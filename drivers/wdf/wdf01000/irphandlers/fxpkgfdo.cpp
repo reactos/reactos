@@ -1,0 +1,573 @@
+#include "common/fxpkgfdo.h"
+#include "common/fxirp.h"
+#include "common/fxdevice.h"
+
+
+
+const PFN_PNP_POWER_CALLBACK FxPkgFdo::m_FdoPnpFunctionTable[IRP_MN_SURPRISE_REMOVAL + 1] =
+{
+    NULL
+    
+    // TODO: Implement functions
+
+    /*_PnpStartDevice,                // IRP_MN_START_DEVICE
+    _PnpQueryRemoveDevice,          // IRP_MN_QUERY_REMOVE_DEVICE
+    _PnpRemoveDevice,               // IRP_MN_REMOVE_DEVICE
+    _PnpCancelRemoveDevice,         // IRP_MN_CANCEL_REMOVE_DEVICE
+    _PnpStopDevice,                 // IRP_MN_STOP_DEVICE
+    _PnpQueryStopDevice,            // IRP_MN_QUERY_STOP_DEVICE
+    _PnpCancelStopDevice,           // IRP_MN_CANCEL_STOP_DEVICE
+
+    _PnpQueryDeviceRelations,       // IRP_MN_QUERY_DEVICE_RELATIONS
+    _PnpQueryInterface,             // IRP_MN_QUERY_INTERFACE
+    _PnpQueryCapabilities,          // IRP_MN_QUERY_CAPABILITIES
+    _PnpPassDown,                   // IRP_MN_QUERY_RESOURCES
+    _PnpPassDown,                   // IRP_MN_QUERY_RESOURCE_REQUIREMENTS
+    _PnpPassDown,                   // IRP_MN_QUERY_DEVICE_TEXT
+    _PnpFilterResourceRequirements, // IRP_MN_FILTER_RESOURCE_REQUIREMENTS
+
+    _PnpPassDown,                   // 0x0E
+
+    _PnpPassDown,                   // IRP_MN_READ_CONFIG
+    _PnpPassDown,                   // IRP_MN_WRITE_CONFIG
+    _PnpPassDown,                   // IRP_MN_EJECT
+    _PnpPassDown,                   // IRP_MN_SET_LOCK
+    _PnpPassDown,                   // IRP_MN_QUERY_ID
+    _PnpQueryPnpDeviceState,        // IRP_MN_QUERY_PNP_DEVICE_STATE
+    _PnpPassDown,                   // IRP_MN_QUERY_BUS_INFORMATION
+    _PnpDeviceUsageNotification,    // IRP_MN_DEVICE_USAGE_NOTIFICATION
+    _PnpSurpriseRemoval,            // IRP_MN_SURPRISE_REMOVAL
+    */
+};
+
+const PFN_PNP_POWER_CALLBACK FxPkgFdo::m_FdoPowerFunctionTable[IRP_MN_QUERY_POWER + 1] =
+{
+    // TODO: Implement functions
+
+    //_DispatchWaitWake,      // IRP_MN_WAIT_WAKE
+    //_PowerPassDown,         // IRP_MN_POWER_SEQUENCE
+    //_DispatchSetPower,      // IRP_MN_SET_POWER
+    //_DispatchQueryPower,    // IRP_MN_QUERY_POWER
+};
+
+FxPkgFdo::FxPkgFdo(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in CfxDevice *Device
+    ) :
+    FxPkgPnp(FxDriverGlobals, Device, FX_TYPE_PACKAGE_FDO)
+/*++
+
+Routine Description:
+
+    This is the constructor for the FxPkgFdo.  Don't do any initialization
+    that might fail here.
+
+Arguments:
+
+    none
+
+Returns:
+
+    none
+
+--*/
+
+{
+    m_DefaultDeviceList = NULL;
+    m_StaticDeviceList = NULL;
+
+    m_DefaultTarget = NULL;
+    m_SelfTarget = NULL;
+
+    m_BusEnumRetries = 0;
+
+    //
+    // Since we will always have a valid PDO when we are the FDO, we can do
+    // any device interface related activity at any time
+    //
+    m_DeviceInterfacesCanBeEnabled = TRUE;
+
+    m_Filter = FALSE;
+
+    RtlZeroMemory(&m_BusInformation, sizeof(m_BusInformation));
+ 
+    RtlZeroMemory(&m_SurpriseRemoveAndReenumerateSelfInterface, 
+        sizeof(m_SurpriseRemoveAndReenumerateSelfInterface));
+}
+
+FxPkgFdo::~FxPkgFdo(
+    VOID
+    )
+/*++
+
+Routine Description:
+
+    This is the destructor for the FxPkgFdo
+
+Arguments:
+
+    none
+
+Returns:
+
+    none
+
+--*/
+
+{
+    if (m_DefaultDeviceList != NULL)
+    {
+        m_DefaultDeviceList->RELEASE(this);
+    }
+    if (m_StaticDeviceList != NULL)
+    {
+        m_StaticDeviceList->RELEASE(this);
+    }
+    if (m_SelfTarget != NULL)
+    {
+        m_SelfTarget->RELEASE(this);
+    }
+    if (m_DefaultTarget != NULL)
+    {
+        m_DefaultTarget->RELEASE(this);
+    }
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_Create(
+    __in PFX_DRIVER_GLOBALS DriverGlobals,
+    __in CfxDevice * Device,
+    __deref_out FxPkgFdo ** PkgFdo
+    )
+{   
+    NTSTATUS status;
+    FxPkgFdo * fxPkgFdo;
+    FxEventQueue *eventQueue;
+    
+    fxPkgFdo = new(DriverGlobals) FxPkgFdo(DriverGlobals, Device);
+
+    if (NULL == fxPkgFdo)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        DoTraceLevelMessage(DriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                            "Memory allocation failed: %!STATUS!", status);
+        return status;        
+    }
+
+    //
+    // Initialize the event queues in the PnP, power and power policy state
+    // machines
+    //
+    eventQueue = static_cast<FxEventQueue*> (&(fxPkgFdo->m_PnpMachine));
+    status = eventQueue->Initialize(DriverGlobals);
+    if (!NT_SUCCESS(status))
+    {
+        goto exit;
+    }
+
+    eventQueue = static_cast<FxEventQueue*> (&(fxPkgFdo->m_PowerMachine));
+    status = eventQueue->Initialize(DriverGlobals);
+    if (!NT_SUCCESS(status))
+    {
+        goto exit;
+    }
+
+    eventQueue = static_cast<FxEventQueue*> (&(fxPkgFdo->m_PowerPolicyMachine));
+    status = eventQueue->Initialize(DriverGlobals);
+    if (!NT_SUCCESS(status))
+    {
+        goto exit;
+    }
+
+    *PkgFdo = fxPkgFdo;
+
+exit:
+    if (!NT_SUCCESS(status))
+    {
+        fxPkgFdo->DeleteFromFailedCreate();
+    }
+    
+    return status;
+}
+
+VOID
+FxPkgFdo::ReleaseReenumerationInterface(
+    VOID
+    )
+/*++
+
+Routine Description:
+
+    Releases the implicit reference taken on REENUMERATE_SELF interface. 
+    NOOP for PDO.
+
+Arguments:
+    None
+
+Return Value:
+    VOID
+
+  --*/
+{
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    RemoveWorkItemForSetDeviceFailed();
+#endif
+
+    PREENUMERATE_SELF_INTERFACE_STANDARD pInterface;
+
+    pInterface = &m_SurpriseRemoveAndReenumerateSelfInterface;
+
+    pInterface->SurpriseRemoveAndReenumerateSelf = NULL; 
+
+    if (pInterface->InterfaceDereference != NULL)
+    {
+        pInterface->InterfaceDereference(pInterface->Context);
+    }
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::FireAndForgetIrp(
+    __inout FxIrp *Irp
+    )
+
+/*++
+
+Routine Description:
+
+    Virtual override which sends the request down the stack and forgets about it.
+
+Arguments:
+
+    Irp - The request
+
+Returns:
+
+    results from IoCallDriver
+
+--*/
+
+{
+    if (Irp->GetMajorFunction() == IRP_MJ_POWER)
+    {
+        return _PowerPassDown(this, Irp);
+    }
+    else
+    {
+        return _PnpPassDown(this, Irp);
+    }
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_PnpPassDown(
+    __in FxPkgPnp* This,
+    __inout FxIrp* Irp
+    )
+/*++
+
+Routine Description:
+    Functionally equivalent to FireAndForgetIrp except this isn't a virtual
+    call
+
+Arguments:
+    Irp - The request
+
+Return Value:
+    result from IoCallDriver
+
+  --*/
+{
+    NTSTATUS status;
+    FxDevice* device;
+    MdIrp pIrp;
+
+    device = ((FxPkgFdo*)This)->m_Device;
+    pIrp = Irp->GetIrp();
+
+    Irp->CopyCurrentIrpStackLocationToNext();
+    status = Irp->CallDriver(
+        ((FxPkgFdo*)This)->m_Device->GetAttachedDevice()); 
+
+    Mx::MxReleaseRemoveLock(device->GetRemoveLock(),
+                            pIrp
+                            );
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::Initialize(
+    __in PWDFDEVICE_INIT DeviceInit
+    )
+/*++
+Routine Description:
+
+    After creating a FxPkgFdo, the driver writer will initialize it by passing
+    a set of driver callbacks that allow the driver writer to customize the
+    behavior when handling certain IRPs.
+
+    This is the place to do any initialization that might fail.
+
+Arguments:
+
+    Device - a pointer to the FxDevice
+
+    DispatchTable - a driver supplied table of callbacks
+
+Returns:
+
+    NTSTATUS
+
+--*/
+{
+    PFX_DRIVER_GLOBALS pGlobals;
+    WDF_CHILD_LIST_CONFIG config;
+    size_t totalDescriptionSize = 0;
+    WDFCHILDLIST hList;
+    NTSTATUS status;
+
+    pGlobals = GetDriverGlobals();
+
+    status = FxPkgPnp::Initialize(DeviceInit);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    status = AllocateEnumInfo();
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    WDF_CHILD_LIST_CONFIG_INIT(&config,
+                               sizeof(FxStaticChildDescription),
+                               NULL);
+
+    status = FxChildList::_ComputeTotalDescriptionSize(pGlobals,
+                                                       &config,
+                                                       &totalDescriptionSize);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    status = FxChildList::_CreateAndInit(&m_StaticDeviceList,
+                                         pGlobals,
+                                         WDF_NO_OBJECT_ATTRIBUTES,
+                                         totalDescriptionSize, 
+                                         m_Device,
+                                         &config,
+                                         TRUE);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    status = m_StaticDeviceList->Commit(WDF_NO_OBJECT_ATTRIBUTES,
+                                        (WDFOBJECT*) &hList,
+                                        m_Device);
+
+    if (!NT_SUCCESS(status))
+    {
+        m_StaticDeviceList->DeleteFromFailedCreate();
+        m_StaticDeviceList = NULL;
+
+        return status;
+    }
+
+    //
+    // This will be released in the destructor
+    //
+    m_StaticDeviceList->ADDREF(this);
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::CreateDefaultDeviceList(
+    __in PWDF_CHILD_LIST_CONFIG ListConfig,
+    __in PWDF_OBJECT_ATTRIBUTES ListAttributes
+    )
+
+/*++
+
+Routine Description:
+
+
+
+Arguments:
+
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    WDFCHILDLIST hList;
+    size_t totalDescriptionSize = 0;
+    NTSTATUS status;
+
+    pFxDriverGlobals = GetDriverGlobals();
+
+    ASSERT(m_EnumInfo != NULL);
+
+    //
+    // This should not fail, we already validated the total size when we
+    // validated the config (we just had no place to store the total size, so
+    // we recompute it again).
+    //
+    status = FxChildList::_ComputeTotalDescriptionSize(
+        pFxDriverGlobals,
+        ListConfig,
+        &totalDescriptionSize
+        );
+    
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    status = FxChildList::_CreateAndInit(&m_DefaultDeviceList,
+                                         pFxDriverGlobals, 
+                                         ListAttributes,
+                                         totalDescriptionSize,
+                                         m_Device,
+                                         ListConfig);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    status = m_DefaultDeviceList->Commit(ListAttributes,
+                                         (WDFOBJECT*)&hList,
+                                         m_Device);
+
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
+                            "Could not convert object to handle");
+        m_DefaultDeviceList->DeleteFromFailedCreate();
+        m_DefaultDeviceList = NULL;
+        return status;
+    }
+
+    //
+    // This will be released in the destructor
+    //
+    m_DefaultDeviceList->ADDREF(this);
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::RegisterCallbacks(
+    __in PWDF_FDO_EVENT_CALLBACKS DispatchTable
+    )
+{
+    //
+    // Walk the table, and only update the pkg table *if* the dispatch
+    // table has a non-null entry.
+    //
+    m_DeviceFilterAddResourceRequirements.m_Method =
+        DispatchTable->EvtDeviceFilterAddResourceRequirements;
+    m_DeviceFilterRemoveResourceRequirements.m_Method =
+        DispatchTable->EvtDeviceFilterRemoveResourceRequirements;
+    m_DeviceRemoveAddedResources.m_Method =
+        DispatchTable->EvtDeviceRemoveAddedResources;
+
+    return STATUS_SUCCESS;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::PostCreateDeviceInitialize(
+    VOID
+    )
+{
+    NTSTATUS status;
+
+    status = __super::PostCreateDeviceInitialize();
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    //
+    // Allow device simulation framework to hook interrupt routines.
+    //
+    /*if (GetDriverGlobals()->FxDsfOn)
+    {
+        status = QueryForDsfInterface();
+        if (!NT_SUCCESS(status))
+        {
+            return status;
+        }
+    } */
+
+#endif
+
+    status = m_Device->AllocateTarget(&m_DefaultTarget, 
+                                      FALSE /*SelfTarget=FALSE*/);
+    if (NT_SUCCESS(status))
+    {
+        //
+        // This will be released in the destructor
+        //
+        m_DefaultTarget->ADDREF(this);
+    }
+
+    if (m_Device->m_SelfIoTargetNeeded)
+    {
+        status = m_Device->AllocateTarget((FxIoTarget**)&m_SelfTarget, 
+                                          TRUE /*SelfTarget*/);
+        if (NT_SUCCESS(status))
+        {
+            //
+            // This will be released in the destructor
+            //
+            m_SelfTarget->ADDREF(this);
+        }
+    }
+
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::SetFilter(
+    __in BOOLEAN Value
+    )
+
+/*++
+
+Routine Description:
+
+    The Framework behaves differently depending on whether this device is a
+    filter in the stack.  This method is the way we keep track.
+
+Arguments:
+
+    Value - Filter or not
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    m_Filter = Value;
+    return STATUS_SUCCESS;
+}

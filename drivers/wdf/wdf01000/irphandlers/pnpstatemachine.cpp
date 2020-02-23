@@ -1093,3 +1093,39 @@ const PNP_STATE_TABLE FxPkgPnp::m_WdfPnpStates[] = {
           0 } ,
     },
 };
+
+VOID
+FxPkgPnp::_PowerProcessEventInner(
+    __in FxPkgPnp* This,
+    __in FxPostProcessInfo* Info,
+    __in PVOID WorkerContext
+    )
+{
+    
+    UNREFERENCED_PARAMETER(WorkerContext);
+
+    //
+    // Take the state machine lock.
+    //
+    This->m_PowerMachine.m_StateMachineLock.AcquireLock(
+        This->GetDriverGlobals()
+        );
+
+    //
+    // Call the function that will actually run the state machine.
+    //
+    This->PowerProcessEventInner(Info);
+
+    //
+    // We are being called from the work item and m_WorkItemRunning is > 0, so
+    // we cannot be deleted yet.
+    //
+    ASSERT(Info->SomethingToDo() == FALSE);
+
+    //
+    // Now release the lock
+    //
+    This->m_PowerMachine.m_StateMachineLock.ReleaseLock(
+        This->GetDriverGlobals()
+        );
+}

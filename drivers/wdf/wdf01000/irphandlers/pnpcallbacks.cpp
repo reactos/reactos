@@ -19,3 +19,153 @@ FxPnpStateCallback::Invoke(
         CallbackEnd();
     }
 }
+
+VOID
+FxPnpDeviceD0Entry::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_D0_ENTRY Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackD0Entry;
+}
+
+VOID
+FxPnpDeviceD0Exit::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_D0_EXIT Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackD0Exit;
+}
+
+VOID
+FxPnpDevicePrepareHardware::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_PREPARE_HARDWARE Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackPrepareHardware;
+}
+
+VOID
+FxPnpDeviceReleaseHardware::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_RELEASE_HARDWARE Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackReleaseHardware;
+}
+
+VOID
+FxPnpDeviceSurpriseRemoval::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_SURPRISE_REMOVAL Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackSurpriseRemoval;
+}
+
+VOID
+FxPnpDeviceSelfManagedIoRestart::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_SELF_MANAGED_IO_RESTART Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackSmIoRestart;
+}
+
+VOID
+FxPnpDeviceSelfManagedIoSuspend::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_SELF_MANAGED_IO_SUSPEND Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackSmIoSuspend;
+}
+
+VOID
+FxPnpDeviceSelfManagedIoInit::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_SELF_MANAGED_IO_INIT Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackSmIoInit;
+}
+
+VOID
+FxPnpDeviceSelfManagedIoFlush::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_SELF_MANAGED_IO_FLUSH Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackSmIoFlush;
+}
+
+VOID
+FxPnpDeviceSelfManagedIoCleanup::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_SELF_MANAGED_IO_CLEANUP Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackSmIoCleanup;
+}
+
+VOID
+FxPowerPolicyStateCallback::Invoke(
+    __in WDF_DEVICE_POWER_POLICY_STATE State,
+    __in WDF_STATE_NOTIFICATION_TYPE Type,
+    __in WDFDEVICE Device,
+    __in PCWDF_DEVICE_POWER_POLICY_NOTIFICATION_DATA NotificationData
+    )
+{
+    FxPowerPolicyStateCallbackInfo *pInfo;
+
+    pInfo = &m_Methods[WdfDevStateNormalize(State)-WdfDevStatePwrPolObjectCreated];
+
+    if (pInfo->Callback != NULL && (pInfo->Types & Type))
+    {
+        CallbackStart();
+        pInfo->Callback(Device, NotificationData);
+        CallbackEnd();
+    }
+}
+
+VOID
+FxPowerStateCallback::Invoke(
+    __in WDF_DEVICE_POWER_STATE State,
+    __in WDF_STATE_NOTIFICATION_TYPE Type,
+    __in WDFDEVICE Device,
+    __in PCWDF_DEVICE_POWER_NOTIFICATION_DATA NotificationData
+    )
+{
+    FxPowerStateCallbackInfo *pInfo;
+
+    pInfo = &m_Methods[WdfDevStateNormalize(State)-WdfDevStatePowerObjectCreated];
+
+    if (pInfo->Callback != NULL && (pInfo->Types & Type))
+    {
+        CallbackStart();
+        pInfo->Callback(Device, NotificationData);
+        CallbackEnd();
+    }
+}

@@ -2,7 +2,198 @@
 #include "common/fxdevice.h"
 #include "common/fxirp.h"
 #include "common/fxmacros.h"
+#include "common/fxdeviceinit.h"
+#include "common/fxautoregistry.h"
+#include "common/fxwatchdog.h"
+#include "common/fxdeviceinterface.h"
 
+
+
+const NOT_POWER_POLICY_OWNER_STATE_TABLE FxPkgPnp::m_WdfNotPowerPolicyOwnerStates[] =
+{
+    // TODO: Fill table
+
+    // current state
+    // transition function,
+    // target states
+    // count of target states
+    // Queue state
+    //
+    { WdfDevStatePwrPolObjectCreated,
+      NULL,
+      0,//FxPkgPnp::m_NotPowerPolOwnerObjectCreatedStates,
+      0,//ARRAY_SIZE(FxPkgPnp::m_NotPowerPolOwnerObjectCreatedStates),
+      TRUE,
+    }
+};
+
+FxPkgPnp::FxPkgPnp(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in CfxDevice* Device,
+    __in WDFTYPE Type
+    ) :
+    FxPackage(FxDriverGlobals, Device, Type)
+{
+    ULONG i;
+
+    m_DmaEnablerList = NULL;
+    m_RemovalDeviceList = NULL;
+    m_UsageDependentDeviceList = NULL;
+
+    //
+    // Initialize the structures to the default state and then override the
+    // non WDF std default values to the unsupported / off values.
+    //
+    m_PnpStateAndCaps.Value =
+        FxPnpStateDisabledUseDefault         |
+        FxPnpStateDontDisplayInUIUseDefault  |
+        FxPnpStateFailedUseDefault           |
+        FxPnpStateNotDisableableUseDefault   |
+        FxPnpStateRemovedUseDefault          |
+        FxPnpStateResourcesChangedUseDefault |
+
+        FxPnpCapLockSupportedUseDefault      |
+        FxPnpCapEjectSupportedUseDefault     |
+        FxPnpCapRemovableUseDefault          |
+        FxPnpCapDockDeviceUseDefault         |
+        FxPnpCapUniqueIDUseDefault           |
+        FxPnpCapSilentInstallUseDefault      |
+        FxPnpCapSurpriseRemovalOKUseDefault  |
+        FxPnpCapHardwareDisabledUseDefault   |
+        FxPnpCapNoDisplayInUIUseDefault
+        ;
+
+    m_PnpCapsAddress = (ULONG) -1;
+    m_PnpCapsUINumber = (ULONG) -1;
+
+    RtlZeroMemory(&m_PowerCaps, sizeof(m_PowerCaps));
+    m_PowerCaps.Caps =
+        FxPowerCapDeviceD1UseDefault   |
+        FxPowerCapDeviceD2UseDefault   |
+        FxPowerCapWakeFromD0UseDefault |
+        FxPowerCapWakeFromD1UseDefault |
+        FxPowerCapWakeFromD2UseDefault |
+        FxPowerCapWakeFromD3UseDefault
+        ;
+
+    m_PowerCaps.DeviceWake = PowerDeviceMaximum;
+    m_PowerCaps.SystemWake = PowerSystemMaximum;
+
+    m_PowerCaps.D1Latency = (ULONG) -1;
+    m_PowerCaps.D2Latency = (ULONG) -1;
+    m_PowerCaps.D3Latency = (ULONG) -1;
+
+    m_PowerCaps.States = 0;
+    for (i = 0; i < PowerSystemMaximum; i++) {
+        _SetPowerCapState(i, PowerDeviceMaximum, &m_PowerCaps.States);
+    }
+
+    //RtlZeroMemory(&m_D3ColdInterface, sizeof(m_D3ColdInterface));
+    RtlZeroMemory(&m_SpecialSupport[0], sizeof(m_SpecialSupport));
+    RtlZeroMemory(&m_SpecialFileCount[0], sizeof(m_SpecialFileCount));
+
+    m_PowerThreadInterface.Interface.Size = sizeof(m_PowerThreadInterface);
+    m_PowerThreadInterface.Interface.Version = 1;
+    m_PowerThreadInterface.Interface.Context = this;
+    m_PowerThreadInterface.Interface.InterfaceReference = &FxPkgPnp::_PowerThreadInterfaceReference;
+    m_PowerThreadInterface.Interface.InterfaceDereference = &FxPkgPnp::_PowerThreadInterfaceDereference;
+    m_PowerThreadInterface.PowerThreadEnqueue = &FxPkgPnp::_PowerThreadEnqueue;
+    m_PowerThread = NULL;
+    m_HasPowerThread = FALSE;
+    m_PowerThreadInterfaceReferenceCount = 1;
+    m_PowerThreadEvent = NULL;
+
+    m_DeviceStopCount = 0;
+    m_CapsQueried = FALSE;
+    m_InternalFailure = FALSE;
+    m_FailedAction = WdfDeviceFailedUndefined;
+
+    //
+    // We only set the pending child count to 1 once we know we have successfully
+    // created an FxDevice and initialized it fully.  If we delete an FxDevice
+    // which is half baked, it cannot have any FxChildLists which have any
+    // pending children on them.
+    //
+    m_PendingChildCount = 0;
+
+    m_QueryInterfaceHead.Next = NULL;
+
+    m_DeviceInterfaceHead.Next = NULL;
+    m_DeviceInterfacesCanBeEnabled = FALSE;
+
+    m_Failed = FALSE;
+    m_SetDeviceRemoveProcessed = FALSE;
+
+    m_SystemPowerState    = PowerSystemWorking;
+    m_DevicePowerState    = WdfPowerDeviceD3Final;
+    m_DevicePowerStateOld = WdfPowerDeviceD3Final;
+
+    m_PendingPnPIrp = NULL;
+    m_PendingSystemPowerIrp = NULL;
+    m_PendingDevicePowerIrp = NULL;
+    m_SystemPowerAction = (UCHAR) PowerActionNone;
+
+    m_PnpStateCallbacks = NULL;
+    m_PowerStateCallbacks = NULL;
+    m_PowerPolicyStateCallbacks = NULL;
+
+    m_SelfManagedIoMachine = NULL;
+
+    m_EnumInfo = NULL;
+
+    m_Resources = NULL;
+    m_ResourcesRaw = NULL;
+
+    InitializeListHead(&m_InterruptListHead);
+    m_InterruptObjectCount = 0;
+    m_WakeInterruptCount = 0;
+    m_WakeInterruptPendingAckCount = 0;
+    m_SystemWokenByWakeInterrupt = FALSE;
+    m_WakeInterruptsKeepConnected = FALSE;
+    m_AchievedStart = FALSE;
+
+    m_SharedPower.m_WaitWakeIrp = NULL;
+    m_SharedPower.m_WaitWakeOwner = FALSE;
+    m_SharedPower.m_ExtendWatchDogTimer = FALSE;
+
+    m_DeviceRemoveProcessed = NULL;
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    //
+    // Interrupt APIs for Vista and forward
+    //
+    //m_IoConnectInterruptEx      = FxLibraryGlobals.IoConnectInterruptEx;
+    //m_IoDisconnectInterruptEx   = FxLibraryGlobals.IoDisconnectInterruptEx;
+
+    //
+    // Interrupt APIs for Windows 8 and forward
+    //
+    //m_IoReportInterruptActive   = FxLibraryGlobals.IoReportInterruptActive;
+    //m_IoReportInterruptInactive = FxLibraryGlobals.IoReportInterruptInactive;
+
+#endif
+
+    m_ReleaseHardwareAfterDescendantsOnFailure = FALSE;
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    //m_SleepStudy = NULL;
+    m_SleepStudyPowerRefIoCount = 0;
+
+    //
+    // Sleep Study relies on other OS components that do not start as early as
+    // WDF. We automatically track references until we have determined if
+    // Sleep Study is enabled for this driver.
+    //
+    m_SleepStudyTrackReferences = TRUE;
+
+    //m_CompanionTarget = NULL;
+    //m_CompanionTargetStatus = STATUS_NOT_FOUND;
+
+    m_SetDeviceFailedAttemptRestartWorkItem = NULL;
+#endif
+
+    MarkDisposeOverride(ObjectDoNotLock);
+}
 
 VOID
 FxPkgPnp::CleanupDeviceFromFailedCreate(
@@ -61,6 +252,35 @@ Return Value:
     m_DeviceRemoveProcessed = NULL;
 
     RELEASE(WaitEvent);    
+}
+
+NTSTATUS
+FxPkgPnp::CompletePowerRequest(
+    __inout FxIrp* Irp,
+    __in    NTSTATUS Status
+    )
+{
+    MdIrp irp;
+
+    //
+    // Once we call CompleteRequest, 2 things happen
+    // 1) this object may go away
+    // 2) Irp->m_Irp will be cleared
+    //
+    // As such, we capture the underlying WDM objects so that we can use them
+    // to release the remove lock and use the PIRP *value* as a tag to release
+    // the remlock.
+    //
+    irp = Irp->GetIrp();
+
+    Irp->SetStatus(Status);
+    Irp->StartNextPowerIrp();
+    Irp->CompleteRequest(IO_NO_INCREMENT);
+
+    Mx::MxReleaseRemoveLock(m_Device->GetRemoveLock(),
+                            irp);
+
+    return Status;
 }
 
 NTSTATUS
@@ -329,4 +549,1177 @@ Return Value:
             m_PowerThreadInterface.Interface.Context
             );
     }
+}
+
+VOID
+FxPkgPnp::FinishInitialize(
+    __inout PWDFDEVICE_INIT DeviceInit
+    )
+/*++
+
+Routine Description:
+    Finish initializing the object.  All initialization up until this point
+    could fail.  This function cannot fail, so all it can do is assign field
+    values and take allocations from DeviceInit.
+
+Arguments:
+    DeviceInit - device initialization structure that the driver writer has
+                 initialized
+
+Return Value:
+    None
+
+  --*/
+
+{
+    //
+    // Reassign the state callback arrays away from the init struct.
+    // Set the init field to NULL so that it does not attempt to free the array
+    // when it is destroyed.
+    //
+    m_PnpStateCallbacks = DeviceInit->PnpPower.PnpStateCallbacks;
+    DeviceInit->PnpPower.PnpStateCallbacks = NULL;
+
+    m_PowerStateCallbacks = DeviceInit->PnpPower.PowerStateCallbacks;
+    DeviceInit->PnpPower.PowerStateCallbacks = NULL;
+
+    m_PowerPolicyStateCallbacks = DeviceInit->PnpPower.PowerPolicyStateCallbacks;
+    DeviceInit->PnpPower.PowerPolicyStateCallbacks = NULL;
+
+    //
+    // Bias the count towards one so that we can optimize the synchronous
+    // cleanup case when the device is being destroyed.
+    //
+    m_PendingChildCount = 1;
+
+    //
+    // Now "Add" this device in the terms that the PnP state machine uses.  This
+    // will be in the context of an actual AddDevice function for FDOs, and
+    // something very much like it for PDOs.
+    //
+    // Important that the posting of the event is after setting of the state
+    // callback arrays so that we can guarantee that any state transition
+    // callback will be made.
+    //
+    PnpProcessEvent(PnpEventAddDevice);
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::Dispatch(
+    __in MdIrp Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This is the main dispatch handler for the pnp package.  This method is
+    called by the framework manager when a PNP or Power IRP enters the driver.
+    This function will dispatch the IRP to a function designed to handle the
+    specific IRP.
+
+Arguments:
+
+    Device - a pointer to the FxDevice
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    NTSTATUS status;
+    FxIrp irp(Irp);
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    FX_TRACK_DRIVER(GetDriverGlobals());
+#endif
+
+    if (irp.GetMajorFunction() == IRP_MJ_PNP)
+    {
+
+        switch (irp.GetMinorFunction()) {
+        case IRP_MN_START_DEVICE:
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_REMOVE_DEVICE:
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        case IRP_MN_STOP_DEVICE:
+        case IRP_MN_QUERY_STOP_DEVICE:
+        case IRP_MN_CANCEL_STOP_DEVICE:
+        case IRP_MN_SURPRISE_REMOVAL:
+        case IRP_MN_EJECT:
+        case IRP_MN_QUERY_PNP_DEVICE_STATE:
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+                "WDFDEVICE 0x%p !devobj 0x%p, IRP_MJ_PNP, %!pnpmn! IRP 0x%p",
+                m_Device->GetHandle(),
+                m_Device->GetDeviceObject(),
+                irp.GetMinorFunction(), irp.GetIrp());
+            break;
+
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+                "WDFDEVICE 0x%p !devobj 0x%p, IRP_MJ_PNP, %!pnpmn! "
+                "type %!DEVICE_RELATION_TYPE! IRP 0x%p",
+                m_Device->GetHandle(),
+                m_Device->GetDeviceObject(),
+                irp.GetMinorFunction(),
+                irp.GetParameterQDRType(), irp.GetIrp());
+            break;
+
+        default:
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                "WDFDEVICE 0x%p !devobj 0x%p, IRP_MJ_PNP, %!pnpmn! IRP 0x%p",
+                m_Device->GetHandle(),
+                m_Device->GetDeviceObject(),
+                irp.GetMinorFunction(), irp.GetIrp());
+            break;
+        }
+
+        if (irp.GetMinorFunction() <= IRP_MN_SURPRISE_REMOVAL)
+        {
+            status = (*GetDispatchPnp()[irp.GetMinorFunction()])(this, &irp);
+        }
+        else
+        {
+            //
+            // For Pnp IRPs we don't understand, just forget about them
+            //
+            status = FireAndForgetIrp(&irp);
+        }
+    }
+    else
+    {
+        //
+        // If this isn't a PnP Irp, it must be a power irp.
+        //
+        switch (irp.GetMinorFunction()) {
+        case IRP_MN_WAIT_WAKE:
+        case IRP_MN_SET_POWER:
+            if (irp.GetParameterPowerType() == SystemPowerState)
+            {
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+                    "WDFDEVICE 0x%p !devobj 0x%p IRP_MJ_POWER, %!pwrmn! "
+                    "IRP 0x%p for %!SYSTEM_POWER_STATE! (S%d)",
+                    m_Device->GetHandle(),
+                    m_Device->GetDeviceObject(),
+                    irp.GetMinorFunction(), irp.GetIrp(),
+                    irp.GetParameterPowerStateSystemState(),
+                    irp.GetParameterPowerStateSystemState() - 1);
+            }
+            else
+            {
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+                    "WDFDEVICE 0x%p !devobj 0x%p IRP_MJ_POWER, %!pwrmn! "
+                    "IRP 0x%p for %!DEVICE_POWER_STATE!",
+                    m_Device->GetHandle(),
+                    m_Device->GetDeviceObject(),
+                    irp.GetMinorFunction(), irp.GetIrp(),
+                    irp.GetParameterPowerStateDeviceState());
+            }
+            break;
+
+        default:
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                "WDFDEVICE 0x%p !devobj 0x%p IRP_MJ_POWER, %!pwrmn! IRP 0x%p",
+                m_Device->GetHandle(),
+                m_Device->GetDeviceObject(),
+                irp.GetMinorFunction(), irp.GetIrp());
+            break;
+        }
+
+        Mx::MxAssert(irp.GetMajorFunction() == IRP_MJ_POWER);
+
+        if (irp.GetMinorFunction() <= IRP_MN_QUERY_POWER)
+        {
+            status = (*GetDispatchPower()[irp.GetMinorFunction()])(this, &irp);
+        }
+        else
+        {
+            //
+            // For Power IRPs we don't understand, just forget about them
+            //
+            status = FireAndForgetIrp(&irp);
+        }
+    }
+
+    return status;
+}
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+NTSTATUS
+FxPkgPnp::AllocateWorkItemForSetDeviceFailed(
+    VOID
+    )
+{
+    NTSTATUS status;
+
+    if (m_SetDeviceFailedAttemptRestartWorkItem != NULL)
+    {
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+            "Reusing previously created workitem for"
+            "SetDeviceFailedAttemptRestart");
+        return STATUS_SUCCESS;
+    }
+
+    status = FxSystemWorkItem::_Create(GetDriverGlobals(),
+                                       m_Device->GetDeviceObject(),
+                                       &m_SetDeviceFailedAttemptRestartWorkItem
+                                       );
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "Could not allocate workitem for "
+            "SetDeviceFailedAttemptRestart: %!STATUS!", status);
+    }
+
+    return status;
+}
+
+VOID
+FxPkgPnp::RemoveWorkItemForSetDeviceFailed(
+    VOID
+    )
+{
+    if (m_SetDeviceFailedAttemptRestartWorkItem != NULL)
+    {
+        m_SetDeviceFailedAttemptRestartWorkItem->DeleteObject();
+        m_SetDeviceFailedAttemptRestartWorkItem = NULL;
+    }
+}
+#endif
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::Initialize(
+    __in PWDFDEVICE_INIT DeviceInit
+    )
+
+/*++
+
+Routine Description:
+
+    This function initializes state associated with an instance of FxPkgPnp.
+    This differs from the constructor because it can do operations which
+    will fail, and can return failure.  (Constructors can't fail, they can
+    only throw exceptions, which we can't deal with in this kernel mode
+    environment.)
+
+Arguments:
+
+    DeviceInit - Struct that the driver initialized that contains defaults.
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    NTSTATUS status;
+
+    pFxDriverGlobals = GetDriverGlobals();
+
+    // WDF 1.11
+    //m_ReleaseHardwareAfterDescendantsOnFailure = (DeviceInit->ReleaseHardwareOrderOnFailure ==
+    //            WdfReleaseHardwareOrderOnFailureAfterDescendants);
+
+    status = m_QueryInterfaceLock.Initialize();
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR,
+                            TRACINGPNP,
+                            "Could not initialize QueryInterfaceLock for "
+                            "WDFDEVICE %p, %!STATUS!",
+                            m_Device->GetHandle(), status);
+        return status;
+    }
+
+    status = m_DeviceInterfaceLock.Initialize();
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR,
+                            TRACINGPNP,
+                            "Could not initialize DeviceInterfaceLock for "
+                            "WDFDEVICE %p, %!STATUS!",
+                            m_Device->GetHandle(), status);
+        return status;
+    }
+
+    //
+    // Initialize preallocated events for UM
+    // (For KM, events allocated on stack are used since event initialization
+    // doesn't fail in KM)
+    //
+#if (FX_CORE_MODE==FX_CORE_USER_MODE)
+
+    status = m_CleanupEventUm.Initialize();
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR,
+                            TRACINGPNP,
+                            "Could not initialize cleanup event for "
+                            "WDFDEVICE %p, %!STATUS!",
+                            m_Device->GetHandle(), status);
+        return status;
+    }
+
+    status = m_RemoveEventUm.Initialize(SynchronizationEvent, FALSE);
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR,
+                            TRACINGPNP,
+                            "Could not initialize remove event for "
+                            "WDFDEVICE %p, %!STATUS!",
+                            m_Device->GetHandle(), status);
+        return status;
+    }
+#endif
+
+    if (DeviceInit->IsPwrPolOwner())
+    {
+        m_PowerPolicyMachine.m_Owner = new (pFxDriverGlobals)
+            FxPowerPolicyOwnerSettings(this);
+
+        if (m_PowerPolicyMachine.m_Owner == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        status = m_PowerPolicyMachine.m_Owner->Init();
+        if (!NT_SUCCESS(status))
+        {
+            return status;
+        }
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+        QueryForD3ColdInterface();
+#endif
+    }
+
+    //
+    // we will change the access flags on the object later on when we build up
+    // the list from the wdm resources
+    //
+    status = FxCmResList::_CreateAndInit(&m_Resources,
+                                         pFxDriverGlobals,
+                                         m_Device,
+                                         WDF_NO_OBJECT_ATTRIBUTES,
+                                         FxResourceNoAccess);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    status = m_Resources->Commit(WDF_NO_OBJECT_ATTRIBUTES,
+                                 WDF_NO_HANDLE,
+                                 m_Device);
+
+    //
+    // This should never fail
+    //
+    ASSERT(NT_SUCCESS(status));
+    if (!NT_SUCCESS(status))
+    {
+        m_Resources->DeleteFromFailedCreate();
+        m_Resources = NULL;
+        return status;
+    }
+
+    m_Resources->ADDREF(this);
+
+    //
+    // we will change the access flags on the object later on when we build up
+    // the list from the wdm resources
+    //
+    status = FxCmResList::_CreateAndInit(&m_ResourcesRaw,
+                                         pFxDriverGlobals,
+                                         m_Device,
+                                         WDF_NO_OBJECT_ATTRIBUTES,
+                                         FxResourceNoAccess);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    status = m_ResourcesRaw->Commit(WDF_NO_OBJECT_ATTRIBUTES,
+                                    WDF_NO_HANDLE,
+                                    m_Device);
+
+    //
+    // This should never fail
+    //
+    ASSERT(NT_SUCCESS(status));
+    if (!NT_SUCCESS(status))
+    {
+        m_ResourcesRaw->DeleteFromFailedCreate();
+        m_ResourcesRaw = NULL;
+        return status;
+    }
+
+    m_ResourcesRaw->ADDREF(this);
+
+    status = RegisterCallbacks(&DeviceInit->PnpPower.PnpPowerEventCallbacks);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    if (IsPowerPolicyOwner())
+    {
+        RegisterPowerPolicyCallbacks(&DeviceInit->PnpPower.PolicyEventCallbacks);
+    }
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::AllocateEnumInfo(
+    VOID
+    )
+{
+    KIRQL irql;
+    NTSTATUS status;
+
+    if (m_EnumInfo != NULL)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    Lock(&irql);
+    if (m_EnumInfo == NULL)
+    {
+        m_EnumInfo = new (GetDriverGlobals()) FxEnumerationInfo(GetDriverGlobals());
+
+        if (m_EnumInfo != NULL)
+        {
+            status = m_EnumInfo->Initialize();
+
+            if (!NT_SUCCESS(status))
+            {
+                delete m_EnumInfo;
+                m_EnumInfo = NULL;
+
+                DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR,
+                                    TRACINGPNP,
+                                    "Could not initialize enum info for "
+                                    "WDFDEVICE %p, %!STATUS!",
+                                    m_Device->GetHandle(), status);
+            }
+
+        }
+        else
+        {
+            status = STATUS_INSUFFICIENT_RESOURCES;
+
+            DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                                "Could not allocate enum info for WDFDEVICE %p, "
+                                "%!STATUS!", m_Device->GetHandle(), status);
+        }
+    }
+    else
+    {
+        //
+        // another thread allocated the list already
+        //
+        status = STATUS_SUCCESS;
+    }
+    Unlock(irql);
+
+    return status;
+}
+
+VOID
+FxPkgPnp::_SetPowerCapState(
+    __in  ULONG Index,
+    __in  DEVICE_POWER_STATE State,
+    __out PULONG Result
+    )
+/*++
+
+Routine Description:
+    Encodes the given device power state (State) into Result at the given Index.
+    States are encoded in nibbles (4 bit chunks), starting at the bottom of the
+    result and  moving upward
+
+Arguments:
+    Index - zero based index into the number of nibbles to encode the value
+
+    State - State to encode
+
+    Result - pointer to where the encoding will take place
+
+Return Value:
+    None
+
+  --*/
+{
+    //
+    // We store off state in 4 bits, starting at the lowest byte
+    //
+    ASSERT(Index < 8);
+
+    //
+    // Erase the old value
+    //
+    *Result &= ~(0xF << (Index * 4));
+
+    //
+    // Write in the new one
+    //
+    *Result |= (0xF & State) << (Index * 4);
+}
+
+VOID
+FxPkgPnp::AddChildList(
+    __in FxChildList* List
+    )
+{
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Adding FxChildList %p, WDFCHILDLIST %p", List,
+                        List->GetHandle());
+
+    m_EnumInfo->m_ChildListList.Add(GetDriverGlobals(),
+                                    &List->m_TransactionLink);
+}
+
+VOID
+FxPkgPnp::QueryForD3ColdInterface(
+    VOID
+    )
+{
+    MxDeviceObject deviceObject;
+    PDEVICE_OBJECT topOfStack;
+    PDEVICE_OBJECT pdo;
+    FxAutoIrp irp;
+    NTSTATUS status;
+
+    //
+    // This function can be invoked multiple times, particularly if filters
+    // send IRP_MN_QUERY_CAPABILITIES.  So bail out if the interface has already
+    // been acquired.
+    //
+
+    /*if ((m_D3ColdInterface.InterfaceDereference != NULL) ||
+        (m_D3ColdInterface.GetIdleWakeInfo != NULL) ||
+        (m_D3ColdInterface.SetD3ColdSupport != NULL))
+    {
+        return;
+    }*/
+
+    pdo = m_Device->GetPhysicalDevice();
+
+    if (pdo == NULL)
+    {
+        return;
+    }
+
+    //
+    // Get the top of stack device object, even though normal filters and the
+    // FDO may not have been added to the stack yet to ensure that this
+    // query-interface is seen by bus filters.  Specifically, in a PCI device
+    // which is soldered to the motherboard, ACPI will be on the stack and it
+    // needs to see this IRP.
+    //
+    topOfStack = IoGetAttachedDeviceReference(pdo);
+    deviceObject.SetObject(topOfStack);
+
+    if (deviceObject.GetObject() != NULL)
+    {
+        irp.SetIrp(FxIrp::AllocateIrp(deviceObject.GetStackSize()));
+        if (irp.GetIrp() == NULL)
+        {
+
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "Failed to allocate IRP to get D3COLD_SUPPORT_INTERFACE from !devobj %p", 
+                pdo);
+        }
+        else
+        {
+            //
+            // Initialize the Irp
+            //
+            irp.SetStatus(STATUS_NOT_SUPPORTED);
+
+            irp.ClearNextStack();
+            irp.SetMajorFunction(IRP_MJ_PNP);
+            irp.SetMinorFunction(IRP_MN_QUERY_INTERFACE);
+            //irp.SetParameterQueryInterfaceType(&GUID_D3COLD_SUPPORT_INTERFACE);
+            //irp.SetParameterQueryInterfaceVersion(D3COLD_SUPPORT_INTERFACE_VERSION);
+            //irp.SetParameterQueryInterfaceSize(sizeof(m_D3ColdInterface));
+            irp.SetParameterQueryInterfaceInterfaceSpecificData(NULL);
+            //irp.SetParameterQueryInterfaceInterface((PINTERFACE)&m_D3ColdInterface);
+
+            status = irp.SendIrpSynchronously(deviceObject.GetObject());
+
+            if (!NT_SUCCESS(status))
+            {
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                    "!devobj %p declined to supply D3COLD_SUPPORT_INTERFACE", 
+                    pdo);
+
+                //RtlZeroMemory(&m_D3ColdInterface, sizeof(m_D3ColdInterface));
+            }
+        }
+    }
+    ObDereferenceObject(topOfStack);
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::RegisterCallbacks(
+    __in PWDF_PNPPOWER_EVENT_CALLBACKS DispatchTable
+    )
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    BOOLEAN useSmIo;
+
+    useSmIo = FALSE;
+
+    //
+    // Update the callback table.
+    //
+    m_DeviceD0Entry.Initialize(this, DispatchTable->EvtDeviceD0Entry);
+    m_DeviceD0Exit.Initialize(this,  DispatchTable->EvtDeviceD0Exit);
+    m_DevicePrepareHardware.Initialize(this,
+                DispatchTable->EvtDevicePrepareHardware);
+    m_DeviceReleaseHardware.Initialize(this,
+                DispatchTable->EvtDeviceReleaseHardware);
+    m_DeviceSurpriseRemoval.Initialize(this,
+                DispatchTable->EvtDeviceSurpriseRemoval);
+
+    m_DeviceD0EntryPostInterruptsEnabled.m_Method =
+        DispatchTable->EvtDeviceD0EntryPostInterruptsEnabled;
+    m_DeviceD0ExitPreInterruptsDisabled.m_Method =
+        DispatchTable->EvtDeviceD0ExitPreInterruptsDisabled;
+
+    m_DeviceQueryStop.m_Method         = DispatchTable->EvtDeviceQueryStop;
+    m_DeviceQueryRemove.m_Method       = DispatchTable->EvtDeviceQueryRemove;
+
+    m_DeviceUsageNotification.m_Method = DispatchTable->EvtDeviceUsageNotification;
+    //m_DeviceUsageNotificationEx.m_Method = DispatchTable->EvtDeviceUsageNotificationEx;
+    m_DeviceRelationsQuery.m_Method    = DispatchTable->EvtDeviceRelationsQuery;
+
+
+    //
+    // Now see if SMIO is being used
+    //
+    if (DispatchTable->EvtDeviceSelfManagedIoCleanup != NULL ||
+        DispatchTable->EvtDeviceSelfManagedIoFlush != NULL ||
+        DispatchTable->EvtDeviceSelfManagedIoInit != NULL ||
+        DispatchTable->EvtDeviceSelfManagedIoSuspend != NULL ||
+        DispatchTable->EvtDeviceSelfManagedIoRestart != NULL)
+    {
+
+        useSmIo = TRUE;
+    }
+    else if (GetDevice()->IsCxUsingSelfManagedIo())
+    {
+        useSmIo = TRUE;
+    }
+
+
+    if (useSmIo)
+    {
+        status = FxSelfManagedIoMachine::_CreateAndInit(&m_SelfManagedIoMachine,
+                                                        this);
+
+        if (!NT_SUCCESS(status))
+        {
+            return status;
+        }
+
+        m_SelfManagedIoMachine->InitializeMachine(DispatchTable);
+    }
+
+    return status;
+}
+
+VOID
+FxPkgPnp::RegisterPowerPolicyCallbacks(
+    __in PWDF_POWER_POLICY_EVENT_CALLBACKS Callbacks
+    )
+{
+    m_PowerPolicyMachine.m_Owner->m_DeviceArmWakeFromS0.m_Method =
+        Callbacks->EvtDeviceArmWakeFromS0;
+    m_PowerPolicyMachine.m_Owner->m_DeviceArmWakeFromSx.m_Method =
+        Callbacks->EvtDeviceArmWakeFromSx;
+    m_PowerPolicyMachine.m_Owner->m_DeviceArmWakeFromSx.m_MethodWithReason =
+        Callbacks->EvtDeviceArmWakeFromSxWithReason;
+
+    m_PowerPolicyMachine.m_Owner->m_DeviceDisarmWakeFromS0.m_Method =
+        Callbacks->EvtDeviceDisarmWakeFromS0;
+    m_PowerPolicyMachine.m_Owner->m_DeviceDisarmWakeFromSx.m_Method =
+        Callbacks->EvtDeviceDisarmWakeFromSx;
+
+    m_PowerPolicyMachine.m_Owner->m_DeviceWakeFromS0Triggered.m_Method =
+        Callbacks->EvtDeviceWakeFromS0Triggered;
+    m_PowerPolicyMachine.m_Owner->m_DeviceWakeFromSxTriggered.m_Method =
+        Callbacks->EvtDeviceWakeFromSxTriggered;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::PostCreateDeviceInitialize(
+    VOID
+    )
+
+/*++
+
+Routine Description:
+
+    This function does any initialization to this object which must be done
+    after the underlying device object has been attached to the device stack,
+    i.e. you can send IRPs down this stack now.
+
+Arguments:
+
+    none
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    NTSTATUS status;
+
+    status = m_PnpMachine.Init(this, &FxPkgPnp::_PnpProcessEventInner);
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                            "PnP State Machine init failed, %!STATUS!",
+                            status);
+        return status;
+    }
+
+    status = m_PowerMachine.Init(this, &FxPkgPnp::_PowerProcessEventInner);
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                            "Power State Machine init failed, %!STATUS!",
+                            status);
+        return status;
+    }
+
+    status = m_PowerPolicyMachine.Init(this, &FxPkgPnp::_PowerPolicyProcessEventInner);
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                            "Power Policy State Machine init failed, %!STATUS!",
+                            status);
+        return status;
+    }
+
+/*
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    FxCompanionLibrary* companionLib = FxLibraryGlobals.CompanionLibrary;
+    PCWSTR companionName = NULL;
+
+    //
+    // Check if a companion is needed
+    //
+    if (companionLib->IsCompanionRequiredForDevice(
+                                        m_Device,
+                                        &companionName)) {
+
+        NTSTATUS companionTargetStatus;
+
+        //
+        // We dont want to fail WdfDeviceCreate so we dont propagate the
+        // failure. Also, upon failure AllocateCompanionTarget will write a error trace
+        // message.
+        //
+
+        companionTargetStatus = m_Device->AllocateCompanionTarget(&m_CompanionTarget);
+
+        if (NT_SUCCESS(companionTargetStatus)) {
+            //
+            // Take a reference that will be released in ~FxPkgPnp
+            //
+            m_CompanionTarget->ADDREF(this);
+        }
+        else {
+            WCHAR insertString[EVTLOG_MESSAGE_SIZE];
+            if (NT_SUCCESS(RtlStringCchPrintfW(insertString,
+                            RTL_NUMBER_OF(insertString),
+                            L"Service:%S, Companion:%s, Status:0x%x",
+                            GetDriverGlobals()->Public.DriverName,
+                            companionName,
+                            companionTargetStatus))) {
+
+                LibraryLogEvent(FxLibraryGlobals.DriverObject,
+                    WDFVER_DRIVER_COMPANION_FAIL_TO_LOAD,
+                    companionTargetStatus,
+                    insertString,
+                    NULL,
+                    0);
+            }
+        }
+
+        m_CompanionTargetStatus = companionTargetStatus;
+    }
+
+    if (companionName != NULL) {
+        FxPoolFree((PVOID)companionName);
+    }
+#endif
+*/
+
+    return status;
+}
+
+VOID
+FxPkgPnp::SaveState(
+    __in BOOLEAN UseCanSaveState
+    )
+/*++
+
+Routine Description:
+    Saves any permanent state of the device out to the registry
+
+Arguments:
+    None
+
+Return Value:
+    None
+
+  --*/
+
+{
+    UNICODE_STRING name;
+    FxAutoRegKey hKey;
+    NTSTATUS status;
+    ULONG value;
+
+    //
+    // We only have settings to save if we are the power policy owner
+    //
+    if (IsPowerPolicyOwner() == FALSE)
+    {
+        return;
+    }
+
+    if (UseCanSaveState &&
+        m_PowerPolicyMachine.m_Owner->m_CanSaveState == FALSE)
+    {
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+            "Not saving wake settings for WDFDEVICE %p due to system power "
+            "transition", m_Device->GetHandle());
+        
+        return;
+    }
+
+    //
+    // Check to see if there is anything to write out
+    //
+    if (m_PowerPolicyMachine.m_Owner->m_IdleSettings.Dirty == FALSE &&
+        m_PowerPolicyMachine.m_Owner->m_WakeSettings.Dirty == FALSE)
+    {
+        return;
+    }
+
+    //
+    // No need to write out if user control is not enabled
+    //
+    if (m_PowerPolicyMachine.m_Owner->m_IdleSettings.Overridable == FALSE &&
+        m_PowerPolicyMachine.m_Owner->m_WakeSettings.Overridable == FALSE)
+    {
+        return;
+    }
+
+    //
+    // If the device is in paging path we should not be touching registry during
+    // power up because it may incur page fault which won't be satisfied if the
+    // device is still not powered up, blocking power Irp. User control state
+    // change will not get written if any at this time but will be flushed out
+    // to registry during device disable/remove in the remove path.
+    //
+    if (IsUsageSupported(DeviceUsageTypePaging) && IsDevicePowerUpIrpPending())
+    {
+        return;
+    }
+
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+
+    status = m_Device->OpenSettingsKey(&hKey.m_Key, STANDARD_RIGHTS_WRITE);
+    if (!NT_SUCCESS(status))
+    {
+        return;
+    }
+#else
+    status = STATUS_SUCCESS;
+#endif
+
+    if (m_PowerPolicyMachine.m_Owner->m_IdleSettings.Overridable &&
+        m_PowerPolicyMachine.m_Owner->m_IdleSettings.Dirty)
+    {
+        RtlInitUnicodeString(&name, WDF_S0_IDLE_ENABLED_VALUE_NAME);
+        value = m_PowerPolicyMachine.m_Owner->m_IdleSettings.Enabled;
+
+        WriteStateToRegistry(hKey.m_Key, &name, value);
+
+        m_PowerPolicyMachine.m_Owner->m_IdleSettings.Dirty = FALSE;
+    }
+
+    if (m_PowerPolicyMachine.m_Owner->m_WakeSettings.Overridable &&
+        m_PowerPolicyMachine.m_Owner->m_WakeSettings.Dirty)
+    {
+        RtlInitUnicodeString(&name, WDF_SX_WAKE_ENABLED_VALUE_NAME);
+        value = m_PowerPolicyMachine.m_Owner->m_WakeSettings.Enabled;
+
+        WriteStateToRegistry(hKey.m_Key, &name, value);
+
+        m_PowerPolicyMachine.m_Owner->m_WakeSettings.Dirty = FALSE;
+    }
+}
+
+VOID
+FxPkgPnp::WriteStateToRegistry(
+    __in HANDLE RegKey,
+    __in PUNICODE_STRING ValueName,
+    __in ULONG Value
+    )
+{
+    ZwSetValueKey(RegKey, ValueName, 0, REG_DWORD, &Value, sizeof(Value));
+}
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+__drv_minIRQL(DISPATCH_LEVEL)
+__drv_requiresIRQL(DISPATCH_LEVEL)
+__drv_sameIRQL
+VOID
+FxWatchdog::_WatchdogDpc(
+    __in     PKDPC Dpc,
+    __in_opt PVOID Context,
+    __in_opt PVOID SystemArgument1,
+    __in_opt PVOID SystemArgument2
+    )
+/*++
+
+Routine Description:
+
+    This routine's job is to crash the machine, attempting to get some data
+    into the crashdump file (or minidump) about why the machine stopped
+    responding during an attempt to put the machine to sleep.
+
+Arguments:
+
+    This - the instance of FxPkgPnp
+
+Return Value:
+
+    this routine never returns
+
+--*/
+{
+    WDF_POWER_ROUTINE_TIMED_OUT_DATA data;
+    FxWatchdog* pThis;
+    CfxDevice* pDevice;
+
+    UNREFERENCED_PARAMETER(Dpc);
+    UNREFERENCED_PARAMETER(SystemArgument1);
+    UNREFERENCED_PARAMETER(SystemArgument2);
+
+    pThis = (FxWatchdog*) Context;
+    pDevice = pThis->m_PkgPnp->GetDevice();
+
+    DoTraceLevelMessage(pDevice->GetDriverGlobals(),
+                        TRACE_LEVEL_ERROR, TRACINGPNP,
+                        "The driver failed to return from a callback routine "
+                        "in a reasonable period of time.  This prevented the "
+                        "machine from going to sleep or from hibernating.  The "
+                        "machine crashed because that was the best way to get "
+                        "data about the cause of the crash into a minidump file.");
+
+    data.PowerState = pDevice->GetDevicePowerState();
+    data.PowerPolicyState = pDevice->GetDevicePowerPolicyState();
+    data.DeviceObject = reinterpret_cast<PDEVICE_OBJECT>(pDevice->GetDeviceObject());
+    data.Device = pDevice->GetHandle();
+    data.TimedOutThread = reinterpret_cast<PKTHREAD>(pThis->m_CallingThread);
+
+    FxVerifierBugCheck(pDevice->GetDriverGlobals(),
+                       WDF_POWER_ROUTINE_TIMED_OUT,
+                       (ULONG_PTR) &data);
+}
+
+FxPkgPnp::~FxPkgPnp()
+{
+    PSINGLE_LIST_ENTRY ple;
+
+    Mx::MxAssert(Mx::MxGetCurrentIrql() == PASSIVE_LEVEL);
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    //SleepStudyStop();
+
+    /*if (m_CompanionTarget != NULL)
+    {
+        m_CompanionTarget->RELEASE(this);
+    }*/
+#endif
+
+    //
+    // We should either have zero pending children or we never made it out of
+    // the init state during a failed WDFDEVICE create or failed EvtDriverDeviceAdd
+    //
+    Mx::MxAssert(m_PendingChildCount == 0 ||
+           m_Device->GetDevicePnpState() == WdfDevStatePnpInit);
+
+
+    ple = m_DeviceInterfaceHead.Next;
+    while (ple != NULL)
+    {
+        FxDeviceInterface* pDI;
+
+        pDI = FxDeviceInterface::_FromEntry(ple);
+
+        //
+        // Advance to the next before deleting the current
+        //
+        ple = ple->Next;
+
+        //
+        // No longer in the list
+        //
+        pDI->m_Entry.Next = NULL;
+
+        delete pDI;
+    }
+    m_DeviceInterfaceHead.Next = NULL;
+
+    if (m_DmaEnablerList != NULL)
+    {
+        delete m_DmaEnablerList;
+        m_DmaEnablerList = NULL;
+    }
+
+    if (m_RemovalDeviceList != NULL)
+    {
+        delete m_RemovalDeviceList;
+        m_RemovalDeviceList = NULL;
+    }
+
+    if (m_UsageDependentDeviceList != NULL)
+    {
+        delete m_UsageDependentDeviceList;
+        m_UsageDependentDeviceList = NULL;
+    }
+
+    if (m_PnpStateCallbacks != NULL)
+    {
+        delete m_PnpStateCallbacks;
+    }
+
+    if (m_PowerStateCallbacks != NULL)
+    {
+        delete m_PowerStateCallbacks;
+    }
+
+    if (m_PowerPolicyStateCallbacks != NULL)
+    {
+        delete m_PowerPolicyStateCallbacks;
+    }
+
+    if (m_SelfManagedIoMachine != NULL)
+    {
+        delete m_SelfManagedIoMachine;
+        m_SelfManagedIoMachine = NULL;
+    }
+
+    if (m_EnumInfo != NULL)
+    {
+        delete m_EnumInfo;
+        m_EnumInfo = NULL;
+    }
+
+    if (m_Resources != NULL)
+    {
+        m_Resources->RELEASE(this);
+        m_Resources = NULL;
+    }
+
+    if (m_ResourcesRaw != NULL)
+    {
+        m_ResourcesRaw->RELEASE(this);
+        m_ResourcesRaw = NULL;
+    }
+
+    ASSERT(IsListEmpty(&m_InterruptListHead));
+}
+
+VOID
+FxPkgPnp::_PowerThreadInterfaceDereference(
+    __inout PVOID Context
+    )
+/*++
+
+Routine Description:
+    Interface deref for the thread interface.  If this is the last reference
+    released, an event is set so that the thread which waiting for the last ref
+    to go away can unblock.
+
+Arguments:
+    Context - FxPkgPnp*
+
+Return Value:
+    None
+
+  --*/
+
+{
+    FxPkgPnp* pThis;
+
+    pThis = (FxPkgPnp*) Context;
+
+    if (InterlockedDecrement(&pThis->m_PowerThreadInterfaceReferenceCount) == 0)
+    {
+        pThis->m_PowerThreadEvent->Set();
+    }
+}
+
+VOID
+FxPkgPnp::_PowerThreadInterfaceReference(
+    __inout PVOID Context
+    )
+/*++
+
+Routine Description:
+    Increments the ref count on the thread interface.
+
+Arguments:
+    Context - FxPkgPnp*
+
+Return Value:
+    None
+
+  --*/
+{
+    LONG count;
+
+    count = InterlockedIncrement(
+        &((FxPkgPnp*) Context)->m_PowerThreadInterfaceReferenceCount
+        );
+
+#if DBG
+    ASSERT(count >= 2);
+#else
+    UNREFERENCED_PARAMETER(count);
+#endif
 }
