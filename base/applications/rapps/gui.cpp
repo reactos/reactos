@@ -1868,7 +1868,7 @@ public:
 
         if (current < 0)
             current = (_countof(Controls) - 1);
-        else if (current >= _countof(Controls))
+        else if ((UINT)current >= _countof(Controls))
             current = 0;
 
         ::SetFocus(Controls[current]);
