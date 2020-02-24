@@ -13,11 +13,11 @@
 
 #define ID_TEST 1000
 
-static WCHAR s_dir1[MAX_PATH];    // "%TEMP%\\WatchDir1"
-static WCHAR s_dir2[MAX_PATH];    // "%TEMP%\\WatchDir1\\Dir2"
-static WCHAR s_dir3[MAX_PATH];    // "%TEMP%\\WatchDir1\\Dir3"
-static WCHAR s_file1[MAX_PATH];   // "%TEMP%\\WatchDir1\\File1.txt"
-static WCHAR s_file2[MAX_PATH];   // "%TEMP%\\WatchDir1\\File2.txt"
+static WCHAR s_dir1[MAX_PATH];  // "%TEMP%\\WatchDir1"
+static WCHAR s_dir2[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir2"
+static WCHAR s_dir3[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir3"
+static WCHAR s_file1[MAX_PATH]; // "%TEMP%\\WatchDir1\\File1.txt"
+static WCHAR s_file2[MAX_PATH]; // "%TEMP%\\WatchDir1\\File2.txt"
 
 static HWND s_hwnd = NULL;
 static WCHAR s_szName[] = L"SHChangeNotify testcase";
@@ -125,8 +125,7 @@ DoAction8(void)
     ok_int(RemoveDirectoryW(s_dir1), TRUE);
 }
 
-static const TEST_ENTRY s_TestEntries[] =
-{
+static const TEST_ENTRY s_TestEntries[] = {
     {__LINE__, SHCNE_MKDIR, s_dir1, NULL, "000100000", NULL},
     {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", NULL},
     {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL},
@@ -197,8 +196,7 @@ static void
 DoTestEntry2(const TEST_ENTRY *entry)
 {
     LPCSTR pattern = DoGetPattern();
-    ok(lstrcmpA(pattern, entry->pattern) == 0,
-       "Line %d: pattern mismatch '%s'\n", entry->line, pattern);
+    ok(lstrcmpA(pattern, entry->pattern) == 0, "Line %d: pattern mismatch '%s'\n", entry->line, pattern);
 }
 
 static BOOL
@@ -210,43 +208,32 @@ DoInit(HWND hwnd)
     GetLongPathNameW(szTemp, szPath, _countof(szPath));
 
     lstrcpyW(s_dir1, szPath);
-    PathAddBackslashW(s_dir1);
-    lstrcatW(s_dir1, L"WatchDir1");
+    PathAppendW(s_dir1, L"WatchDir1");
     CreateDirectoryW(s_dir1, NULL);
-    //trace("s_dir1: %S\n", s_dir1);
 
     lstrcpyW(s_dir2, s_dir1);
-    PathAddBackslashW(s_dir2);
-    lstrcatW(s_dir2, L"Dir2");
-    //trace("s_dir2: %S\n", s_dir2);
+    PathAppendW(s_dir2, L"Dir2");
 
     lstrcpyW(s_dir3, s_dir1);
-    PathAddBackslashW(s_dir3);
-    lstrcatW(s_dir3, L"Dir3");
-    //trace("s_dir3: %S\n", s_dir3);
+    PathAppendW(s_dir3, L"Dir3");
 
     lstrcpyW(s_file1, s_dir1);
-    PathAddBackslashW(s_file1);
-    lstrcatW(s_file1, L"File1.txt");
-    //trace("s_file1: %S\n", s_file1);
+    PathAppendW(s_file1, L"File1.txt");
 
     lstrcpyW(s_file2, s_dir1);
-    PathAddBackslashW(s_file2);
-    lstrcatW(s_file2, L"File2.txt");
-    //trace("s_file2: %S\n", s_file2);
+    PathAppendW(s_file2, L"File2.txt");
 
     s_pidl = ILCreateFromPathW(s_dir1);
 
     s_entry.pidl = s_pidl;
     s_entry.fRecursive = TRUE;
     LONG fEvents = SHCNE_ALLEVENTS;
-    s_uRegID = SHChangeNotifyRegister(hwnd, SHCNRF_ShellLevel/* | SHCNRF_NewDelivery*/,
-                                      fEvents, WM_SHELL_NOTIFY, 1, &s_entry);
+    s_uRegID = SHChangeNotifyRegister(hwnd, SHCNRF_ShellLevel, fEvents, WM_SHELL_NOTIFY,
+                                      1, &s_entry);
     return s_uRegID != 0;
 }
 
-static DWORD WINAPI
-ThreadFunc(LPVOID)
+static DWORD WINAPI ThreadFunc(LPVOID)
 {
     for (size_t i = 0; i < s_nTestEntries; ++i)
     {
