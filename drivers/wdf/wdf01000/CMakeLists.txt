@@ -26,6 +26,8 @@ list(APPEND SOURCE
     support/fxtransactionedlist.cpp
     support/fxcollection.cpp
     support/fxdeviceinterface.cpp
+    support/fxspinlockapi.cpp
+    support/fxspinlock.cpp
     core/fxbugcheckcallback.cpp
     core/tracing.cpp
     core/fxdriver.cpp

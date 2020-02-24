@@ -15,16 +15,6 @@ WDFAPI
 NTSTATUS
 (*PFN_WDFUNIMPLEMENTED)();
 
-WDFAPI
-NTSTATUS
-static
-NotImplemented()
-{
-	DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, "Not implemented");
-    __debugbreak();
-	return STATUS_UNSUCCESSFUL;
-}
-
 typedef struct _WDFFUNCTIONS {
     PFN_WDFUNIMPLEMENTED   pfnWdfChildListCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfChildListGetDevice;
@@ -341,7 +331,7 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfWaitLockCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfWaitLockAcquire;
 	PFN_WDFUNIMPLEMENTED   pfnWdfWaitLockRelease;
-	PFN_WDFUNIMPLEMENTED   pfnWdfSpinLockCreate;
+	PFN_WDFSPINLOCKCREATE   pfnWdfSpinLockCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfSpinLockAcquire;
 	PFN_WDFUNIMPLEMENTED   pfnWdfSpinLockRelease;
 	PFN_WDFTIMERCREATE   pfnWdfTimerCreate;
@@ -831,7 +821,33 @@ WDFEXPORT(WdfVerifierDbgBreakPoint)(
 
 // ----- WDFVERIFIER -----//
 
+// ----- WDFSYNC ----- //
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfSpinLockCreate)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_opt_
+    PWDF_OBJECT_ATTRIBUTES SpinLockAttributes,
+    _Out_
+    WDFSPINLOCK* SpinLock
+    );
+
+// ----- WDFSYNC ----- //
+
 extern WDFVERSION WdfVersion;
+
+WDFAPI
+NTSTATUS
+static
+NotImplemented()
+{
+	DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, "Not implemented. WDFFUNCTIONS Table: 0x%x\r\n", &WdfVersion);
+    __debugbreak();
+	return STATUS_UNSUCCESSFUL;
+}
 
 static WDFVERSION WdfVersion = {
 		sizeof(WDFVERSION),
@@ -1152,7 +1168,7 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
-			NotImplemented,
+			WDFEXPORT(WdfSpinLockCreate),
 			NotImplemented,
 			NotImplemented,
 			WDFEXPORT(WdfTimerCreate),
