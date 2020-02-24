@@ -199,6 +199,32 @@ public:
         //
     }
 
+    /*++
+
+    Routine Description:
+
+    Initializes the default queue, and allows the driver to
+    pass configuration information.
+
+    The driver callbacks registered in this call are used
+    to supply the callbacks for the driver default I/O queue.
+
+Arguments:
+
+    hDevice - Pointer Device Object
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+    _Must_inspect_result_
+    NTSTATUS
+    InitializeDefaultQueue(
+        __in    CfxDevice               * Device,
+        __inout FxIoQueue               * Queue
+        );
+
 private:
 
     _Must_inspect_result_

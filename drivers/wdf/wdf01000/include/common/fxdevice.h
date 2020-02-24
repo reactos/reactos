@@ -166,6 +166,24 @@ public:
         return &m_DeviceObject;
     }
 
+    ULONG
+    __inline
+    GetDeviceObjectFlags(
+        VOID
+        )
+    {
+        return m_DeviceObject.GetFlags();
+    }
+
+    VOID
+    __inline
+    SetDeviceObjectFlags(
+        _In_ ULONG Flags
+        )
+    {
+        m_DeviceObject.SetFlags(Flags);
+    }
+
     WDFDEVICE
     __inline
     GetHandle(

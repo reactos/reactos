@@ -948,3 +948,60 @@ FxPkgIo::GetNextIoQueueLocked(
 
     return queue;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgIo::InitializeDefaultQueue(
+    __in    CfxDevice               * Device,
+    __inout FxIoQueue               * Queue
+    )
+
+/*++
+
+    Routine Description:
+
+    Make the input queue as the default queue. There can be
+    only one queue as the default queue.
+
+    The default queue is the place all requests go to
+    automatically if a specific queue was not configured
+    for them.
+
+Arguments:
+
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+{
+    PFX_DRIVER_GLOBALS FxDriverGlobals = GetDriverGlobals();
+    ULONG index;
+
+    if (m_DefaultQueue != NULL)
+    {
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                            "Default Queue Already Configured for "
+                            "FxPkgIo 0x%p, WDFDEVICE 0x%p %!STATUS!",this,
+                            Device->GetHandle(), STATUS_UNSUCCESSFUL);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    for (index=0; index <= IRP_MJ_MAXIMUM_FUNCTION; index++)
+    {
+        if (m_DispatchTable[index] == NULL)
+        {
+            m_DispatchTable[index] = Queue;
+        }
+    }
+
+    m_DefaultQueue = Queue;
+
+    //
+    // Default queue can't be deleted. So mark the object to fail WdfObjectDelete on
+    // the default queue.
+    //
+    Queue->MarkNoDeleteDDI();
+    return STATUS_SUCCESS;
+}
