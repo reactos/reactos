@@ -1387,7 +1387,6 @@ Ext2GetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
 {
     PIRP                        Irp = NULL;
     PIO_STACK_LOCATION          IrpSp;
-    PEXTENDED_IO_STACK_LOCATION EIrpSp;
 
     PDEVICE_OBJECT      DeviceObject;
 

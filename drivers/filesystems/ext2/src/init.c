@@ -111,7 +111,7 @@ Ext2RegistryQueryCallback(
     )
 {
     ULONG  i = 0;
-    BYTE   *s, *t;
+    BYTE   *t;
 
     if (NULL == ValueName || NULL == ValueData)
         return STATUS_SUCCESS;

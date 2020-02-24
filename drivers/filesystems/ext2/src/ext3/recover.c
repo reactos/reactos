@@ -106,7 +106,6 @@ Ext2RecoverJournal(
 #endif
     struct inode *          ji = NULL;
     journal_t *             journal = NULL;
-    struct ext3_super_block *esb;
 
     ExAcquireResourceExclusiveLite(&Vcb->MainResource, TRUE);
 

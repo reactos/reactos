@@ -439,8 +439,6 @@ get_block_bh_mdl(
     PVOID         bcb = NULL;
     PVOID         ptr = NULL;
 
-    struct list_head *entry;
-
     /* allocate buffer_head and initialize it */
     struct buffer_head *bh = NULL, *tbh = NULL;
 

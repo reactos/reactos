@@ -209,7 +209,6 @@ Ext2TruncateExtent(
     ULONG    Extra = 0;
     ULONG    Wanted = 0;
     ULONG    End;
-    ULONG    Removed;
     int      err;
 
     /* translate file size to block */

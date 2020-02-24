@@ -3047,7 +3047,7 @@ Ext2McbReaperThread(
     PEXT2_VCB       Vcb = NULL;
     PEXT2_MCB       Mcb  = NULL;
 
-    ULONG           i, NumOfMcbs;
+    ULONG           NumOfMcbs;
 
     BOOLEAN         GlobalAcquired = FALSE;
 

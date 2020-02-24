@@ -312,7 +312,6 @@ rendezvous_request(xprt, msg)
 	socklen_t len;
 	struct __rpc_sockinfo si;
 	SVCXPRT *newxprt;
-	fd_set cleanfds;
 
 	assert(xprt != NULL);
 	assert(msg != NULL);

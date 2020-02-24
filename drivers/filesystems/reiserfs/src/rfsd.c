@@ -2962,8 +2962,6 @@ _NavigateToLeafNode(
 	// If this block is a leaf, just return it (or invoke the given callback on the leaf block)	
 	if (pBlockHeader->blk_level == RFSD_LEAF_BLOCK_LEVEL)
 	{
-		NTSTATUS	CallbackStatus;
-
 		ExFreePool(pBlockBuffer);
 		
 		*out_NextBlockNumber = StartingBlockNumber;

@@ -139,7 +139,6 @@ Ext2Printf(
     LARGE_INTEGER       CurrentTime;
     TIME_FIELDS         TimeFields;
     CHAR                Buffer[DBG_BUF_LEN];
-    ULONG               i;
 
     RtlZeroMemory(Buffer, DBG_BUF_LEN);
     va_start(ap, DebugMessage);

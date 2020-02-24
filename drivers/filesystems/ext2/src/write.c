@@ -178,7 +178,6 @@ Ext2ZeroData (
     PEXT2_FCB       Fcb;
     PBCB            Bcb;
     PVOID           Ptr;
-    ULONG           Size;
     BOOLEAN         rc = TRUE;
 
     ASSERT (End && Start && End->QuadPart > Start->QuadPart);

@@ -1885,7 +1885,6 @@ static int ext4_remove_blocks(void *icb, handle_t *handle, struct inode *inode,
 		struct ext4_extent *ex,
 		unsigned long from, unsigned long to)
 {
-	struct buffer_head *bh;
 	int i;
 
 	if (from >= le32_to_cpu(ex->ee_block)

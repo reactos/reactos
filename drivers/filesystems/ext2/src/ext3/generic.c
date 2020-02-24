@@ -146,8 +146,6 @@ VOID
 Ext2PutGroup(IN PEXT2_VCB Vcb)
 {
     struct ext3_sb_info *sbi = &Vcb->sbi;
-    unsigned long i;
-
 
     if (NULL == Vcb->sbi.s_gd) {
         return;

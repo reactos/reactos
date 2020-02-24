@@ -392,7 +392,7 @@ int add_dirent_to_buf(struct ext2_icb *icb, struct dentry *dentry,
     int		namelen = dentry->d_name.len;
     unsigned int	offset = 0;
     unsigned short	reclen;
-    int		nlen, rlen, err;
+    int		nlen, rlen;
     char		*top;
 
     reclen = EXT3_DIR_REC_LEN(namelen);

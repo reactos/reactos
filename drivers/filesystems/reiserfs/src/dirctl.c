@@ -489,8 +489,6 @@ RfsdQueryDirectory (IN PRFSD_IRP_CONTEXT IrpContext)
 		// A callback will be triggered on any direntry span belonging to DirectoryKey.
 		// This callback will fill the requested section of the user buffer.
 		{
-			ULONG CurrentFileIndex;
-
 			RFSD_CALLBACK_CONTEXT  CallbackContext;
 			CallbackContext.Vcb						= Vcb;
 			CallbackContext.Ccb						= Ccb;

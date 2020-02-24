@@ -250,7 +250,6 @@ Ext2ReadWriteBlocks(
     PMDL                Mdl;
     PEXT2_RW_CONTEXT    pContext = NULL;
     PEXT2_EXTENT        Extent;
-    KEVENT              Wait;
     NTSTATUS            Status = STATUS_SUCCESS;
     BOOLEAN             bMasterCompleted = FALSE;
     BOOLEAN             bBugCheck = FALSE;
