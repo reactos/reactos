@@ -94,6 +94,7 @@ endif()
 
 if(MSVC AND (NOT USE_CLANG_CL))
     # Disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"
+    replace_compile_flags("/we4101" " ")
     replace_compile_flags("/we4189" " ")
     add_target_compile_flags(ext2fs "/wd4189 /wd4142 /wd4101")
 else()
