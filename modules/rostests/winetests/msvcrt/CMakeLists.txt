@@ -27,6 +27,10 @@ list(APPEND SOURCE
 
 add_executable(msvcrt_winetest ${SOURCE} testlist.c)
 
+if(USE_CLANG_CL OR (NOT MSVC))
+    add_target_compile_flags(msvcrt_winetest "-Wno-format")
+endif()
+
 set_module_type(msvcrt_winetest win32cui)
 add_importlibs(msvcrt_winetest advapi32 msvcrt kernel32)
 
