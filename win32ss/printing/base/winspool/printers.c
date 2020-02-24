@@ -270,11 +270,10 @@ DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDe
 
     if (pdmwOutput)
     {
-     RosConvertUnicodeDevModeToAnsiDevmode(pdmwOutput, pDevModeOutput);
+        RosConvertUnicodeDevModeToAnsiDevmode(pdmwOutput, pDevModeOutput);
     }
 
 Cleanup:
-
     if(pwszDeviceName)
         HeapFree(hProcessHeap, 0, pwszDeviceName);
 

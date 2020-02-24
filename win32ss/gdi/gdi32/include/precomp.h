@@ -60,7 +60,4 @@
 #include <undocgdi.h>
 #include <ntintsafe.h>
 
-// misc/misc.c
-extern DEVMODEW * WINAPI GdiConvertToDevmodeW(const DEVMODEA *dmA);
-
 #endif /* _GDI32_PCH_ */
