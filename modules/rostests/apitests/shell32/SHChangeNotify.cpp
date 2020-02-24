@@ -6,8 +6,8 @@
  */
 
 #include "shelltest.h"
-#include <stdio.h>
 #include <shlwapi.h>
+#include <stdio.h>
 
 #define WM_SHELL_NOTIFY (WM_USER + 100)
 
