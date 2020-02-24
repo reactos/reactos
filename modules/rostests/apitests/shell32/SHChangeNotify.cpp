@@ -11,26 +11,21 @@
 
 #define WM_SHELL_NOTIFY (WM_USER + 100)
 
-#define ID_STAGE1 1001
-#define ID_STAGE2 1002
-#define ID_STAGE3 1003
-#define ID_STAGE4 1004
-#define ID_STAGE5 1005
-#define ID_STAGE6 1006
-#define ID_STAGE7 1007
-#define ID_STAGE8 1008
+#define ID_TEST 1000
 
-static WCHAR s_szDir1[MAX_PATH];    // "%TEMP%\\WatchDir1"
-static WCHAR s_szDir2[MAX_PATH];    // "%TEMP%\\WatchDir1\\Dir2"
-static WCHAR s_szDir3[MAX_PATH];    // "%TEMP%\\WatchDir1\\Dir3"
-static WCHAR s_szFile1[MAX_PATH];   // "%TEMP%\\WatchDir1\\File1.txt"
-static WCHAR s_szFile2[MAX_PATH];   // "%TEMP%\\WatchDir1\\File2.txt"
+static WCHAR s_dir1[MAX_PATH];    // "%TEMP%\\WatchDir1"
+static WCHAR s_dir2[MAX_PATH];    // "%TEMP%\\WatchDir1\\Dir2"
+static WCHAR s_dir3[MAX_PATH];    // "%TEMP%\\WatchDir1\\Dir3"
+static WCHAR s_file1[MAX_PATH];   // "%TEMP%\\WatchDir1\\File1.txt"
+static WCHAR s_file2[MAX_PATH];   // "%TEMP%\\WatchDir1\\File2.txt"
 
 static HWND s_hwnd = NULL;
 static WCHAR s_szName[] = L"SHChangeNotify testcase";
 static LPITEMIDLIST s_pidl = NULL;
 static UINT s_uRegID = 0;
 static SHChangeNotifyEntry s_entry;
+
+static CHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
 
 typedef enum TYPE
 {
@@ -47,21 +42,163 @@ typedef enum TYPE
 
 static BYTE s_counters[TYPE_FREESPACE + 1];
 
-#define DoClearCounters() ZeroMemory(&s_counters, sizeof(s_counters));
-#define DoCompareCounters(pattern) \
-    memcmp(s_counters, (pattern), sizeof(s_counters)) == 0
-
 static LPCSTR
-GetCounters(void)
+DoGetPattern(void)
 {
     size_t i;
     static char buf[TYPE_FREESPACE + 1 + 1];
-    for (i = 0; i < sizeof(buf); ++i)
+    for (i = 0; i < TYPE_FREESPACE + 1; ++i)
     {
         buf[i] = (char)('0' + s_counters[i]);
     }
     buf[i] = 0;
     return buf;
+}
+
+typedef void (*ACTION)(void);
+
+typedef struct TEST_ENTRY
+{
+    INT line;
+    LONG event;
+    LPCVOID item1;
+    LPCVOID item2;
+    LPCSTR pattern;
+    ACTION action;
+} TEST_ENTRY;
+
+static BOOL
+DoCreateEmptyFile(LPCWSTR pszFileName)
+{
+    FILE *fp = _wfopen(pszFileName, L"wb");
+    fclose(fp);
+    return fp != NULL;
+}
+
+static void
+DoAction1(void)
+{
+    ok_int(CreateDirectoryW(s_dir2, NULL), TRUE);
+}
+
+static void
+DoAction2(void)
+{
+    ok_int(RemoveDirectoryW(s_dir2), TRUE);
+}
+
+static void
+DoAction3(void)
+{
+    ok_int(MoveFileExW(s_dir2, s_dir3, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING), TRUE);
+}
+
+static void
+DoAction4(void)
+{
+    ok_int(DoCreateEmptyFile(s_file1), TRUE);
+}
+
+static void
+DoAction5(void)
+{
+    ok_int(MoveFileExW(s_file1, s_file2, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING), TRUE);
+}
+
+static void
+DoAction6(void)
+{
+    ok_int(DeleteFileW(s_file2), TRUE);
+}
+
+static void
+DoAction7(void)
+{
+    DeleteFileW(s_file1);
+    DeleteFileW(s_file2);
+    ok_int(RemoveDirectoryW(s_dir3), TRUE);
+}
+
+static void
+DoAction8(void)
+{
+    ok_int(RemoveDirectoryW(s_dir1), TRUE);
+}
+
+static const TEST_ENTRY s_TestEntries[] =
+{
+    {__LINE__, SHCNE_MKDIR, s_dir1, NULL, "000100000", NULL},
+    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL},
+    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", DoAction1},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", DoAction2},
+    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", DoAction1},
+    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "000000010", NULL},
+    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, NULL, "000000010", NULL},
+    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "000000010", DoAction3},
+    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, NULL, "000000010", NULL},
+    {__LINE__, SHCNE_CREATE, s_file1, NULL, "010000000", NULL},
+    {__LINE__, SHCNE_CREATE, s_file1, s_file2, "010000000", NULL},
+    {__LINE__, SHCNE_CREATE, s_file1, NULL, "010000000", DoAction4},
+    {__LINE__, SHCNE_RENAMEITEM, s_file1, NULL, "100000000", NULL},
+    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", NULL},
+    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", DoAction5},
+    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", NULL},
+    {__LINE__, SHCNE_UPDATEITEM, s_file1, NULL, "000000100", NULL},
+    {__LINE__, SHCNE_UPDATEITEM, s_file2, NULL, "000000100", NULL},
+    {__LINE__, SHCNE_UPDATEITEM, s_file1, s_file2, "000000100", NULL},
+    {__LINE__, SHCNE_UPDATEITEM, s_file2, s_file1, "000000100", NULL},
+    {__LINE__, SHCNE_DELETE, s_file1, NULL, "001000000", NULL},
+    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", NULL},
+    {__LINE__, SHCNE_DELETE, s_file2, s_file1, "001000000", NULL},
+    {__LINE__, SHCNE_DELETE, s_file1, s_file2, "001000000", NULL},
+    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", DoAction6},
+    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", NULL},
+    {__LINE__, SHCNE_DELETE, s_file1, NULL, "001000000", NULL},
+    {__LINE__, SHCNE_UPDATEDIR, s_file1, NULL, "000001000", NULL},
+    {__LINE__, SHCNE_UPDATEDIR, s_file2, NULL, "000001000", NULL},
+    {__LINE__, SHCNE_UPDATEDIR, s_file1, s_file2, "000001000", NULL},
+    {__LINE__, SHCNE_UPDATEDIR, s_file2, s_file1, "000001000", NULL},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir1, NULL, "000001000", NULL},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir2, NULL, "000001000", NULL},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir1, s_dir2, "000001000", NULL},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir2, s_dir1, "000001000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir1, s_dir2, "000010000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir1, s_dir3, "000010000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir2, s_dir1, "000010000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir2, s_dir3, "000010000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", DoAction7},
+    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", NULL},
+    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", DoAction8},
+};
+static const size_t s_nTestEntries = _countof(s_TestEntries);
+static size_t s_iTest = 0;
+
+static void
+DoTestEntry1(const TEST_ENTRY *entry)
+{
+    if (entry->action)
+    {
+        (*entry->action)();
+    }
+
+    SHChangeNotify(entry->event, SHCNF_PATHW | SHCNF_FLUSH, entry->item1, entry->item2);
+    SendMessageW(s_hwnd, WM_COMMAND, ID_TEST + s_iTest, 0);
+
+    ZeroMemory(&s_counters, sizeof(s_counters));
+}
+
+static void
+DoTestEntry2(const TEST_ENTRY *entry)
+{
+    LPCSTR pattern = DoGetPattern();
+    ok(lstrcmpA(pattern, entry->pattern) == 0,
+       "Line %d: pattern mismatch '%s'\n", entry->line, pattern);
 }
 
 static BOOL
@@ -72,33 +209,33 @@ DoInit(HWND hwnd)
     GetTempPathW(_countof(szTemp), szTemp);
     GetLongPathNameW(szTemp, szPath, _countof(szPath));
 
-    lstrcpyW(s_szDir1, szPath);
-    PathAddBackslashW(s_szDir1);
-    lstrcatW(s_szDir1, L"WatchDir1");
-    CreateDirectoryW(s_szDir1, NULL);
-    trace("s_szDir1: %S\n", s_szDir1);
+    lstrcpyW(s_dir1, szPath);
+    PathAddBackslashW(s_dir1);
+    lstrcatW(s_dir1, L"WatchDir1");
+    CreateDirectoryW(s_dir1, NULL);
+    //trace("s_dir1: %S\n", s_dir1);
 
-    lstrcpyW(s_szDir2, s_szDir1);
-    PathAddBackslashW(s_szDir2);
-    lstrcatW(s_szDir2, L"Dir2");
-    trace("s_szDir2: %S\n", s_szDir2);
+    lstrcpyW(s_dir2, s_dir1);
+    PathAddBackslashW(s_dir2);
+    lstrcatW(s_dir2, L"Dir2");
+    //trace("s_dir2: %S\n", s_dir2);
 
-    lstrcpyW(s_szDir3, s_szDir1);
-    PathAddBackslashW(s_szDir3);
-    lstrcatW(s_szDir3, L"Dir3");
-    trace("s_szDir3: %S\n", s_szDir3);
+    lstrcpyW(s_dir3, s_dir1);
+    PathAddBackslashW(s_dir3);
+    lstrcatW(s_dir3, L"Dir3");
+    //trace("s_dir3: %S\n", s_dir3);
 
-    lstrcpyW(s_szFile1, s_szDir1);
-    PathAddBackslashW(s_szFile1);
-    lstrcatW(s_szFile1, L"File1.txt");
-    trace("s_szFile1: %S\n", s_szFile1);
+    lstrcpyW(s_file1, s_dir1);
+    PathAddBackslashW(s_file1);
+    lstrcatW(s_file1, L"File1.txt");
+    //trace("s_file1: %S\n", s_file1);
 
-    lstrcpyW(s_szFile2, s_szDir1);
-    PathAddBackslashW(s_szFile2);
-    lstrcatW(s_szFile2, L"File2.txt");
-    trace("s_szFile2: %S\n", s_szFile2);
+    lstrcpyW(s_file2, s_dir1);
+    PathAddBackslashW(s_file2);
+    lstrcatW(s_file2, L"File2.txt");
+    //trace("s_file2: %S\n", s_file2);
 
-    s_pidl = ILCreateFromPathW(s_szDir1);
+    s_pidl = ILCreateFromPathW(s_dir1);
 
     s_entry.pidl = s_pidl;
     s_entry.fRecursive = TRUE;
@@ -108,46 +245,14 @@ DoInit(HWND hwnd)
     return s_uRegID != 0;
 }
 
-static BOOL
-DoCreateEmptyFile(LPCWSTR pszFileName)
-{
-    FILE *fp = _wfopen(pszFileName, L"wb");
-    fclose(fp);
-    return fp != NULL;
-}
-
 static DWORD WINAPI
 ThreadFunc(LPVOID)
 {
-    ok_int(CreateDirectoryW(s_szDir2, NULL), TRUE);
-    SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, s_szDir2, NULL);
-    SendMessageW(s_hwnd, WM_COMMAND, ID_STAGE1, 0);
-
-    ok_int(MoveFileW(s_szDir2, s_szDir3), TRUE);
-    SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_PATHW | SHCNF_FLUSH, s_szDir2, s_szDir3);
-    SendMessageW(s_hwnd, WM_COMMAND, ID_STAGE2, 0);
-
-    ok_int(DoCreateEmptyFile(s_szFile1), TRUE);
-    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1, NULL);
-    SendMessageW(s_hwnd, WM_COMMAND, ID_STAGE3, 0);
-
-    ok_int(MoveFileExW(s_szFile1, s_szFile2, MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED), TRUE);
-    SHChangeNotify(SHCNE_RENAMEITEM, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1, s_szFile2);
-    SendMessageW(s_hwnd, WM_COMMAND, ID_STAGE4, 0);
-
-    SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1, NULL);
-    SendMessageW(s_hwnd, WM_COMMAND, ID_STAGE5, 0);
-
-    ok_int(DeleteFileW(s_szFile2), TRUE);
-    SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1, NULL);
-    SendMessageW(s_hwnd, WM_COMMAND, ID_STAGE6, 0);
-
-    SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1, NULL);
-    SendMessageW(s_hwnd, WM_COMMAND, ID_STAGE7, 0);
-
-    ok_int(RemoveDirectoryW(s_szDir3), TRUE);
-    SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH, s_szDir1, s_szDir2);
-    SendMessageW(s_hwnd, WM_COMMAND, ID_STAGE8, 0);
+    for (size_t i = 0; i < s_nTestEntries; ++i)
+    {
+        s_iTest = i;
+        DoTestEntry1(&s_TestEntries[i]);
+    }
 
     SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
     return 0;
@@ -186,41 +291,13 @@ OnCommand(HWND hwnd, UINT id)
         case IDCANCEL:
             DestroyWindow(hwnd);
             break;
-        case ID_STAGE1:
-            trace("ID_STAGE1\n");
-            ok(DoCompareCounters("\0\0\0\1\0\0\0\0\0"), "s_counters was %s\n", GetCounters());
-            break;
-        case ID_STAGE2:
-            trace("ID_STAGE2\n");
-            ok(DoCompareCounters("\0\0\0\0\0\0\0\1\0"), "s_counters was %s\n", GetCounters());
-            break;
-        case ID_STAGE3:
-            trace("ID_STAGE3\n");
-            ok(DoCompareCounters("\0\1\0\0\0\0\0\0\0"), "s_counters was %s\n", GetCounters());
-            break;
-        case ID_STAGE4:
-            trace("ID_STAGE4\n");
-            ok(DoCompareCounters("\1\0\0\0\0\0\0\0\0"), "s_counters was %s\n", GetCounters());
-            break;
-        case ID_STAGE5:
-            trace("ID_STAGE5\n");
-            ok(DoCompareCounters("\0\0\0\0\0\0\1\0\0"), "s_counters was %s\n", GetCounters());
-            break;
-        case ID_STAGE6:
-            trace("ID_STAGE6\n");
-            ok(DoCompareCounters("\0\0\1\0\0\0\0\0\0"), "s_counters was %s\n", GetCounters());
-            break;
-        case ID_STAGE7:
-            trace("ID_STAGE7\n");
-            ok(DoCompareCounters("\0\0\0\0\0\1\0\0\0"), "s_counters was %s\n", GetCounters());
-            break;
-        case ID_STAGE8:
-            trace("ID_STAGE8\n");
-            ok(DoCompareCounters("\0\0\0\0\1\0\0\0\0"), "s_counters was %s\n", GetCounters());
+        default:
+            if (ID_TEST <= id && id < ID_TEST + 1000)
+            {
+                DoTestEntry2(&s_TestEntries[s_iTest]);
+            }
             break;
     }
-
-    DoClearCounters();
 }
 
 static void
@@ -228,11 +305,11 @@ OnDestroy(HWND hwnd)
 {
     SHChangeNotifyDeregister(s_uRegID);
     CoTaskMemFree(s_pidl);
-    DeleteFileW(s_szFile1);
-    DeleteFileW(s_szFile2);
-    RemoveDirectoryW(s_szDir3);
-    RemoveDirectoryW(s_szDir2);
-    RemoveDirectoryW(s_szDir1);
+    DeleteFileW(s_file1);
+    DeleteFileW(s_file2);
+    RemoveDirectoryW(s_dir3);
+    RemoveDirectoryW(s_dir2);
+    RemoveDirectoryW(s_dir1);
     PostQuitMessage(0);
     s_hwnd = NULL;
 }
@@ -240,94 +317,92 @@ OnDestroy(HWND hwnd)
 static void
 DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
 {
-    CHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
-
     if (pidl1)
-        SHGetPathFromIDListA(pidl1, szPath1);
+        SHGetPathFromIDListA(pidl1, s_path1);
     else
-        szPath1[0] = 0;
+        s_path1[0] = 0;
 
     if (pidl2)
-        SHGetPathFromIDListA(pidl2, szPath2);
+        SHGetPathFromIDListA(pidl2, s_path2);
     else
-        szPath2[0] = 0;
+        s_path2[0] = 0;
 
     switch (lEvent)
     {
         case SHCNE_RENAMEITEM:
-            trace("SHCNE_RENAMEITEM('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_RENAMEITEM('%s', '%s')\n", s_path1, s_path2);
             s_counters[TYPE_RENAMEITEM] = 1;
             break;
         case SHCNE_CREATE:
-            trace("SHCNE_CREATE('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_CREATE('%s', '%s')\n", s_path1, s_path2);
             s_counters[TYPE_CREATE] = 1;
             break;
         case SHCNE_DELETE:
-            trace("SHCNE_DELETE('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_DELETE('%s', '%s')\n", s_path1, s_path2);
             s_counters[TYPE_DELETE] = 1;
             break;
         case SHCNE_MKDIR:
-            trace("SHCNE_MKDIR('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_MKDIR('%s', '%s')\n", s_path1, s_path2);
             s_counters[TYPE_MKDIR] = 1;
             break;
         case SHCNE_RMDIR:
-            trace("SHCNE_RMDIR('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_RMDIR('%s', '%s')\n", s_path1, s_path2);
             s_counters[TYPE_RMDIR] = 1;
             break;
         case SHCNE_MEDIAINSERTED:
-            trace("SHCNE_MEDIAINSERTED('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_MEDIAINSERTED('%s', '%s')\n", s_path1, s_path2);
             break;
         case SHCNE_MEDIAREMOVED:
-            trace("SHCNE_MEDIAREMOVED('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_MEDIAREMOVED('%s', '%s')\n", s_path1, s_path2);
             break;
         case SHCNE_DRIVEREMOVED:
-            trace("SHCNE_DRIVEREMOVED('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_DRIVEREMOVED('%s', '%s')\n", s_path1, s_path2);
             break;
         case SHCNE_DRIVEADD:
-            trace("SHCNE_DRIVEADD('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_DRIVEADD('%s', '%s')\n", s_path1, s_path2);
             break;
         case SHCNE_NETSHARE:
-            trace("SHCNE_NETSHARE('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_NETSHARE('%s', '%s')\n", s_path1, s_path2);
             break;
         case SHCNE_NETUNSHARE:
-            trace("SHCNE_NETUNSHARE('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_NETUNSHARE('%s', '%s')\n", s_path1, s_path2);
             break;
         case SHCNE_ATTRIBUTES:
-            trace("SHCNE_ATTRIBUTES('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_ATTRIBUTES('%s', '%s')\n", s_path1, s_path2);
             break;
         case SHCNE_UPDATEDIR:
-            trace("SHCNE_UPDATEDIR('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_UPDATEDIR('%s', '%s')\n", s_path1, s_path2);
             s_counters[TYPE_UPDATEDIR] = 1;
             break;
         case SHCNE_UPDATEITEM:
-            trace("SHCNE_UPDATEITEM('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_UPDATEITEM('%s', '%s')\n", s_path1, s_path2);
             s_counters[TYPE_UPDATEITEM] = 1;
             break;
         case SHCNE_SERVERDISCONNECT:
-            trace("SHCNE_SERVERDISCONNECT('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_SERVERDISCONNECT('%s', '%s')\n", s_path1, s_path2);
             break;
         case SHCNE_UPDATEIMAGE:
-            trace("SHCNE_UPDATEIMAGE('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_UPDATEIMAGE('%s', '%s')\n", s_path1, s_path2);
             break;
         case SHCNE_DRIVEADDGUI:
-            trace("SHCNE_DRIVEADDGUI('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_DRIVEADDGUI('%s', '%s')\n", s_path1, s_path2);
             break;
         case SHCNE_RENAMEFOLDER:
-            trace("SHCNE_RENAMEFOLDER('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_RENAMEFOLDER('%s', '%s')\n", s_path1, s_path2);
             s_counters[TYPE_RENAMEFOLDER] = 1;
             break;
         case SHCNE_FREESPACE:
-            trace("SHCNE_FREESPACE('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_FREESPACE('%s', '%s')\n", s_path1, s_path2);
             s_counters[TYPE_FREESPACE] = 1;
             break;
         case SHCNE_EXTENDED_EVENT:
             trace("SHCNE_EXTENDED_EVENT('%p', '%p')\n", pidl1, pidl2);
             break;
         case SHCNE_ASSOCCHANGED:
-            trace("SHCNE_ASSOCCHANGED('%s', '%s')\n", szPath1, szPath2);
+            trace("SHCNE_ASSOCCHANGED('%s', '%s')\n", s_path1, s_path2);
             break;
         default:
-            trace("(lEvent:%08lX)('%s', '%s')\n", lEvent, szPath1, szPath2);
+            trace("(lEvent:%08lX)('%s', '%s')\n", lEvent, s_path1, s_path2);
             break;
     }
 }
