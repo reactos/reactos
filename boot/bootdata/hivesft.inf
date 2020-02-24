@@ -1798,6 +1798,11 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","USERProcessHandleQu
 ; App Compat -- Enable on ReactOS
 ;HKLM,"SOFTWARE\Policies\Microsoft\Windows\AppCompat","DisableEngine",0x00010003, 0x00000001
 
+; App Compat -- for official Releases we do still disable the new heuristic introduced in master 0.4.13-dev-986-g029b8f2.
+; This will not automatically expose apisets based on apps manifests as we have too many gaps still in the apisets.
+; Adventurous users can set this to 0 to expose more Vista+ stuff, in return can OPT-OUT per app via shim "IgnoreManifestCompatVersion".
+HKLM,"SOFTWARE\Policies\Microsoft\Windows\AppCompat","DisableCompatGuidDetection",0x00010003, 0x00000001
+
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
