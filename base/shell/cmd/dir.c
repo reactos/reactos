@@ -1853,7 +1853,7 @@ CommandDir(LPTSTR rest)
     stFlags.bWideList = FALSE;
     stFlags.bWideListColSort = FALSE;
     stFlags.stTimeField.eTimeField = TF_MODIFIEDDATE;
-    stFlags.stAttribs.dwAttribMask = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
+    stFlags.stAttribs.dwAttribMask = FILE_ATTRIBUTE_HIDDEN;
     stFlags.stAttribs.dwAttribVal = 0L;
     stFlags.stOrderBy.sCriteriaCount = 0;
 
