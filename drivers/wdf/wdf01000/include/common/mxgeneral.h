@@ -451,6 +451,22 @@ public:
         return MmGetSystemAddressForMdlSafe(Mdl, (_MM_PAGE_PRIORITY)Priority);
     }
 
+    __inline
+    static
+    NTSTATUS
+    MxRegisterDeviceInterface(
+        _In_      PDEVICE_OBJECT PhysicalDeviceObject,
+        _In_      const GUID *InterfaceClassGuid,
+        _In_opt_  PUNICODE_STRING ReferenceString,
+        _Out_     PUNICODE_STRING SymbolicLinkName
+        )
+    {
+        return IoRegisterDeviceInterface(PhysicalDeviceObject, 
+                                         InterfaceClassGuid, 
+                                         ReferenceString, 
+                                         SymbolicLinkName);
+    }
+
 };
 
 #endif //_MXGENERAL_H_
