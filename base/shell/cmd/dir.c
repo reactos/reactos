@@ -1782,6 +1782,10 @@ ResolvePattern(
             pszPatternPart = NULL;
         }
     }
+    else if (_istalpha(pNextDir[0]) && pNextDir[1] == TEXT(':') && pNextDir[2] == 0)
+    {
+        /* Drive name only */
+    }
     else if (_tcscmp(pNextDir, pszPatternPart) != 0)
     {
         /*
