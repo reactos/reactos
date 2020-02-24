@@ -112,8 +112,7 @@ SetNTPServer(HWND hwnd, BOOL bBeginUpdate)
     {
         /* Inform the user that the synchronization is about to begin (depending on how reachable the NTP server is) */
         StringCchPrintfW(szFormat, _countof(szFormat), SyncStatus.szSyncWait, buffer);
-        SyncStatus.lpszSyncStatus = szFormat;
-        SetDlgItemTextW(hwnd, IDC_SUCSYNC, SyncStatus.lpszSyncStatus);
+        SetDlgItemTextW(hwnd, IDC_SUCSYNC, szFormat);
     }
 
     /* If there is new data entered then save it in the registry 
@@ -203,8 +202,7 @@ SyncNTPStatusInit(HWND hwnd)
      * displaying the last time and date of the said sync. I have no idea how does timedate.cpl remember its last
      * successful sync so for the time being, we will only load the initial remark string.
     */
-    SyncStatus.lpszSyncStatus = SyncStatus.szSyncInit;
-    SetDlgItemTextW(hwnd, IDC_SUCSYNC, SyncStatus.lpszSyncStatus);
+    SetDlgItemTextW(hwnd, IDC_SUCSYNC, SyncStatus.szSyncInit);
 }
 
 static VOID
@@ -244,16 +242,14 @@ UpdateNTPStatus(HWND hwnd, DWORD dwReason)
 
             /* Format the resource sting with the given NTP server name and the current time data */
             StringCchPrintfW(szFormat, _countof(szFormat), SyncStatus.szSyncSuc, szNtpServerName, szLocalDate, szLocalTime);
-            SyncStatus.lpszSyncStatus = szFormat;
-            SetDlgItemTextW(hwnd, IDC_SUCSYNC, SyncStatus.lpszSyncStatus);
+            SetDlgItemTextW(hwnd, IDC_SUCSYNC, szFormat);
             break;
         }
 
         /* Empty field data has been caught -- simply tell the user to write the NTP name to continue */
         case ERROR_INVALID_DATA:
         {
-            SyncStatus.lpszSyncStatus = SyncStatus.szSyncType;
-            SetDlgItemTextW(hwnd, IDC_SUCSYNC, SyncStatus.lpszSyncStatus);
+            SetDlgItemTextW(hwnd, IDC_SUCSYNC, SyncStatus.szSyncType);
             DPRINT("UpdateNTPStatus(): The user didn't submit any NTP server name!\n");
             break;
         }
@@ -262,8 +258,7 @@ UpdateNTPStatus(HWND hwnd, DWORD dwReason)
         default:
         {
             StringCchPrintfW(szFormat, _countof(szFormat), SyncStatus.szSyncErr, szNtpServerName);
-            SyncStatus.lpszSyncStatus = szFormat;
-            SetDlgItemTextW(hwnd, IDC_SUCSYNC, SyncStatus.lpszSyncStatus);
+            SetDlgItemTextW(hwnd, IDC_SUCSYNC, szFormat);
             DPRINT("UpdateNTPStatus(): Failed to synchronize the time! (Error: %lu).\n", dwReason);
             break;
         }

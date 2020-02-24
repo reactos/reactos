@@ -42,7 +42,6 @@ typedef struct
     WCHAR szSyncErr[BUFSIZE];
     WCHAR szSyncType[BUFSIZE];
     WCHAR szSyncInit[BUFSIZE];
-    LPWSTR lpszSyncStatus;
 } SYNC_STATUS, *PSYNC_STATUS;
 
 extern HINSTANCE hApplet;
