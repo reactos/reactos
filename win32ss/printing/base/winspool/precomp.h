@@ -44,4 +44,9 @@ extern HANDLE hProcessHeap;
 // utils.c
 extern BOOL UnicodeToAnsiInPlace(PWSTR pwszField);
 
+// devmode.c
+extern void RosConvertAnsiDevModeToUnicodeDevmode(PDEVMODEA pDevModeInput, PDEVMODEW pDevModeOutput);
+
+extern void RosConvertUnicodeDevModeToAnsiDevmode(PDEVMODEW pDevModeInput, PDEVMODEA pDevModeOutput);
+
 #endif

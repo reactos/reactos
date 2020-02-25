@@ -205,9 +205,85 @@ DocumentEvent( HANDLE hPrinter, HDC hdc, int iEsc, ULONG cbIn, PVOID pvIn, ULONG
 LONG WINAPI
 DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDevModeOutput, PDEVMODEA pDevModeInput, DWORD fMode)
 {
+    PWSTR pwszDeviceName = NULL;
+    PDEVMODEW pdmwInput = NULL;
+    PDEVMODEW pdmwOutput = NULL;
+    BOOL bReturnValue = -1;
+    DWORD cch;
+
     TRACE("DocumentPropertiesA(%p, %p, %s, %p, %p, %lu)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput, fMode);
-    UNIMPLEMENTED;
-    return -1;
+
+    if (pDeviceName)
+    {
+        // Convert pName to a Unicode string pwszDeviceName.
+        cch = strlen(pDeviceName);
+
+        pwszDeviceName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        if (!pwszDeviceName)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ERR("HeapAlloc failed!\n");
+            goto Cleanup;
+        }
+
+        MultiByteToWideChar(CP_ACP, 0, pDeviceName, -1, pwszDeviceName, cch + 1);
+    }
+
+    if (pDevModeInput)
+    {
+        // Create working buffer for input to DocumentPropertiesW.
+        pdmwInput = HeapAlloc(hProcessHeap, 0, sizeof(DEVMODEW));
+        if (!pdmwInput)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ERR("HeapAlloc failed!\n");
+            goto Cleanup;
+        }
+        RosConvertAnsiDevModeToUnicodeDevmode(pDevModeInput, pdmwInput);
+    }
+
+    if (pDevModeOutput)
+    {
+        // Create working buffer for output from DocumentPropertiesW.
+        pdmwOutput = HeapAlloc(hProcessHeap, 0, sizeof(DEVMODEW));
+        if (!pdmwOutput)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ERR("HeapAlloc failed!\n");
+            goto Cleanup;
+        }
+    }
+
+    bReturnValue = DocumentPropertiesW(hWnd, hPrinter, pwszDeviceName, pdmwOutput, pdmwInput, fMode);
+    TRACE("bReturnValue from DocumentPropertiesW is '%ld'.\n", bReturnValue);
+
+    if (pwszDeviceName)
+    {
+        HeapFree(hProcessHeap, 0, pwszDeviceName);
+    }
+
+    if (bReturnValue < 0)
+    {
+        TRACE("DocumentPropertiesW failed!\n");
+        goto Cleanup;
+    }
+
+    if (pdmwOutput)
+    {
+        RosConvertUnicodeDevModeToAnsiDevmode(pdmwOutput, pDevModeOutput);
+    }
+
+Cleanup:
+    if(pwszDeviceName)
+        HeapFree(hProcessHeap, 0, pwszDeviceName);
+
+    if (pdmwInput)
+        HeapFree(hProcessHeap, 0, pdmwInput);
+
+    if (pdmwOutput)
+        HeapFree(hProcessHeap, 0, pdmwOutput);
+
+    return bReturnValue;
 }
 
 static PRINTER_INFO_9W * get_devmodeW(HANDLE hprn)
