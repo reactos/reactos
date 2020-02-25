@@ -195,7 +195,7 @@ PUSHD [mappe | ..]\n\n\
 Skriv ECHO uten parameter for å vise gjeldende ECHO innstillinger."
     STRING_ECHO_HELP5 "ECHO er %s\n"
     STRING_EXIT_HELP "Avslutt kommando linje interpreter.\n\nAVSLUTT [/b] [ExitCode]\n\n\
-  /B            Avslutt bare en batch fil.  \n\
+  /B            Avslutt bare en batch fil.\n\
                 Hvis det kjøres en batch fil på utsiden vil den avslutte cmd.exe\n\
   ExitCode      Denne verdien vil bli utpekt til ERRORLEVEL ved avslutting\n"
     STRING_FOR_HELP1 "Kjør en spesifisert kommando for hver fil i en gruppe med filer.\n\n\

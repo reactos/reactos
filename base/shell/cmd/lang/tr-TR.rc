@@ -201,7 +201,7 @@ PUSHD [yol | ..]\n\n\
 Şimdiki ECHO ayârını görüntülemek için bir değişken olmadan ECHO yazınız."
     STRING_ECHO_HELP5 "ECHO %s\n"
     STRING_EXIT_HELP "Komut yatacı yorumcusundan çıkar.\n\nEXIT [/b] [çıkış kodu]\n\n\
-  /B            Yalnızca bir toplu iş kütüğünden çıkar.  \n\
+  /B            Yalnızca bir toplu iş kütüğünden çıkar.\n\
                 Bir toplu iş kütüğünün dışında çalışırsa cmd.exe'den çıkacaktır.\n\
   çıkış kodu    Bu değer çıkışta ERRORLEVEL'e atanacaktır.\n"
     STRING_FOR_HELP1 "Bir takım kütükte tüm kütükler için belirtilen bir komut çalıştırır.\n\n\

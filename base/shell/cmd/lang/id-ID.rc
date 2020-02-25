@@ -197,7 +197,7 @@ PUSHD [path | ..]\n\n\
 Ketik ECHO tanpa parameter untuk menampilkan setelan ECHO saat ini."
     STRING_ECHO_HELP5 "ECHO adalah %s\n"
     STRING_EXIT_HELP "Keluar dari interpreter baris perintah.\n\nEXIT [/b] [ExitCode]\n\n\
-  /B            Keluar dari hanya file batch.  \n\
+  /B            Keluar dari hanya file batch.\n\
                 Jika dijalankan di luar file batch ia akan keluar dari cmd.exe\n\
   ExitCode      Nilai ini akan ditempatkan ke ERRORLEVEL saat keluar\n"
     STRING_FOR_HELP1 "Menjalankan perintah yang ditetapkan untuk setiap file dalam set file.\n\n\

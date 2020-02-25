@@ -218,7 +218,7 @@ comenzilor în ecou.\n\n\
 Tastați ECHO fără argumente pentru afișarea stării curente a ecoului.\n"
     STRING_ECHO_HELP5 "ECHO: %s\n"
     STRING_EXIT_HELP "Închide interpretorul de comenzi.\n\nEXIT [/b] [cod_de_ieșire]\n\n\
-  /B              Doar pentru ieșirea dintr-un fișier de comenzi.  \n\
+  /B              Doar pentru ieșirea dintr-un fișier de comenzi.\n\
                   Dacă este executat în afara unui fișier de comenzi, va\n\
                   cauza ieșirea din cmd.exe\n\
   cod_de_ieșire   Valoare atribuită variabilei ERRORLEVEL la ieșirea din\n\

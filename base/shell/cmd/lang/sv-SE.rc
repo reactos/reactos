@@ -195,7 +195,7 @@ PUSHD [mapp | ..]\n\n\
 Skriv ECHO utan parametar för att visa aktuell ECHO inställning."
     STRING_ECHO_HELP5 "ECHO är %s\n"
     STRING_EXIT_HELP "Avsluta kommandotolken (cmd.exe).\n\nEXIT [/b] [ExitCode]\n\n\
-  /B            Avslutt bara en batchfil.  \n\
+  /B            Avslutt bara en batchfil.\n\
                 Om det körs utan en batch filkommer det avslutta cmd.exe\n\
   ExitCode      Detta värdet kommer att skickas till ERRORLEVEL vid avslutning\n"
     STRING_FOR_HELP1 "Kör ett angivet kommando för varje fil i en grupp med filer.\n\n\
