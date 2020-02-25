@@ -1782,9 +1782,9 @@ ResolvePattern(
             pszPatternPart = NULL;
         }
     }
-    else if (_istalpha(pNextDir[0]) && pNextDir[1] == TEXT(':') && pNextDir[2] == 0)
+    else if (_istalpha(pNextDir[0]) && pNextDir[1] == TEXT(':') && pNextDir[2] == TEXT('\0'))
     {
-        /* Drive name only */
+        /* Drive name only. Nothing to do. */
     }
     else if (_tcscmp(pNextDir, pszPatternPart) != 0)
     {
