@@ -1013,7 +1013,11 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_CurrVer,
         ProgramFilesDirW,
         MAKEINTRESOURCEW(IDS_PROGRAM_FILES),
+#ifdef __REACTOS__
+        0
+#else
         -IDI_SHELL_PROGRAMS_FOLDER
+#endif
     },
     { /* 0x27 - CSIDL_MYPICTURES */
         &FOLDERID_Pictures,
