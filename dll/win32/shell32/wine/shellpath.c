@@ -734,7 +734,11 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_User,
         DesktopW,
         MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
+#ifdef __REACTOS__
+        0
+#else
         -IDI_SHELL_DESKTOP
+#endif
     },
     { /* 0x01 - CSIDL_INTERNET */
         &FOLDERID_InternetFolder,
@@ -747,7 +751,11 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_User,
         ProgramsW,
         MAKEINTRESOURCEW(IDS_PROGRAMS),
+#ifdef __REACTOS__
+        0
+#else
         -IDI_SHELL_PROGRAMS_FOLDER
+#endif
     },
     { /* 0x03 - CSIDL_CONTROLS (.CPL files) */
         &FOLDERID_ControlPanelFolder,
@@ -849,7 +857,11 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_User,
         DesktopW,
         MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
+#ifdef __REACTOS__
+        0
+#else
         -IDI_SHELL_DESKTOP
+#endif
     },
     { /* 0x11 - CSIDL_DRIVES */
         &FOLDERID_ComputerFolder,
@@ -897,7 +909,11 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_AllUsers,
         Common_ProgramsW,
         MAKEINTRESOURCEW(IDS_PROGRAMS),
+#ifdef __REACTOS__
+        0
+#else
         -IDI_SHELL_PROGRAMS_FOLDER
+#endif
     },
     { /* 0x18 - CSIDL_COMMON_STARTUP */
         &FOLDERID_CommonStartup,
@@ -910,7 +926,11 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_AllUsers,
         Common_DesktopW,
         MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
+#ifdef __REACTOS__
+        0
+#else
         -IDI_SHELL_DESKTOP
+#endif
     },
     { /* 0x1a - CSIDL_APPDATA */
         &FOLDERID_RoamingAppData,
@@ -993,7 +1013,11 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_CurrVer,
         ProgramFilesDirW,
         MAKEINTRESOURCEW(IDS_PROGRAM_FILES),
+#ifdef __REACTOS__
+        0
+#else
         -IDI_SHELL_PROGRAMS_FOLDER
+#endif
     },
     { /* 0x27 - CSIDL_MYPICTURES */
         &FOLDERID_Pictures,
@@ -2393,9 +2417,9 @@ end:
         WCHAR szIconLocation[MAX_PATH];
         DWORD dwAttributes;
 
-        /* make the directory a system folder */
+        /* make the directory a read-only folder */
         dwAttributes = GetFileAttributesW(szBuildPath);
-        dwAttributes |= FILE_ATTRIBUTE_SYSTEM;
+        dwAttributes |= FILE_ATTRIBUTE_READONLY;
         SetFileAttributesW(szBuildPath, dwAttributes);
 
         /* build the desktop.ini file path */
