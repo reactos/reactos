@@ -2117,7 +2117,9 @@ insert_file_entry(this_dir, whole_path, short_name, statp, have_rsrc)
 	    strcmp(s_entry->name, "..") != 0) {
 
 		char	buffer[SECTOR_SIZE];
+#if !defined(__REACTOS__) || defined(S_IFLNK)
 		int	nchar;
+#endif
 
 		switch (lstatbuf.st_mode & S_IFMT) {
 		case S_IFDIR:

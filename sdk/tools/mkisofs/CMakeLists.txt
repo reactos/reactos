@@ -96,9 +96,6 @@ if(MSVC)
     # Disable warning "'<': signed/unsigned mismatch"
     add_target_compile_flags(mkisofs "/wd4018")
 
-    # Disable warning "'nchar': unreferenced local variable"
-    add_target_compile_flags(mkisofs "/wd4101")
-
     # Disable warning "'+=': conversion from 'x' to 'y', possible loss of data"
     add_target_compile_flags(libschily "/wd4244")
     add_target_compile_flags(mkisofs "/wd4244")
