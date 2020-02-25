@@ -136,7 +136,7 @@ CAPTION "Innstillinger for filtertaster"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Hurtigtast", -1, 6, 11, 234, 62
-    LTEXT "Hurtigtast for filtertaster er:  \nHold nede høyre Skift-tast i 8 sekunder.",
+    LTEXT "Hurtigtast for filtertaster er:\nHold nede høyre Skift-tast i 8 sekunder.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Bruk hurtigtast", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Filteralternativer", -1, 6, 79, 234, 79
@@ -176,7 +176,7 @@ CAPTION "Innstillinger for høykontrast"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Hurtigtast", -1, 6, 11, 234, 62
-    LTEXT "Hurtigtasten for høykontrast er:  \nTrykk <venstre Alt+venstre Skift+PrintScreen>.",
+    LTEXT "Hurtigtasten for høykontrast er:\nTrykk <venstre Alt+venstre Skift+PrintScreen>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Bruk hurtigtast", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Utseendeoppsett med høykontrast", -1, 6, 83, 234, 44
@@ -193,7 +193,7 @@ CAPTION "Innstillinger for musetaster"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Hurtigtast", -1, 6, 11, 234, 62
-    LTEXT "Hurtigtasten for musetaster er:  \nTrykk på <Venstre Alt+venstre Shift+Num Lock>.",
+    LTEXT "Hurtigtasten for musetaster er:\nTrykk på <Venstre Alt+venstre Shift+Num Lock>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Bruk hurtigtast", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
