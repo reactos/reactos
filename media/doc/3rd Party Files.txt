@@ -1,3 +1,4 @@
+Files synced with various file system upstreams can be found in /media/doc/README.FSD
 Files synced with Wine can be found in /media/doc/README.WINE
 
 Other things synced with other projects:
@@ -93,3 +94,7 @@ Website: http://libpng.sourceforge.net/
 Title: ACPICA
 Used Version: 20200110
 Website: https://acpica.org/
+
+Title: Schily Tools, mkisofs
+Used Version: schily-2017-09-07
+Website: https://sourceforge.net/projects/schilytools/
