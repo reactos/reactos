@@ -102,6 +102,7 @@ add_library(libtirpc MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/libtirpc.def)
 
 if(MSVC AND (NOT USE_CLANG_CL))
+    # Disable warnings: "unreferenced local variable", "incompatible types - from '<x> *' to '<y> *'", "'function' : not enough arguments passed for format string placeholders" and "'_snprintf' : format string '%ld' requires an argument of type 'long'".
     replace_compile_flags("/we4101" " ")
     add_target_compile_flags(libtirpc "/wd4101 /wd4133 /wd4473 /wd4477")
 else()

@@ -1109,7 +1109,11 @@ static void test_NtMapViewOfSection(void)
     char buffer[sizeof(data)];
     HANDLE file, mapping;
     void *ptr, *ptr2;
+#ifndef __REACTOS__
     BOOL is_wow64, ret;
+#else
+    BOOL ret;
+#endif
     DWORD status, written;
     SIZE_T size, result;
     LARGE_INTEGER offset;
@@ -1234,8 +1238,16 @@ static void test_NtMapViewOfSection(void)
     status = pNtMapViewOfSection( mapping, hProcess, &ptr2, 16, 0, &offset, &size, 1, 0, PAGE_READWRITE );
     ok( status == STATUS_INVALID_PARAMETER_4, "NtMapViewOfSection returned %x\n", status );
 
+#ifndef __REACTOS__
     if (sizeof(void *) == sizeof(int) && (!pIsWow64Process ||
         !pIsWow64Process( GetCurrentProcess(), &is_wow64 ) || !is_wow64))
+#else
+    if (sizeof(void *) == sizeof(int))
+    {
+        BOOL is_wow64;
+
+    if (!pIsWow64Process || !pIsWow64Process( GetCurrentProcess(), &is_wow64 ) || !is_wow64)
+#endif
     {
         /* new memory region conflicts with previous mapping */
         ptr2 = ptr;
@@ -1297,6 +1309,10 @@ static void test_NtMapViewOfSection(void)
         todo_wine
         ok( status == STATUS_INVALID_PARAMETER_9, "NtMapViewOfSection returned %x\n", status );
     }
+
+#ifdef __REACTOS__
+    } // if (sizeof(void *) == sizeof(int))
+#endif
 
     status = pNtUnmapViewOfSection( hProcess, ptr );
     ok( !status, "NtUnmapViewOfSection failed status %x\n", status );
