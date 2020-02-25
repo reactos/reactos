@@ -2393,9 +2393,9 @@ end:
         WCHAR szIconLocation[MAX_PATH];
         DWORD dwAttributes;
 
-        /* make the directory a system folder */
+        /* make the directory a read-only folder */
         dwAttributes = GetFileAttributesW(szBuildPath);
-        dwAttributes |= FILE_ATTRIBUTE_SYSTEM;
+        dwAttributes |= FILE_ATTRIBUTE_READONLY;
         SetFileAttributesW(szBuildPath, dwAttributes);
 
         /* build the desktop.ini file path */
