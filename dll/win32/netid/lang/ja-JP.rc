@@ -6,7 +6,7 @@ CAPTION "コンピュータ名"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "ReactOSは次の情報を使ってネットワーク上でこのコンピュータを\n識別します。", IDC_STATIC, 40, 5, 224, 20
+    LTEXT "ReactOS は次の情報を使ってネットワーク上でこのコンピュータを\n識別します。", IDC_STATIC, 40, 5, 224, 20
     LTEXT "コンピュータの説明:", IDC_STATIC, 6, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "フル コンピュータ名:", IDC_STATIC, 6, 68, 85, 9

@@ -19,7 +19,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "<A HREF=""http://www.reactos.org"">ReactOS ホームページ</A>へ行く", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 150, 10
+    CONTROL "<A HREF=""http://www.reactos.org/"">ReactOS ホームページ</A>へ行く", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 150, 10
     PUSHBUTTON "ライセンスを表示(&L)...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -67,7 +67,6 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "システムの設定"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
-
     GROUPBOX "バージョン情報", IDC_STATIC, 6, 3, 210, 73
     LTEXT "ReactOS はサーバ OS としてビルドされているため、サーバとしてふるまいます。これを変更するにはこのボックスにチェックしてください。ただしアプリケーションに対してのみ有効です。", IDC_STATIC, 15, 15, 198, 41
     CONTROL "ワークステーションとしてふるまう", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
@@ -172,8 +171,8 @@ CAPTION "Change Profile Type"
 FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
-    AUTORADIOBUTTON "移動プロファイル", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 165, 10
-    AUTORADIOBUTTON "ローカルプロファイル", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 175, 10
+    AUTORADIOBUTTON "ローミング プロファイル(&R)", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 165, 10
+    AUTORADIOBUTTON "ローカル プロファイル(&L)", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 175, 10
     DEFPUSHBUTTON "OK", IDOK, 60, 82, 60, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 122, 82, 60, 14
 END
