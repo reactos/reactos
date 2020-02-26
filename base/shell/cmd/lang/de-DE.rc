@@ -84,7 +84,7 @@ Beispiel: ""COLOR fc"" legt Rot als Text- und Weiß als Hintergrund-\n\
 farbe fest"
     STRING_COPY_HELP1 " %s überschreiben (Ja/Nein/Alle)? "
     STRING_COPY_HELP2 "Kopiert eine oder mehrere Dateien an eine andere Position.\n\n\
-COPY [/V][/Y|/-Y][/A|/B] \n\
+COPY [/V][/Y|/-Y][/A|/B]\n\
      [+ Quelle [/A|/B] [+ ...]] [Ziel [/A|/B]]\n\n\
   Quelle       Bezeichnet die zu kopierende(n) Datei(en).\n\
   /A           Weist auf eine ASCII-Textdatei hin.\n\

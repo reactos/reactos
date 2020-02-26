@@ -3,7 +3,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Utilisation : %s [lecteur:] [-F] [-V] [-R] [-C] \n\n\
+Utilisation : %s [lecteur:] [-F] [-V] [-R] [-C]\n\n\
 [lecteur:]    Spécifie le lecteur à vérifier.\n\
 -F            Corrige les erreurs sur le disque.\n\
 -V            Affiche le chemin complet de chaque fichier sur le disque.\n\

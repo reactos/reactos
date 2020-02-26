@@ -47,9 +47,9 @@ BEGIN
   Puedes utilizar '/nh' para ocultar los encabezados.\n\
 \n\
 SINTAXIS:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <Formato>] [/nh] \n\
-  whoami /all [/fo <Formato>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Formato>] [/nh]\n\
+  whoami /all [/fo <Formato>] [/nh]\n\
 \n\
 EJEMPLOS:\n\
   whoami /groups /priv /nh /fo csv \n\
