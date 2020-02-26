@@ -1762,10 +1762,9 @@ ResolvePattern(
         pNextDir = pszPattern;
     }
 
-    if (_istalpha(pNextDir[0]) && pNextDir[1] == _T(':') && pNextDir[2] == _T('\0'))
+    if (_istalpha(pNextDir[0]) && pNextDir[1] == _T(':') && pNextDir[2] != _T('\\'))
     {
         /*
-         * Drive name only. Nothing to do.
          * The syntax "<drive_letter>:" without any trailing backslash actually
          * means: "current directory on this drive".
          */
