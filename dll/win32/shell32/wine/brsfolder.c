@@ -642,7 +642,16 @@ static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydo
         break;
     case VK_DELETE:
         {
-#ifndef __REACTOS__
+#ifdef __REACTOS__
+            /*********************************************************
+            FIXME: Add a proper alternative implementation for ReactOS
+
+            NOTES: Wine makes use of the ISFHelper interface, which we
+            don't have in ReactOS.
+            It's defined in dlls/shell32/shellfolder.h and implemented
+            in dlls/shell32/shfldr_fs.c on Wine's side.
+            *********************************************************/
+#else
             const ITEMIDLIST *item_id;
             ISFHelper *psfhlp;
             HRESULT hr;
