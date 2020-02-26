@@ -1762,16 +1762,24 @@ ResolvePattern(
         pNextDir = pszPattern;
     }
 
-    /*
-     * When pszPatternPart == NULL this means that pszFullPath should be a
-     * directory; however it might have happened that the original pattern
-     * was specifying a dots-only directory, that has been stripped off by
-     * GetFullPathName(). In both these cases we need to restore these as
-     * they are part of the actual directory path; the exception being if
-     * these are the special "." or ".." directories.
-     */
-    if (pszPatternPart == NULL)
+    if (_istalpha(pNextDir[0]) && pNextDir[1] == _T(':') && pNextDir[2] == _T('\0'))
     {
+        /*
+         * Drive name only. Nothing to do.
+         * The syntax "<drive_letter>:" without any trailing backslash actually
+         * means: "current directory on this drive".
+         */
+    }
+    else if (pszPatternPart == NULL)
+    {
+        /*
+         * When pszPatternPart == NULL this means that pszFullPath should be a
+         * directory; however it might have happened that the original pattern
+         * was specifying a dots-only directory, that has been stripped off by
+         * GetFullPathName(). In both these cases we need to restore these as
+         * they are part of the actual directory path; the exception being if
+         * these are the special "." or ".." directories.
+         */
         ASSERT(pszFullPath[_tcslen(pszFullPath)-1] == _T('\\'));
 
         /* Anything NOT being "." or ".." (the special directories) must be fully restored */
@@ -1781,10 +1789,6 @@ ResolvePattern(
             _tcscpy(pszPatternPart, pNextDir);
             pszPatternPart = NULL;
         }
-    }
-    else if (_istalpha(pNextDir[0]) && pNextDir[1] == TEXT(':') && pNextDir[2] == TEXT('\0'))
-    {
-        /* Drive name only. Nothing to do. */
     }
     else if (_tcscmp(pNextDir, pszPatternPart) != 0)
     {
