@@ -177,7 +177,7 @@ ajustes previos anteponiendo a cualquier modificador - (hyphen)--por ejemplo, /-
     STRING_DIR_HELP6 "%16i Directorio(s)% 15s bytes libres\n"
     STRING_DIR_HELP7 "\n Directorio %s\n\n"
     STRING_DIR_HELP8 "%16i archivo(s)% 14s bytes\n"
-    STRING_DIRSTACK_HELP1 "Almacena el directorio actual para usarlo por el comando, \n\
+    STRING_DIRSTACK_HELP1 "Almacena el directorio actual para usarlo por el comando,\n\
 entonces cambia al directorio especificado.\n\n\
 PUSHD [ruta | ..]\n\n\
   ruta        Especifica el directorio para hacerlo el directorio actual\n"

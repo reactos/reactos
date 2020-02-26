@@ -23,7 +23,7 @@ time               Określa godzinę wykonania polecenia.\n\
                    miesiąca. Jeśli data jest pominięta, przyjmowany jest\n\
                    bieżący dzień miesiąca.\n\
 /NEXT:date[,...]   Uruchamia określone polecenie przy następnym wystąpieniu\n\
-                   dnia (np. w następny czwartek). Jeśli data jest pominięta, \n\
+                   dnia (np. w następny czwartek). Jeśli data jest pominięta,\n\
                    przyjmowany jest bieżący dzień miesiąca.\n\
 ""command""          Polecenie lub program wsadowy do uruchomienia.\n"
 

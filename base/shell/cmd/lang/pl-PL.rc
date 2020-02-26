@@ -416,7 +416,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
               n możliwości:\n\
                     0    millisekundy\n\
                     1    hh%cmm%css%cdd\n\n\
-jeśli nie podano w składni parametrów: ON, OFF or /S, \n\
+jeśli nie podano w składni parametrów: ON, OFF or /S,\n\
 komenda zmieni obecny stan stopera\n\n"
     STRING_TYPE_HELP1 "Wyświetla zawartość plików tekstowych.\n\nTYPE [napęd:][ścieżka]nazwa_pliku \n\
   /P          Pauzuje po każdym pełnym ekranie.\n"
