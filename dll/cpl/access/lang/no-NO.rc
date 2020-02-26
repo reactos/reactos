@@ -163,7 +163,7 @@ CAPTION "Innstillinger for veksletaster"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Hurtigtast", -1, 6, 11, 234, 62
-    LTEXT "Hurtigtasten for veksletaster er: \nHold nede Num Lock-tasten i 5 sekunder.",
+    LTEXT "Hurtigtasten for veksletaster er:\nHold nede Num Lock-tasten i 5 sekunder.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Bruk &hurtigtast", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14

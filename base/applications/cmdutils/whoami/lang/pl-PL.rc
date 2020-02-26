@@ -49,7 +49,7 @@ SKŁADNIA:\n\
   whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
   whoami /all [/fo <Format>] [/nh] \n\
 \n\
-PRZYKŁADY: \n\
+PRZYKŁADY:\n\
   whoami /groups /priv /nh /fo csv \n\
   whoami /logonid \n\
   whoami \n"

@@ -163,7 +163,7 @@ CAPTION "Impostazione dei tasti a commutazione"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Scorciatoia da tastiera", -1, 6, 11, 234, 62
-    LTEXT "La scorciatoia per i tasti a commutazione è: \nTenere premuto <Bloc Num> per cinque secondi.",
+    LTEXT "La scorciatoia per i tasti a commutazione è:\nTenere premuto <Bloc Num> per cinque secondi.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Usare la scorciatoia", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14

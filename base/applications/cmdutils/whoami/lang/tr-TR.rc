@@ -51,7 +51,7 @@ YAZIM:\n\
   whoami {[/user] [/groups] [/priv]} [/fo <Biçim>] [/nh] \n\
   whoami /all [/fo <Biçim>] [/nh] \n\
 \n\
-ÖRNEKLER: \n\
+ÖRNEKLER:\n\
   whoami /groups /priv /nh /fo csv \n\
   whoami /logonid \n\
   whoami \n"

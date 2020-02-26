@@ -165,7 +165,7 @@ CAPTION "Toggle Keys Settings"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for ToggleKeys is: \nHold down <Num Lock> for five seconds.",
+    LTEXT "The shortcut for ToggleKeys is:\nHold down <Num Lock> for five seconds.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Use &shortcut", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "אישור", IDOK, 135, 207, 50, 14
