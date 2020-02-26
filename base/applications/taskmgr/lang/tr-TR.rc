@@ -434,7 +434,7 @@ BEGIN
     IDS_MSG_UNABLETERMINATEPRO "İşlem Sonlandırmanın Yapılamaması"
     IDS_MSG_CLOSESYSTEMPROCESS "Bu bir çok önemli sistem işlemidir. Görev Yöneticisi bu işlemi sonlandırmayacak."
     IDS_MSG_UNABLECHANGEPRIORITY "Önceliğin Değiştirilememesi"
-    IDS_MSG_WARNINGCHANGEPRIORITY "UYARI: Bu işlemin öncelik sınıfının değiştirilmesi, sistem\nkararsızlığını içeren istenmeyen sonuçlara neden olabilir. Öncelik \nsınıfını değiştirmek istediğinizden emin misiniz?"
+    IDS_MSG_WARNINGCHANGEPRIORITY "UYARI: Bu işlemin öncelik sınıfının değiştirilmesi, sistem\nkararsızlığını içeren istenmeyen sonuçlara neden olabilir. Öncelik\nsınıfını değiştirmek istediğinizden emin misiniz?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU Kullanımı: %%%d"
     IDS_STATUS_MEMUSAGE "İşleme Yükü: %s / %s (%%%d)"
     IDS_STATUS_CPUUSAGE "CPU Kullanımı: %%%3d"

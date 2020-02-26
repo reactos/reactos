@@ -142,7 +142,7 @@ CAPTION "Fecha"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Calendario ", -1, 7, 7, 230, 74
-    LTEXT "Cuando se escriba un año con dos dígitos, interpretalo como un \naño entre:", -1, 13, 18, 215, 17
+    LTEXT "Cuando se escriba un año con dos dígitos, interpretalo como un\naño entre:", -1, 13, 18, 215, 17
     EDITTEXT IDC_FIRSTYEAR_EDIT, 53, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "y", -1, 95, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 107, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP

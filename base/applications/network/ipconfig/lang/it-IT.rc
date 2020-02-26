@@ -50,7 +50,7 @@ BEGIN
     E' predefinita la visualizzazione dei soli indirizzo IP, subnet mask e\n \
     gateway predefinito di ogni adattatore con TCP/IP.\n \
 \n \
-    Per Release e Renew, se non è indicato un adattatore, tutti gli indirizzi IP \n \
+    Per Release e Renew, se non è indicato un adattatore, tutti gli indirizzi IP\n \
     di tutti gli adattatori con TCP/IP saranno liberati o rinnovati.\n \
 \n \
     Per Setclassid se non è indicato un ID di classe verrà rimosso l'ID classe.\n \

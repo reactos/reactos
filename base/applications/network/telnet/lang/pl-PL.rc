@@ -2,7 +2,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    MSG_COPYRIGHT "Telnet Win32 v2.1b2, Copyright (C) 2000 Paul Brannan <pbranna@clemson.edu>\nand the team.  Ten program został dostarczony BEZ JAKIEJKOLWIEK GWARANCJI; aby \nuzyskać więcej informacji, przeczytaj LICENSE.TXT.  "
+    MSG_COPYRIGHT "Telnet Win32 v2.1b2, Copyright (C) 2000 Paul Brannan <pbranna@clemson.edu>\nand the team.  Ten program został dostarczony BEZ JAKIEJKOLWIEK GWARANCJI; aby\nuzyskać więcej informacji, przeczytaj LICENSE.TXT.  "
     MSG_COPYRIGHT_1 "To jest wolne oprogramowanie,\nmożesz je rozpowszechniać pod pewnymi warunkami.\n\n"
     MSG_USAGE "Użycie: TELNET [parametry][host [port]]\n\n  parametry\n    -d:FILENAME.EXT  Zrzuca wszystkie dane przychodzące do FILENAME.EXT.\n  host              Nazwa hosta lub adres IP zdalnego hosta, z którym chcesz się połączyć.\n"
     MSG_USAGE_1 "  port              Port usługi do otwarcia (domyślnie jest port telnet 23).\n\n"

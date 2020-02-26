@@ -8,7 +8,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Zobrazuje údaje, stránku za stránkou, na obrazovke.\n\n\
   MORE < [Jednotka:][Cesta]Názov súboru\n\
-  Príkaz | MORE \n\
+  Príkaz | MORE\n\
   MORE [Jednotka:][Cesta]Názov súboru\n\n\
   [Jednotka:][Cesta]Názov súboru    Súbor, ktorého obsah má byť zobrazený.\n\
   Príkaz\t\t     Príkaz, ktorého výstup má byť zobrazený.\n\n\

@@ -5,7 +5,7 @@ BEGIN
     IDS_USAGE "\nEinen WLAN Adapter konfigurieren.\n\n\
 WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
 \t-c SSID\t\teine Verbindung mit der angegebenen\n\
-\t\t\tSSID herstellen \n\
+\t\t\tSSID herstellen\n\
 \t-w WEP\t\tden zu benutzenden WEP-Schlüssel angeben\n\
 \t-a\t\tals ad-hoc-Netzwerk konfigurieren\n\
 \t-d\t\tvom aktuellen Access Point trennen\n\

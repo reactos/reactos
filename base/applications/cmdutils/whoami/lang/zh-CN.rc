@@ -52,7 +52,7 @@ BEGIN
   whoami /all [/fo <格式>] [/nh]\n\
 \n\
 例子:\n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

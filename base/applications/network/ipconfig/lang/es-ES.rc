@@ -43,7 +43,7 @@ BEGIN
            /release     Libera la dirección IP para el adaptador especificado.\n \
            /renew       Renueva la dirección IP para el adaptador especificado.\n \
            /flushdns    Purga la caché de resolución DNS.\n \
-           /registerdns Actualiza todas las concesiones DHCP y registran \n \
+           /registerdns Actualiza todas las concesiones DHCP y registran\n \
 		                de nuevo los nombres DNS.\n \
            /displaydns  Muestra el contenido de la caché de resolución DNS.\n \
            /showclassid Muestra todos los id. de clase DHCP permitidos al adaptador.\n \

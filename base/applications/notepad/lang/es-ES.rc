@@ -155,7 +155,7 @@ un nuevo archivo?"
     STRING_NOTFOUND "No se encontró '%s'."
     STRING_OUT_OF_MEMORY "No hay suficiente memoria para terminar esta \
 tarea.\nCierre una o más aplicaciones para \
-aumentar la cantidad \nde memoria libre."
+aumentar la cantidad\nde memoria libre."
     STRING_CANNOTFIND "No se encontró '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

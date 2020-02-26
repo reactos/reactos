@@ -430,7 +430,7 @@ VER [/C][/R][/W]\n\n\
  vertreiben; tippen Sie `ver /R' für nähere Informationen darüber.\n\
  Tippen Sie `ver /C' um die Mitwirkenden (Credits) aufzulisten."
     STRING_VERSION_HELP3 "\n Dieses Programm wir in der Hoffnung, dass es nützlich ist,\n\
- jedoch OHNE JEGLICHE GARANTIE, auch die der implizierten Garantie der \n\
+ jedoch OHNE JEGLICHE GARANTIE, auch die der implizierten Garantie der\n\
  MARKTFÄHIGKEIT und der EIGNUNG FÜR EINEN BESTIMMTEN ZWECK, verteilt.\n\
  Siehe GNU General Public License für weitere Details.\n"
     STRING_VERSION_HELP4 "\n Dieses Programm ist freie Software; Sie können es verteilen\n\
@@ -472,7 +472,7 @@ Titel         neuer Titel"
     STRING_CHOICE_ERROR_OPTION "Ungültige Option: %s"
     STRING_CMD_ERROR1 "Die Eingaben konnten nicht umgeleitet werden (von der Datei) %s\n"
     STRING_CMD_ERROR2 "Ein Fehler ist beim Erstellen der temporären Datei für Pipedaten aufgetreten\n"
-    STRING_CMD_ERROR3 "%s kann nicht in die Datei umgeleitet werden \n"
+    STRING_CMD_ERROR3 "%s kann nicht in die Datei umgeleitet werden\n"
     STRING_CMD_ERROR4 "Ausführend %s...\n"
     STRING_CMD_ERROR5 "Ausführend cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "Fehler: Hinter- und Vordergrund können nicht die selben Farben haben!"

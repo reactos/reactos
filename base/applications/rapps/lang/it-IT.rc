@@ -106,7 +106,7 @@ CAPTION "Informazioni"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "Gestione applicazioni di ReactOS \nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    LTEXT "Gestione applicazioni di ReactOS\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
     DEFPUSHBUTTON "Chiudi", IDOK, 133, 46, 50, 14
 END
 

@@ -53,7 +53,7 @@ BEGIN
   whoami /all [/fo <Format>] [/nh]\n\
 \n\
             EXEMPLE:\n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END
