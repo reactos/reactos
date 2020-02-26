@@ -4,7 +4,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_UsageMessage "%s\n\nUtilizare: regsvr32 [/u] [/s] [/c] [/n] [/i[:argumente]] nume_fișier_dll         \n\
+    IDS_UsageMessage "%s\n\nUtilizare: regsvr32 [/u] [/s] [/c] [/n] [/i[:argumente]] nume_fișier_dll\n\
 /u -	Anulează înregistrarea\n\
 /s -	Tacit; fără ferestre de mesaje\n\
 /c -	Debitează informațiile la consolă\n\

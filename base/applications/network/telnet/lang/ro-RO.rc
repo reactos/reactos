@@ -7,7 +7,7 @@ BEGIN
     MSG_COPYRIGHT_1 "Acesta este un program gratuit, aveți libertatea de a-l re-\ndistribui sub anumite condiții.\n\n"
     MSG_USAGE "Utilizare: TELNET [parametri] [gazdă [port]]\n\n  parametri\n    -d:FIȘIER.EXT  Scrie toate datele recepționate în «FIȘIER.EXT».\n  gazdă            Numele gazdei sau adresa IP a gazdei aflate la distanță.\n"
     MSG_USAGE_1 "  port             Portul de serviciu (implicit pentru telnet este portul 23).\n\n"
-    MSG_HELP "Comenzile pot fi abreviate. Acestea sunt:\n  \ncl[ose]         Închide conexiunea curentă.\nop[en]          Conectează la un sit.\nq[uit]          Ieșire din telnet.\n"
+    MSG_HELP "Comenzile pot fi abreviate. Acestea sunt:\n\ncl[ose]         Închide conexiunea curentă.\nop[en]          Conectează la un sit.\nq[uit]          Ieșire din telnet.\n"
     MSG_HELP_1 "ke[ys]          Afișează/alterează configurații de taste.\nse[t]           Afișează/alterează opțiunile de configurare.\nz               Suspendă.\n? h[elp]        Afișează informațiile de utilizare.\n"
     MSG_INVCMD "Comandă nevalidă. Tastați ? pentru informații.\n"
     MSG_ERROR "%1 a eșuat.\n"
