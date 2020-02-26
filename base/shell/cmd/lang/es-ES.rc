@@ -42,7 +42,7 @@ CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
   /N            No muestra las posibles elecciones y ? al final del prompt.\n\
   /S            Hace que la elección sea sensible a las mayúsculas y minúsculas.\n\
   /T[:]c,nn     La elección por defecto será c después de nn segundos.\n\
-  text          Prompt a mostrar. \n\n\
+  text          Prompt a mostrar.\n\n\
 ERRORLEVEL se configura al offset de la tecla que presione el usuario.\n"
     STRING_CLS_HELP "Limpia la pantalla.\n\nCLS\n"
     STRING_CMD_HELP1 "\nComandos internos disponibles:\n"

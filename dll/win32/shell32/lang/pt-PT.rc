@@ -975,13 +975,13 @@ BEGIN
     IDS_NEWEXT_ALREADY_ASSOC "A extensão %s já está associada ao tipo de arquivo %s. Deseja desassociar %s com %s e criar um novo tipo de arquivo?"
     IDS_NEWEXT_EXT_IN_USE "A extensão está em uso"
 
-    IDS_REMOVE_EXT "Se remover uma extensão de nome de arquivo registrado, não poderá abrir arquivos com esta extensão clicando duas vezes nos ícones. \n\nTem a certeza de que deseja remover esta extensão?"
+    IDS_REMOVE_EXT "Se remover uma extensão de nome de arquivo registrado, não poderá abrir arquivos com esta extensão clicando duas vezes nos ícones.\n\nTem a certeza de que deseja remover esta extensão?"
     IDS_SPECIFY_ACTION "Deve especificar uma acção."
     IDS_INVALID_PROGRAM "Não foi possível encontrar o programa especificado. Verifique se o nome e o caminho do arquivo estão correctos."
     IDS_REMOVE_ACTION "Tem a certeza que deseja remover esta acção?"
     IDS_ACTION_EXISTS "A acção '%s' já está registrada para este tipo de arquivo. Digite um nome diferente e tente novamente."
     IDS_EXE_FILTER "Programas\0*.exe\0Todos os tipos\0*.*\0"
     IDS_EDITING_ACTION "Editar acção para o tipo: "
-    IDS_NO_ICONS "O arquivo '%s' não contém ícones. \n\nEscolha um ícone da lista ou especifique um arquivo diferente."
+    IDS_NO_ICONS "O arquivo '%s' não contém ícones.\n\nEscolha um ícone da lista ou especifique um arquivo diferente."
     IDS_FILE_NOT_FOUND "O arquivo '%s' não foi encontrado."
 END

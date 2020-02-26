@@ -33,7 +33,7 @@ Aby usunąć istniejący alias:\n\
 CALL [napęd:][ścieżka]nazwa_pliku [parametry]\n\n\
   parametry   Wszelkie dane, wymagane przez program wsadowy,\n\
                który ma zostać wywołany."
-    STRING_CD_HELP "Zmienia obecny katalog albo wyświetla jego pełną nazwę. \n\n\
+    STRING_CD_HELP "Zmienia obecny katalog albo wyświetla jego pełną nazwę.\n\n\
 CHDIR [/D][napęd:][ścieżka]\n\
 CHDIR[..|.]\n\
 CD [/D][napęd:][ścieżka]\n\

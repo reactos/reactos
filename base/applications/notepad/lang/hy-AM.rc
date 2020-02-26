@@ -142,7 +142,7 @@ BEGIN
     STRING_UNTITLED "Առանց վերնագրի"
     STRING_ALL_FILES "Բոլոր ֆայլերը (*.*)"
     STRING_TEXT_FILES_TXT "Տեքստային ֆայլերը (*.txt)"
-    STRING_TOOLARGE "Ֆայլը '%s' բավականին մեծ է բլոկնոտի համար. \n \
+    STRING_TOOLARGE "Ֆայլը '%s' բավականին մեծ է բլոկնոտի համար.\n \
 Please use a different editor."
     STRING_NOTEXT "Դուք տեքստ չեք ներմուծել \
 \nPlease type something and try again"

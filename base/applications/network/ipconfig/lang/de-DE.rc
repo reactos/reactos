@@ -42,7 +42,7 @@ BEGIN
            /registerdns Aktualisiert alle DHCP-Leases und registriert DNS-Namen.\n \
            /displaydns  Zeigt den Inhalt des DNS-Auflösungscaches an.\n \
            /showclassid Zeigt alle DHCP-Klassen-IDs an, die für diesen\n \
-                        Adapter zugelassen sind. \n \
+                        Adapter zugelassen sind.\n \
            /setclassid  Ändert die DHCP-Klassen-ID\n \
     \n \
     Standardmäßig wird nur die IP-Adresse, die Subnetzmaske und das Standard-\n \
@@ -52,7 +52,7 @@ BEGIN
     Adressen von allen an TCP/IP gebundenen Adapter freigegeben oder erneuert.\n \
     \n \
     Wird bei SETCLASSID kein Klassenkennung angegeben, dann wird die Klassen-\n \
-    kennung gelöscht. \n \
+    kennung gelöscht.\n \
     \n \
     Beispiele:\n \
         > ipconfig                   ... Zeigt Informationen an.\n \

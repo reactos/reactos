@@ -68,8 +68,8 @@ Es gibt 2 Möglichkeiten, die Farben festzulegen:\n\
 2) Zwei Dezimalzahlen\n\
 3) Zwei Hexadezimalziffern\n\n\
 Die jeweils erste Angabe bezieht sich auf den Hintergrund, die zweite\n\
-auf den Vordergrund. \n\
-Es müssen jeweils zwei Werte angegeben werden. \n\
+auf den Vordergrund.\n\
+Es müssen jeweils zwei Werte angegeben werden.\n\
 Farben:\n\
 Dez  Hex  Name              dec  hex  name\n\
 0    0    Schwarz           8    8    Dunkelgrau\n\
@@ -431,7 +431,7 @@ VER [/C][/R][/W]\n\n\
  Tippen Sie `ver /C' um die Mitwirkenden (Credits) aufzulisten."
     STRING_VERSION_HELP3 "\n Dieses Programm wir in der Hoffnung, dass es nützlich ist,\n\
  jedoch OHNE JEGLICHE GARANTIE, auch die der implizierten Garantie der \n\
- MARKTFÄHIGKEIT und der EIGNUNG FÜR EINEN BESTIMMTEN ZWECK, verteilt. \n\
+ MARKTFÄHIGKEIT und der EIGNUNG FÜR EINEN BESTIMMTEN ZWECK, verteilt.\n\
  Siehe GNU General Public License für weitere Details.\n"
     STRING_VERSION_HELP4 "\n Dieses Programm ist freie Software; Sie können es verteilen\n\
  und/oder unter den Bedingungnen der GNU General Public License, von der\n\

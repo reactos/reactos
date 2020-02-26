@@ -54,7 +54,7 @@ MCIERR_UNRECOGNIZED_KEYWORD, 	"Il driver non riconosce il parametro del comando 
 MCIERR_UNRECOGNIZED_COMMAND,	"Il driver non riconosce il comando specificato."
 MCIERR_HARDWARE, 		"C'è un problema con il dispositivo multimediale. Controllare che il funzionamento del dispositivo o contattare il produttore."
 MCIERR_INVALID_DEVICE_NAME, 	"Il dispositivo specificato non è aperto o non è supportato da MCI."
-MCIERR_OUT_OF_MEMORY, 		"Memoria insufficente per eseguire questa operazione. \nChiudere una o più applicazioni per aumentare la memoria disponibile, e riprovare."
+MCIERR_OUT_OF_MEMORY, 		"Memoria insufficente per eseguire questa operazione.\nChiudere una o più applicazioni per aumentare la memoria disponibile, e riprovare."
 MCIERR_DEVICE_OPEN, 		"Il nome del dispositivo è già in uso come alias da parte di questa applicazione. Usare un alias univoco."
 MCIERR_CANNOT_LOAD_DRIVER, 	"Si è verificato un problema non rilevabile nel caricamento del driver specificato."
 MCIERR_MISSING_COMMAND_STRING, 	"Non è stato specificato nessun comando."
