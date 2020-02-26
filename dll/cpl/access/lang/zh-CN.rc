@@ -169,7 +169,7 @@ CAPTION "切换键设置"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "键盘快捷键", -1, 6, 11, 234, 62
-    LTEXT "切换键的快捷键是:  \n将 NUM LOCK 键按住五秒钟。",
+    LTEXT "切换键的快捷键是:\n将 NUM LOCK 键按住五秒钟。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷键(&S)", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "确定", IDOK, 135, 207, 50, 14
@@ -182,7 +182,7 @@ CAPTION "高对比度设置"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "键盘快捷键", -1, 6, 11, 234, 62
-    LTEXT "高对比度的快捷键是:  \n同时按住左 Alt 键、左 SHIFT 键和 PRINT SCREEN 键。",
+    LTEXT "高对比度的快捷键是:\n同时按住左 Alt 键、左 SHIFT 键和 PRINT SCREEN 键。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷键(&U)", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "高对比度外观方案", -1, 6, 83, 234, 44

@@ -141,7 +141,7 @@ CAPTION "Opțiuni pentru FiltruTaste"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Activare din taste", -1, 6, 11, 234, 62
-    LTEXT "Combinația de activare a accesibilității FiltruTaste:  \nApăsați «Shift» (dreapta) timp de 8 secunde.",
+    LTEXT "Combinația de activare a accesibilității FiltruTaste:\nApăsați «Shift» (dreapta) timp de 8 secunde.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Permite activarea din taste", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Opțiuni de filtrare", -1, 6, 79, 234, 79
@@ -181,7 +181,7 @@ CAPTION "Opțiuni pentru ContrastSporit"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Activare din taste", -1, 6, 11, 234, 62
-    LTEXT "Combinația de activare a accesibilității ContrastSporit:  \nApăsați «Alt» (stânga) + «Shift» (stânga) + «Print Screen».",
+    LTEXT "Combinația de activare a accesibilității ContrastSporit:\nApăsați «Alt» (stânga) + «Shift» (stânga) + «Print Screen».",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Permite activarea din taste", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Schema de culori ContrastSporit:", -1, 6, 83, 234, 44
@@ -198,7 +198,7 @@ CAPTION "Opțiuni TasteȘoricel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Activare din taste", -1, 6, 11, 234, 62
-    LTEXT "Combinația de activare a accesibilității TasteȘoricel:  \nApăsați «Alt» (stâng) + «Shift» (stâng) + «Num Lock».",
+    LTEXT "Combinația de activare a accesibilității TasteȘoricel:\nApăsați «Alt» (stâng) + «Shift» (stâng) + «Num Lock».",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "P&ermite activarea din taste", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14

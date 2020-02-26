@@ -203,7 +203,7 @@ PUSHD [ścieżka | ..]\n\n\
 Wpisz ECHO bez żadnych parametrów, by wyświetlić obecne ustawienie."
     STRING_ECHO_HELP5 "ECHO jest %s\n"
     STRING_EXIT_HELP "Zamyka okno konsoli.\n\nEXIT [/b] [kod]\n\n\
-  /B            Zamyka jedynie plik wsadowy.  \n\
+  /B            Zamyka jedynie plik wsadowy.\n\
                 Jeśli użyty będzie poza plikiem wsadowym, zamknie cmd.exe\n\
   kod           Ta wartość zostanie przypisana do ERRORLEVEL przy wyjściu.\n"
     STRING_FOR_HELP1 "Uruchamia wyznaczoną komendę dla każdego pliku w zestawie.\n\n\

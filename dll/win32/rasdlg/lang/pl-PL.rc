@@ -2328,7 +2328,7 @@ BEGIN
     7353 "Ostrzeżenie o połączeniu przychodzącym\0"
     7354 "Każdy skasowany użytkownik zostanie trwale usunięty z systemu, nawet jeśli naciśniesz później Anuluj. Czy na pewno chcesz trwale usunąć %s? \0"
     7355 "Masz zamiar się przełączyć na konsolę zarządzania systemem. Te okno właściwości Połączeń przychodzących zostanie zamknięte a wszystkie dokonane zmiany - zapisane w systemie. Czy kontynuować?\0"
-    7356 "Twoja Maska Podsieci uległa zmianie. Po bicie zerowym w Masce mogą nastąpić wyłącznie bity zerowe. Na przykład, Maska, wyrażona w zapisie dziesiętnym jako 255.255.0.0, jest prawidłowa, ale 255.0.255.0 już nie.  \n\0"
+    7356 "Twoja Maska Podsieci uległa zmianie. Po bicie zerowym w Masce mogą nastąpić wyłącznie bity zerowe. Na przykład, Maska, wyrażona w zapisie dziesiętnym jako 255.255.0.0, jest prawidłowa, ale 255.0.255.0 już nie.\n\0"
     7357 "Dopuszczenie Użytkowników\0"
     7358 "Możesz wyznaczyć użytkowników, którzy będą mogli się połączyć z tym komputerem.\0"
     7359 "Urządzenia dla połączeń przychodzących\0"

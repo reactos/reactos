@@ -209,7 +209,7 @@ ni passage à la ligne.\n\n\
 Taper ECHO sans paramètre pour afficher le réglage ECHO courant."
     STRING_ECHO_HELP5 "ECHO est %s\n"
     STRING_EXIT_HELP "Sort de l'interpréteur de commandes.\n\nEXIT [/b] [CodeDeFin]\n\n\
-  /B            Quitte seulement un fichier batch.  \n\
+  /B            Quitte seulement un fichier batch.\n\
                 En cas de lancement en dehors d'un fichier batch, cmd.exe sera quittée\n\
   CodeDeFin     ERRORLEVEL prendra cette valeur à la sortie\n"
     STRING_FOR_HELP1 "Exécute une commande donnée pour chaque fichier d'un ensemble de fichiers.\n\n\

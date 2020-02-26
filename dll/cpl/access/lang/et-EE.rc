@@ -143,7 +143,7 @@ CAPTION "Filterklahvide sätted"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Klaviatuuri otsetee", -1, 6, 11, 234, 62
-    LTEXT "Filterklahvide otsetee:  \nvajuta ja hoidke kaheksa sekundit all parempoolset tõstuklahvi (SHIFT).",
+    LTEXT "Filterklahvide otsetee:\nvajuta ja hoidke kaheksa sekundit all parempoolset tõstuklahvi (SHIFT).",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Kasuta otseteed", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Filtrisuvandid", -1, 6, 79, 234, 79
@@ -183,7 +183,7 @@ CAPTION "Kõige kontrastsuse sätted"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Klaviatuuri otsetee", -1, 6, 11, 234, 62
-    LTEXT "Kõrge kontrastuse otsetee:  \nvajutage klahve: Vasak ALT + vasak SHIFT + PRINT SCREEN.",
+    LTEXT "Kõrge kontrastuse otsetee:\nvajutage klahve: Vasak ALT + vasak SHIFT + PRINT SCREEN.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Kasuta otseteed", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Kõrge kontrastsusega ilme skeem", -1, 6, 83, 234, 44
@@ -200,7 +200,7 @@ CAPTION "Hiireklahvide sätted"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Klaviatuuri otsetee", -1, 6, 11, 234, 62
-    LTEXT "Hiireklahvide otsetee:  \nvajutage klahve vasak ALT + vasak SHIFT + NUM LOCK.",
+    LTEXT "Hiireklahvide otsetee:\nvajutage klahve vasak ALT + vasak SHIFT + NUM LOCK.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Kasuta otseteed", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14

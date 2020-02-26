@@ -136,7 +136,7 @@ CAPTION "Impostazione del filtro dei tasti"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Scorciatoie della tastiera", -1, 6, 11, 234, 62
-    LTEXT "La scorciatoia per i filtri è:  \nTenere premuto lo <Shift destro> per otto secondi.",
+    LTEXT "La scorciatoia per i filtri è:\nTenere premuto lo <Shift destro> per otto secondi.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Use shortcut", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Opzioni dei filtri", -1, 6, 79, 234, 79
@@ -176,7 +176,7 @@ CAPTION "Impostazioni per contrasto elevato"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Scorciatoia da tastiera", -1, 6, 11, 234, 62
-    LTEXT "La scorciatoia per contrasto elevato è:  \nPremere <Alt Sinistro+Shift Sinistro+Stamp>.",
+    LTEXT "La scorciatoia per contrasto elevato è:\nPremere <Alt Sinistro+Shift Sinistro+Stamp>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Usare la scorciatoia", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Schema dei colori ad alto contrasto", -1, 6, 83, 234, 44
@@ -193,7 +193,7 @@ CAPTION "Impostazione dei tasti del mouse"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Scorciatoia da tastiera", -1, 6, 11, 234, 62
-    LTEXT "La scorciatoia per i tasti del mouse è:  \nPremere <Alt Sinistro+Shift Sinistro+BlocNum>.",
+    LTEXT "La scorciatoia per i tasti del mouse è:\nPremere <Alt Sinistro+Shift Sinistro+BlocNum>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Usare la scorciatoia", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14

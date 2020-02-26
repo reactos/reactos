@@ -138,7 +138,7 @@ CAPTION "Pengaturan FilterKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
-    LTEXT "Pintasan untuk FilterKeys adalah:  \nTekan dan tahan <Right Shift> selama delapan detik.",
+    LTEXT "Pintasan untuk FilterKeys adalah:\nTekan dan tahan <Right Shift> selama delapan detik.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Gunakan pintasan", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Pilihan filter", -1, 6, 79, 234, 79
@@ -178,7 +178,7 @@ CAPTION "Pengaturan Kontras Tinggi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
-    LTEXT "Pintasan untuk Kontras Tinggi:  \nTekan <Left Alt+Left Shift+Print Screen>.",
+    LTEXT "Pintasan untuk Kontras Tinggi:\nTekan <Left Alt+Left Shift+Print Screen>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Gunakan pintasan", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Warna skema kontras tinggi", -1, 6, 83, 234, 44
@@ -195,7 +195,7 @@ CAPTION "Pengaturan MouseKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
-    LTEXT "Pintasan MouseKeys:  \nTekan <Left Alt+Left Shift+Num Lock>.",
+    LTEXT "Pintasan MouseKeys:\nTekan <Left Alt+Left Shift+Num Lock>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Gunakan pintasan", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14

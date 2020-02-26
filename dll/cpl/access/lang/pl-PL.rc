@@ -142,7 +142,7 @@ CAPTION "Ustawienia Filtrów Klawiszy"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Skrót klawiszowy", -1, 6, 11, 234, 62
-    LTEXT "Skrót do Filtrów Klawiszy:  \nPrzytrzymaj <Prawy Shift> naciśnięty przez 8 sekund.",
+    LTEXT "Skrót do Filtrów Klawiszy:\nPrzytrzymaj <Prawy Shift> naciśnięty przez 8 sekund.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Używaj skrótu", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Ustawienia Filtrów", -1, 6, 79, 234, 79
@@ -182,7 +182,7 @@ CAPTION "Ustawienia Wysokiego Kontrastu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Skrót klawiszowy", -1, 6, 11, 234, 62
-    LTEXT "Skrót do Wysokiego Kontrastu:  \nNaciśnij <Lewy Alt+Lewy Shift+Print Screen>.",
+    LTEXT "Skrót do Wysokiego Kontrastu:\nNaciśnij <Lewy Alt+Lewy Shift+Print Screen>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Użyj skrótu", IDC_CONTRAST_ACTIVATE_CHECK, 24, 49, 222, 14
     GROUPBOX "Schemat kolorów Wysokiego Kontrastu", -1, 6, 83, 234, 44
@@ -199,7 +199,7 @@ CAPTION "Ustawienia Klawiszy Myszy"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Skrót klawiszowy", -1, 6, 11, 239, 62
-    LTEXT "Skrót do Klawiszy Myszy:  \nNaciśnij <Lewy Alt+Lewy Shift+Num Lock>.",
+    LTEXT "Skrót do Klawiszy Myszy:\nNaciśnij <Lewy Alt+Lewy Shift+Num Lock>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Użyj skrótu", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14

@@ -136,7 +136,7 @@ CAPTION "フィルタキー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "キーボード ショートカット", -1, 6, 11, 234, 62
-    LTEXT "フィルタキーのショートカットは:  \n<右Shift>を8秒間押し続ける。",
+    LTEXT "フィルタキーのショートカットは:\n<右Shift>を8秒間押し続ける。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Use shortcut", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "フィルタ オプション", -1, 6, 79, 234, 79
@@ -176,7 +176,7 @@ CAPTION "ハイコントラスト設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "キーボード ショートカット", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for High Contrast is:  \nPress <Left Alt+Left Shift+Print Screen>.",
+    LTEXT "The shortcut for High Contrast is:\nPress <Left Alt+Left Shift+Print Screen>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "ショートカットを使う(&U)", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "ハイコントラスト配色", -1, 6, 83, 234, 44
