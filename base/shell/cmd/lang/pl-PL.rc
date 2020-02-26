@@ -299,7 +299,7 @@ PROMPT [tekst]\n\n\
   tekst   Definiuje nowy znak zachęty.\n\n\
 Znak zachęty może składać się z normalnych znaków, a także poniższych symboli:\n\n\
   $A   & (Et)\n\
-  $B   | \n\
+  $B   |\n\
   $C   ( (lewy nawias)\n\
   $D   Bieżąca data\n\
   $E   Znak ucieczki (kod ASCII 27)\n\
@@ -345,7 +345,7 @@ do tego komendy MOVE.\n"
 REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/A] [/P] [/R] [/W]\n\
 REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] [/U]\n\n\
   [napęd1:][ścieżka1]nazwa_pliku Wyznacza źródło pliku bądź plików.\n\
-  [napęd2:][ścieżka2]         Wyznacza lokalizacje gdzie pliki mają być \n\
+  [napęd2:][ścieżka2]         Wyznacza lokalizacje gdzie pliki mają być\n\
                            zamienione.\n\
   /A                       Dodaje nowe pliki do lokalizacji docelowej. Nie można\n\
                            łączyć z opcjami /S lub /U.\n\
