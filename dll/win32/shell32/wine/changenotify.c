@@ -370,7 +370,9 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
     {
         TRACE("dwItem2 is not zero, but should be\n");
         dwItem2 = 0;
+#ifndef __REACTOS__
         return;
+#endif
     }
 
     if( ( ( wEventId & SHCNE_NOITEMEVENTS ) && 
