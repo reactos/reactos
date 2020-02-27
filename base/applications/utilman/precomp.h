@@ -59,6 +59,7 @@ INT ListBoxRefreshContents(VOID);
 VOID CheckUtilityState(BOOL bUtilState);
 
 /* process.c */
+DWORD GetProcessID(IN LPCWSTR lpProcessName);
 BOOL IsProcessRunning(IN LPCWSTR lpProcessName);
 BOOL LaunchProcess(LPCWSTR lpProcessName);
 BOOL CloseProcess(IN LPCWSTR lpProcessName);
