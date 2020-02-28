@@ -4526,7 +4526,7 @@ RtlGetVersion(
 NTSYSAPI
 BOOLEAN
 NTAPI
-RtlGetNtProductType(OUT PNT_PRODUCT_TYPE ProductType);
+RtlGetNtProductType(_Out_ PNT_PRODUCT_TYPE ProductType);
 
 //
 // Secure Memory Functions
