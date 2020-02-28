@@ -21,7 +21,6 @@ static WCHAR s_file2[MAX_PATH]; // "%TEMP%\\WatchDir1\\File2.txt"
 
 static HWND s_hwnd = NULL;
 static const WCHAR s_szName[] = L"SHChangeNotify testcase";
-static LPITEMIDLIST s_pidl = NULL;
 
 typedef enum TYPE
 {
@@ -157,7 +156,7 @@ static const size_t s_nTestEntries = _countof(s_TestEntries);
 
 LPCSTR PatternFromFlags(DWORD flags)
 {
-    static char s_buf[32];
+    static char s_buf[TYPE_FREESPACE + 1 + 1];
     DWORD i;
     for (i = 0; i <= TYPE_FREESPACE; ++i)
     {
@@ -209,14 +208,12 @@ DoStart(HWND hwnd)
     lstrcpyW(s_file2, s_dir1);
     PathAppendW(s_file2, L"File2.txt");
 
-    s_pidl = ILCreateFromPathW(s_dir1);
     return TRUE;
 }
 
 static void
 DoEnd(HWND hwnd)
 {
-    CoTaskMemFree(s_pidl);
     DeleteFileW(s_file1);
     DeleteFileW(s_file2);
     RemoveDirectoryW(s_dir3);
