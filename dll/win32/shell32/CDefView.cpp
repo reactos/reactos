@@ -1997,9 +1997,9 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
                 if (!(dwAttr & SFGAO_LINK) && (lpdi->item.mask & LVIF_TEXT))
                 {
-                    LPWSTR psz = lpdi->item.pszText;
-                    LPWSTR pchDotExt = PathFindExtensionW(psz);
-                    ::PostMessageW(hEdit, EM_SETSEL, 0, (LPARAM)(pchDotExt - psz));
+                    LPWSTR pszText = lpdi->item.pszText;
+                    LPWSTR pchDotExt = PathFindExtensionW(pszText);
+                    ::PostMessageW(hEdit, EM_SETSEL, 0, pchDotExt - pszText);
                     ::PostMessageW(hEdit, EM_SCROLLCARET, 0, 0);
                 }
 
