@@ -172,7 +172,7 @@ BOOLEAN IsPowerOfTwo(unsigned int x)
 static
 NTSTATUS
 LdrpPatchExportNameTable(
-    _In_ PVOID DllBase,
+    _In_ PLDR_DATA_TABLE_ENTRY LdrEntry,
     _In_ PROSCOMPAT_DESCRIPTOR RosCompatDescriptor,
     _Inout_ PIMAGE_EXPORT_DIRECTORY ExportDirectory,
     _In_ DWORD AppCompatVersion)
@@ -188,10 +188,10 @@ LdrpPatchExportNameTable(
     ASSERT(IsPowerOfTwo(VersionMask));
 
     /* Get the VA of the name table */
-    NameTable = (PULONG)((ULONG_PTR)DllBase +
+    NameTable = (PULONG)((ULONG_PTR)LdrEntry->DllBase +
         (ULONG_PTR)ExportDirectory->AddressOfNames);
 
-    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
+    OrdinalTable = (PUSHORT)((ULONG_PTR)LdrEntry->DllBase +
         (ULONG_PTR)ExportDirectory->AddressOfNameOrdinals);
 
     /* Allocate a temp buffer for the exports */
@@ -199,6 +199,7 @@ LdrpPatchExportNameTable(
     OrgNameTable = RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
     if (OrgNameTable == NULL)
     {
+        DPRINT1("ERROR: LdrpPatchExportNameTable: Unable to allocate %u bytes\n", Size);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     OrgOrdinalTable = (PUSHORT)&OrgNameTable[ExportDirectory->NumberOfNames];
@@ -227,6 +228,7 @@ LdrpPatchExportNameTable(
     }
 
     /* Finally patch the number of exports */
+    DPRINT("roscompat: %wZ from %u to %u exports\n", &LdrEntry->BaseDllName, ExportDirectory->NumberOfNames, j);
     ExportDirectory->NumberOfNames = j;
 
     /* Copy the private functions back */
@@ -245,7 +247,7 @@ LdrpPatchExportNameTable(
 static
 NTSTATUS
 LdrpPatchExportTable(
-    _In_ PVOID DllBase,
+    _In_ PLDR_DATA_TABLE_ENTRY LdrEntry,
     _In_ PROSCOMPAT_DESCRIPTOR RosCompatDescriptor,
     _In_ DWORD AppCompatVersion
     )
@@ -260,12 +262,13 @@ LdrpPatchExportTable(
     //__debugbreak();
 
     /* Get export directory */
-    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
+    ExportDirectory = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
                                                    TRUE,
                                                    IMAGE_DIRECTORY_ENTRY_EXPORT,
                                                    &ExportDirectorySize);
     if (ExportDirectory == NULL)
     {
+        DPRINT("roscompat: No ExportDirectory for %wZ\n", &LdrEntry->BaseDllName);
         return STATUS_INVALID_IMAGE_FORMAT;
     }
 
@@ -281,20 +284,18 @@ LdrpPatchExportTable(
                                     &OldProtect);
     if (!NT_SUCCESS(Status))
     {
-        /* Fail */
-        //DbgPrint("LDR: Unable to unprotect IAT for %wZ (Status %x)\n",
-        //         &ImportLdrEntry->BaseDllName,
-        //         Status);
+        DPRINT1("roscompat: Unable to unprotect EAT for %wZ (Status 0x%x)\n", &LdrEntry->BaseDllName, Status);
         return Status;
     }
 
     /* Patch the export name and ordinal table */
-    Status = LdrpPatchExportNameTable(DllBase,
+    Status = LdrpPatchExportNameTable(LdrEntry,
                                       RosCompatDescriptor,
                                       ExportDirectory,
                                       AppCompatVersion);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("roscompat: Unable to patch EAT, 0x%x\n", Status);
         return Status;
     }
 
@@ -311,10 +312,7 @@ LdrpPatchExportTable(
                                     &OldProtect);
     if (!NT_SUCCESS(Status))
     {
-        /* Fail */
-        //DbgPrint("LDR: Unable to unprotect export table for %wZ (Status %x)\n",
-        //         &ImportLdrEntry->BaseDllName,
-        //         Status);
+        DPRINT1("roscompat: Unable to reprotect EAT for %wZ (Status 0x%x)\n", &LdrEntry->BaseDllName, Status);
         return Status;
     }
 
@@ -364,10 +362,17 @@ LdrpApplyRosCompatMagic(PLDR_DATA_TABLE_ENTRY LdrEntry)
     PROSCOMPAT_DESCRIPTOR RosCompatDescriptor;
     NTSTATUS Status;
 
+    /* Make sure we have a data table entry */
+    ASSERT(LdrEntry != NULL);
+
+    /* Ensure that this field is not used */
+    ASSERT(LdrEntry->PatchInformation == NULL);
+
     /* Get the appcompat descriptor */
     RosCompatDescriptor = FindRosCompatDescriptor(LdrEntry->DllBase);
     if (RosCompatDescriptor == NULL)
     {
+        DPRINT("roscompat: No descriptor in %wZ\n", &LdrEntry->BaseDllName);
         return FALSE;
     }
 
@@ -379,12 +384,14 @@ LdrpApplyRosCompatMagic(PLDR_DATA_TABLE_ENTRY LdrEntry)
         AppCompatVersion = _WIN32_WINNT_WS03;
     }
 
+    DPRINT("roscompat: Patching eat of %wZ for 0x%x\n", &LdrEntry->BaseDllName, AppCompatVersion);
+
     /* Save the descriptor in the PatchInformation field, which is otherwise
        unused in user-mode */
     LdrEntry->PatchInformation = RosCompatDescriptor;
 
     /* Now patch the export table */
-    Status = LdrpPatchExportTable(LdrEntry->DllBase,
+    Status = LdrpPatchExportTable(LdrEntry,
                                   RosCompatDescriptor,
                                   AppCompatVersion);
     if (!NT_SUCCESS(Status))
