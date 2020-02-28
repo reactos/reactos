@@ -268,7 +268,7 @@ START_TEST(SHChangeNotify)
 
     if (!DoStart(s_hwnd))
     {
-        skip("Unable to register the notification client.\n");
+        skip("Unable to initialize.\n");
         return;
     }
 
