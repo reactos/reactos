@@ -1783,6 +1783,25 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     return 0;
 }
 
+static BOOL
+UnselectExtOnRename(void)
+{
+    HKEY hKey;
+    LONG error;
+    DWORD dwValue, cbValue;
+
+    error = RegOpenKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS", 0, KEY_READ, &hKey);
+    if (error)
+        return FALSE;
+
+    dwValue = FALSE;
+    cbValue = sizeof(dwValue);
+    RegQueryValueExW(hKey, L"UnselectExtOnRename", NULL, NULL, (LPBYTE)&dwValue, &cbValue);
+
+    RegCloseKey(hKey);
+    return !!dwValue;
+}
+
 /**********************************************************
 * ShellView_OnNotify()
 */
@@ -1995,7 +2014,8 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 HWND hEdit = reinterpret_cast<HWND>(m_ListView.SendMessage(LVM_GETEDITCONTROL));
                 SHLimitInputEdit(hEdit, m_pSFParent);
 
-                if (!(dwAttr & SFGAO_LINK) && (lpdi->item.mask & LVIF_TEXT))
+                if (!(dwAttr & SFGAO_LINK) && (lpdi->item.mask & LVIF_TEXT) &&
+                    UnselectExtOnRename())
                 {
                     LPWSTR pszText = lpdi->item.pszText;
                     LPWSTR pchDotExt = PathFindExtensionW(pszText);
