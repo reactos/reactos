@@ -1995,6 +1995,14 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 HWND hEdit = reinterpret_cast<HWND>(m_ListView.SendMessage(LVM_GETEDITCONTROL));
                 SHLimitInputEdit(hEdit, m_pSFParent);
 
+                if (!(dwAttr & SFGAO_LINK) && (lpdi->item.mask & LVIF_TEXT))
+                {
+                    LPWSTR psz = lpdi->item.pszText;
+                    LPWSTR pchDotExt = PathFindExtensionW(psz);
+                    ::PostMessageW(hEdit, EM_SETSEL, 0, (LPARAM)(pchDotExt - psz));
+                    ::PostMessageW(hEdit, EM_SCROLLCARET, 0, 0);
+                }
+
                 m_isEditing = TRUE;
                 return FALSE;
             }
