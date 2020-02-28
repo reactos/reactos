@@ -1788,15 +1788,14 @@ SelectExtOnRename(void)
 {
     HKEY hKey;
     LONG error;
-    DWORD dwValue, cbValue;
+    DWORD dwValue = FALSE, cbValue;
 
     error = RegOpenKeyExW(HKEY_CURRENT_USER,
                           L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer",
                           0, KEY_READ, &hKey);
     if (error)
-        return FALSE;
+        return dwValue;
 
-    dwValue = FALSE;
     cbValue = sizeof(dwValue);
     RegQueryValueExW(hKey, L"SelectExtOnRename", NULL, NULL, (LPBYTE)&dwValue, &cbValue);
 
