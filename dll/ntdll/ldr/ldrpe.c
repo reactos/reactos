@@ -929,8 +929,6 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
         goto done;
     }
 
-    LdrpApplyRosCompatMagic(*DataTableEntry);
-
     /* Walk its import descriptor table */
     Status = LdrpWalkImportDescriptor(DllPath,
                                       *DataTableEntry);
