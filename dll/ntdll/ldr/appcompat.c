@@ -16,11 +16,13 @@
 #define NDEBUG
 #include <debug.h>
 
+static DWORD g_CompatVersion = REACTOS_COMPATVERSION_UNINITIALIZED;
+
+
 DWORD
 NTAPI
 RosGetProcessCompatVersion(VOID)
 {
-    static DWORD g_CompatVersion = REACTOS_COMPATVERSION_UNINITIALIZED;
     if (g_CompatVersion == REACTOS_COMPATVERSION_UNINITIALIZED)
     {
         ReactOS_ShimData* pShimData = (ReactOS_ShimData*)NtCurrentPeb()->pShimData;
@@ -28,6 +30,12 @@ RosGetProcessCompatVersion(VOID)
             pShimData->dwSize == sizeof(ReactOS_ShimData))
         {
             g_CompatVersion = pShimData->dwRosProcessCompatVersion;
+            DPRINT("roscompat: Initializing version to 0x%x\n", g_CompatVersion);
+        }
+        else
+        {
+            g_CompatVersion = 0;
+            DPRINT("roscompat: No version set\n");
         }
     }
     return g_CompatVersion < REACTOS_COMPATVERSION_UNINITIALIZED ? g_CompatVersion : 0;
