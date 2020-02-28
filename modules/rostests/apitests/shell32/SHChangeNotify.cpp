@@ -184,7 +184,7 @@ DoTestEntry(const TEST_ENTRY *entry)
 }
 
 static BOOL
-DoStart(HWND hwnd)
+DoInit(HWND hwnd)
 {
     WCHAR szTemp[MAX_PATH], szPath[MAX_PATH];
 
@@ -265,7 +265,7 @@ START_TEST(SHChangeNotify)
         return;
     }
 
-    if (!DoStart(s_hwnd))
+    if (!DoInit(s_hwnd))
     {
         skip("Unable to initialize.\n");
         return;
