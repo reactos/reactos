@@ -1,28 +1,28 @@
-@ stub ConvertAtJobsToTasks
+@ stdcall ConvertAtJobsToTasks()
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
-@ stub GetNetScheduleAccountInformation
-@ stub NetrJobAdd
-@ stub NetrJobDel
-@ stub NetrJobEnum
-@ stub NetrJobGetInfo
-@ stub SAGetAccountInformation
-@ stub SAGetNSAccountInformation
-@ stub SASetAccountInformation
-@ stub SASetNSAccountInformation
-@ stub SetNetScheduleAccountInformation
-@ stub _ConvertAtJobsToTasks@0
-@ stub _DllCanUnloadNow@0
-@ stub _DllGetClassObject@12
-@ stub _GetNetScheduleAccountInformation@12
-@ stub _NetrJobAdd@12
-@ stub _NetrJobDel@12
-@ stub _NetrJobEnum@20
-@ stub _NetrJobGetInfo@12
-@ stub _SAGetAccountInformation@16
-@ stub _SAGetNSAccountInformation@12
-@ stub _SASetAccountInformation@20
-@ stub _SASetNSAccountInformation@12
-@ stub _SetNetScheduleAccountInformation@12
+@ stdcall GetNetScheduleAccountInformation(ptr long ptr)
+@ stdcall NetrJobAdd(ptr ptr ptr)
+@ stdcall NetrJobDel(ptr long long)
+@ stdcall NetrJobEnum(ptr ptr long ptr ptr)
+@ stdcall NetrJobGetInfo(ptr long ptr)
+@ stdcall SAGetAccountInformation(ptr ptr long ptr)
+@ stdcall SAGetNSAccountInformation(ptr long ptr)
+@ stdcall SASetAccountInformation(ptr wstr wstr wstr long)
+@ stdcall SASetNSAccountInformation(ptr wstr wstr)
+@ stdcall SetNetScheduleAccountInformation(wstr wstr wstr)
+#@ stdcall _ConvertAtJobsToTasks@0() mstask.ConvertAtJobsToTasks
+#@ stdcall _DllCanUnloadNow@0() DllCanUnloadNow
+#@ stdcall _DllGetClassObject@12(ptr ptr ptr) DllGetClassObject
+#@ stdcall _GetNetScheduleAccountInformation@12(ptr ptr long ptr) GetNetScheduleAccountInformation
+#@ stdcall _NetrJobAdd@12(ptr ptr ptr) NetrJobAdd
+#@ stdcall _NetrJobDel@12(ptr long long) NetrJobDel
+#@ stdcall _NetrJobEnum@20(ptr ptr long ptr ptr) NetrJobEnum
+#@ stdcall _NetrJobGetInfo@12(ptr long ptr) NetrJobGetInfo
+#@ stdcall _SAGetAccountInformation@16(ptr ptr long ptr) SAGetAccountInformation
+#@ stdcall _SAGetNSAccountInformation@12(ptr long ptr) SAGetNSAccountInformation
+#@ stdcall _SASetAccountInformation@20(ptr wstr wstr wstr long) SASetAccountInformation
+#@ stdcall _SASetNSAccountInformation@12(ptr wstr wstr) SASetNSAccountInformation
+#@ stdcall _SetNetScheduleAccountInformation@12(wstr wstr wstr) SetNetScheduleAccountInformation
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()

@@ -10,6 +10,7 @@ list(APPEND SOURCE
     task.c
     task_scheduler.c
     task_trigger.c
+    stubs.c
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/mstask_local_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/mstask_stubs.c)
