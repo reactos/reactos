@@ -2457,12 +2457,26 @@ HRESULT WINAPI ShellExecCmdLine(
         {
             PathAddBackslashW(szFile);
         }
-        if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
+
+        WCHAR szCurDir[MAX_PATH];
+        GetCurrentDirectoryW(_countof(szCurDir), szCurDir);
+        if (pwszStartDir)
+        {
+            SetCurrentDirectoryW(pwszStartDir);
+        }
+
+        if (PathIsRelativeW(szFile) &&
+            GetFullPathNameW(szFile, _countof(szFile2), szFile2, NULL) &&
+            PathFileExistsW(szFile2))
+        {
+            StringCchCopyW(szFile, _countof(szFile), szFile2);
+        }
+        else if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
         }
@@ -2475,6 +2489,11 @@ HRESULT WINAPI ShellExecCmdLine(
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
             pchParams = NULL;
+        }
+
+        if (pwszStartDir)
+        {
+            SetCurrentDirectoryW(szCurDir);
         }
 
         if (!(dwSeclFlags & SECL_ALLOW_NONEXE))
