@@ -1783,6 +1783,26 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     return 0;
 }
 
+static BOOL
+SelectExtOnRename(void)
+{
+    HKEY hKey;
+    LONG error;
+    DWORD dwValue = FALSE, cbValue;
+
+    error = RegOpenKeyExW(HKEY_CURRENT_USER,
+                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                          0, KEY_READ, &hKey);
+    if (error)
+        return dwValue;
+
+    cbValue = sizeof(dwValue);
+    RegQueryValueExW(hKey, L"SelectExtOnRename", NULL, NULL, (LPBYTE)&dwValue, &cbValue);
+
+    RegCloseKey(hKey);
+    return !!dwValue;
+}
+
 /**********************************************************
 * ShellView_OnNotify()
 */
@@ -1994,6 +2014,14 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             {
                 HWND hEdit = reinterpret_cast<HWND>(m_ListView.SendMessage(LVM_GETEDITCONTROL));
                 SHLimitInputEdit(hEdit, m_pSFParent);
+
+                if (!(dwAttr & SFGAO_LINK) && (lpdi->item.mask & LVIF_TEXT) && !SelectExtOnRename())
+                {
+                    LPWSTR pszText = lpdi->item.pszText;
+                    LPWSTR pchDotExt = PathFindExtensionW(pszText);
+                    ::PostMessageW(hEdit, EM_SETSEL, 0, pchDotExt - pszText);
+                    ::PostMessageW(hEdit, EM_SCROLLCARET, 0, 0);
+                }
 
                 m_isEditing = TRUE;
                 return FALSE;
