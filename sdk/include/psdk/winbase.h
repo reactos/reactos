@@ -779,6 +779,10 @@ typedef struct _DEBUG_EVENT {
 	} u;
 } DEBUG_EVENT,*LPDEBUG_EVENT;
 
+#ifndef MIDL_PASS
+typedef PEXCEPTION_RECORD LPEXCEPTION_RECORD;
+#endif
+
 typedef struct _OVERLAPPED {
 	ULONG_PTR Internal;
 	ULONG_PTR InternalHigh;
