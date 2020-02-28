@@ -1883,6 +1883,7 @@ HKCU,"SOFTWARE\Classes\Applications",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer","SelectExtOnRename",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts",,0x00000012
@@ -1900,7 +1901,6 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","ShowSuperHid
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\LastVisitedMRU",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\OpenSaveMRU",,0x00000012
-
 
 ; Default shell for the current user (overrides the defaults from the HKLM Winlogon sub-key)
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon",,0x00000012
@@ -1979,8 +1979,6 @@ HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP",
 HKCU,"SOFTWARE\ReactOS\Debug","SpyInclude",0x00020000,"INCLUDEALL"
 ;HKCU,"SOFTWARE\ReactOS\Debug","SpyExclude",0x00020000,""
 ;HKCU,"SOFTWARE\ReactOS\Debug","SpyExcludeDWP",0x00020000,""
-
-HKCU,"SOFTWARE\ReactOS","SelectExtOnRename",0x00010001,0x00000000
 
 ; Internet Explorer
 HKCU,"SOFTWARE\Wine\MSHTML","GeckoUrl",,"http://source.winehq.org/winegecko.php"

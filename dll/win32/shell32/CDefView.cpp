@@ -1790,7 +1790,9 @@ SelectExtOnRename(void)
     LONG error;
     DWORD dwValue, cbValue;
 
-    error = RegOpenKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS", 0, KEY_READ, &hKey);
+    error = RegOpenKeyExW(HKEY_CURRENT_USER,
+                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                          0, KEY_READ, &hKey);
     if (error)
         return FALSE;
 
