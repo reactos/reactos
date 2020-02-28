@@ -152,7 +152,6 @@ static const TEST_ENTRY s_TestEntries[] = {
     {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", NULL},
     {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", DoAction8},
 };
-static const size_t s_nTestEntries = _countof(s_TestEntries);
 
 LPCSTR PatternFromFlags(DWORD flags)
 {
@@ -272,7 +271,7 @@ START_TEST(SHChangeNotify)
         return;
     }
 
-    for (size_t i = 0; i < s_nTestEntries; ++i)
+    for (size_t i = 0; i < _countof(s_TestEntries); ++i)
     {
         DoTestEntry(&s_TestEntries[i]);
     }
