@@ -1784,7 +1784,7 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 }
 
 static BOOL
-UnselectExtOnRename(void)
+SelectExtOnRename(void)
 {
     HKEY hKey;
     LONG error;
@@ -1796,7 +1796,7 @@ UnselectExtOnRename(void)
 
     dwValue = FALSE;
     cbValue = sizeof(dwValue);
-    RegQueryValueExW(hKey, L"UnselectExtOnRename", NULL, NULL, (LPBYTE)&dwValue, &cbValue);
+    RegQueryValueExW(hKey, L"SelectExtOnRename", NULL, NULL, (LPBYTE)&dwValue, &cbValue);
 
     RegCloseKey(hKey);
     return !!dwValue;
@@ -2014,8 +2014,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 HWND hEdit = reinterpret_cast<HWND>(m_ListView.SendMessage(LVM_GETEDITCONTROL));
                 SHLimitInputEdit(hEdit, m_pSFParent);
 
-                if (!(dwAttr & SFGAO_LINK) && (lpdi->item.mask & LVIF_TEXT) &&
-                    UnselectExtOnRename())
+                if (!(dwAttr & SFGAO_LINK) && (lpdi->item.mask & LVIF_TEXT) && !SelectExtOnRename())
                 {
                     LPWSTR pszText = lpdi->item.pszText;
                     LPWSTR pchDotExt = PathFindExtensionW(pszText);
