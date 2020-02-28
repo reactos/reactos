@@ -1028,12 +1028,23 @@ FailurePath:
         /* Is this a static snap? */
         if (Static)
         {
+            UNICODE_STRING SnapTarget;
+            PLDR_DATA_TABLE_ENTRY LdrEntry;
+
+            /* What was the module we were searching in */
             RtlInitAnsiString(&TempString, DllName ? DllName : "Unknown");
+
+            /* What was the module we were searching for */
+            if (LdrpCheckForLoadedDllHandle(ImportBase, &LdrEntry))
+                SnapTarget = LdrEntry->BaseDllName;
+            else
+                RtlInitUnicodeString(&SnapTarget, L"Unknown");
+
             /* Inform the debug log */
             if (IsOrdinal)
-                DPRINT1("Failed to snap ordinal %Z!0x%x\n", &TempString, OriginalOrdinal);
+                DPRINT1("Failed to snap ordinal %Z!0x%x for %wZ\n", &TempString, OriginalOrdinal, &SnapTarget);
             else
-                DPRINT1("Failed to snap %Z!%s\n", &TempString, ImportName);
+                DPRINT1("Failed to snap %Z!%s for %wZ\n", &TempString, ImportName, &SnapTarget);
 
             /* These are critical errors. Setup a string for the DLL name */
             RtlAnsiStringToUnicodeString(&HardErrorDllName, &TempString, TRUE);
