@@ -4,7 +4,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mstask);
 
-typedef PWSTR SASEC_HANDLE;
+#define NET_API_STATUS DWORD
+typedef HANDLE ATSVC_HANDLE, SASEC_HANDLE;
+typedef struct _AT_INFO *LPAT_INFO;
+typedef struct _AT_ENUM_CONTAINER *LPAT_ENUM_CONTAINER;
 
 HRESULT
 WINAPI
@@ -26,14 +29,12 @@ GetNetScheduleAccountInformation(
     return E_NOTIMPL;
 }
 
-// For the following functions see https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-TSCH/%5BMS-TSCH%5D.pdf
-
 NET_API_STATUS
 WINAPI
 NetrJobAdd(
-    _In_z_ ATSVC_HANDLE ServerName,
-    _In_ LPAT_INFO pAtInfo,
-    _Out_ LPDWORD pJobId)
+   ATSVC_HANDLE ServerName,
+   LPAT_INFO *pAtInfo,
+   LPDWORD pJobId)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
@@ -42,9 +43,9 @@ NetrJobAdd(
 NET_API_STATUS
 WINAPI
 NetrJobDel(
-    _In_z_ ATSVC_HANDLE ServerName,
-    _In_ DWORD MinJobId,
-    _In_ DWORD MaxJobId)
+    ATSVC_HANDLE ServerName,
+    DWORD MinJobId,
+    DWORD MaxJobId)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
@@ -53,11 +54,11 @@ NetrJobDel(
 NET_API_STATUS
 WINAPI
 NetrJobEnum(
-    _In_z_ ATSVC_HANDLE ServerName,
-    _Inout_ LPAT_ENUM_CONTAINER pEnumContainer,
-    _In_ DWORD PreferedMaximumLength,
-    _Out_ LPDWORD pTotalEntries,
-    _Inout_ LPDWORD pResumeHandle)
+    ATSVC_HANDLE ServerName,
+    LPAT_ENUM_CONTAINER pEnumContainer,
+    DWORD PreferedMaximumLength,
+    LPDWORD pTotalEntries,
+    LPDWORD pResumeHandle)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
@@ -66,23 +67,9 @@ NetrJobEnum(
 NET_API_STATUS
 WINAPI
 NetrJobGetInfo(
-    _In_z_ ATSVC_HANDLE ServerName,
-    _In_ DWORD JobId,
-    _Outptr_ LPAT_INFO* ppAtInfo)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-#define MAX_BUFFER_SIZE 273
-
-HRESULT
-WINAPI
-SAGetAccountInformation( 
-    _In_z_ SASEC_HANDLE Handle,
-    _In_z_ const wchar_t* pwszJobName,
-    _In_range_(0, MAX_BUFFER_SIZE) DWORD ccBufferSize,
-    _Inout_updates_z_(ccBufferSize) wchar_t wszBuffer[])
+    ATSVC_HANDLE ServerName,
+    DWORD JobId,
+    LPAT_INFO* ppAtInfo)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
@@ -90,10 +77,11 @@ SAGetAccountInformation(
 
 HRESULT
 WINAPI
-SAGetNSAccountInformation( 
-    _In_z_ SASEC_HANDLE Handle,
-    _In_range_(0, MAX_BUFFER_SIZE) DWORD ccBufferSize,
-    _Inout_updates_z_(ccBufferSize) wchar_t wszBuffer[])
+SAGetAccountInformation(
+    SASEC_HANDLE Handle,
+    const wchar_t* pwszJobName,
+    DWORD ccBufferSize,
+    wchar_t wszBuffer[])
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
@@ -101,12 +89,10 @@ SAGetNSAccountInformation(
 
 HRESULT
 WINAPI
-SASetAccountInformation( 
-    _In_z_ SASEC_HANDLE Handle,
-    _In_z_ const wchar_t* pwszJobName,
-    _In_z_ const wchar_t* pwszAccount,
-    _In_z_ const wchar_t* pwszPassword,
-    _In_ DWORD dwJobFlags)
+SAGetNSAccountInformation(
+    SASEC_HANDLE Handle,
+    DWORD ccBufferSize,
+    wchar_t wszBuffer[])
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
@@ -114,10 +100,23 @@ SASetAccountInformation(
 
 HRESULT
 WINAPI
-SASetNSAccountInformation( 
-    _In_z_ SASEC_HANDLE Handle,
-    _In_z_ const wchar_t* pwszAccount,
-    _In_z_ const wchar_t* pwszPassword)
+SASetAccountInformation(
+    SASEC_HANDLE Handle,
+    const wchar_t* pwszJobName,
+    const wchar_t* pwszAccount,
+    const wchar_t* pwszPassword,
+    DWORD dwJobFlags)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT
+WINAPI
+SASetNSAccountInformation(
+    SASEC_HANDLE Handle,
+    const wchar_t* pwszAccount,
+    const wchar_t* pwszPassword)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
@@ -126,9 +125,9 @@ SASetNSAccountInformation(
 HRESULT
 WINAPI
 SetNetScheduleAccountInformation(
-    _In_z_ LPCWSTR pwszServerName,
-    _In_z_ LPCWSTR pwszAccount,
-    _In_z_ LPCWSTR pwszPassword)
+    IN LPCWSTR pwszServerName,
+    IN LPCWSTR pwszAccount,
+    IN LPCWSTR pwszPassword)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
