@@ -16,7 +16,7 @@
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-#if _WIN32_WINNT >= 0x600
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 
 /*
  * @implemented
@@ -163,6 +163,6 @@ GetCurrentConsoleFontEx(IN HANDLE hConsoleOutput,
     return FALSE;
 }
 
-#endif
+#endif // (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 
 /* EOF */
