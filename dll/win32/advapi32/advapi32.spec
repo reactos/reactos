@@ -681,6 +681,9 @@
 @ stub WmiSetSingleItemA
 @ stub WmiSetSingleItemW
 @ stub Wow64Win32ApiEntry
-@ stdcall WriteEncryptedFileRaw(ptr ptr ptr)
-@ stdcall -version=0x600+ RegLoadMUIStringW(ptr wstr wstr long ptr long wstr) advapi32_vista.RegLoadMUIStringW
-@ stdcall -version=0x600+ RegLoadMUIStringA(ptr str str long ptr long str) advapi32_vista.RegLoadMUIStringA
+@ stdcall -version=0x600+ WriteEncryptedFileRaw(ptr ptr ptr)
+@ stdcall -version=0x600+ RegDeleteTreeA(long str)
+@ stdcall -version=0x600+ RegDeleteTreeW(long wstr)
+@ stdcall -version=0x600+ RegSetKeyValueW(long wstr wstr long ptr long)
+@ stdcall -version=0x600+ RegLoadMUIStringW(ptr wstr wstr long ptr long wstr)
+@ stdcall -version=0x600+ RegLoadMUIStringA(ptr str str long ptr long str)
