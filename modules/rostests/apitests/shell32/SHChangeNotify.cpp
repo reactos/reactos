@@ -222,6 +222,22 @@ DoEnd(HWND hwnd)
     SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
 }
 
+static BOOL CALLBACK
+PropEnumProcEx(HWND hwnd, LPWSTR lpszString, HANDLE hData, ULONG_PTR dwData)
+{
+    if (HIWORD(lpszString))
+        trace("Prop: '%S' --> %p\n", lpszString, hData);
+    else
+        trace("Prop: '%u' --> %p\n", LOWORD(lpszString), hData);
+    return TRUE;
+}
+
+static void
+DoPropTest(HWND hwnd)
+{
+    EnumPropsExW(hwnd, PropEnumProcEx, 0);
+}
+
 START_TEST(SHChangeNotify)
 {
     WCHAR szPath[MAX_PATH];
@@ -270,6 +286,8 @@ START_TEST(SHChangeNotify)
         skip("Unable to initialize.\n");
         return;
     }
+
+    DoPropTest(s_hwnd);
 
     for (size_t i = 0; i < _countof(s_TestEntries); ++i)
     {
