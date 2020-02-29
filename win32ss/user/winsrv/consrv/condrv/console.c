@@ -409,7 +409,7 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
     /* Deinitialize the input buffer */
     ConDrvDeinitInputBuffer(Console);
 
-    if (Console->UnpauseEvent) CloseHandle(Console->UnpauseEvent);
+    if (Console->UnpauseEvent) NtClose(Console->UnpauseEvent);
 
     DPRINT("ConDrvDeleteConsole - Unlocking\n");
     LeaveCriticalSection(&Console->Lock);

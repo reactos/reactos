@@ -365,7 +365,7 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
             CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
             if (IsListEmpty(&InputBuffer->InputEvents))
             {
-                ResetEvent(InputBuffer->ActiveEvent);
+                NtClearEvent(InputBuffer->ActiveEvent);
             }
             Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
 
@@ -430,7 +430,7 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
             CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
             if (IsListEmpty(&InputBuffer->InputEvents))
             {
-                ResetEvent(InputBuffer->ActiveEvent);
+                NtClearEvent(InputBuffer->ActiveEvent);
             }
             Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
 
