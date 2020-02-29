@@ -27,6 +27,6 @@ add_library(msctf MODULE
 
 set_module_type(msctf win32dll)
 target_link_libraries(msctf uuid wine)
-add_importlibs(msctf ole32 oleaut32 user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
+add_importlibs(msctf ole32 oleaut32 user32 advapi32_vista advapi32 msvcrt kernel32 ntdll)
 add_pch(msctf precomp.h SOURCE)
 add_cd_file(TARGET msctf DESTINATION reactos/system32 FOR all)
