@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "history.h"
 #include "popup.h"
 
 #define NDEBUG
@@ -29,29 +30,6 @@ ConvertInputUnicodeToAnsi(PCONSRV_CONSOLE Console,
                           // BOOLEAN  IsAnsi,
                           PCHAR/* * */   Target,
                           /*P*/USHORT  TargetLength);
-
-
-VOID
-HistoryAddEntry(PCONSRV_CONSOLE Console,
-                PUNICODE_STRING ExeName,
-                PUNICODE_STRING Entry);
-BOOL
-HistoryRecallHistory(PCONSRV_CONSOLE Console,
-                     PUNICODE_STRING ExeName,
-                     INT Offset,
-                     PUNICODE_STRING Entry);
-VOID
-HistoryGetCurrentEntry(PCONSRV_CONSOLE Console,
-                       PUNICODE_STRING ExeName,
-                       PUNICODE_STRING Entry);
-VOID
-HistoryDeleteCurrentBuffer(PCONSRV_CONSOLE Console,
-                           PUNICODE_STRING ExeName);
-BOOL
-HistoryFindEntryByPrefix(PCONSRV_CONSOLE Console,
-                         PUNICODE_STRING ExeName,
-                         PUNICODE_STRING Prefix,
-                         PUNICODE_STRING Entry);
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
