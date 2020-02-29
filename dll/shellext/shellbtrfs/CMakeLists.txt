@@ -38,6 +38,6 @@ add_rc_deps(shellbtrfs.rc ${shellbtrfs_rc_deps})
 
 set_module_type(shellbtrfs win32dll UNICODE)
 target_link_libraries(shellbtrfs uuid)
-add_importlibs(shellbtrfs advapi32 advapi32_vista ole32 shell32 shlwapi user32 comctl32 uxtheme setupapi comdlg32 gdi32 msvcrt kernel32_vista kernel32 ntdll)
+add_importlibs(shellbtrfs advapi32_vista advapi32 ole32 shell32 shlwapi user32 comctl32 uxtheme setupapi comdlg32 gdi32 msvcrt kernel32_vista kernel32 ntdll)
 add_pch(shellbtrfs precomp.h SOURCE)
 add_cd_file(TARGET shellbtrfs DESTINATION reactos/system32 FOR all)
