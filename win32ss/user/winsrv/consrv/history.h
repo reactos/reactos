@@ -9,3 +9,10 @@
 #pragma once
 
 VOID HistoryDeleteBuffers(PCONSRV_CONSOLE Console);
+
+VOID
+HistoryReshapeAllBuffers(
+    IN PCONSRV_CONSOLE Console,
+    IN ULONG HistoryBufferSize,
+    IN ULONG MaxNumberOfHistoryBuffers,
+    IN BOOLEAN HistoryNoDup);

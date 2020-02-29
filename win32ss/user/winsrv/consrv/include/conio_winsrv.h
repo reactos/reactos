@@ -159,8 +159,9 @@ typedef struct _WINSRV_CONSOLE
 /**************************** Aliases and Histories ***************************/
     struct _ALIAS_HEADER *Aliases;
     LIST_ENTRY HistoryBuffers;
+    ULONG NumberOfHistoryBuffers;           /* Number of history buffers */
+    ULONG MaxNumberOfHistoryBuffers;        /* Maximum number of history buffers allowed */
     ULONG HistoryBufferSize;                /* Size for newly created history buffers */
-    ULONG NumberOfHistoryBuffers;           /* Maximum number of history buffers allowed */
     BOOLEAN HistoryNoDup;                   /* Remove old duplicate history entries */
 
 /**************************** Input Line Discipline ***************************/

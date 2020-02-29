@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "history.h"
 #include "../concfg/font.h"
 
 #define NDEBUG
@@ -40,10 +41,15 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
     /*
      * Apply terminal-edition settings:
      * - QuickEdit and Insert modes,
-     * - history settings.
+     * - History settings.
      */
     Console->QuickEdit  = !!ConsoleInfo->QuickEdit;
     Console->InsertMode = !!ConsoleInfo->InsertMode;
+    /// Console->InputBufferSize = 0;
+    HistoryReshapeAllBuffers(Console,
+                             ConsoleInfo->HistoryBufferSize,
+                             ConsoleInfo->NumberOfHistoryBuffers,
+                             ConsoleInfo->HistoryNoDup);
 
     /* Copy the new console palette */
     // FIXME: Possible buffer overflow if s_colors is bigger than ConsoleInfo->ColorTable.

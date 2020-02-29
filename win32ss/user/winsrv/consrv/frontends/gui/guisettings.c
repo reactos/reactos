@@ -132,11 +132,11 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         pSharedInfo->hWnd = GuiData->hWindow;
 
         /* Console information */
-        pSharedInfo->HistoryBufferSize = Console->HistoryBufferSize;
-        pSharedInfo->NumberOfHistoryBuffers = Console->NumberOfHistoryBuffers;
-        pSharedInfo->HistoryNoDup = Console->HistoryNoDup;
         pSharedInfo->QuickEdit = Console->QuickEdit;
         pSharedInfo->InsertMode = Console->InsertMode;
+        pSharedInfo->NumberOfHistoryBuffers = Console->MaxNumberOfHistoryBuffers;
+        pSharedInfo->HistoryBufferSize = Console->HistoryBufferSize;
+        pSharedInfo->HistoryNoDup = Console->HistoryNoDup;
         /// pSharedInfo->InputBufferSize = 0;
         pSharedInfo->ScreenBufferSize = ActiveBuffer->ScreenBufferSize;
         pSharedInfo->WindowSize = ActiveBuffer->ViewSize;
@@ -154,7 +154,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
 
             // FIXME: Gather defaults from the registry ?
             pSharedInfo->ScreenAttributes = DEFAULT_SCREEN_ATTRIB;
-            pSharedInfo->PopupAttributes  = DEFAULT_POPUP_ATTRIB ;
+            pSharedInfo->PopupAttributes  = DEFAULT_POPUP_ATTRIB;
         }
 
         /* We display the output code page only */
@@ -315,12 +315,6 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
         /* Retrieve terminal informations */
 
         /* Console information */
-#if 0 // FIXME: Things not set
-        ConInfo.HistoryBufferSize = pConInfo->HistoryBufferSize;
-        ConInfo.NumberOfHistoryBuffers = pConInfo->NumberOfHistoryBuffers;
-        ConInfo.HistoryNoDup = !!pConInfo->HistoryNoDup;
-        ConInfo.CodePage = pConInfo->CodePage; // Done in ConSrvApplyUserSettings
-#endif
 
         /*
          * Apply the settings

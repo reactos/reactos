@@ -323,7 +323,9 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
         case VK_F7:
         {
             if (KeyEvent->dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
+            {
                 HistoryDeleteCurrentBuffer(Console, ExeName);
+            }
             else
             {
                 if (Popup) DestroyPopupWindow(Popup);
