@@ -57,8 +57,19 @@ add_library(advapi32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/winreg_c.c)
 
 set_module_type(advapi32 win32dll UNICODE ENTRYPOINT DllMain 12)
-target_link_libraries(advapi32 cryptlib wine ${PSEH_LIB})
+target_link_libraries(advapi32 advapi32_vista_static cryptlib wine ${PSEH_LIB})
 add_delay_importlibs(advapi32 secur32)
 add_importlibs(advapi32 advapi32_vista rpcrt4 kernel32 ntdll)
 add_pch(advapi32 advapi32.h SOURCE)
 add_cd_file(TARGET advapi32 DESTINATION reactos/system32 FOR all)
+
+# Vista forwarder
+spec2def(advapi32_vista.dll advapi32_vista.spec ADD_IMPORTLIB)
+add_library(advapi32_vista MODULE
+    DllMainStub.c
+    ${CMAKE_CURRENT_BINARY_DIR}/advapi32_vista_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/advapi32_vista.def)
+set_module_type(advapi32_vista win32dll ENTRYPOINT DllMain 12)
+add_importlibs(advapi32_vista advapi32 kernel32)
+add_cd_file(TARGET advapi32_vista DESTINATION reactos/system32 FOR all)
+
