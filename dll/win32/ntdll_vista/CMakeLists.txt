@@ -5,19 +5,19 @@ add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600
     -D_NTOSKRNL_
     -D_NTSYSTEM_)
 
-spec2def(ntdll_vista.dll ntdll_vista.spec ADD_IMPORTLIB)
+spec2def(ntdll_vista_addon.dll ntdll_vista_addon.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    DllMain.c
     condvar.c
     srw.c
-    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_vista.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_vista_addon.def)
 
-add_library(ntdll_vista MODULE ${SOURCE})
-set_module_type(ntdll_vista win32dll ENTRYPOINT DllMain 12)
+add_library(ntdll_vista_static ${SOURCE})
+add_library(ntdll_vista_addon MODULE DllMain.c)
+set_module_type(ntdll_vista_addon win32dll ENTRYPOINT DllMain 12)
+target_link_libraries(ntdll_vista_addon ntdll_vista_static)
 if(ARCH STREQUAL "arm")
-    target_link_libraries(ntdll_vista chkstk)
+    target_link_libraries(ntdll_vista_addon chkstk)
 endif()
-add_importlibs(ntdll_vista ntdll)
-add_dependencies(ntdll_vista psdk)
-add_cd_file(TARGET ntdll_vista DESTINATION reactos/system32 FOR all)
+add_importlibs(ntdll_vista_addon ntdll)
+add_dependencies(ntdll_vista_addon psdk)

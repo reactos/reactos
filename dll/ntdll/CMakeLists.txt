@@ -8,7 +8,6 @@ add_definitions(
 
 include_directories(
     BEFORE include
-    ../win32/ntdll_vista
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 
 list(APPEND SOURCE
@@ -26,8 +25,6 @@ list(APPEND SOURCE
     rtl/uilist.c
     rtl/version.c
     etw/trace.c
-    ../win32/ntdll_vista/condvar.c
-    ../win32/ntdll_vista/srw.c
     include/ntdll.h)
 
 if(ARCH STREQUAL "i386")
@@ -59,7 +56,18 @@ if(MSVC)
     add_target_link_flags(ntdll "/RELEASE")
 endif()
 
-target_link_libraries(ntdll rtl ntdllsys libcntpr uuid ${PSEH_LIB})
+target_link_libraries(ntdll ntdll_vista_static rtl ntdllsys libcntpr uuid ${PSEH_LIB})
 add_pch(ntdll include/ntdll.h SOURCE)
 add_dependencies(ntdll ntstatus asm)
 add_cd_file(TARGET ntdll DESTINATION reactos/system32 NO_CAB FOR all)
+
+# Vista forwarder
+spec2def(ntdll_vista.dll ntdll_vista.spec ADD_IMPORTLIB)
+add_library(ntdll_vista MODULE
+    DllMainStub.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_vista_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_vista.def)
+set_module_type(ntdll_vista win32dll ENTRYPOINT DllMain 12)
+add_importlibs(ntdll_vista ntdll)
+add_dependencies(ntdll_vista psdk)
+add_cd_file(TARGET ntdll_vista DESTINATION reactos/system32 FOR all)
