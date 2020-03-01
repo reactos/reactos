@@ -38,14 +38,8 @@ WORK_QUEUE_ITEM IopDeviceActionWorkItem;
 BOOLEAN IopDeviceActionInProgress;
 KSPIN_LOCK IopDeviceActionLock;
 
-typedef struct _DEVICE_ACTION_DATA
-{
-    LIST_ENTRY RequestListEntry;
-    PDEVICE_OBJECT DeviceObject;
-    DEVICE_RELATION_TYPE Type;
-} DEVICE_ACTION_DATA, *PDEVICE_ACTION_DATA;
-
 /* FUNCTIONS *****************************************************************/
+
 NTSTATUS
 NTAPI
 IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
@@ -1073,8 +1067,17 @@ IopDeviceActionWorker(
                                  DEVICE_ACTION_DATA,
                                  RequestListEntry);
 
-        IoSynchronousInvalidateDeviceRelations(Data->DeviceObject,
-                                               Data->Type);
+        switch (Data->Action)
+        {
+            case DeviceActionInvalidateDeviceRelations:
+                IoSynchronousInvalidateDeviceRelations(Data->DeviceObject,
+                                                       Data->InvalidateDeviceRelations.Type);
+                break;
+
+            default:
+                DPRINT1("Unimplemented device action %u\n", Data->Action);
+                break;
+        }
 
         ObDereferenceObject(Data->DeviceObject);
         ExFreePoolWithTag(Data, TAG_IO);
@@ -1082,6 +1085,43 @@ IopDeviceActionWorker(
     }
     IopDeviceActionInProgress = FALSE;
     KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
+}
+
+VOID
+IopQueueDeviceAction(
+    _In_ PDEVICE_ACTION_DATA ActionData)
+{
+    PDEVICE_ACTION_DATA Data;
+    KIRQL OldIrql;
+
+    DPRINT("IopQueueDeviceAction(%p)\n", ActionData);
+
+    Data = ExAllocatePoolWithTag(NonPagedPool,
+                                 sizeof(DEVICE_ACTION_DATA),
+                                 TAG_IO);
+    if (!Data)
+        return;
+
+    ObReferenceObject(ActionData->DeviceObject);
+    RtlCopyMemory(Data, ActionData, sizeof(DEVICE_ACTION_DATA));
+
+    DPRINT("Action %u\n", Data->Action);
+
+    KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
+    InsertTailList(&IopDeviceActionRequestList, &Data->RequestListEntry);
+    if (IopDeviceActionInProgress)
+    {
+        KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
+        return;
+    }
+    IopDeviceActionInProgress = TRUE;
+    KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
+
+    ExInitializeWorkItem(&IopDeviceActionWorkItem,
+                         IopDeviceActionWorker,
+                         NULL);
+    ExQueueWorkItem(&IopDeviceActionWorkItem,
+                    DelayedWorkQueue);
 }
 
 NTSTATUS
@@ -5112,34 +5152,13 @@ IoInvalidateDeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN DEVICE_RELATION_TYPE Type)
 {
-    PDEVICE_ACTION_DATA Data;
-    KIRQL OldIrql;
+    DEVICE_ACTION_DATA ActionData;
 
-    Data = ExAllocatePoolWithTag(NonPagedPool,
-                                 sizeof(DEVICE_ACTION_DATA),
-                                 TAG_IO);
-    if (!Data)
-        return;
+    ActionData.DeviceObject = DeviceObject;
+    ActionData.Action = DeviceActionInvalidateDeviceRelations;
+    ActionData.InvalidateDeviceRelations.Type = Type;
 
-    ObReferenceObject(DeviceObject);
-    Data->DeviceObject = DeviceObject;
-    Data->Type = Type;
-
-    KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
-    InsertTailList(&IopDeviceActionRequestList, &Data->RequestListEntry);
-    if (IopDeviceActionInProgress)
-    {
-        KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
-        return;
-    }
-    IopDeviceActionInProgress = TRUE;
-    KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
-
-    ExInitializeWorkItem(&IopDeviceActionWorkItem,
-                         IopDeviceActionWorker,
-                         NULL);
-    ExQueueWorkItem(&IopDeviceActionWorkItem,
-                    DelayedWorkQueue);
+    IopQueueDeviceAction(&ActionData);
 }
 
 /*

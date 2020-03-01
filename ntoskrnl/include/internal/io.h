@@ -539,6 +539,29 @@ typedef enum _SECURITY_DESCRIPTOR_TYPE
 } SECURITY_DESCRIPTOR_TYPE, *PSECURITY_DESCRIPTOR_TYPE;
 
 //
+// Action types and data for IopQueueDeviceAction()
+//
+typedef enum _DEVICE_ACTION
+{
+    DeviceActionInvalidateDeviceRelations,
+    MaxDeviceAction
+} DEVICE_ACTION;
+
+typedef struct _DEVICE_ACTION_DATA
+{
+    LIST_ENTRY RequestListEntry;
+    PDEVICE_OBJECT DeviceObject;
+    DEVICE_ACTION Action;
+    union
+    {
+        struct
+        {
+            DEVICE_RELATION_TYPE Type;
+        } InvalidateDeviceRelations;
+    };
+} DEVICE_ACTION_DATA, *PDEVICE_ACTION_DATA;
+
+//
 // Resource code
 //
 ULONG
@@ -1396,6 +1419,14 @@ VOID
 NTAPI
 IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceName,
                                    IN PUNICODE_STRING OsLoaderPathName
+);
+
+//
+// Device action
+//
+VOID
+IopQueueDeviceAction(
+    _In_ PDEVICE_ACTION_DATA ActionData
 );
 
 //
