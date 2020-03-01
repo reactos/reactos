@@ -61,6 +61,7 @@ add_library(comctl32 MODULE
     ${SOURCE}
     stubs.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/comctl32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
 
 set_module_type(comctl32 win32dll UNICODE)
