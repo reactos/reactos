@@ -147,7 +147,8 @@ VOID
 WINAPI
 GetSystemTimePreciseAsFileTime(OUT PFILETIME lpFileTime)
 {
-    STUB;
+    DPRINT1("GetSystemTimePreciseAsFileTime is not actually precise.");
+    GetSystemTimeAsFileTime(lpFileTime);
 }
 
 /*
