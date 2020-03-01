@@ -564,9 +564,10 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
             /* Now translate everything to ANSI */
             if (!GetInputRequest->Unicode)
             {
-                for (; NumEventsRead > 0; --NumEventsRead)
+                ULONG i;
+                for (i = 0; i < NumEventsRead; ++i)
                 {
-                    ConioInputEventToAnsi(InputBuffer->Header.Console, --InputRecord);
+                    ConioInputEventToAnsi(InputBuffer->Header.Console, &InputRecord[i]);
                 }
             }
         }
