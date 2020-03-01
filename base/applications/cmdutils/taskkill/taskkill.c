@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <psapi.h>
+#include <tlhelp32.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
@@ -31,6 +32,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(taskkill);
 
 static BOOL force_termination = FALSE;
+static BOOL kill_child_processes = FALSE;
 
 static WCHAR **task_list;
 static unsigned int task_count;
@@ -230,11 +232,74 @@ static BOOL get_process_name_from_pid(DWORD pid, WCHAR *buf, DWORD chars)
  * A PID of zero causes taskkill to warn about the inability to terminate
  * system processes. */
 
-#ifndef __REACTOS__
+
+static BOOL get_pid_creation_time(DWORD pid, FILETIME *time)
+{
+    HANDLE process = INVALID_HANDLE_VALUE;
+    FILETIME t1 = { 0 }, t2 = { 0 }, t3 = { 0 };
+
+    process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+    if (!process)
+    {
+        return FALSE;
+    }
+
+    if (!GetProcessTimes(process, time, &t1, &t2, &t3))
+    {
+        CloseHandle(process);
+        return FALSE;
+    }
+
+    CloseHandle(process);
+    return TRUE;
+}
+
+static void send_close_messages_tree(DWORD ppid)
+{
+    FILETIME parent_creation_time = { 0 };
+    HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    PROCESSENTRY32W pe = { 0 };
+    pe.dwSize = sizeof(PROCESSENTRY32W);
+
+    if (!get_pid_creation_time(ppid, &parent_creation_time) || !h)
+    {
+        CloseHandle(h);
+        return;
+    }
+
+    if (Process32FirstW(h, &pe))
+    {
+        do
+        {
+            FILETIME child_creation_time = { 0 };
+            struct pid_close_info info = { pe.th32ProcessID };
+
+            if (!get_pid_creation_time(pe.th32ProcessID, &child_creation_time))
+            {
+                continue;
+            }
+
+            // Compare creation time to avoid reuse PID, thanks to @ThFabba
+            if (pe.th32ParentProcessID == ppid &&
+                CompareFileTime(&parent_creation_time, &child_creation_time) < 0)
+            {
+                // Use recursion to browse all child processes
+                send_close_messages_tree(pe.th32ProcessID);
+                EnumWindows(pid_enum_proc, (LPARAM)&info);
+                if (info.found)
+                {
+                    taskkill_message_printfW(STRING_CLOSE_CHILD, pe.th32ProcessID, ppid);
+                }
+            }
+        } while (Process32NextW(h, &pe));
+    }
+
+    CloseHandle(h);
+}
 
 static int send_close_messages(void)
 {
-    DWORD *pid_list, pid_list_size;
+    DWORD *pid_list, pid_list_size, *pkill_list;
     DWORD self_pid = GetCurrentProcessId();
     unsigned int i;
     int status_code = 0;
@@ -246,10 +311,17 @@ static int send_close_messages(void)
         return 1;
     }
 
+    pkill_list = HeapAlloc(GetProcessHeap(), 0, pid_list_size * sizeof(DWORD));
+    if (!pkill_list)
+        return 1;
+
     for (i = 0; i < task_count; i++)
     {
         WCHAR *p = task_list[i];
         BOOL is_numeric = TRUE;
+        DWORD pkill_size = 0, index = 0;
+
+        memset(pkill_list, 0, pid_list_size * sizeof(DWORD));
 
         /* Determine whether the string is not numeric. */
         while (*p)
@@ -261,9 +333,43 @@ static int send_close_messages(void)
             }
         }
 
+        // Find processes to kill
         if (is_numeric)
         {
-            DWORD pid = atoiW(task_list[i]);
+            WCHAR ps_name[MAX_PATH] = { 0 };
+            if (get_process_name_from_pid(atoiW(task_list[i]), ps_name, MAX_PATH))
+            {
+                pkill_list[pkill_size] = atoiW(task_list[i]);
+                pkill_size++;
+            }
+        }
+        else
+        {
+            for (index = 0; index < pid_list_size; index++)
+            {
+                WCHAR process_name[MAX_PATH];
+                if (get_process_name_from_pid(pid_list[index], process_name, MAX_PATH) &&
+                    !strcmpiW(process_name, task_list[i]))
+                {
+                    pkill_list[pkill_size] = pid_list[index];
+                    pkill_size++;
+                }
+            }
+        }
+
+        // Can't find any process same as name or PID
+        if (pkill_size == 0)
+        {
+            taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
+            status_code = 128;
+            continue;
+        }
+
+        // Try to send close messages to process in `pkill_list`
+        for (index = 0; index < pkill_size; index++)
+        {
+            DWORD pid = pkill_list[index];
+            WCHAR process_name[MAX_PATH] = { 0 };
             struct pid_close_info info = { pid };
 
             if (pid == self_pid)
@@ -273,63 +379,90 @@ static int send_close_messages(void)
                 continue;
             }
 
+            // Send close messages to child first
+            if (kill_child_processes)
+            {
+                send_close_messages_tree(pid);
+            }
+
+            get_process_name_from_pid(pid, process_name, MAX_PATH);
             EnumWindows(pid_enum_proc, (LPARAM)&info);
             if (info.found)
-                taskkill_message_printfW(STRING_CLOSE_PID_SEARCH, pid);
-            else
             {
-                taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
-                status_code = 128;
-            }
-        }
-        else
-        {
-            DWORD index;
-            BOOL found_process = FALSE;
-
-            for (index = 0; index < pid_list_size; index++)
-            {
-                WCHAR process_name[MAX_PATH];
-
-                if (get_process_name_from_pid(pid_list[index], process_name, MAX_PATH) &&
-                    !strcmpiW(process_name, task_list[i]))
+                if (is_numeric)
                 {
-                    struct pid_close_info info = { pid_list[index] };
-
-                    found_process = TRUE;
-                    if (pid_list[index] == self_pid)
-                    {
-                        taskkill_message(STRING_SELF_TERMINATION);
-                        status_code = 1;
-                        continue;
-                    }
-
-                    EnumWindows(pid_enum_proc, (LPARAM)&info);
-                    taskkill_message_printfW(STRING_CLOSE_PROC_SRCH, process_name, pid_list[index]);
+                    taskkill_message_printfW(STRING_CLOSE_PID_SEARCH, pid);
                 }
-            }
-
-            if (!found_process)
-            {
-                taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
-                status_code = 128;
+                else
+                {
+                    taskkill_message_printfW(STRING_CLOSE_PROC_SRCH, process_name, pid);
+                }
             }
         }
     }
 
+    HeapFree(GetProcessHeap(), 0, pkill_list);
     HeapFree(GetProcessHeap(), 0, pid_list);
     return status_code;
 }
 
-#endif // __REACTOS__
-
-#ifdef __REACTOS__
-static int terminate_processes(BOOL force_termination)
-#else
-static int terminate_processes(void)
-#endif
+static void terminate_process_tree(DWORD ppid)
 {
-    DWORD *pid_list, pid_list_size;
+    FILETIME parent_creation_time = { 0 };
+    HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    PROCESSENTRY32W pe = { 0 };
+    pe.dwSize = sizeof(PROCESSENTRY32W);
+
+    if (!get_pid_creation_time(ppid, &parent_creation_time) || !h)
+    {
+        CloseHandle(h);
+        return;
+    }
+
+    if (Process32FirstW(h, &pe))
+    {
+        do
+        {
+            FILETIME child_creation_time = { 0 };
+
+            if (!get_pid_creation_time(pe.th32ProcessID, &child_creation_time))
+            {
+                continue;
+            }
+
+            // Compare creation time to avoid reuse PID, thanks to @ThFabba
+            if (pe.th32ParentProcessID == ppid &&
+                CompareFileTime(&parent_creation_time, &child_creation_time) < 0)
+            {
+                HANDLE process = INVALID_HANDLE_VALUE;
+
+                // Use recursion to browse all child processes
+                terminate_process_tree(pe.th32ProcessID);
+                process = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
+                if (!process)
+                {
+                    continue;
+                }
+
+                if (!TerminateProcess(process, 0))
+                {
+                    taskkill_message_printfW(STRING_TERM_CHILD_FAILED, pe.th32ProcessID, ppid);
+                    CloseHandle(process);
+                    continue;
+                }
+
+                taskkill_message_printfW(STRING_TERM_CHILD, pe.th32ProcessID, ppid);
+                CloseHandle(process);
+            }
+        } while (Process32NextW(h, &pe));
+    }
+
+    CloseHandle(h);
+}
+
+static int terminate_processes(void)
+{
+    DWORD *pid_list, pid_list_size, *pkill_list;
     DWORD self_pid = GetCurrentProcessId();
     unsigned int i;
     int status_code = 0;
@@ -341,10 +474,17 @@ static int terminate_processes(void)
         return 1;
     }
 
+    pkill_list = HeapAlloc(GetProcessHeap(), 0, pid_list_size * sizeof(DWORD));
+    if (!pkill_list)
+        return 1;
+
     for (i = 0; i < task_count; i++)
     {
         WCHAR *p = task_list[i];
         BOOL is_numeric = TRUE;
+        DWORD pkill_size = 0, index = 0;
+
+        memset(pkill_list, 0, pid_list_size * sizeof(DWORD));
 
         /* Determine whether the string is not numeric. */
         while (*p)
@@ -356,12 +496,44 @@ static int terminate_processes(void)
             }
         }
 
+        // Find processes to kill
         if (is_numeric)
         {
-            DWORD pid = atoiW(task_list[i]);
-#ifndef __REACTOS__
-            HANDLE process;
-#endif
+            WCHAR ps_name[MAX_PATH] = { 0 };
+            if (get_process_name_from_pid(atoiW(task_list[i]), ps_name, MAX_PATH))
+            {
+                pkill_list[pkill_size] = atoiW(task_list[i]);
+                pkill_size++;
+            }
+        }
+        else
+        {
+            for (index = 0; index < pid_list_size; index++)
+            {
+                WCHAR process_name[MAX_PATH];
+                if (get_process_name_from_pid(pid_list[index], process_name, MAX_PATH) &&
+                    !strcmpiW(process_name, task_list[i]))
+                {
+                    pkill_list[pkill_size] = pid_list[index];
+                    pkill_size++;
+                }
+            }
+        }
+
+        // Can't find any process same as name or PID
+        if (!pkill_size)
+        {
+            taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
+            status_code = 128;
+            continue;
+        }
+
+        // Try to terminate to process in `pkill_list`
+        for (index = 0; index < pkill_size; index++)
+        {
+            DWORD pid = pkill_list[index];
+            WCHAR process_name[MAX_PATH] = { 0 };
+            HANDLE process = INVALID_HANDLE_VALUE;
 
             if (pid == self_pid)
             {
@@ -370,13 +542,14 @@ static int terminate_processes(void)
                 continue;
             }
 
-#ifdef __REACTOS__
-            if (force_termination)
+            // Terminate child first
+            if (kill_child_processes)
             {
-            HANDLE process;
-#endif
+                terminate_process_tree(pid);
+            }
+
             process = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-            if (!process)
+            if (get_process_name_from_pid(pid, process_name, MAX_PATH) && !process)
             {
                 taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
                 status_code = 128;
@@ -385,102 +558,25 @@ static int terminate_processes(void)
 
             if (!TerminateProcess(process, 0))
             {
-                taskkill_message_printfW(STRING_TERMINATE_FAILED, task_list[i]);
+                taskkill_message_printfW(STRING_TERMINATE_FAILED, process_name);
                 status_code = 1;
                 CloseHandle(process);
                 continue;
             }
 
-            taskkill_message_printfW(STRING_TERM_PID_SEARCH, pid);
-            CloseHandle(process);
-#ifdef __REACTOS__
+            if (is_numeric)
+            {
+                taskkill_message_printfW(STRING_TERM_PID_SEARCH, pid);
             }
             else
             {
-                struct pid_close_info info = { pid };
-
-                EnumWindows(pid_enum_proc, (LPARAM)&info);
-                if (info.found)
-                    taskkill_message_printfW(STRING_CLOSE_PID_SEARCH, pid);
-                else
-                {
-                    taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
-                    status_code = 128;
-                }
+                taskkill_message_printfW(STRING_TERM_PROC_SEARCH, process_name, pid);
             }
-#endif
-        }
-        else
-        {
-            DWORD index;
-            BOOL found_process = FALSE;
-
-            for (index = 0; index < pid_list_size; index++)
-            {
-                WCHAR process_name[MAX_PATH];
-
-                if (get_process_name_from_pid(pid_list[index], process_name, MAX_PATH) &&
-                    !strcmpiW(process_name, task_list[i]))
-                {
-#ifdef __REACTOS__
-                    found_process = TRUE;
-#else
-                    HANDLE process;
-#endif
-
-                    if (pid_list[index] == self_pid)
-                    {
-                        taskkill_message(STRING_SELF_TERMINATION);
-                        status_code = 1;
-                        continue;
-                    }
-
-#ifdef __REACTOS__
-                    if (force_termination)
-                    {
-                    HANDLE process;
-#endif
-                    process = OpenProcess(PROCESS_TERMINATE, FALSE, pid_list[index]);
-                    if (!process)
-                    {
-                        taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
-                        status_code = 128;
-                        continue;
-                    }
-
-                    if (!TerminateProcess(process, 0))
-                    {
-                        taskkill_message_printfW(STRING_TERMINATE_FAILED, task_list[i]);
-                        status_code = 1;
-                        CloseHandle(process);
-                        continue;
-                    }
-
-#ifndef __REACTOS__
-                    found_process = TRUE;
-#endif
-                    taskkill_message_printfW(STRING_TERM_PROC_SEARCH, task_list[i], pid_list[index]);
-                    CloseHandle(process);
-#ifdef __REACTOS__
-                    }
-                    else
-                    {
-                        struct pid_close_info info = { pid_list[index] };
-                        EnumWindows(pid_enum_proc, (LPARAM)&info);
-                        taskkill_message_printfW(STRING_CLOSE_PROC_SRCH, process_name, pid_list[index]);
-                    }
-#endif
-                }
-            }
-
-            if (!found_process)
-            {
-                taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
-                status_code = 128;
-            }
+            CloseHandle(process);
         }
     }
 
+    HeapFree(GetProcessHeap(), 0, pkill_list);
     HeapFree(GetProcessHeap(), 0, pid_list);
     return status_code;
 }
@@ -534,10 +630,6 @@ static int get_argument_type(WCHAR* argument)
     }
     return OP_PARAM_INVALID;
 }
-
-/* FIXME
-argument T not supported
-*/
 
 static BOOL process_arguments(int argc, WCHAR* argv[])
 {
@@ -612,7 +704,14 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
             }
             case OP_PARAM_TERMINATE_CHILD:
             {
-                WINE_FIXME("argument T not supported\n");
+                if (kill_child_processes == TRUE)
+                {
+                    // -t already specified
+                    taskkill_message_printfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
+                    taskkill_message(STRING_USAGE);
+                    return FALSE;
+                }
+                kill_child_processes = TRUE;
                 break;
             }
             case OP_PARAM_INVALID:
@@ -691,8 +790,8 @@ static BOOL process_arguments(int argc, WCHAR *argv[])
             argdata++;
 
             if (!strcmpiW(opTerminateChildren, argdata))
-                WINE_FIXME("argument T not supported\n");
-            if (!strcmpiW(opForceTerminate, argdata))
+                kill_child_processes = TRUE;
+            else if (!strcmpiW(opForceTerminate, argdata))
                 force_termination = TRUE;
             /* Options /IM and /PID appear to behave identically, except for
              * the fact that they cannot be specified at the same time. */
@@ -751,14 +850,10 @@ int wmain(int argc, WCHAR *argv[])
         return 1;
     }
 
-#ifdef __REACTOS__
-    status_code = terminate_processes(force_termination);
-#else
     if (force_termination)
         status_code = terminate_processes();
     else
         status_code = send_close_messages();
-#endif
 
     HeapFree(GetProcessHeap(), 0, task_list);
     return status_code;

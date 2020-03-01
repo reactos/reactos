@@ -2,7 +2,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Usage: taskkill [/?] [/f] [/im ProcessName | /pid ProcessID]\n"
+    STRING_USAGE, "Usage: taskkill [/?] [/f] [/im ProcessName | /pid ProcessID] [/t]\n"
     STRING_INVALID_OPTION, "Error: Unknown or invalid command line option specified.\n"
     STRING_INVALID_PARAM, "Error: Invalid command line parameter specified.\n"
     STRING_MISSING_OPTION, "Error: One of options /im or /pid must be specified.\n"
@@ -16,6 +16,9 @@ STRINGTABLE
     STRING_ENUM_FAILED, "Error: Unable to enumerate the process list.\n"
     STRING_TERMINATE_FAILED, "Error: Unable to terminate process ""%1"".\n"
     STRING_SELF_TERMINATION, "Error: Process self-termination is not permitted.\n"
+    STRING_CLOSE_CHILD, "Close message sent to top-level windows of process with PID %1!u!, child of PID %2!u!.\n"
+    STRING_TERM_CHILD, "Process with PID %1!u! was forcibly terminated, child of PID %2!u!.\n"
+    STRING_TERM_CHILD_FAILED, "Error: Unable to terminate process with PID %1!u!, child of PID %2!u!.\n"
     STRING_PARAM_TOO_MUCH, "Error: Invalid syntax. '%1' option is not allowed more than '%2!d!' time(s).\n"
     STRING_INVALID_SYNTAX, "Error: Invalid syntax.\n"
 }

@@ -9,7 +9,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Sposób użycia: taskkill [/?] [/f] [/im nazwa_procesu | /pid id_procesu]\n"
+    STRING_USAGE, "Sposób użycia: taskkill [/?] [/f] [/im nazwa_procesu | /pid id_procesu] [/t]\n"
     STRING_INVALID_OPTION, "Błąd: Określono nieznaną lub nieprawidłową opcję.\n"
     STRING_INVALID_PARAM, "Błąd: Nieprawidłowy parametr.\n"
     STRING_MISSING_OPTION, "Błąd: Nie określono opcji /im ani /pid.\n"
@@ -23,6 +23,9 @@ STRINGTABLE
     STRING_ENUM_FAILED, "Błąd: Nie można wyliczyć listy procesów.\n"
     STRING_TERMINATE_FAILED, "Błąd: Nie można zakończyć procesu ""%1"".\n"
     STRING_SELF_TERMINATION, "Błąd: Proces nie może zakończyć sam siebie.\n"
+    STRING_CLOSE_CHILD, "Close message sent to top-level windows of process with PID %1!u!, child of PID %2!u!.\n"
+    STRING_TERM_CHILD, "Process with PID %1!u! was forcibly terminated, child of PID %2!u!.\n"
+    STRING_TERM_CHILD_FAILED, "Error: Unable to terminate process with PID %1!u!, child of PID %2!u!.\n"
     STRING_PARAM_TOO_MUCH, "Błąd: Nieprawidłowa składnia. Opcja '%1' nie jest dozwolona więcej niż '%2!d!' razy.\n"
     STRING_INVALID_SYNTAX, "Błąd: Nieprawidłowa składnia.\n"
 }
