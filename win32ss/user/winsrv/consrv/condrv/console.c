@@ -79,24 +79,21 @@ RemoveConsole(IN PCONSOLE Console)
 VOID NTAPI
 ConDrvPause(PCONSOLE Console)
 {
-    /* In case we already have a pause event, just exit... */
-    if (Console->UnpauseEvent) return;
+    /* In case we are already paused, just exit... */
+    if (Console->ConsolePaused) return;
 
-    /* ... otherwise create it */
-    NtCreateEvent(&Console->UnpauseEvent, EVENT_ALL_ACCESS,
-                  NULL, NotificationEvent, FALSE);
+    /* ... otherwise set the flag */
+    Console->ConsolePaused = TRUE;
 }
 
 VOID NTAPI
 ConDrvUnpause(PCONSOLE Console)
 {
-    /* In case we already freed the event, just exit... */
-    if (!Console->UnpauseEvent) return;
+    /* In case we are already unpaused, just exit... */
+    if (!Console->ConsolePaused) return;
 
-    /* ... otherwise set and free it */
-    NtSetEvent(Console->UnpauseEvent, NULL);
-    NtClose(Console->UnpauseEvent);
-    Console->UnpauseEvent = NULL;
+    /* ... otherwise reset the flag */
+    Console->ConsolePaused = FALSE;
 }
 
 
@@ -248,7 +245,7 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     }
     /* Make the new screen buffer active */
     Console->ActiveBuffer = NewBuffer;
-    Console->UnpauseEvent = NULL;
+    Console->ConsolePaused = FALSE;
 
     DPRINT("Console initialized\n");
 
@@ -409,7 +406,7 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
     /* Deinitialize the input buffer */
     ConDrvDeinitInputBuffer(Console);
 
-    if (Console->UnpauseEvent) NtClose(Console->UnpauseEvent);
+    Console->ConsolePaused = FALSE;
 
     DPRINT("ConDrvDeleteConsole - Unlocking\n");
     LeaveCriticalSection(&Console->Lock);

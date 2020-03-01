@@ -228,7 +228,6 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
     }
 
     NewBuffer->ViewOrigin.X = NewBuffer->ViewOrigin.Y = 0;
-    NewBuffer->VirtualY = 0;
 
     NewBuffer->CursorBlinkOn  = FALSE;
     NewBuffer->ForceCursorOff = TRUE;

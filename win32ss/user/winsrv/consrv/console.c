@@ -240,14 +240,14 @@ ConsoleFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 }
 
 VOID
-ConioPause(PCONSRV_CONSOLE Console, UINT Flags)
+ConioPause(PCONSRV_CONSOLE Console, UCHAR Flags)
 {
     Console->PauseFlags |= Flags;
     ConDrvPause((PCONSOLE)Console);
 }
 
 VOID
-ConioUnpause(PCONSRV_CONSOLE Console, UINT Flags)
+ConioUnpause(PCONSRV_CONSOLE Console, UCHAR Flags)
 {
     Console->PauseFlags &= ~Flags;
 

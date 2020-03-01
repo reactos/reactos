@@ -206,7 +206,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
     TEXTMODE_BUFFER_INFO TextModeInfo = {{80, 25},
                                          {80, 25},
                                          DEFAULT_SCREEN_ATTRIB,
-                                         DEFAULT_POPUP_ATTRIB ,
+                                         DEFAULT_POPUP_ATTRIB,
                                          TRUE,
                                          CSR_DEFAULT_CURSOR_SIZE};
     GRAPHICS_BUFFER_INFO GraphicsInfo;

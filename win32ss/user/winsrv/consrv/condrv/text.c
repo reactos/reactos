@@ -793,7 +793,7 @@ ConDrvWriteConsole(IN PCONSOLE Console,
     ASSERT((StringBuffer != NULL) || (StringBuffer == NULL && NumCharsToWrite == 0));
 
     /* Stop here if the console is paused */
-    if (Console->UnpauseEvent != NULL) return STATUS_PENDING;
+    if (Console->ConsolePaused) return STATUS_PENDING;
 
     /* Convert the string to UNICODE */
     if (Unicode)

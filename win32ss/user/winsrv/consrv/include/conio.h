@@ -93,8 +93,6 @@ struct _CONSOLE_SCREEN_BUFFER
     COORD   ViewOrigin;                 /* Beginning offset for the actual display area */
 
 /***** Put that VV in TEXTMODE_SCREEN_BUFFER ?? *****/
-    USHORT  VirtualY;                   /* Top row of buffer being displayed, reported to callers */
-
     COORD   CursorPosition;             /* Current cursor position */
     BOOLEAN CursorBlinkOn;
     BOOLEAN ForceCursorOff;
@@ -152,6 +150,7 @@ typedef struct _TEXTMODE_SCREEN_BUFFER
 {
     CONSOLE_SCREEN_BUFFER;      /* Screen buffer base class - MUST BE IN FIRST PLACE */
 
+    USHORT     VirtualY;        /* Top row of buffer being displayed, reported to callers */
     PCHAR_INFO Buffer;          /* Pointer to UNICODE screen buffer (Buffer->Char.UnicodeChar only is valid, not Char.AsciiChar) */
 
     USHORT ScreenDefaultAttrib; /* Default screen char attribute */
@@ -333,7 +332,7 @@ typedef struct _CONSOLE
     CONSOLE_STATE State;                    /* State of the console */
     TERMINAL TermIFace;                     /* Terminal-specific interface */
 
-    HANDLE UnpauseEvent;                    /* When != NULL, event for pausing the console */
+    BOOLEAN ConsolePaused;                  /* If TRUE, the console is paused */
 
 /******************************** Input buffer ********************************/
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
@@ -367,7 +366,7 @@ ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
 
 /* conoutput.c */
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
+NTSTATUS ConioResizeBuffer(PCONSOLE Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
 

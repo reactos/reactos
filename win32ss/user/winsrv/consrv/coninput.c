@@ -202,6 +202,31 @@ ConioProcessInputEvent(PCONSRV_CONSOLE Console,
                        PINPUT_RECORD InputEvent)
 {
     ULONG NumEventsWritten;
+
+    if (InputEvent->EventType == KEY_EVENT)
+    {
+        BOOL Down = InputEvent->Event.KeyEvent.bKeyDown;
+        UINT VirtualKeyCode = InputEvent->Event.KeyEvent.wVirtualKeyCode;
+        DWORD ShiftState = InputEvent->Event.KeyEvent.dwControlKeyState;
+
+        /* Process Ctrl-C and Ctrl-Break */
+        if ( (GetConsoleInputBufferMode(Console) & ENABLE_PROCESSED_INPUT) &&
+             Down && (VirtualKeyCode == VK_PAUSE || VirtualKeyCode == 'C') &&
+             (ShiftState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) )
+        {
+            DPRINT1("Console_Api Ctrl-C\n");
+            ConSrvConsoleProcessCtrlEvent(Console, 0, CTRL_C_EVENT);
+
+            if (Console->LineBuffer && !Console->LineComplete)
+            {
+                /* Line input is in progress; end it */
+                Console->LinePos = Console->LineSize = 0;
+                Console->LineComplete = TRUE;
+            }
+            return STATUS_SUCCESS; // STATUS_CONTROL_C_EXIT;
+        }
+    }
+
     return ConioAddInputEvents(Console,
                                InputEvent,
                                1,
