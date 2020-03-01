@@ -114,14 +114,12 @@ if(ARCH STREQUAL "i386")
         arch/i386/halstub.c
         arch/i386/ntoskrnl.c
         arch/i386/drivemap.c
-        arch/i386/hardware.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c
         arch/i386/hwdisk.c
         arch/i386/hwpci.c
         arch/i386/i386bug.c
         arch/i386/i386idt.c
-        arch/i386/i386vid.c
         disk/scsiport.c)
 
     if(SARCH STREQUAL "xbox")
@@ -130,7 +128,9 @@ if(ARCH STREQUAL "i386")
             arch/i386/pc/machpc.c       # machxbox.c depends on it
             arch/i386/pc/pcbeep.c       # machxbox.c depends on it
             arch/i386/pc/pcdisk.c       # hwdisk.c depends on it
+            arch/i386/pc/pchw.c         # Many files depends on it
             arch/i386/pc/pcmem.c        # hwacpi.c/xboxmem.c depends on it
+            arch/i386/pc/pcvesa.c       # machpc.c depends on it
             arch/i386/xbox/machxbox.c
             arch/i386/xbox/xboxcons.c
             arch/i386/xbox/xboxdisk.c
@@ -145,8 +145,10 @@ if(ARCH STREQUAL "i386")
             arch/i386/pc/pcbeep.c
             arch/i386/pc/pccons.c
             arch/i386/pc/pcdisk.c
+            arch/i386/pc/pchw.c
             arch/i386/pc/pcmem.c
             arch/i386/pc/pcrtc.c
+            arch/i386/pc/pcvesa.c
             arch/i386/pc/pcvideo.c)
     endif()
 
@@ -164,19 +166,19 @@ elseif(ARCH STREQUAL "amd64")
         lib/fs/pxe.c
         arch/i386/ntoskrnl.c
         arch/i386/drivemap.c
-        arch/i386/hardware.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c
         arch/i386/hwdisk.c
         arch/i386/hwpci.c
         arch/i386/i386bug.c
-        arch/i386/i386vid.c
         arch/i386/pc/machpc.c
         arch/i386/pc/pcbeep.c
         arch/i386/pc/pccons.c
         arch/i386/pc/pcdisk.c
+        arch/i386/pc/pchw.c
         arch/i386/pc/pcmem.c
         arch/i386/pc/pcrtc.c
+        arch/i386/pc/pcvesa.c
         arch/i386/pc/pcvideo.c)
 
 elseif(ARCH STREQUAL "arm")
