@@ -1,4 +1,8 @@
-#include "wdf.h"
+#include "common/fxglobals.h"
+#include "common/fxhandle.h"
+#include "common/fxtimer.h"
+#include "common/fxvalidatefunctions.h"
+
 
 extern "C" {
 
@@ -44,8 +48,131 @@ Notes:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxObject* pParent;
+    NTSTATUS status;
+
+    pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
+
+    status = FxValidateObjectAttributesForParentHandle(pFxDriverGlobals,
+                                                       Attributes,
+                                                       FX_VALIDATE_OPTION_PARENT_REQUIRED);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    FxObjectHandleGetPtrAndGlobals(pFxDriverGlobals,
+                                   Attributes->ParentObject,
+                                   FX_TYPE_OBJECT,
+                                   (PVOID*)&pParent,
+                                   &pFxDriverGlobals);
+
+    FxPointerNotNull(pFxDriverGlobals, Config);
+    FxPointerNotNull(pFxDriverGlobals, Timer);
+
+    if (Config->Size != sizeof(WDF_TIMER_CONFIG) &&
+        Config->Size != sizeof(WDF_TIMER_CONFIG_V1_7) &&
+        Config->Size != sizeof(WDF_TIMER_CONFIG_V1_11))
+    {
+        status = STATUS_INFO_LENGTH_MISMATCH;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            "PWDF_TIMER_CONFIG Size %d, expected %d, %!STATUS!",
+            Config->Size, sizeof(WDF_TIMER_CONFIG), status);
+
+        return status;
+    }
+
+    if (Config->Period > MAXLONG)
+    {
+        status = STATUS_INVALID_PARAMETER;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            "Period value %u for a periodic timer cannot be greater than "
+            "MAXLONG, %!STATUS!", Config->Period, status);
+
+        return status;
+    }
+
+    //
+    // For version 1.13 and higher, the tolerable delay could
+    // go upto MAXULONG
+    //
+    if (Config->Size > sizeof(WDF_TIMER_CONFIG_V1_7) &&
+        (pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,13) == FALSE))
+    {
+        if (Config->TolerableDelay > MAXLONG)
+        {
+            status = STATUS_INVALID_PARAMETER;
+
+            DoTraceLevelMessage(
+                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                "TolerableDelay value %u cannot be greater than MAXLONG, "
+                "%!STATUS!", Config->TolerableDelay, status);
+
+            return status;
+        }
+    }
+
+    /*if (Config->Size > sizeof(WDF_TIMER_CONFIG_V1_11))
+    {
+        
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+        if (Config->UseHighResolutionTimer)
+        {
+            
+            status = STATUS_NOT_IMPLEMENTED;
+            DoTraceLevelMessage(
+                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                "UseHighResolutionTimer option is not supported for UMDF "
+                "%!STATUS!", status);
+            return status;
+        }   
+#endif      
+        
+        if ((Config->TolerableDelay > 0) &&
+            (Config->UseHighResolutionTimer))
+        {
+            status = STATUS_INVALID_PARAMETER;
+
+            DoTraceLevelMessage(
+                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                "UseHighResolutionTimer option sepcified with non zero tolerable delay %u "
+                "%!STATUS!", Config->TolerableDelay, status);
+
+            return status;
+        }
+    }*/
+    
+    status = FxValidateObjectAttributes(pFxDriverGlobals,
+                                Attributes,
+                                FX_VALIDATE_OPTION_EXECUTION_LEVEL_ALLOWED);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    if (Config->Period  > 0 && 
+        Attributes->ExecutionLevel == WdfExecutionLevelPassive)
+    {
+        status = STATUS_NOT_SUPPORTED;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            "Passive level periodic timer is not supported. "
+            "Use one shot timer and queue the next timer from the callback "
+            "or use a dedicated thread, %!STATUS!",
+            status);
+
+        return status;
+    }
+
+    return FxTimer::_Create(pFxDriverGlobals, Config, Attributes, pParent, Timer);
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)

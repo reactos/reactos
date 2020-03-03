@@ -40,4 +40,22 @@ typedef struct _WDF_IO_QUEUE_CONFIG_V1_7 {
 
 } WDF_IO_QUEUE_CONFIG_V1_7, *PWDF_IO_QUEUE_CONFIG_V1_7;
 
+typedef struct _WDF_TIMER_CONFIG_V1_7 {
+    ULONG         Size;
+
+    PFN_WDF_TIMER EvtTimerFunc;
+
+    LONG          Period;
+
+    // 
+    // If this is TRUE, the Timer will automatically serialize
+    // with the event callback handlers of its Parent Object.
+    // 
+    // Parent Object's callback constraints should be compatible
+    // with the Timer DPC (DISPATCH_LEVEL), or the request will fail.
+    // 
+    BOOLEAN       AutomaticSerialization;
+
+} WDF_TIMER_CONFIG_V1_7, *PWDF_TIMER_CONFIG_V1_7;
+
 #endif //_WDF17_H_

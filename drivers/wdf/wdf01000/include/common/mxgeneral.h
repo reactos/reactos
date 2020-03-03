@@ -467,6 +467,15 @@ public:
                                          SymbolicLinkName);
     }
 
+    __inline
+    static
+    VOID
+    MxFlushQueuedDpcs(
+        )
+    {
+        KeFlushQueuedDpcs();
+    }
+
 };
 
 #endif //_MXGENERAL_H_

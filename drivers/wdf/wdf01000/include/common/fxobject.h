@@ -18,6 +18,7 @@
 #include "common/dbgtrace.h"
 #include "common/fxtagtracker.h"
 #include "common/fxpoolinlines.h"
+#include "common/ifxhascallbacks.h"
 #include "wdf.h"
 
 
@@ -543,6 +544,14 @@ private:
         __in FxObject* ChildObject
         );
 
+    BOOLEAN
+    IsPassiveCallbacksLocked(
+        VOID
+        )
+    {
+        return FLAG_TO_BOOL(m_ObjectFlags, FXOBJECT_FLAGS_PASSIVE_CALLBACKS);
+    }
+
     
 public:
     //
@@ -702,6 +711,18 @@ public:
 
         return pHeader;
     }
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _GetEffectiveLock(
+        __in        FxObject* Object,
+        __in_opt    IFxHasCallbacks* Callbacks,
+        __in        BOOLEAN AutomaticLocking,
+        __in        BOOLEAN PassiveCallbacks,
+        __out       FxCallbackLock** CallbackLock,
+        __out_opt   FxObject** CallbackLockObject
+        );
 
     BOOLEAN
     IsDebug(
@@ -901,6 +922,29 @@ public:
         {
             m_ObjectFlags |= FXOBJECT_FLAGS_PASSIVE_CALLBACKS | FXOBJECT_FLAGS_PASSIVE_DISPOSE;
         }
+    }
+
+    BOOLEAN
+    IsPassiveCallbacks(
+        __in BOOLEAN AcquireLock = TRUE
+        )
+    {
+        BOOLEAN result;
+        KIRQL   oldIrql = PASSIVE_LEVEL;
+
+        if (AcquireLock)
+        {
+            m_SpinLock.Acquire(&oldIrql);
+        }
+
+        result = IsPassiveCallbacksLocked();
+
+        if (AcquireLock)
+        {
+            m_SpinLock.Release(oldIrql);
+        }
+
+        return result;
     }
 
     static

@@ -141,12 +141,21 @@ public:
         VOID
         )
     {
-    BOOLEAN bRetVal;
+        BOOLEAN bRetVal;
     
-    bRetVal = KeCancelTimer(&(m_Timer.KernelTimer));
+        bRetVal = KeCancelTimer(&(m_Timer.KernelTimer));
 
-    return bRetVal;
-}
+        return bRetVal;
+    }
+
+    __inline
+    VOID
+    FlushQueuedDpcs(
+        VOID
+        )
+    {
+        Mx::MxFlushQueuedDpcs();
+    }
 
 };
 

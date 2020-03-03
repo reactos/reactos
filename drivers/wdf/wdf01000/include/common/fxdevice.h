@@ -100,7 +100,7 @@ FxIsFileObjectOptional(
 //
 // Base class for all devices.
 //
-class FxDeviceBase : public FxNonPagedObject {
+class FxDeviceBase : public FxNonPagedObject, public IFxHasCallbacks {
 
 protected:
     FxDriver* m_Driver;
@@ -220,6 +220,7 @@ public:
         return STATUS_SUCCESS;
     }
 
+    // begin IFxHasCallbacks overrides
     VOID
     GetConstraints(
         __out_opt WDF_EXECUTION_LEVEL*       ExecutionLevel,
@@ -230,6 +231,7 @@ public:
     GetCallbackLockPtr(
         __out_opt FxObject** LockObject
         );
+    // end IFxHasCallbacks overrides
 
     MdDeviceObject
     __inline
@@ -264,6 +266,15 @@ public:
         __in FxObject* Object,
         __out_opt IFxHasCallbacks** Callbacks
         );
+
+    // begin FxObject overrides
+    _Must_inspect_result_
+    NTSTATUS
+    QueryInterface(
+        __inout FxQueryInterfaceParams* Params
+        );
+    // end FxObject overrides
+    
 
 };
 

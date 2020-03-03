@@ -357,3 +357,25 @@ FxDeviceBase::_SearchForDevice(
 
     return pDeviceBase;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxDeviceBase::QueryInterface(
+    __inout FxQueryInterfaceParams* Params
+    )
+{
+    switch (Params->Type) {
+    case FX_TYPE_DEVICE_BASE:
+        *Params->Object = this;
+        break;
+
+    case FX_TYPE_IHASCALLBACKS:
+        *Params->Object = (IFxHasCallbacks*) this;
+        break;
+
+    default:
+        return __super::QueryInterface(Params);
+    }
+
+    return STATUS_SUCCESS;
+}

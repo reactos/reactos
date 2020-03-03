@@ -1045,3 +1045,105 @@ FxObject::AddContext(
 
     return status;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxObject::_GetEffectiveLock(
+    __in        FxObject* Object,
+    __in_opt    IFxHasCallbacks* Callbacks,
+    __in        BOOLEAN AutomaticLocking,
+    __in        BOOLEAN PassiveCallbacks,
+    __out       FxCallbackLock** CallbackLock,
+    __out_opt   FxObject** CallbackLockObject
+    )
+/*++
+
+Routine Description:
+
+    This gets the effective lock based on the callback constraints
+    configuration of the supplied object.
+
+    This is a common routine shared by all FxObject's that utilize
+    DPC's. Currently, this is FxDpc, FxTimer, and FxInterrupt.
+
+    This contains the common serialization configuration logic for these
+    objects.
+
+Arguments:
+
+    Object - Object to serialize with
+
+    Callbacks - Optional interface for acquiring constraints and locking pointers
+
+    AutomaticLocking - TRUE if automatic serialization with Object is required
+
+    PassiveCallbacks - TRUE if the caller requires passive level callback, FALSE
+                       if the
+    CallbackLock - Lock that is in effect for Object
+
+    CallbackLockOjbect - FxObject that contains the callback lock
+
+Returns:
+
+    NTSTATUS
+
+--*/
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    WDF_EXECUTION_LEVEL parentLevel;
+    WDF_SYNCHRONIZATION_SCOPE parentScope;
+
+    pFxDriverGlobals = Object->GetDriverGlobals();
+    *CallbackLock = NULL;
+    *CallbackLockObject = NULL;
+
+    //
+    // No automatic locking, nothing to do
+    //
+    if (AutomaticLocking == FALSE)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    //
+    // Objects that have callback locks must support this interface.
+    //
+    if (Callbacks == NULL)
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    //
+    // Get the callback constraints in effect for the object
+    //
+    Callbacks->GetConstraints(&parentLevel, &parentScope);
+
+    if (parentScope == WdfSynchronizationScopeInheritFromParent ||
+        parentScope == WdfSynchronizationScopeNone)
+    {
+        //
+        // Do nothing, no synchronization specified
+        //
+        DO_NOTHING();
+    }
+    else
+    {
+        //
+        // If the caller wants passive callbacks and the object does not support
+        // it, failure.
+        //
+        // If the caller wants non passive callbacks and the object supports
+        // passive only callbacks, failure.
+        //
+        if ((PassiveCallbacks && Object->IsPassiveCallbacks() == FALSE) ||
+            (PassiveCallbacks == FALSE && Object->IsPassiveCallbacks()))
+        {
+            FxVerifierDbgBreakPoint(pFxDriverGlobals);
+            return STATUS_WDF_INCOMPATIBLE_EXECUTION_LEVEL;
+        }
+
+        *CallbackLock = Callbacks->GetCallbackLockPtr(CallbackLockObject);
+    }
+
+    return STATUS_SUCCESS;
+}
