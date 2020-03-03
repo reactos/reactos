@@ -36,8 +36,10 @@ ENDM
 
 DEFINE_ALIAS ??3@YAXPEAX@Z, MSVCRT_operator_delete
 DEFINE_ALIAS ??_U@YAPEAX_K@Z, MSVCRT_operator_new
+DEFINE_ALIAS ??_U@YAPEAX_KHPEBDH@Z, MSVCRT_operator_new_dbg
 DEFINE_ALIAS ??_V@YAXPEAX@Z, MSVCRT_operator_delete
 DEFINE_ALIAS ??2@YAPEAX_K@Z, MSVCRT_operator_new
+DEFINE_ALIAS ??2@YAPEAX_KHPEBDH@Z, MSVCRT_operator_new_dbg
 DEFINE_ALIAS ?_query_new_handler@@YAP6AHI@ZXZ, MSVCRT__query_new_handler
 DEFINE_ALIAS ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z, MSVCRT__set_new_handler
 DEFINE_ALIAS ?set_new_handler@@YAP6AXXZP6AXXZ@Z, MSVCRT_set_new_handler
@@ -57,7 +59,9 @@ DEFINE_ALIAS ??4exception@@QEAAAEAV0@AEBV0@@Z, MSVCRT_exception_opequals
 DEFINE_ALIAS ??1type_info@@UEAA@XZ, MSVCRT_type_info_dtor
 DEFINE_ALIAS ??0__non_rtti_object@@QEAA@AEBV0@@Z, MSVCRT___non_rtti_object_copy_ctor
 DEFINE_ALIAS ??0__non_rtti_object@@QEAA@PEBD@Z, MSVCRT___non_rtti_object_ctor
+DEFINE_ALIAS ??0bad_cast@@AAE@PBQBD@Z, MSVCRT_bad_cast_ctor
 DEFINE_ALIAS ??0bad_cast@@AEAA@PEBQEBD@Z, MSVCRT_bad_cast_ctor
+DEFINE_ALIAS ??0bad_cast@@QAE@ABQBD@Z, MSVCRT_bad_cast_ctor
 DEFINE_ALIAS ??0bad_cast@@QEAA@AEBQEBD@Z, MSVCRT_bad_cast_ctor
 DEFINE_ALIAS ??0bad_cast@@QEAA@AEBV0@@Z, MSVCRT_bad_cast_copy_ctor
 DEFINE_ALIAS ??0bad_cast@@QEAA@PEBD@Z, MSVCRT_bad_cast_ctor_charptr
