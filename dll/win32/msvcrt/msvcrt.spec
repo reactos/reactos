@@ -1,5 +1,7 @@
 # msvcrt.dll - MS VC++ Run Time Library
 
+@ cdecl -arch=x86_64 -version=0x502 $I10_OUTPUT() MSVCRT_I10_OUTPUT
+
 # **************** x86 C++ functions ****************
 @ cdecl -i386 -norelay ??0__non_rtti_object@@QAE@ABV0@@Z(ptr) MSVCRT___non_rtti_object_copy_ctor # public: __thiscall __non_rtti_object::__non_rtti_object(class __non_rtti_object const &)
 @ cdecl -i386 -norelay ??0__non_rtti_object@@QAE@PBD@Z(ptr) MSVCRT___non_rtti_object_ctor # public: __thiscall __non_rtti_object::__non_rtti_object(char const *)
@@ -63,7 +65,9 @@
 # **************** win64 C++ functions ****************
 @ cdecl -arch=win64 ??0__non_rtti_object@@QEAA@AEBV0@@Z(ptr) MSVCRT___non_rtti_object_copy_ctor # public: __cdecl __non_rtti_object::__non_rtti_object(class __non_rtti_object const & __ptr64) __ptr64
 @ cdecl -arch=win64 ??0__non_rtti_object@@QEAA@PEBD@Z(ptr) MSVCRT___non_rtti_object_ctor # public: __cdecl __non_rtti_object::__non_rtti_object(char const * __ptr64) __ptr64
+@ cdecl -arch=win64 ??0bad_cast@@AAE@PBQBD@Z(ptr) MSVCRT_bad_cast_ctor # private: __thiscall bad_cast::bad_cast(char const near * const near *)
 @ cdecl -arch=win64 ??0bad_cast@@AEAA@PEBQEBD@Z(ptr) MSVCRT_bad_cast_ctor # private: __cdecl bad_cast::bad_cast(char const * __ptr64 const * __ptr64) __ptr64
+@ cdecl -arch=win64 ??0bad_cast@@QAE@ABQBD@Z(ptr) MSVCRT_bad_cast_ctor # public: __thiscall bad_cast::bad_cast(char const near * const near &)
 @ cdecl -arch=win64 ??0bad_cast@@QEAA@AEBQEBD@Z(ptr) MSVCRT_bad_cast_ctor # public: __cdecl bad_cast::bad_cast(char const * __ptr64 const & __ptr64) __ptr64
 @ cdecl -arch=win64 ??0bad_cast@@QEAA@AEBV0@@Z(ptr) MSVCRT_bad_cast_copy_ctor # public: __cdecl bad_cast::bad_cast(class bad_cast const & __ptr64) __ptr64
 @ cdecl -arch=win64 ??0bad_cast@@QEAA@PEBD@Z(ptr) MSVCRT_bad_cast_ctor_charptr # public: __cdecl bad_cast::bad_cast(char const * __ptr64) __ptr64
@@ -79,6 +83,7 @@
 @ cdecl -arch=win64 ??1exception@@UEAA@XZ() MSVCRT_exception_dtor # public: virtual __cdecl exception::~exception(void) __ptr64
 @ cdecl -arch=win64 ??1type_info@@UEAA@XZ() MSVCRT_type_info_dtor # public: virtual __cdecl type_info::~type_info(void) __ptr64
 @ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) MSVCRT_operator_new # void * __ptr64 __cdecl operator new(unsigned __int64)
+@ cdecl -arch=win64 ??2@YAPEAX_KHPEBDH@Z(int64 long str long) MSVCRT_operator_new_dbg # void * __ptr64 __cdecl operator new(unsigned __int64,int,char const * __ptr64,int)
 @ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) MSVCRT_operator_delete # void __cdecl operator delete(void * __ptr64)
 @ cdecl -arch=win64 ??4__non_rtti_object@@QEAAAEAV0@AEBV0@@Z(ptr) MSVCRT___non_rtti_object_opequals # public: class __non_rtti_object & __ptr64 __cdecl __non_rtti_object::operator=(class __non_rtti_object const & __ptr64) __ptr64
 @ cdecl -arch=win64 ??4bad_cast@@QEAAAEAV0@AEBV0@@Z(ptr) MSVCRT_bad_cast_opequals # public: class bad_cast & __ptr64 __cdecl bad_cast::operator=(class bad_cast const & __ptr64) __ptr64
@@ -93,6 +98,7 @@
 @ cdecl -arch=win64 ??_Fbad_cast@@QEAAXXZ() MSVCRT_bad_cast_default_ctor # public: void __cdecl bad_cast::`default constructor closure'(void) __ptr64
 @ cdecl -arch=win64 ??_Fbad_typeid@@QEAAXXZ() MSVCRT_bad_typeid_default_ctor # public: void __cdecl bad_typeid::`default constructor closure'(void) __ptr64
 @ cdecl -arch=win64 ??_U@YAPEAX_K@Z(long) MSVCRT_operator_new # void * __ptr64 __cdecl operator new[](unsigned __int64)
+@ cdecl -arch=win64 ??_U@YAPEAX_KHPEBDH@Z(int64 long str long) MSVCRT_operator_new_dbg # void * __ptr64 __cdecl operator new[](unsigned __int64,int,char const * __ptr64,int)
 @ cdecl -arch=win64 ??_V@YAXPEAX@Z(ptr) MSVCRT_operator_delete # void __cdecl operator delete[](void * __ptr64)
 @ cdecl -arch=win64 __uncaught_exception(ptr) MSVCRT___uncaught_exception
 @ cdecl -arch=win64 ?_query_new_handler@@YAP6AH_K@ZXZ() MSVCRT__query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned __int64)
@@ -174,7 +180,7 @@
 
 
 # **************** Common functions ****************
-@ cdecl $I10_OUTPUT() MSVCRT_I10_OUTPUT
+@ cdecl -arch=i386 $I10_OUTPUT() MSVCRT_I10_OUTPUT
 @ cdecl -arch=i386 _CIacos()
 @ cdecl -arch=i386 _CIasin()
 @ cdecl -arch=i386 _CIatan()
@@ -201,10 +207,10 @@
 @ cdecl _XcptFilter(long ptr)
 @ stdcall -arch=x86_64,arm __C_specific_handler(ptr long ptr ptr)
 @ cdecl __CppXcptFilter(long ptr)
-# stub __CxxCallUnwindDtor
-# stub __CxxCallUnwindVecDtor
-@ cdecl __CxxDetectRethrow(ptr)
-@ cdecl __CxxExceptionFilter()
+@ stub -arch=i386 __CxxCallUnwindDtor
+@ stub -arch=i386 __CxxCallUnwindVecDtor
+@ cdecl -arch=i386 __CxxDetectRethrow(ptr)
+@ cdecl -arch=i386 __CxxExceptionFilter()
 @ cdecl -arch=i386,x86_64 -norelay __CxxFrameHandler(ptr ptr ptr ptr)
 @ cdecl -arch=i386 -norelay __CxxFrameHandler2(ptr ptr ptr ptr) __CxxFrameHandler
 @ cdecl -arch=arm -norelay __CxxFrameHandler3(ptr ptr ptr ptr)
@@ -292,7 +298,7 @@
 @ cdecl __wcserror(wstr)
 @ cdecl __wgetmainargs(ptr ptr ptr long ptr)
 @ extern __winitenv
-@ cdecl _abnormal_termination()
+@ cdecl -arch=i386 _abnormal_termination()
 # stub _abs64
 @ cdecl _access(str long)
 @ extern _acmdln
@@ -396,11 +402,13 @@
 @ cdecl _findnext64(long ptr)
 @ cdecl _findnexti64(long ptr)
 @ cdecl _finite(double)
+@ stub -arch=x86_64 _finitef
 @ cdecl _flsbuf(long ptr)
 @ cdecl _flushall()
 @ extern _fmode
 @ cdecl _fpclass(double)
-@ cdecl _fpieee_flt(long ptr ptr)
+@ cdecl -stub -arch=x86_64 _fpclassf(long)
+@ cdecl -arch=i386 _fpieee_flt(long ptr ptr)
 @ cdecl _fpreset()
 @ cdecl _fputchar(long)
 @ cdecl _fputwchar(long)
@@ -423,7 +431,8 @@
 @ cdecl _getcwd(str long)
 @ cdecl _getdcwd(long str long)
 @ cdecl _getdiskfree(long ptr)
-@ cdecl _getdllprocaddr(long str long)
+@ cdecl -arch=i386 _getdllprocaddr(long str long)
+@ cdecl -arch=x86_64 -version=0x502 _getdllprocaddr(long str long)
 @ cdecl _getdrive()
 @ cdecl _getdrives() kernel32.GetLogicalDrives
 @ cdecl _getmaxstdio()
@@ -440,7 +449,8 @@
 @ cdecl _heapchk()
 @ cdecl _heapmin()
 @ cdecl _heapset(long)
-@ cdecl _heapused(ptr ptr)
+@ cdecl -arch=i386 _heapused(ptr ptr)
+@ cdecl -arch=x86_64 -version=0x502 _heapused(ptr ptr)
 @ cdecl _heapwalk(ptr)
 @ cdecl _hypot(double double)
 @ cdecl -arch=x86_64,arm _hypotf(long long)
@@ -483,6 +493,7 @@
 @ cdecl _ismbslead(ptr ptr)
 @ cdecl _ismbstrail(ptr ptr)
 @ cdecl _isnan(double)
+@ stub -arch=x86_64 _isnanf
 @ cdecl _itoa(long ptr long)
 @ cdecl _itow(long ptr long)
 @ cdecl _j0(double)
@@ -490,7 +501,9 @@
 @ cdecl _jn(long double)
 @ cdecl _kbhit()
 @ cdecl _lfind(ptr ptr ptr long ptr)
-@ cdecl _loaddll(str)
+@ cdecl -arch=i386 _loaddll(str)
+@ cdecl -arch=x86_64 -version=0x502 _loaddll(str)
+@ cdecl -arch=x86_64 _local_unwind(ptr ptr)
 @ cdecl -i386 _local_unwind2(ptr long)
 @ cdecl -i386 -version=0x600+ _local_unwind4(ptr ptr long)
 @ cdecl _localtime64(ptr)
@@ -570,6 +583,7 @@
 @ cdecl _mktime64(ptr)
 @ cdecl _msize(ptr)
 @ cdecl _nextafter(double double)
+@ stub -arch=x86_64 _nextafterf
 @ cdecl _onexit(ptr)
 @ varargs _open(str long)
 @ cdecl _open_osfhandle(long long)
@@ -603,11 +617,12 @@
 @ cdecl -arch=i386 _safe_fprem()
 @ cdecl -arch=i386 _safe_fprem1()
 @ cdecl _scalb(double long)
+@ stub -arch=x86_64 _scalbf
 @ varargs _scprintf(str)
 @ varargs _scwprintf(wstr)
 @ cdecl _searchenv(str str ptr)
 @ stdcall -i386 _seh_longjmp_unwind(ptr)
-# stub _set_SSE2_enable
+@ stub -arch=i386 _set_SSE2_enable
 @ cdecl _set_error_mode(long)
 @ cdecl _set_sbh_threshold(long)
 @ cdecl _seterrormode(long)
@@ -674,7 +689,8 @@
 @ cdecl _ungetch(long)
 # stub _ungetwch
 @ cdecl _unlink(str)
-@ cdecl _unloaddll(long)
+@ cdecl -arch=i386 _unloaddll(ptr)
+@ cdecl -arch=x86_64 -version=0x502 _unloaddll(ptr)
 @ cdecl _unlock(long)
 @ cdecl _utime(str ptr)
 @ cdecl _utime64(str ptr)
