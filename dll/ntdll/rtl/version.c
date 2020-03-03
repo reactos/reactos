@@ -79,7 +79,8 @@ SetRosSpecificInfo(IN OUT PRTL_OSVERSIONINFOEXW VersionInformation)
  *  ProductType Pointer to the product type variable.
  *
  * RETURN VALUE
- *  TRUE if successful, otherwise FALSE
+ *  TRUE if successful, otherwise FALSE on failure. RtlGetNtProductType() will
+ *  set the product type to the parameter call as Workstation (WinNT) on failure.
  *
  * NOTE
  *  ProductType can be one of the following values:
@@ -89,12 +90,29 @@ SetRosSpecificInfo(IN OUT PRTL_OSVERSIONINFOEXW VersionInformation)
  *
  * REVISIONS
  *  2000-08-10 ekohl
+ *  2020-03-03 Fraizeraust
  *
  * @implemented
  */
 BOOLEAN NTAPI
 RtlGetNtProductType(_Out_ PNT_PRODUCT_TYPE ProductType)
 {
+    /* Raise an exception if the passed argument is NULL */
+    if (ProductType == NULL)
+    {
+        RtlRaiseStatus(STATUS_ACCESS_VIOLATION);
+        return FALSE;
+    }
+
+    /* Bail out if the product value from the shared data doesn't correspond in conformity with NT_PRODUCT_TYPE */
+    if (SharedUserData->NtProductType < NtProductWinNt || SharedUserData->NtProductType > NtProductServer)
+    {
+        DPRINT1("RtlGetNtProductType(): Got an invalid NT product type! Defaulting to NtProductWinNt...\n");
+        *ProductType = NtProductWinNt;
+        return FALSE;
+    }
+
+    /* Cache the data */
     *ProductType = SharedUserData->NtProductType;
     return TRUE;
 }
