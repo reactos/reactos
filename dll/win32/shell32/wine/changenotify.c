@@ -2,6 +2,7 @@
  *	shell change notification
  *
  * Copyright 2000 Juergen Schmied
+ * Copyright 2020 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,13 +42,22 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #ifdef __REACTOS__
-#define SHARE_MUTEX_NAME L"Shell32ShareMutex"
+#define MAX_FIXEDPIDL_SIZE 600
+#define INVALID_REGID 0
+#define CHANGENOTIFY_MUTEX_NAME L"Shell32ChangeNotifyMutex"
 #define LINKHUB_GROW 5
+
+typedef union FIXEDPIDL
+{
+    ITEMIDLIST pidl[1];
+    BYTE data[MAX_FIXEDPIDL_SIZE];
+    SHITEMID mkid;
+} FIXEDPIDL, *LPFIXEDPIDL;
 
 typedef struct ITEM
 {
     BOOL fRecursive;
-    WCHAR szPath[MAX_PATH];
+    FIXEDPIDL fpidl;
 } ITEM, *LPITEM;
 
 typedef struct BLOCK
@@ -57,7 +67,7 @@ typedef struct BLOCK
     LONG fEvents;
     UINT uMsg;
     INT cItems;
-    ITEM Items[1];
+    ITEM Items[ANYSIZE_ARRAY];
 } BLOCK, *LPBLOCK;
 
 typedef struct LINK
@@ -72,22 +82,21 @@ typedef struct LINKHUB
 {
     INT nCapacity;
     INT nCount;
-    LINK Links[1];
+    LINK Links[ANYSIZE_ARRAY];
 } LINKHUB, *LPLINKHUB;
 
 /* shared data section */
 
 #ifdef _MSC_VER
     #define SHELL32SHARE
+    #pragma data_seg(".shared")
 #else
     #define SHELL32SHARE __attribute__((section(".shared"), shared))
 #endif
-#ifdef _MSC_VER
-    #pragma data_seg(".shared")
-#endif
 static HANDLE s_hLinkHub SHELL32SHARE = NULL;
-static DWORD s_dwLinkOwnerPID SHELL32SHARE = 0;
+static DWORD s_dwLinkHubOwnerPID SHELL32SHARE = 0;
 static UINT s_nNextRegID SHELL32SHARE = 0;
+static UINT s_nTotalBlockCount SHELL32SHARE = 0;
 #ifdef _MSC_VER
     #pragma data_seg()
     #pragma comment(linker, "/SECTION:.shared,RWS")
@@ -96,7 +105,7 @@ static UINT s_nNextRegID SHELL32SHARE = 0;
 static BOOL
 IsProcessRunning(DWORD pid)
 {
-    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, pid);
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (hProcess)
         CloseHandle(hProcess);
     return hProcess != NULL;
@@ -127,18 +136,18 @@ LinkHub_Unlock(LPLINKHUB pLinkHub)
 }
 
 static DWORD
-Block_GetSize(INT nEntries)
+Block_GetSize(INT nItems)
 {
-    return sizeof(BLOCK) + (nEntries - 1) * sizeof(ITEM);
+    return sizeof(BLOCK) + (nItems - 1) * sizeof(ITEM);
 }
 
-static BLOCK *
-Block_Lock(HANDLE hShare, DWORD pid)
+static LPBLOCK
+Block_Lock(HANDLE hShare, DWORD dwOwnerPID)
 {
-    if (!hShare || !pid || !IsProcessRunning(pid))
+    if (!hShare || !dwOwnerPID || !IsProcessRunning(dwOwnerPID))
         return NULL;
 
-    return (LPBLOCK)SHLockShared(hShare, pid);
+    return (LPBLOCK)SHLockShared(hShare, dwOwnerPID);
 }
 
 static void
@@ -151,12 +160,12 @@ Block_Unlock(LPVOID block)
 }
 
 static void
-Block_Destroy(HANDLE hShare, DWORD pid)
+Block_Destroy(HANDLE hShare, DWORD dwOwnerPID)
 {
-    if (!hShare || !pid || !IsProcessRunning(pid))
+    if (!hShare || !dwOwnerPID || !IsProcessRunning(dwOwnerPID))
         return;
 
-    SHFreeShared(hShare, pid);
+    SHFreeShared(hShare, dwOwnerPID);
 }
 
 static BOOL
@@ -165,10 +174,14 @@ LinkHub_RemoveByRegID(LPLINKHUB pLinkHub, UINT nRegID)
     BOOL ret = FALSE;
     INT iLink;
     LPLINK pLink;
+
+    if (!pLinkHub->nCount || nRegID == INVALID_REGID)
+        return ret;
+
     for (iLink = 0; iLink < pLinkHub->nCapacity; ++iLink)
     {
         pLink = &pLinkHub->Links[iLink];
-        if (!pLink->nRegID)
+        if (pLink->nRegID == INVALID_REGID)
             continue;
 
         if (pLink->nRegID == nRegID)
@@ -176,6 +189,7 @@ LinkHub_RemoveByRegID(LPLINKHUB pLinkHub, UINT nRegID)
             Block_Destroy(pLink->hBlock, pLink->dwOwnerPID);
             ZeroMemory(pLink, sizeof(*pLink));
             pLinkHub->nCount--;
+            s_nTotalBlockCount--;
             ret = TRUE;
             break;
         }
@@ -184,15 +198,35 @@ LinkHub_RemoveByRegID(LPLINKHUB pLinkHub, UINT nRegID)
 }
 
 static BOOL
+DoFreeLinkHubIfEmpty(void)
+{
+    if (s_nTotalBlockCount != 0)
+        return FALSE;
+
+    if (s_hLinkHub && s_dwLinkHubOwnerPID && IsProcessRunning(s_dwLinkHubOwnerPID))
+        SHFreeShared(s_hLinkHub, s_dwLinkHubOwnerPID);
+
+    s_hLinkHub = NULL;
+    s_dwLinkHubOwnerPID = 0;
+    return TRUE;
+}
+
+static BOOL
 DoRemoveBlockByRegID(UINT nRegID)
 {
     BOOL ret = FALSE;
-    LPLINKHUB pLinkHub = LinkHub_Lock(s_hLinkHub, s_dwLinkOwnerPID);
-    if (pLinkHub)
+    LPLINKHUB pLinkHub = LinkHub_Lock(s_hLinkHub, s_dwLinkHubOwnerPID);
+    if (!pLinkHub)
     {
-        ret = LinkHub_RemoveByRegID(pLinkHub, nRegID);
-        LinkHub_Unlock(pLinkHub);
+        if (s_hLinkHub)
+            ERR("!pLinkHub\n");
+        return FALSE;
     }
+
+    ret = LinkHub_RemoveByRegID(pLinkHub, nRegID);
+    LinkHub_Unlock(pLinkHub);
+
+    DoFreeLinkHubIfEmpty();
     return ret;
 }
 
@@ -201,10 +235,14 @@ LinkHub_Add(LPLINKHUB pLinkHub, DWORD pid, LPBLOCK block)
 {
     INT iLink;
     LPLINK pLink;
+
+    if (pLinkHub->nCapacity == pLinkHub->nCount)
+        return INVALID_REGID;
+
     for (iLink = 0; iLink < pLinkHub->nCapacity; ++iLink)
     {
         pLink = &pLinkHub->Links[iLink];
-        if (pLink->nRegID != 0)
+        if (pLink->nRegID != INVALID_REGID)
             continue;
 
         pLink->hBlock = SHAllocShared(block, Block_GetSize(block->cItems), pid);
@@ -213,16 +251,17 @@ LinkHub_Add(LPLINKHUB pLinkHub, DWORD pid, LPBLOCK block)
             pLink->dwUserPID = pLink->dwOwnerPID = pid;
             pLink->nRegID = ++s_nNextRegID;
             pLinkHub->nCount++;
+            s_nTotalBlockCount++;
             return pLink->nRegID;
         }
     }
-    return 0;
+    return INVALID_REGID;
 }
 
 static UINT
 LinkHub_GrowAdd(LPLINKHUB pOldLinkHub, INT nNewCapacity, DWORD pid, LPBLOCK block)
 {
-    UINT nRegID = 0;
+    UINT nRegID = INVALID_REGID;
     DWORD cbOldLinkHub = LinkHub_GetSize(pOldLinkHub->nCapacity);
     DWORD cbNewLinkHub = LinkHub_GetSize(nNewCapacity);
     HANDLE hNewLinkHub;
@@ -251,7 +290,7 @@ LinkHub_GrowAdd(LPLINKHUB pOldLinkHub, INT nNewCapacity, DWORD pid, LPBLOCK bloc
     SHUnlockShared(pNewLinkHub);
 
     s_hLinkHub = hNewLinkHub;
-    s_dwLinkOwnerPID = pid;
+    s_dwLinkHubOwnerPID = pid;
 
     return nRegID;
 }
@@ -266,7 +305,7 @@ LinkHub_Create(DWORD pid)
 static UINT
 DoAddBlock(DWORD pid, LPBLOCK block)
 {
-    UINT nRegID = 0;
+    UINT nRegID = INVALID_REGID;
     HANDLE hOldLinkHub;
     DWORD dwOldOwnerPID;
     HANDLE hLinkHub;
@@ -282,10 +321,10 @@ DoAddBlock(DWORD pid, LPBLOCK block)
         }
 
         s_hLinkHub = hLinkHub;
-        s_dwLinkOwnerPID = pid;
+        s_dwLinkHubOwnerPID = pid;
     }
 
-    pLinkHub = LinkHub_Lock(s_hLinkHub, s_dwLinkOwnerPID);
+    pLinkHub = LinkHub_Lock(s_hLinkHub, s_dwLinkHubOwnerPID);
     if (!pLinkHub)
     {
         ERR("!pLinkHub\n");
@@ -293,19 +332,20 @@ DoAddBlock(DWORD pid, LPBLOCK block)
     }
 
     nRegID = LinkHub_Add(pLinkHub, pid, block);
-    if (nRegID)
+    if (nRegID != INVALID_REGID)
     {
         LinkHub_Unlock(pLinkHub);
         return nRegID;
     }
 
     hOldLinkHub = s_hLinkHub;
-    dwOldOwnerPID = s_dwLinkOwnerPID;
+    dwOldOwnerPID = s_dwLinkHubOwnerPID;
 
     nRegID = LinkHub_GrowAdd(pLinkHub, pLinkHub->nCapacity + LINKHUB_GROW, pid, block);
     LinkHub_Unlock(pLinkHub);
 
-    SHFreeShared(hOldLinkHub, dwOldOwnerPID);
+    if (hOldLinkHub && dwOldOwnerPID && IsProcessRunning(dwOldOwnerPID))
+        SHFreeShared(hOldLinkHub, dwOldOwnerPID);
     return nRegID;
 }
 
@@ -317,10 +357,14 @@ LinkHub_MoveOwnership(LPLINKHUB pLinkHub, DWORD dwFromPID, DWORD dwToPID)
     LPBLOCK block;
     DWORD cbBlock;
     HANDLE hBlock;
+
+    if (!pLinkHub->nCount)
+        return;
+
     for (iLink = 0; iLink < pLinkHub->nCapacity; ++iLink)
     {
         pLink = &pLinkHub->Links[iLink];
-        if (pLink->nRegID == 0)
+        if (pLink->nRegID == INVALID_REGID)
             continue;
 
         if (pLink->dwOwnerPID != dwFromPID)
@@ -344,15 +388,20 @@ LinkHub_MoveOwnership(LPLINKHUB pLinkHub, DWORD dwFromPID, DWORD dwToPID)
     }
 }
 
-static void
+static BOOL
 LinkHub_RemoveByProcess(LPLINKHUB pLinkHub, DWORD pid)
 {
     INT iLink;
     LPLINK pLink;
+    BOOL ret = FALSE;
+
+    if (!pLinkHub->nCount)
+        return ret;
+
     for (iLink = 0; iLink < pLinkHub->nCapacity; ++iLink)
     {
         pLink = &pLinkHub->Links[iLink];
-        if (pLink->nRegID == 0)
+        if (pLink->nRegID == INVALID_REGID)
             continue;
 
         if (pLink->dwUserPID == pid)
@@ -360,22 +409,30 @@ LinkHub_RemoveByProcess(LPLINKHUB pLinkHub, DWORD pid)
             Block_Destroy(pLink->hBlock, pLink->dwOwnerPID);
             ZeroMemory(pLink, sizeof(*pLink));
             pLinkHub->nCount--;
+            s_nTotalBlockCount--;
+            ret = TRUE;
         }
     }
+
+    return ret;
 }
 
 static DWORD
-LinkHub_GetAnotherPID(LPLINKHUB pLinkHub, DWORD pid)
+LinkHub_GetAnotherOwnerPID(LPLINKHUB pLinkHub, DWORD dwOwnerPID)
 {
     INT iLink;
     LPLINK pLink;
+
+    if (!pLinkHub->nCount)
+        return 0;
+
     for (iLink = 0; iLink < pLinkHub->nCapacity; ++iLink)
     {
         pLink = &pLinkHub->Links[iLink];
-        if (pLink->nRegID == 0)
+        if (pLink->nRegID == INVALID_REGID)
             continue;
 
-        if (pLink->dwOwnerPID != pid)
+        if (pLink->dwOwnerPID != dwOwnerPID)
         {
             return pLink->dwOwnerPID;
         }
@@ -386,34 +443,40 @@ LinkHub_GetAnotherPID(LPLINKHUB pLinkHub, DWORD pid)
 static void
 DoRemoveBlockByProcess(DWORD pid)
 {
-    LPLINKHUB pLinkHub = LinkHub_Lock(s_hLinkHub, s_dwLinkOwnerPID);
-    if (pLinkHub)
+    DWORD dwToPID;
+    LPLINKHUB pLinkHub = LinkHub_Lock(s_hLinkHub, s_dwLinkHubOwnerPID);
+    if (!pLinkHub)
     {
-        DWORD dwToPID = LinkHub_GetAnotherPID(pLinkHub, pid);
-        if (!dwToPID)
-        {
-            LinkHub_Unlock(pLinkHub);
-            return;
-        }
-
-        LinkHub_RemoveByProcess(pLinkHub, pid);
-        LinkHub_MoveOwnership(pLinkHub, pid, dwToPID);
-
-        if (pid == s_dwLinkOwnerPID)
-        {
-            HANDLE hOldLinkHub = s_hLinkHub;
-            DWORD dwOldOwnerPID = s_dwLinkOwnerPID;
-
-            LinkHub_GrowAdd(pLinkHub, pLinkHub->nCapacity, dwToPID, NULL);
-            LinkHub_Unlock(pLinkHub);
-
-            SHFreeShared(hOldLinkHub, dwOldOwnerPID);
-        }
-        else
-        {
-            LinkHub_Unlock(pLinkHub);
-        }
+        if (s_hLinkHub)
+            ERR("!pLinkHub\n");
+        return;
     }
+
+    LinkHub_RemoveByProcess(pLinkHub, pid);
+
+    dwToPID = LinkHub_GetAnotherOwnerPID(pLinkHub, pid);
+    if (dwToPID != 0)
+    {
+        LinkHub_MoveOwnership(pLinkHub, pid, dwToPID);
+    }
+
+    if (pid == s_dwLinkHubOwnerPID)
+    {
+        HANDLE hOldLinkHub = s_hLinkHub;
+        DWORD dwOldOwnerPID = s_dwLinkHubOwnerPID;
+
+        LinkHub_GrowAdd(pLinkHub, pLinkHub->nCapacity, dwToPID, NULL);
+        LinkHub_Unlock(pLinkHub);
+
+        if (hOldLinkHub && dwOldOwnerPID && IsProcessRunning(dwOldOwnerPID))
+            SHFreeShared(hOldLinkHub, dwOldOwnerPID);
+    }
+    else
+    {
+        LinkHub_Unlock(pLinkHub);
+    }
+
+    DoFreeLinkHubIfEmpty();
 }
 #else
 static CRITICAL_SECTION SHELL32_ChangenotifyCS;
@@ -527,7 +590,13 @@ void InitChangeNotifications(void)
 void FreeChangeNotifications(void)
 {
 #ifdef __REACTOS__
-    HANDLE hMutex = CreateMutexW(NULL, TRUE, SHARE_MUTEX_NAME);
+    HANDLE hMutex = CreateMutexW(NULL, FALSE, CHANGENOTIFY_MUTEX_NAME);
+    if (!hMutex)
+    {
+        ERR("!hMutex\n");
+        return;
+    }
+    WaitForSingleObject(hMutex, INFINITE);
     DoRemoveBlockByProcess(GetCurrentProcessId());
     ReleaseMutex(hMutex);
     CloseHandle(hMutex);
@@ -563,13 +632,14 @@ SHChangeNotifyRegister(
 #ifdef __REACTOS__
     HANDLE hMutex;
     DWORD pid;
-    UINT nRegID = 0;
+    UINT nRegID = INVALID_REGID;
     DWORD cbBlock;
     LPBLOCK lpBlock;
-    INT iEntries;
+    INT iItem;
     LPITEM pItem;
 
-    TRACE("(%p,0x%08x,0x%08x,0x%08x,%d,%p) item=%p\n",
+    TRACE("(%p,0x%08x,0x%08x,0x%08x,%d,%p)\n",
+          hwnd, fSources, wEventMask, uMsg, cItems, lpItems);
 
     if (cItems <= 0 || !lpItems || !IsWindow(hwnd))
     {
@@ -584,30 +654,53 @@ SHChangeNotifyRegister(
         return nRegID;
     }
 
-    hMutex = CreateMutexW(NULL, TRUE, SHARE_MUTEX_NAME);
+    hMutex = CreateMutexW(NULL, FALSE, CHANGENOTIFY_MUTEX_NAME);
+    if (!hMutex)
+    {
+        ERR("!hMutex\n");
+        return nRegID;
+    }
+    WaitForSingleObject(hMutex, INFINITE);
+
     if (cItems == 1)
     {
         ITEM item = { lpItems->fRecursive };
         BLOCK block = { hwnd, fSources, wEventMask, uMsg, 1 };
+        UINT size = ILGetSize(lpItems[0].pidl);
 
-        SHGetPathFromIDListW(lpItems->pidl, item.szPath);
-        block.Items[0] = item;
+        if (size <= MAX_FIXEDPIDL_SIZE)
+        {
+            memcpy(item.fpidl.pidl, lpItems[0].pidl, size);
+            block.Items[0] = item;
 
-        nRegID = DoAddBlock(GetCurrentProcessId(), &block);
+            nRegID = DoAddBlock(GetCurrentProcessId(), &block);
+        }
     }
     else
     {
         cbBlock = Block_GetSize(cItems);
         lpBlock = (LPBLOCK)CoTaskMemAlloc(cbBlock);
-        if (lpBlock)
+        if (!lpBlock)
         {
-            for (iEntries = 0; iEntries < cItems; ++iEntries)
+            ERR("Out of memory!\n");
+        }
+        else
+        {
+            UINT size = 0;
+            for (iItem = 0; iItem < cItems; ++iItem)
             {
-                pItem = &lpBlock->Items[iEntries];
-                pItem->fRecursive = lpItems[iEntries].fRecursive;
-                SHGetPathFromIDListW(lpItems[iEntries].pidl, pItem->szPath);
+                pItem = &lpBlock->Items[iItem];
+                pItem->fRecursive = lpItems[iItem].fRecursive;
+                size = ILGetSize(lpItems[iItem].pidl);
+                if (size > MAX_FIXEDPIDL_SIZE)
+                    break;
+
+                memcpy(pItem->fpidl.pidl, lpItems[iItem].pidl, size);
             }
-            nRegID = DoAddBlock(GetCurrentProcessId(), lpBlock);
+            if (size <= MAX_FIXEDPIDL_SIZE)
+            {
+                nRegID = DoAddBlock(GetCurrentProcessId(), lpBlock);
+            }
             CoTaskMemFree(lpBlock);
         }
     }
@@ -655,8 +748,17 @@ SHChangeNotifyRegister(
 BOOL WINAPI SHChangeNotifyDeregister(ULONG hNotify)
 {
 #ifdef __REACTOS__
-    HANDLE hMutex = CreateMutexW(NULL, TRUE, SHARE_MUTEX_NAME);
-    BOOL ret = DoRemoveBlockByRegID(hNotify);
+    BOOL ret = FALSE;
+    HANDLE hMutex = CreateMutexW(NULL, TRUE, CHANGENOTIFY_MUTEX_NAME);
+    if (!hMutex)
+    {
+        ERR("!hMutex\n");
+        return ret;
+    }
+    WaitForSingleObject(hMutex, INFINITE);
+
+    ret = DoRemoveBlockByRegID(hNotify);
+
     ReleaseMutex(hMutex);
     CloseHandle(hMutex);
     return ret;
@@ -702,147 +804,6 @@ struct new_delivery_notification
     BYTE data[1];
 };
 
-#ifdef __REACTOS__
-typedef struct DELIVERY
-{
-    LONG event;
-    WCHAR szPath1[MAX_PATH];
-    WCHAR szPath2[MAX_PATH];
-} DELIVERY, *LPDELIVERY;
-
-static BOOL
-should_notify(LPCWSTR changed, LPCWSTR watched, BOOL sub)
-{
-    WCHAR szChanged[MAX_PATH], szWatched[MAX_PATH];
-    INT cchChanged;
-
-    if (!watched)
-        return FALSE;
-
-    lstrcpynW(szChanged, changed, MAX_PATH);
-    if (PathIsDirectoryW(szChanged))
-        PathAddBackslashW(szChanged);
-    if (PathIsDirectoryW(szWatched))
-        PathAddBackslashW(szWatched);
-
-    if (lstrcmpiW(szChanged, szWatched) == 0)
-        return TRUE;
-
-    if (sub)
-    {
-        cchChanged = lstrlenW(szChanged);
-        szWatched[cchChanged] = 0;
-        if (lstrcmpiW(szChanged, szWatched) == 0)
-            return TRUE;
-    }
-
-    return FALSE;
-}
-
-static void
-DoDelivery(LPDELIVERY delivery, LONG wEventId, ULONG uFlags)
-{
-    LPLINKHUB pLinkHub;
-    INT iLink, iItem;
-    struct new_delivery_notification *shared_data = NULL;
-    LPITEMIDLIST Pidls[2];
-
-    pLinkHub = LinkHub_Lock(s_hLinkHub, s_dwLinkOwnerPID);
-    if (!pLinkHub)
-        return;
-
-    if (!pLinkHub->nCount)
-    {
-        LinkHub_Unlock(pLinkHub);
-        return;
-    }
-
-    Pidls[0] = (delivery->szPath1[0] ? ILCreateFromPathW(delivery->szPath1) : NULL);
-    Pidls[1] = (delivery->szPath2[0] ? ILCreateFromPathW(delivery->szPath2) : NULL);
-
-    /* Create shared_data */
-    {
-        struct new_delivery_notification *notification;
-        UINT size1 = ILGetSize(Pidls[0]), size2 = ILGetSize(Pidls[1]);
-        UINT offset = (size1 + sizeof(int) - 1) / sizeof(int) * sizeof(int);
-
-        notification = SHAlloc(sizeof(struct new_delivery_notification) + offset + size2);
-        if (!notification) {
-            ERR("out of memory\n");
-        } else {
-            notification->event = wEventId;
-            notification->pidl1_size = size1;
-            notification->pidl2_size = size2;
-            if (size1)
-                memcpy(notification->data, Pidls[0], size1);
-            if (size2)
-                memcpy(notification->data+offset, Pidls[1], size2);
-
-            shared_data = SHAllocShared(notification,
-                sizeof(struct new_delivery_notification) + size1 + size2,
-                GetCurrentProcessId());
-            SHFree(notification);
-        }
-    }
-
-    for (iLink = 0; iLink < pLinkHub->nCapacity; ++iLink)
-    {
-        LPBLOCK block;
-        LPLINK pLink = &pLinkHub->Links[iLink];
-        if (pLink->nRegID == 0)
-            continue;
-
-        block = Block_Lock(pLink->hBlock, pLink->dwOwnerPID);
-        if (!block)
-            continue;
-
-        TRACE("notifying %p, event %s(%x)\n", block->hwnd, DumpEvent(block->fEvents), wEventId);
-
-        for (iItem = 0; iItem < block->cItems; ++iItem)
-        {
-            LPITEM pItem = &block->Items[iItem];
-            LPCWSTR pszPath = pItem->szPath;
-            BOOL subtree = pItem->fRecursive;
-            BOOL notify = FALSE;
-
-            if (wEventId & block->fEvents)
-            {
-                if (!pszPath[0])
-                    notify = TRUE;
-                else if (wEventId & SHCNE_NOITEMEVENTS)
-                    notify = TRUE;
-                else if (wEventId & (SHCNE_ONEITEMEVENTS | SHCNE_TWOITEMEVENTS))
-                    notify = should_notify(delivery->szPath1, pszPath, subtree);
-                else if( wEventId & SHCNE_TWOITEMEVENTS )
-                    notify = should_notify(delivery->szPath2, pszPath, subtree);
-            }
-
-            if (!notify)
-                continue;
-
-            if ((block->fSources & SHCNRF_NewDelivery))
-            {
-                if (shared_data)
-                    SendMessageA(block->hwnd, block->uMsg, (WPARAM)shared_data, GetCurrentProcessId());
-                else
-                    ERR("out of memory\n");
-            }
-            else
-            {
-                SendMessageA(block->hwnd, block->uMsg, (WPARAM)Pidls, wEventId);
-            }
-        }
-
-        Block_Unlock(block);
-    }
-
-    SHFreeShared(shared_data, GetCurrentProcessId());
-    SHFree(Pidls[0]);
-    SHFree(Pidls[1]);
-
-    LinkHub_Unlock(pLinkHub);
-}
-#else
 static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL sub )
 {
     TRACE("%p %p %d\n", changed, watched, sub );
@@ -854,6 +815,205 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
         return TRUE;
     return FALSE;
 }
+
+#ifdef __REACTOS__
+typedef struct DELIVERY
+{
+    FIXEDPIDL fpidl1;
+    FIXEDPIDL fpidl2;
+} DELIVERY, *LPDELIVERY;
+
+static BOOL
+DoProcessMemoryAndSendNotif(LPBLOCK block, LPITEMIDLIST *Pidls, LONG wEventId)
+{
+    DWORD pid;
+    HANDLE hProcess;
+    LPITEMIDLIST *pProcessMemory;
+    LPITEMIDLIST pidlsProcess[2] = { NULL, NULL };
+    DWORD size, size1, size2;
+    SIZE_T cbWritten;
+    BOOL ret;
+
+    GetWindowThreadProcessId(block->hwnd, &pid);
+
+    if (pid == GetCurrentProcessId())
+    {
+        SendMessageA(block->hwnd, block->uMsg, (WPARAM)Pidls, wEventId);
+        return TRUE;
+    }
+
+    hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, pid);
+    if (!hProcess)
+    {
+        ERR("!hProcess\n");
+        return FALSE;
+    }
+
+    size1 = ILGetSize(Pidls[0]);
+    if (size1)
+    {
+        pidlsProcess[0] = VirtualAllocEx(hProcess, NULL, size1, MEM_COMMIT, PAGE_READWRITE);
+        ret = WriteProcessMemory(hProcess, pidlsProcess[0], Pidls[0], size1, &cbWritten);
+        if (!pidlsProcess[0])
+            ERR("!pidlsProcess[0]\n");
+        if (!ret)
+            ERR("!WriteProcessMemory\n");
+    }
+
+    size2 = ILGetSize(Pidls[1]);
+    if (size2)
+    {
+        pidlsProcess[1] = VirtualAllocEx(hProcess, NULL, size2, MEM_COMMIT, PAGE_READWRITE);
+        ret = WriteProcessMemory(hProcess, pidlsProcess[1], Pidls[1], size2, &cbWritten);
+        if (!pidlsProcess[1])
+            ERR("!pidlsProcess[1]\n");
+        if (!ret)
+            ERR("!WriteProcessMemory\n");
+    }
+
+    size = 2 * sizeof(LPITEMIDLIST);
+    pProcessMemory = VirtualAllocEx(hProcess, NULL, size, MEM_COMMIT, PAGE_READWRITE);
+    if (!pProcessMemory)
+    {
+        ERR("!pProcessMemory\n");
+    }
+    ret = WriteProcessMemory(hProcess, pProcessMemory, pidlsProcess, size, &cbWritten);
+    if (!ret)
+    {
+        ERR("!WriteProcessMemory\n");
+    }
+
+    SendMessageA(block->hwnd, block->uMsg, (WPARAM)pProcessMemory, wEventId);
+
+    VirtualFreeEx(hProcess, pidlsProcess[0], size1, MEM_RELEASE);
+    VirtualFreeEx(hProcess, pidlsProcess[1], size2, MEM_RELEASE);
+    VirtualFreeEx(hProcess, pProcessMemory, size, MEM_RELEASE);
+    CloseHandle(hProcess);
+    return ret;
+}
+
+static void
+DoDelivery(LPDELIVERY delivery, LONG wEventId)
+{
+    LPLINKHUB pLinkHub;
+    INT iLink, iItem;
+    HANDLE hShare;
+    LPITEMIDLIST Pidls[2] = { NULL, NULL };
+
+    pLinkHub = LinkHub_Lock(s_hLinkHub, s_dwLinkHubOwnerPID);
+    if (!pLinkHub)
+    {
+        if (s_hLinkHub)
+            ERR("!pLinkHub\n");
+        return;
+    }
+
+    if (!pLinkHub->nCount)
+    {
+        LinkHub_Unlock(pLinkHub);
+        return;
+    }
+
+    if (delivery->fpidl1.mkid.cb)
+    {
+        Pidls[0] = delivery->fpidl1.pidl;
+    }
+    if (delivery->fpidl2.mkid.cb)
+    {
+        Pidls[1] = delivery->fpidl2.pidl;
+    }
+
+    /* Create hShare */
+    {
+        struct new_delivery_notification *notification;
+        UINT size1 = ILGetSize(Pidls[0]), size2 = ILGetSize(Pidls[1]);
+        UINT offset = (size1 + sizeof(int) - 1) / sizeof(int) * sizeof(int);
+        DWORD cbShare = sizeof(struct new_delivery_notification) + offset + size2;
+
+        notification = SHAlloc(cbShare);
+        if (!notification)
+        {
+            ERR("out of memory\n");
+        }
+        else
+        {
+            notification->event = wEventId;
+            notification->pidl1_size = size1;
+            notification->pidl2_size = size2;
+            if (size1)
+                memcpy(notification->data, Pidls[0], size1);
+            if (size2)
+                memcpy(notification->data + offset, Pidls[1], size2);
+
+            hShare = SHAllocShared(notification,
+                sizeof(struct new_delivery_notification) + size1 + size2,
+                GetCurrentProcessId());
+            SHFree(notification);
+        }
+    }
+
+    for (iLink = 0; iLink < pLinkHub->nCapacity; ++iLink)
+    {
+        LPBLOCK block;
+        LPLINK pLink = &pLinkHub->Links[iLink];
+        if (pLink->nRegID == INVALID_REGID)
+            continue;
+
+        block = Block_Lock(pLink->hBlock, pLink->dwOwnerPID);
+        if (!block)
+            continue;
+
+        TRACE("notifying %p, event %s(%x)\n", block->hwnd, DumpEvent(block->fEvents),
+              wEventId);
+
+        for (iItem = 0; iItem < block->cItems; ++iItem)
+        {
+            LPITEM pItem = &block->Items[iItem];
+            LPCITEMIDLIST pidl = pItem->fpidl.pidl;
+            BOOL subtree = pItem->fRecursive;
+            BOOL notify = FALSE;
+
+            if (wEventId & block->fEvents)
+            {
+                if (!pidl->mkid.cb || (wEventId & SHCNE_NOITEMEVENTS))
+                {
+                    notify = TRUE;
+                }
+                else if (wEventId & SHCNE_TWOITEMEVENTS)
+                {
+                    notify = should_notify(Pidls[0], pItem->fpidl.pidl, subtree) ||
+                             should_notify(Pidls[1], pItem->fpidl.pidl, subtree);
+                }
+                else if (wEventId & SHCNE_ONEITEMEVENTS)
+                {
+                    notify = should_notify(Pidls[0], pItem->fpidl.pidl, subtree);
+                }
+            }
+
+            if (!notify)
+                continue;
+
+            if (!hShare)
+                continue;
+
+            if (block->fSources & SHCNRF_NewDelivery)
+            {
+                /* Use shared data. */
+                SendMessageA(block->hwnd, block->uMsg, (WPARAM)hShare, GetCurrentProcessId());
+                continue;
+            }
+
+            /* Use process memory. */
+            DoProcessMemoryAndSendNotif(block, Pidls, wEventId);
+        }
+
+        Block_Unlock(block);
+    }
+
+    SHFreeShared(hShare, GetCurrentProcessId());
+
+    LinkHub_Unlock(pLinkHub);
+}
 #endif
 
 /*************************************************************************
@@ -864,6 +1024,8 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
 #ifdef __REACTOS__
     DELIVERY delivery;
     HANDLE hMutex;
+    LPITEMIDLIST pidl;
+    UINT size;
 
     TRACE("(0x%08x,0x%08x,%p,%p)\n", wEventId, uFlags, dwItem1, dwItem2);
 
@@ -873,13 +1035,13 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
     if ((wEventId & SHCNE_NOITEMEVENTS) && (dwItem1 || dwItem2))
     {
         TRACE("dwItem1 and dwItem2 are not zero, but should be\n");
-        dwItem1 = 0;
-        dwItem2 = 0;
+        dwItem1 = NULL;
+        dwItem2 = NULL;
     }
     else if ((wEventId & SHCNE_ONEITEMEVENTS) && dwItem2)
     {
         TRACE("dwItem2 is not zero, but should be\n");
-        dwItem2 = 0;
+        dwItem2 = NULL;
     }
 
     if (((wEventId & SHCNE_NOITEMEVENTS) && 
@@ -893,26 +1055,82 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
         return;
     }
 
-    delivery.szPath1[0] = delivery.szPath2[0] = 0;
+    ZeroMemory(&delivery, sizeof(delivery));
     switch (uFlags & SHCNF_TYPE)
     {
         case SHCNF_PATHA:
             if (dwItem1)
-                MultiByteToWideChar(CP_ACP, 0, dwItem1, -1, delivery.szPath1, MAX_PATH);
+            {
+                if (PathFileExistsA(dwItem1))
+                    pidl = ILCreateFromPathA(dwItem1);
+                else
+                    pidl = SHSimpleIDListFromPathA(dwItem1);
+                size = ILGetSize(pidl);
+                if (size <= MAX_FIXEDPIDL_SIZE)
+                {
+                    memcpy(delivery.fpidl1.pidl, pidl, size);
+                }
+                SHFree(pidl);
+            }
             if (dwItem2)
-                MultiByteToWideChar(CP_ACP, 0, dwItem2, -1, delivery.szPath2, MAX_PATH);
+            {
+                if (PathFileExistsA(dwItem2))
+                    pidl = ILCreateFromPathA(dwItem2);
+                else
+                    pidl = SHSimpleIDListFromPathA(dwItem2);
+                size = ILGetSize(pidl);
+                if (size <= MAX_FIXEDPIDL_SIZE)
+                {
+                    memcpy(delivery.fpidl2.pidl, pidl, size);
+                }
+                SHFree(pidl);
+            }
             break;
         case SHCNF_PATHW:
             if (dwItem1)
-                lstrcpynW(delivery.szPath1, dwItem1, MAX_PATH);
+            {
+                if (PathFileExistsW(dwItem1))
+                    pidl = ILCreateFromPathW(dwItem1);
+                else
+                    pidl = SHSimpleIDListFromPathW(dwItem1);
+                size = ILGetSize(pidl);
+                if (size <= MAX_FIXEDPIDL_SIZE)
+                {
+                    memcpy(delivery.fpidl1.pidl, pidl, size);
+                }
+                SHFree(pidl);
+            }
             if (dwItem2)
-                lstrcpynW(delivery.szPath2, dwItem2, MAX_PATH);
+            {
+                if (PathFileExistsW(dwItem2))
+                    pidl = ILCreateFromPathW(dwItem2);
+                else
+                    pidl = SHSimpleIDListFromPathW(dwItem2);
+                size = ILGetSize(pidl);
+                if (size <= MAX_FIXEDPIDL_SIZE)
+                {
+                    memcpy(delivery.fpidl2.pidl, pidl, size);
+                }
+                SHFree(pidl);
+            }
             break;
         case SHCNF_IDLIST:
             if (dwItem1)
-                SHGetPathFromIDListW(dwItem1, delivery.szPath1);
+            {
+                size = ILGetSize(dwItem1);
+                if (size <= MAX_FIXEDPIDL_SIZE)
+                {
+                    memcpy(delivery.fpidl1.pidl, dwItem1, size);
+                }
+            }
             if (dwItem2)
-                SHGetPathFromIDListW(dwItem2, delivery.szPath2);
+            {
+                size = ILGetSize(dwItem2);
+                if (size <= MAX_FIXEDPIDL_SIZE)
+                {
+                    memcpy(delivery.fpidl2.pidl, dwItem2, size);
+                }
+            }
             break;
         case SHCNF_PRINTERA:
         case SHCNF_PRINTERW:
@@ -924,8 +1142,15 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
             return;
     }
 
-    hMutex = CreateMutexW(NULL, TRUE, SHARE_MUTEX_NAME);
-    DoDelivery(&delivery, wEventId, uFlags);
+    hMutex = CreateMutexW(NULL, TRUE, CHANGENOTIFY_MUTEX_NAME);
+    if (!hMutex)
+    {
+        ERR("!hMutex\n");
+        return;
+    }
+
+    WaitForSingleObject(hMutex, INFINITE);
+    DoDelivery(&delivery, wEventId);
     ReleaseMutex(hMutex);
     CloseHandle(hMutex);
 #else   /* ndef __REACTOS__ */
