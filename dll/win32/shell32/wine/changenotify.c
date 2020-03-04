@@ -288,7 +288,7 @@ DoAddBlock(DWORD pid, LPBLOCK block)
     pLinkHub = LinkHub_Lock(s_hLinkHub, s_dwLinkOwnerPID);
     if (!pLinkHub)
     {
-        ERR("!hLinkHub\n");
+        ERR("!pLinkHub\n");
         return nRegID;
     }
 
