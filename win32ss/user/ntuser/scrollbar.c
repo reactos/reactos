@@ -61,6 +61,9 @@ DBG_DEFAULT_CHANNEL(UserScrollbar);
 BOOL APIENTRY
 IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows);
 
+static void
+IntRefeshScrollInterior(PWND pWnd, INT nBar, PSCROLLBARINFO psbi);
+
 
 /* Ported from WINE20020904 */
 /* Compute the scroll bar rectangle, in drawing coordinates (i.e. client coords for SB_CTL, window coords for SB_VERT and
@@ -636,13 +639,21 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
          if ( co_UserShowScrollBar(Window, nBar, TRUE, TRUE) )
             return lpsi->fMask & SIF_PREVIOUSPOS ? OldPos : pSBData->pos; /* SetWindowPos() already did the painting */
       if (bRedraw)
-      { // FIXME: Arrows and interior.
-         RECTL UpdateRect = psbi->rcScrollBar;
-         UpdateRect.left -= Window->rcClient.left - Window->rcWindow.left;
-         UpdateRect.right -= Window->rcClient.left - Window->rcWindow.left;
-         UpdateRect.top -= Window->rcClient.top - Window->rcWindow.top;
-         UpdateRect.bottom -= Window->rcClient.top - Window->rcWindow.top;
-         co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
+      {
+         if (action & SA_SSI_REPAINT_ARROWS)
+         {  // Redraw the entire bar.
+            RECTL UpdateRect = psbi->rcScrollBar;
+            UpdateRect.left -= Window->rcClient.left - Window->rcWindow.left;
+            UpdateRect.right -= Window->rcClient.left - Window->rcWindow.left;
+            UpdateRect.top -= Window->rcClient.top - Window->rcWindow.top;
+            UpdateRect.bottom -= Window->rcClient.top - Window->rcWindow.top;
+            co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
+         }
+         else
+         {
+            // Redraw only the interior part of the bar.
+            IntRefeshScrollInterior(Window, nBar, psbi);
+         }
       } // FIXME: Arrows
 /*      else if( action & SA_SSI_REPAINT_ARROWS )
       {
@@ -1067,6 +1078,21 @@ IntScrollGetObjectId(INT SBType)
    if (SBType == SB_HORZ)
        return OBJID_HSCROLL;
    return OBJID_CLIENT;
+}
+
+static void
+IntRefeshScrollInterior(PWND pWnd, INT nBar, PSCROLLBARINFO psbi)
+{
+   HDC hdc;
+   BOOL Vertical = ((nBar == SB_CTL) ? ((pWnd->style & SBS_VERT) != 0) : (nBar == SB_VERT));
+
+   hdc = UserGetDCEx(pWnd, NULL, DCX_CACHE | ((nBar == SB_CTL) ? 0 : DCX_WINDOW));
+   if (hdc)
+   {  /* Get updated info. */
+      co_IntGetScrollBarInfo(pWnd, IntScrollGetObjectId(nBar), psbi);
+      IntDrawScrollInterior(pWnd, hdc, nBar, Vertical, psbi);
+      UserReleaseDC(pWnd, hdc, FALSE);
+   }
 }
 
 void
