@@ -1796,7 +1796,7 @@ CM_Disable_DevNode_Ex(
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    FIXME("CM_Disable_DevNode_Ex(%p %lx %p)\n",
+    TRACE("CM_Disable_DevNode_Ex(%p %lx %p)\n",
           dnDevInst, ulFlags, hMachine);
 
     if (!pSetupIsUserAdmin())

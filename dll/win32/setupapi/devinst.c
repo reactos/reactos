@@ -5045,12 +5045,28 @@ ResetDevice(
 #endif
 }
 
-static BOOL StopDevice(
+static BOOL
+StopDevice(
         IN HDEVINFO DeviceInfoSet,
         IN PSP_DEVINFO_DATA DeviceInfoData)
 {
+#ifndef __WINESRC__
+    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+    CONFIGRET cr;
+
+    cr = CM_Disable_DevNode_Ex(deviceInfo->dnDevInst, 0, set->hMachine);
+    if (cr != CR_SUCCESS)
+    {
+        SetLastError(GetErrorCodeFromCrCode(cr));
+        return FALSE;
+    }
+
+    return TRUE;
+#else
     FIXME("Stub: StopDevice(%p %p)\n", DeviceInfoSet, DeviceInfoData);
     return TRUE;
+#endif
 }
 
 /***********************************************************************
