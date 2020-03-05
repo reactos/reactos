@@ -373,3 +373,164 @@ Return Value:
 
     CompletePowerRequest(&irp, irp.GetStatus());
 }
+
+VOID
+FxPkgPnp::PowerProcessEvent(
+    __in FxPowerEvent Event,
+    __in BOOLEAN ProcessOnDifferentThread
+    )
+/*++
+
+Routine Description:
+    This function implements steps 1-8 of the algorithm described above.
+
+Arguments:
+    Event - Current Power event
+
+    ProcessOnDifferentThread - Process the event on a different thread 
+        regardless of IRQL. By default this is FALSE as per the declaration.
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+{
+    NTSTATUS status;
+    KIRQL irql;
+
+    //
+    // Take the lock, raising to DISPATCH_LEVEL.
+    //
+    m_PowerMachine.Lock(&irql);
+
+    //
+    // If the input Event is any of the events described by PowerSingularEventMask,
+    // then check whether it is already queued up. If so, then dont enqueue this
+    // Event.
+    //
+    if (Event & PowerSingularEventMask)
+    {
+        if ((m_PowerMachine.m_SingularEventsPresent & Event) == 0x00)
+        {
+            m_PowerMachine.m_SingularEventsPresent |= Event;
+        }
+        else
+        {
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+                "WDFDEVICE 0x%p !devobj 0x%p current pwr pol state "
+                "%!WDF_DEVICE_POWER_STATE! dropping event %!FxPowerEvent! because "
+                "the Event is already enqueued.", m_Device->GetHandle(),
+                m_Device->GetDeviceObject(), 
+                m_Device->GetDevicePowerState(),
+                Event);
+
+            m_PowerMachine.Unlock(irql);
+            return;
+        }
+    }
+
+    if (m_PowerMachine.IsFull())
+    {
+        //
+        // The queue is full.  Bail.
+        //
+        m_PowerMachine.Unlock(irql);
+
+        ASSERT(!"The Power queue is full.  This shouldn't be able to happen.");
+        return;
+    }
+
+    if (m_PowerMachine.IsClosedLocked())
+    {
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+            "WDFDEVICE 0x%p !devobj 0x%p current pwr pol state "
+            "%!WDF_DEVICE_POWER_STATE! dropping event %!FxPowerEvent! because "
+            "of a closed queue", m_Device->GetHandle(),
+            m_Device->GetDeviceObject(), 
+            m_Device->GetDevicePowerState(),
+            Event);
+
+        //
+        // The queue is closed.  Bail
+        //
+        m_PowerMachine.Unlock(irql);
+
+        return;
+    }
+
+    //
+    // Enqueue the event.  Whether the event goes on the front
+    // or the end of the queue depends on which event it is.
+    //
+    if (Event & PowerPriorityEventsMask)
+    {
+        //
+        // Stick it on the front of the queue, making it the next
+        // event that will be processed.
+        //
+        m_PowerMachine.m_Queue.Events[m_PowerMachine.InsertAtHead()] = (USHORT) Event;
+    }
+    else
+    {
+        //
+        // Stick it on the end of the queue.
+        //
+        m_PowerMachine.m_Queue.Events[m_PowerMachine.InsertAtTail()] = (USHORT) Event;
+    }
+
+    //
+    // Drop the lock.
+    //
+    m_PowerMachine.Unlock(irql);
+
+    //
+    // Now, if we are running at PASSIVE_LEVEL, attempt to run the state
+    // machine on this thread.  If we can't do that, then queue a work item.
+    //
+
+    if (irql == PASSIVE_LEVEL &&
+        FALSE == ProcessOnDifferentThread)
+    {
+        LONGLONG timeout = 0;
+
+        status = m_PowerMachine.m_StateMachineLock.AcquireLock(
+            GetDriverGlobals(), &timeout);
+
+        if (FxWaitLockInternal::IsLockAcquired(status))
+        {
+            FxPostProcessInfo info;
+            //
+            // We now hold the state machine lock.  So call the function that
+            // dispatches the next state.
+            //
+            PowerProcessEventInner(&info);
+
+            //
+            // The pnp state machine should be the only one deleting the object
+            //
+            ASSERT(info.m_DeleteObject == FALSE);
+
+            m_PowerMachine.m_StateMachineLock.ReleaseLock(GetDriverGlobals());
+
+            info.Evaluate(this);
+
+            return;
+        }
+    }
+
+    //
+    // The tag added above will be released when the work item runs
+    //
+
+    // For one reason or another, we couldn't run the state machine on this
+    // thread.  So queue a work item to do it.  If m_PnPWorkItemEnqueuing
+    // is non-zero, that means that the work item is already being enqueued
+    // on another thread.  This is significant, since it means that we can't do
+    // anything with the work item on this thread, but it's okay, since the
+    // work item will pick up our work and do it.
+    //
+    m_PowerMachine.QueueToThread();
+}

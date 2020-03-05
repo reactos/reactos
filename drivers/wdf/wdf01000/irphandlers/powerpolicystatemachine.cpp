@@ -749,6 +749,217 @@ Return Value:
     }
 }
 
+VOID
+FxPkgPnp::PowerPolicyProcessEvent(
+    __in FxPowerPolicyEvent Event,
+    __in BOOLEAN ProcessOnDifferentThread
+    )
+/*++
+
+Routine Description:
+    This function implements steps 1-8 of the algorithm described above.
+
+Arguments:
+    Event - Current Power event
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+{
+    NTSTATUS status;
+    ULONG mask;
+    KIRQL irql;
+
+    //
+    // Take the lock, raising to DISPATCH_LEVEL.
+    //
+    m_PowerPolicyMachine.Lock(&irql);
+
+    //
+    // If the input Event is any of the events described by PowerSingularEventMask,
+    // then check whether it is already queued up. If so, then dont enqueue this
+    // Event.
+    //
+    if (Event & PowerPolSingularEventMask)
+    {
+        if ((m_PowerPolicyMachine.m_SingularEventsPresent & Event) == 0x00)
+        {
+            m_PowerPolicyMachine.m_SingularEventsPresent |= Event;
+        }
+        else
+        {
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+                "WDFDEVICE 0x%p !devobj 0x%p current pwr pol state "
+                "%!WDF_DEVICE_POWER_POLICY_STATE! dropping event "
+                "%!FxPowerPolicyEvent! because the Event is already enqueued.",
+                m_Device->GetHandle(), 
+                m_Device->GetDeviceObject(),
+                m_Device->GetDevicePowerPolicyState(), Event);
+
+            m_PowerPolicyMachine.Unlock(irql);
+            return;
+        }
+    }
+
+    if (m_PowerPolicyMachine.IsFull())
+    {
+        //
+        // The queue is full.  Bail.
+        //
+        m_PowerPolicyMachine.Unlock(irql);
+
+        ASSERT(!"The Power queue is full.  This shouldn't be able to happen.");
+        return;
+    }
+
+    if (m_PowerPolicyMachine.IsClosedLocked())
+    {
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+            "WDFDEVICE 0x%p !devobj 0x%p current pwr pol state "
+            "%!WDF_DEVICE_POWER_POLICY_STATE! dropping event "
+            "%!FxPowerPolicyEvent! because of a closed queue",
+            m_Device->GetHandle(), 
+            m_Device->GetDeviceObject(),
+            m_Device->GetDevicePowerPolicyState(), Event);
+
+        //
+        // The queue is closed.  Bail
+        //
+        m_PowerPolicyMachine.Unlock(irql);
+
+        return;
+    }
+
+    //
+    // Enqueue the event.  Whether the event goes on the front
+    // or the end of the queue depends on which event it is and if we are the
+    // PPO or not.
+    //
+    // Yes, mask could be a member variable of m_PowerPolicyMachine, but why
+    // waste 4 bytes when it is very easy to figure out?
+    //
+    mask = IsPowerPolicyOwner() ? PwrPolPriorityEventsMask
+                                : PwrPolNotOwnerPriorityEventsMask;
+
+    if (Event & mask)
+    {
+        //
+        // Stick it on the front of the queue, making it the next event that
+        // will be processed if, otherwise let these events go by.
+        //
+        m_PowerPolicyMachine.m_Queue[m_PowerPolicyMachine.InsertAtHead()] = Event;
+    }
+    else
+    {
+        //
+        // Stick it on the end of the queue.
+        //
+        m_PowerPolicyMachine.m_Queue[m_PowerPolicyMachine.InsertAtTail()] = Event;
+    }
+
+    //
+    // Drop the lock.
+    //
+    m_PowerPolicyMachine.Unlock(irql);
+
+    //
+    // Now, if we are running at PASSIVE_LEVEL, attempt to run the state
+    // machine on this thread.  If we can't do that, then queue a work item.
+    //
+    if (FALSE == ShouldProcessPowerPolicyEventOnDifferentThread(
+                    irql,
+                    ProcessOnDifferentThread
+                    ))
+    {
+        LONGLONG timeout = 0;
+
+        status = m_PowerPolicyMachine.m_StateMachineLock.AcquireLock(
+            GetDriverGlobals(), &timeout);
+
+        if (FxWaitLockInternal::IsLockAcquired(status))
+        {
+            FxPostProcessInfo info;
+
+            //
+            // We now hold the state machine lock.  So call the function that
+            // dispatches the next state.
+            //
+            PowerPolicyProcessEventInner(&info);
+
+            //
+            // The pnp state machine should be the only one deleting the object
+            //
+            ASSERT(info.m_DeleteObject == FALSE);
+
+            m_PowerPolicyMachine.m_StateMachineLock.ReleaseLock(
+                GetDriverGlobals());
+
+            info.Evaluate(this);
+
+            return;
+        }
+    }
+
+    //
+    // The tag added above will be released when the work item runs
+    //
+
+    //
+    // For one reason or another, we couldn't run the state machine on this
+    // thread.  So queue a work item to do it.  If m_PnPWorkItemEnqueuing
+    // is non-zero, that means that the work item is already being enqueued
+    // on another thread.  This is significant, since it means that we can't do
+    // anything with the work item on this thread, but it's okay, since the
+    // work item will pick up our work and do it.
+    //
+    m_PowerPolicyMachine.QueueToThread();
+}
+
+BOOLEAN
+FxPkgPnp::ShouldProcessPowerPolicyEventOnDifferentThread(
+    __in KIRQL CurrentIrql,
+    __in BOOLEAN CallerSpecifiedProcessingOnDifferentThread
+    )
+/*++
+Routine Description:
+
+    This function returns whether the power policy state machine should process
+    the current event on the same thread or on a different one.
+
+Arguemnts:
+
+    CurrentIrql - The current IRQL
+    
+    CallerSpecifiedProcessingOnDifferentThread - Whether or not caller of 
+        PowerPolicyProcessEvent specified that the event be processed on a 
+        different thread.
+
+Returns:
+    TRUE if the power policy state machine should process the event on a 
+       different thread.
+       
+    FALSE if the power policy state machine should process the event on the 
+       same thread
+
+--*/
+{
+    //
+    // For KMDF, we ignore what the caller of PowerPolicyProcessEvent specified
+    // (which should always be FALSE, BTW) and base our decision on the current
+    // IRQL. If we are running at PASSIVE_LEVEL, we process on the same thread
+    // else we queue a work item.
+    //
+    UNREFERENCED_PARAMETER(CallerSpecifiedProcessingOnDifferentThread);
+
+    ASSERT(FALSE == CallerSpecifiedProcessingOnDifferentThread);
+
+    return (CurrentIrql == PASSIVE_LEVEL) ? FALSE : TRUE;
+}
+
 FxPowerPolicyMachine::FxPowerPolicyMachine(
     VOID
     ) : FxThreadedEventQueue(FxPowerPolicyEventQueueDepth)

@@ -422,3 +422,45 @@ FxThreadedEventQueue::_WorkerThreadRoutine(
 
     This->EventQueueWorker();
 }
+
+VOID
+FxThreadedEventQueue::QueueWorkItem(
+    VOID
+    )
+{
+    if (m_PkgPnp->HasPowerThread())
+    {
+        //
+        // Use the power thread for the stack
+        //
+        m_PkgPnp->QueueToPowerThread(&m_EventWorkQueueItem);
+    }
+    else
+    {
+        //
+        // Use the work item since the power thread is not available
+        //
+        m_WorkItem.Enqueue(_WorkItemCallback,
+                            (FxEventQueue*) this);
+    }
+}
+
+VOID
+FxThreadedEventQueue::_WorkItemCallback(
+    __in MdDeviceObject DeviceObject,
+    __in PVOID Context
+    )
+/*++
+
+Routine Description:
+    This is the work item that attempts to run the machine on a thread
+    separate from the one the caller was using.
+
+--*/
+{
+    FxThreadedEventQueue* This = (FxThreadedEventQueue *)Context;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+    
+    This->EventQueueWorker();
+}

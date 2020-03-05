@@ -423,6 +423,26 @@ protected:
         return m_PendingPnPIrp;
     }
 
+    VOID
+    SetPendingDevicePowerIrp(
+        __inout FxIrp* Irp
+        )
+    {
+        ASSERT(m_PendingDevicePowerIrp == NULL);
+
+        Irp->MarkIrpPending();
+        m_PendingDevicePowerIrp = Irp->GetIrp();
+
+        if (Irp->GetParameterPowerStateDeviceState() > PowerDeviceD0)
+        {
+            //
+            // We are powering down, capture the current power action.  We will
+            // reset it to PowerActionNone once we have powered up.
+            //
+            m_SystemPowerAction = (UCHAR) Irp->GetParameterPowerShutdownType();
+        }
+    }
+
     NTSTATUS
     CompletePowerRequest(
         __inout FxIrp* Irp,
@@ -679,7 +699,31 @@ protected:
         __inout FxIrp* Irp
         );
 
+    VOID
+    SetPendingSystemPowerIrp(
+        __inout FxIrp* Irp
+        )
+    {
+        ASSERT(m_PendingSystemPowerIrp == NULL);
+        Irp->MarkIrpPending();
+        m_PendingSystemPowerIrp = Irp->GetIrp();
+    }
+
+    MdIrp
+    GetPendingSystemPowerIrp(
+        VOID
+        )
+    {
+        return m_PendingSystemPowerIrp;
+    }
+
 public:
+
+    VOID
+    PowerProcessEvent(
+        __in FxPowerEvent Event,
+        __in BOOLEAN ProcessEventOnDifferentThread = FALSE
+        );
 
     VOID
     CleanupDeviceFromFailedCreate(
@@ -803,6 +847,37 @@ public:
         )
     {
         m_PowerPolicyMachine.m_Owner->m_PowerIdleMachine.IoDecrement(Tag, Line, File);
+    }
+
+    VOID
+    PowerPolicyProcessEvent(
+        __in FxPowerPolicyEvent Event,
+        __in BOOLEAN ProcessEventOnDifferentThread = FALSE
+        );
+
+    BOOLEAN
+    ShouldProcessPowerPolicyEventOnDifferentThread(
+        __in KIRQL CurrentIrql,
+        __in BOOLEAN CallerSpecifiedProcessingOnDifferentThread
+        );
+
+    BOOLEAN
+    HasPowerThread(
+        VOID
+        )
+    {
+        return m_HasPowerThread;
+    }
+
+    VOID
+    QueueToPowerThread(
+        __in PWORK_QUEUE_ITEM WorkItem
+        )
+    {
+        m_PowerThreadInterface.PowerThreadEnqueue(
+            m_PowerThreadInterface.Interface.Context,
+            WorkItem
+            );
     }
 
 

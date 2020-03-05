@@ -357,8 +357,27 @@ struct FxThreadedEventQueue : public FxEventQueue {
         __in PVOID WorkerContext = NULL
         );
 
+    VOID
+    QueueToThread(
+        VOID
+        )
+    {
+        if (QueueToThreadWorker())
+        {
+            QueueWorkItem();
+        }
+    }
 
 protected:
+
+    static
+    MX_WORKITEM_ROUTINE 
+    _WorkItemCallback;
+
+    VOID
+    QueueWorkItem(
+        VOID
+        );
 
     MxWorkItem m_WorkItem;
 

@@ -82,9 +82,21 @@ public:
         __in BOOLEAN Value
         );
 
+    static
+    MdCompletionRoutineType
+    RaiseDevicePowerCompletion;
+
 protected:
 
     ~FxPkgFdo(VOID);
+
+    static
+    MdCompletionRoutineType
+    _SystemPowerS0Completion;
+
+    static
+    MdCompletionRoutineType
+    _SystemPowerSxCompletion;
 
 private:
 
@@ -271,6 +283,30 @@ private:
     NTSTATUS
     SendIrpSynchronously(
         __inout FxIrp* Irp
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    DispatchSystemSetPower(
+        __in FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    DispatchDeviceSetPower(
+        __in FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    RaiseDevicePower(
+        __in FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    LowerDevicePower(
+        __in FxIrp *Irp
         );
 
 };

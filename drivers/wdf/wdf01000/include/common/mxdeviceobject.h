@@ -137,6 +137,16 @@ public:
         return m_DeviceObject->Characteristics;
     }
 
+    __inline
+    POWER_STATE
+    SetPowerState(
+        __in POWER_STATE_TYPE  Type,
+        __in POWER_STATE  State
+        )
+    {
+        return PoSetPowerState(m_DeviceObject, Type, State);
+    }
+
 };
 
 #endif //_MXDEVICEOBJECT_H_

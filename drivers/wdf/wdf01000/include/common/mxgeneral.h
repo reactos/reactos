@@ -476,6 +476,30 @@ public:
         KeFlushQueuedDpcs();
     }
 
+    __drv_maxIRQL(HIGH_LEVEL)
+    __drv_raisesIRQL(NewIrql)
+    __inline
+    static
+    VOID
+    MxRaiseIrql(
+        __in KIRQL                              NewIrql,
+        __out __deref __drv_savesIRQL PKIRQL    OldIrql
+        )
+    {
+        KeRaiseIrql(NewIrql, OldIrql);
+    }
+
+    __drv_maxIRQL(HIGH_LEVEL)
+    __inline
+    static
+    VOID
+    MxLowerIrql(
+        __in __drv_restoresIRQL __drv_nonConstant KIRQL NewIrql
+        )
+    {
+        KeLowerIrql(NewIrql);
+    }
+
 };
 
 #endif //_MXGENERAL_H_

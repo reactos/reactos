@@ -115,6 +115,14 @@ public:
     }
 
     __inline
+    POWER_STATE
+    GetParameterPowerState(
+        )
+    {
+        return (this->GetCurrentIrpStackLocation())->Parameters.Power.State;
+    }
+
+    __inline
     VOID
     CopyCurrentIrpStackLocationToNext(
         VOID
@@ -615,6 +623,15 @@ public:
         )
     {
       return this->GetCurrentIrpStackLocation()->DeviceObject;
+    }
+
+    __inline
+    POWER_ACTION
+    GetParameterPowerShutdownType(
+        )
+    {
+        return (this->GetCurrentIrpStackLocation())->
+            Parameters.Power.ShutdownType;
     }
 
 };
