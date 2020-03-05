@@ -28,6 +28,7 @@ list(APPEND INF_FILES
     netamd.inf
     nete1000.inf
     netisa.inf
+    netkvm.inf
     netrtl.inf
     netrtpnt.inf
     nettcpip.inf
