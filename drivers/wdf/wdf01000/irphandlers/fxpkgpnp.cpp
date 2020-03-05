@@ -2189,3 +2189,36 @@ Return Value:
 
     return STATUS_SUCCESS;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::_DispatchWaitWake(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This the first-level dispatch routine for IRP_MN_WAIT_WAKE.  What one
+    does with a WaitWake IRP depends very much on whether one is an FDO, a PDO
+    or a filter.  So dispatch immediately to a subclassable function.
+
+Arguments:
+
+    This - the package
+
+    Irp - pointer to FxIrp representing this notification
+
+Return Value:
+
+    status
+
+--*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+    //return This->DispatchWaitWake(Irp);
+}

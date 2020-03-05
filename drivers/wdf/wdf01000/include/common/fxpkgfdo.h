@@ -151,6 +151,22 @@ private:
         __in FxIrp *Irp
         );
 
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _DispatchSetPower(
+        __inout FxPkgPnp* This,
+        __in FxIrp *Irp
+        );
+    
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _DispatchQueryPower(
+        __inout FxPkgPnp* This,
+        __in FxIrp *Irp
+        );
+
     _Must_inspect_result_
     static
     NTSTATUS

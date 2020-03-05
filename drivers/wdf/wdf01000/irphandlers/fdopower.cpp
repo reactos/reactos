@@ -88,3 +88,62 @@ FxPkgFdo::PowerReleasePendingDeviceIrp(
         }
     }
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_DispatchSetPower(
+    __inout FxPkgPnp* This,
+    __in FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+
+    This method is invoked when a SetPower IRP enters the driver.
+
+Arguemnts:
+
+    Device - a pointer to the FxDevice
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_DispatchQueryPower(
+    __inout FxPkgPnp* This,
+    __in FxIrp *Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This method is invoked when a QueryPower IRP enters the driver.
+
+Arguemnts:
+
+    This - The package
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}

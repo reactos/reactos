@@ -37,12 +37,10 @@ const PFN_PNP_POWER_CALLBACK FxPkgFdo::m_FdoPnpFunctionTable[IRP_MN_SURPRISE_REM
 
 const PFN_PNP_POWER_CALLBACK FxPkgFdo::m_FdoPowerFunctionTable[IRP_MN_QUERY_POWER + 1] =
 {
-    // TODO: Implement functions
-
-    //_DispatchWaitWake,      // IRP_MN_WAIT_WAKE
-    //_PowerPassDown,         // IRP_MN_POWER_SEQUENCE
-    //_DispatchSetPower,      // IRP_MN_SET_POWER
-    //_DispatchQueryPower,    // IRP_MN_QUERY_POWER
+    _DispatchWaitWake,      // IRP_MN_WAIT_WAKE
+    _PowerPassDown,         // IRP_MN_POWER_SEQUENCE
+    _DispatchSetPower,      // IRP_MN_SET_POWER
+    _DispatchQueryPower,    // IRP_MN_QUERY_POWER
 };
 
 FxPkgFdo::FxPkgFdo(

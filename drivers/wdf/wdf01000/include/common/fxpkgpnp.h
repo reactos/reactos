@@ -671,6 +671,14 @@ protected:
         __inout FxIrp* Irp
         );
 
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _DispatchWaitWake(
+        __inout FxPkgPnp* This,
+        __inout FxIrp* Irp
+        );
+
 public:
 
     VOID
