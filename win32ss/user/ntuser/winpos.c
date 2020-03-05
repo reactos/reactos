@@ -1913,6 +1913,8 @@ co_WinPosSetWindowPos(
               (Window->ExStyle & WS_EX_APPWINDOW)))
          {
             co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
+            if (!(WinPos.flags & SWP_NOACTIVATE))
+               UpdateShellHook(Window);
          }
       }
 
