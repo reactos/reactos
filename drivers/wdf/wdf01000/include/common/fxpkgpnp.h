@@ -596,6 +596,81 @@ protected:
         VOID
         );
 
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpStartDevice(
+        __inout FxPkgPnp* This,
+        __inout FxIrp* Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryStopDevice(
+        __inout FxPkgPnp* This,
+        __inout FxIrp* Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpCancelStopDevice(
+        __inout FxPkgPnp* This,
+        __inout FxIrp* Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpStopDevice(
+        __inout FxPkgPnp* This,
+        __inout FxIrp* Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryRemoveDevice(
+        __inout FxPkgPnp* This,
+        __inout FxIrp* Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpCancelRemoveDevice(
+        __inout FxPkgPnp* This,
+        __inout FxIrp* Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpRemoveDevice(
+        __inout FxPkgPnp* This,
+        __inout FxIrp* Irp
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    PnpSurpriseRemoval(
+        __inout FxIrp* Irp
+        );
+
+    NTSTATUS
+    FilterResourceRequirements(
+        __in IO_RESOURCE_REQUIREMENTS_LIST **IoList
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpDeviceUsageNotification(
+        __inout FxPkgPnp* This,
+        __inout FxIrp* Irp
+        );
+
 public:
 
     VOID

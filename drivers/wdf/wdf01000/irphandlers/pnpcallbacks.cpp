@@ -169,3 +169,26 @@ FxPowerStateCallback::Invoke(
         CallbackEnd();
     }
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPnpDeviceFilterResourceRequirements::Invoke(
+    __in WDFDEVICE Device,
+    __in WDFIORESREQLIST Collection
+    )
+{
+    if (m_Method != NULL)
+    {
+        NTSTATUS status;
+
+        CallbackStart();
+        status = m_Method(Device, Collection);
+        CallbackEnd();
+
+        return status;
+    }
+    else
+    {
+        return STATUS_SUCCESS;
+    }
+}

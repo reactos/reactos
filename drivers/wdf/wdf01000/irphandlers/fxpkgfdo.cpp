@@ -6,11 +6,7 @@
 
 const PFN_PNP_POWER_CALLBACK FxPkgFdo::m_FdoPnpFunctionTable[IRP_MN_SURPRISE_REMOVAL + 1] =
 {
-    NULL
-    
-    // TODO: Implement functions
-
-    /*_PnpStartDevice,                // IRP_MN_START_DEVICE
+    _PnpStartDevice,                // IRP_MN_START_DEVICE
     _PnpQueryRemoveDevice,          // IRP_MN_QUERY_REMOVE_DEVICE
     _PnpRemoveDevice,               // IRP_MN_REMOVE_DEVICE
     _PnpCancelRemoveDevice,         // IRP_MN_CANCEL_REMOVE_DEVICE
@@ -36,8 +32,7 @@ const PFN_PNP_POWER_CALLBACK FxPkgFdo::m_FdoPnpFunctionTable[IRP_MN_SURPRISE_REM
     _PnpQueryPnpDeviceState,        // IRP_MN_QUERY_PNP_DEVICE_STATE
     _PnpPassDown,                   // IRP_MN_QUERY_BUS_INFORMATION
     _PnpDeviceUsageNotification,    // IRP_MN_DEVICE_USAGE_NOTIFICATION
-    _PnpSurpriseRemoval,            // IRP_MN_SURPRISE_REMOVAL
-    */
+    _PnpSurpriseRemoval,            // IRP_MN_SURPRISE_REMOVAL    
 };
 
 const PFN_PNP_POWER_CALLBACK FxPkgFdo::m_FdoPowerFunctionTable[IRP_MN_QUERY_POWER + 1] =
@@ -570,4 +565,365 @@ Returns:
 {
     m_Filter = Value;
     return STATUS_SUCCESS;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_PnpFilterResourceRequirements(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+{
+    return ((FxPkgFdo*) This)->PnpFilterResourceRequirements(Irp);
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::PnpFilterResourceRequirements(
+    __inout FxIrp *Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This method is invoked in response to a Pnp FilterResourceRequirements IRP.
+
+Arguments:
+
+    Device - a pointer to the FxDevice
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    PIO_RESOURCE_REQUIREMENTS_LIST pWdmRequirementsList;
+    PIO_RESOURCE_REQUIREMENTS_LIST pNewWdmList;
+    NTSTATUS status;
+    FxIoResReqList *pIoResReqList;
+    WDFIORESREQLIST reqlist;
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Entering FilterResourceRequirements handler");
+
+    if (m_DeviceFilterRemoveResourceRequirements.m_Method != NULL)
+    {
+        pWdmRequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST) Irp->GetInformation();
+
+        status = STATUS_INSUFFICIENT_RESOURCES;
+
+        pIoResReqList = FxIoResReqList::_CreateFromWdmList(GetDriverGlobals(),
+                                                           pWdmRequirementsList,
+                                                           FxResourceAllAccessAllowed);
+
+        if (pIoResReqList != NULL)
+        {
+            status = pIoResReqList->Commit(NULL, (PWDFOBJECT) &reqlist);
+
+            // Commit should never fail because we own all object state
+            ASSERT(NT_SUCCESS(status));
+            UNREFERENCED_PARAMETER(status);
+
+            status = m_DeviceFilterRemoveResourceRequirements.Invoke(
+                m_Device->GetHandle(), pIoResReqList->GetHandle());
+
+            if (NT_SUCCESS(status) && pIoResReqList->IsChanged())
+            {
+                pNewWdmList = pIoResReqList->CreateWdmList();
+
+                if (pNewWdmList != NULL)
+                {
+                    //
+                    // List could be missing previously
+                    //
+                    if (pWdmRequirementsList != NULL)
+                    {
+                        //
+                        // Propagate BusNumber to our new list.
+                        //
+                        pNewWdmList->BusNumber = pWdmRequirementsList->BusNumber;
+
+                        MxMemory::MxFreePool(pWdmRequirementsList);
+                    }
+
+                    Irp->SetInformation((ULONG_PTR) pNewWdmList);
+                }
+                else
+                {
+                    status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+            }
+
+            //
+            // No matter what, free the resource requirements list object.  If
+            // we need another one when adding resources, another one will be
+            // allocated.
+            //
+            pIoResReqList->DeleteObject();
+            pIoResReqList = NULL;
+        }
+    }
+    else
+    {
+        //
+        // No filtering on the way down, set status to STATUS_SUCCESS so we
+        // send the irp down the stack.
+        //
+        status = STATUS_SUCCESS;
+    }
+
+    if (NT_SUCCESS(status))
+    {
+        status = SendIrpSynchronously(Irp);
+    }
+
+    //
+    // If we do not handle the IRP on the way down and the PDO does not handle
+    // the IRP, we can have a status of STATUS_NOT_SUPPORTED.  We still want to
+    // process the irp in this state.
+    //
+    if (NT_SUCCESS(status) || status == STATUS_NOT_SUPPORTED)
+    {
+        NTSTATUS filterStatus;
+
+        //
+        // Give the Framework objects a pass at the list.
+        //        
+        filterStatus = FxPkgPnp::FilterResourceRequirements(
+            (PIO_RESOURCE_REQUIREMENTS_LIST*)(&Irp->GetIrp()->IoStatus.Information)
+            );
+
+        if (!NT_SUCCESS(filterStatus))
+        {
+            status = filterStatus;
+        } 
+        else if (m_DeviceFilterAddResourceRequirements.m_Method != NULL)
+        {
+            //
+            // Now give the driver a shot at it.
+            //
+            pWdmRequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)
+                Irp->GetInformation();
+
+            pIoResReqList = FxIoResReqList::_CreateFromWdmList(
+                GetDriverGlobals(), pWdmRequirementsList, FxResourceAllAccessAllowed);
+
+            if (pIoResReqList != NULL)
+            {
+                status = pIoResReqList->Commit(NULL, (PWDFOBJECT) &reqlist);
+                UNREFERENCED_PARAMETER(status);
+
+                //
+                // Since we absolutely control the lifetime of pIoResReqList, this
+                // should never fail
+                //
+                ASSERT(NT_SUCCESS(status));
+
+                status = m_DeviceFilterAddResourceRequirements.Invoke(
+                    m_Device->GetHandle(), reqlist);
+
+                //
+                // It is possible the child driver modified the resource list,
+                // and if so we need to update the requirements list.
+                //
+                if (NT_SUCCESS(status) && pIoResReqList->IsChanged())
+                {
+                    pNewWdmList = pIoResReqList->CreateWdmList();
+
+                    if (pNewWdmList != NULL)
+                    {
+                        //
+                        // List could be missing previously
+                        //
+                        if (pWdmRequirementsList != NULL)
+                        {
+                            //
+                            // Propagate BusNumber to our new list.
+                            //
+                            pNewWdmList->BusNumber = pWdmRequirementsList->BusNumber;
+
+                            ExFreePool(pWdmRequirementsList);
+                        }
+
+                        Irp->SetInformation((ULONG_PTR) pNewWdmList);
+                    }
+                    else
+                    {
+                        status = STATUS_INSUFFICIENT_RESOURCES;
+                    }
+                }
+
+                pIoResReqList->DeleteObject();
+                pIoResReqList = NULL;
+            }
+            else
+            {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+        }
+    }
+
+    CompletePnpRequest(Irp, status);
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Exiting FilterResourceRequirements handler, %!STATUS!",
+                        status);
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_PnpSurpriseRemoval(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+
+    This method is called in response to a PnP SurpriseRemoval IRP.
+
+Arguments:
+
+    Device - a pointer to the FxDevice
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NTSTATUS
+
+--*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_PnpQueryDeviceRelations(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+
+    This method is called in response to a PnP QDR.
+
+Arguments:
+
+    Device - a pointer to the FxDevice
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NTSTATUS
+
+--*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_PnpQueryInterface(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+
+    This method is invoked in response to a Pnp QueryInterface IRP.
+
+Arguments:
+
+    This - The package
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NTSTATUS
+
+--*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_PnpQueryCapabilities(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_PnpQueryPnpDeviceState(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This method is invoked in response to a Pnp QueryPnpDeviceState IRP.
+
+Arguments:
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::SendIrpSynchronously(
+    __inout FxIrp* Irp
+    )
+
+/*++
+
+Routine Description:
+
+    Helper function that makes it easy to handle events which need to be
+    done as an IRP comes back up the stack.
+
+Arguments:
+
+    Irp - The request
+
+Returns:
+
+    results from IoCallDriver
+
+--*/
+
+{
+    Irp->CopyCurrentIrpStackLocationToNext();
+    return Irp->SendIrpSynchronously(m_Device->GetAttachedDevice());
 }

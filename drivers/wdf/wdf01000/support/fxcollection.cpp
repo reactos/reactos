@@ -117,3 +117,31 @@ FxCollectionInternal::RemoveEntry(
 
     return STATUS_SUCCESS;
 }
+
+BOOLEAN
+FxCollectionInternal::Add(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in FxObject *Item
+    )
+{
+    FxCollectionEntry *pNode;
+
+    pNode = AllocateEntry(FxDriverGlobals);
+
+    if (pNode != NULL)
+    {
+        InsertTailList(&m_ListHead, &pNode->m_ListEntry);
+
+        AddEntry(pNode, Item);
+    }
+
+    return pNode != NULL;
+}
+
+ULONG
+FxCollectionInternal::Count(
+    VOID
+    )
+{
+    return m_Count;
+}

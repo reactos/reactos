@@ -6,7 +6,7 @@
 #include "common/fxautoregistry.h"
 #include "common/fxwatchdog.h"
 #include "common/fxdeviceinterface.h"
-
+#include "common/fxinterrupt.h"
 
 
 const NOT_POWER_POLICY_OWNER_STATE_TABLE FxPkgPnp::m_WdfNotPowerPolicyOwnerStates[] =
@@ -1722,4 +1722,470 @@ Return Value:
 #else
     UNREFERENCED_PARAMETER(count);
 #endif
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::_PnpStartDevice(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+    This method is called in response to a PnP StartDevice IRP coming down the
+    stack.
+
+Arguments:
+    This - device instance
+    Irp - a pointer to the FxIrp
+
+Returns:
+    STATUS_PENDING
+
+--*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::_PnpQueryStopDevice(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+
+/*++
+
+Routine Description:
+
+    Pnp callback querying to see if the device can be stopped.
+
+    The Framework philosophy surrounding Query Stop (and Query Remove) is that
+    it's impossible to really know if you can stop unless you've tried to stop.
+    This may not always be true, but it's hard to find a general strategy that
+    works that is less conservative.  Furthermore, I couldn't find good examples
+    of drivers that would really benefit from continuing to handle requests
+    until the actual Stop IRP arrived, particularly when you consider that
+    most QueryStops are followed immediately by Stops.
+
+    So this function sends an event to the PnP State machine that begins the
+    stopping process.  If it is successful, then ultimately the QueryStop IRP
+    will be successfully completed.
+
+Arguments:
+
+    This - a pointer to the PnP package
+
+    Irp - a pointer to the FxIrp
+
+Return Value:
+
+    STATUS_PENDING
+
+  --*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::_PnpCancelStopDevice(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+
+    This routine is invoked in response to a query stop failing, somewhere in
+    the stack.  Note that we can receive a cancel stop without being in the
+    query stop state if a driver above us in the stack failed the query stop.
+
+    Again, this function just exists to bridge the gap between the WDM IRPs
+    and the PnP state machine.  This function does little more than send an
+    event to the machine.
+
+Arguments:
+
+    This - the package
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    STATUS_PENDING
+
+--*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::_PnpStopDevice(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+
+    This method is invoked in response to a Pnp StopDevice IRP.
+
+Arguments:
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    STATUS_PENDING
+
+--*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::_PnpQueryRemoveDevice(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+
+    Again, the Framework handles QueryRemove by stopping everything going on
+    related to the device and then asking the driver whether it can be
+    removed.  This function just kicks the state machine.  Final completion
+    of the IRP will come (much) later.
+
+Arguments:
+
+    This - the package
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    STATUS_PENDING
+
+--*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::_PnpCancelRemoveDevice(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+
+/*++
+
+Routine Description:
+
+    Notification of a previous remove being canceled.  Kick the state machine.
+
+Arguments:
+
+    This - the package
+
+    Irp - FxIrp representing the notification
+
+Return Value:
+
+    STATUS_PENDING
+
+  --*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::_PnpRemoveDevice(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+
+/*++
+
+Routine Description:
+
+    Notification of a remove.  Kick the state machine.
+
+Arguments:
+
+    This - the package
+
+    Irp - FxIrp representing the notification
+
+Return Value:
+
+    status
+
+  --*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::_PnpDeviceUsageNotification(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+    //return This->PnpDeviceUsageNotification(Irp);
+}
+
+NTSTATUS
+FxPkgPnp::FilterResourceRequirements(
+    __in IO_RESOURCE_REQUIREMENTS_LIST **IoList
+    )
+/*++
+
+Routine Description:
+
+    This routine traverses one or more alternate _IO_RESOURCE_LISTs in the input
+    IO_RESOURCE_REQUIREMENTS_LIST looking for interrupt descriptor and applies
+    the policy set by driver in the interrupt object to the resource descriptor.
+
+    LBI - Line based interrupt
+    MSI - Message Signalled interrupt
+
+    Here are the assumptions made about the order of descriptors.
+
+    - An IoRequirementList can have one or more alternate IoResourceList
+    - Each IoResourceList can have one or more resource descriptors
+    - A descriptor can be default (unique), preferred, or alternate descriptors
+    - A preferred descriptor can have zero or more alternate descriptors (P, A, A, A..)
+    - In an IoResourceList, there can be one or more LBI descriptors
+      (non-pci devices)(P,A,P,A)
+    - In an IoResourceList, there can be only one preferred MSI 2.2
+      (single or multi message) descriptor
+    - In an IoResourceList, there cannot be MSI2.2 and MSI-X descriptors
+    - In an IoResourceList, there can be one or more MSI-X descriptor
+    - An alternate descriptor cannot be a very first descriptor in the list
+
+
+    Now with that assumption, this routines parses the list looking for interrupt
+    descriptor.
+
+    - If it finds a LBI, it starts with the very first interrupt object and applies
+      the policy set by the driver to the resource descriptor.
+    - If it's finds an MSI2.2 then it starts with the first interrupt object and applies
+      the policy. If the MSI2.2 is a multi-message one then it loops thru looking for
+      as many interrupt object as there are messages. It doesn't fail the IRP, if the
+      interrupt objects are less than the messages.
+    - If there is an alternate descriptor then it applies the same policy from the
+      interrupt object that it used for the preceding preferred descriptor.
+    - Framework always uses FULLY_SPECIFIED connection type for both LBI and MSI
+      interrupts including MSI-X
+    - Framework will apply the policy on the descriptor set by the driver only
+      if the policy is already not included in the resource descriptor. This is
+      to allow the policy set in the registry to take precedence over the hard
+      coded driver policy.
+    - If the driver registers filter resource requirement and applies the policy
+      on its own (by escaping to WDM) then framework doesn't override that.
+
+Arguments:
+
+    IoList - Pointer to the list part of an IRP_MN_FILTER_RESOURCE_REQUIREMENTS.
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+{
+    ULONG altResListIndex;
+    PIO_RESOURCE_REQUIREMENTS_LIST pIoRequirementList;
+    PIO_RESOURCE_LIST pIoResList;
+
+    pIoRequirementList = *IoList;
+
+    if (pIoRequirementList == NULL)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    if (IsListEmpty(&m_InterruptListHead))
+    {
+        //
+        // No interrupt objects created to filter resource requirements.
+        //
+        return STATUS_SUCCESS;
+    }
+
+    pIoResList = pIoRequirementList->List;
+
+    //
+    // Parse one or more alternative resource lists.
+    //
+    for (altResListIndex = 0;
+         altResListIndex < pIoRequirementList->AlternativeLists;
+         altResListIndex++)
+    {
+        PLIST_ENTRY pIntListEntryForMSI;
+        PLIST_ENTRY pIntListEntryForLBI;
+        BOOLEAN multiMessageMSI22Found;
+        BOOLEAN previousDescMSI;
+        ULONG descIndex;
+
+        multiMessageMSI22Found = FALSE;
+        previousDescMSI = FALSE;
+
+        pIntListEntryForMSI = &m_InterruptListHead;
+        pIntListEntryForLBI = &m_InterruptListHead;
+
+        //
+        // Traverse each _IO_RESOURCE_LISTs looking for interrupt descriptors
+        // and call FilterResourceRequirements method so that it can apply
+        // policy set on the interrupt object into the resource-descriptor.
+        //
+
+        for (descIndex = 0; descIndex < pIoResList->Count; descIndex++)
+        {
+            ULONG messageCount;
+            PIO_RESOURCE_DESCRIPTOR pIoDesc;
+            FxInterrupt* pInterruptInstance;
+
+            pIoDesc = &pIoResList->Descriptors[descIndex];
+
+            switch (pIoDesc->Type) {
+            case CmResourceTypeInterrupt:
+
+                if (FxInterrupt::_IsMessageInterrupt(pIoDesc->Flags))
+                {
+                    previousDescMSI = TRUE;
+
+                    //
+                    // We will advance to the next interrupt object if the resource
+                    // is not an alternate resource descriptor. A resource list can
+                    // have a preferred and zero or more alternate resource descriptors
+                    // for the same resource. We need to apply the same policy on the
+                    // alternate desc that we applied on the preferred one in case one
+                    // of the alernate desc is selected for this device. An alternate
+                    // resource descriptor can't be the first descriptor in a list.
+                    //
+                    if ((pIoDesc->Option & IO_RESOURCE_ALTERNATIVE) == 0)
+                    {
+                        pIntListEntryForMSI = pIntListEntryForMSI->Flink;
+                    }
+
+                    if (pIntListEntryForMSI == &m_InterruptListHead)
+                    {
+                        DoTraceLevelMessage(
+                            GetDriverGlobals(), TRACE_LEVEL_WARNING, TRACINGPNP,
+                            "Not enough interrupt objects created for MSI by WDFDEVICE 0x%p ",
+                            m_Device->GetHandle());
+                        break;
+                    }
+
+                    pInterruptInstance = CONTAINING_RECORD(pIntListEntryForMSI, FxInterrupt, m_PnpList);
+                    messageCount = pIoDesc->u.Interrupt.MaximumVector - pIoDesc->u.Interrupt.MinimumVector + 1;
+
+                    if (messageCount > 1)
+                    {
+                        //
+                        //  PCI spec guarantees that there can be only one preferred/default
+                        //  MSI 2.2 descriptor in a single list.
+                        //
+                        if ((pIoDesc->Option & IO_RESOURCE_ALTERNATIVE) == 0)
+                        {
+#if DBG
+                            ASSERT(multiMessageMSI22Found == FALSE);
+#else
+                            UNREFERENCED_PARAMETER(multiMessageMSI22Found);
+#endif
+                            multiMessageMSI22Found = TRUE;
+
+                        }
+                    }
+                    else
+                    {
+                        //
+                        //  This is either single message MSI 2.2 or MSI-X interrupts
+                        //
+                        DO_NOTHING();
+                    }
+
+                    pInterruptInstance->FilterResourceRequirements(pIoDesc);
+                }
+                else
+                {
+                    //
+                    // We will advance to next interrupt object if the desc is not an alternate
+                    // descriptor. For non PCI devices, the first LBI interrupt desc can't be an
+                    // alternate descriptor.
+                    //
+                    if ((pIoDesc->Option & IO_RESOURCE_ALTERNATIVE) == 0)
+                    {
+                        pIntListEntryForLBI = pIntListEntryForLBI->Flink;
+                    }
+
+                    //
+                    // An LBI can be first alternate resource if there are preceding MSI(X) descriptors
+                    // listed in the list. In that case, this descriptor is the alternate interrupt resource
+                    // for all of the MSI messages. As a result, we will use the first interrupt object from
+                    // the list if this ends up being assigned by the system instead of MSI.
+                    //
+                    if (previousDescMSI)
+                    {
+                        ASSERT(pIoDesc->Option & IO_RESOURCE_ALTERNATIVE);
+                        pIntListEntryForLBI = m_InterruptListHead.Flink;
+                        previousDescMSI = FALSE;
+                    }
+
+                    //
+                    // There can be one or more LBI interrupts and each LBI interrupt
+                    // could have zero or more alternate descriptors.
+                    //
+                    if (pIntListEntryForLBI == &m_InterruptListHead)
+                    {
+                        DoTraceLevelMessage(
+                            GetDriverGlobals(), TRACE_LEVEL_WARNING, TRACINGPNP,
+                            "Not enough interrupt objects created for LBI by WDFDEVICE 0x%p ",
+                            m_Device->GetHandle());
+                        break;
+                    }
+
+                    pInterruptInstance = CONTAINING_RECORD(pIntListEntryForLBI, FxInterrupt, m_PnpList);
+
+                    pInterruptInstance->FilterResourceRequirements(pIoDesc);
+                }
+
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        //
+        // Since the Descriptors is a variable length list, you cannot get to the next
+        // alternate list by doing pIoRequirementList->List[altResListIndex].
+        // Descriptors[descIndex] will now point to the end of the descriptor list.
+        // If there is another alternate list, it would be begin there.
+        //
+        pIoResList = (PIO_RESOURCE_LIST) &pIoResList->Descriptors[descIndex];
+    }
+
+    return STATUS_SUCCESS;
 }

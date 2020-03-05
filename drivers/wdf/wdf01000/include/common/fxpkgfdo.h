@@ -165,6 +165,98 @@ private:
         __in BOOLEAN IrpMustBePresent = TRUE
         );
 
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpSurpriseRemoval(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryDeviceRelations(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    PnpQueryDeviceRelations(
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryInterface(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryCapabilities(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    PnpQueryCapabilities(
+        __inout FxIrp *Irp
+        );
+
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryCapabilitiesCompletionRoutine(
+        __in    MdDeviceObject DeviceObject,
+        __inout MdIrp Irp,
+        __inout PVOID Context
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpFilterResourceRequirements(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    PnpFilterResourceRequirements(
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryPnpDeviceState(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryPnpDeviceStateCompletionRoutine(
+        __in    MdDeviceObject DeviceObject,
+        __inout MdIrp Irp,
+        __inout PVOID Context
+        );
+
+    _Must_inspect_result_
+    virtual
+    NTSTATUS
+    SendIrpSynchronously(
+        __inout FxIrp* Irp
+        );
+
 };
 
 
