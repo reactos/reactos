@@ -1908,7 +1908,11 @@ co_WinPosSetWindowPos(
            Window->spwndOwner == NULL &&
            (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
             (Window->ExStyle & WS_EX_APPWINDOW)))
-         co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
+            {
+               co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
+               if (!(WinPos.flags & SWP_NOACTIVATE))
+                  UpdateShellHook(Window);
+            }
 
       Window->style |= WS_VISIBLE; //IntSetStyle( Window, WS_VISIBLE, 0 );
       Window->head.pti->cVisWindows++;
