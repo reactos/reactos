@@ -10,7 +10,7 @@
 #include <freeldr.h>
 #include <drivers/pc98/video.h>
 
-extern UCHAR XboxFont8x16[];
+extern UCHAR BitmapFont8x16[];
 extern BOOLEAN HiResoMachine;
 
 /* GLOBALS ********************************************************************/
@@ -241,7 +241,7 @@ Pc98VideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
     UCHAR R = (Attr & 0x40) ? 0xFF : 0;
     UCHAR I = (Attr & 0x80) ? 0xFF : 0;
     ULONG VramOffset = X + (Y * CHAR_HEIGHT) * BYTES_PER_SCANLINE;
-    PUCHAR FontPtr = XboxFont8x16 + Ch * 16;
+    PUCHAR FontPtr = BitmapFont8x16 + Ch * 16;
 
     for (Line = 0; Line < CHAR_HEIGHT; Line++)
     {

@@ -46,7 +46,7 @@
 #define     NV2A_RAMDAC_FP_HVALID_END      (0x838 + NV2A_RAMDAC_OFFSET)
 #define     NV2A_RAMDAC_FP_VVALID_END      (0x818 + NV2A_RAMDAC_OFFSET)
 
-extern UCHAR XboxFont8x16[256 * 16];
+extern UCHAR BitmapFont8x16[256 * 16];
 
 VOID XboxConsPutChar(int Ch);
 BOOLEAN XboxConsKbHit(VOID);
