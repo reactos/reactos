@@ -1373,7 +1373,8 @@ PcHwDetect(VOID)
 
     /* Create the 'System' key */
     FldrCreateSystemKey(&SystemKey);
-    // TODO: Discover and set the machine type as the Component->Identifier
+    // TODO: Discover and set the other machine types
+    FldrSetIdentifier(SystemKey, "AT/AT COMPATIBLE");
 
     GetHarddiskConfigurationData = PcGetHarddiskConfigurationData;
     FindPciBios = PcFindPciBios;

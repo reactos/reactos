@@ -50,7 +50,7 @@ XboxVideoOutputChar(UCHAR Char, unsigned X, unsigned Y, ULONG FgColor, ULONG BgC
   unsigned Line;
   unsigned Col;
 
-  FontPtr = XboxFont8x16 + Char * 16;
+  FontPtr = BitmapFont8x16 + Char * 16;
   Pixel = (PULONG) ((char *) FrameBuffer + (Y * CHAR_HEIGHT + TOP_BOTTOM_LINES) * Delta
                   + X * CHAR_WIDTH * BytesPerPixel);
   for (Line = 0; Line < CHAR_HEIGHT; Line++)
@@ -288,13 +288,6 @@ VOID
 XboxVideoSync(VOID)
 {
   /* Not supported */
-}
-
-VOID
-XboxBeep(VOID)
-{
-    /* Call PC version */
-    PcBeep();
 }
 
 VOID

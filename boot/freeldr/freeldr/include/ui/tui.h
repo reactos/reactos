@@ -19,7 +19,6 @@
 
 #pragma once
 
-#define    TUI_SCREEN_MEM                0xB8000
 #define TUI_TITLE_BOX_CHAR_HEIGHT    5
 
 ///////////////////////////////////////////////////////////////////////////////////////

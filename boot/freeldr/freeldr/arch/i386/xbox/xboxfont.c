@@ -1,28 +1,17 @@
 /*
- *  FreeLoader
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Note: Converted from the XFree vga.bdf font
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     VGA font 8x16
+ * COPYRIGHT:   Copyright 2004 Gé van Geldorp (gvg@reactos.org)
  */
+
+/* Note: Converted from the XFree vga.bdf font */
 
 #include <freeldr.h>
 
-UCHAR XboxFont8x16[256 * 16] =
+UCHAR BitmapFont8x16[256 * 16] =
 {
-  0x00,0x00,0x00,0x7c,0xc6,0xc6,0xde,0xde,0xde,0xdc,0xc0,0x7c,0x00,0x00,0x00,0x00, /* 0x00 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 0x00 */
   0x00,0x00,0x7e,0x81,0xa5,0x81,0x81,0xa5,0x99,0x81,0x81,0x7e,0x00,0x00,0x00,0x00, /* 0x01 */
   0x00,0x00,0x7e,0xff,0xdb,0xff,0xff,0xdb,0xe7,0xff,0xff,0x7e,0x00,0x00,0x00,0x00, /* 0x02 */
   0x00,0x00,0x00,0x00,0x6c,0xfe,0xfe,0xfe,0xfe,0x7c,0x38,0x10,0x00,0x00,0x00,0x00, /* 0x03 */
@@ -281,4 +270,3 @@ UCHAR XboxFont8x16[256 * 16] =
 };
 
 /* EOF */
-
