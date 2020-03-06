@@ -546,8 +546,8 @@ static void test_pack_COMMCONFIG(void)
     TEST_FIELD_SIZE  (COMMCONFIG, dwProviderSize, 4)
     TEST_FIELD_ALIGN (COMMCONFIG, dwProviderSize, 4)
     TEST_FIELD_OFFSET(COMMCONFIG, dwProviderSize, 44)
-    TEST_FIELD_SIZE  (COMMCONFIG, wcProviderData, 4)
-    TEST_FIELD_ALIGN (COMMCONFIG, wcProviderData, 4)
+    TEST_FIELD_SIZE  (COMMCONFIG, wcProviderData, 2)
+    TEST_FIELD_ALIGN (COMMCONFIG, wcProviderData, 2)
     TEST_FIELD_OFFSET(COMMCONFIG, wcProviderData, 48)
 }
 
@@ -2403,8 +2403,8 @@ static void test_pack_COMMCONFIG(void)
     TEST_FIELD_SIZE  (COMMCONFIG, dwProviderSize, 4)
     TEST_FIELD_ALIGN (COMMCONFIG, dwProviderSize, 4)
     TEST_FIELD_OFFSET(COMMCONFIG, dwProviderSize, 44)
-    TEST_FIELD_SIZE  (COMMCONFIG, wcProviderData, 4)
-    TEST_FIELD_ALIGN (COMMCONFIG, wcProviderData, 4)
+    TEST_FIELD_SIZE  (COMMCONFIG, wcProviderData, 2)
+    TEST_FIELD_ALIGN (COMMCONFIG, wcProviderData, 2)
     TEST_FIELD_OFFSET(COMMCONFIG, wcProviderData, 48)
 }
 
