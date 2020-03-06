@@ -1,0 +1,78 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDR_BROWSE_MAIN_MENU MENU
+{
+    POPUP "&Ficheiro"
+    {
+        POPUP "&Novo"
+        {
+            MENUITEM "&Janela",                 ID_BROWSE_NEW_WINDOW
+        }
+        MENUITEM "&Abrir...",                   ID_BROWSE_OPEN
+        MENUITEM "&Guardar...",                 ID_BROWSE_SAVE
+        MENUITEM "Guardar &como...",            ID_BROWSE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Imprimir &Format...",         ID_BROWSE_PRINT_FORMAT
+        MENUITEM "&Imprimir...",                ID_BROWSE_PRINT
+        MENUITEM "&Visualizar impressão",       ID_BROWSE_PRINT_PREVIEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Propriedades",               ID_BROWSE_PROPERTIES
+        MENUITEM "&Fechar",                     ID_BROWSE_QUIT
+    }
+    POPUP "&Visualizar"
+    {
+        POPUP "&Ferramentas"
+        {
+            MENUITEM "Barra &Standard",         ID_BROWSE_BAR_STD
+            MENUITEM "Barra de &Endereços",     ID_BROWSE_BAR_ADDR
+        }
+    }
+    POPUP "F&avoritos"
+    {
+        MENUITEM "&Adicionar aos favoritos...", ID_BROWSE_ADDFAV
+        MENUITEM SEPARATOR
+    }
+    POPUP "&Ajuda"
+    {
+        MENUITEM "&Acerca do Internet Explorer", ID_BROWSE_ABOUT
+    }
+}
+
+STRINGTABLE
+{
+    IDS_TB_BACK             "Retroceder"
+    IDS_TB_FORWARD          "Avançar"
+    IDS_TB_STOP             "Parar"
+    IDS_TB_REFRESH          "Actualizar"
+    IDS_TB_HOME             "Home"
+    IDS_TB_PRINT            "Imprimir..."
+}
+
+STRINGTABLE
+{
+    IDS_ADDRESS             "Endereço"
+}
+
+STRINGTABLE
+{
+    IDS_FINDINGRESOURCE     "Procurar por %s"
+    IDS_BEGINDOWNLOADDATA   "Iniciar  carregamento de %s"
+    IDS_ENDDOWNLOADDATA     "A carregar %s"
+    IDS_SENDINGREQUEST      "Perguntar por %s"
+}
+
+
+IDD_BROWSE_OPEN DIALOGEX 10, 10, 200, 70
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION
+CAPTION "Abrir URL"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "Especifique o endereço que deseja abrir no Internet Explorer",-1, 35,5,160,25
+    LTEXT "Abrir:", -1, 5, 32, 30, 15
+#ifdef __REACTOS__
+    ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
+#endif
+    EDITTEXT IDC_BROWSE_OPEN_URL, 35, 30, 160, 13
+    DEFPUSHBUTTON "&OK", IDOK, 90, 50, 50, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 145, 50, 50, 14
+}

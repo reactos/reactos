@@ -127,23 +127,23 @@ STRINGTABLE
     IDS_PURPOSE_CTL_USAGE_SIGNING "Permite que assine digitalmente uma lista de certificados confiáveis"
     IDS_PURPOSE_EFS "Permite que os dados em disco sejam cifrados"
     IDS_PURPOSE_EFS_RECOVERY "Recuperação de Ficheiros"
-    IDS_PURPOSE_WHQL "Windows Hardware Driver Verification"
-    IDS_PURPOSE_NT5 "Windows System Component Verification"
-    IDS_PURPOSE_OEM_WHQL "OEM Windows System Component Verification"
-    IDS_PURPOSE_EMBEDDED_NT "Embedded Windows System Component Verification"
-    IDS_PURPOSE_ROOT_LIST_SIGNER "Root List Signer"
-    IDS_PURPOSE_QUALIFIED_SUBORDINATION "Qualified Subordination"
-    IDS_PURPOSE_KEY_RECOVERY "Key Recovery"
-    IDS_PURPOSE_DOCUMENT_SIGNING "Document Signing"
-    IDS_PURPOSE_LIFETIME_SIGNING "Lifetime Signing"
-    IDS_PURPOSE_DRM "Digital Rights"
-    IDS_PURPOSE_LICENSES "Key Pack Licenses"
-    IDS_PURPOSE_LICENSE_SERVER "License Server Verification"
-    IDS_PURPOSE_ENROLLMENT_AGENT "Certificate Request Agent"
-    IDS_PURPOSE_SMARTCARD_LOGON "Smart Card Logon"
-    IDS_PURPOSE_CA_EXCHANGE "Private Key Archival"
-    IDS_PURPOSE_KEY_RECOVERY_AGENT "Key Recovery Agent"
-    IDS_PURPOSE_DS_EMAIL_REPLICATION "Directory Service Email Replication"
+    IDS_PURPOSE_WHQL "Verificação do controlador de hardware do Windows"
+    IDS_PURPOSE_NT5 "Verificação de componentes do sistema Windows"
+    IDS_PURPOSE_OEM_WHQL "Verificação de componente do sistema Windows OEM"
+    IDS_PURPOSE_EMBEDDED_NT "Verificação de componente do sistema Windows incorporado"
+    IDS_PURPOSE_ROOT_LIST_SIGNER "Signatário da lista raiz"
+    IDS_PURPOSE_QUALIFIED_SUBORDINATION "Subordinação Qualificada"
+    IDS_PURPOSE_KEY_RECOVERY "Recuperação da chave"
+    IDS_PURPOSE_DOCUMENT_SIGNING "Assinatura do documento"
+    IDS_PURPOSE_LIFETIME_SIGNING "Assinatura vitalícia"
+    IDS_PURPOSE_DRM "Direitos digitais"
+    IDS_PURPOSE_LICENSES "Licenças do pacote de chaves"
+    IDS_PURPOSE_LICENSE_SERVER "Verificação do servidor de licenças"
+    IDS_PURPOSE_ENROLLMENT_AGENT "Agente de solicitação de certificado"
+    IDS_PURPOSE_SMARTCARD_LOGON "Início de sessão com cartão inteligente"
+    IDS_PURPOSE_CA_EXCHANGE "Arquivamento de chave privada"
+    IDS_PURPOSE_KEY_RECOVERY_AGENT "Agente de recuperação de chave"
+    IDS_PURPOSE_DS_EMAIL_REPLICATION "Serviço de Diretório Replicação de Email"
     IDS_EXPORT_WIZARD "Assistente de Exportação de Certificados"
     IDS_EXPORT_FORMAT_TITLE "Formato de Exportação"
     IDS_EXPORT_FORMAT_SUBTITLE "Escolha o formato em que o conteúdo será guardado."
@@ -171,11 +171,11 @@ STRINGTABLE
     IDS_EXPORT_PASSWORD_MISMATCH "As palavras chave não coincidem."
     IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "Nota: A chave privada para este certificado não conseguiu ser aberta."
     IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Nota: A chave privada para este certificado não é exportável."
-    IDS_INTENDED_USE_COLUMN "Intended Use"
-    IDS_LOCATION_COLUMN "Location"
-    IDS_SELECT_CERT_TITLE "Select Certificate"
-    IDS_SELECT_CERT "Select a certificate"
-    IDS_NO_IMPL "Not yet implemented"
+    IDS_INTENDED_USE_COLUMN "Uso pretendido"
+    IDS_LOCATION_COLUMN "Localização"
+    IDS_SELECT_CERT_TITLE "Seleccionar certificado"
+    IDS_SELECT_CERT "Seleccione um certificado"
+    IDS_NO_IMPL "Ainda não implementado"
 }
 
 IDD_GENERAL DIALOGEX 0, 0, 255, 236
@@ -204,8 +204,8 @@ BEGIN
   CONTROL "", IDC_DETAIL_LIST, "SysListView32",
     LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 6,28,241,100
   CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W", ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
-  PUSHBUTTON "&Editar Propriedades...", IDC_EDITPROPERTIES,53,216,95,14
-  PUSHBUTTON "&Copiar para Ficheiro...", IDC_EXPORT,152,216,95,14
+  PUSHBUTTON "&Editar propriedades...", IDC_EDITPROPERTIES,53,216,95,14
+  PUSHBUTTON "&Copiar para ficheiro...", IDC_EXPORT,152,216,95,14
 END
 
 IDD_HIERARCHY DIALOGEX 0, 0, 255, 236
@@ -285,7 +285,7 @@ CAPTION "Assistente de Importação de Certificados"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Benvindo ao Assistente de Importação de Certificados", IDC_IMPORT_TITLE, 115,7,195,30
+  LTEXT "Bem-vindo ao Assistente de Importação de Certificados", IDC_IMPORT_TITLE, 115,7,195,30
   LTEXT "Um certificado pode ser usado para identificá-lo ou ao computador do qual está a comunicar. Também pode ser usado para autenticação e para assinar mensagens. Conjuntos de certificados são colecções de certificados, listas de revogação de certificados e listas de certificados confiáveis.",
     -1, 115,40,195,120
 END
@@ -313,7 +313,7 @@ CAPTION "Assistente de Importação de Certificados"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "O Wine pode automaticamente seleccionar o conjunto de certificados ou você pode especificar a localização para os certificados.",
+  LTEXT "O ""Wine"" pode automaticamente seleccionar o conjunto de certificados ou pode especificar a localização para os certificados.",
     -1, 21,1,220,25
   AUTORADIOBUTTON "&Seleccionar conjunto de certificados automaticamente",
     IDC_IMPORT_AUTO_STORE, 31,28,220,12, BS_AUTORADIOBUTTON|WS_TABSTOP
@@ -403,7 +403,7 @@ CAPTION "Assistente de Exportação de Certificados"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "&Password:", -1, 21,1,195,10
+  LTEXT "Palavra-passe:", -1, 21,1,195,10
   EDITTEXT IDC_EXPORT_PASSWORD, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
   LTEXT "&Confirmar palavra-passe:", -1, 21,35,195,10
   EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
@@ -460,13 +460,13 @@ BEGIN
 END
 
 IDD_SELECT_CERT DIALOG 0,0,278,157
-CAPTION "Select Certificate"
+CAPTION "Selecção de Certificado"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Select a certificate you want to use", IDC_SELECT_DISPLAY_STRING, 7,7,264,26
+  LTEXT "Seleccione o certificado que deseja usar", IDC_SELECT_DISPLAY_STRING, 7,7,264,26
   CONTROL "", IDC_SELECT_CERTS, "SysListView32",
     LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 7,40,264,89
   PUSHBUTTON "OK", IDOK, 91,136,51,14, BS_DEFPUSHBUTTON
-  PUSHBUTTON "Cancel", IDCANCEL, 149,136,51,14
-  PUSHBUTTON "&View Certificate", IDC_SELECT_VIEW_CERT, 207,136,65,14, WS_DISABLED
+  PUSHBUTTON "Cancelar", IDCANCEL, 149,136,51,14
+  PUSHBUTTON "&Ver Certificado", IDC_SELECT_VIEW_CERT, 207,136,65,14, WS_DISABLED
 END
