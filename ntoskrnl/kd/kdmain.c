@@ -392,16 +392,6 @@ KdEnableDebugger(VOID)
 }
 
 /*
- * @implemented
- */
-BOOLEAN
-NTAPI
-KdPollBreakIn(VOID)
-{
-    return FALSE;
-}
-
-/*
  * @unimplemented
  */
 NTSTATUS
