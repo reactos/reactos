@@ -1871,7 +1871,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_WARN_PARTITION,
-        "Instalator wykry\210, \276e co najmniej jeden dysk twardy zawiera niekompatybiln\245 \n"
+        "Instalator wykry\210, \276e co najmniej jeden dysk twardy zawiera niekompatybiln\245\n"
         "tabel\251 partycji, kt\242ra nie b\251dzie poprawnie obs\210ugiwana!\n"
         "\n"
         "Tworzenie lub usuwanie partycji mo\276e nieodwracalnie uszkodi\206 tabel\251 partycji.\n"
@@ -2018,7 +2018,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "Nie mo\276na utworzy\206 partycji podstawowej lub rozszerzonej, \n" // FIXME
+        "Nie mo\276na utworzy\206 partycji podstawowej lub rozszerzonej,\n" // FIXME
         "poniewa\276 tabela partycji na tym dysku jest pe\210na.\n"
         "\n"
         "  * Naci\230nij dowolny klawisz, aby kontynuowa\206."

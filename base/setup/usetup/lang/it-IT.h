@@ -1789,8 +1789,8 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "ReactOS non \x8A stato installato completamente nel \n"
-        "vostro computer. Se esce adesso, dovr\x85 eseguire il \n"
+        "ReactOS non \x8A stato installato completamente nel\n"
+        "vostro computer. Se esce adesso, dovr\x85 eseguire il\n"
         "Setup nuovamente per installare ReactOS.\n"
         "\n"
         "  \x07  Premere INVIO per continuare il setup.\n"
