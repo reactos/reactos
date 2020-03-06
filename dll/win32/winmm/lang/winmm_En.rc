@@ -53,7 +53,7 @@ MCIERR_UNRECOGNIZED_KEYWORD, 	"The driver cannot recognize the specified command
 MCIERR_UNRECOGNIZED_COMMAND,	"The driver cannot recognize the specified command."
 MCIERR_HARDWARE, 		"There is a problem with your media device. Make sure it is working correctly or contact the device manufacturer."
 MCIERR_INVALID_DEVICE_NAME, 	"The specified device is not open or is not recognized by MCI."
-MCIERR_OUT_OF_MEMORY, 		"Not enough memory available for this task. \nQuit one or more applications to increase available memory, and then try again."
+MCIERR_OUT_OF_MEMORY, 		"Not enough memory available for this task.\nQuit one or more applications to increase available memory, and then try again."
 MCIERR_DEVICE_OPEN, 		"The device name is already being used as an alias by this application. Use a unique alias."
 MCIERR_CANNOT_LOAD_DRIVER, 	"There is an undetectable problem in loading the specified device driver."
 MCIERR_MISSING_COMMAND_STRING, 	"No command was specified."

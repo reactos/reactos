@@ -53,7 +53,7 @@ MCIERR_UNRECOGNIZED_KEYWORD, 	"Der Treiber kann den angegebenen Befehlsparameter
 MCIERR_UNRECOGNIZED_COMMAND,	"Der Treiber kann den angegebenen Befehl nicht anerkennen."
 MCIERR_HARDWARE, 		"Es gibt ein Problem mit Ihrem Media - Gerät. Stellen Sie sicher, dass es richtig arbeitet oder fragen Sie den Gerätehersteller."
 MCIERR_INVALID_DEVICE_NAME, 	"Das angegebene Gerät ist nicht geöffnet oder wird vom MCI nicht erkannt."
-MCIERR_OUT_OF_MEMORY, 		"Nicht genügend Speicher für den angeforderten Vorgang. \nBeenden Sie eine oder mehrere Anwendungen, und versuchen Sie es erneut."
+MCIERR_OUT_OF_MEMORY, 		"Nicht genügend Speicher für den angeforderten Vorgang.\nBeenden Sie eine oder mehrere Anwendungen, und versuchen Sie es erneut."
 MCIERR_DEVICE_OPEN, 		"Der Gerätename wird von dieser Anwendung bereits als Alias benutzt. Benutzen Sie einen eindeutigen Alias"
 MCIERR_CANNOT_LOAD_DRIVER, 	"Es gibt ein unbekanntes Problem beim Laden des angegebenen Gerätetreibers."
 MCIERR_MISSING_COMMAND_STRING, "Kein Befehl wurde angegeben."

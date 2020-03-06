@@ -154,7 +154,7 @@ Adakah anda mahu mencipta fail baru?"
 Adakah anda mahu menyimpan perubahan?"
     STRING_NOTFOUND "'%s' tidak dapat ditemui."
     STRING_OUT_OF_MEMORY "Tidak cukup ingatan untuk melengkapkan \
-tugas ini. \nTutup satu atau lebih aplikasi untuk menambah jumlah \ningatan kosong."
+tugas ini.\nTutup satu atau lebih aplikasi untuk menambah jumlah\ningatan kosong."
     STRING_CANNOTFIND "Tidak dapat mencari '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unikod"

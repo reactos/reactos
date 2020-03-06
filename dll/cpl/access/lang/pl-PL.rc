@@ -169,7 +169,7 @@ CAPTION "Ustawienia Klawiszy Przełączających"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Skrót klawiszowy", -1, 6, 11, 234, 62
-    LTEXT "Skrót do Klawiszy Przełączających: \nPrzytrzymaj <Num Lock> naciśnięty przez 5 sekund.",
+    LTEXT "Skrót do Klawiszy Przełączających:\nPrzytrzymaj <Num Lock> naciśnięty przez 5 sekund.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Użyj &skrótu", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14

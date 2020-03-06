@@ -47,12 +47,12 @@ BEGIN
   使用 '/nh' 要隱藏頁首。 默認情況下表中顯示資料。\n\
 \n\
 語法:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <格式>] [/nh] \n\
-  whoami /all [/fo <格式>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <格式>] [/nh]\n\
+  whoami /all [/fo <格式>] [/nh]\n\
 \n\
-例子: \n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+例子:\n\
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

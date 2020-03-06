@@ -160,7 +160,7 @@ Kas soovid uut faili koostada ?"
 Kas soovid muudatused salvestada ?"
     STRING_NOTFOUND "'%s' ei suudetud leida."
     STRING_OUT_OF_MEMORY "Pole piisavalt mälu selle \
-käsu lõpetamiseks. \nSulge üks või enam rakendust, et suurendada \nvaba mälu hulka."
+käsu lõpetamiseks.\nSulge üks või enam rakendust, et suurendada\nvaba mälu hulka."
     STRING_CANNOTFIND "Ei suuda leida '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

@@ -165,7 +165,7 @@ CAPTION "Pengaturan ToggleKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
-    LTEXT "Pintasan untuk ToggleKeys is: \nTekan dan tahan <Num Lock> selama lima detik.",
+    LTEXT "Pintasan untuk ToggleKeys is:\nTekan dan tahan <Num Lock> selama lima detik.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Gunakan pintasan", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14

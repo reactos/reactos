@@ -42,7 +42,7 @@ BEGIN
     IDS_LIST_DISK_HEAD "\n  Disc ###  Stare       Dimensiune  Liber    Dyn  Gpt\n"
     IDS_LIST_DISK_LINE "  --------  ----------  ----------  -------  ---  ---\n"
     IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
-    IDS_LIST_PARTITION_HEAD "\n  Partiție       Tip               Dim.     Depl. \n"
+    IDS_LIST_PARTITION_HEAD "\n  Partiție       Tip               Dim.     Depl.\n"
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partiție  %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nNu există niciun disc pentru a afișa partiții.\nSelectați un disc apoi reîncercați.\n\n"

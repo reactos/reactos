@@ -165,7 +165,7 @@ CAPTION "Paramètre des touches bascules"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Raccourci clavier", -1, 6, 11, 234, 62
-    LTEXT "Le raccourci pour les touches bascule est : \nMaintenir la touche <Verr num> pressée pendant cinq secondes.",
+    LTEXT "Le raccourci pour les touches bascule est :\nMaintenir la touche <Verr num> pressée pendant cinq secondes.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Utili&ser le raccourci", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14

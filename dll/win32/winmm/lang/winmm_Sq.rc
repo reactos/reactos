@@ -53,7 +53,7 @@ MCIERR_UNRECOGNIZED_KEYWORD, 	"Drejtuesi nuk mund të njohin parametër specifik
 MCIERR_UNRECOGNIZED_COMMAND,	"Drejtuesi nuk mund të njohin komandën e specifikuar."
 MCIERR_HARDWARE, 		"Ka një problem me pajisjen tuaj të media's. Sigurohuni që ajo është duke punuar si duhet ose kontaktoni prodhuesin e pajisjes."
 MCIERR_INVALID_DEVICE_NAME, 	"Pajisja specifikuar nuk është e hapur ose nuk njihet nga MCI."
-MCIERR_OUT_OF_MEMORY, 		"Memoria e pamjaftueshme në dispozicion për këtë detyrë. \nNxjirr një ose më shumë aplikime për të rritur memorien në dispozicion, dhe pastaj provoni përsëri."
+MCIERR_OUT_OF_MEMORY, 		"Memoria e pamjaftueshme në dispozicion për këtë detyrë.\nNxjirr një ose më shumë aplikime për të rritur memorien në dispozicion, dhe pastaj provoni përsëri."
 MCIERR_DEVICE_OPEN, 		"Emri Pajisjes tashmë është duke u përdorur si një pseudonim me këtë kërkesë. Përdorni një pseudonim të veçantë."
 MCIERR_CANNOT_LOAD_DRIVER, 	"Nuk është një problem i pa-dallueshëm në ngarkimin e aparatit drejtues të specifikuar."
 MCIERR_MISSING_COMMAND_STRING, 	"Komandë jo e specifikuar."

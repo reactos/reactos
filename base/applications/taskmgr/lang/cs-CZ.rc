@@ -430,7 +430,7 @@ BEGIN
     IDS_MSG_UNABLEDEBUGPROCESS "Není možné ladit proces"
     IDS_MSG_WARNINGDEBUG "Upozornění: ladění tohoto procesu může způsobit ztrátu dat.\nJste si jisti s připojením ladicího nástroje k tomuto procesu?"
     IDS_MSG_TASKMGRWARNING "Upozornění správce úloh"
-    IDS_MSG_WARNINGTERMINATING "Upozornění: ukončení procesu může způsobit nevratné škody,\nnapř.: ztrátu dat nebo nestability systému. \nProcesu nebude poskytnuta šance k uložení jeho stavu nebo\ndat předtím, než bude ukončen. Jste si jisti\ns ukončením procesu?"
+    IDS_MSG_WARNINGTERMINATING "Upozornění: ukončení procesu může způsobit nevratné škody,\nnapř.: ztrátu dat nebo nestability systému.\nProcesu nebude poskytnuta šance k uložení jeho stavu nebo\ndat předtím, než bude ukončen. Jste si jisti\ns ukončením procesu?"
     IDS_MSG_UNABLETERMINATEPRO "Není možné ukončit proces"
     IDS_MSG_CLOSESYSTEMPROCESS "Toto je důležitý systémový proces. Správce úloh tento proces neukončí."
     IDS_MSG_UNABLECHANGEPRIORITY "Není možné změnit prioritu"

@@ -2,12 +2,12 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    MSG_COPYRIGHT "Telnet Win32 v2.1b2, Copyright (C) 2000 Paul Brannan <pbranna@clemson.edu>\nand the team.  Ten program został dostarczony BEZ JAKIEJKOLWIEK GWARANCJI; aby \nuzyskać więcej informacji, przeczytaj LICENSE.TXT.  "
-    MSG_COPYRIGHT_1 "To jest wolne oprogramowanie, \nmożesz je rozpowszechniać pod pewnymi warunkami.\n\n"
+    MSG_COPYRIGHT "Telnet Win32 v2.1b2, Copyright (C) 2000 Paul Brannan <pbranna@clemson.edu>\nand the team.  Ten program został dostarczony BEZ JAKIEJKOLWIEK GWARANCJI; aby\nuzyskać więcej informacji, przeczytaj LICENSE.TXT.  "
+    MSG_COPYRIGHT_1 "To jest wolne oprogramowanie,\nmożesz je rozpowszechniać pod pewnymi warunkami.\n\n"
     MSG_USAGE "Użycie: TELNET [parametry][host [port]]\n\n  parametry\n    -d:FILENAME.EXT  Zrzuca wszystkie dane przychodzące do FILENAME.EXT.\n  host              Nazwa hosta lub adres IP zdalnego hosta, z którym chcesz się połączyć.\n"
     MSG_USAGE_1 "  port              Port usługi do otwarcia (domyślnie jest port telnet 23).\n\n"
-    MSG_HELP "Polecenia mogą być skracane.  Dostępne polecenia:\n  \ncl[ose]         zamknij bieżące połączenie\nop[en]          połącz z witryną\nq[uit]          zakończ telnet\n"
-    MSG_HELP_1 "ke[ys]          zmienia/wyświetla mapy klawiszy (wpisz klawisze, \naby zobaczyć opcje)\nse[t]           wyświetla/zmienia opcje konfiguracji\nz               wstrzymaj\n? h[elp]        wypisz informacje pomocy\n"
+    MSG_HELP "Polecenia mogą być skracane.  Dostępne polecenia:\n\ncl[ose]         zamknij bieżące połączenie\nop[en]          połącz z witryną\nq[uit]          zakończ telnet\n"
+    MSG_HELP_1 "ke[ys]          zmienia/wyświetla mapy klawiszy (wpisz klawisze,\naby zobaczyć opcje)\nse[t]           wyświetla/zmienia opcje konfiguracji\nz               wstrzymaj\n? h[elp]        wypisz informacje pomocy\n"
     MSG_INVCMD "Nieprawidłowe polecenie.  Wpisz ?, aby uzyskać pomoc.\n"
     MSG_ERROR "%1 nie powiodło się.\n"
     MSG_INFO "%1\n"

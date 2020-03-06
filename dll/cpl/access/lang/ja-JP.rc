@@ -163,7 +163,7 @@ CAPTION "キーの入れ替え設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "キーボード ショートカット", -1, 6, 11, 234, 62
-    LTEXT "キー入れ替えのショートカットは: \n5秒間、<NumLock>を押し続ける。",
+    LTEXT "キー入れ替えのショートカットは:\n5秒間、<NumLock>を押し続ける。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "ショートカットを使う(&S)", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14

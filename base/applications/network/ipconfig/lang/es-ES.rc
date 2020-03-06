@@ -32,32 +32,32 @@ BEGIN
                   /flushdns | /displaydns | /registerdns |\n \
                   /showclassid adaptador |\n \
                   /setclassid adaptador [classid] ]\n \
-    \n \
+\n \
     donde\n \
         adaptador       Nombre de la conexión\n \
                        (los caracteres comodín * y ? están permitidos, ver ejemplos)\n \
-    \n \
+\n \
         Opciones:\n \
            /?           Muestra este mensaje de ayuda\n \
            /all         Muestra la información de configuración.\n \
            /release     Libera la dirección IP para el adaptador especificado.\n \
            /renew       Renueva la dirección IP para el adaptador especificado.\n \
            /flushdns    Purga la caché de resolución DNS.\n \
-           /registerdns Actualiza todas las concesiones DHCP y registran \n \
+           /registerdns Actualiza todas las concesiones DHCP y registran\n \
 		                de nuevo los nombres DNS.\n \
            /displaydns  Muestra el contenido de la caché de resolución DNS.\n \
            /showclassid Muestra todos los id. de clase DHCP permitidos al adaptador.\n \
            /setclassid  Modifica el id. de clase DHCP.\n \
-    \n \
+\n \
     Normalmente se muestra sólo la dirección IP, la máscara de red y\n \
     la puerta de enlace predeterminada de cada adaptador enlazado a TCP/IP.\n \
-    \n \
+\n \
     Para los parámetros Release y Renew, si no se especifica un adaptador,\n \
     se liberan o renuevan las concesiones de dirección IP para todos\n \
 	los adaptadores enlazados por TCP/IP.\n \
-    \n \
+\n \
     Para Setclassid, si no se especifica algún classid, se quita.\n \
-    \n \
+\n \
     Ejemplos:\n \
         > ipconfig                   ... Muestra información.\n \
         > ipconfig /all              ... Muestra información detallada.\n \

@@ -14,7 +14,7 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
   A   Atributo de archivo\n\
   S   Atributo de archivo de sistema\n\
   H   Atributo de archivo oculto\n\
-  /S  Procesa los archivos coincidentes en el directorio actual \n\
+  /S  Procesa los archivos coincidentes en el directorio actual\n\
       y sus subdirectorios\n\
   /D  Procesa también los directorios\n\n\
 Type ATTRIB without a parameter to display the attributes of all files.\n"

@@ -27,16 +27,16 @@ STRINGTABLE
     9 "inserați discul %s"
     10 "Instalatorul Windows %s\n\nUtilizare:\nmsiexec command {parametru obligatoriu} [parametru opțional]\n\n \
        Instalarea unui produs:\n\t/i {pachet|cod_produs} [proprietate] \
-                              \n\t/package {pachet|cod_produs} [proprietate] \
-                              \n\t/a pachet [proprietate]\n \
+\n\t/package {pachet|cod_produs} [proprietate] \
+\n\t/a pachet [proprietate]\n \
        Repararea unei instalări:\n\t/f[p|o|e|d|c|a|u|m|s|v] {pachet|cod_produs}\n \
        Dezinstalarea unui produs:\n\t/uninstall {pachet|cod_produs} [proprietate] \
-                                   \n\t/x {pachet|cod_produs} [proprietate]\n \
+\n\t/x {pachet|cod_produs} [proprietate]\n \
        Promovarea unui produs:\n\t/j[u|m] pachet [/t transformare] [/g id_limbă]\n \
        Aplicarea unui patch:\n\t/p pachet_patch [proprietate] \
-                              \n\t/p pachet_patch /a pachet [proprietate]\n \
+\n\t/p pachet_patch /a pachet [proprietate]\n \
        Jurnalizare și modificatori de interfață pentru comenzile enumerate: \
-                              \n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] fișier_jurnal\n\t/q{|n|b|r|f|n+|b+|b-}\n \
+\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] fișier_jurnal\n\t/q{|n|b|r|f|n+|b+|b-}\n \
        Înregistrarea serviciului MSI:\n\t/y\n \
        Excluderea serviciului MSI:\n\t/z\n \
        Afișarea acestui manual:\n\t/help\n\t/?\n"

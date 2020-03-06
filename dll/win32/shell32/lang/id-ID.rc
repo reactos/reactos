@@ -337,7 +337,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Pemeriksaan kesalahan", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "Opsi ini akan memeriksa kesalahan \nvolume.", -1, 40, 25, 160, 20
+    LTEXT "Opsi ini akan memeriksa kesalahan\nvolume.", -1, 40, 25, 160, 20
     PUSHBUTTON "Cek Sekarang...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentasi", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
@@ -971,7 +971,7 @@ BEGIN
     IDS_NEWEXT_SPECIFY_EXT "Anda Harus Merincikan Ekstensi."
     IDS_NEWEXT_ALREADY_ASSOC "Ekstensi %s sudah dihubungkan dengan Jenis Berkas %s. anda ingin memustuskan hubungan %s dengan %s dan membuat Jenis Berkas Baru untuk ini?"
     IDS_NEWEXT_EXT_IN_USE "Ekstensi ini sedang digunakan"
-    IDS_REMOVE_EXT "Jika Anda menghapus ekstensi nama file terdaftar, Anda tidak akan dapat membuka file dengan ekstensi ini dengan mengklik dua kali ikonnya. \n\nApakah Anda yakin ingin menghapus ekstensi ini??"
+    IDS_REMOVE_EXT "Jika Anda menghapus ekstensi nama file terdaftar, Anda tidak akan dapat membuka file dengan ekstensi ini dengan mengklik dua kali ikonnya.\n\nApakah Anda yakin ingin menghapus ekstensi ini??"
     IDS_SPECIFY_ACTION "Anda harus menentukan tindakan."
     IDS_INVALID_PROGRAM "Program yang ditentukan tidak dapat ditemukan. Pastikan nama file dan jalurnya benar."
     IDS_REMOVE_ACTION "Anda yakin ingin menghapus tindakan ini?"

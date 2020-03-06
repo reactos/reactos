@@ -144,7 +144,7 @@ BEGIN
     STRING_TEXT_FILES_TXT "Testu dokumentuak (*.txt)"
     STRING_TOOLARGE "'%s' fitxategia handiegia da\
 ohar-blokarentzat.\n Erabili beste editore bat."
-    STRING_NOTEXT "Ez duzu ezer idatzi. \nMesedez zerbait idatzi e \
+    STRING_NOTEXT "Ez duzu ezer idatzi.\nMesedez zerbait idatzi e \
 berriz saiatu"
     STRING_DOESNOTEXIST "'%s'\nFitxategia ez dago\n\n ¿Fitxategi berri bat \
 sortu nahi duzu?"
@@ -152,8 +152,8 @@ sortu nahi duzu?"
 ¿Aldaketak gorde nahi dituzu?"
     STRING_NOTFOUND "Ez da aurkitu '%s'."
     STRING_OUT_OF_MEMORY "Ez dago memoria nahikorik lan hau\
-amaitzeko. \nItxi aplikazio bat edo gehiago \
-memoria librearen \nkopurua handitzeko."
+amaitzeko.\nItxi aplikazio bat edo gehiago \
+memoria librearen\nkopurua handitzeko."
     STRING_CANNOTFIND "Ez da '%s' aurkitu"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

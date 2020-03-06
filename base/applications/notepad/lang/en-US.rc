@@ -152,7 +152,7 @@ Do you want to create a new file ?"
 Would you like to save the changes ?"
     STRING_NOTFOUND "'%s' can not be found."
     STRING_OUT_OF_MEMORY "Not enough memory to complete this \
-task. \nClose one or more applications to increase the amount of \nfree memory."
+task.\nClose one or more applications to increase the amount of\nfree memory."
     STRING_CANNOTFIND "Cannot find '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
