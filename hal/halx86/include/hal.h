@@ -59,6 +59,7 @@
 #include "bus.h"
 #include "halirq.h"
 #include "haldma.h"
+#include "halhw.h"
 #include "halp.h"
 #include "mps.h"
 #include "halacpi.h"
