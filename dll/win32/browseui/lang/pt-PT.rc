@@ -140,16 +140,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Procurar por um dos seguintes critérios.", IDC_SEARCH_LABEL, 4, 2, 120, 20
 
-    LTEXT "A totalidade ou parte do nome de ficheiro:", -1, 10, 25, 500, 10
+    LTEXT "A totalidade &ou parte do nome de ficheiro:", -1, 10, 25, 500, 10
     EDITTEXT IDC_SEARCH_FILENAME, 10, 35, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "Uma palavra ou frase no ficheiro:", -1, 10, 50, 500, 10
+    LTEXT "&Uma palavra ou frase no ficheiro:", -1, 10, 50, 500, 10
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "Procurar em:", -1, 10, 75, 500, 10
+    LTEXT "&Procurar em:", -1, 10, 75, 500, 10
     CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
 
-    DEFPUSHBUTTON "&Procurar", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    DEFPUSHBUTTON "Pro&curar", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "Pa&rar", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
     AUTOCHECKBOX "Procurar em pastas e ficheiros ocultos",
