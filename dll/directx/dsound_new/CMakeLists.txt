@@ -21,7 +21,8 @@ list(APPEND SOURCE
 
 add_library(dsound MODULE
     ${SOURCE}
-    version.rc)
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dsound.def)
 
 set_module_type(dsound win32dll)
 target_link_libraries(dsound dxguid uuid)
