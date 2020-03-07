@@ -305,13 +305,13 @@ START_TEST(SHChangeNotify)
         return;
     }
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 15; ++i)
     {
         s_hwnd = FindWindowW(s_szName, s_szName);
         if (s_hwnd)
             break;
 
-        Sleep(100);
+        Sleep(50);
     }
 
     if (!s_hwnd)

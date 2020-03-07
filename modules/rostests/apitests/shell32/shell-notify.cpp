@@ -234,7 +234,7 @@ DoSetClipText(HWND hwnd)
     }
 
     CloseClipboard();
-    Sleep(100);
+    Sleep(60);
 }
 
 static LRESULT CALLBACK
