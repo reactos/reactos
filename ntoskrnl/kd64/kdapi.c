@@ -2205,6 +2205,7 @@ KdSystemDebugControl(
     DbgPrint("KdSystemDebugControl is unimplemented!\n");
     return STATUS_NOT_IMPLEMENTED;
 }
+#endif
 
 /*
  * @implemented
@@ -2291,6 +2292,7 @@ KdPowerTransition(IN DEVICE_POWER_STATE NewState)
     }
 }
 
+#ifdef _WINKD_
 /*
  * @implemented
  */

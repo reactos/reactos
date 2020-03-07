@@ -396,33 +396,6 @@ KdEnableDebugger(VOID)
  */
 NTSTATUS
 NTAPI
-KdPowerTransition(ULONG PowerState)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-KdChangeOption(IN KD_OPTION Option,
-               IN ULONG InBufferLength OPTIONAL,
-               IN PVOID InBuffer,
-               IN ULONG OutBufferLength OPTIONAL,
-               OUT PVOID OutBuffer,
-               OUT PULONG OutBufferRequiredLength OPTIONAL)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
 KdSystemDebugControl(IN SYSDBG_COMMAND Command,
                      IN PVOID InputBuffer,
                      IN ULONG InputBufferLength,
