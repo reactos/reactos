@@ -46,70 +46,6 @@ volatile ULONG KdbDmesgTotalWritten = 0;
 volatile BOOLEAN KdbpIsInDmesgMode = FALSE;
 static KSPIN_LOCK KdpDmesgLogSpinLock;
 
-/* UTILITY FUNCTIONS *********************************************************/
-
-/*
- * Get the total size of the memory before
- * Mm is initialized, by counting the number
- * of physical pages. Useful for debug logging.
- *
- * Strongly inspired by:
- * mm\ARM3\mminit.c : MiScanMemoryDescriptors(...)
- *
- * See also: kd64\kdinit.c
- */
-static CODE_SEG("INIT")
-SIZE_T
-KdpGetMemorySizeInMBs(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    PLIST_ENTRY ListEntry;
-    PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
-    SIZE_T NumberOfPhysicalPages = 0;
-
-    /* Loop the memory descriptors */
-    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
-         ListEntry = ListEntry->Flink)
-    {
-        /* Get the descriptor */
-        Descriptor = CONTAINING_RECORD(ListEntry,
-                                       MEMORY_ALLOCATION_DESCRIPTOR,
-                                       ListEntry);
-
-        /* Check if this is invisible memory */
-        if ((Descriptor->MemoryType == LoaderFirmwarePermanent) ||
-            (Descriptor->MemoryType == LoaderSpecialMemory) ||
-            (Descriptor->MemoryType == LoaderHALCachedMemory) ||
-            (Descriptor->MemoryType == LoaderBBTMemory))
-        {
-            /* Skip this descriptor */
-            continue;
-        }
-
-        /* Check if this is bad memory */
-        if (Descriptor->MemoryType != LoaderBad)
-        {
-            /* Count this in the total of pages */
-            NumberOfPhysicalPages += Descriptor->PageCount;
-        }
-    }
-
-    /* Round size up. Assumed to better match actual physical RAM size */
-    return ALIGN_UP_BY(NumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
-}
-
-/* See also: kd64\kdinit.c */
-static CODE_SEG("INIT")
-VOID
-KdpPrintBanner(IN SIZE_T MemSizeMBs)
-{
-    DPRINT1("-----------------------------------------------------\n");
-    DPRINT1("ReactOS " KERNEL_VERSION_STR " (Build " KERNEL_VERSION_BUILD_STR ") (Commit " KERNEL_VERSION_COMMIT_HASH ")\n");
-    DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
-    DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
-    DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName, KeLoaderBlock->NtHalPathName, KeLoaderBlock->ArcHalDeviceName, KeLoaderBlock->NtBootPathName);
-}
-
 /* LOCKING FUNCTIONS *********************************************************/
 
 KIRQL
@@ -254,7 +190,6 @@ KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
     IO_STATUS_BLOCK Iosb;
     HANDLE ThreadHandle;
     KPRIORITY Priority;
-    SIZE_T MemSizeMBs;
 
     if (!KdpDebugMode.File) return;
 
@@ -277,11 +212,6 @@ KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Initialize spinlock */
         KeInitializeSpinLock(&KdpDebugLogSpinLock);
-
-        /* Display separator + ReactOS version at start of the debug log */
-        /* Round size up. Assumed to better match actual physical RAM size */
-        MemSizeMBs = ALIGN_UP_BY(MmNumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
-        KdpPrintBanner(MemSizeMBs);
     }
     else if (BootPhase == 2)
     {
@@ -374,7 +304,6 @@ NTAPI
 KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
               ULONG BootPhase)
 {
-    SIZE_T MemSizeMBs;
     if (!KdpDebugMode.Serial) return;
 
     if (BootPhase == 0)
@@ -396,10 +325,6 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
-
-        /* Display separator + ReactOS version at start of the debug log */
-        MemSizeMBs = KdpGetMemorySizeInMBs(KeLoaderBlock);
-        KdpPrintBanner(MemSizeMBs);
     }
     else if (BootPhase == 2)
     {
@@ -545,7 +470,6 @@ NTAPI
 KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
               ULONG BootPhase)
 {
-    SIZE_T MemSizeMBs;
     if (!KdpDebugMode.Screen) return;
 
     if (BootPhase == 0)
@@ -572,11 +496,6 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Initialize spinlock */
         KeInitializeSpinLock(&KdpDmesgLogSpinLock);
-
-        /* Display separator + ReactOS version at start of the debug log */
-        /* Round size up. Assumed to better match actual physical RAM size */
-        MemSizeMBs = ALIGN_UP_BY(MmNumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
-        KdpPrintBanner(MemSizeMBs);
     }
     else if (BootPhase == 2)
     {
