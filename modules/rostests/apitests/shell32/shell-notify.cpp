@@ -12,6 +12,7 @@
 #define WM_SHELL_NOTIFY (WM_USER + 100)
 #define WM_GET_NOTIFY_FLAGS (WM_USER + 101)
 #define WM_CLEAR_FLAGS (WM_USER + 102)
+#define WM_SET_PATHS (WM_USER + 103)
 
 static HWND s_hwnd = NULL;
 static const WCHAR s_szName[] = L"SHChangeNotify testcase";
@@ -31,7 +32,15 @@ typedef enum TYPE
 
 static BYTE s_counters[TYPE_FREESPACE + 1];
 static UINT s_uRegID = 0;
+
 static WCHAR s_dir1[MAX_PATH];  // "%TEMP%\\WatchDir1"
+static WCHAR s_dir2[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir2"
+static WCHAR s_dir3[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir3"
+static WCHAR s_file1[MAX_PATH]; // "%TEMP%\\WatchDir1\\File1.txt"
+static WCHAR s_file2[MAX_PATH]; // "%TEMP%\\WatchDir1\\File2.txt"
+
+static WCHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
+
 static LPITEMIDLIST s_pidl = NULL;
 static SHChangeNotifyEntry s_entry;
 
@@ -47,6 +56,18 @@ OnCreate(HWND hwnd)
 
     lstrcpyW(s_dir1, szPath);
     PathAppendW(s_dir1, L"WatchDir1");
+
+    lstrcpyW(s_dir2, s_dir1);
+    PathAppendW(s_dir2, L"Dir2");
+
+    lstrcpyW(s_dir3, s_dir1);
+    PathAppendW(s_dir3, L"Dir3");
+
+    lstrcpyW(s_file1, s_dir1);
+    PathAppendW(s_file1, L"File1.txt");
+
+    lstrcpyW(s_file2, s_dir1);
+    PathAppendW(s_file2, L"File2.txt");
 
     s_pidl = ILCreateFromPathW(s_dir1);
 
@@ -86,17 +107,15 @@ OnDestroy(HWND hwnd)
 static void
 DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
 {
-    CHAR path1[MAX_PATH], path2[MAX_PATH];
-
     if (pidl1)
-        SHGetPathFromIDListA(pidl1, path1);
+        SHGetPathFromIDListW(pidl1, s_path1);
     else
-        path1[0] = 0;
+        s_path1[0] = 0;
 
     if (pidl2)
-        SHGetPathFromIDListA(pidl2, path2);
+        SHGetPathFromIDListW(pidl2, s_path2);
     else
-        path2[0] = 0;
+        s_path2[0] = 0;
 
     switch (lEvent)
     {
@@ -187,6 +206,37 @@ OnGetNotifyFlags(HWND hwnd)
     return dwFlags;
 }
 
+static void
+DoSetClipText(HWND hwnd)
+{
+    if (!OpenClipboard(hwnd))
+        return;
+
+    EmptyClipboard();
+
+    WCHAR szText[MAX_PATH * 2];
+    lstrcpyW(szText, s_path1);
+    lstrcatW(szText, L"|");
+    lstrcatW(szText, s_path2);
+
+    DWORD cbText = (lstrlenW(szText) + 1) * sizeof(WCHAR);
+    HGLOBAL hGlobal = GlobalAlloc(GHND | GMEM_SHARE, cbText);
+    if (hGlobal)
+    {
+        LPWSTR psz = (LPWSTR)GlobalLock(hGlobal);
+        if (psz)
+        {
+            CopyMemory(psz, szText, cbText);
+            GlobalUnlock(hGlobal);
+
+            SetClipboardData(CF_UNICODETEXT, hGlobal);
+        }
+    }
+
+    CloseClipboard();
+    Sleep(60);
+}
+
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -211,6 +261,10 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_CLEAR_FLAGS:
             ZeroMemory(&s_counters, sizeof(s_counters));
+            break;
+
+        case WM_SET_PATHS:
+            DoSetClipText(hwnd);
             break;
 
         default:
