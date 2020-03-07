@@ -47,6 +47,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
+#ifdef _WINKD_
 BOOLEAN
 NTAPI
 KdpReport(IN PKTRAP_FRAME TrapFrame,
@@ -335,3 +336,5 @@ KdIsThisAKdTrap(IN PEXCEPTION_RECORD ExceptionRecord,
         return FALSE;
     }
 }
+
+#endif

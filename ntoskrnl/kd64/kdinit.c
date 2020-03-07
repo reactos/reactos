@@ -16,6 +16,7 @@
 
 /* UTILITY FUNCTIONS *********************************************************/
 
+#ifdef _WINKD_
 /*
  * Get the total size of the memory before
  * Mm is initialized, by counting the number
@@ -92,6 +93,7 @@ KdUpdateDataBlock(VOID)
     KdDebuggerDataBlock.KeUserCallbackDispatcher =
         (ULONG_PTR)KeUserCallbackDispatcher;
 }
+#endif
 
 BOOLEAN
 NTAPI
@@ -137,6 +139,7 @@ KdRegisterDebuggerDataBlock(IN ULONG Tag,
     return TRUE;
 }
 
+#ifdef _WINKD_
 BOOLEAN
 NTAPI
 KdInitSystem(IN ULONG BootPhase,
@@ -459,3 +462,4 @@ KdInitSystem(IN ULONG BootPhase,
     /* Return initialized */
     return TRUE;
 }
+#endif
