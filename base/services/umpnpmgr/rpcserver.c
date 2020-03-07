@@ -2296,7 +2296,7 @@ PNP_DeleteClassKey(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetClassName(%p %S 0x%08lx)\n",
+    DPRINT("PNP_DeleteClassKey(%p %S 0x%08lx)\n",
            hBinding, pszClassGuid, ulFlags);
 
     if (ulFlags & CM_DELETE_CLASS_SUBKEYS)
@@ -2376,7 +2376,7 @@ PNP_GetInterfaceDeviceList(
         ret = NtStatusToCrError(Status);
     }
 
-    DPRINT("PNP_GetInterfaceDeviceListSize() done (returns %lx)\n", ret);
+    DPRINT("PNP_GetInterfaceDeviceList() done (returns %lx)\n", ret);
     return ret;
 }
 
@@ -2397,7 +2397,7 @@ PNP_GetInterfaceDeviceListSize(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetInterfaceDeviceList(%p %p %p %S 0x%08lx)\n",
+    DPRINT("PNP_GetInterfaceDeviceListSize(%p %p %p %S 0x%08lx)\n",
            hBinding, pulLen, InterfaceGuid, pszDeviceID, ulFlags);
 
     if (!IsValidDeviceInstanceID(pszDeviceID))
