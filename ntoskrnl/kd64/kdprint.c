@@ -15,8 +15,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-#ifdef _WINKD_
-
 BOOLEAN
 NTAPI
 KdpPrintString(
@@ -131,6 +129,8 @@ KdpPromptString(
     /* Success; we don't need to resend */
     return FALSE;
 }
+
+#ifdef _WINKD_
 
 VOID
 NTAPI
