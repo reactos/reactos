@@ -47,7 +47,6 @@ extern UNICODE_STRING CmVersionString;
 extern UNICODE_STRING CmCSDVersionString;
 extern CHAR NtBuildLab[];
 
-// #ifdef _WINKD_
 /*
  * WinDBG Debugger Worker State Machine data (see dbgctrl.c)
  */
@@ -65,7 +64,6 @@ extern PEPROCESS ExpDebuggerProcessKill;
 extern ULONG_PTR ExpDebuggerPageIn;
 
 VOID NTAPI ExpDebuggerWorker(IN PVOID Context);
-// #endif /* _WINKD_ */
 
 #ifdef _WIN64
 #define HANDLE_LOW_BITS (PAGE_SHIFT - 4)
