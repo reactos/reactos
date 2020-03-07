@@ -84,16 +84,16 @@ KdpPrintBanner(IN SIZE_T MemSizeMBs)
 
 /* FUNCTIONS *****************************************************************/
 
-#ifdef _WINKD_
 VOID
 NTAPI
 KdUpdateDataBlock(VOID)
 {
+#ifdef _WINKD_
     /* Update the KeUserCallbackDispatcher pointer */
     KdDebuggerDataBlock.KeUserCallbackDispatcher =
         (ULONG_PTR)KeUserCallbackDispatcher;
-}
 #endif
+}
 
 BOOLEAN
 NTAPI

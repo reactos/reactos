@@ -1874,12 +1874,14 @@ KdpQueryPerformanceCounter(IN PKTRAP_FRAME TrapFrame)
     /* Otherwise, do the call */
     return KeQueryPerformanceCounter(NULL);
 }
+#endif
 
 BOOLEAN
 NTAPI
 KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
                 IN PKEXCEPTION_FRAME ExceptionFrame)
 {
+#ifdef _WINKD_
     BOOLEAN Enable;
 
     /* Check if we have a trap frame */
@@ -1926,12 +1928,16 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
 
     /* Return if interrupts needs to be re-enabled */
     return Enable;
+#else
+    return FALSE;
+#endif
 }
 
 VOID
 NTAPI
 KdExitDebugger(IN BOOLEAN Enable)
 {
+#ifdef _WINKD_
     ULONG TimeSlip;
 
     /* Restore the state and unlock the port */
@@ -1961,12 +1967,14 @@ KdExitDebugger(IN BOOLEAN Enable)
         InterlockedIncrement(&KdpTimeSlipPending);
         KeInsertQueueDpc(&KdpTimeSlipDpc, NULL, NULL); // FIXME: this can trigger context switches!
     }
+#endif
 }
 
 NTSTATUS
 NTAPI
 KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
 {
+#ifdef _WINKD_
     KIRQL OldIrql;
 
 #if defined(__GNUC__)
@@ -2037,12 +2045,31 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
 
     /* We're done */
     return STATUS_SUCCESS;
+#else
+    KIRQL OldIrql;
+
+    /* Raise IRQL */
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* TODO: Re-enable any breakpoints */
+
+    /* Enable the Debugger */
+    KdDebuggerEnabled = TRUE;
+    SharedUserData->KdDebuggerEnabled = TRUE;
+
+    /* Lower the IRQL */
+    KeLowerIrql(OldIrql);
+
+    /* Return success */
+    return STATUS_SUCCESS;
+#endif
 }
 
 NTSTATUS
 NTAPI
 KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
 {
+#ifdef _WINKD_
     KIRQL OldIrql;
     NTSTATUS Status;
 
@@ -2127,13 +2154,32 @@ KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
 
     /* We're done */
     return STATUS_SUCCESS;
+#else
+    KIRQL OldIrql;
+
+    if (!NeedLock)
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Raise IRQL */
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* TODO: Disable any breakpoints */
+
+    /* Disable the Debugger */
+    KdDebuggerEnabled = FALSE;
+    SharedUserData->KdDebuggerEnabled = FALSE;
+
+    /* Lower the IRQL */
+    KeLowerIrql(OldIrql);
+
+    /* Return success */
+    return STATUS_SUCCESS;
+#endif
 }
 
-#endif // _WINKD_
-
 /* PUBLIC FUNCTIONS **********************************************************/
-
-#ifdef _WINKD_
 
 /*
  * @implemented
@@ -2174,6 +2220,21 @@ KdSystemDebugControl(
     /* Handle some internal commands */
     switch ((ULONG)Command)
     {
+#ifndef _WINKD_
+        case BREAKPOINT_PRINT: /* DbgPrint */
+        {
+            /* Call KDBG */
+            BOOLEAN Handled;
+            return KdpPrint(MAXULONG,
+                            DPFLTR_INFO_LEVEL,
+                            (PCHAR)InputBuffer,
+                            (USHORT)InputBufferLength,
+                            PreviousMode,
+                            NULL, // TrapFrame,
+                            NULL, // ExceptionFrame,
+                            &Handled);
+        }
+#endif
 #if DBG
         case ' soR': /* ROS-INTERNAL */
         {
@@ -2197,12 +2258,38 @@ KdSystemDebugControl(
             return STATUS_SUCCESS;
         }
 
+#if defined(_M_IX86) && !defined(_WINKD_) // See ke/i386/traphdlr.c
+        /* Register a debug callback */
+        case 'CsoR':
+        {
+            switch (InputBufferLength)
+            {
+                case ID_Win32PreServiceHook:
+                    KeWin32PreServiceHook = InputBuffer;
+                    break;
+
+                case ID_Win32PostServiceHook:
+                    KeWin32PostServiceHook = InputBuffer;
+                    break;
+
+            }
+            break;
+        }
+#endif
+
         /* Special case for stack frame dumps */
         case 'DsoR':
         {
             KeRosDumpStackFrames((PULONG_PTR)InputBuffer, InputBufferLength);
             break;
         }
+#if defined(KDBG)
+        /* Register KDBG CLI callback */
+        case 'RbdK':
+        {
+            return KdbRegisterCliCallback(InputBuffer, InputBufferLength);
+        }
+#endif /* KDBG */
 #endif
         default:
             break;
@@ -2212,7 +2299,6 @@ KdSystemDebugControl(
     DbgPrint("KdSystemDebugControl is unimplemented!\n");
     return STATUS_NOT_IMPLEMENTED;
 }
-#endif
 
 /*
  * @implemented
@@ -2299,7 +2385,6 @@ KdPowerTransition(IN DEVICE_POWER_STATE NewState)
     }
 }
 
-#ifdef _WINKD_
 /*
  * @implemented
  */
@@ -2332,8 +2417,6 @@ KdRefreshDebuggerNotPresent(VOID)
     KdExitDebugger(Enable);
     return DebuggerNotPresent;
 }
-
-#endif // _WINKD_
 
 /*
  * @implemented
