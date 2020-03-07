@@ -1726,6 +1726,7 @@ KdpReportCommandStringStateChange(IN PSTRING NameString,
                                      Context);
     } while (Status == ContinueProcessorReselected);
 }
+#endif
 
 BOOLEAN
 NTAPI
@@ -1733,6 +1734,7 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
                               IN OUT PCONTEXT Context,
                               IN BOOLEAN SecondChanceException)
 {
+#ifdef _WINKD_
     STRING Header, Data;
     DBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange;
     KCONTINUE_STATUS Status;
@@ -1780,6 +1782,10 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
 
     /* Return */
     return Status;
+#else
+    UNIMPLEMENTED;
+    return FALSE;
+#endif
 }
 
 VOID
@@ -1851,6 +1857,7 @@ KdpSwitchProcessor(IN PEXCEPTION_RECORD ExceptionRecord,
     return Status;
 }
 
+#ifdef _WINKD_
 LARGE_INTEGER
 NTAPI
 KdpQueryPerformanceCounter(IN PKTRAP_FRAME TrapFrame)

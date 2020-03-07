@@ -58,6 +58,9 @@ VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
 ULONG Kd_DEFAULT_MASK = 1 << DPFLTR_ERROR_LEVEL;
 #endif
 
+extern CPPORT PortInfo;
+extern ANSI_STRING KdpLogFileName;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 ULONG
@@ -413,12 +416,164 @@ KdSystemDebugControl(IN SYSDBG_COMMAND Command,
 
 PKDEBUG_ROUTINE KiDebugRoutine = KdpEnterDebuggerException;
 
+CODE_SEG("INIT")
+PCHAR
+NTAPI
+KdpGetDebugMode(PCHAR Currentp2)
+{
+    PCHAR p1, p2 = Currentp2;
+    ULONG Value;
+
+    /* Check for Screen Debugging */
+    if (!_strnicmp(p2, "SCREEN", 6))
+    {
+        /* Enable It */
+        p2 += 6;
+        KdpDebugMode.Screen = TRUE;
+    }
+    /* Check for Serial Debugging */
+    else if (!_strnicmp(p2, "COM", 3))
+    {
+        /* Gheck for a valid Serial Port */
+        p2 += 3;
+        if (*p2 != ':')
+        {
+            Value = (ULONG)atol(p2);
+            if (Value > 0 && Value < 5)
+            {
+                /* Valid port found, enable Serial Debugging */
+                KdpDebugMode.Serial = TRUE;
+
+                /* Set the port to use */
+                SerialPortNumber = Value;
+                KdpPort = Value;
+            }
+        }
+        else
+        {
+            Value = strtoul(p2 + 1, NULL, 0);
+            if (Value)
+            {
+                KdpDebugMode.Serial = TRUE;
+                SerialPortInfo.Address = UlongToPtr(Value);
+                SerialPortNumber = 0;
+                KdpPort = 0;
+            }
+        }
+    }
+    /* Check for Debug Log Debugging */
+    else if (!_strnicmp(p2, "FILE", 4))
+    {
+        /* Enable It */
+        p2 += 4;
+        KdpDebugMode.File = TRUE;
+        if (*p2 == ':')
+        {
+            p2++;
+            p1 = p2;
+            while (*p2 != '\0' && *p2 != ' ') p2++;
+            KdpLogFileName.MaximumLength = KdpLogFileName.Length = p2 - p1;
+            KdpLogFileName.Buffer = p1;
+        }
+    }
+    /* Check for BOCHS Debugging */
+    else if (!_strnicmp(p2, "BOCHS", 5))
+    {
+        /* Enable It */
+        p2 += 5;
+        KdpDebugMode.Bochs = TRUE;
+    }
+
+    return p2;
+}
+
 NTSTATUS
 NTAPI
 KdDebuggerInitialize0(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Value;
+    ULONG i;
+    PCHAR CommandLine, Port = NULL, BaudRate = NULL, Irq = NULL;
+
+    if (LoaderBlock)
+    {
+        /* Check if we have a command line */
+        CommandLine = LoaderBlock->LoadOptions;
+        if (CommandLine)
+        {
+            /* Upcase it */
+            _strupr(CommandLine);
+
+            /* Get the port and baud rate */
+            Port = strstr(CommandLine, "DEBUGPORT");
+            BaudRate = strstr(CommandLine, "BAUDRATE");
+            Irq = strstr(CommandLine, "IRQ");
+        }
+    }
+
+    /* Check if we got the /DEBUGPORT parameter(s) */
+    while (Port)
+    {
+        /* Move past the actual string, to reach the port*/
+        Port += sizeof("DEBUGPORT") - 1;
+
+        /* Now get past any spaces and skip the equal sign */
+        while (*Port == ' ') Port++;
+        Port++;
+
+        /* Get the debug mode and wrapper */
+        Port = KdpGetDebugMode(Port);
+        Port = strstr(Port, "DEBUGPORT");
+    }
+
+    /* Use serial port then */
+    if (KdpDebugMode.Value == 0)
+        KdpDebugMode.Serial = TRUE;
+
+    /* Check if we got a baud rate */
+    if (BaudRate)
+    {
+        /* Move past the actual string, to reach the rate */
+        BaudRate += sizeof("BAUDRATE") - 1;
+
+        /* Now get past any spaces */
+        while (*BaudRate == ' ') BaudRate++;
+
+        /* And make sure we have a rate */
+        if (*BaudRate)
+        {
+            /* Read and set it */
+            Value = atol(BaudRate + 1);
+            if (Value) PortInfo.BaudRate = SerialPortInfo.BaudRate = Value;
+        }
+    }
+
+    /* Check Serial Port Settings [IRQ] */
+    if (Irq)
+    {
+        /* Move past the actual string, to reach the rate */
+        Irq += sizeof("IRQ") - 1;
+
+        /* Now get past any spaces */
+        while (*Irq == ' ') Irq++;
+
+        /* And make sure we have an IRQ */
+        if (*Irq)
+        {
+            /* Read and set it */
+            Value = atol(Irq + 1);
+            if (Value) KdpPortIrq = Value;
+        }
+    }
+
+    /* Call Providers at Phase 0 */
+    for (i = 0; i < KdMax; i++)
+    {
+        InitRoutines[i](&DispatchTable[i], 0);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
