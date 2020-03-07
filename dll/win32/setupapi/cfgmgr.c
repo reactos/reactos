@@ -1830,11 +1830,12 @@ CM_Disable_DevNode_Ex(
 
     RpcTryExcept
     {
-        ret = PNP_DeviceInstanceAction(BindingHandle,
-                                       PNP_DEVINST_DISABLE,
-                                       ulFlags,
-                                       lpDevInst,
-                                       NULL);
+        ret = PNP_DisableDevInst(BindingHandle,
+                                 lpDevInst,
+                                 NULL,
+                                 NULL,
+                                 0,
+                                 ulFlags);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
