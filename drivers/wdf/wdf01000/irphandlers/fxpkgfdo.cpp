@@ -925,3 +925,174 @@ Returns:
     Irp->CopyCurrentIrpStackLocationToNext();
     return Irp->SendIrpSynchronously(m_Device->GetAttachedDevice());
 }
+
+BOOLEAN
+FxPkgFdo::PnpSendStartDeviceDownTheStackOverload(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Send the start irp down the stack.
+
+Arguments:
+    None
+
+Return Value:
+    FALSE, the transition will occur in the irp's completion routine.
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FALSE;
+}
+
+WDF_DEVICE_PNP_STATE
+FxPkgFdo::PnpEventCheckForDevicePresenceOverload(
+    VOID
+    )
+
+/*++
+
+Routine Description:
+
+    This method implements the Check For Device Presence state in the PnP State
+    Machine.  Since FDO and PDO behavior is different, this is overloaded.  In
+    fact, this state shouldn't be reachable for FDOs, as the FDO should have
+    been torn off the stack before the device was cleanly ejected.
+
+Arguments:
+
+    none
+
+Returns:
+
+    WdfDevStatePnpFinal
+
+--*/
+
+{
+    ASSERT(!"This should only be implemented for PDOs.");
+
+    //
+    // Do something safe.  Act like the device is not
+    // present.
+    //
+    return WdfDevStatePnpFinal;
+}
+
+WDF_DEVICE_PNP_STATE
+FxPkgFdo::PnpEventEjectHardwareOverload(
+    VOID
+    )
+
+/*++
+
+Routine Description:
+
+    This method implements the Eject Hardware state in the PnP State Machine.
+    Since FDO and PDO behavior is different, this is overloaded.  In fact,
+    this state shouldn't be reachable for FDOs, as the FDO should have been
+    torn off the stack before the device was cleanly ejected.
+
+Arguments:
+
+    none
+
+Returns:
+
+    WdfDevStatePnpEjectedWaitingForRemove
+
+--*/
+
+{
+    ASSERT(!"This should only be reachable for PDOs.");
+
+    //
+    // Do something safe.  Act like the device got
+    // ejected.
+    //
+    return WdfDevStatePnpEjectedWaitingForRemove;
+}
+
+WDF_DEVICE_PNP_STATE
+FxPkgFdo::PnpGetPostRemoveState(
+    VOID
+    )
+
+/*++
+
+Routine Description:
+
+    This method implements the Removed state in the PnP State Machine.
+    Since FDO and PDO behavior is different, this is overloaded.  This state
+    just moves us toward the FDO-specific removal states.
+
+Arguments:
+
+    none
+
+Returns:
+
+    none
+
+--*/
+
+{
+    return WdfDevStatePnpFdoRemoved;
+}
+
+WDF_DEVICE_PNP_STATE
+FxPkgFdo::PnpEventPdoRemovedOverload(
+    VOID
+    )
+
+/*++
+
+Routine Description:
+
+    This method implements the PDO Removed state in the PnP State Machine.
+    Since FDO and PDO behavior is different, this is overloaded.  In fact,
+    this state shouldn't be reachable for FDOs, as the FDO should have been
+    torn off the stack before the PDO is removed.
+
+Arguments:
+
+    none
+
+Returns:
+
+    none
+
+--*/
+
+{
+    ASSERT(!"This should only be implemented for PDOs.");
+
+    return WdfDevStatePnpFinal;
+}
+
+WDF_DEVICE_PNP_STATE
+FxPkgFdo::PnpEventFdoRemovedOverload(
+    VOID
+    )
+/*++
+
+Routine Description:
+    FDO is being removed, see if there are any children that need to be removed
+
+Arguments:
+    None
+
+Return Value:
+    New device pnp state
+
+  --*/
+{
+    //
+    // Do that which all device stacks need to do upon removal.
+    //
+    PnpEventRemovedCommonCode();
+
+    return WdfDevStatePnpFinal;
+}

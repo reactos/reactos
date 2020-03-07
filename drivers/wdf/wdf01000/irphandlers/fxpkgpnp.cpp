@@ -1745,8 +1745,10 @@ Returns:
 
 --*/
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    This->SetPendingPnpIrp(Irp);
+    This->PnpProcessEvent(PnpEventStartDevice);
+
+    return STATUS_PENDING;
 }
 
 _Must_inspect_result_
@@ -2221,4 +2223,42 @@ Return Value:
     WDFNOTIMPLEMENTED();
     return STATUS_UNSUCCESSFUL;
     //return This->DispatchWaitWake(Irp);
+}
+
+VOID
+FxPkgPnp::SetPendingPnpIrp(
+    __inout FxIrp* Irp,
+    __in    BOOLEAN MarkIrpPending
+    )
+{
+    if (m_PendingPnPIrp != NULL )
+    {
+        FxIrp pendingIrp(m_PendingPnPIrp);
+
+        //
+        // A state changing pnp irp is already pended. If we don't bugcheck
+        // the pended pnp irp will be overwritten with new pnp irp and the old
+        // one may never get completed, which may have drastic implications (
+        // unresponsive system, power manager not sending Sx Irp etc.)
+        //
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "A new state changing pnp irp %!pnpmn! IRP %p arrived while another "
+            "pnp irp %!pnpmn! IRP %p is still pending WDFDEVICE %p\n",
+            Irp->GetMinorFunction(), Irp->GetIrp(),
+            pendingIrp.GetMinorFunction(),pendingIrp.GetIrp(),
+            m_Device->GetHandle());
+
+        FxVerifierBugCheck(GetDriverGlobals(),  // globals
+                           WDF_PNP_FATAL_ERROR, // specific type
+                           (ULONG_PTR)m_Device->GetHandle(), //parm 2
+                           (ULONG_PTR)Irp->GetIrp());  // parm 3
+
+        /* NOTREACHED */
+        return;
+    }
+    if (MarkIrpPending)
+    {
+        Irp->MarkIrpPending();
+    }
+    m_PendingPnPIrp = Irp->GetIrp();
 }

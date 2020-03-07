@@ -717,6 +717,373 @@ protected:
         return m_PendingSystemPowerIrp;
     }
 
+    VOID
+    SetPendingPnpIrp(
+        __inout FxIrp* Irp,
+        __in    BOOLEAN MarkIrpPending = TRUE
+        );
+
+// begin pnp state machine table based callbacks
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventCheckForDevicePresence(
+        __inout FxPkgPnp* This
+        );
+
+    virtual
+    BOOLEAN
+    PnpSendStartDeviceDownTheStackOverload(
+        VOID
+        ) =0;
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventCheckForDevicePresenceOverload(
+        VOID
+        ) = 0;
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventEjectHardware(
+        __inout FxPkgPnp* This
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventEjectHardwareOverload(
+        VOID
+        ) = 0;
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventInitStarting(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventInitSurpriseRemoved(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventHardwareAvailable(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventEnableInterfaces(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventHardwareAvailablePowerPolicyFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventQueryRemoveAskDriver(
+        __inout FxPkgPnp* This
+        );
+
+    static 
+    WDF_DEVICE_PNP_STATE 
+    PnpEventQueryRemoveEnsureDeviceAwake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventQueryRemovePending(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventQueryRemoveStaticCheck(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventQueriedRemoving(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventQueryStopAskDriver(
+        __inout FxPkgPnp* This
+        );
+
+    static 
+    WDF_DEVICE_PNP_STATE 
+    PnpEventQueryStopEnsureDeviceAwake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventQueryStopPending(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventQueryStopStaticCheck(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventQueryCanceled(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventRemoved(
+        __inout FxPkgPnp* This
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpGetPostRemoveState(
+        VOID
+        ) =0;
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventPdoRemoved(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventRemovedPdoWait(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventRemovedPdoSurpriseRemoved(
+        __inout FxPkgPnp* This
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventPdoRemovedOverload(
+        VOID
+        ) =0;
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventFdoRemovedOverload(
+        VOID
+        ) =0;
+
+    virtual
+    VOID
+    PnpEventSurpriseRemovePendingOverload(
+        VOID
+        );
+
+    VOID
+    PnpEventRemovedCommonCode(
+        VOID
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventRemovingDisableInterfaces(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventRestarting(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventStarted(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventStartedCancelStop(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventStartedCancelRemove(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventStartedRemoving(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventStartingFromStopped(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventStopped(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventStoppedWaitForStartCompletion(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventStartedStopping(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventSurpriseRemoved(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventInitQueryRemove(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventInitQueryRemoveCanceled(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventFdoRemoved(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventQueriedSurpriseRemove(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventSurpriseRemoveIoStarted(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventFailedPowerDown(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventFailedIoStarting(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventFailedOwnHardware(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventFailedPowerPolicyRemoved(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventFailedSurpriseRemoved(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventFailedStarted(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventFailedInit(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventPdoInitFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventRestart(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventRestartReleaseHardware(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventRestartHardwareAvailable(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventPdoRestart(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventRemovedChildrenRemoved(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_PNP_STATE
+    PnpEventFinal(
+        __inout FxPkgPnp* This
+        );
+// end pnp state machine table based callbacks
+
 public:
 
     VOID
@@ -1253,6 +1620,30 @@ protected:
     // The power action corresponding to the system power transition
     //
     UCHAR m_SystemPowerAction;
+
+
+    static const PNP_EVENT_TARGET_STATE m_PnpInitOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpInitStartingOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpHardwareAvailableOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpQueryStopPendingOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpRemovedPdoWaitOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpRestartingOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpStartedOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpQueryRemovePendingOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpQueriedRemovingOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpInitQueryRemoveOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpStoppedOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpStoppedWaitForStartCompletionOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpStartedStoppingOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpStartedStoppingFailedOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpEjectFailedOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpStartedRemovingOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpFailedPowerDownOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpFailedIoStartingOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpFailedWaitForRemoveOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpRestartOtherStates[];
+    static const PNP_EVENT_TARGET_STATE m_PnpRestartReleaseHardware[];
+    static const PNP_EVENT_TARGET_STATE m_PnpRestartHardwareAvailableOtherStates[];
 
 
     NTSTATUS

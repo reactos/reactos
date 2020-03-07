@@ -183,6 +183,42 @@ private:
         __in BOOLEAN IrpMustBePresent = TRUE
         );
 
+    virtual
+    BOOLEAN
+    PnpSendStartDeviceDownTheStackOverload(
+        VOID
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventCheckForDevicePresenceOverload(
+        VOID
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventEjectHardwareOverload(
+        VOID
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpGetPostRemoveState(
+        VOID
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventPdoRemovedOverload(
+        VOID
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventFdoRemovedOverload(
+        VOID
+        );
+
 };
 
 typedef NTSTATUS (FxPkgPdo::*PFN_PDO_HANDLER)(FxIrp *Irp);

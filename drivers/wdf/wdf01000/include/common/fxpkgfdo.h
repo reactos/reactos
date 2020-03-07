@@ -309,6 +309,43 @@ private:
         __in FxIrp *Irp
         );
 
+
+    virtual
+    BOOLEAN
+    PnpSendStartDeviceDownTheStackOverload(
+        VOID
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventCheckForDevicePresenceOverload(
+        VOID
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventEjectHardwareOverload(
+        VOID
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpGetPostRemoveState(
+        VOID
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventPdoRemovedOverload(
+        VOID
+        );
+
+    virtual
+    WDF_DEVICE_PNP_STATE
+    PnpEventFdoRemovedOverload(
+        VOID
+        );
+
 };
 
 

@@ -181,3 +181,129 @@ Return Value:
         return CompletePnpRequest(Irp, status);
     }
 }
+
+BOOLEAN
+FxPkgPdo::PnpSendStartDeviceDownTheStackOverload(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Send the start irp down the stack.
+
+Arguments:
+    None
+
+Return Value:
+    FALSE, the transition will occur in the irp's completion routine.
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FALSE;
+}
+
+WDF_DEVICE_PNP_STATE
+FxPkgPdo::PnpEventCheckForDevicePresenceOverload(
+    VOID
+    )
+/*++
+
+Routine Description:
+
+    This function implements the CheckForDevicePresence state.  This
+    function overloads the base PnP State machine handler.  It's
+    job is to figure out whether the removed device is actually
+    still attached.  It then changes state based on that result.
+
+Arguments:
+
+    none
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return WdfDevStatePnpInvalid;
+}
+
+WDF_DEVICE_PNP_STATE
+FxPkgPdo::PnpEventEjectHardwareOverload(
+    VOID
+    )
+/*++
+
+Routine Description:
+
+    This function implements the EjectHardware state.  This
+    function overloads the base PnP State machine handler.  Its
+    job is to call EvtDeviceEject.  If that succeeds, then we
+    transition immediately to EjectedWaitingForRemove.  If not,
+    then to EjectFailed.
+
+Arguments:
+
+    none
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+{
+    WDFNOTIMPLEMENTED();
+    return WdfDevStatePnpInvalid;
+}
+
+WDF_DEVICE_PNP_STATE
+FxPkgPdo::PnpGetPostRemoveState(
+    VOID
+    )
+{
+    //
+    // Transition to the check for device presence state.
+    //
+    return WdfDevStatePnpCheckForDevicePresence;
+}
+
+WDF_DEVICE_PNP_STATE
+FxPkgPdo::PnpEventPdoRemovedOverload(
+    VOID
+    )
+/*++
+
+Routine Description:
+
+    This function implements the Removed state.  This
+    function overloads the base PnP State machine handler.
+
+Arguments:
+
+    none
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+{
+    WDFNOTIMPLEMENTED();
+    return WdfDevStatePnpInvalid;
+}
+
+WDF_DEVICE_PNP_STATE
+FxPkgPdo::PnpEventFdoRemovedOverload(
+    VOID
+    )
+{
+    ASSERT(!"This should only be implemented for FDOs.");
+
+    //
+    // Do something safe.  Act like the device is not present.
+    //
+    return WdfDevStatePnpFinal;
+}
