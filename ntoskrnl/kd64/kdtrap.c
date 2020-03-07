@@ -261,6 +261,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
     /* Return TRUE or FALSE to caller */
     return Handled;
 }
+#endif
 
 BOOLEAN
 NTAPI
@@ -312,7 +313,6 @@ KdpStub(IN PKTRAP_FRAME TrapFrame,
         return FALSE;
     }
 }
-#endif
 
 BOOLEAN
 NTAPI

@@ -188,23 +188,6 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
     return TRUE;
 }
 
-BOOLEAN
-NTAPI
-KdpStub(IN PKTRAP_FRAME TrapFrame,
-        IN PKEXCEPTION_FRAME ExceptionFrame,
-        IN PEXCEPTION_RECORD ExceptionRecord,
-        IN PCONTEXT ContextRecord,
-        IN KPROCESSOR_MODE PreviousMode,
-        IN BOOLEAN SecondChanceException)
-{
-    return KdpTrap(TrapFrame,
-                   ExceptionFrame,
-                   ExceptionRecord,
-                   ContextRecord,
-                   PreviousMode,
-                   SecondChanceException);
-}
-
 /* PUBLIC FUNCTIONS *********************************************************/
 
 static PCHAR
