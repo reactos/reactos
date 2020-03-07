@@ -12,6 +12,7 @@
 #define WM_SHELL_NOTIFY (WM_USER + 100)
 #define WM_GET_NOTIFY_FLAGS (WM_USER + 101)
 #define WM_CLEAR_FLAGS (WM_USER + 102)
+#define WM_SET_PATHS (WM_USER + 103)
 
 static WCHAR s_dir1[MAX_PATH];  // "%TEMP%\\WatchDir1"
 static WCHAR s_dir2[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir2"
@@ -45,6 +46,8 @@ typedef struct TEST_ENTRY
     LPCVOID item2;
     LPCSTR pattern;
     ACTION action;
+    LPCWSTR path1;
+    LPCWSTR path2;
 } TEST_ENTRY;
 
 static BOOL
@@ -106,51 +109,51 @@ DoAction8(void)
 }
 
 static const TEST_ENTRY s_TestEntries[] = {
-    {__LINE__, SHCNE_MKDIR, s_dir1, NULL, "000100000", NULL},
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", DoAction1},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", DoAction2},
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", DoAction1},
-    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "000000010", NULL},
-    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "000000010", DoAction3},
-    {__LINE__, SHCNE_CREATE, s_file1, NULL, "010000000", NULL},
-    {__LINE__, SHCNE_CREATE, s_file1, s_file2, "010000000", NULL},
-    {__LINE__, SHCNE_CREATE, s_file1, NULL, "010000000", DoAction4},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", NULL},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", DoAction5},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file1, NULL, "000000100", NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file2, NULL, "000000100", NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file1, s_file2, "000000100", NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file2, s_file1, "000000100", NULL},
-    {__LINE__, SHCNE_DELETE, s_file1, NULL, "001000000", NULL},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", NULL},
-    {__LINE__, SHCNE_DELETE, s_file2, s_file1, "001000000", NULL},
-    {__LINE__, SHCNE_DELETE, s_file1, s_file2, "001000000", NULL},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", DoAction6},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", NULL},
-    {__LINE__, SHCNE_DELETE, s_file1, NULL, "001000000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_file1, NULL, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_file2, NULL, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_file1, s_file2, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_file2, s_file1, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_dir1, NULL, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_dir2, NULL, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_dir1, s_dir2, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_dir2, s_dir1, "000001000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir1, s_dir2, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir1, s_dir3, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, s_dir1, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, s_dir3, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", DoAction7},
-    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", DoAction8},
+    {__LINE__, SHCNE_MKDIR, s_dir1, NULL, "000100000", NULL, s_dir1, L""},
+    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", NULL, s_dir2, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL, s_dir2, L""},
+    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", DoAction1, s_dir2, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL, s_dir2, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", DoAction2, s_dir2, L""},
+    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", DoAction1, s_dir2, L""},
+    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "000000010", NULL, s_dir2, s_dir3},
+    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "000000010", DoAction3, s_dir2, s_dir3},
+    {__LINE__, SHCNE_CREATE, s_file1, NULL, "010000000", NULL, s_file1, L""},
+    {__LINE__, SHCNE_CREATE, s_file1, s_file2, "010000000", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_CREATE, s_file1, NULL, "010000000", DoAction4, s_file1, L""},
+    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", DoAction5, s_file1, s_file2},
+    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_UPDATEITEM, s_file1, NULL, "000000100", NULL, s_file1, L""},
+    {__LINE__, SHCNE_UPDATEITEM, s_file2, NULL, "000000100", NULL, s_file2, L""},
+    {__LINE__, SHCNE_UPDATEITEM, s_file1, s_file2, "000000100", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_UPDATEITEM, s_file2, s_file1, "000000100", NULL, s_file2, s_file1},
+    {__LINE__, SHCNE_DELETE, s_file1, NULL, "001000000", NULL, s_file1, L""},
+    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", NULL, s_file2, L""},
+    {__LINE__, SHCNE_DELETE, s_file2, s_file1, "001000000", NULL, s_file2, s_file1},
+    {__LINE__, SHCNE_DELETE, s_file1, s_file2, "001000000", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", DoAction6, s_file2, L""},
+    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", NULL, s_file2, L""},
+    {__LINE__, SHCNE_DELETE, s_file1, NULL, "001000000", NULL, s_file1, L""},
+    {__LINE__, SHCNE_UPDATEDIR, s_file1, NULL, "000001000", NULL, s_file1, L""},
+    {__LINE__, SHCNE_UPDATEDIR, s_file2, NULL, "000001000", NULL, s_file2, L""},
+    {__LINE__, SHCNE_UPDATEDIR, s_file1, s_file2, "000001000", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_UPDATEDIR, s_file2, s_file1, "000001000", NULL, s_file2, s_file1},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir1, NULL, "000001000", NULL, s_dir1, L""},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir2, NULL, "000001000", NULL, s_dir2, L""},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir1, s_dir2, "000001000", NULL, s_dir1, s_dir2},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir2, s_dir1, "000001000", NULL, s_dir2, s_dir1},
+    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", NULL, s_dir1, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL, s_dir2, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", NULL, s_dir3, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir1, s_dir2, "000010000", NULL, s_dir1, s_dir2},
+    {__LINE__, SHCNE_RMDIR, s_dir1, s_dir3, "000010000", NULL, s_dir1, s_dir3},
+    {__LINE__, SHCNE_RMDIR, s_dir2, s_dir1, "000010000", NULL, s_dir2, s_dir1},
+    {__LINE__, SHCNE_RMDIR, s_dir2, s_dir3, "000010000", NULL, s_dir2, s_dir3},
+    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", NULL, s_dir3, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", DoAction7, s_dir3, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", NULL, s_dir1, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", DoAction8, s_dir1, L""},
 };
 
 LPCSTR PatternFromFlags(DWORD flags)
@@ -163,6 +166,31 @@ LPCSTR PatternFromFlags(DWORD flags)
     }
     s_buf[i] = 0;
     return s_buf;
+}
+
+static BOOL
+DoGetClipText(LPWSTR pszPath1, LPWSTR pszPath2)
+{
+    pszPath1[0] = pszPath2[0] = 0;
+
+    if (!OpenClipboard(NULL) || !IsClipboardFormatAvailable(CF_UNICODETEXT))
+        return FALSE;
+
+    WCHAR szText[MAX_PATH * 2];
+    HGLOBAL hGlobal = GetClipboardData(CF_UNICODETEXT);
+    LPWSTR psz = (LPWSTR)GlobalLock(hGlobal);
+    lstrcpynW(szText, psz, _countof(szText));
+    GlobalUnlock(hGlobal);
+    CloseClipboard();
+
+    LPWSTR pch = wcschr(szText, L'|');
+    if (pch == NULL)
+        return FALSE;
+
+    *pch = 0;
+    lstrcpynW(pszPath1, szText, MAX_PATH);
+    lstrcpynW(pszPath2, pch + 1, MAX_PATH);
+    return TRUE;
 }
 
 static void
@@ -179,6 +207,17 @@ DoTestEntry(const TEST_ENTRY *entry)
     LPCSTR pattern = PatternFromFlags(flags);
 
     ok(lstrcmpA(pattern, entry->pattern) == 0, "Line %d: pattern mismatch '%s'\n", entry->line, pattern);
+
+    SendMessageW(s_hwnd, WM_SET_PATHS, 0, 0);
+
+    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+    BOOL bOK = DoGetClipText(szPath1, szPath2);
+    if (entry->path1)
+        ok(bOK && lstrcmpiW(entry->path1, szPath1) == 0,
+           "Line %d: path1 mismatch '%S' (%d)\n", entry->line, szPath1, bOK);
+    if (entry->path2)
+        ok(bOK && lstrcmpiW(entry->path2, szPath2) == 0,
+           "Line %d: path2 mismatch '%S' (%d)\n", entry->line, szPath2, bOK);
 
     SendMessageW(s_hwnd, WM_CLEAR_FLAGS, 0, 0);
 }
