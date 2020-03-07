@@ -369,3 +369,157 @@ Overflow:
 
     return NULL;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxCmResList::BuildFromWdmList(
+    __in PCM_RESOURCE_LIST WdmResourceList,
+    __in UCHAR AccessFlags
+    )
+/*++
+
+Routine Description:
+    Builds up the collection with FxResourceCm objects based on the passed in
+    WDM io resource list.
+
+Arguments:
+    WdmResourceList - list which specifies the io resource objects to create
+
+    AccessFlags - permissions to be associated with the list
+
+Return Value:
+    NTSTATUS
+
+  --*/
+{
+    NTSTATUS status;
+
+    //
+    // Predispose to success
+    //
+    status = STATUS_SUCCESS;
+
+    Clear();
+
+    m_AccessFlags = AccessFlags;
+
+    if (WdmResourceList != NULL)
+    {
+        PCM_PARTIAL_RESOURCE_DESCRIPTOR pDescriptor;
+        ULONG count, i;
+
+        //
+        // We only expect to see one full resource descriptor.
+        //
+        ASSERT(WdmResourceList->Count == 1);
+
+        count = WdmResourceList->List[0].PartialResourceList.Count;
+        pDescriptor = WdmResourceList->List[0].PartialResourceList.PartialDescriptors;
+
+        for (i = 0; i < count; i++, pDescriptor++)
+        {
+            FxResourceCm *pResource;
+
+            pResource = new(GetDriverGlobals())
+                FxResourceCm(GetDriverGlobals(), pDescriptor);
+
+            if (pResource == NULL)
+            {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            if (NT_SUCCESS(status))
+            {
+                status = pResource->AssignParentObject(this);
+
+                //
+                // Since we control our own lifetime here, the assign should
+                // always work.
+                //
+                ASSERT(NT_SUCCESS(status));
+
+                status = Add(pResource) ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            if (!NT_SUCCESS(status))
+            {
+                Clear();
+                break;
+            }
+        }
+    }
+
+    return status;
+}
+
+_Must_inspect_result_
+PCM_RESOURCE_LIST
+FxCmResList::CreateWdmList(
+    __in __drv_strictTypeMatch(__drv_typeExpr) POOL_TYPE PoolType
+    )
+/*++
+
+Routine Description:
+    Allocates and initializes a WDM CM resource list based off of the current
+    contents of this collection.
+
+Arguments:
+    PoolType - the pool type from which to allocate the resource list
+
+Return Value:
+    a new resource list upon success, NULL upon failure
+
+  --*/
+{
+    PCM_RESOURCE_LIST pWdmResourceList;
+    ULONG size;
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+
+    pWdmResourceList = NULL;
+    pFxDriverGlobals = GetDriverGlobals();
+
+    if (Count())
+    {
+        //
+        // NOTE: This function assumes all resources are on the same bus
+        // and therefore there is only one FULL_RESOURCE_DESCRIPTOR.
+        //
+        size = sizeof(CM_RESOURCE_LIST) +
+               (sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (Count() - 1));
+
+        pWdmResourceList = (PCM_RESOURCE_LIST)
+            MxMemory::MxAllocatePoolWithTag(PoolType, size, pFxDriverGlobals->Tag);
+
+        if (pWdmResourceList != NULL)
+        {
+            PCM_PARTIAL_RESOURCE_DESCRIPTOR pDescriptor;
+            FxCollectionEntry *cur, *end;
+
+            RtlZeroMemory(pWdmResourceList, size);
+
+            pWdmResourceList->Count = 1;  // We only return one full descriptor
+
+            pWdmResourceList->List[0].PartialResourceList.Version  = 1;
+            pWdmResourceList->List[0].PartialResourceList.Revision = 1;
+            pWdmResourceList->List[0].PartialResourceList.Count = Count();
+
+            pDescriptor =
+                pWdmResourceList->List[0].PartialResourceList.PartialDescriptors;
+
+            end = End();
+            for (cur = Start(); cur != end; cur = cur->Next())
+            {
+                FxResourceCm *pResource;
+
+                pResource = (FxResourceCm*) cur->m_Object;
+
+                RtlCopyMemory(pDescriptor,
+                              &pResource->m_Descriptor,
+                              sizeof(pResource->m_Descriptor));
+                pDescriptor++;
+            }
+        }
+    }
+
+    return pWdmResourceList;
+}

@@ -32,6 +32,33 @@ public:
     DECLARE_INTERNAL_NEW_OPERATOR();
 };
 
+//
+// Used in StartDevice
+//
+class FxResourceCm : public FxObject {
+public:
+    CM_PARTIAL_RESOURCE_DESCRIPTOR m_Descriptor;
+
+    //
+    // Clone of m_Descriptor which is returned to the driver writer when it
+    // requests a descriptor pointer.  We clone the descriptor so that if the
+    // driver writer attempts to modify the pointer in place, they modify the
+    // clone and not the real descriptor.
+    //
+    CM_PARTIAL_RESOURCE_DESCRIPTOR m_DescriptorClone;
+
+public:
+    FxResourceCm(
+        __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+        __in PCM_PARTIAL_RESOURCE_DESCRIPTOR Resource
+        ) : FxObject(FX_TYPE_RESOURCE_CM, 0, FxDriverGlobals)
+    {
+        RtlCopyMemory(&m_Descriptor, Resource, sizeof(m_Descriptor));
+    }
+
+    DECLARE_INTERNAL_NEW_OPERATOR();
+};
+
 enum FxResourceAccessFlags {
     FxResourceNoAccess      = 0x0000,
     FxResourceAddAllowed    = 0x0001,
@@ -206,6 +233,19 @@ public:
     {
         return (WDFCMRESLIST) GetObjectHandle();
     }
+
+    _Must_inspect_result_
+    NTSTATUS
+    BuildFromWdmList(
+        __in PCM_RESOURCE_LIST ResourceList,
+        __in UCHAR AccessFlags
+        );
+
+    _Must_inspect_result_
+    PCM_RESOURCE_LIST
+    CreateWdmList(
+        __in __drv_strictTypeMatch(__drv_typeExpr) POOL_TYPE PoolType = PagedPool
+        );
 
 };
 

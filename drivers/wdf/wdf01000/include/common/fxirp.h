@@ -634,6 +634,45 @@ public:
             Parameters.Power.ShutdownType;
     }
 
+    __inline
+    PCM_RESOURCE_LIST
+    GetParameterAllocatedResources(
+        )
+    {
+        return this->GetCurrentIrpStackLocation()->
+            Parameters.StartDevice.AllocatedResources;
+    }
+
+    __inline
+    PCM_RESOURCE_LIST
+    GetParameterAllocatedResourcesTranslated(
+        )
+    {
+        return this->GetCurrentIrpStackLocation()->
+            Parameters.StartDevice.AllocatedResourcesTranslated;
+    }
+
+    __inline
+    VOID
+    SetParameterAllocatedResources(
+        __in PCM_RESOURCE_LIST AllocatedResources
+        )
+    {
+        this->GetNextIrpStackLocation()->
+            Parameters.StartDevice.AllocatedResources = AllocatedResources;
+    }
+
+    __inline
+    VOID
+    SetParameterAllocatedResourcesTranslated(
+        __in PCM_RESOURCE_LIST AllocatedResourcesTranslated
+        )
+    {
+        this->GetNextIrpStackLocation()->
+            Parameters.StartDevice.AllocatedResourcesTranslated = 
+                AllocatedResourcesTranslated;
+    }
+
 };
 
 //

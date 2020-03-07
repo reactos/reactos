@@ -192,3 +192,27 @@ FxPnpDeviceFilterResourceRequirements::Invoke(
         return STATUS_SUCCESS;
     }
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPnpDeviceRemoveAddedResources::Invoke(
+    __in WDFDEVICE Device,
+    __in WDFCMRESLIST ResourcesRaw,
+    __in WDFCMRESLIST ResourcesTranslated
+    )
+{
+    if (m_Method != NULL)
+    {
+        NTSTATUS status;
+
+        CallbackStart();
+        status = m_Method(Device, ResourcesRaw, ResourcesTranslated);
+        CallbackEnd();
+
+        return status;
+    }
+    else
+    {
+        return STATUS_SUCCESS;
+    }
+}

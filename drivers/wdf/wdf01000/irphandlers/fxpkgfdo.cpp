@@ -3,6 +3,33 @@
 #include "common/fxdevice.h"
 
 
+struct FxFilteredStartContext : public FxStump {
+    FxFilteredStartContext(
+        VOID
+        )
+    {
+        ResourcesRaw = NULL;
+        ResourcesTranslated = NULL;
+    }
+
+    ~FxFilteredStartContext()
+    {
+        if (ResourcesRaw != NULL)
+        {
+            MxMemory::MxFreePool(ResourcesRaw);
+        }
+        if (ResourcesTranslated != NULL)
+        {
+            MxMemory::MxFreePool(ResourcesTranslated);
+        }
+    }
+
+    FxPkgFdo* PkgFdo;
+
+    PCM_RESOURCE_LIST ResourcesRaw;
+
+    PCM_RESOURCE_LIST ResourcesTranslated;
+};
 
 const PFN_PNP_POWER_CALLBACK FxPkgFdo::m_FdoPnpFunctionTable[IRP_MN_SURPRISE_REMOVAL + 1] =
 {
@@ -943,7 +970,180 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
+    //
+    // We will re-set the pending pnp irp when the start irp returns
+    //
+    FxIrp irp(ClearPendingPnpIrp());
+    PCM_RESOURCE_LIST pWdmRaw, pWdmTranslated;
+    NTSTATUS status;
+    BOOLEAN setFilteredCompletion = FALSE;
+    FxFilteredStartContext* pContext = NULL;
+
+    pWdmRaw = irp.GetParameterAllocatedResources();
+    pWdmTranslated = irp.GetParameterAllocatedResourcesTranslated();
+
+    //
+    // Always setup the irp to be sent down the stack.  In case of an error,
+    // this does no harm and it keeps everything simple.
+    //
+    irp.CopyCurrentIrpStackLocationToNext();
+
+    //
+    // If the driver registered for a callback to remove its added resources
+    // and there are resources to remove, call the driver and set the next
+    // stack location to the filtered resources lists
+    //
+    if (m_DeviceRemoveAddedResources.m_Method != NULL &&
+        pWdmRaw != NULL && pWdmTranslated != NULL)
+    {
+        //
+        // Since we reuse these 2 fields for both the removal and the normal
+        // reporting (and can then be subsequently reused on a restart), we
+        // set the changed status back to FALSE.
+        //
+        m_ResourcesRaw->m_Changed = FALSE;
+        m_Resources->m_Changed = FALSE;
+
+        status = m_ResourcesRaw->BuildFromWdmList(pWdmRaw,
+                                                  FxResourceAllAccessAllowed);
+
+        if (NT_SUCCESS(status))
+        {
+            status = m_Resources->BuildFromWdmList(pWdmTranslated,
+                                                   FxResourceAllAccessAllowed);
+        }
+
+        if (NT_SUCCESS(status))
+        {
+            status = m_DeviceRemoveAddedResources.Invoke(
+                m_Device->GetHandle(),
+                m_ResourcesRaw->GetHandle(),
+                m_Resources->GetHandle()
+                );
+        }
+
+        if (NT_SUCCESS(status) &&
+            (m_ResourcesRaw->IsChanged() || m_Resources->IsChanged()))
+        {
+            pContext = new(GetDriverGlobals()) FxFilteredStartContext();
+
+            if (pContext != NULL)
+            {
+                pContext->PkgFdo = this;
+
+                //
+                // Allocate the raw and translated resources.  Upon failure for
+                // either, fail the start irp.  We allocate from NonPagedPool
+                // because we are going to free the list in a completion routine
+                // which maybe running at an IRQL > PASSIVE_LEVEL.
+                //
+                if (m_ResourcesRaw->Count() > 0)
+                {
+                    pContext->ResourcesRaw =
+                        m_ResourcesRaw->CreateWdmList(NonPagedPool);
+
+                    if (pContext->ResourcesRaw == NULL)
+                    {
+                        status = STATUS_INSUFFICIENT_RESOURCES;
+                    }
+                }
+
+                if (NT_SUCCESS(status) && m_Resources->Count() > 0)
+                {
+                    pContext->ResourcesTranslated =
+                        m_Resources->CreateWdmList(NonPagedPool);
+
+                    if (pContext->ResourcesTranslated == NULL)
+                    {
+                        status = STATUS_INSUFFICIENT_RESOURCES;
+                    }
+                }
+
+                if (NT_SUCCESS(status))
+                {
+                    //
+                    // We copied to the next stack location at the start
+                    //
+                    irp.SetParameterAllocatedResources(
+                        pContext->ResourcesRaw);
+                    irp.SetParameterAllocatedResourcesTranslated(
+                        pContext->ResourcesTranslated);
+
+                    //
+                    // Completion routine will free the resource list
+                    // allocations.  
+                    //
+                    setFilteredCompletion = TRUE;
+                }
+                else
+                {
+                    //
+                    // Allocation failure.  The destructor will free any
+                    // outstanding allocations.
+                    //
+                    delete pContext;
+                }
+            }
+        }
+    }
+    else
+    {
+        status = STATUS_SUCCESS;
+    }
+
+    if (NT_SUCCESS(status))
+    {
+        //
+        // The completion of the start irp will move the state machine into a new
+        // state.
+        //
+        // After calling IoSetCompletionRoutineEx the driver must call 
+        // IoCallDriver, otherwise a memory leak would occur. So call this API
+        // as close to IoCallDriver as possible to avoid failure paths.
+        // 
+        if (setFilteredCompletion)
+        {
+            ASSERT(pContext != NULL);
+            irp.SetCompletionRoutineEx(
+                m_Device->GetDeviceObject(),
+                _PnpFilteredStartDeviceCompletionRoutine, 
+                pContext);
+        }
+        else
+        {
+            irp.SetCompletionRoutineEx(
+                m_Device->GetDeviceObject(),
+                _PnpStartDeviceCompletionRoutine, 
+                this);
+        }
+
+        irp.CallDriver(m_Device->GetAttachedDevice());
+    }
+    else
+    {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                            "PNP start preprocessing failed with %!STATUS!",
+                            status);
+
+        //
+        // Move the state machine to the failed state.
+        //
+        // Process the event *before* completing the irp so that this even is in
+        // the queue before the device remove event which will be be processed
+        // right after the start irp has been completed.
+        //
+        PnpProcessEvent(PnpEventStartDeviceFailed);
+
+        //
+        // All states which handle the PnpEventStartDeviceFailed event
+        // transition do not expect a pended start irp.
+        //
+        CompletePnpRequest(&irp, status);
+    }
+
+    //
+    // Indicate to the caller that the transition is asynchronous.
+    //
     return FALSE;
 }
 
@@ -1095,4 +1295,93 @@ Return Value:
     PnpEventRemovedCommonCode();
 
     return WdfDevStatePnpFinal;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_PnpFilteredStartDeviceCompletionRoutine(
+    __in    MdDeviceObject DeviceObject,
+    __inout MdIrp Irp,
+    __inout PVOID Context
+    )
+{
+    FxFilteredStartContext *pContext;
+    FxPkgFdo* pPkgFdo;
+
+    pContext = (FxFilteredStartContext*) Context;
+
+    //
+    // Save off the package so we can use it after we free the context
+    //
+    pPkgFdo = pContext->PkgFdo;
+
+    delete pContext;
+
+    return _PnpStartDeviceCompletionRoutine(DeviceObject, Irp, pPkgFdo);
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::_PnpStartDeviceCompletionRoutine(
+    __in    MdDeviceObject DeviceObject,
+    __inout MdIrp Irp,
+    __inout PVOID Context
+    )
+{
+    FxPkgFdo* pThis;
+    FxIrp irp(Irp);
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    pThis = (FxPkgFdo*) Context;
+
+    if (NT_SUCCESS(irp.GetStatus()))
+    {
+        pThis->SetPendingPnpIrp(&irp);
+
+        //
+        // Only raise irql if we are the power policy owner.  Only the p.p.o.
+        // does this so that we only have one driver in the device stack moving
+        // to another thread.
+        //
+        if (pThis->IsPowerPolicyOwner())
+        {
+            KIRQL irql;
+
+            //
+            // By raising to dispatch level we are forcing the pnp state machine
+            // to move to another thread.  On NT 6.0 PnP supports asynchronous
+            // starts, so this will other starts to proceed while WDF processes
+            // this device starting.
+            //
+            Mx::MxRaiseIrql(DISPATCH_LEVEL, &irql);
+            pThis->PnpProcessEvent(PnpEventStartDeviceComplete);
+            Mx::MxLowerIrql(irql);
+        }
+        else
+        {
+            pThis->PnpProcessEvent(PnpEventStartDeviceComplete);
+        }
+    }
+    else
+    {
+        //
+        // Just complete the request, the current pnp state can handle the remove
+        // which will be sent b/c of the failed start.
+        //
+        DoTraceLevelMessage(
+            pThis->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "PNP start failed with %!STATUS!", irp.GetStatus());
+
+        //
+        // Process the event *before* completing the irp so that this even is in
+        // the queue before the device remove event which will be be processed
+        // right after the start irp has been completed.
+        //
+        pThis->PnpProcessEvent(PnpEventStartDeviceFailed);
+
+        pThis->CompletePnpRequest(&irp, irp.GetStatus());
+    }
+
+    return STATUS_MORE_PROCESSING_REQUIRED;
 }

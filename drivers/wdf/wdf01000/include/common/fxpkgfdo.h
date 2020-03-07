@@ -98,6 +98,24 @@ protected:
     MdCompletionRoutineType
     _SystemPowerSxCompletion;
 
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpFilteredStartDeviceCompletionRoutine(
+        __in    MdDeviceObject DeviceObject,
+        __inout MdIrp Irp,
+        __inout PVOID Context
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpStartDeviceCompletionRoutine(
+        __in    MdDeviceObject DeviceObject,
+        __inout MdIrp Irp,
+        __inout PVOID Context
+        );
+
 private:
 
     //
