@@ -16,7 +16,9 @@ extern void func_environ(void);
 extern void func_fiber(void);
 extern void func_file(void);
 extern void func_format_msg(void);
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
 extern void func_generated(void);
+#endif
 extern void func_heap(void);
 extern void func_loader(void);
 extern void func_locale(void);
@@ -55,8 +57,9 @@ const struct test winetest_testlist[] =
     { "fiber", func_fiber },
     { "file", func_file },
     { "format_msg", func_format_msg },
-    /* ReactOS */
-    //{ "generated", func_generated },
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
+    { "generated", func_generated },
+#endif
     { "heap", func_heap },
     { "loader", func_loader },
     { "locale", func_locale },

@@ -12,7 +12,9 @@ extern void func_dce(void);
 extern void func_dde(void);
 extern void func_dialog(void);
 extern void func_edit(void);
-//extern void func_generated(void);
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
+extern void func_generated(void);
+#endif
 extern void func_input(void);
 extern void func_listbox(void);
 extern void func_menu(void);
@@ -54,7 +56,9 @@ const struct test winetest_testlist[] =
     { "dde", func_dde },
     { "dialog", func_dialog },
     { "edit", func_edit },
-    //{ "generated", func_generated },
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
+    { "generated", func_generated },
+#endif
     { "input", func_input },
     { "listbox", func_listbox },
     { "menu", func_menu },

@@ -10,7 +10,9 @@ extern void func_env(void);
 extern void func_error(void);
 extern void func_exception(void);
 extern void func_file(void);
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
 extern void func_generated(void);
+#endif
 extern void func_info(void);
 extern void func_large_int(void);
 extern void func_om(void);
@@ -36,7 +38,7 @@ const struct test winetest_testlist[] =
     { "exception", func_exception },
 #endif
     { "file", func_file },
-#ifdef _M_IX86
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
     { "generated", func_generated },
 #endif
     { "info", func_info },

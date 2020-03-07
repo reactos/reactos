@@ -5,7 +5,9 @@
 
 extern void func_clist(void);
 extern void func_clsid(void);
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
 extern void func_generated(void);
+#endif
 extern void func_istream(void);
 extern void func_ordinal(void);
 extern void func_path(void);
@@ -18,7 +20,9 @@ const struct test winetest_testlist[] =
 {
     { "clist", func_clist },
     { "clsid", func_clsid },
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
     { "generated", func_generated },
+#endif
     { "istream", func_istream },
     { "ordinal", func_ordinal },
     { "path", func_path },

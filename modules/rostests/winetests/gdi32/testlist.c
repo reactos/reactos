@@ -10,7 +10,9 @@ extern void func_dc(void);
 extern void func_dib(void);
 extern void func_font(void);
 extern void func_gdiobj(void);
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
 extern void func_generated(void);
+#endif
 extern void func_icm(void);
 extern void func_mapping(void);
 extern void func_metafile(void);
@@ -27,7 +29,9 @@ const struct test winetest_testlist[] =
     { "dib", func_dib },
     { "font", func_font },
     { "gdiobj", func_gdiobj },
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
     { "generated", func_generated },
+#endif
     { "icm", func_icm },
     { "mapping", func_mapping },
     { "metafile", func_metafile },

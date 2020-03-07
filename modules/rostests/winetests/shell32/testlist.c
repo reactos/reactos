@@ -8,7 +8,9 @@ extern void func_assoc(void);
 extern void func_autocomplete(void);
 extern void func_brsfolder(void);
 extern void func_ebrowser(void);
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
 extern void func_generated(void);
+#endif
 extern void func_progman_dde(void);
 extern void func_recyclebin(void);
 extern void func_shelldispatch(void);
@@ -30,7 +32,9 @@ const struct test winetest_testlist[] =
     { "autocomplete", func_autocomplete },
     { "brsfolder", func_brsfolder },
     { "ebrowser", func_ebrowser },
+#ifdef RUN_COMPILE_TIME_ONLY_GENERATED
     { "generated", func_generated },
+#endif
     { "progman_dde", func_progman_dde },
     { "recyclebin", func_recyclebin },
     { "shelldispatch", func_shelldispatch },
