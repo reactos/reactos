@@ -111,35 +111,6 @@ KdRegisterDebuggerDataBlock(IN ULONG Tag,
                             IN PDBGKD_DEBUG_DATA_HEADER64 DataHeader,
                             IN ULONG Size);
 
-CODE_SEG("INIT")
-VOID
-NTAPI
-KdpCallInitRoutine(ULONG BootPhase)
-{
-    PLIST_ENTRY CurrentEntry;
-    PKD_DISPATCH_TABLE CurrentTable;
-
-    /* Call the registered handlers */
-    CurrentEntry = KdProviders.Flink;
-    while (CurrentEntry != &KdProviders)
-    {
-        /* Get the current table */
-        CurrentTable = CONTAINING_RECORD(CurrentEntry,
-                                         KD_DISPATCH_TABLE,
-                                         KdProvidersList);
-
-        /* Call it */
-        CurrentTable->KdpInitRoutine(CurrentTable, BootPhase);
-
-        /* Next Table */
-        CurrentEntry = CurrentEntry->Flink;
-    }
-
-    /* Call the Wrapper Init Routine */
-    if (WrapperInitRoutine)
-        WrapperTable.KdpInitRoutine(&WrapperTable, BootPhase);
-}
-
 BOOLEAN
 NTAPI
 KdInitSystem(IN ULONG BootPhase,
@@ -155,8 +126,6 @@ KdInitSystem(IN ULONG BootPhase,
     /* Check if this is Phase 1 */
     if (BootPhase)
     {
-        /* Call the Initialization Routines of the Registered Providers */
-        KdpCallInitRoutine(BootPhase);
         return TRUE;
     }
 

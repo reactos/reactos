@@ -581,7 +581,29 @@ NTAPI
 KdDebuggerInitialize1(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    PLIST_ENTRY CurrentEntry;
+    PKD_DISPATCH_TABLE CurrentTable;
+
+    /* Call the registered handlers */
+    CurrentEntry = KdProviders.Flink;
+    while (CurrentEntry != &KdProviders)
+    {
+        /* Get the current table */
+        CurrentTable = CONTAINING_RECORD(CurrentEntry,
+                                         KD_DISPATCH_TABLE,
+                                         KdProvidersList);
+
+        /* Call it */
+        CurrentTable->KdpInitRoutine(CurrentTable, 1);
+
+        /* Next Table */
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    /* Call the Wrapper Init Routine */
+    if (WrapperInitRoutine)
+        WrapperTable.KdpInitRoutine(&WrapperTable, 1);
+    return STATUS_SUCCESS;
 }
 
  /* EOF */
