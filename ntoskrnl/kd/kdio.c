@@ -728,4 +728,29 @@ KdpPromptString(
     return FALSE;
 }
 
+VOID
+NTAPI
+KdSendPacket(
+    IN ULONG PacketType,
+    IN PSTRING MessageHeader,
+    IN PSTRING MessageData,
+    IN OUT PKD_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    return;
+}
+
+KDSTATUS
+NTAPI
+KdReceivePacket(
+    IN ULONG PacketType,
+    OUT PSTRING MessageHeader,
+    OUT PSTRING MessageData,
+    OUT PULONG DataLength,
+    IN OUT PKD_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
 /* EOF */

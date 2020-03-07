@@ -440,4 +440,20 @@ KdSystemDebugControl(IN SYSDBG_COMMAND Command,
 
 PKDEBUG_ROUTINE KiDebugRoutine = KdpEnterDebuggerException;
 
+NTSTATUS
+NTAPI
+KdDebuggerInitialize0(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+KdDebuggerInitialize1(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
  /* EOF */
