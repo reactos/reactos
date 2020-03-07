@@ -985,12 +985,12 @@ static void test_pack_LPEXCEPTION_POINTERS(void)
     TEST_TYPE_ALIGN  (LPEXCEPTION_POINTERS, 8)
 }
 
-//static void test_pack_LPEXCEPTION_RECORD(void)
-//{
-//    /* LPEXCEPTION_RECORD */
-//    TEST_TYPE_SIZE   (LPEXCEPTION_RECORD, 8)
-//    TEST_TYPE_ALIGN  (LPEXCEPTION_RECORD, 8)
-//}
+static void test_pack_LPEXCEPTION_RECORD(void)
+{
+    /* LPEXCEPTION_RECORD */
+    TEST_TYPE_SIZE   (LPEXCEPTION_RECORD, 8)
+    TEST_TYPE_ALIGN  (LPEXCEPTION_RECORD, 8)
+}
 
 static void test_pack_LPFIBER_START_ROUTINE(void)
 {
@@ -2842,12 +2842,12 @@ static void test_pack_LPEXCEPTION_POINTERS(void)
     TEST_TYPE_ALIGN  (LPEXCEPTION_POINTERS, 4)
 }
 
-//static void test_pack_LPEXCEPTION_RECORD(void)
-//{
-//    /* LPEXCEPTION_RECORD */
-//    TEST_TYPE_SIZE   (LPEXCEPTION_RECORD, 4)
-//    TEST_TYPE_ALIGN  (LPEXCEPTION_RECORD, 4)
-//}
+static void test_pack_LPEXCEPTION_RECORD(void)
+{
+    /* LPEXCEPTION_RECORD */
+    TEST_TYPE_SIZE   (LPEXCEPTION_RECORD, 4)
+    TEST_TYPE_ALIGN  (LPEXCEPTION_RECORD, 4)
+}
 
 static void test_pack_LPFIBER_START_ROUTINE(void)
 {
