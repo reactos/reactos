@@ -107,7 +107,6 @@ OnDestroy(HWND hwnd)
 static void
 DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
 {
-
     if (pidl1)
         SHGetPathFromIDListW(pidl1, s_path1);
     else
