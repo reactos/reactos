@@ -407,6 +407,7 @@ RunTraceRoute()
     }
     if (Info.hIcmpFile == INVALID_HANDLE_VALUE)
     {
+        HeapFree(heap, 0, ReplyBuffer);
         FreeAddrInfoW(Info.Target);
         return false;
     }
