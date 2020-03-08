@@ -396,6 +396,11 @@ RunTraceRoute()
 
     HANDLE heap = GetProcessHeap();
     ReplyBuffer = HeapAlloc(heap, HEAP_ZERO_MEMORY, ReplySize);
+    if (ReplyBuffer == NULL)
+    {
+        FreeAddrInfoW(Info.Target);
+        return false;
+    }
 
     if (Info.Family == AF_INET6)
     {
