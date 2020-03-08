@@ -1728,13 +1728,13 @@ KdpReportCommandStringStateChange(IN PSTRING NameString,
 }
 #endif
 
+#ifdef _WINKD_
 BOOLEAN
 NTAPI
 KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
                               IN OUT PCONTEXT Context,
                               IN BOOLEAN SecondChanceException)
 {
-#ifdef _WINKD_
     STRING Header, Data;
     DBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange;
     KCONTINUE_STATUS Status;
@@ -1782,11 +1782,8 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
 
     /* Return */
     return Status;
-#else
-    UNIMPLEMENTED;
-    return FALSE;
-#endif
 }
+#endif
 
 VOID
 NTAPI
@@ -1850,6 +1847,10 @@ KdpSwitchProcessor(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Report a state change */
     Status = KdpReportExceptionStateChange(ExceptionRecord,
                                            ContextRecord,
+#ifndef _WINKD_
+                                           NULL,
+                                           KernelMode,
+#endif
                                            SecondChanceException);
 
     /* Restore the port data and return */

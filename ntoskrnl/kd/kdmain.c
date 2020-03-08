@@ -52,15 +52,13 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
 
 BOOLEAN
 NTAPI
-KdpReport(IN PKTRAP_FRAME TrapFrame,
-          IN PKEXCEPTION_FRAME ExceptionFrame,
-          IN PEXCEPTION_RECORD ExceptionRecord,
-          IN PCONTEXT ContextRecord,
-          IN KPROCESSOR_MODE PreviousMode,
-          IN BOOLEAN SecondChanceException)
+KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
+                              IN OUT PCONTEXT ContextRecord,
+                              IN PKTRAP_FRAME TrapFrame,
+                              IN KPROCESSOR_MODE PreviousMode,
+                              IN BOOLEAN SecondChanceException)
 {
     KD_CONTINUE_TYPE Return = kdHandleException;
-
 #ifdef KDBG
     /* Check if this is an assertion failure */
     if (ExceptionRecord->ExceptionCode == STATUS_ASSERTION_FAILURE)
@@ -288,6 +286,9 @@ KdDebuggerInitialize1(
     /* Call the Wrapper Init Routine */
     if (WrapperInitRoutine)
         WrapperTable.KdpInitRoutine(&WrapperTable, 1);
+
+    NtGlobalFlag |= FLG_STOP_ON_EXCEPTION;
+
     return STATUS_SUCCESS;
 }
 

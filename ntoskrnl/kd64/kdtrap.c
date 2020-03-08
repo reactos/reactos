@@ -47,16 +47,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-#ifndef _WINKD_
-BOOLEAN
-NTAPI
-KdpReport(IN PKTRAP_FRAME TrapFrame,
-          IN PKEXCEPTION_FRAME ExceptionFrame,
-          IN PEXCEPTION_RECORD ExceptionRecord,
-          IN PCONTEXT ContextRecord,
-          IN KPROCESSOR_MODE PreviousMode,
-          IN BOOLEAN SecondChanceException);
-#else
 BOOLEAN
 NTAPI
 KdpReport(IN PKTRAP_FRAME TrapFrame,
@@ -126,6 +116,10 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     Handled = KdpReportExceptionStateChange(ExceptionRecord,
                                             &Prcb->ProcessorState.
                                             ContextFrame,
+#ifndef _WINKD_
+                                            TrapFrame,
+                                            PreviousMode,
+#endif
                                             SecondChanceException);
 
     /* Now restore the processor state, manually again. */
@@ -139,7 +133,6 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     KdpControlCPressed = FALSE;
     return Handled;
 }
-#endif
 
 BOOLEAN
 NTAPI
