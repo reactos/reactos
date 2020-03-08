@@ -46,6 +46,38 @@ private:
         VOID
         );
 
+    //
+    // This is the thread's main processing function
+    //
+    VOID
+    Thread(
+        VOID
+        );
+        
+    //
+    // This is the reaper method
+    //
+    VOID
+    Reaper(
+        VOID
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    CreateThread(
+        VOID
+        );
+
+    //
+    // This is the thunk used to get from the system
+    // thread start callback into this class
+    //
+    static
+    VOID
+    StaticThreadThunk(
+        __inout PVOID Context
+        );
+
 public:
 
     //
@@ -93,6 +125,16 @@ public:
     BOOLEAN
     QueueWorkItem(
         __inout PWORK_QUEUE_ITEM WorkItem
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _CreateAndInit(
+        __deref_out FxSystemThread** SystemThread,
+        __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+        __in WDFDEVICE Device,
+        __in MdDeviceObject DeviceObject
         );
 };
 

@@ -673,6 +673,16 @@ public:
                 AllocatedResourcesTranslated;
     }
 
+    __inline
+    VOID
+    SetParameterDeviceCapabilities(
+        __in PDEVICE_CAPABILITIES DeviceCapabilities
+        )
+    {
+        this->GetNextIrpStackLocation()->
+            Parameters.DeviceCapabilities.Capabilities = DeviceCapabilities;
+    }
+
 };
 
 //

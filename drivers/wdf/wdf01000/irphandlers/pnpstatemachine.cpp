@@ -1,6 +1,7 @@
 #include "common/fxpkgpnp.h"
 #include "common/fxdevice.h"
 #include "common/fxmacros.h"
+#include "common/fxinterrupt.h"
 
 
 //
@@ -1423,8 +1424,83 @@ Return Value:
 
 --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePnpInvalid;
+    NTSTATUS status;
+    BOOLEAN matched;
+    FxCxCallbackProgress progress = FxCxCallbackProgressInitialized;
+
+    status = STATUS_SUCCESS;
+    matched = FALSE;
+
+    status = This->QueryForReenumerationInterface();
+
+    if (NT_SUCCESS(status))
+    {
+        status = This->CreatePowerThreadIfNeeded();
+    }
+
+    if (NT_SUCCESS(status))
+    {
+        status = This->PnpPrepareHardware(&matched, &progress);
+    }
+
+    if (!NT_SUCCESS(status))
+    {
+        if ((matched == FALSE) ||
+            (progress  < FxCxCallbackProgressClientCalled))
+        {
+            //
+            // NOTE:  consider going to WdfDevStatePnpFailed instead of yet
+            //        another failed state out of start device handling.
+            //
+
+            //
+            // We can handle remove out of the init state, revert back to that
+            // state.
+            //
+            return WdfDevStatePnpFailedInit;
+        }
+        else
+        {
+            //
+            // EvtDevicePrepareHardware is what failed, goto a state where we
+            // undo that call.
+            //
+            return WdfDevStatePnpFailedOwnHardware;
+        }
+    }
+
+    //
+    // We only query for the capabilities for the power policy owner because
+    // we use the capabilities to determine the right Dx state when we want to
+    // wake from S0 or Sx.  Since only the power policy owner can enable wake
+    // behavior, only the owner needs to query for the information.
+    //
+    // ALSO, if we are a filter, there are issues in stacks wrt pnp reentrancy.
+    //
+    if (This->IsPowerPolicyOwner())
+    {
+        //
+        // Query the stack for capabilities before telling the stack hw is
+        // available
+        //
+        status = This->QueryForCapabilities();
+
+        if (!NT_SUCCESS(status))
+        {
+            DoTraceLevelMessage(
+                This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "could not query caps for stack, %!STATUS!", status);
+
+            This->SetPendingPnpIrpStatus(status);
+            return WdfDevStatePnpFailedOwnHardware;
+        }
+
+        This->m_CapsQueried = TRUE;
+    }
+
+    This->PnpPowerPolicyStart();
+
+    return WdfDevStatePnpNull;
 }
 
 WDF_DEVICE_PNP_STATE
@@ -2519,4 +2595,592 @@ Return Value:
 --*/
 {
     WDFNOTIMPLEMENTED();
+}
+
+__drv_when(!NT_SUCCESS(return), __drv_arg(ResourcesMatched, _Must_inspect_result_))
+__drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
+NTSTATUS
+FxPkgPnp::PnpPrepareHardware(
+    _Out_ PBOOLEAN ResourcesMatched,
+    _Out_ FxCxCallbackProgress *Progress
+    )
+/*++
+
+Routine Description:
+    Matches the PNP resources with the WDFINTERRUPT objects registered and then
+    calls EvtDevicePrepareHardware.  All start paths call this function
+
+Arguments:
+    ResourcesMatched - indicates to the caller what stage failed if !NT_SUCCESS
+                        is returned
+    Progress - indicates to the caller what stage the API failed if 
+                        !NT_SUCCESS is returned
+
+Return Value:
+    NT_SUCCESS if all goes well, !NT_SUCCESS if failure occurrs
+
+  --*/
+{
+    NTSTATUS status;
+    *ResourcesMatched = FALSE;
+	*Progress = FxCxCallbackProgressInitialized;
+
+    //
+    // FxPnpStateRemoved:
+    // Mark the device a not removed.  This is just so that anybody sending
+    // a PnP IRP_MN_QUERY_DEVICE_STATE gets a reasonable answer.
+    //
+    // FxPnpStateFailed, FxPnpStateResourcesChanged:
+    // Both of these values can be set to true and cause another start to
+    // be sent down the stack.  Reset these values back to false.  If there is
+    // a need to set these values, the driver can set them in
+    // EvtDevicePrepareHardware.
+    //
+    m_PnpStateAndCaps.Value &= ~(FxPnpStateRemovedMask |
+                                 FxPnpStateFailedMask |
+                                 FxPnpStateResourcesChangedMask);
+    m_PnpStateAndCaps.Value |= (FxPnpStateRemovedUseDefault |
+                                FxPnpStateFailedUseDefault |
+                                FxPnpStateResourcesChangedUseDefault);
+
+    //
+    // This will parse the resources and setup all the WDFINTERRUPT handles
+    //
+    status = PnpMatchResources();
+
+    if (!NT_SUCCESS(status))
+    {
+        *ResourcesMatched = FALSE;
+        SetInternalFailure();
+        SetPendingPnpIrpStatus(status);
+        return status;
+    }
+
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+    //
+    // Build register resource table
+    //
+    status = m_Resources->BuildRegisterResourceTable();
+    if (!NT_SUCCESS(status))
+    {
+        SetInternalFailure();
+        SetPendingPnpIrpStatus(status);
+        goto exit;
+    }
+
+    //
+    // Build Port resource table
+    //
+    status = m_Resources->BuildPortResourceTable();
+    if (!NT_SUCCESS(status))
+    {
+        SetInternalFailure();
+        SetPendingPnpIrpStatus(status);
+        goto exit;
+    }
+
+    //
+    // We keep track if the device has any connection resources,
+    // in which case we allow unrestricted access to interrupts
+    // regardless of the UmdfDirectHardwareAccess directive.
+    //
+    status = m_Resources->CheckForConnectionResources();
+    if (!NT_SUCCESS(status))
+    {
+        SetInternalFailure();
+        SetPendingPnpIrpStatus(status);
+        goto exit;
+    }
+#endif
+
+    *ResourcesMatched = TRUE;
+
+    m_Device->SetCallbackFlags(
+                        FXDEVICE_CALLBACK_IN_PREPARE_HARDWARE
+                        );
+
+    status = m_DevicePrepareHardware.Invoke(m_Device->GetHandle(),
+                                            m_ResourcesRaw->GetHandle(),
+                                            m_Resources->GetHandle());//,
+                                            //Progress);
+
+    m_Device->ClearCallbackFlags(
+                        FXDEVICE_CALLBACK_IN_PREPARE_HARDWARE
+                        );
+
+    if (!NT_SUCCESS(status))
+    {
+        if (status == STATUS_NOT_SUPPORTED)
+        {
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "EvtDevicePrepareHardware returned an invalid status "
+                "STATUS_NOT_SUPPORTED");
+
+            if (GetDriverGlobals()->IsVerificationEnabled(1, 11, OkForDownLevel)) {
+                FxVerifierDbgBreakPoint(GetDriverGlobals());
+            }
+        }
+
+        SetInternalFailure();
+        SetPendingPnpIrpStatus(status);
+        goto exit;
+    }
+
+    //
+    // Now that we have assigned the resources to all the interrupts, figure out
+    // the highest synch irql for each interrupt set which shares a spinlock.
+    //
+    PnpAssignInterruptsSyncIrql();
+
+    //
+    // Do mode-specific work. For KMDF, there is nothing additional to do.
+    //
+    status = PnpPrepareHardwareInternal();
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                            "PrepareHardware failed %!STATUS!", status);
+
+        SetInternalFailure();
+        SetPendingPnpIrpStatus(status);
+    }
+
+exit:
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::PnpMatchResources(
+    VOID
+    )
+/*++
+
+Routine Description:
+
+    This method is called in response to a PnP StartDevice IRP
+    coming up the stack.  It:
+
+    - Captures the device's resources
+    - Calls out to interested resource objects
+    - Sends an event to the PnP state machine
+
+Arguemnts:
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NTSTATUS
+
+--*/
+{
+    PCM_RESOURCE_LIST pResourcesRaw;
+    PCM_RESOURCE_LIST pResourcesTranslated;
+    FxResourceCm* resCmRaw;
+    FxResourceCm* resCmTrans;
+    FxInterrupt*  interrupt;
+    PLIST_ENTRY ple;
+    NTSTATUS status;
+    FxCollectionEntry *curRaw, *curTrans, *endTrans;
+    ULONG messageCount;
+    FxIrp irp;
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Entering PnpMatchResources");
+
+    //
+    // We must clear these flags before calling into the event handler because
+    // it might set these states back (which is OK).  If we don't clear these
+    // states and the start succeeds, we would endlessly report that our
+    // resources have changed and be restarted over and over.
+    //
+    m_PnpStateAndCaps.Value &= ~(FxPnpStateFailedMask |
+                                 FxPnpStateResourcesChangedMask);
+    m_PnpStateAndCaps.Value |= (FxPnpStateFailedUseDefault |
+                                FxPnpStateResourcesChangedUseDefault);
+
+    irp.SetIrp(m_PendingPnPIrp);
+    pResourcesRaw = irp.GetParameterAllocatedResources();
+    pResourcesTranslated = irp.GetParameterAllocatedResourcesTranslated();
+
+    status = m_ResourcesRaw->BuildFromWdmList(pResourcesRaw, FxResourceNoAccess);
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "Could not allocate raw resource list for WDFDEVICE 0x%p, %!STATUS!",
+            m_Device->GetHandle(), status);
+        goto Done;
+    }
+
+    status = m_Resources->BuildFromWdmList(pResourcesTranslated, FxResourceNoAccess);
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "Could not allocate translated resource list for WDFDEVICE 0x%p, %!STATUS!",
+            m_Device->GetHandle(), status);
+        goto Done;
+    }
+
+    //
+    // reset the stored information in all interrupts in the rebalance case
+    //
+    for (ple = m_InterruptListHead.Flink;
+         ple != &m_InterruptListHead;
+         ple = ple->Flink)
+    {
+        interrupt = CONTAINING_RECORD(ple, FxInterrupt, m_PnpList);
+        interrupt->Reset();
+    }
+
+    //
+    // Now iterate across the resources, looking for ones that correspond
+    // to objects that we are managing.  Tell those objects about the resources
+    // that were assigned.
+    //
+    ple = &m_InterruptListHead;
+
+    endTrans = m_Resources->End();
+
+    for (curTrans = m_Resources->Start(), curRaw = m_ResourcesRaw->Start();
+         curTrans != endTrans;
+         curTrans = curTrans->Next(), curRaw = curRaw->Next())
+    {
+
+        ASSERT(curTrans->m_Object->GetType() == FX_TYPE_RESOURCE_CM);
+        ASSERT(curRaw->m_Object->GetType() == FX_TYPE_RESOURCE_CM);
+
+        resCmRaw = (FxResourceCm*) curRaw->m_Object;
+
+        if (resCmRaw->m_Descriptor.Type == CmResourceTypeInterrupt)
+        {
+            //
+            // We're looking at an interrupt resource.
+            //
+            if (ple->Flink == &m_InterruptListHead)
+            {
+                //
+                // Oops, there are no more interrupt objects.
+                //
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_WARNING, TRACINGPNP,
+                    "Not enough interrupt objects created by WDFDEVICE 0x%p",
+                    m_Device->GetHandle());
+                break;
+            }
+
+            resCmTrans = (FxResourceCm*) curTrans->m_Object;
+            ASSERT(resCmTrans->m_Descriptor.Type == CmResourceTypeInterrupt);
+
+            messageCount = resCmRaw->m_Descriptor.u.MessageInterrupt.Raw.MessageCount;
+
+            if (FxInterrupt::_IsMessageInterrupt(resCmTrans->m_Descriptor.Flags)
+                &&
+                (messageCount > 1))
+            {
+                ULONG i;
+                //
+                // Multi-message MSI 2.2 needs to be handled differently
+                //
+                for (i = 0, ple = ple->Flink;
+                     i < messageCount && ple != &m_InterruptListHead;
+                     i++, ple = ple->Flink)
+                {
+                    //
+                    // Get the next interrupt object.
+                    //
+                    interrupt = CONTAINING_RECORD(ple, FxInterrupt, m_PnpList);
+
+                    //
+                    // Tell the interrupt object what its resources are.
+                    //
+                    interrupt->AssignResources(&resCmRaw->m_Descriptor,
+                                               &resCmTrans->m_Descriptor);
+                }
+            }
+            else
+            {
+                //
+                // This is either MSI2.2 with 1 message, MSI-X or Line based.
+                //
+                ple = ple->Flink;
+                interrupt = CONTAINING_RECORD(ple, FxInterrupt, m_PnpList);
+
+                //
+                // Tell the interrupt object what its resources are.
+                //
+                interrupt->AssignResources(&resCmRaw->m_Descriptor,
+                                           &resCmTrans->m_Descriptor);
+            }
+        }
+    }
+
+#if FX_IS_KERNEL_MODE
+    //
+    // If there are any pended I/Os that were sent to the target
+    // that were pended in the transition to stop, then this will
+    // resend them.
+    //
+    // ISSUE:  This has the potential of I/O completing
+    // before the driver's start callback has been called...but,
+    // this is the same as the PDO pending a sent irp and completing
+    // it when the PDO is restarted before the FDO has a change to
+    // process the start irp which was still pended below.
+    //
+    if (m_Device->IsFilter())
+    {
+        //
+        // If this is a filter device, then copy the FILE_REMOVABLE_MEDIA
+        // characteristic from the lower device.
+        //
+        if (m_Device->GetAttachedDevice()->Characteristics & FILE_REMOVABLE_MEDIA)
+        {
+            ULONG characteristics;
+
+            characteristics =
+                m_Device->GetDeviceObject()->Characteristics | FILE_REMOVABLE_MEDIA;
+
+            m_Device->GetDeviceObject()->Characteristics = characteristics;
+        }
+
+        m_Device->SetFilterIoType();
+    }
+
+#endif // FX_IS_KERNEL_MODE
+
+Done:
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Exiting PnpMatchResources %!STATUS!", status);
+
+    return status;
+}
+
+VOID
+FxPkgPnp::PnpPowerPolicyStart(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Informs the power policy state machine that it should start.
+
+Arguments:
+    None
+
+Return Value:
+    None
+
+  --*/
+{
+    PowerPolicyProcessEvent(PwrPolStart);
+}
+
+VOID
+FxPkgPnp::PnpAssignInterruptsSyncIrql(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Figure out the highest synch irql for each interrupt set which shares a
+    spinlock.
+
+    foreach(interrupt assigned to this instance)
+        determine the max sync irql in the set
+        set all the associated interrupts to the sync irql
+        set the sync irql on the first interrupt in the set
+
+Arguments:
+    None
+
+Return Value:
+    None
+
+  --*/
+{
+    PLIST_ENTRY ple;
+    FxInterrupt* pInterrupt;
+
+    for (ple = m_InterruptListHead.Flink;
+         ple != &m_InterruptListHead;
+         ple = ple->Flink)
+    {
+        KIRQL syncIrql;
+
+        pInterrupt = CONTAINING_RECORD(ple, FxInterrupt, m_PnpList);
+
+        syncIrql = pInterrupt->GetResourceIrql();
+
+        if (syncIrql == PASSIVE_LEVEL)
+        {
+            //
+            // The irql associated with the resources assigned is passive,
+            // this can happen in the following scenarios:
+            //
+            // (1)  no resources were assigned.  Skip this interrupt b/c it has
+            //      no associated resources. Note: setting the SynchronizeIrql
+            //      to PASSIVE_LEVEL is a no-op.
+            //
+            // (2) this interrupt is handled at passive-level.
+            //      Set SynchronizeIrql to passive-level and continue.
+            //
+            pInterrupt->SetSyncIrql(PASSIVE_LEVEL);
+            continue;
+        }
+
+        if (pInterrupt->IsSharedSpinLock() == FALSE)
+        {
+            //
+            // If the interrupt spinlock is not shared, it's sync irql is the
+            // irql assigned to it in the resources.
+            //
+            pInterrupt->SetSyncIrql(syncIrql);
+        }
+        else if (pInterrupt->IsSyncIrqlSet() == FALSE)
+        {
+            FxInterrupt* pFwdInterrupt;
+            PLIST_ENTRY pleFwd;
+
+            //
+            // Find all of the other interrupts which share the lock and compute
+            // the max sync irql.
+            //
+            for (pleFwd = ple->Flink;
+                 pleFwd != &m_InterruptListHead;
+                 pleFwd = pleFwd->Flink)
+            {
+                pFwdInterrupt = CONTAINING_RECORD(pleFwd, FxInterrupt, m_PnpList);
+
+                //
+                // If the 2 do not share the same lock, they are not in the same
+                // set.
+                //
+                if (pFwdInterrupt->SharesLock(pInterrupt) == FALSE)
+                {
+                    continue;
+                }
+
+                if (pFwdInterrupt->GetResourceIrql() > syncIrql)
+                {
+                    syncIrql = pFwdInterrupt->GetResourceIrql();
+                }
+            }
+
+            //
+            // Now that we found the max sync irql, set it for all interrupts in
+            // the set which share the lock
+            //
+            for (pleFwd = ple->Flink;
+                 pleFwd != &m_InterruptListHead;
+                 pleFwd = pleFwd->Flink)
+            {
+                pFwdInterrupt = CONTAINING_RECORD(pleFwd, FxInterrupt, m_PnpList);
+
+                //
+                // If the 2 do not share the same lock, they are not in the same
+                // set.
+                //
+                if (pFwdInterrupt->SharesLock(pInterrupt) == FALSE)
+                {
+                    continue;
+                }
+
+                pFwdInterrupt->SetSyncIrql(syncIrql);
+            }
+
+            //
+            // Set the sync irql for the first interrupt in the set.  We have set
+            // the sync irql for all other interrupts in the set.
+            //
+            pInterrupt->SetSyncIrql(syncIrql);
+        }
+        else
+        {
+            //
+            // If IsSyncIrqlSet is TRUE, we already covered this interrupt in a
+            // previous pass of this loop when we computed the max sync irql for
+            // an interrupt set.
+            //
+            ASSERT(pInterrupt->GetSyncIrql() > PASSIVE_LEVEL);
+            DO_NOTHING();
+        }
+    }
+}
+
+NTSTATUS
+FxPkgPnp::PnpPrepareHardwareInternal(
+    VOID
+    )
+/*++
+Routine description:
+    This is mode-specific routine for Prepare hardware
+    
+Arguments:
+    None
+    
+Return value:
+    none.
+--*/
+{
+    //
+    // nothing to do for KMDF.
+    //
+    return STATUS_SUCCESS;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::CreatePowerThreadIfNeeded(
+    VOID
+    )
+/*++
+Routine description:
+    If needed, creates a thread for processing power IRPs
+    
+Arguments:
+    None
+    
+Return value:
+    An NTSTATUS code indicating success or failure of this function
+--*/
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    MxDeviceObject pTopOfStack;
+
+    pTopOfStack.SetObject(
+        m_Device->GetAttachedDeviceReference());
+
+    ASSERT(pTopOfStack.GetObject() != NULL);
+
+    if (pTopOfStack.GetObject() != NULL)
+    {
+        //
+        // If the top of the stack is not power pageable, the stack needs a power
+        // thread.  Query for it if we are not a PDO (and create it if the lower
+        // stack does not support it), and create it if we are a PDO.
+        //
+        // Some stacks send a usage notification when processing a start device, so
+        // a notification could have already traveled through the stack by the time
+        // the start irp has completed back up to this device.
+        //
+        if ((pTopOfStack.GetFlags() & DO_POWER_PAGABLE) == 0 &&
+            HasPowerThread() == FALSE)
+        {
+            status = QueryForPowerThread();
+
+            if (!NT_SUCCESS(status))
+            {
+                SetInternalFailure();
+                SetPendingPnpIrpStatus(status);
+            }
+        }
+
+        pTopOfStack.DereferenceObject();
+        pTopOfStack.SetObject(NULL);
+    }
+
+    return status;
 }

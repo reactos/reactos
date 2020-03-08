@@ -7,7 +7,14 @@
 #include "common/fxwatchdog.h"
 #include "common/fxdeviceinterface.h"
 #include "common/fxinterrupt.h"
+#include "common/pnppriv.h"
 
+
+
+/* dc7a8e51-49b3-4a3a-9e81-625205e7d729 */
+const GUID FxPkgPnp::GUID_POWER_THREAD_INTERFACE = {
+    0xdc7a8e51, 0x49b3, 0x4a3a, { 0x9e, 0x81, 0x62, 0x52, 0x05, 0xe7, 0xd7, 0x29 }
+};
 
 const NOT_POWER_POLICY_OWNER_STATE_TABLE FxPkgPnp::m_WdfNotPowerPolicyOwnerStates[] =
 {
@@ -2261,4 +2268,134 @@ FxPkgPnp::SetPendingPnpIrp(
         Irp->MarkIrpPending();
     }
     m_PendingPnPIrp = Irp->GetIrp();
+}
+
+VOID
+FxPkgPnp::SetInternalFailure(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Sets the failure field and then optionally invalidates the device state.
+
+Arguments:
+    InvalidateState - If TRUE, the state is invalidated
+
+Return Value:
+    None
+
+  --*/
+{
+    m_InternalFailure = TRUE;
+
+    MxDeviceObject physicalDeviceObject(
+                                m_Device->GetPhysicalDevice()
+                                );
+    physicalDeviceObject.InvalidateDeviceState(
+        m_Device->GetDeviceObject()
+        );
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::QueryForCapabilities(
+    VOID
+    )
+{
+    DEVICE_CAPABILITIES caps;
+    NTSTATUS status;
+
+    MxDeviceObject deviceObject;
+
+    deviceObject.SetObject(m_Device->GetDeviceObject());
+
+    status = GetStackCapabilities(GetDriverGlobals(),
+                                  &deviceObject,                                  
+                                  &caps);
+
+    if (NT_SUCCESS(status))
+    {
+        ULONG states, i;
+        
+        ASSERT(caps.DeviceWake <= 0xFF && caps.SystemWake <= 0xFF);
+        
+        m_SystemWake = (BYTE) caps.SystemWake;
+
+        //
+        // Capture the S -> D state mapping table as a ULONG for use in the
+        // power policy owner state machine when the machine moves into Sx and
+        // the device is not armed for wake and has set an IdealDxStateForSx
+        // value
+        //
+        states = 0x0;
+
+        for (i = 0; i < ARRAY_SIZE(caps.DeviceState); i++)
+        {
+            _SetPowerCapState(i,  caps.DeviceState[i], &states);
+        }
+
+        m_PowerPolicyMachine.m_Owner->m_SystemToDeviceStateMap = states;
+        
+    }
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::CreatePowerThread(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Creates a power thread for the device node.  This thread is share among all
+    the devices in the stack through the POWER_THREAD_INTERFACE structure and
+    PnP query interface.
+
+Arguments:
+    None
+
+Return Value:
+    NTSTATUS
+
+  --*/
+{
+    FxSystemThread *pThread, *pOld;
+    NTSTATUS status;
+
+    status = FxSystemThread::_CreateAndInit(
+                &pThread,
+                GetDriverGlobals(),
+                m_Device->GetHandle(),
+                m_Device->GetDeviceObject());
+
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    //
+    // Simple locking logic in case N requests are conncurrent.  (The requests
+    // never should be concurrent, but in the case that there are 2 usage
+    // notifications coming in from two different sources, it could
+    // theoritically happen.)
+    //
+    pOld = (FxSystemThread*) InterlockedCompareExchangePointer(
+        (PVOID*) &m_PowerThread, pThread, NULL);
+
+    if (pOld != NULL)
+    {
+        //
+        // Someone also set the thread pointer value at the same time, free
+        // our new one here.
+        //
+        pThread->ExitThread();
+        pThread->DeleteObject();
+    }
+
+    m_HasPowerThread = TRUE;
+
+    return STATUS_SUCCESS;
 }

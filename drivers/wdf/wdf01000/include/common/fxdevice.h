@@ -275,6 +275,25 @@ public:
         );
     // end FxObject overrides
     
+    __inline
+    MdDeviceObject
+    GetAttachedDeviceReference(
+        VOID
+        )
+    {
+        return Mx::MxGetAttachedDeviceReference(m_DeviceObject.GetObject());
+    }
+
+    _Must_inspect_result_
+    NTSTATUS
+    QueryForInterface(
+        __in const GUID* InterfaceType,
+        __out PINTERFACE Interface,
+        __in USHORT Size,
+        __in USHORT Version,
+        __in PVOID InterfaceSpecificData,
+        __in_opt MdDeviceObject TargetDevice = NULL
+        );
 
 };
 

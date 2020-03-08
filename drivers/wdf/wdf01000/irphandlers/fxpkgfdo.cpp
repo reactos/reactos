@@ -3,6 +3,10 @@
 #include "common/fxdevice.h"
 
 
+const GUID GUID_REENUMERATE_SELF_INTERFACE_STANDARD = {
+    0x2aeb0243, 0x6a6e, 0x486b, { 0x82, 0xfc, 0xd8, 0x15, 0xf6, 0xb9, 0x70, 0x06 }
+};
+
 struct FxFilteredStartContext : public FxStump {
     FxFilteredStartContext(
         VOID
@@ -1384,4 +1388,119 @@ FxPkgFdo::_PnpStartDeviceCompletionRoutine(
     }
 
     return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+NTSTATUS
+FxPkgFdo::QueryForReenumerationInterface(
+    VOID
+    )
+{
+    PREENUMERATE_SELF_INTERFACE_STANDARD pInterface;
+    NTSTATUS status;
+
+    pInterface = &m_SurpriseRemoveAndReenumerateSelfInterface;
+
+    if (pInterface->SurpriseRemoveAndReenumerateSelf != NULL)
+    {
+        //
+        // Already got it, just return.  This function can be called again during
+        // stop -> start, so we must check.
+        //
+        return STATUS_SUCCESS;
+    }
+
+    RtlZeroMemory(pInterface, sizeof(*pInterface));
+    pInterface->Size =  sizeof(*pInterface);
+    pInterface->Version = 1;
+
+    //
+    // Since there are some stacks that are not PnP re-entrant 
+
+    // we specify that the QI goes only to our attached device and
+    // not to the top of the stack as a normal QI irp would.  For the
+    // reenumerate self interface, having someone on top of us filter the
+    // IRP makes no sense anyways.
+    //
+    // We also do this as a preventative measure for other stacks we don't know
+    // about internally and do not have access to when testing.
+    //
+    status = m_Device->QueryForInterface(&GUID_REENUMERATE_SELF_INTERFACE_STANDARD,
+        (PINTERFACE) pInterface,
+        sizeof(*pInterface),
+        1,
+        NULL,
+        m_Device->GetAttachedDevice()
+        );
+
+    //
+    // Failure to get this interface is not fatal.
+    // Note that an implicit reference has been taken on the interface. We 
+    // must release the reference when we are done with the interface.
+    //
+    status = STATUS_SUCCESS;
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    if (pInterface->SurpriseRemoveAndReenumerateSelf != NULL)
+    {
+        status = AllocateWorkItemForSetDeviceFailed();
+        if (!NT_SUCCESS(status))
+        {
+            ReleaseReenumerationInterface();
+        }
+    }
+#endif
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::QueryForPowerThread(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Sends a query for a power thread down the stack.  If it can't query for one,
+    it attempts to create one on its own.
+
+Arguments:
+    None
+
+Return Value:
+    NTSTATUS
+
+  --*/
+{
+    NTSTATUS status;
+
+    //
+    // Query down the stack to see if a lower device already created a thread.
+    // Do NOT send this to the top of the stack, it is sent to the attached
+    // device b/c we need the thread from a device below us b/c its lifetime
+    // will outlast this device's.
+    //
+    status = m_Device->QueryForInterface(&GUID_POWER_THREAD_INTERFACE,
+        &m_PowerThreadInterface.Interface,
+        sizeof(m_PowerThreadInterface),
+        1,
+        NULL,
+        m_Device->GetAttachedDevice());
+
+    if (NT_SUCCESS(status))
+    {
+        //
+        // A lower thread exists, use it
+        //
+        m_HasPowerThread = TRUE;
+    }
+    else
+    {
+        //
+        // No thread exists yet, attempt to create our own
+        //
+        status = CreatePowerThread();
+    }
+
+    return status;
 }

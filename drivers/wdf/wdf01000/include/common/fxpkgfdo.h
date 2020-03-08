@@ -364,6 +364,19 @@ private:
         VOID
         );
 
+    virtual
+    NTSTATUS
+    QueryForReenumerationInterface(
+        VOID
+        );
+
+    _Must_inspect_result_
+    virtual
+    NTSTATUS
+    QueryForPowerThread(
+        VOID
+        );
+
 };
 
 

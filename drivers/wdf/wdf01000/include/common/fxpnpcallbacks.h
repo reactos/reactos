@@ -272,6 +272,15 @@ public:
         ) : m_Method(NULL)
     {
     }
+
+    __drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
+    _Must_inspect_result_
+    NTSTATUS
+    Invoke(
+        _In_ WDFDEVICE  Device,
+        _In_ WDFCMRESLIST ResourcesRaw,
+        _In_ WDFCMRESLIST ResourcesTranslated
+        );
     
     VOID
     Initialize(

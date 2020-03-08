@@ -500,6 +500,16 @@ public:
         KeLowerIrql(NewIrql);
     }
 
+    __inline
+    static
+    MdDeviceObject
+    MxGetAttachedDeviceReference(
+        __in PDEVICE_OBJECT DriverObject
+        )
+    {
+        return IoGetAttachedDeviceReference(DriverObject);
+    }
+
 };
 
 #endif //_MXGENERAL_H_

@@ -307,3 +307,25 @@ FxPkgPdo::PnpEventFdoRemovedOverload(
     //
     return WdfDevStatePnpFinal;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::QueryForPowerThread(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Since the PDO is the lowest device in the stack, it does not have to send
+    a query down the stack.  Rather, it just creates the thread and returns.
+
+Arguments:
+    None
+
+Return Value:
+    NTSTATUS
+
+  --*/
+{
+    return CreatePowerThread();
+}

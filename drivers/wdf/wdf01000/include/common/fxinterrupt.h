@@ -56,6 +56,18 @@ private:
     WDF_INTERRUPT_PRIORITY          m_Priority;
     GROUP_AFFINITY                  m_Processors;
 
+    
+    //
+    // PnP data about the interrupt.
+    //
+    WDF_INTERRUPT_INFO              m_InterruptInfo;
+
+    //
+    // Set if this is an Edge-Triggered non-MSI interrupt. These interrupts are
+    // stateful and it is important not to drop any around the connection window.
+    //
+    BOOLEAN m_IsEdgeTriggeredNonMsiInterrupt;
+
 public:
     FxInterrupt(
         __in PFX_DRIVER_GLOBALS FxDriverGlobals
@@ -87,9 +99,99 @@ public:
         }
     }
 
+    VOID
+    AssignResources(
+        __in PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescRaw,
+        __in PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescTrans
+        );
+
+    WDFINTERRUPT
+    GetHandle(
+        VOID
+        )
+    {
+        return (WDFINTERRUPT) GetObjectHandle();
+    }
+
+    BOOLEAN
+    IsSharedSpinLock(
+        VOID
+        )
+    {
+        return m_SpinLock != &m_BuiltInSpinLock.Get() ? TRUE : FALSE;
+    }
+
+    BOOLEAN
+    IsSyncIrqlSet(
+        VOID
+        )
+    {
+        return m_SynchronizeIrql != PASSIVE_LEVEL ? TRUE : FALSE;
+    }
+
+    KIRQL
+    GetSyncIrql(
+        VOID
+        )
+    {
+        return m_SynchronizeIrql;
+    }
+
+    KIRQL
+    GetResourceIrql(
+        VOID
+        )
+    {
+        return m_InterruptInfo.Irql;
+    }
+
+    BOOLEAN
+    SharesLock(
+        FxInterrupt* Interrupt
+        )
+    {
+        return m_SpinLock == Interrupt->m_SpinLock ? TRUE : FALSE;
+    }
+
 protected:
 
     LIST_ENTRY  m_PnpList;
+
+private:
+    VOID
+    Reset(
+        VOID
+        );
+
+    VOID
+    ResetInternal(
+        VOID
+        )
+    {
+
+    }
+
+    VOID
+    SetSyncIrql(
+        KIRQL SyncIrql
+        )
+    {
+        m_SynchronizeIrql = SyncIrql;
+    }
+
+    //
+    // Called from workitem to perform final flushing of any
+    // outstanding DPC's and dereferencing of objects.
+    //
+    VOID
+    FlushAndRundown(
+        VOID
+        );
+
+    VOID
+    FlushAndRundownInternal(
+        VOID
+        );
         
 };
 

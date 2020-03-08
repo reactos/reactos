@@ -219,6 +219,34 @@ private:
         VOID
         );
 
+    virtual
+    NTSTATUS
+    QueryForReenumerationInterface(
+        VOID
+        )
+    {
+        //
+        // As the PDO, we already have the interface built in
+        //
+        NTSTATUS status;
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+        status = AllocateWorkItemForSetDeviceFailed();
+#else
+        DO_NOTHING();
+        status = STATUS_SUCCESS;
+#endif
+
+        return status;
+    }
+
+    _Must_inspect_result_
+    virtual
+    NTSTATUS
+    QueryForPowerThread(
+        VOID
+        );
+
 };
 
 typedef NTSTATUS (FxPkgPdo::*PFN_PDO_HANDLER)(FxIrp *Irp);

@@ -1084,6 +1084,12 @@ protected:
         );
 // end pnp state machine table based callbacks
 
+    _Must_inspect_result_
+    NTSTATUS
+    CreatePowerThread(
+        VOID
+        );
+
 public:
 
     VOID
@@ -1247,6 +1253,58 @@ public:
             );
     }
 
+    _Must_inspect_result_
+    NTSTATUS
+    PnpMatchResources(
+        VOID
+        );
+
+    VOID
+    SetInternalFailure(
+        VOID
+        );
+
+    __drv_when(!NT_SUCCESS(return), __drv_arg(ResourcesMatched, _Must_inspect_result_))
+    __drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
+    NTSTATUS
+    PnpPrepareHardware(
+        _Out_ PBOOLEAN ResourcesMatched,
+        _Out_ FxCxCallbackProgress* Progress
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    QueryForCapabilities(
+        VOID
+        );
+
+    VOID
+    PnpPowerPolicyStart(
+        VOID
+        );
+
+    VOID
+    SetPendingPnpIrpStatus(
+        __in NTSTATUS Status
+        )
+    {
+        FxIrp irp(m_PendingPnPIrp);
+
+        ASSERT(m_PendingPnPIrp != NULL);
+        irp.SetStatus(Status);
+    }
+
+    VOID
+    PnpAssignInterruptsSyncIrql(
+        VOID
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    PnpPrepareHardwareInternal(
+        VOID
+        );
+
 
 private:
 
@@ -1399,6 +1457,24 @@ private:
     _PowerThreadInterfaceDereference(
         __inout PVOID Context
         );
+
+    virtual
+    NTSTATUS
+    QueryForReenumerationInterface(
+        VOID
+        ) =0;
+
+    _Must_inspect_result_
+    NTSTATUS
+    CreatePowerThreadIfNeeded(
+        VOID
+        );
+
+    virtual
+    NTSTATUS
+    QueryForPowerThread(
+        VOID
+        ) =0;
 
     
 
@@ -1570,6 +1646,9 @@ protected:
     //
     BOOLEAN m_ReleaseHardwareAfterDescendantsOnFailure;
 
+    // SYSTEM_POWER_STATE
+    BYTE m_SystemWake;
+
     //
     // Interface to queue a work item to the devnode's power thread.  Any device
     // in the stack can export the power thread, but it must be the lowest
@@ -1644,6 +1723,11 @@ protected:
     static const PNP_EVENT_TARGET_STATE m_PnpRestartOtherStates[];
     static const PNP_EVENT_TARGET_STATE m_PnpRestartReleaseHardware[];
     static const PNP_EVENT_TARGET_STATE m_PnpRestartHardwareAvailableOtherStates[];
+
+    //
+    // GUID for querying for a power thread down the stack
+    //
+    static const GUID GUID_POWER_THREAD_INTERFACE;
 
 
     NTSTATUS

@@ -147,6 +147,41 @@ public:
         return PoSetPowerState(m_DeviceObject, Type, State);
     }
 
+    __inline
+    VOID
+    InvalidateDeviceState(
+        __in MdDeviceObject Fdo
+        )
+    {
+        //
+        // UMDF currently needs Fdo for InvalidateDeviceState
+        // FDO is not used in km. 
+        //
+        // m_DeviceObject holds PDO that is what is used below.
+        //
+
+        UNREFERENCED_PARAMETER(Fdo);
+
+        IoInvalidateDeviceState(m_DeviceObject);
+    }
+
+    __inline
+    VOID
+    DereferenceObject(
+        )
+    {
+        ObDereferenceObject(m_DeviceObject);
+    }
+
+    __inline
+    MdDeviceObject
+    GetAttachedDeviceReference(
+        VOID
+        )
+    {
+        return IoGetAttachedDeviceReference(m_DeviceObject);
+    }
+
 };
 
 #endif //_MXDEVICEOBJECT_H_

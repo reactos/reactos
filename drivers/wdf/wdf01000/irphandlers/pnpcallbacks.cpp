@@ -216,3 +216,32 @@ FxPnpDeviceRemoveAddedResources::Invoke(
         return STATUS_SUCCESS;
     }
 }
+
+__drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
+_Must_inspect_result_
+NTSTATUS
+FxPnpDevicePrepareHardware::Invoke(
+    _In_ WDFDEVICE  Device,
+    _In_ WDFCMRESLIST ResourcesRaw,
+    _In_ WDFCMRESLIST ResourcesTranslated
+    )
+{
+    m_Device = Device;
+    m_ResourcesRaw = ResourcesRaw;
+    m_ResourcesTranslated = ResourcesTranslated;
+
+    if (m_Method != NULL)
+    {
+        NTSTATUS status;
+
+        CallbackStart();
+        status = m_Method(Device, ResourcesRaw, ResourcesTranslated);
+        CallbackEnd();
+
+        return status;
+    }
+    else
+    {
+        return STATUS_SUCCESS;
+    }
+}

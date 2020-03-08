@@ -29,6 +29,7 @@ list(APPEND SOURCE
     support/fxspinlockapi.cpp
     support/fxspinlock.cpp
     support/fxresourcecollection.cpp
+    support/fxqueryinterface.cpp
     core/fxbugcheckcallback.cpp
     core/tracing.cpp
     core/fxdriver.cpp
@@ -78,6 +79,7 @@ list(APPEND SOURCE
     irphandlers/fxwmiprovider.cpp
     irphandlers/notpowerpolicyownerstatemachine.cpp
     irphandlers/interruptobject.cpp
+    irphandlers/support.cpp
     targets/fxiotarget.cpp
     targets/fxiotargetself.cpp
 )
