@@ -457,14 +457,6 @@ protected:
 
     static
     VOID
-    _SetPowerCapState(
-        __in  ULONG Index,
-        __in  DEVICE_POWER_STATE State,
-        __out PULONG Result
-        );
-
-    static
-    VOID
     _PowerProcessEventInner(
         __in FxPkgPnp* This,
         __in FxPostProcessInfo* Info,
@@ -721,6 +713,26 @@ protected:
     SetPendingPnpIrp(
         __inout FxIrp* Irp,
         __in    BOOLEAN MarkIrpPending = TRUE
+        );
+
+    LONG
+    GetPnpCapsInternal(
+        VOID
+        );
+
+    static
+    VOID
+    _SetPowerCapState(
+        __in  ULONG Index,
+        __in  DEVICE_POWER_STATE State,
+        __out PULONG Result
+        );
+
+    static
+    DEVICE_POWER_STATE
+    _GetPowerCapState(
+        __in ULONG Index,
+        __in ULONG State
         );
 
 // begin pnp state machine table based callbacks
@@ -1150,6 +1162,21 @@ public:
         )
     {
         return m_PowerPolicyMachine.m_Owner != NULL ? TRUE : FALSE;
+    }
+
+    BOOLEAN
+    SupportsWakeInterrupt(
+        VOID
+        )
+    {
+        if (m_WakeInterruptCount > 0)
+        {
+            return TRUE;
+        }
+        else
+        {
+            return FALSE;
+        }
     }
 
     virtual

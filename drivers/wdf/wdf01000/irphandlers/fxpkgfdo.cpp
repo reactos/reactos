@@ -1,6 +1,7 @@
 #include "common/fxpkgfdo.h"
 #include "common/fxirp.h"
 #include "common/fxdevice.h"
+#include "common/pnppriv.h"
 
 
 const GUID GUID_REENUMERATE_SELF_INTERFACE_STANDARD = {
@@ -897,8 +898,235 @@ FxPkgFdo::_PnpQueryCapabilities(
     __inout FxIrp *Irp
     )
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    return ((FxPkgFdo*) This)->PnpQueryCapabilities(Irp);
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::PnpQueryCapabilities(
+    __inout FxIrp *Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This method is invoked in response to a Pnp QueryCapabilities IRP.
+
+Arguments:
+
+    Device - a pointer to the FxDevice
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    NTSTATUS status;
+
+    HandleQueryCapabilities(Irp);
+
+    status = SendIrpSynchronously(Irp);
+
+    //
+    // Now that the IRP has returned to us,  we modify what the bus driver
+    // set up.
+    //
+    if (NT_SUCCESS(status))
+    {
+        HandleQueryCapabilitiesCompletion(Irp);
+    }
+
+    CompletePnpRequest(Irp, status);
+
+    return status;
+}
+
+VOID
+FxPkgFdo::HandleQueryCapabilities(
+    __inout FxIrp *Irp
+    )
+{
+    PDEVICE_CAPABILITIES pCaps;
+    LONG pnpCaps;
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Entering QueryCapabilities handler");
+
+    pCaps = Irp->GetParameterDeviceCapabilities();
+
+    pnpCaps = GetPnpCapsInternal();
+
+    //
+    // Add Capabilities.  These need to be done as the IRP goes down, since
+    // lower drivers need to see them.
+    //
+    if ((pCaps->Size >= sizeof(DEVICE_CAPABILITIES)) && (pCaps->Version == 1))
+    {
+        SET_PNP_CAP_IF_TRUE(pnpCaps, pCaps, LockSupported);
+        SET_PNP_CAP_IF_TRUE(pnpCaps, pCaps, EjectSupported);
+        SET_PNP_CAP_IF_TRUE(pnpCaps, pCaps, Removable);
+        SET_PNP_CAP_IF_TRUE(pnpCaps, pCaps, DockDevice);
+        SET_PNP_CAP_IF_TRUE(pnpCaps, pCaps, SurpriseRemovalOK);
+        SET_PNP_CAP_IF_TRUE(pnpCaps, pCaps, NoDisplayInUI);
+        //
+        // If the driver has declared a wake capable interrupt,
+        // we need to set this bit in the capabilities so that
+        // ACPI will relinquish control of wake responsiblity
+        //
+        //if (SupportsWakeInterrupt())
+        //{
+        //    pCaps->WakeFromInterrupt = TRUE;
+        //}
+    }
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Exiting QueryCapabilities handler");
+    return;
+}
+
+VOID
+FxPkgFdo::HandleQueryCapabilitiesCompletion(
+    __inout FxIrp *Irp
+    )
+{
+    PDEVICE_CAPABILITIES pCaps;
+    LONG pnpCaps;
+    ULONG i;
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Entering QueryCapabilities completion handler");
+
+    pCaps = Irp->GetParameterDeviceCapabilities();
+
+    pnpCaps = GetPnpCapsInternal();
+
+    //
+    // Confirm this is a valid DeviceCapabilities structure.
+    //
+    ASSERT(pCaps->Size >= sizeof(DEVICE_CAPABILITIES));
+    ASSERT(pCaps->Version >= 1);
+
+    if ((pCaps->Size >= sizeof(DEVICE_CAPABILITIES)) &&
+        (pCaps->Version == 1))
+    {
+        ULONG states;
+
+        //
+        // Remove Capabilities
+        //
+
+        //
+        // Re-add SOME capibilties that the bus driver may have accidentally
+        // stomped.
+        //
+        SET_PNP_CAP_IF_FALSE(pnpCaps, pCaps, LockSupported);
+        SET_PNP_CAP_IF_FALSE(pnpCaps, pCaps, EjectSupported);
+        SET_PNP_CAP_IF_FALSE(pnpCaps, pCaps, DockDevice);
+
+        SET_PNP_CAP(pnpCaps, pCaps, Removable);
+        SET_PNP_CAP(pnpCaps, pCaps, SurpriseRemovalOK);
+
+        //
+        // The DeviceState array contains a table of D states that correspond
+        // to a given S state.  If the driver writer initialized entries of the
+        // array, and if the new value is a deeper sleep state than the
+        // original, we will use the new driver supplied value.
+        //
+        states = m_PowerCaps.States;
+
+        for (i = PowerSystemWorking; i < PowerSystemMaximum; i++)
+        {
+            DEVICE_POWER_STATE state;
+
+            //
+            // PowerDeviceMaximum indicates to use the default value
+            //
+            // We are only allowed to deepen the D states, not lighten them,
+            // hence the > compare.
+            //
+            state = _GetPowerCapState(i, states);
+
+            if (state != PowerDeviceMaximum && state > pCaps->DeviceState[i])
+            {
+                pCaps->DeviceState[i] = state;
+            }
+        }
+
+        //
+        // If the driver supplied SystemWake value is lighter than the current
+        // value, then use the driver supplied value.
+        //
+        // PowerSystemMaximum indicates to use the default value
+        //
+        // We are only allowed to lighten the S state, not deepen it, hence
+        // the < compare.
+        //
+        if (m_PowerCaps.SystemWake != PowerSystemMaximum &&
+            m_PowerCaps.SystemWake < pCaps->SystemWake)
+        {
+            pCaps->SystemWake = (SYSTEM_POWER_STATE) m_PowerCaps.SystemWake;
+        }
+
+        //
+        // Same for DeviceWake
+        //
+        if (m_PowerCaps.DeviceWake != PowerDeviceMaximum &&
+            m_PowerCaps.DeviceWake < pCaps->DeviceWake)
+        {
+            pCaps->DeviceWake = (DEVICE_POWER_STATE) m_PowerCaps.DeviceWake;
+        }
+
+        //
+        // Set the Device wake up latencies.  A value of -1 indicates to
+        // use the default values provided by the lower stack.
+        //
+        if (m_PowerCaps.D1Latency != (ULONG) -1 &&
+            m_PowerCaps.D1Latency > pCaps->D1Latency)
+        {
+            pCaps->D1Latency = m_PowerCaps.D1Latency;
+        }
+
+        if (m_PowerCaps.D2Latency != (ULONG) -1 &&
+            m_PowerCaps.D2Latency > pCaps->D2Latency)
+        {
+            pCaps->D2Latency = m_PowerCaps.D2Latency;
+        }
+
+        if (m_PowerCaps.D3Latency != (ULONG) -1 &&
+            m_PowerCaps.D3Latency > pCaps->D3Latency)
+        {
+            pCaps->D3Latency = m_PowerCaps.D3Latency;
+        }
+
+        //
+        // Set the Address and the UI number values.  A value of -1 indicates
+        // to use the default values provided by the lower stack.
+        //
+        if (m_PnpCapsAddress != (ULONG) -1)
+        {
+            pCaps->Address = m_PnpCapsAddress;
+        }
+
+        if (m_PnpCapsUINumber != (ULONG) -1)
+        {
+            pCaps->UINumber= m_PnpCapsUINumber;
+        }
+    }
+
+    //
+    // CompletePnpRequest is called after return from this function
+    // so it is safe to log here
+    //
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Exiting QueryCapabilities completion handler");
+
+    return;
 }
 
 _Must_inspect_result_

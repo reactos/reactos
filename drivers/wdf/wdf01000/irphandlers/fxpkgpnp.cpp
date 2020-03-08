@@ -2399,3 +2399,58 @@ Return Value:
 
     return STATUS_SUCCESS;
 }
+
+LONG
+FxPkgPnp::GetPnpCapsInternal(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Returns the pnp device capabilities encoded into a LONG.  This state is used
+    in reporting device capabilities via IRP_MN_QUERY_CAPABILITIES and filling
+    in the PDEVICE_CAPABILITIES structure.
+
+Arguments:
+    None
+
+Return Value:
+    the current pnp cap bits
+
+  --*/
+{
+    LONG caps;
+    KIRQL irql;
+
+    Lock(&irql);
+    caps = m_PnpStateAndCaps.Value & FxPnpCapMask;
+    Unlock(irql);
+
+    return caps;
+}
+
+DEVICE_POWER_STATE
+FxPkgPnp::_GetPowerCapState(
+    __in ULONG Index,
+    __in ULONG State
+    )
+/*++
+
+Routine Description:
+    Decodes our internal device state encoding and returns a normalized device
+    power state for the given index.
+
+Arguments:
+    Index - nibble (4 bit chunk) index into the State
+
+    State - value which has the device states encoded into it
+
+Return Value:
+    device power state for the given Index
+
+  --*/
+{
+    ASSERT(Index < 8);
+                                // isolate the value            and normalize it
+    return (DEVICE_POWER_STATE) ((State & (0xF << (Index * 4))) >> (Index * 4));
+}

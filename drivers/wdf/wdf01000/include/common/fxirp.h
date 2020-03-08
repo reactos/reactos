@@ -683,6 +683,15 @@ public:
             Parameters.DeviceCapabilities.Capabilities = DeviceCapabilities;
     }
 
+    __inline
+    PDEVICE_CAPABILITIES
+    GetParameterDeviceCapabilities(
+        )
+    {
+        return this->GetCurrentIrpStackLocation()->
+            Parameters.DeviceCapabilities.Capabilities;
+    }
+
 };
 
 //

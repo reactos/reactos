@@ -255,6 +255,16 @@ private:
         __inout FxIrp *Irp
         );
 
+    VOID
+    HandleQueryCapabilities(
+        __inout FxIrp *Irp
+        );
+
+    VOID
+    HandleQueryCapabilitiesCompletion(
+        __inout FxIrp *Irp
+        );
+
 
     _Must_inspect_result_
     static
