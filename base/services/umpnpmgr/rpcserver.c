@@ -287,6 +287,52 @@ SetDeviceStatus(
 
 
 static
+CONFIGRET
+DisableDeviceInstance(
+    _In_ LPWSTR pszDeviceInstance,
+    _Inout_opt_ PPNP_VETO_TYPE pVetoType,
+    _Inout_opt_ LPWSTR pszVetoName,
+    _In_ DWORD ulNameLength)
+{
+    PLUGPLAY_CONTROL_QUERY_REMOVE_DATA QueryRemoveData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT1("DisableDeviceInstance(%S %p %p %lu)\n",
+            pszDeviceInstance, pVetoType, pszVetoName, ulNameLength);
+
+    RtlInitUnicodeString(&QueryRemoveData.DeviceInstance,
+                         pszDeviceInstance);
+
+    QueryRemoveData.Flags = 0;
+    QueryRemoveData.VetoType = 0;
+    QueryRemoveData.VetoName = pszVetoName;
+    QueryRemoveData.NameLength = ulNameLength;
+
+    Status = NtPlugPlayControl(PlugPlayControlQueryAndRemoveDevice,
+                               &QueryRemoveData,
+                               sizeof(PLUGPLAY_CONTROL_QUERY_REMOVE_DATA));
+    if (Status == STATUS_NO_SUCH_DEVICE)
+    {
+        ret = CR_INVALID_DEVNODE;
+    }
+    else if (Status == STATUS_PLUGPLAY_QUERY_VETOED)
+    {
+        if (pVetoType != NULL)
+            *pVetoType = QueryRemoveData.VetoType;
+
+        ret = CR_REMOVE_VETOED;
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        ret = NtStatusToCrError(Status);
+    }
+
+    return ret;
+}
+
+
+static
 BOOL
 IsValidDeviceInstanceID(
     _In_ PWSTR pszDeviceInstanceID)
@@ -3038,9 +3084,24 @@ PNP_DisableDevInst(
     DWORD ulNameLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT1("PNP_DisableDevInst(%p %S %p %p %lu 0x%08lx)\n",
+            hBinding, pDeviceID, pVetoType, pszVetoName, ulNameLength, ulFlags);
+
+    if (ulFlags & ~CM_DISABLE_BITS)
+        return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pDeviceID) ||
+        IsRootDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
+
+    return DisableDeviceInstance(pDeviceID,
+                                 pVetoType,
+                                 pszVetoName,
+                                 ulNameLength);
 }
+
 
 /* Function 33 */
 DWORD
