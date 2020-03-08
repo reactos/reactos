@@ -2304,6 +2304,9 @@ PNP_GetInterfaceDeviceList(
 
     UNREFERENCED_PARAMETER(hBinding);
 
+    DPRINT("PNP_GetInterfaceDeviceList(%p %p %S %p %p 0x%08lx)\n",
+           hBinding, InterfaceGuid, pszDeviceID, Buffer, pulLength, ulFlags);
+
     if (!IsValidDeviceInstanceID(pszDeviceID))
         return CR_INVALID_DEVINST;
 
@@ -2348,7 +2351,8 @@ PNP_GetInterfaceDeviceListSize(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetInterfaceDeviceListSize() called\n");
+    DPRINT("PNP_GetInterfaceDeviceList(%p %p %p %S 0x%08lx)\n",
+           hBinding, pulLen, InterfaceGuid, pszDeviceID, ulFlags);
 
     if (!IsValidDeviceInstanceID(pszDeviceID))
         return CR_INVALID_DEVINST;
@@ -2866,9 +2870,9 @@ SetupDeviceInstance(
 
     if (ulStatus & DN_HAS_PROBLEM)
     {
-       ret = ClearDeviceStatus(pszDeviceInstance,
-                               DN_HAS_PROBLEM,
-                               ulProblem);
+        ret = ClearDeviceStatus(pszDeviceInstance,
+                                DN_HAS_PROBLEM,
+                                ulProblem);
     }
 
     if (ret != CR_SUCCESS)
@@ -3111,10 +3115,8 @@ PNP_AddID(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_AddID() called\n");
-    DPRINT("  DeviceInstance: %S\n", pszDeviceID);
-    DPRINT("  DeviceId: %S\n", pszID);
-    DPRINT("  Flags: %lx\n", ulFlags);
+    DPRINT("PNP_AddID(%p %S %S 0x%08lx)\n",
+           hBinding, pszDeviceID, pszID, ulFlags);
 
     if (RegOpenKeyExW(hEnumKey,
                       pszDeviceID,
@@ -3337,7 +3339,8 @@ PNP_IsDockStationPresent(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT1("PNP_IsDockStationPresent() called\n");
+    DPRINT1("PNP_IsDockStationPresent(%p %p)\n",
+            hBinding, Present);
 
     *Present = FALSE;
 
