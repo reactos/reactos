@@ -389,17 +389,20 @@ RunTraceRoute()
 
     PVOID ReplyBuffer;
 
-    DWORD ReplySize = sizeof(SendAndReplyBuffer) + SIZEOF_ICMP_ERROR + SIZEOF_IO_STATUS_BLOCK;
+    DWORD ReplySize = PACKET_SIZE + SIZEOF_ICMP_ERROR + SIZEOF_IO_STATUS_BLOCK;
     if (Info.Family == AF_INET6)
     {
         ReplyBuffer = &(SendAndReplyBuffer.ReplyBufferv6);
+        ReplySize += sizeof(ICMPV6_ECHO_REPLY);
     }
     else
     {
 #ifdef _WIN64
         ReplyBuffer = &(SendAndReplyBuffer.ReplyBufferv432);
+        ReplySize += sizeof(ICMP_ECHO_REPLY32);
 #else
         ReplyBuffer = &(SendAndReplyBuffer.ReplyBufferv4);
+        ReplySize += sizeof(ICMP_ECHO_REPLY);
 #endif
     }
 
