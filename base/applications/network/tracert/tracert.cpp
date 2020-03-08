@@ -376,29 +376,30 @@ RunTraceRoute()
         return false;
     }
 
-    BYTE SendBuffer[PACKET_SIZE];
-    ICMPV6_ECHO_REPLY ReplyBufferv6;
+    struct SendAndReplyStruct
+    {
+        BYTE SendBuffer[PACKET_SIZE];
+        ICMPV6_ECHO_REPLY ReplyBufferv6;
 #ifdef _WIN64
-    ICMP_ECHO_REPLY32 ReplyBufferv432;
+        ICMP_ECHO_REPLY32 ReplyBufferv432;
 #else
-    ICMP_ECHO_REPLY ReplyBufferv4;
+        ICMP_ECHO_REPLY ReplyBufferv4;
 #endif
+    } SendAndReplyBuffer;
+
     PVOID ReplyBuffer;
 
-    DWORD ReplySize = PACKET_SIZE + SIZEOF_ICMP_ERROR + SIZEOF_IO_STATUS_BLOCK;
+    DWORD ReplySize = sizeof(SendAndReplyBuffer) + SIZEOF_ICMP_ERROR + SIZEOF_IO_STATUS_BLOCK;
     if (Info.Family == AF_INET6)
     {
-        ReplyBuffer = &ReplyBufferv6;
-        ReplySize += sizeof(ICMPV6_ECHO_REPLY);
+        ReplyBuffer = &(SendAndReplyBuffer.ReplyBufferv6);
     }
     else
     {
 #ifdef _WIN64
-        ReplyBuffer = &ReplyBufferv432;
-        ReplySize += sizeof(ICMP_ECHO_REPLY32);
+        ReplyBuffer = &(SendAndReplyBuffer.ReplyBufferv432);
 #else
-        ReplyBuffer = &ReplyBufferv4;
-        ReplySize += sizeof(ICMP_ECHO_REPLY);
+        ReplyBuffer = &(SendAndReplyBuffer.ReplyBufferv4);
 #endif
     }
 
@@ -445,7 +446,7 @@ RunTraceRoute()
                                      NULL,
                                      &Source,
                                      (struct sockaddr_in6 *)Info.Target->ai_addr,
-                                     SendBuffer,
+                                     SendAndReplyBuffer.SendBuffer,
                                      (USHORT)PACKET_SIZE,
                                      &IpOptionInfo,
                                      ReplyBuffer,
@@ -459,7 +460,7 @@ RunTraceRoute()
                                      NULL,
                                      NULL,
                                      ((PSOCKADDR_IN)Info.Target->ai_addr)->sin_addr.s_addr,
-                                     SendBuffer,
+                                     SendAndReplyBuffer.SendBuffer,
                                      (USHORT)PACKET_SIZE,
                                      &IpOptionInfo,
                                      ReplyBuffer,
