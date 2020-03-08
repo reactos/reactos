@@ -130,8 +130,6 @@ KdpPromptString(
     return FALSE;
 }
 
-#ifdef _WINKD_
-
 VOID
 NTAPI
 KdpCommandString(IN PSTRING NameString,
@@ -211,23 +209,6 @@ KdpSymbol(IN PSTRING DllPath,
     /* Exit the debugger and return */
     KdExitDebugger(Enable);
 }
-
-#else
-
-extern
-BOOLEAN
-NTAPI
-KdpPrintString(
-    _In_ PSTRING Output);
-
-extern
-BOOLEAN
-NTAPI
-KdpPromptString(
-    _In_ PSTRING PromptString,
-    _In_ PSTRING ResponseString);
-
-#endif // _WINKD_
 
 USHORT
 NTAPI

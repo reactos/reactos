@@ -11,38 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-//
-// Retrieves the ComponentId and Level for BREAKPOINT_PRINT
-// and OutputString and OutputStringLength for BREAKPOINT_PROMPT.
-//
-#if defined(_X86_)
-
-//
-// EBX/EDI on x86
-//
-#define KdpGetParameterThree(Context)  ((Context)->Ebx)
-#define KdpGetParameterFour(Context)   ((Context)->Edi)
-
-#elif defined(_AMD64_)
-
-//
-// R8/R9 on AMD64
-//
-#define KdpGetParameterThree(Context)  ((Context)->R8)
-#define KdpGetParameterFour(Context)   ((Context)->R9)
-
-#elif defined(_ARM_)
-
-//
-// R3/R4 on ARM
-//
-#define KdpGetParameterThree(Context)  ((Context)->R3)
-#define KdpGetParameterFour(Context)   ((Context)->R4)
-
-#else
-#error Unsupported Architecture
-#endif
-
 /* VARIABLES ***************************************************************/
 
 VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
@@ -52,109 +20,53 @@ extern ANSI_STRING KdpLogFileName;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+KdpReportCommandStringStateChange(IN PSTRING NameString,
+                                  IN PSTRING CommandString,
+                                  IN OUT PCONTEXT Context)
+{
+}
+
+VOID
+NTAPI
+KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
+                                IN PKD_SYMBOLS_INFO SymbolInfo,
+                                IN BOOLEAN Unload,
+                                IN OUT PCONTEXT Context)
+{
+#ifdef KDBG
+    PKD_SYMBOLS_INFO SymbolsInfo = SymbolInfo;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+
+    if (SymbolsInfo != NULL && !Unload)
+    {
+        /* Load symbols. Currently implemented only for KDBG! */
+        if (KdbpSymFindModule(SymbolsInfo->BaseOfDll, NULL, -1, &LdrEntry))
+        {
+            KdbSymProcessSymbols(LdrEntry);
+        }
+    }
+#endif
+}
+
 BOOLEAN
 NTAPI
-KdpTrap(IN PKTRAP_FRAME TrapFrame,
-                          IN PKEXCEPTION_FRAME ExceptionFrame,
-                          IN PEXCEPTION_RECORD ExceptionRecord,
-                          IN PCONTEXT Context,
-                          IN KPROCESSOR_MODE PreviousMode,
-                          IN BOOLEAN SecondChance)
+KdpReport(IN PKTRAP_FRAME TrapFrame,
+          IN PKEXCEPTION_FRAME ExceptionFrame,
+          IN PEXCEPTION_RECORD ExceptionRecord,
+          IN PCONTEXT ContextRecord,
+          IN KPROCESSOR_MODE PreviousMode,
+          IN BOOLEAN SecondChanceException)
 {
     KD_CONTINUE_TYPE Return = kdHandleException;
-    ULONG ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
-
-    /* Check if this was a breakpoint due to DbgPrint or Load/UnloadSymbols */
-    if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
-        (ExceptionRecord->NumberParameters > 0) &&
-        ((ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS) ||
-         (ExceptionCommand == BREAKPOINT_UNLOAD_SYMBOLS) ||
-         (ExceptionCommand == BREAKPOINT_COMMAND_STRING) ||
-         (ExceptionCommand == BREAKPOINT_PRINT) ||
-         (ExceptionCommand == BREAKPOINT_PROMPT)))
-    {
-        /* Check if this is a debug print */
-        if (ExceptionCommand == BREAKPOINT_PRINT)
-        {
-            /* Call KDBG */
-            NTSTATUS ReturnStatus;
-            BOOLEAN Handled;
-            ReturnStatus = KdpPrint((ULONG)KdpGetParameterThree(Context),
-                                    (ULONG)KdpGetParameterFour(Context),
-                                    (PCHAR)ExceptionRecord->ExceptionInformation[1],
-                                    (USHORT)ExceptionRecord->ExceptionInformation[2],
-                                    PreviousMode,
-                                    TrapFrame,
-                                    ExceptionFrame,
-                                    &Handled);
-
-            /* Update the return value for the caller */
-            KeSetContextReturnRegister(Context, ReturnStatus);
-        }
-#ifdef KDBG
-        else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
-        {
-            PKD_SYMBOLS_INFO SymbolsInfo;
-            KD_SYMBOLS_INFO CapturedSymbolsInfo;
-            PLDR_DATA_TABLE_ENTRY LdrEntry;
-
-            SymbolsInfo = (PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2];
-            if (PreviousMode != KernelMode)
-            {
-                _SEH2_TRY
-                {
-                    ProbeForRead(SymbolsInfo,
-                                 sizeof(*SymbolsInfo),
-                                 1);
-                    KdpMoveMemory(&CapturedSymbolsInfo,
-                                  SymbolsInfo,
-                                  sizeof(*SymbolsInfo));
-                    SymbolsInfo = &CapturedSymbolsInfo;
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    SymbolsInfo = NULL;
-                }
-                _SEH2_END;
-            }
-
-            if (SymbolsInfo != NULL)
-            {
-                /* Load symbols. Currently implemented only for KDBG! */
-                if (KdbpSymFindModule(SymbolsInfo->BaseOfDll, NULL, -1, &LdrEntry))
-                {
-                    KdbSymProcessSymbols(LdrEntry);
-                }
-            }
-        }
-        else if (ExceptionCommand == BREAKPOINT_PROMPT)
-        {
-            /* Call KDBG */
-            ULONG ReturnLength;
-            ReturnLength = KdpPrompt((PCHAR)ExceptionRecord->ExceptionInformation[1],
-                                     (USHORT)ExceptionRecord->ExceptionInformation[2],
-                                     (PCHAR)KdpGetParameterThree(Context),
-                                     (USHORT)KdpGetParameterFour(Context),
-                                     PreviousMode,
-                                     TrapFrame,
-                                     ExceptionFrame);
-
-            /* Update the return value for the caller */
-            KeSetContextReturnRegister(Context, ReturnLength);
-        }
-#endif
-
-        /* This we can handle: simply bump the Program Counter */
-        KeSetContextPc(Context, KeGetContextPc(Context) + KD_BREAKPOINT_SIZE);
-        return TRUE;
-    }
 
 #ifdef KDBG
     /* Check if this is an assertion failure */
     if (ExceptionRecord->ExceptionCode == STATUS_ASSERTION_FAILURE)
     {
         /* Bump EIP to the instruction following the int 2C */
-        Context->Eip += 2;
+        ContextRecord->Eip += 2;
     }
 #endif
 
@@ -165,15 +77,15 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
     /* Call KDBG if available */
     Return = KdbEnterDebuggerException(ExceptionRecord,
                                        PreviousMode,
-                                       Context,
+                                       ContextRecord,
                                        TrapFrame,
-                                       !SecondChance);
+                                       !SecondChanceException);
 #else /* not KDBG */
     if (WrapperInitRoutine)
     {
         /* Call GDB */
         Return = WrapperTable.KdpExceptionRoutine(ExceptionRecord,
-                                                  Context,
+                                                  ContextRecord,
                                                   TrapFrame);
     }
 
