@@ -377,29 +377,29 @@ RunTraceRoute()
     }
 
     BYTE SendBuffer[PACKET_SIZE];
-    ICMPV6_ECHO_REPLY ReplyBufferv6;
-#ifdef _WIN64
-    ICMP_ECHO_REPLY32 ReplyBufferv432;
-#else
-    ICMP_ECHO_REPLY ReplyBufferv4;
-#endif
+
     PVOID ReplyBuffer;
 
     DWORD ReplySize = PACKET_SIZE + SIZEOF_ICMP_ERROR + SIZEOF_IO_STATUS_BLOCK;
     if (Info.Family == AF_INET6)
     {
-        ReplyBuffer = &ReplyBufferv6;
         ReplySize += sizeof(ICMPV6_ECHO_REPLY);
     }
     else
     {
 #ifdef _WIN64
-        ReplyBuffer = &ReplyBufferv432;
         ReplySize += sizeof(ICMP_ECHO_REPLY32);
 #else
-        ReplyBuffer = &ReplyBufferv4;
         ReplySize += sizeof(ICMP_ECHO_REPLY);
 #endif
+    }
+
+    HANDLE heap = GetProcessHeap();
+    ReplyBuffer = HeapAlloc(heap, HEAP_ZERO_MEMORY, ReplySize);
+    if (ReplyBuffer == NULL)
+    {
+        FreeAddrInfoW(Info.Target);
+        return false;
     }
 
     if (Info.Family == AF_INET6)
@@ -412,6 +412,7 @@ RunTraceRoute()
     }
     if (Info.hIcmpFile == INVALID_HANDLE_VALUE)
     {
+        HeapFree(heap, 0, ReplyBuffer);
         FreeAddrInfoW(Info.Target);
         return false;
     }
@@ -486,6 +487,7 @@ RunTraceRoute()
 
     OutputText(IDS_TRACE_COMPLETE);
 
+    HeapFree(heap, 0, ReplyBuffer);
     FreeAddrInfoW(Info.Target);
     if (Info.hIcmpFile)
     {
