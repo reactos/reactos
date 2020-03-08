@@ -154,7 +154,7 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
       ULONG Vector;
       KAFFINITY Affinity;
     } Interrupt;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+//#if (NTDDI_VERSION >= NTDDI_LONGHORN) Why this under ifdef ??? In Windows DDK 7.1 this struct have not ifdef. 
     struct {
       _ANONYMOUS_UNION union {
         struct {
@@ -179,7 +179,7 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
         } Translated;
       } DUMMYUNIONNAME;
     } MessageInterrupt;
-#endif
+//#endif
     struct {
       PHYSICAL_ADDRESS Start;
       ULONG Length;
