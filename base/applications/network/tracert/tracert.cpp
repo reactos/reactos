@@ -384,9 +384,6 @@ RunTraceRoute()
     if (Info.Family == AF_INET6)
     {
         ReplySize += sizeof(ICMPV6_ECHO_REPLY);
-
-        HANDLE heap = GetProcessHeap();
-        ReplyBuffer = HeapAlloc(heap, HEAP_ZERO_MEMORY, ReplySize);
     }
     else
     {
@@ -395,9 +392,10 @@ RunTraceRoute()
 #else
         ReplySize += sizeof(ICMP_ECHO_REPLY);
 #endif
-        HANDLE heap = GetProcessHeap();
-        ReplyBuffer = HeapAlloc(heap, HEAP_ZERO_MEMORY, ReplySize);
     }
+
+    HANDLE heap = GetProcessHeap();
+    ReplyBuffer = HeapAlloc(heap, HEAP_ZERO_MEMORY, ReplySize);
 
     if (Info.Family == AF_INET6)
     {
@@ -483,6 +481,7 @@ RunTraceRoute()
 
     OutputText(IDS_TRACE_COMPLETE);
 
+    HeapFree(heap, 0, ReplyBuffer);
     FreeAddrInfoW(Info.Target);
     if (Info.hIcmpFile)
     {
