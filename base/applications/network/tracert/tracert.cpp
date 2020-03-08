@@ -393,16 +393,16 @@ RunTraceRoute()
     if (Info.Family == AF_INET6)
     {
         ReplyBuffer = &(SendAndReplyBuffer.ReplyBufferv6);
-        ReplySize += sizeof(ICMPV6_ECHO_REPLY);
+        ReplySize += sizeof(SendAndReplyBuffer.ReplyBufferv6);
     }
     else
     {
 #ifdef _WIN64
         ReplyBuffer = &(SendAndReplyBuffer.ReplyBufferv432);
-        ReplySize += sizeof(ICMP_ECHO_REPLY32);
+        ReplySize += sizeof(SendAndReplyBuffer.ReplyBufferv432);
 #else
         ReplyBuffer = &(SendAndReplyBuffer.ReplyBufferv4);
-        ReplySize += sizeof(ICMP_ECHO_REPLY);
+        ReplySize += sizeof(SendAndReplyBuffer.ReplyBufferv4);
 #endif
     }
 
