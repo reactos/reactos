@@ -2167,21 +2167,6 @@ KdSystemDebugControl(
     /* Handle some internal commands */
     switch ((ULONG)Command)
     {
-#ifndef _WINKD_
-        case BREAKPOINT_PRINT: /* DbgPrint */
-        {
-            /* Call KDBG */
-            BOOLEAN Handled;
-            return KdpPrint(MAXULONG,
-                            DPFLTR_INFO_LEVEL,
-                            (PCHAR)InputBuffer,
-                            (USHORT)InputBufferLength,
-                            PreviousMode,
-                            NULL, // TrapFrame,
-                            NULL, // ExceptionFrame,
-                            &Handled);
-        }
-#endif
 #if DBG
         case ' soR': /* ROS-INTERNAL */
         {
