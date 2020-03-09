@@ -550,6 +550,25 @@ KdSendPacket(
 
         return;
     }
+    else if (PacketType == PACKET_TYPE_KD_STATE_CHANGE64)
+    {
+        PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange = (PDBGKD_ANY_WAIT_STATE_CHANGE)MessageHeader->Buffer;
+        if (WaitStateChange->NewState == DbgKdLoadSymbolsStateChange)
+        {
+#ifdef KDBG
+            PLDR_DATA_TABLE_ENTRY LdrEntry;
+            if (!WaitStateChange->u.LoadSymbols.UnloadSymbols)
+            {
+                /* Load symbols. Currently implemented only for KDBG! */
+                if (KdbpSymFindModule((PVOID)(ULONG_PTR)WaitStateChange->u.LoadSymbols.BaseOfDll, NULL, -1, &LdrEntry))
+                {
+                    KdbSymProcessSymbols(LdrEntry);
+                }
+            }
+#endif
+            return;
+        }
+    }
     UNIMPLEMENTED;
 }
 
@@ -571,6 +590,14 @@ KdReceivePacket(
     CHAR MessageBuffer[100];
     STRING ResponseString;
 #endif
+
+    if (PacketType == PACKET_TYPE_KD_STATE_MANIPULATE)
+    {
+        PDBGKD_MANIPULATE_STATE64 ManipulateState = (PDBGKD_MANIPULATE_STATE64)MessageHeader->Buffer;
+        ManipulateState->ApiNumber = DbgKdContinueApi;
+        ManipulateState->u.Continue.ContinueStatus = STATUS_SUCCESS;
+        return KdPacketReceived;
+    }
 
     if (PacketType != PACKET_TYPE_KD_DEBUG_IO)
         return KdPacketTimedOut;

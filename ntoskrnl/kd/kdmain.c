@@ -28,28 +28,6 @@ KdpReportCommandStringStateChange(IN PSTRING NameString,
 {
 }
 
-VOID
-NTAPI
-KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
-                                IN PKD_SYMBOLS_INFO SymbolInfo,
-                                IN BOOLEAN Unload,
-                                IN OUT PCONTEXT Context)
-{
-#ifdef KDBG
-    PKD_SYMBOLS_INFO SymbolsInfo = SymbolInfo;
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
-
-    if (SymbolsInfo != NULL && !Unload)
-    {
-        /* Load symbols. Currently implemented only for KDBG! */
-        if (KdbpSymFindModule(SymbolsInfo->BaseOfDll, NULL, -1, &LdrEntry))
-        {
-            KdbSymProcessSymbols(LdrEntry);
-        }
-    }
-#endif
-}
-
 BOOLEAN
 NTAPI
 KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,

@@ -1576,7 +1576,6 @@ SendPacket:
     }
 }
 
-#ifdef _WINKD_
 VOID
 NTAPI
 KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
@@ -1649,6 +1648,7 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
     } while (Status == ContinueProcessorReselected);
 }
 
+#ifdef _WINKD_
 VOID
 NTAPI
 KdpReportCommandStringStateChange(IN PSTRING NameString,
