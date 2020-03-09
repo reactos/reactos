@@ -188,6 +188,11 @@ KdDebuggerInitialize0(
             /* Upcase it */
             _strupr(CommandLine);
 
+#ifdef KDBG
+            /* Get the KDBG Settings */
+            KdbpGetCommandLineSettings(CommandLine);
+#endif
+
             /* Get the port and baud rate */
             Port = strstr(CommandLine, "DEBUGPORT");
             BaudRate = strstr(CommandLine, "BAUDRATE");

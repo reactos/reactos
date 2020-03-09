@@ -123,8 +123,6 @@ KdpCopyMemoryChunks(
     return RemainingLength == 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
-#ifdef _WINKD_
-
 VOID
 NTAPI
 KdpQueryMemory(IN PDBGKD_MANIPULATE_STATE64 State,
@@ -1578,6 +1576,7 @@ SendPacket:
     }
 }
 
+#ifdef _WINKD_
 VOID
 NTAPI
 KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
@@ -1726,9 +1725,7 @@ KdpReportCommandStringStateChange(IN PSTRING NameString,
                                      Context);
     } while (Status == ContinueProcessorReselected);
 }
-#endif
 
-#ifdef _WINKD_
 BOOLEAN
 NTAPI
 KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
@@ -1858,7 +1855,6 @@ KdpSwitchProcessor(IN PEXCEPTION_RECORD ExceptionRecord,
     return Status;
 }
 
-#ifdef _WINKD_
 LARGE_INTEGER
 NTAPI
 KdpQueryPerformanceCounter(IN PKTRAP_FRAME TrapFrame)
@@ -1875,7 +1871,6 @@ KdpQueryPerformanceCounter(IN PKTRAP_FRAME TrapFrame)
     /* Otherwise, do the call */
     return KeQueryPerformanceCounter(NULL);
 }
-#endif
 
 BOOLEAN
 NTAPI

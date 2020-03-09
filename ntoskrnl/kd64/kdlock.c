@@ -74,7 +74,6 @@ BOOLEAN
 NTAPI
 KdPollBreakIn(VOID)
 {
-#ifdef _WINKD_
     BOOLEAN DoBreak = FALSE, Enable;
 
     /* First make sure that KD is enabled */
@@ -119,7 +118,4 @@ KdPollBreakIn(VOID)
 
     /* Tell the caller to do a break */
     return DoBreak;
-#else
-    return FALSE;
-#endif
 }
