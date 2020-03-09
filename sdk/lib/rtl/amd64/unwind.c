@@ -772,65 +772,69 @@ RtplUnwindInternal(
             DispatcherContext.FunctionEntry = FunctionEntry;
             DispatcherContext.LanguageHandler = ExceptionRoutine;
             DispatcherContext.EstablisherFrame = EstablisherFrame;
-            DispatcherContext.ScopeIndex = 0; // loop this?
+            DispatcherContext.ScopeIndex = 0;
 
             /* Store the return value in the unwind context */
             UnwindContext.Rax = (ULONG64)ReturnValue;
 
             /// TODO: call RtlpExecuteHandlerForUnwind instead
 
-            /* Call the language specific handler */
-            Disposition = ExceptionRoutine(ExceptionRecord,
-                                           (PVOID)EstablisherFrame,
-                                           &UnwindContext,
-                                           &DispatcherContext);
-
-            /* Clear exception flags for the next iteration */
-            ExceptionRecord->ExceptionFlags &= ~(EXCEPTION_TARGET_UNWIND |
-                                                 EXCEPTION_COLLIDED_UNWIND);
-
-            /* Check if we do exception handling */
-            if (HandlerType == UNW_FLAG_EHANDLER)
+            /* Loop all nested handlers */
+            do
             {
-                if (Disposition == ExceptionContinueExecution)
+                /* Call the language specific handler */
+                Disposition = ExceptionRoutine(ExceptionRecord,
+                                               (PVOID)EstablisherFrame,
+                                               &UnwindContext,
+                                               &DispatcherContext);
+
+                /* Clear exception flags for the next iteration */
+                ExceptionRecord->ExceptionFlags &= ~(EXCEPTION_TARGET_UNWIND |
+                                                     EXCEPTION_COLLIDED_UNWIND);
+
+                /* Check if we do exception handling */
+                if (HandlerType == UNW_FLAG_EHANDLER)
                 {
-                    /* Check if it was non-continuable */
-                    if (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)
+                    if (Disposition == ExceptionContinueExecution)
                     {
-                        __debugbreak();
-                        RtlRaiseStatus(EXCEPTION_NONCONTINUABLE_EXCEPTION);
+                        /* Check if it was non-continuable */
+                        if (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)
+                        {
+                            __debugbreak();
+                            RtlRaiseStatus(EXCEPTION_NONCONTINUABLE_EXCEPTION);
+                        }
+
+                        /* Execution continues */
+                        return TRUE;
                     }
+                    else if (Disposition == ExceptionNestedException)
+                    {
+                        /* Turn the nested flag on */
+                        ExceptionRecord->ExceptionFlags |= EXCEPTION_NESTED_CALL;
 
-                    /* Execution continues */
-                    return TRUE;
+                        /* Update the current nested frame */
+                        //if (DispatcherContext.RegistrationPointer > NestedFrame)
+                        //{
+                        /* Get the frame from the dispatcher context */
+                        //NestedFrame = DispatcherContext.RegistrationPointer;
+                        //}
+                        __debugbreak();
+                    }
                 }
-                else if (Disposition == ExceptionNestedException)
-                {
-                    /* Turn the nested flag on */
-                    ExceptionRecord->ExceptionFlags |= EXCEPTION_NESTED_CALL;
 
-                    /* Update the current nested frame */
-                    //if (DispatcherContext.RegistrationPointer > NestedFrame)
-                    //{
-                    /* Get the frame from the dispatcher context */
-                    //NestedFrame = DispatcherContext.RegistrationPointer;
-                    //}
+                if (Disposition == ExceptionCollidedUnwind)
+                {
+                    /// TODO
                     __debugbreak();
                 }
-            }
 
-            if (Disposition == ExceptionCollidedUnwind)
-            {
-                /// TODO
-                __debugbreak();
-            }
-
-            /* This must be ExceptionContinueSearch now */
-            if (Disposition != ExceptionContinueSearch)
-            {
-                __debugbreak();
-                RtlRaiseStatus(STATUS_INVALID_DISPOSITION);
-            }
+                /* This must be ExceptionContinueSearch now */
+                if (Disposition != ExceptionContinueSearch)
+                {
+                    __debugbreak();
+                    RtlRaiseStatus(STATUS_INVALID_DISPOSITION);
+                }
+            } while (ExceptionRecord->ExceptionFlags & EXCEPTION_COLLIDED_UNWIND);
         }
 
         /* Check, if we have left our stack (8.) */
