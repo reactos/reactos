@@ -766,6 +766,14 @@ PUBLIC KiSystemCallEntry64
     mov ds, ax
     mov es, ax
 
+#if DBG
+    /* Check IRQL */
+    mov rax, cr8
+    test eax, eax
+    jz KiSystemCall64Again
+    int HEX(2C)
+#endif
+
 KiSystemCall64Again LABEL PROC
 
     /* Call the C-handler (will enable interrupts) */
@@ -859,6 +867,27 @@ PUBLIC KiServiceExit
 PUBLIC KiServiceExit2
 .PROC KiServiceExit2
     .ENDPROLOG
+
+#if DBG
+    /* Get the current IRQL and compare it to the trap frame */
+    mov rax, cr8
+    cmp byte ptr [rcx + KTRAP_FRAME_PreviousIrql], al
+    je KiServiceExit2_ok1
+    int HEX(2C)
+
+KiServiceExit2_ok1:
+    /* Check if this is a user mode exit */
+    mov ah, byte ptr [rcx + KTRAP_FRAME_SegCs]
+    test ah, 1
+    jz KiServiceExit2_kernel
+
+    /* Validate that we are at PASSIVE_LEVEL */
+    test al, al
+    jz KiServiceExit2_kernel
+    int HEX(2C)
+
+KiServiceExit2_kernel:
+#endif
 
     mov rbp, rcx
     mov rsp, rcx
@@ -1064,6 +1093,10 @@ PUBLIC KiInitiateUserApc
 
     /* Disable interrupts again */
     cli
+
+    /* Go back to PASSIVE_LEVEL */
+    mov rax, PASSIVE_LEVEL
+    mov cr8, rax
 
     /* Restore the registers from the KEXCEPTION_FRAME */
     RESTORE_EXCEPTION_STATE
