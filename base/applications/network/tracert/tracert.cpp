@@ -296,8 +296,13 @@ DecodeResponse(
     }
     else
     {
+#ifdef _WIN64
+        PICMP_ECHO_REPLY32 EchoReplyV4;
+        EchoReplyV4 = (PICMP_ECHO_REPLY32)ReplyBuffer;
+#else
         PICMP_ECHO_REPLY EchoReplyV4;
         EchoReplyV4 = (PICMP_ECHO_REPLY)ReplyBuffer;
+#endif
         Status = EchoReplyV4->Status;
         RoundTripTime = EchoReplyV4->RoundTripTime;
         AddressInfo = &EchoReplyV4->Address;
