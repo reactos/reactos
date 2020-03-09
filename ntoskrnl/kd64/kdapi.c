@@ -1964,7 +1964,6 @@ NTSTATUS
 NTAPI
 KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
 {
-#ifdef _WINKD_
     KIRQL OldIrql;
 
 #if defined(__GNUC__)
@@ -2035,31 +2034,12 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
 
     /* We're done */
     return STATUS_SUCCESS;
-#else
-    KIRQL OldIrql;
-
-    /* Raise IRQL */
-    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-
-    /* TODO: Re-enable any breakpoints */
-
-    /* Enable the Debugger */
-    KdDebuggerEnabled = TRUE;
-    SharedUserData->KdDebuggerEnabled = TRUE;
-
-    /* Lower the IRQL */
-    KeLowerIrql(OldIrql);
-
-    /* Return success */
-    return STATUS_SUCCESS;
-#endif
 }
 
 NTSTATUS
 NTAPI
 KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
 {
-#ifdef _WINKD_
     KIRQL OldIrql;
     NTSTATUS Status;
 
@@ -2144,29 +2124,6 @@ KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
 
     /* We're done */
     return STATUS_SUCCESS;
-#else
-    KIRQL OldIrql;
-
-    if (!NeedLock)
-    {
-        return STATUS_ACCESS_DENIED;
-    }
-
-    /* Raise IRQL */
-    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-
-    /* TODO: Disable any breakpoints */
-
-    /* Disable the Debugger */
-    KdDebuggerEnabled = FALSE;
-    SharedUserData->KdDebuggerEnabled = FALSE;
-
-    /* Lower the IRQL */
-    KeLowerIrql(OldIrql);
-
-    /* Return success */
-    return STATUS_SUCCESS;
-#endif
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
