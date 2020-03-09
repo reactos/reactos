@@ -1648,7 +1648,6 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
     } while (Status == ContinueProcessorReselected);
 }
 
-#ifdef _WINKD_
 VOID
 NTAPI
 KdpReportCommandStringStateChange(IN PSTRING NameString,
@@ -1726,6 +1725,7 @@ KdpReportCommandStringStateChange(IN PSTRING NameString,
     } while (Status == ContinueProcessorReselected);
 }
 
+#ifdef _WINKD_
 BOOLEAN
 NTAPI
 KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,

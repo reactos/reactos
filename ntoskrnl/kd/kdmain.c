@@ -20,14 +20,6 @@ extern ANSI_STRING KdpLogFileName;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-VOID
-NTAPI
-KdpReportCommandStringStateChange(IN PSTRING NameString,
-                                  IN PSTRING CommandString,
-                                  IN OUT PCONTEXT Context)
-{
-}
-
 BOOLEAN
 NTAPI
 KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
