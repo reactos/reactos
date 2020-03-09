@@ -1877,7 +1877,6 @@ NTAPI
 KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
                 IN PKEXCEPTION_FRAME ExceptionFrame)
 {
-#ifdef _WINKD_
     BOOLEAN Enable;
 
     /* Check if we have a trap frame */
@@ -1924,16 +1923,12 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
 
     /* Return if interrupts needs to be re-enabled */
     return Enable;
-#else
-    return FALSE;
-#endif
 }
 
 VOID
 NTAPI
 KdExitDebugger(IN BOOLEAN Enable)
 {
-#ifdef _WINKD_
     ULONG TimeSlip;
 
     /* Restore the state and unlock the port */
@@ -1963,7 +1958,6 @@ KdExitDebugger(IN BOOLEAN Enable)
         InterlockedIncrement(&KdpTimeSlipPending);
         KeInsertQueueDpc(&KdpTimeSlipDpc, NULL, NULL); // FIXME: this can trigger context switches!
     }
-#endif
 }
 
 NTSTATUS
