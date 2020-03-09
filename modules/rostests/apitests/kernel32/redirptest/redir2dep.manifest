@@ -6,7 +6,7 @@
                   type="win32"
                   name="redirtest2"
                   version="0.2.2.2"
-                  processorArchitecture="x86"
+                  processorArchitecture="*"
                   />
           </dependentAssembly>
   </dependency>
