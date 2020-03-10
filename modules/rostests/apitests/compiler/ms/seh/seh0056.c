@@ -16,7 +16,7 @@ int main() {
   try {
     Counter += 1;
     RaiseException(EXCEPTION_INT_OVERFLOW, 0, /* no flags */
-                   0, ((LPDWORD)0));
+                   0, NULL);
   }
   except(Counter) {
     try {
