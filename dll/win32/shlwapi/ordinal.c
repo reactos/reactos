@@ -259,6 +259,8 @@ PVOID WINAPI SHLockShared(HANDLE hShared, DWORD dwProcId)
 
   /* Get handle to shared memory for current process */
   hDup = SHMapHandle(hShared, dwProcId, GetCurrentProcessId(), FILE_MAP_ALL_ACCESS, 0);
+  if (hDup == NULL)
+    return NULL;
 
   /* Get View */
   pMapped = MapViewOfFile(hDup, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
