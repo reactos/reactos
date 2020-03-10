@@ -212,12 +212,10 @@ SHLockSharedEx(HANDLE hShare, DWORD dwOwnerPID, BOOL bWriteAccess)
 
     dwAccess = (FILE_MAP_READ | (bWriteAccess ? FILE_MAP_WRITE : 0));
     pView = MapViewOfFile(hDup, dwAccess, 0, 0, 0);
-
     CloseHandle(hDup);
 
     if (pView)
         return (LPBYTE)pView + sizeof(DWORD);
-
     return NULL;
 }
 #endif
