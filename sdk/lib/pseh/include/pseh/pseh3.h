@@ -371,13 +371,18 @@ _Pragma("GCC diagnostic pop") \
         volatile SEH3$_REGISTRATION_FRAME _SEH3$_AUTO_CLEANUP _SEH3$_TrylevelFrame; \
 \
         goto _SEH3$_l_BeforeTry; \
+        { \
+            __label__ _SEH3$_l_Leave; \
+            _SEH3$_l_Leave: (void)0; \
         /* Silence warning */ goto _SEH3$_l_AfterTry; \
+        /* Silence warning */ goto _SEH3$_l_Leave; \
 \
     _SEH3$_l_DoTry: \
         if (1)
 
 
 #define _SEH3_EXCEPT(...) \
+        } \
     /* End of the try block */ \
     _SEH3$_l_AfterTry: (void)0; \
         goto _SEH3$_l_EndTry; \
@@ -422,6 +427,7 @@ _Pragma("GCC diagnostic pop") \
 
 
 #define _SEH3_FINALLY \
+        } \
     /* End of the try block */ \
     _SEH3$_l_AfterTry: (void)0; \
         /* Set ExceptionPointers to 0, this is used by _abnormal_termination() */ \
@@ -471,7 +477,7 @@ _Pragma("GCC diagnostic pop") \
     /* Close the outer scope */ \
     }
 
-#define _SEH3_LEAVE goto _SEH3$_l_AfterTry
+#define _SEH3_LEAVE goto _SEH3$_l_Leave
 
 #define _SEH3_VOLATILE volatile
 
