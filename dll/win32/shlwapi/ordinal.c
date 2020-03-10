@@ -202,18 +202,18 @@ LPVOID WINAPI
 SHLockSharedEx(HANDLE hShare, DWORD dwOwnerPID, BOOL bWriteAccess)
 {
     DWORD dwUserPID, dwAccess;
-    HANDLE hMap;
+    HANDLE hDup;
     LPVOID pView;
 
     dwUserPID = GetCurrentProcessId();
-    hMap = SHMapHandle(hShare, dwOwnerPID, dwUserPID, FILE_MAP_ALL_ACCESS, 0);
-    if (!hMap)
+    hDup = SHMapHandle(hShare, dwOwnerPID, dwUserPID, FILE_MAP_ALL_ACCESS, 0);
+    if (!hDup)
         return NULL;
 
     dwAccess = (FILE_MAP_READ | (bWriteAccess ? FILE_MAP_WRITE : 0));
-    pView = MapViewOfFile(hMap, dwAccess, 0, 0, 0);
+    pView = MapViewOfFile(hDup, dwAccess, 0, 0, 0);
 
-    CloseHandle(hMap);
+    CloseHandle(hDup);
 
     if (pView)
         return (LPBYTE)pView + sizeof(DWORD);
