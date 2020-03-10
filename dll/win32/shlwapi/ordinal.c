@@ -208,9 +208,7 @@ HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
  * RETURNS
  * Success: A pointer to the shared memory
  * Failure: NULL
- *
  */
-
 LPVOID WINAPI
 SHLockSharedEx(HANDLE hShared, DWORD dwProcId, BOOL bWriteAccess)
 {
