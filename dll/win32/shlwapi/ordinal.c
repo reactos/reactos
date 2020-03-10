@@ -203,7 +203,8 @@ HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
  * PARAMS
  * hShared  [I] Shared memory handle
  * dwProcId [I] ID of process owning hShared
- * bWriteAccess [I] TRUE to get a writable block
+ * bWriteAccess [I] TRUE to get a writable block,
+ *                  FALSE to get a read-only block
  *
  * RETURNS
  * Success: A pointer to the shared memory
@@ -212,25 +213,23 @@ HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
 LPVOID WINAPI
 SHLockSharedEx(HANDLE hShared, DWORD dwProcId, BOOL bWriteAccess)
 {
-    HANDLE hDup;
-    LPVOID pMapped;
-    DWORD dwAccess;
+  HANDLE hDup;
+  LPVOID pMapped;
+  DWORD dwAccess;
 
-    TRACE("(%p %d %d)\n", hShared, dwProcId, bWriteAccess);
+  TRACE("(%p %d %d)\n", hShared, dwProcId, bWriteAccess);
 
-    /* Get handle to shared memory for current process */
-    hDup = SHMapHandle(hShared, dwProcId, GetCurrentProcessId(), FILE_MAP_ALL_ACCESS, 0);
-    if (!hDup)
-        return NULL;
+  /* Get handle to shared memory for current process */
+  hDup = SHMapHandle(hShared, dwProcId, GetCurrentProcessId(), FILE_MAP_ALL_ACCESS, 0);
 
-    /* Get View */
-    dwAccess = (FILE_MAP_READ | (bWriteAccess ? FILE_MAP_WRITE : 0));
-    pMapped = MapViewOfFile(hDup, dwAccess, 0, 0, 0);
-    CloseHandle(hDup);
+  /* Get View */
+  dwAccess = (FILE_MAP_READ | (bWriteAccess ? FILE_MAP_WRITE : 0));
+  pMapped = MapViewOfFile(hDup, dwAccess, 0, 0, 0);
+  CloseHandle(hDup);
 
-    if (pMapped)
-        return (LPBYTE)pMapped + sizeof(DWORD); /* Hide size */
-    return NULL;
+  if (pMapped)
+    return (char *) pMapped + sizeof(DWORD); /* Hide size */
+  return NULL;
 }
 
 #endif
