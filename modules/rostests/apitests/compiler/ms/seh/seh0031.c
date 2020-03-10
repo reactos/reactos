@@ -31,6 +31,7 @@ int main() {
        */
       Counter += 2;
     }
+    endtry
     /* only add 3 if INdex1 is odd */
     Counter += 3;
   }

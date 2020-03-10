@@ -26,8 +26,10 @@ int main() {
           Counter += 5;
         }
       }
+      endtry
     }
   }
+  endtry
 
   if (Counter != 9) {
     printf("TEST 57 FAILED, Counter = %d\n", Counter);

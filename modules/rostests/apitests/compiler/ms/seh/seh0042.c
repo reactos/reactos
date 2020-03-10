@@ -28,8 +28,14 @@ int main() {
       finally {
         /* set counter = 2 */
         Counter += 2;
+#ifdef _MSC_VER
         break;
+#endif
       }
+      endtry
+#ifndef _MSC_VER
+      break;
+#endif
       /* never gets here */
       Counter += 4;
     }
@@ -37,6 +43,7 @@ int main() {
       /* adds 5 to counter while unwinding from "break" */
       Counter += 5;
     }
+    endtry
     Counter += 6;
   }
 

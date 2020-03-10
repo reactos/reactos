@@ -31,8 +31,14 @@ int main() {
     finally {
       /* ste counter to 3 and rbeak out of switch */
       Counter += 2;
+#ifdef _MSC_VER
       break;
+#endif
     }
+    endtry
+#ifndef _MSC_VER
+    break;
+#endif
     /* never gets here due to break */
     Counter += 4;
   }

@@ -25,7 +25,9 @@ int main() {
                      0, ((LPDWORD)0));
     }
     except(Counter - 3) { Counter += 5; }
+    endtry
   }
+  endtry
 
   if (Counter != 9) {
     printf("TEST 58 FAILED.  Counter = %d\n\r", Counter);

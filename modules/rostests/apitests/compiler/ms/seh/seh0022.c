@@ -18,10 +18,12 @@ int main() {
   try {
     if (_setjmp(JumpBuffer) == 0) {
       /* set counter = 1 */
-      (volatile LONG) Counter += 1;
+      //(volatile LONG) Counter += 1;
+      *(volatile LONG*)&Counter += 1;
     } else {
       /* set counter = 4 */
-      (volatile LONG) Counter += 1;
+      //(volatile LONG) Counter += 1;
+      *(volatile LONG*)&Counter += 1;
     }
   }
   finally {
@@ -29,10 +31,12 @@ int main() {
     Counter += 1;
     if (Counter == 2) {
       /* set counter = 3 */
-      (volatile LONG) Counter += 1;
+      //(volatile LONG) Counter += 1;
+      *(volatile LONG*)&Counter += 1;
       longjmp(JumpBuffer, 1);
     }
   }
+  endtry
 
   if (Counter != 5) {
     printf("TEST 22 FAILED. Counter = %d\n\r", Counter);

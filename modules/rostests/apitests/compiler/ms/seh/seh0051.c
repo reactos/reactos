@@ -28,6 +28,7 @@ int main() {
       Counter += 5;
     }
   }
+  endtry
 
   if (Counter != 8) {
     printf("test 51 failed.  Counter = %d\n", Counter);

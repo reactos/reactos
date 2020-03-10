@@ -37,7 +37,9 @@ int main() {
       }
       Counter += 1;
     }
+    endtry
   }
+  endtry
 
   if (Counter != 2) {
     printf("TEST 12 FAILED. Counter = %d\n\r", Counter);

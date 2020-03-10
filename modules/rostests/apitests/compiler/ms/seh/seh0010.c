@@ -29,6 +29,7 @@ void tfRaiseExcpt(DWORD Status, PLONG Counter) {
       *Counter = 100;
     }
   }
+  endtry
   return;
 }
 
@@ -45,6 +46,7 @@ int main() {
   {
     Counter -= 1;
   }
+  endtry
 
   if (Counter != 98) {
     printf("TEST 10 FAILED. Counter = %d\n\r", Counter);

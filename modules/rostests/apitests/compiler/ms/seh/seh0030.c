@@ -25,6 +25,7 @@ int main() {
       }
     }
     except(1) { Counter += 40; }
+    endtry
     /* add 2 to counter when Index1 is odd */
     Counter += 2;
   }

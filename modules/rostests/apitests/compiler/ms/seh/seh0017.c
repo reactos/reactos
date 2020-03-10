@@ -22,8 +22,12 @@ int main() {
     finally {
       /* set counter = 2 */
       Counter += 1;
+#ifdef _MSC_VER
       goto t12; /* can't jump into a try/finally */
+#endif
     }
+    endtry
+
   t12:
     ;
   }
@@ -31,6 +35,7 @@ int main() {
     /* set counter = 3 */
     Counter += 1;
   }
+  endtry
 
   if (Counter != 3) {
     printf("TEST 17 FAILED. Counter = %d\n\r", Counter);

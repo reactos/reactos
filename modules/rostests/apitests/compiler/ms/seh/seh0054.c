@@ -30,6 +30,7 @@ int main() {
         Counter += 5;
       }
     }
+    endtry
 
     if (Echo(Counter) == Counter) {
       Counter += 3;
@@ -44,6 +45,7 @@ int main() {
       Counter += 5;
     }
   }
+  endtry
 
   if (Counter != 16) {
     printf("TEST 54 FAILED, Counter = %d\n", Counter);

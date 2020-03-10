@@ -28,8 +28,14 @@ int main() {
       /* set counter to 2 */
       Counter += 2;
       /* end loop */
+#ifdef _MSC_VER
       break;
+#endif
     }
+    endtry
+#ifndef _MSC_VER
+    break;
+#endif
     Counter += 4;
   }
 

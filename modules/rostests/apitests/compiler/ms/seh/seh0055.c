@@ -31,6 +31,7 @@ int main() {
         leave;
       }
     }
+    endtry
 
     Counter += 100;
   }
@@ -39,6 +40,7 @@ int main() {
       Counter += 5;
     }
   }
+  endtry
 
   if (Counter != 13) {
     printf("TEST 55 FAILED, Counter = %d\n", Counter);

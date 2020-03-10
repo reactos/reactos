@@ -37,6 +37,7 @@ int main() {
        */
       Counter += 2;
     }
+    endtry
     Counter += 3;
   }
 

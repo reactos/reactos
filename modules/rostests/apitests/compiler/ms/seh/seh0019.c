@@ -17,13 +17,20 @@ void fret(PLONG Counter) {
     finally {
       /* set counter = 3 */
       *Counter += 1;
+#ifdef _MSC_VER
       return;
+#endif
     }
+    endtry
+#ifndef _MSC_VER
+    return;
+#endif
   }
   finally {
     /* set counter = 4 */
     *Counter += 1;
   }
+  endtry
   return;
 }
 
@@ -41,6 +48,7 @@ int main() {
     /* set counter = 5 */
     Counter += 1;
   }
+  endtry
 
   if (Counter != 5) {
     printf("TEST 19 FAILED. Counter = %d\n\r", Counter);

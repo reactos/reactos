@@ -24,6 +24,7 @@ int main() {
       }
     }
     except(1) { Counter += 40; }
+    endtry
     /* only add when Index is 0 */
     Counter += 2;
   }

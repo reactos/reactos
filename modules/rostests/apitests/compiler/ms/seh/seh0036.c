@@ -26,6 +26,7 @@ int main() {
         /* always add 2 */
         Counter += 2;
       }
+      endtry
       /* always add 4 */
       Counter += 4;
     }
@@ -34,6 +35,7 @@ int main() {
       Counter += 5;
       continue;
     }
+    endtry
     /* never get here due to continue */
     Counter += 6;
   }

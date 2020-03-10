@@ -25,10 +25,12 @@ int main() {
         }
       }
       except(1) { Counter += 10; }
+      endtry
       /* add 2 to counter if index1 is odd */
       Counter += 2;
     }
     except(1) { Counter += 20; }
+    endtry
     /* add 3 to counter if index1 is odd */
     Counter += 3;
   }

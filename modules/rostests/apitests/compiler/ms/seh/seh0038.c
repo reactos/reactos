@@ -28,6 +28,7 @@ int main() {
       /* add 2 to counter when Index1 is 0 and 1 */
       Counter += 2;
     }
+    endtry
     /* add 3 to counter when Index1 is 0 */
     Counter += 3;
   }

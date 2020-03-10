@@ -25,11 +25,11 @@ int main() {
           Counter += 1;
         }
       }
-      except(1) { Counter += 10; }
+      except(1) { Counter += 10; } endtry
       /* only add 2 if index1 is 0 */
       Counter += 2;
     }
-    except(1) { Counter += 20; }
+    except(1) { Counter += 20; } endtry
     /* only add 3 if index1 is 0 */
     Counter += 3;
   }

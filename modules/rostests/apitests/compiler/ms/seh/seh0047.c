@@ -35,12 +35,14 @@ int main() {
         /* set counter to 2 after "break" */
         Counter += 2;
       }
+      endtry
       Counter += 3;
     }
     finally {
       /* set counter to 4 after break in nested try/finally */
       Counter += 4;
     }
+    endtry
     Counter += 5;
   }
 

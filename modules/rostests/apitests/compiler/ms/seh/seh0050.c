@@ -27,13 +27,19 @@ int main() {
           Counter += 1;
         }
       }
-      finally { Counter += 2; }
+      finally { Counter += 2; } endtry
       Counter += 4;
     }
     finally {
       Counter += 5;
+#ifdef _MSC_VER
       break;
+#endif
     }
+    endtry
+#ifndef _MSC_VER
+    break;
+#endif
     Counter += 6;
   }
 

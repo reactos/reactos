@@ -41,6 +41,7 @@ void except1(PLONG Counter) {
     RaiseException(EXCEPTION_INT_OVERFLOW, 0, /*no flags*/ 0, 0);
   }
   except(except3(GetExceptionInformation(), Counter)) { *Counter += 7; }
+  endtry
   /* set counter = 59 */
   *Counter += 9;
   return;
@@ -76,8 +77,10 @@ int main() {
       /* set counter = 55 */
       Counter += 2;
     }
+    endtry
   }
   except(1) { Counter += 3; }
+  endtry
 
   if (Counter != 55) {
     printf("TEST 27 FAILED. Counter = %d\n\r", Counter);

@@ -34,6 +34,7 @@ int main() {
         Counter += 1;
       }
     }
+    endtry
   }
   except(Counter)
   /* counter is positive == EXECUTE_HANDLER */
@@ -44,6 +45,7 @@ int main() {
       Counter += 1;
     }
   }
+  endtry
 
   if (Counter != 3) {
     printf("TEST 7 FAILED. Counter = %d\n\r", Counter);

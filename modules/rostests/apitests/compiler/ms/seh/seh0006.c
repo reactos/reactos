@@ -30,6 +30,7 @@ int main() {
         Counter += 1;
       }
     }
+    endtry
   }
   except(Counter)
   /* counter should equal "EXECUTE HANDLER" */
@@ -43,6 +44,7 @@ int main() {
       Counter += 1;
     }
   }
+  endtry
 
   if (Counter != 3) {
     printf("TEST 6 FAILED. Counter = %d\n\r", Counter);

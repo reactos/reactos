@@ -26,6 +26,7 @@ int main() {
         /* set counter to 2 */
         Counter += 2;
       }
+      endtry
       /* set counter = 6 */
       Counter += 4;
     }
@@ -33,8 +34,14 @@ int main() {
       /* set counter = 11 */
       Counter += 5;
       /* end loop */
+#ifdef _MSC_VER
       break;
+#endif
     }
+    endtry
+#ifndef _MSC_VER
+    break;
+#endif
     /* never gets here due to "break" */
     Counter += 6;
   }

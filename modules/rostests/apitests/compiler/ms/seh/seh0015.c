@@ -21,13 +21,20 @@ int main() {
     finally {
       /* set counter = 2 */
       Counter += 1;
+#ifdef _MSC_VER
       goto t10;
+#endif
     }
+    endtry
+#ifndef _MSC_VER
+    goto t10;
+#endif
   }
   finally {
     /* set counter = 3 */
     Counter += 1;
   }
+  endtry
 
 t10:
   ;

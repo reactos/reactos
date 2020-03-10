@@ -17,11 +17,13 @@ int main() {
 
   if (_setjmp(JumpBuffer) == 0) {
     /* set counter = 1 */
-    (volatile LONG) Counter += 1;
+    //(volatile LONG) Counter += 1;
+    *(volatile LONG*)&Counter += 1;
     longjmp(JumpBuffer, 1);
   } else {
     /* set counter = 2 */
-    (volatile LONG) Counter += 1;
+    //(volatile LONG) Counter += 1;
+    *(volatile LONG*)&Counter += 1;
   }
 
   if (Counter != 2) {

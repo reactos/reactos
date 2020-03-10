@@ -31,8 +31,14 @@ int main() {
       finally {
         /* set counter to 3 */
         Counter += 2;
+#ifdef _MSC_VER
         break;
+#endif
       }
+      endtry
+#ifndef _MSC_VER
+        break;
+#endif
       /* never get here due to break */
       Counter += 4;
     }
@@ -40,6 +46,7 @@ int main() {
       /* set counter to 8 */
       Counter += 5;
     }
+    endtry
     /* never get hre due to break */
     Counter += 6;
   }

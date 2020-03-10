@@ -34,6 +34,7 @@ int main() {
         /* add 2 to counter always */
         Counter += 2;
       }
+      endtry
       /* addd 3 to connter if Index1 is odd */
       Counter += 3;
     }
@@ -41,6 +42,7 @@ int main() {
       /* add 4 to counter always */
       Counter += 4;
     }
+    endtry
     /* add 5 to counter if index1 is odd */
     Counter += 5;
   }

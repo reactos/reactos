@@ -32,6 +32,7 @@ int main() {
          */
         Counter += 2;
       }
+      endtry
       /* add 1 to Counter if Index is 0 */
       Counter += 3;
     }
@@ -42,6 +43,7 @@ int main() {
        */
       Counter += 4;
     }
+    endtry
     /* add 1 to Counter if Index is 0 */
     Counter += 5;
   }

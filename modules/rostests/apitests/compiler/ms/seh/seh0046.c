@@ -34,6 +34,7 @@ int main() {
         /* no exception occurs, never gets here */
         Counter += 10;
       }
+      endtry
       /* "break" keeps you from getting here */
       Counter += 2;
     }
@@ -41,6 +42,7 @@ int main() {
       /* no exception occurs, never gets here */
       Counter += 20;
     }
+    endtry
     /* "break" keeps you from getting here */
     Counter += 3;
   }

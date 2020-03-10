@@ -30,6 +30,7 @@ int main() {
       Counter += 5;
     }
   }
+  endtry
 
   if (Counter != 8) {
     printf("TEST 52 FAILED, Counter = %d\n", Counter);

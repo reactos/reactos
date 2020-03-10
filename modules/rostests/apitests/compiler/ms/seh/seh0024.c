@@ -37,35 +37,45 @@ int main() {
         try {
           try {
             /* set counter = 1 */
-            (volatile LONG) Counter += 1;
+            //(volatile LONG) Counter += 1;
+            *(volatile LONG*)&Counter += 1;
             RaiseException(EXCEPTION_INT_OVERFLOW, 0, /*no flags*/ 0, 0);
           }
           finally {
             /* set counter = 2 */
-            (volatile LONG) Counter += 1;
+            //(volatile LONG) Counter += 1;
+            *(volatile LONG*)&Counter += 1;
           }
+          endtry
         }
         finally {
           /* set counter = 3 */
-          (volatile LONG) Counter += 1;
+          //(volatile LONG) Counter += 1;
+          *(volatile LONG*)&Counter += 1;
           /* end unwinding wiht long jump */
           longjmp(JumpBuffer, 1);
         }
+        endtry
       }
       finally {
         /* never gets here due to longjump ending unwinding */
-        (volatile LONG) Counter += 1;
+        //(volatile LONG) Counter += 1;
+        *(volatile LONG*)&Counter += 1;
       }
+      endtry
     }
     except(1)
     /* handle exception after unwinding */
     {
       /* sets counter = 4 */
-      (volatile LONG) Counter += 1;
+      //(volatile LONG) Counter += 1;
+      *(volatile LONG*)&Counter += 1;
     }
+    endtry
   } else {
     /* sets counter = 5 */
-    (volatile LONG) Counter += 1;
+    //(volatile LONG) Counter += 1;
+    *(volatile LONG*)&Counter += 1;
   }
 
   if (Counter != 5) {

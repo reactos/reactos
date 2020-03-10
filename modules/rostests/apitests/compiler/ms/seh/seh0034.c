@@ -32,6 +32,7 @@ int main() {
       Counter += 2;
       continue;
     }
+    endtry
     /* never gets executed due to continue in finally */
     Counter += 4;
   }

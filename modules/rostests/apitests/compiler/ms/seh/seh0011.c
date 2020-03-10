@@ -28,7 +28,7 @@ void tfAccessViolation(PLONG BlackHole, PLONG BadAddress, PLONG Counter) {
     } else {
       *Counter = 100;
     }
-  }
+  } endtry
   return;
 }
 
@@ -53,6 +53,7 @@ int main() {
   {
     Counter -= 1;
   }
+  endtry
 
   if (Counter != 98) {
     printf("TEST 11 FAILED. Counter = %d\n\r", Counter);

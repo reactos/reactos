@@ -25,11 +25,13 @@ void eret(DWORD Status, PLONG Counter) {
       *Counter += 1;
       return;
     }
+    endtry
   }
   finally {
     /* set counter = 3 */
     *Counter += 1;
   }
+  endtry
 
   return;
 }
@@ -49,6 +51,7 @@ int main() {
     /* set counter = 4 */
     Counter += 1;
   }
+  endtry
 
   if (Counter != 4) {
     printf("TEST 18 FAILED. Counter = %d\n\r", Counter);

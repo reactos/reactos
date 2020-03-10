@@ -28,12 +28,14 @@ int main() {
       Counter += 1;
       goto t9; /* executes finally before goto */
     }
+    endtry
   }
   finally
   /* should set counter to 2 */
   {
     Counter += 1;
   }
+  endtry
 
 t9:
   ;

@@ -20,6 +20,7 @@ void dojump(jmp_buf JumpBuffer, PLONG Counter) {
       /* set counter = 3 */
       (*Counter) += 1;
     }
+    endtry
   }
   finally {
     /* set counter = 4 */
@@ -27,6 +28,7 @@ void dojump(jmp_buf JumpBuffer, PLONG Counter) {
     /* end unwinding with longjump */
     longjmp(JumpBuffer, 1);
   }
+  endtry
 }
 
 int main() {
@@ -40,18 +42,23 @@ int main() {
       try {
         try {
           /* set counter = 1 */
-          (volatile LONG) Counter += 1;
+          //(volatile LONG) Counter += 1;
+          *(volatile LONG*)&Counter += 1;
           dojump(JumpBuffer, &Counter);
         }
         finally {
           /* set counter = 5 */
-          (volatile LONG) Counter += 1;
+          //(volatile LONG) Counter += 1;
+          *(volatile LONG*)&Counter += 1;
         }
+        endtry
       }
       finally {
         /* set counter  = 6 */
-        (volatile LONG) Counter += 1;
+        //(volatile LONG) Counter += 1;
+        *(volatile LONG*)&Counter += 1;
       }
+      endtry
     }
     except(1)
     /*
@@ -59,11 +66,14 @@ int main() {
      * after unwinding
      */
     {
-      (volatile LONG) Counter += 1;
+      //(volatile LONG) Counter += 1;
+      *(volatile LONG*)&Counter += 1;
     }
+    endtry
   } else {
     /* set counter = 7 */
-    (volatile LONG) Counter += 1;
+    //(volatile LONG) Counter += 1;
+    *(volatile LONG*)&Counter += 1;
   }
 
   if (Counter != 7) {

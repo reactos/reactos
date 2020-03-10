@@ -19,23 +19,25 @@ int main() {
     try {
       try {
         /* set counter = 1 */
-        (volatile LONG) Counter += 1;
+        *(volatile LONG*)&Counter += 1;
         RaiseException(EXCEPTION_INT_OVERFLOW, 0, /*no flags*/ 0, 0);
       }
       finally {
         /* set counter = 2 */
-        (volatile LONG) Counter += 1;
+        *(volatile LONG*)&Counter += 1;
         longjmp(JumpBuffer, 1);
       }
+      endtry
     }
     except(1)
     /* should never get here */
     {
-      (volatile LONG) Counter += 1;
+      *(volatile LONG*)&Counter += 1;
     }
+    endtry
   } else {
     /* set counter = 3 */
-    (volatile LONG) Counter += 1;
+    *(volatile LONG*)&Counter += 1;
   }
 
   if (Counter != 3) {

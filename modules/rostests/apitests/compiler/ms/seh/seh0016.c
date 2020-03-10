@@ -30,11 +30,13 @@ int main() {
         Counter += 1;
         goto t11; /* can't jump into the body of a try/finally */
       }
+      endtry
     }
     finally {
       /* set counter = 3 */
       Counter += 1;
     }
+    endtry
 
   t11:
     ;
@@ -43,6 +45,7 @@ int main() {
     /* set counter = 4 */
     Counter += 1;
   }
+  endtry
 
   if (Counter != 4) {
     printf("TEST 16 FAILED. Counter = %d\n\r", Counter);

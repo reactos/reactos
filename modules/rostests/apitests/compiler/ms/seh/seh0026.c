@@ -21,12 +21,14 @@ void dojump(jmp_buf JumpBuffer, PLONG Counter) {
       /* set counter = 2 */
       *Counter += 1;
     }
+    endtry
   }
   finally {
     /* set counter = 3 */
     *Counter += 1;
     longjmp(JumpBuffer, 1);
   }
+  endtry
 }
 
 int main() {
@@ -40,26 +42,30 @@ int main() {
       try {
         try {
           try {
-            (volatile LONG) Counter += 1;
+            *(volatile LONG*)&Counter += 1;
             dojump(JumpBuffer, &Counter);
           }
-          finally { (volatile LONG) Counter += 1; }
+          finally { *(volatile LONG*)&Counter += 1; }
+          endtry
         }
         finally {
-          (volatile LONG) Counter += 1;
+          *(volatile LONG*)&Counter += 1;
           longjmp(JumpBuffer, 1);
         }
+        endtry
       }
-      finally { (volatile LONG) Counter += 1; }
+      finally { *(volatile LONG*)&Counter += 1; }
+      endtry
     }
     except(1)
     /* EXECUTE HANDLER after unwinding */
     {
-      (volatile LONG) Counter += 1;
+      *(volatile LONG*)&Counter += 1;
     }
+    endtry
   } else {
     /* set Counter  = 4 */ //
-    (volatile LONG) Counter += 1;
+    *(volatile LONG*)&Counter += 1;
   }
 
   if (Counter != 8) {

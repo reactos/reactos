@@ -38,6 +38,7 @@ int main() {
     {
       Counter += 40;
     }
+    endtry
     Counter += 2;
     break;
   }

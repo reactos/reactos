@@ -44,6 +44,7 @@ int main() {
               : ((ExceptionCode == STATUS_ACCESS_VIOLATION) ? 1 : 0))) {
     Counter += 1;
   }
+  endtry
 
   if (Counter != 2) {
     printf("TEST 29 FAILED. Counter = %d\n\r", Counter);
