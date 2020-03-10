@@ -199,25 +199,27 @@ HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
  */
 
 LPVOID WINAPI
-SHLockSharedEx(HANDLE hShare, DWORD dwOwnerPID, BOOL bWriteAccess)
+SHLockSharedEx(HANDLE hShared, DWORD dwProcId, BOOL bWriteAccess)
 {
-    DWORD dwUserPID, dwAccess;
     HANDLE hDup;
-    LPVOID pView;
+    LPVOID pMapped;
+    DWORD dwAccess;
 
-    dwUserPID = GetCurrentProcessId();
-    hDup = SHMapHandle(hShare, dwOwnerPID, dwUserPID, FILE_MAP_ALL_ACCESS, 0);
+    TRACE("(%p %d %d)\n", hShared, dwProcId, bWriteAccess);
+
+    hDup = SHMapHandle(hShared, dwProcId, GetCurrentProcessId(), FILE_MAP_ALL_ACCESS, 0);
     if (!hDup)
         return NULL;
 
     dwAccess = (FILE_MAP_READ | (bWriteAccess ? FILE_MAP_WRITE : 0));
-    pView = MapViewOfFile(hDup, dwAccess, 0, 0, 0);
+    pMapped = MapViewOfFile(hDup, dwAccess, 0, 0, 0);
     CloseHandle(hDup);
 
-    if (pView)
-        return (LPBYTE)pView + sizeof(DWORD);
+    if (pMapped)
+        return (LPBYTE)pMapped + sizeof(DWORD);
     return NULL;
 }
+
 #endif
 /*************************************************************************
  * @ [SHLWAPI.8]
