@@ -37,6 +37,8 @@
 #include <windef.h>
 #include <winnt.h>
 
+#define ASSERT(exp) if (!(exp)) __int2c();
+
 #include "pseh3.h"
 #include "pseh3_asmdef.h"
 
@@ -66,10 +68,49 @@ __attribute__((regparm(1)))
 _SEH3$_Unregister(
     volatile SEH3$_REGISTRATION_FRAME *Frame)
 {
-    if (Frame->Handler)
-        _SEH3$_UnregisterFrame(Frame);
+    volatile SEH3$_REGISTRATION_FRAME *CurrentFrame;
+
+    /* Check if the frame has a handler (then it's the registered frame) */
+    if (Frame->Handler != NULL)
+    {
+        /* There shouldn't be any more nested try-level frames */
+        ASSERT(Frame->EndOfChain == Frame);
+
+        /* During unwinding on Windows ExecuteHandler2 installs it's own EH frame,
+           so there can be one or even multiple frames before our own one and we
+           need to search for the link that points to our head frame. */
+        CurrentFrame = (SEH3$_REGISTRATION_FRAME*)__readfsdword(0);
+        if (Frame == CurrentFrame)
+        {
+            /* The target frame is the first installed frame, remove it */
+            __writefsdword(0, (ULONG)Frame->Next);
+            return;
+        }
+
+        /* Loop to find the frame that links the target frame */
+        while (CurrentFrame->Next != Frame)
+        {
+            CurrentFrame = CurrentFrame->Next;
+        }
+
+        /* Remove the frame from the linked list */
+        CurrentFrame->Next = Frame->Next;
+    }
     else
-        _SEH3$_UnregisterTryLevel(Frame);
+    {
+        /* Search for the head frame */
+        CurrentFrame = Frame->Next;
+        while (CurrentFrame->Handler == NULL)
+        {
+            CurrentFrame = CurrentFrame->Next;
+        }
+
+        /* Make sure the head frame points to our frame */
+        ASSERT(CurrentFrame->EndOfChain == Frame);
+
+        /* Remove this frame from the internal linked list */
+        CurrentFrame->EndOfChain = Frame->Next;
+    }
 }
 
 static inline
@@ -146,10 +187,7 @@ __attribute__((regparm(1)))
 _SEH3$_AutoCleanup(
     volatile SEH3$_REGISTRATION_FRAME *Frame)
 {
-    if (Frame->Handler)
-        _SEH3$_UnregisterFrame(Frame);
-    else
-        _SEH3$_UnregisterTryLevel(Frame);
+    _SEH3$_Unregister(Frame);
 
     /* Check for __finally frames */
     if (Frame->ScopeTable->Target == NULL)
@@ -166,12 +204,6 @@ _SEH3$_GetFilterResult(
 {
     PVOID Filter = Record->ScopeTable->Filter;
     LONG Result;
-
-    /* Check for __finally frames */
-    if (Record->ScopeTable->Target == NULL)
-    {
-        return EXCEPTION_CONTINUE_SEARCH;
-    }
 
     /* Check if we have a constant filter */
     if (((ULONG)Filter & 0xFFFFFF00) == 0)
@@ -278,7 +310,7 @@ _SEH3$_except_handler(
     ExceptionPointers.ContextRecord = ContextRecord;
 
     /* Check if this is an unwind */
-    if (ExceptionRecord->ExceptionFlags & EXCEPTION_UNWINDING)
+    if (IS_UNWINDING(ExceptionRecord->ExceptionFlags))
     {
         /* Unwind all local frames */
         TargetFrame = EstablisherFrame->Next;
