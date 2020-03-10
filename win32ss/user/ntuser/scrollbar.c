@@ -540,7 +540,6 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
          OldPos = Info->nPos;
          Info->nPos = lpsi->nPos;
          pSBData->pos = lpsi->nPos;
-         bChangeParams = TRUE;
       }
    }
 
@@ -614,10 +613,14 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
       else /* Show and enable scroll-bar only if no page only changed. */
       if (lpsi->fMask != SIF_PAGE)
       {
-         new_flags = ESB_ENABLE_BOTH;
          if ((nBar != SB_CTL) && bChangeParams)
          {
+            new_flags = ESB_ENABLE_BOTH;
             action |= SA_SSI_SHOW;
+         }
+         else if (nBar == SB_CTL)
+         {
+            new_flags = ESB_ENABLE_BOTH;
          }
       }
 
