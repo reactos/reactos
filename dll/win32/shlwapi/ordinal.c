@@ -193,6 +193,34 @@ HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
   return hRet;
 }
 
+#ifdef __REACTOS__
+/*************************************************************************
+ * @ [SHLWAPI.510]
+ */
+
+LPVOID WINAPI
+SHLockSharedEx(HANDLE hShare, DWORD dwOwnerPID, BOOL bWriteAccess)
+{
+    DWORD dwUserPID, dwAccess;
+    HANDLE hMap;
+    LPVOID pView;
+
+    dwUserPID = GetCurrentProcessId();
+    hMap = SHMapHandle(hShare, dwOwnerPID, dwUserPID, FILE_MAP_ALL_ACCESS, 0);
+    if (!hMap)
+        return NULL;
+
+    dwAccess = (FILE_MAP_READ | (bWriteAccess ? FILE_MAP_WRITE : 0));
+    pView = MapViewOfFile(hMap, dwAccess, 0, 0, 0);
+
+    CloseHandle(hMap);
+
+    if (pView)
+        return (LPBYTE)pView + sizeof(DWORD);
+
+    return NULL;
+}
+#endif
 /*************************************************************************
  * @ [SHLWAPI.8]
  *
@@ -209,6 +237,9 @@ HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
  */
 PVOID WINAPI SHLockShared(HANDLE hShared, DWORD dwProcId)
 {
+#ifdef __REACTOS__
+    return SHLockSharedEx(hShared, dwProcId, TRUE);
+#else
   HANDLE hDup;
   LPVOID pMapped;
 
@@ -224,6 +255,7 @@ PVOID WINAPI SHLockShared(HANDLE hShared, DWORD dwProcId)
   if (pMapped)
     return (char *) pMapped + sizeof(DWORD); /* Hide size */
   return NULL;
+#endif
 }
 
 /*************************************************************************
