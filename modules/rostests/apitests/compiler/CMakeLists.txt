@@ -1,21 +1,12 @@
 
-add_executable(pseh2_test psehtest.c psehtest2.c)
-target_link_libraries(pseh2_test wine ${PSEH_LIB})
-set_module_type(pseh2_test win32cui)
-add_importlibs(pseh2_test msvcrt kernel32 ntdll)
-add_rostests_file(TARGET pseh2_test)
+list(APPEND SOURCE
+    pseh.c
+    pseh_cpp.cpp
+    psehtest2.c
+    testlist.c)
 
-if(NOT MSVC)
-    target_compile_options(pseh2_test PRIVATE "-Wno-format")
-endif()
-
-
-add_executable(pseh2_test_cpp psehtest_cpp.cpp psehtest2.c)
-target_link_libraries(pseh2_test_cpp wine ${PSEH_LIB})
-set_module_type(pseh2_test_cpp win32cui)
-add_importlibs(pseh2_test_cpp msvcrt kernel32 ntdll)
-add_rostests_file(TARGET pseh2_test_cpp)
-
-if(NOT MSVC)
-    target_compile_options(pseh2_test_cpp PRIVATE "-Wno-format")
-endif()
+add_executable(compiler_apitest ${SOURCE})
+target_link_libraries(compiler_apitest wine ${PSEH_LIB})
+set_module_type(compiler_apitest win32cui)
+add_importlibs(compiler_apitest msvcrt kernel32 ntdll)
+add_rostests_file(TARGET compiler_apitest)
