@@ -196,6 +196,19 @@ HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
 #ifdef __REACTOS__
 /*************************************************************************
  * @ [SHLWAPI.510]
+ *
+ * Get a pointer to a block of shared memory from a shared memory handle,
+ * with specified access rights.
+ *
+ * PARAMS
+ * hShared  [I] Shared memory handle
+ * dwProcId [I] ID of process owning hShared
+ * bWriteAccess [I] TRUE to get a writable block
+ *
+ * RETURNS
+ * Success: A pointer to the shared memory
+ * Failure: NULL
+ *
  */
 
 LPVOID WINAPI
