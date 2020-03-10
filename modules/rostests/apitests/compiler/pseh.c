@@ -26,7 +26,6 @@
 extern "C" {
 #endif
 
-#define STANDALONE
 #include <wine/test.h>
 
 extern void no_op(void);
@@ -2760,7 +2759,7 @@ struct subtest
 	int (* func)(void);
 };
 
-void testsuite_syntax(void)
+START_TEST(pseh)
 {
 	const struct subtest testsuite[] =
 	{
@@ -2892,10 +2891,5 @@ void testsuite_syntax(void)
 	for(i = 0; i < sizeof(testsuite) / sizeof(testsuite[0]); ++ i)
 		ok(call_test(testsuite[i].func), "%s failed\n", testsuite[i].name);
 }
-
-const struct test winetest_testlist[] = {
-	{ "pseh2_syntax", testsuite_syntax },
-	{ 0, 0 }
-};
 
 /* EOF */
