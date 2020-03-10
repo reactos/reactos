@@ -122,6 +122,12 @@ if(ARCH STREQUAL "i386")
         arch/i386/i386idt.c
         disk/scsiport.c)
 
+    if(SARCH STREQUAL "pc98" OR SARCH STREQUAL "xbox")
+        # These machine types require built-in bitmap font
+        list(APPEND FREELDR_ARC_SOURCE
+            arch/vgafont.c)
+    endif()
+
     if(SARCH STREQUAL "xbox")
         list(APPEND FREELDR_ARC_SOURCE
             # FIXME: Abstract things better so we don't need to include /pc/* here
@@ -134,7 +140,6 @@ if(ARCH STREQUAL "i386")
             arch/i386/xbox/machxbox.c
             arch/i386/xbox/xboxcons.c
             arch/i386/xbox/xboxdisk.c
-            arch/i386/xbox/xboxfont.c
             arch/i386/xbox/xboxi2c.c
             arch/i386/xbox/xboxmem.c
             arch/i386/xbox/xboxrtc.c
@@ -149,8 +154,7 @@ if(ARCH STREQUAL "i386")
             arch/i386/pc98/pc98hw.c
             arch/i386/pc98/pc98mem.c
             arch/i386/pc98/pc98rtc.c
-            arch/i386/pc98/pc98video.c
-            arch/i386/xbox/xboxfont.c)
+            arch/i386/pc98/pc98video.c)
     else()
         list(APPEND FREELDR_ARC_SOURCE
             arch/i386/pc/machpc.c
