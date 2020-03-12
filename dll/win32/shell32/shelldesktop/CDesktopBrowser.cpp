@@ -2,6 +2,7 @@
  * Shell Desktop
  *
  * Copyright 2008 Thomas Bluemel
+ * Copyright 2020 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +26,7 @@
 #include <atlcoll.h>
 #endif
 
-
+#define WM_SHELL_GETNOTIFWND (WM_USER+25) /* 0x419 */
 
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
@@ -82,6 +83,7 @@ public:
     LRESULT OnOpenNewWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnGetNotifWnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 DECLARE_WND_CLASS_EX(szProgmanClassName, CS_DBLCLKS, COLOR_DESKTOP)
 
@@ -94,6 +96,7 @@ BEGIN_MSG_MAP(CBaseBar)
     MESSAGE_HANDLER(WM_EXPLORER_OPEN_NEW_WINDOW, OnOpenNewWindow)
     MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+    MESSAGE_HANDLER(WM_SHELL_GETNOTIFWND, OnGetNotifWnd)
 END_MSG_MAP()
 
 BEGIN_COM_MAP(CDesktopBrowser)
@@ -427,6 +430,11 @@ LRESULT CDesktopBrowser::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     ::SetFocus(m_hWndShellView);
     return 0;
+}
+
+LRESULT CDesktopBrowser::OnGetNotifWnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    return (LRESULT)::FindWindowExW(m_hWnd, NULL, L"WorkerW", NULL);
 }
 
 HRESULT CDesktopBrowser_CreateInstance(IShellDesktopTray *Tray, REFIID riid, void **ppv)
