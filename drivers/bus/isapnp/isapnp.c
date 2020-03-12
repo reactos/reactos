@@ -152,6 +152,7 @@ IsaAddDevice(
   FdoExt->Common.Self = Fdo;
   FdoExt->Common.IsFdo = TRUE;
   FdoExt->Common.State = dsStopped;
+  FdoExt->DriverObject = DriverObject;
   FdoExt->Pdo = PhysicalDeviceObject;
   FdoExt->Ldo = IoAttachDeviceToDeviceStack(Fdo,
                                             PhysicalDeviceObject);
@@ -186,7 +187,7 @@ IsaPnp(
   }
   else
   {
-     return IsaPdoPnp((PISAPNP_LOGICAL_DEVICE)DevExt,
+     return IsaPdoPnp((PISAPNP_PDO_EXTENSION)DevExt,
                       Irp,
                       IrpSp);
   }

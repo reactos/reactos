@@ -13,7 +13,7 @@
 NTSTATUS
 NTAPI
 IsaPdoQueryDeviceRelations(
-  IN PISAPNP_LOGICAL_DEVICE LogDev,
+  IN PISAPNP_PDO_EXTENSION PdoExt,
   IN PIRP Irp,
   IN PIO_STACK_LOCATION IrpSp)
 {
@@ -27,8 +27,8 @@ IsaPdoQueryDeviceRelations(
       return STATUS_INSUFFICIENT_RESOURCES;
 
   DeviceRelations->Count = 1;
-  DeviceRelations->Objects[0] = LogDev->Common.Self;
-  ObReferenceObject(LogDev->Common.Self);
+  DeviceRelations->Objects[0] = PdoExt->Common.Self;
+  ObReferenceObject(PdoExt->Common.Self);
 
   Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
 
@@ -38,11 +38,12 @@ IsaPdoQueryDeviceRelations(
 NTSTATUS
 NTAPI
 IsaPdoQueryCapabilities(
-  IN PISAPNP_LOGICAL_DEVICE LogDev,
+  IN PISAPNP_PDO_EXTENSION PdoExt,
   IN PIRP Irp,
   IN PIO_STACK_LOCATION IrpSp)
 {
   PDEVICE_CAPABILITIES DeviceCapabilities;
+  PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
 
   DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
   if (DeviceCapabilities->Version != 1)
@@ -57,10 +58,11 @@ IsaPdoQueryCapabilities(
 NTSTATUS
 NTAPI
 IsaPdoQueryId(
-  IN PISAPNP_LOGICAL_DEVICE LogDev,
+  IN PISAPNP_PDO_EXTENSION PdoExt,
   IN PIRP Irp,
   IN PIO_STACK_LOCATION IrpSp)
 {
+  PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
   WCHAR Temp[256];
   PWCHAR Buffer, End;
   ULONG Length;
@@ -140,7 +142,7 @@ IsaPdoQueryId(
 NTSTATUS
 NTAPI
 IsaPdoPnp(
-  IN PISAPNP_LOGICAL_DEVICE LogDev,
+  IN PISAPNP_PDO_EXTENSION PdoExt,
   IN PIRP Irp,
   IN PIO_STACK_LOCATION IrpSp)
 {
@@ -149,25 +151,25 @@ IsaPdoPnp(
   switch (IrpSp->MinorFunction)
   {
      case IRP_MN_START_DEVICE:
-       Status = IsaHwActivateDevice(LogDev);
+       Status = IsaHwActivateDevice(PdoExt->IsaPnpDevice);
 
        if (NT_SUCCESS(Status))
-           LogDev->Common.State = dsStarted;
+           PdoExt->Common.State = dsStarted;
        break;
 
      case IRP_MN_STOP_DEVICE:
-       Status = IsaHwDeactivateDevice(LogDev);
+       Status = IsaHwDeactivateDevice(PdoExt->IsaPnpDevice);
 
        if (NT_SUCCESS(Status))
-           LogDev->Common.State = dsStopped;
+           PdoExt->Common.State = dsStopped;
        break;
 
      case IRP_MN_QUERY_DEVICE_RELATIONS:
-       Status = IsaPdoQueryDeviceRelations(LogDev, Irp, IrpSp);
+       Status = IsaPdoQueryDeviceRelations(PdoExt, Irp, IrpSp);
        break;
 
      case IRP_MN_QUERY_CAPABILITIES:
-       Status = IsaPdoQueryCapabilities(LogDev, Irp, IrpSp);
+       Status = IsaPdoQueryCapabilities(PdoExt, Irp, IrpSp);
        break;
 
      case IRP_MN_QUERY_RESOURCES:
@@ -179,7 +181,7 @@ IsaPdoPnp(
        break;
 
      case IRP_MN_QUERY_ID:
-       Status = IsaPdoQueryId(LogDev, Irp, IrpSp);
+       Status = IsaPdoQueryId(PdoExt, Irp, IrpSp);
        break;
 
      default:

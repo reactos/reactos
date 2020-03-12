@@ -463,8 +463,6 @@ ProbeIsaPnpBus(PISAPNP_FDO_EXTENSION FdoExt)
   ISAPNP_LOGDEVID LogDevId;
   USHORT Csn;
   USHORT LogDev;
-  PDEVICE_OBJECT Pdo;
-  NTSTATUS Status;
 
   ASSERT(FdoExt->ReadDataPort);
 
@@ -472,25 +470,11 @@ ProbeIsaPnpBus(PISAPNP_FDO_EXTENSION FdoExt)
   {
     for (LogDev = 0; LogDev <= 0xFF; LogDev++)
     {
-      Status = IoCreateDevice(FdoExt->Common.Self->DriverObject,
-                              sizeof(ISAPNP_LOGICAL_DEVICE),
-                              NULL,
-                              FILE_DEVICE_CONTROLLER,
-                              FILE_DEVICE_SECURE_OPEN,
-                              FALSE,
-                              &Pdo);
-      if (!NT_SUCCESS(Status))
-          return Status;
-
-      Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
-
-      LogDevice = Pdo->DeviceExtension;
+      LogDevice = ExAllocatePool(NonPagedPool, sizeof(ISAPNP_LOGICAL_DEVICE));
+      if (!LogDevice)
+          return STATUS_NO_MEMORY;
 
       RtlZeroMemory(LogDevice, sizeof(ISAPNP_LOGICAL_DEVICE));
-
-      LogDevice->Common.Self = Pdo;
-      LogDevice->Common.IsFdo = FALSE;
-      LogDevice->Common.State = dsStopped;
 
       LogDevice->CSN = Csn;
       LogDevice->LDN = LogDev;
@@ -503,7 +487,7 @@ ProbeIsaPnpBus(PISAPNP_FDO_EXTENSION FdoExt)
 
       if (Identifier.VendorId & 0x80)
       {
-          IoDeleteDevice(LogDevice->Common.Self);
+          ExFreePool(LogDevice);
           return STATUS_SUCCESS;
       }
 
@@ -524,8 +508,6 @@ ProbeIsaPnpBus(PISAPNP_FDO_EXTENSION FdoExt)
                LogDevice->VendorId, LogDevice->ProdId, LogDevice->SerialNumber, LogDevice->IoAddr, LogDevice->IrqNo);
 
       WaitForKey();
-
-      Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
       InsertTailList(&FdoExt->DeviceListHead, &LogDevice->ListEntry);
       FdoExt->DeviceCount++;
