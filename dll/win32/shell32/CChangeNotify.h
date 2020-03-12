@@ -73,7 +73,7 @@ EXTERN_C void
 DoRemoveChangeNotifyClientsByProcess(DWORD dwPID);
 
 EXTERN_C void
-DoNotifyFreeSpace(LPCITEMIDLIST pidl1,LPCITEMIDLIST pidl2);
+DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 
 EXTERN_C HWND
 DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg);

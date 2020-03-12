@@ -10,7 +10,7 @@
 static CChangeNotify s_hwndNotif;
 
 EXTERN_C void
-DoNotifyFreeSpace(LPCITEMIDLIST pidl1,LPCITEMIDLIST pidl2)
+DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     WCHAR path1[MAX_PATH], path2[MAX_PATH];
 
@@ -108,7 +108,7 @@ OldDeliveryWorkerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     LRESULT ret = 0;
     PIDLIST_ABSOLUTE *ppidl = NULL;
     LONG lEvent;
-    OLDDELIVERYWORKER *pNotif = (OLDDELIVERYWORKER *)GetWindowLongW(hwnd,0);
+    OLDDELIVERYWORKER *pNotif = (OLDDELIVERYWORKER *)GetWindowLongW(hwnd, 0);
 
     switch (uMsg)
     {
@@ -118,9 +118,9 @@ OldDeliveryWorkerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 hLock = SHChangeNotification_Lock((HANDLE)wParam, lParam, &ppidl, &lEvent);
                 if (hLock)
                 {
-                    ret = SendMessageW(pNotif->hwnd, pNotif->uMsg, (WPARAM)*ppidl, lEvent);
+                    ret = SendMessageW(pNotif->hwnd, pNotif->uMsg, (WPARAM)ppidl, lEvent);
                     SHChangeNotification_Unlock(hLock);
-                    return TRUE;
+                    return ret;
                 }
             }
             return FALSE;
@@ -237,7 +237,7 @@ DoCreateDelivery(
     pTicket = (LPDELITICKET)SHLockShared(hShared, dwOwnerPID);
     if (pTicket == NULL)
     {
-        SHFreeShared(hShared,dwOwnerPID);
+        SHFreeShared(hShared, dwOwnerPID);
         return NULL;
     }
     pTicket->dwMagic  = DELIVERY_MAGIC;
