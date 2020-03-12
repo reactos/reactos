@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Management Console
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Resource header
  * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller
- *              Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2017-2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #pragma once
@@ -15,6 +15,8 @@
 
 #define IDI_MAINAPP 101
 #define IDI_FOLDERICON 102
+
+#define IDA_MMC         500
 
 #define IDM_CONSOLE_SMALL 1000
 #define IDM_CONSOLE_LARGE 1001
