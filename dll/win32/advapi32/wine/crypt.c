@@ -639,22 +639,18 @@ BOOL WINAPI CryptContextAddRef (HCRYPTPROV hProv, DWORD *pdwReserved, DWORD dwFl
  *
  * PARAMS
  *  hProv   [I] Handle of a CSP.
- *  dwFlags [I] Reserved for future use and must be NULL.
+ *  dwFlags [I] Reserved for future use and must be 0.
  *
  * RETURNS
  *  Success: TRUE
  *  Failure: FALSE
  */
-#ifdef __REACTOS__
 BOOL WINAPI CryptReleaseContext (HCRYPTPROV hProv, DWORD dwFlags)
-#else
-BOOL WINAPI CryptReleaseContext (HCRYPTPROV hProv, ULONG_PTR dwFlags)
-#endif
 {
 	PCRYPTPROV pProv = (PCRYPTPROV)hProv;
 	BOOL ret = TRUE;
 
-	TRACE("(0x%lx, %08lx)\n", hProv, dwFlags);
+	TRACE("(0x%lx, %08x)\n", hProv, dwFlags);
 
 	if (!pProv)
 	{
