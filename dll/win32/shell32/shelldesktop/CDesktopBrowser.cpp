@@ -20,13 +20,12 @@
  */
 
 #include "shelldesktop.h"
+#include "../CChangeNotify.h"
 
 // Support for multiple monitors is disabled till LVM_SETWORKAREAS gets implemented
 #ifdef MULTIMONITOR_SUPPORT
 #include <atlcoll.h>
 #endif
-
-#define WM_SHELL_GETNOTIFWND (WM_USER+25) /* 0x419 */
 
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
@@ -83,7 +82,7 @@ public:
     LRESULT OnOpenNewWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnGetNotifWnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnGetDeliveryWorkerWnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 DECLARE_WND_CLASS_EX(szProgmanClassName, CS_DBLCLKS, COLOR_DESKTOP)
 
@@ -96,7 +95,7 @@ BEGIN_MSG_MAP(CBaseBar)
     MESSAGE_HANDLER(WM_EXPLORER_OPEN_NEW_WINDOW, OnOpenNewWindow)
     MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
-    MESSAGE_HANDLER(WM_SHELL_GETNOTIFWND, OnGetNotifWnd)
+    MESSAGE_HANDLER(WM_GETDELIWORKERWND, OnGetDeliveryWorkerWnd)
 END_MSG_MAP()
 
 BEGIN_COM_MAP(CDesktopBrowser)
@@ -432,9 +431,36 @@ LRESULT CDesktopBrowser::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     return 0;
 }
 
-LRESULT CDesktopBrowser::OnGetNotifWnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+typedef struct ENUMDATA
 {
-    return (LRESULT)::FindWindowExW(m_hWnd, NULL, L"WorkerW", NULL);
+    HWND hwndGot;
+} ENUMDATA, *LPENUMDATA;
+
+static BOOL CALLBACK
+EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+    WCHAR szClass[16];
+    LPENUMDATA data = (LPENUMDATA)lParam;
+
+    if ((DWORD)GetWindowLongPtrW(hwnd, GWLP_USERDATA) != NEWDELIWORKER_MAGIC)
+        return TRUE;
+
+    if (GetWindowTextLengthW(hwnd) != 0)
+        return TRUE;
+
+    GetClassNameW(hwnd, szClass, _countof(szClass));
+    if (lstrcmpiW(szClass, L"WorkerW") != 0)
+        return TRUE;
+
+    data->hwndGot = hwnd;
+    return FALSE;
+}
+
+LRESULT CDesktopBrowser::OnGetDeliveryWorkerWnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    ENUMDATA data = { NULL };
+    EnumWindows(EnumWindowsProc, (LPARAM)&data);
+    return (LRESULT)data.hwndGot;
 }
 
 HRESULT CDesktopBrowser_CreateInstance(IShellDesktopTray *Tray, REFIID riid, void **ppv)

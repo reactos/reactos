@@ -4,184 +4,301 @@
  * PURPOSE:     Shell change notification
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
-
+#include "precomp.h"
 #include "CChangeNotify.h"
 
-static CChangeNotify s_hwndNotif;
+WINE_DEFAULT_DEBUG_CHANNEL(shcn);
+
+class CWorker : public CMessageMap
+{
+public:
+    CWorker() : m_hWnd(NULL)
+    {
+    }
+
+    static LRESULT CALLBACK
+    WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    BOOL CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle);
+
+protected:
+    HWND m_hWnd;
+};
+
+class CChangeNotify : public CWorker
+{
+public:
+    struct ITEM
+    {
+        UINT nRegID;
+        DWORD dwUserPID;
+        HANDLE hShare;
+    };
+
+    CChangeNotify() : m_nNextRegID(INVALID_REG_ID)
+    {
+    }
+
+    ~CChangeNotify()
+    {
+    }
+
+    operator HWND()
+    {
+        return m_hWnd;
+    }
+
+    void SetHWND(HWND hwnd)
+    {
+        m_hWnd = hwnd;
+    }
+
+    void clear()
+    {
+        m_hWnd = NULL;
+        m_nNextRegID = INVALID_REG_ID;
+        m_items.RemoveAll();
+    }
+
+    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare);
+    BOOL RemoveItem(UINT nRegID, DWORD dwOwnerPID);
+    void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
+
+    UINT GetNextRegID();
+    BOOL DoDelivery(HANDLE hTicket, DWORD dwOwnerPID);
+
+    BOOL ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared);
+    BOOL DoNotify(LPHANDBAG pHandBag, LPDELITICKET pTicket, LPNOTIFSHARE pShared);
+
+    LRESULT OnBang(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+    BEGIN_MSG_MAP(CChangeNotify)
+        MESSAGE_HANDLER(WM_NOTIF_BANG, OnBang)
+        MESSAGE_HANDLER(WM_NOTIF_UNREG, OnUnReg)
+        MESSAGE_HANDLER(WM_NOTIF_DELIVERY, OnDelivery)
+        MESSAGE_HANDLER(WM_NOTIF_SUSPEND, OnSuspendResume)
+        MESSAGE_HANDLER(WM_NOTIF_REMOVEBYPID, OnRemoveByPID);
+    END_MSG_MAP()
+
+protected:
+    UINT m_nNextRegID;
+    CSimpleArray<ITEM> m_items;
+};
+
+static CChangeNotify s_hwndNewWorker;
+static HWND s_hwndWorker = NULL;
 
 EXTERN_C void
 DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     WCHAR path1[MAX_PATH], path2[MAX_PATH];
 
-    if (!SHGetPathFromIDListW(pidl1, path1))
-        return;
+    path1[0] = 0;
+    if (pidl1)
+        SHGetPathFromIDListW(pidl1, path1);
 
     path2[0] = 0;
     if (pidl2)
         SHGetPathFromIDListW(pidl2, path2);
 
-    if (path2[0])
-        SHChangeNotify(SHCNE_FREESPACE, SHCNF_PATHW, path1, path2);
+    if (path1[0])
+    {
+        if (path2[0])
+            SHChangeNotify(SHCNE_FREESPACE, SHCNF_PATHW, path1, path2);
+        else
+            SHChangeNotify(SHCNE_FREESPACE, SHCNF_PATHW, path1, NULL);
+    }
     else
-        SHChangeNotify(SHCNE_FREESPACE, SHCNF_PATHW, path1, NULL);
-}
-
-EXTERN_C UINT
-DoGetNextRegID(void)
-{
-    return s_hwndNotif.GetNextRegID();
-}
-
-EXTERN_C void
-DoRemoveChangeNotifyClientsByProcess(DWORD dwUserID)
-{
-    DWORD dwOwnerPID;
-    GetWindowThreadProcessId(s_hwndNotif, &dwOwnerPID);
-    s_hwndNotif.RemoveItemsByProcess(dwOwnerPID, dwUserID);
+    {
+        SHChangeNotify(SHCNE_FREESPACE, SHCNF_PATHW, NULL, NULL);
+    }
 }
 
 static DWORD WINAPI
 DoCreateNotifWindowThreadFunc(LPVOID pData)
 {
-    if (IsWindow(s_hwndNotif))
+    if (IsWindow(s_hwndNewWorker))
+    {
+        TRACE("s_hwndNewWorker is already created\n");
         return 0;
+    }
 
-    HWND hwndShell = (HWND)pData;
     DWORD exstyle = WS_EX_TOOLWINDOW;
     DWORD style = WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-    s_hwndNotif.CreateWorker(hwndShell, exstyle, style);
+    s_hwndNewWorker.CreateWorker(NULL, exstyle, style);
+    SetWindowLongPtrW(s_hwndNewWorker, GWLP_USERDATA, NEWDELIWORKER_MAGIC);
+
+    DWORD pid;
+    GetWindowThreadProcessId(s_hwndNewWorker, &pid);
+    TRACE("s_hwndNewWorker: %p, 0x%lx\n", (HWND)s_hwndNewWorker, pid);
     return 0;
 }
 
 static DWORD WINAPI
 ChangeNotifThreadFunc(LPVOID args)
 {
+    TRACE("ChangeNotifThreadFunc entered\n");
+
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0))
     {
-        if (!IsWindow(s_hwndNotif))
+        if (!IsWindow(s_hwndNewWorker))
             break;
 
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+    DestroyWindow(s_hwndNewWorker);
+    s_hwndNewWorker.clear();
 
+    TRACE("ChangeNotifThreadFunc leaved\n");
     return 0;
 }
 
 EXTERN_C HWND
-DoCreateNotifWindow(HWND hwndShell)
+DoGetNewDeliveryWorker(void)
 {
-    if (!IsWindow(s_hwndNotif))
-    {
-        SHCreateThread(ChangeNotifThreadFunc, hwndShell, CTF_PROCESS_REF,
-                       DoCreateNotifWindowThreadFunc);
-    }
-    return s_hwndNotif;
+    if (s_hwndWorker && IsWindow(s_hwndWorker))
+        return s_hwndWorker;
+
+    HWND hwndShell = GetShellWindow();
+    HWND hwndWorker = (HWND)SendMessageW(hwndShell, WM_GETDELIWORKERWND, 0, 0);
+    if (!IsWindow(hwndWorker))
+        ERR("Unable to get notification window\n");
+
+    s_hwndWorker = hwndWorker;
+    return hwndWorker;
 }
 
 EXTERN_C HWND
-DoGetNotifWindow(BOOL bCreate)
+DoGetOrCreateNewDeliveryWorker(void)
 {
-    if (s_hwndNotif && IsWindow(s_hwndNotif))
-        return s_hwndNotif;
+    if (s_hwndNewWorker && IsWindow(s_hwndNewWorker))
+        return s_hwndNewWorker;
 
-    HWND hwnd, hwndShell = GetShellWindow();
-    if (bCreate)
-    {
-        hwnd = DoCreateNotifWindow(hwndShell);
-    }
-    else
-    {
-        hwnd = (HWND)SendMessageW(hwndShell, WM_SHELL_GETNOTIFWND, 0, 0);
-    }
-    s_hwndNotif.SetHWND(hwnd);
+    HWND hwndNewWorker = DoGetNewDeliveryWorker();
+    if (hwndNewWorker && IsWindow(hwndNewWorker))
+        return hwndNewWorker;
 
-    return hwnd;
+    SHCreateThread(ChangeNotifThreadFunc, NULL, CTF_PROCESS_REF,
+                   DoCreateNotifWindowThreadFunc);
+
+    for (INT i = 0; i < 8; ++i)
+    {
+        if (IsWindow(s_hwndNewWorker))
+            break;
+        Sleep(50);
+    }
+
+    return s_hwndNewWorker;
 }
 
 static LRESULT CALLBACK
-OldDeliveryWorkerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HANDLE hLock;
-    LRESULT ret = 0;
-    PIDLIST_ABSOLUTE *ppidl = NULL;
+    PIDLIST_ABSOLUTE *ppidl;
     LONG lEvent;
-    OLDDELIVERYWORKER *pNotif = (OLDDELIVERYWORKER *)GetWindowLongW(hwnd, 0);
+    LPOLDDELIVERYWORKER pWorker;
+    HANDLE hShared;
+    DWORD dwOwnerPID;
 
     switch (uMsg)
     {
         case WM_NOTIF_BANG:
-            if (pNotif)
+            hShared = (HANDLE)wParam;
+            dwOwnerPID = (DWORD)lParam;
+            TRACE("WM_NOTIF_BANG: hwnd:%p, hShared:%p, pid:0x%lx\n",
+                  hwnd, hShared, dwOwnerPID);
+
+            pWorker = (LPOLDDELIVERYWORKER)GetWindowLongPtrW(hwnd, 0);
+            if (!pWorker)
             {
-                hLock = SHChangeNotification_Lock((HANDLE)wParam, lParam, &ppidl, &lEvent);
-                if (hLock)
-                {
-                    ret = SendMessageW(pNotif->hwnd, pNotif->uMsg, (WPARAM)ppidl, lEvent);
-                    SHChangeNotification_Unlock(hLock);
-                    return ret;
-                }
+                ERR("!pWorker\n");
+                break;
             }
-            return FALSE;
+
+            ppidl = NULL;
+            hLock = SHChangeNotification_Lock(hShared, dwOwnerPID, &ppidl, &lEvent);
+            if (!hLock)
+            {
+                ERR("!hLock\n");
+                break;
+            }
+
+            TRACE("OldDeliveryWorker notifying: %p, 0x%x, %p, 0x%lx\n",
+                  pWorker->hwnd, pWorker->uMsg, ppidl, lEvent);
+            SendMessageW(pWorker->hwnd, pWorker->uMsg, (WPARAM)ppidl, lEvent);
+            SHChangeNotification_Unlock(hLock);
+            return TRUE;
 
         case WM_NCDESTROY:
+            TRACE("WM_NCDESTROY\n");
+            pWorker = (LPOLDDELIVERYWORKER)GetWindowLongPtrW(hwnd, 0);
             SetWindowLongW(hwnd, 0, 0);
-            LocalFree(pNotif);
+            LocalFree(pWorker);
             break;
 
         default:
             return DefWindowProcW(hwnd, uMsg, wParam, lParam);
     }
-    return ret;
+    return 0;
 }
 
 EXTERN_C HWND
 DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg)
 {
     LPOLDDELIVERYWORKER pWorker;
-    HWND hwndWorker;
+    HWND hwndOldWorker;
 
-    pWorker = (LPOLDDELIVERYWORKER)LocalAlloc(LMEM_FIXED | LMEM_ZEROINIT, sizeof(OLDDELIVERYWORKER));
+    pWorker = (LPOLDDELIVERYWORKER)LocalAlloc(LMEM_FIXED, sizeof(OLDDELIVERYWORKER));
     if (!pWorker)
+    {
+        ERR("Out of memory\n");
         return NULL;
+    }
 
     pWorker->hwnd = hwnd;
     pWorker->uMsg = wMsg;
-    hwndWorker = SHCreateWorkerWindowW(OldDeliveryWorkerWindowProc, 0, 0, 0, 0,
-                                       (LONG_PTR)pWorker);
-    if (hwndWorker == NULL)
+    hwndOldWorker = SHCreateWorkerWindowW(OldDeliveryWorkerWndProc, NULL, 0, 0,
+                                       NULL, (LONG_PTR)pWorker);
+    if (hwndOldWorker == NULL)
     {
+        ERR("hwndOldWorker == NULL\n");
         LocalFree(pWorker);
     }
 
-    return hwndWorker;
+    DWORD pid;
+    GetWindowThreadProcessId(hwndOldWorker, &pid);
+    TRACE("hwndOldWorker: %p, 0x%lx\n", hwndOldWorker, pid);
+    return hwndOldWorker;
 }
 
 EXTERN_C HANDLE
-DoCreateNotifShare(
-    ULONG nRegID,
-    HWND hwnd,
-    UINT wMsg,
-    ULONG fSources,
-    LONG fEvents,
-    LONG fRecursive,
-    LPCITEMIDLIST pidl,
-    DWORD dwOwnerPID)
+DoCreateNotifShare(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
+                   LONG fRecursive, LPCITEMIDLIST pidl, DWORD dwOwnerPID)
 {
     DWORD cbPidl = ILGetSize(pidl);
-    DWORD cbSize = sizeof(NOTIFSHARE) + cbPidl;
+    DWORD ibPidl = DWORD_ALIGNMENT(sizeof(NOTIFSHARE));
+    DWORD cbSize = ibPidl + cbPidl;
     HANDLE hShared = SHAllocShared(NULL, cbSize, dwOwnerPID);
     if (!hShared)
-        return NULL;
-
-    LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockShared(hShared, dwOwnerPID);
-    if (pShared == NULL)
     {
-        SHFreeShared(hShared, dwOwnerPID);
+        ERR("Out of memory\n");
         return NULL;
     }
 
+    LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockSharedEx(hShared, dwOwnerPID, TRUE);
+    if (pShared == NULL)
+    {
+        ERR("SHLockSharedEx failed\n");
+        SHFreeShared(hShared, dwOwnerPID);
+        return NULL;
+    }
     pShared->dwMagic = NOTIFSHARE_MAGIC;
     pShared->cbSize = cbSize;
     pShared->nRegID = nRegID;
@@ -193,25 +310,19 @@ DoCreateNotifShare(
     pShared->ibPidl = 0;
     if (pidl)
     {
-        pShared->ibPidl = DWORD_ALIGNMENT(sizeof(NOTIFSHARE));
-        memcpy((LPBYTE)pShared + pShared->ibPidl, pidl, cbPidl);
+        pShared->ibPidl = ibPidl;
+        memcpy((LPBYTE)pShared + ibPidl, pidl, cbPidl);
     }
     SHUnlockShared(pShared);
-
     return hShared;
 }
 
 EXTERN_C HANDLE
-DoCreateDelivery(
-    LONG wEventId,
-    UINT uFlags,
-    LPCITEMIDLIST pidl1,
-    LPCITEMIDLIST pidl2,
-    DWORD dwOwnerPID,
-    DWORD dwTick)
+DoCreateDeliTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
+                   DWORD dwOwnerPID, DWORD dwTick)
 {
     LPDELITICKET pTicket;
-    HANDLE hShared = NULL;
+    HANDLE hTicket = NULL;
     DWORD cbPidl1, cbPidl2, ibOffset1, ibOffset2, cbSize;
 
     ibOffset1 = 0;
@@ -229,18 +340,21 @@ DoCreateDelivery(
     }
 
     cbSize = ibOffset2 + cbPidl2;
-
-    hShared = SHAllocShared(NULL, cbSize, dwOwnerPID);
-    if (hShared == NULL)
-        return NULL;
-
-    pTicket = (LPDELITICKET)SHLockShared(hShared, dwOwnerPID);
-    if (pTicket == NULL)
+    hTicket = SHAllocShared(NULL, cbSize, dwOwnerPID);
+    if (hTicket == NULL)
     {
-        SHFreeShared(hShared, dwOwnerPID);
+        ERR("Out of memory\n");
         return NULL;
     }
-    pTicket->dwMagic  = DELIVERY_MAGIC;
+
+    pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, TRUE);
+    if (pTicket == NULL)
+    {
+        ERR("SHLockSharedEx failed\n");
+        SHFreeShared(hTicket, dwOwnerPID);
+        return NULL;
+    }
+    pTicket->dwMagic  = DELITICKET_MAGIC;
     pTicket->wEventId = wEventId;
     pTicket->uFlags = uFlags;
     pTicket->ibOffset1 = ibOffset1;
@@ -248,66 +362,82 @@ DoCreateDelivery(
 
     if (pidl1)
         memcpy((LPBYTE)pTicket + ibOffset1, pidl1, cbPidl1);
-
     if (pidl2)
         memcpy((LPBYTE)pTicket + ibOffset2, pidl1, cbPidl2);
 
     SHUnlockShared(pTicket);
-
-    return hShared;
+    return hTicket;
 }
 
-EXTERN_C LPCHANGE
-DoGetChangeFromTicket(HANDLE hDelivery, DWORD dwOwnerPID)
+EXTERN_C LPHANDBAG
+DoGetHandBagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
 {
-    LPDELITICKET pTicket;
-    LPCHANGE pChange;
-
-    pTicket = (LPDELITICKET)SHLockShared(hDelivery, dwOwnerPID);
-    if (!pTicket || pTicket->dwMagic != DELIVERY_MAGIC)
-        return NULL;
-
-    pChange = (LPCHANGE)LocalAlloc(LMEM_FIXED | LMEM_ZEROINIT, sizeof(CHANGE));
-    if (pChange == NULL)
+    LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
+    if (!pTicket || pTicket->dwMagic != DELITICKET_MAGIC)
     {
+        ERR("pTicket is invalid\n");
+        return NULL;
+    }
+
+    LPHANDBAG pHandBag = (LPHANDBAG)LocalAlloc(LMEM_FIXED, sizeof(HANDBAG));
+    if (pHandBag == NULL)
+    {
+        ERR("Out of memory\n");
         SHUnlockShared(pTicket);
         return NULL;
     }
-    pChange->dwMagic = CHANGE_MAGIC;
+    pHandBag->dwMagic = HANDBAG_MAGIC;
+    pHandBag->pTicket = pTicket;
 
-    pChange->pidl1 = pChange->pidl2 = NULL;
+    pHandBag->pidl1 = pHandBag->pidl2 = NULL;
     if (pTicket->ibOffset1)
-        pChange->pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
+        pHandBag->pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
     if (pTicket->ibOffset2)
-        pChange->pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
+        pHandBag->pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
 
-    pChange->pTicket = pTicket;
-    return pChange;
+    return pHandBag;
 }
 
 EXTERN_C void
-DoChangeDelivery(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
-                 DWORD dwTick)
+DoTransportChange(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
+                  DWORD dwTick)
 {
-    HWND hwndNotif = DoGetNotifWindow(FALSE);
+    HWND hwndNotif = DoGetNewDeliveryWorker();
     if (!hwndNotif)
         return;
 
     DWORD pid;
     GetWindowThreadProcessId(hwndNotif, &pid);
 
-    HANDLE hDelivery = DoCreateDelivery(wEventId, uFlags, pidl1, pidl2, pid, dwTick);
-    if (hDelivery)
+    HANDLE hTicket = DoCreateDeliTicket(wEventId, uFlags, pidl1, pidl2, pid, dwTick);
+    if (hTicket)
     {
+        TRACE("hTicket: %p, 0x%lx\n", hTicket, pid);
         if ((uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
-        {
-            SendMessageW(hwndNotif, WM_NOTIF_DELIVERY, (WPARAM)hDelivery, pid);
-        }
+            SendMessageW(hwndNotif, WM_NOTIF_DELIVERY, (WPARAM)hTicket, pid);
         else
-        {
-            SendNotifyMessageW(hwndNotif, WM_NOTIF_DELIVERY, (WPARAM)hDelivery, pid);
-        }
+            SendNotifyMessageW(hwndNotif, WM_NOTIF_DELIVERY, (WPARAM)hTicket, pid);
     }
+}
+
+/*static*/ LRESULT CALLBACK
+CWorker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    CWorker *pThis = (CWorker *)GetWindowLongPtrW(hwnd, 0);
+    if (pThis)
+    {
+        LRESULT lResult = 0;
+        pThis->ProcessWindowMessage(hwnd, uMsg, wParam, lParam, lResult, 0);
+        return lResult;
+    }
+    return 0;
+}
+
+BOOL CWorker::CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle)
+{
+    m_hWnd = SHCreateWorkerWindowW(WindowProc, hwndParent, dwExStyle, dwStyle,
+                                   NULL, (LONG_PTR)this);
+    return m_hWnd != NULL;
 }
 
 BOOL CChangeNotify::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare)
@@ -331,7 +461,6 @@ BOOL CChangeNotify::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare)
 BOOL CChangeNotify::RemoveItem(UINT nRegID, DWORD dwOwnerPID)
 {
     BOOL bFound = FALSE;
-
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
         if (m_items[i].nRegID == nRegID)
@@ -343,7 +472,6 @@ BOOL CChangeNotify::RemoveItem(UINT nRegID, DWORD dwOwnerPID)
             m_items[i].hShare = NULL;
         }
     }
-
     return bFound;
 }
 
@@ -363,57 +491,93 @@ void CChangeNotify::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
 
 LRESULT CChangeNotify::OnBang(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    TRACE("OnBang(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
+
     HANDLE hShared = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
 
-    LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockShared(hShared, dwOwnerPID);
+    LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockSharedEx(hShared, dwOwnerPID, TRUE);
     if (!pShared || pShared->dwMagic != NOTIFSHARE_MAGIC)
+    {
+        ERR("pShared is invalid\n");
         return FALSE;
+    }
+
+    if (pShared->nRegID == INVALID_REG_ID)
+        pShared->nRegID = GetNextRegID();
+
+    TRACE("pShared->nRegID: %u\n", pShared->nRegID);
 
     DWORD dwUserPID;
     GetWindowThreadProcessId(pShared->hwnd, &dwUserPID);
 
     HANDLE hNewShared = SHAllocShared(pShared, pShared->cbSize, dwOwnerPID);
+    if (!hNewShared)
+    {
+        ERR("Out of memory\n");
+        pShared->nRegID = INVALID_REG_ID;
+        SHUnlockShared(pShared);
+        return FALSE;
+    }
+
+    SHUnlockShared(pShared);
+
     return AddItem(m_nNextRegID, dwUserPID, hNewShared);
 }
 
 LRESULT CChangeNotify::OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    TRACE("OnUnReg(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
+
     UINT nRegID = (UINT)wParam;
     if (nRegID == INVALID_REG_ID)
+    {
+        ERR("INVALID_REG_ID\n");
         return FALSE;
+    }
 
     DWORD dwOwnerPID;
     GetWindowThreadProcessId(m_hWnd, &dwOwnerPID);
-
     return RemoveItem(nRegID, dwOwnerPID);
 }
 
 LRESULT CChangeNotify::OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    HANDLE hDelivery = (HANDLE)wParam;
+    TRACE("OnDelivery(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
+
+    HANDLE hTicket = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
     BOOL ret = FALSE;
 
-    LPCHANGE pChange = DoGetChangeFromTicket(hDelivery, dwOwnerPID);
-    if (pChange && pChange->dwMagic == CHANGE_MAGIC)
+    LPHANDBAG pHandBag = DoGetHandBagFromTicket(hTicket, dwOwnerPID);
+    if (pHandBag && pHandBag->dwMagic == HANDBAG_MAGIC)
     {
-        LPDELITICKET pTicket = pChange->pTicket;
-        if (pTicket && pTicket->dwMagic == DELIVERY_MAGIC)
+        LPDELITICKET pTicket = pHandBag->pTicket;
+        if (pTicket && pTicket->dwMagic == DELITICKET_MAGIC)
         {
-            ret = DoDelivery(hDelivery, pChange);
+            ret = DoDelivery(hTicket, dwOwnerPID);
         }
     }
 
-    SHChangeNotification_Unlock(pChange);
-    SHFreeShared(hDelivery, dwOwnerPID);
+    SHChangeNotification_Unlock(pHandBag);
+    SHFreeShared(hTicket, dwOwnerPID);
     return ret;
 }
 
 LRESULT CChangeNotify::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    TRACE("OnSuspendResume\n");
+
     // FIXME
     return FALSE;
+}
+
+LRESULT CChangeNotify::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    DWORD dwOwnerPID, dwUserPID = (DWORD)wParam;
+    GetWindowThreadProcessId(m_hWnd, &dwOwnerPID);
+    RemoveItemsByProcess(dwOwnerPID, dwUserPID);
+    return 0;
 }
 
 UINT CChangeNotify::GetNextRegID()
@@ -424,10 +588,9 @@ UINT CChangeNotify::GetNextRegID()
     return m_nNextRegID;
 }
 
-BOOL CChangeNotify::DoDelivery(HANDLE hDelivery, LPCHANGE pChange)
+BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
 {
-    DWORD dwOwnerPID;
-    GetWindowThreadProcessId(m_hWnd, &dwOwnerPID);
+    TRACE("DoDelivery(%p, %p, 0x%lx)\n", m_hWnd, hTicket, dwOwnerPID);
 
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
@@ -435,23 +598,28 @@ BOOL CChangeNotify::DoDelivery(HANDLE hDelivery, LPCHANGE pChange)
         if (!m_items[i].nRegID || !hShare)
             continue;
 
-        LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockShared(hShare, dwOwnerPID);
+        LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockSharedEx(hShare, dwOwnerPID, FALSE);
         if (!pShared || pShared->dwMagic != NOTIFSHARE_MAGIC)
-            continue;
-
-        LPDELITICKET pTicket = (LPDELITICKET)SHLockShared(hDelivery, dwOwnerPID);
-        if (!pTicket || pTicket->dwMagic != DELIVERY_MAGIC)
         {
-            SHUnlockShared(pShared);
+            ERR("pShared is invalid\n");
             continue;
         }
 
-        BOOL bNotify = ShouldNotify(pChange, pTicket, pShared);
+        LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
+        if (!pTicket || pTicket->dwMagic != DELITICKET_MAGIC)
+        {
+            ERR("pTicket is invalid\n");
+            SHUnlockShared(pShared);
+            continue;
+        }
+        BOOL bNotify = ShouldNotify(pTicket, pShared);
         SHUnlockShared(pTicket);
 
         if (bNotify)
         {
-            SendNotifyMessageW(pShared->hwnd, pShared->uMsg, (WPARAM)hDelivery, dwOwnerPID);
+            TRACE("Notifying: %p, 0x%x, %p, %lu\n",
+                  pShared->hwnd, pShared->uMsg, hTicket, dwOwnerPID);
+            SendMessageW(pShared->hwnd, pShared->uMsg, (WPARAM)hTicket, dwOwnerPID);
         }
         SHUnlockShared(pShared);
     }
@@ -459,33 +627,44 @@ BOOL CChangeNotify::DoDelivery(HANDLE hDelivery, LPCHANGE pChange)
     return TRUE;
 }
 
-BOOL CChangeNotify::ShouldNotify(LPCHANGE pChange, LPDELITICKET pTicket, LPNOTIFSHARE pShared)
+BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
 {
+    BOOL ret = FALSE;
     LPITEMIDLIST pidl = NULL;
     if (pShared->ibPidl)
         pidl = (LPITEMIDLIST)((LPBYTE)pShared + pShared->ibPidl);
 
-    if (!pidl)
-        return FALSE;
-
     LPITEMIDLIST pidl1 = NULL, pidl2 = NULL;
-    if (pTicket->ibOffset1)
-        pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
-    if (pTicket->ibOffset2)
-        pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
 
-    if (pidl1 && ILIsEqual(pidl, pidl1))
-        return TRUE;
-    if (pidl2 && ILIsEqual(pidl, pidl2))
-        return TRUE;
+    if (pTicket->ibOffset1)
+    {
+        pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
+        if (ILIsEqual(pidl, pidl1))
+            ret = TRUE;
+    }
+
+    if (pTicket->ibOffset2)
+    {
+        pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
+        if (ILIsEqual(pidl, pidl2))
+            ret = TRUE;
+    }
 
     if (pShared->fRecursive)
     {
         if (pidl1 && ILIsParent(pidl, pidl1, FALSE))
-            return TRUE;
+            ret = TRUE;
         if (pidl2 && ILIsParent(pidl, pidl2, FALSE))
-            return TRUE;
+            ret = TRUE;
     }
 
-    return FALSE;
+    WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
+    szPath[0] = szPath1[0] = szPath2[0] = 0;
+    SHGetPathFromIDListW(pidl, szPath);
+    SHGetPathFromIDListW(pidl1, szPath1);
+    SHGetPathFromIDListW(pidl2, szPath2);
+    TRACE("ShouldNotify: %d, %p, %p, %p, '%S', '%S', '%S'\n",
+          ret, pidl, pidl1, pidl2, szPath, szPath1, szPath2);
+
+    return ret;
 }

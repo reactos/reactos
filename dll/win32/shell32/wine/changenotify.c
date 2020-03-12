@@ -52,8 +52,17 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": SHELL32_ChangenotifyCS") }
 };
 static CRITICAL_SECTION SHELL32_ChangenotifyCS = { &critsect_debug, -1, 0, 0, 0, 0 };
+#ifdef __REACTOS__
+void DoChangeNotifyLock(void)
+{
+    EnterCriticalSection(&SHELL32_ChangenotifyCS);
+}
+void DoChangeNotifyUnlock(void)
+{
+    LeaveCriticalSection(&SHELL32_ChangenotifyCS);
+}
+#endif
 
-#ifndef __REACTOS__
 typedef SHChangeNotifyEntry *LPNOTIFYREGISTER;
 
 /* internal list of notification clients (internal) */
@@ -69,8 +78,10 @@ typedef struct _NOTIFICATIONLIST
 	ULONG id;
 } NOTIFICATIONLIST, *LPNOTIFICATIONLIST;
 
+#ifndef __REACTOS__
 static struct list notifications = LIST_INIT( notifications );
 static LONG next_id;
+#endif  /* ndef __REACTOS__ */
 
 #define SHCNE_NOITEMEVENTS ( \
    SHCNE_ASSOCCHANGED )
@@ -84,7 +95,6 @@ static LONG next_id;
 
 #define SHCNE_TWOITEMEVENTS ( \
    SHCNE_RENAMEFOLDER | SHCNE_RENAMEITEM | SHCNE_UPDATEITEM )
-#endif  /* ndef __REACTOS__ */
 
 /* for dumping events */
 static const char * DumpEvent( LONG event )
@@ -156,8 +166,10 @@ void InitChangeNotifications(void)
 void FreeChangeNotifications(void)
 {
 #ifdef __REACTOS__
+    HWND hwndWorker;
     EnterCriticalSection(&SHELL32_ChangenotifyCS);
-    DoRemoveChangeNotifyClientsByProcess(GetCurrentProcessId());
+    hwndWorker = DoGetNewDeliveryWorker();
+    SendMessageW(hwndWorker, WM_NOTIF_REMOVEBYPID, GetCurrentProcessId(), 0);
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
     DeleteCriticalSection(&SHELL32_ChangenotifyCS);
 #else
@@ -192,15 +204,15 @@ SHChangeNotifyRegister(
 #ifdef __REACTOS__
     HWND hwndNotif;
     HANDLE hShared;
-    int iItem;
-    ULONG nRegID = 0;
-    DWORD pid;
-    BOOL bAdded;
+    INT iItem;
+    ULONG nRegID = INVALID_REG_ID;
+    DWORD dwOwnerPID;
+    LPNOTIFSHARE pShare;
 
     TRACE("(%p,0x%08x,0x%08x,0x%08x,%d,%p)\n",
           hwnd, fSources, wEventMask, uMsg, cItems, lpItems);
 
-    hwndNotif = DoGetNotifWindow(TRUE);
+    hwndNotif = DoGetOrCreateNewDeliveryWorker();
     if (hwndNotif == NULL)
         return INVALID_REG_ID;
 
@@ -216,33 +228,36 @@ SHChangeNotifyRegister(
         fSources &= ~SHCNRF_NewDelivery;
     }
 
-    GetWindowThreadProcessId(hwndNotif, &pid);
+    GetWindowThreadProcessId(hwndNotif, &dwOwnerPID);
 
     EnterCriticalSection(&SHELL32_ChangenotifyCS);
-
-    nRegID = DoGetNextRegID();
-
     for (iItem = 0; iItem < cItems; ++iItem)
     {
-        bAdded = FALSE;
         hShared = DoCreateNotifShare(nRegID, hwnd, uMsg, fSources, wEventMask,
                                      lpItems[iItem].fRecursive, lpItems[iItem].pidl,
-                                     pid);
+                                     dwOwnerPID);
         if (hShared)
         {
-            bAdded = (BOOL)SendMessageW(hwndNotif, WM_NOTIF_BANG, (WPARAM)hShared, pid);
-            SHFreeShared(hShared, pid);
+            TRACE("WM_NOTIF_BANG: hwnd:%p, hShared:%p, pid:0x%lx\n", hwndNotif, hShared, dwOwnerPID);
+            SendMessageW(hwndNotif, WM_NOTIF_BANG, (WPARAM)hShared, dwOwnerPID);
+
+            pShare = (LPNOTIFSHARE)SHLockSharedEx(hShared, dwOwnerPID, FALSE);
+            if (pShare)
+            {
+                nRegID = pShare->nRegID;
+                SHUnlockShared(pShare);
+            }
+            SHFreeShared(hShared, dwOwnerPID);
         }
 
-        if (!bAdded && (fSources & SHCNRF_NewDelivery) == 0)
+        if (nRegID == INVALID_REG_ID && (fSources & SHCNRF_NewDelivery) == 0)
         {
+            ERR("Old Delivery is failed\n");
             DestroyWindow(hwnd);
             return INVALID_REG_ID;
         }
     }
-
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
-
     return nRegID;
 #else
     LPNOTIFICATIONLIST item;
@@ -286,14 +301,17 @@ BOOL WINAPI SHChangeNotifyDeregister(ULONG hNotify)
 #ifdef __REACTOS__
     HWND hwndNotif;
     LRESULT ret = 0;
-
     TRACE("(0x%08x)\n", hNotify);
 
     EnterCriticalSection(&SHELL32_ChangenotifyCS);
-    hwndNotif = DoGetNotifWindow(FALSE);
+    hwndNotif = DoGetNewDeliveryWorker();
     if (hwndNotif)
     {
         ret = SendMessageW(hwndNotif, WM_NOTIF_UNREG, hNotify, 0);
+        if (!ret)
+        {
+            ERR("WM_NOTIF_UNREG failed\n");
+        }
     }
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
     return ret;
@@ -330,7 +348,6 @@ BOOL WINAPI SHChangeNotifyUpdateEntryList(DWORD unknown1, DWORD unknown2,
     return TRUE;
 }
 
-#ifndef __REACTOS__
 struct new_delivery_notification
 {
     LONG event;
@@ -340,6 +357,7 @@ struct new_delivery_notification
     BYTE data[1];
 };
 
+#ifndef __REACTOS__
 static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL sub )
 {
     TRACE("%p %p %d\n", changed, watched, sub );
@@ -351,7 +369,16 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
         return TRUE;
     return FALSE;
 }
-#endif  /* ndef __REACTOS__ */
+#else   /* def __REACTOS__ */
+LPITEMIDLIST PidlFromPathW(LPCWSTR path)
+{
+#if 1 /* FIXME: This is a workaround to fix display icon. */
+    if (PathFileExistsW(path))
+        return ILCreateFromPathW(path);
+#endif
+    return SHSimpleIDListFromPathW(path);
+}
+#endif  /* def __REACTOS__ */
 
 /*************************************************************************
  * SHChangeNotify				[SHELL32.@]
@@ -359,11 +386,11 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
 void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
 {
 #ifdef __REACTOS__
-    LPITEMIDLIST pidl1 = NULL, pidl2 = NULL;
-    LPITEMIDLIST pidlTemp1 = NULL, pidlTemp2 = NULL;
+    LPITEMIDLIST pidl1 = NULL, pidl2 = NULL, pidlTemp1 = NULL, pidlTemp2 = NULL;
     DWORD dwTick = GetTickCount();
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     LPWSTR psz1, psz2;
+    TRACE("(0x%08x,0x%08x,%p,%p)\n", wEventId, uFlags, dwItem1, dwItem2);
 
     switch (uFlags & SHCNF_TYPE)
     {
@@ -391,23 +418,29 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
             }
             uFlags &= ~SHCNF_TYPE;
             uFlags |= SHCNF_PATHW;
-            return SHChangeNotify(wEventId, uFlags, psz1, psz2);
+            SHChangeNotify(wEventId, uFlags, psz1, psz2);
+            return;
 
         case SHCNF_PATHW:
             if (wEventId == SHCNE_FREESPACE)
             {
-                // FIXME
+                /* FIXME */
                 goto Quit;
             }
             if (dwItem1)
             {
-                pidl1 = pidlTemp1 = SHSimpleIDListFromPathW((LPCWSTR)dwItem1);
+                pidl1 = pidlTemp1 = PidlFromPathW((LPCWSTR)dwItem1);
                 if (dwItem2)
                 {
-                    pidl2 = pidlTemp2 = SHSimpleIDListFromPathW((LPCWSTR)dwItem2);
+                    pidl2 = pidlTemp2 = PidlFromPathW((LPCWSTR)dwItem2);
                 }
             }
             break;
+
+        case SHCNF_PRINTERA:
+        case SHCNF_PRINTERW:
+            FIXME("SHChangeNotify with (uFlags & SHCNF_PRINTER)\n");
+            return;
 
         default:
             FIXME("unknown type %08x\n", uFlags & SHCNF_TYPE);
@@ -417,7 +450,7 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
     if (wEventId == 0 || (wEventId & SHCNE_ASSOCCHANGED) || pidl1 != NULL)
     {
         TRACE("notifying event %s(%x)\n", DumpEvent(wEventId), wEventId);
-        DoChangeDelivery(wEventId, uFlags, pidl1, pidl2, dwTick);
+        DoTransportChange(wEventId, uFlags, pidl1, pidl2, dwTick);
     }
 
 Quit:
@@ -475,8 +508,8 @@ Quit:
     switch (uFlags & SHCNF_TYPE)
     {
     case SHCNF_PATHA:
-        if (dwItem1) Pidls[0] = SHSimpleIDListFromPathA(dwItem1);
-        if (dwItem2) Pidls[1] = SHSimpleIDListFromPathA(dwItem2);
+        if (dwItem1) Pidls[0] = SHSimpleIDListFromPathA(dwItem1); //FIXME
+        if (dwItem2) Pidls[1] = SHSimpleIDListFromPathA(dwItem2); //FIXME
         break;
     case SHCNF_PATHW:
         if (dwItem1) Pidls[0] = SHSimpleIDListFromPathW(dwItem1);
@@ -592,21 +625,22 @@ Quit:
 }
 
 /*************************************************************************
- * NTSHChangeNotifyRegister			[SHELL32.640]
+ * NTSHChangeNotifyRegister            [SHELL32.640]
  * NOTES
- *   Idlist is an array of structures and Count specifies how many items in the array
- *   (usually just one I think).
+ *   Idlist is an array of structures and Count specifies how many items in the array.
+ *   count should always be one when calling SHChangeNotifyRegister, or
+ *   SHChangeNotifyDeregister will not work properly.
  */
-ULONG WINAPI NTSHChangeNotifyRegister(
+EXTERN_C ULONG WINAPI NTSHChangeNotifyRegister(
     HWND hwnd,
     int fSources,
-    LONG wEventMask,
-    UINT uMsg,
-    int cItems,
-    SHChangeNotifyEntry *lpItems)
+    LONG fEvents,
+    UINT msg,
+    int count,
+    SHChangeNotifyEntry *idlist)
 {
     return SHChangeNotifyRegister(hwnd, fSources | SHCNRF_NewDelivery,
-                                  wEventMask, uMsg, cItems, lpItems);
+                                  fEvents, msg, count, idlist);
 }
 
 /*************************************************************************
@@ -619,24 +653,23 @@ HANDLE WINAPI SHChangeNotification_Lock(
 	LPLONG lpwEventId)
 {
 #ifdef __REACTOS__
-    LPDELITICKET pTicket;
-    LPCHANGE pChange;
-
+    LPHANDBAG pHandBag;
     TRACE("%p %08x %p %p\n", hChange, dwProcessId, lppidls, lpwEventId);
 
-    pChange = (LPCHANGE)DoGetChangeFromTicket(hChange, dwProcessId);
-    if (!pChange || pChange->dwMagic != CHANGE_MAGIC)
+    pHandBag = DoGetHandBagFromTicket(hChange, dwProcessId);
+    if (!pHandBag || pHandBag->dwMagic != HANDBAG_MAGIC)
+    {
+        ERR("pHandBag is invalid\n");
         return NULL;
-
-    pTicket = pChange->pTicket;
+    }
 
     if (lppidls)
-        *lppidls = &pChange->pidl1;
+        *lppidls = &pHandBag->pidl1;
 
     if (lpwEventId)
-        *lpwEventId = pTicket->wEventId;
+        *lpwEventId = pHandBag->pTicket->wEventId;
 
-    return pChange;
+    return pHandBag;
 #else
     struct new_delivery_notification *ndn;
     UINT offset;
@@ -669,17 +702,18 @@ HANDLE WINAPI SHChangeNotification_Lock(
 BOOL WINAPI SHChangeNotification_Unlock ( HANDLE hLock)
 {
 #ifdef __REACTOS__
-    LPCHANGE pChange = (LPCHANGE)hLock;
+    LPHANDBAG pHandBag = (LPHANDBAG)hLock;
     BOOL ret;
-
     TRACE("%p\n", hLock);
 
-    if (!pChange || pChange->dwMagic != CHANGE_MAGIC)
+    if (!pHandBag || pHandBag->dwMagic != HANDBAG_MAGIC)
+    {
+        ERR("pHandBag is invalid\n");
         return FALSE;
+    }
 
-    ret = SHUnlockShared(pChange->pTicket);
+    ret = SHUnlockShared(pHandBag->pTicket);
     LocalFree(hLock);
-
     return ret;
 #else
     TRACE("%p\n", hLock);

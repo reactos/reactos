@@ -1892,6 +1892,13 @@ SHLockShared(
     _In_  DWORD dwProcessId
     );
 
+PVOID
+WINAPI
+SHLockSharedEx(
+    _In_  HANDLE hData,
+    _In_  DWORD dwProcessId,
+    _In_  BOOL bWriteAccess);
+
 BOOL
 WINAPI
 SHUnlockShared(
