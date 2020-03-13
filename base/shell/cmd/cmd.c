@@ -147,7 +147,7 @@
 
 typedef NTSTATUS (WINAPI *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLASS,
                                                           PVOID, ULONG, PULONG);
-typedef NTSTATUS (WINAPI *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, PULONG);
+typedef NTSTATUS (WINAPI *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, PSIZE_T);
 
 BOOL bExit = FALSE;       /* Indicates EXIT was typed */
 BOOL bCanExit = TRUE;     /* Indicates if this shell is exitable */
@@ -225,7 +225,7 @@ static BOOL IsConsoleProcess(HANDLE Process)
     NTSTATUS Status;
     PROCESS_BASIC_INFORMATION Info;
     PEB ProcessPeb;
-    ULONG BytesRead;
+    SIZE_T BytesRead;
 
     if (NULL == NtQueryInformationProcessPtr || NULL == NtReadVirtualMemoryPtr)
     {
@@ -245,7 +245,7 @@ static BOOL IsConsoleProcess(HANDLE Process)
         sizeof(PEB), &BytesRead);
     if (! NT_SUCCESS(Status) || sizeof(PEB) != BytesRead)
     {
-        WARN ("Couldn't read virt mem status %08x bytes read %lu\n", Status, BytesRead);
+        WARN ("Couldn't read virt mem status %08x bytes read %Iu\n", Status, BytesRead);
         return TRUE;
     }
 

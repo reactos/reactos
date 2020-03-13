@@ -4498,7 +4498,7 @@ IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
     PDEVICE_NODE DeviceNode = IopGetDeviceNode(PhysicalDeviceObject);
     IO_STACK_LOCATION Stack;
-    ULONG PnPFlags;
+    ULONG_PTR PnPFlags;
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
 
