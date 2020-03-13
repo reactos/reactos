@@ -147,7 +147,7 @@
 
 typedef NTSTATUS (WINAPI *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLASS,
                                                           PVOID, ULONG, PULONG);
-typedef NTSTATUS (WINAPI *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, PSIZE_T);
+typedef NTSTATUS (WINAPI *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);
 
 BOOL bExit = FALSE;       /* Indicates EXIT was typed */
 BOOL bCanExit = TRUE;     /* Indicates if this shell is exitable */
