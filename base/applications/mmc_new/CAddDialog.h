@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Management Console
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Snapin selection dialog
- * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2017-2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #pragma once
@@ -22,6 +22,7 @@ public:
         COMMAND_ID_HANDLER(IDC_BUTTON_REMOVE, OnCommand)
 
         NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnItemChanged)
+        NOTIFY_CODE_HANDLER(NM_DBLCLK, OnItemDblClicked)
     END_MSG_MAP()
 
 private:
@@ -115,8 +116,23 @@ public:
             InsertItem(m_Available, &m_Snapins[n]);
         }
 
+        // Select the first item
+        m_Available.SetItemState(0, LVIS_FOCUSED | LVIS_SELECTED, 0xff);
+
         UpdateButtons();
-        return 0;
+
+        return TRUE;
+    }
+
+    void AddSelectedAvailableEntry()
+    {
+        int iItem = m_Available.GetNextItem(-1, LVNI_SELECTED);
+        CSnapin* snapin;
+        if (iItem != -1 && (snapin = (CSnapin*)m_Available.GetItemData(iItem)))
+        {
+            snapin->OnAdd(m_Console);
+            InsertItem(m_Selected, snapin);
+        }
     }
 
     LRESULT OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
@@ -124,18 +140,8 @@ public:
         switch (wID)
         {
         case IDC_BUTTON_ADD:
-        {
-            //LVITEM lvi = { LVIF_PARAM };
-            //lvi.iItem = ListView_GetNextItem(m_Available.m_hWnd, -1, LVNI_SELECTED);
-            int iItem = m_Available.GetNextItem(-1, LVNI_SELECTED);
-            CSnapin* snapin;
-            if (iItem != -1 && (snapin = (CSnapin*)m_Available.GetItemData(iItem)))
-            {
-                snapin->OnAdd(m_Console);
-                InsertItem(m_Selected, snapin);
-            }
-        }
-        break;
+            AddSelectedAvailableEntry();
+            break;
         case IDC_BUTTON_REMOVE:
         {
             int iItem = m_Selected.GetNextItem(-1, LVNI_SELECTED);
@@ -181,6 +187,13 @@ public:
         }
         // No selection or no snapin, clear description
         SetDlgItemText(IDC_DESCRIPTION, TEXT(""));
+
+        return TRUE;
+    }
+
+    LRESULT OnItemDblClicked(INT uCode, LPNMHDR hdr, BOOL& bHandled)
+    {
+        AddSelectedAvailableEntry();
 
         return TRUE;
     }
