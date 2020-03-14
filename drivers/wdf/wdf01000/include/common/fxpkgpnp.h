@@ -1096,6 +1096,718 @@ protected:
         );
 // end pnp state machine table based callbacks
 
+
+// begin power policy state machine table based callbacks
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStarting(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStartingSucceeded(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStartingFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStartingDecideS0Wake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStartedIdleCapable(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredNoWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredNoWakeCompletePowerDown(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolS0NoWakePowerUp(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolS0NoWakeCompletePowerUp(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemSleepFromDeviceWaitingUnarmed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemSleepNeedWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemSleepNeedWakeCompletePowerUp(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolCheckPowerPageable(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingWakeWakeArrived(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingWakeRevertArmWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemAsleepWakeArmed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceWakeEnabled(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceWakeEnabledWakeCanceled(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceWakeDisarm(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceWakeTriggeredS0(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceWokeDisarm(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingWakeWakeArrivedNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingWakeRevertArmWakeNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingWakePowerDownFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemAsleepWakeArmedNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceWakeEnabledNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceWakeEnabledWakeCanceledNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceWakeTriggeredS0NP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceWakeCompletePowerUp(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleeping(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingNoWakePowerDown(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingNoWakeCompletePowerDown(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingNoWakeDxRequestFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingWakePowerDown(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingSendWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceWakeDisabled(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceToD0(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceToD0CompletePowerUp(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeQueryIdle(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStartedWakeCapable(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredDecideUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapablePowerDown(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapableSendWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapableUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapableWakeArrived(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapableCancelWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapableWakeCanceled(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapableCleanup(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapableDxAllocFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCompletedPowerDown(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCompletedPowerUp(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolWaitingArmedUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolWaitingArmedQueryIdle(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolIoPresentArmed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolIoPresentArmedWakeCanceled(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolS0WakeDisarm(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolS0WakeCompletePowerUp(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeSucceeded(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCompletedDisarm(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolWakeFailedUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapablePowerDownFailedCancelWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapablePowerDownFailedWakeCanceled(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapablePowerDownFailedUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolCancelingWakeForSystemSleep(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolCancelingWakeForSystemSleepWakeCanceled(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolDisarmingWakeForSystemSleepCompletePowerUp(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolPowerUpForSystemSleepFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolWokeFromS0UsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolWokeFromS0(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolWokeFromS0NotifyDriver(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingResetDevice(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingResetDeviceCompletePowerUp(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingResetDeviceFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingD0(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingD0Failed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingDisarmWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingDisarmWakeCancelWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingDisarmWakeWakeCanceled(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStopping(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingSucceeded(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingSendStatus(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingCancelTimer(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingCancelUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingCancelWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolCancelUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStarted(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStartedCancelTimer(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStartedWakeCapableCancelTimerForSleep(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStartedWakeCapableSleepingUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStartedIdleCapableCancelTimerForSleep(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolDeviceD0PowerRequestFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolDevicePowerRequestFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingPowerDownNotProcessed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapablePowerDownNotProcessed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredNoWakePowerDownNotProcessed(
+        __inout FxPkgPnp* This
+        );
+        
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredNoWakePoweredDownDisableIdleTimer(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolPowerUpForSystemSleepNotSeen(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolWaitingArmedStoppingCancelUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolWaitingArmedWakeFailedCancelUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolWaitingArmedIoPresentCancelUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolWaitingArmedWakeSucceededCancelUsbSS(
+        __inout FxPkgPnp* This
+        );
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolCancelingUsbSSForSystemSleep(
+        __inout FxPkgPnp* This
+        );
+    
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolStoppingD0CancelUsbSS(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapableWakeInterruptArrived(
+        __inout FxPkgPnp* This
+        );
+    
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerStarting(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerStarted(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerGotoDx(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerGotoDxInDx(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerGotoD0(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerGotoD0InD0(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerStopping(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerStoppingSendStatus(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerStartingFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerStoppingFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerStoppingPoweringUp(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerStoppingPoweringDown(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    NotPowerPolOwnerRemoved(
+        __inout FxPkgPnp* This
+        );
+        
+    // end power policy state machine table based callbacks
+
+
     _Must_inspect_result_
     NTSTATUS
     CreatePowerThread(
@@ -1750,6 +2462,94 @@ protected:
     static const PNP_EVENT_TARGET_STATE m_PnpRestartOtherStates[];
     static const PNP_EVENT_TARGET_STATE m_PnpRestartReleaseHardware[];
     static const PNP_EVENT_TARGET_STATE m_PnpRestartHardwareAvailableOtherStates[];
+    
+
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolObjectCreatedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStartingOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStartedIdleCapableOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolIdleCapableDeviceIdleOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredNoWakeOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredNoWakeCompletePowerDownOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolWaitingUnarmedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolS0NoWakePowerUpOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolS0NoWakeCompletePowerUpOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemSleepNeedWakeOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemSleepNeedWakeCompletePowerUpOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemAsleepWakeArmedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemAsleepWakeArmedNPOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemWakeDeviceToD0OtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemWakeDeviceToD0CompletePowerUpOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStartedWakeCapableOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolWakeCapableDeviceIdleOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapablePowerDownOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapableSendWakeOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapableUsbSSOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolWaitingArmedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolDisarmingWakeForSystemSleepCompletePowerUpOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolCancelingWakeForSystemSleepWakeCanceledOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolWokeFromS0OtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStoppingResetDeviceOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStoppingResetDeviceCompletePowerUpOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStoppingD0OtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStoppingDisarmWakeOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStoppingDisarmWakeCancelWakeOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolIoPresentArmedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolIoPresentArmedWakeCanceledOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolS0WakeCompletePowerUpOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapableWakeSucceededOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapableWakeFailedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapablePowerDownFailedCancelWakeOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolCancelingWakeForSystemSleepOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapableWakeArrivedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapableCancelWakeOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCompletedPowerDownOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCompletedPowerUpOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemWakeDeviceWakeEnabledOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemWakeDeviceWakeEnabledNPOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemWakeDeviceWakeEnabledWakeCanceledOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemWakeDeviceWakeEnabledWakeCanceledNPOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingWakeWakeArrivedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemWakeDeviceWakeTriggeredS0OtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemWakeDeviceWakeTriggeredS0NPOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemWakeDeviceWakeCompletePowerUpOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingNoWakePowerDownOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingNoWakeCompletePowerDownOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingWakePowerDownOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingSendWakeOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingWakeWakeArrivedNPOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingWakePowerDownFailedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStartedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStartedWaitForIdleTimeoutOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolDevicePowerRequestFailedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStoppingOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStoppedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolRestartingOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStoppingCancelWakeOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolCancelUsbSSOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingWakeRevertArmWakeOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingWakeRevertArmWakeNPOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolRemovedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapableWakeInterruptArrivedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapablePowerDownFailedWakeInterruptArrivedOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolWaitingArmedWakeInterruptFiredDuringPowerDownOtherStates[];
+
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerObjectCreatedStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerStartingStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerStartingSucceededStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerStartingFailedStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerGotoDxStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerGotoDxInDxStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerDxStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerGotoD0States[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerGotoD0InD0States[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerStoppedStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerStoppingWaitForImplicitPowerDownStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerStoppingPoweringUpStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerStoppingPoweringDownStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_NotPowerPolOwnerRemovedStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolWaitingArmedWakeInterruptFiredOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemWakeDeviceWakeInterruptFiredOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSystemWakeDeviceWakeInterruptFiredNPOtherStates[];
 
     //
     // GUID for querying for a power thread down the stack
