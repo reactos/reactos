@@ -5,10 +5,289 @@
 #include "common/fxdriver.h"
 
 
+
+const FxPowerIdleTargetState FxPowerIdleMachine::m_StoppedStates[] =
+{
+    { PowerIdleEventStart, FxIdleStarted DEBUGGED_EVENT },
+};
+
+const FxPowerIdleTargetState FxPowerIdleMachine::m_StartedStates[] =
+{
+    { PowerIdleEventPowerUpComplete, FxIdleStartedPowerUp DEBUGGED_EVENT },
+    { PowerIdleEventPowerUpFailed, FxIdleStartedPowerFailed DEBUGGED_EVENT },
+    { PowerIdleEventStop, FxIdleStopped DEBUGGED_EVENT },
+};
+
+const FxPowerIdleTargetState FxPowerIdleMachine::m_DisabledStates[] =
+{
+    { PowerIdleEventEnabled, FxIdleCheckIoCount DEBUGGED_EVENT },
+    { PowerIdleEventDisabled, FxIdleDisabled DEBUGGED_EVENT },
+    { PowerIdleEventPowerDown, FxIdleGoingToDx DEBUGGED_EVENT },
+    { PowerIdleEventPowerDownFailed, FxIdlePowerFailed DEBUGGED_EVENT },
+    { PowerIdleEventPowerUpFailed, FxIdlePowerFailed DEBUGGED_EVENT },
+    { PowerIdleEventStop, FxIdleStopped DEBUGGED_EVENT },
+};
+
+const FxPowerIdleTargetState FxPowerIdleMachine::m_BusyStates[] =
+{
+    { PowerIdleEventIoDecrement, FxIdleDecrementIo DEBUGGED_EVENT },
+    { PowerIdleEventDisabled, FxIdleDisabled DEBUGGED_EVENT },
+    { PowerIdleEventPowerDown, FxIdleGoingToDx TRAP_ON_EVENT },
+    { PowerIdleEventPowerDownFailed, FxIdlePowerFailed TRAP_ON_EVENT },
+};
+
+const FxPowerIdleTargetState FxPowerIdleMachine::m_TimerRunningStates[] =
+{
+    { PowerIdleEventDisabled, FxIdleDisabling DEBUGGED_EVENT },
+    { PowerIdleEventIoIncrement, FxIdleCancelTimer DEBUGGED_EVENT },
+    { PowerIdleEventEnabled, FxIdleCancelTimer DEBUGGED_EVENT },
+    { PowerIdleEventTimerExpired, FxIdleTimingOut DEBUGGED_EVENT },
+};
+
+const FxPowerIdleTargetState FxPowerIdleMachine::m_TimedOutStates[] =
+{
+    { PowerIdleEventPowerDown, FxIdleTimedOutPowerDown DEBUGGED_EVENT },
+    { PowerIdleEventPowerDownFailed, FxIdleTimedOutPowerDownFailed DEBUGGED_EVENT },
+    { PowerIdleEventDisabled, FxIdleTimedOutDisabled DEBUGGED_EVENT },
+    { PowerIdleEventEnabled, FxIdleTimedOutEnabled DEBUGGED_EVENT },
+    { PowerIdleEventIoIncrement, FxIdleTimedOutIoIncrement DEBUGGED_EVENT },
+};
+
+const FxPowerIdleTargetState FxPowerIdleMachine::m_InDxStates[] =
+{
+    { PowerIdleEventPowerUpComplete, FxIdlePowerUp DEBUGGED_EVENT },
+    { PowerIdleEventPowerUpFailed, FxIdleInDxPowerUpFailure DEBUGGED_EVENT },
+    { PowerIdleEventPowerDownFailed, FxIdleInDxPowerUpFailure TRAP_ON_EVENT },
+    { PowerIdleEventStop, FxIdleInDxStopped DEBUGGED_EVENT },
+    { PowerIdleEventDisabled, FxIdleInDxDisabled DEBUGGED_EVENT },
+    { PowerIdleEventIoIncrement, FxIdleInDxIoIncrement DEBUGGED_EVENT },
+    { PowerIdleEventIoDecrement, FxIdleInDx DEBUGGED_EVENT },
+    { PowerIdleEventPowerDown, FxIdleInDx DEBUGGED_EVENT },
+    { PowerIdleEventEnabled, FxIdleInDxEnabled DEBUGGED_EVENT },
+};
+
+const FxPowerIdleTargetState FxPowerIdleMachine::m_WaitForTimeoutStates[] =
+{
+    { PowerIdleEventTimerExpired, FxIdleTimerExpired DEBUGGED_EVENT },
+    { PowerIdleEventPowerDownFailed, FxIdlePowerFailedWaitForTimeout TRAP_ON_EVENT },
+    { PowerIdleEventDisabled, FxIdleDisablingWaitForTimeout DEBUGGED_EVENT },
+};
+
+const FxPowerIdleTargetState FxPowerIdleMachine::m_DisablingWaitForTimeoutStates[] =
+{
+    { PowerIdleEventTimerExpired, FxIdleDisablingTimerExpired DEBUGGED_EVENT },
+};
+
+const FxPowerIdleTargetState FxPowerIdleMachine::m_PowerFailedWaitForTimeoutStates[] =
+{
+    { PowerIdleEventTimerExpired, FxIdlePowerFailed TRAP_ON_EVENT },
+};
+
 const FxIdleStateTable FxPowerIdleMachine::m_StateTable[] =
 {
-    NULL
-    // TODO: Fill this array
+        // FxIdleStopped
+    {   FxPowerIdleMachine::Stopped,
+        FxPowerIdleMachine::m_StoppedStates,
+        ARRAY_SIZE(FxPowerIdleMachine::m_StoppedStates),
+    },
+
+    // FxIdleStarted
+    {   FxPowerIdleMachine::Started,
+        FxPowerIdleMachine::m_StartedStates,
+        ARRAY_SIZE(FxPowerIdleMachine::m_StartedStates),
+    },
+
+    // FxIdleStartedPowerUp
+    {   FxPowerIdleMachine::StartedPowerUp,
+        NULL,
+        0,
+    },
+
+    // FxIdleStartedPowerFailed
+    {   FxPowerIdleMachine::StartedPowerFailed,
+        NULL,
+        0,
+    },
+
+    // FxIdleDisabled
+    {   FxPowerIdleMachine::Disabled,
+        FxPowerIdleMachine::m_DisabledStates,
+        ARRAY_SIZE(FxPowerIdleMachine::m_DisabledStates),
+    },
+
+    // FxIdleCheckIoCount
+    {   FxPowerIdleMachine::CheckIoCount,
+        NULL,
+        0,
+    },
+
+    // FxIdleBusy
+    {   NULL,
+        FxPowerIdleMachine::m_BusyStates,
+        ARRAY_SIZE(FxPowerIdleMachine::m_BusyStates),
+    },
+
+    // FxIdleDecrementIo
+    {   FxPowerIdleMachine::DecrementIo,
+        NULL,
+        0,
+    },
+
+    // FxIdleStartTimer
+    {   FxPowerIdleMachine::StartTimer,
+        NULL,
+        0,
+    },
+
+    // FxIdleTimerRunning
+    {   NULL,
+        FxPowerIdleMachine::m_TimerRunningStates,
+        ARRAY_SIZE(FxPowerIdleMachine::m_TimerRunningStates)
+    },
+
+    // FxIdleTimingOut
+    {   FxPowerIdleMachine::TimingOut,
+        NULL,
+        0,
+    },
+
+    // FxIdleTimedOut
+    {   NULL,
+        FxPowerIdleMachine::m_TimedOutStates,
+        ARRAY_SIZE(FxPowerIdleMachine::m_TimedOutStates),
+    },
+
+    // FxIdleTimedOutIoIncrement
+    {   FxPowerIdleMachine::TimedOutIoIncrement,
+        NULL,
+        0,
+    },
+
+    // FxIdleTimedOutPowerDown
+    {   FxPowerIdleMachine::TimedOutPowerDown,
+        NULL,
+        0,
+    },
+
+    // FxIdleTimedOutPowerDownFailed
+    {   FxPowerIdleMachine::TimedOutPowerDownFailed,
+        NULL,
+        0,
+    },
+
+    // FxIdleGoingToDx,
+    {   FxPowerIdleMachine::GoingToDx,
+        NULL,
+        0,
+    },
+
+    // FxIdleInDx,
+    {   FxPowerIdleMachine::InDx,
+        FxPowerIdleMachine::m_InDxStates,
+        ARRAY_SIZE(FxPowerIdleMachine::m_InDxStates),
+    },
+
+    // FxIdleInDxIoIncrement
+    {   FxPowerIdleMachine::InDxIoIncrement,
+        NULL,
+        0,
+    },
+
+    // FxIdleInDxPowerUpFailure
+    {   FxPowerIdleMachine::InDxPowerUpFailure,
+        NULL,
+        0,
+    },
+
+    // FxIdleInDxStopped
+    {   FxPowerIdleMachine::InDxStopped,
+        NULL,
+        0,
+    },
+
+    // FxIdleInDxDisabled
+    {   FxPowerIdleMachine::InDxDisabled,
+        NULL,
+        0,
+    },
+
+    // FxIdleInDxEnabled
+    {   FxPowerIdleMachine::InDxEnabled,
+        NULL,
+        0,
+    },
+
+    // FxIdlePowerUp
+    {   FxPowerIdleMachine::PowerUp,
+        NULL,
+        0,
+    },
+
+    // FxIdlePowerUpComplete
+    {   FxPowerIdleMachine::PowerUpComplete,
+        NULL,
+        0,
+    },
+
+    // FxIdleTimedOutDisabled
+    {   FxPowerIdleMachine::TimedOutDisabled,
+        NULL,
+        0,
+    },
+
+    // FxIdleTimedOutEnabled
+    {   FxPowerIdleMachine::TimedOutEnabled,
+        NULL,
+        0,
+    },
+
+    // FxIdleCancelTimer
+    {   FxPowerIdleMachine::CancelTimer,
+        NULL,
+        0,
+    },
+
+    // FxIdleWaitForTimeout
+    {   NULL,
+        FxPowerIdleMachine::m_WaitForTimeoutStates,
+        ARRAY_SIZE(FxPowerIdleMachine::m_WaitForTimeoutStates),
+    },
+
+    // FxIdleTimerExpired
+    {   FxPowerIdleMachine::TimerExpired,
+        NULL,
+        0,
+    },
+
+    // FxIdleDisabling
+    {   FxPowerIdleMachine::Disabling,
+        NULL,
+        0,
+    },
+
+    // FxIdleDisablingWaitForTimeout
+    {   NULL,
+        FxPowerIdleMachine::m_DisablingWaitForTimeoutStates,
+        ARRAY_SIZE(FxPowerIdleMachine::m_DisablingWaitForTimeoutStates),
+    },
+
+    // FxIdleDisablingTimerExpired
+    {   FxPowerIdleMachine::DisablingTimerExpired,
+        NULL,
+        0,
+    },
+
+    // FxIdlePowerFailedWaitForTimeout
+    {   NULL,
+        FxPowerIdleMachine::m_PowerFailedWaitForTimeoutStates,
+        ARRAY_SIZE(FxPowerIdleMachine::m_PowerFailedWaitForTimeoutStates),
+    },
+
+    // FxIdlePowerFailed
+    {   FxPowerIdleMachine::PowerFailed,
+        NULL,
+        0,
+    },
 };
 
 FxPowerIdleMachine::FxPowerIdleMachine(
@@ -636,4 +915,612 @@ Return Value:
     m_Lock.Release(irql);
 
     return status;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::Stopped(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    State machine has entered the stopped state, clear the started flag
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleMax
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::Started(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    State machine has entered the started state, set the started flag
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleMax
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::StartedPowerUp(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    We were in the started and powered off state.  We are powered up,
+    so set the event now so that we can wake up any waiters.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleDisabled
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::StartedPowerFailed(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The state machine was started, but the initial power up failed.  Mark the
+    failure.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleStarted
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::Disabled(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    State machine has entered the disabled state, unblock all waiters
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleMax
+
+  --*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::CheckIoCount(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    Checks the IO count and transitions the appropriate state.   This is the
+    first state we are in after being disabled or after transitioning from Dx to
+    D0.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    new state machine state
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::DecrementIo(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    Checks the IO count and returns a new state
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    new state machine state
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::StartTimer(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The io count is now at zero.  Start the idle timer so that when it expires,
+    the device will move into Dx.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleMax
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+
+FxPowerIdleStates
+FxPowerIdleMachine::TimingOut(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The idle timer has expired. Indicate to the power policy state machine
+    that it should power down.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleTimedOut
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::TimedOutIoIncrement(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    A power reference occurred after we notified the power policy machine of
+    a power timeout, but before we timed out. Send an io present event to the
+    power policy machine so that it can move into the D0 state/not timed out
+    state again.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleTimedOut
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::TimedOutPowerDown(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The idle timer fired and we are now powering down.  Clear the flag that
+    limits our sending of the io present event to one time while in the timed
+    out state.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleGoingToDx
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::TimedOutPowerDownFailed(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The idle timer fired and we could no power down.  Clear the flag that
+    limits our sending of the io present event to one time while in the timed
+    out state.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdlePowerFailed
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::GoingToDx(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The device is going into Dx.  It could be going into Dx because the idle
+    timer expired or because the machine is moving into Sx, the reason doesn't
+    matter though.  Clear the in D0 event.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleInDx
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::InDx(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The device has moved into Dx.   If there is no pending io, mark the device
+    as idle.  We can be in Dx with pending io if IoIncrement was called after
+    the device moved into Dx.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleMax
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::InDxIoIncrement(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    In Dx and the io count went up.  Send the event to the power policy state
+    machine indicating new io is present.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleInDx
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::InDxPowerUpFailure(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    Device is in Dx and there was a failure in the power up path.  The device
+    is no longer idle, even though it is stil in Dx.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdlePowerFailed
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::InDxStopped(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The state machine was stopped while in the Dx state.  When the machine is in
+    the stopped state, the notification event is in the signaled state.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleStopped
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::InDxDisabled(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The device is in Dx and the state machine is being disabled (most likely due
+    to a surprise remove).
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleDisabled
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::InDxEnabled(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The device is in Dx and the state machine is being enabled (most like due
+    to trying to remain in Dx after Sx->S0.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleInDx
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::PowerUp(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The device powered up enough to where we can let waiters go and start pounding
+    on their hardware.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdlePowerUpComplete
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::PowerUpComplete(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The device is moving into D0, determine which D0 state to move into
+    based on the enabled state and io count.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    new state
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::TimedOutDisabled(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The power idle state machine is moving into the disabled state.  Set the
+    D0 event.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleDisabled
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::TimedOutEnabled(
+    __inout FxPowerIdleMachine* This
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::CancelTimer(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The timer is running and we need to cancel it because of an io increment or
+    the state machine being disabled.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    new state
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::TimerExpired(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    The timer was not canceled because it was running.  The timer has now
+    fired, so we can move forward.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleCheckIoCount
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::Disabling(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    Timer is running and the state machine is being disabled.  Cancel the idle
+    timer.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    new state
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::DisablingTimerExpired(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    When disabling the state machine, the timer could not be canceled.  The
+    timer has now expired and the state machine can move forward.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleDisabled
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
+}
+
+FxPowerIdleStates
+FxPowerIdleMachine::PowerFailed(
+    __inout FxPowerIdleMachine* This
+    )
+/*++
+
+Routine Description:
+    A power operation (up or down) failed.  Mark the machine as failed so that
+    PowerReference will fail properly.
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    FxIdleDisabled
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxIdleMax;
 }

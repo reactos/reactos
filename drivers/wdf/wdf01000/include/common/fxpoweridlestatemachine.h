@@ -136,6 +136,26 @@ public:
         );
 
     VOID
+    EnableTimer(
+        VOID
+        );
+
+    BOOLEAN
+    DisableTimer(
+        VOID
+        );
+
+    VOID
+    Start(
+        VOID
+        );
+
+    VOID
+    Stop(
+        VOID
+        );
+
+    VOID
     Reset(
         VOID
         );
@@ -257,6 +277,17 @@ protected:
     //
     FxPowerIdleStates m_StateHistory[FxPowerIdleEventQueueDepth];
 
+    static const FxPowerIdleTargetState m_StoppedStates[];
+    static const FxPowerIdleTargetState m_StartedStates[];
+    static const FxPowerIdleTargetState m_DisabledStates[];
+    static const FxPowerIdleTargetState m_BusyStates[];
+    static const FxPowerIdleTargetState m_TimerRunningStates[];
+    static const FxPowerIdleTargetState m_TimedOutStates[];
+    static const FxPowerIdleTargetState m_InDxStates[];
+    static const FxPowerIdleTargetState m_WaitForTimeoutStates[];
+    static const FxPowerIdleTargetState m_DisablingWaitForTimeoutStates[];
+    static const FxPowerIdleTargetState m_PowerFailedWaitForTimeoutStates[];
+
     static const FxIdleStateTable m_StateTable[];
 
 
@@ -287,6 +318,174 @@ protected:
     {
         return m_D0NotificationEvent.ReadState() ? TRUE : FALSE;
     }
+
+    static
+    FxPowerIdleStates
+    Stopped(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    Started(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    StartedPowerUp(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    StartedPowerFailed(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    Disabled(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    CheckIoCount(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    DecrementIo(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    StartTimer(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    TimingOut(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    TimedOutIoIncrement(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    TimedOutPowerDown(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    TimedOutPowerDownFailed(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    GoingToDx(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    InDx(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    InDxIoIncrement(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    InDxPowerUpFailure(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    InDxStopped(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    InDxDisabled(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    InDxEnabled(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    PowerUp(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    PowerUpComplete(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    TimedOutDisabled(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    TimedOutEnabled(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    CancelTimer(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    TimerExpired(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    Disabling(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    DisablingTimerExpired(
+        __inout FxPowerIdleMachine* This
+        );
+
+    static
+    FxPowerIdleStates
+    PowerFailed(
+        __inout FxPowerIdleMachine* This
+        );
 };
 
 #endif //_FXPOWERIDLESTATEMACHINE_H_
