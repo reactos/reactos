@@ -250,7 +250,7 @@ CreateSysMenu(HWND hWnd)
     if (ptrTab)
     {
         *ptrTab = L'\0';
-        mii.cch = wcslen(szMenuStringBack);
+        mii.cch = (UINT)wcslen(szMenuStringBack);
 
         SetMenuItemInfoW(hMenu, SC_CLOSE, FALSE, &mii);
     }
@@ -2164,6 +2164,20 @@ GuiConsoleHandleScrollbarMenu(VOID)
 }
 */
 
+HBITMAP
+CreateFrameBufferBitmap(HDC hDC, int width, int height)
+{
+    BITMAPINFO bmi;
+    ZeroMemory(&bmi, sizeof(BITMAPINFO));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = width;
+    bmi.bmiHeader.biHeight = height;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = GetDeviceCaps(hDC, BITSPIXEL);
+    bmi.bmiHeader.biCompression = BI_RGB;
+    return CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
+}
+
 static LRESULT CALLBACK
 ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -2505,7 +2519,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             /* Recreate the framebuffer */
             hDC  = GetDC(GuiData->hWindow);
-            hnew = CreateCompatibleBitmap(hDC, Width, Height);
+            hnew = CreateFrameBufferBitmap(hDC, Width, Height);
             ReleaseDC(GuiData->hWindow, hDC);
             hold = SelectObject(GuiData->hMemDC, hnew);
             if (GuiData->hBitmap)
