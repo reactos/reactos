@@ -10,6 +10,8 @@ import "objidl.idl";
 
 interface IComponent;
 interface IComponentData;
+interface IExtendPropertySheet;
+interface IExtendPropertySheet2;
 
 interface IConsole;
 interface IConsole2;
@@ -26,6 +28,8 @@ interface ISnapInAbout;
 
 typedef IComponent *LPCOMPONENT;
 typedef IComponentData *LPCOMPONENTDATA;
+typedef IExtendPropertySheet *LPEXTENDPROPERTYSHEET;
+typedef IExtendPropertySheet2 *LPEXTENDPROPERTYSHEET2;
 
 typedef IConsole *LPCONSOLE;
 typedef IConsole2 *LPCONSOLE2;
@@ -428,6 +432,40 @@ interface IPropertySheetProvider : IUnknown
         [in] LONG_PTR window,
         [in] int page
     );
+};
+
+
+[
+    object,
+    uuid(85de64dc-ef21-11cf-a285-00c04fd8dbe6)
+]
+interface IExtendPropertySheet : IUnknown
+{
+    HRESULT CreatePropertyPages(
+        [in] LPPROPERTYSHEETCALLBACK lpProvider,
+        [in] LONG_PTR handle,
+        [in] LPDATAOBJECT lpIDataObject
+    );
+
+    HRESULT QueryPagesFor(
+        [in] LPDATAOBJECT lpDataObject
+    );
+};
+
+
+[
+    object,
+    uuid(b7a87232-4a51-11d1-a7ea-00c04fd909dd)
+]
+interface IExtendPropertySheet2 : IExtendPropertySheet
+{
+    HRESULT GetWatermarks(
+        [in] LPDATAOBJECT lpIDataObject,
+        [out] HBITMAP* lphWatermark,
+        [out] HBITMAP* lphHeader,
+        [out] HPALETTE* lphPalette,
+        [out] BOOL* bStretch
+  );
 };
 
 
