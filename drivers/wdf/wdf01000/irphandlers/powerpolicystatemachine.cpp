@@ -2383,8 +2383,18 @@ FxPkgPnp::PowerPolStarting(
     __inout FxPkgPnp* This
     )
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePwrPolInvalid;
+    ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolStarting);
+
+    This->m_PowerPolicyMachine.m_Owner->m_PowerIdleMachine.Start();
+
+    This->PowerProcessEvent(PowerImplicitD0);
+
+    //
+    // Wait for the successful power up before starting any idle timers.  If
+    // the power up fails, we will not send a power policy stop from the pnp
+    // engine.
+    //
+    return WdfDevStatePwrPolNull;
 }
 
 WDF_DEVICE_POWER_POLICY_STATE
@@ -4247,4 +4257,31 @@ FxPkgPnp::NotPowerPolOwnerGotoD0(
 {
     WDFNOTIMPLEMENTED();
     return WdfDevStatePwrPolInvalid;
+}
+
+//
+
+VOID
+FxPowerIdleMachine::Start(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Public function that the power policy state machine uses to put this state
+    machine into a started state so that the caller can call PowerReference
+    successfully.
+
+Arguments:
+    None
+
+Return Value:
+    None
+
+  --*/
+{
+    KIRQL irql;
+    m_Lock.Acquire(&irql);
+    ProcessEventLocked(PowerIdleEventStart);
+    m_Lock.Release(irql);
 }
