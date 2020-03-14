@@ -113,6 +113,9 @@ CPlApplet(HWND hwndCpl,
             Applets[uAppIndex].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
             break;
         }
+
+        case CPL_STARTWPARMSW:
+            return Applets[(UINT)lParam1].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
     }
 
     return FALSE;
