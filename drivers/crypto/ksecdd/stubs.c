@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef PVOID PSECURITY_PACKAGE_OPTIONS, PSecurityUserData;  // Imported from secur32/stubs.c
+typedef PVOID PSECURITY_PACKAGE_OPTIONS, PSecurityUserData;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -161,16 +161,16 @@ GenerateSessionKey(VOID)
     UNIMPLEMENTED_DBGBREAK();
 }
 
-SECURITY_STATUS              // Updated from secur32/stubs.c
+SECURITY_STATUS
 SEC_ENTRY
 GetSecurityUserInfo(
-    PLUID LogonId,
-    ULONG Flags,
-    PSecurityUserData *UserInformation)
+    _In_opt_ PLUID LogonId,
+    _In_     ULONG Flags,
+    _Out_    PSecurityUserData *UserInformation)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
-}                            // End of update from secur32/stubs.c
+}
 
 SECURITY_STATUS
 SEC_ENTRY
