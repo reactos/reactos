@@ -114,7 +114,7 @@ IsaPdoQueryId(
       Status = RtlStringCbPrintfExW(Temp, sizeof(Temp),
                                     &End,
                                     NULL, 0,
-                                    L"%u",
+                                    L"%X",
                                     LogDev->SerialNumber);
       if (!NT_SUCCESS(Status))
         return Status;
