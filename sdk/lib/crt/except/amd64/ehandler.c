@@ -107,12 +107,12 @@ __C_specific_handler(
                 FilterResult = ExceptionFilter(&ExceptionPointers, EstablisherFrame);
             }
 
-            if (FilterResult == EXCEPTION_CONTINUE_EXECUTION)
+            if (FilterResult < 0 /* EXCEPTION_CONTINUE_EXECUTION */)
             {
                 return ExceptionContinueExecution;
             }
 
-            if (FilterResult == EXCEPTION_EXECUTE_HANDLER)
+            if (FilterResult > 0 /* EXCEPTION_EXECUTE_HANDLER */)
             {
                 JumpTarget = (ImageBase + ScopeTable->ScopeRecord[i].JumpTarget);
 
