@@ -14,6 +14,8 @@ interface IComponentData;
 interface IConsole;
 interface IConsole2;
 interface IConsoleNameSpace;
+interface IPropertySheetCallback;
+interface IPropertySheetProvider;
 interface IConsoleNameSpace2;
 interface IHeaderCtrl;
 interface IToolbar;
@@ -28,6 +30,8 @@ typedef IComponentData *LPCOMPONENTDATA;
 typedef IConsole *LPCONSOLE;
 typedef IConsole2 *LPCONSOLE2;
 typedef IConsoleNameSpace *LPCONSOLENAMESPACE;
+typedef IPropertySheetCallback *LPPROPERTYSHEETCALLBACK;
+typedef IPropertySheetProvider *LPPROPERTYSHEETPROVIDER;
 typedef IConsoleNameSpace2 *LPCONSOLENAMESPACE2;
 typedef IHeaderCtrl *LPHEADERCTRL;
 typedef IToolbar *LPTOOLBAR;
@@ -157,6 +161,8 @@ typedef struct _MMCBUTTON {
 } MMCBUTTON, *LPMMCBUTTON;
 #include <poppack.h>
 
+
+typedef LONG_PTR MMC_COOKIE;
 
 
 [
@@ -360,6 +366,69 @@ interface IConsoleNameSpace : IUnknown
         [out] long       *plCookie
     );
 }
+
+
+cpp_quote("#if 0")
+typedef struct { int dummy; } _PSP;
+typedef _PSP *HPROPSHEETPAGE;
+cpp_quote("#else")
+cpp_quote("#ifndef _HPROPSHEETPAGE_DEFINED")
+cpp_quote("#define _HPROPSHEETPAGE_DEFINED")
+cpp_quote("DECLARE_HANDLE(HPROPSHEETPAGE);")
+cpp_quote("#endif")
+cpp_quote("#endif")
+
+
+[
+    object,
+    uuid(85de64dd-ef21-11cf-a285-00c04fd8dbe6)
+]
+interface IPropertySheetCallback : IUnknown
+{
+    HRESULT AddPage(
+        [in] HPROPSHEETPAGE hPage
+    );
+
+    HRESULT RemovePage(
+        [in] HPROPSHEETPAGE hPage
+    );
+};
+
+
+[
+    object,
+    uuid(85de64de-ef21-11cf-a285-00c04fd8dbe6)
+]
+interface IPropertySheetProvider : IUnknown
+{
+    HRESULT CreatePropertySheet(
+        [in] LPCWSTR title,
+        [in] boolean type,
+        [in] MMC_COOKIE cookie,
+        [in] LPDATAOBJECT pIDataObjectm,
+        [in] DWORD dwOptions
+    );
+
+    HRESULT FindPropertySheet(
+        [in] HSCOPEITEM hItem,
+        [in] LPCOMPONENT lpComponent,
+        [in] LPDATAOBJECT lpDataObject
+    );
+
+    HRESULT AddPrimaryPages(
+        [in] LPUNKNOWN lpUnknown,
+        [in] BOOL bCreateHandle,
+        [in] HWND hNotifyWindow,
+        [in] BOOL bScopePane
+    );
+
+    HRESULT AddExtensionPages();
+
+    HRESULT Show(
+        [in] LONG_PTR window,
+        [in] int page
+    );
+};
 
 
 [
