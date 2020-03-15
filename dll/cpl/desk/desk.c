@@ -150,6 +150,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     LPCWSTR pwszSelectedTab = NULL;
     LPCWSTR pwszFile = NULL;
     LPCWSTR pwszAction = NULL;
+    INT nPage = 0;
 
     UNREFERENCED_PARAMETER(wParam);
 
@@ -159,6 +160,8 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     {
         int argc;
         int i;
+
+        nPage = _wtoi((PWSTR)lParam);
 
 #if 0
         argv = CommandLineToArgvW((LPCWSTR)lParam, &argc);
@@ -190,7 +193,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         ActivateThemeFile(pwszFile);
         goto cleanup;
     }
-    
+
     g_GlobalData.pwszFile = pwszFile;
     g_GlobalData.pwszAction = pwszAction;
     g_GlobalData.desktop_color = GetSysColor(COLOR_DESKTOP);
@@ -232,6 +235,9 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     /* NOTE: Don't call SHAddFromPropSheetExtArray here because this applet only allows
              replacing the background page but not extending the applet by more pages */
 
+    if (nPage != 0 && psh.nStartPage == 0)
+        psh.nStartPage = nPage;
+
     PropertySheet(&psh);
 
 cleanup:
@@ -272,6 +278,7 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
         case CPL_DBLCLK:
             Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
             break;
+
         case CPL_STARTWPARMSW:
             return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
     }
