@@ -164,11 +164,12 @@ GenerateSessionKey(VOID)
 SECURITY_STATUS
 SEC_ENTRY
 GetSecurityUserInfo(
-    _In_opt_ PLUID LogonId,
-    _In_     ULONG Flags,
-    _Out_    PSecurityUserData *UserInformation)
+    _In_opt_    PLUID LogonId,
+    _In_        ULONG Flags,
+    _Outptr_    PSecurityUserData *UserInformation)
 {
     UNIMPLEMENTED;
+    *UserInformation = NULL;
     return STATUS_UNSUCCESSFUL;
 }
 
