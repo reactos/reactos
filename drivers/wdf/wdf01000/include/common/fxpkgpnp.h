@@ -1807,6 +1807,429 @@ protected:
         
     // end power policy state machine table based callbacks
 
+    // begin power state machine table based callbacks
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerCheckDeviceType(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerCheckDeviceTypeNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerEnablingWakeAtBus(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerEnablingWakeAtBusNP(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerCheckParentState(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerCheckParentStateNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerD0NP(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerD0BusWakeOwner(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerD0BusWakeOwnerNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerD0ArmedForWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerD0DisarmingWakeAtBus(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerD0DisarmingWakeAtBusNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerD0Starting(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerD0StartingConnectInterrupt(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerD0StartingDmaEnable(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerD0StartingStartSelfManagedIo(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerDecideD0State(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerGotoD3Stopped(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerStartingCheckDeviceType(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerStartingChild(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerDxDisablingWakeAtBus(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerDxDisablingWakeAtBusNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerGotoDNotZeroIoStopped(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerGotoDNotZeroIoStoppedNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerGotoDxNPFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerGotoDxArmedForWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerGotoDxIoStoppedArmedForWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerGotoDxIoStoppedArmedForWakeNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerCheckParentStateArmedForWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerCheckParentStateArmedForWakeNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerStartSelfManagedIo(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerStartSelfManagedIoNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerStartSelfManagedIoFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerStartSelfManagedIoFailedNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakePending(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakePendingNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWaking(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingConnectInterrupt(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingConnectInterruptNP(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingConnectInterruptFailed(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingConnectInterruptFailedNP(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingDmaEnable(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingDmaEnableNP(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingDmaEnableFailed(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingDmaEnableFailedNP(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerReportPowerUpFailedDerefParent(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerReportPowerUpFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerPowerFailedPowerDown(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerReportPowerDownFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerInitialConnectInterruptFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerInitialDmaEnableFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerInitialSelfManagedIoFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerInitialPowerUpFailedPowerDown(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerInitialPowerUpFailedDerefParent(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerInitialPowerUpFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerDxStoppedDisarmWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerDxStoppedDisarmWakeNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerGotoDxStoppedDisableInterruptNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerGotoDxStopped(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerGotoStopped(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerStoppedCompleteDx(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerDxStoppedDecideDxState(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerDxStoppedArmForWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerDxStoppedArmForWakeNP(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerFinalPowerDownFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerUpFailedDerefParent(
+        __inout FxPkgPnp*   This
+        );
+    
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerUpFailed(
+        __inout FxPkgPnp*   This
+        );
+    
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerUpFailedPowerDown(
+        __inout FxPkgPnp*   This
+        );
+    
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerGotoDxStoppedDisableInterrupt(
+        __inout FxPkgPnp*   This
+        );
+
+    // end power state machine table based callbacks
+
 
     _Must_inspect_result_
     NTSTATUS
@@ -2463,6 +2886,21 @@ protected:
     static const PNP_EVENT_TARGET_STATE m_PnpRestartReleaseHardware[];
     static const PNP_EVENT_TARGET_STATE m_PnpRestartHardwareAvailableOtherStates[];
     
+    static const POWER_EVENT_TARGET_STATE m_PowerD0OtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_PowerD0NPOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_PowerD0BusWakeOwnerOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_PowerD0BusWakeOwnerNPOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_PowerD0ArmedForWakeOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_PowerD0ArmedForWakeNPOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_PowerDNotZeroOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_PowerDNotZeroNPOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_DxArmedForWakeOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_DxArmedForWakeNPOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_WakePendingOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_WakePendingNPOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_DxSurpriseRemovedOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_PowerStoppedOtherStates[];
+    static const POWER_EVENT_TARGET_STATE m_PowerDxStoppedOtherStates[];
 
     static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolObjectCreatedOtherStates[];
     static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStartingOtherStates[];
