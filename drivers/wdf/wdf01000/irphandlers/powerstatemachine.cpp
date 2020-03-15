@@ -1731,8 +1731,14 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    if (This->m_Device->IsPdo())
+    {
+        return WdfDevStatePowerStartingChild;
+    }
+    else
+    {
+        return WdfDevStatePowerD0Starting;
+    }
 }
 
 WDF_DEVICE_POWER_STATE
