@@ -955,7 +955,13 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
+    This->m_Flags |= FxPowerIdleIsStarted;
+
+    //
+    // We are in the started state, but we are not powered up.
+    //
+    This->m_D0NotificationEvent.Clear();
+
     return FxIdleMax;
 }
 
