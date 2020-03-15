@@ -622,7 +622,7 @@
 @ varargs _snprintf(ptr long str)
 @ varargs _snscanf(str long str)
 @ varargs _snwprintf(ptr long wstr)
-# stub _snwscanf
+@ varargs _snwscanf(wstr long wstr)
 @ varargs _sopen(str long long)
 @ varargs _spawnl(long str str)
 @ varargs _spawnle(long str str)
