@@ -245,3 +245,28 @@ FxPnpDevicePrepareHardware::Invoke(
         return STATUS_SUCCESS;
     }
 }
+
+__drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
+_Must_inspect_result_
+NTSTATUS
+FxPnpDeviceD0Entry::Invoke(
+    _In_ WDFDEVICE  Device,
+    _In_ WDF_POWER_DEVICE_STATE PreviousState
+    )
+{
+    NTSTATUS status;
+
+    m_Device = Device;
+    m_PreviousState = PreviousState;
+
+    if (m_Method != NULL)
+    {
+        status = m_Method(Device, PreviousState);
+    }
+    else
+    {
+        status = STATUS_SUCCESS;
+    }
+    
+    return status;
+}
