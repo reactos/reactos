@@ -62,79 +62,43 @@ IsaPdoQueryId(
     IN PIRP Irp,
     IN PIO_STACK_LOCATION IrpSp)
 {
-    PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
-    WCHAR Temp[256];
-    PWCHAR Buffer, End;
-    ULONG Length;
-    NTSTATUS Status;
+    UNICODE_STRING EmptyString = RTL_CONSTANT_STRING(L"");
+    PUNICODE_STRING Source;
+    PWCHAR Buffer;
 
     switch (IrpSp->Parameters.QueryId.IdType)
     {
         case BusQueryDeviceID:
-        {
             DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
-            Status = RtlStringCbPrintfExW(Temp, sizeof(Temp),
-                                          &End,
-                                          NULL, 0,
-                                          L"ISAPNP\\%3S%04X",
-                                          LogDev->VendorId,
-                                          LogDev->ProdId);
-            if (!NT_SUCCESS(Status))
-                return Status;
-            Length = End - Temp;
-            Temp[Length++] = UNICODE_NULL;
+            Source = &PdoExt->DeviceID;
             break;
-        }
 
         case BusQueryHardwareIDs:
             DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
-            Status = RtlStringCbPrintfExW(Temp, sizeof(Temp),
-                                          &End,
-                                          NULL, 0,
-                                          L"ISAPNP\\%3S%04X",
-                                          LogDev->VendorId,
-                                          LogDev->ProdId);
-            if (!NT_SUCCESS(Status))
-                return Status;
-            Length = End - Temp;
-            Temp[Length++] = UNICODE_NULL;
-            Status = RtlStringCbPrintfExW(Temp + Length, sizeof(Temp) - Length,
-                                          &End,
-                                          NULL, 0,
-                                          L"*%3S%04X",
-                                          LogDev->VendorId,
-                                          LogDev->ProdId);
-            if (!NT_SUCCESS(Status))
-                return Status;
-            Length = End - Temp;
-            Temp[Length++] = UNICODE_NULL;
-            Temp[Length++] = UNICODE_NULL;
+            Source = &PdoExt->HardwareIDs;
+            break;
+
+        case BusQueryCompatibleIDs:
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
+            Source = &EmptyString;
             break;
 
         case BusQueryInstanceID:
             DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
-            Status = RtlStringCbPrintfExW(Temp, sizeof(Temp),
-                                          &End,
-                                          NULL, 0,
-                                          L"%X",
-                                          LogDev->SerialNumber);
-            if (!NT_SUCCESS(Status))
-                return Status;
-            Length = End - Temp;
-            Temp[Length++] = UNICODE_NULL;
+            Source = &PdoExt->InstanceID;
             break;
 
         default:
-            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / unknown query id type 0x%lx\n",
-                    IrpSp->Parameters.QueryId.IdType);
-            return Irp->IoStatus.Status;
+          DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / unknown query id type 0x%lx\n",
+                  IrpSp->Parameters.QueryId.IdType);
+          return Irp->IoStatus.Status;
     }
 
-    Buffer = ExAllocatePool(PagedPool, Length * sizeof(WCHAR));
+    Buffer = ExAllocatePool(PagedPool, Source->MaximumLength);
     if (!Buffer)
         return STATUS_NO_MEMORY;
 
-    RtlCopyMemory(Buffer, Temp, Length * sizeof(WCHAR));
+    RtlCopyMemory(Buffer, Source->Buffer, Source->MaximumLength);
     Irp->IoStatus.Information = (ULONG_PTR)Buffer;
     return STATUS_SUCCESS;
 }
