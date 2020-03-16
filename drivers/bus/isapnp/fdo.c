@@ -59,7 +59,7 @@ IsaFdoQueryDeviceRelations(
         return Status;
     }
 
-    return IsaPnpFillDeviceRelations(FdoExt, Irp);
+    return IsaPnpFillDeviceRelations(FdoExt, Irp, TRUE);
 }
 
 NTSTATUS

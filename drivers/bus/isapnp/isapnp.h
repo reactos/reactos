@@ -37,6 +37,7 @@ typedef struct _ISAPNP_FDO_EXTENSION {
     ISAPNP_COMMON_EXTENSION Common;
     PDEVICE_OBJECT Ldo;
     PDEVICE_OBJECT Pdo;
+    PDEVICE_OBJECT DataPortPdo;
     LIST_ENTRY DeviceListHead;
     ULONG DeviceCount;
     PDRIVER_OBJECT DriverObject;
@@ -68,7 +69,8 @@ NTSTATUS
 NTAPI
 IsaPnpFillDeviceRelations(
     IN PISAPNP_FDO_EXTENSION FdoExt,
-    IN PIRP Irp);
+    IN PIRP Irp,
+    IN BOOLEAN IncludeDataPort);
 
 DRIVER_INITIALIZE DriverEntry;
 

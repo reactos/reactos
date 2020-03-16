@@ -140,7 +140,8 @@ NTSTATUS
 NTAPI
 IsaPnpFillDeviceRelations(
   IN PISAPNP_FDO_EXTENSION FdoExt,
-  IN PIRP Irp)
+  IN PIRP Irp,
+  IN BOOLEAN IncludeDataPort)
 {
     PISAPNP_PDO_EXTENSION PdoExt;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -154,6 +155,12 @@ IsaPnpFillDeviceRelations(
     if (!DeviceRelations)
     {
         return STATUS_NO_MEMORY;
+    }
+
+    if (IncludeDataPort)
+    {
+        DeviceRelations->Objects[i++] = FdoExt->DataPortPdo;
+        ObReferenceObject(FdoExt->DataPortPdo);
     }
 
     CurrentEntry = FdoExt->DeviceListHead.Flink;
@@ -323,6 +330,53 @@ IsaReadWrite(
 static
 NTSTATUS
 NTAPI
+IsaPnpCreateReadPortDO(PISAPNP_FDO_EXTENSION FdoExt)
+{
+  UNICODE_STRING DeviceID = RTL_CONSTANT_STRING(L"ISAPNP\\ReadDataPort\0");
+  UNICODE_STRING HardwareIDs = RTL_CONSTANT_STRING(L"ISAPNP\\ReadDataPort\0\0");
+  UNICODE_STRING InstanceID = RTL_CONSTANT_STRING(L"0\0");
+  PISAPNP_PDO_EXTENSION PdoExt;
+
+  NTSTATUS Status;
+  Status = IoCreateDevice(FdoExt->DriverObject,
+                          sizeof(ISAPNP_PDO_EXTENSION),
+                          NULL,
+                          FILE_DEVICE_CONTROLLER,
+                          FILE_DEVICE_SECURE_OPEN,
+                          FALSE,
+                          &FdoExt->DataPortPdo);
+  if (!NT_SUCCESS(Status))
+      return Status;
+  PdoExt = (PISAPNP_PDO_EXTENSION)FdoExt->DataPortPdo->DeviceExtension;
+  RtlZeroMemory(PdoExt, sizeof(ISAPNP_PDO_EXTENSION));
+  PdoExt->Common.IsFdo = FALSE;
+  PdoExt->Common.Self = FdoExt->DataPortPdo;
+  PdoExt->Common.State = dsStopped;
+
+  Status = IsaPnpDuplicateUnicodeString(0,
+                                        &DeviceID,
+                                        &PdoExt->DeviceID);
+  if (!NT_SUCCESS(Status))
+      return Status;
+
+  Status = IsaPnpDuplicateUnicodeString(0,
+                                        &HardwareIDs,
+                                        &PdoExt->HardwareIDs);
+  if (!NT_SUCCESS(Status))
+      return Status;
+
+  Status = IsaPnpDuplicateUnicodeString(0,
+                                        &InstanceID,
+                                        &PdoExt->InstanceID);
+  if (!NT_SUCCESS(Status))
+      return Status;
+
+  return Status;
+}
+
+static
+NTSTATUS
+NTAPI
 IsaAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject)
@@ -360,7 +414,12 @@ IsaAddDevice(
     InitializeListHead(&FdoExt->DeviceListHead);
     KeInitializeSpinLock(&FdoExt->Lock);
 
+    Status = IsaPnpCreateReadPortDO(FdoExt);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
     Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
+    FdoExt->DataPortPdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
     return STATUS_SUCCESS;
 }

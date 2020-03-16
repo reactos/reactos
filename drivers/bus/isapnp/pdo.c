@@ -44,13 +44,26 @@ IsaPdoQueryCapabilities(
 {
     PDEVICE_CAPABILITIES DeviceCapabilities;
     PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
+    ULONG i;
 
     DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
     if (DeviceCapabilities->Version != 1)
         return STATUS_REVISION_MISMATCH;
 
-    DeviceCapabilities->UniqueID = LogDev->SerialNumber != 0xffffffff;
-    DeviceCapabilities->Address = LogDev->CSN;
+    if (LogDev)
+    {
+        DeviceCapabilities->UniqueID = LogDev->SerialNumber != 0xffffffff;
+        DeviceCapabilities->Address = LogDev->CSN;
+    }
+    else
+    {
+        DeviceCapabilities->UniqueID = TRUE;
+        DeviceCapabilities->SilentInstall = TRUE;
+        DeviceCapabilities->RawDeviceOK = TRUE;
+        for (i = 0; i < POWER_SYSTEM_MAXIMUM; i++)
+            DeviceCapabilities->DeviceState[i] = PowerDeviceD3;
+        DeviceCapabilities->DeviceState[PowerSystemWorking] = PowerDeviceD0;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -115,14 +128,20 @@ IsaPdoPnp(
     switch (IrpSp->MinorFunction)
     {
        case IRP_MN_START_DEVICE:
-         Status = IsaHwActivateDevice(PdoExt->IsaPnpDevice);
+           if (PdoExt->IsaPnpDevice)
+               Status = IsaHwActivateDevice(PdoExt->IsaPnpDevice);
+           else
+               Status = STATUS_SUCCESS;
 
          if (NT_SUCCESS(Status))
              PdoExt->Common.State = dsStarted;
          break;
 
        case IRP_MN_STOP_DEVICE:
-         Status = IsaHwDeactivateDevice(PdoExt->IsaPnpDevice);
+           if (PdoExt->IsaPnpDevice)
+               Status = IsaHwDeactivateDevice(PdoExt->IsaPnpDevice);
+           else
+               Status = STATUS_SUCCESS;
 
          if (NT_SUCCESS(Status))
              PdoExt->Common.State = dsStopped;
