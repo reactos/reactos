@@ -51,6 +51,12 @@ typedef struct _ISAPNP_PDO_EXTENSION {
 
 /* isapnp.c */
 
+NTSTATUS
+NTAPI
+IsaPnpFillDeviceRelations(
+    IN PISAPNP_FDO_EXTENSION FdoExt,
+    IN PIRP Irp);
+
 DRIVER_INITIALIZE DriverEntry;
 
 NTSTATUS
