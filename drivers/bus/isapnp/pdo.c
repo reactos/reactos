@@ -19,6 +19,12 @@ IsaPdoQueryDeviceRelations(
 {
     PDEVICE_RELATIONS DeviceRelations;
 
+    if (IrpSp->Parameters.QueryDeviceRelations.Type == RemovalRelations &&
+        PdoExt->Common.Self == PdoExt->FdoExt->DataPortPdo)
+    {
+        return IsaPnpFillDeviceRelations(PdoExt->FdoExt, Irp, FALSE);
+    }
+
     if (IrpSp->Parameters.QueryDeviceRelations.Type != TargetDeviceRelation)
         return Irp->IoStatus.Status;
 

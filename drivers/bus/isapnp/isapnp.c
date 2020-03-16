@@ -194,6 +194,7 @@ IsaPnpFillDeviceRelations(
            PdoExt->Common.Self = IsaDevice->Pdo;
            PdoExt->Common.State = dsStopped;
            PdoExt->IsaPnpDevice = IsaDevice;
+           PdoExt->FdoExt = FdoExt;
 
            Status = IsaFdoCreateDeviceIDs(PdoExt);
            if (!NT_SUCCESS(Status))
@@ -352,6 +353,7 @@ IsaPnpCreateReadPortDO(PISAPNP_FDO_EXTENSION FdoExt)
   PdoExt->Common.IsFdo = FALSE;
   PdoExt->Common.Self = FdoExt->DataPortPdo;
   PdoExt->Common.State = dsStopped;
+  PdoExt->FdoExt = FdoExt;
 
   Status = IsaPnpDuplicateUnicodeString(0,
                                         &DeviceID,
