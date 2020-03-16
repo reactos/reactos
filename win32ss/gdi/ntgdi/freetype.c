@@ -5,7 +5,7 @@
  * PURPOSE:         FreeType font engine interface
  * PROGRAMMERS:     Copyright 2001 Huw D M Davies for CodeWeavers.
  *                  Copyright 2006 Dmitry Timoshkov for CodeWeavers.
- *                  Copyright 2016-2019 Katayama Hirofumi MZ.
+ *                  Copyright 2016-2020 Katayama Hirofumi MZ.
  */
 
 /** Includes ******************************************************************/
@@ -4231,7 +4231,6 @@ TextIntGetTextExtentPoint(PDC dc,
     PMATRIX pmxWorldToDevice;
     LOGFONTW *plf;
     BOOL EmuBold, EmuItalic;
-    LONG ascender, descender;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
@@ -4339,12 +4338,13 @@ TextIntGetTextExtentPoint(PDC dc,
         String++;
     }
     ASSERT(FontGDI->Magic == FONTGDI_MAGIC);
-    ascender = FontGDI->tmAscent; /* Units above baseline */
-    descender = FontGDI->tmDescent; /* Units below baseline */
     IntUnLockFreeType();
 
     Size->cx = (TotalWidth64 + 32) >> 6;
-    Size->cy = ascender + descender;
+    Size->cy = (plf->lfHeight == 0 ?
+                dc->ppdev->devinfo.lfDefaultFont.lfHeight :
+                abs(plf->lfHeight));
+    Size->cy = EngMulDiv(Size->cy, dc->ppdev->gdiinfo.ulLogPixelsY, 72);
 
     return TRUE;
 }
