@@ -213,6 +213,52 @@ IsaPdoQueryResourceRequirements(
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+NTAPI
+IsaPdoStartReadPort(
+  IN PISAPNP_FDO_EXTENSION FdoExt,
+  IN PIO_STACK_LOCATION IrpSp)
+{
+    PCM_RESOURCE_LIST ResourceList = IrpSp->Parameters.StartDevice.AllocatedResources;
+    NTSTATUS Status;
+    KIRQL OldIrql;
+    ULONG i;
+
+    if (!ResourceList || ResourceList->Count != 1)
+    {
+        DPRINT1("No resource list (%p) or bad count (%d)\n", ResourceList, ResourceList ? ResourceList->Count : 0);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    if (ResourceList->List[0].PartialResourceList.Version != 1
+     || ResourceList->List[0].PartialResourceList.Revision != 1)
+    {
+        DPRINT1("Bad resource list version (%d.%d)\n", ResourceList->List[0].PartialResourceList.Version, ResourceList->List[0].PartialResourceList.Revision);
+        return STATUS_REVISION_MISMATCH;
+    }
+    for (i = 0; i < ResourceList->List[0].PartialResourceList.Count; i++)
+    {
+        PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
+        if (PartialDescriptor->Type == CmResourceTypePort)
+        {
+            PUCHAR ReadDataPort = (PUCHAR)PartialDescriptor->u.Port.Start.u.LowPart + 3;
+            if (PartialDescriptor->u.Port.Length > 1 && !FdoExt->ReadDataPort && NT_SUCCESS(IsaHwTryReadDataPort(ReadDataPort)))
+            {
+                FdoExt->ReadDataPort = ReadDataPort;
+                KeAcquireSpinLock(&FdoExt->Lock, &OldIrql);
+                Status = IsaHwFillDeviceList(FdoExt);
+                KeReleaseSpinLock(&FdoExt->Lock, OldIrql);
+                if (FdoExt->DeviceCount > 0)
+                {
+                    IoInvalidateDeviceRelations(FdoExt->Pdo, BusRelations);
+                    IoInvalidateDeviceRelations(FdoExt->DataPortPdo, RemovalRelations);
+                }
+            }
+        }
+    }
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 IsaPdoPnp(
@@ -228,7 +274,7 @@ IsaPdoPnp(
             if (PdoExt->IsaPnpDevice)
                 Status = IsaHwActivateDevice(PdoExt->IsaPnpDevice);
             else
-                Status = STATUS_SUCCESS;
+                Status = IsaPdoStartReadPort(PdoExt->FdoExt, IrpSp);
 
             if (NT_SUCCESS(Status))
                 PdoExt->Common.State = dsStarted;

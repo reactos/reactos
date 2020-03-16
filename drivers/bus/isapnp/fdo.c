@@ -17,20 +17,8 @@ IsaFdoStartDevice(
     IN PIRP Irp,
     IN PIO_STACK_LOCATION IrpSp)
 {
-    NTSTATUS Status;
-    KIRQL OldIrql;
-
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IrpSp);
-
-    KeAcquireSpinLock(&FdoExt->Lock, &OldIrql);
-    Status = IsaHwDetectReadDataPort(FdoExt);
-    KeReleaseSpinLock(&FdoExt->Lock, OldIrql);
-
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
 
     FdoExt->Common.State = dsStarted;
 
@@ -44,20 +32,8 @@ IsaFdoQueryDeviceRelations(
     IN PIRP Irp,
     IN PIO_STACK_LOCATION IrpSp)
 {
-    NTSTATUS Status;
-    KIRQL OldIrql;
-
     if (IrpSp->Parameters.QueryDeviceRelations.Type != BusRelations)
         return Irp->IoStatus.Status;
-
-    KeAcquireSpinLock(&FdoExt->Lock, &OldIrql);
-    Status = IsaHwFillDeviceList(FdoExt);
-    KeReleaseSpinLock(&FdoExt->Lock, OldIrql);
-
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
 
     return IsaPnpFillDeviceRelations(FdoExt, Irp, TRUE);
 }

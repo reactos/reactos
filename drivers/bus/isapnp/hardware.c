@@ -451,28 +451,6 @@ TryIsolate(
     return Csn;
 }
 
-static
-PUCHAR
-Isolate(VOID)
-{
-    PUCHAR ReadPort;
-
-    for (ReadPort = (PUCHAR)ISAPNP_READ_PORT_START;
-         (ULONG_PTR)ReadPort <= ISAPNP_READ_PORT_MAX;
-         ReadPort += ISAPNP_READ_PORT_STEP)
-    {
-      /* Avoid the NE2000 probe space */
-      if ((ULONG_PTR)ReadPort >= 0x280 &&
-          (ULONG_PTR)ReadPort <= 0x380)
-          continue;
-
-      if (TryIsolate(ReadPort) > 0)
-          return ReadPort;
-    }
-
-    return 0;
-}
-
 VOID
 DeviceActivation(
     IN PISAPNP_LOGICAL_DEVICE IsaDevice,
@@ -557,19 +535,10 @@ ProbeIsaPnpBus(
 
 NTSTATUS
 NTAPI
-IsaHwDetectReadDataPort(
-  IN PISAPNP_FDO_EXTENSION FdoExt)
+IsaHwTryReadDataPort(
+  IN PUCHAR ReadDataPort)
 {
-    FdoExt->ReadDataPort = Isolate();
-    if (!FdoExt->ReadDataPort)
-    {
-        DPRINT1("No read data port found\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    DPRINT1("Detected read data port at 0x%p\n", FdoExt->ReadDataPort);
-
-    return STATUS_SUCCESS;
+    return TryIsolate(ReadDataPort) > 0 ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
 
 NTSTATUS

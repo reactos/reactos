@@ -106,8 +106,8 @@ IsaPdoPnp(
 /* hardware.c */
 NTSTATUS
 NTAPI
-IsaHwDetectReadDataPort(
-    IN PISAPNP_FDO_EXTENSION FdoExt);
+IsaHwTryReadDataPort(
+    IN PUCHAR ReadDataPort);
 
 NTSTATUS
 NTAPI
