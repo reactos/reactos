@@ -1,0 +1,10 @@
+{
+    "cpp.buildConfigurations": [
+        {
+            "name": "build",
+            "directory": "${workspaceFolder}/build"
+        }
+    ],
+    "cpp.clangdArgs": "--background-index",
+    "C_Cpp.intelliSenseEngine": "Disabled",
+}
