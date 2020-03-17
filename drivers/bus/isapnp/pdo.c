@@ -270,6 +270,64 @@ IsaPdoStartReadPort(
     return Status;
 }
 
+static
+NTSTATUS
+NTAPI
+IsaPdoOnRepeaterComplete(
+    IN PDEVICE_OBJECT Tdo,
+    IN PIRP SubIrp,
+    PVOID NeedsVote)
+{
+    PIO_STACK_LOCATION SubStack = IoGetCurrentIrpStackLocation(SubIrp);
+    PIRP Irp = (PIRP)SubStack->Parameters.Others.Argument1;
+    ObDereferenceObject(Tdo);
+
+    if (SubIrp->IoStatus.Status == STATUS_NOT_SUPPORTED)
+    {
+        if (NeedsVote)
+        {
+            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+        }
+    }
+    else
+    {
+        Irp->IoStatus = SubIrp->IoStatus;
+    }
+
+    IoFreeIrp(SubIrp);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+NTSTATUS
+NTAPI
+IsaPdoRepeatRequest(
+    IN PISAPNP_PDO_EXTENSION PdoExt,
+    IN PIRP Irp,
+    IN BOOLEAN NeedsVote)
+{
+    PDEVICE_OBJECT Fdo = PdoExt->FdoExt->Common.Self;
+    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+
+    PDEVICE_OBJECT Tdo = IoGetAttachedDeviceReference(Fdo);
+    PIRP SubIrp = IoAllocateIrp(Tdo->StackSize + 1, FALSE);
+    PIO_STACK_LOCATION SubStack = IoGetNextIrpStackLocation(SubIrp);
+
+    SubStack->DeviceObject = Tdo;
+    SubStack->Parameters.Others.Argument1 = (PVOID)Irp;
+
+    IoSetNextIrpStackLocation(SubIrp);
+    SubStack = IoGetNextIrpStackLocation(SubIrp);
+    RtlCopyMemory(SubStack, Stack, FIELD_OFFSET(IO_STACK_LOCATION, CompletionRoutine));
+    SubStack->Control = 0;
+    IoSetCompletionRoutine(SubIrp, IsaPdoOnRepeaterComplete, (PVOID)(ULONG_PTR)NeedsVote, TRUE, TRUE, TRUE);
+
+    SubIrp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+    IoMarkIrpPending(Irp);
+    IoCallDriver(Tdo, SubIrp);
+    return STATUS_PENDING;
+}
+
 NTSTATUS
 NTAPI
 IsaPdoPnp(
@@ -331,6 +389,25 @@ IsaPdoPnp(
         case IRP_MN_QUERY_ID:
             Status = IsaPdoQueryId(PdoExt, Irp, IrpSp);
             break;
+
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_REMOVE_DEVICE:
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        case IRP_MN_QUERY_STOP_DEVICE:
+        case IRP_MN_CANCEL_STOP_DEVICE:
+        case IRP_MN_QUERY_DEVICE_TEXT:
+        case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
+        case IRP_MN_SURPRISE_REMOVAL:
+            Status = STATUS_SUCCESS;
+            break;
+
+        case IRP_MN_READ_CONFIG:
+        case IRP_MN_WRITE_CONFIG:
+        case IRP_MN_EJECT:
+        case IRP_MN_SET_LOCK:
+        case IRP_MN_QUERY_BUS_INFORMATION:
+        case IRP_MN_DEVICE_USAGE_NOTIFICATION:
+            return IsaPdoRepeatRequest(PdoExt, Irp, TRUE);
 
         default:
             DPRINT1("Unknown PnP code: %x\n", IrpSp->MinorFunction);
