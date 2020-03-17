@@ -19,7 +19,7 @@
 
  // CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam)
-    : m_IsSelected(FALSE), m_LicenseType(LICENSE_NONE), m_sFileName(sFileNameParam),
+    : m_IsSelected(FALSE), m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
     m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
 {
     RetrieveGeneralInfo();
@@ -153,7 +153,8 @@ VOID CAvailableApplicationInfo::RetrieveSize()
         GetString(L"Size", m_szSize);
         return;
     }
- 
+
+    m_SizeBytes = iSizeBytes;
     StrFormatByteSizeW(iSizeBytes, m_szSize.GetBuffer(MAX_PATH), MAX_PATH);
     m_szSize.ReleaseBuffer();
 }
