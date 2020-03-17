@@ -498,3 +498,22 @@ MUI_SUBFONT FontFixupBATANG[] =
     { KF_LocalName1, NULL},
     { NULL, NULL }
 };
+
+MUI_SUBFONT FontFixupTahoma[] =
+{
+    { L"Tahoma", NULL},
+    { L"Tahoma Bold", NULL},
+    { NULL, NULL }
+};
+
+MUI_SUBFONT FontFixupTimes[] =
+{
+    { L"Times New Roman", NULL},
+    { NULL, NULL }
+};
+
+MUI_SUBFONT FontFixupCourier[] =
+{
+    { L"Courier", NULL},
+    { NULL, NULL }
+};

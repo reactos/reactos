@@ -578,6 +578,12 @@ DoRegistryFontFixup(PFONTSUBSTSETTINGS pSettings, LANGID LangID)
         AddFontsSettingsToRegistry(FontFixupGULIM);
     if (pSettings->bFoundFontBATANG)
         AddFontsSettingsToRegistry(FontFixupBATANG);
+    if (pSettings->nTahomaCount >= 2)
+        AddFontsSettingsToRegistry(FontFixupTahoma);
+    if (pSettings->nTimesCount >= 2)
+        AddFontsSettingsToRegistry(FontFixupTimes);
+    if (pSettings->nCourierCount >= 2)
+        AddFontsSettingsToRegistry(FontFixupCourier);
 
     switch (PRIMARYLANGID(LangID))
     {

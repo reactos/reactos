@@ -23,6 +23,7 @@
  * PURPOSE:         Text-mode setup
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <usetup.h>
@@ -136,6 +137,21 @@ DoWatchDestFileName(LPCWSTR FileName)
         {
             DPRINT("batang.ttc found\n");
             s_SubstSettings.bFoundFontBATANG = TRUE;
+        }
+        else if (wcsicmp(FileName, L"tahoma.ttf") == 0)
+        {
+            DPRINT("Tahoma found\n");
+            s_SubstSettings.nTahomaCount++;
+        }
+        else if (wcsicmp(FileName, L"times.ttf") == 0)
+        {
+            DPRINT("Times New Roman found\n");
+            s_SubstSettings.nTimesCount++;
+        }
+        else if (wcsicmp(FileName, L"cour.ttf") == 0)
+        {
+            DPRINT("Courier found\n");
+            s_SubstSettings.nCourierCount++;
         }
     }
 }

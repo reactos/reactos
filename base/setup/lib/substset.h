@@ -9,6 +9,9 @@ typedef struct _FONTSUBSTSETTINGS
     BOOL bFoundFontMSMINCHO;
     BOOL bFoundFontGULIM;
     BOOL bFoundFontBATANG;
+    INT nTahomaCount;
+    INT nTimesCount;
+    INT nCourierCount;
 } FONTSUBSTSETTINGS, *PFONTSUBSTSETTINGS;
 
 BOOL

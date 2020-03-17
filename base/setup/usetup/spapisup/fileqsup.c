@@ -23,6 +23,7 @@
  * PURPOSE:         Interfacing with Setup* API File Queue support functions
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -65,6 +66,40 @@ typedef struct _FILEQUEUEHEADER
 
 /* SETUP* API COMPATIBILITY FUNCTIONS ****************************************/
 
+static BOOL
+PathFileExists(LPCWSTR PathName)
+{
+    UNICODE_STRING UnicodeString;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS NtStatus;
+    HANDLE FileHandle;
+
+    RtlInitUnicodeString(&UnicodeString, PathName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &UnicodeString,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL, NULL);
+
+    NtStatus = NtCreateFile(&FileHandle,
+                            GENERIC_READ,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            NULL,
+                            FILE_ATTRIBUTE_NORMAL,
+                            0,
+                            FILE_OPEN,
+                            0,
+                            NULL, 0);
+    if (NT_SUCCESS(NtStatus))
+    {
+        NtClose(FileHandle);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static NTSTATUS
 SetupExtractFile(
     IN OUT PFILEQUEUEHEADER QueueHeader,
@@ -73,6 +108,7 @@ SetupExtractFile(
     IN PCWSTR DestinationPathName)
 {
     ULONG CabStatus;
+    WCHAR DestFileName[MAX_PATH];
 
     DPRINT("SetupExtractFile(CabinetFileName: '%S', SourceFileName: '%S', DestinationPathName: '%S')\n",
            CabinetFileName, SourceFileName, DestinationPathName);
@@ -143,6 +179,15 @@ SetupExtractFile(
         DPRINT1("Unable to find '%S' in cabinet '%S'\n",
                 SourceFileName, CabinetGetCabinetName(&QueueHeader->CabinetContext));
         return STATUS_UNSUCCESSFUL;
+    }
+
+    RtlStringCbCopyW(DestFileName, sizeof(DestFileName), DestinationPathName);
+    RtlStringCbCatW(DestFileName, sizeof(DestFileName), L"\\");
+    RtlStringCbCatW(DestFileName, sizeof(DestFileName), SourceFileName);
+    if (PathFileExists(DestFileName))
+    {
+        DPRINT1("'%S' already exists. Do not copy.\n", DestFileName);
+        return STATUS_SUCCESS;
     }
 
     CabinetSetDestinationPath(&QueueHeader->CabinetContext, DestinationPathName);
