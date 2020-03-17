@@ -77,6 +77,17 @@ IsaPdoQueryCapabilities(
 
 NTSTATUS
 NTAPI
+IsaPdoQueryPnpDeviceState(
+  IN PISAPNP_PDO_EXTENSION PdoExt,
+  IN PIRP Irp,
+  IN PIO_STACK_LOCATION IrpSp)
+{
+    Irp->IoStatus.Information |= PNP_DEVICE_NOT_DISABLEABLE;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 IsaPdoQueryId(
     IN PISAPNP_PDO_EXTENSION PdoExt,
     IN PIRP Irp,
@@ -296,6 +307,11 @@ IsaPdoPnp(
 
         case IRP_MN_QUERY_CAPABILITIES:
             Status = IsaPdoQueryCapabilities(PdoExt, Irp, IrpSp);
+            break;
+
+        case IRP_MN_QUERY_PNP_DEVICE_STATE:
+            if (PdoExt->Common.Self == PdoExt->FdoExt->DataPortPdo)
+                Status = IsaPdoQueryPnpDeviceState(PdoExt, Irp, IrpSp);
             break;
 
         case IRP_MN_QUERY_RESOURCES:
