@@ -135,31 +135,14 @@ typedef struct _MMPTE_LIST
     ULONG NextEntry:20;
 } MMPTE_LIST;
 
+typedef struct _MMPTE_HARDWARE
+{
+    ULONG Valid:1;
 #ifndef CONFIG_SMP
-
-typedef struct _MMPTE_HARDWARE
-{
-    ULONG Valid:1;
     ULONG Write:1;
-    ULONG Owner:1;
-    ULONG WriteThrough:1;
-    ULONG CacheDisable:1;
-    ULONG Accessed:1;
-    ULONG Dirty:1;
-    ULONG LargePage:1;
-    ULONG Global:1;
-    ULONG CopyOnWrite:1;
-    ULONG Prototype:1;
-    ULONG reserved:1;
-    ULONG PageFrameNumber:20;
-} MMPTE_HARDWARE, *PMMPTE_HARDWARE;
-
 #else
-
-typedef struct _MMPTE_HARDWARE
-{
-    ULONG Valid:1;
     ULONG Writable:1;
+#endif
     ULONG Owner:1;
     ULONG WriteThrough:1;
     ULONG CacheDisable:1;
@@ -169,11 +152,13 @@ typedef struct _MMPTE_HARDWARE
     ULONG Global:1;
     ULONG CopyOnWrite:1;
     ULONG Prototype:1;
+#ifndef CONFIG_SMP
+    ULONG reserved:1;
+#else
     ULONG Write:1;
+#endif
     ULONG PageFrameNumber:20;
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
-
-#endif
 
 //
 // Use the right PTE structure
