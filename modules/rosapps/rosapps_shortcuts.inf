@@ -165,19 +165,19 @@ VCD_DESC=Manage virtual CDRom drives
 
 ; Hungarian
 [Strings.040E]
-ACCESSORIES=Accessories
-SYSTOOLS=System Tools
-ACCESSIBILITY=Accessibility
-ENTERTAINMENT=Entertainment
-COMMUNICATIONS=Communications
+ACCESSORIES=Kellékek
+SYSTOOLS=Rendszereszközök
+ACCESSIBILITY=Kisegítő lehetőségek
+ENTERTAINMENT=Szórakozás
+COMMUNICATIONS=Kommunikáció
 GAMES=Játékok
 
-FONTSUB_TITLE=FontSub
-FONTSUB_DESC=Font Substitutes Editor
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=Take screenshot
-VCD_TITLE=Virtual CDRom Control Panel
-VCD_DESC=Manage virtual CDRom drives
+FONTSUB_TITLE=Betűtípus-helyettesítő
+FONTSUB_DESC=Betűtípus-helyettesítő szerkesztő
+SCREENSHOT_TITLE=Képernyőkép
+SCREENSHOT_DESC=Képernyőkép készítése
+VCD_TITLE=Virtuális CD-ROM vezérlőpult
+VCD_DESC=Virtuális CD-ROM-ok kezelése
 
 ; Indonesian
 [Strings.0421]
