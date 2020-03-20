@@ -129,11 +129,9 @@ KdpPortInitialize(IN ULONG ComPortNumber,
     {
         return STATUS_INVALID_PARAMETER;
     }
-    else
-    {
-        KdComPortInUse = KdComPort.Address;
-        return STATUS_SUCCESS;
-    }
+
+    KdComPortInUse = KdComPort.Address;
+    return STATUS_SUCCESS;
 }
 
 /******************************************************************************
@@ -300,7 +298,13 @@ KDSTATUS
 NTAPI
 KdpReceiveByte(_Out_ PUCHAR OutByte)
 {
-    USHORT CpStatus = CpGetByte(&KdComPort, OutByte, TRUE, FALSE);
+    USHORT CpStatus;
+    
+    do
+    {
+        CpStatus = CpGetByte(&KdComPort, OutByte, TRUE, FALSE);
+    } while (CpStatus == CP_GET_NODATA);
+    
     /* Get the byte */
     if (CpStatus == CP_GET_SUCCESS)
     {
