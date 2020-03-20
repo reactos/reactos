@@ -13,184 +13,184 @@
 NTSTATUS
 NTAPI
 IsaPdoQueryDeviceRelations(
-  IN PISAPNP_PDO_EXTENSION PdoExt,
-  IN PIRP Irp,
-  IN PIO_STACK_LOCATION IrpSp)
+    IN PISAPNP_PDO_EXTENSION PdoExt,
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IrpSp)
 {
-  PDEVICE_RELATIONS DeviceRelations;
+    PDEVICE_RELATIONS DeviceRelations;
 
-  if (IrpSp->Parameters.QueryDeviceRelations.Type != TargetDeviceRelation)
-      return Irp->IoStatus.Status;
+    if (IrpSp->Parameters.QueryDeviceRelations.Type != TargetDeviceRelation)
+        return Irp->IoStatus.Status;
 
-  DeviceRelations = ExAllocatePool(PagedPool, sizeof(*DeviceRelations));
-  if (!DeviceRelations)
-      return STATUS_INSUFFICIENT_RESOURCES;
+    DeviceRelations = ExAllocatePool(PagedPool, sizeof(*DeviceRelations));
+    if (!DeviceRelations)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-  DeviceRelations->Count = 1;
-  DeviceRelations->Objects[0] = PdoExt->Common.Self;
-  ObReferenceObject(PdoExt->Common.Self);
+    DeviceRelations->Count = 1;
+    DeviceRelations->Objects[0] = PdoExt->Common.Self;
+    ObReferenceObject(PdoExt->Common.Self);
 
-  Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+    Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 IsaPdoQueryCapabilities(
-  IN PISAPNP_PDO_EXTENSION PdoExt,
-  IN PIRP Irp,
-  IN PIO_STACK_LOCATION IrpSp)
+    IN PISAPNP_PDO_EXTENSION PdoExt,
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IrpSp)
 {
-  PDEVICE_CAPABILITIES DeviceCapabilities;
-  PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
+    PDEVICE_CAPABILITIES DeviceCapabilities;
+    PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
 
-  DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
-  if (DeviceCapabilities->Version != 1)
-    return STATUS_UNSUCCESSFUL;
+    DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
+    if (DeviceCapabilities->Version != 1)
+        return STATUS_UNSUCCESSFUL;
 
-  DeviceCapabilities->UniqueID = LogDev->SerialNumber != 0xffffffff;
-  DeviceCapabilities->Address = LogDev->CSN;
+    DeviceCapabilities->UniqueID = LogDev->SerialNumber != 0xffffffff;
+    DeviceCapabilities->Address = LogDev->CSN;
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 IsaPdoQueryId(
-  IN PISAPNP_PDO_EXTENSION PdoExt,
-  IN PIRP Irp,
-  IN PIO_STACK_LOCATION IrpSp)
+    IN PISAPNP_PDO_EXTENSION PdoExt,
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IrpSp)
 {
-  PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
-  WCHAR Temp[256];
-  PWCHAR Buffer, End;
-  ULONG Length;
-  NTSTATUS Status;
+    PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
+    WCHAR Temp[256];
+    PWCHAR Buffer, End;
+    ULONG Length;
+    NTSTATUS Status;
 
-  switch (IrpSp->Parameters.QueryId.IdType)
-  {
-    case BusQueryDeviceID:
+    switch (IrpSp->Parameters.QueryId.IdType)
     {
-      DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
-      Status = RtlStringCbPrintfExW(Temp, sizeof(Temp),
-                                    &End,
-                                    NULL, 0,
-                                    L"ISAPNP\\%3S%04X",
-                                    LogDev->VendorId,
-                                    LogDev->ProdId);
-      if (!NT_SUCCESS(Status))
-        return Status;
-      Length = End - Temp;
-      Temp[Length++] = UNICODE_NULL;
-      break;
+        case BusQueryDeviceID:
+        {
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
+            Status = RtlStringCbPrintfExW(Temp, sizeof(Temp),
+                                          &End,
+                                          NULL, 0,
+                                          L"ISAPNP\\%3S%04X",
+                                          LogDev->VendorId,
+                                          LogDev->ProdId);
+            if (!NT_SUCCESS(Status))
+                return Status;
+            Length = End - Temp;
+            Temp[Length++] = UNICODE_NULL;
+            break;
+        }
+
+        case BusQueryHardwareIDs:
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
+            Status = RtlStringCbPrintfExW(Temp, sizeof(Temp),
+                                          &End,
+                                          NULL, 0,
+                                          L"ISAPNP\\%3S%04X",
+                                          LogDev->VendorId,
+                                          LogDev->ProdId);
+            if (!NT_SUCCESS(Status))
+                return Status;
+            Length = End - Temp;
+            Temp[Length++] = UNICODE_NULL;
+            Status = RtlStringCbPrintfExW(Temp + Length, sizeof(Temp) - Length,
+                                          &End,
+                                          NULL, 0,
+                                          L"*%3S%04X",
+                                          LogDev->VendorId,
+                                          LogDev->ProdId);
+            if (!NT_SUCCESS(Status))
+                return Status;
+            Length = End - Temp;
+            Temp[Length++] = UNICODE_NULL;
+            Temp[Length++] = UNICODE_NULL;
+            break;
+
+        case BusQueryInstanceID:
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
+            Status = RtlStringCbPrintfExW(Temp, sizeof(Temp),
+                                          &End,
+                                          NULL, 0,
+                                          L"%X",
+                                          LogDev->SerialNumber);
+            if (!NT_SUCCESS(Status))
+                return Status;
+            Length = End - Temp;
+            Temp[Length++] = UNICODE_NULL;
+            break;
+
+        default:
+            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / unknown query id type 0x%lx\n",
+                    IrpSp->Parameters.QueryId.IdType);
+            return Irp->IoStatus.Status;
     }
 
-    case BusQueryHardwareIDs:
-      DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
-      Status = RtlStringCbPrintfExW(Temp, sizeof(Temp),
-                                    &End,
-                                    NULL, 0,
-                                    L"ISAPNP\\%3S%04X",
-                                    LogDev->VendorId,
-                                    LogDev->ProdId);
-      if (!NT_SUCCESS(Status))
-        return Status;
-      Length = End - Temp;
-      Temp[Length++] = UNICODE_NULL;
-      Status = RtlStringCbPrintfExW(Temp + Length, sizeof(Temp) - Length,
-                                    &End,
-                                    NULL, 0,
-                                    L"*%3S%04X",
-                                    LogDev->VendorId,
-                                    LogDev->ProdId);
-      if (!NT_SUCCESS(Status))
-        return Status;
-      Length = End - Temp;
-      Temp[Length++] = UNICODE_NULL;
-      Temp[Length++] = UNICODE_NULL;
-      break;
+    Buffer = ExAllocatePool(PagedPool, Length * sizeof(WCHAR));
+    if (!Buffer)
+        return STATUS_NO_MEMORY;
 
-    case BusQueryInstanceID:
-      DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
-      Status = RtlStringCbPrintfExW(Temp, sizeof(Temp),
-                                    &End,
-                                    NULL, 0,
-                                    L"%X",
-                                    LogDev->SerialNumber);
-      if (!NT_SUCCESS(Status))
-        return Status;
-      Length = End - Temp;
-      Temp[Length++] = UNICODE_NULL;
-      break;
-
-    default:
-      DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / unknown query id type 0x%lx\n",
-              IrpSp->Parameters.QueryId.IdType);
-      return Irp->IoStatus.Status;
-  }
-
-  Buffer = ExAllocatePool(PagedPool, Length * sizeof(WCHAR));
-  if (!Buffer)
-      return STATUS_NO_MEMORY;
-
-  RtlCopyMemory(Buffer, Temp, Length * sizeof(WCHAR));
-  Irp->IoStatus.Information = (ULONG_PTR)Buffer;
-  return STATUS_SUCCESS;
+    RtlCopyMemory(Buffer, Temp, Length * sizeof(WCHAR));
+    Irp->IoStatus.Information = (ULONG_PTR)Buffer;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 IsaPdoPnp(
-  IN PISAPNP_PDO_EXTENSION PdoExt,
-  IN PIRP Irp,
-  IN PIO_STACK_LOCATION IrpSp)
+    IN PISAPNP_PDO_EXTENSION PdoExt,
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IrpSp)
 {
-  NTSTATUS Status = Irp->IoStatus.Status;
+    NTSTATUS Status = Irp->IoStatus.Status;
 
-  switch (IrpSp->MinorFunction)
-  {
-     case IRP_MN_START_DEVICE:
-       Status = IsaHwActivateDevice(PdoExt->IsaPnpDevice);
+    switch (IrpSp->MinorFunction)
+    {
+       case IRP_MN_START_DEVICE:
+         Status = IsaHwActivateDevice(PdoExt->IsaPnpDevice);
 
-       if (NT_SUCCESS(Status))
-           PdoExt->Common.State = dsStarted;
-       break;
+         if (NT_SUCCESS(Status))
+             PdoExt->Common.State = dsStarted;
+         break;
 
-     case IRP_MN_STOP_DEVICE:
-       Status = IsaHwDeactivateDevice(PdoExt->IsaPnpDevice);
+       case IRP_MN_STOP_DEVICE:
+         Status = IsaHwDeactivateDevice(PdoExt->IsaPnpDevice);
 
-       if (NT_SUCCESS(Status))
-           PdoExt->Common.State = dsStopped;
-       break;
+         if (NT_SUCCESS(Status))
+             PdoExt->Common.State = dsStopped;
+         break;
 
-     case IRP_MN_QUERY_DEVICE_RELATIONS:
-       Status = IsaPdoQueryDeviceRelations(PdoExt, Irp, IrpSp);
-       break;
+       case IRP_MN_QUERY_DEVICE_RELATIONS:
+         Status = IsaPdoQueryDeviceRelations(PdoExt, Irp, IrpSp);
+         break;
 
-     case IRP_MN_QUERY_CAPABILITIES:
-       Status = IsaPdoQueryCapabilities(PdoExt, Irp, IrpSp);
-       break;
+       case IRP_MN_QUERY_CAPABILITIES:
+         Status = IsaPdoQueryCapabilities(PdoExt, Irp, IrpSp);
+         break;
 
-     case IRP_MN_QUERY_RESOURCES:
-       DPRINT1("IRP_MN_QUERY_RESOURCES is UNIMPLEMENTED!\n");
-       break;
+       case IRP_MN_QUERY_RESOURCES:
+         DPRINT1("IRP_MN_QUERY_RESOURCES is UNIMPLEMENTED!\n");
+         break;
 
-     case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
-       DPRINT1("IRP_MN_QUERY_RESOURCE_REQUIREMENTS is UNIMPLEMENTED!\n");
-       break;
+       case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
+         DPRINT1("IRP_MN_QUERY_RESOURCE_REQUIREMENTS is UNIMPLEMENTED!\n");
+         break;
 
-     case IRP_MN_QUERY_ID:
-       Status = IsaPdoQueryId(PdoExt, Irp, IrpSp);
-       break;
+       case IRP_MN_QUERY_ID:
+         Status = IsaPdoQueryId(PdoExt, Irp, IrpSp);
+         break;
 
-     default:
-       DPRINT1("Unknown PnP code: %x\n", IrpSp->MinorFunction);
-       break;
-  }
+       default:
+         DPRINT1("Unknown PnP code: %x\n", IrpSp->MinorFunction);
+         break;
+    }
 
-  Irp->IoStatus.Status = Status;
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return Status;
+    return Status;
 }

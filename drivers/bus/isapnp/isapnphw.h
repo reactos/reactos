@@ -83,22 +83,22 @@ extern "C" {
 #define ISAPNP_TAG_PSEUDO_NEWBOARD 0x100
 
 typedef struct _ISAPNP_IDENTIFIER {
-  USHORT VendorId;
-  USHORT ProdId;
-  ULONG Serial;
-  UCHAR Checksum;
+    USHORT VendorId;
+    USHORT ProdId;
+    ULONG Serial;
+    UCHAR Checksum;
 } ISAPNP_IDENTIFIER, *PISAPNP_IDENTIFIER;
 
 typedef struct _ISAPNP_LOGDEVID {
-  USHORT VendorId;
-  USHORT ProdId;
-  USHORT Flags;
+    USHORT VendorId;
+    USHORT ProdId;
+    USHORT Flags;
 } ISAPNP_LOGDEVID, *PISAPNP_LOGDEVID;
 
 typedef struct _ISAPNP_DEVICEID {
-  CHAR* Name;
-  USHORT VendorId;
-  USHORT ProdId;
+    CHAR* Name;
+    USHORT VendorId;
+    USHORT ProdId;
 } ISAPNP_DEVICEID, *PISAPNP_DEVICEID;
 
 #ifdef __cplusplus
