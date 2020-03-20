@@ -249,7 +249,11 @@ else()
     endif()
 
     # For MSVC builds, this puts all debug symbols file in the same directory.
-    set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")
+    if (MSVC)
+        set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")
+    elseif(SEPARATE_DBG)
+        set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/symbols")
+    endif()
 
     #begin with boot so reactos_cab target is defined before all other modules
     add_subdirectory(boot)
