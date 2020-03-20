@@ -50,6 +50,7 @@ HKR, , Icon,           0, "-27"
 %SWENUM.DeviceDesc%   = SWENUM_Inst, ROOT\SWENUM
 
 %ACPI\FixedButton.DeviceDesc% = NO_DRV,ACPI\FixedButton
+%ISAPNP\ReadDataPort.DeviceDesc% = NO_DRV,ISAPNP\ReadDataPort
 %PCI\CC_0500.DeviceDesc% = NO_DRV,PCI\CC_0500
 %PCI\CC_0600.DeviceDesc% = NO_DRV,PCI\CC_0600
 %PCI\CC_0601.DeviceDesc% = PCI_ISA_Inst,PCI\CC_0601
@@ -172,6 +173,7 @@ GenericMfg = "(Generic system devices)"
 *PNP0C0F.DeviceDesc = "PCI interrupt link device"
 *PNP0C15.DeviceDesc = "Docking Station"
 ACPI\FixedButton.DeviceDesc = "ACPI fixed feature button"
+ISAPNP\ReadDataPort.DeviceDesc = "ISAPNP read data port"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
 PCI\CC_0600.DeviceDesc = "Standard CPU to PCI bridge"
 PCI\CC_0601.DeviceDesc = "Standard PCI to ISA bridge"
