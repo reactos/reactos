@@ -56,6 +56,17 @@ struct SharedPowerData {
     BOOLEAN m_ExtendWatchDogTimer;
 };
 
+enum NotifyResourcesFlags {
+    NotifyResourcesNoFlags            = 0x00,
+    NotifyResourcesNP                 = 0x01,
+    NotifyResourcesSurpriseRemoved    = 0x02,
+    NotifyResourcesForceDisconnect    = 0x04,
+    NotifyResourcesExplicitPowerup    = 0x08,
+    NotifyResourcesExplicitPowerDown  = 0x10,
+    NotifyResourcesDisconnectInactive = 0x20,
+    NotifyResourcesArmedForWake       = 0x40,
+};
+
 //
 // Bit-flags for tracking which callback is currently executing.
 //
@@ -351,9 +362,15 @@ struct FxEnumerationInfo : public FxStump {
     FxWaitLockTransactionedList m_ChildListList;
 };
 
+class FxInterrupt;
+
 class FxPkgPnp : public FxPackage {
 
+    friend FxPnpMachine;
+    friend FxPowerMachine;
+    friend FxPowerPolicyMachine;
     friend FxPowerPolicyOwnerSettings;
+    friend FxInterrupt;
 
 protected:
 
@@ -2638,7 +2655,11 @@ private:
         VOID
         ) =0;
 
-    
+    _Must_inspect_result_
+    NTSTATUS
+    NotifyResourceObjectsD0(
+        __in ULONG NotifyFlags
+        );
 
 //
 // Start of members
@@ -2993,6 +3014,14 @@ protected:
     // GUID for querying for a power thread down the stack
     //
     static const GUID GUID_POWER_THREAD_INTERFACE;
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    //
+    // Interrupt APIs for Vista and forward
+    //
+    PFN_IO_CONNECT_INTERRUPT_EX     m_IoConnectInterruptEx;
+
+#endif
 
 
     NTSTATUS

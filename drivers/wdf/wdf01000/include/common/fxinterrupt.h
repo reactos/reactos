@@ -2,6 +2,9 @@
 #define _FXINTERRUPT_H_
 
 #include "common/fxnonpagedobject.h"
+#include "common/fxwakeinterruptstatemachine.h"
+#include "common/fxwaitlock.h"
+
 
 class FxPkgPnp;
 class FxInterrupt;
@@ -47,6 +50,10 @@ private:
     //
     MxLock                          m_BuiltInSpinLock;
 
+    //
+    // Passive-level interrupt handling.
+    //
+    FxWaitLock*                     m_WaitLock;
 
     //
     // Interrupt policy
@@ -67,6 +74,91 @@ private:
     // stateful and it is important not to drop any around the connection window.
     //
     BOOLEAN m_IsEdgeTriggeredNonMsiInterrupt;
+
+    //
+    // Set to TRUE when WDF is responsible for disposing the wait-lock.
+    //
+    BOOLEAN                         m_DisposeWaitLock;
+
+    //
+    // Value provided by driver. When TRUE we use IoReportActive/Inactive to 
+    // do soft connect/disconnect on explicit power transitions.
+    //
+    BOOLEAN                         m_UseSoftDisconnect;
+    
+    //
+    // Set to TRUE for passive-level interrupt handling.
+    //
+    BOOLEAN                         m_PassiveHandling;
+
+    // set to TRUE once the interrupt has been added to the pnp package's
+    // interrupt list
+    BOOLEAN                         m_AddedToList;
+
+    //
+    // Indicates whether the driver has forced a disconnect.  If so, then
+    // we should stop automatically managing the connected state.
+    //
+    BOOLEAN                         m_Connected;
+    BOOLEAN                         m_ForceDisconnected;
+
+    //
+    // Indicates whether the m_EvtInterruptPostEnable succeeded or not.
+    //
+    BOOLEAN                         m_Enabled;
+
+    //
+    // Save floating point when the ISR runs
+    //
+    BOOLEAN                         m_FloatingSave;
+
+    //
+    // Set to TRUE if interrupt is created in the prepare hardware callback.
+    //
+    BOOLEAN                         m_CreatedInPrepareHardware;
+
+    //
+    // State machine to manage a wake capable interrupt
+    //
+    FxWakeInterruptMachine*         m_WakeInterruptMachine;
+
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+    //
+    // Set to true on successful connect or when driver reports active. 
+    // (this field is mainly for aid in debugging)
+    //
+    BOOLEAN                         m_Active;
+#endif
+
+    //
+    // Callbacks
+    //
+    PFN_WDF_INTERRUPT_ENABLE        m_EvtInterruptEnable;
+
+    PFN_WDF_INTERRUPT_ISR           m_EvtInterruptIsr;
+
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    //
+    // Callback used to set m_Disconnecting, synchronized to running ISRs.
+    // Only runs if m_IsEdgeTriggeredNonMsiInterrupt is TRUE.
+    //
+    //static
+    //MdInterruptSynchronizeRoutineType _InterruptMarkDisconnecting;
+
+    //
+    // Backup KINTERRUPT pointer, captured from the KMDF ISR thunk. We need it
+    // because valid interrupts may arrive before IoConnectInterruptEx sets
+    // FxInterrupt.m_Interrupt. Non-NULL only if m_IsEdgeTriggeredNonMsiInterrupt is TRUE.
+    //
+    struct _KINTERRUPT* m_InterruptCaptured;
+#endif
+
+    //
+    // Used to mark the interrupt disconnect window, and to discard interrupts
+    // that arrive within this window. Only set if m_IsEdgeTriggeredNonMsiInterrupt is TRUE.
+    //
+    BOOLEAN m_Disconnecting;    
 
 public:
     FxInterrupt(
@@ -153,6 +245,150 @@ public:
         return m_SpinLock == Interrupt->m_SpinLock ? TRUE : FALSE;
     }
 
+    _Must_inspect_result_
+    NTSTATUS
+    Connect(
+        __in ULONG NotifyFlags
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    ConnectInternal(
+        VOID
+        );
+
+    VOID
+    SetActiveForWake(
+        __in BOOLEAN ActiveForWake
+        )
+    {
+        m_WakeInterruptMachine->m_ActiveForWake = ActiveForWake;
+    }
+
+    BOOLEAN
+    IsActiveForWake(
+        VOID
+        )
+    {
+        if ((m_WakeInterruptMachine != NULL) &&
+            (m_WakeInterruptMachine->m_ActiveForWake))
+        {
+            return TRUE;
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
+
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+
+    //
+    // NOTE: Start from Windows 8
+    //
+    //VOID
+    //ReportActive(
+    //    _In_ BOOLEAN Internal = FALSE
+    //    );
+
+    VOID
+    ReportInactive(
+        _In_ BOOLEAN Internal = FALSE
+        );
+
+    BOOLEAN
+    IsSoftDisconnectCapable(
+        VOID
+        )
+    {
+        if (m_UseSoftDisconnect &&
+            //FxLibraryGlobals.IoReportInterruptInactive != NULL &&
+            m_Interrupt != NULL &&
+            m_Connected) {
+            return TRUE;
+        }
+        else {
+            return FALSE;
+        }
+    }
+
+#elif ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+
+    BOOLEAN
+    IsSoftDisconnectCapable(
+        VOID
+        )
+    {
+        //
+        // Not implemented for UMDF
+        //
+        return FALSE;
+    }
+
+    VOID
+    ReportActive(
+        _In_ BOOLEAN Internal = FALSE
+        )
+    {
+        UNREFERENCED_PARAMETER(Internal);
+        //
+        // Not implemented for UMDF
+        //
+    }
+
+    VOID
+    ReportInactive(
+        _In_ BOOLEAN Internal = FALSE
+        )
+    {
+        UNREFERENCED_PARAMETER(Internal);
+        //
+        // Not implemented for UMDF
+        //
+    }
+
+#endif
+
+    __inline
+    BOOLEAN
+    IsWakeCapable(
+        VOID
+        )
+    {
+        return ((m_WakeInterruptMachine != NULL) ? TRUE : FALSE);
+    }
+
+    VOID
+    AcquireLock(
+        VOID
+        );
+
+    BOOLEAN
+    TryToAcquireLock(
+        VOID
+        );
+
+    VOID
+    ReleaseLock(
+        VOID
+        );
+
+    __inline
+    struct _KINTERRUPT*
+    GetInterruptPtr(
+        VOID
+        )
+    {
+        struct _KINTERRUPT* interrupt = m_Interrupt;
+
+        if (interrupt == NULL)
+        {
+            interrupt = m_InterruptCaptured;
+        }
+
+        return interrupt;
+    }
+
 protected:
 
     LIST_ENTRY  m_PnpList;
@@ -192,14 +428,44 @@ private:
     FlushAndRundownInternal(
         VOID
         );
+
+    //
+    // Helper functions to enable an interrupt.
+    // Sequence: 
+    //  (1) InterruptEnable
+    //  (2) _InterruptEnableThunk
+    //  (3) InterruptEnableInvokeCallback
+    //
+    NTSTATUS
+    InterruptEnable(
+        VOID
+        );
+
+    static
+    MdInterruptSynchronizeRoutineType _InterruptEnableThunk;
+
+    
+    NTSTATUS
+    InterruptEnableInvokeCallback(
+        VOID
+        );
+
+    static
+    MdInterruptServiceRoutineType _InterruptThunk;
         
 };
 
+__inline
 BOOLEAN 
 _SynchronizeExecution(
     __in MdInterrupt  Interrupt,
     __in MdInterruptSynchronizeRoutine  SynchronizeRoutine,
     __in PVOID  SynchronizeContext
-    );
+    )
+{
+    return KeSynchronizeExecution(Interrupt,
+                                  SynchronizeRoutine,
+                                  SynchronizeContext);
+}
 
 #endif // _FXINTERRUPT_H_

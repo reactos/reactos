@@ -510,6 +510,27 @@ public:
         return IoGetAttachedDeviceReference(DriverObject);
     }
 
+    __inline
+    static
+    KIRQL
+    MxAcquireInterruptSpinLock(
+        _Inout_ PKINTERRUPT Interrupt
+        )
+    {
+        return KeAcquireInterruptSpinLock(Interrupt);
+    }
+
+    __inline
+    static
+    VOID
+    MxReleaseInterruptSpinLock(
+        _Inout_ PKINTERRUPT Interrupt,
+        _In_ KIRQL OldIrql
+        )
+    {
+        KeReleaseInterruptSpinLock(Interrupt, OldIrql);
+    }
+
 };
 
 #endif //_MXGENERAL_H_

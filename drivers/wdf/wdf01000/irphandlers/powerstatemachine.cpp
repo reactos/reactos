@@ -1645,8 +1645,42 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    NTSTATUS status;
+
+    //
+    // Connect the interrupt and enable it
+    //
+    status = This->NotifyResourceObjectsD0(NotifyResourcesNoFlags);
+    if (!NT_SUCCESS(status))
+    {
+        //
+        // NotifyResourceObjectsD0 has already logged the error, no need to
+        // repeat any error messsages here
+        //
+        return WdfDevStatePowerInitialConnectInterruptFailed;
+    }
+
+    status = This->m_DeviceD0EntryPostInterruptsEnabled.Invoke(
+        This->m_Device->GetHandle(),
+        (WDF_POWER_DEVICE_STATE) This->m_DevicePowerState);
+
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(
+            This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "EvtDeviceD0EntryPostInterruptsEnabed WDFDEVICE 0x%p !devobj 0x%p, "
+            "old state %!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
+            This->m_Device->GetHandle(), 
+            This->m_Device->GetDeviceObject(),
+            This->m_DevicePowerState, status);
+        return WdfDevStatePowerInitialConnectInterruptFailed;
+    }
+
+    //
+    // Last, figure out which state to drop into.  This is the juncture
+    // where we figure out if we're doing power in a pageable fashion.
+    //
+    return WdfDevStatePowerD0StartingDmaEnable;
 }
 
 WDF_DEVICE_POWER_STATE

@@ -1,5 +1,7 @@
 #include "common/fxinterrupt.h"
 #include "common/fxtelemetry.h"
+#include "common/fxpkgpnp.h"
+#include "common/fxdevice.h"
 
 VOID
 FxInterrupt::FilterResourceRequirements(
@@ -189,4 +191,480 @@ Return Value:
         (ULONGLONG)m_InterruptInfo.TargetProcessorSet,
         m_InterruptInfo.Irql,
         m_InterruptInfo.Vector);
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxInterrupt::Connect(
+    __in ULONG NotifyFlags
+    )
+/*++
+
+Routine Description:
+
+    This function is the external interface for connecting the interrupt.  It
+    calls the PnP manager to connect the interrupt (only if the operation is
+    not occurring in a non power pageable state).  Then it calls
+    EvtInterruptEnable at DIRQL and EvtInterruptPostEnable at PASSIVE_LEVEL.
+
+Arguments:
+    NotifyFlags - combination of values from the enum NotifyResourcesFlags
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    NTSTATUS status;
+
+    pFxDriverGlobals = GetDriverGlobals();
+
+    if ((NotifyFlags & NotifyResourcesExplicitPowerup) &&
+        IsActiveForWake())
+    {
+        //
+        // If an interrupt is marked as wakeable and the device has been set to
+        // wake via a driver-owned ISR, leave the interrupt connected.
+        //
+        SetActiveForWake(FALSE);
+
+        return STATUS_SUCCESS;
+    }
+
+    //
+    // See if we need to just do soft connect. We do soft connect on explicit
+    // power up if driver opted-in for that.
+    //
+    if (IsSoftDisconnectCapable() &&
+        (NotifyFlags & NotifyResourcesExplicitPowerup))
+    {
+        //
+        // NOTE: Start from Windows 8
+        //
+        //ReportActive(TRUE);
+
+        status = STATUS_SUCCESS;
+        goto Enable;
+    }
+
+    //
+    // We should either be disconnected or being asked to connect in the NP path
+    //
+    ASSERT(m_Connected == FALSE || (NotifyFlags & NotifyResourcesNP));
+
+    if (m_ForceDisconnected)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    //
+    // Check to see if this interrupt object was actually assigned any
+    // resources.  If it wasn't, then don't attempt to connect.  A WDFINTERRUPT
+    // object won't be assigned any resources if the underlying device wasn't
+    // granted any by the PnP manager.
+    //
+    if (m_InterruptInfo.Vector == 0)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    //
+    // If we are in an NP path, the interrupt remained connected while the device
+    // went into Dx so there is no need to reconnect it.
+    //
+    if ((NotifyFlags & NotifyResourcesNP) == 0)
+    {
+        ASSERT(m_Interrupt == NULL);
+        ASSERT(m_SynchronizeIrql != PASSIVE_LEVEL || m_PassiveHandling);
+
+        //
+        // Call pnp manager to connect the interrupt. For KMDF, we call
+        // kernel DDI, whereas for UMDF, we send a sync message to redirector.
+        //
+        status = ConnectInternal();
+
+        if (!NT_SUCCESS(status))
+        {
+            m_Interrupt = NULL;
+
+            DoTraceLevelMessage(
+                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
+                "IoConnectInterrupt(Ex) Failed,"
+                " SpinLock 0x%p,"
+                " Vector 0x%x,"
+                " IRQL 0x%x,"
+                " Synchronize IRQL 0x%x,"
+                " Mode 0x%x,"
+                " ShareVector %s,"
+                " ProcessorGroup %d,"
+                " ProcessorEnableMask 0x%I64x,"
+                " FloatingSave %s,"
+                " %!STATUS!",
+                m_SpinLock,
+                m_InterruptInfo.Vector,
+                m_InterruptInfo.Irql,
+                m_SynchronizeIrql,
+                m_InterruptInfo.Mode,
+                m_InterruptInfo.ShareDisposition ==
+                    CmResourceShareShared ? "True" : "False",
+                m_InterruptInfo.Group,
+                (ULONGLONG)m_InterruptInfo.TargetProcessorSet,
+                m_FloatingSave ? "True" : "False",
+                status
+                );
+
+            return status;
+        }
+
+        m_Connected = TRUE;
+
+#if FX_IS_KERNEL_MODE
+        m_Active = TRUE;
+#endif
+
+    }
+    else
+    {
+        ASSERT(m_Connected);
+        ASSERT(m_Interrupt != NULL);
+    }
+
+Enable:
+
+    //
+    // Enable the interrupt at the hardware.
+    //
+    status = InterruptEnable();
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
+            "EvtInterruptEnable WDFDEVICE %p, WDFINTERRUPT %p, PKINTERRUPT %p "
+            "returned %!STATUS!", m_Device->GetHandle(), GetHandle(),
+            m_Interrupt, status);
+
+        return status;
+    }
+
+    m_Enabled = TRUE;
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxInterrupt::ConnectInternal(
+    VOID
+    )
+{
+    IO_CONNECT_INTERRUPT_PARAMETERS connectParams;
+    FxPkgPnp* fxPkgPnp;
+    NTSTATUS status;
+
+    fxPkgPnp = m_Device->m_PkgPnp;
+
+    //
+    // Tell the PnP Manager to connect the interrupt.
+    //    
+    //ASSERT(fxPkgPnp->m_IoConnectInterruptEx != NULL);
+    
+    //
+    // NOTE: Adaptation for WDF 1.9
+    //
+    if (fxPkgPnp->m_IoConnectInterruptEx == NULL)
+    {
+        status = IoConnectInterrupt(
+           &m_Interrupt,
+           FxInterrupt::_InterruptThunk,
+           this,
+           m_SpinLock,
+           m_InterruptInfo.Vector,
+           m_InterruptInfo.Irql,
+           m_SynchronizeIrql,
+           m_InterruptInfo.Mode,
+           m_InterruptInfo.ShareDisposition == CmResourceShareShared,
+           m_InterruptInfo.TargetProcessorSet,
+           m_FloatingSave);
+
+           return status;
+    }
+    
+    //
+    // We're running on Longhorn or later (or somebody backported the new
+    // interrupt code,) so tell the PnP manager everything we can about this
+    // device.
+    //
+    RtlZeroMemory(&connectParams, sizeof(connectParams));
+    
+    if (FxIsProcessorGroupSupported())
+    {
+        connectParams.Version = CONNECT_FULLY_SPECIFIED_GROUP;
+    }
+    else
+    {
+        connectParams.Version = CONNECT_FULLY_SPECIFIED;
+    }
+
+    connectParams.FullySpecified.PhysicalDeviceObject = m_Device->GetPhysicalDevice();
+    connectParams.FullySpecified.InterruptObject      = &m_Interrupt;
+    connectParams.FullySpecified.ServiceRoutine       = _InterruptThunk;
+    connectParams.FullySpecified.ServiceContext       = this;
+    connectParams.FullySpecified.SpinLock             = m_SpinLock;
+    connectParams.FullySpecified.FloatingSave         = m_FloatingSave;
+    connectParams.FullySpecified.Vector               = m_InterruptInfo.Vector;
+    connectParams.FullySpecified.Irql                 = m_InterruptInfo.Irql;
+    connectParams.FullySpecified.ProcessorEnableMask  = m_InterruptInfo.TargetProcessorSet;
+    connectParams.FullySpecified.Group                = m_InterruptInfo.Group;
+    connectParams.FullySpecified.InterruptMode        = m_InterruptInfo.Mode;
+    connectParams.FullySpecified.ShareVector          =
+        m_InterruptInfo.ShareDisposition == CmResourceShareShared ? TRUE : FALSE;
+    connectParams.FullySpecified.SynchronizeIrql      = m_SynchronizeIrql;
+
+    status = fxPkgPnp->m_IoConnectInterruptEx(&connectParams);
+
+    return status;
+}
+
+NTSTATUS
+FxInterrupt::InterruptEnable(
+    VOID
+    )
+{
+    FxInterruptEnableParameters params;
+
+    params.Interrupt = this;
+    params.ReturnVal = STATUS_SUCCESS;
+
+    if (m_EvtInterruptEnable)
+    {
+        _SynchronizeExecution(m_Interrupt, _InterruptEnableThunk, &params);
+    }
+
+    return params.ReturnVal;
+}
+
+BOOLEAN
+FxInterrupt::_InterruptEnableThunk(
+    __in PVOID SyncContext
+    )
+{
+    FxInterruptEnableParameters* p;
+
+    p = (FxInterruptEnableParameters*) SyncContext;
+
+    p->ReturnVal = p->Interrupt->InterruptEnableInvokeCallback();
+
+    return TRUE;
+}
+
+BOOLEAN
+FxInterrupt::_InterruptThunk(
+    __in struct _KINTERRUPT *Interrupt,
+    __in PVOID              ServiceContext
+    )
+
+/*++
+
+Routine Description:
+
+    This is the C routine called by the kernels INTERRUPT handler
+
+Arguments:
+
+Return Value:
+
+--*/
+
+{
+    FxInterrupt*    interrupt;
+    BOOLEAN         result;
+
+    UNREFERENCED_PARAMETER(Interrupt);
+
+    interrupt = (FxInterrupt*)ServiceContext;
+    ASSERT( interrupt->m_EvtInterruptIsr != NULL );
+
+    if (interrupt->m_IsEdgeTriggeredNonMsiInterrupt == TRUE)
+    {
+        //
+        // If KMDF is in the process of disconnecting this interrupt, discard it.
+        //
+        if (interrupt->m_Disconnecting == TRUE)
+        {
+            return FALSE;
+        }
+
+        //
+        // Captures the interrupt object as a backup in case interrupts start
+        // to arrive before IoConnectInterruptEx sets FxInterrupt.m_Interrupt.
+        //
+        interrupt->m_InterruptCaptured = Interrupt;
+    }
+    //
+    // If the interrupt is not connected, treat this as spurious interrupt.
+    //
+    else if (NULL == interrupt->m_Interrupt)
+    {
+        return FALSE;
+    }
+    
+    if (interrupt->IsWakeCapable())
+    {
+        //
+        // if it is a wake capable interrupt, we will hand it off
+        // to the state machine so that it can power up the device
+        // if required and then invoke the ISR callback
+        //
+        ASSERT(interrupt->m_PassiveHandling);
+        //
+        // TODO: Implement function
+        //
+        //FxPerfTracePassiveInterrupt(&interrupt->m_EvtInterruptIsr);
+
+        //
+        // NOTE: not in WDF 1.9
+        //
+        __debugbreak();
+        //return interrupt->WakeInterruptIsr();  
+    }
+
+    if (interrupt->m_PassiveHandling)
+    {
+        ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);  
+        
+        //
+        // Acquire our internal passive-lock after the kernel acquired its own 
+        // passive-lock and before invoking the callback.
+        //
+        interrupt->AcquireLock();
+
+        //
+        // TODO: Implement function
+        //
+        //FxPerfTracePassiveInterrupt(&interrupt->m_EvtInterruptIsr);
+
+        result = interrupt->m_EvtInterruptIsr(
+                                interrupt->GetHandle(), 
+                                interrupt->m_InterruptInfo.MessageNumber);
+        interrupt->ReleaseLock();
+    }
+    else
+    {
+        //
+        // TODO: Implement function
+        //
+        //FxPerfTraceInterrupt(&interrupt->m_EvtInterruptIsr);
+
+        result = interrupt->m_EvtInterruptIsr(
+                                interrupt->GetHandle(), 
+                                interrupt->m_InterruptInfo.MessageNumber);
+    }
+
+    return result;
+}
+
+#pragma prefast(push)
+#pragma prefast(disable:__WARNING_UNEXPECTED_IRQL_CHANGE, "Used unannotated pointers previously")
+
+VOID
+FxInterrupt::AcquireLock(
+    )
+{
+    if (FALSE == m_PassiveHandling)
+    {
+        struct _KINTERRUPT* kinterrupt = GetInterruptPtr();
+        
+        //
+        // DIRQL interrupt handling.
+        //
+        ASSERTMSG("Can't synchronize when the interrupt isn't connected: ",
+                  kinterrupt != NULL);
+
+        if (NULL != kinterrupt)
+        {
+            m_OldIrql = Mx::MxAcquireInterruptSpinLock(kinterrupt);
+        }
+    }
+    else
+    {
+        //
+        // Passive-level interrupt handling when automatic serialization is off.
+        //
+        ASSERT(Mx::MxGetCurrentIrql() == PASSIVE_LEVEL);
+        ASSERT(m_WaitLock != NULL);
+        m_WaitLock->AcquireLock(GetDriverGlobals(), NULL);
+    }
+}
+#pragma prefast(pop)
+
+#pragma prefast(push)
+#pragma prefast(disable:__WARNING_UNEXPECTED_IRQL_CHANGE, "Used unannotated pointers previously")
+
+VOID
+FxInterrupt::ReleaseLock(
+    )
+{
+    if (FALSE == m_PassiveHandling)
+    {
+        struct _KINTERRUPT* kinterrupt = GetInterruptPtr();
+        
+        //
+        // DIRQL interrupt handling.
+        //
+        ASSERTMSG("Can't synchronize when the interrupt isn't connected: ",
+                  kinterrupt != NULL);
+
+        if (NULL != kinterrupt)
+        {
+#pragma prefast(suppress:__WARNING_CALLER_FAILING_TO_HOLD, "Unable to annotate ReleaseLock for this case.");
+            Mx::MxReleaseInterruptSpinLock(kinterrupt, m_OldIrql);
+        }
+    }
+    else
+    {
+        //
+        // Passive-level interrupt handling when automatic serialization is off.
+        //
+        ASSERT(Mx::MxGetCurrentIrql() == PASSIVE_LEVEL);
+        ASSERT(m_WaitLock != NULL);
+#pragma prefast(suppress:__WARNING_CALLER_FAILING_TO_HOLD, "Unable to annotate ReleaseLock for this case.");
+        m_WaitLock->ReleaseLock(GetDriverGlobals());
+    }
+}
+#pragma prefast(pop)
+
+//
+// Enable interrupts
+//
+NTSTATUS
+FxInterrupt::InterruptEnableInvokeCallback(
+    VOID
+    )
+{
+    NTSTATUS status;
+
+    if (m_PassiveHandling)
+    {
+        //
+        // Passive-level interrupt handling: acquire our internal passive-lock
+        // after the kernel acquired its own passive-lock and before invoking
+        // the callback.
+        //
+        AcquireLock();
+        status = m_EvtInterruptEnable(GetHandle(),
+                                      m_Device->GetHandle());
+        ReleaseLock();
+    }
+    else
+    {
+        //
+        // DIRQL interrupt handling: invoke the callback.
+        //
+        status = m_EvtInterruptEnable(GetHandle(),
+                                      m_Device->GetHandle());
+    }
+
+    return status;
 }

@@ -270,3 +270,26 @@ FxPnpDeviceD0Entry::Invoke(
     
     return status;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPnpDeviceD0EntryPostInterruptsEnabled::Invoke(
+    __in WDFDEVICE  Device,
+    __in WDF_POWER_DEVICE_STATE PreviousState
+    )
+{
+    if (m_Method != NULL)
+    {
+        NTSTATUS status;
+
+        CallbackStart();
+        status = m_Method(Device, PreviousState);
+        CallbackEnd();
+
+        return status;
+    }
+    else
+    {
+        return STATUS_SUCCESS;
+    }
+}

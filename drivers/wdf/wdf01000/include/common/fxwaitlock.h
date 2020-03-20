@@ -4,6 +4,7 @@
 #include "common/mxevent.h"
 #include "common/mxgeneral.h"
 #include "common/fxglobals.h"
+#include "common/fxobject.h"
 
 
 #if (FX_CORE_MODE==FX_CORE_USER_MODE)
@@ -254,6 +255,42 @@ public:
         Mx::MxLeaveCriticalRegion();
     }
 
+};
+
+//
+// Order is important here, FxObject *must* be the first class in the
+// list so that &FxWaitWaitLock == &FxNonPagedObject.
+//
+class FxWaitLock : public FxObject, public FxWaitLockInternal  {
+
+public:
+    // Factory function
+    _Must_inspect_result_    
+    static
+    NTSTATUS
+    _Create(
+        __in PFX_DRIVER_GLOBALS         DriverGlobals,
+        __in_opt PWDF_OBJECT_ATTRIBUTES Attributes,
+        __in_opt FxObject*              ParentObject,
+        __in BOOLEAN                    AssignDriverAsDefaultParent,
+        __out WDFWAITLOCK*              LockHandle
+        );
+
+    
+    CHECK_RETURN_IF_USER_MODE
+    NTSTATUS
+    Initialize(
+        )
+    {
+        return __super::Initialize();
+    }
+
+    FxWaitLock(
+        __in PFX_DRIVER_GLOBALS FxDriverGlobals
+        ) :
+        FxObject(FX_TYPE_WAIT_LOCK, sizeof(FxWaitLock), FxDriverGlobals)
+    {
+    }
 };
 
 #endif // _FXWAITLOCK_H_

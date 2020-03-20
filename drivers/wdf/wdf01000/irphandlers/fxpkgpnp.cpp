@@ -2454,3 +2454,54 @@ Return Value:
                                 // isolate the value            and normalize it
     return (DEVICE_POWER_STATE) ((State & (0xF << (Index * 4))) >> (Index * 4));
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::NotifyResourceObjectsD0(
+    __in ULONG NotifyFlags
+    )
+/*++
+
+Routine Description:
+
+    This routine traverses all resource objects and tells them that the device
+    is entering D0.  If an error is encountered, the walking of the list is
+    halted.
+
+Arguments:
+
+    none
+
+Return Value:
+
+    VOID
+
+--*/
+{
+    FxInterrupt* pInterrupt;
+    PLIST_ENTRY ple;
+    NTSTATUS status;
+
+    for (ple = m_InterruptListHead.Flink;
+         ple != &m_InterruptListHead;
+         ple = ple->Flink)
+    {
+        //
+        // Connect the interrupts
+        //
+        pInterrupt = CONTAINING_RECORD(ple, FxInterrupt, m_PnpList);
+
+        status = pInterrupt->Connect(NotifyFlags);
+
+        if (!NT_SUCCESS(status))
+        {
+            DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                                "WDFINTERRUPT %p failed to connect, %!STATUS!",
+                                pInterrupt->GetHandle(), status);
+
+            return status;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}

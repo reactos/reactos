@@ -105,6 +105,12 @@ FxVerifyObjectTypeInTable(
     __in USHORT ObjectType
     );
 
+typedef
+NTSTATUS
+(*PFN_IO_CONNECT_INTERRUPT_EX)(
+    __inout PIO_CONNECT_INTERRUPT_PARAMETERS Parameters
+    );
+
 
 typedef enum FxTrackPowerOption : UCHAR {
     FxTrackPowerNone = 0,
@@ -117,6 +123,12 @@ typedef enum FxVerifierDownlevelOption {
     NotOkForDownLevel = 0,
     OkForDownLevel = 1,
 } FxVerifierDownLevelOption;
+
+typedef enum WaitSignalFlags {
+    WaitSignalBreakUnderVerifier      = 0x01,
+    WaitSignalBreakUnderDebugger      = 0x02,
+    WaitSignalAlwaysBreak             = 0x04
+} WaitSignalFlags;
 
 struct FxMdlDebugInfo {
     PMDL Mdl;
@@ -1067,6 +1079,19 @@ Return Value:
         InterlockedPushEntrySList(&Lookaside->L.ListHead,
                                   (PSLIST_ENTRY)Entry);
     }
+}
+
+_Must_inspect_result_
+__inline
+BOOLEAN
+FxIsProcessorGroupSupported(
+    VOID
+    )
+{
+    //
+    // Groups are supported in Win 7 and forward.
+    //
+    return FxLibraryGlobals.ProcessorGroupSupport;
 }
 
 #ifdef __cplusplus
