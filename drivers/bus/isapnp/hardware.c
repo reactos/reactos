@@ -564,7 +564,7 @@ IsaHwDetectReadDataPort(
     if (!FdoExt->ReadDataPort)
     {
         DPRINT1("No read data port found\n");
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     DPRINT1("Detected read data port at 0x%p\n", FdoExt->ReadDataPort);

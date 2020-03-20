@@ -24,7 +24,7 @@ IsaPdoQueryDeviceRelations(
 
     DeviceRelations = ExAllocatePool(PagedPool, sizeof(*DeviceRelations));
     if (!DeviceRelations)
-        return STATUS_INSUFFICIENT_RESOURCES;
+        return STATUS_NO_MEMORY;
 
     DeviceRelations->Count = 1;
     DeviceRelations->Objects[0] = PdoExt->Common.Self;
@@ -47,7 +47,7 @@ IsaPdoQueryCapabilities(
 
     DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
     if (DeviceCapabilities->Version != 1)
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_REVISION_MISMATCH;
 
     DeviceCapabilities->UniqueID = LogDev->SerialNumber != 0xffffffff;
     DeviceCapabilities->Address = LogDev->CSN;
