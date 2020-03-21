@@ -21,10 +21,6 @@
 #ifndef __EDITSTR_H
 #define __EDITSTR_H
 
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0400
-#endif
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
