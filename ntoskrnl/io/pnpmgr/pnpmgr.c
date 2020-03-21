@@ -896,7 +896,7 @@ IopStartAndEnumerateDevice(IN PDEVICE_NODE DeviceNode)
 
 NTSTATUS
 IopStopDevice(
-   PDEVICE_NODE DeviceNode)
+    PDEVICE_NODE DeviceNode)
 {
     NTSTATUS Status;
 
@@ -918,7 +918,7 @@ IopStopDevice(
 
 NTSTATUS
 IopStartDevice(
-   PDEVICE_NODE DeviceNode)
+    PDEVICE_NODE DeviceNode)
 {
     NTSTATUS Status;
     HANDLE InstanceHandle = NULL, ControlHandle = NULL;
@@ -958,12 +958,12 @@ IopStartDevice(
     if (!NT_SUCCESS(Status))
         goto ByeBye;
 
-   RtlInitUnicodeString(&KeyName, L"ActiveService");
-   ValueString = DeviceNode->ServiceName;
-   if (!ValueString.Buffer)
-       RtlInitUnicodeString(&ValueString, L"");
-   Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_SZ, ValueString.Buffer, ValueString.Length + sizeof(UNICODE_NULL));
-   // }
+    RtlInitUnicodeString(&KeyName, L"ActiveService");
+    ValueString = DeviceNode->ServiceName;
+    if (!ValueString.Buffer)
+        RtlInitUnicodeString(&ValueString, L"");
+    Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_SZ, ValueString.Buffer, ValueString.Length + sizeof(UNICODE_NULL));
+    // }
 
 ByeBye:
     if (ControlHandle != NULL)
