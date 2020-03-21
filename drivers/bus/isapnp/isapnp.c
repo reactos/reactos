@@ -84,7 +84,7 @@ IsaFdoCreateDeviceIDs(
                                   LogDev->ProdId);
     if (!NT_SUCCESS(Status))
         return Status;
-    TempString.Length = (End - TempString.Buffer) * sizeof(WCHAR);
+    TempString.Length = (USHORT)((End - TempString.Buffer) * sizeof(WCHAR));
     Status = IsaPnpDuplicateUnicodeString(
         RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
         &TempString,
@@ -105,7 +105,7 @@ IsaFdoCreateDeviceIDs(
                                   LogDev->ProdId);
     if (!NT_SUCCESS(Status))
         return Status;
-    TempString.Length = (End - TempString.Buffer) * sizeof(WCHAR);
+    TempString.Length = (USHORT)((End - TempString.Buffer) * sizeof(WCHAR));
     Status = IsaPnpDuplicateUnicodeString(
         RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
         &TempString,
@@ -125,7 +125,7 @@ IsaFdoCreateDeviceIDs(
                                   LogDev->SerialNumber);
     if (!NT_SUCCESS(Status))
         return Status;
-    TempString.Length = (End - TempString.Buffer) * sizeof(WCHAR);
+    TempString.Length = (USHORT)((End - TempString.Buffer) * sizeof(WCHAR));
     Status = IsaPnpDuplicateUnicodeString(
         RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
         &TempString,

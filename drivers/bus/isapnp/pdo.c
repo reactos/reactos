@@ -252,7 +252,7 @@ IsaPdoStartReadPort(
         PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
         if (PartialDescriptor->Type == CmResourceTypePort)
         {
-            PUCHAR ReadDataPort = (PUCHAR)PartialDescriptor->u.Port.Start.u.LowPart + 3;
+            PUCHAR ReadDataPort = ULongToPtr(PartialDescriptor->u.Port.Start.u.LowPart + 3);
             if (PartialDescriptor->u.Port.Length > 1 && !FdoExt->ReadDataPort && NT_SUCCESS(IsaHwTryReadDataPort(ReadDataPort)))
             {
                 FdoExt->ReadDataPort = ReadDataPort;
