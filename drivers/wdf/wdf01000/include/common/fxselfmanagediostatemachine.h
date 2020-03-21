@@ -226,6 +226,27 @@ protected:
         _Inout_opt_ FxCxCallbackProgress* Progress
         );
 
+    static
+    FxSelfManagedIoStates
+    InitStartedFailedPost(
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
+        );
+
+    static 
+    FxSelfManagedIoStates
+    RestartedFailedPost(
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
+        );
+
+    WDFDEVICE
+    GetDeviceHandle(
+        VOID
+        );
+
 };
 
 #endif //_FXSELFMANAGEDIOSTATEMACHINE_H_

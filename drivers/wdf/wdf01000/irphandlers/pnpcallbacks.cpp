@@ -293,3 +293,22 @@ FxPnpDeviceD0EntryPostInterruptsEnabled::Invoke(
         return STATUS_SUCCESS;
     }
 }
+
+__drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
+_Must_inspect_result_
+NTSTATUS
+FxPnpDeviceSelfManagedIoInit::Invoke(
+    _In_  WDFDEVICE  Device,
+    _Out_ FxCxCallbackProgress *Progress
+    )
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    m_Device = Device;
+
+    if (m_Method != NULL)
+    {
+        status = m_Method(Device);
+    }
+
+    return status;
+}

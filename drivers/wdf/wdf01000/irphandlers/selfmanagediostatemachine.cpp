@@ -11,38 +11,38 @@ const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_CreatedStates[] =
 {
     { SelfManagedIoEventStart, FxSelfManagedIoInit DEBUGGED_EVENT },
     { SelfManagedIoEventFlush, FxSelfManagedIoCreated DEBUGGED_EVENT },
-    { SelfManagedIoEventCleanup, FxSelfManagedIoFlushed DEBUGGED_EVENT },
+    { SelfManagedIoEventCleanup, FxSelfManagedIoFinal DEBUGGED_EVENT },
 };
 
 const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_InitFailedStates[] =
 {
     { SelfManagedIoEventSuspend, FxSelfManagedIoInitFailed DEBUGGED_EVENT },
-    { SelfManagedIoEventFlush, FxSelfManagedIoRestartedFailedPost DEBUGGED_EVENT },
+    { SelfManagedIoEventFlush, FxSelfManagedIoFlushing DEBUGGED_EVENT },
 };
 
 const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_StartedStates[] =
 {
-    { SelfManagedIoEventSuspend, FxSelfManagedIoStarted DEBUGGED_EVENT },
+    { SelfManagedIoEventSuspend, FxSelfManagedIoSuspending DEBUGGED_EVENT },
 };
 
 const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_StoppedStates[] =
 {
-    { SelfManagedIoEventStart, FxSelfManagedIoStopped DEBUGGED_EVENT },
-    { SelfManagedIoEventSuspend, FxSelfManagedIoSuspending DEBUGGED_EVENT },
-    { SelfManagedIoEventFlush, FxSelfManagedIoRestartedFailedPost DEBUGGED_EVENT },
+    { SelfManagedIoEventStart, FxSelfManagedIoRestarting DEBUGGED_EVENT },
+    { SelfManagedIoEventSuspend, FxSelfManagedIoStopped DEBUGGED_EVENT },
+    { SelfManagedIoEventFlush, FxSelfManagedIoFlushing DEBUGGED_EVENT },
 };
 
 const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_FailedStates[] =
 {
-    { SelfManagedIoEventFlush, FxSelfManagedIoRestartedFailedPost DEBUGGED_EVENT },
-    { SelfManagedIoEventSuspend, FxSelfManagedIoSuspending DEBUGGED_EVENT },
+    { SelfManagedIoEventFlush, FxSelfManagedIoFlushing DEBUGGED_EVENT },
+    { SelfManagedIoEventSuspend, FxSelfManagedIoFailed DEBUGGED_EVENT },
 };
 
 const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_FlushedStates[] =
 {
-    { SelfManagedIoEventStart, FxSelfManagedIoStopped DEBUGGED_EVENT },
-    { SelfManagedIoEventCleanup, FxSelfManagedIoFlushing DEBUGGED_EVENT },
-    { SelfManagedIoEventFlush, FxSelfManagedIoFailed TRAP_ON_EVENT },
+    { SelfManagedIoEventStart, FxSelfManagedIoRestarting DEBUGGED_EVENT },
+    { SelfManagedIoEventCleanup, FxSelfManagedIoCleanup DEBUGGED_EVENT },
+    { SelfManagedIoEventFlush, FxSelfManagedIoFlushed TRAP_ON_EVENT },
 };
 
 const FxSelfManagedIoStateTable FxSelfManagedIoMachine::m_StateTable[] =
@@ -65,6 +65,12 @@ const FxSelfManagedIoStateTable FxSelfManagedIoMachine::m_StateTable[] =
         ARRAY_SIZE(FxSelfManagedIoMachine::m_InitFailedStates),
     },
 
+    // FxSelfManagedIoInitStartedFailedPost
+    {   FxSelfManagedIoMachine::InitStartedFailedPost,
+        NULL,
+        0,
+    },
+
     // FxSelfManagedIoStarted
     {   NULL,
         FxSelfManagedIoMachine::m_StartedStates,
@@ -85,6 +91,12 @@ const FxSelfManagedIoStateTable FxSelfManagedIoMachine::m_StateTable[] =
 
     // FxSelfManagedIoRestarting
     {   FxSelfManagedIoMachine::Restarting,
+        NULL,
+        0,
+    },
+
+    // FxSelfManagedIoRestartedFailedPost
+    {   FxSelfManagedIoMachine::RestartedFailedPost,
         NULL,
         0,
     },
@@ -214,6 +226,14 @@ Return Value:
         Callbacks->EvtDeviceSelfManagedIoRestart);
 }
 
+WDFDEVICE
+FxSelfManagedIoMachine::GetDeviceHandle(
+    VOID
+    )
+{
+    return m_PkgPnp->GetDevice()->GetHandle();
+}
+
 _Must_inspect_result_
 NTSTATUS
 FxSelfManagedIoMachine::ProcessEvent(
@@ -334,8 +354,23 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return FxSelfManagedIoInvalid;
+    FxCxCallbackProgress progress;
+    
+    *Status = This->m_DeviceSelfManagedIoInit.Invoke(This->GetDeviceHandle(), &progress);
+
+    if (Progress)
+    {
+        *Progress = progress;
+    }
+    
+    if (NT_SUCCESS(*Status))
+    {
+        return FxSelfManagedIoStarted;
+    }
+    else
+    {
+        return FxSelfManagedIoInitFailed;
+    }
 }
 
 FxSelfManagedIoStates
@@ -445,6 +480,62 @@ Arguments:
 
 Return Value:
     FxSelfManagedIoFinal
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxSelfManagedIoInvalid;
+}
+
+FxSelfManagedIoStates
+FxSelfManagedIoMachine::InitStartedFailedPost(
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
+    )
+/*++
+
+Routine Description:
+    Calls the self managed io suspend routine routine.
+
+Arguments:
+    This - instance of the state machine
+
+    Status - result of the event callback into the driver
+
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
+Return Value:
+    FxSelfManagedIoFailed
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxSelfManagedIoInvalid;
+}
+
+FxSelfManagedIoStates
+FxSelfManagedIoMachine::RestartedFailedPost(
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
+    )
+/*++
+
+Routine Description:
+    Calls the self managed io suspend routine routine.
+
+Arguments:
+    This - instance of the state machine
+
+    Status - result of the event callback into the driver
+
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
+Return Value:
+    FxSelfManagedIoFailed
 
   --*/
 {
