@@ -1011,7 +1011,37 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
         return Status;
     }
 
-    DeviceNode->CapabilityFlags = *(PULONG)((ULONG_PTR)&DeviceCaps->Version + sizeof(DeviceCaps->Version));
+    /* Map device capabilities to capability flags */
+    DeviceNode->CapabilityFlags = 0;
+    if (DeviceCaps->LockSupported)
+        DeviceNode->CapabilityFlags |= 0x00000001;    // CM_DEVCAP_LOCKSUPPORTED
+
+    if (DeviceCaps->EjectSupported)
+        DeviceNode->CapabilityFlags |= 0x00000002;    // CM_DEVCAP_EJECTSUPPORTED
+
+    if (DeviceCaps->Removable)
+        DeviceNode->CapabilityFlags |= 0x00000004;    // CM_DEVCAP_REMOVABLE
+
+    if (DeviceCaps->DockDevice)
+        DeviceNode->CapabilityFlags |= 0x00000008;    // CM_DEVCAP_DOCKDEVICE
+
+    if (DeviceCaps->UniqueID)
+        DeviceNode->CapabilityFlags |= 0x00000010;    // CM_DEVCAP_UNIQUEID
+
+    if (DeviceCaps->SilentInstall)
+        DeviceNode->CapabilityFlags |= 0x00000020;    // CM_DEVCAP_SILENTINSTALL
+
+    if (DeviceCaps->RawDeviceOK)
+        DeviceNode->CapabilityFlags |= 0x00000040;    // CM_DEVCAP_RAWDEVICEOK
+
+    if (DeviceCaps->SurpriseRemovalOK)
+        DeviceNode->CapabilityFlags |= 0x00000080;    // CM_DEVCAP_SURPRISEREMOVALOK
+
+    if (DeviceCaps->HardwareDisabled)
+        DeviceNode->CapabilityFlags |= 0x00000100;    // CM_DEVCAP_HARDWAREDISABLED
+
+    if (DeviceCaps->NonDynamic)
+        DeviceNode->CapabilityFlags |= 0x00000200;    // CM_DEVCAP_NONDYNAMIC
 
     if (DeviceCaps->NoDisplayInUI)
         DeviceNode->UserFlags |= DNUF_DONT_SHOW_IN_UI;
