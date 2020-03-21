@@ -17,12 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* make sure the structures work with a comctl32 v5.x */
-#ifndef __REACTOS__
-#define _WIN32_WINNT 0x500
-#define _WIN32_IE 0x500
-#endif
-
 #include <assert.h>
 #include <stdarg.h>
 
