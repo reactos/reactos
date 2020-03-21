@@ -111,6 +111,15 @@ public:
         __in_opt FxIoQueue*  Queue
         );
 
+    __inline
+    FxIoQueue*
+    GetDefaultQueue(
+        VOID
+        ) 
+    {
+        return m_DefaultQueue;
+    }
+
     //
     // Register the I/O in-caller context callback
     //

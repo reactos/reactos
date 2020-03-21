@@ -148,8 +148,40 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
-    return NULL;
+    DDI_ENTRY();
+        
+    FxPkgIo*   pPkgIo;;
+    FxIoQueue* pFxIoQueue;;
+    FxDevice * pFxDevice;
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+
+    pPkgIo = NULL;
+    pFxIoQueue = NULL;
+
+    //
+    // Validate the I/O Package handle, and get the FxPkgIo*
+    //
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Device,
+                                   FX_TYPE_DEVICE,
+                                   (PVOID *) &pFxDevice,
+                                   &pFxDriverGlobals);
+
+    pPkgIo = (FxPkgIo *) pFxDevice->m_PkgIo;
+    pFxIoQueue = pPkgIo->GetDefaultQueue();
+
+    //
+    // A default queue is optional
+    //
+    if (pFxIoQueue == NULL)
+    {
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGIO,
+                            "No default Queue configured "
+                            "for Device 0x%p", Device);
+        return NULL;
+    }
+
+    return (WDFQUEUE)pFxIoQueue->GetObjectHandle();
 }
 
 } // extern "C"
