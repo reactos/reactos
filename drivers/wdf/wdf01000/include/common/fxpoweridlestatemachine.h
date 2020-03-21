@@ -194,6 +194,11 @@ public:
         __in_opt PCSTR File = NULL
         );
 
+    VOID
+    ProcessPowerEvent(
+        __in FxPowerIdleEvents Event
+        );
+
 
 protected:
 

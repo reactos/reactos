@@ -104,6 +104,14 @@ union FxSelfManagedIoMachineStateHistory {
     UCHAR History[FxSelfManagedIoEventQueueDepth];
 };
 
+struct FxSelfManagedIoStateTable {
+    PFN_SELF_MANAGED_IO_STATE_ENTRY_FUNCTION StateFunc;
+
+    const FxSelfManagedIoTargetState* TargetStates;
+
+    ULONG TargetStatesCount;
+};
+
 class FxSelfManagedIoMachine : public FxStump {
 
 public:
@@ -125,6 +133,15 @@ public:
     InitializeMachine(
         _In_ PWDF_PNPPOWER_EVENT_CALLBACKS Callbacks
         );
+
+    _Must_inspect_result_
+    NTSTATUS
+    Start(
+        _Out_opt_ FxCxCallbackProgress* Progress
+        )
+    {
+        return ProcessEvent(SelfManagedIoEventStart, Progress);
+    }
 
 
 public:
@@ -150,6 +167,64 @@ protected:
     FxSelfManagedIoMachineEventHistory m_Events;
 
     FxSelfManagedIoMachineStateHistory m_States;
+
+    static const FxSelfManagedIoStateTable m_StateTable[];
+
+    static const FxSelfManagedIoTargetState m_CreatedStates[];
+    static const FxSelfManagedIoTargetState m_InitFailedStates[];
+    static const FxSelfManagedIoTargetState m_StartedStates[];
+    static const FxSelfManagedIoTargetState m_StoppedStates[];
+    static const FxSelfManagedIoTargetState m_FailedStates[];
+    static const FxSelfManagedIoTargetState m_FlushedStates[];
+
+    // Functions
+
+    _Must_inspect_result_
+    NTSTATUS
+    ProcessEvent(
+        _In_ FxSelfManagedIoEvents Event,
+        _Out_opt_ FxCxCallbackProgress* Progress
+        );
+
+    static
+    FxSelfManagedIoStates
+    Init(
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
+        );
+
+    static
+    FxSelfManagedIoStates
+    Suspending(
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
+        );
+
+    static
+    FxSelfManagedIoStates
+    Restarting(
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
+        );
+
+    static
+    FxSelfManagedIoStates
+    Flushing(
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
+        );
+
+    static
+    FxSelfManagedIoStates
+    Cleanup(
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
+        );
 
 };
 

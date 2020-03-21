@@ -1005,3 +1005,171 @@ Return Value:
     Queue->MarkNoDeleteDDI();
     return STATUS_SUCCESS;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgIo::ResumeProcessingForPower()
+
+/*++
+
+    Routine Description:
+
+    Resumes all PowerManaged queues for automatic I/O processing due to
+        a power event that allows I/O to resume.
+
+    Non-PowerManaged queues are left alone.
+
+Arguments:
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+
+{
+    KIRQL irql;
+    FxIoQueue* queue;
+    SINGLE_LIST_ENTRY queueList, *ple;
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGIO,
+                "Power resume all queues of WDFDEVICE 0x%p", 
+                m_Device->GetHandle());
+
+    queueList.Next = NULL;
+
+    Lock(&irql);
+
+    GetIoQueueListLocked(&queueList, FxIoQueueIteratorListPowerOn);
+    //
+    // Change the state so that new queues created while we
+    // are resuming the existing queues can be in a powered-on state.
+    //
+    m_PowerStateOn = TRUE;
+    
+    //
+    // Change the accepting state so that new queues created while we
+    // are resuming the existing queues can be accept request.
+    //
+    m_QueuesAreShuttingDown = FALSE;
+
+    Unlock(irql);
+
+    //
+    // We will power-up the queues in two steps. First we will resume
+    // the power of all the queues and then we will start dispatching I/Os.
+    // This is to avoid a queue being powered up at the begining of the list
+    // trying to forward a request to another queue lower in the list that's
+    // not powered up yet.
+    //
+    for(ple = queueList.Next; ple != NULL; ple = ple->Next)
+    {
+        queue = FxIoQueue::_FromPowerSListEntry(ple);
+
+        queue->ResumeProcessingForPower();
+    }
+
+    for (ple = PopEntryList(&queueList);
+         ple != NULL;
+         ple = PopEntryList(&queueList))
+    {
+        queue = FxIoQueue::_FromPowerSListEntry(ple);
+
+        queue->StartPowerTransitionOn();
+
+        ple->Next = NULL;
+
+        queue->RELEASE(IO_ITERATOR_POWER_TAG);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static
+VOID
+GetIoQueueList_ProcessQueueListEntry(
+    PLIST_ENTRY         QueueLE,
+    PSINGLE_LIST_ENTRY  SListHead,
+    PVOID               Tag
+    )
+{
+    FxIoQueueNode*      listNode;
+    FxIoQueue*          queue;
+    
+    //
+    // Skip any nodes that are not queues. They can be bookmarks for
+    // in-progress flush operations.
+    //
+    listNode = FxIoQueueNode::_FromListEntry(QueueLE);
+    if (listNode->IsNodeType(FxIoQueueNodeTypeQueue) == FALSE)
+    {
+        return;
+    }
+
+    queue = FxIoQueue::_FromIoPkgListEntry(QueueLE);
+    PushEntryList(SListHead, &queue->m_PowerSListEntry);
+    
+    //
+    // Add a reference since the request will be touched outside of the
+    // lock being held. We will use the enumerant value as the tag.
+    //
+    queue->ADDREF(Tag);
+}
+
+VOID
+FxPkgIo::GetIoQueueListLocked(
+    __in    PSINGLE_LIST_ENTRY SListHead,
+    __inout FxIoIteratorList ListType
+    )
+/*++
+
+    Routine Description:
+
+        Called to make a temporary list of queues for iteration purpose.
+        Function is called with the FxPkg lock held.
+
+--*/
+{
+    PLIST_ENTRY         listHead, le;
+    
+    listHead = &m_IoQueueListHead;
+
+    if (FxIoQueueIteratorListPowerOn == ListType ||
+        (FxIoQueueIteratorListPowerOff == ListType &&  // backwards compatibility order.
+          m_Device->IsCxInIoPath() == FALSE))
+    {
+        //
+        // Power up: first client driver's queues then cx's queues.
+        // List is already sorted with client driver's queue first.
+        // Since we are inserting into the head of the single list head, if we walked
+        // over the list from first to last, we would reverse the entries.  By walking
+        // the list backwards, we build the single list head in the order of m_IoQueueListHead.
+        //
+        for (le = listHead->Blink; le != listHead; le = le->Blink)
+        {
+            GetIoQueueList_ProcessQueueListEntry(le, 
+                                                 SListHead, 
+                                                 IO_ITERATOR_POWER_TAG);
+        }
+    }
+    else if (FxIoQueueIteratorListPowerOff == ListType)
+    {
+        //
+        // Power down: first cx's queues then client driver's queues.
+        // List is already sorted with client driver's queue first.
+        // Since we are inserting into the head of the single list head, if we walked
+        // over the list from last to first, we would reverse the entries.  By walking
+        // the list forwards, we build the single list head in the desired order 
+        //
+        for (le = listHead->Flink; le != listHead; le = le->Flink)
+        {
+            GetIoQueueList_ProcessQueueListEntry(le, 
+                                                 SListHead, 
+                                                 IO_ITERATOR_POWER_TAG);
+        }
+    }
+    else
+    {
+        ASSERT(FALSE);
+    }
+}

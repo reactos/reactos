@@ -4741,3 +4741,108 @@ FX_VF_METHOD(FxIoQueue, VerifyValidateCompletedRequest)(
         FxVerifierDbgBreakPoint(GetDriverGlobals());
     }
 }
+
+VOID
+FxIoQueue::StartPowerTransitionOn(
+    VOID
+    )
+/*++
+    Routine Description: Start dispatching I/Os
+
+    Arguments: VOID
+
+    Return Value:  VOID
+--*/
+{
+    KIRQL irql;
+
+    if (m_PowerManaged == FALSE)
+    {
+        ASSERT(m_PowerState == FxIoQueuePowerOn);
+        return;
+    }
+
+    Lock(&irql);
+
+    if (m_Deleted == FALSE)
+    {
+        ASSERT(m_PowerState == FxIoQueuePowerOn);
+    }
+    
+    //
+    // If there are requests in the queue when we power up, we
+    // should set m_TransitionFromEmpty to trigger event-ready notify
+    // callback on the manual queue to kick start processing of requests. 
+    // If we don't set, there is a posibility for abandoning the requests in the 
+    // the queue if the queue is powered off between the time we call 
+    // ProcessReadNotify and the call to retrieve requests made by the driver 
+    // because the retrieve call will fail and the request will be left in the 
+    // queue with m_TransitionFromEmpty state cleared.
+    //
+    if (m_Queue.GetRequestCount() > 0L)
+    {
+        m_TransitionFromEmpty = TRUE;
+        m_ForceTransitionFromEmptyWhenAddingNewRequest = FALSE;
+    }
+
+    DispatchEvents(irql);
+
+    return;
+}
+
+VOID
+FxIoQueue::ResumeProcessingForPower(
+    VOID
+    )
+/*++
+
+    Routine Description:
+
+    Resumes a PowerManaged queue for automatic I/O processing due to
+    a power event that allows I/O to resume.
+
+    Does nothing if its a non-power managed queue.
+
+    Additional reference is already taken on the object by the caller
+    to prevent the queue from being deleted.
+
+Arguments:
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+{
+    KIRQL irql;
+
+    //
+    // If not power managed, leave it alone
+    //
+    if (!m_PowerManaged)
+    {
+        ASSERT(m_PowerState == FxIoQueuePowerOn);
+        return;
+    }
+
+    Lock(&irql);
+
+    if (m_PowerState == FxIoQueuePowerOn)
+    {
+        Unlock(irql);
+        return;
+    }
+
+    ASSERT(m_PowerState == FxIoQueuePowerOff);
+
+    m_PowerState = FxIoQueuePowerRestarting;
+
+    //
+    // We have transitioned to a status that resumes
+    // processing, so call dispatch function.
+    //
+
+    DispatchEvents(irql);
+
+    return;
+}

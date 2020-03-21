@@ -2495,6 +2495,20 @@ public:
         VOID
         );
 
+    VOID
+    PowerSetDevicePowerState(
+        __in WDF_POWER_DEVICE_STATE State
+        );
+
+    VOID
+    PowerSendPowerUpEvents(
+        VOID
+        );
+
+    VOID
+    PowerSendIdlePowerEvent(
+        __in FxPowerIdleEvents Event
+        );
 
 private:
 

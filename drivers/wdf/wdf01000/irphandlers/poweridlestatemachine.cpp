@@ -1530,3 +1530,35 @@ Return Value:
     WDFNOTIMPLEMENTED();
     return FxIdleMax;
 }
+
+VOID
+FxPowerIdleMachine::ProcessPowerEvent(
+    __in FxPowerIdleEvents Event
+    )
+/*++
+
+Routine Description:
+    Post a power related event to the state machine.
+
+Arguments:
+    Event - the event to post
+
+Return Value:
+    None
+
+  --*/
+{
+    KIRQL irql;
+
+    //
+    // All other event types have specialized public functions
+    //
+    ASSERT(Event == PowerIdleEventPowerUpComplete ||
+           Event == PowerIdleEventPowerUpFailed ||
+           Event == PowerIdleEventPowerDown ||
+           Event == PowerIdleEventPowerDownFailed);
+
+    m_Lock.Acquire(&irql);
+    ProcessEventLocked(Event);
+    m_Lock.Release(irql);
+}

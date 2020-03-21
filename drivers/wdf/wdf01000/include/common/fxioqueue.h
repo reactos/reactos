@@ -10,6 +10,12 @@
 #include "common/fxcallbackmutexlock.h"
 
 
+enum FxIoStopProcessingForPowerAction {
+    FxIoStopProcessingForPowerHold = 1,
+    FxIoStopProcessingForPowerPurgeManaged,
+    FxIoStopProcessingForPowerPurgeNonManaged,
+};
+
 //
 // These FxIoQueue public Enum and Struct are used to tie the queue 
 // with FxPkgIo.
@@ -818,6 +824,26 @@ public:
             m_PowerState = PowerState;
         }
     }
+
+    VOID
+    StartPowerTransitionOn(
+        VOID
+        );
+
+    VOID
+    StartPowerTransitionOff(
+        VOID
+        );
+
+    VOID
+    StopProcessingForPower(
+        __in FxIoStopProcessingForPowerAction Action
+        );
+
+    VOID
+    ResumeProcessingForPower(
+        VOID
+        );
     
     VOID
     SetStateForShutdown(

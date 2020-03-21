@@ -1727,8 +1727,29 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    This->m_Device->m_PkgIo->ResumeProcessingForPower();
+
+    if (This->m_SelfManagedIoMachine != NULL)
+    {
+        NTSTATUS status;
+        FxCxCallbackProgress progress;
+
+        status = This->m_SelfManagedIoMachine->Start(&progress);
+
+        if (!NT_SUCCESS(status))
+        {
+            return WdfDevStatePowerInitialSelfManagedIoFailed;            
+        }
+    }
+
+    This->PowerSetDevicePowerState(WdfPowerDeviceD0);
+
+    //
+    // Send the PowerUp event to both the PnP and the Power Policy state machines.
+    //
+    This->PowerSendPowerUpEvents();
+
+    return WdfDevStatePowerDecideD0State;
 }
 
 WDF_DEVICE_POWER_STATE
@@ -2932,4 +2953,96 @@ Return Value:
     }
 
     return result;
+}
+
+VOID
+FxPkgPnp::PowerSetDevicePowerState(
+    __in WDF_POWER_DEVICE_STATE State
+    )
+/*++
+
+Routine Description:
+    Stores the state in the object and notifies the system of the change.
+
+Arguments:
+    State - new device state
+
+Return Value:
+    VOID
+
+  --*/
+{
+    POWER_STATE powerState;
+
+    //
+    // Remember our previous state
+    //
+    m_DevicePowerStateOld = m_DevicePowerState;
+
+    //
+    // Set our new state
+    //
+    ASSERT(State <= 0xFF);
+    m_DevicePowerState = (BYTE) State;
+
+    //
+    // Notify the system of the new power state.
+    //
+    switch (State) {
+    case WdfPowerDeviceD3Final:
+    case WdfPowerDevicePrepareForHibernation:
+        powerState.DeviceState = PowerDeviceD3;
+        break;
+
+    case WdfPowerDeviceD0:
+         m_SystemPowerAction = PowerActionNone;
+         __fallthrough;
+
+    default:
+        powerState.DeviceState = (DEVICE_POWER_STATE) State;
+        break;
+    }
+
+    MxDeviceObject deviceObject(m_Device->GetDeviceObject());
+    deviceObject.SetPowerState(
+                    DevicePowerState,
+                    powerState);
+}
+
+VOID
+FxPkgPnp::PowerSendIdlePowerEvent(
+    __in FxPowerIdleEvents Event
+    )
+{
+    if (IsPowerPolicyOwner())
+    {
+        m_PowerPolicyMachine.m_Owner->m_PowerIdleMachine.ProcessPowerEvent(Event);
+    }
+}
+
+VOID
+FxPkgPnp::PowerSendPowerUpEvents(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Sends power up events to the pnp and power policy state machines
+
+Arguments:
+    None
+
+Return Value:
+    None
+
+  --*/
+{
+    PowerSendIdlePowerEvent(PowerIdleEventPowerUpComplete);
+
+    //
+    // This must be called *before* PowerPostParentToD0ToChildren so that we
+    // clear the child power up guard variable in the power policy state machine
+    // and then post an event which will unblock the child.
+    //
+    PowerPolicyProcessEvent(PwrPolPowerUp);
 }

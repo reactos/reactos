@@ -225,6 +225,16 @@ Return Value:
         __inout FxIoQueue               * Queue
         );
 
+    //
+    // This is called to start, or resume processing when PNP/Power
+    // resources have been supplied to the device driver.
+    //
+    // The driver is notified of resumption for any in-flight I/O.
+    //
+    _Must_inspect_result_
+    NTSTATUS
+    ResumeProcessingForPower();
+
 private:
 
     _Must_inspect_result_
@@ -248,6 +258,12 @@ private:
     GetNextIoQueueLocked(
         __in FxIoQueueNode* QueueBookmark,
         __in PVOID Tag
+        );
+
+    VOID
+    GetIoQueueListLocked(
+        __in    PSINGLE_LIST_ENTRY SListHead,
+        __inout FxIoIteratorList ListType
         );
 };
 

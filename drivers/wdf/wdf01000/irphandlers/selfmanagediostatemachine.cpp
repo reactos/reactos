@@ -4,6 +4,123 @@
 
 
 
+// * - We can get a restart from the created state if a PDO is newly enumerated
+//     but was disabled on a previous enumeration.  Treat restart as an init
+//     in this case.
+const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_CreatedStates[] =
+{
+    { SelfManagedIoEventStart, FxSelfManagedIoInit DEBUGGED_EVENT },
+    { SelfManagedIoEventFlush, FxSelfManagedIoCreated DEBUGGED_EVENT },
+    { SelfManagedIoEventCleanup, FxSelfManagedIoFlushed DEBUGGED_EVENT },
+};
+
+const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_InitFailedStates[] =
+{
+    { SelfManagedIoEventSuspend, FxSelfManagedIoInitFailed DEBUGGED_EVENT },
+    { SelfManagedIoEventFlush, FxSelfManagedIoRestartedFailedPost DEBUGGED_EVENT },
+};
+
+const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_StartedStates[] =
+{
+    { SelfManagedIoEventSuspend, FxSelfManagedIoStarted DEBUGGED_EVENT },
+};
+
+const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_StoppedStates[] =
+{
+    { SelfManagedIoEventStart, FxSelfManagedIoStopped DEBUGGED_EVENT },
+    { SelfManagedIoEventSuspend, FxSelfManagedIoSuspending DEBUGGED_EVENT },
+    { SelfManagedIoEventFlush, FxSelfManagedIoRestartedFailedPost DEBUGGED_EVENT },
+};
+
+const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_FailedStates[] =
+{
+    { SelfManagedIoEventFlush, FxSelfManagedIoRestartedFailedPost DEBUGGED_EVENT },
+    { SelfManagedIoEventSuspend, FxSelfManagedIoSuspending DEBUGGED_EVENT },
+};
+
+const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_FlushedStates[] =
+{
+    { SelfManagedIoEventStart, FxSelfManagedIoStopped DEBUGGED_EVENT },
+    { SelfManagedIoEventCleanup, FxSelfManagedIoFlushing DEBUGGED_EVENT },
+    { SelfManagedIoEventFlush, FxSelfManagedIoFailed TRAP_ON_EVENT },
+};
+
+const FxSelfManagedIoStateTable FxSelfManagedIoMachine::m_StateTable[] =
+{
+    // FxSelfManagedIoCreated
+    {   NULL,
+        FxSelfManagedIoMachine::m_CreatedStates,
+        ARRAY_SIZE(FxSelfManagedIoMachine::m_CreatedStates),
+    },
+
+    // FxSelfManagedIoInit
+    {   FxSelfManagedIoMachine::Init,
+        NULL,
+        0,
+    },
+
+    // FxSelfManagedIoInitFailed
+    {   NULL,
+        FxSelfManagedIoMachine::m_InitFailedStates,
+        ARRAY_SIZE(FxSelfManagedIoMachine::m_InitFailedStates),
+    },
+
+    // FxSelfManagedIoStarted
+    {   NULL,
+        FxSelfManagedIoMachine::m_StartedStates,
+        ARRAY_SIZE(FxSelfManagedIoMachine::m_StartedStates),
+    },
+
+    // FxSelfManagedIoSuspending
+    {   FxSelfManagedIoMachine::Suspending,
+        NULL,
+        0,
+    },
+
+    // FxSelfManagedIoStopped
+    {   NULL,
+        FxSelfManagedIoMachine::m_StoppedStates,
+        ARRAY_SIZE(FxSelfManagedIoMachine::m_StoppedStates),
+    },
+
+    // FxSelfManagedIoRestarting
+    {   FxSelfManagedIoMachine::Restarting,
+        NULL,
+        0,
+    },
+
+    // FxSelfManagedIoFailed
+    {   NULL,
+        FxSelfManagedIoMachine::m_FailedStates,
+        ARRAY_SIZE(FxSelfManagedIoMachine::m_FailedStates),
+    },
+
+    // FxSelfManagedIoFlushing
+    {   FxSelfManagedIoMachine::Flushing,
+        NULL,
+        0,
+    },
+
+    // FxSelfManagedIoFlushed
+    {   NULL,
+        FxSelfManagedIoMachine::m_FlushedStates,
+        ARRAY_SIZE(FxSelfManagedIoMachine::m_FlushedStates),
+    },
+
+    // FxSelfManagedIoCleanup
+    {   FxSelfManagedIoMachine::Cleanup,
+        NULL,
+        0,
+    },
+
+    // FxSelfManagedIoFinal
+    {   NULL,
+        NULL,
+        0,
+    },
+};
+
+
 FxSelfManagedIoMachine::FxSelfManagedIoMachine(
     _In_ FxPkgPnp* PkgPnp
     )
@@ -95,4 +212,242 @@ Return Value:
         Callbacks->EvtDeviceSelfManagedIoSuspend);
     m_DeviceSelfManagedIoRestart.Initialize(m_PkgPnp, 
         Callbacks->EvtDeviceSelfManagedIoRestart);
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxSelfManagedIoMachine::ProcessEvent(
+    _In_ FxSelfManagedIoEvents Event,
+    _Out_opt_ FxCxCallbackProgress* Progress
+    )
+/*++
+
+Routine Description:
+    Processes an event and runs it through the state machine.  Unlike other
+    state machines in the framework, this one acquires lock in the event
+    processing function rather then relying on the caller to do so.
+
+Arguments:
+    Event - The event to feed into the state machine.
+
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
+Return Value:
+    result of the event
+
+  --*/
+{
+    const FxSelfManagedIoStateTable* entry;
+    FxSelfManagedIoStates newState;
+    NTSTATUS status;
+
+    m_StateMachineLock.AcquireLock(m_PkgPnp->GetDriverGlobals());
+
+    m_Events.History[m_EventHistoryIndex] = (UCHAR) Event;
+    m_EventHistoryIndex = (m_EventHistoryIndex + 1) %
+                          (sizeof(m_Events.History)/sizeof(m_Events.History[0]));
+
+    entry = &m_StateTable[m_CurrentState-FxSelfManagedIoCreated];
+    newState = FxSelfManagedIoMax;
+
+    if (Progress)
+    {
+        *Progress = FxCxCallbackProgressInitialized;
+    }
+
+    for (ULONG i = 0; i < entry->TargetStatesCount; i++)
+    {
+        if (entry->TargetStates[i].SelfManagedIoEvent == Event)
+        {
+            DO_EVENT_TRAP(&entry->TargetStates[i]);
+            newState = entry->TargetStates[i].SelfManagedIoState;
+            break;
+        }
+    }
+
+    if (newState == FxSelfManagedIoMax)
+    {
+        //
+        // We always can handle io increment/decrement from any state, but we
+        // should not be dropping any other events from this state.
+        //
+
+        COVERAGE_TRAP();
+    }
+
+    status = STATUS_SUCCESS;
+
+    while (newState != FxSelfManagedIoMax)
+    {
+        DoTraceLevelMessage(
+            m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+            "WDFDEVICE 0x%p !devobj 0x%p entering self managed io state "
+            "%!FxSelfManagedIoStates! from %!FxSelfManagedIoStates!",
+            m_PkgPnp->GetDevice()->GetHandle(),
+            m_PkgPnp->GetDevice()->GetDeviceObject(),
+            newState, m_CurrentState);
+
+        m_States.History[m_StateHistoryIndex] = (UCHAR) newState;
+        m_StateHistoryIndex = (m_StateHistoryIndex + 1) %
+                              (sizeof(m_States.History)/sizeof(m_States.History[0]));
+
+        m_CurrentState = (BYTE) newState;
+        entry = &m_StateTable[m_CurrentState-FxSelfManagedIoCreated];
+
+        if (entry->StateFunc != NULL)
+        {
+            newState = entry->StateFunc(this, &status, Progress);
+        }
+        else
+        {
+            newState = FxSelfManagedIoMax;
+        }
+    }
+
+    m_StateMachineLock.ReleaseLock(m_PkgPnp->GetDriverGlobals());
+
+    return status;
+}
+
+FxSelfManagedIoStates
+FxSelfManagedIoMachine::Init(
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
+    )
+/*++
+
+Routine Description:
+    Calls the event callback for initializing self managed io.
+
+Arguments:
+    This - instance of the state machine
+
+    Status - result of the event callback into the driver
+
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
+Return Value:
+    new machine state
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxSelfManagedIoInvalid;
+}
+
+FxSelfManagedIoStates
+FxSelfManagedIoMachine::Suspending(
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
+    )
+/*++
+
+Routine Description:
+    Invokes the self managed io suspend event callback.  Upon failure goes to
+    the failed state and awaits teardown of the stack.
+
+Arguments:
+    This - instance of the state machine
+
+    Status - result of the event callback into the driver
+
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
+Return Value:
+    new machine state
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxSelfManagedIoInvalid;
+}
+
+FxSelfManagedIoStates
+FxSelfManagedIoMachine::Restarting(
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
+    )
+/*++
+
+Routine Description:
+    Invokes the self managed io event callback for restarting self managed io
+    from the stopped state.
+
+Arguments:
+    This - instance of the state machine
+
+    Status - result of the event callback into the driver
+
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
+Return Value:
+    new machine state
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxSelfManagedIoInvalid;
+}
+
+FxSelfManagedIoStates
+FxSelfManagedIoMachine::Flushing(
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
+    )
+/*++
+
+Routine Description:
+    Calls the self managed io flush routine.
+
+Arguments:
+    This - instance of the state machine
+
+    Status - result of the event callback into the driver
+
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
+Return Value:
+    FxSelfManagedIoFlushed
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxSelfManagedIoInvalid;
+}
+
+FxSelfManagedIoStates
+FxSelfManagedIoMachine::Cleanup(
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
+    )
+/*++
+
+Routine Description:
+    Calls the self managed io cleanup routine.
+
+Arguments:
+    This - instance of the state machine
+
+    Status - result of the event callback into the driver
+
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
+Return Value:
+    FxSelfManagedIoFinal
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return FxSelfManagedIoInvalid;
 }
