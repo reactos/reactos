@@ -183,46 +183,18 @@ IsaPdoQueryResourceRequirements(
     IN PIRP Irp,
     IN PIO_STACK_LOCATION IrpSp)
 {
-    USHORT Ports[] = { ISAPNP_WRITE_DATA, ISAPNP_ADDRESS, 0x274, 0x3e4, 0x204, 0x2e4, 0x354, 0x2f4 };
-    ULONG ListSize, i;
+    ULONG ListSize;
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
-    PIO_RESOURCE_DESCRIPTOR Descriptor;
 
-    ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST)
-             + 2 * ARRAYSIZE(Ports) * sizeof(IO_RESOURCE_DESCRIPTOR);
-    RequirementsList = ExAllocatePool(NonPagedPool, ListSize);
+    if (!PdoExt->RequirementsList)
+        return Irp->IoStatus.Status;
+
+    ListSize = PdoExt->RequirementsList->ListSize;
+    RequirementsList = ExAllocatePool(PagedPool, ListSize);
     if (!RequirementsList)
         return STATUS_NO_MEMORY;
 
-    RtlZeroMemory(RequirementsList, ListSize);
-    RequirementsList->ListSize = ListSize;
-    RequirementsList->AlternativeLists = 1;
-
-    RequirementsList->List[0].Version = 1;
-    RequirementsList->List[0].Revision = 1;
-    RequirementsList->List[0].Count = 2 * ARRAYSIZE(Ports);
-
-    for (i = 0; i < 2 * ARRAYSIZE(Ports); i += 2)
-    {
-        Descriptor = &RequirementsList->List[0].Descriptors[i];
-
-        /* Expected port */
-        Descriptor[0].Type = CmResourceTypePort;
-        Descriptor[0].ShareDisposition = CmResourceShareDeviceExclusive;
-        Descriptor[0].Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
-        Descriptor[0].u.Port.Length = Ports[i / 2] & 1 ? 0x01 : 0x04;
-        Descriptor[0].u.Port.Alignment = 0x01;
-        Descriptor[0].u.Port.MinimumAddress.LowPart = Ports[i / 2];
-        Descriptor[0].u.Port.MaximumAddress.LowPart = Ports[i / 2] + Descriptor[0].u.Port.Length - 1;
-
-        /* ... but mark it as optional */
-        Descriptor[1].Option = IO_RESOURCE_ALTERNATIVE;
-        Descriptor[1].Type = CmResourceTypePort;
-        Descriptor[1].ShareDisposition = CmResourceShareDeviceExclusive;
-        Descriptor[1].Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
-        Descriptor[1].u.Port.Alignment = 0x01;
-    }
-
+    RtlCopyMemory(RequirementsList, PdoExt->RequirementsList, ListSize);
     Irp->IoStatus.Information = (ULONG_PTR)RequirementsList;
     return STATUS_SUCCESS;
 }
@@ -383,10 +355,7 @@ IsaPdoPnp(
             break;
 
         case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
-            if (PdoExt->Common.Self == PdoExt->FdoExt->DataPortPdo)
-                Status = IsaPdoQueryResourceRequirements(PdoExt, Irp, IrpSp);
-            else
-                DPRINT1("IRP_MN_QUERY_RESOURCE_REQUIREMENTS is UNIMPLEMENTED!\n");
+            Status = IsaPdoQueryResourceRequirements(PdoExt, Irp, IrpSp);
             break;
 
         case IRP_MN_QUERY_ID:
