@@ -632,6 +632,14 @@ public:
         return (WDFQUEUE) GetObjectHandle();
     }
 
+    //
+    // Start the Queue
+    //
+    VOID
+    QueueStart(
+        VOID
+        );
+
     __inline
     NTSTATUS
     InvokeAllocateResourcesCallback(

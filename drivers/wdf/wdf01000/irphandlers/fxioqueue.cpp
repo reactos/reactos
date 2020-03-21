@@ -4846,3 +4846,35 @@ Return Value:
 
     return;
 }
+
+VOID
+FxIoQueue::QueueStart(
+    )
+{
+    KIRQL irql;
+
+    Lock(&irql);
+
+    SetState((FX_IO_QUEUE_SET_STATE)(FxIoQueueSetAcceptRequests | FxIoQueueSetDispatchRequests) );
+
+    //
+    // We should set the flag to notify the driver on queue start in case
+    // the driver stops the queue while the ReadyNotify callback is executing.
+    // If that happens, the request will be left in the manual queue with 
+    // m_TransitionFromEmpty cleared.
+    //
+    if (m_Queue.GetRequestCount() > 0L)
+    {
+        m_TransitionFromEmpty = TRUE;
+        m_ForceTransitionFromEmptyWhenAddingNewRequest = FALSE;
+    }
+
+    //
+    // We may have transitioned to a status that resumes
+    // processing, so call dispatch function.
+    //
+
+    DispatchEvents(irql);
+
+    return;
+}

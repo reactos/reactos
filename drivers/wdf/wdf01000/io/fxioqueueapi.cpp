@@ -248,7 +248,18 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
+    DDI_ENTRY();
+
+    FxIoQueue* pQueue;
+
+    FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
+                          Queue,
+                          FX_TYPE_QUEUE,
+                          (PVOID*)&pQueue);
+
+    pQueue->QueueStart();
+
+    return;
 }
 
 __drv_maxIRQL(PASSIVE_LEVEL)
