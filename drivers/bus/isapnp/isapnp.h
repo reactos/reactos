@@ -54,6 +54,8 @@ typedef struct _ISAPNP_PDO_EXTENSION {
     UNICODE_STRING CompatibleIDs;
     UNICODE_STRING InstanceID;
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+    PCM_RESOURCE_LIST ResourceList;
+    ULONG ResourceListSize;
 } ISAPNP_PDO_EXTENSION, *PISAPNP_PDO_EXTENSION;
 
 /* isapnp.c */

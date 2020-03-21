@@ -382,6 +382,45 @@ IsaPnpCreateReadPortDORequirements(
 static
 NTSTATUS
 NTAPI
+IsaPnpCreateReadPortDOResources(
+    IN PISAPNP_PDO_EXTENSION PdoExt)
+{
+    USHORT Ports[] = { ISAPNP_WRITE_DATA, ISAPNP_ADDRESS };
+    ULONG ListSize, i;
+    PCM_RESOURCE_LIST ResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
+
+    ListSize = sizeof(CM_RESOURCE_LIST)
+             + (ARRAYSIZE(Ports) - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    ResourceList = ExAllocatePool(PagedPool, ListSize);
+    if (!ResourceList)
+        return STATUS_NO_MEMORY;
+
+    RtlZeroMemory(ResourceList, ListSize);
+    ResourceList->Count = 1;
+    ResourceList->List[0].InterfaceType = Internal;
+    ResourceList->List[0].PartialResourceList.Version = 1;
+    ResourceList->List[0].PartialResourceList.Revision = 1;
+    ResourceList->List[0].PartialResourceList.Count = 2;
+
+    for (i = 0; i < ARRAYSIZE(Ports); i++)
+    {
+        Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
+        Descriptor->Type = CmResourceTypePort;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
+        Descriptor->u.Port.Length = 0x01;
+        Descriptor->u.Port.Start.LowPart = Ports[i];
+    }
+
+    PdoExt->ResourceList = ResourceList;
+    PdoExt->ResourceListSize = ListSize;
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NTAPI
 IsaPnpCreateReadPortDO(PISAPNP_FDO_EXTENSION FdoExt)
 {
     UNICODE_STRING DeviceID = RTL_CONSTANT_STRING(L"ISAPNP\\ReadDataPort\0");
@@ -432,6 +471,10 @@ IsaPnpCreateReadPortDO(PISAPNP_FDO_EXTENSION FdoExt)
         return Status;
 
     Status = IsaPnpCreateReadPortDORequirements(PdoExt);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = IsaPnpCreateReadPortDOResources(PdoExt);
     if (!NT_SUCCESS(Status))
         return Status;
 

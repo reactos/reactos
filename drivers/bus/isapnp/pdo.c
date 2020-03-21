@@ -6,7 +6,6 @@
  */
 
 #include <isapnp.h>
-#include <isapnphw.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -144,34 +143,18 @@ IsaPdoQueryResources(
     IN PIRP Irp,
     IN PIO_STACK_LOCATION IrpSp)
 {
-    USHORT Ports[] = { ISAPNP_WRITE_DATA, ISAPNP_ADDRESS };
-    ULONG ListSize, i;
+    ULONG ListSize;
     PCM_RESOURCE_LIST ResourceList;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
 
-    ListSize = sizeof(CM_RESOURCE_LIST)
-             + (ARRAYSIZE(Ports) - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    ResourceList = ExAllocatePool(NonPagedPool, ListSize);
+    if (!PdoExt->ResourceList)
+        return Irp->IoStatus.Status;
+
+    ListSize = PdoExt->ResourceListSize;
+    ResourceList = ExAllocatePool(PagedPool, ListSize);
     if (!ResourceList)
         return STATUS_NO_MEMORY;
 
-    RtlZeroMemory(ResourceList, ListSize);
-    ResourceList->Count = 1;
-    ResourceList->List[0].InterfaceType = Internal;
-    ResourceList->List[0].PartialResourceList.Version = 1;
-    ResourceList->List[0].PartialResourceList.Revision = 1;
-    ResourceList->List[0].PartialResourceList.Count = 2;
-
-    for (i = 0; i < ARRAYSIZE(Ports); i++)
-    {
-        Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
-        Descriptor->Type = CmResourceTypePort;
-        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-        Descriptor->Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
-        Descriptor->u.Port.Length = 0x01;
-        Descriptor->u.Port.Start.LowPart = Ports[i];
-    }
-
+    RtlCopyMemory(ResourceList, PdoExt->ResourceList, ListSize);
     Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
     return STATUS_SUCCESS;
 }
@@ -348,10 +331,7 @@ IsaPdoPnp(
             break;
 
         case IRP_MN_QUERY_RESOURCES:
-            if (PdoExt->Common.Self == PdoExt->FdoExt->DataPortPdo)
-                Status = IsaPdoQueryResources(PdoExt, Irp, IrpSp);
-            else
-                DPRINT1("IRP_MN_QUERY_RESOURCES is UNIMPLEMENTED!\n");
+            Status = IsaPdoQueryResources(PdoExt, Irp, IrpSp);
             break;
 
         case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
