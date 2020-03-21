@@ -77,5 +77,6 @@ extern HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uM
 #define POWER_TIMER_ID   2
 #define VOLUME_TIMER_ID  3
 #define HOTPLUG_TIMER_ID 4
+#define HOTPLUG_DEVICE_TIMER_ID 5
 
 #endif /* _STOBJECT_PRECOMP_H_ */

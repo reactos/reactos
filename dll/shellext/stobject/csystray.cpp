@@ -27,8 +27,8 @@ VOID CSysTray::GetServicesEnabled()
     HKEY hKey;
     DWORD dwSize;
 
-    /* Enable power and volume by default */
-    this->dwServicesEnabled = POWER_SERVICE_FLAG | VOLUME_SERVICE_FLAG;
+    /* Enable power, volume and hotplug by default */
+    this->dwServicesEnabled = POWER_SERVICE_FLAG | VOLUME_SERVICE_FLAG | HOTPLUG_SERVICE_FLAG;
 
     if (RegCreateKeyExW(HKEY_CURRENT_USER,
                         L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\SysTray",

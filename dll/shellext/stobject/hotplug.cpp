@@ -128,27 +128,31 @@ HRESULT NotifyBalloon(CSysTray* pSysTray, LPCWSTR szTitle = NULL, LPCWSTR szInfo
 }
 
 HRESULT STDMETHODCALLTYPE Hotplug_Init(_In_ CSysTray * pSysTray)
-{ 
+{
     TRACE("Hotplug_Init\n");
+
     g_hIconHotplug = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_HOTPLUG_OK));
+
     EnumHotpluggedDevices(g_devList);
 
-    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip, NIS_HIDDEN);
+    if (g_devList.GetSize() > 0)
+        return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip);
+    else
+        return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip, NIS_HIDDEN);
 }
 
 HRESULT STDMETHODCALLTYPE Hotplug_Update(_In_ CSysTray * pSysTray)
 {
     TRACE("Hotplug_Update\n");
-
-    if(g_devList.GetSize() || g_IsRemoving)
-        return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip);
-    else
-        return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip, NIS_HIDDEN);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE Hotplug_Shutdown(_In_ CSysTray * pSysTray)
 {
     TRACE("Hotplug_Shutdown\n");
+
+    DestroyIcon(g_hIconHotplug);
+    g_hIconHotplug = NULL;
 
     return pSysTray->NotifyIcon(NIM_DELETE, ID_ICON_HOTPLUG, NULL, NULL);
 }
@@ -239,9 +243,24 @@ static void _ShowContextMenuR(CSysTray * pSysTray)
     DestroyMenu(hPopup);
 }
 
+
+VOID
+HotplugDeviceTimer(
+    _In_ CSysTray *pSysTray)
+{
+    TRACE("HotplugDeviceTimer()\n");
+
+    EnumHotpluggedDevices(g_devList);
+
+    if (g_devList.GetSize() > 0)
+        pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip);
+    else
+        pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip, NIS_HIDDEN);
+}
+
+
 HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult)
 {
-    HRESULT hr = E_FAIL;
     TRACE("Hotplug_Message uMsg=%d, wParam=%x, lParam=%x\n", uMsg, wParam, lParam);
 
     switch (uMsg)
@@ -294,6 +313,11 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
                 KillTimer(pSysTray->GetHWnd(), HOTPLUG_TIMER_ID);
                 _ShowContextMenu(pSysTray);
             }
+            else if (wParam == HOTPLUG_DEVICE_TIMER_ID)
+            {
+                KillTimer(pSysTray->GetHWnd(), HOTPLUG_DEVICE_TIMER_ID);
+                HotplugDeviceTimer(pSysTray);
+            }
             break;
 
         case ID_ICON_HOTPLUG:
@@ -332,12 +356,11 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
             switch (wParam)
             {
                 case DBT_DEVNODES_CHANGED:
-                    hr = EnumHotpluggedDevices(g_devList);
-                    if (FAILED(hr))
-                        return hr;
-
+                    TRACE("WM_DEVICECHANGE : DBT_DEVNODES_CHANGED\n");
+                    SetTimer(pSysTray->GetHWnd(), HOTPLUG_DEVICE_TIMER_ID, 100, NULL);
                     lResult = true;
                     break;
+
                 case DBT_DEVICEARRIVAL:
                     break;
                 case DBT_DEVICEQUERYREMOVE:
