@@ -2,7 +2,7 @@
 #include "common/fxpkgpnp.h"
 #include "common/fxdevice.h"
 #include "common/fxwatchdog.h"
-
+#include "common/fxdmaenabler.h"
 
 
 
@@ -1701,8 +1701,12 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    if (This->PowerDmaEnableAndScan(TRUE) == FALSE)
+    {
+        return WdfDevStatePowerInitialDmaEnableFailed;
+    }
+
+    return WdfDevStatePowerD0StartingStartSelfManagedIo;
 }
 
 WDF_DEVICE_POWER_STATE
@@ -2841,4 +2845,91 @@ Return Value:
 {
     WDFNOTIMPLEMENTED();
     return WdfDevStatePowerInvalid;
+}
+
+BOOLEAN
+FxPkgPnp::PowerDmaEnableAndScan(
+    __in BOOLEAN ImplicitPowerUp
+    )
+{
+    FxTransactionedEntry* ple;
+
+    if (PowerDmaPowerUp() == FALSE)
+    {
+        return FALSE;
+    }
+
+    if (m_EnumInfo != NULL)
+    {
+        //
+        // Scan for children
+        //
+        m_EnumInfo->m_ChildListList.LockForEnum(GetDriverGlobals());
+
+        ple = NULL;
+        while ((ple = m_EnumInfo->m_ChildListList.GetNextEntry(ple)) != NULL)
+        {
+            ((FxChildList*) ple->GetTransactionedObject())->ScanForChildren();
+        }
+
+        m_EnumInfo->m_ChildListList.UnlockFromEnum(GetDriverGlobals());
+    }
+
+    if (ImplicitPowerUp == FALSE)
+    {
+        PowerPolicyProcessEvent(PwrPolPowerUpHwStarted);
+    }
+
+    return TRUE;
+}
+
+_Must_inspect_result_
+BOOLEAN
+FxPkgPnp::PowerDmaPowerUp(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Calls FxDmaEnabler::PowerUp on all registered FxDmaEnabler objects.  As soon
+    as a PowerUp call fails, we stop iterating over the list.
+
+Arguments:
+    None
+
+Return Value:
+    TRUE if PowerUp succeeded on all enablers, FALSE otherwise
+
+  --*/
+
+{
+    FxTransactionedEntry* ple;
+    NTSTATUS status;
+    BOOLEAN result;
+
+    result = TRUE;
+
+    //
+    // Power up each dma enabler
+    //
+    if (m_DmaEnablerList != NULL)
+    {
+        m_DmaEnablerList->LockForEnum(GetDriverGlobals());
+
+        ple = NULL;
+        while ((ple = m_DmaEnablerList->GetNextEntry(ple)) != NULL)
+        {
+            status = ((FxDmaEnabler*) ple->GetTransactionedObject())->PowerUp();
+
+            if (!NT_SUCCESS(status))
+            {
+                result = FALSE;
+                break;
+            }
+        }
+
+        m_DmaEnablerList->UnlockFromEnum(GetDriverGlobals());
+    }
+
+    return result;
 }

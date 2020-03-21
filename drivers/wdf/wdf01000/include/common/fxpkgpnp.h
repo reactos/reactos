@@ -507,6 +507,11 @@ protected:
         return &m_WdfPowerStates[WdfDevStateNormalize(State) - WdfDevStatePowerObjectCreated];
     }
 
+    BOOLEAN
+    PowerDmaEnableAndScan(
+        __in BOOLEAN ImplicitPowerUp
+        );
+
     VOID
     PowerCompletePendedWakeIrp(
         VOID
@@ -2251,6 +2256,12 @@ protected:
     _Must_inspect_result_
     NTSTATUS
     CreatePowerThread(
+        VOID
+        );
+
+    _Must_inspect_result_
+    BOOLEAN
+    PowerDmaPowerUp(
         VOID
         );
 

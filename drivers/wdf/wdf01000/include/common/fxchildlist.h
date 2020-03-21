@@ -120,6 +120,14 @@ public:
         return (WDFCHILDLIST) GetObjectHandle();
     }
 
+    VOID
+    ScanForChildren(
+        VOID
+        )
+    {
+        m_EvtScanForChildren.Invoke(GetHandle());
+    }
+
 protected:
 
     FxChildList(

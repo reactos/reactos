@@ -82,6 +82,7 @@ list(APPEND SOURCE
     irphandlers/support.cpp
     targets/fxiotarget.cpp
     targets/fxiotargetself.cpp
+    dma/fxdmaenabler.cpp
 )
 
 add_library(wdf01000 MODULE ${SOURCE})
