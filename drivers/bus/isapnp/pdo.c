@@ -65,12 +65,13 @@ IsaPdoQueryCapabilities(
     else
     {
         DeviceCapabilities->UniqueID = TRUE;
-        DeviceCapabilities->SilentInstall = TRUE;
         DeviceCapabilities->RawDeviceOK = TRUE;
-        for (i = 0; i < POWER_SYSTEM_MAXIMUM; i++)
-            DeviceCapabilities->DeviceState[i] = PowerDeviceD3;
-        DeviceCapabilities->DeviceState[PowerSystemWorking] = PowerDeviceD0;
+        DeviceCapabilities->SilentInstall = TRUE;
     }
+
+    for (i = 0; i < POWER_SYSTEM_MAXIMUM; i++)
+        DeviceCapabilities->DeviceState[i] = PowerDeviceD3;
+    DeviceCapabilities->DeviceState[PowerSystemWorking] = PowerDeviceD0;
 
     return STATUS_SUCCESS;
 }
