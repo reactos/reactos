@@ -3,10 +3,10 @@
  * FILE:            hardware.c
  * PURPOSE:         Hardware support code
  * PROGRAMMERS:     Cameron Gutman (cameron.gutman@reactos.org)
+ *                  Hervé Poussineau
  */
 
 #include <isapnp.h>
-#include <isapnphw.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -191,6 +191,16 @@ ReadIrqNo(
 
 static
 inline
+USHORT
+ReadIrqType(
+    IN PUCHAR ReadDataPort,
+    IN USHORT Index)
+{
+    return ReadByte(ReadDataPort, ISAPNP_IRQTYPE(Index));
+}
+
+static
+inline
 VOID
 HwDelay(VOID)
 {
@@ -287,15 +297,19 @@ IsaPnpChecksum(
 
 static
 BOOLEAN
-FindTag(
+ReadTags(
     IN PUCHAR ReadDataPort,
-    IN USHORT WantedTag,
-    IN OUT PVOID Buffer,
-    IN ULONG Length)
+    IN USHORT LogDev,
+    IN OUT PISAPNP_LOGICAL_DEVICE LogDevice)
 {
-    USHORT Tag, TagLen;
+    BOOLEAN res = FALSE;
+    PVOID Buffer;
+    USHORT Tag, TagLen, MaxLen;
+    ULONG NumberOfIo = 0, NumberOfIrq = 0;
 
-    do
+    LogDev += 1;
+
+    while (TRUE)
     {
         Tag = PeekByte(ReadDataPort);
         if (ISAPNP_IS_SMALL_TAG(Tag))
@@ -308,41 +322,55 @@ FindTag(
             TagLen = PeekByte(ReadDataPort) + (PeekByte(ReadDataPort) << 8);
             Tag = ISAPNP_LARGE_TAG_NAME(Tag);
         }
+        if (Tag == ISAPNP_TAG_END)
+            break;
 
-        if (Tag == WantedTag)
+        Buffer = NULL;
+        if (Tag == ISAPNP_TAG_LOGDEVID)
         {
-            if (Length > TagLen)
-                Length = TagLen;
+            MaxLen = sizeof(LogDevice->LogDevId);
+            Buffer = &LogDevice->LogDevId;
+            LogDev--;
+        }
+        else if (Tag == ISAPNP_TAG_IRQ && NumberOfIrq < ARRAYSIZE(LogDevice->Irq))
+        {
+            MaxLen = sizeof(LogDevice->Irq[NumberOfIrq].Description);
+            Buffer = &LogDevice->Irq[NumberOfIrq].Description;
+            NumberOfIrq++;
+        }
+        else if (Tag == ISAPNP_TAG_IOPORT && NumberOfIo < ARRAYSIZE(LogDevice->Io))
+        {
+            MaxLen = sizeof(LogDevice->Io[NumberOfIo].Description);
+            Buffer = &LogDevice->Io[NumberOfIo].Description;
+            NumberOfIo++;
+        }
+        else if (LogDev == 0)
+        {
+            DPRINT1("Found unknown tag 0x%x (len %d)\n", Tag, TagLen);
+        }
 
-            Peek(ReadDataPort, Buffer, Length);
-
-            return TRUE;
+        if (Buffer && LogDev == 0)
+        {
+            res = TRUE;
+            if (MaxLen > TagLen)
+            {
+                Peek(ReadDataPort, Buffer, TagLen);
+            }
+            else
+            {
+                Peek(ReadDataPort, Buffer, MaxLen);
+                Peek(ReadDataPort, NULL, TagLen - MaxLen);
+            }
         }
         else
         {
+            /* We don't want to read informations on this
+             * logical device, or we don't know the tag. */
             Peek(ReadDataPort, NULL, TagLen);
         }
-    } while (Tag != ISAPNP_TAG_END);
+    };
 
-    return FALSE;
-}
-
-static
-BOOLEAN
-FindLogDevId(
-    IN PUCHAR ReadDataPort,
-    IN USHORT LogDev,
-    IN OUT PISAPNP_LOGDEVID LogDeviceId)
-{
-    USHORT i;
-
-    for (i = 0; i <= LogDev; i++)
-    {
-        if (!FindTag(ReadDataPort, ISAPNP_TAG_LOGDEVID, LogDeviceId, sizeof(*LogDeviceId)))
-            return FALSE;
-    }
-
-    return TRUE;
+    return res;
 }
 
 static
@@ -476,9 +504,9 @@ ProbeIsaPnpBus(
 {
     PISAPNP_LOGICAL_DEVICE LogDevice;
     ISAPNP_IDENTIFIER Identifier;
-    ISAPNP_LOGDEVID LogDevId;
     USHORT Csn;
     USHORT LogDev;
+    ULONG i;
 
     ASSERT(FdoExt->ReadDataPort);
 
@@ -507,21 +535,26 @@ ProbeIsaPnpBus(
                 return STATUS_SUCCESS;
             }
 
-            if (!FindLogDevId(FdoExt->ReadDataPort, LogDev, &LogDevId))
+            if (!ReadTags(FdoExt->ReadDataPort, LogDev, LogDevice))
                 break;
 
             WriteLogicalDeviceNumber(LogDev);
 
-            LogDevice->VendorId[0] = ((LogDevId.VendorId >> 2) & 0x1f) + 'A' - 1,
-            LogDevice->VendorId[1] = (((LogDevId.VendorId & 0x3) << 3) | ((LogDevId.VendorId >> 13) & 0x7)) + 'A' - 1,
-            LogDevice->VendorId[2] = ((LogDevId.VendorId >> 8) & 0x1f) + 'A' - 1,
-            LogDevice->ProdId = RtlUshortByteSwap(LogDevId.ProdId);
+            LogDevice->VendorId[0] = ((LogDevice->LogDevId.VendorId >> 2) & 0x1f) + 'A' - 1,
+            LogDevice->VendorId[1] = (((LogDevice->LogDevId.VendorId & 0x3) << 3) | ((LogDevice->LogDevId.VendorId >> 13) & 0x7)) + 'A' - 1,
+            LogDevice->VendorId[2] = ((LogDevice->LogDevId.VendorId >> 8) & 0x1f) + 'A' - 1,
+            LogDevice->ProdId = RtlUshortByteSwap(LogDevice->LogDevId.ProdId);
             LogDevice->SerialNumber = Identifier.Serial;
-            LogDevice->IoAddr = ReadIoBase(FdoExt->ReadDataPort, 0);
-            LogDevice->IrqNo = ReadIrqNo(FdoExt->ReadDataPort, 0);
+            for (i = 0; i < ARRAYSIZE(LogDevice->Io); i++)
+                LogDevice->Io[i].CurrentBase = ReadIoBase(FdoExt->ReadDataPort, i);
+            for (i = 0; i < ARRAYSIZE(LogDevice->Irq); i++)
+            {
+                LogDevice->Irq[i].CurrentNo = ReadIrqNo(FdoExt->ReadDataPort, i);
+                LogDevice->Irq[i].CurrentType = ReadIrqType(FdoExt->ReadDataPort, i);
+            }
 
             DPRINT1("Detected ISA PnP device - VID: '%3s' PID: 0x%x SN: 0x%08x IoBase: 0x%x IRQ:0x%x\n",
-                    LogDevice->VendorId, LogDevice->ProdId, LogDevice->SerialNumber, LogDevice->IoAddr, LogDevice->IrqNo);
+                    LogDevice->VendorId, LogDevice->ProdId, LogDevice->SerialNumber, LogDevice->Io[0].CurrentBase, LogDevice->Irq[0].CurrentNo);
 
             WaitForKey();
 

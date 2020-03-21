@@ -6,7 +6,6 @@
  */
 
 #include <isapnp.h>
-#include <isapnphw.h>
 
 #define NDEBUG
 #include <debug.h>

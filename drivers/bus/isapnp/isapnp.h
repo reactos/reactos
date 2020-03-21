@@ -3,6 +3,7 @@
 
 #include <wdm.h>
 #include <ntstrsafe.h>
+#include <isapnphw.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,13 +16,25 @@ typedef enum {
     dsStarted
 } ISAPNP_DEVICE_STATE;
 
+typedef struct _ISAPNP_IO {
+    USHORT CurrentBase;
+    ISAPNP_IO_DESCRIPTION Description;
+} ISAPNP_IO, PISAPNP_IO;
+
+typedef struct _ISAPNP_IRQ {
+    UCHAR CurrentNo;
+    UCHAR CurrentType;
+    ISAPNP_IRQ_DESCRIPTION Description;
+} ISAPNP_IRQ, *PISAPNP_IRQ;
+
 typedef struct _ISAPNP_LOGICAL_DEVICE {
     PDEVICE_OBJECT Pdo;
+    ISAPNP_LOGDEVID LogDevId;
     UCHAR VendorId[3];
     USHORT ProdId;
     ULONG SerialNumber;
-    USHORT IoAddr;
-    UCHAR IrqNo;
+    ISAPNP_IO Io[8];
+    ISAPNP_IRQ Irq[2];
     UCHAR CSN;
     UCHAR LDN;
     LIST_ENTRY ListEntry;

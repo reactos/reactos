@@ -3,6 +3,7 @@
  * FILE:            pdo.c
  * PURPOSE:         PDO-specific code
  * PROGRAMMERS:     Cameron Gutman (cameron.gutman@reactos.org)
+ *                  Hervé Poussineau
  */
 
 #include <isapnp.h>
