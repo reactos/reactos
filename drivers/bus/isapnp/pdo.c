@@ -93,7 +93,6 @@ IsaPdoQueryId(
     IN PIRP Irp,
     IN PIO_STACK_LOCATION IrpSp)
 {
-    UNICODE_STRING EmptyString = RTL_CONSTANT_STRING(L"");
     PUNICODE_STRING Source;
     PWCHAR Buffer;
 
@@ -111,7 +110,7 @@ IsaPdoQueryId(
 
         case BusQueryCompatibleIDs:
             DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
-            Source = &EmptyString;
+            Source = &PdoExt->CompatibleIDs;
             break;
 
         case BusQueryInstanceID:
@@ -124,6 +123,9 @@ IsaPdoQueryId(
                   IrpSp->Parameters.QueryId.IdType);
           return Irp->IoStatus.Status;
     }
+
+    if (!Source->Buffer)
+        return Irp->IoStatus.Status;
 
     Buffer = ExAllocatePool(PagedPool, Source->MaximumLength);
     if (!Buffer)

@@ -335,6 +335,7 @@ IsaPnpCreateReadPortDO(PISAPNP_FDO_EXTENSION FdoExt)
 {
     UNICODE_STRING DeviceID = RTL_CONSTANT_STRING(L"ISAPNP\\ReadDataPort\0");
     UNICODE_STRING HardwareIDs = RTL_CONSTANT_STRING(L"ISAPNP\\ReadDataPort\0\0");
+    UNICODE_STRING CompatibleIDs = RTL_CONSTANT_STRING(L"\0\0");
     UNICODE_STRING InstanceID = RTL_CONSTANT_STRING(L"0\0");
     PISAPNP_PDO_EXTENSION PdoExt;
 
@@ -364,6 +365,12 @@ IsaPnpCreateReadPortDO(PISAPNP_FDO_EXTENSION FdoExt)
     Status = IsaPnpDuplicateUnicodeString(0,
                                           &HardwareIDs,
                                           &PdoExt->HardwareIDs);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = IsaPnpDuplicateUnicodeString(0,
+                                          &CompatibleIDs,
+                                          &PdoExt->CompatibleIDs);
     if (!NT_SUCCESS(Status))
         return Status;
 
