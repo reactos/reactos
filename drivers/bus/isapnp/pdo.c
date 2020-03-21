@@ -78,9 +78,9 @@ IsaPdoQueryCapabilities(
 NTSTATUS
 NTAPI
 IsaPdoQueryPnpDeviceState(
-  IN PISAPNP_PDO_EXTENSION PdoExt,
-  IN PIRP Irp,
-  IN PIO_STACK_LOCATION IrpSp)
+    IN PISAPNP_PDO_EXTENSION PdoExt,
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IrpSp)
 {
     Irp->IoStatus.Information |= PNP_DEVICE_NOT_DISABLEABLE;
     return STATUS_SUCCESS;
@@ -137,9 +137,9 @@ IsaPdoQueryId(
 NTSTATUS
 NTAPI
 IsaPdoQueryResources(
-  IN PISAPNP_PDO_EXTENSION PdoExt,
-  IN PIRP Irp,
-  IN PIO_STACK_LOCATION IrpSp)
+    IN PISAPNP_PDO_EXTENSION PdoExt,
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IrpSp)
 {
     USHORT Ports[] = { ISAPNP_WRITE_DATA, ISAPNP_ADDRESS };
     ULONG ListSize, i;
@@ -176,9 +176,9 @@ IsaPdoQueryResources(
 NTSTATUS
 NTAPI
 IsaPdoQueryResourceRequirements(
-  IN PISAPNP_PDO_EXTENSION PdoExt,
-  IN PIRP Irp,
-  IN PIO_STACK_LOCATION IrpSp)
+    IN PISAPNP_PDO_EXTENSION PdoExt,
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IrpSp)
 {
     USHORT Ports[] = { ISAPNP_WRITE_DATA, ISAPNP_ADDRESS, 0x274, 0x3e4, 0x204, 0x2e4, 0x354, 0x2f4 };
     ULONG ListSize, i;
@@ -228,8 +228,8 @@ static
 NTSTATUS
 NTAPI
 IsaPdoStartReadPort(
-  IN PISAPNP_FDO_EXTENSION FdoExt,
-  IN PIO_STACK_LOCATION IrpSp)
+    IN PISAPNP_FDO_EXTENSION FdoExt,
+    IN PIO_STACK_LOCATION IrpSp)
 {
     PCM_RESOURCE_LIST ResourceList = IrpSp->Parameters.StartDevice.AllocatedResources;
     NTSTATUS Status;

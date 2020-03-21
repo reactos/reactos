@@ -61,7 +61,7 @@ static
 NTSTATUS
 NTAPI
 IsaFdoCreateDeviceIDs(
-  IN PISAPNP_PDO_EXTENSION PdoExt)
+    IN PISAPNP_PDO_EXTENSION PdoExt)
 {
     PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
     UNICODE_STRING TempString;
@@ -139,9 +139,9 @@ IsaFdoCreateDeviceIDs(
 NTSTATUS
 NTAPI
 IsaPnpFillDeviceRelations(
-  IN PISAPNP_FDO_EXTENSION FdoExt,
-  IN PIRP Irp,
-  IN BOOLEAN IncludeDataPort)
+    IN PISAPNP_FDO_EXTENSION FdoExt,
+    IN PIRP Irp,
+    IN BOOLEAN IncludeDataPort)
 {
     PISAPNP_PDO_EXTENSION PdoExt;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -333,47 +333,47 @@ NTSTATUS
 NTAPI
 IsaPnpCreateReadPortDO(PISAPNP_FDO_EXTENSION FdoExt)
 {
-  UNICODE_STRING DeviceID = RTL_CONSTANT_STRING(L"ISAPNP\\ReadDataPort\0");
-  UNICODE_STRING HardwareIDs = RTL_CONSTANT_STRING(L"ISAPNP\\ReadDataPort\0\0");
-  UNICODE_STRING InstanceID = RTL_CONSTANT_STRING(L"0\0");
-  PISAPNP_PDO_EXTENSION PdoExt;
+    UNICODE_STRING DeviceID = RTL_CONSTANT_STRING(L"ISAPNP\\ReadDataPort\0");
+    UNICODE_STRING HardwareIDs = RTL_CONSTANT_STRING(L"ISAPNP\\ReadDataPort\0\0");
+    UNICODE_STRING InstanceID = RTL_CONSTANT_STRING(L"0\0");
+    PISAPNP_PDO_EXTENSION PdoExt;
 
-  NTSTATUS Status;
-  Status = IoCreateDevice(FdoExt->DriverObject,
-                          sizeof(ISAPNP_PDO_EXTENSION),
-                          NULL,
-                          FILE_DEVICE_CONTROLLER,
-                          FILE_DEVICE_SECURE_OPEN,
-                          FALSE,
-                          &FdoExt->DataPortPdo);
-  if (!NT_SUCCESS(Status))
-      return Status;
-  PdoExt = (PISAPNP_PDO_EXTENSION)FdoExt->DataPortPdo->DeviceExtension;
-  RtlZeroMemory(PdoExt, sizeof(ISAPNP_PDO_EXTENSION));
-  PdoExt->Common.IsFdo = FALSE;
-  PdoExt->Common.Self = FdoExt->DataPortPdo;
-  PdoExt->Common.State = dsStopped;
-  PdoExt->FdoExt = FdoExt;
+    NTSTATUS Status;
+    Status = IoCreateDevice(FdoExt->DriverObject,
+                            sizeof(ISAPNP_PDO_EXTENSION),
+                            NULL,
+                            FILE_DEVICE_CONTROLLER,
+                            FILE_DEVICE_SECURE_OPEN,
+                            FALSE,
+                            &FdoExt->DataPortPdo);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    PdoExt = (PISAPNP_PDO_EXTENSION)FdoExt->DataPortPdo->DeviceExtension;
+    RtlZeroMemory(PdoExt, sizeof(ISAPNP_PDO_EXTENSION));
+    PdoExt->Common.IsFdo = FALSE;
+    PdoExt->Common.Self = FdoExt->DataPortPdo;
+    PdoExt->Common.State = dsStopped;
+    PdoExt->FdoExt = FdoExt;
 
-  Status = IsaPnpDuplicateUnicodeString(0,
-                                        &DeviceID,
-                                        &PdoExt->DeviceID);
-  if (!NT_SUCCESS(Status))
-      return Status;
+    Status = IsaPnpDuplicateUnicodeString(0,
+                                          &DeviceID,
+                                          &PdoExt->DeviceID);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-  Status = IsaPnpDuplicateUnicodeString(0,
-                                        &HardwareIDs,
-                                        &PdoExt->HardwareIDs);
-  if (!NT_SUCCESS(Status))
-      return Status;
+    Status = IsaPnpDuplicateUnicodeString(0,
+                                          &HardwareIDs,
+                                          &PdoExt->HardwareIDs);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-  Status = IsaPnpDuplicateUnicodeString(0,
-                                        &InstanceID,
-                                        &PdoExt->InstanceID);
-  if (!NT_SUCCESS(Status))
-      return Status;
+    Status = IsaPnpDuplicateUnicodeString(0,
+                                          &InstanceID,
+                                          &PdoExt->InstanceID);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-  return Status;
+    return Status;
 }
 
 static

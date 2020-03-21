@@ -536,7 +536,7 @@ ProbeIsaPnpBus(
 NTSTATUS
 NTAPI
 IsaHwTryReadDataPort(
-  IN PUCHAR ReadDataPort)
+    IN PUCHAR ReadDataPort)
 {
     return TryIsolate(ReadDataPort) > 0 ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
@@ -544,12 +544,12 @@ IsaHwTryReadDataPort(
 NTSTATUS
 NTAPI
 IsaHwActivateDevice(
-  IN PISAPNP_LOGICAL_DEVICE LogicalDevice)
+    IN PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
-  DeviceActivation(LogicalDevice,
-                   TRUE);
+    DeviceActivation(LogicalDevice,
+                     TRUE);
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
