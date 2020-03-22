@@ -80,7 +80,7 @@ IsaFdoCreateDeviceIDs(
                                   TempString.MaximumLength / sizeof(WCHAR),
                                   &End,
                                   NULL, 0,
-                                  L"ISAPNP\\%3S%04X",
+                                  L"ISAPNP\\%.3S%04x",
                                   LogDev->VendorId,
                                   LogDev->ProdId);
     if (!NT_SUCCESS(Status))
@@ -98,8 +98,8 @@ IsaFdoCreateDeviceIDs(
                                   TempString.MaximumLength / sizeof(WCHAR),
                                   &End,
                                   NULL, 0,
-                                  L"ISAPNP\\%3S%04X@"
-                                  L"*%3S%04X@",
+                                  L"ISAPNP\\%.3S%04x@"
+                                  L"*%.3S%04x@",
                                   LogDev->VendorId,
                                   LogDev->ProdId,
                                   LogDev->VendorId,

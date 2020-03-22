@@ -59,7 +59,7 @@ IsaPdoQueryCapabilities(
 
     if (LogDev)
     {
-        DeviceCapabilities->UniqueID = LogDev->SerialNumber != 0xffffffff;
+        DeviceCapabilities->UniqueID = TRUE;
         DeviceCapabilities->Address = LogDev->CSN;
     }
     else
