@@ -201,6 +201,16 @@ ReadIrqType(
 
 static
 inline
+USHORT
+ReadDmaChannel(
+    IN PUCHAR ReadDataPort,
+    IN USHORT Index)
+{
+    return ReadByte(ReadDataPort, ISAPNP_DMACHANNEL(Index));
+}
+
+static
+inline
 VOID
 HwDelay(VOID)
 {
@@ -305,7 +315,7 @@ ReadTags(
     BOOLEAN res = FALSE;
     PVOID Buffer;
     USHORT Tag, TagLen, MaxLen;
-    ULONG NumberOfIo = 0, NumberOfIrq = 0;
+    ULONG NumberOfIo = 0, NumberOfIrq = 0, NumberOfDma = 0;
 
     LogDev += 1;
 
@@ -343,6 +353,12 @@ ReadTags(
             MaxLen = sizeof(LogDevice->Io[NumberOfIo].Description);
             Buffer = &LogDevice->Io[NumberOfIo].Description;
             NumberOfIo++;
+        }
+        else if (Tag == ISAPNP_TAG_DMA && NumberOfDma < ARRAYSIZE(LogDevice->Dma))
+        {
+            MaxLen = sizeof(LogDevice->Dma[NumberOfDma].Description);
+            Buffer = &LogDevice->Dma[NumberOfDma].Description;
+            NumberOfDma++;
         }
         else if (LogDev == 0)
         {
@@ -551,6 +567,10 @@ ProbeIsaPnpBus(
             {
                 LogDevice->Irq[i].CurrentNo = ReadIrqNo(FdoExt->ReadDataPort, i);
                 LogDevice->Irq[i].CurrentType = ReadIrqType(FdoExt->ReadDataPort, i);
+            }
+            for (i = 0; i < ARRAYSIZE(LogDevice->Dma); i++)
+            {
+                LogDevice->Dma[i].CurrentChannel = ReadDmaChannel(FdoExt->ReadDataPort, i);
             }
 
             DPRINT1("Detected ISA PnP device - VID: '%3s' PID: 0x%x SN: 0x%08x IoBase: 0x%x IRQ:0x%x\n",

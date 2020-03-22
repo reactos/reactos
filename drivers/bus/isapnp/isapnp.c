@@ -145,10 +145,12 @@ IsaFdoCreateRequirements(
 {
     PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
     RTL_BITMAP IrqBitmap[ARRAYSIZE(LogDev->Irq)];
+    RTL_BITMAP DmaBitmap[ARRAYSIZE(LogDev->Dma)];
     ULONG IrqData[ARRAYSIZE(LogDev->Irq)];
+    ULONG DmaData[ARRAYSIZE(LogDev->Dma)];
     ULONG ResourceCount = 0;
     ULONG ListSize, i, j;
-    BOOLEAN FirstIrq = TRUE;
+    BOOLEAN FirstIrq = TRUE, FirstDma = TRUE;
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
     PIO_RESOURCE_DESCRIPTOR Descriptor;
 
@@ -174,6 +176,14 @@ IsaFdoCreateRequirements(
     }
     if (ResourceCount == 0)
         return STATUS_SUCCESS;
+    for (i = 0; i < ARRAYSIZE(LogDev->Irq); i++)
+    {
+        if (!LogDev->Dma[i].Description.Mask)
+            break;
+        DmaData[i] = LogDev->Dma[i].Description.Mask;
+        RtlInitializeBitMap(&DmaBitmap[i], &DmaData[i], 8);
+        ResourceCount += RtlNumberOfSetBits(&DmaBitmap[i]);
+    }
 
     /* Allocate memory to store requirements */
     ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST)
@@ -243,6 +253,41 @@ IsaFdoCreateRequirements(
             }
         }
     }
+    for (i = 0; i < ARRAYSIZE(LogDev->Dma); i++)
+    {
+        if (!LogDev->Dma[i].Description.Mask)
+            break;
+        DPRINT("Device.Dma[%d].Mask = 0x%02x\n", i, LogDev->Dma[i].Description.Mask);
+        DPRINT("Device.Dma[%d].Information = 0x%02x\n", i, LogDev->Dma[i].Description.Information);
+        for (j = 0; j < 8; j++)
+        {
+            if (!RtlCheckBit(&DmaBitmap[i], j))
+                continue;
+            if (FirstDma)
+                FirstDma = FALSE;
+            else
+                Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
+            Descriptor->Type = CmResourceTypeDma;
+            switch (LogDev->Dma[i].Description.Information & 0x3)
+            {
+                case 0x0: Descriptor->Flags |= CM_RESOURCE_DMA_8; break;
+                case 0x1: Descriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
+                case 0x2: Descriptor->Flags |= CM_RESOURCE_DMA_16; break;
+                default: break;
+            }
+            if (LogDev->Dma[i].Description.Information & 0x4)
+                Descriptor->Flags |= CM_RESOURCE_DMA_BUS_MASTER;
+            switch ((LogDev->Dma[i].Description.Information >> 5) & 0x3)
+            {
+                case 0x1: Descriptor->Flags |= CM_RESOURCE_DMA_TYPE_A; break;
+                case 0x2: Descriptor->Flags |= CM_RESOURCE_DMA_TYPE_B; break;
+                case 0x3: Descriptor->Flags |= CM_RESOURCE_DMA_TYPE_F; break;
+                default: break;
+            }
+            Descriptor->u.Dma.MinimumChannel = Descriptor->u.Dma.MaximumChannel = j;
+            Descriptor++;
+        }
+    }
 
     PdoExt->RequirementsList = RequirementsList;
     return STATUS_SUCCESS;
@@ -271,6 +316,13 @@ IsaFdoCreateResources(
     for (i = 0; i < ARRAYSIZE(LogDev->Irq); i++)
     {
         if (LogDev->Irq[i].CurrentNo)
+            ResourceCount++;
+        else
+            break;
+    }
+    for (i = 0; i < ARRAYSIZE(LogDev->Dma); i++)
+    {
+        if (LogDev->Dma[i].CurrentChannel != 4)
             ResourceCount++;
         else
             break;
@@ -322,6 +374,31 @@ IsaFdoCreateResources(
         Descriptor->u.Interrupt.Level = LogDev->Irq[i].CurrentNo;
         Descriptor->u.Interrupt.Vector = LogDev->Irq[i].CurrentNo;
         Descriptor->u.Interrupt.Affinity = -1;
+    }
+    for (i = 0; i < ARRAYSIZE(LogDev->Dma); i++)
+    {
+        if (LogDev->Dma[i].CurrentChannel == 4)
+            continue;
+        Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[ResourceCount++];
+        Descriptor->Type = CmResourceTypeDma;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        switch (LogDev->Dma[i].Description.Information & 0x3)
+        {
+            case 0x0: Descriptor->Flags |= CM_RESOURCE_DMA_8; break;
+            case 0x1: Descriptor->Flags |= CM_RESOURCE_DMA_8 | CM_RESOURCE_DMA_16; break;
+            case 0x2: Descriptor->Flags |= CM_RESOURCE_DMA_16; break;
+            default: break;
+        }
+        if (LogDev->Dma[i].Description.Information & 0x4)
+            Descriptor->Flags |= CM_RESOURCE_DMA_BUS_MASTER;
+        switch ((LogDev->Dma[i].Description.Information >> 5) & 0x3)
+        {
+            case 0x1: Descriptor->Flags |= CM_RESOURCE_DMA_TYPE_A; break;
+            case 0x2: Descriptor->Flags |= CM_RESOURCE_DMA_TYPE_B; break;
+            case 0x3: Descriptor->Flags |= CM_RESOURCE_DMA_TYPE_F; break;
+            default: break;
+        }
+        Descriptor->u.Dma.Channel = LogDev->Dma[i].CurrentChannel;
     }
 
     PdoExt->ResourceList = ResourceList;

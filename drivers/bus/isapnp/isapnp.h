@@ -27,6 +27,11 @@ typedef struct _ISAPNP_IRQ {
     ISAPNP_IRQ_DESCRIPTION Description;
 } ISAPNP_IRQ, *PISAPNP_IRQ;
 
+typedef struct _ISAPNP_DMA {
+    UCHAR CurrentChannel;
+    ISAPNP_DMA_DESCRIPTION Description;
+} ISAPNP_DMA, *PISAPNP_DMA;
+
 typedef struct _ISAPNP_LOGICAL_DEVICE {
     PDEVICE_OBJECT Pdo;
     ISAPNP_LOGDEVID LogDevId;
@@ -35,6 +40,7 @@ typedef struct _ISAPNP_LOGICAL_DEVICE {
     ULONG SerialNumber;
     ISAPNP_IO Io[8];
     ISAPNP_IRQ Irq[2];
+    ISAPNP_DMA Dma[2];
     UCHAR CSN;
     UCHAR LDN;
     LIST_ENTRY ListEntry;

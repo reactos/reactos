@@ -30,6 +30,7 @@ extern "C" {
 #define ISAPNP_IOBASE(n) (0x60 + ((n)*2))
 #define ISAPNP_IRQNO(n) (0x70 + ((n)*2))
 #define ISAPNP_IRQTYPE(n) (0x71 + ((n) * 2))
+#define ISAPNP_DMACHANNEL(n) (0x74 + (n))
 
 #define ISAPNP_CONFIG_RESET (1 << 0)
 #define ISAPNP_CONFIG_WAIT_FOR_KEY (1 << 1)
@@ -115,6 +116,11 @@ typedef struct _ISAPNP_IRQ_DESCRIPTION {
     USHORT Mask;
     UCHAR Information;
 } ISAPNP_IRQ_DESCRIPTION;
+
+typedef struct _ISAPNP_DMA_DESCRIPTION {
+    UCHAR Mask;
+    UCHAR Information;
+} ISAPNP_DMA_DESCRIPTION;
 
 #include <poppack.h>
 
