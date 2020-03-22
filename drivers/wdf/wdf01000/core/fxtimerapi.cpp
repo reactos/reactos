@@ -205,8 +205,19 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
-    return FALSE;
+    DDI_ENTRY();
+
+    FxTimer* pFxTimer;
+    LARGE_INTEGER li;
+
+    FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
+                         Timer,
+                         FX_TYPE_TIMER,
+                         (PVOID*)&pFxTimer);
+
+    li.QuadPart = DueTime;
+
+    return pFxTimer->Start(li);
 }
 
 __drv_when(Wait == __true, __drv_maxIRQL(PASSIVE_LEVEL))
