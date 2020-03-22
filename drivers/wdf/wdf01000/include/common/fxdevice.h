@@ -1375,7 +1375,18 @@ public:
         return (FxPkgPdo*) m_PkgPnp;
     }
 
-    
+    VOID
+    FxLogDeviceStartTelemetryEvent(
+        VOID
+        )
+    {
+        WDFNOTIMPLEMENTED();
+
+        //
+        // TODO: Implement function
+        //
+        //LogDeviceStartTelemetryEvent(GetDriverGlobals(), this);
+    }
 
 };
 

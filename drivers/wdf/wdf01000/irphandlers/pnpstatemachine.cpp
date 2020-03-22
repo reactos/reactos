@@ -1521,8 +1521,19 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePnpInvalid;
+    This->m_AchievedStart = TRUE;
+    
+    //
+    // Log Telemetry event for the FDO
+    //
+    if (This->m_Device->IsPdo() == FALSE)
+    {
+        This->m_Device->FxLogDeviceStartTelemetryEvent();
+    }
+
+    This->PnpFinishProcessingIrp();
+
+    return WdfDevStatePnpNull;
 }
 
 WDF_DEVICE_PNP_STATE
