@@ -631,6 +631,12 @@ protected:
         );
 
     _Must_inspect_result_
+    NTSTATUS
+    PnpEnableInterfacesAndRegisterWmi(
+        VOID
+        );
+
+    _Must_inspect_result_
     static
     NTSTATUS
     _PnpStartDevice(

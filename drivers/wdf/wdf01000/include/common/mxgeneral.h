@@ -531,6 +531,17 @@ public:
         KeReleaseInterruptSpinLock(Interrupt, OldIrql);
     }
 
+    __inline
+    static
+    NTSTATUS
+    MxSetDeviceInterfaceState(
+        _In_ PUNICODE_STRING SymbolicLinkName,
+        _In_ BOOLEAN Enable
+        )
+    {
+        return IoSetDeviceInterfaceState(SymbolicLinkName, Enable);
+    }
+
 };
 
 #endif //_MXGENERAL_H_

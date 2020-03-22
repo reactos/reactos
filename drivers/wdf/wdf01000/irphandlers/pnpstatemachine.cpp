@@ -2,6 +2,7 @@
 #include "common/fxdevice.h"
 #include "common/fxmacros.h"
 #include "common/fxinterrupt.h"
+#include "common/fxdeviceinterface.h"
 
 
 //
@@ -1546,8 +1547,87 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePnpInvalid;
+    NTSTATUS status;
+
+    status = This->PnpEnableInterfacesAndRegisterWmi();
+
+    if (!NT_SUCCESS(status))
+    {
+        //
+        // Upon failure, PnpEnableInterfacesAndRegisterWmi already marked the
+        // irp as failed and recorded an internal error.
+        //
+        // FailedPowerDown will gracefully tear down the stack and bring it out
+        // of D0.
+        //
+        return WdfDevStatePnpFailedPowerDown;
+    }
+
+    return WdfDevStatePnpStarted;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::PnpEnableInterfacesAndRegisterWmi(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Enables all of the device interfaces and then registers wmi.
+
+Arguments:
+    None
+
+Return Value:
+    NT_SUCCESS if all goes well, !NT_SUCCESS otherwise
+
+  --*/
+{
+    PSINGLE_LIST_ENTRY ple;
+    NTSTATUS status;
+
+    status = STATUS_SUCCESS;
+
+    //
+    // Enable any device interfaces.
+    //
+    m_DeviceInterfaceLock.AcquireLock(GetDriverGlobals());
+
+    m_DeviceInterfacesCanBeEnabled = TRUE;
+
+    for (ple = m_DeviceInterfaceHead.Next; ple != NULL; ple = ple->Next)
+    {
+        FxDeviceInterface *pDeviceInterface;
+
+        pDeviceInterface = FxDeviceInterface::_FromEntry(ple);
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+        //
+        // By this time, the device interface, no matter what the WDFDEVICE role
+        // will have been registered.
+        //
+        ASSERT(pDeviceInterface->m_SymbolicLinkName.Buffer != NULL);
+#endif
+        pDeviceInterface->SetState(TRUE);
+
+        status = STATUS_SUCCESS;
+    }
+
+    m_DeviceInterfaceLock.ReleaseLock(GetDriverGlobals());
+
+    if (NT_SUCCESS(status))
+    {
+        status = m_Device->WmiPkgRegister();
+    }
+
+    if (!NT_SUCCESS(status))
+    {
+        SetInternalFailure();
+        SetPendingPnpIrpStatus(status);
+    }
+
+    return status;
 }
 
 WDF_DEVICE_PNP_STATE

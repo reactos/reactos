@@ -401,6 +401,21 @@ private:
         // NOTHING TO DO
     }
 
+    NTSTATUS
+    WmiPkgRegister(
+        VOID
+        );
+
+    VOID
+    WmiPkgDeregister(
+        VOID
+        );
+
+    VOID
+    WmiPkgCleanup(
+        VOID
+        );
+
 protected:
 
     //

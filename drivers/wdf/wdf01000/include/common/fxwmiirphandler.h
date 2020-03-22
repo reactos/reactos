@@ -48,6 +48,12 @@ public:
         __in PIRP Irp
         );
 
+    _Must_inspect_result_
+    NTSTATUS
+    Register(
+        VOID
+        );
+
 protected:
 
     _Must_inspect_result_

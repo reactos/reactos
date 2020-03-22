@@ -162,3 +162,32 @@ FxDeviceInterface::Register(
 
     return status;
 }
+
+VOID
+FxDeviceInterface::SetState(
+    __in BOOLEAN State
+    )
+/*++
+
+Routine Description:
+    Sets the state of the device interface
+
+Arguments:
+    State - the state to set
+
+
+Return Value:
+    None.
+
+  --*/
+{
+    m_State = State;
+
+    //
+    // Only set the state if the interface has been registered
+    //
+    if (m_SymbolicLinkName.Buffer != NULL)
+    {
+        Mx::MxSetDeviceInterfaceState(&m_SymbolicLinkName, m_State);
+    }
+}

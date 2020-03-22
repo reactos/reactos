@@ -64,6 +64,11 @@ public:
         _In_ FxDevice* Device
         );
 
+    VOID
+    SetState(
+        __in BOOLEAN State
+        );
+
 };
 
 #endif //_FXDEVICEINTERFACE_H_

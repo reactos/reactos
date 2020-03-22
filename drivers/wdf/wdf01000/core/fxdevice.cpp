@@ -2165,3 +2165,11 @@ FxDevice::FreeRequestMemory(
         FxFreeToNPagedLookasideList(&m_RequestLookasideList, pHeader->Base);
     }
 }
+
+NTSTATUS
+FxDevice::WmiPkgRegister(
+    VOID
+    )
+{
+    return m_PkgWmi->Register();
+}

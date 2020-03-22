@@ -282,3 +282,39 @@ FxWmiIrpHandler::PostCreateDeviceInitialize(
 
     return STATUS_SUCCESS;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxWmiIrpHandler::Register(
+    VOID
+    )
+{
+    NTSTATUS status;
+    KIRQL irql;
+
+    //
+    // We rely on the PnP state machine to manage our state transitions properly
+    // so that we don't have to do any state checking here.
+    //
+    Lock(&irql);
+    ASSERT(m_RegisteredState == WmiUnregistered ||
+              m_RegisteredState == WmiDeregistered);
+    m_RegisteredState = WmiRegistered;
+    Unlock(irql);
+
+    status = IoWMIRegistrationControl(GetDevice()->GetDeviceObject(),
+                                      WMIREG_ACTION_REGISTER);
+
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "could not register WMI with OS, %!STATUS!", status);
+
+        Lock(&irql);
+        m_RegisteredState = WmiUnregistered;
+        Unlock(irql);
+    }
+
+    return status;
+}
