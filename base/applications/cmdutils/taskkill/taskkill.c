@@ -34,6 +34,29 @@ static BOOL force_termination = FALSE;
 static WCHAR **task_list;
 static unsigned int task_count;
 
+static WCHAR opForceTerminate[] = {'f',0};
+static WCHAR opImage[] = {'i','m',0};
+static WCHAR opPID[] = {'p','i','d',0};
+static WCHAR opHelp[] = {'?',0};
+static WCHAR opTerminateChildren[] = {'t',0};
+	
+static PWCHAR opList[] = {
+	opForceTerminate,
+	opImage,
+	opPID,
+	opHelp,
+	opTerminateChildren
+};
+
+#define OP_PARAM_INVALID -1
+
+#define OP_PARAM_FORCE_TERMINATE 0
+#define OP_PARAM_IMAGE 1
+#define OP_PARAM_PID 2
+#define OP_PARAM_HELP 3
+#define OP_PARAM_TERMITANE_CHILD 4
+
+	
 struct pid_close_info
 {
     DWORD pid;
@@ -440,89 +463,137 @@ static BOOL add_to_task_list(WCHAR *name)
     return TRUE;
 }
 
-/* FIXME Argument processing does not match behavior observed on Windows.
- * Stringent argument counting and processing is performed, and unrecognized
- * options are detected as parameters when placed after options that accept one. */
+static int is_valid_arguments(WCHAR *argument)
+{
+	int i;
+	
+	if (*argument != '/' && *argument != '-')
+	{
+		return OP_PARAM_INVALID;
+	}
+    argument++;
+	
+	for(i = 0; i < _countof(opList); i++)
+	{
+		if (!strcmpiW(opList[i], argument))
+		{
+			return i;
+		}
+	}
+	return OP_PARAM_INVALID;
+}
+
+/* FIXME 
+Argument T not supported
+
+*/
 static BOOL process_arguments(int argc, WCHAR *argv[])
 {
-    static const WCHAR opForceTerminate[] = {'f',0};
-    static const WCHAR opImage[] = {'i','m',0};
-    static const WCHAR opPID[] = {'p','i','d',0};
-    static const WCHAR opHelp[] = {'?',0};
-    static const WCHAR opTerminateChildren[] = {'t',0};
+    BOOL has_im = FALSE, has_pid = FALSE, has_help = FALSE;
 
     if (argc > 1)
     {
         int i;
-        WCHAR *argdata;
-        BOOL has_im = FALSE, has_pid = FALSE;
-
-        /* Only the lone help option is recognized. */
-        if (argc == 2)
-        {
-            argdata = argv[1];
-            if ((*argdata == '/' || *argdata == '-') && !strcmpW(opHelp, argdata + 1))
-            {
-                taskkill_message(STRING_USAGE);
-                exit(0);
-            }
-        }
-
         for (i = 1; i < argc; i++)
         {
-            BOOL got_im = FALSE, got_pid = FALSE;
+			int Argument = is_valid_arguments(argv[i]);
 
-            argdata = argv[i];
-            if (*argdata != '/' && *argdata != '-')
-                goto invalid;
-            argdata++;
+			switch(Argument)
+			{
+				case OP_PARAM_FORCE_TERMINATE:
+				{
+					if(force_termination == TRUE)
+					{
+						// -f already specified
+						taskkill_message_printfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
+						taskkill_message(STRING_USAGE);
+						return FALSE;
+					}
+					force_termination = TRUE;
+					break;
+				}
+				case OP_PARAM_IMAGE:
+				case OP_PARAM_PID:
+				{
+					if (!argv[i + 1])
+					{
+						taskkill_message_printfW(STRING_MISSING_PARAM, argv[i]);
+						taskkill_message(STRING_USAGE);
+						return FALSE;
+					}
+				
+					if (Argument == OP_PARAM_IMAGE) has_im = TRUE;
+					if (Argument == OP_PARAM_PID) has_pid = TRUE;
 
-            if (!strcmpiW(opTerminateChildren, argdata))
-                WINE_FIXME("argument T not supported\n");
-            if (!strcmpiW(opForceTerminate, argdata))
-                force_termination = TRUE;
-            /* Options /IM and /PID appear to behave identically, except for
-             * the fact that they cannot be specified at the same time. */
-            else if ((got_im = !strcmpiW(opImage, argdata)) ||
-                     (got_pid = !strcmpiW(opPID, argdata)))
-            {
-                if (!argv[i + 1])
-                {
-                    taskkill_message_printfW(STRING_MISSING_PARAM, argv[i]);
-                    taskkill_message(STRING_USAGE);
-                    return FALSE;
-                }
+					if (has_im && has_pid)
+					{
+						taskkill_message(STRING_MUTUAL_EXCLUSIVE);
+						taskkill_message(STRING_USAGE);
+						return FALSE;
+					}
 
-                if (got_im) has_im = TRUE;
-                if (got_pid) has_pid = TRUE;
-
-                if (has_im && has_pid)
-                {
-                    taskkill_message(STRING_MUTUAL_EXCLUSIVE);
-                    taskkill_message(STRING_USAGE);
-                    return FALSE;
-                }
-
-                if (!add_to_task_list(argv[i + 1]))
-                    return FALSE;
-                i++;
-            }
-            else
-            {
-                invalid:
-                taskkill_message(STRING_INVALID_OPTION);
-                taskkill_message(STRING_USAGE);
-                return FALSE;
-            }
+					if(is_valid_arguments(argv[i + 1]) != OP_PARAM_INVALID)
+					{
+						taskkill_message_printfW(STRING_MISSING_PARAM, argv[i]);
+						taskkill_message(STRING_USAGE);
+						return FALSE;
+					}
+					
+					if (!add_to_task_list(argv[++i])) // add next parameters to task_list
+						return FALSE;
+					
+					break;
+				}
+				case OP_PARAM_HELP:
+				{
+					if(has_help == TRUE)
+					{
+						// -? already specified
+						taskkill_message_printfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
+						taskkill_message(STRING_USAGE);
+						return FALSE;
+					}
+					has_help = TRUE;
+					break;
+				}
+				case OP_PARAM_TERMITANE_CHILD:
+				{
+					WINE_FIXME("argument T not supported\n");
+					break;
+				}
+				case OP_PARAM_INVALID:
+				default:
+				{
+					taskkill_message(STRING_INVALID_OPTION);
+					taskkill_message(STRING_USAGE);
+					return FALSE;
+				}
+			}
         }
     }
-    else
-    {
-        taskkill_message(STRING_MISSING_OPTION);
+	
+    if(has_help)
+	{
+		if(argc > 2) // any parameters other than -? is specified 
+		{
+			taskkill_message(STRING_INVALID_SYNTAX);
+			taskkill_message(STRING_USAGE);
+			return FALSE;
+		}
+		else
+		{
+			taskkill_message(STRING_USAGE);
+			exit(0);
+		}
+	}
+	else if((!has_im) && (!has_pid)) // has_help == FALSE
+	{
+		// both has_im and has_pid are missing (maybe -fi option is missing too, if implemented later)
+		taskkill_message(STRING_MISSING_OPTION);
         taskkill_message(STRING_USAGE);
         return FALSE;
-    }
-
+	}
+	
     return TRUE;
 }
 
