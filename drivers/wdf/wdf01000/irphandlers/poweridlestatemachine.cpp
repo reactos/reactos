@@ -1568,4 +1568,52 @@ Return Value:
     m_Lock.Release(irql);
 }
 
+BOOLEAN
+FxPowerIdleMachine::DisableTimer(
+    VOID
+    )
+/*++
 
+Routine Description:
+    Public function which the power policy state machine uses to put this state
+    machine into a disabled state.  If necessary, the state machine will attempt
+    to cancel the idle timer.
+
+Arguments:
+    None
+
+Return Value:
+    TRUE if the idle timer was cancelled and the caller may proceed directly to
+    its new state
+
+    FALSE if the idle timer was not cancelled and the caller must wait for the
+    io timeout event to be posted before proceeding.
+
+  --*/
+{
+    KIRQL irql;
+    BOOLEAN disabledImmediately;
+
+    m_Lock.Acquire(&irql);
+
+    ProcessEventLocked(PowerIdleEventDisabled);
+
+    //
+    // If FxPowerIdleTimerStarted is still set after disabling the state machine,
+    // then we could not cancel the timer and we must wait for the timer expired
+    // event to be posted to this state machine.  This state machine will then
+    // post a PwrPolIoPresent event to power policy.
+    //
+    if (m_Flags & FxPowerIdleTimerStarted)
+    {
+        disabledImmediately = FALSE;
+    }
+    else
+    {
+        disabledImmediately = TRUE;
+    }
+
+    m_Lock.Release(irql);
+
+    return disabledImmediately;
+}

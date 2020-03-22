@@ -3901,8 +3901,22 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePwrPolInvalid;
+    ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolStarted);
+
+    //
+    // We signal we are in D0 even though there is idling out in this state
+    // because we could have just come from a state which *was* idled out.
+    // For instance
+    // 1) We are in WaitingArmed and an io present event moved us out of this state
+    // 2) Immediately afterward, the s0 idle policy was changed
+    // 3) When we enter StartingDecideS0Wake, we will move into this state without
+    //    first entering StartedWakeCapable.
+    // 4) The source of the io present event, if waiting synchronously needs to
+    //    be unblocked.
+    //
+    This->m_PowerPolicyMachine.m_Owner->m_PowerIdleMachine.DisableTimer();
+
+    return WdfDevStatePwrPolNull;
 }
 
 WDF_DEVICE_POWER_POLICY_STATE
