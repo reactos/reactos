@@ -12,14 +12,16 @@ Provider   = %ReactOS%
 DriverVer  = 10/19/1999,5.00.2157.1
 
 [DestinationDirs]
-DefaultDestDir = 12
+disk_CopyFiles.NT = 12
+storprop_CopyFiles.NT = 11
 
 [ClassInstall32.NT]
 AddReg = DiskClass.NT.AddReg
+Copyfiles = storprop_CopyFiles.NT
 
 [DiskClass.NT.AddReg]
 HKR, , ,               0, %DiskClassName%
-;HKR, , Installer32,    0, "StorProp.dll,DiskClassInstaller"
+HKR, , Installer32,    0, "storprop.dll,DiskClassInstaller"
 HKR, , Icon,           0, "-53"
 HKR, , NoInstallClass, 0, 1
 HKR, , SilentInstall,  0, 1
@@ -48,6 +50,11 @@ ServiceBinary  = %12%\disk.sys
 
 [disk_CopyFiles.NT]
 disk.sys
+
+;---------------------------- DISK INSTALLER ----------------------------
+
+[storprop_CopyFiles.NT]
+storprop.dll
 
 ;-------------------------------- STRINGS -------------------------------
 
