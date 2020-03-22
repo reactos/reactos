@@ -34,11 +34,11 @@ static BOOL force_termination = FALSE;
 static WCHAR **task_list;
 static unsigned int task_count;
 
-static WCHAR opForceTerminate[] = {'f',0};
-static WCHAR opImage[] = {'i','m',0};
-static WCHAR opPID[] = {'p','i','d',0};
-static WCHAR opHelp[] = {'?',0};
-static WCHAR opTerminateChildren[] = {'t',0};
+static WCHAR opForceTerminate[] = L"f";
+static WCHAR opImage[] = L"im";
+static WCHAR opPID[] = L"pid";
+static WCHAR opHelp[] = L"?";
+static WCHAR opTerminateChildren[] = L"t";
 	
 static PWCHAR opList[] = {
 	opForceTerminate,
