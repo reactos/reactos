@@ -1031,7 +1031,8 @@ Return Value:
   --*/
 
 {
-    WDFNOTIMPLEMENTED();
+    This->m_Flags &= ~FxPowerIdleTimerEnabled;
+
     return FxIdleMax;
 }
 
