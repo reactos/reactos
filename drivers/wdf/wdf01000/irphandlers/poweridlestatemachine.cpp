@@ -983,8 +983,12 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return FxIdleMax;
+    //
+    // Moving from the started state to the powered on state
+    //
+    This->SendD0Notification();
+
+    return FxIdleDisabled;
 }
 
 FxPowerIdleStates
@@ -1562,3 +1566,5 @@ Return Value:
     ProcessEventLocked(Event);
     m_Lock.Release(irql);
 }
+
+
