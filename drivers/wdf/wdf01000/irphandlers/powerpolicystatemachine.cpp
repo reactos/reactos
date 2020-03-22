@@ -2416,8 +2416,11 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePwrPolInvalid;
+    ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolStartingSucceeded);
+
+    This->PnpProcessEvent(PnpEventPwrPolStarted);
+
+    return WdfDevStatePwrPolStartingDecideS0Wake;
 }
 
 WDF_DEVICE_POWER_POLICY_STATE
