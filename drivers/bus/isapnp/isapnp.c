@@ -3,6 +3,7 @@
  * FILE:            isapnp.c
  * PURPOSE:         Driver entry
  * PROGRAMMERS:     Cameron Gutman (cameron.gutman@reactos.org)
+ *                  Hervé Poussineau
  */
 
 #include <isapnp.h>
@@ -136,6 +137,198 @@ IsaFdoCreateDeviceIDs(
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+NTAPI
+IsaFdoCreateRequirements(
+    IN PISAPNP_PDO_EXTENSION PdoExt)
+{
+    PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
+    RTL_BITMAP IrqBitmap[ARRAYSIZE(LogDev->Irq)];
+    ULONG IrqData[ARRAYSIZE(LogDev->Irq)];
+    ULONG ResourceCount = 0;
+    ULONG ListSize, i, j;
+    BOOLEAN FirstIrq = TRUE;
+    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+    PIO_RESOURCE_DESCRIPTOR Descriptor;
+
+    /* Count number of requirements */
+    for (i = 0; i < ARRAYSIZE(LogDev->Io); i++)
+    {
+        if (!LogDev->Io[i].Description.Length)
+            break;
+        ResourceCount++;
+    }
+    for (i = 0; i < ARRAYSIZE(LogDev->Irq); i++)
+    {
+        if (!LogDev->Irq[i].Description.Mask)
+            break;
+        IrqData[i] = LogDev->Irq[i].Description.Mask;
+        RtlInitializeBitMap(&IrqBitmap[i], &IrqData[i], 16);
+        ResourceCount += RtlNumberOfSetBits(&IrqBitmap[i]);
+        if (LogDev->Irq[i].Description.Information & 0x4)
+        {
+            /* Add room for level sensitive */
+            ResourceCount += RtlNumberOfSetBits(&IrqBitmap[i]);
+        }
+    }
+    if (ResourceCount == 0)
+        return STATUS_SUCCESS;
+
+    /* Allocate memory to store requirements */
+    ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST)
+             + ResourceCount * sizeof(IO_RESOURCE_DESCRIPTOR);
+    RequirementsList = ExAllocatePool(PagedPool, ListSize);
+    if (!RequirementsList)
+        return STATUS_NO_MEMORY;
+
+    RtlZeroMemory(RequirementsList, ListSize);
+    RequirementsList->ListSize = ListSize;
+    RequirementsList->InterfaceType = Isa;
+    RequirementsList->AlternativeLists = 1;
+
+    RequirementsList->List[0].Version = 1;
+    RequirementsList->List[0].Revision = 1;
+    RequirementsList->List[0].Count = ResourceCount;
+
+    /* Store requirements */
+    Descriptor = RequirementsList->List[0].Descriptors;
+    for (i = 0; i < ARRAYSIZE(LogDev->Io); i++)
+    {
+        if (!LogDev->Io[i].Description.Length)
+            break;
+        DPRINT("Device.Io[%d].Information = 0x%02x\n", i, LogDev->Io[i].Description.Information);
+        DPRINT("Device.Io[%d].Minimum = 0x%02x\n", i, LogDev->Io[i].Description.Minimum);
+        DPRINT("Device.Io[%d].Maximum = 0x%02x\n", i, LogDev->Io[i].Description.Maximum);
+        DPRINT("Device.Io[%d].Alignment = 0x%02x\n", i, LogDev->Io[i].Description.Alignment);
+        DPRINT("Device.Io[%d].Length = 0x%02x\n", i, LogDev->Io[i].Description.Length);
+        Descriptor->Type = CmResourceTypePort;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        if (LogDev->Io[i].Description.Information & 0x1)
+            Descriptor->Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
+        else
+            Descriptor->Flags = CM_RESOURCE_PORT_10_BIT_DECODE;
+        Descriptor->u.Port.Length = LogDev->Io[i].Description.Length;
+        Descriptor->u.Port.Alignment = LogDev->Io[i].Description.Alignment;
+        Descriptor->u.Port.MinimumAddress.LowPart = LogDev->Io[i].Description.Minimum;
+        Descriptor->u.Port.MaximumAddress.LowPart = LogDev->Io[i].Description.Maximum + LogDev->Io[i].Description.Length - 1;
+        Descriptor++;
+    }
+    for (i = 0; i < ARRAYSIZE(LogDev->Irq); i++)
+    {
+        if (!LogDev->Irq[i].Description.Mask)
+            break;
+        DPRINT("Device.Irq[%d].Mask = 0x%02x\n", i, LogDev->Irq[i].Description.Mask);
+        DPRINT("Device.Irq[%d].Information = 0x%02x\n", i, LogDev->Irq[i].Description.Information);
+        for (j = 0; j < 15; j++)
+        {
+            if (!RtlCheckBit(&IrqBitmap[i], j))
+                continue;
+            if (FirstIrq)
+                FirstIrq = FALSE;
+            else
+                Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
+            Descriptor->Type = CmResourceTypeInterrupt;
+            Descriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+            Descriptor->u.Interrupt.MinimumVector = Descriptor->u.Interrupt.MaximumVector = j;
+            Descriptor++;
+            if (LogDev->Irq[i].Description.Information & 0x4)
+            {
+                /* Level interrupt */
+                Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
+                Descriptor->Type = CmResourceTypeInterrupt;
+                Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+                Descriptor->u.Interrupt.MinimumVector = Descriptor->u.Interrupt.MaximumVector = j;
+                Descriptor++;
+            }
+        }
+    }
+
+    PdoExt->RequirementsList = RequirementsList;
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NTAPI
+IsaFdoCreateResources(
+    IN PISAPNP_PDO_EXTENSION PdoExt)
+{
+    PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
+    ULONG ResourceCount = 0;
+    ULONG ListSize, i;
+    PCM_RESOURCE_LIST ResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
+
+    /* Count number of required resources */
+    for (i = 0; i < ARRAYSIZE(LogDev->Io); i++)
+    {
+        if (LogDev->Io[i].CurrentBase)
+            ResourceCount++;
+        else
+            break;
+    }
+    for (i = 0; i < ARRAYSIZE(LogDev->Irq); i++)
+    {
+        if (LogDev->Irq[i].CurrentNo)
+            ResourceCount++;
+        else
+            break;
+    }
+    if (ResourceCount == 0)
+        return STATUS_SUCCESS;
+
+    /* Allocate memory to store resources */
+    ListSize = sizeof(CM_RESOURCE_LIST)
+             + (ResourceCount - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    ResourceList = ExAllocatePool(PagedPool, ListSize);
+    if (!ResourceList)
+        return STATUS_NO_MEMORY;
+
+    RtlZeroMemory(ResourceList, ListSize);
+    ResourceList->Count = 1;
+    ResourceList->List[0].InterfaceType = Isa;
+    ResourceList->List[0].PartialResourceList.Version = 1;
+    ResourceList->List[0].PartialResourceList.Revision = 1;
+    ResourceList->List[0].PartialResourceList.Count = ResourceCount;
+
+    /* Store resources */
+    ResourceCount = 0;
+    for (i = 0; i < ARRAYSIZE(LogDev->Io); i++)
+    {
+        if (!LogDev->Io[i].CurrentBase)
+            continue;
+        Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[ResourceCount++];
+        Descriptor->Type = CmResourceTypePort;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        if (LogDev->Io[i].Description.Information & 0x1)
+            Descriptor->Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
+        else
+            Descriptor->Flags = CM_RESOURCE_PORT_10_BIT_DECODE;
+        Descriptor->u.Port.Length = LogDev->Io[i].Description.Length;
+        Descriptor->u.Port.Start.LowPart = LogDev->Io[i].CurrentBase;
+    }
+    for (i = 0; i < ARRAYSIZE(LogDev->Irq); i++)
+    {
+        if (!LogDev->Irq[i].CurrentNo)
+            continue;
+        Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[ResourceCount++];
+        Descriptor->Type = CmResourceTypeInterrupt;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        if (LogDev->Irq[i].CurrentType & 0x01)
+            Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+        else
+            Descriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+        Descriptor->u.Interrupt.Level = LogDev->Irq[i].CurrentNo;
+        Descriptor->u.Interrupt.Vector = LogDev->Irq[i].CurrentNo;
+        Descriptor->u.Interrupt.Affinity = -1;
+    }
+
+    PdoExt->ResourceList = ResourceList;
+    PdoExt->ResourceListSize = ListSize;
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 IsaPnpFillDeviceRelations(
@@ -197,6 +390,13 @@ IsaPnpFillDeviceRelations(
            PdoExt->FdoExt = FdoExt;
 
            Status = IsaFdoCreateDeviceIDs(PdoExt);
+
+           if (NT_SUCCESS(Status))
+              Status = IsaFdoCreateRequirements(PdoExt);
+
+           if (NT_SUCCESS(Status))
+              Status = IsaFdoCreateResources(PdoExt);
+
            if (!NT_SUCCESS(Status))
            {
                IoDeleteDevice(IsaDevice->Pdo);
