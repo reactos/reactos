@@ -676,6 +676,11 @@ BOOL WINAPI GUIDFromStringW(
 #define TRAYCMD_SEARCH_FILES        41093
 #define TRAYCMD_SEARCH_COMPUTERS    41094
 
+// Explorer Tray Application Bar Data Message Commands
+#define TABDMC_APPBAR     0
+#define TABDMC_NOTIFY     1
+#define TABDMC_LOADINPROC 2
+
 void WINAPI ShellDDEInit(BOOL bInit);
 DWORD WINAPI WinList_Init(void);
 
