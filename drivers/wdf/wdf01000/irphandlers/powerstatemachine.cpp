@@ -1770,8 +1770,34 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    if (This->m_Device->GetDeviceObjectFlags() & DO_POWER_PAGABLE)
+    {
+        //
+        // Pageable.
+        //
+        if (This->m_SharedPower.m_WaitWakeOwner)
+        {
+            return WdfDevStatePowerD0BusWakeOwner;
+        }
+        else
+        {
+            return WdfDevStatePowerD0;
+        }
+    }
+    else
+    {
+        //
+        // Non-pageable.
+        //
+        if (This->m_SharedPower.m_WaitWakeOwner)
+        {
+            return WdfDevStatePowerD0BusWakeOwnerNP;
+        }
+        else
+        {
+            return WdfDevStatePowerD0NP;
+        }
+    }
 }
 
 WDF_DEVICE_POWER_STATE
