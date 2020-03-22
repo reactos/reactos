@@ -2450,8 +2450,40 @@ FxPkgPnp::PowerPolStartingDecideS0Wake(
     __inout FxPkgPnp* This
     )
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePwrPolInvalid;
+    ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolStartingDecideS0Wake);
+
+    This->PowerPolicyChildrenCanPowerUp();
+
+    //
+    // Save idle state if it is dirty.  We check when deciding the S0 state
+    // because any change in the S0 idle settings will go through this state.
+    //
+    This->SaveState(TRUE);
+
+    //
+    // If necessary update the idle timeout hint to the power framework
+    //
+    //This->m_PowerPolicyMachine.m_Owner->m_PoxInterface.UpdateIdleTimeoutHint();
+
+    if (This->m_PowerPolicyMachine.m_Owner->m_IdleSettings.Enabled)
+    {
+        if (This->m_PowerPolicyMachine.m_Owner->m_IdleSettings.WakeFromS0Capable)
+        {
+            //
+            // We can idle out and wake from S0
+            //
+            return WdfDevStatePwrPolStartedWakeCapable;
+        }
+        else
+        {
+            //
+            // We can idle out, but not wake from the idle state
+            //
+            return WdfDevStatePwrPolStartedIdleCapable;
+        }
+    }
+
+    return WdfDevStatePwrPolStarted;
 }
 
 WDF_DEVICE_POWER_POLICY_STATE
@@ -4287,4 +4319,112 @@ Return Value:
     m_Lock.Acquire(&irql);
     ProcessEventLocked(PowerIdleEventStart);
     m_Lock.Release(irql);
+}
+
+VOID
+FxPkgPnp::PowerPolicyChildrenCanPowerUp(
+    VOID
+    )
+/*++
+
+Routine Description:
+    After this function returns, any child devices rooted off of this parent
+    device can now move into D0.
+
+Arguments:
+    None
+
+Return Value:
+    None
+
+  --*/
+{
+    //
+    // This can be called for any PPO so we must check first if we have any
+    // possibility of children.
+    //
+    if (m_EnumInfo == NULL)
+    {
+        return;
+    }
+
+    if (IsPowerPolicyOwner())
+    {
+        m_EnumInfo->AcquireParentPowerStateLock(GetDriverGlobals());
+
+        //
+        // When the child attempts to power up, m_ChildrenPoweredOnCount can
+        // be incremented while the parent is in Dx. The important value
+        // here is the guard value, m_ChildrenCanPowerUp which must be
+        // FALSE.
+        //
+        // ASSERT (m_PowerPolicyMachine.m_Owner->m_ChildrenPoweredOnCount == 0);
+
+        //
+        // In the USB SS case, we can return to StartingDecideS0Wake without
+        // ever attempting to go into a Dx state state, so m_ChildrenCanPowerUp
+        // can be TRUE.
+        //
+        // ASSERT(m_PowerPolicyMachine.m_Owner->m_ChildrenCanPowerUp == FALSE);
+
+        m_PowerPolicyMachine.m_Owner->m_ChildrenCanPowerUp = TRUE;
+        m_EnumInfo->ReleaseParentPowerStateLock(GetDriverGlobals());
+
+        //
+        // Now that we have set the state of the parent, any child which checks
+        // the power state after we have released the lock will be able to
+        // power up immediately.  We now need to unblock all children which
+        // checked the parent state before this function was called by posting
+        // a PowerParentToD0 event to each child (regardless of the PDO device
+        // power state).
+        //
+        PowerPolicyPostParentToD0ToChildren();
+    }
+    else
+    {
+        //
+        // Since we are not the power policy owner for the parent device,
+        // we cannot make any guarantees about the child being in D0 while
+        // the parent is in D0 so we do not call PowerPostParentToD0ToChildren().
+        // Additionally in PowerPolicyCanChildPowerUp(), if the parent (this)
+        // device is not the PPO, we don't even check the parent D state before
+        // powering up the child.
+        //
+        DO_NOTHING();
+    }
+}
+
+VOID
+FxPkgPnp::PowerPolicyPostParentToD0ToChildren(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Indicates to all of the children that the parent is in D0
+
+Arguments:
+    None
+
+Return Value:
+    None.
+
+  --*/
+{
+    FxTransactionedEntry* ple;
+
+    ASSERT(IsPowerPolicyOwner());
+
+    if (m_EnumInfo != NULL)
+    {
+        m_EnumInfo->m_ChildListList.LockForEnum(GetDriverGlobals());
+
+        ple = NULL;
+        while ((ple = m_EnumInfo->m_ChildListList.GetNextEntry(ple)) != NULL)
+        {
+            ((FxChildList*) ple->GetTransactionedObject())->PostParentToD0();
+        }
+
+        m_EnumInfo->m_ChildListList.UnlockFromEnum(GetDriverGlobals());
+    }
 }

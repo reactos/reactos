@@ -2686,6 +2686,16 @@ private:
         __in ULONG NotifyFlags
         );
 
+    VOID
+    PowerPolicyChildrenCanPowerUp(
+        VOID
+        );
+
+    VOID
+    PowerPolicyPostParentToD0ToChildren(
+        VOID
+        );
+
 //
 // Start of members
 //

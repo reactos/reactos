@@ -83,7 +83,94 @@ enum FxChildListScanTagStates {
     ScanTagFinished,
 };
 
+class FxChildList;
+
 struct FxDeviceDescriptionEntry : public FxStump {
+    
+    friend class FxDevice;
+    friend class FxChildList;
+
+public:
+    FxDeviceDescriptionEntry(
+        __inout FxChildList* DeviceList,
+        __in ULONG IdentificationDescriptionSize,
+        __in ULONG AddressDescriptionSize
+        );
+
+    ~FxDeviceDescriptionEntry();
+
+    _Must_inspect_result_
+    PVOID
+    operator new(
+        __in size_t AllocatorBlock,
+        __in PFX_DRIVER_GLOBALS DriverGlobals,
+        __in size_t TotalDescriptionSize
+        );
+
+    FxChildList*
+    GetParentList(
+        VOID
+        )
+    {
+        return m_DeviceList;
+    }
+
+
+    PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER
+    GetId(
+        VOID
+        )
+    {
+        return m_IdentificationDescription;
+    }
+
+protected:
+    static
+    FxDeviceDescriptionEntry*
+    _FromDescriptionLink(
+        __in PLIST_ENTRY Link
+        )
+    {
+        return CONTAINING_RECORD(Link,
+                                 FxDeviceDescriptionEntry,
+                                 m_DescriptionLink);
+    }
+
+    static
+    FxDeviceDescriptionEntry*
+    _FromModificationLink(
+        __in PLIST_ENTRY Link
+        )
+    {
+        return CONTAINING_RECORD(Link,
+                                 FxDeviceDescriptionEntry,
+                                 m_ModificationLink);
+    }
+
+protected:
+    LIST_ENTRY m_DescriptionLink;
+
+    //FxChildListDescriptionState m_DescriptionState;
+
+    PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER m_IdentificationDescription;
+
+    PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER m_AddressDescription;
+
+    LIST_ENTRY m_ModificationLink;
+
+    //FxChildListModificationState m_ModificationState;
+
+    CfxDevice* m_Pdo;
+
+    FxChildList* m_DeviceList;
+
+    BOOLEAN m_FoundInLastScan;
+
+    BOOLEAN m_ProcessingSurpriseRemove;
+
+    BOOLEAN m_PendingDeleteOnScanEnd;
+
+    //FxChildListReportedMissingCallbackState m_ReportedMissingCallbackState;
 };
 
 class FxChildList : public FxNonPagedObject {
@@ -128,6 +215,11 @@ public:
         m_EvtScanForChildren.Invoke(GetHandle());
     }
 
+    VOID
+    PostParentToD0(
+        VOID
+        );
+
 protected:
 
     FxChildList(
@@ -141,6 +233,7 @@ protected:
     Initialize(
         __in PWDF_CHILD_LIST_CONFIG Config
         );
+        
 
 public:
     //

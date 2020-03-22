@@ -227,3 +227,33 @@ FxChildList::_ComputeTotalDescriptionSize(
 
     return STATUS_SUCCESS;
 }
+
+VOID
+FxChildList::PostParentToD0(
+    VOID
+    )
+{
+    FxDeviceDescriptionEntry* pEntry;
+    PLIST_ENTRY ple;
+    KIRQL irql;
+
+    KeAcquireSpinLock(&m_ListLock, &irql);
+    for (ple = m_DescriptionListHead.Flink;
+         ple != &m_DescriptionListHead;
+         ple = ple->Flink)
+    {
+        pEntry = FxDeviceDescriptionEntry::_FromDescriptionLink(ple);
+
+        if (pEntry->m_PendingDeleteOnScanEnd)
+        {
+            COVERAGE_TRAP();
+            continue;
+        }
+
+        if (pEntry->m_Pdo != NULL)
+        {
+            pEntry->m_Pdo->m_PkgPnp->PowerProcessEvent(PowerParentToD0);
+        }
+    }
+    KeReleaseSpinLock(&m_ListLock, irql);
+}
