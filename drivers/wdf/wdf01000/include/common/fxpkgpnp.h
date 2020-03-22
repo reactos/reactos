@@ -3098,6 +3098,42 @@ protected:
         return &m_WdfPnpStates[WdfDevStateNormalize(State) - WdfDevStatePnpObjectCreated];
     }
 
+    PNP_DEVICE_STATE
+    HandleQueryPnpDeviceState(
+        __in PNP_DEVICE_STATE PnpDeviceState
+        );
+
+    LONG
+    GetPnpStateInternal(
+        VOID
+        );
+
+    LONG
+    GetUsageCount(
+        // __range(WdfSpecialFilePaging, WdfSpecialFileBoot)
+        __in ULONG Usage
+        )
+    {
+        return m_SpecialFileCount[Usage-1];
+    }
+
+    BOOLEAN
+    IsInSpecialUse(
+        VOID
+        )
+    {
+        if (GetUsageCount(WdfSpecialFilePaging) == 0 &&
+            GetUsageCount(WdfSpecialFileHibernation) == 0 &&
+            GetUsageCount(WdfSpecialFileDump) == 0)
+        {
+            return FALSE;
+        }
+        else
+        {
+            return TRUE;
+        }
+    }
+
 };
 
 __inline

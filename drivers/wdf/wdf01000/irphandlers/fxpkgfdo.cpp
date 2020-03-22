@@ -1153,8 +1153,39 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    FxPkgFdo* pThis;
+    NTSTATUS status;
+
+    pThis = (FxPkgFdo*) This;
+
+    status = pThis->SendIrpSynchronously(Irp);
+
+    if (status == STATUS_NOT_SUPPORTED)
+    {
+        //
+        // Morph into a successful code so that we process the request
+        //
+        status = STATUS_SUCCESS;
+        Irp->SetStatus(status);
+    }
+
+    if (NT_SUCCESS(status))
+    {
+        pThis->HandleQueryPnpDeviceStateCompletion(Irp);
+    }
+    else
+    {
+        DoTraceLevelMessage(
+            This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "Lower stack returned error for query pnp device state, %!STATUS!",
+            status);
+    }
+
+    //
+    // Since we already sent the request down the stack, we must complete it 
+    // now.
+    //
+    return pThis->CompletePnpRequest(Irp, status);
 }
 
 _Must_inspect_result_
@@ -1731,4 +1762,36 @@ Return Value:
     }
 
     return status;
+}
+
+VOID
+FxPkgFdo::HandleQueryPnpDeviceStateCompletion(
+    __inout FxIrp *Irp
+    )
+{
+    PNP_DEVICE_STATE pnpDeviceState;
+
+    DoTraceLevelMessage(
+        GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+        "Entering QueryPnpDeviceState completion handler");
+
+    pnpDeviceState = HandleQueryPnpDeviceState(
+        (PNP_DEVICE_STATE) Irp->GetInformation()
+        );
+
+    Irp->SetInformation((ULONG_PTR) pnpDeviceState);
+
+    DoTraceLevelMessage(
+        GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+        "WDFDEVICE 0x%p !devobj 0x%p returning PNP_DEVICE_STATE 0x%d IRP 0x%p",
+        m_Device->GetHandle(), 
+        m_Device->GetDeviceObject(),
+        pnpDeviceState,
+        Irp->GetIrp());
+
+    DoTraceLevelMessage(
+        GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+        "Exiting QueryPnpDeviceState completion handler");
+
+    return;
 }

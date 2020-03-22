@@ -306,6 +306,11 @@ private:
         __inout PVOID Context
         );
 
+    VOID
+    HandleQueryPnpDeviceStateCompletion(
+        __inout FxIrp *Irp
+        );
+
     _Must_inspect_result_
     virtual
     NTSTATUS

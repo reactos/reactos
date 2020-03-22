@@ -2505,3 +2505,136 @@ Return Value:
 
     return STATUS_SUCCESS;
 }
+
+PNP_DEVICE_STATE
+FxPkgPnp::HandleQueryPnpDeviceState(
+    __in PNP_DEVICE_STATE PnpDeviceState
+    )
+
+/*++
+
+Routine Description:
+
+    This function handled IRP_MN_QUERY_DEVICE_STATE.  Most of the bits are
+    just copied from internal Framework state.
+
+Arguments:
+
+    PnpDeviceState - Bitfield that will be returned to the sender of the IRP.
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    LONG state;
+
+    state = GetPnpStateInternal();
+
+    //
+    // Return device state set by driver.
+    //
+    SET_PNP_DEVICE_STATE_BIT(&PnpDeviceState,
+                             PNP_DEVICE_DISABLED,
+                             state,
+                             Disabled);
+    SET_PNP_DEVICE_STATE_BIT(&PnpDeviceState,
+                             PNP_DEVICE_DONT_DISPLAY_IN_UI,
+                             state,
+                             DontDisplayInUI);
+    SET_PNP_DEVICE_STATE_BIT(&PnpDeviceState,
+                             PNP_DEVICE_FAILED,
+                             state,
+                             Failed);
+    SET_PNP_DEVICE_STATE_BIT(&PnpDeviceState,
+                             PNP_DEVICE_NOT_DISABLEABLE,
+                             state,
+                             NotDisableable);
+    SET_PNP_DEVICE_STATE_BIT(&PnpDeviceState,
+                             PNP_DEVICE_REMOVED,
+                             state,
+                             Removed);
+    SET_PNP_DEVICE_STATE_BIT(&PnpDeviceState,
+                             PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED,
+                             state,
+                             ResourcesChanged);
+
+    if ((state & FxPnpStateDontDisplayInUIMask) == FxPnpStateDontDisplayInUIUseDefault)
+    {
+        LONG caps;
+
+        //
+        // Mask off all caps except for NoDispalyInUI
+        //
+        caps = GetPnpCapsInternal() & FxPnpCapNoDisplayInUIMask;
+
+        //
+        // If the driver didn't specify pnp state, see if they specified no
+        // display as a capability.  For raw PDOs and just usability, it is not
+        // always clear to the driver writer that they must set both the pnp cap
+        // and the pnp state for the no display in UI property to stick after
+        // the device has been started.
+        //
+        if (caps == FxPnpCapNoDisplayInUITrue)
+        {
+            PnpDeviceState |= PNP_DEVICE_DONT_DISPLAY_IN_UI;
+        }
+        else if (caps == FxPnpCapNoDisplayInUIFalse)
+        {
+            PnpDeviceState &= ~PNP_DEVICE_DONT_DISPLAY_IN_UI;
+        }
+    }
+
+    //
+    // Return device state maintained by frameworks.
+    //
+    if (IsInSpecialUse())
+    {
+        PnpDeviceState |= PNP_DEVICE_NOT_DISABLEABLE;
+    }
+
+    //
+    // If there is an internal failure, then indicate that up to pnp.
+    //
+    if (m_InternalFailure || m_Failed)
+    {
+        PnpDeviceState |= PNP_DEVICE_FAILED;
+    }
+
+    return PnpDeviceState;
+}
+
+LONG
+FxPkgPnp::GetPnpStateInternal(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Returns the pnp device state encoded into a ULONG.  This state is the state
+    that is reported to PNp via IRP_MN_QUERY_PNP_DEVICE_STATE after it has been
+    decoded into the bits pnp expects
+
+Arguments:
+    None
+
+Return Value:
+    the current state bits
+
+  --*/
+{
+    LONG state;
+    KIRQL irql;
+
+    //
+    // State is shared with the caps bits.  Use a lock to guard against
+    // corruption of the value between these 2 values
+    //
+    Lock(&irql);
+    state = m_PnpStateAndCaps.Value & FxPnpStateMask;
+    Unlock(irql);
+
+    return state;
+}
