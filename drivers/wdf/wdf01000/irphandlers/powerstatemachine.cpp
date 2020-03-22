@@ -1529,8 +1529,17 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    if ((This->m_Device->GetDeviceObjectFlags() & DO_POWER_PAGABLE) == 0)
+    {
+        //
+        // We are non pageable, go to that state now
+        //
+        COVERAGE_TRAP();
+
+        return WdfDevStatePowerDecideD0State;
+    }
+
+    return WdfDevStatePowerNull;
 }
 
 WDF_DEVICE_POWER_STATE
