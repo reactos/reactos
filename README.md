@@ -36,7 +36,6 @@
 [ReactOS Git mirror](https://git.reactos.org) &bull; 
 [Testman](https://reactos.org/testman/)
 
-
 ## What is ReactOS?
 
 ReactOS™ is an Open Source effort to develop a quality operating system that is compatible with applications and drivers written for the Microsoft® Windows™ NT family of operating systems (NT4, 2000, XP, 2003, Vista, Seven).
@@ -91,7 +90,7 @@ See ["File Bugs"](https://www.reactos.org/wiki/File_Bugs) for a guide.
 
 __NOTE:__ The bug tracker is _not_ for discussions. Please use `#reactos` Freenode IRC channel or our [forum](https://reactos.org/forum).
 
-## Contributing  ![prwelcome.badge]
+## Contributing [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/reactos/reactos) &bull; ![prwelcome.badge]
 
 We are always looking for developers! Check [how to contribute](CONTRIBUTING.md) if you are willing to participate.
 
