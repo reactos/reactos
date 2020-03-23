@@ -1,9 +1,9 @@
 /*
  * PROJECT:         ReactOS Kernel
- * COPYRIGHT:       GPL - See COPYING in the top level directory
+ * COPYRIGHT:       GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * FILE:            ntoskrnl/io/debug.c
  * PURPOSE:         Useful functions for debugging IO and PNP managers
- * PROGRAMMERS:     
+ * PROGRAMMERS:     Copyright 2020 Vadim Galyant <vgal@rambler.ru>
  */
 
 #include <ntoskrnl.h>
@@ -311,103 +311,81 @@ NTAPI
 PipGetDeviceNodeStateName(
     _In_ PNP_DEVNODE_STATE State)
 {
-    PWSTR StateName;
-
     switch (State)
     {
         case DeviceNodeUnspecified:
-            StateName = L"DeviceNodeUnspecified";
-            break;
+            return L"DeviceNodeUnspecified";
 
         case DeviceNodeUninitialized:
-            StateName = L"DeviceNodeUninitialized";
-            break;
+            return L"DeviceNodeUninitialized";
 
         case DeviceNodeInitialized:
-            StateName = L"DeviceNodeInitialized";
-            break;
+            return L"DeviceNodeInitialized";
 
         case DeviceNodeDriversAdded:
-            StateName = L"DeviceNodeDriversAdded";
-            break;
+            return L"DeviceNodeDriversAdded";
 
         case DeviceNodeResourcesAssigned:
-            StateName = L"DeviceNodeResourcesAssigned";
-            break;
+            return L"DeviceNodeResourcesAssigned";
 
         case DeviceNodeStartPending:
-            StateName = L"DeviceNodeStartPending";
-            break;
+            return L"DeviceNodeStartPending";
 
         case DeviceNodeStartCompletion:
-            StateName = L"DeviceNodeStartCompletion";
-            break;
+            return L"DeviceNodeStartCompletion";
 
         case DeviceNodeStartPostWork:
-            StateName = L"DeviceNodeStartPostWork";
-            break;
+            return L"DeviceNodeStartPostWork";
 
         case DeviceNodeStarted:
-            StateName = L"DeviceNodeStarted";
-            break;
+            return L"DeviceNodeStarted";
 
         case DeviceNodeQueryStopped:
-            StateName = L"DeviceNodeQueryStopped";
-            break;
+            return L"DeviceNodeQueryStopped";
 
         case DeviceNodeStopped:
-            StateName = L"DeviceNodeStopped";
-            break;
+            return L"DeviceNodeStopped";
 
         case DeviceNodeRestartCompletion:
-            StateName = L"DeviceNodeRestartCompletion";
-            break;
+            return L"DeviceNodeRestartCompletion";
 
         case DeviceNodeEnumeratePending:
-            StateName = L"DeviceNodeEnumeratePending";
-            break;
+            return L"DeviceNodeEnumeratePending";
 
         case DeviceNodeEnumerateCompletion:
-            StateName = L"DeviceNodeEnumerateCompletion";
-            break;
+            return L"DeviceNodeEnumerateCompletion";
 
         case DeviceNodeAwaitingQueuedDeletion:
-            StateName = L"DeviceNodeAwaitingQueuedDeletion";
-            break;
+            return L"DeviceNodeAwaitingQueuedDeletion";
 
         case DeviceNodeAwaitingQueuedRemoval:
-            StateName = L"DeviceNodeAwaitingQueuedRemoval";
-            break;
+            return L"DeviceNodeAwaitingQueuedRemoval";
 
         case DeviceNodeQueryRemoved:
-            StateName = L"DeviceNodeQueryRemoved";
-            break;
+            return L"DeviceNodeQueryRemoved";
 
         case DeviceNodeRemovePendingCloses:
-            StateName = L"DeviceNodeRemovePendingCloses";
-            break;
+            return L"DeviceNodeRemovePendingCloses";
 
         case DeviceNodeRemoved:
-            StateName = L"DeviceNodeRemoved";
-            break;
+            return L"DeviceNodeRemoved";
 
         case DeviceNodeDeletePendingCloses:
-            StateName = L"DeviceNodeDeletePendingCloses";
-            break;
+            return L"DeviceNodeDeletePendingCloses";
 
         case DeviceNodeDeleted:
-            StateName = L"DeviceNodeDeleted";
-            break;
+            return L"DeviceNodeDeleted";
 
         default:
-            if (State != MaxDeviceNodeState)
-            {
-                DPRINT1("PipGetDeviceNodeStateName: State %X\n", State);
-            }
             break;
     }
 
-    return StateName;
+    if (State != MaxDeviceNodeState)
+    {
+        DPRINT1("PipGetDeviceNodeStateName: Unknown State %X\n", State);
+    }
+
+    return L"";
 }
 
 /* Dump list arbiters for the device node */
