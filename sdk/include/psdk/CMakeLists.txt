@@ -127,6 +127,7 @@ list(APPEND SOURCE
     vmr9.idl
 #   vmrender.idl
     vss.idl
+    vswriter.idl
     wbemcli.idl
     wbemdisp.idl
     wbemprov.idl
