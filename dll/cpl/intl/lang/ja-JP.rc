@@ -210,7 +210,7 @@ BEGIN
     IDS_ERROR_ANSI_CODE_PAGE "ANSIコードページの読み込みに問題がありました"
     IDS_ERROR_INT_KEY_REG "問題の開いているキー: HKCU\\Control Panel\\International"
     IDS_ERROR_DEF_INT_KEY_REG "問題の開いているキー: HKU\\.DEFAULT\\Control Panel\\International"
-    IDS_ERROR_NLS_KEY_REG "問題の開いているキー: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
-    IDS_ERROR_NLS_CODE_REG "問題の開いているキー: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_NLS_KEY_REG "問題の開いているキー: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language"
+    IDS_ERROR_NLS_CODE_REG "問題の開いているキー: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage"
     IDS_ERROR_INPUT_DLL "input.dllを開始できません"
 END

@@ -1020,7 +1020,7 @@ SetKeyboardLayoutName(HWND hwnd)
     HKEY hKey;
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Locale"),
+                     _T("SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale"),
                      0,
                      KEY_ALL_ACCESS,
                      &hKey))
@@ -1436,7 +1436,7 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
         *lpIndex = 85; /* fallback to GMT time zone */
 
         if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                          L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
+                          L"SYSTEM\\CurrentControlSet\\Control\\Nls\\Language",
                           0,
                           KEY_ALL_ACCESS,
                           &hKey))

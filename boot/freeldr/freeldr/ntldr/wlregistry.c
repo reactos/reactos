@@ -220,7 +220,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
 
     /* Open the CodePage key */
     rc = RegOpenKey(NULL,
-        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage",
+        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",
         &hKey);
     if (rc != ERROR_SUCCESS)
     {
@@ -268,7 +268,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
 
     /* Open the Language key */
     rc = RegOpenKey(NULL,
-        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
+        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language",
         &hKey);
     if (rc != ERROR_SUCCESS)
     {

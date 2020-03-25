@@ -361,7 +361,7 @@ SaveSystemSettings(
     }
 
     /* Set codepages */
-    ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage", &langKey);
+    ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage", &langKey);
     if (ret != ERROR_SUCCESS)
     {
         PrintErrorMsgBox(IDS_ERROR_NLS_CODE_REG);
@@ -378,7 +378,7 @@ SaveSystemSettings(
     valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
 
     /* Set language */
-    ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language", &langKey);
+    ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Nls\\Language", &langKey);
     if (ret != ERROR_SUCCESS)
     {
         PrintErrorMsgBox(IDS_ERROR_NLS_KEY_REG);

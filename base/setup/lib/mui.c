@@ -403,7 +403,7 @@ AddCodepageToRegistry(
 
     // Open the nls codepage key
     RtlInitUnicodeString(&KeyName,
-                         L"SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
+                         L"SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,

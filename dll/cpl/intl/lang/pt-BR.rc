@@ -207,7 +207,7 @@ BEGIN
     IDS_ERROR_ANSI_CODE_PAGE "Erro ao ler a tabela de conversão de página de código ANSI"
     IDS_ERROR_INT_KEY_REG "Erro ao abrir a chave: HKCU\\Control Panel\\International"
     IDS_ERROR_DEF_INT_KEY_REG "Erro ao abrir a chave: HKU\\.DEFAULT\\Control Panel\\International"
-    IDS_ERROR_NLS_KEY_REG "Erro ao abrir a chave: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
-    IDS_ERROR_NLS_CODE_REG "Erro ao abrir a chave: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_NLS_KEY_REG "Erro ao abrir a chave: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language"
+    IDS_ERROR_NLS_CODE_REG "Erro ao abrir a chave: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage"
     IDS_ERROR_INPUT_DLL "Não foi possível iniciar input.dll"
 END

@@ -1018,7 +1018,7 @@ ProcessLocaleRegistry(
 
     /* Open the NLS language key */
     RtlInitUnicodeString(&KeyName,
-                         L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language");
+                         L"SYSTEM\\CurrentControlSet\\Control\\Nls\\Language");
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
