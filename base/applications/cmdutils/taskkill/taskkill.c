@@ -19,9 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <psapi.h>
 #include <stdlib.h>
 #include <windows.h>
+#include <psapi.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
@@ -29,7 +29,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(taskkill);
 
-static BOOL force_termination = FALSE;
+static BOOL ForceTermination = FALSE;
 
 static WCHAR **ToKillTaskList;
 static unsigned int ToKillTaskCount;
@@ -39,8 +39,14 @@ static WCHAR opImage[] = L"im";
 static WCHAR opPID[] = L"pid";
 static WCHAR opHelp[] = L"?";
 static WCHAR opTerminateChildren[] = L"t";
-
-static PWCHAR opList[] = {opForceTerminate, opImage, opPID, opHelp, opTerminateChildren};
+	
+static PWCHAR opList[] = {
+	opForceTerminate,
+	opImage,
+	opPID,
+	opHelp,
+	opTerminateChildren
+};
 
 #define OP_PARAM_INVALID -1
 
@@ -50,20 +56,21 @@ static PWCHAR opList[] = {opForceTerminate, opImage, opPID, opHelp, opTerminateC
 #define OP_PARAM_HELP 3
 #define OP_PARAM_TERMITANE_CHILD 4
 
+	
 struct pid_close_info
 {
     DWORD pid;
     BOOL found;
 };
 
-static int
-TaskkillVPrintfW(const WCHAR *msg, __ms_va_list va_args)
+static int TaskkillVPrintfW(const WCHAR *msg, __ms_va_list va_args)
 {
     int wlen;
     DWORD count, ret;
     WCHAR msg_buffer[8192];
 
-    wlen = FormatMessageW(FORMAT_MESSAGE_FROM_STRING, msg, 0, 0, msg_buffer, ARRAY_SIZE(msg_buffer), &va_args);
+    wlen = FormatMessageW(FORMAT_MESSAGE_FROM_STRING, msg, 0, 0, msg_buffer,
+                          ARRAY_SIZE(msg_buffer), &va_args);
 
     ret = WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), msg_buffer, wlen, &count, NULL);
     if (!ret)
@@ -75,12 +82,14 @@ TaskkillVPrintfW(const WCHAR *msg, __ms_va_list va_args)
          * back to WriteFile(), assuming the console encoding is still the right
          * one in that case.
          */
-        len = WideCharToMultiByte(GetConsoleOutputCP(), 0, msg_buffer, wlen, NULL, 0, NULL, NULL);
+        len = WideCharToMultiByte(GetConsoleOutputCP(), 0, msg_buffer, wlen,
+            NULL, 0, NULL, NULL);
         msgA = HeapAlloc(GetProcessHeap(), 0, len);
         if (!msgA)
             return 0;
 
-        WideCharToMultiByte(GetConsoleOutputCP(), 0, msg_buffer, wlen, msgA, len, NULL, NULL);
+        WideCharToMultiByte(GetConsoleOutputCP(), 0, msg_buffer, wlen, msgA, len,
+            NULL, NULL);
         WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), msgA, len, &count, FALSE);
         HeapFree(GetProcessHeap(), 0, msgA);
     }
@@ -88,8 +97,7 @@ TaskkillVPrintfW(const WCHAR *msg, __ms_va_list va_args)
     return count;
 }
 
-static int WINAPIV
-TaskkillPrintfW(const WCHAR *msg, ...)
+static int WINAPIV TaskkillPrintfW(const WCHAR *msg, ...)
 {
     __ms_va_list va_args;
     int len;
@@ -101,8 +109,7 @@ TaskkillPrintfW(const WCHAR *msg, ...)
     return len;
 }
 
-static int WINAPIV
-TaskkillMessagePrintfW(int msg, ...)
+static int WINAPIV TaskkillMessagePrintfW(int msg, ...)
 {
     __ms_va_list va_args;
     WCHAR msg_buffer[8192];
@@ -117,10 +124,9 @@ TaskkillMessagePrintfW(int msg, ...)
     return len;
 }
 
-static int
-TaskkillMessage(int msg)
+static int TaskkillMessage(int msg)
 {
-    static const WCHAR formatW[] = {'%', '1', 0};
+    static const WCHAR formatW[] = {'%','1',0};
     WCHAR msg_buffer[8192];
 
     LoadStringW(GetModuleHandleW(NULL), msg, msg_buffer, ARRAY_SIZE(msg_buffer));
@@ -129,8 +135,7 @@ TaskkillMessage(int msg)
 }
 
 /* Post WM_CLOSE to all top-level windows belonging to the process with specified PID. */
-static BOOL CALLBACK
-PIDEnumProc(HWND hwnd, LPARAM lParam)
+static BOOL CALLBACK PIDEnumProc(HWND hwnd, LPARAM lParam)
 {
     struct pid_close_info *info = (struct pid_close_info *)lParam;
     DWORD hwnd_pid;
@@ -146,8 +151,7 @@ PIDEnumProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
-static DWORD *
-EnumerateProcesses(DWORD *list_count)
+static DWORD *EnumerateProcesses(DWORD *list_count)
 {
     DWORD *pid_list, alloc_bytes = 1024 * sizeof(*pid_list), needed_bytes;
 
@@ -187,8 +191,7 @@ EnumerateProcesses(DWORD *list_count)
     return pid_list;
 }
 
-static BOOL
-GetProcessNameFromPID(DWORD pid, WCHAR *buf, DWORD chars)
+static BOOL GetProcessNameFromPID(DWORD pid, WCHAR *buf, DWORD chars)
 {
     HANDLE process;
     HMODULE module;
@@ -228,8 +231,7 @@ GetProcessNameFromPID(DWORD pid, WCHAR *buf, DWORD chars)
  *
  * A PID of zero causes taskkill to warn about the inability to terminate
  * system processes. */
-static int
-SendCloseMessages(void)
+static int SendCloseMessages(void)
 {
     DWORD *pid_list, pid_list_size;
     DWORD self_pid = GetCurrentProcessId();
@@ -261,7 +263,7 @@ SendCloseMessages(void)
         if (is_numeric)
         {
             DWORD pid = atoiW(ToKillTaskList[i]);
-            struct pid_close_info info = {pid};
+            struct pid_close_info info = { pid };
 
             if (pid == self_pid)
             {
@@ -291,7 +293,7 @@ SendCloseMessages(void)
                 if (GetProcessNameFromPID(pid_list[index], process_name, MAX_PATH) &&
                     !strcmpiW(process_name, ToKillTaskList[i]))
                 {
-                    struct pid_close_info info = {pid_list[index]};
+                    struct pid_close_info info = { pid_list[index] };
 
                     found_process = TRUE;
                     if (pid_list[index] == self_pid)
@@ -318,8 +320,7 @@ SendCloseMessages(void)
     return status_code;
 }
 
-static int
-TerminateToKillProcesses(void)
+static int TerminateProcesses(void)
 {
     DWORD *pid_list, pid_list_size;
     DWORD self_pid = GetCurrentProcessId();
@@ -434,14 +435,14 @@ TerminateToKillProcesses(void)
     return status_code;
 }
 
-static BOOL
-ToKillTaskListAdd(WCHAR *name)
+static BOOL ToKillTaskListAdd(WCHAR *name)
 {
     static unsigned int list_size = 16;
 
     if (!ToKillTaskList)
     {
-        ToKillTaskList = HeapAlloc(GetProcessHeap(), 0, list_size * sizeof(*ToKillTaskList));
+        ToKillTaskList = HeapAlloc(GetProcessHeap(), 0,
+                                   list_size * sizeof(*ToKillTaskList));
         if (!ToKillTaskList)
             return FALSE;
     }
@@ -450,7 +451,8 @@ ToKillTaskListAdd(WCHAR *name)
         void *realloc_list;
 
         list_size *= 2;
-        realloc_list = HeapReAlloc(GetProcessHeap(), 0, ToKillTaskList, list_size * sizeof(*ToKillTaskList));
+        realloc_list = HeapReAlloc(GetProcessHeap(), 0, ToKillTaskList,
+                                   list_size * sizeof(*ToKillTaskList));
         if (!realloc_list)
             return FALSE;
 
@@ -461,33 +463,31 @@ ToKillTaskListAdd(WCHAR *name)
     return TRUE;
 }
 
-static int
-GetArgumentType(WCHAR *argument)
+static int GetArgumentType(WCHAR *argument)
 {
-    int i;
-
-    if (argument[0] != L'/' && argument[0] != L'-')
-    {
-        return OP_PARAM_INVALID;
-    }
+	int i;
+	
+	if (argument[0] != L'/' && argument[0] != L'-')
+	{
+		return OP_PARAM_INVALID;
+	}
     argument++;
-
-    for (i = 0; i < _countof(opList); i++)
-    {
-        if (!strcmpiW(opList[i], argument))
-        {
-            return i;
-        }
-    }
-    return OP_PARAM_INVALID;
+	
+	for(i = 0; i < _countof(opList); i++)
+	{
+		if (!strcmpiW(opList[i], argument))
+		{
+			return i;
+		}
+	}
+	return OP_PARAM_INVALID;
 }
 
-/* FIXME
+/* FIXME 
 Argument T not supported
 
 */
-static BOOL
-ProcessArguments(int argc, WCHAR *argv[])
+static BOOL ProcessArguments(int argc, WCHAR *argv[])
 {
     BOOL has_im = FALSE, has_pid = FALSE, has_help = FALSE;
 
@@ -496,111 +496,108 @@ ProcessArguments(int argc, WCHAR *argv[])
         int i;
         for (i = 1; i < argc; i++)
         {
-            int Argument = GetArgumentType(argv[i]);
+			int Argument = GetArgumentType(argv[i]);
 
-            switch (Argument)
-            {
-                case OP_PARAM_FORCE_TERMINATE:
-                {
-                    if (force_termination == TRUE)
-                    {
-                        // -f already specified
-                        TaskkillMessagePrintfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
-                        TaskkillMessage(STRING_USAGE);
-                        return FALSE;
-                    }
-                    force_termination = TRUE;
-                    break;
-                }
-                case OP_PARAM_IMAGE:
-                case OP_PARAM_PID:
-                {
-                    if (!argv[i + 1])
-                    {
-                        TaskkillMessagePrintfW(STRING_MISSING_PARAM, argv[i]);
-                        TaskkillMessage(STRING_USAGE);
-                        return FALSE;
-                    }
+			switch(Argument)
+			{
+				case OP_PARAM_FORCE_TERMINATE:
+				{
+					if(ForceTermination == TRUE)
+					{
+						// -f already specified
+						TaskkillMessagePrintfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
+						TaskkillMessage(STRING_USAGE);
+						return FALSE;
+					}
+					ForceTermination = TRUE;
+					break;
+				}
+				case OP_PARAM_IMAGE:
+				case OP_PARAM_PID:
+				{
+					if (!argv[i + 1])
+					{
+						TaskkillMessagePrintfW(STRING_MISSING_PARAM, argv[i]);
+						TaskkillMessage(STRING_USAGE);
+						return FALSE;
+					}
+				
+					if (Argument == OP_PARAM_IMAGE) has_im = TRUE;
+					if (Argument == OP_PARAM_PID) has_pid = TRUE;
 
-                    if (Argument == OP_PARAM_IMAGE)
-                        has_im = TRUE;
-                    if (Argument == OP_PARAM_PID)
-                        has_pid = TRUE;
+					if (has_im && has_pid)
+					{
+						TaskkillMessage(STRING_MUTUAL_EXCLUSIVE);
+						TaskkillMessage(STRING_USAGE);
+						return FALSE;
+					}
 
-                    if (has_im && has_pid)
-                    {
-                        TaskkillMessage(STRING_MUTUAL_EXCLUSIVE);
-                        TaskkillMessage(STRING_USAGE);
-                        return FALSE;
-                    }
-
-                    if (GetArgumentType(argv[i + 1]) != OP_PARAM_INVALID)
-                    {
-                        TaskkillMessagePrintfW(STRING_MISSING_PARAM, argv[i]);
-                        TaskkillMessage(STRING_USAGE);
-                        return FALSE;
-                    }
-
-                    if (!ToKillTaskListAdd(argv[++i])) // add next parameters to ToKillTaskList
-                        return FALSE;
-
-                    break;
-                }
-                case OP_PARAM_HELP:
-                {
-                    if (has_help == TRUE)
-                    {
-                        // -? already specified
-                        TaskkillMessagePrintfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
-                        TaskkillMessage(STRING_USAGE);
-                        return FALSE;
-                    }
-                    has_help = TRUE;
-                    break;
-                }
-                case OP_PARAM_TERMITANE_CHILD:
-                {
-                    WINE_FIXME("argument T not supported\n");
-                    break;
-                }
-                case OP_PARAM_INVALID:
-                default:
-                {
-                    TaskkillMessage(STRING_INVALID_OPTION);
-                    TaskkillMessage(STRING_USAGE);
-                    return FALSE;
-                }
-            }
+					if(GetArgumentType(argv[i + 1]) != OP_PARAM_INVALID)
+					{
+						TaskkillMessagePrintfW(STRING_MISSING_PARAM, argv[i]);
+						TaskkillMessage(STRING_USAGE);
+						return FALSE;
+					}
+					
+					if (!ToKillTaskListAdd(argv[++i])) // add next parameters to ToKillTaskList
+						return FALSE;
+					
+					break;
+				}
+				case OP_PARAM_HELP:
+				{
+					if(has_help == TRUE)
+					{
+						// -? already specified
+						TaskkillMessagePrintfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
+						TaskkillMessage(STRING_USAGE);
+						return FALSE;
+					}
+					has_help = TRUE;
+					break;
+				}
+				case OP_PARAM_TERMITANE_CHILD:
+				{
+					WINE_FIXME("argument T not supported\n");
+					break;
+				}
+				case OP_PARAM_INVALID:
+				default:
+				{
+					TaskkillMessage(STRING_INVALID_OPTION);
+					TaskkillMessage(STRING_USAGE);
+					return FALSE;
+				}
+			}
         }
     }
-
-    if (has_help)
-    {
-        if (argc > 2) // any parameters other than -? is specified
-        {
-            TaskkillMessage(STRING_INVALID_SYNTAX);
-            TaskkillMessage(STRING_USAGE);
-            return FALSE;
-        }
-        else
-        {
-            TaskkillMessage(STRING_USAGE);
-            exit(0);
-        }
-    }
-    else if ((!has_im) && (!has_pid)) // has_help == FALSE
-    {
-        // both has_im and has_pid are missing (maybe -fi option is missing too, if implemented later)
-        TaskkillMessage(STRING_MISSING_OPTION);
+	
+    if(has_help)
+	{
+		if(argc > 2) // any parameters other than -? is specified 
+		{
+			TaskkillMessage(STRING_INVALID_SYNTAX);
+			TaskkillMessage(STRING_USAGE);
+			return FALSE;
+		}
+		else
+		{
+			TaskkillMessage(STRING_USAGE);
+			exit(0);
+		}
+	}
+	else if((!has_im) && (!has_pid)) // has_help == FALSE
+	{
+		// both has_im and has_pid are missing (maybe -fi option is missing too, if implemented later)
+		TaskkillMessage(STRING_MISSING_OPTION);
         TaskkillMessage(STRING_USAGE);
         return FALSE;
-    }
-
+	}
+	
     return TRUE;
 }
 
-int
-wmain(int argc, WCHAR *argv[])
+int wmain(int argc, WCHAR *argv[])
 {
     int StatusCode = 0;
 
@@ -610,8 +607,8 @@ wmain(int argc, WCHAR *argv[])
         return 1;
     }
 
-    if (force_termination)
-        StatusCode = TerminateToKillProcesses();
+    if (ForceTermination)
+        StatusCode = TerminateProcesses();
     else
         StatusCode = SendCloseMessages();
 
