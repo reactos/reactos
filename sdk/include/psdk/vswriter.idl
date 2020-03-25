@@ -15,9 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
-#ifndef __WINE_VSWRITER_H
-#define __WINE_VSWRITER_H
+import "oaidl.idl";
 
 typedef enum
 {
@@ -44,4 +42,17 @@ typedef enum
     VSS_AWS_THIS_IS_ALTERNATE_WRITER
 } VSS_ALTERNATE_WRITER_STATE;
 
-#endif /* ___WINE_VSWRITER_H */
+typedef enum VSS_COMPONENT_TYPE
+{
+    VSS_CT_UNDEFINED,
+    VSS_CT_DATABASE,
+    VSS_CT_FILEGROUP
+} VSS_COMPONENT_TYPE;
+
+typedef enum VSS_FILE_RESTORE_STATUS
+{
+    VSS_RS_UNDEFINED,
+    VSS_RS_NONE,
+    VSS_RS_ALL,
+    VSS_RS_FAILED
+} VSS_FILE_RESTORE_STATUS;
