@@ -8,7 +8,7 @@ LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 /* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
-    IDS_PROFILEPATH "%SistemDrive%\\Dokumente dhe Cilësime"
+    IDS_PROFILEPATH "%SystemDrive%\\Dokumente dhe Cilësime"
     IDS_APPDATA "Aplikation Data"
     IDS_DESKTOP "Desktop"
     IDS_FAVORITES "Preferuara"
