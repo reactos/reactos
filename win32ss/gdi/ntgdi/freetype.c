@@ -5830,7 +5830,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     return GotCount;
 }
 
-FORCEINLINE
+static inline
 LONG
 ScaleLong(LONG lValue, PFLOATOBJ pef)
 {
