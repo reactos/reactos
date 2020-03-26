@@ -79,6 +79,7 @@
 #include "hal.h"
 #include "hdl.h"
 #include "arch/intrin_i.h"
+#include <arbiter.h>
 
 /*
  * generic information class probing code

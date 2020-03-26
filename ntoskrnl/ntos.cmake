@@ -1,6 +1,7 @@
 
 include_directories(
     ${REACTOS_SOURCE_DIR}
+    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/arbiter
     ${REACTOS_SOURCE_DIR}/sdk/lib/cmlib
     include
     ${CMAKE_CURRENT_BINARY_DIR}/include
@@ -151,6 +152,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/symlink.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/util.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/volume.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/arbs.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/plugplay.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpdma.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpinit.c
