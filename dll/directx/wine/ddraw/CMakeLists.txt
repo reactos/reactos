@@ -1,6 +1,7 @@
 
 add_definitions(
     -D__WINESRC__
+    -D__ROS_LONG64__
     -DUSE_WIN32_OPENGL)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)

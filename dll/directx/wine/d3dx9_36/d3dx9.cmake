@@ -32,6 +32,7 @@ function(add_d3dx9_target __version)
         ${CMAKE_CURRENT_BINARY_DIR}/${module}_stubs.c
         ${CMAKE_CURRENT_BINARY_DIR}/${module}.def)
     
+    add_definitions(-D__ROS_LONG64__)
     set_module_type(${module} win32dll)
     add_dependencies(${module} d3d_idl_headers)
     target_link_libraries(${module} dxguid wine)
