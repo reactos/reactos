@@ -65,9 +65,9 @@
 #ifdef LANGUAGE_BN_BD
     #include "lang/bn-BD.h"
 #endif
-// #ifdef LANGUAGE_BN_IN
-    // #include "lang/bn-IN.h"
-// #endif
+#ifdef LANGUAGE_BN_IN
+    #include "lang/bn-IN.h"
+#endif
 // #ifdef LANGUAGE_CA_ES
     // #include "lang/ca-ES.h"
 // #endif
