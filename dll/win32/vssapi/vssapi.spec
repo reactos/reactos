@@ -7,7 +7,8 @@
 @ cdecl -arch=i386 ??1CVssWriter@@UAE@XZ(ptr) VSSAPI_CVssWriter_dtor
 @ stub ?AreComponentsSelected@CVssJetWriter@@IBG_NXZ
 @ stub ?AreComponentsSelected@CVssWriter@@IBG_NXZ
-@ stdcall ?CreateVssBackupComponents@@YGJPAPAVIVssBackupComponents@@@Z(ptr) VSSAPI_CreateVssBackupComponents
+@ stdcall -arch=i386 ?CreateVssBackupComponents@@YGJPAPAVIVssBackupComponents@@@Z(ptr) VSSAPI_CreateVssBackupComponents
+@ stdcall -arch=amd64 ?CreateVssBackupComponents@@YAJPEAPEAVIVssBackupComponents@@@Z(ptr) VSSAPI_CreateVssBackupComponents
 @ stub ?CreateVssExamineWriterMetadata@@YGJPAGPAPAVIVssExamineWriterMetadata@@@Z
 @ stub ?CreateVssSnapshotSetDescription@@YGJU_GUID@@JPAPAVIVssSnapshotSetDescription@@@Z
 @ stub ?GetBackupType@CVssJetWriter@@IBG?AW4_VSS_BACKUP_TYPE@@XZ
