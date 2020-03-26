@@ -1127,6 +1127,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0445",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0456",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","048f",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0490",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0845",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","Default",0x00000000,"0409"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","InstallLanguage",0x00000000,"0409"
 
