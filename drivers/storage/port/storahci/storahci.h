@@ -581,14 +581,14 @@ AhciAdapterReset (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension
     );
 
-__inline
+FORCEINLINE
 VOID
 AhciZeroMemory (
     __out PCHAR Buffer,
     __in ULONG BufferSize
     );
 
-__inline
+FORCEINLINE
 BOOLEAN
 IsPortValid (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
@@ -632,14 +632,14 @@ UCHAR DeviceReportLuns (
     __in PCDB Cdb
     );
 
-__inline
+FORCEINLINE
 BOOLEAN
 AddQueue (
     __inout PAHCI_QUEUE Queue,
     __in PVOID Srb
     );
 
-__inline
+FORCEINLINE
 PVOID
 RemoveQueue (
     __inout PAHCI_QUEUE Queue
@@ -651,7 +651,7 @@ GetSrbExtension(
     __in PSCSI_REQUEST_BLOCK Srb
     );
 
-__inline
+FORCEINLINE
 ULONG64
 AhciGetLba (
     __in PCDB Cdb,
