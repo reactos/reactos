@@ -247,7 +247,7 @@ RtlConvertUlongToLuid(
 //
 // This macro does nothing in user mode
 //
-#define RTL_PAGED_CODE NOP_FUNCTION
+#define RTL_PAGED_CODE()
 
 #endif
 
