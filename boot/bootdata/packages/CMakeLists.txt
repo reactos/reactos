@@ -31,20 +31,37 @@ add_custom_command(
                              -D SRC2=${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.$<CONFIG>.dyn
                              -D DST=${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.maydiff
                              -P ${CMAKE_CURRENT_BINARY_DIR}/concat.cmake
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
                              ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.maydiff
                              ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/reactos.dff.in
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.$<CONFIG>.dyn)
 
-add_custom_target(
-    reactos_cab_inf
+# reactos.inf. We want this command to be always executed, in case someone added an optional file between two builds.
+# So we pretend it generates another file although it will never do.
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos_real.inf ${CMAKE_CURRENT_BINARY_DIR}/__some_non_existent_file
     COMMAND native-cabman -C ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff -L ${CMAKE_CURRENT_BINARY_DIR} -I -P ${REACTOS_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/reactos_real.inf
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff native-cabman
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf)
 
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
+    COMMAND native-cabman -C ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff -RC ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf -N -P ${REACTOS_SOURCE_DIR}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos_real.inf native-cabman $<TARGET_PROPERTY:reactos_cab,CAB_DEPENDENCIES>)
+
+add_custom_target(reactos_cab DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab)
+
 add_cd_file(
-    TARGET reactos_cab_inf
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
+    TARGET reactos_cab
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
+    DESTINATION reactos
+    NO_CAB FOR bootcd regtest)
+
+add_cd_file(
+    TARGET reactos_cab
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos_real.inf
+    NAME_ON_CD reactos.inf
     DESTINATION reactos
     NO_CAB FOR bootcd regtest)
