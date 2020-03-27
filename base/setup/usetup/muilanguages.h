@@ -62,9 +62,9 @@
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.h"
 #endif
-#ifdef LANGUAGE_BN_BD
-    #include "lang/bn-BD.h"
-#endif
+// #ifdef LANGUAGE_BN_BD
+    // #include "lang/bn-BD.h"
+// #endif
 // #ifdef LANGUAGE_BN_IN
     // #include "lang/bn-IN.h"
 // #endif
@@ -484,10 +484,10 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"00000423", L"Belarusian", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_BN_BD
-    {L"00000845", L"Bengali (Bangladesh)", bnBDPages, bnBDErrorEntries, bnBDStrings},
+    {L"00000845", L"Bengali (Bangladesh)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_BN_IN
-    {L"00000445", L"Bengali (India)", bnBDPages, bnBDErrorEntries, bnBDStrings},
+    {L"00000445", L"Bengali (India)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_BG_BG
     {L"00000402", L"Bulgarian", bgBGPages, bgBGErrorEntries, bgBGStrings},
