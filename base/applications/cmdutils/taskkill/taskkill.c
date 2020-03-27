@@ -29,10 +29,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(taskkill);
 
-static BOOL bForceTermination = FALSE;
+static BOOL force_termination = FALSE;
 
-static WCHAR **ToKillTaskList;
-static unsigned int ToKillTaskCount;
+static WCHAR **task_list;
+static unsigned int task_count;
 
 static WCHAR opForceTerminate[] = L"f";
 static WCHAR opImage[] = L"im";
@@ -57,7 +57,7 @@ struct pid_close_info
 };
 
 static int
-TaskkillVPrintfW(const WCHAR *msg, __ms_va_list va_args)
+taskkill_vprintfW(const WCHAR *msg, __ms_va_list va_args)
 {
     int wlen;
     DWORD count, ret;
@@ -89,20 +89,20 @@ TaskkillVPrintfW(const WCHAR *msg, __ms_va_list va_args)
 }
 
 static int WINAPIV
-TaskkillPrintfW(const WCHAR *msg, ...)
+taskkill_printfW(const WCHAR *msg, ...)
 {
     __ms_va_list va_args;
     int len;
 
     __ms_va_start(va_args, msg);
-    len = TaskkillVPrintfW(msg, va_args);
+    len = taskkill_vprintfW(msg, va_args);
     __ms_va_end(va_args);
 
     return len;
 }
 
 static int WINAPIV
-TaskkillMessagePrintfW(int msg, ...)
+taskkill_message_printfW(int msg, ...)
 {
     __ms_va_list va_args;
     WCHAR msg_buffer[8192];
@@ -111,26 +111,26 @@ TaskkillMessagePrintfW(int msg, ...)
     LoadStringW(GetModuleHandleW(NULL), msg, msg_buffer, ARRAY_SIZE(msg_buffer));
 
     __ms_va_start(va_args, msg);
-    len = TaskkillVPrintfW(msg_buffer, va_args);
+    len = taskkill_vprintfW(msg_buffer, va_args);
     __ms_va_end(va_args);
 
     return len;
 }
 
 static int
-TaskkillMessage(int msg)
+taskkill_message(int msg)
 {
     static const WCHAR formatW[] = {'%', '1', 0};
     WCHAR msg_buffer[8192];
 
     LoadStringW(GetModuleHandleW(NULL), msg, msg_buffer, ARRAY_SIZE(msg_buffer));
 
-    return TaskkillPrintfW(formatW, msg_buffer);
+    return taskkill_printfW(formatW, msg_buffer);
 }
 
 /* Post WM_CLOSE to all top-level windows belonging to the process with specified PID. */
 static BOOL CALLBACK
-PIDEnumProc(HWND hwnd, LPARAM lParam)
+pid_enum_proc(HWND hwnd, LPARAM lParam)
 {
     struct pid_close_info *info = (struct pid_close_info *)lParam;
     DWORD hwnd_pid;
@@ -147,7 +147,7 @@ PIDEnumProc(HWND hwnd, LPARAM lParam)
 }
 
 static PDWORD
-EnumerateProcesses(DWORD *list_count)
+enumerate_processes(DWORD *list_count)
 {
     DWORD *pid_list, alloc_bytes = 1024 * sizeof(*pid_list), needed_bytes;
 
@@ -188,7 +188,7 @@ EnumerateProcesses(DWORD *list_count)
 }
 
 static BOOL
-GetProcessNameFromPID(DWORD pid, WCHAR *buf, DWORD chars)
+get_process_name_from_pid(DWORD pid, WCHAR *buf, DWORD chars)
 {
     HANDLE process;
     HMODULE module;
@@ -217,8 +217,8 @@ GetProcessNameFromPID(DWORD pid, WCHAR *buf, DWORD chars)
 /* The implemented task enumeration and termination behavior does not
  * exactly match native behavior. On Windows:
  *
- * In the case of terminating by process Name, specifying a particular
- * process Name more times than the number of running instances causes
+ * In the case of terminating by process name, specifying a particular
+ * process name more times than the number of running instances causes
  * all instances to be terminated, but termination failure messages to
  * be printed as many times as the difference between the specification
  * quantity and the number of running instances.
@@ -230,188 +230,188 @@ GetProcessNameFromPID(DWORD pid, WCHAR *buf, DWORD chars)
  * system processes. */
 
 static int
-TerminateProcesses(BOOL bForceTerminate)
+terminate_processes(BOOL force_termination)
 {
-    DWORD *PIDList, PIDListSize;
-    DWORD SelfPID = GetCurrentProcessId();
+    DWORD *pid_list, pid_list_size;
+    DWORD self_pid = GetCurrentProcessId();
     unsigned int i;
-    int StatusCode = 0;
+    int status_code = 0;
 
-    PIDList = EnumerateProcesses(&PIDListSize);
-    if (!PIDList)
+    pid_list = enumerate_processes(&pid_list_size);
+    if (!pid_list)
     {
-        TaskkillMessage(STRING_ENUM_FAILED);
+        taskkill_message(STRING_ENUM_FAILED);
         return 1;
     }
 
-    for (i = 0; i < ToKillTaskCount; i++)
+    for (i = 0; i < task_count; i++)
     {
-        WCHAR *p = ToKillTaskList[i];
-        BOOL IsNumeric = TRUE;
+        WCHAR *p = task_list[i];
+        BOOL is_numeric = TRUE;
 
         /* Determine whether the string is not numeric. */
         while (*p)
         {
             if (!isdigitW(*p++))
             {
-                IsNumeric = FALSE;
+                is_numeric = FALSE;
                 break;
             }
         }
 
-        if (IsNumeric)
+        if (is_numeric)
         {
-            DWORD dwPID = atoiW(ToKillTaskList[i]);
+            DWORD pid = atoiW(task_list[i]);
 
-            if (dwPID == SelfPID)
+            if (pid == self_pid)
             {
-                TaskkillMessage(STRING_SELF_TERMINATION);
-                StatusCode = 1;
+                taskkill_message(STRING_SELF_TERMINATION);
+                status_code = 1;
                 continue;
             }
 
-            if (bForceTerminate)
+            if (force_termination)
             {
-                HANDLE hProcess;
-                hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, dwPID);
-                if (!hProcess)
+                HANDLE process;
+                process = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+                if (!process)
                 {
-                    TaskkillMessagePrintfW(STRING_SEARCH_FAILED, ToKillTaskList[i]);
-                    StatusCode = 128;
+                    taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
+                    status_code = 128;
                     continue;
                 }
 
-                if (!TerminateProcess(hProcess, 0))
+                if (!TerminateProcess(process, 0))
                 {
-                    TaskkillMessagePrintfW(STRING_TERMINATE_FAILED, ToKillTaskList[i]);
-                    StatusCode = 1;
-                    CloseHandle(hProcess);
+                    taskkill_message_printfW(STRING_TERMINATE_FAILED, task_list[i]);
+                    status_code = 1;
+                    CloseHandle(process);
                     continue;
                 }
 
-                TaskkillMessagePrintfW(STRING_TERM_PID_SEARCH, dwPID);
-                CloseHandle(hProcess);
+                taskkill_message_printfW(STRING_TERM_PID_SEARCH, pid);
+                CloseHandle(process);
             }
             else
             {
-                struct pid_close_info Info = {dwPID};
+                struct pid_close_info info = {pid};
 
-                EnumWindows(PIDEnumProc, (LPARAM)&Info);
-                if (Info.found)
-                    TaskkillMessagePrintfW(STRING_CLOSE_PID_SEARCH, dwPID);
+                EnumWindows(pid_enum_proc, (LPARAM)&info);
+                if (info.found)
+                    taskkill_message_printfW(STRING_CLOSE_PID_SEARCH, pid);
                 else
                 {
-                    TaskkillMessagePrintfW(STRING_SEARCH_FAILED, ToKillTaskList[i]);
-                    StatusCode = 128;
+                    taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
+                    status_code = 128;
                 }
             }
         }
         else
         {
-            DWORD Index;
-            BOOL bFoundProcess = FALSE;
+            DWORD index;
+            BOOL found_process = FALSE;
 
-            for (Index = 0; Index < PIDListSize; Index++)
+            for (index = 0; index < pid_list_size; index++)
             {
-                WCHAR ProcessName[MAX_PATH];
+                WCHAR process_name[MAX_PATH];
 
-                if (GetProcessNameFromPID(PIDList[Index], ProcessName, MAX_PATH) &&
-                    !strcmpiW(ProcessName, ToKillTaskList[i]))
+                if (get_process_name_from_pid(pid_list[index], process_name, MAX_PATH) &&
+                    !strcmpiW(process_name, task_list[i]))
                 {
-                    bFoundProcess = TRUE;
+                    found_process = TRUE;
 
-                    if (PIDList[Index] == SelfPID)
+                    if (pid_list[index] == self_pid)
                     {
-                        TaskkillMessage(STRING_SELF_TERMINATION);
-                        StatusCode = 1;
+                        taskkill_message(STRING_SELF_TERMINATION);
+                        status_code = 1;
                         continue;
                     }
 
-                    if (bForceTerminate)
+                    if (force_termination)
                     {
-                        HANDLE hProcess;
+                        HANDLE process;
 
-                        hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, PIDList[Index]);
-                        if (!hProcess)
+                        process = OpenProcess(PROCESS_TERMINATE, FALSE, pid_list[index]);
+                        if (!process)
                         {
-                            TaskkillMessagePrintfW(STRING_SEARCH_FAILED, ToKillTaskList[i]);
-                            StatusCode = 128;
+                            taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
+                            status_code = 128;
                             continue;
                         }
 
-                        if (!TerminateProcess(hProcess, 0))
+                        if (!TerminateProcess(process, 0))
                         {
-                            TaskkillMessagePrintfW(STRING_TERMINATE_FAILED, ToKillTaskList[i]);
-                            StatusCode = 1;
-                            CloseHandle(hProcess);
+                            taskkill_message_printfW(STRING_TERMINATE_FAILED, task_list[i]);
+                            status_code = 1;
+                            CloseHandle(process);
                             continue;
                         }
 
-                        TaskkillMessagePrintfW(STRING_TERM_PROC_SEARCH, ToKillTaskList[i], PIDList[Index]);
-                        CloseHandle(hProcess);
+                        taskkill_message_printfW(STRING_TERM_PROC_SEARCH, task_list[i], pid_list[index]);
+                        CloseHandle(process);
                     }
                     else
                     {
-                        struct pid_close_info Info = {PIDList[Index]};
-                        EnumWindows(PIDEnumProc, (LPARAM)&Info);
-                        TaskkillMessagePrintfW(STRING_CLOSE_PROC_SRCH, ProcessName, PIDList[Index]);
+                        struct pid_close_info info = {pid_list[index]};
+                        EnumWindows(pid_enum_proc, (LPARAM)&info);
+                        taskkill_message_printfW(STRING_CLOSE_PROC_SRCH, process_name, pid_list[index]);
                     }
                 }
             }
 
-            if (!bFoundProcess)
+            if (!found_process)
             {
-                TaskkillMessagePrintfW(STRING_SEARCH_FAILED, ToKillTaskList[i]);
-                StatusCode = 128;
+                taskkill_message_printfW(STRING_SEARCH_FAILED, task_list[i]);
+                status_code = 128;
             }
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, PIDList);
-    return StatusCode;
+    HeapFree(GetProcessHeap(), 0, pid_list);
+    return status_code;
 }
 
 static BOOL
-ToKillTaskListAdd(WCHAR *Name)
+add_to_task_list(WCHAR *name)
 {
-    static unsigned int ListSize = 16;
+    static unsigned int list_size = 16;
 
-    if (!ToKillTaskList)
+    if (!task_list)
     {
-        ToKillTaskList = HeapAlloc(GetProcessHeap(), 0, ListSize * sizeof(*ToKillTaskList));
-        if (!ToKillTaskList)
+        task_list = HeapAlloc(GetProcessHeap(), 0, list_size * sizeof(*task_list));
+        if (!task_list)
             return FALSE;
     }
-    else if (ToKillTaskCount == ListSize)
+    else if (task_count == list_size)
     {
-        void *ReallocList;
+        void *realloc_list;
 
-        ListSize *= 2;
-        ReallocList = HeapReAlloc(GetProcessHeap(), 0, ToKillTaskList, ListSize * sizeof(*ToKillTaskList));
-        if (!ReallocList)
+        list_size *= 2;
+        realloc_list = HeapReAlloc(GetProcessHeap(), 0, task_list, list_size * sizeof(*task_list));
+        if (!realloc_list)
             return FALSE;
 
-        ToKillTaskList = ReallocList;
+        task_list = realloc_list;
     }
 
-    ToKillTaskList[ToKillTaskCount++] = Name;
+    task_list[task_count++] = name;
     return TRUE;
 }
 
 static int
-GetArgumentType(WCHAR *Argument)
+get_argument_type(WCHAR *argument)
 {
     int i;
 
-    if (Argument[0] != L'/' && Argument[0] != L'-')
+    if (argument[0] != L'/' && argument[0] != L'-')
     {
         return OP_PARAM_INVALID;
     }
-    Argument++;
+    argument++;
 
     for (i = 0; i < _countof(opList); i++)
     {
-        if (!strcmpiW(opList[i], Argument))
+        if (!strcmpiW(opList[i], argument))
         {
             return i;
         }
@@ -420,33 +420,33 @@ GetArgumentType(WCHAR *Argument)
 }
 
 /* FIXME
-Argument T not supported
+argument T not supported
 
 */
 static BOOL
-ProcessArguments(int argc, WCHAR *argv[])
+process_arguments(int argc, WCHAR *argv[])
 {
-    BOOL HasIM = FALSE, HasPID = FALSE, HasHelp = FALSE;
+    BOOL has_im = FALSE, has_pid = FALSE, has_help = FALSE;
 
     if (argc > 1)
     {
         int i;
         for (i = 1; i < argc; i++)
         {
-            int Argument = GetArgumentType(argv[i]);
+            int argument = get_argument_type(argv[i]);
 
-            switch (Argument)
+            switch (argument)
             {
                 case OP_PARAM_FORCE_TERMINATE:
                 {
-                    if (bForceTermination == TRUE)
+                    if (force_termination == TRUE)
                     {
                         // -f already specified
-                        TaskkillMessagePrintfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
-                        TaskkillMessage(STRING_USAGE);
+                        taskkill_message_printfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
+                        taskkill_message(STRING_USAGE);
                         return FALSE;
                     }
-                    bForceTermination = TRUE;
+                    force_termination = TRUE;
                     break;
                 }
                 case OP_PARAM_IMAGE:
@@ -454,45 +454,45 @@ ProcessArguments(int argc, WCHAR *argv[])
                 {
                     if (!argv[i + 1])
                     {
-                        TaskkillMessagePrintfW(STRING_MISSING_PARAM, argv[i]);
-                        TaskkillMessage(STRING_USAGE);
+                        taskkill_message_printfW(STRING_MISSING_PARAM, argv[i]);
+                        taskkill_message(STRING_USAGE);
                         return FALSE;
                     }
 
-                    if (Argument == OP_PARAM_IMAGE)
-                        HasIM = TRUE;
-                    if (Argument == OP_PARAM_PID)
-                        HasPID = TRUE;
+                    if (argument == OP_PARAM_IMAGE)
+                        has_im = TRUE;
+                    if (argument == OP_PARAM_PID)
+                        has_pid = TRUE;
 
-                    if (HasIM && HasPID)
+                    if (has_im && has_pid)
                     {
-                        TaskkillMessage(STRING_MUTUAL_EXCLUSIVE);
-                        TaskkillMessage(STRING_USAGE);
+                        taskkill_message(STRING_MUTUAL_EXCLUSIVE);
+                        taskkill_message(STRING_USAGE);
                         return FALSE;
                     }
 
-                    if (GetArgumentType(argv[i + 1]) != OP_PARAM_INVALID)
+                    if (get_argument_type(argv[i + 1]) != OP_PARAM_INVALID)
                     {
-                        TaskkillMessagePrintfW(STRING_MISSING_PARAM, argv[i]);
-                        TaskkillMessage(STRING_USAGE);
+                        taskkill_message_printfW(STRING_MISSING_PARAM, argv[i]);
+                        taskkill_message(STRING_USAGE);
                         return FALSE;
                     }
 
-                    if (!ToKillTaskListAdd(argv[++i])) // add next parameters to ToKillTaskList
+                    if (!add_to_task_list(argv[++i])) // add next parameters to task_list
                         return FALSE;
 
                     break;
                 }
                 case OP_PARAM_HELP:
                 {
-                    if (HasHelp == TRUE)
+                    if (has_help == TRUE)
                     {
                         // -? already specified
-                        TaskkillMessagePrintfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
-                        TaskkillMessage(STRING_USAGE);
+                        taskkill_message_printfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
+                        taskkill_message(STRING_USAGE);
                         return FALSE;
                     }
-                    HasHelp = TRUE;
+                    has_help = TRUE;
                     break;
                 }
                 case OP_PARAM_TERMINATE_CHILD:
@@ -503,33 +503,33 @@ ProcessArguments(int argc, WCHAR *argv[])
                 case OP_PARAM_INVALID:
                 default:
                 {
-                    TaskkillMessage(STRING_INVALID_OPTION);
-                    TaskkillMessage(STRING_USAGE);
+                    taskkill_message(STRING_INVALID_OPTION);
+                    taskkill_message(STRING_USAGE);
                     return FALSE;
                 }
             }
         }
     }
 
-    if (HasHelp)
+    if (has_help)
     {
         if (argc > 2) // any parameters other than -? is specified
         {
-            TaskkillMessage(STRING_INVALID_SYNTAX);
-            TaskkillMessage(STRING_USAGE);
+            taskkill_message(STRING_INVALID_SYNTAX);
+            taskkill_message(STRING_USAGE);
             return FALSE;
         }
         else
         {
-            TaskkillMessage(STRING_USAGE);
+            taskkill_message(STRING_USAGE);
             exit(0);
         }
     }
-    else if ((!HasIM) && (!HasPID)) // HasHelp == FALSE
+    else if ((!has_im) && (!has_pid)) // has_help == FALSE
     {
-        // both HasIM and HasPID are missing (maybe -fi option is missing too, if implemented later)
-        TaskkillMessage(STRING_MISSING_OPTION);
-        TaskkillMessage(STRING_USAGE);
+        // both has_im and has_pid are missing (maybe -fi option is missing too, if implemented later)
+        taskkill_message(STRING_MISSING_OPTION);
+        taskkill_message(STRING_USAGE);
         return FALSE;
     }
 
@@ -539,21 +539,21 @@ ProcessArguments(int argc, WCHAR *argv[])
 int
 wmain(int argc, WCHAR *argv[])
 {
-    int StatusCode = 0;
+    int status_code = 0;
 
-    if (!ProcessArguments(argc, argv))
+    if (!process_arguments(argc, argv))
     {
-        HeapFree(GetProcessHeap(), 0, ToKillTaskList);
+        HeapFree(GetProcessHeap(), 0, task_list);
         return 1;
     }
 
-    /*  if (bForceTermination)
-          StatusCode = TerminateProcesses();
+    /*  if (force_termination)
+          status_code = terminate_processes();
       else
-          StatusCode = SendCloseMessages();*/
+          status_code = SendCloseMessages();*/
 
-    StatusCode = TerminateProcesses(bForceTermination);
+    status_code = terminate_processes(force_termination);
 
-    HeapFree(GetProcessHeap(), 0, ToKillTaskList);
-    return StatusCode;
+    HeapFree(GetProcessHeap(), 0, task_list);
+    return status_code;
 }
