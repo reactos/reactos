@@ -29,7 +29,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(taskkill);
 
-static BOOL ForceTermination = FALSE;
+static BOOL bForceTermination = FALSE;
 
 static WCHAR **ToKillTaskList;
 static unsigned int ToKillTaskCount;
@@ -128,7 +128,7 @@ TaskkillMessage(int msg)
     return TaskkillPrintfW(formatW, msg_buffer);
 }
 
-/* Post WM_CLOSE to all top-level windows belonging to the hProcess with specified PID. */
+/* Post WM_CLOSE to all top-level windows belonging to the process with specified PID. */
 static BOOL CALLBACK
 PIDEnumProc(HWND hwnd, LPARAM lParam)
 {
@@ -146,7 +146,8 @@ PIDEnumProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
-static PDWORD EnumerateProcesses(DWORD *list_count)
+static PDWORD
+EnumerateProcesses(DWORD *list_count)
 {
     DWORD *pid_list, alloc_bytes = 1024 * sizeof(*pid_list), needed_bytes;
 
@@ -186,7 +187,8 @@ static PDWORD EnumerateProcesses(DWORD *list_count)
     return pid_list;
 }
 
-static BOOL GetProcessNameFromPID(DWORD pid, WCHAR *buf, DWORD chars)
+static BOOL
+GetProcessNameFromPID(DWORD pid, WCHAR *buf, DWORD chars)
 {
     HANDLE process;
     HMODULE module;
@@ -215,8 +217,8 @@ static BOOL GetProcessNameFromPID(DWORD pid, WCHAR *buf, DWORD chars)
 /* The implemented task enumeration and termination behavior does not
  * exactly match native behavior. On Windows:
  *
- * In the case of terminating by hProcess Name, specifying a particular
- * hProcess Name more times than the number of running instances causes
+ * In the case of terminating by process Name, specifying a particular
+ * process Name more times than the number of running instances causes
  * all instances to be terminated, but termination failure messages to
  * be printed as many times as the difference between the specification
  * quantity and the number of running instances.
@@ -226,7 +228,9 @@ static BOOL GetProcessNameFromPID(DWORD pid, WCHAR *buf, DWORD chars)
  *
  * A PID of zero causes taskkill to warn about the inability to terminate
  * system processes. */
-static int SendCloseMessages(void)
+
+static int
+TerminateProcesses(BOOL bForceTerminate)
 {
     DWORD *PIDList, PIDListSize;
     DWORD SelfPID = GetCurrentProcessId();
@@ -257,123 +261,50 @@ static int SendCloseMessages(void)
 
         if (IsNumeric)
         {
-            DWORD pid = atoiW(ToKillTaskList[i]);
-            struct pid_close_info info = {pid};
+            DWORD dwPID = atoiW(ToKillTaskList[i]);
 
-            if (pid == SelfPID)
+            if (dwPID == SelfPID)
             {
                 TaskkillMessage(STRING_SELF_TERMINATION);
                 StatusCode = 1;
                 continue;
             }
 
-            EnumWindows(PIDEnumProc, (LPARAM)&info);
-            if (info.found)
-                TaskkillMessagePrintfW(STRING_CLOSE_PID_SEARCH, pid);
+            if (bForceTerminate)
+            {
+                HANDLE hProcess;
+                hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, dwPID);
+                if (!hProcess)
+                {
+                    TaskkillMessagePrintfW(STRING_SEARCH_FAILED, ToKillTaskList[i]);
+                    StatusCode = 128;
+                    continue;
+                }
+
+                if (!TerminateProcess(hProcess, 0))
+                {
+                    TaskkillMessagePrintfW(STRING_TERMINATE_FAILED, ToKillTaskList[i]);
+                    StatusCode = 1;
+                    CloseHandle(hProcess);
+                    continue;
+                }
+
+                TaskkillMessagePrintfW(STRING_TERM_PID_SEARCH, dwPID);
+                CloseHandle(hProcess);
+            }
             else
             {
-                TaskkillMessagePrintfW(STRING_SEARCH_FAILED, ToKillTaskList[i]);
-                StatusCode = 128;
-            }
-        }
-        else
-        {
-            DWORD Index;
-            BOOL FoundProcess = FALSE;
+                struct pid_close_info Info = {dwPID};
 
-            for (Index = 0; Index < PIDListSize; Index++)
-            {
-                WCHAR ProcessName[MAX_PATH];
-
-                if (GetProcessNameFromPID(PIDList[Index], ProcessName, MAX_PATH) &&
-                    !strcmpiW(ProcessName, ToKillTaskList[i]))
+                EnumWindows(PIDEnumProc, (LPARAM)&Info);
+                if (Info.found)
+                    TaskkillMessagePrintfW(STRING_CLOSE_PID_SEARCH, dwPID);
+                else
                 {
-                    struct pid_close_info info = {PIDList[Index]};
-
-                    FoundProcess = TRUE;
-                    if (PIDList[Index] == SelfPID)
-                    {
-                        TaskkillMessage(STRING_SELF_TERMINATION);
-                        StatusCode = 1;
-                        continue;
-                    }
-
-                    EnumWindows(PIDEnumProc, (LPARAM)&info);
-                    TaskkillMessagePrintfW(STRING_CLOSE_PROC_SRCH, ProcessName, PIDList[Index]);
+                    TaskkillMessagePrintfW(STRING_SEARCH_FAILED, ToKillTaskList[i]);
+                    StatusCode = 128;
                 }
             }
-
-            if (!FoundProcess)
-            {
-                TaskkillMessagePrintfW(STRING_SEARCH_FAILED, ToKillTaskList[i]);
-                StatusCode = 128;
-            }
-        }
-    }
-
-    HeapFree(GetProcessHeap(), 0, PIDList);
-    return StatusCode;
-}
-
-static int TerminateProcesses(void)
-{
-    DWORD *PIDList, PIDListSize;
-    DWORD SelfPID = GetCurrentProcessId();
-    unsigned int i;
-    int StatusCode = 0;
-
-    PIDList = EnumerateProcesses(&PIDListSize);
-    if (!PIDList)
-    {
-        TaskkillMessage(STRING_ENUM_FAILED);
-        return 1;
-    }
-
-    for (i = 0; i < ToKillTaskCount; i++)
-    {
-        WCHAR *p = ToKillTaskList[i];
-        BOOL is_numeric = TRUE;
-
-        /* Determine whether the string is not numeric. */
-        while (*p)
-        {
-            if (!isdigitW(*p++))
-            {
-                is_numeric = FALSE;
-                break;
-            }
-        }
-
-        if (is_numeric)
-        {
-            DWORD pid = atoiW(ToKillTaskList[i]);
-            HANDLE process;
-
-            if (pid == SelfPID)
-            {
-                TaskkillMessage(STRING_SELF_TERMINATION);
-                StatusCode = 1;
-                continue;
-            }
-
-            process = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-            if (!process)
-            {
-                TaskkillMessagePrintfW(STRING_SEARCH_FAILED, ToKillTaskList[i]);
-                StatusCode = 128;
-                continue;
-            }
-
-            if (!TerminateProcess(process, 0))
-            {
-                TaskkillMessagePrintfW(STRING_TERMINATE_FAILED, ToKillTaskList[i]);
-                StatusCode = 1;
-                CloseHandle(process);
-                continue;
-            }
-
-            TaskkillMessagePrintfW(STRING_TERM_PID_SEARCH, pid);
-            CloseHandle(process);
         }
         else
         {
@@ -387,7 +318,7 @@ static int TerminateProcesses(void)
                 if (GetProcessNameFromPID(PIDList[Index], ProcessName, MAX_PATH) &&
                     !strcmpiW(ProcessName, ToKillTaskList[i]))
                 {
-                    HANDLE hProcess;
+                    bFoundProcess = TRUE;
 
                     if (PIDList[Index] == SelfPID)
                     {
@@ -396,25 +327,35 @@ static int TerminateProcesses(void)
                         continue;
                     }
 
-                    hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, PIDList[Index]);
-                    if (!hProcess)
+                    if (bForceTerminate)
                     {
-                        TaskkillMessagePrintfW(STRING_SEARCH_FAILED, ToKillTaskList[i]);
-                        StatusCode = 128;
-                        continue;
-                    }
+                        HANDLE hProcess;
 
-                    if (!TerminateProcess(hProcess, 0))
-                    {
-                        TaskkillMessagePrintfW(STRING_TERMINATE_FAILED, ToKillTaskList[i]);
-                        StatusCode = 1;
+                        hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, PIDList[Index]);
+                        if (!hProcess)
+                        {
+                            TaskkillMessagePrintfW(STRING_SEARCH_FAILED, ToKillTaskList[i]);
+                            StatusCode = 128;
+                            continue;
+                        }
+
+                        if (!TerminateProcess(hProcess, 0))
+                        {
+                            TaskkillMessagePrintfW(STRING_TERMINATE_FAILED, ToKillTaskList[i]);
+                            StatusCode = 1;
+                            CloseHandle(hProcess);
+                            continue;
+                        }
+
+                        TaskkillMessagePrintfW(STRING_TERM_PROC_SEARCH, ToKillTaskList[i], PIDList[Index]);
                         CloseHandle(hProcess);
-                        continue;
                     }
-
-                    bFoundProcess = TRUE;
-                    TaskkillMessagePrintfW(STRING_TERM_PROC_SEARCH, ToKillTaskList[i], PIDList[Index]);
-                    CloseHandle(hProcess);
+                    else
+                    {
+                        struct pid_close_info Info = {PIDList[Index]};
+                        EnumWindows(PIDEnumProc, (LPARAM)&Info);
+                        TaskkillMessagePrintfW(STRING_CLOSE_PROC_SRCH, ProcessName, PIDList[Index]);
+                    }
                 }
             }
 
@@ -430,7 +371,8 @@ static int TerminateProcesses(void)
     return StatusCode;
 }
 
-static BOOL ToKillTaskListAdd(WCHAR *Name)
+static BOOL
+ToKillTaskListAdd(WCHAR *Name)
 {
     static unsigned int ListSize = 16;
 
@@ -456,7 +398,8 @@ static BOOL ToKillTaskListAdd(WCHAR *Name)
     return TRUE;
 }
 
-static int GetArgumentType(WCHAR *Argument)
+static int
+GetArgumentType(WCHAR *Argument)
 {
     int i;
 
@@ -480,7 +423,8 @@ static int GetArgumentType(WCHAR *Argument)
 Argument T not supported
 
 */
-static BOOL ProcessArguments(int argc, WCHAR *argv[])
+static BOOL
+ProcessArguments(int argc, WCHAR *argv[])
 {
     BOOL HasIM = FALSE, HasPID = FALSE, HasHelp = FALSE;
 
@@ -495,14 +439,14 @@ static BOOL ProcessArguments(int argc, WCHAR *argv[])
             {
                 case OP_PARAM_FORCE_TERMINATE:
                 {
-                    if (ForceTermination == TRUE)
+                    if (bForceTermination == TRUE)
                     {
                         // -f already specified
                         TaskkillMessagePrintfW(STRING_PARAM_TOO_MUCH, argv[i], 1);
                         TaskkillMessage(STRING_USAGE);
                         return FALSE;
                     }
-                    ForceTermination = TRUE;
+                    bForceTermination = TRUE;
                     break;
                 }
                 case OP_PARAM_IMAGE:
@@ -592,7 +536,8 @@ static BOOL ProcessArguments(int argc, WCHAR *argv[])
     return TRUE;
 }
 
-int wmain(int argc, WCHAR *argv[])
+int
+wmain(int argc, WCHAR *argv[])
 {
     int StatusCode = 0;
 
@@ -602,10 +547,12 @@ int wmain(int argc, WCHAR *argv[])
         return 1;
     }
 
-    if (ForceTermination)
-        StatusCode = TerminateProcesses();
-    else
-        StatusCode = SendCloseMessages();
+    /*  if (bForceTermination)
+          StatusCode = TerminateProcesses();
+      else
+          StatusCode = SendCloseMessages();*/
+
+    StatusCode = TerminateProcesses(bForceTermination);
 
     HeapFree(GetProcessHeap(), 0, ToKillTaskList);
     return StatusCode;
