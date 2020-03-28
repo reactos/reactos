@@ -160,15 +160,22 @@ RtlGetExpWinVer( HMODULE hModule )
     {
         pinth = RtlImageNtHeader( hModule );
 
-        dwMajorVersion = pinth->OptionalHeader.MajorSubsystemVersion;
-
-        if ( dwMajorVersion == 1 )
+        if (pinth)
         {
-            dwMajorVersion = 3;
+            dwMajorVersion = pinth->OptionalHeader.MajorSubsystemVersion;
+
+            if ( dwMajorVersion == 1 )
+            {
+                dwMajorVersion = 3;
+            }
+            else
+            {
+                dwMinorVersion = pinth->OptionalHeader.MinorSubsystemVersion;
+            }
         }
         else
         {
-            dwMinorVersion = pinth->OptionalHeader.MinorSubsystemVersion;
+            ERR("Invalid hModule: %p\n", hModule);
         }
     }
     return MAKELONG(MAKEWORD(dwMinorVersion, dwMajorVersion), 0);
