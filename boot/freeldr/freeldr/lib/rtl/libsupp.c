@@ -57,3 +57,30 @@ RtlpSafeCopyMemory(
     RtlCopyMemory(Destination, Source, Length);
     return STATUS_SUCCESS;
 }
+
+/* Ldr access to IMAGE_NT_HEADERS without SEH */
+
+/* Rtl SEH-Free version of this */
+NTSTATUS
+NTAPI
+RtlpImageNtHeaderEx(
+    _In_ ULONG Flags,
+    _In_ PVOID Base,
+    _In_ ULONG64 Size,
+    _Out_ PIMAGE_NT_HEADERS *OutHeaders);
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlImageNtHeaderEx(
+    _In_ ULONG Flags,
+    _In_ PVOID Base,
+    _In_ ULONG64 Size,
+    _Out_ PIMAGE_NT_HEADERS *OutHeaders)
+{
+    return RtlpImageNtHeaderEx(Flags, Base, Size, OutHeaders);
+}
+
