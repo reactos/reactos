@@ -462,7 +462,7 @@ static int send_close_messages(void)
 
 static int terminate_processes(void)
 {
-    DWORD* pid_list, pid_list_size;
+    DWORD *pid_list, pid_list_size;
     DWORD self_pid = GetCurrentProcessId();
     unsigned int i;
     int status_code = 0;
@@ -476,7 +476,7 @@ static int terminate_processes(void)
 
     for (i = 0; i < task_count; i++)
     {
-        WCHAR* p = task_list[i];
+        WCHAR *p = task_list[i];
         BOOL is_numeric = TRUE;
 
         /* Determine whether the string is not numeric. */
@@ -583,7 +583,8 @@ static BOOL add_to_task_list(WCHAR *name)
 
     if (!task_list)
     {
-        task_list = HeapAlloc(GetProcessHeap(), 0, list_size * sizeof(*task_list));
+        task_list = HeapAlloc(GetProcessHeap(), 0,
+                                   list_size * sizeof(*task_list));
         if (!task_list)
             return FALSE;
     }
@@ -592,7 +593,8 @@ static BOOL add_to_task_list(WCHAR *name)
         void *realloc_list;
 
         list_size *= 2;
-        realloc_list = HeapReAlloc(GetProcessHeap(), 0, task_list, list_size * sizeof(*task_list));
+        realloc_list = HeapReAlloc(GetProcessHeap(), 0, task_list,
+                                   list_size * sizeof(*task_list));
         if (!realloc_list)
             return FALSE;
 
@@ -767,18 +769,18 @@ int wmain(int argc, WCHAR* argv[])
 /* FIXME Argument processing does not match behavior observed on Windows.
  * Stringent argument counting and processing is performed, and unrecognized
  * options are detected as parameters when placed after options that accept one. */
-static BOOL process_arguments(int argc, WCHAR* argv[])
+static BOOL process_arguments(int argc, WCHAR *argv[])
 {
-    static const WCHAR opForceTerminate[] = { 'f',0 };
-    static const WCHAR opImage[] = { 'i','m',0 };
-    static const WCHAR opPID[] = { 'p','i','d',0 };
-    static const WCHAR opHelp[] = { '?',0 };
-    static const WCHAR opTerminateChildren[] = { 't',0 };
+    static const WCHAR opForceTerminate[] = {'f',0};
+    static const WCHAR opImage[] = {'i','m',0};
+    static const WCHAR opPID[] = {'p','i','d',0};
+    static const WCHAR opHelp[] = {'?',0};
+    static const WCHAR opTerminateChildren[] = {'t',0};
 
     if (argc > 1)
     {
         int i;
-        WCHAR* argdata;
+        WCHAR *argdata;
         BOOL has_im = FALSE, has_pid = FALSE;
 
         /* Only the lone help option is recognized. */
@@ -808,7 +810,7 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
             /* Options /IM and /PID appear to behave identically, except for
              * the fact that they cannot be specified at the same time. */
             else if ((got_im = !strcmpiW(opImage, argdata)) ||
-                (got_pid = !strcmpiW(opPID, argdata)))
+                     (got_pid = !strcmpiW(opPID, argdata)))
             {
                 if (!argv[i + 1])
                 {
@@ -833,7 +835,7 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
             }
             else
             {
-            invalid:
+                invalid:
                 taskkill_message(STRING_INVALID_OPTION);
                 taskkill_message(STRING_USAGE);
                 return FALSE;
@@ -850,7 +852,7 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
     return TRUE;
 }
 
-int wmain(int argc, WCHAR* argv[])
+int wmain(int argc, WCHAR *argv[])
 {
     int status_code = 0;
 
