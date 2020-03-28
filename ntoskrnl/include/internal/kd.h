@@ -6,7 +6,6 @@
 // Kernel Debugger Port Definition
 //
 struct _KD_DISPATCH_TABLE;
-extern CPPORT GdbPortInfo;
 
 BOOLEAN
 NTAPI
@@ -163,12 +162,6 @@ KdpBochsInit(
 
 VOID
 NTAPI
-KdpGdbStubInit(
-    struct _KD_DISPATCH_TABLE *DispatchTable,
-    ULONG BootPhase);
-
-VOID
-NTAPI
 KdpKdbgInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase);
@@ -228,7 +221,6 @@ typedef struct _KDP_DEBUG_MODE
 
             /* Currently Supported Wrappers */
             UCHAR Pice   :1;
-            UCHAR Gdb    :1;
         };
 
         /* Generic Value */

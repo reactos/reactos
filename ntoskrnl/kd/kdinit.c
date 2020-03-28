@@ -106,19 +106,6 @@ KdpGetDebugMode(PCHAR Currentp2)
         p2 += 5;
         KdpDebugMode.Bochs = TRUE;
     }
-    /* Check for GDB Debugging */
-    else if (!_strnicmp(p2, "GDB", 3))
-    {
-        /* Enable it */
-        p2 += 3;
-        KdpDebugMode.Gdb = TRUE;
-
-        /* Enable Debugging */
-        KdDebuggerNotPresent = FALSE;
-        KdDebuggerEnabled = TRUE;
-        SharedUserData->KdDebuggerEnabled = TRUE;
-        WrapperInitRoutine = KdpGdbStubInit;
-    }
     /* Check for PICE Debugging */
     else if (!_strnicmp(p2, "PICE", 4))
     {
