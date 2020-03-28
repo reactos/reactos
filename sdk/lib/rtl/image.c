@@ -134,11 +134,10 @@ LdrVerifyMappedImageMatchesChecksum(
 
 /*
  * @implemented
- * @note This needs SEH (See https://jira.reactos.org/browse/CORE-14857)
  */
 NTSTATUS
 NTAPI
-RtlImageNtHeaderEx(
+RtlpImageNtHeaderEx(
     _In_ ULONG Flags,
     _In_ PVOID Base,
     _In_ ULONG64 Size,

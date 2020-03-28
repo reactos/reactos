@@ -20,6 +20,7 @@ list(APPEND BOOTLIB_SOURCE
      lib/misc/resource.c
      lib/misc/font.c
      lib/misc/rtlcompat.c
+     lib/rtl/libsupp.c
      lib/firmware/fwutil.c
      lib/firmware/efi/firmware.c
      lib/mm/mm.c
