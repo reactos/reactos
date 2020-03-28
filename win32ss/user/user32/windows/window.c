@@ -159,16 +159,18 @@ RtlGetExpWinVer( HMODULE hModule )
     if ( hModule && !((ULONG_PTR)hModule >> 16))
     {
         pinth = RtlImageNtHeader( hModule );
-
-        dwMajorVersion = pinth->OptionalHeader.MajorSubsystemVersion;
-
-        if ( dwMajorVersion == 1 )
+        if ( pinth )
         {
-            dwMajorVersion = 3;
-        }
-        else
-        {
-            dwMinorVersion = pinth->OptionalHeader.MinorSubsystemVersion;
+            dwMajorVersion = pinth->OptionalHeader.MajorSubsystemVersion;
+
+            if ( dwMajorVersion == 1 )
+            {
+                dwMajorVersion = 3;
+            }
+            else
+            {
+                dwMinorVersion = pinth->OptionalHeader.MinorSubsystemVersion;
+            }
         }
     }
     return MAKELONG(MAKEWORD(dwMinorVersion, dwMajorVersion), 0);
