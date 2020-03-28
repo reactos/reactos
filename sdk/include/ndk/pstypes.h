@@ -902,7 +902,7 @@ typedef struct _PROCESS_SESSION_INFORMATION
 
 #endif
 
-typedef struct _PROCESS_PRIORITY_CLASS
+typedef struct DECLSPEC_ALIGN(4) _PROCESS_PRIORITY_CLASS
 {
     BOOLEAN Foreground;
     UCHAR PriorityClass;
