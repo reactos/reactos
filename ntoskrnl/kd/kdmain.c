@@ -15,7 +15,6 @@
 
 VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
 
-extern CPPORT PortInfo;
 extern ANSI_STRING KdpLogFileName;
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -49,14 +48,6 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
                                        TrapFrame,
                                        !SecondChanceException);
 #else /* not KDBG */
-    if (WrapperInitRoutine)
-    {
-        /* Call GDB */
-        Return = WrapperTable.KdpExceptionRoutine(ExceptionRecord,
-                                                  ContextRecord,
-                                                  TrapFrame);
-    }
-
     /* We'll manually dump the stack for the user... */
     KeRosDumpStackFrames(NULL, 0);
 #endif /* not KDBG */
@@ -99,7 +90,6 @@ KdpGetDebugMode(PCHAR Currentp2)
 
                 /* Set the port to use */
                 SerialPortNumber = Value;
-                KdpPort = Value;
             }
         }
         else
@@ -110,7 +100,6 @@ KdpGetDebugMode(PCHAR Currentp2)
                 KdpDebugMode.Serial = TRUE;
                 SerialPortInfo.Address = UlongToPtr(Value);
                 SerialPortNumber = 0;
-                KdpPort = 0;
             }
         }
     }
@@ -138,9 +127,8 @@ NTAPI
 KdDebuggerInitialize0(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
-    ULONG Value;
     ULONG i;
-    PCHAR CommandLine, Port = NULL, BaudRate = NULL, Irq = NULL;
+    PCHAR CommandLine, Port = NULL;
 
     if (LoaderBlock)
     {
@@ -156,10 +144,8 @@ KdDebuggerInitialize0(
             KdbpGetCommandLineSettings(CommandLine);
 #endif
 
-            /* Get the port and baud rate */
+            /* Get the port */
             Port = strstr(CommandLine, "DEBUGPORT");
-            BaudRate = strstr(CommandLine, "BAUDRATE");
-            Irq = strstr(CommandLine, "IRQ");
         }
     }
 
@@ -181,42 +167,6 @@ KdDebuggerInitialize0(
     /* Use serial port then */
     if (KdpDebugMode.Value == 0)
         KdpDebugMode.Serial = TRUE;
-
-    /* Check if we got a baud rate */
-    if (BaudRate)
-    {
-        /* Move past the actual string, to reach the rate */
-        BaudRate += sizeof("BAUDRATE") - 1;
-
-        /* Now get past any spaces */
-        while (*BaudRate == ' ') BaudRate++;
-
-        /* And make sure we have a rate */
-        if (*BaudRate)
-        {
-            /* Read and set it */
-            Value = atol(BaudRate + 1);
-            if (Value) PortInfo.BaudRate = SerialPortInfo.BaudRate = Value;
-        }
-    }
-
-    /* Check Serial Port Settings [IRQ] */
-    if (Irq)
-    {
-        /* Move past the actual string, to reach the rate */
-        Irq += sizeof("IRQ") - 1;
-
-        /* Now get past any spaces */
-        while (*Irq == ' ') Irq++;
-
-        /* And make sure we have an IRQ */
-        if (*Irq)
-        {
-            /* Read and set it */
-            Value = atol(Irq + 1);
-            if (Value) KdpPortIrq = Value;
-        }
-    }
 
     /* Call Providers at Phase 0 */
     for (i = 0; i < KdMax; i++)
@@ -250,10 +200,6 @@ KdDebuggerInitialize1(
         /* Next Table */
         CurrentEntry = CurrentEntry->Flink;
     }
-
-    /* Call the Wrapper Init Routine */
-    if (WrapperInitRoutine)
-        WrapperTable.KdpInitRoutine(&WrapperTable, 1);
 
     NtGlobalFlag |= FLG_STOP_ON_EXCEPTION;
 

@@ -105,18 +105,6 @@ VOID
     ULONG Length
 );
 
-typedef
-VOID
-(NTAPI*PKDP_PROMPT_ROUTINE)(PCH String);
-
-typedef
-KD_CONTINUE_TYPE
-(NTAPI*PKDP_EXCEPTION_ROUTINE)(
-    PEXCEPTION_RECORD ExceptionRecord,
-    PCONTEXT Context,
-    PKTRAP_FRAME TrapFrame
-);
-
 /* INIT ROUTINES *************************************************************/
 
 BOOLEAN
@@ -239,18 +227,10 @@ typedef struct _KD_DISPATCH_TABLE
     LIST_ENTRY KdProvidersList;
     PKDP_INIT_ROUTINE KdpInitRoutine;
     PKDP_PRINT_ROUTINE KdpPrintRoutine;
-    PKDP_PROMPT_ROUTINE KdpPromptRoutine;
-    PKDP_EXCEPTION_ROUTINE KdpExceptionRoutine;
 } KD_DISPATCH_TABLE, *PKD_DISPATCH_TABLE;
 
 /* The current Debugging Mode */
 extern KDP_DEBUG_MODE KdpDebugMode;
-
-/* The current Port IRQ */
-extern ULONG KdpPortIrq;
-
-/* The current Port */
-extern ULONG KdpPort;
 
 /* Port Information for the Serial Native Mode */
 extern ULONG  SerialPortNumber;
@@ -259,14 +239,8 @@ extern CPPORT SerialPortInfo;
 /* Init Functions for Native Providers */
 extern PKDP_INIT_ROUTINE InitRoutines[KdMax];
 
-/* Wrapper Init Function */
-extern PKDP_INIT_ROUTINE WrapperInitRoutine;
-
 /* Dispatch Tables for Native Providers */
 extern KD_DISPATCH_TABLE DispatchTable[KdMax];
-
-/* Dispatch Table for the Wrapper */
-extern KD_DISPATCH_TABLE WrapperTable;
 
 /* The KD Native Provider List */
 extern LIST_ENTRY KdProviders;

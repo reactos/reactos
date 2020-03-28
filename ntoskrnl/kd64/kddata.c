@@ -138,13 +138,7 @@ ULONG KdPrintBufferSize = sizeof(KdPrintDefaultCircularBuffer);
 ULONG KdPrintBufferChanges = 0;
 
 #ifndef _WINKD_
-/* Make bochs debug output in the very early boot phase available */
-ULONG  PortNumber = DEFAULT_DEBUG_PORT;
-CPPORT PortInfo   = {0, DEFAULT_DEBUG_BAUD_RATE, 0};
-ULONG KdpPortIrq;
 KDP_DEBUG_MODE KdpDebugMode;
-PKDP_INIT_ROUTINE WrapperInitRoutine;
-KD_DISPATCH_TABLE WrapperTable;
 LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
 KD_DISPATCH_TABLE DispatchTable[KdMax];
 

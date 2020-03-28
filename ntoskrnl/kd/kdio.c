@@ -31,9 +31,6 @@ static KSPIN_LOCK KdpSerialSpinLock;
 ULONG  SerialPortNumber = DEFAULT_DEBUG_PORT;
 CPPORT SerialPortInfo   = {0, DEFAULT_DEBUG_BAUD_RATE, 0};
 
-/* Current Port in use. FIXME: Do we support more than one? */
-ULONG KdpPort;
-
 #define KdpScreenLineLengthDefault 80
 static CHAR KdpScreenLineBuffer[KdpScreenLineLengthDefault + 1] = "";
 static ULONG KdpScreenLineBufferPos = 0, KdpScreenLineLength = 0;
@@ -543,11 +540,6 @@ KdSendPacket(
             /* Next Table */
             CurrentEntry = CurrentEntry->Flink;
         }
-
-        /* Call the Wrapper Routine */
-        if (WrapperTable.KdpPrintRoutine)
-            WrapperTable.KdpPrintRoutine(Output->Buffer, Output->Length);
-
         return;
     }
     else if (PacketType == PACKET_TYPE_KD_STATE_CHANGE64)
