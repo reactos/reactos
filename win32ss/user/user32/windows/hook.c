@@ -699,35 +699,39 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       _SEH2_END;
       break;
     case WH_CALLWNDPROC:
-//      ERR("WH_CALLWNDPROC: Code %d, wParam %d\n",Common->Code,Common->wParam);
-      pCWP = HeapAlloc(GetProcessHeap(), 0, ArgumentLength - sizeof(HOOKPROC_CALLBACK_ARGUMENTS));
-      RtlCopyMemory(pCWP, (PCHAR) Common + Common->lParam, sizeof(CWPSTRUCT));
+    {
+      PCWP_Struct pcwps = (PCWP_Struct)Common;
+      CWPSTRUCT *pCWPT = &pcwps->cwps;
+      pCWP = HeapAlloc(GetProcessHeap(), 0, Common->lParamSize + sizeof(CWPSTRUCT));
+      RtlCopyMemory(pCWP, pCWPT, sizeof(CWPSTRUCT));
+//      ERR("WH_CALLWNDPROC: Code %d, wParam %d msg %d\n",Common->Code,Common->wParam,pCWP->message);
       /* If more memory is reserved, then lParam is a pointer.
        * Size of the buffer is stocked in the lParam member, and its content
        * is at the end of the argument buffer */
-      if(ArgumentLength > (sizeof(CWPSTRUCT) + sizeof(HOOKPROC_CALLBACK_ARGUMENTS)))
+      if ( Common->lParamSize )
       {
-         RtlCopyMemory((PCHAR)pCWP + sizeof(CWPSTRUCT),
-            (PCHAR)Common + Common->lParam + sizeof(CWPSTRUCT),
-            pCWP->lParam);
          pCWP->lParam = (LPARAM)((PCHAR)pCWP + sizeof(CWPSTRUCT));
+         RtlCopyMemory( (PCHAR)pCWP + sizeof(CWPSTRUCT), &pcwps->Extra, Common->lParamSize );
       }
       Result = Proc(Common->Code, Common->wParam, (LPARAM) pCWP);
       HeapFree(GetProcessHeap(), 0, pCWP);
+    }
       break;
     case WH_CALLWNDPROCRET:
       /* Almost the same as WH_CALLWNDPROC */
-      pCWPR = HeapAlloc(GetProcessHeap(), 0, ArgumentLength - sizeof(HOOKPROC_CALLBACK_ARGUMENTS));
-      RtlCopyMemory(pCWPR, (PCHAR) Common + Common->lParam, sizeof(CWPRETSTRUCT));
-      if(ArgumentLength > (sizeof(CWPRETSTRUCT) + sizeof(HOOKPROC_CALLBACK_ARGUMENTS)))
+    {
+      PCWPR_Struct pcwprs = (PCWPR_Struct)Common;
+      CWPRETSTRUCT *pCWPRT = &pcwprs->cwprs;
+      pCWPR = HeapAlloc(GetProcessHeap(), 0, Common->lParamSize + sizeof(CWPRETSTRUCT));
+      RtlCopyMemory(pCWPR, pCWPRT, sizeof(CWPSTRUCT));
+      if ( Common->lParamSize )
       {
-         RtlCopyMemory((PCHAR)pCWPR + sizeof(CWPRETSTRUCT),
-            (PCHAR)Common + Common->lParam + sizeof(CWPRETSTRUCT),
-            pCWPR->lParam);
          pCWPR->lParam = (LPARAM)((PCHAR)pCWPR + sizeof(CWPRETSTRUCT));
+         RtlCopyMemory( (PCHAR)pCWPR + sizeof(CWPRETSTRUCT), &pcwprs->Extra, Common->lParamSize );
       }
       Result = Proc(Common->Code, Common->wParam, (LPARAM) pCWPR);
       HeapFree(GetProcessHeap(), 0, pCWPR);
+    }
       break;
     case WH_MSGFILTER: /* All SEH support */
     case WH_SYSMSGFILTER:

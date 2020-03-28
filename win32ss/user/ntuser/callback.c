@@ -509,6 +509,8 @@ co_IntLoadDefaultCursors(VOID)
    return TRUE;
 }
 
+static INT iTheId = -2; // Set it out of range.
+
 LRESULT APIENTRY
 co_IntCallHookProc(INT HookId,
                    INT Code,
@@ -535,6 +537,8 @@ co_IntCallHookProc(INT HookId,
    PMSG pMsg = NULL;
    BOOL Hit = FALSE;
    UINT lParamSize = 0;
+   CWPSTRUCT* pCWP = NULL;
+   CWPRETSTRUCT* pCWPR = NULL;
 
    ASSERT(Proc);
    /* Do not allow the desktop thread to do callback to user mode */
@@ -593,27 +597,27 @@ co_IntCallHookProc(INT HookId,
                goto Fault_Exit;
          }
          break;
-      case WH_KEYBOARD_LL:
+     case WH_KEYBOARD_LL:
          ArgumentLength += sizeof(KBDLLHOOKSTRUCT);
          break;
-      case WH_MOUSE_LL:
+     case WH_MOUSE_LL:
          ArgumentLength += sizeof(MSLLHOOKSTRUCT);
          break;
-      case WH_MOUSE:
+     case WH_MOUSE:
          ArgumentLength += sizeof(MOUSEHOOKSTRUCT);
          break;
      case WH_CALLWNDPROC:
      {
-         CWPSTRUCT* pCWP = (CWPSTRUCT*) lParam;
-         ArgumentLength += sizeof(CWPSTRUCT);
+         pCWP = (CWPSTRUCT*) lParam;
+         ArgumentLength = sizeof(CWP_Struct);
          lParamSize = lParamMemorySize(pCWP->message, pCWP->wParam, pCWP->lParam);
          ArgumentLength += lParamSize;
          break;
       }
       case WH_CALLWNDPROCRET:
       {
-         CWPRETSTRUCT* pCWPR = (CWPRETSTRUCT*) lParam;
-         ArgumentLength += sizeof(CWPRETSTRUCT);
+         pCWPR = (CWPRETSTRUCT*) lParam;
+         ArgumentLength = sizeof(CWPR_Struct);
          lParamSize = lParamMemorySize(pCWPR->message, pCWPR->wParam, pCWPR->lParam);
          ArgumentLength += lParamSize;
          break;
@@ -647,6 +651,7 @@ co_IntCallHookProc(INT HookId,
    Common->Mod = Mod;
    Common->offPfn = offPfn;
    Common->Ansi = Ansi;
+   Common->lParamSize = lParamSize;
    RtlZeroMemory(&Common->ModuleName, sizeof(Common->ModuleName));
    if (ModuleName->Buffer && ModuleName->Length)
    {
@@ -697,25 +702,27 @@ co_IntCallHookProc(INT HookId,
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
          break;
       case WH_CALLWNDPROC:
+      {
+         PCWP_Struct pcwps = (PCWP_Struct)Common;
+         RtlCopyMemory( &pcwps->cwps, pCWP, sizeof(CWPSTRUCT));
          /* For CALLWNDPROC and CALLWNDPROCRET, we must be wary of the fact that
           * lParam could be a pointer to a buffer. This buffer must be exported
           * to user space too */
-         RtlCopyMemory(Extra, (PVOID) lParam, sizeof(CWPSTRUCT));
-         Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
-         if(lParamSize)
+         if ( lParamSize )
          {
-             RtlCopyMemory(Extra + sizeof(CWPSTRUCT), (PVOID)((CWPSTRUCT*)lParam)->lParam, lParamSize);
-             ((CWPSTRUCT*)Extra)->lParam = (LPARAM)lParamSize;
+             RtlCopyMemory( &pcwps->Extra, (PVOID)pCWP->lParam, lParamSize );
          }
+      }
          break;
       case WH_CALLWNDPROCRET:
-         RtlCopyMemory(Extra, (PVOID) lParam, sizeof(CWPRETSTRUCT));
-         Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
-         if(lParamSize)
+      {
+         PCWPR_Struct pcwprs = (PCWPR_Struct)Common;
+         RtlCopyMemory( &pcwprs->cwprs, pCWPR, sizeof(CWPRETSTRUCT));
+         if ( lParamSize )
          {
-             RtlCopyMemory(Extra + sizeof(CWPRETSTRUCT), (PVOID)((CWPRETSTRUCT*)lParam)->lParam, lParamSize);
-             ((CWPRETSTRUCT*)Extra)->lParam = (LPARAM)lParamSize;
+             RtlCopyMemory( &pcwprs->Extra, (PVOID)pCWPR->lParam, lParamSize );
          }
+      }
          break;
       case WH_MSGFILTER:
       case WH_SYSMSGFILTER:
@@ -745,7 +752,11 @@ co_IntCallHookProc(INT HookId,
 
    if (!NT_SUCCESS(Status))
    {
-      ERR("Failure to make Callback! Status 0x%x\n",Status);
+      if ( iTheId != HookId ) // Hook ID can change.
+      {
+          ERR("Failure to make Callback %d! Status 0x%x\n",HookId,Status);
+          iTheId = HookId;
+      }
       goto Fault_Exit;
    }
 
@@ -1216,12 +1227,13 @@ APIENTRY
 co_UserCBClientPrinterThunk( PVOID pkt, INT InSize, PVOID pvOutData, INT OutSize )
 {
    NTSTATUS Status;
+   PVOID ResultPointer;
 
-   Status = KeUserModeCallback(USER32_CALLBACK_UMPD,
-                               pkt,
-                               InSize,
-                               pvOutData,
-                               (PULONG)&OutSize);
+   Status = KeUserModeCallback( USER32_CALLBACK_UMPD,
+                                pkt,
+                                InSize,
+                               &ResultPointer,
+                               (PULONG)&OutSize );
 
 
    if (!NT_SUCCESS(Status))
@@ -1229,6 +1241,8 @@ co_UserCBClientPrinterThunk( PVOID pkt, INT InSize, PVOID pvOutData, INT OutSize
       ERR("User UMPD callback failed!\n");
       return 1;
    }
+
+   if (OutSize) RtlMoveMemory( pvOutData, ResultPointer, OutSize );
 
    return 0;
 }
