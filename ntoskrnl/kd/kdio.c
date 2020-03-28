@@ -626,6 +626,7 @@ KdpPromptString(
     _In_ PSTRING PromptString,
     _In_ PSTRING ResponseString)
 {
+#ifdef KDBG
     KIRQL OldIrql;
     STRING StringChar;
     CHAR Response;
@@ -720,6 +721,7 @@ KdpPromptString(
     /* Print a new line */
     *StringChar.Buffer = '\n';
     KdpPrintString(&StringChar);
+#endif
 
     /* Success; we don't need to resend */
     return FALSE;
