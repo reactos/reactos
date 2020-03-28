@@ -106,18 +106,6 @@ KdpGetDebugMode(PCHAR Currentp2)
         p2 += 5;
         KdpDebugMode.Bochs = TRUE;
     }
-    /* Check for PICE Debugging */
-    else if (!_strnicmp(p2, "PICE", 4))
-    {
-        /* Enable it */
-        p2 += 4;
-        KdpDebugMode.Pice = TRUE;
-
-        /* Enable Debugging */
-        KdDebuggerNotPresent = FALSE;
-        KdDebuggerEnabled = TRUE;
-        SharedUserData->KdDebuggerEnabled = TRUE;
-    }
 
     return p2;
 }

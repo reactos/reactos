@@ -218,9 +218,6 @@ typedef struct _KDP_DEBUG_MODE
             UCHAR Serial :1;
             UCHAR File   :1;
             UCHAR Bochs  :1;
-
-            /* Currently Supported Wrappers */
-            UCHAR Pice   :1;
         };
 
         /* Generic Value */
