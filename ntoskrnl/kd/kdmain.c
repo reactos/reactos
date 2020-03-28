@@ -129,13 +129,6 @@ KdpGetDebugMode(PCHAR Currentp2)
             KdpLogFileName.Buffer = p1;
         }
     }
-    /* Check for BOCHS Debugging */
-    else if (!_strnicmp(p2, "BOCHS", 5))
-    {
-        /* Enable It */
-        p2 += 5;
-        KdpDebugMode.Bochs = TRUE;
-    }
 
     return p2;
 }

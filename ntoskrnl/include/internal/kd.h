@@ -155,13 +155,6 @@ KdpDebugLogInit(
 
 VOID
 NTAPI
-KdpBochsInit(
-    struct _KD_DISPATCH_TABLE *DispatchTable,
-    ULONG BootPhase
-);
-
-VOID
-NTAPI
 KdpKdbgInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase);
@@ -202,9 +195,8 @@ KdpSafeWriteMemory(
 #define KdScreen    0
 #define KdSerial    1
 #define KdFile      2
-#define KdBochs     3
-#define KdKdbg      4
-#define KdMax       5
+#define KdKdbg      3
+#define KdMax       4
 
 /* KD Private Debug Modes */
 typedef struct _KDP_DEBUG_MODE
@@ -217,7 +209,6 @@ typedef struct _KDP_DEBUG_MODE
             UCHAR Screen :1;
             UCHAR Serial :1;
             UCHAR File   :1;
-            UCHAR Bochs  :1;
         };
 
         /* Generic Value */
