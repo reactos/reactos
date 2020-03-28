@@ -34,6 +34,8 @@ static BOOL force_termination = FALSE;
 static WCHAR **task_list;
 static unsigned int task_count;
 
+#ifdef __REACTOS__
+
 static WCHAR opForceTerminate[] = L"f";
 static WCHAR opImage[] = L"im";
 static WCHAR opPID[] = L"pid";
@@ -50,12 +52,13 @@ static PWCHAR opList[] = {opForceTerminate, opImage, opPID, opHelp, opTerminateC
 #define OP_PARAM_HELP 3
 #define OP_PARAM_TERMINATE_CHILD 4
 
+#endif
+
 struct pid_close_info
 {
     DWORD pid;
     BOOL found;
 };
-
 
 static int taskkill_vprintfW(const WCHAR *msg, __ms_va_list va_args)
 {
@@ -226,6 +229,7 @@ static BOOL get_process_name_from_pid(DWORD pid, WCHAR *buf, DWORD chars)
  * A PID of zero causes taskkill to warn about the inability to terminate
  * system processes. */
 
+
 #ifdef __REACTOS__
 
 static int terminate_processes(BOOL force_termination)
@@ -373,7 +377,7 @@ static int terminate_processes(BOOL force_termination)
 
 static int send_close_messages(void)
 {
-    DWORD* pid_list, pid_list_size;
+    DWORD *pid_list, pid_list_size;
     DWORD self_pid = GetCurrentProcessId();
     unsigned int i;
     int status_code = 0;
@@ -387,7 +391,7 @@ static int send_close_messages(void)
 
     for (i = 0; i < task_count; i++)
     {
-        WCHAR* p = task_list[i];
+        WCHAR *p = task_list[i];
         BOOL is_numeric = TRUE;
 
         /* Determine whether the string is not numeric. */
@@ -577,6 +581,7 @@ static int terminate_processes(void)
 
 #endif // __REACTOS__
 
+
 static BOOL add_to_task_list(WCHAR *name)
 {
     static unsigned int list_size = 16;
@@ -629,8 +634,8 @@ static int get_argument_type(WCHAR* argument)
 
 /* FIXME
 argument T not supported
-
 */
+
 static BOOL process_arguments(int argc, WCHAR* argv[])
 {
     BOOL has_im = FALSE, has_pid = FALSE, has_help = FALSE;
@@ -743,27 +748,6 @@ static BOOL process_arguments(int argc, WCHAR* argv[])
     return TRUE;
 }
 
-int wmain(int argc, WCHAR* argv[])
-{
-    int status_code = 0;
-
-    if (!process_arguments(argc, argv))
-    {
-        HeapFree(GetProcessHeap(), 0, task_list);
-        return 1;
-    }
-
-    /*  if (force_termination)
-          status_code = terminate_processes();
-      else
-          status_code = SendCloseMessages();*/
-
-    status_code = terminate_processes(force_termination);
-
-    HeapFree(GetProcessHeap(), 0, task_list);
-    return status_code;
-}
-
 #else
 
 /* FIXME Argument processing does not match behavior observed on Windows.
@@ -852,6 +836,8 @@ static BOOL process_arguments(int argc, WCHAR *argv[])
     return TRUE;
 }
 
+#endif // __REACTOS__
+
 int wmain(int argc, WCHAR *argv[])
 {
     int status_code = 0;
@@ -862,14 +848,19 @@ int wmain(int argc, WCHAR *argv[])
         return 1;
     }
 
-    if (force_termination)
+#ifdef __REACTOS__
+
+	status_code = terminate_processes(force_termination);
+    
+#else
+	
+	if (force_termination)
         status_code = terminate_processes();
     else
         status_code = send_close_messages();
 
+#endif
+
     HeapFree(GetProcessHeap(), 0, task_list);
     return status_code;
 }
-
-#endif // __REACTOS__
-
