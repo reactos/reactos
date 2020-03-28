@@ -3,7 +3,7 @@
  */
 #pragma once
 
-#ifdef _PAE_
+#ifdef _X86PAE_
 #define _MI_PAGING_LEVELS 3
 #define _MI_HAS_NO_EXECUTE 1
 #else
@@ -14,7 +14,7 @@
 /* Memory layout base addresses */
 #define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
 #define MI_DEFAULT_SYSTEM_RANGE_START           (PVOID)0x80000000
-#ifndef PAE
+#ifndef _X86PAE_
 #define HYPER_SPACE                                    0xC0400000
 #define HYPER_SPACE_END                                0xC07FFFFF
 #else
@@ -106,7 +106,7 @@
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Writable == 1)
 #endif
 #define MI_IS_PAGE_COPY_ON_WRITE(x)((x)->u.Hard.CopyOnWrite == 1)
-#ifdef _PAE_
+#ifdef _X86PAE_
 #define MI_IS_PAGE_EXECUTABLE(x)   ((x)->u.Hard.NoExecute == 0)
 #else
 #define MI_IS_PAGE_EXECUTABLE(x)   TRUE
