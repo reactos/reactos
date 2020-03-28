@@ -8,7 +8,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include "msv1_0.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
 
