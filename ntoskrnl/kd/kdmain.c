@@ -277,6 +277,9 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                                                   Context,
                                                   TrapFrame);
     }
+
+    /* We'll manually dump the stack for the user... */
+    KeRosDumpStackFrames(NULL, 0);
 #endif /* not KDBG */
 
     /* Debugger didn't handle it, please handle! */

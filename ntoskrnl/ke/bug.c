@@ -1067,15 +1067,6 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
             /* Break in the debugger */
             KiBugCheckDebugBreak(DBG_STATUS_BUGCHECK_FIRST);
         }
-        else
-        {
-            /*
-             * ROS HACK.
-             * Ok, so debugging is enabled, but KDBG isn't there.
-             * We'll manually dump the stack for the user.
-             */
-            KeRosDumpStackFrames(NULL, 0);
-        }
     }
 
     /* Raise IRQL to HIGH_LEVEL */
