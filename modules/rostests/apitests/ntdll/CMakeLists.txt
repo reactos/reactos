@@ -33,6 +33,7 @@ list(APPEND SOURCE
     NtReadFile.c
     NtSaveKey.c
     NtSetInformationFile.c
+    NtSetInformationProcess.c
     NtSetValueKey.c
     NtSetVolumeInformationFile.c
     NtUnloadDriver.c
