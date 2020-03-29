@@ -175,6 +175,7 @@ FxWmiIrpHandler::Dispatch(
 
     if (NT_SUCCESS(status) && m_WmiDispatchTable[minor].Handler != NULL)
     {
+        __debugbreak();
         status = m_WmiDispatchTable[minor].Handler(this,
                                                    Irp,
                                                    pProvider,

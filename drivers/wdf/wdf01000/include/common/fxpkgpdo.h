@@ -142,6 +142,10 @@ private:
         VOID
         )
     {
+        //
+        // TODO: remove when create function table
+        //
+        __debugbreak();
         return m_PdoPnpFunctionTable;
     }
 
@@ -151,6 +155,10 @@ private:
         VOID
         )
     {
+        //
+        // TODO: remove when create function table
+        //
+	__debugbreak();
         return m_PdoPowerFunctionTable;
     }
 

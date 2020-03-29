@@ -566,6 +566,10 @@ protected:
     {
         ULONG i;
 
+        //
+        // TODO: remove when fill m_WdfNotPowerPolicyOwnerStates
+        //
+        __debugbreak();
         for (i = 0;
              m_WdfNotPowerPolicyOwnerStates[i].CurrentTargetState != WdfDevStatePwrPolNull;
              i++)
