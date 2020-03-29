@@ -18,8 +18,7 @@ list(APPEND SOURCE
     ntlm/strutil.c
     ntlm/util.c
     precomp.h
-    splsa.c
-    spuser.c
+    user.c
     usercontext.c
     ${CMAKE_CURRENT_BINARY_DIR}/msv1_0_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msv1_0.def)
