@@ -280,8 +280,16 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
-    return NULL;
+    DDI_ENTRY();
+
+    FxTimer* pFxTimer;
+
+    FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
+                         Timer,
+                         FX_TYPE_TIMER,
+                         (PVOID*)&pFxTimer);
+
+    return pFxTimer->GetObject();
 }
 
 } // extern "C"
