@@ -21,3 +21,37 @@ FxSpinLock::FxSpinLock(
         pHistory->CurrentHistory = &pHistory->History[0];
     }
 }
+
+__drv_raisesIRQL(DISPATCH_LEVEL)
+__drv_maxIRQL(DISPATCH_LEVEL)
+VOID
+FxSpinLock::AcquireLock(
+    __in PVOID CallersAddress
+    )
+{
+    PFX_SPIN_LOCK_HISTORY pHistory;
+    KIRQL irql;
+
+    m_SpinLock.Acquire(&irql);
+
+    m_Irql = irql;
+
+    pHistory = GetHistory();
+
+    if (pHistory != NULL)
+    {
+        PFX_SPIN_LOCK_HISTORY_ENTRY pCur;
+
+        //
+        // This assert should never fire here, but this helps track ownership
+        // in the case of a release without an acquire.
+        //
+        ASSERT(pHistory->OwningThread == NULL);
+        pHistory->OwningThread = Mx::MxGetCurrentThread();
+
+        pCur = pHistory->CurrentHistory;
+
+        Mx::MxQueryTickCount(&pCur->AcquiredAtTime);
+        pCur->CallersAddress = CallersAddress;
+    }
+}
