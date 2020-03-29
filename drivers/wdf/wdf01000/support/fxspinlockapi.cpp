@@ -83,4 +83,36 @@ WDFEXPORT(WdfSpinLockCreate)(
     return status;
 }
 
+__drv_raisesIRQL(DISPATCH_LEVEL)
+__drv_maxIRQL(DISPATCH_LEVEL)
+VOID
+WDFEXPORT(WdfSpinLockAcquire)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    __drv_savesIRQL
+    _Requires_lock_not_held_(_Curr_)
+    _Acquires_lock_(_Curr_)
+    WDFSPINLOCK SpinLock
+    )
+{
+    WDFNOTIMPLEMENTED();
+}
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+__drv_minIRQL(DISPATCH_LEVEL)
+VOID
+WDFEXPORT(WdfSpinLockRelease)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    __drv_restoresIRQL
+    _Requires_lock_held_(_Curr_)
+    _Releases_lock_(_Curr_)
+    WDFSPINLOCK SpinLock
+    )
+{
+    WDFNOTIMPLEMENTED();
+}
+
 } //exter "C"

@@ -332,8 +332,8 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfWaitLockAcquire;
 	PFN_WDFUNIMPLEMENTED   pfnWdfWaitLockRelease;
 	PFN_WDFSPINLOCKCREATE   pfnWdfSpinLockCreate;
-	PFN_WDFUNIMPLEMENTED   pfnWdfSpinLockAcquire;
-	PFN_WDFUNIMPLEMENTED   pfnWdfSpinLockRelease;
+	PFN_WDFSPINLOCKACQUIRE  pfnWdfSpinLockAcquire;
+    PFN_WDFSPINLOCKRELEASE  pfnWdfSpinLockRelease;
 	PFN_WDFTIMERCREATE   pfnWdfTimerCreate;
 	PFN_WDFTIMERSTART   pfnWdfTimerStart;
 	PFN_WDFTIMERSTOP   pfnWdfTimerStop;
@@ -835,6 +835,34 @@ WDFEXPORT(WdfSpinLockCreate)(
     WDFSPINLOCK* SpinLock
     );
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_raises_(DISPATCH_LEVEL)
+WDFAPI
+VOID
+WDFEXPORT(WdfSpinLockAcquire)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    _Requires_lock_not_held_(_Curr_)
+    _Acquires_lock_(_Curr_)
+    _IRQL_saves_
+    WDFSPINLOCK SpinLock
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_min_(DISPATCH_LEVEL)
+WDFAPI
+VOID
+WDFEXPORT(WdfSpinLockRelease)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    _Requires_lock_held_(_Curr_)
+    _Releases_lock_(_Curr_)
+    _IRQL_restores_
+    WDFSPINLOCK SpinLock
+    );
+
 // ----- WDFSYNC ----- //
 
 extern WDFVERSION WdfVersion;
@@ -1169,8 +1197,8 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			WDFEXPORT(WdfSpinLockCreate),
-			NotImplemented,
-			NotImplemented,
+			WDFEXPORT(WdfSpinLockAcquire),//NotImplemented,
+			WDFEXPORT(WdfSpinLockRelease),//NotImplemented,
 			WDFEXPORT(WdfTimerCreate),
 			WDFEXPORT(WdfTimerStart),
 			WDFEXPORT(WdfTimerStop),
