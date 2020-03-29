@@ -55,3 +55,66 @@ FxSpinLock::AcquireLock(
         pCur->CallersAddress = CallersAddress;
     }
 }
+
+__drv_requiresIRQL(DISPATCH_LEVEL)
+VOID
+FxSpinLock::ReleaseLock(
+    VOID
+    )
+{
+    PFX_SPIN_LOCK_HISTORY pHistory;
+
+    pHistory = GetHistory();
+
+    if (pHistory != NULL)
+    {
+        LARGE_INTEGER now;
+        PFX_SPIN_LOCK_HISTORY_ENTRY pCur;
+
+        if (pHistory->OwningThread != Mx::MxGetCurrentThread())
+        {
+            if (pHistory->OwningThread == NULL)
+            {
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGERROR,
+                    "WDFSPINLOCK %p being released by thread 0x%p, but was "
+                    "never acquired!", GetObjectHandle(), Mx::MxGetCurrentThread());
+            }
+            else
+            {
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGERROR,
+                    "WDFSPINLOCK 0x%p not owned by thread 0x%p, owned by thread 0x%p",
+                    GetObjectHandle(), Mx::MxGetCurrentThread(),
+                    pHistory->OwningThread);
+            }
+
+            FxVerifierBugCheck(GetDriverGlobals(),
+                               WDF_INVALID_LOCK_OPERATION,
+                               (ULONG_PTR) GetObjectHandle(),
+                               0x1);
+            //
+            // Will not get here
+            //
+            return;
+        }
+
+        ASSERT(pHistory->OwningThread != NULL);
+
+        Mx::MxQueryTickCount(&now);
+
+        pCur = pHistory->CurrentHistory;
+        pCur->LockedDuraction = now.QuadPart - pCur->AcquiredAtTime.QuadPart;
+
+        pHistory->CurrentHistory++;
+        if (pHistory->CurrentHistory >=
+            pHistory->History + FX_SPIN_LOCK_NUM_HISTORY_ENTRIES)
+        {
+            pHistory->CurrentHistory = pHistory->History;
+        }
+
+        pHistory->OwningThread = NULL;
+    }
+
+    m_SpinLock.Release(m_Irql);
+}

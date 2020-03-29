@@ -134,7 +134,28 @@ WDFEXPORT(WdfSpinLockRelease)(
     WDFSPINLOCK SpinLock
     )
 {
-    WDFNOTIMPLEMENTED();
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxSpinLock* pLock;
+
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   SpinLock,
+                                   FX_TYPE_SPIN_LOCK,
+                                   (PVOID*) &pLock,
+                                   &pFxDriverGlobals);
+
+    if (pLock->IsInterruptLock())
+    {
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
+                            "WDFSPINLOCK %p is associated with an interrupt, "
+                            "cannot be used for normal sync operations",
+                            SpinLock);
+        FxVerifierDbgBreakPoint(pFxDriverGlobals);
+        return;
+    }
+
+    pLock->ReleaseLock();
 }
 
 } //exter "C"
