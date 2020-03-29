@@ -1344,3 +1344,260 @@ FX_VF_METHOD(FxRequest, VerifierBreakpoint_RequestEarlyDisposeDeferred) (
         FxVerifierDbgBreakPoint(FxDriverGlobals);
     }
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxRequest::GetMemoryObject(
+    __deref_out IFxMemory** MemoryObject,
+    __out PVOID* Buffer,
+    __out size_t* Length
+    )
+{
+    PMDL  pMdl;
+    NTSTATUS status;
+    ULONG length;
+    KIRQL irql;
+    BOOLEAN mapMdl, mdlMapped;
+    UCHAR majorFunction;
+
+    status = STATUS_SUCCESS;
+    length = 0x0;
+    mapMdl = FALSE;
+    mdlMapped = FALSE;
+    irql = PASSIVE_LEVEL;
+    majorFunction = m_Irp.GetMajorFunction();
+
+
+    //
+    // Verifier
+    //
+    if (GetDriverGlobals()->FxVerifierIO)
+    {
+        status = VerifyRequestIsNotCompleted(GetDriverGlobals());
+        if (!NT_SUCCESS(status))
+        {
+            goto Done;
+        }
+        if (m_Irp.GetRequestorMode() == UserMode
+            &&
+            (majorFunction == IRP_MJ_WRITE ||
+             majorFunction == IRP_MJ_READ)
+            &&
+            GetDevice()->GetIoType() == WdfDeviceIoNeither)
+        {
+            status = STATUS_INVALID_DEVICE_REQUEST;
+
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                "Attempt to get UserMode Buffer Pointer for WDFDEVICE 0x%p, "
+                "WDFREQUEST 0x%p, %!STATUS!",
+                GetDevice()->GetHandle(), GetHandle(), status);
+
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                "Driver must use buffered or direct I/O for this call, or use "
+                "WdfDeviceInitSetIoInCallerContextCallback to probe and lock "
+                "user mode memory");
+
+            FxVerifierDbgBreakPoint(GetDriverGlobals());
+        }
+    }
+
+    if ((m_RequestBaseStaticFlags & FxRequestBaseStaticSystemBufferValid) == 0x00)
+    {
+        Lock(&irql);
+    }
+
+    //
+    // We must dig into the IRP to get the buffer, length, and readonly status
+    //
+
+    switch (majorFunction) {
+    case IRP_MJ_DEVICE_CONTROL:
+    case IRP_MJ_INTERNAL_DEVICE_CONTROL:
+        length = m_Irp.GetParameterIoctlInputBufferLength();
+
+        if (length == 0)
+        {
+            status = STATUS_BUFFER_TOO_SMALL;
+
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                "WDFREQUEST %p InputBufferLength length is zero, %!STATUS!",
+                GetObjectHandle(), status);
+
+            goto Done;
+        }
+
+        if (m_Irp.GetParameterIoctlCodeBufferMethod() == METHOD_NEITHER)
+        {
+            //
+            // Internal device controls are kernel mode to kernel mode, and deal
+            // with direct unmapped pointers.
+            //
+            // In addition, a normal device control with
+            // RequestorMode == KernelMode is also treated as kernel mode
+            // to kernel mode since the I/O Manager will not generate requests
+            // with this setting from a user mode request.
+            //
+            if ((m_Irp.GetRequestorMode() == KernelMode) ||
+                (majorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL))
+            {
+                DO_NOTHING();
+            }
+            else
+            {
+                status = STATUS_INVALID_DEVICE_REQUEST;
+
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                    "Attempt to get UserMode Buffer Pointer for METHOD_NEITHER "
+                    "DeviceControl 0x%x, WDFDEVICE 0x%p, WDFREQUEST 0x%p, "
+                    "%!STATUS!",
+                    m_Irp.GetParameterIoctlCode(),
+                    GetDevice()->GetHandle(), GetHandle(), status);
+
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                    "Driver must use METHOD_BUFFERED or METHOD_xx_DIRECT I/O for "
+                    "this call, or use WdfDeviceInitSetIoInCallerContextCallback to "
+                    "probe and lock user mode memory %!STATUS!",
+                    STATUS_INVALID_DEVICE_REQUEST);
+
+                goto Done;
+            }
+        }
+        break;
+
+    case IRP_MJ_READ:
+        length = m_Irp.GetParameterReadLength();
+
+        if (GetDevice()->GetIoTypeForReadWriteBufferAccess() == WdfDeviceIoDirect)
+        {
+            KMDF_ONLY_CODE_PATH_ASSERT();
+            mapMdl = TRUE;
+        }
+        break;
+
+    case IRP_MJ_WRITE:
+        length = m_Irp.GetParameterWriteLength();
+
+        if (GetDevice()->GetIoTypeForReadWriteBufferAccess() == WdfDeviceIoDirect)
+        {
+            KMDF_ONLY_CODE_PATH_ASSERT();
+            mapMdl = TRUE;
+        }
+        break;
+
+    default:
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+            "Unrecognized Major Function 0x%x on WDFDEVICE 0x%p WDFREQUEST 0x%p",
+            majorFunction, GetDevice()->GetHandle(), GetHandle());
+
+        FxVerifierDbgBreakPoint(GetDriverGlobals());
+
+        status = STATUS_INVALID_DEVICE_REQUEST;
+        goto Done;
+    }
+
+    if (length == 0)
+    {
+        status = STATUS_BUFFER_TOO_SMALL;
+
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+            "WDFREQUEST 0x%p length is zero, %!STATUS!",
+            GetHandle(), status);
+
+        goto Done;
+    }
+
+    //
+    // See if we need to map
+    //
+    if (mapMdl && (m_RequestBaseFlags & FxRequestBaseSystemMdlMapped) == 0x00)
+    {
+        pMdl = m_Irp.GetMdl();
+
+        if (pMdl == NULL)
+        {
+            //
+            // Zero length transfer
+            //
+            status = STATUS_BUFFER_TOO_SMALL;
+
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                "WDFREQUEST 0x%p, direct io device, PMDL is NULL, "
+                "%!STATUS!", GetHandle(), status);
+
+            ASSERT(length == 0);
+        }
+        else
+        {
+            PVOID pVA;
+
+            //
+            // PagePriority may need to be a property, and/or parameter to
+            // this call
+            //
+            //
+            // Upon success, MmGetSystemAddressForMdlSafe stores the mapped
+            // VA pointer in the pMdl and upon subsequent calls to
+            // MmGetSystemAddressForMdlSafe, no mapping is done, just
+            // the stored VA is returned.  FxRequestSystemBuffer relies
+            // on this behavior and, more importantly, relies on this function
+            // to do the initial mapping so that FxRequestSystemBuffer::GetBuffer()
+            // will not return a NULL pointer.
+            //
+            pVA = Mx::MxGetSystemAddressForMdlSafe(pMdl, NormalPagePriority);
+
+            if (pVA == NULL)
+            {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                    "WDFREQUEST 0x%p could not get a system address for PMDL "
+                    "0x%p, %!STATUS!", GetHandle(), pMdl, status);
+            }
+            else
+            {
+                //
+                // System will automatically release the mapping PTE's when
+                // the MDL is released by the I/O request
+                //
+
+                m_SystemBuffer.SetMdl(m_Irp.GetMdl());
+
+                m_RequestBaseFlags |= FxRequestBaseSystemMdlMapped;
+            }
+        }
+    }
+
+Done:
+    if ((m_RequestBaseStaticFlags & FxRequestBaseStaticSystemBufferValid) == 0x00)
+    {
+        Unlock(irql);
+    }
+
+    if (NT_SUCCESS(status))
+    {
+        *MemoryObject = &m_SystemBuffer;
+
+        if (mapMdl)
+        {
+            *Buffer = Mx::MxGetSystemAddressForMdlSafe(m_SystemBuffer.m_Mdl,
+                                                   NormalPagePriority);
+        }
+        else
+        {
+            *Buffer = m_SystemBuffer.m_Buffer;
+        }
+
+        *Length = length;
+    }
+
+    return status;
+}

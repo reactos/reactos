@@ -692,6 +692,14 @@ public:
             Parameters.DeviceCapabilities.Capabilities;
     }
 
+    __inline
+    PMDL
+    FxIrp::GetMdl(
+        )
+    {
+        return m_Irp->MdlAddress;
+    }
+
 };
 
 //

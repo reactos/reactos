@@ -17,6 +17,7 @@ Environment:
 
 #include "common/fxrequestbase.h"
 #include "common/fxirp.h"
+#include "common/ifxmemory.h"
 
 
 #define KMDF_ONLY_CODE_PATH_ASSERT()
@@ -43,7 +44,7 @@ NTSTATUS
     __in_opt WDFCONTEXT Context
     );
 
-struct FxRequestSystemBuffer {//: public IFxMemory {
+struct FxRequestSystemBuffer : public IFxMemory {
     
     friend FxRequest;
 
@@ -147,7 +148,7 @@ protected:
 
 };
 
-struct FxRequestOutputBuffer {//: public IFxMemory {
+struct FxRequestOutputBuffer : public IFxMemory {
     friend FxRequest;
 
     FxRequestOutputBuffer(
@@ -790,6 +791,14 @@ public:
     {
         return m_ForwardRequestToParent;
     }
+
+    _Must_inspect_result_
+    NTSTATUS
+    GetMemoryObject(
+        __deref_out IFxMemory** Memory,
+        __out PVOID* Buffer,
+        __out size_t* Length
+        );
 
 private:
 
