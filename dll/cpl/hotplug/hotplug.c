@@ -8,26 +8,66 @@
 
 #include "hotplug.h"
 
+#define NDEBUG
+#include <debug.h>
+
 // globals
 HINSTANCE hApplet = 0;
 
 /* Applets */
 APPLET Applets[NUM_APPLETS] =
 {
-    {IDC_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, InitApplet}
+    {IDI_HOTPLUG, IDS_CPLNAME, IDS_CPLDESCRIPTION, InitApplet}
 };
+
+
+INT_PTR
+CALLBACK
+SafeRemovalDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            return TRUE;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDCLOSE:
+                    EndDialog(hwndDlg, TRUE);
+                    break;
+
+            }
+            break;
+    }
+
+    return FALSE;
+}
 
 
 LONG
 APIENTRY
 InitApplet(
-    HWND hwnd, 
+    HWND hwnd,
     UINT uMsg,
     LPARAM wParam,
     LPARAM lParam)
 {
+    DPRINT1("InitApplet()\n");
+
+    DialogBox(hApplet,
+              MAKEINTRESOURCE(IDD_SAFE_REMOVE_HARDWARE_DIALOG),
+              hwnd,
+              SafeRemovalDlgProc);
+
     // TODO
-    return FALSE;
+    return TRUE;
 }
 
 
@@ -39,29 +79,32 @@ CPlApplet(
     LPARAM lParam1,
     LPARAM lParam2)
 {
+    UINT i = (UINT)lParam1;
+
     switch(uMsg)
     {
         case CPL_INIT:
-        {
             return TRUE;
-        }
+
         case CPL_GETCOUNT:
-        {
             return NUM_APPLETS;
-        }
+
         case CPL_INQUIRE:
-        {
-            CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-            CPlInfo->idIcon = Applets[0].idIcon;
-            CPlInfo->idName = Applets[0].idName;
-            CPlInfo->idInfo = Applets[0].idDescription;
+            {
+                CPLINFO *CPlInfo = (CPLINFO*)lParam2;
+                CPlInfo->lData = 0;
+                CPlInfo->idIcon = Applets[i].idIcon;
+                CPlInfo->idName = Applets[i].idName;
+                CPlInfo->idInfo = Applets[i].idDescription;
+            }
             break;
-        }
+
         case CPL_DBLCLK:
-        {
-            InitApplet(hwndCPl, uMsg, lParam1, lParam2);
+            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
             break;
-        }
+
+        case CPL_STARTWPARMSW:
+            return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
     }
     return FALSE;
 }
@@ -76,12 +119,12 @@ DllMain(
 {
     UNREFERENCED_PARAMETER(lpvReserved);
 
-    switch(dwReason)
+    switch (dwReason)
     {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-        hApplet = hinstDLL;
-        break;
+        case DLL_PROCESS_ATTACH:
+        case DLL_THREAD_ATTACH:
+            hApplet = hinstDLL;
+            break;
     }
     return TRUE;
 }
