@@ -859,8 +859,102 @@ Returns:
 
 --*/
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    return ((FxPkgFdo*) This)->PnpQueryDeviceRelations(Irp);
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::PnpQueryDeviceRelations(
+    __inout FxIrp *Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine is called in response to a QueryDeviceRelations IRP.
+
+Arguments:
+
+    Device - a pointer to the FxDevice
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NSTATUS
+
+--*/
+
+{
+    NTSTATUS status;
+    DEVICE_RELATION_TYPE type;
+
+    type = Irp->GetParameterQDRType();
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Entering QueryDeviceRelations handler, "
+                        "type %!DEVICE_RELATION_TYPE!",
+                        type);
+
+    status = STATUS_SUCCESS;
+
+
+    //
+    // Set up the type of relations.
+    //
+    switch (type) {
+    case BusRelations:
+        status = HandleQueryBusRelations(Irp);
+
+        //
+        // STATUS_NOT_SUPPORTED is a special value. It means that
+        // HandleQueryBusRelations did not modify the irp at all and it should
+        // be sent off as is.
+        //
+        if (status == STATUS_NOT_SUPPORTED)
+        {
+            //
+            // We set status to STATUS_SUCCESS so that we send the requqest down
+            // the stack in the comparison below.
+            //
+            //status = STATUS_SUCCESS;
+        }
+        break;
+
+    case RemovalRelations:
+        status = HandleQueryDeviceRelations(Irp, m_RemovalDeviceList);
+
+        //
+        // STATUS_NOT_SUPPORTED is a special value. It means that
+        // HandleQueryDeviceRelations did not modify the irp at all and it should
+        // be sent off as is.
+        //
+        if (status == STATUS_NOT_SUPPORTED)
+        {
+            //
+            // We set status to STATUS_SUCCESS so that we send the requqest down
+            // the stack in the comparison below.
+            //
+            //status = STATUS_SUCCESS;
+        }
+        break;
+    }
+
+    if (NT_SUCCESS(status))
+    {
+        status = _PnpPassDown(this, Irp);
+    }
+    else
+    {
+        CompletePnpRequest(Irp, status);
+    }
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Exiting QueryDeviceRelations handler, status %!STATUS!",
+                        status);
+
+    return status;
 }
 
 _Must_inspect_result_

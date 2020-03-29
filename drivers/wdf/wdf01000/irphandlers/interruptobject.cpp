@@ -3,6 +3,133 @@
 #include "common/fxpkgpnp.h"
 #include "common/fxdevice.h"
 
+
+//
+// Public constructors
+//
+FxInterrupt::FxInterrupt(
+    __in PFX_DRIVER_GLOBALS Globals
+    ) :
+    FxNonPagedObject(FX_TYPE_INTERRUPT, sizeof(FxInterrupt), Globals)
+{
+    m_Interrupt = NULL;
+
+    m_OldIrql   = PASSIVE_LEVEL;
+
+    m_EvtInterruptEnable = NULL;
+    m_EvtInterruptDisable = NULL;
+
+    m_PassiveHandling = FALSE;
+
+    m_EvtInterruptIsr = NULL;
+    m_EvtInterruptDpc = NULL;
+    //m_EvtInterruptWorkItem = NULL;
+
+    m_CallbackLock = NULL;
+    m_WaitLock = NULL;
+    m_SystemWorkItem = NULL;
+
+    m_DisposeWaitLock = FALSE;
+
+    //
+    // We want platform specific behavior for soft disconnect to avoid any
+    // compat issues on existing platforms. In later versions (after 1.11) the
+    // platform differenciation could be removed.
+    //
+#if defined(_ARM_) || defined(_ARM64_)
+    m_UseSoftDisconnect = TRUE;
+#else
+    m_UseSoftDisconnect = FALSE;
+#endif
+
+#if FX_IS_KERNEL_MODE
+    KeInitializeDpc(&m_Dpc, _InterruptDpcThunk, this);
+
+    m_Active = FALSE;
+    m_InterruptCaptured = NULL;
+
+#elif FX_IS_USER_MODE
+
+    m_RdInterruptContext = NULL;
+    m_InterruptWaitblock = NULL;
+    m_CanQueue = FALSE;
+    m_PassiveHandlingByRedirector = FALSE;
+#endif
+
+    m_Disconnecting = FALSE;
+    m_IsEdgeTriggeredNonMsiInterrupt = FALSE;
+
+    m_ShareVector = WdfUseDefault;
+
+    m_AddedToList = FALSE;
+    m_Connected = FALSE;
+    m_ForceDisconnected = FALSE;
+    m_Enabled = FALSE;
+    m_FloatingSave = FALSE;
+
+    m_WakeInterruptMachine = NULL;
+
+    // This field is init later on.
+    m_CreatedInPrepareHardware = FALSE;
+
+    WDF_INTERRUPT_INFO_INIT(&m_InterruptInfo);
+    m_CmTranslatedResource = NULL;
+
+    Reset();
+
+    // This is set up by Initialize
+    m_SpinLock  = NULL;
+
+    //
+    // MSI Support
+    //
+    m_InterruptInfo.MessageNumber = 0;
+
+    //
+    // WdfIrqPolicyOneCloseProcessor is a safe policy to use. It ensures that
+    // old devices continue to work without any change in their functionality.
+    //
+    m_Policy    = WdfIrqPolicyOneCloseProcessor;
+    m_Priority  = WdfIrqPriorityUndefined;
+    RtlZeroMemory(&m_Processors, sizeof(m_Processors));
+    m_SetPolicy = FALSE;
+
+    InitializeListHead(&m_PnpList);
+
+    //
+    // Driver writer can only create WDFINTERRUPTs, not delete them
+    //
+    MarkNoDeleteDDI(ObjectDoNotLock);
+    MarkPassiveDispose(ObjectDoNotLock);
+    MarkDisposeOverride(ObjectDoNotLock);
+}
+
+FxInterrupt::~FxInterrupt()
+{
+
+    //
+    // If this hits, its because someone destroyed the INTERRUPT by
+    // removing too many references by mistake without calling WdfObjectDelete
+    //
+    if ( m_Interrupt != NULL )
+    {
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "Destroy Interrupt destroyed without calling WdfObjectDelete, or "
+            "by Framework processing DeviceRemove. Possible reference count problem?");
+        FxVerifierDbgBreakPoint(GetDriverGlobals());
+    }
+
+    if (m_Device != NULL)
+    {
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "Destroy Interrupt destroyed without calling WdfObjectDelete, or "
+            "by Framework processing DeviceRemove. Possible reference count problem?");
+        FxVerifierDbgBreakPoint(GetDriverGlobals());
+    }
+}
+
 VOID
 FxInterrupt::FilterResourceRequirements(
     __inout PIO_RESOURCE_DESCRIPTOR IoResourceDescriptor
@@ -667,4 +794,155 @@ FxInterrupt::InterruptEnableInvokeCallback(
     }
 
     return status;
+}
+
+VOID
+FxInterrupt::_InterruptDpcThunk(
+    __in PKDPC Dpc,
+    __in_opt PVOID DeferredContext,
+    __in_opt PVOID SystemArgument1,
+    __in_opt PVOID SystemArgument2
+    )
+/*++
+
+Routine Description:
+
+   Thunk used to invoke EvtInterruptDpc at DPC-level, or to queue a work-item 
+   for invoking EvtInterruptWorkItem at passive-level.
+
+--*/
+{
+    FxInterrupt* interrupt;
+
+    UNREFERENCED_PARAMETER(Dpc);
+
+    ASSERT(DeferredContext != NULL);
+    interrupt = (FxInterrupt*) DeferredContext;
+
+    if (interrupt->m_SystemWorkItem == NULL)
+    {
+        //
+        // TODO: Implement function
+        //
+        //FxPerfTraceDpc(&interrupt->m_EvtInterruptDpc);
+
+        __debugbreak();
+        //interrupt->DpcHandler(SystemArgument1, SystemArgument2);
+    }
+    else
+    {
+        interrupt->m_SystemWorkItem->TryToEnqueue(_InterruptWorkItemCallback, 
+                                                  interrupt);
+    }
+}
+
+VOID
+FxInterrupt::_InterruptWorkItemCallback(
+    __in PVOID DeferredContext
+    )
+/*++
+
+Routine Description:
+   Thunk used to invoke EvtInterruptWorkItem at passive-level
+
+--*/
+{
+    __debugbreak();
+    //ASSERT(DeferredContext != NULL);
+    //((FxInterrupt*)DeferredContext)->WorkItemHandler();
+}
+
+//
+// Called from the parent when the parent is being removed.
+//
+// Must ensure that any races with Delete are handled properly
+//
+BOOLEAN
+FxInterrupt::Dispose(
+    VOID
+    )
+{
+    // MarkPassiveDispose() in Initialize ensures this
+    ASSERT(Mx::MxGetCurrentIrql() == PASSIVE_LEVEL);
+
+    FlushAndRundown();
+
+    return TRUE;
+}
+
+//
+// Called by the system work item to finish the rundown
+//
+VOID
+FxInterrupt::FlushAndRundown()
+{
+    FxObject* pObject;
+
+    //
+    // This called at PASSIVE_LEVEL which is required for
+    // IoDisconnectInterrupt and KeFlushQueuedDpcs
+    //
+    ASSERT(Mx::MxGetCurrentIrql() == PASSIVE_LEVEL);
+
+    //
+    // If we have the KeFlushQueuedDpcs function call it
+    // to ensure the DPC routine is no longer running before
+    // we release the final reference to memory and the framework objects
+    //
+    FlushQueuedDpcs();
+
+    //
+    // Do mode-specific work.
+    //
+    FlushAndRundownInternal();
+
+    //
+    // Release the reference taken in FxInterrupt::Initialize
+    //
+    if (m_Device != NULL)
+    {
+        pObject = m_Device;
+        m_Device = NULL;
+
+        pObject->RELEASE(this);
+    }
+
+    //
+    // Release the reference taken in FxInterrupt::Initialize
+    //
+    RELEASE(_InterruptThunk);
+}
+
+VOID
+FxInterrupt::FlushQueuedDpcs(
+    VOID
+    )
+{
+    KeFlushQueuedDpcs();
+}
+
+VOID
+FxInterrupt::FlushAndRundownInternal(
+    VOID
+    )
+{
+    //
+    // Rundown the workitem.
+    //
+    if (m_SystemWorkItem != NULL)
+    {
+        m_SystemWorkItem->DeleteObject();
+        m_SystemWorkItem = NULL;
+    }
+
+    //
+    // If present, delete the default passive-lock.
+    //
+    if (m_DisposeWaitLock)
+    {
+        ASSERT(m_WaitLock != NULL);
+        m_WaitLock->DeleteObject();
+        m_WaitLock = NULL;
+        m_DisposeWaitLock = FALSE;
+    }
 }

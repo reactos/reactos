@@ -8,6 +8,7 @@
 #include "common/fxdeviceinterface.h"
 #include "common/fxinterrupt.h"
 #include "common/pnppriv.h"
+#include "common/fxrelateddevice.h"
 
 
 
@@ -91,7 +92,8 @@ FxPkgPnp::FxPkgPnp(
     m_PowerCaps.D3Latency = (ULONG) -1;
 
     m_PowerCaps.States = 0;
-    for (i = 0; i < PowerSystemMaximum; i++) {
+    for (i = 0; i < PowerSystemMaximum; i++)
+    {
         _SetPowerCapState(i, PowerDeviceMaximum, &m_PowerCaps.States);
     }
 
@@ -659,13 +661,14 @@ Returns:
         case IRP_MN_CANCEL_STOP_DEVICE:
         case IRP_MN_SURPRISE_REMOVAL:
         case IRP_MN_EJECT:
-        case IRP_MN_QUERY_PNP_DEVICE_STATE:
+        case IRP_MN_QUERY_PNP_DEVICE_STATE:        
             DoTraceLevelMessage(
                 GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
                 "WDFDEVICE 0x%p !devobj 0x%p, IRP_MJ_PNP, %!pnpmn! IRP 0x%p",
                 m_Device->GetHandle(),
                 m_Device->GetDeviceObject(),
                 irp.GetMinorFunction(), irp.GetIrp());
+                
             break;
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
@@ -677,6 +680,7 @@ Returns:
                 m_Device->GetDeviceObject(),
                 irp.GetMinorFunction(),
                 irp.GetParameterQDRType(), irp.GetIrp());
+            
             break;
 
         default:
@@ -2637,4 +2641,416 @@ Return Value:
     Unlock(irql);
 
     return state;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::HandleQueryBusRelations(
+    __inout FxIrp* Irp
+    )
+/*++
+
+Routine Description:
+    Handles a query device relations for the bus relations type (all other types
+    are handled by HandleQueryDeviceRelations).  This function will call into
+    each of the device's FxChildList objects to process the request.
+
+Arguments:
+    Irp - the request contain the query device relations
+
+Return Value:
+    NTSTATUS
+
+  --*/
+{
+    FxWaitLockTransactionedList* pList;
+    PDEVICE_RELATIONS pRelations;
+    FxTransactionedEntry* ple;
+    NTSTATUS status, listStatus;
+    BOOLEAN changed;
+
+    //
+    // Before we do anything, callback into the driver
+    //
+    m_DeviceRelationsQuery.Invoke(m_Device->GetHandle(), BusRelations);
+
+    //
+    // Default to success unless list processing fails
+    //
+    status = STATUS_SUCCESS;
+
+    //
+    // Keep track of changes made by any list object.  If anything changes,
+    // remember it for post-processing.
+    //
+    changed = FALSE;
+
+    pRelations = (PDEVICE_RELATIONS) Irp->GetInformation();
+
+    if (m_EnumInfo != NULL)
+    {
+        pList = &m_EnumInfo->m_ChildListList;
+
+        pList->LockForEnum(GetDriverGlobals());
+    }
+    else
+    {
+        pList = NULL;
+    }
+
+    ple = NULL;
+    while (pList != NULL && (ple = pList->GetNextEntry(ple)) != NULL)
+    {
+        FxChildList* pChildList;
+
+        pChildList = FxChildList::_FromEntry(ple);
+
+        //
+        // ProcessBusRelations will free and reallocate pRelations if necessary
+        //
+        listStatus = pChildList->ProcessBusRelations(&pRelations);
+
+        //
+        // STATUS_NOT_SUPPORTED is a special value.  It indicates that the call
+        // to ProcessBusRelations did not modify pRelations in any way.
+        //
+        if (listStatus == STATUS_NOT_SUPPORTED)
+        {
+            continue;
+        }
+
+
+        if (!NT_SUCCESS(listStatus))
+        {
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "WDFDEVICE %p, WDFCHILDLIST %p returned %!STATUS! from "
+                "processing bus relations",
+                m_Device->GetHandle(), pChildList->GetHandle(), listStatus);
+            status = listStatus;
+            break;
+        }
+
+        //
+        // We updated pRelations, change the status later
+        //
+        changed = TRUE;
+    }
+
+    //
+    // By checking for NT_SUCCESS(status) below we account for
+    // both the cases - list changed, as well as list unchanged but possibly
+    // children being reported missing (that doesn't involve list change).
+    //
+    
+    //
+    // InvokeReportedMissingCallback used PFN_WDF_DEVICE_REPORTED_MISSING, added in WDF 1.11
+    //
+    /*if (NT_SUCCESS(status))
+    {
+        ple = NULL;
+        while (pList != NULL && (ple = pList->GetNextEntry(ple)) != NULL)
+        {
+            FxChildList* pChildList;
+
+            pChildList = FxChildList::_FromEntry(ple);
+
+            //
+            // invoke the ReportedMissing callback for for children that are
+            // being reporte missing
+            //
+            pChildList->InvokeReportedMissingCallback();
+        }
+    }*/
+
+    if (pList != NULL)
+    {
+        pList->UnlockFromEnum(GetDriverGlobals());
+    }
+
+    if (NT_SUCCESS(status) && changed == FALSE)
+    {
+        //
+        // Went through the entire list of FxChildList objects, but no object
+        // modified the pRelations, so restore the caller's NTSTATUS.
+        //
+        status = Irp->GetStatus();
+    }
+
+    //
+    // Re-set the relations into the structure so that any changes that any call
+    // to FxChildList::ProcessBusRelations takes effect and is reported.
+    //
+    Irp->SetInformation((ULONG_PTR) pRelations);
+    Irp->SetStatus(status);
+
+    DoTraceLevelMessage(
+        GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+        "WDFDEVICE %p, returning %!STATUS! from processing bus relations",
+        m_Device->GetHandle(), status
+        );
+
+    if (NT_SUCCESS(status) && pRelations != NULL)
+    {
+        ULONG i;
+
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+            "WDFDEVICE %p returning %d devices in relations %p",
+            m_Device->GetHandle(), pRelations->Count, pRelations
+            );
+
+        //
+        // Try to not consume an IFR entry per DO reported.  Instead, report up
+        // to 4 at a time.
+        //
+        for (i = 0; i < pRelations->Count && GetDriverGlobals()->FxVerboseOn; i += 4)
+        {
+            if (i + 3 < pRelations->Count)
+            {
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                    "PDO %p PDO %p PDO %p PDO %p",
+                    pRelations->Objects[i],
+                    pRelations->Objects[i+1],
+                    pRelations->Objects[i+2],
+                    pRelations->Objects[i+3]
+                    );
+            }
+            else if (i + 2 < pRelations->Count)
+            {
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                    "PDO %p PDO %p PDO %p",
+                    pRelations->Objects[i],
+                    pRelations->Objects[i+1],
+                    pRelations->Objects[i+2]
+                    );
+            }
+            else if (i + 1 < pRelations->Count)
+            {
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                    "PDO %p PDO %p",
+                    pRelations->Objects[i],
+                    pRelations->Objects[i+1]
+                    );
+            }
+            else
+            {
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                    "PDO %p",
+                    pRelations->Objects[i]
+                    );
+            }
+        }
+    }
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::HandleQueryDeviceRelations(
+    __inout FxIrp* Irp,
+    __inout FxRelatedDeviceList* List
+    )
+/*++
+
+Routine Description:
+    Handles the query device relations request for all relation types *except*
+    for bus relations (HandleQueryBusRelations handles that type exclusively).
+
+    This function will allocate a PDEVICE_RELATIONS structure if the passed in
+    FxRelatedDeviceList contains any devices to add to the relations list.
+
+Arguments:
+    Irp - the request
+
+    List - list containing devices to report in the relations
+
+Return Value:
+    NTSTATUS
+
+  --*/
+{
+    PDEVICE_RELATIONS pPriorRelations, pNewRelations;
+    FxRelatedDevice* entry;
+    DEVICE_RELATION_TYPE type;
+    ULONG count;
+    size_t size;
+    NTSTATUS status;
+    BOOLEAN retry;
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+
+    if (List == NULL)
+    {
+        //
+        // Indicate that we didn't modify the irp at all since we have no list
+        //
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    pFxDriverGlobals = GetDriverGlobals();
+    type = Irp->GetParameterQDRType();
+    status = STATUS_SUCCESS;
+
+    //
+    // Notify driver that he should re-scan for device relations.
+    //
+    m_DeviceRelationsQuery.Invoke(m_Device->GetHandle(), type);
+
+    pPriorRelations = (PDEVICE_RELATIONS) Irp->GetInformation();
+    retry = FALSE;
+
+    count = 0;
+
+    List->LockForEnum(pFxDriverGlobals);
+
+    //
+    // Count how many entries there are in the list
+    //
+    for (entry = NULL; (entry = List->GetNextEntry(entry)) != NULL; count++)
+    {
+        DO_NOTHING();
+    }
+
+    //
+    // If we have
+    // 1)  no devices in the list AND
+    //   a) we have nothing to report OR
+    //   b) we have something to report and there are previous relations (which
+    //      if left unchanged will be used to report our missing devices)
+    //
+    // THEN we have nothing else to do, just return
+    //
+    if (count == 0 &&
+        (List->m_NeedReportMissing == 0 || pPriorRelations != NULL))
+    {
+        List->UnlockFromEnum(pFxDriverGlobals);
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    if (pPriorRelations != NULL)
+    {
+        //
+        // Looks like another driver in the stack has already added some
+        // entries.  Make sure we allocate space for these additional entries.
+        //
+        count += pPriorRelations->Count;
+    }
+
+    //
+    // Allocate space for the device relations structure (which includes
+    // space for one PDEVICE_OBJECT, and then allocate enough additional
+    // space for the extra PDEVICE_OBJECTS we need.
+    //
+    // (While no FxChildList objects are used in this function, this static
+    // function from the class computes what we need.)
+    //
+    size = FxChildList::_ComputeRelationsSize(count);
+
+    pNewRelations = (PDEVICE_RELATIONS) MxMemory::MxAllocatePoolWithTag(
+        PagedPool, size, pFxDriverGlobals->Tag);
+
+    if (pNewRelations == NULL)
+    {
+        //
+        // Dereference any previously reported relations before exiting.  They
+        // are dereferenced here because the PNP manager will see error and not
+        // do anything while the driver which added these objects expects the
+        // pnp manager to do the dereference.  Since this device is changing the
+        // status, it must act like the pnp manager.
+        //
+        if (pPriorRelations != NULL)
+        {
+            ULONG i;
+
+            for (i = 0; i < pPriorRelations->Count; i++)
+            {
+                Mx::MxDereferenceObject(pPriorRelations->Objects[i]);
+            }
+        }
+
+        if (List->IncrementRetries() < 3)
+        {
+            retry = TRUE;
+        }
+
+        status = STATUS_INSUFFICIENT_RESOURCES;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
+            "WDFDEVICE %p could not allocate device relations for type %d string, "
+            " %!STATUS!", m_Device->GetHandle(), type, status);
+
+        goto Done;
+    }
+
+    RtlZeroMemory(pNewRelations, size);
+
+    //
+    // If there was an existing device relations structure, copy
+    // the entries to the new structure.
+    //
+    if (pPriorRelations != NULL && pPriorRelations->Count > 0)
+    {
+        RtlCopyMemory(
+            pNewRelations,
+            pPriorRelations,
+            FxChildList::_ComputeRelationsSize(pPriorRelations->Count)
+            );
+    }
+
+    //
+    // Walk the list and return the relations here
+    //
+    for (entry = NULL;
+         (entry = List->GetNextEntry(entry)) != NULL;
+         pNewRelations->Count++)
+    {
+        MdDeviceObject pdo;
+
+        pdo = entry->GetDevice();
+
+        if (entry->m_State == RelatedDeviceStateNeedsReportPresent)
+        {
+            entry->m_State = RelatedDeviceStateReportedPresent;
+        }
+
+        //
+        // Add it to the DEVICE_RELATIONS structure.  Pnp dictates that each
+        // PDO in the list be referenced.
+        //
+        pNewRelations->Objects[pNewRelations->Count] = reinterpret_cast<PDEVICE_OBJECT>(pdo);
+        Mx::MxReferenceObject(pdo);
+    }
+
+Done:
+    if (NT_SUCCESS(status))
+    {
+        List->ZeroRetries();
+    }
+
+    List->UnlockFromEnum(GetDriverGlobals());
+
+    if (pPriorRelations != NULL)
+    {
+        MxMemory::MxFreePool(pPriorRelations);
+    }
+
+    if (retry)
+    {
+        MxDeviceObject physicalDeviceObject(
+                                    m_Device->GetPhysicalDevice()
+                                    );
+
+        physicalDeviceObject.InvalidateDeviceRelations(type);
+    }
+
+    Irp->SetStatus(status);
+    Irp->SetInformation((ULONG_PTR) pNewRelations);
+
+    return status;
 }

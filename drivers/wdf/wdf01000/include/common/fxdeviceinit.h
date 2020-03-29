@@ -132,6 +132,11 @@ public:
 
     ~WDFDEVICE_INIT();
 
+    VOID
+    SetPdo(
+        __in FxDevice* Parent
+        );
+
     BOOLEAN
     HasName(
         VOID

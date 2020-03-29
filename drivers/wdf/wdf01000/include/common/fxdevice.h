@@ -925,6 +925,15 @@ public:
         m_CurrentPnpState = DeviceState;
     }
 
+    __inline
+    BOOLEAN
+    IsPowerPageableCapable(
+        VOID
+        )
+    {
+        return m_PowerPageableCapable;
+    }
+
     _Must_inspect_result_
     NTSTATUS
     Initialize(

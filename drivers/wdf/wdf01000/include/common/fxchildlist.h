@@ -83,6 +83,39 @@ enum FxChildListScanTagStates {
     ScanTagFinished,
 };
 
+// begin_wpp enum
+enum FxChildListModificationState {
+    ModificationUnspecified = 0,
+    ModificationInsert,
+    ModificationRemove,
+    ModificationRemoveNotify,
+    ModificationClone,
+    ModificationNeedsPnpRemoval,
+};
+// end_wpp
+
+// begin_wpp enum
+enum FxChildListDescriptionState {
+    DescriptionUnspecified = 0,
+    DescriptionPresentNeedsInstantiation,
+    DescriptionInstantiatedHasObject,
+    DescriptionReportedMissing,
+    DescriptionNotPresent,
+};
+// end_wpp
+
+// begin_wpp enum
+enum FxChildListReportedMissingCallbackState : UCHAR {
+    CallbackStateUnspecified = 0,
+    CallbackNeedsToBeInvoked,
+    CallbackInvoked,
+};
+// end_wpp
+
+enum FxChildListValues {
+    FX_CHILD_LIST_MAX_RETRIES = 3
+};
+
 class FxChildList;
 
 struct FxDeviceDescriptionEntry : public FxStump {
@@ -124,7 +157,31 @@ public:
         return m_IdentificationDescription;
     }
 
+    _Must_inspect_result_
+    FxDeviceDescriptionEntry*
+    Clone(
+        __inout PLIST_ENTRY FreeListHead
+        );
+
 protected:
+
+    BOOLEAN
+    __inline
+    IsPresent(
+        VOID
+        )
+    {
+        if (m_DescriptionState == DescriptionPresentNeedsInstantiation ||
+            m_DescriptionState == DescriptionInstantiatedHasObject)
+        {
+            return TRUE;
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
+
     static
     FxDeviceDescriptionEntry*
     _FromDescriptionLink(
@@ -150,7 +207,7 @@ protected:
 protected:
     LIST_ENTRY m_DescriptionLink;
 
-    //FxChildListDescriptionState m_DescriptionState;
+    FxChildListDescriptionState m_DescriptionState;
 
     PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER m_IdentificationDescription;
 
@@ -158,7 +215,7 @@ protected:
 
     LIST_ENTRY m_ModificationLink;
 
-    //FxChildListModificationState m_ModificationState;
+    FxChildListModificationState m_ModificationState;
 
     CfxDevice* m_Pdo;
 
@@ -170,10 +227,12 @@ protected:
 
     BOOLEAN m_PendingDeleteOnScanEnd;
 
-    //FxChildListReportedMissingCallbackState m_ReportedMissingCallbackState;
+    FxChildListReportedMissingCallbackState m_ReportedMissingCallbackState;
 };
 
 class FxChildList : public FxNonPagedObject {
+
+    friend struct FxDeviceDescriptionEntry;
 
 public:
 
@@ -215,10 +274,58 @@ public:
         m_EvtScanForChildren.Invoke(GetHandle());
     }
 
+    static
+    FxChildList*
+    _FromEntry(
+        __in FxTransactionedEntry* Entry
+        )
+    {
+        return CONTAINING_RECORD(Entry, FxChildList, m_TransactionLink);
+    }
+
     VOID
     PostParentToD0(
         VOID
         );
+
+    _Must_inspect_result_
+    NTSTATUS
+    ProcessBusRelations(
+        __inout PDEVICE_RELATIONS *DeviceRelations
+        );
+
+    static
+    size_t
+    _ComputeRelationsSize(
+        __in ULONG Count
+        )
+    {
+        if (Count == 0)
+        {
+            return sizeof(((PDEVICE_RELATIONS) NULL)->Count);
+        }
+        else
+        {
+            return sizeof(DEVICE_RELATIONS) + (Count-1)*sizeof(PDEVICE_OBJECT);
+        }
+    }
+
+    VOID
+    CleanupDescriptions(
+        __in_opt PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdDescription,
+        __in_opt PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER AddrDescription
+        )
+    {
+        if (m_EvtAddressDescriptionCleanup != NULL && AddrDescription != NULL)
+        {
+            m_EvtAddressDescriptionCleanup(GetHandle(), AddrDescription);
+        }
+
+        if (m_EvtIdentificationDescriptionCleanup != NULL && IdDescription != NULL)
+        {
+            m_EvtIdentificationDescriptionCleanup(GetHandle(), IdDescription);
+        }
+    }
 
 protected:
 
@@ -232,6 +339,87 @@ protected:
     VOID
     Initialize(
         __in PWDF_CHILD_LIST_CONFIG Config
+        );
+
+    BOOLEAN
+    ReenumerateEntryLocked(
+        __inout FxDeviceDescriptionEntry* Entry,
+        __in BOOLEAN FromQDR
+        );
+
+    BOOLEAN
+    CloneEntryLocked(
+        __inout PLIST_ENTRY FreeListHead,
+        __inout FxDeviceDescriptionEntry* Entry,
+        __in BOOLEAN FromQDR
+        );
+
+    BOOLEAN
+    CreateDevice(
+        __inout FxDeviceDescriptionEntry* Entry,
+        __inout PBOOLEAN InvalidateRelations
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    DuplicateId(
+        __out PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER Dest,
+        __in PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER Source
+        )
+    {
+        if (m_EvtIdentificationDescriptionDuplicate != NULL)
+        {
+            return m_EvtIdentificationDescriptionDuplicate(GetHandle(),
+                                                           Source,
+                                                           Dest);
+        }
+        else
+        {
+            RtlCopyMemory(Dest, Source, m_IdentificationDescriptionSize);
+            return STATUS_SUCCESS;
+        }
+    }
+
+    _Must_inspect_result_
+    NTSTATUS
+    DuplicateAddress(
+        __out PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER Dest,
+        __in PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER Source
+        )
+    {
+        if (m_EvtAddressDescriptionDuplicate != NULL)
+        {
+            return m_EvtAddressDescriptionDuplicate(GetHandle(), Source, Dest);
+        }
+        else
+        {
+            RtlCopyMemory(Dest, Source, m_AddressDescriptionSize);
+            return STATUS_SUCCESS;
+        }
+    }
+
+    BOOLEAN
+    HasAddressDescriptions(
+        VOID
+        )
+    {
+        return m_AddressDescriptionSize > 0 ? TRUE : FALSE;
+    }
+
+    VOID
+    ProcessModificationsLocked(
+        __inout PLIST_ENTRY FreeListHead
+        );
+
+    VOID
+    DrainFreeListHead(
+        __inout PLIST_ENTRY FreeListHead
+        );
+
+    VOID
+    MarkDescriptionNotPresentWorker(
+        __inout FxDeviceDescriptionEntry* DescriptionEntry,
+        __in BOOLEAN ModificationCanBeQueued
         );
         
 

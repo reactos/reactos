@@ -3134,6 +3134,19 @@ protected:
         }
     }
 
+    _Must_inspect_result_
+    NTSTATUS
+    HandleQueryBusRelations(
+        __inout FxIrp* Irp
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    HandleQueryDeviceRelations(
+        __inout FxIrp* Irp,
+        __inout FxRelatedDeviceList* List
+        );
+
 };
 
 __inline

@@ -312,3 +312,17 @@ FxPnpDeviceSelfManagedIoInit::Invoke(
 
     return status;
 }
+
+VOID
+FxPnpDeviceRelationsQuery::Invoke(
+    __in WDFDEVICE Device,
+    __in DEVICE_RELATION_TYPE RelationType
+    )
+{
+    if (m_Method != NULL)
+    {
+        CallbackStart();
+        m_Method(Device, RelationType);
+        CallbackEnd();
+    }
+}

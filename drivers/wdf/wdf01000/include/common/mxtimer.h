@@ -92,6 +92,7 @@ public:
         m_Timer.m_TimerCallback = TimerCallback;
         m_Timer.m_Period = Period;
 
+        KeInitializeTimerEx(&(m_Timer.KernelTimer), NotificationTimer);
         KeInitializeDpc(&(m_Timer.TimerDpc), // Timer DPC
                         m_Timer.m_TimerCallback, // DeferredRoutine
                         m_Timer.m_TimerContext); // DeferredContext

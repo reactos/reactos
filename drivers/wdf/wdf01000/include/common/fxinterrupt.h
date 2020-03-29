@@ -4,6 +4,7 @@
 #include "common/fxnonpagedobject.h"
 #include "common/fxwakeinterruptstatemachine.h"
 #include "common/fxwaitlock.h"
+#include "common/fxsystemworkitem.h"
 
 
 class FxPkgPnp;
@@ -54,6 +55,22 @@ private:
     // Passive-level interrupt handling.
     //
     FxWaitLock*                     m_WaitLock;
+
+    //
+    // DpcForIsr and WorkItemForIsr support. Note that a DPC is still
+    // needed even if the driver opts to use WorkItemForIsr when 
+    // driver handles interrupts at DIRQL.
+    //
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+    KDPC                            m_Dpc;
+#endif
+    FxSystemWorkItem*               m_SystemWorkItem;
+
+    //
+    // Automatic serialization: this is the callback lock for the object the DPC or 
+    //       work-item will synchronize with.
+    //
+    FxCallbackLock*                 m_CallbackLock;
 
     //
     // Interrupt policy
@@ -134,9 +151,11 @@ private:
     // Callbacks
     //
     PFN_WDF_INTERRUPT_ENABLE        m_EvtInterruptEnable;
+    PFN_WDF_INTERRUPT_DISABLE       m_EvtInterruptDisable;
 
     PFN_WDF_INTERRUPT_ISR           m_EvtInterruptIsr;
-
+    PFN_WDF_INTERRUPT_DPC           m_EvtInterruptDpc;
+    //PFN_WDF_INTERRUPT_WORKITEM      m_EvtInterruptWorkItem; //WDF 1.11
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
     //
@@ -158,7 +177,13 @@ private:
     // Used to mark the interrupt disconnect window, and to discard interrupts
     // that arrive within this window. Only set if m_IsEdgeTriggeredNonMsiInterrupt is TRUE.
     //
-    BOOLEAN m_Disconnecting;    
+    BOOLEAN m_Disconnecting;
+
+    //
+    // Weak ref to the translated resource interrupt descriptor.
+    // It is valid from prepare hardware callback to release hardware callback.
+    // 
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR  m_CmTranslatedResource;
 
 public:
     FxInterrupt(
@@ -190,6 +215,12 @@ public:
             return FALSE;
         }
     }
+
+    virtual
+    BOOLEAN
+    Dispose(
+        VOID
+        );
 
     VOID
     AssignResources(
@@ -389,6 +420,17 @@ public:
         return interrupt;
     }
 
+    VOID
+    DpcHandler(
+        __in_opt PVOID SystemArgument1,
+        __in_opt PVOID SystemArgument2
+        );
+
+    VOID
+    FlushQueuedDpcs(
+        VOID
+        );
+
 protected:
 
     LIST_ENTRY  m_PnpList;
@@ -452,6 +494,17 @@ private:
 
     static
     MdInterruptServiceRoutineType _InterruptThunk;
+
+    static
+    EVT_SYSTEMWORKITEM _InterruptWorkItemCallback;
+
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+    static
+    MdDeferredRoutineType _InterruptDpcThunk;
+
+#elif ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+
+#endif
         
 };
 

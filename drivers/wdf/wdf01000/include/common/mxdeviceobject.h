@@ -182,6 +182,15 @@ public:
         return IoGetAttachedDeviceReference(m_DeviceObject);
     }
 
+    __inline
+    VOID
+    InvalidateDeviceRelations(
+        __in DEVICE_RELATION_TYPE Type
+        )
+    {
+            IoInvalidateDeviceRelations(m_DeviceObject, Type);
+    }
+
 };
 
 #endif //_MXDEVICEOBJECT_H_
