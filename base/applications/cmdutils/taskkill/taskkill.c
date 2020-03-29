@@ -850,11 +850,11 @@ int wmain(int argc, WCHAR *argv[])
 
 #ifdef __REACTOS__
 
-	status_code = terminate_processes(force_termination);
+    status_code = terminate_processes(force_termination);
     
 #else
-	
-	if (force_termination)
+
+    if (force_termination)
         status_code = terminate_processes();
     else
         status_code = send_close_messages();
