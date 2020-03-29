@@ -7,8 +7,41 @@
 
 const FxWmiMinorEntry FxWmiIrpHandler::m_WmiDispatchTable[] =
 {
-    NULL
-    // TODO: Fill table
+    // IRP_MN_QUERY_ALL_DATA
+    { _QueryAllData, FALSE },
+
+    // IRP_MN_QUERY_SINGLE_INSTANCE
+    { _QuerySingleInstance, TRUE },
+
+    // IRP_MN_CHANGE_SINGLE_INSTANCE
+    { _ChangeSingleInstance, TRUE },
+
+    // IRP_MN_CHANGE_SINGLE_ITEM
+    { _ChangeSingleItem, TRUE },
+
+    // IRP_MN_ENABLE_EVENTS
+    { _EnableDisableEventsAndCollection, FALSE },
+
+    // IRP_MN_DISABLE_EVENTS
+    { _EnableDisableEventsAndCollection, FALSE },
+
+    // IRP_MN_ENABLE_COLLECTION
+    { _EnableDisableEventsAndCollection, FALSE },
+
+    // IRP_MN_DISABLE_COLLECTION
+    { _EnableDisableEventsAndCollection, FALSE },
+
+    // IRP_MN_REGINFO
+    { _RegInfo, FALSE },
+
+    // IRP_MN_EXECUTE_METHOD
+    { _ExecuteMethod, TRUE },
+
+    // 0xA is reseverved
+    { NULL, FALSE },
+
+    // IRP_MN_REGINFO_EX
+    { _RegInfo, FALSE },
 };
 
 FxWmiIrpHandler::FxWmiIrpHandler(
@@ -175,7 +208,6 @@ FxWmiIrpHandler::Dispatch(
 
     if (NT_SUCCESS(status) && m_WmiDispatchTable[minor].Handler != NULL)
     {
-        __debugbreak();
         status = m_WmiDispatchTable[minor].Handler(this,
                                                    Irp,
                                                    pProvider,
@@ -318,4 +350,117 @@ FxWmiIrpHandler::Register(
     }
 
     return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxWmiIrpHandler::_QueryAllData(
+    __in FxWmiIrpHandler* This,
+    __in PIRP Irp,
+    __in FxWmiProvider* Provider,
+    __in_opt FxWmiInstance* Instance
+    )
+/*++
+
+Routine Description:
+    Handles querying all instances for data.  In the case where there is not
+    enough space in the buffer, we query each instance for the required amount
+    of buffer space and report that.
+
+Arguments:
+    This - device instance
+
+    Irp - WMI request for query all data
+
+    Providre - the provider being queried
+
+    Instance - ignored, NULL
+
+Return Value:
+    STATUS_BUFFER_TOO_SMALL in case the buffer is not large enough
+    STATUS_SUCCESS on a successful query
+    or other values depending on the client driver
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxWmiIrpHandler::_QuerySingleInstance(
+    __in FxWmiIrpHandler* This,
+    __in PIRP Irp,
+    __in FxWmiProvider* Provider,
+    __in FxWmiInstance* Instance
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxWmiIrpHandler::_ChangeSingleInstance(
+    __in FxWmiIrpHandler* This,
+    __in PIRP Irp,
+    __in FxWmiProvider* Provider,
+    __in FxWmiInstance* Instance
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxWmiIrpHandler::_ChangeSingleItem(
+    __in FxWmiIrpHandler* This,
+    __in PIRP Irp,
+    __in FxWmiProvider* Provider,
+    __in FxWmiInstance* Instance
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxWmiIrpHandler::_EnableDisableEventsAndCollection(
+    __in FxWmiIrpHandler* This,
+    __in PIRP Irp,
+    __in FxWmiProvider* Provider,
+    __in FxWmiInstance* Instance
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxWmiIrpHandler::_ExecuteMethod(
+    __in FxWmiIrpHandler* This,
+    __in PIRP Irp,
+    __in FxWmiProvider* Provider,
+    __in FxWmiInstance* Instance
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxWmiIrpHandler::_RegInfo(
+    __in FxWmiIrpHandler* This,
+    __in PIRP Irp,
+    __in_opt FxWmiProvider* Provider,
+    __in_opt FxWmiInstance* Instance
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
 }

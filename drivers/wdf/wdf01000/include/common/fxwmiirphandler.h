@@ -95,6 +95,77 @@ protected:
 
     BOOLEAN m_WorkItemQueued;
 
+private:
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _QueryAllData(
+        __in FxWmiIrpHandler* This,
+        __in PIRP Irp,
+        __in FxWmiProvider* Provider,
+        __in_opt FxWmiInstance* Instance
+        );
+
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _QuerySingleInstance(
+        __in FxWmiIrpHandler* This,
+        __in PIRP Irp,
+        __in FxWmiProvider* Provider,
+        __in FxWmiInstance* Instance
+        );
+
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _ChangeSingleInstance(
+        __in FxWmiIrpHandler* This,
+        __in PIRP Irp,
+        __in FxWmiProvider* Provider,
+        __in FxWmiInstance* Instance
+        );
+
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _ChangeSingleItem(
+        __in FxWmiIrpHandler* This,
+        __in PIRP Irp,
+        __in FxWmiProvider* Provider,
+        __in FxWmiInstance* Instance
+        );
+
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _EnableDisableEventsAndCollection(
+        __in FxWmiIrpHandler* This,
+        __in PIRP Irp,
+        __in FxWmiProvider* Provider,
+        __in FxWmiInstance* Instance
+        );
+
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _RegInfo(
+        __in FxWmiIrpHandler* This,
+        __in PIRP Irp,
+        __in_opt FxWmiProvider* Provider,
+        __in_opt FxWmiInstance* Instance
+        );
+
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _ExecuteMethod(
+        __in FxWmiIrpHandler* This,
+        __in PIRP Irp,
+        __in FxWmiProvider* Provider,
+        __in FxWmiInstance* Instance
+        );
+
 };
 
 #endif //_FXWMIIRPHANDLER_H_
