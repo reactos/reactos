@@ -268,7 +268,7 @@
 268 stdcall NdrServerCall2(ptr)
 269 stdcall NdrServerCall(ptr)
 @ stdcall -arch=x86_64 NdrServerCallAll(ptr)
-270 stdcall NdrServerContextMarshall(ptr ptr long)
+270 stdcall NdrServerContextMarshall(ptr ptr ptr)
 271 stdcall NdrServerContextNewMarshall(ptr ptr ptr ptr)
 272 stdcall NdrServerContextNewUnmarshall(ptr ptr)
 273 stdcall NdrServerContextUnmarshall(ptr)
