@@ -409,7 +409,7 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfIoQueueAssignForwardProgressPolicy;
 	PFN_WDFUNIMPLEMENTED   pfnWdfPdoInitAssignContainerID;
 	PFN_WDFUNIMPLEMENTED   pfnWdfPdoInitAllowForwardingRequestToParent;
-	PFN_WDFUNIMPLEMENTED   pfnWdfRequestMarkCancelableEx;
+	PFN_WDFREQUESTMARKCANCELABLEEX   pfnWdfRequestMarkCancelableEx;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestIsReserved;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestForwardToParentDeviceIoQueue;
 } WDFFUNCTIONS, *PWDFFUNCTIONS;
@@ -865,6 +865,22 @@ WDFEXPORT(WdfSpinLockRelease)(
 
 // ----- WDFSYNC ----- //
 
+// ----- WDFREQUEST ----- //
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfRequestMarkCancelableEx)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFREQUEST Request,
+    _In_
+    PFN_WDF_REQUEST_CANCEL EvtRequestCancel
+    );
+
+// ----- WDFREQUEST ----- //
+
 extern WDFVERSION WdfVersion;
 
 WDFAPI
@@ -1263,6 +1279,18 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			NotImplemented,
+			NotImplemented,
+			NotImplemented,
+			NotImplemented,
+			NotImplemented,
+			NotImplemented,
+			NotImplemented,
+			NotImplemented,
+			NotImplemented,
+			NotImplemented,
+			NotImplemented,
+			WDFEXPORT(WdfRequestMarkCancelableEx),
 			NotImplemented,
 			NotImplemented
 		}

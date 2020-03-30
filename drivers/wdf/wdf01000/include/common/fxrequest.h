@@ -818,6 +818,11 @@ public:
         __out size_t* Length
         );
 
+    NTSTATUS
+    SetInformation(
+        __in ULONG_PTR Information
+        );
+
 private:
 
     NTSTATUS

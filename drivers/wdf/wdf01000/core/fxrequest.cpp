@@ -1633,3 +1633,54 @@ FxRequest::QueryInterface(
 
     return STATUS_SUCCESS;
 }
+
+NTSTATUS
+FxRequest::SetInformation(
+    __in ULONG_PTR Information
+    )
+/*++
+
+Routine Description:
+
+    Set the IRP's IoStatus.Information field.
+
+    NOTE: If the caller calls Complete(status, information), as opposed
+          to Complete(status), the value will get overwritten.
+
+Arguments:
+
+    Information - Information value to set
+
+Returns:
+
+    NTSTATUS
+
+--*/
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+
+    pFxDriverGlobals = GetDriverGlobals();
+
+    if (pFxDriverGlobals->FxVerifierIO)
+    {
+        NTSTATUS status;
+        KIRQL irql;
+
+        Lock(&irql);
+
+        status = VerifyRequestIsNotCompleted(pFxDriverGlobals);
+        if (NT_SUCCESS(status))
+        {
+            m_Irp.SetInformation(Information);
+        }
+
+        Unlock(irql);
+
+        return status;
+    }
+    else
+    {
+        m_Irp.SetInformation(Information);
+        return STATUS_SUCCESS;
+    }
+}

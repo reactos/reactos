@@ -215,7 +215,27 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
+    FxRequest *pRequest;
+
+    //
+    // Validate the request handle, and get the FxRequest*
+    //
+    FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
+                         Request,
+                         FX_TYPE_REQUEST,
+                         (PVOID*)&pRequest);
+
+#if FX_VERBOSE_TRACE
+    //
+    // Use the object's globals, not the caller's
+    //
+    DoTraceLevelMessage(pRequest->GetDriverGlobals(),
+                        TRACE_LEVEL_VERBOSE, TRACINGREQUEST,
+                        "Enter: WDFREQUEST 0x%p, Information 0x%p",
+                        Request, (VOID*)Information);
+#endif // FX_VERBOSE_TRACE
+
+    pRequest->SetInformation(Information);
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
@@ -389,6 +409,46 @@ Returns:
 
     NTSTATUS
 
+--*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfRequestMarkCancelableEx)(
+   __in
+   PWDF_DRIVER_GLOBALS DriverGlobals,
+   __in
+   WDFREQUEST Request,
+   __in
+   PFN_WDF_REQUEST_CANCEL  EvtRequestCancel
+   )
+
+/*++
+
+Routine Description:
+
+    Mark the specified request as cancelable. Do not call the specified cancel 
+    routine if IRP is already cancelled but instead return STATUS_CANCELLED.
+    Caller is responsible for completing the request with STATUS_CANCELLED.
+
+Arguments:
+
+    Request - Request to mark as cancelable.
+    
+    EvtRequestCancel - cancel routine to be invoked when the
+                                request is cancelled.
+
+Returns:
+
+    STATUS_SUCCESS      - The request has been marked cancelable.
+    STATUS_CANCELLED    - The IRP is already cancelled.
+    NTSTATUS            - Other values are possible when verifier is enabled.
+    
 --*/
 
 {
