@@ -267,6 +267,7 @@
 267 stdcall NdrSendReceive(ptr ptr)
 268 stdcall NdrServerCall2(ptr)
 269 stdcall NdrServerCall(ptr)
+@ stdcall -arch=x86_64 NdrServerCallAll(ptr)
 270 stdcall NdrServerContextMarshall(ptr ptr long)
 271 stdcall NdrServerContextNewMarshall(ptr ptr ptr ptr)
 272 stdcall NdrServerContextNewUnmarshall(ptr ptr)
