@@ -1601,3 +1601,35 @@ Done:
 
     return status;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxRequest::QueryInterface(
+    __in FxQueryInterfaceParams* Params
+    )
+{
+    switch (Params->Type) {
+    case FX_TYPE_REQUEST:
+        *Params->Object = (FxRequest*) this;
+        break;
+
+    case IFX_TYPE_MEMORY:
+        if (Params->Offset == FIELD_OFFSET(FxRequest, m_SystemBufferOffset))
+        {
+            *Params->Object = (IFxMemory*) &m_SystemBuffer;
+            break;
+        }
+        else if (Params->Offset == FIELD_OFFSET(FxRequest, m_OutputBufferOffset))
+        {
+            *Params->Object = (IFxMemory*) &m_OutputBuffer;
+            break;
+        }
+
+        //  ||   ||   Fall      ||  ||
+        //  \/   \/   through   \/  \/
+    default:
+        return __super::QueryInterface(Params);
+    }
+
+    return STATUS_SUCCESS;
+}

@@ -22,7 +22,7 @@ Revision History:
 #ifndef __IFX_MEMORY_H__
 #define __IFX_MEMORY_H__
 
-#include "wdf.h"
+#include "common/fxglobals.h"
 
 // begin_wpp enum
 enum IFxMemoryFlags {
@@ -35,10 +35,50 @@ class IFxMemory {
 
 public:
     virtual
+    PVOID
+    GetBuffer(
+        VOID
+        ) =0;
+
+    virtual
+    size_t
+    GetBufferSize(
+        VOID
+        ) =0;
+
+    virtual
     WDFMEMORY
     GetHandle(
         VOID
         ) =0;
+
+    virtual
+    PFX_DRIVER_GLOBALS
+    GetDriverGlobals(
+        VOID
+        ) =0;
+
+    _Must_inspect_result_
+    NTSTATUS
+    CopyToPtr(
+        __in_opt PWDFMEMORY_OFFSET SourceOffsets,
+        __out_bcount(DestinationBufferLength) PVOID DestinationBuffer,
+        __in size_t DestinationBufferLength,
+        __in_opt PWDFMEMORY_OFFSET DestinationOffsets
+        );
+
+protected:
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _CopyPtrToPtr(
+        __in_bcount(SourceBufferLength)  PVOID SourceBuffer,
+        __in size_t SourceBufferLength,
+        __in_opt PWDFMEMORY_OFFSET SourceOffsets,
+        __out_bcount(DestinationBufferLength) PVOID DestinationBuffer,
+        __in size_t DestinationBufferLength,
+        __in_opt PWDFMEMORY_OFFSET DestinationOffsets
+        );
 };
 
 #endif //__IFX_MEMORY_H__

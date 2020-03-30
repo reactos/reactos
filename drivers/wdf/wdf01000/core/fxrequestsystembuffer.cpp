@@ -184,3 +184,23 @@ Return Value:
 {
     return CONTAINING_RECORD(this, FxRequest, m_SystemBuffer);
 }
+
+PFX_DRIVER_GLOBALS
+FxRequestSystemBuffer::GetDriverGlobals(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Returns the driver globals
+
+Arguments:
+    none
+
+Return Value:
+    Driver globals pointer
+
+  --*/
+{
+    return GetRequest()->GetDriverGlobals();
+}

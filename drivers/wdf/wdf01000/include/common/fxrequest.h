@@ -90,6 +90,12 @@ struct FxRequestSystemBuffer : public IFxMemory {
         VOID
         );
 
+    virtual
+    PFX_DRIVER_GLOBALS
+    GetDriverGlobals(
+        VOID
+        );
+
 protected:
 
     __inline
@@ -189,6 +195,12 @@ struct FxRequestOutputBuffer : public IFxMemory {
     virtual
     WDFMEMORY
     GetHandle(
+        VOID
+        );
+
+    virtual
+    PFX_DRIVER_GLOBALS
+    GetDriverGlobals(
         VOID
         );
 
@@ -355,8 +367,14 @@ protected:
         return (WDFMEMORY) handle;
     }
 
+    _Must_inspect_result_
+    virtual
+    NTSTATUS
+    QueryInterface(
+        __in FxQueryInterfaceParams* Params
+        );
     
-        //
+    //
     // This field points to the queue that the request is currently 
     // associated with.
     //

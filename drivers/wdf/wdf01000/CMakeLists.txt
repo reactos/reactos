@@ -55,6 +55,7 @@ list(APPEND SOURCE
     core/fxrequestoutputbuffer.cpp
     core/fxrequestsystembuffer.cpp
     core/fxtimer.cpp
+    core/fxmemoryobject.cpp
     io/fxioqueueapi.cpp
     primitives/mxgeneral.cpp
     irphandlers/fxpkgpnp.cpp

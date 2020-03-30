@@ -147,3 +147,23 @@ Return Value:
         return NULL;
     }
 }
+
+PFX_DRIVER_GLOBALS
+FxRequestOutputBuffer::GetDriverGlobals(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Returns the driver globals
+
+Arguments:
+    none
+
+Return Value:
+    Driver globals pointer
+
+  --*/
+{
+    return GetRequest()->GetDriverGlobals();
+}

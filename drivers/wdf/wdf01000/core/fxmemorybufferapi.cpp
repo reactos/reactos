@@ -1,4 +1,7 @@
-#include "wdf.h"
+#include "common/fxglobals.h"
+#include "common/ifxmemory.h"
+#include "common/dbgtrace.h"
+#include "common/fxhandle.h"
 
 extern "C" {
 
@@ -42,8 +45,43 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    IFxMemory* pSource;
+    WDFMEMORY_OFFSET srcOffsets;
+    WDFMEMORY_OFFSET dstOffsets;
+    NTSTATUS status;
+
+    FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
+                         SourceMemory,
+                         IFX_TYPE_MEMORY,
+                         (PVOID*) &pSource);
+
+    pFxDriverGlobals = pSource->GetDriverGlobals();
+
+    FxPointerNotNull(pFxDriverGlobals, Buffer);
+
+    if (NumBytesToCopyTo == 0)
+    {
+        status =STATUS_INVALID_PARAMETER;
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                            "Zero bytes to copy not allowed, %!STATUS!", status);
+        return status;
+    }
+
+    RtlZeroMemory(&srcOffsets, sizeof(srcOffsets));
+    srcOffsets.BufferLength = NumBytesToCopyTo;
+    srcOffsets.BufferOffset = SourceOffset;
+
+    RtlZeroMemory(&dstOffsets, sizeof(dstOffsets));
+    dstOffsets.BufferLength = NumBytesToCopyTo;
+    dstOffsets.BufferOffset = 0;
+
+    return pSource->CopyToPtr(&srcOffsets,
+                              Buffer,
+                              NumBytesToCopyTo,
+                              &dstOffsets);
 }
 
 _Must_inspect_result_
