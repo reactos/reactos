@@ -21,6 +21,93 @@ APPLET Applets[NUM_APPLETS] =
 };
 
 
+static
+VOID
+EnumHotpluggedDevices(HWND hwndDeviceTree)
+{
+    WCHAR szDisplayName[40];
+    SP_DEVINFO_DATA did = { 0 };
+    HDEVINFO hdev;
+    int idev;
+    DWORD dwCapabilities, dwSize;
+    ULONG ulStatus, ulProblem;
+    TVINSERTSTRUCTW tvItem;
+    CONFIGRET cr;
+
+    TreeView_DeleteAllItems(hwndDeviceTree);
+
+    hdev = SetupDiGetClassDevs(NULL, NULL, 0, DIGCF_ALLCLASSES | DIGCF_PRESENT);
+    if (hdev == INVALID_HANDLE_VALUE)
+        return;
+
+    did.cbSize = sizeof(did);
+
+    /* Enumerate all the attached devices */
+    for (idev = 0; SetupDiEnumDeviceInfo(hdev, idev, &did); idev++)
+    {
+        ulStatus = 0;
+        ulProblem = 0;
+
+        cr = CM_Get_DevNode_Status(&ulStatus,
+                                   &ulProblem,
+                                   did.DevInst,
+                                   0);
+        if (cr != CR_SUCCESS)
+            continue;
+
+        dwCapabilities = 0,
+        dwSize = sizeof(dwCapabilities);
+        cr = CM_Get_DevNode_Registry_Property(did.DevInst,
+                                              CM_DRP_CAPABILITIES,
+                                              NULL,
+                                              &dwCapabilities,
+                                              &dwSize,
+                                              0);
+        if (cr != CR_SUCCESS)
+            continue;
+
+        /* Add devices that require safe removal to the device tree */
+        if ( (dwCapabilities & CM_DEVCAP_REMOVABLE) &&
+            !(dwCapabilities & CM_DEVCAP_DOCKDEVICE) &&
+            !(dwCapabilities & CM_DEVCAP_SURPRISEREMOVALOK) &&
+            ((dwCapabilities & CM_DEVCAP_EJECTSUPPORTED) || (ulStatus & DN_DISABLEABLE)) &&
+            ulProblem == 0)
+        {
+            /* Get the device description */
+            dwSize = sizeof(szDisplayName);
+            cr = CM_Get_DevNode_Registry_Property(did.DevInst,
+                                                  CM_DRP_DEVICEDESC,
+                                                  NULL,
+                                                  szDisplayName,
+                                                  &dwSize,
+                                                  0);
+            if (cr != CR_SUCCESS)
+                wcscpy(szDisplayName, L"Unknown Device");
+
+            /* Add it to the device tree */
+            ZeroMemory(&tvItem, sizeof(tvItem));
+            tvItem.hParent = TVI_ROOT;
+            tvItem.hInsertAfter = TVI_FIRST;
+
+            tvItem.item.mask = TVIF_STATE | TVIF_TEXT /*| TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE */;
+            tvItem.item.state = TVIS_EXPANDED;
+            tvItem.item.stateMask = TVIS_EXPANDED;
+            tvItem.item.pszText = szDisplayName;
+//            tvItem.item.iImage = IMAGE_SOUND_SECTION;
+//            tvItem.item.iSelectedImage = IMAGE_SOUND_SECTION;
+            tvItem.item.lParam = (LPARAM)NULL;
+
+            /*hTreeItem = */ TreeView_InsertItem(hwndDeviceTree, &tvItem);
+
+
+
+        }
+    }
+
+    SetupDiDestroyDeviceInfoList(hdev);
+}
+
+
 INT_PTR
 CALLBACK
 SafeRemovalDlgProc(
@@ -34,16 +121,40 @@ SafeRemovalDlgProc(
     switch (uMsg)
     {
         case WM_INITDIALOG:
+            EnumHotpluggedDevices(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE));
             return TRUE;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDCLOSE:
+                    KillTimer(hwndDlg, 1);
                     EndDialog(hwndDlg, TRUE);
                     break;
 
             }
+            break;
+
+        case WM_DEVICECHANGE:
+            switch (wParam)
+            {
+                case DBT_DEVNODES_CHANGED:
+                    SetTimer(hwndDlg, 1, 500, NULL);
+                    break;
+            }
+            break;
+
+        case WM_TIMER:
+            if (wParam == 1)
+            {
+                KillTimer(hwndDlg, 1);
+                EnumHotpluggedDevices(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE));
+            }
+            break;
+
+        case WM_CLOSE:
+            KillTimer(hwndDlg, 1);
+            EndDialog(hwndDlg, TRUE);
             break;
     }
 

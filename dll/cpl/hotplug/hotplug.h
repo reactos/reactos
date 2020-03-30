@@ -7,10 +7,14 @@
 #include <wingdi.h>
 #include <winuser.h>
 #include <wincon.h>
+#include <winreg.h>
 #include <commctrl.h>
 #include <cpl.h>
 #include <tchar.h>
 #include <limits.h>
+#include <setupapi.h>
+#include <cfgmgr32.h>
+#include <dbt.h>
 
 #include "resource.h"
 
