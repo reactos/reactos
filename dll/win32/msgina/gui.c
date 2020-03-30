@@ -216,7 +216,7 @@ StatusDialogProc(
                 return FALSE;
 
             DlgData_LoadBitmaps(pDlgData);
-            if (pDlgData->hBarBitmap)
+            if (FALSE && pDlgData->hBarBitmap)
             {
                 if (SetTimer(hwndDlg, IDT_BAR, 200, NULL) == 0)
                 {
