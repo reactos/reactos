@@ -406,8 +406,8 @@
 405 stdcall RpcMgmtWaitServerListen()
 406 stdcall RpcNetworkInqProtseqsA(ptr)
 407 stdcall RpcNetworkInqProtseqsW(ptr)
-408 stdcall RpcNetworkIsProtseqValidA(ptr)
-409 stdcall RpcNetworkIsProtseqValidW(ptr)
+408 stdcall RpcNetworkIsProtseqValidA(str)
+409 stdcall RpcNetworkIsProtseqValidW(wstr)
 410 stub RpcNsBindingInqEntryNameA
 411 stub RpcNsBindingInqEntryNameW
 412 stub RpcObjectInqType
