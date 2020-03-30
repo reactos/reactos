@@ -1332,7 +1332,7 @@ ApplyOrdinals(EXPORT* pexports, unsigned cExports)
     /* Pass 2: apply available ordinals */
     for (i = 0, j = 1; i < cExports; i++)
     {
-        if ((pexports[i].uFlags & FL_ORDINAL) == 0)
+        if ((pexports[i].uFlags & FL_ORDINAL) == 0 && pexports[i].bVersionIncluded)
         {
             while (used[j] != 0)
                 j++;
