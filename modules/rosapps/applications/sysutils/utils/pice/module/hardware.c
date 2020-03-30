@@ -665,27 +665,6 @@ void ClrLine(ULONG line)
 }
 
 //*************************************************************************
-// ScrollUp()
-//
-// Scroll a specific window up one line
-//*************************************************************************
-void ScrollUp(USHORT Window)
-{
-    USHORT i;
-
-    return;
-
-	if(!wWindow[Window].bScrollDisabled)
-	{
-		for(i=1;i<wWindow[Window].cy;i++)
-		{
-			CopyLineTo((USHORT)(wWindow[Window].y+i-1),(USHORT)(wWindow[Window].y+i));
-		}
-		ClrLine((USHORT)(wWindow[Window].y+wWindow[Window].cy-1));
-	}
-}
-
-//*************************************************************************
 // Home()
 //
 // cursor to home position
@@ -848,7 +827,6 @@ void Print(USHORT Window,LPSTR p)
 				if(wWindow[Window].usCurY>=wWindow[Window].cy)
 				{
 					wWindow[Window].usCurY=wWindow[Window].cy-1;
-					ScrollUp(Window);
 				}
                 if(wWindow[Window].bScrollDisabled==TRUE)break;
 			}
