@@ -12,6 +12,9 @@
 #include <winnls.h>
 #include <winreg.h>
 
+// TODO: Remove related code, or explain its usefulness. (CJK specific?)
+// #define NEED_LOGO_SIZE
+
 typedef struct _DISPLAYSTATUSMSG
 {
     PGINA_CONTEXT Context;
@@ -38,8 +41,10 @@ typedef struct _DLG_DATA
     HBITMAP hBarBitmap;
     HWND hWndBarCtrl;
     DWORD BarCounter;
+#ifdef NEED_LOGO_SIZE
     DWORD LogoWidth;
     DWORD LogoHeight;
+#endif
     DWORD BarWidth;
     DWORD BarHeight;
 } DLG_DATA, *PDLG_DATA;
@@ -69,12 +74,14 @@ DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
     pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
                                        MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP,
                                        0, 0, LR_DEFAULTCOLOR);
+#ifdef NEED_LOGO_SIZE
     if (pDlgData->hLogoBitmap)
     {
         GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
         pDlgData->LogoWidth = bm.bmWidth;
         pDlgData->LogoHeight = bm.bmHeight;
     }
+#endif
 
     pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_BAR),
                                       IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
