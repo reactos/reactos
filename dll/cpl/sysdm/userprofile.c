@@ -687,7 +687,7 @@ AddUserProfiles(
     DWORD dwSidLength;
     FILETIME ftLastWrite;
     DWORD dwSize;
-    HANDLE hToken = NULL;
+    HANDLE hToken;
     PTOKEN_USER pTokenUser = NULL;
     PSID pProfileSid;
     PWSTR pszProfileSid;

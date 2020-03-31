@@ -185,7 +185,7 @@ GetUserAndDomainName(OUT LPWSTR* UserName,
 {
     BOOL bRet = TRUE;
     HANDLE hToken;
-    DWORD cbTokenBuffer = 0;
+    DWORD cbTokenBuffer;
     PTOKEN_USER pUserToken;
 
     LPWSTR lpUserName   = NULL;
@@ -200,13 +200,11 @@ GetUserAndDomainName(OUT LPWSTR* UserName,
         return FALSE;
 
     /* Retrieve token's information */
-    if (!GetTokenInformation(hToken, TokenUser, NULL, 0, &cbTokenBuffer))
+    if (GetTokenInformation(hToken, TokenUser, NULL, 0, &cbTokenBuffer) ||
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-        {
-            CloseHandle(hToken);
-            return FALSE;
-        }
+        CloseHandle(hToken);
+        return FALSE;
     }
 
     pUserToken = Alloc(HEAP_ZERO_MEMORY, cbTokenBuffer);

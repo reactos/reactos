@@ -291,14 +291,14 @@ WINAPI
 GetUserNameW(LPWSTR lpszName,
              LPDWORD lpSize)
 {
-    HANDLE hToken = INVALID_HANDLE_VALUE;
-    DWORD tu_len = 0;
-    char* tu_buf = NULL;
-    TOKEN_USER* token_user = NULL;
-    DWORD an_len = 0;
-    SID_NAME_USE snu = SidTypeUser;
-    WCHAR* domain_name = NULL;
-    DWORD dn_len = 0;
+    HANDLE hToken;
+    DWORD tu_len;
+    char* tu_buf;
+    TOKEN_USER* token_user;
+    DWORD an_len;
+    SID_NAME_USE snu;
+    WCHAR* domain_name;
+    DWORD dn_len;
 
     if (!OpenThreadToken (GetCurrentThread(), TOKEN_QUERY, FALSE, &hToken))
     {
@@ -327,9 +327,20 @@ GetUserNameW(LPWSTR lpszName,
         return FALSE;
     }
 
-    if (!GetTokenInformation(hToken, TokenUser, tu_buf, 36, &tu_len) || tu_len > 36)
+    if (!GetTokenInformation(hToken, TokenUser, tu_buf, 36, &tu_len))
     {
+        DWORD dwLastError = GetLastError();
+
         LocalFree(tu_buf);
+
+        if (dwLastError != ERROR_INSUFFICIENT_BUFFER)
+        {
+            /* don't call SetLastError(),
+               as GetTokenInformation() ought to have set one */
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
         tu_buf = LocalAlloc(LMEM_FIXED, tu_len);
         if (!tu_buf)
         {

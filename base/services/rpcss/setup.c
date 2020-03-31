@@ -58,7 +58,7 @@ RunningAsSYSTEM(VOID)
     BOOL bRet = FALSE;
     PTOKEN_USER pTokenUser;
     HANDLE hToken;
-    DWORD cbTokenBuffer = 0;
+    DWORD cbTokenBuffer;
 
     /* Get the process token */
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))

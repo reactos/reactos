@@ -278,18 +278,25 @@ GetFromToken(HANDLE hToken, TOKEN_INFORMATION_CLASS tic)
 {
 	BOOL bResult;
     DWORD n;
-	PBYTE p = 0;
+	PBYTE p;
 
-    bResult = GetTokenInformation(hToken, tic, 0, 0, &n);
-    if ( ! bResult && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-		return 0;
+    bResult = GetTokenInformation(hToken, tic, NULL, 0, &n);
+    if (bResult || GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    {
+		return NULL;
+    }
 
     p = (PBYTE) malloc(n);
+    if (!p)
+    {
+		return NULL;
+    }
+
     if ( ! GetTokenInformation(hToken, tic, p, n, &n) )
 	{
-		printf("GetFromToken() failed for TOKEN_INFORMATION_CLASS(%d): %d\n", tic, GetLastError());
+		printf("GetFromToken() failed for TOKEN_INFORMATION_CLASS(%d): %lu\n", tic, GetLastError());
 		free(p);
-		return 0;
+		return NULL;
 	}
 
 	return p;

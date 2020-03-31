@@ -432,27 +432,24 @@ AllowWinstaAccess(PWLSESSION Session)
 {
     BOOL bSuccess = FALSE;
     DWORD dwIndex;
-    DWORD dwLength = 0;
-    PTOKEN_GROUPS ptg = NULL;
+    DWORD dwLength;
+    PTOKEN_GROUPS ptg;
     PSID psid;
     TOKEN_STATISTICS Stats;
     DWORD cbStats;
     DWORD ret;
 
     // Get required buffer size and allocate the TOKEN_GROUPS buffer.
-
-    if (!GetTokenInformation(Session->UserToken,
-                             TokenGroups,
-                             ptg,
-                             0,
-                             &dwLength))
+    if (GetTokenInformation(Session->UserToken, TokenGroups, NULL, 0, &dwLength) ||
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-            return FALSE;
+        return FALSE;
+    }
 
-        ptg = (PTOKEN_GROUPS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
-        if (ptg == NULL)
-            return FALSE;
+    ptg = (PTOKEN_GROUPS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
+    if (!ptg)
+    {
+        return FALSE;
     }
 
     // Get the token group information from the access token.

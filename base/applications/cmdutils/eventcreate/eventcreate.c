@@ -126,8 +126,9 @@ GetUserToken(
     BOOL Success = FALSE;
     DWORD dwError;
     HANDLE hToken;
-    DWORD cbTokenBuffer = 0;
+    DWORD cbTokenBuffer;
     PTOKEN_USER pUserToken = NULL;
+    BOOL bRet;
 
     *ppUserToken = NULL;
 
@@ -136,11 +137,12 @@ GetUserToken(
         return FALSE;
 
     /* Retrieve token's information */
-    if (!GetTokenInformation(hToken, TokenUser, NULL, 0, &cbTokenBuffer))
+    bRet = GetTokenInformation(hToken, TokenUser, NULL, 0, &cbTokenBuffer);
+    if (bRet || GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
-        dwError = GetLastError();
-        if (dwError != ERROR_INSUFFICIENT_BUFFER)
-            goto Quit;
+        // Fake an error code if need be.
+        dwError = bRet ? ERROR_INVALID_DATA : GetLastError();
+        goto Quit;
     }
 
     pUserToken = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbTokenBuffer);

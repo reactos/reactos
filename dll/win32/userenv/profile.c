@@ -357,22 +357,21 @@ CheckForGuestsAndAdmins(
     PTOKEN_GROUPS pGroupInfo = NULL;
     PSID pAdministratorsSID = NULL;
     PSID pGuestsSID = NULL;
-    DWORD i, dwSize = 0;
+    DWORD i, dwSize;
     DWORD dwError = ERROR_SUCCESS;
+    BOOL bRet;
 
     DPRINT("CheckForGuestsAndAdmins(%p %p)\n", hToken, pdwState);
 
     /* Get the buffer size */
-    if (!GetTokenInformation(hToken, TokenGroups, NULL, dwSize, &dwSize))
+    bRet = GetTokenInformation(hToken, TokenGroups, NULL, 0, &dwSize);
+    if (bRet || GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
         dwError = GetLastError();
-        if (dwError != ERROR_INSUFFICIENT_BUFFER)
-        {
-            DPRINT1("GetTokenInformation() failed (Error %lu)\n", dwError);
-            return dwError;
-        }
-
-        dwError = ERROR_SUCCESS;
+        DPRINT1("GetTokenInformation() failed (Error %lu)\n",
+                bRet ? ERROR_SUCCESS : dwError);
+        // Fake a return code if need be.
+        return bRet ? ERROR_INVALID_DATA : dwError;
     }
 
     /* Allocate the buffer */
