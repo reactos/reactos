@@ -76,7 +76,6 @@ KdbSymGetAddressInformation(
 # define KdbInit()                                  KdbpCliInit()
 # define KdbModuleLoaded(FILENAME)                  KdbpCliModuleLoaded(FILENAME)
 #else
-# define KdbEnterDebuggerException(ER, PM, C, TF, F)    kdHandleException
 # define KdbInit()                                      do { } while (0)
 # define KdbEnter()                                     do { } while (0)
 # define KdbModuleLoaded(X)                             do { } while (0)
