@@ -28,18 +28,7 @@
 #define MI_DEBUG_MAPPING                        (PVOID)0xFFBFF000
 #define MI_HIGHEST_SYSTEM_ADDRESS               (PVOID)0xFFFFFFFF
 
-/* FIXME: These are different for PAE */
-#define PTE_BASE    0xC0000000
-#define PDE_BASE    0xC0300000
-#define PDE_TOP     0xC0300FFF
-#define PTE_TOP     0xC03FFFFF
-
-#define PTE_PER_PAGE 0x400
-#define PDE_PER_PAGE 0x400
-#define PPE_PER_PAGE 1
-
 /* Misc address definitions */
-#define MI_SYSTEM_PTE_BASE                      (PVOID)MiAddressToPte(NULL)
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 #define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
@@ -128,21 +117,68 @@
 /* On x86, these two are the same */
 #define MI_WRITE_VALID_PPE MI_WRITE_VALID_PTE
 
-/* Convert an address to a corresponding PTE */
-#define MiAddressToPte(x) \
-    ((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PTE_BASE))
+/*  Translating virtual addresses to physical addresses
+        (See: "Intel® 64 and IA-32 Architectures Software Developer’s Manual
+              Volume 3A: System Programming Guide, Part 1, CHAPTER 4 PAGING")
+    Page directory (PD) and Page table (PT) definitions
+    Page directory entry (PDE) and Page table entry (PTE) definitions
+*/
 
-/* Convert an address to a corresponding PDE */
-#define MiAddressToPde(x) \
-    ((PMMPDE)(((((ULONG)(x)) >> 22) << 2) + PDE_BASE))
+/* Maximum number of page directories pages */
+#ifndef _X86PAE_
+#define PD_COUNT 1        /* Only one page directory page */
+#else
+#define PD_COUNT (1 << 2) /* The two most significant bits in the VA */
+#endif
 
-/* Convert an address to a corresponding PTE offset/index */
-#define MiAddressToPteOffset(x) \
-    ((((ULONG)(x)) << 10) >> 22)
+/* The number of PTEs on one page of the PT */
+#define PTE_PER_PAGE (PAGE_SIZE / sizeof(MMPTE))
 
-/* Convert an address to a corresponding PDE offset/index */
-#define MiAddressToPdeOffset(x) \
-    (((ULONG)(x)) / (1024 * PAGE_SIZE))
+/* The number of PDEs on one page of the PD */
+#define PDE_PER_PAGE (PAGE_SIZE / sizeof(MMPDE))
+
+/* Maximum number of PDEs */
+#define PDE_PER_SYSTEM (PD_COUNT * PDE_PER_PAGE)
+
+/* TODO: It seems this variable is not needed for x86 */
+#define PPE_PER_PAGE 1
+
+/* Maximum number of pages for 4 GB of virtual space */
+#define MI_MAX_PAGES ((1ull << 32) / PAGE_SIZE)
+
+/* Base addresses for page tables */
+#define PTE_BASE (ULONG_PTR)0xC0000000
+#define PTE_TOP  (ULONG_PTR)(PTE_BASE + (MI_MAX_PAGES * sizeof(MMPTE)) - 1)
+#define PTE_MASK (PTE_TOP - PTE_BASE)
+
+#define MI_SYSTEM_PTE_BASE (PVOID)MiAddressToPte(NULL)
+
+/* Base addreses for page directories */
+#define PDE_BASE (ULONG_PTR)MiAddressToPte(PTE_BASE)
+#define PDE_TOP  (ULONG_PTR)(PDE_BASE + (PDE_PER_SYSTEM * sizeof(MMPDE)) - 1)
+#define PDE_MASK (PDE_TOP - PDE_BASE)
+
+/* The size of the virtual memory area that is mapped using a single PDE */
+#ifndef PDE_MAPPED_VA
+#define PDE_MAPPED_VA  (PTE_PER_PAGE * PAGE_SIZE)
+#endif
+
+/* Maps the virtual address to the corresponding PTE */
+#define MiAddressToPte(Va) \
+    ((PMMPTE)(PTE_BASE + ((((ULONG_PTR)(Va)) / PAGE_SIZE) * sizeof(MMPTE))))
+
+/* Maps the virtual address to the corresponding PDE */
+#define MiAddressToPde(Va) \
+    ((PMMPDE)(PDE_BASE + ((MiAddressToPdeOffset(Va)) * sizeof(MMPTE))))
+
+/* Takes the PTE index (for one PD page) from the virtual address */
+#define MiAddressToPteOffset(Va) \
+    ((((ULONG_PTR)(Va)) & (PDE_MAPPED_VA - 1)) / PAGE_SIZE)
+
+/* Takes the PDE offset (within all PDs pages) from the virtual address */
+#define MiAddressToPdeOffset(Va) (((ULONG_PTR)(Va)) / PDE_MAPPED_VA)
+
+/* TODO: Free this variable (for offset from the pointer to the PDE) */
 #define MiGetPdeOffset MiAddressToPdeOffset
 
 /* Convert a PTE/PDE into a corresponding address */
