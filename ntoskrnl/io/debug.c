@@ -53,11 +53,7 @@ PipDumpCmResourceDescriptor(
             break;
 
         case CmResourceTypeInterrupt:
-#ifdef _M_AMD64
-            DPRINT1("[%p:%X:%X] INT: Lev %X Vec %X Aff %I64X\n", Descriptor, Descriptor->ShareDisposition, Descriptor->Flags, Descriptor->u.Interrupt.Level, Descriptor->u.Interrupt.Vector, Descriptor->u.Interrupt.Affinity);
-#else
-            DPRINT1("[%p:%X:%X] INT: Lev %X Vec %X Aff %X\n", Descriptor, Descriptor->ShareDisposition, Descriptor->Flags, Descriptor->u.Interrupt.Level, Descriptor->u.Interrupt.Vector, Descriptor->u.Interrupt.Affinity);
-#endif
+            DPRINT1("[%p:%X:%X] INT: Lev %X Vec %X Aff %IX\n", Descriptor, Descriptor->ShareDisposition, Descriptor->Flags, Descriptor->u.Interrupt.Level, Descriptor->u.Interrupt.Vector, Descriptor->u.Interrupt.Affinity);
             break;
 
         case CmResourceTypeMemory:
@@ -238,7 +234,7 @@ PipDumpIoResourceDescriptor(
             break;
 
         default:
-            DPRINT1("%s[%p:%X:%X]. Unknown type %X\n", Descriptor, Descriptor->Option, Descriptor->ShareDisposition, Descriptor->Type);
+            DPRINT1("[%p:%X:%X]. Unknown type %X\n", Descriptor, Descriptor->Option, Descriptor->ShareDisposition, Descriptor->Type);
             break;
     }
 }
