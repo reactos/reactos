@@ -140,7 +140,7 @@
 /* Maximum number of PDEs */
 #define PDE_PER_SYSTEM (PD_COUNT * PDE_PER_PAGE)
 
-/* TODO: It seems this variable is not needed for x86 */
+/* TODO: It seems this constant is not needed for x86 */
 #define PPE_PER_PAGE 1
 
 /* Maximum number of pages for 4 GB of virtual space */
@@ -154,13 +154,13 @@
 #define MI_SYSTEM_PTE_BASE (PVOID)MiAddressToPte(NULL)
 
 /* Base addreses for page directories */
-#define PDE_BASE (ULONG_PTR)MiAddressToPte(PTE_BASE)
+#define PDE_BASE (ULONG_PTR)MiPteToPde(PTE_BASE)
 #define PDE_TOP  (ULONG_PTR)(PDE_BASE + (PDE_PER_SYSTEM * sizeof(MMPDE)) - 1)
 #define PDE_MASK (PDE_TOP - PDE_BASE)
 
 /* The size of the virtual memory area that is mapped using a single PDE */
 #ifndef PDE_MAPPED_VA
-#define PDE_MAPPED_VA  (PTE_PER_PAGE * PAGE_SIZE)
+#define PDE_MAPPED_VA (PTE_PER_PAGE * PAGE_SIZE)
 #endif
 
 /* Maps the virtual address to the corresponding PTE */
@@ -169,7 +169,7 @@
 
 /* Maps the virtual address to the corresponding PDE */
 #define MiAddressToPde(Va) \
-    ((PMMPDE)(PDE_BASE + ((MiAddressToPdeOffset(Va)) * sizeof(MMPTE))))
+    ((PMMPDE)(PDE_BASE + ((MiAddressToPdeOffset(Va)) * sizeof(MMPDE))))
 
 /* Takes the PTE index (for one PD page) from the virtual address */
 #define MiAddressToPteOffset(Va) \
