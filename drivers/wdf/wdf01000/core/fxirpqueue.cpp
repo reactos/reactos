@@ -739,3 +739,29 @@ Routine Description:
         }
     }        
 }
+
+MdIrp
+FxIrpQueue::RemoveRequest(
+    __in PMdIoCsqIrpContext Context
+    )
+/*++
+
+Routine Description:
+
+    Returns a request from the queue.
+
+--*/
+{
+    MdIrp Irp;
+
+    ASSERT(Context != NULL);
+
+    //
+    // Returns an IRP from the queue, and if success
+    // the IRP is no longer on the CSQ (m_Queue) and
+    // is not non-cancellable.
+    //
+    Irp = RemoveIrpFromQueueByContext(Context);
+
+    return Irp;
+}

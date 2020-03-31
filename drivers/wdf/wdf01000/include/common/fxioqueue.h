@@ -1074,6 +1074,23 @@ public:
         Unlock(irql);
     }
 
+    _Must_inspect_result_
+    NTSTATUS
+    RequestCancelable(
+        __in FxRequest* pRequest,
+        __in BOOLEAN    Cancelable,
+        __in_opt PFN_WDF_REQUEST_CANCEL  EvtRequestCancel,
+        __in BOOLEAN    FailIfIrpIsCancelled
+       );
+
+    // Do not specify argument names
+    FX_DECLARE_VF_FUNCTION_P2(
+    NTSTATUS, 
+    VerifyRequestCancelable, 
+        _In_ FxRequest*, 
+        _In_ BOOLEAN
+        );
+
 private:
 
     //

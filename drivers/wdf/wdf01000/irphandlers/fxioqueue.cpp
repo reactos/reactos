@@ -4878,3 +4878,218 @@ FxIoQueue::QueueStart(
 
     return;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxIoQueue::RequestCancelable(
+    __in FxRequest* pRequest,
+    __in BOOLEAN    Cancelable,
+    __in_opt PFN_WDF_REQUEST_CANCEL  EvtRequestCancel,
+    __in BOOLEAN    FailIfIrpIsCancelled
+   )
+/*++
+
+    Routine Description:
+
+        This is called to mark or unmark the request cancelable.
+
+    Arguments:
+
+        FxRequest* - Request that is completing
+
+        Cancelable - if TRUE, mark the request cancellable
+                     if FALSE, mark the request not cancelable
+                        if it's previously marked canceelable.
+                        
+        EvtRequestCancel - points to driver provided cancel routine
+                              if the cancelable flag is TRUE.
+                              
+        FailIfIrpIsCancelled - if FALSE and the IRP is already cancelled,
+                                  call the provided cancel routine and 
+                                  return success.
+                               if TRUE and the IRP is already cancelled,
+                                  return STATUS_CANCELLED.
+                                    
+    Returns:
+    
+        NTSTATUS
+
+--*/
+{
+    NTSTATUS status;
+    PFX_DRIVER_GLOBALS FxDriverGlobals = GetDriverGlobals();
+    KIRQL irql;
+
+    status = VerifyRequestCancelable(FxDriverGlobals, pRequest, Cancelable);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    if (Cancelable)
+    {
+        if (FxDriverGlobals->FxVerifierOn)
+        {
+            pRequest->SetVerifierFlags(FXREQUEST_FLAG_DRIVER_CANCELABLE);
+        }
+        //
+        // Set the Request for cancel status by inserting in the driver owned
+        // CSQ. Note: This could fire the cancel callback right away
+        // if the IRP was already cancelled.
+        //
+
+        ASSERT(EvtRequestCancel);
+
+        Lock(&irql);
+
+        pRequest->m_CancelRoutine.m_Cancel = EvtRequestCancel;
+
+        //
+        // Check if we need to delete this request.
+        //
+        if (m_CancelDispatchedRequests)
+        {
+            //
+            // Purge is in progress, cancel this request.
+            //
+            status = STATUS_CANCELLED;
+        }
+        else
+        {
+            status = pRequest->InsertTailIrpQueue(&m_DriverCancelable, NULL);
+        }
+
+        if (NT_SUCCESS(status))
+        {
+            Unlock(irql);
+        }
+        else if (FailIfIrpIsCancelled == FALSE)
+        {
+            ASSERT(status == STATUS_CANCELLED);
+
+            // This is not an error to the driver
+            status = STATUS_SUCCESS;
+
+            pRequest->m_Canceled = TRUE;
+
+            Unlock(irql);
+
+            //
+            // We must add a reference since the CancelForDriver path
+            // assumes we were on the FxIrpQueue with the extra reference
+            //
+            pRequest->ADDREF(FXREQUEST_QUEUE_TAG);
+
+            //
+            // Mark the request as cancelled, place it on the cancel list,
+            // and schedule the cancel event to the driver
+            //
+            CancelForDriver(pRequest);
+        }
+        else
+        {            
+            ASSERT(status == STATUS_CANCELLED);
+
+            pRequest->m_CancelRoutine.m_Cancel = NULL;
+
+            //
+            // Let the caller complete the request with STATUS_CANCELLED.
+            //
+            Unlock(irql);
+
+            if (FxDriverGlobals->FxVerifierOn)
+            {
+                pRequest->ClearVerifierFlags(FXREQUEST_FLAG_DRIVER_CANCELABLE);
+            }
+        }
+
+        return status;
+    }
+    else
+    {
+        //
+        // This can return STATUS_CANCELLED if the request
+        // has been canceled already
+        //
+        Lock(&irql);
+        status = pRequest->RemoveFromIrpQueue(&m_DriverCancelable);
+
+        if (NT_SUCCESS(status))
+        {
+            pRequest->m_CancelRoutine.m_Cancel = NULL;
+        }
+        else
+        {
+            //
+            // In the failure case, the cancel routine has won the race and will
+            // be invoked on another thread.
+            //
+            DO_NOTHING();
+        }
+        Unlock(irql);
+
+        if (FxDriverGlobals->FxVerifierOn)
+        {
+
+            // We got the request back, can clear the cancelable flag
+            if (NT_SUCCESS(status))
+            {
+                pRequest->ClearVerifierFlags(FXREQUEST_FLAG_DRIVER_CANCELABLE);
+            }
+        }
+
+        return status;
+    }
+}
+
+_Must_inspect_result_
+NTSTATUS
+FX_VF_METHOD(FxIoQueue, VerifyRequestCancelable) (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ FxRequest* pRequest,
+    _In_ BOOLEAN Cancelable
+    )
+{
+    NTSTATUS status;
+    KIRQL irql;
+
+    PAGED_CODE_LOCKED();
+
+    pRequest->Lock(&irql);
+
+    // Make sure the driver owns the request
+    status = pRequest->VerifyRequestIsDriverOwned(FxDriverGlobals);
+    if (!NT_SUCCESS(status))
+    {
+        goto Done;
+    }
+
+    if (Cancelable)
+    {
+        //
+        // Make sure the request is not cancelable for it to be made
+        // cancelable.
+        //
+        status = pRequest->VerifyRequestIsNotCancelable(FxDriverGlobals);
+        if (!NT_SUCCESS(status))
+        {
+            goto Done;
+        }
+    }
+    else
+    {
+        //
+        // Make sure the request is cancelable for it to be made
+        // uncancelable.
+        //
+        status = pRequest->VerifyRequestIsCancelable(FxDriverGlobals);
+        if (!NT_SUCCESS(status))
+        {
+            goto Done;
+        }
+    }
+    
+Done:
+    pRequest->Unlock(irql);
+    return status;
+}

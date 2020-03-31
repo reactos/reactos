@@ -1,6 +1,7 @@
 #include "common/fxglobals.h"
 #include "common/fxrequest.h"
 #include "common/ifxmemory.h"
+#include "common/fxioqueue.h"
 
 extern "C" {
 
@@ -452,8 +453,42 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxRequest* pRequest;
+    NTSTATUS status;
+
+    //
+    // Validate request object handle
+    //
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Request,
+                                   FX_TYPE_REQUEST,
+                                   (PVOID*)&pRequest,
+                                   &pFxDriverGlobals);
+
+    FxPointerNotNull(pFxDriverGlobals, EvtRequestCancel);
+
+#if FX_VERBOSE_TRACE
+    DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGREQUEST,
+                        "Enter: WDFREQUEST 0x%p", Request);
+#endif // FX_VERBOSE_TRACE
+
+    if (pRequest->GetCurrentQueue() == NULL)
+    {
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                            "WDFREQUEST %p doesn't belong to any queue %!STATUS!",
+                            Request, STATUS_INVALID_DEVICE_REQUEST);
+        FxVerifierDbgBreakPoint(pFxDriverGlobals);
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    status = pRequest->GetCurrentQueue()->RequestCancelable(pRequest,
+                                                        TRUE,
+                                                        EvtRequestCancel,
+                                                        TRUE);
+
+    ASSERT(status == STATUS_SUCCESS || status == STATUS_CANCELLED);
+    return status;
 }
 
 } // extern "C"

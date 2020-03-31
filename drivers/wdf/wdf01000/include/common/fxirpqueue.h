@@ -110,6 +110,11 @@ public:
         __out FxRequest**          ppOutRequest
         );
 
+    MdIrp
+    RemoveRequest(
+        __in PMdIoCsqIrpContext Context
+        );
+
 private:
 
     //

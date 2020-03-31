@@ -823,6 +823,33 @@ public:
         __in ULONG_PTR Information
         );
 
+    _Must_inspect_result_
+    FxIoQueue*
+    GetCurrentQueue(
+        VOID
+        )
+    {
+        if (m_Completed)
+        {
+            return NULL;
+        }
+
+        return m_IoQueue;
+    }
+
+    //
+    // Remove it from the FxIrpQueue it is associated with.
+    //
+    // Returns STATUS_CANCELLED if the cancel routine has
+    // fired and removed it from the queue first.
+    //
+    //
+    _Must_inspect_result_
+    NTSTATUS
+    RemoveFromIrpQueue(
+        __in FxIrpQueue* IrpQueue
+        );
+
 private:
 
     NTSTATUS

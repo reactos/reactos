@@ -1684,3 +1684,98 @@ Returns:
         return STATUS_SUCCESS;
     }
 }
+
+//
+// Remove request from its IRP queue
+//
+_Must_inspect_result_
+NTSTATUS
+FxRequest::RemoveFromIrpQueue(
+    __in FxIrpQueue* IrpQueue
+    )
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    MdIrp pIrp;
+
+    pFxDriverGlobals = GetDriverGlobals();
+
+    //
+    // Cancel Safe Queues allow this request
+    // removal to be race free even if the
+    // request has been cancelled already.
+    //
+    // It signals this by returning NULL for
+    // the Irp.
+    //
+    pIrp = IrpQueue->RemoveRequest(&m_CsqContext);
+
+    if (pIrp == NULL)
+    {
+        //
+        // Cancel routine removed it from the cancel
+        // safe queue.
+        //
+        // The cancel handler will remove this reference
+        // in FxIoQueue::_IrpCancelForDriver /
+        // FxIrpQueue::_WdmCancelRoutineInternal
+        //
+
+        return STATUS_CANCELLED;
+    }
+    else
+    {
+        //
+        // We retrieved the Irp from the cancel safe queue
+        // without it having been cancelled first.
+        //
+        // It is no longer cancelable
+        //
+        if (pFxDriverGlobals->FxVerifierOn)
+        {
+            if (m_IrpQueue == NULL)
+            {
+                DoTraceLevelMessage(
+                    pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                    "WDFREQUEST 0x%p not on IrpQueue",
+                    GetHandle());
+
+                FxVerifierDbgBreakPoint(pFxDriverGlobals);
+            }
+        }
+
+        MarkRemovedFromIrpQueue();
+
+        RELEASE(FXREQUEST_QUEUE_TAG);
+
+        return STATUS_SUCCESS;
+    }
+}
+
+_Must_inspect_result_
+NTSTATUS
+FX_VF_METHOD(FxRequest, VerifyRequestIsCancelable)(
+     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+{
+    NTSTATUS status;
+
+    PAGED_CODE_LOCKED();
+
+    if ((m_VerifierFlags & FXREQUEST_FLAG_DRIVER_CANCELABLE) == 0)
+    {
+        status = STATUS_INVALID_DEVICE_REQUEST;
+
+        DoTraceLevelMessage(
+            FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGREQUEST,
+            "WDFREQUEST 0x%p is not cancelable, %!STATUS!",
+            GetHandle(), status);
+
+        FxVerifierDbgBreakPoint(FxDriverGlobals);
+    }
+    else
+    {
+        status = STATUS_SUCCESS;
+    }
+
+    return status;
+}
