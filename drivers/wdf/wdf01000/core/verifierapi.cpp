@@ -1,4 +1,6 @@
-#include "wdf.h"
+#include "common/fxglobals.h"
+#include "common/dbgtrace.h"
+
 
 extern "C" {
 
@@ -28,7 +30,22 @@ Return Value:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
+    DDI_ENTRY_IMPERSONATION_OK();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+
+    pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
+
+    if (pFxDriverGlobals->FxVerifierDbgBreakOnError)
+    {
+        DbgBreakPoint();
+    }
+    else
+    {
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGDRIVER,
+            "DbgBreakOnError registry value wasn't set, ignoring WdfVerifierDbgBreakPoint");
+    }
 }
 
 } // extern "C"
