@@ -191,6 +191,7 @@ StatusDialogProc(
     IN LPARAM lParam)
 {
     PDLG_DATA pDlgData;
+
     UNREFERENCED_PARAMETER(wParam);
 
     pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
@@ -446,6 +447,7 @@ WelcomeDialogProc(
             }
             return TRUE;
         }
+
         case WM_DESTROY:
         {
             DlgData_Destroy(hwndDlg);
@@ -1244,10 +1246,13 @@ LogonDialogProc(
         }
 
         case WM_DESTROY:
+        {
             DlgData_Destroy(hwndDlg);
             return TRUE;
+        }
 
         case WM_COMMAND:
+        {
             switch (LOWORD(wParam))
             {
                 case IDOK:
@@ -1265,6 +1270,7 @@ LogonDialogProc(
                     return TRUE;
             }
             break;
+        }
     }
 
     return FALSE;
@@ -1502,11 +1508,15 @@ UnlockDialogProc(
             }
             return TRUE;
         }
+
         case WM_DESTROY:
+        {
             DlgData_Destroy(hwndDlg);
             return TRUE;
+        }
 
         case WM_COMMAND:
+        {
             switch (LOWORD(wParam))
             {
                 case IDOK:
@@ -1519,6 +1529,7 @@ UnlockDialogProc(
                     return TRUE;
             }
             break;
+        }
     }
 
     return FALSE;
@@ -1578,6 +1589,7 @@ LockedDialogProc(
             SetLockMessage(hwndDlg, IDC_LOCKED_MESSAGE, pDlgData->pgContext);
             return TRUE;
         }
+
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
@@ -1589,6 +1601,7 @@ LockedDialogProc(
             }
             return TRUE;
         }
+
         case WM_DESTROY:
         {
             DlgData_Destroy(hwndDlg);
