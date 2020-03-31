@@ -218,7 +218,7 @@ StatusDialogProc(
             DlgData_LoadBitmaps(pDlgData);
             if (pDlgData->hBarBitmap)
             {
-                if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
+                if (SetTimer(hwndDlg, IDT_BAR, 200, NULL) == 0)
                 {
                     ERR("SetTimer(IDT_BAR) failed: %d\n", GetLastError());
                 }
