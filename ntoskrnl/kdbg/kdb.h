@@ -96,6 +96,12 @@ KdbpStackSwitchAndCall(
 
 extern PCHAR KdbInitFileBuffer;
 
+BOOLEAN
+NTAPI
+KdbRegisterCliCallback(
+    PVOID Callback,
+    BOOLEAN Deregister);
+
 VOID
 KdbpCliInit(VOID);
 
@@ -153,6 +159,16 @@ KdbpSymFindModule(
     IN LPCWSTR Name  OPTIONAL,
     IN INT Index  OPTIONAL,
     OUT PLDR_DATA_TABLE_ENTRY* pLdrEntry);
+
+BOOLEAN
+KdbSymPrintAddress(
+    IN PVOID Address,
+    IN PKTRAP_FRAME Context
+);
+
+VOID
+KdbSymProcessSymbols(
+    IN PLDR_DATA_TABLE_ENTRY LdrEntry);
 
 /* from kdb.c */
 

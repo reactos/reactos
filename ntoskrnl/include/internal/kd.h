@@ -30,48 +30,6 @@ KdPortPutByteEx(
 /* SYMBOL ROUTINES **********************************************************/
 #ifdef __NTOSKRNL__
 
-#if defined(KDBG) || DBG
-
-#if defined(KDBG)
-typedef
-BOOLEAN
-(NTAPI *PKDBG_CLI_ROUTINE)(
-    IN PCHAR Command,
-    IN ULONG Argc,
-    IN PCH Argv[]);
-
-BOOLEAN
-NTAPI
-KdbRegisterCliCallback(
-    PVOID Callback,
-    BOOLEAN Deregister);
-#endif
-
-VOID
-KdbSymProcessSymbols(
-    IN PLDR_DATA_TABLE_ENTRY LdrEntry);
-
-
-BOOLEAN
-KdbSymPrintAddress(
-    IN PVOID Address,
-    IN PKTRAP_FRAME Context
-);
-
-NTSTATUS
-KdbSymGetAddressInformation(
-    IN PROSSYM_INFO  RosSymInfo,
-    IN ULONG_PTR  RelativeAddress,
-#ifdef __ROS_DWARF__
-    IN PROSSYM_LINEINFO RosSymLineInfo
-#else
-    OUT PULONG LineNumber  OPTIONAL,
-    OUT PCH FileName  OPTIONAL,
-    OUT PCH FunctionName  OPTIONAL
-#endif
-);
-#endif
-
 #ifdef KDBG
 # define KdbInit()                                  KdbpCliInit()
 # define KdbModuleLoaded(FILENAME)                  KdbpCliModuleLoaded(FILENAME)

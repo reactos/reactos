@@ -105,6 +105,13 @@ static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
 
 /* GLOBALS *******************************************************************/
 
+typedef
+BOOLEAN
+(NTAPI *PKDBG_CLI_ROUTINE)(
+    IN PCHAR Command,
+    IN ULONG Argc,
+    IN PCH Argv[]);
+
 static PKDBG_CLI_ROUTINE KdbCliCallbacks[10];
 static BOOLEAN KdbUseIntelSyntax = FALSE; /* Set to TRUE for intel syntax */
 static BOOLEAN KdbBreakOnModuleLoad = FALSE; /* Set to TRUE to break into KDB when a module is loaded */

@@ -33,6 +33,14 @@ BOOLEAN KdbpSymbolsInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
+static NTSTATUS
+KdbSymGetAddressInformation(
+    IN PROSSYM_INFO RosSymInfo,
+    IN ULONG_PTR RelativeAddress,
+    OUT PULONG LineNumber  OPTIONAL,
+    OUT PCH FileName  OPTIONAL,
+    OUT PCH FunctionName  OPTIONAL);
+
 static BOOLEAN
 KdbpSymSearchModuleList(
     IN PLIST_ENTRY current_entry,
@@ -200,7 +208,7 @@ KdbSymPrintAddress(
  * \retval STATUS_SUCCESS  At least one of the requested informations was found.
  * \retval STATUS_UNSUCCESSFUL  None of the requested information was found.
  */
-NTSTATUS
+static NTSTATUS
 KdbSymGetAddressInformation(
     IN PROSSYM_INFO RosSymInfo,
     IN ULONG_PTR RelativeAddress,
