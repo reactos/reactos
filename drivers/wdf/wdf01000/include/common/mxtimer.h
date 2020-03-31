@@ -115,9 +115,21 @@ public:
         }
         else
         {
-    	    KeSetTimer(&(m_Timer.KernelTimer),
-    		   DueTime,
-    		   &(m_Timer.TimerDpc));
+    	    if (FxLibraryGlobals.pfn_KeSetCoalescableTimer)
+            {
+                FxLibraryGlobals.pfn_KeSetCoalescableTimer(&(m_Timer.KernelTimer), 
+                                         DueTime, 
+                                         m_Timer.m_Period, 
+                                         TolerableDelay,
+                                         &(m_Timer.TimerDpc));
+            }
+            else
+            {
+                KeSetTimerEx(&(m_Timer.KernelTimer),
+                            DueTime,
+                            m_Timer.m_Period,
+                            &(m_Timer.TimerDpc));
+            }
         }                                              
 
         return;
@@ -129,10 +141,22 @@ public:
         __in LARGE_INTEGER DueTime,
         __in ULONG TolerableDelay = 0
         )
-    {        
-    	return KeSetTimer(&(m_Timer.KernelTimer),
-    			  DueTime,
-    			  &(m_Timer.TimerDpc));            
+    {
+        if (FxLibraryGlobals.pfn_KeSetCoalescableTimer)
+        {
+            return FxLibraryGlobals.pfn_KeSetCoalescableTimer(&(m_Timer.KernelTimer), 
+                                     DueTime, 
+                                     m_Timer.m_Period, 
+                                     TolerableDelay,
+                                     &(m_Timer.TimerDpc));
+        }
+        else
+        {
+            return KeSetTimerEx(&(m_Timer.KernelTimer),
+                        DueTime,
+                        m_Timer.m_Period,
+                        &(m_Timer.TimerDpc));
+        }
     }
 
     _Must_inspect_result_
