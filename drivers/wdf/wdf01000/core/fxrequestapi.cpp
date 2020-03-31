@@ -155,8 +155,66 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    NTSTATUS status;
+    FxRequest *pRequest;
+    IFxMemory* pMemory;
+    PVOID pBuffer;
+    size_t length;
+    UCHAR majorFunction;
+
+    pMemory = NULL;
+
+    //
+    // Validate the request handle, and get the FxRequest*
+    //
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Request,
+                                   FX_TYPE_REQUEST,
+                                   (PVOID*)&pRequest,
+                                   &pFxDriverGlobals);
+
+    FxPointerNotNull(pFxDriverGlobals, Memory);
+
+#if FX_VERBOSE_TRACE
+    DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGREQUEST,
+                        "Enter: WDFREQUEST 0x%p", Request);
+#endif // FX_VERBOSE_TRACE
+
+    //
+    // This call is not valid on Write request.
+    //
+    majorFunction = pRequest->GetFxIrp()->GetMajorFunction();
+
+    if (majorFunction == IRP_MJ_WRITE)
+    {
+        status = STATUS_INVALID_DEVICE_REQUEST;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGREQUEST,
+            "This call is not valid on the Write request, you should call"
+            " WdfRequestRetrieveInputMemory to get the Memory for WDFREQUEST "
+            "0x%p, %!STATUS!", Request, status);
+
+        return status;
+    }
+
+    if ( (majorFunction == IRP_MJ_DEVICE_CONTROL) ||
+        (majorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL) )
+    {
+        status = pRequest->GetDeviceControlOutputMemoryObject(&pMemory, &pBuffer, &length);
+    }
+    else
+    {
+        status = pRequest->GetMemoryObject(&pMemory, &pBuffer, &length);
+    }
+
+    if (NT_SUCCESS(status))
+    {
+        *Memory = pMemory->GetHandle();
+    }
+
+    return status;
 }
 
 _Must_inspect_result_

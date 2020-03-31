@@ -850,6 +850,14 @@ public:
         __in FxIrpQueue* IrpQueue
         );
 
+    _Must_inspect_result_
+    NTSTATUS
+    GetDeviceControlOutputMemoryObject(
+        __deref_out IFxMemory** MemoryObject,
+        __out PVOID* Buffer,
+        __out size_t* Length
+        );
+
     // Do not specify argument names
     FX_DECLARE_VF_FUNCTION(
     NTSTATUS, 

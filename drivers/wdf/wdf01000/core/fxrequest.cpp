@@ -1901,3 +1901,254 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsCurrentStackValid)(
 Done:
     return status;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxRequest::GetDeviceControlOutputMemoryObject(
+    __deref_out IFxMemory** MemoryObject,
+    __out PVOID* Buffer,
+    __out size_t* Length
+    )
+/*++
+
+Routine Description:
+
+    Return the IRP_MJ_DEVICE_CONTROL OutputBuffer.
+
+    The memory buffer is valid in any thread/process context,
+    and may be accessed at IRQL > PASSIVE_LEVEL.
+
+    The memory buffer is automatically released when the request
+    is completed.
+
+    The memory buffer is not valid for a METHOD_NEITHER IRP_MJ_DEVICE_CONTROL,
+    or for any request other than IRP_MJ_DEVICE_CONTROL.
+
+    The Memory buffer is as follows for each buffering mode:
+
+    METHOD_BUFFERED:
+
+        Irp->UserBuffer  // This is actually a system address
+
+    METHOD_IN_DIRECT:
+
+        MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority)
+
+    METHOD_OUT_DIRECT:
+
+        MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority)
+
+    METHOD_NEITHER:
+
+        NULL. Must use WdfDeviceInitSetIoInCallerContextCallback in order
+        to access the request in the calling threads address space before
+        it is placed into any I/O Queues.
+
+    The buffer is only valid until the request is completed.
+
+Arguments:
+
+    MemoryObject - Pointer location to return the memory object interface.
+
+    Buffer - Pointer location to return buffer ptr
+
+    Length - Pointer location to return buffer length.
+
+Returns:
+
+    NTSTATUS
+
+--*/
+{
+    size_t length;
+    NTSTATUS status;
+    KIRQL irql;
+    BOOLEAN mapMdl;
+    UCHAR majorFunction;
+
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(Length);
+
+    status = STATUS_SUCCESS;
+    length = 0;
+    irql = PASSIVE_LEVEL;
+    mapMdl = FALSE;
+
+    //
+    // Verifier
+    //
+    if (GetDriverGlobals()->FxVerifierIO )
+    {
+        status = VerifyRequestIsNotCompleted(GetDriverGlobals());
+        if (!NT_SUCCESS(status))
+        {
+            return status;
+        }
+    }
+
+    if ((m_RequestBaseStaticFlags & FxRequestBaseStaticOutputBufferValid) == 0x00)
+    {
+        Lock(&irql);
+    }
+
+    //
+    // See if we already have a validated buffer
+    //
+    //if (m_RequestBaseFlags & FxRequestBaseOutputBufferValid) {
+    //    status = STATUS_SUCCESS;
+    //}
+
+    majorFunction = m_Irp.GetMajorFunction();
+
+    ASSERT(majorFunction == IRP_MJ_DEVICE_CONTROL ||
+           majorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL);
+
+    length = m_Irp.GetParameterIoctlOutputBufferLength();
+
+    if (length == 0)
+    {
+        status = STATUS_BUFFER_TOO_SMALL;
+
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+            "WDFREQUEST 0x%p IOCTL output buffer length is zero, %!STATUS!",
+            GetHandle(), status);
+
+        goto Done;
+    }
+
+    switch (m_Irp.GetParameterIoctlCodeBufferMethod()) {
+    //
+    // InputBuffer is in SystemBuffer
+    // OutputBuffer is in MdlAddress with read access
+    //
+    case METHOD_IN_DIRECT:
+        //  ||  ||   fall     ||  ||
+        //  \/  \/   through  \/  \/
+
+    //
+    // InputBuffer is in SystemBuffer
+    // OutputBuffer is in MdlAddress with read access
+    //
+    case METHOD_OUT_DIRECT:
+        mapMdl = TRUE;
+        break;
+
+    case METHOD_NEITHER:
+        //
+        // Internal device controls are kernel mode to kernel mode, and deal
+        // with direct unmapped pointers.
+        //
+        // In addition, a normal device control with
+        // RequestorMode == KernelMode is also treated as kernel mode
+        // to kernel mode since the I/O Manager will not generate requests
+        // with this setting from a user mode request.
+        //
+        if ((m_Irp.GetRequestorMode() == KernelMode) ||
+            (majorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL))
+        {
+            DO_NOTHING();
+        }
+        else
+        {
+            status = STATUS_INVALID_DEVICE_REQUEST;
+
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                "Attempt to get UserMode Buffer Pointer for "
+                "METHOD_NEITHER DeviceControl 0x%x, WDFDEVICE 0x%p, "
+                "WDFREQUEST 0x%p, %!STATUS!",
+                m_Irp.GetParameterIoctlCode(),
+                GetDevice()->GetHandle(), GetObjectHandle(), status);
+
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                "Driver must use METHOD_BUFFERED or METHOD_xx_DIRECT "
+                "I/O for this call, or use "
+                "WdfDeviceInitSetIoInCallerContextCallback to probe and "
+                "lock user mode memory");
+        }
+        break;
+    }
+
+    if (mapMdl && (m_RequestBaseFlags & FxRequestBaseOutputMdlMapped) == 0x0)
+    {
+        PMDL pMdl;
+        PVOID pVA;
+
+        pMdl = m_Irp.GetMdl();
+
+        if (pMdl == NULL)
+        {
+            //
+            // Zero length transfer
+            //
+            status = STATUS_BUFFER_TOO_SMALL;
+
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                "WDFREQUEST 0x%p, METHOD_IN_DIRECT IOCTL PMDL is NULL, "
+                "%!STATUS!", GetHandle(), status);
+
+            ASSERT(
+                m_Irp.GetParameterIoctlOutputBufferLength()== 0
+                );
+        }
+        else
+        {
+            //
+            // PagePriority may need to be a property, and/or parameter to
+            // this call
+            //
+            //
+            // Upon success, MmGetSystemAddressForMdlSafe stores the mapped
+            // VA pointer in the pMdl and upon subsequent calls to
+            // MmGetSystemAddressForMdlSafe, no mapping is done, just
+            // the stored VA is returned.  FxRequestOutputBuffer relies
+            // on this behavior and, more importantly, relies on this function
+            // to do the initial mapping so that FxRequestOutputBuffer::GetBuffer()
+            // will not return a NULL pointer.
+            //
+            pVA = Mx::MxGetSystemAddressForMdlSafe(pMdl, NormalPagePriority);
+
+            if (pVA == NULL)
+            {
+                status =  STATUS_INSUFFICIENT_RESOURCES;
+
+                DoTraceLevelMessage(
+                    GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                    "WDFREQUEST 0x%p could not get a system address for PMDL"
+                    "0x%p, %!STATUS!", GetHandle(), pMdl, status);
+            }
+            else
+            {
+                m_OutputBuffer.SetMdl(pMdl);
+                m_RequestBaseFlags |= FxRequestBaseOutputMdlMapped;
+                status = STATUS_SUCCESS;
+            }
+        }
+    }
+
+Done:
+    if ((m_RequestBaseStaticFlags & FxRequestBaseStaticOutputBufferValid) == 0x00)
+    {
+        Unlock(irql);
+    }
+
+    if (NT_SUCCESS(status))
+    {
+        *MemoryObject = &m_OutputBuffer;
+        if (mapMdl)
+        {
+            *Buffer = Mx::MxGetSystemAddressForMdlSafe(m_OutputBuffer.m_Mdl,
+                                                   NormalPagePriority);
+        }
+        else
+        {
+            *Buffer = m_OutputBuffer.m_Buffer;
+        }
+        *Length = length;
+    }
+
+    return status;
+}
