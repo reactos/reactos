@@ -11,6 +11,12 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct _HOTPLUG_DATA
+{
+    SP_CLASSIMAGELIST_DATA ImageListData;
+} HOTPLUG_DATA, *PHOTPLUG_DATA;
+
+
 // globals
 HINSTANCE hApplet = 0;
 
@@ -23,7 +29,9 @@ APPLET Applets[NUM_APPLETS] =
 
 static
 VOID
-EnumHotpluggedDevices(HWND hwndDeviceTree)
+EnumHotpluggedDevices(
+    HWND hwndDeviceTree,
+    PHOTPLUG_DATA pHotplugData)
 {
     WCHAR szDisplayName[40];
     SP_DEVINFO_DATA did = { 0 };
@@ -32,6 +40,10 @@ EnumHotpluggedDevices(HWND hwndDeviceTree)
     DWORD dwCapabilities, dwSize;
     ULONG ulStatus, ulProblem;
     TVINSERTSTRUCTW tvItem;
+//    HTREEITEM hTreeItem;
+    WCHAR szGuidString[MAX_GUID_STRING_LEN];
+    GUID ClassGuid;
+    INT nClassImage;
     CONFIGRET cr;
 
     TreeView_DeleteAllItems(hwndDeviceTree);
@@ -84,20 +96,42 @@ EnumHotpluggedDevices(HWND hwndDeviceTree)
             if (cr != CR_SUCCESS)
                 wcscpy(szDisplayName, L"Unknown Device");
 
+            /* Get the class GUID */
+            dwSize = sizeof(szGuidString);
+            cr = CM_Get_DevNode_Registry_Property(did.DevInst,
+                                                  CM_DRP_CLASSGUID,
+                                                  NULL,
+                                                  szGuidString,
+                                                  &dwSize,
+                                                  0);
+            if (cr == CR_SUCCESS)
+            {
+                pSetupGuidFromString(szGuidString, &ClassGuid);
+            }
+            else
+            {
+//                memcpy(&ClassGuid, GUID_DEVCLASS_UNKNOWN, sizeof(GUID));
+            }
+
+            /* Get the image for the class this device is in */
+            SetupDiGetClassImageIndex(&pHotplugData->ImageListData,
+                                      &ClassGuid,
+                                      &nClassImage);
+
             /* Add it to the device tree */
             ZeroMemory(&tvItem, sizeof(tvItem));
             tvItem.hParent = TVI_ROOT;
             tvItem.hInsertAfter = TVI_FIRST;
 
-            tvItem.item.mask = TVIF_STATE | TVIF_TEXT /*| TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE */;
+            tvItem.item.mask = TVIF_STATE | TVIF_TEXT /*| TVIF_PARAM*/ | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
             tvItem.item.state = TVIS_EXPANDED;
             tvItem.item.stateMask = TVIS_EXPANDED;
             tvItem.item.pszText = szDisplayName;
-//            tvItem.item.iImage = IMAGE_SOUND_SECTION;
-//            tvItem.item.iSelectedImage = IMAGE_SOUND_SECTION;
+            tvItem.item.iImage = nClassImage;
+            tvItem.item.iSelectedImage = nClassImage;
             tvItem.item.lParam = (LPARAM)NULL;
 
-            /*hTreeItem = */ TreeView_InsertItem(hwndDeviceTree, &tvItem);
+            /*hTreeItem =*/ TreeView_InsertItem(hwndDeviceTree, &tvItem);
 
 
 
@@ -116,12 +150,31 @@ SafeRemovalDlgProc(
     WPARAM wParam,
     LPARAM lParam)
 {
+    PHOTPLUG_DATA pHotplugData;
+
     UNREFERENCED_PARAMETER(lParam);
+
+
+    pHotplugData = (PHOTPLUG_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            EnumHotpluggedDevices(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE));
+            pHotplugData = HeapAlloc(GetProcessHeap(), 0, sizeof(HOTPLUG_DATA));
+            if (pHotplugData != NULL)
+            {
+                SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pHotplugData);
+
+                pHotplugData->ImageListData.cbSize = sizeof(pHotplugData->ImageListData);
+                SetupDiGetClassImageList(&pHotplugData->ImageListData);
+
+                TreeView_SetImageList(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE),
+                                      pHotplugData->ImageListData.ImageList,
+                                      TVSIL_NORMAL);
+
+                EnumHotpluggedDevices(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE),
+                                      pHotplugData);
+            }
             return TRUE;
 
         case WM_COMMAND:
@@ -148,13 +201,28 @@ SafeRemovalDlgProc(
             if (wParam == 1)
             {
                 KillTimer(hwndDlg, 1);
-                EnumHotpluggedDevices(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE));
+
+                if (pHotplugData != NULL)
+                {
+                    EnumHotpluggedDevices(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE),
+                                          pHotplugData);
+                }
             }
             break;
 
         case WM_CLOSE:
             KillTimer(hwndDlg, 1);
             EndDialog(hwndDlg, TRUE);
+            break;
+
+        case WM_DESTROY:
+            if (pHotplugData != NULL)
+            {
+                SetupDiDestroyClassImageList(&pHotplugData->ImageListData);
+
+                HeapFree(GetProcessHeap(), 0, pHotplugData);
+                SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)NULL);
+            }
             break;
     }
 
