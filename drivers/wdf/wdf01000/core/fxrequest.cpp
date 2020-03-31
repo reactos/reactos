@@ -1779,3 +1779,125 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsCancelable)(
 
     return status;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FX_VF_METHOD(FxRequest, VerifyRequestCanBeCompleted)(
+    _In_ PFX_DRIVER_GLOBALS  FxDriverGlobals
+    )
+{
+    NTSTATUS            status;
+
+    PAGED_CODE_LOCKED();
+
+    if (GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(1,11) == FALSE)
+    {
+        status = VerifyRequestIsAllocatedFromIo(FxDriverGlobals);
+        goto Done;
+    }
+
+    //
+    // Validate the IRP's stack location.
+    //
+    status = VerifyRequestIsCurrentStackValid(FxDriverGlobals);
+    if (!NT_SUCCESS(status))
+    {
+        goto Done;
+    }
+
+    //
+    // Note: There is no guarantees that the request has a completion routine in the current
+    //          IRP stack location; thus we cannot check for it.
+    //
+
+    //
+    // Make sure this request can be completed.
+    //
+    if (IsCanComplete() == FALSE)
+    {
+        status =  STATUS_INVALID_DEVICE_REQUEST;
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                            "IRP %p of WDFREQUEST %p cannot be completed, "
+                            "%!STATUS!",
+                            GetFxIrp()->GetIrp(), GetHandle(), status);
+        FxVerifierDbgBreakPoint(FxDriverGlobals);
+        goto Done;
+    }
+
+    status = STATUS_SUCCESS;
+
+Done:
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FX_VF_METHOD(FxRequest, VerifyRequestIsAllocatedFromIo)(
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+{
+    NTSTATUS status;
+
+    PAGED_CODE_LOCKED();
+
+    if (IsAllocatedFromIo() == FALSE)
+    {
+       status = STATUS_INVALID_PARAMETER;
+       DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                           "Request 0x%p was not allocated for an incoming IRP, "
+                           "%!STATUS!", GetHandle(), status);
+       FxVerifierDbgBreakPoint(FxDriverGlobals);
+
+    }
+    else
+    {
+        status = STATUS_SUCCESS;
+    }
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FX_VF_METHOD(FxRequest, VerifyRequestIsCurrentStackValid)(
+    _In_ PFX_DRIVER_GLOBALS  FxDriverGlobals
+    )
+{
+    NTSTATUS status;
+    MdIrp     irp;
+
+    PAGED_CODE_LOCKED();
+
+    //
+    //Make sure there is an IRP.
+    //
+    irp = GetFxIrp()->GetIrp();
+    if (NULL == irp)
+    {
+        status =  STATUS_INVALID_DEVICE_REQUEST;
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                            "WDFREQUEST %p doesn't have an IRP, %!STATUS!",
+                            GetHandle(), status);
+        FxVerifierDbgBreakPoint(FxDriverGlobals);
+        goto Done;
+    }
+
+    //
+    // Validate the IRP's stack location values.
+    //
+    if (m_Irp.IsCurrentIrpStackLocationValid() == FALSE)
+    {
+        status =  STATUS_INVALID_DEVICE_REQUEST;
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                            "IRP %p of WDFREQUEST %p doesn't have a valid"
+                            " stack location, %!STATUS!",
+                            irp, GetHandle(), status);
+        FxVerifierDbgBreakPoint(FxDriverGlobals);
+        goto Done;
+    }
+
+    status = STATUS_SUCCESS;
+
+Done:
+    return status;
+}

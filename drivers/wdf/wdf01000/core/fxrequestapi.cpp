@@ -5,6 +5,18 @@
 
 extern "C" {
 
+
+//
+// Verifiers
+//
+// Do not supply Argument names 
+FX_DECLARE_VF_FUNCTION_P1(
+NTSTATUS, 
+VerifyRequestComplete, 
+    _In_ FxRequest*
+    );
+
+
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFQUEUE
 WDFAPI
@@ -147,6 +159,30 @@ Returns:
     return STATUS_UNSUCCESSFUL;
 }
 
+_Must_inspect_result_
+NTSTATUS
+FX_VF_FUNCTION(VerifyRequestComplete) (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals, 
+    _In_ FxRequest* pRequest
+    )
+{
+    NTSTATUS status;
+    KIRQL irql;
+
+    PAGED_CODE_LOCKED();
+
+    pRequest->Lock(&irql);
+
+    status = pRequest->VerifyRequestIsDriverOwned(FxDriverGlobals);
+    if (NT_SUCCESS(status))
+    {
+        status = pRequest->VerifyRequestCanBeCompleted(FxDriverGlobals);
+    }
+
+    pRequest->Unlock(irql);
+    return status;
+}
+
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
 WDFAPI
@@ -180,7 +216,32 @@ Returns:
 
 --*/
 {
-    WDFNOTIMPLEMENTED();
+    NTSTATUS status;
+    FxRequest *pRequest;
+
+    //
+    // Validate the request handle, and get the FxRequest*
+    //
+    FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
+                          Request,
+                          FX_TYPE_REQUEST,
+                          (PVOID*)&pRequest);
+#if FX_VERBOSE_TRACE
+    //
+    // Use object's globals, not the caller's
+    //
+    DoTraceLevelMessage(pRequest->GetDriverGlobals(),
+                        TRACE_LEVEL_VERBOSE, TRACINGREQUEST,
+                        "Completing WDFREQUEST 0x%p, %!STATUS!",
+                        Request, RequestStatus);
+#endif    
+    status = VerifyRequestComplete(pRequest->GetDriverGlobals(), pRequest );
+    if (!NT_SUCCESS(status))
+    {
+        return;
+    }
+
+    pRequest->Complete(RequestStatus);
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)

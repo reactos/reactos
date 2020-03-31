@@ -850,6 +850,24 @@ public:
         __in FxIrpQueue* IrpQueue
         );
 
+    // Do not specify argument names
+    FX_DECLARE_VF_FUNCTION(
+    NTSTATUS, 
+    VerifyRequestCanBeCompleted
+    );
+
+    // Do not specify argument names
+    FX_DECLARE_VF_FUNCTION(
+    NTSTATUS, 
+    VerifyRequestIsAllocatedFromIo
+    );
+
+    // Do not specify argument names
+    FX_DECLARE_VF_FUNCTION(
+    NTSTATUS, 
+    VerifyRequestIsCurrentStackValid
+    );
+
 private:
 
     NTSTATUS

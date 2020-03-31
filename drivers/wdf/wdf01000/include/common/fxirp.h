@@ -694,10 +694,35 @@ public:
 
     __inline
     PMDL
-    FxIrp::GetMdl(
+    GetMdl(
         )
     {
         return m_Irp->MdlAddress;
+    }
+
+    __inline
+    CCHAR
+    GetCurrentIrpStackLocationIndex(
+        )
+    {
+        return m_Irp->CurrentLocation;
+    }
+
+    __inline
+    CCHAR
+    GetStackCount(
+        )
+    {
+        return m_Irp->StackCount;
+    }
+
+    __inline
+    BOOLEAN
+    IsCurrentIrpStackLocationValid(
+        VOID
+        )
+    {
+        return (GetCurrentIrpStackLocationIndex() <= GetStackCount());
     }
 
 };
