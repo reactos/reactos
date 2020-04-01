@@ -122,6 +122,14 @@ public:
         __in FxIrp *Irp
         );
 
+    __inline
+    FxIoQueue*
+    GetDeafultInternalCreateQueue(
+        )
+    {
+        return m_DefaultQueueForCreates;
+    }
+
 private:
     _Must_inspect_result_
     NTSTATUS

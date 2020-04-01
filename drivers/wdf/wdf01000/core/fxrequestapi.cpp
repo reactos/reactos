@@ -2,6 +2,9 @@
 #include "common/fxrequest.h"
 #include "common/ifxmemory.h"
 #include "common/fxioqueue.h"
+#include "common/fxdevice.h"
+#include "common/fxpkggeneral.h"
+
 
 extern "C" {
 
@@ -46,8 +49,68 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
-    return NULL;
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxRequest *pRequest;
+
+    //
+    // Validate the request handle, and get the FxRequest*
+    //
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Request,
+                                   FX_TYPE_REQUEST,
+                                   (PVOID*)&pRequest,
+                                   &pFxDriverGlobals);
+
+#if FX_VERBOSE_TRACE
+    DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGREQUEST,
+                        "Enter: WDFREQUEST 0x%p", Request);
+#endif // FX_VERBOSE_TRACE
+
+    if (pRequest->GetCurrentQueue() == NULL)
+    {
+        //
+        // For a driver-created request, the queue can be NULL. It is not 
+        // necessarily an error to call WdfRequestGetIoQueue on a driver-
+        // created request, because the caller may not really know whether or 
+        // not the request is driver-created. 
+        // 
+        // For example, it is possible for a class extension to create a request
+        // and pass it to the client driver, in which case the client driver 
+        // wouldn't really know whether or not it was driver-created. Or a 
+        // client driver is might be using a helper library for some of its 
+        // tasks and it might pass in a request object to the helper library. In
+        // this case, the helper library wouldn't really know whether or not the
+        // request was driver-created. Therefore, the log message below is at 
+        // verbose level and not at error or warning level.
+        //
+        DoTraceLevelMessage(pFxDriverGlobals, 
+                            TRACE_LEVEL_VERBOSE, 
+                            TRACINGREQUEST,
+                            "WDFREQUEST %p doesn't belong to any queue",
+                            Request);
+        return NULL;
+    }
+
+    if (pRequest->GetFxIrp()->GetMajorFunction() == IRP_MJ_CREATE)
+    {
+        //
+        // If the queue for Create is the framework internal queue
+        // return NULL. 
+        //
+        FxPkgGeneral* devicePkgGeneral = pRequest->GetDevice()->m_PkgGeneral;
+        
+        if (devicePkgGeneral->GetDeafultInternalCreateQueue() == 
+                pRequest->GetCurrentQueue())
+        {
+            DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                                "Getting queue handle for Create request is "
+                                "not allowed for WDFREQUEST 0x%p", pRequest);
+            FxVerifierDbgBreakPoint(pFxDriverGlobals);
+            return  NULL;
+        }
+    }
+
+    return (WDFQUEUE) pRequest->GetCurrentQueue()->GetObjectHandle();
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
