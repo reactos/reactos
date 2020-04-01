@@ -151,7 +151,34 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
+    FxRequest *pRequest;
+    NTSTATUS status;
+
+    //
+    // Validate the request handle, and get the FxRequest*
+    //
+    FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
+                         Request,
+                         FX_TYPE_REQUEST,
+                         (PVOID*)&pRequest);
+
+#if FX_VERBOSE_TRACE
+    //
+    // Use the object's globals, not the caller's
+    //
+    DoTraceLevelMessage(pRequest->GetDriverGlobals(),
+                        TRACE_LEVEL_VERBOSE, TRACINGREQUEST,
+                        "Completing WDFREQUEST 0x%p, %!STATUS!",
+                        Request, RequestStatus);
+#endif
+    status = VerifyRequestComplete(pRequest->GetDriverGlobals(), pRequest);
+    if (!NT_SUCCESS(status))
+    {
+        return;
+    }
+
+
+    pRequest->CompleteWithInformation(RequestStatus, Information);
 }
 
 _Must_inspect_result_
