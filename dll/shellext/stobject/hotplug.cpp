@@ -200,11 +200,11 @@ static void _ShowContextMenu(CSysTray * pSysTray)
         {
             WCHAR strInfo[128];
             swprintf(strInfo, L"Problem Ejecting %wS", g_strMenuSel);
-            MessageBox(0, L"The device cannot be stopped right now! Try stopping it again later!", strInfo, MB_OKCANCEL | MB_ICONEXCLAMATION);
+            MessageBox(0, L"The device cannot be stopped right now! Try stopping it again later!", strInfo, MB_OK | MB_ICONEXCLAMATION);
         }
         else
         {
-            //MessageBox(0, L"Device ejected successfully!! You can safely remove the device now!", L"Safely Remove Hardware", MB_OKCANCEL | MB_ICONINFORMATION);
+            //MessageBox(0, L"Device ejected successfully!! You can safely remove the device now!", L"Safely Remove Hardware", MB_OK | MB_ICONINFORMATION);
             g_IsRemoving = TRUE;
             g_devList.RemoveAt(id); /* thing is.. even after removing id at this point, the devnode_change occurs after some seconds of sucessful removal
                                        and since pendrive is still plugged in it gets enumerated, if problem number is not filtered.
