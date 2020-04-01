@@ -358,11 +358,11 @@ AcpiHwLegacyWake (
 
     /* Enable sleep button */
 
-	(void) AcpiWriteBitRegister (
+    (void) AcpiWriteBitRegister (
             AcpiGbl_FixedEventInfo[ACPI_EVENT_SLEEP_BUTTON].EnableRegisterId,
             ACPI_ENABLE_EVENT);
 
-	(void) AcpiWriteBitRegister (
+    (void) AcpiWriteBitRegister (
             AcpiGbl_FixedEventInfo[ACPI_EVENT_SLEEP_BUTTON].StatusRegisterId,
             ACPI_CLEAR_STATUS);
 

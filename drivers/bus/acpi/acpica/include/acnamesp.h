@@ -379,6 +379,10 @@ AcpiNsBuildNormalizedPath (
     UINT32                  PathSize,
     BOOLEAN                 NoTrailing);
 
+void
+AcpiNsNormalizePathname (
+    char                    *OriginalPath);
+
 char *
 AcpiNsGetNormalizedPathname (
     ACPI_NAMESPACE_NODE     *Node,

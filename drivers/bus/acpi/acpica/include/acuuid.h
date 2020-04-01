@@ -92,4 +92,4 @@
 #define UUID_DEVICE_PROPERTIES          "daffd814-6eba-4d8c-8a91-bc9bbf4aa301"
 
 
-#endif /* __AUUID_H__ */
+#endif /* __ACUUID_H__ */
