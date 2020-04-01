@@ -1,4 +1,6 @@
 #include "common/ifxmemory.h"
+#include "common/dbgtrace.h"
+#include "common/fxverifier.h"
 
 
 _Must_inspect_result_
@@ -177,4 +179,42 @@ Return Value:
     RtlCopyMemory(pDstBuf, pSrcBuf, copyLength);
 
     return STATUS_SUCCESS;
+}
+
+_Must_inspect_result_
+NTSTATUS
+IFxMemory::CopyFromPtr(
+    __in_opt PWDFMEMORY_OFFSET DestinationOffsets,
+    __in_bcount(SourceBufferLength) PVOID SourceBuffer,
+    __in size_t  SourceBufferLength,
+    __in_opt PWDFMEMORY_OFFSET SourceOffsets
+    )
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+
+    pFxDriverGlobals = GetDriverGlobals();
+
+    //
+    // We read from the supplied buffer writing to the current FxMemoryBuffer
+    //
+    if (GetFlags() & IFxMemoryFlagReadOnly)
+    {
+        //
+        // FxMemoryBuffer is not writeable
+        //
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                            "Target WDFMEMORY 0x%p is ReadOnly", GetHandle());
+        FxVerifierDbgBreakPoint(pFxDriverGlobals);
+
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    return _CopyPtrToPtr(
+        SourceBuffer,
+        SourceBufferLength,
+        SourceOffsets,
+        GetBuffer(),
+        GetBufferSize(),
+        DestinationOffsets
+        );
 }

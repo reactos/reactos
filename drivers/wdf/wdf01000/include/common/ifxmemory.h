@@ -52,11 +52,29 @@ public:
         VOID
         ) =0;
 
+    //
+    // Value returned is a bit field from the enum IFxMemoryFlags
+    //
+    virtual
+    USHORT
+    GetFlags(
+        VOID
+        ) =0;
+
     virtual
     PFX_DRIVER_GLOBALS
     GetDriverGlobals(
         VOID
         ) =0;
+
+    _Must_inspect_result_
+    NTSTATUS
+    CopyFromPtr(
+        __in_opt PWDFMEMORY_OFFSET DestinationOffsets,
+        __in_bcount(SourceBufferLength) PVOID SourceBuffer,
+        __in size_t SourceBufferLength,
+        __in_opt PWDFMEMORY_OFFSET SourceOffsets
+        );
 
     _Must_inspect_result_
     NTSTATUS

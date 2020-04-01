@@ -167,3 +167,38 @@ Return Value:
 {
     return GetRequest()->GetDriverGlobals();
 }
+
+USHORT
+FxRequestOutputBuffer::GetFlags(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Returns the flags associated with this buffer.  This currently only includes
+    whether the buffer is read only or not
+
+Arguments:
+    None
+
+Return Value:
+    flags from IFxMemoryFlags
+
+  --*/
+{
+    FxIrp* irp = GetRequest()->GetFxIrp();
+
+    ASSERT(irp->GetMajorFunction() == IRP_MJ_DEVICE_CONTROL ||
+           irp->GetMajorFunction() == IRP_MJ_INTERNAL_DEVICE_CONTROL);
+
+    switch (irp->GetParameterIoctlCodeBufferMethod()) {
+    case METHOD_IN_DIRECT:
+        return IFxMemoryFlagReadOnly;
+
+    case METHOD_BUFFERED:
+    case METHOD_OUT_DIRECT:
+    case METHOD_NEITHER: // since it is neither, we can't tell, so leave it as 0
+    default:
+        return 0;
+    }
+}

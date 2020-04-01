@@ -91,6 +91,12 @@ struct FxRequestSystemBuffer : public IFxMemory {
         );
 
     virtual
+    USHORT
+    GetFlags(
+        VOID
+        );
+
+    virtual
     PFX_DRIVER_GLOBALS
     GetDriverGlobals(
         VOID
@@ -195,6 +201,12 @@ struct FxRequestOutputBuffer : public IFxMemory {
     virtual
     WDFMEMORY
     GetHandle(
+        VOID
+        );
+
+    virtual
+    USHORT
+    GetFlags(
         VOID
         );
 

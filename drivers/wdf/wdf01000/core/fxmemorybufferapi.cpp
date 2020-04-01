@@ -126,8 +126,43 @@ Return Value:
   --*/
 
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    WDFMEMORY_OFFSET srcOffsets;
+    WDFMEMORY_OFFSET dstOffsets;
+    IFxMemory* pDest;
+    NTSTATUS status;
+
+    FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
+                         DestinationMemory,
+                         IFX_TYPE_MEMORY,
+                         (PVOID*) &pDest);
+
+    pFxDriverGlobals = pDest->GetDriverGlobals();
+
+    FxPointerNotNull(pFxDriverGlobals, Buffer);
+
+    if (NumBytesToCopyFrom == 0)
+    {
+        status = STATUS_INVALID_PARAMETER;
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                            "Zero bytes to copy not allowed, %!STATUS!", status);
+        return status;
+    }
+
+    RtlZeroMemory(&srcOffsets, sizeof(srcOffsets));
+    srcOffsets.BufferLength = NumBytesToCopyFrom;
+    srcOffsets.BufferOffset = 0;
+
+    RtlZeroMemory(&dstOffsets, sizeof(dstOffsets));
+    dstOffsets.BufferLength = NumBytesToCopyFrom;
+    dstOffsets.BufferOffset = DestinationOffset;
+
+    return pDest->CopyFromPtr(&dstOffsets,
+                              Buffer,
+                              NumBytesToCopyFrom,
+                              &srcOffsets);
 }
 
 } // extern "C"
