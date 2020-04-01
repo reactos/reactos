@@ -131,6 +131,9 @@
 #define PD_COUNT (1 << 2) /* The two most significant bits in the VA */
 #endif
 
+/* PAE not yet implemented. */
+C_ASSERT(PD_COUNT == 1);
+
 /* The number of PTEs on one page of the PT */
 #define PTE_PER_PAGE (PAGE_SIZE / sizeof(MMPTE))
 
@@ -159,9 +162,7 @@
 #define PDE_MASK (PDE_TOP - PDE_BASE)
 
 /* The size of the virtual memory area that is mapped using a single PDE */
-#ifndef PDE_MAPPED_VA
 #define PDE_MAPPED_VA (PTE_PER_PAGE * PAGE_SIZE)
-#endif
 
 /* Maps the virtual address to the corresponding PTE */
 #define MiAddressToPte(Va) \
