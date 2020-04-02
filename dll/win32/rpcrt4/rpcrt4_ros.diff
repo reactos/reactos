@@ -129,13 +129,27 @@ diff -pudN e:\wine\dlls\rpcrt4/rpc_transport.c e:\reactos\dll\win32\rpcrt4/rpc_t
 +  static const char prefix[] = "\\\\";
 +  static const char local[] = ".";
 +  char ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
++  DWORD bufLen = ARRAY_SIZE(ComputerName);
    char *pipe_name;
-+  DWORD bufLen = ARRAYSIZE(ComputerName);
 +
-+  GetComputerNameA(ComputerName, &bufLen);
++  if (server != NULL && *server != 0)
++  {
++    /* Trim any leading UNC server prefix. */
++    if (server[0] == '\\' && server[1] == '\\')
++      server += 2;
 +
-+  if (server == NULL || *server == 0 || stricmp(ComputerName, server) == 0)
++    /* If the server represents the local computer, use instead
++     * the local prefix to avoid a round in UNC name resolution. */
++    if (GetComputerNameA(ComputerName, &bufLen) &&
++        (stricmp(ComputerName, server) == 0))
++    {
 +      server = local;
++    }
++  }
++  else
++  {
++    server = local;
++  }
  
    /* protseq=ncacn_np: named pipes */
 -  pipe_name = I_RpcAllocate(sizeof(prefix) + strlen(endpoint));
