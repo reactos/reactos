@@ -3,6 +3,7 @@
 #include "common/fxpoweridlestatemachine.h"
 #include "common/fxdevice.h"
 #include "common/fxwatchdog.h"
+#include "common/fxverifier.h"
 
 
 //
@@ -2843,8 +2844,63 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePwrPolInvalid;
+    NTSTATUS notifyPowerDownStatus;
+    SYSTEM_POWER_STATE systemState;
+
+    ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSleeping);
+
+    //
+    // If the bus/PDO is not in the hibernate path, then verify that all the
+    // children have powered down by now.
+    //
+    if (This->GetUsageCount(WdfSpecialFileHibernation) == 0 &&
+        This->m_PowerPolicyMachine.m_Owner->m_ChildrenPoweredOnCount > 0)
+    {
+        DoTraceLevelMessage(
+            This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "WDFDEVICE %p powering down before child devices have powered down. "
+            "This usually indicates a faulty child device that completed the Sx "
+            "irp before sending the Dx irp",
+            This->m_Device->GetHandle());
+
+        FxVerifierBreakOnDeviceStateError(
+            This->m_Device->GetDriverGlobals());
+    }
+
+    //
+    // Simulate a device-power-not-required notification from the power 
+    // framework. An Sx-IRP is essentially equivalent to a device-power-not-
+    // required notification.
+    //
+    //This->m_PowerPolicyMachine.m_Owner->
+    //    m_PoxInterface.SimulateDevicePowerNotRequired();
+
+    //
+    // Notify the device-power-requirement state machine that we are about to 
+    // power down
+    //
+    //notifyPowerDownStatus = This->m_PowerPolicyMachine.m_Owner->
+    //                          m_PoxInterface.NotifyDevicePowerDown();
+
+    //
+    // We simulated a device-power-not-required notification before we notified
+    // the device-power-requirement state machine that we are powering down. 
+    // Therefore, our notification should have succeeded.
+    //
+    //ASSERT(NT_SUCCESS(notifyPowerDownStatus));
+    //UNREFERENCED_PARAMETER(notifyPowerDownStatus);
+
+    systemState = This->PowerPolicyGetPendingSystemState();
+
+    if (This->PowerPolicyIsWakeEnabled() &&
+        This->PowerPolicyCanWakeFromSystemState(systemState))
+    {
+        return WdfDevStatePwrPolSleepingWakePowerDown;
+    }
+    else
+    {
+        return WdfDevStatePwrPolSleepingNoWakePowerDown;
+    }
 }
 
 WDF_DEVICE_POWER_POLICY_STATE

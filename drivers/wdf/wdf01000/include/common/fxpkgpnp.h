@@ -2275,6 +2275,22 @@ protected:
         VOID
         );
 
+    BOOLEAN
+    PowerPolicyCanWakeFromSystemState(
+        __in SYSTEM_POWER_STATE SystemState
+        )
+    {
+        return SystemState <= PowerPolicyGetDeviceDeepestSystemWakeState();
+    }
+
+    SYSTEM_POWER_STATE
+    PowerPolicyGetDeviceDeepestSystemWakeState(
+        VOID
+        )
+    {
+        return (SYSTEM_POWER_STATE) m_SystemWake;
+    }
+
 public:
 
     VOID
@@ -2518,6 +2534,42 @@ public:
     VOID
     PowerSendIdlePowerEvent(
         __in FxPowerIdleEvents Event
+        );
+
+    BOOLEAN
+    PowerPolicyIsWakeEnabled(
+        VOID
+        );
+
+    SYSTEM_POWER_STATE
+    PowerPolicyGetPendingSystemState(
+        VOID
+        )
+    {
+        FxIrp irp(m_PendingSystemPowerIrp);
+        
+        //
+        // In a FastS4 situation, Parameters.Power.State.SystemState will be
+        // PowerSystemHibernate, while TargetSystemState will indicate the
+        // true Sx state the machine is moving into.
+        //
+        #if (NTDDI_VERSION >= NTDDI_VISTA)
+        if (FxLibraryGlobals.UseTargetSystemPowerState)
+        { 
+            return (SYSTEM_POWER_STATE)
+                (irp.GetParameterPowerSystemPowerStateContext()).
+                    TargetSystemState;
+        }
+        else
+        #endif
+        {
+            return irp.GetParameterPowerStateSystemState();
+        }
+    }
+
+    ULONG
+    PowerPolicyGetCurrentWakeReason(
+        VOID
         );
 
 private:

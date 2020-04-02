@@ -725,6 +725,17 @@ public:
         return (GetCurrentIrpStackLocationIndex() <= GetStackCount());
     }
 
+    #if (NTDDI_VERSION >= NTDDI_VISTA) 
+    __inline
+    SYSTEM_POWER_STATE_CONTEXT
+    GetParameterPowerSystemPowerStateContext(
+        )
+    {
+        return (this->GetCurrentIrpStackLocation())->
+            Parameters.Power.SystemPowerStateContext;
+    }
+    #endif
+
 };
 
 //

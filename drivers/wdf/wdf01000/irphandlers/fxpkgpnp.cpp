@@ -3054,3 +3054,69 @@ Done:
 
     return status;
 }
+
+BOOLEAN
+FxPkgPnp::PowerPolicyIsWakeEnabled(
+    VOID
+    )
+{
+    if (IsPowerPolicyOwner() && PowerPolicyGetCurrentWakeReason() != 0x0)
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+ULONG
+FxPkgPnp::PowerPolicyGetCurrentWakeReason(
+    VOID
+    )
+/*++
+
+Routine Description:
+    This routine determines the reasons for whether wake should be enabled or
+    not.  Wake could be enabled because it is explicitly enabled for the device
+    in the wake policy settings or, because the device opted to depend on its
+    children being armed for wake.
+
+Arguments:
+    None
+
+Return Value:
+    Returns a combination of FxPowerPolicySxWakeChildrenArmedFlag, to indicate
+    that wake can be enabled because of more than one children being armed for
+    wake, and FxPowerPolicySxWakeDeviceEnabledFlag, to indicate that wake can
+    be enabled because the device was explicitly enabled in the wake policy
+    settings.
+
+    Returns Zero to indicate that wake is currently disabled for the device.
+
+--*/
+{
+    ULONG wakeReason;
+
+    wakeReason = 0x0;
+
+    if (m_PowerPolicyMachine.m_Owner->m_WakeSettings.ArmForWakeIfChildrenAreArmedForWake &&
+        m_PowerPolicyMachine.m_Owner->m_ChildrenArmedCount > 0)
+    {
+        //
+        // Wake settings depends on children and one or more children are
+        // armed for wake.
+        //
+        wakeReason |= FxPowerPolicySxWakeChildrenArmedFlag;
+    }
+
+    if (m_PowerPolicyMachine.m_Owner->m_WakeSettings.Enabled)
+    {
+        //
+        // Wake settings is explicitly enabled.
+        //
+        wakeReason |= FxPowerPolicySxWakeDeviceEnabledFlag;
+    }
+
+    return wakeReason;
+}

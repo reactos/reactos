@@ -205,4 +205,33 @@ IsFxVerifierTestForwardProgressFailRandom(
     }
 }
 
+__inline
+VOID
+FxVerifierBreakOnDeviceStateError(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+{
+#if FX_CORE_MODE == FX_CORE_KERNEL_MODE
+        CHAR ext[] = "sys";
+#else
+        CHAR ext[] = "dll";
+#endif
+
+    Mx::MxDbgPrint("WDF detected potentially invalid device state in %s.%s. "
+             "Dump the driver log (!wdflogdump %s.$s) for more information.\n",
+             FxDriverGlobals->Public.DriverName, ext,
+             FxDriverGlobals->Public.DriverName, ext);
+
+    if (FxDriverGlobals->FxVerifierDbgBreakOnDeviceStateError)
+    {
+        Mx::MxDbgBreakPoint();
+    }
+    else
+    {
+        Mx::MxDbgPrint("Turn on framework verifier for %s.%s to automatically "
+            "break into the debugger next time it happens.\n",
+            FxDriverGlobals->Public.DriverName, ext);
+    }
+}
+
 #endif //_FXVERIFIER_H_
