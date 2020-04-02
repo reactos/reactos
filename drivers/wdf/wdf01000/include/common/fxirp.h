@@ -736,6 +736,31 @@ public:
     }
     #endif
 
+    _Must_inspect_result_
+    __inline
+    static
+    NTSTATUS
+    RequestPowerIrp(
+        __in MdDeviceObject  DeviceObject,
+        __in UCHAR  MinorFunction,
+        __in POWER_STATE  PowerState,
+        __in MdRequestPowerComplete  CompletionFunction,
+        __in PVOID  Context
+        )
+    {
+        //
+        // Prefast enforces that NULL is passed for IRP parameter (last parameter)  
+        // since the IRP might complete before the function returns.
+        //
+        return PoRequestPowerIrp(
+            DeviceObject,
+            MinorFunction,
+            PowerState,
+            CompletionFunction,
+            Context,
+            NULL); 
+    }
+
 };
 
 //

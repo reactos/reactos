@@ -3120,3 +3120,139 @@ Return Value:
 
     return wakeReason;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::PowerPolicySendDevicePowerRequest(
+    __in DEVICE_POWER_STATE DeviceState,
+    __in SendDeviceRequestAction Action
+    )
+/*++
+
+Routine Description:
+    Attempts to send a D irp to the stack.  The caller can specify if the
+    request allocation is retried in case of failure.
+
+Design Notes:
+    The timeout and number of retries are somewhat magical numbers.  They were
+    picked so that the total amount of time spent attempting to retry would be
+    under a minute.  Any memory pressure the machine would be under after the
+    first failure should be over by the end of the minute; if not, there are
+    bigger problems.
+
+    If you look at each of the callers who specify Retry for the Action, nearly
+    each one transitions to the WdfDevStatePwrPolDevicePowerRequestFailed state
+    if the request cannot be allocated.  This transition could be placed in this
+    function, but it is not for 2 reasons:
+
+    1)  Keep this function simple
+
+    2)  It makes the flow of the state transition function easier to understand;
+        all transitions out of the current state happen within top level
+        transition function
+
+Arguments:
+    DeviceState - The new D state being request
+
+    Action - Whether to retry upon failure to allocate the request
+
+Return Value:
+    NT_SUCCESS if the request was allocated, !NT_SUCCESS otherwise
+
+  --*/
+{
+    MdRequestPowerComplete pCompletionRoutine;
+    LARGE_INTEGER interval;
+    NTSTATUS status;
+    POWER_STATE state;
+    ULONG i;
+
+    status = STATUS_UNSUCCESSFUL;
+    interval.QuadPart = WDF_REL_TIMEOUT_IN_MS(500);
+    state.DeviceState = DeviceState;
+
+    if (DeviceState == PowerDeviceD0)
+    {
+        //
+        // We are powering up, we do not synchronize the completion of the D0 irp
+        // with a potential S0 irp. However we need to ensure that if an upper filter 
+        // driver fails the power irp, we handle it gracefully rather than keep waiting
+        // for the power irp to arrive.
+        //
+        pCompletionRoutine = _PowerPolDevicePowerUpComplete;
+    }
+    else
+    {
+        //
+        // We are powering down, we synchronize the completion of the Dx irp
+        // with a potential Sx irp.  If there is no pending Sx irp, the state
+        // machine takes care of it.
+        //
+        pCompletionRoutine = _PowerPolDevicePowerDownComplete;
+    }
+
+    //
+    // We track when we request power irps to catch someone other then ourselves
+    // sending power irps to our own stack.
+    //
+    if (DeviceState == PowerDeviceD0)
+    {
+        m_PowerPolicyMachine.m_Owner->m_RequestedPowerUpIrp = TRUE;
+    } 
+    else
+    {
+        m_PowerPolicyMachine.m_Owner->m_RequestedPowerDownIrp = TRUE;
+    }
+
+    for (i = 0; i < 100; i++)
+    {
+        status = FxIrp::RequestPowerIrp(m_Device->GetDeviceObject(),
+                                   IRP_MN_SET_POWER,
+                                   state,
+                                   pCompletionRoutine,
+                                   this);
+
+        //
+        // If we are not retrying, we always break out
+        //
+        if (NT_SUCCESS(status) || Action == NoRetry)
+        {
+            break;
+        }
+
+        Mx::MxDelayExecutionThread(KernelMode, FALSE, &interval);
+    }
+
+    if (!NT_SUCCESS(status))
+    {
+        //
+        // We are no longer requesting a power irp
+        //
+        if (DeviceState == PowerDeviceD0)
+        {
+            m_PowerPolicyMachine.m_Owner->m_RequestedPowerUpIrp = FALSE;
+        } 
+        else
+        {
+            m_PowerPolicyMachine.m_Owner->m_RequestedPowerDownIrp = FALSE;
+        }
+
+        if (Action == Retry)
+        {
+            COVERAGE_TRAP();
+
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "Could not request D%d irp for device %p (WDFDEVICE %p), "
+                "%!STATUS!", DeviceState-1, 
+                m_Device->GetDeviceObject(),
+                m_Device->GetHandle(), status);
+        }
+    }
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Requesting D%d irp, %!STATUS!",
+                        DeviceState-1, status);
+
+    return status;
+}

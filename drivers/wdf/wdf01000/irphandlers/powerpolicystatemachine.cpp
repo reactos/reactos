@@ -2921,8 +2921,48 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePwrPolInvalid;
+    NTSTATUS status;
+    DEVICE_POWER_STATE dxState;
+
+    ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSleepingNoWakePowerDown);
+
+    dxState = (DEVICE_POWER_STATE)
+        This->m_PowerPolicyMachine.m_Owner->m_IdealDxStateForSx;
+
+    if (dxState != PowerDeviceD3)
+    {
+        DEVICE_POWER_STATE dxMappedState;
+
+        //
+        // Get the lightest Dx state for this Sx state as reported by the
+        // device capabilities of the stack.
+        //
+        dxMappedState = _GetPowerCapState(
+            This->PowerPolicyGetPendingSystemState(),
+            This->m_PowerPolicyMachine.m_Owner->m_SystemToDeviceStateMap
+            );
+
+        //
+        // If the ideal desired state is lighter than what the S->D mapping says
+        // is the lightest supported D state, use the mapping value instead.
+        //
+        if (dxState < dxMappedState)
+        {
+            dxState = dxMappedState;
+        }
+    }
+
+    ASSERT(dxState >= PowerDeviceD1 && dxState <= PowerDeviceD3);
+
+    status = This->PowerPolicyPowerDownForSx(dxState, Retry);
+
+    if (!NT_SUCCESS(status))
+    {
+        COVERAGE_TRAP();
+        return WdfDevStatePwrPolSleepingNoWakeDxRequestFailed;
+    }
+
+    return WdfDevStatePwrPolNull;
 }
 
 WDF_DEVICE_POWER_POLICY_STATE
@@ -4496,5 +4536,160 @@ Return Value:
         }
 
         m_EnumInfo->m_ChildListList.UnlockFromEnum(GetDriverGlobals());
+    }
+}
+
+__drv_sameIRQL
+VOID
+FxPkgPnp::_PowerPolDevicePowerDownComplete(
+    __in MdDeviceObject DeviceObject,
+    __in UCHAR MinorFunction,
+    __in POWER_STATE PowerState,
+    __in_opt PVOID Context,
+    __in PIO_STATUS_BLOCK IoStatus
+    )
+/*++
+
+Routine Description:
+    Completion routine for a requested power irp.  Called once the power irp
+    has traveled through the entire stack.  We feed the result of the power
+    operation back into the power policy state machine through an event.
+
+Arguments:
+    Context - instance of the state machine
+    All others ignored
+
+Return Value:
+    None
+
+  --*/
+
+{
+    FxPkgPnp* pThis;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(MinorFunction);
+    UNREFERENCED_PARAMETER(PowerState);
+    UNREFERENCED_PARAMETER(IoStatus);
+
+    pThis = (FxPkgPnp*) Context;
+
+    //
+    // Note that we are ignoring IoStatus.Status intentionally.  If we failed
+    // power down in this device, we have tracked that state via
+    // m_PowerDownFailure.  If some other device failed power down, we are still
+    // in the state where we succeeded power down and we don't want to alter
+    // that yet.
+    //
+    // Note that the state machine also handles an upper filter completing the
+    // Dx irp before our device gets to process it (which would be a bug in the
+    // filter driver) by handling the PwrPolPowerDown from the appropriate
+    // state, as an example...
+    //
+    // a successful power down state transition looks like this
+    // 1)  power policy state where we request a power irp
+    // 2)  power sends a partial power down message (PwrPolPowerDownIoStopped)
+    //      to power policy, moves to the partial power down state
+    // 3)  power policy tells power to complete the power down
+    // 4)  power completes the irp and we send the power down complete message
+    //      (PwrPolPowerDown) moving from the partial power down state to the
+    //      final power down state
+    //
+    // In the case where the top filter driver completes the PIRP without our
+    // driver seeing it, we will be in the state where we requested a power irp
+    // and process a power down complete event instead of the partial power down
+    // event and in this transition, we detect the error.
+    //
+    if (pThis->m_PowerMachine.m_PowerDownFailure)
+    {
+        //
+        // Clear the faliure condition if we ever attempt to power off this
+        // device again (highly possible if it is a PDO).
+        //
+        pThis->m_PowerMachine.m_PowerDownFailure = FALSE;
+
+        //
+        // Power down failed, send ourself an even indicating that.
+        //
+        pThis->PowerPolicyProcessEvent(PwrPolPowerDownFailed);
+
+        //
+        // Inform pnp last so that all the other state machines are in the failed
+        // state by the time we transition the pnp state of the device.
+        //
+        if (FALSE == pThis->m_ReleaseHardwareAfterDescendantsOnFailure)
+        {
+            pThis->PnpProcessEvent(PnpEventPowerDownFailed);
+        }
+    }
+    else
+    {
+        //
+        // Power down succeeded, send ourself an even indicating that.
+        //
+        pThis->PowerPolicyProcessEvent(PwrPolPowerDown);
+    }
+}
+
+__drv_sameIRQL
+VOID
+FxPkgPnp::_PowerPolDevicePowerUpComplete(
+    __in MdDeviceObject DeviceObject,
+    __in UCHAR MinorFunction,
+    __in POWER_STATE PowerState,
+    __in_opt PVOID Context,
+    __in PIO_STATUS_BLOCK IoStatus
+    )
+/*++
+
+Routine Description:
+    Completion routine for a requested power irp.  Called once the power irp
+    has traveled through the entire stack.  We feed the result of the power
+    operation back into the power policy state machine through an event.
+
+Arguments:
+    Context - instance of the state machine
+    All others ignored
+
+Return Value:
+    None
+
+  --*/
+
+{
+    FxPkgPnp* pThis;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(MinorFunction);
+    UNREFERENCED_PARAMETER(PowerState);
+    UNREFERENCED_PARAMETER(IoStatus);
+
+    pThis = (FxPkgPnp*) Context;
+
+    //
+    // The state machine handles an upper filter completing the
+    // D0 irp before our device gets to process it (which would be a bug in the
+    // filter driver).
+    //
+    if (pThis->m_PowerPolicyMachine.m_Owner->m_RequestedPowerUpIrp)
+    {
+        //
+        // We requested a Power Irp but that never arrived in dispatch routine.
+        // We know this because m_RequestedPowerUpIrp is still TRUE at the end of 
+        // the power irp completion (it is set to false when it arrives in 
+        // dispatch routine). 
+        //
+        DoTraceLevelMessage(
+            pThis->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "PowerDeviceD0 requested by WDFDEVICE 0x%p !devobj 0x%p, "
+            "is being completed by upper driver without sending it to "
+            "driver that requested it",
+            pThis->m_Device->GetHandle(), 
+            pThis->m_Device->GetDeviceObject());
+
+        //
+        // Power-up request not seen, send ourself an event indicating that.
+        //
+        pThis->PowerPolicyProcessEvent(PwrPolPowerUpNotSeen);
     }
 }

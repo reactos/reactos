@@ -56,6 +56,11 @@ struct SharedPowerData {
     BOOLEAN m_ExtendWatchDogTimer;
 };
 
+enum SendDeviceRequestAction {
+    NoRetry = 0,
+    Retry,
+};
+
 enum NotifyResourcesFlags {
     NotifyResourcesNoFlags            = 0x00,
     NotifyResourcesNP                 = 0x01,
@@ -2291,6 +2296,21 @@ protected:
         return (SYSTEM_POWER_STATE) m_SystemWake;
     }
 
+    _Must_inspect_result_
+    NTSTATUS
+    PowerPolicySendDevicePowerRequest(
+        __in DEVICE_POWER_STATE DeviceState,
+        __in SendDeviceRequestAction Action
+        );
+
+    static
+    MdRequestPowerCompleteType
+    _PowerPolDevicePowerDownComplete;
+
+    static
+    MdRequestPowerCompleteType
+    _PowerPolDevicePowerUpComplete;
+
 public:
 
     VOID
@@ -2757,6 +2777,44 @@ private:
     PowerPolicyPostParentToD0ToChildren(
         VOID
         );
+
+    _Must_inspect_result_
+    NTSTATUS
+    PowerPolicyPowerDownForSx(
+        __in DEVICE_POWER_STATE DxState,
+        __in SendDeviceRequestAction Action
+        )
+    {
+        //
+        // The device is powering down because the system is moving into a lower
+        // power state.
+        //
+        // If we have child devices, setup the guard so that they do not power
+        // up while the parent is in low power.  Note that in this case (an Sx
+        // transition) we do not look at the count of powered up children
+        // because the power policy owner for the child's stack should not be
+        // powering up the device once it has processed the Sx irp for its stack.
+        //
+        PowerPolicyBlockChildrenPowerUp();
+
+        return PowerPolicySendDevicePowerRequest(DxState, Action);
+    }
+
+    VOID
+    PowerPolicyBlockChildrenPowerUp(
+        VOID
+        )
+    {
+        if (m_EnumInfo != NULL)
+        {
+            m_EnumInfo->AcquireParentPowerStateLock(GetDriverGlobals());
+            //
+            // Setup a guard so that no children power up until we return to S0.
+            //
+            m_PowerPolicyMachine.m_Owner->m_ChildrenCanPowerUp = FALSE;
+            m_EnumInfo->ReleaseParentPowerStateLock(GetDriverGlobals());
+        }
+    }
 
 //
 // Start of members
