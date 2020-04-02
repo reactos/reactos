@@ -174,6 +174,11 @@ static RPC_STATUS rpcrt4_conn_open_pipe(RpcConnection *Connection, LPCSTR pname,
       }
       TRACE("connection failed, error=%x\n", err);
       return RPC_S_SERVER_TOO_BUSY;
+#ifdef __REACTOS__
+    } else if (err == ERROR_BAD_NETPATH) {
+      TRACE("connection failed, error=%x\n", err);
+      return RPC_S_SERVER_UNAVAILABLE;
+#endif
     }
     if (!wait || !WaitNamedPipeA(pname, NMPWAIT_WAIT_FOREVER)) {
       err = GetLastError();
