@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Utility Manager (Accessibility)
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Pre-compiled header file
- * COPYRIGHT:       Copyright 2019 Bișoc George (fraizeraust99 at gmail dot com)
+ * COPYRIGHT:       Copyright 2019-2020 Bișoc George (fraizeraust99 at gmail dot com)
  */
 
 #ifndef _UTILMAN_H
@@ -50,6 +50,43 @@ typedef struct _UTILMAN_STATE
     BOOL    bState;
 } UTILMAN_STATE, *PUTILMAN_STATE;
 
+typedef struct _REGISTRY_SETTINGS
+{
+    /* Accessibility Registry settings */
+    LPCWSTR wszAppPath;
+    DWORD dwAppType;
+    DWORD dwClientControlCode;
+    LPCWSTR wszAppName;
+    LPCWSTR wszErrorOnLaunch;
+    BOOL bHideClient;
+    BOOL bStartWithUtilman;
+    BOOL bStartWithROS;
+    LPCWSTR wszHungRespondAction;
+    DWORD dwHungTimeOut;
+
+    /* Utility Manager Registry settings */
+    BOOL bShowWarning;
+} REGISTRY_SETTINGS, *PREGISTRY_SETTINGS;
+
+typedef struct _REGISTRY_DATA
+{
+    /* On-Screen Keyboard Registry data */
+    LPCWSTR lpwsOskPath;
+    LPCWSTR lpwszOskDisplayName;
+
+    /* Magnify Registry data */
+    LPCWSTR lpwszMagnifyPath;
+    LPCWSTR lpwszMagnifyDisplayName;
+} REGISTRY_DATA, *PREGISTRY_DATA;
+
+/* ENUMERATIONS ***************************************************************/
+
+typedef enum _WRITE_REGISTRY
+{
+    REGISTRY_ACCESSIBILITY,
+    REGISTRY_UTILMAN
+} WRITE_REGISTRY, *PWRITE_REGISTRY;
+
 /* DECLARATIONS ***************************************************************/
 
 /* dialog.c */
@@ -68,8 +105,15 @@ BOOL CloseProcess(IN LPCWSTR lpProcessName);
 VOID ShowAboutDlg(HWND hDlgParent);
 INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
 
+/* registry.c */
+BOOL InitAppRegKey(IN HKEY hPredefinedKey, IN LPCWSTR lpwszSubKey, OUT PHKEY phKey, OUT LPDWORD lpdwDisposition);
+BOOL QueryAppSettings(IN HKEY hKey, IN LPCWSTR lpwszSubKey, IN LPCWSTR lpwszRegValue, OUT PVOID ReturnedData, IN OUT LPDWORD lpdwSizeData);
+BOOL SaveAppSettings(IN HKEY hKey, IN LPCWSTR lpwszRegValue, IN DWORD dwRegType, IN PVOID Data, IN DWORD cbSize);
+
 /* Struct variable declaration */
 extern UTILMAN_GLOBALS Globals;
+extern REGISTRY_SETTINGS Settings;
+extern REGISTRY_DATA RegData;
 
 #endif /* _UTILMAN_H */
 
