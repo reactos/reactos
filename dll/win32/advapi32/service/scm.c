@@ -150,17 +150,33 @@ ScmRpcStatusToWinError(RPC_STATUS Status)
 
     switch (Status)
     {
-        case STATUS_ACCESS_VIOLATION:
+        /* Invalid context received */
         case RPC_S_INVALID_BINDING:
         case RPC_X_SS_IN_NULL_CONTEXT:
+        case RPC_X_SS_CONTEXT_DAMAGED:
+        case RPC_X_SS_HANDLES_MISMATCH:
+        case RPC_X_SS_CONTEXT_MISMATCH: // == ERROR_INVALID_HANDLE
             return ERROR_INVALID_HANDLE;
 
+#if 1 // FIXME: ReactOS-specific !!
+// https://github.com/reactos/reactos/commit/38418a1b4c50d414c6c36963bdedd19ef804f400
         case RPC_X_ENUM_VALUE_OUT_OF_RANGE:
         case RPC_X_BYTE_COUNT_TOO_SMALL:
             return ERROR_INVALID_PARAMETER;
+#endif
 
         case RPC_X_NULL_REF_POINTER:
+            // return ERROR_INVALID_PARAMETER;
+            // This was on older Windows; newer falls back below.
+// NOTE: Modification in ROS brought by https://github.com/reactos/reactos/commit/910f60d2f29c8453126fa66381b5a79c6fb84920
+        case STATUS_ACCESS_VIOLATION: // == EXCEPTION_ACCESS_VIOLATION
             return ERROR_INVALID_ADDRESS;
+
+        case RPC_S_INVALID_TAG:
+            return ERROR_INVALID_LEVEL;
+
+        case RPC_S_PROCNUM_OUT_OF_RANGE:
+            return ERROR_CALL_NOT_IMPLEMENTED;
 
         default:
             return (DWORD)Status;
@@ -2972,11 +2988,11 @@ UnlockServiceDatabase(SC_LOCK ScLock)
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        /* Adjust the error code in the case of an invalid context received */
+        if (dwError == ERROR_INVALID_HANDLE)
+            dwError = ERROR_INVALID_SERVICE_LOCK;
     }
     RpcEndExcept;
-
-    if (dwError == ERROR_INVALID_HANDLE)
-        dwError = ERROR_INVALID_SERVICE_LOCK;
 
     if (dwError != ERROR_SUCCESS)
     {
