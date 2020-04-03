@@ -3499,7 +3499,7 @@ NTAPI
 NtUserWaitForInputIdle(
     IN HANDLE hProcess,
     IN DWORD dwMilliseconds,
-    IN BOOL Unknown2); /* Always FALSE */
+    IN BOOL bSharedWow); /* Always FALSE */
 
 DWORD
 NTAPI
