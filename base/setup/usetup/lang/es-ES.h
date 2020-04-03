@@ -465,7 +465,7 @@ static MUI_ENTRY esESDevicePageEntries[] =
     {
         6,
         19,
-        "Puede escoger la configuraci\242n de harware con las teclas",
+        "Puede escoger la configuraci\242n de hardware con las teclas",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1628,7 +1628,7 @@ static MUI_ENTRY esESPrepareCopyEntries[] =
     {
         6,
         8,
-        "El instalador est\240 preparando el equipo para copiar los archivos de ReactOS.",
+        "El instalador se prepara para copiar los archivos de ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
