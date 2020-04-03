@@ -554,8 +554,8 @@ NTSTATUS WINAPI
 User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PHOOKPROC_CALLBACK_ARGUMENTS Common;
-  CREATESTRUCTW Csw;
-  CBT_CREATEWNDW CbtCreatewndw;
+  CREATESTRUCTW *pCsw = NULL;
+  CBT_CREATEWNDW *pCbtCreatewndw = NULL;
   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
   KBDLLHOOKSTRUCT KeyboardLlData, *pKeyboardLlData;
   MSLLHOOKSTRUCT MouseLlData, *pMouseLlData;
@@ -608,12 +608,18 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
         case HCBT_CREATEWND:
           CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS)
                               ((PCHAR) Common + Common->lParam);
-          RtlCopyMemory(&Csw, &CbtCreatewndExtra->Cs, sizeof(CREATESTRUCTW));
-          CbtCreatewndw.lpcs = &Csw;
-          CbtCreatewndw.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+
+          pCbtCreatewndw = (CBT_CREATEWNDW*)HeapAlloc(GetProcessHeap(), 0, sizeof(CBT_CREATEWNDW));
+          RtlCopyMemory(pCbtCreatewndw, CbtCreatewndExtra, sizeof(CBT_CREATEWNDW));
+
+          pCsw = (CREATESTRUCTW*)HeapAlloc(GetProcessHeap(), 0, sizeof(CREATESTRUCTW));
+          RtlCopyMemory(pCsw, &CbtCreatewndExtra->Cs, sizeof(CREATESTRUCTW));
+
+          pCbtCreatewndw->lpcs = pCsw;
+          pCbtCreatewndw->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
           wParam = Common->wParam;
-          lParam = (LPARAM) &CbtCreatewndw;
-          //ERR("HCBT_CREATEWND: hWnd 0x%x Name 0x%x Class 0x%x\n", Common->wParam, Csw.lpszName, Csw.lpszClass);
+          lParam = (LPARAM) pCbtCreatewndw;
+          //ERR("HCBT_CREATEWND: hWnd %p Csw %p Name %p Class %p\n", Common->wParam, pCsw, pCsw->lpszName, pCsw->lpszClass);
           break;
         case HCBT_CLICKSKIPPED:
             pMHook = (PMOUSEHOOKSTRUCT)((PCHAR) Common + Common->lParam);
@@ -665,11 +671,13 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       switch(Common->Code)
       {
         case HCBT_CREATEWND:
-          CbtCreatewndExtra->WndInsertAfter = CbtCreatewndw.hwndInsertAfter;
-          CbtCreatewndExtra->Cs.x = CbtCreatewndw.lpcs->x;
-          CbtCreatewndExtra->Cs.y = CbtCreatewndw.lpcs->y;
-          CbtCreatewndExtra->Cs.cx = CbtCreatewndw.lpcs->cx;
-          CbtCreatewndExtra->Cs.cy = CbtCreatewndw.lpcs->cy;
+          CbtCreatewndExtra->WndInsertAfter = pCbtCreatewndw->hwndInsertAfter;
+          CbtCreatewndExtra->Cs.x  = pCbtCreatewndw->lpcs->x;
+          CbtCreatewndExtra->Cs.y  = pCbtCreatewndw->lpcs->y;
+          CbtCreatewndExtra->Cs.cx = pCbtCreatewndw->lpcs->cx;
+          CbtCreatewndExtra->Cs.cy = pCbtCreatewndw->lpcs->cy;
+          HeapFree(GetProcessHeap(), 0, pCsw);
+          HeapFree(GetProcessHeap(), 0, pCbtCreatewndw);
           break;
       }
       break;

@@ -610,7 +610,12 @@ co_IntCallHookProc(INT HookId,
      {
          pCWP = (CWPSTRUCT*) lParam;
          ArgumentLength = sizeof(CWP_Struct);
-         lParamSize = lParamMemorySize(pCWP->message, pCWP->wParam, pCWP->lParam);
+         if ( pCWP->message == WM_CREATE || pCWP->message == WM_NCCREATE )
+         {
+             lParamSize = sizeof(CREATESTRUCTW);
+         }
+         else
+             lParamSize = lParamMemorySize(pCWP->message, pCWP->wParam, pCWP->lParam);
          ArgumentLength += lParamSize;
          break;
       }
@@ -618,7 +623,12 @@ co_IntCallHookProc(INT HookId,
       {
          pCWPR = (CWPRETSTRUCT*) lParam;
          ArgumentLength = sizeof(CWPR_Struct);
-         lParamSize = lParamMemorySize(pCWPR->message, pCWPR->wParam, pCWPR->lParam);
+         if ( pCWPR->message == WM_CREATE || pCWPR->message == WM_NCCREATE )
+         {
+             lParamSize = sizeof(CREATESTRUCTW);
+         }
+         else
+             lParamSize = lParamMemorySize(pCWPR->message, pCWPR->wParam, pCWPR->lParam);
          ArgumentLength += lParamSize;
          break;
       }
@@ -639,7 +649,7 @@ co_IntCallHookProc(INT HookId,
    Argument = IntCbAllocateMemory(ArgumentLength);
    if (NULL == Argument)
    {
-      ERR("HookProc callback failed: out of memory\n");
+      ERR("HookProc callback %d failed: out of memory %d\n",HookId,ArgumentLength);
       goto Fault_Exit;
    }
    Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Argument;
@@ -671,9 +681,10 @@ co_IntCallHookProc(INT HookId,
                CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS) Extra;
                RtlCopyMemory( &CbtCreatewndExtra->Cs, CbtCreateWnd->lpcs, sizeof(CREATESTRUCTW) );
                CbtCreatewndExtra->WndInsertAfter = CbtCreateWnd->hwndInsertAfter;
-               CbtCreatewndExtra->Cs.lpszClass = CbtCreateWnd->lpcs->lpszClass;
-               CbtCreatewndExtra->Cs.lpszName = CbtCreateWnd->lpcs->lpszName;
+               CbtCreatewndExtra->Cs.lpszClass   = CbtCreateWnd->lpcs->lpszClass;
+               CbtCreatewndExtra->Cs.lpszName    = CbtCreateWnd->lpcs->lpszName;
                Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
+               //ERR("HCBT_CREATEWND: hWnd %p Csw %p Name %p Class %p\n", Common->wParam, CbtCreateWnd->lpcs, CbtCreateWnd->lpcs->lpszName, CbtCreateWnd->lpcs->lpszClass);
                break;
             case HCBT_CLICKSKIPPED:
                RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MOUSEHOOKSTRUCT));
@@ -754,7 +765,7 @@ co_IntCallHookProc(INT HookId,
    {
       if ( iTheId != HookId ) // Hook ID can change.
       {
-          ERR("Failure to make Callback %d! Status 0x%x\n",HookId,Status);
+          ERR("Failure to make Callback %d! Status 0x%x ArgumentLength %d\n",HookId,Status,ArgumentLength);
           iTheId = HookId;
       }
       goto Fault_Exit;
