@@ -17,10 +17,10 @@ REGISTRY_SETTINGS Settings;
 
 /* DEFINES ********************************************************************/
 
-#define ACCESS_UTILMAN_KEY L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Accessibility\\Utility Manager";
-#define UTILMAN_KEY L"SOFTWARE\\Microsoft\\Utility Manager";
-#define OSK_KEY L"On-Screen Keyboard";
-#define MAGNIFIER_KEY L"Magnifier";
+#define ACCESS_UTILMAN_KEY L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Accessibility\\Utility Manager"
+#define UTILMAN_KEY L"SOFTWARE\\Microsoft\\Utility Manager"
+#define OSK_KEY L"On-Screen Keyboard"
+#define MAGNIFIER_KEY L"Magnifier"
 
 /* FUNCTIONS ******************************************************************/
 
@@ -122,8 +122,8 @@ BOOL QueryAppSettings(IN HKEY hKey,
 
     lResult = RegQueryValueExW(hKeyQueryValue,
                                lpwszRegValue,
-                               0,
-                               0,
+                               NULL,
+                               NULL,
                                (LPBYTE)&ReturnedData,
                                lpdwSizeData);
     if (lResult != ERROR_SUCCESS)
