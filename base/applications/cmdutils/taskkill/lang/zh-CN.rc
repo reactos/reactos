@@ -1,4 +1,7 @@
-/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Simplified Chinese translation by 
+Henry Tang Ih 2016 (henrytang2@hotmail.com)
+He Yang 2020 (1160386205@qq.com)
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -18,4 +21,6 @@ STRINGTABLE
     STRING_ENUM_FAILED, "错误: 无法枚举进程列表。\n"
     STRING_TERMINATE_FAILED, "错误: 无法终止进程 ""%1""。\n"
     STRING_SELF_TERMINATION, "错误: 不允许终止自身。\n"
+    STRING_PARAM_TOO_MUCH, "错误：无效语法。选项 '%1' 不允许超过 '%2!d!' 次。\n"
+    STRING_INVALID_SYNTAX, "错误：无效语法。\n"
 }
