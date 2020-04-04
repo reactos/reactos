@@ -54,18 +54,8 @@ if defined ROS_ARCH (
     cl 2>&1 | find "17.00." > NUL && set VS_VERSION=11
     cl 2>&1 | find "18.00." > NUL && set VS_VERSION=12
     cl 2>&1 | find "19.00." > NUL && set VS_VERSION=14
-    cl 2>&1 | find "19.10." > NUL && set VS_VERSION=15
-    cl 2>&1 | find "19.11." > NUL && set VS_VERSION=15
-    cl 2>&1 | find "19.12." > NUL && set VS_VERSION=15
-    cl 2>&1 | find "19.13." > NUL && set VS_VERSION=15
-    cl 2>&1 | find "19.14." > NUL && set VS_VERSION=15
-    cl 2>&1 | find "19.15." > NUL && set VS_VERSION=15
-    cl 2>&1 | find "19.16." > NUL && set VS_VERSION=15
-    cl 2>&1 | find "19.20." > NUL && set VS_VERSION=16
-    cl 2>&1 | find "19.21." > NUL && set VS_VERSION=16
-    cl 2>&1 | find "19.22." > NUL && set VS_VERSION=16
-    cl 2>&1 | find "19.23." > NUL && set VS_VERSION=16
-    cl 2>&1 | find "19.24." > NUL && set VS_VERSION=16
+    cl 2>&1 | findstr /R /c:"19\.1.\." > NUL && set VS_VERSION=15
+    cl 2>&1 | findstr /R /c:"19\.2.\." > NUL && set VS_VERSION=16
     if not defined VS_VERSION (
         echo Error: Visual Studio version too old ^(before 10 ^(2010^)^) or version detection failed.
         goto quit

@@ -1375,7 +1375,7 @@ protected:
             pszz += len + 1;
         } while (*pszz != TEXT('\0'));
         ++count;
-        ATLASSERT(count * sizeof(TCHAR) <= ULONGMAX);
+        ATLASSERT(count * sizeof(TCHAR) <= ULONG_MAX);
         return (ULONG)count * sizeof(TCHAR);
     }
 

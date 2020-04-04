@@ -36,6 +36,7 @@ list(APPEND MSVCRTEX_SOURCE
     startup/crt0_w.c
     startup/dllentry.c
     startup/reactos.c
+    misc/dbgrpt.cpp
     misc/fltused.c
     misc/isblank.c
     misc/iswblank.c

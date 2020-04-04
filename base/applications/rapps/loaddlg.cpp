@@ -73,13 +73,17 @@ struct DownloadInfo
 {
     DownloadInfo() {}
     DownloadInfo(const CAvailableApplicationInfo& AppInfo)
-        :szUrl(AppInfo.m_szUrlDownload), szName(AppInfo.m_szName), szSHA1(AppInfo.m_szSHA1)
+        : szUrl(AppInfo.m_szUrlDownload)
+        , szName(AppInfo.m_szName)
+        , szSHA1(AppInfo.m_szSHA1)
+        , SizeInBytes(AppInfo.m_SizeBytes)
     {
     }
 
     ATL::CStringW szUrl;
     ATL::CStringW szName;
     ATL::CStringW szSHA1;
+    ULONG SizeInBytes;
 };
 
 struct DownloadParam
@@ -345,6 +349,7 @@ class CDownloadManager
     static CDowloadingAppsListView DownloadsListView;
     static CDownloaderProgress ProgressBar;
     static BOOL bCancelled;
+    static BOOL bModal;
     static VOID UpdateProgress(HWND hDlg, ULONG ulProgress, ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText);
 public:
     static VOID Add(DownloadInfo info);
@@ -359,7 +364,8 @@ public:
 ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsToInstallList;
 CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
 CDownloaderProgress                     CDownloadManager::ProgressBar;
-BOOL                                    CDownloadManager::bCancelled;
+BOOL                                    CDownloadManager::bCancelled = FALSE;
+BOOL                                    CDownloadManager::bModal = FALSE;
 
 VOID CDownloadManager::Add(DownloadInfo info)
 {
@@ -448,8 +454,14 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         return FALSE;
 
     case WM_CLOSE:
-        EndDialog(Dlg, 0);
-        //DestroyWindow(Dlg);
+        if (CDownloadManager::bModal)
+        {
+            ::EndDialog(Dlg, 0);
+        }
+        else
+        {
+            ::DestroyWindow(Dlg);
+        }
         return TRUE;
 
     default:
@@ -669,8 +681,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             // query content length
             HttpQueryInfoW(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwStatusLen, NULL);
         }
-
-        if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
+        else if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
         {
             // force passive mode on FTP
             hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
@@ -687,8 +698,16 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         if (!dwContentLen)
         {
-            // content-length is not known, enable marquee mode
-            ProgressBar.SetMarquee(TRUE);
+            // Someone was nice enough to add this, let's use it
+            if (InfoArray[iAppId].SizeInBytes)
+            {
+                dwContentLen = InfoArray[iAppId].SizeInBytes;
+            }
+            else
+            {
+                // content-length is not known, enable marquee mode
+                ProgressBar.SetMarquee(TRUE);
+            }
         }
 
         free(urlComponents.lpszScheme);
@@ -847,6 +866,7 @@ end:
 //TODO: Reuse the dialog
 VOID CDownloadManager::LaunchDownloadDialog(BOOL bIsModal)
 {
+    CDownloadManager::bModal = bIsModal;
     if (bIsModal)
     {
         DialogBoxW(hInst,

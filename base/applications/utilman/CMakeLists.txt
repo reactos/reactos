@@ -3,6 +3,7 @@ list(APPEND SOURCE
     dialog.c
     process.c
     about.c
+    registry.c
     precomp.h)
 
 add_rc_deps(utilman.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/utilman.ico)
