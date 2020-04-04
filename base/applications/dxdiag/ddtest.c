@@ -14,7 +14,13 @@ BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen);
 VOID DDRedrawFrame(LPDIRECTDRAWSURFACE lpDDSurface);
 VOID DDUpdateFrame(LPDIRECTDRAWSURFACE lpDDPrimarySurface ,LPDIRECTDRAWSURFACE lpDDBackBuffer, BOOL Fullscreen, INT *posX, INT *posY, INT *gainX, INT *gainY, RECT *rectDD);
 
+/* DURATION, for test execution */
+#define IDT_DURATION 1
 #define TEST_DURATION 10000 
+/* UPDATE, for frame updating */
+#define IDT_UPDATE 2
+#define TEST_UPDATE 10
+
 #define DD_TEST_WIDTH 640
 #define DD_TEST_HEIGHT 480
 #define DD_TEST_STEP 5
@@ -115,9 +121,7 @@ VOID DDTests()
 }
 
 BOOL DDPrimarySurfaceTest(HWND hWnd){
-    UINT TimerID;
     MSG msg;
-
     LPDIRECTDRAW lpDD = NULL;
     LPDIRECTDRAWSURFACE lpDDSurface = NULL;
     DDSURFACEDESC DDSurfaceDesc;
@@ -144,25 +148,37 @@ BOOL DDPrimarySurfaceTest(HWND hWnd){
         return FALSE;
     }
 
-    TimerID = SetTimer(hWnd, -1, (UINT)TEST_DURATION, NULL);
+    if (SetTimer(hWnd, IDT_DURATION, TEST_DURATION, NULL) == 0)
+    {
+        goto NoIdtDuration;
+    }
 
     while (TRUE)
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
-            if (msg.message == WM_TIMER && TimerID == msg.wParam)
+            if (msg.message == WM_TIMER && msg.wParam == IDT_DURATION)
+            {
                 break;
+            }
+
             TranslateMessage(&msg);
             DispatchMessage(&msg);
+
             if (msg.message == WM_PAINT)
+            {
                 DDRedrawFrame(lpDDSurface);
+            }
         }
     }
-    KillTimer(hWnd, TimerID);
+
+    KillTimer(hWnd, IDT_DURATION);
+
+NoIdtDuration:
     lpDDSurface->lpVtbl->Release(lpDDSurface);
     lpDD->lpVtbl->Release(lpDD);
 
-return TRUE;
+    return TRUE;
 }
 
 VOID DDRedrawFrame(LPDIRECTDRAWSURFACE lpDDSurface)
@@ -199,7 +215,6 @@ VOID DDRedrawFrame(LPDIRECTDRAWSURFACE lpDDSurface)
 
 
 BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen){
-    UINT_PTR TimerID, TimerIDUpdate;
     LPDIRECTDRAW lpDD;
     LPDIRECTDRAWSURFACE lpDDPrimarySurface;
     LPDIRECTDRAWSURFACE lpDDBackBuffer;
@@ -284,10 +299,15 @@ BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen){
         OffsetRect(&rectDD, wndPoint.x, wndPoint.y);
     }
 
-    /* set our timers, TimerID - for test timeout, TimerIDUpdate - for frame updating */
-    TimerID = SetTimer(hWnd, -1, (UINT)TEST_DURATION, NULL);
-    TimerIDUpdate = SetTimer(hWnd, 2, (UINT)10, NULL);
-    (void)TimerIDUpdate;
+    if (SetTimer(hWnd, IDT_DURATION, TEST_DURATION, NULL) == 0)
+    {
+        goto NoIdtDuration;
+    }
+
+    if (SetTimer(hWnd, IDT_UPDATE, TEST_UPDATE, NULL) == 0)
+    {
+        goto NoIdtUpdate;
+    }
 
     while (TRUE)
     {
@@ -295,27 +315,32 @@ BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen){
         {
             if (msg.message == WM_TIMER)
             {
-                if(msg.wParam == TimerID) 
+                if (msg.wParam == IDT_DURATION)
                 {
                     break;
                 }
-                else
-                {
-                    DDUpdateFrame(lpDDPrimarySurface,lpDDBackBuffer, Fullscreen,&posX, &posY, &xGain, &yGain, &rectDD);
-                }
+
+                DDUpdateFrame(lpDDPrimarySurface,lpDDBackBuffer, Fullscreen,&posX, &posY, &xGain, &yGain, &rectDD);
             }
+
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
     }
 
+    KillTimer(hWnd, IDT_UPDATE);
+
+NoIdtUpdate:
+    KillTimer(hWnd, IDT_DURATION);
+
+NoIdtDuration:
     lpDDPrimarySurface->lpVtbl->Release(lpDDPrimarySurface);
     /* backbuffer is released automatically when in fullscreen */
     if(!Fullscreen)
         lpDDBackBuffer->lpVtbl->Release(lpDDBackBuffer);
     lpDD->lpVtbl->Release(lpDD);
 
-return TRUE;
+    return TRUE;
 }
 
 
