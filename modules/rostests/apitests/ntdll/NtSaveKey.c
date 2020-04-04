@@ -31,7 +31,12 @@ START_TEST(NtSaveKey)
     NTSTATUS Status;
     HANDLE KeyHandle;
     HANDLE FileHandle;
+    BOOLEAN PrivilegeEnabled = FALSE;
     BOOLEAN OldPrivilegeStatus;
+
+    /* Make sure we don't have backup privileges initially, otherwise WHS testbot fails */
+    Status = RtlAdjustPrivilege(SE_BACKUP_PRIVILEGE, FALSE, FALSE, &PrivilegeEnabled);
+    ok(Status == STATUS_SUCCESS, "RtlAdjustPrivilege returned %lx\n", Status);
 
     /* Open the file */
     FileHandle = CreateFileW(L"saved_key.dat",

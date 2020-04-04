@@ -332,7 +332,12 @@ BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* p
 	  ret = HCR_RegGetIconA(hkey, szDest, szName, len, picon_idx);
 	  RegCloseKey(hkey);
 	}
-	TRACE("-- %s %i\n", szDest, *picon_idx);
+
+    if (ret)
+        TRACE("-- %s %i\n", szDest, *picon_idx);
+    else
+        TRACE("-- not found\n");
+
 	return ret;
 }
 

@@ -190,7 +190,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             const WCHAR szString[] = {ALEF, BET, GIMEL, DALET, HEY, 'A', 'B', 'C', 'D', VAV, ZAYIN, HET, TET, YUD, 0};
             const WCHAR szReversedString[] = {HEY, DALET, GIMEL, BET, ALEF, 'A', 'B', 'C', 'D', YUD, TET, HET, ZAYIN, VAV, 0};
-            int Len = wcslen(szString);
+            int Len = lstrlenW(szString);
             int i, xpos, tempLength;
             WCHAR tempString[20] = { 0 };
             WCHAR Glyphs[100] = { 0 };
@@ -247,15 +247,15 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             for (i = 0, xpos = 10; i < Len; i++, xpos += 30)
             {
                 StringCchPrintfW(tempString, 20, L"%d", i);
-                tempLength = wcslen(tempString);
+                tempLength = lstrlenW(tempString);
                 TextOutW(hdc, xpos, 430, tempString, tempLength);
 
                 StringCchPrintfW(tempString, 20, L"%d", lpOrder[i]);
-                tempLength = wcslen(tempString);
+                tempLength = lstrlenW(tempString);
                 TextOutW(hdc, xpos, 450, tempString, tempLength);
 
                 StringCchPrintfW(tempString, 20, L"%d", lpCaretPos[i]);
-                tempLength = wcslen(tempString);
+                tempLength = lstrlenW(tempString);
                 TextOutW(hdc, xpos, 470, tempString, tempLength);
 
                 TextOutW(hdc, xpos, 490, &szString[i], 1);
@@ -271,15 +271,15 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             for (i = 0, xpos = 10; i < Len; i++, xpos += 30)
             {
                 StringCchPrintfW(tempString, 20, L"%d", i);
-                tempLength = wcslen(tempString);
+                tempLength = lstrlenW(tempString);
                 TextOutW(hdc, xpos, 530, tempString, tempLength);
 
                 StringCchPrintfW(tempString, 20, L"%d", lpOrder[i]);
-                tempLength = wcslen(tempString);
+                tempLength = lstrlenW(tempString);
                 TextOutW(hdc, xpos, 550, tempString, tempLength);
 
                 StringCchPrintfW(tempString, 20, L"%d", lpCaretPos[i]);
-                tempLength = wcslen(tempString);
+                tempLength = lstrlenW(tempString);
                 TextOutW(hdc, xpos, 570, tempString, tempLength);
 
                 TextOutW(hdc, xpos, 590, &szString[i], 1);

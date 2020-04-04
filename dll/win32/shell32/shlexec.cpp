@@ -3,7 +3,7 @@
  *
  * Copyright 1998 Marcus Meissner
  * Copyright 2002 Eric Pouech
- * Copyright 2018 Katayama Hirofumi MZ
+ * Copyright 2018-2019 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -167,6 +167,8 @@ static void ParseTildeEffect(PWSTR &res, LPCWSTR &args, DWORD &len, DWORD &used,
  * %I address of a global item ID (explorer switch /idlist)
  * %L seems to be %1 as long filename followed by the 8+3 variation
  * %S ???
+ * %W Working directory
+ * %V Use either %L or %W
  * %* all following parameters (see batfile)
  *
  * The way we parse the command line arguments was determined through extensive
@@ -300,6 +302,42 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
                         }
                     }
                     found_p1 = TRUE;
+                    break;
+
+                case 'w':
+                case 'W':
+                    if (lpDir)
+                    {
+                        used += wcslen(lpDir);
+                        if (used < len)
+                        {
+                            wcscpy(res, lpDir);
+                            res += wcslen(lpDir);
+                        }
+                    }
+                    break;
+
+                case 'v':
+                case 'V':
+                    if (lpFile)
+                    {
+                        used += wcslen(lpFile);
+                        if (used < len)
+                        {
+                            wcscpy(res, lpFile);
+                            res += wcslen(lpFile);
+                        }
+                        found_p1 = TRUE;
+                    }
+                    else if (lpDir)
+                    {
+                        used += wcslen(lpDir);
+                        if (used < len)
+                        {
+                            wcscpy(res, lpDir);
+                            res += wcslen(lpDir);
+                        }
+                    }
                     break;
 
                 case 'i':
@@ -1041,6 +1079,22 @@ static unsigned dde_connect(const WCHAR* key, const WCHAR* start, WCHAR* ddeexec
         {
             TRACE("Couldn't launch\n");
             goto error;
+        }
+        /* if ddeexec is NULL, then we just need to exit here */
+        if (ddeexec == NULL)
+        {
+            TRACE("Exiting because ddeexec is NULL. ret=42.\n");
+            /* See https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew */
+            /* for reason why we use 42 here and also "Shell32_apitest ShellExecuteW" regression test */
+            return 42;
+        }
+        /* if ddeexec is 'empty string', then we just need to exit here */
+        if (wcscmp(ddeexec, L"") == 0)
+        {
+            TRACE("Exiting because ddeexec is 'empty string'. ret=42.\n");
+            /* See https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew */
+            /* for reason why we use 42 here and also "Shell32_apitest ShellExecuteW" regression test */
+            return 42;
         }
         hConv = DdeConnect(ddeInst, hszApp, hszTopic, NULL);
         if (!hConv)
@@ -1807,7 +1861,11 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 
     if (sei_tmp.fMask & unsupportedFlags)
     {
-        FIXME("flags ignored: 0x%08x\n", sei_tmp.fMask & unsupportedFlags);
+        // SEE_MASK_IDLIST is not in unsupportedFlags, but the check above passes because SEE_MASK_INVOKEIDLIST is in it
+        if ((sei_tmp.fMask & unsupportedFlags) != SEE_MASK_IDLIST)
+        {
+            FIXME("flags ignored: 0x%08x\n", sei_tmp.fMask & unsupportedFlags);
+        }
     }
 
     /* process the IDList */
@@ -2399,12 +2457,26 @@ HRESULT WINAPI ShellExecCmdLine(
         {
             PathAddBackslashW(szFile);
         }
-        if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
+
+        WCHAR szCurDir[MAX_PATH];
+        GetCurrentDirectoryW(_countof(szCurDir), szCurDir);
+        if (pwszStartDir)
+        {
+            SetCurrentDirectoryW(pwszStartDir);
+        }
+
+        if (PathIsRelativeW(szFile) &&
+            GetFullPathNameW(szFile, _countof(szFile2), szFile2, NULL) &&
+            PathFileExistsW(szFile2))
+        {
+            StringCchCopyW(szFile, _countof(szFile), szFile2);
+        }
+        else if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
         }
@@ -2417,6 +2489,11 @@ HRESULT WINAPI ShellExecCmdLine(
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
             pchParams = NULL;
+        }
+
+        if (pwszStartDir)
+        {
+            SetCurrentDirectoryW(szCurDir);
         }
 
         if (!(dwSeclFlags & SECL_ALLOW_NONEXE))

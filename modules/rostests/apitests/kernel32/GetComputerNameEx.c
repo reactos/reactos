@@ -30,7 +30,7 @@ TestGetComputerNameEx(
         return;
     }
     trace("[%d] Reference is %ls\n", NameType, Reference);
-    ReferenceLen = wcslen(Reference);
+    ReferenceLen = lstrlenW(Reference);
     ok(ReferenceLen < RTL_NUMBER_OF(Reference),
        "[%d] Unexpected ReferenceLen %lu\n", NameType, ReferenceLen);
     if (NameType != ComputerNameDnsDomain && NameType != ComputerNamePhysicalDnsDomain)
@@ -41,20 +41,23 @@ TestGetComputerNameEx(
 
     /* NULL buffer, NULL size */
     StartSeh()
+        SetLastError(0xdeadbeef);
         Ret = GetComputerNameExW(NameType, NULL, NULL);
         Error = GetLastError();
         ok(Ret == FALSE, "[%d] GetComputerNameExW returned %d\n", NameType, Ret);
         ok(Error == ERROR_INVALID_PARAMETER, "[%d] GetComputerNameExW returned error %lu\n", NameType, Error);
     EndSeh(STATUS_SUCCESS);
     StartSeh()
+        SetLastError(0xdeadbeef);
         Ret = GetComputerNameExA(NameType, NULL, NULL);
         Error = GetLastError();
-        ok(Ret == FALSE, "[%d] GetComputerNameExW returned %d\n", NameType, Ret);
-        ok(Error == ERROR_INVALID_PARAMETER, "[%d] GetComputerNameExW returned error %lu\n", NameType, Error);
+        ok(Ret == FALSE, "[%d] GetComputerNameExA returned %d\n", NameType, Ret);
+        ok(Error == ERROR_INVALID_PARAMETER, "[%d] GetComputerNameExA returned error %lu\n", NameType, Error);
     EndSeh(STATUS_SUCCESS);
 
     /* NULL buffer, nonzero size */
     Size = 0x55555555;
+    SetLastError(0xdeadbeef);
     Ret = GetComputerNameExW(NameType, NULL, &Size);
     Error = GetLastError();
     ok(Ret == FALSE, "[%d] GetComputerNameExW returned %d\n", NameType, Ret);
@@ -62,6 +65,7 @@ TestGetComputerNameEx(
     ok(Size == 0x55555555, "[%d] Got Size %lu\n", NameType, Size);
 
     Size = 0x55555555;
+    SetLastError(0xdeadbeef);
     Ret = GetComputerNameExA(NameType, NULL, &Size);
     Error = GetLastError();
     ok(Ret == FALSE, "[%d] GetComputerNameExA returned %d\n", NameType, Ret);
@@ -70,6 +74,7 @@ TestGetComputerNameEx(
 
     /* non-NULL buffer, NULL size */
     RtlFillMemory(BufferW, sizeof(BufferW), 0x55);
+    SetLastError(0xdeadbeef);
     Ret = GetComputerNameExW(NameType, BufferW, NULL);
     Error = GetLastError();
     ok(Ret == FALSE, "[%d] GetComputerNameExW returned %d\n", NameType, Ret);
@@ -77,6 +82,7 @@ TestGetComputerNameEx(
     ok(BufferW[0] == 0x5555, "[%d] BufferW[0] = 0x%x\n", NameType, BufferW[0]);
 
     RtlFillMemory(BufferA, sizeof(BufferA), 0x55);
+    SetLastError(0xdeadbeef);
     Ret = GetComputerNameExA(NameType, BufferA, NULL);
     Error = GetLastError();
     ok(Ret == FALSE, "[%d] GetComputerNameExA returned %d\n", NameType, Ret);
@@ -85,6 +91,7 @@ TestGetComputerNameEx(
 
     /* NULL buffer, zero size */
     Size = 0;
+    SetLastError(0xdeadbeef);
     Ret = GetComputerNameExW(NameType, NULL, &Size);
     Error = GetLastError();
     ok(Ret == FALSE, "[%d] GetComputerNameExW returned %d\n", NameType, Ret);
@@ -92,6 +99,7 @@ TestGetComputerNameEx(
     ok(Size == ReferenceLen + 1, "[%d] Got Size %lu, expected %lu\n", NameType, Size, ReferenceLen + 1);
 
     Size = 0;
+    SetLastError(0xdeadbeef);
     Ret = GetComputerNameExA(NameType, NULL, &Size);
     Error = GetLastError();
     ok(Ret == FALSE, "[%d] GetComputerNameExA returned %d\n", NameType, Ret);
@@ -101,6 +109,7 @@ TestGetComputerNameEx(
     /* non-NULL buffer, zero size */
     RtlFillMemory(BufferW, sizeof(BufferW), 0x55);
     Size = 0;
+    SetLastError(0xdeadbeef);
     Ret = GetComputerNameExW(NameType, BufferW, &Size);
     Error = GetLastError();
     ok(Ret == FALSE, "[%d] GetComputerNameExW returned %d\n", NameType, Ret);
@@ -110,6 +119,7 @@ TestGetComputerNameEx(
 
     RtlFillMemory(BufferA, sizeof(BufferA), 0x55);
     Size = 0;
+    SetLastError(0xdeadbeef);
     Ret = GetComputerNameExA(NameType, BufferA, &Size);
     Error = GetLastError();
     ok(Ret == FALSE, "[%d] GetComputerNameExA returned %d\n", NameType, Ret);
@@ -120,6 +130,7 @@ TestGetComputerNameEx(
     /* non-NULL buffer, too small size */
     RtlFillMemory(BufferW, sizeof(BufferW), 0x55);
     Size = ReferenceLen;
+    SetLastError(0xdeadbeef);
     Ret = GetComputerNameExW(NameType, BufferW, &Size);
     Error = GetLastError();
     ok(Ret == FALSE, "[%d] GetComputerNameExW returned %d\n", NameType, Ret);
@@ -142,6 +153,7 @@ TestGetComputerNameEx(
 
     RtlFillMemory(BufferA, sizeof(BufferA), 0x55);
     Size = ReferenceLen;
+    SetLastError(0xdeadbeef);
     Ret = GetComputerNameExA(NameType, BufferA, &Size);
     Error = GetLastError();
     ok(Ret == FALSE, "[%d] GetComputerNameExA returned %d\n", NameType, Ret);
@@ -278,7 +290,7 @@ WriteRegistryValue(PCHAR ValueName, PCHAR Value)
                                    0,
                                    REG_SZ,
                                    (LPBYTE)Value,
-                                   strlen(Value) + 1);
+                                   lstrlenA(Value) + 1);
 
         /* Close the key */
         RegCloseKey(ParametersKey);
@@ -328,6 +340,7 @@ TestReturnValues()
     CHAR ComputerName[128];
     DWORD ComputerNameSize = 0;
     INT ErrorCode;
+    BOOL Ret;
 
     memset(OrigNetBIOS, 0, sizeof(OrigNetBIOS));
     memset(OrigHostname, 0, sizeof(OrigHostname));
@@ -363,9 +376,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNamePhysicalNetBIOS, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-            ok(GetComputerNameExA(ComputerNamePhysicalNetBIOS, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalNetBIOS) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNamePhysicalNetBIOS, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNamePhysicalNetBIOS) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigNetBIOS) == 0, "ComputerNamePhysicalNetBIOS doesn't match registry value '%s' != '%s'\n", ComputerName, OrigNetBIOS);
     EndSeh(STATUS_SUCCESS);
 
@@ -374,9 +392,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNamePhysicalDnsHostname, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-            ok(GetComputerNameExA(ComputerNamePhysicalDnsHostname, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalDnsHostname) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNamePhysicalDnsHostname, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNamePhysicalDnsHostname) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigHostname) == 0, "ComputerNamePhysicalDnsHostname doesn't match registry value '%s' != '%s'\n", ComputerName, OrigHostname);
     EndSeh(STATUS_SUCCESS);
 
@@ -385,9 +408,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNamePhysicalDnsDomain, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-            ok(GetComputerNameExA(ComputerNamePhysicalDnsDomain, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalDnsDomain) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNamePhysicalDnsDomain, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNamePhysicalDnsDomain) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigDomainName) == 0, "ComputerNamePhysicalDnsDomain doesn't match registry value '%s' != '%s'\n", ComputerName, OrigDomainName);
     EndSeh(STATUS_SUCCESS);
     ComputerNameSize = 0;
@@ -396,9 +424,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNameNetBIOS, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-            ok(GetComputerNameExA(ComputerNameNetBIOS, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameNetBIOS) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNameNetBIOS, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNameNetBIOS) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigNetBIOS) == 0, "ComputerNameNetBIOS doesn't match registry value '%s' != '%s'\n", ComputerName, OrigNetBIOS);
     EndSeh(STATUS_SUCCESS);
 
@@ -407,9 +440,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNameDnsHostname, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-            ok(GetComputerNameExA(ComputerNameDnsHostname, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameDnsHostname) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNameDnsHostname, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNameDnsHostname) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigHostname) == 0, "ComputerNameDnsHostname doesn't match registry value '%s' != '%s'\n", ComputerName, OrigHostname);
     EndSeh(STATUS_SUCCESS);
 
@@ -418,9 +456,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNameDnsDomain, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-           ok(GetComputerNameExA(ComputerNameDnsDomain, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameDnsDomain) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNameDnsDomain, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNameDnsDomain) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigDomainName) == 0, "ComputerNameDnsDomain doesn't match registry value '%s' != '%s'\n", ComputerName, OrigDomainName);
     EndSeh(STATUS_SUCCESS);
 
@@ -434,9 +477,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNamePhysicalNetBIOS, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-            ok(GetComputerNameExA(ComputerNamePhysicalNetBIOS, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalNetBIOS) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNamePhysicalNetBIOS, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNamePhysicalNetBIOS) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigNetBIOS) == 0, "ComputerNamePhysicalNetBIOS doesn't match registry value '%s' != '%s'\n", ComputerName, OrigNetBIOS);
     EndSeh(STATUS_SUCCESS);
 
@@ -445,9 +493,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNamePhysicalDnsHostname, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-            ok(GetComputerNameExA(ComputerNamePhysicalDnsHostname, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalDnsHostname) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNamePhysicalDnsHostname, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNamePhysicalDnsHostname) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigHostname) == 0, "ComputerNamePhysicalDnsHostname doesn't match registry value '%s' != '%s'\n", ComputerName, OrigHostname);
     EndSeh(STATUS_SUCCESS);
 
@@ -456,9 +509,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNamePhysicalDnsDomain, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-            ok(GetComputerNameExA(ComputerNamePhysicalDnsDomain, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalDnsDomain) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNamePhysicalDnsDomain, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNamePhysicalDnsDomain) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigDomainName) == 0, "ComputerNamePhysicalDnsDomain doesn't match registry value '%s' != '%s'\n", ComputerName, OrigDomainName);
     EndSeh(STATUS_SUCCESS);
     ComputerNameSize = 0;
@@ -467,9 +525,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNameNetBIOS, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-            ok(GetComputerNameExA(ComputerNameNetBIOS, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameNetBIOS) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNameNetBIOS, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNameNetBIOS) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigNetBIOS) == 0, "ComputerNameNetBIOS doesn't match registry value '%s' != '%s'\n", ComputerName, OrigNetBIOS);
     EndSeh(STATUS_SUCCESS);
 
@@ -478,9 +541,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNameDnsHostname, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-            ok(GetComputerNameExA(ComputerNameDnsHostname, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameDnsHostname) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNameDnsHostname, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNameDnsHostname) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigHostname) == 0, "ComputerNameDnsHostname doesn't match registry value '%s' != '%s'\n", ComputerName, OrigHostname);
     EndSeh(STATUS_SUCCESS);
 
@@ -489,9 +557,14 @@ TestReturnValues()
     StartSeh()
         GetComputerNameExA(ComputerNameDnsDomain, ComputerName, &ComputerNameSize);
         if (ComputerNameSize)
-            ok(GetComputerNameExA(ComputerNameDnsDomain, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameDnsDomain) failed with %ld\n", GetLastError());
+        {
+            Ret = GetComputerNameExA(ComputerNameDnsDomain, ComputerName, &ComputerNameSize);
+            ok(Ret, "GetComputerNameExA(ComputerNameDnsDomain) failed with %ld\n", GetLastError());
+        }
         else
+        {
             memset(ComputerName, 0, sizeof(ComputerName));
+        }
         ok(strcmp(ComputerName, OrigDomainName) == 0, "ComputerNameDnsDomain doesn't match registry value '%s' != '%s'\n", ComputerName, OrigDomainName);
     EndSeh(STATUS_SUCCESS);
 

@@ -152,7 +152,7 @@ Vil du opprette en ny fil?"
 Vil du lagre endringen?"
     STRING_NOTFOUND "'%s' ble ikke funnet."
     STRING_OUT_OF_MEMORY "Ikke nok minne for å åpne \
-oppgaven. \nAvslutt en eller mere applikasjoner for øke mengden  av \nledig \
+oppgaven.\nAvslutt en eller mere applikasjoner for øke mengden  av\nledig \
 minne."
     STRING_CANNOTFIND "Kan ikke finne '%s'"
     STRING_ANSI "ANSI"

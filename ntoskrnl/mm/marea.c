@@ -599,8 +599,8 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
         OldIrql = MiAcquirePfnLock();
 
         for (Address = MI_LOWEST_VAD_ADDRESS;
-                Address < MM_HIGHEST_VAD_ADDRESS;
-                Address =(PVOID)((ULONG_PTR)Address + (PAGE_SIZE * PTE_COUNT)))
+             Address < MM_HIGHEST_VAD_ADDRESS;
+             Address = (PVOID)((ULONG_PTR)Address + (PTE_PER_PAGE * PAGE_SIZE)))
         {
             /* At this point all references should be dead */
             if (MiQueryPageTableReferences(Address) != 0)

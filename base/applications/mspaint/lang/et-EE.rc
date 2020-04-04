@@ -196,7 +196,7 @@ BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
     IDS_INFOTITLE "Paint ReactOS'ile"
-    IDS_INFOTEXT "Paint ReactOS'ile on saadaval ""GNU Lesser General Public License"" litsentsi all (LGPL, vaata www.gnu.org)"
+    IDS_INFOTEXT "On saadaval ""GNU Lesser General Public License"" litsentsi all (LGPL, vaata www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Kas soovid salvesta muudatusi failis %s?"
     IDS_DEFAULTFILENAME "Nimetu.bmp"
     IDS_MINIATURETITLE "Miniatuur"

@@ -17,8 +17,8 @@ BEGIN
     PUSHBUTTON "&Właściwości", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Opis", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Tutaj pojawi się opis składnika...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "Pokazuj ikonę w obszarze powiadomień podczas połączenia", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "Powiadom mnie, gdy to połączenie ma ograniczoną łączność lub całkowity brak łączności", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "Pokazuj ikonę w obszarze powiadomień podczas połączenia", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "Powiadom mnie, gdy to połączenie ma ograniczoną łączność lub całkowity brak łączności", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280

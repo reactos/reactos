@@ -275,6 +275,7 @@ IntDeleteAllAliases(PCONSOLE Console)
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: ConsolepAddAlias */
 CSR_API(SrvAddConsoleAlias)
 {
     PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
@@ -359,6 +360,7 @@ CSR_API(SrvAddConsoleAlias)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: ConsolepGetAlias */
 CSR_API(SrvGetConsoleAlias)
 {
     PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
@@ -432,6 +434,7 @@ CSR_API(SrvGetConsoleAlias)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: ConsolepGetAliases */
 CSR_API(SrvGetConsoleAliases)
 {
     PCONSOLE_GETALLALIASES GetAllAliasesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesRequest;
@@ -484,6 +487,7 @@ CSR_API(SrvGetConsoleAliases)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: ConsolepGetAliasesLength */
 CSR_API(SrvGetConsoleAliasesLength)
 {
     PCONSOLE_GETALLALIASESLENGTH GetAllAliasesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesLengthRequest;
@@ -523,6 +527,7 @@ CSR_API(SrvGetConsoleAliasesLength)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: ConsolepGetAliasExes */
 CSR_API(SrvGetConsoleAliasExes)
 {
     PCONSOLE_GETALIASESEXES GetAliasesExesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesRequest;
@@ -569,6 +574,7 @@ CSR_API(SrvGetConsoleAliasExes)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: ConsolepGetAliasExesLength */
 CSR_API(SrvGetConsoleAliasExesLength)
 {
     PCONSOLE_GETALIASESEXESLENGTH GetAliasesExesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesLengthRequest;

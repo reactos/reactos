@@ -69,7 +69,13 @@ CreateConsoleFontEx(
                                  ~(VARIABLE_PITCH | FF_DECORATIVE | FF_ROMAN | FF_SCRIPT | FF_SWISS));
 
     if (!IsValidConsoleFont(FaceName, CodePage))
+    {
         StringCchCopyW(FaceName, LF_FACESIZE, L"Terminal");
+        if (IsCJKCodePage(CodePage))
+        {
+            lf.lfCharSet = ANSI_CHARSET;
+        }
+    }
 
     StringCchCopyNW(lf.lfFaceName, ARRAYSIZE(lf.lfFaceName),
                     FaceName, LF_FACESIZE);

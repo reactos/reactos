@@ -1531,17 +1531,27 @@ LRESULT CSysPagerWnd::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     return 0;
 }
 
+LRESULT appbar_message( COPYDATASTRUCT* cds );
+
 LRESULT CSysPagerWnd::OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     PCOPYDATASTRUCT cpData = (PCOPYDATASTRUCT)lParam;
-    if (cpData->dwData == 1)
+    if (cpData->dwData == TABDMC_NOTIFY)
     {
         /* A taskbar NotifyIcon notification */
         PTRAYNOTIFYDATAW pData = (PTRAYNOTIFYDATAW)cpData->lpData;
         if (pData->dwSignature == NI_NOTIFY_SIG)
             return NotifyIcon(pData->dwMessage, &pData->nid);
     }
-    // TODO: Handle other types of taskbar notifications
+    else if (cpData->dwData == TABDMC_APPBAR)
+    {
+        FIXME("Taskbar Tray Application Bar\n");
+        return appbar_message( cpData );
+    }
+    else if (cpData->dwData == TABDMC_LOADINPROC)
+    {
+        FIXME("Taskbar Load In Proc\n");
+    }
 
     return FALSE;
 }

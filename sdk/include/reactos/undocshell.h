@@ -462,19 +462,33 @@ BOOL WINAPI PathIsSameRootAW(LPCVOID lpszPath1, LPCVOID lpszPath2);
 BOOL WINAPI PathFindOnPathAW(LPVOID sFile, LPCVOID *sOtherDirs);
 
 /****************************************************************************
- * Shell File Operations error codes
+ * Shell File Operations error codes - SHFileOperationA/W
  */
 
 /* Error codes could be pre-Win32 */
-#define DE_SAMEFILE      0x71
-#define DE_MANYSRC1DEST  0x72
-#define DE_DIFFDIR       0x73
-#define DE_OPCANCELLED   0x75
-#define DE_DESTSUBTREE   0x76
-#define DE_INVALIDFILES  0x7C
-#define DE_DESTSAMETREE  0x7D
-#define DE_FLDDESTISFILE 0x7E
-#define DE_FILEDESTISFLD 0x80
+#define DE_SAMEFILE         0x71
+#define DE_MANYSRC1DEST     0x72
+#define DE_DIFFDIR          0x73
+#define DE_ROOTDIR          0x74
+#define DE_OPCANCELLED      0x75
+#define DE_DESTSUBTREE      0x76
+#define DE_ACCESSDENIEDSRC  0x78
+#define DE_PATHTOODEEP      0x79
+#define DE_MANYDEST         0x7A
+#define DE_INVALIDFILES     0x7C
+#define DE_DESTSAMETREE     0x7D
+#define DE_FLDDESTISFILE    0x7E
+#define DE_FILEDESTISFLD    0x80
+#define DE_FILENAMETOOLONG  0x81
+#define DE_DEST_IS_CDROM    0x82
+#define DE_DEST_IS_DVD      0x83
+#define DE_DEST_IS_CDRECORD 0x84
+#define DE_FILE_TOO_LARGE   0x85
+#define DE_SRC_IS_CDROM     0x86
+#define DE_SRC_IS_DVD       0x87
+#define DE_SRC_IS_CDRECORD  0x88
+// #define DE_ERROR_MAX
+#define ERRORONDEST         0x10000
 
 /****************************************************************************
  * Shell Namespace Routines
@@ -676,12 +690,30 @@ BOOL WINAPI GUIDFromStringW(
 #define TRAYCMD_SEARCH_FILES        41093
 #define TRAYCMD_SEARCH_COMPUTERS    41094
 
+// Explorer Tray Application Bar Data Message Commands
+#define TABDMC_APPBAR     0
+#define TABDMC_NOTIFY     1
+#define TABDMC_LOADINPROC 2
+
 void WINAPI ShellDDEInit(BOOL bInit);
 DWORD WINAPI WinList_Init(void);
 
 IStream* WINAPI SHGetViewStream(LPCITEMIDLIST, DWORD, LPCTSTR, LPCTSTR, LPCTSTR);
 
 EXTERN_C HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
+
+/*****************************************************************************
+ * INVALID_FILETITLE_CHARACTERS
+ */
+
+#define INVALID_FILETITLE_CHARACTERSA "\\/:*?\"<>|"
+#define INVALID_FILETITLE_CHARACTERSW L"\\/:*?\"<>|"
+
+#ifdef UNICODE
+    #define INVALID_FILETITLE_CHARACTERS INVALID_FILETITLE_CHARACTERSW
+#else
+    #define INVALID_FILETITLE_CHARACTERS INVALID_FILETITLE_CHARACTERSA
+#endif
 
 /*****************************************************************************
  * Shell Link

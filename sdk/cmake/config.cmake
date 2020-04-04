@@ -1,7 +1,7 @@
 
 set(SARCH "pc" CACHE STRING
 "Sub-architecture to build for. Specify one of:
- pc xbox")
+ pc pc98 xbox")
 
 set(OARCH "pentium" CACHE STRING
 "Generate instructions for this CPU type. Specify one of:

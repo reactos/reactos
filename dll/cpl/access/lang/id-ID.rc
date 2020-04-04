@@ -138,7 +138,7 @@ CAPTION "Pengaturan FilterKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
-    LTEXT "Pintasan untuk FilterKeys adalah:  \nTekan dan tahan <Right Shift> selama delapan detik.",
+    LTEXT "Pintasan untuk FilterKeys adalah:\nTekan dan tahan <Right Shift> selama delapan detik.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Gunakan pintasan", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Pilihan filter", -1, 6, 79, 234, 79
@@ -165,7 +165,7 @@ CAPTION "Pengaturan ToggleKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
-    LTEXT "Pintasan untuk ToggleKeys is: \nTekan dan tahan <Num Lock> selama lima detik.",
+    LTEXT "Pintasan untuk ToggleKeys is:\nTekan dan tahan <Num Lock> selama lima detik.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Gunakan pintasan", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
@@ -178,7 +178,7 @@ CAPTION "Pengaturan Kontras Tinggi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
-    LTEXT "Pintasan untuk Kontras Tinggi:  \nTekan <Left Alt+Left Shift+Print Screen>.",
+    LTEXT "Pintasan untuk Kontras Tinggi:\nTekan <Left Alt+Left Shift+Print Screen>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Gunakan pintasan", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Warna skema kontras tinggi", -1, 6, 83, 234, 44
@@ -195,23 +195,23 @@ CAPTION "Pengaturan MouseKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
-    LTEXT "Pintasan MouseKeys:  \nTekan <Left Alt+Left Shift+Num Lock>.",
+    LTEXT "Pintasan MouseKeys:\nTekan <Left Alt+Left Shift+Num Lock>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Gunakan pintasan", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
     GROUPBOX "Kecepatan penunjuk", -1, 6, 83, 234, 83
     LTEXT "Kecepatan &puncak:", -1, 12, 96, 48, 11
-    LTEXT "Rendah", -1, 66, 96, 18, 11
+    LTEXT "Rendah", -1, 62, 96, 24, 11
     CONTROL "", IDC_MOUSEKEYS_SPEED_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 94, 114, 20
-    LTEXT "Tinggi", -1, 204, 96, 18, 11
+    LTEXT "Tinggi", -1, 204, 96, 20, 11
     LTEXT "&Akselerasi:", -1, 12, 123, 48, 11
-    LTEXT "Lambat", -1, 66, 123, 18, 11
+    LTEXT "Lambat", -1, 62, 123, 24, 11
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
-    LTEXT "Cepat", -1, 204, 123, 18, 11
+    LTEXT "Cepat", -1, 204, 123, 20, 11
     AUTOCHECKBOX "&Tekan dan tahan Ctrl untuk mempercepat dan Shift untuk memperlambat", IDC_MOUSEKEYS_SPEED_CHECK,
-                 12, 142, 222, 14
+                 12, 142, 222, 20
     LTEXT "Gunakan MouseKeys ketika NumLock:", -1, 6, 171, 120, 11
     AUTORADIOBUTTON "&Nyala", IDC_MOUSEKEYS_ON_RADIO, 162, 171, 30, 11
     AUTORADIOBUTTON "&Mati", IDC_MOUSEKEYS_OFF_RADIO, 198, 171, 30, 11

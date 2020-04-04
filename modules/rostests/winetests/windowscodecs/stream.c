@@ -765,7 +765,7 @@ static void test_StreamOnIStream(void)
     ok(hr == S_OK, "Failed to create a stream, hr %#x.\n", hr);
 
     hr = IWICStream_InitializeFromMemory(stream, memory, sizeof(memory));
-    ok(hr == S_OK, "Failed to initialize stream, hr %#x.", hr);
+    ok(hr == S_OK, "Failed to initialize stream, hr %#x.\n", hr);
 
     hr = IWICImagingFactory_CreateStream(factory, &substream);
     ok(hr == S_OK, "Failed to create a stream, hr %#x.\n", hr);

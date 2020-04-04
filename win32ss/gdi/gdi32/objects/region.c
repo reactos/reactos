@@ -64,7 +64,6 @@ FASTCALL
 DeleteRegion(
     _In_ HRGN hrgn)
 {
-#if 0
     PRGN_ATTR Rgn_Attr = GdiGetRgnAttr(hrgn);
 
     if ( Rgn_Attr )
@@ -78,7 +77,6 @@ DeleteRegion(
             return TRUE;
         }
     }
-#endif
     return NtGdiDeleteObjectApp(hrgn);
 }
 

@@ -141,11 +141,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Verze ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
@@ -757,6 +753,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "Přidá, mění a spravuje soubory písem."
     IDS_PRINTERS_DESCRIPTION "Zobrazí instalované tiskárny a faxy a pomůže přidat další."
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Verze %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "&Vedle sebe"
     IDS_VIEW_SMALL "&Ikony"
@@ -775,6 +774,17 @@ BEGIN
     IDS_PASTE "Vložit"
     IDS_EJECT "Eject"
     IDS_DISCONNECT "Disconnect"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "Složku '%1' nebylo možné vytvořit"
     IDS_CREATEFOLDER_CAPTION "Složku nebylo možné vytvořit"
@@ -815,7 +825,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Procházet"
     IDS_RUNDLG_BROWSE_FILTER "Spustitelné soubory (*.exe)\0*.exe\0Všechnysoubory (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Nabídka Start\\Programy"
     IDS_PERSONAL "Dokumenty"
     IDS_FAVORITES "Oblíbené"
@@ -878,6 +888,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
     IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Složka"
@@ -914,6 +925,7 @@ BEGIN
     IDS_EDIT_VERB "Upravit"
     IDS_FIND_VERB "Najít"
     IDS_PRINT_VERB "Tisknout"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u souborů, %u složek"
     IDS_PRINTERS "Tiskárny"

@@ -33,8 +33,10 @@ list(APPEND SOURCE
     NtReadFile.c
     NtSaveKey.c
     NtSetInformationFile.c
+    NtSetInformationProcess.c
     NtSetValueKey.c
     NtSetVolumeInformationFile.c
+    NtUnloadDriver.c
     NtWriteFile.c
     RtlAllocateHeap.c
     RtlBitmap.c
@@ -56,7 +58,6 @@ list(APPEND SOURCE
     RtlGetLongestNtPathLength.c
     RtlHandle.c
     RtlImageRvaToVa.c
-    RtlInitializeBitMap.c
     RtlIsNameLegalDOS8Dot3.c
     RtlMemoryStream.c
     RtlNtPathNameToDosPathName.c
@@ -65,6 +66,7 @@ list(APPEND SOURCE
     RtlReAllocateHeap.c
     RtlUnicodeStringToAnsiString.c
     RtlUpcaseUnicodeStringToCountedOemString.c
+    RtlValidateUnicodeString.c
     StackOverflow.c
     SystemInfo.c
     Timer.c

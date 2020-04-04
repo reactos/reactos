@@ -20,8 +20,6 @@
  */
 
 %{
-#include "config.h"
-#include "wine/port.h"
 #include "wine/debug.h"
 
 #define YY_NO_UNISTD_H

@@ -19,12 +19,10 @@
  *
  */
 
-#include "config.h"
 
 #define COBJMACROS
 #include "dxdiag_private.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dxdiag);
 
@@ -114,7 +112,7 @@ static HRESULT WINAPI IDxDiagContainerImpl_EnumChildContainerNames(IDxDiagContai
     if (dwIndex == i) {
       TRACE("Found container name %s, copying string\n", debugstr_w(p->contName));
       lstrcpynW(pwszContainer, p->contName, cchContainer);
-      return (cchContainer <= strlenW(p->contName)) ?
+      return (cchContainer <= lstrlenW(p->contName)) ?
               DXDIAG_E_INSUFFICIENT_BUFFER : S_OK;
     }
     ++i;
@@ -157,20 +155,12 @@ static HRESULT WINAPI IDxDiagContainerImpl_GetChildContainer(IDxDiagContainer *i
 
   *ppInstance = NULL;
 
-  tmp_len = strlenW(pwszContainer) + 1;
+  tmp_len = lstrlenW(pwszContainer) + 1;
   orig_tmp = tmp = HeapAlloc(GetProcessHeap(), 0, tmp_len * sizeof(WCHAR));
   if (NULL == tmp) return E_FAIL;
   lstrcpynW(tmp, pwszContainer, tmp_len);
 
-  /* special handling for an empty string and leaf container */
-  if (!tmp[0] && list_empty(&pContainer->subContainers)) {
-    hr = DXDiag_CreateDXDiagContainer(&IID_IDxDiagContainer, pContainer, This->pProv, (void **)ppInstance);
-    if (SUCCEEDED(hr))
-      TRACE("Succeeded in getting the container instance\n");
-    goto out;
-  }
-
-  cur = strchrW(tmp, '.');
+  cur = wcschr(tmp, '.');
   while (NULL != cur) {
     *cur = '\0'; /* cut tmp string to '.' */
     if (!*(cur + 1)) break; /* Account for a lone terminating period, as in "cont1.cont2.". */
@@ -180,7 +170,7 @@ static HRESULT WINAPI IDxDiagContainerImpl_GetChildContainer(IDxDiagContainer *i
       goto out;
     cur++; /* go after '.' (just replaced by \0) */
     tmp = cur;
-    cur = strchrW(tmp, '.');
+    cur = wcschr(tmp, '.');
   }
 
   TRACE("Trying to get container %s\n", debugstr_w(tmp));
@@ -227,7 +217,7 @@ static HRESULT WINAPI IDxDiagContainerImpl_EnumPropNames(IDxDiagContainer *iface
     if (dwIndex == i) {
       TRACE("Found property name %s, copying string\n", debugstr_w(p->propName));
       lstrcpynW(pwszPropName, p->propName, cchPropName);
-      return (cchPropName <= strlenW(p->propName)) ?
+      return (cchPropName <= lstrlenW(p->propName)) ?
               DXDIAG_E_INSUFFICIENT_BUFFER : S_OK;
     }
     ++i;

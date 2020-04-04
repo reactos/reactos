@@ -329,7 +329,9 @@ StartScreenSaver(
     StartupInfo.cb = sizeof(STARTUPINFOW);
     StartupInfo.dwFlags = STARTF_SCREENSAVER;
 
-    /* FIXME: run the screen saver on the screen saver desktop */
+    /* FIXME: Run the screen saver on the secure screen saver desktop if required */
+    StartupInfo.lpDesktop = L"WinSta0\\Default";
+
     ret = CreateProcessW(szApplicationName,
                          szCommandLine,
                          NULL,

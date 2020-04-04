@@ -33,13 +33,13 @@ Author:
 NTSTATUS
 NTAPI
 KdSystemDebugControl(
-    SYSDBG_COMMAND Command,
-    PVOID InputBuffer,
-    ULONG InputBufferLength,
-    PVOID OutputBuffer,
-    ULONG OutputBufferLength,
-    PULONG ReturnLength,
-    KPROCESSOR_MODE PreviousMode
+    _In_ SYSDBG_COMMAND Command,
+    _In_ PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_ PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _Inout_ PULONG ReturnLength,
+    _In_ KPROCESSOR_MODE PreviousMode
 );
 
 BOOLEAN
@@ -57,17 +57,17 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryDebugFilterState(
-     ULONG ComponentId,
-     ULONG Level
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetDebugFilterState(
-    ULONG ComponentId,
-    ULONG Level,
-    BOOLEAN State
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level,
+    _In_ BOOLEAN State
 );
 
 NTSYSCALLAPI

@@ -50,6 +50,7 @@ class CMergedFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
     public IPersistFolder2,
+    public IItemNameLimits,
     public IAugmentedShellFolder3     // -- undocumented
     //public IShellService,              // DEPRECATED IE4 interface: https://msdn.microsoft.com/en-us/library/windows/desktop/bb774870%28v=vs.85%29.aspx
     //public ITranslateShellChangeNotify,// -- undocumented
@@ -84,6 +85,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IPersist,        IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder,  IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
+        COM_INTERFACE_ENTRY_IID(IID_IItemNameLimits, IItemNameLimits)
         COM_INTERFACE_ENTRY_IID(IID_IAugmentedShellFolder,  IAugmentedShellFolder)
         COM_INTERFACE_ENTRY_IID(IID_IAugmentedShellFolder2, IAugmentedShellFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IAugmentedShellFolder3, IAugmentedShellFolder3)
@@ -195,6 +197,28 @@ public:
 
     // IPersistFolder2
     virtual HRESULT STDMETHODCALLTYPE GetCurFolder(PIDLIST_ABSOLUTE * pidl);
+
+    /*** IItemNameLimits methods ***/
+
+    STDMETHODIMP
+    GetMaxLength(LPCWSTR pszName, int *piMaxNameLen)
+    {
+        return E_NOTIMPL;
+    }
+
+    STDMETHODIMP
+    GetValidCharacters(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars)
+    {
+        if (ppwszValidChars)
+        {
+            *ppwszValidChars = NULL;
+        }
+        if (ppwszInvalidChars)
+        {
+            SHStrDupW(INVALID_FILETITLE_CHARACTERSW, ppwszInvalidChars);
+        }
+        return S_OK;
+    }
 
     // IAugmentedShellFolder2
     virtual HRESULT STDMETHODCALLTYPE AddNameSpace(LPGUID lpGuid, IShellFolder * psf, LPCITEMIDLIST pcidl, ULONG dwUnknown);

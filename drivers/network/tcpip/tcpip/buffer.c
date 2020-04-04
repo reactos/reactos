@@ -10,7 +10,8 @@
 
 #include "precomp.h"
 
-__inline INT SkipToOffset(
+static inline
+INT SkipToOffset(
     PNDIS_BUFFER Buffer,
     UINT Offset,
     PCHAR *Data,

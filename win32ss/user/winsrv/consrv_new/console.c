@@ -309,6 +309,7 @@ ConSrvDeleteConsole(PCONSOLE Console)
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: ConsolepAlloc */
 CSR_API(SrvAllocConsole)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -353,6 +354,7 @@ CSR_API(SrvAllocConsole)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: ConsolepAttach */
 CSR_API(SrvAttachConsole)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -435,6 +437,7 @@ Quit:
     return Status;
 }
 
+/* API_NUMBER: ConsolepFree */
 CSR_API(SrvFreeConsole)
 {
     ConSrvRemoveConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process));
@@ -445,6 +448,7 @@ NTSTATUS NTAPI
 ConDrvGetConsoleMode(IN PCONSOLE Console,
                      IN PCONSOLE_IO_OBJECT Object,
                      OUT PULONG ConsoleMode);
+/* API_NUMBER: ConsolepGetMode */
 CSR_API(SrvGetConsoleMode)
 {
     NTSTATUS Status;
@@ -467,6 +471,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleMode(IN PCONSOLE Console,
                      IN PCONSOLE_IO_OBJECT Object,
                      IN ULONG ConsoleMode);
+/* API_NUMBER: ConsolepSetMode */
 CSR_API(SrvSetConsoleMode)
 {
     NTSTATUS Status;
@@ -489,6 +494,7 @@ NTSTATUS NTAPI
 ConDrvGetConsoleTitle(IN PCONSOLE Console,
                       IN OUT PWCHAR Title,
                       IN OUT PULONG BufLength);
+/* API_NUMBER: ConsolepGetTitle */
 CSR_API(SrvGetConsoleTitle)
 {
     NTSTATUS Status;
@@ -522,6 +528,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleTitle(IN PCONSOLE Console,
                       IN PWCHAR Title,
                       IN ULONG BufLength);
+/* API_NUMBER: ConsolepSetTitle */
 CSR_API(SrvSetConsoleTitle)
 {
     NTSTATUS Status;
@@ -557,6 +564,7 @@ NTSTATUS NTAPI
 ConDrvGetConsoleCP(IN PCONSOLE Console,
                    OUT PUINT CodePage,
                    IN BOOLEAN InputCP);
+/* API_NUMBER: ConsolepGetCP */
 CSR_API(SrvGetConsoleCP)
 {
     NTSTATUS Status;
@@ -581,6 +589,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleCP(IN PCONSOLE Console,
                    IN UINT CodePage,
                    IN BOOLEAN InputCP);
+/* API_NUMBER: ConsolepSetCP */
 CSR_API(SrvSetConsoleCP)
 {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
@@ -606,6 +615,7 @@ ConDrvGetConsoleProcessList(IN PCONSOLE Console,
                             IN OUT PULONG ProcessIdsList,
                             IN ULONG MaxIdListItems,
                             OUT PULONG ProcessIdsTotal);
+/* API_NUMBER: ConsolepGetProcessList */
 CSR_API(SrvGetConsoleProcessList)
 {
     NTSTATUS Status;
@@ -632,6 +642,7 @@ CSR_API(SrvGetConsoleProcessList)
     return Status;
 }
 
+/* API_NUMBER: ConsolepGenerateCtrlEvent */
 CSR_API(SrvGenerateConsoleCtrlEvent)
 {
     NTSTATUS Status;

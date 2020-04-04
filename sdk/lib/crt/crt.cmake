@@ -20,12 +20,8 @@ list(APPEND CRT_SOURCE
     direct/wgetdcwd.c
     direct/wmkdir.c
     direct/wrmdir.c
-    except/cpp.c
-    except/cppexcept.c
-    except/except.c
     except/matherr.c
     except/stack.c
-    except/xcptfil.c
     float/chgsign.c
     float/copysign.c
     float/fpclass.c
@@ -360,7 +356,11 @@ list(APPEND CRT_SOURCE
     wstring/wcsstr.c
     wstring/wcstok.c
     wstring/wcsupr.c
-    wstring/wcsxfrm.c
+    wstring/wcsxfrm.c)
+
+list(APPEND CRT_WINE_SOURCE
+    wine/cpp.c
+    wine/except.c
     wine/heap.c
     wine/undname.c)
 
@@ -424,7 +424,6 @@ if(ARCH STREQUAL "i386")
         string/i386/wcsrchr_asm.s)
 
     list(APPEND CRT_SOURCE
-        except/i386/unwind.c
         float/i386/clearfp.c
         float/i386/cntrlfp.c
         float/i386/fpreset.c
@@ -437,6 +436,8 @@ if(ARCH STREQUAL "i386")
         math/i386/cisin.c
         math/i386/cisqrt.c
         math/i386/ldexp.c)
+    list(APPEND CRT_WINE_SOURCE
+        wine/except_i386.c)
     if(MSVC)
         list(APPEND CRT_ASM_SOURCE
             except/i386/cpp.s)
@@ -477,6 +478,8 @@ elseif(ARCH STREQUAL "amd64")
         except/amd64/ehandler.c
         float/i386/cntrlfp.c
         float/i386/statfp.c)
+    list(APPEND CRT_WINE_SOURCE
+        wine/except_x86_64.c)
     if(MSVC)
         list(APPEND CRT_ASM_SOURCE
             except/amd64/cpp.s)
@@ -490,6 +493,9 @@ elseif(ARCH STREQUAL "arm")
         math/arm/__rt_sdiv64_worker.c
         math/arm/__rt_udiv.c
         math/arm/__rt_udiv64_worker.c
+    )
+    list(APPEND CRT_WINE_SOURCE
+        wine/except_arm.c
     )
     list(APPEND CRT_ASM_SOURCE
         except/arm/_abnormal_termination.s
@@ -584,6 +590,9 @@ if(NOT ARCH STREQUAL "i386")
         string/wcsrchr.c)
 endif()
 
+# includes for wine code
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+
 set_source_files_properties(${CRT_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "__MINGW_IMPORT=extern;USE_MSVCRT_PREFIX;_MSVCRT_LIB_;_MSVCRT_;_MT;CRTDLL")
 add_asm_files(crt_asm ${CRT_ASM_SOURCE})
 
@@ -593,7 +602,7 @@ if(USE_CLANG_CL)
     set_property(SOURCE stdlib/rot.c APPEND_STRING PROPERTY COMPILE_FLAGS " /fallback")
 endif()
 
-add_library(crt ${CRT_SOURCE} ${crt_asm})
+add_library(crt ${CRT_SOURCE} ${CRT_WINE_SOURCE} ${crt_asm})
 target_link_libraries(crt chkstk)
 add_target_compile_definitions(crt
     __MINGW_IMPORT=extern

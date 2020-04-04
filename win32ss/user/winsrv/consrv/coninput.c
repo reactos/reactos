@@ -19,9 +19,11 @@
 #define ConSrvGetInputBuffer(ProcessData, Handle, Ptr, Access, LockConsole)     \
     ConSrvGetObject((ProcessData), (Handle), (PCONSOLE_IO_OBJECT*)(Ptr), NULL,  \
                     (Access), (LockConsole), INPUT_BUFFER)
+
 #define ConSrvGetInputBufferAndHandleEntry(ProcessData, Handle, Ptr, Entry, Access, LockConsole)    \
     ConSrvGetObject((ProcessData), (Handle), (PCONSOLE_IO_OBJECT*)(Ptr), (Entry),                   \
                     (Access), (LockConsole), INPUT_BUFFER)
+
 #define ConSrvReleaseInputBuffer(Buff, IsConsoleLocked) \
     ConSrvReleaseObject(&(Buff)->Header, (IsConsoleLocked))
 
@@ -33,12 +35,16 @@
  *  ERROR_INVALID_PARAMETER."
  */
 #define ConsoleInputUnicodeToAnsiChar(Console, dChar, sWChar) \
-    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
-    WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
+do { \
+    ASSERT((ULONG_PTR)(dChar) != (ULONG_PTR)(sWChar)); \
+    WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL); \
+} while (0)
 
 #define ConsoleInputAnsiToUnicodeChar(Console, dWChar, sChar) \
-    ASSERT((ULONG_PTR)dWChar != (ULONG_PTR)sChar); \
-    MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1)
+do { \
+    ASSERT((ULONG_PTR)(dWChar) != (ULONG_PTR)(sChar)); \
+    MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1); \
+} while (0)
 
 
 typedef struct _GET_INPUT_INFO
@@ -196,6 +202,31 @@ ConioProcessInputEvent(PCONSRV_CONSOLE Console,
                        PINPUT_RECORD InputEvent)
 {
     ULONG NumEventsWritten;
+
+    if (InputEvent->EventType == KEY_EVENT)
+    {
+        BOOL Down = InputEvent->Event.KeyEvent.bKeyDown;
+        UINT VirtualKeyCode = InputEvent->Event.KeyEvent.wVirtualKeyCode;
+        DWORD ShiftState = InputEvent->Event.KeyEvent.dwControlKeyState;
+
+        /* Process Ctrl-C and Ctrl-Break */
+        if ( (GetConsoleInputBufferMode(Console) & ENABLE_PROCESSED_INPUT) &&
+             Down && (VirtualKeyCode == VK_PAUSE || VirtualKeyCode == 'C') &&
+             (ShiftState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) )
+        {
+            DPRINT1("Console_Api Ctrl-C\n");
+            ConSrvConsoleProcessCtrlEvent(Console, 0, CTRL_C_EVENT);
+
+            if (Console->LineBuffer && !Console->LineComplete)
+            {
+                /* Line input is in progress; end it */
+                Console->LinePos = Console->LineSize = 0;
+                Console->LineComplete = TRUE;
+            }
+            return STATUS_SUCCESS; // STATUS_CONTROL_C_EXIT;
+        }
+    }
+
     return ConioAddInputEvents(Console,
                                InputEvent,
                                1,
@@ -533,9 +564,10 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
             /* Now translate everything to ANSI */
             if (!GetInputRequest->Unicode)
             {
-                for (; NumEventsRead > 0; --NumEventsRead)
+                ULONG i;
+                for (i = 0; i < NumEventsRead; ++i)
                 {
-                    ConioInputEventToAnsi(InputBuffer->Header.Console, --InputRecord);
+                    ConioInputEventToAnsi(InputBuffer->Header.Console, &InputRecord[i]);
                 }
             }
         }
@@ -548,6 +580,7 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: ConsolepReadConsole */
 CSR_API(SrvReadConsole)
 {
     NTSTATUS Status;
@@ -605,6 +638,7 @@ CSR_API(SrvReadConsole)
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetConsoleInput */
 CSR_API(SrvGetConsoleInput)
 {
     NTSTATUS Status;
@@ -669,6 +703,8 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
                         IN ULONG NumEventsToWrite,
                         OUT PULONG NumEventsWritten OPTIONAL);
 #endif
+
+/* API_NUMBER: ConsolepWriteConsoleInput */
 CSR_API(SrvWriteConsoleInput)
 {
     NTSTATUS Status;
@@ -752,6 +788,7 @@ CSR_API(SrvWriteConsoleInput)
 NTSTATUS NTAPI
 ConDrvFlushConsoleInputBuffer(IN PCONSOLE Console,
                               IN PCONSOLE_INPUT_BUFFER InputBuffer);
+/* API_NUMBER: ConsolepFlushInputBuffer */
 CSR_API(SrvFlushConsoleInputBuffer)
 {
     NTSTATUS Status;
@@ -776,6 +813,7 @@ NTSTATUS NTAPI
 ConDrvGetConsoleNumberOfInputEvents(IN PCONSOLE Console,
                                     IN PCONSOLE_INPUT_BUFFER InputBuffer,
                                     OUT PULONG NumberOfEvents);
+/* API_NUMBER: ConsolepGetNumberOfInputEvents */
 CSR_API(SrvGetConsoleNumberOfInputEvents)
 {
     NTSTATUS Status;

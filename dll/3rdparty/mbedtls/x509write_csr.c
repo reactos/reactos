@@ -50,6 +50,16 @@ static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
+/*
+ * For the currently used signature algorithms the buffer to store any signature
+ * must be at least of size MAX(MBEDTLS_ECDSA_MAX_LEN, MBEDTLS_MPI_MAX_SIZE)
+ */
+#if MBEDTLS_ECDSA_MAX_LEN > MBEDTLS_MPI_MAX_SIZE
+#define SIGNATURE_MAX_SIZE MBEDTLS_ECDSA_MAX_LEN
+#else
+#define SIGNATURE_MAX_SIZE MBEDTLS_MPI_MAX_SIZE
+#endif
+
 void mbedtls_x509write_csr_init( mbedtls_x509write_csr *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_x509write_csr ) );
@@ -165,7 +175,7 @@ int mbedtls_x509write_csr_der( mbedtls_x509write_csr *ctx, unsigned char *buf, s
     size_t sig_oid_len = 0;
     unsigned char *c, *c2;
     unsigned char hash[64];
-    unsigned char sig[MBEDTLS_MPI_MAX_SIZE];
+    unsigned char sig[SIGNATURE_MAX_SIZE];
     unsigned char tmp_buf[2048];
     size_t pub_len = 0, sig_and_oid_len = 0, sig_len;
     size_t len = 0;

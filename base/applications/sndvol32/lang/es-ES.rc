@@ -22,7 +22,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SNDVOL32 "Control de volumen"
-    IDS_NOMIXERDEVICES "¡No hay dispositivos mezcladores activos en este momento! \n\
+    IDS_NOMIXERDEVICES "¡No hay dispositivos mezcladores activos en este momento!\n\
 La aplicación se cerrará ahora."
     IDS_SELECT "&Select"
     IDS_ADVANCED_CONTROLS "Advanced Controls for %s"

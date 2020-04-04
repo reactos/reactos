@@ -3368,7 +3368,7 @@ Language=Russian
 ERROR_ARITHMETIC_OVERFLOW - Arithmetic result exceeded 32 bits.
 .
 Language=Polish
-ERROR_ARITHMETIC_OVERFLOW - Arithmetic result exceeded 32 bits.
+ERROR_ARITHMETIC_OVERFLOW - Wynik arytmetyczny przekroczył 32 bity.
 .
 Language=Romanian
 ERROR_ARITHMETIC_OVERFLOW - Rezultatul aritmetic depășește 32 de biți.
@@ -3385,7 +3385,7 @@ Language=Russian
 ERROR_PIPE_CONNECTED - There is a process on other end of the pipe.
 .
 Language=Polish
-ERROR_PIPE_CONNECTED - There is a process on other end of the pipe.
+ERROR_PIPE_CONNECTED - Na drugim końcu potoku jest proces.
 .
 Language=Romanian
 ERROR_PIPE_CONNECTED - La celălalt capăt al conectorului (pipe) deja există un proces.
@@ -3402,7 +3402,7 @@ Language=Russian
 ERROR_PIPE_LISTENING - Waiting for a process to open the other end of the pipe.
 .
 Language=Polish
-ERROR_PIPE_LISTENING - Waiting for a process to open the other end of the pipe.
+ERROR_PIPE_LISTENING - Oczekiwanie na otwarcie przez proces drugiego końca potoku.
 .
 Language=Romanian
 ERROR_PIPE_LISTENING - Un proces este așteptat la capătul complementar al conectorului (pipe).
@@ -3419,7 +3419,7 @@ Language=Russian
 ERROR_ACPI_ERROR - An error occurred in the ACPI subsystem.
 .
 Language=Polish
-ERROR_ACPI_ERROR - An error occurred in the ACPI subsystem.
+ERROR_ACPI_ERROR - Wystąpił błąd w podsystemie ACPI.
 .
 Language=Romanian
 ERROR_ACPI_ERROR - În subsistemul ACPI a apărut o eroare.
@@ -3436,7 +3436,7 @@ Language=Russian
 ERROR_ABIOS_ERROR - An error occurred in the ABIOS subsystem
 .
 Language=Polish
-ERROR_ABIOS_ERROR - An error occurred in the ABIOS subsystem
+ERROR_ABIOS_ERROR - Wystąpił błąd w podsystemie ABIOS.
 .
 Language=Romanian
 ERROR_ABIOS_ERROR - În subsistemul ABIOS a apărut o eroare.
@@ -3453,7 +3453,7 @@ Language=Russian
 ERROR_WX86_WARNING - A warning occurred in the WX86 subsystem.
 .
 Language=Polish
-ERROR_WX86_WARNING - A warning occurred in the WX86 subsystem.
+ERROR_WX86_WARNING - Wystąpiło ostrzeżenie w podsystemie WX86.
 .
 Language=Romanian
 ERROR_WX86_WARNING - Există un avertisment referitor la subsistemul WX86.
@@ -3470,7 +3470,7 @@ Language=Russian
 ERROR_WX86_ERROR - An error occurred in the WX86 subsystem.
 .
 Language=Polish
-ERROR_WX86_ERROR - An error occurred in the WX86 subsystem.
+ERROR_WX86_ERROR - Wystąpił błąd w podsystemie WX86.
 .
 Language=Romanian
 ERROR_WX86_ERROR - În subsistemul WX86 a apărut o eroare.
@@ -3487,7 +3487,7 @@ Language=Russian
 ERROR_TIMER_NOT_CANCELED - An attempt was made to cancel or set a timer that has an associated APC and the subject thread is not the thread that originally set the timer with an associated APC routine.
 .
 Language=Polish
-ERROR_TIMER_NOT_CANCELED - An attempt was made to cancel or set a timer that has an associated APC and the subject thread is not the thread that originally set the timer with an associated APC routine.
+ERROR_TIMER_NOT_CANCELED - Podjęto próbę anulowania lub ustawienia czasomierza ze związaną procedurą APC, a aktualny wątek nie jest tym wątkiem, który pierwotnie ustawił czasomierz ze związaną procedurą APC.
 .
 Language=Romanian
 ERROR_TIMER_NOT_CANCELED - A avut loc o încercare de a institui sau destitui un cronometru cu un APC asociat, însă firul de execuție nu este cel care a creat cronometrul cu APC asociat.
@@ -3504,7 +3504,7 @@ Language=Russian
 ERROR_UNWIND - Unwind exception code.
 .
 Language=Polish
-ERROR_UNWIND - Unwind exception code.
+ERROR_UNWIND - Kod wyjątku operacji unwind.
 .
 Language=Romanian
 ERROR_UNWIND - Eșec la deducția codului de eroare.
@@ -3521,7 +3521,7 @@ Language=Russian
 ERROR_BAD_STACK - An invalid or unaligned stack was encountered during an unwind operation.
 .
 Language=Polish
-ERROR_BAD_STACK - An invalid or unaligned stack was encountered during an unwind operation.
+ERROR_BAD_STACK - Podczas operacji unwind napotkano nieprawidłowy lub niewyrównany stos.
 .
 Language=Romanian
 ERROR_BAD_STACK - Stivă nealiniată sau nevalidă în operația de deducție a unui cod de eroare.
@@ -3538,7 +3538,7 @@ Language=Russian
 ERROR_INVALID_UNWIND_TARGET - An invalid unwind target was encountered during an unwind operation.
 .
 Language=Polish
-ERROR_INVALID_UNWIND_TARGET - An invalid unwind target was encountered during an unwind operation.
+ERROR_INVALID_UNWIND_TARGET - Podczas operacji unwind napotkano nieprawidłowy obiekt docelowy operacji.
 .
 Language=Romanian
 ERROR_INVALID_UNWIND_TARGET - Destinație nevalidă în operația de deducție a unui cod de eroare.
@@ -3555,7 +3555,7 @@ Language=Russian
 ERROR_INVALID_PORT_ATTRIBUTES - Invalid Object Attributes specified to NtCreatePort or invalid Port Attributes specified to NtConnectPort
 .
 Language=Polish
-ERROR_INVALID_PORT_ATTRIBUTES - Invalid Object Attributes specified to NtCreatePort or invalid Port Attributes specified to NtConnectPort
+ERROR_INVALID_PORT_ATTRIBUTES - Określono nieprawidłowe atrybuty obiektu dla NtCreatePort albo nieprawidłowe atrybuty portu dla NtConnectPort
 .
 Language=Romanian
 ERROR_INVALID_PORT_ATTRIBUTES - Atribute nevalide de obiect sau de port specificate către NtCreatePort sau respectiv NtConnectPort.
@@ -3572,7 +3572,7 @@ Language=Russian
 ERROR_PORT_MESSAGE_TOO_LONG - Length of message passed to NtRequestPort or NtRequestWaitReplyPort was longer than the maximum message allowed by the port.
 .
 Language=Polish
-ERROR_PORT_MESSAGE_TOO_LONG - Length of message passed to NtRequestPort or NtRequestWaitReplyPort was longer than the maximum message allowed by the port.
+ERROR_PORT_MESSAGE_TOO_LONG - Długość komunikatu przekazanego dla NtRequestPort lub NtRequestWaitReplyPort była większa niż maksimum dozwolone dla tego portu.
 .
 Language=Romanian
 ERROR_PORT_MESSAGE_TOO_LONG - Lungimea mesajului specificat în NtRequestPort sau NtRequestWaitReplyPort depășește limita maximă permisă de port.
@@ -3589,7 +3589,7 @@ Language=Russian
 ERROR_INVALID_QUOTA_LOWER - An attempt was made to lower a quota limit below the current usage.
 .
 Language=Polish
-ERROR_INVALID_QUOTA_LOWER - An attempt was made to lower a quota limit below the current usage.
+ERROR_INVALID_QUOTA_LOWER - Podjęto próbę obniżenia ograniczeń zasobów poniżej aktualnego wykorzystania.
 .
 Language=Romanian
 ERROR_INVALID_QUOTA_LOWER - A avut loc o încercare de a scădea limita cotei sub cea utilizată.
@@ -3606,7 +3606,7 @@ Language=Russian
 ERROR_DEVICE_ALREADY_ATTACHED - An attempt was made to attach to a device that was already attached to another device.
 .
 Language=Polish
-ERROR_DEVICE_ALREADY_ATTACHED - An attempt was made to attach to a device that was already attached to another device.
+ERROR_DEVICE_ALREADY_ATTACHED - Podjęto próbę dołączenia do urządzenia, które było już dołączone do innego urządzenia.
 .
 Language=Romanian
 ERROR_DEVICE_ALREADY_ATTACHED - A avut loc o încercare de a atașa un dispozitiv deja atașat de un alt dispozitiv.
@@ -3623,7 +3623,7 @@ Language=Russian
 ERROR_INSTRUCTION_MISALIGNMENT - An attempt was made to execute an instruction at an unaligned address and the host system does not support unaligned instruction references.
 .
 Language=Polish
-ERROR_INSTRUCTION_MISALIGNMENT - An attempt was made to execute an instruction at an unaligned address and the host system does not support unaligned instruction references.
+ERROR_INSTRUCTION_MISALIGNMENT - Podjęto próbę wykonania instrukcji pod niewyrównanym adresem, a system hosta nie obsługuje odwołań do niewyrównanych instrukcji.
 .
 Language=Romanian
 ERROR_INSTRUCTION_MISALIGNMENT - A avut loc o încercare de a executa o instrucțiune de la o adresă nealiniată dar sistemul gazdă nu permite referințe la instrucțiuni nealiniate.
@@ -3640,7 +3640,7 @@ Language=Russian
 ERROR_PROFILING_NOT_STARTED - Profiling not started.
 .
 Language=Polish
-ERROR_PROFILING_NOT_STARTED - Profiling not started.
+ERROR_PROFILING_NOT_STARTED - Nie rozpoczęto profilowania.
 .
 Language=Romanian
 ERROR_PROFILING_NOT_STARTED - Profilarea nu este pornită.
@@ -3657,7 +3657,7 @@ Language=Russian
 ERROR_PROFILING_NOT_STOPPED - Profiling not stopped.
 .
 Language=Polish
-ERROR_PROFILING_NOT_STOPPED - Profiling not stopped.
+ERROR_PROFILING_NOT_STOPPED - Nie zatrzymano profilowania.
 .
 Language=Romanian
 ERROR_PROFILING_NOT_STOPPED - Profiling not stopped.
@@ -3674,7 +3674,7 @@ Language=Russian
 ERROR_COULD_NOT_INTERPRET - The passed ACL did not contain the minimum required information.
 .
 Language=Polish
-ERROR_COULD_NOT_INTERPRET - The passed ACL did not contain the minimum required information.
+ERROR_COULD_NOT_INTERPRET - Przekazane ACL nie zawierało wymaganego minimum informacji.
 .
 Language=Romanian
 ERROR_COULD_NOT_INTERPRET - The passed ACL did not contain the minimum required information.
@@ -3691,7 +3691,7 @@ Language=Russian
 ERROR_PROFILING_AT_LIMIT - The number of active profiling objects is at the maximum and no more may be started.
 .
 Language=Polish
-ERROR_PROFILING_AT_LIMIT - The number of active profiling objects is at the maximum and no more may be started.
+ERROR_PROFILING_AT_LIMIT - Liczba aktywnych obiektów profilowania jest maksymalna i nie można uruchomić ich więcej.
 .
 Language=Romanian
 ERROR_PROFILING_AT_LIMIT - The number of active profiling objects is at the maximum and no more may be started.
@@ -3708,7 +3708,7 @@ Language=Russian
 ERROR_CANT_WAIT - Used to indicate that an operation cannot continue without blocking for I/O.
 .
 Language=Polish
-ERROR_CANT_WAIT - Used to indicate that an operation cannot continue without blocking for I/O.
+ERROR_CANT_WAIT - Wskazuje, że kontynuowanie operacji nie jest możliwe bez zablokowania jej dla We/Wy.
 .
 Language=Romanian
 ERROR_CANT_WAIT - Used to indicate that an operation cannot continue without blocking for I/O.
@@ -3725,7 +3725,7 @@ Language=Russian
 ERROR_CANT_TERMINATE_SELF - Indicates that a thread attempted to terminate itself by default (called NtTerminateThread with NULL) and it was the last thread in the current process.
 .
 Language=Polish
-ERROR_CANT_TERMINATE_SELF - Indicates that a thread attempted to terminate itself by default (called NtTerminateThread with NULL) and it was the last thread in the current process.
+ERROR_CANT_TERMINATE_SELF - Wskazuje, że wątek próbował sam się zakończyć w domyślny sposób (tzw. NtTerminateThread z wartością NULL) i że był to ostatni wątek bieżącego procesu.
 .
 Language=Romanian
 ERROR_CANT_TERMINATE_SELF - Indicates that a thread attempted to terminate itself by default (called NtTerminateThread with NULL) and it was the last thread in the current process.
@@ -3742,7 +3742,7 @@ Language=Russian
 ERROR_UNEXPECTED_MM_CREATE_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
 .
 Language=Polish
-ERROR_UNEXPECTED_MM_CREATE_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
+ERROR_UNEXPECTED_MM_CREATE_ERR - Jeśli zwracany jest błąd MM, który nie jest zdefiniowany w standardowym filtrze FsRtl, to błąd jest konwertowany na jeden z poniższych błędów, który na pewno występuje w filtrze. W tym wypadku informacje ulegają utracie, ale filtr właściwie obsługuje dany wyjątek.
 .
 Language=Romanian
 ERROR_UNEXPECTED_MM_CREATE_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
@@ -3759,7 +3759,7 @@ Language=Russian
 ERROR_UNEXPECTED_MM_MAP_ERROR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
 .
 Language=Polish
-ERROR_UNEXPECTED_MM_MAP_ERROR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
+ERROR_UNEXPECTED_MM_MAP_ERROR - Jeśli zwracany jest błąd MM, który nie jest zdefiniowany w standardowym filtrze FsRtl, to błąd jest konwertowany na jeden z poniższych błędów, który na pewno występuje w filtrze. W tym wypadku informacje ulegają utracie, ale filtr właściwie obsługuje dany wyjątek.
 .
 Language=Romanian
 ERROR_UNEXPECTED_MM_MAP_ERROR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
@@ -3776,7 +3776,7 @@ Language=Russian
 ERROR_UNEXPECTED_MM_EXTEND_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
 .
 Language=Polish
-ERROR_UNEXPECTED_MM_EXTEND_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
+ERROR_UNEXPECTED_MM_EXTEND_ERR - Jeśli zwracany jest błąd MM, który nie jest zdefiniowany w standardowym filtrze FsRtl, to błąd jest konwertowany na jeden z poniższych błędów, który na pewno występuje w filtrze. W tym wypadku informacje ulegają utracie, ale filtr właściwie obsługuje dany wyjątek.
 .
 Language=Romanian
 ERROR_UNEXPECTED_MM_EXTEND_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
@@ -3793,7 +3793,7 @@ Language=Russian
 ERROR_BAD_FUNCTION_TABLE - A malformed function table was encountered during an unwind operation.
 .
 Language=Polish
-ERROR_BAD_FUNCTION_TABLE - A malformed function table was encountered during an unwind operation.
+ERROR_BAD_FUNCTION_TABLE - Podczas operacji unwind napotkano wadliwie sformułowaną tabelę funkcji.
 .
 Language=Romanian
 ERROR_BAD_FUNCTION_TABLE - A malformed function table was encountered during an unwind operation.
@@ -3810,7 +3810,7 @@ Language=Russian
 ERROR_NO_GUID_TRANSLATION - Indicates that an attempt was made to assign protection to a file system file or directory and one of the SIDs in the security descriptor could not be translated into a GUID that could be stored by the file system. This causes the protection attempt to fail, which may cause a file creation attempt to fail.
 .
 Language=Polish
-ERROR_NO_GUID_TRANSLATION - Indicates that an attempt was made to assign protection to a file system file or directory and one of the SIDs in the security descriptor could not be translated into a GUID that could be stored by the file system. This causes the protection attempt to fail, which may cause a file creation attempt to fail.
+ERROR_NO_GUID_TRANSLATION - Wskazuje, że podjęto próbę przypisania zabezpieczenia dla pliku lub katalogu systemu plików. Przetłumaczenie jednego z identyfikatorów SID w deskryptorze zabezpieczeń na identyfikator GUID, który mógłby być przechowywany w systemie plików nie było możliwe. Powoduje to, że próba zabezpieczenia nie może się powieść i w konsekwencji nie może się powieść próba utworzenia pliku.
 .
 Language=Romanian
 ERROR_NO_GUID_TRANSLATION - Indicates that an attempt was made to assign protection to a file system file or directory and one of the SIDs in the security descriptor could not be translated into a GUID that could be stored by the file system. This causes the protection attempt to fail, which may cause a file creation attempt to fail.
@@ -3827,7 +3827,7 @@ Language=Russian
 ERROR_INVALID_LDT_SIZE - Indicates that an attempt was made to grow an LDT by setting its size, or that the size was not an even number of selectors.
 .
 Language=Polish
-ERROR_INVALID_LDT_SIZE - Indicates that an attempt was made to grow an LDT by setting its size, or that the size was not an even number of selectors.
+ERROR_INVALID_LDT_SIZE - Wskazuje, że podjęto próbę powiększenia LDT przez ustawienie rozmiaru, albo że rozmiar nie odpowiadał parzystej liczbie selektorów.
 .
 Language=Romanian
 ERROR_INVALID_LDT_SIZE - Indicates that an attempt was made to grow an LDT by setting its size, or that the size was not an even number of selectors.
@@ -3844,7 +3844,7 @@ Language=Russian
 ERROR_INVALID_LDT_OFFSET - Indicates that the starting value for the LDT information was not an integral multiple of the selector size.
 .
 Language=Polish
-ERROR_INVALID_LDT_OFFSET - Indicates that the starting value for the LDT information was not an integral multiple of the selector size.
+ERROR_INVALID_LDT_OFFSET - Wskazuje, że początkowa wartość dla informacji LDT nie była całkowitą wielokrotnością rozmiaru selektora.
 .
 Language=Romanian
 ERROR_INVALID_LDT_OFFSET - Indicates that the starting value for the LDT information was not an integral multiple of the selector size.
@@ -3861,7 +3861,7 @@ Language=Russian
 ERROR_INVALID_LDT_DESCRIPTOR - Indicates that the user supplied an invalid descriptor when trying to set up Ldt descriptors.
 .
 Language=Polish
-ERROR_INVALID_LDT_DESCRIPTOR - Indicates that the user supplied an invalid descriptor when trying to set up Ldt descriptors.
+ERROR_INVALID_LDT_DESCRIPTOR - Wskazuje, że użytkownik podał nieprawidłowy deskryptor próbując ustawić deskryptory LDT.
 .
 Language=Romanian
 ERROR_INVALID_LDT_DESCRIPTOR - Indicates that the user supplied an invalid descriptor when trying to set up Ldt descriptors.
@@ -3878,7 +3878,7 @@ Language=Russian
 ERROR_TOO_MANY_THREADS - Indicates a process has too many threads to perform the requested action. For example, assignment of a primary token may only be performed when a process has zero or one threads.
 .
 Language=Polish
-ERROR_TOO_MANY_THREADS - Indicates a process has too many threads to perform the requested action. For example, assignment of a primary token may only be performed when a process has zero or one threads.
+ERROR_TOO_MANY_THREADS - Wskazuje, że proces ma zbyt wiele wątków, aby wykonać żądaną akcję. Na przykład przypisanie podstawowego tokenu jest możliwe do wykonania tylko wtedy, gdy dany proces nie ma wątków lub ma jeden wątek.
 .
 Language=Romanian
 ERROR_TOO_MANY_THREADS - Indicates a process has too many threads to perform the requested action. For example, assignment of a primary token may only be performed when a process has zero or one threads.
@@ -3895,7 +3895,7 @@ Language=Russian
 ERROR_THREAD_NOT_IN_PROCESS - An attempt was made to operate on a thread within a specific process, but the thread specified is not in the process specified.
 .
 Language=Polish
-ERROR_THREAD_NOT_IN_PROCESS - An attempt was made to operate on a thread within a specific process, but the thread specified is not in the process specified.
+ERROR_THREAD_NOT_IN_PROCESS - Podjęto próbę operowania na wątku w pewnym procesie, ale określony wątek nie znajduje się w określonym procesie.
 .
 Language=Romanian
 ERROR_THREAD_NOT_IN_PROCESS - An attempt was made to operate on a thread within a specific process, but the thread specified is not in the process specified.
@@ -3912,7 +3912,7 @@ Language=Russian
 ERROR_PAGEFILE_QUOTA_EXCEEDED - Page file quota was exceeded.
 .
 Language=Polish
-ERROR_PAGEFILE_QUOTA_EXCEEDED - Page file quota was exceeded.
+ERROR_PAGEFILE_QUOTA_EXCEEDED - Przekroczono ograniczenie rozmiaru pliku stronicowania.
 .
 Language=Romanian
 ERROR_PAGEFILE_QUOTA_EXCEEDED - Page file quota was exceeded.
@@ -3929,7 +3929,7 @@ Language=Russian
 ERROR_LOGON_SERVER_CONFLICT - The Netlogon service cannot start because another Netlogon service running in the domain conflicts with the specified role.
 .
 Language=Polish
-ERROR_LOGON_SERVER_CONFLICT - The Netlogon service cannot start because another Netlogon service running in the domain conflicts with the specified role.
+ERROR_LOGON_SERVER_CONFLICT - Uruchomienie tej usługi Netlogon nie było możliwe, ponieważ inna usługa Netlogon działająca w tej domenie wchodzi w konflikt z określoną funkcją.
 .
 Language=Romanian
 ERROR_LOGON_SERVER_CONFLICT - The Netlogon service cannot start because another Netlogon service running in the domain conflicts with the specified role.
@@ -3946,7 +3946,7 @@ Language=Russian
 ERROR_SYNCHRONIZATION_REQUIRED - The SAM database on a Windows Server is significantly out of synchronization with the copy on the Domain Controller. A complete synchronization is required.
 .
 Language=Polish
-ERROR_SYNCHRONIZATION_REQUIRED - The SAM database on a Windows Server is significantly out of synchronization with the copy on the Domain Controller. A complete synchronization is required.
+ERROR_SYNCHRONIZATION_REQUIRED - Baza danych SAM na serwerze Windows jest znacząco rozsynchronizowana z kopią znajdującą się na kontrolerze domeny. Wymagana jest pełna synchronizacja.
 .
 Language=Romanian
 ERROR_SYNCHRONIZATION_REQUIRED - The SAM database on a Windows Server is significantly out of synchronization with the copy on the Domain Controller. A complete synchronization is required.
@@ -3963,7 +3963,7 @@ Language=Russian
 ERROR_NET_OPEN_FAILED - The NtCreateFile API failed. This error should never be returned to an application, it is a place holder for the Windows Lan Manager Redirector to use in its internal error mapping routines.
 .
 Language=Polish
-ERROR_NET_OPEN_FAILED - The NtCreateFile API failed. This error should never be returned to an application, it is a place holder for the Windows Lan Manager Redirector to use in its internal error mapping routines.
+ERROR_NET_OPEN_FAILED - Wykonanie funkcji API o nazwie NtCreateFile nie powiodło się. Ten błąd nie powinien być nigdy zwracany do aplikacji, jest używany przez program Windows Lan Manager Redirector w procedurach mapowania błędów wewnętrznych.
 .
 Language=Romanian
 ERROR_NET_OPEN_FAILED - The NtCreateFile API failed. This error should never be returned to an application, it is a place holder for the Windows Lan Manager Redirector to use in its internal error mapping routines.
@@ -3980,7 +3980,7 @@ Language=Russian
 ERROR_IO_PRIVILEGE_FAILED - The I/O permissions for the process could not be changed.
 .
 Language=Polish
-ERROR_IO_PRIVILEGE_FAILED - The I/O permissions for the process could not be changed.
+ERROR_IO_PRIVILEGE_FAILED - Nie udało się zmienić uprawnień We/Wy dla tego procesu.
 .
 Language=Romanian
 ERROR_IO_PRIVILEGE_FAILED - The I/O permissions for the process could not be changed.
@@ -3997,7 +3997,7 @@ Language=Russian
 ERROR_CONTROL_C_EXIT - The application terminated as a result of a CTRL+C.
 .
 Language=Polish
-ERROR_CONTROL_C_EXIT - The application terminated as a result of a CTRL+C.
+ERROR_CONTROL_C_EXIT - Aplikacja została zakończona w wyniku naciśnięcia klawiszy CTRL+C.
 .
 Language=Romanian
 ERROR_CONTROL_C_EXIT - The application terminated as a result of a CTRL+C.
@@ -4014,7 +4014,7 @@ Language=Russian
 ERROR_MISSING_SYSTEMFILE - The required system file %hs is bad or missing.
 .
 Language=Polish
-ERROR_MISSING_SYSTEMFILE - The required system file %hs is bad or missing.
+ERROR_MISSING_SYSTEMFILE - Wymagany plik systemowy %hs jest zły albo brak go.
 .
 Language=Romanian
 ERROR_MISSING_SYSTEMFILE - The required system file %hs is bad or missing.
@@ -4031,7 +4031,7 @@ Language=Russian
 ERROR_UNHANDLED_EXCEPTION - The exception %s (0x%08lx) occurred in the application at location 0x%08lx.
 .
 Language=Polish
-ERROR_UNHANDLED_EXCEPTION - The exception %s (0x%08lx) occurred in the application at location 0x%08lx.
+ERROR_UNHANDLED_EXCEPTION - W aplikacji wystąpił wyjątek %s (0x%08lx) na pozycji 0x%08lx.
 .
 Language=Romanian
 ERROR_UNHANDLED_EXCEPTION - The exception %s (0x%08lx) occurred in the application at location 0x%08lx.
@@ -4048,7 +4048,7 @@ Language=Russian
 ERROR_APP_INIT_FAILURE - The application failed to initialize properly (0x%lx). Click on OK to terminate the application.
 .
 Language=Polish
-ERROR_APP_INIT_FAILURE - The application failed to initialize properly (0x%lx). Click on OK to terminate the application.
+ERROR_APP_INIT_FAILURE - Aplikacja nie została właściwie uruchomiona (0x%lx). Kliknij przycisk OK, aby zakończyć aplikację.
 .
 Language=Romanian
 ERROR_APP_INIT_FAILURE - The application failed to initialize properly (0x%lx). Click on OK to terminate the application.
@@ -4065,7 +4065,7 @@ Language=Russian
 ERROR_PAGEFILE_CREATE_FAILED - The creation of the paging file %hs failed (%lx). The requested size was %ld.
 .
 Language=Polish
-ERROR_PAGEFILE_CREATE_FAILED - The creation of the paging file %hs failed (%lx). The requested size was %ld.
+ERROR_PAGEFILE_CREATE_FAILED - Utworzenie pliku stronicowania %hs nie powiodło się (%lx). Żądanym rozmiarem było %ld.
 .
 Language=Romanian
 ERROR_PAGEFILE_CREATE_FAILED - The creation of the paging file %hs failed (%lx). The requested size was %ld.
@@ -4082,7 +4082,7 @@ Language=Russian
 ERROR_NO_PAGEFILE - No paging file was specified in the system configuration.
 .
 Language=Polish
-ERROR_NO_PAGEFILE - No paging file was specified in the system configuration.
+ERROR_NO_PAGEFILE - W konfiguracji systemu nie określono pliku stronicowania.
 .
 Language=Romanian
 ERROR_NO_PAGEFILE - No paging file was specified in the system configuration.
@@ -4099,7 +4099,7 @@ Language=Russian
 ERROR_ILLEGAL_FLOAT_CONTEXT - A real-mode application issued a floating-point instruction and floating-point hardware is not present.
 .
 Language=Polish
-ERROR_ILLEGAL_FLOAT_CONTEXT - A real-mode application issued a floating-point instruction and floating-point hardware is not present.
+ERROR_ILLEGAL_FLOAT_CONTEXT - Aplikacja trybu rzeczywistego wydała instrukcję zmiennoprzecinkową, tymczasem nie ma urządzenia zmiennoprzecinkowego.
 .
 Language=Romanian
 ERROR_ILLEGAL_FLOAT_CONTEXT - A real-mode application issued a floating-point instruction and floating-point hardware is not present.
@@ -4116,7 +4116,7 @@ Language=Russian
 ERROR_NO_EVENT_PAIR - An event pair synchronization operation was performed using the thread specific client/server event pair object, but no event pair object was associated with the thread.
 .
 Language=Polish
-ERROR_NO_EVENT_PAIR - An event pair synchronization operation was performed using the thread specific client/server event pair object, but no event pair object was associated with the thread.
+ERROR_NO_EVENT_PAIR - Wykonano operację synchronizacji pary zdarzeń używając właściwego dla wątku obiektu pary zdarzeń klient/serwer, ale żaden obiekt pary zdarzeń nie był związany z tym wątkiem.
 .
 Language=Romanian
 ERROR_NO_EVENT_PAIR - An event pair synchronization operation was performed using the thread specific client/server event pair object, but no event pair object was associated with the thread.
@@ -4133,7 +4133,7 @@ Language=Russian
 ERROR_DOMAIN_CTRLR_CONFIG_ERROR - A Windows Server has an incorrect configuration.
 .
 Language=Polish
-ERROR_DOMAIN_CTRLR_CONFIG_ERROR - A Windows Server has an incorrect configuration.
+ERROR_DOMAIN_CTRLR_CONFIG_ERROR - Serwer Windows ma niepoprawną konfigurację.
 .
 Language=Romanian
 ERROR_DOMAIN_CTRLR_CONFIG_ERROR - A Windows Server has an incorrect configuration.
@@ -4150,7 +4150,7 @@ Language=Russian
 ERROR_ILLEGAL_CHARACTER - An illegal character was encountered. For a multi-byte character set this includes a lead byte without a succeeding trail byte. For the Unicode character set this includes the characters 0xFFFF and 0xFFFE.
 .
 Language=Polish
-ERROR_ILLEGAL_CHARACTER - An illegal character was encountered. For a multi-byte character set this includes a lead byte without a succeeding trail byte. For the Unicode character set this includes the characters 0xFFFF and 0xFFFE.
+ERROR_ILLEGAL_CHARACTER - Napotkano niedozwolony znak. W przypadku wielobajtowego zestawu znaków dotyczy to także wiodącego bajtu, po którym nie występuje żaden bajt pomocniczy. W przypadku zestawu znaków Unicode obejmuje to 0xFFFF i 0xFFFE.
 .
 Language=Romanian
 ERROR_ILLEGAL_CHARACTER - An illegal character was encountered. For a multi-byte character set this includes a lead byte without a succeeding trail byte. For the Unicode character set this includes the characters 0xFFFF and 0xFFFE.
@@ -4167,7 +4167,7 @@ Language=Russian
 ERROR_UNDEFINED_CHARACTER - The Unicode character is not defined in the Unicode character set installed on the system.
 .
 Language=Polish
-ERROR_UNDEFINED_CHARACTER - The Unicode character is not defined in the Unicode character set installed on the system.
+ERROR_UNDEFINED_CHARACTER - Ten znak Unicode nie jest zdefiniowany w zestawie znaków Unicode zainstalowanym w tym systemie.
 .
 Language=Romanian
 ERROR_UNDEFINED_CHARACTER - The Unicode character is not defined in the Unicode character set installed on the system.
@@ -4184,7 +4184,7 @@ Language=Russian
 ERROR_FLOPPY_VOLUME - The paging file cannot be created on a floppy diskette.
 .
 Language=Polish
-ERROR_FLOPPY_VOLUME - The paging file cannot be created on a floppy diskette.
+ERROR_FLOPPY_VOLUME - Nie można utworzyć pliku stronicowania na dyskietce.
 .
 Language=Romanian
 ERROR_FLOPPY_VOLUME - The paging file cannot be created on a floppy diskette.
@@ -4201,7 +4201,7 @@ Language=Russian
 ERROR_BIOS_FAILED_TO_CONNECT_INTERRUPT - The system bios failed to connect a system interrupt to the device or bus for which the device is connected.
 .
 Language=Polish
-ERROR_BIOS_FAILED_TO_CONNECT_INTERRUPT - The system bios failed to connect a system interrupt to the device or bus for which the device is connected.
+ERROR_BIOS_FAILED_TO_CONNECT_INTERRUPT - System BIOS nie połączył przerwania systemowego z urządzeniem lub magistralą, do której urządzenie jest podłączone.
 .
 Language=Romanian
 ERROR_BIOS_FAILED_TO_CONNECT_INTERRUPT - The system bios failed to connect a system interrupt to the device or bus for which the device is connected.
@@ -4218,7 +4218,7 @@ Language=Russian
 ERROR_BACKUP_CONTROLLER - This operation is only allowed for the Primary Domain Controller of the domain.
 .
 Language=Polish
-ERROR_BACKUP_CONTROLLER - This operation is only allowed for the Primary Domain Controller of the domain.
+ERROR_BACKUP_CONTROLLER - Ta operacja jest dozwolona tylko dla podstawowego kontrolera domeny.
 .
 Language=Romanian
 ERROR_BACKUP_CONTROLLER - This operation is only allowed for the Primary Domain Controller of the domain.
@@ -4235,7 +4235,7 @@ Language=Russian
 ERROR_MUTANT_LIMIT_EXCEEDED - An attempt was made to acquire a mutant such that its maximum count would have been exceeded.
 .
 Language=Polish
-ERROR_MUTANT_LIMIT_EXCEEDED - An attempt was made to acquire a mutant such that its maximum count would have been exceeded.
+ERROR_MUTANT_LIMIT_EXCEEDED - Podjęto próbę uzyskania zmienionego obiektu w taki sposób, że zostałaby przekroczona maksymalna liczba takich obiektów.
 .
 Language=Romanian
 ERROR_MUTANT_LIMIT_EXCEEDED - An attempt was made to acquire a mutant such that its maximum count would have been exceeded.
@@ -4252,7 +4252,7 @@ Language=Russian
 ERROR_FS_DRIVER_REQUIRED - A volume has been accessed for which a file system driver is required that has not yet been loaded.
 .
 Language=Polish
-ERROR_FS_DRIVER_REQUIRED - A volume has been accessed for which a file system driver is required that has not yet been loaded.
+ERROR_FS_DRIVER_REQUIRED - Uzyskano dostęp do woluminu, dla którego wymagany jest jeszcze nie załadowany sterownik systemu plików.
 .
 Language=Romanian
 ERROR_FS_DRIVER_REQUIRED - A volume has been accessed for which a file system driver is required that has not yet been loaded.
@@ -4269,7 +4269,7 @@ Language=Russian
 ERROR_CANNOT_LOAD_REGISTRY_FILE - The registry cannot load the hive (file): %hs or its log or alternate. It is corrupt, absent, or not writable.
 .
 Language=Polish
-ERROR_CANNOT_LOAD_REGISTRY_FILE - The registry cannot load the hive (file): %hs or its log or alternate. It is corrupt, absent, or not writable.
+ERROR_CANNOT_LOAD_REGISTRY_FILE - Nie jest możliwe załadowanie przez Rejestr gałęzi (pliku): %hs lub jego dziennika bądź drugiej kopii. Jest on uszkodzony, brak go lub jest nie do zapisania.
 .
 Language=Romanian
 ERROR_CANNOT_LOAD_REGISTRY_FILE - The registry cannot load the hive (file): %hs or its log or alternate. It is corrupt, absent, or not writable.
@@ -4286,7 +4286,7 @@ Language=Russian
 ERROR_DEBUG_ATTACH_FAILED - An unexpected failure occurred while processing a DebugActiveProcess API request. You may choose OK to terminate the process, or Cancel to ignore the error.
 .
 Language=Polish
-ERROR_DEBUG_ATTACH_FAILED - An unexpected failure occurred while processing a DebugActiveProcess API request. You may choose OK to terminate the process, or Cancel to ignore the error.
+ERROR_DEBUG_ATTACH_FAILED - Niespodziewanie nie powiodło się przetwarzanie żądania procesu API DebugActiveProcess. Możesz wybrać "OK", aby zakończyć ten proces, albo "Anuluj", aby zignorować błąd.
 .
 Language=Romanian
 ERROR_DEBUG_ATTACH_FAILED - An unexpected failure occurred while processing a DebugActiveProcess API request. You may choose OK to terminate the process, or Cancel to ignore the error.
@@ -4303,7 +4303,7 @@ Language=Russian
 ERROR_SYSTEM_PROCESS_TERMINATED - The %hs system process terminated unexpectedly with a status of 0x%08x (0x%08x 0x%08x). The system has been shut down.
 .
 Language=Polish
-ERROR_SYSTEM_PROCESS_TERMINATED - The %hs system process terminated unexpectedly with a status of 0x%08x (0x%08x 0x%08x). The system has been shut down.
+ERROR_SYSTEM_PROCESS_TERMINATED - Proces systemowy %hs zakończył się niespodziewanie ze stanem 0x%08x (0x%08x 0x%08x). System zostanie zamknięty.
 .
 Language=Romanian
 ERROR_SYSTEM_PROCESS_TERMINATED - The %hs system process terminated unexpectedly with a status of 0x%08x (0x%08x 0x%08x). The system has been shut down.
@@ -4320,7 +4320,7 @@ Language=Russian
 ERROR_DATA_NOT_ACCEPTED - The TDI client could not handle the data received during an indication.
 .
 Language=Polish
-ERROR_DATA_NOT_ACCEPTED - The TDI client could not handle the data received during an indication.
+ERROR_DATA_NOT_ACCEPTED - Obsługa danych otrzymanych przez klienta TDI podczas wskazywania nie jest możliwa.
 .
 Language=Romanian
 ERROR_DATA_NOT_ACCEPTED - The TDI client could not handle the data received during an indication.
@@ -4337,7 +4337,7 @@ Language=Russian
 ERROR_VDM_HARD_ERROR - NTVDM encountered a hard error.
 .
 Language=Polish
-ERROR_VDM_HARD_ERROR - NTVDM encountered a hard error.
+ERROR_VDM_HARD_ERROR - NTVDM napotkał poważny błąd.
 .
 Language=Romanian
 ERROR_VDM_HARD_ERROR - NTVDM encountered a hard error.
@@ -4354,7 +4354,7 @@ Language=Russian
 ERROR_DRIVER_CANCEL_TIMEOUT - The driver %hs failed to complete a cancelled I/O request in the allotted time.
 .
 Language=Polish
-ERROR_DRIVER_CANCEL_TIMEOUT - The driver %hs failed to complete a cancelled I/O request in the allotted time.
+ERROR_DRIVER_CANCEL_TIMEOUT - Sterownik %hs nie zdołał zakończyć anulowanego żądania We/Wy w przypisanym czasie.
 .
 Language=Romanian
 ERROR_DRIVER_CANCEL_TIMEOUT - The driver %hs failed to complete a cancelled I/O request in the allotted time.
@@ -4371,7 +4371,7 @@ Language=Russian
 ERROR_REPLY_MESSAGE_MISMATCH - An attempt was made to reply to an LPC message, but the thread specified by the client ID in the message was not waiting on that message.
 .
 Language=Polish
-ERROR_REPLY_MESSAGE_MISMATCH - An attempt was made to reply to an LPC message, but the thread specified by the client ID in the message was not waiting on that message.
+ERROR_REPLY_MESSAGE_MISMATCH - Próbowano odpowiedzieć na komunikat LPC, ale wątek określony przez identyfikator klienta w komunikacie nie oczekiwał na tę odpowiedź.
 .
 Language=Romanian
 ERROR_REPLY_MESSAGE_MISMATCH - An attempt was made to reply to an LPC message, but the thread specified by the client ID in the message was not waiting on that message.
@@ -4388,7 +4388,7 @@ Language=Russian
 ERROR_LOST_WRITEBEHIND_DATA - Windows was unable to save all the data for the file %hs. The data has been lost. This error may be caused by a failure of your computer hardware or network connection. Please try to save this file elsewhere.
 .
 Language=Polish
-ERROR_LOST_WRITEBEHIND_DATA - Windows was unable to save all the data for the file %hs. The data has been lost. This error may be caused by a failure of your computer hardware or network connection. Please try to save this file elsewhere.
+ERROR_LOST_WRITEBEHIND_DATA - System Windows nie mógł zapisać wszystkich danych dla pliku %hs. Dane zostały utracone. Powodem tego błędu mogła być awaria sprzętu komputerowego lub połączenia sieciowego. Spróbuj zapisać ten plik w innym miejscu.
 .
 Language=Romanian
 ERROR_LOST_WRITEBEHIND_DATA - Windows was unable to save all the data for the file %hs. The data has been lost. This error may be caused by a failure of your computer hardware or network connection. Please try to save this file elsewhere.
@@ -4405,7 +4405,7 @@ Language=Russian
 ERROR_CLIENT_SERVER_PARAMETERS_INVALID - The parameter(s) passed to the server in the client/server shared memory window were invalid. Too much data may have been put in the shared memory window.
 .
 Language=Polish
-ERROR_CLIENT_SERVER_PARAMETERS_INVALID - The parameter(s) passed to the server in the client/server shared memory window were invalid. Too much data may have been put in the shared memory window.
+ERROR_CLIENT_SERVER_PARAMETERS_INVALID - Parametry przekazane do serwera we wspólnym oknie pamięci klient/serwer były nieprawidłowe. Zbyt wiele danych zostało umieszczonych we wspólnym oknie pamięci.
 .
 Language=Romanian
 ERROR_CLIENT_SERVER_PARAMETERS_INVALID - The parameter(s) passed to the server in the client/server shared memory window were invalid. Too much data may have been put in the shared memory window.
@@ -4422,7 +4422,7 @@ Language=Russian
 ERROR_NOT_TINY_STREAM - The stream is not a tiny stream.
 .
 Language=Polish
-ERROR_NOT_TINY_STREAM - The stream is not a tiny stream.
+ERROR_NOT_TINY_STREAM - Ten strumień nie jest mały.
 .
 Language=Romanian
 ERROR_NOT_TINY_STREAM - The stream is not a tiny stream.
@@ -4439,7 +4439,7 @@ Language=Russian
 ERROR_STACK_OVERFLOW_READ - The request must be handled by the stack overflow code.
 .
 Language=Polish
-ERROR_STACK_OVERFLOW_READ - The request must be handled by the stack overflow code.
+ERROR_STACK_OVERFLOW_READ - To żądanie musi być obsługiwane przez kod przepełnienia stosu.
 .
 Language=Romanian
 ERROR_STACK_OVERFLOW_READ - The request must be handled by the stack overflow code.
@@ -4456,7 +4456,7 @@ Language=Russian
 ERROR_CONVERT_TO_LARGE - Internal OFS status codes indicating how an allocation operation is handled. Either it is retried after the containing onode is moved or the extent stream is converted to a large stream.
 .
 Language=Polish
-ERROR_CONVERT_TO_LARGE - Internal OFS status codes indicating how an allocation operation is handled. Either it is retried after the containing onode is moved or the extent stream is converted to a large stream.
+ERROR_CONVERT_TO_LARGE - Wewnętrzne kody stanu OFS wskazują, jak jest obsługiwana operacja alokacji. Próba jest ponawiana po przeniesieniu węzła zawierającego onode, albo istniejący strumień jest konwertowany na duży potok.
 .
 Language=Romanian
 ERROR_CONVERT_TO_LARGE - Internal OFS status codes indicating how an allocation operation is handled. Either it is retried after the containing onode is moved or the extent stream is converted to a large stream.
@@ -4473,7 +4473,7 @@ Language=Russian
 ERROR_FOUND_OUT_OF_SCOPE - The attempt to find the object found an object matching by ID on the volume but it is out of the scope of the handle used for the operation.
 .
 Language=Polish
-ERROR_FOUND_OUT_OF_SCOPE - The attempt to find the object found an object matching by ID on the volume but it is out of the scope of the handle used for the operation.
+ERROR_FOUND_OUT_OF_SCOPE - Próba znalezienia obiektu dała w efekcie obiekt na tym woluminie, mający odpowiedni identyfikator, ale znajdujący się poza zakresem dojścia użytego dla tej operacji.
 .
 Language=Romanian
 ERROR_FOUND_OUT_OF_SCOPE - The attempt to find the object found an object matching by ID on the volume but it is out of the scope of the handle used for the operation.
@@ -4490,7 +4490,7 @@ Language=Russian
 ERROR_ALLOCATE_BUCKET - The bucket array must be grown. Retry transaction after doing so.
 .
 Language=Polish
-ERROR_ALLOCATE_BUCKET - The bucket array must be grown. Retry transaction after doing so.
+ERROR_ALLOCATE_BUCKET - Należy powiększyć tablicę typu "bucket array", a następnie spróbować ponownie wykonać transakcję.
 .
 Language=Romanian
 ERROR_ALLOCATE_BUCKET - The bucket array must be grown. Retry transaction after doing so.
@@ -4507,7 +4507,7 @@ Language=Russian
 ERROR_MARSHALL_OVERFLOW - The user/kernel marshalling buffer has overflowed.
 .
 Language=Polish
-ERROR_MARSHALL_OVERFLOW - The user/kernel marshalling buffer has overflowed.
+ERROR_MARSHALL_OVERFLOW - Bufor kierujący użytkownika/jądra został przepełniony.
 .
 Language=Romanian
 ERROR_MARSHALL_OVERFLOW - The user/kernel marshalling buffer has overflowed.
@@ -4524,7 +4524,7 @@ Language=Russian
 ERROR_INVALID_VARIANT - The supplied variant structure contains invalid data.
 .
 Language=Polish
-ERROR_INVALID_VARIANT - The supplied variant structure contains invalid data.
+ERROR_INVALID_VARIANT - Podana struktura wariantu zawiera nieprawidłowe dane.
 .
 Language=Romanian
 ERROR_INVALID_VARIANT - The supplied variant structure contains invalid data.
@@ -4541,7 +4541,7 @@ Language=Russian
 ERROR_BAD_COMPRESSION_BUFFER - The specified buffer contains ill-formed data.
 .
 Language=Polish
-ERROR_BAD_COMPRESSION_BUFFER - The specified buffer contains ill-formed data.
+ERROR_BAD_COMPRESSION_BUFFER - Określony bufor zawiera źle sformułowane dane.
 .
 Language=Romanian
 ERROR_BAD_COMPRESSION_BUFFER - The specified buffer contains ill-formed data.
@@ -4558,7 +4558,7 @@ Language=Russian
 ERROR_AUDIT_FAILED - An attempt to generate a security audit failed.
 .
 Language=Polish
-ERROR_AUDIT_FAILED - An attempt to generate a security audit failed.
+ERROR_AUDIT_FAILED - Próba wygenerowania inspekcji zabezpieczeń nie powiodła się.
 .
 Language=Romanian
 ERROR_AUDIT_FAILED - An attempt to generate a security audit failed.
@@ -4575,7 +4575,7 @@ Language=Russian
 ERROR_TIMER_RESOLUTION_NOT_SET - The timer resolution was not previously set by the current process.
 .
 Language=Polish
-ERROR_TIMER_RESOLUTION_NOT_SET - The timer resolution was not previously set by the current process.
+ERROR_TIMER_RESOLUTION_NOT_SET - Rozdzielczość czasomierza nie została wcześniej ustawiona przez bieżący proces.
 .
 Language=Romanian
 ERROR_TIMER_RESOLUTION_NOT_SET - The timer resolution was not previously set by the current process.
@@ -4592,7 +4592,7 @@ Language=Russian
 ERROR_INSUFFICIENT_LOGON_INFO - There is insufficient account information to log you on.
 .
 Language=Polish
-ERROR_INSUFFICIENT_LOGON_INFO - There is insufficient account information to log you on.
+ERROR_INSUFFICIENT_LOGON_INFO - Nie podano informacji dotyczących konta niezbędnych do zalogowania.
 .
 Language=Romanian
 ERROR_INSUFFICIENT_LOGON_INFO - There is insufficient account information to log you on.
@@ -4609,7 +4609,7 @@ Language=Russian
 ERROR_BAD_DLL_ENTRYPOINT - The dynamic link library %hs is not written correctly. The stack pointer has been left in an inconsistent state. The entrypoint should be declared as WINAPI or STDCALL. Select YES to fail the DLL load. Select NO to continue execution. Selecting NO may cause the application to operate incorrectly.
 .
 Language=Polish
-ERROR_BAD_DLL_ENTRYPOINT - The dynamic link library %hs is not written correctly. The stack pointer has been left in an inconsistent state. The entrypoint should be declared as WINAPI or STDCALL. Select YES to fail the DLL load. Select NO to continue execution. Selecting NO may cause the application to operate incorrectly.
+ERROR_BAD_DLL_ENTRYPOINT - Biblioteka dołączana dynamicznie %hs nie jest napisana poprawnie. Wskaźnik stosu pozostawiono w niespójnym stanie. Punkt wejścia powinien być zadeklarowany jako WINAPI lub STDCALL. Wybierz "TAK", aby zrezygnować z ładowania DLL. Wybierz "NIE", aby kontynuować wykonywanie DLL. Wybór "NIE" może spowodować niewłaściwe działanie aplikacji.
 .
 Language=Romanian
 ERROR_BAD_DLL_ENTRYPOINT - The dynamic link library %hs is not written correctly. The stack pointer has been left in an inconsistent state. The entrypoint should be declared as WINAPI or STDCALL. Select YES to fail the DLL load. Select NO to continue execution. Selecting NO may cause the application to operate incorrectly.
@@ -4626,7 +4626,7 @@ Language=Russian
 ERROR_BAD_SERVICE_ENTRYPOINT - The %hs service is not written correctly. The stack pointer has been left in an inconsistent state. The callback entrypoint should be declared as WINAPI or STDCALL. Selecting OK will cause the service to continue operation. However, the service process may operate incorrectly.
 .
 Language=Polish
-ERROR_BAD_SERVICE_ENTRYPOINT - The %hs service is not written correctly. The stack pointer has been left in an inconsistent state. The callback entrypoint should be declared as WINAPI or STDCALL. Selecting OK will cause the service to continue operation. However, the service process may operate incorrectly.
+ERROR_BAD_SERVICE_ENTRYPOINT - Usługa %hs nie jest napisana poprawnie. Wskaźnik stosu pozostawiono w niespójnym stanie. Punkt wejścia wywołania zwrotnego usługi powinien być zadeklarowany jako WINAPI lub STDCALL. Wybierz "OK", aby kontynuować operacje usługi. Proces usługi może jednak działać niewłaściwie.
 .
 Language=Romanian
 ERROR_BAD_SERVICE_ENTRYPOINT - The %hs service is not written correctly. The stack pointer has been left in an inconsistent state. The callback entrypoint should be declared as WINAPI or STDCALL. Selecting OK will cause the service to continue operation. However, the service process may operate incorrectly.
@@ -4643,7 +4643,7 @@ Language=Russian
 ERROR_IP_ADDRESS_CONFLICT1 - There is an IP address conflict with another system on the network
 .
 Language=Polish
-ERROR_IP_ADDRESS_CONFLICT1 - There is an IP address conflict with another system on the network
+ERROR_IP_ADDRESS_CONFLICT1 - Istnieje konflikt adresów IP z innym systemem w sieci.
 .
 Language=Romanian
 ERROR_IP_ADDRESS_CONFLICT1 - There is an IP address conflict with another system on the network
@@ -4660,7 +4660,7 @@ Language=Russian
 ERROR_IP_ADDRESS_CONFLICT2 - There is an IP address conflict with another system on the network
 .
 Language=Polish
-ERROR_IP_ADDRESS_CONFLICT2 - There is an IP address conflict with another system on the network
+ERROR_IP_ADDRESS_CONFLICT2 - Istnieje konflikt adresów IP z innym systemem w sieci.
 .
 Language=Romanian
 ERROR_IP_ADDRESS_CONFLICT2 - There is an IP address conflict with another system on the network
@@ -4677,7 +4677,7 @@ Language=Russian
 ERROR_REGISTRY_QUOTA_LIMIT - The system has reached the maximum size allowed for the system part of the registry. Additional storage requests will be ignored.
 .
 Language=Polish
-ERROR_REGISTRY_QUOTA_LIMIT - The system has reached the maximum size allowed for the system part of the registry. Additional storage requests will be ignored.
+ERROR_REGISTRY_QUOTA_LIMIT - System osiągnął maksymalny rozmiar dozwolony dla części systemowej rejestru. Dodatkowe żądania przydziału miejsca będą ignorowane.
 .
 Language=Romanian
 ERROR_REGISTRY_QUOTA_LIMIT - The system has reached the maximum size allowed for the system part of the registry. Additional storage requests will be ignored.
@@ -4694,7 +4694,7 @@ Language=Russian
 ERROR_NO_CALLBACK_ACTIVE - A callback return system service cannot be executed when no callback is active.
 .
 Language=Polish
-ERROR_NO_CALLBACK_ACTIVE - A callback return system service cannot be executed when no callback is active.
+ERROR_NO_CALLBACK_ACTIVE - Nie można wykonać usługi wywołania zwrotnego, gdy żadne wywołanie zwrotne nie jest aktywne.
 .
 Language=Romanian
 ERROR_NO_CALLBACK_ACTIVE - A callback return system service cannot be executed when no callback is active.
@@ -4711,7 +4711,7 @@ Language=Russian
 ERROR_PWD_TOO_SHORT - The password provided is too short to meet the policy of your user account. Please choose a longer password.
 .
 Language=Polish
-ERROR_PWD_TOO_SHORT - The password provided is too short to meet the policy of your user account. Please choose a longer password.
+ERROR_PWD_TOO_SHORT - Podane hasło jest zbyt krótkie, co jest niezgodne z zasadami wykorzystywania tego konta. Wybierz dłuższe hasło.
 .
 Language=Romanian
 ERROR_PWD_TOO_SHORT - The password provided is too short to meet the policy of your user account. Please choose a longer password.
@@ -4728,7 +4728,7 @@ Language=Russian
 ERROR_PWD_TOO_RECENT - The policy of your user account does not allow you to change passwords too frequently. This is done to prevent users from changing back to a familiar, but potentially discovered, password. If you feel your password has been compromised then please contact your administrator immediately to have a new one assigned.
 .
 Language=Polish
-ERROR_PWD_TOO_RECENT - The policy of your user account does not allow you to change passwords too frequently. This is done to prevent users from changing back to a familiar, but potentially discovered, password. If you feel your password has been compromised then please contact your administrator immediately to have a new one assigned.
+ERROR_PWD_TOO_RECENT - Zasady wykorzystywania tego konta użytkownika nie pozwalają na zbyt częste zmiany hasła. Ma to zapobiec zmianom hasła na wyrażenie łatwe do zapamiętania, ale i do złamania. Jeśli jednak podejrzewasz, że złamano twoje hasło, skontaktuj się niezwłocznie z administratorem, aby otrzymać nowe.
 .
 Language=Romanian
 ERROR_PWD_TOO_RECENT - The policy of your user account does not allow you to change passwords too frequently. This is done to prevent users from changing back to a familiar, but potentially discovered, password. If you feel your password has been compromised then please contact your administrator immediately to have a new one assigned.
@@ -4745,7 +4745,7 @@ Language=Russian
 ERROR_PWD_HISTORY_CONFLICT - You have attempted to change your password to one that you have used in the past. The policy of your user account does not allow this. Please select a password that you have not previously used.
 .
 Language=Polish
-ERROR_PWD_HISTORY_CONFLICT - You have attempted to change your password to one that you have used in the past. The policy of your user account does not allow this. Please select a password that you have not previously used.
+ERROR_PWD_HISTORY_CONFLICT - Próbowano zmienić hasło na takie, które było już używane w przeszłości. Jest to niezgodne z zasadami wykorzystywania tego konta. Wybierz inne hasło.
 .
 Language=Romanian
 ERROR_PWD_HISTORY_CONFLICT - You have attempted to change your password to one that you have used in the past. The policy of your user account does not allow this. Please select a password that you have not previously used.
@@ -4762,7 +4762,7 @@ Language=Russian
 ERROR_UNSUPPORTED_COMPRESSION - The specified compression format is unsupported.
 .
 Language=Polish
-ERROR_UNSUPPORTED_COMPRESSION - The specified compression format is unsupported.
+ERROR_UNSUPPORTED_COMPRESSION - Określony format kompresji nie jest obsługiwany.
 .
 Language=Romanian
 ERROR_UNSUPPORTED_COMPRESSION - The specified compression format is unsupported.
@@ -4779,7 +4779,7 @@ Language=Russian
 ERROR_INVALID_HW_PROFILE - The specified hardware profile configuration is invalid.
 .
 Language=Polish
-ERROR_INVALID_HW_PROFILE - The specified hardware profile configuration is invalid.
+ERROR_INVALID_HW_PROFILE - Określona konfiguracja profilu sprzętu jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_INVALID_HW_PROFILE - The specified hardware profile configuration is invalid.
@@ -4796,7 +4796,7 @@ Language=Russian
 ERROR_INVALID_PLUGPLAY_DEVICE_PATH - The specified Plug and Play registry device path is invalid.
 .
 Language=Polish
-ERROR_INVALID_PLUGPLAY_DEVICE_PATH - The specified Plug and Play registry device path is invalid.
+ERROR_INVALID_PLUGPLAY_DEVICE_PATH - Określona ścieżka Rejestru urządzenia typu „Plug and Play” jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_INVALID_PLUGPLAY_DEVICE_PATH - The specified Plug and Play registry device path is invalid.
@@ -4813,7 +4813,7 @@ Language=Russian
 ERROR_QUOTA_LIST_INCONSISTENT - The specified quota list is internally inconsistent with its descriptor.
 .
 Language=Polish
-ERROR_QUOTA_LIST_INCONSISTENT - The specified quota list is internally inconsistent with its descriptor.
+ERROR_QUOTA_LIST_INCONSISTENT - Określona lista zasobów jest wewnętrznie niezgodna ze swoim deskryptorem.
 .
 Language=Romanian
 ERROR_QUOTA_LIST_INCONSISTENT - The specified quota list is internally inconsistent with its descriptor.
@@ -4830,7 +4830,7 @@ Language=Russian
 ERROR_EVALUATION_EXPIRATION - The evaluation period for this installation of Windows has expired. This system will shutdown in 1 hour. To restore access to this installation of Windows, please upgrade this installation using a licensed distribution of this product.
 .
 Language=Polish
-ERROR_EVALUATION_EXPIRATION - The evaluation period for this installation of Windows has expired. This system will shutdown in 1 hour. To restore access to this installation of Windows, please upgrade this installation using a licensed distribution of this product.
+ERROR_EVALUATION_EXPIRATION - Okres tymczasowego użytkowania tej instalacji systemu Windows wygasł. System zostanie zamknięty za godzinę. Aby przywrócić dostęp do tej instalacji systemu Windows, uaktualnij instalację używając licencjonowanego produktu znajdującego się w dystrybucji.
 .
 Language=Romanian
 ERROR_EVALUATION_EXPIRATION - The evaluation period for this installation of Windows has expired. This system will shutdown in 1 hour. To restore access to this installation of Windows, please upgrade this installation using a licensed distribution of this product.
@@ -4847,7 +4847,7 @@ Language=Russian
 ERROR_ILLEGAL_DLL_RELOCATION - The system DLL %hs was relocated in memory. The application will not run properly. The relocation occurred because the DLL %hs occupied an address range reserved for Windows system DLLs. The vendor supplying the DLL should be contacted for a new DLL.
 .
 Language=Polish
-ERROR_ILLEGAL_DLL_RELOCATION - The system DLL %hs was relocated in memory. The application will not run properly. The relocation occurred because the DLL %hs occupied an address range reserved for Windows system DLLs. The vendor supplying the DLL should be contacted for a new DLL.
+ERROR_ILLEGAL_DLL_RELOCATION - Biblioteka systemowa DLL %hs została zrelokowana w pamięci. Aplikacja nie będzie działać prawidłowo. Powodem relokacji było to, że biblioteka DLL %hs zajmowała zakres adresów zarezerwowany dla systemowej biblioteki DLL. Należy skontaktować się z dostawcą w sprawie nowej biblioteki DLL.
 .
 Language=Romanian
 ERROR_ILLEGAL_DLL_RELOCATION - The system DLL %hs was relocated in memory. The application will not run properly. The relocation occurred because the DLL %hs occupied an address range reserved for Windows system DLLs. The vendor supplying the DLL should be contacted for a new DLL.
@@ -4864,7 +4864,7 @@ Language=Russian
 ERROR_DLL_INIT_FAILED_LOGOFF - The application failed to initialize because the window station is shutting down.
 .
 Language=Polish
-ERROR_DLL_INIT_FAILED_LOGOFF - The application failed to initialize because the window station is shutting down.
+ERROR_DLL_INIT_FAILED_LOGOFF - Zainicjowanie aplikacji nie udało się, gdyż stacja jest właśnie zamykana.
 .
 Language=Romanian
 ERROR_DLL_INIT_FAILED_LOGOFF - The application failed to initialize because the window station is shutting down.
@@ -4881,7 +4881,7 @@ Language=Russian
 ERROR_VALIDATE_CONTINUE - The validation process needs to continue on to the next step.
 .
 Language=Polish
-ERROR_VALIDATE_CONTINUE - The validation process needs to continue on to the next step.
+ERROR_VALIDATE_CONTINUE - Proces sprawdzania poprawności musi być kontynuowany do następnego kroku.
 .
 Language=Romanian
 ERROR_VALIDATE_CONTINUE - The validation process needs to continue on to the next step.
@@ -4898,7 +4898,7 @@ Language=Russian
 ERROR_NO_MORE_MATCHES - There are no more matches for the current index enumeration.
 .
 Language=Polish
-ERROR_NO_MORE_MATCHES - There are no more matches for the current index enumeration.
+ERROR_NO_MORE_MATCHES - Nie ma więcej odpowiedników dla bieżącego wyliczania indeksu.
 .
 Language=Romanian
 ERROR_NO_MORE_MATCHES - There are no more matches for the current index enumeration.
@@ -4915,7 +4915,7 @@ Language=Russian
 ERROR_RANGE_LIST_CONFLICT - The range could not be added to the range list because of a conflict.
 .
 Language=Polish
-ERROR_RANGE_LIST_CONFLICT - The range could not be added to the range list because of a conflict.
+ERROR_RANGE_LIST_CONFLICT - Z powodu konfliktu nie można dodać zakresu do listy zakresów.
 .
 Language=Romanian
 ERROR_RANGE_LIST_CONFLICT - The range could not be added to the range list because of a conflict.
@@ -4932,7 +4932,7 @@ Language=Russian
 ERROR_SERVER_SID_MISMATCH - The server process is running under a SID different than that required by client.
 .
 Language=Polish
-ERROR_SERVER_SID_MISMATCH - The server process is running under a SID different than that required by client.
+ERROR_SERVER_SID_MISMATCH - Proces serwera działa z innym identyfikatorem SID niż wymaga to klient.
 .
 Language=Romanian
 ERROR_SERVER_SID_MISMATCH - The server process is running under a SID different than that required by client.
@@ -4949,7 +4949,7 @@ Language=Russian
 ERROR_CANT_ENABLE_DENY_ONLY - A group marked use for deny only cannot be enabled.
 .
 Language=Polish
-ERROR_CANT_ENABLE_DENY_ONLY - A group marked use for deny only cannot be enabled.
+ERROR_CANT_ENABLE_DENY_ONLY - Nie można włączyć grupy oznaczonej do użycia tylko dla odmowy.
 .
 Language=Romanian
 ERROR_CANT_ENABLE_DENY_ONLY - A group marked use for deny only cannot be enabled.
@@ -4966,7 +4966,7 @@ Language=Russian
 ERROR_FLOAT_MULTIPLE_FAULTS - Multiple floating point faults.
 .
 Language=Polish
-ERROR_FLOAT_MULTIPLE_FAULTS - Multiple floating point faults.
+ERROR_FLOAT_MULTIPLE_FAULTS - Wiele błędów zmiennoprzecinkowych.
 .
 Language=Romanian
 ERROR_FLOAT_MULTIPLE_FAULTS - Multiple floating point faults.
@@ -4983,7 +4983,7 @@ Language=Russian
 ERROR_FLOAT_MULTIPLE_TRAPS - Multiple floating point traps.
 .
 Language=Polish
-ERROR_FLOAT_MULTIPLE_TRAPS - Multiple floating point traps.
+ERROR_FLOAT_MULTIPLE_TRAPS - Wiele pułapek zmiennoprzecinkowych.
 .
 Language=Romanian
 ERROR_FLOAT_MULTIPLE_TRAPS - Multiple floating point traps.
@@ -5000,7 +5000,7 @@ Language=Russian
 ERROR_NOINTERFACE - The requested interface is not supported.
 .
 Language=Polish
-ERROR_NOINTERFACE - The requested interface is not supported.
+ERROR_NOINTERFACE - Żądany interfejs nie jest obsługiwany.
 .
 Language=Romanian
 ERROR_NOINTERFACE - The requested interface is not supported.
@@ -5017,7 +5017,7 @@ Language=Russian
 ERROR_DRIVER_FAILED_SLEEP - The driver %hs does not support standby mode. Updating this driver may allow the system to go to standby mode.
 .
 Language=Polish
-ERROR_DRIVER_FAILED_SLEEP - The driver %hs does not support standby mode. Updating this driver may allow the system to go to standby mode.
+ERROR_DRIVER_FAILED_SLEEP - Sterownik %hs nie obsługuje trybu stanu wstrzymania. Aby system mógł się znaleźć w stanie wstrzymania należy zaktualizować sterownik.
 .
 Language=Romanian
 ERROR_DRIVER_FAILED_SLEEP - The driver %hs does not support standby mode. Updating this driver may allow the system to go to standby mode.
@@ -5034,7 +5034,7 @@ Language=Russian
 ERROR_CORRUPT_SYSTEM_FILE - The system file %1 has become corrupt and has been replaced.
 .
 Language=Polish
-ERROR_CORRUPT_SYSTEM_FILE - The system file %1 has become corrupt and has been replaced.
+ERROR_CORRUPT_SYSTEM_FILE - Plik systemowy %1 był uszkodzony i został zastąpiony.
 .
 Language=Romanian
 ERROR_CORRUPT_SYSTEM_FILE - The system file %1 has become corrupt and has been replaced.
@@ -5051,7 +5051,7 @@ Language=Russian
 ERROR_COMMITMENT_MINIMUM - Your system is low on virtual memory. Windows is increasing the size of your virtual memory paging file. During this process, memory requests for some applications may be denied. For more information, see Help.
 .
 Language=Polish
-ERROR_COMMITMENT_MINIMUM - Your system is low on virtual memory. Windows is increasing the size of your virtual memory paging file. During this process, memory requests for some applications may be denied. For more information, see Help.
+ERROR_COMMITMENT_MINIMUM - System ma za mało pamięci wirtualnej. System Windows zwiększa rozmiar pliku stronicowania pamięci wirtualnej. W czasie trwania tego procesu, może wystąpić odmowa na żądania pamięci niektórych aplikacji. Więcej informacji możesz znaleźć w Pomocy.
 .
 Language=Romanian
 ERROR_COMMITMENT_MINIMUM - Your system is low on virtual memory. Windows is increasing the size of your virtual memory paging file. During this process, memory requests for some applications may be denied. For more information, see Help.
@@ -5068,7 +5068,7 @@ Language=Russian
 ERROR_PNP_RESTART_ENUMERATION - A device was removed so enumeration must be restarted.
 .
 Language=Polish
-ERROR_PNP_RESTART_ENUMERATION - A device was removed so enumeration must be restarted.
+ERROR_PNP_RESTART_ENUMERATION - Urządzenie zostało usunięte, a więc wyliczanie musi zostać uruchomione ponownie.
 .
 Language=Romanian
 ERROR_PNP_RESTART_ENUMERATION - A device was removed so enumeration must be restarted.
@@ -5085,7 +5085,7 @@ Language=Russian
 ERROR_SYSTEM_IMAGE_BAD_SIGNATURE - The system image %s is not properly signed. The file has been replaced with the signed file. The system has been shut down.
 .
 Language=Polish
-ERROR_SYSTEM_IMAGE_BAD_SIGNATURE - The system image %s is not properly signed. The file has been replaced with the signed file. The system has been shut down.
+ERROR_SYSTEM_IMAGE_BAD_SIGNATURE - Obraz systemu %s nie jest poprawnie podpisany. Plik został zastąpiony plikiem podpisanym. System został zamknięty.
 .
 Language=Romanian
 ERROR_SYSTEM_IMAGE_BAD_SIGNATURE - The system image %s is not properly signed. The file has been replaced with the signed file. The system has been shut down.
@@ -5102,7 +5102,7 @@ Language=Russian
 ERROR_PNP_REBOOT_REQUIRED - Device will not start without a reboot.
 .
 Language=Polish
-ERROR_PNP_REBOOT_REQUIRED - Device will not start without a reboot.
+ERROR_PNP_REBOOT_REQUIRED - Urządzenie nie zostanie uruchomione bez ponownego rozruchu komputera.
 .
 Language=Romanian
 ERROR_PNP_REBOOT_REQUIRED - Device will not start without a reboot.
@@ -5119,7 +5119,7 @@ Language=Russian
 ERROR_INSUFFICIENT_POWER - There is not enough power to complete the requested operation.
 .
 Language=Polish
-ERROR_INSUFFICIENT_POWER - There is not enough power to complete the requested operation.
+ERROR_INSUFFICIENT_POWER - Za mało energii, aby zakończyć żądaną operację
 .
 Language=Romanian
 ERROR_INSUFFICIENT_POWER - There is not enough power to complete the requested operation.
@@ -5136,7 +5136,7 @@ Language=Russian
 ERROR_SYSTEM_SHUTDOWN - The system is in the process of shutting down.
 .
 Language=Polish
-ERROR_SYSTEM_SHUTDOWN - The system is in the process of shutting down.
+ERROR_SYSTEM_SHUTDOWN - Trwa proces zamykania systemu.
 .
 Language=Romanian
 ERROR_SYSTEM_SHUTDOWN - The system is in the process of shutting down.
@@ -5153,7 +5153,7 @@ Language=Russian
 ERROR_PORT_NOT_SET - An attempt to remove a processes DebugPort was made, but a port was not already associated with the process.
 .
 Language=Polish
-ERROR_PORT_NOT_SET - An attempt to remove a processes DebugPort was made, but a port was not already associated with the process.
+ERROR_PORT_NOT_SET - Podjęto próbę usunięcia portu DebugPort, ale żaden port nie był już skojarzony z danym procesem
 .
 Language=Romanian
 ERROR_PORT_NOT_SET - An attempt to remove a processes DebugPort was made, but a port was not already associated with the process.
@@ -5170,7 +5170,7 @@ Language=Russian
 ERROR_DS_VERSION_CHECK_FAILURE - This version of Windows is not compatible with the behavior version of directory forest, domain or domain controller.
 .
 Language=Polish
-ERROR_DS_VERSION_CHECK_FAILURE - This version of Windows is not compatible with the behavior version of directory forest, domain or domain controller.
+ERROR_DS_VERSION_CHECK_FAILURE - Ta wersja systemu Windows jest niezgodna z wersją zachowania lasu katalogów, domeny lub kontrolera domeny.
 .
 Language=Romanian
 ERROR_DS_VERSION_CHECK_FAILURE - This version of Windows is not compatible with the behavior version of directory forest, domain or domain controller.
@@ -5187,7 +5187,7 @@ Language=Russian
 ERROR_RANGE_NOT_FOUND - The specified range could not be found in the range list.
 .
 Language=Polish
-ERROR_RANGE_NOT_FOUND - The specified range could not be found in the range list.
+ERROR_RANGE_NOT_FOUND - Na liście zakresów nie można znaleźć określonego zakresu.
 .
 Language=Romanian
 ERROR_RANGE_NOT_FOUND - The specified range could not be found in the range list.
@@ -5204,7 +5204,7 @@ Language=Russian
 ERROR_NOT_SAFE_MODE_DRIVER - The driver was not loaded because the system is booting into safe mode.
 .
 Language=Polish
-ERROR_NOT_SAFE_MODE_DRIVER - The driver was not loaded because the system is booting into safe mode.
+ERROR_NOT_SAFE_MODE_DRIVER - Sterownik nie został załadowany, ponieważ system jest uruchamiany w trybie awaryjnym.
 .
 Language=Romanian
 ERROR_NOT_SAFE_MODE_DRIVER - The driver was not loaded because the system is booting into safe mode.
@@ -5221,7 +5221,7 @@ Language=Russian
 ERROR_FAILED_DRIVER_ENTRY - The driver was not loaded because it failed it's initialization call.
 .
 Language=Polish
-ERROR_FAILED_DRIVER_ENTRY - The driver was not loaded because it failed it's initialization call.
+ERROR_FAILED_DRIVER_ENTRY - Sterownik nie został załadowany, ponieważ nie powiodło się wywołanie jego inicjalizacji.
 .
 Language=Romanian
 ERROR_FAILED_DRIVER_ENTRY - The driver was not loaded because it failed it's initialization call.
@@ -5238,7 +5238,7 @@ Language=Russian
 ERROR_DEVICE_ENUMERATION_ERROR - The \"%hs\" encountered an error while applying power or reading the device configuration. This may be caused by a failure of your hardware or by a poor connection.
 .
 Language=Polish
-ERROR_DEVICE_ENUMERATION_ERROR - The \"%hs\" encountered an error while applying power or reading the device configuration. This may be caused by a failure of your hardware or by a poor connection.
+ERROR_DEVICE_ENUMERATION_ERROR - 	Sterownik "%hs" napotkał błąd, stosując zasilanie lub odczytując konfigurację urządzenia. Przyczyną może być awaria sprzętu lub złe połączenie.
 .
 Language=Romanian
 ERROR_DEVICE_ENUMERATION_ERROR - The \"%hs\" encountered an error while applying power or reading the device configuration. This may be caused by a failure of your hardware or by a poor connection.
@@ -5255,7 +5255,7 @@ Language=Russian
 ERROR_MOUNT_POINT_NOT_RESOLVED - The create operation failed because the name contained at least one mount point which resolves to a volume to which the specified device object is not attached.
 .
 Language=Polish
-ERROR_MOUNT_POINT_NOT_RESOLVED - The create operation failed because the name contained at least one mount point which resolves to a volume to which the specified device object is not attached.
+ERROR_MOUNT_POINT_NOT_RESOLVED - Operacja tworzenia nie powiodła się, ponieważ dana nazwa zawierała przynajmniej jeden punkt instalacji rozpoznawany jako wolumin, do którego określone urządzenie nie jest dołączone.
 .
 Language=Romanian
 ERROR_MOUNT_POINT_NOT_RESOLVED - The create operation failed because the name contained at least one mount point which resolves to a volume to which the specified device object is not attached.
@@ -5272,7 +5272,7 @@ Language=Russian
 ERROR_INVALID_DEVICE_OBJECT_PARAMETER - The device object parameter is either not a valid device object or is not attached to the volume specified by the file name.
 .
 Language=Polish
-ERROR_INVALID_DEVICE_OBJECT_PARAMETER - The device object parameter is either not a valid device object or is not attached to the volume specified by the file name.
+ERROR_INVALID_DEVICE_OBJECT_PARAMETER - Parametr obiektu urządzenia określa urządzenie, które albo nie jest prawidłowym obiektem urządzenia, albo nie jest dołączone do woluminu określonego przez nazwę pliku.
 .
 Language=Romanian
 ERROR_INVALID_DEVICE_OBJECT_PARAMETER - The device object parameter is either not a valid device object or is not attached to the volume specified by the file name.
@@ -5289,7 +5289,7 @@ Language=Russian
 ERROR_MCA_OCCURED - A Machine Check Error has occurred. Please check the system eventlog for additional information.
 .
 Language=Polish
-ERROR_MCA_OCCURED - A Machine Check Error has occurred. Please check the system eventlog for additional information.
+ERROR_MCA_OCCURED - Wystąpił błąd sprawdzania komputera. Dodatkowe informacje można znaleźć w dzienniku zdarzeń systemowych.
 .
 Language=Romanian
 ERROR_MCA_OCCURED - A Machine Check Error has occurred. Please check the system eventlog for additional information.
@@ -5306,7 +5306,7 @@ Language=Russian
 ERROR_DRIVER_DATABASE_ERROR - There was error [%2] processing the driver database.
 .
 Language=Polish
-ERROR_DRIVER_DATABASE_ERROR - There was error [%2] processing the driver database.
+ERROR_DRIVER_DATABASE_ERROR - Wystąpił błąd [%2] podczas przetwarzania bazy danych sterowników.
 .
 Language=Romanian
 ERROR_DRIVER_DATABASE_ERROR - There was error [%2] processing the driver database.
@@ -5323,7 +5323,7 @@ Language=Russian
 ERROR_SYSTEM_HIVE_TOO_LARGE - System hive size has exceeded its limit.
 .
 Language=Polish
-ERROR_SYSTEM_HIVE_TOO_LARGE - System hive size has exceeded its limit.
+ERROR_SYSTEM_HIVE_TOO_LARGE - Przekroczono limit rozmiaru gałęzi systemu.
 .
 Language=Romanian
 ERROR_SYSTEM_HIVE_TOO_LARGE - System hive size has exceeded its limit.
@@ -5340,7 +5340,7 @@ Language=Russian
 ERROR_DRIVER_FAILED_PRIOR_UNLOAD - The driver could not be loaded because a previous version of the driver is still in memory.
 .
 Language=Polish
-ERROR_DRIVER_FAILED_PRIOR_UNLOAD - The driver could not be loaded because a previous version of the driver is still in memory.
+ERROR_DRIVER_FAILED_PRIOR_UNLOAD - Nie można załadować sterownika, ponieważ jego poprzednia wersja nadal znajduje się w pamięci.
 .
 Language=Romanian
 ERROR_DRIVER_FAILED_PRIOR_UNLOAD - The driver could not be loaded because a previous version of the driver is still in memory.
@@ -5357,7 +5357,7 @@ Language=Russian
 ERROR_VOLSNAP_PREPARE_HIBERNATE - Please wait while the Volume Shadow Copy Service prepares volume %hs for hibernation.
 .
 Language=Polish
-ERROR_VOLSNAP_PREPARE_HIBERNATE - Please wait while the Volume Shadow Copy Service prepares volume %hs for hibernation.
+ERROR_VOLSNAP_PREPARE_HIBERNATE - Zaczekaj, aż usługa kopii woluminu w tle przygotuje wolumin %hs do hibernacji.
 .
 Language=Romanian
 ERROR_VOLSNAP_PREPARE_HIBERNATE - Please wait while the Volume Shadow Copy Service prepares volume %hs for hibernation.
@@ -5374,7 +5374,7 @@ Language=Russian
 ERROR_HIBERNATION_FAILURE - The system has failed to hibernate (The error code is %hs). Hibernation will be disabled until the system is restarted.
 .
 Language=Polish
-ERROR_HIBERNATION_FAILURE - The system has failed to hibernate (The error code is %hs). Hibernation will be disabled until the system is restarted.
+ERROR_HIBERNATION_FAILURE - System nie może wykonać hibernacji (kod błędu: %hs). Hibernacja będzie wyłączona do czasu ponownego uruchomienia systemu.
 .
 Language=Romanian
 ERROR_HIBERNATION_FAILURE - The system has failed to hibernate (The error code is %hs). Hibernation will be disabled until the system is restarted.
@@ -5391,7 +5391,7 @@ Language=Russian
 ERROR_HUNG_DISPLAY_DRIVER_THREAD - The %hs display driver has stopped working normally. Save your work and reboot the system to restore full display functionality. The next time you reboot the machine a dialog will be displayed giving you a chance to report this failure to Microsoft.
 .
 Language=Polish
-ERROR_HUNG_DISPLAY_DRIVER_THREAD - The %hs display driver has stopped working normally. Save your work and reboot the system to restore full display functionality. The next time you reboot the machine a dialog will be displayed giving you a chance to report this failure to Microsoft.
+ERROR_HUNG_DISPLAY_DRIVER_THREAD - Sterownik ekranu %hs przestał normalnie pracować. Zapisz pracę i dokonaj ponownego rozruchu systemu, aby przywrócić wszystkie funkcje ekranu. Przy następnym ponownym rozruchu komputera zostanie wyświetlone okno dialogowe umożliwiające zgłoszenie tego błędu firmie Microsoft.
 .
 Language=Romanian
 ERROR_HUNG_DISPLAY_DRIVER_THREAD - The %hs display driver has stopped working normally. Save your work and reboot the system to restore full display functionality. The next time you reboot the machine a dialog will be displayed giving you a chance to report this failure to Microsoft.
@@ -5408,7 +5408,7 @@ Language=Russian
 ERROR_FILE_SYSTEM_LIMITATION - The requested operation could not be completed due to a file system limitation.
 .
 Language=Polish
-ERROR_FILE_SYSTEM_LIMITATION - The requested operation could not be completed due to a file system limitation.
+ERROR_FILE_SYSTEM_LIMITATION - Nie można ukończyć żądanej operacji z powodu ograniczenia systemu plików.
 .
 Language=Romanian
 ERROR_FILE_SYSTEM_LIMITATION - The requested operation could not be completed due to a file system limitation.
@@ -5425,7 +5425,7 @@ Language=Russian
 ERROR_ASSERTION_FAILURE - An assertion failure has occurred.
 .
 Language=Polish
-ERROR_ASSERTION_FAILURE - An assertion failure has occurred.
+ERROR_ASSERTION_FAILURE - Wystąpił błąd potwierdzenia.
 .
 Language=Romanian
 ERROR_ASSERTION_FAILURE - An assertion failure has occurred.
@@ -5442,7 +5442,7 @@ Language=Russian
 ERROR_VERIFIER_STOP - Application verifier has found an error in the current process.
 .
 Language=Polish
-ERROR_VERIFIER_STOP - Application verifier has found an error in the current process.
+ERROR_VERIFIER_STOP - Weryfikator aplikacji napotkał błąd w bieżącym procesie.
 .
 Language=Romanian
 ERROR_VERIFIER_STOP - Application verifier has found an error in the current process.
@@ -5459,7 +5459,7 @@ Language=Russian
 ERROR_WOW_ASSERTION - WOW Assertion Error.
 .
 Language=Polish
-ERROR_WOW_ASSERTION - WOW Assertion Error.
+ERROR_WOW_ASSERTION - Błąd potwierdzenia WOW.
 .
 Language=Romanian
 ERROR_WOW_ASSERTION - WOW Assertion Error.
@@ -5476,7 +5476,7 @@ Language=Russian
 ERROR_PNP_BAD_MPS_TABLE - A device is missing in the system BIOS MPS table. This device will not be used. Please contact your system vendor for system BIOS update.
 .
 Language=Polish
-ERROR_PNP_BAD_MPS_TABLE - A device is missing in the system BIOS MPS table. This device will not be used. Please contact your system vendor for system BIOS update.
+ERROR_PNP_BAD_MPS_TABLE - Brak urządzenia w tabeli MPS systemu BIOS. Urządzenie nie zostanie użyte. Skontaktuj się z producentem, aby otrzymać aktualizację systemu BIOS.
 .
 Language=Romanian
 ERROR_PNP_BAD_MPS_TABLE - A device is missing in the system BIOS MPS table. This device will not be used. Please contact your system vendor for system BIOS update.
@@ -5493,7 +5493,7 @@ Language=Russian
 ERROR_PNP_TRANSLATION_FAILED - A translator failed to translate resources.
 .
 Language=Polish
-ERROR_PNP_TRANSLATION_FAILED - A translator failed to translate resources.
+ERROR_PNP_TRANSLATION_FAILED - Translator nie może zinterpretować zasobów.
 .
 Language=Romanian
 ERROR_PNP_TRANSLATION_FAILED - A translator failed to translate resources.
@@ -5510,7 +5510,7 @@ Language=Russian
 ERROR_PNP_IRQ_TRANSLATION_FAILED - A IRQ translator failed to translate resources.
 .
 Language=Polish
-ERROR_PNP_IRQ_TRANSLATION_FAILED - A IRQ translator failed to translate resources.
+ERROR_PNP_IRQ_TRANSLATION_FAILED - Translator IRQ nie może zinterpretować zasobów.
 .
 Language=Romanian
 ERROR_PNP_IRQ_TRANSLATION_FAILED - A IRQ translator failed to translate resources.
@@ -5527,7 +5527,7 @@ Language=Russian
 ERROR_PNP_INVALID_ID - Driver %2 returned invalid ID for a child device (%3).
 .
 Language=Polish
-ERROR_PNP_INVALID_ID - Driver %2 returned invalid ID for a child device (%3).
+ERROR_PNP_INVALID_ID - Sterownik %2 zwrócił nieprawidłowy identyfikator urządzenia podrzędnego (%3).
 .
 Language=Romanian
 ERROR_PNP_INVALID_ID - Driver %2 returned invalid ID for a child device (%3).
@@ -5544,7 +5544,7 @@ Language=Russian
 ERROR_WAKE_SYSTEM_DEBUGGER - The system debugger was awakened by an interrupt.
 .
 Language=Polish
-ERROR_WAKE_SYSTEM_DEBUGGER - The system debugger was awakened by an interrupt.
+ERROR_WAKE_SYSTEM_DEBUGGER - Przerwanie uaktywniło debuger systemu.
 .
 Language=Romanian
 ERROR_WAKE_SYSTEM_DEBUGGER - The system debugger was awakened by an interrupt.
@@ -5561,7 +5561,7 @@ Language=Russian
 ERROR_HANDLES_CLOSED - Handles to objects have been automatically closed as a result of the requested operation.
 .
 Language=Polish
-ERROR_HANDLES_CLOSED - Handles to objects have been automatically closed as a result of the requested operation.
+ERROR_HANDLES_CLOSED - Dojścia do obiektów zostały automatycznie zamknięte w wyniku żądanej operacji.
 .
 Language=Romanian
 ERROR_HANDLES_CLOSED - Handles to objects have been automatically closed as a result of the requested operation.
@@ -5572,16 +5572,16 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_EXTRANEOUS_INFORMATION
 Language=English
-ERROR_EXTRANEOUS_INFORMATION - he specified access control list (ACL) contained more information than was expected.
+ERROR_EXTRANEOUS_INFORMATION - The specified access control list (ACL) contained more information than was expected.
 .
 Language=Russian
-ERROR_EXTRANEOUS_INFORMATION - he specified access control list (ACL) contained more information than was expected.
+ERROR_EXTRANEOUS_INFORMATION - The specified access control list (ACL) contained more information than was expected.
 .
 Language=Polish
-ERROR_EXTRANEOUS_INFORMATION - he specified access control list (ACL) contained more information than was expected.
+ERROR_EXTRANEOUS_INFORMATION - Określona lista kontroli dostępu (ACL) zawiera więcej informacji niż oczekiwano.
 .
 Language=Romanian
-ERROR_EXTRANEOUS_INFORMATION - he specified access control list (ACL) contained more information than was expected.
+ERROR_EXTRANEOUS_INFORMATION - The specified access control list (ACL) contained more information than was expected.
 .
 
 MessageId=678
@@ -5595,7 +5595,7 @@ Language=Russian
 ERROR_RXACT_COMMIT_NECESSARY - This warning level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has NOT been completed, but has not been rolled back either (so it may still be committed if desired).
 .
 Language=Polish
-ERROR_RXACT_COMMIT_NECESSARY - This warning level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has NOT been completed, but has not been rolled back either (so it may still be committed if desired).
+ERROR_RXACT_COMMIT_NECESSARY - Ten stan poziomu ostrzeżenia wskazuje, że dla danego poddrzewa Rejestru istnieje już stan transakcji, ale zlecenie transakcji zostało wcześniej przerwane. Transakcja NIE została zlecona, ale nie była też zwrócona (zatem może być z łatwością zlecona w razie potrzeby).
 .
 Language=Romanian
 ERROR_RXACT_COMMIT_NECESSARY - This warning level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has NOT been completed, but has not been rolled back either (so it may still be committed if desired).
@@ -5612,7 +5612,7 @@ Language=Russian
 ERROR_MEDIA_CHECK - The media may have changed.
 .
 Language=Polish
-ERROR_MEDIA_CHECK - The media may have changed.
+ERROR_MEDIA_CHECK - Nośnik mógł się zmienić.
 .
 Language=Romanian
 ERROR_MEDIA_CHECK - The media may have changed.
@@ -5629,7 +5629,7 @@ Language=Russian
 ERROR_GUID_SUBSTITUTION_MADE - During the translation of a global identifier (GUID) to a Windows security ID (SID), no administratively-defined GUID prefix was found. A substitute prefix was used, which will not compromise system security. However, this may provide a more restrictive access than intended.
 .
 Language=Polish
-ERROR_GUID_SUBSTITUTION_MADE - During the translation of a global identifier (GUID) to a Windows security ID (SID), no administratively-defined GUID prefix was found. A substitute prefix was used, which will not compromise system security. However, this may provide a more restrictive access than intended.
+ERROR_GUID_SUBSTITUTION_MADE - Podczas tłumaczenia globalnego identyfikatora (GUID) na identyfikator zabezpieczeń Windows NT nie znaleziono zdefiniowanego administracyjnie prefiksu GUID. Użyto zamiast tego zastępczego prefiksu, który nie wpłynie na bezpieczeństwo systemu. Może to jednak ograniczyć dostęp bardziej niż zamierzano.
 .
 Language=Romanian
 ERROR_GUID_SUBSTITUTION_MADE - During the translation of a global identifier (GUID) to a Windows security ID (SID), no administratively-defined GUID prefix was found. A substitute prefix was used, which will not compromise system security. However, this may provide a more restrictive access than intended.
@@ -5646,7 +5646,7 @@ Language=Russian
 ERROR_STOPPED_ON_SYMLINK - The create operation stopped after reaching a symbolic link.
 .
 Language=Polish
-ERROR_STOPPED_ON_SYMLINK - The create operation stopped after reaching a symbolic link.
+ERROR_STOPPED_ON_SYMLINK - Operacja tworzenia została zatrzymana po napotkaniu łącza symbolicznego.
 .
 Language=Romanian
 ERROR_STOPPED_ON_SYMLINK - The create operation stopped after reaching a symbolic link.
@@ -5663,7 +5663,7 @@ Language=Russian
 ERROR_LONGJUMP - A long jump has been executed.
 .
 Language=Polish
-ERROR_LONGJUMP - A long jump has been executed.
+ERROR_LONGJUMP - Wykonano długi skok.
 .
 Language=Romanian
 ERROR_LONGJUMP - A long jump has been executed.
@@ -5680,7 +5680,7 @@ Language=Russian
 ERROR_PLUGPLAY_QUERY_VETOED - The Plug and Play query operation was not successful.
 .
 Language=Polish
-ERROR_PLUGPLAY_QUERY_VETOED - The Plug and Play query operation was not successful.
+ERROR_PLUGPLAY_QUERY_VETOED - Operacja zapytania Plug and Play zakończyła się niepomyślnie.
 .
 Language=Romanian
 ERROR_PLUGPLAY_QUERY_VETOED - The Plug and Play query operation was not successful.
@@ -5697,7 +5697,7 @@ Language=Russian
 ERROR_UNWIND_CONSOLIDATE - A frame consolidation has been executed.
 .
 Language=Polish
-ERROR_UNWIND_CONSOLIDATE - A frame consolidation has been executed.
+ERROR_UNWIND_CONSOLIDATE - Przeprowadzono konsolidację ramek.
 .
 Language=Romanian
 ERROR_UNWIND_CONSOLIDATE - A frame consolidation has been executed.
@@ -5714,7 +5714,7 @@ Language=Russian
 ERROR_REGISTRY_HIVE_RECOVERED - Registry hive (file): %hs was corrupted and it has been recovered. Some data might have been lost.
 .
 Language=Polish
-ERROR_REGISTRY_HIVE_RECOVERED - Registry hive (file): %hs was corrupted and it has been recovered. Some data might have been lost.
+ERROR_REGISTRY_HIVE_RECOVERED - Gałąź rejestru (plik): %hs była uszkodzona i została odzyskana. Niektóre dane mogły zostać utracone.
 .
 Language=Romanian
 ERROR_REGISTRY_HIVE_RECOVERED - Registry hive (file): %hs was corrupted and it has been recovered. Some data might have been lost.
@@ -5731,7 +5731,7 @@ Language=Russian
 ERROR_DLL_MIGHT_BE_INSECURE - The application is attempting to run executable code from the module %hs. This may be insecure. An alternative, %hs, is available. Should the application use the secure module %hs?
 .
 Language=Polish
-ERROR_DLL_MIGHT_BE_INSECURE - The application is attempting to run executable code from the module %hs. This may be insecure. An alternative, %hs, is available. Should the application use the secure module %hs?
+ERROR_DLL_MIGHT_BE_INSECURE - Aplikacja próbuje uruchomić kod wykonywalny z modułu %hs. Może to być niebezpieczne. Dostępna jest alternatywa, %hs. Czy aplikacja ma użyć bezpiecznego modułu %hs?
 .
 Language=Romanian
 ERROR_DLL_MIGHT_BE_INSECURE - The application is attempting to run executable code from the module %hs. This may be insecure. An alternative, %hs, is available. Should the application use the secure module %hs?
@@ -5748,7 +5748,7 @@ Language=Russian
 ERROR_DLL_MIGHT_BE_INCOMPATIBLE - The application is loading executable code from the module %hs. This is secure, but may be incompatible with previous releases of the operating system. An alternative, %hs, is available. Should the application use the secure module %hs?
 .
 Language=Polish
-ERROR_DLL_MIGHT_BE_INCOMPATIBLE - The application is loading executable code from the module %hs. This is secure, but may be incompatible with previous releases of the operating system. An alternative, %hs, is available. Should the application use the secure module %hs?
+ERROR_DLL_MIGHT_BE_INCOMPATIBLE - Aplikacja ładuje kod wykonywalny z modułu %hs. Jest to bezpieczne, ale może być niezgodne z poprzednimi wydaniami systemu operacyjnego. Dostępna jest alternatywa, %hs. Czy aplikacja ma użyć bezpiecznego modułu %hs?
 .
 Language=Romanian
 ERROR_DLL_MIGHT_BE_INCOMPATIBLE - The application is loading executable code from the module %hs. This is secure, but may be incompatible with previous releases of the operating system. An alternative, %hs, is available. Should the application use the secure module %hs?
@@ -5765,7 +5765,7 @@ Language=Russian
 ERROR_DBG_EXCEPTION_NOT_HANDLED - Debugger did not handle the exception.
 .
 Language=Polish
-ERROR_DBG_EXCEPTION_NOT_HANDLED - Debugger did not handle the exception.
+ERROR_DBG_EXCEPTION_NOT_HANDLED - Debuger nie obsłużył wyjątku.
 .
 Language=Romanian
 ERROR_DBG_EXCEPTION_NOT_HANDLED - Debugger did not handle the exception.
@@ -5782,7 +5782,7 @@ Language=Russian
 ERROR_DBG_REPLY_LATER - Debugger will reply later.
 .
 Language=Polish
-ERROR_DBG_REPLY_LATER - Debugger will reply later.
+ERROR_DBG_REPLY_LATER - Debuger udzieli odpowiedź później.
 .
 Language=Romanian
 ERROR_DBG_REPLY_LATER - Debugger will reply later.
@@ -5799,7 +5799,7 @@ Language=Russian
 ERROR_DBG_UNABLE_TO_PROVIDE_HANDLE - Debugger can not provide handle.
 .
 Language=Polish
-ERROR_DBG_UNABLE_TO_PROVIDE_HANDLE - Debugger can not provide handle.
+ERROR_DBG_UNABLE_TO_PROVIDE_HANDLE - Debuger nie może udostępnić uchwytu.
 .
 Language=Romanian
 ERROR_DBG_UNABLE_TO_PROVIDE_HANDLE - Debugger can not provide handle.
@@ -5816,7 +5816,7 @@ Language=Russian
 ERROR_DBG_TERMINATE_THREAD - Debugger terminated thread.
 .
 Language=Polish
-ERROR_DBG_TERMINATE_THREAD - Debugger terminated thread.
+ERROR_DBG_TERMINATE_THREAD - Debuger przerwał wątek.
 .
 Language=Romanian
 ERROR_DBG_TERMINATE_THREAD - Debugger terminated thread.
@@ -5833,7 +5833,7 @@ Language=Russian
 ERROR_DBG_TERMINATE_PROCESS - Debugger terminated process.
 .
 Language=Polish
-ERROR_DBG_TERMINATE_PROCESS - Debugger terminated process.
+ERROR_DBG_TERMINATE_PROCESS - Debuger przerwał proces.
 .
 Language=Romanian
 ERROR_DBG_TERMINATE_PROCESS - Debugger terminated process.
@@ -5850,7 +5850,7 @@ Language=Russian
 ERROR_DBG_CONTROL_C - Debugger got control C.
 .
 Language=Polish
-ERROR_DBG_CONTROL_C - Debugger got control C.
+ERROR_DBG_CONTROL_C - Debuger przejął kontrolę C.
 .
 Language=Romanian
 ERROR_DBG_CONTROL_C - Debugger got control C.
@@ -5867,7 +5867,7 @@ Language=Russian
 ERROR_DBG_PRINTEXCEPTION_C - Debugger printed exception on control C.
 .
 Language=Polish
-ERROR_DBG_PRINTEXCEPTION_C - Debugger printed exception on control C.
+ERROR_DBG_PRINTEXCEPTION_C - Debuger wydrukował wyjątek dla kontroli C.
 .
 Language=Romanian
 ERROR_DBG_PRINTEXCEPTION_C - Debugger printed exception on control C.
@@ -5884,7 +5884,7 @@ Language=Russian
 ERROR_DBG_RIPEXCEPTION - Debugger received RIP exception.
 .
 Language=Polish
-ERROR_DBG_RIPEXCEPTION - Debugger received RIP exception.
+ERROR_DBG_RIPEXCEPTION - Debuger otrzymał wyjątek RIP.
 .
 Language=Romanian
 ERROR_DBG_RIPEXCEPTION - Debugger received RIP exception.
@@ -5901,7 +5901,7 @@ Language=Russian
 ERROR_DBG_CONTROL_BREAK - Debugger received control break.
 .
 Language=Polish
-ERROR_DBG_CONTROL_BREAK - Debugger received control break.
+ERROR_DBG_CONTROL_BREAK - Debuger otrzymał kombinację control break.
 .
 Language=Romanian
 ERROR_DBG_CONTROL_BREAK - Debugger received control break.
@@ -5918,7 +5918,7 @@ Language=Russian
 ERROR_DBG_COMMAND_EXCEPTION - Debugger command communication exception.
 .
 Language=Polish
-ERROR_DBG_COMMAND_EXCEPTION - Debugger command communication exception.
+ERROR_DBG_COMMAND_EXCEPTION - Wyjątek komunikacji polecenia debugera.
 .
 Language=Romanian
 ERROR_DBG_COMMAND_EXCEPTION - Debugger command communication exception.
@@ -5935,7 +5935,7 @@ Language=Russian
 ERROR_OBJECT_NAME_EXISTS - An attempt was made to create an object and the object name already existed.
 .
 Language=Polish
-ERROR_OBJECT_NAME_EXISTS - An attempt was made to create an object and the object name already existed.
+ERROR_OBJECT_NAME_EXISTS - Podjęto próbę utworzenia obiektu, podczas gdy taka nazwa obiektu już istniała.
 .
 Language=Romanian
 ERROR_OBJECT_NAME_EXISTS - An attempt was made to create an object and the object name already existed.
@@ -5952,7 +5952,7 @@ Language=Russian
 ERROR_THREAD_WAS_SUSPENDED - A thread termination occurred while the thread was suspended. The thread was resumed, and termination proceeded.
 .
 Language=Polish
-ERROR_THREAD_WAS_SUSPENDED - A thread termination occurred while the thread was suspended. The thread was resumed, and termination proceeded.
+ERROR_THREAD_WAS_SUSPENDED - Nastąpiło zamknięcie wątku, gdy wątek ten został zawieszony. Wątek został wznowiony i wznowiono operację zamykania.
 .
 Language=Romanian
 ERROR_THREAD_WAS_SUSPENDED - A thread termination occurred while the thread was suspended. The thread was resumed, and termination proceeded.
@@ -5969,7 +5969,7 @@ Language=Russian
 ERROR_IMAGE_NOT_AT_BASE - An image file could not be mapped at the address specified in the image file. Local fixups must be performed on this image.
 .
 Language=Polish
-ERROR_IMAGE_NOT_AT_BASE - An image file could not be mapped at the address specified in the image file. Local fixups must be performed on this image.
+ERROR_IMAGE_NOT_AT_BASE - Zamapowanie obrazu pod adresem określonym w pliku obrazu nie było możliwe. Na tym obrazie trzeba wykonać lokalną naprawę.
 .
 Language=Romanian
 ERROR_IMAGE_NOT_AT_BASE - An image file could not be mapped at the address specified in the image file. Local fixups must be performed on this image.
@@ -5986,7 +5986,7 @@ Language=Russian
 ERROR_RXACT_STATE_CREATED - This informational level status indicates that a specified registry sub-tree transaction state did not yet exist and had to be created.
 .
 Language=Polish
-ERROR_RXACT_STATE_CREATED - This informational level status indicates that a specified registry sub-tree transaction state did not yet exist and had to be created.
+ERROR_RXACT_STATE_CREATED - Ten stan poziomu informacji wskazuje, że określony stan transakcji poddrzewa Rejestru jeszcze nie istniał i musiał być utworzony.
 .
 Language=Romanian
 ERROR_RXACT_STATE_CREATED - This informational level status indicates that a specified registry sub-tree transaction state did not yet exist and had to be created.
@@ -6003,7 +6003,7 @@ Language=Russian
 ERROR_SEGMENT_NOTIFICATION - A virtual DOS machine (VDM) is loading, unloading, or moving an MS-DOS or Win16 program segment image. An exception is raised so a debugger can load, unload or track symbols and breakpoints within these 16-bit segments.
 .
 Language=Polish
-ERROR_SEGMENT_NOTIFICATION - A virtual DOS machine (VDM) is loading, unloading, or moving an MS-DOS or Win16 program segment image. An exception is raised so a debugger can load, unload or track symbols and breakpoints within these 16-bit segments.
+ERROR_SEGMENT_NOTIFICATION - Wirtualna maszyna DOS ładuje, zwalnia lub przenosi obraz segmentu programu MS-DOS lub Win16. Tworzony jest wyjątek, dzięki czemu debuger może ładować zwalniać i śledzić symbole i punkty przerwania w tych 16-bitowych segmentach.
 .
 Language=Romanian
 ERROR_SEGMENT_NOTIFICATION - A virtual DOS machine (VDM) is loading, unloading, or moving an MS-DOS or Win16 program segment image. An exception is raised so a debugger can load, unload or track symbols and breakpoints within these 16-bit segments.
@@ -6020,7 +6020,7 @@ Language=Russian
 ERROR_BAD_CURRENT_DIRECTORY - The process cannot switch to the startup current directory %hs. Select OK to set current directory to %hs, or select CANCEL to exit.
 .
 Language=Polish
-ERROR_BAD_CURRENT_DIRECTORY - The process cannot switch to the startup current directory %hs. Select OK to set current directory to %hs, or select CANCEL to exit.
+ERROR_BAD_CURRENT_DIRECTORY - Proces nie może przełączyć się do bieżącego katalogu startowego %hs. Wybierz OK, aby ustawić bieżący katalog na %hs, albo wybierz "Anuluj", aby zakończyć.
 .
 Language=Romanian
 ERROR_BAD_CURRENT_DIRECTORY - The process cannot switch to the startup current directory %hs. Select OK to set current directory to %hs, or select CANCEL to exit.
@@ -6037,7 +6037,7 @@ Language=Russian
 ERROR_FT_READ_RECOVERY_FROM_BACKUP - To satisfy a read request, the NT fault-tolerant file system successfully read the requested data from a redundant copy. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was unable to reassign the failing area of the device.
 .
 Language=Polish
-ERROR_FT_READ_RECOVERY_FROM_BACKUP - To satisfy a read request, the NT fault-tolerant file system successfully read the requested data from a redundant copy. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was unable to reassign the failing area of the device.
+ERROR_FT_READ_RECOVERY_FROM_BACKUP - Aby wykonać żądanie odczytu, odporny na błędy system plików NT pomyślnie odczytał dane z dodatkowej kopii. Powodem było to, że wystąpiła awaria w elemencie odpornego na błędy woluminu, ale nie było możliwe ponowne przypisanie odpowiedzialnego za awarię obszaru urządzenia.
 .
 Language=Romanian
 ERROR_FT_READ_RECOVERY_FROM_BACKUP - To satisfy a read request, the NT fault-tolerant file system successfully read the requested data from a redundant copy. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was unable to reassign the failing area of the device.
@@ -6054,7 +6054,7 @@ Language=Russian
 ERROR_FT_WRITE_RECOVERY - To satisfy a write request, the NT fault-tolerant file system successfully wrote a redundant copy of the information. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was not able to reassign the failing area of the device.
 .
 Language=Polish
-ERROR_FT_WRITE_RECOVERY - To satisfy a write request, the NT fault-tolerant file system successfully wrote a redundant copy of the information. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was not able to reassign the failing area of the device.
+ERROR_FT_WRITE_RECOVERY - Aby wykonać żądanie zapisu odporny na błędy system plików NT pomyślnie zapisał dodatkową kopię danych. Powodem było to, że wystąpiła awaria w elemencie odpornego na błędy woluminu, ale nie było możliwe ponowne przypisanie odpowiedzialnego za awarię obszaru urządzenia.
 .
 Language=Romanian
 ERROR_FT_WRITE_RECOVERY - To satisfy a write request, the NT fault-tolerant file system successfully wrote a redundant copy of the information. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was not able to reassign the failing area of the device.
@@ -6071,7 +6071,7 @@ Language=Russian
 ERROR_IMAGE_MACHINE_TYPE_MISMATCH - The image file %hs is valid, but is for a machine type other than the current machine. Select OK to continue, or CANCEL to fail the DLL load.
 .
 Language=Polish
-ERROR_IMAGE_MACHINE_TYPE_MISMATCH - The image file %hs is valid, but is for a machine type other than the current machine. Select OK to continue, or CANCEL to fail the DLL load.
+ERROR_IMAGE_MACHINE_TYPE_MISMATCH - Plik obrazu %hs jest prawidłowy, ale jest dla innego typu komuptera niż bieżący. Wybierz OK, aby kontynuować, albo ANULUJ, aby anulować ładowanie biblioteki DLL.
 .
 Language=Romanian
 ERROR_IMAGE_MACHINE_TYPE_MISMATCH - The image file %hs is valid, but is for a machine type other than the current machine. Select OK to continue, or CANCEL to fail the DLL load.
@@ -6088,7 +6088,7 @@ Language=Russian
 ERROR_RECEIVE_PARTIAL - The network transport returned partial data to its client. The remaining data will be sent later.
 .
 Language=Polish
-ERROR_RECEIVE_PARTIAL - The network transport returned partial data to its client. The remaining data will be sent later.
+ERROR_RECEIVE_PARTIAL - Transport sieciowy zwrócił do klienta częściowe dane. Pozostałe dane zostaną wysłane później.
 .
 Language=Romanian
 ERROR_RECEIVE_PARTIAL - The network transport returned partial data to its client. The remaining data will be sent later.
@@ -6105,7 +6105,7 @@ Language=Russian
 ERROR_RECEIVE_EXPEDITED - The network transport returned data to its client that was marked as expedited by the remote system.
 .
 Language=Polish
-ERROR_RECEIVE_EXPEDITED - The network transport returned data to its client that was marked as expedited by the remote system.
+ERROR_RECEIVE_EXPEDITED - Transport sieciowy zwrócił do klienta dane oznaczone przez zdalny system jako przyspieszone.
 .
 Language=Romanian
 ERROR_RECEIVE_EXPEDITED - The network transport returned data to its client that was marked as expedited by the remote system.
@@ -6122,7 +6122,7 @@ Language=Russian
 ERROR_RECEIVE_PARTIAL_EXPEDITED - The network transport returned partial data to its client and this data was marked as expedited by the remote system. The remaining data will be sent later.
 .
 Language=Polish
-ERROR_RECEIVE_PARTIAL_EXPEDITED - The network transport returned partial data to its client and this data was marked as expedited by the remote system. The remaining data will be sent later.
+ERROR_RECEIVE_PARTIAL_EXPEDITED - Transport sieciowy zwrócił do klienta częściowe dane, oznaczone przez zdalny system jako przyspieszone. Pozostałe dane zostaną wysłane później.
 .
 Language=Romanian
 ERROR_RECEIVE_PARTIAL_EXPEDITED - The network transport returned partial data to its client and this data was marked as expedited by the remote system. The remaining data will be sent later.
@@ -6139,7 +6139,7 @@ Language=Russian
 ERROR_EVENT_DONE - The TDI indication has completed successfully.
 .
 Language=Polish
-ERROR_EVENT_DONE - The TDI indication has completed successfully.
+ERROR_EVENT_DONE - Wskazywanie TDI zostało ukończone pomyślnie.
 .
 Language=Romanian
 ERROR_EVENT_DONE - The TDI indication has completed successfully.
@@ -6156,7 +6156,7 @@ Language=Russian
 ERROR_EVENT_PENDING - The TDI indication has entered the pending state.
 .
 Language=Polish
-ERROR_EVENT_PENDING - The TDI indication has entered the pending state.
+ERROR_EVENT_PENDING - Wskazywanie TDI przeszło w stan oczekiwania.
 .
 Language=Romanian
 ERROR_EVENT_PENDING - The TDI indication has entered the pending state.
@@ -6173,7 +6173,7 @@ Language=Russian
 ERROR_CHECKING_FILE_SYSTEM - Checking file system on %wZ.
 .
 Language=Polish
-ERROR_CHECKING_FILE_SYSTEM - Checking file system on %wZ.
+ERROR_CHECKING_FILE_SYSTEM - Sprawdzanie systemu plików na %wZ
 .
 Language=Romanian
 ERROR_CHECKING_FILE_SYSTEM - Checking file system on %wZ.
@@ -6190,7 +6190,7 @@ Language=Russian
 ERROR_PREDEFINED_HANDLE - The specified registry key is referenced by a predefined handle.
 .
 Language=Polish
-ERROR_PREDEFINED_HANDLE - The specified registry key is referenced by a predefined handle.
+ERROR_PREDEFINED_HANDLE - Do określonego klucza Rejestru odwołuje się dojście uprzednio zdefiniowane.
 .
 Language=Romanian
 ERROR_PREDEFINED_HANDLE - The specified registry key is referenced by a predefined handle.
@@ -6207,7 +6207,7 @@ Language=Russian
 ERROR_WAS_UNLOCKED - The page protection of a locked page was changed to 'No Access' and the page was unlocked from memory and from the process.
 .
 Language=Polish
-ERROR_WAS_UNLOCKED - The page protection of a locked page was changed to 'No Access' and the page was unlocked from memory and from the process.
+ERROR_WAS_UNLOCKED - Zabezpieczenie zablokowanej strony zmieniono na "Brak dostępu" i strona została odblokowana z pamięci i z procesu.
 .
 Language=Romanian
 ERROR_WAS_UNLOCKED - The page protection of a locked page was changed to 'No Access' and the page was unlocked from memory and from the process.
@@ -6224,7 +6224,7 @@ Language=Russian
 ERROR_WAS_LOCKED - One of the pages to lock was already locked.
 .
 Language=Polish
-ERROR_WAS_LOCKED - One of the pages to lock was already locked.
+ERROR_WAS_LOCKED - Jedna ze stron przewidzianych do zablokowania była już zablokowana.
 .
 Language=Romanian
 ERROR_WAS_LOCKED - One of the pages to lock was already locked.
@@ -6241,7 +6241,7 @@ Language=Russian
 ERROR_IMAGE_MACHINE_TYPE_MISMATCH_EXE - The image file %hs is valid, but is for a machine type other than the current machine.
 .
 Language=Polish
-ERROR_IMAGE_MACHINE_TYPE_MISMATCH_EXE - The image file %hs is valid, but is for a machine type other than the current machine.
+ERROR_IMAGE_MACHINE_TYPE_MISMATCH_EXE - Plik obrazu %hs jest prawidłowy, ale jest dla innego typu komputera niż bieżący.
 .
 Language=Romanian
 ERROR_IMAGE_MACHINE_TYPE_MISMATCH_EXE - The image file %hs is valid, but is for a machine type other than the current machine.
@@ -6258,7 +6258,7 @@ Language=Russian
 ERROR_NO_YIELD_PERFORMED - A yield execution was performed and no thread was available to run.
 .
 Language=Polish
-ERROR_NO_YIELD_PERFORMED - A yield execution was performed and no thread was available to run.
+ERROR_NO_YIELD_PERFORMED - Wykonano przekazanie wykonywania i żaden wątek nie był dostępny do uruchomienia.
 .
 Language=Romanian
 ERROR_NO_YIELD_PERFORMED - A yield execution was performed and no thread was available to run.
@@ -6275,7 +6275,7 @@ Language=Russian
 ERROR_TIMER_RESUME_IGNORED - The resumable flag to a timer API was ignored.
 .
 Language=Polish
-ERROR_TIMER_RESUME_IGNORED - The resumable flag to a timer API was ignored.
+ERROR_TIMER_RESUME_IGNORED - Zignorowano wznawialną flagę czasomierza API.
 .
 Language=Romanian
 ERROR_TIMER_RESUME_IGNORED - The resumable flag to a timer API was ignored.
@@ -6292,7 +6292,7 @@ Language=Russian
 ERROR_ARBITRATION_UNHANDLED - The arbiter has deferred arbitration of these resources to its parent.
 .
 Language=Polish
-ERROR_ARBITRATION_UNHANDLED - The arbiter has deferred arbitration of these resources to its parent.
+ERROR_ARBITRATION_UNHANDLED - Arbiter wstrzymał rozstrzyganie o przynależności zasobów do obiektów nadrzędnych
 .
 Language=Romanian
 ERROR_ARBITRATION_UNHANDLED - The arbiter has deferred arbitration of these resources to its parent.
@@ -6309,7 +6309,7 @@ Language=Russian
 ERROR_CARDBUS_NOT_SUPPORTED - The device \"%hs\" has detected a CardBus card in its slot, but the firmware on this system is not configured to allow the CardBus controller to be run in CardBus mode. The operating system will currently accept only 16-bit (R2) pc-cards on this controller.
 .
 Language=Polish
-ERROR_CARDBUS_NOT_SUPPORTED - The device \"%hs\" has detected a CardBus card in its slot, but the firmware on this system is not configured to allow the CardBus controller to be run in CardBus mode. The operating system will currently accept only 16-bit (R2) pc-cards on this controller.
+ERROR_CARDBUS_NOT_SUPPORTED - Urządzenie \"%hs"\ wykryło w gnieździe kartę CardBus, ale oprogramowanie firmware w systemie nie jest skonfigurowane w sposób zezwalający na uruchamianie kontrolera CardBus w trybie CardBus. System operacyjny będzie obecnie akceptować tylko 16 bitowe karty pc (R2) dla tego kontrolera.
 .
 Language=Romanian
 ERROR_CARDBUS_NOT_SUPPORTED - The device \"%hs\" has detected a CardBus card in its slot, but the firmware on this system is not configured to allow the CardBus controller to be run in CardBus mode. The operating system will currently accept only 16-bit (R2) pc-cards on this controller.
@@ -6326,7 +6326,7 @@ Language=Russian
 ERROR_MP_PROCESSOR_MISMATCH - The CPUs in this multiprocessor system are not all the same revision level. To use all processors the operating system restricts itself to the features of the least capable processor in the system. Should problems occur with this system, contact the CPU manufacturer to see if this mix of processors is supported.
 .
 Language=Polish
-ERROR_MP_PROCESSOR_MISMATCH - The CPUs in this multiprocessor system are not all the same revision level. To use all processors the operating system restricts itself to the features of the least capable processor in the system. Should problems occur with this system, contact the CPU manufacturer to see if this mix of processors is supported.
+ERROR_MP_PROCESSOR_MISMATCH - Jednostki CPU w tym systemie wieloprocesorowym mają różne poziomy wersji. Aby używać wszystkich procesorów, system operacyjny ograniczy możliwości zestawu do funkcji obsługiwanych przez procesor o najmniejszych możliwościach. Jeśli wystąpią problemy, skontaktuj się z producentem jednostki CPU, aby upewnić się czy zestaw procesorów jest obsługiwany.
 .
 Language=Romanian
 ERROR_MP_PROCESSOR_MISMATCH - The CPUs in this multiprocessor system are not all the same revision level. To use all processors the operating system restricts itself to the features of the least capable processor in the system. Should problems occur with this system, contact the CPU manufacturer to see if this mix of processors is supported.
@@ -6343,7 +6343,7 @@ Language=Russian
 ERROR_HIBERNATED - The system was put into hibernation.
 .
 Language=Polish
-ERROR_HIBERNATED - The system was put into hibernation.
+ERROR_HIBERNATED - System został wprowadzony w stan hibernacji.
 .
 Language=Romanian
 ERROR_HIBERNATED - The system was put into hibernation.
@@ -6360,7 +6360,7 @@ Language=Russian
 ERROR_RESUME_HIBERNATION - The system was resumed from hibernation.
 .
 Language=Polish
-ERROR_RESUME_HIBERNATION - The system was resumed from hibernation.
+ERROR_RESUME_HIBERNATION - System wyszedł ze stanu hibernacji.
 .
 Language=Romanian
 ERROR_RESUME_HIBERNATION - The system was resumed from hibernation.
@@ -6377,7 +6377,7 @@ Language=Russian
 ERROR_FIRMWARE_UPDATED - Windows has detected that the system firmware (BIOS) was updated [previous firmware date = %2, current firmware date %3].
 .
 Language=Polish
-ERROR_FIRMWARE_UPDATED - Windows has detected that the system firmware (BIOS) was updated [previous firmware date = %2, current firmware date %3].
+ERROR_FIRMWARE_UPDATED - System Windows wykrył, że oprogramowanie układowe systemu (BIOS) zostało zaktualizowane [poprzednia data oprogramowania układowego = %2, bieżąca data oprogramowania układowego %3].
 .
 Language=Romanian
 ERROR_FIRMWARE_UPDATED - Windows has detected that the system firmware (BIOS) was updated [previous firmware date = %2, current firmware date %3].
@@ -6394,7 +6394,7 @@ Language=Russian
 ERROR_DRIVERS_LEAKING_LOCKED_PAGES - A device driver is leaking locked I/O pages causing system degradation. The system has automatically enabled tracking code in order to try and catch the culprit.
 .
 Language=Polish
-ERROR_DRIVERS_LEAKING_LOCKED_PAGES - A device driver is leaking locked I/O pages causing system degradation. The system has automatically enabled tracking code in order to try and catch the culprit.
+ERROR_DRIVERS_LEAKING_LOCKED_PAGES - W sterowniku urządzenia powstają przecieki zablokowanych stron We/Wy, które powodują degradację systemu. System włączy automatycznie kod śledzenia, aby podjąć próbę odnalezienia programu, który powoduje ten problem.
 .
 Language=Romanian
 ERROR_DRIVERS_LEAKING_LOCKED_PAGES - A device driver is leaking locked I/O pages causing system degradation. The system has automatically enabled tracking code in order to try and catch the culprit.
@@ -6411,7 +6411,7 @@ Language=Russian
 ERROR_WAKE_SYSTEM - The system has awoken
 .
 Language=Polish
-ERROR_WAKE_SYSTEM - The system has awoken
+ERROR_WAKE_SYSTEM - System został obudzony.
 .
 Language=Romanian
 ERROR_WAKE_SYSTEM - The system has awoken
@@ -6428,7 +6428,7 @@ Language=Russian
 ERROR_REPARSE - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
 .
 Language=Polish
-ERROR_REPARSE - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
+ERROR_REPARSE - Menedżer obiektów powinien przeprowadzić ponowną analizę składni, ponieważ nazwa pliku dała w efekcie łącze symboliczne.
 .
 Language=Romanian
 ERROR_REPARSE - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
@@ -6445,7 +6445,7 @@ Language=Russian
 ERROR_OPLOCK_BREAK_IN_PROGRESS - An open/create operation completed while an oplock break is underway.
 .
 Language=Polish
-ERROR_OPLOCK_BREAK_IN_PROGRESS - An open/create operation completed while an oplock break is underway.
+ERROR_OPLOCK_BREAK_IN_PROGRESS - Zakończono operację otwierania/tworzenia podczas trwania "oplock break".
 .
 Language=Romanian
 ERROR_OPLOCK_BREAK_IN_PROGRESS - An open/create operation completed while an oplock break is underway.
@@ -6462,7 +6462,7 @@ Language=Russian
 ERROR_VOLUME_MOUNTED - A new volume has been mounted by a file system.
 .
 Language=Polish
-ERROR_VOLUME_MOUNTED - A new volume has been mounted by a file system.
+ERROR_VOLUME_MOUNTED - Nowy wolumin został zainstalowany przez system plików.
 .
 Language=Romanian
 ERROR_VOLUME_MOUNTED - A new volume has been mounted by a file system.
@@ -6479,7 +6479,7 @@ Language=Russian
 ERROR_RXACT_COMMITTED - This success level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has now been completed.
 .
 Language=Polish
-ERROR_RXACT_COMMITTED - This success level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has now been completed.
+ERROR_RXACT_COMMITTED - Ten stan poziomu sukcesu wskazuje, że dla danego poddrzewa Rejestru istnieje już stan transakcji, ale zlecenie transakcji zostało wcześniej przerwane. Teraz zlecenie zostało zakończone.
 .
 Language=Romanian
 ERROR_RXACT_COMMITTED - This success level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has now been completed.
@@ -6496,7 +6496,7 @@ Language=Russian
 ERROR_NOTIFY_CLEANUP - This indicates that a notify change request has been completed due to closing the handle which made the notify change request.
 .
 Language=Polish
-ERROR_NOTIFY_CLEANUP - This indicates that a notify change request has been completed due to closing the handle which made the notify change request.
+ERROR_NOTIFY_CLEANUP - Wskazuje, że żądanie potwierdzenia zmiany zostało zakończone z powodu zamknięcia dojścia, które zgłosiło to żądanie.
 .
 Language=Romanian
 ERROR_NOTIFY_CLEANUP - This indicates that a notify change request has been completed due to closing the handle which made the notify change request.
@@ -6513,7 +6513,7 @@ Language=Russian
 ERROR_PRIMARY_TRANSPORT_CONNECT_FAILED - An attempt was made to connect to the remote server %hs on the primary transport, but the connection failed. The computer WAS able to connect on a secondary transport.
 .
 Language=Polish
-ERROR_PRIMARY_TRANSPORT_CONNECT_FAILED - An attempt was made to connect to the remote server %hs on the primary transport, but the connection failed. The computer WAS able to connect on a secondary transport.
+ERROR_PRIMARY_TRANSPORT_CONNECT_FAILED - Podjęto próbę podłączenia do zdalnego serwera %hs przez transport podstawowy, ale próba nie powiodła się. Uzyskano połączenie przez transport pomocniczy.
 .
 Language=Romanian
 ERROR_PRIMARY_TRANSPORT_CONNECT_FAILED - An attempt was made to connect to the remote server %hs on the primary transport, but the connection failed. The computer WAS able to connect on a secondary transport.
@@ -6530,7 +6530,7 @@ Language=Russian
 ERROR_PAGE_FAULT_TRANSITION - Page fault was a transition fault.
 .
 Language=Polish
-ERROR_PAGE_FAULT_TRANSITION - Page fault was a transition fault.
+ERROR_PAGE_FAULT_TRANSITION - Błąd strony był błędem przejścia.
 .
 Language=Romanian
 ERROR_PAGE_FAULT_TRANSITION - Page fault was a transition fault.
@@ -6547,7 +6547,7 @@ Language=Russian
 ERROR_PAGE_FAULT_DEMAND_ZERO - Page fault was a demand zero fault.
 .
 Language=Polish
-ERROR_PAGE_FAULT_DEMAND_ZERO - Page fault was a demand zero fault.
+ERROR_PAGE_FAULT_DEMAND_ZERO - Błąd strony był błędem typu wymagane zero.
 .
 Language=Romanian
 ERROR_PAGE_FAULT_DEMAND_ZERO - Page fault was a demand zero fault.
@@ -6564,7 +6564,7 @@ Language=Russian
 ERROR_PAGE_FAULT_COPY_ON_WRITE - Page fault was a demand zero fault.
 .
 Language=Polish
-ERROR_PAGE_FAULT_COPY_ON_WRITE - Page fault was a demand zero fault.
+ERROR_PAGE_FAULT_COPY_ON_WRITE - Błąd strony był błędem typu wymagane zero.
 .
 Language=Romanian
 ERROR_PAGE_FAULT_COPY_ON_WRITE - Page fault was a demand zero fault.
@@ -6581,7 +6581,7 @@ Language=Russian
 ERROR_PAGE_FAULT_GUARD_PAGE - Page fault was a demand zero fault.
 .
 Language=Polish
-ERROR_PAGE_FAULT_GUARD_PAGE - Page fault was a demand zero fault.
+ERROR_PAGE_FAULT_GUARD_PAGE - Błąd strony był błędem typu wymagane zero.
 .
 Language=Romanian
 ERROR_PAGE_FAULT_GUARD_PAGE - Page fault was a demand zero fault.
@@ -6598,7 +6598,7 @@ Language=Russian
 ERROR_PAGE_FAULT_PAGING_FILE - Page fault was satisfied by reading from a secondary storage device.
 .
 Language=Polish
-ERROR_PAGE_FAULT_PAGING_FILE - Page fault was satisfied by reading from a secondary storage device.
+ERROR_PAGE_FAULT_PAGING_FILE - Błąd strony został naprawiony przez odczyt z zapasowego urządzenia magazynującego.
 .
 Language=Romanian
 ERROR_PAGE_FAULT_PAGING_FILE - Page fault was satisfied by reading from a secondary storage device.
@@ -6615,7 +6615,7 @@ Language=Russian
 ERROR_CACHE_PAGE_LOCKED - Cached page was locked during operation.
 .
 Language=Polish
-ERROR_CACHE_PAGE_LOCKED - Cached page was locked during operation.
+ERROR_CACHE_PAGE_LOCKED - Buforowana strona została zablokowana podczas operacji.
 .
 Language=Romanian
 ERROR_CACHE_PAGE_LOCKED - Cached page was locked during operation.
@@ -6632,7 +6632,7 @@ Language=Russian
 ERROR_CRASH_DUMP - Crash dump exists in paging file.
 .
 Language=Polish
-ERROR_CRASH_DUMP - Crash dump exists in paging file.
+ERROR_CRASH_DUMP - W pliku stronicowania istnieje zrzut awaryjny.
 .
 Language=Romanian
 ERROR_CRASH_DUMP - Crash dump exists in paging file.
@@ -6649,7 +6649,7 @@ Language=Russian
 ERROR_BUFFER_ALL_ZEROS - Specified buffer contains all zeros.
 .
 Language=Polish
-ERROR_BUFFER_ALL_ZEROS - Specified buffer contains all zeros.
+ERROR_BUFFER_ALL_ZEROS - Określony bufor zawiera same zera.
 .
 Language=Romanian
 ERROR_BUFFER_ALL_ZEROS - Specified buffer contains all zeros.
@@ -6666,7 +6666,7 @@ Language=Russian
 ERROR_REPARSE_OBJECT - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
 .
 Language=Polish
-ERROR_REPARSE_OBJECT - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
+ERROR_REPARSE_OBJECT - Menedżer obiektów powinien przeprowadzić ponowną analizę składni, ponieważ nazwa pliku dała w efekcie łącze symboliczne.
 .
 Language=Romanian
 ERROR_REPARSE_OBJECT - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
@@ -6683,7 +6683,7 @@ Language=Russian
 ERROR_RESOURCE_REQUIREMENTS_CHANGED - The device has succeeded a query-stop and its resource requirements have changed.
 .
 Language=Polish
-ERROR_RESOURCE_REQUIREMENTS_CHANGED - The device has succeeded a query-stop and its resource requirements have changed.
+ERROR_RESOURCE_REQUIREMENTS_CHANGED - Urządzenie pomyślnie wykonało operację zatrzymania zapytania i wymagania dotyczące zasobów uległy zmianie.
 .
 Language=Romanian
 ERROR_RESOURCE_REQUIREMENTS_CHANGED - The device has succeeded a query-stop and its resource requirements have changed.
@@ -6700,7 +6700,7 @@ Language=Russian
 ERROR_TRANSLATION_COMPLETE - The translator has translated these resources into the global space and no further translations should be performed.
 .
 Language=Polish
-ERROR_TRANSLATION_COMPLETE - The translator has translated these resources into the global space and no further translations should be performed.
+ERROR_TRANSLATION_COMPLETE - Translator zinterpretował zasoby w przestrzeni globalnej i nie należy wykonywać więcej interpretacji.
 .
 Language=Romanian
 ERROR_TRANSLATION_COMPLETE - The translator has translated these resources into the global space and no further translations should be performed.
@@ -6717,7 +6717,7 @@ Language=Russian
 ERROR_NOTHING_TO_TERMINATE - A process being terminated has no threads to terminate.
 .
 Language=Polish
-ERROR_NOTHING_TO_TERMINATE - A process being terminated has no threads to terminate.
+ERROR_NOTHING_TO_TERMINATE - Kończony proces nie ma wątków do zakończenia.
 .
 Language=Romanian
 ERROR_NOTHING_TO_TERMINATE - A process being terminated has no threads to terminate.
@@ -6734,7 +6734,7 @@ Language=Russian
 ERROR_PROCESS_NOT_IN_JOB - The specified process is not part of a job.
 .
 Language=Polish
-ERROR_PROCESS_NOT_IN_JOB - The specified process is not part of a job.
+ERROR_PROCESS_NOT_IN_JOB - Określony proces nie jest częścią zadania.
 .
 Language=Romanian
 ERROR_PROCESS_NOT_IN_JOB - The specified process is not part of a job.
@@ -6751,7 +6751,7 @@ Language=Russian
 ERROR_PROCESS_IN_JOB - The specified process is part of a job.
 .
 Language=Polish
-ERROR_PROCESS_IN_JOB - The specified process is part of a job.
+ERROR_PROCESS_IN_JOB - Określony proces jest częścią zadania.
 .
 Language=Romanian
 ERROR_PROCESS_IN_JOB - The specified process is part of a job.
@@ -6768,7 +6768,7 @@ Language=Russian
 ERROR_VOLSNAP_HIBERNATE_READY - The system is now ready for hibernation.
 .
 Language=Polish
-ERROR_VOLSNAP_HIBERNATE_READY - The system is now ready for hibernation.
+ERROR_VOLSNAP_HIBERNATE_READY - System jest teraz gotowy do hibernacji.
 .
 Language=Romanian
 ERROR_VOLSNAP_HIBERNATE_READY - The system is now ready for hibernation.
@@ -6785,7 +6785,7 @@ Language=Russian
 ERROR_FSFILTER_OP_COMPLETED_SUCCESSFULLY - A file system or file system filter driver has successfully completed an FsFilter operation.
 .
 Language=Polish
-ERROR_FSFILTER_OP_COMPLETED_SUCCESSFULLY - A file system or file system filter driver has successfully completed an FsFilter operation.
+ERROR_FSFILTER_OP_COMPLETED_SUCCESSFULLY - System plików lub sterownik filtru systemu plików ukończył pomyślnie operację FsFilter.
 .
 Language=Romanian
 ERROR_FSFILTER_OP_COMPLETED_SUCCESSFULLY - A file system or file system filter driver has successfully completed an FsFilter operation.
@@ -6802,7 +6802,7 @@ Language=Russian
 ERROR_INTERRUPT_VECTOR_ALREADY_CONNECTED - The specified interrupt vector was already connected.
 .
 Language=Polish
-ERROR_INTERRUPT_VECTOR_ALREADY_CONNECTED - The specified interrupt vector was already connected.
+ERROR_INTERRUPT_VECTOR_ALREADY_CONNECTED - Określony wektor przerwania był już połączony.
 .
 Language=Romanian
 ERROR_INTERRUPT_VECTOR_ALREADY_CONNECTED - The specified interrupt vector was already connected.
@@ -6819,7 +6819,7 @@ Language=Russian
 ERROR_INTERRUPT_STILL_CONNECTED - The specified interrupt vector is still connected.
 .
 Language=Polish
-ERROR_INTERRUPT_STILL_CONNECTED - The specified interrupt vector is still connected.
+ERROR_INTERRUPT_STILL_CONNECTED - Określony wektor przerwania jest wciąż połączony.
 .
 Language=Romanian
 ERROR_INTERRUPT_STILL_CONNECTED - The specified interrupt vector is still connected.
@@ -6836,7 +6836,7 @@ Language=Russian
 ERROR_WAIT_FOR_OPLOCK - An operation is blocked waiting for an oplock.
 .
 Language=Polish
-ERROR_WAIT_FOR_OPLOCK - An operation is blocked waiting for an oplock.
+ERROR_WAIT_FOR_OPLOCK - Operacja jest zablokowana i czeka na operację oplock.
 .
 Language=Romanian
 ERROR_WAIT_FOR_OPLOCK - An operation is blocked waiting for an oplock.
@@ -6853,7 +6853,7 @@ Language=Russian
 ERROR_DBG_EXCEPTION_HANDLED - Debugger handled exception.
 .
 Language=Polish
-ERROR_DBG_EXCEPTION_HANDLED - Debugger handled exception.
+ERROR_DBG_EXCEPTION_HANDLED - Debuger obsłużył wyjątek
 .
 Language=Romanian
 ERROR_DBG_EXCEPTION_HANDLED - Debugger handled exception.
@@ -6870,7 +6870,7 @@ Language=Russian
 ERROR_DBG_CONTINUE - Debugger continued
 .
 Language=Polish
-ERROR_DBG_CONTINUE - Debugger continued
+ERROR_DBG_CONTINUE - Debuger kontynuuje pracę
 .
 Language=Romanian
 ERROR_DBG_CONTINUE - Debugger continued
@@ -6887,7 +6887,7 @@ Language=Russian
 ERROR_CALLBACK_POP_STACK - An exception occurred in a user mode callback and the kernel callback frame should be removed.
 .
 Language=Polish
-ERROR_CALLBACK_POP_STACK - An exception occurred in a user mode callback and the kernel callback frame should be removed.
+ERROR_CALLBACK_POP_STACK - Wystąpił wyjątek w wywołaniu zwrotnym trybu użytkownika, a ramka wywołania zwrotnego jądra powinna zostać usunięta.
 .
 Language=Romanian
 ERROR_CALLBACK_POP_STACK - An exception occurred in a user mode callback and the kernel callback frame should be removed.
@@ -6904,7 +6904,7 @@ Language=Russian
 ERROR_COMPRESSION_DISABLED - Compression is disabled for this volume.
 .
 Language=Polish
-ERROR_COMPRESSION_DISABLED - Compression is disabled for this volume.
+ERROR_COMPRESSION_DISABLED - Kompresja jest wyłączona dla tego woluminu.
 .
 Language=Romanian
 ERROR_COMPRESSION_DISABLED - Compression is disabled for this volume.
@@ -6921,7 +6921,7 @@ Language=Russian
 ERROR_CANTFETCHBACKWARDS - The data provider cannot fetch backwards through a result set.
 .
 Language=Polish
-ERROR_CANTFETCHBACKWARDS - The data provider cannot fetch backwards through a result set.
+ERROR_CANTFETCHBACKWARDS - Dostawca danych nie może pobierać zestawu wyników wstecz.
 .
 Language=Romanian
 ERROR_CANTFETCHBACKWARDS - The data provider cannot fetch backwards through a result set.
@@ -6938,7 +6938,7 @@ Language=Russian
 ERROR_CANTSCROLLBACKWARDS - The data provider cannot scroll backwards through a result set.
 .
 Language=Polish
-ERROR_CANTSCROLLBACKWARDS - The data provider cannot scroll backwards through a result set.
+ERROR_CANTSCROLLBACKWARDS - Dostawca danych nie może przewijać zestawu wyników wstecz.
 .
 Language=Romanian
 ERROR_CANTSCROLLBACKWARDS - The data provider cannot scroll backwards through a result set.
@@ -6955,7 +6955,7 @@ Language=Russian
 ERROR_ROWSNOTRELEASED - The data provider requires that previously fetched data is released before asking for more data.
 .
 Language=Polish
-ERROR_ROWSNOTRELEASED - The data provider requires that previously fetched data is released before asking for more data.
+ERROR_ROWSNOTRELEASED - Dostawca danych wymaga zwolnienia poprzednio pobranych danych przed żądaniem kolejnych danych.
 .
 Language=Romanian
 ERROR_ROWSNOTRELEASED - The data provider requires that previously fetched data is released before asking for more data.
@@ -6972,7 +6972,7 @@ Language=Russian
 ERROR_BAD_ACCESSOR_FLAGS - The data provider was not able to interpret the flags set for a column binding in an accessor.
 .
 Language=Polish
-ERROR_BAD_ACCESSOR_FLAGS - The data provider was not able to interpret the flags set for a column binding in an accessor.
+ERROR_BAD_ACCESSOR_FLAGS - Dostawca danych nie może zinterpretować zestawu flag dla wiązania kolumn w metodzie dostępu.
 .
 Language=Romanian
 ERROR_BAD_ACCESSOR_FLAGS - The data provider was not able to interpret the flags set for a column binding in an accessor.
@@ -6989,7 +6989,7 @@ Language=Russian
 ERROR_ERRORS_ENCOUNTERED - One or more errors occurred while processing the request.
 .
 Language=Polish
-ERROR_ERRORS_ENCOUNTERED - One or more errors occurred while processing the request.
+ERROR_ERRORS_ENCOUNTERED - Wystąpił co najmniej jeden błąd podczas przetwarzania żądania.
 .
 Language=Romanian
 ERROR_ERRORS_ENCOUNTERED - One or more errors occurred while processing the request.
@@ -7006,7 +7006,7 @@ Language=Russian
 ERROR_NOT_CAPABLE - The implementation is not capable of performing the request.
 .
 Language=Polish
-ERROR_NOT_CAPABLE - The implementation is not capable of performing the request.
+ERROR_NOT_CAPABLE - Bieżąca implementacja nie może wykonać żądania.
 .
 Language=Romanian
 ERROR_NOT_CAPABLE - The implementation is not capable of performing the request.
@@ -7023,7 +7023,7 @@ Language=Russian
 ERROR_REQUEST_OUT_OF_SEQUENCE - The client of a component requested an operation which is not valid given the state of the component instance.
 .
 Language=Polish
-ERROR_REQUEST_OUT_OF_SEQUENCE - The client of a component requested an operation which is not valid given the state of the component instance.
+ERROR_REQUEST_OUT_OF_SEQUENCE - Klient składnika zażądał nieprawidłowej operacji podającej stan wystąpienia składnika.
 .
 Language=Romanian
 ERROR_REQUEST_OUT_OF_SEQUENCE - The client of a component requested an operation which is not valid given the state of the component instance.
@@ -7040,7 +7040,7 @@ Language=Russian
 ERROR_VERSION_PARSE_ERROR - A version number could not be parsed.
 .
 Language=Polish
-ERROR_VERSION_PARSE_ERROR - A version number could not be parsed.
+ERROR_VERSION_PARSE_ERROR - Nie można przeanalizować numeru wersji.
 .
 Language=Romanian
 ERROR_VERSION_PARSE_ERROR - A version number could not be parsed.
@@ -7057,7 +7057,7 @@ Language=Russian
 ERROR_BADSTARTPOSITION - The iterator's start position is invalid.
 .
 Language=Polish
-ERROR_BADSTARTPOSITION - The iterator's start position is invalid.
+ERROR_BADSTARTPOSITION - Pozycja początkowa iteratora jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_BADSTARTPOSITION - The iterator's start position is invalid.
@@ -7074,7 +7074,7 @@ Language=Russian
 ERROR_EA_ACCESS_DENIED - Access to the extended attribute was denied.
 .
 Language=Polish
-ERROR_EA_ACCESS_DENIED - Access to the extended attribute was denied.
+ERROR_EA_ACCESS_DENIED - Dostęp do atrybutu rozszerzonego został zabroniony.
 .
 Language=Romanian
 ERROR_EA_ACCESS_DENIED - Access to the extended attribute was denied.
@@ -7091,7 +7091,7 @@ Language=Russian
 ERROR_OPERATION_ABORTED - The I/O operation has been aborted because of either a thread exit or an application request.
 .
 Language=Polish
-ERROR_OPERATION_ABORTED - The I/O operation has been aborted because of either a thread exit or an application request.
+ERROR_OPERATION_ABORTED - Operacja We/Wy została przerwana z powodu zakończenia wątku lub żądania aplikacji.
 .
 Language=Romanian
 ERROR_OPERATION_ABORTED - The I/O operation has been aborted because of either a thread exit or an application request.
@@ -7108,7 +7108,7 @@ Language=Russian
 ERROR_IO_INCOMPLETE - Overlapped I/O event is not in a signaled state.
 .
 Language=Polish
-ERROR_IO_INCOMPLETE - Overlapped I/O event is not in a signaled state.
+ERROR_IO_INCOMPLETE - Pokrywające się zdarzenie We/Wy nie jest w stanie sygnalizacji.
 .
 Language=Romanian
 ERROR_IO_INCOMPLETE - Overlapped I/O event is not in a signaled state.
@@ -7125,7 +7125,7 @@ Language=Russian
 ERROR_IO_PENDING - Overlapped I/O operation is in progress.
 .
 Language=Polish
-ERROR_IO_PENDING - Overlapped I/O operation is in progress.
+ERROR_IO_PENDING - Pokrywająca się operacja We/Wy jest w toku.
 .
 Language=Romanian
 ERROR_IO_PENDING - Overlapped I/O operation is in progress.
@@ -7142,7 +7142,7 @@ Language=Russian
 ERROR_NOACCESS - Invalid access to memory location.
 .
 Language=Polish
-ERROR_NOACCESS - Invalid access to memory location.
+ERROR_NOACCESS - Nieprawidłowy dostęp do lokalizacji w pamięci.
 .
 Language=Romanian
 ERROR_NOACCESS - Invalid access to memory location.
@@ -7159,7 +7159,7 @@ Language=Russian
 ERROR_SWAPERROR - Error performing inpage operation.
 .
 Language=Polish
-ERROR_SWAPERROR - Error performing inpage operation.
+ERROR_SWAPERROR - Błąd wykonania operacji inpage.
 .
 Language=Romanian
 ERROR_SWAPERROR - Error performing inpage operation.
@@ -7176,7 +7176,7 @@ Language=Russian
 ERROR_STACK_OVERFLOW - Recursion too deep; the stack overflowed.
 .
 Language=Polish
-ERROR_STACK_OVERFLOW - Recursion too deep; the stack overflowed.
+ERROR_STACK_OVERFLOW - Zbyt głęboka rekursja, stos przepełniony.
 .
 Language=Romanian
 ERROR_STACK_OVERFLOW - Recursion too deep; the stack overflowed.
@@ -7193,7 +7193,7 @@ Language=Russian
 ERROR_INVALID_MESSAGE - The window cannot act on the sent message.
 .
 Language=Polish
-ERROR_INVALID_MESSAGE - The window cannot act on the sent message.
+ERROR_INVALID_MESSAGE - Okno nie może operować na wysłanym komunikacie.
 .
 Language=Romanian
 ERROR_INVALID_MESSAGE - The window cannot act on the sent message.
@@ -7210,7 +7210,7 @@ Language=Russian
 ERROR_CAN_NOT_COMPLETE - Cannot complete this function.
 .
 Language=Polish
-ERROR_CAN_NOT_COMPLETE - Cannot complete this function.
+ERROR_CAN_NOT_COMPLETE - Nie można ukończyć wykonywania tej funkcji.
 .
 Language=Romanian
 ERROR_CAN_NOT_COMPLETE - Cannot complete this function.
@@ -7227,7 +7227,7 @@ Language=Russian
 ERROR_INVALID_FLAGS - Invalid flags.
 .
 Language=Polish
-ERROR_INVALID_FLAGS - Invalid flags.
+ERROR_INVALID_FLAGS - Nieprawidłowe flagi.
 .
 Language=Romanian
 ERROR_INVALID_FLAGS - Invalid flags.
@@ -7244,7 +7244,7 @@ Language=Russian
 ERROR_UNRECOGNIZED_VOLUME - The volume does not contain a recognized file system. Please make sure that all required file system drivers are loaded and that the volume is not corrupted.
 .
 Language=Polish
-ERROR_UNRECOGNIZED_VOLUME - The volume does not contain a recognized file system. Please make sure that all required file system drivers are loaded and that the volume is not corrupted.
+ERROR_UNRECOGNIZED_VOLUME - Wolumin nie zawiera rozpoznawanego systemu plików. Sprawdź, czy załadowano wszystkie wymagane sterowniki systemu plików i czy wolumin nie jest uszkodzony.
 .
 Language=Romanian
 ERROR_UNRECOGNIZED_VOLUME - The volume does not contain a recognized file system. Please make sure that all required file system drivers are loaded and that the volume is not corrupted.
@@ -7261,7 +7261,7 @@ Language=Russian
 ERROR_FILE_INVALID - The volume for a file has been externally altered so that the opened file is no longer valid.
 .
 Language=Polish
-ERROR_FILE_INVALID - The volume for a file has been externally altered so that the opened file is no longer valid.
+ERROR_FILE_INVALID - Wolumin pliku został zewnętrznie zmieniony w taki sposób, że otwarty plik nie jest już prawidłowy.
 .
 Language=Romanian
 ERROR_FILE_INVALID - The volume for a file has been externally altered so that the opened file is no longer valid.
@@ -7278,7 +7278,7 @@ Language=Russian
 ERROR_FULLSCREEN_MODE - The requested operation cannot be performed in full-screen mode.
 .
 Language=Polish
-ERROR_FULLSCREEN_MODE - The requested operation cannot be performed in full-screen mode.
+ERROR_FULLSCREEN_MODE - Nie można wykonać żądanej operacji w trybie pełnoekranowym.
 .
 Language=Romanian
 ERROR_FULLSCREEN_MODE - The requested operation cannot be performed in full-screen mode.
@@ -7295,7 +7295,7 @@ Language=Russian
 ERROR_NO_TOKEN - An attempt was made to reference a token that does not exist.
 .
 Language=Polish
-ERROR_NO_TOKEN - An attempt was made to reference a token that does not exist.
+ERROR_NO_TOKEN - Wykonano próbę odwołania się do tokena, który nie istnieje.
 .
 Language=Romanian
 ERROR_NO_TOKEN - An attempt was made to reference a token that does not exist.
@@ -7312,7 +7312,7 @@ Language=Russian
 ERROR_BADDB - The configuration registry database is corrupt.
 .
 Language=Polish
-ERROR_BADDB - The configuration registry database is corrupt.
+ERROR_BADDB - Baza danych rejestru konfiguracji jest uszkodzona.
 .
 Language=Romanian
 ERROR_BADDB - The configuration registry database is corrupt.
@@ -7329,7 +7329,7 @@ Language=Russian
 ERROR_BADKEY - The configuration registry key is invalid.
 .
 Language=Polish
-ERROR_BADKEY - The configuration registry key is invalid.
+ERROR_BADKEY - Klucz rejestru konfiguracji jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_BADKEY - The configuration registry key is invalid.
@@ -7346,7 +7346,7 @@ Language=Russian
 ERROR_CANTOPEN - The configuration registry key could not be opened.
 .
 Language=Polish
-ERROR_CANTOPEN - The configuration registry key could not be opened.
+ERROR_CANTOPEN - Nie można otworzyć klucza rejestru konfiguracji.
 .
 Language=Romanian
 ERROR_CANTOPEN - The configuration registry key could not be opened.
@@ -7363,7 +7363,7 @@ Language=Russian
 ERROR_CANTREAD - The configuration registry key could not be read.
 .
 Language=Polish
-ERROR_CANTREAD - The configuration registry key could not be read.
+ERROR_CANTREAD - Nie można odczytać klucza rejestru konfiguracji.
 .
 Language=Romanian
 ERROR_CANTREAD - The configuration registry key could not be read.
@@ -7380,7 +7380,7 @@ Language=Russian
 ERROR_CANTWRITE - The configuration registry key could not be written.
 .
 Language=Polish
-ERROR_CANTWRITE - The configuration registry key could not be written.
+ERROR_CANTWRITE - Nie można zapisać klucza rejestru konfiguracji.
 .
 Language=Romanian
 ERROR_CANTWRITE - The configuration registry key could not be written.
@@ -7397,7 +7397,7 @@ Language=Russian
 ERROR_REGISTRY_RECOVERED - One of the files in the registry database had to be recovered by use of a log or alternate copy. The recovery was successful.
 .
 Language=Polish
-ERROR_REGISTRY_RECOVERED - One of the files in the registry database had to be recovered by use of a log or alternate copy. The recovery was successful.
+ERROR_REGISTRY_RECOVERED - Jeden z plików w bazie danych rejestru musiał zostać odzyskany za pomocą dziennika lub kopii alternatywnej. Odzyskiwanie zakończyło się pomyślnie.
 .
 Language=Romanian
 ERROR_REGISTRY_RECOVERED - One of the files in the registry database had to be recovered by use of a log or alternate copy. The recovery was successful.
@@ -7414,7 +7414,7 @@ Language=Russian
 ERROR_REGISTRY_CORRUPT - The registry is corrupted. The structure of one of the files containing registry data is corrupted, or the system's memory image of the file is corrupted, or the file could not be recovered because the alternate copy or log was absent or corrupted.
 .
 Language=Polish
-ERROR_REGISTRY_CORRUPT - The registry is corrupted. The structure of one of the files containing registry data is corrupted, or the system's memory image of the file is corrupted, or the file could not be recovered because the alternate copy or log was absent or corrupted.
+ERROR_REGISTRY_CORRUPT - Rejestr jest uszkodzony. Uszkodzona jest struktura jednego z plików zawierających dane Rejestru, uszkodzony jest systemowy obraz pliku w pamięci lub też nie można odzyskać pliku, ponieważ alternatywna kopia lub dziennik były nieobecne lub uszkodzone.
 .
 Language=Romanian
 ERROR_REGISTRY_CORRUPT - The registry is corrupted. The structure of one of the files containing registry data is corrupted, or the system's memory image of the file is corrupted, or the file could not be recovered because the alternate copy or log was absent or corrupted.
@@ -7431,7 +7431,7 @@ Language=Russian
 ERROR_REGISTRY_IO_FAILED - An I/O operation initiated by the registry failed unrecoverably. The registry could not read in, or write out, or flush, one of the files that contain the system's image of the registry.
 .
 Language=Polish
-ERROR_REGISTRY_IO_FAILED - An I/O operation initiated by the registry failed unrecoverably. The registry could not read in, or write out, or flush, one of the files that contain the system's image of the registry.
+ERROR_REGISTRY_IO_FAILED - Operacja We/Wy zainicjowana przez rejestr nie powiodła się w sposób nieodwracalny. Rejestr nie może wczytać, wypisać lub opróżnić jednego z plików zawierających obraz rejestru systemu.
 .
 Language=Romanian
 ERROR_REGISTRY_IO_FAILED - An I/O operation initiated by the registry failed unrecoverably. The registry could not read in, or write out, or flush, one of the files that contain the system's image of the registry.
@@ -7448,7 +7448,7 @@ Language=Russian
 ERROR_NOT_REGISTRY_FILE - The system has attempted to load or restore a file into the registry, but the specified file is not in a registry file format.
 .
 Language=Polish
-ERROR_NOT_REGISTRY_FILE - The system has attempted to load or restore a file into the registry, but the specified file is not in a registry file format.
+ERROR_NOT_REGISTRY_FILE - System próbował załadować lub przywrócić plik do Rejestru, ale określony plik nie jest w formacie plików Rejestru.
 .
 Language=Romanian
 ERROR_NOT_REGISTRY_FILE - The system has attempted to load or restore a file into the registry, but the specified file is not in a registry file format.
@@ -7465,7 +7465,7 @@ Language=Russian
 ERROR_KEY_DELETED - Illegal operation attempted on a registry key that has been marked for deletion.
 .
 Language=Polish
-ERROR_KEY_DELETED - Illegal operation attempted on a registry key that has been marked for deletion.
+ERROR_KEY_DELETED - Wykonano próbę niedozwolonej operacji na kluczu Rejestru, który został oznaczony do usunięcia.
 .
 Language=Romanian
 ERROR_KEY_DELETED - Illegal operation attempted on a registry key that has been marked for deletion.
@@ -7482,7 +7482,7 @@ Language=Russian
 ERROR_NO_LOG_SPACE - System could not allocate the required space in a registry log.
 .
 Language=Polish
-ERROR_NO_LOG_SPACE - System could not allocate the required space in a registry log.
+ERROR_NO_LOG_SPACE - System nie mógł przydzielić wymaganego miejsca w dzienniku Rejestru.
 .
 Language=Romanian
 ERROR_NO_LOG_SPACE - System could not allocate the required space in a registry log.
@@ -7499,7 +7499,7 @@ Language=Russian
 ERROR_KEY_HAS_CHILDREN - Cannot create a symbolic link in a registry key that already has subkeys or values.
 .
 Language=Polish
-ERROR_KEY_HAS_CHILDREN - Cannot create a symbolic link in a registry key that already has subkeys or values.
+ERROR_KEY_HAS_CHILDREN - W Rejestrze kluczy, który ma już podklucze lub wartości, nie można utworzyć łącza symbolicznego.
 .
 Language=Romanian
 ERROR_KEY_HAS_CHILDREN - Cannot create a symbolic link in a registry key that already has subkeys or values.
@@ -7516,7 +7516,7 @@ Language=Russian
 ERROR_CHILD_MUST_BE_VOLATILE - Cannot create a stable subkey under a volatile parent key.
 .
 Language=Polish
-ERROR_CHILD_MUST_BE_VOLATILE - Cannot create a stable subkey under a volatile parent key.
+ERROR_CHILD_MUST_BE_VOLATILE - Dla usuwalnego klucza nadrzędnego nie można utworzyć trwałego podklucza.
 .
 Language=Romanian
 ERROR_CHILD_MUST_BE_VOLATILE - Cannot create a stable subkey under a volatile parent key.
@@ -7533,7 +7533,7 @@ Language=Russian
 ERROR_NOTIFY_ENUM_DIR - A notify change request is being completed and the information is not being returned in the caller's buffer. The caller now needs to enumerate the files to find the changes.
 .
 Language=Polish
-ERROR_NOTIFY_ENUM_DIR - A notify change request is being completed and the information is not being returned in the caller's buffer. The caller now needs to enumerate the files to find the changes.
+ERROR_NOTIFY_ENUM_DIR - Żądanie zmiany powiadomienia jest już kończone, a informacje nie są zwracane do buforu komputera wywołującego. Wywołujący musi teraz wyliczyć pliki w celu odnalezienia zmian.
 .
 Language=Romanian
 ERROR_NOTIFY_ENUM_DIR - A notify change request is being completed and the information is not being returned in the caller's buffer. The caller now needs to enumerate the files to find the changes.
@@ -7550,7 +7550,7 @@ Language=Russian
 ERROR_DEPENDENT_SERVICES_RUNNING - A stop control has been sent to a service that other running services are dependent on.
 .
 Language=Polish
-ERROR_DEPENDENT_SERVICES_RUNNING - A stop control has been sent to a service that other running services are dependent on.
+ERROR_DEPENDENT_SERVICES_RUNNING - Sygnał kontrolny Stop został wysłany do usługi, od której są zależne inne działające usługi.
 .
 Language=Romanian
 ERROR_DEPENDENT_SERVICES_RUNNING - A stop control has been sent to a service that other running services are dependent on.
@@ -7567,7 +7567,7 @@ Language=Russian
 ERROR_INVALID_SERVICE_CONTROL - The requested control is not valid for this service.
 .
 Language=Polish
-ERROR_INVALID_SERVICE_CONTROL - The requested control is not valid for this service.
+ERROR_INVALID_SERVICE_CONTROL - Żądany sygnał sterujący jest nieprawidłowy dla tej usługi.
 .
 Language=Romanian
 ERROR_INVALID_SERVICE_CONTROL - The requested control is not valid for this service.
@@ -7584,7 +7584,7 @@ Language=Russian
 ERROR_SERVICE_REQUEST_TIMEOUT - The service did not respond to the start or control request in a timely fashion.
 .
 Language=Polish
-ERROR_SERVICE_REQUEST_TIMEOUT - The service did not respond to the start or control request in a timely fashion.
+ERROR_SERVICE_REQUEST_TIMEOUT - Usługa nie odpowiada na sygnał uruchomienia lub sygnał sterujący w oczekiwanym czasie.
 .
 Language=Romanian
 ERROR_SERVICE_REQUEST_TIMEOUT - The service did not respond to the start or control request in a timely fashion.
@@ -7601,7 +7601,7 @@ Language=Russian
 ERROR_SERVICE_NO_THREAD - A thread could not be created for the service.
 .
 Language=Polish
-ERROR_SERVICE_NO_THREAD - A thread could not be created for the service.
+ERROR_SERVICE_NO_THREAD - Nie można utworzyć wątku dla tej usługi.
 .
 Language=Romanian
 ERROR_SERVICE_NO_THREAD - A thread could not be created for the service.
@@ -7618,7 +7618,7 @@ Language=Russian
 ERROR_SERVICE_DATABASE_LOCKED - The service database is locked.
 .
 Language=Polish
-ERROR_SERVICE_DATABASE_LOCKED - The service database is locked.
+ERROR_SERVICE_DATABASE_LOCKED - Baza danych usługi jest zablokowana.
 .
 Language=Romanian
 ERROR_SERVICE_DATABASE_LOCKED - The service database is locked.
@@ -7635,7 +7635,7 @@ Language=Russian
 ERROR_SERVICE_ALREADY_RUNNING - An instance of the service is already running.
 .
 Language=Polish
-ERROR_SERVICE_ALREADY_RUNNING - An instance of the service is already running.
+ERROR_SERVICE_ALREADY_RUNNING - Jedno wystąpienie usługi już działa.
 .
 Language=Romanian
 ERROR_SERVICE_ALREADY_RUNNING - An instance of the service is already running.
@@ -7652,7 +7652,7 @@ Language=Russian
 ERROR_INVALID_SERVICE_ACCOUNT - The account name is invalid or does not exist, or the password is invalid for the account name specified.
 .
 Language=Polish
-ERROR_INVALID_SERVICE_ACCOUNT - The account name is invalid or does not exist, or the password is invalid for the account name specified.
+ERROR_INVALID_SERVICE_ACCOUNT - Nazwa konta jest nieprawidłowa lub nie istnieje albo hasło dla podanej nazwy konta jest nieprawidłowe.
 .
 Language=Romanian
 ERROR_INVALID_SERVICE_ACCOUNT - The account name is invalid or does not exist, or the password is invalid for the account name specified.
@@ -7669,7 +7669,7 @@ Language=Russian
 ERROR_SERVICE_DISABLED - The service cannot be started, either because it is disabled or because it has no enabled devices associated with it.
 .
 Language=Polish
-ERROR_SERVICE_DISABLED - The service cannot be started, either because it is disabled or because it has no enabled devices associated with it.
+ERROR_SERVICE_DISABLED - Nie można uruchomić określonej usługi, ponieważ jest ona wyłączona lub ponieważ nie są włączone skojarzone z nią urządzenia.
 .
 Language=Romanian
 ERROR_SERVICE_DISABLED - The service cannot be started, either because it is disabled or because it has no enabled devices associated with it.
@@ -7686,7 +7686,7 @@ Language=Russian
 ERROR_CIRCULAR_DEPENDENCY - Circular service dependency was specified.
 .
 Language=Polish
-ERROR_CIRCULAR_DEPENDENCY - Circular service dependency was specified.
+ERROR_CIRCULAR_DEPENDENCY - Określono cykliczną zależność usługi.
 .
 Language=Romanian
 ERROR_CIRCULAR_DEPENDENCY - Circular service dependency was specified.
@@ -7703,7 +7703,7 @@ Language=Russian
 ERROR_SERVICE_DOES_NOT_EXIST - The specified service does not exist as an installed service.
 .
 Language=Polish
-ERROR_SERVICE_DOES_NOT_EXIST - The specified service does not exist as an installed service.
+ERROR_SERVICE_DOES_NOT_EXIST - Określona usługa nie istnieje jako usługa zainstalowana.
 .
 Language=Romanian
 ERROR_SERVICE_DOES_NOT_EXIST - The specified service does not exist as an installed service.
@@ -7720,7 +7720,7 @@ Language=Russian
 ERROR_SERVICE_CANNOT_ACCEPT_CTRL - The service cannot accept control messages at this time.
 .
 Language=Polish
-ERROR_SERVICE_CANNOT_ACCEPT_CTRL - The service cannot accept control messages at this time.
+ERROR_SERVICE_CANNOT_ACCEPT_CTRL - Usługa nie może teraz zaakceptować komunikatów sterujących.
 .
 Language=Romanian
 ERROR_SERVICE_CANNOT_ACCEPT_CTRL - The service cannot accept control messages at this time.
@@ -7737,7 +7737,7 @@ Language=Russian
 ERROR_SERVICE_NOT_ACTIVE - The service has not been started.
 .
 Language=Polish
-ERROR_SERVICE_NOT_ACTIVE - The service has not been started.
+ERROR_SERVICE_NOT_ACTIVE - Usługa nie została uruchomiona.
 .
 Language=Romanian
 ERROR_SERVICE_NOT_ACTIVE - The service has not been started.
@@ -7754,7 +7754,7 @@ Language=Russian
 ERROR_FAILED_SERVICE_CONTROLLER_CONNECT - The service process could not connect to the service controller.
 .
 Language=Polish
-ERROR_FAILED_SERVICE_CONTROLLER_CONNECT - The service process could not connect to the service controller.
+ERROR_FAILED_SERVICE_CONTROLLER_CONNECT - Proces usługi nie mógł połączyć się z kontrolerem usługi.
 .
 Language=Romanian
 ERROR_FAILED_SERVICE_CONTROLLER_CONNECT - The service process could not connect to the service controller.
@@ -7771,7 +7771,7 @@ Language=Russian
 ERROR_EXCEPTION_IN_SERVICE - An exception occurred in the service when handling the control request.
 .
 Language=Polish
-ERROR_EXCEPTION_IN_SERVICE - An exception occurred in the service when handling the control request.
+ERROR_EXCEPTION_IN_SERVICE - W usłudze wystąpił wyjątek podczas obsługi żądania kontroli.
 .
 Language=Romanian
 ERROR_EXCEPTION_IN_SERVICE - An exception occurred in the service when handling the control request.
@@ -7788,7 +7788,7 @@ Language=Russian
 ERROR_DATABASE_DOES_NOT_EXIST - The database specified does not exist.
 .
 Language=Polish
-ERROR_DATABASE_DOES_NOT_EXIST - The database specified does not exist.
+ERROR_DATABASE_DOES_NOT_EXIST - Określona baza danych nie istnieje.
 .
 Language=Romanian
 ERROR_DATABASE_DOES_NOT_EXIST - The database specified does not exist.
@@ -7805,7 +7805,7 @@ Language=Russian
 ERROR_SERVICE_SPECIFIC_ERROR - The service has returned a service-specific error code.
 .
 Language=Polish
-ERROR_SERVICE_SPECIFIC_ERROR - The service has returned a service-specific error code.
+ERROR_SERVICE_SPECIFIC_ERROR - Usługa zwróciła kod błędu specyficzny dla tej usługi.
 .
 Language=Romanian
 ERROR_SERVICE_SPECIFIC_ERROR - The service has returned a service-specific error code.
@@ -7822,7 +7822,7 @@ Language=Russian
 ERROR_PROCESS_ABORTED - The process terminated unexpectedly.
 .
 Language=Polish
-ERROR_PROCESS_ABORTED - The process terminated unexpectedly.
+ERROR_PROCESS_ABORTED - Proces zakończył się nieoczekiwanie.
 .
 Language=Romanian
 ERROR_PROCESS_ABORTED - The process terminated unexpectedly.
@@ -7839,7 +7839,7 @@ Language=Russian
 ERROR_SERVICE_DEPENDENCY_FAIL - The dependency service or group failed to start.
 .
 Language=Polish
-ERROR_SERVICE_DEPENDENCY_FAIL - The dependency service or group failed to start.
+ERROR_SERVICE_DEPENDENCY_FAIL - Uruchomienie usługi zależności lub grupy nie powiodło się.
 .
 Language=Romanian
 ERROR_SERVICE_DEPENDENCY_FAIL - The dependency service or group failed to start.
@@ -7856,7 +7856,7 @@ Language=Russian
 ERROR_SERVICE_LOGON_FAILED - The service did not start due to a logon failure.
 .
 Language=Polish
-ERROR_SERVICE_LOGON_FAILED - The service did not start due to a logon failure.
+ERROR_SERVICE_LOGON_FAILED - Usługa nie została uruchomiona z powodu nieudanego logowania.
 .
 Language=Romanian
 ERROR_SERVICE_LOGON_FAILED - The service did not start due to a logon failure.
@@ -7873,7 +7873,7 @@ Language=Russian
 ERROR_SERVICE_START_HANG - After starting, the service hung in a start-pending state.
 .
 Language=Polish
-ERROR_SERVICE_START_HANG - After starting, the service hung in a start-pending state.
+ERROR_SERVICE_START_HANG - Po uruchomieniu usługa uległa zawieszeniu w stanie startowym.
 .
 Language=Romanian
 ERROR_SERVICE_START_HANG - After starting, the service hung in a start-pending state.
@@ -7890,7 +7890,7 @@ Language=Russian
 ERROR_INVALID_SERVICE_LOCK - The specified service database lock is invalid.
 .
 Language=Polish
-ERROR_INVALID_SERVICE_LOCK - The specified service database lock is invalid.
+ERROR_INVALID_SERVICE_LOCK - Określona blokada bazy danych usługi jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_INVALID_SERVICE_LOCK - The specified service database lock is invalid.
@@ -7907,7 +7907,7 @@ Language=Russian
 ERROR_SERVICE_MARKED_FOR_DELETE - The specified service has been marked for deletion.
 .
 Language=Polish
-ERROR_SERVICE_MARKED_FOR_DELETE - The specified service has been marked for deletion.
+ERROR_SERVICE_MARKED_FOR_DELETE - Określona usługa została oznaczona do usunięcia.
 .
 Language=Romanian
 ERROR_SERVICE_MARKED_FOR_DELETE - The specified service has been marked for deletion.
@@ -7924,7 +7924,7 @@ Language=Russian
 ERROR_SERVICE_EXISTS - The specified service already exists.
 .
 Language=Polish
-ERROR_SERVICE_EXISTS - The specified service already exists.
+ERROR_SERVICE_EXISTS - Określona usługa już istnieje.
 .
 Language=Romanian
 ERROR_SERVICE_EXISTS - The specified service already exists.
@@ -7941,7 +7941,7 @@ Language=Russian
 ERROR_ALREADY_RUNNING_LKG - The system is currently running with the last-known-good configuration.
 .
 Language=Polish
-ERROR_ALREADY_RUNNING_LKG - The system is currently running with the last-known-good configuration.
+ERROR_ALREADY_RUNNING_LKG - System działa obecnie w ostatniej znanej dobrej konfiguracji.
 .
 Language=Romanian
 ERROR_ALREADY_RUNNING_LKG - The system is currently running with the last-known-good configuration.
@@ -7958,7 +7958,7 @@ Language=Russian
 ERROR_SERVICE_DEPENDENCY_DELETED - The dependency service does not exist or has been marked for deletion.
 .
 Language=Polish
-ERROR_SERVICE_DEPENDENCY_DELETED - The dependency service does not exist or has been marked for deletion.
+ERROR_SERVICE_DEPENDENCY_DELETED - Usługa zależności nie istnieje lub została oznaczona do usunięcia.
 .
 Language=Romanian
 ERROR_SERVICE_DEPENDENCY_DELETED - The dependency service does not exist or has been marked for deletion.
@@ -7975,7 +7975,7 @@ Language=Russian
 ERROR_BOOT_ALREADY_ACCEPTED - The current boot has already been accepted for use as the last-known-good control set.
 .
 Language=Polish
-ERROR_BOOT_ALREADY_ACCEPTED - The current boot has already been accepted for use as the last-known-good control set.
+ERROR_BOOT_ALREADY_ACCEPTED - Bieżące uruchomienie zostało już zaakceptowane do użycia jako ostatni znany dobry zestaw sterujący.
 .
 Language=Romanian
 ERROR_BOOT_ALREADY_ACCEPTED - The current boot has already been accepted for use as the last-known-good control set.
@@ -7992,7 +7992,7 @@ Language=Russian
 ERROR_SERVICE_NEVER_STARTED - No attempts to start the service have been made since the last boot.
 .
 Language=Polish
-ERROR_SERVICE_NEVER_STARTED - No attempts to start the service have been made since the last boot.
+ERROR_SERVICE_NEVER_STARTED - Od czasu ostatniego uruchomienia komputera nie podejmowano prób uruchomienia usługi.
 .
 Language=Romanian
 ERROR_SERVICE_NEVER_STARTED - No attempts to start the service have been made since the last boot.
@@ -8009,7 +8009,7 @@ Language=Russian
 ERROR_DUPLICATE_SERVICE_NAME - The name is already in use as either a service name or a service display name.
 .
 Language=Polish
-ERROR_DUPLICATE_SERVICE_NAME - The name is already in use as either a service name or a service display name.
+ERROR_DUPLICATE_SERVICE_NAME - Nazwa jest już w użyciu jako nazwa usługi lub wyświetlana nazwa usługi.
 .
 Language=Romanian
 ERROR_DUPLICATE_SERVICE_NAME - The name is already in use as either a service name or a service display name.
@@ -8026,7 +8026,7 @@ Language=Russian
 ERROR_DIFFERENT_SERVICE_ACCOUNT - The account specified for this service is different from the account specified for other services running in the same process.
 .
 Language=Polish
-ERROR_DIFFERENT_SERVICE_ACCOUNT - The account specified for this service is different from the account specified for other services running in the same process.
+ERROR_DIFFERENT_SERVICE_ACCOUNT - Konto podane dla tej usługi różni się od konta podanego dla innych usług działających w tym samym procesie.
 .
 Language=Romanian
 ERROR_DIFFERENT_SERVICE_ACCOUNT - The account specified for this service is different from the account specified for other services running in the same process.
@@ -8043,7 +8043,7 @@ Language=Russian
 ERROR_CANNOT_DETECT_DRIVER_FAILURE - Failure actions can only be set for Win32 services, not for drivers.
 .
 Language=Polish
-ERROR_CANNOT_DETECT_DRIVER_FAILURE - Failure actions can only be set for Win32 services, not for drivers.
+ERROR_CANNOT_DETECT_DRIVER_FAILURE - Akcje przypisane do błędów można ustawić tylko dla usług Win32, a nie dla sterowników.
 .
 Language=Romanian
 ERROR_CANNOT_DETECT_DRIVER_FAILURE - Failure actions can only be set for Win32 services, not for drivers.
@@ -8060,7 +8060,7 @@ Language=Russian
 ERROR_CANNOT_DETECT_PROCESS_ABORT - This service runs in the same process as the service control manager. Therefore, the service control manager cannot take action if this service's process terminates unexpectedly.
 .
 Language=Polish
-ERROR_CANNOT_DETECT_PROCESS_ABORT - This service runs in the same process as the service control manager. Therefore, the service control manager cannot take action if this service's process terminates unexpectedly.
+ERROR_CANNOT_DETECT_PROCESS_ABORT - Ta usługa działa w tym samym procesie, co Menedżer sterowania usługami. Z tego powodu Menedżer sterowania usługami nie będzie mógł podjąć działań, gdy proces tej usługi niespodziewanie się zakończy.
 .
 Language=Romanian
 ERROR_CANNOT_DETECT_PROCESS_ABORT - This service runs in the same process as the service control manager. Therefore, the service control manager cannot take action if this service's process terminates unexpectedly.
@@ -8077,7 +8077,7 @@ Language=Russian
 ERROR_NO_RECOVERY_PROGRAM - No recovery program has been configured for this service.
 .
 Language=Polish
-ERROR_NO_RECOVERY_PROGRAM - No recovery program has been configured for this service.
+ERROR_NO_RECOVERY_PROGRAM - Żaden program odzyskiwania nie został skonfigurowany dla tej usługi.
 .
 Language=Romanian
 ERROR_NO_RECOVERY_PROGRAM - No recovery program has been configured for this service.
@@ -8094,7 +8094,7 @@ Language=Russian
 ERROR_SERVICE_NOT_IN_EXE - The executable program that this service is configured to run in does not implement the service.
 .
 Language=Polish
-ERROR_SERVICE_NOT_IN_EXE - The executable program that this service is configured to run in does not implement the service.
+ERROR_SERVICE_NOT_IN_EXE - Program wykonywalny, w którym ta usługa (zgodnie z jej konfiguracją) ma być uruchomiona, nie implementuje usługi.
 .
 Language=Romanian
 ERROR_SERVICE_NOT_IN_EXE - The executable program that this service is configured to run in does not implement the service.
@@ -8111,7 +8111,7 @@ Language=Russian
 ERROR_NOT_SAFEBOOT_SERVICE - This service cannot be started in Safe Mode.
 .
 Language=Polish
-ERROR_NOT_SAFEBOOT_SERVICE - This service cannot be started in Safe Mode.
+ERROR_NOT_SAFEBOOT_SERVICE - Tej usługi nie można uruchomić w trybie awaryjnym
 .
 Language=Romanian
 ERROR_NOT_SAFEBOOT_SERVICE - This service cannot be started in Safe Mode.
@@ -8128,7 +8128,7 @@ Language=Russian
 ERROR_END_OF_MEDIA - The physical end of the tape has been reached.
 .
 Language=Polish
-ERROR_END_OF_MEDIA - The physical end of the tape has been reached.
+ERROR_END_OF_MEDIA - Osiągnięto fizyczny koniec taśmy.
 .
 Language=Romanian
 ERROR_END_OF_MEDIA - The physical end of the tape has been reached.
@@ -8145,7 +8145,7 @@ Language=Russian
 ERROR_FILEMARK_DETECTED - A tape access reached a filemark.
 .
 Language=Polish
-ERROR_FILEMARK_DETECTED - A tape access reached a filemark.
+ERROR_FILEMARK_DETECTED - Osiągnięto znacznik pliku na taśmie.
 .
 Language=Romanian
 ERROR_FILEMARK_DETECTED - A tape access reached a filemark.
@@ -8162,7 +8162,7 @@ Language=Russian
 ERROR_BEGINNING_OF_MEDIA - The beginning of the tape or a partition was encountered.
 .
 Language=Polish
-ERROR_BEGINNING_OF_MEDIA - The beginning of the tape or a partition was encountered.
+ERROR_BEGINNING_OF_MEDIA - Napotkano początek taśmy lub partycji.
 .
 Language=Romanian
 ERROR_BEGINNING_OF_MEDIA - The beginning of the tape or a partition was encountered.
@@ -8179,7 +8179,7 @@ Language=Russian
 ERROR_SETMARK_DETECTED - A tape access reached the end of a set of files.
 .
 Language=Polish
-ERROR_SETMARK_DETECTED - A tape access reached the end of a set of files.
+ERROR_SETMARK_DETECTED - Osiągnięto koniec zestawu plików na taśmie.
 .
 Language=Romanian
 ERROR_SETMARK_DETECTED - A tape access reached the end of a set of files.
@@ -8196,7 +8196,7 @@ Language=Russian
 ERROR_NO_DATA_DETECTED - No more data is on the tape.
 .
 Language=Polish
-ERROR_NO_DATA_DETECTED - No more data is on the tape.
+ERROR_NO_DATA_DETECTED - Na taśmie brak dalszych danych.
 .
 Language=Romanian
 ERROR_NO_DATA_DETECTED - No more data is on the tape.
@@ -8213,7 +8213,7 @@ Language=Russian
 ERROR_PARTITION_FAILURE - Tape could not be partitioned.
 .
 Language=Polish
-ERROR_PARTITION_FAILURE - Tape could not be partitioned.
+ERROR_PARTITION_FAILURE - Nie można podzielić taśmy na partycje.
 .
 Language=Romanian
 ERROR_PARTITION_FAILURE - Tape could not be partitioned.
@@ -8230,7 +8230,7 @@ Language=Russian
 ERROR_INVALID_BLOCK_LENGTH - When accessing a new tape of a multivolume partition, the current block size is incorrect.
 .
 Language=Polish
-ERROR_INVALID_BLOCK_LENGTH - When accessing a new tape of a multivolume partition, the current block size is incorrect.
+ERROR_INVALID_BLOCK_LENGTH - W trakcie uzyskiwania dostępu do nowej taśmy w partycji o wielu woluminach, bieżący rozmiar bloku jest niepoprawny.
 .
 Language=Romanian
 ERROR_INVALID_BLOCK_LENGTH - When accessing a new tape of a multivolume partition, the current block size is incorrect.
@@ -8247,7 +8247,7 @@ Language=Russian
 ERROR_DEVICE_NOT_PARTITIONED - Tape partition information could not be found when loading a tape.
 .
 Language=Polish
-ERROR_DEVICE_NOT_PARTITIONED - Tape partition information could not be found when loading a tape.
+ERROR_DEVICE_NOT_PARTITIONED - Podczas ładowania taśmy nie odnaleziono informacji o jej partycjach.
 .
 Language=Romanian
 ERROR_DEVICE_NOT_PARTITIONED - Tape partition information could not be found when loading a tape.
@@ -8264,7 +8264,7 @@ Language=Russian
 ERROR_UNABLE_TO_LOCK_MEDIA - Unable to lock the media eject mechanism.
 .
 Language=Polish
-ERROR_UNABLE_TO_LOCK_MEDIA - Unable to lock the media eject mechanism.
+ERROR_UNABLE_TO_LOCK_MEDIA - Nie można zablokować mechanizmu wysuwu nośnika.
 .
 Language=Romanian
 ERROR_UNABLE_TO_LOCK_MEDIA - Unable to lock the media eject mechanism.
@@ -8281,7 +8281,7 @@ Language=Russian
 ERROR_UNABLE_TO_UNLOAD_MEDIA - Unable to unload the media.
 .
 Language=Polish
-ERROR_UNABLE_TO_UNLOAD_MEDIA - Unable to unload the media.
+ERROR_UNABLE_TO_UNLOAD_MEDIA - Nie można usunąć nośnika z pamięci.
 .
 Language=Romanian
 ERROR_UNABLE_TO_UNLOAD_MEDIA - Unable to unload the media.
@@ -8298,7 +8298,7 @@ Language=Russian
 ERROR_MEDIA_CHANGED - The media in the drive may have changed.
 .
 Language=Polish
-ERROR_MEDIA_CHANGED - The media in the drive may have changed.
+ERROR_MEDIA_CHANGED - Nośnik w stacji mógł się zmienić.
 .
 Language=Romanian
 ERROR_MEDIA_CHANGED - The media in the drive may have changed.
@@ -8315,7 +8315,7 @@ Language=Russian
 ERROR_BUS_RESET - The I/O bus was reset.
 .
 Language=Polish
-ERROR_BUS_RESET - The I/O bus was reset.
+ERROR_BUS_RESET - Magistrala We/Wy została zresetowana.
 .
 Language=Romanian
 ERROR_BUS_RESET - The I/O bus was reset.
@@ -8332,7 +8332,7 @@ Language=Russian
 ERROR_NO_MEDIA_IN_DRIVE - No media in drive.
 .
 Language=Polish
-ERROR_NO_MEDIA_IN_DRIVE - No media in drive.
+ERROR_NO_MEDIA_IN_DRIVE - Brak nośnika w stacji.
 .
 Language=Romanian
 ERROR_NO_MEDIA_IN_DRIVE - No media in drive.
@@ -8349,7 +8349,7 @@ Language=Russian
 ERROR_NO_UNICODE_TRANSLATION - No mapping for the Unicode character exists in the target multi-byte code page.
 .
 Language=Polish
-ERROR_NO_UNICODE_TRANSLATION - No mapping for the Unicode character exists in the target multi-byte code page.
+ERROR_NO_UNICODE_TRANSLATION - Brak mapowania dla tego znaku Unicode w docelowej wielobajtowej stronie kodowej.
 .
 Language=Romanian
 ERROR_NO_UNICODE_TRANSLATION - No mapping for the Unicode character exists in the target multi-byte code page.
@@ -8366,7 +8366,7 @@ Language=Russian
 ERROR_DLL_INIT_FAILED - A dynamic link library (DLL) initialization routine failed.
 .
 Language=Polish
-ERROR_DLL_INIT_FAILED - A dynamic link library (DLL) initialization routine failed.
+ERROR_DLL_INIT_FAILED - Procedura inicjowania biblioteki dołączanej dynamicznie (DLL) nie powiodła się.
 .
 Language=Romanian
 ERROR_DLL_INIT_FAILED - A dynamic link library (DLL) initialization routine failed.
@@ -8383,7 +8383,7 @@ Language=Russian
 ERROR_SHUTDOWN_IN_PROGRESS - A system shutdown is in progress.
 .
 Language=Polish
-ERROR_SHUTDOWN_IN_PROGRESS - A system shutdown is in progress.
+ERROR_SHUTDOWN_IN_PROGRESS - Trwa proces zamykania systemu.
 .
 Language=Romanian
 ERROR_SHUTDOWN_IN_PROGRESS - A system shutdown is in progress.
@@ -8400,7 +8400,7 @@ Language=Russian
 ERROR_NO_SHUTDOWN_IN_PROGRESS - Unable to abort the system shutdown because no shutdown was in progress.
 .
 Language=Polish
-ERROR_NO_SHUTDOWN_IN_PROGRESS - Unable to abort the system shutdown because no shutdown was in progress.
+ERROR_NO_SHUTDOWN_IN_PROGRESS - Nie można przerwać procesu zamykania systemu, ponieważ taki proces nie jest w toku.
 .
 Language=Romanian
 ERROR_NO_SHUTDOWN_IN_PROGRESS - Unable to abort the system shutdown because no shutdown was in progress.
@@ -8417,7 +8417,7 @@ Language=Russian
 ERROR_IO_DEVICE - The request could not be performed because of an I/O device error.
 .
 Language=Polish
-ERROR_IO_DEVICE - The request could not be performed because of an I/O device error.
+ERROR_IO_DEVICE - Nie można wykonać żądania z powodu błędu urządzenia We/Wy.
 .
 Language=Romanian
 ERROR_IO_DEVICE - The request could not be performed because of an I/O device error.
@@ -8434,7 +8434,7 @@ Language=Russian
 ERROR_SERIAL_NO_DEVICE - No serial device was successfully initialized. The serial driver will unload.
 .
 Language=Polish
-ERROR_SERIAL_NO_DEVICE - No serial device was successfully initialized. The serial driver will unload.
+ERROR_SERIAL_NO_DEVICE - Żadne urządzenie szeregowe nie zostało pomyślnie zainicjowane. Sterownik szeregowy zostanie usunięty z pamięci.
 .
 Language=Romanian
 ERROR_SERIAL_NO_DEVICE - No serial device was successfully initialized. The serial driver will unload.
@@ -8451,7 +8451,7 @@ Language=Russian
 ERROR_IRQ_BUSY - Unable to open a device that was sharing an interrupt request (IRQ) with other devices. At least one other device that uses that IRQ was already opened.
 .
 Language=Polish
-ERROR_IRQ_BUSY - Unable to open a device that was sharing an interrupt request (IRQ) with other devices. At least one other device that uses that IRQ was already opened.
+ERROR_IRQ_BUSY - Nie można otworzyć urządzenia, które współużytkowało przerwanie (IRQ) z innymi urządzeniami. Co najmniej jedno inne urządzenie używające tego IRQ zostało już otwarte.
 .
 Language=Romanian
 ERROR_IRQ_BUSY - Unable to open a device that was sharing an interrupt request (IRQ) with other devices. At least one other device that uses that IRQ was already opened.
@@ -8468,7 +8468,7 @@ Language=Russian
 ERROR_MORE_WRITES - A serial I/O operation was completed by another write to the serial port. (The IOCTL_SERIAL_XOFF_COUNTER reached zero.)
 .
 Language=Polish
-ERROR_MORE_WRITES - A serial I/O operation was completed by another write to the serial port. (The IOCTL_SERIAL_XOFF_COUNTER reached zero.)
+ERROR_MORE_WRITES - Operacja szeregowego We/Wy została zakończona przez inny zapis do portu szeregowego. (Licznik IOCTL_SERIAL_XOFF_COUNTER osiągnął zero.)
 .
 Language=Romanian
 ERROR_MORE_WRITES - A serial I/O operation was completed by another write to the serial port. (The IOCTL_SERIAL_XOFF_COUNTER reached zero.)
@@ -8485,7 +8485,7 @@ Language=Russian
 ERROR_COUNTER_TIMEOUT - A serial I/O operation completed because the timeout period expired. (The IOCTL_SERIAL_XOFF_COUNTER did not reach zero.)
 .
 Language=Polish
-ERROR_COUNTER_TIMEOUT - A serial I/O operation completed because the timeout period expired. (The IOCTL_SERIAL_XOFF_COUNTER did not reach zero.)
+ERROR_COUNTER_TIMEOUT - Operacja szeregowego We/Wy została zakończona z powodu przekroczenia limitu czasu. (Licznik IOCTL_SERIAL_XOFF_COUNTER nie osiągnął wartości zero.)
 .
 Language=Romanian
 ERROR_COUNTER_TIMEOUT - A serial I/O operation completed because the timeout period expired. (The IOCTL_SERIAL_XOFF_COUNTER did not reach zero.)
@@ -8502,7 +8502,7 @@ Language=Russian
 ERROR_FLOPPY_ID_MARK_NOT_FOUND - No ID address mark was found on the floppy disk.
 .
 Language=Polish
-ERROR_FLOPPY_ID_MARK_NOT_FOUND - No ID address mark was found on the floppy disk.
+ERROR_FLOPPY_ID_MARK_NOT_FOUND - Na dyskietce nie znaleziono znacznika adresu identyfikatora.
 .
 Language=Romanian
 ERROR_FLOPPY_ID_MARK_NOT_FOUND - No ID address mark was found on the floppy disk.
@@ -8519,7 +8519,7 @@ Language=Russian
 ERROR_FLOPPY_WRONG_CYLINDER - Mismatch between the floppy disk sector ID field and the floppy disk controller track address.
 .
 Language=Polish
-ERROR_FLOPPY_WRONG_CYLINDER - Mismatch between the floppy disk sector ID field and the floppy disk controller track address.
+ERROR_FLOPPY_WRONG_CYLINDER - Niedopasowanie między polem identyfikatora sektora dyskietki i adresem ścieżki kontrolera stacji dyskietek.
 .
 Language=Romanian
 ERROR_FLOPPY_WRONG_CYLINDER - Mismatch between the floppy disk sector ID field and the floppy disk controller track address.
@@ -8536,7 +8536,7 @@ Language=Russian
 ERROR_FLOPPY_UNKNOWN_ERROR - The floppy disk controller reported an error that is not recognized by the floppy disk driver.
 .
 Language=Polish
-ERROR_FLOPPY_UNKNOWN_ERROR - The floppy disk controller reported an error that is not recognized by the floppy disk driver.
+ERROR_FLOPPY_UNKNOWN_ERROR - Kontroler stacji dyskietek zgłosił błąd, który nie został rozpoznany przez sterownik stacji dyskietek.
 .
 Language=Romanian
 ERROR_FLOPPY_UNKNOWN_ERROR - The floppy disk controller reported an error that is not recognized by the floppy disk driver.
@@ -8553,7 +8553,7 @@ Language=Russian
 ERROR_FLOPPY_BAD_REGISTERS - The floppy disk controller returned inconsistent results in its registers.
 .
 Language=Polish
-ERROR_FLOPPY_BAD_REGISTERS - The floppy disk controller returned inconsistent results in its registers.
+ERROR_FLOPPY_BAD_REGISTERS - Kontroler stacji dyskietek zwrócił w swych rejestrach niezgodne wyniki.
 .
 Language=Romanian
 ERROR_FLOPPY_BAD_REGISTERS - The floppy disk controller returned inconsistent results in its registers.
@@ -8570,7 +8570,7 @@ Language=Russian
 ERROR_DISK_RECALIBRATE_FAILED - While accessing the hard disk, a recalibrate operation failed, even after retries.
 .
 Language=Polish
-ERROR_DISK_RECALIBRATE_FAILED - While accessing the hard disk, a recalibrate operation failed, even after retries.
+ERROR_DISK_RECALIBRATE_FAILED - Podczas uzyskiwania dostępu do dysku twardego operacja rekalibracji nie powiodła się, mimo ponawiania prób.
 .
 Language=Romanian
 ERROR_DISK_RECALIBRATE_FAILED - While accessing the hard disk, a recalibrate operation failed, even after retries.
@@ -8587,7 +8587,7 @@ Language=Russian
 ERROR_DISK_OPERATION_FAILED - While accessing the hard disk, a disk operation failed even after retries.
 .
 Language=Polish
-ERROR_DISK_OPERATION_FAILED - While accessing the hard disk, a disk operation failed even after retries.
+ERROR_DISK_OPERATION_FAILED - Podczas uzyskiwania dostępu do dysku twardego operacja dyskowa nie powiodła się, mimo ponawiania prób.
 .
 Language=Romanian
 ERROR_DISK_OPERATION_FAILED - While accessing the hard disk, a disk operation failed even after retries.
@@ -8604,7 +8604,7 @@ Language=Russian
 ERROR_DISK_RESET_FAILED - While accessing the hard disk, a disk controller reset was needed, but even that failed.
 .
 Language=Polish
-ERROR_DISK_RESET_FAILED - While accessing the hard disk, a disk controller reset was needed, but even that failed.
+ERROR_DISK_RESET_FAILED - Podczas uzyskiwania dostępu do dysku twardego, niezbędna była operacja resetowania kontrolera dysku; nawet to nie przyniosło oczekiwanego rezultatu.
 .
 Language=Romanian
 ERROR_DISK_RESET_FAILED - While accessing the hard disk, a disk controller reset was needed, but even that failed.
@@ -8621,7 +8621,7 @@ Language=Russian
 ERROR_EOM_OVERFLOW - Physical end of tape encountered.
 .
 Language=Polish
-ERROR_EOM_OVERFLOW - Physical end of tape encountered.
+ERROR_EOM_OVERFLOW - Napotkano fizyczny koniec taśmy.
 .
 Language=Romanian
 ERROR_EOM_OVERFLOW - Physical end of tape encountered.
@@ -8638,7 +8638,7 @@ Language=Russian
 ERROR_NOT_ENOUGH_SERVER_MEMORY - Not enough server storage is available to process this command.
 .
 Language=Polish
-ERROR_NOT_ENOUGH_SERVER_MEMORY - Not enough server storage is available to process this command.
+ERROR_NOT_ENOUGH_SERVER_MEMORY - Za mało pamięci serwera do przetworzenia tego polecenia.
 .
 Language=Romanian
 ERROR_NOT_ENOUGH_SERVER_MEMORY - Not enough server storage is available to process this command.
@@ -8655,7 +8655,7 @@ Language=Russian
 ERROR_POSSIBLE_DEADLOCK - A potential deadlock condition has been detected.
 .
 Language=Polish
-ERROR_POSSIBLE_DEADLOCK - A potential deadlock condition has been detected.
+ERROR_POSSIBLE_DEADLOCK - Wykryto możliwość wystąpienia stanu zakleszczenia (deadlock).
 .
 Language=Romanian
 ERROR_POSSIBLE_DEADLOCK - A potential deadlock condition has been detected.
@@ -8672,7 +8672,7 @@ Language=Russian
 ERROR_MAPPED_ALIGNMENT - The base address or the file offset specified does not have the proper alignment.
 .
 Language=Polish
-ERROR_MAPPED_ALIGNMENT - The base address or the file offset specified does not have the proper alignment.
+ERROR_MAPPED_ALIGNMENT - Adres bazowy określonego offsetu pliku nie ma odpowiedniego wyrównania.
 .
 Language=Romanian
 ERROR_MAPPED_ALIGNMENT - The base address or the file offset specified does not have the proper alignment.
@@ -8689,7 +8689,7 @@ Language=Russian
 ERROR_SET_POWER_STATE_VETOED - An attempt to change the system power state was vetoed by another application or driver.
 .
 Language=Polish
-ERROR_SET_POWER_STATE_VETOED - An attempt to change the system power state was vetoed by another application or driver.
+ERROR_SET_POWER_STATE_VETOED - Próba zmiany stanu zasilania systemu została zablokowana przez inną aplikację lub sterownik.
 .
 Language=Romanian
 ERROR_SET_POWER_STATE_VETOED - An attempt to change the system power state was vetoed by another application or driver.
@@ -8706,7 +8706,7 @@ Language=Russian
 ERROR_SET_POWER_STATE_FAILED - The system BIOS failed an attempt to change the system power state.
 .
 Language=Polish
-ERROR_SET_POWER_STATE_FAILED - The system BIOS failed an attempt to change the system power state.
+ERROR_SET_POWER_STATE_FAILED - Próba zmiany stanu zasilania systemu przez systemowy BIOS nie powiodła się.
 .
 Language=Romanian
 ERROR_SET_POWER_STATE_FAILED - The system BIOS failed an attempt to change the system power state.
@@ -8723,7 +8723,7 @@ Language=Russian
 ERROR_TOO_MANY_LINKS - An attempt was made to create more links on a file than the file system supports.
 .
 Language=Polish
-ERROR_TOO_MANY_LINKS - An attempt was made to create more links on a file than the file system supports.
+ERROR_TOO_MANY_LINKS - Podjęto próbę utworzenia większej liczby łączy na pliku niż obsługuje system plików.
 .
 Language=Romanian
 ERROR_TOO_MANY_LINKS - An attempt was made to create more links on a file than the file system supports.
@@ -8740,7 +8740,7 @@ Language=Russian
 ERROR_OLD_WIN_VERSION - The specified program requires a newer version of Windows.
 .
 Language=Polish
-ERROR_OLD_WIN_VERSION - The specified program requires a newer version of Windows.
+ERROR_OLD_WIN_VERSION - Określony program wymaga nowszej wersji systemu Windows.
 .
 Language=Romanian
 ERROR_OLD_WIN_VERSION - The specified program requires a newer version of Windows.
@@ -8757,7 +8757,7 @@ Language=Russian
 ERROR_APP_WRONG_OS - The specified program is not a Windows or MS-DOS program.
 .
 Language=Polish
-ERROR_APP_WRONG_OS - The specified program is not a Windows or MS-DOS program.
+ERROR_APP_WRONG_OS - Określony program nie jest programem środowiska Windows ani MS-DOS.
 .
 Language=Romanian
 ERROR_APP_WRONG_OS - The specified program is not a Windows or MS-DOS program.
@@ -8774,7 +8774,7 @@ Language=Russian
 ERROR_SINGLE_INSTANCE_APP - Cannot start more than one instance of the specified program.
 .
 Language=Polish
-ERROR_SINGLE_INSTANCE_APP - Cannot start more than one instance of the specified program.
+ERROR_SINGLE_INSTANCE_APP - Nie można uruchomić więcej niż jednego wystąpienia określonego programu.
 .
 Language=Romanian
 ERROR_SINGLE_INSTANCE_APP - Cannot start more than one instance of the specified program.
@@ -8791,7 +8791,7 @@ Language=Russian
 ERROR_RMODE_APP - The specified program was written for an earlier version of Windows.
 .
 Language=Polish
-ERROR_RMODE_APP - The specified program was written for an earlier version of Windows.
+ERROR_RMODE_APP - Określony program został napisany dla starszej wersji systemu Windows.
 .
 Language=Romanian
 ERROR_RMODE_APP - The specified program was written for an earlier version of Windows.
@@ -8808,7 +8808,7 @@ Language=Russian
 ERROR_INVALID_DLL - One of the library files needed to run this application is damaged.
 .
 Language=Polish
-ERROR_INVALID_DLL - One of the library files needed to run this application is damaged.
+ERROR_INVALID_DLL - Jeden z plików bibliotek potrzebnych do uruchomienia tej aplikacji jest uszkodzony.
 .
 Language=Romanian
 ERROR_INVALID_DLL - One of the library files needed to run this application is damaged.
@@ -8825,7 +8825,7 @@ Language=Russian
 ERROR_NO_ASSOCIATION - No application is associated with the specified file for this operation.
 .
 Language=Polish
-ERROR_NO_ASSOCIATION - No application is associated with the specified file for this operation.
+ERROR_NO_ASSOCIATION - Z określonym plikiem nie skojarzono dla tej operacji żadnej aplikacji.
 .
 Language=Romanian
 ERROR_NO_ASSOCIATION - No application is associated with the specified file for this operation.
@@ -8842,7 +8842,7 @@ Language=Russian
 ERROR_DDE_FAIL - Ошибка при пересылке команды приложению.
 .
 Language=Polish
-ERROR_DDE_FAIL - An error occurred in sending the command to the application.
+ERROR_DDE_FAIL - W trakcie wysyłania polecenia do aplikacji wystąpił błąd.
 .
 Language=Romanian
 ERROR_DDE_FAIL - An error occurred in sending the command to the application.
@@ -8859,7 +8859,7 @@ Language=Russian
 ERROR_DLL_NOT_FOUND - Не найден один из файлов библиотек, необходимых для выполнения данного приложения.
 .
 Language=Polish
-ERROR_DLL_NOT_FOUND - One of the library files needed to run this application cannot be found.
+ERROR_DLL_NOT_FOUND - Nie można odnaleźć jednego z plików bibliotek potrzebnych do uruchomienia tej aplikacji.
 .
 Language=Romanian
 ERROR_DLL_NOT_FOUND - One of the library files needed to run this application cannot be found.
@@ -8876,7 +8876,7 @@ Language=Russian
 ERROR_NO_MORE_USER_HANDLES - Текущий процесс использовал все системные разрешения по управлению объектами диспетчера окон.
 .
 Language=Polish
-ERROR_NO_MORE_USER_HANDLES - The current process has used all of its system allowance of handles for Window Manager objects.
+ERROR_NO_MORE_USER_HANDLES - Bieżący proces wykorzystał wszystkie dozwolone przez system dojścia do obiektów Window Manager.
 .
 Language=Romanian
 ERROR_NO_MORE_USER_HANDLES - The current process has used all of its system allowance of handles for Window Manager objects.
@@ -8893,7 +8893,7 @@ Language=Russian
 ERROR_MESSAGE_SYNC_ONLY - Сообщение может быть использовано только с операциями синхронизации.
 .
 Language=Polish
-ERROR_MESSAGE_SYNC_ONLY - The message can be used only with synchronous operations.
+ERROR_MESSAGE_SYNC_ONLY - Komunikat może być użyty tylko przy operacjach synchronicznych.
 .
 Language=Romanian
 ERROR_MESSAGE_SYNC_ONLY - The message can be used only with synchronous operations.
@@ -8910,7 +8910,7 @@ Language=Russian
 ERROR_SOURCE_ELEMENT_EMPTY - Указанный исходный элемент не имеет носителя.
 .
 Language=Polish
-ERROR_SOURCE_ELEMENT_EMPTY - The indicated source element has no media.
+ERROR_SOURCE_ELEMENT_EMPTY - Wskazany element źródłowy nie ma nośnika.
 .
 Language=Romanian
 ERROR_SOURCE_ELEMENT_EMPTY - The indicated source element has no media.
@@ -8927,7 +8927,7 @@ Language=Russian
 ERROR_DESTINATION_ELEMENT_FULL - Указанный конечный элемент уже содержит носитель.
 .
 Language=Polish
-ERROR_DESTINATION_ELEMENT_FULL - The indicated destination element already contains media.
+ERROR_DESTINATION_ELEMENT_FULL - Wskazany element docelowy już ma nośnik.
 .
 Language=Romanian
 ERROR_DESTINATION_ELEMENT_FULL - The indicated destination element already contains media.
@@ -8944,7 +8944,7 @@ Language=Russian
 ERROR_ILLEGAL_ELEMENT_ADDRESS - Указанный элемент не существует.
 .
 Language=Polish
-ERROR_ILLEGAL_ELEMENT_ADDRESS - The indicated element does not exist.
+ERROR_ILLEGAL_ELEMENT_ADDRESS - Wskazany element nie istnieje.
 .
 Language=Romanian
 ERROR_ILLEGAL_ELEMENT_ADDRESS - The indicated element does not exist.
@@ -8961,7 +8961,7 @@ Language=Russian
 ERROR_MAGAZINE_NOT_PRESENT - Указанный элемент является частью отсутствующего журнала.
 .
 Language=Polish
-ERROR_MAGAZINE_NOT_PRESENT - The indicated element is part of a magazine that is not present.
+ERROR_MAGAZINE_NOT_PRESENT - Wskazany element stanowi część magazynu, którego nie ma.
 .
 Language=Romanian
 ERROR_MAGAZINE_NOT_PRESENT - The indicated element is part of a magazine that is not present.
@@ -8978,7 +8978,7 @@ Language=Russian
 ERROR_DEVICE_REINITIALIZATION_NEEDED - Указанный элемент требует повторной инициализации из-за аппаратных ошибок.
 .
 Language=Polish
-ERROR_DEVICE_REINITIALIZATION_NEEDED - The indicated device requires reinitialization due to hardware errors.
+ERROR_DEVICE_REINITIALIZATION_NEEDED - Wskazane urządzenie wymaga ponownego zainicjowania wskutek błędów sprzętowych.
 .
 Language=Romanian
 ERROR_DEVICE_REINITIALIZATION_NEEDED - The indicated device requires reinitialization due to hardware errors.
@@ -8995,7 +8995,7 @@ Language=Russian
 ERROR_DEVICE_REQUIRES_CLEANING - Устройство требует проведение чистки перед его дальнейшим использованием.
 .
 Language=Polish
-ERROR_DEVICE_REQUIRES_CLEANING - The device has indicated that cleaning is required before further operations are attempted.
+ERROR_DEVICE_REQUIRES_CLEANING - Urządzenie sygnalizuje, że przed dalszymi operacjami jest wymagane czyszczenie.
 .
 Language=Romanian
 ERROR_DEVICE_REQUIRES_CLEANING - The device has indicated that cleaning is required before further operations are attempted.
@@ -9012,7 +9012,7 @@ Language=Russian
 ERROR_DEVICE_DOOR_OPEN - Устройство сообщает, что открыта дверца.
 .
 Language=Polish
-ERROR_DEVICE_DOOR_OPEN - The device has indicated that its door is open.
+ERROR_DEVICE_DOOR_OPEN - Urządzenie sygnalizuje, że jest otwarte.
 .
 Language=Romanian
 ERROR_DEVICE_DOOR_OPEN - The device has indicated that its door is open.
@@ -9029,7 +9029,7 @@ Language=Russian
 ERROR_DEVICE_NOT_CONNECTED - Устройство не подключено.
 .
 Language=Polish
-ERROR_DEVICE_NOT_CONNECTED - The device is not connected.
+ERROR_DEVICE_NOT_CONNECTED - Urządzenie nie jest podłączone.
 .
 Language=Romanian
 ERROR_DEVICE_NOT_CONNECTED - The device is not connected.
@@ -9046,7 +9046,7 @@ Language=Russian
 ERROR_NOT_FOUND - Элемент не найден.
 .
 Language=Polish
-ERROR_NOT_FOUND - Element not found.
+ERROR_NOT_FOUND - Nie można odnaleźć elementu.
 .
 Language=Romanian
 ERROR_NOT_FOUND - Element not found.
@@ -9063,7 +9063,7 @@ Language=Russian
 ERROR_NO_MATCH - В индексе не найдены соответствия указанному ключу.
 .
 Language=Polish
-ERROR_NO_MATCH - There was no match for the specified key in the index.
+ERROR_NO_MATCH - W indeksie nie znaleziono pozycji odpowiadającej podanemu kluczowi.
 .
 Language=Romanian
 ERROR_NO_MATCH - There was no match for the specified key in the index.
@@ -9080,7 +9080,7 @@ Language=Russian
 ERROR_SET_NOT_FOUND - Указанный набор свойств не существует для объекта.
 .
 Language=Polish
-ERROR_SET_NOT_FOUND - The property set specified does not exist on the object.
+ERROR_SET_NOT_FOUND - Określony zestaw właściwości nie istnieje na tym obiekcie.
 .
 Language=Romanian
 ERROR_SET_NOT_FOUND - The property set specified does not exist on the object.
@@ -9097,7 +9097,7 @@ Language=Russian
 ERROR_POINT_NOT_FOUND - Переданная в GetMouseMovePoints точка не находится в буфере.
 .
 Language=Polish
-ERROR_POINT_NOT_FOUND - The point passed to GetMouseMovePointsEx is not in the buffer.
+ERROR_POINT_NOT_FOUND - Punkt przekazany do instrukcji GetMouseMovePoints nie znajduje się w buforze.
 .
 Language=Romanian
 ERROR_POINT_NOT_FOUND - The point passed to GetMouseMovePointsEx is not in the buffer.
@@ -9114,7 +9114,7 @@ Language=Russian
 ERROR_NO_TRACKING_SERVICE - Служба слежения (на рабочей станции) не запущена.
 .
 Language=Polish
-ERROR_NO_TRACKING_SERVICE - The tracking (workstation) service is not running.
+ERROR_NO_TRACKING_SERVICE - Usługa śledzenia (stacja robocza) nie jest uruchomiona.
 .
 Language=Romanian
 ERROR_NO_TRACKING_SERVICE - The tracking (workstation) service is not running.
@@ -9131,7 +9131,7 @@ Language=Russian
 ERROR_NO_VOLUME_ID - Не удается найти идентификатор тома.
 .
 Language=Polish
-ERROR_NO_VOLUME_ID - The Volume ID could not be found.
+ERROR_NO_VOLUME_ID - Nie można znaleźć identyfikatora woluminu.
 .
 Language=Romanian
 ERROR_NO_VOLUME_ID - The Volume ID could not be found.
@@ -9148,7 +9148,7 @@ Language=Russian
 ERROR_UNABLE_TO_REMOVE_REPLACED - Не удается удалить заменяемый файл.
 .
 Language=Polish
-ERROR_UNABLE_TO_REMOVE_REPLACED - Unable to remove the file to be replaced.
+ERROR_UNABLE_TO_REMOVE_REPLACED - Nie można usunąć pliku, który ma być zastąpiony.
 .
 Language=Romanian
 ERROR_UNABLE_TO_REMOVE_REPLACED - Unable to remove the file to be replaced.
@@ -9165,7 +9165,7 @@ Language=Russian
 ERROR_UNABLE_TO_MOVE_REPLACEMENT - Не удается заместить файл. Замещаемый файл сохранил свое первоначальное имя.
 .
 Language=Polish
-ERROR_UNABLE_TO_MOVE_REPLACEMENT - Unable to move the replacement file to the file to be replaced. The file to be replaced has retained its original name.
+ERROR_UNABLE_TO_MOVE_REPLACEMENT - Nie można przenieść pliku zastępującego do pliku, który ma być zamieniony. Plik, który miał ulec zamianie, zachował swoją oryginalną nazwę.
 .
 Language=Romanian
 ERROR_UNABLE_TO_MOVE_REPLACEMENT - Unable to move the replacement file to the file to be replaced. The file to be replaced has retained its original name.
@@ -9182,7 +9182,7 @@ Language=Russian
 ERROR_UNABLE_TO_MOVE_REPLACEMENT_2 - Не удается заместить файл. Замещаемый файл был переименован с использованием резервного имени.
 .
 Language=Polish
-ERROR_UNABLE_TO_MOVE_REPLACEMENT_2 - Unable to move the replacement file to the file to be replaced. The file to be replaced has been renamed using the backup name.
+ERROR_UNABLE_TO_MOVE_REPLACEMENT_2 - Nie można przenieść pliku zastępującego do pliku, który ma być zamieniony. Nazwa pliku, który miał ulec zamianie, została zmieniona na nazwę kopii zapasowej.
 .
 Language=Romanian
 ERROR_UNABLE_TO_MOVE_REPLACEMENT_2 - Unable to move the replacement file to the file to be replaced. The file to be replaced has been renamed using the backup name.
@@ -9199,7 +9199,7 @@ Language=Russian
 ERROR_JOURNAL_DELETE_IN_PROGRESS - Журнал изменений тома удален.
 .
 Language=Polish
-ERROR_JOURNAL_DELETE_IN_PROGRESS - The volume change journal is being deleted.
+ERROR_JOURNAL_DELETE_IN_PROGRESS - Dziennik zmian woluminu jest usuwany.
 .
 Language=Romanian
 ERROR_JOURNAL_DELETE_IN_PROGRESS - The volume change journal is being deleted.
@@ -9216,7 +9216,7 @@ Language=Russian
 ERROR_JOURNAL_NOT_ACTIVE - Журнал изменений тома не активен.
 .
 Language=Polish
-ERROR_JOURNAL_NOT_ACTIVE - The volume change journal is not active.
+ERROR_JOURNAL_NOT_ACTIVE - Dziennik zmiany woluminu nie jest aktywny.
 .
 Language=Romanian
 ERROR_JOURNAL_NOT_ACTIVE - The volume change journal is not active.
@@ -9233,7 +9233,7 @@ Language=Russian
 ERROR_POTENTIAL_FILE_FOUND - Файл найден, но это может быть неверный файл.
 .
 Language=Polish
-ERROR_POTENTIAL_FILE_FOUND - A file was found, but it may not be the correct file.
+ERROR_POTENTIAL_FILE_FOUND - Plik został znaleziony, ale może to nie być właściwy plik.
 .
 Language=Romanian
 ERROR_POTENTIAL_FILE_FOUND - A file was found, but it may not be the correct file.
@@ -9250,7 +9250,7 @@ Language=Russian
 ERROR_JOURNAL_ENTRY_DELETED - Из журнала удалена запись.
 .
 Language=Polish
-ERROR_JOURNAL_ENTRY_DELETED - The journal entry has been deleted from the journal.
+ERROR_JOURNAL_ENTRY_DELETED - Wpis dziennika został usunięty z dziennika.
 .
 Language=Romanian
 ERROR_JOURNAL_ENTRY_DELETED - The journal entry has been deleted from the journal.
@@ -9267,7 +9267,7 @@ Language=Russian
 ERROR_BAD_DEVICE - Указано неверное имя устройства.
 .
 Language=Polish
-ERROR_BAD_DEVICE - The specified device name is invalid.
+ERROR_BAD_DEVICE - Określona nazwa urządzenia jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_BAD_DEVICE - The specified device name is invalid.
@@ -9284,7 +9284,7 @@ Language=Russian
 ERROR_CONNECTION_UNAVAIL - Устройство сейчас не подключено, но сведения о нем в конфигурации присутствуют.
 .
 Language=Polish
-ERROR_CONNECTION_UNAVAIL - The device is not currently connected but it is a remembered connection.
+ERROR_CONNECTION_UNAVAIL - Urządzenie nie jest obecnie podłączone, ale istnieje jako zapamiętane połączenie.
 .
 Language=Romanian
 ERROR_CONNECTION_UNAVAIL - The device is not currently connected but it is a remembered connection.
@@ -9301,7 +9301,7 @@ Language=Russian
 ERROR_DEVICE_ALREADY_REMEMBERED - Локальное имя устройства уже используется для подключения к другому сетевому ресурсу.
 .
 Language=Polish
-ERROR_DEVICE_ALREADY_REMEMBERED - The local device name has a remembered connection to another network resource.
+ERROR_DEVICE_ALREADY_REMEMBERED - Nazwa urządzenia lokalnego pamięta połączenie z innym zasobem sieciowym.
 .
 Language=Romanian
 ERROR_DEVICE_ALREADY_REMEMBERED - The local device name has a remembered connection to another network resource.
@@ -9318,7 +9318,7 @@ Language=Russian
 ERROR_NO_NET_OR_BAD_PATH - Сетевой путь введен неправильно, не существует, или сеть сейчас недоступна. Попробуйте ввести путь заново или обратитесь к администратору сети.
 .
 Language=Polish
-ERROR_NO_NET_OR_BAD_PATH - The network path was either typed incorrectly, does not exist, or the network provider is not currently available. Please try retyping the path or contact your network administrator.
+ERROR_NO_NET_OR_BAD_PATH - Ścieżka sieciowa została wpisana niepoprawnie, nie istnieje lub dostawca sieci jest obecnie niedostępny. Spróbuj ponownie wpisać ścieżkę lub skontaktuj się z administratorem sieci.
 .
 Language=Romanian
 ERROR_NO_NET_OR_BAD_PATH - The network path was either typed incorrectly, does not exist, or the network provider is not currently available. Please try retyping the path or contact your network administrator.
@@ -9335,7 +9335,7 @@ Language=Russian
 ERROR_BAD_PROVIDER - Имя службы доступа к сети задано неверно.
 .
 Language=Polish
-ERROR_BAD_PROVIDER - The specified network provider name is invalid.
+ERROR_BAD_PROVIDER - Określona nazwa dostawcy sieciowego jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_BAD_PROVIDER - The specified network provider name is invalid.
@@ -9352,7 +9352,7 @@ Language=Russian
 ERROR_CANNOT_OPEN_PROFILE - Не удается открыть конфигурацию подключения к сети.
 .
 Language=Polish
-ERROR_CANNOT_OPEN_PROFILE - Unable to open the network connection profile.
+ERROR_CANNOT_OPEN_PROFILE - Nie można otworzyć profilu połączenia sieciowego.
 .
 Language=Romanian
 ERROR_CANNOT_OPEN_PROFILE - Unable to open the network connection profile.
@@ -9369,7 +9369,7 @@ Language=Russian
 ERROR_BAD_PROFILE - Конфигурация подключения к сети повреждена.
 .
 Language=Polish
-ERROR_BAD_PROFILE - The network connection profile is corrupted.
+ERROR_BAD_PROFILE - Profil połączenia sieciowego jest uszkodzony.
 .
 Language=Romanian
 ERROR_BAD_PROFILE - The network connection profile is corrupted.
@@ -9386,7 +9386,7 @@ Language=Russian
 ERROR_NOT_CONTAINER - Перечисление объектов, не являющихся контейнерами, невозможно.
 .
 Language=Polish
-ERROR_NOT_CONTAINER - Cannot enumerate a noncontainer.
+ERROR_NOT_CONTAINER - Nie można wyliczać obiektu nie będącego kontenerem.
 .
 Language=Romanian
 ERROR_NOT_CONTAINER - Cannot enumerate a noncontainer.
@@ -9403,7 +9403,7 @@ Language=Russian
 ERROR_EXTENDED_ERROR - Ошибка расширенного типа.
 .
 Language=Polish
-ERROR_EXTENDED_ERROR - An extended error has occurred.
+ERROR_EXTENDED_ERROR - Wystąpił błąd rozszerzony.
 .
 Language=Romanian
 ERROR_EXTENDED_ERROR - An extended error has occurred.
@@ -9420,7 +9420,7 @@ Language=Russian
 ERROR_INVALID_GROUPNAME - Неверный формат имени группы.
 .
 Language=Polish
-ERROR_INVALID_GROUPNAME - The format of the specified group name is invalid.
+ERROR_INVALID_GROUPNAME - Format określonej nazwy grupy jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_GROUPNAME - The format of the specified group name is invalid.
@@ -9437,7 +9437,7 @@ Language=Russian
 ERROR_INVALID_COMPUTERNAME - Неверный формат имени компьютера.
 .
 Language=Polish
-ERROR_INVALID_COMPUTERNAME - The format of the specified computer name is invalid.
+ERROR_INVALID_COMPUTERNAME - Format określonej nazwy komputera jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_COMPUTERNAME - The format of the specified computer name is invalid.
@@ -9454,7 +9454,7 @@ Language=Russian
 ERROR_INVALID_EVENTNAME - Неверный формат имени события.
 .
 Language=Polish
-ERROR_INVALID_EVENTNAME - The format of the specified event name is invalid.
+ERROR_INVALID_EVENTNAME - Format określonej nazwy zdarzenia jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_EVENTNAME - The format of the specified event name is invalid.
@@ -9471,7 +9471,7 @@ Language=Russian
 ERROR_INVALID_DOMAINNAME - Неверный формат имени домена.
 .
 Language=Polish
-ERROR_INVALID_DOMAINNAME - The format of the specified domain name is invalid.
+ERROR_INVALID_DOMAINNAME - Format określonej nazwy domeny jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_DOMAINNAME - The format of the specified domain name is invalid.
@@ -9488,7 +9488,7 @@ Language=Russian
 ERROR_INVALID_SERVICENAME - Неверный формат имени службы.
 .
 Language=Polish
-ERROR_INVALID_SERVICENAME - The format of the specified service name is invalid.
+ERROR_INVALID_SERVICENAME - Format określonej nazwy usługi jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_SERVICENAME - The format of the specified service name is invalid.
@@ -9505,7 +9505,7 @@ Language=Russian
 ERROR_INVALID_NETNAME - Неверный формат сетевого имени.
 .
 Language=Polish
-ERROR_INVALID_NETNAME - The format of the specified network name is invalid.
+ERROR_INVALID_NETNAME - Format określonej nazwy sieci jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_NETNAME - The format of the specified network name is invalid.
@@ -9522,7 +9522,7 @@ Language=Russian
 ERROR_INVALID_SHARENAME - Недопустимый формат имени общего ресурса.
 .
 Language=Polish
-ERROR_INVALID_SHARENAME - The format of the specified share name is invalid.
+ERROR_INVALID_SHARENAME - Format określonej nazwy udziału jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_SHARENAME - The format of the specified share name is invalid.
@@ -9539,7 +9539,7 @@ Language=Russian
 ERROR_INVALID_PASSWORDNAME - Неверный формат пароля.
 .
 Language=Polish
-ERROR_INVALID_PASSWORDNAME - The format of the specified password is invalid.
+ERROR_INVALID_PASSWORDNAME - Format określonego hasła jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_PASSWORDNAME - The format of the specified password is invalid.
@@ -9556,7 +9556,7 @@ Language=Russian
 ERROR_INVALID_MESSAGENAME - Неверный формат имени сообщения.
 .
 Language=Polish
-ERROR_INVALID_MESSAGENAME - The format of the specified message name is invalid.
+ERROR_INVALID_MESSAGENAME - Format określonej nazwy komunikatu jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_MESSAGENAME - The format of the specified message name is invalid.
@@ -9573,7 +9573,7 @@ Language=Russian
 ERROR_INVALID_MESSAGEDEST - Неверный формат задания адреса, по которому отправляется сообщение.
 .
 Language=Polish
-ERROR_INVALID_MESSAGEDEST - The format of the specified message destination is invalid.
+ERROR_INVALID_MESSAGEDEST - Format określonego miejsca docelowego komunikatu jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_MESSAGEDEST - The format of the specified message destination is invalid.
@@ -9590,7 +9590,7 @@ Language=Russian
 ERROR_SESSION_CREDENTIAL_CONFLICT - Множественное подключение к серверу или к общим ресурсам одним пользователем с использованием более одного имени пользователя не разрешено. Отключите все предыдущие подключения к серверу или общим ресурсам и повторите попытку.
 .
 Language=Polish
-ERROR_SESSION_CREDENTIAL_CONFLICT - Multiple connections to a server or shared resource by the same user, using more than one user name, are not allowed. Disconnect all previous connections to the server or shared resource and try again.
+ERROR_SESSION_CREDENTIAL_CONFLICT - Wielokrotne połączenia z serwerem lub udostępnionym zasobem przez tego samego użytkownika przy użyciu więcej niż jednej nazwy użytkownika są niedozwolone. Rozłącz wszystkie poprzednie połączenia z serwerem lub udostępnionym zasobem i spróbuj ponownie.
 .
 Language=Romanian
 ERROR_SESSION_CREDENTIAL_CONFLICT - Multiple connections to a server or shared resource by the same user, using more than one user name, are not allowed. Disconnect all previous connections to the server or shared resource and try again.
@@ -9607,7 +9607,7 @@ Language=Russian
 ERROR_REMOTE_SESSION_LIMIT_EXCEEDED - Попытка установки сеанса связи с сервером сети, для которого достигнут предел по числу таких сеансов.
 .
 Language=Polish
-ERROR_REMOTE_SESSION_LIMIT_EXCEEDED - An attempt was made to establish a session to a network server, but there are already too many sessions established to that server.
+ERROR_REMOTE_SESSION_LIMIT_EXCEEDED - Podjęto próbę ustanowienia sesji z serwerem sieci, ale jest już ustanowionych zbyt wiele sesji z tym serwerem.
 .
 Language=Romanian
 ERROR_REMOTE_SESSION_LIMIT_EXCEEDED - An attempt was made to establish a session to a network server, but there are already too many sessions established to that server.
@@ -9624,7 +9624,7 @@ Language=Russian
 ERROR_DUP_DOMAINNAME - Имя рабочей группы или домена уже используется другим компьютером в сети.
 .
 Language=Polish
-ERROR_DUP_DOMAINNAME - The workgroup or domain name is already in use by another computer on the network.
+ERROR_DUP_DOMAINNAME - Nazwa domeny lub grupy roboczej jest już używana przez inny komputer w sieci.
 .
 Language=Romanian
 ERROR_DUP_DOMAINNAME - The workgroup or domain name is already in use by another computer on the network.
@@ -9641,7 +9641,7 @@ Language=Russian
 ERROR_NO_NETWORK - Сеть отсутствует или не запущена.
 .
 Language=Polish
-ERROR_NO_NETWORK - The network is not present or not started.
+ERROR_NO_NETWORK - Brak sieci lub nie została ona uruchomiona.
 .
 Language=Romanian
 ERROR_NO_NETWORK - The network is not present or not started.
@@ -9658,7 +9658,7 @@ Language=Russian
 ERROR_CANCELLED - Операция была отменена пользователем.
 .
 Language=Polish
-ERROR_CANCELLED - The operation was canceled by the user.
+ERROR_CANCELLED - Operacja została anulowana przez użytkownika.
 .
 Language=Romanian
 ERROR_CANCELLED - The operation was canceled by the user.
@@ -9675,7 +9675,7 @@ Language=Russian
 ERROR_USER_MAPPED_FILE - Запрошенную операцию нельзя выполнить для файла с открытой пользователем сопоставленной секцией.
 .
 Language=Polish
-ERROR_USER_MAPPED_FILE - The requested operation cannot be performed on a file with a user-mapped section open.
+ERROR_USER_MAPPED_FILE - Nie można wykonać żądanej operacji na pliku z otwartą sekcją mapowania użytkownika.
 .
 Language=Romanian
 ERROR_USER_MAPPED_FILE - The requested operation cannot be performed on a file with a user-mapped section open.
@@ -9692,7 +9692,7 @@ Language=Russian
 ERROR_CONNECTION_REFUSED - Удаленный компьютер отклонил это сетевое подключение.
 .
 Language=Polish
-ERROR_CONNECTION_REFUSED - The remote system refused the network connection.
+ERROR_CONNECTION_REFUSED - Komputer zdalny odrzucił połączenie sieciowe.
 .
 Language=Romanian
 ERROR_CONNECTION_REFUSED - The remote system refused the network connection.
@@ -9709,7 +9709,7 @@ Language=Russian
 ERROR_GRACEFUL_DISCONNECT - Сетевое подключение было закрыто.
 .
 Language=Polish
-ERROR_GRACEFUL_DISCONNECT - The network connection was gracefully closed.
+ERROR_GRACEFUL_DISCONNECT - Połączenie sieciowe zostało bezpiecznie zamknięte.
 .
 Language=Romanian
 ERROR_GRACEFUL_DISCONNECT - The network connection was gracefully closed.
@@ -9726,7 +9726,7 @@ Language=Russian
 ERROR_ADDRESS_ALREADY_ASSOCIATED - Конечной точке сетевого транспорта уже сопоставлен адрес.
 .
 Language=Polish
-ERROR_ADDRESS_ALREADY_ASSOCIATED - The network transport endpoint already has an address associated with it.
+ERROR_ADDRESS_ALREADY_ASSOCIATED - Z punktem końcowym transportu sieciowego jest już skojarzony adres.
 .
 Language=Romanian
 ERROR_ADDRESS_ALREADY_ASSOCIATED - The network transport endpoint already has an address associated with it.
@@ -9743,7 +9743,7 @@ Language=Russian
 ERROR_ADDRESS_NOT_ASSOCIATED - Конечной точке сети еще не сопоставлен адрес.
 .
 Language=Polish
-ERROR_ADDRESS_NOT_ASSOCIATED - An address has not yet been associated with the network endpoint.
+ERROR_ADDRESS_NOT_ASSOCIATED - Adres nie został jeszcze skojarzony z punktem końcowym sieci.
 .
 Language=Romanian
 ERROR_ADDRESS_NOT_ASSOCIATED - An address has not yet been associated with the network endpoint.
@@ -9760,7 +9760,7 @@ Language=Russian
 ERROR_CONNECTION_INVALID - Попытка выполнить операцию для несуществующего сетевого подключения.
 .
 Language=Polish
-ERROR_CONNECTION_INVALID - An operation was attempted on a nonexistent network connection.
+ERROR_CONNECTION_INVALID - Próbowano wykonać operację na nieistniejącym połączeniu sieciowym.
 .
 Language=Romanian
 ERROR_CONNECTION_INVALID - An operation was attempted on a nonexistent network connection.
@@ -9777,7 +9777,7 @@ Language=Russian
 ERROR_CONNECTION_ACTIVE - Попытка выполнить недопустимую операцию для активного сетевого подключения.
 .
 Language=Polish
-ERROR_CONNECTION_ACTIVE - An invalid operation was attempted on an active network connection.
+ERROR_CONNECTION_ACTIVE - Na aktywnym połączeniu sieciowym próbowano wykonać nieprawidłową operację.
 .
 Language=Romanian
 ERROR_CONNECTION_ACTIVE - An invalid operation was attempted on an active network connection.
@@ -9794,7 +9794,7 @@ Language=Russian
 ERROR_NETWORK_UNREACHABLE - Сетевая папка недоступна. За информацией о разрешении проблем в сети обратитесь к справочной системе Windows.
 .
 Language=Polish
-ERROR_NETWORK_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
+ERROR_NETWORK_UNREACHABLE - Lokalizacja sieciowa jest nieosiągalna. Informacje na temat rozwiązywania problemów z siecią można znaleźć w Pomocy systemu Windows.
 .
 Language=Romanian
 ERROR_NETWORK_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
@@ -9811,7 +9811,7 @@ Language=Russian
 ERROR_HOST_UNREACHABLE - Сетевая папка недоступна. За информацией о разрешении проблем в сети обратитесь к справочной системе Windows.
 .
 Language=Polish
-ERROR_HOST_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
+ERROR_HOST_UNREACHABLE - Lokalizacja sieciowa jest nieosiągalna. Informacje na temat rozwiązywania problemów z siecią można znaleźć w Pomocy systemu Windows.
 .
 Language=Romanian
 ERROR_HOST_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
@@ -9828,7 +9828,7 @@ Language=Russian
 ERROR_PROTOCOL_UNREACHABLE - Сетевая папка недоступна. За информацией о разрешении проблем в сети обратитесь к справочной системе Windows.
 .
 Language=Polish
-ERROR_PROTOCOL_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
+ERROR_PROTOCOL_UNREACHABLE - Lokalizacja sieciowa jest nieosiągalna. Informacje na temat rozwiązywania problemów z siecią można znaleźć w Pomocy systemu Windows.
 .
 Language=Romanian
 ERROR_PROTOCOL_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
@@ -9845,7 +9845,7 @@ Language=Russian
 ERROR_PORT_UNREACHABLE - На конечном звене нужной сети удаленной системы не запущена ни одна служба.
 .
 Language=Polish
-ERROR_PORT_UNREACHABLE - No service is operating at the destination network endpoint on the remote system.
+ERROR_PORT_UNREACHABLE - W docelowym punkcie końcowym sieci systemu zdalnego nie działa żadna usługa.
 .
 Language=Romanian
 ERROR_PORT_UNREACHABLE - No service is operating at the destination network endpoint on the remote system.
@@ -9862,7 +9862,7 @@ Language=Russian
 ERROR_REQUEST_ABORTED - Запрос был прерван.
 .
 Language=Polish
-ERROR_REQUEST_ABORTED - The request was aborted.
+ERROR_REQUEST_ABORTED - Żądanie zostało przerwane.
 .
 Language=Romanian
 ERROR_REQUEST_ABORTED - The request was aborted.
@@ -9879,7 +9879,7 @@ Language=Russian
 ERROR_CONNECTION_ABORTED - Подключение к сети было разорвано локальной системой.
 .
 Language=Polish
-ERROR_CONNECTION_ABORTED - The network connection was aborted by the local system.
+ERROR_CONNECTION_ABORTED - Połączenie sieciowe zostało przerwane przez system lokalny.
 .
 Language=Romanian
 ERROR_CONNECTION_ABORTED - The network connection was aborted by the local system.
@@ -9896,7 +9896,7 @@ Language=Russian
 ERROR_RETRY - Не удалось завершить операцию.  Следует повторить ее.
 .
 Language=Polish
-ERROR_RETRY - The operation could not be completed. A retry should be performed.
+ERROR_RETRY - Operacja nie zakończyła się pomyślnie. Należy ponowić próbę.
 .
 Language=Romanian
 ERROR_RETRY - The operation could not be completed. A retry should be performed.
@@ -9913,7 +9913,7 @@ Language=Russian
 ERROR_CONNECTION_COUNT_LIMIT - Подключение к серверу невозможно, так как для данной учетной записи уже достигнут предел по числу одновременных подключений.
 .
 Language=Polish
-ERROR_CONNECTION_COUNT_LIMIT - A connection to the server could not be made because the limit on the number of concurrent connections for this account has been reached.
+ERROR_CONNECTION_COUNT_LIMIT - Nie można ustanowić połączenia z serwerem z powodu wyczerpania limitu jednoczesnych połączeń dla tego konta.
 .
 Language=Romanian
 ERROR_CONNECTION_COUNT_LIMIT - A connection to the server could not be made because the limit on the number of concurrent connections for this account has been reached.
@@ -9930,7 +9930,7 @@ Language=Russian
 ERROR_LOGIN_TIME_RESTRICTION - Попытка входа в сеть в непредусмотренное для этой учетной записи время дня.
 .
 Language=Polish
-ERROR_LOGIN_TIME_RESTRICTION - Attempting to log in during an unauthorized time of day for this account.
+ERROR_LOGIN_TIME_RESTRICTION - Próbowano zalogować się w porze dnia niedozwolonej dla tego konta.
 .
 Language=Romanian
 ERROR_LOGIN_TIME_RESTRICTION - Attempting to log in during an unauthorized time of day for this account.
@@ -9947,7 +9947,7 @@ Language=Russian
 ERROR_LOGIN_WKSTA_RESTRICTION - Данная учетная запись не может быть использована для входа в сеть с этой станции.
 .
 Language=Polish
-ERROR_LOGIN_WKSTA_RESTRICTION - The account is not authorized to log in from this station.
+ERROR_LOGIN_WKSTA_RESTRICTION - Konto nie ma uprawnień do logowania z tej stacji.
 .
 Language=Romanian
 ERROR_LOGIN_WKSTA_RESTRICTION - The account is not authorized to log in from this station.
@@ -9964,7 +9964,7 @@ Language=Russian
 ERROR_INCORRECT_ADDRESS - Не удалось использовать сетевой адрес для запрошенной операции.
 .
 Language=Polish
-ERROR_INCORRECT_ADDRESS - The network address could not be used for the operation requested.
+ERROR_INCORRECT_ADDRESS - Adresu sieciowego nie można użyć do żądanej operacji.
 .
 Language=Romanian
 ERROR_INCORRECT_ADDRESS - The network address could not be used for the operation requested.
@@ -9981,7 +9981,7 @@ Language=Russian
 ERROR_ALREADY_REGISTERED - Служба уже зарегистрирована.
 .
 Language=Polish
-ERROR_ALREADY_REGISTERED - The service is already registered.
+ERROR_ALREADY_REGISTERED - Usługa jest już zarejestrowana.
 .
 Language=Romanian
 ERROR_ALREADY_REGISTERED - The service is already registered.
@@ -9998,7 +9998,7 @@ Language=Russian
 ERROR_SERVICE_NOT_FOUND - Указанная служба не существует.
 .
 Language=Polish
-ERROR_SERVICE_NOT_FOUND - The specified service does not exist.
+ERROR_SERVICE_NOT_FOUND - Określona usługa nie istnieje.
 .
 Language=Romanian
 ERROR_SERVICE_NOT_FOUND - The specified service does not exist.
@@ -10015,7 +10015,7 @@ Language=Russian
 ERROR_NOT_AUTHENTICATED - Запрошенная операция не была выполнена, так как пользователь не зарегистрирован.
 .
 Language=Polish
-ERROR_NOT_AUTHENTICATED - The operation being requested was not performed because the user has not been authenticated.
+ERROR_NOT_AUTHENTICATED - Żądana operacja nie została wykonana, ponieważ użytkownik nie został uwierzytelniony.
 .
 Language=Romanian
 ERROR_NOT_AUTHENTICATED - The operation being requested was not performed because the user has not been authenticated.
@@ -10032,7 +10032,7 @@ Language=Russian
 ERROR_NOT_LOGGED_ON - Запрошенная операция не была выполнена, так как пользователь не выполнил вход в сеть. Указанная служба не существует.
 .
 Language=Polish
-ERROR_NOT_LOGGED_ON - The operation being requested was not performed because the user has not logged on to the network. The specified service does not exist.
+ERROR_NOT_LOGGED_ON - Żądana operacja nie została wykonana, ponieważ użytkownik nie zalogował się do sieci. Określona usługa nie istnieje.
 .
 Language=Romanian
 ERROR_NOT_LOGGED_ON - The operation being requested was not performed because the user has not logged on to the network. The specified service does not exist.
@@ -10049,7 +10049,7 @@ Language=Russian
 ERROR_CONTINUE - Требуется продолжить выполняющуюся операцию.
 .
 Language=Polish
-ERROR_CONTINUE - Continue with work in progress.
+ERROR_CONTINUE - Kontynuuj wykonywaną pracę.
 .
 Language=Romanian
 ERROR_CONTINUE - Continue with work in progress.
@@ -10066,7 +10066,7 @@ Language=Russian
 ERROR_ALREADY_INITIALIZED - Попытка выполнить операцию инициализации, которая уже проведена.
 .
 Language=Polish
-ERROR_ALREADY_INITIALIZED - An attempt was made to perform an initialization operation when initialization has already been completed.
+ERROR_ALREADY_INITIALIZED - Wykonano próbę wykonania operacji inicjalizacji po tym, gdy inicjalizacja została już wykonana.
 .
 Language=Romanian
 ERROR_ALREADY_INITIALIZED - An attempt was made to perform an initialization operation when initialization has already been completed.
@@ -10083,7 +10083,7 @@ Language=Russian
 ERROR_NO_MORE_DEVICES - Больше локальных устройств не найдено.
 .
 Language=Polish
-ERROR_NO_MORE_DEVICES - No more local devices.
+ERROR_NO_MORE_DEVICES - Brak dalszych urządzeń lokalnych.
 .
 Language=Romanian
 ERROR_NO_MORE_DEVICES - No more local devices.
@@ -10100,7 +10100,7 @@ Language=Russian
 ERROR_NO_SUCH_SITE - Указанный сайт не существует.
 .
 Language=Polish
-ERROR_NO_SUCH_SITE - The specified site does not exist.
+ERROR_NO_SUCH_SITE - Podana lokacja nie istnieje.
 .
 Language=Romanian
 ERROR_NO_SUCH_SITE - The specified site does not exist.
@@ -10117,7 +10117,7 @@ Language=Russian
 ERROR_DOMAIN_CONTROLLER_EXISTS - Контроллер домена с указанным именем уже существует.
 .
 Language=Polish
-ERROR_DOMAIN_CONTROLLER_EXISTS - A domain controller with the specified name already exists.
+ERROR_DOMAIN_CONTROLLER_EXISTS - Kontroler domeny o podanej nazwie już istnieje.
 .
 Language=Romanian
 ERROR_DOMAIN_CONTROLLER_EXISTS - A domain controller with the specified name already exists.
@@ -10134,7 +10134,7 @@ Language=Russian
 ERROR_ONLY_IF_CONNECTED - Эта операция поддерживается только при наличии подключения к серверу.
 .
 Language=Polish
-ERROR_ONLY_IF_CONNECTED - This operation is supported only when you are connected to the server.
+ERROR_ONLY_IF_CONNECTED - Ta operacja jest obsługiwana tylko wtedy, gdy jest nawiązane połączenie z serwerem.
 .
 Language=Romanian
 ERROR_ONLY_IF_CONNECTED - This operation is supported only when you are connected to the server.
@@ -10151,7 +10151,7 @@ Language=Russian
 ERROR_OVERRIDE_NOCHANGES - Основной модуль групповой политики должен вызвать расширение даже в случае отсутствия изменений.
 .
 Language=Polish
-ERROR_OVERRIDE_NOCHANGES - The group policy framework should call the extension even if there are no changes.
+ERROR_OVERRIDE_NOCHANGES - Zasady grupowe powinny wywołać rozszerzenie, nawet jeśli nie ma zmian.
 .
 Language=Romanian
 ERROR_OVERRIDE_NOCHANGES - The group policy framework should call the extension even if there are no changes.
@@ -10168,7 +10168,7 @@ Language=Russian
 ERROR_BAD_USER_PROFILE - Выбранный пользователь не имеет допустимого профиля.
 .
 Language=Polish
-ERROR_BAD_USER_PROFILE - The specified user does not have a valid profile.
+ERROR_BAD_USER_PROFILE - Nie ma prawidłowego profilu dla podanego użytkownika.
 .
 Language=Romanian
 ERROR_BAD_USER_PROFILE - The specified user does not have a valid profile.
@@ -10185,7 +10185,7 @@ Language=Russian
 ERROR_NOT_SUPPORTED_ON_SBS - Эта операция не поддерживается на Windows Server 2003 for Small Business Server.
 .
 Language=Polish
-ERROR_NOT_SUPPORTED_ON_SBS - This operation is not supported on a computer running Windows Server 2003 for Small Business Server.
+ERROR_NOT_SUPPORTED_ON_SBS - Ta operacja nie jest obsługiwana na komputerze z uruchomionym systemem Windows Server 2003 for Small Business Server.
 .
 Language=Romanian
 ERROR_NOT_SUPPORTED_ON_SBS - This operation is not supported on a computer running Windows Server 2003 for Small Business Server.
@@ -10202,7 +10202,7 @@ Language=Russian
 ERROR_SERVER_SHUTDOWN_IN_PROGRESS - Идет завершение работы компьютера-сервера.
 .
 Language=Polish
-ERROR_SERVER_SHUTDOWN_IN_PROGRESS - The server machine is shutting down.
+ERROR_SERVER_SHUTDOWN_IN_PROGRESS - Trwa zamykanie serwera.
 .
 Language=Romanian
 ERROR_SERVER_SHUTDOWN_IN_PROGRESS - The server machine is shutting down.
@@ -10219,7 +10219,7 @@ Language=Russian
 ERROR_HOST_DOWN - Удаленная система недоступна. За информацией о разрешении проблем в сети, обратитесь к справочной системе Windows.
 .
 Language=Polish
-ERROR_HOST_DOWN - The remote system is not available. For information about network troubleshooting, see Windows Help.
+ERROR_HOST_DOWN - System zdalny jest niedostępny. Aby uzyskać informacje dotyczące rozwiązywania problemów z siecią, zobacz Pomoc systemu Windows.
 .
 Language=Romanian
 ERROR_HOST_DOWN - The remote system is not available. For information about network troubleshooting, see Windows Help.
@@ -10236,7 +10236,7 @@ Language=Russian
 ERROR_NON_ACCOUNT_SID - Был указан идентификатор безопасности не из того домена.
 .
 Language=Polish
-ERROR_NON_ACCOUNT_SID - The security identifier provided is not from an account domain.
+ERROR_NON_ACCOUNT_SID - Podany identyfikator zabezpieczeń nie pochodzi z domeny konta.
 .
 Language=Romanian
 ERROR_NON_ACCOUNT_SID - The security identifier provided is not from an account domain.
@@ -10253,7 +10253,7 @@ Language=Russian
 ERROR_NON_DOMAIN_SID - В указанном идентификаторе безопасности отсутствует компонент для домена.
 .
 Language=Polish
-ERROR_NON_DOMAIN_SID - The security identifier provided does not have a domain component.
+ERROR_NON_DOMAIN_SID - Podany identyfikator zabezpieczeń nie ma składnika określającego domenę.
 .
 Language=Romanian
 ERROR_NON_DOMAIN_SID - The security identifier provided does not have a domain component.
@@ -10270,7 +10270,7 @@ Language=Russian
 ERROR_APPHELP_BLOCK - Окно AppHelp закрыто, из-за чего приложение не было запущено.
 .
 Language=Polish
-ERROR_APPHELP_BLOCK - AppHelp dialog canceled thus preventing the application from starting.
+ERROR_APPHELP_BLOCK - Okno dialogowe pomocy aplikacji zostało anulowane i uniemożliwia to uruchomienie aplikacji.
 .
 Language=Romanian
 ERROR_APPHELP_BLOCK - AppHelp dialog canceled thus preventing the application from starting.
@@ -10287,7 +10287,7 @@ Language=Russian
 ERROR_ACCESS_DISABLED_BY_POLICY - Эта программа заблокирована групповой политикой. За дополнительными сведениями обращайтесь к системному администратору.
 .
 Language=Polish
-ERROR_ACCESS_DISABLED_BY_POLICY - Windows cannot open this program because it has been prevented by a software restriction policy. For more information, open Event Viewer or contact your system administrator.
+ERROR_ACCESS_DISABLED_BY_POLICY - Ten program jest blokowany przez zasady grupy. Aby uzyskać więcej informacji, otwórz Podgląd zdarzeń lub skontaktuj się z administratorem systemu.
 .
 Language=Romanian
 ERROR_ACCESS_DISABLED_BY_POLICY - Windows cannot open this program because it has been prevented by a software restriction policy. For more information, open Event Viewer or contact your system administrator.
@@ -10304,7 +10304,7 @@ Language=Russian
 ERROR_REG_NAT_CONSUMPTION - Попытка программы использовать неправильное значение регистра. Обычно это вызвано неинициализированным регистром.
 .
 Language=Polish
-ERROR_REG_NAT_CONSUMPTION - A program attempt to use an invalid register value. Normally caused by an uninitialized register. This error is Itanium specific.
+ERROR_REG_NAT_CONSUMPTION - Program próbuje użyć nieprawidłowej wartości rejestru. Zwykle przyczyną jest niezainicjowany rejestr. Ten błąd jest specyficzny dla procesora Itanium.
 .
 Language=Romanian
 ERROR_REG_NAT_CONSUMPTION - A program attempt to use an invalid register value. Normally caused by an uninitialized register. This error is Itanium specific.
@@ -10321,7 +10321,7 @@ Language=Russian
 ERROR_CSCSHARE_OFFLINE - Общий ресурс недоступен или не существует.
 .
 Language=Polish
-ERROR_CSCSHARE_OFFLINE - The share is currently offline or does not exist.
+ERROR_CSCSHARE_OFFLINE - Udział jest aktualnie w trybie offline lub nie istnieje.
 .
 Language=Romanian
 ERROR_CSCSHARE_OFFLINE - The share is currently offline or does not exist.
@@ -10338,7 +10338,7 @@ Language=Russian
 ERROR_PKINIT_FAILURE - Ошибка протокола Kerberos при проверке сертификата KDC во время входа в систему со смарт-картой. Дополнительные сведения см. в журнале системных событий.
 .
 Language=Polish
-ERROR_PKINIT_FAILURE - The kerberos protocol encountered an error while validating the KDC certificate during smartcard logon.
+ERROR_PKINIT_FAILURE - Protokół Kerberos napotkał błąd, sprawdzając poprawność certyfikatu KDC podczas logowania karty inteligentnej. Więcej informacji można znaleźć w dzienniku zdarzeń systemu.
 .
 Language=Romanian
 ERROR_PKINIT_FAILURE - The kerberos protocol encountered an error while validating the KDC certificate during smartcard logon.
@@ -10355,7 +10355,7 @@ Language=Russian
 ERROR_SMARTCARD_SUBSYSTEM_FAILURE - Ошибка протокола Kerberos при попытке использовать подсистему для смарт-карт.
 .
 Language=Polish
-ERROR_SMARTCARD_SUBSYSTEM_FAILURE - The kerberos protocol encountered an error while attempting to utilize the smartcard subsystem.
+ERROR_SMARTCARD_SUBSYSTEM_FAILURE - Protokół Kerberos napotkał błąd podczas próby użycia podsystemu karty inteligentnej.
 .
 Language=Romanian
 ERROR_SMARTCARD_SUBSYSTEM_FAILURE - The kerberos protocol encountered an error while attempting to utilize the smartcard subsystem.
@@ -10372,7 +10372,7 @@ Language=Russian
 ERROR_DOWNGRADE_DETECTED - Системе не удается установить связь с контроллером домена, чтобы обработать запрос на проверку подлинности. Попробуйте еще раз позже.
 .
 Language=Polish
-ERROR_DOWNGRADE_DETECTED - The system detected a possible attempt to compromise security. Please ensure that you can contact the server that authenticated you.
+ERROR_DOWNGRADE_DETECTED - System wykrył możliwe zagrożenie bezpieczeństwa. Upewnij się, że możesz skontaktować się z serwerem, który Cię uwierzytelnił.
 .
 Language=Romanian
 ERROR_DOWNGRADE_DETECTED - The system detected a possible attempt to compromise security. Please ensure that you can contact the server that authenticated you.
@@ -10389,7 +10389,7 @@ Language=Russian
 SEC_E_SMARTCARD_CERT_REVOKED - The smartcard certificate used for authentication has been revoked. Please contact your system administrator. There may be additional information in the event log.
 .
 Language=Polish
-SEC_E_SMARTCARD_CERT_REVOKED - The smartcard certificate used for authentication has been revoked. Please contact your system administrator. There may be additional information in the event log.
+SEC_E_SMARTCARD_CERT_REVOKED - Certyfikat karty inteligentnej użyty do uwierzytelnienia został odwołany. Skontaktuj się z administratorem systemu. Dodatkowe informacje może zawierać dziennik zdarzeń.
 .
 Language=Romanian
 SEC_E_SMARTCARD_CERT_REVOKED - The smartcard certificate used for authentication has been revoked. Please contact your system administrator. There may be additional information in the event log.
@@ -10406,7 +10406,7 @@ Language=Russian
 SEC_E_ISSUING_CA_UNTRUSTED - An untrusted certificate authority was detected while processing the smartcard certificate used for authentication. Please contact your system administrator.
 .
 Language=Polish
-SEC_E_ISSUING_CA_UNTRUSTED - An untrusted certificate authority was detected while processing the smartcard certificate used for authentication. Please contact your system administrator.
+SEC_E_ISSUING_CA_UNTRUSTED - Podczas przetwarzania certyfikatu karty inteligentnej używanej do uwierzytelniania został wykryty niezaufany urząd certyfikacji. Skontaktuj się z administratorem systemu.
 .
 Language=Romanian
 SEC_E_ISSUING_CA_UNTRUSTED - An untrusted certificate authority was detected while processing the smartcard certificate used for authentication. Please contact your system administrator.
@@ -10423,7 +10423,7 @@ Language=Russian
 SEC_E_REVOCATION_OFFLINE_C - The revocation status of the smartcard certificate used for authentication could not be determined. Please contact your system administrator.
 .
 Language=Polish
-SEC_E_REVOCATION_OFFLINE_C - The revocation status of the smartcard certificate used for authentication could not be determined. Please contact your system administrator.
+SEC_E_REVOCATION_OFFLINE_C - Ustalenie stanu odwołania certyfikatu karty inteligentnej używanego do uwierzytelniania nie było możliwe. Skontaktuj się z administratorem systemu.
 .
 Language=Romanian
 SEC_E_REVOCATION_OFFLINE_C - The revocation status of the smartcard certificate used for authentication could not be determined. Please contact your system administrator.
@@ -10440,7 +10440,7 @@ Language=Russian
 SEC_E_PKINIT_CLIENT_FAILUR - The smartcard certificate used for authentication was not trusted. Please contact your system administrator.
 .
 Language=Polish
-SEC_E_PKINIT_CLIENT_FAILUR - The smartcard certificate used for authentication was not trusted. Please contact your system administrator.
+SEC_E_PKINIT_CLIENT_FAILUR - Certyfikat karty inteligentnej używany do uwierzytelniania nie był zaufany. Skontaktuj się z administratorem systemu.
 .
 Language=Romanian
 SEC_E_PKINIT_CLIENT_FAILUR - The smartcard certificate used for authentication was not trusted. Please contact your system administrator.
@@ -10457,7 +10457,7 @@ Language=Russian
 SEC_E_SMARTCARD_CERT_EXPIRED - The smartcard certificate used for authentication has expired. Please contact your system administrator.
 .
 Language=Polish
-SEC_E_SMARTCARD_CERT_EXPIRED - The smartcard certificate used for authentication has expired. Please contact your system administrator.
+SEC_E_SMARTCARD_CERT_EXPIRED - Certyfikat karty inteligentnej używany do uwierzytelniania wygasł. Skontaktuj się z administratorem systemu.
 .
 Language=Romanian
 SEC_E_SMARTCARD_CERT_EXPIRED - The smartcard certificate used for authentication has expired. Please contact your system administrator.
@@ -10474,7 +10474,7 @@ Language=Russian
 ERROR_MACHINE_LOCKED - Компьютер заблокирован и не может завершить работу без режима принудительного завершения.
 .
 Language=Polish
-ERROR_MACHINE_LOCKED - The machine is locked and cannot be shut down without the force option.
+ERROR_MACHINE_LOCKED - Komputer jest zablokowany i nie można go zamknąć bez opcji wymuszenia.
 .
 Language=Romanian
 ERROR_MACHINE_LOCKED - The machine is locked and cannot be shut down without the force option.
@@ -10491,7 +10491,7 @@ Language=Russian
 ERROR_CALLBACK_SUPPLIED_INVALID_DATA - Определенный в приложении ответный вызов вернул неверные данные.
 .
 Language=Polish
-ERROR_CALLBACK_SUPPLIED_INVALID_DATA - An application-defined callback gave invalid data when called.
+ERROR_CALLBACK_SUPPLIED_INVALID_DATA - Określone przez aplikację wywołanie zwrotne dało po wywołaniu nieprawidłowe dane.
 .
 Language=Romanian
 ERROR_CALLBACK_SUPPLIED_INVALID_DATA - An application-defined callback gave invalid data when called.
@@ -10508,7 +10508,7 @@ Language=Russian
 ERROR_SYNC_FOREGROUND_REFRESH_REQUIRED - Система групповой политики должна вызывать расширения в синхронном, не фоновом режиме обновления.
 .
 Language=Polish
-ERROR_SYNC_FOREGROUND_REFRESH_REQUIRED - The group policy framework should call the extension in the synchronous foreground policy refresh.
+ERROR_SYNC_FOREGROUND_REFRESH_REQUIRED - Ogólna struktura zasad grupy powinna wywołać rozszerzenie podczas synchronicznego, pierwszoplanowego odświeżania zasad.
 .
 Language=Romanian
 ERROR_SYNC_FOREGROUND_REFRESH_REQUIRED - The group policy framework should call the extension in the synchronous foreground policy refresh.
@@ -10525,7 +10525,7 @@ Language=Russian
 ERROR_DRIVER_BLOCKED - Загрузка драйвера была заблокирована.
 .
 Language=Polish
-ERROR_DRIVER_BLOCKED - This driver has been blocked from loading.
+ERROR_DRIVER_BLOCKED - Nastąpiło zablokowanie ładowania sterownika
 .
 Language=Romanian
 ERROR_DRIVER_BLOCKED - This driver has been blocked from loading.
@@ -10542,7 +10542,7 @@ Language=Russian
 ERROR_INVALID_IMPORT_OF_NON_DLL - Библиотека, на которую ссылается модуль, не является библиотекой динамической компоновки (DLL) или исполняемым модулем.
 .
 Language=Polish
-ERROR_INVALID_IMPORT_OF_NON_DLL - A dynamic link library (DLL) referenced a module that was neither a DLL nor the process's executable image.
+ERROR_INVALID_IMPORT_OF_NON_DLL - Biblioteka dołączana dynamicznie DLL odwoływała się do modułu, który nie był ani biblioteką DLL, ani obrazem wykonywalnym procesu.
 .
 Language=Romanian
 ERROR_INVALID_IMPORT_OF_NON_DLL - A dynamic link library (DLL) referenced a module that was neither a DLL nor the process's executable image.
@@ -10559,7 +10559,7 @@ Language=Russian
 ERROR_ACCESS_DISABLED_WEBBLADE - Windows не удается запустить эту программу, так как она отключена.
 .
 Language=Polish
-ERROR_ACCESS_DISABLED_WEBBLADE - Windows cannot open this program since it has been disabled.
+ERROR_ACCESS_DISABLED_WEBBLADE - System Windows nie może otworzyć tego programu, ponieważ został on wyłączony.
 .
 Language=Romanian
 ERROR_ACCESS_DISABLED_WEBBLADE - Windows cannot open this program since it has been disabled.
@@ -10576,7 +10576,7 @@ Language=Russian
 ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER - Windows не удается открыть эту программу, так как система учета лицензий изменена или повреждена.
 .
 Language=Polish
-ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER - Windows cannot open this program because the license enforcement system has been tampered with or become corrupted.
+ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER - System Windows nie może otworzyć tego programu, ponieważ system wymuszania licencji został zmieniony lub uszkodzony.
 .
 Language=Romanian
 ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER - Windows cannot open this program because the license enforcement system has been tampered with or become corrupted.
@@ -10593,7 +10593,7 @@ Language=Russian
 ERROR_RECOVERY_FAILURE - Неудача при восстановлении транзакции.
 .
 Language=Polish
-ERROR_RECOVERY_FAILURE - A transaction recovery failed.
+ERROR_RECOVERY_FAILURE - Odzyskanie transakcji nie powiodło się.
 .
 Language=Romanian
 ERROR_RECOVERY_FAILURE - A transaction recovery failed.
@@ -10610,7 +10610,7 @@ Language=Russian
 ERROR_ALREADY_FIBER - Текущий поток уже преобразован в нить.
 .
 Language=Polish
-ERROR_ALREADY_FIBER - The current thread has already been converted to a fiber.
+ERROR_ALREADY_FIBER - Bieżący wątek został już przekonwertowany do włókna.
 .
 Language=Romanian
 ERROR_ALREADY_FIBER - The current thread has already been converted to a fiber.
@@ -10627,7 +10627,7 @@ Language=Russian
 ERROR_ALREADY_THREAD - Текущий поток уже преобразован из нити.
 .
 Language=Polish
-ERROR_ALREADY_THREAD - The current thread has already been converted from a fiber.
+ERROR_ALREADY_THREAD - Bieżący wątek został już przekonwertowany z włókna.
 .
 Language=Romanian
 ERROR_ALREADY_THREAD - The current thread has already been converted from a fiber.
@@ -10644,7 +10644,7 @@ Language=Russian
 ERROR_STACK_BUFFER_OVERRUN - Обнаружено переполнение стекового буфера в данном приложении. Это переполнение может позволить злоумышленнику получить управление над данным приложением.
 .
 Language=Polish
-ERROR_STACK_BUFFER_OVERRUN - The system detected an overrun of a stack-based buffer in this application. This overrun could potentially allow a malicious user to gain control of this application.
+ERROR_STACK_BUFFER_OVERRUN - System wykrył w tej aplikacji przekroczenie buforu opartego na stosie. Przekroczenie może umożliwić złośliwemu użytkownikowi uzyskanie kontroli nad tą aplikacją.
 .
 Language=Romanian
 ERROR_STACK_BUFFER_OVERRUN - The system detected an overrun of a stack-based buffer in this application. This overrun could potentially allow a malicious user to gain control of this application.
@@ -10661,7 +10661,7 @@ Language=Russian
 ERROR_PARAMETER_QUOTA_EXCEEDED - В одном из параметров задано больше данных, чем эта функция может обработать.
 .
 Language=Polish
-ERROR_PARAMETER_QUOTA_EXCEEDED - Data present in one of the parameters is more than the function can operate on.
+ERROR_PARAMETER_QUOTA_EXCEEDED - Ilość danych w jednym z parametrów jest większa niż ilość, którą może obsłużyć funkcja.
 .
 Language=Romanian
 ERROR_PARAMETER_QUOTA_EXCEEDED - Data present in one of the parameters is more than the function can operate on.
@@ -10678,7 +10678,7 @@ Language=Russian
 ERROR_DEBUGGER_INACTIVE - Не удалось выполнить операцию над объектом отладки, так как он удаляется.
 .
 Language=Polish
-ERROR_DEBUGGER_INACTIVE - An attempt to do an operation on a debug object failed because the object is in the process of being deleted.
+ERROR_DEBUGGER_INACTIVE - Próba wykonania operacji na obiekcie debugowania nie powiodła się, ponieważ obiekt jest właśnie usuwany.
 .
 Language=Romanian
 ERROR_DEBUGGER_INACTIVE - An attempt to do an operation on a debug object failed because the object is in the process of being deleted.
@@ -10695,7 +10695,7 @@ Language=Russian
 ERROR_DELAY_LOAD_FAILED - Не удалось загрузить с задержкой библиотеку DLL или получить из нее адрес функции.
 .
 Language=Polish
-ERROR_DELAY_LOAD_FAILED - An attempt to delay-load a .dll or get a function address in a delay-loaded .dll failed.
+ERROR_DELAY_LOAD_FAILED - Próba załadowania z opóźnieniem biblioteki .dll lub uzyskania adresu funkcji z biblioteki .dll załadowanej z opóźnieniem nie powiodła się.
 .
 Language=Romanian
 ERROR_DELAY_LOAD_FAILED - An attempt to delay-load a .dll or get a function address in a delay-loaded .dll failed.
@@ -10712,7 +10712,7 @@ Language=Russian
 ERROR_VDM_DISALLOWED - "%1" является 16-битным приложением. Вы не имеете прав доступа для выполнения 16-битных приложений. Проверьте ваши права доступа с вашим системным администратором.
 .
 Language=Polish
-ERROR_VDM_DISALLOWED - %1 is a 16-bit application. You do not have permissions to execute 16-bit applications. Check your permissions with your system administrator.
+ERROR_VDM_DISALLOWED - %1 jest aplikacją 16-bitową. Nie masz uprawnień do wykonywania aplikacji 16-bitowych. Skontaktuj się z administratorem, aby uzyskać informacje o uprawnieniach.
 .
 Language=Romanian
 ERROR_VDM_DISALLOWED - %1 is a 16-bit application. You do not have permissions to execute 16-bit applications. Check your permissions with your system administrator.
@@ -10729,7 +10729,7 @@ Language=Russian
 ERROR_UNIDENTIFIED_ERROR - Недостаточно сведений для установки причины сбоя.
 .
 Language=Polish
-ERROR_UNIDENTIFIED_ERROR - Insufficient information exists to identify the cause of failure.
+ERROR_UNIDENTIFIED_ERROR - Za mało informacji do zidentyfikowania przyczyny błędu.
 .
 Language=Romanian
 ERROR_UNIDENTIFIED_ERROR - Insufficient information exists to identify the cause of failure.
@@ -10899,7 +10899,7 @@ Language=Russian
 ERROR_IMPLEMENTATION_LIMIT - Права, необходимые службе для правильной работы, не существуют в конфигурации учетной записи службы.
 .
 Language=Polish
-ERROR_IMPLEMENTATION_LIMIT - An operation attempted to exceed an implementation-defined limit.
+ERROR_IMPLEMENTATION_LIMIT - Operacja usiłowała przekroczyć ograniczenie zdefiniowane w implementacji.
 .
 Language=Romanian
 ERROR_IMPLEMENTATION_LIMIT - An operation attempted to exceed an implementation-defined limit.
@@ -10933,7 +10933,7 @@ Language=Russian
 ERROR_NOT_ALL_ASSIGNED - Вызывающая сторона не обладает всеми необходимыми правами доступа.
 .
 Language=Polish
-ERROR_NOT_ALL_ASSIGNED - Not all privileges referenced are assigned to the caller.
+ERROR_NOT_ALL_ASSIGNED - Nie wszystkie wywoływane uprawnienia lub grupy są przypisane komputerowi wywołującemu.
 .
 Language=Romanian
 ERROR_NOT_ALL_ASSIGNED - Not all privileges referenced are assigned to the caller.
@@ -10950,7 +10950,7 @@ Language=Russian
 ERROR_SOME_NOT_MAPPED - Некоторые соответствия между именами пользователей и идентификаторами безопасности не были установлены.
 .
 Language=Polish
-ERROR_SOME_NOT_MAPPED - Some mapping between account names and security IDs was not done.
+ERROR_SOME_NOT_MAPPED - Nie wykonano pewnych mapowań między nazwami kont i identyfikatorami zabezpieczeń.
 .
 Language=Romanian
 ERROR_SOME_NOT_MAPPED - Some mapping between account names and security IDs was not done.
@@ -10967,7 +10967,7 @@ Language=Russian
 ERROR_NO_QUOTAS_FOR_ACCOUNT - Системные квоты для данной учетной записи не установлены.
 .
 Language=Polish
-ERROR_NO_QUOTAS_FOR_ACCOUNT - No system quota limits are specifically set for this account.
+ERROR_NO_QUOTAS_FOR_ACCOUNT - Dla tego konta nie ustawiono żadnych szczególnych ograniczeń przydziałów zasobów systemowych.
 .
 Language=Romanian
 ERROR_NO_QUOTAS_FOR_ACCOUNT - No system quota limits are specifically set for this account.
@@ -10984,7 +10984,7 @@ Language=Russian
 ERROR_LOCAL_USER_SESSION_KEY - Ключ шифрования недоступен. Возвращен общедоступный ключ.
 .
 Language=Polish
-ERROR_LOCAL_USER_SESSION_KEY - No encryption key is available. A well-known encryption key was returned.
+ERROR_LOCAL_USER_SESSION_KEY - Brak klucza szyfrowania. Został zwrócony dobrze znany klucz szyfrowania.
 .
 Language=Romanian
 ERROR_LOCAL_USER_SESSION_KEY - No encryption key is available. A well-known encryption key was returned.
@@ -11001,7 +11001,7 @@ Language=Russian
 ERROR_NULL_LM_PASSWORD - Пароль слишком сложен и не может быть преобразован в пароль LAN Manager. Вместо пароля LAN Manager была возвращена пустая строка.
 .
 Language=Polish
-ERROR_NULL_LM_PASSWORD - The password is too complex to be converted to a LAN Manager password. The LAN Manager password returned is a NULL string.
+ERROR_NULL_LM_PASSWORD - Hasło jest zbyt złożone, aby mogło być przekształcone na hasło programu LAN Manager. Zwrócone hasło programu LAN Manager jest ciągiem pustym (NULL).
 .
 Language=Romanian
 ERROR_NULL_LM_PASSWORD - The password is too complex to be converted to a LAN Manager password. The LAN Manager password returned is a NULL string.
@@ -11018,7 +11018,7 @@ Language=Russian
 ERROR_UNKNOWN_REVISION - Уровень редакции неизвестен.
 .
 Language=Polish
-ERROR_UNKNOWN_REVISION - The revision level is unknown.
+ERROR_UNKNOWN_REVISION - Poziom wydania jest nieznany.
 .
 Language=Romanian
 ERROR_UNKNOWN_REVISION - The revision level is unknown.
@@ -11035,7 +11035,7 @@ Language=Russian
 ERROR_REVISION_MISMATCH - Два уровня редакции являются несовместимыми.
 .
 Language=Polish
-ERROR_REVISION_MISMATCH - Indicates two revision levels are incompatible.
+ERROR_REVISION_MISMATCH - Wskazuje, że dwa poziomy wydania są niezgodne.
 .
 Language=Romanian
 ERROR_REVISION_MISMATCH - Indicates two revision levels are incompatible.
@@ -11052,7 +11052,7 @@ Language=Russian
 ERROR_INVALID_OWNER - Этот идентификатор безопасности не может быть назначен владельцем этого объекта.
 .
 Language=Polish
-ERROR_INVALID_OWNER - This security ID may not be assigned as the owner of this object.
+ERROR_INVALID_OWNER - Ten identyfikator zabezpieczeń nie może być przypisany jako właściciel tego obiektu.
 .
 Language=Romanian
 ERROR_INVALID_OWNER - This security ID may not be assigned as the owner of this object.
@@ -11069,7 +11069,7 @@ Language=Russian
 ERROR_INVALID_PRIMARY_GROUP - Этот идентификатор безопасности не может быть назначен основной группой объекта.
 .
 Language=Polish
-ERROR_INVALID_PRIMARY_GROUP - This security ID may not be assigned as the primary group of an object.
+ERROR_INVALID_PRIMARY_GROUP - Ten identyfikator zabezpieczeń nie może być przypisany jako grupa podstawowa obiektu.
 .
 Language=Romanian
 ERROR_INVALID_PRIMARY_GROUP - This security ID may not be assigned as the primary group of an object.
@@ -11086,7 +11086,7 @@ Language=Russian
 ERROR_NO_IMPERSONATION_TOKEN - Предпринята попытка использования элемента олицетворения потоком команд, который в данное время не олицетворяет клиента.
 .
 Language=Polish
-ERROR_NO_IMPERSONATION_TOKEN - An attempt has been made to operate on an impersonation token by a thread that is not currently impersonating a client.
+ERROR_NO_IMPERSONATION_TOKEN - Na tokenie personifikacji podjął próbę działania wątek, który obecnie nie personifikuje żadnego klienta.
 .
 Language=Romanian
 ERROR_NO_IMPERSONATION_TOKEN - An attempt has been made to operate on an impersonation token by a thread that is not currently impersonating a client.
@@ -11103,7 +11103,7 @@ Language=Russian
 ERROR_CANT_DISABLE_MANDATORY - Эту группу невозможно отключить.
 .
 Language=Polish
-ERROR_CANT_DISABLE_MANDATORY - The group may not be disabled.
+ERROR_CANT_DISABLE_MANDATORY - Grupa nie może być wyłączona.
 .
 Language=Romanian
 ERROR_CANT_DISABLE_MANDATORY - The group may not be disabled.
@@ -11120,7 +11120,7 @@ Language=Russian
 ERROR_NO_LOGON_SERVERS - Отсутствуют серверы, которые могли бы обработать запрос на вход в сеть.
 .
 Language=Polish
-ERROR_NO_LOGON_SERVERS - There are currently no logon servers available to service the logon request.
+ERROR_NO_LOGON_SERVERS - Nie ma obecnie serwerów logowania dostępnych do obsługi żądania logowania.
 .
 Language=Romanian
 ERROR_NO_LOGON_SERVERS - There are currently no logon servers available to service the logon request.
@@ -11137,7 +11137,7 @@ Language=Russian
 ERROR_NO_SUCH_LOGON_SESSION - Указанный сеанс работы не существует. Возможно, он уже  завершен.
 .
 Language=Polish
-ERROR_NO_SUCH_LOGON_SESSION - A specified logon session does not exist. It may already have been terminated.
+ERROR_NO_SUCH_LOGON_SESSION - Określona sesja logowania nie istnieje. Być może została już zakończona.
 .
 Language=Romanian
 ERROR_NO_SUCH_LOGON_SESSION - A specified logon session does not exist. It may already have been terminated.
@@ -11154,7 +11154,7 @@ Language=Russian
 ERROR_NO_SUCH_PRIVILEGE - Указанная привилегия не существует.
 .
 Language=Polish
-ERROR_NO_SUCH_PRIVILEGE - A specified privilege does not exist.
+ERROR_NO_SUCH_PRIVILEGE - Określone uprawnienie nie istnieje.
 .
 Language=Romanian
 ERROR_NO_SUCH_PRIVILEGE - A specified privilege does not exist.
@@ -11171,7 +11171,7 @@ Language=Russian
 ERROR_PRIVILEGE_NOT_HELD - Клиент не обладает требуемыми правами.
 .
 Language=Polish
-ERROR_PRIVILEGE_NOT_HELD - A required privilege is not held by the client.
+ERROR_PRIVILEGE_NOT_HELD - Klient nie ma wymaganych uprawnień.
 .
 Language=Romanian
 ERROR_PRIVILEGE_NOT_HELD - A required privilege is not held by the client.
@@ -11188,7 +11188,7 @@ Language=Russian
 ERROR_INVALID_ACCOUNT_NAME - Указанное имя не является корректным именем пользователя.
 .
 Language=Polish
-ERROR_INVALID_ACCOUNT_NAME - The name provided is not a properly formed account name.
+ERROR_INVALID_ACCOUNT_NAME - Podana nazwa nie jest właściwie sformułowaną nazwą konta.
 .
 Language=Romanian
 ERROR_INVALID_ACCOUNT_NAME - The name provided is not a properly formed account name.
@@ -11205,7 +11205,7 @@ Language=Russian
 ERROR_USER_EXISTS - Указанная учетная запись уже существует.
 .
 Language=Polish
-ERROR_USER_EXISTS - The specified user already exists.
+ERROR_USER_EXISTS - Określone konto już istnieje.
 .
 Language=Romanian
 ERROR_USER_EXISTS - The specified user already exists.
@@ -11222,7 +11222,7 @@ Language=Russian
 ERROR_NO_SUCH_USER - Указанная учетная запись не существует.
 .
 Language=Polish
-ERROR_NO_SUCH_USER - The specified user does not exist.
+ERROR_NO_SUCH_USER - Określone konto nie istnieje.
 .
 Language=Romanian
 ERROR_NO_SUCH_USER - The specified user does not exist.
@@ -11239,7 +11239,7 @@ Language=Russian
 ERROR_GROUP_EXISTS - Указанная группа уже существует.
 .
 Language=Polish
-ERROR_GROUP_EXISTS - The specified group already exists.
+ERROR_GROUP_EXISTS - Określona grupa już istnieje.
 .
 Language=Romanian
 ERROR_GROUP_EXISTS - The specified group already exists.
@@ -11256,7 +11256,7 @@ Language=Russian
 ERROR_NO_SUCH_GROUP - Указанная группа не существует.
 .
 Language=Polish
-ERROR_NO_SUCH_GROUP - The specified group does not exist.
+ERROR_NO_SUCH_GROUP - Określona grupa nie istnieje.
 .
 Language=Romanian
 ERROR_NO_SUCH_GROUP - The specified group does not exist.
@@ -11273,7 +11273,7 @@ Language=Russian
 ERROR_MEMBER_IN_GROUP - Указанный пользователь уже является членом заданной группы, либо группа не может быть удалена, так как содержит как минимум одного пользователя.
 .
 Language=Polish
-ERROR_MEMBER_IN_GROUP - Either the specified user account is already a member of the specified group, or the specified group cannot be deleted because it contains a member.
+ERROR_MEMBER_IN_GROUP - Określone konto użytkownika jest już członkiem określonej grupy albo określona grupa nie może być usunięta, ponieważ zawiera członka grupy.
 .
 Language=Romanian
 ERROR_MEMBER_IN_GROUP - Either the specified user account is already a member of the specified group, or the specified group cannot be deleted because it contains a member.
@@ -11290,7 +11290,7 @@ Language=Russian
 ERROR_MEMBER_NOT_IN_GROUP - Указанный пользователь не является членом заданной группы.
 .
 Language=Polish
-ERROR_MEMBER_NOT_IN_GROUP - The specified user account is not a member of the specified group account.
+ERROR_MEMBER_NOT_IN_GROUP - Określone konto użytkownika nie jest członkiem określonego konta grupowego.
 .
 Language=Romanian
 ERROR_MEMBER_NOT_IN_GROUP - The specified user account is not a member of the specified group account.
@@ -11307,7 +11307,7 @@ Language=Russian
 ERROR_LAST_ADMIN - Эта операция запрещена, так как может привести к отключению, удалению или невозможности входа учетной записи администратора.
 .
 Language=Polish
-ERROR_LAST_ADMIN - The last remaining administration account cannot be disabled or deleted.
+ERROR_LAST_ADMIN - Ostatnie pozostałe konto administracyjne nie może zostać wyłączone ani usunięte.
 .
 Language=Romanian
 ERROR_LAST_ADMIN - The last remaining administration account cannot be disabled or deleted.
@@ -11324,7 +11324,7 @@ Language=Russian
 ERROR_WRONG_PASSWORD - Не удается обновить пароль. Текущий пароль был задан неверно.
 .
 Language=Polish
-ERROR_WRONG_PASSWORD - Unable to update the password. The value provided as the current password is incorrect.
+ERROR_WRONG_PASSWORD - Nie można zaktualizować hasła. Wartość podana jako bieżące hasło jest niepoprawna.
 .
 Language=Romanian
 ERROR_WRONG_PASSWORD - Unable to update the password. The value provided as the current password is incorrect.
@@ -11341,7 +11341,7 @@ Language=Russian
 ERROR_ILL_FORMED_PASSWORD - Не удается обновить пароль. Новый пароль содержит недопустимые символы.
 .
 Language=Polish
-ERROR_ILL_FORMED_PASSWORD - Unable to update the password. The value provided for the new password contains values that are not allowed in passwords.
+ERROR_ILL_FORMED_PASSWORD - Nie można zaktualizować hasła. Wartość podana jako nowe hasło zawiera wartości niedozwolone w hasłach.
 .
 Language=Romanian
 ERROR_ILL_FORMED_PASSWORD - Unable to update the password. The value provided for the new password contains values that are not allowed in passwords.
@@ -11358,7 +11358,7 @@ Language=Russian
 ERROR_PASSWORD_RESTRICTION - Не удается обновить пароль. Введенный пароль не обеспечивает требований домена к длине пароля, его сложности или истории обновления.
 .
 Language=Polish
-ERROR_PASSWORD_RESTRICTION - Unable to update the password. The value provided for the new password does not meet the length, complexity, or history requirement of the domain.
+ERROR_PASSWORD_RESTRICTION - Nie można zaktualizować hasła. Podana wartość nowego hasła nie spełnia wymagań domeny dotyczących długości, złożoności lub historii hasła.
 .
 Language=Romanian
 ERROR_PASSWORD_RESTRICTION - Unable to update the password. The value provided for the new password does not meet the length, complexity, or history requirement of the domain.
@@ -11375,7 +11375,7 @@ Language=Russian
 ERROR_LOGON_FAILURE - Неверное имя пользователя или пароль.
 .
 Language=Polish
-ERROR_LOGON_FAILURE - Logon failure: unknown user name or bad password.
+ERROR_LOGON_FAILURE - Błąd logowania: nieznana nazwa użytkownika lub nieprawidłowe hasło.
 .
 Language=Romanian
 ERROR_LOGON_FAILURE - Logon failure: unknown user name or bad password.
@@ -11392,7 +11392,7 @@ Language=Russian
 ERROR_ACCOUNT_RESTRICTION - Вход этого пользователя в систему не выполнен из-за ограничений учетной записи. Например: пустые пароли не разрешены, ограничено число входов или включено ограничение политики.
 .
 Language=Polish
-ERROR_ACCOUNT_RESTRICTION - Logon failure: user account restriction. Possible reasons are blank passwords not allowed, logon hour restrictions, or a policy restriction has been enforced.
+ERROR_ACCOUNT_RESTRICTION - Błąd logowania: Ograniczenie konta użytkownika. Do możliwych przyczyn należą: niedozwolone puste hasła, ograniczenia godzin logowania lub wymuszanie ograniczenia zasad.
 .
 Language=Romanian
 ERROR_ACCOUNT_RESTRICTION - Logon failure: user account restriction. Possible reasons are blank passwords not allowed, logon hour restrictions, or a policy restriction has been enforced.
@@ -11409,7 +11409,7 @@ Language=Russian
 ERROR_INVALID_LOGON_HOURS - Вы не можете войти в систему сейчас из-за ограничений вашей учетной записи.
 .
 Language=Polish
-ERROR_INVALID_LOGON_HOURS - Logon failure: account logon time restriction violation.
+ERROR_INVALID_LOGON_HOURS - Błąd logowania: przekroczenie ograniczenia czasu logowania.
 .
 Language=Romanian
 ERROR_INVALID_LOGON_HOURS - Logon failure: account logon time restriction violation.
@@ -11426,7 +11426,7 @@ Language=Russian
 ERROR_INVALID_WORKSTATION - Этому пользователю не разрешен вход в систему на этом компьютере.
 .
 Language=Polish
-ERROR_INVALID_WORKSTATION - Logon failure: user not allowed to log on to this computer.
+ERROR_INVALID_WORKSTATION - Błąd logowania: użytkownik nie ma zezwolenia na logowanie się w tym komputerze.
 .
 Language=Romanian
 ERROR_INVALID_WORKSTATION - Logon failure: user not allowed to log on to this computer.
@@ -11443,7 +11443,7 @@ Language=Russian
 ERROR_PASSWORD_EXPIRED - Срок действия пароля для этой учетной записи истек.
 .
 Language=Polish
-ERROR_PASSWORD_EXPIRED - Logon failure: the specified account password has expired.
+ERROR_PASSWORD_EXPIRED - Błąd logowania: określone hasło konta wygasło.
 .
 Language=Romanian
 ERROR_PASSWORD_EXPIRED - Logon failure: the specified account password has expired.
@@ -11460,7 +11460,7 @@ Language=Russian
 ERROR_ACCOUNT_DISABLED - Вход этого пользователя в систему невозможен, так как эта учетная запись сейчас отключена.
 .
 Language=Polish
-ERROR_ACCOUNT_DISABLED - Logon failure: account currently disabled.
+ERROR_ACCOUNT_DISABLED - Błąd logowania: konto jest obecnie wyłączone.
 .
 Language=Romanian
 ERROR_ACCOUNT_DISABLED - Logon failure: account currently disabled.
@@ -11477,7 +11477,7 @@ Language=Russian
 ERROR_NONE_MAPPED - Сопоставление между именами пользователей и идентификаторами безопасности не было произведено.
 .
 Language=Polish
-ERROR_NONE_MAPPED - No mapping between account names and security IDs was done.
+ERROR_NONE_MAPPED - Nie zostało wykonane mapowanie między nazwami kont a identyfikatorami zabezpieczeń.
 .
 Language=Romanian
 ERROR_NONE_MAPPED - No mapping between account names and security IDs was done.
@@ -11494,7 +11494,7 @@ Language=Russian
 ERROR_TOO_MANY_LUIDS_REQUESTED - Одновременно запрошено слишком много локальных кодов пользователей.
 .
 Language=Polish
-ERROR_TOO_MANY_LUIDS_REQUESTED - Too many local user identifiers (LUIDs) were requested at one time.
+ERROR_TOO_MANY_LUIDS_REQUESTED - Wystąpiło za dużo równoczesnych żądań identyfikatorów użytkowników lokalnych (LUID).
 .
 Language=Romanian
 ERROR_TOO_MANY_LUIDS_REQUESTED - Too many local user identifiers (LUIDs) were requested at one time.
@@ -11511,7 +11511,7 @@ Language=Russian
 ERROR_LUIDS_EXHAUSTED - Дополнительные локальные коды пользователей недоступны.
 .
 Language=Polish
-ERROR_LUIDS_EXHAUSTED - No more local user identifiers (LUIDs) are available.
+ERROR_LUIDS_EXHAUSTED - Brak dostępnych identyfikatorów użytkowników lokalnych (LUID).
 .
 Language=Romanian
 ERROR_LUIDS_EXHAUSTED - No more local user identifiers (LUIDs) are available.
@@ -11528,7 +11528,7 @@ Language=Russian
 ERROR_INVALID_SUB_AUTHORITY - Часть "subauthority" идентификатора безопасности недействительна для этого конкретного использования.
 .
 Language=Polish
-ERROR_INVALID_SUB_AUTHORITY - The subauthority part of a security ID is invalid for this particular use.
+ERROR_INVALID_SUB_AUTHORITY - Podrzędna część identyfikatora zabezpieczeń jest nieprawidłowa dla tego szczególnego zastosowania.
 .
 Language=Romanian
 ERROR_INVALID_SUB_AUTHORITY - The subauthority part of a security ID is invalid for this particular use.
@@ -11545,7 +11545,7 @@ Language=Russian
 ERROR_INVALID_ACL - Список управления доступом (ACL) имеет неверную структуру.
 .
 Language=Polish
-ERROR_INVALID_ACL - The access control list (ACL) structure is invalid.
+ERROR_INVALID_ACL - Struktura listy kontroli dostępu (ACL) jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_INVALID_ACL - The access control list (ACL) structure is invalid.
@@ -11562,7 +11562,7 @@ Language=Russian
 ERROR_INVALID_SID - Идентификатор безопасности имеет неверную структуру.
 .
 Language=Polish
-ERROR_INVALID_SID - The security ID structure is invalid.
+ERROR_INVALID_SID - Struktura identyfikatora zabezpieczenia jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_INVALID_SID - The security ID structure is invalid.
@@ -11579,7 +11579,7 @@ Language=Russian
 ERROR_INVALID_SECURITY_DESCR - Дескриптор защиты данных имеет неверную структуру.
 .
 Language=Polish
-ERROR_INVALID_SECURITY_DESCR - The security descriptor structure is invalid.
+ERROR_INVALID_SECURITY_DESCR - Struktura deskryptora zabezpieczeń jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_INVALID_SECURITY_DESCR - The security descriptor structure is invalid.
@@ -11596,7 +11596,7 @@ Language=Russian
 ERROR_BAD_INHERITANCE_ACL - Не удается построить список управления доступом (ACL) или элемент этого списка (ACE).
 .
 Language=Polish
-ERROR_BAD_INHERITANCE_ACL - The inherited access control list (ACL) or access control entry (ACE) could not be built.
+ERROR_BAD_INHERITANCE_ACL - Nie można zbudować dziedziczonej listy kontroli dostępu (ACL) lub wpisu kontroli dostępu (ACE).
 .
 Language=Romanian
 ERROR_BAD_INHERITANCE_ACL - The inherited access control list (ACL) or access control entry (ACE) could not be built.
@@ -11613,7 +11613,7 @@ Language=Russian
 ERROR_SERVER_DISABLED - Сервер в настоящее время отключен.
 .
 Language=Polish
-ERROR_SERVER_DISABLED - The server is currently disabled.
+ERROR_SERVER_DISABLED - Serwer jest obecnie wyłączony.
 .
 Language=Romanian
 ERROR_SERVER_DISABLED - The server is currently disabled.
@@ -11630,7 +11630,7 @@ Language=Russian
 ERROR_SERVER_NOT_DISABLED - Сервер в настоящее время включен.
 .
 Language=Polish
-ERROR_SERVER_NOT_DISABLED - The server is currently enabled.
+ERROR_SERVER_NOT_DISABLED - Serwer jest obecnie włączony.
 .
 Language=Romanian
 ERROR_SERVER_NOT_DISABLED - The server is currently enabled.
@@ -11647,7 +11647,7 @@ Language=Russian
 ERROR_INVALID_ID_AUTHORITY - Указано недопустимое значение для защитного кода.
 .
 Language=Polish
-ERROR_INVALID_ID_AUTHORITY - The value provided was an invalid value for an identifier authority.
+ERROR_INVALID_ID_AUTHORITY - Podana wartość była nieprawidłowa dla urzędu identyfikatora.
 .
 Language=Romanian
 ERROR_INVALID_ID_AUTHORITY - The value provided was an invalid value for an identifier authority.
@@ -11664,7 +11664,7 @@ Language=Russian
 ERROR_ALLOTTED_SPACE_EXCEEDED - Недостаточно памяти для обновления сведений, относящихся к защите данных.
 .
 Language=Polish
-ERROR_ALLOTTED_SPACE_EXCEEDED - No more memory is available for security information updates.
+ERROR_ALLOTTED_SPACE_EXCEEDED - Za mało pamięci do aktualizacji informacji o zabezpieczeniach.
 .
 Language=Romanian
 ERROR_ALLOTTED_SPACE_EXCEEDED - No more memory is available for security information updates.
@@ -11681,7 +11681,7 @@ Language=Russian
 ERROR_INVALID_GROUP_ATTRIBUTES - Указанные атрибуты неверны или несовместимы с атрибутами группы в целом.
 .
 Language=Polish
-ERROR_INVALID_GROUP_ATTRIBUTES - The specified attributes are invalid, or incompatible with the attributes for the group as a whole.
+ERROR_INVALID_GROUP_ATTRIBUTES - Określone atrybuty są nieprawidłowe lub niezgodne z atrybutami całości grupy.
 .
 Language=Romanian
 ERROR_INVALID_GROUP_ATTRIBUTES - The specified attributes are invalid, or incompatible with the attributes for the group as a whole.
@@ -11698,7 +11698,7 @@ Language=Russian
 ERROR_BAD_IMPERSONATION_LEVEL - Требуемый уровень олицетворения не обеспечен, или обеспеченный уровень неверен.
 .
 Language=Polish
-ERROR_BAD_IMPERSONATION_LEVEL - Either a required impersonation level was not provided, or the provided impersonation level is invalid.
+ERROR_BAD_IMPERSONATION_LEVEL - Nie został podany poziom personifikacji albo podany poziom jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_BAD_IMPERSONATION_LEVEL - Either a required impersonation level was not provided, or the provided impersonation level is invalid.
@@ -11715,7 +11715,7 @@ Language=Russian
 ERROR_CANT_OPEN_ANONYMOUS - Не удается открыть токен безопасности анонимного уровня.
 .
 Language=Polish
-ERROR_CANT_OPEN_ANONYMOUS - Cannot open an anonymous level security token.
+ERROR_CANT_OPEN_ANONYMOUS - Nie można otworzyć tokenu o anonimowym poziomie zabezpieczenia.
 .
 Language=Romanian
 ERROR_CANT_OPEN_ANONYMOUS - Cannot open an anonymous level security token.
@@ -11732,7 +11732,7 @@ Language=Russian
 ERROR_BAD_VALIDATION_CLASS - Запрошен неправильный класс сведений для проверки.
 .
 Language=Polish
-ERROR_BAD_VALIDATION_CLASS - The validation information class requested was invalid.
+ERROR_BAD_VALIDATION_CLASS - Żądana klasa informacji sprawdzania poprawności była nieprawidłowa.
 .
 Language=Romanian
 ERROR_BAD_VALIDATION_CLASS - The validation information class requested was invalid.
@@ -11749,7 +11749,7 @@ Language=Russian
 ERROR_BAD_TOKEN_TYPE - Тип токена не соответствует выполняемой операции.
 .
 Language=Polish
-ERROR_BAD_TOKEN_TYPE - The type of the token is inappropriate for its attempted use.
+ERROR_BAD_TOKEN_TYPE - Typ tokena jest nieodpowiedni dla podjętej próby jego użycia.
 .
 Language=Romanian
 ERROR_BAD_TOKEN_TYPE - The type of the token is inappropriate for its attempted use.
@@ -11766,7 +11766,7 @@ Language=Russian
 ERROR_NO_SECURITY_ON_OBJECT - Операция, связанная с защитой данных, не может быть выполнена для незащищенного объекта.
 .
 Language=Polish
-ERROR_NO_SECURITY_ON_OBJECT - Unable to perform a security operation on an object that has no associated security.
+ERROR_NO_SECURITY_ON_OBJECT - Nie można wykonać operacji zabezpieczenia na obiekcie, z którym nie ma skojarzonego zabezpieczenia.
 .
 Language=Romanian
 ERROR_NO_SECURITY_ON_OBJECT - Unable to perform a security operation on an object that has no associated security.
@@ -11783,7 +11783,7 @@ Language=Russian
 ERROR_CANT_ACCESS_DOMAIN_INFO - Не удалось получить данные о конфигурации от контроллера домена. Либо он отключен, либо к нему нет доступа.
 .
 Language=Polish
-ERROR_CANT_ACCESS_DOMAIN_INFO - Configuration information could not be read from the domain controller, either because the machine is unavailable, or access has been denied.
+ERROR_CANT_ACCESS_DOMAIN_INFO - Nie można odczytać informacji o konfiguracji z kontrolera domeny, ponieważ urządzenie jest niedostępne lub dostęp jest zabroniony.
 .
 Language=Romanian
 ERROR_CANT_ACCESS_DOMAIN_INFO - Configuration information could not be read from the domain controller, either because the machine is unavailable, or access has been denied.
@@ -11800,7 +11800,7 @@ Language=Russian
 ERROR_INVALID_SERVER_STATE - Диспетчер защиты (SAM) или локальный сервер (LSA) не смог выполнить требуемую операцию.
 .
 Language=Polish
-ERROR_INVALID_SERVER_STATE - The security account manager (SAM) or local security authority (LSA) server was in the wrong state to perform the security operation.
+ERROR_INVALID_SERVER_STATE - Menedżer kont zabezpieczeń (SAM) lub lokalny serwer urzędu zabezpieczeń (LSA) był w niewłaściwym stanie do wykonania operacji zabezpieczania.
 .
 Language=Romanian
 ERROR_INVALID_SERVER_STATE - The security account manager (SAM) or local security authority (LSA) server was in the wrong state to perform the security operation.
@@ -11817,7 +11817,7 @@ Language=Russian
 ERROR_INVALID_DOMAIN_STATE - Состояние домена не позволило выполнить нужную операцию.
 .
 Language=Polish
-ERROR_INVALID_DOMAIN_STATE - The domain was in the wrong state to perform the security operation.
+ERROR_INVALID_DOMAIN_STATE - Domena była w niewłaściwym stanie do wykonania operacji zabezpieczania.
 .
 Language=Romanian
 ERROR_INVALID_DOMAIN_STATE - The domain was in the wrong state to perform the security operation.
@@ -11834,7 +11834,7 @@ Language=Russian
 ERROR_INVALID_DOMAIN_ROLE - Операция разрешена только для основного контроллера домена.
 .
 Language=Polish
-ERROR_INVALID_DOMAIN_ROLE - This operation is only allowed for the Primary Domain Controller of the domain.
+ERROR_INVALID_DOMAIN_ROLE - Ta operacja jest dozwolona tylko dla podstawowego kontrolera domeny.
 .
 Language=Romanian
 ERROR_INVALID_DOMAIN_ROLE - This operation is only allowed for the Primary Domain Controller of the domain.
@@ -11851,7 +11851,7 @@ Language=Russian
 ERROR_NO_SUCH_DOMAIN - Указанный домен не существует или к нему невозможно подключиться.
 .
 Language=Polish
-ERROR_NO_SUCH_DOMAIN - The specified domain either does not exist or could not be contacted.
+ERROR_NO_SUCH_DOMAIN - Określona domena nie istnieje lub nie można się z nią skontaktować.
 .
 Language=Romanian
 ERROR_NO_SUCH_DOMAIN - The specified domain either does not exist or could not be contacted.
@@ -11868,7 +11868,7 @@ Language=Russian
 ERROR_DOMAIN_EXISTS - Указанный домен уже существует.
 .
 Language=Polish
-ERROR_DOMAIN_EXISTS - The specified domain already exists.
+ERROR_DOMAIN_EXISTS - Określona domena już istnieje.
 .
 Language=Romanian
 ERROR_DOMAIN_EXISTS - The specified domain already exists.
@@ -11885,7 +11885,7 @@ Language=Russian
 ERROR_DOMAIN_LIMIT_EXCEEDED - Была сделана попытка превысить предел на число доменов, обслуживаемых одним сервером.
 .
 Language=Polish
-ERROR_DOMAIN_LIMIT_EXCEEDED - An attempt was made to exceed the limit on the number of domains per server.
+ERROR_DOMAIN_LIMIT_EXCEEDED - Podjęto próbę przekroczenia limitu liczby domen na serwer.
 .
 Language=Romanian
 ERROR_DOMAIN_LIMIT_EXCEEDED - An attempt was made to exceed the limit on the number of domains per server.
@@ -11902,7 +11902,7 @@ Language=Russian
 ERROR_INTERNAL_DB_CORRUPTION - Не удается завершить требуемую операцию из-за сбоев в данных на диске или неустранимой ошибки носителя.
 .
 Language=Polish
-ERROR_INTERNAL_DB_CORRUPTION - Unable to complete the requested operation because of either a catastrophic media failure or a data structure corruption on the disk.
+ERROR_INTERNAL_DB_CORRUPTION - Nie można wykonać żądanej operacji, ponieważ wystąpiła katastrofalna awaria nośnika lub uszkodzenie struktury danych na dysku.
 .
 Language=Romanian
 ERROR_INTERNAL_DB_CORRUPTION - Unable to complete the requested operation because of either a catastrophic media failure or a data structure corruption on the disk.
@@ -11919,7 +11919,7 @@ Language=Russian
 ERROR_INTERNAL_ERROR - Внутренняя ошибка.
 .
 Language=Polish
-ERROR_INTERNAL_ERROR - An internal error occurred.
+ERROR_INTERNAL_ERROR - Wystąpił błąd wewnętrzny.
 .
 Language=Romanian
 ERROR_INTERNAL_ERROR - An internal error occurred.
@@ -11936,7 +11936,7 @@ Language=Russian
 ERROR_GENERIC_NOT_MAPPED - Универсальные типы доступа содержатся в маске доступа, которая должна была уже быть связана с нестандартными типами.
 .
 Language=Polish
-ERROR_GENERIC_NOT_MAPPED - Generic access types were contained in an access mask which should already be mapped to nongeneric types.
+ERROR_GENERIC_NOT_MAPPED - Rodzajowe typy dostępu były zawarte w masce dostępu, która powinna być już zamapowana na typy nierodzajowe.
 .
 Language=Romanian
 ERROR_GENERIC_NOT_MAPPED - Generic access types were contained in an access mask which should already be mapped to nongeneric types.
@@ -11953,7 +11953,7 @@ Language=Russian
 ERROR_BAD_DESCRIPTOR_FORMAT - Дескриптор защиты имеет неверный формат.
 .
 Language=Polish
-ERROR_BAD_DESCRIPTOR_FORMAT - A security descriptor is not in the right format (absolute or self-relative).
+ERROR_BAD_DESCRIPTOR_FORMAT - Deskryptor zabezpieczeń nie ma prawidłowego formatu (bezwzględnego lub autorelacyjnego).
 .
 Language=Romanian
 ERROR_BAD_DESCRIPTOR_FORMAT - A security descriptor is not in the right format (absolute or self-relative).
@@ -11970,7 +11970,7 @@ Language=Russian
 ERROR_NOT_LOGON_PROCESS - Выполнение запрошенной операции разрешено только для процессов входа в систему. Вызывающий процесс не зарегистрирован как процесс входа в систему.
 .
 Language=Polish
-ERROR_NOT_LOGON_PROCESS - The requested action is restricted for use by logon processes only. The calling process has not registered as a logon process.
+ERROR_NOT_LOGON_PROCESS - Żądana akcja jest ograniczona do używania wyłącznie przez procesy logowania. Proces wywołujący nie jest zarejestrowany jako proces logowania.
 .
 Language=Romanian
 ERROR_NOT_LOGON_PROCESS - The requested action is restricted for use by logon processes only. The calling process has not registered as a logon process.
@@ -11987,7 +11987,7 @@ Language=Russian
 ERROR_LOGON_SESSION_EXISTS - Запуск нового сеанса работы с уже использующимся кодом невозможен.
 .
 Language=Polish
-ERROR_LOGON_SESSION_EXISTS - Cannot start a new logon session with an ID that is already in use.
+ERROR_LOGON_SESSION_EXISTS - Nie można uruchomić nowej sesji logowania z identyfikatorem, który jest już w użyciu.
 .
 Language=Romanian
 ERROR_LOGON_SESSION_EXISTS - Cannot start a new logon session with an ID that is already in use.
@@ -12004,7 +12004,7 @@ Language=Russian
 ERROR_NO_SUCH_PACKAGE - Пакет проверки подлинности не опознан.
 .
 Language=Polish
-ERROR_NO_SUCH_PACKAGE - A specified authentication package is unknown.
+ERROR_NO_SUCH_PACKAGE - Określony pakiet uwierzytelniania jest nieznany.
 .
 Language=Romanian
 ERROR_NO_SUCH_PACKAGE - A specified authentication package is unknown.
@@ -12021,7 +12021,7 @@ Language=Russian
 ERROR_BAD_LOGON_SESSION_STATE - Текущее состояние сеанса входа в систему не подходит для запрошенной операции.
 .
 Language=Polish
-ERROR_BAD_LOGON_SESSION_STATE - The logon session is not in a state that is consistent with the requested operation.
+ERROR_BAD_LOGON_SESSION_STATE - Sesja logowania jest w stanie niezgodnym z żądaną operacją.
 .
 Language=Romanian
 ERROR_BAD_LOGON_SESSION_STATE - The logon session is not in a state that is consistent with the requested operation.
@@ -12038,7 +12038,7 @@ Language=Russian
 ERROR_LOGON_SESSION_COLLISION - Код сеанса входа в систему уже используется.
 .
 Language=Polish
-ERROR_LOGON_SESSION_COLLISION - The logon session ID is already in use.
+ERROR_LOGON_SESSION_COLLISION - Identyfikator sesji logowania jest już w użyciu.
 .
 Language=Romanian
 ERROR_LOGON_SESSION_COLLISION - The logon session ID is already in use.
@@ -12055,7 +12055,7 @@ Language=Russian
 ERROR_INVALID_LOGON_TYPE - Режим входа в систему задан неверно.
 .
 Language=Polish
-ERROR_INVALID_LOGON_TYPE - A logon request contained an invalid logon type value.
+ERROR_INVALID_LOGON_TYPE - Żądanie logowania zawierało nieprawidłowy typ wartości logowania.
 .
 Language=Romanian
 ERROR_INVALID_LOGON_TYPE - A logon request contained an invalid logon type value.
@@ -12072,7 +12072,7 @@ Language=Russian
 ERROR_CANNOT_IMPERSONATE - Невозможно обеспечить олицетворение через именованный канал до тех пор, пока данные не считаны из этого канала.
 .
 Language=Polish
-ERROR_CANNOT_IMPERSONATE - Unable to impersonate using a named pipe until data has been read from that pipe.
+ERROR_CANNOT_IMPERSONATE - Dopóki dane są odczytywane z nazwanego potoku, nie można przeprowadzić personifikacji przy jego użyciu.
 .
 Language=Romanian
 ERROR_CANNOT_IMPERSONATE - Unable to impersonate using a named pipe until data has been read from that pipe.
@@ -12089,7 +12089,7 @@ Language=Russian
 ERROR_RXACT_INVALID_STATE - Операция несовместима с состоянием транзакции для ветви реестра.
 .
 Language=Polish
-ERROR_RXACT_INVALID_STATE - The transaction state of a registry subtree is incompatible with the requested operation.
+ERROR_RXACT_INVALID_STATE - Stan transakcji poddrzewa rejestru jest niezgodny z żądaną operacją.
 .
 Language=Romanian
 ERROR_RXACT_INVALID_STATE - The transaction state of a registry subtree is incompatible with the requested operation.
@@ -12106,7 +12106,7 @@ Language=Russian
 ERROR_RXACT_COMMIT_FAILURE - База данных защиты повреждена.
 .
 Language=Polish
-ERROR_RXACT_COMMIT_FAILURE - An internal security database corruption has been encountered.
+ERROR_RXACT_COMMIT_FAILURE - Wystąpiło uszkodzenie wewnętrznej bazy danych zabezpieczeń.
 .
 Language=Romanian
 ERROR_RXACT_COMMIT_FAILURE - An internal security database corruption has been encountered.
@@ -12123,7 +12123,7 @@ Language=Russian
 ERROR_SPECIAL_ACCOUNT - Операция не предназначена для встроенных учетных записей.
 .
 Language=Polish
-ERROR_SPECIAL_ACCOUNT - Cannot perform this operation on built-in accounts.
+ERROR_SPECIAL_ACCOUNT - Nie można wykonać tej operacji na kontach wbudowanych.
 .
 Language=Romanian
 ERROR_SPECIAL_ACCOUNT - Cannot perform this operation on built-in accounts.
@@ -12140,7 +12140,7 @@ Language=Russian
 ERROR_SPECIAL_GROUP - Операция не предназначена для встроенной специальной группы.
 .
 Language=Polish
-ERROR_SPECIAL_GROUP - Cannot perform this operation on this built-in special group.
+ERROR_SPECIAL_GROUP - Nie można wykonać tej operacji na tej wbudowanej grupie specjalnej.
 .
 Language=Romanian
 ERROR_SPECIAL_GROUP - Cannot perform this operation on this built-in special group.
@@ -12157,7 +12157,7 @@ Language=Russian
 ERROR_SPECIAL_USER - Операция не предназначена для встроенного специального пользователя.
 .
 Language=Polish
-ERROR_SPECIAL_USER - Cannot perform this operation on this built-in special user.
+ERROR_SPECIAL_USER - Nie można wykonać tej operacji na tym wbudowanym użytkowniku specjalnym.
 .
 Language=Romanian
 ERROR_SPECIAL_USER - Cannot perform this operation on this built-in special user.
@@ -12174,7 +12174,7 @@ Language=Russian
 ERROR_MEMBERS_PRIMARY_GROUP - Невозможно удалить пользователя из группы, так как она является для него основной.
 .
 Language=Polish
-ERROR_MEMBERS_PRIMARY_GROUP - The user cannot be removed from a group because the group is currently the user's primary group.
+ERROR_MEMBERS_PRIMARY_GROUP - Nie można usunąć użytkownika z grupy, ponieważ grupa jest obecnie podstawową grupą użytkownika.
 .
 Language=Romanian
 ERROR_MEMBERS_PRIMARY_GROUP - The user cannot be removed from a group because the group is currently the user's primary group.
@@ -12191,7 +12191,7 @@ Language=Russian
 ERROR_TOKEN_ALREADY_IN_USE - Токен уже используется в качестве основного токена.
 .
 Language=Polish
-ERROR_TOKEN_ALREADY_IN_USE - The token is already in use as a primary token.
+ERROR_TOKEN_ALREADY_IN_USE - Token jest już w użyciu jako token podstawowy.
 .
 Language=Romanian
 ERROR_TOKEN_ALREADY_IN_USE - The token is already in use as a primary token.
@@ -12208,7 +12208,7 @@ Language=Russian
 ERROR_NO_SUCH_ALIAS - Указанная локальная группа не существует.
 .
 Language=Polish
-ERROR_NO_SUCH_ALIAS - The specified local group does not exist.
+ERROR_NO_SUCH_ALIAS - Określona grupa lokalna nie istnieje.
 .
 Language=Romanian
 ERROR_NO_SUCH_ALIAS - The specified local group does not exist.
@@ -12225,7 +12225,7 @@ Language=Russian
 ERROR_MEMBER_NOT_IN_ALIAS - Указанная учетная запись не входит в эту группу.
 .
 Language=Polish
-ERROR_MEMBER_NOT_IN_ALIAS - The specified account name is not a member of the local group.
+ERROR_MEMBER_NOT_IN_ALIAS - Określona nazwa konta nie jest członkiem grupy.
 .
 Language=Romanian
 ERROR_MEMBER_NOT_IN_ALIAS - The specified account name is not a member of the local group.
@@ -12242,7 +12242,7 @@ Language=Russian
 ERROR_MEMBER_IN_ALIAS - Указанная учетная запись уже входит в эту группу.
 .
 Language=Polish
-ERROR_MEMBER_IN_ALIAS - The specified account name is already a member of the local group.
+ERROR_MEMBER_IN_ALIAS - Określona nazwa konta jest już członkiem grupy.
 .
 Language=Romanian
 ERROR_MEMBER_IN_ALIAS - The specified account name is already a member of the local group.
@@ -12259,7 +12259,7 @@ Language=Russian
 ERROR_ALIAS_EXISTS - Указанная локальная группа уже существует.
 .
 Language=Polish
-ERROR_ALIAS_EXISTS - The specified local group already exists.
+ERROR_ALIAS_EXISTS - Określona grupa lokalna już istnieje.
 .
 Language=Romanian
 ERROR_ALIAS_EXISTS - The specified local group already exists.
@@ -12276,7 +12276,7 @@ Language=Russian
 ERROR_LOGON_NOT_GRANTED - Вход в систему не произведен: выбранный режим входа для данного пользователя на этом компьютере не предусмотрен.
 .
 Language=Polish
-ERROR_LOGON_NOT_GRANTED - Logon failure: the user has not been granted the requested logon type at this computer.
+ERROR_LOGON_NOT_GRANTED - Błąd logowania: użytkownikowi nie przyznano żądanego typu logowania na tym komputerze.
 .
 Language=Romanian
 ERROR_LOGON_NOT_GRANTED - Logon failure: the user has not been granted the requested logon type at this computer.
@@ -12293,7 +12293,7 @@ Language=Russian
 ERROR_TOO_MANY_SECRETS - Достигнут предел по количеству защищенных данных/ресурсов для одной системы.
 .
 Language=Polish
-ERROR_TOO_MANY_SECRETS - The maximum number of secrets that may be stored in a single system has been exceeded.
+ERROR_TOO_MANY_SECRETS - Przekroczono maksymalną liczbę haseł, które mogą być przechowywane w pojedynczym systemie.
 .
 Language=Romanian
 ERROR_TOO_MANY_SECRETS - The maximum number of secrets that may be stored in a single system has been exceeded.
@@ -12310,7 +12310,7 @@ Language=Russian
 ERROR_SECRET_TOO_LONG - Длина защищенных данных превышает максимально возможную.
 .
 Language=Polish
-ERROR_SECRET_TOO_LONG - The length of a secret exceeds the maximum length allowed.
+ERROR_SECRET_TOO_LONG - Długość hasła przekracza maksymalną dopuszczalną wartość.
 .
 Language=Romanian
 ERROR_SECRET_TOO_LONG - The length of a secret exceeds the maximum length allowed.
@@ -12327,7 +12327,7 @@ Language=Russian
 ERROR_INTERNAL_DB_ERROR - Локальная база данных защиты содержит внутренние несоответствия.
 .
 Language=Polish
-ERROR_INTERNAL_DB_ERROR - The local security authority database contains an internal inconsistency.
+ERROR_INTERNAL_DB_ERROR - Baza danych urzędu zabezpieczeń lokalnych zawiera wewnętrzną niezgodność.
 .
 Language=Romanian
 ERROR_INTERNAL_DB_ERROR - The local security authority database contains an internal inconsistency.
@@ -12344,7 +12344,7 @@ Language=Russian
 ERROR_TOO_MANY_CONTEXT_IDS - При попытке входа в систему контекст безопасности пользователя накопил слишком много идентификаторов безопасности.
 .
 Language=Polish
-ERROR_TOO_MANY_CONTEXT_IDS - During a logon attempt, the user's security context accumulated too many security IDs.
+ERROR_TOO_MANY_CONTEXT_IDS - Podczas próby logowania kontekst zabezpieczeń użytkownika zakumulował za dużo identyfikatorów zabezpieczeń.
 .
 Language=Romanian
 ERROR_TOO_MANY_CONTEXT_IDS - During a logon attempt, the user's security context accumulated too many security IDs.
@@ -12361,7 +12361,7 @@ Language=Russian
 ERROR_LOGON_TYPE_NOT_GRANTED - Вход в систему не произведен: выбранный режим входа для данного пользователя на этом компьютере не предусмотрен.
 .
 Language=Polish
-ERROR_LOGON_TYPE_NOT_GRANTED - Logon failure: the user has not been granted the requested logon type at this computer.
+ERROR_LOGON_TYPE_NOT_GRANTED - Błąd logowania: użytkownikowi nie przyznano żądanego typu logowania na tym komputerze.
 .
 Language=Romanian
 ERROR_LOGON_TYPE_NOT_GRANTED - Logon failure: the user has not been granted the requested logon type at this computer.
@@ -12378,7 +12378,7 @@ Language=Russian
 ERROR_NT_CROSS_ENCRYPTION_REQUIRED - Для смены пароля необходим зашифрованный пароль.
 .
 Language=Polish
-ERROR_NT_CROSS_ENCRYPTION_REQUIRED - A cross-encrypted password is necessary to change a user password.
+ERROR_NT_CROSS_ENCRYPTION_REQUIRED - Do zmiany hasła użytkownika konieczne jest hasło zaszyfrowane krzyżowo.
 .
 Language=Romanian
 ERROR_NT_CROSS_ENCRYPTION_REQUIRED - A cross-encrypted password is necessary to change a user password.
@@ -12395,7 +12395,7 @@ Language=Russian
 ERROR_NO_SUCH_MEMBER - Не удалось добавить или удалить члена локальной группы, так как он не существует.
 .
 Language=Polish
-ERROR_NO_SUCH_MEMBER - A new member could not be added to or removed from the local group because the member does not exist.
+ERROR_NO_SUCH_MEMBER - Nie można dodać nowego członka grupy do grupy lokalnej ani usunąć go z niej, ponieważ ten członek grupy nie istnieje.
 .
 Language=Romanian
 ERROR_NO_SUCH_MEMBER - A new member could not be added to or removed from the local group because the member does not exist.
@@ -12412,7 +12412,7 @@ Language=Russian
 ERROR_INVALID_MEMBER - Добавление нового члена в локальную группу невозможно, так как он имеет неправильный тип учетной записи.
 .
 Language=Polish
-ERROR_INVALID_MEMBER - A new member could not be added to a local group because the member has the wrong account type.
+ERROR_INVALID_MEMBER - Nie można dodać nowego członka grupy do grupy lokalnej, ponieważ ten członek grupy ma zły typ konta.
 .
 Language=Romanian
 ERROR_INVALID_MEMBER - A new member could not be added to a local group because the member has the wrong account type.
@@ -12429,7 +12429,7 @@ Language=Russian
 ERROR_TOO_MANY_SIDS - Задано слишком много идентификаторов безопасности.
 .
 Language=Polish
-ERROR_TOO_MANY_SIDS - Too many security IDs have been specified.
+ERROR_TOO_MANY_SIDS - Określono za dużo identyfikatorów zabezpieczeń.
 .
 Language=Romanian
 ERROR_TOO_MANY_SIDS - Too many security IDs have been specified.
@@ -12446,7 +12446,7 @@ Language=Russian
 ERROR_LM_CROSS_ENCRYPTION_REQUIRED - Для смены пароля необходим зашифрованный пароль.
 .
 Language=Polish
-ERROR_LM_CROSS_ENCRYPTION_REQUIRED - A cross-encrypted password is necessary to change this user password.
+ERROR_LM_CROSS_ENCRYPTION_REQUIRED - Do zmiany tego hasła użytkownika konieczne jest hasło zaszyfrowane krzyżowo.
 .
 Language=Romanian
 ERROR_LM_CROSS_ENCRYPTION_REQUIRED - A cross-encrypted password is necessary to change this user password.
@@ -12463,7 +12463,7 @@ Language=Russian
 ERROR_NO_INHERITANCE - Список управления доступом (ACL) не содержит наследуемых компонентов.
 .
 Language=Polish
-ERROR_NO_INHERITANCE - Indicates an ACL contains no inheritable components.
+ERROR_NO_INHERITANCE - Wskazuje, że ACL nie zawiera składników dziedzicznych.
 .
 Language=Romanian
 ERROR_NO_INHERITANCE - Indicates an ACL contains no inheritable components.
@@ -12480,7 +12480,7 @@ Language=Russian
 ERROR_FILE_CORRUPT - Файл или папка повреждены. Чтение невозможно.
 .
 Language=Polish
-ERROR_FILE_CORRUPT - The file or directory is corrupted and unreadable.
+ERROR_FILE_CORRUPT - Plik lub katalog jest uszkodzony i nieczytelny.
 .
 Language=Romanian
 ERROR_FILE_CORRUPT - The file or directory is corrupted and unreadable.
@@ -12497,7 +12497,7 @@ Language=Russian
 ERROR_DISK_CORRUPT - Структура диска повреждена. Чтение невозможно.
 .
 Language=Polish
-ERROR_DISK_CORRUPT - The disk structure is corrupted and unreadable.
+ERROR_DISK_CORRUPT - Struktura dysku jest uszkodzona i nieczytelna.
 .
 Language=Romanian
 ERROR_DISK_CORRUPT - The disk structure is corrupted and unreadable.
@@ -12514,7 +12514,7 @@ Language=Russian
 ERROR_NO_USER_SESSION_KEY - Для заданного сеанса входа в систему отсутствует раздел сеанса пользователя.
 .
 Language=Polish
-ERROR_NO_USER_SESSION_KEY - There is no user session key for the specified logon session.
+ERROR_NO_USER_SESSION_KEY - Brak klucza sesji użytkownika dla określonej sesji logowania.
 .
 Language=Romanian
 ERROR_NO_USER_SESSION_KEY - There is no user session key for the specified logon session.
@@ -12531,7 +12531,7 @@ Language=Russian
 ERROR_LICENSE_QUOTA_EXCEEDED - Для вызываемой службы действует лицензия на определенное число подключений. В настоящее время создание дополнительных подключений к службе невозможно, так как уже существует максимально допустимое число подключений.
 .
 Language=Polish
-ERROR_LICENSE_QUOTA_EXCEEDED - The service being accessed is licensed for a particular number of connections. No more connections can be made to the service at this time because there are already as many connections as the service can accept.
+ERROR_LICENSE_QUOTA_EXCEEDED - Usługa, do której próbujesz uzyskać dostęp, ma licencję tylko na określoną liczbę połączeń. Nie można obecnie połączyć się z tą usługą, gdyż istnieje już tyle połączeń, ile usługa może zaakceptować.
 .
 Language=Romanian
 ERROR_LICENSE_QUOTA_EXCEEDED - The service being accessed is licensed for a particular number of connections. No more connections can be made to the service at this time because there are already as many connections as the service can accept.
@@ -12548,7 +12548,7 @@ Language=Russian
 ERROR_WRONG_TARGET_NAME - Конечная учетная запись указана неверно.
 .
 Language=Polish
-ERROR_WRONG_TARGET_NAME - Logon Failure: The target account name is incorrect.
+ERROR_WRONG_TARGET_NAME - Błąd logowania: niepoprawna nazwa docelowego konta.
 .
 Language=Romanian
 ERROR_WRONG_TARGET_NAME - Logon Failure: The target account name is incorrect.
@@ -12565,7 +12565,7 @@ Language=Russian
 ERROR_MUTUAL_AUTH_FAILED - Ошибка взаимной проверки подлинности. Пароль сервера на контроллере домена устарел.
 .
 Language=Polish
-ERROR_MUTUAL_AUTH_FAILED - Mutual Authentication failed. The server's password is out of date at the domain controller.
+ERROR_MUTUAL_AUTH_FAILED - Wzajemne uwierzytelnienie nie powiodło się. Hasło serwera w kontrolerze domeny jest nieaktualne.
 .
 Language=Romanian
 ERROR_MUTUAL_AUTH_FAILED - Mutual Authentication failed. The server's password is out of date at the domain controller.
@@ -12582,7 +12582,7 @@ Language=Russian
 ERROR_TIME_SKEW - Существует разница настройки времени и/или даты между клиентом и сервером.
 .
 Language=Polish
-ERROR_TIME_SKEW - There is a time and/or date difference between the client and server.
+ERROR_TIME_SKEW - Występuje różnica czasu i/lub daty między klientem i serwerem.
 .
 Language=Romanian
 ERROR_TIME_SKEW - There is a time and/or date difference between the client and server.
@@ -12599,7 +12599,7 @@ Language=Russian
 ERROR_CURRENT_DOMAIN_NOT_ALLOWED - Эта операция не может быть выполнена над текущим доменом.
 .
 Language=Polish
-ERROR_CURRENT_DOMAIN_NOT_ALLOWED - This operation cannot be performed on the current domain.
+ERROR_CURRENT_DOMAIN_NOT_ALLOWED - Tej operacji nie można wykonać na bieżącej domenie.
 .
 Language=Romanian
 ERROR_CURRENT_DOMAIN_NOT_ALLOWED - This operation cannot be performed on the current domain.
@@ -12616,7 +12616,7 @@ Language=Russian
 ERROR_INVALID_WINDOW_HANDLE - Недопустимый дескриптор окна.
 .
 Language=Polish
-ERROR_INVALID_WINDOW_HANDLE - Invalid window handle.
+ERROR_INVALID_WINDOW_HANDLE - Nieprawidłowe dojście okna.
 .
 Language=Romanian
 ERROR_INVALID_WINDOW_HANDLE - Invalid window handle.
@@ -12633,7 +12633,7 @@ Language=Russian
 ERROR_INVALID_MENU_HANDLE - Неверный дескриптор меню.
 .
 Language=Polish
-ERROR_INVALID_MENU_HANDLE - Invalid menu handle.
+ERROR_INVALID_MENU_HANDLE - Nieprawidłowe dojście menu.
 .
 Language=Romanian
 ERROR_INVALID_MENU_HANDLE - Invalid menu handle.
@@ -12650,7 +12650,7 @@ Language=Russian
 ERROR_INVALID_CURSOR_HANDLE - Неверный дескриптор указателя.
 .
 Language=Polish
-ERROR_INVALID_CURSOR_HANDLE - Invalid cursor handle.
+ERROR_INVALID_CURSOR_HANDLE - Nieprawidłowe dojście kursora.
 .
 Language=Romanian
 ERROR_INVALID_CURSOR_HANDLE - Invalid cursor handle.
@@ -12667,7 +12667,7 @@ Language=Russian
 ERROR_INVALID_ACCEL_HANDLE - Неверный дескриптор таблицы сочетаний клавиш.
 .
 Language=Polish
-ERROR_INVALID_ACCEL_HANDLE - Invalid accelerator table handle.
+ERROR_INVALID_ACCEL_HANDLE - Nieprawidłowe dojście tabeli przyspieszacza.
 .
 Language=Romanian
 ERROR_INVALID_ACCEL_HANDLE - Invalid accelerator table handle.
@@ -12684,7 +12684,7 @@ Language=Russian
 ERROR_INVALID_HOOK_HANDLE - Неверный дескриптор обработчика.
 .
 Language=Polish
-ERROR_INVALID_HOOK_HANDLE - Invalid hook handle.
+ERROR_INVALID_HOOK_HANDLE - Nieprawidłowe dojście haka.
 .
 Language=Romanian
 ERROR_INVALID_HOOK_HANDLE - Invalid hook handle.
@@ -12701,7 +12701,7 @@ Language=Russian
 ERROR_INVALID_DWP_HANDLE - Неверный дескриптор многооконной структуры.
 .
 Language=Polish
-ERROR_INVALID_DWP_HANDLE - Invalid handle to a multiple-window position structure.
+ERROR_INVALID_DWP_HANDLE - Nieprawidłowe dojście do struktury wielooknowej.
 .
 Language=Romanian
 ERROR_INVALID_DWP_HANDLE - Invalid handle to a multiple-window position structure.
@@ -12718,7 +12718,7 @@ Language=Russian
 ERROR_TLW_WITH_WSCHILD - Не удается создать дочернее окно верхнего уровня.
 .
 Language=Polish
-ERROR_TLW_WITH_WSCHILD - Cannot create a top-level child window.
+ERROR_TLW_WITH_WSCHILD - Nie można utworzyć okna podrzędnego najwyższego poziomu.
 .
 Language=Romanian
 ERROR_TLW_WITH_WSCHILD - Cannot create a top-level child window.
@@ -12735,7 +12735,7 @@ Language=Russian
 ERROR_CANNOT_FIND_WND_CLASS - Не удается найти класс окна.
 .
 Language=Polish
-ERROR_CANNOT_FIND_WND_CLASS - Cannot find window class.
+ERROR_CANNOT_FIND_WND_CLASS - Nie można odnaleźć klasy okna.
 .
 Language=Romanian
 ERROR_CANNOT_FIND_WND_CLASS - Cannot find window class.
@@ -12752,7 +12752,7 @@ Language=Russian
 ERROR_WINDOW_OF_OTHER_THREAD - Окно принадлежит другому потоку команд.
 .
 Language=Polish
-ERROR_WINDOW_OF_OTHER_THREAD - Invalid window; it belongs to other thread.
+ERROR_WINDOW_OF_OTHER_THREAD - Nieprawidłowe okno, należy ono do innego wątku.
 .
 Language=Romanian
 ERROR_WINDOW_OF_OTHER_THREAD - Invalid window; it belongs to other thread.
@@ -12769,7 +12769,7 @@ Language=Russian
 ERROR_HOTKEY_ALREADY_REGISTERED - Назначенная клавиша уже зарегистрирована.
 .
 Language=Polish
-ERROR_HOTKEY_ALREADY_REGISTERED - Hot key is already registered.
+ERROR_HOTKEY_ALREADY_REGISTERED - Klawisz dostępu jest już zarejestrowany.
 .
 Language=Romanian
 ERROR_HOTKEY_ALREADY_REGISTERED - Hot key is already registered.
@@ -12786,7 +12786,7 @@ Language=Russian
 ERROR_CLASS_ALREADY_EXISTS - Класс уже существует.
 .
 Language=Polish
-ERROR_CLASS_ALREADY_EXISTS - Class already exists.
+ERROR_CLASS_ALREADY_EXISTS - Klasa już istnieje.
 .
 Language=Romanian
 ERROR_CLASS_ALREADY_EXISTS - Class already exists.
@@ -12803,7 +12803,7 @@ Language=Russian
 ERROR_CLASS_DOES_NOT_EXIST - Класс не существует.
 .
 Language=Polish
-ERROR_CLASS_DOES_NOT_EXIST - Class does not exist.
+ERROR_CLASS_DOES_NOT_EXIST - Klasa nie istnieje.
 .
 Language=Romanian
 ERROR_CLASS_DOES_NOT_EXIST - Class does not exist.
@@ -12820,7 +12820,7 @@ Language=Russian
 ERROR_CLASS_HAS_WINDOWS - Class still has open windows.
 .
 Language=Polish
-ERROR_CLASS_HAS_WINDOWS - Class still has open windows.
+ERROR_CLASS_HAS_WINDOWS - Klasa ma wciąż otwarte okna.
 .
 Language=Romanian
 ERROR_CLASS_HAS_WINDOWS - Class still has open windows.
@@ -12837,7 +12837,7 @@ Language=Russian
 ERROR_INVALID_INDEX - Invalid index.
 .
 Language=Polish
-ERROR_INVALID_INDEX - Invalid index.
+ERROR_INVALID_INDEX - Nieprawidłowy indeks.
 .
 Language=Romanian
 ERROR_INVALID_INDEX - Invalid index.
@@ -12854,7 +12854,7 @@ Language=Russian
 ERROR_INVALID_ICON_HANDLE - Invalid icon handle.
 .
 Language=Polish
-ERROR_INVALID_ICON_HANDLE - Invalid icon handle.
+ERROR_INVALID_ICON_HANDLE - Nieprawidłowe dojście ikony.
 .
 Language=Romanian
 ERROR_INVALID_ICON_HANDLE - Invalid icon handle.
@@ -12871,7 +12871,7 @@ Language=Russian
 ERROR_PRIVATE_DIALOG_INDEX - Using private DIALOG window words.
 .
 Language=Polish
-ERROR_PRIVATE_DIALOG_INDEX - Using private DIALOG window words.
+ERROR_PRIVATE_DIALOG_INDEX - Używane są słowa prywatnego okna DIALOG.
 .
 Language=Romanian
 ERROR_PRIVATE_DIALOG_INDEX - Using private DIALOG window words.
@@ -12888,7 +12888,7 @@ Language=Russian
 ERROR_LISTBOX_ID_NOT_FOUND - The list box identifier was not found.
 .
 Language=Polish
-ERROR_LISTBOX_ID_NOT_FOUND - The list box identifier was not found.
+ERROR_LISTBOX_ID_NOT_FOUND - Nie znaleziono identyfikatora pola listy.
 .
 Language=Romanian
 ERROR_LISTBOX_ID_NOT_FOUND - The list box identifier was not found.
@@ -12905,7 +12905,7 @@ Language=Russian
 ERROR_NO_WILDCARD_CHARACTERS - No wildcards were found.
 .
 Language=Polish
-ERROR_NO_WILDCARD_CHARACTERS - No wildcards were found.
+ERROR_NO_WILDCARD_CHARACTERS - Nie znaleziono symboli wieloznacznych.
 .
 Language=Romanian
 ERROR_NO_WILDCARD_CHARACTERS - No wildcards were found.
@@ -12922,7 +12922,7 @@ Language=Russian
 ERROR_CLIPBOARD_NOT_OPEN - Thread does not have a clipboard open.
 .
 Language=Polish
-ERROR_CLIPBOARD_NOT_OPEN - Thread does not have a clipboard open.
+ERROR_CLIPBOARD_NOT_OPEN - Wątek nie ma otwartego Schowka.
 .
 Language=Romanian
 ERROR_CLIPBOARD_NOT_OPEN - Thread does not have a clipboard open.
@@ -12939,7 +12939,7 @@ Language=Russian
 ERROR_HOTKEY_NOT_REGISTERED - Hot key is not registered.
 .
 Language=Polish
-ERROR_HOTKEY_NOT_REGISTERED - Hot key is not registered.
+ERROR_HOTKEY_NOT_REGISTERED - Klawisz dostępu nie jest zarejestrowany.
 .
 Language=Romanian
 ERROR_HOTKEY_NOT_REGISTERED - Hot key is not registered.
@@ -12956,7 +12956,7 @@ Language=Russian
 ERROR_WINDOW_NOT_DIALOG - The window is not a valid dialog window.
 .
 Language=Polish
-ERROR_WINDOW_NOT_DIALOG - The window is not a valid dialog window.
+ERROR_WINDOW_NOT_DIALOG - Okno nie jest prawidłowym oknem dialogowym.
 .
 Language=Romanian
 ERROR_WINDOW_NOT_DIALOG - The window is not a valid dialog window.
@@ -12973,7 +12973,7 @@ Language=Russian
 ERROR_CONTROL_ID_NOT_FOUND - Control ID not found.
 .
 Language=Polish
-ERROR_CONTROL_ID_NOT_FOUND - Control ID not found.
+ERROR_CONTROL_ID_NOT_FOUND - Nie można odnaleźć identyfikatora formantu.
 .
 Language=Romanian
 ERROR_CONTROL_ID_NOT_FOUND - Control ID not found.
@@ -12990,7 +12990,7 @@ Language=Russian
 ERROR_INVALID_COMBOBOX_MESSAGE - Invalid message for a combo box because it does not have an edit control.
 .
 Language=Polish
-ERROR_INVALID_COMBOBOX_MESSAGE - Invalid message for a combo box because it does not have an edit control.
+ERROR_INVALID_COMBOBOX_MESSAGE - Nieprawidłowy komunikat dla pola kombi, ponieważ nie ma ono formantu edycyjnego.
 .
 Language=Romanian
 ERROR_INVALID_COMBOBOX_MESSAGE - Invalid message for a combo box because it does not have an edit control.
@@ -13007,7 +13007,7 @@ Language=Russian
 ERROR_WINDOW_NOT_COMBOBOX - The window is not a combo box.
 .
 Language=Polish
-ERROR_WINDOW_NOT_COMBOBOX - The window is not a combo box.
+ERROR_WINDOW_NOT_COMBOBOX - Okno nie jest polem kombi.
 .
 Language=Romanian
 ERROR_WINDOW_NOT_COMBOBOX - The window is not a combo box.
@@ -13024,7 +13024,7 @@ Language=Russian
 ERROR_INVALID_EDIT_HEIGHT - Height must be less than 256.
 .
 Language=Polish
-ERROR_INVALID_EDIT_HEIGHT - Height must be less than 256.
+ERROR_INVALID_EDIT_HEIGHT - Wysokość musi być mniejsza niż 256.
 .
 Language=Romanian
 ERROR_INVALID_EDIT_HEIGHT - Height must be less than 256.
@@ -13041,7 +13041,7 @@ Language=Russian
 ERROR_DC_NOT_FOUND - Invalid device context (DC) handle.
 .
 Language=Polish
-ERROR_DC_NOT_FOUND - Invalid device context (DC) handle.
+ERROR_DC_NOT_FOUND - Nieprawidłowe dojście kontekstu urządzenia (DC).
 .
 Language=Romanian
 ERROR_DC_NOT_FOUND - Invalid device context (DC) handle.
@@ -13058,7 +13058,7 @@ Language=Russian
 ERROR_INVALID_HOOK_FILTER - Invalid hook procedure type.
 .
 Language=Polish
-ERROR_INVALID_HOOK_FILTER - Invalid hook procedure type.
+ERROR_INVALID_HOOK_FILTER - Nieprawidłowy typ procedury haka.
 .
 Language=Romanian
 ERROR_INVALID_HOOK_FILTER - Invalid hook procedure type.
@@ -13075,7 +13075,7 @@ Language=Russian
 ERROR_INVALID_FILTER_PROC - Invalid hook procedure.
 .
 Language=Polish
-ERROR_INVALID_FILTER_PROC - Invalid hook procedure.
+ERROR_INVALID_FILTER_PROC - Nieprawidłowa procedura haka.
 .
 Language=Romanian
 ERROR_INVALID_FILTER_PROC - Invalid hook procedure.
@@ -13092,7 +13092,7 @@ Language=Russian
 ERROR_HOOK_NEEDS_HMOD - Cannot set nonlocal hook without a module handle.
 .
 Language=Polish
-ERROR_HOOK_NEEDS_HMOD - Cannot set nonlocal hook without a module handle.
+ERROR_HOOK_NEEDS_HMOD - Nie można ustawić haka nielokalnego bez dojścia modułu.
 .
 Language=Romanian
 ERROR_HOOK_NEEDS_HMOD - Cannot set nonlocal hook without a module handle.
@@ -13109,7 +13109,7 @@ Language=Russian
 ERROR_GLOBAL_ONLY_HOOK - This hook procedure can only be set globally.
 .
 Language=Polish
-ERROR_GLOBAL_ONLY_HOOK - This hook procedure can only be set globally.
+ERROR_GLOBAL_ONLY_HOOK - Ta procedura haka może być ustawiona tylko globalnie.
 .
 Language=Romanian
 ERROR_GLOBAL_ONLY_HOOK - This hook procedure can only be set globally.
@@ -13126,7 +13126,7 @@ Language=Russian
 ERROR_JOURNAL_HOOK_SET - The journal hook procedure is already installed.
 .
 Language=Polish
-ERROR_JOURNAL_HOOK_SET - The journal hook procedure is already installed.
+ERROR_JOURNAL_HOOK_SET - Procedura haka dziennika jest już zainstalowana.
 .
 Language=Romanian
 ERROR_JOURNAL_HOOK_SET - The journal hook procedure is already installed.
@@ -13143,7 +13143,7 @@ Language=Russian
 ERROR_HOOK_NOT_INSTALLED - The hook procedure is not installed.
 .
 Language=Polish
-ERROR_HOOK_NOT_INSTALLED - The hook procedure is not installed.
+ERROR_HOOK_NOT_INSTALLED - Procedura haka nie jest zainstalowana.
 .
 Language=Romanian
 ERROR_HOOK_NOT_INSTALLED - The hook procedure is not installed.
@@ -13160,7 +13160,7 @@ Language=Russian
 ERROR_INVALID_LB_MESSAGE - Invalid message for single-selection list box.
 .
 Language=Polish
-ERROR_INVALID_LB_MESSAGE - Invalid message for single-selection list box.
+ERROR_INVALID_LB_MESSAGE - Nieprawidłowy komunikat dla pola listy z pojedynczym wyborem.
 .
 Language=Romanian
 ERROR_INVALID_LB_MESSAGE - Invalid message for single-selection list box.
@@ -13177,7 +13177,7 @@ Language=Russian
 ERROR_SETCOUNT_ON_BAD_LB - LB_SETCOUNT sent to non-lazy list box.
 .
 Language=Polish
-ERROR_SETCOUNT_ON_BAD_LB - LB_SETCOUNT sent to non-lazy list box.
+ERROR_SETCOUNT_ON_BAD_LB - Polecenie LB_SETCOUNT przesłane do pola listy non-lazy.
 .
 Language=Romanian
 ERROR_SETCOUNT_ON_BAD_LB - LB_SETCOUNT sent to non-lazy list box.
@@ -13194,7 +13194,7 @@ Language=Russian
 ERROR_LB_WITHOUT_TABSTOPS - This list box does not support tab stops.
 .
 Language=Polish
-ERROR_LB_WITHOUT_TABSTOPS - This list box does not support tab stops.
+ERROR_LB_WITHOUT_TABSTOPS - To pole listy nie obsługuje tabulatorów.
 .
 Language=Romanian
 ERROR_LB_WITHOUT_TABSTOPS - This list box does not support tab stops.
@@ -13211,7 +13211,7 @@ Language=Russian
 ERROR_DESTROY_OBJECT_OF_OTHER_THREAD - Cannot destroy object created by another thread.
 .
 Language=Polish
-ERROR_DESTROY_OBJECT_OF_OTHER_THREAD - Cannot destroy object created by another thread.
+ERROR_DESTROY_OBJECT_OF_OTHER_THREAD - Nie można zniszczyć obiektu utworzonego przez inny wątek.
 .
 Language=Romanian
 ERROR_DESTROY_OBJECT_OF_OTHER_THREAD - Cannot destroy object created by another thread.
@@ -13228,7 +13228,7 @@ Language=Russian
 ERROR_CHILD_WINDOW_MENU - Child windows cannot have menus.
 .
 Language=Polish
-ERROR_CHILD_WINDOW_MENU - Child windows cannot have menus.
+ERROR_CHILD_WINDOW_MENU - Okna podrzędne nie mogą mieć menu.
 .
 Language=Romanian
 ERROR_CHILD_WINDOW_MENU - Child windows cannot have menus.
@@ -13245,7 +13245,7 @@ Language=Russian
 ERROR_NO_SYSTEM_MENU - The window does not have a system menu.
 .
 Language=Polish
-ERROR_NO_SYSTEM_MENU - The window does not have a system menu.
+ERROR_NO_SYSTEM_MENU - Okno nie ma menu systemowego.
 .
 Language=Romanian
 ERROR_NO_SYSTEM_MENU - The window does not have a system menu.
@@ -13262,7 +13262,7 @@ Language=Russian
 ERROR_INVALID_MSGBOX_STYLE - Invalid message box style.
 .
 Language=Polish
-ERROR_INVALID_MSGBOX_STYLE - Invalid message box style.
+ERROR_INVALID_MSGBOX_STYLE - Nieprawidłowy styl okna komunikatu.
 .
 Language=Romanian
 ERROR_INVALID_MSGBOX_STYLE - Invalid message box style.
@@ -13279,7 +13279,7 @@ Language=Russian
 ERROR_INVALID_SPI_VALUE - Invalid system-wide (SPI_*) parameter.
 .
 Language=Polish
-ERROR_INVALID_SPI_VALUE - Invalid system-wide (SPI_*) parameter.
+ERROR_INVALID_SPI_VALUE - Nieprawidłowy parametr systemowy (SPI_*).
 .
 Language=Romanian
 ERROR_INVALID_SPI_VALUE - Invalid system-wide (SPI_*) parameter.
@@ -13296,7 +13296,7 @@ Language=Russian
 ERROR_SCREEN_ALREADY_LOCKED - Screen already locked.
 .
 Language=Polish
-ERROR_SCREEN_ALREADY_LOCKED - Screen already locked.
+ERROR_SCREEN_ALREADY_LOCKED - Ekran jest już zablokowany.
 .
 Language=Romanian
 ERROR_SCREEN_ALREADY_LOCKED - Screen already locked.
@@ -13313,7 +13313,7 @@ Language=Russian
 ERROR_HWNDS_HAVE_DIFF_PARENT - All handles to windows in a multiple-window position structure must have the same parent.
 .
 Language=Polish
-ERROR_HWNDS_HAVE_DIFF_PARENT - All handles to windows in a multiple-window position structure must have the same parent.
+ERROR_HWNDS_HAVE_DIFF_PARENT - Wszystkie dojścia okien w strukturze o wielu pozycjach okien muszą mieć to samo okno nadrzędne.
 .
 Language=Romanian
 ERROR_HWNDS_HAVE_DIFF_PARENT - All handles to windows in a multiple-window position structure must have the same parent.
@@ -13330,7 +13330,7 @@ Language=Russian
 ERROR_NOT_CHILD_WINDOW - The window is not a child window.
 .
 Language=Polish
-ERROR_NOT_CHILD_WINDOW - The window is not a child window.
+ERROR_NOT_CHILD_WINDOW - Okno nie jest oknem podrzędnym.
 .
 Language=Romanian
 ERROR_NOT_CHILD_WINDOW - The window is not a child window.
@@ -13347,7 +13347,7 @@ Language=Russian
 ERROR_INVALID_GW_COMMAND - Invalid GW_* command.
 .
 Language=Polish
-ERROR_INVALID_GW_COMMAND - Invalid GW_* command.
+ERROR_INVALID_GW_COMMAND - Nieprawidłowe polecenie GW_* .
 .
 Language=Romanian
 ERROR_INVALID_GW_COMMAND - Invalid GW_* command.
@@ -13364,7 +13364,7 @@ Language=Russian
 ERROR_INVALID_THREAD_ID - Invalid thread identifier.
 .
 Language=Polish
-ERROR_INVALID_THREAD_ID - Invalid thread identifier.
+ERROR_INVALID_THREAD_ID - Nieprawidłowy identyfikator wątku.
 .
 Language=Romanian
 ERROR_INVALID_THREAD_ID - Invalid thread identifier.
@@ -13381,7 +13381,7 @@ Language=Russian
 ERROR_NON_MDICHILD_WINDOW - Cannot process a message from a window that is not a multiple document interface (MDI) window.
 .
 Language=Polish
-ERROR_NON_MDICHILD_WINDOW - Cannot process a message from a window that is not a multiple document interface (MDI) window.
+ERROR_NON_MDICHILD_WINDOW - Nie można przetworzyć komunikatu z okna, które nie jest oknem interfejsu dokumentu wielokrotnego (MDI).
 .
 Language=Romanian
 ERROR_NON_MDICHILD_WINDOW - Cannot process a message from a window that is not a multiple document interface (MDI) window.
@@ -13398,7 +13398,7 @@ Language=Russian
 ERROR_POPUP_ALREADY_ACTIVE - Popup menu already active.
 .
 Language=Polish
-ERROR_POPUP_ALREADY_ACTIVE - Popup menu already active.
+ERROR_POPUP_ALREADY_ACTIVE - Menu podręczne jest już aktywne.
 .
 Language=Romanian
 ERROR_POPUP_ALREADY_ACTIVE - Popup menu already active.
@@ -13415,7 +13415,7 @@ Language=Russian
 ERROR_NO_SCROLLBARS - The window does not have scroll bars.
 .
 Language=Polish
-ERROR_NO_SCROLLBARS - The window does not have scroll bars.
+ERROR_NO_SCROLLBARS - Okno nie ma pasków przewijania.
 .
 Language=Romanian
 ERROR_NO_SCROLLBARS - The window does not have scroll bars.
@@ -13432,7 +13432,7 @@ Language=Russian
 ERROR_INVALID_SCROLLBAR_RANGE - Scroll bar range cannot be greater than MAXLONG.
 .
 Language=Polish
-ERROR_INVALID_SCROLLBAR_RANGE - Scroll bar range cannot be greater than MAXLONG.
+ERROR_INVALID_SCROLLBAR_RANGE - Zakres paska przewijania nie może być większy niż wartość MAXLONG.
 .
 Language=Romanian
 ERROR_INVALID_SCROLLBAR_RANGE - Scroll bar range cannot be greater than MAXLONG.
@@ -13449,7 +13449,7 @@ Language=Russian
 ERROR_INVALID_SHOWWIN_COMMAND - Cannot show or remove the window in the way specified.
 .
 Language=Polish
-ERROR_INVALID_SHOWWIN_COMMAND - Cannot show or remove the window in the way specified.
+ERROR_INVALID_SHOWWIN_COMMAND - Nie można wyświetić ani usunąć okna określoną metodą.
 .
 Language=Romanian
 ERROR_INVALID_SHOWWIN_COMMAND - Cannot show or remove the window in the way specified.
@@ -13466,7 +13466,7 @@ Language=Russian
 ERROR_NO_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
 .
 Language=Polish
-ERROR_NO_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
+ERROR_NO_SYSTEM_RESOURCES - Zasoby systemowe nie wystarczają do ukończenia żądanej usługi.
 .
 Language=Romanian
 ERROR_NO_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
@@ -13483,7 +13483,7 @@ Language=Russian
 ERROR_NONPAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
 .
 Language=Polish
-ERROR_NONPAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
+ERROR_NONPAGED_SYSTEM_RESOURCES - Zasoby systemowe nie wystarczają do ukończenia żądanej usługi.
 .
 Language=Romanian
 ERROR_NONPAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
@@ -13500,7 +13500,7 @@ Language=Russian
 ERROR_PAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
 .
 Language=Polish
-ERROR_PAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
+ERROR_PAGED_SYSTEM_RESOURCES - Zasoby systemowe nie wystarczają do ukończenia żądanej usługi.
 .
 Language=Romanian
 ERROR_PAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
@@ -13517,7 +13517,7 @@ Language=Russian
 ERROR_WORKING_SET_QUOTA - Insufficient quota to complete the requested service.
 .
 Language=Polish
-ERROR_WORKING_SET_QUOTA - Insufficient quota to complete the requested service.
+ERROR_WORKING_SET_QUOTA - Przydział jest niewystarczający do ukończenia żądanej usługi.
 .
 Language=Romanian
 ERROR_WORKING_SET_QUOTA - Insufficient quota to complete the requested service.
@@ -13534,7 +13534,7 @@ Language=Russian
 ERROR_PAGEFILE_QUOTA - Insufficient quota to complete the requested service.
 .
 Language=Polish
-ERROR_PAGEFILE_QUOTA - Insufficient quota to complete the requested service.
+ERROR_PAGEFILE_QUOTA - Przydział jest niewystarczający do ukończenia żądanej usługi.
 .
 Language=Romanian
 ERROR_PAGEFILE_QUOTA - Insufficient quota to complete the requested service.
@@ -13551,7 +13551,7 @@ Language=Russian
 ERROR_COMMITMENT_LIMIT - The paging file is too small for this operation to complete.
 .
 Language=Polish
-ERROR_COMMITMENT_LIMIT - The paging file is too small for this operation to complete.
+ERROR_COMMITMENT_LIMIT - Plik stronicowania jest za mały do ukończenia tej operacji.
 .
 Language=Romanian
 ERROR_COMMITMENT_LIMIT - The paging file is too small for this operation to complete.
@@ -13568,7 +13568,7 @@ Language=Russian
 ERROR_MENU_ITEM_NOT_FOUND - A menu item was not found.
 .
 Language=Polish
-ERROR_MENU_ITEM_NOT_FOUND - A menu item was not found.
+ERROR_MENU_ITEM_NOT_FOUND - Nie odnaleziono elementu menu.
 .
 Language=Romanian
 ERROR_MENU_ITEM_NOT_FOUND - A menu item was not found.
@@ -13585,7 +13585,7 @@ Language=Russian
 ERROR_INVALID_KEYBOARD_HANDLE - Invalid keyboard layout handle.
 .
 Language=Polish
-ERROR_INVALID_KEYBOARD_HANDLE - Invalid keyboard layout handle.
+ERROR_INVALID_KEYBOARD_HANDLE - Nieprawidłowe dojście układu klawiatury.
 .
 Language=Romanian
 ERROR_INVALID_KEYBOARD_HANDLE - Invalid keyboard layout handle.
@@ -13602,7 +13602,7 @@ Language=Russian
 ERROR_HOOK_TYPE_NOT_ALLOWED - Hook type not allowed.
 .
 Language=Polish
-ERROR_HOOK_TYPE_NOT_ALLOWED - Hook type not allowed.
+ERROR_HOOK_TYPE_NOT_ALLOWED - Niedozwolony typ haka.
 .
 Language=Romanian
 ERROR_HOOK_TYPE_NOT_ALLOWED - Hook type not allowed.
@@ -13619,7 +13619,7 @@ Language=Russian
 ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION - This operation requires an interactive window station.
 .
 Language=Polish
-ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION - This operation requires an interactive window station.
+ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION - Ta operacja wymaga interakcyjnej stacji z systemem Windows.
 .
 Language=Romanian
 ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION - This operation requires an interactive window station.
@@ -13636,7 +13636,7 @@ Language=Russian
 ERROR_TIMEOUT - This operation returned because the timeout period expired.
 .
 Language=Polish
-ERROR_TIMEOUT - This operation returned because the timeout period expired.
+ERROR_TIMEOUT - Operacja została zwrócona, ponieważ przekroczono limit czasu.
 .
 Language=Romanian
 ERROR_TIMEOUT - This operation returned because the timeout period expired.
@@ -13653,7 +13653,7 @@ Language=Russian
 ERROR_INVALID_MONITOR_HANDLE - Invalid monitor handle.
 .
 Language=Polish
-ERROR_INVALID_MONITOR_HANDLE - Invalid monitor handle.
+ERROR_INVALID_MONITOR_HANDLE - Nieprawidłowe dojście do monitora.
 .
 Language=Romanian
 ERROR_INVALID_MONITOR_HANDLE - Invalid monitor handle.
@@ -13670,7 +13670,7 @@ Language=Russian
 ERROR_EVENTLOG_FILE_CORRUPT - The event log file is corrupted.
 .
 Language=Polish
-ERROR_EVENTLOG_FILE_CORRUPT - The event log file is corrupted.
+ERROR_EVENTLOG_FILE_CORRUPT - Plik dziennika zdarzeń jest uszkodzony.
 .
 Language=Romanian
 ERROR_EVENTLOG_FILE_CORRUPT - The event log file is corrupted.
@@ -13687,7 +13687,7 @@ Language=Russian
 ERROR_EVENTLOG_CANT_START - No event log file could be opened, so the event logging service did not start.
 .
 Language=Polish
-ERROR_EVENTLOG_CANT_START - No event log file could be opened, so the event logging service did not start.
+ERROR_EVENTLOG_CANT_START - Nie można uruchomić usługi rejestrowania zdarzeń, ponieważ nie można otworzyć pliku dziennika zdarzeń.
 .
 Language=Romanian
 ERROR_EVENTLOG_CANT_START - No event log file could be opened, so the event logging service did not start.
@@ -13704,7 +13704,7 @@ Language=Russian
 ERROR_LOG_FILE_FULL - The event log file is full.
 .
 Language=Polish
-ERROR_LOG_FILE_FULL - The event log file is full.
+ERROR_LOG_FILE_FULL - Plik dziennika zdarzeń jest zapełniony.
 .
 Language=Romanian
 ERROR_LOG_FILE_FULL - The event log file is full.
@@ -13721,7 +13721,7 @@ Language=Russian
 ERROR_EVENTLOG_FILE_CHANGED - The event log file has changed between read operations.
 .
 Language=Polish
-ERROR_EVENTLOG_FILE_CHANGED - The event log file has changed between read operations.
+ERROR_EVENTLOG_FILE_CHANGED - Plik dziennika zdarzeń zmienił się między operacjami odczytu.
 .
 Language=Romanian
 ERROR_EVENTLOG_FILE_CHANGED - The event log file has changed between read operations.
@@ -13738,7 +13738,7 @@ Language=Russian
 ERROR_INSTALL_SERVICE_FAILURE - The Windows Installer service could not be accessed. This can occur if you are running Windows in safe mode, or if the Windows Installer is not correctly installed. Contact your support personnel for assistance.
 .
 Language=Polish
-ERROR_INSTALL_SERVICE_FAILURE - The Windows Installer service could not be accessed. This can occur if you are running Windows in safe mode, or if the Windows Installer is not correctly installed. Contact your support personnel for assistance.
+ERROR_INSTALL_SERVICE_FAILURE - Nie można uzyskać dostępu do usługi Instalator Windows. Może mieć to miejsce, jeśli system Windows jest uruchomiony w trybie awaryjnym lub Instalator Windows jest niepoprawnie zainstalowany. Skontaktuj się z pomocą techniczną, aby uzyskać pomoc.
 .
 Language=Romanian
 ERROR_INSTALL_SERVICE_FAILURE - The Windows Installer service could not be accessed. This can occur if you are running Windows in safe mode, or if the Windows Installer is not correctly installed. Contact your support personnel for assistance.
@@ -13755,7 +13755,7 @@ Language=Russian
 ERROR_INSTALL_USEREXIT - User cancelled installation.
 .
 Language=Polish
-ERROR_INSTALL_USEREXIT - User cancelled installation.
+ERROR_INSTALL_USEREXIT - Użytkownik anulował instalację.
 .
 Language=Romanian
 ERROR_INSTALL_USEREXIT - User cancelled installation.
@@ -13772,7 +13772,7 @@ Language=Russian
 ERROR_INSTALL_FAILURE - Fatal error during installation.
 .
 Language=Polish
-ERROR_INSTALL_FAILURE - Fatal error during installation.
+ERROR_INSTALL_FAILURE - Błąd krytyczny podczas instalacji.
 .
 Language=Romanian
 ERROR_INSTALL_FAILURE - Fatal error during installation.
@@ -13789,7 +13789,7 @@ Language=Russian
 ERROR_INSTALL_SUSPEND - Installation suspended, incomplete.
 .
 Language=Polish
-ERROR_INSTALL_SUSPEND - Installation suspended, incomplete.
+ERROR_INSTALL_SUSPEND - Instalacja wstrzymana, nieukończona.
 .
 Language=Romanian
 ERROR_INSTALL_SUSPEND - Installation suspended, incomplete.
@@ -13806,7 +13806,7 @@ Language=Russian
 ERROR_UNKNOWN_PRODUCT - This action is only valid for products that are currently installed.
 .
 Language=Polish
-ERROR_UNKNOWN_PRODUCT - This action is only valid for products that are currently installed.
+ERROR_UNKNOWN_PRODUCT - Akcja ta jest prawidłowa tylko w odniesieniu do produktów, które są obecnie zainstalowane.
 .
 Language=Romanian
 ERROR_UNKNOWN_PRODUCT - This action is only valid for products that are currently installed.
@@ -13823,7 +13823,7 @@ Language=Russian
 ERROR_UNKNOWN_FEATURE - Feature ID not registered.
 .
 Language=Polish
-ERROR_UNKNOWN_FEATURE - Feature ID not registered.
+ERROR_UNKNOWN_FEATURE - Niezarejestrowany identyfikator cechy.
 .
 Language=Romanian
 ERROR_UNKNOWN_FEATURE - Feature ID not registered.
@@ -13840,7 +13840,7 @@ Language=Russian
 ERROR_UNKNOWN_COMPONENT - Component ID not registered.
 .
 Language=Polish
-ERROR_UNKNOWN_COMPONENT - Component ID not registered.
+ERROR_UNKNOWN_COMPONENT - Niezarejestrowany identyfikator składnika.
 .
 Language=Romanian
 ERROR_UNKNOWN_COMPONENT - Component ID not registered.
@@ -13857,7 +13857,7 @@ Language=Russian
 ERROR_UNKNOWN_PROPERTY - Unknown property.
 .
 Language=Polish
-ERROR_UNKNOWN_PROPERTY - Unknown property.
+ERROR_UNKNOWN_PROPERTY - Nieznana właściwość.
 .
 Language=Romanian
 ERROR_UNKNOWN_PROPERTY - Unknown property.
@@ -13874,7 +13874,7 @@ Language=Russian
 ERROR_INVALID_HANDLE_STATE - Handle is in an invalid state.
 .
 Language=Polish
-ERROR_INVALID_HANDLE_STATE - Handle is in an invalid state.
+ERROR_INVALID_HANDLE_STATE - Nieprawidłowy stan dojścia.
 .
 Language=Romanian
 ERROR_INVALID_HANDLE_STATE - Handle is in an invalid state.
@@ -13891,7 +13891,7 @@ Language=Russian
 ERROR_BAD_CONFIGURATION - The configuration data for this product is corrupt. Contact your support personnel.
 .
 Language=Polish
-ERROR_BAD_CONFIGURATION - The configuration data for this product is corrupt. Contact your support personnel.
+ERROR_BAD_CONFIGURATION - Dane konfiguracyjne tego produktu są uszkodzone. Skontaktuj się z działem Pomocy technicznej.
 .
 Language=Romanian
 ERROR_BAD_CONFIGURATION - The configuration data for this product is corrupt. Contact your support personnel.
@@ -13908,7 +13908,7 @@ Language=Russian
 ERROR_INDEX_ABSENT - Component qualifier not present.
 .
 Language=Polish
-ERROR_INDEX_ABSENT - Component qualifier not present.
+ERROR_INDEX_ABSENT - Brak kwalifikatora składnika.
 .
 Language=Romanian
 ERROR_INDEX_ABSENT - Component qualifier not present.
@@ -13925,7 +13925,7 @@ Language=Russian
 ERROR_INSTALL_SOURCE_ABSENT - The installation source for this product is not available. Verify that the source exists and that you can access it.
 .
 Language=Polish
-ERROR_INSTALL_SOURCE_ABSENT - The installation source for this product is not available. Verify that the source exists and that you can access it.
+ERROR_INSTALL_SOURCE_ABSENT - Źródło instalacji dla tego produktu nie jest dostępne. Sprawdź, czy źródło istnieje i czy możesz uzyskać do niego dostęp.
 .
 Language=Romanian
 ERROR_INSTALL_SOURCE_ABSENT - The installation source for this product is not available. Verify that the source exists and that you can access it.
@@ -13942,7 +13942,7 @@ Language=Russian
 ERROR_INSTALL_PACKAGE_VERSION - This installation package cannot be installed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
 .
 Language=Polish
-ERROR_INSTALL_PACKAGE_VERSION - This installation package cannot be installed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
+ERROR_INSTALL_PACKAGE_VERSION - Usługa Instalator Windows nie może zainstalować tego pakietu instalacyjnego. Musisz zainstalować dodatek Windows Service Pack, zawierający nowszą wersję usługi Instalator Windows.
 .
 Language=Romanian
 ERROR_INSTALL_PACKAGE_VERSION - This installation package cannot be installed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
@@ -13959,7 +13959,7 @@ Language=Russian
 ERROR_PRODUCT_UNINSTALLED - Product is uninstalled.
 .
 Language=Polish
-ERROR_PRODUCT_UNINSTALLED - Product is uninstalled.
+ERROR_PRODUCT_UNINSTALLED - Produkt jest odinstalowany.
 .
 Language=Romanian
 ERROR_PRODUCT_UNINSTALLED - Product is uninstalled.
@@ -13976,7 +13976,7 @@ Language=Russian
 ERROR_BAD_QUERY_SYNTAX - SQL query syntax invalid or unsupported.
 .
 Language=Polish
-ERROR_BAD_QUERY_SYNTAX - SQL query syntax invalid or unsupported.
+ERROR_BAD_QUERY_SYNTAX - Nieprawidłowa lub nieobsługiwana składnia zapytania SQL.
 .
 Language=Romanian
 ERROR_BAD_QUERY_SYNTAX - SQL query syntax invalid or unsupported.
@@ -13993,7 +13993,7 @@ Language=Russian
 ERROR_INVALID_FIELD - Record field does not exist.
 .
 Language=Polish
-ERROR_INVALID_FIELD - Record field does not exist.
+ERROR_INVALID_FIELD - Pole rekordu nie istnieje.
 .
 Language=Romanian
 ERROR_INVALID_FIELD - Record field does not exist.
@@ -14010,7 +14010,7 @@ Language=Russian
 ERROR_DEVICE_REMOVED - The device has been removed.
 .
 Language=Polish
-ERROR_DEVICE_REMOVED - The device has been removed.
+ERROR_DEVICE_REMOVED - Urządzenie zostało usunięte.
 .
 Language=Romanian
 ERROR_DEVICE_REMOVED - The device has been removed.
@@ -14027,7 +14027,7 @@ Language=Russian
 ERROR_INSTALL_ALREADY_RUNNING - Another installation is already in progress. Complete that installation before proceeding with this install.
 .
 Language=Polish
-ERROR_INSTALL_ALREADY_RUNNING - Another installation is already in progress. Complete that installation before proceeding with this install.
+ERROR_INSTALL_ALREADY_RUNNING - Trwa inna instalacja. Ukończ ją, zanim zaczniesz kontynuować bieżącą.
 .
 Language=Romanian
 ERROR_INSTALL_ALREADY_RUNNING - Another installation is already in progress. Complete that installation before proceeding with this install.
@@ -14044,7 +14044,7 @@ Language=Russian
 ERROR_INSTALL_PACKAGE_OPEN_FAILED - This installation package could not be opened. Verify that the package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer package.
 .
 Language=Polish
-ERROR_INSTALL_PACKAGE_OPEN_FAILED - This installation package could not be opened. Verify that the package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer package.
+ERROR_INSTALL_PACKAGE_OPEN_FAILED - Nie można otworzyć tego pakietu instalacyjnego. Sprawdź, czy ten pakiet istnieje i czy masz do niego dostęp, albo skontaktuj się z dostawcą aplikacji w celu sprawdzenia, czy jest to prawidłowy pakiet Instalatora Windows.
 .
 Language=Romanian
 ERROR_INSTALL_PACKAGE_OPEN_FAILED - This installation package could not be opened. Verify that the package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer package.
@@ -14061,7 +14061,7 @@ Language=Russian
 ERROR_INSTALL_PACKAGE_INVALID - This installation package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer package.
 .
 Language=Polish
-ERROR_INSTALL_PACKAGE_INVALID - This installation package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer package.
+ERROR_INSTALL_PACKAGE_INVALID - Nie można otworzyć tego pakietu instalacyjnego. Skontaktuj się z dostawcą aplikacji w celu sprawdzenia, czy jest to prawidłowy pakiet poprawek Instalatora Windows.
 .
 Language=Romanian
 ERROR_INSTALL_PACKAGE_INVALID - This installation package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer package.
@@ -14078,7 +14078,7 @@ Language=Russian
 ERROR_INSTALL_UI_FAILURE - There was an error starting the Windows Installer service user interface. Contact your support personnel.
 .
 Language=Polish
-ERROR_INSTALL_UI_FAILURE - There was an error starting the Windows Installer service user interface. Contact your support personnel.
+ERROR_INSTALL_UI_FAILURE - Podczas uruchamiania interfejsu użytkownika usługi Instalator Windows wystąpił błąd. Skontaktuj się z personelem technicznym.
 .
 Language=Romanian
 ERROR_INSTALL_UI_FAILURE - There was an error starting the Windows Installer service user interface. Contact your support personnel.
@@ -14095,7 +14095,7 @@ Language=Russian
 ERROR_INSTALL_LOG_FAILURE - Error opening installation log file. Verify that the specified log file location exists and that you can write to it.
 .
 Language=Polish
-ERROR_INSTALL_LOG_FAILURE - Error opening installation log file. Verify that the specified log file location exists and that you can write to it.
+ERROR_INSTALL_LOG_FAILURE - Błąd podczas otwierania pliku dziennika instalacji. Sprawdź, czy istnieje określona lokalizacja pliku dziennika i czy można w niej zapisywać.
 .
 Language=Romanian
 ERROR_INSTALL_LOG_FAILURE - Error opening installation log file. Verify that the specified log file location exists and that you can write to it.
@@ -14112,7 +14112,7 @@ Language=Russian
 ERROR_INSTALL_LANGUAGE_UNSUPPORTED - The language of this installation package is not supported by your system.
 .
 Language=Polish
-ERROR_INSTALL_LANGUAGE_UNSUPPORTED - The language of this installation package is not supported by your system.
+ERROR_INSTALL_LANGUAGE_UNSUPPORTED - Język stosowany w tym pakiecie instalacyjnym nie jest obsługiwany przez system.
 .
 Language=Romanian
 ERROR_INSTALL_LANGUAGE_UNSUPPORTED - The language of this installation package is not supported by your system.
@@ -14129,7 +14129,7 @@ Language=Russian
 ERROR_INSTALL_TRANSFORM_FAILURE - Error applying transforms. Verify that the specified transform paths are valid.
 .
 Language=Polish
-ERROR_INSTALL_TRANSFORM_FAILURE - Error applying transforms. Verify that the specified transform paths are valid.
+ERROR_INSTALL_TRANSFORM_FAILURE - Błąd podczas przeprowadzania transformacji. Sprawdź, czy podane ścieżki transformacji są prawidłowe.
 .
 Language=Romanian
 ERROR_INSTALL_TRANSFORM_FAILURE - Error applying transforms. Verify that the specified transform paths are valid.
@@ -14146,7 +14146,7 @@ Language=Russian
 ERROR_INSTALL_PACKAGE_REJECTED - This installation is forbidden by system policy. Contact your system administrator.
 .
 Language=Polish
-ERROR_INSTALL_PACKAGE_REJECTED - This installation is forbidden by system policy. Contact your system administrator.
+ERROR_INSTALL_PACKAGE_REJECTED - Ta instalacja jest zabroniona przez zasady systemowe. Skontaktuj się z administratorem systemu.
 .
 Language=Romanian
 ERROR_INSTALL_PACKAGE_REJECTED - This installation is forbidden by system policy. Contact your system administrator.
@@ -14163,7 +14163,7 @@ Language=Russian
 ERROR_FUNCTION_NOT_CALLED - Function could not be executed.
 .
 Language=Polish
-ERROR_FUNCTION_NOT_CALLED - Function could not be executed.
+ERROR_FUNCTION_NOT_CALLED - Nie można wykonać funkcji.
 .
 Language=Romanian
 ERROR_FUNCTION_NOT_CALLED - Function could not be executed.
@@ -14180,7 +14180,7 @@ Language=Russian
 ERROR_FUNCTION_FAILED - Function failed during execution.
 .
 Language=Polish
-ERROR_FUNCTION_FAILED - Function failed during execution.
+ERROR_FUNCTION_FAILED - Niepowodzenie funkcji podczas jej wykonywania.
 .
 Language=Romanian
 ERROR_FUNCTION_FAILED - Function failed during execution.
@@ -14197,7 +14197,7 @@ Language=Russian
 ERROR_INVALID_TABLE - Invalid or unknown table specified.
 .
 Language=Polish
-ERROR_INVALID_TABLE - Invalid or unknown table specified.
+ERROR_INVALID_TABLE - Podano nieprawidłową lub nieznaną tabelę.
 .
 Language=Romanian
 ERROR_INVALID_TABLE - Invalid or unknown table specified.
@@ -14214,7 +14214,7 @@ Language=Russian
 ERROR_DATATYPE_MISMATCH - Data supplied is of wrong type.
 .
 Language=Polish
-ERROR_DATATYPE_MISMATCH - Data supplied is of wrong type.
+ERROR_DATATYPE_MISMATCH - Dostarczono dane nieprawidłowego typu.
 .
 Language=Romanian
 ERROR_DATATYPE_MISMATCH - Data supplied is of wrong type.
@@ -14231,7 +14231,7 @@ Language=Russian
 ERROR_UNSUPPORTED_TYPE - Data of this type is not supported.
 .
 Language=Polish
-ERROR_UNSUPPORTED_TYPE - Data of this type is not supported.
+ERROR_UNSUPPORTED_TYPE - Dane tego typu nie są obsługiwane.
 .
 Language=Romanian
 ERROR_UNSUPPORTED_TYPE - Data of this type is not supported.
@@ -14248,7 +14248,7 @@ Language=Russian
 ERROR_CREATE_FAILED - The Windows Installer service failed to start. Contact your support personnel.
 .
 Language=Polish
-ERROR_CREATE_FAILED - The Windows Installer service failed to start. Contact your support personnel.
+ERROR_CREATE_FAILED - Nie można uruchomić usługi Instalator Windows. Skontaktuj się z działem Pomocy technicznej.
 .
 Language=Romanian
 ERROR_CREATE_FAILED - The Windows Installer service failed to start. Contact your support personnel.
@@ -14265,7 +14265,7 @@ Language=Russian
 ERROR_INSTALL_TEMP_UNWRITABLE - The Temp folder is on a drive that is full or inaccessible. Free up space on the drive or verify that you have write permission on the Temp folder.
 .
 Language=Polish
-ERROR_INSTALL_TEMP_UNWRITABLE - The Temp folder is on a drive that is full or inaccessible. Free up space on the drive or verify that you have write permission on the Temp folder.
+ERROR_INSTALL_TEMP_UNWRITABLE - Folder Temp znajduje się na dysku, który jest albo zapełniony, albo niedostępny. Zwolnij miejsce na dysku lub zweryfikuj, że masz uprawnienia do zapisu w folderze Temp.
 .
 Language=Romanian
 ERROR_INSTALL_TEMP_UNWRITABLE - The Temp folder is on a drive that is full or inaccessible. Free up space on the drive or verify that you have write permission on the Temp folder.
@@ -14282,7 +14282,7 @@ Language=Russian
 ERROR_INSTALL_PLATFORM_UNSUPPORTED - This installation package is not supported by this processor type. Contact your product vendor.
 .
 Language=Polish
-ERROR_INSTALL_PLATFORM_UNSUPPORTED - This installation package is not supported by this processor type. Contact your product vendor.
+ERROR_INSTALL_PLATFORM_UNSUPPORTED - Ten pakiet instalacyjny nie jest obsługiwany przez ten typ procesora. Skontaktuj się z dostawcą produktu.
 .
 Language=Romanian
 ERROR_INSTALL_PLATFORM_UNSUPPORTED - This installation package is not supported by this processor type. Contact your product vendor.
@@ -14299,7 +14299,7 @@ Language=Russian
 ERROR_INSTALL_NOTUSED - Component not used on this computer.
 .
 Language=Polish
-ERROR_INSTALL_NOTUSED - Component not used on this computer.
+ERROR_INSTALL_NOTUSED - Składnik nieużywany w tym komputerze.
 .
 Language=Romanian
 ERROR_INSTALL_NOTUSED - Component not used on this computer.
@@ -14316,7 +14316,7 @@ Language=Russian
 ERROR_PATCH_PACKAGE_OPEN_FAILED - This patch package could not be opened. Verify that the patch package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer patch package.
 .
 Language=Polish
-ERROR_PATCH_PACKAGE_OPEN_FAILED - This patch package could not be opened. Verify that the patch package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer patch package.
+ERROR_PATCH_PACKAGE_OPEN_FAILED - Nie można otworzyć tego pakietu aktualizacji. Sprawdź, czy ten pakiet istnieje i czy masz do niego dostęp, albo skontaktuj się z dostawcą aplikacji w celu sprawdzenia, czy jest to prawidłowy pakiet aktualizacji Instalatora Windows.
 .
 Language=Romanian
 ERROR_PATCH_PACKAGE_OPEN_FAILED - This patch package could not be opened. Verify that the patch package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer patch package.
@@ -14333,7 +14333,7 @@ Language=Russian
 ERROR_PATCH_PACKAGE_INVALID - This patch package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer patch package.
 .
 Language=Polish
-ERROR_PATCH_PACKAGE_INVALID - This patch package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer patch package.
+ERROR_PATCH_PACKAGE_INVALID - Nie można otworzyć tego pakietu aktualizacji. Skontaktuj się z dostawcą aplikacji w celu sprawdzenia, czy jest to prawidłowy pakiet aktualizacji Instalatora Windows.
 .
 Language=Romanian
 ERROR_PATCH_PACKAGE_INVALID - This patch package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer patch package.
@@ -14350,7 +14350,7 @@ Language=Russian
 ERROR_PATCH_PACKAGE_UNSUPPORTED - This patch package cannot be processed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
 .
 Language=Polish
-ERROR_PATCH_PACKAGE_UNSUPPORTED - This patch package cannot be processed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
+ERROR_PATCH_PACKAGE_UNSUPPORTED - Usługa Instalator Windows nie może przetworzyć tego pakietu aktualizacji. Musisz zainstalować dodatek Windows Service Pack, zawierający nowszą wersję usługi Instalator Windows.
 .
 Language=Romanian
 ERROR_PATCH_PACKAGE_UNSUPPORTED - This patch package cannot be processed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
@@ -14367,7 +14367,7 @@ Language=Russian
 ERROR_PRODUCT_VERSION - Another version of this product is already installed. Installation of this version cannot continue. To configure or remove the existing version of this product, use Add/Remove Programs on the Control Panel.
 .
 Language=Polish
-ERROR_PRODUCT_VERSION - Another version of this product is already installed. Installation of this version cannot continue. To configure or remove the existing version of this product, use Add/Remove Programs on the Control Panel.
+ERROR_PRODUCT_VERSION - Inna wersja tego produktu jest już zainstalowana na tym komputerze. Nie można kontynuować instalowania tej wersji. Aby skonfigurować lub usunąć istniejącą wersję tego produktu, użyj aplikacji Dodaj/Usuń Programy z Panelu sterowania.
 .
 Language=Romanian
 ERROR_PRODUCT_VERSION - Another version of this product is already installed. Installation of this version cannot continue. To configure or remove the existing version of this product, use Add/Remove Programs on the Control Panel.
@@ -14384,7 +14384,7 @@ Language=Russian
 ERROR_INVALID_COMMAND_LINE - Invalid command line argument. Consult the Windows Installer SDK for detailed command line help.
 .
 Language=Polish
-ERROR_INVALID_COMMAND_LINE - Invalid command line argument. Consult the Windows Installer SDK for detailed command line help.
+ERROR_INVALID_COMMAND_LINE - Nieprawidłowy argument wiersza polecenia. Szczegółowe informacje na temat wiersza polecenia można znaleźć w pakiecie SDK Instalatora Windows.
 .
 Language=Romanian
 ERROR_INVALID_COMMAND_LINE - Invalid command line argument. Consult the Windows Installer SDK for detailed command line help.
@@ -14401,7 +14401,7 @@ Language=Russian
 ERROR_INSTALL_REMOTE_DISALLOWED - Only administrators have permission to add, remove, or configure server software during a Terminal Services remote session. If you want to install or configure software on the server, contact your network administrator.
 .
 Language=Polish
-ERROR_INSTALL_REMOTE_DISALLOWED - Only administrators have permission to add, remove, or configure server software during a Terminal Services remote session. If you want to install or configure software on the server, contact your network administrator.
+ERROR_INSTALL_REMOTE_DISALLOWED - Tylko administratorzy są uprawnieni do dodawania, usuwania lub konfigurowania oprogramowania serwera podczas zdalnych sesji usług Terminala. Jeśli chcesz zainstalować lub skonfigurować jakieś oprogramowanie na serwerze, musisz skontaktować się z administratorem sieci.
 .
 Language=Romanian
 ERROR_INSTALL_REMOTE_DISALLOWED - Only administrators have permission to add, remove, or configure server software during a Terminal Services remote session. If you want to install or configure software on the server, contact your network administrator.
@@ -14418,7 +14418,7 @@ Language=Russian
 ERROR_SUCCESS_REBOOT_INITIATED - The requested operation completed successfully. The system will be restarted so the changes can take effect.
 .
 Language=Polish
-ERROR_SUCCESS_REBOOT_INITIATED - The requested operation completed successfully. The system will be restarted so the changes can take effect.
+ERROR_SUCCESS_REBOOT_INITIATED - Żądana operacja została pomyślnie ukończona. Aby zmiany zostały wprowadzone, nastąpi ponowne uruchomienie systemu.
 .
 Language=Romanian
 ERROR_SUCCESS_REBOOT_INITIATED - The requested operation completed successfully. The system will be restarted so the changes can take effect.
@@ -14435,7 +14435,7 @@ Language=Russian
 ERROR_PATCH_TARGET_NOT_FOUND - The upgrade patch cannot be installed by the Windows Installer service because the program to be upgraded may be missing, or the upgrade patch may update a different version of the program. Verify that the program to be upgraded exists on your computer and that you have the correct upgrade patch.
 .
 Language=Polish
-ERROR_PATCH_TARGET_NOT_FOUND - The upgrade patch cannot be installed by the Windows Installer service because the program to be upgraded may be missing, or the upgrade patch may update a different version of the program. Verify that the program to be upgraded exists on your computer and that you have the correct upgrade patch.
+ERROR_PATCH_TARGET_NOT_FOUND - Uaktualnienia nie można zainstalować przez usługę Instalator Windows, ponieważ nie ma programu do uaktualnienia albo uaktualnienie jest przeznaczone do innej wersji tego programu. Sprawdź, czy program, który ma być uaktualniony, znajduje się na dysku i czy masz prawidłowe uaktualnienie.
 .
 Language=Romanian
 ERROR_PATCH_TARGET_NOT_FOUND - The upgrade patch cannot be installed by the Windows Installer service because the program to be upgraded may be missing, or the upgrade patch may update a different version of the program. Verify that the program to be upgraded exists on your computer and that you have the correct upgrade patch.
@@ -14452,7 +14452,7 @@ Language=Russian
 ERROR_PATCH_PACKAGE_REJECTED - The patch package is not permitted by software restriction policy.
 .
 Language=Polish
-ERROR_PATCH_PACKAGE_REJECTED - The patch package is not permitted by software restriction policy.
+ERROR_PATCH_PACKAGE_REJECTED - Zasady ograniczeń oprogramowania nie zezwalają na dany pakiet aktualizacji.
 .
 Language=Romanian
 ERROR_PATCH_PACKAGE_REJECTED - The patch package is not permitted by software restriction policy.
@@ -14469,7 +14469,7 @@ Language=Russian
 ERROR_INSTALL_TRANSFORM_REJECTED - One or more customizations are not permitted by software restriction policy.
 .
 Language=Polish
-ERROR_INSTALL_TRANSFORM_REJECTED - One or more customizations are not permitted by software restriction policy.
+ERROR_INSTALL_TRANSFORM_REJECTED - Zasady ograniczeń oprogramowania nie zezwalają na jedno lub kilka z dostosowań.
 .
 Language=Romanian
 ERROR_INSTALL_TRANSFORM_REJECTED - One or more customizations are not permitted by software restriction policy.
@@ -14486,7 +14486,7 @@ Language=Russian
 ERROR_INSTALL_REMOTE_PROHIBITED - The Windows Installer does not permit installation from a Remote Desktop Connection.
 .
 Language=Polish
-ERROR_INSTALL_REMOTE_PROHIBITED - The Windows Installer does not permit installation from a Remote Desktop Connection.
+ERROR_INSTALL_REMOTE_PROHIBITED - Instalator Windows nie zezwala na instalację przy użyciu podłączania pulpitu zdalnego.
 .
 Language=Romanian
 ERROR_INSTALL_REMOTE_PROHIBITED - The Windows Installer does not permit installation from a Remote Desktop Connection.
@@ -14503,7 +14503,7 @@ Language=Russian
 RPC_S_INVALID_STRING_BINDING - The string binding is invalid.
 .
 Language=Polish
-RPC_S_INVALID_STRING_BINDING - The string binding is invalid.
+RPC_S_INVALID_STRING_BINDING - Powiązanie ciągu jest nieprawidłowe.
 .
 Language=Romanian
 RPC_S_INVALID_STRING_BINDING - The string binding is invalid.
@@ -14520,7 +14520,7 @@ Language=Russian
 RPC_S_WRONG_KIND_OF_BINDING - The binding handle is not the correct type.
 .
 Language=Polish
-RPC_S_WRONG_KIND_OF_BINDING - The binding handle is not the correct type.
+RPC_S_WRONG_KIND_OF_BINDING - Dojście powiązania nie jest poprawnego typu.
 .
 Language=Romanian
 RPC_S_WRONG_KIND_OF_BINDING - The binding handle is not the correct type.
@@ -14537,7 +14537,7 @@ Language=Russian
 RPC_S_INVALID_BINDING - The binding handle is invalid.
 .
 Language=Polish
-RPC_S_INVALID_BINDING - The binding handle is invalid.
+RPC_S_INVALID_BINDING - Dojście powiązania jest nieprawidłowe.
 .
 Language=Romanian
 RPC_S_INVALID_BINDING - The binding handle is invalid.
@@ -14554,7 +14554,7 @@ Language=Russian
 RPC_S_PROTSEQ_NOT_SUPPORTED - The RPC protocol sequence is not supported.
 .
 Language=Polish
-RPC_S_PROTSEQ_NOT_SUPPORTED - The RPC protocol sequence is not supported.
+RPC_S_PROTSEQ_NOT_SUPPORTED - Sekwencja protokołu RPC nie jest obsługiwana.
 .
 Language=Romanian
 RPC_S_PROTSEQ_NOT_SUPPORTED - The RPC protocol sequence is not supported.
@@ -14571,7 +14571,7 @@ Language=Russian
 RPC_S_INVALID_RPC_PROTSEQ - The RPC protocol sequence is invalid.
 .
 Language=Polish
-RPC_S_INVALID_RPC_PROTSEQ - The RPC protocol sequence is invalid.
+RPC_S_INVALID_RPC_PROTSEQ - Sekwencja protokołu RPC jest nieprawidłowa.
 .
 Language=Romanian
 RPC_S_INVALID_RPC_PROTSEQ - The RPC protocol sequence is invalid.
@@ -14588,7 +14588,7 @@ Language=Russian
 RPC_S_INVALID_STRING_UUID - The string universal unique identifier (UUID) is invalid.
 .
 Language=Polish
-RPC_S_INVALID_STRING_UUID - The string universal unique identifier (UUID) is invalid.
+RPC_S_INVALID_STRING_UUID - Uniwersalny, unikatowy identyfikator ciągu (UUID) jest nieprawidłowy.
 .
 Language=Romanian
 RPC_S_INVALID_STRING_UUID - The string universal unique identifier (UUID) is invalid.
@@ -14605,7 +14605,7 @@ Language=Russian
 RPC_S_INVALID_ENDPOINT_FORMAT - The endpoint format is invalid.
 .
 Language=Polish
-RPC_S_INVALID_ENDPOINT_FORMAT - The endpoint format is invalid.
+RPC_S_INVALID_ENDPOINT_FORMAT - Format punktu końcowego jest nieprawidłowy.
 .
 Language=Romanian
 RPC_S_INVALID_ENDPOINT_FORMAT - The endpoint format is invalid.
@@ -14622,7 +14622,7 @@ Language=Russian
 RPC_S_INVALID_NET_ADDR - The network address is invalid.
 .
 Language=Polish
-RPC_S_INVALID_NET_ADDR - The network address is invalid.
+RPC_S_INVALID_NET_ADDR - Adres sieciowy jest nieprawidłowy.
 .
 Language=Romanian
 RPC_S_INVALID_NET_ADDR - The network address is invalid.
@@ -14639,7 +14639,7 @@ Language=Russian
 RPC_S_NO_ENDPOINT_FOUND - No endpoint was found.
 .
 Language=Polish
-RPC_S_NO_ENDPOINT_FOUND - No endpoint was found.
+RPC_S_NO_ENDPOINT_FOUND - Nie odnaleziono punktu końcowego.
 .
 Language=Romanian
 RPC_S_NO_ENDPOINT_FOUND - No endpoint was found.
@@ -14656,7 +14656,7 @@ Language=Russian
 RPC_S_INVALID_TIMEOUT - The timeout value is invalid.
 .
 Language=Polish
-RPC_S_INVALID_TIMEOUT - The timeout value is invalid.
+RPC_S_INVALID_TIMEOUT - Wartość limitu czasu jest nieprawidłowa.
 .
 Language=Romanian
 RPC_S_INVALID_TIMEOUT - The timeout value is invalid.
@@ -14673,7 +14673,7 @@ Language=Russian
 RPC_S_OBJECT_NOT_FOUND - The object universal unique identifier (UUID) was not found.
 .
 Language=Polish
-RPC_S_OBJECT_NOT_FOUND - The object universal unique identifier (UUID) was not found.
+RPC_S_OBJECT_NOT_FOUND - Uniwersalny, unikatowy identyfikator obiektu (UUID) nie został znaleziony.
 .
 Language=Romanian
 RPC_S_OBJECT_NOT_FOUND - The object universal unique identifier (UUID) was not found.
@@ -14690,7 +14690,7 @@ Language=Russian
 RPC_S_ALREADY_REGISTERED - The object universal unique identifier (UUID) has already been registered.
 .
 Language=Polish
-RPC_S_ALREADY_REGISTERED - The object universal unique identifier (UUID) has already been registered.
+RPC_S_ALREADY_REGISTERED - Uniwersalny, unikatowy identyfikator obiektu (UUID) został już zarejestrowany.
 .
 Language=Romanian
 RPC_S_ALREADY_REGISTERED - The object universal unique identifier (UUID) has already been registered.
@@ -14707,7 +14707,7 @@ Language=Russian
 RPC_S_TYPE_ALREADY_REGISTERED - The type universal unique identifier (UUID) has already been registered.
 .
 Language=Polish
-RPC_S_TYPE_ALREADY_REGISTERED - The type universal unique identifier (UUID) has already been registered.
+RPC_S_TYPE_ALREADY_REGISTERED - Uniwersalny, unikatowy identyfikator typu (UUID) został już zarejestrowany.
 .
 Language=Romanian
 RPC_S_TYPE_ALREADY_REGISTERED - The type universal unique identifier (UUID) has already been registered.
@@ -14724,7 +14724,7 @@ Language=Russian
 RPC_S_ALREADY_LISTENING - The RPC server is already listening.
 .
 Language=Polish
-RPC_S_ALREADY_LISTENING - The RPC server is already listening.
+RPC_S_ALREADY_LISTENING - Serwer RPC już nasłuchuje.
 .
 Language=Romanian
 RPC_S_ALREADY_LISTENING - The RPC server is already listening.
@@ -14741,7 +14741,7 @@ Language=Russian
 RPC_S_NO_PROTSEQS_REGISTERED - No protocol sequences have been registered.
 .
 Language=Polish
-RPC_S_NO_PROTSEQS_REGISTERED - No protocol sequences have been registered.
+RPC_S_NO_PROTSEQS_REGISTERED - Żadna sekwencja protokołu nie została zarejestrowana.
 .
 Language=Romanian
 RPC_S_NO_PROTSEQS_REGISTERED - No protocol sequences have been registered.
@@ -14758,7 +14758,7 @@ Language=Russian
 RPC_S_NOT_LISTENING - The RPC server is not listening.
 .
 Language=Polish
-RPC_S_NOT_LISTENING - The RPC server is not listening.
+RPC_S_NOT_LISTENING - Serwer RPC nie nasłuchuje.
 .
 Language=Romanian
 RPC_S_NOT_LISTENING - The RPC server is not listening.
@@ -14775,7 +14775,7 @@ Language=Russian
 RPC_S_UNKNOWN_MGR_TYPE - The manager type is unknown.
 .
 Language=Polish
-RPC_S_UNKNOWN_MGR_TYPE - The manager type is unknown.
+RPC_S_UNKNOWN_MGR_TYPE - Typ menedżera jest nieznany.
 .
 Language=Romanian
 RPC_S_UNKNOWN_MGR_TYPE - The manager type is unknown.
@@ -14792,7 +14792,7 @@ Language=Russian
 RPC_S_UNKNOWN_IF - The interface is unknown.
 .
 Language=Polish
-RPC_S_UNKNOWN_IF - The interface is unknown.
+RPC_S_UNKNOWN_IF - Interfejs jest nieznany.
 .
 Language=Romanian
 RPC_S_UNKNOWN_IF - The interface is unknown.
@@ -14809,7 +14809,7 @@ Language=Russian
 RPC_S_NO_BINDINGS - There are no bindings.
 .
 Language=Polish
-RPC_S_NO_BINDINGS - There are no bindings.
+RPC_S_NO_BINDINGS - Nie ma powiązań.
 .
 Language=Romanian
 RPC_S_NO_BINDINGS - There are no bindings.
@@ -14826,7 +14826,7 @@ Language=Russian
 RPC_S_NO_PROTSEQS - There are no protocol sequences.
 .
 Language=Polish
-RPC_S_NO_PROTSEQS - There are no protocol sequences.
+RPC_S_NO_PROTSEQS - Nie ma sekwencji protokołów.
 .
 Language=Romanian
 RPC_S_NO_PROTSEQS - There are no protocol sequences.
@@ -14843,7 +14843,7 @@ Language=Russian
 RPC_S_CANT_CREATE_ENDPOINT - The endpoint cannot be created.
 .
 Language=Polish
-RPC_S_CANT_CREATE_ENDPOINT - The endpoint cannot be created.
+RPC_S_CANT_CREATE_ENDPOINT - Nie można utworzyć punktu końcowego.
 .
 Language=Romanian
 RPC_S_CANT_CREATE_ENDPOINT - The endpoint cannot be created.
@@ -14860,7 +14860,7 @@ Language=Russian
 RPC_S_OUT_OF_RESOURCES - Not enough resources are available to complete this operation.
 .
 Language=Polish
-RPC_S_OUT_OF_RESOURCES - Not enough resources are available to complete this operation.
+RPC_S_OUT_OF_RESOURCES - Za mało dostępnych zasobów do ukończenia tej operacji.
 .
 Language=Romanian
 RPC_S_OUT_OF_RESOURCES - Not enough resources are available to complete this operation.
@@ -14877,7 +14877,7 @@ Language=Russian
 RPC_S_SERVER_UNAVAILABLE - The RPC server is unavailable.
 .
 Language=Polish
-RPC_S_SERVER_UNAVAILABLE - The RPC server is unavailable.
+RPC_S_SERVER_UNAVAILABLE - Serwer RPC jest niedostępny.
 .
 Language=Romanian
 RPC_S_SERVER_UNAVAILABLE - The RPC server is unavailable.
@@ -14894,7 +14894,7 @@ Language=Russian
 RPC_S_SERVER_TOO_BUSY - The RPC server is too busy to complete this operation.
 .
 Language=Polish
-RPC_S_SERVER_TOO_BUSY - The RPC server is too busy to complete this operation.
+RPC_S_SERVER_TOO_BUSY - Serwer RPC jest zbyt zajęty, aby ukończyć tę operację.
 .
 Language=Romanian
 RPC_S_SERVER_TOO_BUSY - The RPC server is too busy to complete this operation.
@@ -14911,7 +14911,7 @@ Language=Russian
 RPC_S_INVALID_NETWORK_OPTIONS - The network options are invalid.
 .
 Language=Polish
-RPC_S_INVALID_NETWORK_OPTIONS - The network options are invalid.
+RPC_S_INVALID_NETWORK_OPTIONS - Opcje sieciowe są nieprawidłowe.
 .
 Language=Romanian
 RPC_S_INVALID_NETWORK_OPTIONS - The network options are invalid.
@@ -14928,7 +14928,7 @@ Language=Russian
 RPC_S_NO_CALL_ACTIVE - There are no remote procedure calls active on this thread.
 .
 Language=Polish
-RPC_S_NO_CALL_ACTIVE - There are no remote procedure calls active on this thread.
+RPC_S_NO_CALL_ACTIVE - W tym wątku nie ma aktywnego żadnego zdalnego wywołania procedury.
 .
 Language=Romanian
 RPC_S_NO_CALL_ACTIVE - There are no remote procedure calls active on this thread.
@@ -14945,7 +14945,7 @@ Language=Russian
 RPC_S_CALL_FAILED - The remote procedure call failed.
 .
 Language=Polish
-RPC_S_CALL_FAILED - The remote procedure call failed.
+RPC_S_CALL_FAILED - Zdalne wywołanie procedury nie powiodło się.
 .
 Language=Romanian
 RPC_S_CALL_FAILED - The remote procedure call failed.
@@ -14962,7 +14962,7 @@ Language=Russian
 RPC_S_CALL_FAILED_DNE - The remote procedure call failed and did not execute.
 .
 Language=Polish
-RPC_S_CALL_FAILED_DNE - The remote procedure call failed and did not execute.
+RPC_S_CALL_FAILED_DNE - Zdalne wywołanie procedury nie powiodło się i nie zostało wykonane.
 .
 Language=Romanian
 RPC_S_CALL_FAILED_DNE - The remote procedure call failed and did not execute.
@@ -14979,7 +14979,7 @@ Language=Russian
 RPC_S_PROTOCOL_ERROR - A remote procedure call (RPC) protocol error occurred.
 .
 Language=Polish
-RPC_S_PROTOCOL_ERROR - A remote procedure call (RPC) protocol error occurred.
+RPC_S_PROTOCOL_ERROR - Wystąpił błąd protokołu zdalnego wywołania procedury (RPC).
 .
 Language=Romanian
 RPC_S_PROTOCOL_ERROR - A remote procedure call (RPC) protocol error occurred.
@@ -14996,7 +14996,7 @@ Language=Russian
 RPC_S_UNSUPPORTED_TRANS_SYN - The transfer syntax is not supported by the RPC server.
 .
 Language=Polish
-RPC_S_UNSUPPORTED_TRANS_SYN - The transfer syntax is not supported by the RPC server.
+RPC_S_UNSUPPORTED_TRANS_SYN - Składnia transferu nie jest obsługiwana przez serwer RPC.
 .
 Language=Romanian
 RPC_S_UNSUPPORTED_TRANS_SYN - The transfer syntax is not supported by the RPC server.
@@ -15013,7 +15013,7 @@ Language=Russian
 RPC_S_UNSUPPORTED_TYPE - The universal unique identifier (UUID) type is not supported.
 .
 Language=Polish
-RPC_S_UNSUPPORTED_TYPE - The universal unique identifier (UUID) type is not supported.
+RPC_S_UNSUPPORTED_TYPE - Typ uniwersalnego, unikatowego identyfikatora (UUID) nie jest obsługiwany.
 .
 Language=Romanian
 RPC_S_UNSUPPORTED_TYPE - The universal unique identifier (UUID) type is not supported.
@@ -15030,7 +15030,7 @@ Language=Russian
 RPC_S_INVALID_TAG - The tag is invalid.
 .
 Language=Polish
-RPC_S_INVALID_TAG - The tag is invalid.
+RPC_S_INVALID_TAG - Tag jest nieprawidłowy.
 .
 Language=Romanian
 RPC_S_INVALID_TAG - The tag is invalid.
@@ -15047,7 +15047,7 @@ Language=Russian
 RPC_S_INVALID_BOUND - The array bounds are invalid.
 .
 Language=Polish
-RPC_S_INVALID_BOUND - The array bounds are invalid.
+RPC_S_INVALID_BOUND - Granice tablicy są nieprawidłowe.
 .
 Language=Romanian
 RPC_S_INVALID_BOUND - The array bounds are invalid.
@@ -15064,7 +15064,7 @@ Language=Russian
 RPC_S_NO_ENTRY_NAME - The binding does not contain an entry name.
 .
 Language=Polish
-RPC_S_NO_ENTRY_NAME - The binding does not contain an entry name.
+RPC_S_NO_ENTRY_NAME - Powiązanie nie zawiera nazwy wpisu.
 .
 Language=Romanian
 RPC_S_NO_ENTRY_NAME - The binding does not contain an entry name.
@@ -15081,7 +15081,7 @@ Language=Russian
 RPC_S_INVALID_NAME_SYNTAX - The name syntax is invalid.
 .
 Language=Polish
-RPC_S_INVALID_NAME_SYNTAX - The name syntax is invalid.
+RPC_S_INVALID_NAME_SYNTAX - Składnia nazwy jest nieprawidłowa.
 .
 Language=Romanian
 RPC_S_INVALID_NAME_SYNTAX - The name syntax is invalid.
@@ -15098,7 +15098,7 @@ Language=Russian
 RPC_S_UNSUPPORTED_NAME_SYNTAX - The name syntax is not supported.
 .
 Language=Polish
-RPC_S_UNSUPPORTED_NAME_SYNTAX - The name syntax is not supported.
+RPC_S_UNSUPPORTED_NAME_SYNTAX - Składnia nazwy nie jest obsługiwana.
 .
 Language=Romanian
 RPC_S_UNSUPPORTED_NAME_SYNTAX - The name syntax is not supported.
@@ -15115,7 +15115,7 @@ Language=Russian
 RPC_S_UUID_NO_ADDRESS - No network address is available to use to construct a universal unique identifier (UUID).
 .
 Language=Polish
-RPC_S_UUID_NO_ADDRESS - No network address is available to use to construct a universal unique identifier (UUID).
+RPC_S_UUID_NO_ADDRESS - Brak dostępnych adresów sieciowych do utworzenia uniwersalnego unikatowego identyfikatora (UUID).
 .
 Language=Romanian
 RPC_S_UUID_NO_ADDRESS - No network address is available to use to construct a universal unique identifier (UUID).
@@ -15132,7 +15132,7 @@ Language=Russian
 RPC_S_DUPLICATE_ENDPOINT - The endpoint is a duplicate.
 .
 Language=Polish
-RPC_S_DUPLICATE_ENDPOINT - The endpoint is a duplicate.
+RPC_S_DUPLICATE_ENDPOINT - Punkt końcowy jest duplikatem.
 .
 Language=Romanian
 RPC_S_DUPLICATE_ENDPOINT - The endpoint is a duplicate.
@@ -15149,7 +15149,7 @@ Language=Russian
 RPC_S_UNKNOWN_AUTHN_TYPE - The authentication type is unknown.
 .
 Language=Polish
-RPC_S_UNKNOWN_AUTHN_TYPE - The authentication type is unknown.
+RPC_S_UNKNOWN_AUTHN_TYPE - Typ uwierzytelniania jest nieznany.
 .
 Language=Romanian
 RPC_S_UNKNOWN_AUTHN_TYPE - The authentication type is unknown.
@@ -15166,7 +15166,7 @@ Language=Russian
 RPC_S_MAX_CALLS_TOO_SMALL - The maximum number of calls is too small.
 .
 Language=Polish
-RPC_S_MAX_CALLS_TOO_SMALL - The maximum number of calls is too small.
+RPC_S_MAX_CALLS_TOO_SMALL - Maksymalna liczba wywołań jest za mała.
 .
 Language=Romanian
 RPC_S_MAX_CALLS_TOO_SMALL - The maximum number of calls is too small.
@@ -15183,7 +15183,7 @@ Language=Russian
 RPC_S_STRING_TOO_LONG - The string is too long.
 .
 Language=Polish
-RPC_S_STRING_TOO_LONG - The string is too long.
+RPC_S_STRING_TOO_LONG - Ciąg jest za długi.
 .
 Language=Romanian
 RPC_S_STRING_TOO_LONG - The string is too long.
@@ -15200,7 +15200,7 @@ Language=Russian
 RPC_S_PROTSEQ_NOT_FOUND - The RPC protocol sequence was not found.
 .
 Language=Polish
-RPC_S_PROTSEQ_NOT_FOUND - The RPC protocol sequence was not found.
+RPC_S_PROTSEQ_NOT_FOUND - Nie odnaleziono sekwencji protokołu RPC.
 .
 Language=Romanian
 RPC_S_PROTSEQ_NOT_FOUND - The RPC protocol sequence was not found.
@@ -15217,7 +15217,7 @@ Language=Russian
 RPC_S_PROCNUM_OUT_OF_RANGE - The procedure number is out of range.
 .
 Language=Polish
-RPC_S_PROCNUM_OUT_OF_RANGE - The procedure number is out of range.
+RPC_S_PROCNUM_OUT_OF_RANGE - Numer procedury jest spoza zakresu.
 .
 Language=Romanian
 RPC_S_PROCNUM_OUT_OF_RANGE - The procedure number is out of range.
@@ -15234,7 +15234,7 @@ Language=Russian
 RPC_S_BINDING_HAS_NO_AUTH - The binding does not contain any authentication information.
 .
 Language=Polish
-RPC_S_BINDING_HAS_NO_AUTH - The binding does not contain any authentication information.
+RPC_S_BINDING_HAS_NO_AUTH - Powiązanie nie zawiera żadnych informacji o uwierzytelnianiu.
 .
 Language=Romanian
 RPC_S_BINDING_HAS_NO_AUTH - The binding does not contain any authentication information.
@@ -15251,7 +15251,7 @@ Language=Russian
 RPC_S_UNKNOWN_AUTHN_SERVICE - The authentication service is unknown.
 .
 Language=Polish
-RPC_S_UNKNOWN_AUTHN_SERVICE - The authentication service is unknown.
+RPC_S_UNKNOWN_AUTHN_SERVICE - Usługa uwierzytelniania jest nieznana.
 .
 Language=Romanian
 RPC_S_UNKNOWN_AUTHN_SERVICE - The authentication service is unknown.
@@ -15268,7 +15268,7 @@ Language=Russian
 RPC_S_UNKNOWN_AUTHN_LEVEL - The authentication level is unknown.
 .
 Language=Polish
-RPC_S_UNKNOWN_AUTHN_LEVEL - The authentication level is unknown.
+RPC_S_UNKNOWN_AUTHN_LEVEL - Poziom uwierzytelniania jest nieznany.
 .
 Language=Romanian
 RPC_S_UNKNOWN_AUTHN_LEVEL - The authentication level is unknown.
@@ -15285,7 +15285,7 @@ Language=Russian
 RPC_S_INVALID_AUTH_IDENTITY - The security context is invalid.
 .
 Language=Polish
-RPC_S_INVALID_AUTH_IDENTITY - The security context is invalid.
+RPC_S_INVALID_AUTH_IDENTITY - Kontekst zabezpieczeń jest nieprawidłowy.
 .
 Language=Romanian
 RPC_S_INVALID_AUTH_IDENTITY - The security context is invalid.
@@ -15302,7 +15302,7 @@ Language=Russian
 RPC_S_UNKNOWN_AUTHZ_SERVICE - The authorization service is unknown.
 .
 Language=Polish
-RPC_S_UNKNOWN_AUTHZ_SERVICE - The authorization service is unknown.
+RPC_S_UNKNOWN_AUTHZ_SERVICE - Usługa autoryzowania jest nieznana.
 .
 Language=Romanian
 RPC_S_UNKNOWN_AUTHZ_SERVICE - The authorization service is unknown.
@@ -15319,7 +15319,7 @@ Language=Russian
 EPT_S_INVALID_ENTRY - The entry is invalid.
 .
 Language=Polish
-EPT_S_INVALID_ENTRY - The entry is invalid.
+EPT_S_INVALID_ENTRY - Wpis jest nieprawidłowy.
 .
 Language=Romanian
 EPT_S_INVALID_ENTRY - The entry is invalid.
@@ -15336,7 +15336,7 @@ Language=Russian
 EPT_S_CANT_PERFORM_OP - The server endpoint cannot perform the operation.
 .
 Language=Polish
-EPT_S_CANT_PERFORM_OP - The server endpoint cannot perform the operation.
+EPT_S_CANT_PERFORM_OP - Punkt końcowy serwera nie może wykonać operacji.
 .
 Language=Romanian
 EPT_S_CANT_PERFORM_OP - The server endpoint cannot perform the operation.
@@ -15353,7 +15353,7 @@ Language=Russian
 EPT_S_NOT_REGISTERED - There are no more endpoints available from the endpoint mapper.
 .
 Language=Polish
-EPT_S_NOT_REGISTERED - There are no more endpoints available from the endpoint mapper.
+EPT_S_NOT_REGISTERED - Nie ma więcej dostępnych punktów końcowych z programu mapowania punktów końcowych.
 .
 Language=Romanian
 EPT_S_NOT_REGISTERED - There are no more endpoints available from the endpoint mapper.
@@ -15370,7 +15370,7 @@ Language=Russian
 RPC_S_NOTHING_TO_EXPORT - No interfaces have been exported.
 .
 Language=Polish
-RPC_S_NOTHING_TO_EXPORT - No interfaces have been exported.
+RPC_S_NOTHING_TO_EXPORT - Żaden interfejs nie został wyeksportowany.
 .
 Language=Romanian
 RPC_S_NOTHING_TO_EXPORT - No interfaces have been exported.
@@ -15387,7 +15387,7 @@ Language=Russian
 RPC_S_INCOMPLETE_NAME - The entry name is incomplete.
 .
 Language=Polish
-RPC_S_INCOMPLETE_NAME - The entry name is incomplete.
+RPC_S_INCOMPLETE_NAME - Nazwa wpisu jest niekompletna.
 .
 Language=Romanian
 RPC_S_INCOMPLETE_NAME - The entry name is incomplete.
@@ -15404,7 +15404,7 @@ Language=Russian
 RPC_S_INVALID_VERS_OPTION - The version option is invalid.
 .
 Language=Polish
-RPC_S_INVALID_VERS_OPTION - The version option is invalid.
+RPC_S_INVALID_VERS_OPTION - Opcja wersji jest nieprawidłowa.
 .
 Language=Romanian
 RPC_S_INVALID_VERS_OPTION - The version option is invalid.
@@ -15421,7 +15421,7 @@ Language=Russian
 RPC_S_NO_MORE_MEMBERS - There are no more members.
 .
 Language=Polish
-RPC_S_NO_MORE_MEMBERS - There are no more members.
+RPC_S_NO_MORE_MEMBERS - Nie ma więcej członków grupy.
 .
 Language=Romanian
 RPC_S_NO_MORE_MEMBERS - There are no more members.
@@ -15438,7 +15438,7 @@ Language=Russian
 RPC_S_NOT_ALL_OBJS_UNEXPORTED - There is nothing to unexport.
 .
 Language=Polish
-RPC_S_NOT_ALL_OBJS_UNEXPORTED - There is nothing to unexport.
+RPC_S_NOT_ALL_OBJS_UNEXPORTED - Nie ma nic, na czym można by wykonać cofnięcie eksportowania.
 .
 Language=Romanian
 RPC_S_NOT_ALL_OBJS_UNEXPORTED - There is nothing to unexport.
@@ -15455,7 +15455,7 @@ Language=Russian
 RPC_S_INTERFACE_NOT_FOUND - The interface was not found.
 .
 Language=Polish
-RPC_S_INTERFACE_NOT_FOUND - The interface was not found.
+RPC_S_INTERFACE_NOT_FOUND - Nie odnaleziono interfejsu.
 .
 Language=Romanian
 RPC_S_INTERFACE_NOT_FOUND - The interface was not found.
@@ -15472,7 +15472,7 @@ Language=Russian
 RPC_S_ENTRY_ALREADY_EXISTS - The entry already exists.
 .
 Language=Polish
-RPC_S_ENTRY_ALREADY_EXISTS - The entry already exists.
+RPC_S_ENTRY_ALREADY_EXISTS - Wpis już istnieje.
 .
 Language=Romanian
 RPC_S_ENTRY_ALREADY_EXISTS - The entry already exists.
@@ -15489,7 +15489,7 @@ Language=Russian
 RPC_S_ENTRY_NOT_FOUND - The entry is not found.
 .
 Language=Polish
-RPC_S_ENTRY_NOT_FOUND - The entry is not found.
+RPC_S_ENTRY_NOT_FOUND - Nie można odnaleźć wpisu.
 .
 Language=Romanian
 RPC_S_ENTRY_NOT_FOUND - The entry is not found.
@@ -15506,7 +15506,7 @@ Language=Russian
 RPC_S_NAME_SERVICE_UNAVAILABLE - The name service is unavailable.
 .
 Language=Polish
-RPC_S_NAME_SERVICE_UNAVAILABLE - The name service is unavailable.
+RPC_S_NAME_SERVICE_UNAVAILABLE - Usługa nazw jest niedostępna.
 .
 Language=Romanian
 RPC_S_NAME_SERVICE_UNAVAILABLE - The name service is unavailable.
@@ -15523,7 +15523,7 @@ Language=Russian
 RPC_S_INVALID_NAF_ID - The network address family is invalid.
 .
 Language=Polish
-RPC_S_INVALID_NAF_ID - The network address family is invalid.
+RPC_S_INVALID_NAF_ID - Rodzina adresów sieciowych jest nieprawidłowa.
 .
 Language=Romanian
 RPC_S_INVALID_NAF_ID - The network address family is invalid.
@@ -15540,7 +15540,7 @@ Language=Russian
 RPC_S_CANNOT_SUPPORT - The requested operation is not supported.
 .
 Language=Polish
-RPC_S_CANNOT_SUPPORT - The requested operation is not supported.
+RPC_S_CANNOT_SUPPORT - Żądana operacja nie jest obsługiwana.
 .
 Language=Romanian
 RPC_S_CANNOT_SUPPORT - The requested operation is not supported.
@@ -15557,7 +15557,7 @@ Language=Russian
 RPC_S_NO_CONTEXT_AVAILABLE - No security context is available to allow impersonation.
 .
 Language=Polish
-RPC_S_NO_CONTEXT_AVAILABLE - No security context is available to allow impersonation.
+RPC_S_NO_CONTEXT_AVAILABLE - Nie jest dostępny kontekst zabezpieczeń umożliwiający personifikację.
 .
 Language=Romanian
 RPC_S_NO_CONTEXT_AVAILABLE - No security context is available to allow impersonation.
@@ -15574,7 +15574,7 @@ Language=Russian
 RPC_S_INTERNAL_ERROR - An internal error occurred in a remote procedure call (RPC).
 .
 Language=Polish
-RPC_S_INTERNAL_ERROR - An internal error occurred in a remote procedure call (RPC).
+RPC_S_INTERNAL_ERROR - Wystąpił błąd wewnętrzny w zdalnym wywołaniu procedury (RPC).
 .
 Language=Romanian
 RPC_S_INTERNAL_ERROR - An internal error occurred in a remote procedure call (RPC).
@@ -15591,7 +15591,7 @@ Language=Russian
 RPC_S_ZERO_DIVIDE - The RPC server attempted an integer division by zero.
 .
 Language=Polish
-RPC_S_ZERO_DIVIDE - The RPC server attempted an integer division by zero.
+RPC_S_ZERO_DIVIDE - Serwer RPC próbował wykonać dzielenie liczby całkowitej przez zero.
 .
 Language=Romanian
 RPC_S_ZERO_DIVIDE - The RPC server attempted an integer division by zero.
@@ -15608,7 +15608,7 @@ Language=Russian
 RPC_S_ADDRESS_ERROR - An addressing error occurred in the RPC server.
 .
 Language=Polish
-RPC_S_ADDRESS_ERROR - An addressing error occurred in the RPC server.
+RPC_S_ADDRESS_ERROR - Wystąpił błąd adresowania na serwerze RPC.
 .
 Language=Romanian
 RPC_S_ADDRESS_ERROR - An addressing error occurred in the RPC server.
@@ -15625,7 +15625,7 @@ Language=Russian
 RPC_S_FP_DIV_ZERO - A floating-point operation at the RPC server caused a division by zero.
 .
 Language=Polish
-RPC_S_FP_DIV_ZERO - A floating-point operation at the RPC server caused a division by zero.
+RPC_S_FP_DIV_ZERO - Operacja zmiennoprzecinkowa serwera RPC spowodowała dzielenie przez zero.
 .
 Language=Romanian
 RPC_S_FP_DIV_ZERO - A floating-point operation at the RPC server caused a division by zero.
@@ -15642,7 +15642,7 @@ Language=Russian
 RPC_S_FP_UNDERFLOW - A floating-point underflow occurred at the RPC server.
 .
 Language=Polish
-RPC_S_FP_UNDERFLOW - A floating-point underflow occurred at the RPC server.
+RPC_S_FP_UNDERFLOW - Na serwerze RPC wystąpił niedomiar zmiennoprzecinkowy.
 .
 Language=Romanian
 RPC_S_FP_UNDERFLOW - A floating-point underflow occurred at the RPC server.
@@ -15659,7 +15659,7 @@ Language=Russian
 RPC_S_FP_OVERFLOW - A floating-point overflow occurred at the RPC server.
 .
 Language=Polish
-RPC_S_FP_OVERFLOW - A floating-point overflow occurred at the RPC server.
+RPC_S_FP_OVERFLOW - Na serwerze RPC wystąpił nadmiar zmiennoprzecinkowy.
 .
 Language=Romanian
 RPC_S_FP_OVERFLOW - A floating-point overflow occurred at the RPC server.
@@ -15676,7 +15676,7 @@ Language=Russian
 RPC_X_NO_MORE_ENTRIES - The list of RPC servers available for the binding of auto handles has been exhausted.
 .
 Language=Polish
-RPC_X_NO_MORE_ENTRIES - The list of RPC servers available for the binding of auto handles has been exhausted.
+RPC_X_NO_MORE_ENTRIES - Lista serwerów RPC dostępnych do powiązania autodojść została wyczerpana.
 .
 Language=Romanian
 RPC_X_NO_MORE_ENTRIES - The list of RPC servers available for the binding of auto handles has been exhausted.
@@ -15693,7 +15693,7 @@ Language=Russian
 RPC_X_SS_CHAR_TRANS_OPEN_FAIL - Unable to open the character translation table file.
 .
 Language=Polish
-RPC_X_SS_CHAR_TRANS_OPEN_FAIL - Unable to open the character translation table file.
+RPC_X_SS_CHAR_TRANS_OPEN_FAIL - Nie można otworzyć pliku tabeli translacji znaków.
 .
 Language=Romanian
 RPC_X_SS_CHAR_TRANS_OPEN_FAIL - Unable to open the character translation table file.
@@ -15710,7 +15710,7 @@ Language=Russian
 RPC_X_SS_CHAR_TRANS_SHORT_FILE - The file containing the character translation table has fewer than 512 bytes.
 .
 Language=Polish
-RPC_X_SS_CHAR_TRANS_SHORT_FILE - The file containing the character translation table has fewer than 512 bytes.
+RPC_X_SS_CHAR_TRANS_SHORT_FILE - Plik zawierający tabelę translacji znaków ma mniej niż 512 bajtów.
 .
 Language=Romanian
 RPC_X_SS_CHAR_TRANS_SHORT_FILE - The file containing the character translation table has fewer than 512 bytes.
@@ -15727,7 +15727,7 @@ Language=Russian
 RPC_X_SS_IN_NULL_CONTEXT - A null context handle was passed from the client to the host during a remote procedure call.
 .
 Language=Polish
-RPC_X_SS_IN_NULL_CONTEXT - A null context handle was passed from the client to the host during a remote procedure call.
+RPC_X_SS_IN_NULL_CONTEXT - Dojście z zerowym kontekstem (null context handle) zostało przekazane od klienta do hosta w czasie zdalnego wywołania procedury.
 .
 Language=Romanian
 RPC_X_SS_IN_NULL_CONTEXT - A null context handle was passed from the client to the host during a remote procedure call.
@@ -15744,7 +15744,7 @@ Language=Russian
 RPC_X_SS_CONTEXT_DAMAGED - The context handle changed during a remote procedure call.
 .
 Language=Polish
-RPC_X_SS_CONTEXT_DAMAGED - The context handle changed during a remote procedure call.
+RPC_X_SS_CONTEXT_DAMAGED - Dojście kontekstu zmieniło się podczas zdalnego wywołania procedury.
 .
 Language=Romanian
 RPC_X_SS_CONTEXT_DAMAGED - The context handle changed during a remote procedure call.
@@ -15761,7 +15761,7 @@ Language=Russian
 RPC_X_SS_HANDLES_MISMATCH - The binding handles passed to a remote procedure call do not match.
 .
 Language=Polish
-RPC_X_SS_HANDLES_MISMATCH - The binding handles passed to a remote procedure call do not match.
+RPC_X_SS_HANDLES_MISMATCH - Dojścia powiązania przekazane do zdalnego wywołania procedury nie pasują do siebie.
 .
 Language=Romanian
 RPC_X_SS_HANDLES_MISMATCH - The binding handles passed to a remote procedure call do not match.
@@ -15778,7 +15778,7 @@ Language=Russian
 RPC_X_SS_CANNOT_GET_CALL_HANDLE - The stub is unable to get the remote procedure call handle.
 .
 Language=Polish
-RPC_X_SS_CANNOT_GET_CALL_HANDLE - The stub is unable to get the remote procedure call handle.
+RPC_X_SS_CANNOT_GET_CALL_HANDLE - Procedura wejścia nie może uzyskać dojścia do zdalnego wywołania procedury.
 .
 Language=Romanian
 RPC_X_SS_CANNOT_GET_CALL_HANDLE - The stub is unable to get the remote procedure call handle.
@@ -15795,7 +15795,7 @@ Language=Russian
 RPC_X_NULL_REF_POINTER - A null reference pointer was passed to the stub.
 .
 Language=Polish
-RPC_X_NULL_REF_POINTER - A null reference pointer was passed to the stub.
+RPC_X_NULL_REF_POINTER - Do procedury wejścia został przekazany wskaźnik odwołania zerowego.
 .
 Language=Romanian
 RPC_X_NULL_REF_POINTER - A null reference pointer was passed to the stub.
@@ -15812,7 +15812,7 @@ Language=Russian
 RPC_X_ENUM_VALUE_OUT_OF_RANGE - The enumeration value is out of range.
 .
 Language=Polish
-RPC_X_ENUM_VALUE_OUT_OF_RANGE - The enumeration value is out of range.
+RPC_X_ENUM_VALUE_OUT_OF_RANGE - Wartość wyliczenia jest spoza zakresu.
 .
 Language=Romanian
 RPC_X_ENUM_VALUE_OUT_OF_RANGE - The enumeration value is out of range.
@@ -15829,7 +15829,7 @@ Language=Russian
 RPC_X_BYTE_COUNT_TOO_SMALL - The byte count is too small.
 .
 Language=Polish
-RPC_X_BYTE_COUNT_TOO_SMALL - The byte count is too small.
+RPC_X_BYTE_COUNT_TOO_SMALL - Liczba bajtów jest za mała.
 .
 Language=Romanian
 RPC_X_BYTE_COUNT_TOO_SMALL - The byte count is too small.
@@ -15846,7 +15846,7 @@ Language=Russian
 RPC_X_BAD_STUB_DATA - The stub received bad data.
 .
 Language=Polish
-RPC_X_BAD_STUB_DATA - The stub received bad data.
+RPC_X_BAD_STUB_DATA - Procedura wejścia odebrała złe dane.
 .
 Language=Romanian
 RPC_X_BAD_STUB_DATA - The stub received bad data.
@@ -15863,7 +15863,7 @@ Language=Russian
 ERROR_INVALID_USER_BUFFER - The supplied user buffer is not valid for the requested operation.
 .
 Language=Polish
-ERROR_INVALID_USER_BUFFER - The supplied user buffer is not valid for the requested operation.
+ERROR_INVALID_USER_BUFFER - Podany bufor użytkownika jest nieodpowiedni dla żądanej operacji.
 .
 Language=Romanian
 ERROR_INVALID_USER_BUFFER - The supplied user buffer is not valid for the requested operation.
@@ -15880,7 +15880,7 @@ Language=Russian
 ERROR_UNRECOGNIZED_MEDIA - The disk media is not recognized. It may not be formatted.
 .
 Language=Polish
-ERROR_UNRECOGNIZED_MEDIA - The disk media is not recognized. It may not be formatted.
+ERROR_UNRECOGNIZED_MEDIA - Nie rozpoznany nośnik dysku. Może być nie sformatowany.
 .
 Language=Romanian
 ERROR_UNRECOGNIZED_MEDIA - The disk media is not recognized. It may not be formatted.
@@ -15897,7 +15897,7 @@ Language=Russian
 ERROR_NO_TRUST_LSA_SECRET - The workstation does not have a trust secret.
 .
 Language=Polish
-ERROR_NO_TRUST_LSA_SECRET - The workstation does not have a trust secret.
+ERROR_NO_TRUST_LSA_SECRET - Stacja robocza nie ma hasła zaufania.
 .
 Language=Romanian
 ERROR_NO_TRUST_LSA_SECRET - The workstation does not have a trust secret.
@@ -15914,7 +15914,7 @@ Language=Russian
 ERROR_NO_TRUST_SAM_ACCOUNT - The security database on the server does not have a computer account for this workstation trust relationship.
 .
 Language=Polish
-ERROR_NO_TRUST_SAM_ACCOUNT - The security database on the server does not have a computer account for this workstation trust relationship.
+ERROR_NO_TRUST_SAM_ACCOUNT - Baza danych zabezpieczeń na serwerze nie ma konta komputera dla relacji zaufania tej stacji roboczej.
 .
 Language=Romanian
 ERROR_NO_TRUST_SAM_ACCOUNT - The security database on the server does not have a computer account for this workstation trust relationship.
@@ -15931,7 +15931,7 @@ Language=Russian
 ERROR_TRUSTED_DOMAIN_FAILURE - The trust relationship between the primary domain and the trusted domain failed.
 .
 Language=Polish
-ERROR_TRUSTED_DOMAIN_FAILURE - The trust relationship between the primary domain and the trusted domain failed.
+ERROR_TRUSTED_DOMAIN_FAILURE - Relacje zaufania między domeną podstawową a domeną zaufaną nie powiodły się.
 .
 Language=Romanian
 ERROR_TRUSTED_DOMAIN_FAILURE - The trust relationship between the primary domain and the trusted domain failed.
@@ -15948,7 +15948,7 @@ Language=Russian
 ERROR_TRUSTED_RELATIONSHIP_FAILURE - The trust relationship between this workstation and the primary domain failed.
 .
 Language=Polish
-ERROR_TRUSTED_RELATIONSHIP_FAILURE - The trust relationship between this workstation and the primary domain failed.
+ERROR_TRUSTED_RELATIONSHIP_FAILURE - Relacje zaufania między tą stacją roboczą a domeną podstawową nie powiodły się.
 .
 Language=Romanian
 ERROR_TRUSTED_RELATIONSHIP_FAILURE - The trust relationship between this workstation and the primary domain failed.
@@ -15965,7 +15965,7 @@ Language=Russian
 ERROR_TRUST_FAILURE - The network logon failed.
 .
 Language=Polish
-ERROR_TRUST_FAILURE - The network logon failed.
+ERROR_TRUST_FAILURE - Logowanie w sieci nie powiodło się.
 .
 Language=Romanian
 ERROR_TRUST_FAILURE - The network logon failed.
@@ -15982,7 +15982,7 @@ Language=Russian
 RPC_S_CALL_IN_PROGRESS - A remote procedure call is already in progress for this thread.
 .
 Language=Polish
-RPC_S_CALL_IN_PROGRESS - A remote procedure call is already in progress for this thread.
+RPC_S_CALL_IN_PROGRESS - Zdalne wywołanie procedury jest już w toku dla tego wątku.
 .
 Language=Romanian
 RPC_S_CALL_IN_PROGRESS - A remote procedure call is already in progress for this thread.
@@ -15999,7 +15999,7 @@ Language=Russian
 ERROR_NETLOGON_NOT_STARTED - An attempt was made to logon, but the network logon service was not started.
 .
 Language=Polish
-ERROR_NETLOGON_NOT_STARTED - An attempt was made to logon, but the network logon service was not started.
+ERROR_NETLOGON_NOT_STARTED - Podjęto próbę zalogowania, ale sieciowa usługa logowania nie została uruchomiona.
 .
 Language=Romanian
 ERROR_NETLOGON_NOT_STARTED - An attempt was made to logon, but the network logon service was not started.
@@ -16016,7 +16016,7 @@ Language=Russian
 ERROR_ACCOUNT_EXPIRED - The user's account has expired.
 .
 Language=Polish
-ERROR_ACCOUNT_EXPIRED - The user's account has expired.
+ERROR_ACCOUNT_EXPIRED - Konto użytkownika wygasło.
 .
 Language=Romanian
 ERROR_ACCOUNT_EXPIRED - The user's account has expired.
@@ -16033,7 +16033,7 @@ Language=Russian
 ERROR_REDIRECTOR_HAS_OPEN_HANDLES - The redirector is in use and cannot be unloaded.
 .
 Language=Polish
-ERROR_REDIRECTOR_HAS_OPEN_HANDLES - The redirector is in use and cannot be unloaded.
+ERROR_REDIRECTOR_HAS_OPEN_HANDLES - Readresator jest w użyciu i nie można usunąć go z pamięci.
 .
 Language=Romanian
 ERROR_REDIRECTOR_HAS_OPEN_HANDLES - The redirector is in use and cannot be unloaded.
@@ -16050,7 +16050,7 @@ Language=Russian
 ERROR_PRINTER_DRIVER_ALREADY_INSTALLED - The specified printer driver is already installed.
 .
 Language=Polish
-ERROR_PRINTER_DRIVER_ALREADY_INSTALLED - The specified printer driver is already installed.
+ERROR_PRINTER_DRIVER_ALREADY_INSTALLED - Określony sterownik drukarki jest już zainstalowany.
 .
 Language=Romanian
 ERROR_PRINTER_DRIVER_ALREADY_INSTALLED - The specified printer driver is already installed.
@@ -16067,7 +16067,7 @@ Language=Russian
 ERROR_UNKNOWN_PORT - The specified port is unknown.
 .
 Language=Polish
-ERROR_UNKNOWN_PORT - The specified port is unknown.
+ERROR_UNKNOWN_PORT - Określony port jest nieznany.
 .
 Language=Romanian
 ERROR_UNKNOWN_PORT - The specified port is unknown.
@@ -16084,7 +16084,7 @@ Language=Russian
 ERROR_UNKNOWN_PRINTER_DRIVER - The printer driver is unknown.
 .
 Language=Polish
-ERROR_UNKNOWN_PRINTER_DRIVER - The printer driver is unknown.
+ERROR_UNKNOWN_PRINTER_DRIVER - Sterownik drukarki jest nieznany.
 .
 Language=Romanian
 ERROR_UNKNOWN_PRINTER_DRIVER - The printer driver is unknown.
@@ -16101,7 +16101,7 @@ Language=Russian
 ERROR_UNKNOWN_PRINTPROCESSOR - The print processor is unknown.
 .
 Language=Polish
-ERROR_UNKNOWN_PRINTPROCESSOR - The print processor is unknown.
+ERROR_UNKNOWN_PRINTPROCESSOR - Procesor wydruku jest nieznany.
 .
 Language=Romanian
 ERROR_UNKNOWN_PRINTPROCESSOR - The print processor is unknown.
@@ -16118,7 +16118,7 @@ Language=Russian
 ERROR_INVALID_SEPARATOR_FILE - The specified separator file is invalid.
 .
 Language=Polish
-ERROR_INVALID_SEPARATOR_FILE - The specified separator file is invalid.
+ERROR_INVALID_SEPARATOR_FILE - Określony plik separatora jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_SEPARATOR_FILE - The specified separator file is invalid.
@@ -16135,7 +16135,7 @@ Language=Russian
 ERROR_INVALID_PRIORITY - The specified priority is invalid.
 .
 Language=Polish
-ERROR_INVALID_PRIORITY - The specified priority is invalid.
+ERROR_INVALID_PRIORITY - Określony priorytet jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_PRIORITY - The specified priority is invalid.
@@ -16152,7 +16152,7 @@ Language=Russian
 ERROR_INVALID_PRINTER_NAME - The printer name is invalid.
 .
 Language=Polish
-ERROR_INVALID_PRINTER_NAME - The printer name is invalid.
+ERROR_INVALID_PRINTER_NAME - Nazwa drukarki jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_INVALID_PRINTER_NAME - The printer name is invalid.
@@ -16169,7 +16169,7 @@ Language=Russian
 ERROR_PRINTER_ALREADY_EXISTS - The printer already exists.
 .
 Language=Polish
-ERROR_PRINTER_ALREADY_EXISTS - The printer already exists.
+ERROR_PRINTER_ALREADY_EXISTS - Drukarka już istnieje.
 .
 Language=Romanian
 ERROR_PRINTER_ALREADY_EXISTS - The printer already exists.
@@ -16186,7 +16186,7 @@ Language=Russian
 ERROR_INVALID_PRINTER_COMMAND - The printer command is invalid.
 .
 Language=Polish
-ERROR_INVALID_PRINTER_COMMAND - The printer command is invalid.
+ERROR_INVALID_PRINTER_COMMAND - Polecenie drukarki jest nieprawidłowe.
 .
 Language=Romanian
 ERROR_INVALID_PRINTER_COMMAND - The printer command is invalid.
@@ -16203,7 +16203,7 @@ Language=Russian
 ERROR_INVALID_DATATYPE - The specified datatype is invalid.
 .
 Language=Polish
-ERROR_INVALID_DATATYPE - The specified datatype is invalid.
+ERROR_INVALID_DATATYPE - Określony typ danych jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_DATATYPE - The specified datatype is invalid.
@@ -16220,7 +16220,7 @@ Language=Russian
 ERROR_INVALID_ENVIRONMENT - The environment specified is invalid.
 .
 Language=Polish
-ERROR_INVALID_ENVIRONMENT - The environment specified is invalid.
+ERROR_INVALID_ENVIRONMENT - Określone środowisko jest nieprawidłowe.
 .
 Language=Romanian
 ERROR_INVALID_ENVIRONMENT - The environment specified is invalid.
@@ -16237,7 +16237,7 @@ Language=Russian
 RPC_S_NO_MORE_BINDINGS - There are no more bindings.
 .
 Language=Polish
-RPC_S_NO_MORE_BINDINGS - There are no more bindings.
+RPC_S_NO_MORE_BINDINGS - Nie ma więcej powiązań.
 .
 Language=Romanian
 RPC_S_NO_MORE_BINDINGS - There are no more bindings.
@@ -16254,7 +16254,7 @@ Language=Russian
 ERROR_NOLOGON_INTERDOMAIN_TRUST_ACCOUNT - The account used is an interdomain trust account. Use your global user account or local user account to access this server.
 .
 Language=Polish
-ERROR_NOLOGON_INTERDOMAIN_TRUST_ACCOUNT - The account used is an interdomain trust account. Use your global user account or local user account to access this server.
+ERROR_NOLOGON_INTERDOMAIN_TRUST_ACCOUNT - Użyte konto jest międzydomenowym kontem zaufania. Aby uzyskać dostęp do tego serwera, użyj globalnego lub lokalnego konta użytkownika.
 .
 Language=Romanian
 ERROR_NOLOGON_INTERDOMAIN_TRUST_ACCOUNT - The account used is an interdomain trust account. Use your global user account or local user account to access this server.
@@ -16271,7 +16271,7 @@ Language=Russian
 ERROR_NOLOGON_WORKSTATION_TRUST_ACCOUNT - The account used is a computer account. Use your global user account or local user account to access this server.
 .
 Language=Polish
-ERROR_NOLOGON_WORKSTATION_TRUST_ACCOUNT - The account used is a computer account. Use your global user account or local user account to access this server.
+ERROR_NOLOGON_WORKSTATION_TRUST_ACCOUNT - Użyte konto jest kontem komputera. Aby uzyskać dostęp do tego serwera, użyj globalnego lub lokalnego konta użytkownika.
 .
 Language=Romanian
 ERROR_NOLOGON_WORKSTATION_TRUST_ACCOUNT - The account used is a computer account. Use your global user account or local user account to access this server.
@@ -16288,7 +16288,7 @@ Language=Russian
 ERROR_NOLOGON_SERVER_TRUST_ACCOUNT - The account used is a server trust account. Use your global user account or local user account to access this server.
 .
 Language=Polish
-ERROR_NOLOGON_SERVER_TRUST_ACCOUNT - The account used is a server trust account. Use your global user account or local user account to access this server.
+ERROR_NOLOGON_SERVER_TRUST_ACCOUNT - Użyte konto jest kontem zaufania serwera. Aby uzyskać dostęp do tego serwera, użyj globalnego lub lokalnego konta użytkownika.
 .
 Language=Romanian
 ERROR_NOLOGON_SERVER_TRUST_ACCOUNT - The account used is a server trust account. Use your global user account or local user account to access this server.
@@ -16305,7 +16305,7 @@ Language=Russian
 ERROR_DOMAIN_TRUST_INCONSISTENT - The name or security ID (SID) of the domain specified is inconsistent with the trust information for that domain.
 .
 Language=Polish
-ERROR_DOMAIN_TRUST_INCONSISTENT - The name or security ID (SID) of the domain specified is inconsistent with the trust information for that domain.
+ERROR_DOMAIN_TRUST_INCONSISTENT - Nazwa lub identyfikator zabezpieczeń (SID) określonej domeny jest niezgodny z informacją zaufania dla tej domeny.
 .
 Language=Romanian
 ERROR_DOMAIN_TRUST_INCONSISTENT - The name or security ID (SID) of the domain specified is inconsistent with the trust information for that domain.
@@ -16322,7 +16322,7 @@ Language=Russian
 ERROR_SERVER_HAS_OPEN_HANDLES - The server is in use and cannot be unloaded.
 .
 Language=Polish
-ERROR_SERVER_HAS_OPEN_HANDLES - The server is in use and cannot be unloaded.
+ERROR_SERVER_HAS_OPEN_HANDLES - Serwer jest w użyciu i nie można usunąć go z pamięci.
 .
 Language=Romanian
 ERROR_SERVER_HAS_OPEN_HANDLES - The server is in use and cannot be unloaded.
@@ -16339,7 +16339,7 @@ Language=Russian
 ERROR_RESOURCE_DATA_NOT_FOUND - The specified image file did not contain a resource section.
 .
 Language=Polish
-ERROR_RESOURCE_DATA_NOT_FOUND - The specified image file did not contain a resource section.
+ERROR_RESOURCE_DATA_NOT_FOUND - Określony plik obrazu nie zawierał sekcji zasobów.
 .
 Language=Romanian
 ERROR_RESOURCE_DATA_NOT_FOUND - The specified image file did not contain a resource section.
@@ -16356,7 +16356,7 @@ Language=Russian
 ERROR_RESOURCE_TYPE_NOT_FOUND - The specified resource type cannot be found in the image file.
 .
 Language=Polish
-ERROR_RESOURCE_TYPE_NOT_FOUND - The specified resource type cannot be found in the image file.
+ERROR_RESOURCE_TYPE_NOT_FOUND - Nie można znaleźć określonego typu zasobu w pliku obrazu.
 .
 Language=Romanian
 ERROR_RESOURCE_TYPE_NOT_FOUND - The specified resource type cannot be found in the image file.
@@ -16373,7 +16373,7 @@ Language=Russian
 ERROR_RESOURCE_NAME_NOT_FOUND - The specified resource name cannot be found in the image file.
 .
 Language=Polish
-ERROR_RESOURCE_NAME_NOT_FOUND - The specified resource name cannot be found in the image file.
+ERROR_RESOURCE_NAME_NOT_FOUND - Nie można znaleźć określonej nazwy zasobu w pliku obrazu.
 .
 Language=Romanian
 ERROR_RESOURCE_NAME_NOT_FOUND - The specified resource name cannot be found in the image file.
@@ -16390,7 +16390,7 @@ Language=Russian
 ERROR_RESOURCE_LANG_NOT_FOUND - The specified resource language ID cannot be found in the image file.
 .
 Language=Polish
-ERROR_RESOURCE_LANG_NOT_FOUND - The specified resource language ID cannot be found in the image file.
+ERROR_RESOURCE_LANG_NOT_FOUND - Nie można odnaleźć identyfikatora języka zasobu w pliku obrazu.
 .
 Language=Romanian
 ERROR_RESOURCE_LANG_NOT_FOUND - The specified resource language ID cannot be found in the image file.
@@ -16407,7 +16407,7 @@ Language=Russian
 ERROR_NOT_ENOUGH_QUOTA - Not enough quota is available to process this command.
 .
 Language=Polish
-ERROR_NOT_ENOUGH_QUOTA - Not enough quota is available to process this command.
+ERROR_NOT_ENOUGH_QUOTA - Za mały przydział do przetworzenia tego polecenia.
 .
 Language=Romanian
 ERROR_NOT_ENOUGH_QUOTA - Not enough quota is available to process this command.
@@ -16424,7 +16424,7 @@ Language=Russian
 RPC_S_NO_INTERFACES - No interfaces have been registered.
 .
 Language=Polish
-RPC_S_NO_INTERFACES - No interfaces have been registered.
+RPC_S_NO_INTERFACES - Żaden interfejs nie został zarejestrowany.
 .
 Language=Romanian
 RPC_S_NO_INTERFACES - No interfaces have been registered.
@@ -16441,7 +16441,7 @@ Language=Russian
 RPC_S_CALL_CANCELLED - The remote procedure call was cancelled.
 .
 Language=Polish
-RPC_S_CALL_CANCELLED - The remote procedure call was cancelled.
+RPC_S_CALL_CANCELLED - Zdalne wywołanie procedury zostało anulowane.
 .
 Language=Romanian
 RPC_S_CALL_CANCELLED - The remote procedure call was cancelled.
@@ -16458,7 +16458,7 @@ Language=Russian
 RPC_S_BINDING_INCOMPLETE - The binding handle does not contain all required information.
 .
 Language=Polish
-RPC_S_BINDING_INCOMPLETE - The binding handle does not contain all required information.
+RPC_S_BINDING_INCOMPLETE - Dojście powiązania nie zawiera wszystkich wymaganych informacji.
 .
 Language=Romanian
 RPC_S_BINDING_INCOMPLETE - The binding handle does not contain all required information.
@@ -16475,7 +16475,7 @@ Language=Russian
 RPC_S_COMM_FAILURE - A communications failure occurred during a remote procedure call.
 .
 Language=Polish
-RPC_S_COMM_FAILURE - A communications failure occurred during a remote procedure call.
+RPC_S_COMM_FAILURE - Podczas zdalnego wywoływania procedury wystąpił błąd komunikacji.
 .
 Language=Romanian
 RPC_S_COMM_FAILURE - A communications failure occurred during a remote procedure call.
@@ -16492,7 +16492,7 @@ Language=Russian
 RPC_S_UNSUPPORTED_AUTHN_LEVEL - The requested authentication level is not supported.
 .
 Language=Polish
-RPC_S_UNSUPPORTED_AUTHN_LEVEL - The requested authentication level is not supported.
+RPC_S_UNSUPPORTED_AUTHN_LEVEL - Żądany poziom uwierzytelniania nie jest obsługiwany.
 .
 Language=Romanian
 RPC_S_UNSUPPORTED_AUTHN_LEVEL - The requested authentication level is not supported.
@@ -16509,7 +16509,7 @@ Language=Russian
 RPC_S_NO_PRINC_NAME - No principal name registered.
 .
 Language=Polish
-RPC_S_NO_PRINC_NAME - No principal name registered.
+RPC_S_NO_PRINC_NAME - Nie zarejestrowano nazwy głównej.
 .
 Language=Romanian
 RPC_S_NO_PRINC_NAME - No principal name registered.
@@ -16526,7 +16526,7 @@ Language=Russian
 RPC_S_NOT_RPC_ERROR - The error specified is not a valid Windows RPC error code.
 .
 Language=Polish
-RPC_S_NOT_RPC_ERROR - The error specified is not a valid Windows RPC error code.
+RPC_S_NOT_RPC_ERROR - Określony błąd nie jest prawidłowym kodem błędu protokołu zdalnego wywołania procedury (RPC).
 .
 Language=Romanian
 RPC_S_NOT_RPC_ERROR - The error specified is not a valid Windows RPC error code.
@@ -16543,7 +16543,7 @@ Language=Russian
 RPC_S_UUID_LOCAL_ONLY - A UUID that is valid only on this computer has been allocated.
 .
 Language=Polish
-RPC_S_UUID_LOCAL_ONLY - A UUID that is valid only on this computer has been allocated.
+RPC_S_UUID_LOCAL_ONLY - Przydzielono identyfikator UUID, który jest prawidłowy tylko na tym komputerze.
 .
 Language=Romanian
 RPC_S_UUID_LOCAL_ONLY - A UUID that is valid only on this computer has been allocated.
@@ -16560,7 +16560,7 @@ Language=Russian
 RPC_S_SEC_PKG_ERROR - A security package specific error occurred.
 .
 Language=Polish
-RPC_S_SEC_PKG_ERROR - A security package specific error occurred.
+RPC_S_SEC_PKG_ERROR - Wystąpił błąd specyficzny dla pakietu zabezpieczeń.
 .
 Language=Romanian
 RPC_S_SEC_PKG_ERROR - A security package specific error occurred.
@@ -16577,7 +16577,7 @@ Language=Russian
 RPC_S_NOT_CANCELLED - Thread is not canceled.
 .
 Language=Polish
-RPC_S_NOT_CANCELLED - Thread is not canceled.
+RPC_S_NOT_CANCELLED - Wątek nie został anulowany.
 .
 Language=Romanian
 RPC_S_NOT_CANCELLED - Thread is not canceled.
@@ -16594,7 +16594,7 @@ Language=Russian
 RPC_X_INVALID_ES_ACTION - Invalid operation on the encoding/decoding handle.
 .
 Language=Polish
-RPC_X_INVALID_ES_ACTION - Invalid operation on the encoding/decoding handle.
+RPC_X_INVALID_ES_ACTION - Nieprawidłowa operacja na dojściu kodowania/dekodowania.
 .
 Language=Romanian
 RPC_X_INVALID_ES_ACTION - Invalid operation on the encoding/decoding handle.
@@ -16611,7 +16611,7 @@ Language=Russian
 RPC_X_WRONG_ES_VERSION - Incompatible version of the serializing package.
 .
 Language=Polish
-RPC_X_WRONG_ES_VERSION - Incompatible version of the serializing package.
+RPC_X_WRONG_ES_VERSION - Niezgodna wersja pakietu szeregującego.
 .
 Language=Romanian
 RPC_X_WRONG_ES_VERSION - Incompatible version of the serializing package.
@@ -16628,7 +16628,7 @@ Language=Russian
 RPC_X_WRONG_STUB_VERSION - Incompatible version of the RPC stub.
 .
 Language=Polish
-RPC_X_WRONG_STUB_VERSION - Incompatible version of the RPC stub.
+RPC_X_WRONG_STUB_VERSION - Niezgodna wersja procedury wejścia RPC.
 .
 Language=Romanian
 RPC_X_WRONG_STUB_VERSION - Incompatible version of the RPC stub.
@@ -16645,7 +16645,7 @@ Language=Russian
 RPC_X_INVALID_PIPE_OBJECT - The RPC pipe object is invalid or corrupted.
 .
 Language=Polish
-RPC_X_INVALID_PIPE_OBJECT - The RPC pipe object is invalid or corrupted.
+RPC_X_INVALID_PIPE_OBJECT - Obiekt potoku RPC jest nieprawidłowy lub uszkodzony.
 .
 Language=Romanian
 RPC_X_INVALID_PIPE_OBJECT - The RPC pipe object is invalid or corrupted.
@@ -16662,7 +16662,7 @@ Language=Russian
 RPC_X_WRONG_PIPE_ORDER - An invalid operation was attempted on an RPC pipe object.
 .
 Language=Polish
-RPC_X_WRONG_PIPE_ORDER - An invalid operation was attempted on an RPC pipe object.
+RPC_X_WRONG_PIPE_ORDER - Ta operacja nie jest prawidłowa dla danego obiektu potoku RPC.
 .
 Language=Romanian
 RPC_X_WRONG_PIPE_ORDER - An invalid operation was attempted on an RPC pipe object.
@@ -16679,7 +16679,7 @@ Language=Russian
 RPC_X_WRONG_PIPE_VERSION - Unsupported RPC pipe version.
 .
 Language=Polish
-RPC_X_WRONG_PIPE_VERSION - Unsupported RPC pipe version.
+RPC_X_WRONG_PIPE_VERSION - Ta wersja potoku RPC nie jest obsługiwana.
 .
 Language=Romanian
 RPC_X_WRONG_PIPE_VERSION - Unsupported RPC pipe version.
@@ -16696,7 +16696,7 @@ Language=Russian
 RPC_S_GROUP_MEMBER_NOT_FOUND - The group member was not found.
 .
 Language=Polish
-RPC_S_GROUP_MEMBER_NOT_FOUND - The group member was not found.
+RPC_S_GROUP_MEMBER_NOT_FOUND - Nie odnaleziono członka grupy.
 .
 Language=Romanian
 RPC_S_GROUP_MEMBER_NOT_FOUND - The group member was not found.
@@ -16713,7 +16713,7 @@ Language=Russian
 EPT_S_CANT_CREATE - The endpoint mapper database entry could not be created.
 .
 Language=Polish
-EPT_S_CANT_CREATE - The endpoint mapper database entry could not be created.
+EPT_S_CANT_CREATE - Nie można utworzyć bazy danych mapowania punktu końcowego.
 .
 Language=Romanian
 EPT_S_CANT_CREATE - The endpoint mapper database entry could not be created.
@@ -16730,7 +16730,7 @@ Language=Russian
 RPC_S_INVALID_OBJECT - The object universal unique identifier (UUID) is the nil UUID.
 .
 Language=Polish
-RPC_S_INVALID_OBJECT - The object universal unique identifier (UUID) is the nil UUID.
+RPC_S_INVALID_OBJECT - Uniwersalny, unikatowy identyfikator obiektu (UUID) jest zerowym identyfikatorem UUID.
 .
 Language=Romanian
 RPC_S_INVALID_OBJECT - The object universal unique identifier (UUID) is the nil UUID.
@@ -16747,7 +16747,7 @@ Language=Russian
 ERROR_INVALID_TIME - The specified time is invalid.
 .
 Language=Polish
-ERROR_INVALID_TIME - The specified time is invalid.
+ERROR_INVALID_TIME - Określony czas jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_TIME - The specified time is invalid.
@@ -16764,7 +16764,7 @@ Language=Russian
 ERROR_INVALID_FORM_NAME - The specified form name is invalid.
 .
 Language=Polish
-ERROR_INVALID_FORM_NAME - The specified form name is invalid.
+ERROR_INVALID_FORM_NAME - Określona nazwa formularza jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_INVALID_FORM_NAME - The specified form name is invalid.
@@ -16781,7 +16781,7 @@ Language=Russian
 ERROR_INVALID_FORM_SIZE - The specified form size is invalid.
 .
 Language=Polish
-ERROR_INVALID_FORM_SIZE - The specified form size is invalid.
+ERROR_INVALID_FORM_SIZE - Określony rozmiar formularza jest nieprawidłowy
 .
 Language=Romanian
 ERROR_INVALID_FORM_SIZE - The specified form size is invalid.
@@ -16798,7 +16798,7 @@ Language=Russian
 ERROR_ALREADY_WAITING - The specified printer handle is already being waited on
 .
 Language=Polish
-ERROR_ALREADY_WAITING - The specified printer handle is already being waited on
+ERROR_ALREADY_WAITING - Określone dojście drukarki jest już obsługiwane.
 .
 Language=Romanian
 ERROR_ALREADY_WAITING - The specified printer handle is already being waited on
@@ -16815,7 +16815,7 @@ Language=Russian
 ERROR_PRINTER_DELETED - The specified printer has been deleted.
 .
 Language=Polish
-ERROR_PRINTER_DELETED - The specified printer has been deleted.
+ERROR_PRINTER_DELETED - Określona drukarka została usunięta.
 .
 Language=Romanian
 ERROR_PRINTER_DELETED - The specified printer has been deleted.
@@ -16832,7 +16832,7 @@ Language=Russian
 ERROR_INVALID_PRINTER_STATE - The state of the printer is invalid.
 .
 Language=Polish
-ERROR_INVALID_PRINTER_STATE - The state of the printer is invalid.
+ERROR_INVALID_PRINTER_STATE - Stan drukarki jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_PRINTER_STATE - The state of the printer is invalid.
@@ -16849,7 +16849,7 @@ Language=Russian
 ERROR_PASSWORD_MUST_CHANGE - The user's password must be changed before logging on the first time.
 .
 Language=Polish
-ERROR_PASSWORD_MUST_CHANGE - The user's password must be changed before logging on the first time.
+ERROR_PASSWORD_MUST_CHANGE - Hasło użytkownika musi zostać zmienione przed pierwszym zalogowaniem.
 .
 Language=Romanian
 ERROR_PASSWORD_MUST_CHANGE - The user's password must be changed before logging on the first time.
@@ -16866,7 +16866,7 @@ Language=Russian
 ERROR_DOMAIN_CONTROLLER_NOT_FOUND - Could not find the domain controller for this domain.
 .
 Language=Polish
-ERROR_DOMAIN_CONTROLLER_NOT_FOUND - Could not find the domain controller for this domain.
+ERROR_DOMAIN_CONTROLLER_NOT_FOUND - Nie można odnaleźć kontrolera tej domeny.
 .
 Language=Romanian
 ERROR_DOMAIN_CONTROLLER_NOT_FOUND - Could not find the domain controller for this domain.
@@ -16883,7 +16883,7 @@ Language=Russian
 ERROR_ACCOUNT_LOCKED_OUT - The referenced account is currently locked out and may not be used to log on.
 .
 Language=Polish
-ERROR_ACCOUNT_LOCKED_OUT - The referenced account is currently locked out and may not be used to log on.
+ERROR_ACCOUNT_LOCKED_OUT - Wywoływane konto jest obecnie zablokowane i nie można logować się za jego pomocą.
 .
 Language=Romanian
 ERROR_ACCOUNT_LOCKED_OUT - The referenced account is currently locked out and may not be used to log on.
@@ -16900,7 +16900,7 @@ Language=Russian
 OR_INVALID_OXID - The object exporter specified was not found.
 .
 Language=Polish
-OR_INVALID_OXID - The object exporter specified was not found.
+OR_INVALID_OXID - Określony eksporter obiektu nie został odnaleziony.
 .
 Language=Romanian
 OR_INVALID_OXID - The object exporter specified was not found.
@@ -16917,7 +16917,7 @@ Language=Russian
 OR_INVALID_OID - The object specified was not found.
 .
 Language=Polish
-OR_INVALID_OID - The object specified was not found.
+OR_INVALID_OID - Określony obiekt nie został odnaleziony.
 .
 Language=Romanian
 OR_INVALID_OID - The object specified was not found.
@@ -16934,7 +16934,7 @@ Language=Russian
 OR_INVALID_SET - The object resolver set specified was not found.
 .
 Language=Polish
-OR_INVALID_SET - The object resolver set specified was not found.
+OR_INVALID_SET - Określony zestaw programu rozpoznawania nazw obiektów nie został odnaleziony.
 .
 Language=Romanian
 OR_INVALID_SET - The object resolver set specified was not found.
@@ -16951,7 +16951,7 @@ Language=Russian
 RPC_S_SEND_INCOMPLETE - Some data remains to be sent in the request buffer.
 .
 Language=Polish
-RPC_S_SEND_INCOMPLETE - Some data remains to be sent in the request buffer.
+RPC_S_SEND_INCOMPLETE - Pewne dane pozostają w buforze żądania, oczekując na wysłanie.
 .
 Language=Romanian
 RPC_S_SEND_INCOMPLETE - Some data remains to be sent in the request buffer.
@@ -16968,7 +16968,7 @@ Language=Russian
 RPC_S_INVALID_ASYNC_HANDLE - Invalid asynchronous remote procedure call handle.
 .
 Language=Polish
-RPC_S_INVALID_ASYNC_HANDLE - Invalid asynchronous remote procedure call handle.
+RPC_S_INVALID_ASYNC_HANDLE - Nieprawidłowe dojście do asynchronicznego zdalnego wywołania procedury.
 .
 Language=Romanian
 RPC_S_INVALID_ASYNC_HANDLE - Invalid asynchronous remote procedure call handle.
@@ -16985,7 +16985,7 @@ Language=Russian
 RPC_S_INVALID_ASYNC_CALL - Invalid asynchronous RPC call handle for this operation.
 .
 Language=Polish
-RPC_S_INVALID_ASYNC_CALL - Invalid asynchronous RPC call handle for this operation.
+RPC_S_INVALID_ASYNC_CALL - Nieprawidłowe dojście do asynchronicznego zdalnego wywołania procedury (RPC) dla tej operacji.
 .
 Language=Romanian
 RPC_S_INVALID_ASYNC_CALL - Invalid asynchronous RPC call handle for this operation.
@@ -17002,7 +17002,7 @@ Language=Russian
 RPC_X_PIPE_CLOSED - The RPC pipe object has already been closed.
 .
 Language=Polish
-RPC_X_PIPE_CLOSED - The RPC pipe object has already been closed.
+RPC_X_PIPE_CLOSED - Obiekt potoku RPC został już zamknięty.
 .
 Language=Romanian
 RPC_X_PIPE_CLOSED - The RPC pipe object has already been closed.
@@ -17019,7 +17019,7 @@ Language=Russian
 RPC_X_PIPE_DISCIPLINE_ERROR - The RPC call completed before all pipes were processed.
 .
 Language=Polish
-RPC_X_PIPE_DISCIPLINE_ERROR - The RPC call completed before all pipes were processed.
+RPC_X_PIPE_DISCIPLINE_ERROR - Wywołanie RPC zostało ukończone przed przetworzeniem wszystkich potoków.
 .
 Language=Romanian
 RPC_X_PIPE_DISCIPLINE_ERROR - The RPC call completed before all pipes were processed.
@@ -17036,7 +17036,7 @@ Language=Russian
 RPC_X_PIPE_EMPTY - No more data is available from the RPC pipe.
 .
 Language=Polish
-RPC_X_PIPE_EMPTY - No more data is available from the RPC pipe.
+RPC_X_PIPE_EMPTY - Nie ma więcej dostępnych danych z potoku RPC.
 .
 Language=Romanian
 RPC_X_PIPE_EMPTY - No more data is available from the RPC pipe.
@@ -17053,7 +17053,7 @@ Language=Russian
 ERROR_NO_SITENAME - No site name is available for this machine.
 .
 Language=Polish
-ERROR_NO_SITENAME - No site name is available for this machine.
+ERROR_NO_SITENAME - Żadna nazwa serwisu nie jest dostępna dla tego komputera.
 .
 Language=Romanian
 ERROR_NO_SITENAME - No site name is available for this machine.
@@ -17070,7 +17070,7 @@ Language=Russian
 ERROR_CANT_ACCESS_FILE - The file cannot be accessed by the system.
 .
 Language=Polish
-ERROR_CANT_ACCESS_FILE - The file cannot be accessed by the system.
+ERROR_CANT_ACCESS_FILE - System nie może uzyskać dostępu do pliku.
 .
 Language=Romanian
 ERROR_CANT_ACCESS_FILE - The file cannot be accessed by the system.
@@ -17087,7 +17087,7 @@ Language=Russian
 ERROR_CANT_RESOLVE_FILENAME - The name of the file cannot be resolved by the system.
 .
 Language=Polish
-ERROR_CANT_RESOLVE_FILENAME - The name of the file cannot be resolved by the system.
+ERROR_CANT_RESOLVE_FILENAME - System nie może rozpoznać nazwy pliku.
 .
 Language=Romanian
 ERROR_CANT_RESOLVE_FILENAME - The name of the file cannot be resolved by the system.
@@ -17104,7 +17104,7 @@ Language=Russian
 RPC_S_ENTRY_TYPE_MISMATCH - The entry is not of the expected type.
 .
 Language=Polish
-RPC_S_ENTRY_TYPE_MISMATCH - The entry is not of the expected type.
+RPC_S_ENTRY_TYPE_MISMATCH - Wpis nie jest oczekiwanego typu.
 .
 Language=Romanian
 RPC_S_ENTRY_TYPE_MISMATCH - The entry is not of the expected type.
@@ -17121,7 +17121,7 @@ Language=Russian
 RPC_S_NOT_ALL_OBJS_EXPORTED - Not all object UUIDs could be exported to the specified entry.
 .
 Language=Polish
-RPC_S_NOT_ALL_OBJS_EXPORTED - Not all object UUIDs could be exported to the specified entry.
+RPC_S_NOT_ALL_OBJS_EXPORTED - Nie można wyeksportować niektórych identyfikatorów UUID obiektu do podanego wpisu.
 .
 Language=Romanian
 RPC_S_NOT_ALL_OBJS_EXPORTED - Not all object UUIDs could be exported to the specified entry.
@@ -17138,7 +17138,7 @@ Language=Russian
 RPC_S_INTERFACE_NOT_EXPORTED - Interface could not be exported to the specified entry.
 .
 Language=Polish
-RPC_S_INTERFACE_NOT_EXPORTED - Interface could not be exported to the specified entry.
+RPC_S_INTERFACE_NOT_EXPORTED - Nie można wyeksportować interfejsu do podanego wpisu..
 .
 Language=Romanian
 RPC_S_INTERFACE_NOT_EXPORTED - Interface could not be exported to the specified entry.
@@ -17155,7 +17155,7 @@ Language=Russian
 RPC_S_PROFILE_NOT_ADDED - The specified profile entry could not be added.
 .
 Language=Polish
-RPC_S_PROFILE_NOT_ADDED - The specified profile entry could not be added.
+RPC_S_PROFILE_NOT_ADDED - Nie można dodać podanego wpisu profilu.
 .
 Language=Romanian
 RPC_S_PROFILE_NOT_ADDED - The specified profile entry could not be added.
@@ -17172,7 +17172,7 @@ Language=Russian
 RPC_S_PRF_ELT_NOT_ADDED - The specified profile element could not be added.
 .
 Language=Polish
-RPC_S_PRF_ELT_NOT_ADDED - The specified profile element could not be added.
+RPC_S_PRF_ELT_NOT_ADDED - Nie można dodać podanego elementu profilu.
 .
 Language=Romanian
 RPC_S_PRF_ELT_NOT_ADDED - The specified profile element could not be added.
@@ -17189,7 +17189,7 @@ Language=Russian
 RPC_S_PRF_ELT_NOT_REMOVED - The specified profile element could not be removed.
 .
 Language=Polish
-RPC_S_PRF_ELT_NOT_REMOVED - The specified profile element could not be removed.
+RPC_S_PRF_ELT_NOT_REMOVED - Nie można usunąć podanego elementu profilu.
 .
 Language=Romanian
 RPC_S_PRF_ELT_NOT_REMOVED - The specified profile element could not be removed.
@@ -17206,7 +17206,7 @@ Language=Russian
 RPC_S_GRP_ELT_NOT_ADDED - The group element could not be added.
 .
 Language=Polish
-RPC_S_GRP_ELT_NOT_ADDED - The group element could not be added.
+RPC_S_GRP_ELT_NOT_ADDED - Nie można dodać elementu grupy.
 .
 Language=Romanian
 RPC_S_GRP_ELT_NOT_ADDED - The group element could not be added.
@@ -17223,7 +17223,7 @@ Language=Russian
 RPC_S_GRP_ELT_NOT_REMOVED - The group element could not be removed.
 .
 Language=Polish
-RPC_S_GRP_ELT_NOT_REMOVED - The group element could not be removed.
+RPC_S_GRP_ELT_NOT_REMOVED - Nie można usunąć elementu grupy.
 .
 Language=Romanian
 RPC_S_GRP_ELT_NOT_REMOVED - The group element could not be removed.
@@ -17240,7 +17240,7 @@ Language=Russian
 ERROR_KM_DRIVER_BLOCKED - The printer driver is not compatible with a policy enabled on your computer that blocks NT 4.0 drivers.
 .
 Language=Polish
-ERROR_KM_DRIVER_BLOCKED - The printer driver is not compatible with a policy enabled on your computer that blocks NT 4.0 drivers.
+ERROR_KM_DRIVER_BLOCKED - Sterownik drukarki jest niezgodny z włączonymi na danym komputerze zasadami, które blokują sterowniki systemu NT 4.0.
 .
 Language=Romanian
 ERROR_KM_DRIVER_BLOCKED - The printer driver is not compatible with a policy enabled on your computer that blocks NT 4.0 drivers.
@@ -17257,7 +17257,7 @@ Language=Russian
 ERROR_CONTEXT_EXPIRED - The context has expired and can no longer be used.
 .
 Language=Polish
-ERROR_CONTEXT_EXPIRED - The context has expired and can no longer be used.
+ERROR_CONTEXT_EXPIRED - Kontekst wygasł i nie może być już dłużej używany.
 .
 Language=Romanian
 ERROR_CONTEXT_EXPIRED - The context has expired and can no longer be used.
@@ -17274,7 +17274,7 @@ Language=Russian
 ERROR_PER_USER_TRUST_QUOTA_EXCEEDED - The current user's delegated trust creation quota has been exceeded.
 .
 Language=Polish
-ERROR_PER_USER_TRUST_QUOTA_EXCEEDED - The current user's delegated trust creation quota has been exceeded.
+ERROR_PER_USER_TRUST_QUOTA_EXCEEDED - Delegowany przydział tworzenia zaufania bieżącego użytkownika został przekroczony.
 .
 Language=Romanian
 ERROR_PER_USER_TRUST_QUOTA_EXCEEDED - The current user's delegated trust creation quota has been exceeded.
@@ -17291,7 +17291,7 @@ Language=Russian
 ERROR_ALL_USER_TRUST_QUOTA_EXCEEDED - The total delegated trust creation quota has been exceeded.
 .
 Language=Polish
-ERROR_ALL_USER_TRUST_QUOTA_EXCEEDED - The total delegated trust creation quota has been exceeded.
+ERROR_ALL_USER_TRUST_QUOTA_EXCEEDED - Całkowity delegowany przydział tworzenia zaufania został przekroczony.
 .
 Language=Romanian
 ERROR_ALL_USER_TRUST_QUOTA_EXCEEDED - The total delegated trust creation quota has been exceeded.
@@ -17308,7 +17308,7 @@ Language=Russian
 ERROR_USER_DELETE_TRUST_QUOTA_EXCEEDED - The current user's delegated trust deletion quota has been exceeded.
 .
 Language=Polish
-ERROR_USER_DELETE_TRUST_QUOTA_EXCEEDED - The current user's delegated trust deletion quota has been exceeded.
+ERROR_USER_DELETE_TRUST_QUOTA_EXCEEDED - Delegowany przydział usuwania zaufania bieżącego użytkownika został przekroczony.
 .
 Language=Romanian
 ERROR_USER_DELETE_TRUST_QUOTA_EXCEEDED - The current user's delegated trust deletion quota has been exceeded.
@@ -17325,7 +17325,7 @@ Language=Russian
 ERROR_INVALID_PIXEL_FORMAT - The pixel format is invalid.
 .
 Language=Polish
-ERROR_INVALID_PIXEL_FORMAT - The pixel format is invalid.
+ERROR_INVALID_PIXEL_FORMAT - Format piksela jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_PIXEL_FORMAT - The pixel format is invalid.
@@ -17342,7 +17342,7 @@ Language=Russian
 ERROR_BAD_DRIVER - The specified driver is invalid.
 .
 Language=Polish
-ERROR_BAD_DRIVER - The specified driver is invalid.
+ERROR_BAD_DRIVER - Określony sterownik jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_BAD_DRIVER - The specified driver is invalid.
@@ -17359,7 +17359,7 @@ Language=Russian
 ERROR_INVALID_WINDOW_STYLE - The window style or class attribute is invalid for this operation.
 .
 Language=Polish
-ERROR_INVALID_WINDOW_STYLE - The window style or class attribute is invalid for this operation.
+ERROR_INVALID_WINDOW_STYLE - Styl okna lub atrybut klasy jest nieodpowiedni dla tej operacji.
 .
 Language=Romanian
 ERROR_INVALID_WINDOW_STYLE - The window style or class attribute is invalid for this operation.
@@ -17376,7 +17376,7 @@ Language=Russian
 ERROR_METAFILE_NOT_SUPPORTED - The requested metafile operation is not supported.
 .
 Language=Polish
-ERROR_METAFILE_NOT_SUPPORTED - The requested metafile operation is not supported.
+ERROR_METAFILE_NOT_SUPPORTED - Żądana operacja metapliku nie jest obsługiwana.
 .
 Language=Romanian
 ERROR_METAFILE_NOT_SUPPORTED - The requested metafile operation is not supported.
@@ -17393,7 +17393,7 @@ Language=Russian
 ERROR_TRANSFORM_NOT_SUPPORTED - The requested transformation operation is not supported.
 .
 Language=Polish
-ERROR_TRANSFORM_NOT_SUPPORTED - The requested transformation operation is not supported.
+ERROR_TRANSFORM_NOT_SUPPORTED - Żądana operacja transformacji nie jest obsługiwana.
 .
 Language=Romanian
 ERROR_TRANSFORM_NOT_SUPPORTED - The requested transformation operation is not supported.
@@ -17410,7 +17410,7 @@ Language=Russian
 ERROR_CLIPPING_NOT_SUPPORTED - The requested clipping operation is not supported.
 .
 Language=Polish
-ERROR_CLIPPING_NOT_SUPPORTED - The requested clipping operation is not supported.
+ERROR_CLIPPING_NOT_SUPPORTED - Żądana operacja clipping nie jest obsługiwana.
 .
 Language=Romanian
 ERROR_CLIPPING_NOT_SUPPORTED - The requested clipping operation is not supported.
@@ -17427,7 +17427,7 @@ Language=Russian
 ERROR_INVALID_CMM - The specified color management module is invalid.
 .
 Language=Polish
-ERROR_INVALID_CMM - The specified color management module is invalid.
+ERROR_INVALID_CMM - Podany moduł zarządzania kolorami jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_CMM - The specified color management module is invalid.
@@ -17444,7 +17444,7 @@ Language=Russian
 ERROR_INVALID_PROFILE - The specified color profile is invalid.
 .
 Language=Polish
-ERROR_INVALID_PROFILE - The specified color profile is invalid.
+ERROR_INVALID_PROFILE - Podany profil kolorów jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_PROFILE - The specified color profile is invalid.
@@ -17461,7 +17461,7 @@ Language=Russian
 ERROR_TAG_NOT_FOUND - The specified tag was not found.
 .
 Language=Polish
-ERROR_TAG_NOT_FOUND - The specified tag was not found.
+ERROR_TAG_NOT_FOUND - Nie znaleziono podanej etykiety.
 .
 Language=Romanian
 ERROR_TAG_NOT_FOUND - The specified tag was not found.
@@ -17478,7 +17478,7 @@ Language=Russian
 ERROR_TAG_NOT_PRESENT - A required tag is not present.
 .
 Language=Polish
-ERROR_TAG_NOT_PRESENT - A required tag is not present.
+ERROR_TAG_NOT_PRESENT - Brakuje wymaganej etykiety.
 .
 Language=Romanian
 ERROR_TAG_NOT_PRESENT - A required tag is not present.
@@ -17495,7 +17495,7 @@ Language=Russian
 ERROR_DUPLICATE_TAG - The specified tag is already present.
 .
 Language=Polish
-ERROR_DUPLICATE_TAG - The specified tag is already present.
+ERROR_DUPLICATE_TAG - Podana etykieta już istnieje.
 .
 Language=Romanian
 ERROR_DUPLICATE_TAG - The specified tag is already present.
@@ -17512,7 +17512,7 @@ Language=Russian
 ERROR_PROFILE_NOT_ASSOCIATED_WITH_DEVICE - The specified color profile is not associated with any device.
 .
 Language=Polish
-ERROR_PROFILE_NOT_ASSOCIATED_WITH_DEVICE - The specified color profile is not associated with any device.
+ERROR_PROFILE_NOT_ASSOCIATED_WITH_DEVICE - Podany profil kolorów nie jest skojarzony z żadnym urządzeniem.
 .
 Language=Romanian
 ERROR_PROFILE_NOT_ASSOCIATED_WITH_DEVICE - The specified color profile is not associated with any device.
@@ -17529,7 +17529,7 @@ Language=Russian
 ERROR_PROFILE_NOT_FOUND - The specified color profile was not found.
 .
 Language=Polish
-ERROR_PROFILE_NOT_FOUND - The specified color profile was not found.
+ERROR_PROFILE_NOT_FOUND - Nie znaleziono podanego profilu kolorów.
 .
 Language=Romanian
 ERROR_PROFILE_NOT_FOUND - The specified color profile was not found.
@@ -17546,7 +17546,7 @@ Language=Russian
 ERROR_INVALID_COLORSPACE - The specified color space is invalid.
 .
 Language=Polish
-ERROR_INVALID_COLORSPACE - The specified color space is invalid.
+ERROR_INVALID_COLORSPACE - Podana przestrzeń kolorów jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_INVALID_COLORSPACE - The specified color space is invalid.
@@ -17563,7 +17563,7 @@ Language=Russian
 ERROR_ICM_NOT_ENABLED - Image Color Management is not enabled.
 .
 Language=Polish
-ERROR_ICM_NOT_ENABLED - Image Color Management is not enabled.
+ERROR_ICM_NOT_ENABLED - Zarządzanie kolorami obrazu nie jest włączone.
 .
 Language=Romanian
 ERROR_ICM_NOT_ENABLED - Image Color Management is not enabled.
@@ -17580,7 +17580,7 @@ Language=Russian
 ERROR_DELETING_ICM_XFORM - There was an error while deleting the color transform.
 .
 Language=Polish
-ERROR_DELETING_ICM_XFORM - There was an error while deleting the color transform.
+ERROR_DELETING_ICM_XFORM - Podczas usuwania transformacji koloru wystąpił błąd.
 .
 Language=Romanian
 ERROR_DELETING_ICM_XFORM - There was an error while deleting the color transform.
@@ -17597,7 +17597,7 @@ Language=Russian
 ERROR_INVALID_TRANSFORM - The specified color transform is invalid.
 .
 Language=Polish
-ERROR_INVALID_TRANSFORM - The specified color transform is invalid.
+ERROR_INVALID_TRANSFORM - Podana transformacja kolorów jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_INVALID_TRANSFORM - The specified color transform is invalid.
@@ -17614,7 +17614,7 @@ Language=Russian
 ERROR_COLORSPACE_MISMATCH - The specified transform does not match the bitmap's color space.
 .
 Language=Polish
-ERROR_COLORSPACE_MISMATCH - The specified transform does not match the bitmap's color space.
+ERROR_COLORSPACE_MISMATCH - Podana transformacja nie jest zgodna z przestrzenią kolorów mapy bitowej.
 .
 Language=Romanian
 ERROR_COLORSPACE_MISMATCH - The specified transform does not match the bitmap's color space.
@@ -17631,7 +17631,7 @@ Language=Russian
 ERROR_INVALID_COLORINDEX - The specified named color index is not present in the profile.
 .
 Language=Polish
-ERROR_INVALID_COLORINDEX - The specified named color index is not present in the profile.
+ERROR_INVALID_COLORINDEX - Podany indeks nazwanych kolorów nie występuje w profilu.
 .
 Language=Romanian
 ERROR_INVALID_COLORINDEX - The specified named color index is not present in the profile.
@@ -17648,7 +17648,7 @@ Language=Russian
 ERROR_CONNECTED_OTHER_PASSWORD - The network connection was made successfully, but the user had to be prompted for a password other than the one originally specified.
 .
 Language=Polish
-ERROR_CONNECTED_OTHER_PASSWORD - The network connection was made successfully, but the user had to be prompted for a password other than the one originally specified.
+ERROR_CONNECTED_OTHER_PASSWORD - Połączenie sieciowe zostało nawiązane, ale użytkownik był wezwany do podania hasła innego niż pierwotnie podane.
 .
 Language=Romanian
 ERROR_CONNECTED_OTHER_PASSWORD - The network connection was made successfully, but the user had to be prompted for a password other than the one originally specified.
@@ -17665,7 +17665,7 @@ Language=Russian
 ERROR_CONNECTED_OTHER_PASSWORD_DEFAULT - The network connection was made successfully using default credentials.
 .
 Language=Polish
-ERROR_CONNECTED_OTHER_PASSWORD_DEFAULT - The network connection was made successfully using default credentials.
+ERROR_CONNECTED_OTHER_PASSWORD_DEFAULT - Ustanowienie połączenia przy użyciu poświadczeń domyślnych powiodło się.
 .
 Language=Romanian
 ERROR_CONNECTED_OTHER_PASSWORD_DEFAULT - The network connection was made successfully using default credentials.
@@ -17682,7 +17682,7 @@ Language=Russian
 ERROR_BAD_USERNAME - The specified username is invalid.
 .
 Language=Polish
-ERROR_BAD_USERNAME - The specified username is invalid.
+ERROR_BAD_USERNAME - Określona nazwa użytkownika jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_BAD_USERNAME - The specified username is invalid.
@@ -17699,7 +17699,7 @@ Language=Russian
 ERROR_NOT_CONNECTED - This network connection does not exist.
 .
 Language=Polish
-ERROR_NOT_CONNECTED - This network connection does not exist.
+ERROR_NOT_CONNECTED - To połączenie sieciowe nie istnieje.
 .
 Language=Romanian
 ERROR_NOT_CONNECTED - This network connection does not exist.
@@ -17716,7 +17716,7 @@ Language=Russian
 ERROR_OPEN_FILES - This network connection has files open or requests pending.
 .
 Language=Polish
-ERROR_OPEN_FILES - This network connection has files open or requests pending.
+ERROR_OPEN_FILES - To połączenie sieciowe ma otwarte pliki lub aktywne żądania.
 .
 Language=Romanian
 ERROR_OPEN_FILES - This network connection has files open or requests pending.
@@ -17733,7 +17733,7 @@ Language=Russian
 ERROR_ACTIVE_CONNECTIONS - Active connections still exist.
 .
 Language=Polish
-ERROR_ACTIVE_CONNECTIONS - Active connections still exist.
+ERROR_ACTIVE_CONNECTIONS - Nadal istnieją aktywne połączenia.
 .
 Language=Romanian
 ERROR_ACTIVE_CONNECTIONS - Active connections still exist.
@@ -17750,7 +17750,7 @@ Language=Russian
 ERROR_DEVICE_IN_USE - The device is in use by an active process and cannot be disconnected.
 .
 Language=Polish
-ERROR_DEVICE_IN_USE - The device is in use by an active process and cannot be disconnected.
+ERROR_DEVICE_IN_USE - Urządzenie jest używane przez aktywny proces i nie można go odłączyć.
 .
 Language=Romanian
 ERROR_DEVICE_IN_USE - The device is in use by an active process and cannot be disconnected.
@@ -17767,7 +17767,7 @@ Language=Russian
 ERROR_UNKNOWN_PRINT_MONITOR - The specified print monitor is unknown.
 .
 Language=Polish
-ERROR_UNKNOWN_PRINT_MONITOR - The specified print monitor is unknown.
+ERROR_UNKNOWN_PRINT_MONITOR - Określony monitor wydruku jest nieznany.
 .
 Language=Romanian
 ERROR_UNKNOWN_PRINT_MONITOR - The specified print monitor is unknown.
@@ -17784,7 +17784,7 @@ Language=Russian
 ERROR_PRINTER_DRIVER_IN_USE - The specified printer driver is currently in use.
 .
 Language=Polish
-ERROR_PRINTER_DRIVER_IN_USE - The specified printer driver is currently in use.
+ERROR_PRINTER_DRIVER_IN_USE - Określony sterownik drukarki jest obecnie w użyciu.
 .
 Language=Romanian
 ERROR_PRINTER_DRIVER_IN_USE - The specified printer driver is currently in use.
@@ -17801,7 +17801,7 @@ Language=Russian
 ERROR_SPOOL_FILE_NOT_FOUND - The spool file was not found.
 .
 Language=Polish
-ERROR_SPOOL_FILE_NOT_FOUND - The spool file was not found.
+ERROR_SPOOL_FILE_NOT_FOUND - Nie znaleziono pliku buforowania.
 .
 Language=Romanian
 ERROR_SPOOL_FILE_NOT_FOUND - The spool file was not found.
@@ -17818,7 +17818,7 @@ Language=Russian
 ERROR_SPL_NO_STARTDOC - A StartDocPrinter call was not issued.
 .
 Language=Polish
-ERROR_SPL_NO_STARTDOC - A StartDocPrinter call was not issued.
+ERROR_SPL_NO_STARTDOC - Wywołanie StartDocPrinter nie zostało wysłane.
 .
 Language=Romanian
 ERROR_SPL_NO_STARTDOC - A StartDocPrinter call was not issued.
@@ -17835,7 +17835,7 @@ Language=Russian
 ERROR_SPL_NO_ADDJOB - An AddJob call was not issued.
 .
 Language=Polish
-ERROR_SPL_NO_ADDJOB - An AddJob call was not issued.
+ERROR_SPL_NO_ADDJOB - Wywołanie AddJob nie zostało wysłane.
 .
 Language=Romanian
 ERROR_SPL_NO_ADDJOB - An AddJob call was not issued.
@@ -17852,7 +17852,7 @@ Language=Russian
 ERROR_PRINT_PROCESSOR_ALREADY_INSTALLED - The specified print processor has already been installed.
 .
 Language=Polish
-ERROR_PRINT_PROCESSOR_ALREADY_INSTALLED - The specified print processor has already been installed.
+ERROR_PRINT_PROCESSOR_ALREADY_INSTALLED - Określony procesor wydruku jest już zainstalowany.
 .
 Language=Romanian
 ERROR_PRINT_PROCESSOR_ALREADY_INSTALLED - The specified print processor has already been installed.
@@ -17869,7 +17869,7 @@ Language=Russian
 ERROR_PRINT_MONITOR_ALREADY_INSTALLED - The specified print monitor has already been installed.
 .
 Language=Polish
-ERROR_PRINT_MONITOR_ALREADY_INSTALLED - The specified print monitor has already been installed.
+ERROR_PRINT_MONITOR_ALREADY_INSTALLED - Określony monitor wydruku jest już zainstalowany.
 .
 Language=Romanian
 ERROR_PRINT_MONITOR_ALREADY_INSTALLED - The specified print monitor has already been installed.
@@ -17886,7 +17886,7 @@ Language=Russian
 ERROR_INVALID_PRINT_MONITOR - The specified print monitor does not have the required functions.
 .
 Language=Polish
-ERROR_INVALID_PRINT_MONITOR - The specified print monitor does not have the required functions.
+ERROR_INVALID_PRINT_MONITOR - Określony monitor wydruku nie ma wymaganych funkcji.
 .
 Language=Romanian
 ERROR_INVALID_PRINT_MONITOR - The specified print monitor does not have the required functions.
@@ -17903,7 +17903,7 @@ Language=Russian
 ERROR_PRINT_MONITOR_IN_USE - The specified print monitor is currently in use.
 .
 Language=Polish
-ERROR_PRINT_MONITOR_IN_USE - The specified print monitor is currently in use.
+ERROR_PRINT_MONITOR_IN_USE - Określony monitor wydruku jest już w użyciu.
 .
 Language=Romanian
 ERROR_PRINT_MONITOR_IN_USE - The specified print monitor is currently in use.
@@ -17920,7 +17920,7 @@ Language=Russian
 ERROR_PRINTER_HAS_JOBS_QUEUED - The requested operation is not allowed when there are jobs queued to the printer.
 .
 Language=Polish
-ERROR_PRINTER_HAS_JOBS_QUEUED - The requested operation is not allowed when there are jobs queued to the printer.
+ERROR_PRINTER_HAS_JOBS_QUEUED - Żądana operacja nie jest dopuszczalna, gdy w kolejce drukarki znajdują się zadania.
 .
 Language=Romanian
 ERROR_PRINTER_HAS_JOBS_QUEUED - The requested operation is not allowed when there are jobs queued to the printer.
@@ -17937,7 +17937,7 @@ Language=Russian
 ERROR_SUCCESS_REBOOT_REQUIRED - The requested operation is successful. Changes will not be effective until the system is rebooted.
 .
 Language=Polish
-ERROR_SUCCESS_REBOOT_REQUIRED - The requested operation is successful. Changes will not be effective until the system is rebooted.
+ERROR_SUCCESS_REBOOT_REQUIRED - Żądana operacja powiodła się. Zmiany nie odniosą skutku aż do ponownego uruchomienia systemu.
 .
 Language=Romanian
 ERROR_SUCCESS_REBOOT_REQUIRED - The requested operation is successful. Changes will not be effective until the system is rebooted.
@@ -17954,7 +17954,7 @@ Language=Russian
 ERROR_SUCCESS_RESTART_REQUIRED - The requested operation is successful. Changes will not be effective until the service is restarted.
 .
 Language=Polish
-ERROR_SUCCESS_RESTART_REQUIRED - The requested operation is successful. Changes will not be effective until the service is restarted.
+ERROR_SUCCESS_RESTART_REQUIRED - Żądana operacja powiodła się. Zmiany nie odniosą skutku aż do ponownego uruchomienia usługi.
 .
 Language=Romanian
 ERROR_SUCCESS_RESTART_REQUIRED - The requested operation is successful. Changes will not be effective until the service is restarted.
@@ -17971,7 +17971,7 @@ Language=Russian
 ERROR_PRINTER_NOT_FOUND - No printers were found.
 .
 Language=Polish
-ERROR_PRINTER_NOT_FOUND - No printers were found.
+ERROR_PRINTER_NOT_FOUND - Nie znaleziono żadnych drukarek.
 .
 Language=Romanian
 ERROR_PRINTER_NOT_FOUND - No printers were found.
@@ -17988,7 +17988,7 @@ Language=Russian
 ERROR_PRINTER_DRIVER_WARNED - The printer driver is known to be unreliable.
 .
 Language=Polish
-ERROR_PRINTER_DRIVER_WARNED - The printer driver is known to be unreliable.
+ERROR_PRINTER_DRIVER_WARNED - Sterownik drukarki jest znany jako zawodny.
 .
 Language=Romanian
 ERROR_PRINTER_DRIVER_WARNED - The printer driver is known to be unreliable.
@@ -18005,7 +18005,7 @@ Language=Russian
 ERROR_PRINTER_DRIVER_BLOCKED - The printer driver is known to harm the system.
 .
 Language=Polish
-ERROR_PRINTER_DRIVER_BLOCKED - The printer driver is known to harm the system.
+ERROR_PRINTER_DRIVER_BLOCKED - Sterownik drukarki jest znany jako szkodliwy dla systemu.
 .
 Language=Romanian
 ERROR_PRINTER_DRIVER_BLOCKED - The printer driver is known to harm the system.
@@ -18022,7 +18022,7 @@ Language=Russian
 ERROR_XML_UNDEFINED_ENTITY - The XML contains an entity reference to an undefined entity.
 .
 Language=Polish
-ERROR_XML_UNDEFINED_ENTITY - The XML contains an entity reference to an undefined entity.
+ERROR_XML_UNDEFINED_ENTITY - Kod XML zawiera odwołanie do niezdefiniowanej encji.
 .
 Language=Romanian
 ERROR_XML_UNDEFINED_ENTITY - The XML contains an entity reference to an undefined entity.
@@ -18039,7 +18039,7 @@ Language=Russian
 ERROR_XML_MALFORMED_ENTITY - The XML contains a malformed entity reference.
 .
 Language=Polish
-ERROR_XML_MALFORMED_ENTITY - The XML contains a malformed entity reference.
+ERROR_XML_MALFORMED_ENTITY - Kod XML zawiera nieprawidłowe odwołanie do encji.
 .
 Language=Romanian
 ERROR_XML_MALFORMED_ENTITY - The XML contains a malformed entity reference.
@@ -18056,7 +18056,7 @@ Language=Russian
 ERROR_XML_CHAR_NOT_IN_RANGE - The XML contains a character which is not permitted in XML.
 .
 Language=Polish
-ERROR_XML_CHAR_NOT_IN_RANGE - The XML contains a character which is not permitted in XML.
+ERROR_XML_CHAR_NOT_IN_RANGE - Kod XML zawiera znak, który nie jest dozwolony w języku w XML.
 .
 Language=Romanian
 ERROR_XML_CHAR_NOT_IN_RANGE - The XML contains a character which is not permitted in XML.
@@ -18073,7 +18073,7 @@ Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_EXTERNAL_PROXY - The manifest contained a duplicate definition for external proxy stub %1 at (%1:%2,%3)
 .
 Language=Polish
-ERROR_PCM_COMPILER_DUPLICATE_EXTERNAL_PROXY - The manifest contained a duplicate definition for external proxy stub %1 at (%1:%2,%3)
+ERROR_PCM_COMPILER_DUPLICATE_EXTERNAL_PROXY - Manifest zawiera zduplikowaną definicję dla zewnętrznej procedury wejścia obiektu proxy %1 w (%1:%2,%3)
 .
 Language=Romanian
 ERROR_PCM_COMPILER_DUPLICATE_EXTERNAL_PROXY - The manifest contained a duplicate definition for external proxy stub %1 at (%1:%2,%3)
@@ -18090,7 +18090,7 @@ Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_ASSEMBLY_REFERENCE - The manifest already contains a reference to %4 - a second reference was found at (%1:%2,%3)
 .
 Language=Polish
-ERROR_PCM_COMPILER_DUPLICATE_ASSEMBLY_REFERENCE - The manifest already contains a reference to %4 - a second reference was found at (%1:%2,%3)
+ERROR_PCM_COMPILER_DUPLICATE_ASSEMBLY_REFERENCE - Manifest zawiera już odwołanie do %4 - drugie odwołanie odnaleziono w (%1:%2,%3)
 .
 Language=Romanian
 ERROR_PCM_COMPILER_DUPLICATE_ASSEMBLY_REFERENCE - The manifest already contains a reference to %4 - a second reference was found at (%1:%2,%3)
@@ -18107,7 +18107,7 @@ Language=Russian
 ERROR_PCM_COMPILER_INVALID_ASSEMBLY_REFERENCE - The assembly reference at (%1:%2,%3) is invalid.
 .
 Language=Polish
-ERROR_PCM_COMPILER_INVALID_ASSEMBLY_REFERENCE - The assembly reference at (%1:%2,%3) is invalid.
+ERROR_PCM_COMPILER_INVALID_ASSEMBLY_REFERENCE - Nieprawidłowe odwołanie do zestawu w (%1:%2,%3).
 .
 Language=Romanian
 ERROR_PCM_COMPILER_INVALID_ASSEMBLY_REFERENCE - The assembly reference at (%1:%2,%3) is invalid.
@@ -18124,7 +18124,7 @@ Language=Russian
 ERROR_PCM_COMPILER_INVALID_ASSEMBLY_DEFINITION - The assembly definition at (%1:%2,%3) is invalid.
 .
 Language=Polish
-ERROR_PCM_COMPILER_INVALID_ASSEMBLY_DEFINITION - The assembly definition at (%1:%2,%3) is invalid.
+ERROR_PCM_COMPILER_INVALID_ASSEMBLY_DEFINITION - Nieprawidłowa definicja zestawu w (%1:%2,%3).
 .
 Language=Romanian
 ERROR_PCM_COMPILER_INVALID_ASSEMBLY_DEFINITION - The assembly definition at (%1:%2,%3) is invalid.
@@ -18141,7 +18141,7 @@ Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_WINDOW_CLASS - The manifest already contained the window class %4, found a second declaration at (%1:%2,%3)
 .
 Language=Polish
-ERROR_PCM_COMPILER_DUPLICATE_WINDOW_CLASS - The manifest already contained the window class %4, found a second declaration at (%1:%2,%3)
+ERROR_PCM_COMPILER_DUPLICATE_WINDOW_CLASS - Manifest zawiera już klasę okna %4, drugą deklarację odnaleziono w (%1:%2,%3).
 .
 Language=Romanian
 ERROR_PCM_COMPILER_DUPLICATE_WINDOW_CLASS - The manifest already contained the window class %4, found a second declaration at (%1:%2,%3)
@@ -18158,7 +18158,7 @@ Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_PROGID - The manifest already declared the progId %4, found a second declaration at (%1:%2,%3)
 .
 Language=Polish
-ERROR_PCM_COMPILER_DUPLICATE_PROGID - The manifest already declared the progId %4, found a second declaration at (%1:%2,%3)
+ERROR_PCM_COMPILER_DUPLICATE_PROGID - Manifest już zadeklarował identyfikator progId %4, drugą deklarację odnaleziono w (%1:%2,%3)
 .
 Language=Romanian
 ERROR_PCM_COMPILER_DUPLICATE_PROGID - The manifest already declared the progId %4, found a second declaration at (%1:%2,%3)
@@ -18175,7 +18175,7 @@ Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_NOINHERIT - Only one noInherit tag may be present in a manifest, found a second tag at (%1:%2,%3)
 .
 Language=Polish
-ERROR_PCM_COMPILER_DUPLICATE_NOINHERIT - Only one noInherit tag may be present in a manifest, found a second tag at (%1:%2,%3)
+ERROR_PCM_COMPILER_DUPLICATE_NOINHERIT - W manifeście może występować tylko jeden tag noInherit, drugi tag odnaleziono w (%1:%2,%3)
 .
 Language=Romanian
 ERROR_PCM_COMPILER_DUPLICATE_NOINHERIT - Only one noInherit tag may be present in a manifest, found a second tag at (%1:%2,%3)
@@ -18192,7 +18192,7 @@ Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_NOINHERITABLE - Only one noInheritable tag may be present in a manifest, found a second tag at (%1:%2,%3)
 .
 Language=Polish
-ERROR_PCM_COMPILER_DUPLICATE_NOINHERITABLE - Only one noInheritable tag may be present in a manifest, found a second tag at (%1:%2,%3)
+ERROR_PCM_COMPILER_DUPLICATE_NOINHERITABLE - W manifeście może występować tylko jeden tag noInheritable, drugi tag odnaleziono w (%1:%2,%3)
 .
 Language=Romanian
 ERROR_PCM_COMPILER_DUPLICATE_NOINHERITABLE - Only one noInheritable tag may be present in a manifest, found a second tag at (%1:%2,%3)
@@ -18209,7 +18209,7 @@ Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_COM_CLASS - The manifest contained a duplicate declaration of COM class %4 at (%1:%2,%3)
 .
 Language=Polish
-ERROR_PCM_COMPILER_DUPLICATE_COM_CLASS - The manifest contained a duplicate declaration of COM class %4 at (%1:%2,%3)
+ERROR_PCM_COMPILER_DUPLICATE_COM_CLASS - Manifest zawiera zduplikowaną deklarację klasy COM %4 w (%1:%2,%3)
 .
 Language=Romanian
 ERROR_PCM_COMPILER_DUPLICATE_COM_CLASS - The manifest contained a duplicate declaration of COM class %4 at (%1:%2,%3)
@@ -18226,7 +18226,7 @@ Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_FILE_NAME - The manifest already declared the file %4, a second definition was found at (%1:%2,%3)
 .
 Language=Polish
-ERROR_PCM_COMPILER_DUPLICATE_FILE_NAME - The manifest already declared the file %4, a second definition was found at (%1:%2,%3)
+ERROR_PCM_COMPILER_DUPLICATE_FILE_NAME - Manifest już zadeklarował plik %4, drugą definicję odnaleziono w (%1:%2,%3)
 .
 Language=Romanian
 ERROR_PCM_COMPILER_DUPLICATE_FILE_NAME - The manifest already declared the file %4, a second definition was found at (%1:%2,%3)
@@ -18430,7 +18430,7 @@ Language=Russian
 ERROR_WINS_INTERNAL - WINS encountered an error while processing the command.
 .
 Language=Polish
-ERROR_WINS_INTERNAL - WINS encountered an error while processing the command.
+ERROR_WINS_INTERNAL - WINS napotkał na błąd podczas przetwarzania polecenia.
 .
 Language=Romanian
 ERROR_WINS_INTERNAL - WINS encountered an error while processing the command.
@@ -18447,7 +18447,7 @@ Language=Russian
 ERROR_CAN_NOT_DEL_LOCAL_WINS - The local WINS cannot be deleted.
 .
 Language=Polish
-ERROR_CAN_NOT_DEL_LOCAL_WINS - The local WINS cannot be deleted.
+ERROR_CAN_NOT_DEL_LOCAL_WINS - Lokalny WINS nie może być usunięty.
 .
 Language=Romanian
 ERROR_CAN_NOT_DEL_LOCAL_WINS - The local WINS cannot be deleted.
@@ -18464,7 +18464,7 @@ Language=Russian
 ERROR_STATIC_INIT - The importation from the file failed.
 .
 Language=Polish
-ERROR_STATIC_INIT - The importation from the file failed.
+ERROR_STATIC_INIT - Importowanie z pliku nie powiodło się.
 .
 Language=Romanian
 ERROR_STATIC_INIT - The importation from the file failed.
@@ -18481,7 +18481,7 @@ Language=Russian
 ERROR_INC_BACKUP - The backup failed. Was a full backup done before?
 .
 Language=Polish
-ERROR_INC_BACKUP - The backup failed. Was a full backup done before?
+ERROR_INC_BACKUP - Wykonanie kopii zapasowej nie powiodło się. Czy wcześniej wykonywano pełną kopię zapasową?
 .
 Language=Romanian
 ERROR_INC_BACKUP - The backup failed. Was a full backup done before?
@@ -18498,7 +18498,7 @@ Language=Russian
 ERROR_FULL_BACKUP - The backup failed. Check the directory to which you are backing the database.
 .
 Language=Polish
-ERROR_FULL_BACKUP - The backup failed. Check the directory to which you are backing the database.
+ERROR_FULL_BACKUP - Wykonanie kopii zapasowej nie powiodło się. Sprawdź katalog, do którego jest wykonywana kopia zapasowa bazy danych.
 .
 Language=Romanian
 ERROR_FULL_BACKUP - The backup failed. Check the directory to which you are backing the database.
@@ -18515,7 +18515,7 @@ Language=Russian
 ERROR_REC_NON_EXISTENT - The name does not exist in the WINS database.
 .
 Language=Polish
-ERROR_REC_NON_EXISTENT - The name does not exist in the WINS database.
+ERROR_REC_NON_EXISTENT - Nazwa nie istnieje w bazie danych WINS.
 .
 Language=Romanian
 ERROR_REC_NON_EXISTENT - The name does not exist in the WINS database.
@@ -18532,7 +18532,7 @@ Language=Russian
 ERROR_RPL_NOT_ALLOWED - Replication with a nonconfigured partner is not allowed.
 .
 Language=Polish
-ERROR_RPL_NOT_ALLOWED - Replication with a nonconfigured partner is not allowed.
+ERROR_RPL_NOT_ALLOWED - Replikowanie z nie skonfigurowanym partnerem jest niedozwolone.
 .
 Language=Romanian
 ERROR_RPL_NOT_ALLOWED - Replication with a nonconfigured partner is not allowed.
@@ -18549,7 +18549,7 @@ Language=Russian
 ERROR_DHCP_ADDRESS_CONFLICT - The DHCP client has obtained an IP address that is already in use on the network. The local interface will be disabled until the DHCP client can obtain a new address.
 .
 Language=Polish
-ERROR_DHCP_ADDRESS_CONFLICT - The DHCP client has obtained an IP address that is already in use on the network. The local interface will be disabled until the DHCP client can obtain a new address.
+ERROR_DHCP_ADDRESS_CONFLICT - Klient DHCP otrzymał adres IP, który jest już używany w sieci. Lokalny interfejs zostanie wyłączony do chwili, gdy klient otrzyma nowy adres.
 .
 Language=Romanian
 ERROR_DHCP_ADDRESS_CONFLICT - The DHCP client has obtained an IP address that is already in use on the network. The local interface will be disabled until the DHCP client can obtain a new address.
@@ -18566,7 +18566,7 @@ Language=Russian
 ERROR_WMI_GUID_NOT_FOUND - The GUID passed was not recognized as valid by a WMI data provider.
 .
 Language=Polish
-ERROR_WMI_GUID_NOT_FOUND - The GUID passed was not recognized as valid by a WMI data provider.
+ERROR_WMI_GUID_NOT_FOUND - Przekazany identyfikator GUID nie został uznany przez dostawcę danych WMI za prawidłowy.
 .
 Language=Romanian
 ERROR_WMI_GUID_NOT_FOUND - The GUID passed was not recognized as valid by a WMI data provider.
@@ -18583,7 +18583,7 @@ Language=Russian
 ERROR_WMI_INSTANCE_NOT_FOUND - The instance name passed was not recognized as valid by a WMI data provider.
 .
 Language=Polish
-ERROR_WMI_INSTANCE_NOT_FOUND - The instance name passed was not recognized as valid by a WMI data provider.
+ERROR_WMI_INSTANCE_NOT_FOUND - Przekazana nazwa wystąpienia nie została uznana przez dostawcę danych WMI za prawidłową.
 .
 Language=Romanian
 ERROR_WMI_INSTANCE_NOT_FOUND - The instance name passed was not recognized as valid by a WMI data provider.
@@ -18600,7 +18600,7 @@ Language=Russian
 ERROR_WMI_ITEMID_NOT_FOUND - The data item ID passed was not recognized as valid by a WMI data provider.
 .
 Language=Polish
-ERROR_WMI_ITEMID_NOT_FOUND - The data item ID passed was not recognized as valid by a WMI data provider.
+ERROR_WMI_ITEMID_NOT_FOUND - Przekazany identyfikator elementu danych nie został uznany przez dostawcę danych WMI za prawidłowy.
 .
 Language=Romanian
 ERROR_WMI_ITEMID_NOT_FOUND - The data item ID passed was not recognized as valid by a WMI data provider.
@@ -18617,7 +18617,7 @@ Language=Russian
 ERROR_WMI_TRY_AGAIN - The WMI request could not be completed and should be retried.
 .
 Language=Polish
-ERROR_WMI_TRY_AGAIN - The WMI request could not be completed and should be retried.
+ERROR_WMI_TRY_AGAIN - Nie można ukończyć żądania WMI; należy je powtórzyć.
 .
 Language=Romanian
 ERROR_WMI_TRY_AGAIN - The WMI request could not be completed and should be retried.
@@ -18634,7 +18634,7 @@ Language=Russian
 ERROR_WMI_DP_NOT_FOUND - The WMI data provider could not be located.
 .
 Language=Polish
-ERROR_WMI_DP_NOT_FOUND - The WMI data provider could not be located.
+ERROR_WMI_DP_NOT_FOUND - Nie można zlokalizować dostawcy danych WMI.
 .
 Language=Romanian
 ERROR_WMI_DP_NOT_FOUND - The WMI data provider could not be located.
@@ -18651,7 +18651,7 @@ Language=Russian
 ERROR_WMI_UNRESOLVED_INSTANCE_REF - The WMI data provider references an instance set that has not been registered.
 .
 Language=Polish
-ERROR_WMI_UNRESOLVED_INSTANCE_REF - The WMI data provider references an instance set that has not been registered.
+ERROR_WMI_UNRESOLVED_INSTANCE_REF - Dostawca danych WMI odwołuje się do zestawu wystąpień, który nie został zarejestrowany.
 .
 Language=Romanian
 ERROR_WMI_UNRESOLVED_INSTANCE_REF - The WMI data provider references an instance set that has not been registered.
@@ -18668,7 +18668,7 @@ Language=Russian
 ERROR_WMI_ALREADY_ENABLED - The WMI data block or event notification has already been enabled.
 .
 Language=Polish
-ERROR_WMI_ALREADY_ENABLED - The WMI data block or event notification has already been enabled.
+ERROR_WMI_ALREADY_ENABLED - Blok danych WMI lub powiadamianie o zdarzeniach WMI jest już włączone.
 .
 Language=Romanian
 ERROR_WMI_ALREADY_ENABLED - The WMI data block or event notification has already been enabled.
@@ -18685,7 +18685,7 @@ Language=Russian
 ERROR_WMI_GUID_DISCONNECTED - The WMI data block is no longer available.
 .
 Language=Polish
-ERROR_WMI_GUID_DISCONNECTED - The WMI data block is no longer available.
+ERROR_WMI_GUID_DISCONNECTED - Blok danych WMI nie jest już dostępny.
 .
 Language=Romanian
 ERROR_WMI_GUID_DISCONNECTED - The WMI data block is no longer available.
@@ -18702,7 +18702,7 @@ Language=Russian
 ERROR_WMI_SERVER_UNAVAILABLE - The WMI data service is not available.
 .
 Language=Polish
-ERROR_WMI_SERVER_UNAVAILABLE - The WMI data service is not available.
+ERROR_WMI_SERVER_UNAVAILABLE - Usługa danych WMI nie jest dostępna.
 .
 Language=Romanian
 ERROR_WMI_SERVER_UNAVAILABLE - The WMI data service is not available.
@@ -18719,7 +18719,7 @@ Language=Russian
 ERROR_WMI_DP_FAILED - The WMI data provider failed to carry out the request.
 .
 Language=Polish
-ERROR_WMI_DP_FAILED - The WMI data provider failed to carry out the request.
+ERROR_WMI_DP_FAILED - Dostawca danych WMI nie może spełnić żądania.
 .
 Language=Romanian
 ERROR_WMI_DP_FAILED - The WMI data provider failed to carry out the request.
@@ -18736,7 +18736,7 @@ Language=Russian
 ERROR_WMI_INVALID_MOF - The WMI MOF information is not valid.
 .
 Language=Polish
-ERROR_WMI_INVALID_MOF - The WMI MOF information is not valid.
+ERROR_WMI_INVALID_MOF - Informacje WMI MOF są nieprawidłowe.
 .
 Language=Romanian
 ERROR_WMI_INVALID_MOF - The WMI MOF information is not valid.
@@ -18753,7 +18753,7 @@ Language=Russian
 ERROR_WMI_INVALID_REGINFO - The WMI registration information is not valid.
 .
 Language=Polish
-ERROR_WMI_INVALID_REGINFO - The WMI registration information is not valid.
+ERROR_WMI_INVALID_REGINFO - Informacje rejestracyjne WMI są nieprawidłowe.
 .
 Language=Romanian
 ERROR_WMI_INVALID_REGINFO - The WMI registration information is not valid.
@@ -18770,7 +18770,7 @@ Language=Russian
 ERROR_WMI_ALREADY_DISABLED - The WMI data block or event notification has already been disabled.
 .
 Language=Polish
-ERROR_WMI_ALREADY_DISABLED - The WMI data block or event notification has already been disabled.
+ERROR_WMI_ALREADY_DISABLED - Blok danych WMI lub powiadamianie o zdarzeniach WMI jest już wyłączone.
 .
 Language=Romanian
 ERROR_WMI_ALREADY_DISABLED - The WMI data block or event notification has already been disabled.
@@ -18787,7 +18787,7 @@ Language=Russian
 ERROR_WMI_READ_ONLY - The WMI data item or data block is read only.
 .
 Language=Polish
-ERROR_WMI_READ_ONLY - The WMI data item or data block is read only.
+ERROR_WMI_READ_ONLY - Element danych WMI lub blok danych są tylko do odczytu.
 .
 Language=Romanian
 ERROR_WMI_READ_ONLY - The WMI data item or data block is read only.
@@ -18804,7 +18804,7 @@ Language=Russian
 ERROR_WMI_SET_FAILURE - The WMI data item or data block could not be changed.
 .
 Language=Polish
-ERROR_WMI_SET_FAILURE - The WMI data item or data block could not be changed.
+ERROR_WMI_SET_FAILURE - Nie można zmienić elementu danych WMI lub bloku danych.
 .
 Language=Romanian
 ERROR_WMI_SET_FAILURE - The WMI data item or data block could not be changed.
@@ -18821,7 +18821,7 @@ Language=Russian
 ERROR_INVALID_MEDIA - The media identifier does not represent a valid medium.
 .
 Language=Polish
-ERROR_INVALID_MEDIA - The media identifier does not represent a valid medium.
+ERROR_INVALID_MEDIA - Identyfikator nośnika nie reprezentuje prawidłowej oczyszczarki.
 .
 Language=Romanian
 ERROR_INVALID_MEDIA - The media identifier does not represent a valid medium.
@@ -18838,7 +18838,7 @@ Language=Russian
 ERROR_INVALID_LIBRARY - The library identifier does not represent a valid library.
 .
 Language=Polish
-ERROR_INVALID_LIBRARY - The library identifier does not represent a valid library.
+ERROR_INVALID_LIBRARY - Identyfikator biblioteki nie reprezentuje prawidłowej biblioteki.
 .
 Language=Romanian
 ERROR_INVALID_LIBRARY - The library identifier does not represent a valid library.
@@ -18855,7 +18855,7 @@ Language=Russian
 ERROR_INVALID_MEDIA_POOL - The media pool identifier does not represent a valid media pool.
 .
 Language=Polish
-ERROR_INVALID_MEDIA_POOL - The media pool identifier does not represent a valid media pool.
+ERROR_INVALID_MEDIA_POOL - Identyfikator zestawu nośników nie reprezentuje prawidłowej puli nośników.
 .
 Language=Romanian
 ERROR_INVALID_MEDIA_POOL - The media pool identifier does not represent a valid media pool.
@@ -18872,7 +18872,7 @@ Language=Russian
 ERROR_DRIVE_MEDIA_MISMATCH - The drive and medium are not compatible or exist in different libraries.
 .
 Language=Polish
-ERROR_DRIVE_MEDIA_MISMATCH - The drive and medium are not compatible or exist in different libraries.
+ERROR_DRIVE_MEDIA_MISMATCH - Stacja i nośnik nie są zgodne lub znajdują się w innych bibliotekach.
 .
 Language=Romanian
 ERROR_DRIVE_MEDIA_MISMATCH - The drive and medium are not compatible or exist in different libraries.
@@ -18889,7 +18889,7 @@ Language=Russian
 ERROR_MEDIA_OFFLINE - The medium currently exists in an offline library and must be online to perform this operation.
 .
 Language=Polish
-ERROR_MEDIA_OFFLINE - The medium currently exists in an offline library and must be online to perform this operation.
+ERROR_MEDIA_OFFLINE - Nośnik znajduje się obecnie w bibliotece będącej w trybie offline. Aby ta operacja została wykonana, ta biblioteka musi być w trybie online.
 .
 Language=Romanian
 ERROR_MEDIA_OFFLINE - The medium currently exists in an offline library and must be online to perform this operation.
@@ -18906,7 +18906,7 @@ Language=Russian
 ERROR_LIBRARY_OFFLINE - The operation cannot be performed on an offline library.
 .
 Language=Polish
-ERROR_LIBRARY_OFFLINE - The operation cannot be performed on an offline library.
+ERROR_LIBRARY_OFFLINE - Nie można wykonać operacji na bibliotece będącej w trybie offline.
 .
 Language=Romanian
 ERROR_LIBRARY_OFFLINE - The operation cannot be performed on an offline library.
@@ -18923,7 +18923,7 @@ Language=Russian
 ERROR_EMPTY - The library, drive, or media pool is empty.
 .
 Language=Polish
-ERROR_EMPTY - The library, drive, or media pool is empty.
+ERROR_EMPTY - Biblioteka, stacja dysków lub pula nośników są puste.
 .
 Language=Romanian
 ERROR_EMPTY - The library, drive, or media pool is empty.
@@ -18940,7 +18940,7 @@ Language=Russian
 ERROR_NOT_EMPTY - The library, drive, or media pool must be empty to perform this operation.
 .
 Language=Polish
-ERROR_NOT_EMPTY - The library, drive, or media pool must be empty to perform this operation.
+ERROR_NOT_EMPTY - Biblioteka, stacja dysków lub pula nośników muszą być puste, aby można było wykonać tę operację.
 .
 Language=Romanian
 ERROR_NOT_EMPTY - The library, drive, or media pool must be empty to perform this operation.
@@ -18957,7 +18957,7 @@ Language=Russian
 ERROR_MEDIA_UNAVAILABLE - No media is currently available in this media pool or library.
 .
 Language=Polish
-ERROR_MEDIA_UNAVAILABLE - No media is currently available in this media pool or library.
+ERROR_MEDIA_UNAVAILABLE - Żaden nośnik nie jest obecnie dostępny w tej puli nośników lub w bibliotece.
 .
 Language=Romanian
 ERROR_MEDIA_UNAVAILABLE - No media is currently available in this media pool or library.
@@ -18974,7 +18974,7 @@ Language=Russian
 ERROR_RESOURCE_DISABLED - A resource required for this operation is disabled.
 .
 Language=Polish
-ERROR_RESOURCE_DISABLED - A resource required for this operation is disabled.
+ERROR_RESOURCE_DISABLED - Zasób wymagany dla tej operacji jest wyłączony.
 .
 Language=Romanian
 ERROR_RESOURCE_DISABLED - A resource required for this operation is disabled.
@@ -18991,7 +18991,7 @@ Language=Russian
 ERROR_INVALID_CLEANER - The media identifier does not represent a valid cleaner.
 .
 Language=Polish
-ERROR_INVALID_CLEANER - The media identifier does not represent a valid cleaner.
+ERROR_INVALID_CLEANER - Identyfikator nośnika nie reprezentuje prawidłowego nośnika czyszczącego.
 .
 Language=Romanian
 ERROR_INVALID_CLEANER - The media identifier does not represent a valid cleaner.
@@ -19008,7 +19008,7 @@ Language=Russian
 ERROR_UNABLE_TO_CLEAN - The drive cannot be cleaned or does not support cleaning.
 .
 Language=Polish
-ERROR_UNABLE_TO_CLEAN - The drive cannot be cleaned or does not support cleaning.
+ERROR_UNABLE_TO_CLEAN - Nie można oczyścić stacji lub nie obsługuje ona funkcji czyszczenia.
 .
 Language=Romanian
 ERROR_UNABLE_TO_CLEAN - The drive cannot be cleaned or does not support cleaning.
@@ -19025,7 +19025,7 @@ Language=Russian
 ERROR_OBJECT_NOT_FOUND - The object identifier does not represent a valid object.
 .
 Language=Polish
-ERROR_OBJECT_NOT_FOUND - The object identifier does not represent a valid object.
+ERROR_OBJECT_NOT_FOUND - Identyfikator obiektu nie reprezentuje prawidłowego obiektu.
 .
 Language=Romanian
 ERROR_OBJECT_NOT_FOUND - The object identifier does not represent a valid object.
@@ -19042,7 +19042,7 @@ Language=Russian
 ERROR_DATABASE_FAILURE - Unable to read from or write to the database.
 .
 Language=Polish
-ERROR_DATABASE_FAILURE - Unable to read from or write to the database.
+ERROR_DATABASE_FAILURE - Nie można odczytać z bazy danych lub do niej zapisać.
 .
 Language=Romanian
 ERROR_DATABASE_FAILURE - Unable to read from or write to the database.
@@ -19059,7 +19059,7 @@ Language=Russian
 ERROR_DATABASE_FULL - The database is full.
 .
 Language=Polish
-ERROR_DATABASE_FULL - The database is full.
+ERROR_DATABASE_FULL - Baza danych jest zapełniona.
 .
 Language=Romanian
 ERROR_DATABASE_FULL - The database is full.
@@ -19076,7 +19076,7 @@ Language=Russian
 ERROR_MEDIA_INCOMPATIBLE - The medium is not compatible with the device or media pool.
 .
 Language=Polish
-ERROR_MEDIA_INCOMPATIBLE - The medium is not compatible with the device or media pool.
+ERROR_MEDIA_INCOMPATIBLE - Nośnik nie jest zgodny z urządzeniem lub pulą nośników.
 .
 Language=Romanian
 ERROR_MEDIA_INCOMPATIBLE - The medium is not compatible with the device or media pool.
@@ -19093,7 +19093,7 @@ Language=Russian
 ERROR_RESOURCE_NOT_PRESENT - The resource required for this operation does not exist.
 .
 Language=Polish
-ERROR_RESOURCE_NOT_PRESENT - The resource required for this operation does not exist.
+ERROR_RESOURCE_NOT_PRESENT - Wymagany dla tej operacji zasób nie istnieje.
 .
 Language=Romanian
 ERROR_RESOURCE_NOT_PRESENT - The resource required for this operation does not exist.
@@ -19110,7 +19110,7 @@ Language=Russian
 ERROR_INVALID_OPERATION - The operation identifier is not valid.
 .
 Language=Polish
-ERROR_INVALID_OPERATION - The operation identifier is not valid.
+ERROR_INVALID_OPERATION - Identyfikator operacji jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_INVALID_OPERATION - The operation identifier is not valid.
@@ -19127,7 +19127,7 @@ Language=Russian
 ERROR_MEDIA_NOT_AVAILABLE - The media is not mounted or ready for use.
 .
 Language=Polish
-ERROR_MEDIA_NOT_AVAILABLE - The media is not mounted or ready for use.
+ERROR_MEDIA_NOT_AVAILABLE - Nośnik nie jest zainstalowany lub nie jest gotowy do użycia.
 .
 Language=Romanian
 ERROR_MEDIA_NOT_AVAILABLE - The media is not mounted or ready for use.
@@ -19144,7 +19144,7 @@ Language=Russian
 ERROR_DEVICE_NOT_AVAILABLE - The device is not ready for use.
 .
 Language=Polish
-ERROR_DEVICE_NOT_AVAILABLE - The device is not ready for use.
+ERROR_DEVICE_NOT_AVAILABLE - Urządzenie nie jest gotowe do użycia.
 .
 Language=Romanian
 ERROR_DEVICE_NOT_AVAILABLE - The device is not ready for use.
@@ -19161,7 +19161,7 @@ Language=Russian
 ERROR_REQUEST_REFUSED - The operator or administrator has refused the request.
 .
 Language=Polish
-ERROR_REQUEST_REFUSED - The operator or administrator has refused the request.
+ERROR_REQUEST_REFUSED - Operator lub administrator odrzucił żądanie.
 .
 Language=Romanian
 ERROR_REQUEST_REFUSED - The operator or administrator has refused the request.
@@ -19178,7 +19178,7 @@ Language=Russian
 ERROR_INVALID_DRIVE_OBJECT - The drive identifier does not represent a valid drive.
 .
 Language=Polish
-ERROR_INVALID_DRIVE_OBJECT - The drive identifier does not represent a valid drive.
+ERROR_INVALID_DRIVE_OBJECT - Identyfikator stacji nie reprezentuje prawidłowej stacji.
 .
 Language=Romanian
 ERROR_INVALID_DRIVE_OBJECT - The drive identifier does not represent a valid drive.
@@ -19195,7 +19195,7 @@ Language=Russian
 ERROR_LIBRARY_FULL - Library is full. No slot is available for use.
 .
 Language=Polish
-ERROR_LIBRARY_FULL - Library is full. No slot is available for use.
+ERROR_LIBRARY_FULL - Biblioteka jest zapełniona. Nie ma żadnego wolnego gniazda do użycia.
 .
 Language=Romanian
 ERROR_LIBRARY_FULL - Library is full. No slot is available for use.
@@ -19212,7 +19212,7 @@ Language=Russian
 ERROR_MEDIUM_NOT_ACCESSIBLE - The transport cannot access the medium.
 .
 Language=Polish
-ERROR_MEDIUM_NOT_ACCESSIBLE - The transport cannot access the medium.
+ERROR_MEDIUM_NOT_ACCESSIBLE - Transport nie może uzyskać dostępu do nośnika.
 .
 Language=Romanian
 ERROR_MEDIUM_NOT_ACCESSIBLE - The transport cannot access the medium.
@@ -19229,7 +19229,7 @@ Language=Russian
 ERROR_UNABLE_TO_LOAD_MEDIUM - Unable to load the medium into the drive.
 .
 Language=Polish
-ERROR_UNABLE_TO_LOAD_MEDIUM - Unable to load the medium into the drive.
+ERROR_UNABLE_TO_LOAD_MEDIUM - Nie można włożyć nośnika do stacji.
 .
 Language=Romanian
 ERROR_UNABLE_TO_LOAD_MEDIUM - Unable to load the medium into the drive.
@@ -19246,7 +19246,7 @@ Language=Russian
 ERROR_UNABLE_TO_INVENTORY_DRIVE - Unable to retrieve status about the drive.
 .
 Language=Polish
-ERROR_UNABLE_TO_INVENTORY_DRIVE - Unable to retrieve status about the drive.
+ERROR_UNABLE_TO_INVENTORY_DRIVE - Nie można pobrać danych o stanie stacji.
 .
 Language=Romanian
 ERROR_UNABLE_TO_INVENTORY_DRIVE - Unable to retrieve status about the drive.
@@ -19263,7 +19263,7 @@ Language=Russian
 ERROR_UNABLE_TO_INVENTORY_SLOT - Unable to retrieve status about the slot.
 .
 Language=Polish
-ERROR_UNABLE_TO_INVENTORY_SLOT - Unable to retrieve status about the slot.
+ERROR_UNABLE_TO_INVENTORY_SLOT - Nie można pobrać danych o stanie gniazda.
 .
 Language=Romanian
 ERROR_UNABLE_TO_INVENTORY_SLOT - Unable to retrieve status about the slot.
@@ -19280,7 +19280,7 @@ Language=Russian
 ERROR_UNABLE_TO_INVENTORY_TRANSPORT - Unable to retrieve status about the transport.
 .
 Language=Polish
-ERROR_UNABLE_TO_INVENTORY_TRANSPORT - Unable to retrieve status about the transport.
+ERROR_UNABLE_TO_INVENTORY_TRANSPORT - Nie można pobrać danych o stanie transportu.
 .
 Language=Romanian
 ERROR_UNABLE_TO_INVENTORY_TRANSPORT - Unable to retrieve status about the transport.
@@ -19297,7 +19297,7 @@ Language=Russian
 ERROR_TRANSPORT_FULL - Cannot use the transport because it is already in use.
 .
 Language=Polish
-ERROR_TRANSPORT_FULL - Cannot use the transport because it is already in use.
+ERROR_TRANSPORT_FULL - Nie można użyć transportu, ponieważ jest już używany.
 .
 Language=Romanian
 ERROR_TRANSPORT_FULL - Cannot use the transport because it is already in use.
@@ -19314,7 +19314,7 @@ Language=Russian
 ERROR_CONTROLLING_IEPORT - Unable to open or close the inject/eject port.
 .
 Language=Polish
-ERROR_CONTROLLING_IEPORT - Unable to open or close the inject/eject port.
+ERROR_CONTROLLING_IEPORT - Nie można otworzyć lub zamknąć portu wsuwania/wysuwania.
 .
 Language=Romanian
 ERROR_CONTROLLING_IEPORT - Unable to open or close the inject/eject port.
@@ -19331,7 +19331,7 @@ Language=Russian
 ERROR_UNABLE_TO_EJECT_MOUNTED_MEDIA - Unable to eject the media because it is in a drive.
 .
 Language=Polish
-ERROR_UNABLE_TO_EJECT_MOUNTED_MEDIA - Unable to eject the media because it is in a drive.
+ERROR_UNABLE_TO_EJECT_MOUNTED_MEDIA - Nie można wsunąć nośnika, ponieważ jest w stacji.
 .
 Language=Romanian
 ERROR_UNABLE_TO_EJECT_MOUNTED_MEDIA - Unable to eject the media because it is in a drive.
@@ -19348,7 +19348,7 @@ Language=Russian
 ERROR_CLEANER_SLOT_SET - A cleaner slot is already reserved.
 .
 Language=Polish
-ERROR_CLEANER_SLOT_SET - A cleaner slot is already reserved.
+ERROR_CLEANER_SLOT_SET - Gniazdo oczyszczarki jest już zarezerwowane.
 .
 Language=Romanian
 ERROR_CLEANER_SLOT_SET - A cleaner slot is already reserved.
@@ -19365,7 +19365,7 @@ Language=Russian
 ERROR_CLEANER_SLOT_NOT_SET - A cleaner slot is not reserved.
 .
 Language=Polish
-ERROR_CLEANER_SLOT_NOT_SET - A cleaner slot is not reserved.
+ERROR_CLEANER_SLOT_NOT_SET - Gniazdo oczyszczarki nie jest zarezerwowane.
 .
 Language=Romanian
 ERROR_CLEANER_SLOT_NOT_SET - A cleaner slot is not reserved.
@@ -19382,7 +19382,7 @@ Language=Russian
 ERROR_CLEANER_CARTRIDGE_SPENT - The cleaner cartridge has performed the maximum number of drive cleanings.
 .
 Language=Polish
-ERROR_CLEANER_CARTRIDGE_SPENT - The cleaner cartridge has performed the maximum number of drive cleanings.
+ERROR_CLEANER_CARTRIDGE_SPENT - Kaseta czyszcząca wykonała maksymalną liczbę operacji czyszczenia.
 .
 Language=Romanian
 ERROR_CLEANER_CARTRIDGE_SPENT - The cleaner cartridge has performed the maximum number of drive cleanings.
@@ -19399,7 +19399,7 @@ Language=Russian
 ERROR_UNEXPECTED_OMID - Unexpected on-medium identifier.
 .
 Language=Polish
-ERROR_UNEXPECTED_OMID - Unexpected on-medium identifier.
+ERROR_UNEXPECTED_OMID - Nieoczekiwany identyfikator nośnika.
 .
 Language=Romanian
 ERROR_UNEXPECTED_OMID - Unexpected on-medium identifier.
@@ -19416,7 +19416,7 @@ Language=Russian
 ERROR_CANT_DELETE_LAST_ITEM - The last remaining item in this group or resource cannot be deleted.
 .
 Language=Polish
-ERROR_CANT_DELETE_LAST_ITEM - The last remaining item in this group or resource cannot be deleted.
+ERROR_CANT_DELETE_LAST_ITEM - Nie można usunąć ostatniego pozostałego elementu z tej grupy lub nie można usunąć ostatniego pozostałego zasobu.
 .
 Language=Romanian
 ERROR_CANT_DELETE_LAST_ITEM - The last remaining item in this group or resource cannot be deleted.
@@ -19433,7 +19433,7 @@ Language=Russian
 ERROR_MESSAGE_EXCEEDS_MAX_SIZE - The message provided exceeds the maximum size allowed for this parameter.
 .
 Language=Polish
-ERROR_MESSAGE_EXCEEDS_MAX_SIZE - The message provided exceeds the maximum size allowed for this parameter.
+ERROR_MESSAGE_EXCEEDS_MAX_SIZE - Dostarczony komunikat przekracza maksymalny rozmiar dozwolony dla tego parametru.
 .
 Language=Romanian
 ERROR_MESSAGE_EXCEEDS_MAX_SIZE - The message provided exceeds the maximum size allowed for this parameter.
@@ -19450,7 +19450,7 @@ Language=Russian
 ERROR_VOLUME_CONTAINS_SYS_FILES - The volume contains system or paging files.
 .
 Language=Polish
-ERROR_VOLUME_CONTAINS_SYS_FILES - The volume contains system or paging files.
+ERROR_VOLUME_CONTAINS_SYS_FILES - Wolumin zawiera pliki systemowe lub pliki stronicowania.
 .
 Language=Romanian
 ERROR_VOLUME_CONTAINS_SYS_FILES - The volume contains system or paging files.
@@ -19467,7 +19467,7 @@ Language=Russian
 ERROR_INDIGENOUS_TYPE - The media type cannot be removed from this library since at least one drive in the library reports it can support this media type.
 .
 Language=Polish
-ERROR_INDIGENOUS_TYPE - The media type cannot be removed from this library since at least one drive in the library reports it can support this media type.
+ERROR_INDIGENOUS_TYPE - Nie można usunąć tego typu nośnika z tej biblioteki, ponieważ co najmniej jedna stacja z tej biblioteki sygnalizuje, że obsługuje ten typ nośnika.
 .
 Language=Romanian
 ERROR_INDIGENOUS_TYPE - The media type cannot be removed from this library since at least one drive in the library reports it can support this media type.
@@ -19484,7 +19484,7 @@ Language=Russian
 ERROR_NO_SUPPORTING_DRIVES - This offline media cannot be mounted on this system since no enabled drives are present which can be used.
 .
 Language=Polish
-ERROR_NO_SUPPORTING_DRIVES - This offline media cannot be mounted on this system since no enabled drives are present which can be used.
+ERROR_NO_SUPPORTING_DRIVES - Nośnik pracujący w trybie offline nie może być zainstalowany w tym systemie, ponieważ nie są włączone żadne stacje, których można by użyć.
 .
 Language=Romanian
 ERROR_NO_SUPPORTING_DRIVES - This offline media cannot be mounted on this system since no enabled drives are present which can be used.
@@ -19501,7 +19501,7 @@ Language=Russian
 ERROR_CLEANER_CARTRIDGE_INSTALLED - A cleaner cartridge is present in the tape library.
 .
 Language=Polish
-ERROR_CLEANER_CARTRIDGE_INSTALLED - A cleaner cartridge is present in the tape library.
+ERROR_CLEANER_CARTRIDGE_INSTALLED - Kaseta czyszcząca znajduje się w bibliotece taśm.
 .
 Language=Romanian
 ERROR_CLEANER_CARTRIDGE_INSTALLED - A cleaner cartridge is present in the tape library.
@@ -19535,7 +19535,7 @@ Language=Russian
 ERROR_REMOTE_STORAGE_NOT_ACTIVE - The remote storage service is not operational at this time.
 .
 Language=Polish
-ERROR_REMOTE_STORAGE_NOT_ACTIVE - The remote storage service is not operational at this time.
+ERROR_REMOTE_STORAGE_NOT_ACTIVE - Usługa Magazyn zdalny teraz nie działa.
 .
 Language=Romanian
 ERROR_REMOTE_STORAGE_NOT_ACTIVE - The remote storage service is not operational at this time.
@@ -19552,7 +19552,7 @@ Language=Russian
 ERROR_REMOTE_STORAGE_MEDIA_ERROR - The remote storage service encountered a media error.
 .
 Language=Polish
-ERROR_REMOTE_STORAGE_MEDIA_ERROR - The remote storage service encountered a media error.
+ERROR_REMOTE_STORAGE_MEDIA_ERROR - Usługa Magazyn zdalny napotkała błąd nośnika.
 .
 Language=Romanian
 ERROR_REMOTE_STORAGE_MEDIA_ERROR - The remote storage service encountered a media error.
@@ -19569,7 +19569,7 @@ Language=Russian
 ERROR_NOT_A_REPARSE_POINT - The file or directory is not a reparse point.
 .
 Language=Polish
-ERROR_NOT_A_REPARSE_POINT - The file or directory is not a reparse point.
+ERROR_NOT_A_REPARSE_POINT - Plik lub katalog nie jest punktem ponownej analizy.
 .
 Language=Romanian
 ERROR_NOT_A_REPARSE_POINT - The file or directory is not a reparse point.
@@ -19586,7 +19586,7 @@ Language=Russian
 ERROR_REPARSE_ATTRIBUTE_CONFLICT - The reparse point attribute cannot be set because it conflicts with an existing attribute.
 .
 Language=Polish
-ERROR_REPARSE_ATTRIBUTE_CONFLICT - The reparse point attribute cannot be set because it conflicts with an existing attribute.
+ERROR_REPARSE_ATTRIBUTE_CONFLICT - Nie można ustawić atrybutu punktu ponownej analizy, ponieważ wchodzi w konflikt z istniejącym atrybutem.
 .
 Language=Romanian
 ERROR_REPARSE_ATTRIBUTE_CONFLICT - The reparse point attribute cannot be set because it conflicts with an existing attribute.
@@ -19603,7 +19603,7 @@ Language=Russian
 ERROR_INVALID_REPARSE_DATA - The data present in the reparse point buffer is invalid.
 .
 Language=Polish
-ERROR_INVALID_REPARSE_DATA - The data present in the reparse point buffer is invalid.
+ERROR_INVALID_REPARSE_DATA - Dane występujące w buforze punktu ponownej analizy są nieprawidłowe.
 .
 Language=Romanian
 ERROR_INVALID_REPARSE_DATA - The data present in the reparse point buffer is invalid.
@@ -19620,7 +19620,7 @@ Language=Russian
 ERROR_REPARSE_TAG_INVALID - The tag present in the reparse point buffer is invalid.
 .
 Language=Polish
-ERROR_REPARSE_TAG_INVALID - The tag present in the reparse point buffer is invalid.
+ERROR_REPARSE_TAG_INVALID - Etykieta występująca w buforze punktu ponownej analizy jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_REPARSE_TAG_INVALID - The tag present in the reparse point buffer is invalid.
@@ -19637,7 +19637,7 @@ Language=Russian
 ERROR_REPARSE_TAG_MISMATCH - There is a mismatch between the tag specified in the request and the tag present in the reparse point.
 .
 Language=Polish
-ERROR_REPARSE_TAG_MISMATCH - There is a mismatch between the tag specified in the request and the tag present in the reparse point.
+ERROR_REPARSE_TAG_MISMATCH - Istnieje niezgodność między etykietą podaną w żądaniu, a etykietą występującą w punkcie ponownej analizy.
 .
 Language=Romanian
 ERROR_REPARSE_TAG_MISMATCH - There is a mismatch between the tag specified in the request and the tag present in the reparse point.
@@ -19654,7 +19654,7 @@ Language=Russian
 ERROR_VOLUME_NOT_SIS_ENABLED - Single Instance Storage is not available on this volume.
 .
 Language=Polish
-ERROR_VOLUME_NOT_SIS_ENABLED - Single Instance Storage is not available on this volume.
+ERROR_VOLUME_NOT_SIS_ENABLED - Wolumin ten nie może być woluminem typu SIS (Single Instance Storage).
 .
 Language=Romanian
 ERROR_VOLUME_NOT_SIS_ENABLED - Single Instance Storage is not available on this volume.
@@ -19688,7 +19688,7 @@ Language=Russian
 ERROR_DEPENDENCY_NOT_FOUND - The cluster resource dependency cannot be found.
 .
 Language=Polish
-ERROR_DEPENDENCY_NOT_FOUND - The cluster resource dependency cannot be found.
+ERROR_DEPENDENCY_NOT_FOUND - Nie można znaleźć zależności zasobów klastra.
 .
 Language=Romanian
 ERROR_DEPENDENCY_NOT_FOUND - The cluster resource dependency cannot be found.
@@ -19705,7 +19705,7 @@ Language=Russian
 ERROR_DEPENDENCY_ALREADY_EXISTS - The cluster resource cannot be made dependent on the specified resource because it is already dependent.
 .
 Language=Polish
-ERROR_DEPENDENCY_ALREADY_EXISTS - The cluster resource cannot be made dependent on the specified resource because it is already dependent.
+ERROR_DEPENDENCY_ALREADY_EXISTS - Nie można uczynić zasobu klastra zależnym od podanego zasobu, ponieważ jest on już zależny.
 .
 Language=Romanian
 ERROR_DEPENDENCY_ALREADY_EXISTS - The cluster resource cannot be made dependent on the specified resource because it is already dependent.
@@ -19722,7 +19722,7 @@ Language=Russian
 ERROR_RESOURCE_NOT_ONLINE - The cluster resource is not online.
 .
 Language=Polish
-ERROR_RESOURCE_NOT_ONLINE - The cluster resource is not online.
+ERROR_RESOURCE_NOT_ONLINE - Zasób klastra nie jest w trybie online.
 .
 Language=Romanian
 ERROR_RESOURCE_NOT_ONLINE - The cluster resource is not online.
@@ -19739,7 +19739,7 @@ Language=Russian
 ERROR_HOST_NODE_NOT_AVAILABLE - A cluster node is not available for this operation.
 .
 Language=Polish
-ERROR_HOST_NODE_NOT_AVAILABLE - A cluster node is not available for this operation.
+ERROR_HOST_NODE_NOT_AVAILABLE - Węzeł klastra nie jest dostępny dla tej operacji.
 .
 Language=Romanian
 ERROR_HOST_NODE_NOT_AVAILABLE - A cluster node is not available for this operation.
@@ -19756,7 +19756,7 @@ Language=Russian
 ERROR_RESOURCE_NOT_AVAILABLE - The cluster resource is not available.
 .
 Language=Polish
-ERROR_RESOURCE_NOT_AVAILABLE - The cluster resource is not available.
+ERROR_RESOURCE_NOT_AVAILABLE - Zasób klastra nie jest dostępny.
 .
 Language=Romanian
 ERROR_RESOURCE_NOT_AVAILABLE - The cluster resource is not available.
@@ -19773,7 +19773,7 @@ Language=Russian
 ERROR_RESOURCE_NOT_FOUND - The cluster resource could not be found.
 .
 Language=Polish
-ERROR_RESOURCE_NOT_FOUND - The cluster resource could not be found.
+ERROR_RESOURCE_NOT_FOUND - Nie można znaleźć zasobu klastra.
 .
 Language=Romanian
 ERROR_RESOURCE_NOT_FOUND - The cluster resource could not be found.
@@ -19790,7 +19790,7 @@ Language=Russian
 ERROR_SHUTDOWN_CLUSTER - The cluster is being shut down.
 .
 Language=Polish
-ERROR_SHUTDOWN_CLUSTER - The cluster is being shut down.
+ERROR_SHUTDOWN_CLUSTER - Trwa zamykanie klastra.
 .
 Language=Romanian
 ERROR_SHUTDOWN_CLUSTER - The cluster is being shut down.
@@ -19807,7 +19807,7 @@ Language=Russian
 ERROR_CANT_EVICT_ACTIVE_NODE - A cluster node cannot be evicted from the cluster unless the node is down.
 .
 Language=Polish
-ERROR_CANT_EVICT_ACTIVE_NODE - A cluster node cannot be evicted from the cluster unless the node is down.
+ERROR_CANT_EVICT_ACTIVE_NODE - Węzła klastra nie można wykluczyć z klastra, chyba że węzeł nie działa.
 .
 Language=Romanian
 ERROR_CANT_EVICT_ACTIVE_NODE - A cluster node cannot be evicted from the cluster unless the node is down.
@@ -19824,7 +19824,7 @@ Language=Russian
 ERROR_OBJECT_ALREADY_EXISTS - The object already exists.
 .
 Language=Polish
-ERROR_OBJECT_ALREADY_EXISTS - The object already exists.
+ERROR_OBJECT_ALREADY_EXISTS - Obiekt już istnieje.
 .
 Language=Romanian
 ERROR_OBJECT_ALREADY_EXISTS - The object already exists.
@@ -19841,7 +19841,7 @@ Language=Russian
 ERROR_OBJECT_IN_LIST - The object is already in the list.
 .
 Language=Polish
-ERROR_OBJECT_IN_LIST - The object is already in the list.
+ERROR_OBJECT_IN_LIST - Obiekt już występuje na liście.
 .
 Language=Romanian
 ERROR_OBJECT_IN_LIST - The object is already in the list.
@@ -19858,7 +19858,7 @@ Language=Russian
 ERROR_GROUP_NOT_AVAILABLE - The cluster group is not available for any new requests.
 .
 Language=Polish
-ERROR_GROUP_NOT_AVAILABLE - The cluster group is not available for any new requests.
+ERROR_GROUP_NOT_AVAILABLE - Grupa klastrów nie jest dostępna dla żadnych nowych żądań.
 .
 Language=Romanian
 ERROR_GROUP_NOT_AVAILABLE - The cluster group is not available for any new requests.
@@ -19875,7 +19875,7 @@ Language=Russian
 ERROR_GROUP_NOT_FOUND - The cluster group could not be found.
 .
 Language=Polish
-ERROR_GROUP_NOT_FOUND - The cluster group could not be found.
+ERROR_GROUP_NOT_FOUND - Nie można znaleźć grupy klastrów.
 .
 Language=Romanian
 ERROR_GROUP_NOT_FOUND - The cluster group could not be found.
@@ -19892,7 +19892,7 @@ Language=Russian
 ERROR_GROUP_NOT_ONLINE - The operation could not be completed because the cluster group is not online.
 .
 Language=Polish
-ERROR_GROUP_NOT_ONLINE - The operation could not be completed because the cluster group is not online.
+ERROR_GROUP_NOT_ONLINE - Nie można ukończyć operacji, ponieważ grupa klastrów nie pracuje w trybie online.
 .
 Language=Romanian
 ERROR_GROUP_NOT_ONLINE - The operation could not be completed because the cluster group is not online.
@@ -19909,7 +19909,7 @@ Language=Russian
 ERROR_HOST_NODE_NOT_RESOURCE_OWNER - The cluster node is not the owner of the resource.
 .
 Language=Polish
-ERROR_HOST_NODE_NOT_RESOURCE_OWNER - The cluster node is not the owner of the resource.
+ERROR_HOST_NODE_NOT_RESOURCE_OWNER - Określony węzeł klastra nie jest właścicielem zasobu.
 .
 Language=Romanian
 ERROR_HOST_NODE_NOT_RESOURCE_OWNER - The cluster node is not the owner of the resource.
@@ -19926,7 +19926,7 @@ Language=Russian
 ERROR_HOST_NODE_NOT_GROUP_OWNER - The cluster node is not the owner of the group.
 .
 Language=Polish
-ERROR_HOST_NODE_NOT_GROUP_OWNER - The cluster node is not the owner of the group.
+ERROR_HOST_NODE_NOT_GROUP_OWNER - Określony węzeł klastra nie jest właścicielem zasobu.
 .
 Language=Romanian
 ERROR_HOST_NODE_NOT_GROUP_OWNER - The cluster node is not the owner of the group.
@@ -19943,7 +19943,7 @@ Language=Russian
 ERROR_RESMON_CREATE_FAILED - The cluster resource could not be created in the specified resource monitor.
 .
 Language=Polish
-ERROR_RESMON_CREATE_FAILED - The cluster resource could not be created in the specified resource monitor.
+ERROR_RESMON_CREATE_FAILED - Nie można utworzyć zasobu klastra za pomocą podanego monitora zasobów.
 .
 Language=Romanian
 ERROR_RESMON_CREATE_FAILED - The cluster resource could not be created in the specified resource monitor.
@@ -19960,7 +19960,7 @@ Language=Russian
 ERROR_RESMON_ONLINE_FAILED - The cluster resource could not be brought online by the resource monitor.
 .
 Language=Polish
-ERROR_RESMON_ONLINE_FAILED - The cluster resource could not be brought online by the resource monitor.
+ERROR_RESMON_ONLINE_FAILED - Nie można przełączyć zasobu klastra do trybu online za pomocą monitora zasobów.
 .
 Language=Romanian
 ERROR_RESMON_ONLINE_FAILED - The cluster resource could not be brought online by the resource monitor.
@@ -19977,7 +19977,7 @@ Language=Russian
 ERROR_RESOURCE_ONLINE - The operation could not be completed because the cluster resource is online.
 .
 Language=Polish
-ERROR_RESOURCE_ONLINE - The operation could not be completed because the cluster resource is online.
+ERROR_RESOURCE_ONLINE - Nie można ukończyć operacji, ponieważ zasób klastra jest w trybie online.
 .
 Language=Romanian
 ERROR_RESOURCE_ONLINE - The operation could not be completed because the cluster resource is online.
@@ -19994,7 +19994,7 @@ Language=Russian
 ERROR_QUORUM_RESOURCE - The cluster resource could not be deleted or brought offline because it is the quorum resource.
 .
 Language=Polish
-ERROR_QUORUM_RESOURCE - The cluster resource could not be deleted or brought offline because it is the quorum resource.
+ERROR_QUORUM_RESOURCE - Nie można usunąć zasobu klastra ani przełączyć go do trybu offline, ponieważ jest to zasób kworum.
 .
 Language=Romanian
 ERROR_QUORUM_RESOURCE - The cluster resource could not be deleted or brought offline because it is the quorum resource.
@@ -20011,7 +20011,7 @@ Language=Russian
 ERROR_NOT_QUORUM_CAPABLE - The cluster could not make the specified resource a quorum resource because it is not capable of being a quorum resource.
 .
 Language=Polish
-ERROR_NOT_QUORUM_CAPABLE - The cluster could not make the specified resource a quorum resource because it is not capable of being a quorum resource.
+ERROR_NOT_QUORUM_CAPABLE - Klaster nie może uczynić podanego zasobu zasobem kworum, ponieważ nie ma on możliwości bycia nim.
 .
 Language=Romanian
 ERROR_NOT_QUORUM_CAPABLE - The cluster could not make the specified resource a quorum resource because it is not capable of being a quorum resource.
@@ -20028,7 +20028,7 @@ Language=Russian
 ERROR_CLUSTER_SHUTTING_DOWN - The cluster software is shutting down.
 .
 Language=Polish
-ERROR_CLUSTER_SHUTTING_DOWN - The cluster software is shutting down.
+ERROR_CLUSTER_SHUTTING_DOWN - Trwa zamykanie oprogramowania klastra.
 .
 Language=Romanian
 ERROR_CLUSTER_SHUTTING_DOWN - The cluster software is shutting down.
@@ -20045,7 +20045,7 @@ Language=Russian
 ERROR_INVALID_STATE - The group or resource is not in the correct state to perform the requested operation.
 .
 Language=Polish
-ERROR_INVALID_STATE - The group or resource is not in the correct state to perform the requested operation.
+ERROR_INVALID_STATE - Grupa lub zasób nie jest w odpowiednim stanie, aby można było wykonać żądaną operację.
 .
 Language=Romanian
 ERROR_INVALID_STATE - The group or resource is not in the correct state to perform the requested operation.
@@ -20062,7 +20062,7 @@ Language=Russian
 ERROR_RESOURCE_PROPERTIES_STORED - The properties were stored but not all changes will take effect until the next time the resource is brought online.
 .
 Language=Polish
-ERROR_RESOURCE_PROPERTIES_STORED - The properties were stored but not all changes will take effect until the next time the resource is brought online.
+ERROR_RESOURCE_PROPERTIES_STORED - Właściwości zostały zapisane, lecz niektóre zmiany zostaną wprowadzone dopiero wtedy, gdy zasób zostanie ponownie przełączony do trybu online.
 .
 Language=Romanian
 ERROR_RESOURCE_PROPERTIES_STORED - The properties were stored but not all changes will take effect until the next time the resource is brought online.
@@ -20079,7 +20079,7 @@ Language=Russian
 ERROR_NOT_QUORUM_CLASS - The cluster could not make the specified resource a quorum resource because it does not belong to a shared storage class.
 .
 Language=Polish
-ERROR_NOT_QUORUM_CLASS - The cluster could not make the specified resource a quorum resource because it does not belong to a shared storage class.
+ERROR_NOT_QUORUM_CLASS - Klaster nie może uczynić podanego zasobu zasobem kworum, ponieważ nie należy on do współdzielonej klasy magazynów.
 .
 Language=Romanian
 ERROR_NOT_QUORUM_CLASS - The cluster could not make the specified resource a quorum resource because it does not belong to a shared storage class.
@@ -20096,7 +20096,7 @@ Language=Russian
 ERROR_CORE_RESOURCE - The cluster resource could not be deleted since it is a core resource.
 .
 Language=Polish
-ERROR_CORE_RESOURCE - The cluster resource could not be deleted since it is a core resource.
+ERROR_CORE_RESOURCE - Nie można usunąć zasobu klastra, ponieważ jest to zasób główny.
 .
 Language=Romanian
 ERROR_CORE_RESOURCE - The cluster resource could not be deleted since it is a core resource.
@@ -20113,7 +20113,7 @@ Language=Russian
 ERROR_QUORUM_RESOURCE_ONLINE_FAILED - The quorum resource failed to come online.
 .
 Language=Polish
-ERROR_QUORUM_RESOURCE_ONLINE_FAILED - The quorum resource failed to come online.
+ERROR_QUORUM_RESOURCE_ONLINE_FAILED - Nie udało się przełączyć zasobu kworum do trybu online.
 .
 Language=Romanian
 ERROR_QUORUM_RESOURCE_ONLINE_FAILED - The quorum resource failed to come online.
@@ -20130,7 +20130,7 @@ Language=Russian
 ERROR_QUORUMLOG_OPEN_FAILED - The quorum log could not be created or mounted successfully.
 .
 Language=Polish
-ERROR_QUORUMLOG_OPEN_FAILED - The quorum log could not be created or mounted successfully.
+ERROR_QUORUMLOG_OPEN_FAILED - Nie można utworzyć lub pomyślnie zainstalować dziennika kworum.
 .
 Language=Romanian
 ERROR_QUORUMLOG_OPEN_FAILED - The quorum log could not be created or mounted successfully.
@@ -20147,7 +20147,7 @@ Language=Russian
 ERROR_CLUSTERLOG_CORRUPT - The cluster log is corrupt.
 .
 Language=Polish
-ERROR_CLUSTERLOG_CORRUPT - The cluster log is corrupt.
+ERROR_CLUSTERLOG_CORRUPT - Dziennik klastrów jest uszkodzony.
 .
 Language=Romanian
 ERROR_CLUSTERLOG_CORRUPT - The cluster log is corrupt.
@@ -20164,7 +20164,7 @@ Language=Russian
 ERROR_CLUSTERLOG_RECORD_EXCEEDS_MAXSIZE - The record could not be written to the cluster log since it exceeds the maximum size.
 .
 Language=Polish
-ERROR_CLUSTERLOG_RECORD_EXCEEDS_MAXSIZE - The record could not be written to the cluster log since it exceeds the maximum size.
+ERROR_CLUSTERLOG_RECORD_EXCEEDS_MAXSIZE - Nie można zapisać rekordu do dziennika klastrów, ponieważ wielkość rekordu przekracza maksymalny rozmiar.
 .
 Language=Romanian
 ERROR_CLUSTERLOG_RECORD_EXCEEDS_MAXSIZE - The record could not be written to the cluster log since it exceeds the maximum size.
@@ -20181,7 +20181,7 @@ Language=Russian
 ERROR_CLUSTERLOG_EXCEEDS_MAXSIZE - The cluster log exceeds its maximum size.
 .
 Language=Polish
-ERROR_CLUSTERLOG_EXCEEDS_MAXSIZE - The cluster log exceeds its maximum size.
+ERROR_CLUSTERLOG_EXCEEDS_MAXSIZE - Dziennik klastrów przekracza maksymalny rozmiar.
 .
 Language=Romanian
 ERROR_CLUSTERLOG_EXCEEDS_MAXSIZE - The cluster log exceeds its maximum size.
@@ -20198,7 +20198,7 @@ Language=Russian
 ERROR_CLUSTERLOG_CHKPOINT_NOT_FOUND - No checkpoint record was found in the cluster log.
 .
 Language=Polish
-ERROR_CLUSTERLOG_CHKPOINT_NOT_FOUND - No checkpoint record was found in the cluster log.
+ERROR_CLUSTERLOG_CHKPOINT_NOT_FOUND - W dzienniku klastrów nie znaleziono żadnego rekordu punktu kontrolnego.
 .
 Language=Romanian
 ERROR_CLUSTERLOG_CHKPOINT_NOT_FOUND - No checkpoint record was found in the cluster log.
@@ -20215,7 +20215,7 @@ Language=Russian
 ERROR_CLUSTERLOG_NOT_ENOUGH_SPACE - The minimum required disk space needed for logging is not available.
 .
 Language=Polish
-ERROR_CLUSTERLOG_NOT_ENOUGH_SPACE - The minimum required disk space needed for logging is not available.
+ERROR_CLUSTERLOG_NOT_ENOUGH_SPACE - Nie jest dostępna minimalna ilość miejsca wymagana do rejestrowania w dzienniku.
 .
 Language=Romanian
 ERROR_CLUSTERLOG_NOT_ENOUGH_SPACE - The minimum required disk space needed for logging is not available.
@@ -20232,7 +20232,7 @@ Language=Russian
 ERROR_QUORUM_OWNER_ALIVE - The cluster node failed to take control of the quorum resource because the resource is owned by another active node.
 .
 Language=Polish
-ERROR_QUORUM_OWNER_ALIVE - The cluster node failed to take control of the quorum resource because the resource is owned by another active node.
+ERROR_QUORUM_OWNER_ALIVE - Węzeł klastra nie może przejąć kontroli nad zasobem kworum, ponieważ zasób ten jest posiadany przez inny aktywny węzeł.
 .
 Language=Romanian
 ERROR_QUORUM_OWNER_ALIVE - The cluster node failed to take control of the quorum resource because the resource is owned by another active node.
@@ -20249,7 +20249,7 @@ Language=Russian
 ERROR_NETWORK_NOT_AVAILABLE - A cluster network is not available for this operation.
 .
 Language=Polish
-ERROR_NETWORK_NOT_AVAILABLE - A cluster network is not available for this operation.
+ERROR_NETWORK_NOT_AVAILABLE - Sieć klastrów nie jest dostępna dla tej operacji.
 .
 Language=Romanian
 ERROR_NETWORK_NOT_AVAILABLE - A cluster network is not available for this operation.
@@ -20266,7 +20266,7 @@ Language=Russian
 ERROR_NODE_NOT_AVAILABLE - A cluster node is not available for this operation.
 .
 Language=Polish
-ERROR_NODE_NOT_AVAILABLE - A cluster node is not available for this operation.
+ERROR_NODE_NOT_AVAILABLE - Węzeł klastra nie jest dostępny dla tej operacji.
 .
 Language=Romanian
 ERROR_NODE_NOT_AVAILABLE - A cluster node is not available for this operation.
@@ -20283,7 +20283,7 @@ Language=Russian
 ERROR_ALL_NODES_NOT_AVAILABLE - All cluster nodes must be running to perform this operation.
 .
 Language=Polish
-ERROR_ALL_NODES_NOT_AVAILABLE - All cluster nodes must be running to perform this operation.
+ERROR_ALL_NODES_NOT_AVAILABLE - Aby można było wykonać tę operację, muszą być uruchomione wszystkie węzły klastra.
 .
 Language=Romanian
 ERROR_ALL_NODES_NOT_AVAILABLE - All cluster nodes must be running to perform this operation.
@@ -20300,7 +20300,7 @@ Language=Russian
 ERROR_RESOURCE_FAILED - A cluster resource failed.
 .
 Language=Polish
-ERROR_RESOURCE_FAILED - A cluster resource failed.
+ERROR_RESOURCE_FAILED - Błąd zasobu klastra.
 .
 Language=Romanian
 ERROR_RESOURCE_FAILED - A cluster resource failed.
@@ -20317,7 +20317,7 @@ Language=Russian
 ERROR_CLUSTER_INVALID_NODE - The cluster node is not valid.
 .
 Language=Polish
-ERROR_CLUSTER_INVALID_NODE - The cluster node is not valid.
+ERROR_CLUSTER_INVALID_NODE - Węzeł klastra jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_CLUSTER_INVALID_NODE - The cluster node is not valid.
@@ -20334,7 +20334,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_EXISTS - The cluster node already exists.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_EXISTS - The cluster node already exists.
+ERROR_CLUSTER_NODE_EXISTS - Węzeł klastra już istnieje.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_EXISTS - The cluster node already exists.
@@ -20351,7 +20351,7 @@ Language=Russian
 ERROR_CLUSTER_JOIN_IN_PROGRESS - A node is in the process of joining the cluster.
 .
 Language=Polish
-ERROR_CLUSTER_JOIN_IN_PROGRESS - A node is in the process of joining the cluster.
+ERROR_CLUSTER_JOIN_IN_PROGRESS - Trwa proces przyłączania węzła do klastra.
 .
 Language=Romanian
 ERROR_CLUSTER_JOIN_IN_PROGRESS - A node is in the process of joining the cluster.
@@ -20368,7 +20368,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_NOT_FOUND - The cluster node was not found.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_NOT_FOUND - The cluster node was not found.
+ERROR_CLUSTER_NODE_NOT_FOUND - Nie znaleziono węzła klastra.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_NOT_FOUND - The cluster node was not found.
@@ -20385,7 +20385,7 @@ Language=Russian
 ERROR_CLUSTER_LOCAL_NODE_NOT_FOUND - The cluster local node information was not found.
 .
 Language=Polish
-ERROR_CLUSTER_LOCAL_NODE_NOT_FOUND - The cluster local node information was not found.
+ERROR_CLUSTER_LOCAL_NODE_NOT_FOUND - Nie znaleziono informacji o lokalnym węźle klastra.
 .
 Language=Romanian
 ERROR_CLUSTER_LOCAL_NODE_NOT_FOUND - The cluster local node information was not found.
@@ -20402,7 +20402,7 @@ Language=Russian
 ERROR_CLUSTER_NETWORK_EXISTS - The cluster network already exists.
 .
 Language=Polish
-ERROR_CLUSTER_NETWORK_EXISTS - The cluster network already exists.
+ERROR_CLUSTER_NETWORK_EXISTS - Sieć klastrów już istnieje.
 .
 Language=Romanian
 ERROR_CLUSTER_NETWORK_EXISTS - The cluster network already exists.
@@ -20419,7 +20419,7 @@ Language=Russian
 ERROR_CLUSTER_NETWORK_NOT_FOUND - The cluster network was not found.
 .
 Language=Polish
-ERROR_CLUSTER_NETWORK_NOT_FOUND - The cluster network was not found.
+ERROR_CLUSTER_NETWORK_NOT_FOUND - Nie znaleziono sieci klastrów.
 .
 Language=Romanian
 ERROR_CLUSTER_NETWORK_NOT_FOUND - The cluster network was not found.
@@ -20436,7 +20436,7 @@ Language=Russian
 ERROR_CLUSTER_NETINTERFACE_EXISTS - The cluster network interface already exists.
 .
 Language=Polish
-ERROR_CLUSTER_NETINTERFACE_EXISTS - The cluster network interface already exists.
+ERROR_CLUSTER_NETINTERFACE_EXISTS - Interfejs sieci klastrów już istnieje.
 .
 Language=Romanian
 ERROR_CLUSTER_NETINTERFACE_EXISTS - The cluster network interface already exists.
@@ -20453,7 +20453,7 @@ Language=Russian
 ERROR_CLUSTER_NETINTERFACE_NOT_FOUND - The cluster network interface was not found.
 .
 Language=Polish
-ERROR_CLUSTER_NETINTERFACE_NOT_FOUND - The cluster network interface was not found.
+ERROR_CLUSTER_NETINTERFACE_NOT_FOUND - Nie znaleziono interfejsu sieci klastrów.
 .
 Language=Romanian
 ERROR_CLUSTER_NETINTERFACE_NOT_FOUND - The cluster network interface was not found.
@@ -20470,7 +20470,7 @@ Language=Russian
 ERROR_CLUSTER_INVALID_REQUEST - The cluster request is not valid for this object.
 .
 Language=Polish
-ERROR_CLUSTER_INVALID_REQUEST - The cluster request is not valid for this object.
+ERROR_CLUSTER_INVALID_REQUEST - Żądanie klastra jest nieprawidłowe w odniesieniu do tego obiektu.
 .
 Language=Romanian
 ERROR_CLUSTER_INVALID_REQUEST - The cluster request is not valid for this object.
@@ -20487,7 +20487,7 @@ Language=Russian
 ERROR_CLUSTER_INVALID_NETWORK_PROVIDER - The cluster network provider is not valid.
 .
 Language=Polish
-ERROR_CLUSTER_INVALID_NETWORK_PROVIDER - The cluster network provider is not valid.
+ERROR_CLUSTER_INVALID_NETWORK_PROVIDER - Dostawca sieci klastrów jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_CLUSTER_INVALID_NETWORK_PROVIDER - The cluster network provider is not valid.
@@ -20504,7 +20504,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_DOWN - The cluster node is down.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_DOWN - The cluster node is down.
+ERROR_CLUSTER_NODE_DOWN - Węzeł klastra nie działa.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_DOWN - The cluster node is down.
@@ -20521,7 +20521,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_UNREACHABLE - The cluster node is not reachable.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_UNREACHABLE - The cluster node is not reachable.
+ERROR_CLUSTER_NODE_UNREACHABLE - Węzeł klastra jest nieosiągalny.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_UNREACHABLE - The cluster node is not reachable.
@@ -20538,7 +20538,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_NOT_MEMBER - The cluster node is not a member of the cluster.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_NOT_MEMBER - The cluster node is not a member of the cluster.
+ERROR_CLUSTER_NODE_NOT_MEMBER - Węzeł klastra nie należy do klastra.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_NOT_MEMBER - The cluster node is not a member of the cluster.
@@ -20555,7 +20555,7 @@ Language=Russian
 ERROR_CLUSTER_JOIN_NOT_IN_PROGRESS - A cluster join operation is not in progress.
 .
 Language=Polish
-ERROR_CLUSTER_JOIN_NOT_IN_PROGRESS - A cluster join operation is not in progress.
+ERROR_CLUSTER_JOIN_NOT_IN_PROGRESS - Operacja dołączania klastra nie jest realizowana.
 .
 Language=Romanian
 ERROR_CLUSTER_JOIN_NOT_IN_PROGRESS - A cluster join operation is not in progress.
@@ -20572,7 +20572,7 @@ Language=Russian
 ERROR_CLUSTER_INVALID_NETWORK - The cluster network is not valid.
 .
 Language=Polish
-ERROR_CLUSTER_INVALID_NETWORK - The cluster network is not valid.
+ERROR_CLUSTER_INVALID_NETWORK - Sieć klastrów jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_CLUSTER_INVALID_NETWORK - The cluster network is not valid.
@@ -20589,7 +20589,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_UP - The cluster node is up.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_UP - The cluster node is up.
+ERROR_CLUSTER_NODE_UP - Węzeł klastra działa.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_UP - The cluster node is up.
@@ -20606,7 +20606,7 @@ Language=Russian
 ERROR_CLUSTER_IPADDR_IN_USE - The cluster IP address is already in use.
 .
 Language=Polish
-ERROR_CLUSTER_IPADDR_IN_USE - The cluster IP address is already in use.
+ERROR_CLUSTER_IPADDR_IN_USE - Adres IP klastra jest już używany.
 .
 Language=Romanian
 ERROR_CLUSTER_IPADDR_IN_USE - The cluster IP address is already in use.
@@ -20623,7 +20623,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_NOT_PAUSED - The cluster node is not paused.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_NOT_PAUSED - The cluster node is not paused.
+ERROR_CLUSTER_NODE_NOT_PAUSED - Węzeł klastra nie jest wstrzymany.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_NOT_PAUSED - The cluster node is not paused.
@@ -20640,7 +20640,7 @@ Language=Russian
 ERROR_CLUSTER_NO_SECURITY_CONTEXT - No cluster security context is available.
 .
 Language=Polish
-ERROR_CLUSTER_NO_SECURITY_CONTEXT - No cluster security context is available.
+ERROR_CLUSTER_NO_SECURITY_CONTEXT - Nie jest dostępny żaden kontekst zabezpieczenia klastra.
 .
 Language=Romanian
 ERROR_CLUSTER_NO_SECURITY_CONTEXT - No cluster security context is available.
@@ -20657,7 +20657,7 @@ Language=Russian
 ERROR_CLUSTER_NETWORK_NOT_INTERNAL - The cluster network is not configured for internal cluster communication.
 .
 Language=Polish
-ERROR_CLUSTER_NETWORK_NOT_INTERNAL - The cluster network is not configured for internal cluster communication.
+ERROR_CLUSTER_NETWORK_NOT_INTERNAL - Sieć klastrów nie jest skonfigurowana tak, aby zapewniała wewnętrzną komunikację w klastrach.
 .
 Language=Romanian
 ERROR_CLUSTER_NETWORK_NOT_INTERNAL - The cluster network is not configured for internal cluster communication.
@@ -20674,7 +20674,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_ALREADY_UP - The cluster node is already up.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_ALREADY_UP - The cluster node is already up.
+ERROR_CLUSTER_NODE_ALREADY_UP - Węzeł klastra już działa.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_ALREADY_UP - The cluster node is already up.
@@ -20691,7 +20691,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_ALREADY_DOWN - The cluster node is already down.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_ALREADY_DOWN - The cluster node is already down.
+ERROR_CLUSTER_NODE_ALREADY_DOWN - Węzeł klastra już nie działa.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_ALREADY_DOWN - The cluster node is already down.
@@ -20708,7 +20708,7 @@ Language=Russian
 ERROR_CLUSTER_NETWORK_ALREADY_ONLINE - The cluster network is already online.
 .
 Language=Polish
-ERROR_CLUSTER_NETWORK_ALREADY_ONLINE - The cluster network is already online.
+ERROR_CLUSTER_NETWORK_ALREADY_ONLINE - Sieć klastrów już jest w trybie online.
 .
 Language=Romanian
 ERROR_CLUSTER_NETWORK_ALREADY_ONLINE - The cluster network is already online.
@@ -20725,7 +20725,7 @@ Language=Russian
 ERROR_CLUSTER_NETWORK_ALREADY_OFFLINE - The cluster network is already offline.
 .
 Language=Polish
-ERROR_CLUSTER_NETWORK_ALREADY_OFFLINE - The cluster network is already offline.
+ERROR_CLUSTER_NETWORK_ALREADY_OFFLINE - Sieć klastrów już jest w trybie offline.
 .
 Language=Romanian
 ERROR_CLUSTER_NETWORK_ALREADY_OFFLINE - The cluster network is already offline.
@@ -20742,7 +20742,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_ALREADY_MEMBER - The cluster node is already a member of the cluster.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_ALREADY_MEMBER - The cluster node is already a member of the cluster.
+ERROR_CLUSTER_NODE_ALREADY_MEMBER - Węzeł klastra już należy do klastra.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_ALREADY_MEMBER - The cluster node is already a member of the cluster.
@@ -20759,7 +20759,7 @@ Language=Russian
 ERROR_CLUSTER_LAST_INTERNAL_NETWORK - The cluster network is the only one configured for internal cluster communication between two or more active cluster nodes. The internal communication capability cannot be removed from the network.
 .
 Language=Polish
-ERROR_CLUSTER_LAST_INTERNAL_NETWORK - The cluster network is the only one configured for internal cluster communication between two or more active cluster nodes. The internal communication capability cannot be removed from the network.
+ERROR_CLUSTER_LAST_INTERNAL_NETWORK - Sieć klastrów jest jedyną siecią skonfigurowaną tak, aby zapewniała wewnętrzną komunikację między dwoma (lub więcej) aktywnymi węzłami klastra. Nie można wyłączyć funkcji wewnętrznego komunikowania się w ramach klastra.
 .
 Language=Romanian
 ERROR_CLUSTER_LAST_INTERNAL_NETWORK - The cluster network is the only one configured for internal cluster communication between two or more active cluster nodes. The internal communication capability cannot be removed from the network.
@@ -20776,7 +20776,7 @@ Language=Russian
 ERROR_CLUSTER_NETWORK_HAS_DEPENDENTS - One or more cluster resources depend on the network to provide service to clients. The client access capability cannot be removed from the network.
 .
 Language=Polish
-ERROR_CLUSTER_NETWORK_HAS_DEPENDENTS - One or more cluster resources depend on the network to provide service to clients. The client access capability cannot be removed from the network.
+ERROR_CLUSTER_NETWORK_HAS_DEPENDENTS - Co najmniej jeden z zasobów klastra świadczy usługi klientom poprzez sieć. Nie można usunąć z sieci możliwości dostępu dla klientów.
 .
 Language=Romanian
 ERROR_CLUSTER_NETWORK_HAS_DEPENDENTS - One or more cluster resources depend on the network to provide service to clients. The client access capability cannot be removed from the network.
@@ -20793,7 +20793,7 @@ Language=Russian
 ERROR_INVALID_OPERATION_ON_QUORUM - This operation cannot be performed on the cluster resource as it the quorum resource. You may not bring the quorum resource offline or modify its possible owners list.
 .
 Language=Polish
-ERROR_INVALID_OPERATION_ON_QUORUM - This operation cannot be performed on the cluster resource as it the quorum resource. You may not bring the quorum resource offline or modify its possible owners list.
+ERROR_INVALID_OPERATION_ON_QUORUM - Tej operacji nie można wykonać na zasobie klastra, ponieważ jest to zasób kworum. Nie można przełączyć zasobu kworum do trybu offline ani modyfikować listy jego właścicieli (jeśli istnieje).
 .
 Language=Romanian
 ERROR_INVALID_OPERATION_ON_QUORUM - This operation cannot be performed on the cluster resource as it the quorum resource. You may not bring the quorum resource offline or modify its possible owners list.
@@ -20810,7 +20810,7 @@ Language=Russian
 ERROR_DEPENDENCY_NOT_ALLOWED - The cluster quorum resource is not allowed to have any dependencies.
 .
 Language=Polish
-ERROR_DEPENDENCY_NOT_ALLOWED - The cluster quorum resource is not allowed to have any dependencies.
+ERROR_DEPENDENCY_NOT_ALLOWED - Zasób klastra kworum nie może mieć żadnych zależności.
 .
 Language=Romanian
 ERROR_DEPENDENCY_NOT_ALLOWED - The cluster quorum resource is not allowed to have any dependencies.
@@ -20827,7 +20827,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_PAUSED - The cluster node is paused.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_PAUSED - The cluster node is paused.
+ERROR_CLUSTER_NODE_PAUSED - Węzeł klastra jest wstrzymany.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_PAUSED - The cluster node is paused.
@@ -20844,7 +20844,7 @@ Language=Russian
 ERROR_NODE_CANT_HOST_RESOURCE - The cluster resource cannot be brought online. The owner node cannot run this resource.
 .
 Language=Polish
-ERROR_NODE_CANT_HOST_RESOURCE - The cluster resource cannot be brought online. The owner node cannot run this resource.
+ERROR_NODE_CANT_HOST_RESOURCE - Nie można przełączyć zasobu klastra do trybu online. Węzeł-właściciel nie może uruchomić tego zasobu.
 .
 Language=Romanian
 ERROR_NODE_CANT_HOST_RESOURCE - The cluster resource cannot be brought online. The owner node cannot run this resource.
@@ -20861,7 +20861,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_NOT_READY - The cluster node is not ready to perform the requested operation.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_NOT_READY - The cluster node is not ready to perform the requested operation.
+ERROR_CLUSTER_NODE_NOT_READY - Węzeł klastra nie jest gotowy wykonać żądaną operację.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_NOT_READY - The cluster node is not ready to perform the requested operation.
@@ -20878,7 +20878,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_SHUTTING_DOWN - The cluster node is shutting down.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_SHUTTING_DOWN - The cluster node is shutting down.
+ERROR_CLUSTER_NODE_SHUTTING_DOWN - Węzeł klastra jest zamykany.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_SHUTTING_DOWN - The cluster node is shutting down.
@@ -20895,7 +20895,7 @@ Language=Russian
 ERROR_CLUSTER_JOIN_ABORTED - The cluster join operation was aborted.
 .
 Language=Polish
-ERROR_CLUSTER_JOIN_ABORTED - The cluster join operation was aborted.
+ERROR_CLUSTER_JOIN_ABORTED - Operacja łączenia klastra została przerwana.
 .
 Language=Romanian
 ERROR_CLUSTER_JOIN_ABORTED - The cluster join operation was aborted.
@@ -20912,7 +20912,7 @@ Language=Russian
 ERROR_CLUSTER_INCOMPATIBLE_VERSIONS - The cluster join operation failed due to incompatible software versions between the joining node and its sponsor.
 .
 Language=Polish
-ERROR_CLUSTER_INCOMPATIBLE_VERSIONS - The cluster join operation failed due to incompatible software versions between the joining node and its sponsor.
+ERROR_CLUSTER_INCOMPATIBLE_VERSIONS - Operacja przyłączenia do klastra nie powiodła się z powodu niezgodności wersji oprogramowania dołączanego węzła i jego sponsora.
 .
 Language=Romanian
 ERROR_CLUSTER_INCOMPATIBLE_VERSIONS - The cluster join operation failed due to incompatible software versions between the joining node and its sponsor.
@@ -20929,7 +20929,7 @@ Language=Russian
 ERROR_CLUSTER_MAXNUM_OF_RESOURCES_EXCEEDED - This resource cannot be created because the cluster has reached the limit on the number of resources it can monitor.
 .
 Language=Polish
-ERROR_CLUSTER_MAXNUM_OF_RESOURCES_EXCEEDED - This resource cannot be created because the cluster has reached the limit on the number of resources it can monitor.
+ERROR_CLUSTER_MAXNUM_OF_RESOURCES_EXCEEDED - Nie można utworzyć tego zasobu, ponieważ klaster osiągnął limit liczby zasobów, które może monitorować.
 .
 Language=Romanian
 ERROR_CLUSTER_MAXNUM_OF_RESOURCES_EXCEEDED - This resource cannot be created because the cluster has reached the limit on the number of resources it can monitor.
@@ -20946,7 +20946,7 @@ Language=Russian
 ERROR_CLUSTER_SYSTEM_CONFIG_CHANGED - The system configuration changed during the cluster join or form operation. The join or form operation was aborted.
 .
 Language=Polish
-ERROR_CLUSTER_SYSTEM_CONFIG_CHANGED - The system configuration changed during the cluster join or form operation. The join or form operation was aborted.
+ERROR_CLUSTER_SYSTEM_CONFIG_CHANGED - Konfiguracja systemu zmieniła się podczas wykonywania operacji łączenia lub formowania klastrów. Operacja łączenia lub formowania klastrów została przerwana.
 .
 Language=Romanian
 ERROR_CLUSTER_SYSTEM_CONFIG_CHANGED - The system configuration changed during the cluster join or form operation. The join or form operation was aborted.
@@ -20963,7 +20963,7 @@ Language=Russian
 ERROR_CLUSTER_RESOURCE_TYPE_NOT_FOUND - The specified resource type was not found.
 .
 Language=Polish
-ERROR_CLUSTER_RESOURCE_TYPE_NOT_FOUND - The specified resource type was not found.
+ERROR_CLUSTER_RESOURCE_TYPE_NOT_FOUND - Nie znaleziono podanego typu zasobu.
 .
 Language=Romanian
 ERROR_CLUSTER_RESOURCE_TYPE_NOT_FOUND - The specified resource type was not found.
@@ -20980,7 +20980,7 @@ Language=Russian
 ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED - The specified node does not support a resource of this type. This may be due to version inconsistencies or due to the absence of the resource DLL on this node.
 .
 Language=Polish
-ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED - The specified node does not support a resource of this type. This may be due to version inconsistencies or due to the absence of the resource DLL on this node.
+ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED - Podany węzeł nie obsługuje zasobów tego typu. Może być to spowodowane niezgodnością wersji lub nieobecnością biblioteki DLL zasobów w tym węźle.
 .
 Language=Romanian
 ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED - The specified node does not support a resource of this type. This may be due to version inconsistencies or due to the absence of the resource DLL on this node.
@@ -20997,7 +20997,7 @@ Language=Russian
 ERROR_CLUSTER_RESNAME_NOT_FOUND - The specified resource name is supported by this resource DLL. This may be due to a bad (or changed) name supplied to the resource DLL.
 .
 Language=Polish
-ERROR_CLUSTER_RESNAME_NOT_FOUND - The specified resource name is supported by this resource DLL. This may be due to a bad (or changed) name supplied to the resource DLL.
+ERROR_CLUSTER_RESNAME_NOT_FOUND - Podana nazwa zasobu nie jest obsługiwana przez tę bibliotekę DLL. Może to być spowodowane złą (lub zmienioną) nazwą dostarczoną do biblioteki DLL zasobów.
 .
 Language=Romanian
 ERROR_CLUSTER_RESNAME_NOT_FOUND - The specified resource name is supported by this resource DLL. This may be due to a bad (or changed) name supplied to the resource DLL.
@@ -21014,7 +21014,7 @@ Language=Russian
 ERROR_CLUSTER_NO_RPC_PACKAGES_REGISTERED - No authentication package could be registered with the RPC server.
 .
 Language=Polish
-ERROR_CLUSTER_NO_RPC_PACKAGES_REGISTERED - No authentication package could be registered with the RPC server.
+ERROR_CLUSTER_NO_RPC_PACKAGES_REGISTERED - Na serwerze RPC nie można zarejestrować żadnego pakietu uwierzytelnień.
 .
 Language=Romanian
 ERROR_CLUSTER_NO_RPC_PACKAGES_REGISTERED - No authentication package could be registered with the RPC server.
@@ -21031,7 +21031,7 @@ Language=Russian
 ERROR_CLUSTER_OWNER_NOT_IN_PREFLIST - You cannot bring the group online because the owner of the group is not in the preferred list for the group. To change the owner node for the group, move the group.
 .
 Language=Polish
-ERROR_CLUSTER_OWNER_NOT_IN_PREFLIST - You cannot bring the group online because the owner of the group is not in the preferred list for the group. To change the owner node for the group, move the group.
+ERROR_CLUSTER_OWNER_NOT_IN_PREFLIST - Nie można przełączyć grupy do trybu online, ponieważ właściciel grupy nie występuje na liście preferowanych przez grupę. Aby zmienić węzeł będący właścicielem grupy, przenieś grupę.
 .
 Language=Romanian
 ERROR_CLUSTER_OWNER_NOT_IN_PREFLIST - You cannot bring the group online because the owner of the group is not in the preferred list for the group. To change the owner node for the group, move the group.
@@ -21048,7 +21048,7 @@ Language=Russian
 ERROR_CLUSTER_DATABASE_SEQMISMATCH - The join operation failed because the cluster database sequence number has changed or is incompatible with the locker node. This may happen during a join operation if the cluster database was changing during the join.
 .
 Language=Polish
-ERROR_CLUSTER_DATABASE_SEQMISMATCH - The join operation failed because the cluster database sequence number has changed or is incompatible with the locker node. This may happen during a join operation if the cluster database was changing during the join.
+ERROR_CLUSTER_DATABASE_SEQMISMATCH - Operacja łączenia nie powiodła się, ponieważ numer sekwencyjny bazy danych klastra zmienił się lub jest niezgodny z węzłem blokującym. Może się to zdarzyć podczas operacji łączenia, jeżeli w jej trakcie ulegnie zmianie baza danych klastra.
 .
 Language=Romanian
 ERROR_CLUSTER_DATABASE_SEQMISMATCH - The join operation failed because the cluster database sequence number has changed or is incompatible with the locker node. This may happen during a join operation if the cluster database was changing during the join.
@@ -21065,7 +21065,7 @@ Language=Russian
 ERROR_RESMON_INVALID_STATE - The resource monitor will not allow the fail operation to be performed while the resource is in its current state. This may happen if the resource is in a pending state.
 .
 Language=Polish
-ERROR_RESMON_INVALID_STATE - The resource monitor will not allow the fail operation to be performed while the resource is in its current state. This may happen if the resource is in a pending state.
+ERROR_RESMON_INVALID_STATE - Monitorów zasobów nie pozwoli na wykonanie błędnej operacji, gdy zasób jest w swoim bieżącym stanie. Może się to zdarzyć, jeśli zasób jest w stanie oczekiwania.
 .
 Language=Romanian
 ERROR_RESMON_INVALID_STATE - The resource monitor will not allow the fail operation to be performed while the resource is in its current state. This may happen if the resource is in a pending state.
@@ -21082,7 +21082,7 @@ Language=Russian
 ERROR_CLUSTER_GUM_NOT_LOCKER - A non locker code got a request to reserve the lock for making global updates.
 .
 Language=Polish
-ERROR_CLUSTER_GUM_NOT_LOCKER - A non locker code got a request to reserve the lock for making global updates.
+ERROR_CLUSTER_GUM_NOT_LOCKER - Kod nieblokujący odebrał żądanie zarezerwowania tej blokady w celu przeprowadzenia globalnej aktualizacji.
 .
 Language=Romanian
 ERROR_CLUSTER_GUM_NOT_LOCKER - A non locker code got a request to reserve the lock for making global updates.
@@ -21099,7 +21099,7 @@ Language=Russian
 ERROR_QUORUM_DISK_NOT_FOUND - The quorum disk could not be located by the cluster service.
 .
 Language=Polish
-ERROR_QUORUM_DISK_NOT_FOUND - The quorum disk could not be located by the cluster service.
+ERROR_QUORUM_DISK_NOT_FOUND - Usługa klastrowania nie może zlokalizować dysku kworum.
 .
 Language=Romanian
 ERROR_QUORUM_DISK_NOT_FOUND - The quorum disk could not be located by the cluster service.
@@ -21116,7 +21116,7 @@ Language=Russian
 ERROR_DATABASE_BACKUP_CORRUPT - The backup up cluster database is possibly corrupt.
 .
 Language=Polish
-ERROR_DATABASE_BACKUP_CORRUPT - The backup up cluster database is possibly corrupt.
+ERROR_DATABASE_BACKUP_CORRUPT - Kopia zapasowa bazy danych klastra prawdopodobnie jest uszkodzona.
 .
 Language=Romanian
 ERROR_DATABASE_BACKUP_CORRUPT - The backup up cluster database is possibly corrupt.
@@ -21133,7 +21133,7 @@ Language=Russian
 ERROR_CLUSTER_NODE_ALREADY_HAS_DFS_ROOT - A DFS root already exists in this cluster node.
 .
 Language=Polish
-ERROR_CLUSTER_NODE_ALREADY_HAS_DFS_ROOT - A DFS root already exists in this cluster node.
+ERROR_CLUSTER_NODE_ALREADY_HAS_DFS_ROOT - W tym węźle klastra już występuje system DFS.
 .
 Language=Romanian
 ERROR_CLUSTER_NODE_ALREADY_HAS_DFS_ROOT - A DFS root already exists in this cluster node.
@@ -21150,7 +21150,7 @@ Language=Russian
 ERROR_RESOURCE_PROPERTY_UNCHANGEABLE - An attempt to modify a resource property failed because it conflicts with another existing property.
 .
 Language=Polish
-ERROR_RESOURCE_PROPERTY_UNCHANGEABLE - An attempt to modify a resource property failed because it conflicts with another existing property.
+ERROR_RESOURCE_PROPERTY_UNCHANGEABLE - Nie można zmodyfikować właściwości zasobu, ponieważ nowa właściwość wchodzi w konflikt z inną istniejącą właściwością.
 .
 Language=Romanian
 ERROR_RESOURCE_PROPERTY_UNCHANGEABLE - An attempt to modify a resource property failed because it conflicts with another existing property.
@@ -21167,7 +21167,7 @@ Language=Russian
 ERROR_CLUSTER_MEMBERSHIP_INVALID_STATE - An operation was attempted that is incompatible with the current membership state of the node.
 .
 Language=Polish
-ERROR_CLUSTER_MEMBERSHIP_INVALID_STATE - An operation was attempted that is incompatible with the current membership state of the node.
+ERROR_CLUSTER_MEMBERSHIP_INVALID_STATE - Próbowano wykonać operację, która jest niezgodna z bieżącym stanem członkostwa węzła.
 .
 Language=Romanian
 ERROR_CLUSTER_MEMBERSHIP_INVALID_STATE - An operation was attempted that is incompatible with the current membership state of the node.
@@ -21184,7 +21184,7 @@ Language=Russian
 ERROR_CLUSTER_QUORUMLOG_NOT_FOUND - The quorum resource does not contain the quorum log.
 .
 Language=Polish
-ERROR_CLUSTER_QUORUMLOG_NOT_FOUND - The quorum resource does not contain the quorum log.
+ERROR_CLUSTER_QUORUMLOG_NOT_FOUND - Zasób kworum nie zawiera dziennika kworum.
 .
 Language=Romanian
 ERROR_CLUSTER_QUORUMLOG_NOT_FOUND - The quorum resource does not contain the quorum log.
@@ -21201,7 +21201,7 @@ Language=Russian
 ERROR_CLUSTER_MEMBERSHIP_HALT - The membership engine requested shutdown of the cluster service on this node.
 .
 Language=Polish
-ERROR_CLUSTER_MEMBERSHIP_HALT - The membership engine requested shutdown of the cluster service on this node.
+ERROR_CLUSTER_MEMBERSHIP_HALT - Aparat członkostwa zażądał zamknięcia usługi klastrowania na tym węźle.
 .
 Language=Romanian
 ERROR_CLUSTER_MEMBERSHIP_HALT - The membership engine requested shutdown of the cluster service on this node.
@@ -21218,7 +21218,7 @@ Language=Russian
 ERROR_CLUSTER_INSTANCE_ID_MISMATCH - The join operation failed because the cluster instance ID of the joining node does not match the cluster instance ID of the sponsor node.
 .
 Language=Polish
-ERROR_CLUSTER_INSTANCE_ID_MISMATCH - The join operation failed because the cluster instance ID of the joining node does not match the cluster instance ID of the sponsor node.
+ERROR_CLUSTER_INSTANCE_ID_MISMATCH - Operacja dołączania nie powiodła się, ponieważ identyfikator wystąpienia klastra węzła dołączającego nie pasuje do identyfikatora wystąpienia klastra węzła sponsorującego.
 .
 Language=Romanian
 ERROR_CLUSTER_INSTANCE_ID_MISMATCH - The join operation failed because the cluster instance ID of the joining node does not match the cluster instance ID of the sponsor node.
@@ -21252,7 +21252,7 @@ Language=Russian
 ERROR_CLUSTER_PROPERTY_DATA_TYPE_MISMATCH - The actual data type of the property did not match the expected data type of the property.
 .
 Language=Polish
-ERROR_CLUSTER_PROPERTY_DATA_TYPE_MISMATCH - The actual data type of the property did not match the expected data type of the property.
+ERROR_CLUSTER_PROPERTY_DATA_TYPE_MISMATCH - Rzeczywisty typ danych właściwości nie odpowiada oczekiwanemu typowi danych właściwości.
 .
 Language=Romanian
 ERROR_CLUSTER_PROPERTY_DATA_TYPE_MISMATCH - The actual data type of the property did not match the expected data type of the property.
@@ -21286,7 +21286,7 @@ Language=Russian
 ERROR_CLUSTER_PARAMETER_MISMATCH - Two or more parameter values specified for a resource's properties are in conflict.
 .
 Language=Polish
-ERROR_CLUSTER_PARAMETER_MISMATCH - Two or more parameter values specified for a resource's properties are in conflict.
+ERROR_CLUSTER_PARAMETER_MISMATCH - Dwie lub więcej wartości parametrów, określonych dla właściwości zasobu, kolidują ze sobą.
 .
 Language=Romanian
 ERROR_CLUSTER_PARAMETER_MISMATCH - Two or more parameter values specified for a resource's properties are in conflict.
@@ -21303,7 +21303,7 @@ Language=Russian
 ERROR_NODE_CANNOT_BE_CLUSTERED - This computer cannot be made a member of a cluster.
 .
 Language=Polish
-ERROR_NODE_CANNOT_BE_CLUSTERED - This computer cannot be made a member of a cluster.
+ERROR_NODE_CANNOT_BE_CLUSTERED - Ten komputer nie może być członkiem klastra.
 .
 Language=Romanian
 ERROR_NODE_CANNOT_BE_CLUSTERED - This computer cannot be made a member of a cluster.
@@ -21320,7 +21320,7 @@ Language=Russian
 ERROR_CLUSTER_WRONG_OS_VERSION - This computer cannot be made a member of a cluster because it does not have the correct version of Windows installed.
 .
 Language=Polish
-ERROR_CLUSTER_WRONG_OS_VERSION - This computer cannot be made a member of a cluster because it does not have the correct version of Windows installed.
+ERROR_CLUSTER_WRONG_OS_VERSION - Ten komputer nie może być członkiem klastra, ponieważ nie ma na nim zainstalowanej właściwej wersji systemu Windows.
 .
 Language=Romanian
 ERROR_CLUSTER_WRONG_OS_VERSION - This computer cannot be made a member of a cluster because it does not have the correct version of Windows installed.
@@ -21337,7 +21337,7 @@ Language=Russian
 ERROR_CLUSTER_CANT_CREATE_DUP_CLUSTER_NAME - A cluster cannot be created with the specified cluster name because that cluster name is already in use. Specify a different name for the cluster.
 .
 Language=Polish
-ERROR_CLUSTER_CANT_CREATE_DUP_CLUSTER_NAME - A cluster cannot be created with the specified cluster name because that cluster name is already in use. Specify a different name for the cluster.
+ERROR_CLUSTER_CANT_CREATE_DUP_CLUSTER_NAME - Nie można utworzyć klastra o określonej nazwie, ponieważ ta nazwa klastra jest już używana. Określ inną nazwę dla klastra.
 .
 Language=Romanian
 ERROR_CLUSTER_CANT_CREATE_DUP_CLUSTER_NAME - A cluster cannot be created with the specified cluster name because that cluster name is already in use. Specify a different name for the cluster.
@@ -21354,7 +21354,7 @@ Language=Russian
 ERROR_CLUSCFG_ALREADY_COMMITTED - The cluster configuration action has already been committed.
 .
 Language=Polish
-ERROR_CLUSCFG_ALREADY_COMMITTED - The cluster configuration action has already been committed.
+ERROR_CLUSCFG_ALREADY_COMMITTED - Akcja konfiguracji klastra została już wykonana.
 .
 Language=Romanian
 ERROR_CLUSCFG_ALREADY_COMMITTED - The cluster configuration action has already been committed.
@@ -21371,7 +21371,7 @@ Language=Russian
 ERROR_CLUSCFG_ROLLBACK_FAILED - The cluster configuration action could not be rolled back.
 .
 Language=Polish
-ERROR_CLUSCFG_ROLLBACK_FAILED - The cluster configuration action could not be rolled back.
+ERROR_CLUSCFG_ROLLBACK_FAILED - Nie można wycofać akcji konfiguracji klastra.
 .
 Language=Romanian
 ERROR_CLUSCFG_ROLLBACK_FAILED - The cluster configuration action could not be rolled back.
@@ -21388,7 +21388,7 @@ Language=Russian
 ERROR_CLUSCFG_SYSTEM_DISK_DRIVE_LETTER_CONFLICT - The drive letter assigned to a system disk on one node conflicted with the driver letter assigned to a disk on another node.
 .
 Language=Polish
-ERROR_CLUSCFG_SYSTEM_DISK_DRIVE_LETTER_CONFLICT - The drive letter assigned to a system disk on one node conflicted with the driver letter assigned to a disk on another node.
+ERROR_CLUSCFG_SYSTEM_DISK_DRIVE_LETTER_CONFLICT - Litera dysku przypisana do dysku systemowego w jednym z węzłów jest w konflikcie z literą dysku przypisaną do dysku w innym węźle.
 .
 Language=Romanian
 ERROR_CLUSCFG_SYSTEM_DISK_DRIVE_LETTER_CONFLICT - The drive letter assigned to a system disk on one node conflicted with the driver letter assigned to a disk on another node.
@@ -21405,7 +21405,7 @@ Language=Russian
 ERROR_CLUSTER_OLD_VERSION - One or more nodes in the cluster are running a version of Windows that does not support this operation.
 .
 Language=Polish
-ERROR_CLUSTER_OLD_VERSION - One or more nodes in the cluster are running a version of Windows that does not support this operation.
+ERROR_CLUSTER_OLD_VERSION - Jeden lub kilka węzłów w klastrze korzysta z wersji systemu Windows, która nie obsługuje tej operacji.
 .
 Language=Romanian
 ERROR_CLUSTER_OLD_VERSION - One or more nodes in the cluster are running a version of Windows that does not support this operation.
@@ -21422,7 +21422,7 @@ Language=Russian
 ERROR_CLUSTER_MISMATCHED_COMPUTER_ACCT_NAME - The name of the corresponding computer account doesn't match the Network Name for this resource.
 .
 Language=Polish
-ERROR_CLUSTER_MISMATCHED_COMPUTER_ACCT_NAME - The name of the corresponding computer account doesn't match the Network Name for this resource.
+ERROR_CLUSTER_MISMATCHED_COMPUTER_ACCT_NAME - Nazwa odpowiedniego konta komputera nie pasuje do nazwy sieciowej tego zasobu.
 .
 Language=Romanian
 ERROR_CLUSTER_MISMATCHED_COMPUTER_ACCT_NAME - The name of the corresponding computer account doesn't match the Network Name for this resource.
@@ -21439,7 +21439,7 @@ Language=Russian
 ERROR_CLUSTER_NO_NET_ADAPTERS - No network adapters are available.
 .
 Language=Polish
-ERROR_CLUSTER_NO_NET_ADAPTERS - No network adapters are available.
+ERROR_CLUSTER_NO_NET_ADAPTERS - Nie są dostępne żadne karty sieciowe.
 .
 Language=Romanian
 ERROR_CLUSTER_NO_NET_ADAPTERS - No network adapters are available.
@@ -21456,7 +21456,7 @@ Language=Russian
 ERROR_CLUSTER_POISONED - The cluster node has been poisoned.
 .
 Language=Polish
-ERROR_CLUSTER_POISONED - The cluster node has been poisoned.
+ERROR_CLUSTER_POISONED - Węzeł klastra uległ awarii.
 .
 Language=Romanian
 ERROR_CLUSTER_POISONED - The cluster node has been poisoned.
@@ -21473,7 +21473,7 @@ Language=Russian
 ERROR_ENCRYPTION_FAILED - The specified file could not be encrypted.
 .
 Language=Polish
-ERROR_ENCRYPTION_FAILED - The specified file could not be encrypted.
+ERROR_ENCRYPTION_FAILED - Nie można zaszyfrować podanego pliku.
 .
 Language=Romanian
 ERROR_ENCRYPTION_FAILED - The specified file could not be encrypted.
@@ -21490,7 +21490,7 @@ Language=Russian
 ERROR_DECRYPTION_FAILED - The specified file could not be decrypted.
 .
 Language=Polish
-ERROR_DECRYPTION_FAILED - The specified file could not be decrypted.
+ERROR_DECRYPTION_FAILED - Nie można odszyfrować podanego pliku.
 .
 Language=Romanian
 ERROR_DECRYPTION_FAILED - The specified file could not be decrypted.
@@ -21507,7 +21507,7 @@ Language=Russian
 ERROR_FILE_ENCRYPTED - The specified file is encrypted and the user does not have the ability to decrypt it.
 .
 Language=Polish
-ERROR_FILE_ENCRYPTED - The specified file is encrypted and the user does not have the ability to decrypt it.
+ERROR_FILE_ENCRYPTED - Określony plik jest zaszyfrowany i użytkownik nie ma możliwości odszyfrowania go.
 .
 Language=Romanian
 ERROR_FILE_ENCRYPTED - The specified file is encrypted and the user does not have the ability to decrypt it.
@@ -21524,7 +21524,7 @@ Language=Russian
 ERROR_NO_RECOVERY_POLICY - There is no valid encryption recovery policy configured for this system.
 .
 Language=Polish
-ERROR_NO_RECOVERY_POLICY - There is no valid encryption recovery policy configured for this system.
+ERROR_NO_RECOVERY_POLICY - Brak skonfigurowanych prawidłowych zasad odzyskiwania szyfrowania dla tego systemu.
 .
 Language=Romanian
 ERROR_NO_RECOVERY_POLICY - There is no valid encryption recovery policy configured for this system.
@@ -21541,7 +21541,7 @@ Language=Russian
 ERROR_NO_EFS - The required encryption driver is not loaded for this system.
 .
 Language=Polish
-ERROR_NO_EFS - The required encryption driver is not loaded for this system.
+ERROR_NO_EFS - Wymagany sterownik szyfrowania nie jest załadowany w systemie.
 .
 Language=Romanian
 ERROR_NO_EFS - The required encryption driver is not loaded for this system.
@@ -21558,7 +21558,7 @@ Language=Russian
 ERROR_WRONG_EFS - The file was encrypted with a different encryption driver than is currently loaded.
 .
 Language=Polish
-ERROR_WRONG_EFS - The file was encrypted with a different encryption driver than is currently loaded.
+ERROR_WRONG_EFS - Plik został zaszyfrowany za pomocą sterownika szyfrowania innego niż obecnie załadowany.
 .
 Language=Romanian
 ERROR_WRONG_EFS - The file was encrypted with a different encryption driver than is currently loaded.
@@ -21575,7 +21575,7 @@ Language=Russian
 ERROR_NO_USER_KEYS - There are no EFS keys defined for the user.
 .
 Language=Polish
-ERROR_NO_USER_KEYS - There are no EFS keys defined for the user.
+ERROR_NO_USER_KEYS - Brak zdefiniowanych kluczy EFS dla użytkownika.
 .
 Language=Romanian
 ERROR_NO_USER_KEYS - There are no EFS keys defined for the user.
@@ -21592,7 +21592,7 @@ Language=Russian
 ERROR_FILE_NOT_ENCRYPTED - The specified file is not encrypted.
 .
 Language=Polish
-ERROR_FILE_NOT_ENCRYPTED - The specified file is not encrypted.
+ERROR_FILE_NOT_ENCRYPTED - Określony plik nie jest zaszyfrowany.
 .
 Language=Romanian
 ERROR_FILE_NOT_ENCRYPTED - The specified file is not encrypted.
@@ -21609,7 +21609,7 @@ Language=Russian
 ERROR_NOT_EXPORT_FORMAT - The specified file is not in the defined EFS export format.
 .
 Language=Polish
-ERROR_NOT_EXPORT_FORMAT - The specified file is not in the defined EFS export format.
+ERROR_NOT_EXPORT_FORMAT - Określony plik nie występuje w zdefiniowanym formacie eksportu EFS.
 .
 Language=Romanian
 ERROR_NOT_EXPORT_FORMAT - The specified file is not in the defined EFS export format.
@@ -21626,7 +21626,7 @@ Language=Russian
 ERROR_FILE_READ_ONLY - The specified file is read only.
 .
 Language=Polish
-ERROR_FILE_READ_ONLY - The specified file is read only.
+ERROR_FILE_READ_ONLY - Podany plik jest tylko do odczytu.
 .
 Language=Romanian
 ERROR_FILE_READ_ONLY - The specified file is read only.
@@ -21643,7 +21643,7 @@ Language=Russian
 ERROR_DIR_EFS_DISALLOWED - The directory has been disabled for encryption.
 .
 Language=Polish
-ERROR_DIR_EFS_DISALLOWED - The directory has been disabled for encryption.
+ERROR_DIR_EFS_DISALLOWED - Katalog został wyłączony z szyfrowania.
 .
 Language=Romanian
 ERROR_DIR_EFS_DISALLOWED - The directory has been disabled for encryption.
@@ -21660,7 +21660,7 @@ Language=Russian
 ERROR_EFS_SERVER_NOT_TRUSTED - The server is not trusted for remote encryption operation.
 .
 Language=Polish
-ERROR_EFS_SERVER_NOT_TRUSTED - The server is not trusted for remote encryption operation.
+ERROR_EFS_SERVER_NOT_TRUSTED - Serwer nie jest zaufany dla zdalnej operacji szyfrowania.
 .
 Language=Romanian
 ERROR_EFS_SERVER_NOT_TRUSTED - The server is not trusted for remote encryption operation.
@@ -21677,7 +21677,7 @@ Language=Russian
 ERROR_BAD_RECOVERY_POLICY - Recovery policy configured for this system contains invalid recovery certificate.
 .
 Language=Polish
-ERROR_BAD_RECOVERY_POLICY - Recovery policy configured for this system contains invalid recovery certificate.
+ERROR_BAD_RECOVERY_POLICY - Zasady odzyskiwania skonfigurowane dla tego systemu zawierają nieprawidłowy certyfikat odzyskiwania.
 .
 Language=Romanian
 ERROR_BAD_RECOVERY_POLICY - Recovery policy configured for this system contains invalid recovery certificate.
@@ -21694,7 +21694,7 @@ Language=Russian
 ERROR_EFS_ALG_BLOB_TOO_BIG - The encryption algorithm used on the source file needs a bigger key buffer than the one on the destination file.
 .
 Language=Polish
-ERROR_EFS_ALG_BLOB_TOO_BIG - The encryption algorithm used on the source file needs a bigger key buffer than the one on the destination file.
+ERROR_EFS_ALG_BLOB_TOO_BIG - Algorytm szyfrowania użyty dla pliku źródłowego wymaga większego buforu klucza niż określony dla pliku docelowego.
 .
 Language=Romanian
 ERROR_EFS_ALG_BLOB_TOO_BIG - The encryption algorithm used on the source file needs a bigger key buffer than the one on the destination file.
@@ -21711,7 +21711,7 @@ Language=Russian
 ERROR_VOLUME_NOT_SUPPORT_EFS - The disk partition does not support file encryption.
 .
 Language=Polish
-ERROR_VOLUME_NOT_SUPPORT_EFS - The disk partition does not support file encryption.
+ERROR_VOLUME_NOT_SUPPORT_EFS - Dana partycja dysku nie obsługuje szyfrowania plików.
 .
 Language=Romanian
 ERROR_VOLUME_NOT_SUPPORT_EFS - The disk partition does not support file encryption.
@@ -21728,7 +21728,7 @@ Language=Russian
 ERROR_EFS_DISABLED - This machine is disabled for file encryption.
 .
 Language=Polish
-ERROR_EFS_DISABLED - This machine is disabled for file encryption.
+ERROR_EFS_DISABLED - Dla tego komputera szyfrowanie plików jest wyłączone.
 .
 Language=Romanian
 ERROR_EFS_DISABLED - This machine is disabled for file encryption.
@@ -21745,7 +21745,7 @@ Language=Russian
 ERROR_EFS_VERSION_NOT_SUPPORT - A newer system is required to decrypt this encrypted file.
 .
 Language=Polish
-ERROR_EFS_VERSION_NOT_SUPPORT - A newer system is required to decrypt this encrypted file.
+ERROR_EFS_VERSION_NOT_SUPPORT - Do odszyfrowania tego pliku zaszyfrowanego potrzebny jest nowszy system.
 .
 Language=Romanian
 ERROR_EFS_VERSION_NOT_SUPPORT - A newer system is required to decrypt this encrypted file.
@@ -21762,7 +21762,7 @@ Language=Russian
 ERROR_NO_BROWSER_SERVERS_FOUND - The list of servers for this workgroup is not currently available.
 .
 Language=Polish
-ERROR_NO_BROWSER_SERVERS_FOUND - The list of servers for this workgroup is not currently available.
+ERROR_NO_BROWSER_SERVERS_FOUND - Lista serwerów dla tej grupy roboczej jest obecnie niedostępna.
 .
 Language=Romanian
 ERROR_NO_BROWSER_SERVERS_FOUND - The list of servers for this workgroup is not currently available.
@@ -21779,7 +21779,7 @@ Language=Russian
 SCHED_E_SERVICE_NOT_LOCALSYSTEM - The Task Scheduler service must be configured to run in the System account to function properly. Individual tasks may be configured to run in other accounts.
 .
 Language=Polish
-SCHED_E_SERVICE_NOT_LOCALSYSTEM - The Task Scheduler service must be configured to run in the System account to function properly. Individual tasks may be configured to run in other accounts.
+SCHED_E_SERVICE_NOT_LOCALSYSTEM - Usługa harmonogramu zadań musi być skonfiguorawana do uruchomienia w systemie konta, aby funkcjonować poprawnie. Indywidualne zadania mogą być skierowane do uruchamiania w innych kontach.
 .
 Language=Romanian
 SCHED_E_SERVICE_NOT_LOCALSYSTEM - The Task Scheduler service must be configured to run in the System account to function properly. Individual tasks may be configured to run in other accounts.
@@ -21796,7 +21796,7 @@ Language=Russian
 ERROR_CTX_WINSTATION_NAME_INVALID - The specified session name is invalid.
 .
 Language=Polish
-ERROR_CTX_WINSTATION_NAME_INVALID - The specified session name is invalid.
+ERROR_CTX_WINSTATION_NAME_INVALID - Podana nazwa sesji jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_CTX_WINSTATION_NAME_INVALID - The specified session name is invalid.
@@ -21813,7 +21813,7 @@ Language=Russian
 ERROR_CTX_INVALID_PD - The specified protocol driver is invalid.
 .
 Language=Polish
-ERROR_CTX_INVALID_PD - The specified protocol driver is invalid.
+ERROR_CTX_INVALID_PD - Podany sterownik protokołu jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_CTX_INVALID_PD - The specified protocol driver is invalid.
@@ -21830,7 +21830,7 @@ Language=Russian
 ERROR_CTX_PD_NOT_FOUND - The specified protocol driver was not found in the system path.
 .
 Language=Polish
-ERROR_CTX_PD_NOT_FOUND - The specified protocol driver was not found in the system path.
+ERROR_CTX_PD_NOT_FOUND - Podany sterownik protokołu nie został znaleziony w ścieżce systemu.
 .
 Language=Romanian
 ERROR_CTX_PD_NOT_FOUND - The specified protocol driver was not found in the system path.
@@ -21847,7 +21847,7 @@ Language=Russian
 ERROR_CTX_WD_NOT_FOUND - The specified terminal connection driver was not found in the system path.
 .
 Language=Polish
-ERROR_CTX_WD_NOT_FOUND - The specified terminal connection driver was not found in the system path.
+ERROR_CTX_WD_NOT_FOUND - Podany sterownik połączenia terminali nie został znaleziony w ścieżce systemu.
 .
 Language=Romanian
 ERROR_CTX_WD_NOT_FOUND - The specified terminal connection driver was not found in the system path.
@@ -21864,7 +21864,7 @@ Language=Russian
 ERROR_CTX_CANNOT_MAKE_EVENTLOG_ENTRY - A registry key for event logging could not be created for this session.
 .
 Language=Polish
-ERROR_CTX_CANNOT_MAKE_EVENTLOG_ENTRY - A registry key for event logging could not be created for this session.
+ERROR_CTX_CANNOT_MAKE_EVENTLOG_ENTRY - Dla tej sesji nie można utworzyć klucza Rejestru obejmującego rejestrowanie w dzienniku zdarzeń.
 .
 Language=Romanian
 ERROR_CTX_CANNOT_MAKE_EVENTLOG_ENTRY - A registry key for event logging could not be created for this session.
@@ -21881,7 +21881,7 @@ Language=Russian
 ERROR_CTX_SERVICE_NAME_COLLISION - A service with the same name already exists on the system.
 .
 Language=Polish
-ERROR_CTX_SERVICE_NAME_COLLISION - A service with the same name already exists on the system.
+ERROR_CTX_SERVICE_NAME_COLLISION - Usługa o tej samej nazwie już istnieje w systemie.
 .
 Language=Romanian
 ERROR_CTX_SERVICE_NAME_COLLISION - A service with the same name already exists on the system.
@@ -21898,7 +21898,7 @@ Language=Russian
 ERROR_CTX_CLOSE_PENDING - A close operation is pending on the session.
 .
 Language=Polish
-ERROR_CTX_CLOSE_PENDING - A close operation is pending on the session.
+ERROR_CTX_CLOSE_PENDING - Operacja zamykania czeka na wykonanie (w tej sesji).
 .
 Language=Romanian
 ERROR_CTX_CLOSE_PENDING - A close operation is pending on the session.
@@ -21915,7 +21915,7 @@ Language=Russian
 ERROR_CTX_NO_OUTBUF - There are no free output buffers available.
 .
 Language=Polish
-ERROR_CTX_NO_OUTBUF - There are no free output buffers available.
+ERROR_CTX_NO_OUTBUF - Brak dostępnych wolnych buforów wyjściowych.
 .
 Language=Romanian
 ERROR_CTX_NO_OUTBUF - There are no free output buffers available.
@@ -21932,7 +21932,7 @@ Language=Russian
 ERROR_CTX_MODEM_INF_NOT_FOUND - The MODEM.INF file was not found.
 .
 Language=Polish
-ERROR_CTX_MODEM_INF_NOT_FOUND - The MODEM.INF file was not found.
+ERROR_CTX_MODEM_INF_NOT_FOUND - Nie znaleziono pliku MODEM.INF.
 .
 Language=Romanian
 ERROR_CTX_MODEM_INF_NOT_FOUND - The MODEM.INF file was not found.
@@ -21949,7 +21949,7 @@ Language=Russian
 ERROR_CTX_INVALID_MODEMNAME - The modem name was not found in MODEM.INF.
 .
 Language=Polish
-ERROR_CTX_INVALID_MODEMNAME - The modem name was not found in MODEM.INF.
+ERROR_CTX_INVALID_MODEMNAME - Nazwa modemu nie została znaleziona w pliku MODEM.INF.
 .
 Language=Romanian
 ERROR_CTX_INVALID_MODEMNAME - The modem name was not found in MODEM.INF.
@@ -21966,7 +21966,7 @@ Language=Russian
 ERROR_CTX_MODEM_RESPONSE_ERROR - The modem did not accept the command sent to it. Verify that the configured modem name matches the attached modem.
 .
 Language=Polish
-ERROR_CTX_MODEM_RESPONSE_ERROR - The modem did not accept the command sent to it. Verify that the configured modem name matches the attached modem.
+ERROR_CTX_MODEM_RESPONSE_ERROR - Modem nie akceptuje wysłanego do niego polecenia. Upewnij się, czy nazwa skonfigurowanego modemu jest zgodna z nazwą dołączonego modemu.
 .
 Language=Romanian
 ERROR_CTX_MODEM_RESPONSE_ERROR - The modem did not accept the command sent to it. Verify that the configured modem name matches the attached modem.
@@ -21983,7 +21983,7 @@ Language=Russian
 ERROR_CTX_MODEM_RESPONSE_TIMEOUT - The modem did not respond to the command sent to it. Verify that the modem is properly cabled and powered on.
 .
 Language=Polish
-ERROR_CTX_MODEM_RESPONSE_TIMEOUT - The modem did not respond to the command sent to it. Verify that the modem is properly cabled and powered on.
+ERROR_CTX_MODEM_RESPONSE_TIMEOUT - Modem nie odpowiada na wysłane do niego polecenie. Upewnij się, czy modem jest właściwie połączony i czy jest zasilany.
 .
 Language=Romanian
 ERROR_CTX_MODEM_RESPONSE_TIMEOUT - The modem did not respond to the command sent to it. Verify that the modem is properly cabled and powered on.
@@ -22000,7 +22000,7 @@ Language=Russian
 ERROR_CTX_MODEM_RESPONSE_NO_CARRIER - Carrier detect has failed or carrier has been dropped due to disconnect.
 .
 Language=Polish
-ERROR_CTX_MODEM_RESPONSE_NO_CARRIER - Carrier detect has failed or carrier has been dropped due to disconnect.
+ERROR_CTX_MODEM_RESPONSE_NO_CARRIER - Nie można wykryć nośnej lub nośna została utracona z powodu rozłączenia.
 .
 Language=Romanian
 ERROR_CTX_MODEM_RESPONSE_NO_CARRIER - Carrier detect has failed or carrier has been dropped due to disconnect.
@@ -22017,7 +22017,7 @@ Language=Russian
 ERROR_CTX_MODEM_RESPONSE_NO_DIALTONE - Dial tone not detected within the required time. Verify that the phone cable is properly attached and functional.
 .
 Language=Polish
-ERROR_CTX_MODEM_RESPONSE_NO_DIALTONE - Dial tone not detected within the required time. Verify that the phone cable is properly attached and functional.
+ERROR_CTX_MODEM_RESPONSE_NO_DIALTONE - W wymaganym czasie nie wykryto sygnału wybierania. Sprawdź, czy kabel telefoniczny jest poprawnie podłączony i czy nie jest uszkodzony.
 .
 Language=Romanian
 ERROR_CTX_MODEM_RESPONSE_NO_DIALTONE - Dial tone not detected within the required time. Verify that the phone cable is properly attached and functional.
@@ -22034,7 +22034,7 @@ Language=Russian
 ERROR_CTX_MODEM_RESPONSE_BUSY - Busy signal detected at remote site on callback.
 .
 Language=Polish
-ERROR_CTX_MODEM_RESPONSE_BUSY - Busy signal detected at remote site on callback.
+ERROR_CTX_MODEM_RESPONSE_BUSY - Podczas oddzwaniania, w lokacji zdalnej wykryto sygnał zajętości.
 .
 Language=Romanian
 ERROR_CTX_MODEM_RESPONSE_BUSY - Busy signal detected at remote site on callback.
@@ -22051,7 +22051,7 @@ Language=Russian
 ERROR_CTX_MODEM_RESPONSE_VOICE - Voice detected at remote site on callback.
 .
 Language=Polish
-ERROR_CTX_MODEM_RESPONSE_VOICE - Voice detected at remote site on callback.
+ERROR_CTX_MODEM_RESPONSE_VOICE - Podczas oddzwaniania, w lokacji zdalnej wykryto głos.
 .
 Language=Romanian
 ERROR_CTX_MODEM_RESPONSE_VOICE - Voice detected at remote site on callback.
@@ -22068,7 +22068,7 @@ Language=Russian
 ERROR_CTX_TD_ERROR - Transport driver error
 .
 Language=Polish
-ERROR_CTX_TD_ERROR - Transport driver error
+ERROR_CTX_TD_ERROR - Błąd sterownika transportu.
 .
 Language=Romanian
 ERROR_CTX_TD_ERROR - Transport driver error
@@ -22085,7 +22085,7 @@ Language=Russian
 ERROR_CTX_WINSTATION_NOT_FOUND - The specified session cannot be found.
 .
 Language=Polish
-ERROR_CTX_WINSTATION_NOT_FOUND - The specified session cannot be found.
+ERROR_CTX_WINSTATION_NOT_FOUND - Nie można odnaleźć określonej sesji.
 .
 Language=Romanian
 ERROR_CTX_WINSTATION_NOT_FOUND - The specified session cannot be found.
@@ -22102,7 +22102,7 @@ Language=Russian
 ERROR_CTX_WINSTATION_ALREADY_EXISTS - The specified session name is already in use.
 .
 Language=Polish
-ERROR_CTX_WINSTATION_ALREADY_EXISTS - The specified session name is already in use.
+ERROR_CTX_WINSTATION_ALREADY_EXISTS - Określona nazwa sesji jest już używana.
 .
 Language=Romanian
 ERROR_CTX_WINSTATION_ALREADY_EXISTS - The specified session name is already in use.
@@ -22119,7 +22119,7 @@ Language=Russian
 ERROR_CTX_WINSTATION_BUSY - The requested operation cannot be completed because the terminal connection is currently busy processing a connect, disconnect, reset, or delete operation.
 .
 Language=Polish
-ERROR_CTX_WINSTATION_BUSY - The requested operation cannot be completed because the terminal connection is currently busy processing a connect, disconnect, reset, or delete operation.
+ERROR_CTX_WINSTATION_BUSY - Nie można ukończyć żądanej operacji, ponieważ połączenie Terminala jest zajęte przetwarzaniem operacji łączenia, rozłączania, resetowania lub usuwania.
 .
 Language=Romanian
 ERROR_CTX_WINSTATION_BUSY - The requested operation cannot be completed because the terminal connection is currently busy processing a connect, disconnect, reset, or delete operation.
@@ -22136,7 +22136,7 @@ Language=Russian
 ERROR_CTX_BAD_VIDEO_MODE - An attempt has been made to connect to a session whose video mode is not supported by the current client.
 .
 Language=Polish
-ERROR_CTX_BAD_VIDEO_MODE - An attempt has been made to connect to a session whose video mode is not supported by the current client.
+ERROR_CTX_BAD_VIDEO_MODE - Podjęto próbę połączenia z sesją, której tryb wideo nie jest obsługiwany przez bieżącego klienta.
 .
 Language=Romanian
 ERROR_CTX_BAD_VIDEO_MODE - An attempt has been made to connect to a session whose video mode is not supported by the current client.
@@ -22153,7 +22153,7 @@ Language=Russian
 ERROR_CTX_GRAPHICS_INVALID - The application attempted to enable DOS graphics mode. DOS graphics mode is not supported.
 .
 Language=Polish
-ERROR_CTX_GRAPHICS_INVALID - The application attempted to enable DOS graphics mode. DOS graphics mode is not supported.
+ERROR_CTX_GRAPHICS_INVALID - Aplikacja próbowała włączyć tryb graficzny DOS. Tryb graficzny DOS nie jest obsługiwany.
 .
 Language=Romanian
 ERROR_CTX_GRAPHICS_INVALID - The application attempted to enable DOS graphics mode. DOS graphics mode is not supported.
@@ -22170,7 +22170,7 @@ Language=Russian
 ERROR_CTX_LOGON_DISABLED - Your interactive logon privilege has been disabled. Please contact your administrator.
 .
 Language=Polish
-ERROR_CTX_LOGON_DISABLED - Your interactive logon privilege has been disabled. Please contact your administrator.
+ERROR_CTX_LOGON_DISABLED - Twoje uprawnienie do logowania interakcyjnego zostało wyłączone. Skontaktuj się z administratorem systemu.
 .
 Language=Romanian
 ERROR_CTX_LOGON_DISABLED - Your interactive logon privilege has been disabled. Please contact your administrator.
@@ -22187,7 +22187,7 @@ Language=Russian
 ERROR_CTX_NOT_CONSOLE - The requested operation can be performed only on the system console. This is most often the result of a driver or system DLL requiring direct console access.
 .
 Language=Polish
-ERROR_CTX_NOT_CONSOLE - The requested operation can be performed only on the system console. This is most often the result of a driver or system DLL requiring direct console access.
+ERROR_CTX_NOT_CONSOLE - Żądana operacja może być wykonana jedynie za pomocą konsoli systemu. Jest to spowodowane najczęściej tym, że sterownik lub biblioteka DLL wymaga bezpośredniego dostępu do konsoli.
 .
 Language=Romanian
 ERROR_CTX_NOT_CONSOLE - The requested operation can be performed only on the system console. This is most often the result of a driver or system DLL requiring direct console access.
@@ -22204,7 +22204,7 @@ Language=Russian
 ERROR_CTX_CLIENT_QUERY_TIMEOUT - The client failed to respond to the server connect message.
 .
 Language=Polish
-ERROR_CTX_CLIENT_QUERY_TIMEOUT - The client failed to respond to the server connect message.
+ERROR_CTX_CLIENT_QUERY_TIMEOUT - Klient nie odpowiada na komunikat połączenia wysłany przez serwer.
 .
 Language=Romanian
 ERROR_CTX_CLIENT_QUERY_TIMEOUT - The client failed to respond to the server connect message.
@@ -22221,7 +22221,7 @@ Language=Russian
 ERROR_CTX_CONSOLE_DISCONNECT - Disconnecting the console session is not supported.
 .
 Language=Polish
-ERROR_CTX_CONSOLE_DISCONNECT - Disconnecting the console session is not supported.
+ERROR_CTX_CONSOLE_DISCONNECT - Odłączanie sesji konsoli nie jest obsługiwane.
 .
 Language=Romanian
 ERROR_CTX_CONSOLE_DISCONNECT - Disconnecting the console session is not supported.
@@ -22238,7 +22238,7 @@ Language=Russian
 ERROR_CTX_CONSOLE_CONNECT - Reconnecting a disconnected session to the console is not supported.
 .
 Language=Polish
-ERROR_CTX_CONSOLE_CONNECT - Reconnecting a disconnected session to the console is not supported.
+ERROR_CTX_CONSOLE_CONNECT - Ponowne podłączanie odłączonej sesji do konsoli nie jest obsługiwane.
 .
 Language=Romanian
 ERROR_CTX_CONSOLE_CONNECT - Reconnecting a disconnected session to the console is not supported.
@@ -22255,7 +22255,7 @@ Language=Russian
 ERROR_CTX_SHADOW_DENIED - The request to control another session remotely was denied.
 .
 Language=Polish
-ERROR_CTX_SHADOW_DENIED - The request to control another session remotely was denied.
+ERROR_CTX_SHADOW_DENIED - Żądanie kontrolowania zdalnego jeszcze jednej sesji zostało odrzucone.
 .
 Language=Romanian
 ERROR_CTX_SHADOW_DENIED - The request to control another session remotely was denied.
@@ -22272,7 +22272,7 @@ Language=Russian
 ERROR_CTX_WINSTATION_ACCESS_DENIED - The requested session access is denied.
 .
 Language=Polish
-ERROR_CTX_WINSTATION_ACCESS_DENIED - The requested session access is denied.
+ERROR_CTX_WINSTATION_ACCESS_DENIED - Odmowa dostępu do żądanej sesji.
 .
 Language=Romanian
 ERROR_CTX_WINSTATION_ACCESS_DENIED - The requested session access is denied.
@@ -22289,7 +22289,7 @@ Language=Russian
 ERROR_CTX_INVALID_WD - The specified terminal connection driver is invalid.
 .
 Language=Polish
-ERROR_CTX_INVALID_WD - The specified terminal connection driver is invalid.
+ERROR_CTX_INVALID_WD - Podany sterownik połączenia terminali jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_CTX_INVALID_WD - The specified terminal connection driver is invalid.
@@ -22306,7 +22306,7 @@ Language=Russian
 ERROR_CTX_SHADOW_INVALID - The requested session cannot be controlled remotely. This may be because the session is disconnected or does not currently have a user logged on.
 .
 Language=Polish
-ERROR_CTX_SHADOW_INVALID - The requested session cannot be controlled remotely. This may be because the session is disconnected or does not currently have a user logged on.
+ERROR_CTX_SHADOW_INVALID - Żądana sesja nie może być kontrolowana zdalnie. Może się to zdarzyć, ponieważ sesja jest odłączona lub użytkownik nie jest zalogowany.
 .
 Language=Romanian
 ERROR_CTX_SHADOW_INVALID - The requested session cannot be controlled remotely. This may be because the session is disconnected or does not currently have a user logged on.
@@ -22323,7 +22323,7 @@ Language=Russian
 ERROR_CTX_SHADOW_DISABLED - The requested session is not configured to allow remote control.
 .
 Language=Polish
-ERROR_CTX_SHADOW_DISABLED - The requested session is not configured to allow remote control.
+ERROR_CTX_SHADOW_DISABLED - Żądana sesja nie jest skonfigurowana tak, aby umożliwiać kontrolę zdalną.
 .
 Language=Romanian
 ERROR_CTX_SHADOW_DISABLED - The requested session is not configured to allow remote control.
@@ -22340,7 +22340,7 @@ Language=Russian
 ERROR_CTX_CLIENT_LICENSE_IN_USE - Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number is currently being used by another user. Please call your system administrator to obtain a unique license number.
 .
 Language=Polish
-ERROR_CTX_CLIENT_LICENSE_IN_USE - Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number is currently being used by another user. Please call your system administrator to obtain a unique license number.
+ERROR_CTX_CLIENT_LICENSE_IN_USE - Żądanie połączenia z tym serwerem terminali zostało odrzucone. Numer licencji Twojego klienta serwera terminali jest obecnie używany przez innego użytkownika. Skontaktuj się z administratorem systemu, aby uzyskać unikatowy numer licencji.
 .
 Language=Romanian
 ERROR_CTX_CLIENT_LICENSE_IN_USE - Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number is currently being used by another user. Please call your system administrator to obtain a unique license number.
@@ -22357,7 +22357,7 @@ Language=Russian
 ERROR_CTX_CLIENT_LICENSE_NOT_SET - Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number has not been entered for this copy of the Terminal Server client. Please contact your system administrator.
 .
 Language=Polish
-ERROR_CTX_CLIENT_LICENSE_NOT_SET - Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number has not been entered for this copy of the Terminal Server client. Please contact your system administrator.
+ERROR_CTX_CLIENT_LICENSE_NOT_SET - Żądanie połączenia z tym serwerem terminali zostało odrzucone. Numer licencji klienta serwera terminali nie został wprowadzony dla tej kopii klienta serwera terminali. Skontaktuj się z administratorem systemu.
 .
 Language=Romanian
 ERROR_CTX_CLIENT_LICENSE_NOT_SET - Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number has not been entered for this copy of the Terminal Server client. Please contact your system administrator.
@@ -22374,7 +22374,7 @@ Language=Russian
 ERROR_CTX_LICENSE_NOT_AVAILABLE - The system has reached its licensed logon limit. Please try again later.
 .
 Language=Polish
-ERROR_CTX_LICENSE_NOT_AVAILABLE - The system has reached its licensed logon limit. Please try again later.
+ERROR_CTX_LICENSE_NOT_AVAILABLE - System osiągnął ograniczony licencją limit logowania. Spróbuj ponownie później.
 .
 Language=Romanian
 ERROR_CTX_LICENSE_NOT_AVAILABLE - The system has reached its licensed logon limit. Please try again later.
@@ -22391,7 +22391,7 @@ Language=Russian
 ERROR_CTX_LICENSE_CLIENT_INVALID - The client you are using is not licensed to use this system. Your logon request is denied.
 .
 Language=Polish
-ERROR_CTX_LICENSE_CLIENT_INVALID - The client you are using is not licensed to use this system. Your logon request is denied.
+ERROR_CTX_LICENSE_CLIENT_INVALID - Klient, którego używasz, nie ma licencji na używanie systemu. Żądanie zalogowania zostało odrzucone.
 .
 Language=Romanian
 ERROR_CTX_LICENSE_CLIENT_INVALID - The client you are using is not licensed to use this system. Your logon request is denied.
@@ -22408,7 +22408,7 @@ Language=Russian
 ERROR_CTX_LICENSE_EXPIRED - The system license has expired. Your logon request is denied.
 .
 Language=Polish
-ERROR_CTX_LICENSE_EXPIRED - The system license has expired. Your logon request is denied.
+ERROR_CTX_LICENSE_EXPIRED - Licencja na używanie systemu wygasła. Żądanie zalogowania zostało odrzucone.
 .
 Language=Romanian
 ERROR_CTX_LICENSE_EXPIRED - The system license has expired. Your logon request is denied.
@@ -22425,7 +22425,7 @@ Language=Russian
 ERROR_CTX_SHADOW_NOT_RUNNING - Remote control could not be terminated because the specified session is not currently being remotely controlled.
 .
 Language=Polish
-ERROR_CTX_SHADOW_NOT_RUNNING - Remote control could not be terminated because the specified session is not currently being remotely controlled.
+ERROR_CTX_SHADOW_NOT_RUNNING - Nie można przerwać zdalnego sterowania, ponieważ określona sesja nie jest sterowana zdalnie.
 .
 Language=Romanian
 ERROR_CTX_SHADOW_NOT_RUNNING - Remote control could not be terminated because the specified session is not currently being remotely controlled.
@@ -22442,7 +22442,7 @@ Language=Russian
 ERROR_CTX_SHADOW_ENDED_BY_MODE_CHANGE - The remote control of the console was terminated because the display mode was changed. Changing the display mode in a remote control session is not supported.
 .
 Language=Polish
-ERROR_CTX_SHADOW_ENDED_BY_MODE_CHANGE - The remote control of the console was terminated because the display mode was changed. Changing the display mode in a remote control session is not supported.
+ERROR_CTX_SHADOW_ENDED_BY_MODE_CHANGE - Zdalne sterowanie konsolą zostało przerwane z powodu zmiany trybu wyświetlania. Zmiana trybu wyświetlania w trakcie sesji zdalnego sterowania jest nieobsługiwana.
 .
 Language=Romanian
 ERROR_CTX_SHADOW_ENDED_BY_MODE_CHANGE - The remote control of the console was terminated because the display mode was changed. Changing the display mode in a remote control session is not supported.
@@ -22459,7 +22459,7 @@ Language=Russian
 ERROR_ACTIVATION_COUNT_EXCEEDED - Activation has already been reset the maximum number of times for this installation. Your activation timer will not be cleared.
 .
 Language=Polish
-ERROR_ACTIVATION_COUNT_EXCEEDED - Activation has already been reset the maximum number of times for this installation. Your activation timer will not be cleared.
+ERROR_ACTIVATION_COUNT_EXCEEDED - Aktywacja została zresetowana maksymalną liczbę razy na tę instalację. Czasomierz aktywacji nie zostanie wyczyszczony.
 .
 Language=Romanian
 ERROR_ACTIVATION_COUNT_EXCEEDED - Activation has already been reset the maximum number of times for this installation. Your activation timer will not be cleared.
@@ -22476,7 +22476,7 @@ Language=Russian
 ERROR_CTX_WINSTATIONS_DISABLED - Remote logins are currently disabled.
 .
 Language=Polish
-ERROR_CTX_WINSTATIONS_DISABLED - Remote logins are currently disabled.
+ERROR_CTX_WINSTATIONS_DISABLED - Logowania zdalne są w tej chwili wyłączone.
 .
 Language=Romanian
 ERROR_CTX_WINSTATIONS_DISABLED - Remote logins are currently disabled.
@@ -22493,7 +22493,7 @@ Language=Russian
 ERROR_CTX_ENCRYPTION_LEVEL_REQUIRED - You do not have the proper encryption level to access this Session.
 .
 Language=Polish
-ERROR_CTX_ENCRYPTION_LEVEL_REQUIRED - You do not have the proper encryption level to access this Session.
+ERROR_CTX_ENCRYPTION_LEVEL_REQUIRED - Nie masz odpowiedniego poziomu szyfrowania, aby uzyskać dostęp do tej sesji.
 .
 Language=Romanian
 ERROR_CTX_ENCRYPTION_LEVEL_REQUIRED - You do not have the proper encryption level to access this Session.
@@ -22510,7 +22510,7 @@ Language=Russian
 ERROR_CTX_SESSION_IN_USE - The user %s\\%s is currently logged on to this computer. Only the current user or an administrator can log on to this computer.
 .
 Language=Polish
-ERROR_CTX_SESSION_IN_USE - The user %s\\%s is currently logged on to this computer. Only the current user or an administrator can log on to this computer.
+ERROR_CTX_SESSION_IN_USE - Użytkownik %s\\%s jest aktualnie zalogowany na tym komputerze. Tylko bieżący użytkownik lub administrator mogą zalogować się na tym komputerze.
 .
 Language=Romanian
 ERROR_CTX_SESSION_IN_USE - The user %s\\%s is currently logged on to this computer. Only the current user or an administrator can log on to this computer.
@@ -22527,7 +22527,7 @@ Language=Russian
 ERROR_CTX_NO_FORCE_LOGOFF - The user %s\\%s is already logged on to the console of this computer. You do not have permission to log in at this time. To resolve this issue, contact %s\\%s and have them log off.
 .
 Language=Polish
-ERROR_CTX_NO_FORCE_LOGOFF - The user %s\\%s is already logged on to the console of this computer. You do not have permission to log in at this time. To resolve this issue, contact %s\\%s and have them log off.
+ERROR_CTX_NO_FORCE_LOGOFF - Użytkownik %s\\%s jest już zalogowany do konsoli tego komputera. Nie masz uprawnienia do logowania w tym czasie. Aby rozwiązać ten problem, skontaktuj się z użytkownikiem %s\\%s i poproś o wylogowanie.
 .
 Language=Romanian
 ERROR_CTX_NO_FORCE_LOGOFF - The user %s\\%s is already logged on to the console of this computer. You do not have permission to log in at this time. To resolve this issue, contact %s\\%s and have them log off.
@@ -22544,7 +22544,7 @@ Language=Russian
 ERROR_CTX_ACCOUNT_RESTRICTION - Unable to log you on because of an account restriction.
 .
 Language=Polish
-ERROR_CTX_ACCOUNT_RESTRICTION - Unable to log you on because of an account restriction.
+ERROR_CTX_ACCOUNT_RESTRICTION - Nie możesz się zalogować z powodu ograniczeń konta.
 .
 Language=Romanian
 ERROR_CTX_ACCOUNT_RESTRICTION - Unable to log you on because of an account restriction.
@@ -22561,7 +22561,7 @@ Language=Russian
 ERROR_RDP_PROTOCOL_ERROR - The RDP protocol component %2 detected an error in the protocol stream and has disconnected the client.
 .
 Language=Polish
-ERROR_RDP_PROTOCOL_ERROR - The RDP protocol component %2 detected an error in the protocol stream and has disconnected the client.
+ERROR_RDP_PROTOCOL_ERROR - Składnik protokołu RDP %2 wykrył błąd w strumieniu protokołu i rozłączył klienta.
 .
 Language=Romanian
 ERROR_RDP_PROTOCOL_ERROR - The RDP protocol component %2 detected an error in the protocol stream and has disconnected the client.
@@ -22578,7 +22578,7 @@ Language=Russian
 ERROR_CTX_CDM_CONNECT - The Client Drive Mapping Service Has Connected on Terminal Connection.
 .
 Language=Polish
-ERROR_CTX_CDM_CONNECT - The Client Drive Mapping Service Has Connected on Terminal Connection.
+ERROR_CTX_CDM_CONNECT - Usługa klienta mapowania dysków została połączona prze użyciu połączenia Terminal.
 .
 Language=Romanian
 ERROR_CTX_CDM_CONNECT - The Client Drive Mapping Service Has Connected on Terminal Connection.
@@ -22595,7 +22595,7 @@ Language=Russian
 ERROR_CTX_CDM_DISCONNECT - The Client Drive Mapping Service Has Disconnected on Terminal Connection.
 .
 Language=Polish
-ERROR_CTX_CDM_DISCONNECT - The Client Drive Mapping Service Has Disconnected on Terminal Connection.
+ERROR_CTX_CDM_DISCONNECT - Usługa klienta mapowania dysków została rozłączona prze użyciu połączenia Terminal.
 .
 Language=Romanian
 ERROR_CTX_CDM_DISCONNECT - The Client Drive Mapping Service Has Disconnected on Terminal Connection.
@@ -22612,7 +22612,7 @@ Language=Russian
 FRS_ERR_INVALID_API_SEQUENCE - The file replication service API was called incorrectly.
 .
 Language=Polish
-FRS_ERR_INVALID_API_SEQUENCE - The file replication service API was called incorrectly.
+FRS_ERR_INVALID_API_SEQUENCE - Interfejs API usługi replikacji plików został niepoprawnie wywołany.
 .
 Language=Romanian
 FRS_ERR_INVALID_API_SEQUENCE - The file replication service API was called incorrectly.
@@ -22629,7 +22629,7 @@ Language=Russian
 FRS_ERR_STARTING_SERVICE - The file replication service cannot be started.
 .
 Language=Polish
-FRS_ERR_STARTING_SERVICE - The file replication service cannot be started.
+FRS_ERR_STARTING_SERVICE - Nie można uruchomić usługi replikacji plików.
 .
 Language=Romanian
 FRS_ERR_STARTING_SERVICE - The file replication service cannot be started.
@@ -22646,7 +22646,7 @@ Language=Russian
 FRS_ERR_STOPPING_SERVICE - The file replication service cannot be stopped.
 .
 Language=Polish
-FRS_ERR_STOPPING_SERVICE - The file replication service cannot be stopped.
+FRS_ERR_STOPPING_SERVICE - Nie można zatrzymać usługi replikacji plików.
 .
 Language=Romanian
 FRS_ERR_STOPPING_SERVICE - The file replication service cannot be stopped.
@@ -22663,7 +22663,7 @@ Language=Russian
 FRS_ERR_INTERNAL_API - The file replication service API terminated the request. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_INTERNAL_API - The file replication service API terminated the request. The event log may have more information.
+FRS_ERR_INTERNAL_API - Interfejs API usługi replikacji plików przerwał żądanie. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_INTERNAL_API - The file replication service API terminated the request. The event log may have more information.
@@ -22680,7 +22680,7 @@ Language=Russian
 FRS_ERR_INTERNAL - The file replication service terminated the request. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_INTERNAL - The file replication service terminated the request. The event log may have more information.
+FRS_ERR_INTERNAL - Usługa replikacji plików przerwała żądanie. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_INTERNAL - The file replication service terminated the request. The event log may have more information.
@@ -22697,7 +22697,7 @@ Language=Russian
 FRS_ERR_SERVICE_COMM - The file replication service cannot be contacted. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_SERVICE_COMM - The file replication service cannot be contacted. The event log may have more information.
+FRS_ERR_SERVICE_COMM - Nie można skontaktować się z usługą replikacji plików. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_SERVICE_COMM - The file replication service cannot be contacted. The event log may have more information.
@@ -22714,7 +22714,7 @@ Language=Russian
 FRS_ERR_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges. The event log may have more information.
+FRS_ERR_INSUFFICIENT_PRIV - Usługa replikacji plików nie może spełnić żądania, ponieważ użytkownik ma niewystarczające uprawnienia. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges. The event log may have more information.
@@ -22731,7 +22731,7 @@ Language=Russian
 FRS_ERR_AUTHENTICATION - The file replication service cannot satisfy the request because authenticated RPC is not available. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_AUTHENTICATION - The file replication service cannot satisfy the request because authenticated RPC is not available. The event log may have more information.
+FRS_ERR_AUTHENTICATION - Usługa replikacji plików nie może spełnić żądania, ponieważ uwierzytelniony serwer RPC nie jest dostępny. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_AUTHENTICATION - The file replication service cannot satisfy the request because authenticated RPC is not available. The event log may have more information.
@@ -22748,7 +22748,7 @@ Language=Russian
 FRS_ERR_PARENT_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges on the domain controller. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_PARENT_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges on the domain controller. The event log may have more information.
+FRS_ERR_PARENT_INSUFFICIENT_PRIV - Usługa replikacji plików nie może spełnić żądania, ponieważ użytkownik ma niewystarczające uprawnienia w odniesieniu do kontrolera domeny. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_PARENT_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges on the domain controller. The event log may have more information.
@@ -22765,7 +22765,7 @@ Language=Russian
 FRS_ERR_PARENT_AUTHENTICATION - The file replication service cannot satisfy the request because authenticated RPC is not available on the domain controller. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_PARENT_AUTHENTICATION - The file replication service cannot satisfy the request because authenticated RPC is not available on the domain controller. The event log may have more information.
+FRS_ERR_PARENT_AUTHENTICATION - Usługa replikacji plików nie może spełnić żądania, ponieważ uwierzytelniony serwer RPC nie jest dostępny w kontrolerze domeny. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_PARENT_AUTHENTICATION - The file replication service cannot satisfy the request because authenticated RPC is not available on the domain controller. The event log may have more information.
@@ -22782,7 +22782,7 @@ Language=Russian
 FRS_ERR_CHILD_TO_PARENT_COMM - The file replication service cannot communicate with the file replication service on the domain controller. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_CHILD_TO_PARENT_COMM - The file replication service cannot communicate with the file replication service on the domain controller. The event log may have more information.
+FRS_ERR_CHILD_TO_PARENT_COMM - Usługa replikacji plików nie może skomunikować się z usługą replikacji w kontrolerze domeny. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_CHILD_TO_PARENT_COMM - The file replication service cannot communicate with the file replication service on the domain controller. The event log may have more information.
@@ -22799,7 +22799,7 @@ Language=Russian
 FRS_ERR_PARENT_TO_CHILD_COMM - The file replication service on the domain controller cannot communicate with the file replication service on this computer. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_PARENT_TO_CHILD_COMM - The file replication service on the domain controller cannot communicate with the file replication service on this computer. The event log may have more information.
+FRS_ERR_PARENT_TO_CHILD_COMM - Usługa replikacji plików w kontrolerze domeny nie może skomunikować się z usługą replikacji plików na tym komputerze. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_PARENT_TO_CHILD_COMM - The file replication service on the domain controller cannot communicate with the file replication service on this computer. The event log may have more information.
@@ -22816,7 +22816,7 @@ Language=Russian
 FRS_ERR_SYSVOL_POPULATE - The file replication service cannot populate the system volume because of an internal error. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_SYSVOL_POPULATE - The file replication service cannot populate the system volume because of an internal error. The event log may have more information.
+FRS_ERR_SYSVOL_POPULATE - Usługa replikacji plików nie może wypełnić woluminu systemowego, ponieważ wystąpił wewnętrzny błąd. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_SYSVOL_POPULATE - The file replication service cannot populate the system volume because of an internal error. The event log may have more information.
@@ -22833,7 +22833,7 @@ Language=Russian
 FRS_ERR_SYSVOL_POPULATE_TIMEOUT - The file replication service cannot populate the system volume because of an internal timeout. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_SYSVOL_POPULATE_TIMEOUT - The file replication service cannot populate the system volume because of an internal timeout. The event log may have more information.
+FRS_ERR_SYSVOL_POPULATE_TIMEOUT - Usługa replikacji plików nie może wypełnić woluminu systemowego, ponieważ upłynął wewnętrzny limit czasu. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_SYSVOL_POPULATE_TIMEOUT - The file replication service cannot populate the system volume because of an internal timeout. The event log may have more information.
@@ -22850,7 +22850,7 @@ Language=Russian
 FRS_ERR_SYSVOL_IS_BUSY - The file replication service cannot process the request. The system volume is busy with a previous request.
 .
 Language=Polish
-FRS_ERR_SYSVOL_IS_BUSY - The file replication service cannot process the request. The system volume is busy with a previous request.
+FRS_ERR_SYSVOL_IS_BUSY - Usługa replikacji plików nie może przetworzyć żądania. Wolumin systemowy jest zajęty poprzednim żądaniem.
 .
 Language=Romanian
 FRS_ERR_SYSVOL_IS_BUSY - The file replication service cannot process the request. The system volume is busy with a previous request.
@@ -22867,7 +22867,7 @@ Language=Russian
 FRS_ERR_SYSVOL_DEMOTE - The file replication service cannot stop replicating the system volume because of an internal error. The event log may have more information.
 .
 Language=Polish
-FRS_ERR_SYSVOL_DEMOTE - The file replication service cannot stop replicating the system volume because of an internal error. The event log may have more information.
+FRS_ERR_SYSVOL_DEMOTE - Usługa replikacji plików nie może zatrzymać replikacji woluminu systemowego, ponieważ wystąpił błąd wewnętrzny. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 FRS_ERR_SYSVOL_DEMOTE - The file replication service cannot stop replicating the system volume because of an internal error. The event log may have more information.
@@ -22884,7 +22884,7 @@ Language=Russian
 FRS_ERR_INVALID_SERVICE_PARAMETER - The file replication service detected an invalid parameter.
 .
 Language=Polish
-FRS_ERR_INVALID_SERVICE_PARAMETER - The file replication service detected an invalid parameter.
+FRS_ERR_INVALID_SERVICE_PARAMETER - Usługa replikacji plików wykryła nieprawidłowy parametr.
 .
 Language=Romanian
 FRS_ERR_INVALID_SERVICE_PARAMETER - The file replication service detected an invalid parameter.
@@ -22901,7 +22901,7 @@ Language=Russian
 ERROR_DS_NOT_INSTALLED - An error occurred while installing the directory service. For more information, see the event log.
 .
 Language=Polish
-ERROR_DS_NOT_INSTALLED - An error occurred while installing the directory service. For more information, see the event log.
+ERROR_DS_NOT_INSTALLED - Podczas instalowania usługi katalogowej wystąpił błąd. Więcej informacji można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 ERROR_DS_NOT_INSTALLED - An error occurred while installing the directory service. For more information, see the event log.
@@ -22918,7 +22918,7 @@ Language=Russian
 ERROR_DS_MEMBERSHIP_EVALUATED_LOCALLY - The directory service evaluated group memberships locally.
 .
 Language=Polish
-ERROR_DS_MEMBERSHIP_EVALUATED_LOCALLY - The directory service evaluated group memberships locally.
+ERROR_DS_MEMBERSHIP_EVALUATED_LOCALLY - Usługa katalogowa oceniła lokalnie członkostwo w grupach.
 .
 Language=Romanian
 ERROR_DS_MEMBERSHIP_EVALUATED_LOCALLY - The directory service evaluated group memberships locally.
@@ -22935,7 +22935,7 @@ Language=Russian
 ERROR_DS_NO_ATTRIBUTE_OR_VALUE - The specified directory service attribute or value does not exist.
 .
 Language=Polish
-ERROR_DS_NO_ATTRIBUTE_OR_VALUE - The specified directory service attribute or value does not exist.
+ERROR_DS_NO_ATTRIBUTE_OR_VALUE - Określony atrybut lub wartość usługi katalogowej nie istnieje.
 .
 Language=Romanian
 ERROR_DS_NO_ATTRIBUTE_OR_VALUE - The specified directory service attribute or value does not exist.
@@ -22952,7 +22952,7 @@ Language=Russian
 ERROR_DS_INVALID_ATTRIBUTE_SYNTAX - The attribute syntax specified to the directory service is invalid.
 .
 Language=Polish
-ERROR_DS_INVALID_ATTRIBUTE_SYNTAX - The attribute syntax specified to the directory service is invalid.
+ERROR_DS_INVALID_ATTRIBUTE_SYNTAX - Składnia atrybutu podana dla usługi katalogowej jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_DS_INVALID_ATTRIBUTE_SYNTAX - The attribute syntax specified to the directory service is invalid.
@@ -22969,7 +22969,7 @@ Language=Russian
 ERROR_DS_ATTRIBUTE_TYPE_UNDEFINED - The attribute type specified to the directory service is not defined.
 .
 Language=Polish
-ERROR_DS_ATTRIBUTE_TYPE_UNDEFINED - The attribute type specified to the directory service is not defined.
+ERROR_DS_ATTRIBUTE_TYPE_UNDEFINED - Typ atrybutu podany dla usługi katalogowej nie jest zdefiniowany.
 .
 Language=Romanian
 ERROR_DS_ATTRIBUTE_TYPE_UNDEFINED - The attribute type specified to the directory service is not defined.
@@ -22986,7 +22986,7 @@ Language=Russian
 ERROR_DS_ATTRIBUTE_OR_VALUE_EXISTS - The specified directory service attribute or value already exists.
 .
 Language=Polish
-ERROR_DS_ATTRIBUTE_OR_VALUE_EXISTS - The specified directory service attribute or value already exists.
+ERROR_DS_ATTRIBUTE_OR_VALUE_EXISTS - Określony atrybut lub wartość usługi katalogowej już istnieje.
 .
 Language=Romanian
 ERROR_DS_ATTRIBUTE_OR_VALUE_EXISTS - The specified directory service attribute or value already exists.
@@ -23003,7 +23003,7 @@ Language=Russian
 ERROR_DS_BUSY - The directory service is busy.
 .
 Language=Polish
-ERROR_DS_BUSY - The directory service is busy.
+ERROR_DS_BUSY - Usługa katalogowa jest zajęta.
 .
 Language=Romanian
 ERROR_DS_BUSY - The directory service is busy.
@@ -23020,7 +23020,7 @@ Language=Russian
 ERROR_DS_UNAVAILABLE - The directory service is unavailable.
 .
 Language=Polish
-ERROR_DS_UNAVAILABLE - The directory service is unavailable.
+ERROR_DS_UNAVAILABLE - Usługa katalogowa jest niedostępna.
 .
 Language=Romanian
 ERROR_DS_UNAVAILABLE - The directory service is unavailable.
@@ -23037,7 +23037,7 @@ Language=Russian
 ERROR_DS_NO_RIDS_ALLOCATED - The directory service was unable to allocate a relative identifier.
 .
 Language=Polish
-ERROR_DS_NO_RIDS_ALLOCATED - The directory service was unable to allocate a relative identifier.
+ERROR_DS_NO_RIDS_ALLOCATED - Usługa katalogowa nie może przydzielić identyfikatora względnego.
 .
 Language=Romanian
 ERROR_DS_NO_RIDS_ALLOCATED - The directory service was unable to allocate a relative identifier.
@@ -23054,7 +23054,7 @@ Language=Russian
 ERROR_DS_NO_MORE_RIDS - The directory service has exhausted the pool of relative identifiers.
 .
 Language=Polish
-ERROR_DS_NO_MORE_RIDS - The directory service has exhausted the pool of relative identifiers.
+ERROR_DS_NO_MORE_RIDS - Usługa katalogowa wyczerpała pulę identyfikatorów względnych.
 .
 Language=Romanian
 ERROR_DS_NO_MORE_RIDS - The directory service has exhausted the pool of relative identifiers.
@@ -23071,7 +23071,7 @@ Language=Russian
 ERROR_DS_INCORRECT_ROLE_OWNER - The requested operation could not be performed because the directory service is not the master for that type of operation.
 .
 Language=Polish
-ERROR_DS_INCORRECT_ROLE_OWNER - The requested operation could not be performed because the directory service is not the master for that type of operation.
+ERROR_DS_INCORRECT_ROLE_OWNER - Nie można wykonać żądanej operacji, ponieważ usługa katalogowa nie jest usługą wzorcową dla tego typu operacji.
 .
 Language=Romanian
 ERROR_DS_INCORRECT_ROLE_OWNER - The requested operation could not be performed because the directory service is not the master for that type of operation.
@@ -23088,7 +23088,7 @@ Language=Russian
 ERROR_DS_RIDMGR_INIT_ERROR - The directory service was unable to initialize the subsystem that allocates relative identifiers.
 .
 Language=Polish
-ERROR_DS_RIDMGR_INIT_ERROR - The directory service was unable to initialize the subsystem that allocates relative identifiers.
+ERROR_DS_RIDMGR_INIT_ERROR - Usługa katalogowa nie może zainicjować podsystemu przydzielającego identyfikatory względne.
 .
 Language=Romanian
 ERROR_DS_RIDMGR_INIT_ERROR - The directory service was unable to initialize the subsystem that allocates relative identifiers.
@@ -23105,7 +23105,7 @@ Language=Russian
 ERROR_DS_OBJ_CLASS_VIOLATION - The requested operation did not satisfy one or more constraints associated with the class of the object.
 .
 Language=Polish
-ERROR_DS_OBJ_CLASS_VIOLATION - The requested operation did not satisfy one or more constraints associated with the class of the object.
+ERROR_DS_OBJ_CLASS_VIOLATION - Żądana operacja nie spełnia jednego lub więcej warunków ograniczających skojarzonych z klasą obiektu.
 .
 Language=Romanian
 ERROR_DS_OBJ_CLASS_VIOLATION - The requested operation did not satisfy one or more constraints associated with the class of the object.
@@ -23122,7 +23122,7 @@ Language=Russian
 ERROR_DS_CANT_ON_NON_LEAF - The directory service can perform the requested operation only on a leaf object.
 .
 Language=Polish
-ERROR_DS_CANT_ON_NON_LEAF - The directory service can perform the requested operation only on a leaf object.
+ERROR_DS_CANT_ON_NON_LEAF - Usługa katalogowa może przeprowadzić żądaną operację tylko na obiekcie typu liść.
 .
 Language=Romanian
 ERROR_DS_CANT_ON_NON_LEAF - The directory service can perform the requested operation only on a leaf object.
@@ -23139,7 +23139,7 @@ Language=Russian
 ERROR_DS_CANT_ON_RDN - The directory service cannot perform the requested operation on the RDN attribute of an object.
 .
 Language=Polish
-ERROR_DS_CANT_ON_RDN - The directory service cannot perform the requested operation on the RDN attribute of an object.
+ERROR_DS_CANT_ON_RDN - Usługa katalogowa nie może przeprowadzić żądanej operacji na atrybucie RDN obiektu.
 .
 Language=Romanian
 ERROR_DS_CANT_ON_RDN - The directory service cannot perform the requested operation on the RDN attribute of an object.
@@ -23156,7 +23156,7 @@ Language=Russian
 ERROR_DS_CANT_MOD_OBJ_CLASS - The directory service detected an attempt to modify the object class of an object.
 .
 Language=Polish
-ERROR_DS_CANT_MOD_OBJ_CLASS - The directory service detected an attempt to modify the object class of an object.
+ERROR_DS_CANT_MOD_OBJ_CLASS - Usługa katalogowa wykryła próbę modyfikacji klasy obiektu.
 .
 Language=Romanian
 ERROR_DS_CANT_MOD_OBJ_CLASS - The directory service detected an attempt to modify the object class of an object.
@@ -23173,7 +23173,7 @@ Language=Russian
 ERROR_DS_CROSS_DOM_MOVE_ERROR - The requested cross-domain move operation could not be performed.
 .
 Language=Polish
-ERROR_DS_CROSS_DOM_MOVE_ERROR - The requested cross-domain move operation could not be performed.
+ERROR_DS_CROSS_DOM_MOVE_ERROR - Nie można wykonać żądanej operacji przeniesienia poza domenę.
 .
 Language=Romanian
 ERROR_DS_CROSS_DOM_MOVE_ERROR - The requested cross-domain move operation could not be performed.
@@ -23190,7 +23190,7 @@ Language=Russian
 ERROR_DS_GC_NOT_AVAILABLE - Unable to contact the global catalog server.
 .
 Language=Polish
-ERROR_DS_GC_NOT_AVAILABLE - Unable to contact the global catalog server.
+ERROR_DS_GC_NOT_AVAILABLE - Nie można skontaktować się z serwerem wykazu globalnego.
 .
 Language=Romanian
 ERROR_DS_GC_NOT_AVAILABLE - Unable to contact the global catalog server.
@@ -23207,7 +23207,7 @@ Language=Russian
 ERROR_SHARED_POLICY - The policy object is shared and can only be modified at the root.
 .
 Language=Polish
-ERROR_SHARED_POLICY - The policy object is shared and can only be modified at the root.
+ERROR_SHARED_POLICY - Obiekt zasad jest udostępniany i może być tylko modyfikowany na poziomie głównym.
 .
 Language=Romanian
 ERROR_SHARED_POLICY - The policy object is shared and can only be modified at the root.
@@ -23224,7 +23224,7 @@ Language=Russian
 ERROR_POLICY_OBJECT_NOT_FOUND - The policy object does not exist.
 .
 Language=Polish
-ERROR_POLICY_OBJECT_NOT_FOUND - The policy object does not exist.
+ERROR_POLICY_OBJECT_NOT_FOUND - Obiekt zasad nie istnieje.
 .
 Language=Romanian
 ERROR_POLICY_OBJECT_NOT_FOUND - The policy object does not exist.
@@ -23241,7 +23241,7 @@ Language=Russian
 ERROR_POLICY_ONLY_IN_DS - The requested policy information is only in the directory service.
 .
 Language=Polish
-ERROR_POLICY_ONLY_IN_DS - The requested policy information is only in the directory service.
+ERROR_POLICY_ONLY_IN_DS - Żądane informacje o zasadach występują tylko w usłudze katalogowej.
 .
 Language=Romanian
 ERROR_POLICY_ONLY_IN_DS - The requested policy information is only in the directory service.
@@ -23258,7 +23258,7 @@ Language=Russian
 ERROR_PROMOTION_ACTIVE - A domain controller promotion is currently active.
 .
 Language=Polish
-ERROR_PROMOTION_ACTIVE - A domain controller promotion is currently active.
+ERROR_PROMOTION_ACTIVE - Proces promocji kontrolera domeny jest obecnie aktywny.
 .
 Language=Romanian
 ERROR_PROMOTION_ACTIVE - A domain controller promotion is currently active.
@@ -23275,7 +23275,7 @@ Language=Russian
 ERROR_NO_PROMOTION_ACTIVE - A domain controller promotion is not currently active
 .
 Language=Polish
-ERROR_NO_PROMOTION_ACTIVE - A domain controller promotion is not currently active
+ERROR_NO_PROMOTION_ACTIVE - Proces promocji kontrolera domeny nie jest obecnie aktywny.
 .
 Language=Romanian
 ERROR_NO_PROMOTION_ACTIVE - A domain controller promotion is not currently active
@@ -23292,7 +23292,7 @@ Language=Russian
 ERROR_DS_OPERATIONS_ERROR - An operations error occurred.
 .
 Language=Polish
-ERROR_DS_OPERATIONS_ERROR - An operations error occurred.
+ERROR_DS_OPERATIONS_ERROR - Wystąpił błąd operacji.
 .
 Language=Romanian
 ERROR_DS_OPERATIONS_ERROR - An operations error occurred.
@@ -23309,7 +23309,7 @@ Language=Russian
 ERROR_DS_PROTOCOL_ERROR - A protocol error occurred.
 .
 Language=Polish
-ERROR_DS_PROTOCOL_ERROR - A protocol error occurred.
+ERROR_DS_PROTOCOL_ERROR - Wystąpił błąd protokołu.
 .
 Language=Romanian
 ERROR_DS_PROTOCOL_ERROR - A protocol error occurred.
@@ -23326,7 +23326,7 @@ Language=Russian
 ERROR_DS_TIMELIMIT_EXCEEDED - The time limit for this request was exceeded.
 .
 Language=Polish
-ERROR_DS_TIMELIMIT_EXCEEDED - The time limit for this request was exceeded.
+ERROR_DS_TIMELIMIT_EXCEEDED - Limit czasu dla tego żądania został przekroczony.
 .
 Language=Romanian
 ERROR_DS_TIMELIMIT_EXCEEDED - The time limit for this request was exceeded.
@@ -23343,7 +23343,7 @@ Language=Russian
 ERROR_DS_SIZELIMIT_EXCEEDED - The size limit for this request was exceeded.
 .
 Language=Polish
-ERROR_DS_SIZELIMIT_EXCEEDED - The size limit for this request was exceeded.
+ERROR_DS_SIZELIMIT_EXCEEDED - Limit rozmiaru dla tego żądania został przekroczony.
 .
 Language=Romanian
 ERROR_DS_SIZELIMIT_EXCEEDED - The size limit for this request was exceeded.
@@ -23360,7 +23360,7 @@ Language=Russian
 ERROR_DS_ADMIN_LIMIT_EXCEEDED - The administrative limit for this request was exceeded.
 .
 Language=Polish
-ERROR_DS_ADMIN_LIMIT_EXCEEDED - The administrative limit for this request was exceeded.
+ERROR_DS_ADMIN_LIMIT_EXCEEDED - Limit administracyjny dla tego żądania został przekroczony.
 .
 Language=Romanian
 ERROR_DS_ADMIN_LIMIT_EXCEEDED - The administrative limit for this request was exceeded.
@@ -23377,7 +23377,7 @@ Language=Russian
 ERROR_DS_COMPARE_FALSE - The compare response was false.
 .
 Language=Polish
-ERROR_DS_COMPARE_FALSE - The compare response was false.
+ERROR_DS_COMPARE_FALSE - Wynik porównania: fałsz.
 .
 Language=Romanian
 ERROR_DS_COMPARE_FALSE - The compare response was false.
@@ -23394,7 +23394,7 @@ Language=Russian
 ERROR_DS_COMPARE_TRUE - The compare response was true.
 .
 Language=Polish
-ERROR_DS_COMPARE_TRUE - The compare response was true.
+ERROR_DS_COMPARE_TRUE - Wynik porównania: prawda.
 .
 Language=Romanian
 ERROR_DS_COMPARE_TRUE - The compare response was true.
@@ -23411,7 +23411,7 @@ Language=Russian
 ERROR_DS_AUTH_METHOD_NOT_SUPPORTED - The requested authentication method is not supported by the server.
 .
 Language=Polish
-ERROR_DS_AUTH_METHOD_NOT_SUPPORTED - The requested authentication method is not supported by the server.
+ERROR_DS_AUTH_METHOD_NOT_SUPPORTED - Żądana metoda uwierzytelniania nie jest obsługiwana przez serwer.
 .
 Language=Romanian
 ERROR_DS_AUTH_METHOD_NOT_SUPPORTED - The requested authentication method is not supported by the server.
@@ -23428,7 +23428,7 @@ Language=Russian
 ERROR_DS_STRONG_AUTH_REQUIRED - A more secure authentication method is required for this server.
 .
 Language=Polish
-ERROR_DS_STRONG_AUTH_REQUIRED - A more secure authentication method is required for this server.
+ERROR_DS_STRONG_AUTH_REQUIRED - Dla tego serwera jest wymagana bardziej bezpieczna metoda uwierzytelniania.
 .
 Language=Romanian
 ERROR_DS_STRONG_AUTH_REQUIRED - A more secure authentication method is required for this server.
@@ -23445,7 +23445,7 @@ Language=Russian
 ERROR_DS_INAPPROPRIATE_AUTH - Inappropriate authentication.
 .
 Language=Polish
-ERROR_DS_INAPPROPRIATE_AUTH - Inappropriate authentication.
+ERROR_DS_INAPPROPRIATE_AUTH - Nieodpowiednie uwierzytelnienia.
 .
 Language=Romanian
 ERROR_DS_INAPPROPRIATE_AUTH - Inappropriate authentication.
@@ -23462,7 +23462,7 @@ Language=Russian
 ERROR_DS_AUTH_UNKNOWN - The authentication mechanism is unknown.
 .
 Language=Polish
-ERROR_DS_AUTH_UNKNOWN - The authentication mechanism is unknown.
+ERROR_DS_AUTH_UNKNOWN - Mechanizm uwierzytelniania jest nieznany.
 .
 Language=Romanian
 ERROR_DS_AUTH_UNKNOWN - The authentication mechanism is unknown.
@@ -23479,7 +23479,7 @@ Language=Russian
 ERROR_DS_REFERRAL - A referral was returned from the server.
 .
 Language=Polish
-ERROR_DS_REFERRAL - A referral was returned from the server.
+ERROR_DS_REFERRAL - Odniesienie zostało zwrócone z serwera.
 .
 Language=Romanian
 ERROR_DS_REFERRAL - A referral was returned from the server.
@@ -23496,7 +23496,7 @@ Language=Russian
 ERROR_DS_UNAVAILABLE_CRIT_EXTENSION - The server does not support the requested critical extension.
 .
 Language=Polish
-ERROR_DS_UNAVAILABLE_CRIT_EXTENSION - The server does not support the requested critical extension.
+ERROR_DS_UNAVAILABLE_CRIT_EXTENSION - Serwer nie obsługuje żądanego rozszerzenia krytycznego.
 .
 Language=Romanian
 ERROR_DS_UNAVAILABLE_CRIT_EXTENSION - The server does not support the requested critical extension.
@@ -23513,7 +23513,7 @@ Language=Russian
 ERROR_DS_CONFIDENTIALITY_REQUIRED - This request requires a secure connection.
 .
 Language=Polish
-ERROR_DS_CONFIDENTIALITY_REQUIRED - This request requires a secure connection.
+ERROR_DS_CONFIDENTIALITY_REQUIRED - To żądanie wymaga bezpiecznego połączenia.
 .
 Language=Romanian
 ERROR_DS_CONFIDENTIALITY_REQUIRED - This request requires a secure connection.
@@ -23530,7 +23530,7 @@ Language=Russian
 ERROR_DS_INAPPROPRIATE_MATCHING - Inappropriate matching.
 .
 Language=Polish
-ERROR_DS_INAPPROPRIATE_MATCHING - Inappropriate matching.
+ERROR_DS_INAPPROPRIATE_MATCHING - Nieodpowiednie dopasowanie.
 .
 Language=Romanian
 ERROR_DS_INAPPROPRIATE_MATCHING - Inappropriate matching.
@@ -23547,7 +23547,7 @@ Language=Russian
 ERROR_DS_CONSTRAINT_VIOLATION - A constraint violation occurred.
 .
 Language=Polish
-ERROR_DS_CONSTRAINT_VIOLATION - A constraint violation occurred.
+ERROR_DS_CONSTRAINT_VIOLATION - Wystąpiło naruszenie więzów.
 .
 Language=Romanian
 ERROR_DS_CONSTRAINT_VIOLATION - A constraint violation occurred.
@@ -23564,7 +23564,7 @@ Language=Russian
 ERROR_DS_NO_SUCH_OBJECT - There is no such object on the server.
 .
 Language=Polish
-ERROR_DS_NO_SUCH_OBJECT - There is no such object on the server.
+ERROR_DS_NO_SUCH_OBJECT - Nie ma takiego obiektu na serwerze.
 .
 Language=Romanian
 ERROR_DS_NO_SUCH_OBJECT - There is no such object on the server.
@@ -23581,7 +23581,7 @@ Language=Russian
 ERROR_DS_ALIAS_PROBLEM - There is an alias problem.
 .
 Language=Polish
-ERROR_DS_ALIAS_PROBLEM - There is an alias problem.
+ERROR_DS_ALIAS_PROBLEM - Problem z aliasem.
 .
 Language=Romanian
 ERROR_DS_ALIAS_PROBLEM - There is an alias problem.
@@ -23598,7 +23598,7 @@ Language=Russian
 ERROR_DS_INVALID_DN_SYNTAX - An invalid dn syntax has been specified.
 .
 Language=Polish
-ERROR_DS_INVALID_DN_SYNTAX - An invalid dn syntax has been specified.
+ERROR_DS_INVALID_DN_SYNTAX - Użyto niepoprawnej składni nazwy domeny.
 .
 Language=Romanian
 ERROR_DS_INVALID_DN_SYNTAX - An invalid dn syntax has been specified.
@@ -23615,7 +23615,7 @@ Language=Russian
 ERROR_DS_IS_LEAF - The object is a leaf object.
 .
 Language=Polish
-ERROR_DS_IS_LEAF - The object is a leaf object.
+ERROR_DS_IS_LEAF - Obiekt jest obiektem typu liść.
 .
 Language=Romanian
 ERROR_DS_IS_LEAF - The object is a leaf object.
@@ -23632,7 +23632,7 @@ Language=Russian
 ERROR_DS_ALIAS_DEREF_PROBLEM - There is an alias dereferencing problem.
 .
 Language=Polish
-ERROR_DS_ALIAS_DEREF_PROBLEM - There is an alias dereferencing problem.
+ERROR_DS_ALIAS_DEREF_PROBLEM - Występuje problem z usunięciem odwołania do aliasu.
 .
 Language=Romanian
 ERROR_DS_ALIAS_DEREF_PROBLEM - There is an alias dereferencing problem.
@@ -23649,7 +23649,7 @@ Language=Russian
 ERROR_DS_UNWILLING_TO_PERFORM - The server is unwilling to process the request.
 .
 Language=Polish
-ERROR_DS_UNWILLING_TO_PERFORM - The server is unwilling to process the request.
+ERROR_DS_UNWILLING_TO_PERFORM - Serwer odmawia przetwarzania żądania.
 .
 Language=Romanian
 ERROR_DS_UNWILLING_TO_PERFORM - The server is unwilling to process the request.
@@ -23666,7 +23666,7 @@ Language=Russian
 ERROR_DS_LOOP_DETECT - A loop has been detected.
 .
 Language=Polish
-ERROR_DS_LOOP_DETECT - A loop has been detected.
+ERROR_DS_LOOP_DETECT - Została wykryta pętla.
 .
 Language=Romanian
 ERROR_DS_LOOP_DETECT - A loop has been detected.
@@ -23683,7 +23683,7 @@ Language=Russian
 ERROR_DS_NAMING_VIOLATION - There is a naming violation.
 .
 Language=Polish
-ERROR_DS_NAMING_VIOLATION - There is a naming violation.
+ERROR_DS_NAMING_VIOLATION - Naruszenie zasad nazewnictwa.
 .
 Language=Romanian
 ERROR_DS_NAMING_VIOLATION - There is a naming violation.
@@ -23700,7 +23700,7 @@ Language=Russian
 ERROR_DS_OBJECT_RESULTS_TOO_LARGE - The result set is too large.
 .
 Language=Polish
-ERROR_DS_OBJECT_RESULTS_TOO_LARGE - The result set is too large.
+ERROR_DS_OBJECT_RESULTS_TOO_LARGE - Zestaw wynikowy jest zbyt duży.
 .
 Language=Romanian
 ERROR_DS_OBJECT_RESULTS_TOO_LARGE - The result set is too large.
@@ -23717,7 +23717,7 @@ Language=Russian
 ERROR_DS_AFFECTS_MULTIPLE_DSAS - The operation affects multiple DSAs
 .
 Language=Polish
-ERROR_DS_AFFECTS_MULTIPLE_DSAS - The operation affects multiple DSAs
+ERROR_DS_AFFECTS_MULTIPLE_DSAS - Operacja wpływa na wielu agentów DSA.
 .
 Language=Romanian
 ERROR_DS_AFFECTS_MULTIPLE_DSAS - The operation affects multiple DSAs
@@ -23734,7 +23734,7 @@ Language=Russian
 ERROR_DS_SERVER_DOWN - The server is not operational.
 .
 Language=Polish
-ERROR_DS_SERVER_DOWN - The server is not operational.
+ERROR_DS_SERVER_DOWN - Serwer nie działa.
 .
 Language=Romanian
 ERROR_DS_SERVER_DOWN - The server is not operational.
@@ -23751,7 +23751,7 @@ Language=Russian
 ERROR_DS_LOCAL_ERROR - A local error has occurred.
 .
 Language=Polish
-ERROR_DS_LOCAL_ERROR - A local error has occurred.
+ERROR_DS_LOCAL_ERROR - Wstąpił błąd lokalny.
 .
 Language=Romanian
 ERROR_DS_LOCAL_ERROR - A local error has occurred.
@@ -23768,7 +23768,7 @@ Language=Russian
 ERROR_DS_ENCODING_ERROR - An encoding error has occurred.
 .
 Language=Polish
-ERROR_DS_ENCODING_ERROR - An encoding error has occurred.
+ERROR_DS_ENCODING_ERROR - Wystąpił błąd kodowania.
 .
 Language=Romanian
 ERROR_DS_ENCODING_ERROR - An encoding error has occurred.
@@ -23785,7 +23785,7 @@ Language=Russian
 ERROR_DS_DECODING_ERROR - A decoding error has occurred.
 .
 Language=Polish
-ERROR_DS_DECODING_ERROR - A decoding error has occurred.
+ERROR_DS_DECODING_ERROR - Wystąpił błąd dekodowania.
 .
 Language=Romanian
 ERROR_DS_DECODING_ERROR - A decoding error has occurred.
@@ -23802,7 +23802,7 @@ Language=Russian
 ERROR_DS_FILTER_UNKNOWN - The search filter cannot be recognized.
 .
 Language=Polish
-ERROR_DS_FILTER_UNKNOWN - The search filter cannot be recognized.
+ERROR_DS_FILTER_UNKNOWN - Nieznany filtr wyszukiwania.
 .
 Language=Romanian
 ERROR_DS_FILTER_UNKNOWN - The search filter cannot be recognized.
@@ -23819,7 +23819,7 @@ Language=Russian
 ERROR_DS_PARAM_ERROR - One or more parameters are illegal.
 .
 Language=Polish
-ERROR_DS_PARAM_ERROR - One or more parameters are illegal.
+ERROR_DS_PARAM_ERROR - Co najmniej jeden z parametrów jest niedozwolony.
 .
 Language=Romanian
 ERROR_DS_PARAM_ERROR - One or more parameters are illegal.
@@ -23836,7 +23836,7 @@ Language=Russian
 ERROR_DS_NOT_SUPPORTED - The specified method is not supported.
 .
 Language=Polish
-ERROR_DS_NOT_SUPPORTED - The specified method is not supported.
+ERROR_DS_NOT_SUPPORTED - Podana metoda nie jest obsługiwana.
 .
 Language=Romanian
 ERROR_DS_NOT_SUPPORTED - The specified method is not supported.
@@ -23853,7 +23853,7 @@ Language=Russian
 ERROR_DS_NO_RESULTS_RETURNED - No results were returned.
 .
 Language=Polish
-ERROR_DS_NO_RESULTS_RETURNED - No results were returned.
+ERROR_DS_NO_RESULTS_RETURNED - Nie zwrócono żadnych wyników.
 .
 Language=Romanian
 ERROR_DS_NO_RESULTS_RETURNED - No results were returned.
@@ -23870,7 +23870,7 @@ Language=Russian
 ERROR_DS_CONTROL_NOT_FOUND - The specified control is not supported by the server.
 .
 Language=Polish
-ERROR_DS_CONTROL_NOT_FOUND - The specified control is not supported by the server.
+ERROR_DS_CONTROL_NOT_FOUND - Podany formant nie jest obsługiwany przez serwer.
 .
 Language=Romanian
 ERROR_DS_CONTROL_NOT_FOUND - The specified control is not supported by the server.
@@ -23887,7 +23887,7 @@ Language=Russian
 ERROR_DS_CLIENT_LOOP - A referral loop was detected by the client.
 .
 Language=Polish
-ERROR_DS_CLIENT_LOOP - A referral loop was detected by the client.
+ERROR_DS_CLIENT_LOOP - Klient wykrył pętlę odniesień.
 .
 Language=Romanian
 ERROR_DS_CLIENT_LOOP - A referral loop was detected by the client.
@@ -23904,7 +23904,7 @@ Language=Russian
 ERROR_DS_REFERRAL_LIMIT_EXCEEDED - The preset referral limit was exceeded.
 .
 Language=Polish
-ERROR_DS_REFERRAL_LIMIT_EXCEEDED - The preset referral limit was exceeded.
+ERROR_DS_REFERRAL_LIMIT_EXCEEDED - Ustalony wstępnie limit odniesień został przekroczony.
 .
 Language=Romanian
 ERROR_DS_REFERRAL_LIMIT_EXCEEDED - The preset referral limit was exceeded.
@@ -23921,7 +23921,7 @@ Language=Russian
 ERROR_DS_SORT_CONTROL_MISSING - The search requires a SORT control.
 .
 Language=Polish
-ERROR_DS_SORT_CONTROL_MISSING - The search requires a SORT control.
+ERROR_DS_SORT_CONTROL_MISSING - Wyszukiwanie wymaga elementu sterującego SORT.
 .
 Language=Romanian
 ERROR_DS_SORT_CONTROL_MISSING - The search requires a SORT control.
@@ -23938,7 +23938,7 @@ Language=Russian
 ERROR_DS_OFFSET_RANGE_ERROR - The search results exceed the offset range specified.
 .
 Language=Polish
-ERROR_DS_OFFSET_RANGE_ERROR - The search results exceed the offset range specified.
+ERROR_DS_OFFSET_RANGE_ERROR - Wyniki wyszukiwania przekraczają określony zakres przesunięcia.
 .
 Language=Romanian
 ERROR_DS_OFFSET_RANGE_ERROR - The search results exceed the offset range specified.
@@ -23955,7 +23955,7 @@ Language=Russian
 ERROR_DS_ROOT_MUST_BE_NC - The root object must be the head of a naming context. The root object cannot have an instantiated parent.
 .
 Language=Polish
-ERROR_DS_ROOT_MUST_BE_NC - The root object must be the head of a naming context. The root object cannot have an instantiated parent.
+ERROR_DS_ROOT_MUST_BE_NC - Obiekt główny musi być na początku kontekstu nazewnictwa. Rodzicem obiektu głównego nie może być wystąpienie obiektu.
 .
 Language=Romanian
 ERROR_DS_ROOT_MUST_BE_NC - The root object must be the head of a naming context. The root object cannot have an instantiated parent.
@@ -23972,7 +23972,7 @@ Language=Russian
 ERROR_DS_ADD_REPLICA_INHIBITED - The add replica operation cannot be performed. The naming context must be writeable in order to create the replica.
 .
 Language=Polish
-ERROR_DS_ADD_REPLICA_INHIBITED - The add replica operation cannot be performed. The naming context must be writeable in order to create the replica.
+ERROR_DS_ADD_REPLICA_INHIBITED - Nie można wykonać operacji dodania repliki. Kontekst nazewnictwa musi mieć możliwość zapisu, Aby można było utworzyć replikę, musi istnieć możliwość zapisywania w kontekście nazewnictwa.
 .
 Language=Romanian
 ERROR_DS_ADD_REPLICA_INHIBITED - The add replica operation cannot be performed. The naming context must be writeable in order to create the replica.
@@ -23989,7 +23989,7 @@ Language=Russian
 ERROR_DS_ATT_NOT_DEF_IN_SCHEMA - A reference to an attribute that is not defined in the schema occurred.
 .
 Language=Polish
-ERROR_DS_ATT_NOT_DEF_IN_SCHEMA - A reference to an attribute that is not defined in the schema occurred.
+ERROR_DS_ATT_NOT_DEF_IN_SCHEMA - Wystąpiło odwołanie do atrybutu, który nie jest zdefiniowany w schemacie.
 .
 Language=Romanian
 ERROR_DS_ATT_NOT_DEF_IN_SCHEMA - A reference to an attribute that is not defined in the schema occurred.
@@ -24006,7 +24006,7 @@ Language=Russian
 ERROR_DS_MAX_OBJ_SIZE_EXCEEDED - The maximum size of an object has been exceeded.
 .
 Language=Polish
-ERROR_DS_MAX_OBJ_SIZE_EXCEEDED - The maximum size of an object has been exceeded.
+ERROR_DS_MAX_OBJ_SIZE_EXCEEDED - Został przekroczony maksymalny rozmiar obiektu.
 .
 Language=Romanian
 ERROR_DS_MAX_OBJ_SIZE_EXCEEDED - The maximum size of an object has been exceeded.
@@ -24023,7 +24023,7 @@ Language=Russian
 ERROR_DS_OBJ_STRING_NAME_EXISTS - An attempt was made to add an object to the directory with a name that is already in use.
 .
 Language=Polish
-ERROR_DS_OBJ_STRING_NAME_EXISTS - An attempt was made to add an object to the directory with a name that is already in use.
+ERROR_DS_OBJ_STRING_NAME_EXISTS - Została podjęta próba dodania do katalogu obiektu o już istniejącej nazwie.
 .
 Language=Romanian
 ERROR_DS_OBJ_STRING_NAME_EXISTS - An attempt was made to add an object to the directory with a name that is already in use.
@@ -24040,7 +24040,7 @@ Language=Russian
 ERROR_DS_NO_RDN_DEFINED_IN_SCHEMA - An attempt was made to add an object of a class that does not have an RDN defined in the schema.
 .
 Language=Polish
-ERROR_DS_NO_RDN_DEFINED_IN_SCHEMA - An attempt was made to add an object of a class that does not have an RDN defined in the schema.
+ERROR_DS_NO_RDN_DEFINED_IN_SCHEMA - Została podjęta próba dodania obiektu klasy, która w schemacie nie ma zdefiniowanej nazwy RDN.
 .
 Language=Romanian
 ERROR_DS_NO_RDN_DEFINED_IN_SCHEMA - An attempt was made to add an object of a class that does not have an RDN defined in the schema.
@@ -24057,7 +24057,7 @@ Language=Russian
 ERROR_DS_RDN_DOESNT_MATCH_SCHEMA - An attempt was made to add an object using an RDN that is not the RDN defined in the schema.
 .
 Language=Polish
-ERROR_DS_RDN_DOESNT_MATCH_SCHEMA - An attempt was made to add an object using an RDN that is not the RDN defined in the schema.
+ERROR_DS_RDN_DOESNT_MATCH_SCHEMA - Została podjęta próba dodania obiektu za pomocą nazwy RDN, która nie jest nazwą RDN zdefiniowaną w schemacie.
 .
 Language=Romanian
 ERROR_DS_RDN_DOESNT_MATCH_SCHEMA - An attempt was made to add an object using an RDN that is not the RDN defined in the schema.
@@ -24074,7 +24074,7 @@ Language=Russian
 ERROR_DS_NO_REQUESTED_ATTS_FOUND - None of the requested attributes were found on the objects.
 .
 Language=Polish
-ERROR_DS_NO_REQUESTED_ATTS_FOUND - None of the requested attributes were found on the objects.
+ERROR_DS_NO_REQUESTED_ATTS_FOUND - Nie znaleziono w obiektach żadnych z wymaganych atrybutów.
 .
 Language=Romanian
 ERROR_DS_NO_REQUESTED_ATTS_FOUND - None of the requested attributes were found on the objects.
@@ -24091,7 +24091,7 @@ Language=Russian
 ERROR_DS_USER_BUFFER_TO_SMALL - The user buffer is too small.
 .
 Language=Polish
-ERROR_DS_USER_BUFFER_TO_SMALL - The user buffer is too small.
+ERROR_DS_USER_BUFFER_TO_SMALL - Bufor użytkownika jest za mały.
 .
 Language=Romanian
 ERROR_DS_USER_BUFFER_TO_SMALL - The user buffer is too small.
@@ -24108,7 +24108,7 @@ Language=Russian
 ERROR_DS_ATT_IS_NOT_ON_OBJ - The attribute specified in the operation is not present on the object.
 .
 Language=Polish
-ERROR_DS_ATT_IS_NOT_ON_OBJ - The attribute specified in the operation is not present on the object.
+ERROR_DS_ATT_IS_NOT_ON_OBJ - Atrybut podany w operacji nie występuje w obiekcie.
 .
 Language=Romanian
 ERROR_DS_ATT_IS_NOT_ON_OBJ - The attribute specified in the operation is not present on the object.
@@ -24125,7 +24125,7 @@ Language=Russian
 ERROR_DS_ILLEGAL_MOD_OPERATION - Illegal modify operation. Some aspect of the modification is not permitted.
 .
 Language=Polish
-ERROR_DS_ILLEGAL_MOD_OPERATION - Illegal modify operation. Some aspect of the modification is not permitted.
+ERROR_DS_ILLEGAL_MOD_OPERATION - Niedozwolona operacja modyfikowania. Niektóre aspekty modyfikacji nie są dozwolone.
 .
 Language=Romanian
 ERROR_DS_ILLEGAL_MOD_OPERATION - Illegal modify operation. Some aspect of the modification is not permitted.
@@ -24142,7 +24142,7 @@ Language=Russian
 ERROR_DS_OBJ_TOO_LARGE - The specified object is too large.
 .
 Language=Polish
-ERROR_DS_OBJ_TOO_LARGE - The specified object is too large.
+ERROR_DS_OBJ_TOO_LARGE - Podany obiekt jest zbyt duży.
 .
 Language=Romanian
 ERROR_DS_OBJ_TOO_LARGE - The specified object is too large.
@@ -24159,7 +24159,7 @@ Language=Russian
 ERROR_DS_BAD_INSTANCE_TYPE - The specified instance type is not valid.
 .
 Language=Polish
-ERROR_DS_BAD_INSTANCE_TYPE - The specified instance type is not valid.
+ERROR_DS_BAD_INSTANCE_TYPE - Podany typ wystąpienia jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_DS_BAD_INSTANCE_TYPE - The specified instance type is not valid.
@@ -24176,7 +24176,7 @@ Language=Russian
 ERROR_DS_MASTERDSA_REQUIRED - The operation must be performed at a master DSA.
 .
 Language=Polish
-ERROR_DS_MASTERDSA_REQUIRED - The operation must be performed at a master DSA.
+ERROR_DS_MASTERDSA_REQUIRED - Operacja musi być dokonana na głównym serwerze DSA.
 .
 Language=Romanian
 ERROR_DS_MASTERDSA_REQUIRED - The operation must be performed at a master DSA.
@@ -24193,7 +24193,7 @@ Language=Russian
 ERROR_DS_OBJECT_CLASS_REQUIRED - The object class attribute must be specified.
 .
 Language=Polish
-ERROR_DS_OBJECT_CLASS_REQUIRED - The object class attribute must be specified.
+ERROR_DS_OBJECT_CLASS_REQUIRED - Musi być podany atrybut klasy obiektu.
 .
 Language=Romanian
 ERROR_DS_OBJECT_CLASS_REQUIRED - The object class attribute must be specified.
@@ -24210,7 +24210,7 @@ Language=Russian
 ERROR_DS_MISSING_REQUIRED_ATT - A required attribute is missing.
 .
 Language=Polish
-ERROR_DS_MISSING_REQUIRED_ATT - A required attribute is missing.
+ERROR_DS_MISSING_REQUIRED_ATT - Brak wymaganego atrybutu.
 .
 Language=Romanian
 ERROR_DS_MISSING_REQUIRED_ATT - A required attribute is missing.
@@ -24227,7 +24227,7 @@ Language=Russian
 ERROR_DS_ATT_NOT_DEF_FOR_CLASS - An attempt was made to modify an object to include an attribute that is not legal for its class
 .
 Language=Polish
-ERROR_DS_ATT_NOT_DEF_FOR_CLASS - An attempt was made to modify an object to include an attribute that is not legal for its class
+ERROR_DS_ATT_NOT_DEF_FOR_CLASS - Nastąpiła próba modyfikacji obiektu w celu dołączenia atrybutu, który nie jest dozwolony dla klasy obiektu.
 .
 Language=Romanian
 ERROR_DS_ATT_NOT_DEF_FOR_CLASS - An attempt was made to modify an object to include an attribute that is not legal for its class
@@ -24244,7 +24244,7 @@ Language=Russian
 ERROR_DS_ATT_ALREADY_EXISTS - The specified attribute is already present on the object.
 .
 Language=Polish
-ERROR_DS_ATT_ALREADY_EXISTS - The specified attribute is already present on the object.
+ERROR_DS_ATT_ALREADY_EXISTS - Podany atrybut już występuje w obiekcie.
 .
 Language=Romanian
 ERROR_DS_ATT_ALREADY_EXISTS - The specified attribute is already present on the object.
@@ -24261,7 +24261,7 @@ Language=Russian
 ERROR_DS_CANT_ADD_ATT_VALUES - The specified attribute is not present, or has no values.
 .
 Language=Polish
-ERROR_DS_CANT_ADD_ATT_VALUES - The specified attribute is not present, or has no values.
+ERROR_DS_CANT_ADD_ATT_VALUES - Podany atrybut jest nieobecny lub nie ma nadanej wartości.
 .
 Language=Romanian
 ERROR_DS_CANT_ADD_ATT_VALUES - The specified attribute is not present, or has no values.
@@ -24278,7 +24278,7 @@ Language=Russian
 ERROR_DS_SINGLE_VALUE_CONSTRAINT - Multiple values were specified for an attribute that can have only one value.
 .
 Language=Polish
-ERROR_DS_SINGLE_VALUE_CONSTRAINT - Multiple values were specified for an attribute that can have only one value.
+ERROR_DS_SINGLE_VALUE_CONSTRAINT - Dla atrybutu, który może mieć tylko jedną wartość, zostały podane wielokrotne wartości.
 .
 Language=Romanian
 ERROR_DS_SINGLE_VALUE_CONSTRAINT - Multiple values were specified for an attribute that can have only one value.
@@ -24295,7 +24295,7 @@ Language=Russian
 ERROR_DS_RANGE_CONSTRAINT - A value for the attribute was not in the acceptable range of values.
 .
 Language=Polish
-ERROR_DS_RANGE_CONSTRAINT - A value for the attribute was not in the acceptable range of values.
+ERROR_DS_RANGE_CONSTRAINT - Wartość atrybutu nie mieści się w przedziale dozwolonych wartości.
 .
 Language=Romanian
 ERROR_DS_RANGE_CONSTRAINT - A value for the attribute was not in the acceptable range of values.
@@ -24312,7 +24312,7 @@ Language=Russian
 ERROR_DS_ATT_VAL_ALREADY_EXISTS - The specified value already exists.
 .
 Language=Polish
-ERROR_DS_ATT_VAL_ALREADY_EXISTS - The specified value already exists.
+ERROR_DS_ATT_VAL_ALREADY_EXISTS - Podana wartość już istnieje.
 .
 Language=Romanian
 ERROR_DS_ATT_VAL_ALREADY_EXISTS - The specified value already exists.
@@ -24329,7 +24329,7 @@ Language=Russian
 ERROR_DS_CANT_REM_MISSING_ATT - The attribute cannot be removed because it is not present on the object.
 .
 Language=Polish
-ERROR_DS_CANT_REM_MISSING_ATT - The attribute cannot be removed because it is not present on the object.
+ERROR_DS_CANT_REM_MISSING_ATT - Nie można usunąć atrybutu, ponieważ nie występuje on w obiekcie.
 .
 Language=Romanian
 ERROR_DS_CANT_REM_MISSING_ATT - The attribute cannot be removed because it is not present on the object.
@@ -24346,7 +24346,7 @@ Language=Russian
 ERROR_DS_CANT_REM_MISSING_ATT_VAL - The attribute value cannot be removed because it is not present on the object.
 .
 Language=Polish
-ERROR_DS_CANT_REM_MISSING_ATT_VAL - The attribute value cannot be removed because it is not present on the object.
+ERROR_DS_CANT_REM_MISSING_ATT_VAL - Nie można usunąć wartości atrybutu, ponieważ nie występuje ona w obiekcie.
 .
 Language=Romanian
 ERROR_DS_CANT_REM_MISSING_ATT_VAL - The attribute value cannot be removed because it is not present on the object.
@@ -24363,7 +24363,7 @@ Language=Russian
 ERROR_DS_ROOT_CANT_BE_SUBREF - The specified root object cannot be a subref.
 .
 Language=Polish
-ERROR_DS_ROOT_CANT_BE_SUBREF - The specified root object cannot be a subref.
+ERROR_DS_ROOT_CANT_BE_SUBREF - Podany obiekt główny nie może być odniesieniem podrzędnym.
 .
 Language=Romanian
 ERROR_DS_ROOT_CANT_BE_SUBREF - The specified root object cannot be a subref.
@@ -24380,7 +24380,7 @@ Language=Russian
 ERROR_DS_NO_CHAINING - Chaining is not permitted.
 .
 Language=Polish
-ERROR_DS_NO_CHAINING - Chaining is not permitted.
+ERROR_DS_NO_CHAINING - Tworzenie łańcucha nie jest dozwolone.
 .
 Language=Romanian
 ERROR_DS_NO_CHAINING - Chaining is not permitted.
@@ -24397,7 +24397,7 @@ Language=Russian
 ERROR_DS_NO_CHAINED_EVAL - Chained evaluation is not permitted.
 .
 Language=Polish
-ERROR_DS_NO_CHAINED_EVAL - Chained evaluation is not permitted.
+ERROR_DS_NO_CHAINED_EVAL - Ocena łańcuchowa nie jest dozwolona.
 .
 Language=Romanian
 ERROR_DS_NO_CHAINED_EVAL - Chained evaluation is not permitted.
@@ -24414,7 +24414,7 @@ Language=Russian
 ERROR_DS_NO_PARENT_OBJECT - The operation could not be performed because the object's parent is either uninstantiated or deleted.
 .
 Language=Polish
-ERROR_DS_NO_PARENT_OBJECT - The operation could not be performed because the object's parent is either uninstantiated or deleted.
+ERROR_DS_NO_PARENT_OBJECT - Operacja nie może być wykonana, ponieważ usunięto albo wystąpienie rodzica obiektu, albo samego rodzica.
 .
 Language=Romanian
 ERROR_DS_NO_PARENT_OBJECT - The operation could not be performed because the object's parent is either uninstantiated or deleted.
@@ -24431,7 +24431,7 @@ Language=Russian
 ERROR_DS_PARENT_IS_AN_ALIAS - Having a parent that is an alias is not permitted. Aliases are leaf objects.
 .
 Language=Polish
-ERROR_DS_PARENT_IS_AN_ALIAS - Having a parent that is an alias is not permitted. Aliases are leaf objects.
+ERROR_DS_PARENT_IS_AN_ALIAS - Posiadanie rodzica, który jest aliasem jest niedozwolone. Aliasy są obiektami typu liść.
 .
 Language=Romanian
 ERROR_DS_PARENT_IS_AN_ALIAS - Having a parent that is an alias is not permitted. Aliases are leaf objects.
@@ -24448,7 +24448,7 @@ Language=Russian
 ERROR_DS_CANT_MIX_MASTER_AND_REPS - The object and parent must be of the same type, either both masters or both replicas.
 .
 Language=Polish
-ERROR_DS_CANT_MIX_MASTER_AND_REPS - The object and parent must be of the same type, either both masters or both replicas.
+ERROR_DS_CANT_MIX_MASTER_AND_REPS - Obiekt i rodzic muszą być tego samego typu - muszą być albo obiektami głównymi, albo replikami.
 .
 Language=Romanian
 ERROR_DS_CANT_MIX_MASTER_AND_REPS - The object and parent must be of the same type, either both masters or both replicas.
@@ -24465,7 +24465,7 @@ Language=Russian
 ERROR_DS_CHILDREN_EXIST - The operation cannot be performed because child objects exist. This operation can only be performed on a leaf object.
 .
 Language=Polish
-ERROR_DS_CHILDREN_EXIST - The operation cannot be performed because child objects exist. This operation can only be performed on a leaf object.
+ERROR_DS_CHILDREN_EXIST - Operacja nie może być wykonana, ponieważ istnieje obiekt podrzędny. Ta operacja może jedynie być wykonana na obiekcie typu liść.
 .
 Language=Romanian
 ERROR_DS_CHILDREN_EXIST - The operation cannot be performed because child objects exist. This operation can only be performed on a leaf object.
@@ -24482,7 +24482,7 @@ Language=Russian
 ERROR_DS_OBJ_NOT_FOUND - Directory object not found.
 .
 Language=Polish
-ERROR_DS_OBJ_NOT_FOUND - Directory object not found.
+ERROR_DS_OBJ_NOT_FOUND - Nie znaleziono obiektu katalogu.
 .
 Language=Romanian
 ERROR_DS_OBJ_NOT_FOUND - Directory object not found.
@@ -24499,7 +24499,7 @@ Language=Russian
 ERROR_DS_ALIASED_OBJ_MISSING - The aliased object is missing.
 .
 Language=Polish
-ERROR_DS_ALIASED_OBJ_MISSING - The aliased object is missing.
+ERROR_DS_ALIASED_OBJ_MISSING - Brakuje obiektu, dla którego utworzono alias.
 .
 Language=Romanian
 ERROR_DS_ALIASED_OBJ_MISSING - The aliased object is missing.
@@ -24516,7 +24516,7 @@ Language=Russian
 ERROR_DS_BAD_NAME_SYNTAX - The object name has bad syntax.
 .
 Language=Polish
-ERROR_DS_BAD_NAME_SYNTAX - The object name has bad syntax.
+ERROR_DS_BAD_NAME_SYNTAX - Nazwa obiektu ma złą składnię.
 .
 Language=Romanian
 ERROR_DS_BAD_NAME_SYNTAX - The object name has bad syntax.
@@ -24533,7 +24533,7 @@ Language=Russian
 ERROR_DS_ALIAS_POINTS_TO_ALIAS - It is not permitted for an alias to refer to another alias.
 .
 Language=Polish
-ERROR_DS_ALIAS_POINTS_TO_ALIAS - It is not permitted for an alias to refer to another alias.
+ERROR_DS_ALIAS_POINTS_TO_ALIAS - Odwoływanie się aliasu do innego aliasu jest niedozwolone.
 .
 Language=Romanian
 ERROR_DS_ALIAS_POINTS_TO_ALIAS - It is not permitted for an alias to refer to another alias.
@@ -24550,7 +24550,7 @@ Language=Russian
 ERROR_DS_CANT_DEREF_ALIAS - The alias cannot be dereferenced.
 .
 Language=Polish
-ERROR_DS_CANT_DEREF_ALIAS - The alias cannot be dereferenced.
+ERROR_DS_CANT_DEREF_ALIAS - Nie można usunąć odwołania do aliasu.
 .
 Language=Romanian
 ERROR_DS_CANT_DEREF_ALIAS - The alias cannot be dereferenced.
@@ -24567,7 +24567,7 @@ Language=Russian
 ERROR_DS_OUT_OF_SCOPE - The operation is out of scope.
 .
 Language=Polish
-ERROR_DS_OUT_OF_SCOPE - The operation is out of scope.
+ERROR_DS_OUT_OF_SCOPE - Operacja wykracza poza zakres.
 .
 Language=Romanian
 ERROR_DS_OUT_OF_SCOPE - The operation is out of scope.
@@ -24584,7 +24584,7 @@ Language=Russian
 ERROR_DS_OBJECT_BEING_REMOVED - The operation cannot continue because the object is in the process of being removed.
 .
 Language=Polish
-ERROR_DS_OBJECT_BEING_REMOVED - The operation cannot continue because the object is in the process of being removed.
+ERROR_DS_OBJECT_BEING_REMOVED - Nie można kontynuować operacji, ponieważ trwa proces usuwania danego obiektu.
 .
 Language=Romanian
 ERROR_DS_OBJECT_BEING_REMOVED - The operation cannot continue because the object is in the process of being removed.
@@ -24601,7 +24601,7 @@ Language=Russian
 ERROR_DS_CANT_DELETE_DSA_OBJ - The DSA object cannot be deleted.
 .
 Language=Polish
-ERROR_DS_CANT_DELETE_DSA_OBJ - The DSA object cannot be deleted.
+ERROR_DS_CANT_DELETE_DSA_OBJ - Nie można usunąć obiektu DSA.
 .
 Language=Romanian
 ERROR_DS_CANT_DELETE_DSA_OBJ - The DSA object cannot be deleted.
@@ -24618,7 +24618,7 @@ Language=Russian
 ERROR_DS_GENERIC_ERROR - A directory service error has occurred.
 .
 Language=Polish
-ERROR_DS_GENERIC_ERROR - A directory service error has occurred.
+ERROR_DS_GENERIC_ERROR - Wystąpił błąd usługi katalogowej.
 .
 Language=Romanian
 ERROR_DS_GENERIC_ERROR - A directory service error has occurred.
@@ -24635,7 +24635,7 @@ Language=Russian
 ERROR_DS_DSA_MUST_BE_INT_MASTER - The operation can only be performed on an internal master DSA object.
 .
 Language=Polish
-ERROR_DS_DSA_MUST_BE_INT_MASTER - The operation can only be performed on an internal master DSA object.
+ERROR_DS_DSA_MUST_BE_INT_MASTER - Operacja może być dokonana jedynie na wewnętrznym głównym obiekcie DSA.
 .
 Language=Romanian
 ERROR_DS_DSA_MUST_BE_INT_MASTER - The operation can only be performed on an internal master DSA object.
@@ -24652,7 +24652,7 @@ Language=Russian
 ERROR_DS_CLASS_NOT_DSA - The object must be of class DSA.
 .
 Language=Polish
-ERROR_DS_CLASS_NOT_DSA - The object must be of class DSA.
+ERROR_DS_CLASS_NOT_DSA - Obiekt musi być klasy DSA.
 .
 Language=Romanian
 ERROR_DS_CLASS_NOT_DSA - The object must be of class DSA.
@@ -24669,7 +24669,7 @@ Language=Russian
 ERROR_DS_INSUFF_ACCESS_RIGHTS - Insufficient access rights to perform the operation.
 .
 Language=Polish
-ERROR_DS_INSUFF_ACCESS_RIGHTS - Insufficient access rights to perform the operation.
+ERROR_DS_INSUFF_ACCESS_RIGHTS - Niewystarczające prawa dostępu, aby wykonać tę operację.
 .
 Language=Romanian
 ERROR_DS_INSUFF_ACCESS_RIGHTS - Insufficient access rights to perform the operation.
@@ -24686,7 +24686,7 @@ Language=Russian
 ERROR_DS_ILLEGAL_SUPERIOR - The object cannot be added because the parent is not on the list of possible superiors.
 .
 Language=Polish
-ERROR_DS_ILLEGAL_SUPERIOR - The object cannot be added because the parent is not on the list of possible superiors.
+ERROR_DS_ILLEGAL_SUPERIOR - Nie można dodać obiektu, ponieważ rodzic nie występuje na liście możliwych obiektów nadrzędnych.
 .
 Language=Romanian
 ERROR_DS_ILLEGAL_SUPERIOR - The object cannot be added because the parent is not on the list of possible superiors.
@@ -24703,7 +24703,7 @@ Language=Russian
 ERROR_DS_ATTRIBUTE_OWNED_BY_SAM - Access to the attribute is not permitted because the attribute is owned by the Security Accounts Manager (SAM).
 .
 Language=Polish
-ERROR_DS_ATTRIBUTE_OWNED_BY_SAM - Access to the attribute is not permitted because the attribute is owned by the Security Accounts Manager (SAM).
+ERROR_DS_ATTRIBUTE_OWNED_BY_SAM - Dostęp do atrybutu nie jest dozwolony, ponieważ atrybut jest posiadany przez Menedżera kont zabezpieczeń (SAM).
 .
 Language=Romanian
 ERROR_DS_ATTRIBUTE_OWNED_BY_SAM - Access to the attribute is not permitted because the attribute is owned by the Security Accounts Manager (SAM).
@@ -24720,7 +24720,7 @@ Language=Russian
 ERROR_DS_NAME_TOO_MANY_PARTS - The name has too many parts.
 .
 Language=Polish
-ERROR_DS_NAME_TOO_MANY_PARTS - The name has too many parts.
+ERROR_DS_NAME_TOO_MANY_PARTS - Nazwa składa się ze zbyt wielu części.
 .
 Language=Romanian
 ERROR_DS_NAME_TOO_MANY_PARTS - The name has too many parts.
@@ -24737,7 +24737,7 @@ Language=Russian
 ERROR_DS_NAME_TOO_LONG - The name is too long.
 .
 Language=Polish
-ERROR_DS_NAME_TOO_LONG - The name is too long.
+ERROR_DS_NAME_TOO_LONG - Nazwa jest zbyt długa.
 .
 Language=Romanian
 ERROR_DS_NAME_TOO_LONG - The name is too long.
@@ -24754,7 +24754,7 @@ Language=Russian
 ERROR_DS_NAME_VALUE_TOO_LONG - The name value is too long.
 .
 Language=Polish
-ERROR_DS_NAME_VALUE_TOO_LONG - The name value is too long.
+ERROR_DS_NAME_VALUE_TOO_LONG - Wartość nazwy jest zbyt długa.
 .
 Language=Romanian
 ERROR_DS_NAME_VALUE_TOO_LONG - The name value is too long.
@@ -24771,7 +24771,7 @@ Language=Russian
 ERROR_DS_NAME_UNPARSEABLE - The directory service encountered an error parsing a name.
 .
 Language=Polish
-ERROR_DS_NAME_UNPARSEABLE - The directory service encountered an error parsing a name.
+ERROR_DS_NAME_UNPARSEABLE - Usługa katalogowa napotkała błąd podczas analizy nazwy.
 .
 Language=Romanian
 ERROR_DS_NAME_UNPARSEABLE - The directory service encountered an error parsing a name.
@@ -24788,7 +24788,7 @@ Language=Russian
 ERROR_DS_NAME_TYPE_UNKNOWN - The directory service cannot get the attribute type for a name.
 .
 Language=Polish
-ERROR_DS_NAME_TYPE_UNKNOWN - The directory service cannot get the attribute type for a name.
+ERROR_DS_NAME_TYPE_UNKNOWN - Usługa katalogowa nie może uzyskać typu atrybutu dla nazwy.
 .
 Language=Romanian
 ERROR_DS_NAME_TYPE_UNKNOWN - The directory service cannot get the attribute type for a name.
@@ -24805,7 +24805,7 @@ Language=Russian
 ERROR_DS_NOT_AN_OBJECT - The name does not identify an object; the name identifies a phantom.
 .
 Language=Polish
-ERROR_DS_NOT_AN_OBJECT - The name does not identify an object; the name identifies a phantom.
+ERROR_DS_NOT_AN_OBJECT - Nazwa nie określa obiektu; nazwa określa fantom.
 .
 Language=Romanian
 ERROR_DS_NOT_AN_OBJECT - The name does not identify an object; the name identifies a phantom.
@@ -24822,7 +24822,7 @@ Language=Russian
 ERROR_DS_SEC_DESC_TOO_SHORT - The security descriptor is too short.
 .
 Language=Polish
-ERROR_DS_SEC_DESC_TOO_SHORT - The security descriptor is too short.
+ERROR_DS_SEC_DESC_TOO_SHORT - Deskryptor zabezpieczenia jest za krótki.
 .
 Language=Romanian
 ERROR_DS_SEC_DESC_TOO_SHORT - The security descriptor is too short.
@@ -24839,7 +24839,7 @@ Language=Russian
 ERROR_DS_SEC_DESC_INVALID - The security descriptor is invalid.
 .
 Language=Polish
-ERROR_DS_SEC_DESC_INVALID - The security descriptor is invalid.
+ERROR_DS_SEC_DESC_INVALID - Deskryptor zabezpieczenia jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_DS_SEC_DESC_INVALID - The security descriptor is invalid.
@@ -24856,7 +24856,7 @@ Language=Russian
 ERROR_DS_NO_DELETED_NAME - Failed to create name for deleted object.
 .
 Language=Polish
-ERROR_DS_NO_DELETED_NAME - Failed to create name for deleted object.
+ERROR_DS_NO_DELETED_NAME - Nie można utworzyć nazwy dla usuniętego obiektu.
 .
 Language=Romanian
 ERROR_DS_NO_DELETED_NAME - Failed to create name for deleted object.
@@ -24873,7 +24873,7 @@ Language=Russian
 ERROR_DS_SUBREF_MUST_HAVE_PARENT - The parent of a new subref must exist.
 .
 Language=Polish
-ERROR_DS_SUBREF_MUST_HAVE_PARENT - The parent of a new subref must exist.
+ERROR_DS_SUBREF_MUST_HAVE_PARENT - Musi istnieć rodzic nowego odwołania podrzędnego.
 .
 Language=Romanian
 ERROR_DS_SUBREF_MUST_HAVE_PARENT - The parent of a new subref must exist.
@@ -24890,7 +24890,7 @@ Language=Russian
 ERROR_DS_NCNAME_MUST_BE_NC - The object must be a naming context.
 .
 Language=Polish
-ERROR_DS_NCNAME_MUST_BE_NC - The object must be a naming context.
+ERROR_DS_NCNAME_MUST_BE_NC - Obiekt musi być kontekstem nazewnictwa.
 .
 Language=Romanian
 ERROR_DS_NCNAME_MUST_BE_NC - The object must be a naming context.
@@ -24907,7 +24907,7 @@ Language=Russian
 ERROR_DS_CANT_ADD_SYSTEM_ONLY - It is not permitted to add an attribute which is owned by the system.
 .
 Language=Polish
-ERROR_DS_CANT_ADD_SYSTEM_ONLY - It is not permitted to add an attribute which is owned by the system.
+ERROR_DS_CANT_ADD_SYSTEM_ONLY - Nie jest dozwolone dodawanie atrybutu, który jest w posiadaniu systemu.
 .
 Language=Romanian
 ERROR_DS_CANT_ADD_SYSTEM_ONLY - It is not permitted to add an attribute which is owned by the system.
@@ -24924,7 +24924,7 @@ Language=Russian
 ERROR_DS_CLASS_MUST_BE_CONCRETE - The class of the object must be structural; you cannot instantiate an abstract class.
 .
 Language=Polish
-ERROR_DS_CLASS_MUST_BE_CONCRETE - The class of the object must be structural; you cannot instantiate an abstract class.
+ERROR_DS_CLASS_MUST_BE_CONCRETE - Klasa obiektu musi być strukturalna; nie możesz utworzyć wystąpienia klasy abstrakcyjnej.
 .
 Language=Romanian
 ERROR_DS_CLASS_MUST_BE_CONCRETE - The class of the object must be structural; you cannot instantiate an abstract class.
@@ -24941,7 +24941,7 @@ Language=Russian
 ERROR_DS_INVALID_DMD - The schema object could not be found.
 .
 Language=Polish
-ERROR_DS_INVALID_DMD - The schema object could not be found.
+ERROR_DS_INVALID_DMD - Nie znaleziono obiekt schematu.
 .
 Language=Romanian
 ERROR_DS_INVALID_DMD - The schema object could not be found.
@@ -24958,7 +24958,7 @@ Language=Russian
 ERROR_DS_OBJ_GUID_EXISTS - A local object with this GUID (dead or alive) already exists.
 .
 Language=Polish
-ERROR_DS_OBJ_GUID_EXISTS - A local object with this GUID (dead or alive) already exists.
+ERROR_DS_OBJ_GUID_EXISTS - Już istnieje obiekt lokalny o tym identyfikatorze GUID (aktywny lub nieaktywny).
 .
 Language=Romanian
 ERROR_DS_OBJ_GUID_EXISTS - A local object with this GUID (dead or alive) already exists.
@@ -24975,7 +24975,7 @@ Language=Russian
 ERROR_DS_NOT_ON_BACKLINK - The operation cannot be performed on a back link.
 .
 Language=Polish
-ERROR_DS_NOT_ON_BACKLINK - The operation cannot be performed on a back link.
+ERROR_DS_NOT_ON_BACKLINK - Operacja nie może być wykonana na odsyłaczu wstecznym.
 .
 Language=Romanian
 ERROR_DS_NOT_ON_BACKLINK - The operation cannot be performed on a back link.
@@ -24992,7 +24992,7 @@ Language=Russian
 ERROR_DS_NO_CROSSREF_FOR_NC - The cross reference for the specified naming context could not be found.
 .
 Language=Polish
-ERROR_DS_NO_CROSSREF_FOR_NC - The cross reference for the specified naming context could not be found.
+ERROR_DS_NO_CROSSREF_FOR_NC - Nie znaleziono odwołania do podanego kontekstu nazewnictwa.
 .
 Language=Romanian
 ERROR_DS_NO_CROSSREF_FOR_NC - The cross reference for the specified naming context could not be found.
@@ -25009,7 +25009,7 @@ Language=Russian
 ERROR_DS_SHUTTING_DOWN - The operation could not be performed because the directory service is shutting down.
 .
 Language=Polish
-ERROR_DS_SHUTTING_DOWN - The operation could not be performed because the directory service is shutting down.
+ERROR_DS_SHUTTING_DOWN - Operacja nie może być wykonana ponieważ usługa katalogowa jest zamykana.
 .
 Language=Romanian
 ERROR_DS_SHUTTING_DOWN - The operation could not be performed because the directory service is shutting down.
@@ -25026,7 +25026,7 @@ Language=Russian
 ERROR_DS_UNKNOWN_OPERATION - The directory service request is invalid.
 .
 Language=Polish
-ERROR_DS_UNKNOWN_OPERATION - The directory service request is invalid.
+ERROR_DS_UNKNOWN_OPERATION - Żądanie usługi katalogowej jest nieprawidłowe.
 .
 Language=Romanian
 ERROR_DS_UNKNOWN_OPERATION - The directory service request is invalid.
@@ -25043,7 +25043,7 @@ Language=Russian
 ERROR_DS_INVALID_ROLE_OWNER - The role owner attribute could not be read.
 .
 Language=Polish
-ERROR_DS_INVALID_ROLE_OWNER - The role owner attribute could not be read.
+ERROR_DS_INVALID_ROLE_OWNER - Nie można odczytać atrybutu właściciela roli.
 .
 Language=Romanian
 ERROR_DS_INVALID_ROLE_OWNER - The role owner attribute could not be read.
@@ -25060,7 +25060,7 @@ Language=Russian
 ERROR_DS_COULDNT_CONTACT_FSMO - The requested FSMO operation failed. The current FSMO holder could not be reached.
 .
 Language=Polish
-ERROR_DS_COULDNT_CONTACT_FSMO - The requested FSMO operation failed. The current FSMO holder could not be reached.
+ERROR_DS_COULDNT_CONTACT_FSMO - Żądana operacja FSMO nie powiodła się. Nie można połączyć się z bieżącym posiadaczem FSMO.
 .
 Language=Romanian
 ERROR_DS_COULDNT_CONTACT_FSMO - The requested FSMO operation failed. The current FSMO holder could not be reached.
@@ -25077,7 +25077,7 @@ Language=Russian
 ERROR_DS_CROSS_NC_DN_RENAME - Modification of a DN across a naming context is not permitted.
 .
 Language=Polish
-ERROR_DS_CROSS_NC_DN_RENAME - Modification of a DN across a naming context is not permitted.
+ERROR_DS_CROSS_NC_DN_RENAME - Modyfikowanie nazwy domen poza kontekstem nazewnictwa jest niedozwolone.
 .
 Language=Romanian
 ERROR_DS_CROSS_NC_DN_RENAME - Modification of a DN across a naming context is not permitted.
@@ -25094,7 +25094,7 @@ Language=Russian
 ERROR_DS_CANT_MOD_SYSTEM_ONLY - The attribute cannot be modified because it is owned by the system.
 .
 Language=Polish
-ERROR_DS_CANT_MOD_SYSTEM_ONLY - The attribute cannot be modified because it is owned by the system.
+ERROR_DS_CANT_MOD_SYSTEM_ONLY - Atrybut nie może być modyfikowany, ponieważ jest w posiadaniu systemu.
 .
 Language=Romanian
 ERROR_DS_CANT_MOD_SYSTEM_ONLY - The attribute cannot be modified because it is owned by the system.
@@ -25111,7 +25111,7 @@ Language=Russian
 ERROR_DS_REPLICATOR_ONLY - Only the replicator can perform this function.
 .
 Language=Polish
-ERROR_DS_REPLICATOR_ONLY - Only the replicator can perform this function.
+ERROR_DS_REPLICATOR_ONLY - Tylko replikator może wykonać tę funkcję.
 .
 Language=Romanian
 ERROR_DS_REPLICATOR_ONLY - Only the replicator can perform this function.
@@ -25128,7 +25128,7 @@ Language=Russian
 ERROR_DS_OBJ_CLASS_NOT_DEFINED - The specified class is not defined.
 .
 Language=Polish
-ERROR_DS_OBJ_CLASS_NOT_DEFINED - The specified class is not defined.
+ERROR_DS_OBJ_CLASS_NOT_DEFINED - Podana klasa nie jest zdefiniowana.
 .
 Language=Romanian
 ERROR_DS_OBJ_CLASS_NOT_DEFINED - The specified class is not defined.
@@ -25145,7 +25145,7 @@ Language=Russian
 ERROR_DS_OBJ_CLASS_NOT_SUBCLASS - The specified class is not a subclass.
 .
 Language=Polish
-ERROR_DS_OBJ_CLASS_NOT_SUBCLASS - The specified class is not a subclass.
+ERROR_DS_OBJ_CLASS_NOT_SUBCLASS - Podana klasa nie jest podklasą.
 .
 Language=Romanian
 ERROR_DS_OBJ_CLASS_NOT_SUBCLASS - The specified class is not a subclass.
@@ -25162,7 +25162,7 @@ Language=Russian
 ERROR_DS_NAME_REFERENCE_INVALID - The name reference is invalid.
 .
 Language=Polish
-ERROR_DS_NAME_REFERENCE_INVALID - The name reference is invalid.
+ERROR_DS_NAME_REFERENCE_INVALID - Nazwa odwołania jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_DS_NAME_REFERENCE_INVALID - The name reference is invalid.
@@ -25179,7 +25179,7 @@ Language=Russian
 ERROR_DS_CROSS_REF_EXISTS - A cross reference already exists.
 .
 Language=Polish
-ERROR_DS_CROSS_REF_EXISTS - A cross reference already exists.
+ERROR_DS_CROSS_REF_EXISTS - Odwołanie już istnieje.
 .
 Language=Romanian
 ERROR_DS_CROSS_REF_EXISTS - A cross reference already exists.
@@ -25196,7 +25196,7 @@ Language=Russian
 ERROR_DS_CANT_DEL_MASTER_CROSSREF - It is not permitted to delete a master cross reference.
 .
 Language=Polish
-ERROR_DS_CANT_DEL_MASTER_CROSSREF - It is not permitted to delete a master cross reference.
+ERROR_DS_CANT_DEL_MASTER_CROSSREF - Usuwanie głównego odwołania jest niedozwolone.
 .
 Language=Romanian
 ERROR_DS_CANT_DEL_MASTER_CROSSREF - It is not permitted to delete a master cross reference.
@@ -25213,7 +25213,7 @@ Language=Russian
 ERROR_DS_SUBTREE_NOTIFY_NOT_NC_HEAD - Subtree notifications are only supported on NC heads.
 .
 Language=Polish
-ERROR_DS_SUBTREE_NOTIFY_NOT_NC_HEAD - Subtree notifications are only supported on NC heads.
+ERROR_DS_SUBTREE_NOTIFY_NOT_NC_HEAD - Powiadomienia poddrzewa są dostarczane tylko do węzłów NC.
 .
 Language=Romanian
 ERROR_DS_SUBTREE_NOTIFY_NOT_NC_HEAD - Subtree notifications are only supported on NC heads.
@@ -25230,7 +25230,7 @@ Language=Russian
 ERROR_DS_NOTIFY_FILTER_TOO_COMPLEX - Notification filter is too complex.
 .
 Language=Polish
-ERROR_DS_NOTIFY_FILTER_TOO_COMPLEX - Notification filter is too complex.
+ERROR_DS_NOTIFY_FILTER_TOO_COMPLEX - Filtr powiadamiania jest zbyt skomplikowany.
 .
 Language=Romanian
 ERROR_DS_NOTIFY_FILTER_TOO_COMPLEX - Notification filter is too complex.
@@ -25247,7 +25247,7 @@ Language=Russian
 ERROR_DS_DUP_RDN - Schema update failed: duplicate RDN.
 .
 Language=Polish
-ERROR_DS_DUP_RDN - Schema update failed: duplicate RDN.
+ERROR_DS_DUP_RDN - Nie można zaktualizować schematu: zduplikowana nazwa RDN.
 .
 Language=Romanian
 ERROR_DS_DUP_RDN - Schema update failed: duplicate RDN.
@@ -25264,7 +25264,7 @@ Language=Russian
 ERROR_DS_DUP_OID - Schema update failed: duplicate OID
 .
 Language=Polish
-ERROR_DS_DUP_OID - Schema update failed: duplicate OID
+ERROR_DS_DUP_OID - Nie można zaktualizować schematu: zduplikowany identyfikator OID.
 .
 Language=Romanian
 ERROR_DS_DUP_OID - Schema update failed: duplicate OID
@@ -25281,7 +25281,7 @@ Language=Russian
 ERROR_DS_DUP_MAPI_ID - Schema update failed: duplicate MAPI identifier.
 .
 Language=Polish
-ERROR_DS_DUP_MAPI_ID - Schema update failed: duplicate MAPI identifier.
+ERROR_DS_DUP_MAPI_ID - Nie można zaktualizować schematu: zduplikowany identyfikator MAPI.
 .
 Language=Romanian
 ERROR_DS_DUP_MAPI_ID - Schema update failed: duplicate MAPI identifier.
@@ -25298,7 +25298,7 @@ Language=Russian
 ERROR_DS_DUP_SCHEMA_ID_GUID - Schema update failed: duplicate schema-id GUID.
 .
 Language=Polish
-ERROR_DS_DUP_SCHEMA_ID_GUID - Schema update failed: duplicate schema-id GUID.
+ERROR_DS_DUP_SCHEMA_ID_GUID - Nie można zaktualizować schematu: zduplikowany identyfikator schematu GUID.
 .
 Language=Romanian
 ERROR_DS_DUP_SCHEMA_ID_GUID - Schema update failed: duplicate schema-id GUID.
@@ -25315,7 +25315,7 @@ Language=Russian
 ERROR_DS_DUP_LDAP_DISPLAY_NAME - Schema update failed: duplicate LDAP display name.
 .
 Language=Polish
-ERROR_DS_DUP_LDAP_DISPLAY_NAME - Schema update failed: duplicate LDAP display name.
+ERROR_DS_DUP_LDAP_DISPLAY_NAME - Nie można zaktualizować schematu: zduplikowana wyświetlana nazwa LDAP.
 .
 Language=Romanian
 ERROR_DS_DUP_LDAP_DISPLAY_NAME - Schema update failed: duplicate LDAP display name.
@@ -25332,7 +25332,7 @@ Language=Russian
 ERROR_DS_SEMANTIC_ATT_TEST - Schema update failed: range-lower less than range upper
 .
 Language=Polish
-ERROR_DS_SEMANTIC_ATT_TEST - Schema update failed: range-lower less than range upper
+ERROR_DS_SEMANTIC_ATT_TEST - Nie można zaktualizować schematu: zakres niższy mniejszy niż zakres górny.
 .
 Language=Romanian
 ERROR_DS_SEMANTIC_ATT_TEST - Schema update failed: range-lower less than range upper
@@ -25349,7 +25349,7 @@ Language=Russian
 ERROR_DS_SYNTAX_MISMATCH - Schema update failed: syntax mismatch
 .
 Language=Polish
-ERROR_DS_SYNTAX_MISMATCH - Schema update failed: syntax mismatch
+ERROR_DS_SYNTAX_MISMATCH - Nie można zaktualizować schematu: niezgodność składni.
 .
 Language=Romanian
 ERROR_DS_SYNTAX_MISMATCH - Schema update failed: syntax mismatch
@@ -25366,7 +25366,7 @@ Language=Russian
 ERROR_DS_EXISTS_IN_MUST_HAVE - Schema deletion failed: attribute is used in must-contain
 .
 Language=Polish
-ERROR_DS_EXISTS_IN_MUST_HAVE - Schema deletion failed: attribute is used in must-contain
+ERROR_DS_EXISTS_IN_MUST_HAVE - Nie można zaktualizować schematu: atrybut jest używany w aspekcie „musi zawierać”.
 .
 Language=Romanian
 ERROR_DS_EXISTS_IN_MUST_HAVE - Schema deletion failed: attribute is used in must-contain
@@ -25383,7 +25383,7 @@ Language=Russian
 ERROR_DS_EXISTS_IN_MAY_HAVE - Schema deletion failed: attribute is used in may-contain
 .
 Language=Polish
-ERROR_DS_EXISTS_IN_MAY_HAVE - Schema deletion failed: attribute is used in may-contain
+ERROR_DS_EXISTS_IN_MAY_HAVE - Nie można zaktualizować schematu: atrybut jest używany w aspekcie „może zawierać”.
 .
 Language=Romanian
 ERROR_DS_EXISTS_IN_MAY_HAVE - Schema deletion failed: attribute is used in may-contain
@@ -25400,7 +25400,7 @@ Language=Russian
 ERROR_DS_NONEXISTENT_MAY_HAVE - Schema update failed: attribute in may-contain does not exist
 .
 Language=Polish
-ERROR_DS_NONEXISTENT_MAY_HAVE - Schema update failed: attribute in may-contain does not exist
+ERROR_DS_NONEXISTENT_MAY_HAVE - Nie można zaktualizować schematu: nie istnieje atrybut w aspekcie „może zawierać”.
 .
 Language=Romanian
 ERROR_DS_NONEXISTENT_MAY_HAVE - Schema update failed: attribute in may-contain does not exist
@@ -25417,7 +25417,7 @@ Language=Russian
 ERROR_DS_NONEXISTENT_MUST_HAVE - Schema update failed: attribute in must-contain does not exist
 .
 Language=Polish
-ERROR_DS_NONEXISTENT_MUST_HAVE - Schema update failed: attribute in must-contain does not exist
+ERROR_DS_NONEXISTENT_MUST_HAVE - Nie można zaktualizować schematu: nie istnieje atrybut w aspekcie „musi zawierać”.
 .
 Language=Romanian
 ERROR_DS_NONEXISTENT_MUST_HAVE - Schema update failed: attribute in must-contain does not exist
@@ -25434,7 +25434,7 @@ Language=Russian
 ERROR_DS_AUX_CLS_TEST_FAIL - Schema update failed: class in aux-class list does not exist or is not an auxiliary class
 .
 Language=Polish
-ERROR_DS_AUX_CLS_TEST_FAIL - Schema update failed: class in aux-class list does not exist or is not an auxiliary class
+ERROR_DS_AUX_CLS_TEST_FAIL - Nie można zaktualizować schematu: klasa z listy klas pomocniczych nie istnieje lub nie jest klasą pomocniczą.
 .
 Language=Romanian
 ERROR_DS_AUX_CLS_TEST_FAIL - Schema update failed: class in aux-class list does not exist or is not an auxiliary class
@@ -25451,7 +25451,7 @@ Language=Russian
 ERROR_DS_NONEXISTENT_POSS_SUP - Schema update failed: class in poss-superiors does not exist
 .
 Language=Polish
-ERROR_DS_NONEXISTENT_POSS_SUP - Schema update failed: class in poss-superiors does not exist
+ERROR_DS_NONEXISTENT_POSS_SUP - Nie można zaktualizować schematu: klasa z listy klas zwierzchnich nie istnieje.
 .
 Language=Romanian
 ERROR_DS_NONEXISTENT_POSS_SUP - Schema update failed: class in poss-superiors does not exist
@@ -25468,7 +25468,7 @@ Language=Russian
 ERROR_DS_SUB_CLS_TEST_FAIL - Schema update failed: class in subclassof list does not exist or does not satisfy hierarchy rules
 .
 Language=Polish
-ERROR_DS_SUB_CLS_TEST_FAIL - Schema update failed: class in subclassof list does not exist or does not satisfy hierarchy rules
+ERROR_DS_SUB_CLS_TEST_FAIL - Nie można zaktualizować schematu: klasa z listy podklas nie istnieje lub nie spełnia reguł hierarchii.
 .
 Language=Romanian
 ERROR_DS_SUB_CLS_TEST_FAIL - Schema update failed: class in subclassof list does not exist or does not satisfy hierarchy rules
@@ -25485,7 +25485,7 @@ Language=Russian
 ERROR_DS_BAD_RDN_ATT_ID_SYNTAX - Schema update failed: Rdn-Att-Id has wrong syntax
 .
 Language=Polish
-ERROR_DS_BAD_RDN_ATT_ID_SYNTAX - Schema update failed: Rdn-Att-Id has wrong syntax
+ERROR_DS_BAD_RDN_ATT_ID_SYNTAX - Nie można zaktualizować schematu: nieprawidłowa składnia Rdn-Att-Id.
 .
 Language=Romanian
 ERROR_DS_BAD_RDN_ATT_ID_SYNTAX - Schema update failed: Rdn-Att-Id has wrong syntax
@@ -25502,7 +25502,7 @@ Language=Russian
 ERROR_DS_EXISTS_IN_AUX_CLS - Schema deletion failed: class is used as auxiliary class
 .
 Language=Polish
-ERROR_DS_EXISTS_IN_AUX_CLS - Schema deletion failed: class is used as auxiliary class
+ERROR_DS_EXISTS_IN_AUX_CLS - Nie można usunąć schematu: klasa jest używana jako klasa pomocnicza.
 .
 Language=Romanian
 ERROR_DS_EXISTS_IN_AUX_CLS - Schema deletion failed: class is used as auxiliary class
@@ -25519,7 +25519,7 @@ Language=Russian
 ERROR_DS_EXISTS_IN_SUB_CLS - Schema deletion failed: class is used as sub class
 .
 Language=Polish
-ERROR_DS_EXISTS_IN_SUB_CLS - Schema deletion failed: class is used as sub class
+ERROR_DS_EXISTS_IN_SUB_CLS - Nie można usunąć schematu: klasa jest używana jako podklasa.
 .
 Language=Romanian
 ERROR_DS_EXISTS_IN_SUB_CLS - Schema deletion failed: class is used as sub class
@@ -25536,7 +25536,7 @@ Language=Russian
 ERROR_DS_EXISTS_IN_POSS_SUP - Schema deletion failed: class is used as poss superior
 .
 Language=Polish
-ERROR_DS_EXISTS_IN_POSS_SUP - Schema deletion failed: class is used as poss superior
+ERROR_DS_EXISTS_IN_POSS_SUP - Nie można usunąć schematu: klasa jest używana jako zwierzchnia.
 .
 Language=Romanian
 ERROR_DS_EXISTS_IN_POSS_SUP - Schema deletion failed: class is used as poss superior
@@ -25553,7 +25553,7 @@ Language=Russian
 ERROR_DS_RECALCSCHEMA_FAILED - Schema update failed in recalculating validation cache.
 .
 Language=Polish
-ERROR_DS_RECALCSCHEMA_FAILED - Schema update failed in recalculating validation cache.
+ERROR_DS_RECALCSCHEMA_FAILED - Nie można zaktualizować schematu: błąd w przetwarzaniu pamięci podręcznej procesu sprawdzania poprawności.
 .
 Language=Romanian
 ERROR_DS_RECALCSCHEMA_FAILED - Schema update failed in recalculating validation cache.
@@ -25570,7 +25570,7 @@ Language=Russian
 ERROR_DS_TREE_DELETE_NOT_FINISHED - The tree deletion is not finished.
 .
 Language=Polish
-ERROR_DS_TREE_DELETE_NOT_FINISHED - The tree deletion is not finished.
+ERROR_DS_TREE_DELETE_NOT_FINISHED - Usuwanie drzewa nie zostało zakończone.
 .
 Language=Romanian
 ERROR_DS_TREE_DELETE_NOT_FINISHED - The tree deletion is not finished.
@@ -25587,7 +25587,7 @@ Language=Russian
 ERROR_DS_CANT_DELETE - The requested delete operation could not be performed.
 .
 Language=Polish
-ERROR_DS_CANT_DELETE - The requested delete operation could not be performed.
+ERROR_DS_CANT_DELETE - Nie można wykonać żądanej operacji usuwania.
 .
 Language=Romanian
 ERROR_DS_CANT_DELETE - The requested delete operation could not be performed.
@@ -25604,7 +25604,7 @@ Language=Russian
 ERROR_DS_ATT_SCHEMA_REQ_ID - Cannot read the governs class identifier for the schema record.
 .
 Language=Polish
-ERROR_DS_ATT_SCHEMA_REQ_ID - Cannot read the governs class identifier for the schema record.
+ERROR_DS_ATT_SCHEMA_REQ_ID - Nie można odczytać identyfikatora klasy rządzącej dla rekordu schematu.
 .
 Language=Romanian
 ERROR_DS_ATT_SCHEMA_REQ_ID - Cannot read the governs class identifier for the schema record.
@@ -25621,7 +25621,7 @@ Language=Russian
 ERROR_DS_BAD_ATT_SCHEMA_SYNTAX - The attribute schema has bad syntax.
 .
 Language=Polish
-ERROR_DS_BAD_ATT_SCHEMA_SYNTAX - The attribute schema has bad syntax.
+ERROR_DS_BAD_ATT_SCHEMA_SYNTAX - Schemat atrybutu ma złą składnię.
 .
 Language=Romanian
 ERROR_DS_BAD_ATT_SCHEMA_SYNTAX - The attribute schema has bad syntax.
@@ -25638,7 +25638,7 @@ Language=Russian
 ERROR_DS_CANT_CACHE_ATT - The attribute could not be cached.
 .
 Language=Polish
-ERROR_DS_CANT_CACHE_ATT - The attribute could not be cached.
+ERROR_DS_CANT_CACHE_ATT - Nie można umieścić atrybutu w pamięci podręcznej.
 .
 Language=Romanian
 ERROR_DS_CANT_CACHE_ATT - The attribute could not be cached.
@@ -25655,7 +25655,7 @@ Language=Russian
 ERROR_DS_CANT_CACHE_CLASS - The class could not be cached.
 .
 Language=Polish
-ERROR_DS_CANT_CACHE_CLASS - The class could not be cached.
+ERROR_DS_CANT_CACHE_CLASS - Nie można umieścić klasy w pamięci podręcznej.
 .
 Language=Romanian
 ERROR_DS_CANT_CACHE_CLASS - The class could not be cached.
@@ -25672,7 +25672,7 @@ Language=Russian
 ERROR_DS_CANT_REMOVE_ATT_CACHE - The attribute could not be removed from the cache.
 .
 Language=Polish
-ERROR_DS_CANT_REMOVE_ATT_CACHE - The attribute could not be removed from the cache.
+ERROR_DS_CANT_REMOVE_ATT_CACHE - Nie można usunąć atrybutu z pamięci podręcznej.
 .
 Language=Romanian
 ERROR_DS_CANT_REMOVE_ATT_CACHE - The attribute could not be removed from the cache.
@@ -25689,7 +25689,7 @@ Language=Russian
 ERROR_DS_CANT_REMOVE_CLASS_CACHE - The class could not be removed from the cache.
 .
 Language=Polish
-ERROR_DS_CANT_REMOVE_CLASS_CACHE - The class could not be removed from the cache.
+ERROR_DS_CANT_REMOVE_CLASS_CACHE - Nie można usunąć klasy z pamięci podręcznej.
 .
 Language=Romanian
 ERROR_DS_CANT_REMOVE_CLASS_CACHE - The class could not be removed from the cache.
@@ -25706,7 +25706,7 @@ Language=Russian
 ERROR_DS_CANT_RETRIEVE_DN - The distinguished name attribute could not be read.
 .
 Language=Polish
-ERROR_DS_CANT_RETRIEVE_DN - The distinguished name attribute could not be read.
+ERROR_DS_CANT_RETRIEVE_DN - Nie można odczytać atrybutu nazwy wyróżniającej.
 .
 Language=Romanian
 ERROR_DS_CANT_RETRIEVE_DN - The distinguished name attribute could not be read.
@@ -25723,7 +25723,7 @@ Language=Russian
 ERROR_DS_MISSING_SUPREF - No superior reference has been configured for the directory service. The directory service is therefore unable to issue referrals to objects outside this forest.
 .
 Language=Polish
-ERROR_DS_MISSING_SUPREF - No superior reference has been configured for the directory service. The directory service is therefore unable to issue referrals to objects outside this forest.
+ERROR_DS_MISSING_SUPREF - Nie skonfigurowano nadrzędnego odwołania usługi katalogowej. Z tego powodu usługa katalogowa nie może przydzielić odwołań obiektom poza tym lasem.
 .
 Language=Romanian
 ERROR_DS_MISSING_SUPREF - No superior reference has been configured for the directory service. The directory service is therefore unable to issue referrals to objects outside this forest.
@@ -25740,7 +25740,7 @@ Language=Russian
 ERROR_DS_CANT_RETRIEVE_INSTANCE - The instance type attribute could not be retrieved.
 .
 Language=Polish
-ERROR_DS_CANT_RETRIEVE_INSTANCE - The instance type attribute could not be retrieved.
+ERROR_DS_CANT_RETRIEVE_INSTANCE - Nie można pobrać atrybutu typu wystąpienia.
 .
 Language=Romanian
 ERROR_DS_CANT_RETRIEVE_INSTANCE - The instance type attribute could not be retrieved.
@@ -25757,7 +25757,7 @@ Language=Russian
 ERROR_DS_CODE_INCONSISTENCY - An internal error has occurred.
 .
 Language=Polish
-ERROR_DS_CODE_INCONSISTENCY - An internal error has occurred.
+ERROR_DS_CODE_INCONSISTENCY - Wystąpił błąd wewnętrzny.
 .
 Language=Romanian
 ERROR_DS_CODE_INCONSISTENCY - An internal error has occurred.
@@ -25774,7 +25774,7 @@ Language=Russian
 ERROR_DS_DATABASE_ERROR - A database error has occurred.
 .
 Language=Polish
-ERROR_DS_DATABASE_ERROR - A database error has occurred.
+ERROR_DS_DATABASE_ERROR - Wystąpił błąd bazy danych.
 .
 Language=Romanian
 ERROR_DS_DATABASE_ERROR - A database error has occurred.
@@ -25791,7 +25791,7 @@ Language=Russian
 ERROR_DS_GOVERNSID_MISSING - The attribute GOVERNSID is missing.
 .
 Language=Polish
-ERROR_DS_GOVERNSID_MISSING - The attribute GOVERNSID is missing.
+ERROR_DS_GOVERNSID_MISSING - Brakuje atrybutu GOVERNSID.
 .
 Language=Romanian
 ERROR_DS_GOVERNSID_MISSING - The attribute GOVERNSID is missing.
@@ -25808,7 +25808,7 @@ Language=Russian
 ERROR_DS_MISSING_EXPECTED_ATT - An expected attribute is missing.
 .
 Language=Polish
-ERROR_DS_MISSING_EXPECTED_ATT - An expected attribute is missing.
+ERROR_DS_MISSING_EXPECTED_ATT - Brakuje oczekiwanego atrybutu.
 .
 Language=Romanian
 ERROR_DS_MISSING_EXPECTED_ATT - An expected attribute is missing.
@@ -25825,7 +25825,7 @@ Language=Russian
 ERROR_DS_NCNAME_MISSING_CR_REF - The specified naming context is missing a cross reference.
 .
 Language=Polish
-ERROR_DS_NCNAME_MISSING_CR_REF - The specified naming context is missing a cross reference.
+ERROR_DS_NCNAME_MISSING_CR_REF - W podanym kontekście nazewnictwa brakuje odwołania.
 .
 Language=Romanian
 ERROR_DS_NCNAME_MISSING_CR_REF - The specified naming context is missing a cross reference.
@@ -25842,7 +25842,7 @@ Language=Russian
 ERROR_DS_SECURITY_CHECKING_ERROR - A security checking error has occurred.
 .
 Language=Polish
-ERROR_DS_SECURITY_CHECKING_ERROR - A security checking error has occurred.
+ERROR_DS_SECURITY_CHECKING_ERROR - Podczas sprawdzania zabezpieczeń wystąpił błąd.
 .
 Language=Romanian
 ERROR_DS_SECURITY_CHECKING_ERROR - A security checking error has occurred.
@@ -25859,7 +25859,7 @@ Language=Russian
 ERROR_DS_SCHEMA_NOT_LOADED - The schema is not loaded.
 .
 Language=Polish
-ERROR_DS_SCHEMA_NOT_LOADED - The schema is not loaded.
+ERROR_DS_SCHEMA_NOT_LOADED - Schemat nie został załadowany.
 .
 Language=Romanian
 ERROR_DS_SCHEMA_NOT_LOADED - The schema is not loaded.
@@ -25876,7 +25876,7 @@ Language=Russian
 ERROR_DS_SCHEMA_ALLOC_FAILED - Schema allocation failed. Please check if the machine is running low on memory.
 .
 Language=Polish
-ERROR_DS_SCHEMA_ALLOC_FAILED - Schema allocation failed. Please check if the machine is running low on memory.
+ERROR_DS_SCHEMA_ALLOC_FAILED - Nie można przydzielić pamięci dla schematu. Sprawdź, czy w komputerze nie brakuje pamięci.
 .
 Language=Romanian
 ERROR_DS_SCHEMA_ALLOC_FAILED - Schema allocation failed. Please check if the machine is running low on memory.
@@ -25893,7 +25893,7 @@ Language=Russian
 ERROR_DS_ATT_SCHEMA_REQ_SYNTAX - Failed to obtain the required syntax for the attribute schema.
 .
 Language=Polish
-ERROR_DS_ATT_SCHEMA_REQ_SYNTAX - Failed to obtain the required syntax for the attribute schema.
+ERROR_DS_ATT_SCHEMA_REQ_SYNTAX - Nie można uzyskać wymaganej składni schematu atrybutów.
 .
 Language=Romanian
 ERROR_DS_ATT_SCHEMA_REQ_SYNTAX - Failed to obtain the required syntax for the attribute schema.
@@ -25910,7 +25910,7 @@ Language=Russian
 ERROR_DS_GCVERIFY_ERROR - The global catalog verification failed. The global catalog is not available or does not support the operation. Some part of the directory is currently not available.
 .
 Language=Polish
-ERROR_DS_GCVERIFY_ERROR - The global catalog verification failed. The global catalog is not available or does not support the operation. Some part of the directory is currently not available.
+ERROR_DS_GCVERIFY_ERROR - Nie można zweryfikować wykazu globalnego. Wykaz globalny nie jest dostępny lub nie obsługuje operacji. Część katalogu nie jest obecnie dostępna.
 .
 Language=Romanian
 ERROR_DS_GCVERIFY_ERROR - The global catalog verification failed. The global catalog is not available or does not support the operation. Some part of the directory is currently not available.
@@ -25927,7 +25927,7 @@ Language=Russian
 ERROR_DS_DRA_SCHEMA_MISMATCH - The replication operation failed because of a schema mismatch between the servers involved.
 .
 Language=Polish
-ERROR_DS_DRA_SCHEMA_MISMATCH - The replication operation failed because of a schema mismatch between the servers involved.
+ERROR_DS_DRA_SCHEMA_MISMATCH - Nie można wykonać replikacji, ponieważ występuje niezgodność schematów pomiędzy serwerami biorącymi udział w operacji.
 .
 Language=Romanian
 ERROR_DS_DRA_SCHEMA_MISMATCH - The replication operation failed because of a schema mismatch between the servers involved.
@@ -25944,7 +25944,7 @@ Language=Russian
 ERROR_DS_CANT_FIND_DSA_OBJ - The DSA object could not be found.
 .
 Language=Polish
-ERROR_DS_CANT_FIND_DSA_OBJ - The DSA object could not be found.
+ERROR_DS_CANT_FIND_DSA_OBJ - Nie można znaleźć obiektu DSA.
 .
 Language=Romanian
 ERROR_DS_CANT_FIND_DSA_OBJ - The DSA object could not be found.
@@ -25961,7 +25961,7 @@ Language=Russian
 ERROR_DS_CANT_FIND_EXPECTED_NC - The naming context could not be found.
 .
 Language=Polish
-ERROR_DS_CANT_FIND_EXPECTED_NC - The naming context could not be found.
+ERROR_DS_CANT_FIND_EXPECTED_NC - Nie można znaleźć kontekstu nazewnictwa.
 .
 Language=Romanian
 ERROR_DS_CANT_FIND_EXPECTED_NC - The naming context could not be found.
@@ -25978,7 +25978,7 @@ Language=Russian
 ERROR_DS_CANT_FIND_NC_IN_CACHE - The naming context could not be found in the cache.
 .
 Language=Polish
-ERROR_DS_CANT_FIND_NC_IN_CACHE - The naming context could not be found in the cache.
+ERROR_DS_CANT_FIND_NC_IN_CACHE - Nie można znaleźć kontekstu nazewnictwa w pamięci podręcznej.
 .
 Language=Romanian
 ERROR_DS_CANT_FIND_NC_IN_CACHE - The naming context could not be found in the cache.
@@ -25995,7 +25995,7 @@ Language=Russian
 ERROR_DS_CANT_RETRIEVE_CHILD - The child object could not be retrieved.
 .
 Language=Polish
-ERROR_DS_CANT_RETRIEVE_CHILD - The child object could not be retrieved.
+ERROR_DS_CANT_RETRIEVE_CHILD - Nie można pobrać obiektu podrzędnego.
 .
 Language=Romanian
 ERROR_DS_CANT_RETRIEVE_CHILD - The child object could not be retrieved.
@@ -26012,7 +26012,7 @@ Language=Russian
 ERROR_DS_SECURITY_ILLEGAL_MODIFY - The modification was not permitted for security reasons.
 .
 Language=Polish
-ERROR_DS_SECURITY_ILLEGAL_MODIFY - The modification was not permitted for security reasons.
+ERROR_DS_SECURITY_ILLEGAL_MODIFY - Modyfikacja nie została dozwolona z powodów bezpieczeństwa.
 .
 Language=Romanian
 ERROR_DS_SECURITY_ILLEGAL_MODIFY - The modification was not permitted for security reasons.
@@ -26029,7 +26029,7 @@ Language=Russian
 ERROR_DS_CANT_REPLACE_HIDDEN_REC - The operation cannot replace the hidden record.
 .
 Language=Polish
-ERROR_DS_CANT_REPLACE_HIDDEN_REC - The operation cannot replace the hidden record.
+ERROR_DS_CANT_REPLACE_HIDDEN_REC - Operacja nie może zamienić ukrytego rekordu.
 .
 Language=Romanian
 ERROR_DS_CANT_REPLACE_HIDDEN_REC - The operation cannot replace the hidden record.
@@ -26046,7 +26046,7 @@ Language=Russian
 ERROR_DS_BAD_HIERARCHY_FILE - The hierarchy file is invalid.
 .
 Language=Polish
-ERROR_DS_BAD_HIERARCHY_FILE - The hierarchy file is invalid.
+ERROR_DS_BAD_HIERARCHY_FILE - Plik hierarchii jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_DS_BAD_HIERARCHY_FILE - The hierarchy file is invalid.
@@ -26063,7 +26063,7 @@ Language=Russian
 ERROR_DS_BUILD_HIERARCHY_TABLE_FAILED - The attempt to build the hierarchy table failed.
 .
 Language=Polish
-ERROR_DS_BUILD_HIERARCHY_TABLE_FAILED - The attempt to build the hierarchy table failed.
+ERROR_DS_BUILD_HIERARCHY_TABLE_FAILED - Nie można utworzyć tablicy hierarchii.
 .
 Language=Romanian
 ERROR_DS_BUILD_HIERARCHY_TABLE_FAILED - The attempt to build the hierarchy table failed.
@@ -26080,7 +26080,7 @@ Language=Russian
 ERROR_DS_CONFIG_PARAM_MISSING - The directory configuration parameter is missing from the registry.
 .
 Language=Polish
-ERROR_DS_CONFIG_PARAM_MISSING - The directory configuration parameter is missing from the registry.
+ERROR_DS_CONFIG_PARAM_MISSING - W Rejestrze brakuje parametru konfiguracji katalogu.
 .
 Language=Romanian
 ERROR_DS_CONFIG_PARAM_MISSING - The directory configuration parameter is missing from the registry.
@@ -26097,7 +26097,7 @@ Language=Russian
 ERROR_DS_COUNTING_AB_INDICES_FAILED - The attempt to count the address book indices failed.
 .
 Language=Polish
-ERROR_DS_COUNTING_AB_INDICES_FAILED - The attempt to count the address book indices failed.
+ERROR_DS_COUNTING_AB_INDICES_FAILED - Nie można policzyć indeksów książki adresowej.
 .
 Language=Romanian
 ERROR_DS_COUNTING_AB_INDICES_FAILED - The attempt to count the address book indices failed.
@@ -26114,7 +26114,7 @@ Language=Russian
 ERROR_DS_HIERARCHY_TABLE_MALLOC_FAILED - The allocation of the hierarchy table failed.
 .
 Language=Polish
-ERROR_DS_HIERARCHY_TABLE_MALLOC_FAILED - The allocation of the hierarchy table failed.
+ERROR_DS_HIERARCHY_TABLE_MALLOC_FAILED - Nie można przydzielić pamięci dla tabeli hierarchii.
 .
 Language=Romanian
 ERROR_DS_HIERARCHY_TABLE_MALLOC_FAILED - The allocation of the hierarchy table failed.
@@ -26131,7 +26131,7 @@ Language=Russian
 ERROR_DS_INTERNAL_FAILURE - The directory service encountered an internal failure.
 .
 Language=Polish
-ERROR_DS_INTERNAL_FAILURE - The directory service encountered an internal failure.
+ERROR_DS_INTERNAL_FAILURE - Usługa katalogowa napotkała błąd wewnętrzny.
 .
 Language=Romanian
 ERROR_DS_INTERNAL_FAILURE - The directory service encountered an internal failure.
@@ -26148,7 +26148,7 @@ Language=Russian
 ERROR_DS_UNKNOWN_ERROR - The directory service encountered an unknown failure.
 .
 Language=Polish
-ERROR_DS_UNKNOWN_ERROR - The directory service encountered an unknown failure.
+ERROR_DS_UNKNOWN_ERROR - Usługa katalogowa napotkała nieznany błąd.
 .
 Language=Romanian
 ERROR_DS_UNKNOWN_ERROR - The directory service encountered an unknown failure.
@@ -26165,7 +26165,7 @@ Language=Russian
 ERROR_DS_ROOT_REQUIRES_CLASS_TOP - A root object requires a class of 'top'.
 .
 Language=Polish
-ERROR_DS_ROOT_REQUIRES_CLASS_TOP - A root object requires a class of 'top'.
+ERROR_DS_ROOT_REQUIRES_CLASS_TOP - Obiekt główny wymaga klasy „top”.
 .
 Language=Romanian
 ERROR_DS_ROOT_REQUIRES_CLASS_TOP - A root object requires a class of 'top'.
@@ -26182,7 +26182,7 @@ Language=Russian
 ERROR_DS_REFUSING_FSMO_ROLES - This directory server is shutting down, and cannot take ownership of new floating single-master operation roles.
 .
 Language=Polish
-ERROR_DS_REFUSING_FSMO_ROLES - This directory server is shutting down, and cannot take ownership of new floating single-master operation roles.
+ERROR_DS_REFUSING_FSMO_ROLES - Serwer katalogu jest zamykany i nie może przejąć w posiadanie nowych zmiennych prostych operacji głównych (FSMO).
 .
 Language=Romanian
 ERROR_DS_REFUSING_FSMO_ROLES - This directory server is shutting down, and cannot take ownership of new floating single-master operation roles.
@@ -26199,7 +26199,7 @@ Language=Russian
 ERROR_DS_MISSING_FSMO_SETTINGS - The directory service is missing mandatory configuration information, and is unable to determine the ownership of floating single-master operation roles.
 .
 Language=Polish
-ERROR_DS_MISSING_FSMO_SETTINGS - The directory service is missing mandatory configuration information, and is unable to determine the ownership of floating single-master operation roles.
+ERROR_DS_MISSING_FSMO_SETTINGS - Usłudze katalogowej brakuje koniecznych informacji o konfiguracji - nie można określić posiadaczy zmiennych prostych operacji głównych (FSMO).
 .
 Language=Romanian
 ERROR_DS_MISSING_FSMO_SETTINGS - The directory service is missing mandatory configuration information, and is unable to determine the ownership of floating single-master operation roles.
@@ -26216,7 +26216,7 @@ Language=Russian
 ERROR_DS_UNABLE_TO_SURRENDER_ROLES - The directory service was unable to transfer ownership of one or more floating single-master operation roles to other servers.
 .
 Language=Polish
-ERROR_DS_UNABLE_TO_SURRENDER_ROLES - The directory service was unable to transfer ownership of one or more floating single-master operation roles to other servers.
+ERROR_DS_UNABLE_TO_SURRENDER_ROLES - Usługa katalogowa nie może przetransferować do innych serwerów praw własności do zmiennych prostych operacji głównych (FSMO).
 .
 Language=Romanian
 ERROR_DS_UNABLE_TO_SURRENDER_ROLES - The directory service was unable to transfer ownership of one or more floating single-master operation roles to other servers.
@@ -26233,7 +26233,7 @@ Language=Russian
 ERROR_DS_DRA_GENERIC - The replication operation failed.
 .
 Language=Polish
-ERROR_DS_DRA_GENERIC - The replication operation failed.
+ERROR_DS_DRA_GENERIC - Operacja replikacji nie powiodła się.
 .
 Language=Romanian
 ERROR_DS_DRA_GENERIC - The replication operation failed.
@@ -26250,7 +26250,7 @@ Language=Russian
 ERROR_DS_DRA_INVALID_PARAMETER - An invalid parameter was specified for this replication operation.
 .
 Language=Polish
-ERROR_DS_DRA_INVALID_PARAMETER - An invalid parameter was specified for this replication operation.
+ERROR_DS_DRA_INVALID_PARAMETER - Podano nieprawidłowy parametr dla tej operacji replikacji.
 .
 Language=Romanian
 ERROR_DS_DRA_INVALID_PARAMETER - An invalid parameter was specified for this replication operation.
@@ -26267,7 +26267,7 @@ Language=Russian
 ERROR_DS_DRA_BUSY - The directory service is too busy to complete the replication operation at this time.
 .
 Language=Polish
-ERROR_DS_DRA_BUSY - The directory service is too busy to complete the replication operation at this time.
+ERROR_DS_DRA_BUSY - Usługa katalogowa jest zbyt zajęta, aby dokończyć teraz operację replikacji.
 .
 Language=Romanian
 ERROR_DS_DRA_BUSY - The directory service is too busy to complete the replication operation at this time.
@@ -26284,7 +26284,7 @@ Language=Russian
 ERROR_DS_DRA_BAD_DN - The distinguished name specified for this replication operation is invalid.
 .
 Language=Polish
-ERROR_DS_DRA_BAD_DN - The distinguished name specified for this replication operation is invalid.
+ERROR_DS_DRA_BAD_DN - Nazwa wyróżniająca, podana dla tej operacji replikacji, jest nieprawidłowa.
 .
 Language=Romanian
 ERROR_DS_DRA_BAD_DN - The distinguished name specified for this replication operation is invalid.
@@ -26301,7 +26301,7 @@ Language=Russian
 ERROR_DS_DRA_BAD_NC - The naming context specified for this replication operation is invalid.
 .
 Language=Polish
-ERROR_DS_DRA_BAD_NC - The naming context specified for this replication operation is invalid.
+ERROR_DS_DRA_BAD_NC - Kontekst nazewnictwa, podany dla tej operacji replikacji, jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_DS_DRA_BAD_NC - The naming context specified for this replication operation is invalid.
@@ -26318,7 +26318,7 @@ Language=Russian
 ERROR_DS_DRA_DN_EXISTS - The distinguished name specified for this replication operation already exists.
 .
 Language=Polish
-ERROR_DS_DRA_DN_EXISTS - The distinguished name specified for this replication operation already exists.
+ERROR_DS_DRA_DN_EXISTS - Nazwa wyróżniająca, podana dla tej operacji replikacji, już istnieje.
 .
 Language=Romanian
 ERROR_DS_DRA_DN_EXISTS - The distinguished name specified for this replication operation already exists.
@@ -26335,7 +26335,7 @@ Language=Russian
 ERROR_DS_DRA_INTERNAL_ERROR - The replication system encountered an internal error.
 .
 Language=Polish
-ERROR_DS_DRA_INTERNAL_ERROR - The replication system encountered an internal error.
+ERROR_DS_DRA_INTERNAL_ERROR - System replikacji napotkał błąd wewnętrzny.
 .
 Language=Romanian
 ERROR_DS_DRA_INTERNAL_ERROR - The replication system encountered an internal error.
@@ -26352,7 +26352,7 @@ Language=Russian
 ERROR_DS_DRA_INCONSISTENT_DIT - The replication operation encountered a database inconsistency.
 .
 Language=Polish
-ERROR_DS_DRA_INCONSISTENT_DIT - The replication operation encountered a database inconsistency.
+ERROR_DS_DRA_INCONSISTENT_DIT - Podczas operacji replikacji wykryto niespójność bazy danych.
 .
 Language=Romanian
 ERROR_DS_DRA_INCONSISTENT_DIT - The replication operation encountered a database inconsistency.
@@ -26369,7 +26369,7 @@ Language=Russian
 ERROR_DS_DRA_CONNECTION_FAILED - The server specified for this replication operation could not be contacted.
 .
 Language=Polish
-ERROR_DS_DRA_CONNECTION_FAILED - The server specified for this replication operation could not be contacted.
+ERROR_DS_DRA_CONNECTION_FAILED - Nie można skontaktować się z serwerem podanym dla tej operacji replikacji.
 .
 Language=Romanian
 ERROR_DS_DRA_CONNECTION_FAILED - The server specified for this replication operation could not be contacted.
@@ -26386,7 +26386,7 @@ Language=Russian
 ERROR_DS_DRA_BAD_INSTANCE_TYPE - The replication operation encountered an object with an invalid instance type.
 .
 Language=Polish
-ERROR_DS_DRA_BAD_INSTANCE_TYPE - The replication operation encountered an object with an invalid instance type.
+ERROR_DS_DRA_BAD_INSTANCE_TYPE - Operacja replikacji napotkała obiekt z nieprawidłowym typem wystąpienia.
 .
 Language=Romanian
 ERROR_DS_DRA_BAD_INSTANCE_TYPE - The replication operation encountered an object with an invalid instance type.
@@ -26403,7 +26403,7 @@ Language=Russian
 ERROR_DS_DRA_OUT_OF_MEM - The replication operation failed to allocate memory.
 .
 Language=Polish
-ERROR_DS_DRA_OUT_OF_MEM - The replication operation failed to allocate memory.
+ERROR_DS_DRA_OUT_OF_MEM - Nie można przydzielić pamięci dla operacji replikacji.
 .
 Language=Romanian
 ERROR_DS_DRA_OUT_OF_MEM - The replication operation failed to allocate memory.
@@ -26420,7 +26420,7 @@ Language=Russian
 ERROR_DS_DRA_MAIL_PROBLEM - The replication operation encountered an error with the mail system.
 .
 Language=Polish
-ERROR_DS_DRA_MAIL_PROBLEM - The replication operation encountered an error with the mail system.
+ERROR_DS_DRA_MAIL_PROBLEM - Operacja replikacji napotkała błąd systemu poczty.
 .
 Language=Romanian
 ERROR_DS_DRA_MAIL_PROBLEM - The replication operation encountered an error with the mail system.
@@ -26437,7 +26437,7 @@ Language=Russian
 ERROR_DS_DRA_REF_ALREADY_EXISTS - The replication reference information for the target server already exists.
 .
 Language=Polish
-ERROR_DS_DRA_REF_ALREADY_EXISTS - The replication reference information for the target server already exists.
+ERROR_DS_DRA_REF_ALREADY_EXISTS - Informacja dla serwera docelowego o odniesieniu replikacji już istnieje.
 .
 Language=Romanian
 ERROR_DS_DRA_REF_ALREADY_EXISTS - The replication reference information for the target server already exists.
@@ -26454,7 +26454,7 @@ Language=Russian
 ERROR_DS_DRA_REF_NOT_FOUND - The replication reference information for the target server does not exist.
 .
 Language=Polish
-ERROR_DS_DRA_REF_NOT_FOUND - The replication reference information for the target server does not exist.
+ERROR_DS_DRA_REF_NOT_FOUND - Informacja dla serwera docelowego o odniesieniu replikacji nie istnieje.
 .
 Language=Romanian
 ERROR_DS_DRA_REF_NOT_FOUND - The replication reference information for the target server does not exist.
@@ -26471,7 +26471,7 @@ Language=Russian
 ERROR_DS_DRA_OBJ_IS_REP_SOURCE - The naming context cannot be removed because it is replicated to another server.
 .
 Language=Polish
-ERROR_DS_DRA_OBJ_IS_REP_SOURCE - The naming context cannot be removed because it is replicated to another server.
+ERROR_DS_DRA_OBJ_IS_REP_SOURCE - Kontekst nazewnictwa nie może być usunięty, ponieważ jest replikowany do innego serwera.
 .
 Language=Romanian
 ERROR_DS_DRA_OBJ_IS_REP_SOURCE - The naming context cannot be removed because it is replicated to another server.
@@ -26488,7 +26488,7 @@ Language=Russian
 ERROR_DS_DRA_DB_ERROR - The replication operation encountered a database error.
 .
 Language=Polish
-ERROR_DS_DRA_DB_ERROR - The replication operation encountered a database error.
+ERROR_DS_DRA_DB_ERROR - Operacja replikacji napotkała błąd bazy danych.
 .
 Language=Romanian
 ERROR_DS_DRA_DB_ERROR - The replication operation encountered a database error.
@@ -26505,7 +26505,7 @@ Language=Russian
 ERROR_DS_DRA_NO_REPLICA - The naming context is in the process of being removed or is not replicated from the specified server.
 .
 Language=Polish
-ERROR_DS_DRA_NO_REPLICA - The naming context is in the process of being removed or is not replicated from the specified server.
+ERROR_DS_DRA_NO_REPLICA - Kontekst nazewnictwa jest właśnie usuwany lub nie jest replikowany z podanego serwera.
 .
 Language=Romanian
 ERROR_DS_DRA_NO_REPLICA - The naming context is in the process of being removed or is not replicated from the specified server.
@@ -26522,7 +26522,7 @@ Language=Russian
 ERROR_DS_DRA_ACCESS_DENIED - Replication access was denied.
 .
 Language=Polish
-ERROR_DS_DRA_ACCESS_DENIED - Replication access was denied.
+ERROR_DS_DRA_ACCESS_DENIED - Odmówiono dostępu dla replikacji.
 .
 Language=Romanian
 ERROR_DS_DRA_ACCESS_DENIED - Replication access was denied.
@@ -26539,7 +26539,7 @@ Language=Russian
 ERROR_DS_DRA_NOT_SUPPORTED - The requested operation is not supported by this version of the directory service.
 .
 Language=Polish
-ERROR_DS_DRA_NOT_SUPPORTED - The requested operation is not supported by this version of the directory service.
+ERROR_DS_DRA_NOT_SUPPORTED - Żądana operacja nie jest obsługiwana przez tą wersję usługi katalogowej.
 .
 Language=Romanian
 ERROR_DS_DRA_NOT_SUPPORTED - The requested operation is not supported by this version of the directory service.
@@ -26556,7 +26556,7 @@ Language=Russian
 ERROR_DS_DRA_RPC_CANCELLED - The replication remote procedure call was cancelled.
 .
 Language=Polish
-ERROR_DS_DRA_RPC_CANCELLED - The replication remote procedure call was cancelled.
+ERROR_DS_DRA_RPC_CANCELLED - Zdalne wywołanie procedury replikacji zostało anulowane.
 .
 Language=Romanian
 ERROR_DS_DRA_RPC_CANCELLED - The replication remote procedure call was cancelled.
@@ -26573,7 +26573,7 @@ Language=Russian
 ERROR_DS_DRA_SOURCE_DISABLED - The source server is currently rejecting replication requests.
 .
 Language=Polish
-ERROR_DS_DRA_SOURCE_DISABLED - The source server is currently rejecting replication requests.
+ERROR_DS_DRA_SOURCE_DISABLED - Serwer źródłowy obecnie odrzuca żądania replikacji.
 .
 Language=Romanian
 ERROR_DS_DRA_SOURCE_DISABLED - The source server is currently rejecting replication requests.
@@ -26590,7 +26590,7 @@ Language=Russian
 ERROR_DS_DRA_SINK_DISABLED - The destination server is currently rejecting replication requests.
 .
 Language=Polish
-ERROR_DS_DRA_SINK_DISABLED - The destination server is currently rejecting replication requests.
+ERROR_DS_DRA_SINK_DISABLED - Serwer docelowy obecnie odrzuca żądania replikacji.
 .
 Language=Romanian
 ERROR_DS_DRA_SINK_DISABLED - The destination server is currently rejecting replication requests.
@@ -26607,7 +26607,7 @@ Language=Russian
 ERROR_DS_DRA_NAME_COLLISION - The replication operation failed due to a collision of object names.
 .
 Language=Polish
-ERROR_DS_DRA_NAME_COLLISION - The replication operation failed due to a collision of object names.
+ERROR_DS_DRA_NAME_COLLISION - Nie można wykonać operacji replikacji z powodu konfliktu nazw obiektów.
 .
 Language=Romanian
 ERROR_DS_DRA_NAME_COLLISION - The replication operation failed due to a collision of object names.
@@ -26624,7 +26624,7 @@ Language=Russian
 ERROR_DS_DRA_SOURCE_REINSTALLED - The replication source has been reinstalled.
 .
 Language=Polish
-ERROR_DS_DRA_SOURCE_REINSTALLED - The replication source has been reinstalled.
+ERROR_DS_DRA_SOURCE_REINSTALLED - Źródło replikacji zostało ponownie zainstalowane.
 .
 Language=Romanian
 ERROR_DS_DRA_SOURCE_REINSTALLED - The replication source has been reinstalled.
@@ -26641,7 +26641,7 @@ Language=Russian
 ERROR_DS_DRA_MISSING_PARENT - The replication operation failed because a required parent object is missing.
 .
 Language=Polish
-ERROR_DS_DRA_MISSING_PARENT - The replication operation failed because a required parent object is missing.
+ERROR_DS_DRA_MISSING_PARENT - Nie można wykonać operacji replikacji, ponieważ brakuje obiektu nadrzędnego.
 .
 Language=Romanian
 ERROR_DS_DRA_MISSING_PARENT - The replication operation failed because a required parent object is missing.
@@ -26658,7 +26658,7 @@ Language=Russian
 ERROR_DS_DRA_PREEMPTED - The replication operation was preempted.
 .
 Language=Polish
-ERROR_DS_DRA_PREEMPTED - The replication operation was preempted.
+ERROR_DS_DRA_PREEMPTED - Operacja replikacji została udaremniona.
 .
 Language=Romanian
 ERROR_DS_DRA_PREEMPTED - The replication operation was preempted.
@@ -26675,7 +26675,7 @@ Language=Russian
 ERROR_DS_DRA_ABANDON_SYNC - The replication synchronization attempt was abandoned because of a lack of updates.
 .
 Language=Polish
-ERROR_DS_DRA_ABANDON_SYNC - The replication synchronization attempt was abandoned because of a lack of updates.
+ERROR_DS_DRA_ABANDON_SYNC - Próba synchronizacji replikacji została zaniechana z powodu braku aktualizacji.
 .
 Language=Romanian
 ERROR_DS_DRA_ABANDON_SYNC - The replication synchronization attempt was abandoned because of a lack of updates.
@@ -26692,7 +26692,7 @@ Language=Russian
 ERROR_DS_DRA_SHUTDOWN - The replication operation was terminated because the system is shutting down.
 .
 Language=Polish
-ERROR_DS_DRA_SHUTDOWN - The replication operation was terminated because the system is shutting down.
+ERROR_DS_DRA_SHUTDOWN - Operacja replikacji została przerwana, ponieważ system jest zamykany.
 .
 Language=Romanian
 ERROR_DS_DRA_SHUTDOWN - The replication operation was terminated because the system is shutting down.
@@ -26709,7 +26709,7 @@ Language=Russian
 ERROR_DS_DRA_INCOMPATIBLE_PARTIAL_SET - Synchronization attempt failed because the destination DC is currently waiting to synchronize new partial attributes from source. This condition is normal if a recent schema change modified the partial attribute set. The destination partial attribute set is not a subset of the source partial attribute set.
 .
 Language=Polish
-ERROR_DS_DRA_INCOMPATIBLE_PARTIAL_SET - Synchronization attempt failed because the destination DC is currently waiting to synchronize new partial attributes from source. This condition is normal if a recent schema change modified the partial attribute set. The destination partial attribute set is not a subset of the source partial attribute set.
+ERROR_DS_DRA_INCOMPATIBLE_PARTIAL_SET - Próba synchronizacji nie powiodła się, ponieważ docelowy kontroler domeny oczekuje na synchronizację nowych atrybutów częściowych ze źródła. Ta sytuacja jest normalna, jeśli bieżąca zmiana schematu zmodyfikowała zbiór częściowy atrybutów. Zbiór częściowy atrybutów docelowych nie jest podzbiorem zbioru częściowego atrybutów źródłowych.
 .
 Language=Romanian
 ERROR_DS_DRA_INCOMPATIBLE_PARTIAL_SET - Synchronization attempt failed because the destination DC is currently waiting to synchronize new partial attributes from source. This condition is normal if a recent schema change modified the partial attribute set. The destination partial attribute set is not a subset of the source partial attribute set.
@@ -26726,7 +26726,7 @@ Language=Russian
 ERROR_DS_DRA_SOURCE_IS_PARTIAL_REPLICA - The replication synchronization attempt failed because a master replica attempted to sync from a partial replica.
 .
 Language=Polish
-ERROR_DS_DRA_SOURCE_IS_PARTIAL_REPLICA - The replication synchronization attempt failed because a master replica attempted to sync from a partial replica.
+ERROR_DS_DRA_SOURCE_IS_PARTIAL_REPLICA - Próba synchronizacji replikacji nie powiodła się, ponieważ główna replika próbowała zsynchronizować się z repliką częściową.
 .
 Language=Romanian
 ERROR_DS_DRA_SOURCE_IS_PARTIAL_REPLICA - The replication synchronization attempt failed because a master replica attempted to sync from a partial replica.
@@ -26743,7 +26743,7 @@ Language=Russian
 ERROR_DS_DRA_EXTN_CONNECTION_FAILED - The server specified for this replication operation was contacted, but that server was unable to contact an additional server needed to complete the operation.
 .
 Language=Polish
-ERROR_DS_DRA_EXTN_CONNECTION_FAILED - The server specified for this replication operation was contacted, but that server was unable to contact an additional server needed to complete the operation.
+ERROR_DS_DRA_EXTN_CONNECTION_FAILED - Skontaktowano się z serwerem podanym dla tej operacji replikacji, ale serwer ten nie zdołał się połączyć z dodatkowym serwerem potrzebnym do ukończenia operacji.
 .
 Language=Romanian
 ERROR_DS_DRA_EXTN_CONNECTION_FAILED - The server specified for this replication operation was contacted, but that server was unable to contact an additional server needed to complete the operation.
@@ -26760,7 +26760,7 @@ Language=Russian
 ERROR_DS_INSTALL_SCHEMA_MISMATCH - The version of the Active Directory schema of the source forest is not compatible with the version of Active Directory on this computer.
 .
 Language=Polish
-ERROR_DS_INSTALL_SCHEMA_MISMATCH - The version of the Active Directory schema of the source forest is not compatible with the version of Active Directory on this computer.
+ERROR_DS_INSTALL_SCHEMA_MISMATCH - Wersja schematu usługi katalogowej lasu źródłowego jest niezgodna z wersją usługi katalogowej na tym komputerze.
 .
 Language=Romanian
 ERROR_DS_INSTALL_SCHEMA_MISMATCH - The version of the Active Directory schema of the source forest is not compatible with the version of Active Directory on this computer.
@@ -26777,7 +26777,7 @@ Language=Russian
 ERROR_DS_DUP_LINK_ID - Schema update failed: An attribute with the same link identifier already exists.
 .
 Language=Polish
-ERROR_DS_DUP_LINK_ID - Schema update failed: An attribute with the same link identifier already exists.
+ERROR_DS_DUP_LINK_ID - Nie można zaktualizować schematu: atrybut z tym samym identyfikatorem łącza już istnieje.
 .
 Language=Romanian
 ERROR_DS_DUP_LINK_ID - Schema update failed: An attribute with the same link identifier already exists.
@@ -26794,7 +26794,7 @@ Language=Russian
 ERROR_DS_NAME_ERROR_RESOLVING - Name translation: Generic processing error.
 .
 Language=Polish
-ERROR_DS_NAME_ERROR_RESOLVING - Name translation: Generic processing error.
+ERROR_DS_NAME_ERROR_RESOLVING - Tłumaczenie nazw: ogólny błąd przetwarzania.
 .
 Language=Romanian
 ERROR_DS_NAME_ERROR_RESOLVING - Name translation: Generic processing error.
@@ -26811,7 +26811,7 @@ Language=Russian
 ERROR_DS_NAME_ERROR_NOT_FOUND - Name translation: Could not find the name or insufficient right to see name.
 .
 Language=Polish
-ERROR_DS_NAME_ERROR_NOT_FOUND - Name translation: Could not find the name or insufficient right to see name.
+ERROR_DS_NAME_ERROR_NOT_FOUND - Tłumaczenie nazw: nie można znaleźć nazwy lub brak wystarczających uprawnień, aby ją zobaczyć.
 .
 Language=Romanian
 ERROR_DS_NAME_ERROR_NOT_FOUND - Name translation: Could not find the name or insufficient right to see name.
@@ -26828,7 +26828,7 @@ Language=Russian
 ERROR_DS_NAME_ERROR_NOT_UNIQUE - Name translation: Input name mapped to more than one output name.
 .
 Language=Polish
-ERROR_DS_NAME_ERROR_NOT_UNIQUE - Name translation: Input name mapped to more than one output name.
+ERROR_DS_NAME_ERROR_NOT_UNIQUE - Tłumaczenie nazw: nazwa wejściowa mapowana na więcej niż jedną nazwę wynikową.
 .
 Language=Romanian
 ERROR_DS_NAME_ERROR_NOT_UNIQUE - Name translation: Input name mapped to more than one output name.
@@ -26845,7 +26845,7 @@ Language=Russian
 ERROR_DS_NAME_ERROR_NO_MAPPING - Name translation: Input name found, but not the associated output format.
 .
 Language=Polish
-ERROR_DS_NAME_ERROR_NO_MAPPING - Name translation: Input name found, but not the associated output format.
+ERROR_DS_NAME_ERROR_NO_MAPPING - Tłumaczenie nazw: znaleziono nazwę wejściową, lecz nie znaleziono skojarzonego formatu nazwy wynikowej.
 .
 Language=Romanian
 ERROR_DS_NAME_ERROR_NO_MAPPING - Name translation: Input name found, but not the associated output format.
@@ -26862,7 +26862,7 @@ Language=Russian
 ERROR_DS_NAME_ERROR_DOMAIN_ONLY - Name translation: Unable to resolve completely, only the domain was found.
 .
 Language=Polish
-ERROR_DS_NAME_ERROR_DOMAIN_ONLY - Name translation: Unable to resolve completely, only the domain was found.
+ERROR_DS_NAME_ERROR_DOMAIN_ONLY - Tłumaczenie nazw: nie można w pełni rozpoznać - znaleziono tylko domenę.
 .
 Language=Romanian
 ERROR_DS_NAME_ERROR_DOMAIN_ONLY - Name translation: Unable to resolve completely, only the domain was found.
@@ -26879,7 +26879,7 @@ Language=Russian
 ERROR_DS_NAME_ERROR_NO_SYNTACTICAL_MAPPING - Name translation: Unable to perform purely syntactical mapping at the client without going out to the wire.
 .
 Language=Polish
-ERROR_DS_NAME_ERROR_NO_SYNTACTICAL_MAPPING - Name translation: Unable to perform purely syntactical mapping at the client without going out to the wire.
+ERROR_DS_NAME_ERROR_NO_SYNTACTICAL_MAPPING - Tłumaczenie nazw: nie można przeprowadzić czysto syntaktycznego odwzorowania u klienta nie mając połączenia z siecią.
 .
 Language=Romanian
 ERROR_DS_NAME_ERROR_NO_SYNTACTICAL_MAPPING - Name translation: Unable to perform purely syntactical mapping at the client without going out to the wire.
@@ -26896,7 +26896,7 @@ Language=Russian
 ERROR_DS_CONSTRUCTED_ATT_MOD - Modification of a constructed attribute is not allowed.
 .
 Language=Polish
-ERROR_DS_CONSTRUCTED_ATT_MOD - Modification of a constructed attribute is not allowed.
+ERROR_DS_CONSTRUCTED_ATT_MOD - Modyfikowanie złożonego atrybutu jest niedozwolone.
 .
 Language=Romanian
 ERROR_DS_CONSTRUCTED_ATT_MOD - Modification of a constructed attribute is not allowed.
@@ -26913,7 +26913,7 @@ Language=Russian
 ERROR_DS_WRONG_OM_OBJ_CLASS - The OM-Object-Class specified is incorrect for an attribute with the specified syntax.
 .
 Language=Polish
-ERROR_DS_WRONG_OM_OBJ_CLASS - The OM-Object-Class specified is incorrect for an attribute with the specified syntax.
+ERROR_DS_WRONG_OM_OBJ_CLASS - Podany ciąg OM-Obiekt-Klasa jest niepoprawny dla atrybutu o podanej składni.
 .
 Language=Romanian
 ERROR_DS_WRONG_OM_OBJ_CLASS - The OM-Object-Class specified is incorrect for an attribute with the specified syntax.
@@ -26930,7 +26930,7 @@ Language=Russian
 ERROR_DS_DRA_REPL_PENDING - The replication request has been posted; waiting for reply.
 .
 Language=Polish
-ERROR_DS_DRA_REPL_PENDING - The replication request has been posted; waiting for reply.
+ERROR_DS_DRA_REPL_PENDING - Żądanie replikacji zostało wysłane; oczekiwanie na odpowiedź.
 .
 Language=Romanian
 ERROR_DS_DRA_REPL_PENDING - The replication request has been posted; waiting for reply.
@@ -26947,7 +26947,7 @@ Language=Russian
 ERROR_DS_DS_REQUIRED - The requested operation requires a directory service, and none was available.
 .
 Language=Polish
-ERROR_DS_DS_REQUIRED - The requested operation requires a directory service, and none was available.
+ERROR_DS_DS_REQUIRED - Żądana operacja wymaga usługi katalogowej, ale żadna usługa katalogowa nie jest dostępna.
 .
 Language=Romanian
 ERROR_DS_DS_REQUIRED - The requested operation requires a directory service, and none was available.
@@ -26964,7 +26964,7 @@ Language=Russian
 ERROR_DS_INVALID_LDAP_DISPLAY_NAME - The LDAP display name of the class or attribute contains non-ASCII characters.
 .
 Language=Polish
-ERROR_DS_INVALID_LDAP_DISPLAY_NAME - The LDAP display name of the class or attribute contains non-ASCII characters.
+ERROR_DS_INVALID_LDAP_DISPLAY_NAME - Wyświetlana nazwa LDAP danej klasy lub atrybutu zawiera znaki inne niż ASCII.
 .
 Language=Romanian
 ERROR_DS_INVALID_LDAP_DISPLAY_NAME - The LDAP display name of the class or attribute contains non-ASCII characters.
@@ -26981,7 +26981,7 @@ Language=Russian
 ERROR_DS_NON_BASE_SEARCH - The requested search operation is only supported for base searches.
 .
 Language=Polish
-ERROR_DS_NON_BASE_SEARCH - The requested search operation is only supported for base searches.
+ERROR_DS_NON_BASE_SEARCH - Żądana operacja wyszukiwania jest obsługiwana tylko dla przeszukiwań bazowych.
 .
 Language=Romanian
 ERROR_DS_NON_BASE_SEARCH - The requested search operation is only supported for base searches.
@@ -26998,7 +26998,7 @@ Language=Russian
 ERROR_DS_CANT_RETRIEVE_ATTS - The search failed to retrieve attributes from the database.
 .
 Language=Polish
-ERROR_DS_CANT_RETRIEVE_ATTS - The search failed to retrieve attributes from the database.
+ERROR_DS_CANT_RETRIEVE_ATTS - Operacja wyszukiwania nie może pobrać atrybutów z bazy danych.
 .
 Language=Romanian
 ERROR_DS_CANT_RETRIEVE_ATTS - The search failed to retrieve attributes from the database.
@@ -27015,7 +27015,7 @@ Language=Russian
 ERROR_DS_BACKLINK_WITHOUT_LINK - The schema update operation tried to add a backward link attribute that has no corresponding forward link.
 .
 Language=Polish
-ERROR_DS_BACKLINK_WITHOUT_LINK - The schema update operation tried to add a backward link attribute that has no corresponding forward link.
+ERROR_DS_BACKLINK_WITHOUT_LINK - Operacja zaktualizowania schematu próbowała dodać atrybut odsyłacza wstecznego, któremu nie towarzyszy odsyłacz do przodu.
 .
 Language=Romanian
 ERROR_DS_BACKLINK_WITHOUT_LINK - The schema update operation tried to add a backward link attribute that has no corresponding forward link.
@@ -27032,7 +27032,7 @@ Language=Russian
 ERROR_DS_EPOCH_MISMATCH - Source and destination of a cross domain move do not agree on the object's epoch number. Either source or destination does not have the latest version of the object.
 .
 Language=Polish
-ERROR_DS_EPOCH_MISMATCH - Source and destination of a cross domain move do not agree on the object's epoch number. Either source or destination does not have the latest version of the object.
+ERROR_DS_EPOCH_MISMATCH - Źródło i miejsce docelowe operacji przenoszenia poza domenę nie mogą uzgodnić numeru epoki obiektu. Albo źródło, albo miejsce docelowe nie ma najnowszej wersji obiektu.
 .
 Language=Romanian
 ERROR_DS_EPOCH_MISMATCH - Source and destination of a cross domain move do not agree on the object's epoch number. Either source or destination does not have the latest version of the object.
@@ -27049,7 +27049,7 @@ Language=Russian
 ERROR_DS_SRC_NAME_MISMATCH - Source and destination of a cross domain move do not agree on the object's current name. Either source or destination does not have the latest version of the object.
 .
 Language=Polish
-ERROR_DS_SRC_NAME_MISMATCH - Source and destination of a cross domain move do not agree on the object's current name. Either source or destination does not have the latest version of the object.
+ERROR_DS_SRC_NAME_MISMATCH - Źródło i miejsce docelowe operacji przenoszenia poza domenę nie mogą uzgodnić aktualnej nazwy obiektu. Albo źródło, albo miejsce docelowe nie ma najnowszej wersji obiektu.
 .
 Language=Romanian
 ERROR_DS_SRC_NAME_MISMATCH - Source and destination of a cross domain move do not agree on the object's current name. Either source or destination does not have the latest version of the object.
@@ -27066,7 +27066,7 @@ Language=Russian
 ERROR_DS_SRC_AND_DST_NC_IDENTICAL - Source and destination of a cross domain move operation are identical. Caller should use local move operation instead of cross domain move operation.
 .
 Language=Polish
-ERROR_DS_SRC_AND_DST_NC_IDENTICAL - Source and destination of a cross domain move operation are identical. Caller should use local move operation instead of cross domain move operation.
+ERROR_DS_SRC_AND_DST_NC_IDENTICAL - Źródło i miejsce docelowe operacji przenoszenia poza domenę są identyczne. Wywołujący powinien użyć operacji przenoszenia lokalnego zamiast operacji przenoszenia poza domenę.
 .
 Language=Romanian
 ERROR_DS_SRC_AND_DST_NC_IDENTICAL - Source and destination of a cross domain move operation are identical. Caller should use local move operation instead of cross domain move operation.
@@ -27083,7 +27083,7 @@ Language=Russian
 ERROR_DS_DST_NC_MISMATCH - Source and destination for a cross domain move are not in agreement on the naming contexts in the forest. Either source or destination does not have the latest version of the Partitions container.
 .
 Language=Polish
-ERROR_DS_DST_NC_MISMATCH - Source and destination for a cross domain move are not in agreement on the naming contexts in the forest. Either source or destination does not have the latest version of the Partitions container.
+ERROR_DS_DST_NC_MISMATCH - Źródło i miejsce docelowe operacji przenoszenia poza domenę nie mogą uzgodnić kontekstów nazewnictwa w lesie. Albo źródło, albo miejsce docelowe nie ma najnowszej wersji kontenera partycji.
 .
 Language=Romanian
 ERROR_DS_DST_NC_MISMATCH - Source and destination for a cross domain move are not in agreement on the naming contexts in the forest. Either source or destination does not have the latest version of the Partitions container.
@@ -27100,7 +27100,7 @@ Language=Russian
 ERROR_DS_NOT_AUTHORITIVE_FOR_DST_NC - Destination of a cross domain move is not authoritative for the destination naming context.
 .
 Language=Polish
-ERROR_DS_NOT_AUTHORITIVE_FOR_DST_NC - Destination of a cross domain move is not authoritative for the destination naming context.
+ERROR_DS_NOT_AUTHORITIVE_FOR_DST_NC - Miejsce docelowe operacji przenoszenia poza domenę nie jest autorytatywne dla docelowego kontekstu nazewnictwa.
 .
 Language=Romanian
 ERROR_DS_NOT_AUTHORITIVE_FOR_DST_NC - Destination of a cross domain move is not authoritative for the destination naming context.
@@ -27117,7 +27117,7 @@ Language=Russian
 ERROR_DS_SRC_GUID_MISMATCH - Source and destination of a cross domain move do not agree on the identity of the source object. Either source or destination does not have the latest version of the source object.
 .
 Language=Polish
-ERROR_DS_SRC_GUID_MISMATCH - Source and destination of a cross domain move do not agree on the identity of the source object. Either source or destination does not have the latest version of the source object.
+ERROR_DS_SRC_GUID_MISMATCH - Źródło i miejsce docelowe operacji przenoszenia poza domenę nie mogą uzgodnić tożsamości obiektu źródłowego. Albo źródło, albo miejsce docelowe nie ma najnowszej wersji obiektu źródłowego.
 .
 Language=Romanian
 ERROR_DS_SRC_GUID_MISMATCH - Source and destination of a cross domain move do not agree on the identity of the source object. Either source or destination does not have the latest version of the source object.
@@ -27134,7 +27134,7 @@ Language=Russian
 ERROR_DS_CANT_MOVE_DELETED_OBJECT - Object being moved across domains is already known to be deleted by the destination server. The source server does not have the latest version of the source object.
 .
 Language=Polish
-ERROR_DS_CANT_MOVE_DELETED_OBJECT - Object being moved across domains is already known to be deleted by the destination server. The source server does not have the latest version of the source object.
+ERROR_DS_CANT_MOVE_DELETED_OBJECT - Obiekt przenoszony poza domenę jest zaznaczony do usunięcia przez serwer docelowy. Serwer źródłowy nie ma najnowszej wersji obiektu źródłowego.
 .
 Language=Romanian
 ERROR_DS_CANT_MOVE_DELETED_OBJECT - Object being moved across domains is already known to be deleted by the destination server. The source server does not have the latest version of the source object.
@@ -27151,7 +27151,7 @@ Language=Russian
 ERROR_DS_PDC_OPERATION_IN_PROGRESS - Another operation, which requires exclusive access to the PDC PSMO, is already in progress.
 .
 Language=Polish
-ERROR_DS_PDC_OPERATION_IN_PROGRESS - Another operation, which requires exclusive access to the PDC PSMO, is already in progress.
+ERROR_DS_PDC_OPERATION_IN_PROGRESS - Inna operacja, która wymaga wyłącznego dostępu do PSMO PDC jest już wykonywana.
 .
 Language=Romanian
 ERROR_DS_PDC_OPERATION_IN_PROGRESS - Another operation, which requires exclusive access to the PDC PSMO, is already in progress.
@@ -27168,7 +27168,7 @@ Language=Russian
 ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD - A cross domain move operation failed such that the two versions of the moved object exist - one each in the source and destination domains. The destination object needs to be removed to restore the system to a consistent state.
 .
 Language=Polish
-ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD - A cross domain move operation failed such that the two versions of the moved object exist - one each in the source and destination domains. The destination object needs to be removed to restore the system to a consistent state.
+ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD - Operacja przenoszenia poza domenę nie powiodła się, ponieważ istnieją już dwie takie wersje przenoszonych obiektów - po jednym w domenie źródłowej i docelowej. Obiekt docelowy musi być usunięty, aby został przywrócony spójny stan systemu.
 .
 Language=Romanian
 ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD - A cross domain move operation failed such that the two versions of the moved object exist - one each in the source and destination domains. The destination object needs to be removed to restore the system to a consistent state.
@@ -27185,7 +27185,7 @@ Language=Russian
 ERROR_DS_ILLEGAL_XDOM_MOVE_OPERATION - This object may not be moved across domain boundaries either because cross domain moves for this class are disallowed, or the object has some special characteristics, e.g.: trust account or restricted RID, which prevent its move.
 .
 Language=Polish
-ERROR_DS_ILLEGAL_XDOM_MOVE_OPERATION - This object may not be moved across domain boundaries either because cross domain moves for this class are disallowed, or the object has some special characteristics, e.g.: trust account or restricted RID, which prevent its move.
+ERROR_DS_ILLEGAL_XDOM_MOVE_OPERATION - Nie można przenieść tego obiektu poza granice domeny, ponieważ przenoszenie poza domenę nie jest dozwolone dla tej klasy albo obiekt ma pewne specjalne właściwości, takie jak konto zaufania czy ograniczony RID, uniemożliwiające przeniesienie.
 .
 Language=Romanian
 ERROR_DS_ILLEGAL_XDOM_MOVE_OPERATION - This object may not be moved across domain boundaries either because cross domain moves for this class are disallowed, or the object has some special characteristics, e.g.: trust account or restricted RID, which prevent its move.
@@ -27202,7 +27202,7 @@ Language=Russian
 ERROR_DS_CANT_WITH_ACCT_GROUP_MEMBERSHPS - Can't move objects with memberships across domain boundaries as once moved, this would violate the membership conditions of the account group. Remove the object from any account group memberships and retry.
 .
 Language=Polish
-ERROR_DS_CANT_WITH_ACCT_GROUP_MEMBERSHPS - Can't move objects with memberships across domain boundaries as once moved, this would violate the membership conditions of the account group. Remove the object from any account group memberships and retry.
+ERROR_DS_CANT_WITH_ACCT_GROUP_MEMBERSHPS - Nie można przenieść obiektów wraz z członkostwem poza granice domeny, ponieważ naruszyłoby to warunki członkostwa grupy kont. Anuluj członkostwo obiektu we wszystkich grupach kont, po czym ponów próbę.
 .
 Language=Romanian
 ERROR_DS_CANT_WITH_ACCT_GROUP_MEMBERSHPS - Can't move objects with memberships across domain boundaries as once moved, this would violate the membership conditions of the account group. Remove the object from any account group memberships and retry.
@@ -27219,7 +27219,7 @@ Language=Russian
 ERROR_DS_NC_MUST_HAVE_NC_PARENT - A naming context head must be the immediate child of another naming context head, not of an interior node.
 .
 Language=Polish
-ERROR_DS_NC_MUST_HAVE_NC_PARENT - A naming context head must be the immediate child of another naming context head, not of an interior node.
+ERROR_DS_NC_MUST_HAVE_NC_PARENT - Początek kontekstu nazewnictwa musi być bezpośrednim potomkiem innego początku kontekstu nazewnictwa, a nie potomkiem wewnętrznego węzła.
 .
 Language=Romanian
 ERROR_DS_NC_MUST_HAVE_NC_PARENT - A naming context head must be the immediate child of another naming context head, not of an interior node.
@@ -27236,7 +27236,7 @@ Language=Russian
 ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE - The directory cannot validate the proposed naming context name because it does not hold a replica of the naming context above the proposed naming context. Please ensure that the domain naming master role is held by a server that is configured as a global catalog server, and that the server is up to date with its replication partners. (Applies only to Windows 2000 Domain Naming masters)
 .
 Language=Polish
-ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE - The directory cannot validate the proposed naming context name because it does not hold a replica of the naming context above the proposed naming context. Please ensure that the domain naming master role is held by a server that is configured as a global catalog server, and that the server is up to date with its replication partners. (Applies only to Windows 2000 Domain Naming masters)
+ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE - Katalog nie może sprawdzać poprawności nazwy z proponowanego kontekstu nazewnictwa, ponieważ nie zawiera repliki kontekstu nazewnictwa ponad proponowanym kontekstem nazewnictwa. Upewnij się, że rola wzorca operacji nazw domen jest pełniona przez serwer, który jest skonfigurowany jako serwer wykazu globalnego, i serwer ten jest zaktualizowany względem jego partnerów replikacji. (Ma zastosowanie tylko dla wzorców nazw domen systemu Windows 2000)
 .
 Language=Romanian
 ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE - The directory cannot validate the proposed naming context name because it does not hold a replica of the naming context above the proposed naming context. Please ensure that the domain naming master role is held by a server that is configured as a global catalog server, and that the server is up to date with its replication partners. (Applies only to Windows 2000 Domain Naming masters)
@@ -27253,7 +27253,7 @@ Language=Russian
 ERROR_DS_DST_DOMAIN_NOT_NATIVE - Destination domain must be in native mode.
 .
 Language=Polish
-ERROR_DS_DST_DOMAIN_NOT_NATIVE - Destination domain must be in native mode.
+ERROR_DS_DST_DOMAIN_NOT_NATIVE - Domena docelowa musi być w trybie macierzystym.
 .
 Language=Romanian
 ERROR_DS_DST_DOMAIN_NOT_NATIVE - Destination domain must be in native mode.
@@ -27270,7 +27270,7 @@ Language=Russian
 ERROR_DS_MISSING_INFRASTRUCTURE_CONTAINER - The operation cannot be performed because the server does not have an infrastructure container in the domain of interest.
 .
 Language=Polish
-ERROR_DS_MISSING_INFRASTRUCTURE_CONTAINER - The operation cannot be performed because the server does not have an infrastructure container in the domain of interest.
+ERROR_DS_MISSING_INFRASTRUCTURE_CONTAINER - Nie można wykonać operacji, ponieważ serwer nie ma kontenera infrastruktury w domenie zainteresowań.
 .
 Language=Romanian
 ERROR_DS_MISSING_INFRASTRUCTURE_CONTAINER - The operation cannot be performed because the server does not have an infrastructure container in the domain of interest.
@@ -27287,7 +27287,7 @@ Language=Russian
 ERROR_DS_CANT_MOVE_ACCOUNT_GROUP - Cross-domain move of non-empty account groups is not allowed.
 .
 Language=Polish
-ERROR_DS_CANT_MOVE_ACCOUNT_GROUP - Cross-domain move of non-empty account groups is not allowed.
+ERROR_DS_CANT_MOVE_ACCOUNT_GROUP - Przenoszenie niepustych grup kont poza granice domeny nie jest dozwolone.
 .
 Language=Romanian
 ERROR_DS_CANT_MOVE_ACCOUNT_GROUP - Cross-domain move of non-empty account groups is not allowed.
@@ -27304,7 +27304,7 @@ Language=Russian
 ERROR_DS_CANT_MOVE_RESOURCE_GROUP - Cross-domain move of non-empty resource groups is not allowed.
 .
 Language=Polish
-ERROR_DS_CANT_MOVE_RESOURCE_GROUP - Cross-domain move of non-empty resource groups is not allowed.
+ERROR_DS_CANT_MOVE_RESOURCE_GROUP - Przenoszenie niepustych grup zasobów poza granice domeny nie jest dozwolone.
 .
 Language=Romanian
 ERROR_DS_CANT_MOVE_RESOURCE_GROUP - Cross-domain move of non-empty resource groups is not allowed.
@@ -27321,7 +27321,7 @@ Language=Russian
 ERROR_DS_INVALID_SEARCH_FLAG - The search flags for the attribute are invalid. The ANR bit is valid only on attributes of Unicode or Teletex strings.
 .
 Language=Polish
-ERROR_DS_INVALID_SEARCH_FLAG - The search flags for the attribute are invalid. The ANR bit is valid only on attributes of Unicode or Teletex strings.
+ERROR_DS_INVALID_SEARCH_FLAG - Flagi wyszukiwania dla atrybutów są nieprawidłowe. Bit ANR jest ważny tylko dla atrybutów Unicode lub łańcuchów Teletekstu.
 .
 Language=Romanian
 ERROR_DS_INVALID_SEARCH_FLAG - The search flags for the attribute are invalid. The ANR bit is valid only on attributes of Unicode or Teletex strings.
@@ -27338,7 +27338,7 @@ Language=Russian
 ERROR_DS_NO_TREE_DELETE_ABOVE_NC - Tree deletions starting at an object which has an NC head as a descendant are not allowed.
 .
 Language=Polish
-ERROR_DS_NO_TREE_DELETE_ABOVE_NC - Tree deletions starting at an object which has an NC head as a descendant are not allowed.
+ERROR_DS_NO_TREE_DELETE_ABOVE_NC - Usuwanie drzewa poczynając od obiektu-potomka będącego węzłem NC nie jest dozwolone.
 .
 Language=Romanian
 ERROR_DS_NO_TREE_DELETE_ABOVE_NC - Tree deletions starting at an object which has an NC head as a descendant are not allowed.
@@ -27355,7 +27355,7 @@ Language=Russian
 ERROR_DS_COULDNT_LOCK_TREE_FOR_DELETE - The directory service failed to lock a tree in preparation for a tree deletion because the tree was in use.
 .
 Language=Polish
-ERROR_DS_COULDNT_LOCK_TREE_FOR_DELETE - The directory service failed to lock a tree in preparation for a tree deletion because the tree was in use.
+ERROR_DS_COULDNT_LOCK_TREE_FOR_DELETE - Usługa katalogowa, przygotowując operację drzewa, nie mogła zablokować drzewa, ponieważ było ono wówczas używane.
 .
 Language=Romanian
 ERROR_DS_COULDNT_LOCK_TREE_FOR_DELETE - The directory service failed to lock a tree in preparation for a tree deletion because the tree was in use.
@@ -27372,7 +27372,7 @@ Language=Russian
 ERROR_DS_COULDNT_IDENTIFY_OBJECTS_FOR_TREE_DELETE - The directory service failed to identify the list of objects to delete while attempting a tree deletion.
 .
 Language=Polish
-ERROR_DS_COULDNT_IDENTIFY_OBJECTS_FOR_TREE_DELETE - The directory service failed to identify the list of objects to delete while attempting a tree deletion.
+ERROR_DS_COULDNT_IDENTIFY_OBJECTS_FOR_TREE_DELETE - Usłudze katalogowej nie udało się zidentyfikować listy obiektów do usunięcia podczas próby usuwania drzewa.
 .
 Language=Romanian
 ERROR_DS_COULDNT_IDENTIFY_OBJECTS_FOR_TREE_DELETE - The directory service failed to identify the list of objects to delete while attempting a tree deletion.
@@ -27391,8 +27391,8 @@ ERROR_DS_SAM_INIT_FAILURE - Security Accounts Manager initialization failed beca
 Error Status: 0x%2. Click OK to shut down the system and reboot into Directory Services Restore Mode. Check the event log for detailed information.
 .
 Language=Polish
-ERROR_DS_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
-Error Status: 0x%2. Click OK to shut down the system and reboot into Directory Services Restore Mode. Check the event log for detailed information.
+ERROR_DS_SAM_INIT_FAILURE - Nie można zainicjować Menedżera kont zabezpieczeń z powodu następującego błędu: %1.
+Stan błędu: 0x%2. Zamknij system i uruchom go w trybie odtwarzania usługi katalogowej. Szczegółowe informacje można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 ERROR_DS_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
@@ -27410,7 +27410,7 @@ Language=Russian
 ERROR_DS_SENSITIVE_GROUP_VIOLATION - Only an administrator can modify the membership list of an administrative group.
 .
 Language=Polish
-ERROR_DS_SENSITIVE_GROUP_VIOLATION - Only an administrator can modify the membership list of an administrative group.
+ERROR_DS_SENSITIVE_GROUP_VIOLATION - Tylko administrator może modyfikować listę członków grupy administrującej.
 .
 Language=Romanian
 ERROR_DS_SENSITIVE_GROUP_VIOLATION - Only an administrator can modify the membership list of an administrative group.
@@ -27427,7 +27427,7 @@ Language=Russian
 ERROR_DS_CANT_MOD_PRIMARYGROUPID - Cannot change the primary group ID of a domain controller account.
 .
 Language=Polish
-ERROR_DS_CANT_MOD_PRIMARYGROUPID - Cannot change the primary group ID of a domain controller account.
+ERROR_DS_CANT_MOD_PRIMARYGROUPID - Nie można zmienić identyfikatora grupy podstawowej konta kontrolera domeny.
 .
 Language=Romanian
 ERROR_DS_CANT_MOD_PRIMARYGROUPID - Cannot change the primary group ID of a domain controller account.
@@ -27444,7 +27444,7 @@ Language=Russian
 ERROR_DS_ILLEGAL_BASE_SCHEMA_MOD - An attempt is made to modify the base schema.
 .
 Language=Polish
-ERROR_DS_ILLEGAL_BASE_SCHEMA_MOD - An attempt is made to modify the base schema.
+ERROR_DS_ILLEGAL_BASE_SCHEMA_MOD - Została podjęta próba zmodyfikowania schematu podstawowego.
 .
 Language=Romanian
 ERROR_DS_ILLEGAL_BASE_SCHEMA_MOD - An attempt is made to modify the base schema.
@@ -27461,7 +27461,7 @@ Language=Russian
 ERROR_DS_NONSAFE_SCHEMA_CHANGE - Adding a new mandatory attribute to an existing class, deleting a mandatory attribute from an existing class, or adding an optional attribute to the special class Top that is not a backlink attribute (directly or through inheritance, for example, by adding or deleting an auxiliary class) is not allowed.
 .
 Language=Polish
-ERROR_DS_NONSAFE_SCHEMA_CHANGE - Adding a new mandatory attribute to an existing class, deleting a mandatory attribute from an existing class, or adding an optional attribute to the special class Top that is not a backlink attribute (directly or through inheritance, for example, by adding or deleting an auxiliary class) is not allowed.
+ERROR_DS_NONSAFE_SCHEMA_CHANGE - Nie jest dozwolone: dodawanie do istniejącej klasy nowego obowiązkowego atrybutu, usuwanie obowiązkowego atrybutu z istniejącej klasy lub dodawanie opcjonalnego atrybutu do specjalnej klasy Top, który nie jest atrybutem odsyłacza wstecznego (bezpośrednio lub wskutek dziedziczenia, na przykład przez dodanie lub usunięcie klasy pomocniczej).
 .
 Language=Romanian
 ERROR_DS_NONSAFE_SCHEMA_CHANGE - Adding a new mandatory attribute to an existing class, deleting a mandatory attribute from an existing class, or adding an optional attribute to the special class Top that is not a backlink attribute (directly or through inheritance, for example, by adding or deleting an auxiliary class) is not allowed.
@@ -27478,7 +27478,7 @@ Language=Russian
 ERROR_DS_SCHEMA_UPDATE_DISALLOWED - Schema update is not allowed on this DC because the DC is not the schema FSMO Role Owner.
 .
 Language=Polish
-ERROR_DS_SCHEMA_UPDATE_DISALLOWED - Schema update is not allowed on this DC because the DC is not the schema FSMO Role Owner.
+ERROR_DS_SCHEMA_UPDATE_DISALLOWED - Nie można zaktualizować schematu w bieżącym kontrolerze domeny, ponieważ kontroler domeny nie jest właścicielem schematu ról FSMO.
 .
 Language=Romanian
 ERROR_DS_SCHEMA_UPDATE_DISALLOWED - Schema update is not allowed on this DC because the DC is not the schema FSMO Role Owner.
@@ -27495,7 +27495,7 @@ Language=Russian
 ERROR_DS_CANT_CREATE_UNDER_SCHEMA - An object of this class cannot be created under the schema container. You can only create attribute-schema and class-schema objects under the schema container.
 .
 Language=Polish
-ERROR_DS_CANT_CREATE_UNDER_SCHEMA - An object of this class cannot be created under the schema container. You can only create attribute-schema and class-schema objects under the schema container.
+ERROR_DS_CANT_CREATE_UNDER_SCHEMA - Obiektu tej klasy nie można utworzyć w kontenerze schematów. W kontenerze schematów możesz utworzyć tylko obiekty typu schemat atrybutów i schemat klas.
 .
 Language=Romanian
 ERROR_DS_CANT_CREATE_UNDER_SCHEMA - An object of this class cannot be created under the schema container. You can only create attribute-schema and class-schema objects under the schema container.
@@ -27512,7 +27512,7 @@ Language=Russian
 ERROR_DS_INSTALL_NO_SRC_SCH_VERSION - The replica/child install failed to get the objectVersion attribute on the schema container on the source DC. Either the attribute is missing on the schema container or the credentials supplied do not have permission to read it.
 .
 Language=Polish
-ERROR_DS_INSTALL_NO_SRC_SCH_VERSION - The replica/child install failed to get the objectVersion attribute on the schema container on the source DC. Either the attribute is missing on the schema container or the credentials supplied do not have permission to read it.
+ERROR_DS_INSTALL_NO_SRC_SCH_VERSION - Instalacja repliki/obiektu potomnego nie mogła pobrać atrybutu wersji obiektu z kontenera schematów ze źródłowego kontrolera domeny. Albo brakuje atrybutu w kontenerze schematów, albo dostarczone poświadczenia nie nadają uprawnień odczytu.
 .
 Language=Romanian
 ERROR_DS_INSTALL_NO_SRC_SCH_VERSION - The replica/child install failed to get the objectVersion attribute on the schema container on the source DC. Either the attribute is missing on the schema container or the credentials supplied do not have permission to read it.
@@ -27529,7 +27529,7 @@ Language=Russian
 ERROR_DS_INSTALL_NO_SCH_VERSION_IN_INIFILE - The replica/child install failed to read the objectVersion attribute in the SCHEMA section of the file schema.ini in the system32 directory.
 .
 Language=Polish
-ERROR_DS_INSTALL_NO_SCH_VERSION_IN_INIFILE - The replica/child install failed to read the objectVersion attribute in the SCHEMA section of the file schema.ini in the system32 directory.
+ERROR_DS_INSTALL_NO_SCH_VERSION_IN_INIFILE - Instalacja repliki/obiektu potomnego nie mogła odczytać atrybutu wersji obiektu z sekcji SCHEMA pliku schema.ini znajdującego się w katalogu system32.
 .
 Language=Romanian
 ERROR_DS_INSTALL_NO_SCH_VERSION_IN_INIFILE - The replica/child install failed to read the objectVersion attribute in the SCHEMA section of the file schema.ini in the system32 directory.
@@ -27546,7 +27546,7 @@ Language=Russian
 ERROR_DS_INVALID_GROUP_TYPE - The specified group type is invalid.
 .
 Language=Polish
-ERROR_DS_INVALID_GROUP_TYPE - The specified group type is invalid.
+ERROR_DS_INVALID_GROUP_TYPE - Określony typ grupy jest nieprawidłowy.
 .
 Language=Romanian
 ERROR_DS_INVALID_GROUP_TYPE - The specified group type is invalid.
@@ -27563,7 +27563,7 @@ Language=Russian
 ERROR_DS_NO_NEST_GLOBALGROUP_IN_MIXEDDOMAIN - Cannot nest global groups in a mixed domain if the group is security-enabled.
 .
 Language=Polish
-ERROR_DS_NO_NEST_GLOBALGROUP_IN_MIXEDDOMAIN - Cannot nest global groups in a mixed domain if the group is security-enabled.
+ERROR_DS_NO_NEST_GLOBALGROUP_IN_MIXEDDOMAIN - Nie można zagnieździć grup globalnych w domenie mieszanej, jeżeli zabezpieczenie grup jest włączone.
 .
 Language=Romanian
 ERROR_DS_NO_NEST_GLOBALGROUP_IN_MIXEDDOMAIN - Cannot nest global groups in a mixed domain if the group is security-enabled.
@@ -27580,7 +27580,7 @@ Language=Russian
 ERROR_DS_NO_NEST_LOCALGROUP_IN_MIXEDDOMAIN - Cannot nest local groups in a mixed domain if the group is security-enabled.
 .
 Language=Polish
-ERROR_DS_NO_NEST_LOCALGROUP_IN_MIXEDDOMAIN - Cannot nest local groups in a mixed domain if the group is security-enabled.
+ERROR_DS_NO_NEST_LOCALGROUP_IN_MIXEDDOMAIN - Nie można zagnieździć grup lokalnych w domenie mieszanej, jeżeli zabezpieczenie grup jest włączone.
 .
 Language=Romanian
 ERROR_DS_NO_NEST_LOCALGROUP_IN_MIXEDDOMAIN - Cannot nest local groups in a mixed domain if the group is security-enabled.
@@ -27597,7 +27597,7 @@ Language=Russian
 ERROR_DS_GLOBAL_CANT_HAVE_LOCAL_MEMBER - A global group cannot have a local group as a member.
 .
 Language=Polish
-ERROR_DS_GLOBAL_CANT_HAVE_LOCAL_MEMBER - A global group cannot have a local group as a member.
+ERROR_DS_GLOBAL_CANT_HAVE_LOCAL_MEMBER - Grupa lokalna nie może być członkiem grupy globalnej.
 .
 Language=Romanian
 ERROR_DS_GLOBAL_CANT_HAVE_LOCAL_MEMBER - A global group cannot have a local group as a member.
@@ -27614,7 +27614,7 @@ Language=Russian
 ERROR_DS_GLOBAL_CANT_HAVE_UNIVERSAL_MEMBER - A global group cannot have a universal group as a member.
 .
 Language=Polish
-ERROR_DS_GLOBAL_CANT_HAVE_UNIVERSAL_MEMBER - A global group cannot have a universal group as a member.
+ERROR_DS_GLOBAL_CANT_HAVE_UNIVERSAL_MEMBER - Grupa uniwersalna nie może być członkiem grupy globalnej.
 .
 Language=Romanian
 ERROR_DS_GLOBAL_CANT_HAVE_UNIVERSAL_MEMBER - A global group cannot have a universal group as a member.
@@ -27631,7 +27631,7 @@ Language=Russian
 ERROR_DS_UNIVERSAL_CANT_HAVE_LOCAL_MEMBER - A universal group cannot have a local group as a member.
 .
 Language=Polish
-ERROR_DS_UNIVERSAL_CANT_HAVE_LOCAL_MEMBER - A universal group cannot have a local group as a member.
+ERROR_DS_UNIVERSAL_CANT_HAVE_LOCAL_MEMBER - Grupa globalna nie może być członkiem grupy uniwersalnej.
 .
 Language=Romanian
 ERROR_DS_UNIVERSAL_CANT_HAVE_LOCAL_MEMBER - A universal group cannot have a local group as a member.
@@ -27648,7 +27648,7 @@ Language=Russian
 ERROR_DS_GLOBAL_CANT_HAVE_CROSSDOMAIN_MEMBER - A global group cannot have a cross-domain member.
 .
 Language=Polish
-ERROR_DS_GLOBAL_CANT_HAVE_CROSSDOMAIN_MEMBER - A global group cannot have a cross-domain member.
+ERROR_DS_GLOBAL_CANT_HAVE_CROSSDOMAIN_MEMBER - Członek grupy globalnej nie może pochodzić z innej domeny.
 .
 Language=Romanian
 ERROR_DS_GLOBAL_CANT_HAVE_CROSSDOMAIN_MEMBER - A global group cannot have a cross-domain member.
@@ -27665,7 +27665,7 @@ Language=Russian
 ERROR_DS_LOCAL_CANT_HAVE_CROSSDOMAIN_LOCAL_MEMBER - A local group cannot have another cross-domain local group as a member.
 .
 Language=Polish
-ERROR_DS_LOCAL_CANT_HAVE_CROSSDOMAIN_LOCAL_MEMBER - A local group cannot have another cross-domain local group as a member.
+ERROR_DS_LOCAL_CANT_HAVE_CROSSDOMAIN_LOCAL_MEMBER - Członkiem grupy globalnej nie może być grupa lokalna z innej domeny.
 .
 Language=Romanian
 ERROR_DS_LOCAL_CANT_HAVE_CROSSDOMAIN_LOCAL_MEMBER - A local group cannot have another cross-domain local group as a member.
@@ -27682,7 +27682,7 @@ Language=Russian
 ERROR_DS_HAVE_PRIMARY_MEMBERS - A group with primary members cannot change to a security-disabled group.
 .
 Language=Polish
-ERROR_DS_HAVE_PRIMARY_MEMBERS - A group with primary members cannot change to a security-disabled group.
+ERROR_DS_HAVE_PRIMARY_MEMBERS - Grupa z członkami głównymi nie może zostać zmieniona w grupę z wyłączonymi zabezpieczeniami.
 .
 Language=Romanian
 ERROR_DS_HAVE_PRIMARY_MEMBERS - A group with primary members cannot change to a security-disabled group.
@@ -27699,7 +27699,7 @@ Language=Russian
 ERROR_DS_STRING_SD_CONVERSION_FAILED - The schema cache load failed to convert the string default SD on a class-schema object.
 .
 Language=Polish
-ERROR_DS_STRING_SD_CONVERSION_FAILED - The schema cache load failed to convert the string default SD on a class-schema object.
+ERROR_DS_STRING_SD_CONVERSION_FAILED - Podczas ładowania schematu z pamięci podręcznej nie udało się przekształcić domyślnego SD na obiekt schematu klasy.
 .
 Language=Romanian
 ERROR_DS_STRING_SD_CONVERSION_FAILED - The schema cache load failed to convert the string default SD on a class-schema object.
@@ -27716,7 +27716,7 @@ Language=Russian
 ERROR_DS_NAMING_MASTER_GC - Only DSAs configured to be Global Catalog servers should be allowed to hold the Domain Naming Master FSMO role. (Applies only to Windows 2000 servers)
 .
 Language=Polish
-ERROR_DS_NAMING_MASTER_GC - Only DSAs configured to be Global Catalog servers should be allowed to hold the Domain Naming Master FSMO role. (Applies only to Windows 2000 servers)
+ERROR_DS_NAMING_MASTER_GC - Tylko serwery DSA skonfigurowane jako serwery wykazu globalnego mogą pełnić rolę wzorca operacji FSMO nazw domen. (Ma zastosowanie tylko dla serwerów systemu Windows 2000)
 .
 Language=Romanian
 ERROR_DS_NAMING_MASTER_GC - Only DSAs configured to be Global Catalog servers should be allowed to hold the Domain Naming Master FSMO role. (Applies only to Windows 2000 servers)
@@ -27733,7 +27733,7 @@ Language=Russian
 ERROR_DS_LOOKUP_FAILURE - The DSA operation is unable to proceed because of a DNS lookup failure.
 .
 Language=Polish
-ERROR_DS_LOOKUP_FAILURE - The DSA operation is unable to proceed because of a DNS lookup failure.
+ERROR_DS_LOOKUP_FAILURE - Operacja DSA nie może być kontynuowana wskutek błędu wyszukiwania DNS.
 .
 Language=Romanian
 ERROR_DS_LOOKUP_FAILURE - The DSA operation is unable to proceed because of a DNS lookup failure.
@@ -27750,7 +27750,7 @@ Language=Russian
 ERROR_DS_COULDNT_UPDATE_SPNS - While processing a change to the DNS Host Name for an object, the Service Principal Name values could not be kept in sync.
 .
 Language=Polish
-ERROR_DS_COULDNT_UPDATE_SPNS - While processing a change to the DNS Host Name for an object, the Service Principal Name values could not be kept in sync.
+ERROR_DS_COULDNT_UPDATE_SPNS - Podczas przetwarzania zmian nazwy hosta DNS dla danego obiektu, wartości głównej nazwy usługi (SPN) nie zostały zsynchronizowane.
 .
 Language=Romanian
 ERROR_DS_COULDNT_UPDATE_SPNS - While processing a change to the DNS Host Name for an object, the Service Principal Name values could not be kept in sync.
@@ -27767,7 +27767,7 @@ Language=Russian
 ERROR_DS_CANT_RETRIEVE_SD - The Security Descriptor attribute could not be read.
 .
 Language=Polish
-ERROR_DS_CANT_RETRIEVE_SD - The Security Descriptor attribute could not be read.
+ERROR_DS_CANT_RETRIEVE_SD - Nie można odczytać atrybutu deskryptora zabezpieczeń.
 .
 Language=Romanian
 ERROR_DS_CANT_RETRIEVE_SD - The Security Descriptor attribute could not be read.
@@ -27784,7 +27784,7 @@ Language=Russian
 ERROR_DS_KEY_NOT_UNIQUE - The object requested was not found, but an object with that key was found.
 .
 Language=Polish
-ERROR_DS_KEY_NOT_UNIQUE - The object requested was not found, but an object with that key was found.
+ERROR_DS_KEY_NOT_UNIQUE - Żądany obiekt nie został znaleziony, ale znaleziono obiekt z tym kluczem.
 .
 Language=Romanian
 ERROR_DS_KEY_NOT_UNIQUE - The object requested was not found, but an object with that key was found.
@@ -27801,7 +27801,7 @@ Language=Russian
 ERROR_DS_WRONG_LINKED_ATT_SYNTAX - The syntax of the linked attributed being added is incorrect. Forward links can only have syntax 2.5.5.1, 2.5.5.7, and 2.5.5.14, and backlinks can only have syntax 2.5.5.1.
 .
 Language=Polish
-ERROR_DS_WRONG_LINKED_ATT_SYNTAX - The syntax of the linked attributed being added is incorrect. Forward links can only have syntax 2.5.5.1, 2.5.5.7, and 2.5.5.14, and backlinks can only have syntax 2.5.5.1.
+ERROR_DS_WRONG_LINKED_ATT_SYNTAX - Składnia dodawanego atrybutu łącza jest niepoprawna. Odsyłacze do przodu mogą mieć składnię tylko 2.5.5.1, 2.5.5.7 i 2.5.5.14, a odsyłacze wsteczne mogą mieć składnię tylko 2.5.5.1.
 .
 Language=Romanian
 ERROR_DS_WRONG_LINKED_ATT_SYNTAX - The syntax of the linked attributed being added is incorrect. Forward links can only have syntax 2.5.5.1, 2.5.5.7, and 2.5.5.14, and backlinks can only have syntax 2.5.5.1.
@@ -27818,7 +27818,7 @@ Language=Russian
 ERROR_DS_SAM_NEED_BOOTKEY_PASSWORD - Security Account Manager needs to get the boot password.
 .
 Language=Polish
-ERROR_DS_SAM_NEED_BOOTKEY_PASSWORD - Security Account Manager needs to get the boot password.
+ERROR_DS_SAM_NEED_BOOTKEY_PASSWORD - Menedżer kont zabezpieczeń musi uzyskać hasło rozruchowe.
 .
 Language=Romanian
 ERROR_DS_SAM_NEED_BOOTKEY_PASSWORD - Security Account Manager needs to get the boot password.
@@ -27835,7 +27835,7 @@ Language=Russian
 ERROR_DS_SAM_NEED_BOOTKEY_FLOPPY - Security Account Manager needs to get the boot key from floppy disk.
 .
 Language=Polish
-ERROR_DS_SAM_NEED_BOOTKEY_FLOPPY - Security Account Manager needs to get the boot key from floppy disk.
+ERROR_DS_SAM_NEED_BOOTKEY_FLOPPY - Menedżer kont zabezpieczeń musi uzyskać klucz rozruchowy z dyskietki.
 .
 Language=Romanian
 ERROR_DS_SAM_NEED_BOOTKEY_FLOPPY - Security Account Manager needs to get the boot key from floppy disk.
@@ -27852,7 +27852,7 @@ Language=Russian
 ERROR_DS_CANT_START - Directory Service cannot start.
 .
 Language=Polish
-ERROR_DS_CANT_START - Directory Service cannot start.
+ERROR_DS_CANT_START - Nie można uruchomić usługi katalogowej.
 .
 Language=Romanian
 ERROR_DS_CANT_START - Directory Service cannot start.
@@ -27869,7 +27869,7 @@ Language=Russian
 ERROR_DS_INIT_FAILURE - Directory Services could not start.
 .
 Language=Polish
-ERROR_DS_INIT_FAILURE - Directory Services could not start.
+ERROR_DS_INIT_FAILURE - Nie można uruchomić usług katalogowych.
 .
 Language=Romanian
 ERROR_DS_INIT_FAILURE - Directory Services could not start.
@@ -27886,7 +27886,7 @@ Language=Russian
 ERROR_DS_NO_PKT_PRIVACY_ON_CONNECTION - The connection between client and server requires packet privacy or better.
 .
 Language=Polish
-ERROR_DS_NO_PKT_PRIVACY_ON_CONNECTION - The connection between client and server requires packet privacy or better.
+ERROR_DS_NO_PKT_PRIVACY_ON_CONNECTION - Połączenie między klientem i serwerem wymaga zabezpieczeń zapewniających co najmniej prywatność pakietów.
 .
 Language=Romanian
 ERROR_DS_NO_PKT_PRIVACY_ON_CONNECTION - The connection between client and server requires packet privacy or better.
@@ -27903,7 +27903,7 @@ Language=Russian
 ERROR_DS_SOURCE_DOMAIN_IN_FOREST - The source domain may not be in the same forest as destination.
 .
 Language=Polish
-ERROR_DS_SOURCE_DOMAIN_IN_FOREST - The source domain may not be in the same forest as destination.
+ERROR_DS_SOURCE_DOMAIN_IN_FOREST - Domena źródłowa nie może występować w tym samym lesie co docelowa.
 .
 Language=Romanian
 ERROR_DS_SOURCE_DOMAIN_IN_FOREST - The source domain may not be in the same forest as destination.
@@ -27920,7 +27920,7 @@ Language=Russian
 ERROR_DS_DESTINATION_DOMAIN_NOT_IN_FOREST - The destination domain must be in the forest.
 .
 Language=Polish
-ERROR_DS_DESTINATION_DOMAIN_NOT_IN_FOREST - The destination domain must be in the forest.
+ERROR_DS_DESTINATION_DOMAIN_NOT_IN_FOREST - Domena docelowa musi występować w lesie.
 .
 Language=Romanian
 ERROR_DS_DESTINATION_DOMAIN_NOT_IN_FOREST - The destination domain must be in the forest.
@@ -27937,7 +27937,7 @@ Language=Russian
 ERROR_DS_DESTINATION_AUDITING_NOT_ENABLED - The operation requires that destination domain auditing be enabled.
 .
 Language=Polish
-ERROR_DS_DESTINATION_AUDITING_NOT_ENABLED - The operation requires that destination domain auditing be enabled.
+ERROR_DS_DESTINATION_AUDITING_NOT_ENABLED - Operacja wymaga włączenia inspekcji domeny docelowej.
 .
 Language=Romanian
 ERROR_DS_DESTINATION_AUDITING_NOT_ENABLED - The operation requires that destination domain auditing be enabled.
@@ -27954,7 +27954,7 @@ Language=Russian
 ERROR_DS_CANT_FIND_DC_FOR_SRC_DOMAIN - The operation couldn't locate a DC for the source domain.
 .
 Language=Polish
-ERROR_DS_CANT_FIND_DC_FOR_SRC_DOMAIN - The operation couldn't locate a DC for the source domain.
+ERROR_DS_CANT_FIND_DC_FOR_SRC_DOMAIN - Operacja nie może zlokalizować kontrolera domeny dla domeny źródłowej.
 .
 Language=Romanian
 ERROR_DS_CANT_FIND_DC_FOR_SRC_DOMAIN - The operation couldn't locate a DC for the source domain.
@@ -27971,7 +27971,7 @@ Language=Russian
 ERROR_DS_SRC_OBJ_NOT_GROUP_OR_USER - The source object must be a group or user.
 .
 Language=Polish
-ERROR_DS_SRC_OBJ_NOT_GROUP_OR_USER - The source object must be a group or user.
+ERROR_DS_SRC_OBJ_NOT_GROUP_OR_USER - Obiekt źródłowy musi być grupą lub użytkownikiem.
 .
 Language=Romanian
 ERROR_DS_SRC_OBJ_NOT_GROUP_OR_USER - The source object must be a group or user.
@@ -27988,7 +27988,7 @@ Language=Russian
 ERROR_DS_SRC_SID_EXISTS_IN_FOREST - The source object's SID already exists in destination forest.
 .
 Language=Polish
-ERROR_DS_SRC_SID_EXISTS_IN_FOREST - The source object's SID already exists in destination forest.
+ERROR_DS_SRC_SID_EXISTS_IN_FOREST - Identyfikator SID obiektu źródłowego już istnieje w lesie docelowym.
 .
 Language=Romanian
 ERROR_DS_SRC_SID_EXISTS_IN_FOREST - The source object's SID already exists in destination forest.
@@ -28005,7 +28005,7 @@ Language=Russian
 ERROR_DS_SRC_AND_DST_OBJECT_CLASS_MISMATCH - The source and destination object must be of the same type.
 .
 Language=Polish
-ERROR_DS_SRC_AND_DST_OBJECT_CLASS_MISMATCH - The source and destination object must be of the same type.
+ERROR_DS_SRC_AND_DST_OBJECT_CLASS_MISMATCH - Obiekty źródłowy i docelowy muszą być tego samego typu.
 .
 Language=Romanian
 ERROR_DS_SRC_AND_DST_OBJECT_CLASS_MISMATCH - The source and destination object must be of the same type.
@@ -28024,8 +28024,8 @@ ERROR_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because
 Error Status: 0x%2. Click OK to shut down the system and reboot into Safe Mode. Check the event log for detailed information.
 .
 Language=Polish
-ERROR_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
-Error Status: 0x%2. Click OK to shut down the system and reboot into Safe Mode. Check the event log for detailed information.
+ERROR_SAM_INIT_FAILURE - Nie można zainicjować Menedżera kont zabezpieczeń z powodu następującego błędu: %1.
+Stan błędu: 0x%2. Kliknij przycisk OK, aby zamknąć system i uruchomić go w trybie awaryjnym. Szczegółowe informacje można znaleźć w dzienniku zdarzeń.
 .
 Language=Romanian
 ERROR_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
@@ -28043,7 +28043,7 @@ Language=Russian
 ERROR_DS_DRA_SCHEMA_INFO_SHIP - Schema information could not be included in the replication request.
 .
 Language=Polish
-ERROR_DS_DRA_SCHEMA_INFO_SHIP - Schema information could not be included in the replication request.
+ERROR_DS_DRA_SCHEMA_INFO_SHIP - Informacje o schemacie nie mogły być zawarte w żądaniu replikacji.
 .
 Language=Romanian
 ERROR_DS_DRA_SCHEMA_INFO_SHIP - Schema information could not be included in the replication request.
@@ -28060,7 +28060,7 @@ Language=Russian
 ERROR_DS_DRA_SCHEMA_CONFLICT - The replication operation could not be completed due to a schema incompatibility.
 .
 Language=Polish
-ERROR_DS_DRA_SCHEMA_CONFLICT - The replication operation could not be completed due to a schema incompatibility.
+ERROR_DS_DRA_SCHEMA_CONFLICT - Nie można ukończyć operacji replikacji z powodu niezgodności schematów.
 .
 Language=Romanian
 ERROR_DS_DRA_SCHEMA_CONFLICT - The replication operation could not be completed due to a schema incompatibility.
@@ -28077,7 +28077,7 @@ Language=Russian
 ERROR_DS_DRA_EARLIER_SCHEMA_CONLICT - The replication operation could not be completed due to a previous schema incompatibility.
 .
 Language=Polish
-ERROR_DS_DRA_EARLIER_SCHEMA_CONLICT - The replication operation could not be completed due to a previous schema incompatibility.
+ERROR_DS_DRA_EARLIER_SCHEMA_CONLICT - Nie można ukończyć operacji replikacji z powodu poprzedniej niezgodności schematów.
 .
 Language=Romanian
 ERROR_DS_DRA_EARLIER_SCHEMA_CONLICT - The replication operation could not be completed due to a previous schema incompatibility.
@@ -28094,7 +28094,7 @@ Language=Russian
 ERROR_DS_DRA_OBJ_NC_MISMATCH - The replication update could not be applied because either the source or the destination has not yet received information regarding a recent cross-domain move operation.
 .
 Language=Polish
-ERROR_DS_DRA_OBJ_NC_MISMATCH - The replication update could not be applied because either the source or the destination has not yet received information regarding a recent cross-domain move operation.
+ERROR_DS_DRA_OBJ_NC_MISMATCH - Nie można dokonać aktualizacji replikacji, ponieważ miejsce źródłowe lub docelowe nie otrzymało informacji odnośnie ostatniej operacji przenoszenia poza domenę.
 .
 Language=Romanian
 ERROR_DS_DRA_OBJ_NC_MISMATCH - The replication update could not be applied because either the source or the destination has not yet received information regarding a recent cross-domain move operation.
@@ -28111,7 +28111,7 @@ Language=Russian
 ERROR_DS_NC_STILL_HAS_DSAS - The requested domain could not be deleted because there exist domain controllers that still host this domain.
 .
 Language=Polish
-ERROR_DS_NC_STILL_HAS_DSAS - The requested domain could not be deleted because there exist domain controllers that still host this domain.
+ERROR_DS_NC_STILL_HAS_DSAS - Żądana domena nie mogła być usunięta ponieważ istnieją kontrolery domeny, które nadal są jej hostem.
 .
 Language=Romanian
 ERROR_DS_NC_STILL_HAS_DSAS - The requested domain could not be deleted because there exist domain controllers that still host this domain.
@@ -28128,7 +28128,7 @@ Language=Russian
 ERROR_DS_GC_REQUIRED - The requested operation can be performed only on a global catalog server.
 .
 Language=Polish
-ERROR_DS_GC_REQUIRED - The requested operation can be performed only on a global catalog server.
+ERROR_DS_GC_REQUIRED - Żądana operacja może być wykonana tylko na serwerze wykazu globalnego.
 .
 Language=Romanian
 ERROR_DS_GC_REQUIRED - The requested operation can be performed only on a global catalog server.
@@ -28145,7 +28145,7 @@ Language=Russian
 ERROR_DS_LOCAL_MEMBER_OF_LOCAL_ONLY - A local group can only be a member of other local groups in the same domain.
 .
 Language=Polish
-ERROR_DS_LOCAL_MEMBER_OF_LOCAL_ONLY - A local group can only be a member of other local groups in the same domain.
+ERROR_DS_LOCAL_MEMBER_OF_LOCAL_ONLY - Grupa lokalna może być tylko członkiem innej grupy lokalnej w tej samej domenie.
 .
 Language=Romanian
 ERROR_DS_LOCAL_MEMBER_OF_LOCAL_ONLY - A local group can only be a member of other local groups in the same domain.
@@ -28162,7 +28162,7 @@ Language=Russian
 ERROR_DS_NO_FPO_IN_UNIVERSAL_GROUPS - Foreign security principals cannot be members of universal groups.
 .
 Language=Polish
-ERROR_DS_NO_FPO_IN_UNIVERSAL_GROUPS - Foreign security principals cannot be members of universal groups.
+ERROR_DS_NO_FPO_IN_UNIVERSAL_GROUPS - Konta lub grupy kont obcych zasad zabezpieczeń nie mogą być członkami grup uniwersalnych.
 .
 Language=Romanian
 ERROR_DS_NO_FPO_IN_UNIVERSAL_GROUPS - Foreign security principals cannot be members of universal groups.
@@ -28179,7 +28179,7 @@ Language=Russian
 ERROR_DS_CANT_ADD_TO_GC - The attribute is not allowed to be replicated to the GC because of security reasons.
 .
 Language=Polish
-ERROR_DS_CANT_ADD_TO_GC - The attribute is not allowed to be replicated to the GC because of security reasons.
+ERROR_DS_CANT_ADD_TO_GC - Atrybut nie może być replikowany do GC z powodów bezpieczeństwa.
 .
 Language=Romanian
 ERROR_DS_CANT_ADD_TO_GC - The attribute is not allowed to be replicated to the GC because of security reasons.
@@ -28196,7 +28196,7 @@ Language=Russian
 ERROR_DS_NO_CHECKPOINT_WITH_PDC - The checkpoint with the PDC could not be taken because there are too many modifications being processed currently.
 .
 Language=Polish
-ERROR_DS_NO_CHECKPOINT_WITH_PDC - The checkpoint with the PDC could not be taken because there are too many modifications being processed currently.
+ERROR_DS_NO_CHECKPOINT_WITH_PDC - Nie można przejąć punktu kontrolnego PDC, ponieważ obecnie jest przetwarzanych zbyt wiele modyfikacji.
 .
 Language=Romanian
 ERROR_DS_NO_CHECKPOINT_WITH_PDC - The checkpoint with the PDC could not be taken because there are too many modifications being processed currently.
@@ -28213,7 +28213,7 @@ Language=Russian
 ERROR_DS_SOURCE_AUDITING_NOT_ENABLED - The operation requires that source domain auditing be enabled.
 .
 Language=Polish
-ERROR_DS_SOURCE_AUDITING_NOT_ENABLED - The operation requires that source domain auditing be enabled.
+ERROR_DS_SOURCE_AUDITING_NOT_ENABLED - Operacja wymaga włączenia inspekcji domeny źródłowej.
 .
 Language=Romanian
 ERROR_DS_SOURCE_AUDITING_NOT_ENABLED - The operation requires that source domain auditing be enabled.
@@ -28230,7 +28230,7 @@ Language=Russian
 ERROR_DS_CANT_CREATE_IN_NONDOMAIN_NC - Security principal objects can only be created inside domain naming contexts.
 .
 Language=Polish
-ERROR_DS_CANT_CREATE_IN_NONDOMAIN_NC - Security principal objects can only be created inside domain naming contexts.
+ERROR_DS_CANT_CREATE_IN_NONDOMAIN_NC - Obiekty główne zabezpieczeń mogą być tworzone jedynie wewnątrz kontekstów nazewnictwa domen.
 .
 Language=Romanian
 ERROR_DS_CANT_CREATE_IN_NONDOMAIN_NC - Security principal objects can only be created inside domain naming contexts.
@@ -28247,7 +28247,7 @@ Language=Russian
 ERROR_DS_INVALID_NAME_FOR_SPN - A Service Principal Name (SPN) could not be constructed because the provided hostname is not in the necessary format.
 .
 Language=Polish
-ERROR_DS_INVALID_NAME_FOR_SPN - A Service Principal Name (SPN) could not be constructed because the provided hostname is not in the necessary format.
+ERROR_DS_INVALID_NAME_FOR_SPN - Nie można utworzyć głównej nazwy usługi (SPN), ponieważ podana nazwa hosta ma nieodpowiedni format.
 .
 Language=Romanian
 ERROR_DS_INVALID_NAME_FOR_SPN - A Service Principal Name (SPN) could not be constructed because the provided hostname is not in the necessary format.
@@ -28264,7 +28264,7 @@ Language=Russian
 ERROR_DS_FILTER_USES_CONTRUCTED_ATTRS - A Filter was passed that uses constructed attributes.
 .
 Language=Polish
-ERROR_DS_FILTER_USES_CONTRUCTED_ATTRS - A Filter was passed that uses constructed attributes.
+ERROR_DS_FILTER_USES_CONTRUCTED_ATTRS - Został przekazany filtr, który używa złożonych atrybutów.
 .
 Language=Romanian
 ERROR_DS_FILTER_USES_CONTRUCTED_ATTRS - A Filter was passed that uses constructed attributes.
@@ -28281,7 +28281,7 @@ Language=Russian
 ERROR_DS_UNICODEPWD_NOT_IN_QUOTES - The unicodePwd attribute value must be enclosed in double quotes.
 .
 Language=Polish
-ERROR_DS_UNICODEPWD_NOT_IN_QUOTES - The unicodePwd attribute value must be enclosed in double quotes.
+ERROR_DS_UNICODEPWD_NOT_IN_QUOTES - Wartość atrybutu unicodePwd musi być ujęta w cudzysłów.
 .
 Language=Romanian
 ERROR_DS_UNICODEPWD_NOT_IN_QUOTES - The unicodePwd attribute value must be enclosed in double quotes.
@@ -28298,7 +28298,7 @@ Language=Russian
 ERROR_DS_MACHINE_ACCOUNT_QUOTA_EXCEEDED - Your computer could not be joined to the domain. You have exceeded the maximum number of computer accounts you are allowed to create in this domain. Contact your system administrator to have this limit reset or increased.
 .
 Language=Polish
-ERROR_DS_MACHINE_ACCOUNT_QUOTA_EXCEEDED - Your computer could not be joined to the domain. You have exceeded the maximum number of computer accounts you are allowed to create in this domain. Contact your system administrator to have this limit reset or increased.
+ERROR_DS_MACHINE_ACCOUNT_QUOTA_EXCEEDED - Nie można dołączyć komputera do domeny. Została przekroczona maksymalna liczba kont, które możesz utworzyć w tej domenie. Skontaktuj się z administratorem systemu, aby ten limit zresetować lub zwiększyć.
 .
 Language=Romanian
 ERROR_DS_MACHINE_ACCOUNT_QUOTA_EXCEEDED - Your computer could not be joined to the domain. You have exceeded the maximum number of computer accounts you are allowed to create in this domain. Contact your system administrator to have this limit reset or increased.
@@ -28315,7 +28315,7 @@ Language=Russian
 ERROR_DS_MUST_BE_RUN_ON_DST_DC - For security reasons, the operation must be run on the destination DC.
 .
 Language=Polish
-ERROR_DS_MUST_BE_RUN_ON_DST_DC - For security reasons, the operation must be run on the destination DC.
+ERROR_DS_MUST_BE_RUN_ON_DST_DC - Aby zapewnić bezpieczeństwo, operacja musi być przeprowadzona na docelowym kontrolerze domeny.
 .
 Language=Romanian
 ERROR_DS_MUST_BE_RUN_ON_DST_DC - For security reasons, the operation must be run on the destination DC.
@@ -28332,7 +28332,7 @@ Language=Russian
 ERROR_DS_SRC_DC_MUST_BE_SP4_OR_GREATER - For security reasons, the source DC must be NT4SP4 or greater.
 .
 Language=Polish
-ERROR_DS_SRC_DC_MUST_BE_SP4_OR_GREATER - For security reasons, the source DC must be NT4SP4 or greater.
+ERROR_DS_SRC_DC_MUST_BE_SP4_OR_GREATER - Aby zapewnić bezpieczeństwo, źródłowy kontroler domeny musi pochodzić z dodatku NT4SP4 lub wyższego.
 .
 Language=Romanian
 ERROR_DS_SRC_DC_MUST_BE_SP4_OR_GREATER - For security reasons, the source DC must be NT4SP4 or greater.
@@ -28349,7 +28349,7 @@ Language=Russian
 ERROR_DS_CANT_TREE_DELETE_CRITICAL_OBJ - Critical Directory Service System objects cannot be deleted during tree delete operations. The tree delete may have been partially performed.
 .
 Language=Polish
-ERROR_DS_CANT_TREE_DELETE_CRITICAL_OBJ - Critical Directory Service System objects cannot be deleted during tree delete operations. The tree delete may have been partially performed.
+ERROR_DS_CANT_TREE_DELETE_CRITICAL_OBJ - Nie można usunąć kluczowych obiektów usługi katalogowej podczas operacji usuwania drzewa. Być może drzewo zostało usunięte częściowo.
 .
 Language=Romanian
 ERROR_DS_CANT_TREE_DELETE_CRITICAL_OBJ - Critical Directory Service System objects cannot be deleted during tree delete operations. The tree delete may have been partially performed.
@@ -28368,8 +28368,8 @@ ERROR_DS_INIT_FAILURE_CONSOLE - Directory Services could not start because of th
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
 .
 Language=Polish
-ERROR_DS_INIT_FAILURE_CONSOLE - Directory Services could not start because of the following error: %1.
-Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
+ERROR_DS_INIT_FAILURE_CONSOLE - Nie można uruchomić usług katalogowych z powodu następującego błędu: %1.
+Stan błędu: 0x%2. Kliknij przycisk OK, aby zamknąć system. Możesz użyć konsoli odzyskiwania do diagnozy systemu.
 .
 Language=Romanian
 ERROR_DS_INIT_FAILURE_CONSOLE - Directory Services could not start because of the following error: %1.
@@ -28389,8 +28389,8 @@ ERROR_DS_SAM_INIT_FAILURE_CONSOLE - Security Accounts Manager initialization fai
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
 .
 Language=Polish
-ERROR_DS_SAM_INIT_FAILURE_CONSOLE - Security Accounts Manager initialization failed because of the following error: %1.
-Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
+ERROR_DS_SAM_INIT_FAILURE_CONSOLE - Zainicjowanie Menedżera kont zabezpieczeń nie powiodło się z powodu następującego błędu: %1.
+Stan błędu: 0x%2. Kliknij przycisk OK, aby zamknąć system. Możesz użyć konsoli odzyskiwania do diagnozy systemu.
 .
 Language=Romanian
 ERROR_DS_SAM_INIT_FAILURE_CONSOLE - Security Accounts Manager initialization failed because of the following error: %1.
@@ -28408,7 +28408,7 @@ Language=Russian
 ERROR_DS_FOREST_VERSION_TOO_HIGH - The version of the operating system installed is incompatible with the current forest functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this forest.
 .
 Language=Polish
-ERROR_DS_FOREST_VERSION_TOO_HIGH - The version of the operating system installed is incompatible with the current forest functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this forest.
+ERROR_DS_FOREST_VERSION_TOO_HIGH - Wersja zainstalowanego systemu operacyjnego jest niezgodna z bieżącym poziomem funkcjonalności lasu. Aby ten serwer mógł stać się kontrolerem domeny w tym lesie, trzeba uaktualnić system operacyjny do nowszej wersji.
 .
 Language=Romanian
 ERROR_DS_FOREST_VERSION_TOO_HIGH - The version of the operating system installed is incompatible with the current forest functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this forest.
@@ -28425,7 +28425,7 @@ Language=Russian
 ERROR_DS_DOMAIN_VERSION_TOO_HIGH - The version of the operating system installed is incompatible with the current domain functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this domain.
 .
 Language=Polish
-ERROR_DS_DOMAIN_VERSION_TOO_HIGH - The version of the operating system installed is incompatible with the current domain functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this domain.
+ERROR_DS_DOMAIN_VERSION_TOO_HIGH - Wersja zainstalowanego systemu operacyjnego jest niezgodna z bieżącym poziomem funkcjonalności domeny. Aby ten serwer mógł stać się kontrolerem domeny w tym lesie, trzeba uaktualnić system operacyjny do nowszej wersji.
 .
 Language=Romanian
 ERROR_DS_DOMAIN_VERSION_TOO_HIGH - The version of the operating system installed is incompatible with the current domain functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this domain.
@@ -28442,7 +28442,7 @@ Language=Russian
 ERROR_DS_FOREST_VERSION_TOO_LOW - This version of the operating system installed on this server no longer supports the current forest functional level. You must raise the forest functional level before this server can become a domain controller in this forest.
 .
 Language=Polish
-ERROR_DS_FOREST_VERSION_TOO_LOW - This version of the operating system installed on this server no longer supports the current forest functional level. You must raise the forest functional level before this server can become a domain controller in this forest.
+ERROR_DS_FOREST_VERSION_TOO_LOW - Wersja systemu operacyjnego zainstalowana na tym serwerze nie obsługuje już bieżącego poziomu funkcjonalności lasu. Aby ten serwer mógł stać się kontrolerem domeny w tym lesie, trzeba zwiększyć poziom funkcjonalności lasu.
 .
 Language=Romanian
 ERROR_DS_FOREST_VERSION_TOO_LOW - This version of the operating system installed on this server no longer supports the current forest functional level. You must raise the forest functional level before this server can become a domain controller in this forest.
@@ -28459,7 +28459,7 @@ Language=Russian
 ERROR_DS_DOMAIN_VERSION_TOO_LOW - This version of the operating system installed on this server no longer supports the current domain functional level. You must raise the domain functional level before this server can become a domain controller in this domain.
 .
 Language=Polish
-ERROR_DS_DOMAIN_VERSION_TOO_LOW - This version of the operating system installed on this server no longer supports the current domain functional level. You must raise the domain functional level before this server can become a domain controller in this domain.
+ERROR_DS_DOMAIN_VERSION_TOO_LOW - Wersja systemu operacyjnego zainstalowana na tym serwerze nie obsługuje już bieżącego poziomu funkcjonalności domeny. Aby ten serwer mógł stać się kontrolerem domeny w tym lesie, trzeba zwiększyć poziom funkcjonalności domeny.
 .
 Language=Romanian
 ERROR_DS_DOMAIN_VERSION_TOO_LOW - This version of the operating system installed on this server no longer supports the current domain functional level. You must raise the domain functional level before this server can become a domain controller in this domain.
@@ -28476,7 +28476,7 @@ Language=Russian
 ERROR_DS_INCOMPATIBLE_VERSION - The version of the operating system installed on this server is incompatible with the functional level of the domain or forest.
 .
 Language=Polish
-ERROR_DS_INCOMPATIBLE_VERSION - The version of the operating system installed on this server is incompatible with the functional level of the domain or forest.
+ERROR_DS_INCOMPATIBLE_VERSION - Wersja zainstalowanego systemu operacyjnego na tym serwerze jest niezgodna z poziomem funkcjonalności domeny lub lasu
 .
 Language=Romanian
 ERROR_DS_INCOMPATIBLE_VERSION - The version of the operating system installed on this server is incompatible with the functional level of the domain or forest.
@@ -28493,7 +28493,7 @@ Language=Russian
 ERROR_DS_LOW_DSA_VERSION - The functional level of the domain (or forest) cannot be raised to the requested value, because there exist one or more domain controllers in the domain (or forest) that are at a lower incompatible functional level.
 .
 Language=Polish
-ERROR_DS_LOW_DSA_VERSION - The functional level of the domain (or forest) cannot be raised to the requested value, because there exist one or more domain controllers in the domain (or forest) that are at a lower incompatible functional level.
+ERROR_DS_LOW_DSA_VERSION - Poziomu funkcjonalności domeny (lub lasu) nie można zwiększyć do żądanej wartości, ponieważ w domenie (lub lesie) istnieje co najmniej jeden kontroler domeny z niższym niezgodnym poziomem funkcjonalności.
 .
 Language=Romanian
 ERROR_DS_LOW_DSA_VERSION - The functional level of the domain (or forest) cannot be raised to the requested value, because there exist one or more domain controllers in the domain (or forest) that are at a lower incompatible functional level.
@@ -28510,7 +28510,7 @@ Language=Russian
 ERROR_DS_NO_BEHAVIOR_VERSION_IN_MIXEDDOMAIN - The forest functional level cannot be raised to the requested level since one or more domains are still in mixed domain mode. All domains in the forest must be in native mode before you can raise the forest functional level.
 .
 Language=Polish
-ERROR_DS_NO_BEHAVIOR_VERSION_IN_MIXEDDOMAIN - The forest functional level cannot be raised to the requested level since one or more domains are still in mixed domain mode. All domains in the forest must be in native mode before you can raise the forest functional level.
+ERROR_DS_NO_BEHAVIOR_VERSION_IN_MIXEDDOMAIN - Poziomu funkcjonalności lasu nie można zwiększyć do żądanej wartości, ponieważ co najmniej jedna domena jest nadal w trybie domeny mieszanej. Przed zwiększeniem poziomu funkcjonalności lasu wszystkie domeny w lesie muszą być w trybie macierzystym.
 .
 Language=Romanian
 ERROR_DS_NO_BEHAVIOR_VERSION_IN_MIXEDDOMAIN - The forest functional level cannot be raised to the requested level since one or more domains are still in mixed domain mode. All domains in the forest must be in native mode before you can raise the forest functional level.
@@ -28527,7 +28527,7 @@ Language=Russian
 ERROR_DS_NOT_SUPPORTED_SORT_ORDER - The sort order requested is not supported.
 .
 Language=Polish
-ERROR_DS_NOT_SUPPORTED_SORT_ORDER - The sort order requested is not supported.
+ERROR_DS_NOT_SUPPORTED_SORT_ORDER - Żądana kolejność sortowania nie jest obsługiwana.
 .
 Language=Romanian
 ERROR_DS_NOT_SUPPORTED_SORT_ORDER - The sort order requested is not supported.
@@ -28544,7 +28544,7 @@ Language=Russian
 ERROR_DS_NAME_NOT_UNIQUE - The requested name already exists as a unique identifier.
 .
 Language=Polish
-ERROR_DS_NAME_NOT_UNIQUE - The requested name already exists as a unique identifier.
+ERROR_DS_NAME_NOT_UNIQUE - Żądana nazwa już istnieje, jako unikatowy identyfikator.
 .
 Language=Romanian
 ERROR_DS_NAME_NOT_UNIQUE - The requested name already exists as a unique identifier.
@@ -28561,7 +28561,7 @@ Language=Russian
 ERROR_DS_MACHINE_ACCOUNT_CREATED_PRENT4 - The machine account was created pre-NT4. The account needs to be recreated.
 .
 Language=Polish
-ERROR_DS_MACHINE_ACCOUNT_CREATED_PRENT4 - The machine account was created pre-NT4. The account needs to be recreated.
+ERROR_DS_MACHINE_ACCOUNT_CREATED_PRENT4 - Konto komputera zostało utworzone przed systemem NT4. Konto musi być utworzone ponownie.
 .
 Language=Romanian
 ERROR_DS_MACHINE_ACCOUNT_CREATED_PRENT4 - The machine account was created pre-NT4. The account needs to be recreated.
@@ -28578,7 +28578,7 @@ Language=Russian
 ERROR_DS_OUT_OF_VERSION_STORE - The database is out of version store.
 .
 Language=Polish
-ERROR_DS_OUT_OF_VERSION_STORE - The database is out of version store.
+ERROR_DS_OUT_OF_VERSION_STORE - Baza danych działa bez magazynu wersji.
 .
 Language=Romanian
 ERROR_DS_OUT_OF_VERSION_STORE - The database is out of version store.
@@ -28595,7 +28595,7 @@ Language=Russian
 ERROR_DS_INCOMPATIBLE_CONTROLS_USED - Unable to continue operation because multiple conflicting controls were used.
 .
 Language=Polish
-ERROR_DS_INCOMPATIBLE_CONTROLS_USED - Unable to continue operation because multiple conflicting controls were used.
+ERROR_DS_INCOMPATIBLE_CONTROLS_USED - Nie można kontynuować operacji, ponieważ użyto wielu konfliktowych elementów sterujących.
 .
 Language=Romanian
 ERROR_DS_INCOMPATIBLE_CONTROLS_USED - Unable to continue operation because multiple conflicting controls were used.
@@ -28612,7 +28612,7 @@ Language=Russian
 ERROR_DS_NO_REF_DOMAIN - Unable to find a valid security descriptor reference domain for this partition.
 .
 Language=Polish
-ERROR_DS_NO_REF_DOMAIN - Unable to find a valid security descriptor reference domain for this partition.
+ERROR_DS_NO_REF_DOMAIN - Nie można odnaleźć prawidłowej domeny odniesienia deskryptora zabezpieczeń dla tej partycji.
 .
 Language=Romanian
 ERROR_DS_NO_REF_DOMAIN - Unable to find a valid security descriptor reference domain for this partition.
@@ -28629,7 +28629,7 @@ Language=Russian
 ERROR_DS_RESERVED_LINK_ID - Schema update failed: The link identifier is reserved.
 .
 Language=Polish
-ERROR_DS_RESERVED_LINK_ID - Schema update failed: The link identifier is reserved.
+ERROR_DS_RESERVED_LINK_ID - Nie można zaktualizować schematu: identyfikator łącza jest zarezerwowany.
 .
 Language=Romanian
 ERROR_DS_RESERVED_LINK_ID - Schema update failed: The link identifier is reserved.
@@ -28646,7 +28646,7 @@ Language=Russian
 ERROR_DS_LINK_ID_NOT_AVAILABLE - Schema update failed: There are no link identifiers available.
 .
 Language=Polish
-ERROR_DS_LINK_ID_NOT_AVAILABLE - Schema update failed: There are no link identifiers available.
+ERROR_DS_LINK_ID_NOT_AVAILABLE - Nie można zaktualizować schematu: brak dostępnych identyfikatorów łącza.
 .
 Language=Romanian
 ERROR_DS_LINK_ID_NOT_AVAILABLE - Schema update failed: There are no link identifiers available.
@@ -28663,7 +28663,7 @@ Language=Russian
 ERROR_DS_AG_CANT_HAVE_UNIVERSAL_MEMBER - An account group cannot have a universal group as a member.
 .
 Language=Polish
-ERROR_DS_AG_CANT_HAVE_UNIVERSAL_MEMBER - An account group cannot have a universal group as a member.
+ERROR_DS_AG_CANT_HAVE_UNIVERSAL_MEMBER - Grupa uniwersalna nie może być członkiem grupy kont.
 .
 Language=Romanian
 ERROR_DS_AG_CANT_HAVE_UNIVERSAL_MEMBER - An account group cannot have a universal group as a member.
@@ -28680,7 +28680,7 @@ Language=Russian
 ERROR_DS_MODIFYDN_DISALLOWED_BY_INSTANCE_TYPE - Rename or move operations on naming context heads or read-only objects are not allowed.
 .
 Language=Polish
-ERROR_DS_MODIFYDN_DISALLOWED_BY_INSTANCE_TYPE - Rename or move operations on naming context heads or read-only objects are not allowed.
+ERROR_DS_MODIFYDN_DISALLOWED_BY_INSTANCE_TYPE - Operacje zmiany nazwy i przenoszenia dla początków kontekstu nazewnictwa i obiektów tylko do odczytu są niedozwolone.
 .
 Language=Romanian
 ERROR_DS_MODIFYDN_DISALLOWED_BY_INSTANCE_TYPE - Rename or move operations on naming context heads or read-only objects are not allowed.
@@ -28697,7 +28697,7 @@ Language=Russian
 ERROR_DS_NO_OBJECT_MOVE_IN_SCHEMA_NC - Move operations on objects in the schema naming context are not allowed.
 .
 Language=Polish
-ERROR_DS_NO_OBJECT_MOVE_IN_SCHEMA_NC - Move operations on objects in the schema naming context are not allowed.
+ERROR_DS_NO_OBJECT_MOVE_IN_SCHEMA_NC - Operacje przenoszenia obiektów w kontekście nazewnictwa schematu są niedozwolone.
 .
 Language=Romanian
 ERROR_DS_NO_OBJECT_MOVE_IN_SCHEMA_NC - Move operations on objects in the schema naming context are not allowed.
@@ -28714,7 +28714,7 @@ Language=Russian
 ERROR_DS_MODIFYDN_DISALLOWED_BY_FLAG - A system flag has been set on the object and does not allow the object to be moved or renamed.
 .
 Language=Polish
-ERROR_DS_MODIFYDN_DISALLOWED_BY_FLAG - A system flag has been set on the object and does not allow the object to be moved or renamed.
+ERROR_DS_MODIFYDN_DISALLOWED_BY_FLAG - Dla obiektu ustawiono flagę systemową, która nie pozwala na przeniesienie obiektu ani zmianę jego nazwy.
 .
 Language=Romanian
 ERROR_DS_MODIFYDN_DISALLOWED_BY_FLAG - A system flag has been set on the object and does not allow the object to be moved or renamed.
@@ -28731,7 +28731,7 @@ Language=Russian
 ERROR_DS_MODIFYDN_WRONG_GRANDPARENT - This object is not allowed to change its grandparent container. Moves are not forbidden on this object, but are restricted to sibling containers.
 .
 Language=Polish
-ERROR_DS_MODIFYDN_WRONG_GRANDPARENT - This object is not allowed to change its grandparent container. Moves are not forbidden on this object, but are restricted to sibling containers.
+ERROR_DS_MODIFYDN_WRONG_GRANDPARENT - Dla tego obiektu nie jest dozwolona zmiana jego kontenera nadrzędnego. Przenoszenie tego obiektu nie jest zabronione, ale jest ograniczone do kontenerów tego samego poziomu.
 .
 Language=Romanian
 ERROR_DS_MODIFYDN_WRONG_GRANDPARENT - This object is not allowed to change its grandparent container. Moves are not forbidden on this object, but are restricted to sibling containers.
@@ -28748,7 +28748,7 @@ Language=Russian
 ERROR_DS_NAME_ERROR_TRUST_REFERRAL - Unable to resolve completely, a referral to another forest is generated.
 .
 Language=Polish
-ERROR_DS_NAME_ERROR_TRUST_REFERRAL - Unable to resolve completely, a referral to another forest is generated.
+ERROR_DS_NAME_ERROR_TRUST_REFERRAL - Nie można w pełni rozpoznać; generowane jest odwołanie do innego lasu.
 .
 Language=Romanian
 ERROR_DS_NAME_ERROR_TRUST_REFERRAL - Unable to resolve completely, a referral to another forest is generated.
@@ -28765,7 +28765,7 @@ Language=Russian
 ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER - The requested action is not supported on standard server.
 .
 Language=Polish
-ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER - The requested action is not supported on standard server.
+ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER - Żądana akcja nie jest obsługiwana na serwerze standardowym.
 .
 Language=Romanian
 ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER - The requested action is not supported on standard server.
@@ -28782,7 +28782,7 @@ Language=Russian
 ERROR_DS_CANT_ACCESS_REMOTE_PART_OF_AD - Could not access a partition of the Active Directory located on a remote server. Make sure at least one server is running for the partition in question.
 .
 Language=Polish
-ERROR_DS_CANT_ACCESS_REMOTE_PART_OF_AD - Could not access a partition of the Active Directory located on a remote server. Make sure at least one server is running for the partition in question.
+ERROR_DS_CANT_ACCESS_REMOTE_PART_OF_AD - Nie można uzyskać dostępu do partycji usługi katalogowej znajdującej się na serwerze zdalnym. Upewnij się, że dla danej partycji jest uruchomiony przynajmniej jeden serwer.
 .
 Language=Romanian
 ERROR_DS_CANT_ACCESS_REMOTE_PART_OF_AD - Could not access a partition of the Active Directory located on a remote server. Make sure at least one server is running for the partition in question.
@@ -28799,7 +28799,7 @@ Language=Russian
 ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE_V2 - The directory cannot validate the proposed naming context (or partition) name because it does not hold a replica nor can it contact a replica of the naming context above the proposed naming context. Please ensure that the parent naming context is properly registered in DNS, and at least one replica of this naming context is reachable by the Domain Naming master.
 .
 Language=Polish
-ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE_V2 - The directory cannot validate the proposed naming context (or partition) name because it does not hold a replica nor can it contact a replica of the naming context above the proposed naming context. Please ensure that the parent naming context is properly registered in DNS, and at least one replica of this naming context is reachable by the Domain Naming master.
+ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE_V2 - Katalog nie może sprawdzić poprawności proponowanej nazwy kontekstu nazewnictwa (lub partycji), ponieważ nie przechowuje on repliki ani nie może skontaktować się z repliką kontekstu nazewnictwa ponad proponowanym kontekstem nazewnictwa. Upewnij się, że nadrzędny kontekst nazewnictwa jest poprawnie zarejestrowany w systemie DNS i przynajmniej jedna replika tego kontekstu nazewnictwa jest osiągalna dla wzorca nazw domen.
 .
 Language=Romanian
 ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE_V2 - The directory cannot validate the proposed naming context (or partition) name because it does not hold a replica nor can it contact a replica of the naming context above the proposed naming context. Please ensure that the parent naming context is properly registered in DNS, and at least one replica of this naming context is reachable by the Domain Naming master.
@@ -28816,7 +28816,7 @@ Language=Russian
 ERROR_DS_THREAD_LIMIT_EXCEEDED - The thread limit for this request was exceeded.
 .
 Language=Polish
-ERROR_DS_THREAD_LIMIT_EXCEEDED - The thread limit for this request was exceeded.
+ERROR_DS_THREAD_LIMIT_EXCEEDED - Przekroczono limit wątków dla tego żądania.
 .
 Language=Romanian
 ERROR_DS_THREAD_LIMIT_EXCEEDED - The thread limit for this request was exceeded.
@@ -28833,7 +28833,7 @@ Language=Russian
 ERROR_DS_NOT_CLOSEST - The Global catalog server is not in the closet site.
 .
 Language=Polish
-ERROR_DS_NOT_CLOSEST - The Global catalog server is not in the closet site.
+ERROR_DS_NOT_CLOSEST - Serwer wykazu globalnego nie znajduje się w najbliższej witrynie.
 .
 Language=Romanian
 ERROR_DS_NOT_CLOSEST - The Global catalog server is not in the closet site.
@@ -28850,7 +28850,7 @@ Language=Russian
 ERROR_DS_CANT_DERIVE_SPN_WITHOUT_SERVER_REF - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the corresponding server object in the local DS database has no serverReference attribute.
 .
 Language=Polish
-ERROR_DS_CANT_DERIVE_SPN_WITHOUT_SERVER_REF - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the corresponding server object in the local DS database has no serverReference attribute.
+ERROR_DS_CANT_DERIVE_SPN_WITHOUT_SERVER_REF - Usługa katalogowa nie może uzyskać głównej nazwy usługi (SPN) używanej z serwerem docelowym do wzajemnego uwierzytelniania, ponieważ odpowiedni obiekt serwera w lokalnej bazie danych usługi katalogowej nie ma atrybutu serverReference.
 .
 Language=Romanian
 ERROR_DS_CANT_DERIVE_SPN_WITHOUT_SERVER_REF - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the corresponding server object in the local DS database has no serverReference attribute.
@@ -28867,7 +28867,7 @@ Language=Russian
 ERROR_DS_SINGLE_USER_MODE_FAILED - The Directory Service failed to enter single user mode.
 .
 Language=Polish
-ERROR_DS_SINGLE_USER_MODE_FAILED - The Directory Service failed to enter single user mode.
+ERROR_DS_SINGLE_USER_MODE_FAILED - Nie można przełączyć usługi katalogowej do trybu jednego użytkownika.
 .
 Language=Romanian
 ERROR_DS_SINGLE_USER_MODE_FAILED - The Directory Service failed to enter single user mode.
@@ -28884,7 +28884,7 @@ Language=Russian
 ERROR_DS_NTDSCRIPT_SYNTAX_ERROR - The Directory Service cannot parse the script because of a syntax error.
 .
 Language=Polish
-ERROR_DS_NTDSCRIPT_SYNTAX_ERROR - The Directory Service cannot parse the script because of a syntax error.
+ERROR_DS_NTDSCRIPT_SYNTAX_ERROR - Usługa katalogowa nie może zanalizować skryptu z powodu błędu składniowego.
 .
 Language=Romanian
 ERROR_DS_NTDSCRIPT_SYNTAX_ERROR - The Directory Service cannot parse the script because of a syntax error.
@@ -28901,7 +28901,7 @@ Language=Russian
 ERROR_DS_NTDSCRIPT_PROCESS_ERROR - The Directory Service cannot process the script because of an error.
 .
 Language=Polish
-ERROR_DS_NTDSCRIPT_PROCESS_ERROR - The Directory Service cannot process the script because of an error.
+ERROR_DS_NTDSCRIPT_PROCESS_ERROR - Usługa katalogowa nie może przetworzyć skryptu z powodu błędu.
 .
 Language=Romanian
 ERROR_DS_NTDSCRIPT_PROCESS_ERROR - The Directory Service cannot process the script because of an error.
@@ -28918,7 +28918,7 @@ Language=Russian
 ERROR_DS_DIFFERENT_REPL_EPOCHS - The directory service cannot perform the requested operation because the servers involved are of different replication epochs (which is usually related to a domain rename that is in progress).
 .
 Language=Polish
-ERROR_DS_DIFFERENT_REPL_EPOCHS - The directory service cannot perform the requested operation because the servers involved are of different replication epochs (which is usually related to a domain rename that is in progress).
+ERROR_DS_DIFFERENT_REPL_EPOCHS - Usługa katalogowa nie może wykonać żądanej operacji, ponieważ serwery, których ona dotyczy, należą do różnych epok replikacji (zwykle wiąże się to z trwającą operacją zmiany nazwy domeny).
 .
 Language=Romanian
 ERROR_DS_DIFFERENT_REPL_EPOCHS - The directory service cannot perform the requested operation because the servers involved are of different replication epochs (which is usually related to a domain rename that is in progress).
@@ -28935,7 +28935,7 @@ Language=Russian
 ERROR_DS_DRS_EXTENSIONS_CHANGED - The directory service binding must be renegotiated due to a change in the server extensions information.
 .
 Language=Polish
-ERROR_DS_DRS_EXTENSIONS_CHANGED - The directory service binding must be renegotiated due to a change in the server extensions information.
+ERROR_DS_DRS_EXTENSIONS_CHANGED - Powiązanie usługi katalogowej musi być ponownie negocjowane z powodu zmiany informacji o rozszerzeniach serwera.
 .
 Language=Romanian
 ERROR_DS_DRS_EXTENSIONS_CHANGED - The directory service binding must be renegotiated due to a change in the server extensions information.
@@ -28952,7 +28952,7 @@ Language=Russian
 ERROR_DS_REPLICA_SET_CHANGE_NOT_ALLOWED_ON_DISABLED_CR - Operation not allowed on a disabled cross ref.
 .
 Language=Polish
-ERROR_DS_REPLICA_SET_CHANGE_NOT_ALLOWED_ON_DISABLED_CR - Operation not allowed on a disabled cross ref.
+ERROR_DS_REPLICA_SET_CHANGE_NOT_ALLOWED_ON_DISABLED_CR - Operacja niedozwolona dla wyłączonego odwołania krzyżowego.
 .
 Language=Romanian
 ERROR_DS_REPLICA_SET_CHANGE_NOT_ALLOWED_ON_DISABLED_CR - Operation not allowed on a disabled cross ref.
@@ -28969,7 +28969,7 @@ Language=Russian
 ERROR_DS_NO_MSDS_INTID - Schema update failed: No values for msDS-IntId are available.
 .
 Language=Polish
-ERROR_DS_NO_MSDS_INTID - Schema update failed: No values for msDS-IntId are available.
+ERROR_DS_NO_MSDS_INTID - Nie można zaktualizować schematu: brak dostępnych wartości dla identyfikatora msDS-IntId.
 .
 Language=Romanian
 ERROR_DS_NO_MSDS_INTID - Schema update failed: No values for msDS-IntId are available.
@@ -28986,7 +28986,7 @@ Language=Russian
 ERROR_DS_DUP_MSDS_INTID - Schema update failed: Duplicate msDS-IntId. Retry the operation.
 .
 Language=Polish
-ERROR_DS_DUP_MSDS_INTID - Schema update failed: Duplicate msDS-IntId. Retry the operation.
+ERROR_DS_DUP_MSDS_INTID - Nie można zaktualizować schematu: zduplikowany identyfikator msDS-INtId. Ponów próbę wykonania operacji.
 .
 Language=Romanian
 ERROR_DS_DUP_MSDS_INTID - Schema update failed: Duplicate msDS-IntId. Retry the operation.
@@ -29003,7 +29003,7 @@ Language=Russian
 ERROR_DS_EXISTS_IN_RDNATTID - Schema deletion failed: attribute is used in rDNAttID.
 .
 Language=Polish
-ERROR_DS_EXISTS_IN_RDNATTID - Schema deletion failed: attribute is used in rDNAttID.
+ERROR_DS_EXISTS_IN_RDNATTID - Usunięcie schematu nie powiodło się: atrybut jest używany w parametrze rDNAttID.
 .
 Language=Romanian
 ERROR_DS_EXISTS_IN_RDNATTID - Schema deletion failed: attribute is used in rDNAttID.
@@ -29020,7 +29020,7 @@ Language=Russian
 ERROR_DS_AUTHORIZATION_FAILED - The directory service failed to authorize the request.
 .
 Language=Polish
-ERROR_DS_AUTHORIZATION_FAILED - The directory service failed to authorize the request.
+ERROR_DS_AUTHORIZATION_FAILED - Usługa katalogowa nie może autoryzować żądania.
 .
 Language=Romanian
 ERROR_DS_AUTHORIZATION_FAILED - The directory service failed to authorize the request.
@@ -29037,7 +29037,7 @@ Language=Russian
 ERROR_DS_INVALID_SCRIPT - The Directory Service cannot process the script because it is invalid.
 .
 Language=Polish
-ERROR_DS_INVALID_SCRIPT - The Directory Service cannot process the script because it is invalid.
+ERROR_DS_INVALID_SCRIPT - Usługa katalogowa nie może przetworzyć skryptu, ponieważ jest on nieprawidłowy.
 .
 Language=Romanian
 ERROR_DS_INVALID_SCRIPT - The Directory Service cannot process the script because it is invalid.
@@ -29054,7 +29054,7 @@ Language=Russian
 ERROR_DS_REMOTE_CROSSREF_OP_FAILED - The remote create cross reference operation failed on the Domain Naming Master FSMO. The operation's error is in the extended data.
 .
 Language=Polish
-ERROR_DS_REMOTE_CROSSREF_OP_FAILED - The remote create cross reference operation failed on the Domain Naming Master FSMO. The operation's error is in the extended data.
+ERROR_DS_REMOTE_CROSSREF_OP_FAILED - Operacja zdalnego utworzenia odwołania krzyżowego nie powiodła się dla operacji FSMO wzorca nazw domen. Błąd operacji występuje w danych rozszerzonych.
 .
 Language=Romanian
 ERROR_DS_REMOTE_CROSSREF_OP_FAILED - The remote create cross reference operation failed on the Domain Naming Master FSMO. The operation's error is in the extended data.
@@ -29071,7 +29071,7 @@ Language=Russian
 ERROR_DS_CROSS_REF_BUSY - A cross reference is in use locally with the same name.
 .
 Language=Polish
-ERROR_DS_CROSS_REF_BUSY - A cross reference is in use locally with the same name.
+ERROR_DS_CROSS_REF_BUSY - Odsyłacz jest używany lokalnie z tą samą nazwą.
 .
 Language=Romanian
 ERROR_DS_CROSS_REF_BUSY - A cross reference is in use locally with the same name.
@@ -29088,7 +29088,7 @@ Language=Russian
 ERROR_DS_CANT_DERIVE_SPN_FOR_DELETED_DOMAIN - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the server's domain has been deleted from the forest.
 .
 Language=Polish
-ERROR_DS_CANT_DERIVE_SPN_FOR_DELETED_DOMAIN - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the server's domain has been deleted from the forest.
+ERROR_DS_CANT_DERIVE_SPN_FOR_DELETED_DOMAIN - Usługa katalogowa nie może uzyskać głównej nazwy usługi (SPN) używanej z serwerem docelowym do wzajemnego uwierzytelniania, ponieważ domena serwera została usunięta z lasu.
 .
 Language=Romanian
 ERROR_DS_CANT_DERIVE_SPN_FOR_DELETED_DOMAIN - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the server's domain has been deleted from the forest.
@@ -29105,7 +29105,7 @@ Language=Russian
 ERROR_DS_CANT_DEMOTE_WITH_WRITEABLE_NC - Writeable NCs prevent this DC from demoting.
 .
 Language=Polish
-ERROR_DS_CANT_DEMOTE_WITH_WRITEABLE_NC - Writeable NCs prevent this DC from demoting.
+ERROR_DS_CANT_DEMOTE_WITH_WRITEABLE_NC - Zapisywalne klastry węzłów nie pozwalają na obniżenie poziomu tego kontrolera domeny.
 .
 Language=Romanian
 ERROR_DS_CANT_DEMOTE_WITH_WRITEABLE_NC - Writeable NCs prevent this DC from demoting.
@@ -29122,7 +29122,7 @@ Language=Russian
 ERROR_DS_DUPLICATE_ID_FOUND - The requested object has a non-unique identifier and cannot be retrieved.
 .
 Language=Polish
-ERROR_DS_DUPLICATE_ID_FOUND - The requested object has a non-unique identifier and cannot be retrieved.
+ERROR_DS_DUPLICATE_ID_FOUND - Żądany obiekt ma identyfikator, który nie jest unikatowy, i nie można go pobrać.
 .
 Language=Romanian
 ERROR_DS_DUPLICATE_ID_FOUND - The requested object has a non-unique identifier and cannot be retrieved.
@@ -29139,7 +29139,7 @@ Language=Russian
 ERROR_DS_INSUFFICIENT_ATTR_TO_CREATE_OBJECT - Insufficient attributes were given to create an object. This object may not exist because it may have been deleted and already garbage collected.
 .
 Language=Polish
-ERROR_DS_INSUFFICIENT_ATTR_TO_CREATE_OBJECT - Insufficient attributes were given to create an object. This object may not exist because it may have been deleted and already garbage collected.
+ERROR_DS_INSUFFICIENT_ATTR_TO_CREATE_OBJECT - Nadano atrybuty, które nie wystarczają do utworzenia obiektu. Ten obiekt może nie istnieć, ponieważ mógł zostać usunięty i wyrzucony jako element bezużyteczny.
 .
 Language=Romanian
 ERROR_DS_INSUFFICIENT_ATTR_TO_CREATE_OBJECT - Insufficient attributes were given to create an object. This object may not exist because it may have been deleted and already garbage collected.
@@ -29156,7 +29156,7 @@ Language=Russian
 ERROR_DS_GROUP_CONVERSION_ERROR - The group cannot be converted due to attribute restrictions on the requested group type.
 .
 Language=Polish
-ERROR_DS_GROUP_CONVERSION_ERROR - The group cannot be converted due to attribute restrictions on the requested group type.
+ERROR_DS_GROUP_CONVERSION_ERROR - Nie można konwertować grupy z powodu ograniczeń atrybutów w żądanym typie grupy.
 .
 Language=Romanian
 ERROR_DS_GROUP_CONVERSION_ERROR - The group cannot be converted due to attribute restrictions on the requested group type.
@@ -29173,7 +29173,7 @@ Language=Russian
 ERROR_DS_CANT_MOVE_APP_BASIC_GROUP - Cross-domain move of non-empty basic application groups is not allowed.
 .
 Language=Polish
-ERROR_DS_CANT_MOVE_APP_BASIC_GROUP - Cross-domain move of non-empty basic application groups is not allowed.
+ERROR_DS_CANT_MOVE_APP_BASIC_GROUP - Przeniesienie poza domenę niepustych grup podstawowych aplikacji jest niedozwolone.
 .
 Language=Romanian
 ERROR_DS_CANT_MOVE_APP_BASIC_GROUP - Cross-domain move of non-empty basic application groups is not allowed.
@@ -29190,7 +29190,7 @@ Language=Russian
 ERROR_DS_CANT_MOVE_APP_QUERY_GROUP - Cross-domain move on non-empty query based application groups is not allowed.
 .
 Language=Polish
-ERROR_DS_CANT_MOVE_APP_QUERY_GROUP - Cross-domain move on non-empty query based application groups is not allowed.
+ERROR_DS_CANT_MOVE_APP_QUERY_GROUP - Przeniesienie poza domenę niepustych grup podstawowych aplikacji opartych na zapytaniach jest niedozwolone.
 .
 Language=Romanian
 ERROR_DS_CANT_MOVE_APP_QUERY_GROUP - Cross-domain move on non-empty query based application groups is not allowed.
@@ -29207,7 +29207,7 @@ Language=Russian
 ERROR_DS_ROLE_NOT_VERIFIED - The role owner could not be verified because replication of its partition has not occurred recently.
 .
 Language=Polish
-ERROR_DS_ROLE_NOT_VERIFIED - The role owner could not be verified because replication of its partition has not occurred recently.
+ERROR_DS_ROLE_NOT_VERIFIED - Nie można zweryfikować własności roli FSMO, ponieważ jej partycja katalogu nie replikowała pomyślnie z co najmniej jednym partnerem replikacji.
 .
 Language=Romanian
 ERROR_DS_ROLE_NOT_VERIFIED - The role owner could not be verified because replication of its partition has not occurred recently.
@@ -29224,7 +29224,7 @@ Language=Russian
 ERROR_DS_WKO_CONTAINER_CANNOT_BE_SPECIAL - The target container for a redirection of a well-known object container cannot already be a special container.
 .
 Language=Polish
-ERROR_DS_WKO_CONTAINER_CANNOT_BE_SPECIAL - The target container for a redirection of a well-known object container cannot already be a special container.
+ERROR_DS_WKO_CONTAINER_CANNOT_BE_SPECIAL - Kontener docelowy przekierowania dobrze znanych obiektów nie może już być kontenerem specjalnym.
 .
 Language=Romanian
 ERROR_DS_WKO_CONTAINER_CANNOT_BE_SPECIAL - The target container for a redirection of a well-known object container cannot already be a special container.
@@ -29241,7 +29241,7 @@ Language=Russian
 ERROR_DS_DOMAIN_RENAME_IN_PROGRESS - The Directory Service cannot perform the requested operation because a domain rename operation is in progress.
 .
 Language=Polish
-ERROR_DS_DOMAIN_RENAME_IN_PROGRESS - The Directory Service cannot perform the requested operation because a domain rename operation is in progress.
+ERROR_DS_DOMAIN_RENAME_IN_PROGRESS - Usługa katalogowa nie może wykonać żądanej operacji, ponieważ trwa operacja zmiany nazwy domeny.
 .
 Language=Romanian
 ERROR_DS_DOMAIN_RENAME_IN_PROGRESS - The Directory Service cannot perform the requested operation because a domain rename operation is in progress.
@@ -29258,7 +29258,7 @@ Language=Russian
 ERROR_DS_EXISTING_AD_CHILD_NC - The Active Directory detected an Active Directory child partition below the requested new partition name. The Active Directory's partition hierarchy must be created in a top-down method.
 .
 Language=Polish
-ERROR_DS_EXISTING_AD_CHILD_NC - The Active Directory detected an Active Directory child partition below the requested new partition name. The Active Directory's partition hierarchy must be created in a top-down method.
+ERROR_DS_EXISTING_AD_CHILD_NC - Usługa katalogowa wykryła partycję podrzędną poniżej żądanej nazwy partycji. Hierarchię partycji należy tworzyć metodą zstępującą.
 .
 Language=Romanian
 ERROR_DS_EXISTING_AD_CHILD_NC - The Active Directory detected an Active Directory child partition below the requested new partition name. The Active Directory's partition hierarchy must be created in a top-down method.
@@ -29275,7 +29275,7 @@ Language=Russian
 ERROR_DS_REPL_LIFETIME_EXCEEDED - The Active Directory cannot replicate with this server because the time since the last replication with this server has exceeded the tombstone lifetime.
 .
 Language=Polish
-ERROR_DS_REPL_LIFETIME_EXCEEDED - The Active Directory cannot replicate with this server because the time since the last replication with this server has exceeded the tombstone lifetime.
+ERROR_DS_REPL_LIFETIME_EXCEEDED - Usługa katalogowa nie może replikować z tym serwerem, ponieważ czas, który upłynął od ostatniej replikacji z tym serwerem, przekroczył okres istnienia reliktu.
 .
 Language=Romanian
 ERROR_DS_REPL_LIFETIME_EXCEEDED - The Active Directory cannot replicate with this server because the time since the last replication with this server has exceeded the tombstone lifetime.
@@ -29292,7 +29292,7 @@ Language=Russian
 ERROR_DS_DISALLOWED_IN_SYSTEM_CONTAINER - The requested operation is not allowed on an object under the system container.
 .
 Language=Polish
-ERROR_DS_DISALLOWED_IN_SYSTEM_CONTAINER - The requested operation is not allowed on an object under the system container.
+ERROR_DS_DISALLOWED_IN_SYSTEM_CONTAINER - Żądana operacja jest niedozwolona na obiekcie znajdującym się w kontenerze systemowym.
 .
 Language=Romanian
 ERROR_DS_DISALLOWED_IN_SYSTEM_CONTAINER - The requested operation is not allowed on an object under the system container.
@@ -29309,7 +29309,7 @@ Language=Russian
 ERROR_DS_LDAP_SEND_QUEUE_FULL - The LDAP servers network send queue has filled up because the client is not processing the results of it's requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
 .
 Language=Polish
-ERROR_DS_LDAP_SEND_QUEUE_FULL - The LDAP servers network send queue has filled up because the client is not processing the results of it's requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
+ERROR_DS_LDAP_SEND_QUEUE_FULL - Kolejka odbiorcza sieci serwerów LDAP wypełniła się, ponieważ klient nie przetwarza odpowiednio szybko wyników swoich żądań. Żadne żądania nie będą przetwarzane do czasu wyrównania klienta. Jeżeli klient nie zostanie wyrównany, zostanie rozłączony.
 .
 Language=Romanian
 ERROR_DS_LDAP_SEND_QUEUE_FULL - The LDAP servers network send queue has filled up because the client is not processing the results of it's requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
@@ -29326,7 +29326,7 @@ Language=Russian
 ERROR_DS_DRA_OUT_SCHEDULE_WINDOW - The scheduled replication did not take place because the system was too busy to execute the request within the schedule window. The replication queue is overloaded. Consider reducing the number of partners or decreasing the scheduled replication frequency.
 .
 Language=Polish
-ERROR_DS_DRA_OUT_SCHEDULE_WINDOW - The scheduled replication did not take place because the system was too busy to execute the request within the schedule window. The replication queue is overloaded. Consider reducing the number of partners or decreasing the scheduled replication frequency.
+ERROR_DS_DRA_OUT_SCHEDULE_WINDOW - Zaplanowana replikacja nie została przeprowadzona, ponieważ system był zbyt zajęty, aby wykonać żądanie w zaplanowanym czasie. Kolejka replikacji jest przeciążona. Rozważ ograniczenie liczby partnerów lub zmniejszenie częstotliwości zaplanowanych replikacji.
 .
 Language=Romanian
 ERROR_DS_DRA_OUT_SCHEDULE_WINDOW - The scheduled replication did not take place because the system was too busy to execute the request within the schedule window. The replication queue is overloaded. Consider reducing the number of partners or decreasing the scheduled replication frequency.

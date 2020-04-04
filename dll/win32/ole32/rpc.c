@@ -20,9 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 #include <string.h>
 
@@ -39,7 +36,6 @@
 #include "winerror.h"
 #include "winreg.h"
 #include "servprov.h"
-#include "wine/unicode.h"
 
 #include "compobj_private.h"
 
@@ -1684,7 +1680,7 @@ static HRESULT create_server(REFCLSID rclsid, HANDLE *process)
 
     /* EXE servers are started with the -Embedding switch. */
 
-    strcatW(command, embedding);
+    lstrcatW(command, embedding);
 
     TRACE("activating local server %s for %s\n", debugstr_w(command), debugstr_guid(rclsid));
 
@@ -1800,7 +1796,7 @@ static HRESULT create_local_service(REFCLSID rclsid)
 static void get_localserver_pipe_name(WCHAR *pipefn, REFCLSID rclsid)
 {
     static const WCHAR wszPipeRef[] = {'\\','\\','.','\\','p','i','p','e','\\',0};
-    strcpyW(pipefn, wszPipeRef);
+    lstrcpyW(pipefn, wszPipeRef);
     StringFromGUID2(rclsid, pipefn + ARRAY_SIZE(wszPipeRef) - 1, CHARS_IN_GUID);
 }
 

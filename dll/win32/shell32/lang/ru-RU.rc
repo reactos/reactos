@@ -142,11 +142,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Версия ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " Команда ReactOS\0", IDC_STATIC, 105, 75, 65, 10
@@ -758,6 +754,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "Добавление, изменение и управление шрифтами на компьютере."
     IDS_PRINTERS_DESCRIPTION "Показывает установленные принтеры и факсы и поможет вам добавить новые."
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Версия %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "&Большие значки"
     IDS_VIEW_SMALL "&Мелкие значки"
@@ -776,6 +775,17 @@ BEGIN
     IDS_PASTE "Вставить"
     IDS_EJECT "Извлечь"
     IDS_DISCONNECT "Отсоединить"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "Невозможно создать папку '%1'"
     IDS_CREATEFOLDER_CAPTION "Невозможно создать папку"
@@ -816,7 +826,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Обзор"
     IDS_RUNDLG_BROWSE_FILTER "Исполняемые файлы (*.exe)\0*.exe\0Все файлы (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Главное меню\\Программы"
     IDS_PERSONAL "Мои документы"
     IDS_FAVORITES "Избранное"
@@ -824,8 +834,8 @@ BEGIN
     IDS_RECENT "Недавние документы"
     IDS_SENDTO "Отправить"
     IDS_STARTMENU "Главное меню"
-    IDS_MYMUSIC "Мои документы\\Моя музыка"
-    IDS_MYVIDEO "Мои документы\\Мои видеозаписи"
+    IDS_MYMUSIC "Моя музыка"
+    IDS_MYVIDEO "Мои видеозаписи"
     IDS_DESKTOPDIRECTORY "Рабочий стол"
     IDS_NETHOOD "Сетевое окружение"
     IDS_TEMPLATES "Шаблоны"
@@ -836,7 +846,7 @@ BEGIN
     IDS_COOKIES "Cookies"
     IDS_HISTORY "Local Settings\\History"
     IDS_PROGRAM_FILES "Program Files"
-    IDS_MYPICTURES "Мои документы\\Мои рисунки"
+    IDS_MYPICTURES "Мои рисунки"
     IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
     IDS_COMMON_DOCUMENTS "Общие документы"
     IDS_ADMINTOOLS "Главное меню\\Программы\\Администрирование"
@@ -879,6 +889,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Не удалось извлечь носитель (код ошибки: %lu)."
     IDS_CANTSHOWPROPERTIES "Не удалось вывести свойства (код ошибки: %lu)."
     IDS_CANTDISCONNECT "Не удалось отсоединить сетевой диск (код ошибки: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Папка с файлами"
@@ -915,6 +926,7 @@ BEGIN
     IDS_EDIT_VERB "Изменить"
     IDS_FIND_VERB "Поиск"
     IDS_PRINT_VERB "Печать"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u файлов, %u папок"
     IDS_PRINTERS "Принтеры"

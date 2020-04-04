@@ -36,7 +36,7 @@
 
 /* GLOBALS ******************************************************************/
 
-static WCHAR szRootDeviceId[] = L"HTREE\\ROOT\\0";
+static WCHAR szRootDeviceInstanceID[] = L"HTREE\\ROOT\\0";
 
 
 /* FUNCTIONS *****************************************************************/
@@ -193,8 +193,38 @@ SplitDeviceInstanceID(IN LPWSTR pszDeviceInstanceID,
 
 static
 CONFIGRET
+ClearDeviceStatus(
+    _In_ LPWSTR pszDeviceID,
+    _In_ DWORD ulStatus,
+    _In_ DWORD ulProblem)
+{
+    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT1("ClearDeviceStatus(%S 0x%lx 0x%lx)\n",
+            pszDeviceID, ulStatus, ulProblem);
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pszDeviceID);
+    PlugPlayData.Operation = PNP_CLEAR_DEVICE_STATUS;
+    PlugPlayData.DeviceStatus = ulStatus;
+    PlugPlayData.DeviceProblem = ulProblem;
+
+    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
+}
+
+
+static
+CONFIGRET
 GetDeviceStatus(
-    _In_ LPWSTR pDeviceID,
+    _In_ LPWSTR pszDeviceID,
     _Out_ DWORD *pulStatus,
     _Out_ DWORD *pulProblem)
 {
@@ -203,11 +233,11 @@ GetDeviceStatus(
     NTSTATUS Status;
 
     DPRINT("GetDeviceStatus(%S %p %p)\n",
-           pDeviceID, pulStatus, pulProblem);
+           pszDeviceID, pulStatus, pulProblem);
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                         pDeviceID);
-    PlugPlayData.Operation = 0; /* Get status */
+                         pszDeviceID);
+    PlugPlayData.Operation = PNP_GET_DEVICE_STATUS;
 
     Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
                                (PVOID)&PlugPlayData,
@@ -223,6 +253,160 @@ GetDeviceStatus(
     }
 
     return ret;
+}
+
+
+static
+CONFIGRET
+SetDeviceStatus(
+    _In_ LPWSTR pszDeviceID,
+    _In_ DWORD ulStatus,
+    _In_ DWORD ulProblem)
+{
+    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT1("SetDeviceStatus(%S 0x%lx 0x%lx)\n",
+            pszDeviceID, ulStatus, ulProblem);
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pszDeviceID);
+    PlugPlayData.Operation = PNP_SET_DEVICE_STATUS;
+    PlugPlayData.DeviceStatus = ulStatus;
+    PlugPlayData.DeviceProblem = ulProblem;
+
+    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
+}
+
+
+static
+CONFIGRET
+DisableDeviceInstance(
+    _In_ LPWSTR pszDeviceInstance,
+    _Inout_opt_ PPNP_VETO_TYPE pVetoType,
+    _Inout_opt_ LPWSTR pszVetoName,
+    _In_ DWORD ulNameLength)
+{
+    PLUGPLAY_CONTROL_QUERY_REMOVE_DATA QueryRemoveData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT1("DisableDeviceInstance(%S %p %p %lu)\n",
+            pszDeviceInstance, pVetoType, pszVetoName, ulNameLength);
+
+    RtlInitUnicodeString(&QueryRemoveData.DeviceInstance,
+                         pszDeviceInstance);
+
+    QueryRemoveData.Flags = 0;
+    QueryRemoveData.VetoType = 0;
+    QueryRemoveData.VetoName = pszVetoName;
+    QueryRemoveData.NameLength = ulNameLength;
+
+    Status = NtPlugPlayControl(PlugPlayControlQueryAndRemoveDevice,
+                               &QueryRemoveData,
+                               sizeof(PLUGPLAY_CONTROL_QUERY_REMOVE_DATA));
+    if (Status == STATUS_NO_SUCH_DEVICE)
+    {
+        ret = CR_INVALID_DEVNODE;
+    }
+    else if (Status == STATUS_PLUGPLAY_QUERY_VETOED)
+    {
+        if (pVetoType != NULL)
+            *pVetoType = QueryRemoveData.VetoType;
+
+        ret = CR_REMOVE_VETOED;
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        ret = NtStatusToCrError(Status);
+    }
+
+    return ret;
+}
+
+
+static
+BOOL
+IsValidDeviceInstanceID(
+    _In_ PWSTR pszDeviceInstanceID)
+{
+    INT nPartLength[3] = {0, 0, 0};
+    INT nLength = 0, nParts = 0;
+    PWCHAR p;
+
+    DPRINT("IsValidDeviceInstanceID(%S)\n",
+           pszDeviceInstanceID);
+
+    if (pszDeviceInstanceID == NULL)
+    {
+        DPRINT("Device instance ID is NULL!\n");
+        return FALSE;
+    }
+
+    p = pszDeviceInstanceID;
+    while (*p != UNICODE_NULL)
+    {
+        if (*p == L'\\')
+        {
+            nParts++;
+            if (nParts >= 3)
+            {
+                DPRINT("Too many separators: %d\n", nParts);
+                return FALSE;
+            }
+        }
+        else
+        {
+            nPartLength[nParts]++;
+        }
+
+        nLength++;
+        if (nLength >= MAX_DEVICE_ID_LEN)
+        {
+            DPRINT("Too long: %d\n", nLength);
+            return FALSE;
+        }
+
+        p++;
+    }
+
+    if (nParts != 2)
+    {
+        DPRINT("Invalid number of separtors: %d\n", nParts);
+        return FALSE;
+    }
+
+    if ((nPartLength[0] == 0) ||
+        (nPartLength[1] == 0) ||
+        (nPartLength[2] == 0))
+    {
+        DPRINT("Invalid part lengths: %d %d %d\n",
+               nPartLength[0], nPartLength[1], nPartLength[2]);
+        return FALSE;
+    }
+
+    DPRINT("Valid device instance ID!\n");
+
+    return TRUE;
+}
+
+
+static
+BOOL
+IsRootDeviceInstanceID(
+    _In_ PWSTR pszDeviceInstanceID)
+{
+    if (_wcsicmp(pszDeviceInstanceID, szRootDeviceInstanceID) == 0)
+        return TRUE;
+
+    return FALSE;
 }
 
 
@@ -259,7 +443,11 @@ PNP_GetVersion(
 {
     UNREFERENCED_PARAMETER(hBinding);
 
+    DPRINT("PNP_GetVersion(%p %p)\n",
+           hBinding, pVersion);
+
     *pVersion = 0x0400;
+
     return CR_SUCCESS;
 }
 
@@ -275,7 +463,11 @@ PNP_GetGlobalState(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
+    DPRINT("PNP_GetGlobalState(%p %p 0x%08lx)\n",
+           hBinding, pulState, ulFlags);
+
     *pulState = CM_GLOBAL_STATE_CAN_DO_UI | CM_GLOBAL_STATE_SERVICES_AVAILABLE;
+
     return CR_SUCCESS;
 }
 
@@ -288,7 +480,9 @@ PNP_InitDetection(
 {
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_InitDetection() called\n");
+    DPRINT("PNP_InitDetection(%p)\n",
+           hBinding);
+
     return CR_SUCCESS;
 }
 
@@ -307,7 +501,8 @@ PNP_ReportLogOn(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(Admin);
 
-    DPRINT("PNP_ReportLogOn(%u, %u) called\n", Admin, ProcessId);
+    DPRINT("PNP_ReportLogOn(%p %u, %u)\n",
+           hBinding, Admin, ProcessId);
 
     /* Get the users token */
     hProcess = OpenProcess(PROCESS_ALL_ACCESS, TRUE, ProcessId);
@@ -358,8 +553,11 @@ PNP_ValidateDeviceInstance(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_ValidateDeviceInstance(%S %lx) called\n",
-           pDeviceID, ulFlags);
+    DPRINT("PNP_ValidateDeviceInstance(%p %S 0x%08lx)\n",
+           hBinding, pDeviceID, ulFlags);
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
 
     if (RegOpenKeyExW(hEnumKey,
                       pDeviceID,
@@ -396,21 +594,23 @@ PNP_GetRootDeviceInstance(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetRootDeviceInstance() called\n");
+    DPRINT("PNP_GetRootDeviceInstance(%p %S %lu)\n",
+           hBinding, pDeviceID, ulLength);
 
     if (!pDeviceID)
     {
         ret = CR_INVALID_POINTER;
         goto Done;
     }
-    if (ulLength < lstrlenW(szRootDeviceId) + 1)
+
+    if (ulLength < lstrlenW(szRootDeviceInstanceID) + 1)
     {
         ret = CR_BUFFER_SMALL;
         goto Done;
     }
 
     lstrcpyW(pDeviceID,
-             szRootDeviceId);
+             szRootDeviceInstanceID);
 
 Done:
     DPRINT("PNP_GetRootDeviceInstance() done (returns %lx)\n", ret);
@@ -437,9 +637,12 @@ PNP_GetRelatedDeviceInstance(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_GetRelatedDeviceInstance() called\n");
-    DPRINT("  Relationship %ld\n", ulRelationship);
-    DPRINT("  DeviceId %S\n", pDeviceID);
+    DPRINT("PNP_GetRelatedDeviceInstance(%p %lu %S %p %p 0x%lx)\n",
+           hBinding, ulRelationship, pDeviceID, pRelatedDeviceId,
+           pulLength, ulFlags);
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
 
     RtlInitUnicodeString(&PlugPlayData.TargetDeviceInstance,
                          pDeviceID);
@@ -486,7 +689,9 @@ PNP_EnumerateSubKeys(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_EnumerateSubKeys() called\n");
+    DPRINT("PNP_EnumerateSubKeys(%p %lu %lu %p %lu %p 0x%08lx)\n",
+           hBinding, ulBranch, ulIndex, Buffer, ulLength,
+           pulRequiredLen, ulFlags);
 
     switch (ulBranch)
     {
@@ -901,7 +1106,8 @@ PNP_GetDeviceList(
     WCHAR szInstance[MAX_DEVICE_ID_LEN];
     CONFIGRET ret = CR_SUCCESS;
 
-    DPRINT("PNP_GetDeviceList() called\n");
+    DPRINT("PNP_GetDeviceList(%p %S %p %p 0x%08lx)\n",
+           hBinding, pszFilter, Buffer, pulLength, ulFlags);
 
     if (ulFlags & ~CM_GETIDLIST_FILTER_BITS)
         return CR_INVALID_FLAG;
@@ -1270,7 +1476,7 @@ PNP_GetDeviceListSize(
     WCHAR szInstance[MAX_DEVICE_ID_LEN];
     CONFIGRET ret = CR_SUCCESS;
 
-    DPRINT("PNP_GetDeviceListSize(%p %S %p 0x%lx)\n",
+    DPRINT("PNP_GetDeviceListSize(%p %S %p 0x%08lx)\n",
            hBinding, pszFilter, pulLength, ulFlags);
 
     if (ulFlags & ~CM_GETIDLIST_FILTER_BITS)
@@ -1347,7 +1553,11 @@ PNP_GetDepth(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_GetDepth() called\n");
+    DPRINT("PNP_GetDepth(%p %S %p 0x%08lx)\n",
+           hBinding, pszDeviceID, pulDepth, ulFlags);
+
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          pszDeviceID);
@@ -1392,7 +1602,9 @@ PNP_GetDeviceRegProp(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetDeviceRegProp() called\n");
+    DPRINT("PNP_GetDeviceRegProp(%p %S %lu %p %p %p %p 0x%08lx)\n",
+           hBinding, pDeviceID, ulProperty, pulRegDataType, Buffer,
+           pulTransferLen, pulLength, ulFlags);
 
     if (pulTransferLen == NULL || pulLength == NULL)
     {
@@ -1406,7 +1618,12 @@ PNP_GetDeviceRegProp(
         goto done;
     }
 
-    /* FIXME: Check pDeviceID */
+    /* Check pDeviceID */
+    if (!IsValidDeviceInstanceID(pDeviceID))
+    {
+        ret = CR_INVALID_DEVINST;
+        goto done;
+    }
 
     if (*pulLength < *pulTransferLen)
         *pulLength = *pulTransferLen;
@@ -1646,12 +1863,12 @@ PNP_SetDeviceRegProp(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_SetDeviceRegProp() called\n");
+    DPRINT("PNP_SetDeviceRegProp(%p %S %lu %lu %p %lu 0x%08lx)\n",
+           hBinding, pDeviceId, ulProperty, ulDataType, Buffer,
+           ulLength, ulFlags);
 
-    DPRINT("DeviceId: %S\n", pDeviceId);
-    DPRINT("Property: %lu\n", ulProperty);
-    DPRINT("DataType: %lu\n", ulDataType);
-    DPRINT("Length: %lu\n", ulLength);
+    if (!IsValidDeviceInstanceID(pDeviceId))
+        return CR_INVALID_DEVINST;
 
     switch (ulProperty)
     {
@@ -1790,6 +2007,9 @@ PNP_GetClassInstance(
     DPRINT("PNP_GetClassInstance(%p %S %p %lu)\n",
            hBinding, pDeviceId, pszClassInstance, ulLength);
 
+    if (!IsValidDeviceInstanceID(pDeviceId))
+        return CR_INVALID_DEVINST;
+
     ulTransferLength = ulLength;
     ret = PNP_GetDeviceRegProp(hBinding,
                                pDeviceId,
@@ -1891,24 +2111,58 @@ PNP_CreateKey(
     DWORD samDesired,
     DWORD ulFlags)
 {
-    HKEY hKey = 0;
+    HKEY hDeviceKey = NULL, hParametersKey = NULL;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
 
-    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-                        pszSubKey,
-                        0,
-                        NULL,
-                        0,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hKey,
-                        NULL))
-        return CR_REGISTRY_ERROR;
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(samDesired);
 
-    /* FIXME: Set security key */
+    DPRINT("PNP_CreateKey(%p %S 0x%lx 0x%08lx)\n",
+           hBinding, pszSubKey, samDesired, ulFlags);
 
-    RegCloseKey(hKey);
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
 
-    return CR_SUCCESS;
+    if (!IsValidDeviceInstanceID(pszSubKey))
+        return CR_INVALID_DEVINST;
+
+    dwError = RegOpenKeyExW(hEnumKey,
+                            pszSubKey,
+                            0,
+                            KEY_WRITE,
+                            &hDeviceKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        ret = CR_INVALID_DEVNODE;
+        goto done;
+    }
+
+    dwError = RegCreateKeyExW(hDeviceKey,
+                              L"Device Parameters",
+                              0,
+                              NULL,
+                              REG_OPTION_NON_VOLATILE,
+                              KEY_ALL_ACCESS,
+                              NULL,
+                              &hParametersKey,
+                              NULL);
+    if (dwError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+    /* FIXME: Set key security */
+
+done:
+    if (hParametersKey != NULL)
+        RegCloseKey(hParametersKey);
+
+    if (hDeviceKey != NULL)
+        RegCloseKey(hDeviceKey);
+
+    return ret;
 }
 
 
@@ -1940,6 +2194,9 @@ PNP_GetClassCount(
 
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
+
+    DPRINT("PNP_GetClassCount(%p %p 0x%08lx)\n",
+           hBinding, pulClassCount, ulFlags);
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             REGSTR_PATH_CLASS,
@@ -1987,7 +2244,8 @@ PNP_GetClassName(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_GetClassName() called\n");
+    DPRINT("PNP_GetClassName(%p %S %p %p 0x%08lx)\n",
+           hBinding, pszClassGuid, Buffer, pulLength, ulFlags);
 
     lstrcpyW(szKeyName, L"System\\CurrentControlSet\\Control\\Class\\");
     if (lstrlenW(pszClassGuid) + 1 < sizeof(szKeyName)/sizeof(WCHAR)-(lstrlenW(szKeyName) * sizeof(WCHAR)))
@@ -2038,7 +2296,8 @@ PNP_DeleteClassKey(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetClassName(%S, %lx) called\n", pszClassGuid, ulFlags);
+    DPRINT("PNP_DeleteClassKey(%p %S 0x%08lx)\n",
+           hBinding, pszClassGuid, ulFlags);
 
     if (ulFlags & CM_DELETE_CLASS_SUBKEYS)
     {
@@ -2091,6 +2350,12 @@ PNP_GetInterfaceDeviceList(
 
     UNREFERENCED_PARAMETER(hBinding);
 
+    DPRINT("PNP_GetInterfaceDeviceList(%p %p %S %p %p 0x%08lx)\n",
+           hBinding, InterfaceGuid, pszDeviceID, Buffer, pulLength, ulFlags);
+
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
+
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          pszDeviceID);
 
@@ -2111,7 +2376,7 @@ PNP_GetInterfaceDeviceList(
         ret = NtStatusToCrError(Status);
     }
 
-    DPRINT("PNP_GetInterfaceDeviceListSize() done (returns %lx)\n", ret);
+    DPRINT("PNP_GetInterfaceDeviceList() done (returns %lx)\n", ret);
     return ret;
 }
 
@@ -2132,7 +2397,11 @@ PNP_GetInterfaceDeviceListSize(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetInterfaceDeviceListSize() called\n");
+    DPRINT("PNP_GetInterfaceDeviceListSize(%p %p %p %S 0x%08lx)\n",
+           hBinding, pulLen, InterfaceGuid, pszDeviceID, ulFlags);
+
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          pszDeviceID);
@@ -2534,7 +2803,18 @@ PNP_CreateDevInst(
 {
     CONFIGRET ret = CR_SUCCESS;
 
-    DPRINT("PNP_CreateDevInst: %S\n", pszDeviceID);
+    DPRINT("PNP_CreateDevInst(%p %S %S %lu 0x%08lx)\n",
+           hBinding, pszParentDeviceID, pszDeviceID, ulLength, ulFlags);
+
+    if (ulFlags & ~CM_CREATE_DEVNODE_BITS)
+        return CR_INVALID_FLAG;
+
+    if (pszDeviceID == NULL || pszParentDeviceID == NULL)
+        return CR_INVALID_POINTER;
+
+    /* Fail, if the parent device is not the root device */
+    if (!IsRootDeviceInstanceID(pszParentDeviceID))
+        return CR_INVALID_DEVINST;
 
     if (ulFlags & CM_CREATE_DEVNODE_GENERATE_ID)
     {
@@ -2581,27 +2861,83 @@ PNP_CreateDevInst(
 
 
 static CONFIGRET
-MoveDeviceInstance(LPWSTR pszDeviceInstanceDestination,
-                   LPWSTR pszDeviceInstanceSource)
+SetupDeviceInstance(
+    _In_ LPWSTR pszDeviceInstance,
+    _In_ DWORD ulMinorAction)
 {
-    DPRINT("MoveDeviceInstance: not implemented\n");
-    /* FIXME */
-    return CR_CALL_NOT_IMPLEMENTED;
+    HKEY hDeviceKey = NULL;
+    DWORD dwDisableCount, dwSize;
+    DWORD ulStatus, ulProblem;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("SetupDeviceInstance(%S 0x%08lx)\n",
+            pszDeviceInstance, ulMinorAction);
+
+    if (IsRootDeviceInstanceID(pszDeviceInstance))
+        return CR_INVALID_DEVINST;
+
+    if (ulMinorAction & ~CM_SETUP_BITS)
+        return CR_INVALID_FLAG;
+
+    if ((ulMinorAction == CM_SETUP_DOWNLOAD) ||
+        (ulMinorAction == CM_SETUP_WRITE_LOG_CONFS))
+        return CR_SUCCESS;
+
+    dwError = RegOpenKeyExW(hEnumKey,
+                            pszDeviceInstance,
+                            0,
+                            KEY_READ,
+                            &hDeviceKey);
+    if (dwError != ERROR_SUCCESS)
+        return CR_INVALID_DEVNODE;
+
+    dwSize = sizeof(dwDisableCount);
+    dwError = RegQueryValueExW(hDeviceKey,
+                               L"DisableCount",
+                               NULL,
+                               NULL,
+                               (LPBYTE)&dwDisableCount,
+                               &dwSize);
+    if ((dwError == ERROR_SUCCESS) &&
+        (dwDisableCount > 0))
+    {
+        goto done;
+    }
+
+    GetDeviceStatus(pszDeviceInstance,
+                    &ulStatus,
+                    &ulProblem);
+
+    if (ulStatus & DN_STARTED)
+    {
+        goto done;
+    }
+
+    if (ulStatus & DN_HAS_PROBLEM)
+    {
+        ret = ClearDeviceStatus(pszDeviceInstance,
+                                DN_HAS_PROBLEM,
+                                ulProblem);
+    }
+
+    if (ret != CR_SUCCESS)
+        goto done;
+
+
+    /* FIXME: Start the device */
+
+done:
+    if (hDeviceKey != NULL)
+        RegCloseKey(hDeviceKey);
+
+    return ret;
 }
 
 
 static CONFIGRET
-SetupDeviceInstance(LPWSTR pszDeviceInstance,
-                    DWORD ulFlags)
-{
-    DPRINT("SetupDeviceInstance: not implemented\n");
-    /* FIXME */
-    return CR_CALL_NOT_IMPLEMENTED;
-}
-
-
-static CONFIGRET
-EnableDeviceInstance(LPWSTR pszDeviceInstance)
+EnableDeviceInstance(
+    _In_ LPWSTR pszDeviceInstance)
 {
     PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
     CONFIGRET ret = CR_SUCCESS;
@@ -2609,8 +2945,11 @@ EnableDeviceInstance(LPWSTR pszDeviceInstance)
 
     DPRINT("Enable device instance %S\n", pszDeviceInstance);
 
-    RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, pszDeviceInstance);
-    Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
+    RtlInitUnicodeString(&ResetDeviceData.DeviceInstance,
+                         pszDeviceInstance);
+    Status = NtPlugPlayControl(PlugPlayControlResetDevice,
+                               &ResetDeviceData,
+                               sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
     if (!NT_SUCCESS(Status))
         ret = NtStatusToCrError(Status);
 
@@ -2619,30 +2958,21 @@ EnableDeviceInstance(LPWSTR pszDeviceInstance)
 
 
 static CONFIGRET
-DisableDeviceInstance(LPWSTR pszDeviceInstance)
-{
-    DPRINT("DisableDeviceInstance: not implemented\n");
-    /* FIXME */
-    return CR_CALL_NOT_IMPLEMENTED;
-}
-
-
-static CONFIGRET
 ReenumerateDeviceInstance(
     _In_ LPWSTR pszDeviceInstance,
-    _In_ ULONG ulFlags)
+    _In_ ULONG ulMinorAction)
 {
     PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA EnumerateDeviceData;
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
     DPRINT1("ReenumerateDeviceInstance(%S 0x%08lx)\n",
-           pszDeviceInstance, ulFlags);
+           pszDeviceInstance, ulMinorAction);
 
-    if (ulFlags & ~CM_REENUMERATE_BITS)
+    if (ulMinorAction & ~CM_REENUMERATE_BITS)
         return CR_INVALID_FLAG;
 
-    if (ulFlags & CM_REENUMERATE_RETRY_INSTALLATION)
+    if (ulMinorAction & CM_REENUMERATE_RETRY_INSTALLATION)
     {
         DPRINT1("CM_REENUMERATE_RETRY_INSTALLATION not implemented!\n");
     }
@@ -2666,8 +2996,8 @@ DWORD
 WINAPI
 PNP_DeviceInstanceAction(
     handle_t hBinding,
-    DWORD ulAction,
-    DWORD ulFlags,
+    DWORD ulMajorAction,
+    DWORD ulMinorAction,
     LPWSTR pszDeviceInstance1,
     LPWSTR pszDeviceInstance2)
 {
@@ -2675,35 +3005,28 @@ PNP_DeviceInstanceAction(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_DeviceInstanceAction() called\n");
+    DPRINT("PNP_DeviceInstanceAction(%p %lu 0x%08lx %S %S)\n",
+           hBinding, ulMajorAction, ulMinorAction,
+           pszDeviceInstance1, pszDeviceInstance2);
 
-    switch (ulAction)
+    switch (ulMajorAction)
     {
-        case PNP_DEVINST_MOVE:
-            ret = MoveDeviceInstance(pszDeviceInstance1,
-                                     pszDeviceInstance2);
-            break;
-
         case PNP_DEVINST_SETUP:
             ret = SetupDeviceInstance(pszDeviceInstance1,
-                                      ulFlags);
+                                      ulMinorAction);
             break;
 
         case PNP_DEVINST_ENABLE:
             ret = EnableDeviceInstance(pszDeviceInstance1);
             break;
 
-        case PNP_DEVINST_DISABLE:
-            ret = DisableDeviceInstance(pszDeviceInstance1);
-            break;
-
         case PNP_DEVINST_REENUMERATE:
             ret = ReenumerateDeviceInstance(pszDeviceInstance1,
-                                            ulFlags);
+                                            ulMinorAction);
             break;
 
         default:
-            DPRINT1("Unknown device action %lu: not implemented\n", ulAction);
+            DPRINT1("Unknown device action %lu: not implemented\n", ulMajorAction);
             ret = CR_CALL_NOT_IMPLEMENTED;
     }
 
@@ -2728,6 +3051,9 @@ PNP_GetDeviceStatus(
 
     DPRINT("PNP_GetDeviceStatus(%p %S %p %p)\n",
            hBinding, pDeviceID, pulStatus, pulProblem, ulFlags);
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
 
     return GetDeviceStatus(pDeviceID, pulStatus, pulProblem);
 }
@@ -2758,9 +3084,24 @@ PNP_DisableDevInst(
     DWORD ulNameLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT1("PNP_DisableDevInst(%p %S %p %p %lu 0x%08lx)\n",
+            hBinding, pDeviceID, pVetoType, pszVetoName, ulNameLength, ulFlags);
+
+    if (ulFlags & ~CM_DISABLE_BITS)
+        return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pDeviceID) ||
+        IsRootDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
+
+    return DisableDeviceInstance(pDeviceID,
+                                 pVetoType,
+                                 pszVetoName,
+                                 ulNameLength);
 }
+
 
 /* Function 33 */
 DWORD
@@ -2835,10 +3176,8 @@ PNP_AddID(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_AddID() called\n");
-    DPRINT("  DeviceInstance: %S\n", pszDeviceID);
-    DPRINT("  DeviceId: %S\n", pszID);
-    DPRINT("  Flags: %lx\n", ulFlags);
+    DPRINT("PNP_AddID(%p %S %S 0x%08lx)\n",
+           hBinding, pszDeviceID, pszID, ulFlags);
 
     if (RegOpenKeyExW(hEnumKey,
                       pszDeviceID,
@@ -2934,8 +3273,18 @@ PNP_RegisterDriver(
     LPWSTR pszDeviceID,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    DPRINT("PNP_RegisterDriver(%p %S 0x%lx)\n",
+           hBinding, pszDeviceID, ulFlags);
+
+    if (ulFlags & ~CM_REGISTER_DEVICE_DRIVER_BITS)
+        return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
+
+    SetDeviceStatus(pszDeviceID, 0, 0);
+
+    return CR_SUCCESS;
 }
 
 
@@ -2961,6 +3310,10 @@ PNP_QueryRemove(
     if (ulFlags & ~CM_REMOVE_BITS)
         return CR_INVALID_FLAG;
 
+    if (!IsValidDeviceInstanceID(pszDeviceID) ||
+        IsRootDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
+
     if (pVetoType != NULL)
         *pVetoType = PNP_VetoTypeUnknown;
 
@@ -2972,6 +3325,7 @@ PNP_QueryRemove(
                          pszDeviceID);
     PlugPlayData.VetoName = pszVetoName;
     PlugPlayData.NameLength = ulNameLength;
+//    PlugPlayData.Flags = 
 
     Status = NtPlugPlayControl(PlugPlayControlQueryAndRemoveDevice,
                                &PlugPlayData,
@@ -2994,8 +3348,40 @@ PNP_RequestDeviceEject(
     DWORD ulNameLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    PLUGPLAY_CONTROL_QUERY_REMOVE_DATA PlugPlayData;
+    NTSTATUS Status;
+    DWORD ret = CR_SUCCESS;
+
+    DPRINT1("PNP_RequestDeviceEject(%p %S %p %p %lu 0x%lx)\n",
+            hBinding, pszDeviceID, pVetoType, pszVetoName,
+            ulNameLength, ulFlags);
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
+
+    if (pVetoType != NULL)
+        *pVetoType = PNP_VetoTypeUnknown;
+
+    if (pszVetoName != NULL && ulNameLength > 0)
+        *pszVetoName = UNICODE_NULL;
+
+    RtlZeroMemory(&PlugPlayData, sizeof(PlugPlayData));
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pszDeviceID);
+    PlugPlayData.VetoName = pszVetoName;
+    PlugPlayData.NameLength = ulNameLength;
+//    PlugPlayData.Flags = 
+
+    Status = NtPlugPlayControl(PlugPlayControlQueryAndRemoveDevice,
+                               &PlugPlayData,
+                               sizeof(PlugPlayData));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
 }
 
 
@@ -3014,7 +3400,8 @@ PNP_IsDockStationPresent(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT1("PNP_IsDockStationPresent() called\n");
+    DPRINT1("PNP_IsDockStationPresent(%p %p)\n",
+            hBinding, Present);
 
     *Present = FALSE;
 
@@ -3060,8 +3447,29 @@ WINAPI
 PNP_RequestEjectPC(
     handle_t hBinding)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    WCHAR szDockDeviceInstance[MAX_DEVICE_ID_LEN];
+    PLUGPLAY_CONTROL_RETRIEVE_DOCK_DATA DockData;
+    NTSTATUS Status;
+
+    DPRINT("PNP_RequestEjectPC(%p)\n", hBinding);
+
+    /* Retrieve the dock device */
+    DockData.DeviceInstanceLength = ARRAYSIZE(szDockDeviceInstance);
+    DockData.DeviceInstance = szDockDeviceInstance;
+
+    Status = NtPlugPlayControl(PlugPlayControlRetrieveDock,
+                               &DockData,
+                               sizeof(DockData));
+    if (!NT_SUCCESS(Status))
+        return NtStatusToCrError(Status);
+
+    /* Eject the dock device */
+    return PNP_RequestDeviceEject(hBinding,
+                                  szDockDeviceInstance,
+                                  NULL,
+                                  NULL,
+                                  0,
+                                  0);
 }
 
 
@@ -3088,6 +3496,9 @@ PNP_HwProfFlags(
     UNREFERENCED_PARAMETER(hBinding);
 
     DPRINT("PNP_HwProfFlags() called\n");
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
 
     if (ulConfig == 0)
     {
@@ -3696,6 +4107,9 @@ PNP_GetCustomDevProp(
         ret = CR_INVALID_FLAG;
         goto done;
     }
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
 
     if (*pulLength < *pulTransferLen)
         *pulLength = *pulTransferLen;

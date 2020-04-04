@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "wine/debug.h"
 
 #define COBJMACROS
@@ -264,7 +263,7 @@ static HRESULT WINAPI IDirectXFileImpl_CreateEnumObject(IDirectXFile* iface, LPV
     ULONG i;
     TRACE("Registered templates (%d):\n", This->nb_xtemplates);
     for (i = 1; i < This->nb_xtemplates; i++)
-      DPRINTF("%s - %s\n", This->xtemplates[i].name, debugstr_guid(&This->xtemplates[i].class_id));
+      TRACE("%s - %s\n", This->xtemplates[i].name, debugstr_guid(&This->xtemplates[i].class_id));
   }
 
   *ppEnumObj = &object->IDirectXFileEnumObject_iface;
@@ -343,7 +342,7 @@ static HRESULT WINAPI IDirectXFileImpl_RegisterTemplates(IDirectXFile* iface, LP
     ULONG i;
     TRACE("Registered templates (%d):\n", This->nb_xtemplates);
     for (i = 1; i < This->nb_xtemplates; i++)
-      DPRINTF("%s - %s\n", This->xtemplates[i].name, debugstr_guid(&This->xtemplates[i].class_id));
+      TRACE("%s - %s\n", This->xtemplates[i].name, debugstr_guid(&This->xtemplates[i].class_id));
   }
 
   hr = DXFILE_OK;

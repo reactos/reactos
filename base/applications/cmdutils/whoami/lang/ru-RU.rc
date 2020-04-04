@@ -36,7 +36,7 @@ BEGIN
     IDS_ERROR_VALUEXPECTED "ОШИБКА: Указан недопустимый формат (/FO).\nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
     IDS_ERROR_VALUENOTALLOWED "ОШИБКА: Неверный синтаксис. Значение '%s' запрещено для параметра '/fo'.\nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
     IDS_ERROR_1TIMES "ОШИБКА: Неверный синтаксис. Запрещено использовать параметр '%s' более '1' раз(а).\nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
-    IDS_ERROR_INVALIDSYNTAX "ОШИБКА: Синтаксическая ошибка. \nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
+    IDS_ERROR_INVALIDSYNTAX "ОШИБКА: Синтаксическая ошибка.\nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
     IDS_ERROR_INVALIDARG "ОШИБКА: Неправильный параметр или аргумент - '%s'.\nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
     IDS_ERROR_NH_LIST "ОШИБКА: Параметр /NH нельзя использовать с форматом LIST.\nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
     IDS_HELP "Описание:\n\
@@ -47,12 +47,12 @@ BEGIN
   Используйте '/nh' чтобы скрыть заголовки. По умолчанию данные отображаются в таблице.\n\
 \n\
 Синтаксис:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <формат>] [/nh] \n\
-  whoami /all [/fo <формат>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <формат>] [/nh]\n\
+  whoami /all [/fo <формат>] [/nh]\n\
 \n\
 Примеры:\n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

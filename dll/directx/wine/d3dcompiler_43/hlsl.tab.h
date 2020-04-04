@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.0.  */
+/* A Bison parser, made by GNU Bison 3.4.1.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -29,6 +30,9 @@
 
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
+
+/* Undocumented macros, especially those whose name start with YY_,
+   are private implementation details.  Do not rely on them.  */
 
 #ifndef YY_HLSL_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_HLSL_TAB_H_INCLUDED
 # define YY_HLSL_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_HLSL_TAB_H_INCLUDED
@@ -152,10 +156,9 @@ extern int hlsl_debug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 910 "hlsl.y" /* yacc.c:1909  */
+#line 890 "hlsl.y"
 
     struct hlsl_type *type;
     INT intval;
@@ -163,11 +166,11 @@ union YYSTYPE
     BOOL boolval;
     char *name;
     DWORD modifiers;
-    struct hlsl_ir_var *var;
     struct hlsl_ir_node *instr;
     struct list *list;
     struct parse_function function;
     struct parse_parameter parameter;
+    struct parse_initializer initializer;
     struct parse_variable_def *variable_def;
     struct parse_if_body if_body;
     enum parse_unary_op unary_op;
@@ -175,8 +178,10 @@ union YYSTYPE
     struct reg_reservation *reg_reservation;
     struct parse_colon_attribute colon_attribute;
 
-#line 179 "hlsl.tab.h" /* yacc.c:1909  */
+#line 182 "hlsl.tab.h"
+
 };
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif

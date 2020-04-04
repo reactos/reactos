@@ -152,15 +152,16 @@ typedef struct _WINSRV_CONSOLE
     BOOLEAN HasFocus;               /* TRUE if the console has focus (is in the foreground) */
 
 /******************************* Pausing support ******************************/
-    BYTE PauseFlags;
+    UCHAR PauseFlags;
     LIST_ENTRY  ReadWaitQueue;      /* List head for the queue of unique input buffer read wait blocks */
     LIST_ENTRY WriteWaitQueue;      /* List head for the queue of current screen-buffer write wait blocks */
 
 /**************************** Aliases and Histories ***************************/
     struct _ALIAS_HEADER *Aliases;
     LIST_ENTRY HistoryBuffers;
+    ULONG NumberOfHistoryBuffers;           /* Number of history buffers */
+    ULONG MaxNumberOfHistoryBuffers;        /* Maximum number of history buffers allowed */
     ULONG HistoryBufferSize;                /* Size for newly created history buffers */
-    ULONG NumberOfHistoryBuffers;           /* Maximum number of history buffers allowed */
     BOOLEAN HistoryNoDup;                   /* Remove old duplicate history entries */
 
 /**************************** Input Line Discipline ***************************/
@@ -196,8 +197,8 @@ typedef struct _WINSRV_CONSOLE
 } WINSRV_CONSOLE; // , *PWINSRV_CONSOLE;
 
 /* console.c */
-VOID ConioPause(PCONSRV_CONSOLE Console, UINT Flags);
-VOID ConioUnpause(PCONSRV_CONSOLE Console, UINT Flags);
+VOID ConioPause(PCONSRV_CONSOLE Console, UCHAR Flags);
+VOID ConioUnpause(PCONSRV_CONSOLE Console, UCHAR Flags);
 
 PCONSOLE_PROCESS_DATA NTAPI
 ConSrvGetConsoleLeaderProcess(IN PCONSRV_CONSOLE Console);
@@ -226,7 +227,7 @@ ConioProcessInputEvent(PCONSRV_CONSOLE Console,
 
 /* conoutput.c */
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
+NTSTATUS ConioResizeBuffer(PCONSOLE Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
 

@@ -872,7 +872,7 @@ BOOLEAN Ext2ReadPartialBlock(PEXT2_VOLUME_INFO Volume, ULONG BlockNumber, ULONG 
         return FALSE;
     }
 
-    memcpy(Buffer, ((PUCHAR)TempBuffer + StartingOffset), Length);
+    RtlCopyMemory(Buffer, ((PUCHAR)TempBuffer + StartingOffset), Length);
 
     FrLdrTempFree(TempBuffer, TAG_EXT_BUFFER);
 

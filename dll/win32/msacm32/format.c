@@ -27,7 +27,6 @@
 #include "winerror.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "mmsystem.h"
 #include "mmreg.h"
@@ -75,7 +74,7 @@ static BOOL CALLBACK MSACM_FillFormatTagsCB(HACMDRIVERID hadid,
         }
 	break;
     case WINE_ACMFF_FORMAT:
-	if (strcmpW(affd->szFormatTag, paftd->szFormatTag) == 0) {
+	if (lstrcmpW(affd->szFormatTag, paftd->szFormatTag) == 0) {
 	    HACMDRIVER		had;
 
 	    if (acmDriverOpen(&had, hadid, 0) == MMSYSERR_NOERROR) {
@@ -102,7 +101,7 @@ static BOOL CALLBACK MSACM_FillFormatTagsCB(HACMDRIVERID hadid,
 		    mmr = acmFormatDetailsW(had, &afd, ACM_FORMATDETAILSF_INDEX);
 		    if (mmr == MMSYSERR_NOERROR) {
                        lstrcpynW(buffer, afd.szFormat, ACMFORMATTAGDETAILS_FORMATTAG_CHARS + 1);
-                       len = strlenW(buffer);
+                       len = lstrlenW(buffer);
                        for (j = len; j < ACMFORMATTAGDETAILS_FORMATTAG_CHARS; j++)
                            buffer[j] = ' ';
                        wsprintfW(buffer + ACMFORMATTAGDETAILS_FORMATTAG_CHARS,
@@ -123,7 +122,7 @@ static BOOL CALLBACK MSACM_FillFormatTagsCB(HACMDRIVERID hadid,
 	}
 	break;
     case WINE_ACMFF_WFX:
-	if (strcmpW(affd->szFormatTag, paftd->szFormatTag) == 0) {
+	if (lstrcmpW(affd->szFormatTag, paftd->szFormatTag) == 0) {
 	    HACMDRIVER		had;
 
 	    if (acmDriverOpen(&had, hadid, 0) == MMSYSERR_NOERROR) {
@@ -504,8 +503,8 @@ MMRESULT WINAPI acmFormatDetailsW(HACMDRIVER had, PACMFORMATDETAILSW pafd, DWORD
 		      pafd->pwfx->wBitsPerSample);
 	}
         MultiByteToWideChar(CP_ACP, 0, (pafd->pwfx->nChannels == 1) ? "; Mono" : "; Stereo", -1,
-                            pafd->szFormat + strlenW(pafd->szFormat),
-                            ARRAY_SIZE(pafd->szFormat) - strlenW(pafd->szFormat));
+                            pafd->szFormat + lstrlenW(pafd->szFormat),
+                            ARRAY_SIZE(pafd->szFormat) - lstrlenW(pafd->szFormat));
     }
 
     TRACE("=> %d\n", mmr);

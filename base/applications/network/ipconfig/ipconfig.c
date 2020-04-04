@@ -8,10 +8,11 @@
 /*
  * TODO:
  * fix renew / release
- * implement flushdns, registerdns, displaydns, showclassid, setclassid
+ * implement registerdns, showclassid, setclassid
  * allow globbing on adapter names
  */
 
+#define WIN32_NO_STATUS
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
@@ -21,13 +22,102 @@
 #include <tchar.h>
 #include <time.h>
 #include <iphlpapi.h>
+#include <ndk/rtlfuncs.h>
+#include <inaddr.h>
+#include <windns.h>
+#include <windns_undoc.h>
 
 #include "resource.h"
+
+typedef struct _RECORDTYPE
+{
+    WORD wRecordType;
+    LPTSTR pszRecordName;
+} RECORDTYPE, *PRECORDTYPE;
 
 #define GUID_LEN 40
 
 HINSTANCE hInstance;
 HANDLE ProcessHeap;
+
+RECORDTYPE TypeArray[] =
+{
+    {DNS_TYPE_ZERO,    _T("ZERO")},
+    {DNS_TYPE_A,       _T("A")},
+    {DNS_TYPE_NS,      _T("NS")},
+    {DNS_TYPE_MD,      _T("MD")},
+    {DNS_TYPE_MF,      _T("MF")},
+    {DNS_TYPE_CNAME,   _T("CNAME")},
+    {DNS_TYPE_SOA,     _T("SOA")},
+    {DNS_TYPE_MB,      _T("MB")},
+    {DNS_TYPE_MG,      _T("MG")},
+    {DNS_TYPE_MR,      _T("MR")},
+    {DNS_TYPE_NULL,    _T("NULL")},
+    {DNS_TYPE_WKS,     _T("WKS")},
+    {DNS_TYPE_PTR,     _T("PTR")},
+    {DNS_TYPE_HINFO,   _T("HINFO")},
+    {DNS_TYPE_MINFO,   _T("MINFO")},
+    {DNS_TYPE_MX,      _T("MX")},
+    {DNS_TYPE_TEXT,    _T("TXT")},
+    {DNS_TYPE_RP,      _T("RP")},
+    {DNS_TYPE_AFSDB,   _T("AFSDB")},
+    {DNS_TYPE_X25,     _T("X25")},
+    {DNS_TYPE_ISDN,    _T("ISDN")},
+    {DNS_TYPE_RT,      _T("RT")},
+    {DNS_TYPE_NSAP,    _T("NSAP")},
+    {DNS_TYPE_NSAPPTR, _T("NSAPPTR")},
+    {DNS_TYPE_SIG,     _T("SIG")},
+    {DNS_TYPE_KEY,     _T("KEY")},
+    {DNS_TYPE_PX,      _T("PX")},
+    {DNS_TYPE_GPOS,    _T("GPOS")},
+    {DNS_TYPE_AAAA,    _T("AAAA")},
+    {DNS_TYPE_LOC,     _T("LOC")},
+    {DNS_TYPE_NXT,     _T("NXT")},
+    {DNS_TYPE_EID,     _T("EID")},
+    {DNS_TYPE_NIMLOC,  _T("NIMLOC")},
+    {DNS_TYPE_SRV,     _T("SRV")},
+    {DNS_TYPE_ATMA,    _T("ATMA")},
+    {DNS_TYPE_NAPTR,   _T("NAPTR")},
+    {DNS_TYPE_KX,      _T("KX")},
+    {DNS_TYPE_CERT,    _T("CERT")},
+    {DNS_TYPE_A6,      _T("A6")},
+    {DNS_TYPE_DNAME,   _T("DNAME")},
+    {DNS_TYPE_SINK,    _T("SINK")},
+    {DNS_TYPE_OPT,     _T("OPT")},
+    {DNS_TYPE_UINFO,   _T("UINFO")},
+    {DNS_TYPE_UID,     _T("UID")},
+    {DNS_TYPE_GID,     _T("GID")},
+    {DNS_TYPE_UNSPEC,  _T("UNSPEC")},
+    {DNS_TYPE_ADDRS,   _T("ADDRS")},
+    {DNS_TYPE_TKEY,    _T("TKEY")},
+    {DNS_TYPE_TSIG,    _T("TSIG")},
+    {DNS_TYPE_IXFR,    _T("IXFR")},
+    {DNS_TYPE_AXFR,    _T("AXFR")},
+    {DNS_TYPE_MAILB,   _T("MAILB")},
+    {DNS_TYPE_MAILA,   _T("MAILA")},
+    {DNS_TYPE_ALL,     _T("ALL")},
+    {0, NULL}
+};
+
+LPTSTR
+GetRecordTypeName(WORD wType)
+{
+    static TCHAR szType[8];
+    INT i;
+
+    for (i = 0; ; i++)
+    {
+         if (TypeArray[i].pszRecordName == NULL)
+             break;
+
+         if (TypeArray[i].wRecordType == wType)
+             return TypeArray[i].pszRecordName;
+    }
+
+    _stprintf(szType, _T("%hu"), wType);
+
+    return szType;
+}
 
 int LoadStringAndOem(HINSTANCE hInst,
                      UINT uID,
@@ -725,7 +815,171 @@ VOID Renew(LPTSTR Index)
     }
 }
 
+VOID
+FlushDns(VOID)
+{
+    _tprintf(_T("\nReactOS IP Configuration\n\n"));
 
+    if (DnsFlushResolverCache())
+        _tprintf(_T("The DNS Resolver Cache has been deleted.\n"));
+    else
+        DoFormatMessage(GetLastError());
+}
+
+
+static
+VOID
+DisplayDnsRecord(
+    PWSTR pszName,
+    WORD wType)
+{
+    PDNS_RECORDW pQueryResults = NULL, pThisRecord, pNextRecord;
+    WCHAR szBuffer[48];
+    IN_ADDR Addr4;
+    IN6_ADDR Addr6;
+    DNS_STATUS Status;
+
+    pQueryResults = NULL;
+    Status = DnsQuery_W(pszName,
+                        wType,
+                        DNS_QUERY_NO_WIRE_QUERY,
+                        NULL,
+                        (PDNS_RECORD *)&pQueryResults,
+                        NULL);
+    if (Status != ERROR_SUCCESS)
+    {
+        if (Status == DNS_ERROR_RCODE_NAME_ERROR)
+        {
+            _tprintf(_T("\t%S\n"), pszName);
+            _tprintf(_T("\t----------------------------------------\n"));
+            _tprintf(_T("\tName does not exist\n\n"));
+        }
+        else if (Status == DNS_INFO_NO_RECORDS)
+        {
+            _tprintf(_T("\t%S\n"), pszName);
+            _tprintf(_T("\t----------------------------------------\n"));
+            _tprintf(_T("\tNo records of type %s\n\n"), GetRecordTypeName(wType));
+        }
+        return;
+    }
+
+    _tprintf(_T("\t%S\n"), pszName);
+    _tprintf(_T("\t----------------------------------------\n"));
+
+    pThisRecord = pQueryResults;
+    while (pThisRecord != NULL)
+    {
+        pNextRecord = pThisRecord->pNext;
+
+        _tprintf(_T("\tRecord Name . . . . . : %S\n"), pThisRecord->pName);
+        _tprintf(_T("\tRecord Type . . . . . : %hu\n"), pThisRecord->wType);
+        _tprintf(_T("\tTime To Live. . . . . : %lu\n"), pThisRecord->dwTtl);
+        _tprintf(_T("\tData Length . . . . . : %hu\n"), pThisRecord->wDataLength);
+
+        switch (pThisRecord->Flags.S.Section)
+        {
+            case DnsSectionQuestion:
+                _tprintf(_T("\tSection . . . . . . . : Question\n"));
+                break;
+
+            case DnsSectionAnswer:
+                _tprintf(_T("\tSection . . . . . . . : Answer\n"));
+                break;
+
+            case DnsSectionAuthority:
+                _tprintf(_T("\tSection . . . . . . . : Authority\n"));
+                break;
+
+            case DnsSectionAdditional:
+                _tprintf(_T("\tSection . . . . . . . : Additional\n"));
+                break;
+        }
+
+        switch (pThisRecord->wType)
+        {
+            case DNS_TYPE_A:
+                Addr4.S_un.S_addr = pThisRecord->Data.A.IpAddress;
+                RtlIpv4AddressToStringW(&Addr4, szBuffer);
+                _tprintf(_T("\tA (Host) Record . . . : %S\n"), szBuffer);
+                break;
+
+            case DNS_TYPE_NS:
+                _tprintf(_T("\tNS Record . . . . . . : %S\n"), pThisRecord->Data.NS.pNameHost);
+                break;
+
+            case DNS_TYPE_CNAME:
+                _tprintf(_T("\tCNAME Record. . . . . : %S\n"), pThisRecord->Data.CNAME.pNameHost);
+                break;
+
+            case DNS_TYPE_SOA:
+                _tprintf(_T("\tSOA Record. . . . . . : \n"));
+                break;
+
+            case DNS_TYPE_PTR:
+                _tprintf(_T("\tPTR Record. . . . . . : %S\n"), pThisRecord->Data.PTR.pNameHost);
+                break;
+
+            case DNS_TYPE_MX:
+                _tprintf(_T("\tMX Record . . . . . . : \n"));
+                break;
+
+            case DNS_TYPE_AAAA:
+                RtlCopyMemory(&Addr6, &pThisRecord->Data.AAAA.Ip6Address, sizeof(IN6_ADDR));
+                RtlIpv6AddressToStringW(&Addr6, szBuffer);
+                _tprintf(_T("\tAAAA Record . . . . . : %S\n"), szBuffer);
+                break;
+
+            case DNS_TYPE_ATMA:
+                _tprintf(_T("\tATMA Record . . . . . : \n"));
+                break;
+
+            case DNS_TYPE_SRV:
+                _tprintf(_T("\tSRV Record. . . . . . : \n"));
+                break;
+        }
+        _tprintf(_T("\n\n"));
+
+        pThisRecord = pNextRecord;
+    }
+
+    DnsRecordListFree((PDNS_RECORD)pQueryResults, DnsFreeRecordList);
+}
+
+
+VOID
+DisplayDns(VOID)
+{
+    PDNS_CACHE_ENTRY DnsEntry = NULL, pThisEntry, pNextEntry;
+
+    _tprintf(_T("\nReactOS IP Configuration\n\n"));
+
+    if (!DnsGetCacheDataTable(&DnsEntry))
+    {
+        DoFormatMessage(GetLastError());
+        return;
+    }
+
+    if (DnsEntry == NULL)
+        return;
+
+    pThisEntry = DnsEntry;
+    while (pThisEntry != NULL)
+    {
+        pNextEntry = pThisEntry->pNext;
+
+        if (pThisEntry->wType1 != 0)
+            DisplayDnsRecord(pThisEntry->pszName, pThisEntry->wType1);
+
+        if (pThisEntry->wType2 != 0)
+            DisplayDnsRecord(pThisEntry->pszName, pThisEntry->wType2);
+
+        if (pThisEntry->pszName)
+            LocalFree(pThisEntry->pszName);
+        LocalFree(pThisEntry);
+
+        pThisEntry = pNextEntry;
+    }
+}
 
 VOID Usage(VOID)
 {
@@ -760,8 +1014,6 @@ VOID Usage(VOID)
             HeapFree(ProcessHeap, 0, lpUsage);
         }
     }
-
-
 }
 
 int main(int argc, char *argv[])
@@ -835,11 +1087,11 @@ int main(int argc, char *argv[])
             else if (DoRenew)
                 Renew(NULL);
             else if (DoFlushdns)
-                _tprintf(_T("\nSorry /flushdns is not implemented yet\n"));
+                FlushDns();
             else if (DoRegisterdns)
                 _tprintf(_T("\nSorry /registerdns is not implemented yet\n"));
             else if (DoDisplaydns)
-                _tprintf(_T("\nSorry /displaydns is not implemented yet\n"));
+                DisplayDns();
             else
                 Usage();
             break;

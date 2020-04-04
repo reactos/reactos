@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -247,6 +247,19 @@ typedef struct acpi_device_walk_info
     UINT32                          Num_INI;
 
 } ACPI_DEVICE_WALK_INFO;
+
+
+/* Info used by Acpi  AcpiDbDisplayFields */
+
+typedef struct acpi_region_walk_info
+{
+    UINT32                          DebugLevel;
+    UINT32                          Count;
+    ACPI_OWNER_ID                   OwnerId;
+    UINT8                           DisplayType;
+    UINT32                          AddressSpaceId;
+
+} ACPI_REGION_WALK_INFO;
 
 
 /* TBD: [Restructure] Merge with struct above */

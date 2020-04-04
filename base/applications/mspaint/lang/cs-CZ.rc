@@ -196,7 +196,7 @@ BEGIN
     IDS_PROGRAMNAME "Malování"
     IDS_WINDOWTITLE "%s - Malování"
     IDS_INFOTITLE "ReactOS Malování"
-    IDS_INFOTEXT "ReactOS Malování je dostupné pod licencí GNU Lesser General Public License (LGPL, viz. www.gnu.org)"
+    IDS_INFOTEXT "Dostupné pod licencí GNU Lesser General Public License (LGPL, viz. www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Chcete uložit provedené změny v %s?"
     IDS_DEFAULTFILENAME "Bez názvu.bmp"
     IDS_MINIATURETITLE "Miniatura"

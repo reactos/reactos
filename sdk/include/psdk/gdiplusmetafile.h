@@ -21,108 +21,229 @@
 
 class Metafile : public Image
 {
-public:
-  Metafile(HDC referenceHdc, EmfType type, const WCHAR *description)
-  {
-  }
+  public:
+    Metafile(HDC referenceHdc, EmfType type = EmfTypeEmfPlusDual, const WCHAR *description = NULL)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus =
+            DllExports::GdipRecordMetafile(referenceHdc, type, NULL, MetafileFrameUnitGdi, description, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(const WCHAR *filename)
-  {
-  }
+    Metafile(const WCHAR *filename)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipCreateMetafileFromFile(filename, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(HDC referenceHdc, const RectF &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        HDC referenceHdc,
+        const RectF &frameRect,
+        MetafileFrameUnit frameUnit = MetafileFrameUnitGdi,
+        EmfType type = EmfTypeEmfPlusDual,
+        const WCHAR *description = NULL)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipRecordMetafile(referenceHdc, type, &frameRect, frameUnit, description, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(HMETAFILE hWmf, const WmfPlaceableFileHeader *wmfPlaceableFileHeader, BOOL deleteWmf)
-  {
-  }
+    Metafile(HMETAFILE hWmf, const WmfPlaceableFileHeader *wmfPlaceableFileHeader, BOOL deleteWmf = FALSE)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipCreateMetafileFromWmf(hWmf, deleteWmf, wmfPlaceableFileHeader, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(const WCHAR *fileName, HDC referenceHdc, const Rect &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        const WCHAR *fileName,
+        HDC referenceHdc,
+        const Rect &frameRect,
+        MetafileFrameUnit frameUnit = MetafileFrameUnitGdi,
+        EmfType type = EmfTypeEmfPlusDual,
+        const WCHAR *description = NULL)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipRecordMetafileFileNameI(
+            fileName, referenceHdc, type, &frameRect, frameUnit, description, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(IStream *stream, HDC referenceHdc, const RectF &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        IStream *stream,
+        HDC referenceHdc,
+        const RectF &frameRect,
+        MetafileFrameUnit frameUnit = MetafileFrameUnitGdi,
+        EmfType type = EmfTypeEmfPlusDual,
+        const WCHAR *description = NULL)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipRecordMetafile(referenceHdc, type, &frameRect, frameUnit, description, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(IStream *stream, HDC referenceHdc, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(IStream *stream, HDC referenceHdc, EmfType type = EmfTypeEmfPlusDual, const WCHAR *description = NULL)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipRecordMetafileStream(
+            stream, referenceHdc, type, NULL, MetafileFrameUnitGdi, description, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(IStream *stream, HDC referenceHdc, const Rect &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        IStream *stream,
+        HDC referenceHdc,
+        const Rect &frameRect,
+        MetafileFrameUnit frameUnit = MetafileFrameUnitGdi,
+        EmfType type = EmfTypeEmfPlusDual,
+        const WCHAR *description = NULL)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipRecordMetafileI(referenceHdc, type, &frameRect, frameUnit, description, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(const WCHAR *fileName, HDC referenceHdc, const RectF &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        const WCHAR *fileName,
+        HDC referenceHdc,
+        const RectF &frameRect,
+        MetafileFrameUnit frameUnit = MetafileFrameUnitGdi,
+        EmfType type = EmfTypeEmfPlusDual,
+        const WCHAR *description = NULL)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipRecordMetafileFileName(
+            fileName, referenceHdc, type, &frameRect, frameUnit, description, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(const WCHAR *fileName, HDC referenceHdc, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        const WCHAR *fileName,
+        HDC referenceHdc,
+        EmfType type = EmfTypeEmfPlusDual,
+        const WCHAR *description = NULL)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipRecordMetafileFileName(
+            fileName, referenceHdc, type, NULL, MetafileFrameUnitGdi, description, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(IStream *stream)
-  {
-  }
+    Metafile(IStream *stream)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipCreateMetafileFromStream(stream, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(HENHMETAFILE hEmf, BOOL deleteEmf)
-  {
-  }
+    Metafile(HENHMETAFILE hEmf, BOOL deleteEmf = FALSE)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipCreateMetafileFromEmf(hEmf, deleteEmf, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  Metafile(HDC referenceHdc, const Rect &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        HDC referenceHdc,
+        const Rect &frameRect,
+        MetafileFrameUnit frameUnit = MetafileFrameUnitGdi,
+        EmfType type = EmfTypeEmfPlusDual,
+        const WCHAR *description = NULL)
+    {
+        GpMetafile *metafile = NULL;
+        lastStatus = DllExports::GdipRecordMetafileI(referenceHdc, type, &frameRect, frameUnit, description, &metafile);
+        SetNativeImage(metafile);
+    }
 
-  static UINT EmfToWmfBits(HENHMETAFILE hemf, UINT cbData16, LPBYTE pData16, INT iMapMode, EmfToWmfBitsFlags eFlags)
-  {
-    return 0;
-  }
+    static UINT
+    EmfToWmfBits(
+        HENHMETAFILE hemf,
+        UINT cbData16,
+        LPBYTE pData16,
+        INT iMapMode = MM_ANISOTROPIC,
+        EmfToWmfBitsFlags eFlags = EmfToWmfBitsFlagsDefault)
+    {
+        return DllExports::GdipEmfToWmfBits(hemf, cbData16, pData16, iMapMode, eFlags);
+    }
 
-  UINT GetDownLevelRasterizationLimit(VOID)
-  {
-    return 0;
-  }
+    UINT
+    GetDownLevelRasterizationLimit() const
+    {
+#if 1
+        return 0; // FIXME
+#else
+        UINT metafileRasterizationLimitDpi = 0;
+        SetStatus(DllExports::GdipGetMetafileDownLevelRasterizationLimit(
+            GetNativeMetafile(), &metafileRasterizationLimitDpi));
+        return metafileRasterizationLimitDpi;
+#endif
+    }
 
-  HENHMETAFILE GetHENHMETAFILE(VOID)
-  {
-    return NULL;
-  }
+    HENHMETAFILE
+    GetHENHMETAFILE() const
+    {
+        HENHMETAFILE hEmf;
+        SetStatus(DllExports::GdipGetHemfFromMetafile(GetNativeMetafile(), &hEmf));
+        return hEmf;
+    }
 
-  static Status GetMetafileHeader(const WCHAR *filename, MetafileHeader *header)
-  {
-    return NotImplemented;
-  }
+    static Status
+    GetMetafileHeader(const WCHAR *filename, MetafileHeader *header)
+    {
+        return DllExports::GdipGetMetafileHeaderFromFile(filename, header);
+    }
 
-  static Status GetMetafileHeader(HENHMETAFILE *hEmf, MetafileHeader *header)
-  {
-    return NotImplemented;
-  }
+    static Status
+    GetMetafileHeader(HENHMETAFILE hEmf, MetafileHeader *header)
+    {
+        return DllExports::GdipGetMetafileHeaderFromEmf(hEmf, header);
+    }
 
-  static Status GetMetafileHeader(HMETAFILE hWmf, const WmfPlaceableFileHeader *wmfPlaceableFileHeader, MetafileHeader *header)
-  {
-    return NotImplemented;
-  }
+    static Status
+    GetMetafileHeader(HMETAFILE hWmf, const WmfPlaceableFileHeader *wmfPlaceableFileHeader, MetafileHeader *header)
+    {
+        return DllExports::GdipGetMetafileHeaderFromWmf(hWmf, wmfPlaceableFileHeader, header);
+    }
 
-  Status GetMetafileHeader(MetafileHeader *header) const
-  {
-    return NotImplemented;
-  }
+    Status
+    GetMetafileHeader(MetafileHeader *header) const
+    {
+        return SetStatus(DllExports::GdipGetMetafileHeaderFromMetafile(GetNativeMetafile(), header));
+    }
 
-  static Status GetMetafileHeader(IStream *stream, MetafileHeader *header)
-  {
-    return NotImplemented;
-  }
+    static Status
+    GetMetafileHeader(IStream *stream, MetafileHeader *header)
+    {
+        return DllExports::GdipGetMetafileHeaderFromStream(stream, header);
+    }
 
-  Status PlayRecord(EmfPlusRecordType recordType, UINT flags, UINT dataSize, const BYTE *data)
-  {
-    return NotImplemented;
-  }
+    Status
+    PlayRecord(EmfPlusRecordType recordType, UINT flags, UINT dataSize, const BYTE *data)
+    {
+        return SetStatus(DllExports::GdipPlayMetafileRecord(GetNativeMetafile(), recordType, flags, dataSize, data));
+    }
 
-  Status SetDownLevelRasterizationLimit(UINT metafileRasterizationLimitDpi)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetDownLevelRasterizationLimit(UINT metafileRasterizationLimitDpi)
+    {
+        return SetStatus(
+            DllExports::GdipSetMetafileDownLevelRasterizationLimit(GetNativeMetafile(), metafileRasterizationLimitDpi));
+    }
+
+  protected:
+    GpMetafile *
+    GetNativeMetafile() const
+    {
+        return static_cast<GpMetafile *>(nativeImage);
+    }
+
+    // get native
+    friend inline GpMetafile *&
+    getNat(const Metafile *metafile)
+    {
+        return reinterpret_cast<GpMetafile *&>(const_cast<Metafile *>(metafile)->nativeImage);
+    }
 };
 
 #endif /* _GDIPLUSMETAFILE_H */

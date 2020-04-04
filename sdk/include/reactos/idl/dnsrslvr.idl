@@ -6,7 +6,13 @@
 
 #define UNICODE
 #include <sal.h>
+
+cpp_quote("#ifndef _WINDNS_INCLUDED_")
 #include <windns.h>
+cpp_quote("#endif")
+cpp_quote("#ifndef _WINDNS_UNDOC_H_")
+#include <windns_undoc.h>
+cpp_quote("#endif")
 
 typedef [handle, string] LPWSTR DNSRSLVR_HANDLE;
 
@@ -22,7 +28,11 @@ typedef [handle, string] LPWSTR DNSRSLVR_HANDLE;
 interface DnsResolver
 {
     /* Function: 0x00 */
-    /* CRrReadCache */
+    DWORD
+    __stdcall
+    CRrReadCache(
+        [in, unique, string] DNSRSLVR_HANDLE pwszServerName,
+        [out] DNS_CACHE_ENTRY **ppCacheEntries);
 
     /* Function: 0x01 */
     /* CRrReadCacheEntry */
@@ -34,8 +44,10 @@ interface DnsResolver
     /* R_ResolverGetConfig */
 
     /* Function: 0x04 */
-    DWORD R_ResolverFlushCache(
-        [in][unique][string] DNSRSLVR_HANDLE pwszServerName);
+    DWORD
+    __stdcall
+    R_ResolverFlushCache(
+        [in, unique, string] DNSRSLVR_HANDLE pwszServerName);
 
     /* Function: 0x05 */
     /* R_ResolverFlushCacheEntry */
@@ -44,13 +56,15 @@ interface DnsResolver
     /* R_ResolverRegisterCluster */
 
     /* Function: 0x07 */
-    DWORD R_ResolverQuery(
-        [in][unique][string] DNSRSLVR_HANDLE pwszServerName,
-        [in][unique][string] LPCWSTR pwsName, 
-        [in] WORD wType, 
-        [in] DWORD Flags, 
-        [in][out] DWORD *dwRecords, 
-        [out][ref] DNS_RECORDW** ppResultRecords);
+    DWORD
+    __stdcall
+    R_ResolverQuery(
+        [in, unique, string] DNSRSLVR_HANDLE pwszServerName,
+        [in, unique, string] LPCWSTR pwsName,
+        [in] WORD wType,
+        [in] DWORD Flags,
+        [in, out] DWORD *dwRecords,
+        [out] DNS_RECORDW **ppResultRecords);
 
     /* Function: 0x08 */
     /* R_ResolverEnumCache */

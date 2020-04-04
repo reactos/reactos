@@ -409,10 +409,13 @@ struct btrfs_chunk_map {
     u32 cur_length;
 };
 
+typedef struct _BTRFS_INFO *PBTRFS_INFO;
+
 typedef struct {
     u64 inr;
     u64 position;
     struct btrfs_inode_item inode;
+    PBTRFS_INFO Volume;
 } btrfs_file_info, * pbtrfs_file_info;
 
 const DEVVTBL* BtrFsMount(ULONG DeviceId);

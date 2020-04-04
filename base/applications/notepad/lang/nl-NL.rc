@@ -152,7 +152,7 @@ Wilt u een nieuw bestand maken?"
 Wilt u de wijzigingen opslaan?"
     STRING_NOTFOUND "'%s' kan niet worden gevonden."
     STRING_OUT_OF_MEMORY "Onvoldoende geheugen. \
-\nSluit een of meer applicaties om de hoeveelheid \nbeschikbaar geheugen te vergroten."
+\nSluit een of meer applicaties om de hoeveelheid\nbeschikbaar geheugen te vergroten."
     STRING_CANNOTFIND "Cannot find '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

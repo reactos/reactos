@@ -55,7 +55,7 @@ MCIERR_UNRECOGNIZED_KEYWORD, 	"Ovladač nepřipouątí pouľitý parametr přík
 MCIERR_UNRECOGNIZED_COMMAND,	"Ovladač nepřipouątí pouľitý příkaz."
 MCIERR_HARDWARE, 		"S multimediálním zařízením něco není v pořádku. Ujistěte se, ľe pracuje jak má, případně oslovte jeho výrobce."
 MCIERR_INVALID_DEVICE_NAME, 	"Uvedené zařízení není pouľitelné nebo není podporované MCI."
-MCIERR_OUT_OF_MEMORY, 		"Není dost paměti na provedení této úlohy. \nUkončete jednu nebo víc aplikací a zkuste to znovu."
+MCIERR_OUT_OF_MEMORY, 		"Není dost paměti na provedení této úlohy.\nUkončete jednu nebo víc aplikací a zkuste to znovu."
 MCIERR_DEVICE_OPEN, 		"Jméno zařízení uľ je pouľito jako alias touto aplikací. Pouľijte unikátní alias."
 MCIERR_CANNOT_LOAD_DRIVER, 	"Vyskytl se nerozpoznatelný problém při zavádění uvedeného ovladače."
 MCIERR_MISSING_COMMAND_STRING, 	"Nebyl zadán ľádný příkaz."

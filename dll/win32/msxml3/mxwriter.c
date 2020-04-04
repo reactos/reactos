@@ -498,10 +498,10 @@ static WCHAR *get_escaped_string(const WCHAR *str, escape_mode mode, int *len)
     WCHAR *ptr, *ret;
 
     /* default buffer size to something if length is unknown */
-    conv_len = *len == -1 ? default_alloc : max(2**len, default_alloc);
+    conv_len = max(2**len, default_alloc);
     ptr = ret = heap_alloc(conv_len*sizeof(WCHAR));
 
-    while (*str && p)
+    while (p)
     {
         if (ptr - ret > conv_len - grow_thresh)
         {
@@ -539,10 +539,10 @@ static WCHAR *get_escaped_string(const WCHAR *str, escape_mode mode, int *len)
         }
 
         str++;
-        if (*len != -1) p--;
+        p--;
     }
 
-    if (*len != -1) *len = ptr-ret;
+    *len = ptr-ret;
     *++ptr = 0;
 
     return ret;
@@ -2206,7 +2206,7 @@ static HRESULT WINAPI VBSAXContentHandler_characters(IVBSAXContentHandler *iface
     if (!chars)
         return E_POINTER;
 
-    return ISAXContentHandler_characters(&This->ISAXContentHandler_iface, *chars, -1);
+    return ISAXContentHandler_characters(&This->ISAXContentHandler_iface, *chars, SysStringLen(*chars));
 }
 
 static HRESULT WINAPI VBSAXContentHandler_ignorableWhitespace(IVBSAXContentHandler *iface, BSTR *chars)

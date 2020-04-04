@@ -17,7 +17,7 @@
 #include "log2lines.h"
 #include "options.h"
 
-char *optchars       = "bcd:fFhl:L:mMP:rR:sS:tTuUvz:";
+char *optchars       = "bcd:fFhl:L:mMP:rsS:tTuUvz:";
 int   opt_buffered   = 0;        // -b
 int   opt_help       = 0;        // -h
 int   opt_force      = 0;        // -f
@@ -37,8 +37,6 @@ int   opt_twice      = 0;        // -t
 int   opt_Twice      = 0;        // -T
 int   opt_undo       = 0;        // -u
 int   opt_redo       = 0;        // -U
-char *opt_Revision   = NULL;     // -R
-int   opt_Revision_check = 0;    // -R check
 char  opt_dir[PATH_MAX];         // -d <opt_dir>
 char  opt_logFile[PATH_MAX];     // -l|L <opt_logFile>
 char *opt_mod        = NULL;     // -mod for opt_logFile
@@ -61,10 +59,6 @@ int optionInit(int argc, const char **argv)
     strcpy(opt_SourcesPath, "");
     if ((s = getenv(SOURCES_ENV)))
         strcpy(opt_SourcesPath, s);
-    revinfo.rev = getRevision(NULL, 1);
-    revinfo.range = DEF_RANGE;
-    revinfo.buildrev = getTBRevision(opt_dir);
-    l2l_dbg(1, "Trunk build revision: %d\n", revinfo.buildrev);
 
     strcpy(opt_scanned, "");
 
@@ -164,14 +158,6 @@ int optionParse(int argc, const char **argv)
             optCount++;
             //just count, see optionInit()
             break;
-        case 'R':
-            optCount++;
-            if (!opt_Revision)
-                opt_Revision = malloc(LINESIZE);
-            sscanf(optarg, "%s", opt_Revision);
-            if (strcmp(opt_Revision, "check") == 0)
-                opt_Revision_check ++;
-            break;
         case 's':
             opt_stats++;
             break;
@@ -186,7 +172,6 @@ int optionParse(int argc, const char **argv)
                 /* need to retranslate for source info: */
                 opt_undo++;
                 opt_redo++;
-                opt_Revision_check ++;
             }
             break;
         case 't':

@@ -301,6 +301,8 @@ macro(dir_to_num dir var)
         set(${var} 64)	
     elseif(${dir} STREQUAL reactos/Resources/Themes/Mizu)
         set(${var} 65)
+    elseif(${dir} STREQUAL reactos/system32/spool/prtprocs/x64)
+        set(${var} 66)
     else()
         message(FATAL_ERROR "Wrong destination: ${dir}")
     endif()
@@ -853,8 +855,14 @@ function(create_registry_hives)
     # LiveCD hives
     list(APPEND _livecd_inf_files
         ${_registry_inf}
-        ${CMAKE_SOURCE_DIR}/boot/bootdata/livecd.inf
-        ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst.inf)
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/livecd.inf)
+    if(SARCH STREQUAL "xbox")
+        list(APPEND _livecd_inf_files
+            ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst_xbox.inf)
+    else()
+        list(APPEND _livecd_inf_files
+            ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst.inf)
+    endif()
 
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/system

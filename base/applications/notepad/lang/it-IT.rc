@@ -152,7 +152,7 @@ Creare un nuovo file ?"
 Salvare le modifiche ?"
     STRING_NOTFOUND "'%s' non è stato trovato."
     STRING_OUT_OF_MEMORY "Memoria insufficente per completare \
-questa operazione. \nChiudere una o più applicazioni per aumentare la quantità \
+questa operazione.\nChiudere una o più applicazioni per aumentare la quantità \
 di memoria libera."
     STRING_CANNOTFIND "Impossibile trovare '%s'"
     STRING_ANSI "ANSI"

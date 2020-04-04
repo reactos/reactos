@@ -454,6 +454,7 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: ConsolepGetCommandHistory */
 CSR_API(SrvGetConsoleCommandHistory)
 {
     PCONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryRequest;
@@ -502,6 +503,7 @@ CSR_API(SrvGetConsoleCommandHistory)
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetCommandHistoryLength */
 CSR_API(SrvGetConsoleCommandHistoryLength)
 {
     PCONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryLengthRequest;
@@ -535,6 +537,7 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
     return Status;
 }
 
+/* API_NUMBER: ConsolepExpungeCommandHistory */
 CSR_API(SrvExpungeConsoleCommandHistory)
 {
     PCONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ExpungeCommandHistoryRequest;
@@ -561,6 +564,7 @@ CSR_API(SrvExpungeConsoleCommandHistory)
     return Status;
 }
 
+/* API_NUMBER: ConsolepSetNumberOfCommands */
 CSR_API(SrvSetConsoleNumberOfCommands)
 {
     PCONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryNumberCommandsRequest;
@@ -611,6 +615,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetHistory */
 CSR_API(SrvGetConsoleHistory)
 {
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
@@ -626,6 +631,7 @@ CSR_API(SrvGetConsoleHistory)
     return Status;
 }
 
+/* API_NUMBER: ConsolepSetHistory */
 CSR_API(SrvSetConsoleHistory)
 {
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;

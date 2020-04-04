@@ -25,8 +25,13 @@
 
 /* This determines the HAL type */
 BOOLEAN HalDisableFirmwareMapper = FALSE;
+#if defined(SARCH_XBOX)
+PWCHAR HalHardwareIdString = L"xbox";
+PWCHAR HalName = L"Xbox HAL";
+#else
 PWCHAR HalHardwareIdString = L"e_isa_up";
 PWCHAR HalName = L"PC Compatible Eisa/Isa HAL";
+#endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

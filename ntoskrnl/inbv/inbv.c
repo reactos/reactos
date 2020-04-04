@@ -495,7 +495,6 @@ InbvReleaseLock(VOID)
     if (InbvOldIrql <= DISPATCH_LEVEL) KeLowerIrql(OldIrql);
 }
 
-INIT_FUNCTION
 VOID
 NTAPI
 InbvEnableBootDriver(IN BOOLEAN Enable)
@@ -848,6 +847,7 @@ InbvScreenToBufferBlt(IN PUCHAR Buffer,
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
 InbvSetProgressBarCoordinates(IN ULONG Left,
@@ -861,6 +861,7 @@ InbvSetProgressBarCoordinates(IN ULONG Left,
     ShowProgressBar = TRUE;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
 InbvSetProgressBarSubset(IN ULONG Floor,

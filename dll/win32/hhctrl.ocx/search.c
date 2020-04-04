@@ -29,7 +29,7 @@ static SearchItem *SearchCHM_Folder(SearchItem *item, IStorage *pStorage,
 /* Allocate a ListView entry for a search result. */
 static SearchItem *alloc_search_item(WCHAR *title, const WCHAR *filename)
 {
-    int filename_len = filename ? (strlenW(filename)+1)*sizeof(WCHAR) : 0;
+    int filename_len = filename ? (lstrlenW(filename)+1)*sizeof(WCHAR) : 0;
     SearchItem *item;
 
     item = heap_alloc_zero(sizeof(SearchItem));
@@ -56,7 +56,7 @@ static void fill_search_tree(HWND hwndList, SearchItem *item)
         memset(&lvi, 0, sizeof(lvi));
         lvi.iItem = index++;
         lvi.mask = LVIF_TEXT|LVIF_PARAM;
-        lvi.cchTextMax = strlenW(item->title)+1;
+        lvi.cchTextMax = lstrlenW(item->title)+1;
         lvi.pszText = item->title;
         lvi.lParam = (LPARAM)item;
         item->id = (HTREEITEM)SendMessageW(hwndList, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
@@ -102,7 +102,7 @@ static WCHAR *SearchCHM_File(IStorage *pStorage, const WCHAR *file, const char *
             char *text = &content.buf[1];
             int textlen = content.len-1;
 
-            if(!strcasecmp(node_name.buf, "title"))
+            if(!_strnicmp(node_name.buf, "title", -1))
             {
                 int wlen = MultiByteToWideChar(CP_ACP, 0, text, textlen, NULL, 0);
                 title = heap_alloc((wlen+1)*sizeof(WCHAR));
@@ -168,14 +168,14 @@ static SearchItem *SearchCHM_Storage(SearchItem *item, IStorage *pStorage,
     while (IEnumSTATSTG_Next(elem, 1, &entries, &retr) == NOERROR)
     {
         filename = entries.pwcsName;
-        while(strchrW(filename, '/'))
-            filename = strchrW(filename, '/')+1;
+        while(wcschr(filename, '/'))
+            filename = wcschr(filename, '/')+1;
         switch(entries.type) {
         case STGTY_STORAGE:
             item = SearchCHM_Folder(item, pStorage, filename, needle);
             break;
         case STGTY_STREAM:
-            if(strstrW(filename, szHTMext))
+            if(wcsstr(filename, szHTMext))
             {
                 WCHAR *title = SearchCHM_File(pStorage, filename, needle);
 

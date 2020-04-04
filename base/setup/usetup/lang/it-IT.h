@@ -6,25 +6,29 @@ static MUI_ENTRY itITSetupInitPageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         0,
         20,
         "Please wait while the ReactOS Setup initializes itself",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         21,
         "and discovers your devices...",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -40,37 +44,43 @@ static MUI_ENTRY itITLanguagePageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Selezione della lingua.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Scegliere la lingua da usare durante l'installazione.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Poi premere invio.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Questa lingua sar\x85 quella predefinita per il sistema installato.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Continua  F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -86,67 +96,78 @@ static MUI_ENTRY itITWelcomePageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Benvenuto all'installazione di ReactOS",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "Questa parte dell'installazione copia ReactOS nel vostro computer",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "e prepara la seconda parte dell'installazione.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Press ENTER to install or upgrade ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Premere R per riparare ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Premere L per vedere i termini e condizioni della licenza.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Premere F3 per uscire senza installare ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         23,
         "Per maggiori informazioni riguardo ReactOS, visitate il sito:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         24,
         "http://www.reactos.org",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Continua  R = Ripara F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -162,61 +183,71 @@ static MUI_ENTRY itITIntroPageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Status versione ReactOS",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "ReactOS \x8A nello stadio di sviluppo Alpha, significa che non tutte le",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "funzioni sono operative e cambia continuamente. \x90 adatto solamente per",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "scopi di valutazione, test ed \x8A inadatto per le attivit\x85 quotidiane.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "Eseguire un backup dei dati oppure installate il sistema in un computer",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "senza sistema operativo e dati se volete eseguirlo su un hardware fisico.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "\x07  Premere INVIO per continuare l'installazione di ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         20,
         "\x07  Premere F3 per uscire senza installare ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "INVIO = Continua   F3 = Termina",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -232,115 +263,134 @@ static MUI_ENTRY itITLicensePageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         6,
         "Licenza:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         8,
         "ReactOS aderisce ai termini di licenza",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         9,
         "GNU GPL con parti che contengono codice di altre",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "licenze compatibili come la X11 o BSD e la GNU LGPL.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "Tutto il software che fa parte del sistema ReactOS viene",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "rilasciato sotto licenza GNU GPL e mantiene anche",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "la licenza originale.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "Questo software viene fornito SENZA GARANZIA o limitazioni d'uso",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         16,
         "eccetto per leggi locali o internazionali applicabili. La licenza",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "di ReactOS copre solo la distribuzione a terze parti.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "Se per un qualsiasi motivo non avesse ricevuto una copia",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "della licenza GNU GPL con ReactOS, visiti il sito:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         22,
         "Garanzia:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         24,
         "Questo software \x8A libero; vedere il codice per le condizioni di copia.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "NON esiste garanzia; n\x8A di COMMERCIABILIT\x85",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         26,
         "o adeguatezza ad un uso particolare",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Ritorna",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -356,84 +406,98 @@ static MUI_ENTRY itITDevicePageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "L'elenco che segue mostra le impostazioni correnti delle periferiche.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "       Computer:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "        Schermo:",
         TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "       Tastiera:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         3,
         14,
         "  Layout di tastiera:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         16,
         "       Conferma:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         25,
         16, "Accettare queste impostazioni",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         19,
         "Pu\x95 scegliere un elemento della configurazione con i tasti SU e GI\xEB",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         20,
         "e modificarlo premendo INVIO per selezionare un valore alternativo.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         21,
         " ",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         23,
         "Quando le impostazioni saranno corrette, selezionare",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         24,
         "\"Accettare queste impostazioni\" e premere INVIO.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Continua   F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -449,55 +513,64 @@ static MUI_ENTRY itITRepairPageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Il setup di ReactOS \x8A ancora in una fase preliminare.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "Non ha ancora tutte le funzioni di installazione.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "Le funzioni di ripristino non sono state ancora implementate.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Premere U per aggiornare il SO.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Premere R per la console di ripristino.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Premere ESC tornare al men\x97 principale.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Premere INVIO per riavviare il computer.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ESC = Men\x97 iniziale INVIO = Riavvio",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -513,61 +586,71 @@ static MUI_ENTRY itITUpgradePageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "The ReactOS Setup can upgrade one of the available ReactOS installations",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "listed below, or, if a ReactOS installation is damaged, the Setup program",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "can attempt to repair it.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "The repair functions are not all implemented yet.",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Press UP or DOWN to select an OS installation.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Press U for upgrading the selected OS installation.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Press ESC to continue with a new installation.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Press F3 to quit without installing ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -583,43 +666,50 @@ static MUI_ENTRY itITComputerPageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Desidera modificare il computer da installare.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Premere i tasti SU e GI\xEB per scegliere il tipo.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "Dopo premere INVIO.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Premere ESC per tornare alla pagina precedente senza modificare",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "il tipo di computer.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Continua   ESC = Annulla   F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -635,31 +725,36 @@ static MUI_ENTRY itITFlushPageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "Il sistema si sta accertando che tutti i dati vengano salvati.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "Questo potrebbe impiegare qualche minuto.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "Al termine, il computer verr\x85 riavviato automaticamente.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   Svuotamento della cache in corso",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -675,37 +770,43 @@ static MUI_ENTRY itITQuitPageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "ReactOS non \x8A stato installato completamente.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "Rimuovere il disco floppy dall'unit\x85 A: e",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "Tutti i CD-ROMs dalle unit\x85.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "Premere INVIO per riavviare il computer.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   Attendere prego ...",
         TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -721,43 +822,50 @@ static MUI_ENTRY itITDisplayPageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Desidera modificare il tipo di schermo.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
          "\x07  Premere i tasti SU e GI\xEB per modificare il tipo.",
-         TEXT_STYLE_NORMAL
+         TEXT_STYLE_NORMAL,
+         TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Dopo premere INVIO.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Premere il tasto ESC per tornare alla pagina precedente",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         " senza modificare il tipo di schermo.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Continua   ESC = Annulla   F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -773,37 +881,43 @@ static MUI_ENTRY itITSuccessPageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "I componenti base di ReactOS sono stati installati correttamente.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "Rimuovere il disco dall'unit\x85 A: e",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "tutti i CD-ROMs dalle unit\x85.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "Premere INVIO per riavviare il computer.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Riavvia il computer",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -819,37 +933,43 @@ static MUI_ENTRY itITBootPageEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Il Setup non ha potuto installare il bootloader nel disco",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "del vostro computer",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "Inserire un disco floppy formattato nell'unit\x85 A: e",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "premere INVIO.",
         TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Continua   F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -866,61 +986,71 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "La lista seguente mostra le partizioni esistenti e lo spazio",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "libero per nuove partizioni.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "\x07  Premere SU o GI\xEB per selezionare un elemento della lista.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Premere INVIO per installare ReactOS sulla partizione selezionata.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Premere P per creare una nuova partizione.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Premere E per creare una partizione estesa.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Premere L per creare una partizione logica.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Premere D per cancellare una partizione esistente.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   Attendere...",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -936,97 +1066,113 @@ static MUI_ENTRY itITChangeSystemPartition[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "The current system partition of your computer",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "on the system disk",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "uses a format not supported by ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         18,
         "In order to successfully install ReactOS, the Setup program must change",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         19,
         "the current system partition to a new one.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         21,
         "The new candidate system partition is:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "\x07  To accept this choice, press ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         27,
         "\x07  To manually change the system partition, press ESC to go back to",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         28,
         "   the partition selection list, then select or create a new system",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         29,
         "   partition on the system disk.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         32,
         "In case there are other operating systems that depend on the original",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         33,
         "system partition, you may need to either reconfigure them for the new",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         34,
         "system partition, or you may need to change the system partition back",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         35,
         "to the original one after finishing the installation of ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   ESC = Cancel",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1042,91 +1188,106 @@ static MUI_ENTRY itITConfirmDeleteSystemPartitionEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Hai scelto di eliminare la partizione di sistema.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "Le partizioni di sistema possono contenere i programmi diagnostici,",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "configurazione hardware, programmi utilizzati per l'avvio di un",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "sistema operativo (come ReactOS o altri), programmi forniti",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "dal produttore dell'hardware.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "Elimina una partizione di sistema solo quando sei sicuro che non ci",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "siano programmi sulla partizione, o quando sei sicuro di eliminarla.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         17,
         "Cancellando una partizione, non sar\x85 pi\x97 possibile avviare",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         18,
         "il computer dall'harddisk fino al termine dell'installazione di ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Primere INVIO per eliminare una partizione di sistema. Ti sar\x85",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         22,
         "   chiesto di confermare ancora l'eliminazione della partizione.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "\x07  Premere ESC per ritornare alla pagina precedente. La partizione",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         26,
         "   non verr\x85 cancellata.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "INVIO=Continua  ESC=Annulla",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1142,31 +1303,35 @@ static MUI_ENTRY itITFormatPartitionEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Formattazione della partizione",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "Setup formatter\x85 la partizione. Premere INVIO per continuare.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_FORMAT_PROMPT
     },
     {
         0,
         0,
         "   INVIO = Continua   F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         NULL,
-        TEXT_STYLE_NORMAL
+        0
     }
 };
 
@@ -1176,43 +1341,50 @@ static MUI_ENTRY itITInstallDirectoryEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Il setup installer\x85 i file di ReactOS nella partizione selezionata.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "Scegliere una cartella dove si vuole che ReactOS venga installato:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "Per modificare la cartella suggerita premere CANC e poi digitate",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "la cartella desiderata per l'installazione di ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         " ",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Continua   F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1228,31 +1400,36 @@ static MUI_ENTRY itITFileCopyEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         11,
         12,
         "Attendere mentre il setup di ReactOS copia i file nella",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         18,
         13,
         "cartella di installazione di ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         20,
         14,
         "Potrebbe richiedere alcuni minuti.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "                                                           \xB3 Attendere prego...    ",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1268,43 +1445,50 @@ static MUI_ENTRY itITBootLoaderEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Setup sta installando il bootloader",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "Installazione del bootloader sul disco fisso (MBR e VBR).",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "Installazione del bootloader sul disco fisso (solo VBR).",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "Installazione del bootloader su un disco floppy.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "Salta l'installazione del bootloader.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Continua   F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1320,43 +1504,50 @@ static MUI_ENTRY itITKeyboardSettingsEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Volete cambiare il tipo di tastiere da installare.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Premere SU o GI\xEB per selezionare il tipo di tastiera desiderato.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Poi premere INVIO.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Premere ESC per tornare alla pagina precedente senza modificare",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   il tipo di tastiera.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Continua   ESC = Annulla   F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1372,43 +1563,50 @@ static MUI_ENTRY itITLayoutSettingsEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Selezionare la nazionalit\x85 predefinita della tastiera.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Premere SU o GI\xEB per selezionare il tipo di tastiera",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "    desiderato. Poi premere INVIO.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Premere ESC per tornare alla pagina precedente senza modificare",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   la nazionalit\x85 della tastiera.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   INVIO = Continua   ESC = Annulla   F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1425,19 +1623,22 @@ static MUI_ENTRY itITPrepareCopyEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Setup sta preparando il computer per la copia dei file di ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   Costruzione dell'elenco dei file da copiare...",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1454,7 +1655,8 @@ static MUI_ENTRY itITSelectFSEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
@@ -1484,7 +1686,8 @@ static MUI_ENTRY itITSelectFSEntries[] =
         0,
         0,
         "   INVIO = Continua   ESC = Annulla   F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1500,37 +1703,43 @@ static MUI_ENTRY itITDeletePartitionEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Avete scelto di cancellare la partizione",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "\x07  Premere L per cancellare la partizione.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         11,
         19,
         "ATTENZIONE: Tutti i dati di questa partizione saranno persi!!",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Premere ESC per annullare.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   L = Cancella la partizione   ESC = Annulla   F3 = Termina",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1546,19 +1755,22 @@ static MUI_ENTRY itITRegistryEntries[] =
         4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Setup sta aggiornando la configurazione del sistema.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "   Creazione degli hive del registro in corso...",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1577,8 +1789,8 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "ReactOS non \x8A stato installato completamente nel \n"
-        "vostro computer. Se esce adesso, dovr\x85 eseguire il \n"
+        "ReactOS non \x8A stato installato completamente nel\n"
+        "vostro computer. Se esce adesso, dovr\x85 eseguire il\n"
         "Setup nuovamente per installare ReactOS.\n"
         "\n"
         "  \x07  Premere INVIO per continuare il setup.\n"

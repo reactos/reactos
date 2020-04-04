@@ -21,7 +21,6 @@
 #pragma once
 
 #include "editstr.h"
-#include "wine/unicode.h"
 
 struct _RTF_Info;
 
@@ -56,8 +55,7 @@ void ME_DestroyStyle(ME_Style *item) DECLSPEC_HIDDEN;
 void ME_ReleaseStyle(ME_Style *item) DECLSPEC_HIDDEN;
 ME_Style *ME_GetInsertStyle(ME_TextEditor *editor, int nCursor) DECLSPEC_HIDDEN;
 ME_Style *ME_ApplyStyle(ME_TextEditor *ed, ME_Style *sSrc, CHARFORMAT2W *style) DECLSPEC_HIDDEN;
-HFONT ME_SelectStyleFont(ME_Context *c, ME_Style *s) DECLSPEC_HIDDEN;
-void ME_UnselectStyleFont(ME_Context *c, ME_Style *s, HFONT hOldFont) DECLSPEC_HIDDEN;
+void select_style(ME_Context *c, ME_Style *s) DECLSPEC_HIDDEN;
 void ME_InitCharFormat2W(CHARFORMAT2W *pFmt) DECLSPEC_HIDDEN;
 void ME_SaveTempStyle(ME_TextEditor *editor, ME_Style *style) DECLSPEC_HIDDEN;
 void ME_ClearTempStyle(ME_TextEditor *editor) DECLSPEC_HIDDEN;
@@ -107,7 +105,7 @@ static inline int ME_IsWSpace(WCHAR ch)
 
 static inline int ME_CharCompare(WCHAR a, WCHAR b, int caseSensitive)
 {
-  return caseSensitive ? (a == b) : (toupperW(a) == toupperW(b));
+  return caseSensitive ? (a == b) : (towupper(a) == towupper(b));
 }
 
 /* note: those two really return the first matching offset (starting from EOS)+1 
@@ -152,11 +150,12 @@ void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod) DECLSPEC_
 
 /* caret.c */
 void ME_SetCursorToStart(ME_TextEditor *editor, ME_Cursor *cursor) DECLSPEC_HIDDEN;
-int ME_SetSelection(ME_TextEditor *editor, int from, int to) DECLSPEC_HIDDEN;
+int set_selection_cursors(ME_TextEditor *editor, int from, int to) DECLSPEC_HIDDEN;
 BOOL ME_MoveCursorWords(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs) DECLSPEC_HIDDEN;
-void ME_HideCaret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
-void ME_ShowCaret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
-void ME_MoveCaret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
+void hide_caret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
+void show_caret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
+void update_caret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
+void create_caret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
 BOOL ME_CharFromPos(ME_TextEditor *editor, int x, int y, ME_Cursor *cursor, BOOL *isExact) DECLSPEC_HIDDEN;
 void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum) DECLSPEC_HIDDEN;
 void ME_MouseMove(ME_TextEditor *editor, int x, int y) DECLSPEC_HIDDEN;
@@ -241,7 +240,6 @@ void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run* run, BOOL selected) DECLSPE
 void ME_GetOLEObjectSize(const ME_Context *c, ME_Run *run, SIZE *pSize) DECLSPEC_HIDDEN;
 void ME_CopyReObject(REOBJECT *dst, const REOBJECT *src, DWORD flags) DECLSPEC_HIDDEN;
 void ME_DeleteReObject(struct re_object *re_object) DECLSPEC_HIDDEN;
-void ME_GetITextDocument2OldInterface(IRichEditOle *iface, LPVOID *ppvObj) DECLSPEC_HIDDEN;
 
 /* editor.c */
 ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10) DECLSPEC_HIDDEN;
@@ -258,6 +256,7 @@ void ME_RTFSpecialCharHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
 void ME_StreamInFill(ME_InStream *stream) DECLSPEC_HIDDEN;
 extern BOOL me_debug DECLSPEC_HIDDEN;
 void ME_ReplaceSel(ME_TextEditor *editor, BOOL can_undo, const WCHAR *str, int len) DECLSPEC_HIDDEN;
+int set_selection( ME_TextEditor *editor, int to, int from ) DECLSPEC_HIDDEN;
 
 /* table.c */
 BOOL ME_IsInTable(ME_DisplayItem *pItem) DECLSPEC_HIDDEN;
@@ -279,7 +278,7 @@ void ME_InitTableDef(ME_TextEditor *editor, struct RTFTable *tableDef) DECLSPEC_
 
 /* txthost.c */
 ITextHost *ME_CreateTextHost(HWND hwnd, CREATESTRUCTW *cs, BOOL bEmulateVersion10) DECLSPEC_HIDDEN;
-#ifdef __i386__ /* Use wrappers to perform thiscall on i386 */
+#if defined(__i386__) && !defined(__MINGW32__)  /* Use wrappers to perform thiscall on i386 */
 #define TXTHOST_VTABLE(This) (&itextHostStdcallVtbl)
 #else /* __i386__ */
 #define TXTHOST_VTABLE(This) (This)->lpVtbl

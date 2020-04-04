@@ -3,9 +3,9 @@
 
 The following FSD are shared with: https://github.com/maharmstone/btrfs.
 
-reactos/drivers/filesystems/btrfs           # Synced to 1.4
-reactos/dll/shellext/shellbtrfs             # Synced to 1.1
-reactos/sdk/lib/fslib/btrfslib              # Synced to 1.4
+reactos/drivers/filesystems/btrfs           # Synced to 1.5
+reactos/dll/shellext/shellbtrfs             # Synced to 1.5
+reactos/sdk/lib/fslib/btrfslib              # Synced to 1.5
 
 The following FSD are shared with: http://www.ext2fsd.com/
 
@@ -20,7 +20,7 @@ The following FSD are shared with: https://github.com/Microsoft/Windows-driver-s
 
 reactos/drivers/filesystems/fastfat_new     # Synced to 2817004
 reactos/drivers/filesystems/cdfs            # Synced to f73e552
-reactos/drivers/storage/floppy_new	    # Synced to 9d23d43
+reactos/drivers/storage/floppy_new          # Synced to 8fb512a
 
 The following FS libs are shared with: https://github.com/dosfstools/dosfstools
 reactos/sdk/lib/fslib/vfatlib/check         # Synced to 4.1

@@ -14,41 +14,205 @@
 #include <winbase.h>
 #include <winuser.h>
 #include <winreg.h>
-#include <tchar.h>
+#include <windns.h>
 #include <lm.h>
 #include <prsht.h>
 
 #include "resource.h"
 
 
-#define MAX_COMPUTERDESCRIPTION_LENGTH 256
+#define MAX_COMPUTERDESCRIPTION_LENGTH 255
+#define MAX_HOSTNAME_LENGTH             63
+#define MAX_DOMAINNAME_LENGTH          255
 
-static INT_PTR CALLBACK
-NetIDPageProc(IN HWND hwndDlg,
-              IN UINT uMsg,
-              IN WPARAM wParam,
-              IN LPARAM lParam);
+typedef struct _NETIDDATA
+{
+    WCHAR szHostName[MAX_HOSTNAME_LENGTH + 1];
+    WCHAR szDomainName[MAX_DOMAINNAME_LENGTH + 1];
+    WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    BOOL bHostNameChanged;
+    BOOL bDomainNameChanged;
+    BOOL bEnable;
+} NETIDDATA, *PNETIDDATA;
+
 
 static HINSTANCE hDllInstance;
 
+static
+INT
+FormatMessageBox(
+    HWND hDlg,
+    UINT uType,
+    DWORD dwMessage,
+    ...)
+{
+    WCHAR szTitle[256], szMessage[256], szText[512];
+    va_list args = NULL;
+
+    LoadStringW(hDllInstance, 4, szTitle, ARRAYSIZE(szTitle));
+
+    LoadStringW(hDllInstance, dwMessage, szMessage, ARRAYSIZE(szMessage));
+
+    va_start(args, dwMessage);
+    FormatMessageW(FORMAT_MESSAGE_FROM_STRING,
+                   szMessage,
+                   0,
+                   0,
+                   szText,
+                   ARRAYSIZE(szText),
+                   &args);
+    va_end(args);
+
+    return MessageBoxW(hDlg, szText, szTitle, uType);
+}
+
+static
+BOOL
+GetComputerNames(
+    PNETIDDATA pNetIdData)
+{
+    HKEY KeyHandle;
+    DWORD dwSize;
+    DWORD dwError;
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\CurrentControlSet\\Services\\TcpIp\\Parameters",
+                            0,
+                            KEY_QUERY_VALUE,
+                            &KeyHandle);
+    if (dwError == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(pNetIdData->szHostName);
+        RegQueryValueExW(KeyHandle,
+                         L"NV HostName",
+                         0,
+                         NULL,
+                         (LPBYTE)&pNetIdData->szHostName,
+                         &dwSize);
+
+        dwSize = sizeof(pNetIdData->szDomainName);
+        RegQueryValueExW(KeyHandle,
+                         L"NV Domain",
+                         0,
+                         NULL,
+                         (LPBYTE)&pNetIdData->szDomainName,
+                         &dwSize);
+
+        RegCloseKey(KeyHandle);
+    }
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ComputerName",
+                            0,
+                            KEY_QUERY_VALUE,
+                            &KeyHandle);
+    if (dwError == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(pNetIdData->szComputerName);
+        RegQueryValueExW(KeyHandle,
+                         L"ComputerName",
+                         0,
+                         NULL,
+                         (LPBYTE)&pNetIdData->szComputerName,
+                         &dwSize);
+
+        RegCloseKey(KeyHandle);
+    }
+
+    return TRUE;
+}
+
+static
+BOOL
+IsValidDomainName(
+    HWND hDlg,
+    UINT uId)
+{
+    WCHAR szDomainName[256];
+    DWORD dwError;
+
+    if (GetDlgItemTextW(hDlg, uId, szDomainName, ARRAYSIZE(szDomainName)) == 0)
+        return TRUE;
+
+    dwError = DnsValidateName_W(szDomainName, DnsNameDomain);
+    if (dwError != ERROR_SUCCESS)
+    {
+        switch (dwError)
+        {
+            case DNS_ERROR_NON_RFC_NAME:
+                if (FormatMessageBox(hDlg, MB_YESNO | MB_ICONWARNING, 7, szDomainName) == IDYES)
+                    return TRUE;
+                break;
+
+            case ERROR_INVALID_NAME:
+                FormatMessageBox(hDlg, MB_OK | MB_ICONERROR, 8, szDomainName);
+                break;
+
+            case DNS_ERROR_NUMERIC_NAME:
+                FormatMessageBox(hDlg, MB_OK | MB_ICONERROR, 1031, szDomainName);
+                break;
+
+            case DNS_ERROR_INVALID_NAME_CHAR:
+                FormatMessageBox(hDlg, MB_OK | MB_ICONERROR, 1032, szDomainName);
+                break;
+        }
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 static
 INT_PTR CALLBACK
 DNSSuffixPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+    PNETIDDATA pNetIdData;
+
+    pNetIdData = (PNETIDDATA)GetWindowLongPtr(hDlg, DWLP_USER);
+
     switch (Msg)
     {
+        case WM_INITDIALOG:
+            pNetIdData = (PNETIDDATA)lParam;
+            if (pNetIdData != NULL)
+            {
+                SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)pNetIdData);
+
+                SetDlgItemTextW(hDlg, 1011, pNetIdData->szDomainName);
+
+                SetDlgItemTextW(hDlg, 1013, pNetIdData->szComputerName);
+                EnableWindow(GetDlgItem(hDlg, IDOK), FALSE);
+            }
+            return TRUE;
+
         case WM_COMMAND:
-        {
             switch (LOWORD(wParam))
             {
-                case IDCANCEL:
+                case 1011:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        EnableWindow(GetDlgItem(hDlg, IDOK), TRUE);
+                    }
+                    break;
+
                 case IDOK:
-                    EndDialog(hDlg, LOWORD(wParam));
+                    if (!IsValidDomainName(hDlg, 1011))
+                    {
+                        SetFocus(GetDlgItem(hDlg, 1011));
+                        break;
+                    }
+
+                    GetDlgItemTextW(hDlg, 1011, pNetIdData->szDomainName, ARRAYSIZE(pNetIdData->szDomainName));
+                    pNetIdData->bDomainNameChanged = TRUE;
+                    EndDialog(hDlg, TRUE);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hDlg, FALSE);
                     break;
             }
-        }
-        break;
+            break;
     }
 
     return FALSE;
@@ -74,54 +238,148 @@ DisableControls(HWND hDlg)
 
 static
 BOOL
-IsValidComputerName(LPCWSTR s)
+IsValidComputerName(
+    HWND hDlg,
+    UINT uId)
 {
-    int i;
+    WCHAR szHostName[256];
+    DWORD dwError;
 
-    for (i = 0; i <= wcslen(s); i++)
+    GetWindowText(GetDlgItem(hDlg, uId), szHostName, ARRAYSIZE(szHostName));
+
+    dwError = DnsValidateName_W(szHostName, DnsNameHostnameLabel);
+    if (dwError != ERROR_SUCCESS)
     {
-        if (s[i] == L'!' || s[i] == L'@' || s[i] == L'#' || s[i] == L'$'
-            || s[i] == L'^' || s[i] == L'&' || s[i] == L'\\' || s[i] == L'|'
-            || s[i] == L')' || s[i] == L'(' || s[i] == L'{' || s[i] == L'"'
-            || s[i] == L'}' || s[i] == L'~' || s[i] == L'/' || s[i] == L'\''
-            || s[i] == L'=' || s[i] == L':' || s[i] == L';' || s[i] == L'+'
-            || s[i] == L'<' || s[i] == L'>' || s[i] == L'?' || s[i] == L'['
-            || s[i] == L']' || s[i] == L'`' || s[i] == L'%' || s[i] == L'_'
-            || s[i] == L'.')
-            return FALSE;
+        switch (dwError)
+        {
+            case DNS_ERROR_NON_RFC_NAME:
+                if (FormatMessageBox(hDlg, MB_YESNO | MB_ICONWARNING, 10, szHostName) == IDYES)
+                    return TRUE;
+                break;
+
+            case ERROR_INVALID_NAME:
+                FormatMessageBox(hDlg, MB_OK | MB_ICONERROR, 11);
+                return FALSE;
+
+            case DNS_ERROR_NUMERIC_NAME:
+                FormatMessageBox(hDlg, MB_OK | MB_ICONERROR, 1029, szHostName);
+                break;
+
+            case DNS_ERROR_INVALID_NAME_CHAR:
+                FormatMessageBox(hDlg, MB_OK | MB_ICONERROR, 1030, szHostName);
+                break;
+        }
+
+        return FALSE;
     }
 
     return TRUE;
 }
 
 static
-INT_PTR CALLBACK
-NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
+VOID
+SetFullComputerName(
+    HWND hDlg,
+    UINT uId,
+    PNETIDDATA pNetIdData)
 {
-    switch (Msg)
+    WCHAR szFullComputerName[512];
+
+    wsprintf(szFullComputerName, L"%s.%s", pNetIdData->szHostName, pNetIdData->szDomainName);
+    SetDlgItemText(hDlg, uId, szFullComputerName);
+}
+
+static
+VOID
+UpdateFullComputerName(
+    HWND hDlg,
+    UINT uId,
+    PNETIDDATA pNetIdData)
+{
+    WCHAR szFullComputerName[512];
+    WCHAR szHostName[256];
+
+    GetWindowText(GetDlgItem(hDlg, 1002), szHostName, ARRAYSIZE(szHostName));
+
+    wsprintf(szFullComputerName, L"%s.%s", szHostName, pNetIdData->szDomainName);
+    SetDlgItemText(hDlg, uId, szFullComputerName);
+}
+
+static
+VOID
+UpdateNetbiosName(
+    HWND hDlg,
+    UINT uId,
+    PNETIDDATA pNetIdData)
+{
+    WCHAR szHostName[256];
+    DWORD dwSize;
+
+    GetWindowText(GetDlgItem(hDlg, 1002), szHostName, ARRAYSIZE(szHostName));
+
+    dwSize = ARRAYSIZE(pNetIdData->szComputerName);
+    DnsHostnameToComputerNameW(szHostName,
+                               pNetIdData->szComputerName,
+                               &dwSize);
+}
+
+static
+VOID
+NetworkDlg_OnInitDialog(
+    HWND hDlg,
+    PNETIDDATA pNetIdData)
+{
+    LPWKSTA_INFO_101 wki = NULL;
+    WCHAR MsgText[MAX_PATH * 2];
+    LPWSTR JoinName = NULL;
+    NETSETUP_JOIN_STATUS JoinStatus;
+
+    if (LoadStringW(hDllInstance, 25, MsgText, ARRAYSIZE(MsgText)))
+        SetDlgItemText(hDlg, 1017, MsgText);
+
+    SendMessage(GetDlgItem(hDlg, 1002), EM_SETLIMITTEXT, MAX_HOSTNAME_LENGTH, 0);
+    SetDlgItemText(hDlg, 1002, pNetIdData->szHostName);
+    SetFullComputerName(hDlg, 1001, pNetIdData);
+
+    if (NetGetJoinInformation(NULL, &JoinName, &JoinStatus) != NERR_Success)
     {
-        case WM_INITDIALOG:
+        SetRadioBtnState(hDlg, FALSE);
+
+        if (NetWkstaGetInfo(NULL,
+                            101,
+                            (LPBYTE*)&wki) == NERR_Success)
         {
-            LPWKSTA_INFO_101 wki = NULL;
-            DWORD Size = MAX_COMPUTERNAME_LENGTH + 1;
-            TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-            TCHAR MsgText[MAX_PATH * 2];
-            LPWSTR JoinName;
-            NETSETUP_JOIN_STATUS JoinStatus;
+            SetDlgItemText(hDlg,
+                           1007,
+                           wki->wki101_langroup);
+        }
+        else
+        {
+            DisableControls(hDlg);
+        }
 
-            if (LoadString(hDllInstance, 25, MsgText, sizeof(MsgText) / sizeof(TCHAR)))
-                SetDlgItemText(hDlg, 1017, MsgText);
+        if (wki)
+            NetApiBufferFree(wki);
+    }
+    else
+    {
+        switch (JoinStatus)
+        {
+            case NetSetupDomainName:
+                SetDlgItemText(hDlg, 116, JoinName);
+                SetRadioBtnState(hDlg, TRUE);
+                break;
 
-            SendMessage(GetDlgItem(hDlg, 1002), EM_SETLIMITTEXT, MAX_COMPUTERNAME_LENGTH, 0);
+            case NetSetupWorkgroupName:
+                SetDlgItemText(hDlg, 1007, JoinName);
+                SetRadioBtnState(hDlg, FALSE);
+                break;
 
-            if (GetComputerName(ComputerName, &Size))
-            {
-                SetDlgItemText(hDlg, 1002, ComputerName);
-                SetDlgItemText(hDlg, 1001, ComputerName);
-            }
+            case NetSetupUnjoined:
+                break;
 
-            if (NetGetJoinInformation(NULL, &JoinName, &JoinStatus) != NERR_Success)
-            {
+            case NetSetupUnknownStatus:
+            default:
                 SetRadioBtnState(hDlg, FALSE);
 
                 if (NetWkstaGetInfo(NULL,
@@ -132,63 +390,93 @@ NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                                    1007,
                                    wki->wki101_langroup);
                 }
-                else DisableControls(hDlg);
-
-                if (wki) NetApiBufferFree(wki);
-            }
-            else
-            {
-                switch (JoinStatus)
+                else
                 {
-                    case NetSetupDomainName:
-                        SetDlgItemText(hDlg, 116, JoinName);
-                        SetRadioBtnState(hDlg, TRUE);
-                        break;
-
-                    case NetSetupWorkgroupName:
-                        SetDlgItemText(hDlg, 1007, JoinName);
-                        SetRadioBtnState(hDlg, FALSE);
-                        break;
-
-                    case NetSetupUnjoined:
-                        break;
-
-                    case NetSetupUnknownStatus:
-                    default:
-                    {
-                        SetRadioBtnState(hDlg, FALSE);
-
-                        if (NetWkstaGetInfo(NULL,
-                                            101,
-                                            (LPBYTE*)&wki) == NERR_Success)
-                        {
-                            SetDlgItemText(hDlg,
-                                           1007,
-                                           wki->wki101_langroup);
-                        }
-                        else DisableControls(hDlg);
-
-                        if (wki) NetApiBufferFree(wki);
-                        break;
-                    }
+                    DisableControls(hDlg);
                 }
 
-                if (JoinName) NetApiBufferFree(JoinName);
-            }
+                if (wki)
+                    NetApiBufferFree(wki);
+                break;
         }
-        break;
+
+        if (JoinName)
+            NetApiBufferFree(JoinName);
+    }
+}
+
+static
+BOOL
+NetworkDlg_OnOK(
+    HWND hDlg,
+    PNETIDDATA pNetIdData)
+{
+    WCHAR szMsgText[MAX_PATH], szMsgTitle[MAX_PATH];
+
+    if (pNetIdData->bHostNameChanged)
+    {
+        if (!IsValidComputerName(hDlg, 1002))
+        {
+            SetFocus(GetDlgItem(hDlg, 1002));
+            return FALSE;
+        }
+
+        GetWindowText(GetDlgItem(hDlg, 1002), pNetIdData->szHostName, ARRAYSIZE(pNetIdData->szHostName));
+
+        if (!SetComputerNameExW(ComputerNamePhysicalDnsHostname, pNetIdData->szHostName))
+        {
+            LoadStringW(hDllInstance, 4001, szMsgText, ARRAYSIZE(szMsgText));
+            MessageBoxW(hDlg, szMsgText, NULL, MB_OK | MB_ICONERROR);
+            return FALSE;
+        }
+    }
+
+    if (pNetIdData->bDomainNameChanged)
+    {
+        if (!SetComputerNameExW(ComputerNamePhysicalDnsDomain, pNetIdData->szDomainName))
+        {
+            /* FIXME: Show error message */
+            return FALSE;
+        }
+    }
+
+    LoadStringW(hDllInstance, 4000, szMsgTitle, ARRAYSIZE(szMsgTitle));
+    LoadStringW(hDllInstance, 24, szMsgText, ARRAYSIZE(szMsgText));
+    MessageBoxW(hDlg, szMsgText, szMsgTitle, MB_OK | MB_ICONINFORMATION);
+
+    return TRUE;
+}
+
+static
+INT_PTR CALLBACK
+NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    PNETIDDATA pNetIdData;
+
+    pNetIdData = (PNETIDDATA)GetWindowLongPtr(hDlg, DWLP_USER);
+
+    switch (Msg)
+    {
+        case WM_INITDIALOG:
+            pNetIdData = (PNETIDDATA)lParam;
+            if (pNetIdData != NULL)
+            {
+                SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)pNetIdData);
+                NetworkDlg_OnInitDialog(hDlg, pNetIdData);
+                EnableWindow(GetDlgItem(hDlg, IDOK), FALSE);
+            }
+            return TRUE;
 
         case WM_COMMAND:
-        {
             switch (LOWORD(wParam))
             {
                 case 1002:
                     if (HIWORD(wParam) == EN_CHANGE)
                     {
-                        TCHAR szText[MAX_COMPUTERNAME_LENGTH + 1];
-
-                        GetWindowText(GetDlgItem(hDlg, 1002), szText, MAX_COMPUTERNAME_LENGTH + 1);
-                        SetDlgItemText(hDlg, 1001, szText);
+                        UpdateFullComputerName(hDlg, 1001, pNetIdData);
+                        UpdateNetbiosName(hDlg, 1001, pNetIdData);
+                        pNetIdData->bHostNameChanged = TRUE;
+                        EnableWindow(GetDlgItem(hDlg, IDOK), TRUE);
                     }
                     break;
 
@@ -201,70 +489,27 @@ NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case 1003:
-                    DialogBox(hDllInstance,
-                              MAKEINTRESOURCE(IDD_PROPPAGEDNSANDNETBIOS),
-                              hDlg,
-                              DNSSuffixPropDlgProc);
+                    if (DialogBoxParam(hDllInstance,
+                                       MAKEINTRESOURCE(IDD_PROPPAGEDNSANDNETBIOS),
+                                       hDlg,
+                                       DNSSuffixPropDlgProc,
+                                       (LPARAM)pNetIdData))
+                    {
+                        UpdateFullComputerName(hDlg, 1001, pNetIdData);
+                        EnableWindow(GetDlgItem(hDlg, IDOK), TRUE);
+                    }
                     break;
 
                 case IDOK:
-                {
-                    DWORD Size = MAX_COMPUTERNAME_LENGTH + 1;
-                    TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-                    TCHAR NewComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-
-                    if (GetComputerName(ComputerName, &Size))
-                    {
-                        if (GetWindowText(GetDlgItem(hDlg, 1002),
-                                          NewComputerName,
-                                          (MAX_COMPUTERNAME_LENGTH + 1)))
-                        {
-                            if (_tcscmp(ComputerName, NewComputerName) != 0)
-                            {
-                                if (!IsValidComputerName(NewComputerName))
-                                {
-                                    TCHAR szText[MAX_PATH], szMsgText[MAX_PATH];
-
-                                    LoadString(hDllInstance, 1030, szText, sizeof(szText) / sizeof(TCHAR));
-
-                                    swprintf(szMsgText, szText, NewComputerName);
-                                    MessageBox(hDlg, szMsgText, NULL, MB_OK | MB_ICONERROR);
-                                    SetFocus(GetDlgItem(hDlg, 1002));
-                                    break;
-                                }
-                                else if (!SetComputerNameExW(ComputerNamePhysicalDnsHostname, NewComputerName))
-                                {
-                                    TCHAR szMsgText[MAX_PATH];
-
-                                    LoadString(hDllInstance, 4001, szMsgText, sizeof(szMsgText) / sizeof(TCHAR));
-
-                                    MessageBox(hDlg, szMsgText, NULL, MB_OK | MB_ICONERROR);
-                                }
-                                else
-                                {
-                                    TCHAR szMsgTitle[MAX_PATH], szMsgText[MAX_PATH];
-
-                                    LoadString(hDllInstance, 4000, szMsgTitle, sizeof(szMsgTitle) / sizeof(TCHAR));
-                                    LoadString(hDllInstance, 24, szMsgText, sizeof(szMsgText) / sizeof(TCHAR));
-
-                                    MessageBox(hDlg, szMsgText, szMsgTitle, MB_OK | MB_ICONINFORMATION);
-
-                                    NetIDPageProc(GetParent(hDlg), WM_INITDIALOG, 0, 0);
-                                }
-                            }
-                        }
-                    }
-
-                    EndDialog(hDlg, LOWORD(wParam));
-                }
-                break;
+                    if (NetworkDlg_OnOK(hDlg, pNetIdData))
+                        EndDialog(hDlg, TRUE);
+                    break;
 
                 case IDCANCEL:
-                    EndDialog(hDlg, LOWORD(wParam));
+                    EndDialog(hDlg, FALSE);
                     break;
             }
-        }
-        break;
+            break;
     }
 
     return FALSE;
@@ -273,12 +518,11 @@ NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 static
 VOID
 NetIDPage_OnInitDialog(
-    HWND hwndDlg)
+    HWND hwndDlg,
+    PNETIDDATA pNetIdData)
 {
     WCHAR ComputerDescription[MAX_COMPUTERDESCRIPTION_LENGTH + 1];
-    WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD RegSize = sizeof(ComputerDescription);
-    DWORD Size = MAX_COMPUTERNAME_LENGTH + 1;
     HKEY KeyHandle;
     LPWKSTA_INFO_101 wki;
     LONG lError;
@@ -306,11 +550,6 @@ NetIDPage_OnInitDialog(
         }
 
         RegCloseKey(KeyHandle);
-    }
-
-    if (GetComputerName(ComputerName, &Size))
-    {
-        SetDlgItemText(hwndDlg, IDC_COMPUTERNAME, ComputerName);
     }
 
     if (NetWkstaGetInfo(NULL, 101, (LPBYTE*)&wki) == NERR_Success)
@@ -383,16 +622,23 @@ NetIDPageProc(IN HWND hwndDlg,
               IN WPARAM wParam,
               IN LPARAM lParam)
 {
-    static BOOL bEnable = FALSE;
-    INT_PTR Ret = 0;
+    PNETIDDATA pNetIdData;
+
+    pNetIdData = (PNETIDDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            NetIDPage_OnInitDialog(hwndDlg);
-            bEnable = TRUE;
-            Ret = TRUE;
-            break;
+            pNetIdData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NETIDDATA));
+            if (pNetIdData != NULL)
+            {
+                SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pNetIdData);
+                GetComputerNames(pNetIdData);
+                SetFullComputerName(hwndDlg, IDC_COMPUTERNAME, pNetIdData);
+                NetIDPage_OnInitDialog(hwndDlg, pNetIdData);
+                pNetIdData->bEnable = TRUE;
+            }
+            return TRUE;
 
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
@@ -407,21 +653,34 @@ NetIDPageProc(IN HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDC_COMPDESC:
-                    if (HIWORD(wParam) == EN_CHANGE && bEnable == TRUE)
+                    if (HIWORD(wParam) == EN_CHANGE && pNetIdData->bEnable == TRUE)
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
                 case IDC_NETWORK_PROPERTY:
-                    DialogBox(hDllInstance,
-                              MAKEINTRESOURCE(IDD_PROPPAGECOMPNAMECHENGE),
-                              hwndDlg,
-                              NetworkPropDlgProc);
+                    if (DialogBoxParam(hDllInstance,
+                                       MAKEINTRESOURCE(IDD_PROPPAGECOMPNAMECHENGE),
+                                       hwndDlg,
+                                       NetworkPropDlgProc,
+                                       (LPARAM)pNetIdData))
+                    {
+                        UpdateFullComputerName(hwndDlg, IDC_COMPUTERNAME, pNetIdData);
+                    }
                     break;
+            }
+            break;
+
+        case WM_DESTROY:
+            if (pNetIdData != NULL)
+            {
+                HeapFree(GetProcessHeap(), 0, pNetIdData);
+                pNetIdData = NULL;
+                SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)NULL);
             }
             break;
     }
 
-    return Ret;
+    return FALSE;
 }
 
 HPROPSHEETPAGE WINAPI

@@ -463,21 +463,13 @@ ExpComputePartialHashForAddress(IN PVOID BaseAddress)
 }
 
 #if DBG
-FORCEINLINE
-BOOLEAN
-ExpTagAllowPrint(CHAR Tag)
-{
-    if ((Tag >= 'a' && Tag <= 'z') ||
-        (Tag >= 'A' && Tag <= 'Z') ||
-        (Tag >= '0' && Tag <= '9') ||
-        Tag == ' ' || Tag == '=' ||
-        Tag == '?' || Tag == '@')
-    {
-        return TRUE;
-    }
-
-    return FALSE;
-}
+/*
+ * FORCEINLINE
+ * BOOLEAN
+ * ExpTagAllowPrint(CHAR Tag);
+ */
+#define ExpTagAllowPrint(Tag)   \
+    ((Tag) >= 0x20 /* Space */ && (Tag) <= 0x7E /* Tilde */)
 
 #ifdef KDBG
 #define MiDumperPrint(dbg, fmt, ...)        \
@@ -587,7 +579,7 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask, ULONG Flags)
                 {
                     if (Verbose)
                     {
-                        MiDumperPrint(CalledFromDbg, "%x\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n", TableEntry->Key,
+                        MiDumperPrint(CalledFromDbg, "0x%08x\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n", TableEntry->Key,
                                       TableEntry->NonPagedAllocs, TableEntry->NonPagedFrees,
                                       (TableEntry->NonPagedAllocs - TableEntry->NonPagedFrees), TableEntry->NonPagedBytes,
                                       TableEntry->PagedAllocs, TableEntry->PagedFrees,
@@ -595,7 +587,7 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask, ULONG Flags)
                     }
                     else
                     {
-                        MiDumperPrint(CalledFromDbg, "%x\t%ld\t\t%ld\t\t%ld\t\t%ld\n", TableEntry->Key,
+                        MiDumperPrint(CalledFromDbg, "0x%08x\t%ld\t\t%ld\t\t%ld\t\t%ld\n", TableEntry->Key,
                                       TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes,
                                       TableEntry->PagedAllocs, TableEntry->PagedBytes);
                     }
@@ -1834,7 +1826,7 @@ ExReturnPoolQuota(IN PVOID P)
                 DPRINT1("Object %p is not a process. Type %u, pool type 0x%x, block size %u\n",
                         Process, Process->Pcb.Header.Type, Entry->PoolType, BlockSize);
                 KeBugCheckEx(BAD_POOL_CALLER,
-                             0x0D,
+                             POOL_BILLED_PROCESS_INVALID,
                              (ULONG_PTR)P,
                              Entry->PoolTag,
                              (ULONG_PTR)Process);
@@ -2673,7 +2665,7 @@ ExFreePoolWithTag(IN PVOID P,
                 DPRINT1("Object %p is not a process. Type %u, pool type 0x%x, block size %u\n",
                         Process, Process->Pcb.Header.Type, Entry->PoolType, BlockSize);
                 KeBugCheckEx(BAD_POOL_CALLER,
-                             0x0D,
+                             POOL_BILLED_PROCESS_INVALID,
                              (ULONG_PTR)P,
                              Tag,
                              (ULONG_PTR)Process);

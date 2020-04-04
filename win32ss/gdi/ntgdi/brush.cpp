@@ -543,7 +543,7 @@ NtGdiSetBrushAttributes(
     _In_ HBRUSH hbr,
     _In_ DWORD dwFlags)
 {
-    __debugbreak();
+    FIXME("NtGdiSetBrushAttributes is unimplemented\n");
     return NULL;
 }
 
@@ -554,7 +554,7 @@ NtGdiClearBrushAttributes(
     _In_ HBRUSH hbr,
     _In_ DWORD dwFlags)
 {
-    __debugbreak();
+    FIXME("NtGdiClearBrushAttributes is unimplemented\n");
     return NULL;
 }
 

@@ -17,7 +17,6 @@
 #include <mimeole.h>
 
 #include <wine/list.h>
-#include <wine/unicode.h>
 #include <wine/debug.h>
 
 #include "inetcomm_private.h"

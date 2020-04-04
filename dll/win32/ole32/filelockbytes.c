@@ -41,7 +41,6 @@
 #include "storage32.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
 
@@ -117,7 +116,7 @@ HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsN
        HeapFree(GetProcessHeap(), 0, This);
        return E_OUTOFMEMORY;
     }
-    strcpyW(This->pwcsName, fullpath);
+    lstrcpyW(This->pwcsName, fullpath);
   }
   else
     This->pwcsName = NULL;
@@ -376,7 +375,7 @@ static HRESULT WINAPI FileLockBytesImpl_Stat(ILockBytes* iface,
         pstatstg->pwcsName =
           CoTaskMemAlloc((lstrlenW(This->pwcsName)+1)*sizeof(WCHAR));
 
-        strcpyW(pstatstg->pwcsName, This->pwcsName);
+        lstrcpyW(pstatstg->pwcsName, This->pwcsName);
     }
     else
         pstatstg->pwcsName = NULL;

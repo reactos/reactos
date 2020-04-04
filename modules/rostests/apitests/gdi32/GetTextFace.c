@@ -103,7 +103,7 @@ void Test_GetTextFaceAliasW(void)
     {
         {L"Arial", L"Arial", L"Arial"},
         {L"Tahoma", L"Tahoma", L"Tahoma"},
-        {L"Tahoma Bold", L"MS Sans Serif", L"MS Sans Serif"}, // That's what Windows 2003 and 7 returns.
+//        {L"Tahoma Bold", L"MS Sans Serif", L"MS Sans Serif"}, // That's what Windows 2003 and 7/10 returns. But not WHS testbot.
         {L"Helv", L"Helv", L"Helv"},
         {L"Tms Rmn", L"Tms Rmn", L"Tms Rmn"},
         {L"Times", L"Times", L"Times"},

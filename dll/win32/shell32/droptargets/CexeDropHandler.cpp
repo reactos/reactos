@@ -36,6 +36,9 @@ CExeDropHandler::~CExeDropHandler()
 HRESULT WINAPI CExeDropHandler::DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE ("(%p)\n", this);
+    if (*pdwEffect == DROPEFFECT_NONE)
+        return S_OK;
+
     *pdwEffect = DROPEFFECT_COPY;
     return S_OK;
 }

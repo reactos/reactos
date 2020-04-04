@@ -140,11 +140,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Wersja ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
@@ -336,7 +332,7 @@ BEGIN
     PUSHBUTTON "Oczyszczanie &dysku", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "Kompresuj dysk, aby zaoszczędzić miejsce na dysku", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "Zezwalaj na indeksowanie tego dysku, aby przyspieszyć \nwyszukiwanie plików", 14012, 8, 205, 230, 17, WS_DISABLED | BS_MULTILINE
+    CHECKBOX "Zezwalaj na indeksowanie tego dysku, aby przyspieszyć\nwyszukiwanie plików", 14012, 8, 205, 230, 17, WS_DISABLED | BS_MULTILINE
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
@@ -756,6 +752,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "Dodaj lub zmień czcionki zainstalowane na tym komputerze oraz zarządzaj nimi."
     IDS_PRINTERS_DESCRIPTION "Pokazuje zainstalowane drukarki i faks-drukarki oraz pomaga w dodawaniu nowych."
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Wersja %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "&Duże Ikony"
     IDS_VIEW_SMALL "&Małe Ikony"
@@ -774,6 +773,17 @@ BEGIN
     IDS_PASTE "Włóż"
     IDS_EJECT "Wysuń"
     IDS_DISCONNECT "Odłącz"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "Nie można utworzyć folderu '%1'"
     IDS_CREATEFOLDER_CAPTION "Nie można utworzyć folderu"
@@ -814,7 +824,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Przeglądaj"
     IDS_RUNDLG_BROWSE_FILTER "Programy (*.exe)\0*.exe\0Wszystkie pliki (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Start\\Programy"
     IDS_PERSONAL "Moje dokumenty"
     IDS_FAVORITES "Ulubione"
@@ -877,6 +887,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Nie można wysunąć nośnika (kod błędu: %lu)."
     IDS_CANTSHOWPROPERTIES "Nie można pokazać właściwości (kod błędu: %lu)."
     IDS_CANTDISCONNECT "Nie można odłączyć (kod błędu: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Katalog"
@@ -913,6 +924,7 @@ BEGIN
     IDS_EDIT_VERB "Edytuj"
     IDS_FIND_VERB "Wyszukaj"
     IDS_PRINT_VERB "Drukuj"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Plików, %u Katalogów"
     IDS_PRINTERS "Drukarki"

@@ -1,0 +1,174 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDD_POWERSCHEMESPAGE_ACDC DIALOGEX 0, 0, 252, 237
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Esquemas de energia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    LTEXT "Seleccione o esquema de energia com as configurações mais apropriadas para este computador. Note que a alteração das configurações abaixo, modificará o esquema seleccionado.", -1, 37, 6, 209, 36
+    GROUPBOX "&Esquemas de energia", -1, 6, 43, 240, 50
+    COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+    PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "&Eliminar", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
+    GROUPBOX "Desconhecido", IDC_GRPDETAIL, 6, 95, 240, 136
+    LTEXT "Quando o computador está:", IDC_SAT, 12, 109, 60, 12
+    LTEXT "ligado à corrente", IDC_SAC, 123, 110, 45, 15
+    ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
+    LTEXT "ligado a baterias", IDC_SDC, 195, 110, 45, 15
+    ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
+    LTEXT "Desligar o &monitor:", IDC_MONITOR, 13, 148, 84, 10
+    COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Desligar d&iscos rígidos:", IDC_DISK, 13, 171, 84, 10
+    COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Entra em s&tandby:", IDC_STANDBY, 13, 191, 84, 10
+    COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Entra em &hibernação:", IDC_HIBERNATE, 13, 212, 84, 10
+    COMBOBOX IDC_HIBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_HIBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_POWERSCHEMESPAGE_AC DIALOGEX 0, 0, 252, 237
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Esquemas de energia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+    LTEXT "Seleccione o esquema de energia com as configurações mais apropriadas para este computador. Note que a alteração das configurações abaixo, modificará o esquema seleccionado.", -1, 37, 6, 209, 36
+    GROUPBOX "&Esquemas de energia", -1, 6, 43, 240, 50
+    COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+    PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "&Eliminar", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
+    GROUPBOX "Desconhecido", IDC_GRPDETAIL, 6, 95, 240, 136
+    LTEXT "Desligar o &monitor:", IDC_MONITOR, 13, 148, 84, 10
+    COMBOBOX IDC_MONITORACLIST, 100, 145, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Desligar d&iscos rígidos:", IDC_DISK, 13, 171, 84, 10
+    COMBOBOX IDC_DISKACLIST, 100, 167, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Entra em s&tandby:", IDC_STANDBY, 13, 191, 84, 10
+    COMBOBOX IDC_STANDBYACLIST, 100, 188, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Entra em &hibernação:", IDC_HIBERNATE, 13, 212, 84, 10
+    COMBOBOX IDC_HIBERNATEACLIST, 100, 209, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEALARMS DIALOGEX 0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Alarmes"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Alarme de bateria fraca", -1, 6, 7, 239, 104
+    AUTOCHECKBOX "Activar o alarme de bateria &fraca quando o nível de energia atingir:", IDC_ALARM1, 15, 17, 190, 15, WS_TABSTOP
+    LTEXT "unknown", IDC_ALARMVALUE1, 215, 20, 20, 10
+    LTEXT "0%", -1, 28, 43, 15, 10
+    CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
+    LTEXT "100%", -1, 214, 43, 25, 10
+    PUSHBUTTON "&Acção do alarme...", -1, 17, 69, 70, 14, WS_DISABLED
+    LTEXT "Notificação:", -1, 95, 71, 57, 10
+    LTEXT "Desconhecida", IDC_ALARMMSG1, 154, 71, 84, 10
+    LTEXT "Acção:", -1, 95, 83, 55, 10
+    LTEXT "Desconhecida", IDC_ALARMAKTION1, 154, 83, 84, 10
+    LTEXT "Executar Programa:", -1, 95, 95, 55, 10
+    LTEXT "Desconhecido", IDC_ALARMPROG1, 154, 95, 84, 10
+    GROUPBOX "Alarme de bateria muito fraca", -1, 6, 120, 239, 106
+    AUTOCHECKBOX "Activar o alarme de bateria &muito fraca quando o nível de energia atingir:", IDC_ALARM2, 15, 131, 195, 15, WS_TABSTOP
+    LTEXT "Desconhecida", IDC_ALARMVALUE2, 215, 134, 20, 10
+    LTEXT "0%", -1, 28, 154, 15, 10
+    CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
+    LTEXT "100%", -1, 214, 154, 25, 10
+    PUSHBUTTON "Acção do alarme...", -1, 17, 183, 70, 14, WS_DISABLED
+    LTEXT "Notificação:", -1, 95, 185, 50, 10
+    LTEXT "Desconhecida", IDC_ALARMMSG2, 154, 185, 84, 10
+    LTEXT "Acção:", -1, 95, 198, 45, 10
+    LTEXT "Desconhecida", IDC_ALARMAKTION2, 154, 198, 84, 10
+    LTEXT "Executar Programa:", -1, 95, 211, 50, 10
+    LTEXT "Desconhecido", IDC_ALARMPROG2, 154, 211, 84, 10
+END
+
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Avançadas"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
+    LTEXT "Seleccione as definições de poupança de energia que deseja utilizar.", -1, 37, 6, 207, 20
+    GROUPBOX "Opções", -1, 6, 30, 240, 65
+    AUTOCHECKBOX "Mostrar sempre o &icone na barra de tarefas", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Perguntar a palavra-passe quando o computador reiniciar o trabalho.", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Ajustar o brilho quando ligado a baterias.", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
+    GROUPBOX "Botões de energia", -1, 6, 101, 240, 127
+    LTEXT "Ao baixar a &tampa do portátil:", IDC_SLIDCLOSE, 15, 115, 222, 10
+    COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Ao premir o botão de &energia do computador:", IDC_SPOWERBUTTON, 15, 153, 222, 10
+    COMBOBOX IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Ao premir o botão de &suspensão do computador:", IDC_SSLEEPBUTTON, 15, 191, 222, 10
+    COMBOBOX IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEHIBERNATE DIALOGEX 0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Hibernar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
+    LTEXT "Quando o computador hiberna, armazena no disco rígido tudo o que tem na memória e encerra. Quando sai de hibernação regressa ao estado anterior.", -1, 37, 6, 210, 35
+    GROUPBOX "Hibernar", -1, 6, 41, 240, 32
+    AUTOCHECKBOX "Permitir &hibernação", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
+    GROUPBOX "Espaço em disco para hibernação", -1, 6, 80, 240, 76
+    LTEXT "Espaço disp. em disco:", -1, 15, 95, 140, 10
+    LTEXT "Desconhecido", IDC_FREESPACE, 160, 95, 80, 10
+    LTEXT "Espaço em disco necessário para hibernação:", -1, 15, 115, 140, 10
+    LTEXT "Desconhecido", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
+    LTEXT "Terá de libertar espaço em disco para que o seu computador possa hibernar. ", IDC_TOLESSFREESPACE, 15, 135, 224, 20
+END
+
+IDD_SAVEPOWERSCHEME DIALOGEX 0, 0, 190, 62
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Guardar esquema"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Guardar este esquema de energia como:", -1, 7, 7, 144, 8
+    EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
+    PUSHBUTTON "&OK", IDOK, 79, 40, 50, 14
+    DEFPUSHBUTTON "&Cancelar", IDCANCEL, 133, 40, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME_1 "de Opções de energia"
+    IDS_CPLDESCRIPTION_1 "Defina as configurações de poupança de energia para o seu computador."
+    IDS_PERCENT "%i%%"
+    IDS_SOUND "Som"
+    IDS_TEXT "Texto"
+    IDS_CONFIG1 "Definições para o esquema de energia %s "
+    IDS_CONFIG2 "Definições avançadas para %s"
+    IDS_NOACTION "Sem acção"
+    IDS_PowerActionNone1 "Sem acção"
+    IDS_PowerActionUnknown "Desconhecida"
+    IDS_PowerActionSleep "Stand by"
+    IDS_PowerActionHibernate "Hibernar"
+    IDS_PowerActionShutdown "Desligar"
+    IDS_PowerActionRestart "Reiniciar"
+    IDS_PowerActionShutdownOff "Desligar e desligar a energia"
+    IDS_PowerActionWarmEject "Perguntar o que fazer"
+    IDS_PowerActionNone2 "Nenhum"
+    IDS_TIMEOUT1 "Após 1 min"
+    IDS_TIMEOUT2 "Após 2 mins"
+    IDS_TIMEOUT3 "Após 3 mins"
+    IDS_TIMEOUT4 "Após 5 mins"
+    IDS_TIMEOUT5 "Após 10 mins"
+    IDS_TIMEOUT6 "Após 15 mins"
+    IDS_TIMEOUT7 "Após 20 mins"
+    IDS_TIMEOUT8 "Após 25 mins"
+    IDS_TIMEOUT9 "Após 30 mins"
+    IDS_TIMEOUT10 "Após 45 mins"
+    IDS_TIMEOUT11 "Após 1 hour"
+    IDS_TIMEOUT12 "Após 2 hours"
+    IDS_TIMEOUT13 "Após 3 hours"
+    IDS_TIMEOUT14 "Após 4 hours"
+    IDS_TIMEOUT15 "Após 5 hours"
+    IDS_TIMEOUT16 "Nunca"
+    IDS_DEL_SCHEME "Tem certeza de que deseja excluir o esquema de energia: ""%s""?"
+    IDS_DEL_SCHEME_TITLE "Excluir esquema"
+END

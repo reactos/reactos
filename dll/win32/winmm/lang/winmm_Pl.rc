@@ -53,7 +53,7 @@ MCIERR_UNRECOGNIZED_KEYWORD, 	"Sterownik nie może rozpoznać podanego parametru
 MCIERR_UNRECOGNIZED_COMMAND,	"Sterownik nie może rozpoznać podanego polecenia."
 MCIERR_HARDWARE, 		"Wystąpił problem z urządzeniem multimedialnym. Sprawdź czy działa ono poprawnie lub skontaktuj się z producentem urządzenia."
 MCIERR_INVALID_DEVICE_NAME, 	"Podane urządzenie nie jest otwarte lub nie jest rozpoznawane przez MCI."
-MCIERR_OUT_OF_MEMORY, 		"Za mało pamięci dla tego zadania. \nZamknij jedną lub więcej aplikacji w celu zwiększenia dostępnej pamięci, a następnie spróbuj ponownie."
+MCIERR_OUT_OF_MEMORY, 		"Za mało pamięci dla tego zadania.\nZamknij jedną lub więcej aplikacji w celu zwiększenia dostępnej pamięci, a następnie spróbuj ponownie."
 MCIERR_DEVICE_OPEN, 		"Nazwa urządzenia jest już używana jako alias przez tą aplikację. Użyj unikatowego aliasu."
 MCIERR_CANNOT_LOAD_DRIVER, 	"Nieznany problem przy ładowaniu określonego sterownika urządzenia."
 MCIERR_MISSING_COMMAND_STRING, 	"Nie określono polecenia."

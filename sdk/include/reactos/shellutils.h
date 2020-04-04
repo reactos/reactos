@@ -378,6 +378,28 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 
     return hResult;
 }
 
+template<class T, class T1, class T2, class T3, class T4, class T5>
+HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 initArg4, T5 initArg5, REFIID riid, void ** ppv)
+{
+    _CComObject<T> *pobj;
+    HRESULT hResult;
+
+    hResult = _CComObject<T>::CreateInstance(&pobj);
+    if (FAILED(hResult))
+        return hResult;
+
+    pobj->AddRef(); /* CreateInstance returns object with 0 ref count */
+
+    hResult = pobj->Initialize(initArg1, initArg2, initArg3, initArg4, initArg5);
+
+    if (SUCCEEDED(hResult))
+        hResult = pobj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+
+    pobj->Release(); /* In case of failure the object will be released */
+
+    return hResult;
+}
+
 HRESULT inline SHSetStrRet(LPSTRRET pStrRet, LPCSTR pstrValue)
 {
     pStrRet->uType = STRRET_CSTR;
@@ -511,5 +533,17 @@ void DumpIdList(LPCITEMIDLIST pcidl)
 #define S_EQUAL S_OK
 #define S_GREATERTHAN S_FALSE
 #define MAKE_COMPARE_HRESULT(x) ((x)>0 ? S_GREATERTHAN : ((x)<0 ? S_LESSTHAN : S_EQUAL))
+
+
+static inline PCUIDLIST_ABSOLUTE HIDA_GetPIDLFolder(CIDA const* pida)
+{
+    return (PCUIDLIST_ABSOLUTE)(((LPBYTE)pida) + (pida)->aoffset[0]);
+}
+
+static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
+{
+    return (PCUIDLIST_RELATIVE)(((LPBYTE)pida) + (pida)->aoffset[i + 1]);
+}
+
 
 #endif /* __ROS_SHELL_UTILS_H */

@@ -2,8 +2,6 @@
 #ifndef _OLEAUT32_PCH_
 #define _OLEAUT32_PCH_
 
-#include <config.h>
-
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -18,12 +16,12 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winreg.h>
+#include <winnls.h>
 #include <ole2.h>
 #include <olectl.h>
 
 #include <wine/debug.h>
 #include <wine/list.h>
-#include <wine/unicode.h>
 
 #include "connpt.h"
 #include "variant.h"

@@ -143,11 +143,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Versión ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " El equipo de ReactOS\0", IDC_STATIC, 105, 75, 100, 10
@@ -759,6 +755,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "Añada, cambie y administre las fuentes de su computadora."
     IDS_PRINTERS_DESCRIPTION "Muestra impresoras y faxes instalados y le ayuda a configurar nuevos."
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Versión %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "Iconos &grandes"
     IDS_VIEW_SMALL "Iconos &pequeños"
@@ -777,6 +776,17 @@ BEGIN
     IDS_PASTE "Insertar"
     IDS_EJECT "Extraer"
     IDS_DISCONNECT "Desconectar"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "No se pudo crear la carpeta '%1'"
     IDS_CREATEFOLDER_CAPTION "No se pudo crear la carpeta"
@@ -817,7 +827,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Examinar"
     IDS_RUNDLG_BROWSE_FILTER "Archivos ejecutables (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menú Inicio\\Programas"
     IDS_PERSONAL "Mis documentos"
     IDS_FAVORITES "Favoritos"
@@ -825,8 +835,8 @@ BEGIN
     IDS_RECENT "Reciente"
     IDS_SENDTO "Enviar a"
     IDS_STARTMENU "Menú Inicio"
-    IDS_MYMUSIC "Mis documentos\\Mi música"
-    IDS_MYVIDEO "Mis documentos\\Mis vídeos"
+    IDS_MYMUSIC "Mi música"
+    IDS_MYVIDEO "Mis vídeos"
     IDS_DESKTOPDIRECTORY "Escritorio"
     IDS_NETHOOD "Entorno de red"
     IDS_TEMPLATES "Plantillas"
@@ -880,6 +890,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "No se pudo extraer la unidad (Error Code: %lu)."
     IDS_CANTSHOWPROPERTIES "No se puede mostrar las propiedades (Error Code: %lu)."
     IDS_CANTDISCONNECT "No se pudo desconectar (Error Code: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Directorio"
@@ -916,6 +927,7 @@ BEGIN
     IDS_EDIT_VERB "Editar"
     IDS_FIND_VERB "Buscar"
     IDS_PRINT_VERB "Imprimir"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u archivos, %u carpetas"
     IDS_PRINTERS "Impresoras"

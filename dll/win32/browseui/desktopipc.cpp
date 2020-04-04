@@ -380,7 +380,7 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
         hResult = psb->QueryActiveShellView(&shellView);
         if (SUCCEEDED(hResult))
         {
-            shellView->SelectItem(pidlSelect, SVSI_SELECT|SVSI_ENSUREVISIBLE);
+            shellView->SelectItem(pidlSelect, SVSI_SELECT | SVSI_FOCUSED | SVSI_ENSUREVISIBLE);
         }
         ILFree(pidlSelect);
     }

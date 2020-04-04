@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -373,6 +373,10 @@ AcpiRsCreatePciRoutingTable (
 
                 Status = AcpiNsHandleToPathname (
                     (ACPI_HANDLE) Node, &PathBuffer, FALSE);
+                if (ACPI_FAILURE (Status))
+                {
+                    return_ACPI_STATUS (Status);
+                }
 
                 /* +1 to include null terminator */
 

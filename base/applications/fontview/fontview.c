@@ -38,6 +38,7 @@ LOGFONTW g_LogFonts[64];
 LPCWSTR g_fileName;
 WCHAR g_FontTitle[1024] = L"";
 BOOL g_FontPrint = FALSE;
+BOOL g_DisableInstall = FALSE;
 
 static const WCHAR g_szFontViewClassName[] = L"FontViewWClass";
 
@@ -157,24 +158,35 @@ wWinMain(HINSTANCE hThisInstance,
 	else
 	{
 		/* Try to add the font resource from command line */
-//		fileName = argv[1];
-		if (argc == 2)
-		{
-			fileName = argv[1];
-		}
-		else
-		{
-			/* Windows fontview supports the /p option, which displays print dialog */
-			fileName = argv[2];
-			if (wcscmp(argv[1], L"/p") == 0)
-			{
-				g_FontPrint = TRUE;
-			}
-			else
-			{
-				fileName = argv[1];
-			}
-		}
+        for (i = 1; i < argc; ++i)
+        {
+            // Treat the last argument as filename
+            if (i + 1 == argc)
+            {
+                fileName = argv[i];
+            }
+            else if (argv[i][0] == '/' || argv[i][0] == '-')
+            {
+                switch (argv[i][1])
+                {
+                case 'p':
+                case 'P':
+                    g_FontPrint = TRUE;
+                    break;
+                case 'd':
+                case 'D':
+                    g_DisableInstall = TRUE;
+                    break;
+                default:
+                    fileName = argv[i];
+                    break;
+                }
+            }
+            else
+            {
+                fileName = argv[i];
+            }
+        }
 		g_fileName = fileName;
 	}
 
@@ -315,6 +327,7 @@ MainWnd_OnCreate(HWND hwnd)
 				NULL					/* Window Creation data */
 			);
 	SendMessage(hButtonInstall, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), (LPARAM)TRUE);
+    EnableWindow(hButtonInstall, !g_DisableInstall);
 
 	/* Create the print button */
 	LoadStringW(g_hInstance, IDS_PRINT, szPrint, MAX_BUTTONNAME);

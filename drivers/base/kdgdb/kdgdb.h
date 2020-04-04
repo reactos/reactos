@@ -96,6 +96,7 @@ extern const char hex_chars[];
 KDSTATUS NTAPI KdpPollBreakIn(VOID);
 VOID NTAPI KdpSendByte(_In_ UCHAR Byte);
 KDSTATUS NTAPI KdpReceiveByte(_Out_ PUCHAR OutByte);
+KDSTATUS NTAPI KdpPollByte(OUT PUCHAR OutByte);
 
 /* kdpacket.c */
 extern DBGKD_ANY_WAIT_STATE_CHANGE CurrentStateChange;

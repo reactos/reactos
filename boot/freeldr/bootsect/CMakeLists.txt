@@ -1,4 +1,6 @@
 
+include_directories(${REACTOS_SOURCE_DIR}/boot/freeldr)
+
 if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 
     CreateBootSectorTarget(dosmbr ${CMAKE_CURRENT_SOURCE_DIR}/dosmbr.S ${CMAKE_CURRENT_BINARY_DIR}/dosmbr.bin 7c00)
@@ -7,6 +9,10 @@ if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     CreateBootSectorTarget(fat ${CMAKE_CURRENT_SOURCE_DIR}/fat.S ${CMAKE_CURRENT_BINARY_DIR}/fat.bin 7c00)
     CreateBootSectorTarget(fat32 ${CMAKE_CURRENT_SOURCE_DIR}/fat32.S ${CMAKE_CURRENT_BINARY_DIR}/fat32.bin 7c00)
     CreateBootSectorTarget(btrfsvbr ${CMAKE_CURRENT_SOURCE_DIR}/btrfs.S ${CMAKE_CURRENT_BINARY_DIR}/btrfs.bin 7c00)
+
+    if(SARCH STREQUAL "pc98")
+        CreateBootSectorTarget(fat12pc98 ${CMAKE_CURRENT_SOURCE_DIR}/pc98/fat12fdd.S ${CMAKE_CURRENT_BINARY_DIR}/pc98/fat12fdd.bin 7c00)
+    endif()
 
     ## New versions using FATY.S (experimental)
     # add_definitions(-DFAT12)

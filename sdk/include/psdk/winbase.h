@@ -779,6 +779,12 @@ typedef struct _DEBUG_EVENT {
 	} u;
 } DEBUG_EVENT,*LPDEBUG_EVENT;
 
+#ifndef MIDL_PASS
+typedef PCONTEXT LPCONTEXT;
+typedef PEXCEPTION_RECORD LPEXCEPTION_RECORD;
+typedef PEXCEPTION_POINTERS LPEXCEPTION_POINTERS;
+#endif
+
 typedef struct _OVERLAPPED {
 	ULONG_PTR Internal;
 	ULONG_PTR InternalHigh;
@@ -791,6 +797,13 @@ typedef struct _OVERLAPPED {
 	} DUMMYUNIONNAME;
 	HANDLE hEvent;
 } OVERLAPPED, *POVERLAPPED, *LPOVERLAPPED;
+
+typedef struct _OVERLAPPED_ENTRY {
+    ULONG_PTR lpCompletionKey;
+    LPOVERLAPPED lpOverlapped;
+    ULONG_PTR Internal;
+    DWORD dwNumberOfBytesTransferred;
+} OVERLAPPED_ENTRY, *LPOVERLAPPED_ENTRY;
 
 typedef struct _STARTUPINFOA {
 	DWORD	cb;
@@ -1138,7 +1151,7 @@ typedef struct _SYSTEM_POWER_STATUS {
 	BYTE ACLineStatus;
 	BYTE BatteryFlag;
 	BYTE BatteryLifePercent;
-	BYTE Reserved1;
+	BYTE SystemStatusFlag;
 	DWORD BatteryLifeTime;
 	DWORD BatteryFullLifeTime;
 } SYSTEM_POWER_STATUS,*LPSYSTEM_POWER_STATUS;
@@ -2362,6 +2375,16 @@ VOID WINAPI GetStartupInfoW(LPSTARTUPINFOW);
 HANDLE WINAPI GetStdHandle(_In_ DWORD);
 UINT WINAPI GetSystemDirectoryA(LPSTR,UINT);
 UINT WINAPI GetSystemDirectoryW(LPWSTR,UINT);
+
+WINBASEAPI
+UINT
+WINAPI
+GetSystemFirmwareTable(
+  _In_ DWORD FirmwareTableProviderSignature,
+  _In_ DWORD FirmwareTableID,
+  _Out_writes_bytes_to_opt_(BufferSize,return) PVOID pFirmwareTableBuffer,
+  _In_ DWORD BufferSize);
+
 VOID WINAPI GetSystemInfo(LPSYSTEM_INFO);
 BOOL WINAPI GetSystemPowerStatus(_Out_ LPSYSTEM_POWER_STATUS);
 #if (_WIN32_WINNT >= 0x0502)

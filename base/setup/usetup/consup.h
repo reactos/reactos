@@ -201,6 +201,12 @@ CONSOLE_SetTextXY(
     IN LPCSTR Text);
 
 VOID
+CONSOLE_ClearTextXY(
+    IN SHORT x,
+    IN SHORT y,
+    IN SHORT Length);
+
+VOID
 CONSOLE_SetUnderlinedTextXY(
     IN SHORT x,
     IN SHORT y,

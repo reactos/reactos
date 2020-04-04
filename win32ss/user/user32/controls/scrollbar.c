@@ -318,6 +318,26 @@ IntGetScrollBarInfo(HWND Wnd, INT Bar, PSCROLLBARINFO ScrollBarInfo)
   return NtUserGetScrollBarInfo(Wnd, IntScrollGetObjectId(Bar), ScrollBarInfo);
 }
 
+static VOID FASTCALL
+IntUpdateScrollArrows(HWND Wnd, HDC hDC, PSCROLLBARINFO ScrollBarInfo,
+                      SETSCROLLBARINFO *info, INT SBType, INT Arrow,
+                      BOOL Vertical, BOOL Pressed)
+{
+   if (Pressed)
+   {
+      ScrollBarInfo->rgstate[Arrow] |= STATE_SYSTEM_PRESSED;
+   }
+   else
+   {
+      ScrollBarInfo->rgstate[Arrow] &= ~STATE_SYSTEM_PRESSED;
+   }
+   /* Update arrow state */
+   info->rgstate[Arrow] = ScrollBarInfo->rgstate[Arrow];
+   NtUserSetScrollBarInfo(Wnd, IntScrollGetObjectId(SBType), info);
+
+   IntDrawScrollArrows(hDC, ScrollBarInfo, Vertical);
+}
+
 void
 IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
 {
@@ -831,9 +851,11 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         PrevPt = Pt;
         if (SBType == SB_CTL && (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_TABSTOP)) SetFocus(Wnd);
         SetCapture(Wnd);
-        ScrollBarInfo.rgstate[ScrollTrackHitTest] |= STATE_SYSTEM_PRESSED;
-        NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
-        NtUserSetScrollBarInfo(Wnd, IntScrollGetObjectId(SBType), &NewInfo);
+        /* Don't update scrollbar if disabled. */
+        if (ScrollBarInfo.rgstate[ScrollTrackHitTest] != STATE_SYSTEM_UNAVAILABLE)
+        {
+            IntUpdateScrollArrows (Wnd, Dc, &ScrollBarInfo, &NewInfo, SBType, ScrollTrackHitTest, Vertical, TRUE);
+        }
         break;
 
       case WM_MOUSEMOVE:
@@ -846,13 +868,12 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         ReleaseCapture();
         /* if scrollbar has focus, show back caret */
         if (Wnd == GetFocus()) ShowCaret(Wnd);
-        ScrollBarInfo.rgstate[ScrollTrackHitTest] &= ~STATE_SYSTEM_PRESSED;
-        NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
-        NtUserSetScrollBarInfo(Wnd, IntScrollGetObjectId(SBType), &NewInfo);
-
-        IntDrawScrollInterior(Wnd,Dc,SBType,Vertical,&ScrollBarInfo);
-        IntDrawScrollArrows(Dc, &ScrollBarInfo, Vertical);
-
+        /* Don't update scrollbar if disabled. */
+        if (ScrollBarInfo.rgstate[ScrollTrackHitTest] != STATE_SYSTEM_UNAVAILABLE)
+        {
+            IntUpdateScrollArrows (Wnd, Dc, &ScrollBarInfo, &NewInfo, SBType, ScrollTrackHitTest, Vertical, FALSE);
+            IntDrawScrollInterior(Wnd,Dc,SBType,Vertical,&ScrollBarInfo);
+        }
         break;
 
       case WM_SYSTIMER:
@@ -883,9 +904,17 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
 	    SetSystemTimer(Wnd, SCROLL_TIMER, (WM_LBUTTONDOWN == Msg) ?
                            SCROLL_FIRST_DELAY : SCROLL_REPEAT_DELAY,
                            (TIMERPROC) NULL);
+            if (ScrollBarInfo.rgstate[ScrollTrackHitTest] != STATE_SYSTEM_UNAVAILABLE)
+            {
+               if (!(ScrollBarInfo.rgstate[ScrollTrackHitTest] &= STATE_SYSTEM_PRESSED))
+               {
+                  IntUpdateScrollArrows (Wnd, Dc, &ScrollBarInfo, &NewInfo, SBType, ScrollTrackHitTest, Vertical, TRUE);
+               }
+            }
           }
         else
           {
+            IntUpdateScrollArrows (Wnd, Dc, &ScrollBarInfo, &NewInfo, SBType, ScrollTrackHitTest, Vertical, FALSE);
             KillSystemTimer(Wnd, SCROLL_TIMER);
           }
         break;
@@ -985,8 +1014,20 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
 	    SetSystemTimer(Wnd, SCROLL_TIMER, (WM_LBUTTONDOWN == Msg) ?
                            SCROLL_FIRST_DELAY : SCROLL_REPEAT_DELAY,
                            (TIMERPROC) NULL);
+            if (ScrollBarInfo.rgstate[ScrollTrackHitTest] != STATE_SYSTEM_UNAVAILABLE)
+            {
+               if (!(ScrollBarInfo.rgstate[ScrollTrackHitTest] &= STATE_SYSTEM_PRESSED))
+               {
+                  TRACE("Set Arrow\n");
+                  IntUpdateScrollArrows (Wnd, Dc, &ScrollBarInfo, &NewInfo, SBType, ScrollTrackHitTest, Vertical, TRUE);
+               }
+            }
           }
-        else KillSystemTimer(Wnd, SCROLL_TIMER);
+        else
+        {
+            IntUpdateScrollArrows (Wnd, Dc, &ScrollBarInfo, &NewInfo, SBType, ScrollTrackHitTest, Vertical, FALSE);
+            KillSystemTimer(Wnd, SCROLL_TIMER);
+        }
         break;
     }
 

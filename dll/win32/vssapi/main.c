@@ -16,48 +16,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS__
 #include "config.h"
+#endif
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
 #include "vss.h"
 #include "vswriter.h"
+#include "wine/asm.h"
 #include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL( vssapi );
-
-#ifdef __i386__  /* thiscall functions are i386-specific */
-
-#define THISCALL(func) __thiscall_ ## func
-#define THISCALL_NAME(func) __ASM_NAME("__thiscall_" #func)
-#undef __thiscall
-#define __thiscall __stdcall
+#ifdef __REACTOS__
 #ifdef _MSC_VER
-#define DEFINE_THISCALL_WRAPPER(func,args) \
-    void __declspec(naked) __thiscall_ ##func(void) \
-    { \
-        __asm { pop eax } \
-        __asm { push ecx } \
-        __asm { push eax } \
-        __asm { jmp func } \
-    }
-#else
-#define DEFINE_THISCALL_WRAPPER(func,args) \
-    extern void THISCALL(func)(void); \
-    __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
-                      "popl %eax\n\t" \
-                      "pushl %ecx\n\t" \
-                      "pushl %eax\n\t" \
-                      "jmp " __ASM_NAME(#func) __ASM_STDCALL(args) )
+#define __thiscall __stdcall
 #endif
-#else /* __i386__ */
+#endif
 
-#define THISCALL(func) func
-#define THISCALL_NAME(func) __ASM_NAME(#func)
-#define __thiscall __cdecl
-#define DEFINE_THISCALL_WRAPPER(func,args) /* nothing */
-
-#endif /* __i386__ */
+WINE_DEFAULT_DEBUG_CHANNEL( vssapi );
 
 struct CVssWriter
 {

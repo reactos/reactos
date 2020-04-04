@@ -196,7 +196,7 @@ BEGIN
     IDS_PROGRAMNAME "Рисуване"
     IDS_WINDOWTITLE "%s - рисуване"
     IDS_INFOTITLE "Рисувач (Paint) за РеактОС"
-    IDS_INFOTEXT "Рисувач (Paint) за РеактОС е достъпен под GNU Lesser General Public License (LGPL, see www.gnu.org)"
+    IDS_INFOTEXT "Достъпен под GNU Lesser General Public License (LGPL, see www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Искате ли да запишете промените в %s?"
     IDS_DEFAULTFILENAME "Без име.bmp"
     IDS_MINIATURETITLE "Изображенийце"

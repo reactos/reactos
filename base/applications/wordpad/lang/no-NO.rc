@@ -78,9 +78,9 @@ BEGIN
     POPUP "F&ormat"
     BEGIN
         MENUITEM "&Skrift...",               ID_FONTSETTINGS
-        MENUITEM "&Punktmerking"             ID_BULLET
-        MENUITEM "&Avsnitt..."               ID_PARAFORMAT
-        MENUITEM "&Tabulatorer..."           ID_TABSTOPS
+        MENUITEM "&Punktmerking",            ID_BULLET
+        MENUITEM "&Avsnitt...",              ID_PARAFORMAT
+        MENUITEM "&Tabulatorer...",          ID_TABSTOPS
         POPUP "&Bakgrunn"
         BEGIN
             MENUITEM "&System\tCtrl+1",         ID_BACK_1
@@ -89,7 +89,7 @@ BEGIN
     END
     POPUP "&Hjelp"
     BEGIN
-        MENUITEM "&Om Wine Wordpad"       ID_ABOUT
+        MENUITEM "&Om Wine Wordpad",      ID_ABOUT
     END
 END
 
@@ -101,8 +101,8 @@ BEGIN
         MENUITEM "&Kopier",       ID_EDIT_COPY
         MENUITEM "&Lim inn",      ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Punktmerking"  ID_BULLET
-        MENUITEM "&Avsnitt..."    ID_PARAFORMAT
+        MENUITEM "&Punktmerking", ID_BULLET
+        MENUITEM "&Avsnitt...",   ID_PARAFORMAT
     END
 END
 
@@ -110,23 +110,23 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Svart",     ID_COLOR_BLACK
-        MENUITEM "Rødbrun",   ID_COLOR_MAROON
-        MENUITEM "Grønn",     ID_COLOR_GREEN
-        MENUITEM "Oliven"     ID_COLOR_OLIVE
-        MENUITEM "Marineblå"  ID_COLOR_NAVY
-        MENUITEM "Purpur"     ID_COLOR_PURPLE
-        MENUITEM "Blågrønn"   ID_COLOR_TEAL
-        MENUITEM "Grå"        ID_COLOR_GRAY
-        MENUITEM "Sølv"       ID_COLOR_SILVER
-        MENUITEM "Rød"        ID_COLOR_RED
-        MENUITEM "Lime-grønn" ID_COLOR_LIME
-        MENUITEM "Gul"        ID_COLOR_YELLOW
-        MENUITEM "Blå"        ID_COLOR_BLUE
-        MENUITEM "Fuchsia"    ID_COLOR_FUCHSIA
-        MENUITEM "Turkis"     ID_COLOR_AQUA
-        MENUITEM "Hvit"       ID_COLOR_WHITE
-        MENUITEM "Automatisk" ID_COLOR_AUTOMATIC
+        MENUITEM "Svart",      ID_COLOR_BLACK
+        MENUITEM "Rødbrun",    ID_COLOR_MAROON
+        MENUITEM "Grønn",      ID_COLOR_GREEN
+        MENUITEM "Oliven",     ID_COLOR_OLIVE
+        MENUITEM "Marineblå",  ID_COLOR_NAVY
+        MENUITEM "Purpur",     ID_COLOR_PURPLE
+        MENUITEM "Blågrønn",   ID_COLOR_TEAL
+        MENUITEM "Grå",        ID_COLOR_GRAY
+        MENUITEM "Sølv",       ID_COLOR_SILVER
+        MENUITEM "Rød",        ID_COLOR_RED
+        MENUITEM "Lime-grønn", ID_COLOR_LIME
+        MENUITEM "Gul",        ID_COLOR_YELLOW
+        MENUITEM "Blå",        ID_COLOR_BLUE
+        MENUITEM "Fuchsia",    ID_COLOR_FUCHSIA
+        MENUITEM "Turkis",     ID_COLOR_AQUA
+        MENUITEM "Hvit",       ID_COLOR_WHITE
+        MENUITEM "Automatisk", ID_COLOR_AUTOMATIC
     END
 END
 

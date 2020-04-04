@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 DWORD WINAPI W32TimeSyncNow(LPCWSTR cmdline, UINT blocking, UINT flags);
+SYNC_STATUS SyncStatus;
 
 static VOID
 CreateNTPServerList(HWND hwnd)
@@ -89,7 +90,7 @@ CreateNTPServerList(HWND hwnd)
 
 /* Set the selected server in the registry */
 static VOID
-SetNTPServer(HWND hwnd)
+SetNTPServer(HWND hwnd, BOOL bBeginUpdate)
 {
     HKEY hKey;
     HWND hList;
@@ -97,6 +98,7 @@ SetNTPServer(HWND hwnd)
     WCHAR szSel[4];
     LONG lRet;
     WCHAR buffer[256];
+    WCHAR szFormat[BUFSIZE];
 
     hList = GetDlgItem(hwnd,
                        IDC_SERVERLIST);
@@ -104,6 +106,14 @@ SetNTPServer(HWND hwnd)
     uSel = (UINT)SendMessageW(hList, CB_GETCURSEL, 0, 0);
 
     SendDlgItemMessageW(hwnd, IDC_SERVERLIST, WM_GETTEXT, _countof(buffer), (LPARAM)buffer);
+
+    /* If the condition is true that means the user wants to update (synchronize) the time */
+    if (bBeginUpdate)
+    {
+        /* Inform the user that the synchronization is about to begin (depending on how reachable the NTP server is) */
+        StringCchPrintfW(szFormat, _countof(szFormat), SyncStatus.szSyncWait, buffer);
+        SetDlgItemTextW(hwnd, IDC_SUCSYNC, szFormat);
+    }
 
     /* If there is new data entered then save it in the registry 
        The same key name of "0" is used to store all user entered values
@@ -177,6 +187,83 @@ EnableDialogText(HWND hwnd)
     EnableWindow(GetDlgItem(hwnd, IDC_NEXTSYNC), bChecked);
 }
 
+static VOID
+SyncNTPStatusInit(HWND hwnd)
+{
+    /* Initialize the Synchronization NTP status members */
+    LoadStringW(hApplet, IDS_INETTIMEWELCOME, SyncStatus.szSyncInit, _countof(SyncStatus.szSyncInit));
+    LoadStringW(hApplet, IDS_INETTIMESUCSYNC, SyncStatus.szSyncSuc, _countof(SyncStatus.szSyncSuc));
+    LoadStringW(hApplet, IDS_INETTIMESYNCING, SyncStatus.szSyncWait, _countof(SyncStatus.szSyncWait));
+    LoadStringW(hApplet, IDS_INETTIMEERROR, SyncStatus.szSyncErr, _countof(SyncStatus.szSyncErr));
+    LoadStringW(hApplet, IDS_INETTIMESUCFILL, SyncStatus.szSyncType, _countof(SyncStatus.szSyncType));
+
+    /*
+     * TODO: XP's and Server 2003's timedate.cpl loads the last successful attempt of the NTP synchronization
+     * displaying the last time and date of the said sync. I have no idea how does timedate.cpl remember its last
+     * successful sync so for the time being, we will only load the initial remark string.
+    */
+    SetDlgItemTextW(hwnd, IDC_SUCSYNC, SyncStatus.szSyncInit);
+}
+
+static VOID
+UpdateNTPStatus(HWND hwnd, DWORD dwReason)
+{
+    WCHAR szFormat[BUFSIZE];
+    WCHAR szNtpServerName[MAX_VALUE_NAME];
+    WCHAR szLocalDate[BUFSIZE];
+    WCHAR szLocalTime[BUFSIZE];
+    HWND hDlgComboList;
+
+    /* Retrieve the server NTP name from the edit box */
+    hDlgComboList = GetDlgItem(hwnd, IDC_SERVERLIST);
+    SendMessageW(hDlgComboList, WM_GETTEXT, _countof(szNtpServerName), (LPARAM)szNtpServerName);
+
+    /* Iterate over the case reasons so we can compute the exact status of the NTP synchronization */
+    switch (dwReason)
+    {
+        /* The NTP time synchronization has completed successfully */
+        case ERROR_SUCCESS:
+        {
+            /* Get the current date based on the locale identifier */
+            GetDateFormatW(LOCALE_USER_DEFAULT,
+                           DATE_SHORTDATE,
+                           NULL,
+                           NULL,
+                           szLocalDate,
+                           _countof(szLocalDate));
+
+            /* Get the current time based on the locale identifier */
+            GetTimeFormatW(LOCALE_USER_DEFAULT,
+                           TIME_NOSECONDS,
+                           NULL,
+                           NULL,
+                           szLocalTime,
+                           _countof(szLocalTime));
+
+            /* Format the resource sting with the given NTP server name and the current time data */
+            StringCchPrintfW(szFormat, _countof(szFormat), SyncStatus.szSyncSuc, szNtpServerName, szLocalDate, szLocalTime);
+            SetDlgItemTextW(hwnd, IDC_SUCSYNC, szFormat);
+            break;
+        }
+
+        /* Empty field data has been caught -- simply tell the user to write the NTP name to continue */
+        case ERROR_INVALID_DATA:
+        {
+            SetDlgItemTextW(hwnd, IDC_SUCSYNC, SyncStatus.szSyncType);
+            DPRINT("UpdateNTPStatus(): The user didn't submit any NTP server name!\n");
+            break;
+        }
+
+        /* General failure -- the NTP synchronization has failed for whatever reason */
+        default:
+        {
+            StringCchPrintfW(szFormat, _countof(szFormat), SyncStatus.szSyncErr, szNtpServerName);
+            SetDlgItemTextW(hwnd, IDC_SUCSYNC, szFormat);
+            DPRINT("UpdateNTPStatus(): Failed to synchronize the time! (Error: %lu).\n", dwReason);
+            break;
+        }
+    }
+}
 
 static VOID
 GetSyncSetting(HWND hwnd)
@@ -216,6 +303,7 @@ OnInitDialog(HWND hwnd)
     GetSyncSetting(hwnd);
     EnableDialogText(hwnd);
     CreateNTPServerList(hwnd);
+    SyncNTPStatusInit(hwnd);
 }
 
 static VOID
@@ -273,13 +361,10 @@ InetTimePageProc(HWND hwndDlg,
                 {
                     DWORD dwError;
 
-                    SetNTPServer(hwndDlg);
+                    SetNTPServer(hwndDlg, TRUE);
 
                     dwError = W32TimeSyncNow(L"localhost", 0, 0);
-                    if (dwError != ERROR_SUCCESS)
-                    {
-                        DisplayWin32Error(dwError);
-                    }
+                    UpdateNTPStatus(hwndDlg, dwError);
                 }
                 break;
 
@@ -313,7 +398,7 @@ InetTimePageProc(HWND hwndDlg,
             switch (lpnm->code)
             {
                 case PSN_APPLY:
-                    SetNTPServer(hwndDlg);
+                    SetNTPServer(hwndDlg, FALSE);
 
                     if (SendDlgItemMessageW(hwndDlg, IDC_AUTOSYNC, BM_GETCHECK, 0, 0) == BST_CHECKED)
                         OnAutoSync(TRUE);

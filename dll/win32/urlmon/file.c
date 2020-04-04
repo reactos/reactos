@@ -25,7 +25,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 typedef struct {
-    IUnknown            IUnknown_outer;
+    IUnknown            IUnknown_inner;
     IInternetProtocolEx IInternetProtocolEx_iface;
     IInternetPriority   IInternetPriority_iface;
 
@@ -40,7 +40,7 @@ typedef struct {
 
 static inline FileProtocol *impl_from_IUnknown(IUnknown *iface)
 {
-    return CONTAINING_RECORD(iface, FileProtocol, IUnknown_outer);
+    return CONTAINING_RECORD(iface, FileProtocol, IUnknown_inner);
 }
 
 static inline FileProtocol *impl_from_IInternetProtocolEx(IInternetProtocolEx *iface)
@@ -60,7 +60,7 @@ static HRESULT WINAPI FileProtocolUnk_QueryInterface(IUnknown *iface, REFIID rii
     *ppv = NULL;
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = &This->IUnknown_outer;
+        *ppv = &This->IUnknown_inner;
     }else if(IsEqualGUID(&IID_IInternetProtocolRoot, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolRoot %p)\n", This, ppv);
         *ppv = &This->IInternetProtocolEx_iface;
@@ -312,7 +312,7 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
 
     file_handle = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL,
             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if(file_handle == INVALID_HANDLE_VALUE && (ptr = strrchrW(path, '#'))) {
+    if(file_handle == INVALID_HANDLE_VALUE && (ptr = wcsrchr(path, '#'))) {
         /* If path contains fragment part, try without it. */
         *ptr = 0;
         file_handle = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -333,7 +333,7 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
     hres = IUri_GetExtension(pUri, &ext);
     if(SUCCEEDED(hres)) {
         if(hres == S_OK && *ext) {
-            if((ptr = strchrW(ext, '#')))
+            if((ptr = wcschr(ext, '#')))
                 *ptr = 0;
             hres = find_mime_from_ext(ext, &mime);
             if(SUCCEEDED(hres)) {
@@ -428,14 +428,14 @@ HRESULT FileProtocol_Construct(IUnknown *outer, LPVOID *ppobj)
 
     ret = heap_alloc(sizeof(FileProtocol));
 
-    ret->IUnknown_outer.lpVtbl = &FileProtocolUnkVtbl;
+    ret->IUnknown_inner.lpVtbl = &FileProtocolUnkVtbl;
     ret->IInternetProtocolEx_iface.lpVtbl = &FileProtocolExVtbl;
     ret->IInternetPriority_iface.lpVtbl = &FilePriorityVtbl;
     ret->file = INVALID_HANDLE_VALUE;
     ret->priority = 0;
     ret->ref = 1;
-    ret->outer = outer ? outer : (IUnknown*)&ret->IUnknown_outer;
+    ret->outer = outer ? outer : &ret->IUnknown_inner;
 
-    *ppobj = &ret->IUnknown_outer;
+    *ppobj = &ret->IUnknown_inner;
     return S_OK;
 }

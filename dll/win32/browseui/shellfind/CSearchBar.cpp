@@ -32,6 +32,41 @@ CSearchBar::~CSearchBar()
 
 LRESULT CSearchBar::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    HKEY hkey;
+    DWORD dwType;
+    DWORD size = sizeof(DWORD);
+    DWORD result;
+    DWORD SearchHiddenValue = 0;
+
+    result = RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer", 0, KEY_QUERY_VALUE, &hkey);
+    if (result == ERROR_SUCCESS)
+    {
+        if (RegQueryValueEx(hkey, L"SearchHidden", NULL, &dwType, (LPBYTE)&SearchHiddenValue, &size) == ERROR_SUCCESS)
+        {
+            if ((dwType != REG_DWORD) || (size != sizeof(DWORD)))
+            {
+                ERR("RegQueryKey for \"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SearchHidden\" returned error(s).\n");
+                SearchHiddenValue = 1;
+            }
+            else
+            {
+                TRACE("SearchHidden is '%d'.\n", SearchHiddenValue);
+            }
+        }
+        else
+        {
+            ERR("RegQueryKey for \"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SearchHidden\" Failed.\n");
+        }
+        RegCloseKey(hkey);
+    }
+    else
+        ERR("RegOpenKey for \"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\" Failed.\n");
+
+    if (SearchHiddenValue != 0)
+        CheckDlgButton(IDC_SEARCH_HIDDEN, BST_CHECKED);
+    else
+        CheckDlgButton(IDC_SEARCH_HIDDEN, BST_UNCHECKED);
+
     SetSearchInProgress(FALSE);
 
     HWND hCombobox = GetDlgItem(IDC_SEARCH_COMBOBOX);
@@ -129,6 +164,9 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
     CComHeapPtr<SearchStart> pSearchStart(static_cast<SearchStart *>(CoTaskMemAlloc(sizeof(SearchStart))));
     GetDlgItemText(IDC_SEARCH_FILENAME, pSearchStart->szFileName, _countof(pSearchStart->szFileName));
     GetDlgItemText(IDC_SEARCH_QUERY, pSearchStart->szQuery, _countof(pSearchStart->szQuery));
+
+    pSearchStart->SearchHidden = IsDlgButtonChecked(IDC_SEARCH_HIDDEN);
+
     if (!GetAddressEditBoxPath(pSearchStart->szPath))
     {
         ShellMessageBoxW(_AtlBaseModule.GetResourceInstance(), m_hWnd, MAKEINTRESOURCEW(IDS_SEARCHINVALID), MAKEINTRESOURCEW(IDS_SEARCHLABEL), MB_OK | MB_ICONERROR, pSearchStart->szPath);

@@ -11,25 +11,29 @@ static MUI_ENTRY trTRSetupInitPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         0,
         20,
         "Please wait while the ReactOS Setup initializes itself",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         21,
         "and discovers your devices...",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -45,37 +49,43 @@ static MUI_ENTRY trTRLanguagePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Dil Se\207imi",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  L\201tfen kurulum s\201reci i\207in kullan\215lacak dili se\207iniz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Ard\215ndan ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Bu dil, kurulacak sistemin \224n tan\215ml\215 dili olacakt\215r.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -91,67 +101,78 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "ReactOS Kur'a ho\237 geldiniz.",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "Kurulumun bu b\224l\201m\201, ReactOS \230\237letim Sistemi'ni bilgisayar\215n\215za",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "kopyalar ve kurulumun ikinci b\224l\201m\201n\201 haz\215rlar.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  ReactOS'u y\201klemek ya da y\201kseltmek i\207in ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  ReactOS'u onarmak veya y\201kseltmek i\207in R'ye bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  ReactOS Lisans Terimleri'ni ve \236artlar\215'n\215 g\224r\201nt\201lemek i\207in L'ye bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  ReactOS'u kurmadan \207\215kmak i\207in F3'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         23,
         "Daha \207ok bilgi i\207in l\201tfen u\247ray\215n\215z:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         24,
         "http://www.reactos.org",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r  R = Onar veya Y\201kselt  L = Lisans  F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -167,61 +188,71 @@ static MUI_ENTRY trTRIntroPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "ReactOS S\201r\201m Durumu",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "ReactOS alfa a\237amas\215ndad\215r, \224zellikleri tamamlanmam\215\237 anlam\215na gelmektedir",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "ve a\247\215r geli\237tirme alt\215ndad\215r. Yaln\215zca de\247erlendirme ve s\215nama ama\207lar\215yla",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "kullan\215m\215 \224nerilmektedir ve g\201nl\201k kullan\215m i\237letim sisteminiz de\247ildir.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "E\247er, ReactOS'u ger\207ek donan\215m \201zerinde \207al\215\237t\215rmay\215 deneyecekseniz",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "verilerinizi yedekleyin veya bir ikinci bilgisayar\215n\215zda s\215nay\215n.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  ReactOS Kur'a s\201rd\201rmek i\207in ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  ReactOS'u kurmaks\215z\215n \207\215kmak i\207in F3'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -237,109 +268,127 @@ static MUI_ENTRY trTRLicensePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         6,
         "Lisanslama:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         8,
         "ReactOS Sistemi, GNU GPL'yle X11, BSD ve GNU LPGL",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         9,
         "lisanslar\215 gibi ba\237ka uygun lisanslardan kod i\207eren",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "b\224l\201mlerin \237artlar\215 alt\215nda lisanslanm\215\237t\215r.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "Bu y\201zden ReactOS sisteminin b\224l\201m\201 olan t\201m yaz\215l\215mlar, korunan",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "\224zg\201n lisanslar\215yla birlikte GNU GPL alt\215nda yay\215mlan\215r.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "Bu yaz\215l\215m, yerel ve uluslararas\215 yasa uygulanabilir kullan\215m",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\201zerine hi\207bir g\201vence ve k\215s\215tlamayla gelmez. ReactOS'un",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         16,
         "lisanslanmas\215 yaln\215zca \201\207\201nc\201 yanlara da\247\215tmay\215 kapsar.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "E\247er birtak\215m nedenlerden dolay\215 ReactOS ile GNU Genel",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "Kamu Lisans\215'n\215n bir kopyas\215n\215 almad\215ysan\215z l\201tfen u\247ray\215n\215z:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "http://www.gnu.org/licenses/licenses.html",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "G\201vence:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         23,
         "Bu \224zg\201r yaz\215l\215md\215r, kopylama \237artlar\215 i\207in kayna\247a bak\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         24,
         "Burada hi\207bir g\201vence YOKTUR, SATILAB\230L\230RL\230K veya",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "BEL\230RL\230 B\230R AMACA UYGUNLUK i\207in bile.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Geri D\224n",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -355,85 +404,99 @@ static MUI_ENTRY trTRDevicePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A\237a\247\215daki liste \237imdiki ayg\215t ayarlar\215n\215 g\224sterir.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         24,
         11,
         "Bilgisayar:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         12,
         "G\224r\201nt\201:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         13,
         "Klavye:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         14,
         "Klavye D\201zeni:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         16,
         "Do\247rula:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         25,
         16,
         "Bu ayg\215t ayarlar\215n\215 do\247rula.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         19,
         "Ayg\215t ayarlar\215n\215, bir se\207enek se\207mek i\207in Yukar\215 veya A\237a\247\215",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         20,
         "tu\237lar\215na basarak de\247i\237tirebilirsiniz. Sonra ba\237ka ayarlar se\207mek i\207in",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         21,
         "ENTER tu\237una bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         23,
         "T\201m ayarlar uygun oldu\247unda ""Bu ayg\215t ayarlar\215n\215 do\247rula.""y\215",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         24,
         "se\207iniz ve ENTER tu\237una bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -449,55 +512,64 @@ static MUI_ENTRY trTRRepairPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "ReactOS Kur, bir \224n geli\237me evresindedir. Daha t\201m\201yle kullan\215\237l\215",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "bir kurulum uygulamas\215n\215n t\201m i\237levlerini desteklemez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "Onarma i\237levleri daha bitirilmemi\237tir.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  \230\237letim sistemini y\201kseltmek i\207in U'ya bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Kurtarma Konsolu i\207in R'ye bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Ana sayfaya geri d\224nmek i\207in ESC'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Bilgisayar\215n\215z\215 yeniden ba\237latmak i\207in ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ESC = Ana Sayfa  U = Y\201kselt  R = Kurtarma  ENTER = Yeniden Ba\237lat",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -513,61 +585,71 @@ static MUI_ENTRY trTRUpgradePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "ReactOS Kur, a\237a\247\215da listelenen bir mevcut ReactOS kurulumunu",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "y\201kseltebilir ya da ReactOS kurulumu zarar g\224rm\201\237se Kur program\215 onu",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "onarmay\215 deneyebilir.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "Onar\215m i\237levleri hen\201z tamamlanmam\215\237t\215r.",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Bir i\237letim sistemi se\207mek i\207in YUKARI'ya ya da A\236A\246I'ya bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Se\207ilmi\237 i\237letim sistemi kurulumunu y\201kseltmek i\207in U'ya bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Bir yeni kuruluma s\201rd\201rmek i\207in ESC'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  ReactOS kurmaks\215z\215n \207\215kmak i\207in F3'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "U = Y\201kselt   ESC = Y\201kseltme   F3 = \200\215k\215\237",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -583,43 +665,50 @@ static MUI_ENTRY trTRComputerPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Kurulum yap\215lacak bilgisayar\215n t\201r\201n\201 se\207mek isteyebilirsiniz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  \230stenen bilgisyar t\201r\201n\201 se\207mek i\207in YUKARI'ya veya A\236A\246I'ya bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Ard\215ndan ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Bilgisayar t\201r\201n\201 de\247i\237tirmeden bir \224nceki sayfaya",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   d\224nmek i\207in ESC tu\237una bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r   ESC = \230ptal   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -635,31 +724,36 @@ static MUI_ENTRY trTRFlushPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "Dizge, \237imdi diskinize saklanm\215\237 t\201m veriyi do\247ruluyor.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "Bu bir dakika s\201rebilir.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "Bitti\247inde bilgisayar\215n\215z kendili\247inden yeniden ba\237layacakt\215r.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "\231n bellek temizleniyor...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -675,37 +769,43 @@ static MUI_ENTRY trTRQuitPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "ReactOS, t\201m\201yle kurulmad\215.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "A: s\201r\201c\201s\201nden disketi ve t\201m CD s\201r\201c\201lerinden",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "CD-ROM'lar\215 \207\215kart\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "Bilgisayar\215n\215z\215 yeniden ba\237latmak i\207in ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "L\201tfen bekleyiniz...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -721,43 +821,50 @@ static MUI_ENTRY trTRDisplayPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Kurulum yap\215lacak g\224r\201nt\201n\201n t\201r\201n\201 se\207mek isteyebilirsiniz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  \230stenen g\224r\201nt\201 t\201r\201n\201 se\207mek i\207in YUKARI'ya veya A\236A\246I'ya bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Ard\215ndan ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  G\224r\201nt\201 t\201r\201n\201 de\247i\237tirmeden bir \224nceki sayfaya",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   d\224nmek i\207in ESC tu\237una bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r   ESC = \230ptal   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -773,37 +880,43 @@ static MUI_ENTRY trTRSuccessPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "ReactOS'un ana bile\237enleri ba\237ar\215l\215 olarak kuruldu.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "A: s\201r\201c\201s\201nden disketi ve t\201m CD s\201r\201c\201lerinden",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "CD-ROM'lar\215 \207\215kart\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "Bilgisayar\215n\215z\215 yeniden ba\237latmak i\207in ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -819,31 +932,36 @@ static MUI_ENTRY trTRBootPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Kur, bilgisayar\215n\215z\215n sabit diskine \224ny\201kleyiciyi kuramad\215.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "L\201tfen A: s\201r\201c\201s\201ne bi\207imlendirilmi\237 bir disket tak\215n\215z",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "ve ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -860,61 +978,71 @@ static MUI_ENTRY trTRSelectPartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A\237a\247\215daki liste, var olan b\224l\201mleri ve yeni b\224l\201mler i\207in",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "kullan\215lmayan disk bo\237lu\247unu g\224sterir.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "\x07  Bir liste girdisini se\207mek i\207in YUKARI'ya ya da A\236A\246I'ya bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Se\207ili b\224l\201me ReactOS'u y\201klemek i\207in ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Bir ana b\224l\201m olu\237turmak i\207in P'ye bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Bir geni\237letilmi\237 b\224l\201m olu\237turmak i\207in E'ye bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Mant\215ksal bir b\224l\201m olu\237turmak i\207in L'ye bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Var olan bir b\224l\201m silmek i\207in D'ye bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "L\201tfen bekleyiniz...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -930,97 +1058,113 @@ static MUI_ENTRY trTRChangeSystemPartition[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "The current system partition of your computer",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "on the system disk",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "uses a format not supported by ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         18,
         "In order to successfully install ReactOS, the Setup program must change",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         19,
         "the current system partition to a new one.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         21,
         "The new candidate system partition is:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "\x07  To accept this choice, press ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         27,
         "\x07  To manually change the system partition, press ESC to go back to",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         28,
         "   the partition selection list, then select or create a new system",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         29,
         "   partition on the system disk.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         32,
         "In case there are other operating systems that depend on the original",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         33,
         "system partition, you may need to either reconfigure them for the new",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         34,
         "system partition, or you may need to change the system partition back",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         35,
         "to the original one after finishing the installation of ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   ESC = Cancel",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1036,79 +1180,92 @@ static MUI_ENTRY trTRConfirmDeleteSystemPartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Kur'a sistem b\224l\201m\201n\201 silmeyi sordunuz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "Sistem b\224l\201mleri; tan\215lama programlar\215, donan\215m yap\215land\215rma",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "programlar\215, ReactOS gibi bir i\237letim sistemini ba\237latmak i\207in programlar",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "veya donan\215m \201reticisi taraf\215ndan sa\247lanan ba\237ka programlar i\207erebilir.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "Yaln\215zca, b\224l\201mde b\224yle programlar\215n olmad\215\247\215ndan emin oldu\247unuzda ya da",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "onlar\215 silmek istedi\247inizden emin oldu\247unuzda bir sistem b\224l\201m\201n\201 siliniz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "B\224l\201m\201 sildi\247inizde ReactOS Kur'u bitirene dek bilgisayar\215 sabit diskten",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         17,
         "\224ny\201kleyemeyebilirsiniz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         20,
         "\x07  Sistem b\224l\201m\201n\201 silmek i\207in ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "Sonra b\224l\201m\201 silmeyi onaylamak i\207in yeniden sorulacaks\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         24,
         "\x07  Bir \224nceki sayfaya d\224nmek i\207in ESC'e bas\215n\215z. B\224l\201m silinmeyecek.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r  ESC = \230ptal",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1124,31 +1281,35 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "B\224l\201m Bi\207imlendirme",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "Kur, \237imdi b\224l\201m\201 bi\207imlendirecek. S\201rd\201rmek i\207in ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_FORMAT_PROMPT
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         NULL,
-        TEXT_STYLE_NORMAL
+        0
     }
 };
 
@@ -1158,37 +1319,43 @@ static MUI_ENTRY trTRInstallDirectoryEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Kur, se\207ili b\224l\201me ReactOS dosyalar\215n\215 y\201kler. ReactOS'un",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "y\201klenmesini istedi\247iniz bir dizin se\207iniz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "\231nerilen dizini de\247i\237tirmek i\207in, karakterleri silmek i\207in BACKSPACE'e",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "bas\215n\215z ve ard\215ndan ReactOS'un y\201klenmesini istedi\247iniz dizini yaz\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1204,31 +1371,36 @@ static MUI_ENTRY trTRFileCopyEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         0,
         12,
         "ReactOS Kur, ReactOS kurulum dizininize dosyalar\215 kopyalarken",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         13,
         " l\201tfen bekleyiniz.",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         14,
         "Bu, bitirmek i\207in birka\207 dakika s\201rebilir.",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         50,
         0,
         "\xB3 L\201tfen bekleyiniz...",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1244,43 +1416,50 @@ static MUI_ENTRY trTRBootLoaderEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Kur, \224ny\201kleyiciyi kuruyor.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "\231ny\201kleyiciyi sabit diskin \201zerine kur. (MBR ve VBR)",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\231ny\201kleyiciyi sabit diskin \201zerine kur. (Yaln\215zca VBR)",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "\231ny\201kleyiciyi bir diskete kur.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\231ny\201kleyici kurulumunu ge\207.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1296,43 +1475,50 @@ static MUI_ENTRY trTRKeyboardSettingsEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Kurulum yap\215lacak klavyenin t\201r\201n\201 se\207mek isteyebilirsiniz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  \230stenen klavye t\201r\201n\201 se\207mek i\207in YUKARI'ya veya A\236A\246I'ya bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Ard\215ndan ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Klavye t\201r\201n\201 de\247i\237tirmeden bir \224nceki sayfaya",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   d\224nmek i\207in ESC tu\237una bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r   ESC = \230ptal   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1348,43 +1534,50 @@ static MUI_ENTRY trTRLayoutSettingsEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "L\201tfen \224ntan\215ml\215 olarak kurulacak bir d\201zen se\207iniz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  \230stenen klavye d\201zenini se\207mek i\207in YUKARI'ya veya A\236A\246I'ya bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Ard\215ndan ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  G\224r\201nt\201 t\201r\201n\201 de\247i\237tirmeden bir \224nceki sayfaya",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   d\224nmek i\207in ESC d\201\247mesine bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = S\201rd\201r   ESC = \230ptal   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1401,19 +1594,22 @@ static MUI_ENTRY trTRPrepareCopyEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Kur, ReactOS dosyalar\215n\215 kopyalamak i\207in bilgisayar\215n\215z\215 haz\215rl\215yor.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Dosya kopylalama listesi olu\237turuluyor...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1430,7 +1626,8 @@ static MUI_ENTRY trTRSelectFSEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
@@ -1460,7 +1657,8 @@ static MUI_ENTRY trTRSelectFSEntries[] =
         0,
         0,
         "ENTER = S\201rd\201r   ESC = \230ptal   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1476,37 +1674,43 @@ static MUI_ENTRY trTRDeletePartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "B\224l\201m\201 silmeyi se\207tiniz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "\x07  B\224l\201m\201 silmek i\207in L'ye bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         11,
         19,
         "UYARI: Bu b\224l\201mdeki t\201m veriler yitirilecektir!",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  \230ptal etmek i\207in ESC'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "L = B\224l\201m Sil   ESC = \230ptal   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1522,19 +1726,22 @@ static MUI_ENTRY trTRRegistryEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Kur, sistem yap\215land\215rmas\215n\215 g\201ncelle\237tiriyor.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Kay\215t y\215\247\215nlar\215 olu\237turuluyor...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,

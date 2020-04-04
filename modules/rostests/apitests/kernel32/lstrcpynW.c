@@ -20,5 +20,5 @@ START_TEST(lstrcpynW)
     ok(!lstrcmpW(buffer, L"Copy this"), "Copy went wrong.\n");
     
     /* Test some invalid buffer */
-    ok(lstrcpynW((LPWSTR)0xbaadf00d, L"Copy this string", 256) == NULL, "lstrncpyW should have returned NULL.\n");
+    ok(lstrcpynW((LPWSTR)(LONG_PTR)0xbaadf00d, L"Copy this string", 256) == NULL, "lstrncpyW should have returned NULL.\n");
 }

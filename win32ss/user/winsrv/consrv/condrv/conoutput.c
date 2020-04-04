@@ -82,7 +82,7 @@ ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                          IN ULONG BufferType,
                          IN PVOID ScreenBufferInfo)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     if ( Console == NULL || Buffer == NULL ||
         (BufferType != CONSOLE_TEXTMODE_BUFFER && BufferType != CONSOLE_GRAPHICS_BUFFER) )
@@ -329,8 +329,7 @@ ConDrvSetConsoleCursorPosition(IN PCONSOLE Console,
     OldCursorX = Buffer->CursorPosition.X;
     OldCursorY = Buffer->CursorPosition.Y;
     Buffer->CursorPosition = *Position;
-    // Buffer->CursorPosition.X = Position->X;
-    // Buffer->CursorPosition.Y = Position->Y;
+
     if ( ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer) &&
          (!TermSetScreenInfo(Console, (PCONSOLE_SCREEN_BUFFER)Buffer, OldCursorX, OldCursorY)) )
     {

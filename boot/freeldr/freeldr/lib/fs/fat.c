@@ -519,8 +519,8 @@ BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID Directory
 
     TRACE("FatSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x EntryCount = %d FileName = %s\n", DirectoryBuffer, EntryCount, FileName);
 
-    memset(ShortNameBuffer, 0, 13 * sizeof(CHAR));
-    memset(LfnNameBuffer, 0, 261 * sizeof(CHAR));
+    RtlZeroMemory(ShortNameBuffer, 13 * sizeof(CHAR));
+    RtlZeroMemory(LfnNameBuffer, 261 * sizeof(CHAR));
 
     for (CurrentEntry=0; CurrentEntry<EntryCount; CurrentEntry++, DirectoryBuffer = ((PDIRENTRY)DirectoryBuffer)+1)
     {
@@ -548,8 +548,8 @@ BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID Directory
         //
         if (DirEntry->FileName[0] == '\xE5')
         {
-            memset(ShortNameBuffer, 0, 13 * sizeof(CHAR));
-            memset(LfnNameBuffer, 0, 261 * sizeof(CHAR));
+            RtlZeroMemory(ShortNameBuffer, 13 * sizeof(CHAR));
+            RtlZeroMemory(LfnNameBuffer, 261 * sizeof(CHAR));
             continue;
         }
 
@@ -642,8 +642,8 @@ BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID Directory
         //
         if (DirEntry->Attr & ATTR_VOLUMENAME)
         {
-            memset(ShortNameBuffer, 0, 13 * sizeof(UCHAR));
-            memset(LfnNameBuffer, 0, 261 * sizeof(UCHAR));
+            RtlZeroMemory(ShortNameBuffer, 13 * sizeof(UCHAR));
+            RtlZeroMemory(LfnNameBuffer, 261 * sizeof(UCHAR));
             continue;
         }
 
@@ -700,8 +700,8 @@ BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID Directory
         //
         // Nope, no match - zero buffers and continue looking
         //
-        memset(ShortNameBuffer, 0, 13 * sizeof(UCHAR));
-        memset(LfnNameBuffer, 0, 261 * sizeof(UCHAR));
+        RtlZeroMemory(ShortNameBuffer, 13 * sizeof(UCHAR));
+        RtlZeroMemory(LfnNameBuffer, 261 * sizeof(UCHAR));
         continue;
     }
 
@@ -783,7 +783,7 @@ ARC_STATUS FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, PFAT_FILE_INFO
 
     TRACE("FatLookupFile() FileName = %s\n", FileName);
 
-    memset(FatFileInfoPointer, 0, sizeof(FAT_FILE_INFO));
+    RtlZeroMemory(FatFileInfoPointer, sizeof(FAT_FILE_INFO));
 
     //
     // Figure out how many sub-directories we are nested in
@@ -852,7 +852,7 @@ ARC_STATUS FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, PFAT_FILE_INFO
         }
     }
 
-    memcpy(FatFileInfoPointer, &FatFileInfo, sizeof(FAT_FILE_INFO));
+    RtlCopyMemory(FatFileInfoPointer, &FatFileInfo, sizeof(FAT_FILE_INFO));
 
     return ESUCCESS;
 }
@@ -1178,7 +1178,7 @@ BOOLEAN FatReadPartialCluster(PFAT_VOLUME_INFO Volume, ULONG ClusterNumber, ULON
 
     if (FatReadVolumeSectors(Volume, ClusterStartSector + SectorOffset, SectorCount, ReadBuffer))
     {
-        memcpy(Buffer, ReadBuffer + StartingOffset, Length);
+        RtlCopyMemory(Buffer, ReadBuffer + StartingOffset, Length);
         Success = TRUE;
     }
 

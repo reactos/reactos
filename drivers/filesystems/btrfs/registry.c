@@ -37,7 +37,8 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
     BTRFS_UUID* uuid = &Vcb->superblock.uuid;
     mount_options* options = &Vcb->options;
     UNICODE_STRING path, ignoreus, compressus, compressforceus, compresstypeus, readonlyus, zliblevelus, flushintervalus,
-                   maxinlineus, subvolidus, skipbalanceus, nobarrierus, notrimus, clearcacheus, allowdegradedus, zstdlevelus;
+                   maxinlineus, subvolidus, skipbalanceus, nobarrierus, notrimus, clearcacheus, allowdegradedus, zstdlevelus,
+                   norootdirus;
     OBJECT_ATTRIBUTES oa;
     NTSTATUS Status;
     ULONG i, j, kvfilen, index, retlen;
@@ -121,6 +122,7 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
     RtlInitUnicodeString(&clearcacheus, L"ClearCache");
     RtlInitUnicodeString(&allowdegradedus, L"AllowDegraded");
     RtlInitUnicodeString(&zstdlevelus, L"ZstdLevel");
+    RtlInitUnicodeString(&norootdirus, L"NoRootDir");
 
     do {
         Status = ZwEnumerateValueKey(h, index, KeyValueFullInformation, kvfi, kvfilen, &retlen);
@@ -193,6 +195,10 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
                 DWORD* val = (DWORD*)((uint8_t*)kvfi + kvfi->DataOffset);
 
                 options->zstd_level = *val;
+            } else if (FsRtlAreNamesEqual(&norootdirus, &us, true, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
+                DWORD* val = (DWORD*)((uint8_t*)kvfi + kvfi->DataOffset);
+
+                options->no_root_dir = *val;
             }
         } else if (Status != STATUS_NO_MORE_ENTRIES) {
             ERR("ZwEnumerateValueKey returned %08x\n", Status);
@@ -805,6 +811,7 @@ void read_registry(PUNICODE_STRING regpath, bool refresh) {
     get_registry_value(h, L"AllowDegraded", REG_DWORD, &mount_allow_degraded, sizeof(mount_allow_degraded));
     get_registry_value(h, L"Readonly", REG_DWORD, &mount_readonly, sizeof(mount_readonly));
     get_registry_value(h, L"ZstdLevel", REG_DWORD, &mount_zstd_level, sizeof(mount_zstd_level));
+    get_registry_value(h, L"NoRootDir", REG_DWORD, &mount_no_root_dir, sizeof(mount_no_root_dir));
 
     if (!refresh)
         get_registry_value(h, L"NoPNP", REG_DWORD, &no_pnp, sizeof(no_pnp));

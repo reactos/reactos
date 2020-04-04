@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1041,7 +1041,7 @@ enum AcpiErstInstructions
 
 enum AcpiErstCommandStatus
 {
-    ACPI_ERST_SUCESS                = 0,
+    ACPI_ERST_SUCCESS                = 0,
     ACPI_ERST_NO_SPACE              = 1,
     ACPI_ERST_NOT_AVAILABLE         = 2,
     ACPI_ERST_FAILURE               = 3,

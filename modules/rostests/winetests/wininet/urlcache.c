@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +30,7 @@
 #include "winnls.h"
 #include "wininet.h"
 #include "winineti.h"
+#include "shlobj.h"
 
 #include "wine/test.h"
 
@@ -891,13 +895,13 @@ static void test_urlcacheW(void)
 
     if(ie10_cache) {
         if(!MultiByteToWideChar(CP_ACP, 0, urls[6].encoded_url, -1,
-                    urls[6].url, sizeof(urls[6].url)/sizeof(WCHAR)))
+                    urls[6].url, ARRAY_SIZE(urls[6].url)))
             urls[6].url[0] = 0;
 
         trace("converted url in test 6: %s\n", wine_dbgstr_w(urls[6].url));
     }
 
-    for(i=0; i<sizeof(urls)/sizeof(*urls); i++) {
+    for(i=0; i<ARRAY_SIZE(urls); i++) {
         INTERNET_CACHE_ENTRY_INFOA *entry_infoA;
         INTERNET_CACHE_ENTRY_INFOW *entry_infoW;
         DWORD size;
@@ -1100,6 +1104,102 @@ static void test_trailing_slash(void)
     DeleteFileA(filename);
 }
 
+static void get_cache_path(DWORD flags, char path[MAX_PATH], char path_win8[MAX_PATH])
+{
+    BOOL ret;
+    int folder = -1;
+    const char *suffix = "";
+    const char *suffix_win8 = "";
+
+    switch (flags)
+    {
+    case 0:
+    case CACHE_CONFIG_CONTENT_PATHS_FC:
+        folder = CSIDL_INTERNET_CACHE;
+        suffix = "\\Content.IE5\\";
+        suffix_win8 = "\\IE\\";
+        break;
+
+    case CACHE_CONFIG_COOKIES_PATHS_FC:
+        folder = CSIDL_COOKIES;
+        suffix = "\\";
+        suffix_win8 = "\\";
+        break;
+
+    case CACHE_CONFIG_HISTORY_PATHS_FC:
+        folder = CSIDL_HISTORY;
+        suffix = "\\History.IE5\\";
+        suffix_win8 = "\\History.IE5\\";
+        break;
+
+    default:
+        ok(0, "unexpected flags %#x\n", flags);
+        break;
+    }
+
+    ret = SHGetSpecialFolderPathA(0, path, folder, FALSE);
+    ok(ret, "SHGetSpecialFolderPath error %u\n", GetLastError());
+
+    strcpy(path_win8, path);
+    strcat(path_win8, suffix_win8);
+
+    strcat(path, suffix);
+}
+
+static void test_GetUrlCacheConfigInfo(void)
+{
+    INTERNET_CACHE_CONFIG_INFOA info;
+    struct
+    {
+        INTERNET_CACHE_CONFIG_INFOA *info;
+        DWORD dwStructSize;
+        DWORD flags;
+        BOOL ret;
+        DWORD error;
+    } td[] =
+    {
+#if 0 /* crashes under Vista */
+        { NULL, 0, 0, FALSE, ERROR_INVALID_PARAMETER },
+#endif
+        { &info, 0, 0, TRUE },
+        { &info, sizeof(info) - 1, 0, TRUE },
+        { &info, sizeof(info) + 1, 0, TRUE },
+        { &info, 0, CACHE_CONFIG_CONTENT_PATHS_FC, TRUE },
+        { &info, sizeof(info), CACHE_CONFIG_CONTENT_PATHS_FC, TRUE },
+        { &info, 0, CACHE_CONFIG_COOKIES_PATHS_FC, TRUE },
+        { &info, sizeof(info), CACHE_CONFIG_COOKIES_PATHS_FC, TRUE },
+        { &info, 0, CACHE_CONFIG_HISTORY_PATHS_FC, TRUE },
+        { &info, sizeof(info), CACHE_CONFIG_HISTORY_PATHS_FC, TRUE },
+    };
+    int i;
+    BOOL ret;
+
+    for (i = 0; i < ARRAY_SIZE(td); i++)
+    {
+        if (td[i].info)
+        {
+            memset(&info, 0, sizeof(*td[i].info));
+            info.dwStructSize = td[i].dwStructSize;
+        }
+
+        SetLastError(0xdeadbeef);
+        ret = GetUrlCacheConfigInfoA(td[i].info, NULL, td[i].flags);
+        ok(ret == td[i].ret, "%d: expected %d, got %d\n", i, td[i].ret, ret);
+        if (!ret)
+            ok(GetLastError() == td[i].error, "%d: expected %u, got %u\n", i, td[i].error, GetLastError());
+        else
+        {
+            char path[MAX_PATH], path_win8[MAX_PATH];
+
+            get_cache_path(td[i].flags, path, path_win8);
+
+            ok(info.dwStructSize == td[i].dwStructSize, "got %u\n", info.dwStructSize);
+            ok(!lstrcmpA(info.CachePath, path) || !lstrcmpA(info.CachePath, path_win8),
+               "%d: expected %s or %s, got %s\n", i, path, path_win8, info.CachePath);
+        }
+    }
+}
+
 START_TEST(urlcache)
 {
     HMODULE hdll;
@@ -1124,4 +1224,5 @@ START_TEST(urlcache)
     test_FindCloseUrlCache();
     test_GetDiskInfoA();
     test_trailing_slash();
+    test_GetUrlCacheConfigInfo();
 }

@@ -14,25 +14,29 @@ static MUI_ENTRY ukUASetupInitPageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         0,
         20,
         "Please wait while the ReactOS Setup initializes itself",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         21,
         "and discovers your devices...",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -48,37 +52,43 @@ static MUI_ENTRY ukUALanguagePageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\202\250\241i\340 \254\256\242\250",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  \201\343\244\354-\253\240\341\252\240, \242\250\241\245\340i\342\354 \254\256\242\343, \357\252\240 \241\343\244\245 \242\250\252\256\340\250\341\342\240\255\240 \257\340\250 \242\341\342\240\255\256\242\253\245\255\255i.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   \217\256\342i\254 \255\240\342\250\341\255i\342\354 ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  \226\357 \254\256\242\240 \241\343\244\245 \242\250\252\256\340\250\341\342\256\242\343\242\240\342\250\341\354 \343 \242\341\342\240\255\256\242\253\245\255i\251 \341\250\341\342\245\254i.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250  F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -94,67 +104,78 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\213\240\341\252\240\242\256 \257\340\256\341\250\254\256 \244\256 \257\340\256\243\340\240\254\250 \242\341\342\240\255\256\242\253\245\255\255\357 ReactOS",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "\215\240 \346\354\256\254\343 \245\342\240\257i \242\341\342\240\255\256\242\253\245\255\255\357 \242i\244\241\343\244\245\342\354\341\357 \252\256\257i\356\242\240\255\255\357 ReactOS \255\240 \202\240\350",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "\252\256\254\257'\356\342\245\340 i \257i\244\243\256\342\256\242\252\240 \244\256 \244\340\343\243\256\243\256 \245\342\240\257\343 \242\341\342\240\255\256\242\253\245\255\255\357.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  \215\240\342\250\341\255i\342\354 ENTER \244\253\357 \242\341\342\240\255\256\242\253\245\255\255\357 \240\241\256 \256\255\256\242\253\245\255\255\357 ReactOS",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  \215\240\342\250\341\255i\342\354 R \244\253\357 \256\255\256\242\253\245\255\255\357 ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  \215\240\342\250\341\255i\342\354 L \244\253\357 \257\245\340\245\243\253\357\244\343 \253i\346\245\255\247i\251\255\250\345 \343\254\256\242 ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  \215\240\342\250\341\255i\342\354 F3 \351\256\241 \242\250\251\342\250. \255\245 \242\341\342\240\255\256\242\253\356\356\347\250 ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         23,
         "\204\253\357 \256\342\340\250\254\240\255\255\357 \244\245\342\240\253\354\255i\350\256\365 i\255\344\256\340\254\240\346i\365 \257\340\256 ReactOS, \241\343\244\354-\253\240\341\252\240 \242i\244\242i\244\240\251\342\245:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         24,
         "http://www.reactos.org/uk/",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250  R = \202i\244\255\256\242\250\342\250  L = \213i\346\245\255\247i\357  F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -170,61 +191,71 @@ static MUI_ENTRY ukUAIntroPageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\221\342\240\255 \242\245\340\341i\365 ReactOS",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "ReactOS \247\255\240\345\256\244\250\342\354\341\357 \242 \341\342\240\244i\365 \240\253\354\344\240-\342\245\341\342\343\242\240\255\255\357, \241i\253\354\350i\341\342\354 \344\343\255\252\346i\251 \351\245 \255\245 ",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "\244\256\242\245\244\245\255i \244\256 \243\256\342\256\242\255\256\341\342i, \240\253\245 \365\345 \340\256\247\340\256\241\252\240 \251\244\245 \257\256\242\255\250\254 \345\256\244\256\254.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "\215\245 \340\245\252\256\254\245\255\244\343\363\342\354\341\357 \242\250\252\256\340\250\341\342\256\242\343\242\240\342\250 \346\356 \252\256\257i\356 \244\253\357 \257\256\242\341\357\252\244\245\255\255\256\243\256 \252\256\340\250\341\342\343\242\240\255\255\357.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "\237\252\351\256 \242\250 \345\256\347\245\342\245 \242\341\342\240\255\256\242\250\342\250 \216\221 \255\240 \340\256\241\256\347\256\254\343 \256\241\253\240\244\255\240\255\255i,",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "\255\245 \247\240\241\343\244\354\342\245 \247\241\245\340\245\243\342\250 \340\245\247\245\340\242\255\343 \252\256\257i\356 \242\341i\345 \242\240\350\250\345 \244\240\255\250\345.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  \215\240\342\250\341\255i\342\354 ENTER \244\253\357 \257\340\256\244\256\242\246\245\255\255\357 \242\341\342\240\255\256\242\253\245\255\255\357 ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  \215\240\342\250\341\255i\342\354 F3 \351\256\241 \242\250\251\342\250 \255\245 \242\341\342\240\255\256\242\253\356\356\347\250 ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\244\250\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -240,115 +271,134 @@ static MUI_ENTRY ukUALicensePageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         6,
         "\213i\346\245\255\247i\357:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         8,
         "ReactOS \253i\346\245\255\247\256\242\240\255\256 \242i\244\257\256\242i\244\255\256 \244\256 \343\254\256\242",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         9,
         "GNU GPL. \222\240\252\256\246 ReactOS \254i\341\342\250\342\354 \252\256\254\257\256\255\245\255\342\250, \357\252i \253i\346\245\255\247\256\242\240\255\256",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\247\240 \341\343\254i\341\255\250\254\250 \253i\346\245\255\247i\357\254\250: X11, BSD, GNU LGPL.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "\202\341\245 \257\340\256\243\340\240\254\255\245 \247\240\241\245\247\257\245\347\245\255\255\357, \357\252\245 \242\345\256\244\250\342\354 \242 \341\250\341\342\245\254\343 ReactOS, \242\250\257\343\351\245\255\256",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "\257i\244 \202i\244\252\340\250\342\256\356 \253i\346\245\255\247i\251\255\256\356 \343\243\256\244\256\356 GNU GPL i\247 \247\241\245\340\245\246\245\255\255\357\254",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\257\245\340\242\250\255\255\250\345 \253i\346\245\255\247i\365.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\204\240\255\245 \257\340\256\243\340\240\254\255\245 \247\240\241\245\247\257\245\347\245\255\255\357 \257\256\341\342\240\242\253\357\363\342\354\341\357 \201\205\207 \203\200\220\200\215\222I\365 i \241\245\247 \256\241\254\245\246\245\255\354",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         16,
         "\343 \242\250\252\256\340\250\341\342\240\255\255i, \357\252 \247\240 \254i\341\346\245\242\250\254, \342\240\252 i \254i\246\255\240\340\256\244\255\250\254 \257\340\240\242\256\254",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\213i\346\245\255\247i\357 ReactOS \244\256\247\242\256\253\357\363 \257\245\340\245\244\240\347\343 \257\340\256\244\343\252\342\343 \342\340\245\342i\254 \256\341\256\241\240\254.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "\237\252\351\256 \347\245\340\245\247 \241\343\244\354-\357\252i \257\340\250\347\250\255\250 \202\250 \255\245 \256\342\340\250\254\240\253\250 \252\256\257i\356 \202i\244\252\340\250\342\256\365",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\253i\346\245\255\247i\251\255\256\365 \343\243\256\244\250 GNU \340\240\247\256\254 \247 ReactOS, \242i\244\242i\244\240\363\342\245",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         22,
         "\203\240\340\240\255\342i\365:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         24,
         "\226\245 \363 \242i\253\354\255\245 \257\340\256\243\340\240\254\255\245 \247\240\241\245\247\257\245\347\245\255\255\357; \244\250\242. \244\246\245\340\245\253\256 \244\253\357 \257\245\340\245\243\253\357\244\343 \257\340\240\242.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "\215\245 \244\240\356\342\354\341\357 \215I\237\212I \243\240\340\240\255\342i\365; \255i \243\240\340\240\255\342i\365 \222\216\202\200\220\215\216\203\216 \221\222\200\215\223, \255i ",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         26,
         "\217\220\210\204\200\222\215\216\221\222I \204\213\237 \212\216\215\212\220\205\222\215\210\225 \226I\213\205\211",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\256\242\245\340\255\343\342\250\341\354",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -364,84 +414,98 @@ static MUI_ENTRY ukUADevicePageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\223 \341\257\250\341\252\343 \255\250\246\347\245 \257\340\250\242\245\244\245\255i \257\256\342\256\347\255i \257\240\340\240\254\245\342\340\250 \257\340\250\341\342\340\256\365\242.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         24,
         11,
         "\212\256\254\257'\356\342\245\340:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         12,
         "\205\252\340\240\255:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         13,
         "\212\253\240\242i\240\342\343\340\240:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         14,
         "\212\253\240\242. \340\256\247\252\253\240\244\252\240:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         16,
         "\217\340\250\251\255\357\342\250:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         25,
         16, "\207\240\341\342\256\341\343\242\240\342\250 \244\240\255i \257\240\340\240\254\245\342\340\250 \257\340\250\341\342\340\256\365\242",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         19,
         "\202\250 \254\256\246\245\342\245 \247\254i\255\250\342\250 \257\240\340\240\254\245\342\340\250 \257\340\250\341\342\340\256\365\242 \255\240\342\250\341\252\240\356\347\250 \252\253\240\242i\350i \202\203\216\220\223 i \202\215\210\207",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         20,
         "\244\253\357 \242\250\244i\253\245\255\255\357 \245\253\245\254\245\255\342\343 i \252\253\240\242i\350\343 ENTER \244\253\357 \242\250\241\256\340\343 i\255\350\250\345 \242\240\340i\240\255\342i\242",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         21,
         "\257\240\340\240\254\245\342\340i\242.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         23,
         "\212\256\253\250 \242\341i \257\240\340\240\254\245\342\340\250 \241\343\244\343\342\354 \242\250\247\255\240\347\245\255i, \242\250\241\245\340i\342\354",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         24,
         "\"\207\240\341\342\256\341\343\242\240\342\250 \244\240\255i \257\240\340\240\254\245\342\340\250 \257\340\250\341\342\340\256\365\242\" i \255\240\342\250\341\255i\342\354 ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -457,55 +521,64 @@ static MUI_ENTRY ukUARepairPageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\202\341\342\240\255\256\242\253\356\242\240\347 ReactOS \247\255\240\345\256\244\250\342\354\341\357 \242 \340\240\255\255i\251 \341\342\240\244i\365 \340\256\247\340\256\241\252\250 i \351\245 \255\245",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "\257i\244\342\340\250\254\343\363 \242\341i \344\343\255\252\346i\365 \257\256\242\255\256\346i\255\255\256\365 \257\340\256\243\340\240\254\250 \242\341\342\240\255\256\242\253\245\255\255\357.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "\224\343\255\252\346i\365 \242i\244\255\256\242\253\245\255\255\357 \351\245 \255\245 \242\257\340\256\242\240\244\246\245\255i.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  \215\240\342\250\341\255i\342\354 U \351\256\241 \256\255\256\242\250\342\250 OS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  \215\240\342\250\341\255i\342\354 R \244\253\357 \247\240\257\343\341\252\343 \212\256\255\341\256\253i \202i\244\255\256\242\253\245\255\255\357.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  \215\240\342\250\341\255i\342\354 ESC \244\253\357 \257\256\242\245\340\255\245\255\255\357 \244\256 \243\256\253\256\242\255\256\365 \341\342\256\340i\255\252\250.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  \215\240\342\250\341\255i\342\354 ENTER \351\256\241 \257\245\340\245\247\240\242\240\255\342\240\246\250\342\250 \252\256\254\257'\356\342\245\340.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ESC = \203\256\253\256\242\255\240 \221\342\256\340i\255\252\240  U = \216\255\256\242\250\342\250  R = \202i\244\255\256\242\250\342\250  ENTER = \217\245\340\245\247\240\242\240\255\342\240\246\250\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -521,61 +594,71 @@ static MUI_ENTRY ukUAUpgradePageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\217\340\256\243\340\240\254\240 \242\341\342\240\255\256\242\253\245\255\255\357 \254\256\246\245 \256\255\256\242\250\342\250 \256\244\255\343 i\247 \242\341\342\240\255\256\242\253\245\255\250\345 \252\256\257i\251 ReactOS,",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "\257\245\340\245\340\240\345\256\242\240\255\250\345 \255\250\246\347\245, \240\241\256 \357\252\351\256 \242\341\342\240\255\256\242\252\240 ReactOS \257\256\350\252\256\244\246\245\255\240, \254\256\246\255\240",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "\341\257\340\256\241\343\242\240\342\250 \242i\244\255\256\242\250\342\250 \365\365.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "\224\343\255\252\346i\357 \242i\244\255\256\242\253\245\255\255\357 \242 \244\240\255\250\251 \254\256\254\245\255\342 \242i\244\341\343\342\255\357.",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  \215\240\342\250\341\255i\342\354 \202\202\205\220\225 \240\241\256 \202\215\210\207 \351\256\241 \256\241\340\240\342\250 \252\256\253\250\350\255\356 \242\341\342\240\255\256\242\252\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  \215\240\342\250\341\255i\342\354 U \244\253\357 \256\255\256\242\253\245\255\255\357 \256\241\340\240\255\256\365 \242\341\342\240\255\256\242\252\250.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  \215\240\342\250\341\255i\342\354 ESC \244\253\357 \347\250\341\342\256\365 \242\341\342\240\255\256\242\252\250 \216\221.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  \215\240\342\250\341\255i\342\354 F3 \351\256\241 \242\250\251\342\250 \255\245 \242\341\342\240\255\256\242\253\356\356\347\250 ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "U = \216\255\256\242\250\342\250   ESC = \217\340\256\257\343\341\342\250\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -591,43 +674,50 @@ static MUI_ENTRY ukUAComputerPageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\222\343\342 \202\250 \254\256\246\245\342\245 \247\254i\255\250\342\250 \342\250\257 \202\240\350\256\243\256 \252\256\254\257'\356\342\245\340\240.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  \215\240\342\250\341\252\240\251\342\245 \252\253\240\242i\350i \202\202\205\220\225 \342\240 \202\215\210\207 \244\253\357 \242\250\241\256\340\343 \342\250\257\343 \202\240\350\256\243\256 \252\256\254\257'\356\342\245\340\240",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   i \255\240\342\250\341\255i\342\354 ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  \215\240\342\250\341\255i\342\354 ESC \244\253\357 \257\256\242\245\340\255\245\255\255\357 \244\256 \257\256\257\245\340\245\244\255\354\256\365 \341\342\256\340i\255\252\250 \241\245\247 \247\254i\255\250",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   \342\250\257\343 \252\256\254\257'\356\342\245\340\240.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   ESC = \221\252\240\341\343\242\240\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -643,31 +733,36 @@ static MUI_ENTRY ukUAFlushPageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "\221\250\341\342\245\254\240 \257\245\340\245\242i\340\357\363 \347\250 \242\341i \244\240\255i \247\241\245\340\245\246\245\255\256 \255\240 \244\250\341\252",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "\226\245 \254\256\246\245 \247\240\251\255\357\342\250 \244\245\252i\253\354\252\240 \345\242\250\253\250\255",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "\217i\341\253\357 \247\240\242\245\340\350\245\255\255\357 \252\256\254\257'\356\342\245\340 \241\343\244\245 \240\242\342\256\254\240\342\250\347\255\256 \257\245\340\245\247\240\242\240\255\342\240\246\245\255\256",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "\216\347\250\351\343\356 \252\245\350",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -683,37 +778,43 @@ static MUI_ENTRY ukUAQuitPageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "ReactOS \255\245 \242\341\342\240\255\256\242\253\245\255\256 \257\256\242\255i\341\342\356",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "\202\250\342\357\243\255i\342\354 \244\250\341\252\343\342\343 \247 \244\250\341\252\256\242\256\244\343 A: \342\240",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "\242\341i CD-ROM \247 CD-\257\340\250\242\256\244i\242.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "\215\240\342\250\341\255i\342\354 ENTER \351\256\241 \257\245\340\245\247\240\242\240\255\342\240\246\250\342\250 \252\256\254\257'\356\342\245\340.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "\201\343\244\354-\253\240\341\252\240 \247\240\347\245\252\240\251\342\245 ...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -729,43 +830,50 @@ static MUI_ENTRY ukUADisplayPageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\222\343\342 \242\250 \254\256\246\245\342\245 \247\254i\255\250\342\250 \342\250\257 \245\252\340\240\255\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
          "\x07  \215\240\342\250\341\252\240\251\342\245 \252\253\240\242i\350i \202\202\205\220\225 \342\240 \202\215\210\207 \244\253\357 \242\250\241\256\340\343 \257\256\342\340i\241\255\256\243\256 \342\250\257\343 \254\256\255i\342\256\340\343",
-         TEXT_STYLE_NORMAL
+         TEXT_STYLE_NORMAL,
+         TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   i \255\240\342\250\341\255i\342\354 ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  \215\240\342\250\341\255i\342\354 ESC \244\253\357 \257\256\242\245\340\255\245\255\255\357 \244\256 \257\256\257\245\340\245\244\255\354\256\365 \341\342\256\340i\255\252\250 \241\245\247 \247\254i\255\250",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   \342\250\257\343 \254\256\255i\342\256\340\240.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   ESC = \221\252\240\341\343\242\240\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -781,37 +889,43 @@ static MUI_ENTRY ukUASuccessPageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "\216\341\255\256\242\255i \252\256\254\257\256\255\245\255\342\250 ReactOS \241\343\253\250 \343\341\257i\350\255\256 \242\341\342\240\255\256\242\253\245\255i.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "\202\250\342\357\243\255i\342\354 \244\250\341\252\245\342\343 \247 \244\250\341\252\256\242\256\244\343 A: \342\240",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "\242\341i CD-ROM \247 CD-\257\340\250\242\256\244i\242.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "\215\240\342\250\341\255i\342\354 ENTER \351\256\241 \257\245\340\245\247\240\242\240\255\342\240\246\250\342\250 \252\256\254\257'\356\342\245\340.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\245\340\245\247\240\242\240\255\342\240\246\250\342\250 \252\256\254\257'\356\342\245\340",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -827,37 +941,43 @@ static MUI_ENTRY ukUABootPageEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\202\341\342\240\255\256\242\253\356\242\240\347 \255\245 \254\256\246\245 \242\341\342\240\255\256\242\250\342\250 bootloader \255\240 \246\256\340\341\342\252\250\251 \244\250\341\252",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "\202\240\350\256\243\256 \252\256\254\257'\356\342\245\340\240",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "\201\343\244\354-\253\240\341\252\240 \242\341\342\240\242\342\245 \242i\244\344\256\340\254\240\342\256\242\240\255\343 \244\250\341\252\245\342\343 \242 \244\250\242\252\256\242\256\244 A: \342\240",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "\255\240\342\250\341\255i\342\354 ENTER.",
         TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -874,62 +994,72 @@ static MUI_ENTRY ukUASelectPartitionEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\215\250\246\347\245 \257\340\250\242\245\244\245\255\250\251 \341\257\250\341\256\252 i\341\255\343\356\347\250\345 \340\256\247\244i\253i\242 \342\240 \255\245\247\240\251\255\357\342\256\243\256 \254i\341\346\357, \244\245 \254\256\246\255\240",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "\341\342\242\256\340\250\342\250 \255\256\242i \340\256\247\244i\253\250.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "\x07  \215\240\342\250\341\252\240\251\342\245 \252\253\240\242i\350i \202\202\205\220\225 \342\240 \202\215\210\207 \244\253\357 \242\250\241\256\340\343 \257\343\255\252\342\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  \215\240\342\250\341\255i\342\354 ENTER \351\256\241 \242\341\342\240\255\256\242\250\342\250 ReactOS \255\240 \242\250\241\340\240\255\250\251 \340\256\247\244i\253.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  \215\240\342\250\341\255i\342\354 P \351\256\241 \341\342\242\256\340\250\342\250 \257\245\340\242\250\255\255\250\251 \340\256\247\244i\253.",
 //        "\x07  Натиснiть C щоб створити новий роздiл.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  \215\240\342\250\341\255i\342\354 E \351\256\241 \341\342\256\242\340\250\342\250 \340\256\247\350\250\340\245\255\250\251 \340\256\247\244i\253.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  \215\240\342\250\341\255i\342\354 L \351\256\241 \341\342\242\256\340\250\342\250 \253\256\243i\347\255\250\251 \340\256\247\244i\253.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  \215\240\342\250\341\255i\342\354 D \351\256\241 \242\250\244\240\253\250\342\250 i\341\255\343\356\347\250\251 \340\256\247\244i\253.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "\201\343\244\354-\253\240\341\252\240, \247\240\347\245\252\240\251\342\245...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -945,97 +1075,113 @@ static MUI_ENTRY ukUAChangeSystemPartition[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "The current system partition of your computer",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "on the system disk",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "uses a format not supported by ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         18,
         "In order to successfully install ReactOS, the Setup program must change",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         19,
         "the current system partition to a new one.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         21,
         "The new candidate system partition is:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "\x07  To accept this choice, press ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         27,
         "\x07  To manually change the system partition, press ESC to go back to",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         28,
         "   the partition selection list, then select or create a new system",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         29,
         "   partition on the system disk.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         32,
         "In case there are other operating systems that depend on the original",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         33,
         "system partition, you may need to either reconfigure them for the new",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         34,
         "system partition, or you may need to change the system partition back",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         35,
         "to the original one after finishing the installation of ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   ESC = Cancel",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1051,85 +1197,99 @@ static MUI_ENTRY ukUAConfirmDeleteSystemPartitionEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\202\250 \242\250\340i\350\250\253\250 \242\250\244\240\253\250\342\250 \341\250\341\342\245\254\255\250\251 \340\256\247\244i\253.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "\221\250\341\342\245\254\255i \340\256\247\244i\253\250 \254\256\246\343\342\354 \254i\341\342\250\342\250 \244i\240\243\255\256\341\342\250\347\255i \257\340\256\243\340\240\254\250, \257\340\256\243\340\240\254\250",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "\255\240\253\240\350\342\343\242\240\255\255\357 \240\257\240\340\240\342\255\250\345 \247\240\341\256\241i\242, \257\340\256\243\340\240\254\250 \244\253\357 \247\240\257\343\341\252\343 \216\221 (\357\252 ReactOS)",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "\240\241\256 i\255\350\245 \217\207, \255\240\244\240\255\245 \242\250\340\256\241\255\250\252\256\254 \256\241\253\240\244\255\240\255\255\357.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "\202\250\244\240\253\357\251\342\245 \341\250\341\342\245\254\255\250\251 \340\256\247\244i\253, \252\256\253\250 \242\257\245\242\255\245\255i, \351\256 \255\240 \255\354\256\254\343 \255\245\254\240\363 \242\240\246\253\250\242\250\345",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "\257\340\256\243\340\240\254 \240\241\256 \252\256\253\250 \242\250 \242\257\245\242\255\245\255i, \351\256 \242\256\255\250 \255\245 \257\256\342\340i\241\255i.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "\212\256\253\250 \242\250 \242\250\244\240\253\250\342\245 \341\250\341\342\245\254\255\250\251 \340\256\247\244i\253, \242\250 \255\245 \247\254\256\246\245\342\245 \247\240\242\240\255\342\240\246\250\342\250",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         17,
         "\252\256\254\257'\356\342\245\340 \247 \246\256\340\341\342\252\256\243\256 \244\250\341\252\240, \257\256\252\250 \255\245 \247\240\252i\255\347\250\342\245 \242\341\342\240\255\256\242\253\245\255\255\357 ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         20,
         "\x07  \215\240\342\250\341\255i\342\354 ENTER \351\256\241 \242\250\244\240\253\250\342\250 \341\250\341\342\245\254\255\250\251 \340\256\247\244i\253.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "   \217i\247\255i\350\245 \202\250 \257\256\242\250\255\255i \241\343\244\245\342\245 \257i\244\342\242\245\340\244\250\342\250 \242\250\244\240\253\255\255\357 \247\255\256\242\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         24,
         "\x07  \215\240\342\250\341\255i\342\354 ESC \351\256\241 \257\256\242\245\340\255\343\342\250\341\354 \244\256 \257\256\257\245\340\245\244\255\354\256\365 \341\342\256\340i\255\252\250.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "   \220\256\247\244i\253 \255\245 \241\343\244\245 \242\250\244\240\253\245\255\256.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER=\217\340\256\244\256\242\246\250\342\250  ESC=\221\252\240\341\343\242\240\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1145,31 +1305,35 @@ static MUI_ENTRY ukUAFormatPartitionEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\224\256\340\254\240\342\343\242\240\255\255\357 \340\256\247\244i\253\343",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "\207\240\340\240\247 \242\341\342\240\255\256\242\253\356\242\240\347 \242i\244\344\256\340\254\240\342\343\363 \340\256\247\244i\253. \215\240\342\250\341\255i\342\354 ENTER \244\253\357 \257\340\256\244\256\242\246\245\255\255\357.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_FORMAT_PROMPT
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         NULL,
-        TEXT_STYLE_NORMAL
+        0
     }
 };
 
@@ -1179,43 +1343,50 @@ static MUI_ENTRY ukUAInstallDirectoryEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\202\341\342\240\255\256\242\253\356\242\240\347 \242\341\342\240\255\256\242\250\342\354 \344\240\251\253\250 ReactOS \255\240 \242\250\241\340\240\255\250\251 \340\256\247\244i\253. \202\250\241\245\340i\342\354",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "\244\250\340\245\252\342\256\340i\356, \242 \357\252\343 \202\250 \345\256\347\245\342\245 \242\341\342\240\255\256\242\250\342\250 ReactOS:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "\231\256\241 \247\254i\255\250\342\250 \244\250\340\245\252\342\256\340i\356 \255\240\342\250\341\255i\342\354 BACKSPACE \244\253\357 \242\250\244\240\253\245\255\255\357",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "\341\250\254\242\256\253i\242 \257i\341\253\357 \347\256\243\256 \242\242\245\244i\342\354 \255\240\247\242\343 \244\250\340\245\252\342\256\340i\365 \244\253\357",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "\242\341\342\240\255\256\242\253\245\255\255\357 ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1231,31 +1402,36 @@ static MUI_ENTRY ukUAFileCopyEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         0,
         12,
         "\201\343\244\354-\253\240\341\252\240, \247\240\347\245\252\240\251\342\245 \257\256\252\250 \242\341\342\240\255\256\242\253\356\242\240\347 ReactOS \252\256\257i\356\363 \344\240\251\253\250 \244\256",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         13,
         "\257\240\257\252\250 \257\340\250\247\255\240\347\245\255\255\357.",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         14,
         "\226\245 \254\256\246\245 \247\240\251\255\357\342\250 \244\245\252i\253\354\252\240 \345\242\250\253\250\255.",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         50,
         0,
         "\xB3 \201\343\244\354-\253\240\341\252\240 \247\240\347\245\252\240\251\342\245...    ",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1271,43 +1447,50 @@ static MUI_ENTRY ukUABootLoaderEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\202\341\342\240\255\256\242\253\356\242\240\347 \242\341\342\240\255\256\242\253\356\363 \247\240\242\240\255\342\240\246\343\242\240\347",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "\202\341\342\240\255\256\242\250\342\250 \247\240\242\240\255\342\240\246\343\242\240\347 \255\240 \246\256\340\341\342\252\250\251 \244\250\341\252 (MBR i VBR).",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\202\341\342\240\255\256\242\250\342\250 \247\240\242\240\255\342\240\246\343\242\240\347 \255\240 \246\256\340\341\342\252\250\251 \244\250\341\252 (\253\250\350\245 VBR).",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "\202\341\342\240\255\256\242\250\342\250 \247\240\242\240\255\342\240\246\343\242\240\347 \255\240 \244\250\341\252\245\342\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\215\245 \242\341\342\240\255\256\242\253\356\242\240\342\250 \247\240\242\240\255\342\240\246\343\242\240\347.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1323,43 +1506,50 @@ static MUI_ENTRY ukUAKeyboardSettingsEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\222\343\342 \202\250 \254\256\246\245\342\245 \247\254i\255\250\342\250 \342\250\257 \252\253\240\242i\240\342\343\340\250.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  \215\240\342\250\341\252\240\251\342\245 \252\253\240\242i\350i \202\202\205\220\225 \342\240 \202\215\210\207 \244\253\357 \242\250\241\256\340\343 \257\256\342\340i\241\255\256\243\256 \342\250\257\343",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   \252\253\240\242i\240\342\343\340\250 i \255\240\342\250\341\255i\342\354 ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  \215\240\342\250\341\255i\342\354 ESC \244\253\357 \257\256\242\245\340\255\245\255\255\357 \255\240 \257\256\257\245\340\245\244\255\356 \341\342\256\340i\255\252\343 \241\245\247 \247\254i\255\250",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   \342\250\257\343 \252\253\240\242i\240\342\343\340\250.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   ESC = \221\252\240\341\343\242\240\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1375,43 +1565,50 @@ static MUI_ENTRY ukUALayoutSettingsEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\202\250\241\245\340i\342\354 \340\256\247\252\253\240\244\252\343, \357\252\240 \241\343\244\245 \242\341\342\240\255\256\242\253\245\255\240 \357\252\240 \341\342\240\255\244\240\340\342\255\240.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  \215\240\342\250\341\252\240\251\342\245 \252\253\240\242i\350i \202\202\205\220\225 \342\240 \202\215\210\207 \244\253\357 \242\250\241\256\340\343 \257\256\342\340i\241\255\256\365 \340\256\247\252\253\240\244\252\250",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "    \252\253\240\242i\240\342\343\340\250 i \255\240\342\250\341\255i\342\354 ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  \215\240\342\250\341\255i\342\354 ESC \244\253\357 \257\256\242\245\340\255\245\255\255\357 \255\240 \257\256\257\245\340\245\244\255\356 \341\342\256\340i\255\252\343 \241\245\247 \247\254i\255\250",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   \340\256\247\252\253\240\244\252\250 \252\253\240\242i\240\342\343\340\250.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   ESC = \221\252\240\341\343\242\240\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1428,19 +1625,22 @@ static MUI_ENTRY ukUAPrepareCopyEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\202\341\342\240\255\256\242\253\356\242\240\347 \243\256\342\343\363 \202\240\350 \252\256\254\257'\356\342\245\340 \244\253\357 \252\256\257i\356\242\240\255\255\357 \344\240\251\253i\242 ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "\203\245\255\245\340\343\356 \341\257\250\341\256\252 \344\240\251\253i\242...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1457,7 +1657,8 @@ static MUI_ENTRY ukUASelectFSEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
@@ -1487,7 +1688,8 @@ static MUI_ENTRY ukUASelectFSEntries[] =
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   ESC = \221\252\240\341\343\242\240\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1503,37 +1705,43 @@ static MUI_ENTRY ukUADeletePartitionEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\202\250 \242\250\241\340\240\253\250 \242\250\244\240\253\245\255\255\357 \340\256\247\244i\253\343",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "\x07  \215\240\342\250\341\255i\342\354 L \244\253\357 \242\250\244\240\253\245\255\255\357 \340\256\247\244i\253\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         11,
         19,
         "\223\202\200\203\200: \202\341i \244\240\255i \255\240 \346\354\256\254\343 \340\256\247\244i\253i \241\343\244\343\342\354 \242\342\340\240\347\245\255i!",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  \215\240\342\250\341\255i\342\354 ESC \244\253\357 \341\252\240\341\343\242\240\255\255\357.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "L = \202\250\244\240\253\250\342\250 \220\256\247\244i\253   ESC = \221\252\240\341\343\242\240\342\250   F3 = \202\250\251\342\250",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1549,19 +1757,22 @@ static MUI_ENTRY ukUARegistryEntries[] =
         4,
         3,
         " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\202\341\342\240\255\256\242\253\356\242\240\347 \256\255\256\242\253\356\363 \252\256\255\344i\243\343\340\240\346i\356 \341\250\341\342\245\254\250.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "\221\342\242\256\340\356\356 \341\342\340\343\252\342\343\340\343 \340\245\363\341\342\340\343...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,

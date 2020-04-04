@@ -47,7 +47,7 @@ RemoveVectoredExceptionHandler(pVEH);
      * Use Vectored Exception Handling to monitor for first-chance exceptions.
      */
 pVEH = AddVectoredExceptionHandler(1, VEHandler_2);
-    ok(lstrlenA( (LPSTR)0xbaadf00d) == 0, "lstrlenA should have returned 0.\n");
-    ok(lstrlenW((LPWSTR)0xbaadf00d) == 0, "lstrlenW should have returned 0.\n");
+    ok(lstrlenA( (LPSTR)(LONG_PTR)0xbaadf00d) == 0, "lstrlenA should have returned 0.\n");
+    ok(lstrlenW((LPWSTR)(LONG_PTR)0xbaadf00d) == 0, "lstrlenW should have returned 0.\n");
 RemoveVectoredExceptionHandler(pVEH);
 }

@@ -84,7 +84,7 @@ START_TEST(NtUserScrollDC)
 
     /* Test invalid update rect */
     SetLastError(ERROR_SUCCESS);
-    Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, hRgn, (PVOID)0x80001000);
+    Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, hRgn, (PVOID)(LONG_PTR)0x80001000);
     RTEST(Result == 0);
     RTEST(GetLastError() == ERROR_NOACCESS);
 

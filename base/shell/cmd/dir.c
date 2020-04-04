@@ -1770,7 +1770,14 @@ ResolvePattern(
      * they are part of the actual directory path; the exception being if
      * these are the special "." or ".." directories.
      */
-    if (pszPatternPart == NULL)
+    if (_istalpha(pNextDir[0]) && pNextDir[1] == _T(':') && pNextDir[2] != _T('\\'))
+    {
+        /*
+         * The syntax "<drive_letter>:" without any trailing backslash actually
+         * means: "current directory on this drive".
+         */
+    }
+    else if (pszPatternPart == NULL)
     {
         ASSERT(pszFullPath[_tcslen(pszFullPath)-1] == _T('\\'));
 

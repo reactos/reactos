@@ -44,15 +44,15 @@ BEGIN
 \n\
   Los formatos disponibles para '/fo' son 'csv', 'list' y 'table'.\n\
   Por defecto los datos se muestran en una tabla (opción 'table').\n\
-  Puedes utilizar '/nh' para ocultar los encabezados. \n\
+  Puedes utilizar '/nh' para ocultar los encabezados.\n\
 \n\
 SINTAXIS:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <Formato>] [/nh] \n\
-  whoami /all [/fo <Formato>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Formato>] [/nh]\n\
+  whoami /all [/fo <Formato>] [/nh]\n\
 \n\
-EJEMPLOS: \n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+EJEMPLOS:\n\
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

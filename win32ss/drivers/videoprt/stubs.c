@@ -63,16 +63,6 @@ VideoPortGetMdl(
     return 0;
 }
 
-LONG
-NTAPI
-VideoPortReadStateEvent(
-    IN PVOID HwDeviceExtension,
-    IN PEVENT pEvent)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 VOID
 NTAPI
 VideoPortSetBytesUsed(

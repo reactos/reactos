@@ -25,7 +25,6 @@
 /*
  * TIFF Library.
  */
-
 #include <precomp.h>
 
 /*
@@ -132,6 +131,7 @@ TIFFClientOpen(
 	if (!readproc || !writeproc || !seekproc || !closeproc || !sizeproc) {
 		TIFFErrorExt(clientdata, module,
 		    "One of the client procedures is NULL pointer.");
+		_TIFFfree(tif);
 		goto bad2;
 	}
 	tif->tif_readproc = readproc;
@@ -182,6 +182,8 @@ TIFFClientOpen(
 	 * 'h' read TIFF header only, do not load the first IFD
 	 * '4' ClassicTIFF for creating a file (default)
 	 * '8' BigTIFF for creating a file
+         * 'D' enable use of deferred strip/tile offset/bytecount array loading.
+         * 'O' on-demand loading of values instead of whole array loading (implies D)
 	 *
 	 * The use of the 'l' and 'b' flags is strongly discouraged.
 	 * These flags are provided solely because numerous vendors,
@@ -263,7 +265,22 @@ TIFFClientOpen(
 				if (m&O_CREAT)
 					tif->tif_flags |= TIFF_BIGTIFF;
 				break;
+			case 'D':
+			        tif->tif_flags |= TIFF_DEFERSTRILELOAD;
+				break;
+			case 'O':
+				if( m == O_RDONLY )
+					tif->tif_flags |= (TIFF_LAZYSTRILELOAD | TIFF_DEFERSTRILELOAD);
+				break;
 		}
+
+#ifdef DEFER_STRILE_LOAD
+        /* Compatibility with old DEFER_STRILE_LOAD compilation flag */
+        /* Probably unneeded, since to the best of my knowledge (E. Rouault) */
+        /* GDAL was the only user of this, and will now use the new 'D' flag */
+        tif->tif_flags |= TIFF_DEFERSTRILELOAD;
+#endif
+
 	/*
 	 * Read in TIFF header.
 	 */

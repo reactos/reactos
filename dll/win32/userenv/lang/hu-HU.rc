@@ -1,24 +1,25 @@
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
+/* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
-    IDS_APPDATA "Application Data"
-    IDS_DESKTOP "Asztalk"
+    IDS_APPDATA "Alkalmazás adatok"
+    IDS_DESKTOP "Asztal"
     IDS_FAVORITES "Kedvencek"
     IDS_MYDOCUMENTS "Dokumentumok"
     IDS_NETHOOD "NetHood"
     IDS_PRINTHOOD "PrintHood"
     IDS_RECENT "Recent"
     IDS_SENDTO "SendTo"
-    IDS_TEMPLATES "Templates"
-    IDS_STARTMENU "Start Menu"
-    IDS_PROGRAMS "Start Menu\\Programs"
-    IDS_STARTUP "Start Menu\\Programs\\Startup"
+    IDS_TEMPLATES "Sablonok"
+    IDS_STARTMENU "Start menü"
+    IDS_PROGRAMS "Start menü\\Programok"
+    IDS_STARTUP "Start menü\\Programok\\Automatikus indítás"
     IDS_LOCALSETTINGS "Local Settings"
-    IDS_LOCALAPPDATA "Local Settings\\Application Data"
-    IDS_TEMP "Local Settings\\Temp"
+    IDS_LOCALAPPDATA "Local Settings\\Alkalmazás adatok"
+    IDS_TEMP "Local Settings\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Local Settings\\Temporary Internet Files"
     IDS_HISTORY "Local Settings\\History"
-    IDS_COOKIES "Cookies"
+    IDS_COOKIES "Sütik"
 END

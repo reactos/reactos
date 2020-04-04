@@ -5,9 +5,10 @@
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
+/* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
-    IDS_PROFILEPATH "%SistemDrive%\\Dokumente dhe Cilësime"
+    IDS_PROFILEPATH "%SystemDrive%\\Dokumente dhe Cilësime"
     IDS_APPDATA "Aplikation Data"
     IDS_DESKTOP "Desktop"
     IDS_FAVORITES "Preferuara"
@@ -22,7 +23,7 @@ BEGIN
     IDS_STARTUP "Fillo Menu\\Programe\\Fillimi"
     IDS_LOCALSETTINGS "Cilësimet lokale"
     IDS_LOCALAPPDATA "Cilësimet lokale\\Aplikacion Data"
-    IDS_TEMP "Cilësimet lokale\\Përk"
+    IDS_TEMP "Cilësimet lokale\\Përk" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Cilësimet lokale\\Dokumente Interneti Përkohshëm"
     IDS_HISTORY "Cilësimet lokale\\Historia"
     IDS_COOKIES "Biskota"

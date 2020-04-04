@@ -146,7 +146,7 @@ BEGIN
   IDS_HINT_NEW          " Erstellt iin neues Dokument."
   IDS_HINT_OPEN         " Öffnet ein vorhandenes Dokument."
   IDS_HINT_CLOSE        " Schließt dieses Fenster."
-  IDS_HINT_CLOSEALL     " Schliueßt alle Fenster."
+  IDS_HINT_CLOSEALL     " Schließt alle Fenster."
   IDS_HINT_SAVE         " Speichert das aktive Dokument."
   IDS_HINT_SAVEAS       " Speichert das aktive Dokument unter einem neuen Namen."
   IDS_HINT_PRINT        " Druckt das aktive Dokument."
@@ -161,7 +161,7 @@ BEGIN
   IDS_HINT_NEXT         " Aktiviert das nächste Fenster."
 
   IDS_HINT_SYS_RESTORE  " Dieses Fenster auf normale Größe wiederherstellen."
-  IDS_HINT_SYS_MOVE     " Dieses fenster bewegen."
+  IDS_HINT_SYS_MOVE     " Dieses Fenster bewegen."
   IDS_HINT_SYS_SIZE     " Größe dieses Fensters verändern."
   IDS_HINT_SYS_MINIMIZE " Dieses Fenster auf Symbolgröße verkleinern."
   IDS_HINT_SYS_MAXIMIZE " Dieses Fenster auf Vollbildgröße vergrößern."

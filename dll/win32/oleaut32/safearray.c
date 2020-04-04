@@ -31,8 +31,6 @@
  *  0x10: SAFEARRAYBOUNDS[0...]
  */
 
-#include "config.h"
-
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -525,8 +523,8 @@ HRESULT WINAPI SafeArrayAllocDescriptorEx(VARTYPE vt, UINT cDims, SAFEARRAY **pp
   ULONG cbElements;
   HRESULT hRet;
 
-  TRACE("(%d->%s,%d,%p)\n", vt, debugstr_vt(vt), cDims, ppsaOut);
-    
+  TRACE("(%s,%u,%p)\n", debugstr_vt(vt), cDims, ppsaOut);
+
   cbElements = SAFEARRAY_GetVTSize(vt);
   if (!cbElements)
     WARN("Creating a descriptor with an invalid VARTYPE!\n");
@@ -601,7 +599,7 @@ HRESULT WINAPI SafeArrayAllocData(SAFEARRAY *psa)
  */
 SAFEARRAY* WINAPI SafeArrayCreate(VARTYPE vt, UINT cDims, SAFEARRAYBOUND *rgsabound)
 {
-  TRACE("(%d->%s,%d,%p)\n", vt, debugstr_vt(vt), cDims, rgsabound);
+  TRACE("(%s,%u,%p)\n", debugstr_vt(vt), cDims, rgsabound);
 
   if (vt == VT_RECORD)
     return NULL;
@@ -633,7 +631,7 @@ SAFEARRAY* WINAPI SafeArrayCreateEx(VARTYPE vt, UINT cDims, SAFEARRAYBOUND *rgsa
   IRecordInfo* iRecInfo = pvExtra;
   SAFEARRAY* psa;
  
-  TRACE("(%d->%s,%d,%p,%p)\n", vt, debugstr_vt(vt), cDims, rgsabound, pvExtra);
+  TRACE("(%s,%u,%p,%p)\n", debugstr_vt(vt), cDims, rgsabound, pvExtra);
  
   if (vt == VT_RECORD)
   {
@@ -678,8 +676,8 @@ SAFEARRAY* WINAPI SafeArrayCreateEx(VARTYPE vt, UINT cDims, SAFEARRAYBOUND *rgsa
  */
 SAFEARRAY* WINAPI SafeArrayCreateVector(VARTYPE vt, LONG lLbound, ULONG cElements)
 {
-  TRACE("(%d->%s,%d,%d\n", vt, debugstr_vt(vt), lLbound, cElements);
-    
+  TRACE("(%s,%d,%u)\n", debugstr_vt(vt), lLbound, cElements);
+
   if (vt == VT_RECORD)
     return NULL;
 
@@ -710,8 +708,8 @@ SAFEARRAY* WINAPI SafeArrayCreateVectorEx(VARTYPE vt, LONG lLbound, ULONG cEleme
   IRecordInfo* iRecInfo = pvExtra;
   SAFEARRAY* psa;
 
- TRACE("(%d->%s,%d,%d,%p\n", vt, debugstr_vt(vt), lLbound, cElements, pvExtra);
- 
+  TRACE("(%s,%d,%u,%p)\n", debugstr_vt(vt), lLbound, cElements, pvExtra);
+
   if (vt == VT_RECORD)
   {
     if  (!iRecInfo)

@@ -259,5 +259,5 @@ BEGIN
     IDS_DMUSIC_DLS "支持 DLS"
     IDS_DMUSIC_EXT "外部"
     IDS_DMUSIC_PORT "默认端口"
-    IDS_DDDISABLE_MSG "这将禁用所有的显示设备上所有的 DirectDraw 硬件加速\n。是否继续？\n"
+    IDS_DDDISABLE_MSG "这将禁用所有的显示设备上所有的 DirectDraw 硬件加速。\n是否继续？\n"
 END

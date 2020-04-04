@@ -890,16 +890,35 @@ NtSetValueKey(IN HANDLE KeyHandle,
     /* Probe and copy the data */
     if ((PreviousMode != KernelMode) && (DataSize != 0))
     {
-        PVOID DataCopy = ExAllocatePoolWithTag(PagedPool, DataSize, TAG_CM);
+        PVOID DataCopy = NULL;
+
+        _SEH2_TRY
+        {
+            ProbeForRead(Data, DataSize, 1);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* Dereference and return status */
+            ObDereferenceObject(KeyObject);
+            return Status;
+        }
+
+        DataCopy = ExAllocatePoolWithTag(PagedPool, DataSize, TAG_CM);
         if (!DataCopy)
         {
             /* Dereference and return status */
             ObDereferenceObject(KeyObject);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+
         _SEH2_TRY
         {
-            ProbeForRead(Data, DataSize, 1);
             RtlCopyMemory(DataCopy, Data, DataSize);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -915,6 +934,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
             ObDereferenceObject(KeyObject);
             return Status;
         }
+
         Data = DataCopy;
     }
 
@@ -1395,7 +1415,7 @@ NtLockProductActivationKeys(IN PULONG pPrivateVer,
             /* For user mode, probe it */
             if (PreviousMode != KernelMode)
             {
-                ProbeForRead(pPrivateVer, sizeof(ULONG), sizeof(ULONG));
+                ProbeForWriteUlong(pPrivateVer);
             }
 
             /* Return the expected version */
@@ -1408,7 +1428,7 @@ NtLockProductActivationKeys(IN PULONG pPrivateVer,
             /* For user mode, probe it */
             if (PreviousMode != KernelMode)
             {
-                ProbeForRead(pSafeMode, sizeof(ULONG), sizeof(ULONG));
+                ProbeForWriteUlong(pSafeMode);
             }
 
             /* Return the safe boot mode state */
@@ -1473,6 +1493,7 @@ NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
     PCM_KEY_BODY KeyBody = NULL;
     HANDLE KeyHandle;
     NTSTATUS Status;
+    ULONG SubKeys;
 
     DPRINT("NtQueryOpenSubKeys()\n");
 
@@ -1543,14 +1564,25 @@ NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
     }
 
     /* Call the internal API */
-    *HandleCount = CmpEnumerateOpenSubKeys(KeyBody->KeyControlBlock,
-                                           FALSE, FALSE);
+    SubKeys = CmpEnumerateOpenSubKeys(KeyBody->KeyControlBlock,
+                                      FALSE, FALSE);
 
     /* Unlock the registry */
     CmpUnlockRegistry();
 
     /* Dereference the key object */
     ObDereferenceObject(KeyBody);
+
+    /* Write back the result */
+    _SEH2_TRY
+    {
+        *HandleCount = SubKeys;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     DPRINT("Done.\n");
 

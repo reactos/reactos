@@ -448,6 +448,43 @@ static void test_ImmGetCompositionString(void)
         ok(len*sizeof(WCHAR)==wlen,"GCS_COMPATTR(W) not returning correct count\n");
         len = ImmGetCompositionStringA(imc, GCS_COMPATTR, NULL, 0);
         ok(len==alen,"GCS_COMPATTR(A) not returning correct count\n");
+
+        /* Get strings with exactly matching buffer sizes. */
+        memset(wstring, 0x1a, sizeof(wstring));
+        memset(cstring, 0x1a, sizeof(cstring));
+
+        len = ImmGetCompositionStringA(imc, GCS_COMPSTR, cstring, alen);
+        ok(len == alen, "Unexpected length %d.\n", len);
+        ok(cstring[alen] == 0x1a, "Unexpected buffer contents.\n");
+
+        len = ImmGetCompositionStringW(imc, GCS_COMPSTR, wstring, wlen);
+        ok(len == wlen, "Unexpected length %d.\n", len);
+        ok(wstring[wlen/sizeof(WCHAR)] == 0x1a1a, "Unexpected buffer contents.\n");
+
+        /* Get strings with exactly smaller buffer sizes. */
+        memset(wstring, 0x1a, sizeof(wstring));
+        memset(cstring, 0x1a, sizeof(cstring));
+
+        /* Returns 0 but still fills buffer. */
+        len = ImmGetCompositionStringA(imc, GCS_COMPSTR, cstring, alen - 1);
+        ok(!len, "Unexpected length %d.\n", len);
+        ok(cstring[0] == 'w', "Unexpected buffer contents %s.\n", cstring);
+
+        len = ImmGetCompositionStringW(imc, GCS_COMPSTR, wstring, wlen - 1);
+        ok(len == wlen - 1, "Unexpected length %d.\n", len);
+        ok(!memcmp(wstring, string, wlen - 1), "Unexpected buffer contents.\n");
+
+        /* Get the size of the required output buffer. */
+        memset(wstring, 0x1a, sizeof(wstring));
+        memset(cstring, 0x1a, sizeof(cstring));
+
+        len = ImmGetCompositionStringA(imc, GCS_COMPSTR, cstring, 0);
+        ok(len == alen, "Unexpected length %d.\n", len);
+        ok(cstring[0] == 0x1a, "Unexpected buffer contents %s.\n", cstring);
+
+        len = ImmGetCompositionStringW(imc, GCS_COMPSTR, wstring, 0);
+        ok(len == wlen, "Unexpected length %d.\n", len);
+        ok(wstring[0] == 0x1a1a, "Unexpected buffer contents.\n");
     }
     else
         win_skip("Composition string isn't available\n");

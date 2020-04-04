@@ -29,7 +29,6 @@
 
 #include <wine/debug.h>
 #include <wine/heap.h>
-#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(wscript);
 
@@ -80,7 +79,7 @@ static void print_string(const WCHAR *string)
         return;
     }
 
-    len = strlenW(string);
+    len = lstrlenW(string);
     ret = WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), string, len, &count, NULL);
     if(ret) {
         static const WCHAR crnlW[] = {'\r','\n'};
@@ -200,7 +199,7 @@ static HRESULT WINAPI Host_get_Path(IHost *iface, BSTR *out_Path)
 
     if(GetModuleFileNameW(NULL, path, ARRAY_SIZE(path)) == 0)
         return E_FAIL;
-    pos = strrchrW(path, '\\');
+    pos = wcsrchr(path, '\\');
     howMany = pos - path;
     if(!(*out_Path = SysAllocStringLen(path, howMany)))
         return E_OUTOFMEMORY;
@@ -237,7 +236,7 @@ static HRESULT WINAPI Host_get_ScriptName(IHost *iface, BSTR *out_ScriptName)
 
     WINE_TRACE("(%p)\n", out_ScriptName);
 
-    scriptName = strrchrW(scriptFullName, '\\');
+    scriptName = wcsrchr(scriptFullName, '\\');
     ++scriptName;
     if(!(*out_ScriptName = SysAllocString(scriptName)))
         return E_OUTOFMEMORY;

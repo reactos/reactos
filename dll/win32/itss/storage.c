@@ -20,7 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -36,7 +35,6 @@
 #include "itsstor.h"
 
 #include "wine/itss.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(itss);
@@ -167,9 +165,9 @@ static HRESULT WINAPI ITSS_IEnumSTATSTG_Next(
         str = cur->ui.path;
         if( *str == '/' )
             str++;
-        len = strlenW( str ) + 1;
+        len = lstrlenW( str ) + 1;
         rgelt->pwcsName = CoTaskMemAlloc( len*sizeof(WCHAR) );
-        strcpyW( rgelt->pwcsName, str );
+        lstrcpyW( rgelt->pwcsName, str );
 
         /* determine the type */
         if( rgelt->pwcsName[len-2] == '/' )
@@ -345,17 +343,17 @@ static HRESULT WINAPI ITSS_IStorageImpl_OpenStream(
     TRACE("%p %s %p %u %u %p\n", This, debugstr_w(pwcsName),
           reserved1, grfMode, reserved2, ppstm );
 
-    len = strlenW( This->dir ) + strlenW( pwcsName ) + 1;
+    len = lstrlenW( This->dir ) + lstrlenW( pwcsName ) + 1;
     path = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
-    strcpyW( path, This->dir );
+    lstrcpyW( path, This->dir );
 
     if( pwcsName[0] == '/' || pwcsName[0] == '\\' )
     {
-        p = &path[strlenW( path ) - 1];
+        p = &path[lstrlenW( path ) - 1];
         while( ( path <= p ) && ( *p == '/' ) )
             *p-- = 0;
     }
-    strcatW( path, pwcsName );
+    lstrcatW( path, pwcsName );
 
     for(p=path; *p; p++) {
         if(*p == '\\')
@@ -417,17 +415,17 @@ static HRESULT WINAPI ITSS_IStorageImpl_OpenStorage(
     if( !chmfile )
         return E_FAIL;
 
-    len = strlenW( This->dir ) + strlenW( pwcsName ) + 2; /* need room for a terminating slash */
+    len = lstrlenW( This->dir ) + lstrlenW( pwcsName ) + 2; /* need room for a terminating slash */
     path = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
-    strcpyW( path, This->dir );
+    lstrcpyW( path, This->dir );
 
     if( pwcsName[0] == '/' || pwcsName[0] == '\\' )
     {
-        p = &path[strlenW( path ) - 1];
+        p = &path[lstrlenW( path ) - 1];
         while( ( path <= p ) && ( *p == '/' ) )
             *p-- = 0;
     }
-    strcatW( path, pwcsName );
+    lstrcatW( path, pwcsName );
 
     for(p=path; *p; p++) {
         if(*p == '\\')
@@ -620,11 +618,11 @@ static HRESULT ITSS_create_chm_storage(
     TRACE("%p %s\n", chmfile, debugstr_w( dir ) );
 
     stg = HeapAlloc( GetProcessHeap(), 0,
-                     FIELD_OFFSET( ITSS_IStorageImpl, dir[strlenW( dir ) + 1] ));
+                     FIELD_OFFSET( ITSS_IStorageImpl, dir[lstrlenW( dir ) + 1] ));
     stg->IStorage_iface.lpVtbl = &ITSS_IStorageImpl_Vtbl;
     stg->ref = 1;
     stg->chmfile = chmfile;
-    strcpyW( stg->dir, dir );
+    lstrcpyW( stg->dir, dir );
 
     *ppstgOpen = &stg->IStorage_iface;
 

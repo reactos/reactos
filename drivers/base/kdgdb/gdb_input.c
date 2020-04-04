@@ -368,15 +368,16 @@ handle_gdb_query(void)
             PLDR_DATA_TABLE_ENTRY TableEntry = CONTAINING_RECORD(CurrentEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
             PVOID DllBase = (PVOID)((ULONG_PTR)TableEntry->DllBase + 0x1000);
             LONG mem_length;
-            char* ptr;
+            USHORT i;
 
             /* Convert names to lower case. Yes this _is_ ugly */
-            _snprintf(name_helper, 64, "%wZ", &TableEntry->BaseDllName);
-            for (ptr = name_helper; *ptr; ptr++)
+            for (i = 0; i < (TableEntry->BaseDllName.Length / sizeof(WCHAR)); i++)
             {
-                if (*ptr >= 'A' && *ptr <= 'Z')
-                    *ptr += 'a' - 'A';
+                name_helper[i] = (char)TableEntry->BaseDllName.Buffer[i];
+                if (name_helper[i] >= 'A' && name_helper[i] <= 'Z')
+                    name_helper[i] += 'a' - 'A';
             }
+            name_helper[i] = 0;
 
             /* GDB doesn't load the file if you don't prefix it with a drive letter... */
             mem_length = _snprintf(str_helper, 256, "<library name=\"C:\\%s\"><segment address=\"0x%p\"/></library>", &name_helper, DllBase);
@@ -393,7 +394,7 @@ handle_gdb_query(void)
                 /* We're done for this pass */
                 return finish_gdb_packet();
             }
-                
+
             Sent += send_gdb_partial_binary(str_helper, mem_length);
         }
 
@@ -404,7 +405,6 @@ handle_gdb_query(void)
         }
 
         return finish_gdb_packet();
-   
     }
 
     KDDBGPRINT("KDGDB: Unknown query: %s\n", gdb_input);

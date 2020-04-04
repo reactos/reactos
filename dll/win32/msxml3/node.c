@@ -1217,7 +1217,7 @@ static HRESULT node_transform_write(xsltStylesheetPtr style, xmlDocPtr result, B
         htmlSetMetaEncoding(result, (const xmlChar *)encoding);
         if (indent == -1)
             indent = 1;
-        htmldoc_dumpcontent(output, result, (const char*)encoding, indent);
+        htmldoc_dumpcontent(output, result, encoding, indent);
     }
     else if (method && xmlStrEqual(method, (const xmlChar *)"xhtml"))
     {

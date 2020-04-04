@@ -135,11 +135,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Version ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
@@ -751,6 +747,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
     IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Version %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "&Grandes icônes"
     IDS_VIEW_SMALL "&Petites icônes"
@@ -769,6 +768,17 @@ BEGIN
     IDS_PASTE "Insérer"
     IDS_EJECT "Éjecter"
     IDS_DISCONNECT "Déconnecter"
+    IDS_OPENFILELOCATION "Ouvrir l'empla&cement du fichier"
+    IDS_DESKLINK "Bureau (Créer un raccourci)"
+    IDS_SENDTO_MENU "Envo&yer vers"
+
+    IDS_MOVEERRORTITLE "Erreur lors du déplacement du fichier ou du dossier"
+    IDS_COPYERRORTITLE "Erreur lors de la copie du fichier ou du dossier"
+    IDS_MOVEERRORSAMEFOLDER "Impossible de déplacer '%s' : Le dossier de destination est identique au dossier source."
+    IDS_MOVEERRORSAME "Impossible de déplacer '%s' : Les noms des fichiers source et destination sont identiques."
+    IDS_COPYERRORSAME "Impossible de copier '%s' : Les noms des fichiers source et destination sont identiques."
+    IDS_MOVEERRORSUBFOLDER "Impossible de déplacer '%s' : Le dossier de destination est un sous-dossier du dossier source."
+    IDS_COPYERRORSUBFOLDER "Impossible de copier '%s' : Le dossier de destination est un sous-dossier du dossier source."
 
     IDS_CREATEFOLDER_DENIED "Impossible de créer le dossier '%1'"
     IDS_CREATEFOLDER_CAPTION "Impossible de créer un dossier"
@@ -809,13 +819,13 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Parcourir"
     IDS_RUNDLG_BROWSE_FILTER "Fichiers exécutables (*.exe)\0*.exe\0Tous les fichiers (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Démarrer\\Programmes"
     IDS_PERSONAL "Mes documents"
     IDS_FAVORITES "Favoris"
     IDS_STARTUP "Menu Démarrer\\Programmes\\Démarrage"
-    IDS_RECENT "Recent"
-    IDS_SENDTO "SendTo"
+    IDS_RECENT "Récent"
+    IDS_SENDTO "Envoyer vers"
     IDS_STARTMENU "Menu Démarrer"
     IDS_MYMUSIC "Ma musique"
     IDS_MYVIDEO "Mes vidéos"
@@ -872,6 +882,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Impossible d'éjecter le média (code d'erreur : %lu)."
     IDS_CANTSHOWPROPERTIES "Impossible de montrer les propriétés (code d'erreur : %lu)."
     IDS_CANTDISCONNECT "Impossible de déconnecter (code d'erreur : %lu)."
+    IDS_NONE "(aucun)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dossier"
@@ -908,6 +919,7 @@ BEGIN
     IDS_EDIT_VERB "Éditer"
     IDS_FIND_VERB "Chercher"
     IDS_PRINT_VERB "Imprimer"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u fichiers, %u répertoires"
     IDS_PRINTERS "Imprimantes"

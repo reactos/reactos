@@ -6,25 +6,29 @@ static MUI_ENTRY bnBDSetupInitPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         0,
         20,
         "Please wait while the ReactOS Setup initializes itself",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         21,
         "and discovers your devices...",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -40,37 +44,43 @@ static MUI_ENTRY bnBDLanguagePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Language Selection",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Please choose the language used for the installation process.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Then press ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  This Language will be the default language for the final system.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue  F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -86,67 +96,79 @@ static MUI_ENTRY bnBDWelcomePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Welcome to ReactOS Setup",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "This part of the setup copies the ReactOS Operating System to your",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "computer and prepares the second part of the setup.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Press ENTER to install or upgrade ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
+     // "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         "\x07  Press R to repair a ReactOS installation.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Press L to view the ReactOS Licensing Terms and Conditions.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Press F3 to quit without installing ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         23,
         "For more information on ReactOS, please visit:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         24,
         "http://www.reactos.org",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue  R = Repair  L = License  F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -162,61 +184,71 @@ static MUI_ENTRY bnBDIntroPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "ReactOS Version Status",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "ReactOS is in Alpha stage, meaning it is not feature-complete",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "and is under heavy development. It is recommended to use it only for",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "evaluation and testing purposes and not as your daily-usage OS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "Backup your data or test on a secondary computer if you attempt",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "to run ReactOS on real hardware.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Press ENTER to continue ReactOS Setup.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Press F3 to quit without installing ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -232,115 +264,134 @@ static MUI_ENTRY bnBDLicensePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         6,
         "Licensing:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         8,
         "The ReactOS System is licensed under the terms of the",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         9,
         "GNU GPL with parts containing code from other compatible",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "licenses such as the X11 or BSD and GNU LGPL licenses.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "All software that is part of the ReactOS system is",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "therefore released under the GNU GPL as well as maintaining",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "the original license.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "This software comes with NO WARRANTY or restrictions on usage",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         16,
         "save applicable local and international law. The licensing of",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "ReactOS only covers distribution to third parties.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "If for some reason you did not receive a copy of the",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "GNU General Public License with ReactOS please visit",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         22,
         "Warranty:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         24,
         "This is free software; see the source for copying conditions.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "There is NO warranty; not even for MERCHANTABILITY or",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         26,
         "FITNESS FOR A PARTICULAR PURPOSE",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Return",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -356,84 +407,98 @@ static MUI_ENTRY bnBDDevicePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "The list below shows the current device settings.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         24,
         11,
         "Computer:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         12,
         "Display:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         13,
         "Keyboard:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         14,
         "Keyboard layout:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         16,
         "Accept:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         25,
         16, "Accept these device settings",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         19,
         "You can change the hardware settings by pressing the UP or DOWN keys",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         20,
         "to select an entry. Then press the ENTER key to select alternative",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         21,
         "settings.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         23,
         "When all settings are correct, select \"Accept these device settings\"",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         24,
         "and press ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -449,55 +514,64 @@ static MUI_ENTRY bnBDRepairPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "ReactOS Setup is in an early development phase. It does not yet",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "support all the functions of a fully usable setup application.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "The repair functions are not implemented yet.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Press U for Updating OS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Press R for the Recovery Console.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Press ESC to return to the main page.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Press ENTER to reboot your computer.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ESC = Main page  U = Update  R = Recovery  ENTER = Reboot",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -513,61 +587,71 @@ static MUI_ENTRY bnBDUpgradePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "The ReactOS Setup can upgrade one of the available ReactOS installations",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "listed below, or, if a ReactOS installation is damaged, the Setup program",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "can attempt to repair it.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "The repair functions are not all implemented yet.",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Press UP or DOWN to select an OS installation.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Press U for upgrading the selected OS installation.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Press ESC to continue with a new installation.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Press F3 to quit without installing ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -583,43 +667,50 @@ static MUI_ENTRY bnBDComputerPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "You want to change the type of computer to be installed.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Press the UP or DOWN key to select the desired computer type.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Then press ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Press the ESC key to return to the previous page without changing",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   the computer type.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -635,31 +726,36 @@ static MUI_ENTRY bnBDFlushPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "The system is now making sure all data is stored on your disk.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "This may take a minute.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "When finished, your computer will reboot automatically.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Flushing cache",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -675,37 +771,43 @@ static MUI_ENTRY bnBDQuitPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "ReactOS is not completely installed.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "Remove floppy disk from Drive A: and",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "all CD-ROMs from CD-Drives.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "Press ENTER to reboot your computer.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -721,43 +823,50 @@ static MUI_ENTRY bnBDDisplayPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "You want to change the type of display to be installed.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
          "\x07  Press the UP or DOWN key to select the desired display type.",
-         TEXT_STYLE_NORMAL
+         TEXT_STYLE_NORMAL,
+         TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Then press ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Press the ESC key to return to the previous page without changing",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   the display type.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -773,37 +882,43 @@ static MUI_ENTRY bnBDSuccessPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "The basic components of ReactOS have been installed successfully.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "Remove floppy disk from Drive A: and",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "all CD-ROMs from CD-Drive.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "Press ENTER to reboot your computer.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Reboot computer",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -819,37 +934,43 @@ static MUI_ENTRY bnBDBootPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Setup cannot install the bootloader on your computers",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "hardisk",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "Please insert a formatted floppy disk in drive A: and",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "press ENTER.",
         TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -866,61 +987,71 @@ static MUI_ENTRY bnBDSelectPartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "The list below shows existing partitions and unused disk",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "space for new partitions.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "\x07  Press UP or DOWN to select a list entry.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Press ENTER to install ReactOS onto the selected partition.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Press P to create a primary partition.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Press E to create an extended partition.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Press D to delete an existing partition.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Please wait...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -936,97 +1067,113 @@ static MUI_ENTRY bnBDChangeSystemPartition[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "The current system partition of your computer",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "on the system disk",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "uses a format not supported by ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         18,
         "In order to successfully install ReactOS, the Setup program must change",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         19,
         "the current system partition to a new one.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         21,
         "The new candidate system partition is:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "\x07  To accept this choice, press ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         27,
         "\x07  To manually change the system partition, press ESC to go back to",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         28,
         "   the partition selection list, then select or create a new system",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         29,
         "   partition on the system disk.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         32,
         "In case there are other operating systems that depend on the original",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         33,
         "system partition, you may need to either reconfigure them for the new",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         34,
         "system partition, or you may need to change the system partition back",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         35,
         "to the original one after finishing the installation of ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   ESC = Cancel",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1042,85 +1189,99 @@ static MUI_ENTRY bnBDConfirmDeleteSystemPartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "You have chosen to delete the system partition.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "System partitions can contain diagnostic programs, hardware configuration",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "programs, programs to start an operating system (like ReactOS) or other",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "programs provided by the hardware manufacturer.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "Delete a system partition only when you are sure that there are no such",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "programs on the partition, or when you are sure you want to delete them.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "When you delete the partition, you might not be able to boot the",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         17,
         "computer from the harddisk until you finished the ReactOS Setup.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         20,
         "\x07  Press ENTER to delete the system partition. You will be asked",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "   to confirm the deletion of the partition again later.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         24,
         "\x07  Press ESC to return to the previous page. The partition will",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "   not be deleted.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER=Continue  ESC=Cancel",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1136,31 +1297,35 @@ static MUI_ENTRY bnBDFormatPartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Format partition",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "Setup will now format the partition. Press ENTER to continue.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_FORMAT_PROMPT
     },
     {
         0,
         0,
         "ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         NULL,
-        TEXT_STYLE_NORMAL
+        0
     }
 };
 
@@ -1170,43 +1335,50 @@ static MUI_ENTRY bnBDInstallDirectoryEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Setup installs ReactOS files onto the selected partition. Choose a",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "directory where you want ReactOS to be installed:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "To change the suggested directory, press BACKSPACE to delete",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "characters and then type the directory where you want ReactOS to",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "be installed.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1222,31 +1394,36 @@ static MUI_ENTRY bnBDFileCopyEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         0,
         12,
         "Please wait while ReactOS Setup copies files to your ReactOS",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         13,
         "installation folder.",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         14,
         "This may take several minutes to complete.",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         50,
         0,
         "\xB3 Please wait...    ",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1262,43 +1439,50 @@ static MUI_ENTRY bnBDBootLoaderEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Setup is installing the boot loader",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "Install bootloader on the harddisk (MBR and VBR).",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "Install bootloader on the harddisk (VBR only).",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "Install bootloader on a floppy disk.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "Skip install bootloader.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1314,43 +1498,50 @@ static MUI_ENTRY bnBDKeyboardSettingsEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "You want to change the type of keyboard to be installed.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Press the UP or DOWN key to select the desired keyboard type.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Then press ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Press the ESC key to return to the previous page without changing",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   the keyboard type.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1366,43 +1557,50 @@ static MUI_ENTRY bnBDLayoutSettingsEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Please select a layout to be installed by default.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Press the UP or DOWN key to select the desired keyboard",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "    layout. Then press ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Press the ESC key to return to the previous page without changing",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   the keyboard layout.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1419,19 +1617,22 @@ static MUI_ENTRY bnBDPrepareCopyEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Setup prepares your computer for copying the ReactOS files.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Building the file copy list...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1448,7 +1649,8 @@ static MUI_ENTRY bnBDSelectFSEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
@@ -1478,7 +1680,8 @@ static MUI_ENTRY bnBDSelectFSEntries[] =
         0,
         0,
         "ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1494,37 +1697,43 @@ static MUI_ENTRY bnBDDeletePartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "You have chosen to delete the partition",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "\x07  Press L to delete the partition.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         11,
         19,
         "WARNING: All data on this partition will be lost!",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Press ESC to cancel.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "L = Delete Partition   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1540,19 +1749,22 @@ static MUI_ENTRY bnBDRegistryEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Setup is updating the system configuration.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Creating registry hives...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1651,14 +1863,14 @@ MUI_ERROR bnBDErrorEntries[] =
     },
     {
         // ERROR_WARN_PARTITION,
-          "Setup found that at least one harddisk contains an incompatible\n"
-          "partition table that cannot be handled properly!\n"
-          "\n"
-          "Creating or deleting partitions can destroy the partition table.\n"
-          "\n"
-          "  \x07  Press F3 to quit Setup.\n"
-          "  \x07  Press ENTER to continue.",
-          "F3 = Quit  ENTER = Continue"
+        "Setup found that at least one harddisk contains an incompatible\n"
+        "partition table that cannot be handled properly!\n"
+        "\n"
+        "Creating or deleting partitions can destroy the partition table.\n"
+        "\n"
+        "  \x07  Press F3 to quit Setup.\n"
+        "  \x07  Press ENTER to continue.",
+        "F3 = Quit  ENTER = Continue"
     },
     {
         // ERROR_NEW_PARTITION,
@@ -2036,10 +2248,14 @@ MUI_STRING bnBDStrings[] =
     "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDINFOPARTZEROED_1,
     "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
+    // {STRING_HDINFOPARTZEROED_2,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS_1,
     "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
+    // {STRING_HDINFOPARTEXISTS_2,
+    // "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sType %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT_1,

@@ -173,7 +173,7 @@ GuiConsoleInputThread(PVOID Param)
 
                 ASSERT(NewWindow == GuiData->hWindow);
 
-                InterlockedIncrement(&WindowCount);
+                _InterlockedIncrement(&WindowCount);
 
                 //
                 // FIXME: TODO: Move everything there into conwnd.c!OnNcCreate()
@@ -238,7 +238,7 @@ GuiConsoleInputThread(PVOID Param)
 
                 NtSetEvent(GuiData->hGuiTermEvent, NULL);
 
-                if (InterlockedDecrement(&WindowCount) == 0)
+                if (_InterlockedDecrement(&WindowCount) == 0)
                 {
                     DPRINT("CONSRV: Going to quit the Input Thread 0x%p\n", InputThreadId);
                     goto Quit;
@@ -1238,7 +1238,7 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
         if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
         {
 #if 0
-            /* Load the terminal infos from the registry */
+            /* Load the terminal information from the registry */
             GuiConsoleReadUserSettings(&GuiInitInfo->TermInfo);
 #endif
 

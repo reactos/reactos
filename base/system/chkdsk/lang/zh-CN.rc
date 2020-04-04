@@ -5,7 +5,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Usage: %s [drive:] [-F] [-V] [-R] [-C] \n\n\
+Usage: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
 [drive:]    指定需要检查的驱动器。\n\
 -F          修复磁盘上的错误。\n\
 -V          显示每一个文件的完整路径。\n\

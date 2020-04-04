@@ -355,9 +355,188 @@ AckPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_PRODUCT);
+                        return TRUE;
+                    }
+                    break;
+
+                case PSN_WIZBACK:
+                    pSetupData->UnattendSetup = FALSE;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        break;
+
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
+static BOOL
+DoWriteProductOption(PRODUCT_OPTION nOption)
+{
+    static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
+    static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
+    HKEY hKey;
+    LONG error;
+    LPCWSTR pData;
+    DWORD cbData, dwValue;
+
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
+    if (error)
+        return FALSE;
+
+    switch (nOption)
+    {
+        case PRODUCT_OPTION_SERVER:
+            /* write ProductSuite */
+            pData = L"Terminal Server\0";
+            cbData = sizeof(L"Terminal Server\0");
+            error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
+            if (error)
+                break;
+
+            /* write ProductType */
+            pData = L"ServerNT";
+            cbData = sizeof(L"ServerNT");
+            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
+            break;
+
+        case PRODUCT_OPTION_WORKSTATION:
+            /* write ProductSuite */
+            pData = L"\0";
+            cbData = sizeof(L"\0");
+            error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
+            if (error)
+                break;
+
+            /* write ProductType */
+            pData = L"WinNT";
+            cbData = sizeof(L"WinNT");
+            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
+            break;
+    }
+
+    RegCloseKey(hKey);
+
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szRosVersion, 0, KEY_WRITE, &hKey);
+    if (error)
+        return FALSE;
+
+    /* write ReportAsWorkstation value */
+    dwValue = (nOption == PRODUCT_OPTION_WORKSTATION);
+    cbData = sizeof(dwValue);
+    error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (BYTE *)&dwValue, cbData);
+
+    RegCloseKey(hKey);
+
+    return error == ERROR_SUCCESS;
+}
+
+static void
+OnChooseServer(HWND hwndDlg)
+{
+    WCHAR szText[256];
+
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"Terminal Server");
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"ServerNT");
+
+    LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
+}
+
+static void
+OnChooseWorkstation(HWND hwndDlg)
+{
+    WCHAR szText[256];
+
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"");
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"WinNT");
+
+    LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
+}
+
+static INT_PTR CALLBACK
+ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    LPNMHDR lpnm;
+    PSETUPDATA pSetupData;
+    INT iItem;
+    WCHAR szText[64];
+    HICON hIcon;
+
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSetupData);
+
+            LoadStringW(hDllInstance, IDS_PRODUCTSERVERNAME, szText, _countof(szText));
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
+
+            LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONNAME, szText, _countof(szText));
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
+
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_WORKSTATION, 0);
+            OnChooseWorkstation(hwndDlg);
+
+            hIcon = LoadIcon(NULL, IDI_WINLOGO);
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_ICON, STM_SETICON, (WPARAM)hIcon, 0);
+            return TRUE;
+        }
+
+        case WM_COMMAND:
+            if (HIWORD(wParam) == CBN_SELCHANGE && IDC_PRODUCT_OPTIONS == LOWORD(wParam))
+            {
+                iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
+                switch ((PRODUCT_OPTION)iItem)
+                {
+                    case PRODUCT_OPTION_SERVER:
+                        OnChooseServer(hwndDlg);
+                        break;
+
+                    case PRODUCT_OPTION_WORKSTATION:
+                        OnChooseWorkstation(hwndDlg);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            break;
+
+        case WM_NOTIFY:
+        {
+            lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                    /* Enable the Back and Next buttons */
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+                    if (pSetupData->UnattendSetup)
+                    {
+                        pSetupData->ProductOption = PRODUCT_OPTION_WORKSTATION;
+                        OnChooseWorkstation(hwndDlg);
+                        DoWriteProductOption(pSetupData->ProductOption);
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
                     }
+                    break;
+
+                case PSN_WIZNEXT:
+                    iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
+                    pSetupData->ProductOption = (PRODUCT_OPTION)iItem;
+                    DoWriteProductOption(pSetupData->ProductOption);
                     break;
 
                 case PSN_WIZBACK:
@@ -556,7 +735,10 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
         return FALSE;
     }
 
-    /* Try to also set DNS hostname */
+    /* Set the physical DNS domain */
+    SetComputerNameExW(ComputerNamePhysicalDnsDomain, L"");
+
+    /* Set the physical DNS hostname */
     SetComputerNameExW(ComputerNamePhysicalDnsHostname, ComputerName);
 
     /* Set the accounts domain name */
@@ -2658,7 +2840,7 @@ typedef DWORD(WINAPI *PFNREQUESTWIZARDPAGES)(PDWORD, HPROPSHEETPAGE *, PSETUPDAT
 VOID
 InstallWizard(VOID)
 {
-    PROPSHEETHEADER psh;
+    PROPSHEETHEADER psh = {0};
     HPROPSHEETPAGE *phpage = NULL;
     PROPSHEETPAGE psp = {0};
     UINT nPages = 0;
@@ -2667,7 +2849,7 @@ InstallWizard(VOID)
     PSETUPDATA pSetupData = NULL;
     HMODULE hNetShell = NULL;
     PFNREQUESTWIZARDPAGES pfn = NULL;
-    DWORD dwPageCount = 9, dwNetworkPageCount = 0;
+    DWORD dwPageCount = 10, dwNetworkPageCount = 0;
 
     LogItem(L"BEGIN_SECTION", L"InstallWizard");
 
@@ -2732,6 +2914,14 @@ InstallWizard(VOID)
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_ACKSUBTITLE);
     psp.pszTemplate = MAKEINTRESOURCE(IDD_ACKPAGE);
     psp.pfnDlgProc = AckPageDlgProc;
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create the Product page */
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PRODUCTTITLE);
+    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PRODUCTSUBTITLE);
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_PRODUCT);
+    psp.pfnDlgProc = ProductPageDlgProc;
     phpage[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the Locale page */

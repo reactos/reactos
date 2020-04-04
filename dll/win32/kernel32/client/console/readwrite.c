@@ -20,9 +20,9 @@
 
 /* See consrv/include/rect.h */
 #define ConioRectHeight(Rect) \
-    (((Rect)->Top) > ((Rect)->Bottom) ? 0 : ((Rect)->Bottom) - ((Rect)->Top) + 1)
+    (((Rect)->Top > (Rect)->Bottom) ? 0 : ((Rect)->Bottom - (Rect)->Top + 1))
 #define ConioRectWidth(Rect) \
-    (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
+    (((Rect)->Left > (Rect)->Right) ? 0 : ((Rect)->Right - (Rect)->Left + 1))
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -436,8 +436,7 @@ IntReadConsoleOutput(IN HANDLE hConsoleOutput,
 
             /* Copy into the buffer */
 
-            SizeX = ReadOutputRequest->ReadRegion.Right -
-                    ReadOutputRequest->ReadRegion.Left + 1;
+            SizeX = ConioRectWidth(&ReadOutputRequest->ReadRegion);
 
             for (y = 0, Y = ReadOutputRequest->ReadRegion.Top; Y <= ReadOutputRequest->ReadRegion.Bottom; ++y, ++Y)
             {
@@ -913,8 +912,7 @@ IntWriteConsoleOutput(IN HANDLE hConsoleOutput,
 
         /* Copy into the buffer */
 
-        SizeX = WriteOutputRequest->WriteRegion.Right -
-                WriteOutputRequest->WriteRegion.Left + 1;
+        SizeX = ConioRectWidth(&WriteOutputRequest->WriteRegion);
 
         for (y = 0, Y = WriteOutputRequest->WriteRegion.Top; Y <= WriteOutputRequest->WriteRegion.Bottom; ++y, ++Y)
         {

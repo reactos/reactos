@@ -23,6 +23,7 @@
 #include <windef.h>
 #include <ntddstor.h>
 #include <ntdddisk.h>
+#include <ntddvol.h>
 
 #include <initguid.h>
 #include <wdmguid.h>
@@ -35,6 +36,7 @@ extern HANDLE mountmgr_thread_handle;
 extern bool shutting_down;
 extern PDEVICE_OBJECT busobj;
 extern tIoUnregisterPlugPlayNotificationEx fIoUnregisterPlugPlayNotificationEx;
+extern ERESOURCE boot_lock;
 
 typedef void (*pnp_callback)(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath);
 
@@ -270,8 +272,11 @@ void disk_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
 
     UNUSED(DriverObject);
 
+    ExAcquireResourceSharedLite(&boot_lock, TRUE);
+
     Status = IoGetDeviceObjectPointer(devpath, FILE_READ_ATTRIBUTES, &fileobj, &devobj);
     if (!NT_SUCCESS(Status)) {
+        ExReleaseResourceLite(&boot_lock);
         ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
         return;
     }
@@ -323,6 +328,8 @@ void disk_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
 
 end:
     ObDereferenceObject(fileobj);
+
+    ExReleaseResourceLite(&boot_lock);
 }
 
 void remove_volume_child(_Inout_ _Requires_exclusive_lock_held_(_Curr_->child_lock) _Releases_exclusive_lock_(_Curr_->child_lock) _In_ volume_device_extension* vde,
@@ -496,8 +503,11 @@ void volume_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
 
     TRACE("%.*S\n", devpath->Length / sizeof(WCHAR), devpath->Buffer);
 
+    ExAcquireResourceSharedLite(&boot_lock, TRUE);
+
     Status = IoGetDeviceObjectPointer(devpath, FILE_READ_ATTRIBUTES, &fileobj, &devobj);
     if (!NT_SUCCESS(Status)) {
+        ExReleaseResourceLite(&boot_lock);
         ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
         return;
     }
@@ -506,6 +516,10 @@ void volume_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
 
     if (devobj->DriverObject == DriverObject)
         goto end;
+
+    Status = dev_ioctl(devobj, IOCTL_VOLUME_ONLINE, NULL, 0, NULL, 0, true, NULL);
+    if (!NT_SUCCESS(Status))
+        TRACE("IOCTL_VOLUME_ONLINE returned %08x\n", Status);
 
     Status = dev_ioctl(devobj, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, &gli, sizeof(gli), true, NULL);
     if (!NT_SUCCESS(Status)) {
@@ -570,6 +584,8 @@ void volume_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
 
 end:
     ObDereferenceObject(fileobj);
+
+    ExReleaseResourceLite(&boot_lock);
 }
 
 void volume_removal(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
@@ -648,6 +664,8 @@ static void __stdcall do_pnp_callback(PDEVICE_OBJECT DeviceObject, PVOID con) {
         ExFreePool(context->name.Buffer);
 
     IoFreeWorkItem(context->work_item);
+
+    ExFreePool(context);
 }
 
 static void enqueue_pnp_callback(PDRIVER_OBJECT DriverObject, PUNICODE_STRING name, pnp_callback func) {
@@ -655,6 +673,10 @@ static void enqueue_pnp_callback(PDRIVER_OBJECT DriverObject, PUNICODE_STRING na
     pnp_callback_context* context;
 
     work_item = IoAllocateWorkItem(master_devobj);
+    if (!work_item) {
+        ERR("out of memory\n");
+        return;
+    }
 
     context = ExAllocatePoolWithTag(PagedPool, sizeof(pnp_callback_context), ALLOC_TAG);
 

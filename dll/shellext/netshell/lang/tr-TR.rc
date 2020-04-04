@@ -17,8 +17,8 @@ BEGIN
     PUSHBUTTON "&Özellikler", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Tanım", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Bileşen tanımı buraya gelecek.", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "&Bağlandığında Görev Çubuğunda Simge Göster", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "B&u Bağlantının, Kısıtlı Bağlanabilirliği Varsa ya da Bağlanabilirliği Yoksa Beni Uyar", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    AUTOCHECKBOX "&Bağlandığında Görev Çubuğunda Simge Göster", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "B&u Bağlantının, Kısıtlı Bağlanabilirliği Varsa ya da Bağlanabilirliği Yoksa Beni Uyar", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280

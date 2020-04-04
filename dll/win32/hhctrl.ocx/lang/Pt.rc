@@ -37,13 +37,13 @@ MENU_POPUP MENU
     POPUP "" /* Options */
     {
         MENUITEM "", IDTB_EXPAND
-        MENUITEM "S&ync", IDTB_SYNC
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "S&incronizar", IDTB_SYNC
+        MENUITEM "&Retroceder", IDTB_BACK
+        MENUITEM "&Avançar", IDTB_FORWARD
         MENUITEM "&Home", IDTB_HOME
-        MENUITEM "&Stop", IDTB_STOP
-        MENUITEM "&Refresh", IDTB_REFRESH
-        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "&Parar", IDTB_STOP
+        MENUITEM "A&ctualizar", IDTB_REFRESH
+        MENUITEM "&Imprimir...", IDTB_PRINT
     }
 }
 
@@ -51,25 +51,25 @@ MENU_WEBBROWSER MENU
 {
     POPUP ""
     {
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Retroceder", IDTB_BACK
+        MENUITEM "&Avançar", IDTB_FORWARD
         MENUITEM SEPARATOR
-        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "Seleccionar &tudo", MIID_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM "&Ver código fonte", MIID_VIEWSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "&Print...", IDTB_PRINT
-        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Imprimir...", IDTB_PRINT
+        MENUITEM "A&ctualizar", IDTB_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Proper&ties", MIID_PROPERTIES
+        MENUITEM "&Propriedades", MIID_PROPERTIES
     }
     POPUP ""
     {
-        MENUITEM "Cu&t", MIID_CUT
-        MENUITEM "&Copy", MIID_COPY
-        MENUITEM "Paste", MIID_PASTE
-        MENUITEM "Select &All", MIID_SELECTALL
-        MENUITEM "&Print", IDTB_PRINT
+        MENUITEM "Cor&tar", MIID_CUT
+        MENUITEM "&Copiar", MIID_COPY
+        MENUITEM "Co&lar", MIID_PASTE
+        MENUITEM "Seleccionar &tudo", MIID_SELECTALL
+        MENUITEM "&Imprimir", IDTB_PRINT
     }
 }
 

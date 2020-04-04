@@ -152,7 +152,7 @@ Você deseja criar um novo arquivo?"
 Gostaria de salvar as alteraçÕes?"
     STRING_NOTFOUND "'%s' não pode ser encontrado."
     STRING_OUT_OF_MEMORY "Não há memória suficiente para completar essa \
-tarefa. \nFeche uma ou mais aplicações para aumentar a quantidade de memória livre."
+tarefa.\nFeche uma ou mais aplicações para aumentar a quantidade de memória livre."
     STRING_CANNOTFIND "Não foi encontrado '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

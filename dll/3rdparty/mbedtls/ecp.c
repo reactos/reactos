@@ -1920,15 +1920,14 @@ int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp, const mbedtls_mpi *
 }
 
 /*
- * Generate a keypair with configurable base point
+ * Generate a private key
  */
-int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
-                     const mbedtls_ecp_point *G,
-                     mbedtls_mpi *d, mbedtls_ecp_point *Q,
+int mbedtls_ecp_gen_privkey( const mbedtls_ecp_group *grp,
+                     mbedtls_mpi *d,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
 {
-    int ret;
+    int ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
     size_t n_size = ( grp->nbits + 7 ) / 8;
 
 #if defined(ECP_MONTGOMERY)
@@ -1953,13 +1952,14 @@ int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
         MBEDTLS_MPI_CHK( mbedtls_mpi_set_bit( d, 1, 0 ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_set_bit( d, 2, 0 ) );
     }
-    else
 #endif /* ECP_MONTGOMERY */
+
 #if defined(ECP_SHORTWEIERSTRASS)
     if( ecp_get_type( grp ) == ECP_TYPE_SHORT_WEIERSTRASS )
     {
         /* SEC1 3.2.1: Generate d such that 1 <= n < N */
         int count = 0;
+        unsigned cmp = 0;
 
         /*
          * Match the procedure given in RFC 6979 (deterministic ECDSA):
@@ -1984,19 +1984,37 @@ int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
              */
             if( ++count > 30 )
                 return( MBEDTLS_ERR_ECP_RANDOM_FAILED );
+
+            ret = mbedtls_mpi_lt_mpi_ct( d, &grp->N, &cmp );
+            if( ret != 0 )
+            {
+                goto cleanup;
+            }
         }
-        while( mbedtls_mpi_cmp_int( d, 1 ) < 0 ||
-               mbedtls_mpi_cmp_mpi( d, &grp->N ) >= 0 );
+        while( mbedtls_mpi_cmp_int( d, 1 ) < 0 || cmp != 1 );
     }
-    else
 #endif /* ECP_SHORTWEIERSTRASS */
-        return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
 cleanup:
-    if( ret != 0 )
-        return( ret );
+    return( ret );
+}
 
-    return( mbedtls_ecp_mul( grp, Q, d, G, f_rng, p_rng ) );
+/*
+ * Generate a keypair with configurable base point
+ */
+int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
+                     const mbedtls_ecp_point *G,
+                     mbedtls_mpi *d, mbedtls_ecp_point *Q,
+                     int (*f_rng)(void *, unsigned char *, size_t),
+                     void *p_rng )
+{
+    int ret;
+
+    MBEDTLS_MPI_CHK( mbedtls_ecp_gen_privkey( grp, d, f_rng, p_rng ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_mul( grp, Q, d, G, f_rng, p_rng ) );
+
+cleanup:
+    return( ret );
 }
 
 /*

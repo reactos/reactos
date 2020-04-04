@@ -40,7 +40,7 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/x86_reactos.apisets_6595b64144ccf1d
 # Apisets will be appended
 
 add_apiset(api-ms-win-appmodel-identity-l1-1-0 0x60000000 )
-add_apiset(api-ms-win-appmodel-runtime-l1-1-1 0x60020000 )
+add_apiset(api-ms-win-appmodel-runtime-l1-1-1 0x60020000 kernel32)
 add_apiset(api-ms-win-appmodel-runtime-l1-1-2 0x60040000 )
 add_apiset(api-ms-win-core-apiquery-l1-1-0 0x60060000 )
 add_apiset(api-ms-win-core-appcompat-l1-1-1 0x60070000 kernel32)

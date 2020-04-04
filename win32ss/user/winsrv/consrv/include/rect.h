@@ -29,9 +29,9 @@ do {    \
     (((Rect)->Left > (Rect)->Right) || ((Rect)->Top > (Rect)->Bottom))
 
 #define ConioRectHeight(Rect) \
-    (((Rect)->Top) > ((Rect)->Bottom) ? 0 : ((Rect)->Bottom) - ((Rect)->Top) + 1)
+    (((Rect)->Top > (Rect)->Bottom) ? 0 : ((Rect)->Bottom - (Rect)->Top + 1))
 #define ConioRectWidth(Rect) \
-    (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
+    (((Rect)->Left > (Rect)->Right) ? 0 : ((Rect)->Right - (Rect)->Left + 1))
 
 
 static __inline BOOLEAN

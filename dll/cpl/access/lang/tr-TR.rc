@@ -138,7 +138,7 @@ CAPTION "Süzgeç Düğmeleri Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Düğme Takımı Kısayolu", -1, 6, 11, 234, 62
-    LTEXT "Süzgeç Düğmeleri İçin Kısayol:  \nSağ Üst Damga'ya 8 sâniye süresince basılı tutunuz.",
+    LTEXT "Süzgeç Düğmeleri İçin Kısayol:\nSağ Üst Damga'ya 8 sâniye süresince basılı tutunuz.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Kısayol Kullan", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Süzgeç Ayarları", -1, 6, 79, 234, 79
@@ -165,7 +165,7 @@ CAPTION "Geçiş Düğmeleri Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Düğme Takımı Kısayolu", -1, 6, 11, 234, 62
-    LTEXT "Geçiş Düğmeleri İçin Kısayol:  \nSayılık Kilit'e beş sâniye süresince basılı tutunuz.",
+    LTEXT "Geçiş Düğmeleri İçin Kısayol:\nSayılık Kilit'e beş sâniye süresince basılı tutunuz.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Kısayol Kullan", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "Tamam", IDOK, 135, 207, 50, 14
@@ -178,7 +178,7 @@ CAPTION "Yüksek Karşıtlık Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Düğme Takımı Kısayolu", -1, 6, 11, 234, 62
-    LTEXT "Yüksek Karşıtlık İçin Kısayol:  \nSol Seçenek, Sol Üst Damga ve Görüntülüğü Yazdır'a birlikte basınız.",
+    LTEXT "Yüksek Karşıtlık İçin Kısayol:\nSol Seçenek, Sol Üst Damga ve Görüntülüğü Yazdır'a birlikte basınız.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Kısayol Kullan", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Yüksek Karşıtlık Renk Düzeni", -1, 6, 83, 234, 44
@@ -195,7 +195,7 @@ CAPTION "Fâre Düğmeleri Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Düğme Takımı Kısayolu", -1, 6, 11, 234, 62
-    LTEXT "Fâre Düğmeleri İçin Kısayol:  \nSol Seçenek, Sol Üst Damga ve Sayılık Kilit'e birlikte basınız.",
+    LTEXT "Fâre Düğmeleri İçin Kısayol:\nSol Seçenek, Sol Üst Damga ve Sayılık Kilit'e birlikte basınız.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Kısayol Kullan", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14

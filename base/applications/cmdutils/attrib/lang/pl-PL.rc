@@ -11,6 +11,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ATTRIB_HELP "Wyświetla lub zmienia atrybuty plików.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
        [/S [/D]]\n\n\

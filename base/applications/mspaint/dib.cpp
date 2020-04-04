@@ -83,16 +83,15 @@ void ShowFileLoadError(LPCTSTR name)
 void
 LoadDIBFromFile(HBITMAP * hBitmap, LPCTSTR name, LPSYSTEMTIME time, int *size, int *hRes, int *vRes)
 {
-    using namespace Gdiplus;
-    Bitmap img(CStringW(name), FALSE);  // always use WCHAR string
+    CImage img;
+    img.Load(name);
+    *hBitmap = img.Detach();
 
     if (!hBitmap)
     {
         ShowFileLoadError(name);
         return;
     }
-
-    img.GetHBITMAP(Color(255, 255, 255), hBitmap);
 
     // update time and size
     HANDLE hFile =
@@ -112,9 +111,10 @@ LoadDIBFromFile(HBITMAP * hBitmap, LPCTSTR name, LPSYSTEMTIME time, int *size, i
     if (size)
         *size = GetFileSize(hFile, NULL);
 
-    // update hRes and vRes
-    *hRes = (int) (img.GetHorizontalResolution() * 1000 / 25.4);
-    *vRes = (int) (img.GetVerticalResolution() * 1000 / 25.4);
+    HDC hScreenDC = GetDC(NULL);
+    *hRes = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSX) * 1000 / 25.4);
+    *vRes = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSY) * 1000 / 25.4);
+    ReleaseDC(NULL, hScreenDC);
 
     CloseHandle(hFile);
 }

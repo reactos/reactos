@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -138,7 +138,8 @@ AcpiExGetProtocolBufferLength (
  * RETURN:      Status
  *
  * DESCRIPTION: Read from a named field. Returns either an Integer or a
- *              Buffer, depending on the size of the field.
+ *              Buffer, depending on the size of the field and whether if a
+ *              field is created by the CreateField() operator.
  *
  ******************************************************************************/
 
@@ -202,12 +203,17 @@ AcpiExReadDataFromField (
      * the use of arithmetic operators on the returned value if the
      * field size is equal or smaller than an Integer.
      *
+     * However, all buffer fields created by CreateField operator needs to
+     * remain as a buffer to match other AML interpreter implementations.
+     *
      * Note: Field.length is in bits.
      */
     BufferLength = (ACPI_SIZE) ACPI_ROUND_BITS_UP_TO_BYTES (
         ObjDesc->Field.BitLength);
 
-    if (BufferLength > AcpiGbl_IntegerByteWidth)
+    if (BufferLength > AcpiGbl_IntegerByteWidth ||
+        (ObjDesc->Common.Type == ACPI_TYPE_BUFFER_FIELD &&
+        ObjDesc->BufferField.IsCreateField))
     {
         /* Field is too large for an Integer, create a Buffer instead */
 

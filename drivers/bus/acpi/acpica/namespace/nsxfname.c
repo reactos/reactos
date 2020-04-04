@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -503,7 +503,7 @@ AcpiGetObjectInfo (
 
     if (Cls)
     {
-        NextIdString = AcpiNsCopyDeviceId (&Info->ClassCode,
+       (void) AcpiNsCopyDeviceId (&Info->ClassCode,
             Cls, NextIdString);
     }
 
@@ -606,7 +606,7 @@ AcpiInstallMethod (
 
     MethodFlags = *ParserState.Aml++;
     AmlStart = ParserState.Aml;
-    AmlLength = ACPI_PTR_DIFF (ParserState.PkgEnd, AmlStart);
+    AmlLength = (UINT32) ACPI_PTR_DIFF (ParserState.PkgEnd, AmlStart);
 
     /*
      * Allocate resources up-front. We don't want to have to delete a new

@@ -194,6 +194,15 @@ typedef struct _PROPSHEETPAGEA {
 	LPCSTR pszHeaderTitle;
 	LPCSTR pszHeaderSubTitle;
 #endif
+#if (_WIN32_IE >= 0x0501)
+    HANDLE hActCtx;
+#endif
+#if (_WIN32_IE >= 0x0600)
+    _ANONYMOUS_UNION union {
+        HBITMAP hbmHeader;
+        LPCSTR pszbmHeader;
+    } DUMMYUNIONNAME3;
+#endif
 } PROPSHEETPAGEA,*LPPROPSHEETPAGEA,
   PROPSHEETPAGEA_LATEST, *LPPROPSHEETPAGEA_LATEST;
 typedef const PROPSHEETPAGEA *LPCPROPSHEETPAGEA, *LPCPROPSHEETPAGEA_LATEST;
@@ -221,6 +230,15 @@ typedef struct _PROPSHEETPAGEW {
 #if (_WIN32_IE >= 0x0400)
 	LPCWSTR pszHeaderTitle;
 	LPCWSTR pszHeaderSubTitle;
+#endif
+#if (_WIN32_IE >= 0x0501)
+    HANDLE hActCtx;
+#endif
+#if (_WIN32_IE >= 0x0600)
+    _ANONYMOUS_UNION union {
+        HBITMAP hbmHeader;
+        LPCWSTR pszbmHeader;
+    } DUMMYUNIONNAME3;
 #endif
 } PROPSHEETPAGEW,*LPPROPSHEETPAGEW,
   PROPSHEETPAGEW_LATEST, *LPPROPSHEETPAGEW_LATEST;

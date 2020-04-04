@@ -137,11 +137,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Versiune", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 68, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 95, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 100, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 158, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Drept de autor 1998-", IDC_STATIC, 35, 75, 68, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 103, 75, 17, 10
     LTEXT " Echipa ReactOS\0", IDC_STATIC, 120, 75, 53, 10
@@ -753,6 +749,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "Adăugarea, modificarea, și gestiunea fonturilor din calculator."
     IDS_PRINTERS_DESCRIPTION "Prezentarea imprimantelor și faxurilor, precum și asistență la instalarea unora noi."
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Versiune %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "D&ale"
     IDS_VIEW_SMALL "&Pictograme"
@@ -771,6 +770,17 @@ BEGIN
     IDS_PASTE "&Lipește"
     IDS_EJECT "S&coate"
     IDS_DISCONNECT "Deconectea&ză"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "Nu poate fi creat un dosar cu numele „%1”"
     IDS_CREATEFOLDER_CAPTION "Nu poate fi creat dosar"
@@ -811,7 +821,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Specificare fișiere"
     IDS_RUNDLG_BROWSE_FILTER "Fișiere executabile (*.exe)\0*.exe\0Orice fișier (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Meniul Pornire\\Programe"
     IDS_PERSONAL "Documentele mele"
     IDS_FAVORITES "Favorite"
@@ -874,6 +884,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Eșec la scoaterea mediului de stocare (Cod de eroare: %lu)."
     IDS_CANTSHOWPROPERTIES "Eșec la inspecția proprietăților (Cod de eroare: %lu)."
     IDS_CANTDISCONNECT "Eșec la deconectare (Cod de eroare: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dosar"
@@ -910,6 +921,7 @@ BEGIN
     IDS_EDIT_VERB "Editează"
     IDS_FIND_VERB "Caută"
     IDS_PRINT_VERB "Imprimă"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u fișiere, %u dosare"
     IDS_PRINTERS "Imprimante"

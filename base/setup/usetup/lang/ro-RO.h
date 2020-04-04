@@ -10,25 +10,29 @@ static MUI_ENTRY roROSetupInitPageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR,
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         0,
         20,
         "Asteptati initializarea programului de instalare si",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         21,
         "identificarea dispozitivelor din calculator...",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Asteptati...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -44,37 +48,43 @@ static MUI_ENTRY roROLanguagePageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR,
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Selec\376ie limb\343",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Selecta\376i limba pentru procesul de instalare.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Apoi ap\343sa\376i ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Aceasta va fi \356n final limba implicit\343 pentru tot sistemul.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare  F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -90,73 +100,85 @@ static MUI_ENTRY roROWelcomePageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Bun venit la instalarea ReactOS",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "Aceast\343 prim\343 etap\343 din instalarea ReactOS va copia fi\272ierele",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "necesare \356n calculatorul dumneavoastr\343 \272i-l va preg\343ti pentru",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "cea de-a doua etap\343 a instal\343rii.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         16,
         "\x07  Tasta\376i ENTER pentru a instala sau actualiza ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "\x07  Tasta\376i R pentru a reface un sistem deteriorat.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Tasta\376i L pentru Termenii \272i Condi\376iile de Licen\376iere.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         23,
         "\x07  Tasta\376i F3 pentru a ie\272i f\343r\343 a instala ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         26,
         "Pentru mai multe informa\376ii despre ReactOS, vizita\376i:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         27,
         "http://www.reactos.org",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare  R = Refacere  L = Licen\376\343  F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -172,61 +194,71 @@ static MUI_ENTRY roROIntroPageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Starea versiunii curente a ReactOS",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "ReactOS este \356n stadiu alfa de dezvoltare, adic\343 nu are prezint\343",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "func\376ionalit\343\376i complete \272i \356nc\343 nu este recomandat\343 utilizarea sa",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "ca sistem de operare de zi cu zi. Asigura\376i-v\343 copii ale datelor",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "\356n cazul \356n care \356ncerca\376i ReactOS \356n mod neemulat.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Tasta\376i ENTER pentru a instala ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Tasta\376i F3 pentru a ie\272i f\343r\343 a instala ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -242,133 +274,155 @@ static MUI_ENTRY roROLicensePageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         6,
         "Licen\376iere:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         8,
         "Sistemul de operare ReactOS este oferit \356n termenii Licen\376ei",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         9,
         "Publice Generale GNU, referit\343 \356n continuare ca GPL, cu p\343r\376i",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "de cod din alte licen\376e compatibile (ca X11, BSD, \272i LGPL).",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "Toate componentele care fac parte din sistemul ReactOS sunt",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "prin urmare oferite sub licen\376a GPL, men\376in\342ndu-\272i astfel \272i",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "licen\376ierea original\343 \356n acela\272i timp.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         16,
         "Acest sistem vine f\343r\343 vreo restric\376ie de utilizare, aceasta",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "fiind o condi\376ie legislativ\343 aplicabil\343 at\342t la nivel local",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "c\342t \272i interna\376ional. Licen\376ierea se refer\343 doar la distri-",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "buirea sistemului ReactOS c\343tre p\343r\376i ter\376e.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "Dac\343 din vreun careva motiv nu de\376ine\376i o copie a licen\376ei",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         22,
         "GPL \356mpreun\343 cu ReactOS, o pute\376i consulta (\356n englez\343)",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         23,
         "acces\342nd pagina:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         24,
         "http://www.gnu.org/licenses/licenses.html",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         27,
         "Garan\376ie:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         29,
         "Acest sistem de operare este distribuit doar \356n speran\376a c\343",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         30,
         "va fi util, neav\342nd \356ns\343 ata\272at\343 NICI O GARAN\336IE; nici m\343car",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         31,
         "garan\376ia implicit\343 a VANDABILIT\303\336II sau a UTILIT\303\336II \316NTR-UN",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         32,
         "SCOP ANUME.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Revenire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -384,91 +438,106 @@ static MUI_ENTRY roRODevicePageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Configurare dispozitive de baz\343",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         24,
         11,
         "Arh. de calcul:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         12,
         "Parametri grafici:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         13,
         "Model tastatur\343:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         14,
         "Aranj. tastatur\343:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         16,
         "Accept\343:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         25,
         16,
         "Accept configura\376ia dispozitivelor",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         19,
         "Pute\376i modifica starea curent\343. Utiliza\376i tastele SUS/JOS pentru",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         20,
         "alegerea unui dispozitiv, apoi ap\343sa\376i ENTER pentru a-i modifica",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         21,
         "configura\376ia ata\272at\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         23,
         "C\342nd configura\376ia dispozitivele enumerate este cea corect\343,",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         24,
         "selecta\376i \"Accept configura\376ia dispozitivelor\", apoi confirma\376i",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         25,
         "ap\343s\342nd ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -484,55 +553,64 @@ static MUI_ENTRY roRORepairPageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Programul de instalare ReactOS este \356nc\343 \356ntr-o faz\343 incipient\343 de",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "dezvoltare \272i nu posed\343 o func\376ionalitate complet\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "Func\376ionalitatea de refacere \356nc\343 nu este implementat\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Tasta\376i U pentru actualizarea sistemului.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Tasta\376i R pentru consola de Recuperare.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Tasta\376i ESC pentru a reveni la pagina principal\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Tasta\376i ENTER pentru a reporni calculatorul.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ESC = Revenire  U = Actualizare  R = Recuperare  ENTER = Repornire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -548,61 +626,71 @@ static MUI_ENTRY roROUpgradePageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR,
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Programul de Instalare ReactOS ofer\343 actualizarea urm\343toarelor instal\343ri",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "existente, sau, dac\343 o instalare este deteriorat\343, programul de instalare",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "poate \356ncerca s\343 o repare.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "Func\376ionalitatea de reparare \356nc\343 nu este complet implementat\343.",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Tasta\376i SUS sau JOS pentru a selecta o instalare existent\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Tasta\376i U pentru a actualiza instalarea selectat\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Tasta\376i ESC pentru a continua cu o nou\343 instalare.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Tasta\376i F3 pentru a ie\272i f\343r\343 a instala ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "U = Actualizare   ESC = Evitare actualizare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -618,43 +706,50 @@ static MUI_ENTRY roROComputerPageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Dori\376i specificarea unei alte arhitecturi de calcul?",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Utiliza\376i tastele SUS/JOS pentru a selecta o",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   arhitectur\343 de calcul, apoi ap\343sa\376i ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Tasta\376i ESC pentru a reveni la pagina precedent\343",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   f\343r\343 a specifica o alt\343 arhitectur\343 de calcul.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare   ESC = Anulare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -670,31 +765,36 @@ static MUI_ENTRY roROFlushPageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "Sistemul verific\343 integritatea datelor scrise pe disc.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "Aceasta poate dura c\342teva momente.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "La final, calculatorul va fi repornit automat.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Eliberare memorie...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -710,37 +810,43 @@ static MUI_ENTRY roROQuitPageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "ReactOS nu a fost instalat \356n \356ntregime.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "Scoate\376i discul flexibil din unitatea A:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "\272i toate mediile CD-ROM din unit\343\376ile CD.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "Tasta\376i ENTER pentru a reporni calculatorul.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "A\272tepta\376i...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -756,43 +862,50 @@ static MUI_ENTRY roRODisplayPageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Dori\376i modificarea parametrilor grafici de afi\272are?",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Utiliza\376i tastele SUS/JOS pentru a selecta",
-         TEXT_STYLE_NORMAL
+         TEXT_STYLE_NORMAL,
+         TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   un grup de parametri, apoi ap\343sa\376i ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Tasta\376i ESC pentru a reveni la pagina precedent\343",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   fara a modifica parametrii grafici actuali.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare   ESC = Anulare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -808,37 +921,43 @@ static MUI_ENTRY roROSuccessPageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "Componentele de baz\343 ale ReactOS au fost instalate cu succes.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "Scoate\376i discul flexibil din unitatea A: \272i toate mediile",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "CD-ROM din unit\343\376ile CD.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "Tasta\376i ENTER pentru a reporni calculatorul.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Repornire calculator",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -854,37 +973,43 @@ static MUI_ENTRY roROBootPageEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Programul de instalare nu poate instala modulul de",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "ini\376ializare a calculatorului pe discul local.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "Introduce\376i un disc flexibil formatat \356n",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "unitatea A: apoi s\343 ap\343sa\376i ENTER.",
         TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -901,61 +1026,71 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Urm\343toarea list\343 cuprinde parti\376iile existente, precum \272i",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "spa\376iul liber disponibil pentru crearea de noi parti\376ii.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "\x07  Utiliza\376i tastele SUS/JOS pentru a selecta o op\376iune.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Tasta\376i ENTER pentru a instala pe parti\376ia selectat\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Tasta\376i P pentru a crea o parti\376ie primar\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Tasta\376i E pentru a crea o parti\376ie extins\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Tasta\376i L pentru a crea o parti\376ie logic\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Tasta\376i D pentru a \272terge o parti\376ie existent\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "A\272tepta\376i...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -971,97 +1106,113 @@ static MUI_ENTRY roROChangeSystemPartition[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "The current system partition of your computer",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "on the system disk",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "uses a format not supported by ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         18,
         "In order to successfully install ReactOS, the Setup program must change",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         19,
         "the current system partition to a new one.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         21,
         "The new candidate system partition is:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "\x07  To accept this choice, press ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         27,
         "\x07  To manually change the system partition, press ESC to go back to",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         28,
         "   the partition selection list, then select or create a new system",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         29,
         "   partition on the system disk.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         32,
         "In case there are other operating systems that depend on the original",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         33,
         "system partition, you may need to either reconfigure them for the new",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         34,
         "system partition, or you may need to change the system partition back",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         35,
         "to the original one after finishing the installation of ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continue   ESC = Cancel",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1077,85 +1228,99 @@ static MUI_ENTRY roROConfirmDeleteSystemPartitionEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR,
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A\376i solicitat \272tergerea parti\376iei de sistem.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "Parti\376iile de sistem pot con\376ine programe de diagnoz\343, programe de con-",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "figurare a echipamentelor, programe de lansare a unui sistem de operare",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "(ca ReactOS) \272i alte programe furnizate de produc\343torii calculorului.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "\252terge\376i o parti\376ie de sistem doar c\342nd fie ave\376i siguran\376a c\343 nu ve\376i",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "\272terge accidental a\272a programe pe parti\376ie, fie dori\376i s\343 le \272terge\376i.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "\252terg\342nd parti\376ia apare riscul de a nu mai putea porni calculatorul de",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         17,
         "pe discul local dec\342t dup\343 finalizarea instal\343rii ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         20,
         "\x07  Tasta\376i ENTER pentru a \272terge parti\376ia de sistem. Vi se va",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "   cere s\343 confirma\376i din nou aceast\343 \272tergere a parti\376iei.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         24,
         "\x07  Tasta\376i ESC pentru a reveni la pagina precedent\343. Parti\376ia",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "   nu va fi \272tears\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare   ESC = Anulare",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1171,31 +1336,28 @@ static MUI_ENTRY roROFormatPartitionEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Urmeaz\343 formatarea parti\376iei.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        6,
-        10,
-        "Tasta\376i ENTER pentru a continua.",
-        TEXT_STYLE_NORMAL
+        "Urmeaz\343 formatarea parti\376iei. Tasta\376i ENTER pentru a continua.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_FORMAT_PROMPT
     },
     {
         0,
         0,
         "ENTER = Continuare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         NULL,
-        TEXT_STYLE_NORMAL
+        0
     }
 };
 
@@ -1205,43 +1367,50 @@ static MUI_ENTRY roROInstallDirectoryEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Alege\376i un director de instalare pe parti\376ia aleas\343.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "Aici vor fi amplasate fi\272ierele sistemului ReactOS:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "Pute\376i indica un alt director, ap\343s\342nd BACKSPACE pentru",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "a \272terge caractere, apoi scriind calea directorului unde",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "dori\376i s\343 instala\376i ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1257,25 +1426,29 @@ static MUI_ENTRY roROFileCopyEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         0,
         12,
         "Are loc copierea de fi\272iere \356n directorul ReactOS specificat.",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         14,
         "(aceasta poate dura c\342teva momente)",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         50,
         0,
         "\xB3 A\272tepta\376i...",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1291,43 +1464,50 @@ static MUI_ENTRY roROBootLoaderEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Instalare modul de ini\376ializare al calculatorului",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "Instaleaz\343 ini\376ializatorul pe discul intern (MBR \272i VBR).",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "Instaleaz\343 ini\376ializatorul pe discul intern (doar VBR).",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "Instaleaz\343 ini\376ializatorul pe un disc flexibil.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "Omite instalarea modulului de ini\376ializare.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1343,43 +1523,50 @@ static MUI_ENTRY roROKeyboardSettingsEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC,
     },
     {
         6,
         8,
         "Dori\376i specificarea modelului tastaturii instalate?",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Utiliza\376i tastele SUS/JOS pentru a selecta un model",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   de tastatur\343, apoi ap\343sa\376i ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Tasta\376i ESC pentru a reveni la pagina precedent\343 f\343r\343",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   a schimba modelul tastaturii curente.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare   ESC = Anulare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1395,43 +1582,50 @@ static MUI_ENTRY roROLayoutSettingsEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Dori\376i specificarea unui aranjament implicit de tastatur\343?",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Utiliza\376i tastele SUS/JOS pentru a selecta un aranjament",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "    dorit de tastatur\343, apoi ap\343sa\376i ENTER.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Tasta\376i ESC pentru a reveni la pagina precedent\343 f\343r\343",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   a schimba aranjamentul curent al tastaturii.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Continuare   ESC = Anulare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1448,19 +1642,22 @@ static MUI_ENTRY roROPrepareCopyEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Au loc preg\343tirile necesare pentru copierea de fi\272iere.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "List\343 de fi\272iere \356n curs de creare...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1477,7 +1674,8 @@ static MUI_ENTRY roROSelectFSEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
@@ -1513,7 +1711,8 @@ static MUI_ENTRY roROSelectFSEntries[] =
         0,
         0,
         "ENTER = Continuare   ESC = Anulare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1529,37 +1728,43 @@ static MUI_ENTRY roRODeletePartitionEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A\376i ales s\343 \272terge\376i parti\376ia",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "\x07  Tasta\376i L pentru a \272terge parti\376ia.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         11,
         19,
         "ATEN\336IE: Toate datele de pe aceast\343 parti\376ie vor fi pierdute!",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Tasta\376i ESC pentru a anula.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "L = \252tergere parti\376ie   ESC = Anulare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1575,19 +1780,22 @@ static MUI_ENTRY roRORegistryEntries[] =
         4,
         3,
         " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Are loc actualizarea configura\376iei sistemului.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Registru \356n curs de creare...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,

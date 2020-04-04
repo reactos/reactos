@@ -55,6 +55,8 @@ typedef struct _MIXER_WINDOW
     RECT rect;
     HFONT hFont;
     SIZE baseUnit;
+    INT WndPosX;
+    INT WndPosY;
 } MIXER_WINDOW, *PMIXER_WINDOW;
 
 extern HINSTANCE hAppInstance;
@@ -63,6 +65,7 @@ extern HWND hMainWnd;
 extern HANDLE hAppHeap;
 
 #define SZ_APP_CLASS TEXT("Volume Control")
+#define _countof(array) (sizeof(array) / sizeof(array[0]))
 
 ULONG DbgPrint(PCH , ...);
 #define DPRINT DbgPrint("SNDVOL32: %s:%i: ", __FILE__, __LINE__); DbgPrint
@@ -191,6 +194,13 @@ InitAppConfig(VOID);
 
 VOID
 CloseAppConfig(VOID);
+
+BOOL
+LoadXYCoordWnd(IN PPREFERENCES_CONTEXT PrefContext);
+
+BOOL
+SaveXYCoordWnd(IN HWND hWnd,
+               IN PPREFERENCES_CONTEXT PrefContext);
 
 INT
 AllocAndLoadString(OUT LPWSTR *lpTarget,

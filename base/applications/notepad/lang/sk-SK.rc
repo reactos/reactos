@@ -159,7 +159,7 @@ Chcete vytvoriť nový súbor?"
     STRING_NOTSAVED "Text súboru '%s'\nsa zmenil.\n\n \
 Chcete uložiť zmeny?"
     STRING_NOTFOUND "Nie je možné nájsť '%s' ."
-    STRING_OUT_OF_MEMORY "Nedostatok pamäte na dokončenie tejto operácie. Zatvorte jednu \n \
+    STRING_OUT_OF_MEMORY "Nedostatok pamäte na dokončenie tejto operácie. Zatvorte jednu\n \
 alebo viac aplikácií, aby sa uvoľnila pamäť a skúste to znova."
     STRING_CANNOTFIND "Nemožno nájsť '%s'"
     STRING_ANSI "ANSI"

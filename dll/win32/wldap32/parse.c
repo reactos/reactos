@@ -258,7 +258,7 @@ ULONG CDECL ldap_parse_resultW( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *result,
 
     ldap_memfree( matchedU );
     ldap_memfree( errorU );
-    strarrayfreeU( referralsU );
+    ldap_memvfree( (void **)referralsU );
     ldap_controls_free( serverctrlsU );
 
 #endif

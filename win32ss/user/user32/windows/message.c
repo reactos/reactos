@@ -2162,7 +2162,7 @@ PeekMessageWorker( PMSG pMsg,
         {  // Not waiting for idle event.
            if (!pcti->fsChangeBits && !pcti->fsWakeBits)
            {  // No messages are available.
-              if ((GetTickCount() - pcti->tickLastMsgChecked) > 1000)
+              if ((GetTickCount() - pcti->timeLastRead) > 1000)
               {  // Up the msg read count if over 1 sec.
                  NtUserGetThreadState(THREADSTATE_UPTIMELASTREAD);
               }

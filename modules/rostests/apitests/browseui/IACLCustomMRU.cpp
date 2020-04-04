@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS api tests
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for IACLCustomMRU objects
- * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2017-2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #define _UNICODE
@@ -22,7 +22,7 @@ ULONG DbgPrint(PCH Format,...);
 #include <strsafe.h>
 #include <initguid.h>
 
-#define ok_hex_(file, line, key, expression, result) \
+#define ok_hex2(file, line, key, expression, result) \
     do { \
         int _value = (expression); \
         ok_(file, line)(_value == (result), "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x for %c\n", \
@@ -84,7 +84,7 @@ static void verify_mru_(const char* file, int line, IACLCustomMRU* mru, PCWSTR M
         CStringW tmp;
         tmp += Key;
         LSTATUS Status = key.QueryStringValue(tmp, Value, &nChars);
-        ok_hex_(file, line, Key, Status, ERROR_SUCCESS);
+        ok_hex2(file, line, Key, Status, ERROR_SUCCESS);
         if (Status == ERROR_SUCCESS)
         {
             ok_(file, line)(!wcscmp(Value, Entry), "Expected value %c to be %S, was %S\n", (char)Key, Entry, Value);
@@ -98,7 +98,7 @@ static void verify_mru_(const char* file, int line, IACLCustomMRU* mru, PCWSTR M
         WCHAR Value[MAX_PATH];
         ULONG nChars = _countof(Value);
         LSTATUS Status = key.QueryStringValue(L"MRUList", Value, &nChars);
-        ok_hex_(file, line, Key, Status, ERROR_SUCCESS);
+        ok_hex2(file, line, Key, Status, ERROR_SUCCESS);
         if (Status == ERROR_SUCCESS)
         {
             ok_(file, line)(!wcscmp(Value, MRUString), "Expected MRUList to be %S, was %S\n", MRUString, Value);

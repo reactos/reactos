@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -84,7 +84,7 @@ static ACPI_SLEEP_FUNCTIONS         AcpiSleepDispatch[] =
                        ACPI_HW_OPTIONAL_FUNCTION (AcpiHwLegacyWakePrep)),
      ACPI_STRUCT_INIT (ExtendedFunction,
                        AcpiHwExtendedWakePrep) },
-    {ACPI_STRUCT_INIT (Legacy_function,
+    {ACPI_STRUCT_INIT (LegacyFunction,
                        ACPI_HW_OPTIONAL_FUNCTION (AcpiHwLegacyWake)),
      ACPI_STRUCT_INIT (ExtendedFunction,
                        AcpiHwExtendedWake) }
@@ -249,6 +249,10 @@ AcpiEnterSleepStateS4bios (
 
     Status = AcpiHwWritePort (AcpiGbl_FADT.SmiCommand,
         (UINT32) AcpiGbl_FADT.S4BiosRequest, 8);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
 
     do {
         AcpiOsStall (ACPI_USEC_PER_MSEC);

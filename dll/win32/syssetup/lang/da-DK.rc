@@ -41,6 +41,24 @@ BEGIN
     LTEXT "Click Next to continue with Setup.", IDC_STATIC, 15, 136, 195, 17
 END
 
+IDD_PRODUCT DIALOGEX 0, 0, 317, 143
+CAPTION "ReactOS Setup"
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
+    LTEXT "Please choose a product option:", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "Product &Options:", IDC_STATIC, 5, 32, 85, 10
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "Product Information", IDC_STATIC, 5, 50, 305, 85
+    LTEXT "ProductSuite:", IDC_STATIC, 20, 62, 70, 10
+    EDITTEXT IDC_PRODUCT_SUITE, 95, 60, 175, 14, ES_READONLY | ES_AUTOHSCROLL
+    LTEXT "ProductType:", IDC_STATIC, 20, 82, 70, 10
+    EDITTEXT IDC_PRODUCT_TYPE, 95, 80, 110, 14, ES_READONLY | ES_AUTOHSCROLL
+    LTEXT "Description:", IDC_STATIC, 20, 102, 70, 10
+    EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 99, 205, 30, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
+END
+
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
@@ -222,7 +240,7 @@ BEGIN
     IDS_STATUS_INSTALL_DEV "Installing devices..."
 END
 
-/* ATTENTION: Synchronize the translation of these strings with shell32 */
+/* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROGRAMFILES "%SystemDrive%\\Programmer"
@@ -242,4 +260,14 @@ BEGIN
     IDS_LAUTUS "Lautus"
     IDS_LUNAR "Lunar"
     IDS_MIZU "Mizu"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PRODUCTTITLE "Product Options"
+    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSERVERNAME "ReactOS Server"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation (Default)"
+    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
+    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
 END

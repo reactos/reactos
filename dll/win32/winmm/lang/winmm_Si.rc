@@ -54,7 +54,7 @@ MCIERR_UNRECOGNIZED_KEYWORD, 	"Naveden parameter ukaza ni definiran v naboru MCI
 MCIERR_UNRECOGNIZED_COMMAND,	"Naveden ukaz ni veljaven MCI ukaz."
 MCIERR_HARDWARE, 		"S predstavnostno napravo so težave. Preverite, ali naprava deluje pravilno ali pa se posvetujte z izdelovalcem."
 MCIERR_INVALID_DEVICE_NAME, 	"To ni registrirana MCI naprava."
-MCIERR_OUT_OF_MEMORY, 		"Za to opravilo ni na voljo dovolj pomnilnika. \nKončajte enega ali več programov in poskusite znova."
+MCIERR_OUT_OF_MEMORY, 		"Za to opravilo ni na voljo dovolj pomnilnika.\nKončajte enega ali več programov in poskusite znova."
 MCIERR_DEVICE_OPEN, 		"Ta program že uporablja ta vzdevek. Namesto imena naprave uporabite še neuporabljen  vzdevek."
 MCIERR_CANNOT_LOAD_DRIVER, 	"Naprave ni bilo mogoče naložiti. Preverite, ali je gonilnik pravilno nameščen."
 MCIERR_MISSING_COMMAND_STRING, 	"Ukazni niz je prazen."

@@ -29,7 +29,6 @@
 #include "shlwapi.h"
 #include "wine/list.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "mapival.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mapi);
@@ -91,7 +90,7 @@ SCODE WINAPI PropCopyMore(LPSPropValue lpDest, LPSPropValue lpSrc,
             memcpy(lpDest->Value.lpszA, lpSrc->Value.lpszA, ulLen);
         break;
     case PT_UNICODE:
-        ulLen = (strlenW(lpSrc->Value.lpszW) + 1u) * sizeof(WCHAR);
+        ulLen = (lstrlenW(lpSrc->Value.lpszW) + 1u) * sizeof(WCHAR);
         scode = lpMore(ulLen, lpOrig, (LPVOID*)&lpDest->Value.lpszW);
         if (SUCCEEDED(scode))
             memcpy(lpDest->Value.lpszW, lpSrc->Value.lpszW, ulLen);
@@ -156,7 +155,7 @@ SCODE WINAPI PropCopyMore(LPSPropValue lpDest, LPSPropValue lpSrc,
 
                 for (i = 0; i < lpSrc->Value.MVszW.cValues; i++)
                 {
-                    ULONG ulStrLen = strlenW(lpSrc->Value.MVszW.lppszW[i]) + 1u;
+                    ULONG ulStrLen = lstrlenW(lpSrc->Value.MVszW.lppszW[i]) + 1u;
 
                     lpDest->Value.MVszW.lppszW[i] = lpNextStr;
                     memcpy(lpNextStr, lpSrc->Value.MVszW.lppszW[i], ulStrLen * sizeof(WCHAR));
@@ -263,7 +262,7 @@ ULONG WINAPI UlPropSize(LPSPropValue lpProp)
                          break;
     case PT_MV_UNICODE:  ulRet = 0u;
                          for (i = 0; i < lpProp->Value.MVszW.cValues; i++)
-                             ulRet += (strlenW(lpProp->Value.MVszW.lppszW[i]) + 1u);
+                             ulRet += (lstrlenW(lpProp->Value.MVszW.lppszW[i]) + 1u);
                          ulRet *= sizeof(WCHAR);
                          break;
     case PT_UNICODE:     ulRet = (lstrlenW(lpProp->Value.lpszW) + 1u) * sizeof(WCHAR);
@@ -504,7 +503,7 @@ LONG WINAPI LPropCompareProp(LPSPropValue lpPropLeft, LPSPropValue lpPropRight)
     case PT_STRING8:
         return lstrcmpA(lpPropLeft->Value.lpszA, lpPropRight->Value.lpszA);
     case PT_UNICODE:
-        return strcmpW(lpPropLeft->Value.lpszW, lpPropRight->Value.lpszW);
+        return lstrcmpW(lpPropLeft->Value.lpszW, lpPropRight->Value.lpszW);
     case PT_ERROR:
         if (lpPropLeft->Value.err > lpPropRight->Value.err)
             return 1;
@@ -828,7 +827,7 @@ SCODE WINAPI ScCopyProps(int cValues, LPSPropValue lpProps, LPVOID lpDst, ULONG 
             lpDataDest += ulLen;
             break;
         case PT_UNICODE:
-            ulLen = (strlenW(lpProps->Value.lpszW) + 1u) * sizeof(WCHAR);
+            ulLen = (lstrlenW(lpProps->Value.lpszW) + 1u) * sizeof(WCHAR);
             lpDest->Value.lpszW = (LPWSTR)lpDataDest;
             memcpy(lpDest->Value.lpszW, lpProps->Value.lpszW, ulLen);
             lpDataDest += ulLen;
@@ -867,7 +866,7 @@ SCODE WINAPI ScCopyProps(int cValues, LPSPropValue lpProps, LPVOID lpDst, ULONG 
 
                     for (i = 0; i < lpProps->Value.MVszW.cValues; i++)
                     {
-                        ULONG ulStrLen = (strlenW(lpProps->Value.MVszW.lppszW[i]) + 1u) * sizeof(WCHAR);
+                        ULONG ulStrLen = (lstrlenW(lpProps->Value.MVszW.lppszW[i]) + 1u) * sizeof(WCHAR);
 
                         lpDest->Value.MVszW.lppszW[i] = (LPWSTR)lpDataDest;
                         memcpy(lpDataDest, lpProps->Value.MVszW.lppszW[i], ulStrLen);
@@ -981,7 +980,7 @@ SCODE WINAPI ScRelocProps(int cValues, LPSPropValue lpProps, LPVOID lpOld,
             ulLen = bBadPtr ? 0 : (lstrlenW(lpDest->Value.lpszW) + 1u) * sizeof(WCHAR);
             lpDest->Value.lpszW = (LPWSTR)RELOC_PTR(lpDest->Value.lpszW);
             if (bBadPtr)
-                ulLen = (strlenW(lpDest->Value.lpszW) + 1u) * sizeof(WCHAR);
+                ulLen = (lstrlenW(lpDest->Value.lpszW) + 1u) * sizeof(WCHAR);
             ulCount += ulLen;
             break;
         case PT_BINARY:
@@ -1020,11 +1019,11 @@ SCODE WINAPI ScRelocProps(int cValues, LPSPropValue lpProps, LPVOID lpOld,
 
                     for (i = 0; i < lpDest->Value.MVszW.cValues; i++)
                     {
-                        ULONG ulStrLen = bBadPtr ? 0 : (strlenW(lpDest->Value.MVszW.lppszW[i]) + 1u) * sizeof(WCHAR);
+                        ULONG ulStrLen = bBadPtr ? 0 : (lstrlenW(lpDest->Value.MVszW.lppszW[i]) + 1u) * sizeof(WCHAR);
 
                         lpDest->Value.MVszW.lppszW[i] = (LPWSTR)RELOC_PTR(lpDest->Value.MVszW.lppszW[i]);
                         if (bBadPtr)
-                            ulStrLen = (strlenW(lpDest->Value.MVszW.lppszW[i]) + 1u) * sizeof(WCHAR);
+                            ulStrLen = (lstrlenW(lpDest->Value.MVszW.lppszW[i]) + 1u) * sizeof(WCHAR);
                         ulCount += ulStrLen;
                     }
                     break;

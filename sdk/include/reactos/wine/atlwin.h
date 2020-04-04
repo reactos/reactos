@@ -29,7 +29,7 @@ typedef struct _ATL_WNDCLASSINFOA_TAG
     LPCSTR m_lpszCursorID;
     BOOL m_bSystemCursor;
     ATOM m_atom;
-    CHAR m_szAutoName[14];
+    CHAR m_szAutoName[sizeof("ATL:") + sizeof(void *) * 2];
 } _ATL_WNDCLASSINFOA;
 
 typedef struct _ATL_WNDCLASSINFOW_TAG
@@ -40,7 +40,7 @@ typedef struct _ATL_WNDCLASSINFOW_TAG
     LPCWSTR m_lpszCursorID;
     BOOL m_bSystemCursor;
     ATOM m_atom;
-    WCHAR m_szAutoName[14];
+    WCHAR m_szAutoName[sizeof("ATL:") + sizeof(void *) * 2];
 } _ATL_WNDCLASSINFOW;
 
 ATOM WINAPI AtlModuleRegisterWndClassInfoA(_ATL_MODULEA *pm, _ATL_WNDCLASSINFOA *wci, WNDPROC *pProc);

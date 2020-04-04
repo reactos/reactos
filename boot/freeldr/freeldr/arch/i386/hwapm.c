@@ -1,21 +1,8 @@
 /*
- *  FreeLoader
- *
- *  Copyright (C) 2004  Eric Kohl
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     APM BIOS detection routines
+ * COPYRIGHT:   Copyright 2004 Eric Kohl (eric.kohl@reactos.org)
  */
 
 #include <freeldr.h>
@@ -26,16 +13,19 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 static BOOLEAN
 FindApmBios(VOID)
 {
-    REGS  RegsIn;
-    REGS  RegsOut;
+    REGS RegsIn, RegsOut;
 
-    RegsIn.b.ah = 0x53;
-    RegsIn.b.al = 0x00;
+    /* APM BIOS - Installation check */
+#if defined(SARCH_PC98)
+    RegsIn.w.ax = 0x9A00;
     RegsIn.w.bx = 0x0000;
-
+    Int386(0x1F, &RegsIn, &RegsOut);
+#else
+    RegsIn.w.ax = 0x5300;
+    RegsIn.w.bx = 0x0000;
     Int386(0x15, &RegsIn, &RegsOut);
-
-    if (INT386_SUCCESS(RegsOut))
+#endif
+    if (INT386_SUCCESS(RegsOut) && RegsOut.w.bx == 'PM')
     {
         TRACE("Found APM BIOS\n");
         TRACE("AH: %x\n", RegsOut.b.ah);
@@ -52,7 +42,6 @@ FindApmBios(VOID)
     return FALSE;
 }
 
-
 VOID
 DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
@@ -60,35 +49,40 @@ DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     ULONG Size;
 
+    if (!FindApmBios())
+        return;
+
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
            sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
-    if (FindApmBios())
+    /* Set 'Configuration Data' value */
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+    if (PartialResourceList == NULL)
     {
-        /* Create 'Configuration Data' value */
-        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
-        memset(PartialResourceList, 0, Size);
-        PartialResourceList->Version = 0;
-        PartialResourceList->Revision = 0;
-        PartialResourceList->Count = 0;
-
-        /* Create new bus key */
-        FldrCreateComponentKey(SystemKey,
-                               AdapterClass,
-                               MultiFunctionAdapter,
-                               0x0,
-                               0x0,
-                               0xFFFFFFFF,
-                               "APM",
-                               PartialResourceList,
-                               Size,
-                               &BiosKey);
-
-        /* Increment bus number */
-        (*BusNumber)++;
+        ERR("Failed to allocate resource descriptor\n");
+        return;
     }
+    RtlZeroMemory(PartialResourceList, Size);
+    PartialResourceList->Version = 0;
+    PartialResourceList->Revision = 0;
+    PartialResourceList->Count = 0;
 
     /* FIXME: Add configuration data */
+
+    /* Create new bus key */
+    FldrCreateComponentKey(SystemKey,
+                           AdapterClass,
+                           MultiFunctionAdapter,
+                           0x0,
+                           0,
+                           0xFFFFFFFF,
+                           "APM",
+                           PartialResourceList,
+                           Size,
+                           &BiosKey);
+
+    /* Increment bus number */
+    (*BusNumber)++;
 }
 
 /* EOF */

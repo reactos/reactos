@@ -780,12 +780,9 @@ JPEGFixupTagsSubsampling(TIFF* tif)
 	 */
 	static const char module[] = "JPEGFixupTagsSubsampling";
 	struct JPEGFixupTagsSubsamplingData m;
+        uint64 fileoffset = TIFFGetStrileOffset(tif, 0);
 
-        _TIFFFillStriles( tif );
-        
-        if( tif->tif_dir.td_stripbytecount == NULL
-            || tif->tif_dir.td_stripoffset == NULL
-            || tif->tif_dir.td_stripbytecount[0] == 0 )
+        if( fileoffset == 0 )
         {
             /* Do not even try to check if the first strip/tile does not
                yet exist, as occurs when GDAL has created a new NULL file
@@ -804,9 +801,9 @@ JPEGFixupTagsSubsampling(TIFF* tif)
 	}
 	m.buffercurrentbyte=NULL;
 	m.bufferbytesleft=0;
-	m.fileoffset=tif->tif_dir.td_stripoffset[0];
+	m.fileoffset=fileoffset;
 	m.filepositioned=0;
-	m.filebytesleft=tif->tif_dir.td_stripbytecount[0];
+	m.filebytesleft=TIFFGetStrileByteCount(tif, 0);
 	if (!JPEGFixupTagsSubsamplingSec(&m))
 		TIFFWarningExt(tif->tif_clientdata,module,
 		    "Unable to auto-correct subsampling values, likely corrupt JPEG compressed data in first strip/tile; auto-correcting skipped");
@@ -1566,7 +1563,7 @@ JPEGDecodeRaw(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
 					JSAMPLE *outptr = (JSAMPLE*)tmpbuf + clumpoffset;
 #else
 					JSAMPLE *outptr = (JSAMPLE*)buf + clumpoffset;
-					if (cc < (tmsize_t) (clumpoffset + samples_per_clump*(clumps_per_line-1) + hsamp)) {
+					if (cc < (tmsize_t)(clumpoffset + (tmsize_t)samples_per_clump*(clumps_per_line-1) + hsamp)) {
 						TIFFErrorExt(tif->tif_clientdata, "JPEGDecodeRaw",
 							     "application buffer not large enough for all data, possible subsampling issue");
 						return 0;
@@ -2126,8 +2123,8 @@ JPEGEncodeRaw(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
 	/* data is expected to be supplied in multiples of a clumpline */
 	/* a clumpline is equivalent to v_sampling desubsampled scanlines */
 	/* TODO: the following calculation of bytesperclumpline, should substitute calculation of sp->bytesperline, except that it is per v_sampling lines */
-	bytesperclumpline = (((sp->cinfo.c.image_width+sp->h_sampling-1)/sp->h_sampling)
-			     *(sp->h_sampling*sp->v_sampling+2)*sp->cinfo.c.data_precision+7)
+	bytesperclumpline = ((((tmsize_t)sp->cinfo.c.image_width+sp->h_sampling-1)/sp->h_sampling)
+			     *((tmsize_t)sp->h_sampling*sp->v_sampling+2)*sp->cinfo.c.data_precision+7)
 			    /8;
 
 	nrows = ( cc / bytesperclumpline ) * sp->v_sampling;

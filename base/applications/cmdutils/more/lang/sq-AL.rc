@@ -8,7 +8,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Shfaq të dhëna faqe-per-faqe ne ekran.\n\n\
   MORE < [Drive:][Path]File name\n\
-  Komandë | MORE \n\
+  Komandë | MORE\n\
   MORE [Drive:][Path]File name\n\n\
   [Drive:][Path]File name    Nje dokument, përmbajtja e të cilit do të shfaqet.\n\
   Komandë\t\t     Nje komande, nxjerrja e te cilit do të shfaqet.\n\n\

@@ -107,7 +107,7 @@
 /sdk/tools/xml2sdb/     @learn-more
 
 # Cache Manager
-#   M: HeisSpiter, Pierre Schweitzer
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Maintained
 /modules/rostests/kmtests/ntos_cc/  @HeisSpiter
 /ntoskrnl/cc/                       @HeisSpiter
@@ -130,14 +130,19 @@
 /dll/win32/mspatcha/    @learn-more
 
 # File Systems
-#   M: HeisSpiter, Pierre Schweitzer
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Maintained
 #   C: Also see "Upstream File Systems"
 /drivers/filesystems/   @HeisSpiter
 /sdk/lib/fslib/         @HeisSpiter
 
+# Filesystem Filter Manager
+#   M: gedmurphy, Ged, Ged Murphy
+#   S: Maintained
+/drivers/filters/fltmgr/ @gedmurphy
+
 # File Systems Run Time Library
-#   M: HeisSpiter, Pierre Schweitzer
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Maintained
 /modules/rostests/kmtests/ntos_fsrtl/       @HeisSpiter
 /modules/rostests/kmtests/novp_fsrtl/       @HeisSpiter
@@ -164,7 +169,7 @@
 
 # Kernel
 #   M:
-#   R: HeisSpiter, Pierre Schweitzer
+#   R: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   R: ThFabba, Thomas Faber
 #   R: tkreuzer, ThePhysicist, Timo Kreuzer
 #   S: Maintained
@@ -176,6 +181,11 @@
 #   C: See media/doc/3rd Party Files.txt
 /dll/3rdparty/mbedtls/              @ThFabba
 /sdk/include/reactos/libs/mbedtls/  @ThFabba
+
+# Mount Point Manager
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
+#   S: Maintained
+/drivers/filters/mountmgr/ @HeisSpiter
 
 # Network Drivers
 #   M:
@@ -191,19 +201,24 @@
 /drivers/network/dd/e1000/   @ThFabba @Extravert-ir
 
 # Network File Systems kernel libraries
-#   M: HeisSpiter, Pierre Schweitzer
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Maintained
 /sdk/lib/drivers/rdbsslib/  @HeisSpiter
 /sdk/lib/drivers/rxce/      @HeisSpiter
 
 # NTDLL
 #   M:
-#   R: HeisSpiter, Pierre Schweitzer
+#   R: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   R: learn-more, learn_more, Mark Jansen
 #   R: ThFabba, Thomas Faber
 #   R: tkreuzer, ThePhysicist, Timo Kreuzer
 #   S: Maintained
 /dll/ntdll/ @HeisSpiter @learn-more @ThFabba @tkreuzer
+
+# Printing
+#   M: ColinFinck, Colin Finck
+#   S: Maintained
+/win32ss/printing/ @ColinFinck
 
 # ReactOS API Tests
 #   M:
@@ -218,13 +233,13 @@
 /modules/rostests/kmtests/  @ThFabba
 
 # ROS internals tools
-#   M: HeisSpiter, Pierre Schweitzer
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Maintained
 /modules/rosapps/applications/rosinternals/ @HeisSpiter
 
 # Run-Time Library (RTL)
 #   M:
-#   R: HeisSpiter, Pierre Schweitzer
+#   R: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   R: learn-more, learn_more, Mark Jansen
 #   R: ThFabba, Thomas Faber
 #   R: tkreuzer, ThePhysicist, Timo Kreuzer
@@ -235,7 +250,7 @@
 #   M:
 #   R: learn-more, learn_more, Mark Jansen
 #   S: Maintained
-/dll/shellext   @learn-more
+/dll/shellext/  @learn-more
 
 # UniATA
 #   M: ThFabba, Thomas Faber
@@ -243,7 +258,7 @@
 /drivers/storage/ide/uniata/   @ThFabba
 
 # Upstream File Systems
-#   M: HeisSpiter, Pierre Schweitzer
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Upstream
 /base/services/nfsd/                @HeisSpiter
 /dll/np/nfs/                        @HeisSpiter
@@ -265,29 +280,28 @@
 #   R: Extravert-ir, extravert34, Victor Perevertkin
 #   S: Maintained
 /drivers/usb/                           @ThFabba @Extravert-ir
-/sdk/lib/drivers/libusb/                @ThFabba @Extravert-ir
 /sdk/include/reactos/drivers/usbport/   @ThFabba @Extravert-ir
 
 # Virtual CD-ROM
-#   M: HeisSpiter, Pierre Schweitzer
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Maintained
 /modules/rosapps/applications/cmdutils/vcdcli/  @HeisSpiter
 /modules/rosapps/applications/vcdcontroltool/   @HeisSpiter
 /modules/rosapps/drivers/vcdrom/                @HeisSpiter
 
 # Virtual Floppy Disk
-#   M: HeisSpiter, Pierre Schweitzer
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Upstream
 /modules/rosapps/applications/cmdutils/vfdcmd/  @HeisSpiter
 /modules/rosapps/drivers/vfd/                   @HeisSpiter
 
 # Win32 file functions
-#   M: HeisSpiter, Pierre Schweitzer
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Maintained
 /dll/win32/kernel32/client/file/    @HeisSpiter
 
 # Windows Network File Systems functions
-#   M: HeisSpiter, Pierre Schweitzer
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Upstream
 /dll/win32/mpr/wnet.c   @HeisSpiter
 

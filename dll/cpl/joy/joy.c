@@ -30,9 +30,8 @@
 
 #define NUM_APPLETS	(1)
 
-LONG CALLBACK SystemApplet(VOID);
+LONG CALLBACK SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
 HINSTANCE hApplet = 0;
-HWND MainDlg;
 
 /* Applets */
 
@@ -262,11 +261,15 @@ MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 /* First Applet */
 LONG CALLBACK
-SystemApplet(VOID)
+SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
+    UNREFERENCED_PARAMETER(uMsg);
+    UNREFERENCED_PARAMETER(lParam1);
+    UNREFERENCED_PARAMETER(lParam2);
+
     DialogBox(hApplet,
               MAKEINTRESOURCE(IDD_PROPPAGEMAIN),
-              MainDlg,
+              hwnd,
               MainPageProc);
 
     return (LONG)TRUE;
@@ -299,10 +302,7 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             break;
 
         case CPL_DBLCLK:
-            {
-                MainDlg = hwndCPl;
-                Applets[i].AppletProc();
-            }
+            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
             break;
     }
 

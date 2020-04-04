@@ -135,11 +135,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Versjon ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
@@ -341,7 +337,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Feilsøking", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "Dette alternativet vil kontrollere volumet for \nfeil.", -1, 40, 25, 160, 20
+    LTEXT "Dette alternativet vil kontrollere volumet for\nfeil.", -1, 40, 25, 160, 20
     PUSHBUTTON "Kontroller nå...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentering", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
@@ -751,6 +747,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
     IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Versjon %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "&Store ikoner"
     IDS_VIEW_SMALL "S&må ikoner"
@@ -769,6 +768,17 @@ BEGIN
     IDS_PASTE "Sett inn"
     IDS_EJECT "Eject"
     IDS_DISCONNECT "Disconnect"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Unable to create folder"
@@ -783,7 +793,7 @@ BEGIN
     IDS_CANTTRASH_TEXT "Elementet «%1» kan ikke legges i papirkurven. Vil du slette det i stedet?"
     IDS_OVERWRITEFILE_TEXT "Denne mapppen innholder allerede en fil som heter '%1'.\n\nVil du overskrive denne?"
     IDS_OVERWRITEFILE_CAPTION "Bekreft overskriving av fil"
-    IDS_OVERWRITEFOLDER_TEXT "Denne mappen inneholder allerede en mappe som heter '%1'.\n\nHvis filene i destinasjon mappen har samme navn filer i \nvalgte mapper her vil bli overskrevet. Ønsker du fortsatt å flytte eller kopiere \ndenne mappen?"
+    IDS_OVERWRITEFOLDER_TEXT "Denne mappen inneholder allerede en mappe som heter '%1'.\n\nHvis filene i destinasjon mappen har samme navn filer i\nvalgte mapper her vil bli overskrevet. Ønsker du fortsatt å flytte eller kopiere\ndenne mappen?"
 
     IDS_FILEOOP_COPYING "Copying..."
     IDS_FILEOOP_MOVING "Moving..."
@@ -809,7 +819,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Browse"
     IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Start-meny\\Programmer"
     IDS_PERSONAL "Mine dokumenter"
     IDS_FAVORITES "Favoritter"
@@ -872,6 +882,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
     IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Mappe"
@@ -908,6 +919,7 @@ BEGIN
     IDS_EDIT_VERB "Rediger"
     IDS_FIND_VERB "Finn"
     IDS_PRINT_VERB "Skriv ut"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u filer, %u mapper"
     IDS_PRINTERS "Skrivere"

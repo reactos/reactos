@@ -908,29 +908,32 @@ HRESULT CDefView::FillList()
     DWORD         dwFetched;
     HRESULT       hRes;
     HDPA          hdpa;
-    HKEY          hKey;
     DWORD         dFlags = SHCONTF_NONFOLDERS | SHCONTF_FOLDERS;
+    DWORD dwValue, cbValue;
 
     TRACE("%p\n", this);
 
     /* determine if there is a setting to show all the hidden files/folders */
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    dwValue = 1;
+    cbValue = sizeof(dwValue);
+    SHGetValueW(HKEY_CURRENT_USER,
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                L"Hidden", NULL, &dwValue, &cbValue);
+    if (dwValue == 1)
     {
-        DWORD dataLength, flagVal;
+        dFlags |= SHCONTF_INCLUDEHIDDEN;
+        m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
+    }
 
-        dataLength = sizeof(flagVal);
-        if (RegQueryValueExW(hKey, L"Hidden", NULL, NULL, (LPBYTE)&flagVal, &dataLength) == ERROR_SUCCESS)
-        {
-            /* if the value is 1, then show all hidden files/folders */
-            if (flagVal == 1)
-            {
-                dFlags |= SHCONTF_INCLUDEHIDDEN;
-                m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
-            }
-        }
-
-        /* close the key */
-        RegCloseKey(hKey);
+    dwValue = 0;
+    cbValue = sizeof(dwValue);
+    SHGetValueW(HKEY_CURRENT_USER,
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                L"ShowSuperHidden", NULL, &dwValue, &cbValue);
+    if (dwValue)
+    {
+        dFlags |= SHCONTF_INCLUDESUPERHIDDEN;
+        m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
     }
 
     /* get the itemlist from the shfolder */
@@ -1204,8 +1207,11 @@ HRESULT CDefView::FillFileMenu()
             DeleteMenu(hFileMenu, i, MF_BYPOSITION);
     }
 
+    m_cidl = m_ListView.GetSelectedCount();
+
     /* Store the context menu in m_pCM and keep it in order to invoke the selected command later on */
-    HRESULT hr = GetItemObject(SVGIO_SELECTION, IID_PPV_ARG(IContextMenu, &m_pCM));
+    HRESULT hr = GetItemObject((m_cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND),
+                               IID_PPV_ARG(IContextMenu, &m_pCM));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -1426,6 +1432,24 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (!m_hContextMenu) 
         return E_FAIL;
 
+    if (lParam != ~0)   // unless app key (menu key) was pressed
+    {
+        x = GET_X_LPARAM(lParam);
+        y = GET_Y_LPARAM(lParam);
+
+        LV_HITTESTINFO hittest = { { x, y } };
+        ScreenToClient(&hittest.pt);
+        m_ListView.HitTest(&hittest);
+
+        // Right-Clicked item is selected? If selected, no selection change.
+        // If not selected, then reset the selection and select the item.
+        if ((hittest.flags & LVHT_ONITEM) &&
+            m_ListView.GetItemState(hittest.iItem, LVIS_SELECTED) != LVIS_SELECTED)
+        {
+            SelectItem(hittest.iItem, SVSI_SELECT | SVSI_DESELECTOTHERS | SVSI_ENSUREVISIBLE);
+        }
+    }
+
     m_cidl = m_ListView.GetSelectedCount();
 
     hResult = GetItemObject( m_cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &m_pCM));
@@ -1471,11 +1495,6 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         m_ListView.ClientToScreen(&pt);
         x = pt.x;
         y = pt.y;
-    }
-    else
-    {
-        x = GET_X_LPARAM(lParam);
-        y = GET_Y_LPARAM(lParam);
     }
 
     uCommand = TrackPopupMenu(m_hContextMenu,
@@ -1764,6 +1783,26 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     return 0;
 }
 
+static BOOL
+SelectExtOnRename(void)
+{
+    HKEY hKey;
+    LONG error;
+    DWORD dwValue = FALSE, cbValue;
+
+    error = RegOpenKeyExW(HKEY_CURRENT_USER,
+                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                          0, KEY_READ, &hKey);
+    if (error)
+        return dwValue;
+
+    cbValue = sizeof(dwValue);
+    RegQueryValueExW(hKey, L"SelectExtOnRename", NULL, NULL, (LPBYTE)&dwValue, &cbValue);
+
+    RegCloseKey(hKey);
+    return !!dwValue;
+}
+
 /**********************************************************
 * ShellView_OnNotify()
 */
@@ -1973,9 +2012,21 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             m_pSFParent->GetAttributesOf(1, &pidl, &dwAttr);
             if (SFGAO_CANRENAME & dwAttr)
             {
+                HWND hEdit = reinterpret_cast<HWND>(m_ListView.SendMessage(LVM_GETEDITCONTROL));
+                SHLimitInputEdit(hEdit, m_pSFParent);
+
+                if (!(dwAttr & SFGAO_LINK) && (lpdi->item.mask & LVIF_TEXT) && !SelectExtOnRename())
+                {
+                    LPWSTR pszText = lpdi->item.pszText;
+                    LPWSTR pchDotExt = PathFindExtensionW(pszText);
+                    ::PostMessageW(hEdit, EM_SETSEL, 0, pchDotExt - pszText);
+                    ::PostMessageW(hEdit, EM_SCROLLCARET, 0, 0);
+                }
+
                 m_isEditing = TRUE;
                 return FALSE;
             }
+
             return TRUE;
         }
 
@@ -2379,9 +2430,6 @@ HRESULT WINAPI CDefView::SelectItem(PCUITEMID_CHILD pidl, UINT uFlags)
     if (i == -1)
         return S_OK;
 
-    if(uFlags & SVSI_ENSUREVISIBLE)
-        m_ListView.EnsureVisible(i, FALSE);
-
     LVITEMW lvItem = {0};
     lvItem.mask = LVIF_STATE;
     lvItem.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
@@ -2396,17 +2444,25 @@ HRESULT WINAPI CDefView::SelectItem(PCUITEMID_CHILD pidl, UINT uFlags)
                 lvItem.state &= ~LVIS_SELECTED;
 
             if (uFlags & SVSI_FOCUSED)
+                lvItem.state |= LVIS_FOCUSED;
+            else
                 lvItem.state &= ~LVIS_FOCUSED;
         }
         else
         {
             if (uFlags & SVSI_DESELECTOTHERS)
+            {
                 lvItem.state &= ~LVIS_SELECTED;
+            }
+            lvItem.state &= ~LVIS_FOCUSED;
         }
 
         m_ListView.SetItem(&lvItem);
         lvItem.iItem++;
     }
+
+    if (uFlags & SVSI_ENSUREVISIBLE)
+        m_ListView.EnsureVisible(i, FALSE);
 
     if((uFlags & SVSI_EDIT) == SVSI_EDIT)
         m_ListView.EditLabel(i);
@@ -3186,6 +3242,9 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
 
 HRESULT WINAPI CDefView::DragEnter(IDataObject *pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
+    if (*pdwEffect == DROPEFFECT_NONE)
+        return S_OK;
+
     /* Get a hold on the data object for later calls to DragEnter on the sub-folders */
     m_pCurDataObject = pDataObject;
 

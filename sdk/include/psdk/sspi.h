@@ -77,6 +77,19 @@ typedef struct _SECURITY_INTEGER
 } SECURITY_INTEGER, *PSECURITY_INTEGER;
 typedef SECURITY_INTEGER TimeStamp, *PTimeStamp;
 
+// UNICODE_STRING should have the same memory layout in 32 bit and 64 bit mode.
+// In 32 bit mode SECURITY_STRING is simply a clone of UNICODE_STRING.
+// It is used internal in kernel an security components.
+#ifndef _NTDEF_
+typedef struct _SECURITY_STRING {
+    unsigned short Length;
+    unsigned short MaximumLength;
+    unsigned short *Buffer;
+} SECURITY_STRING, *PSECURITY_STRING;
+#else
+typedef UNICODE_STRING SECURITY_STRING, *PSECURITY_STRING;
+#endif
+
 #define SSPIPFC_CREDPROV_DO_NOT_SAVE 0x00000001
 #define SSPIPFC_NO_CHECKBOX 0x00000002
 
@@ -134,6 +147,7 @@ typedef struct _SecPkgInfoW
 #define SECPKG_FLAG_NEGOTIABLE2              0x00200000
 #define SECPKG_FLAG_APPCONTAINER_PASSTHROUGH 0x00400000
 #define SECPKG_FLAG_APPCONTAINER_CHECKS      0x00800000
+#define SECPKG_FLAG_APPLY_LOOPBACK           0x02000000
 
 typedef struct _SecBuffer {
   ULONG cbBuffer;

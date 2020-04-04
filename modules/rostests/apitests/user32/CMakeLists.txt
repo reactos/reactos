@@ -8,7 +8,9 @@ list(APPEND SOURCE
     CreateWindowEx.c
     DeferWindowPos.c
     DestroyCursorIcon.c
+    DM_REPOSITION.c
     DrawIconEx.c
+    DrawText.c
     desktop.c
     EmptyClipboard.c
     EnumDisplaySettings.c

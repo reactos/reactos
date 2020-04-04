@@ -1,0 +1,70 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Digitare ""EVENTCREATE /?"" per visualizzare la sintassi.\n"
+    IDS_HELP "\n\
+EVENTCREATE [/S computer [/U [dominio\\]utente [/P password]]] /ID id_evento\n\
+            {[/L registro] | [/SO sorgente]} /T tipo /C categoria /D descrizione\n\
+\n\
+Descrizione:\n\
+    Questo programma consente ad un amministratore di creare un evento\n\
+    personalizzato in un registro eventi specificato.\n\
+\n\
+Parametri:\n\
+    /S  computer          Specifica il computer remoto a cui connettersi.\n\
+\n\
+    /U  [dominio\\]utente  Specifica l'account dell'utente per il quale deve\n\
+                          essere eseguito il comando specificato.\n\
+\n\
+    /P  [password]        Specifica la password di accesso per account utente.\n\
+                          Verrà richiesta se omessa.\n\
+\n\
+    /L  registro          Specifica il registro eventi in cui l'evento sarà\n\
+                          creato. I nomi validi sono:\n\
+                          Application, System, Security\n\
+                          (l'ultimo è riservato solo all'account SYSTEM).\n\
+\n\
+    /SO sorgente          Specifica la sorgente da utilizzare per l'evento\n\
+                          (se non specificato, il nome predefinito per la\n\
+                          sorgente sarà 'eventcreate').\n\
+                          Una sorgente valida può essere una qualsiasi stringa\n\
+                          e rappresenta l'applicazione o il componente che\n\
+                          genera l'evento.\n\
+\n\
+    /T  tipo              Specifica il tipo di evento da creare.\n\
+                          I tipi consentiti sono:\n\
+                          SUCCESS, ERROR, WARNING, INFORMATION.\n\
+\n\
+    /C  categoria         Specifica la categoria dell'evento (numero intero).\n\
+\n\
+    /ID id_evento         Specifica l'identificatore dell'evento.\n\
+                          Un identificatore può essere un numero intero\n\
+                          compreso tra 0 e 65535.\n\
+\n\
+    /D  descrizione       Specifica la descrizione da usare per l'evento\n\
+                          che sarà creato.\n\
+\n\
+    /?                    Visualizza questa schermata di aiuto.\n\
+"
+    IDS_INVALIDSWITCH "Opzione non valida - '%s'.\n"
+    IDS_BADSYNTAX_0 "Sintassi errata.\n"
+    IDS_BADSYNTAX_1 "Sintassi errata: l'opzione '%s' richiede un valore.\n"
+    IDS_BADSYNTAX_2 "Sintassi errata: il valore per l'opzione '%s' non può essere vuoto.\n"
+    IDS_BADSYNTAX_3 "Sintassi errata: il valore '%s' non è consentito per l'opzione '%s'.\n"
+    IDS_BADSYNTAX_4 "Sintassi errata: impossibile specificare il valore per l'opzione '%s'.\n"
+    IDS_BADSYNTAX_5 "Sintassi errata: l'opzione '%s' non è consentita più di %lu volte.\n"
+    IDS_BADSYNTAX_6 "Sintassi errata: opzione obbligatoria '%s' mancante.\n"
+    // IDS_BADSYNTAX_7 "Sintassi errata: il valore per l'opzione '%s' è al di fuori dell'intervallo consentito.\n"
+    IDS_BADSYNTAX_7 "Sintassi errata: il valore per l'opzione '%s' deve essere compreso tra %d e %d.\n"
+
+    IDS_LOG_NOT_FOUND "Il registro '%s' non esiste. Impossibile creare l'evento.\n"
+    IDS_SOURCE_NOCREATE "Impossibile creare la nuova sorgente perché il nome del registro non è stato specificato.\nUsare l'opzione /L per specificare il nome del registro.\n"
+    IDS_SOURCE_EXISTS "La sorgente esiste già nel registro '%s' e non può essere duplicata.\n"
+    IDS_SOURCE_NOT_CUSTOM "Il parametro sorgente viene utilizzato per\nidentificare script e applicazioni personalizzate\n(non le applicazioni installate).\n"
+
+    IDS_SUCCESS_1   "Operazione riuscita: un evento di tipo '%s' è stato creato nel registro '%s'.\n"
+    IDS_SUCCESS_2   "Operazione riuscita: un evento di tipo '%s' è stato creato con la sorgente '%s'.\n"
+    IDS_SUCCESS_3   "Operazione riuscita: un evento di tipo '%s' è stato creato nel registro '%s' con la sorgente '%s'.\n"
+    IDS_SWITCH_UNIMPLEMENTED "L'opzione '%s' non è attualmente supportata!\n"
+END

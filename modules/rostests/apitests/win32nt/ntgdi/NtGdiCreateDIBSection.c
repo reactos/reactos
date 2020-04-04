@@ -104,7 +104,7 @@ START_TEST(NtGdiCreateDIBSection)
     /* Test a wrong HDC */
     SetLastError(0);
     pvBits = 0;
-    hbmp = NtGdiCreateDIBSection((HDC)0xdeadbeef, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
+    hbmp = NtGdiCreateDIBSection((HDC)(LONG_PTR)0xdeadbeef, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(pvBits != 0);
     TEST(hbmp != 0);
     TEST(GetLastError() == 8);
@@ -122,7 +122,7 @@ START_TEST(NtGdiCreateDIBSection)
     /* Test invalid pbmi */
     SetLastError(0);
     pvBits = (PVOID)-1;
-    hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, (PVOID)0x80001234, 0, cjHeader, 0, 0, &pvBits);
+    hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, (PVOID)(LONG_PTR)0x80001234, 0, cjHeader, 0, 0, &pvBits);
     TEST(pvBits == (PVOID)-1);
     TEST(hbmp == 0);
     TEST(GetLastError() == ERROR_INVALID_PARAMETER);
@@ -131,7 +131,7 @@ START_TEST(NtGdiCreateDIBSection)
     /* Test invalid pbmi */
     SetLastError(0);
     pvBits = (PVOID)-1;
-    hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, (PVOID)1, 0, cjHeader, 0, 0, &pvBits);
+    hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, (PVOID)(LONG_PTR)1, 0, cjHeader, 0, 0, &pvBits);
     TEST(pvBits == (PVOID)-1);
     TEST(hbmp == 0);
     TEST(GetLastError() == ERROR_INVALID_PARAMETER);

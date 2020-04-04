@@ -343,7 +343,7 @@ DecrementCurrentProcessGdiHandleCount(void)
     if (ppi) InterlockedDecrement((LONG*)&ppi->GDIHandleCount);
 }
 
-FORCEINLINE
+static inline
 VOID
 IncrementGdiHandleCount(ULONG ulProcessId)
 {
@@ -360,7 +360,7 @@ IncrementGdiHandleCount(ULONG ulProcessId)
     if (NT_SUCCESS(Status)) ObDereferenceObject(pep);
 }
 
-FORCEINLINE
+static inline
 VOID
 DecrementGdiHandleCount(ULONG ulProcessId)
 {

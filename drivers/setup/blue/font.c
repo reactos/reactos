@@ -1,31 +1,30 @@
 /*
-* PROJECT:         ReactOS Setup Driver
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            drivers/setup/blue/font.c
-* PURPOSE:         Loading specific fonts into VGA
-* PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
-*                  Colin Finck (mail@colinfinck.de)
-*                  Christoph von Wittich (christoph_vw@reactos.org)
-*/
+ * PROJECT:     ReactOS Console Text-Mode Device Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Loading specific fonts into VGA.
+ * COPYRIGHT:   Copyright 2008-2019 Aleksey Bragin (aleksey@reactos.org)
+ *              Copyright 2008-2019 Colin Finck (mail@colinfinck.de)
+ *              Copyright 2008-2019 Christoph von Wittich (christoph_vw@reactos.org)
+ */
 
 /* INCLUDES ***************************************************************/
 
 #include "blue.h"
-
-#include <ntddk.h>
+#include <ndk/rtlfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
 
-VOID OpenBitPlane();
-VOID CloseBitPlane();
-VOID LoadFont(PUCHAR Bitplane, PUCHAR FontBitfield);
+NTSTATUS ExtractFont(_In_ ULONG CodePage, _In_ PUCHAR FontBitField);
+VOID OpenBitPlane(VOID);
+VOID CloseBitPlane(VOID);
+VOID LoadFont(_In_ PUCHAR Bitplane, _In_ PUCHAR FontBitfield);
 
 /* FUNCTIONS ****************************************************************/
 
 VOID
 ScrLoadFontTable(
-    UINT32 CodePage)
+    _In_ ULONG CodePage)
 {
     PHYSICAL_ADDRESS BaseAddress;
     PUCHAR Bitplane;
@@ -57,7 +56,7 @@ ScrLoadFontTable(
     }
 
     MmUnmapIoSpace(Bitplane, 0xFFFF);
-    ExFreePool(FontBitfield);
+    ExFreePoolWithTag(FontBitfield, TAG_BLUE);
 
     /* close bit plane */
     CloseBitPlane();
@@ -67,8 +66,8 @@ ScrLoadFontTable(
 
 NTSTATUS
 ExtractFont(
-    UINT32 CodePage,
-    PUCHAR FontBitField)
+    _In_ ULONG CodePage,
+    _In_ PUCHAR FontBitField)
 {
     BOOLEAN            bFoundFile = FALSE;
     HANDLE             Handle;
@@ -299,8 +298,8 @@ CloseBitPlane(VOID)
 
 VOID
 LoadFont(
-    PUCHAR Bitplane,
-    PUCHAR FontBitfield)
+    _In_ PUCHAR Bitplane,
+    _In_ PUCHAR FontBitfield)
 {
     UINT32 i, j;
 

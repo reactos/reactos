@@ -18,12 +18,14 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <wingdi.h>
+#include <wincon.h>
 #include <windowsx.h>
 #include <objbase.h>
 #include <commctrl.h>
 #include <commdlg.h>
 #include <gdiplus.h>
 #include <tchar.h>
+#include <shlobj.h>
 #include <strsafe.h>
 #include <shlwapi.h>
 
@@ -304,6 +306,9 @@ static void pLoadImage(LPWSTR szOpenFileName)
     }
     Anime_LoadInfo();
 
+    if (szOpenFileName && szOpenFileName[0])
+        SHAddToRecentDocs(SHARD_PATHW, szOpenFileName);
+
     /* reset zoom */
     ResetZoom();
 
@@ -580,6 +585,26 @@ ImageView_UpdateWindow(HWND hwnd)
     UpdateWindow(hwnd);
 }
 
+static HBRUSH CreateCheckerBoardBrush(HDC hdc)
+{
+    static const CHAR pattern[] =
+        "\x28\x00\x00\x00\x10\x00\x00\x00\x10\x00\x00\x00\x01\x00\x04\x00\x00\x00"
+        "\x00\x00\x80\x00\x00\x00\x23\x2E\x00\x00\x23\x2E\x00\x00\x10\x00\x00\x00"
+        "\x00\x00\x00\x00\x99\x99\x99\x00\xCC\xCC\xCC\x00\x00\x00\x00\x00\x00\x00"
+        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x11\x11\x11\x11"
+        "\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00"
+        "\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00"
+        "\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11"
+        "\x11\x11\x00\x00\x00\x00\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00"
+        "\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11"
+        "\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11"
+        "\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11";
+
+    return CreateDIBPatternBrushPt(pattern, DIB_RGB_COLORS);
+}
+
 static VOID
 ImageView_DrawImage(HWND hwnd)
 {
@@ -591,6 +616,7 @@ ImageView_DrawImage(HWND hwnd)
     HDC hdc;
     HBRUSH white;
     HGDIOBJ hbrOld;
+    UINT uFlags;
 
     hdc = BeginPaint(hwnd, &ps);
     if (!hdc)
@@ -652,9 +678,24 @@ ImageView_DrawImage(HWND hwnd)
             GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
         }
 
-        hbrOld = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-        Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
-        SelectObject(hdc, hbrOld);
+        uFlags = 0;
+        GdipGetImageFlags(image, &uFlags);
+
+        if (uFlags & (ImageFlagsHasAlpha | ImageFlagsHasTranslucent))
+        {
+            HBRUSH hbr = CreateCheckerBoardBrush(hdc);
+            hbrOld = SelectObject(hdc, hbr);
+            Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
+            SelectObject(hdc, hbrOld);
+            DeleteObject(hbr);
+        }
+        else
+        {
+            hbrOld = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
+            SelectObject(hdc, hbrOld);
+        }
+
         GdipDrawImageRectI(graphics, image, x, y, ZoomedWidth, ZoomedHeight);
     }
     GdipDeleteGraphics(graphics);

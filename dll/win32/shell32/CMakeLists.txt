@@ -81,6 +81,7 @@ list(APPEND SOURCE
     CDefaultContextMenu.cpp
     COpenWithMenu.cpp
     CNewMenu.cpp
+    CSendToMenu.cpp
     CShellDispatch.cpp
     CFolder.cpp
     CFolderItems.cpp
@@ -93,6 +94,7 @@ add_rc_deps(shell32.rc ${shell32_rc_deps})
 
 add_library(shell32 MODULE
     ${SOURCE}
+    wine/appbar.c
     wine/brsfolder.c
     wine/changenotify.c
     wine/classes.c

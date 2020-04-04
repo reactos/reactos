@@ -1964,6 +1964,16 @@ static LRESULT CALLBACK COMBO_WindowProc( HWND hwnd, UINT message, WPARAM wParam
         if (GET_WHEEL_DELTA_WPARAM(wParam) < 0) return SendMessageW(hwnd, WM_KEYDOWN, VK_DOWN, 0);
         return TRUE;
 
+    case WM_CTLCOLOR:
+    case WM_CTLCOLORMSGBOX:
+    case WM_CTLCOLOREDIT:
+    case WM_CTLCOLORLISTBOX:
+    case WM_CTLCOLORBTN:
+    case WM_CTLCOLORDLG:
+    case WM_CTLCOLORSCROLLBAR:
+    case WM_CTLCOLORSTATIC:
+        return SendMessageW(lphc->owner, message, wParam, lParam);
+
     /* Combo messages */
     case CB_ADDSTRING:
         if (lphc->dwStyle & CBS_LOWERCASE)

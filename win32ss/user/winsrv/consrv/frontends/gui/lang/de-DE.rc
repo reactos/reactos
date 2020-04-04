@@ -25,6 +25,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MARK_TITLE "Mark"
-    IDS_SELECT_TITLE "Select"
+    IDS_MARK_TITLE "Markieren"
+    IDS_SELECT_TITLE "Auswählen"
 END

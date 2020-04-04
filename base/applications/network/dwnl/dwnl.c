@@ -49,7 +49,7 @@ write_status(LPCWSTR lpFmt, ...)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
 
     va_start(args, lpFmt);
-    StringCbVPrintf(szTxt, sizeof(szTxt), lpFmt, args);
+    StringCbVPrintfW(szTxt, sizeof(szTxt), lpFmt, args);
     va_end(args);
 
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))

@@ -1,5 +1,6 @@
 /*
  * Copyright 2012 Vincent Povirk for CodeWeavers
+ * Copyright 2016 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,7 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS__
 #include "config.h"
+#endif
 
 #include <stdarg.h>
 
@@ -28,6 +31,7 @@
 
 #include "wincodecs_private.h"
 
+#include "wine/asm.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
@@ -38,7 +42,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 typedef struct BitmapImpl {
     IMILUnknown1 IMILUnknown1_iface;
     LONG ref;
-    IMILBitmapSource IMILBitmapSource_iface;
+    IMILBitmap IMILBitmap_iface;
     IWICBitmap IWICBitmap_iface;
     IMILUnknown2 IMILUnknown2_iface;
     IWICPalette *palette;
@@ -68,9 +72,9 @@ static inline BitmapImpl *impl_from_IWICBitmap(IWICBitmap *iface)
     return CONTAINING_RECORD(iface, BitmapImpl, IWICBitmap_iface);
 }
 
-static inline BitmapImpl *impl_from_IMILBitmapSource(IMILBitmapSource *iface)
+static inline BitmapImpl *impl_from_IMILBitmap(IMILBitmap *iface)
 {
-    return CONTAINING_RECORD(iface, BitmapImpl, IMILBitmapSource_iface);
+    return CONTAINING_RECORD(iface, BitmapImpl, IMILBitmap_iface);
 }
 
 static inline BitmapImpl *impl_from_IMILUnknown1(IMILUnknown1 *iface)
@@ -254,7 +258,7 @@ static HRESULT WINAPI BitmapImpl_QueryInterface(IWICBitmap *iface, REFIID iid,
     else if (IsEqualIID(&IID_IMILBitmap, iid) ||
              IsEqualIID(&IID_IMILBitmapSource, iid))
     {
-        *ppv = &This->IMILBitmapSource_iface;
+        *ppv = &This->IMILBitmap_iface;
     }
     else
     {
@@ -478,51 +482,30 @@ static const IWICBitmapVtbl BitmapImpl_Vtbl = {
     BitmapImpl_SetResolution
 };
 
-static HRESULT WINAPI IMILBitmapImpl_QueryInterface(IMILBitmapSource *iface, REFIID iid,
+static HRESULT WINAPI IMILBitmapImpl_QueryInterface(IMILBitmap *iface, REFIID iid,
     void **ppv)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
     TRACE("(%p,%s,%p)\n", iface, debugstr_guid(iid), ppv);
-
-    if (!ppv) return E_INVALIDARG;
-
-    if (IsEqualIID(&IID_IUnknown, iid) ||
-        IsEqualIID(&IID_IMILBitmap, iid) ||
-        IsEqualIID(&IID_IMILBitmapSource, iid))
-    {
-        IUnknown_AddRef(&This->IMILBitmapSource_iface);
-        *ppv = &This->IMILBitmapSource_iface;
-        return S_OK;
-    }
-    else if (IsEqualIID(&IID_IWICBitmap, iid) ||
-             IsEqualIID(&IID_IWICBitmapSource, iid))
-    {
-        IUnknown_AddRef(&This->IWICBitmap_iface);
-        *ppv = &This->IWICBitmap_iface;
-        return S_OK;
-    }
-
-    FIXME("unknown interface %s\n", debugstr_guid(iid));
-    *ppv = NULL;
-    return E_NOINTERFACE;
+    return IWICBitmap_QueryInterface(&This->IWICBitmap_iface, iid, ppv);
 }
 
-static ULONG WINAPI IMILBitmapImpl_AddRef(IMILBitmapSource *iface)
+static ULONG WINAPI IMILBitmapImpl_AddRef(IMILBitmap *iface)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
     return IWICBitmap_AddRef(&This->IWICBitmap_iface);
 }
 
-static ULONG WINAPI IMILBitmapImpl_Release(IMILBitmapSource *iface)
+static ULONG WINAPI IMILBitmapImpl_Release(IMILBitmap *iface)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
     return IWICBitmap_Release(&This->IWICBitmap_iface);
 }
 
-static HRESULT WINAPI IMILBitmapImpl_GetSize(IMILBitmapSource *iface,
+static HRESULT WINAPI IMILBitmapImpl_GetSize(IMILBitmap *iface,
     UINT *width, UINT *height)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
     TRACE("(%p,%p,%p)\n", iface, width, height);
     return IWICBitmap_GetSize(&This->IWICBitmap_iface, width, height);
 }
@@ -556,10 +539,10 @@ static const struct
     { &GUID_WICPixelFormat32bppCMYK, 0x1c }
 };
 
-static HRESULT WINAPI IMILBitmapImpl_GetPixelFormat(IMILBitmapSource *iface,
+static HRESULT WINAPI IMILBitmapImpl_GetPixelFormat(IMILBitmap *iface,
     int *format)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
     int i;
 
     TRACE("(%p,%p)\n", iface, format);
@@ -581,33 +564,33 @@ static HRESULT WINAPI IMILBitmapImpl_GetPixelFormat(IMILBitmapSource *iface,
     return S_OK;
 }
 
-static HRESULT WINAPI IMILBitmapImpl_GetResolution(IMILBitmapSource *iface,
+static HRESULT WINAPI IMILBitmapImpl_GetResolution(IMILBitmap *iface,
     double *dpix, double *dpiy)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
     TRACE("(%p,%p,%p)\n", iface, dpix, dpiy);
     return IWICBitmap_GetResolution(&This->IWICBitmap_iface, dpix, dpiy);
 }
 
-static HRESULT WINAPI IMILBitmapImpl_CopyPalette(IMILBitmapSource *iface,
+static HRESULT WINAPI IMILBitmapImpl_CopyPalette(IMILBitmap *iface,
     IWICPalette *palette)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
     TRACE("(%p,%p)\n", iface, palette);
     return IWICBitmap_CopyPalette(&This->IWICBitmap_iface, palette);
 }
 
-static HRESULT WINAPI IMILBitmapImpl_CopyPixels(IMILBitmapSource *iface,
+static HRESULT WINAPI IMILBitmapImpl_CopyPixels(IMILBitmap *iface,
     const WICRect *rc, UINT stride, UINT size, BYTE *buffer)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
     TRACE("(%p,%p,%u,%u,%p)\n", iface, rc, stride, size, buffer);
     return IWICBitmap_CopyPixels(&This->IWICBitmap_iface, rc, stride, size, buffer);
 }
 
-static HRESULT WINAPI IMILBitmapImpl_unknown1(IMILBitmapSource *iface, void **ppv)
+static HRESULT WINAPI IMILBitmapImpl_unknown1(IMILBitmap *iface, void **ppv)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
 
     TRACE("(%p,%p)\n", iface, ppv);
 
@@ -619,41 +602,41 @@ static HRESULT WINAPI IMILBitmapImpl_unknown1(IMILBitmapSource *iface, void **pp
     return S_OK;
 }
 
-static HRESULT WINAPI IMILBitmapImpl_Lock(IMILBitmapSource *iface, const WICRect *rc, DWORD flags, IWICBitmapLock **lock)
+static HRESULT WINAPI IMILBitmapImpl_Lock(IMILBitmap *iface, const WICRect *rc, DWORD flags, IWICBitmapLock **lock)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
     TRACE("(%p,%p,%08x,%p)\n", iface, rc, flags, lock);
     return IWICBitmap_Lock(&This->IWICBitmap_iface, rc, flags, lock);
 }
 
-static HRESULT WINAPI IMILBitmapImpl_Unlock(IMILBitmapSource *iface, IWICBitmapLock *lock)
+static HRESULT WINAPI IMILBitmapImpl_Unlock(IMILBitmap *iface, IWICBitmapLock *lock)
 {
     TRACE("(%p,%p)\n", iface, lock);
     IWICBitmapLock_Release(lock);
     return S_OK;
 }
 
-static HRESULT WINAPI IMILBitmapImpl_SetPalette(IMILBitmapSource *iface, IWICPalette *palette)
+static HRESULT WINAPI IMILBitmapImpl_SetPalette(IMILBitmap *iface, IWICPalette *palette)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
     TRACE("(%p,%p)\n", iface, palette);
     return IWICBitmap_SetPalette(&This->IWICBitmap_iface, palette);
 }
 
-static HRESULT WINAPI IMILBitmapImpl_SetResolution(IMILBitmapSource *iface, double dpix, double dpiy)
+static HRESULT WINAPI IMILBitmapImpl_SetResolution(IMILBitmap *iface, double dpix, double dpiy)
 {
-    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    BitmapImpl *This = impl_from_IMILBitmap(iface);
     TRACE("(%p,%f,%f)\n", iface, dpix, dpiy);
     return IWICBitmap_SetResolution(&This->IWICBitmap_iface, dpix, dpiy);
 }
 
-static HRESULT WINAPI IMILBitmapImpl_AddDirtyRect(IMILBitmapSource *iface, const WICRect *rc)
+static HRESULT WINAPI IMILBitmapImpl_AddDirtyRect(IMILBitmap *iface, const WICRect *rc)
 {
     FIXME("(%p,%p): stub\n", iface, rc);
     return E_NOTIMPL;
 }
 
-static const IMILBitmapSourceVtbl IMILBitmapImpl_Vtbl =
+static const IMILBitmapVtbl IMILBitmapImpl_Vtbl =
 {
     IMILBitmapImpl_QueryInterface,
     IMILBitmapImpl_AddRef,
@@ -674,6 +657,7 @@ static const IMILBitmapSourceVtbl IMILBitmapImpl_Vtbl =
 static HRESULT WINAPI IMILUnknown1Impl_QueryInterface(IMILUnknown1 *iface, REFIID iid,
     void **ppv)
 {
+    /* It's not clear what interface should be returned here */
     FIXME("(%p,%s,%p): stub\n", iface, debugstr_guid(iid), ppv);
     *ppv = NULL;
     return E_NOINTERFACE;
@@ -835,7 +819,7 @@ HRESULT BitmapImpl_Create(UINT uiWidth, UINT uiHeight, UINT stride, UINT datasiz
     }
 
     This->IWICBitmap_iface.lpVtbl = &BitmapImpl_Vtbl;
-    This->IMILBitmapSource_iface.lpVtbl = &IMILBitmapImpl_Vtbl;
+    This->IMILBitmap_iface.lpVtbl = &IMILBitmapImpl_Vtbl;
     This->IMILUnknown1_iface.lpVtbl = &IMILUnknown1Impl_Vtbl;
     This->IMILUnknown2_iface.lpVtbl = &IMILUnknown2Impl_Vtbl;
     This->ref = 1;

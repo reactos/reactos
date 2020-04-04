@@ -803,7 +803,7 @@ static NTSTATUS write_superblocks(HANDLE h, btrfs_dev* dev, btrfs_root* chunk_ro
     sb->chunk_tree_addr = chunk_root->header.address;
     sb->total_bytes = dev->dev_item.num_bytes;
     sb->bytes_used = bytes_used;
-    sb->root_dir_objectid = 6;
+    sb->root_dir_objectid = BTRFS_ROOT_TREEDIR;
     sb->num_devices = 1;
     sb->sector_size = sector_size;
     sb->node_size = node_size;
@@ -836,14 +836,14 @@ static NTSTATUS write_superblocks(HANDLE h, btrfs_dev* dev, btrfs_root* chunk_ro
         }
 
 #ifndef __REACTOS__
-        utf8len = WideCharToMultiByte(CP_UTF8, 0, label->Buffer, label->Length, NULL, 0, NULL, NULL);
+        utf8len = WideCharToMultiByte(CP_UTF8, 0, label->Buffer, label->Length / sizeof(WCHAR), NULL, 0, NULL, NULL);
 
         if (utf8len == 0 || utf8len > MAX_LABEL_SIZE) {
             free(sb);
             return STATUS_INVALID_VOLUME_LABEL;
         }
 
-        if (WideCharToMultiByte(CP_UTF8, 0, label->Buffer, label->Length, sb->label, utf8len, NULL, NULL) == 0) {
+        if (WideCharToMultiByte(CP_UTF8, 0, label->Buffer, label->Length / sizeof(WCHAR), sb->label, utf8len, NULL, NULL) == 0) {
             free(sb);
             return STATUS_INVALID_VOLUME_LABEL;
         }
@@ -929,9 +929,29 @@ GetSystemTimeAsFileTime(OUT PFILETIME lpFileTime)
 }
 #endif
 
+static void add_inode_ref(btrfs_root* r, uint64_t inode, uint64_t parent, uint64_t index, const char* name) {
+    uint16_t name_len = (uint16_t)strlen(name);
+#ifndef __REACTOS__
+    INODE_REF* ir = malloc(offsetof(INODE_REF, name[0]) + name_len);
+#else
+    INODE_REF* ir = RtlAllocateHeap(RtlGetProcessHeap(), 0, offsetof(INODE_REF, name[0]) + name_len);
+#endif
+
+    ir->index = 0;
+    ir->n = name_len;
+    memcpy(ir->name, name, name_len);
+
+    add_item(r, inode, TYPE_INODE_REF, parent, ir, (uint16_t)offsetof(INODE_REF, name[0]) + ir->n);
+
+#ifndef __REACTOS__
+    free(ir);
+#else
+    RtlFreeHeap(RtlGetProcessHeap(), 0, ir);
+#endif
+}
+
 static void init_fs_tree(btrfs_root* r, uint32_t node_size) {
     INODE_ITEM ii;
-    INODE_REF* ir;
     FILETIME filetime;
     LARGE_INTEGER time;
 
@@ -951,24 +971,7 @@ static void init_fs_tree(btrfs_root* r, uint32_t node_size) {
 
     add_item(r, SUBVOL_ROOT_INODE, TYPE_INODE_ITEM, 0, &ii, sizeof(INODE_ITEM));
 
-#ifndef __REACTOS__
-    ir = malloc(sizeof(INODE_REF) - 1 + 2);
-#else
-    ir = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(INODE_REF) - 1 + 2);
-#endif
-
-    ir->index = 0;
-    ir->n = 2;
-    ir->name[0] = '.';
-    ir->name[1] = '.';
-
-    add_item(r, SUBVOL_ROOT_INODE, TYPE_INODE_REF, SUBVOL_ROOT_INODE, ir, sizeof(INODE_REF) - 1 + ir->n);
-
-#ifndef __REACTOS__
-    free(ir);
-#else
-    RtlFreeHeap(RtlGetProcessHeap(), 0, ir);
-#endif
+    add_inode_ref(r, SUBVOL_ROOT_INODE, SUBVOL_ROOT_INODE, 0, "..");
 }
 
 static void add_block_group_items(LIST_ENTRY* chunks, btrfs_root* extent_root) {
@@ -1061,6 +1064,65 @@ static BOOL is_ssd(HANDLE h) {
     return FALSE;
 }
 
+static void add_dir_item(btrfs_root* root, uint64_t inode, uint32_t hash, uint64_t key_objid, uint8_t key_type,
+                         uint64_t key_offset, uint64_t transid, uint8_t type, const char* name) {
+    uint16_t name_len = (uint16_t)strlen(name);
+#ifndef __REACTOS__
+    DIR_ITEM* di = malloc(offsetof(DIR_ITEM, name[0]) + name_len);
+#else
+    DIR_ITEM* di = RtlAllocateHeap(RtlGetProcessHeap(), 0, offsetof(DIR_ITEM, name[0]) + name_len);
+#endif
+
+    di->key.obj_id = key_objid;
+    di->key.obj_type = key_type;
+    di->key.offset = key_offset;
+    di->transid = transid;
+    di->m = 0;
+    di->n = name_len;
+    di->type = type;
+    memcpy(di->name, name, name_len);
+
+    add_item(root, inode, TYPE_DIR_ITEM, hash, di, (uint16_t)(offsetof(DIR_ITEM, name[0]) + di->m + di->n));
+
+#ifndef __REACTOS__
+    free(di);
+#else
+    RtlFreeHeap(RtlGetProcessHeap(), 0, di);
+#endif
+}
+
+static void set_default_subvol(btrfs_root* root_root, uint32_t node_size) {
+    INODE_ITEM ii;
+    FILETIME filetime;
+    LARGE_INTEGER time;
+
+    static const char default_subvol[] = "default";
+    static const uint32_t default_hash = 0x8dbfc2d2;
+
+    add_inode_ref(root_root, BTRFS_ROOT_FSTREE, BTRFS_ROOT_TREEDIR, 0, default_subvol);
+
+    memset(&ii, 0, sizeof(INODE_ITEM));
+
+    ii.generation = 1;
+    ii.st_blocks = node_size;
+    ii.st_nlink = 1;
+    ii.st_mode = 040755;
+
+    GetSystemTimeAsFileTime(&filetime);
+    time.LowPart = filetime.dwLowDateTime;
+    time.HighPart = filetime.dwHighDateTime;
+
+    win_time_to_unix(time, &ii.st_atime);
+    ii.st_ctime = ii.st_mtime = ii.otime = ii.st_atime;
+
+    add_item(root_root, BTRFS_ROOT_TREEDIR, TYPE_INODE_ITEM, 0, &ii, sizeof(INODE_ITEM));
+
+    add_inode_ref(root_root, BTRFS_ROOT_TREEDIR, BTRFS_ROOT_TREEDIR, 0, "..");
+
+    add_dir_item(root_root, BTRFS_ROOT_TREEDIR, default_hash, BTRFS_ROOT_FSTREE, TYPE_ROOT_ITEM,
+                 0xffffffffffffffff, 0, BTRFS_TYPE_DIRECTORY, default_subvol);
+}
+
 static NTSTATUS write_btrfs(HANDLE h, uint64_t size, PUNICODE_STRING label, uint32_t sector_size, uint32_t node_size, uint64_t incompat_flags) {
     NTSTATUS Status;
     LIST_ENTRY roots, chunks;
@@ -1120,6 +1182,8 @@ static NTSTATUS write_btrfs(HANDLE h, uint64_t size, PUNICODE_STRING label, uint
         return STATUS_INTERNAL_ERROR;
 
     add_item(chunk_root, 1, TYPE_DEV_ITEM, dev.dev_item.dev_id, &dev.dev_item, sizeof(DEV_ITEM));
+
+    set_default_subvol(root_root, node_size);
 
     init_fs_tree(fs_root, node_size);
     init_fs_tree(reloc_root, node_size);

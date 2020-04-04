@@ -427,12 +427,12 @@ BOOL COpenWithList::LoadProgIdList(HKEY hKey, LPCWSTR pwszExt)
 
 HANDLE COpenWithList::OpenMRUList(HKEY hKey)
 {
-    CREATEMRULISTW Info;
+    MRUINFOW Info;
 
     /* Initialize mru list info */
     Info.cbSize = sizeof(Info);
-    Info.nMaxItems = 32;
-    Info.dwFlags = MRU_STRING;
+    Info.uMax = 32;
+    Info.fFlags = MRU_STRING;
     Info.hKey = hKey;
     Info.lpszSubKey = L"OpenWithList";
     Info.lpfnCompare = NULL;
@@ -1369,14 +1369,14 @@ COpenWithMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
     {
         TRACE("pidl is not a file\n");
         GlobalUnlock(medium.hGlobal);
-        GlobalFree(medium.hGlobal);
+        ReleaseStgMedium(&medium);
         return E_FAIL;
     }
 
     pidl = ILCombine(pidlFolder2, pidlChild);
 
     GlobalUnlock(medium.hGlobal);
-    GlobalFree(medium.hGlobal);
+    ReleaseStgMedium(&medium);
 
     if (!pidl)
     {

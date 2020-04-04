@@ -30,6 +30,7 @@ NTSTATUS NTAPI
 ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
                            IN PCONSOLE_SCREEN_BUFFER Buffer,
                            IN PSMALL_RECT Region);
+/* API_NUMBER: ConsolepInvalidateBitMapRect */
 CSR_API(SrvInvalidateBitMapRect)
 {
     NTSTATUS Status;
@@ -69,6 +70,7 @@ ConDrvSetConsolePalette(IN PCONSOLE Console,
                         IN PCONSOLE_SCREEN_BUFFER Buffer,
                         IN HPALETTE PaletteHandle,
                         IN UINT PaletteUsage);
+/* API_NUMBER: ConsolepSetPalette */
 CSR_API(SrvSetConsolePalette)
 {
     NTSTATUS Status;
@@ -116,6 +118,7 @@ NTSTATUS NTAPI
 ConDrvGetConsoleCursorInfo(IN PCONSOLE Console,
                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
                            OUT PCONSOLE_CURSOR_INFO CursorInfo);
+/* API_NUMBER: ConsolepGetCursorInfo */
 CSR_API(SrvGetConsoleCursorInfo)
 {
     NTSTATUS Status;
@@ -141,6 +144,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleCursorInfo(IN PCONSOLE Console,
                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
                            IN PCONSOLE_CURSOR_INFO CursorInfo);
+/* API_NUMBER: ConsolepSetCursorInfo */
 CSR_API(SrvSetConsoleCursorInfo)
 {
     NTSTATUS Status;
@@ -166,6 +170,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleCursorPosition(IN PCONSOLE Console,
                                IN PTEXTMODE_SCREEN_BUFFER Buffer,
                                IN PCOORD Position);
+/* API_NUMBER: ConsolepSetCursorPosition */
 CSR_API(SrvSetConsoleCursorPosition)
 {
     NTSTATUS Status;
@@ -187,6 +192,7 @@ CSR_API(SrvSetConsoleCursorPosition)
     return Status;
 }
 
+/* API_NUMBER: ConsolepCreateScreenBuffer */
 CSR_API(SrvCreateConsoleScreenBuffer)
 {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
@@ -198,8 +204,9 @@ CSR_API(SrvCreateConsoleScreenBuffer)
 
     PVOID ScreenBufferInfo = NULL;
     TEXTMODE_BUFFER_INFO TextModeInfo = {{80, 25},
+                                         {80, 25},
                                          DEFAULT_SCREEN_ATTRIB,
-                                         DEFAULT_POPUP_ATTRIB ,
+                                         DEFAULT_POPUP_ATTRIB,
                                          TRUE,
                                          CSR_DEFAULT_CURSOR_SIZE};
     GRAPHICS_BUFFER_INFO GraphicsInfo;
@@ -215,28 +222,17 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         ScreenBufferInfo = &TextModeInfo;
 
         /*
-        if (Console->ActiveBuffer)
-        {
-            TextModeInfo.ScreenBufferSize = Console->ActiveBuffer->ScreenBufferSize;
-            if (TextModeInfo.ScreenBufferSize.X == 0) TextModeInfo.ScreenBufferSize.X = 80;
-            if (TextModeInfo.ScreenBufferSize.Y == 0) TextModeInfo.ScreenBufferSize.Y = 25;
-
-            TextModeInfo.ScreenAttrib = Console->ActiveBuffer->ScreenBuffer.TextBuffer.ScreenDefaultAttrib;
-            TextModeInfo.PopupAttrib  = Console->ActiveBuffer->ScreenBuffer.TextBuffer.PopupDefaultAttrib;
-
-            TextModeInfo.IsCursorVisible = Console->ActiveBuffer->CursorInfo.bVisible;
-            TextModeInfo.CursorSize      = Console->ActiveBuffer->CursorInfo.dwSize;
-        }
-        */
-
-        /*
-         * This is Windows' behaviour
+         * This is Windows behaviour, as described by MSDN and verified manually:
+         *
+         * The newly created screen buffer will copy some properties from the
+         * active screen buffer at the time that this function is called.
+         * The behavior is as follows:
+         *     Font - copied from active screen buffer.
+         *     Display Window Size - copied from active screen buffer.
+         *     Buffer Size - matched to Display Window Size (NOT copied).
+         *     Default Attributes (colors) - copied from active screen buffer.
+         *     Default Popup Attributes (colors) - copied from active screen buffer.
          */
-
-        /* Use the current console size. Regularize it if needed. */
-        TextModeInfo.ScreenBufferSize = Console->ConsoleSize;
-        if (TextModeInfo.ScreenBufferSize.X == 0) TextModeInfo.ScreenBufferSize.X = 1;
-        if (TextModeInfo.ScreenBufferSize.Y == 0) TextModeInfo.ScreenBufferSize.Y = 1;
 
         /* If we have an active screen buffer, use its attributes as the new ones */
         if (Console->ActiveBuffer && GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
@@ -246,13 +242,27 @@ CSR_API(SrvCreateConsoleScreenBuffer)
             TextModeInfo.ScreenAttrib = Buffer->ScreenDefaultAttrib;
             TextModeInfo.PopupAttrib  = Buffer->PopupDefaultAttrib;
 
-            TextModeInfo.IsCursorVisible = Buffer->CursorInfo.bVisible;
             TextModeInfo.CursorSize      = Buffer->CursorInfo.dwSize;
+            TextModeInfo.IsCursorVisible = Buffer->CursorInfo.bVisible;
+
+            /* Use the current view size */
+            TextModeInfo.ScreenBufferSize = Buffer->ViewSize;
+            TextModeInfo.ViewSize         = Buffer->ViewSize;
         }
+        else
+        {
+            /* Use the current console size */
+            TextModeInfo.ScreenBufferSize = Console->ConsoleSize;
+            TextModeInfo.ViewSize         = Console->ConsoleSize;
+        }
+
+        /* Normalize the screen buffer size if needed */
+        if (TextModeInfo.ScreenBufferSize.X == 0) TextModeInfo.ScreenBufferSize.X = 1;
+        if (TextModeInfo.ScreenBufferSize.Y == 0) TextModeInfo.ScreenBufferSize.Y = 1;
     }
     else if (CreateScreenBufferRequest->ScreenBufferType == CONSOLE_GRAPHICS_BUFFER)
     {
-        /* Get infos from the graphics buffer information structure */
+        /* Get information from the graphics buffer information structure */
         if (!CsrValidateMessageBuffer(ApiMessage,
                                       (PVOID*)&CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMapInfo,
                                       CreateScreenBufferRequest->GraphicsBufferInfo.dwBitMapInfoLength,
@@ -316,6 +326,7 @@ Quit:
 NTSTATUS NTAPI
 ConDrvSetConsoleActiveScreenBuffer(IN PCONSOLE Console,
                                    IN PCONSOLE_SCREEN_BUFFER Buffer);
+/* API_NUMBER: ConsolepSetActiveScreenBuffer */
 CSR_API(SrvSetConsoleActiveScreenBuffer)
 {
     NTSTATUS Status;
@@ -478,6 +489,7 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
                         IN BOOLEAN Unicode,
                         OUT PCHAR_INFO CharInfo/*Buffer*/,
                         IN OUT PSMALL_RECT ReadRegion);
+/* API_NUMBER: ConsolepReadConsoleOutput */
 CSR_API(SrvReadConsoleOutput)
 {
     NTSTATUS Status;
@@ -489,8 +501,8 @@ CSR_API(SrvReadConsoleOutput)
 
     DPRINT("SrvReadConsoleOutput\n");
 
-    NumCells = (ReadOutputRequest->ReadRegion.Right - ReadOutputRequest->ReadRegion.Left + 1) *
-               (ReadOutputRequest->ReadRegion.Bottom - ReadOutputRequest->ReadRegion.Top + 1);
+    NumCells = ConioRectWidth(&ReadOutputRequest->ReadRegion) *
+               ConioRectHeight(&ReadOutputRequest->ReadRegion);
 
     /*
      * For optimization purposes, Windows (and hence ReactOS, too, for
@@ -541,6 +553,7 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
                          IN BOOLEAN Unicode,
                          IN PCHAR_INFO CharInfo/*Buffer*/,
                          IN OUT PSMALL_RECT WriteRegion);
+/* API_NUMBER: ConsolepWriteConsoleOutput */
 CSR_API(SrvWriteConsoleOutput)
 {
     NTSTATUS Status;
@@ -553,8 +566,8 @@ CSR_API(SrvWriteConsoleOutput)
 
     DPRINT("SrvWriteConsoleOutput\n");
 
-    NumCells = (WriteOutputRequest->WriteRegion.Right - WriteOutputRequest->WriteRegion.Left + 1) *
-               (WriteOutputRequest->WriteRegion.Bottom - WriteOutputRequest->WriteRegion.Top + 1);
+    NumCells = ConioRectWidth(&WriteOutputRequest->WriteRegion) *
+               ConioRectHeight(&WriteOutputRequest->WriteRegion);
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(Process),
                                      WriteOutputRequest->OutputHandle,
@@ -639,6 +652,7 @@ Quit:
     return Status;
 }
 
+/* API_NUMBER: ConsolepWriteConsole */
 CSR_API(SrvWriteConsole)
 {
     NTSTATUS Status;
@@ -688,6 +702,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
                               IN PCOORD ReadCoord,
                               // OUT PCOORD EndCoord,
                               OUT PULONG NumCodesRead OPTIONAL);
+/* API_NUMBER: ConsolepReadConsoleOutputString */
 CSR_API(SrvReadConsoleOutputString)
 {
     NTSTATUS Status;
@@ -776,6 +791,7 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
                                IN PCOORD WriteCoord,
                                // OUT PCOORD EndCoord,
                                OUT PULONG NumCodesWritten OPTIONAL);
+/* API_NUMBER: ConsolepWriteConsoleOutputString */
 CSR_API(SrvWriteConsoleOutputString)
 {
     NTSTATUS Status;
@@ -863,6 +879,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN ULONG NumCodesToWrite,
                         IN PCOORD WriteCoord,
                         OUT PULONG NumCodesWritten OPTIONAL);
+/* API_NUMBER: ConsolepFillConsoleOutput */
 CSR_API(SrvFillConsoleOutput)
 {
     NTSTATUS Status;
@@ -909,6 +926,7 @@ ConDrvGetConsoleScreenBufferInfo(IN  PCONSOLE Console,
                                  OUT PCOORD ViewSize,
                                  OUT PCOORD MaximumViewSize,
                                  OUT PWORD  Attributes);
+/* API_NUMBER: ConsolepGetScreenBufferInfo */
 CSR_API(SrvGetConsoleScreenBufferInfo)
 {
     NTSTATUS Status;
@@ -939,6 +957,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleTextAttribute(IN PCONSOLE Console,
                               IN PTEXTMODE_SCREEN_BUFFER Buffer,
                               IN WORD Attributes);
+/* API_NUMBER: ConsolepSetTextAttribute */
 CSR_API(SrvSetConsoleTextAttribute)
 {
     NTSTATUS Status;
@@ -964,6 +983,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleScreenBufferSize(IN PCONSOLE Console,
                                  IN PTEXTMODE_SCREEN_BUFFER Buffer,
                                  IN PCOORD Size);
+/* API_NUMBER: ConsolepSetScreenBufferSize */
 CSR_API(SrvSetConsoleScreenBufferSize)
 {
     NTSTATUS Status;
@@ -994,6 +1014,7 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
                                 IN PSMALL_RECT ClipRectangle OPTIONAL,
                                 IN PCOORD DestinationOrigin,
                                 IN CHAR_INFO FillChar);
+/* API_NUMBER: ConsolepScrollScreenBuffer */
 CSR_API(SrvScrollConsoleScreenBuffer)
 {
     NTSTATUS Status;
@@ -1025,6 +1046,7 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
                            IN BOOLEAN Absolute,
                            IN PSMALL_RECT WindowRect);
+/* API_NUMBER: ConsolepSetWindowInfo */
 CSR_API(SrvSetConsoleWindowInfo)
 {
     NTSTATUS Status;
@@ -1032,7 +1054,7 @@ CSR_API(SrvSetConsoleWindowInfo)
     // PCONSOLE_SCREEN_BUFFER Buffer;
     PTEXTMODE_SCREEN_BUFFER Buffer;
 
-    DPRINT1("SrvSetConsoleWindowInfo(0x%08x, %d, {L%d, T%d, R%d, B%d}) called\n",
+    DPRINT("SrvSetConsoleWindowInfo(0x%08x, %d, {L%d, T%d, R%d, B%d}) called\n",
             SetWindowInfoRequest->OutputHandle, SetWindowInfoRequest->Absolute,
             SetWindowInfoRequest->WindowRect.Left ,
             SetWindowInfoRequest->WindowRect.Top  ,

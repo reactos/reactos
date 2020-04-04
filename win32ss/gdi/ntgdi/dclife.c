@@ -836,7 +836,7 @@ GreCreateCompatibleDC(HDC hdc, BOOL bAltDc)
 
         /* Get the pdev from the DC */
         ppdev = pdc->ppdev;
-        InterlockedIncrement(&ppdev->cPdevRefs);
+        PDEVOBJ_vReference(ppdev);
 
         /* Unlock the source DC */
         DC_UnlockDc(pdc);
@@ -949,9 +949,6 @@ BOOL
 APIENTRY
 NtGdiDeleteObjectApp(HANDLE hobj)
 {
-    /* Complete all pending operations */
-    //NtGdiFlushUserBatch(); // FIXME: We shouldn't need this
-
     if (GDI_HANDLE_IS_STOCKOBJ(hobj)) return TRUE;
 
     if (GreGetObjectOwner(hobj) != GDI_OBJ_HMGR_POWNED)

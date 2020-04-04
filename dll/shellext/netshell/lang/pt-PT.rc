@@ -15,8 +15,8 @@ BEGIN
     PUSHBUTTON "&Propiedades", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Descrição ", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "A descrição dos componentes...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "Mostrar icon na área de notificação quando ligado", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "Notificar-me quando a conectividade esta ligação for limitada ou nula", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    AUTOCHECKBOX "Mostrar icon na área de notificação quando ligado", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "Notificar-me quando a conectividade esta ligação for limitada ou nula", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280

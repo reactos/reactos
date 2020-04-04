@@ -17,9 +17,8 @@
  */
 
 #include "config.h"
+#include "ws2tcpip.h"
 #include <stdarg.h>
-
-#include "wine/debug.h"
 
 #include "windef.h"
 #include "winbase.h"
@@ -27,6 +26,7 @@
 #include "winhttp.h"
 #include "shlwapi.h"
 
+#include "wine/debug.h"
 #include "winhttp_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
@@ -34,27 +34,33 @@ WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 static const WCHAR scheme_http[] = {'h','t','t','p',0};
 static const WCHAR scheme_https[] = {'h','t','t','p','s',0};
 
-static DWORD set_component( WCHAR **str, DWORD *str_len, WCHAR *value, DWORD len, DWORD flags, BOOL *overflow )
+struct url_component
 {
-    if (*str && !*str_len) return ERROR_INVALID_PARAMETER;
-    if (!*str_len) return ERROR_SUCCESS;
-    if (!*str)
+    WCHAR **str;
+    DWORD  *len;
+};
+
+static DWORD set_component( struct url_component *comp, WCHAR *value, DWORD len, DWORD flags, BOOL *overflow )
+{
+    if (*comp->str && !*comp->len) return ERROR_INVALID_PARAMETER;
+    if (!*comp->len) return ERROR_SUCCESS;
+    if (!*comp->str)
     {
-        if (len && *str_len && (flags & (ICU_DECODE|ICU_ESCAPE))) return ERROR_INVALID_PARAMETER;
-        *str = value;
-        *str_len = len;
+        if (len && *comp->len && (flags & (ICU_DECODE|ICU_ESCAPE))) return ERROR_INVALID_PARAMETER;
+        *comp->str = value;
+        *comp->len = len;
     }
     else
     {
-        if (len >= *str_len)
+        if (len >= *comp->len)
         {
-            *str_len = len+1;
+            *comp->len = len + 1;
             *overflow = TRUE;
             return ERROR_SUCCESS;
         }
-        memcpy( *str, value, len * sizeof(WCHAR) );
-        (*str)[len] = 0;
-        *str_len = len;
+        memcpy( *comp->str, value, len * sizeof(WCHAR) );
+        (*comp->str)[len] = 0;
+        *comp->len = len;
     }
     return ERROR_SUCCESS;
 }
@@ -87,81 +93,71 @@ static WCHAR *decode_url( LPCWSTR url, DWORD *len )
     return ret;
 }
 
-static BOOL need_escape( WCHAR c )
+static inline BOOL need_escape( WCHAR ch )
 {
-    if (isalnumW( c )) return FALSE;
+    static const WCHAR escapes[] = {' ','"','#','%','<','>','[','\\',']','^','`','{','|','}','~',0};
+    const WCHAR *p = escapes;
 
-    if (c <= 31 || c >= 127) return TRUE;
-    else
+    if (ch <= 31 || ch >= 127) return TRUE;
+    while (*p)
     {
-        switch (c)
-        {
-        case ' ':
-        case '"':
-        case '#':
-        case '%':
-        case '<':
-        case '>':
-        case ']':
-        case '\\':
-        case '[':
-        case '^':
-        case '`':
-        case '{':
-        case '|':
-        case '}':
-        case '~':
-            return TRUE;
-        default:
-            return FALSE;
-        }
+        if (ch == *p++) return TRUE;
     }
+    return FALSE;
 }
 
-static DWORD copy_escape( WCHAR *dst, const WCHAR *src, DWORD len )
+static BOOL escape_string( const WCHAR *src, DWORD src_len, WCHAR *dst, DWORD *dst_len )
 {
     static const WCHAR hex[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-    DWORD ret = len;
-    unsigned int i;
     WCHAR *p = dst;
+    DWORD i;
 
-    for (i = 0; i < len; i++, p++)
+    *dst_len = src_len;
+    for (i = 0; i < src_len; i++)
     {
+        if (src[i] > 0xff) return FALSE;
         if (need_escape( src[i] ))
         {
-            p[0] = '%';
-            p[1] = hex[(src[i] >> 4) & 0xf];
-            p[2] = hex[src[i] & 0xf];
-            ret += 2;
-            p += 2;
+            if (dst)
+            {
+                p[0] = '%';
+                p[1] = hex[(src[i] >> 4) & 0xf];
+                p[2] = hex[src[i] & 0xf];
+                p += 3;
+            }
+            *dst_len += 2;
         }
-        else *p = src[i];
+        else if (dst) *p++ = src[i];
     }
-    dst[ret] = 0;
-    return ret;
+
+    if (dst) dst[*dst_len] = 0;
+    return TRUE;
 }
 
-static WCHAR *escape_url( LPCWSTR url, DWORD *len )
+static DWORD escape_url( const WCHAR *url, DWORD *len, WCHAR **ret )
 {
-    WCHAR *ret;
-    const WCHAR *p, *q;
+    const WCHAR *p;
+    DWORD len_base, len_path;
 
-    if ((p = q = strrchrW( url, '/' )))
+    if ((p = strrchrW( url, '/' )))
     {
-        while (*q)
-        {
-            if (need_escape( *q )) *len += 2;
-            q++;
-        }
+        len_base = p - url;
+        if (!escape_string( p, *len - len_base, NULL, &len_path )) return ERROR_INVALID_PARAMETER;
     }
-    if (!(ret = heap_alloc( (*len + 1) * sizeof(WCHAR) ))) return NULL;
-    if (!p) strcpyW( ret, url );
     else
     {
-        memcpy( ret, url, (p - url) * sizeof(WCHAR) );
-        copy_escape( ret + (p - url), p, q - p );
+        len_base = *len;
+        len_path = 0;
     }
-    return ret;
+
+    if (!(*ret = heap_alloc( (len_base + len_path + 1) * sizeof(WCHAR) ))) return ERROR_OUTOFMEMORY;
+    memcpy( *ret, url, len_base * sizeof(WCHAR) );
+
+    if (p) escape_string( p, *len - (p - url), *ret + len_base, &len_path );
+    (*ret)[len_base + len_path] = 0;
+
+    *len = len_base + len_path;
+    return ERROR_SUCCESS;
 }
 
 static DWORD parse_port( const WCHAR *str, DWORD len, INTERNET_PORT *ret )
@@ -183,24 +179,25 @@ static DWORD parse_port( const WCHAR *str, DWORD len, INTERNET_PORT *ret )
 BOOL WINAPI WinHttpCrackUrl( LPCWSTR url, DWORD len, DWORD flags, LPURL_COMPONENTSW uc )
 {
     WCHAR *p, *q, *r, *url_decoded = NULL, *url_escaped = NULL;
-    INTERNET_SCHEME scheme = 0;
+    INTERNET_SCHEME scheme_number = 0;
+    struct url_component scheme, username, password, hostname, path, extra;
     BOOL overflow = FALSE;
     DWORD err;
 
     TRACE("%s, %d, %x, %p\n", debugstr_wn(url, len), len, flags, uc);
 
-    if (!url || !uc || uc->dwStructSize != sizeof(URL_COMPONENTS))
+    if (!url || !uc || uc->dwStructSize != sizeof(*uc))
     {
-        set_last_error( ERROR_INVALID_PARAMETER );
+        SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
     if (!len) len = strlenW( url );
 
     if (flags & ICU_ESCAPE)
     {
-        if (!(url_escaped = escape_url( url, &len )))
+        if ((err = escape_url( url, &len, &url_escaped )))
         {
-            set_last_error( ERROR_OUTOFMEMORY );
+            SetLastError( err );
             return FALSE;
         }
         url = url_escaped;
@@ -209,25 +206,28 @@ BOOL WINAPI WinHttpCrackUrl( LPCWSTR url, DWORD len, DWORD flags, LPURL_COMPONEN
     {
         if (!(url_decoded = decode_url( url, &len )))
         {
-            set_last_error( ERROR_OUTOFMEMORY );
+            SetLastError( ERROR_OUTOFMEMORY );
             return FALSE;
         }
         url = url_decoded;
     }
     if (!(p = strchrW( url, ':' )))
     {
-        set_last_error( ERROR_WINHTTP_UNRECOGNIZED_SCHEME );
+        SetLastError( ERROR_WINHTTP_UNRECOGNIZED_SCHEME );
         return FALSE;
     }
-    if (p - url == 4 && !strncmpiW( url, scheme_http, 4 )) scheme = INTERNET_SCHEME_HTTP;
-    else if (p - url == 5 && !strncmpiW( url, scheme_https, 5 )) scheme = INTERNET_SCHEME_HTTPS;
+    if (p - url == 4 && !strncmpiW( url, scheme_http, 4 )) scheme_number = INTERNET_SCHEME_HTTP;
+    else if (p - url == 5 && !strncmpiW( url, scheme_https, 5 )) scheme_number = INTERNET_SCHEME_HTTPS;
     else
     {
         err = ERROR_WINHTTP_UNRECOGNIZED_SCHEME;
         goto exit;
     }
 
-    if ((err = set_component( &uc->lpszScheme, &uc->dwSchemeLength, (WCHAR *)url, p - url, flags, &overflow ))) goto exit;
+    scheme.str = &uc->lpszScheme;
+    scheme.len = &uc->dwSchemeLength;
+
+    if ((err = set_component( &scheme, (WCHAR *)url, p - url, flags, &overflow ))) goto exit;
 
     p++; /* skip ':' */
     if (!p[0] || p[0] != '/' || p[1] != '/')
@@ -241,83 +241,105 @@ BOOL WINAPI WinHttpCrackUrl( LPCWSTR url, DWORD len, DWORD flags, LPURL_COMPONEN
         err = ERROR_WINHTTP_INVALID_URL;
         goto exit;
     }
+
+    username.str = &uc->lpszUserName;
+    username.len = &uc->dwUserNameLength;
+
+    password.str = &uc->lpszPassword;
+    password.len = &uc->dwPasswordLength;
+
     if ((q = memchrW( p, '@', len - (p - url) )) && !(memchrW( p, '/', q - p )))
     {
+
         if ((r = memchrW( p, ':', q - p )))
         {
-            if ((err = set_component( &uc->lpszUserName, &uc->dwUserNameLength, p, r - p, flags, &overflow ))) goto exit;
+            if ((err = set_component( &username, p, r - p, flags, &overflow ))) goto exit;
             r++;
-            if ((err = set_component( &uc->lpszPassword, &uc->dwPasswordLength, r, q - r, flags, &overflow ))) goto exit;
+            if ((err = set_component( &password, r, q - r, flags, &overflow ))) goto exit;
         }
         else
         {
-            if ((err = set_component( &uc->lpszUserName, &uc->dwUserNameLength, p, q - p, flags, &overflow ))) goto exit;
-            if ((err = set_component( &uc->lpszPassword, &uc->dwPasswordLength, NULL, 0, flags, &overflow ))) goto exit;
+            if ((err = set_component( &username, p, q - p, flags, &overflow ))) goto exit;
+            if ((err = set_component( &password, NULL, 0, flags, &overflow ))) goto exit;
         }
         p = q + 1;
     }
     else
     {
-        if ((err = set_component( &uc->lpszUserName, &uc->dwUserNameLength, NULL, 0, flags, &overflow ))) goto exit;
-        if ((err = set_component( &uc->lpszPassword, &uc->dwPasswordLength, NULL, 0, flags, &overflow ))) goto exit;
+        if ((err = set_component( &username, NULL, 0, flags, &overflow ))) goto exit;
+        if ((err = set_component( &password, NULL, 0, flags, &overflow ))) goto exit;
     }
+
+    hostname.str = &uc->lpszHostName;
+    hostname.len = &uc->dwHostNameLength;
+
+    path.str = &uc->lpszUrlPath;
+    path.len = &uc->dwUrlPathLength;
+
+    extra.str = &uc->lpszExtraInfo;
+    extra.len = &uc->dwExtraInfoLength;
+
     if ((q = memchrW( p, '/', len - (p - url) )))
     {
         if ((r = memchrW( p, ':', q - p )))
         {
-            if ((err = set_component( &uc->lpszHostName, &uc->dwHostNameLength, p, r - p, flags, &overflow ))) goto exit;
+            if ((err = set_component( &hostname, p, r - p, flags, &overflow ))) goto exit;
             r++;
             if ((err = parse_port( r, q - r, &uc->nPort ))) goto exit;
         }
         else
         {
-            if ((err = set_component( &uc->lpszHostName, &uc->dwHostNameLength, p, q - p, flags, &overflow ))) goto exit;
-            if (scheme == INTERNET_SCHEME_HTTP) uc->nPort = INTERNET_DEFAULT_HTTP_PORT;
-            if (scheme == INTERNET_SCHEME_HTTPS) uc->nPort = INTERNET_DEFAULT_HTTPS_PORT;
+            if ((err = set_component( &hostname, p, q - p, flags, &overflow ))) goto exit;
+            if (scheme_number == INTERNET_SCHEME_HTTP) uc->nPort = INTERNET_DEFAULT_HTTP_PORT;
+            if (scheme_number == INTERNET_SCHEME_HTTPS) uc->nPort = INTERNET_DEFAULT_HTTPS_PORT;
         }
 
         if ((r = memchrW( q, '?', len - (q - url) )))
         {
-            if ((err = set_component( &uc->lpszUrlPath, &uc->dwUrlPathLength, q, r - q, flags, &overflow ))) goto exit;
-            if ((err = set_component( &uc->lpszExtraInfo, &uc->dwExtraInfoLength, r, len - (r - url), flags, &overflow ))) goto exit;
+            if (*extra.len)
+            {
+                if ((err = set_component( &path, q, r - q, flags, &overflow ))) goto exit;
+                if ((err = set_component( &extra, r, len - (r - url), flags, &overflow ))) goto exit;
+            }
+            else if ((err = set_component( &path, q, len - (q - url), flags, &overflow ))) goto exit;
         }
         else
         {
-            if ((err = set_component( &uc->lpszUrlPath, &uc->dwUrlPathLength, q, len - (q - url), flags, &overflow ))) goto exit;
-            if ((err = set_component( &uc->lpszExtraInfo, &uc->dwExtraInfoLength, (WCHAR *)url + len, 0, flags, &overflow ))) goto exit;
+            if ((err = set_component( &path, q, len - (q - url), flags, &overflow ))) goto exit;
+            if ((err = set_component( &extra, (WCHAR *)url + len, 0, flags, &overflow ))) goto exit;
         }
     }
     else
     {
         if ((r = memchrW( p, ':', len - (p - url) )))
         {
-            if ((err = set_component( &uc->lpszHostName, &uc->dwHostNameLength, p, r - p, flags, &overflow ))) goto exit;
+            if ((err = set_component( &hostname, p, r - p, flags, &overflow ))) goto exit;
             r++;
             if ((err = parse_port( r, len - (r - url), &uc->nPort ))) goto exit;
         }
         else
         {
-            if ((err = set_component( &uc->lpszHostName, &uc->dwHostNameLength, p, len - (p - url), flags, &overflow ))) goto exit;
-            if (scheme == INTERNET_SCHEME_HTTP) uc->nPort = INTERNET_DEFAULT_HTTP_PORT;
-            if (scheme == INTERNET_SCHEME_HTTPS) uc->nPort = INTERNET_DEFAULT_HTTPS_PORT;
+            if ((err = set_component( &hostname, p, len - (p - url), flags, &overflow ))) goto exit;
+            if (scheme_number == INTERNET_SCHEME_HTTP) uc->nPort = INTERNET_DEFAULT_HTTP_PORT;
+            if (scheme_number == INTERNET_SCHEME_HTTPS) uc->nPort = INTERNET_DEFAULT_HTTPS_PORT;
         }
-        if ((err = set_component( &uc->lpszUrlPath, &uc->dwUrlPathLength, (WCHAR *)url + len, 0, flags, &overflow ))) goto exit;
-        if ((err = set_component( &uc->lpszExtraInfo, &uc->dwExtraInfoLength, (WCHAR *)url + len, 0, flags, &overflow ))) goto exit;
+        if ((err = set_component( &path, (WCHAR *)url + len, 0, flags, &overflow ))) goto exit;
+        if ((err = set_component( &extra, (WCHAR *)url + len, 0, flags, &overflow ))) goto exit;
     }
 
-    TRACE("scheme(%s) host(%s) port(%d) path(%s) extra(%s)\n", debugstr_wn( uc->lpszScheme, uc->dwSchemeLength ),
-          debugstr_wn( uc->lpszHostName, uc->dwHostNameLength ), uc->nPort, debugstr_wn( uc->lpszUrlPath, uc->dwUrlPathLength ),
-          debugstr_wn( uc->lpszExtraInfo, uc->dwExtraInfoLength ));
+    TRACE("scheme(%s) host(%s) port(%d) path(%s) extra(%s)\n", debugstr_wn(*scheme.str, *scheme.len),
+          debugstr_wn(*hostname.str, *hostname.len ), uc->nPort, debugstr_wn(*path.str, *path.len),
+          debugstr_wn(*extra.str, *extra.len));
 
 exit:
     if (!err)
     {
         if (overflow) err = ERROR_INSUFFICIENT_BUFFER;
-        uc->nScheme = scheme;
+        uc->nScheme = scheme_number;
     }
     heap_free( url_decoded );
     heap_free( url_escaped );
-    set_last_error( err );
+    SetLastError( err );
     return !err;
 }
 
@@ -342,7 +364,7 @@ static BOOL uses_default_port( INTERNET_SCHEME scheme, INTERNET_PORT port )
     return FALSE;
 }
 
-static DWORD comp_length( DWORD len, DWORD flags, WCHAR *comp )
+static DWORD get_comp_length( DWORD len, DWORD flags, WCHAR *comp )
 {
     DWORD ret;
     unsigned int i;
@@ -353,7 +375,7 @@ static DWORD comp_length( DWORD len, DWORD flags, WCHAR *comp )
     return ret;
 }
 
-static BOOL calc_length( URL_COMPONENTS *uc, DWORD flags, LPDWORD len )
+static BOOL get_url_length( URL_COMPONENTS *uc, DWORD flags, DWORD *len )
 {
     static const WCHAR formatW[] = {'%','u',0};
     INTERNET_SCHEME scheme;
@@ -361,7 +383,7 @@ static BOOL calc_length( URL_COMPONENTS *uc, DWORD flags, LPDWORD len )
     *len = 0;
     if (uc->lpszScheme)
     {
-        DWORD scheme_len = comp_length( uc->dwSchemeLength, 0, uc->lpszScheme );
+        DWORD scheme_len = get_comp_length( uc->dwSchemeLength, 0, uc->lpszScheme );
         *len += scheme_len;
         scheme = get_scheme( uc->lpszScheme, scheme_len );
     }
@@ -371,30 +393,29 @@ static BOOL calc_length( URL_COMPONENTS *uc, DWORD flags, LPDWORD len )
         if (!scheme) scheme = INTERNET_SCHEME_HTTP;
         *len += strlenW( get_scheme_string( scheme ) );
     }
-    *len += 1; /* ':' */
-    if (uc->lpszHostName) *len += 2; /* "//" */
+    *len += 3; /* "://" */
 
     if (uc->lpszUserName)
     {
-        *len += comp_length( uc->dwUserNameLength, 0, uc->lpszUserName );
+        *len += get_comp_length( uc->dwUserNameLength, 0, uc->lpszUserName );
         *len += 1; /* "@" */
     }
     else
     {
         if (uc->lpszPassword)
         {
-            set_last_error( ERROR_INVALID_PARAMETER );
+            SetLastError( ERROR_INVALID_PARAMETER );
             return FALSE;
         }
     }
     if (uc->lpszPassword)
     {
         *len += 1; /* ":" */
-        *len += comp_length( uc->dwPasswordLength, 0, uc->lpszPassword );
+        *len += get_comp_length( uc->dwPasswordLength, 0, uc->lpszPassword );
     }
     if (uc->lpszHostName)
     {
-        *len += comp_length( uc->dwHostNameLength, 0, uc->lpszHostName );
+        *len += get_comp_length( uc->dwHostNameLength, 0, uc->lpszHostName );
 
         if (!uses_default_port( scheme, uc->nPort ))
         {
@@ -405,8 +426,8 @@ static BOOL calc_length( URL_COMPONENTS *uc, DWORD flags, LPDWORD len )
         }
         if (uc->lpszUrlPath && *uc->lpszUrlPath != '/') *len += 1; /* '/' */
     }
-    if (uc->lpszUrlPath) *len += comp_length( uc->dwUrlPathLength, flags, uc->lpszUrlPath );
-    if (uc->lpszExtraInfo) *len += comp_length( uc->dwExtraInfoLength, flags, uc->lpszExtraInfo );
+    if (uc->lpszUrlPath) *len += get_comp_length( uc->dwUrlPathLength, flags, uc->lpszUrlPath );
+    if (uc->lpszExtraInfo) *len += get_comp_length( uc->dwExtraInfoLength, flags, uc->lpszExtraInfo );
     return TRUE;
 }
 
@@ -416,29 +437,28 @@ static BOOL calc_length( URL_COMPONENTS *uc, DWORD flags, LPDWORD len )
 BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS uc, DWORD flags, LPWSTR url, LPDWORD required )
 {
     static const WCHAR formatW[] = {'%','u',0};
-    static const WCHAR twoslashW[] = {'/','/'};
-    DWORD len;
+    DWORD len, len_escaped;
     INTERNET_SCHEME scheme;
 
     TRACE("%p, 0x%08x, %p, %p\n", uc, flags, url, required);
 
     if (!uc || uc->dwStructSize != sizeof(URL_COMPONENTS) || !required)
     {
-        set_last_error( ERROR_INVALID_PARAMETER );
+        SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
 
-    if (!calc_length( uc, flags, &len )) return FALSE;
+    if (!get_url_length( uc, flags, &len )) return FALSE;
 
     if (*required < len)
     {
         *required = len + 1;
-        set_last_error( ERROR_INSUFFICIENT_BUFFER );
+        SetLastError( ERROR_INSUFFICIENT_BUFFER );
         return FALSE;
     }
     if (!url)
     {
-        set_last_error( ERROR_INVALID_PARAMETER );
+        SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
 
@@ -446,7 +466,7 @@ BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS uc, DWORD flags, LPWSTR url, LPDW
     *required = len;
     if (uc->lpszScheme)
     {
-        len = comp_length( uc->dwSchemeLength, 0, uc->lpszScheme );
+        len = get_comp_length( uc->dwSchemeLength, 0, uc->lpszScheme );
         memcpy( url, uc->lpszScheme, len * sizeof(WCHAR) );
         url += len;
 
@@ -465,58 +485,55 @@ BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS uc, DWORD flags, LPWSTR url, LPDW
         url += len;
     }
 
-    /* all schemes are followed by at least a colon */
-    *url = ':';
-    url++;
+    *url++ = ':';
+    *url++ = '/';
+    *url++ = '/';
 
-    if (uc->lpszHostName)
-    {
-        memcpy( url, twoslashW, sizeof(twoslashW) );
-        url += sizeof(twoslashW) / sizeof(twoslashW[0]);
-    }
     if (uc->lpszUserName)
     {
-        len = comp_length( uc->dwUserNameLength, 0, uc->lpszUserName );
+        len = get_comp_length( uc->dwUserNameLength, 0, uc->lpszUserName );
         memcpy( url, uc->lpszUserName, len * sizeof(WCHAR) );
         url += len;
 
         if (uc->lpszPassword)
         {
-            *url = ':';
-            url++;
-
-            len = comp_length( uc->dwPasswordLength, 0, uc->lpszPassword );
+            *url++ = ':';
+            len = get_comp_length( uc->dwPasswordLength, 0, uc->lpszPassword );
             memcpy( url, uc->lpszPassword, len * sizeof(WCHAR) );
             url += len;
         }
-        *url = '@';
-        url++;
+        *url++ = '@';
     }
     if (uc->lpszHostName)
     {
-        len = comp_length( uc->dwHostNameLength, 0, uc->lpszHostName );
+        len = get_comp_length( uc->dwHostNameLength, 0, uc->lpszHostName );
         memcpy( url, uc->lpszHostName, len * sizeof(WCHAR) );
         url += len;
 
         if (!uses_default_port( scheme, uc->nPort ))
         {
-            *url = ':';
-            url++;
-
+            *url++ = ':';
             url += sprintfW( url, formatW, uc->nPort );
         }
 
         /* add slash between hostname and path if necessary */
         if (uc->lpszUrlPath && *uc->lpszUrlPath != '/')
         {
-            *url = '/';
-            url++;
+            *url++ = '/';
         }
     }
     if (uc->lpszUrlPath)
     {
-        len = comp_length( uc->dwUrlPathLength, 0, uc->lpszUrlPath );
-        if (flags & ICU_ESCAPE) url += copy_escape( url, uc->lpszUrlPath, len );
+        len = get_comp_length( uc->dwUrlPathLength, 0, uc->lpszUrlPath );
+        if (flags & ICU_ESCAPE)
+        {
+            if (!escape_string( uc->lpszUrlPath, len, url, &len_escaped ))
+            {
+                SetLastError( ERROR_INVALID_PARAMETER );
+                return FALSE;
+            }
+            url += len_escaped;
+        }
         else
         {
             memcpy( url, uc->lpszUrlPath, len * sizeof(WCHAR) );
@@ -525,8 +542,16 @@ BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS uc, DWORD flags, LPWSTR url, LPDW
     }
     if (uc->lpszExtraInfo)
     {
-        len = comp_length( uc->dwExtraInfoLength, 0, uc->lpszExtraInfo );
-        if (flags & ICU_ESCAPE) url += copy_escape( url, uc->lpszExtraInfo, len );
+        len = get_comp_length( uc->dwExtraInfoLength, 0, uc->lpszExtraInfo );
+        if (flags & ICU_ESCAPE)
+        {
+            if (!escape_string( uc->lpszExtraInfo, len, url, &len_escaped ))
+            {
+                SetLastError( ERROR_INVALID_PARAMETER );
+                return FALSE;
+            }
+            url += len_escaped;
+        }
         else
         {
             memcpy( url, uc->lpszExtraInfo, len * sizeof(WCHAR) );
@@ -534,6 +559,6 @@ BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS uc, DWORD flags, LPWSTR url, LPDW
         }
     }
     *url = 0;
-    set_last_error( ERROR_SUCCESS );
+    SetLastError( ERROR_SUCCESS );
     return TRUE;
 }

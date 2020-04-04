@@ -1,15 +1,15 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for RtlNtPathNameToDosPathName
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Test for RtlNtPathNameToDosPathName
+ * COPYRIGHT:   Copyright 2017-2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
 
 NTSTATUS (NTAPI *pRtlNtPathNameToDosPathName)(ULONG Flags, PRTL_UNICODE_STRING_BUFFER Path, PULONG Type, PULONG Unknown4);
 
-#define ok_hex_(expression, result) \
+#define ok_hex2(expression, result) \
     do { \
         int _value = (expression); \
         winetest_ok(_value == (result), "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x\n", \
@@ -17,14 +17,14 @@ NTSTATUS (NTAPI *pRtlNtPathNameToDosPathName)(ULONG Flags, PRTL_UNICODE_STRING_B
     } while (0)
 
 
-#define ok_ptr_(expression, result) \
+#define ok_ptr2(expression, result) \
     do { \
         void *_value = (expression); \
         winetest_ok(_value == (result), "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
            #expression, (void*)(result), _value); \
     } while (0)
 
-#define ok_wstr_(x, y) \
+#define ok_wstr2(x, y) \
     winetest_ok(wcscmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
 
 
@@ -369,14 +369,14 @@ static void test_table(struct test_entry* Entry)
     RtlEnsureBufferSize(RTL_SKIP_BUFFER_COPY, &Buffer.ByteBuffer, Buffer.String.MaximumLength);
     memcpy(Buffer.ByteBuffer.Buffer, Buffer.String.Buffer, Buffer.String.MaximumLength);
 
-    ok_hex_(pRtlNtPathNameToDosPathName(0, &Buffer, &Type, NULL), STATUS_SUCCESS);
+    ok_hex2(pRtlNtPathNameToDosPathName(0, &Buffer, &Type, NULL), STATUS_SUCCESS);
 
-    ok_hex_(Type, Entry->Type);
-    ok_wstr_(Buffer.String.Buffer, Entry->OutputPath);
+    ok_hex2(Type, Entry->Type);
+    ok_wstr2(Buffer.String.Buffer, Entry->OutputPath);
     /* If there is no change in the path, the pointer is unchanged */
     if (!wcscmp(Entry->InputPath, Entry->OutputPath))
     {
-        ok_ptr_(Buffer.String.Buffer, Entry->InputPath);
+        ok_ptr2(Buffer.String.Buffer, Entry->InputPath);
     }
     else
     {
@@ -385,16 +385,16 @@ static void test_table(struct test_entry* Entry)
                     (PUCHAR)Buffer.String.Buffer <= (Buffer.ByteBuffer.StaticBuffer + Buffer.ByteBuffer.StaticSize),
                     "Expected Buffer to point inside StaticBuffer\n");
     }
-    ok_wstr_((const WCHAR *)Buffer.ByteBuffer.Buffer, Entry->OutputPath);
+    ok_wstr2((const WCHAR *)Buffer.ByteBuffer.Buffer, Entry->OutputPath);
 
-    ok_hex_(Buffer.MinimumStaticBufferForTerminalNul, 0);
+    ok_hex2(Buffer.MinimumStaticBufferForTerminalNul, 0);
 
     /* For none of our tests should we exceed the StaticBuffer size! */
-    ok_ptr_(Buffer.ByteBuffer.Buffer, Buffer.ByteBuffer.StaticBuffer);
-    ok_hex_(Buffer.ByteBuffer.Size, Buffer.ByteBuffer.StaticSize);
+    ok_ptr2(Buffer.ByteBuffer.Buffer, Buffer.ByteBuffer.StaticBuffer);
+    ok_hex2(Buffer.ByteBuffer.Size, Buffer.ByteBuffer.StaticSize);
 
-    ok_hex_(Buffer.ByteBuffer.ReservedForAllocatedSize, 0);
-    ok_ptr_(Buffer.ByteBuffer.ReservedForIMalloc, NULL);
+    ok_hex2(Buffer.ByteBuffer.ReservedForAllocatedSize, 0);
+    ok_ptr2(Buffer.ByteBuffer.ReservedForIMalloc, NULL);
 
     RtlFreeBuffer(&Buffer.ByteBuffer);
 }

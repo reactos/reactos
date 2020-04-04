@@ -31,7 +31,6 @@
 #include "advpub.h"
 #include "ole2.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "advpack_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(advpack);
@@ -207,7 +206,7 @@ LPWSTR get_parameter(LPWSTR *params, WCHAR separator, BOOL quoted)
 
     if (quoted && *token == '"')
     {
-        WCHAR *end = strchrW(token + 1, '"');
+        WCHAR *end = wcschr(token + 1, '"');
         if (end)
         {
             *end = 0;
@@ -216,7 +215,7 @@ LPWSTR get_parameter(LPWSTR *params, WCHAR separator, BOOL quoted)
         }
     }
 
-    *params = strchrW(*params, separator);
+    *params = wcschr(*params, separator);
     if (*params)
         *(*params)++ = '\0';
 
@@ -397,7 +396,7 @@ static HRESULT get_working_dir(ADVInfo *info, LPCWSTR inf_filename, LPCWSTR work
     static const WCHAR backslash[] = {'\\',0};
     static const WCHAR inf_dir[] = {'\\','I','N','F',0};
 
-    if ((ptr = strrchrW(inf_filename, '\\')))
+    if ((ptr = wcsrchr(inf_filename, '\\')))
     {
         len = ptr - inf_filename + 1;
         ptr = inf_filename;
@@ -451,7 +450,7 @@ static HRESULT install_init(LPCWSTR inf_filename, LPCWSTR install_sec,
         'D','e','f','a','u','l','t','I','n','s','t','a','l','l',0
     };
 
-    if (!(ptr = strrchrW(inf_filename, '\\')))
+    if (!(ptr = wcsrchr(inf_filename, '\\')))
         ptr = inf_filename;
 
     len = lstrlenW(ptr);
@@ -493,7 +492,7 @@ static HRESULT install_init(LPCWSTR inf_filename, LPCWSTR install_sec,
     lstrcatW(info->inf_path, backslash);
     lstrcatW(info->inf_path, info->inf_filename);
 
-    /* RunSetupCommand opens unmodifed filename parameter */
+    /* RunSetupCommand opens unmodified filename parameter */
     if (flags & RSC_FLAG_INF)
         path = inf_filename;
     else
@@ -769,7 +768,7 @@ INT WINAPI LaunchINFSectionW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, INT sho
     str_flags = get_parameter(&cmdline_ptr, ',', TRUE);
     if (str_flags)
     {
-        DWORD inf_flags = atolW(str_flags);
+        DWORD inf_flags = wcstol(str_flags, NULL, 10);
         if (inf_flags & LIS_QUIET) flags |= RSC_FLAG_QUIET;
         if (inf_flags & LIS_NOGRPCONV) flags |= RSC_FLAG_NGCONV;
     }
@@ -867,7 +866,7 @@ HRESULT WINAPI LaunchINFSectionExW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, I
 
     flags = get_parameter(&cmdline_ptr, ',', TRUE);
     if (flags)
-        cabinfo.dwFlags = atolW(flags);
+        cabinfo.dwFlags = wcstol(flags, NULL, 10);
 
     if (!is_full_path(cabinfo.pszCab) && !is_full_path(cabinfo.pszInf))
     {
@@ -883,7 +882,7 @@ HRESULT WINAPI LaunchINFSectionExW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, I
         else
             lstrcpyW(cabinfo.szSrcPath, cabinfo.pszCab);
 
-        ptr = strrchrW(cabinfo.szSrcPath, '\\');
+        ptr = wcsrchr(cabinfo.szSrcPath, '\\');
         *(++ptr) = '\0';
     }
 

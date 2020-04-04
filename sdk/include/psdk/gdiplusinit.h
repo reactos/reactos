@@ -25,9 +25,9 @@ enum DebugEventLevel
     DebugEventLevelWarning
 };
 
-typedef VOID (WINAPI *DebugEventProc)(enum DebugEventLevel, CHAR *);
-typedef Status (WINAPI *NotificationHookProc)(ULONG_PTR *);
-typedef void (WINAPI *NotificationUnhookProc)(ULONG_PTR);
+typedef VOID(WINAPI *DebugEventProc)(enum DebugEventLevel, CHAR *);
+typedef Status(WINAPI *NotificationHookProc)(ULONG_PTR *);
+typedef void(WINAPI *NotificationUnhookProc)(ULONG_PTR);
 
 struct GdiplusStartupInput
 {
@@ -37,7 +37,8 @@ struct GdiplusStartupInput
     BOOL SuppressExternalCodecs;
 
 #ifdef __cplusplus
-    GdiplusStartupInput(DebugEventProc debugEventCallback = NULL,
+    GdiplusStartupInput(
+        DebugEventProc debugEventCallback = NULL,
         BOOL suppressBackgroundThread = FALSE,
         BOOL suppressExternalCodecs = FALSE)
     {
@@ -56,11 +57,13 @@ struct GdiplusStartupOutput
 };
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-Status WINAPI GdiplusStartup(ULONG_PTR *, const struct GdiplusStartupInput *, struct GdiplusStartupOutput *);
-void WINAPI GdiplusShutdown(ULONG_PTR);
+    Status WINAPI
+    GdiplusStartup(ULONG_PTR *, const struct GdiplusStartupInput *, struct GdiplusStartupOutput *);
+    void WINAPI GdiplusShutdown(ULONG_PTR);
 
 #ifdef __cplusplus
 }

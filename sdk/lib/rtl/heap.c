@@ -3995,4 +3995,20 @@ RtlMultipleFreeHeap(IN PVOID HeapHandle,
     return 0;
 }
 
+/*
+ * Info:
+ * - https://securityxploded.com/enumheaps.php
+ * - https://evilcodecave.wordpress.com/2009/04/14/rtlqueryprocessheapinformation-as-anti-dbg-trick/
+ */
+struct _DEBUG_BUFFER;
+
+NTSTATUS
+NTAPI
+RtlQueryProcessHeapInformation(
+    IN struct _DEBUG_BUFFER *DebugBuffer)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

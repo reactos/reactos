@@ -29,9 +29,13 @@
  * the header signature and uses the header to load it.
  */
 
+#define MB_INFO_SIZE                60   /* sizeof(multiboot_info_t) */
 #define MB_INFO_FLAGS_OFFSET        0
 #define MB_INFO_BOOT_DEVICE_OFFSET  12
 #define MB_INFO_COMMAND_LINE_OFFSET 16
+#define MB_INFO_MMAP_LEN_OFFSET     44
+#define MB_INFO_MMAP_ADDR_OFFSET    48
+#define MB_MMAP_SIZE                480  /* 20 * sizeof(memory_map_t) - up to 20 entries */
 #define CMDLINE_SIZE                256
 
 /*
@@ -91,6 +95,35 @@ MultibootEntry:
     cmp eax, MULTIBOOT_BOOTLOADER_MAGIC
     jne mbfail
 
+    /* Save multiboot info structure */
+    mov esi, ebx
+    mov edi, offset MultibootInfo + INITIAL_BASE - FREELDR_BASE
+    mov ecx, (MB_INFO_SIZE / 4)
+    rep movsd
+    mov dword ptr ds:[MultibootInfo + INITIAL_BASE - FREELDR_BASE + MB_INFO_MMAP_ADDR_OFFSET], 0
+    mov dword ptr ds:[_MultibootInfoPtr + INITIAL_BASE - FREELDR_BASE], offset MultibootInfo
+
+    /* See if the memory map was passed in */
+    test dword ptr ds:[ebx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_MEMORY_MAP
+    jz mbchk_command_line
+    /* Check memory map length */
+    mov ecx, dword ptr ds:[ebx + MB_INFO_MMAP_LEN_OFFSET]
+    test ecx, ecx
+    jz mbchk_command_line
+    cmp ecx, MB_MMAP_SIZE
+    jg mbchk_command_line
+    /* Check memory map address */
+    mov esi, dword ptr ds:[ebx + MB_INFO_MMAP_ADDR_OFFSET]
+    test esi, esi
+    jz mbchk_command_line
+    /* Save memory map structure */
+    mov edi, offset MultibootMemoryMap + INITIAL_BASE - FREELDR_BASE
+    shr ecx, 2
+    rep movsd
+    /* Relocate memory map address */
+    mov dword ptr ds:[MultibootInfo + INITIAL_BASE - FREELDR_BASE + MB_INFO_MMAP_ADDR_OFFSET], offset MultibootMemoryMap
+
+mbchk_command_line:
     /* Save command line */
     test dword ptr ds:[ebx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_COMMAND_LINE
     jz mb2
@@ -170,6 +203,16 @@ gdt:
 gdtptr:
     .word HEX(17)   /* Limit */
     .long gdt       /* Base Address */
+
+PUBLIC _MultibootInfoPtr
+_MultibootInfoPtr:
+    .long 0
+
+MultibootInfo:
+    .space MB_INFO_SIZE
+
+MultibootMemoryMap:
+    .space MB_MMAP_SIZE
 
 PUBLIC cmdline
 cmdline:

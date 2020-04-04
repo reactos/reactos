@@ -93,8 +93,6 @@ struct _CONSOLE_SCREEN_BUFFER
     COORD   ViewOrigin;                 /* Beginning offset for the actual display area */
 
 /***** Put that VV in TEXTMODE_SCREEN_BUFFER ?? *****/
-    USHORT  VirtualY;                   /* Top row of buffer being displayed, reported to callers */
-
     COORD   CursorPosition;             /* Current cursor position */
     BOOLEAN CursorBlinkOn;
     BOOLEAN ForceCursorOff;
@@ -105,8 +103,8 @@ struct _CONSOLE_SCREEN_BUFFER
     HPALETTE PaletteHandle;             /* Handle to the color palette associated to this buffer */
     UINT     PaletteUsage;              /* The new use of the system palette. See SetSystemPaletteUse 'uUsage' parameter */
 
-//  WORD   ScreenDefaultAttrib;         /* Default screen char attribute */
-//  WORD   PopupDefaultAttrib;          /* Default popup char attribute */
+//  USHORT   ScreenDefaultAttrib;       /* Default screen char attribute */
+//  USHORT   PopupDefaultAttrib;        /* Default popup char attribute */
     USHORT Mode;                        /* Output buffer modes */
 };
 
@@ -141,6 +139,7 @@ struct _CONSOLE_SCREEN_BUFFER
 typedef struct _TEXTMODE_BUFFER_INFO
 {
     COORD   ScreenBufferSize;
+    COORD   ViewSize;
     USHORT  ScreenAttrib;
     USHORT  PopupAttrib;
     ULONG   CursorSize;
@@ -151,10 +150,11 @@ typedef struct _TEXTMODE_SCREEN_BUFFER
 {
     CONSOLE_SCREEN_BUFFER;      /* Screen buffer base class - MUST BE IN FIRST PLACE */
 
+    USHORT     VirtualY;        /* Top row of buffer being displayed, reported to callers */
     PCHAR_INFO Buffer;          /* Pointer to UNICODE screen buffer (Buffer->Char.UnicodeChar only is valid, not Char.AsciiChar) */
 
-    WORD ScreenDefaultAttrib;   /* Default screen char attribute */
-    WORD PopupDefaultAttrib;    /* Default popup char attribute */
+    USHORT ScreenDefaultAttrib; /* Default screen char attribute */
+    USHORT PopupDefaultAttrib;  /* Default popup char attribute */
 } TEXTMODE_SCREEN_BUFFER, *PTEXTMODE_SCREEN_BUFFER;
 
 
@@ -189,9 +189,10 @@ typedef struct _CONSOLE_INPUT_BUFFER
 {
     CONSOLE_IO_OBJECT Header;       /* Object header - MUST BE IN FIRST PLACE */
 
-    ULONG       InputBufferSize;    /* Size of this input buffer -- UNUSED!! */
-    LIST_ENTRY  InputEvents;        /* List head for input event queue */
-    HANDLE      ActiveEvent;        /* Event set when an input event is added in its queue */
+    ULONG       InputBufferSize;    /* Size of this input buffer (maximum number of events) -- UNUSED!! */
+    ULONG       NumberOfEvents;     /* Current number of events in the queue */
+    LIST_ENTRY  InputEvents;        /* Input events queue list head */
+    HANDLE      ActiveEvent;        /* Event set when an input event is added to the queue */
 
     USHORT      Mode;               /* Input buffer modes */
 } CONSOLE_INPUT_BUFFER, *PCONSOLE_INPUT_BUFFER;
@@ -331,7 +332,7 @@ typedef struct _CONSOLE
     CONSOLE_STATE State;                    /* State of the console */
     TERMINAL TermIFace;                     /* Terminal-specific interface */
 
-    HANDLE UnpauseEvent;                    /* When != NULL, event for pausing the console */
+    BOOLEAN ConsolePaused;                  /* If TRUE, the console is paused */
 
 /******************************** Input buffer ********************************/
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
@@ -345,7 +346,7 @@ typedef struct _CONSOLE
 /****************************** Other properties ******************************/
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
-
+    BOOLEAN IsCJK;                          /* TRUE if Chinese, Japanese or Korean (CJK) */
 } CONSOLE; // , *PCONSOLE;
 
 /* console.c */
@@ -365,8 +366,16 @@ ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
 
 /* conoutput.c */
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
+NTSTATUS ConioResizeBuffer(PCONSOLE Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
+
+/* wcwidth.c */
+int mk_wcwidth_cjk(wchar_t ucs);
+
+// NOTE: The check against 0x80 is to avoid calling the helper function
+// for characters that we already know are not full-width.
+#define IS_FULL_WIDTH(wch)  \
+    (((USHORT)(wch) >= 0x0080) && (mk_wcwidth_cjk(wch) == 2))
 
 /* EOF */

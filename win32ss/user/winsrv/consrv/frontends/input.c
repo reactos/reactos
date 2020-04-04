@@ -34,17 +34,20 @@ ConioGetShiftState(PBYTE KeyState, LPARAM lParam)
         ssOut |= SCROLLLOCK_ON;
 
     if (KeyState[VK_SHIFT] & 0x80)
+    // || (KeyState[VK_LSHIFT] & 0x80) || (KeyState[VK_RSHIFT] & 0x80)
         ssOut |= SHIFT_PRESSED;
 
     if (KeyState[VK_LCONTROL] & 0x80)
         ssOut |= LEFT_CTRL_PRESSED;
     if (KeyState[VK_RCONTROL] & 0x80)
         ssOut |= RIGHT_CTRL_PRESSED;
+    // if (KeyState[VK_CONTROL] & 0x80) { ... }
 
     if (KeyState[VK_LMENU] & 0x80)
         ssOut |= LEFT_ALT_PRESSED;
     if (KeyState[VK_RMENU] & 0x80)
         ssOut |= RIGHT_ALT_PRESSED;
+    // if (KeyState[VK_MENU] & 0x80) { ... }
 
     /* See WM_CHAR MSDN documentation for instance */
     if (lParam & 0x01000000)
@@ -124,23 +127,11 @@ ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg)
 
     if (Fake) return;
 
-    /* Process Ctrl-C and Ctrl-Break */
-    if ( Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT &&
-         Down && (VirtualKeyCode == VK_PAUSE || VirtualKeyCode == 'C') &&
-         (ShiftState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) || KeyState[VK_CONTROL] & 0x80) )
-    {
-        DPRINT1("Console_Api Ctrl-C\n");
-        ConSrvConsoleProcessCtrlEvent(Console, 0, CTRL_C_EVENT);
-
-        if (Console->LineBuffer && !Console->LineComplete)
-        {
-            /* Line input is in progress; end it */
-            Console->LinePos = Console->LineSize = 0;
-            Console->LineComplete = TRUE;
-        }
-        return;
-    }
-
+//
+// FIXME: Scrolling via keyboard shortcuts must be done differently,
+// without touching the internal VirtualY variable.
+//
+#if 0
     if ( (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) != 0 &&
          (VirtualKeyCode == VK_UP || VirtualKeyCode == VK_DOWN) )
     {
@@ -172,6 +163,7 @@ ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg)
         ConioDrawConsole(Console);
         return;
     }
+#endif
 
     /* Send the key press to the console driver */
 

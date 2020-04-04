@@ -201,7 +201,7 @@ PUSHD [yol | ..]\n\n\
 Şimdiki ECHO ayârını görüntülemek için bir değişken olmadan ECHO yazınız."
     STRING_ECHO_HELP5 "ECHO %s\n"
     STRING_EXIT_HELP "Komut yatacı yorumcusundan çıkar.\n\nEXIT [/b] [çıkış kodu]\n\n\
-  /B            Yalnızca bir toplu iş kütüğünden çıkar.  \n\
+  /B            Yalnızca bir toplu iş kütüğünden çıkar.\n\
                 Bir toplu iş kütüğünün dışında çalışırsa cmd.exe'den çıkacaktır.\n\
   çıkış kodu    Bu değer çıkışta ERRORLEVEL'e atanacaktır.\n"
     STRING_FOR_HELP1 "Bir takım kütükte tüm kütükler için belirtilen bir komut çalıştırır.\n\n\
@@ -419,7 +419,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     1    hh%cmm%css%cdd\n\n\
 ON, OFF ve /S belirtilmezse komut, süreölçer durumunu\n\
 değiştirecek.\n\n"
-    STRING_TYPE_HELP1 "Metin kütüklerinin içeriklerini görüntüler.\n\nTYPE [sürücü:][yol]kütük adı \n\
+    STRING_TYPE_HELP1 "Metin kütüklerinin içeriklerini görüntüler.\n\nTYPE [sürücü:][yol]kütük adı\n\
   /P          Bir kezde bir görüntülük çıktı gösterir.\n"
     STRING_VERIFY_HELP1 "Bu komut şimdi bir işlevsiz şeydir!!\n\
 Kütüklerinizin bir diske doğru yazıldığının doğrulanıp doğrulanmayacağını\n\

@@ -1,191 +1,225 @@
 /*
- * Copyright 2004-2006, Haiku Inc. All rights reserved.
- * Distributed under the terms of the MIT License.
- *
- * Authors:
- *		Michael Lotz <mmlr@mlotz.ch>
- *		Niels S. Reedijk
+ * PROJECT:     ReactOS USB UHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBUHCI hardware declarations
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
  */
 
-#ifndef UHCI_HARDWARE_H
-#define UHCI_HARDWARE_H
+#define UHCI_FRAME_LIST_MAX_ENTRIES  1024 // Number of frames in Frame List
+#define UHCI_NUM_ROOT_HUB_PORTS      2
 
-/************************************************************
- * The Registers                                            *
- ************************************************************/
+/* UHCI HC I/O Registers offset (PUSHORT) */
+#define UHCI_USBCMD     0  // USB Command R/W
+#define UHCI_USBSTS     1  // USB Status R/WC
+#define UHCI_USBINTR    2  // USB Interrupt Enable R/W
+#define UHCI_FRNUM      3  // Frame Number R/W WORD writeable only
+#define UHCI_FRBASEADD  4  // Frame List Base Address  R/W // 32 bit
+#define UHCI_SOFMOD     6  // Start Of Frame Modify  R/W // 8 bit
+#define UHCI_PORTSC1    8  // Port 1 Status/Control R/WC WORD writeable only
+#define UHCI_PORTSC2    9  // Port 2 Status/Control R/WC WORD writeable only
 
-// R/W -- Read/Write
-// R/WC -- Read/Write Clear
-// ** -- Only writable with words!
+/* PCI Legacy Support */
+#define PCI_LEGSUP             0xC0   // Legacy Support register offset. R/WC
+#define PCI_LEGSUP_USBPIRQDEN  0x2000
+#define PCI_LEGSUP_CLEAR_SMI   0x8F00
 
-// PCI register
-#define PCI_LEGSUP				0xC0
-#define PCI_LEGSUP_USBPIRQDEN	0x2000
-#define PCI_LEGSUP_CLEAR_SMI	0x8f00
+/* LEGSUP Legacy support register (PCI  Configuration - Function 2) */
+typedef union _UHCI_PCI_LEGSUP {
+  struct {
+    USHORT Smi60Read           : 1; // (60REN) Trap/SMI On 60h Read Enable. R/W. 
+    USHORT Smi60Write          : 1; // (60WEN) Trap/SMI On 60h Write Enable. R/W. 
+    USHORT Smi64Read           : 1; // (64REN) Trap/SMI On 64h Read Enable. R/W. 
+    USHORT Smi64Write          : 1; // (64WEN) Trap/SMI On 64h Write Enable. R/W. 
+    USHORT SmiIrq              : 1; // (USBSMIEN) Trap/SMI ON IRQ Enable. R/W.
+    USHORT A20Gate             : 1; // (A20PTEN) A20Gate Pass Through Enable. R/W. 
+    USHORT PassThroughStatus   : 1; // (PSS) Pass Through Status. RO.
+    USHORT SmiEndPassThrough   : 1; // (SMIEPTE) SMI At End Of Pass Through Enable. R/W.
+    USHORT TrapBy60ReadStatus  : 1; // (TBY60R) Trap By 60h Read Status. R/WC.  
+    USHORT TrapBy60WriteStatus : 1; // (TBY60W) Trap By 60h Write Status. R/WC.
+    USHORT TrapBy64ReadStatus  : 1; // (TBY64R) Trap By 64h Read Status. R/WC. 
+    USHORT TrapBy64WriteStatus : 1; // (TBY64W) Trap By 64h Write Status. R/WC.
+    USHORT UsbIrqStatus        : 1; // (USBIRQS) USB IRQ Status. RO.
+    USHORT UsbPIRQ             : 1; // (USBPIRQDEN) USB PIRQ Enable.  R/W.
+    USHORT Reserved            : 1;
+    USHORT EndA20GateStatus    : 1; // (A20PTS) End OF A20GATE Pass Through Status. R/WC. 
+  };
+  USHORT AsUSHORT;
+} UHCI_PCI_LEGSUP;
 
-// Registers
-#define UHCI_USBCMD				0x00 	// USB Command - word - R/W
-#define UHCI_USBSTS				0x02	// USB Status - word - R/WC
-#define UHCI_USBINTR			0x04	// USB Interrupt Enable - word - R/W
-#define UHCI_FRNUM				0x06	// Frame number - word - R/W**
-#define UHCI_FRBASEADD			0x08	// Frame List BAse Address - dword - R/W
-#define UHCI_SOFMOD				0x0c	// Start of Frame Modify - byte - R/W
-#define UHCI_PORTSC1			0x10	// Port 1 Status/Control - word - R/WC**
-#define UHCI_PORTSC2			0x12	// Port 2 Status/Control - word - R/WC**
+C_ASSERT(sizeof(UHCI_PCI_LEGSUP) == sizeof(USHORT));
 
-// USBCMD
-#define UHCI_USBCMD_RS			0x01	// Run/Stop
-#define UHCI_USBCMD_HCRESET		0x02 	// Host Controller Reset
-#define UHCI_USBCMD_GRESET		0x04 	// Global Reset
-#define UHCI_USBCMD_EGSM		0x08	// Enter Global Suspend mode
-#define UHCI_USBCMD_FGR			0x10	// Force Global resume
-#define UHCI_USBCMD_SWDBG		0x20	// Software Debug
-#define UHCI_USBCMD_CF			0x40	// Configure Flag
-#define UHCI_USBCMD_MAXP		0x80	// Max packet
+/* USBCMD Command register */
+typedef union _UHCI_USB_COMMAND {
+  struct {
+    USHORT Run           : 1;
+    USHORT HcReset       : 1;
+    USHORT GlobalReset   : 1;
+    USHORT GlobalSuspend : 1;
+    USHORT GlobalResume  : 1; // Force Global Resume
+    USHORT SoftwareDebug : 1; // 0 - Normal Mode, 1 - Debug mode
+    USHORT ConfigureFlag : 1; // no effect on the hardware
+    USHORT MaxPacket     : 1; // 0 = 32, 1 = 64
+    USHORT Reserved      : 8;
+  };
+  USHORT AsUSHORT;
+} UHCI_USB_COMMAND;
 
-//USBSTS
-#define UHCI_USBSTS_USBINT		0x01	// USB interrupt
-#define UHCI_USBSTS_ERRINT		0x02	// USB error interrupt
-#define UHCI_USBSTS_RESDET		0x04	// Resume Detect
-#define UHCI_USBSTS_HOSTERR		0x08	// Host System Error
-#define UHCI_USBSTS_HCPRERR		0x10	// Host Controller Process error
-#define UHCI_USBSTS_HCHALT		0x20	// HCHalted
+C_ASSERT(sizeof(UHCI_USB_COMMAND) == sizeof(USHORT));
 
-//USBINTR
-#define UHCI_USBINTR_CRC		0x01	// Timeout/ CRC interrupt enable
-#define UHCI_USBINTR_RESUME		0x02	// Resume interrupt enable
-#define UHCI_USBINTR_IOC		0x04	// Interrupt on complete enable
-#define UHCI_USBINTR_SHORT		0x08	// Short packet interrupt enable
+/* USBSTS Status register */
+#define UHCI_USB_STATUS_MASK  0x3F
 
-//PORTSC
-#define UHCI_PORTSC_CURSTAT		0x0001	// Current connect status
-#define UHCI_PORTSC_STATCHA		0x0002	// Current connect status change
-#define UHCI_PORTSC_ENABLED		0x0004	// Port enabled/disabled
-#define UHCI_PORTSC_ENABCHA		0x0008	// Change in enabled/disabled
-#define UHCI_PORTSC_LINE_0		0x0010	// The status of D+
-#define UHCI_PORTSC_LINE_1		0x0020	// The status of D-
-#define UHCI_PORTSC_RESUME		0x0040	// Something with the suspend state ???
-#define UHCI_PORTSC_LOWSPEED	0x0100	// Low speed device attached?
-#define UHCI_PORTSC_RESET		0x0200	// Port is in reset
-#define UHCI_PORTSC_SUSPEND		0x1000	// Set port in suspend state
+typedef union _UHCI_USB_STATUS {
+  struct {
+    USHORT Interrupt       : 1; // due to IOC (Interrupt On Complete)
+    USHORT ErrorInterrupt  : 1; // due to error
+    USHORT ResumeDetect    : 1;
+    USHORT HostSystemError : 1; // PCI problems
+    USHORT HcProcessError  : 1; // Schedule is buggy
+    USHORT HcHalted        : 1;
+    USHORT Reserved        : 10;
+  };
+  USHORT AsUSHORT;
+} UHCI_USB_STATUS;
 
-#define UHCI_PORTSC_DATAMASK	0x13f5	// Mask that excludes the change bits
+C_ASSERT(sizeof(UHCI_USB_STATUS) == sizeof(USHORT));
 
-/************************************************************
- * Hardware structs                                         *
- ************************************************************/
+/* USBINTR Interrupt enable register */
+typedef union _UHCI_INTERRUPT_ENABLE {
+  struct {
+    USHORT TimeoutCRC          : 1; // Timeout/CRC error enable
+    USHORT ResumeInterrupt     : 1;
+    USHORT InterruptOnComplete : 1;
+    USHORT ShortPacket         : 1;
+    USHORT Reserved            : 12;
+  };
+  USHORT AsUSHORT;
+} UHCI_INTERRUPT_ENABLE;
 
-// Framelist flags
-#define FRAMELIST_TERMINATE    0x1
-#define FRAMELIST_NEXT_IS_QH   0x2
+C_ASSERT(sizeof(UHCI_INTERRUPT_ENABLE) == sizeof(USHORT));
 
-// Number of frames
-#define NUMBER_OF_FRAMES		1024
-#define MAX_AVAILABLE_BANDWIDTH	900	// Microseconds
+/* FRNUM Frame Number register */
+#define UHCI_FRNUM_FRAME_MASK     0x7FF 
+#define UHCI_FRNUM_INDEX_MASK     0x3FF 
+#define UHCI_FRNUM_OVERFLOW_LIST  0x400 
 
-// Represents a Transfer Descriptor (TD)
-typedef struct _UHCI_TRANSFER_DESCRIPTOR
-{
-    ULONG LinkPhysical;  // Link to next transfer descriptor / queue head
-    ULONG Status;           // status 
-    ULONG Token;            // packet header
-    ULONG BufferPhysical;   // pointer to the buffer
+/* PORTSC(1|2) USB port status and control registers */
+typedef union _UHCI_PORT_STATUS_CONTROL {
+  struct {
+    USHORT CurrentConnectStatus    : 1;
+    USHORT ConnectStatusChange     : 1;
+    USHORT PortEnabledDisabled     : 1;
+    USHORT PortEnableDisableChange : 1;
+    USHORT LineStatus              : 2; // D+ and D-
+    USHORT ResumeDetect            : 1;
+    USHORT Reserved1               : 1; // always 1
+    USHORT LowSpeedDevice          : 1; // LS device Attached
+    USHORT PortReset               : 1;
+    USHORT Reserved2               : 2; // Intel use it (not UHCI 1.1d spec)
+    USHORT Suspend                 : 1;
+    USHORT Reserved3               : 3; // write zeroes
+  };
+  USHORT AsUSHORT;
+} UHCI_PORT_STATUS_CONTROL;
 
-    // Software part
-    ULONG PhysicalAddress;           // Physical address of this descriptor
-    PVOID NextLogicalDescriptor;
-    ULONG BufferSize;                // Size of the buffer
-    PVOID BufferLogical;            // Logical pointer to the buffer
-    PVOID UserBuffer;
-}UHCI_TRANSFER_DESCRIPTOR, *PUHCI_TRANSFER_DESCRIPTOR;
+C_ASSERT(sizeof(UHCI_PORT_STATUS_CONTROL) == sizeof(USHORT));
 
-#define	TD_NEXT_IS_QH				0x02
+typedef struct _UHCI_HW_REGISTERS {
+  UHCI_USB_COMMAND HcCommand; // R/W
+  UHCI_USB_STATUS HcStatus; // R/WC
+  UHCI_INTERRUPT_ENABLE HcInterruptEnable; // R/W
+  USHORT FrameNumber; // R/W WORD writeable only
+  ULONG FrameAddress; // R/W
+  UCHAR SOF_Modify; // R/W
+  UCHAR Reserved[3];
+  UHCI_PORT_STATUS_CONTROL PortControl[UHCI_NUM_ROOT_HUB_PORTS]; // R/WC WORD writeable only
+} UHCI_HW_REGISTERS, *PUHCI_HW_REGISTERS;
 
-// Control and Status
-#define TD_CONTROL_SPD				(1 << 29)
-#define TD_CONTROL_3_ERRORS			(3 << 27)
-#define TD_CONTROL_LOWSPEED			(1 << 26)
-#define TD_CONTROL_ISOCHRONOUS		(1 << 25)
-#define TD_CONTROL_IOC				(1 << 24)
+/* Transfer Descriptor (TD) */
+#define UHCI_TD_STS_ACTIVE            (1 << 7)
+#define UHCI_TD_STS_STALLED           (1 << 6)
+#define UHCI_TD_STS_DATA_BUFFER_ERROR (1 << 5)
+#define UHCI_TD_STS_BABBLE_DETECTED   (1 << 4)
+#define UHCI_TD_STS_NAK_RECEIVED      (1 << 3)
+#define UHCI_TD_STS_TIMEOUT_CRC_ERROR (1 << 2)
+#define UHCI_TD_STS_BITSTUFF_ERROR    (1 << 1)
+//#define UHCI_TD_STS_Reserved        (1 << 0)
 
-#define TD_STATUS_ACTIVE			(1 << 23)
-#define TD_STATUS_ERROR_STALLED		(1 << 22)
-#define TD_STATUS_ERROR_BUFFER		(1 << 21)
-#define TD_STATUS_ERROR_BABBLE		(1 << 20)
-#define TD_STATUS_ERROR_NAK			(1 << 19)
-#define TD_STATUS_ERROR_CRC			(1 << 18)
-#define TD_STATUS_ERROR_TIMEOUT		(1 << 18)
-#define TD_STATUS_ERROR_BITSTUFF	(1 << 17)
+#define UHCI_TD_VALID_LENGTH    0x4FF
+#define UHCI_TD_LENGTH_INVALID  0x7FE
+#define UHCI_TD_LENGTH_NULL     0x7FF
 
-#define TD_STATUS_ACTLEN_MASK		0x07ff
-#define TD_STATUS_ACTLEN_NULL		0x07ff
+typedef union _UHCI_CONTROL_STATUS {
+  struct {
+    ULONG ActualLength        : 11; // encoded as n - 1
+    ULONG Reserved1           : 5;
+    ULONG Status              : 8; // UHCI_TD_STS_ xxx
+    ULONG InterruptOnComplete : 1;
+    ULONG IsochronousType     : 1;
+    ULONG LowSpeedDevice      : 1;
+    ULONG ErrorCounter        : 2;
+    ULONG ShortPacketDetect   : 1;
+    ULONG Reserved2           : 2;
+  };
+  ULONG AsULONG;
+} UHCI_CONTROL_STATUS;
 
-// Token
-#define TD_TOKEN_MAXLEN_SHIFT		21
-#define TD_TOKEN_NULL_DATA			(0x07ff << TD_TOKEN_MAXLEN_SHIFT)
-#define TD_TOKEN_DATA_TOGGLE_SHIFT	19
-#define TD_TOKEN_DATA1				(1 << TD_TOKEN_DATA_TOGGLE_SHIFT)
+C_ASSERT(sizeof(UHCI_CONTROL_STATUS) == sizeof(ULONG));
 
-#define TD_TOKEN_SETUP				0x2d
-#define TD_TOKEN_IN					0x69
-#define TD_TOKEN_OUT				0xe1
+#define UHCI_TD_PID_IN     0x69
+#define UHCI_TD_PID_OUT    0xE1
+#define UHCI_TD_PID_SETUP  0x2D
 
-#define TD_TOKEN_ENDPTADDR_SHIFT	15
-#define TD_TOKEN_DEVADDR_SHIFT		8
+#define UHCI_TD_PID_DATA0  0
+#define UHCI_TD_PID_DATA1  1
 
-#define TD_DEPTH_FIRST				0x04
-#define TD_TERMINATE				0x01
-#define TD_ERROR_MASK				0x440000
-#define TD_ERROR_COUNT_SHIFT		27
-#define TD_ERROR_COUNT_MASK			0x03
-#define TD_LINK_MASK				0xfffffff0
+typedef union _UHCI_TD_TOKEN {
+  struct {
+    ULONG PIDCode       : 8;
+    ULONG DeviceAddress : 7;
+    ULONG Endpoint      : 4;
+    ULONG DataToggle    : 1;
+    ULONG Reserved      : 1;
+    ULONG MaximumLength : 11;
+  };
+  ULONG AsULONG;
+} UHCI_TD_TOKEN;
 
+C_ASSERT(sizeof(UHCI_TD_TOKEN) == sizeof(ULONG));
 
-static
-inline
-ULONG
-UHCI_TRANSFER_DESCRIPTOR_MAXIMUM_LENGTH(PUHCI_TRANSFER_DESCRIPTOR Descriptor)
-{
-    ULONG Length = (Descriptor->Token >> TD_TOKEN_MAXLEN_SHIFT) + 1;
-    if (Length == TD_STATUS_ACTLEN_NULL + 1)
-        return 0;
-    return Length;
-}
+#define UHCI_TD_LINK_PTR_VALID          (0 << 0)
+#define UHCI_TD_LINK_PTR_TERMINATE      (1 << 0)
+#define UHCI_TD_LINK_PTR_TD             (0 << 1)
+#define UHCI_TD_LINK_PTR_QH             (1 << 1)
+#define UHCI_TD_LINK_PTR_BREADTH_FIRST  (0 << 2)
+#define UHCI_TD_LINK_PTR_DEPTH_FIRST    (1 << 2)
+#define UHCI_TD_LINK_POINTER_MASK       0xFFFFFFF0
 
-static
-inline
-ULONG
-UHCI_TRANSFER_DESCRIPTOR_LENGTH(PUHCI_TRANSFER_DESCRIPTOR Descriptor)
-{
-    ULONG Length = (Descriptor->Status & TD_STATUS_ACTLEN_MASK) + 1;
-    if (Length == TD_STATUS_ACTLEN_NULL + 1)
-        return 0;
-    return Length;
-}
+typedef struct _UHCI_TD {  // Transfer Descriptors always aligned on 16-byte boundaries
+  ULONG NextElement;
+  UHCI_CONTROL_STATUS ControlStatus;
+  UHCI_TD_TOKEN Token;
+  ULONG Buffer;
+} UHCI_TD, *PUHCI_TD;
 
-// Represents a Queue Head (QH)
-typedef struct _UHCI_QUEUE_HEAD
-{
-    // hardware part
-    ULONG LinkPhysical; // address
-    ULONG ElementPhysical; // next descriptor
+C_ASSERT(sizeof(UHCI_TD) == 16);
 
-    // Software part
-    ULONG PhysicalAddress;
-    PVOID NextLogicalDescriptor;
-    PVOID Request;
-    PVOID NextElementDescriptor;
-}UHCI_QUEUE_HEAD, *PUHCI_QUEUE_HEAD;
+/* Queue Header (QH) */
+#define UHCI_QH_HEAD_LINK_PTR_VALID         (0 << 0)
+#define UHCI_QH_HEAD_LINK_PTR_TERMINATE     (1 << 0)
+#define UHCI_QH_HEAD_LINK_PTR_TD            (0 << 1)
+#define UHCI_QH_HEAD_LINK_PTR_QH            (1 << 1)
+#define UHCI_QH_HEAD_LINK_POINTER_MASK      0xFFFFFFF0
 
-#define QH_TERMINATE			0x01
-#define QH_NEXT_IS_QH  			0x02
-#define QH_LINK_MASK			0xfffffff0
+#define UHCI_QH_ELEMENT_LINK_PTR_VALID      (0 << 0)
+#define UHCI_QH_ELEMENT_LINK_PTR_TERMINATE  (1 << 0)
+#define UHCI_QH_ELEMENT_LINK_PTR_TD         (0 << 1)
+#define UHCI_QH_ELEMENT_LINK_PTR_QH         (1 << 1)
+#define UHCI_QH_ELEMENT_LINK_POINTER_MASK   0xFFFFFFF0
 
+typedef struct _UHCI_QH { // Queue Heads must be aligned on a 16-byte boundary
+  ULONG NextQH;
+  ULONG NextElement;
+} UHCI_QH, *PUHCI_QH;
 
-#define UHCI_INTERRUPT_QUEUE          0
-#define UHCI_LOW_SPEED_CONTROL_QUEUE  1
-#define UHCI_FULL_SPEED_CONTROL_QUEUE 2
-#define UHCI_BULK_QUEUE               3
-#define UHCI_DEBUG_QUEUE              4
-
-#endif /* UHCI_HARDWARE_H */
+C_ASSERT(sizeof(UHCI_QH) == 8);

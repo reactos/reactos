@@ -114,7 +114,7 @@
 
 /* Mach-O binaries (OSX/iOS) */
 #define LOCAL_VAR(a) a ## - Lpic_base(_EBX_)
-#define GLOBAL_VAR(a) #error This ABI cannot access non-local symbols directly.
+#define GLOBAL_VAR(a) .err This ABI cannot access non-local symbols directly.
 #define GLOBAL_VAR_PTR(a) L_ ## a ## - Lpic_base(_EBX_)
 #define FUNC(a) L_ ## a
 #define EXTERNAL_FUNC(a) L_ ## a
@@ -130,7 +130,7 @@ Lpic_base: \
 /* Dummies for everyone else. */
 #define LOCAL_VAR(a) a
 #define GLOBAL_VAR ASM_NAME
-#define GLOBAL_VAR_PTR(a) #error Cannot use indirect addressing in non-PIC object.
+#define GLOBAL_VAR_PTR(a) .err Cannot use indirect addressing in non-PIC object.
 #define FUNC ASM_NAME
 #define EXTERNAL_FUNC ASM_NAME
 #define GET_GOT

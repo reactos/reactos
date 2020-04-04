@@ -1893,7 +1893,7 @@ struct _ATL_WNDCLASSINFOW
     LPCWSTR m_lpszCursorID;
     BOOL m_bSystemCursor;
     ATOM m_atom;
-    WCHAR m_szAutoName[5 + sizeof(void *)];
+    WCHAR m_szAutoName[sizeof("ATL:") + sizeof(void *) * 2]; // == 4 characters + NULL + number of hexadecimal digits describing a pointer.
 
     ATOM Register(WNDPROC *p)
     {

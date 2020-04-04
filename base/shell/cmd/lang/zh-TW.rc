@@ -385,7 +385,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     0    毫秒\n\
                     1    hh%cmm%css%cdd\n\n\
 如果沒有 ON，OFF 或者 /S 在呼叫該命令時被指定，將會切換停表狀態。\n\n"
-    STRING_TYPE_HELP1 "顯示文字檔案的內容。\n\nTYPE [驅動器:][路徑]檔名 \n\
+    STRING_TYPE_HELP1 "顯示文字檔案的內容。\n\nTYPE [驅動器:][路徑]檔名\n\
   /P          每次只顯示一屏內容。\n"
     STRING_VERIFY_HELP1 "這條命令只是個擺設！！\n\
 設定是否檢查您的檔案已被正確地寫入磁碟。\n\n\

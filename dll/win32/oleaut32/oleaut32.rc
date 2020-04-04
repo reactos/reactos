@@ -55,6 +55,9 @@
 #ifdef LANGUAGE_HU_HU
     #include "lang/oleaut32_Hu.rc"
 #endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/oleaut32_Id.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/oleaut32_It.rc"
 #endif

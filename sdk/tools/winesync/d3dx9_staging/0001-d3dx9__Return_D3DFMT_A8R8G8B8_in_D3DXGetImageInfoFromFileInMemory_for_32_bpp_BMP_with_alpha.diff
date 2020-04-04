@@ -1,0 +1,73 @@
+diff --git a/dll/directx/wine/d3dx9_36/surface.c b/dll/directx/wine/d3dx9_36/surface.c
+index cf8286e..6e2c10a 100644
+--- a/dll/directx/wine/d3dx9_36/surface.c
++++ b/dll/directx/wine/d3dx9_36/surface.c
+@@ -954,6 +954,24 @@ HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(const void *data, UINT datasize,
+                 }
+             }
+ 
++            /* For 32 bpp BMP, windowscodecs.dll never returns a format with alpha while
++             * d3dx9_xx.dll returns one if at least 1 pixel has a non zero alpha component */
++            if (SUCCEEDED(hr) && (info->Format == D3DFMT_X8R8G8B8) && (info->ImageFileFormat == D3DXIFF_BMP)) {
++                DWORD size = sizeof(DWORD) * info->Width * info->Height;
++                BYTE *buffer = HeapAlloc(GetProcessHeap(), 0, size);
++                hr = IWICBitmapFrameDecode_CopyPixels(frame, NULL, sizeof(DWORD) * info->Width, size, buffer);
++                if (SUCCEEDED(hr)) {
++                    DWORD i;
++                    for (i = 0; i < info->Width * info->Height; i++) {
++                        if (buffer[i*4+3]) {
++                            info->Format = D3DFMT_A8R8G8B8;
++                            break;
++                        }
++                    }
++                }
++                HeapFree(GetProcessHeap(), 0, buffer);
++            }
++
+             if (frame)
+                  IWICBitmapFrameDecode_Release(frame);
+ 
+diff --git a/modules/rostests/winetests/d3dx9_36/surface.c b/modules/rostests/winetests/d3dx9_36/surface.c
+index b7c52a2..2c83dc2 100644
+--- a/modules/rostests/winetests/d3dx9_36/surface.c
++++ b/modules/rostests/winetests/d3dx9_36/surface.c
+@@ -67,6 +67,24 @@ static const unsigned char bmp_8bpp[] = {
+ 0x00,0x00
+ };
+ 
++/* 2x2 bmp (32 bpp XRGB) */
++static const unsigned char bmp_32bpp_xrgb[] = {
++0x42,0x4d,0x46,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x36,0x00,0x00,0x00,0x28,0x00,
++0x00,0x00,0x02,0x00,0x00,0x00,0x02,0x00,0x00,0x00,0x01,0x00,0x20,0x00,0x00,0x00,
++0x00,0x00,0x10,0x00,0x00,0x00,0x12,0x0b,0x00,0x00,0x12,0x0b,0x00,0x00,0x00,0x00,
++0x00,0x00,0x00,0x00,0x00,0x00,0xa0,0xb0,0xc0,0x00,0xa1,0xb1,0xc1,0x00,0xa2,0xb2,
++0xc2,0x00,0xa3,0xb3,0xc3,0x00
++};
++
++/* 2x2 bmp (32 bpp ARGB) */
++static const unsigned char bmp_32bpp_argb[] = {
++0x42,0x4d,0x46,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x36,0x00,0x00,0x00,0x28,0x00,
++0x00,0x00,0x02,0x00,0x00,0x00,0x02,0x00,0x00,0x00,0x01,0x00,0x20,0x00,0x00,0x00,
++0x00,0x00,0x10,0x00,0x00,0x00,0x12,0x0b,0x00,0x00,0x12,0x0b,0x00,0x00,0x00,0x00,
++0x00,0x00,0x00,0x00,0x00,0x00,0xa0,0xb0,0xc0,0x00,0xa1,0xb1,0xc1,0x00,0xa2,0xb2,
++0xc2,0x00,0xa3,0xb3,0xc3,0x01
++};
++
+ static const unsigned char png_grayscale[] =
+ {
+     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49,
+@@ -559,6 +577,14 @@ static void test_D3DXGetImageInfo(void)
+     ok(hr == D3D_OK, "D3DXGetImageInfoFromFileInMemory returned %#x, expected %#x\n", hr, D3D_OK);
+     ok(info.Depth == 1, "Got depth %u, expected 1\n", info.Depth);
+     ok(info.Format == D3DFMT_P8, "Got format %u, expected %u\n", info.Format, D3DFMT_P8);
++    hr = D3DXGetImageInfoFromFileInMemory(bmp_32bpp_xrgb, sizeof(bmp_32bpp_xrgb), &info);
++    ok(hr == D3D_OK, "D3DXGetImageInfoFromFileInMemory returned %#x, expected %#x\n", hr, D3D_OK);
++    ok(info.Depth == 1, "Got depth %u, expected 1\n", info.Depth);
++    ok(info.Format == D3DFMT_X8R8G8B8, "Got format %u, expected %u\n", info.Format, D3DFMT_X8R8G8B8);
++    hr = D3DXGetImageInfoFromFileInMemory(bmp_32bpp_argb, sizeof(bmp_32bpp_argb), &info);
++    ok(hr == D3D_OK, "D3DXGetImageInfoFromFileInMemory returned %#x, expected %#x\n", hr, D3D_OK);
++    ok(info.Depth == 1, "Got depth %u, expected 1\n", info.Depth);
++    ok(info.Format == D3DFMT_A8R8G8B8, "Got format %u, expected %u\n", info.Format, D3DFMT_A8R8G8B8);
+ 
+     /* Grayscale PNG */
+     hr = D3DXGetImageInfoFromFileInMemory(png_grayscale, sizeof(png_grayscale), &info);

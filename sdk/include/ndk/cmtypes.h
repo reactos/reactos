@@ -457,7 +457,7 @@ typedef struct _PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA
 typedef struct _PLUGPLAY_CONTROL_QUERY_REMOVE_DATA
 {
     UNICODE_STRING DeviceInstance;
-    ULONG Unknown2;
+    ULONG Flags;
     PNP_VETO_TYPE VetoType;
     LPWSTR VetoName;
     ULONG NameLength;

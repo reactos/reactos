@@ -45,12 +45,12 @@ BEGIN
   '/nh' legt fest, dass der Spaltenheader nicht in der Ausgabe angezeigt wird. Standardmäßig werden diese in einer TABLE angezeigt.\n\
 \n\
 SYNTAX:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
-  whoami /all [/fo <Format>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh]\n\
+  whoami /all [/fo <Format>] [/nh]\n\
 \n\
-BEISPIELE: \n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+BEISPIELE:\n\
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

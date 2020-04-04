@@ -246,19 +246,35 @@ static volatile BOOLEAN GspMemoryError = FALSE;
 static CHAR
 GspReadMemSafe(PCHAR Address)
 {
-    CHAR ch = 0;
+    CHAR Ch = 0;
 
-    if (!KdpSafeReadMemory((ULONG_PTR)Address, 1, &ch))
+#if 0
+    if (!NT_SUCCESS(KdpCopyMemoryChunks((ULONG64)(ULONG_PTR)Address, &Ch, 1,
+                                        0, MMDBG_COPY_UNSAFE, NULL)))
+#else
+    if (!NT_SUCCESS(MmDbgCopyMemory((ULONG64)(ULONG_PTR)Address, &Ch, 1,
+                                    MMDBG_COPY_UNSAFE)))
+#endif
+    {
         GspMemoryError = TRUE;
+    }
 
-    return ch;
+    return Ch;
 }
 
 static void
 GspWriteMemSafe(PCHAR Address, CHAR Ch)
 {
-    if (!KdpSafeWriteMemory((ULONG_PTR)Address, 1, Ch))
+#if 0
+    if (!NT_SUCCESS(KdpCopyMemoryChunks((ULONG64)(ULONG_PTR)Address, &Ch, 1,
+                                        0, MMDBG_COPY_UNSAFE | MMDBG_COPY_WRITE, NULL)))
+#else
+    if (!NT_SUCCESS(MmDbgCopyMemory((ULONG64)(ULONG_PTR)Address, &Ch, 1,
+                                    MMDBG_COPY_UNSAFE | MMDBG_COPY_WRITE)))
+#endif
+    {
         GspMemoryError = TRUE;
+    }
 }
 
 /* Convert the memory pointed to by Address into hex, placing result in Buffer

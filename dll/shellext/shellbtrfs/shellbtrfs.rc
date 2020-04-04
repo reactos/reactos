@@ -25,18 +25,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE
+2 TEXTINCLUDE 
 BEGIN
     "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -61,8 +61,8 @@ IDI_ICON1               ICON                    "subvol.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,1,0,0
- PRODUCTVERSION 1,1,0,0
+ FILEVERSION 1,5,0,0
+ PRODUCTVERSION 1,5,0,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -78,12 +78,12 @@ BEGIN
         BLOCK "080904b0"
         BEGIN
             VALUE "FileDescription", "WinBtrfs shell extension"
-            VALUE "FileVersion", "1.1"
+            VALUE "FileVersion", "1.5"
             VALUE "InternalName", "btrfs"
-            VALUE "LegalCopyright", "Copyright (c) Mark Harmstone 2016-18"
+            VALUE "LegalCopyright", "Copyright (c) Mark Harmstone 2016-19"
             VALUE "OriginalFilename", "shellbtrfs.dll"
             VALUE "ProductName", "WinBtrfs"
-            VALUE "ProductVersion", "1.1"
+            VALUE "ProductVersion", "1.5"
         END
     END
     BLOCK "VarFileInfo"
@@ -98,51 +98,53 @@ END
 // Dialog
 //
 
-IDD_PROP_SHEET DIALOGEX 0, 0, 235, 257
+IDD_PROP_SHEET DIALOGEX 0, 0, 235, 271
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Inode property sheet"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
     LTEXT           "Subvolume:",IDC_STATIC,14,21,38,8
     LTEXT           "Inode:",IDC_STATIC,14,35,21,8
-    GROUPBOX        "Information",IDC_GROUP_INFORMATION,7,7,221,85
+    GROUPBOX        "Information",IDC_GROUP_INFORMATION,7,7,221,99
     LTEXT           "Type:",IDC_STATIC,14,49,18,8
-    GROUPBOX        "POSIX permissions",IDC_STATIC,7,96,221,102
-    LTEXT           "User:",IDC_STATIC,14,111,17,8
-    LTEXT           "Group:",IDC_STATIC,14,127,22,8
-    EDITTEXT        IDC_UID,94,109,40,14,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_GID,94,125,40,14,ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "User",IDC_STATIC,14,158,15,8
-    LTEXT           "Group",IDC_STATIC,14,168,20,8
-    LTEXT           "Others",IDC_STATIC,14,182,22,8
-    LTEXT           "Read",IDC_STATIC,50,148,17,8
-    LTEXT           "Write",IDC_STATIC,89,148,18,8
-    LTEXT           "Execute",IDC_STATIC,129,148,30,8
-    CONTROL         "",IDC_USERR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,161,16,10
-    CONTROL         "",IDC_GROUPR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,172,16,10
-    CONTROL         "",IDC_OTHERR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,182,16,10
-    CONTROL         "",IDC_USERW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,161,16,10
-    CONTROL         "",IDC_GROUPW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,172,16,10
-    CONTROL         "",IDC_OTHERW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,182,16,10
-    CONTROL         "",IDC_USERX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,135,161,16,10
-    CONTROL         "",IDC_GROUPX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,135,172,16,10
-    CONTROL         "",IDC_OTHERX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,135,182,16,10
-    GROUPBOX        "Flags",IDC_STATIC,7,204,221,48
-    CONTROL         "Disable Copy-on-Write",IDC_NODATACOW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,218,86,10
+    GROUPBOX        "POSIX permissions",IDC_STATIC,7,110,221,102
+    LTEXT           "User:",IDC_STATIC,14,125,17,8
+    LTEXT           "Group:",IDC_STATIC,14,141,22,8
+    EDITTEXT        IDC_UID,94,123,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_GID,94,139,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "User",IDC_STATIC,14,172,15,8
+    LTEXT           "Group",IDC_STATIC,14,182,20,8
+    LTEXT           "Others",IDC_STATIC,14,196,22,8
+    LTEXT           "Read",IDC_STATIC,50,162,17,8
+    LTEXT           "Write",IDC_STATIC,89,162,18,8
+    LTEXT           "Execute",IDC_STATIC,129,162,30,8
+    CONTROL         "",IDC_USERR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,175,16,10
+    CONTROL         "",IDC_GROUPR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,186,16,10
+    CONTROL         "",IDC_OTHERR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,196,16,10
+    CONTROL         "",IDC_USERW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,175,16,10
+    CONTROL         "",IDC_GROUPW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,186,16,10
+    CONTROL         "",IDC_OTHERW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,196,16,10
+    CONTROL         "",IDC_USERX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,135,175,16,10
+    CONTROL         "",IDC_GROUPX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,135,186,16,10
+    CONTROL         "",IDC_OTHERX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,135,196,16,10
+    GROUPBOX        "Flags",IDC_STATIC,7,218,221,48
+    CONTROL         "Disable Copy-on-Write",IDC_NODATACOW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,232,86,10
     LTEXT           "(blank)",IDC_INODE,78,35,70,8
     LTEXT           "(blank)",IDC_TYPE,78,49,116,8
-    CONTROL         "Compress",IDC_COMPRESS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,232,46,10
+    CONTROL         "Compress",IDC_COMPRESS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,246,46,10
     LTEXT           "Size on disk:",IDC_STATIC,14,63,61,8
     CONTROL         "%s (<a>Details</a>)",IDC_SIZE_ON_DISK,"SysLink",WS_TABSTOP,78,63,142,8
-    COMBOBOX        IDC_COMPRESS_TYPE,63,231,48,13,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Readonly subvolume",IDC_SUBVOL_RO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,218,80,10
+    COMBOBOX        IDC_COMPRESS_TYPE,63,245,48,13,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Readonly subvolume",IDC_SUBVOL_RO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,232,80,10
     LTEXT           "(blank)",IDC_SUBVOL,78,21,70,8
     PUSHBUTTON      "&Open as Admin",IDC_OPEN_ADMIN,151,21,70,14
-    CONTROL         "Set UID",IDC_SETUID,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,161,40,10
-    CONTROL         "Set GID",IDC_SETGID,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,172,40,10
-    CONTROL         "Sticky",IDC_STICKY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,182,34,10
+    CONTROL         "Set UID",IDC_SETUID,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,175,40,10
+    CONTROL         "Set GID",IDC_SETGID,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,186,40,10
+    CONTROL         "Sticky",IDC_STICKY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,196,34,10
     LTEXT           "Compression ratio:",IDC_STATIC,14,77,61,8
     LTEXT           "%1.1f%%",IDC_COMPRESSION_RATIO,78,77,116,8
+    LTEXT           "Fragmentation:",IDC_STATIC,14,91,61,8
+    LTEXT           "%1.1f%%",IDC_FRAGMENTATION,78,91,116,8
 END
 
 IDD_SIZE_DETAILS DIALOGEX 0, 0, 212, 98
@@ -163,25 +165,26 @@ BEGIN
     LTEXT           "(blank)",IDC_SIZE_ZSTD,63,59,142,8
 END
 
-IDD_VOL_PROP_SHEET DIALOGEX 0, 0, 235, 251
+IDD_VOL_PROP_SHEET DIALOGEX 0, 0, 235, 273
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "s"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    PUSHBUTTON      "Show &usage...",IDC_VOL_SHOW_USAGE,154,47,67,19
-    PUSHBUTTON      "&Balance...",IDC_VOL_BALANCE,154,105,67,19
-    PUSHBUTTON      "&Devices...",IDC_VOL_DEVICES,154,162,67,19
     LTEXT           "UUID:",IDC_STATIC,7,15,20,8
     LTEXT           "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",IDC_UUID,32,15,294,8
-    GROUPBOX        "Usage",IDC_STATIC,7,31,221,53
-    LTEXT           "Show detailed information about internal filesystem usage. This is the equivalent to the command ""btrfs fi usage"" on Linux.",IDC_STATIC,14,44,131,33
-    GROUPBOX        "Balance",IDC_STATIC,7,87,221,53
-    LTEXT           "Balancing reads and rewrites data and metadata. It can be used to consolidate free space, as well as to convert between different RAID types.",IDC_STATIC,15,98,131,39
-    GROUPBOX        "Devices",IDC_STATIC,7,146,221,45
-    LTEXT           "Allows you to add disks or partitions to this filesystem, or remove those already present.",IDC_STATIC,14,159,131,30
-    GROUPBOX        "Scrub",IDC_STATIC,7,199,221,45
-    LTEXT           "Scrubbing verifies the data and metadata of a filesystem, and where possible will correct any errors.",IDC_STATIC,15,212,131,27
-    PUSHBUTTON      "&Scrub...",IDC_VOL_SCRUB,154,215,67,19
+    PUSHBUTTON      "Change drive &letter...",IDC_VOL_CHANGE_DRIVE_LETTER,7,30,101,19
+    PUSHBUTTON      "Show &usage...",IDC_VOL_SHOW_USAGE,154,69,67,19
+    PUSHBUTTON      "&Balance...",IDC_VOL_BALANCE,154,127,67,19
+    PUSHBUTTON      "&Devices...",IDC_VOL_DEVICES,154,184,67,19
+    GROUPBOX        "Usage",IDC_STATIC,7,53,221,53
+    LTEXT           "Show detailed information about internal filesystem usage. This is the equivalent to the command ""btrfs fi usage"" on Linux.",IDC_STATIC,14,66,131,33
+    GROUPBOX        "Balance",IDC_STATIC,7,109,221,53
+    LTEXT           "Balancing reads and rewrites data and metadata. It can be used to consolidate free space, as well as to convert between different RAID types.",IDC_STATIC,15,120,131,39
+    GROUPBOX        "Devices",IDC_STATIC,7,168,221,45
+    LTEXT           "Allows you to add disks or partitions to this filesystem, or remove those already present.",IDC_STATIC,14,181,131,30
+    GROUPBOX        "Scrub",IDC_STATIC,7,221,221,45
+    LTEXT           "Scrubbing verifies the data and metadata of a filesystem, and where possible will correct any errors.",IDC_STATIC,15,234,131,27
+    PUSHBUTTON      "&Scrub...",IDC_VOL_SCRUB,154,237,67,19
 END
 
 IDD_VOL_USAGE DIALOGEX 0, 0, 235, 242
@@ -364,6 +367,17 @@ BEGIN
     LTEXT           "New size: %s",IDC_RESIZE_NEWSIZE,18,53,238,8
 END
 
+IDD_DRIVE_LETTER DIALOGEX 0, 0, 131, 61
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Change drive letter"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,40,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,74,40,50,14
+    COMBOBOX        IDC_DRIVE_LETTER_COMBO,64,17,60,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Drive letter:",IDC_STATIC,15,19,45,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -378,7 +392,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 228
         TOPMARGIN, 7
-        BOTTOMMARGIN, 238
+        BOTTOMMARGIN, 266
     END
 
     IDD_SIZE_DETAILS, DIALOG
@@ -394,7 +408,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 228
         TOPMARGIN, 7
-        BOTTOMMARGIN, 244
+        BOTTOMMARGIN, 266
     END
 
     IDD_VOL_USAGE, DIALOG
@@ -476,6 +490,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 126
     END
+
+    IDD_DRIVE_LETTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 124
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 54
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -499,6 +521,16 @@ BEGIN
 END
 
 IDD_PROP_SHEET AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_VOL_PROP_SHEET AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DRIVE_LETTER AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -595,9 +627,9 @@ BEGIN
     IDS_DEVLIST_READONLY_NO "No"
     IDS_DEVLIST_ALLOC       "Allocated"
     IDS_DEVLIST_ALLOC_PC    "%"
-    IDS_BALANCE_RUNNING_REMOVAL
+    IDS_BALANCE_RUNNING_REMOVAL 
                             "Currently removing device %llu (%llu out of %llu chunks processed, %1.1f%%)"
-    IDS_BALANCE_PAUSED_REMOVAL
+    IDS_BALANCE_PAUSED_REMOVAL 
                             "Removal of device %llu paused (%llu out of %llu chunks processed, %1.1f%%)"
     IDS_BALANCE_CANCELLED_REMOVAL "Device removal cancelled."
     IDS_BALANCE_COMPLETE_REMOVAL "Device removal completed successfully."
@@ -608,12 +640,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_CANNOT_REMOVE_RAID  "The current RAID levels do not allow this device to be removed. You must do a conversion balance before you will be able to proceed."
-    IDS_REMOVE_DEVICE_CONFIRMATION
+    IDS_REMOVE_DEVICE_CONFIRMATION 
                             "Are you sure that you want to remove device %s, %s?"
     IDS_CONFIRMATION_TITLE  "Confirmation"
-    IDS_ADD_DEVICE_CONFIRMATION
+    IDS_ADD_DEVICE_CONFIRMATION 
                             "Are you sure that you want to add this device?"
-    IDS_ADD_DEVICE_CONFIRMATION_FS
+    IDS_ADD_DEVICE_CONFIRMATION_FS 
                             "Are you sure that you want to add this device? It already appears to contain a filesystem (%s)."
     IDS_BALANCE_FAILED      "Balance failed (error %08x, %s)"
     IDS_BALANCE_FAILED_REMOVAL "Device removal failed (error %08x, %s)"
@@ -624,32 +656,32 @@ BEGIN
     IDS_SCRUB_FINISHED      "Scrub finished."
     IDS_SCRUB_PAUSED        "Scrub paused (%llu out of %llu chunks processed, %1.1f%%)"
     IDS_SCRUB_MSG_STARTED   "Scrub started at %s %s."
-    IDS_SCRUB_MSG_RECOVERABLE_DATA
+    IDS_SCRUB_MSG_RECOVERABLE_DATA 
                             "Recovered from data checksum error at %llx on device %llx."
-    IDS_SCRUB_MSG_RECOVERABLE_METADATA
+    IDS_SCRUB_MSG_RECOVERABLE_METADATA 
                             "Recovered from metadata checksum error at %llx on device %llx."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SCRUB_MSG_UNRECOVERABLE_DATA
+    IDS_SCRUB_MSG_UNRECOVERABLE_DATA 
                             "Unrecoverable data checksum error at %llx on device %llx (%.*s, offset %llx)"
-    IDS_SCRUB_MSG_UNRECOVERABLE_DATA_SUBVOL
+    IDS_SCRUB_MSG_UNRECOVERABLE_DATA_SUBVOL 
                             "Unrecoverable data checksum error at %llx on device %llx (subvol %llx, %.*s, offset %llx)"
-    IDS_SCRUB_MSG_UNRECOVERABLE_METADATA
+    IDS_SCRUB_MSG_UNRECOVERABLE_METADATA 
                             "Unrecoverable metadata checksum error at %llx on device %llx (root %llx, level %x)"
-    IDS_SCRUB_MSG_UNRECOVERABLE_METADATA_FIRSTITEM
+    IDS_SCRUB_MSG_UNRECOVERABLE_METADATA_FIRSTITEM 
                             "Unrecoverable metadata checksum error at %llx on device %llx (root %llx, level %x, first item %llx,%x,%llx)"
     IDS_SCRUB_MSG_FINISHED  "Scrub finished at %s %s."
     IDS_SCRUB_MSG_SUMMARY   "Scrubbed %s in %llu seconds (%s/s)."
     IDS_BALANCE_SCRUB_RUNNING "Cannot start balance while scrub running."
     IDS_SCRUB_BALANCE_RUNNING "Cannot start scrub while balance running."
     IDS_SCRUB_MSG_SUMMARY_ERRORS_RECOVERABLE "Recovered from %llu error(s)."
-    IDS_SCRUB_MSG_SUMMARY_ERRORS_UNRECOVERABLE
+    IDS_SCRUB_MSG_SUMMARY_ERRORS_UNRECOVERABLE 
                             "%llu unrecoverable error(s) found."
     IDS_SCRUB_FAILED        "Scrub failed with error %08x."
     IDS_LOCK_FAILED         "Unable to lock volume: error %08x. Make sure that there are no files open, and that you have closed any Explorer windows."
-    IDS_SCRUB_MSG_RECOVERABLE_PARITY
+    IDS_SCRUB_MSG_RECOVERABLE_PARITY 
                             "Recovered from parity error at %llx on device %llx."
     IDS_COMPRESS_ANY        "(any)"
     IDS_COMPRESS_ZLIB       "Zlib"
@@ -668,13 +700,12 @@ BEGIN
     IDS_OUT_OF_MEMORY       "Out of memory."
     IDS_RECV_UNKNOWN_COMMAND "Unrecognized command %u encountered."
     IDS_RECV_CANT_OPEN_PATH "Couldn't open path %s (error %u, %s)."
-    IDS_RECV_RTLUTF8TOUNICODEN_FAILED "RtlUTF8ToUnicodeN returned %08x (%s)."
-    IDS_RECV_CREATE_SUBVOL_FAILED
+    IDS_RECV_CREATE_SUBVOL_FAILED 
                             "FSCTL_BTRFS_CREATE_SUBVOL returned %08x (%s)."
     IDS_RECV_MISSING_PARAM  "%S: could not find %s parameter."
     IDS_RECV_SHORT_PARAM    "%S: length of parameter %s was %u, expected %u."
     IDS_RECV_MKNOD_FAILED   "FSCTL_BTRFS_MKNOD returned %08x (%s)."
-    IDS_RECV_SET_REPARSE_POINT_FAILED
+    IDS_RECV_SET_REPARSE_POINT_FAILED 
                             "FSCTL_SET_REPARSE_POINT returned %08x (%s)."
 END
 
@@ -683,19 +714,17 @@ BEGIN
     IDS_RECV_MOVEFILE_FAILED "MoveFile (%s -> %s) failed (error %u, %s)."
     IDS_RECV_SETFILEPOINTER_FAILED "SetFilePointer failed (error %u, %s)."
     IDS_RECV_WRITEFILE_FAILED "WriteFile failed (error %u, %s)."
-    IDS_RECV_CREATEHARDLINK_FAILED
+    IDS_RECV_CREATEHARDLINK_FAILED 
                             "CreateHardLink (%s -> %s) failed (error %u, %s)."
     IDS_RECV_SETENDOFFILE_FAILED "SetEndOfFile failed (error %u, %s)."
     IDS_RECV_CANT_CREATE_FILE "Couldn't create %s (error %u, %s)."
-    IDS_RECV_SETFILEINFO_FAILED
-                            "SetFileInformationByHandle failed (error %u, %s)."
-    IDS_RECV_SETINODEINFO_FAILED
+    IDS_RECV_SETINODEINFO_FAILED 
                             "FSCTL_BTRFS_SET_INODE_INFO returned %08x (%s)."
     IDS_RECV_SUCCESS        "Received 1 subvolume successfully."
     IDS_RECV_BUTTON_OK      "OK"
-    IDS_RECV_SETFILEATTRIBUTES_FAILED
+    IDS_RECV_SETFILEATTRIBUTES_FAILED 
                             "SetFileAttributes failed (error %u, %s)."
-    IDS_RECV_GETFILEATTRIBUTES_FAILED
+    IDS_RECV_GETFILEATTRIBUTES_FAILED 
                             "GetFileAttributes failed (error %u, %s)."
     IDS_RECV_CSUM_ERROR     "Checksum error."
     IDS_RECV_NOT_A_SEND_STREAM "File was not a send stream."
@@ -705,28 +734,28 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_RECV_RECEIVED_SUBVOL_FAILED
+    IDS_RECV_RECEIVED_SUBVOL_FAILED 
                             "FSCTL_BTRFS_RECEIVED_SUBVOL returned %08x (%s)."
-    IDS_RECV_SETSECURITYOBJECT_FAILED
+    IDS_RECV_SETSECURITYOBJECT_FAILED 
                             "NtSetSecurityObject returned %08x (%s)."
     IDS_RECV_SETXATTR_FAILED "FSCTL_BTRFS_SET_XATTR returned %08x (%s)."
     IDS_RECV_CREATETHREAD_FAILED "CreateThread failed (error %u, %s)."
     IDS_RECV_FILE_TRUNCATED "File was truncated."
-    IDS_RECV_RESERVE_SUBVOL_FAILED
+    IDS_RECV_RESERVE_SUBVOL_FAILED 
                             "FSCTL_BTRFS_RESERVE_SUBVOL returned %08x (%s)."
     IDS_RECV_CANCELLED      "Receiving cancelled."
     IDS_RECV_CANT_FIND_PARENT_SUBVOL "Could not find parent subvolume."
     IDS_RECV_FIND_SUBVOL_FAILED "FSCTL_BTRFS_FIND_SUBVOL returned %08x (%s)."
-    IDS_RECV_CREATE_SNAPSHOT_FAILED
+    IDS_RECV_CREATE_SNAPSHOT_FAILED 
                             "FSCTL_BTRFS_CREATE_SNAPSHOT returned %08x (%s)."
-    IDS_RECV_GETVOLUMEPATHNAME_FAILED
+    IDS_RECV_GETVOLUMEPATHNAME_FAILED 
                             "GetVolumePathName failed (error %u, %s)."
     IDS_RECV_DELETEFILE_FAILED "DeleteFile failed for %s (error %u, %s)."
-    IDS_RECV_REMOVEDIRECTORY_FAILED
+    IDS_RECV_REMOVEDIRECTORY_FAILED 
                             "RemoveDirectory failed for %s (error %u, %s)."
     IDS_RECV_CANT_FIND_CLONE_SUBVOL "Could not find clone subvolume."
     IDS_RECV_GETFILESIZEEX_FAILED "GetFileSizeEx failed (error %u, %s)."
-    IDS_RECV_DUPLICATE_EXTENTS_FAILED
+    IDS_RECV_DUPLICATE_EXTENTS_FAILED 
                             "FSCTL_DUPLICATE_EXTENTS_TO_FILE returned %08x (%s)."
 END
 
@@ -737,13 +766,13 @@ BEGIN
     IDS_SEND_SUBVOL_HELP    "Exports a subvolume so that it can be recreated on another volume."
     IDS_SEND_CANT_OPEN_FILE "Error opening file %s (error %u, %s)."
     IDS_SEND_CANT_OPEN_DIR  "Error opening directory %s (error %u, %s)."
-    IDS_SEND_FSCTL_BTRFS_SEND_SUBVOL_FAILED
+    IDS_SEND_FSCTL_BTRFS_SEND_SUBVOL_FAILED 
                             "FSCTL_BTRFS_SEND_SUBVOL returned error %08x (%s)."
-    IDS_SEND_FSCTL_BTRFS_READ_SEND_BUFFER_FAILED
+    IDS_SEND_FSCTL_BTRFS_READ_SEND_BUFFER_FAILED 
                             "FSCTL_BTRFS_READ_SEND_BUFFER returned error %08x (%s)."
     IDS_SEND_SUCCESS        "Stream written successfully."
     IDS_SEND_WRITEFILE_FAILED "Writing to file failed (error %u, %s)."
-    IDS_SEND_GET_FILE_INFO_FAILED
+    IDS_SEND_GET_FILE_INFO_FAILED 
                             "GetFileInformationByHandle failed (error %u, %s)."
     IDS_SEND_NOT_READONLY   "Subvolume not readonly."
     IDS_NOT_SUBVOL          "Directory was not a subvolume."
@@ -759,20 +788,18 @@ BEGIN
     IDS_SEND_WRITING        "Writing..."
     IDS_MISSING             "(missing)"
     IDS_RESIZE_SUCCESSFUL   "Device %llx successfully resized to %s."
-    IDS_BALANCE_RUNNING_SHRINK
+    IDS_BALANCE_RUNNING_SHRINK 
                             "Currently shrinking device %llu (%llu out of %llu chunks processed, %1.1f%%)"
-    IDS_BALANCE_PAUSED_SHRINK
+    IDS_BALANCE_PAUSED_SHRINK 
                             "Shrinking of device %llu paused (%llu out of %llu chunks processed, %1.1f%%)"
     IDS_BALANCE_CANCELLED_SHRINK "Device shrinking cancelled."
     IDS_BALANCE_COMPLETE_SHRINK "Device successfully shrunk."
     IDS_BALANCE_FAILED_SHRINK "Device shrinking failed (error %08x, %s)"
     IDS_COMPRESS_ZSTD       "Zstd"
-    IDS_RECV_RTLUNICODETOUTF8N_FAILED "RtlUnicodeToUTF8N returned %08x (%s)."
     IDS_REGCREATEKEY_FAILED "RegCreateKey returned %08x"
     IDS_REGSETVALUEEX_FAILED "RegSetValueEx returned %08x"
     IDS_REGCLOSEKEY_FAILED  "RegCloseKey returned %08x"
-    IDS_REGDELETETREE_FAILED "RegDeleteTree returned %08x"
-    IDS_CANT_REFLINK_DIFFERENT_FS
+    IDS_CANT_REFLINK_DIFFERENT_FS 
                             "Cannot create a reflink between two different filesystems."
 END
 

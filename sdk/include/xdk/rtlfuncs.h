@@ -2376,9 +2376,9 @@ NTSYSAPI
 VOID
 NTAPI
 RtlFillMemoryUlong(
-  OUT PVOID Destination,
-  IN SIZE_T Length,
-  IN ULONG Pattern);
+  _Out_writes_bytes_all_(Length) PVOID Destination,
+  _In_ SIZE_T Length,
+  _In_ ULONG Pattern);
 
 NTSYSAPI
 VOID

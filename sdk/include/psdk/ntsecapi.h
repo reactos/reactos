@@ -226,7 +226,10 @@ typedef enum _MSV1_0_PROTOCOL_MESSAGE_TYPE {
   MsV1_0CacheLogon,
   MsV1_0SubAuth,
   MsV1_0DeriveCredential,
-  MsV1_0CacheLookup
+  MsV1_0CacheLookup,
+#if (_WIN32_WINNT >= _WIN32_WINNT_WINXP)
+  MsV1_0SetProcessOption,
+#endif
 } MSV1_0_PROTOCOL_MESSAGE_TYPE, *PMSV1_0_PROTOCOL_MESSAGE_TYPE;
 typedef enum _POLICY_LSA_SERVER_ROLE {
   PolicyServerRoleBackup = 2,

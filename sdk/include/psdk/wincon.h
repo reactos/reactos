@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#if (_WIN32_WINNT >= 0x0600) && !defined(NOGDI)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) && !defined(NOGDI)
 #  include "wingdi.h"
 #endif
 
@@ -17,7 +17,7 @@ extern "C" {
 /*
  * Special PID for parent process for AttachConsole API
  */
-#if (_WIN32_WINNT >= 0x0501)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WINXP)
 #define ATTACH_PARENT_PROCESS   ((DWORD)-1)
 #endif
 
@@ -45,13 +45,16 @@ extern "C" {
 #define BACKGROUND_RED                  0x0040
 #define BACKGROUND_INTENSITY            0x0080
 
-#define COMMON_LVB_LEADING_BYTE         0x0100
-#define COMMON_LVB_TRAILING_BYTE        0x0200
-#define COMMON_LVB_GRID_HORIZONTAL      0x0400
-#define COMMON_LVB_GRID_LVERTICAL       0x0800
-#define COMMON_LVB_GRID_RVERTICAL       0x1000
-#define COMMON_LVB_REVERSE_VIDEO        0x4000
-#define COMMON_LVB_UNDERSCORE           0x8000
+#define COMMON_LVB_LEADING_BYTE         0x0100  /* DBCS Leading Byte  */
+#define COMMON_LVB_TRAILING_BYTE        0x0200  /* DBCS Trailing Byte */
+#define COMMON_LVB_GRID_HORIZONTAL      0x0400  /* Grid attribute: Top Horizontal */
+#define COMMON_LVB_GRID_LVERTICAL       0x0800  /* Grid attribute: Left Vertical  */
+#define COMMON_LVB_GRID_RVERTICAL       0x1000  /* Grid attribute: Right Vertical */
+#define COMMON_LVB_REVERSE_VIDEO        0x4000  /* Reverse fore/back ground attribute */
+#define COMMON_LVB_UNDERSCORE           0x8000  /* Underscore */
+
+#define COMMON_LVB_SBCSDBCS \
+    (COMMON_LVB_LEADING_BYTE | COMMON_LVB_TRAILING_BYTE) /* == 0x0300 */
 
 /*
  * Screen buffer types
@@ -80,8 +83,11 @@ extern "C" {
 #define ENABLE_INSERT_MODE              0x0020
 #define ENABLE_QUICK_EDIT_MODE          0x0040
 #define ENABLE_EXTENDED_FLAGS           0x0080
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 #define ENABLE_AUTO_POSITION            0x0100
+#endif
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
+#define ENABLE_VIRTUAL_TERMINAL_INPUT   0x0200
 #endif
 
 /*
@@ -102,7 +108,7 @@ extern "C" {
 /*
  * History information and mode flags
  */
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 // For Get/SetConsoleHistoryInfo
 #define HISTORY_NO_DUP_FLAG             0x0001
 // For SetConsoleCommandHistoryMode
@@ -138,6 +144,15 @@ extern "C" {
 #define CAPSLOCK_ON                     0x0080
 #define ENHANCED_KEY                    0x0100
 
+// NLS Japanese flags
+#define NLS_DBCSCHAR                    0x00010000  /* SBCS/DBCS mode     */
+#define NLS_ALPHANUMERIC                0x00000000  /* Alphanumeric mode  */
+#define NLS_KATAKANA                    0x00020000  /* Katakana mode      */
+#define NLS_HIRAGANA                    0x00040000  /* Hiragana mode      */
+#define NLS_ROMAN                       0x00400000  /* Roman/Noroman mode */
+#define NLS_IME_CONVERSION              0x00800000  /* IME conversion     */
+#define NLS_IME_DISABLE                 0x20000000  /* IME enable/disable */
+
 /*
  * ButtonState flags
  */
@@ -153,7 +168,7 @@ extern "C" {
 #define MOUSE_MOVED                     0x0001
 #define DOUBLE_CLICK                    0x0002
 #define MOUSE_WHEELED                   0x0004
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 #define MOUSE_HWHEELED                  0x0008
 #endif
 
@@ -268,7 +283,7 @@ typedef struct _INPUT_RECORD {
     } Event;
 } INPUT_RECORD, *PINPUT_RECORD;
 
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 typedef struct _CONSOLE_HISTORY_INFO {
     UINT cbSize;
     UINT HistoryBufferSize;
@@ -302,7 +317,7 @@ typedef struct _CONSOLE_FONT_INFOEX {
 
 BOOL WINAPI AllocConsole(VOID);
 
-#if (_WIN32_WINNT >= 0x0501)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WINXP)
 BOOL WINAPI AttachConsole(_In_ DWORD);
 
 BOOL WINAPI AddConsoleAliasA(_In_ LPCSTR, _In_ LPCSTR, _In_ LPCSTR);
@@ -435,7 +450,7 @@ GetCurrentConsoleFont(
   _In_  BOOL bMaximumWindow,
   _Out_ PCONSOLE_FONT_INFO lpConsoleCurrentFont);
 
-#if (_WIN32_WINNT >= 0x0500)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN2K)
 
 HWND WINAPI GetConsoleWindow(VOID);
 BOOL WINAPI GetConsoleDisplayMode(_Out_ LPDWORD lpModeFlags);

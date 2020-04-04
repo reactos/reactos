@@ -144,11 +144,7 @@ FONT 9, "新細明體"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "版本 ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
@@ -760,6 +756,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "新增、變更和管理您電腦上的字型。"
     IDS_PRINTERS_DESCRIPTION "顯示已安裝的印表機和傳真印表機並幫助您新增印表機。"
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "版本 %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "大圖示(&G)"
     IDS_VIEW_SMALL "小圖示(&M)"
@@ -778,6 +777,17 @@ BEGIN
     IDS_PASTE "插入"
     IDS_EJECT "退出"
     IDS_DISCONNECT "中斷"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "無法建立資料夾 '%1'"
     IDS_CREATEFOLDER_CAPTION "無法建立資料夾"
@@ -820,7 +830,7 @@ BEGIN
 
     /* ATTENTION: If there is no special situation, please DO NOT change 
     English folder names into Chinese, or it may cause problems in the system. */
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "「開始」功能表\\程式"
     IDS_PERSONAL "我的文件"
     IDS_FAVORITES "我的最愛"
@@ -883,6 +893,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "無法退出媒體 (錯誤碼: %lu)."
     IDS_CANTSHOWPROPERTIES "無法顯示內容 (錯誤碼: %lu)."
     IDS_CANTDISCONNECT "無法中斷 (錯誤碼: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "資料夾"
@@ -919,6 +930,7 @@ BEGIN
     IDS_EDIT_VERB "編輯"
     IDS_FIND_VERB "搜索"
     IDS_PRINT_VERB "列印"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u 個檔案, %u 個檔案夾"
     IDS_PRINTERS "印表機"

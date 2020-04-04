@@ -2,7 +2,7 @@
  * wrbmp.c
  *
  * Copyright (C) 1994-1996, Thomas G. Lane.
- * Modified 2017 by Guido Vollbeding.
+ * Modified 2017-2019 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -74,22 +74,19 @@ put_pixel_rows (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo,
 /* This version is for writing 24-bit pixels */
 {
   bmp_dest_ptr dest = (bmp_dest_ptr) dinfo;
-  JSAMPARRAY image_ptr;
   register JSAMPROW inptr, outptr;
   register JDIMENSION col;
   int pad;
 
   /* Access next row in virtual array */
-  image_ptr = (*cinfo->mem->access_virt_sarray)
-    ((j_common_ptr) cinfo, dest->whole_image,
-     dest->cur_output_row, (JDIMENSION) 1, TRUE);
+  outptr = * (*cinfo->mem->access_virt_sarray) ((j_common_ptr) cinfo,
+    dest->whole_image, dest->cur_output_row, (JDIMENSION) 1, TRUE);
   dest->cur_output_row++;
 
   /* Transfer data.  Note destination values must be in BGR order
    * (even though Microsoft's own documents say the opposite).
    */
   inptr = dest->pub.buffer[0];
-  outptr = image_ptr[0];
   for (col = cinfo->output_width; col > 0; col--) {
     outptr[2] = *inptr++;	/* can omit GETJSAMPLE() safely */
     outptr[1] = *inptr++;
@@ -109,20 +106,17 @@ put_gray_rows (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo,
 /* This version is for grayscale OR quantized color output */
 {
   bmp_dest_ptr dest = (bmp_dest_ptr) dinfo;
-  JSAMPARRAY image_ptr;
   register JSAMPROW inptr, outptr;
   register JDIMENSION col;
   int pad;
 
   /* Access next row in virtual array */
-  image_ptr = (*cinfo->mem->access_virt_sarray)
-    ((j_common_ptr) cinfo, dest->whole_image,
-     dest->cur_output_row, (JDIMENSION) 1, TRUE);
+  outptr = * (*cinfo->mem->access_virt_sarray) ((j_common_ptr) cinfo,
+    dest->whole_image, dest->cur_output_row, (JDIMENSION) 1, TRUE);
   dest->cur_output_row++;
 
   /* Transfer data. */
   inptr = dest->pub.buffer[0];
-  outptr = image_ptr[0];
   for (col = cinfo->output_width; col > 0; col--) {
     *outptr++ = *inptr++;	/* can omit GETJSAMPLE() safely */
   }
@@ -160,10 +154,10 @@ write_bmp_header (j_decompress_ptr cinfo, bmp_dest_ptr dest)
 {
   char bmpfileheader[14];
   char bmpinfoheader[40];
-#define PUT_2B(array,offset,value)  \
+#define PUT_2B(array, offset, value)  \
 	(array[offset] = (char) ((value) & 0xFF), \
 	 array[offset+1] = (char) (((value) >> 8) & 0xFF))
-#define PUT_4B(array,offset,value)  \
+#define PUT_4B(array, offset, value)  \
 	(array[offset] = (char) ((value) & 0xFF), \
 	 array[offset+1] = (char) (((value) >> 8) & 0xFF), \
 	 array[offset+2] = (char) (((value) >> 16) & 0xFF), \
@@ -328,13 +322,13 @@ write_colormap (j_decompress_ptr cinfo, bmp_dest_ptr dest,
 	putc(0, outfile);
     }
   }
-  /* Pad colormap with zeros to ensure specified number of colormap entries */ 
+  /* Pad colormap to ensure specified number of colormap entries */ 
   if (i > map_colors)
     ERREXIT1(cinfo, JERR_TOO_MANY_COLORS, i);
   for (; i < map_colors; i++) {
-    putc(0, outfile);
-    putc(0, outfile);
-    putc(0, outfile);
+    putc(CENTERJSAMPLE, outfile);
+    putc(CENTERJSAMPLE, outfile);
+    putc(CENTERJSAMPLE, outfile);
     if (map_entry_size == 4)
       putc(0, outfile);
   }
@@ -346,7 +340,6 @@ finish_output_bmp (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo)
 {
   bmp_dest_ptr dest = (bmp_dest_ptr) dinfo;
   register FILE * outfile = dest->pub.output_file;
-  JSAMPARRAY image_ptr;
   register JSAMPROW data_ptr;
   JDIMENSION row;
   register JDIMENSION col;
@@ -365,9 +358,8 @@ finish_output_bmp (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo)
       progress->pub.pass_limit = (long) cinfo->output_height;
       (*progress->pub.progress_monitor) ((j_common_ptr) cinfo);
     }
-    image_ptr = (*cinfo->mem->access_virt_sarray)
-      ((j_common_ptr) cinfo, dest->whole_image, row-1, (JDIMENSION) 1, FALSE);
-    data_ptr = image_ptr[0];
+    data_ptr = * (*cinfo->mem->access_virt_sarray) ((j_common_ptr) cinfo,
+      dest->whole_image, row - 1, (JDIMENSION) 1, FALSE);
     for (col = dest->row_width; col > 0; col--) {
       putc(GETJSAMPLE(*data_ptr), outfile);
       data_ptr++;
@@ -394,21 +386,23 @@ jinit_write_bmp (j_decompress_ptr cinfo, boolean is_os2)
   JDIMENSION row_width;
 
   /* Create module interface object, fill in method pointers */
-  dest = (bmp_dest_ptr)
-      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-				  SIZEOF(bmp_dest_struct));
+  dest = (bmp_dest_ptr) (*cinfo->mem->alloc_small)
+    ((j_common_ptr) cinfo, JPOOL_IMAGE, SIZEOF(bmp_dest_struct));
   dest->pub.start_output = start_output_bmp;
   dest->pub.finish_output = finish_output_bmp;
   dest->is_os2 = is_os2;
 
-  if (cinfo->out_color_space == JCS_GRAYSCALE) {
+  switch (cinfo->out_color_space) {
+  case JCS_GRAYSCALE:
     dest->pub.put_pixel_rows = put_gray_rows;
-  } else if (cinfo->out_color_space == JCS_RGB) {
+    break;
+  case JCS_RGB:
     if (cinfo->quantize_colors)
       dest->pub.put_pixel_rows = put_gray_rows;
     else
       dest->pub.put_pixel_rows = put_pixel_rows;
-  } else {
+    break;
+  default:
     ERREXIT(cinfo, JERR_BMP_COLORSPACE);
   }
 

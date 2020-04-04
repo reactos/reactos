@@ -150,7 +150,7 @@ static void test_version_flag_versus_aw(void)
             if (SUCCEEDED(hr))
             {
                 ok(pUnknown == (IUnknown*)pStiW, "created interface was not IID_IStillImageW\n");
-                IUnknown_Release((IUnknown*)pUnknown);
+                IUnknown_Release(pUnknown);
             }
             IUnknown_Release((IUnknown*)pStiW);
         }

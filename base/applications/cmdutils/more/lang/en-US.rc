@@ -4,7 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Displays data page-by-page on the screen.\n\n\
   MORE < [Drive:][Path]File name\n\
-  Command | MORE \n\
+  Command | MORE\n\
   MORE [Drive:][Path]File name\n\n\
   [Drive:][Path]File name    A file, whose content shall be displayed.\n\
   Command\t\t     A command, whose output shall be displayed.\n\n\

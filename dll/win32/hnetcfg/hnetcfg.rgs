@@ -25,6 +25,21 @@ HKCR
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
             ProgId = s 'HNetCfg.FwPolicy2'
         }
+        '{2C5BC43E-3369-4C33-AB0C-BE9469677AF4}' = s 'HNetCfg.FwRule'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'HNetCfg.FwRule'
+        }
+        '{9D745ED8-C514-4D1D-BF42-751FED2D5AC7}' = s 'HNetCfg.FwProduct'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'HNetCfg.FwProduct'
+        }
+        '{CC19079B-8272-4D73-BB70-CDB533527B61}' = s 'HNetCfg.FwProducts'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'HNetCfg.FwProducts'
+        }
     }
     'HNetCfg.FwMgr' = s 'HNetCfg.FwMgr'
     {
@@ -41,5 +56,17 @@ HKCR
     'HNetCfg.FwPolicy2' = s 'HNetCfg.FwPolicy2'
     {
         CLSID = s '{E2B3C97F-6AE1-41AC-817A-F6F92166D7DD}'
+    }
+    'HNetCfg.FwRule' = s 'HNetCfg.FwRule'
+    {
+        CLSID = s '{2C5BC43E-3369-4C33-AB0C-BE9469677AF4}'
+    }
+    'HNetCfg.FwProduct' = s 'HNetCfg.FwProduct'
+    {
+        CLSID = s '{9D745ED8-C514-4D1D-BF42-751FED2D5AC7}'
+    }
+    'HNetCfg.FwProducts' = s 'HNetCfg.FwProducts'
+    {
+        CLSID = s '{CC19079B-8272-4D73-BB70-CDB533527B61}'
     }
 }

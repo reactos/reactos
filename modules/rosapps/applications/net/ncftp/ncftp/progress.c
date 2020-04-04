@@ -209,7 +209,7 @@ PrStatBar(const FTPCIPtr cip, int mode)
 	static double uTotal, uMult;
 	const char *stall;
 	char localName[80];
-	char line[128];
+	char line[134];
 	int i;
 
 	switch (mode) {

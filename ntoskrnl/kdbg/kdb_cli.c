@@ -133,6 +133,179 @@ extern volatile ULONG KdpDmesgCurrentPosition;
 extern volatile ULONG KdpDmesgFreeBytes;
 extern volatile ULONG KdbDmesgTotalWritten;
 
+STRING KdbPromptString = RTL_CONSTANT_STRING("kdb:> ");
+
+//
+// Debug Filter Component Table
+//
+static struct
+{
+    PCSTR Name;
+    ULONG Id;
+}
+ComponentTable[] =
+{
+//
+// Default components
+//
+    { "WIN2000", MAXULONG          },
+    { "DEFAULT", DPFLTR_DEFAULT_ID },
+//
+// Standard components
+//
+    { "SYSTEM",         DPFLTR_SYSTEM_ID        },
+    { "SMSS",           DPFLTR_SMSS_ID          },
+    { "SETUP",          DPFLTR_SETUP_ID         },
+    { "NTFS",           DPFLTR_NTFS_ID          },
+    { "FSTUB",          DPFLTR_FSTUB_ID         },
+    { "CRASHDUMP",      DPFLTR_CRASHDUMP_ID     },
+    { "CDAUDIO",        DPFLTR_CDAUDIO_ID       },
+    { "CDROM",          DPFLTR_CDROM_ID         },
+    { "CLASSPNP",       DPFLTR_CLASSPNP_ID      },
+    { "DISK",           DPFLTR_DISK_ID          },
+    { "REDBOOK",        DPFLTR_REDBOOK_ID       },
+    { "STORPROP",       DPFLTR_STORPROP_ID      },
+    { "SCSIPORT",       DPFLTR_SCSIPORT_ID      },
+    { "SCSIMINIPORT",   DPFLTR_SCSIMINIPORT_ID  },
+    { "CONFIG",         DPFLTR_CONFIG_ID        },
+    { "I8042PRT",       DPFLTR_I8042PRT_ID      },
+    { "SERMOUSE",       DPFLTR_SERMOUSE_ID      },
+    { "LSERMOUS",       DPFLTR_LSERMOUS_ID      },
+    { "KBDHID",         DPFLTR_KBDHID_ID        },
+    { "MOUHID",         DPFLTR_MOUHID_ID        },
+    { "KBDCLASS",       DPFLTR_KBDCLASS_ID      },
+    { "MOUCLASS",       DPFLTR_MOUCLASS_ID      },
+    { "TWOTRACK",       DPFLTR_TWOTRACK_ID      },
+    { "WMILIB",         DPFLTR_WMILIB_ID        },
+    { "ACPI",           DPFLTR_ACPI_ID          },
+    { "AMLI",           DPFLTR_AMLI_ID          },
+    { "HALIA64",        DPFLTR_HALIA64_ID       },
+    { "VIDEO",          DPFLTR_VIDEO_ID         },
+    { "SVCHOST",        DPFLTR_SVCHOST_ID       },
+    { "VIDEOPRT",       DPFLTR_VIDEOPRT_ID      },
+    { "TCPIP",          DPFLTR_TCPIP_ID         },
+    { "DMSYNTH",        DPFLTR_DMSYNTH_ID       },
+    { "NTOSPNP",        DPFLTR_NTOSPNP_ID       },
+    { "FASTFAT",        DPFLTR_FASTFAT_ID       },
+    { "SAMSS",          DPFLTR_SAMSS_ID         },
+    { "PNPMGR",         DPFLTR_PNPMGR_ID        },
+    { "NETAPI",         DPFLTR_NETAPI_ID        },
+    { "SCSERVER",       DPFLTR_SCSERVER_ID      },
+    { "SCCLIENT",       DPFLTR_SCCLIENT_ID      },
+    { "SERIAL",         DPFLTR_SERIAL_ID        },
+    { "SERENUM",        DPFLTR_SERENUM_ID       },
+    { "UHCD",           DPFLTR_UHCD_ID          },
+    { "RPCPROXY",       DPFLTR_RPCPROXY_ID      },
+    { "AUTOCHK",        DPFLTR_AUTOCHK_ID       },
+    { "DCOMSS",         DPFLTR_DCOMSS_ID        },
+    { "UNIMODEM",       DPFLTR_UNIMODEM_ID      },
+    { "SIS",            DPFLTR_SIS_ID           },
+    { "FLTMGR",         DPFLTR_FLTMGR_ID        },
+    { "WMICORE",        DPFLTR_WMICORE_ID       },
+    { "BURNENG",        DPFLTR_BURNENG_ID       },
+    { "IMAPI",          DPFLTR_IMAPI_ID         },
+    { "SXS",            DPFLTR_SXS_ID           },
+    { "FUSION",         DPFLTR_FUSION_ID        },
+    { "IDLETASK",       DPFLTR_IDLETASK_ID      },
+    { "SOFTPCI",        DPFLTR_SOFTPCI_ID       },
+    { "TAPE",           DPFLTR_TAPE_ID          },
+    { "MCHGR",          DPFLTR_MCHGR_ID         },
+    { "IDEP",           DPFLTR_IDEP_ID          },
+    { "PCIIDE",         DPFLTR_PCIIDE_ID        },
+    { "FLOPPY",         DPFLTR_FLOPPY_ID        },
+    { "FDC",            DPFLTR_FDC_ID           },
+    { "TERMSRV",        DPFLTR_TERMSRV_ID       },
+    { "W32TIME",        DPFLTR_W32TIME_ID       },
+    { "PREFETCHER",     DPFLTR_PREFETCHER_ID    },
+    { "RSFILTER",       DPFLTR_RSFILTER_ID      },
+    { "FCPORT",         DPFLTR_FCPORT_ID        },
+    { "PCI",            DPFLTR_PCI_ID           },
+    { "DMIO",           DPFLTR_DMIO_ID          },
+    { "DMCONFIG",       DPFLTR_DMCONFIG_ID      },
+    { "DMADMIN",        DPFLTR_DMADMIN_ID       },
+    { "WSOCKTRANSPORT", DPFLTR_WSOCKTRANSPORT_ID },
+    { "VSS",            DPFLTR_VSS_ID           },
+    { "PNPMEM",         DPFLTR_PNPMEM_ID        },
+    { "PROCESSOR",      DPFLTR_PROCESSOR_ID     },
+    { "DMSERVER",       DPFLTR_DMSERVER_ID      },
+    { "SR",             DPFLTR_SR_ID            },
+    { "INFINIBAND",     DPFLTR_INFINIBAND_ID    },
+    { "IHVDRIVER",      DPFLTR_IHVDRIVER_ID     },
+    { "IHVVIDEO",       DPFLTR_IHVVIDEO_ID      },
+    { "IHVAUDIO",       DPFLTR_IHVAUDIO_ID      },
+    { "IHVNETWORK",     DPFLTR_IHVNETWORK_ID    },
+    { "IHVSTREAMING",   DPFLTR_IHVSTREAMING_ID  },
+    { "IHVBUS",         DPFLTR_IHVBUS_ID        },
+    { "HPS",            DPFLTR_HPS_ID           },
+    { "RTLTHREADPOOL",  DPFLTR_RTLTHREADPOOL_ID },
+    { "LDR",            DPFLTR_LDR_ID           },
+    { "TCPIP6",         DPFLTR_TCPIP6_ID        },
+    { "ISAPNP",         DPFLTR_ISAPNP_ID        },
+    { "SHPC",           DPFLTR_SHPC_ID          },
+    { "STORPORT",       DPFLTR_STORPORT_ID      },
+    { "STORMINIPORT",   DPFLTR_STORMINIPORT_ID  },
+    { "PRINTSPOOLER",   DPFLTR_PRINTSPOOLER_ID  },
+    { "VSSDYNDISK",     DPFLTR_VSSDYNDISK_ID    },
+    { "VERIFIER",       DPFLTR_VERIFIER_ID      },
+    { "VDS",            DPFLTR_VDS_ID           },
+    { "VDSBAS",         DPFLTR_VDSBAS_ID        },
+    { "VDSDYN",         DPFLTR_VDSDYN_ID        },  // Specified in Vista+
+    { "VDSDYNDR",       DPFLTR_VDSDYNDR_ID      },
+    { "VDSLDR",         DPFLTR_VDSLDR_ID        },  // Specified in Vista+
+    { "VDSUTIL",        DPFLTR_VDSUTIL_ID       },
+    { "DFRGIFC",        DPFLTR_DFRGIFC_ID       },
+    { "MM",             DPFLTR_MM_ID            },
+    { "DFSC",           DPFLTR_DFSC_ID          },
+    { "WOW64",          DPFLTR_WOW64_ID         },
+//
+// Components specified in Vista+, some of which we also use in ReactOS
+//
+    { "ALPC",           DPFLTR_ALPC_ID          },
+    { "WDI",            DPFLTR_WDI_ID           },
+    { "PERFLIB",        DPFLTR_PERFLIB_ID       },
+    { "KTM",            DPFLTR_KTM_ID           },
+    { "IOSTRESS",       DPFLTR_IOSTRESS_ID      },
+    { "HEAP",           DPFLTR_HEAP_ID          },
+    { "WHEA",           DPFLTR_WHEA_ID          },
+    { "USERGDI",        DPFLTR_USERGDI_ID       },
+    { "MMCSS",          DPFLTR_MMCSS_ID         },
+    { "TPM",            DPFLTR_TPM_ID           },
+    { "THREADORDER",    DPFLTR_THREADORDER_ID   },
+    { "ENVIRON",        DPFLTR_ENVIRON_ID       },
+    { "EMS",            DPFLTR_EMS_ID           },
+    { "WDT",            DPFLTR_WDT_ID           },
+    { "FVEVOL",         DPFLTR_FVEVOL_ID        },
+    { "NDIS",           DPFLTR_NDIS_ID          },
+    { "NVCTRACE",       DPFLTR_NVCTRACE_ID      },
+    { "LUAFV",          DPFLTR_LUAFV_ID         },
+    { "APPCOMPAT",      DPFLTR_APPCOMPAT_ID     },
+    { "USBSTOR",        DPFLTR_USBSTOR_ID       },
+    { "SBP2PORT",       DPFLTR_SBP2PORT_ID      },
+    { "COVERAGE",       DPFLTR_COVERAGE_ID      },
+    { "CACHEMGR",       DPFLTR_CACHEMGR_ID      },
+    { "MOUNTMGR",       DPFLTR_MOUNTMGR_ID      },
+    { "CFR",            DPFLTR_CFR_ID           },
+    { "TXF",            DPFLTR_TXF_ID           },
+    { "KSECDD",         DPFLTR_KSECDD_ID        },
+    { "FLTREGRESS",     DPFLTR_FLTREGRESS_ID    },
+    { "MPIO",           DPFLTR_MPIO_ID          },
+    { "MSDSM",          DPFLTR_MSDSM_ID         },
+    { "UDFS",           DPFLTR_UDFS_ID          },
+    { "PSHED",          DPFLTR_PSHED_ID         },
+    { "STORVSP",        DPFLTR_STORVSP_ID       },
+    { "LSASS",          DPFLTR_LSASS_ID         },
+    { "SSPICLI",        DPFLTR_SSPICLI_ID       },
+    { "CNG",            DPFLTR_CNG_ID           },
+    { "EXFAT",          DPFLTR_EXFAT_ID         },
+    { "FILETRACE",      DPFLTR_FILETRACE_ID     },
+    { "XSAVE",          DPFLTR_XSAVE_ID         },
+    { "SE",             DPFLTR_SE_ID            },
+    { "DRIVEEXTENDER",  DPFLTR_DRIVEEXTENDER_ID },
+};
+
+//
+// Command Table
+//
 static const struct
 {
     PCHAR Name;
@@ -144,19 +317,19 @@ static const struct
     { NULL, NULL, "Data", NULL },
     { "?", "? expression", "Evaluate expression.", KdbpCmdEvalExpression },
     { "disasm", "disasm [address] [L count]", "Disassemble count instructions at address.", KdbpCmdDisassembleX },
-    { "x", "x [address] [L count]", "Display count dwords, starting at addr.", KdbpCmdDisassembleX },
+    { "x", "x [address] [L count]", "Display count dwords, starting at address.", KdbpCmdDisassembleX },
     { "regs", "regs", "Display general purpose registers.", KdbpCmdRegs },
-    { "cregs", "cregs", "Display control registers.", KdbpCmdRegs },
+    { "cregs", "cregs", "Display control, descriptor table and task segment registers.", KdbpCmdRegs },
     { "sregs", "sregs", "Display status registers.", KdbpCmdRegs },
     { "dregs", "dregs", "Display debug registers.", KdbpCmdRegs },
-    { "bt", "bt [*frameaddr|thread id]", "Prints current backtrace or from given frame addr", KdbpCmdBackTrace },
+    { "bt", "bt [*frameaddr|thread id]", "Prints current backtrace or from given frame address.", KdbpCmdBackTrace },
 #ifdef __ROS_DWARF__
-    { "dt", "dt [mod] [type] [addr]", "Print a struct.  Addr is optional.", KdbpCmdPrintStruct },
+    { "dt", "dt [mod] [type] [addr]", "Print a struct. The address is optional.", KdbpCmdPrintStruct },
 #endif
 
     /* Flow control */
     { NULL, NULL, "Flow control", NULL },
-    { "cont", "cont", "Continue execution (leave debugger)", KdbpCmdContinue },
+    { "cont", "cont", "Continue execution (leave debugger).", KdbpCmdContinue },
     { "step", "step [count]", "Execute single instructions, stepping into interrupts.", KdbpCmdStep },
     { "next", "next [count]", "Execute single instructions, skipping calls and reps.", KdbpCmdStep },
     { "bl", "bl", "List breakpoints.", KdbpCmdBreakPointList },
@@ -174,17 +347,17 @@ static const struct
     /* System information */
     { NULL, NULL, "System info", NULL },
     { "mod", "mod [address]", "List all modules or the one containing address.", KdbpCmdMod },
-    { "gdt", "gdt", "Display global descriptor table.", KdbpCmdGdtLdtIdt },
-    { "ldt", "ldt", "Display local descriptor table.", KdbpCmdGdtLdtIdt },
-    { "idt", "idt", "Display interrupt descriptor table.", KdbpCmdGdtLdtIdt },
-    { "pcr", "pcr", "Display processor control region.", KdbpCmdPcr },
-    { "tss", "tss", "Display task state segment.", KdbpCmdTss },
+    { "gdt", "gdt", "Display the global descriptor table.", KdbpCmdGdtLdtIdt },
+    { "ldt", "ldt", "Display the local descriptor table.", KdbpCmdGdtLdtIdt },
+    { "idt", "idt", "Display the interrupt descriptor table.", KdbpCmdGdtLdtIdt },
+    { "pcr", "pcr", "Display the processor control region.", KdbpCmdPcr },
+    { "tss", "tss [selector|*descaddr]", "Display the current task state segment, or the one specified by its selector number or descriptor address.", KdbpCmdTss },
 
     /* Others */
     { NULL, NULL, "Others", NULL },
     { "bugcheck", "bugcheck", "Bugchecks the system.", KdbpCmdBugCheck },
     { "reboot", "reboot", "Reboots the system.", KdbpCmdReboot},
-    { "filter", "filter [error|warning|trace|info|level]+|-[componentname|default]", "Enable/disable debug channels", KdbpCmdFilter },
+    { "filter", "filter [error|warning|trace|info|level]+|-[componentname|default]", "Enable/disable debug channels.", KdbpCmdFilter },
     { "set", "set [var] [value]", "Sets var to value or displays value of var.", KdbpCmdSet },
     { "dmesg", "dmesg", "Display debug messages on screen, with navigation on pages.", KdbpCmdDmesg },
     { "kmsg", "kmsg", "Kernel dmesg. Alias for dmesg.", KdbpCmdDmesg },
@@ -194,193 +367,11 @@ static const struct
     { "!poolfind", "!poolfind Tag [Pool]", "Search for pool tag allocations.", ExpKdbgExtPoolFind },
     { "!filecache", "!filecache", "Display cache usage.", ExpKdbgExtFileCache },
     { "!defwrites", "!defwrites", "Display cache write values.", ExpKdbgExtDefWrites },
-    { "!irpfind", "!irpfind [Pool [startaddress [criteria data]]]", "Lists IRPs potentially matching criteria", ExpKdbgExtIrpFind },
-    { "!handle", "!handle [Handle]", "Displays info about handles", ExpKdbgExtHandle },
+    { "!irpfind", "!irpfind [Pool [startaddress [criteria data]]]", "Lists IRPs potentially matching criteria.", ExpKdbgExtIrpFind },
+    { "!handle", "!handle [Handle]", "Displays info about handles.", ExpKdbgExtHandle },
 };
 
 /* FUNCTIONS *****************************************************************/
-
-/*!\brief Transform a component name to an integer
- *
- * \param ComponentName  The name of the component.
- * \param ComponentId    Receives the component id on success.
- *
- * \retval TRUE   Success.
- * \retval FALSE  Failure.
- */
-static BOOLEAN
-KdbpGetComponentId(
-    IN  PCCH ComponentName,
-    OUT PULONG ComponentId)
-{
-    ULONG i;
-
-    static struct
-    {
-        PCCH Name;
-        ULONG Id;
-    }
-    ComponentTable[] =
-    {
-        { "DEFAULT", MAXULONG },
-        { "SYSTEM", DPFLTR_SYSTEM_ID },
-        { "SMSS", DPFLTR_SMSS_ID },
-        { "SETUP", DPFLTR_SETUP_ID },
-        { "NTFS", DPFLTR_NTFS_ID },
-        { "FSTUB", DPFLTR_FSTUB_ID },
-        { "CRASHDUMP", DPFLTR_CRASHDUMP_ID },
-        { "CDAUDIO", DPFLTR_CDAUDIO_ID },
-        { "CDROM", DPFLTR_CDROM_ID },
-        { "CLASSPNP", DPFLTR_CLASSPNP_ID },
-        { "DISK", DPFLTR_DISK_ID },
-        { "REDBOOK", DPFLTR_REDBOOK_ID },
-        { "STORPROP", DPFLTR_STORPROP_ID },
-        { "SCSIPORT", DPFLTR_SCSIPORT_ID },
-        { "SCSIMINIPORT", DPFLTR_SCSIMINIPORT_ID },
-        { "CONFIG", DPFLTR_CONFIG_ID },
-        { "I8042PRT", DPFLTR_I8042PRT_ID },
-        { "SERMOUSE", DPFLTR_SERMOUSE_ID },
-        { "LSERMOUS", DPFLTR_LSERMOUS_ID },
-        { "KBDHID", DPFLTR_KBDHID_ID },
-        { "MOUHID", DPFLTR_MOUHID_ID },
-        { "KBDCLASS", DPFLTR_KBDCLASS_ID },
-        { "MOUCLASS", DPFLTR_MOUCLASS_ID },
-        { "TWOTRACK", DPFLTR_TWOTRACK_ID },
-        { "WMILIB", DPFLTR_WMILIB_ID },
-        { "ACPI", DPFLTR_ACPI_ID },
-        { "AMLI", DPFLTR_AMLI_ID },
-        { "HALIA64", DPFLTR_HALIA64_ID },
-        { "VIDEO", DPFLTR_VIDEO_ID },
-        { "SVCHOST", DPFLTR_SVCHOST_ID },
-        { "VIDEOPRT", DPFLTR_VIDEOPRT_ID },
-        { "TCPIP", DPFLTR_TCPIP_ID },
-        { "DMSYNTH", DPFLTR_DMSYNTH_ID },
-        { "NTOSPNP", DPFLTR_NTOSPNP_ID },
-        { "FASTFAT", DPFLTR_FASTFAT_ID },
-        { "SAMSS", DPFLTR_SAMSS_ID },
-        { "PNPMGR", DPFLTR_PNPMGR_ID },
-        { "NETAPI", DPFLTR_NETAPI_ID },
-        { "SCSERVER", DPFLTR_SCSERVER_ID },
-        { "SCCLIENT", DPFLTR_SCCLIENT_ID },
-        { "SERIAL", DPFLTR_SERIAL_ID },
-        { "SERENUM", DPFLTR_SERENUM_ID },
-        { "UHCD", DPFLTR_UHCD_ID },
-        { "RPCPROXY", DPFLTR_RPCPROXY_ID },
-        { "AUTOCHK", DPFLTR_AUTOCHK_ID },
-        { "DCOMSS", DPFLTR_DCOMSS_ID },
-        { "UNIMODEM", DPFLTR_UNIMODEM_ID },
-        { "SIS", DPFLTR_SIS_ID },
-        { "FLTMGR", DPFLTR_FLTMGR_ID },
-        { "WMICORE", DPFLTR_WMICORE_ID },
-        { "BURNENG", DPFLTR_BURNENG_ID },
-        { "IMAPI", DPFLTR_IMAPI_ID },
-        { "SXS", DPFLTR_SXS_ID },
-        { "FUSION", DPFLTR_FUSION_ID },
-        { "IDLETASK", DPFLTR_IDLETASK_ID },
-        { "SOFTPCI", DPFLTR_SOFTPCI_ID },
-        { "TAPE", DPFLTR_TAPE_ID },
-        { "MCHGR", DPFLTR_MCHGR_ID },
-        { "IDEP", DPFLTR_IDEP_ID },
-        { "PCIIDE", DPFLTR_PCIIDE_ID },
-        { "FLOPPY", DPFLTR_FLOPPY_ID },
-        { "FDC", DPFLTR_FDC_ID },
-        { "TERMSRV", DPFLTR_TERMSRV_ID },
-        { "W32TIME", DPFLTR_W32TIME_ID },
-        { "PREFETCHER", DPFLTR_PREFETCHER_ID },
-        { "RSFILTER", DPFLTR_RSFILTER_ID },
-        { "FCPORT", DPFLTR_FCPORT_ID },
-        { "PCI", DPFLTR_PCI_ID },
-        { "DMIO", DPFLTR_DMIO_ID },
-        { "DMCONFIG", DPFLTR_DMCONFIG_ID },
-        { "DMADMIN", DPFLTR_DMADMIN_ID },
-        { "WSOCKTRANSPORT", DPFLTR_WSOCKTRANSPORT_ID },
-        { "VSS", DPFLTR_VSS_ID },
-        { "PNPMEM", DPFLTR_PNPMEM_ID },
-        { "PROCESSOR", DPFLTR_PROCESSOR_ID },
-        { "DMSERVER", DPFLTR_DMSERVER_ID },
-        { "SR", DPFLTR_SR_ID },
-        { "INFINIBAND", DPFLTR_INFINIBAND_ID },
-        { "IHVDRIVER", DPFLTR_IHVDRIVER_ID },
-        { "IHVVIDEO", DPFLTR_IHVVIDEO_ID },
-        { "IHVAUDIO", DPFLTR_IHVAUDIO_ID },
-        { "IHVNETWORK", DPFLTR_IHVNETWORK_ID },
-        { "IHVSTREAMING", DPFLTR_IHVSTREAMING_ID },
-        { "IHVBUS", DPFLTR_IHVBUS_ID },
-        { "HPS", DPFLTR_HPS_ID },
-        { "RTLTHREADPOOL", DPFLTR_RTLTHREADPOOL_ID },
-        { "LDR", DPFLTR_LDR_ID },
-        { "TCPIP6", DPFLTR_TCPIP6_ID },
-        { "ISAPNP", DPFLTR_ISAPNP_ID },
-        { "SHPC", DPFLTR_SHPC_ID },
-        { "STORPORT", DPFLTR_STORPORT_ID },
-        { "STORMINIPORT", DPFLTR_STORMINIPORT_ID },
-        { "PRINTSPOOLER", DPFLTR_PRINTSPOOLER_ID },
-        { "VSSDYNDISK", DPFLTR_VSSDYNDISK_ID },
-        { "VERIFIER", DPFLTR_VERIFIER_ID },
-        { "VDS", DPFLTR_VDS_ID },
-        { "VDSBAS", DPFLTR_VDSBAS_ID },
-        { "VDSDYN", DPFLTR_VDSDYN_ID },
-        { "VDSDYNDR", DPFLTR_VDSDYNDR_ID },
-        { "VDSLDR", DPFLTR_VDSLDR_ID },
-        { "VDSUTIL", DPFLTR_VDSUTIL_ID },
-        { "DFRGIFC", DPFLTR_DFRGIFC_ID },
-        { "MM", DPFLTR_MM_ID },
-        { "DFSC", DPFLTR_DFSC_ID },
-        { "WOW64", DPFLTR_WOW64_ID },
-        { "ALPC", DPFLTR_ALPC_ID },
-        { "WDI", DPFLTR_WDI_ID },
-        { "PERFLIB", DPFLTR_PERFLIB_ID },
-        { "KTM", DPFLTR_KTM_ID },
-        { "IOSTRESS", DPFLTR_IOSTRESS_ID },
-        { "HEAP", DPFLTR_HEAP_ID },
-        { "WHEA", DPFLTR_WHEA_ID },
-        { "USERGDI", DPFLTR_USERGDI_ID },
-        { "MMCSS", DPFLTR_MMCSS_ID },
-        { "TPM", DPFLTR_TPM_ID },
-        { "THREADORDER", DPFLTR_THREADORDER_ID },
-        { "ENVIRON", DPFLTR_ENVIRON_ID },
-        { "EMS", DPFLTR_EMS_ID },
-        { "WDT", DPFLTR_WDT_ID },
-        { "FVEVOL", DPFLTR_FVEVOL_ID },
-        { "NDIS", DPFLTR_NDIS_ID },
-        { "NVCTRACE", DPFLTR_NVCTRACE_ID },
-        { "LUAFV", DPFLTR_LUAFV_ID },
-        { "APPCOMPAT", DPFLTR_APPCOMPAT_ID },
-        { "USBSTOR", DPFLTR_USBSTOR_ID },
-        { "SBP2PORT", DPFLTR_SBP2PORT_ID },
-        { "COVERAGE", DPFLTR_COVERAGE_ID },
-        { "CACHEMGR", DPFLTR_CACHEMGR_ID },
-        { "MOUNTMGR", DPFLTR_MOUNTMGR_ID },
-        { "CFR", DPFLTR_CFR_ID },
-        { "TXF", DPFLTR_TXF_ID },
-        { "KSECDD", DPFLTR_KSECDD_ID },
-        { "FLTREGRESS", DPFLTR_FLTREGRESS_ID },
-        { "MPIO", DPFLTR_MPIO_ID },
-        { "MSDSM", DPFLTR_MSDSM_ID },
-        { "UDFS", DPFLTR_UDFS_ID },
-        { "PSHED", DPFLTR_PSHED_ID },
-        { "STORVSP", DPFLTR_STORVSP_ID },
-        { "LSASS", DPFLTR_LSASS_ID },
-        { "SSPICLI", DPFLTR_SSPICLI_ID },
-        { "CNG", DPFLTR_CNG_ID },
-        { "EXFAT", DPFLTR_EXFAT_ID },
-        { "FILETRACE", DPFLTR_FILETRACE_ID },
-        { "XSAVE", DPFLTR_XSAVE_ID },
-        { "SE", DPFLTR_SE_ID },
-        { "DRIVEEXTENDER", DPFLTR_DRIVEEXTENDER_ID },
-    };
-
-    for (i = 0; i < sizeof(ComponentTable) / sizeof(ComponentTable[0]); i++)
-    {
-        if (_stricmp(ComponentName, ComponentTable[i].Name) == 0)
-        {
-            *ComponentId = ComponentTable[i].Id;
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
 
 /*!\brief Evaluates an expression...
  *
@@ -466,7 +457,7 @@ KdbpCmdEvalExpression(
     }
 
     /* Evaluate the expression */
-    Ok = KdbpEvaluateExpression(Argv[1], sizeof("kdb:> ")-1 + (Argv[1]-Argv[0]), &Result);
+    Ok = KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result);
     if (Ok)
     {
         if (Result > 0x00000000ffffffffLL)
@@ -635,7 +626,34 @@ end:
 }
 #endif
 
-/*!\brief Display list of active debug channels
+/*!\brief Retrieves the component ID corresponding to a given component name.
+ *
+ * \param ComponentName  The name of the component.
+ * \param ComponentId    Receives the component id on success.
+ *
+ * \retval TRUE   Success.
+ * \retval FALSE  Failure.
+ */
+static BOOLEAN
+KdbpGetComponentId(
+    IN  PCSTR ComponentName,
+    OUT PULONG ComponentId)
+{
+    ULONG i;
+
+    for (i = 0; i < sizeof(ComponentTable) / sizeof(ComponentTable[0]); i++)
+    {
+        if (_stricmp(ComponentName, ComponentTable[i].Name) == 0)
+        {
+            *ComponentId = ComponentTable[i].Id;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/*!\brief Displays the list of active debug channels, or enable/disable debug channels.
  */
 static BOOLEAN
 KdbpCmdFilter(
@@ -645,26 +663,44 @@ KdbpCmdFilter(
     ULONG i, j, ComponentId, Level;
     ULONG set = DPFLTR_MASK, clear = DPFLTR_MASK;
     PCHAR pend;
-    LPCSTR opt, p;
+    PCSTR opt, p;
 
     static struct
     {
-        LPCSTR Name;
+        PCSTR Name;
         ULONG Level;
     }
     debug_classes[] =
     {
-        { "error", 1 << DPFLTR_ERROR_LEVEL },
+        { "error",   1 << DPFLTR_ERROR_LEVEL   },
         { "warning", 1 << DPFLTR_WARNING_LEVEL },
-        { "trace", 1 << DPFLTR_TRACE_LEVEL },
-        { "info", 1 << DPFLTR_INFO_LEVEL },
+        { "trace",   1 << DPFLTR_TRACE_LEVEL   },
+        { "info",    1 << DPFLTR_INFO_LEVEL    },
     };
+
+    if (Argc <= 1)
+    {
+        /* Display the list of available debug filter components */
+        KdbpPrint("REMARKS:\n"
+                  "- The 'WIN2000' system-wide debug filter component is used for DbgPrint()\n"
+                  "  messages without Component ID and Level.\n"
+                  "- The 'DEFAULT' debug filter component is used for DbgPrint() messages with\n"
+                  "  an unknown Component ID.\n\n");
+        KdbpPrint("The list of debug filter components currently available on your system is:\n\n");
+        KdbpPrint(" Component Name        Component ID\n"
+                  "================      ==============\n");
+        for (i = 0; i < sizeof(ComponentTable) / sizeof(ComponentTable[0]); i++)
+        {
+            KdbpPrint("%16s        0x%08lx\n", ComponentTable[i].Name, ComponentTable[i].Id);
+        }
+        return TRUE;
+    }
 
     for (i = 1; i < Argc; i++)
     {
         opt = Argv[i];
         p = opt + strcspn(opt, "+-");
-        if (!p[0]) p = opt; /* assume it's a debug channel name */
+        if (!p[0]) p = opt; /* Assume it's a debug channel name */
 
         if (p > opt)
         {
@@ -673,7 +709,7 @@ KdbpCmdFilter(
                 SIZE_T len = strlen(debug_classes[j].Name);
                 if (len != (p - opt))
                     continue;
-                if (_strnicmp(opt, debug_classes[j].Name, len) == 0) /* found it */
+                if (_strnicmp(opt, debug_classes[j].Name, len) == 0) /* Found it */
                 {
                     if (*p == '+')
                         set |= debug_classes[j].Level;
@@ -775,7 +811,7 @@ KdbpCmdDisassembleX(
     /* Evaluate the expression */
     if (Argc > 1)
     {
-        if (!KdbpEvaluateExpression(Argv[1], sizeof("kdb:> ")-1 + (Argv[1]-Argv[0]), &Result))
+        if (!KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result))
             return TRUE;
 
         if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
@@ -797,7 +833,7 @@ KdbpCmdDisassembleX(
         while (Count > 0)
         {
             if (!KdbSymPrintAddress((PVOID)Address, NULL))
-                KdbpPrint("<%x>:", Address);
+                KdbpPrint("<%08x>:", Address);
             else
                 KdbpPrint(":");
 
@@ -849,7 +885,7 @@ KdbpCmdRegs(
     ULONG Argc,
     PCHAR Argv[])
 {
-    PCONTEXT Tf = &KdbCurrentTrapFrame->Tf;
+    PKTRAP_FRAME Tf = &KdbCurrentTrapFrame->Tf;
     INT i;
     static const PCHAR EflagsBits[32] = { " CF", NULL, " PF", " BIT3", " AF", " BIT5",
                                           " ZF", " SF", " TF", " IF", " DF", " OF",
@@ -868,13 +904,14 @@ KdbpCmdRegs(
                   "   ESI  0x%08x   EDI  0x%08x\n"
                   "   EBP  0x%08x\n",
                   Tf->SegCs & 0xFFFF, Tf->Eip,
-                  Tf->SegSs, Tf->Esp,
+                  Tf->HardwareSegSs, Tf->HardwareEsp,
                   Tf->Eax, Tf->Ebx,
                   Tf->Ecx, Tf->Edx,
                   Tf->Esi, Tf->Edi,
                   Tf->Ebp);
-        KdbpPrint("EFLAGS  0x%08x ", Tf->EFlags);
 
+        /* Display the EFlags */
+        KdbpPrint("EFLAGS  0x%08x ", Tf->EFlags);
         for (i = 0; i < 32; i++)
         {
             if (i == 1)
@@ -894,14 +931,13 @@ KdbpCmdRegs(
                 KdbpPrint(EflagsBits[i]);
             }
         }
-
         KdbpPrint("\n");
     }
     else if (Argv[0][0] == 'c') /* cregs */
     {
         ULONG Cr0, Cr2, Cr3, Cr4;
         KDESCRIPTOR Gdtr = {0, 0, 0}, Idtr = {0, 0, 0};
-        USHORT Ldtr;
+        USHORT Ldtr, Tr;
         static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                            " WP", NULL, " AM", NULL, NULL, NULL, NULL, NULL,
@@ -911,19 +947,20 @@ KdbpCmdRegs(
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
+        /* Retrieve the control registers */
         Cr0 = KdbCurrentTrapFrame->Cr0;
         Cr2 = KdbCurrentTrapFrame->Cr2;
         Cr3 = KdbCurrentTrapFrame->Cr3;
         Cr4 = KdbCurrentTrapFrame->Cr4;
 
-        /* Get descriptor table regs */
+        /* Retrieve the descriptor table and task segment registers */
         Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
         Ldtr = Ke386GetLocalDescriptorTable();
         __sidt(&Idtr.Limit);
+        Tr = Ke386GetTr();
 
         /* Display the control registers */
         KdbpPrint("CR0  0x%08x ", Cr0);
-
         for (i = 0; i < 32; i++)
         {
             if (!Cr0Bits[i])
@@ -932,12 +969,12 @@ KdbpCmdRegs(
             if ((Cr0 & (1 << i)) != 0)
                 KdbpPrint(Cr0Bits[i]);
         }
+        KdbpPrint("\n");
 
-        KdbpPrint("\nCR2  0x%08x\n", Cr2);
+        KdbpPrint("CR2  0x%08x\n", Cr2);
         KdbpPrint("CR3  0x%08x  Pagedir-Base 0x%08x %s%s\n", Cr3, (Cr3 & 0xfffff000),
                   (Cr3 & (1 << 3)) ? " PWT" : "", (Cr3 & (1 << 4)) ? " PCD" : "" );
         KdbpPrint("CR4  0x%08x ", Cr4);
-
         for (i = 0; i < 32; i++)
         {
             if (!Cr4Bits[i])
@@ -946,11 +983,13 @@ KdbpCmdRegs(
             if ((Cr4 & (1 << i)) != 0)
                 KdbpPrint(Cr4Bits[i]);
         }
+        KdbpPrint("\n");
 
-        /* Display the descriptor table regs */
-        KdbpPrint("\nGDTR  Base 0x%08x  Size 0x%04x\n", Gdtr.Base, Gdtr.Limit);
-        KdbpPrint("LDTR  0x%04x\n", Ldtr);
-        KdbpPrint("IDTR  Base 0x%08x  Size 0x%04x\n", Idtr.Base, Idtr.Limit);
+        /* Display the descriptor table and task segment registers */
+        KdbpPrint("GDTR Base 0x%08x  Size 0x%04x\n", Gdtr.Base, Gdtr.Limit);
+        KdbpPrint("LDTR 0x%04x\n", Ldtr);
+        KdbpPrint("IDTR Base 0x%08x  Size 0x%04x\n", Idtr.Base, Idtr.Limit);
+        KdbpPrint("TR   0x%04x\n", Tr);
     }
     else if (Argv[0][0] == 's') /* sregs */
     {
@@ -966,7 +1005,7 @@ KdbpCmdRegs(
         KdbpPrint("GS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
                   Tf->SegGs, Tf->SegGs >> 3, (Tf->SegGs & (1 << 2)) ? 'L' : 'G', Tf->SegGs & 3);
         KdbpPrint("SS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                  Tf->SegSs, Tf->SegSs >> 3, (Tf->SegSs & (1 << 2)) ? 'L' : 'G', Tf->SegSs & 3);
+                  Tf->HardwareSegSs, Tf->HardwareSegSs >> 3, (Tf->HardwareSegSs & (1 << 2)) ? 'L' : 'G', Tf->HardwareSegSs & 3);
     }
     else /* dregs */
     {
@@ -984,84 +1023,117 @@ KdbpCmdRegs(
     return TRUE;
 }
 
-static BOOLEAN
-KdbpTrapFrameFromPrevTss(
-    PCONTEXT TrapFrame)
+static PKTSS
+KdbpRetrieveTss(
+    IN USHORT TssSelector,
+    OUT PULONG pType OPTIONAL,
+    IN PKDESCRIPTOR pGdtr OPTIONAL)
 {
-    ULONG_PTR Eip, Ebp;
     KDESCRIPTOR Gdtr;
     KGDTENTRY Desc;
-    USHORT Sel;
     PKTSS Tss;
 
-    Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
-    Sel = Ke386GetTr();
+    /* Retrieve the Global Descriptor Table (user-provided or system) */
+    if (pGdtr)
+        Gdtr = *pGdtr;
+    else
+        Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
 
-    if ((Sel & (sizeof(KGDTENTRY) - 1)) ||
-        (Sel < sizeof(KGDTENTRY)) ||
-        (Sel + sizeof(KGDTENTRY) - 1 > Gdtr.Limit))
-        return FALSE;
+    /* Check limits */
+    if ((TssSelector & (sizeof(KGDTENTRY) - 1)) ||
+        (TssSelector < sizeof(KGDTENTRY)) ||
+        (TssSelector + sizeof(KGDTENTRY) - 1 > Gdtr.Limit))
+    {
+        return NULL;
+    }
 
+    /* Retrieve the descriptor */
     if (!NT_SUCCESS(KdbpSafeReadMemory(&Desc,
-                                       (PVOID)(Gdtr.Base + Sel),
+                                       (PVOID)(Gdtr.Base + TssSelector),
                                        sizeof(KGDTENTRY))))
-        return FALSE;
+    {
+        return NULL;
+    }
 
-    if (Desc.HighWord.Bits.Type != 0xB)
-        return FALSE;
+    /* Check for TSS32(Avl) or TSS32(Busy) */
+    if (Desc.HighWord.Bits.Type != 9 && Desc.HighWord.Bits.Type != 11)
+    {
+        return NULL;
+    }
+    if (pType) *pType = Desc.HighWord.Bits.Type;
 
     Tss = (PKTSS)(ULONG_PTR)(Desc.BaseLow |
                              Desc.HighWord.Bytes.BaseMid << 16 |
                              Desc.HighWord.Bytes.BaseHi << 24);
 
-    if (!NT_SUCCESS(KdbpSafeReadMemory(&Sel,
+    return Tss;
+}
+
+FORCEINLINE BOOLEAN
+KdbpIsNestedTss(
+    IN USHORT TssSelector,
+    IN PKTSS Tss)
+{
+    USHORT Backlink;
+
+    if (!Tss)
+        return FALSE;
+
+    /* Retrieve the TSS Backlink */
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Backlink,
                                        (PVOID)&Tss->Backlink,
                                        sizeof(USHORT))))
+    {
         return FALSE;
+    }
 
-    if ((Sel & (sizeof(KGDTENTRY) - 1)) ||
-        (Sel < sizeof(KGDTENTRY)) ||
-        (Sel + sizeof(KGDTENTRY) - 1 > Gdtr.Limit))
+    return (Backlink != 0 && Backlink != TssSelector);
+}
+
+static BOOLEAN
+KdbpTrapFrameFromPrevTss(
+    IN OUT PKTRAP_FRAME TrapFrame,
+    OUT PUSHORT TssSelector,
+    IN OUT PKTSS* pTss,
+    IN PKDESCRIPTOR pGdtr)
+{
+    ULONG_PTR Eip, Ebp;
+    USHORT Backlink;
+    PKTSS Tss = *pTss;
+
+    /* Retrieve the TSS Backlink */
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Backlink,
+                                       (PVOID)&Tss->Backlink,
+                                       sizeof(USHORT))))
+    {
         return FALSE;
+    }
 
-    if (!NT_SUCCESS(KdbpSafeReadMemory(&Desc,
-                                       (PVOID)(Gdtr.Base + Sel),
-                                       sizeof(KGDTENTRY))))
+    /* Retrieve the parent TSS */
+    Tss = KdbpRetrieveTss(Backlink, NULL, pGdtr);
+    if (!Tss)
         return FALSE;
-
-    if (Desc.HighWord.Bits.Type != 0xB)
-        return FALSE;
-
-    Tss = (PKTSS)(ULONG_PTR)(Desc.BaseLow |
-                             Desc.HighWord.Bytes.BaseMid << 16 |
-                             Desc.HighWord.Bytes.BaseHi << 24);
 
     if (!NT_SUCCESS(KdbpSafeReadMemory(&Eip,
                                        (PVOID)&Tss->Eip,
                                        sizeof(ULONG_PTR))))
+    {
         return FALSE;
+    }
 
     if (!NT_SUCCESS(KdbpSafeReadMemory(&Ebp,
                                        (PVOID)&Tss->Ebp,
                                        sizeof(ULONG_PTR))))
+    {
         return FALSE;
+    }
 
+    /* Return the parent TSS and its trap frame */
+    *TssSelector = Backlink;
+    *pTss = Tss;
     TrapFrame->Eip = Eip;
     TrapFrame->Ebp = Ebp;
     return TRUE;
-}
-
-VOID __cdecl KiTrap02(VOID);
-VOID FASTCALL KiTrap03Handler(IN PKTRAP_FRAME);
-VOID __cdecl KiTrap08(VOID);
-VOID __cdecl KiTrap09(VOID);
-
-static BOOLEAN
-KdbpInNmiOrDoubleFaultHandler(
-    ULONG_PTR Address)
-{
-    return (Address > (ULONG_PTR)KiTrap02 && Address < (ULONG_PTR)KiTrap03Handler) ||
-           (Address > (ULONG_PTR)KiTrap08 && Address < (ULONG_PTR)KiTrap09);
 }
 
 /*!\brief Displays a backtrace.
@@ -1073,15 +1145,17 @@ KdbpCmdBackTrace(
 {
     ULONG ul;
     ULONGLONG Result = 0;
-    ULONG_PTR Frame = KdbCurrentTrapFrame->Tf.Ebp;
+    KTRAP_FRAME TrapFrame = KdbCurrentTrapFrame->Tf;
+    ULONG_PTR Frame = TrapFrame.Ebp;
     ULONG_PTR Address;
-    CONTEXT TrapFrame;
+    KDESCRIPTOR Gdtr;
+    USHORT TssSelector;
+    PKTSS Tss;
 
     if (Argc >= 2)
     {
         /* Check for [L count] part */
         ul = 0;
-
         if (strcmp(Argv[Argc-2], "L") == 0)
         {
             ul = strtoul(Argv[Argc-1], NULL, 0);
@@ -1108,7 +1182,7 @@ KdbpCmdBackTrace(
         Argc++;
     }
 
-    /* Check if frame addr or thread id is given. */
+    /* Check if a Frame Address or Thread ID is given */
     if (Argc > 1)
     {
         if (Argv[1][0] == '*')
@@ -1116,11 +1190,11 @@ KdbpCmdBackTrace(
             Argv[1]++;
 
             /* Evaluate the expression */
-            if (!KdbpEvaluateExpression(Argv[1], sizeof("kdb:> ")-1 + (Argv[1]-Argv[0]), &Result))
+            if (!KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result))
                 return TRUE;
 
             if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
-                KdbpPrint("Warning: Address %I64x is beeing truncated\n",Result);
+                KdbpPrint("Warning: Address %I64x is beeing truncated\n", Result);
 
             Frame = (ULONG_PTR)Result;
         }
@@ -1130,66 +1204,95 @@ KdbpCmdBackTrace(
             return TRUE;
         }
     }
-    else
+
+    /* Retrieve the Global Descriptor Table */
+    Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
+
+    /* Retrieve the current (active) TSS */
+    TssSelector = Ke386GetTr();
+    Tss = KdbpRetrieveTss(TssSelector, NULL, &Gdtr);
+    if (KdbpIsNestedTss(TssSelector, Tss))
+    {
+        /* Display the active TSS if it is nested */
+        KdbpPrint("[Active TSS 0x%04x @ 0x%p]\n", TssSelector, Tss);
+    }
+
+    /* If no Frame Address or Thread ID was given, try printing the function at EIP */
+    if (Argc <= 1)
     {
         KdbpPrint("Eip:\n");
-
-        /* Try printing the function at EIP */
-        if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip, &KdbCurrentTrapFrame->Tf))
-            KdbpPrint("<%08x>\n", KdbCurrentTrapFrame->Tf.Eip);
+        if (!KdbSymPrintAddress((PVOID)TrapFrame.Eip, &TrapFrame))
+            KdbpPrint("<%08x>\n", TrapFrame.Eip);
         else
             KdbpPrint("\n");
     }
 
-    TrapFrame = KdbCurrentTrapFrame->Tf;
+    /* Walk through the frames */
     KdbpPrint("Frames:\n");
-
     for (;;)
     {
         BOOLEAN GotNextFrame;
 
         if (Frame == 0)
-            break;
+            goto CheckForParentTSS;
 
-        if (!NT_SUCCESS(KdbpSafeReadMemory(&Address, (PVOID)(Frame + sizeof(ULONG_PTR)), sizeof (ULONG_PTR))))
+        Address = 0;
+        if (!NT_SUCCESS(KdbpSafeReadMemory(&Address, (PVOID)(Frame + sizeof(ULONG_PTR)), sizeof(ULONG_PTR))))
         {
             KdbpPrint("Couldn't access memory at 0x%p!\n", Frame + sizeof(ULONG_PTR));
-            break;
+            goto CheckForParentTSS;
         }
 
-        if ((GotNextFrame = NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof (ULONG_PTR)))))
-            TrapFrame.Ebp = Frame;
+        if (Address == 0)
+            goto CheckForParentTSS;
 
-        /* Print the location of the call instruction */
+        GotNextFrame = NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof(ULONG_PTR)));
+        if (GotNextFrame)
+            TrapFrame.Ebp = Frame;
+        // else
+            // Frame = 0;
+
+        /* Print the location of the call instruction (assumed 5 bytes length) */
         if (!KdbSymPrintAddress((PVOID)(Address - 5), &TrapFrame))
             KdbpPrint("<%08x>\n", Address);
         else
             KdbpPrint("\n");
 
-        if (KdbOutputAborted) break;
-
-        if (Address == 0)
+        if (KdbOutputAborted)
             break;
-
-        if (KdbpInNmiOrDoubleFaultHandler(Address))
-        {
-            if ((GotNextFrame = KdbpTrapFrameFromPrevTss(&TrapFrame)))
-            {
-                Address = TrapFrame.Eip;
-                Frame = TrapFrame.Ebp;
-
-                if (!KdbSymPrintAddress((PVOID)Address, &TrapFrame))
-                    KdbpPrint("<%08x>\n", Address);
-                else
-                    KdbpPrint("\n");
-            }
-        }
 
         if (!GotNextFrame)
         {
             KdbpPrint("Couldn't access memory at 0x%p!\n", Frame);
-            break;
+            goto CheckForParentTSS; // break;
         }
+
+        continue;
+
+CheckForParentTSS:
+        /*
+         * We have ended the stack walking for the current (active) TSS.
+         * Check whether this TSS was nested, and if so switch to its parent
+         * and walk its stack.
+         */
+        if (!KdbpIsNestedTss(TssSelector, Tss))
+            break; // The TSS is not nested, we stop there.
+
+        GotNextFrame = KdbpTrapFrameFromPrevTss(&TrapFrame, &TssSelector, &Tss, &Gdtr);
+        if (!GotNextFrame)
+        {
+            KdbpPrint("Couldn't access parent TSS 0x%04x\n", Tss->Backlink);
+            break; // Cannot retrieve the parent TSS, we stop there.
+        }
+        Address = TrapFrame.Eip;
+        Frame = TrapFrame.Ebp;
+
+        KdbpPrint("[Parent TSS 0x%04x @ 0x%p]\n", TssSelector, Tss);
+
+        if (!KdbSymPrintAddress((PVOID)Address, &TrapFrame))
+            KdbpPrint("<%08x>\n", Address);
+        else
+            KdbpPrint("\n");
     }
 
     return TRUE;
@@ -1480,7 +1583,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
 
     /* Evaluate the address expression */
     if (!KdbpEvaluateExpression(Argv[AddressArgIndex],
-                                sizeof("kdb:> ")-1 + (Argv[AddressArgIndex]-Argv[0]),
+                                KdbPromptString.Length + (Argv[AddressArgIndex]-Argv[0]),
                                 &Result))
     {
         return TRUE;
@@ -1845,7 +1948,7 @@ KdbpCmdMod(
             Argv[Argc][strlen(Argv[Argc])] = ' ';
 
         /* Evaluate the expression */
-        if (!KdbpEvaluateExpression(Argv[1], sizeof("kdb:> ")-1 + (Argv[1]-Argv[0]), &Result))
+        if (!KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result))
         {
             return TRUE;
         }
@@ -1888,7 +1991,7 @@ KdbpCmdMod(
     return TRUE;
 }
 
-/*!\brief Displays GDT, LDT or IDTd.
+/*!\brief Displays GDT, LDT or IDT.
  */
 static BOOLEAN
 KdbpCmdGdtLdtIdt(
@@ -2024,19 +2127,19 @@ KdbpCmdGdtLdtIdt(
             {
                 switch (Type)
                 {
-                    case 1: SegType = "TSS16(Avl)"; break;
-                    case 2: SegType = "LDT"; break;
-                    case 3: SegType = "TSS16(Busy)"; break;
-                    case 4: SegType = "CALLGATE16"; break;
-                    case 5: SegType = "TASKGATE"; break;
-                    case 6: SegType = "INTGATE16"; break;
-                    case 7: SegType = "TRAPGATE16"; break;
-                    case 9: SegType = "TSS32(Avl)"; break;
-                    case 11: SegType = "TSS32(Busy)"; break;
-                    case 12: SegType = "CALLGATE32"; break;
-                    case 14: SegType = "INTGATE32"; break;
-                    case 15: SegType = "INTGATE32"; break;
-                    default: SegType = "UNKNOWN"; break;
+                    case  1: SegType = "TSS16(Avl)";    break;
+                    case  2: SegType = "LDT";           break;
+                    case  3: SegType = "TSS16(Busy)";   break;
+                    case  4: SegType = "CALLGATE16";    break;
+                    case  5: SegType = "TASKGATE";      break;
+                    case  6: SegType = "INTGATE16";     break;
+                    case  7: SegType = "TRAPGATE16";    break;
+                    case  9: SegType = "TSS32(Avl)";    break;
+                    case 11: SegType = "TSS32(Busy)";   break;
+                    case 12: SegType = "CALLGATE32";    break;
+                    case 14: SegType = "INTGATE32";     break;
+                    case 15: SegType = "TRAPGATE32";    break;
+                    default: SegType = "UNKNOWN";       break;
                 }
 
                 if (!(Type >= 1 && Type <= 3) &&
@@ -2061,7 +2164,7 @@ KdbpCmdGdtLdtIdt(
                     SegType = "CODE16";
             }
 
-            if ((SegDesc[1] & (1 << 15)) == 0) /* not present */
+            if ((SegDesc[1] & (1 << 15)) == 0) /* Not present */
             {
                 KdbpPrint("  %03d  0x%04x  %-11s  [NP]        [NP]        %02d   NP\n",
                           i / 8, i | Dpl | ul, SegType, Dpl);
@@ -2116,7 +2219,7 @@ KdbpCmdPcr(
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
 
-    KdbpPrint("Current PCR is at 0x%08x.\n", (INT)Pcr);
+    KdbpPrint("Current PCR is at 0x%p.\n", Pcr);
     KdbpPrint("  Tib.ExceptionList:         0x%08x\n"
               "  Tib.StackBase:             0x%08x\n"
               "  Tib.StackLimit:            0x%08x\n"
@@ -2161,18 +2264,93 @@ KdbpCmdTss(
     ULONG Argc,
     PCHAR Argv[])
 {
-    KTSS *Tss = KeGetPcr()->TSS;
+    USHORT TssSelector;
+    PKTSS Tss = NULL;
 
-    KdbpPrint("Current TSS is at 0x%08x.\n", (INT)Tss);
-    KdbpPrint("  Eip:           0x%08x\n"
-              "  Es:            0x%04x\n"
-              "  Cs:            0x%04x\n"
-              "  Ss:            0x%04x\n"
-              "  Ds:            0x%04x\n"
-              "  Fs:            0x%04x\n"
-              "  Gs:            0x%04x\n"
-              "  IoMapBase:     0x%04x\n",
-              Tss->Eip, Tss->Es, Tss->Cs, Tss->Ds, Tss->Fs, Tss->Gs, Tss->IoMapBase);
+    if (Argc >= 2)
+    {
+        /*
+         * Specified TSS via its selector [selector] or descriptor address [*descaddr].
+         * Note that we ignore any other argument values.
+         */
+        PCHAR Param, pszNext;
+        ULONG ulValue;
+
+        Param = Argv[1];
+        if (Argv[1][0] == '*')
+            ++Param;
+
+        ulValue = strtoul(Param, &pszNext, 0);
+        if (pszNext && *pszNext)
+        {
+            KdbpPrint("Invalid TSS specification.\n");
+            return TRUE;
+        }
+
+        if (Argv[1][0] == '*')
+        {
+            /* Descriptor specified */
+            TssSelector = 0; // Unknown selector!
+            // TODO: Room for improvement: Find the TSS descriptor
+            // in the GDT so as to validate it.
+            Tss = (PKTSS)(ULONG_PTR)ulValue;
+            if (!Tss)
+            {
+                KdbpPrint("Invalid 32-bit TSS descriptor.\n");
+                return TRUE;
+            }
+        }
+        else
+        {
+            /* Selector specified, retrive the corresponding TSS */
+            TssSelector = (USHORT)ulValue;
+            Tss = KdbpRetrieveTss(TssSelector, NULL, NULL);
+            if (!Tss)
+            {
+                KdbpPrint("Invalid 32-bit TSS selector.\n");
+                return TRUE;
+            }
+        }
+    }
+
+    if (!Tss)
+    {
+        /* If no TSS was specified, use the current TSS descriptor */
+        TssSelector = Ke386GetTr();
+        Tss = KeGetPcr()->TSS;
+        // NOTE: If everything works OK, Tss is the current TSS corresponding to the TR selector.
+    }
+
+    KdbpPrint("%s TSS 0x%04x is at 0x%p.\n",
+              (Tss == KeGetPcr()->TSS) ? "Current" : "Specified", TssSelector, Tss);
+    KdbpPrint("  Backlink:  0x%04x\n"
+              "  Ss0:Esp0:  0x%04x:0x%08x\n"
+              // NOTE: Ss1:Esp1 and Ss2:Esp2: are in the NotUsed1 field.
+              "  CR3:       0x%08x\n"
+              "  EFlags:    0x%08x\n"
+              "  Eax:       0x%08x\n"
+              "  Ebx:       0x%08x\n"
+              "  Ecx:       0x%08x\n"
+              "  Edx:       0x%08x\n"
+              "  Esi:       0x%08x\n"
+              "  Edi:       0x%08x\n"
+              "  Eip:       0x%08x\n"
+              "  Esp:       0x%08x\n"
+              "  Ebp:       0x%08x\n"
+              "  Cs:        0x%04x\n"
+              "  Ss:        0x%04x\n"
+              "  Ds:        0x%04x\n"
+              "  Es:        0x%04x\n"
+              "  Fs:        0x%04x\n"
+              "  Gs:        0x%04x\n"
+              "  LDT:       0x%04x\n"
+              "  Flags:     0x%04x\n"
+              "  IoMapBase: 0x%04x\n",
+              Tss->Backlink, Tss->Ss0, Tss->Esp0, Tss->CR3, Tss->EFlags,
+              Tss->Eax, Tss->Ebx, Tss->Ecx, Tss->Edx, Tss->Esi, Tss->Edi,
+              Tss->Eip, Tss->Esp, Tss->Ebp,
+              Tss->Cs, Tss->Ss, Tss->Ds, Tss->Es, Tss->Fs, Tss->Gs,
+              Tss->LDT, Tss->Flags, Tss->IoMapBase);
 
     return TRUE;
 }
@@ -2186,7 +2364,6 @@ KdbpCmdBugCheck(
 {
     /* Set the flag and quit looping */
     KdbpBugCheckRequested = TRUE;
-
     return FALSE;
 }
 
@@ -2216,41 +2393,41 @@ KdbpCmdDmesg(
     ULONG Argc,
     PCHAR Argv[])
 {
-  ULONG beg, end;
+    ULONG beg, end;
 
-  KdbpIsInDmesgMode = TRUE; /* Toggle logging flag */
-  if (!KdpDmesgBuffer)
-  {
-    KdbpPrint("Dmesg: error, buffer is not allocated! /DEBUGPORT=SCREEN kernel param required for dmesg.\n");
+    KdbpIsInDmesgMode = TRUE; /* Toggle logging flag */
+    if (!KdpDmesgBuffer)
+    {
+        KdbpPrint("Dmesg: error, buffer is not allocated! /DEBUGPORT=SCREEN kernel param required for dmesg.\n");
+        return TRUE;
+    }
+
+    KdbpPrint("*** Dmesg *** TotalWritten=%lu, BufferSize=%lu, CurrentPosition=%lu\n",
+              KdbDmesgTotalWritten, KdpDmesgBufferSize, KdpDmesgCurrentPosition);
+
+    /* Pass data to the pager */
+    end = KdpDmesgCurrentPosition;
+    beg = (end + KdpDmesgFreeBytes) % KdpDmesgBufferSize;
+
+    /* No roll-overs, and overwritten=lost bytes */
+    if (KdbDmesgTotalWritten <= KdpDmesgBufferSize)
+    {
+        /* Show buffer (KdpDmesgBuffer + beg, num) */
+        KdbpPager(KdpDmesgBuffer, KdpDmesgCurrentPosition);
+    }
+    else
+    {
+        /* Show 2 buffers: (KdpDmesgBuffer + beg, KdpDmesgBufferSize - beg)
+         *            and: (KdpDmesgBuffer,       end) */
+        KdbpPager(KdpDmesgBuffer + beg, KdpDmesgBufferSize - beg);
+        KdbpPrint("*** Dmesg: buffer rollup ***\n");
+        KdbpPager(KdpDmesgBuffer,       end);
+    }
+    KdbpPrint("*** Dmesg: end of output ***\n");
+
+    KdbpIsInDmesgMode = FALSE; /* Toggle logging flag */
+
     return TRUE;
-  }
-
-  KdbpPrint("*** Dmesg *** TotalWritten=%lu, BufferSize=%lu, CurrentPosition=%lu\n",
-            KdbDmesgTotalWritten, KdpDmesgBufferSize, KdpDmesgCurrentPosition);
-
-  // Pass data to the pager:
-  end = KdpDmesgCurrentPosition;
-  beg = (end + KdpDmesgFreeBytes) % KdpDmesgBufferSize;
-
-  // no roll-overs, and overwritten=lost bytes
-  if (KdbDmesgTotalWritten <= KdpDmesgBufferSize)
-  {
-    // show buffer (KdpDmesgBuffer + beg, num)
-    KdbpPager(KdpDmesgBuffer, KdpDmesgCurrentPosition);
-  }
-  else
-  {
-    // show 2 buffers: (KdpDmesgBuffer + beg, KdpDmesgBufferSize - beg)
-    //            and: (KdpDmesgBuffer,       end)
-    KdbpPager(KdpDmesgBuffer + beg, KdpDmesgBufferSize - beg);
-    KdbpPrint("*** Dmesg: buffer rollup ***\n");
-    KdbpPager(KdpDmesgBuffer,       end);
-  }
-  KdbpPrint("*** Dmesg: end of output ***\n");
-
-  KdbpIsInDmesgMode = FALSE; /* Toggle logging flag */
-
-  return TRUE;
 }
 
 /*!\brief Sets or displays a config variables value.
@@ -2308,10 +2485,10 @@ KdbpCmdSet(
                     continue;
 
                 if (!KdbpGetEnterCondition(l, TRUE, &ConditionFirst))
-                    ASSERT(0);
+                    ASSERT(FALSE);
 
                 if (!KdbpGetEnterCondition(l, FALSE, &ConditionLast))
-                    ASSERT(0);
+                    ASSERT(FALSE);
 
                 KdbpPrint("  #%02d  %-20s %-8s %-8s\n", l, ExceptionNames[l],
                           KDB_ENTER_CONDITION_TO_STRING(ConditionFirst),
@@ -2389,10 +2566,10 @@ KdbpCmdSet(
             else /* Argc >= 3 */
             {
                 if (!KdbpGetEnterCondition(l, TRUE, &ConditionFirst))
-                    ASSERT(0);
+                    ASSERT(FALSE);
 
                 if (!KdbpGetEnterCondition(l, FALSE, &ConditionLast))
-                    ASSERT(0);
+                    ASSERT(FALSE);
 
                 if (l < (RTL_NUMBER_OF(ExceptionNames) - 1))
                 {
@@ -2918,7 +3095,7 @@ KdbpPager(
           break;
 
         /* Calculate the number of lines which will be printed in the terminal
-         * when outputting the current line
+         * when outputting the current line.
          */
         if (i > 0)
             RowsPrintedByTerminal = (i + KdbNumberOfColsPrinted - 1) / KdbNumberOfColsTerminal;
@@ -3368,7 +3545,7 @@ BOOLEAN
 KdbpInvokeCliCallbacks(
     IN PCHAR Command,
     IN ULONG Argc,
-    IN PCH Argv[])
+    IN PCHAR Argv[])
 {
     ULONG i;
 
@@ -3406,7 +3583,7 @@ KdbpDoCommand(
     PCHAR p;
     ULONG Argc;
     // FIXME: for what do we need a 1024 characters command line and 256 tokens?
-    static PCH Argv[256];
+    static PCHAR Argv[256];
     static CHAR OrigCommand[1024];
 
     RtlStringCbCopyA(OrigCommand, sizeof(OrigCommand), Command);
@@ -3471,7 +3648,7 @@ KdbpCliMainLoop(
     {
         if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip, &KdbCurrentTrapFrame->Tf))
         {
-            KdbpPrint("<%x>", KdbCurrentTrapFrame->Tf.Eip);
+            KdbpPrint("<%08x>", KdbCurrentTrapFrame->Tf.Eip);
         }
 
         KdbpPrint(": ");
@@ -3500,7 +3677,7 @@ KdbpCliMainLoop(
         KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
 
         /* Print the prompt */
-        KdbpPrint("kdb:> ");
+        KdbpPrint(KdbPromptString.Buffer);
 
         /* Read a command and remember it */
         KdbpReadCommand(Command, sizeof (Command));
@@ -3662,205 +3839,4 @@ KdbpCliInit(VOID)
     __writeeflags(OldEflags);
 
     ExFreePool(FileBuffer);
-}
-
-VOID
-NTAPI
-KdpSerialDebugPrint(
-    LPSTR Message,
-    ULONG Length
-);
-
-STRING KdpPromptString = RTL_CONSTANT_STRING("kdb:> ");
-extern KSPIN_LOCK KdpSerialSpinLock;
-
-USHORT
-NTAPI
-KdpPrompt(
-    _In_reads_bytes_(InStringLength) PCHAR UnsafeInString,
-    _In_ USHORT InStringLength,
-    _Out_writes_bytes_(OutStringLength) PCHAR UnsafeOutString,
-    _In_ USHORT OutStringLength,
-    _In_ KPROCESSOR_MODE PreviousMode,
-    _In_ PKTRAP_FRAME TrapFrame,
-    _In_ PKEXCEPTION_FRAME ExceptionFrame)
-{
-    USHORT i;
-    CHAR Response;
-    ULONG DummyScanCode;
-    KIRQL OldIrql;
-    PCHAR InString;
-    PCHAR OutString;
-    CHAR InStringBuffer[512];
-    CHAR OutStringBuffer[512];
-
-    /* Normalize the lengths */
-    InStringLength = min(InStringLength,
-                         sizeof(InStringBuffer));
-    OutStringLength = min(OutStringLength,
-                          sizeof(OutStringBuffer));
-
-    /* Check if we need to verify the string */
-    if (PreviousMode != KernelMode)
-    {
-        /* Handle user-mode buffers safely */
-        _SEH2_TRY
-        {
-            /* Probe the prompt */
-            ProbeForRead(UnsafeInString,
-                         InStringLength,
-                         1);
-
-            /* Capture prompt */
-            InString = InStringBuffer;
-            RtlCopyMemory(InString,
-                          UnsafeInString,
-                          InStringLength);
-
-            /* Probe and make room for response */
-            ProbeForWrite(UnsafeOutString,
-                          OutStringLength,
-                          1);
-            OutString = OutStringBuffer;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* Bad string pointer, bail out */
-            _SEH2_YIELD(return 0);
-        }
-        _SEH2_END;
-    }
-    else
-    {
-        InString = UnsafeInString;
-        OutString = UnsafeOutString;
-    }
-
-    /* Acquire the printing spinlock without waiting at raised IRQL */
-    while (TRUE)
-    {
-        /* Wait when the spinlock becomes available */
-        while (!KeTestSpinLock(&KdpSerialSpinLock));
-
-        /* Spinlock was free, raise IRQL */
-        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-
-        /* Try to get the spinlock */
-        if (KeTryToAcquireSpinLockAtDpcLevel(&KdpSerialSpinLock))
-            break;
-
-        /* Someone else got the spinlock, lower IRQL back */
-        KeLowerIrql(OldIrql);
-    }
-
-    /* Loop the string to send */
-    for (i = 0; i < InStringLength; i++)
-    {
-        /* Print it to serial */
-        KdPortPutByteEx(&SerialPortInfo, *(PCHAR)(InString + i));
-    }
-
-    /* Print a new line for log neatness */
-    KdPortPutByteEx(&SerialPortInfo, '\r');
-    KdPortPutByteEx(&SerialPortInfo, '\n');
-
-    /* Print the kdb prompt */
-    for (i = 0; i < KdpPromptString.Length; i++)
-    {
-        /* Print it to serial */
-        KdPortPutByteEx(&SerialPortInfo,
-                        *(KdpPromptString.Buffer + i));
-    }
-
-    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
-        KbdDisableMouse();
-
-    /* Loop the whole string */
-    for (i = 0; i < OutStringLength; i++)
-    {
-        /* Check if this is serial debugging mode */
-        if (KdbDebugState & KD_DEBUG_KDSERIAL)
-        {
-            /* Get the character from serial */
-            do
-            {
-                Response = KdbpTryGetCharSerial(MAXULONG);
-            } while (Response == -1);
-        }
-        else
-        {
-            /* Get the response from the keyboard */
-            do
-            {
-                Response = KdbpTryGetCharKeyboard(&DummyScanCode, MAXULONG);
-            } while (Response == -1);
-        }
-
-        /* Check for return */
-        if (Response == '\r')
-        {
-            /*
-             * We might need to discard the next '\n'.
-             * Wait a bit to make sure we receive it.
-             */
-            KeStallExecutionProcessor(100000);
-
-            /* Check the mode */
-            if (KdbDebugState & KD_DEBUG_KDSERIAL)
-            {
-                /* Read and discard the next character, if any */
-                KdbpTryGetCharSerial(5);
-            }
-            else
-            {
-                /* Read and discard the next character, if any */
-                KdbpTryGetCharKeyboard(&DummyScanCode, 5);
-            }
-
-            /*
-             * Null terminate the output string -- documentation states that
-             * DbgPrompt does not null terminate, but it does
-             */
-            *(PCHAR)(OutString + i) = 0;
-            break;
-        }
-
-        /* Write it back and print it to the log */
-        *(PCHAR)(OutString + i) = Response;
-        KdPortPutByteEx(&SerialPortInfo, Response);
-    }
-
-    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
-        KbdEnableMouse();
-
-    /* Print a new line */
-    KdPortPutByteEx(&SerialPortInfo, '\r');
-    KdPortPutByteEx(&SerialPortInfo, '\n');
-
-    /* Release spinlock */
-    KiReleaseSpinLock(&KdpSerialSpinLock);
-
-    /* Lower IRQL back */
-    KeLowerIrql(OldIrql);
-
-    /* Copy back response if required */
-    if (PreviousMode != KernelMode)
-    {
-        _SEH2_TRY
-        {
-            /* Safely copy back response to user mode */
-            RtlCopyMemory(UnsafeOutString,
-                          OutString,
-                          i);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* String became invalid after we exited, fail */
-            _SEH2_YIELD(return 0);
-        }
-        _SEH2_END;
-    }
-
-    /* Return the length  */
-    return i;
 }

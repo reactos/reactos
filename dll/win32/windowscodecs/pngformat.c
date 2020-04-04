@@ -332,6 +332,7 @@ MAKE_FUNCPTR(png_set_strip_16);
 MAKE_FUNCPTR(png_set_tRNS);
 MAKE_FUNCPTR(png_set_tRNS_to_alpha);
 MAKE_FUNCPTR(png_set_write_fn);
+MAKE_FUNCPTR(png_set_swap);
 MAKE_FUNCPTR(png_read_end);
 MAKE_FUNCPTR(png_read_image);
 MAKE_FUNCPTR(png_read_info);
@@ -398,6 +399,7 @@ static void *load_libpng(void)
         LOAD_FUNCPTR(png_set_tRNS);
         LOAD_FUNCPTR(png_set_tRNS_to_alpha);
         LOAD_FUNCPTR(png_set_write_fn);
+        LOAD_FUNCPTR(png_set_swap);
         LOAD_FUNCPTR(png_read_end);
         LOAD_FUNCPTR(png_read_image);
         LOAD_FUNCPTR(png_read_info);
@@ -620,7 +622,6 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     if (setjmp(jmpbuf))
     {
         ppng_destroy_read_struct(&This->png_ptr, &This->info_ptr, &This->end_info);
-        HeapFree(GetProcessHeap(), 0, row_pointers);
         This->png_ptr = NULL;
         hr = WINCODEC_ERR_UNKNOWNIMAGEFORMAT;
         goto end;
@@ -642,6 +643,10 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     /* choose a pixel format */
     color_type = ppng_get_color_type(This->png_ptr, This->info_ptr);
     bit_depth = ppng_get_bit_depth(This->png_ptr, This->info_ptr);
+
+    /* PNGs with bit-depth greater than 8 are network byte order. Windows does not expect this. */
+    if (bit_depth > 8)
+        ppng_set_swap(This->png_ptr);
 
     /* check for color-keyed alpha */
     transparency = ppng_get_tRNS(This->png_ptr, This->info_ptr, &trans, &num_trans, &trans_values);
@@ -815,6 +820,8 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
 
 end:
     LeaveCriticalSection(&This->lock);
+
+    HeapFree(GetProcessHeap(), 0, row_pointers);
 
     return hr;
 }
@@ -1641,6 +1648,10 @@ static HRESULT WINAPI PngFrameEncode_WritePixels(IWICBitmapFrameEncode *iface,
                 return E_OUTOFMEMORY;
             }
         }
+
+        /* Tell PNG we need to byte swap if writing a >8-bpp image */
+        if (This->format->bit_depth > 8)
+            ppng_set_swap(This->png_ptr);
 
         ppng_set_IHDR(This->png_ptr, This->info_ptr, This->width, This->height,
             This->format->bit_depth, This->format->color_type,

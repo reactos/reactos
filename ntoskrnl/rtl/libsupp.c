@@ -691,6 +691,49 @@ RtlpGetAtomEntry(PRTL_ATOM_TABLE AtomTable, ULONG Index)
    return Entry;
 }
 
+/* Ldr SEH-Protected access to IMAGE_NT_HEADERS */
+
+/* Rtl SEH-Free version of this */
+NTSTATUS
+NTAPI
+RtlpImageNtHeaderEx(
+    _In_ ULONG Flags,
+    _In_ PVOID Base,
+    _In_ ULONG64 Size,
+    _Out_ PIMAGE_NT_HEADERS *OutHeaders);
+
+/*
+ * @implemented
+ * @note: This is here, so that we do not drag SEH into rosload, freeldr and bootmgfw
+ */
+NTSTATUS
+NTAPI
+RtlImageNtHeaderEx(
+    _In_ ULONG Flags,
+    _In_ PVOID Base,
+    _In_ ULONG64 Size,
+    _Out_ PIMAGE_NT_HEADERS *OutHeaders)
+{
+    NTSTATUS Status;
+
+    /* Assume failure. This is also done in RtlpImageNtHeaderEx, but this is guarded by SEH. */
+    if (OutHeaders != NULL)
+        *OutHeaders = NULL;
+
+    _SEH2_TRY
+    {
+        Status = RtlpImageNtHeaderEx(Flags, Base, Size, OutHeaders);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Fail with the SEH error */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    return Status;
+}
+
 /*
  * Ldr Resource support code
  */

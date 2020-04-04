@@ -89,6 +89,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     (PVOID)NULL_Unused, //BOOL     (*pGetCharABCWidths)(PHYSDEV,UINT,UINT,LPABC);
     (PVOID)NULL_Unused, //BOOL     (*pGetCharABCWidthsI)(PHYSDEV,UINT,UINT,WORD*,LPABC);
     (PVOID)NULL_Unused, //BOOL     (*pGetCharWidth)(PHYSDEV,UINT,UINT,LPINT);
+    (PVOID)NULL_Unused, //BOOL     (*pGetCharWidthInfo)(PHYSDEV,void*);
     (PVOID)NULL_Unused, //INT      (*pGetDeviceCaps)(PHYSDEV,INT);
     (PVOID)NULL_Unused, //BOOL     (*pGetDeviceGammaRamp)(PHYSDEV,LPVOID);
     (PVOID)NULL_Unused, //DWORD    (*pGetFontData)(PHYSDEV,DWORD,DWORD,LPVOID,DWORD);

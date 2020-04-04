@@ -161,7 +161,7 @@ SIZE_T MmSystemViewSize;
 // map paged pool PDEs into external processes when they fault on a paged pool
 // address.
 //
-PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
+PFN_NUMBER MmSystemPageDirectory[PPE_PER_PAGE];
 PMMPDE MmSystemPagePtes;
 #endif
 
@@ -779,7 +779,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Start with the first PDE and scan them all */
     PointerPde = MiAddressToPde(NULL);
-    Count = PD_COUNT * PDE_COUNT;
+    Count = PPE_PER_PAGE * PDE_PER_PAGE;
     for (i = 0; i < Count; i++)
     {
         /* Check for valid PDE */
@@ -812,7 +812,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
             /* Now get the PTE and scan the pages */
             PointerPte = MiAddressToPte(BaseAddress);
-            for (j = 0; j < PTE_COUNT; j++)
+            for (j = 0; j < PTE_PER_PAGE; j++)
             {
                 /* Check for a valid PTE */
                 if (PointerPte->u.Hard.Valid == 1)
@@ -1439,7 +1439,7 @@ MiAddHalIoMappings(VOID)
         {
             /* Get the PTE for it and scan each page */
             PointerPte = MiAddressToPte(BaseAddress);
-            for (j = 0 ; j < PTE_COUNT; j++)
+            for (j = 0; j < PTE_PER_PAGE; j++)
             {
                 /* Does the HAL own this page? */
                 if (PointerPte->u.Hard.Valid == 1)
@@ -1557,7 +1557,7 @@ MmDumpArmPfnDatabase(IN BOOLEAN StatusOnly)
         // Pretty-print the page
         //
         if (!StatusOnly)
-        DbgPrint("0x%08p:\t%20s\t(%04d.%04d)\t[%16s - %16s])\n",
+        DbgPrint("0x%08p:\t%20s\t(%04d.%04d)\t[%16s - %16s]\n",
                  i << PAGE_SHIFT,
                  Consumer,
                  Pfn1->u3.e2.ReferenceCount,
@@ -1767,7 +1767,7 @@ MiBuildPagedPool(VOID)
     // Get the page frame number for the system page directory
     //
     PointerPte = MiAddressToPte(PDE_BASE);
-    ASSERT(PD_COUNT == 1);
+    ASSERT(PPE_PER_PAGE == 1);
     MmSystemPageDirectory[0] = PFN_FROM_PTE(PointerPte);
 
     //
@@ -1785,7 +1785,7 @@ MiBuildPagedPool(VOID)
     // way).
     //
     TempPte = ValidKernelPte;
-    ASSERT(PD_COUNT == 1);
+    ASSERT(PPE_PER_PAGE == 1);
     TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory[0];
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 #endif
@@ -1894,12 +1894,12 @@ MiBuildPagedPool(VOID)
                                    PFN_FROM_PTE(MiAddressToPpe(MmPagedPoolStart)));
 #else
     /* Do it this way */
-//    Bla = MmSystemPageDirectory[(PointerPde - (PMMPTE)PDE_BASE) / PDE_COUNT]
+//    Bla = MmSystemPageDirectory[(PointerPde - (PMMPTE)PDE_BASE) / PDE_PER_PAGE]
 
     /* Initialize the PFN entry for it */
     MiInitializePfnForOtherProcess(PageFrameIndex,
                                    (PMMPTE)PointerPde,
-                                   MmSystemPageDirectory[(PointerPde - (PMMPDE)PDE_BASE) / PDE_COUNT]);
+                                   MmSystemPageDirectory[(PointerPde - (PMMPDE)PDE_BASE) / PDE_PER_PAGE]);
 #endif
 
     //

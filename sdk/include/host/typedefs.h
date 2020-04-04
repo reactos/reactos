@@ -27,6 +27,7 @@
 
 /* Basic definitions */
 #define UNIMPLEMENTED { printf("%s unimplemented\n", __FUNCTION__); exit(1); }
+#define UNIMPLEMENTED_ONCE { printf("%s unimplemented\n", __FUNCTION__); exit(1); }
 #define ASSERT(x) assert(x)
 #define ASSERTMSG(m, x) assert(x)
 #define DPRINT if (0) printf
@@ -81,7 +82,7 @@ typedef WORD LANGID;
 #define MAXUSHORT USHRT_MAX
 
 /* Widely used structures */
-#include <pshpack4.h>
+
 #ifndef _HAVE_RTL_BITMAP
 typedef struct _RTL_BITMAP
 {
@@ -137,7 +138,6 @@ typedef struct _UNICODE_STRING
 } UNICODE_STRING, *PUNICODE_STRING;
 #endif
 
-#include <poppack.h>
 
 #ifndef _HAVE_LIST_ENTRY
 /* List Functions */

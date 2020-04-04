@@ -119,6 +119,7 @@ Test_ProcessTimes(void)
                                        sizeof(KERNEL_USER_TIMES),
                                        NULL);
     ok_hex(Status, STATUS_SUCCESS);
+    ros_skip_flaky
     ok(Times1.CreateTime.QuadPart < TestStartTime.QuadPart,
        "CreateTime is %I64u, expected < %I64u\n", Times1.CreateTime.QuadPart, TestStartTime.QuadPart);
     ok(Times1.CreateTime.QuadPart > TestStartTime.QuadPart - 100000000LL,
@@ -126,6 +127,7 @@ Test_ProcessTimes(void)
     ok(Times1.ExitTime.QuadPart == 0,
        "ExitTime is %I64u, expected 0\n", Times1.ExitTime.QuadPart);
     ok(Times1.KernelTime.QuadPart != 0, "KernelTime is 0\n");
+    ros_skip_flaky
     ok(Times1.UserTime.QuadPart != 0, "UserTime is 0\n");
 
     /* Do some busy waiting to increase UserTime */
@@ -162,9 +164,11 @@ Test_ProcessTimes(void)
     /* Time values must have increased */
     ok(Times2.KernelTime.QuadPart > Times1.KernelTime.QuadPart,
        "KernelTime values inconsistent. Expected %I64u > %I64u\n", Times2.KernelTime.QuadPart, Times1.KernelTime.QuadPart);
+    ros_skip_flaky
     ok(Times2.UserTime.QuadPart > Times1.UserTime.QuadPart,
        "UserTime values inconsistent. Expected %I64u > %I64u\n", Times2.UserTime.QuadPart, Times1.UserTime.QuadPart);
     /* They can't have increased by more than wall clock time difference (we only have one thread) */
+    ros_skip_flaky
     ok(Times2.KernelTime.QuadPart - Times1.KernelTime.QuadPart < Time2.QuadPart - Time1.QuadPart,
        "KernelTime values inconsistent. Expected %I64u - %I64u < %I64u\n",
        Times2.KernelTime.QuadPart, Times1.KernelTime.QuadPart, Time2.QuadPart - Time1.QuadPart);
@@ -181,6 +185,74 @@ Test_ProcessTimes(void)
 #undef SPIN_TIME
 }
 
+static
+void
+Test_ProcessPriorityClassAlignment(void)
+{
+    NTSTATUS Status;
+    PPROCESS_PRIORITY_CLASS ProcPriority;
+
+    /* Allocate some memory for the priority class structure */
+    ProcPriority = malloc(sizeof(PROCESS_PRIORITY_CLASS));
+    if (ProcPriority == NULL)
+    {
+        skip("Failed to allocate memory for PROCESS_PRIORITY_CLASS!\n");
+        return;
+    }
+
+    /*
+     * Initialize the PriorityClass member to ensure the test won't randomly succeed (if such data is uninitialized).
+     * Filling 85 to the data member makes sure that if the test fails continously then NtQueryInformationProcess()
+     * didn't initialize the structure with data.
+     */
+    RtlFillMemory(&ProcPriority->PriorityClass, sizeof(ProcPriority->PriorityClass), 0x55);
+
+    /* Unaligned buffer -- wrong size */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessPriorityClass,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* Unaligned buffer -- correct size */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessPriorityClass,
+                                       (PVOID)1,
+                                       sizeof(PROCESS_PRIORITY_CLASS),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* Unaligned buffer -- wrong size (but this time do with an alignment of 2) */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessPriorityClass,
+                                       (PVOID)2,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* Unaligned buffer -- correct size (but this time do with an alignment of 2) */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessPriorityClass,
+                                       (PVOID)2,
+                                       sizeof(PROCESS_PRIORITY_CLASS),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* Do not care for the length but expect to return the priority class */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessPriorityClass,
+                                       ProcPriority,
+                                       sizeof(PROCESS_PRIORITY_CLASS),
+                                       NULL);
+    ok_hex(Status, STATUS_SUCCESS);
+
+    /* Make sure the returned priority class is a valid number (non negative) but also it should be within the PROCESS_PRIORITY_CLASS range */
+    ok(ProcPriority->PriorityClass > PROCESS_PRIORITY_CLASS_INVALID && ProcPriority->PriorityClass <= PROCESS_PRIORITY_CLASS_ABOVE_NORMAL,
+       "Expected a valid number from priority class range but got %d\n", ProcPriority->PriorityClass);
+    free(ProcPriority);
+}
+
 START_TEST(NtQueryInformationProcess)
 {
     NTSTATUS Status;
@@ -189,4 +261,5 @@ START_TEST(NtQueryInformationProcess)
     ok_hex(Status, STATUS_SUCCESS);
 
     Test_ProcessTimes();
+    Test_ProcessPriorityClassAlignment();
 }

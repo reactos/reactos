@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -529,6 +529,58 @@ AcpiHwEnableWakeupGpeBlock (
 
 /******************************************************************************
  *
+ * FUNCTION:    AcpiHwGetGpeBlockStatus
+ *
+ * PARAMETERS:  GpeXruptInfo    - GPE Interrupt info
+ *              GpeBlock        - Gpe Block info
+ *
+ * RETURN:      Success
+ *
+ * DESCRIPTION: Produce a combined GPE status bits mask for the given block.
+ *
+ ******************************************************************************/
+
+static ACPI_STATUS
+AcpiHwGetGpeBlockStatus(
+    ACPI_GPE_XRUPT_INFO     *GpeXruptInfo,
+    ACPI_GPE_BLOCK_INFO     *GpeBlock,
+    void *RetPtr)
+{
+    ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo;
+    UINT64                  InEnable;
+    UINT64                  InStatus;
+    ACPI_STATUS             Status;
+    UINT8                   *Ret = RetPtr;
+    UINT32                  i;
+
+
+    /* Examine each GPE Register within the block */
+
+    for (i = 0; i < GpeBlock->RegisterCount; i++)
+    {
+        GpeRegisterInfo = &GpeBlock->RegisterInfo[i];
+
+        Status = AcpiHwRead (&InEnable, &GpeRegisterInfo->EnableAddress);
+        if (ACPI_FAILURE (Status))
+        {
+            continue;
+        }
+
+        Status = AcpiHwRead (&InStatus, &GpeRegisterInfo->StatusAddress);
+        if (ACPI_FAILURE (Status))
+        {
+            continue;
+        }
+
+        *Ret |= InEnable & InStatus;
+    }
+
+    return (AE_OK);
+}
+
+
+/******************************************************************************
+ *
  * FUNCTION:    AcpiHwDisableAllGpes
  *
  * PARAMETERS:  None
@@ -605,6 +657,33 @@ AcpiHwEnableAllWakeupGpes (
 
     Status = AcpiEvWalkGpeList (AcpiHwEnableWakeupGpeBlock, NULL);
     return_ACPI_STATUS (Status);
+}
+
+
+/******************************************************************************
+ *
+ * FUNCTION:    AcpiHwCheckAllGpes
+ *
+ * PARAMETERS:  None
+ *
+ * RETURN:      Combined status of all GPEs
+ *
+ * DESCRIPTION: Check all enabled GPEs in all GPE blocks and return TRUE if the
+ *              status bit is set for at least one of them of FALSE otherwise.
+ *
+ ******************************************************************************/
+
+UINT8
+AcpiHwCheckAllGpes (
+    void)
+{
+    UINT8                      Ret = 0;
+
+
+    ACPI_FUNCTION_TRACE (AcpiHwCheckAllGpes);
+
+    (void) AcpiEvWalkGpeList (AcpiHwGetGpeBlockStatus, &Ret);
+    return (Ret != 0);
 }
 
 #endif /* !ACPI_REDUCED_HARDWARE */

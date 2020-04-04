@@ -180,6 +180,9 @@ ok(tmp === "undefined", "typeof((new Object).doesnotexist = " + tmp);
 tmp = typeof(testObj.onlyDispID);
 ok(tmp === "unknown", "typeof(testObj.onlyDispID) = " + tmp);
 
+ok("\0\0x\0\0".length === 5, "\"\\0\\0x\\0\\0\".length = " + "\0\0x\0\0".length);
+ok("\0\0x\0\0" === String.fromCharCode(0) + "\0x\0" + String.fromCharCode(0), "\"\\0\\0x\\0\\0\" unexpected");
+
 ok(testFunc1(true, "test") === true, "testFunc1 not returned true");
 
 ok(testFunc1.arguments === null, "testFunc1.arguments = " + testFunc1.arguments);
@@ -1523,7 +1526,7 @@ deleteTest = 1;
 delete deleteTest;
 try {
     tmp = deleteTest;
-    ok(false, "deleteTest not throwed exception?");
+    ok(false, "deleteTest did not throw an exception?");
 }catch(ex) {}
 
 (function() {

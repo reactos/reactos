@@ -45,6 +45,7 @@ list(APPEND SOURCE
     c_28598.c
     c_28599.c
     c_28600.c
+    c_28601.c
     c_28603.c
     c_28604.c
     c_28605.c
@@ -83,7 +84,8 @@ list(APPEND SOURCE
     wctomb.c
     wctype.c)
 
-add_library(unicode ${SOURCE})
+add_library(unicode STATIC ${SOURCE})
+target_link_libraries(unicode PRIVATE host_includes)
 
 if(MSVC)
     # Disable warning "'<': signed/unsigned mismatch"

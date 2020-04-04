@@ -31,9 +31,11 @@ extern void func_NtQueryVolumeInformationFile(void);
 extern void func_NtReadFile(void);
 extern void func_NtSaveKey(void);
 extern void func_NtSetInformationFile(void);
+extern void func_NtSetInformationProcess(void);
 extern void func_NtSetValueKey(void);
 extern void func_NtSetVolumeInformationFile(void);
 extern void func_NtSystemInformation(void);
+extern void func_NtUnloadDriver(void);
 extern void func_NtWriteFile(void);
 extern void func_RtlAllocateHeap(void);
 extern void func_RtlBitmap(void);
@@ -55,7 +57,6 @@ extern void func_RtlGetLengthWithoutTrailingPathSeperators(void);
 extern void func_RtlGetLongestNtPathLength(void);
 extern void func_RtlHandle(void);
 extern void func_RtlImageRvaToVa(void);
-extern void func_RtlInitializeBitMap(void);
 extern void func_RtlIsNameLegalDOS8Dot3(void);
 extern void func_RtlMemoryStream(void);
 extern void func_RtlNtPathNameToDosPathName(void);
@@ -64,6 +65,7 @@ extern void func_RtlQueryTimeZoneInformation(void);
 extern void func_RtlReAllocateHeap(void);
 extern void func_RtlUnicodeStringToAnsiString(void);
 extern void func_RtlUpcaseUnicodeStringToCountedOemString(void);
+extern void func_RtlValidateUnicodeString(void);
 extern void func_StackOverflow(void);
 extern void func_TimerResolution(void);
 
@@ -97,9 +99,11 @@ const struct test winetest_testlist[] =
     { "NtReadFile",                     func_NtReadFile },
     { "NtSaveKey",                      func_NtSaveKey},
     { "NtSetInformationFile",           func_NtSetInformationFile },
+    { "NtSetInformationProcess",        func_NtSetInformationProcess },
     { "NtSetValueKey",                  func_NtSetValueKey},
     { "NtSetVolumeInformationFile",     func_NtSetVolumeInformationFile },
     { "NtSystemInformation",            func_NtSystemInformation },
+    { "NtUnloadDriver",                 func_NtUnloadDriver },
     { "NtWriteFile",                    func_NtWriteFile },
     { "RtlAllocateHeap",                func_RtlAllocateHeap },
     { "RtlBitmapApi",                   func_RtlBitmap },
@@ -121,7 +125,6 @@ const struct test winetest_testlist[] =
     { "RtlGetLongestNtPathLength",      func_RtlGetLongestNtPathLength },
     { "RtlHandle",                      func_RtlHandle },
     { "RtlImageRvaToVa",                func_RtlImageRvaToVa },
-    { "RtlInitializeBitMap",            func_RtlInitializeBitMap },
     { "RtlIsNameLegalDOS8Dot3",         func_RtlIsNameLegalDOS8Dot3 },
     { "RtlMemoryStream",                func_RtlMemoryStream },
     { "RtlNtPathNameToDosPathName",     func_RtlNtPathNameToDosPathName },
@@ -130,6 +133,7 @@ const struct test winetest_testlist[] =
     { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
     { "RtlUnicodeStringToAnsiString",   func_RtlUnicodeStringToAnsiString },
     { "RtlUpcaseUnicodeStringToCountedOemString", func_RtlUpcaseUnicodeStringToCountedOemString },
+    { "RtlValidateUnicodeString",       func_RtlValidateUnicodeString },
     { "StackOverflow",                  func_StackOverflow },
     { "TimerResolution",                func_TimerResolution },
 

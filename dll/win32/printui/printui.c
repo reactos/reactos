@@ -31,7 +31,6 @@
 #include "winnls.h"
 #include "shellapi.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "printui_private.h"
 
@@ -151,7 +150,7 @@ static BOOL parse_rundll(context_t * cx)
             while ( c )
             {
                 txtW[0] = c;
-                ptr = strchrW(optionsW, c);
+                ptr = wcschr(optionsW, c);
                 if (ptr) {
                     index = ptr - optionsW;
                     cx->options[index] = get_next_wstr(cx);
@@ -160,7 +159,7 @@ static BOOL parse_rundll(context_t * cx)
                 }
                 else
                 {
-                    ptr = strchrW(flagsW, c);
+                    ptr = wcschr(flagsW, c);
                     if (ptr) {
                         index = ptr - flagsW;
                         cx->flags[index] = TRUE;

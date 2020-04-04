@@ -1,0 +1,198 @@
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+IDM_TRAYWND MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Dátum/idő beállítása", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "É&rtesítések testreszabása...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "Ablakok &lépcsőzetes elrendezése", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Ablakok &vízszintes mozaik elrendezése", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Ablakok &függőleges mozaik elrendezése", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Asztal megjelenítése", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Visszavonás", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
+        MENUITEM "F&eladatkezelő", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "A tálca &zárolása", ID_LOCKTASKBAR
+        MENUITEM "&Tulajdonságok", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
+IDM_STARTMENU MENUEX
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&Programok", IDM_PROGRAMS
+        BEGIN
+            MENUITEM "(Empty)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Kedvencek", IDM_FAVORITES
+        BEGIN
+            MENUITEM "(Empty)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Dokumentumok", IDM_DOCUMENTS
+        BEGIN
+            MENUITEM "(Empty)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Beállítások", IDM_SETTINGS
+        BEGIN
+            MENUITEM "&Vezérlőpult", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Biztonság...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Hálózati kapcsolatok", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Nyomtatók és faxok", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Tálca és Start Menü", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+        END
+        MENUITEM "&Keresés", IDM_SEARCH, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Súgó és támogatás", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Futtatás...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "&Szinkronizálás", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Kijelentkezés - %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "Szé&tkapcsolódás...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Dokkolóról leválasztás", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Leállítás...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Tálca"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX "A tálca megjelenése", IDC_STATIC, 6, 6, 240, 104
+    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
+    AUTOCHECKBOX "A tálca &zárolása", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "A tálca automatikus &elrejtése", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "A tálca mindig legyen &látható a többi ablak előtt", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "Hasonló tálca gombok &csoportosítása", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "&Gyorsindító megjelenítése", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
+    GROUPBOX "Értesítési terület", IDC_STATIC, 6, 114, 240, 98
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
+    AUTOCHECKBOX "Az óra &megjelenítése", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
+    AUTOCHECKBOX "Má&sodpercek megjelenítése", IDC_TASKBARPROP_SECONDS, 120, 153, 100, 10, WS_DISABLED
+    LTEXT "Rendezettebbé teheti az értesítési területet, ha elrejti azokat az ikonokat, amelyekre már régen nem kattintott rá.", IDC_STATIC, 13, 169, 223, 16
+    AUTOCHECKBOX "A nem aktív &ikonok elrejtése", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
+    PUSHBUTTON "&Testreszabás...", IDC_TASKBARPROP_ICONCUST, 188, 188, 53, 14
+END
+
+IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Start menü"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
+    AUTORADIOBUTTON "&Start menü", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    LTEXT "Ezt a menüstílust használva könnyen hozzáférhet a mappáihoz, kedvenc programjaihoz és a kereséshez.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
+    PUSHBUTTON "&Testreszabás...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
+    AUTORADIOBUTTON "&Klasszikus Start menü", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
+    LTEXT "Ez a stílus a klasszikus kinézetet és működést biztosítja.", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
+    PUSHBUTTON "&Testreszabás...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
+END
+
+IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Értesítések testreszabása"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT            "A ReactOS megjeleníti az aktív és sürgős értesítések ikonjait, és elrejti az inaktívakat. Ezt a viselkedést tudja megváltoztatni az alábbi listában lévő elemeknél.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "Jelöljön ki egy elemet, majd válassza ki az értesítési viselkedését:", IDC_STATIC, 6, 40, 220, 10
+    CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
+    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
+    PUSHBUTTON       "&Alapértelmezések visszaállítása", IDC_TASKBARPROP_NOTIREST, 120, 188, 106, 14
+    DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
+    PUSHBUTTON       "Mégse", IDCANCEL, 176, 220, 50, 14
+END
+
+IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Klasszikus Start menü testreszabása"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Start menü", IDC_STATIC, 8, 7, 218, 114
+    ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
+    LTEXT            "Testreszabhatja a Start menüjét elemek hozzáadásával és eltávolításával.", IDC_STATIC, 48, 17, 108, 39
+    PUSHBUTTON       "&Hozzáadás...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
+    PUSHBUTTON       "&Eltávolítás...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
+    PUSHBUTTON       "H&aladó", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
+    PUSHBUTTON       "&Rendezés", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
+    ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
+    LTEXT            "A nemrég megnyitott dokumentumok, programok és weboldalak listájának törléséhez kattintson a törlés gombra.", IDC_STATIC, 49, 85, 108, 33
+    PUSHBUTTON       "&Törlés", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
+    LTEXT            "Ha&ladó Start menü opciók:", IDC_STATIC, 8, 129, 150, 8
+    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
+    PUSHBUTTON       "Mégse", IDCANCEL, 176, 220, 50, 14
+END
+
+IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
+CAPTION "Fájlnév-figyelmeztetés"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON    "&Kihagyás", IDIGNORE, 215, 60, 50, 14
+    PUSHBUTTON       "&Átnevezés", IDC_FILE_RENAME, 159, 60, 50, 14
+    LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
+    AUTOCHECKBOX     "&Ne ellenőrizze indításkor", IDC_NOTCHECK, 7, 62, 139, 10
+    ICON             32515, IDC_STATIC, 7, 7, 21, 20
+    LTEXT            "A számítógépen az egyik mappa vagy fájl (%s) bizonyos alkalmazások nem megfelelő működését eredményezheti. Ha átnevezi a következő névre, megoldhatja a problémát: %s. Átnevezi most?", IDC_STATIC, 34, 7, 224, 37
+END
+
+IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
+STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
+CAPTION "Haladó"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Start menü beállítások ", IDC_STATIC, 7, 7, 238, 42
+    AUTOCHECKBOX     "&Almenük megnyitása az egérmutató felettük tartására", IDC_AUTOOPEN, 14, 21, 224, 10
+    AUTOCHECKBOX     "Újonnan &telepített programok kiemelése", IDC_HIGHLIGHT, 14, 35, 224, 10
+    LTEXT            "A &Start menü elemei:", IDC_STATIC, 7, 53, 238, 8
+    CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
+    GROUPBOX         "Legutóbbi dokumentumok ", IDC_STATIC, 7, 133, 238, 56
+    LTEXT            "Ezzel a beállítással gyorsan hozzá tud férni a legutóbb megnyitott dokumentumaihoz. A lista törlése nem törli a dokumentumokat.", IDC_STATIC, 14, 144, 224, 21
+    AUTOCHECKBOX     "A legutóbb &megnyitott dokumentumaim listázása", IDC_RECENTLY, 14, 168, 147, 10
+    PUSHBUTTON       "&Lista törlése", IDC_CLEAR, 182, 168, 55, 14
+END
+
+IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
+CAPTION "Általános"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Válasszon ikonméretet a programokhoz ", IDC_STATIC, 7, 7, 238, 37
+    ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
+    ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
+    AUTORADIOBUTTON  "&Nagy ikonok", IDC_CHOOSELARGE, 43, 25, 53, 10
+    AUTORADIOBUTTON  "&Kis ikonok", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
+    GROUPBOX         "Programok ", IDC_STATIC, 7, 49, 238, 70
+    LTEXT            "A Start menü a leggyakrabban használt programokra mutató parancsikonokat tartalmaz. A parancsikonok listájának törlése nem törli a programokat.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "A &Start menüben megjelenő programok száma:", IDC_STATIC, 14, 86, 112, 8
+    EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
+    CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
+    PUSHBUTTON       "&Lista törlése", IDC_CLEARLIST, 182, 98, 57, 14
+    GROUPBOX         "Megjelenítés a Start menüben ", IDC_STATIC, 7, 126, 238, 63
+    AUTOCHECKBOX     "&Internet:", IDC_SHOWINTERNET, 14, 140, 42, 10
+    COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+    AUTOCHECKBOX     "&E-mail:", IDC_SHOWEMAIL, 14, 157, 37, 10
+    COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+    IDS_START "Start"
+    IDS_PROPERTIES "&Tulajdonságok"
+    IDS_OPEN_ALL_USERS "&Megnyitás - All Users"
+    IDS_EXPLORE_ALL_USERS "&Tallózás - All Users"
+    IDS_STARTUP_ERROR "A rendszer nem tudja elindítani az explorert, mert a regisztrációs adatbázis megsérült vagy nem elérhető."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Tálca és Start menü"
+    IDS_RESTORE_ALL "&Megnyitott ablakok megjelenítése"
+END

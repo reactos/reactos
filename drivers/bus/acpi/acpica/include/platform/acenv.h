@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -160,6 +160,21 @@
 #define ACPI_DEBUG_OUTPUT
 #define ACPI_DEBUGGER 1
 #define ACPI_DISASSEMBLER 1
+#endif
+
+/*
+ * acpisrc CR\LF support
+ * Unix file line endings do not include the carriage return.
+ * If the acpisrc utility is being built using a microsoft compiler, it means
+ * that it will be running on a windows machine which means that the output is
+ * expected to have CR/LF newlines. If the acpisrc utility is built with
+ * anything else, it will likely run on a system with LF newlines. This flag
+ * tells the acpisrc utility that newlines will be in the LF format.
+ */
+#if defined(ACPI_SRC_APP) && !defined(_MSC_VER)
+#define ACPI_SRC_OS_LF_ONLY 1
+#else
+#define ACPI_SRC_OS_LF_ONLY 0
 #endif
 
 /*! [Begin] no source code translation */

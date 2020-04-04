@@ -167,7 +167,7 @@ typedef struct _CLIENTTHREADINFO
     WORD fsWakeBits;
     WORD fsWakeBitsJournal;
     WORD fsWakeMask;
-    ULONG tickLastMsgChecked;
+    ULONG timeLastRead; // Last time the message queue was read.
     DWORD dwcPumpHook;
 } CLIENTTHREADINFO, *PCLIENTTHREADINFO;
 
@@ -3499,7 +3499,7 @@ NTAPI
 NtUserWaitForInputIdle(
     IN HANDLE hProcess,
     IN DWORD dwMilliseconds,
-    IN BOOL Unknown2); /* Always FALSE */
+    IN BOOL bSharedWow); /* Always FALSE */
 
 DWORD
 NTAPI

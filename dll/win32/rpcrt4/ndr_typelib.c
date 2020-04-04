@@ -109,9 +109,13 @@ static unsigned short write_oleaut_tfs(VARTYPE vt)
     return 0;
 }
 
-static unsigned char get_base_type(VARTYPE vt)
+static unsigned char get_basetype(ITypeInfo *typeinfo, TYPEDESC *desc)
 {
-    switch (vt)
+    ITypeInfo *refinfo;
+    unsigned char ret;
+    TYPEATTR *attr;
+
+    switch (desc->vt)
     {
     case VT_I1:     return FC_SMALL;
     case VT_BOOL:
@@ -129,6 +133,18 @@ static unsigned char get_base_type(VARTYPE vt)
     case VT_R4:     return FC_FLOAT;
     case VT_DATE:
     case VT_R8:     return FC_DOUBLE;
+    case VT_USERDEFINED:
+        ITypeInfo_GetRefTypeInfo(typeinfo, desc->hreftype, &refinfo);
+        ITypeInfo_GetTypeAttr(refinfo, &attr);
+        if (attr->typekind == TKIND_ENUM)
+            ret = FC_ENUM32;
+        else if (attr->typekind == TKIND_ALIAS)
+            ret = get_basetype(refinfo, &attr->tdescAlias);
+        else
+            ret = 0;
+        ITypeInfo_ReleaseTypeAttr(refinfo, attr);
+        ITypeInfo_Release(refinfo);
+        return ret;
     default:        return 0;
     }
 }
@@ -192,34 +208,118 @@ static unsigned int type_memsize(ITypeInfo *typeinfo, TYPEDESC *desc)
     }
 }
 
+static BOOL type_pointer_is_iface(ITypeInfo *typeinfo, TYPEDESC *tdesc)
+{
+    ITypeInfo *refinfo;
+    BOOL ret = FALSE;
+    TYPEATTR *attr;
+
+    if (tdesc->vt == VT_USERDEFINED)
+    {
+        ITypeInfo_GetRefTypeInfo(typeinfo, tdesc->hreftype, &refinfo);
+        ITypeInfo_GetTypeAttr(refinfo, &attr);
+
+        if (attr->typekind == TKIND_INTERFACE
+                || attr->typekind == TKIND_DISPATCH
+                || attr->typekind == TKIND_COCLASS)
+            ret = TRUE;
+        else if (attr->typekind == TKIND_ALIAS)
+            ret = type_pointer_is_iface(refinfo, &attr->tdescAlias);
+
+        ITypeInfo_ReleaseTypeAttr(refinfo, attr);
+        ITypeInfo_Release(refinfo);
+    }
+
+    return ret;
+}
+
 static unsigned char get_array_fc(ITypeInfo *typeinfo, TYPEDESC *desc);
+static unsigned char get_struct_fc(ITypeInfo *typeinfo, TYPEATTR *attr);
+
+static unsigned char get_struct_member_fc(ITypeInfo *typeinfo, TYPEDESC *tdesc)
+{
+    unsigned char fc;
+    ITypeInfo *refinfo;
+    TYPEATTR *attr;
+
+    switch (tdesc->vt)
+    {
+    case VT_BSTR:
+    case VT_SAFEARRAY:
+        return (sizeof(void *) == 4) ? FC_PSTRUCT : FC_BOGUS_STRUCT;
+    case VT_CY:
+        return FC_STRUCT;
+    case VT_VARIANT:
+    case VT_UNKNOWN:
+    case VT_DISPATCH:
+        return FC_BOGUS_STRUCT;
+    case VT_CARRAY:
+        if (get_array_fc(typeinfo, &tdesc->lpadesc->tdescElem) == FC_BOGUS_ARRAY)
+            return FC_BOGUS_STRUCT;
+        return FC_STRUCT;
+    case VT_PTR:
+        if (type_pointer_is_iface(typeinfo, tdesc))
+            fc = FC_BOGUS_STRUCT;
+        else
+            fc = (sizeof(void *) == 4) ? FC_PSTRUCT : FC_BOGUS_STRUCT;
+        break;
+    case VT_USERDEFINED:
+        ITypeInfo_GetRefTypeInfo(typeinfo, tdesc->hreftype, &refinfo);
+        ITypeInfo_GetTypeAttr(refinfo, &attr);
+
+        switch (attr->typekind)
+        {
+        case TKIND_ENUM:
+            fc = FC_STRUCT;
+            break;
+        case TKIND_RECORD:
+            fc = get_struct_fc(refinfo, attr);
+            break;
+        case TKIND_INTERFACE:
+        case TKIND_DISPATCH:
+        case TKIND_COCLASS:
+            fc = FC_BOGUS_STRUCT;
+            break;
+        case TKIND_ALIAS:
+            fc = get_struct_member_fc(refinfo, &attr->tdescAlias);
+            break;
+        default:
+            FIXME("Unhandled kind %#x.\n", attr->typekind);
+            fc = FC_BOGUS_STRUCT;
+            break;
+        }
+
+        ITypeInfo_ReleaseTypeAttr(refinfo, attr);
+        ITypeInfo_Release(refinfo);
+        break;
+    default:
+        if (get_basetype(typeinfo, tdesc))
+            return FC_STRUCT;
+        else
+        {
+            FIXME("Unhandled type %u.\n", tdesc->vt);
+            return FC_BOGUS_STRUCT;
+        }
+    }
+
+    return fc;
+}
 
 static unsigned char get_struct_fc(ITypeInfo *typeinfo, TYPEATTR *attr)
 {
-    unsigned char fc = FC_STRUCT;
+    unsigned char fc = FC_STRUCT, member_fc;
     VARDESC *desc;
-    VARTYPE vt;
     WORD i;
 
     for (i = 0; i < attr->cVars; i++)
     {
         ITypeInfo_GetVarDesc(typeinfo, i, &desc);
-        vt = desc->elemdescVar.tdesc.vt;
 
-        switch (vt)
-        {
-        case VT_CARRAY:
-            if (get_array_fc(typeinfo, &desc->elemdescVar.tdesc.lpadesc->tdescElem) == FC_BOGUS_ARRAY)
-                fc = FC_BOGUS_STRUCT;
-            break;
-        default:
-            if (!get_base_type(vt))
-            {
-                FIXME("unhandled type %u\n", vt);
-                fc = FC_BOGUS_STRUCT;
-            }
-            break;
-        }
+        member_fc = get_struct_member_fc(typeinfo, &desc->elemdescVar.tdesc);
+        if (member_fc == FC_BOGUS_STRUCT)
+            fc = FC_BOGUS_STRUCT;
+        else if (member_fc == FC_PSTRUCT && fc != FC_BOGUS_STRUCT)
+            fc = FC_PSTRUCT;
 
         ITypeInfo_ReleaseVarDesc(typeinfo, desc);
     }
@@ -229,9 +329,13 @@ static unsigned char get_struct_fc(ITypeInfo *typeinfo, TYPEATTR *attr)
 
 static unsigned char get_array_fc(ITypeInfo *typeinfo, TYPEDESC *desc)
 {
-    if (get_base_type(desc->vt))
+    switch (desc->vt)
+    {
+    case VT_CY:
         return FC_LGFARRAY;
-    else if (desc->vt == VT_USERDEFINED)
+    case VT_CARRAY:
+        return get_array_fc(typeinfo, &desc->lpadesc->tdescElem);
+    case VT_USERDEFINED:
     {
         ITypeInfo *refinfo;
         TYPEATTR *attr;
@@ -244,6 +348,8 @@ static unsigned char get_array_fc(ITypeInfo *typeinfo, TYPEDESC *desc)
             fc = FC_LGFARRAY;
         else if (attr->typekind == TKIND_RECORD && get_struct_fc(refinfo, attr) == FC_STRUCT)
             fc = FC_LGFARRAY;
+        else if (attr->typekind == TKIND_ALIAS)
+            fc = get_array_fc(refinfo, &attr->tdescAlias);
         else
             fc = FC_BOGUS_ARRAY;
 
@@ -252,8 +358,244 @@ static unsigned char get_array_fc(ITypeInfo *typeinfo, TYPEDESC *desc)
 
         return fc;
     }
+    default:
+        return get_basetype(typeinfo, desc) ? FC_LGFARRAY : FC_BOGUS_ARRAY;
+    }
+}
+
+static BOOL type_is_non_iface_pointer(ITypeInfo *typeinfo, TYPEDESC *desc)
+{
+    if (desc->vt == VT_PTR)
+        return !type_pointer_is_iface(typeinfo, desc->lptdesc);
+    else if (desc->vt == VT_USERDEFINED)
+    {
+        ITypeInfo *refinfo;
+        TYPEATTR *attr;
+        BOOL ret;
+
+        ITypeInfo_GetRefTypeInfo(typeinfo, desc->hreftype, &refinfo);
+        ITypeInfo_GetTypeAttr(refinfo, &attr);
+
+        if (attr->typekind == TKIND_ALIAS)
+            ret = type_is_non_iface_pointer(refinfo, &attr->tdescAlias);
+        else
+            ret = FALSE;
+
+        ITypeInfo_ReleaseTypeAttr(refinfo, attr);
+        ITypeInfo_Release(refinfo);
+
+        return ret;
+    }
     else
-        return FC_BOGUS_ARRAY;
+        return FALSE;
+}
+
+static void write_struct_members(ITypeInfo *typeinfo, unsigned char *str,
+        size_t *len, TYPEATTR *attr)
+{
+    unsigned int struct_offset = 0;
+    unsigned char basetype;
+    TYPEDESC *tdesc;
+    VARDESC *desc;
+    WORD i;
+
+    for (i = 0; i < attr->cVars; i++)
+    {
+        ITypeInfo_GetVarDesc(typeinfo, i, &desc);
+        tdesc = &desc->elemdescVar.tdesc;
+
+        /* This may not match the intended alignment, but we don't have enough
+         * information to determine that. This should always give the correct
+         * layout. */
+        if ((struct_offset & 7) && !(desc->oInst & 7))
+            WRITE_CHAR(str, *len, FC_ALIGNM8);
+        else if ((struct_offset & 3) && !(desc->oInst & 3))
+            WRITE_CHAR(str, *len, FC_ALIGNM4);
+        else if ((struct_offset & 1) && !(desc->oInst & 1))
+            WRITE_CHAR(str, *len, FC_ALIGNM2);
+        struct_offset = desc->oInst + type_memsize(typeinfo, tdesc);
+
+        if ((basetype = get_basetype(typeinfo, tdesc)))
+            WRITE_CHAR(str, *len, basetype);
+        else if (type_is_non_iface_pointer(typeinfo, tdesc))
+            WRITE_CHAR(str, *len, FC_POINTER);
+        else
+        {
+            WRITE_CHAR(str, *len, FC_EMBEDDED_COMPLEX);
+            WRITE_CHAR(str, *len, 0);
+            WRITE_SHORT(str, *len, 0);
+        }
+
+        ITypeInfo_ReleaseVarDesc(typeinfo, desc);
+    }
+    if (!(*len & 1))
+        WRITE_CHAR (str, *len, FC_PAD);
+    WRITE_CHAR (str, *len, FC_END);
+}
+
+static void write_simple_struct_tfs(ITypeInfo *typeinfo, unsigned char *str,
+        size_t *len, TYPEATTR *attr)
+{
+    write_struct_members(typeinfo, str, len, attr);
+}
+
+static BOOL type_needs_pointer_deref(ITypeInfo *typeinfo, TYPEDESC *desc)
+{
+    if (desc->vt == VT_PTR || desc->vt == VT_UNKNOWN || desc->vt == VT_DISPATCH)
+        return TRUE;
+    else if (desc->vt == VT_USERDEFINED)
+    {
+        ITypeInfo *refinfo;
+        BOOL ret = FALSE;
+        TYPEATTR *attr;
+
+        ITypeInfo_GetRefTypeInfo(typeinfo, desc->hreftype, &refinfo);
+        ITypeInfo_GetTypeAttr(refinfo, &attr);
+
+        if (attr->typekind == TKIND_ALIAS)
+            ret = type_needs_pointer_deref(refinfo, &attr->tdescAlias);
+
+        ITypeInfo_ReleaseTypeAttr(refinfo, attr);
+        ITypeInfo_Release(refinfo);
+
+        return ret;
+    }
+    else
+        return FALSE;
+}
+
+static void write_complex_struct_pointer_layout(ITypeInfo *typeinfo,
+        TYPEDESC *desc, unsigned char *str, size_t *len)
+{
+    unsigned char basetype;
+
+    if (desc->vt == VT_PTR && !type_pointer_is_iface(typeinfo, desc->lptdesc))
+    {
+        WRITE_CHAR(str, *len, FC_UP);
+        if ((basetype = get_basetype(typeinfo, desc->lptdesc)))
+        {
+            WRITE_CHAR(str, *len, FC_SIMPLE_POINTER);
+            WRITE_CHAR(str, *len, basetype);
+            WRITE_CHAR(str, *len, FC_PAD);
+        }
+        else
+        {
+            if (type_needs_pointer_deref(typeinfo, desc->lptdesc))
+                WRITE_CHAR(str, *len, FC_POINTER_DEREF);
+            else
+                WRITE_CHAR(str, *len, 0);
+            WRITE_SHORT(str, *len, 0);
+        }
+    }
+    else if (desc->vt == VT_USERDEFINED)
+    {
+        ITypeInfo *refinfo;
+        TYPEATTR *attr;
+
+        ITypeInfo_GetRefTypeInfo(typeinfo, desc->hreftype, &refinfo);
+        ITypeInfo_GetTypeAttr(refinfo, &attr);
+
+        if (attr->typekind == TKIND_ALIAS)
+            write_complex_struct_pointer_layout(refinfo, &attr->tdescAlias, str, len);
+
+        ITypeInfo_ReleaseTypeAttr(refinfo, attr);
+        ITypeInfo_Release(refinfo);
+    }
+}
+
+static size_t write_complex_struct_pointer_ref(ITypeInfo *typeinfo,
+        TYPEDESC *desc, unsigned char *str, size_t *len)
+{
+    if (desc->vt == VT_PTR && !type_pointer_is_iface(typeinfo, desc->lptdesc)
+            && !get_basetype(typeinfo, desc->lptdesc))
+    {
+        return write_type_tfs(typeinfo, str, len, desc->lptdesc, FALSE, FALSE);
+    }
+    else if (desc->vt == VT_USERDEFINED)
+    {
+        ITypeInfo *refinfo;
+        TYPEATTR *attr;
+        size_t ret = 0;
+
+        ITypeInfo_GetRefTypeInfo(typeinfo, desc->hreftype, &refinfo);
+        ITypeInfo_GetTypeAttr(refinfo, &attr);
+
+        if (attr->typekind == TKIND_ALIAS)
+            ret = write_complex_struct_pointer_ref(refinfo, &attr->tdescAlias, str, len);
+
+        ITypeInfo_ReleaseTypeAttr(refinfo, attr);
+        ITypeInfo_Release(refinfo);
+
+        return ret;
+    }
+
+    return 0;
+}
+
+static void write_complex_struct_tfs(ITypeInfo *typeinfo, unsigned char *str,
+        size_t *len, TYPEATTR *attr)
+{
+    size_t pointer_layout_offset, pointer_layout, member_layout, ref;
+    unsigned int struct_offset = 0;
+    TYPEDESC *tdesc;
+    VARDESC *desc;
+    WORD i;
+
+    WRITE_SHORT(str, *len, 0);  /* conformant array description */
+    pointer_layout_offset = *len;
+    WRITE_SHORT(str, *len, 0);  /* pointer layout; will be filled in later */
+    member_layout = *len;
+
+    /* First pass: write the struct members and pointer layout, but do not yet
+     * write the offsets for embedded complexes and pointer refs. These must be
+     * handled after we write the whole struct description, since it must be
+     * contiguous. */
+
+    write_struct_members(typeinfo, str, len, attr);
+
+    pointer_layout = *len;
+    if (str) *((short *)(str + pointer_layout_offset)) = pointer_layout - pointer_layout_offset;
+
+    for (i = 0; i < attr->cVars; i++)
+    {
+        ITypeInfo_GetVarDesc(typeinfo, i, &desc);
+        write_complex_struct_pointer_layout(typeinfo, &desc->elemdescVar.tdesc, str, len);
+        ITypeInfo_ReleaseVarDesc(typeinfo, desc);
+    }
+
+    /* Second pass: write types for embedded complexes and non-simple pointers. */
+
+    struct_offset = 0;
+
+    for (i = 0; i < attr->cVars; i++)
+    {
+        ITypeInfo_GetVarDesc(typeinfo, i, &desc);
+        tdesc = &desc->elemdescVar.tdesc;
+
+        if (struct_offset != desc->oInst)
+            member_layout++; /* alignment directive */
+        struct_offset = desc->oInst + type_memsize(typeinfo, tdesc);
+
+        if (get_basetype(typeinfo, tdesc))
+            member_layout++;
+        else if (type_is_non_iface_pointer(typeinfo, tdesc))
+        {
+            member_layout++;
+            if ((ref = write_complex_struct_pointer_ref(typeinfo, tdesc, str, len)))
+            {
+                if (str) *((short *)(str + pointer_layout + 2)) = ref - (pointer_layout + 2);
+            }
+            pointer_layout += 4;
+        }
+        else
+        {
+            ref = write_type_tfs(typeinfo, str, len, tdesc, FALSE, FALSE);
+            if (str) *((short *)(str + member_layout + 2)) = ref - (member_layout + 2);
+            member_layout += 4;
+        }
+
+        ITypeInfo_ReleaseVarDesc(typeinfo, desc);
+    }
 }
 
 static size_t write_struct_tfs(ITypeInfo *typeinfo, unsigned char *str,
@@ -262,14 +604,18 @@ static size_t write_struct_tfs(ITypeInfo *typeinfo, unsigned char *str,
     unsigned char fc = get_struct_fc(typeinfo, attr);
     size_t off = *len;
 
-    if (fc != FC_STRUCT)
-        FIXME("fc %02x not implemented\n", fc);
+    /* For the sake of simplicity, write pointer structs as complex structs. */
+    if (fc == FC_PSTRUCT)
+        fc = FC_BOGUS_STRUCT;
 
-    WRITE_CHAR (str, *len, FC_STRUCT);
+    WRITE_CHAR (str, *len, fc);
     WRITE_CHAR (str, *len, attr->cbAlignment - 1);
     WRITE_SHORT(str, *len, attr->cbSizeInstance);
-    WRITE_CHAR (str, *len, FC_PAD);
-    WRITE_CHAR (str, *len, FC_END);
+
+    if (fc == FC_STRUCT)
+        write_simple_struct_tfs(typeinfo, str, len, attr);
+    else if (fc == FC_BOGUS_STRUCT)
+        write_complex_struct_tfs(typeinfo, str, len, attr);
 
     return off;
 }
@@ -278,15 +624,12 @@ static size_t write_array_tfs(ITypeInfo *typeinfo, unsigned char *str,
     size_t *len, ARRAYDESC *desc)
 {
     unsigned char fc = get_array_fc(typeinfo, &desc->tdescElem);
-    ULONG size = type_memsize(typeinfo, &desc->tdescElem);
     unsigned char basetype;
     size_t ref = 0, off;
+    ULONG size = 1;
     USHORT i;
 
-    if (fc != FC_LGFARRAY)
-        FIXME("complex arrays not implemented\n");
-
-    if (!(basetype = get_base_type(desc->tdescElem.vt)))
+    if (!(basetype = get_basetype(typeinfo, &desc->tdescElem)))
         ref = write_type_tfs(typeinfo, str, len, &desc->tdescElem, FALSE, FALSE);
 
     /* In theory arrays should be nested, but there's no reason not to marshal
@@ -295,9 +638,20 @@ static size_t write_array_tfs(ITypeInfo *typeinfo, unsigned char *str,
 
     off = *len;
 
-    WRITE_CHAR(str, *len, FC_LGFARRAY);
+    WRITE_CHAR(str, *len, fc);
     WRITE_CHAR(str, *len, 0);
-    WRITE_INT (str, *len, size);
+    if (fc == FC_BOGUS_ARRAY)
+    {
+        WRITE_SHORT(str, *len, size);
+        WRITE_INT(str, *len, 0xffffffff); /* conformance */
+        WRITE_INT(str, *len, 0xffffffff); /* variance */
+    }
+    else
+    {
+        size *= type_memsize(typeinfo, &desc->tdescElem);
+        WRITE_INT(str, *len, size);
+    }
+
     if (basetype)
         WRITE_CHAR(str, *len, basetype);
     else
@@ -404,7 +758,7 @@ static size_t write_pointer_tfs(ITypeInfo *typeinfo, unsigned char *str,
         ITypeInfo_ReleaseTypeAttr(refinfo, attr);
         ITypeInfo_Release(refinfo);
     }
-    else if ((basetype = get_base_type(desc->vt)))
+    else if ((basetype = get_basetype(typeinfo, desc)))
     {
         assert(!toplevel); /* toplevel base-type pointers should use IsSimpleRef */
         WRITE_CHAR(str, *len, FC_UP);
@@ -457,6 +811,14 @@ static size_t write_type_tfs(ITypeInfo *typeinfo, unsigned char *str,
         case TKIND_RECORD:
             off = write_struct_tfs(refinfo, str, len, attr);
             break;
+        case TKIND_INTERFACE:
+        case TKIND_DISPATCH:
+        case TKIND_COCLASS:
+            assert(0);
+            break;
+        case TKIND_ALIAS:
+            off = write_type_tfs(refinfo, str, len, &attr->tdescAlias, toplevel, onstack);
+            break;
         default:
             FIXME("unhandled kind %u\n", attr->typekind);
             off = *len;
@@ -469,7 +831,7 @@ static size_t write_type_tfs(ITypeInfo *typeinfo, unsigned char *str,
         break;
     default:
         /* base types are always embedded directly */
-        assert(!get_base_type(desc->vt));
+        assert(!get_basetype(typeinfo, desc));
         FIXME("unhandled type %u\n", desc->vt);
         off = *len;
         WRITE_SHORT(str, *len, 0);
@@ -517,26 +879,10 @@ static HRESULT get_param_pointer_info(ITypeInfo *typeinfo, TYPEDESC *tdesc, int 
         break;
     case VT_PTR:
         *flags |= MustFree;
-
-        if (tdesc->lptdesc->vt == VT_USERDEFINED)
+        if (type_pointer_is_iface(typeinfo, tdesc->lptdesc))
         {
-            ITypeInfo_GetRefTypeInfo(typeinfo, tdesc->lptdesc->hreftype, &refinfo);
-            ITypeInfo_GetTypeAttr(refinfo, &attr);
-
-            switch (attr->typekind)
-            {
-            case TKIND_INTERFACE:
-            case TKIND_DISPATCH:
-            case TKIND_COCLASS:
-                if (is_in && is_out)
-                    *server_size = sizeof(void *);
-                break;
-            default:
+            if (is_in && is_out)
                 *server_size = sizeof(void *);
-            }
-
-            ITypeInfo_ReleaseTypeAttr(refinfo, attr);
-            ITypeInfo_Release(refinfo);
         }
         else
             *server_size = sizeof(void *);
@@ -587,7 +933,7 @@ static HRESULT get_param_pointer_info(ITypeInfo *typeinfo, TYPEDESC *tdesc, int 
         *tfs_tdesc = tdesc;
         if (!is_in && is_out)
             *server_size = type_memsize(typeinfo, tdesc);
-        if ((*basetype = get_base_type(tdesc->vt)))
+        if ((*basetype = get_basetype(typeinfo, tdesc)))
             *flags |= IsBasetype;
         break;
     }
@@ -665,7 +1011,7 @@ static HRESULT get_param_info(ITypeInfo *typeinfo, TYPEDESC *tdesc, int is_in,
         ITypeInfo_Release(refinfo);
         break;
     default:
-        if ((*basetype = get_base_type(tdesc->vt)))
+        if ((*basetype = get_basetype(typeinfo, tdesc)))
             *flags |= IsBasetype;
         else
         {
@@ -752,7 +1098,7 @@ static void write_proc_func_header(ITypeInfo *typeinfo, FUNCDESC *desc,
     WRITE_SHORT(proc, *proclen, 0);  /* NotifyIndex */
     for (param_idx = 0; param_idx < desc->cParams && param_idx < 3; param_idx++)
     {
-        basetype = get_base_type(desc->lprgelemdescParam[param_idx].tdesc.vt);
+        basetype = get_basetype(typeinfo, &desc->lprgelemdescParam[param_idx].tdesc);
         if (basetype == FC_FLOAT)
             float_mask |= (1 << ((param_idx + 1) * 2));
         else if (basetype == FC_DOUBLE)

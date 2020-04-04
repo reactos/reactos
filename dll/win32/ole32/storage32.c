@@ -43,7 +43,6 @@
 #include "winbase.h"
 #include "winnls.h"
 #include "winuser.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 #include "storage32.h"
@@ -519,7 +518,7 @@ static LONG entryNameCmp(
     /*
      * We compare the string themselves only when they are of the same length
      */
-    diff = toupperW(*name1++) - toupperW(*name2++);
+    diff = towupper(*name1++) - towupper(*name2++);
   }
 
   return diff;
@@ -1347,7 +1346,7 @@ static HRESULT StorageBaseImpl_CopyChildEntryTo(StorageBaseImpl *This,
 
     while ( *snb != NULL && !skip )
     {
-      if ( lstrcmpW(data.name, *snb) == 0 )
+      if ( wcscmp(data.name, *snb) == 0 )
         skip = TRUE;
       ++snb;
     }
@@ -1891,7 +1890,7 @@ static HRESULT WINAPI StorageBaseImpl_RenameElement(
         currentEntryRef);
 
     /* Change the name of the element */
-    strcpyW(currentEntry.name, pwcsNewName);
+    lstrcpyW(currentEntry.name, pwcsNewName);
 
     /* Delete any sibling links */
     currentEntry.leftChild = DIRENTRY_NULL;
@@ -2013,7 +2012,7 @@ static HRESULT WINAPI StorageBaseImpl_CreateStream(
   if (newStreamEntry.sizeOfNameString > DIRENTRY_NAME_BUFFER_LEN)
     return STG_E_INVALIDNAME;
 
-  strcpyW(newStreamEntry.name, pwcsName);
+  lstrcpyW(newStreamEntry.name, pwcsName);
 
   newStreamEntry.stgType       = STGTY_STREAM;
   newStreamEntry.startingBlock = BLOCK_END_OF_CHAIN;
@@ -2209,7 +2208,7 @@ static HRESULT WINAPI StorageBaseImpl_CreateStorage(
     return STG_E_INVALIDNAME;
   }
 
-  strcpyW(newEntry.name, pwcsName);
+  lstrcpyW(newEntry.name, pwcsName);
 
   newEntry.stgType       = STGTY_STORAGE;
   newEntry.startingBlock = BLOCK_END_OF_CHAIN;
@@ -2357,7 +2356,7 @@ static HRESULT WINAPI StorageBaseImpl_CopyTo(
 
         while ( *snb != NULL && fail )
         {
-          if ( lstrcmpW(data.name, *snb) == 0 )
+          if ( wcscmp(data.name, *snb) == 0 )
             fail = FALSE;
           ++snb;
         }
@@ -4768,7 +4767,7 @@ static HRESULT StorageImpl_Refresh(StorageImpl *This, BOOL new_object, BOOL crea
      * Initialize the directory table
      */
     memset(&rootEntry, 0, sizeof(rootEntry));
-    strcpyW(rootEntry.name, rootentryW);
+    lstrcpyW(rootEntry.name, rootentryW);
     rootEntry.sizeOfNameString = sizeof(rootentryW);
     rootEntry.stgType          = STGTY_ROOT;
     rootEntry.leftChild        = DIRENTRY_NULL;
@@ -7040,7 +7039,7 @@ void StorageUtl_CopyDirEntryToSTATSTG(
     destination->pwcsName =
       CoTaskMemAlloc((lstrlenW(source->name)+1)*sizeof(WCHAR));
 
-    strcpyW(destination->pwcsName, source->name);
+    lstrcpyW(destination->pwcsName, source->name);
   }
 
   switch (source->stgType)

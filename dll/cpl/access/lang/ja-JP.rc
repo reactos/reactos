@@ -10,10 +10,10 @@ BEGIN
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "固定キー機能を使う(&U)", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_STICKY_BUTTON, 144, 49, 90, 14
-    GROUPBOX "フィルタ キー機能", -1, 6, 79, 234, 67
-    LTEXT "フィルタ キー機能を使うと、速いキー入力や繰り返されたキー入力を無視したり、繰り返し入力の間隔を長くしたりすることができます。",
+    GROUPBOX "フィルタキー機能", -1, 6, 79, 234, 67
+    LTEXT "フィルタキー機能を使うと、速いキー入力や繰り返されたキー入力を無視したり、繰り返し入力の間隔を長くしたりすることができます。",
           -1, 12, 89, 222, 29
-    AUTOCHECKBOX "フィルタ キー機能を使う(&F)", IDC_FILTER_BOX, 12, 121, 126, 14
+    AUTOCHECKBOX "フィルタキー機能を使う(&F)", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "設定(&E)", IDC_FILTER_BUTTON, 144, 121, 90, 14
     GROUPBOX "切り替えキー機能", -1, 6, 148, 234, 62
     LTEXT "切り替えキー機能を使うと、CapsLock、NumLock、ScrollLock キーを押したときに音を鳴らします。",
@@ -52,17 +52,17 @@ BEGIN
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "ハイコントラストを使う(&U)", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
-    GROUPBOX "Cursor options", -1, 6, 79, 234, 115
-    LTEXT "Use the track bars to modify the blinking speed of the cursor and its width.",
+    GROUPBOX "カーソル オプション", -1, 6, 79, 234, 115
+    LTEXT "カーソルの点滅速度と幅を変更するのにこれらのトラックバーをお使い下さい。",
           -1, 12, 88, 222, 20
-    CTEXT "Blinking speed:", -1, 12, 115, 222, 11
-    LTEXT "None", -1, 18, 130, 36, 11
-    LTEXT "Fast", -1, 192, 130, 36, 11
+    CTEXT "点滅速度:", -1, 12, 115, 222, 11
+    LTEXT "なし", -1, 18, 130, 36, 11
+    LTEXT "速い", -1, 192, 130, 36, 11
     CONTROL "", IDC_CURSOR_BLINK_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             60, 124, 126, 20
-    CTEXT "Cursor width:", -1, 12, 151, 222, 11
-    LTEXT "Narrow", -1, 18, 171, 36, 11
-    LTEXT "Wide", -1, 192, 171, 36, 11
+    CTEXT "カーソル幅:", -1, 12, 151, 222, 11
+    LTEXT "狭い", -1, 18, 171, 36, 11
+    LTEXT "広い", -1, 192, 171, 36, 11
     CONTROL "", IDC_CURSOR_WIDTH_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             60, 169, 126, 20
     LTEXT "", IDC_CURSOR_WIDTH_TEXT, 18, 142, 24, 16
@@ -109,129 +109,129 @@ END
 
 IDD_STICKYKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Sticky Keys Settings"
+CAPTION "固定キー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "Keys", -1, 6, 11, 234, 62
-    LTEXT "Press the SHIFT-Key 5 times in order to activate the Sticky Keys feature.",
+    GROUPBOX "キー", -1, 6, 11, 234, 62
+    LTEXT "固定キー機能を有効にするにはShiftキーを5回押して下さい。",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "A&ctivate sticky keys", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
-    GROUPBOX "Options", -1, 6, 83, 234, 44
-    AUTOCHECKBOX "&Press modifier key twice to lock", IDC_STICKY_LOCK_CHECK,
+    AUTOCHECKBOX "固定キーを有効にする(&C)", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
+    GROUPBOX "オプション", -1, 6, 83, 234, 44
+    AUTOCHECKBOX "修飾キーを2回押すとロックする(&P)", IDC_STICKY_LOCK_CHECK,
                  12, 94, 222, 14
-    AUTOCHECKBOX "&Turn StickyKeys off if two keys are pressed at once", IDC_STICKY_UNLOCK_CHECK,
+    AUTOCHECKBOX "一度に2つのキーが押されたら固定キーをオフにする(&T)", IDC_STICKY_UNLOCK_CHECK,
                  12, 106, 222, 14
-    GROUPBOX "Notifications", -1, 6, 133, 234, 44
-    AUTOCHECKBOX "&Make sounds when the modifier key is pressed", IDC_STICKY_SOUND_CHECK,
+    GROUPBOX "通知", -1, 6, 133, 234, 44
+    AUTOCHECKBOX "修飾キーが押されたら音を鳴らす(&M)", IDC_STICKY_SOUND_CHECK,
                  12, 148, 222, 14
-    AUTOCHECKBOX "&Show StickyKeys status on screen", IDC_STICKY_STATUS_CHECK,
+    AUTOCHECKBOX "固定キーの状態をスクリーンに表示(&S)", IDC_STICKY_STATUS_CHECK,
                  12, 160, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_FILTERKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Filter Keys Settings"
+CAPTION "フィルタキー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for FilterKeys is:  \nHold down <Right Shift> for eight seconds.",
+    GROUPBOX "キーボード ショートカット", -1, 6, 11, 234, 62
+    LTEXT "フィルタキーのショートカットは:\n<右Shift>を8秒間押し続ける。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Use shortcut", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
-    GROUPBOX "Filter options", -1, 6, 79, 234, 79
-    AUTORADIOBUTTON "Ign&ore repeated keystrokes", IDC_FILTER_BOUNCE_RADIO,
+    GROUPBOX "フィルタ オプション", -1, 6, 79, 234, 79
+    AUTORADIOBUTTON "連続したキーストロークを無視する(&O)", IDC_FILTER_BOUNCE_RADIO,
                     12, 91, 120, 11, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Ig&nore quick keystrokes and slow down the repeat rate", IDC_FILTER_REPEAT_RADIO,
+    AUTORADIOBUTTON "素早いキーストロークを無視して、リピート率を遅くする(&N)", IDC_FILTER_REPEAT_RADIO,
                     12, 106, 120, 20, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "&Settings", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
-    PUSHBUTTON "S&ettings", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
-    LTEXT "&Click here and type here to test the settings:", -1, 12, 129, 222, 11
+    PUSHBUTTON "設定(&S)", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
+    PUSHBUTTON "設定(&E)", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
+    LTEXT "設定をテストするには、ここをクリックして入力して下さい(&C):", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
-    GROUPBOX "Notifications", -1, 6, 161, 234, 41
-    AUTOCHECKBOX "&Beep when keys pressed or accepted", IDC_FILTER_SOUND_CHECK,
+    GROUPBOX "通知", -1, 6, 161, 234, 41
+    AUTOCHECKBOX "キーが押されたか受け付けたとき音を鳴らす(&B)", IDC_FILTER_SOUND_CHECK,
                  12, 169, 222, 10
-    AUTOCHECKBOX "S&how FilterKey status on screen", IDC_FILTER_STATUS_CHECK,
+    AUTOCHECKBOX "スクリーンにフィルタキーの状態を表示(&H)", IDC_FILTER_STATUS_CHECK,
                  12, 188, 222, 10
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_TOGGLEKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Toggle Keys Settings"
+CAPTION "キーの入れ替え設定"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for ToggleKeys is: \nHold down <Num Lock> for five seconds.",
+    GROUPBOX "キーボード ショートカット", -1, 6, 11, 234, 62
+    LTEXT "キー入れ替えのショートカットは:\n5秒間、<NumLock>を押し続ける。",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "Use &shortcut", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
+    AUTOCHECKBOX "ショートカットを使う(&S)", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_CONTRASTOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "High Contrast Settings"
+CAPTION "ハイコントラスト設定"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for High Contrast is:  \nPress <Left Alt+Left Shift+Print Screen>.",
+    GROUPBOX "キーボード ショートカット", -1, 6, 11, 234, 62
+    LTEXT "The shortcut for High Contrast is:\nPress <Left Alt+Left Shift+Print Screen>.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Use shortcut", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
-    GROUPBOX "High Contrast Color Scheme", -1, 6, 83, 234, 44
-    LTEXT "Current Color Scheme:", -1, 12, 94, 222, 11
+    AUTOCHECKBOX "ショートカットを使う(&U)", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
+    GROUPBOX "ハイコントラスト配色", -1, 6, 83, 234, 44
+    LTEXT "現在の配色:", -1, 12, 94, 222, 11
     COMBOBOX IDC_CONTRAST_COMBO, 12, 103, 222, 56,
              CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_MOUSEKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Mouse Keys Settings"
+CAPTION "マウスキー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for Mouse Keys is:  \nPress <Left Alt+Left Shift+Num Lock>.",
+    GROUPBOX "キーボード ショートカット", -1, 6, 11, 234, 62
+    LTEXT "マウスキーのショートカットは:\n<← Alt+← Shift+NumLock> を押して下さい。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Use shortcut", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
-    GROUPBOX "Pointer speed", -1, 6, 83, 234, 83
-    LTEXT "&Top speed:", -1, 12, 96, 48, 11
-    LTEXT "Low", -1, 66, 96, 18, 11
+    GROUPBOX "ポインタ速度", -1, 6, 83, 234, 83
+    LTEXT "最高速度(&T):", -1, 12, 96, 48, 11
+    LTEXT "低い", -1, 66, 96, 18, 11
     CONTROL "", IDC_MOUSEKEYS_SPEED_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 94, 114, 20
-    LTEXT "High", -1, 204, 96, 18, 11
-    LTEXT "&Acceleration:", -1, 12, 123, 48, 11
-    LTEXT "Slow", -1, 66, 123, 18, 11
+    LTEXT "高い", -1, 204, 96, 18, 11
+    LTEXT "加速(&A):", -1, 12, 123, 48, 11
+    LTEXT "遅い", -1, 66, 123, 18, 11
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
-    LTEXT "Fast", -1, 204, 123, 18, 11
-    AUTOCHECKBOX "&Hold down Ctrl to speed up and Shift to slow down", IDC_MOUSEKEYS_SPEED_CHECK,
+    LTEXT "速い", -1, 204, 123, 18, 11
+    AUTOCHECKBOX "速度を上げたいときにCtrlを、遅くしたいときにShiftを押す", IDC_MOUSEKEYS_SPEED_CHECK,
                  12, 142, 222, 14
-    LTEXT "Use MouseKeys when NumLock is:", -1, 6, 171, 120, 11
+    LTEXT "NumLockが次のときにマウスキーを使う:", -1, 6, 171, 120, 11
     AUTORADIOBUTTON "O&n", IDC_MOUSEKEYS_ON_RADIO, 162, 171, 30, 11
     AUTORADIOBUTTON "Of&f", IDC_MOUSEKEYS_OFF_RADIO, 198, 171, 30, 11
-    AUTOCHECKBOX "&Show MouseKey status on screen", IDC_MOUSEKEYS_STATUS_CHECK,
+    AUTOCHECKBOX "スクリーンにマウスキー状態を表示(&S)", IDC_MOUSEKEYS_STATUS_CHECK,
                  6, 184, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_BOUNCEKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced FilterKeys Settings"
+CAPTION "高度なフィルタキーの設定"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "Bounce Keys", -1, 6, 11, 234, 47
-    LTEXT "&Ignore keystrokes repeated faster than:", -1, 12, 21, 222, 20
+    GROUPBOX "バウンスキー", -1, 6, 11, 234, 47
+    LTEXT "次よりも速い連続のキーストロークを無視する(&I):", -1, 12, 21, 222, 20
     COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Test area:", -1, 6, 68, 48, 11
+    LTEXT "テストエリア(&T):", -1, 6, 68, 48, 11
     EDITTEXT IDC_BOUNCE_TEST_EDIT, 60, 65, 180, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_REPEATKEYSOPTIONS DIALOGEX 0, 0, 246, 228
@@ -239,53 +239,53 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Advanced FilterKeys Settings"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "Repeat Keys", -1, 6, 11, 234, 106
+    GROUPBOX "リピート キー", -1, 6, 11, 234, 106
     LTEXT "Override settings on the Keyboard control panel:",
           -1, 12, 20, 222, 20
-    AUTORADIOBUTTON "&No keyboard repeat", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 78, 11, WS_GROUP
-    AUTORADIOBUTTON "&Slow down keyboard repeat rates", IDC_REPEAT_REPEAT_RADIO, 12, 45, 131, 11
-    LTEXT "Repeat &delay:", -1, 24, 60, 60, 11
+    AUTORADIOBUTTON "キーをリピートしない(&N)", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 78, 11, WS_GROUP
+    AUTORADIOBUTTON "キー リピート率を遅くする(&S)", IDC_REPEAT_REPEAT_RADIO, 12, 45, 131, 11
+    LTEXT "リピート遅延(&D):", -1, 24, 60, 60, 11
     COMBOBOX IDC_REPEAT_DELAY_COMBO, 24, 71, 210, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Repeat &rate:", -1, 24, 89, 60, 11
+    LTEXT "リピート率(&R):", -1, 24, 89, 60, 11
     COMBOBOX IDC_REPEAT_REPEAT_COMBO, 24, 100, 210, 65,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    GROUPBOX "Slow Keys", -1, 6, 124, 234, 42
-    LTEXT "&Keys must be held down for:", -1, 12, 133, 222, 11
+    GROUPBOX "遅いキー", -1, 6, 124, 234, 42
+    LTEXT "キーは次の時間以上押し続ける(&K):", -1, 12, 133, 222, 11
     COMBOBOX IDC_REPEAT_WAIT_COMBO, 12, 150, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Test area:", -1, 6, 178, 48, 11
+    LTEXT "テストエリア(&T):", -1, 6, 178, 48, 11
     EDITTEXT IDC_REPEAT_TEST_EDIT, 60, 180, 180, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_SERIALKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "SerialKeys Settings"
+CAPTION "シリアルキー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "Serial Keys", -1, 6, 11, 234, 92
-    LTEXT "Choose the port where you connect an alternative input device.",
+    GROUPBOX "シリアルキー", -1, 6, 11, 234, 92
+    LTEXT "代替入力デバイスに接続するポートを選んで下さい。",
           -1, 12, 20, 222, 20
-    LTEXT "&Serial port:", -1, 12, 34, 222, 20
+    LTEXT "シリアルポート(&S):", -1, 12, 34, 222, 20
     COMBOBOX IDC_SERIAL_PORT_COMBO, 12, 45, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Baud rate:", -1, 12, 65, 222, 20
+    LTEXT "ボーレート(&B):", -1, 12, 65, 222, 20
     COMBOBOX IDC_SERIAL_BAUD_COMBO, 12, 76, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 189, 207, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "ユーザー補助"
     IDS_CPLSYSTEMDESCRIPTION "視覚、聴覚、四肢の状態に合わせて、ユーザーを補助する機能を調整します。"
-    IDS_SENTRY_NONE "[None]"
-    IDS_SENTRY_TITLE "Flash the titlebar"
-    IDS_SENTRY_WINDOW "Flash the active window"
-    IDS_SENTRY_DISPLAY "Flash the desktop"
-    IDS_SECONDS "Seconds"
-    IDS_MINUTES "Minutes"
+    IDS_SENTRY_NONE "[なし]"
+    IDS_SENTRY_TITLE "タイトルバーを点滅"
+    IDS_SENTRY_WINDOW "アクティブウィンドウを点滅"
+    IDS_SENTRY_DISPLAY "デスクトップを点滅"
+    IDS_SECONDS "秒"
+    IDS_MINUTES "分"
 END

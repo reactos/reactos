@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/selectionmodel.cpp
  * PURPOSE:     Keep track of selection parameters, notify listeners
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
@@ -13,11 +14,28 @@
 /* FUNCTIONS ********************************************************/
 
 SelectionModel::SelectionModel()
+    : m_hDC(CreateCompatibleDC(NULL))
+    , m_hBm(NULL)
+    , m_hMask(NULL)
+    , m_ptStack(NULL)
+    , m_iPtSP(0)
 {
-    m_ptStack = NULL;
-    m_iPtSP = 0;
+    SetRectEmpty(&m_rcSrc);
+    SetRectEmpty(&m_rcDest);
+}
 
-    m_hDC = CreateCompatibleDC(NULL);
+SelectionModel::~SelectionModel()
+{
+    DeleteDC(m_hDC);
+    ResetPtStack();
+    if (m_hBm)
+    {
+        DeleteObject(m_hBm);
+    }
+    if (m_hMask)
+    {
+        DeleteObject(m_hMask);
+    }
 }
 
 void SelectionModel::ResetPtStack()
@@ -221,7 +239,7 @@ void SelectionModel::DrawFramePoly(HDC hDCImage)
     Poly(hDCImage, m_ptStack, m_iPtSP, 0, 0, 2, 0, FALSE, TRUE); /* draw the freehand selection inverted/xored */
 }
 
-void SelectionModel::SetSrcAndDestRectFromPoints(POINT& ptFrom, POINT& ptTo)
+void SelectionModel::SetSrcAndDestRectFromPoints(const POINT& ptFrom, const POINT& ptTo)
 {
     m_rcDest.left = m_rcSrc.left = min(ptFrom.x, ptTo.x);
     m_rcDest.top = m_rcSrc.top = min(ptFrom.y, ptTo.y);

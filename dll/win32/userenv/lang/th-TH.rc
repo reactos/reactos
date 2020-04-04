@@ -1,5 +1,6 @@
 LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
+/* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\เอกสารและการตั้งค่า"
@@ -17,7 +18,7 @@ BEGIN
     IDS_STARTUP "เริ่มรายการ\\โปรแกรม\\เริ่มต้น"
     IDS_LOCALSETTINGS "การตั้งค่าตั้งต้น"
     IDS_LOCALAPPDATA "การตั้งค่าตั้งต้น\\ข้อมูลประยุกต์"
-    IDS_TEMP "การตั้งค่าตั้งต้น\\เก็บชั่วคราว"
+    IDS_TEMP "การตั้งค่าตั้งต้น\\เก็บชั่วคราว" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "การตั้งค่าตั้งต้น\\เก็บไฟล์อินเตอร์เน็ตชั่วคราว"
     IDS_HISTORY "การตั้งค่าตั้งต้น\\ประวัติใช้งาน"
     IDS_COOKIES "คุกกี้"

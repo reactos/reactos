@@ -65,7 +65,8 @@ list(APPEND SOURCE
 add_library(libxml2 ${SOURCE})
 
 if(MSVC AND (NOT USE_CLANG_CL))
-    # Formal parameter different from declaration
+    # Unreferenced local variable
+    replace_compile_flags("/we4101" " ")
     add_target_compile_flags(libxml2 "/wd4101")
     # Local variable initialized but not referenced
     replace_compile_flags("/we4189" " ")

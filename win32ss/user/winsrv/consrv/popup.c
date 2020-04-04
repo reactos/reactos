@@ -58,9 +58,9 @@ DrawBox(PTEXTMODE_SCREEN_BUFFER Buffer,
 
     /* Set screen attributes */
     coPos.X = xLeft;
+    Code.Attribute = Buffer->PopupDefaultAttrib;
     for (coPos.Y = yTop; coPos.Y < yTop + Height; coPos.Y++)
     {
-        Code.Attribute = Buffer->PopupDefaultAttrib;
         ConDrvFillConsoleOutput(Buffer->Header.Console,
                                 Buffer,
                                 CODE_ATTRIBUTE,

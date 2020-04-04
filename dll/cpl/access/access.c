@@ -13,9 +13,8 @@
 
 #define NUM_APPLETS	(1)
 
-LONG CALLBACK SystemApplet(VOID);
+static LONG CALLBACK SystemApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 HINSTANCE hApplet = 0;
-HWND hCPLWindow;
 
 /* Applets */
 APPLET Applets[NUM_APPLETS] =
@@ -185,13 +184,17 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 /* First Applet */
 
 LONG CALLBACK
-SystemApplet(VOID)
+SystemApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     PGLOBAL_DATA pGlobalData;
     PROPSHEETPAGE psp[5];
     PROPSHEETHEADER psh;
     TCHAR Caption[1024];
+    INT nPage = 0;
     INT ret;
+
+    if (uMsg == CPL_STARTWPARMSW && lParam != 0)
+        nPage = _wtoi((PWSTR)lParam);
 
     LoadString(hApplet, IDS_CPLSYSTEMNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
@@ -208,7 +211,7 @@ SystemApplet(VOID)
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USEICONID | PSH_USECALLBACK;
-    psh.hwndParent = hCPLWindow;
+    psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLACCESS);
     psh.pszCaption = Caption;
@@ -222,6 +225,9 @@ SystemApplet(VOID)
     InitPropSheetPage(&psp[2], IDD_PROPPAGEDISPLAY, DisplayPageProc, pGlobalData);
     InitPropSheetPage(&psp[3], IDD_PROPPAGEMOUSE, MousePageProc, pGlobalData);
     InitPropSheetPage(&psp[4], IDD_PROPPAGEGENERAL, GeneralPageProc, pGlobalData);
+
+    if (nPage != 0 && nPage <= psh.nPages)
+        psh.nStartPage = nPage;
 
     ret = PropertySheet(&psh);
 
@@ -258,9 +264,11 @@ CPlApplet(HWND hwndCPl,
             break;
 
         case CPL_DBLCLK:
-            hCPLWindow = hwndCPl;
-            Applets[i].AppletProc();
+            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
             break;
+
+        case CPL_STARTWPARMSW:
+            return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
     }
 
     return FALSE;

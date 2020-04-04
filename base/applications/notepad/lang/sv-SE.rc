@@ -152,7 +152,7 @@ Vill du skapa en ny fil?"
 Vill du spara ändringarna?"
     STRING_NOTFOUND "'%s' hittades inte."
     STRING_OUT_OF_MEMORY "Det finns inte tillräckligt med minne för att kunna slutföra \
-den här åtgärden. \nAvsluta ett eller flera program för att frigöra mer minne."
+den här åtgärden.\nAvsluta ett eller flera program för att frigöra mer minne."
     STRING_CANNOTFIND "Cannot find '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

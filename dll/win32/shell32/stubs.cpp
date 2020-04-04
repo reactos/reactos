@@ -39,17 +39,6 @@ SHFindComputer(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 /*
  * Unimplemented
  */
-EXTERN_C HRESULT
-WINAPI
-SHLimitInputEdit(HWND hWnd, IShellFolder *psf)
-{
-    FIXME("SHLimitInputEdit() stub\n");
-    return S_FALSE;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C BOOL
 WINAPI
 SHLimitInputCombo(HWND hWnd, LPVOID lpUnknown)

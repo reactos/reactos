@@ -101,6 +101,7 @@ struct gdi_dc_funcs
     BOOL     (*pGetCharABCWidths)(PHYSDEV,UINT,UINT,LPABC);
     BOOL     (*pGetCharABCWidthsI)(PHYSDEV,UINT,UINT,WORD*,LPABC);
     BOOL     (*pGetCharWidth)(PHYSDEV,UINT,UINT,LPINT);
+    BOOL     (*pGetCharWidthInfo)(PHYSDEV,PVOID);
     INT      (*pGetDeviceCaps)(PHYSDEV,INT);
     BOOL     (*pGetDeviceGammaRamp)(PHYSDEV,LPVOID);
     DWORD    (*pGetFontData)(PHYSDEV,DWORD,DWORD,LPVOID,DWORD);
@@ -197,7 +198,7 @@ struct gdi_dc_funcs
 };
 
 /* increment this when you change the DC function table */
-#define WINE_GDI_DRIVER_VERSION 46
+#define WINE_GDI_DRIVER_VERSION 49
 
 #define GDI_PRIORITY_NULL_DRV        0  /* null driver */
 #define GDI_PRIORITY_FONT_DRV      100  /* any font driver */

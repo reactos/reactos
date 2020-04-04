@@ -44,7 +44,7 @@ MountMgrCreatePointWorker(IN PDEVICE_EXTENSION DeviceExtension,
     PDEVICE_INFORMATION DeviceInformation = NULL, DeviceInfo;
 
     /* Get device name */
-    Status = QueryDeviceInformation(SymbolicLinkName,
+    Status = QueryDeviceInformation(DeviceName,
                                     &TargetDeviceName,
                                     NULL, NULL, NULL,
                                     NULL, NULL, NULL);
@@ -241,11 +241,12 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
     NTSTATUS Status;
     PIO_STACK_LOCATION Stack;
     UNICODE_STRING DeviceName;
-    ULONG TotalSize, TotalSymLinks;
     PMOUNTMGR_MOUNT_POINTS MountPoints;
     PDEVICE_INFORMATION DeviceInformation;
     PLIST_ENTRY DeviceEntry, SymlinksEntry;
     PSYMLINK_INFORMATION SymlinkInformation;
+    USHORT UniqueIdLength, DeviceNameLength;
+    ULONG TotalSize, TotalSymLinks, UniqueIdOffset, DeviceNameOffset;
 
     /* If we got a symbolic link, query device */
     if (SymbolicName)
@@ -336,9 +337,9 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
     MountPoints = (PMOUNTMGR_MOUNT_POINTS)Irp->AssociatedIrp.SystemBuffer;
 
     /* Ensure we set output to let user reallocate! */
-    MountPoints->Size = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSize;
+    MountPoints->Size = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSymLinks * sizeof(MOUNTMGR_MOUNT_POINT) + TotalSize;
     MountPoints->NumberOfMountPoints = TotalSymLinks;
-    Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSize;
+    Irp->IoStatus.Information = MountPoints->Size;
 
     if (MountPoints->Size > Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
@@ -353,8 +354,8 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Now, start putting mount points */
+    TotalSize = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSymLinks * sizeof(MOUNTMGR_MOUNT_POINT);
     TotalSymLinks = 0;
-    TotalSize = 0;
     for (DeviceEntry = DeviceExtension->DeviceListHead.Flink;
          DeviceEntry != &(DeviceExtension->DeviceListHead);
          DeviceEntry = DeviceEntry->Flink)
@@ -384,6 +385,26 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
             }
         }
 
+        /* Save our information about shared data */
+        UniqueIdOffset = TotalSize;
+        UniqueIdLength = DeviceInformation->UniqueId->UniqueIdLength;
+        DeviceNameOffset = TotalSize + UniqueIdLength;
+        DeviceNameLength = DeviceInformation->DeviceName.Length;
+
+        /* Initialize first symlink */
+        MountPoints->MountPoints[TotalSymLinks].UniqueIdOffset = UniqueIdOffset;
+        MountPoints->MountPoints[TotalSymLinks].UniqueIdLength = UniqueIdLength;
+        MountPoints->MountPoints[TotalSymLinks].DeviceNameOffset = DeviceNameOffset;
+        MountPoints->MountPoints[TotalSymLinks].DeviceNameLength = DeviceNameLength;
+
+        /* And copy data */
+        RtlCopyMemory((PWSTR)((ULONG_PTR)MountPoints + UniqueIdOffset),
+                      DeviceInformation->UniqueId->UniqueId, UniqueIdLength);
+        RtlCopyMemory((PWSTR)((ULONG_PTR)MountPoints + DeviceNameOffset),
+                      DeviceInformation->DeviceName.Buffer, DeviceNameLength);
+
+        TotalSize += DeviceInformation->UniqueId->UniqueIdLength + DeviceInformation->DeviceName.Length;
+
         /* Now we've got it, but all the data */
         for (SymlinksEntry = DeviceInformation->SymbolicLinksListHead.Flink;
              SymlinksEntry != &(DeviceInformation->SymbolicLinksListHead);
@@ -391,31 +412,33 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
         {
             SymlinkInformation = CONTAINING_RECORD(SymlinksEntry, SYMLINK_INFORMATION, SymbolicLinksListEntry);
 
+            /* First, set shared data */
 
-            MountPoints->MountPoints[TotalSymLinks].SymbolicLinkNameOffset = sizeof(MOUNTMGR_MOUNT_POINTS) +
-                                                                             TotalSize;
+            /* Only put UniqueID if online */
+            if (SymlinkInformation->Online)
+            {
+                MountPoints->MountPoints[TotalSymLinks].UniqueIdOffset = UniqueIdOffset;
+                MountPoints->MountPoints[TotalSymLinks].UniqueIdLength = UniqueIdLength;
+            }
+            else
+            {
+                MountPoints->MountPoints[TotalSymLinks].UniqueIdOffset = 0;
+                MountPoints->MountPoints[TotalSymLinks].UniqueIdLength = 0;
+            }
+
+            MountPoints->MountPoints[TotalSymLinks].DeviceNameOffset = DeviceNameOffset;
+            MountPoints->MountPoints[TotalSymLinks].DeviceNameLength = DeviceNameLength;
+
+            /* And now, copy specific symlink info */
+            MountPoints->MountPoints[TotalSymLinks].SymbolicLinkNameOffset = TotalSize;
             MountPoints->MountPoints[TotalSymLinks].SymbolicLinkNameLength = SymlinkInformation->Name.Length;
-            MountPoints->MountPoints[TotalSymLinks].UniqueIdOffset = sizeof(MOUNTMGR_MOUNT_POINTS) +
-                                                                     SymlinkInformation->Name.Length +
-                                                                     TotalSize;
-            MountPoints->MountPoints[TotalSymLinks].UniqueIdLength = DeviceInformation->UniqueId->UniqueIdLength;
-            MountPoints->MountPoints[TotalSymLinks].DeviceNameOffset = sizeof(MOUNTMGR_MOUNT_POINTS) +
-                                                                       SymlinkInformation->Name.Length +
-                                                                       DeviceInformation->UniqueId->UniqueIdLength +
-                                                                       TotalSize;
-            MountPoints->MountPoints[TotalSymLinks].DeviceNameLength = DeviceInformation->DeviceName.Length;
 
             RtlCopyMemory((PWSTR)((ULONG_PTR)MountPoints + MountPoints->MountPoints[TotalSymLinks].SymbolicLinkNameOffset),
                           SymlinkInformation->Name.Buffer, SymlinkInformation->Name.Length);
-            RtlCopyMemory((PWSTR)((ULONG_PTR)MountPoints + MountPoints->MountPoints[TotalSymLinks].UniqueIdOffset),
-                          DeviceInformation->UniqueId->UniqueId, DeviceInformation->UniqueId->UniqueIdLength);
-            RtlCopyMemory((PWSTR)((ULONG_PTR)MountPoints + MountPoints->MountPoints[TotalSymLinks].DeviceNameOffset),
-                  DeviceInformation->DeviceName.Buffer, DeviceInformation->DeviceName.Length);
 
             /* Update counters */
             TotalSymLinks++;
-            TotalSize += SymlinkInformation->Name.Length + DeviceInformation->UniqueId->UniqueIdLength +
-                         DeviceInformation->DeviceName.Length;
+            TotalSize += SymlinkInformation->Name.Length;
         }
 
         if (UniqueId || SymbolicName)
@@ -478,7 +501,7 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
         /* Check for the link */
         for (SymlinksEntry = DeviceInformation->SymbolicLinksListHead.Flink;
              SymlinksEntry != &(DeviceInformation->SymbolicLinksListHead);
-             SymlinksEntry = DeviceEntry->Flink)
+             SymlinksEntry = SymlinksEntry->Flink)
         {
             SymlinkInformation = CONTAINING_RECORD(SymlinksEntry, SYMLINK_INFORMATION, SymbolicLinksListEntry);
 

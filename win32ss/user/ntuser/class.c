@@ -2706,6 +2706,10 @@ NtUserGetClassInfo(
     {
         ProbeForWrite( lpWndClassEx, sizeof(WNDCLASSEXW), sizeof(ULONG));
         RtlCopyMemory( &Safewcexw, lpWndClassEx, sizeof(WNDCLASSEXW));
+        if (ppszMenuName)
+        {
+            ProbeForWrite(ppszMenuName, sizeof(*ppszMenuName), sizeof(PVOID));
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -2811,6 +2815,12 @@ NtUserGetClassName (IN HWND hWnd,
         {
             ProbeForWriteUnicodeString(ClassName);
             CapturedClassName = *ClassName;
+            if (CapturedClassName.Length != 0)
+            {
+                ProbeForRead(CapturedClassName.Buffer,
+                             CapturedClassName.Length,
+                             sizeof(WCHAR));
+            }
 
             /* Get the class name */
             Ret = UserGetClassName(Window->pcls,

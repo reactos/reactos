@@ -5009,9 +5009,8 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 		result = EDIT_WM_NCDestroy(es);
 #ifdef __REACTOS__
 		NtUserSetWindowFNID(hwnd, FNID_DESTROY);
-#else
-		es = NULL;
 #endif
+		es = NULL;
 		break;
 
 	case WM_GETDLGCODE:

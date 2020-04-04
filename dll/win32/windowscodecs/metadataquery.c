@@ -242,7 +242,6 @@ static HRESULT get_token(struct string_t *elem, PROPVARIANT *id, PROPVARIANT *sc
         bstr = next_token.u.bstrVal;
 
         end++;
-        p = end;
         while (*end && *end != '}' && end - start < elem->len)
         {
             if (*end == '\\') end++;
@@ -925,7 +924,7 @@ HRESULT WINAPI WICMapSchemaToName(REFGUID format, LPWSTR schema, UINT len, WCHAR
                     return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
             }
 
-            if (ret_len) *ret_len = lstrlenW(name2schema[i].name) + 1;
+            *ret_len = lstrlenW(name2schema[i].name) + 1;
             return S_OK;
         }
     }

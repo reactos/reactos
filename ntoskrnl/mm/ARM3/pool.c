@@ -480,7 +480,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             //
             // Get the page bit count
             //
-            i = ((SizeInPages - 1) / PTE_COUNT) + 1;
+            i = ((SizeInPages - 1) / PTE_PER_PAGE) + 1;
             DPRINT("Paged pool expansion: %lu %x\n", i, SizeInPages);
 
             //
@@ -566,7 +566,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 /* Initialize the PFN */
                 MiInitializePfnForOtherProcess(PageFrameNumber,
                                                (PMMPTE)PointerPde,
-                                               MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
+                                               MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_PER_PAGE]);
 #endif
 
                 //
@@ -586,11 +586,11 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // These pages are now available, clear their availablity bits
             //
             EndAllocation = (ULONG)(MmPagedPoolInfo.NextPdeForPagedPoolExpansion -
-                             (PMMPDE)MiAddressToPte(MmPagedPoolInfo.FirstPteForPagedPool)) *
-                             PTE_COUNT;
+                                    (PMMPDE)MiAddressToPte(MmPagedPoolInfo.FirstPteForPagedPool)) *
+                            PTE_PER_PAGE;
             RtlClearBits(MmPagedPoolInfo.PagedPoolAllocationMap,
                          EndAllocation,
-                         PageTableCount * PTE_COUNT);
+                         PageTableCount * PTE_PER_PAGE);
 
             //
             // Update the next expansion location

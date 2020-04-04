@@ -99,7 +99,18 @@ public:
         _In_reads_(NumElements) T* Source,
         _In_ size_t NumElements)
     {
+        // A simple memmove works for most of the types.
+        // You'll have to override this for types that have pointers to their
+        // own members.
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
         memmove(Dest, Source, NumElements * sizeof(T));
+#if defined(__GNUC__) && __GNUC__ >= 8
+    #pragma GCC diagnostic pop
+#endif
     }
 };
 
@@ -144,6 +155,17 @@ class CElementTraits :
     public CDefaultElementTraits<T>
 {
 };
+
+
+template<typename T, class Allocator = CCRTAllocator>
+class CHeapPtrElementTraits :
+    public CDefaultElementTraits< CHeapPtr<T, Allocator> >
+{
+public:
+    typedef CHeapPtr<T, Allocator>& INARGTYPE;
+    typedef T*& OUTARGTYPE;
+};
+
 
 
 template<typename E, class ETraits = CElementTraits<E> >
@@ -840,6 +862,23 @@ typename CAtlList<E, ETraits>::CNode* CAtlList< E, ETraits>::GetFreeNode()
 
     return m_FreeNode;
 }
+
+
+template<typename E, class Allocator = CCRTAllocator >
+class CHeapPtrList :
+    public CAtlList<CHeapPtr<E, Allocator>, CHeapPtrElementTraits<E, Allocator> >
+{
+public:
+    CHeapPtrList(_In_ UINT nBlockSize = 10) :
+        CAtlList<CHeapPtr<E, Allocator>, CHeapPtrElementTraits<E, Allocator> >(nBlockSize)
+    {
+    }
+
+private:
+    CHeapPtrList(const CHeapPtrList&);
+    CHeapPtrList& operator=(const CHeapPtrList*);
+};
+
 
 }
 

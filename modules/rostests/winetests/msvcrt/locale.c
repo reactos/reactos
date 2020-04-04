@@ -759,7 +759,7 @@ static void test___mb_cur_max_func(void)
 
     /* for older Windows */
     if (!p__p___mb_cur_max)
-        win_skip("Skipping __p___mb_cur_max tests\n");
+        skip("Skipping __p___mb_cur_max tests\n");
     else {
         mb_cur_max = *p__p___mb_cur_max();
         ok(mb_cur_max == 1, "mb_cur_max = %d, expected 1\n", mb_cur_max);

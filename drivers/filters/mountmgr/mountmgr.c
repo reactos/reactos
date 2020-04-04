@@ -42,6 +42,7 @@ KEVENT UnloadEvent;
 LONG Unloading;
 
 static const WCHAR Cunc[] = L"\\??\\C:";
+#define Cunc_LETTER_POSITION 4
 
 /*
  * @implemented
@@ -822,7 +823,7 @@ MountMgrUnload(IN struct _DRIVER_OBJECT *DriverObject)
     KeInitializeEvent(&UnloadEvent, NotificationEvent, FALSE);
 
     /* Wait for workers to finish */
-    if (InterlockedIncrement(&DeviceExtension->WorkerReferences))
+    if (InterlockedIncrement(&DeviceExtension->WorkerReferences) > 0)
     {
         KeReleaseSemaphore(&(DeviceExtension->WorkerSemaphore),
                            IO_NO_INCREMENT, 1, FALSE);
@@ -1106,7 +1107,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
         /* Start checking all letters that could have been associated */
         for (Letter = L'D'; Letter <= L'Z'; Letter++)
         {
-            CSymLink.Buffer[LETTER_POSITION] = Letter;
+            CSymLink.Buffer[Cunc_LETTER_POSITION] = Letter;
 
             InitializeObjectAttributes(&ObjectAttributes,
                                        &CSymLink,
@@ -1770,7 +1771,7 @@ MountMgrShutdown(IN PDEVICE_OBJECT DeviceObject,
     KeInitializeEvent(&UnloadEvent, NotificationEvent, FALSE);
 
     /* Wait for workers */
-    if (InterlockedIncrement(&(DeviceExtension->WorkerReferences)))
+    if (InterlockedIncrement(&(DeviceExtension->WorkerReferences)) > 0)
     {
         KeReleaseSemaphore(&(DeviceExtension->WorkerSemaphore),
                            IO_NO_INCREMENT,

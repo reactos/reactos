@@ -977,7 +977,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     HFONT hFont, hOldFont;
     TCHAR Symbol;
     RECT myr;
-    INT cxy, nBkMode;
+    INT cxy;
     cxy = UITOOLS_MakeSquareRect(r, &myr);
     switch(uFlags & 0xff)
     {
@@ -1034,9 +1034,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
        SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
     }
     /* draw selected symbol */
-    nBkMode = SetBkMode(dc, TRANSPARENT);
     TextOut(dc, myr.left, myr.top, &Symbol, 1);
-    SetBkMode(dc, nBkMode);
     /* restore previous settings */
     SelectObject(dc, hOldFont);
     DeleteObject(hFont);

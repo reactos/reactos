@@ -141,7 +141,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
     m_shellPidl = ILClone(pidl);
     m_hRoot = NULL;
 
-    StringCbCopy(m_NtPath, _countof(m_NtPath), L"");
+    StringCbCopyW(m_NtPath, sizeof(m_NtPath), L"");
     return S_OK;
 }
 
@@ -150,7 +150,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(PCIDLIST_ABSOLUTE pidl, PC
     m_shellPidl = ILClone(pidl);
     m_hRoot = hRoot;
 
-    StringCbCopy(m_NtPath, _countof(m_NtPath), ntPath);
+    StringCbCopyW(m_NtPath, sizeof(m_NtPath), ntPath);
     return S_OK;
 }
 

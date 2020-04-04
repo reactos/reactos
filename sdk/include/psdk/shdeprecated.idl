@@ -50,7 +50,7 @@ interface ITravelEntry : IUnknown
         [in] BOOL fIsLocalAnchor);
 
     HRESULT GetPidl(
-        [out] LPITEMIDLIST *ppidl);
+        [out] PIDLIST_ABSOLUTE *ppidl);
 };
 
 [
@@ -84,7 +84,7 @@ interface ITravelLog : IUnknown
 
     HRESULT FindTravelEntry(
         [in]  IUnknown *punk,
-        [in]  LPCITEMIDLIST pidl,
+        [in]  PCIDLIST_ABSOLUTE pidl,
         [out] ITravelEntry **ppte);
 
     HRESULT GetToolTipText(
@@ -343,17 +343,17 @@ typedef struct basebrowserdataxp
     DWORD               _fCreatingViewWindow;
     UINT                _uActivateState;
 
-    LPCITEMIDLIST       _pidlNewShellView;
+    PCIDLIST_ABSOLUTE   _pidlNewShellView;
 
     IOleCommandTarget   *_pctView;
 
-    LPITEMIDLIST        _pidlCur;
+    PIDLIST_ABSOLUTE    _pidlCur;
     IShellView          *_psv;
     IShellFolder        *_psf;
     HWND                _hwndView;
     LPWSTR              _pszTitleCur;
 
-    LPITEMIDLIST        _pidlPending;
+    PIDLIST_ABSOLUTE    _pidlPending;
     IShellView          *_psvPending;
     IShellFolder        *_psfPending;
     HWND                _hwndViewPending;
@@ -378,17 +378,17 @@ typedef struct basebrowserdatalh
     DWORD               _fCreatingViewWindow;
     UINT                _uActivateState;
 
-    LPCITEMIDLIST       _pidlNewShellView;
+    PCIDLIST_ABSOLUTE   _pidlNewShellView;
 
     IOleCommandTarget   *_pctView;
 
-    LPITEMIDLIST        _pidlCur;
+    PIDLIST_ABSOLUTE    _pidlCur;
     IShellView          *_psv;
     IShellFolder        *_psf;
     HWND                _hwndView;
     LPWSTR              _pszTitleCur;
 
-    LPITEMIDLIST        _pidlPending;
+    PIDLIST_ABSOLUTE    _pidlPending;
     IShellView          *_psvPending;
     IShellFolder        *_psfPending;
     HWND                _hwndViewPending;
@@ -535,13 +535,13 @@ interface IBrowserService2 : IBrowserService
     HRESULT _DisableModeless();
 
     HRESULT _NavigateToPidl(
-        [in] LPCITEMIDLIST pidl,
+        [in] PCIDLIST_ABSOLUTE pidl,
         [in] DWORD grfHLNF,
         [in] DWORD dwFlags);
 
     HRESULT _TryShell2Rename(
         [in] IShellView *psv,
-        [in] LPCITEMIDLIST pidlNew);
+        [in] PCIDLIST_ABSOLUTE pidlNew);
 
     HRESULT _SwitchActivationNow();
 
@@ -593,7 +593,7 @@ interface IBrowserService2 : IBrowserService
         [in] HMONITOR hmon);
 
     IStream* v_GetViewStream(
-        [in] LPCITEMIDLIST pidl,
+        [in] PCIDLIST_ABSOLUTE pidl,
         [in] DWORD grfMode,
         [in] LPCWSTR pwszName);
 
@@ -647,7 +647,7 @@ interface IBrowserService2 : IBrowserService
         [in] BOOL bUseHmonitor);
 
     HRESULT v_CheckZoneCrossing(
-        [in, out] LPCITEMIDLIST pidl);
+        [in, out] PCIDLIST_ABSOLUTE pidl);
 };
 
 [
@@ -666,7 +666,7 @@ interface IBrowserService3 : IBrowserService2
         [in] UINT uiCP,
         [in] LPCWSTR pwszPath,
         [in] DWORD dwFlags,
-        [out] LPITEMIDLIST *ppidlOut);
+        [out] PIDLIST_ABSOLUTE *ppidlOut);
 };
 
 [

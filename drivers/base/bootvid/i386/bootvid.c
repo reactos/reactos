@@ -485,5 +485,5 @@ VidResetDisplay(IN BOOLEAN HalReset)
 
     /* Re-initialize the palette and fill the screen black */
     InitializePalette();
-    VidSolidColorFill(0, 0, 639, 479, 0);
+    VidSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 0);
 }

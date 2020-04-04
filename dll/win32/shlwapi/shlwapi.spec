@@ -5,10 +5,10 @@
 5   stdcall -noname PathFindOnPathExA(str ptr long)
 6   stdcall -noname PathFindOnPathExW(wstr ptr long)
 7   stdcall -ordinal SHAllocShared(ptr long long)
-8   stdcall -ordinal SHLockShared(long long)
+8   stdcall -ordinal SHLockShared(ptr long)
 9   stdcall -ordinal SHUnlockShared(ptr)
-10  stdcall -ordinal SHFreeShared(long long)
-11  stdcall -noname SHMapHandle(long long long long long)
+10  stdcall -ordinal SHFreeShared(ptr long)
+11  stdcall -noname SHMapHandle(ptr long long long long)
 12  stdcall -noname SHCreateMemStream(ptr long)
 13  stdcall -noname RegisterDefaultAcceptHeaders(ptr ptr)
 14  stdcall -ordinal GetAcceptLanguagesA(ptr ptr)
@@ -507,7 +507,7 @@
 507 stdcall -stub -noname SHPropertyBag_ReadDWORD(ptr ptr ptr)
 508 stub -noname SHPropertyBag_WriteDWORD
 509 stdcall -noname IUnknown_OnFocusChangeIS(ptr ptr long)
-510 stub -noname SHLockSharedEx
+510 stdcall -noname SHLockSharedEx(ptr long long)
 511 stdcall -stub -noname PathFileExistsDefExtAndAttributesW(wstr long ptr)
 512 stub -ordinal IStream_ReadPidl
 513 stub -ordinal IStream_WritePidl

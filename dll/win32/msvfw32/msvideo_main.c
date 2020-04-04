@@ -35,11 +35,14 @@
 #include "winreg.h"
 #include "winnls.h"
 #include "wingdi.h"
+#include "wine/winternl.h"
 #include "winuser.h"
 #include "commdlg.h"
 #include "vfw.h"
 #include "msvideo_private.h"
 #include "wine/debug.h"
+#include "wine/heap.h"
+#include "wine/list.h"
 
 /* Drivers32 settings */
 #define HKLM_DRIVERS32 "Software\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32"
@@ -100,17 +103,15 @@ static const char *wine_dbgstr_icerr( int ret )
 
 static WINE_HIC*        MSVIDEO_FirstHic /* = NULL */;
 
-typedef struct _reg_driver reg_driver;
-struct _reg_driver
+struct reg_driver
 {
     DWORD       fccType;
     DWORD       fccHandler;
     DRIVERPROC  proc;
-    LPWSTR      name;
-    reg_driver* next;
+    struct list entry;
 };
 
-static reg_driver* reg_driver_list = NULL;
+static struct list reg_driver_list = LIST_INIT(reg_driver_list);
 
 HMODULE MSVFW32_hModule;
 
@@ -220,7 +221,7 @@ static int compare_fourcc(DWORD fcc1, DWORD fcc2)
   char fcc_str2[4];
   fourcc_to_string(fcc_str1, fcc1);
   fourcc_to_string(fcc_str2, fcc2);
-  return strncasecmp(fcc_str1, fcc_str2, 4);
+  return _strnicmp(fcc_str1, fcc_str2, 4);
 }
 
 static DWORD get_size_image(LONG width, LONG height, WORD depth)
@@ -230,53 +231,6 @@ static DWORD get_size_image(LONG width, LONG height, WORD depth)
     ret = (ret + 3) & ~3;   /* align to 4 bytes */
     ret *= abs(height);
     return ret;
-}
-
-typedef BOOL (*enum_handler_t)(const char *name, const char *driver, unsigned int index, void *param);
-
-static BOOL enum_drivers(DWORD fccType, enum_handler_t handler, void* param)
-{
-    char fccTypeStr[4];
-    char name_buf[10];
-    char buf[2048];
-
-    DWORD i, cnt = 0, lRet;
-    BOOL result = FALSE;
-    HKEY hKey;
-
-    fourcc_to_string(fccTypeStr, fccType);
-
-    /* first, go through the registry entries */
-    lRet = RegOpenKeyExA(HKEY_LOCAL_MACHINE, HKLM_DRIVERS32, 0, KEY_QUERY_VALUE, &hKey);
-    if (lRet == ERROR_SUCCESS) 
-    {
-        i = 0;
-        for (;;)
-        {
-            DWORD name_len = 10, driver_len = 128;
-            lRet = RegEnumValueA(hKey, i++, name_buf, &name_len, 0, 0, (BYTE *)buf, &driver_len);
-            if (lRet == ERROR_NO_MORE_ITEMS) break;
-            if (name_len != 9 || name_buf[4] != '.') continue;
-            if (fccType && strncasecmp(name_buf, fccTypeStr, 4)) continue;
-            if ((result = handler(name_buf, buf, cnt++, param))) break;
-        }
-        RegCloseKey( hKey );
-    }
-    if (result) return result;
-
-    /* if that didn't work, go through the values in system.ini */
-    if (GetPrivateProfileSectionA("drivers32", buf, sizeof(buf), "system.ini")) 
-    {
-        char *s;
-        for (s = buf; *s; s += strlen(s) + 1)
-        {
-            if (s[4] != '.' || s[9] != '=') continue;
-            if (fccType && strncasecmp(s, fccTypeStr, 4)) continue;
-            if ((result = handler(s, s + 10, cnt++, param))) break;
-        }
-    }
-
-    return result;
 }
 
 /******************************************************************
@@ -303,27 +257,6 @@ DWORD WINAPI VideoForWindowsVersion(void)
     return 0x040003B6; /* 4.950 */
 }
 
-static BOOL ICInfo_enum_handler(const char *name, const char *driver, unsigned int nr, void *param)
-{
-    ICINFO *lpicinfo = param;
-    DWORD fccType = mmioStringToFOURCCA(name, 0);
-    DWORD fccHandler = mmioStringToFOURCCA(name + 5, 0);
-
-    if (lpicinfo->fccHandler != nr && compare_fourcc(lpicinfo->fccHandler, fccHandler))
-        return FALSE;
-
-    lpicinfo->fccType = fccType;
-    lpicinfo->fccHandler = fccHandler;
-    lpicinfo->dwFlags = 0;
-    lpicinfo->dwVersion = 0;
-    lpicinfo->dwVersionICM = ICVERSION;
-    lpicinfo->szName[0] = 0;
-    lpicinfo->szDescription[0] = 0;
-    MultiByteToWideChar(CP_ACP, 0, driver, -1, lpicinfo->szDriver, ARRAY_SIZE(lpicinfo->szDriver));
-
-    return TRUE;
-}
-
 /***********************************************************************
  *		ICInfo				[MSVFW32.@]
  * Get information about an installable compressor. Return TRUE if there
@@ -334,99 +267,170 @@ static BOOL ICInfo_enum_handler(const char *name, const char *driver, unsigned i
  *   fccHandler  [I] real fcc for handler or <n>th compressor
  *   lpicinfo    [O] information about compressor
  */
-BOOL VFWAPI ICInfo( DWORD fccType, DWORD fccHandler, ICINFO *lpicinfo)
+BOOL VFWAPI ICInfo(DWORD type, DWORD handler, ICINFO *info)
 {
-    TRACE("(%s,%s,%p)\n",
-          wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), lpicinfo);
+    char name_buf[10], buf[2048];
+    DWORD ret_type, ret_handler;
+    struct reg_driver *driver;
+    DWORD i, count = 0;
+    LONG res;
+    HKEY key;
 
-    lpicinfo->fccType = fccType;
-    lpicinfo->fccHandler = fccHandler;
-    return enum_drivers(fccType, ICInfo_enum_handler, lpicinfo);
+    TRACE("type %s, handler %s, info %p.\n",
+            wine_dbgstr_fcc(type), wine_dbgstr_fcc(handler), info);
+
+    memset(info, 0, sizeof(*info));
+    info->dwSize = sizeof(*info);
+    info->dwVersionICM = ICVERSION;
+
+    if (!RegOpenKeyExA(HKEY_LOCAL_MACHINE, HKLM_DRIVERS32, 0, KEY_QUERY_VALUE, &key))
+    {
+        i = 0;
+        for (;;)
+        {
+            DWORD name_len = ARRAY_SIZE(name_buf), driver_len = ARRAY_SIZE(info->szDriver);
+
+            res = RegEnumValueA(key, i++, name_buf, &name_len, 0, 0, (BYTE *)buf, &driver_len);
+            if (res == ERROR_NO_MORE_ITEMS) break;
+
+            if (name_len != 9 || name_buf[4] != '.') continue;
+            ret_type = mmioStringToFOURCCA(name_buf, 0);
+            ret_handler = mmioStringToFOURCCA(name_buf + 5, 0);
+            if (type && compare_fourcc(type, ret_type)) continue;
+            if (compare_fourcc(handler, ret_handler) && handler != count++) continue;
+
+            info->fccType = ret_type;
+            info->fccHandler = ret_handler;
+            MultiByteToWideChar(CP_ACP, 0, buf, -1, info->szDriver, ARRAY_SIZE(info->szDriver));
+            TRACE("Returning codec %s, driver %s.\n", debugstr_a(name_buf), debugstr_a(buf));
+            return TRUE;
+        }
+        RegCloseKey(key);
+    }
+
+    if (GetPrivateProfileSectionA("drivers32", buf, sizeof(buf), "system.ini"))
+    {
+        char *s;
+        for (s = buf; *s; s += strlen(s) + 1)
+        {
+            if (s[4] != '.' || s[9] != '=') continue;
+            ret_type = mmioStringToFOURCCA(s, 0);
+            ret_handler = mmioStringToFOURCCA(s + 5, 0);
+            if (type && compare_fourcc(type, ret_type)) continue;
+            if (compare_fourcc(handler, ret_handler) && handler != count++) continue;
+
+            info->fccType = ret_type;
+            info->fccHandler = ret_handler;
+            MultiByteToWideChar(CP_ACP, 0, s + 10, -1, info->szDriver, ARRAY_SIZE(info->szDriver));
+            TRACE("Returning codec %s, driver %s.\n", debugstr_an(s, 8), debugstr_a(s + 10));
+            return TRUE;
+        }
+    }
+
+    LIST_FOR_EACH_ENTRY(driver, &reg_driver_list, struct reg_driver, entry)
+    {
+        if (type && compare_fourcc(type, driver->fccType)) continue;
+        if (compare_fourcc(handler, driver->fccHandler) && handler != count++) continue;
+        if (driver->proc(0, NULL, ICM_GETINFO, (DWORD_PTR)info, sizeof(*info)) == sizeof(*info))
+            return TRUE;
+    }
+
+    info->fccType = type;
+    info->fccHandler = handler;
+    WARN("No driver found for codec %s.%s.\n", wine_dbgstr_fcc(type), wine_dbgstr_fcc(handler));
+    return FALSE;
 }
 
 static DWORD IC_HandleRef = 1;
 
 /***********************************************************************
- *		ICInstall			[MSVFW32.@]
+ *              ICInstall                       [MSVFW32.@]
  */
-BOOL VFWAPI ICInstall(DWORD fccType, DWORD fccHandler, LPARAM lParam, LPSTR szDesc, UINT wFlags) 
+BOOL VFWAPI ICInstall(DWORD type, DWORD handler, LPARAM lparam, char *desc, UINT flags)
 {
-    reg_driver* driver;
-    unsigned len;
+    struct reg_driver *driver;
 
-    TRACE("(%s,%s,%p,%p,0x%08x)\n", wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), (void*)lParam, szDesc, wFlags);
+    TRACE("type %s, handler %s, lparam %#lx, desc %s, flags %#x.\n",
+            wine_dbgstr_fcc(type), wine_dbgstr_fcc(handler), lparam, debugstr_a(desc), flags);
 
-    /* Check if a driver is already registered */
-    for (driver = reg_driver_list; driver; driver = driver->next)
+    LIST_FOR_EACH_ENTRY(driver, &reg_driver_list, struct reg_driver, entry)
     {
-        if (!compare_fourcc(fccType, driver->fccType) &&
-            !compare_fourcc(fccHandler, driver->fccHandler))
-            break;
+        if (!compare_fourcc(type, driver->fccType)
+                && !compare_fourcc(handler, driver->fccHandler))
+        {
+            return FALSE;
+        }
     }
-    if (driver) return FALSE;
 
-    /* Register the driver */
-    driver = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(reg_driver));
-    if (!driver) goto oom;
-    driver->fccType = fccType;
-    driver->fccHandler = fccHandler;
-
-    switch(wFlags)
+    switch (flags)
     {
     case ICINSTALL_FUNCTION:
-        driver->proc = (DRIVERPROC)lParam;
-	driver->name = NULL;
-        break;
+        if (!(driver = heap_alloc_zero(sizeof(*driver))))
+            return FALSE;
+        driver->fccType = type;
+        driver->fccHandler = handler;
+        driver->proc = (DRIVERPROC)lparam;
+        list_add_tail(&reg_driver_list, &driver->entry);
+        return TRUE;
     case ICINSTALL_DRIVER:
-	driver->proc = NULL;
-        len = MultiByteToWideChar(CP_ACP, 0, (char*)lParam, -1, NULL, 0);
-        driver->name = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!driver->name) goto oom;
-        MultiByteToWideChar(CP_ACP, 0, (char*)lParam, -1, driver->name, len);
-	break;
-    default:
-	ERR("Invalid flags!\n");
-	HeapFree(GetProcessHeap(), 0, driver);
-	return FALSE;
-   }
+    {
+        const char *driver = (const char *)lparam;
+        char value[10];
+        HKEY key;
+        LONG res;
 
-   /* Insert our driver in the list*/
-   driver->next = reg_driver_list;
-   reg_driver_list = driver;
-    
-   return TRUE;
-oom:
-   HeapFree(GetProcessHeap(), 0, driver);
-   return FALSE;
+        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, HKLM_DRIVERS32, 0, KEY_SET_VALUE, &key))
+            return FALSE;
+        fourcc_to_string(value, type);
+        value[4] = '.';
+        fourcc_to_string(value + 5, handler);
+        value[9] = 0;
+        res = RegSetValueExA(key, value, 0, REG_SZ, (const BYTE *)driver, strlen(driver) + 1);
+        RegCloseKey(key);
+        return !res;
+    }
+    default:
+        FIXME("Unhandled flags %#x.\n", flags);
+        return FALSE;
+    }
 }
 
 /***********************************************************************
- *		ICRemove			[MSVFW32.@]
+ *              ICRemove                        [MSVFW32.@]
  */
-BOOL VFWAPI ICRemove(DWORD fccType, DWORD fccHandler, UINT wFlags) 
+BOOL VFWAPI ICRemove(DWORD type, DWORD handler, UINT flags)
 {
-    reg_driver** pdriver;
-    reg_driver*  drv;
+    struct reg_driver *driver;
+    char value[10];
+    HKEY key;
+    LONG res;
 
-    TRACE("(%s,%s,0x%08x)\n", wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), wFlags);
+    TRACE("type %s, handler %s, flags %#x.\n",
+            wine_dbgstr_fcc(type), wine_dbgstr_fcc(handler), flags);
 
-    /* Check if a driver is already registered */
-    for (pdriver = &reg_driver_list; *pdriver; pdriver = &(*pdriver)->next)
+    LIST_FOR_EACH_ENTRY(driver, &reg_driver_list, struct reg_driver, entry)
     {
-        if (!compare_fourcc(fccType, (*pdriver)->fccType) &&
-            !compare_fourcc(fccHandler, (*pdriver)->fccHandler))
-            break;
+        if (!compare_fourcc(type, driver->fccType)
+                && !compare_fourcc(handler, driver->fccHandler))
+        {
+            list_remove(&driver->entry);
+            heap_free(driver);
+            return TRUE;
+        }
     }
-    if (!*pdriver)
-        return FALSE;
 
-    /* Remove the driver from the list */
-    drv = *pdriver;
-    *pdriver = (*pdriver)->next;
-    HeapFree(GetProcessHeap(), 0, drv->name);
-    HeapFree(GetProcessHeap(), 0, drv);
-    
-    return TRUE;  
+    if (!RegOpenKeyExA(HKEY_LOCAL_MACHINE, HKLM_DRIVERS32, 0, KEY_SET_VALUE, &key))
+    {
+        fourcc_to_string(value, type);
+        value[4] = '.';
+        fourcc_to_string(value + 5, handler);
+        value[9] = 0;
+        res = RegDeleteValueA(key, value);
+        RegCloseKey(key);
+        return !res;
+    }
+
+    return FALSE;
 }
 
 
@@ -438,10 +442,10 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
 {
     WCHAR		codecname[10];
     ICOPEN		icopen;
-    HDRVR		hdrv;
     WINE_HIC*           whic;
     static const WCHAR  drv32W[] = {'d','r','i','v','e','r','s','3','2','\0'};
-    reg_driver*         driver;
+    struct reg_driver *driver;
+    HDRVR hdrv = NULL;
 
     TRACE("(%s,%s,0x%08x)\n", wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), wMode);
 
@@ -466,21 +470,15 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
         }
     }
 
-    /* Check if there is a registered driver that matches */
-    driver = reg_driver_list;
-    while(driver)
-        if (!compare_fourcc(fccType, driver->fccType) &&
-            !compare_fourcc(fccHandler, driver->fccHandler)) {
-	    fccType = driver->fccType;
-	    fccHandler = driver->fccHandler;
-	    break;
-        } else
-            driver = driver->next;
+    LIST_FOR_EACH_ENTRY(driver, &reg_driver_list, struct reg_driver, entry)
+    {
+        if (!compare_fourcc(fccType, driver->fccType)
+                && !compare_fourcc(fccHandler, driver->fccHandler))
+        {
+            return ICOpenFunction(driver->fccType, driver->fccHandler, wMode, driver->proc);
+        }
+    }
 
-    if (driver && driver->proc)
-        /* The driver has been registered at runtime with its driverproc */
-        return ICOpenFunction(fccType, fccHandler, wMode, driver->proc);
-  
     /* Well, lParam2 is in fact a LPVIDEO_OPEN_PARMS, but it has the
      * same layout as ICOPEN
      */
@@ -494,7 +492,8 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
     icopen.pV2Reserved = NULL;
     icopen.dnDevNode   = 0; /* FIXME */
 
-    if (!driver) {
+    if (!hdrv)
+    {
         /* normalize to lower case as in 'vidc' */
         ((char*)&fccType)[0] = tolower(((char*)&fccType)[0]);
         ((char*)&fccType)[1] = tolower(((char*)&fccType)[1]);
@@ -510,15 +509,9 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
         hdrv = OpenDriver(codecname, drv32W, (LPARAM)&icopen);
         if (!hdrv)
             return 0;
-    } else {
-        /* The driver has been registered at runtime with its name */
-        hdrv = OpenDriver(driver->name, NULL, (LPARAM)&icopen);
-        if (!hdrv) 
-            return 0; 
     }
 
-    whic = HeapAlloc(GetProcessHeap(), 0, sizeof(WINE_HIC));
-    if (!whic)
+    if (!(whic = heap_alloc(sizeof(*whic))))
     {
         CloseDriver(hdrv, 0, 0);
         return FALSE;
@@ -557,8 +550,8 @@ HIC VFWAPI ICOpenFunction(DWORD fccType, DWORD fccHandler, UINT wMode, DRIVERPRO
     icopen.pV2Reserved = NULL;
     icopen.dnDevNode   = 0; /* FIXME */
 
-    whic = HeapAlloc(GetProcessHeap(), 0, sizeof(WINE_HIC));
-    if (!whic) return 0;
+    if (!(whic = heap_alloc(sizeof(*whic))))
+        return NULL;
 
     whic->driverproc   = lpfnHandler;
     while (MSVIDEO_GetHicPtr((HIC)(ULONG_PTR)IC_HandleRef) != NULL) IC_HandleRef++;
@@ -573,7 +566,7 @@ HIC VFWAPI ICOpenFunction(DWORD fccType, DWORD fccHandler, UINT wMode, DRIVERPRO
     {
         WARN("DRV_LOAD failed for hic %p\n", whic->hic);
         MSVIDEO_FirstHic = whic->next;
-        HeapFree(GetProcessHeap(), 0, whic);
+        heap_free(whic);
         return 0;
     }
     /* return value is not checked */
@@ -587,7 +580,7 @@ HIC VFWAPI ICOpenFunction(DWORD fccType, DWORD fccHandler, UINT wMode, DRIVERPRO
     {
         WARN("DRV_OPEN failed for hic %p\n", whic->hic);
         MSVIDEO_FirstHic = whic->next;
-        HeapFree(GetProcessHeap(), 0, whic);
+        heap_free(whic);
         return 0;
     }
 
@@ -634,89 +627,69 @@ LRESULT VFWAPI ICGetInfo(HIC hic, ICINFO *picinfo, DWORD cb)
     return ret;
 }
 
-typedef struct {
-    DWORD fccType;
-    DWORD fccHandler;
-    LPBITMAPINFOHEADER lpbiIn;
-    LPBITMAPINFOHEADER lpbiOut;
-    WORD wMode;
-    DWORD querymsg;
-    HIC hic;
-} driver_info_t;
-
-static HIC try_driver(driver_info_t *info)
-{
-    HIC   hic;
-
-    if ((hic = ICOpen(info->fccType, info->fccHandler, info->wMode))) 
-    {
-	if (!ICSendMessage(hic, info->querymsg, (DWORD_PTR)info->lpbiIn, (DWORD_PTR)info->lpbiOut))
-	    return hic;
-	ICClose(hic);
-    }
-    return 0;
-}
-
-static BOOL ICLocate_enum_handler(const char *name, const char *driver, unsigned int nr, void *param)
-{
-    driver_info_t *info = param;
-    info->fccHandler = mmioStringToFOURCCA(name + 5, 0);
-    info->hic = try_driver(info);
-    return info->hic != 0;
-}
-
 /***********************************************************************
- *		ICLocate			[MSVFW32.@]
+ *              ICLocate                        [MSVFW32.@]
  */
-HIC VFWAPI ICLocate(DWORD fccType, DWORD fccHandler, LPBITMAPINFOHEADER lpbiIn,
-                    LPBITMAPINFOHEADER lpbiOut, WORD wMode)
+HIC VFWAPI ICLocate(DWORD type, DWORD handler, BITMAPINFOHEADER *in,
+        BITMAPINFOHEADER *out, WORD mode)
 {
-    driver_info_t info;
+    ICINFO info = {sizeof(info)};
+    UINT msg;
+    HIC hic;
+    DWORD i;
 
-    TRACE("(%s,%s,%p,%p,0x%04x)\n", 
-          wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), lpbiIn, lpbiOut, wMode);
+    TRACE("type %s, handler %s, in %p, out %p, mode %u.\n",
+            wine_dbgstr_fcc(type), wine_dbgstr_fcc(handler), in, out, mode);
 
-    info.fccType = fccType;
-    info.fccHandler = fccHandler;
-    info.lpbiIn = lpbiIn;
-    info.lpbiOut = lpbiOut;
-    info.wMode = wMode;
-
-    switch (wMode) 
+    switch (mode)
     {
     case ICMODE_FASTCOMPRESS:
     case ICMODE_COMPRESS:
-        info.querymsg = ICM_COMPRESS_QUERY;
+        msg = ICM_COMPRESS_QUERY;
         break;
     case ICMODE_FASTDECOMPRESS:
     case ICMODE_DECOMPRESS:
-        info.querymsg = ICM_DECOMPRESS_QUERY;
+        msg = ICM_DECOMPRESS_QUERY;
         break;
     case ICMODE_DRAW:
-        info.querymsg = ICM_DRAW_QUERY;
+        msg = ICM_DRAW_QUERY;
         break;
     default:
-        WARN("Unknown mode (%d)\n", wMode);
+        FIXME("Unhandled mode %#x.\n", mode);
         return 0;
     }
 
-    /* Easy case: handler/type match, we just fire a query and return */
-    info.hic = try_driver(&info);
-    /* If it didn't work, try each driver in turn. 32 bit codecs only. */
-    /* FIXME: Move this to an init routine? */
-    if (!info.hic) enum_drivers(fccType, ICLocate_enum_handler, &info);
-
-    if (info.hic) 
+    if ((hic = ICOpen(type, handler, mode)))
     {
-        TRACE("=> %p\n", info.hic);
-	return info.hic;
+        if (!ICSendMessage(hic, msg, (DWORD_PTR)in, (DWORD_PTR)out))
+        {
+            TRACE("Found codec %s.%s.\n", wine_dbgstr_fcc(type),
+                    wine_dbgstr_fcc(handler));
+            return hic;
+        }
+        ICClose(hic);
     }
 
-    if (fccType == streamtypeVIDEO) 
-        return ICLocate(ICTYPE_VIDEO, fccHandler, lpbiIn, lpbiOut, wMode);
-    
-    ERR("Required media codec '%s %s' not found!\n",
-         wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler));
+    for (i = 0; ICInfo(type, i, &info); ++i)
+    {
+        if ((hic = ICOpen(info.fccType, info.fccHandler, mode)))
+        {
+            if (!ICSendMessage(hic, msg, (DWORD_PTR)in, (DWORD_PTR)out))
+            {
+                TRACE("Found codec %s.%s.\n", wine_dbgstr_fcc(info.fccType),
+                        wine_dbgstr_fcc(info.fccHandler));
+                return hic;
+            }
+            ICClose(hic);
+        }
+    }
+
+    if (type == streamtypeVIDEO)
+        return ICLocate(ICTYPE_VIDEO, handler, in, out, mode);
+
+    WARN("Could not find a driver for codec %s.%s.\n",
+            wine_dbgstr_fcc(type), wine_dbgstr_fcc(handler));
+
     return 0;
 }
 
@@ -925,7 +898,7 @@ static BOOL enum_compressors(HWND list, COMPVARS *pcv, BOOL enum_all)
 
             idx = SendMessageW(list, CB_ADDSTRING, 0, (LPARAM)icinfo.szDescription);
 
-            ic = HeapAlloc(GetProcessHeap(), 0, sizeof(struct codec_info));
+            ic = heap_alloc(sizeof(*ic));
             ic->icinfo = icinfo;
             ic->hic = hic;
             SendMessageW(list, CB_SETITEMDATA, idx, (LPARAM)ic);
@@ -978,7 +951,7 @@ static INT_PTR CALLBACK icm_choose_compressor_dlgproc(HWND hdlg, UINT msg, WPARA
         LoadStringW(MSVFW32_hModule, IDS_FULLFRAMES, buf, 128);
         SendDlgItemMessageW(hdlg, IDC_COMP_LIST, CB_ADDSTRING, 0, (LPARAM)buf);
 
-        ic = HeapAlloc(GetProcessHeap(), 0, sizeof(struct codec_info));
+        ic = heap_alloc(sizeof(*ic));
         ic->icinfo.fccType = streamtypeVIDEO;
         ic->icinfo.fccHandler = comptypeDIB;
         ic->hic = 0;
@@ -1099,7 +1072,7 @@ static INT_PTR CALLBACK icm_choose_compressor_dlgproc(HWND hdlg, UINT msg, WPARA
                 if (!ic || (LONG_PTR)ic == CB_ERR) break;
 
                 if (ic->hic) ICClose(ic->hic);
-                HeapFree(GetProcessHeap(), 0, ic);
+                heap_free(ic);
             }
 
             EndDialog(hdlg, LOWORD(wparam) == IDOK);
@@ -1171,23 +1144,25 @@ BOOL VFWAPI ICCompressorChoose(HWND hwnd, UINT uiFlags, LPVOID pvIn,
  */
 void VFWAPI ICCompressorFree(PCOMPVARS pc)
 {
-  TRACE("(%p)\n",pc);
+    TRACE("(%p)\n", pc);
 
-  if (pc != NULL && pc->cbSize == sizeof(COMPVARS)) {
-    if (pc->hic != NULL) {
-      ICClose(pc->hic);
-      pc->hic = NULL;
+    if (pc && pc->cbSize == sizeof(COMPVARS))
+    {
+        if (pc->hic)
+        {
+            ICClose(pc->hic);
+            pc->hic = NULL;
+        }
+        heap_free(pc->lpbiIn);
+        pc->lpbiIn = NULL;
+        heap_free(pc->lpBitsOut);
+        pc->lpBitsOut = NULL;
+        heap_free(pc->lpBitsPrev);
+        pc->lpBitsPrev = NULL;
+        heap_free(pc->lpState);
+        pc->lpState = NULL;
+        pc->dwFlags = 0;
     }
-    HeapFree(GetProcessHeap(), 0, pc->lpbiIn);
-    pc->lpbiIn = NULL;
-    HeapFree(GetProcessHeap(), 0, pc->lpBitsOut);
-    pc->lpBitsOut = NULL;
-    HeapFree(GetProcessHeap(), 0, pc->lpBitsPrev);
-    pc->lpBitsPrev = NULL;
-    HeapFree(GetProcessHeap(), 0, pc->lpState);
-    pc->lpState = NULL;
-    pc->dwFlags = 0;
-  }
 }
 
 /***********************************************************************
@@ -1297,7 +1272,7 @@ LRESULT WINAPI ICClose(HIC hic)
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, whic);
+    heap_free(whic);
     return 0;
 }
 
@@ -1382,8 +1357,7 @@ HANDLE VFWAPI ICImageDecompress(
 		cbHdr = ICDecompressGetFormatSize(hic,lpbiIn);
 		if ( cbHdr < sizeof(BITMAPINFOHEADER) )
 			goto err;
-		pHdr = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,cbHdr+sizeof(RGBQUAD)*256);
-		if ( pHdr == NULL )
+		if (!(pHdr = heap_alloc_zero(cbHdr + sizeof(RGBQUAD) * 256)))
 			goto err;
 		if ( ICDecompressGetFormat( hic, lpbiIn, pHdr ) != ICERR_OK )
 			goto err;
@@ -1438,7 +1412,7 @@ err:
 		ICDecompressEnd( hic );
 	if ( bReleaseIC )
 		ICClose(hic);
-        HeapFree(GetProcessHeap(),0,pHdr);
+        heap_free(pHdr);
 	if ( pMem != NULL )
 		GlobalUnlock( hMem );
 	if ( !bSucceeded && hMem != NULL )
@@ -1509,14 +1483,14 @@ LPVOID VFWAPI ICSeqCompressFrame(PCOMPVARS pc, UINT uiFlags, LPVOID lpBits, BOOL
 
 static void clear_compvars(PCOMPVARS pc)
 {
-    HeapFree(GetProcessHeap(), 0, pc->lpbiIn);
-    HeapFree(GetProcessHeap(), 0, pc->lpBitsPrev);
-    HeapFree(GetProcessHeap(), 0, pc->lpBitsOut);
-    HeapFree(GetProcessHeap(), 0, pc->lpState);
+    heap_free(pc->lpbiIn);
+    heap_free(pc->lpBitsPrev);
+    heap_free(pc->lpBitsOut);
+    heap_free(pc->lpState);
     pc->lpbiIn = pc->lpBitsPrev = pc->lpBitsOut = pc->lpState = NULL;
     if (pc->dwFlags & 0x80000000)
     {
-        HeapFree(GetProcessHeap(), 0, pc->lpbiOut);
+        heap_free(pc->lpbiOut);
         pc->lpbiOut = NULL;
         pc->dwFlags &= ~0x80000000;
     }
@@ -1532,6 +1506,28 @@ void VFWAPI ICSeqCompressFrameEnd(PCOMPVARS pc)
     clear_compvars(pc);
 }
 
+static BITMAPINFO *copy_bitmapinfo(const BITMAPINFO *src)
+{
+    int num_colors;
+    unsigned int size;
+    BITMAPINFO *dst;
+
+    if (src->bmiHeader.biClrUsed)
+        num_colors = min(src->bmiHeader.biClrUsed, 256);
+    else
+        num_colors = src->bmiHeader.biBitCount > 8 ? 0 : 1 << src->bmiHeader.biBitCount;
+
+    size = FIELD_OFFSET(BITMAPINFO, bmiColors[num_colors]);
+    if (src->bmiHeader.biCompression == BI_BITFIELDS)
+        size += 3 * sizeof(DWORD);
+
+    if (!(dst = heap_alloc(size)))
+        return NULL;
+
+    memcpy(dst, src, size);
+    return dst;
+}
+
 /***********************************************************************
  *      ICSeqCompressFrameStart [MSVFW32.@]
  */
@@ -1542,15 +1538,11 @@ BOOL VFWAPI ICSeqCompressFrameStart(PCOMPVARS pc, LPBITMAPINFO lpbiIn)
      */
     DWORD ret;
     ICCOMPRESS* icComp;
-    pc->lpbiIn = HeapAlloc(GetProcessHeap(), 0, sizeof(BITMAPINFO));
-    if (!pc->lpbiIn)
+
+    if (!(pc->lpbiIn = copy_bitmapinfo(lpbiIn)))
         return FALSE;
 
-    *pc->lpbiIn = *lpbiIn;
-
-    pc->lpState = HeapAlloc(GetProcessHeap(), 0, sizeof(ICCOMPRESS)
-                            + sizeof(*icComp->lpckid) + sizeof(*icComp->lpdwFlags));
-    if (!pc->lpState)
+    if (!(pc->lpState = heap_alloc(sizeof(ICCOMPRESS) + sizeof(*icComp->lpckid) + sizeof(*icComp->lpdwFlags))))
         goto error;
 
     pc->cbState = sizeof(ICCOMPRESS);
@@ -1563,8 +1555,7 @@ BOOL VFWAPI ICSeqCompressFrameStart(PCOMPVARS pc, LPBITMAPINFO lpbiIn)
         if (size <= 0)
             goto error;
 
-        pc->lpbiOut = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-        if (!pc->lpbiOut)
+        if (!(pc->lpbiOut = heap_alloc_zero(size)))
             goto error;
         /* Flag to show that we allocated lpbiOut for proper cleanup */
         pc->dwFlags |= 0x80000000;
@@ -1600,13 +1591,11 @@ BOOL VFWAPI ICSeqCompressFrameStart(PCOMPVARS pc, LPBITMAPINFO lpbiIn)
           pc->lpbiOut->bmiHeader.biSizeImage);
 
     /* Buffer for compressed frame data */
-    pc->lpBitsOut = HeapAlloc(GetProcessHeap(), 0, pc->lpbiOut->bmiHeader.biSizeImage);
-    if (!pc->lpBitsOut)
+    if (!(pc->lpBitsOut = heap_alloc(pc->lpbiOut->bmiHeader.biSizeImage)))
         goto error;
 
     /* Buffer for previous compressed frame data */
-    pc->lpBitsPrev = HeapAlloc(GetProcessHeap(), 0, pc->lpbiOut->bmiHeader.biSizeImage);
-    if (!pc->lpBitsPrev)
+    if (!(pc->lpBitsPrev = heap_alloc(pc->lpbiOut->bmiHeader.biSizeImage)))
         goto error;
 
     TRACE("Compvars:\n"

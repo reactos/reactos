@@ -4,7 +4,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "帮助实用程序不支持此命令。\n试试 ""%s /?""\n。"
+    IDS_NO_ENTRY "帮助实用程序不支持此命令。\n试试 ""%s /?""。\n"
 END
 
 STRINGTABLE

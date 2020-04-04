@@ -75,8 +75,6 @@ static BOOL  (WINAPI * pGetPrinterDriverW)(HANDLE, LPWSTR, DWORD, LPBYTE, DWORD,
 static BOOL  (WINAPI * pGetPrinterW)(HANDLE, DWORD, LPBYTE, DWORD, LPDWORD);
 static BOOL  (WINAPI * pSetDefaultPrinterA)(LPCSTR);
 static DWORD (WINAPI * pXcvDataW)(HANDLE, LPCWSTR, PBYTE, DWORD, PBYTE, DWORD, PDWORD, PDWORD);
-static BOOL  (WINAPI * pIsValidDevmodeW)(PDEVMODEW, SIZE_T);
-
 
 /* ################################ */
 
@@ -219,7 +217,7 @@ static struct monitor_entry * find_installed_monitor(void)
 
     if (entry) return entry;
 
-    num_tests = (sizeof(monitor_table)/sizeof(struct monitor_entry));
+    num_tests = ARRAY_SIZE(monitor_table);
 
     /* cleanup */
     DeleteMonitorA(NULL, env_x64, winetest);
@@ -1456,7 +1454,7 @@ static void test_GetDefaultPrinter(void)
 
     SetLastError(ERROR_SUCCESS);
     retval = pGetDefaultPrinterA(buffer, &exact);
-    if (!retval || !exact || !strlen(buffer) ||
+    if (!retval || !exact || !*buffer ||
 	(ERROR_SUCCESS != GetLastError())) {
 	if ((ERROR_FILE_NOT_FOUND == GetLastError()) ||
 	    (ERROR_INVALID_NAME == GetLastError()))
@@ -2905,26 +2903,6 @@ static void test_DeviceCapabilities(void)
     GlobalFree(prn_dlg.hDevNames);
 }
 
-static void test_IsValidDevmodeW(void)
-{
-    BOOL br;
-
-    if (!pIsValidDevmodeW)
-    {
-        win_skip("IsValidDevmodeW not implemented.\n");
-        return;
-    }
-
-    br = pIsValidDevmodeW(NULL, 0);
-    ok(br == FALSE, "Got %d\n", br);
-
-    br = pIsValidDevmodeW(NULL, 1);
-    ok(br == FALSE, "Got %d\n", br);
-
-    br = pIsValidDevmodeW(NULL, sizeof(DEVMODEW));
-    ok(br == FALSE, "Got %d\n", br);
-}
-
 static void test_OpenPrinter_defaults(void)
 {
     HANDLE printer;
@@ -3044,6 +3022,53 @@ todo_wine
     ClosePrinter( printer );
 }
 
+static void test_IsValidDevmodeW(void)
+{
+    static const struct
+    {
+        DWORD dmFields;
+        WORD dmSize;
+        BOOL ret;
+    } test[] =
+    {
+        { 0, FIELD_OFFSET(DEVMODEW, dmFields) + 0, FALSE },
+        { 0, FIELD_OFFSET(DEVMODEW, dmFields) + 1, FALSE },
+        { 0, FIELD_OFFSET(DEVMODEW, dmFields) + 2, FALSE },
+        { 0, FIELD_OFFSET(DEVMODEW, dmFields) + 3, FALSE },
+        { 0, FIELD_OFFSET(DEVMODEW, dmFields) + 4, TRUE },
+
+        { DM_ORIENTATION, FIELD_OFFSET(DEVMODEW, u1.s1.dmOrientation) + 0, FALSE },
+        { DM_ORIENTATION, FIELD_OFFSET(DEVMODEW, u1.s1.dmOrientation) + 1, FALSE },
+        { DM_ORIENTATION, FIELD_OFFSET(DEVMODEW, u1.s1.dmOrientation) + 2, TRUE },
+
+        { DM_NUP, FIELD_OFFSET(DEVMODEW, u2.dmNup) + 0, FALSE },
+        { DM_NUP, FIELD_OFFSET(DEVMODEW, u2.dmNup) + 1, FALSE },
+        { DM_NUP, FIELD_OFFSET(DEVMODEW, u2.dmNup) + 2, FALSE },
+        { DM_NUP, FIELD_OFFSET(DEVMODEW, u2.dmNup) + 3, FALSE },
+        { DM_NUP, FIELD_OFFSET(DEVMODEW, u2.dmNup) + 4, TRUE },
+
+    };
+    DEVMODEW dm;
+    int i;
+    BOOL ret;
+
+    ret = IsValidDevmodeW(NULL, 0);
+    ok(!ret, "got %d\n", ret);
+
+    ret = IsValidDevmodeW(NULL, sizeof(DEVMODEW));
+    ok(!ret, "got %d\n", ret);
+
+    memset(&dm, 0, sizeof(dm));
+
+    for (i = 0; i < ARRAY_SIZE(test); i++)
+    {
+        dm.dmSize = test[i].dmSize;
+        dm.dmFields = test[i].dmFields;
+        ret = IsValidDevmodeW(&dm, dm.dmSize);
+        ok(ret == test[i].ret, "%d: got %d\n", i, ret);
+    }
+}
+
 START_TEST(info)
 {
     hwinspool = LoadLibraryA("winspool.drv");
@@ -3055,7 +3080,6 @@ START_TEST(info)
     pGetPrinterW = (void *) GetProcAddress(hwinspool, "GetPrinterW");
     pSetDefaultPrinterA = (void *) GetProcAddress(hwinspool, "SetDefaultPrinterA");
     pXcvDataW = (void *) GetProcAddress(hwinspool, "XcvDataW");
-    pIsValidDevmodeW = (void *) GetProcAddress(hwinspool, "IsValidDevmodeW");
 
     on_win9x = check_win9x();
     if (on_win9x)

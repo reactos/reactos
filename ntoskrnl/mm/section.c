@@ -4579,11 +4579,11 @@ MmMapViewOfSection(IN PVOID SectionObject,
         ImageSectionObject->ImageInformation.ImageFileSize = (ULONG)ImageSize;
 
         /* Check for an illegal base address */
-        if (((ImageBase + ImageSize) > (ULONG_PTR)MmHighestUserAddress) ||
+        if (((ImageBase + ImageSize) > (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS) ||
                 ((ImageBase + ImageSize) < ImageSize))
         {
             ASSERT(*BaseAddress == NULL);
-            ImageBase = ALIGN_DOWN_BY((ULONG_PTR)MmHighestUserAddress - ImageSize,
+            ImageBase = ALIGN_DOWN_BY((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - ImageSize,
                                       MM_VIRTMEM_GRANULARITY);
             NotAtBase = TRUE;
         }

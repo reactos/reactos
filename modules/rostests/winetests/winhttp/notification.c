@@ -187,7 +187,7 @@ static void test_connection_cache( void )
     struct info info, *context = &info;
 
     info.test  = cache_test;
-    info.count = sizeof(cache_test) / sizeof(cache_test[0]);
+    info.count = ARRAY_SIZE( cache_test );
     info.index = 0;
     info.wait = CreateEventW( NULL, FALSE, FALSE, NULL );
 
@@ -427,7 +427,7 @@ static void test_redirect( void )
     struct info info, *context = &info;
 
     info.test  = redirect_test;
-    info.count = sizeof(redirect_test) / sizeof(redirect_test[0]);
+    info.count = ARRAY_SIZE( redirect_test );
     info.index = 0;
     info.wait = CreateEventW( NULL, FALSE, FALSE, NULL );
 
@@ -508,7 +508,7 @@ static void test_async( void )
     char buffer[1024];
 
     info.test  = async_test;
-    info.count = sizeof(async_test) / sizeof(async_test[0]);
+    info.count = ARRAY_SIZE( async_test );
     info.index = 0;
     info.wait = CreateEventW( NULL, FALSE, FALSE, NULL );
 
@@ -779,12 +779,12 @@ static void open_async_request(int port, struct test_request *req, struct info *
     if (reuse_connection)
     {
         info->test  = reuse_socket_request_test;
-        info->count = sizeof(reuse_socket_request_test) / sizeof(reuse_socket_request_test[0]);
+        info->count = ARRAY_SIZE( reuse_socket_request_test );
     }
     else
     {
         info->test  = open_socket_request_test;
-        info->count = sizeof(open_socket_request_test) / sizeof(open_socket_request_test[0]);
+        info->count = ARRAY_SIZE( open_socket_request_test );
     }
 
     req->session = WinHttpOpen( user_agent, 0, NULL, NULL, WINHTTP_FLAG_ASYNC );
@@ -830,7 +830,7 @@ static void server_send_reply(struct test_request *req, struct info *info, const
     WaitForSingleObject( info->wait, INFINITE );
 
     info->test  = server_reply_test;
-    info->count = sizeof(server_reply_test) / sizeof(server_reply_test[0]);
+    info->count = ARRAY_SIZE( server_reply_test );
     info->index = 0;
     setup_test( info, winhttp_send_request, __LINE__ );
     ret = WinHttpReceiveResponse( req->request, NULL );
@@ -879,12 +879,12 @@ static void close_request(struct test_request *req, struct info *info, BOOL allo
     if (allow_closing_connection)
     {
         info->test = close_allow_connection_close_request_test;
-        info->count = sizeof(close_allow_connection_close_request_test)/sizeof(*close_allow_connection_close_request_test);
+        info->count = ARRAY_SIZE( close_allow_connection_close_request_test );
     }
     else
     {
         info->test = close_request_test;
-        info->count = sizeof(close_request_test)/sizeof(*close_request_test);
+        info->count = ARRAY_SIZE( close_request_test );
     }
     info->index = 0;
     setup_test( info, winhttp_close_handle, __LINE__ );
@@ -920,25 +920,24 @@ static const struct notification read_allow_close_test[] =
 static void _read_request_data(struct test_request *req, struct info *info, const char *expected_data, BOOL closing_connection, unsigned line)
 {
     char buffer[1024];
-    DWORD read, len;
+    DWORD len;
     BOOL ret;
 
     if (closing_connection)
     {
         info->test = read_allow_close_test;
-        info->count = sizeof(read_allow_close_test)/sizeof(*read_allow_close_test);
+        info->count = ARRAY_SIZE( read_allow_close_test );
     }
     else
     {
         info->test = read_test;
-        info->count = sizeof(read_test)/sizeof(*read_test);
+        info->count = ARRAY_SIZE( read_test );
     }
     info->index = 0;
 
     setup_test( info, winhttp_read_data, line );
     memset(buffer, '?', sizeof(buffer));
-    read = 0xdeadbeef;
-    ret = WinHttpReadData( req->request, buffer, sizeof(buffer), &read );
+    ret = WinHttpReadData( req->request, buffer, sizeof(buffer), NULL );
     ok(ret, "failed to read data %u\n", GetLastError());
 
     WaitForSingleObject( info->wait, INFINITE );
@@ -1024,7 +1023,7 @@ START_TEST (notification)
     si.event = CreateEventW( NULL, 0, 0, NULL );
     si.port = 7533;
 
-    thread = CreateThread( NULL, 0, server_thread, (LPVOID)&si, 0, NULL );
+    thread = CreateThread( NULL, 0, server_thread, &si, 0, NULL );
     ok(thread != NULL, "failed to create thread %u\n", GetLastError());
 
     server_socket_available = CreateEventW( NULL, 0, 0, NULL );
@@ -1038,18 +1037,7 @@ START_TEST (notification)
         return;
     }
 
-#ifdef __REACTOS__
-if (!winetest_interactive)
-{
-    skip("Skipping test_persistent_connection due to hang. See ROSTESTS-295.\n");
-}
-else
-{
     test_persistent_connection( si.port );
-}
-#else
-    test_persistent_connection( si.port );
-#endif
 
     /* send the basic request again to shutdown the server thread */
     test_basic_request( si.port, NULL, quitW );

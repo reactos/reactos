@@ -332,7 +332,7 @@ static void TEXT_PathEllipsify (HDC hdc, WCHAR *str, unsigned int max_len,
 }
 
 /* Check the character is Chinese, Japanese, Korean and/or Thai */
-inline BOOL IsCJKT(WCHAR wch)
+FORCEINLINE BOOL IsCJKT(WCHAR wch)
 {
     if (0x0E00 <= wch && wch <= 0x0E7F)
         return TRUE;    /* Thai */
@@ -1263,18 +1263,8 @@ INT WINAPI DrawTextExWorker( HDC hdc,
 	if (flags & DT_SINGLELINE)
 	{
 #ifdef __REACTOS__
-        if (flags & DT_VCENTER)
-        {
-            if (flags & DT_CALCRECT)
-            {
-                if (rect->bottom - rect->top < size.cy / 2)
-                    y = rect->top + (invert_y ? size.cy : -size.cy) / 2;
-            }
-            else
-            {
-                y = rect->top + (rect->bottom - rect->top + (invert_y ? size.cy : -size.cy)) / 2;
-            }
-        }
+        if (flags & DT_VCENTER) y = rect->top +
+            (rect->bottom - rect->top + (invert_y ? size.cy : -size.cy)) / 2;
         else if (flags & DT_BOTTOM)
             y = rect->bottom + (invert_y ? 0 : -size.cy);
 #else
@@ -1374,7 +1364,8 @@ INT WINAPI DrawTextExWorker( HDC hdc,
 #ifndef _WIN32K_
     if (!(flags & DT_NOCLIP) )
     {
-       SelectClipRgn(hdc, hrgn);
+       SelectClipRgn(hdc, hrgn); // This should be NtGdiExtSelectClipRgn, but due to ReactOS build rules this option is next:
+       GdiFlush();               // Flush the batch and level up! See CORE-16498.
        if (hrgn)
        {
           DeleteObject(hrgn);

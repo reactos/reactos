@@ -12,29 +12,28 @@
 /* FUNCTIONS ******************************************************************/
 
 /**
- * @IsProcessRunning
+ * @GetProcessID
  *
- * Checks if a process is running.
+ * Returns the process executable ID based on the given executable name.
  *
- * @param[in]   ProcName
+ * @param[in]   lpProcessName
  *     The name of the executable process.
  *
  * @return
- *     Returns TRUE if the given process' name is running,
- *     FALSE otherwise.
+ *      Returns the ID number of the process, otherwise 0.
  *
  */
-BOOL IsProcessRunning(IN LPCWSTR lpProcessName)
+DWORD GetProcessID(IN LPCWSTR lpProcessName)
 {
-    BOOL bIsRunning = FALSE;
-    PROCESSENTRY32W Process = {0};
+    PROCESSENTRY32W Process;
 
-    /* Create a snapshot and check whether the given process' executable name is running */
+    /* Create a snapshot and check if the given process name matches with the one from the process entry structure */
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
     if (hSnapshot == INVALID_HANDLE_VALUE)
-        return FALSE;
+        return 0;
 
+    /* Get the whole size of the structure */
     Process.dwSize = sizeof(Process);
 
     /* Enumerate the processes */
@@ -44,17 +43,62 @@ BOOL IsProcessRunning(IN LPCWSTR lpProcessName)
         {
             if (_wcsicmp(Process.szExeFile, lpProcessName) == 0)
             {
-                /* The process we are searching for is running */
-                bIsRunning = TRUE;
-                break;
+                /* The names match, return the process ID we're interested */
+                CloseHandle(hSnapshot);
+                return Process.th32ProcessID;
             }
         }
         while (Process32NextW(hSnapshot, &Process));
     }
 
-    /* Free the handle and return */
     CloseHandle(hSnapshot);
-    return bIsRunning;
+    return 0;
+}
+
+/**
+ * @IsProcessRunning
+ *
+ * Checks if a process is running.
+ *
+ * @param[in]   lpProcessName
+ *     The name of the executable process.
+ *
+ * @return
+ *     Returns TRUE if the given process' name is running,
+ *     FALSE otherwise.
+ *
+ */
+BOOL IsProcessRunning(IN LPCWSTR lpProcessName)
+{
+    DWORD dwReturn, dwProcessID;
+    HANDLE hProcess;
+
+    /* Get the process ID */
+    dwProcessID = GetProcessID(lpProcessName);
+    if (dwProcessID == 0)
+    {
+        return FALSE;
+    }
+
+    /* Synchronize the process to get its signaling state */
+    hProcess = OpenProcess(SYNCHRONIZE, FALSE, dwProcessID);
+    if (!hProcess)
+    {
+        DPRINT("IsProcessRunning(): Failed to open the process! (Error: %lu)", GetLastError());
+        return FALSE;
+    }
+
+    /* Wait for the process */
+    dwReturn = WaitForSingleObject(hProcess, 0);
+    if (dwReturn == WAIT_TIMEOUT)
+    {
+        /* The process is still running */
+        CloseHandle(hProcess);
+        return TRUE;
+    }
+
+    CloseHandle(hProcess);
+    return FALSE;
 }
 
 /**
@@ -147,43 +191,32 @@ BOOL LaunchProcess(LPCWSTR lpProcessName)
  */
 BOOL CloseProcess(IN LPCWSTR lpProcessName)
 {
-    BOOL bSuccess = FALSE;
-    PROCESSENTRY32W Process = {0};
+    HANDLE hProcess;
+    DWORD dwProcessID;
 
-    /* Create a snapshot and check if the given process' executable name is running */
-    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-
-    if (hSnapshot == INVALID_HANDLE_VALUE)
-        return FALSE;
-
-    Process.dwSize = sizeof(Process);
-
-    /* Enumerate the processes */
-    if (Process32FirstW(hSnapshot, &Process))
+    /* Get the process ID */
+    dwProcessID = GetProcessID(lpProcessName);
+    if (dwProcessID == 0)
     {
-        do
-        {
-            if (_wcsicmp(Process.szExeFile, lpProcessName) == 0)
-            {
-                /*
-                 * We have found the process. However we must make
-                 * sure that we DO NOT kill ourselves (the process ID
-                 * matching with the current parent process ID).
-                 */
-                HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, 0, Process.th32ProcessID);
-                if ((hProcess != NULL) && (Process.th32ProcessID != GetCurrentProcessId()))
-                {
-                    TerminateProcess(hProcess, 0);
-                    CloseHandle(hProcess);
-                }
-                bSuccess = TRUE;
-                break;
-            }
-        }
-        while (Process32NextW(hSnapshot, &Process));
+        return FALSE;
     }
 
-    /* Free the handle and return */
-    CloseHandle(hSnapshot);
-    return bSuccess;
+    /* Make sure that the given process ID is not ours, the parent process, so that we do not kill ourselves */
+    if (dwProcessID == GetCurrentProcessId())
+    {
+        return FALSE;
+    }
+
+    /* Open the process so that we can terminate it */
+    hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, dwProcessID);
+    if (!hProcess)
+    {
+        DPRINT("CloseProcess(): Failed to open the process for termination! (Error: %lu)", GetLastError());
+        return FALSE;
+    }
+
+    /* Terminate it */
+    TerminateProcess(hProcess, 0);
+    CloseHandle(hProcess);
+    return TRUE;
 }

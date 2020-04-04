@@ -6,7 +6,7 @@ CAPTION "コンピュータ名"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "ReactOSは次の情報を使ってネットワーク上でこのコンピュータを識別します。", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "ReactOS は次の情報を使ってネットワーク上でこのコンピュータを\n識別します。", IDC_STATIC, 40, 5, 224, 20
     LTEXT "コンピュータの説明:", IDC_STATIC, 6, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "フル コンピュータ名:", IDC_STATIC, 6, 68, 85, 9
@@ -14,9 +14,9 @@ BEGIN
     LTEXT "ワークグループ:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "ネットワーク ID ウィザードを使ってドメインへの参加およびローカル ユーザーの作成を行うには、[ネットワーク ID] をクリックしてください。", IDC_STATIC, 6, 113, 172, 24
-    PUSHBUTTON "ネットワーク ID(&N)...", IDC_NETWORK_ID, 190, 114, 58, 15
+    PUSHBUTTON "ネットワーク ID(&N)...", IDC_NETWORK_ID, 180, 114, 72, 15
     LTEXT "コンピュータ名を変更したりドメインに参加したりするには [変更] をクリックしてください。", IDC_STATIC, 6, 149, 170, 17
-    PUSHBUTTON "変更(&C)...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
+    PUSHBUTTON "変更(&C)...", IDC_NETWORK_PROPERTY, 180, 149, 72, 15
     LTEXT "注意: このコンピュータの ID を変更できるのは管理者のみです。", IDC_STATIC, 6, 179, 300, 9
 END
 
@@ -48,7 +48,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "このコンピュータのプライマリ DNS サフィックス(&P):", -1, 7, 5, 253, 8
     EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "ドメインのメンバシップが変更されるときにプライマリ DNS サフィックスを変更する(&C)", 115, 11, 39, 250, 10
+    AUTOCHECKBOX "ドメインのメンバシップが変更されるときにプライマリ DNS サフィックス\nを変更する(&C)", 115, 11, 39, 250, 20
     LTEXT "NetBIOS コンピュータ名(&N):", -1, 7, 57, 148, 8
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", 1, 153, 104, 50, 14
@@ -64,15 +64,22 @@ BEGIN
     4 "コンピュータ名の変更"
     5 "ワークグループ:"
     6 "ドメイン:"
+    7 "The domain name ""%1"" does not conform to Internet Domain Name Service specifications, although it is a legal ReactOS name. You must use ReactOS DNS server for non-standard names."
+    8 "The domain name ""%1"" is not properly formatted. Periods (.) are used to separate domains. Each domain is limited to 63 characters. Example: domain-1.reactos.org."
+    10 "The new computer name ""%1"" is too long. The name may not be longer than 63 characters."
+    11 "The new computer name entered is not properly formatted. Standard names may contain letters (a-z, A-Z), numbers (0-9), and hyphens (-), but no spaces or periods (.). The name may not consist entirely of digits."
     22 "%1 ワークグループへようこそ。"
     23 "%1 ドメインへようこそ。"
     24 "変更を有効にするには、コンピュータを再起動してください。"
     25 "このコンピュータの名前とメンバシップを変更できます。変更するとネットワーク リソースへのアクセスに影響する可能性があります。"
     1021 "注意: このコンピュータの ID を変更できるのは管理者のみです。"
     1022 "注意: 次の理由により、このコンピュータの ID を変更できません:"
-    1030 "新しいコンピュータ名 ""%s"" には、使用できないな文字が含まれています。使用できない文字は ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / ? です。"
+    1029 "The new computer name ""%1"" is a number. The name may not be a number."
+    1030 "新しいコンピュータ名 ""%1"" には、使用できないな文字が含まれています。使用できない文字は ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / ? です。"
+    1031 "The first domain of the domain name ""%1"" is a number. The first domain may not be a number."
+    1032 "The domain name ""%1"" contains characters which are not allowed. Standard DNS names may contain letters (a-z, A-Z), numbers (0-9), and hyphens, but no spaces. Periods (.) are used to separate domains. Example: domain-1.reactos.org."
     3210 "詳細(&D) >>"
     3220 "<< 詳細(&D)"
     4000 "情報"
-    4001 "新しいコンピュータ名を設定できません!"
+    4001 "新しいコンピュータ名を設定できませんでした。"
 END

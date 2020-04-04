@@ -66,6 +66,8 @@ static	BOOL JOY_LoadDriver(DWORD dwJoyID)
 
     if (!JOY_Sticks[dwJoyID].hDriver)
     {
+        WARN("OpenDriverA(\"winejoystick.drv\") failed\n");
+
         /* The default driver is missing, don't attempt to load it again */
         winejoystick_missing = TRUE;
     }

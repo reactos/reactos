@@ -23,6 +23,7 @@ DisplayClassInstaller(
     HINF hInf = INVALID_HANDLE_VALUE;
     TCHAR SectionName[MAX_PATH];
     TCHAR ServiceName[MAX_SERVICE_NAME_LEN];
+    TCHAR DeviceName[12];
     SP_DRVINFO_DETAIL_DATA DriverInfoDetailData;
     HKEY hDriverKey = INVALID_HANDLE_VALUE; /* SetupDiOpenDevRegKey returns INVALID_HANDLE_VALUE in case of error! */
     HKEY hSettingsKey = NULL;
@@ -30,6 +31,7 @@ DisplayClassInstaller(
     HKEY hServiceKey = NULL;
     HKEY hDeviceSubKey = NULL;
     DWORD disposition, cchMax, cbData;
+    WORD wIndex;
     BOOL result;
     LONG rc;
     HRESULT hr;
@@ -183,21 +185,33 @@ DisplayClassInstaller(
         goto cleanup;
     }
 
-    /* Create a Device0 subkey (FIXME: do a loop to find a free number?) */
-    rc = RegCreateKeyEx(
-        hServiceKey, _T("Device0"), 0, NULL,
-        REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL,
-        &hDeviceSubKey, &disposition);
-    if (rc != ERROR_SUCCESS)
+    /* Create a new DeviceX subkey */
+    for (wIndex = 0; wIndex < 9999; wIndex++)
     {
-        DPRINT("RegCreateKeyEx() failed with error 0x%lx\n", rc);
-        goto cleanup;
-    }
-    if (disposition != REG_CREATED_NEW_KEY)
-    {
-        rc = ERROR_GEN_FAILURE;
-        DPRINT("RegCreateKeyEx() failed\n");
-        goto cleanup;
+        _stprintf(DeviceName, _T("Device%hu"), wIndex);
+
+        rc = RegCreateKeyEx(
+            hServiceKey, DeviceName, 0, NULL,
+            REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL,
+            &hDeviceSubKey, &disposition);
+        if (rc != ERROR_SUCCESS)
+        {
+            DPRINT("RegCreateKeyEx() failed with error 0x%lx\n", rc);
+            goto cleanup;
+        }
+
+        if (disposition == REG_CREATED_NEW_KEY)
+            break;
+
+        if (wIndex == 9999)
+        {
+            rc = ERROR_GEN_FAILURE;
+            DPRINT("RegCreateKeyEx() failed\n");
+            goto cleanup;
+        }
+
+        RegCloseKey(hDeviceSubKey);
+        hDeviceSubKey = NULL;
     }
 
     /* Install SoftwareSettings section */

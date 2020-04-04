@@ -26,7 +26,7 @@ void ShowAboutBox(HWND hWnd)
 {
     WCHAR AppStr[255];
     LoadStringW(hInst, IDS_APP_TITLE, AppStr, COUNT_OF(AppStr));
-    ShellAboutW(hWnd, AppStr, L"", LoadIconW(hInst, MAKEINTRESOURCEW(IDI_REGEDIT)));
+    ShellAboutW(hWnd, AppStr, NULL, LoadIconW(hInst, MAKEINTRESOURCEW(IDI_REGEDIT)));
 }
 
 /* EOF */

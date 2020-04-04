@@ -661,6 +661,7 @@ MSG_ENTRY enable_nonthemed_sequence[]={
 MSG_ENTRY btndown_nonthemed_sequence[]={
     {2, WM_LBUTTONDOWN, SENT},
     {1, WM_KILLFOCUS, SENT},
+    {1, WM_IME_SETCONTEXT, SENT},
     {2, WM_SETFOCUS, SENT},
     {2, BM_SETSTATE, SENT},
     {2, WM_PAINT, POST},
@@ -753,7 +754,7 @@ void Test_MessagesNonThemed()
     COMPARE_CACHE(pseudoleave_sequence);
 
     state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
-    ok(state == 0, "Expected state 0, got %lu\n", state);
+    ok_hex(state, 0);
     EMPTY_CACHE();
 
     MOVE_CURSOR(150,150);
@@ -761,7 +762,7 @@ void Test_MessagesNonThemed()
     COMPARE_CACHE(mouseenter_nonthemed_sequence);
 
     state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
-    ok(state == BST_HOT, "Expected state BST_HOT, got %lu\n", state);
+    ok_hex(state, BST_HOT);
     EMPTY_CACHE();
 
     MOVE_CURSOR(151,151);
@@ -769,7 +770,7 @@ void Test_MessagesNonThemed()
     COMPARE_CACHE(mousemove_sequence);
 
     state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
-    ok(state == BST_HOT, "Expected state BST_HOT, got %lu\n", state);
+    ok_hex(state, BST_HOT);
     EMPTY_CACHE();
 
     MOVE_CURSOR(0,0);
@@ -795,7 +796,7 @@ void Test_MessagesNonThemed()
     COMPARE_CACHE(btndown_nonthemed_sequence);
 
     state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
-    ok(state == 0, "Expected state 0, got %lu\n", state);
+    ok_hex(state, BST_PUSHED | BST_FOCUS | 0x20 | 0x40);
     EMPTY_CACHE();
 
     SendMessageW(hWnd2, WM_LBUTTONDOWN, 0, 0);
@@ -803,7 +804,7 @@ void Test_MessagesNonThemed()
     COMPARE_CACHE(btndown_repeat_nonthemed_sequence);
 
     state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
-    ok(state == 0, "Expected state 0, got %lu\n", state);
+    ok_hex(state, BST_PUSHED | BST_FOCUS | 0x20 | 0x40);
     EMPTY_CACHE();
 
     SendMessageW(hWnd2, BM_CLICK, 0, 0);
@@ -811,7 +812,7 @@ void Test_MessagesNonThemed()
     COMPARE_CACHE(btnclick_nonthemed_sequence);    
 
     state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
-    ok(state == 0, "Expected state 0, got %lu\n", state);
+    ok_hex(state, BST_FOCUS);
     EMPTY_CACHE();
 
     SendMessageW(hWnd2, WM_LBUTTONUP, 0, 0);
@@ -819,7 +820,7 @@ void Test_MessagesNonThemed()
     COMPARE_CACHE(btnup_stray_sequence);
 
     state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
-    ok(state == 0, "Expected state 0, got %lu\n", state);
+    ok_hex(state, BST_FOCUS);
     EMPTY_CACHE();
 
     DestroyWindow(hWnd1);

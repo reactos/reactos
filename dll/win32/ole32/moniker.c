@@ -21,9 +21,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 #include <string.h>
 
@@ -39,7 +36,6 @@
 
 #include "wine/list.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "wine/exception.h"
 
 #include "compobj_private.h"
@@ -282,7 +278,7 @@ static HRESULT get_moniker_comparison_data(IMoniker *pMoniker, MonikerComparison
             return hr;
         }
 
-        len = strlenW(pszDisplayName);
+        len = lstrlenW(pszDisplayName);
         *moniker_data = HeapAlloc(GetProcessHeap(), 0,
             FIELD_OFFSET(MonikerComparisonData, abData[sizeof(CLSID) + (len+1)*sizeof(WCHAR)]));
         if (!*moniker_data)
@@ -1152,7 +1148,7 @@ HRESULT WINAPI MkParseDisplayName(LPBC pbc, LPCOLESTR szDisplayName,
     *pchEaten = 0;
     *ppmk = NULL;
 
-    if (!strncmpiW(szDisplayName, wszClsidColon, ARRAY_SIZE(wszClsidColon)))
+    if (!_wcsnicmp(szDisplayName, wszClsidColon, ARRAY_SIZE(wszClsidColon)))
     {
         hr = ClassMoniker_CreateFromDisplayName(pbc, szDisplayName, &chEaten, &moniker);
         if (FAILED(hr) && (hr != MK_E_SYNTAX))
@@ -1269,7 +1265,7 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
     absFile=pathDec[nbElm-1];
 
     /* failed if the path represents a directory and not an absolute file name*/
-    if (!lstrcmpW(absFile, bkslashW)) {
+    if (!wcscmp(absFile, bkslashW)) {
         CoTaskMemFree(pathDec);
         return MK_E_INVALIDEXTENSION;
     }
@@ -1280,7 +1276,7 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
     for(i = length-1; (i >= 0) && *(extension = &absFile[i]) != '.'; i--)
         /* nothing */;
 
-    if (!extension || !lstrcmpW(extension, dotW)) {
+    if (!extension || !wcscmp(extension, dotW)) {
         CoTaskMemFree(pathDec);
         return MK_E_INVALIDEXTENSION;
     }

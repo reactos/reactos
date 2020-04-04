@@ -147,7 +147,7 @@
 
 typedef NTSTATUS (WINAPI *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLASS,
                                                           PVOID, ULONG, PULONG);
-typedef NTSTATUS (WINAPI *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, PULONG);
+typedef NTSTATUS (WINAPI *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);
 
 BOOL bExit = FALSE;       /* Indicates EXIT was typed */
 BOOL bCanExit = TRUE;     /* Indicates if this shell is exitable */
@@ -225,7 +225,7 @@ static BOOL IsConsoleProcess(HANDLE Process)
     NTSTATUS Status;
     PROCESS_BASIC_INFORMATION Info;
     PEB ProcessPeb;
-    ULONG BytesRead;
+    SIZE_T BytesRead;
 
     if (NULL == NtQueryInformationProcessPtr || NULL == NtReadVirtualMemoryPtr)
     {
@@ -245,7 +245,7 @@ static BOOL IsConsoleProcess(HANDLE Process)
         sizeof(PEB), &BytesRead);
     if (! NT_SUCCESS(Status) || sizeof(PEB) != BytesRead)
     {
-        WARN ("Couldn't read virt mem status %08x bytes read %lu\n", Status, BytesRead);
+        WARN ("Couldn't read virt mem status %08x bytes read %Iu\n", Status, BytesRead);
         return TRUE;
     }
 
@@ -1605,7 +1605,7 @@ LoadRegistrySettings(HKEY hKeyRoot)
     DWORD dwType, len;
     /*
      * Buffer big enough to hold the string L"4294967295",
-     * corresponding to the literal 0xFFFFFFFF (MAX_ULONG) in decimal.
+     * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
      */
     DWORD Buffer[6];
 
@@ -1872,7 +1872,7 @@ Initialize(VOID)
     /* Initialize prompt support */
     InitPrompt();
 
-#ifdef FEATURE_DIR_STACK
+#ifdef FEATURE_DIRECTORY_STACK
     /* Initialize directory stack */
     InitDirectoryStack();
 #endif

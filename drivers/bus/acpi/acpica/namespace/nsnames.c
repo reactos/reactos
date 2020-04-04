@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -228,7 +228,7 @@ AcpiNsHandleToPathname (
     /* Build the path in the caller buffer */
 
     (void) AcpiNsBuildNormalizedPath (Node, Buffer->Pointer,
-        RequiredSize, NoTrailing);
+        (UINT32) RequiredSize, NoTrailing);
 
     ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "%s [%X]\n",
         (char *) Buffer->Pointer, (UINT32) RequiredSize));
@@ -401,7 +401,7 @@ AcpiNsGetNormalizedPathname (
 
     /* Build the path in the allocated buffer */
 
-    (void) AcpiNsBuildNormalizedPath (Node, NameBuffer, Size, NoTrailing);
+    (void) AcpiNsBuildNormalizedPath (Node, NameBuffer, (UINT32) Size, NoTrailing);
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_NAMES, "%s: Path \"%s\"\n",
         ACPI_GET_FUNCTION_NAME, NameBuffer));
@@ -434,7 +434,7 @@ AcpiNsBuildPrefixedPathname (
     char                    *FullPath = NULL;
     char                    *ExternalPath = NULL;
     char                    *PrefixPath = NULL;
-    SIZE_T                  PrefixPathLength = 0;
+    ACPI_SIZE               PrefixPathLength = 0;
 
 
     /* If there is a prefix, get the pathname to it */

@@ -2,8 +2,6 @@
 #ifndef _MAPI32_PCH_
 #define _MAPI32_PCH_
 
-#include <wine/config.h>
-
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -17,12 +15,12 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <winnls.h>
 #include <mapi.h>
 #include <mapival.h>
 #include <shlwapi.h>
 
 #include <wine/debug.h>
-#include <wine/unicode.h>
 
 #include "util.h"
 

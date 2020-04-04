@@ -21,10 +21,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x500 /* For NTSTATUS */
-#endif
-
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
 #define NONAMELESSUNION
@@ -782,6 +778,7 @@ static DWORD bpx_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_RECORD *
         ok( context->Eip == (DWORD)code_mem, "eip is wrong:  %x instead of %x\n",
                                              context->Eip, (DWORD)code_mem);
         ok( (context->Dr6 & 0xf) == 1, "B0 flag is not set in Dr6\n");
+        ros_skip_flaky
         ok( !(context->Dr6 & 0x4000), "BS flag is set in Dr6\n");
         context->Dr0 = context->Dr0 + 1;  /* set hw bp again on next instruction */
         context->EFlags |= 0x100;       /* enable single stepping */

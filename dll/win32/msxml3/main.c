@@ -230,6 +230,168 @@ static void init_libxslt(void)
 #endif
 }
 
+static int to_utf8(int cp, unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    WCHAR *tmp;
+    int len;
+
+    if (!in || !inlen) return 0;
+
+    len = MultiByteToWideChar(cp, 0, (const char *)in, *inlen, NULL, 0);
+    tmp = heap_alloc(len * sizeof(WCHAR));
+    if (!tmp) return -1;
+    MultiByteToWideChar(cp, 0, (const char *)in, *inlen, tmp, len);
+
+    len = WideCharToMultiByte(CP_UTF8, 0, tmp, len, (char *)out, *outlen, NULL, NULL);
+    heap_free(tmp);
+    if (!len) return -1;
+
+    *outlen = len;
+    return len;
+}
+
+static int from_utf8(int cp, unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    WCHAR *tmp;
+    int len;
+
+    if (!in || !inlen) return 0;
+
+    len = MultiByteToWideChar(CP_UTF8, 0, (const char *)in, *inlen, NULL, 0);
+    tmp = heap_alloc(len * sizeof(WCHAR));
+    if (!tmp) return -1;
+    MultiByteToWideChar(CP_UTF8, 0, (const char *)in, *inlen, tmp, len);
+
+    len = WideCharToMultiByte(cp, 0, tmp, len, (char *)out, *outlen, NULL, NULL);
+    heap_free(tmp);
+    if (!len) return -1;
+
+    *outlen = len;
+    return len;
+}
+
+static int win1250_to_utf8(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return to_utf8(1250, out, outlen, in, inlen);
+}
+
+static int utf8_to_win1250(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return from_utf8(1250, out, outlen, in, inlen);
+}
+
+static int win1251_to_utf8(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return to_utf8(1251, out, outlen, in, inlen);
+}
+
+static int utf8_to_win1251(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return from_utf8(1251, out, outlen, in, inlen);
+}
+
+static int win1252_to_utf8(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return to_utf8(1252, out, outlen, in, inlen);
+}
+
+static int utf8_to_win1252(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return from_utf8(1252, out, outlen, in, inlen);
+}
+
+static int win1253_to_utf8(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return to_utf8(1253, out, outlen, in, inlen);
+}
+
+static int utf8_to_win1253(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return from_utf8(1253, out, outlen, in, inlen);
+}
+static int win1254_to_utf8(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return to_utf8(1254, out, outlen, in, inlen);
+}
+
+static int utf8_to_win1254(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return from_utf8(1254, out, outlen, in, inlen);
+}
+
+static int win1255_to_utf8(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return to_utf8(1255, out, outlen, in, inlen);
+}
+
+static int utf8_to_win1255(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return from_utf8(1255, out, outlen, in, inlen);
+}
+
+static int win1256_to_utf8(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return to_utf8(1256, out, outlen, in, inlen);
+}
+
+static int utf8_to_win1256(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return from_utf8(1256, out, outlen, in, inlen);
+}
+
+static int win1257_to_utf8(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return to_utf8(1257, out, outlen, in, inlen);
+}
+
+static int utf8_to_win1257(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return from_utf8(1257, out, outlen, in, inlen);
+}
+
+static int win1258_to_utf8(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return to_utf8(1258, out, outlen, in, inlen);
+}
+
+static int utf8_to_win1258(unsigned char *out, int *outlen, const unsigned char *in, int *inlen)
+{
+    return from_utf8(1258, out, outlen, in, inlen);
+}
+
+static void init_char_encoders(void)
+{
+    static const struct
+    {
+        const char *encoding;
+        xmlCharEncodingInputFunc input;
+        xmlCharEncodingOutputFunc output;
+    } encoder[] =
+    {
+        { "windows-1250", win1250_to_utf8, utf8_to_win1250 },
+        { "windows-1251", win1251_to_utf8, utf8_to_win1251 },
+        { "windows-1252", win1252_to_utf8, utf8_to_win1252 },
+        { "windows-1253", win1253_to_utf8, utf8_to_win1253 },
+        { "windows-1254", win1254_to_utf8, utf8_to_win1254 },
+        { "windows-1255", win1255_to_utf8, utf8_to_win1255 },
+        { "windows-1256", win1256_to_utf8, utf8_to_win1256 },
+        { "windows-1257", win1257_to_utf8, utf8_to_win1257 },
+        { "windows-1258", win1258_to_utf8, utf8_to_win1258 }
+    };
+    int i;
+
+    xmlInitCharEncodingHandlers();
+
+    for (i = 0; i < ARRAY_SIZE(encoder); i++)
+    {
+        if (!xmlFindCharEncodingHandler(encoder[i].encoding))
+        {
+            TRACE("Adding %s encoding handler\n", encoder[i].encoding);
+            xmlNewCharEncodingHandler(encoder[i].encoding, encoder[i].input, encoder[i].output);
+        }
+    }
+}
+
 #endif  /* HAVE_LIBXML2 */
 
 
@@ -258,6 +420,8 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID reserved)
         if(xmlRegisterInputCallbacks(wineXmlMatchCallback, wineXmlOpenCallback,
                             wineXmlReadCallback, wineXmlFileCloseCallback) == -1)
             WARN("Failed to register callbacks\n");
+
+        init_char_encoders();
 
         schemasInit();
         init_libxslt();

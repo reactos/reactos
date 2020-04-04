@@ -17,9 +17,27 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Pengembang ReactOS ingin berterima kasih kepada beberapa proyek Sumber Terbuka berikut, yang (bagiannya) digunakan untuk membuat ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS terdaftar di bawah GPL, jadi jika anda ingin menggunakan atau menyalurkan (bagian) itu harus menghargai GPL tersebut.", IDC_STATIC, 15, 110, 227, 19
-    PUSHBUTTON "&Tunjukkan GPL...", IDC_VIEWGPL, 251, 110, 50, 19
+    LTEXT "ReactOS terdaftar di bawah GPL, jadi jika anda ingin menggunakan atau menyalurkan (bagian) itu harus menghargai GPL tersebut.", IDC_STATIC, 15, 110, 222, 19
+    PUSHBUTTON "&Tunjukkan GPL...", IDC_VIEWGPL, 239, 110, 63, 19
     LTEXT "Klik Lanjut untuk melanjutkan Penyetelan.", IDC_STATIC, 15, 136, 195, 17
+END
+
+IDD_PRODUCT DIALOGEX 0, 0, 317, 143
+CAPTION "ReactOS Setup"
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
+    LTEXT "Please choose a product option:", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "Product &Options:", IDC_STATIC, 5, 32, 85, 10
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "Product Information", IDC_STATIC, 5, 50, 305, 85
+    LTEXT "ProductSuite:", IDC_STATIC, 20, 62, 70, 10
+    EDITTEXT IDC_PRODUCT_SUITE, 95, 60, 175, 14, ES_READONLY | ES_AUTOHSCROLL
+    LTEXT "ProductType:", IDC_STATIC, 20, 82, 70, 10
+    EDITTEXT IDC_PRODUCT_TYPE, 95, 80, 110, 14, ES_READONLY | ES_AUTOHSCROLL
+    LTEXT "Description:", IDC_STATIC, 20, 102, 70, 10
+    EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 99, 205, 30, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -41,7 +59,7 @@ CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Ketikkan nama komputer anda maksimal 15 karakter. Jika anda si dalam jaringan, nama komputer anda haruslah unik.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Ketikkan nama komputer anda maksimal 15 karakter. Jika anda berada dalam jaringan, nama komputer anda haruslah unik.", IDC_STATIC, 54, 7, 250, 24
     LTEXT "Nama &Komputer:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
@@ -61,7 +79,7 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Bahasa sistem lokal harus sama dengan aplikasi yang ingin anda gunakan. Pengguna lokal mengontrol tampilan angka, kurs, dan tanggal.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Untuk mengubah setelan lokal sistem atau pengguna, klik Sesuaikan.", IDC_STATIC, 53, 60, 184, 8
+    LTEXT "Untuk mengubah setelan lokal sistem atau pengguna, klik Sesuaikan.", IDC_STATIC, 53, 60, 184, 16
     PUSHBUTTON "&Sesuaikan...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Tata letak papan ketik mengontrol tampilan karakter yang muncul ketika anda ketik.", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
@@ -80,7 +98,7 @@ BEGIN
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
     LTEXT "Zona waktu", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Otomatis menyesuaikan waktu atas perubahan &daylight saving", IDC_AUTODAYLIGHT, 53, 124, 201, 10
+    AUTOCHECKBOX "Otomatis menyesuaikan waktu atas perubahan &daylight saving", IDC_AUTODAYLIGHT, 53, 124, 211, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
@@ -140,11 +158,11 @@ BEGIN
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     RTEXT "Deteksi &Roda:", -1, 27, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Panjang oenyangga masukan:", -1, 27, 75, 90, 8
+    RTEXT "&Panjang penyangga masukan:", -1, 27, 71, 90, 16
     LTEXT "paket", -1, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
-    AUTOCHECKBOX "&Fast Initialization", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
+    AUTOCHECKBOX "Inisialisasi &Cepat", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
     PUSHBUTTON "&Asli", IDC_PS2MOUSEDEFAULTS, 195, 188, 50, 14
 END
 
@@ -152,7 +170,7 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Berterima kasih"
     IDS_ACKSUBTITLE "Tempat berdiri ReactOS dan informasi lisensi"
-    IDS_OWNERTITLE "Personalisai Perangkat Lunak anda"
+    IDS_OWNERTITLE "Personalisasi Perangkat Lunak anda"
     IDS_OWNERSUBTITLE "Penyetelan ini menggunakan informasi terkait diri anda untuk menyesuaikan ReactOS."
     IDS_COMPUTERTITLE "Nama Komputer dan Kata sandi Administrator"
     IDS_COMPUTERSUBTITLE "Anda harus menyediakan nama dan Kata sandi Administrator untuk komputer anda."
@@ -203,7 +221,7 @@ BEGIN
     IDS_STATUS_INSTALL_DEV "Memasang perangkat..."
 END
 
-/* ATTENTION: Synchronize the translation of these strings with shell32 */
+/* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROGRAMFILES "%SystemDrive%\\Berkas Program"
@@ -223,4 +241,14 @@ BEGIN
     IDS_LAUTUS "Lautus"
     IDS_LUNAR "Lunar"
     IDS_MIZU "Mizu"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PRODUCTTITLE "Product Options"
+    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSERVERNAME "ReactOS Server"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation (Default)"
+    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
+    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
 END

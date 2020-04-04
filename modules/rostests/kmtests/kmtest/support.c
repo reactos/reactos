@@ -2,8 +2,9 @@
  * PROJECT:     ReactOS kernel-mode tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Kernel-Mode Test Suite user-mode support routines
- * COPYRIGHT:   Copyright 2011-2018 Thomas Faber <thomas.faber@reactos.org>
+ * COPYRIGHT:   Copyright 2011-2020 Thomas Faber <thomas.faber@reactos.org>
  *              Copyright 2013 Nikolay Borisov <nib9@aber.ac.uk>
+ *              Copyright 2018 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
 
 #include <kmt_test.h>
@@ -131,11 +132,11 @@ KmtLoadDriver(
     DWORD Error = ERROR_SUCCESS;
     WCHAR ServicePath[MAX_PATH];
 
-    StringCbCopy(ServicePath, sizeof ServicePath, ServiceName);
-    StringCbCat(ServicePath, sizeof ServicePath, L"_drv.sys");
+    StringCbCopyW(ServicePath, sizeof(ServicePath), ServiceName);
+    StringCbCatW(ServicePath, sizeof(ServicePath), L"_drv.sys");
 
-    StringCbCopy(TestServiceName, sizeof TestServiceName, L"Kmtest-");
-    StringCbCat(TestServiceName, sizeof TestServiceName, ServiceName);
+    StringCbCopyW(TestServiceName, sizeof(TestServiceName), L"Kmtest-");
+    StringCbCatW(TestServiceName, sizeof(TestServiceName), ServiceName);
 
     Error = KmtCreateAndStartService(TestServiceName, ServicePath, NULL, &TestServiceHandle, RestartIfRunning);
 
@@ -149,19 +150,25 @@ KmtLoadDriver(
 /**
  * @name KmtUnloadDriver
  *
- * Unload special-purpose driver (stop the service)
+ * Unload special-purpose driver (stop and delete the service)
  */
 VOID
 KmtUnloadDriver(VOID)
 {
-    DWORD Error = ERROR_SUCCESS;
+    DWORD Error;
 
     Error = KmtStopService(TestServiceName, &TestServiceHandle);
 
     if (Error)
     {
-        // TODO
-        __debugbreak();
+        fprintf(stderr, "Failed to stop %ls service with error 0x%lx\n", TestServiceName, Error);
+    }
+
+    Error = KmtDeleteService(TestServiceName, &TestServiceHandle);
+
+    if (Error)
+    {
+        fprintf(stderr, "Failed to delete %ls service with error 0x%lx\n", TestServiceName, Error);
     }
 }
 
@@ -176,8 +183,8 @@ KmtOpenDriver(VOID)
     DWORD Error = ERROR_SUCCESS;
     WCHAR DevicePath[MAX_PATH];
 
-    StringCbCopy(DevicePath, sizeof DevicePath, L"\\\\.\\Global\\GLOBALROOT\\Device\\");
-    StringCbCat(DevicePath, sizeof DevicePath, TestServiceName);
+    StringCbCopyW(DevicePath, sizeof(DevicePath), L"\\\\.\\Global\\GLOBALROOT\\Device\\");
+    StringCbCatW(DevicePath, sizeof(DevicePath), TestServiceName);
 
     TestDeviceHandle = CreateFile(DevicePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (TestDeviceHandle == INVALID_HANDLE_VALUE)

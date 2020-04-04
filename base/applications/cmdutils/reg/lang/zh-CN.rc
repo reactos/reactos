@@ -40,6 +40,4 @@ STRINGTABLE
     STRING_EXPORT_USAGE, "REG EXPORT key_name file.reg [/y]\n"
     STRING_INVALID_SYSTEM_KEY, "reg: 无效的系统键 [%1]\n"
     STRING_OVERWRITE_FILE, "文件 '%1' 已经存在。您是否要覆盖它？"
-    STRING_SAVE_USAGE, "REG SAVE key_name file_name [/y]"
-    STRING_RESTORE_USAGE, "REG RESTORE key_name file_name"
 }

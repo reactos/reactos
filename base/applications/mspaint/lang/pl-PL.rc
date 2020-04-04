@@ -197,7 +197,7 @@ BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
     IDS_INFOTITLE "Paint dla ReactOS"
-    IDS_INFOTEXT "Paint dla ReactOS jest dostępny na licencji GNU Lesser General Public License (LGPL, www.gnu.org)"
+    IDS_INFOTEXT "Dostępny na licencji GNU Lesser General Public License (LGPL, www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Czy chcesz zapisać zmiany do %s?"
     IDS_DEFAULTFILENAME "bez tytułu.bmp"
     IDS_MINIATURETITLE "Miniatura"

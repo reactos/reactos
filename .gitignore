@@ -11,3 +11,4 @@ modules/AHK_Tests
 .settings
 build
 .vscode
+sdk/tools/winesync/winesync.cfg

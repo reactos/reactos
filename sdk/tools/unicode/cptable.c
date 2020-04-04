@@ -22,6 +22,10 @@
 
 #include "wine/unicode.h"
 
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
+
 /* Everything below this line is generated automatically by make_unicode */
 /* ### cpmap begin ### */
 extern union cptable cptable_037;
@@ -92,12 +96,13 @@ extern union cptable cptable_28597;
 extern union cptable cptable_28598;
 extern union cptable cptable_28599;
 extern union cptable cptable_28600;
+extern union cptable cptable_28601;
 extern union cptable cptable_28603;
 extern union cptable cptable_28604;
 extern union cptable cptable_28605;
 extern union cptable cptable_28606;
 
-static const union cptable * const cptables[72] =
+static const union cptable * const cptables[73] =
 {
     &cptable_037,
     &cptable_424,
@@ -167,6 +172,7 @@ static const union cptable * const cptables[72] =
     &cptable_28598,
     &cptable_28599,
     &cptable_28600,
+    &cptable_28601,
     &cptable_28603,
     &cptable_28604,
     &cptable_28605,
@@ -174,8 +180,6 @@ static const union cptable * const cptables[72] =
 };
 /* ### cpmap end ### */
 /* Everything above this line is generated automatically by make_unicode */
-
-#define NB_CODEPAGES  (sizeof(cptables)/sizeof(cptables[0]))
 
 
 static int cmp_codepage( const void *codepage, const void *entry )
@@ -189,7 +193,7 @@ const union cptable *wine_cp_get_table( unsigned int codepage )
 {
     const union cptable **res;
 
-    if (!(res = bsearch( &codepage, cptables, NB_CODEPAGES,
+    if (!(res = bsearch( &codepage, cptables, ARRAY_SIZE( cptables ),
                          sizeof(cptables[0]), cmp_codepage ))) return NULL;
     return *res;
 }
@@ -198,6 +202,6 @@ const union cptable *wine_cp_get_table( unsigned int codepage )
 /* enum valid codepages */
 const union cptable *wine_cp_enum_table( unsigned int index )
 {
-    if (index >= NB_CODEPAGES) return NULL;
+    if (index >= ARRAY_SIZE( cptables )) return NULL;
     return cptables[index];
 }

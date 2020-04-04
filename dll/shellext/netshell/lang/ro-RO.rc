@@ -20,8 +20,8 @@ BEGIN
     PUSHBUTTON "&Proprietăți…", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Descriere", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Descrierea componentelor…", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "&Afișează pictogramă în zona de notificare", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "N&otifică problemele de conectivitate", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    AUTOCHECKBOX "&Afișează pictogramă în zona de notificare", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "N&otifică problemele de conectivitate", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280

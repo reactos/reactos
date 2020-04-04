@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include <stdarg.h>
 
 #define COBJMACROS
@@ -30,7 +29,6 @@
 
 #include "wine/debug.h"
 #include "wine/heap.h"
-#include "wine/unicode.h"
 #include "wbemdisp_private.h"
 #include "wbemdisp_classes.h"
 
@@ -384,7 +382,7 @@ static HRESULT WINAPI WinMGMTS_ParseDisplayName(IParseDisplayName *iface, IBindC
 
     TRACE( "%p, %p, %s, %p, %p\n", iface, pbc, debugstr_w(pszDisplayName), pchEaten, ppmkOut );
 
-    if (strncmpiW( pszDisplayName, prefixW, prefix_len )) return MK_E_SYNTAX;
+    if (_wcsnicmp( pszDisplayName, prefixW, prefix_len )) return MK_E_SYNTAX;
 
     p = pszDisplayName + prefix_len;
     if (*p == '{')
@@ -418,7 +416,7 @@ done:
     SysFreeString( server );
     SysFreeString( namespace );
     SysFreeString( relative );
-    if (hr == S_OK) *pchEaten = strlenW( pszDisplayName );
+    if (hr == S_OK) *pchEaten = lstrlenW( pszDisplayName );
     return hr;
 }
 

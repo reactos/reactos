@@ -8,9 +8,13 @@ add_definitions(
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 set(OLD_IDL_FLAGS ${IDL_FLAGS})
-set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
+set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_ -Os --prefix-client=mixed_)
 add_rpc_files(client server.idl)
 add_rpc_files(server server.idl)
+set(IDL_FLAGS ${OLD_IDL_FLAGS})
+set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_ -Oicf --prefix-client=interp_)
+add_rpc_files(client server_interp.idl)
+add_rpc_files(server server_interp.idl)
 set(IDL_FLAGS ${OLD_IDL_FLAGS})
 add_rpcproxy_files(cstub.idl)
 
@@ -25,7 +29,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/cstub_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/server_c.c
-    ${CMAKE_CURRENT_BINARY_DIR}/server_s.c)
+    ${CMAKE_CURRENT_BINARY_DIR}/server_s.c
+    ${CMAKE_CURRENT_BINARY_DIR}/server_interp_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/server_interp_s.c)
 
 if(MSVC)
     # The nmake generator misses this dependency, so set it explicitly until this bug is fixed.

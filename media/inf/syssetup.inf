@@ -62,6 +62,7 @@ AddReg=Classes
 11,,dplayx.dll,1
 11,,dsound.dll,1
 11,,dxdiagn.dll,1
+11,,fontext.dll,1
 11,,hhctrl.ocx,1
 11,,hlink.dll,1
 11,,hnetcfg.dll,1
@@ -101,6 +102,7 @@ AddReg=Classes
 11,,rsabase.dll,1
 11,,rsaenh.dll,1
 11,,scrrun.dll,1
+11,,sendmail.dll,1
 11,,shdocvw.dll,3
 11,,shell32.dll,3
 11,,softpub.dll,1

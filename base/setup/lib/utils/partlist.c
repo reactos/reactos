@@ -11,6 +11,7 @@
 
 #include "partlist.h"
 #include "fsutil.h"
+#include "registry.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -3972,13 +3973,13 @@ SetMountedDeviceValue(
     IN ULONG Signature,
     IN LARGE_INTEGER StartingOffset)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    WCHAR ValueNameBuffer[16];
-    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\MountedDevices");
-    UNICODE_STRING ValueName;
-    REG_DISK_MOUNT_INFO MountInfo;
     NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"SYSTEM\\MountedDevices");
+    UNICODE_STRING ValueName;
+    WCHAR ValueNameBuffer[16];
     HANDLE KeyHandle;
+    REG_DISK_MOUNT_INFO MountInfo;
 
     RtlStringCchPrintfW(ValueNameBuffer, ARRAYSIZE(ValueNameBuffer),
                         L"\\DosDevices\\%c:", Letter);
@@ -3987,12 +3988,12 @@ SetMountedDeviceValue(
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,
+                               GetRootKeyByPredefKey(HKEY_LOCAL_MACHINE, NULL),
                                NULL);
 
-    Status =  NtOpenKey(&KeyHandle,
-                        KEY_ALL_ACCESS,
-                        &ObjectAttributes);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         Status = NtCreateKey(&KeyHandle,
@@ -4003,7 +4004,6 @@ SetMountedDeviceValue(
                              REG_OPTION_NON_VOLATILE,
                              NULL);
     }
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);

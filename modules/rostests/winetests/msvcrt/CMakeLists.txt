@@ -4,11 +4,6 @@ add_definitions(
     -D_CRT_NONSTDC_NO_DEPRECATE
     -D__msvcrt_ulong=ULONG)
 
-if(MSVC)
-    # Disable warning C4477 (printf format warnings)
-    add_compile_flags("/wd4477")
-endif()
-
 if(GCC AND GCC_VERSION VERSION_GREATER 7)
     add_compile_flags("-Wno-stringop-truncation")
 endif()

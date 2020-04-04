@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "history.h"
 #include "popup.h"
 
 #define NDEBUG
@@ -29,29 +30,6 @@ ConvertInputUnicodeToAnsi(PCONSRV_CONSOLE Console,
                           // BOOLEAN  IsAnsi,
                           PCHAR/* * */   Target,
                           /*P*/USHORT  TargetLength);
-
-
-VOID
-HistoryAddEntry(PCONSRV_CONSOLE Console,
-                PUNICODE_STRING ExeName,
-                PUNICODE_STRING Entry);
-BOOL
-HistoryRecallHistory(PCONSRV_CONSOLE Console,
-                     PUNICODE_STRING ExeName,
-                     INT Offset,
-                     PUNICODE_STRING Entry);
-VOID
-HistoryGetCurrentEntry(PCONSRV_CONSOLE Console,
-                       PUNICODE_STRING ExeName,
-                       PUNICODE_STRING Entry);
-VOID
-HistoryDeleteCurrentBuffer(PCONSRV_CONSOLE Console,
-                           PUNICODE_STRING ExeName);
-BOOL
-HistoryFindEntryByPrefix(PCONSRV_CONSOLE Console,
-                         PUNICODE_STRING ExeName,
-                         PUNICODE_STRING Prefix,
-                         PUNICODE_STRING Entry);
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -106,11 +84,14 @@ LineInputEdit(PCONSRV_CONSOLE Console,
 
     if (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT)
     {
-        for (i = Pos; i < NewSize; i++)
+        if (Pos < NewSize)
         {
-            TermWriteStream(Console, ActiveBuffer, &Console->LineBuffer[i], 1, TRUE);
+            TermWriteStream(Console, ActiveBuffer,
+                            &Console->LineBuffer[Pos],
+                            NewSize - Pos,
+                            TRUE);
         }
-        for (; i < Console->LineSize; i++)
+        for (i = NewSize; i < Console->LineSize; ++i)
         {
             TermWriteStream(Console, ActiveBuffer, L" ", 1, TRUE);
         }
@@ -320,7 +301,9 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
         case VK_F7:
         {
             if (KeyEvent->dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
+            {
                 HistoryDeleteCurrentBuffer(Console, ExeName);
+            }
             else
             {
                 if (Popup) DestroyPopupWindow(Popup);
@@ -431,12 +414,10 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 
         LineInputSetPos(Console, Console->LineSize);
         Console->LineBuffer[Console->LineSize++] = L'\r';
-        if (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT)
+        if ((GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER) &&
+            (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT))
         {
-            if (GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
-            {
-                TermWriteStream(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), L"\r", 1, TRUE);
-            }
+            TermWriteStream(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), L"\r", 1, TRUE);
         }
 
         /*
@@ -448,12 +429,10 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
             Console->LineSize < Console->LineMaxSize)
         {
             Console->LineBuffer[Console->LineSize++] = L'\n';
-            if (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT)
+            if ((GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER) &&
+                (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT))
             {
-                if (GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
-                {
-                    TermWriteStream(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), L"\n", 1, TRUE);
-                }
+                TermWriteStream(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), L"\n", 1, TRUE);
             }
         }
         Console->LineComplete = TRUE;

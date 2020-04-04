@@ -24,7 +24,6 @@
 
 #include "wine/debug.h"
 #include "wine/heap.h"
-#include "wine/unicode.h"
 
 #ifdef __REACTOS__
 #include <wingdi.h>
@@ -218,7 +217,7 @@ HRESULT WINAPI AtlInternalQueryInterface(void* this, const _ATL_INTMAP_ENTRY* pE
 
     while (pEntries[i].pFunc != 0)
     {
-        TRACE("Trying entry %i (%s %i %p)\n",i,debugstr_guid(pEntries[i].piid),
+        TRACE("Trying entry %i (%s %lx %p)\n",i,debugstr_guid(pEntries[i].piid),
               pEntries[i].dw, pEntries[i].pFunc);
 
         if (!pEntries[i].piid || IsEqualGUID(iid,pEntries[i].piid))
@@ -351,7 +350,7 @@ HRESULT WINAPI AtlLoadTypeLib(HINSTANCE inst, LPCOLESTR lpszIndex,
 
     TRACE("(%p %s %p %p)\n", inst, debugstr_w(lpszIndex), pbstrPath, ppTypeLib);
 
-    index_len = lpszIndex ? strlenW(lpszIndex) : 0;
+    index_len = lpszIndex ? lstrlenW(lpszIndex) : 0;
     path = heap_alloc((MAX_PATH+index_len)*sizeof(WCHAR) + sizeof(tlb_extW));
     if(!path)
         return E_OUTOFMEMORY;

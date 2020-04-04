@@ -5,6 +5,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(
     -D__WINESRC__
     -D_OLE32_
+    -D__ROS_LONG64__
     -DCOM_NO_WINDOWS_H
     -DENTRY_PREFIX=OLE32_
     -DPROXY_CLSID=CLSID_PSFactoryBuffer

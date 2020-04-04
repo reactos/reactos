@@ -168,8 +168,9 @@ PopShutdownHandler(VOID)
         Logo2 = InbvGetResourceAddress(IDB_LOGO_DEFAULT);
         if ((Logo1) && (Logo2))
         {
-            InbvBitBlt(Logo1, 220, 352);
-            InbvBitBlt(Logo2, 222, 111);
+            /* 16px space between logo and message */
+            InbvBitBlt(Logo1, 213, 354);
+            InbvBitBlt(Logo2, 225, 114);
         }
     }
     else
