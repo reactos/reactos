@@ -398,8 +398,18 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return FxSelfManagedIoInvalid;
+    UNREFERENCED_PARAMETER(Progress);
+
+    *Status = This->m_DeviceSelfManagedIoSuspend.Invoke(This->GetDeviceHandle());
+
+    if (NT_SUCCESS(*Status))
+    {
+        return FxSelfManagedIoStopped;
+    }
+    else
+    {
+        return FxSelfManagedIoFailed;
+    }
 }
 
 FxSelfManagedIoStates

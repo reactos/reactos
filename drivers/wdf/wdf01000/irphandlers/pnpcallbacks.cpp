@@ -326,3 +326,21 @@ FxPnpDeviceRelationsQuery::Invoke(
         CallbackEnd();
     }
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPnpDeviceSelfManagedIoSuspend::Invoke(
+    _In_  WDFDEVICE  Device
+    )
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    m_Device = Device;
+
+    if (m_Method != NULL)
+    {
+        status = m_Method(m_Device);
+    }
+
+    return status;
+    //return FxPrePostCallback::InvokeStateless();
+}
