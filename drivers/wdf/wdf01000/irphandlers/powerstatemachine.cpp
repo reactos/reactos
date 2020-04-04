@@ -1980,8 +1980,9 @@ Return Value:
 
 --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    This->PowerGotoDx();
+
+    return WdfDevStatePowerNull;
 }
 
 WDF_DEVICE_POWER_STATE
@@ -3080,4 +3081,46 @@ Return Value:
     // and then post an event which will unblock the child.
     //
     PowerPolicyProcessEvent(PwrPolPowerUp);
+}
+
+VOID
+FxPkgPnp::PowerGotoDx(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Implements the going into Dx logic for the pageable path.
+
+Arguments:
+    None
+
+Return Value:
+    None
+
+  --*/
+{
+    if (m_SelfManagedIoMachine != NULL)
+    {
+        NTSTATUS    status;
+
+        //
+        // Tell the driver to stop its self-managed I/O
+        //
+        status = m_SelfManagedIoMachine->Suspend();
+
+        if (!NT_SUCCESS(status))
+        {
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "EvtDeviceSelfManagedIoStop failed %!STATUS!", status);
+
+            m_PowerMachine.m_IoCallbackFailure = TRUE;
+        }
+    }
+    
+    // Top-edge queue hold
+    m_Device->m_PkgIo->StopProcessingForPower(FxIoStopProcessingForPowerHold);
+
+    PowerPolicyProcessEvent(PwrPolPowerDownIoStopped);
 }

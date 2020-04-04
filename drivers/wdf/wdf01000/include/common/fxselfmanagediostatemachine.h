@@ -143,6 +143,15 @@ public:
         return ProcessEvent(SelfManagedIoEventStart, Progress);
     }
 
+    _Must_inspect_result_
+    NTSTATUS
+    Suspend(
+        VOID
+        )
+    {
+        return ProcessEvent(SelfManagedIoEventSuspend, NULL);
+    }
+
 
 public:
     FxPnpDeviceSelfManagedIoCleanup     m_DeviceSelfManagedIoCleanup;

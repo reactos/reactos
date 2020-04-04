@@ -244,6 +244,31 @@ Return Value:
     NTSTATUS
     ResumeProcessingForPower();
 
+    //
+    // This is called as a result of a power management state
+    // that requests that all I/O in progress stop.
+    //
+    //
+    // FxIoStopProcessingForPowerHold:
+    // the function returns when the driver has acknowledged that it has
+    // stopped all I/O processing, but may have outstanding "in-flight" requests
+    // that have not been completed.
+    //
+    // FxIoStopProcessingForPowerPurge:
+    // the function returns when all requests have been completed and/or
+    // cancelled., and there are no more in-flight requests.
+    //
+    // Any queues not marked as PowerManaged will be left alone.
+    //
+    // This is called on a PASSIVE_LEVEL thread that can block until
+    // I/O has been stopped, or completed/cancelled.
+    //
+    _Must_inspect_result_
+    NTSTATUS
+    StopProcessingForPower(
+        __in FxIoStopProcessingForPowerAction Action
+        );
+
 private:
 
     _Must_inspect_result_

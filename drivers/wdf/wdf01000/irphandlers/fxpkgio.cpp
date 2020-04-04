@@ -1173,3 +1173,115 @@ FxPkgIo::GetIoQueueListLocked(
         ASSERT(FALSE);
     }
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgIo::StopProcessingForPower(
+    __in FxIoStopProcessingForPowerAction Action
+    )
+
+/*++
+
+    Routine Description:
+
+    Stops all PowerManaged queues automatic I/O processing due to
+        a power event that requires I/O to stop.
+
+    This is called on a PASSIVE_LEVEL thread that can block until
+    I/O has been stopped, or completed/cancelled.
+
+Arguments:
+
+    Action -
+
+    FxIoStopProcessingForPowerHold:
+    the function returns when the driver has acknowledged that it has
+    stopped all I/O processing, but may have outstanding "in-flight" requests
+    that have not been completed.
+
+    FxIoStopProcessingForPowerPurgeManaged:
+    the function returns when all requests from a power managed queue have
+    been completed and/or cancelled., and there are no more in-flight requests.
+
+    FxIoStopProcessingForPowerPurgeNonManaged:
+    the function returns when all requests from a non-power managed queue have
+    been completed and/or cancelled., and there are no more in-flight requests.
+    Only called during device-remove.
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+
+{
+    KIRQL irql;
+    FxIoQueue* queue;
+    SINGLE_LIST_ENTRY queueList, *ple;
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGIO,
+                "Perform %!FxIoStopProcessingForPowerAction! for all queues of "
+                "WDFDEVICE 0x%p", Action, m_Device->GetHandle());
+
+    queueList.Next = NULL;
+
+    Lock(&irql);
+    //
+    // Device is moving into low power state. So any new queues
+    // created after this point would start off as powered off.
+    //
+    m_PowerStateOn = FALSE;
+
+    //
+    // If queues are shutting down, any new queue created after 
+    // this point would not accept any requests.
+    //
+    switch(Action) {
+    case FxIoStopProcessingForPowerPurgeManaged:
+    case FxIoStopProcessingForPowerPurgeNonManaged:
+        m_QueuesAreShuttingDown = TRUE;
+        break;
+    }
+
+    GetIoQueueListLocked(&queueList, FxIoQueueIteratorListPowerOff);
+
+    Unlock(irql);
+
+    //
+    // If the power action is hold then first change the state of all the queues
+    // to PowerStartTransition. This will prevent the queues from dispatching
+    // new requests before we start asking each queue to stop processing
+    // inflight requests.
+    //
+    if (Action == FxIoStopProcessingForPowerHold)
+    {
+        //
+        // Walk the list without popping entries because we need to scan
+        // the list again.
+        //
+        for (ple = queueList.Next; ple != NULL; ple = ple->Next)
+        {
+
+            queue = FxIoQueue::_FromPowerSListEntry(ple);
+
+            queue->StartPowerTransitionOff();
+        }
+    }
+
+    //
+    // Ask the queues to stop processing inflight requests.
+    //
+    for (ple = PopEntryList(&queueList); ple != NULL;
+                        ple = PopEntryList(&queueList))
+    {
+        queue = FxIoQueue::_FromPowerSListEntry(ple);
+
+        queue->StopProcessingForPower(Action);
+
+        ple->Next = NULL;
+
+        queue->RELEASE(IO_ITERATOR_POWER_TAG);
+    }
+
+    return STATUS_SUCCESS;
+}

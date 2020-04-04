@@ -19,6 +19,7 @@ const LONG FX_OBJECT_LEAK_DETECTION_DISABLED = 0xFFFFFFFF;
 struct FxLibraryGlobalsType;
 class FxObject;
 class FxDriver;
+class MxEvent;
 extern RTL_OSVERSIONINFOW  gOsVersion;
 extern PCCH WdfLdrType;
 
@@ -327,7 +328,21 @@ public:
             return FALSE;
         }
     }
-	
+
+    VOID
+    WaitForSignal(
+        __in MxEvent* Event,
+        __in PCSTR ReasonForWaiting,
+        __in PVOID Handle,
+        __in ULONG WarningTimeoutInSec,
+        __in ULONG WaitSignalFlags
+        );
+
+    _Must_inspect_result_
+    BOOLEAN
+    IsDebuggerAttached(
+        VOID
+        );
 
 	//
     // Link list of driver FxDriverGlobals on this WDF Version.
@@ -473,6 +488,15 @@ public:
     // Enhanced Verifier Options.
     //
 	ULONG FxEnhancedVerifierOptions;
+
+    //
+    // If FxVerifierDbgBreakOnError is true, WaitForSignal interrupts the
+    // execution of the system after waiting for the specified number
+    // of seconds. Developer will have an opportunity to validate the state
+    // of the driver when breakpoint is hit. Developer can continue to wait
+    // by entering 'g' in the debugger.
+    //
+    ULONG FxVerifierDbgWaitForSignalTimeoutInSec;
 
 	//
     // The public version of WDF_DRIVER_GLOBALS

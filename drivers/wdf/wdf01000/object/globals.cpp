@@ -284,6 +284,8 @@ FxAllocateDriverGlobals(
     pFxDriverGlobals->BugCheckDriverInfoIndex        = 0;
 #endif
 
+    pFxDriverGlobals->FxVerifierDbgWaitForSignalTimeoutInSec = 60;
+
     return &pFxDriverGlobals->Public;
 }
 
@@ -1244,4 +1246,60 @@ Return Value:
     return FALSE;
 }
 
+VOID
+FX_DRIVER_GLOBALS::WaitForSignal(
+    __in MxEvent* Event,
+    __in PCSTR ReasonForWaiting,
+    __in WDFOBJECT Handle,
+    __in ULONG WarningTimeoutInSec,
+    __in ULONG WaitSignalFlags
+    )
+{
+        LARGE_INTEGER timeOut;
+    NTSTATUS status;
+
+    ASSERT(Mx::MxGetCurrentIrql() == PASSIVE_LEVEL);
+
+    timeOut.QuadPart = WDF_REL_TIMEOUT_IN_SEC(((ULONGLONG)WarningTimeoutInSec));
+
+    do
+    {
+        status = Event->WaitFor(Executive,
+                        KernelMode,
+                        FALSE, // Non alertable
+                        timeOut.QuadPart ? &timeOut : NULL);
+
+        if (status == STATUS_TIMEOUT)
+        {
+            DbgPrint("Thread 0x%p is %s 0x%p\n",
+		      Mx::MxGetCurrentThread(),
+                      ReasonForWaiting,
+                      Handle);
+
+            if ((WaitSignalFlags & WaitSignalAlwaysBreak) ||
+                ((WaitSignalFlags & WaitSignalBreakUnderVerifier) &&
+                 FxVerifierDbgBreakOnError) ||
+                ((WaitSignalFlags & WaitSignalBreakUnderDebugger) &&
+                 IsDebuggerAttached()))
+            {
+                DbgBreakPoint();
+            }
+        }
+        else
+        {
+            ASSERT(NT_SUCCESS(status));
+            break;
+        }
+    } while(TRUE);
+}
+
 } //extern C
+
+_Must_inspect_result_
+BOOLEAN
+FX_DRIVER_GLOBALS::IsDebuggerAttached(
+    VOID
+    )
+{
+    return (FALSE == KdRefreshDebuggerNotPresent());
+}

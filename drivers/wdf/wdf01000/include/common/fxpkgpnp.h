@@ -2311,6 +2311,11 @@ protected:
     MdRequestPowerCompleteType
     _PowerPolDevicePowerUpComplete;
 
+    VOID
+    PowerGotoDx(
+        VOID
+        );
+
 public:
 
     VOID

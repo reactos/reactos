@@ -1091,6 +1091,18 @@ public:
         _In_ BOOLEAN
         );
 
+    //
+    // Purge the Queue
+    //
+    _Must_inspect_result_
+    NTSTATUS
+    QueuePurge(
+        __in BOOLEAN                 CancelQueueRequests,
+        __in BOOLEAN                 CancelDriverRequests,
+        __in_opt PFN_WDF_IO_QUEUE_STATE PurgeComplete,
+        __in_opt WDFCONTEXT              Context
+        );
+
 private:
 
     //

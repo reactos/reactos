@@ -5093,3 +5093,453 @@ Done:
     pRequest->Unlock(irql);
     return status;
 }
+
+VOID
+FxIoQueue::StartPowerTransitionOff(
+    )
+/*++
+
+    Routine Description:
+
+    Purpose of this routine is to put the queue in state that would
+    prevent any new requests from being dispatched to the driver.
+
+Arguments:
+
+Return Value:
+
+    VOID
+
+--*/
+{
+    KIRQL irql;
+    BOOLEAN result;
+
+    if (m_PowerManaged == FALSE)
+    {
+        return;
+    }
+
+    Lock(&irql);
+
+    if (m_Deleted == FALSE)
+    {
+        ASSERT(m_PowerState == FxIoQueuePowerOn);
+    }
+    
+    m_PowerState = FxIoQueuePowerStartingTransition;
+
+    // We must wait on the current thread until the queue is actually idle
+    m_PowerIdle.Clear();
+
+    //
+    // Run the event dispatching loop before waiting on the event
+    // in case this thread actually performs the transition
+    //
+    result = DispatchEvents(irql);
+    if (result)
+    {
+        //
+        // This is called from a kernel mode PNP thread, so we do not need
+        // a KeEnterCriticalRegion()
+        //
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGIO,
+                            "Waiting for all threads to stop dispatching requests"
+                            " so that WDFQUEUE 0x%p can be powered off",
+                            GetObjectHandle());
+
+        GetDriverGlobals()->WaitForSignal(m_PowerIdle.GetSelfPointer(), 
+                "waiting for all threads to stop dispatching requests so "
+                "that queue can be powered off, WDFQUEUE", GetHandle(),
+                GetDriverGlobals()->FxVerifierDbgWaitForSignalTimeoutInSec,
+                WaitSignalBreakUnderVerifier
+                );
+    }
+
+    return;
+}
+
+VOID
+FxIoQueue::StopProcessingForPower(
+    __in FxIoStopProcessingForPowerAction Action
+    )
+/*++
+
+    Routine Description:
+
+    Stops automatic I/O processing due to a power event that requires I/O to stop.
+
+    This is called on a PASSIVE_LEVEL thread that can block until
+    I/O has been stopped, or completed/cancelled.
+
+    Additional reference is already taken on the object by the caller
+    to prevent the queue from being deleted.
+
+
+Arguments:
+
+    Action -
+
+    FxIoStopProcessingForPowerHold:
+    the function returns when the driver has acknowledged that it has
+    stopped all I/O processing, but may have outstanding "in-flight" requests
+    that have not been completed.
+
+    FxIoStopProcessingForPowerPurgeManaged:
+    the function returns when all requests from a power managed queue have
+    been completed and/or cancelled., and there are no more in-flight requests.
+
+    FxIoStopProcessingForPowerPurgeNonManaged:
+    the function returns when all requests from a non-power managed queue have
+    been completed and/or cancelled., and there are no more in-flight requests.
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+{
+    KIRQL irql;
+    BOOLEAN result;
+
+    switch (Action) {
+    case FxIoStopProcessingForPowerPurgeNonManaged:
+
+        //
+        // If power managed, leave it alone
+        //
+        if (m_PowerManaged == TRUE)
+        {
+            // Should be powered off by now.
+            ASSERT(m_PowerState == FxIoQueuePowerOff);
+            return;
+        }
+        
+        //
+        // Queue is being shut down. This flag prevents the following:
+        // (1) a race condition where a dispatch queue handler changes the
+        //     state of the queue to accept_requests while we are in the 
+        //     middle of a power stopping (purge) operation 
+
+        // (2) another thread calling Stop or Start on a queue that is in the
+        //     middle of a power stopping (purge) operation.
+        //
+        Lock(&irql);
+        SetStateForShutdown();
+        Unlock(irql);
+        
+        QueuePurge(TRUE, TRUE, NULL, NULL);
+
+        Lock(&irql);
+        //
+        // Queue must be in PowerOn state.
+        //
+        ASSERT(m_PowerState == FxIoQueuePowerOn);
+
+        m_PowerState = FxIoQueuePowerPurge;
+
+        break;
+
+    case FxIoStopProcessingForPowerPurgeManaged:
+
+        //
+        // If not power managed, leave it alone
+        //
+        if (m_PowerManaged == FALSE)
+        {
+            ASSERT(m_PowerState == FxIoQueuePowerOn);
+            return;
+        }
+        
+        //
+        // Queue is being shut down. This flag prevents the following:
+        // (1) a race condition where a dispatch queue handler changes the
+        //     state of the queue to accept_requests while we are in the 
+        //     middle of a power stopping (purge) operation 
+
+        // (2) another thread calling Stop or Start on a queue that is in the
+        //     middle of a power stopping (purge) operation.
+        //
+        Lock(&irql);
+        SetStateForShutdown();
+        Unlock(irql);     
+
+        QueuePurge(TRUE, TRUE, NULL, NULL);
+
+        Lock(&irql);
+
+        m_PowerState = FxIoQueuePowerPurge;
+
+        break;
+
+    case FxIoStopProcessingForPowerHold:
+        //
+        // If not power managed, leave it alone
+        //
+        if(m_PowerManaged == FALSE) {
+            ASSERT(m_PowerState == FxIoQueuePowerOn);
+            return;
+        }
+
+        Lock(&irql);
+
+        m_PowerState = FxIoQueuePowerStopping;
+
+        break;
+
+    default:
+        ASSERT(FALSE);
+        return;
+    }
+
+    // We must wait on the current thread until the queue is actually idle
+    m_PowerIdle.Clear();
+
+    //
+    // Run the event dispatching loop before waiting on the event
+    // in case this thread actually performs the transition
+    //
+    result = DispatchEvents(irql);
+    if (result)
+    {
+        //
+        // This is called from a kernel mode PNP thread, so we do not need
+        // a KeEnterCriticalRegion()
+        //
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGIO,
+                            "Waiting for all inflight requests to be acknowledged "
+                            " on WDFQUEUE 0x%p",
+                            GetObjectHandle());
+
+        GetDriverGlobals()->WaitForSignal(m_PowerIdle.GetSelfPointer(), 
+                                "waiting for all inflight requests "
+                                "to be acknowledged on WDFQUEUE",
+                                GetHandle(),
+                                GetDriverGlobals()->FxVerifierDbgWaitForSignalTimeoutInSec,
+                                WaitSignalBreakUnderVerifier);
+    }
+
+    return;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxIoQueue::QueuePurge(
+    __in BOOLEAN                 CancelQueueRequests,
+    __in BOOLEAN                 CancelDriverRequests,
+    __in_opt PFN_WDF_IO_QUEUE_STATE PurgeComplete,
+    __in_opt WDFCONTEXT              Context
+    )
+/*++
+
+Routine Description:
+
+    Purge the Queue.
+
+     If CancelQueueRequests == TRUE, any requests in the
+     Queue that have not been presented to the device driver are
+     completed with STATUS_CANCELLED.
+
+     If CancelDriverRequests == TRUE, any requests that the
+     driver is operating on that are cancelable will have an
+     I/O Cancel done on them.
+
+Arguments:
+
+Returns:
+
+--*/
+{
+    FxRequest*  pRequest;
+    PFX_DRIVER_GLOBALS FxDriverGlobals = GetDriverGlobals();
+    KIRQL irql;
+    NTSTATUS status;
+
+    Lock(&irql);
+
+    //
+    // If the Queue is deleted, there can't be any requests
+    // to purge, and the queue is no longer executing its
+    // event dispatch loop, so we would stop responding if we 
+    // registered now.
+    //
+    // We could try and silently succeed this, but if we do, we
+    // must invoke the PurgeComplete callback, and without our
+    // queue state machine excuting, we can not ensure any
+    // callback constraints are handled such as locking, queueing
+    // to passive level, etc. So we just fail to indicate to the
+    // driver we *will not* be invoking its PurgeComplete function.
+    //
+    if (m_Deleted)
+    {
+        status = STATUS_DELETE_PENDING;
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                            "WDFQUEUE 0x%p is already deleted %!STATUS!",
+                            GetObjectHandle(), status);
+        Unlock(irql);
+
+        return status;
+    }
+
+    //
+    // If a PurgeComplete callback is supplied, we must register it up
+    // front since a transition empty could occur in another thread.
+    //
+    if (PurgeComplete != NULL)
+    {
+        //
+        // Only one PurgeComplete callback can be outstanding
+        // at a time per Queue
+        //
+        if (m_PurgeComplete.Method != NULL)
+        {
+            status = STATUS_INVALID_DEVICE_REQUEST;
+            DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                                "WDFQUEUE 0x%p already has a "
+                                "PurgeComplete callback registered 0x%p "
+                                "%!STATUS!", GetObjectHandle(),
+                                m_PurgeComplete.Method, status);
+            Unlock(irql);
+
+            return status;
+        }
+
+        m_PurgeComplete.Method = PurgeComplete;
+        m_PurgeCompleteContext = Context;
+    }
+
+    // Clear accept requests
+    SetState(FxIoQueueClearAcceptRequests);
+    
+    if (CancelQueueRequests && CancelDriverRequests &&
+        FxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,11))
+    {
+        //
+        // Driver wants to abort/complete all queued request and cancel or 
+        // wait for all requests the driver is currently handling. Thus we must
+        // prevent the driver from requeuing stale requests. 
+        // This flag is set here, and cleared when:
+        //  (a) Driver doesn't own any more requests, or 
+        //  (b) the driver calls WdfIoQueueStart again (dispatch gate is opened).
+        // When set, the framework automatically deletes  any request that the
+        // driver requeues.
+        // For compatibility we do this only for drivers v1.11 and above.
+        //
+        m_CancelDispatchedRequests = TRUE;
+    }
+
+    // Unlock queue lock
+    Unlock(irql);
+
+    if (CancelQueueRequests)
+    {
+            #pragma warning(disable:4127)
+        while (TRUE)
+        {
+            #pragma warning(default:4127)
+            //
+            // Get the next FxRequest from the cancel safe queue
+            //
+            Lock(&irql);
+            pRequest = FxRequest::GetNextRequest(&m_Queue);
+            if (pRequest == NULL)
+            {
+                DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIO,
+                                    "All WDFQUEUE 0x%p requests cancelled",
+                                    GetObjectHandle());
+                Unlock(irql);
+                break;
+            }
+
+            // Irp is not cancellable now
+
+            DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGIO,
+                                "Cancelling WDFREQUEST 0x%p, WDFQUEUE 0x%p",
+                                pRequest->GetHandle(),GetObjectHandle());
+
+            //
+            // We must add a reference since the CancelForQueue path
+            // assumes we were on the FxIrpQueue with the extra reference
+            pRequest->ADDREF(FXREQUEST_QUEUE_TAG);
+            
+            //
+            // Mark the request as cancelled, place it on the cancel list,
+            // and schedule the cancel event to the driver
+            //
+            CancelForQueue(pRequest, irql);
+
+        }
+    }
+
+    if (CancelDriverRequests)
+    {
+        //
+        // Walk the driver cancelable list cancelling
+        // the requests.
+        //
+            #pragma warning(disable:4127)
+        while (TRUE)
+        {
+            #pragma warning(default:4127)
+            //
+            // Get the next request of driver cancelable requests
+            //
+            Lock(&irql);
+            pRequest = FxRequest::GetNextRequest(&m_DriverCancelable);
+            if (pRequest == NULL)
+            {
+                DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIO,
+                                    "All driver cancellable requests cancelled "
+                                    " in WDFQUEUE 0x%p",
+                                    GetObjectHandle());
+                Unlock(irql);
+                break;
+            }
+
+            pRequest->m_Canceled = TRUE;
+
+            Unlock(irql);
+
+            //
+            // If the driver follows the pattern of removing cancel status
+            // from the request before completion, then there is no race
+            // with this routine since we will not be able to retrieve any
+            // requests the driver has made non-cancellable in preparation
+            // for completion.
+            //
+            pRequest->ADDREF(FXREQUEST_QUEUE_TAG);
+
+            CancelForDriver(pRequest);
+
+            // The request could have been completed and released by the driver
+        }
+    }
+
+    if (IsForwardProgressQueue())
+    {
+        PurgeForwardProgressIrps(NULL);
+    }
+    
+    //
+    // Since we set that no new requests may be enqueued,
+    // if both m_Queue.GetRequestCount() and m_DriverIoCount == 0 right
+    // now the queue is completely purged.
+    //
+
+    //
+    // We check if our m_PurgeComplete callback is still set
+    // since it may have been called by another thread when
+    // we dropped the lock above
+    //
+    Lock(&irql);
+
+    DispatchEvents(irql);
+
+    //
+    // If the driver registered a PurgeComplete callback, and it was
+    // not empty in the above check, it will be called when a
+    // request complete from the device driver completes the
+    // final request.
+    //
+    return STATUS_SUCCESS;
+}
