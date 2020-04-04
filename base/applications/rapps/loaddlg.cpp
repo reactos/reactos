@@ -349,6 +349,7 @@ class CDownloadManager
     static CDowloadingAppsListView DownloadsListView;
     static CDownloaderProgress ProgressBar;
     static BOOL bCancelled;
+    static BOOL bModal;
     static VOID UpdateProgress(HWND hDlg, ULONG ulProgress, ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText);
 public:
     static VOID Add(DownloadInfo info);
@@ -363,7 +364,8 @@ public:
 ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsToInstallList;
 CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
 CDownloaderProgress                     CDownloadManager::ProgressBar;
-BOOL                                    CDownloadManager::bCancelled;
+BOOL                                    CDownloadManager::bCancelled = FALSE;
+BOOL                                    CDownloadManager::bModal = FALSE;
 
 VOID CDownloadManager::Add(DownloadInfo info)
 {
@@ -452,8 +454,14 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         return FALSE;
 
     case WM_CLOSE:
-        EndDialog(Dlg, 0);
-        //DestroyWindow(Dlg);
+        if (CDownloadManager::bModal)
+        {
+            ::EndDialog(Dlg, 0);
+        }
+        else
+        {
+            ::DestroyWindow(Dlg);
+        }
         return TRUE;
 
     default:
@@ -858,6 +866,7 @@ end:
 //TODO: Reuse the dialog
 VOID CDownloadManager::LaunchDownloadDialog(BOOL bIsModal)
 {
+    CDownloadManager::bModal = bIsModal;
     if (bIsModal)
     {
         DialogBoxW(hInst,
