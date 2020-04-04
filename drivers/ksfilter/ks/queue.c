@@ -30,46 +30,46 @@ typedef struct
 NTSTATUS
 NTAPI
 IKsQueue_fnQueryInterface(
-	IKsQueue * iface,
-	IN REFIID refiid,
-	OUT PVOID* Output)
+    IKsQueue * iface,
+    IN REFIID refiid,
+    OUT PVOID* Output)
 {
-	IKsQueueImpl* This = CONTAINING_RECORD(iface, IKsQueueImpl, lpVtbl);
+    IKsQueueImpl* This = CONTAINING_RECORD(iface, IKsQueueImpl, lpVtbl);
 
-	if (IsEqualGUIDAligned(refiid, &IID_IUnknown))
-	{
-		*Output = &This->lpVtbl;
-		_InterlockedIncrement(&This->ref);
-		return STATUS_SUCCESS;
-	}
-	return STATUS_UNSUCCESSFUL;
+    if (IsEqualGUIDAligned(refiid, &IID_IUnknown))
+    {
+        *Output = &This->lpVtbl;
+        _InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
+    return STATUS_UNSUCCESSFUL;
 }
 
 ULONG
 NTAPI
 IKsQueue_fnAddRef(
-	IKsQueue * iface)
+    IKsQueue * iface)
 {
-	IKsQueueImpl* This = CONTAINING_RECORD(iface, IKsQueueImpl, lpVtbl);
-	return InterlockedIncrement(&This->ref);
+    IKsQueueImpl* This = CONTAINING_RECORD(iface, IKsQueueImpl, lpVtbl);
+    return InterlockedIncrement(&This->ref);
 }
 
 ULONG
 NTAPI
 IKsQueue_fnRelease(
-	IKsQueue * iface)
+    IKsQueue * iface)
 {
-	IKsQueueImpl* This = CONTAINING_RECORD(iface, IKsQueueImpl, lpVtbl);
+    IKsQueueImpl* This = CONTAINING_RECORD(iface, IKsQueueImpl, lpVtbl);
 
-	InterlockedDecrement(&This->ref);
+    InterlockedDecrement(&This->ref);
 
-	if (This->ref == 0)
-	{
-		FreeItem(This);
-		return 0;
-	}
-	/* Return new reference count */
-	return This->ref;
+    if (This->ref == 0)
+    {
+        FreeItem(This);
+        return 0;
+    }
+    /* Return new reference count */
+    return This->ref;
 }
 
 
@@ -145,79 +145,79 @@ IKsQueue_fnDiscardKsIrp(
     IN PIRP Irp,
     OUT IKsTransport ** Transport)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 NTAPI
 IKsQueue_fnConnect(
-	IN IKsQueue * iface,
-	IN IKsTransport *T1,
-	OUT IKsTransport **OutTransport1,
-	OUT IKsTransport **OutTransport2,
-	IN KSPIN_DATAFLOW DataFlow)
+    IN IKsQueue * iface,
+    IN IKsTransport *T1,
+    OUT IKsTransport **OutTransport1,
+    OUT IKsTransport **OutTransport2,
+    IN KSPIN_DATAFLOW DataFlow)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 NTAPI
 IKsQueue_fnSetDeviceState(
-	IN IKsQueue * iface,
-	IN KSSTATE ToState,
-	IN KSSTATE FromState,
-	IN PCHAR Message)
+    IN IKsQueue * iface,
+    IN KSSTATE ToState,
+    IN KSSTATE FromState,
+    IN PCHAR Message)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 NTAPI
 IKsQueue_fnSetResetState(
-	IKsQueue * iface,
-	IN KSRESET Reset,
-	IN PCHAR Message)
+    IKsQueue * iface,
+    IN KSRESET Reset,
+    IN PCHAR Message)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 NTAPI
 IKsQueue_fnGetTransportConfig(
-	IN IKsQueue * iface,
-	IN KSPTRANSPORTCONFIG * TransportConfig,
-	OUT IKsTransport **OutTransport,
-	OUT IKsTransport **OutTransport2)
+    IN IKsQueue * iface,
+    IN KSPTRANSPORTCONFIG * TransportConfig,
+    OUT IKsTransport **OutTransport,
+    OUT IKsTransport **OutTransport2)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 NTAPI
 IKsQueue_fnSetTransportConfig(
-	IN IKsQueue * iface,
-	IN KSPTRANSPORTCONFIG *a2,
-	IN PCHAR Message,
-	OUT IKsTransport **OutTransport,
-	OUT IKsTransport **OutTransport2)
+    IN IKsQueue * iface,
+    IN KSPTRANSPORTCONFIG *a2,
+    IN PCHAR Message,
+    OUT IKsTransport **OutTransport,
+    OUT IKsTransport **OutTransport2)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 VOID
 NTAPI
 IKsQueue_fnResetTransportConfig(
-	IN IKsQueue * iface,
-	IN IKsTransport ** NextTransport,
-	IN IKsTransport ** PrevTransport)
+    IN IKsQueue * iface,
+    IN IKsTransport ** NextTransport,
+    IN IKsTransport ** PrevTransport)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -275,20 +275,20 @@ IKsQueue_fnCloneStreamPointer(
 VOID
 NTAPI
 IKsQueue_fnDeleteStreamPointer(
-	IN IKsQueue * iface,
-	IN KSPSTREAM_POINTER * StreamPointer)
+    IN IKsQueue * iface,
+    IN KSPSTREAM_POINTER * StreamPointer)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 KSPSTREAM_POINTER*
 NTAPI
 IKsQueue_fnLockStreamPointer(
-	IN IKsQueue * iface,
-	IN KSPSTREAM_POINTER * StreamPointer)
+    IN IKsQueue * iface,
+    IN KSPSTREAM_POINTER * StreamPointer)
 {
-	UNIMPLEMENTED;
-	return NULL;
+    UNIMPLEMENTED;
+    return NULL;
 }
 
 VOID
@@ -298,23 +298,23 @@ IKsQueue_fnUnlockStreamPointer(
     IN KSPSTREAM_POINTER * StreamPointer,
     IN enum KSPSTREAM_POINTER_MOTION Motion)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 VOID
 NTAPI
 IKsQueue_fnAdvanceUnlockedStreamPointer(
-	IN IKsQueue * iface,
-	IN KSPSTREAM_POINTER * StreamPointer)
+    IN IKsQueue * iface,
+    IN KSPSTREAM_POINTER * StreamPointer)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 KSPSTREAM_POINTER *
 NTAPI
 IKsQueue_fnGetLeadingStreamPointer(
-	IN IKsQueue * iface,
-	IN KSSTREAM_POINTER_STATE State)
+    IN IKsQueue * iface,
+    IN KSSTREAM_POINTER_STATE State)
 {
     IKsQueueImpl * This;
 
@@ -337,45 +337,45 @@ IKsQueue_fnGetLeadingStreamPointer(
 KSPSTREAM_POINTER *
 NTAPI
 IKsQueue_fnGetTrailingStreamPointer(
-	IN IKsQueue * iface,
-	IN KSSTREAM_POINTER_STATE State)
+    IN IKsQueue * iface,
+    IN KSSTREAM_POINTER_STATE State)
 {
-	IKsQueueImpl * This;
+    IKsQueueImpl * This;
 
-	This = CONTAINING_RECORD(iface, IKsQueueImpl, lpVtbl);
+    This = CONTAINING_RECORD(iface, IKsQueueImpl, lpVtbl);
 
-	if (State != KSSTREAM_POINTER_STATE_LOCKED)
-	{
-		return This->m_Trailing;
-	}
-	else
-	{
-		if (iface->lpVtbl->LockStreamPointer(iface, This->m_Trailing) != NULL)
-		{
-			return This->m_Trailing;
-		}
-	}
-	return NULL;
+    if (State != KSSTREAM_POINTER_STATE_LOCKED)
+    {
+        return This->m_Trailing;
+    }
+    else
+    {
+        if (iface->lpVtbl->LockStreamPointer(iface, This->m_Trailing) != NULL)
+        {
+            return This->m_Trailing;
+        }
+    }
+    return NULL;
 }
 
 VOID
 NTAPI
 IKsQueue_fnScheduleTimeout(
-	IN IKsQueue * iface,
-	IN KSPSTREAM_POINTER * StreamPointer,
-	IN PFNKSSTREAMPOINTER CancelRoutine,
-	IN ULONGLONG TimeOut)
+    IN IKsQueue * iface,
+    IN KSPSTREAM_POINTER * StreamPointer,
+    IN PFNKSSTREAMPOINTER CancelRoutine,
+    IN ULONGLONG TimeOut)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 VOID
 NTAPI
 IKsQueue_fnCancelTimeout(
-	IN IKsQueue * iface,
-	IN KSPSTREAM_POINTER * StreamPointer)
+    IN IKsQueue * iface,
+    IN KSPSTREAM_POINTER * StreamPointer)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 KSPSTREAM_POINTER*
@@ -383,39 +383,39 @@ NTAPI
 IKsQueue_fnGetFirstClone(
     IN IKsQueue * iface)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
     return NULL;
 }
 
 KSPSTREAM_POINTER*
 NTAPI
 IKsQueue_fnGetNextClone(
-	IN IKsQueue * iface,
-	IN KSPSTREAM_POINTER * StreamPointer)
+    IN IKsQueue * iface,
+    IN KSPSTREAM_POINTER * StreamPointer)
 {
-	UNIMPLEMENTED;
-	return NULL;
+    UNIMPLEMENTED;
+    return NULL;
 }
 
 VOID
 NTAPI
 IKsQueue_fnGetAvailableByteCount(
-	IN IKsQueue * iface,
-	IN PULONG InputDataBytes,
-	IN PULONG OutputBufferBytes)
+    IN IKsQueue * iface,
+    IN PULONG InputDataBytes,
+    IN PULONG OutputBufferBytes)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 VOID
 NTAPI
 IKsQueue_fnUpdateByteAvailability(
-	IN IKsQueue * iface,
-	IN KSPSTREAM_POINTER * StreamPointer,
-	IN ULONG InUsed,
-	IN ULONG OutUsed)
+    IN IKsQueue * iface,
+    IN KSPSTREAM_POINTER * StreamPointer,
+    IN ULONG InUsed,
+    IN ULONG OutUsed)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -425,8 +425,8 @@ IKsQueue_fnSetStreamPointerStatusCode(
     IN KSPSTREAM_POINTER * StreamPointer,
     IN NTSTATUS StatusCode)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 VOID
@@ -435,7 +435,7 @@ IKsQueue_fnRegisterFrameDismissalCallback(
     IN IKsQueue * iface,
     IN KSPSTREAM_POINTER * StreamPointer)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 UCHAR
@@ -443,7 +443,7 @@ NTAPI
 IKsQueue_fnGeneratesMappings(
     IKsQueue * iface)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -454,39 +454,39 @@ IKsQueue_fnCopyFrame(
     IN KSPSTREAM_POINTER * Src,
     IN KSPSTREAM_POINTER * Target)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 IKsQueueVtbl vt_IKsQueue = 
 {
     IKsQueue_fnQueryInterface,                           
-	IKsQueue_fnAddRef,                                   
-	IKsQueue_fnRelease,
-	IKsQueue_fnTransferKsIrp,
-	IKsQueue_fnDiscardKsIrp,
-	IKsQueue_fnConnect,
-	IKsQueue_fnSetDeviceState,
-	IKsQueue_fnSetResetState,
-	IKsQueue_fnGetTransportConfig,
-	IKsQueue_fnSetTransportConfig,
-	IKsQueue_fnResetTransportConfig,
-	IKsQueue_fnCloneStreamPointer,
-	IKsQueue_fnDeleteStreamPointer,
-	IKsQueue_fnLockStreamPointer,                        
-	IKsQueue_fnUnlockStreamPointer,                      
-	IKsQueue_fnAdvanceUnlockedStreamPointer,
-	IKsQueue_fnGetLeadingStreamPointer,
-	IKsQueue_fnGetTrailingStreamPointer,
-	IKsQueue_fnScheduleTimeout,
-	IKsQueue_fnCancelTimeout,
-	IKsQueue_fnGetFirstClone,
-	IKsQueue_fnGetNextClone,
-	IKsQueue_fnGetAvailableByteCount,
-	IKsQueue_fnUpdateByteAvailability,
-	IKsQueue_fnSetStreamPointerStatusCode,
-	IKsQueue_fnRegisterFrameDismissalCallback,
-	IKsQueue_fnGeneratesMappings,
-	IKsQueue_fnCopyFrame
+    IKsQueue_fnAddRef,                                   
+    IKsQueue_fnRelease,
+    IKsQueue_fnTransferKsIrp,
+    IKsQueue_fnDiscardKsIrp,
+    IKsQueue_fnConnect,
+    IKsQueue_fnSetDeviceState,
+    IKsQueue_fnSetResetState,
+    IKsQueue_fnGetTransportConfig,
+    IKsQueue_fnSetTransportConfig,
+    IKsQueue_fnResetTransportConfig,
+    IKsQueue_fnCloneStreamPointer,
+    IKsQueue_fnDeleteStreamPointer,
+    IKsQueue_fnLockStreamPointer,                        
+    IKsQueue_fnUnlockStreamPointer,                      
+    IKsQueue_fnAdvanceUnlockedStreamPointer,
+    IKsQueue_fnGetLeadingStreamPointer,
+    IKsQueue_fnGetTrailingStreamPointer,
+    IKsQueue_fnScheduleTimeout,
+    IKsQueue_fnCancelTimeout,
+    IKsQueue_fnGetFirstClone,
+    IKsQueue_fnGetNextClone,
+    IKsQueue_fnGetAvailableByteCount,
+    IKsQueue_fnUpdateByteAvailability,
+    IKsQueue_fnSetStreamPointerStatusCode,
+    IKsQueue_fnRegisterFrameDismissalCallback,
+    IKsQueue_fnGeneratesMappings,
+    IKsQueue_fnCopyFrame
 };
 
 NTSTATUS
@@ -568,7 +568,7 @@ IKsQueue_fnInit(
 
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -592,7 +592,7 @@ KsStreamPointerSetStatusCode(
 }
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -627,7 +627,7 @@ KsStreamPointerLock(
 }
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -656,7 +656,7 @@ KsStreamPointerUnlock(
 }
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -739,7 +739,7 @@ KsStreamPointerAdvanceOffsetsAndUnlock(
 }
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -760,7 +760,7 @@ KsStreamPointerDelete(
 }
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -798,7 +798,7 @@ KsStreamPointerClone(
 }
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -897,7 +897,7 @@ KsStreamPointerAdvanceOffsets(
 }
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -943,13 +943,13 @@ KsStreamPointerAdvance(
 }
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 PMDL
 NTAPI
 KsStreamPointerGetMdl(
-	IN PKSSTREAM_POINTER StreamPointer)
+    IN PKSSTREAM_POINTER StreamPointer)
 {
     KSPSTREAM_POINTER * StreamPtr;
 
@@ -970,7 +970,7 @@ KsStreamPointerGetMdl(
 }
 
 /*
-	@unimplemented
+    @unimplemented
 */
 KSDDKAPI
 PIRP
@@ -1000,7 +1000,7 @@ KsStreamPointerGetIrp(
 }
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -1026,13 +1026,13 @@ KsStreamPointerScheduleTimeout(
 }
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 VOID
 NTAPI
 KsStreamPointerCancelTimeout(
-	IN PKSSTREAM_POINTER StreamPointer)
+    IN PKSSTREAM_POINTER StreamPointer)
 {
     KSPSTREAM_POINTER * StreamPtr;
     IKsQueue * Queue;
@@ -1049,13 +1049,13 @@ KsStreamPointerCancelTimeout(
 }
 
 /*
-	@implemented
+    @implemented
 */
 KSDDKAPI
 PKSSTREAM_POINTER
 NTAPI
 KsStreamPointerGetNextClone(
-	IN PKSSTREAM_POINTER StreamPointer)
+    IN PKSSTREAM_POINTER StreamPointer)
 {
     KSPSTREAM_POINTER * StreamPtr;
     IKsQueue * Queue;

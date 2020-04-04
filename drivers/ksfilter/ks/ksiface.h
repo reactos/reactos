@@ -168,9 +168,9 @@ enum KSPSTREAM_POINTER_TYPE {
 };
 
 typedef struct _KSPTRANSPORTCONFIG {
-	UCHAR TransportType; /*  +0x0000  */
-	USHORT IrpDisposition; /*  +0x0002  */
-	UCHAR StackDepth; /*  +0x0004  */
+	UCHAR TransportType; 
+	USHORT IrpDisposition;
+	UCHAR StackDepth; 
 } KSPTRANSPORTCONFIG;
 
 typedef enum _KSPFRAME_HEADER_TYPE {
@@ -179,54 +179,49 @@ typedef enum _KSPFRAME_HEADER_TYPE {
 } KSPFRAME_HEADER_TYPE;
 
 typedef struct _KSPIRP_FRAMING_ {
-	ULONG  OutputBufferLength; /*  +0x0000  */
-	ULONG  RefCount; /*  +0x0004  */
-	ULONG  QueuedFrameHeaderCount; /*  +0x0008  */
-	PVOID FrameHeaders; /*  +0x0010 ba 13 00 00  */
+	ULONG  OutputBufferLength; 
+	ULONG  RefCount; 
+	ULONG  QueuedFrameHeaderCount; 
+	PVOID FrameHeaders; 
 }KSPIRP_FRAMING;
 
 typedef struct _KSPFRAME_HEADER {
-	LIST_ENTRY ListEntry; /*  +0x0000 29 10 00 00  */
-	struct _KSPFRAME_HEADER * NextFrameHeaderInIrp; /*  +0x0010 ba 13 00 00  */
-	PVOID Queue; /*  +0x0018  */
-	PIRP OriginalIrp; /*  +0x0020 c4 10 00 00  */
-	PMDL Mdl; /*  +0x0028 b3 10 00 00  */
-	PIRP Irp; /*  +0x0030 c4 10 00 00  */
-	KSPIRP_FRAMING* IrpFraming; /*  +0x0038 a8 17 00 00  */
-	PVOID StreamHeader; /*  +0x0040 60 15 00 00  */
-	PVOID FrameBuffer; /*  +0x0048  */
-	PVOID MappingsTable; /*  +0x0050 a2 17 00 00  */
-	ULONG StreamHeaderSize; /*  +0x0058  */
-	ULONG FrameBufferSize; /*  +0x005c  */
-	PVOID Context; /*  +0x0060  */
-	ULONG RefCount; /*  +0x0068  */
-	PVOID OriginalData; /*  +0x0070  */
-	PVOID BufferedData; /*  +0x0078  */
-	NTSTATUS Status; /*  +0x0080  */
-	UCHAR DismissalCall; /*  +0x0084  */
-	KSPFRAME_HEADER_TYPE Type; /*  +0x0088 1a 1b 00 00  */
-	PVOID FrameHolder; /*  +0x0090 b8 13 00 00  */
+	LIST_ENTRY ListEntry; 
+	struct _KSPFRAME_HEADER * NextFrameHeaderInIrp; 
+	PVOID Queue; 
+	PIRP OriginalIrp; 
+	PMDL Mdl; 
+	PIRP Irp; 
+	KSPIRP_FRAMING* IrpFraming; 
+	PVOID StreamHeader; 
+	PVOID FrameBuffer; 
+	PVOID MappingsTable; 
+	ULONG StreamHeaderSize; 
+	ULONG FrameBufferSize; 
+	PVOID Context; 
+	ULONG RefCount; 
+	PVOID OriginalData; 
+	PVOID BufferedData; 
+	NTSTATUS Status; 
+	UCHAR DismissalCall; 
+	KSPFRAME_HEADER_TYPE Type; 
+	PVOID FrameHolder; 
 }KSPFRAME_HEADER;
-C_ASSERT(sizeof(KSPFRAME_HEADER) == 0x54);
-
 
 typedef struct _KSPSTREAM_POINTER {
-    LIST_ENTRY ListEntry; /*  +0x0000 29 10 00 00  */
-    LIST_ENTRY TimeoutListEntry; /*  +0x0010 29 10 00 00  */
-    ULONGLONG TimeoutTime; /*  +0x0020  */
-    PFNKSSTREAMPOINTER CancelCallback; /*  +0x0028 4a 17 00 00  */
-    PDRIVER_CANCEL TimeoutCallback; /*  +0x0030 4a 17 00 00  */
-    enum KSPSTREAM_POINTER_STATE State; /*  +0x0038 50 18 00 00  */
-    enum KSPSTREAM_POINTER_TYPE Type; /*  +0x003c 4c 17 00 00  */
-    ULONG Stride; /*  +0x0040  */
-    PVOID CKsQueue;/*  +0x0048 e1 12 00 00  */
-    KSPFRAME_HEADER* FrameHeader; /*  +0x0050 ba 13 00 00  */
-    KSPFRAME_HEADER* FrameHeaderStarted; /*  +0x0058 ba 13 00 00  */
+    LIST_ENTRY ListEntry; 
+    LIST_ENTRY TimeoutListEntry; 
+    ULONGLONG TimeoutTime; 
+    PFNKSSTREAMPOINTER CancelCallback; 
+    PDRIVER_CANCEL TimeoutCallback; 
+    enum KSPSTREAM_POINTER_STATE State; 
+    enum KSPSTREAM_POINTER_TYPE Type; 
+    ULONG Stride; 
+    PVOID CKsQueue;
+    KSPFRAME_HEADER* FrameHeader; 
+    KSPFRAME_HEADER* FrameHeaderStarted; 
     KSSTREAM_POINTER StreamPointer;
 } KSPSTREAM_POINTER;
-
-C_ASSERT(sizeof(KSPSTREAM_POINTER) == 0x68);
-
 
 DECLARE_INTERFACE_(IKsQueue, IUnknown)
 {
