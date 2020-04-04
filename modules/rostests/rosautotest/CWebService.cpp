@@ -1,13 +1,13 @@
 /*
  * PROJECT:     ReactOS Automatic Testing Utility
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Class implementing the interface to the "testman" Web Service
- * COPYRIGHT:   Copyright 2009-2015 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2009-2020 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
 
-static const WCHAR szHostname[] = L"reactos.org";
+static const WCHAR szHostname[] = L"tlsv1.reactos.org";
 static const WCHAR szServerFile[] = L"testman/webservice/";
 
 /**
