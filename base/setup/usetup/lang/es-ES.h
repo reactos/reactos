@@ -1026,7 +1026,7 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
         8,
         15,
         "\x07  Pulse P para crear una Partici\242n Primaria.",
-//        "\x07  Pulse C para crear una Nueva Partici¢n.",
+//        "\x07  Pulse C para crear una Nueva Partici\242n.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
