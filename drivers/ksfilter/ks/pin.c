@@ -1339,9 +1339,7 @@ NTAPI
 KsPinGetFirstCloneStreamPointer(
     IN PKSPIN Pin)
 {
-    IKsPinImpl * This;
     UNIMPLEMENTED;
-    This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
     return NULL;
 }
 
