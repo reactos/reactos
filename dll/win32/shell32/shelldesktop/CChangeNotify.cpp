@@ -7,6 +7,7 @@
 #include "shelldesktop.h"
 #include "shlwapi_undoc.h"
 #include <atlsimpcoll.h>
+#include <assert.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
@@ -291,6 +292,7 @@ CWorker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 BOOL CWorker::CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle)
 {
+    assert(m_hWnd == NULL);
     m_hWnd = SHCreateWorkerWindowW(WindowProc, hwndParent, dwExStyle, dwStyle,
                                    NULL, (LONG_PTR)this);
     return m_hWnd != NULL;
