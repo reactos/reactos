@@ -640,23 +640,23 @@ HANDLE WINAPI SHChangeNotification_Lock(
 	LPLONG lpwEventId)
 {
 #ifdef __REACTOS__
-    LPHANDBAG pHandBag;
+    LPHANDBAG pHandbag;
     TRACE("%p %08x %p %p\n", hChange, dwProcessId, lppidls, lpwEventId);
 
-    pHandBag = DoGetHandBagFromTicket(hChange, dwProcessId);
-    if (!pHandBag || pHandBag->dwMagic != HANDBAG_MAGIC)
+    pHandbag = DoGetHandbagFromTicket(hChange, dwProcessId);
+    if (!pHandbag || pHandbag->dwMagic != HANDBAG_MAGIC)
     {
-        ERR("pHandBag is invalid\n");
+        ERR("pHandbag is invalid\n");
         return NULL;
     }
 
     if (lppidls)
-        *lppidls = &pHandBag->pidl1;
+        *lppidls = &pHandbag->pidl1;
 
     if (lpwEventId)
-        *lpwEventId = pHandBag->pTicket->wEventId;
+        *lpwEventId = pHandbag->pTicket->wEventId;
 
-    return pHandBag;
+    return pHandbag;
 #else
     struct new_delivery_notification *ndn;
     UINT offset;
@@ -689,17 +689,17 @@ HANDLE WINAPI SHChangeNotification_Lock(
 BOOL WINAPI SHChangeNotification_Unlock ( HANDLE hLock)
 {
 #ifdef __REACTOS__
-    LPHANDBAG pHandBag = (LPHANDBAG)hLock;
+    LPHANDBAG pHandbag = (LPHANDBAG)hLock;
     BOOL ret;
     TRACE("%p\n", hLock);
 
-    if (!pHandBag || pHandBag->dwMagic != HANDBAG_MAGIC)
+    if (!pHandbag || pHandbag->dwMagic != HANDBAG_MAGIC)
     {
-        ERR("pHandBag is invalid\n");
+        ERR("pHandbag is invalid\n");
         return FALSE;
     }
 
-    ret = SHUnlockShared(pHandBag->pTicket);
+    ret = SHUnlockShared(pHandbag->pTicket);
     LocalFree(hLock);
     return ret;
 #else

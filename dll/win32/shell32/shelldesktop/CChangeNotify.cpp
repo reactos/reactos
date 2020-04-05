@@ -227,7 +227,7 @@ DoCreateDeliTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIS
 }
 
 EXTERN_C LPHANDBAG
-DoGetHandBagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
+DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
 {
     LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
     if (!pTicket || pTicket->dwMagic != DELITICKET_MAGIC)
@@ -236,23 +236,23 @@ DoGetHandBagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
         return NULL;
     }
 
-    LPHANDBAG pHandBag = (LPHANDBAG)LocalAlloc(LMEM_FIXED, sizeof(HANDBAG));
-    if (pHandBag == NULL)
+    LPHANDBAG pHandbag = (LPHANDBAG)LocalAlloc(LMEM_FIXED, sizeof(HANDBAG));
+    if (pHandbag == NULL)
     {
         ERR("Out of memory\n");
         SHUnlockShared(pTicket);
         return NULL;
     }
-    pHandBag->dwMagic = HANDBAG_MAGIC;
-    pHandBag->pTicket = pTicket;
+    pHandbag->dwMagic = HANDBAG_MAGIC;
+    pHandbag->pTicket = pTicket;
 
-    pHandBag->pidl1 = pHandBag->pidl2 = NULL;
+    pHandbag->pidl1 = pHandbag->pidl2 = NULL;
     if (pTicket->ibOffset1)
-        pHandBag->pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
+        pHandbag->pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
     if (pTicket->ibOffset2)
-        pHandBag->pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
+        pHandbag->pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
 
-    return pHandBag;
+    return pHandbag;
 }
 
 EXTERN_C void
@@ -439,17 +439,17 @@ LRESULT CChangeNotify::OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     DWORD dwOwnerPID = (DWORD)lParam;
     BOOL ret = FALSE;
 
-    LPHANDBAG pHandBag = DoGetHandBagFromTicket(hTicket, dwOwnerPID);
-    if (pHandBag && pHandBag->dwMagic == HANDBAG_MAGIC)
+    LPHANDBAG pHandbag = DoGetHandbagFromTicket(hTicket, dwOwnerPID);
+    if (pHandbag && pHandbag->dwMagic == HANDBAG_MAGIC)
     {
-        LPDELITICKET pTicket = pHandBag->pTicket;
+        LPDELITICKET pTicket = pHandbag->pTicket;
         if (pTicket && pTicket->dwMagic == DELITICKET_MAGIC)
         {
             ret = DoDelivery(hTicket, dwOwnerPID);
         }
     }
 
-    SHChangeNotification_Unlock(pHandBag);
+    SHChangeNotification_Unlock(pHandbag);
     SHFreeShared(hTicket, dwOwnerPID);
     return ret;
 }

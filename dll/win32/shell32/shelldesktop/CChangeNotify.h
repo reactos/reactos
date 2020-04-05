@@ -63,7 +63,7 @@ typedef struct HANDBAG
 EXTERN_C HWND DoGetNewDeliveryWorker(void);
 EXTERN_C void DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 EXTERN_C HWND DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg);
-EXTERN_C LPHANDBAG DoGetHandBagFromTicket(HANDLE hTicket, DWORD dwOwnerPID);
+EXTERN_C LPHANDBAG DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID);
 
 EXTERN_C HANDLE
 DoCreateNotifShare(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources,
@@ -126,7 +126,7 @@ public:
     BOOL DoDelivery(HANDLE hTicket, DWORD dwOwnerPID);
 
     BOOL ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared);
-    BOOL DoNotify(LPHANDBAG pHandBag, LPDELITICKET pTicket, LPNOTIFSHARE pShared);
+    BOOL DoNotify(LPHANDBAG pHandbag, LPDELITICKET pTicket, LPNOTIFSHARE pShared);
 
     LRESULT OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
