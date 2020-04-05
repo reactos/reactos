@@ -1,9 +1,9 @@
 #pragma once
 
-/* Icon ids */
+/* Icon IDs */
 #define IDI_HOTPLUG    100
 
-/* Dialog ids */
+/* Dialog IDs */
 #define IDC_STATIC -1
 
 #define IDD_SAFE_REMOVE_HARDWARE_DIALOG    300
@@ -16,6 +16,12 @@
 
 #define IDD_CONFIRM_STOP_HARDWARE_DIALOG   310
 
-/* Resource strings ids */
+/* Menu IDs */
+#define IDM_POPUP_DEVICE_TREE              500
+#define IDM_STOP                           501
+#define IDM_PROPERTIES                     502
+
+/* Resource strings IDs */
 #define IDS_CPLNAME        1000
 #define IDS_CPLDESCRIPTION 1001
+
