@@ -114,27 +114,28 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         6,
         11,
-        "Este paso de la instalaci\242n copiar\240 ReactOS en el equipo y",
+        "Este es el primer paso de instalaci\242n, que copiar\240 ReactOS en",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "prepara el segundo paso de la instalaci\242n.",
+        "el equipo y preparar\303\241 el segundo paso de instalaci\242n.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         15,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  Pulse INTRO para instalar o actualizar ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
+//      "\x07  Pulse R para reparar una instalación de ReactOS usando la Consola de Recuperación.",
         "\x07  Pulse R para reparar ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -208,7 +209,7 @@ static MUI_ENTRY esESIntroPageEntries[] =
     {
         6,
         12,
-        "completo y est\240 bajo intenso desarrollo. Se recomienda su uso solo",
+        "completo y est\240 bajo intenso desarrollo. Se recomienda usarlo solo",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -229,7 +230,7 @@ static MUI_ENTRY esESIntroPageEntries[] =
     {
         6,
         16,
-        "en caso de que pruebes ReactOS en hardware real.",
+        "en caso de que uses ReactOS en hardware real.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -323,7 +324,7 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         8,
         15,
-        "Este software NO TIENE GARANTIA ni restricciones de uso",
+        "Este software NO TIENE GARANT\303\215A ni restricciones de uso",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -486,14 +487,14 @@ static MUI_ENTRY esESDevicePageEntries[] =
     {
         6,
         23,
-        "Cuando la configuraci\242n sea la correcta, escoja \"Aceptar la configuraci\242n",
+        "Cuando la configuraci\242n sea la correcta, escoja \"Aceptar la",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         24,
-        "de los dispostivos\" y pulse INTRO.",
+        "configuraci\242n de los dispostivos\" y pulse INTRO.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -677,14 +678,14 @@ static MUI_ENTRY esESComputerPageEntries[] =
     {
         6,
         8,
-        "Desea modificar el tipo de equipo en el va a instalar el SO.",
+        "Puede modificar el tipo de equipo en el que instalar\303\241 el SO.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         10,
-        "\x07  Pulse ARRIBA y ABAJO para escoger el tipo.",
+        "\x07  Pulse ARRIBA y ABAJO para escoger modelo.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -736,7 +737,7 @@ static MUI_ENTRY esESFlushPageEntries[] =
     {
         10,
         6,
-        "El sistema est\240 procurando almacenar todos los datos en el disco.",
+        "El sistema se est\240 asegurando que los datos est\240n en el disco.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -833,14 +834,14 @@ static MUI_ENTRY esESDisplayPageEntries[] =
     {
         6,
         8,
-        "Desea modificar el tipo de pantalla a instalar.",
+        "Puede modificar el tipo de pantalla a instalar.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         10,
-         "\x07  Pulse ARRIBA y ABAJO para modificar el tipo.",
+         "\x07  Pulse ARRIBA y ABAJO para modificar la resoluci\303\263n.",
          TEXT_STYLE_NORMAL,
          TEXT_ID_STATIC
     },
@@ -1026,7 +1027,7 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
         8,
         15,
         "\x07  Pulse P para crear una Partici\242n Primaria.",
-//        "\x07  Pulse C para crear una Nueva Partici�n.",
+//        "\x07  Pulse C para crear una Nueva Partici\242n.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1127,7 +1128,7 @@ static MUI_ENTRY esESChangeSystemPartition[] =
     {
         8,
         27,
-        "\x07  Para cambiar manualmente el sistema de pariciones, pulse ESC para volver atr\240s",
+        "\x07  Para cambiar manualmente el sistema de particiones, pulse ESC para volver",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1207,21 +1208,21 @@ static MUI_ENTRY esESConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         10,
-        "\220sta puede contener programas de diagn\242stico, configuraci\242n de dispositivos,",
+        "\220sta puede contener programas de diagn\242stico, configuraci\242n de,",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "software, sistemas de arranque de un sistema operativo (como ReactOS) u otros",
+        "dispositivos, software, sistemas de arranque de un SO (como ReactOS)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "programas fundamentales proporcionados por el fabricante del hardware.",
+        "u otros programas fundamentales proporcionados por el fabricante del hardware.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1235,7 +1236,7 @@ static MUI_ENTRY esESConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         15,
-        "haya programas de ese tipo en la partici\242n, o cuando est\202 seguro de borrarlos.",
+        "haya programas de ese tipo en la partici\242n, o cuando quiera borrarlos.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1509,7 +1510,7 @@ static MUI_ENTRY esESKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Desea cambiar el tipo de teclado instalado.",
+        "Puede cambiar el tipo de teclado instalado.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1568,7 +1569,7 @@ static MUI_ENTRY esESLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Seleccione la distribuci\242n de teclado a instalar de forma predeterminada.",
+        "Seleccione la distribuci\242n de teclado que quiera instalar.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1582,7 +1583,7 @@ static MUI_ENTRY esESLayoutSettingsEntries[] =
     {
         8,
         11,
-        "    deseada. Luego, pulse INTRO.",
+        "   deseada. Luego, pulse INTRO.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
