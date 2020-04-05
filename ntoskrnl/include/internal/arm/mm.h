@@ -110,7 +110,6 @@
 /* Convert an address to a corresponding PDE offset/index */
 #define MiAddressToPdeOffset(x) \
     (((ULONG)(x)) >> 20)
-#define MiGetPdeOffset MiAddressToPdeOffset
 
 /* Convert a PTE/PDE into a corresponding address */
 #define MiPteToAddress(_Pte) ((PVOID)((ULONG)(_Pte) << 10))

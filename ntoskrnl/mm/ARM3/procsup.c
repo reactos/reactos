@@ -1201,7 +1201,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     SystemTable = MiPteToAddress(PointerPte);
 
     /* Copy all the kernel mappings */
-    PdeOffset = MiGetPdeOffset(MmSystemRangeStart);
+    PdeOffset = MiAddressToPdeOffset(MmSystemRangeStart);
     RtlCopyMemory(&SystemTable[PdeOffset],
                   MiAddressToPde(MmSystemRangeStart),
                   PAGE_SIZE - PdeOffset * sizeof(MMPTE));
@@ -1209,15 +1209,15 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     /* Now write the PTE/PDE entry for hyperspace itself */
     TempPte = ValidKernelPteLocal;
     TempPte.u.Hard.PageFrameNumber = HyperIndex;
-    PdeOffset = MiGetPdeOffset(HYPER_SPACE);
+    PdeOffset = MiAddressToPdeOffset(HYPER_SPACE);
     SystemTable[PdeOffset] = TempPte;
 
     /* Sanity check */
     PdeOffset++;
-    ASSERT(MiGetPdeOffset(MmHyperSpaceEnd) >= PdeOffset);
+    ASSERT(MiAddressToPdeOffset(MmHyperSpaceEnd) >= PdeOffset);
 
     /* Now do the x86 trick of making the PDE a page table itself */
-    PdeOffset = MiGetPdeOffset(PTE_BASE);
+    PdeOffset = MiAddressToPdeOffset(PTE_BASE);
     TempPte.u.Hard.PageFrameNumber = PdeIndex;
     SystemTable[PdeOffset] = TempPte;
 

@@ -185,7 +185,6 @@ MiAddressToPdi(PVOID Address)
     return ((((ULONG64)Address) >> PDI_SHIFT) & 0x1FF);
 }
 #define MiAddressToPdeOffset(x) MiAddressToPdi(x)
-#define MiGetPdeOffset(x) MiAddressToPdi(x)
 
 /* Convert an address to a corresponding PXE offset/index */
 FORCEINLINE

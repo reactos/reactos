@@ -221,7 +221,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
         if(Process != PsGetCurrentProcess())
         {
             PMMPDE PdeBase;
-            ULONG PdeOffset = MiGetPdeOffset(Address);
+            ULONG PdeOffset = MiAddressToPdeOffset(Address);
 
             /* Nobody but page fault should ask for creating the PDE,
              * Which imples that Process is the current one */
@@ -389,8 +389,8 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
 		if (Address < MmSystemRangeStart)
 		{
 			/* Remove PDE reference */
-			Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-			ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_PER_PAGE);
+			Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiAddressToPdeOffset(Address)]--;
+			ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiAddressToPdeOffset(Address)] < PTE_PER_PAGE);
 		}
 
         Pfn = PTE_TO_PFN(Pte);
@@ -453,8 +453,8 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 	if (Address < MmSystemRangeStart)
 	{
 		/* Remove PDE reference */
-		Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]--;
-		ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] < PTE_PER_PAGE);
+		Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiAddressToPdeOffset(Address)]--;
+		ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiAddressToPdeOffset(Address)] < PTE_PER_PAGE);
 	}
 
     /* We don't need to flush here because page file entries
@@ -638,8 +638,8 @@ MmCreatePageFileMapping(PEPROCESS Process,
 	if (Address < MmSystemRangeStart)
 	{
 		/* Add PDE reference */
-		Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-		ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_PER_PAGE);
+		Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiAddressToPdeOffset(Address)]++;
+		ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiAddressToPdeOffset(Address)] <= PTE_PER_PAGE);
 	}
 
     /* We don't need to flush the TLB here because it
@@ -755,8 +755,8 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 		if (Addr < MmSystemRangeStart)
 		{
 			/* Add PDE reference */
-			Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Addr)]++;
-			ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Addr)] <= PTE_PER_PAGE);
+			Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiAddressToPdeOffset(Addr)]++;
+			ASSERT(Process->Vm.VmWorkingSetList->UsedPageTableEntries[MiAddressToPdeOffset(Addr)] <= PTE_PER_PAGE);
 		}
     }
 

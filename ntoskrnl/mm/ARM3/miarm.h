@@ -1660,7 +1660,7 @@ MiIncrementPageTableReferences(IN PVOID Address)
 {
     PUSHORT RefCount;
 
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiAddressToPdeOffset(Address)];
 
     *RefCount += 1;
     ASSERT(*RefCount <= PTE_PER_PAGE);
@@ -1672,7 +1672,7 @@ MiDecrementPageTableReferences(IN PVOID Address)
 {
     PUSHORT RefCount;
 
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiAddressToPdeOffset(Address)];
 
     *RefCount -= 1;
     ASSERT(*RefCount < PTE_PER_PAGE);
@@ -1684,7 +1684,7 @@ MiQueryPageTableReferences(IN PVOID Address)
 {
     PUSHORT RefCount;
 
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiAddressToPdeOffset(Address)];
 
     return *RefCount;
 }

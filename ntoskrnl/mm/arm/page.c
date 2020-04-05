@@ -280,11 +280,11 @@ MmInitGlobalKernelPageDirectory(VOID)
     PULONG CurrentPageDirectory = (PULONG)PDE_BASE;
 
     /* Loop the 2GB of address space which belong to the kernel */
-    for (i = MiGetPdeOffset(MmSystemRangeStart); i < 2048; i++)
+    for (i = MiAddressToPdeOffset(MmSystemRangeStart); i < 2048; i++)
     {
         /* Check if we have an entry for this already */
-        if ((i != MiGetPdeOffset(PTE_BASE)) &&
-            (i != MiGetPdeOffset(HYPER_SPACE)) &&
+        if ((i != MiAddressToPdeOffset(PTE_BASE)) &&
+            (i != MiAddressToPdeOffset(HYPER_SPACE)) &&
             (!MmGlobalKernelPageDirectory[i]) &&
             (CurrentPageDirectory[i]))
         {

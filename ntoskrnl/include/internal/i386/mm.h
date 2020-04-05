@@ -77,7 +77,6 @@
 #define MM_EMPTY_PTE_LIST  ((ULONG)0xFFFFF)
 #define MM_EMPTY_LIST  ((ULONG_PTR)-1)
 
-
 /* Easy accessing PFN in PTE */
 #define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
 
@@ -175,9 +174,6 @@ C_ASSERT(PD_COUNT == 1);
 
 /* Takes the PDE offset (within all PDs pages) from the virtual address */
 #define MiAddressToPdeOffset(Va) (((ULONG_PTR)(Va)) / PDE_MAPPED_VA)
-
-/* TODO: Free this variable (for offset from the pointer to the PDE) */
-#define MiGetPdeOffset MiAddressToPdeOffset
 
 /* Convert a PTE/PDE into a corresponding address */
 #define MiPteToAddress(_Pte) ((PVOID)((ULONG)(_Pte) << 10))

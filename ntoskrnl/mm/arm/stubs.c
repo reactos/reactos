@@ -108,7 +108,7 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
             //
             // Does it exist in the kernel page directory?
             //
-            //PdeOffset = MiGetPdeOffset(Address);
+            //PdeOffset = MiAddressToPdeOffset(Address);
             //if (MmGlobalKernelPageDirectory[PdeOffset] == 0)
             {
                 //
@@ -274,9 +274,9 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     //
     // Copy the PDEs for kernel-mode
     //
-    RtlCopyMemory(PageDirectory + MiGetPdeOffset(MmSystemRangeStart),
-                  MmGlobalKernelPageDirectory + MiGetPdeOffset(MmSystemRangeStart),
-                  (1024 - MiGetPdeOffset(MmSystemRangeStart)) * sizeof(ULONG));
+    RtlCopyMemory(PageDirectory + MiAddressToPdeOffset(MmSystemRangeStart),
+                  MmGlobalKernelPageDirectory + MiAddressToPdeOffset(MmSystemRangeStart),
+                  (1024 - MiAddressToPdeOffset(MmSystemRangeStart)) * sizeof(ULONG));
 
 
     //
@@ -284,7 +284,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     //
     TempPde = MiArmTemplatePde;
     TempPde.u.Hard.Coarse.PageFrameNumber = (Pfn[0] << PAGE_SHIFT) >> CPT_SHIFT;
-    PointerPde = &PageDirectory[MiGetPdeOffset(PTE_BASE)];
+    PointerPde = &PageDirectory[MiAddressToPdeOffset(PTE_BASE)];
 
     //
     // Write the PDE
@@ -297,7 +297,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     // Setup the PDE for the hyperspace
     //
     TempPde.u.Hard.Coarse.PageFrameNumber = (Pfn[1] << PAGE_SHIFT) >> CPT_SHIFT;
-    PointerPde = &PageDirectory[MiGetPdeOffset(HYPER_SPACE)];
+    PointerPde = &PageDirectory[MiAddressToPdeOffset(HYPER_SPACE)];
 
     //
     // Write the PDE
@@ -343,13 +343,13 @@ MmCreateVirtualMappingInternal(IN PEPROCESS Process,
     // Loop every page
     //
     Addr = Address;
-    OldPdeOffset = MiGetPdeOffset(Addr) + 1;
+    OldPdeOffset = MiAddressToPdeOffset(Addr) + 1;
     for (i = 0; i < PageCount; i++)
     {
         //
         // Get the next PDE offset and check if it's a new one
         //
-        PdeOffset = MiGetPdeOffset(Addr);
+        PdeOffset = MiAddressToPdeOffset(Addr);
         if (OldPdeOffset != PdeOffset)
         {
             //
@@ -656,13 +656,13 @@ MmInitGlobalKernelPageDirectory(VOID)
     //
     // Loop the 2GB of address space which belong to the kernel
     //
-    for (i = MiGetPdeOffset(MmSystemRangeStart); i < 1024; i++)
+    for (i = MiAddressToPdeOffset(MmSystemRangeStart); i < 1024; i++)
     {
         //
         // Check if we have an entry for this already
         //
-        if ((i != MiGetPdeOffset(PTE_BASE)) &&
-            (i != MiGetPdeOffset(HYPER_SPACE)) &&
+        if ((i != MiAddressToPdeOffset(PTE_BASE)) &&
+            (i != MiAddressToPdeOffset(HYPER_SPACE)) &&
             (!MmGlobalKernelPageDirectory[i]) &&
             (CurrentPageDirectory[i]))
         {
