@@ -430,10 +430,10 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
             if (dwItem1)
             {
                 pidl1 = pidlTemp1 = PidlFromPathW(dwItem1);
-                if (dwItem2)
-                {
-                    pidl2 = pidlTemp2 = PidlFromPathW(dwItem2);
-                }
+            }
+            if (dwItem2)
+            {
+                pidl2 = pidlTemp2 = PidlFromPathW(dwItem2);
             }
             break;
 
