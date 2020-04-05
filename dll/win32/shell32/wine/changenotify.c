@@ -212,7 +212,7 @@ SHChangeNotifyRegister(
     TRACE("(%p,0x%08x,0x%08x,0x%08x,%d,%p)\n",
           hwnd, fSources, wEventMask, uMsg, cItems, lpItems);
 
-    hwndNotif = DoGetOrCreateNewDeliveryWorker();
+    hwndNotif = DoGetNewDeliveryWorker();
     if (hwndNotif == NULL)
         return INVALID_REG_ID;
 

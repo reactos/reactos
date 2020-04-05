@@ -60,7 +60,6 @@ typedef struct HANDBAG
 #define NOTIFSHARE_MAGIC 0xB0B32D1E
 #define HANDBAG_MAGIC 0xFACEB00C
 
-EXTERN_C HWND DoGetOrCreateNewDeliveryWorker(void);
 EXTERN_C HWND DoGetNewDeliveryWorker(void);
 EXTERN_C void DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 EXTERN_C HWND DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg);

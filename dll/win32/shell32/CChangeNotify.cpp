@@ -52,16 +52,6 @@ DoGetNewDeliveryWorker(void)
     return hwndWorker;
 }
 
-EXTERN_C HWND
-DoGetOrCreateNewDeliveryWorker(void)
-{
-    HWND hwndNewWorker = DoGetNewDeliveryWorker();
-    if (hwndNewWorker && IsWindow(hwndNewWorker))
-        return hwndNewWorker;
-
-    return NULL;
-}
-
 static LRESULT CALLBACK
 OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
