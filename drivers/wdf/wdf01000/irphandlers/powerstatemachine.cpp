@@ -1326,8 +1326,7 @@ Return Value:
 
 --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    return This->PowerCheckDeviceTypeOverload();
 }
 
 WDF_DEVICE_POWER_STATE

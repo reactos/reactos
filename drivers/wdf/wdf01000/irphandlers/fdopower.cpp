@@ -498,3 +498,25 @@ FxPkgFdo::DispatchDeviceQueryPower(
     //
     return _PowerPassDown(this, Irp);
 }
+
+WDF_DEVICE_POWER_STATE
+FxPkgFdo::PowerCheckDeviceTypeOverload(
+    VOID
+    )
+/*++
+
+Routine Description:
+    This function implements the Check Type state.  This is FDO code,
+    so the answer is reductionistly simple.
+
+Arguments:
+    none
+
+Return Value:
+
+    new power state
+
+--*/
+{
+    return WdfDevStatePowerWaking;
+}

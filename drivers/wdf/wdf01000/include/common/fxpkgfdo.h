@@ -410,6 +410,12 @@ private:
         __in FxIrp *Irp
         );
 
+    virtual
+    WDF_DEVICE_POWER_STATE
+    PowerCheckDeviceTypeOverload(
+        VOID
+        );
+
 };
 
 

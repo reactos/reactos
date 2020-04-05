@@ -44,3 +44,24 @@ Return Value:
 {
     m_Device->m_ParentDevice->m_PkgPnp->PowerPolicyChildPoweredDown();
 }
+
+WDF_DEVICE_POWER_STATE
+FxPkgPdo::PowerCheckDeviceTypeOverload(
+    VOID
+    )
+/*++
+
+Routine Description:
+    This function implements the Check Type state.  This is a PDO.
+
+Arguments:
+    none
+
+Return Value:
+
+    new power state
+
+--*/
+{
+    return WdfDevStatePowerCheckParentState;
+}

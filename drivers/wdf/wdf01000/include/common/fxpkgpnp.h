@@ -2337,6 +2337,12 @@ protected:
         VOID
         );
 
+    virtual
+    WDF_DEVICE_POWER_STATE
+    PowerCheckDeviceTypeOverload(
+        VOID
+        ) =0;
+
 public:
 
     VOID

@@ -260,6 +260,12 @@ private:
     PowerParentPowerDereference(
         VOID
         );
+
+    virtual
+    WDF_DEVICE_POWER_STATE
+    PowerCheckDeviceTypeOverload(
+        VOID
+        );
 };
 
 typedef NTSTATUS (FxPkgPdo::*PFN_PDO_HANDLER)(FxIrp *Irp);
