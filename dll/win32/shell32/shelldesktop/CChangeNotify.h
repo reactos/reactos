@@ -120,11 +120,6 @@ public:
         return m_hWnd;
     }
 
-    void SetHWND(HWND hwnd)
-    {
-        m_hWnd = hwnd;
-    }
-
     void clear();
 
     BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare);
