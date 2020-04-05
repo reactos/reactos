@@ -2214,8 +2214,30 @@ Return Value:
 
 --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    NTSTATUS status;
+
+    //
+    // m_DevicePowerState is the "old" state because we update it after the
+    // D0Entry callback in SelfManagedIo or PowerPolicyStopped
+    //
+    status = This->m_DeviceD0Entry.Invoke(
+        This->m_Device->GetHandle(),
+        (WDF_POWER_DEVICE_STATE) This->m_DevicePowerState);
+    
+    if (NT_SUCCESS(status))
+    {
+        return WdfDevStatePowerWakingConnectInterrupt;
+    }
+
+    DoTraceLevelMessage(
+            This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "PowerWaking WDFDEVICE 0x%p !devobj 0x%p, "
+            "old state %!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
+            This->m_Device->GetHandle(), 
+            This->m_Device->GetDeviceObject(),
+            This->m_DevicePowerState, status);
+
+    return WdfDevStatePowerReportPowerUpFailedDerefParent;
 }
 
 
