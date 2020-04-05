@@ -408,12 +408,12 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
             psz1 = psz2 = NULL;
             if (dwItem1)
             {
-                SHAnsiToUnicode((LPCSTR)dwItem1, szPath1, ARRAYSIZE(szPath1));
+                SHAnsiToUnicode(dwItem1, szPath1, ARRAYSIZE(szPath1));
                 psz1 = szPath1;
             }
             if (dwItem2)
             {
-                SHAnsiToUnicode((LPCSTR)dwItem2, szPath2, ARRAYSIZE(szPath2));
+                SHAnsiToUnicode(dwItem2, szPath2, ARRAYSIZE(szPath2));
                 psz2 = szPath2;
             }
             uFlags &= ~SHCNF_TYPE;
@@ -429,10 +429,10 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
             }
             if (dwItem1)
             {
-                pidl1 = pidlTemp1 = PidlFromPathW((LPCWSTR)dwItem1);
+                pidl1 = pidlTemp1 = PidlFromPathW(dwItem1);
                 if (dwItem2)
                 {
-                    pidl2 = pidlTemp2 = PidlFromPathW((LPCWSTR)dwItem2);
+                    pidl2 = pidlTemp2 = PidlFromPathW(dwItem2);
                 }
             }
             break;
