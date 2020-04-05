@@ -200,7 +200,7 @@ SHChangeNotifyRegister(
     TRACE("(%p,0x%08x,0x%08x,0x%08x,%d,%p)\n",
           hwnd, fSources, wEventMask, uMsg, cItems, lpItems);
 
-    if (wEventMask == 0 || cItems <= 0 || cItems > 0x7FFF ||
+    if (wEventMask == 0 || cItems <= 0 || cItems > 0x7FFF || lpItems == NULL ||
         !hwnd || !IsWindow(hwnd))
     {
         return INVALID_REG_ID;
