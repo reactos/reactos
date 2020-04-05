@@ -72,6 +72,11 @@ enum NotifyResourcesFlags {
     NotifyResourcesArmedForWake       = 0x40,
 };
 
+enum FxPowerDownType {
+    FxPowerDownTypeExplicit = 0,
+    FxPowerDownTypeImplicit,
+};
+
 //
 // Bit-flags for tracking which callback is currently executing.
 //
@@ -1977,6 +1982,12 @@ protected:
         __inout FxPkgPnp* This
         );
 
+    virtual
+    VOID
+    PowerParentPowerDereference(
+        VOID
+        ) =0;
+
     static
     WDF_DEVICE_POWER_STATE
     PowerGotoDNotZeroIoStopped(
@@ -2281,6 +2292,11 @@ protected:
         );
 
     BOOLEAN
+    PowerDmaPowerDown(
+        VOID
+        );
+
+    BOOLEAN
     PowerPolicyCanWakeFromSystemState(
         __in SYSTEM_POWER_STATE SystemState
         )
@@ -2313,6 +2329,11 @@ protected:
 
     VOID
     PowerGotoDx(
+        VOID
+        );
+
+    BOOLEAN
+    PowerGotoDxIoStopped(
         VOID
         );
 
@@ -2561,6 +2582,11 @@ public:
         __in FxPowerIdleEvents Event
         );
 
+    VOID
+    PowerSendPowerDownEvents(
+        __in FxPowerDownType Type
+        );
+
     BOOLEAN
     PowerPolicyIsWakeEnabled(
         VOID
@@ -2596,6 +2622,29 @@ public:
     PowerPolicyGetCurrentWakeReason(
         VOID
         );
+
+    VOID
+    PowerPolicyChildPoweredDown(
+        VOID
+        )
+    {
+        //
+        // If this parent is the power policy owner of the child's stack, release
+        // the requirement this device to be in D0 while the child is in D0.
+        //
+        if (IsPowerPolicyOwner())
+        {
+            //
+            // Decrement the number of children who are powered on
+            //
+            m_EnumInfo->AcquireParentPowerStateLock(GetDriverGlobals());
+            ASSERT(m_PowerPolicyMachine.m_Owner->m_ChildrenPoweredOnCount > 0);
+            m_PowerPolicyMachine.m_Owner->m_ChildrenPoweredOnCount--;
+            m_EnumInfo->ReleaseParentPowerStateLock(GetDriverGlobals());
+
+            PowerDereference();
+        }
+    }
 
 private:
 
@@ -2770,6 +2819,11 @@ private:
     _Must_inspect_result_
     NTSTATUS
     NotifyResourceObjectsD0(
+        __in ULONG NotifyFlags
+        );
+
+    NTSTATUS
+    NotifyResourceObjectsDx(
         __in ULONG NotifyFlags
         );
 

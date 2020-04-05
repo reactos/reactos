@@ -260,6 +260,13 @@ public:
     {
     }
 
+    _Must_inspect_result_
+    NTSTATUS
+    Invoke(
+        _In_ WDFDEVICE  Device,
+        _In_ WDF_POWER_DEVICE_STATE TargetState
+        );
+
     VOID
     Initialize(
         _In_ FxPkgPnp* PkgPnp,

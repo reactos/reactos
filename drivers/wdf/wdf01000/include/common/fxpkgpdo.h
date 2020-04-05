@@ -255,6 +255,11 @@ private:
         VOID
         );
 
+    virtual
+    VOID
+    PowerParentPowerDereference(
+        VOID
+        );
 };
 
 typedef NTSTATUS (FxPkgPdo::*PFN_PDO_HANDLER)(FxIrp *Irp);

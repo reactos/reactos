@@ -87,11 +87,11 @@ private:
     // Power-related callbacks.
     //
     FxEvtDmaEnablerFillCallback               m_EvtDmaEnablerFill;
-    //FxEvtDmaEnablerFlushCallback              m_EvtDmaEnablerFlush;
+    FxEvtDmaEnablerFlushCallback              m_EvtDmaEnablerFlush;
     FxEvtDmaEnablerEnableCallback             m_EvtDmaEnablerEnable;
-    //FxEvtDmaEnablerDisableCallback            m_EvtDmaEnablerDisable;
+    FxEvtDmaEnablerDisableCallback            m_EvtDmaEnablerDisable;
     FxEvtDmaEnablerSelfManagedIoStartCallback m_EvtDmaEnablerSelfManagedIoStart;
-    //FxEvtDmaEnablerSelfManagedIoStopCallback  m_EvtDmaEnablerSelfManagedIoStop;
+    FxEvtDmaEnablerSelfManagedIoStopCallback  m_EvtDmaEnablerSelfManagedIoStop;
 
     //
     // Note that these fields form an informal state engine.

@@ -318,6 +318,12 @@ private:
         __inout FxIrp* Irp
         );
 
+    virtual
+    VOID
+    PowerParentPowerDereference(
+        VOID
+        );
+
     _Must_inspect_result_
     NTSTATUS
     DispatchSystemSetPower(

@@ -162,8 +162,8 @@ private:
     // Callback used to set m_Disconnecting, synchronized to running ISRs.
     // Only runs if m_IsEdgeTriggeredNonMsiInterrupt is TRUE.
     //
-    //static
-    //MdInterruptSynchronizeRoutineType _InterruptMarkDisconnecting;
+    static
+    MdInterruptSynchronizeRoutineType _InterruptMarkDisconnecting;
 
     //
     // Backup KINTERRUPT pointer, captured from the KMDF ISR thunk. We need it
@@ -285,6 +285,17 @@ public:
     _Must_inspect_result_
     NTSTATUS
     ConnectInternal(
+        VOID
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    Disconnect(
+        __in ULONG NotifyFlags
+        );
+
+    VOID
+    DisconnectInternal(
         VOID
         );
 
@@ -431,6 +442,11 @@ public:
         VOID
         );
 
+    VOID
+    FlushQueuedWorkitem(
+        VOID
+        );
+
 protected:
 
     LIST_ENTRY  m_PnpList;
@@ -485,10 +501,29 @@ private:
 
     static
     MdInterruptSynchronizeRoutineType _InterruptEnableThunk;
-
     
     NTSTATUS
     InterruptEnableInvokeCallback(
+        VOID
+        );
+
+    //
+    // Helper functions to disable an interrupt.
+    // Sequence: 
+    //  (1) InterruptDisable
+    //  (2) _InterruptDisableThunk
+    //  (3) InterruptDisableInvokeCallback
+    //
+    NTSTATUS
+    InterruptDisable(
+        VOID
+        );
+
+    static
+    MdInterruptSynchronizeRoutineType _InterruptDisableThunk;
+
+    NTSTATUS
+    InterruptDisableInvokeCallback(
         VOID
         );
 

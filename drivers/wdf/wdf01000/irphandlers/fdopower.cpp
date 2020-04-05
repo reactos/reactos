@@ -422,3 +422,23 @@ FxPkgFdo::RaiseDevicePowerCompletion(
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
+
+VOID
+FxPkgFdo::PowerParentPowerDereference(
+    VOID
+    )
+/*++
+
+Routine Description:
+    This virtual function is a nop for an FDO.  PDOs implement this function
+
+Arguments:
+    None
+
+Return Value:
+    None
+
+  --*/
+{
+    DO_NOTHING();
+}

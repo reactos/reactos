@@ -70,3 +70,69 @@ FxDmaEnabler::PowerUp(
 
     return status;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxDmaEnabler::PowerDown(
+    VOID
+    )
+{
+    NTSTATUS              status          = STATUS_SUCCESS;
+    NTSTATUS              localStatus;
+    PFX_DRIVER_GLOBALS    pFxDriverGlobals = GetDriverGlobals();
+    WDFDMAENABLER         handle          = GetHandle();
+    FxDmaEnablerCallbacks tag             = FxEvtDmaEnablerInvalid;
+
+    DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_VERBOSE, 0,//TRACINGDMA,
+                        "WDFDMAENABLER %p: PowerDown notification", GetHandle());
+
+    do
+    {
+        if (m_EvtDmaEnablerSelfManagedIoStop.m_Method)
+        {
+            localStatus = m_EvtDmaEnablerSelfManagedIoStop.Invoke( handle );
+
+            if (!NT_SUCCESS(localStatus))
+            {
+                tag = FxEvtDmaEnablerSelfManagedIoStop;
+                status = (NT_SUCCESS(status)) ? localStatus : status;
+            }
+        }
+
+        if (m_EvtDmaEnablerDisable.m_Method &&
+            m_DmaEnablerFillFailed == FALSE)
+        {
+            localStatus = m_EvtDmaEnablerDisable.Invoke( handle );
+
+            if (!NT_SUCCESS(localStatus))
+            {
+                tag = FxEvtDmaEnablerDisable;
+                status = (NT_SUCCESS(status)) ? localStatus : status;
+            }
+        }
+
+        if (m_EvtDmaEnablerFlush.m_Method     &&
+            m_DmaEnablerFillFailed   == FALSE &&
+            m_DmaEnablerEnableFailed == FALSE)
+        {
+            localStatus = m_EvtDmaEnablerFlush.Invoke( handle );
+
+            if (!NT_SUCCESS(localStatus))
+            {
+                tag = FxEvtDmaEnablerFlush;
+                status = (NT_SUCCESS(status)) ? localStatus : status;
+            }
+        }
+
+    } while (0);
+
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, 0,//TRACINGDMA,
+                            "WDFDMAENABLER %p: PowerDown: "
+                            "%!WdfDmaEnablerCallback! failed %!STATUS!",
+                            GetHandle(), tag, status);
+    }
+
+    return status;
+}

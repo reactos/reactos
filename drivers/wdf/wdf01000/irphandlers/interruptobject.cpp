@@ -946,3 +946,395 @@ FxInterrupt::FlushAndRundownInternal(
         m_DisposeWaitLock = FALSE;
     }
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxInterrupt::Disconnect(
+    __in ULONG NotifyFlags
+    )
+/*++
+
+Routine Description:
+
+    This function is the external interface for disconnecting the interrupt.  It
+    calls the Io manager to disconnect.  Then it calls EvtInterruptPreDisable at
+    PASSIVE_LEVEL and EvtInterruptDisable at DIRQL.
+
+Arguments:
+
+    Surprise - Indicates that we are disconnecting due to a surprise-remove,
+               which means that we shouldn't do anything that touches hardware.
+
+Return Value:
+
+    NTSTATUS
+
+--*/
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    NTSTATUS status, finalStatus;
+
+    finalStatus = STATUS_SUCCESS;
+    pFxDriverGlobals = GetDriverGlobals();
+
+    //
+    // Check to see if this interrupt object was actually assigned any
+    // resources.  If it wasn't, then don't attempt to disconnect.  A
+    // WDFINTERRUPT object won't be assigned any resources if the underlying
+    // device wasn't granted any by the PnP manager.
+    //
+
+    if (m_InterruptInfo.Vector == 0)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    if (IsWakeCapable() &&
+        (NotifyFlags & NotifyResourcesArmedForWake))
+    {
+        //
+        // If an interrupt is marked as wakeable and the device has been set to
+        // wake via a driver-owned ISR, leave the interrupt connected.
+        //
+        ASSERT(NotifyFlags & NotifyResourcesExplicitPowerDown);
+
+        SetActiveForWake(TRUE);
+
+        return STATUS_SUCCESS;
+    }
+
+    //
+    // This takes care of the power-up failure path for interrupt that doesnt
+    // support soft disconnect. The interrupt has already been hard
+    // disconnected in power-up failure path.
+    //
+    if ((NotifyFlags & NotifyResourcesDisconnectInactive) &&
+        (IsSoftDisconnectCapable() == FALSE) &&
+        (IsActiveForWake() == FALSE))
+    {
+        //
+        // We got here to disconnect an inactive interrupt. But if
+        // this interrupt is not Soft Disconnect capable then it was
+        // never made inactive in the first place so nothing to do here.
+        // It should already be hard disconnected by now.
+        //
+        ASSERT(NotifyFlags & NotifyResourcesForceDisconnect);
+
+        return STATUS_SUCCESS;
+    }
+
+
+    if (m_Connected == FALSE)
+    {
+        //
+        // No way we can be not connect and enabled
+        //
+        ASSERT(m_Enabled == FALSE);
+
+        //
+        // if m_Connected is FALSE because the driver forcefully disconnected
+        // the interrupt we still want to disconnect the actual interrupt object
+        // if the caller wants to force disconnect (e.g., the device is being
+        // removed)
+        //
+        if (m_Interrupt != NULL &&
+            (NotifyFlags & NotifyResourcesForceDisconnect))
+        {
+            //
+            // If the driver lets the state machine handle the interrupt state
+            // we should never get here so make sure the driver forced the issue.
+            //
+            ASSERT(m_ForceDisconnected);
+
+            goto Disconnect;
+        }
+
+        return STATUS_SUCCESS;
+    }
+
+    if (m_Enabled && ((NotifyFlags & NotifyResourcesSurpriseRemoved) == 0))
+    {
+        //
+        //
+        // For wake capable interrupts it is possible to enter this path
+        // with NotifyResourcesDisconnectInactive flag if the device fails
+        // to power up after the interrupt was left connected during Dx
+        //
+        if (IsWakeCapable() == FALSE)
+        {
+            ASSERT((NotifyFlags & NotifyResourcesDisconnectInactive) == 0);
+        }
+
+        //
+        // Disable the interrupt at the hardware.
+        //
+        status = InterruptDisable();
+
+        m_Enabled = FALSE;
+
+        if (!NT_SUCCESS(status))
+        {
+            //
+            // Even upon failure we continue because we don't want to leave
+            // the interrupt connected when we tear down the stack.
+            //
+            DoTraceLevelMessage(
+                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
+                "EvtInterruptDisable WDFDEVICE %p, WDFINTERRUPT %p, "
+                "PKINTERRUPT %p returned %!STATUS!",
+                m_Device->GetHandle(),
+                GetHandle(), m_Interrupt, status);
+
+            //
+            // Overwrite the previous value.  Not a big deal since both are
+            // errors.
+            //
+            finalStatus = status;
+        }
+    }
+
+#if FX_IS_KERNEL_MODE
+    //
+    // Some edge-triggered interrupts may fire before the connection process is
+    // finished and m_Interrupt is set. To accomodate them, we save the KINTERRUPT
+    // in _InterruptThunk to m_InterruptCaptured which serves as a backup for
+    // m_Interrupt. Now we need to NULL m_InterruptCaptured and ensure that
+    // _InterruptThunk will not re-capture it.
+    //
+    if (m_IsEdgeTriggeredNonMsiInterrupt == TRUE)
+    {
+        //
+        // Synchronize the setting of m_Disconnecting with any running ISRs.
+        // No new ISR callbacks will run after _SynchronizeExecution returns,
+        // until m_Disconnecting is set to FALSE again.
+        //
+        if (m_Interrupt != NULL)
+        {
+            _SynchronizeExecution(m_Interrupt, _InterruptMarkDisconnecting, this);
+        }
+
+        //
+        // Because m_Disconnecting was set, we know the ISR
+        // will not re-capture the KINTERRUPT again.
+        //
+        m_InterruptCaptured = NULL;
+    }
+#endif
+
+    //
+    // Now flush queued callbacks so that we know that nobody is still trying to
+    // synchronize against this interrupt. For KMDF this will flush DPCs and
+    // for UMDF this will send a message to reflector to flush queued DPCs.
+    //
+    FlushQueuedDpcs();
+
+#if FX_IS_KERNEL_MODE
+    //
+    // Rundown the workitem if present (passive-level interrupt support or KMDF).
+    // Not needed for UMDF since reflector doesn't use workitem for isr.
+    //
+    FlushQueuedWorkitem();
+
+#endif
+
+    //
+    // See if we need to just do soft disconnect. Soft disconnect is done only
+    // during explicit power down.
+    //
+    //if (IsSoftDisconnectCapable() &&
+    //    (NotifyFlags & NotifyResourcesExplicitPowerDown))
+    //{
+    //    ReportInactive(TRUE); // Windows 8
+    //    goto Exit;
+    //}
+
+    //
+    // In the NP path we disable the interrupt but do not disconnect the
+    // interrupt.  (That is b/c IoDisconnectInterrupt is a pagable function and
+    // calling it could cause paging I/O on this device which will be unserviceable
+    // because it is in Dx.
+    //
+    if (NotifyFlags & NotifyResourcesNP)
+    {
+        //
+        // If we are in the NP path, force disconnect should not be set.  Force
+        // disconnect is setup during a query remove/stop power down.
+        //
+        ASSERT((NotifyFlags & NotifyResourcesForceDisconnect) == 0);
+
+        goto Exit;
+    }
+
+Disconnect:
+    //
+    // Disconnect the interrupt. For KMDF, this calls the kernel DDI, and for
+    // UMDF, sends a sync message to reflector.
+    //
+    DisconnectInternal();
+
+    if (IsActiveForWake())
+    {
+        //
+        // Since the interrupt has been disconnected, it not longer active
+        // for wake
+        //
+        SetActiveForWake(FALSE);
+    }
+
+    m_Connected = FALSE;
+
+#if FX_IS_KERNEL_MODE
+    m_Active = FALSE;
+#endif
+
+Exit:
+    m_Disconnecting = FALSE;
+
+    return finalStatus;
+}
+
+BOOLEAN
+FxInterrupt::_InterruptMarkDisconnecting(
+    _In_opt_ PVOID SyncContext
+    )
+{
+    FxInterrupt* pFxInterrupt;
+    
+    ASSERT(SyncContext != NULL);
+    pFxInterrupt = (FxInterrupt*)SyncContext;
+
+    //
+    // This callback is invoked only if m_IsEdgeTriggeredNonMsiInterrupt
+    // is TRUE. This will cause _InterruptThunk to discard subsequent
+    // interrupts until m_Disconnecting is reset to FALSE.
+    //
+    pFxInterrupt->m_Disconnecting = TRUE;
+    
+    return TRUE;
+}
+
+VOID
+FxInterrupt::DisconnectInternal(
+    VOID
+    )
+{
+    IO_DISCONNECT_INTERRUPT_PARAMETERS params;
+    PKINTERRUPT interruptObject;
+    FxPkgPnp* fxPkgPnp;
+
+    fxPkgPnp = m_Device->m_PkgPnp;
+
+    //
+    // Now null these pointers so that we can catch anyone trying to use them
+    // erroneously.
+    //
+    interruptObject = m_Interrupt;
+    m_Interrupt = NULL;
+    
+    //
+    // Disconnect the interrupt.
+    //
+    //ASSERT(fxPkgPnp->m_IoDisconnectInterruptEx != NULL);    
+
+    if (FxLibraryGlobals.pfn_IoDisconnectInterruptEx != NULL)
+    {
+        RtlZeroMemory(&params, sizeof(params));
+
+        if (FxIsProcessorGroupSupported())
+        {
+            params.Version = CONNECT_FULLY_SPECIFIED_GROUP;
+        }
+        else
+        {
+            params.Version = CONNECT_FULLY_SPECIFIED;
+        }
+
+        params.ConnectionContext.InterruptObject = interruptObject;
+
+        //fxPkgPnp->m_IoDisconnectInterruptEx(&params);
+        FxLibraryGlobals.pfn_IoDisconnectInterruptEx(&params);
+    }
+    else
+    {
+        IoDisconnectInterrupt(interruptObject);
+    }
+
+    return;
+}
+
+VOID
+FxInterrupt::FlushQueuedWorkitem(
+    VOID
+    )
+{
+    if (m_SystemWorkItem != NULL)
+    {
+        m_SystemWorkItem->WaitForExit();
+    }
+}
+
+NTSTATUS
+FxInterrupt::InterruptDisable(
+    VOID
+    )
+{
+    FxInterruptDisableParameters params;
+
+    params.Interrupt = this;
+    params.ReturnVal = STATUS_SUCCESS;
+
+    if (m_EvtInterruptDisable != NULL)
+    {
+        _SynchronizeExecution(m_Interrupt, _InterruptDisableThunk, &params);
+    }
+
+    return params.ReturnVal;
+}
+
+BOOLEAN
+FxInterrupt::_InterruptDisableThunk(
+    __in PVOID SyncContext
+    )
+{
+    FxInterruptDisableParameters* p;
+
+    p = (FxInterruptDisableParameters*) SyncContext;
+
+    p->ReturnVal = p->Interrupt->InterruptDisableInvokeCallback();
+
+    return TRUE;
+}
+
+//
+// Disable interrupts
+//
+NTSTATUS
+FxInterrupt::InterruptDisableInvokeCallback(
+    VOID
+    )
+{
+    NTSTATUS status;
+
+    if (m_PassiveHandling)
+    {
+        //
+        // Passive-level interrupt handling: acquire our internal passive-lock
+        // after the kernel acquired its own passive-lock and before invoking
+        // the callback.
+        //
+        AcquireLock();
+        status = m_EvtInterruptDisable(GetHandle(),
+                                       m_Device->GetHandle());
+        ReleaseLock();
+    }
+    else
+    {
+        //
+        // DIRQL interrupt handling: invoke the callback.
+        //
+        status = m_EvtInterruptDisable(GetHandle(),
+                                       m_Device->GetHandle());
+    }
+
+    return status;
+}

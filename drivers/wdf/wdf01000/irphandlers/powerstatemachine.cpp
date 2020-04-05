@@ -1928,8 +1928,13 @@ FxPkgPnp::PowerGotoDNotZeroIoStopped(
     __inout FxPkgPnp*   This
     )
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    if (This->PowerGotoDxIoStopped() == FALSE)
+    {
+        return WdfDevStatePowerReportPowerDownFailed;
+        //return WdfDevStatePowerGotoDxFailed;
+    }
+
+    return WdfDevStatePowerDx;
 }
 
 WDF_DEVICE_POWER_STATE
@@ -3123,4 +3128,305 @@ Return Value:
     m_Device->m_PkgIo->StopProcessingForPower(FxIoStopProcessingForPowerHold);
 
     PowerPolicyProcessEvent(PwrPolPowerDownIoStopped);
+}
+
+BOOLEAN
+FxPkgPnp::PowerGotoDxIoStopped(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Implements the going into Dx logic for the pageable path.
+
+
+
+Arguments:
+    None
+
+Return Value:
+    TRUE if the power down succeeded, FALSE otherwise
+
+  --*/
+{
+    WDF_POWER_DEVICE_STATE state;
+    NTSTATUS    status;
+    BOOLEAN     failed;
+    FxIrp   irp;
+    ULONG   notifyFlags;
+
+    failed = FALSE;
+
+    //
+    // First determine the state that will be indicated to the driver
+    //
+    irp.SetIrp(m_PendingDevicePowerIrp);
+
+    switch (irp.GetParameterPowerShutdownType()) {
+    case PowerActionShutdown:
+    case PowerActionShutdownReset:
+    case PowerActionShutdownOff:
+        state = WdfPowerDeviceD3Final;
+        break;
+
+    default:
+        state = (WDF_POWER_DEVICE_STATE) irp.GetParameterPowerStateDeviceState();
+        break;
+    }
+
+    //
+    // Can we even be a power pageable device and be in hibernation path?
+    //
+    if (m_SystemPowerState == PowerSystemHibernate &&
+        GetUsageCount(WdfSpecialFileHibernation) != 0)
+    {
+        COVERAGE_TRAP();
+
+        //
+        // This device is in the hibernation path and the target system state is
+        // S4.  Tell the driver that it should do special handling.
+        //
+        state = WdfPowerDevicePrepareForHibernation;
+    }
+
+    if (PowerDmaPowerDown() == FALSE)
+    {
+        failed = TRUE;
+    }
+
+    status = m_DeviceD0ExitPreInterruptsDisabled.Invoke(
+        m_Device->GetHandle(),
+        state
+        );
+
+    if (!NT_SUCCESS(status))
+    {
+        failed = TRUE;
+
+        DoTraceLevelMessage(
+            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "EvtDeviceD0ExitPreInterruptsDisabled WDFDEVICE 0x%p !devobj 0x%p, "
+            "new state %!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
+            m_Device->GetHandle(), 
+            m_Device->GetDeviceObject(), state, status);
+    }
+
+    //
+    // interrupt disable & disconnect
+    //
+    
+    notifyFlags = NotifyResourcesExplicitPowerDown;
+
+    //
+    // In general, m_WaitWakeIrp is accessed through guarded InterlockedExchange
+    // operations. However, following is a special case where we just want to know
+    // the current value. It is possible that the value of m_WaitWakeIrp can
+    // change right after we query it. Users of NotifyResourcesArmedForWake will
+    // need to be aware of this fact.
+    //
+    // Note that relying on m_WaitWakeIrp to decide whether to disconnect the wake
+    // interrupts or not is unreliable and may result in a race condition between
+    // the device powering down and a wake interrupt firing:
+    //
+    // Thread A: Device is powering down and is going to disconnect wake interrupts
+    //           unless m_WaitWakeIrp is not NULL.
+    // Thread B: Wake interrupt fires (holding the OS interrupt lock) which results
+    //           in completing the IRP_MN_WAIT_WAKE and setting m_WaitWakeIrp to NULL.
+    //           Thread then blocks waiting for the device to power up.
+    // Thread A: m_WaitWakeIrp is NULL so we disconnect the wake interrupt, but are
+    //           blocked waiting to acquire the lock held by the ISR. The deadlock
+    //           results in bugcheck 0x9F since the Dx IRP is being blocked.
+    //
+    // The m_WakeInterruptsKeepConnected flag is set when we request a IRP_MN_WAIT_WAKE
+    // in the device powering down path, and is cleared below once it is used.
+    //
+    if (m_SharedPower.m_WaitWakeIrp != NULL || m_WakeInterruptsKeepConnected == TRUE)
+    {
+        notifyFlags |= NotifyResourcesArmedForWake;
+        m_WakeInterruptsKeepConnected = FALSE;
+    }
+    
+    status = NotifyResourceObjectsDx(notifyFlags);
+    if (!NT_SUCCESS(status))
+    {
+        //
+        // NotifyResourceObjectsDx already traced the error
+        //
+        failed = TRUE;
+    }
+
+    //
+    // Call the driver to tell it to put the hardware into a sleeping
+    // state.
+    //
+
+    status = m_DeviceD0Exit.Invoke(m_Device->GetHandle(), state);
+
+    if (!NT_SUCCESS(status))
+    {
+        failed = TRUE;
+    }
+
+    //
+    // If this is a child, release the power reference on the parent
+    //
+    PowerParentPowerDereference();
+
+    //
+    // Set our state no matter if power down failed or not
+    //
+    PowerSetDevicePowerState(state);
+
+    //
+    // Stopping self managed io previously failed, convert that failure into
+    // a local failure here.
+    //
+    if (m_PowerMachine.m_IoCallbackFailure)
+    {
+        m_PowerMachine.m_IoCallbackFailure = FALSE;
+        failed = TRUE;
+    }
+
+    if (failed)
+    {
+        //
+        // Power policy will use this property when it is processing the
+        // completion of the Dx irp.
+        //
+        m_PowerMachine.m_PowerDownFailure = TRUE;
+
+        //
+        // This state will record that we encountered an internal error.
+        //
+        return FALSE;
+    }
+
+    PowerSendPowerDownEvents(FxPowerDownTypeExplicit);
+
+    PowerReleasePendingDeviceIrp();
+
+    return TRUE;
+}
+
+BOOLEAN
+FxPkgPnp::PowerDmaPowerDown(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Calls FxDmaEnabler::PowerDown on all registered FxDmaEnabler objects.  All
+    errors are accumulated, all enablers will be PowerDown'ed.
+
+Arguments:
+    None
+
+Return Value:
+    TRUE if PowerDown succeeded on all enablers, FALSE otherwise
+
+  --*/
+{
+    FxTransactionedEntry* ple;
+    NTSTATUS status;
+    BOOLEAN result;
+
+    result = TRUE;
+
+    //
+    // Power up each dma enabler
+    //
+    if (m_DmaEnablerList != NULL)
+    {
+        m_DmaEnablerList->LockForEnum(GetDriverGlobals());
+
+        ple = NULL;
+        while ((ple = m_DmaEnablerList->GetNextEntry(ple)) != NULL)
+        {
+            status = ((FxDmaEnabler*) ple->GetTransactionedObject())->PowerDown();
+
+            if (!NT_SUCCESS(status))
+            {
+                //
+                // We do not break out of the loop on power down failure.  We will
+                // continue to power down each channel regardless of the previous
+                // channel's power down status.
+                //
+                result = FALSE;
+            }
+        }
+
+        m_DmaEnablerList->UnlockFromEnum(GetDriverGlobals());
+    }
+
+    return result;
+}
+
+VOID
+FxPkgPnp::PowerSendPowerDownEvents(
+    __in FxPowerDownType Type
+    )
+/*++
+
+Routine Description:
+    The device has powered down, inform the power policy state machine
+
+Arguments:
+    Type - the type of power down being performed
+
+Return Value:
+    None
+
+  --*/
+{
+    //
+    // If this is an implicit power type, there is completion routine on the
+    // power irp and we must send these events in the power state machine
+    // regardless if we are the PPO or not.
+    //
+    if (Type == FxPowerDownTypeImplicit)
+    {
+        PowerSendIdlePowerEvent(PowerIdleEventPowerDown);
+
+        //
+        // If we are the power policy owner, there is no need to distinguish
+        // between an implicit power down or an explicit power down since the
+        // PPO controls all power irps in the stack and a power policy stop
+        // (e.g. an implicit power down) will not be racing with a real power
+        // irp.
+        //
+        // The non PPO state machine needs to distinguish between the 2 types
+        // of power downs because both of them may occur simultaneously and we
+        // don't want to interpret the power down event for the real Dx irp with
+        // the power down event for the (final) implicit power down.
+        //
+        PowerPolicyProcessEvent(IsPowerPolicyOwner() ? PwrPolPowerDown
+                                                     : PwrPolImplicitPowerDown);
+        return;
+    }
+
+    ASSERT(Type == FxPowerDownTypeExplicit);
+
+    //
+    // If we are the PPO, then we will send PwrPolPowerDown in the completion
+    // routine passed to PoRequestPowerIrp.  If we are not the PPO, we must send
+    // the event now because we have no such completion routine.
+    //
+    if (IsPowerPolicyOwner())
+    {
+        //
+        // Transition the idle state machine to off immediately.
+        //
+        m_PowerPolicyMachine.m_Owner->m_PowerIdleMachine.ProcessPowerEvent(
+            PowerIdleEventPowerDown
+            );
+    }
+    else
+    {
+        //
+        // If we are not the PPO, there is no idle state machine to send an
+        // event to and there is no Po request completion routine to send this
+        // event, so we send it now.
+        //
+        PowerPolicyProcessEvent(PwrPolPowerDown);
+    }
 }

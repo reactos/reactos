@@ -342,5 +342,46 @@ FxPnpDeviceSelfManagedIoSuspend::Invoke(
     }
 
     return status;
-    //return FxPrePostCallback::InvokeStateless();
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPnpDeviceD0Exit::Invoke(
+    _In_ WDFDEVICE  Device,
+    _In_ WDF_POWER_DEVICE_STATE TargetState
+    )
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    m_Device = Device;
+    m_TargetState = TargetState;
+
+    if (m_Method != NULL)
+    {
+        status = m_Method(m_Device, m_TargetState);
+    }
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPnpDeviceD0ExitPreInterruptsDisabled::Invoke(
+    __in WDFDEVICE  Device,
+    __in WDF_POWER_DEVICE_STATE TargetState
+    )
+{
+    if (m_Method != NULL)
+    {
+        NTSTATUS status;
+
+        CallbackStart();
+        status = m_Method(Device, TargetState);
+        CallbackEnd();
+
+        return status;
+    }
+    else
+    {
+        return STATUS_SUCCESS;
+    }
 }

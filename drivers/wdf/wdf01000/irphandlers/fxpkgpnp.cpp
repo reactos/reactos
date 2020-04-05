@@ -3256,3 +3256,64 @@ Return Value:
 
     return status;
 }
+
+NTSTATUS
+FxPkgPnp::NotifyResourceObjectsDx(
+    __in ULONG NotifyFlags
+    )
+/*++
+
+Routine Description:
+    This routine traverses all resource objects and tells them that the device
+    is leaving D0.  If there is an error, the remaining resources in the list
+    are still notified of exitting D0.
+
+Arguments:
+    NotifyFlags - combination of values from the enum NotifyResourcesFlags
+
+Return Value:
+    None
+
+--*/
+{
+    FxInterrupt* pInterrupt;
+    PLIST_ENTRY ple;
+    NTSTATUS status, finalStatus;
+
+    finalStatus = STATUS_SUCCESS;
+
+    //
+    // Disconect in the reverse order in which we connected the interrupts
+    //
+    for (ple = m_InterruptListHead.Blink;
+         ple != &m_InterruptListHead;
+         ple = ple->Blink)
+    {
+        //
+        // Disconnect interrupts and then tell them that they no longer
+        // own their resources.
+        //
+        pInterrupt = CONTAINING_RECORD(ple, FxInterrupt, m_PnpList);
+
+        status = pInterrupt->Disconnect(NotifyFlags);
+
+        if (!NT_SUCCESS(status))
+        {
+            //
+            // When we encounter an error we still disconnect the remaining
+            // interrupts b/c we would just do it later during device tear down
+            // (might as well do it now).
+            //
+            DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                                "WDFINTERRUPT %p failed to disconnect, %!STATUS!",
+                                pInterrupt->GetHandle(), status);
+            //
+            // Overwriting a previous finalStatus is OK, we'll just report the
+            // last one
+            //
+            finalStatus = status;
+        }
+    }
+
+    return finalStatus;
+}
