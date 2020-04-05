@@ -305,53 +305,91 @@ BOOL CWorker::CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle)
     return m_hWnd != NULL;
 }
 
-BOOL CChangeNotify::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare)
+struct CChangeNotifyImpl
 {
-    for (INT i = 0; i < m_items.GetSize(); ++i)
+    CSimpleArray<ITEM> m_items;
+
+    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare)
     {
-        if (m_items[i].nRegID == INVALID_REG_ID)
+        for (INT i = 0; i < m_items.GetSize(); ++i)
         {
-            m_items[i].nRegID = nRegID;
-            m_items[i].dwUserPID = dwUserPID;
-            m_items[i].hShare = hShare;
-            return TRUE;
+            if (m_items[i].nRegID == INVALID_REG_ID)
+            {
+                m_items[i].nRegID = nRegID;
+                m_items[i].dwUserPID = dwUserPID;
+                m_items[i].hShare = hShare;
+                return TRUE;
+            }
         }
+
+        CChangeNotify::ITEM item = { nRegID, dwUserPID, hShare };
+        m_items.Add(item);
+        return TRUE;
     }
 
-    ITEM item = { nRegID, dwUserPID, hShare };
-    m_items.Add(item);
-    return TRUE;
+    BOOL RemoveItem(UINT nRegID, DWORD dwOwnerPID)
+    {
+        BOOL bFound = FALSE;
+        for (INT i = 0; i < m_items.GetSize(); ++i)
+        {
+            if (m_items[i].nRegID == nRegID)
+            {
+                bFound = TRUE;
+                SHFreeShared(m_items[i].hShare, dwOwnerPID);
+                m_items[i].nRegID = INVALID_REG_ID;
+                m_items[i].dwUserPID = 0;
+                m_items[i].hShare = NULL;
+            }
+        }
+        return bFound;
+    }
+
+    void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
+    {
+        for (INT i = 0; i < m_items.GetSize(); ++i)
+        {
+            if (m_items[i].dwUserPID == dwUserPID)
+            {
+                SHFreeShared(m_items[i].hShare, dwOwnerPID);
+                m_items[i].nRegID = INVALID_REG_ID;
+                m_items[i].dwUserPID = 0;
+                m_items[i].hShare = NULL;
+            }
+        }
+    }
+};
+
+CChangeNotify::CChangeNotify()
+    : m_nNextRegID(INVALID_REG_ID)
+    , m_pimpl(new CChangeNotify)
+{
+}
+
+CChangeNotify::~CChangeNotify()
+{
+    delete m_pimpl;
+}
+
+void CChangeNotify::clear()
+{
+    m_hWnd = NULL;
+    m_nNextRegID = INVALID_REG_ID;
+    m_pimpl->m_items.RemoveAll();
+}
+
+BOOL CChangeNotify::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare)
+{
+    return m_pimpl->AddItem(nRegID, dwUserPID, hShare);
 }
 
 BOOL CChangeNotify::RemoveItem(UINT nRegID, DWORD dwOwnerPID)
 {
-    BOOL bFound = FALSE;
-    for (INT i = 0; i < m_items.GetSize(); ++i)
-    {
-        if (m_items[i].nRegID == nRegID)
-        {
-            bFound = TRUE;
-            SHFreeShared(m_items[i].hShare, dwOwnerPID);
-            m_items[i].nRegID = INVALID_REG_ID;
-            m_items[i].dwUserPID = 0;
-            m_items[i].hShare = NULL;
-        }
-    }
-    return bFound;
+    return m_pimpl->RemoveItem(nRegID, dwOwnerPID);
 }
 
 void CChangeNotify::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
 {
-    for (INT i = 0; i < m_items.GetSize(); ++i)
-    {
-        if (m_items[i].dwUserPID == dwUserPID)
-        {
-            SHFreeShared(m_items[i].hShare, dwOwnerPID);
-            m_items[i].nRegID = INVALID_REG_ID;
-            m_items[i].dwUserPID = 0;
-            m_items[i].hShare = NULL;
-        }
-    }
+    m_pimpl->RemoveItemsByProcess(dwOwnerPID, dwUserPID);
 }
 
 LRESULT CChangeNotify::OnBang(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -457,10 +495,10 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
 {
     TRACE("DoDelivery(%p, %p, 0x%lx)\n", m_hWnd, hTicket, dwOwnerPID);
 
-    for (INT i = 0; i < m_items.GetSize(); ++i)
+    for (INT i = 0; i < m_pimpl->m_items.GetSize(); ++i)
     {
-        HANDLE hShare = m_items[i].hShare;
-        if (!m_items[i].nRegID || !hShare)
+        HANDLE hShare = m_pimpl->m_items[i].hShare;
+        if (!m_pimpl->m_items[i].nRegID || !hShare)
             continue;
 
         LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockSharedEx(hShare, dwOwnerPID, FALSE);

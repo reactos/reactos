@@ -88,6 +88,10 @@ public:
     {
     }
 
+    virtual ~CWorker()
+    {
+    }
+
     static LRESULT CALLBACK
     WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -96,6 +100,8 @@ public:
 protected:
     HWND m_hWnd;
 };
+
+struct CChangeNotifyImpl;
 
 class CChangeNotify : public CWorker
 {
@@ -107,13 +113,8 @@ public:
         HANDLE hShare;
     };
 
-    CChangeNotify() : m_nNextRegID(INVALID_REG_ID)
-    {
-    }
-
-    ~CChangeNotify()
-    {
-    }
+    CChangeNotify();
+    virtual ~CChangeNotify();
 
     operator HWND()
     {
@@ -125,12 +126,7 @@ public:
         m_hWnd = hwnd;
     }
 
-    void clear()
-    {
-        m_hWnd = NULL;
-        m_nNextRegID = INVALID_REG_ID;
-        m_items.RemoveAll();
-    }
+    void clear();
 
     BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare);
     BOOL RemoveItem(UINT nRegID, DWORD dwOwnerPID);
@@ -158,6 +154,6 @@ public:
 
 protected:
     UINT m_nNextRegID;
-    CSimpleArray<ITEM> m_items;
+    CChangeNotifyImpl *m_pimpl;
 };
 #endif
