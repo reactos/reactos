@@ -96,7 +96,7 @@ OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             TRACE("WM_NCDESTROY\n");
             pWorker = (LPOLDDELIVERYWORKER)GetWindowLongPtrW(hwnd, 0);
             SetWindowLongW(hwnd, 0, 0);
-            LocalFree(pWorker);
+            delete pWorker;
             break;
 
         default:
@@ -111,7 +111,7 @@ DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg)
     LPOLDDELIVERYWORKER pWorker;
     HWND hwndOldWorker;
 
-    pWorker = (LPOLDDELIVERYWORKER)LocalAlloc(LMEM_FIXED, sizeof(OLDDELIVERYWORKER));
+    pWorker = new OLDDELIVERYWORKER;
     if (!pWorker)
     {
         ERR("Out of memory\n");
@@ -125,7 +125,7 @@ DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg)
     if (hwndOldWorker == NULL)
     {
         ERR("hwndOldWorker == NULL\n");
-        LocalFree(pWorker);
+        delete pWorker;
     }
 
     DWORD pid;
