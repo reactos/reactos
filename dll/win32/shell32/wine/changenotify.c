@@ -207,7 +207,7 @@ SHChangeNotifyRegister(
     if ((fSources & SHCNRF_NewDelivery) == 0)
     {
         hwnd = (HWND)DoHireOldDeliveryWorker(hwnd, uMsg);
-        uMsg = WM_NOTIF_BANG;
+        uMsg = WM_OLDDELI_HANDOVER;
     }
 
     if ((fSources & SHCNRF_RecursiveInterrupt) != 0 &&
@@ -226,8 +226,8 @@ SHChangeNotifyRegister(
                                      dwOwnerPID);
         if (hShared)
         {
-            TRACE("WM_NOTIF_BANG: hwnd:%p, hShared:%p, pid:0x%lx\n", hwndNotif, hShared, dwOwnerPID);
-            SendMessageW(hwndNotif, WM_NOTIF_BANG, (WPARAM)hShared, dwOwnerPID);
+            TRACE("WM_NOTIF_REG: hwnd:%p, hShared:%p, pid:0x%lx\n", hwndNotif, hShared, dwOwnerPID);
+            SendMessageW(hwndNotif, WM_NOTIF_REG, (WPARAM)hShared, dwOwnerPID);
 
             pShare = (LPNOTIFSHARE)SHLockSharedEx(hShared, dwOwnerPID, FALSE);
             if (pShare)

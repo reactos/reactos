@@ -9,8 +9,8 @@
 #define INVALID_REG_ID 0
 
 #define WM_GETDELIWORKERWND (WM_USER + 25) /* 0x419 */
-
-#define WM_NOTIF_BANG (WM_USER + 1) /* 0x401 */
+#define WM_OLDDELI_HANDOVER (WM_USER + 1) /* 0x401 */
+#define WM_NOTIF_REG (WM_USER + 1) /* 0x401 */
 #define WM_NOTIF_UNREG (WM_USER + 2) /* 0x402 */
 #define WM_NOTIF_DELIVERY (WM_USER + 3) /* 0x403 */
 #define WM_NOTIF_SUSPEND (WM_USER + 6) /* 0x406 */
@@ -135,7 +135,7 @@ public:
     LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     BEGIN_MSG_MAP(CChangeNotify)
-        MESSAGE_HANDLER(WM_NOTIF_BANG, OnReg)
+        MESSAGE_HANDLER(WM_NOTIF_REG, OnReg)
         MESSAGE_HANDLER(WM_NOTIF_UNREG, OnUnReg)
         MESSAGE_HANDLER(WM_NOTIF_DELIVERY, OnDelivery)
         MESSAGE_HANDLER(WM_NOTIF_SUSPEND, OnSuspendResume)

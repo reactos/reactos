@@ -66,10 +66,10 @@ OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch (uMsg)
     {
-        case WM_NOTIF_BANG:
+        case WM_OLDDELI_HANDOVER:
             hShared = (HANDLE)wParam;
             dwOwnerPID = (DWORD)lParam;
-            TRACE("WM_NOTIF_BANG: hwnd:%p, hShared:%p, pid:0x%lx\n",
+            TRACE("WM_OLDDELI_HANDOVER: hwnd:%p, hShared:%p, pid:0x%lx\n",
                   hwnd, hShared, dwOwnerPID);
 
             pWorker = (LPOLDDELIVERYWORKER)GetWindowLongPtrW(hwnd, 0);
