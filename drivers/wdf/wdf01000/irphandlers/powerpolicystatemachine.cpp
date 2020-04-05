@@ -4451,17 +4451,6 @@ Return Value:
     return WdfDevStatePwrPolInvalid;
 }
 
-WDF_DEVICE_POWER_POLICY_STATE
-FxPkgPnp::NotPowerPolOwnerGotoD0(
-    __inout FxPkgPnp* This
-    )
-{
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePwrPolInvalid;
-}
-
-//
-
 VOID
 FxPowerIdleMachine::Start(
     VOID

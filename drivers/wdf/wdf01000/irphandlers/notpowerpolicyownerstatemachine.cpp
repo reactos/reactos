@@ -94,3 +94,12 @@ FxPkgPnp::NotPowerPolicyOwnerEnterNewState(
         }
     }
 }
+
+WDF_DEVICE_POWER_POLICY_STATE
+FxPkgPnp::NotPowerPolOwnerGotoD0(
+    __inout FxPkgPnp* This
+    )
+{
+    This->PowerProcessEvent(PowerCompleteD0);
+    return WdfDevStatePwrPolNull;
+}
