@@ -1237,7 +1237,8 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
+    This->m_Flags |= FxPowerIdleInDx;
+
     return FxIdleMax;
 }
 
