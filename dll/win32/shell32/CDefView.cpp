@@ -1161,7 +1161,8 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     SHChangeNotifyEntry ntreg;
     ntreg.fRecursive = TRUE;
     ntreg.pidl = m_pidlParent;
-    m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_InterruptLevel | SHCNRF_ShellLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
+    m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_InterruptLevel | SHCNRF_ShellLevel,
+                                       SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
 
     /* _DoFolderViewCB(SFVM_GETNOTIFY, ??  ??) */
 
