@@ -652,6 +652,7 @@ CDeviceView::RecurseChildDevices(
         if (DeviceNode == nullptr)
         {
             ATLASSERT(FALSE);
+            continue;
         }
 
         // Don't show hidden devices if not requested

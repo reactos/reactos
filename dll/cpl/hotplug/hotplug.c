@@ -18,6 +18,7 @@
 typedef struct _HOTPLUG_DATA
 {
     SP_CLASSIMAGELIST_DATA ImageListData;
+    HMENU hPopupMenu;
     DWORD dwFlags;
 } HOTPLUG_DATA, *PHOTPLUG_DATA;
 
@@ -234,10 +235,8 @@ EnumHotpluggedDevices(
     int idev;
     DWORD dwCapabilities, dwSize;
     ULONG ulStatus, ulProblem;
-
     HTREEITEM hTreeItem;
     CONFIGRET cr;
-
 
     DPRINT1("EnumHotpluggedDevices()\n");
 
@@ -299,6 +298,50 @@ EnumHotpluggedDevices(
 }
 
 
+static
+VOID
+UpdateButtons(
+    HWND hwndDlg)
+{
+    BOOL bEnabled;
+
+    bEnabled = (TreeView_GetCount(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE)) != 0);
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_PROPERTIES), bEnabled);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_STOP), bEnabled);
+}
+
+
+static
+VOID
+ShowContextMenu(
+    HWND hwndDlg,
+    HWND hwndTreeView,
+    PHOTPLUG_DATA pHotplugData)
+{
+    HTREEITEM hTreeItem;
+    RECT rc;
+    POINT pt;
+
+    hTreeItem = TreeView_GetSelection(hwndTreeView);
+    if (hTreeItem == NULL)
+        return;
+
+    TreeView_GetItemRect(hwndTreeView, hTreeItem, &rc, TRUE);
+
+    pt.x = (rc.left + rc.right) / 2;
+    pt.y = (rc.top + rc.bottom) / 2;
+    ClientToScreen(hwndTreeView, &pt);
+    TrackPopupMenu(GetSubMenu(pHotplugData->hPopupMenu, 0),
+                   TPM_LEFTALIGN | TPM_TOPALIGN,
+                   pt.x,
+                   pt.y,
+                   0,
+                   hwndDlg,
+                   NULL);
+}
+
+
 INT_PTR
 CALLBACK
 SafeRemovalDlgProc(
@@ -309,20 +352,20 @@ SafeRemovalDlgProc(
 {
     PHOTPLUG_DATA pHotplugData;
 
-    UNREFERENCED_PARAMETER(lParam);
-
     pHotplugData = (PHOTPLUG_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pHotplugData = HeapAlloc(GetProcessHeap(), 0, sizeof(HOTPLUG_DATA));
+            pHotplugData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HOTPLUG_DATA));
             if (pHotplugData != NULL)
             {
                 SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pHotplugData);
 
                 pHotplugData->ImageListData.cbSize = sizeof(pHotplugData->ImageListData);
                 SetupDiGetClassImageList(&pHotplugData->ImageListData);
+
+                pHotplugData->hPopupMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDM_POPUP_DEVICE_TREE));
 
                 pHotplugData->dwFlags = GetHotPlugFlags();
 
@@ -335,6 +378,7 @@ SafeRemovalDlgProc(
 
                 EnumHotpluggedDevices(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE),
                                       pHotplugData);
+                UpdateButtons(hwndDlg);
             }
             return TRUE;
 
@@ -384,6 +428,23 @@ SafeRemovalDlgProc(
                 {
                     EnumHotpluggedDevices(GetDlgItem(hwndDlg, IDC_SAFE_REMOVE_DEVICE_TREE),
                                           pHotplugData);
+                    UpdateButtons(hwndDlg);
+                }
+            }
+            break;
+
+        case WM_NOTIFY:
+            if (((LPNMHDR)lParam)->idFrom == IDC_SAFE_REMOVE_DEVICE_TREE)
+            {
+                if (((LPNMHDR)lParam)->code == NM_RCLICK)
+                {
+                    if (pHotplugData != NULL)
+                    {
+                        ShowContextMenu(hwndDlg,
+                                        ((LPNMHDR)lParam)->hwndFrom,
+                                        pHotplugData);
+                        return TRUE;
+                    }
                 }
             }
             break;
@@ -396,6 +457,9 @@ SafeRemovalDlgProc(
         case WM_DESTROY:
             if (pHotplugData != NULL)
             {
+                if (pHotplugData->hPopupMenu != NULL)
+                    DestroyMenu(pHotplugData->hPopupMenu);
+
                 SetupDiDestroyClassImageList(&pHotplugData->ImageListData);
 
                 HeapFree(GetProcessHeap(), 0, pHotplugData);
