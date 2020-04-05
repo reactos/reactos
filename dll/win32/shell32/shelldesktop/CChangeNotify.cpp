@@ -520,6 +520,8 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
     BOOL ret = FALSE;
     LPITEMIDLIST pidl = NULL, pidl1 = NULL, pidl2 = NULL;
     WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
+    INT cch, cch1, cch2;
+
     szPath[0] = szPath1[0] = szPath2[0] = 0;
 
     if (pShared->ibPidl)
@@ -549,7 +551,6 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
 
     if (pShared->fRecursive)
     {
-        INT cch, cch1, cch2;
         if (szPath1[0] == 0)
             ret = TRUE;
 
