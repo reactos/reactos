@@ -219,7 +219,6 @@ HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
     _Resize();
 
     HWND hwndListView = FindWindowExW(m_hWndShellView, NULL, WC_LISTVIEW, NULL);
-    SetShellWindowEx(m_hWnd, hwndListView);
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_DESKBROWSER));
 

@@ -1129,7 +1129,6 @@ LRESULT CDefView::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     CComPtr<IDropTarget>     pdt;
-    SHChangeNotifyEntry      ntreg;
     CComPtr<IPersistFolder2> ppf2;
 
     TRACE("%p\n", this);
@@ -1145,9 +1144,6 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     if (ppf2)
     {
         ppf2->GetCurFolder(&m_pidlParent);
-        ntreg.fRecursive = TRUE;
-        ntreg.pidl = m_pidlParent;
-        m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_InterruptLevel | SHCNRF_ShellLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
     }
 
     if (CreateList())
@@ -1157,6 +1153,15 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             FillList();
         }
     }
+
+    HWND hwndSB;
+    m_pShellBrowser->GetWindow(&hwndSB);
+    SetShellWindowEx(hwndSB, m_ListView);
+
+    SHChangeNotifyEntry ntreg;
+    ntreg.fRecursive = TRUE;
+    ntreg.pidl = m_pidlParent;
+    m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_InterruptLevel | SHCNRF_ShellLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
 
     /* _DoFolderViewCB(SFVM_GETNOTIFY, ??  ??) */
 
