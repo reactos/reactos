@@ -2399,8 +2399,15 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    if (This->PowerDmaEnableAndScan(FALSE) == FALSE)
+    {
+        return WdfDevStatePowerWakingDmaEnableFailed;
+    }
+
+    //
+    // Return the state that we should drop into next.
+    //
+    return WdfDevStatePowerNull;
 }
 
 WDF_DEVICE_POWER_STATE
