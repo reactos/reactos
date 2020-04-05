@@ -132,14 +132,14 @@ public:
     BOOL ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared);
     BOOL DoNotify(LPHANDBAG pHandBag, LPDELITICKET pTicket, LPNOTIFSHARE pShared);
 
-    LRESULT OnBang(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     BEGIN_MSG_MAP(CChangeNotify)
-        MESSAGE_HANDLER(WM_NOTIF_BANG, OnBang)
+        MESSAGE_HANDLER(WM_NOTIF_BANG, OnReg)
         MESSAGE_HANDLER(WM_NOTIF_UNREG, OnUnReg)
         MESSAGE_HANDLER(WM_NOTIF_DELIVERY, OnDelivery)
         MESSAGE_HANDLER(WM_NOTIF_SUSPEND, OnSuspendResume)

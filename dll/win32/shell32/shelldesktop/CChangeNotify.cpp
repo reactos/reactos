@@ -386,9 +386,9 @@ void CChangeNotify::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
     m_pimpl->RemoveItemsByProcess(dwOwnerPID, dwUserPID);
 }
 
-LRESULT CChangeNotify::OnBang(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CChangeNotify::OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    TRACE("OnBang(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
+    TRACE("OnReg(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
     HANDLE hShared = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
