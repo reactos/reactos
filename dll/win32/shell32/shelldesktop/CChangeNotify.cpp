@@ -364,13 +364,6 @@ CChangeNotify::~CChangeNotify()
     delete m_pimpl;
 }
 
-void CChangeNotify::clear()
-{
-    m_hWnd = NULL;
-    m_nNextRegID = INVALID_REG_ID;
-    m_pimpl->m_items.RemoveAll();
-}
-
 BOOL CChangeNotify::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare)
 {
     return m_pimpl->AddItem(nRegID, dwUserPID, hShare);

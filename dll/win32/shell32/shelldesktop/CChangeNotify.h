@@ -120,8 +120,6 @@ public:
         return m_hWnd;
     }
 
-    void clear();
-
     BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare);
     BOOL RemoveItem(UINT nRegID, DWORD dwOwnerPID);
     void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
