@@ -385,3 +385,24 @@ FxPnpDeviceD0ExitPreInterruptsDisabled::Invoke(
         return STATUS_SUCCESS;
     }
 }
+
+__drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
+_Must_inspect_result_
+NTSTATUS
+FxPnpDeviceSelfManagedIoRestart::Invoke(
+    _In_  WDFDEVICE  Device,
+    _Out_ FxCxCallbackProgress *Progress
+    )
+{
+    UNREFERENCED_PARAMETER(Progress);
+
+    NTSTATUS status = STATUS_SUCCESS;
+    m_Device = Device;
+
+    if (m_Method != NULL)
+    {
+        status = m_Method(m_Device);
+    }
+
+    return status;
+}

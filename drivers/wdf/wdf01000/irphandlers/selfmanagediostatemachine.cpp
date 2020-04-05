@@ -437,8 +437,27 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return FxSelfManagedIoInvalid;
+    FxCxCallbackProgress progress;
+    
+    *Status = This->m_DeviceSelfManagedIoRestart.Invoke(This->GetDeviceHandle(),
+                                                        &progress);
+    if (Progress)
+    {
+        *Progress = progress;
+    }
+
+    if (NT_SUCCESS(*Status))
+    {
+        return FxSelfManagedIoStarted;
+    }    
+    /*else if (progress >= FxCxCallbackProgressClientSucceeded)
+    {
+        return FxSelfManagedIoRestartedFailedPost;
+    }*/
+    else
+    {
+        return FxSelfManagedIoFailed;
+    }
 }
 
 FxSelfManagedIoStates
