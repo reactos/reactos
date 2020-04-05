@@ -179,7 +179,7 @@ DoCreateDeliTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIS
 {
     LPDELITICKET pTicket;
     HANDLE hTicket = NULL;
-    DWORD cbPidl1, cbPidl2, ibOffset1, ibOffset2, cbSize;
+    DWORD cbPidl1 = 0, cbPidl2 = 0, ibOffset1, ibOffset2, cbSize;
 
     ibOffset1 = 0;
     if (pidl1)
