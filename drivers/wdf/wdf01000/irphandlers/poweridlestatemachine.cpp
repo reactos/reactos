@@ -1400,8 +1400,27 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return FxIdleMax;
+    if (This->m_Flags & FxPowerIdleTimerEnabled)
+    {
+        if (This->m_Flags & FxPowerIdleTimerStarted)
+        {
+            COVERAGE_TRAP();
+            return FxIdleTimerRunning;
+        }
+        else
+        {
+            return FxIdleCheckIoCount;
+        }
+    }
+    else
+    {
+        //
+        // Not enabled, better not have a timer running
+        //
+        ASSERT((This->m_Flags & FxPowerIdleTimerStarted) == 0);
+
+        return FxIdleDisabled;
+    }
 }
 
 FxPowerIdleStates
