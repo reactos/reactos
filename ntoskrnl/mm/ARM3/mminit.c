@@ -161,7 +161,7 @@ SIZE_T MmSystemViewSize;
 // map paged pool PDEs into external processes when they fault on a paged pool
 // address.
 //
-PFN_NUMBER MmSystemPageDirectory[PPE_PER_PAGE];
+PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 PMMPDE MmSystemPagePtes;
 #endif
 
@@ -779,7 +779,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Start with the first PDE and scan them all */
     PointerPde = MiAddressToPde(NULL);
-    Count = PPE_PER_PAGE * PDE_PER_PAGE;
+    Count = PD_COUNT * PDE_PER_PAGE;
     for (i = 0; i < Count; i++)
     {
         /* Check for valid PDE */
@@ -1767,7 +1767,7 @@ MiBuildPagedPool(VOID)
     // Get the page frame number for the system page directory
     //
     PointerPte = MiAddressToPte(PDE_BASE);
-    ASSERT(PPE_PER_PAGE == 1);
+    ASSERT(PD_COUNT == 1);
     MmSystemPageDirectory[0] = PFN_FROM_PTE(PointerPte);
 
     //
@@ -1785,7 +1785,7 @@ MiBuildPagedPool(VOID)
     // way).
     //
     TempPte = ValidKernelPte;
-    ASSERT(PPE_PER_PAGE == 1);
+    ASSERT(PD_COUNT == 1);
     TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory[0];
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 #endif

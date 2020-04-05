@@ -25,7 +25,7 @@
 #define PD_SIZE  (PDE_PER_PAGE * sizeof(MMPDE))
 
 /* Size of all page directories for a process */
-#define SYSTEM_PD_SIZE (PPE_PER_PAGE * PD_SIZE)
+#define SYSTEM_PD_SIZE (PD_COUNT * PD_SIZE)
 #ifdef _M_IX86
 C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #endif
@@ -585,7 +585,6 @@ extern PMMPTE MiSessionImagePteStart;
 extern PMMPTE MiSessionImagePteEnd;
 extern PMMPTE MiSessionBasePte;
 extern PMMPTE MiSessionLastPte;
-extern PMMPDE MmSystemPagePtes;
 extern PVOID MmSystemCacheStart;
 extern PVOID MmSystemCacheEnd;
 extern MMSUPPORT MmSystemCacheWs;
@@ -631,7 +630,6 @@ extern PVOID MiSessionImageStart;
 extern PVOID MiSessionImageEnd;
 extern PMMPTE MiHighestUserPte;
 extern PMMPDE MiHighestUserPde;
-extern PFN_NUMBER MmSystemPageDirectory[PPE_PER_PAGE];
 extern PMMPTE MmSharedUserDataPte;
 extern LIST_ENTRY MmProcessList;
 extern KEVENT MmZeroingPageEvent;
@@ -657,6 +655,10 @@ extern LARGE_INTEGER MmCriticalSectionTimeout;
 extern LIST_ENTRY MmWorkingSetExpansionHead;
 extern KSPIN_LOCK MmExpansionLock;
 extern PETHREAD MiExpansionLockOwner;
+#if (_MI_PAGING_LEVELS <= 3)
+extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
+extern PMMPDE MmSystemPagePtes;
+#endif
 
 FORCEINLINE
 BOOLEAN

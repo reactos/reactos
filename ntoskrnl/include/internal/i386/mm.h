@@ -143,9 +143,6 @@ C_ASSERT(PD_COUNT == 1);
 /* Maximum number of PDEs */
 #define PDE_PER_SYSTEM (PD_COUNT * PDE_PER_PAGE)
 
-/* TODO: It seems this constant is not needed for x86 */
-#define PPE_PER_PAGE 1
-
 /* Maximum number of pages for 4 GB of virtual space */
 #define MI_MAX_PAGES ((1ull << 32) / PAGE_SIZE)
 
