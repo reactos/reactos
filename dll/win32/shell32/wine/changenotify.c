@@ -40,7 +40,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 #ifdef __REACTOS__
-    #include "../CChangeNotify.h"
+    #include "../shelldesktop/CChangeNotify.h"
     DWORD WINAPI SHAnsiToUnicode(LPCSTR lpSrcStr, LPWSTR lpDstStr, int iLen);
 #endif
 

@@ -45,7 +45,6 @@ list(APPEND SOURCE
     dialogs/general.cpp
     dialogs/recycler_prop.cpp
     dialogs/view.cpp
-    CChangeNotify.cpp
     CDropTargetHelper.cpp
     CEnumIDListBase.cpp
     CExtractIcon.cpp

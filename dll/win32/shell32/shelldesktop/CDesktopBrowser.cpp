@@ -20,7 +20,6 @@
  */
 
 #include "shelldesktop.h"
-#include "../CChangeNotify.h"
 
 // Support for multiple monitors is disabled till LVM_SETWORKAREAS gets implemented
 #ifdef MULTIMONITOR_SUPPORT

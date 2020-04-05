@@ -4,8 +4,9 @@
  * PURPOSE:     Shell change notification
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
-#include "precomp.h"
-#include "CChangeNotify.h"
+#include "shelldesktop.h"
+#include "shlwapi_undoc.h"
+#include <atlsimpcoll.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
