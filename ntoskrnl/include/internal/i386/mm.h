@@ -14,13 +14,6 @@
 /* Memory layout base addresses */
 #define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
 #define MI_DEFAULT_SYSTEM_RANGE_START           (PVOID)0x80000000
-#ifndef _X86PAE_
-#define HYPER_SPACE                                    0xC0400000
-#define HYPER_SPACE_END                                0xC07FFFFF
-#else
-#define HYPER_SPACE                                    0xC0800000
-#define HYPER_SPACE_END                                0xC0BFFFFF
-#endif
 #define MI_SYSTEM_CACHE_WS_START                (PVOID)0xC0C00000
 #define MI_SYSTEM_CACHE_START                   (PVOID)0xC1000000
 #define MI_PAGED_POOL_START                     (PVOID)0xE1000000
@@ -28,18 +21,20 @@
 #define MI_DEBUG_MAPPING                        (PVOID)0xFFBFF000
 #define MI_HIGHEST_SYSTEM_ADDRESS               (PVOID)0xFFFFFFFF
 
-/* Misc address definitions */
+/* Highest virtual address for VAD */
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
-#define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
-#define MI_MAPPING_RANGE_END                (MI_MAPPING_RANGE_START + \
-                                                  MI_HYPERSPACE_PTES * PAGE_SIZE)
-#define MI_DUMMY_PTE                        (PMMPTE)((ULONG_PTR)MI_MAPPING_RANGE_END + \
-                                                  PAGE_SIZE)
-#define MI_VAD_BITMAP                       (PMMPTE)((ULONG_PTR)MI_DUMMY_PTE + \
-                                                  PAGE_SIZE)
-#define MI_WORKING_SET_LIST                 (PMMPTE)((ULONG_PTR)MI_VAD_BITMAP + \
-                                                  PAGE_SIZE)
+
+/* Hyper space definitions */
+#define HYPER_SPACE            (PTE_TOP + 1)
+#define HYPER_SPACE_END        (HYPER_SPACE + ((4 * _1MB) - 1))
+#define MI_MAPPING_RANGE_START (HYPER_SPACE)
+#define MI_MAPPING_RANGE_END \
+    (MI_MAPPING_RANGE_START + MI_HYPERSPACE_PTES * PAGE_SIZE)
+
+#define MI_DUMMY_PTE        (PMMPTE)((ULONG_PTR)MI_MAPPING_RANGE_END + PAGE_SIZE)
+#define MI_VAD_BITMAP       (PULONG)((ULONG_PTR)MI_DUMMY_PTE + PAGE_SIZE)
+#define MI_WORKING_SET_LIST (PMMPTE)((ULONG_PTR)MI_VAD_BITMAP + PAGE_SIZE)
 
 /* Memory sizes */
 #define MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING   ((255 * _1MB) >> PAGE_SHIFT)
@@ -175,17 +170,35 @@ C_ASSERT(PD_COUNT == 1);
 /* Takes the PDE offset (within all PDs pages) from the virtual address */
 #define MiAddressToPdeOffset(Va) (((ULONG_PTR)(Va)) / PDE_MAPPED_VA)
 
-/* Convert a PTE/PDE into a corresponding address */
-#define MiPteToAddress(_Pte) ((PVOID)((ULONG)(_Pte) << 10))
-#define MiPdeToAddress(_Pde) ((PVOID)((ULONG)(_Pde) << 20))
+/* PTE offset from the pointer to a PTE */
+#define MiGetPteOffset(_Pte) ((((ULONG_PTR)(_Pte)) & PTE_MASK) / sizeof(MMPTE))
 
-/* Translate between P*Es */
+/* PDE offset (within all PDs pages) from the pointer to a PDE */
+#define MiGetPdeOffset(_Pde) ((((ULONG_PTR)(_Pde)) & PDE_MASK) / sizeof(MMPDE))
+
+/* Index of PD in which the PDE is located */
+#ifndef _X86PAE_
+/* Maximum 4 pages of memory (0 ... 3) */
+#define MiGetPdIndex(_Pde) ((MiGetPdeOffset(_Pde)) / PDE_PER_PAGE)
+#else
+/* Only 1 page of memory */
+#define MiGetPdIndex(_Pde) (0)
+#endif
+
+/* Determines a virtual address mapped to a this PTE */
+#define MiPteToAddress(_Pte) ((PVOID)((MiGetPteOffset(_Pte)) * PAGE_SIZE))
+
+/* Determines a virtual address mapped to a this PDE */
+#define MiPdeToAddress(_Pde) ((PVOID)((MiGetPdeOffset(_Pde)) * PDE_MAPPED_VA))
+
+/* Finds the first PTE in the PT that this PDE points to */
 #define MiPdeToPte(_Pde) ((PMMPTE)MiPteToAddress(_Pde))
+
+/* Finds a PDE pointing to the PT that contains this PTE */
 #define MiPteToPde(_Pte) ((PMMPDE)MiAddressToPte(_Pte))
 
-/* Check P*E boundaries */
-#define MiIsPteOnPdeBoundary(PointerPte) \
-    ((((ULONG_PTR)PointerPte) & (PAGE_SIZE - 1)) == 0)
+/* Return TRUE if the PTE is at the beginning of the PT */
+#define MiIsPteOnPdeBoundary(_Pte) ((((ULONG_PTR)_Pte) & (PAGE_SIZE - 1)) == 0)
 
 //
 // Decodes a Prototype PTE into the underlying PTE
