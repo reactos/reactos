@@ -398,6 +398,18 @@ private:
         VOID
         );
 
+    _Must_inspect_result_
+    NTSTATUS
+    DispatchSystemQueryPower(
+        __in FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    DispatchDeviceQueryPower(
+        __in FxIrp *Irp
+        );
+
 };
 
 

@@ -2618,6 +2618,12 @@ public:
         }
     }
 
+    _Must_inspect_result_
+    NTSTATUS
+    PowerPolicyHandleSystemQueryPower(
+        __in SYSTEM_POWER_STATE QueryState
+        );
+
     ULONG
     PowerPolicyGetCurrentWakeReason(
         VOID

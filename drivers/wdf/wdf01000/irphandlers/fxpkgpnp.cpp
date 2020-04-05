@@ -3317,3 +3317,133 @@ Return Value:
 
     return finalStatus;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPnp::PowerPolicyHandleSystemQueryPower(
+    __in SYSTEM_POWER_STATE QueryState
+    )
+/*++
+
+Framework Philosophy Discussion:
+
+    WDM sends IRP_MN_QUERY_POWER for system power states (where system power
+    states are S0-working, S1-light-sleep, S2-deeper-sleep, S3-deepest-sleep,
+    S4-hibernation, S5-soft-off.)  The idea is that, if a driver can't support
+    a particular state, it fails the query.  The problem is that this idea is
+    horribly broken.
+
+    The first problem is that WDM doesn't always send these IRPs.  In some
+    situations, (very low battery, system getting critically hot) WDM will
+    attempt to preserve user data by sleeping or hibernating, rather than just
+    crashing.  This is good, but it makes a driver writer's life very difficult,
+    since it means that you have to deal with being told to go to a particular
+    state even if you think that your device won't be able to deal well with
+    that state.
+
+    The second problem is that, by the time the system is going to sleep, the
+    user probably isn't still looking at the screen.  This is especially true
+    for laptop computers, as the system is very likely sleeping because the
+    user closed the clamshell lid.  So any attempt to ask the user how to
+    resolve a situation where a driver doesn't want to go to a low power state
+    is futile.  Furthermore, even when the screen is still available, users
+    dislike it when they push the sleep button or the power button on their
+    machines and the machines don't do what they were told to do.
+
+    The third problem is related to the second.  While there may be completely
+    legitimate reasons for the driver to want to delay or even to veto a
+    transition into a sleep state, (an example of a valid scenario would be one
+    in which the driver was involved in burning a CD, an operation which can't
+    be interrupted,) there isn't any good way for a driver to interact with a
+    user anyhow.  (Which desktop is the right one to send messages to?  What
+    should the UI for problem resolution look like?  How does a driver put up
+    UI anyhow?)
+
+    All the driver really knows is that it will or won't be able to maintain
+    device state, and it will or won't be able to get enough power to arm
+    any wake events that it might want to deliver (like PME#.)
+
+    Consequently, the designers of the PnP/Power model in the Framework have
+    decided that all QueryPower-Sx IRPs will be completed successfully
+    except if the device cannot maintain enough power to trigger its wake
+    signal *AND* if the system supports lighter sleep states than the
+    one that is currently being queried.  (If it does, then the kernel's power
+    manager will turn right around and query for those, next.)
+
+    This story usually brings up a few objections:
+
+    1)  My device is important!  When it's operating, I don't want
+        the machine to just fall asleep.  I need to fail QueryPower-Sx to
+        prevent that.
+
+    This objection is an unfortunate consequence of the existing DDK.  There
+    is a perfectly good API that allows a driver to say that the machine
+    shouldn't just fall asleep.  (See PoSetSystemState.)  If a user presses
+    a button telling the machine to go to sleep, then the driver has a
+    responsibility to do that.
+
+    2)  There are certain operations that just can't be interrupted!
+
+    While that's true, those operations started somewhere, probably in user-
+    mode.  Those same user-mode components would be much, much better suited
+    toward negotiating with the user or with other components to figure out
+    what to do when the uninterruptable must be interrupted.  User-mode
+    components get notification that the system is going to sleep and they
+    can delay or veto the transition.  Get over the idea that your driver
+    needs to be involved, too.
+
+Routine Description:
+
+    Determines if for the passed in System state, if we can wake the machine
+    from it.  If the query state is the machine's minimum system state, then
+    we always succeed it because we want the machine to go to at least some
+    sleeping state.  We always succeed hibernate and system off requests as well.
+
+Arguments:
+
+    QueryState - The proposed system state
+
+Return Value:
+
+    NT_SUCCESS if the queried state should be allowed, !NT_SUCCESS otherwise
+
+  --*/
+{
+    PFX_DRIVER_GLOBALS FxDriverGlobals = GetDriverGlobals();
+    NTSTATUS status;
+
+    if (QueryState >= PowerSystemHibernate ||
+        PowerPolicyCanWakeFromSystemState(QueryState))
+    {
+        //
+        // If the query is for the machine's minimum S state or we going into
+        // hibernate or off, always succeed it.
+        //
+        status = STATUS_SUCCESS;
+    }
+    else
+    {
+        //
+        // On Windows Vista and above, its OK to return a failure status code
+        // if the system is going into an S state at which the device cannot
+        // wake the system.
+        //
+        ASSERT(FxLibraryGlobals.OsVersionInfo.dwMajorVersion >= 6);
+
+        //
+        // The S state the machine is going into is one where we can't
+        // wake it up because our D state is too low for this S state.
+        // Since this isn't the minimum S state the machine is capable
+        // of, reject the current query.
+        //
+        DoTraceLevelMessage(
+            FxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGPNP,
+            "failing system query power because the device cannot wake the "
+            "machine from S%d",
+            QueryState - 1);
+
+        status = STATUS_POWER_STATE_INVALID;
+    }
+
+    return status;
+}

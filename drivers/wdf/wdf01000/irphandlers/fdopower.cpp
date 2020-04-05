@@ -295,8 +295,45 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    if (Irp->GetParameterPowerType() == SystemPowerState)
+    {
+        return ((FxPkgFdo*) This)->DispatchSystemQueryPower(Irp);
+    }
+    else
+    {
+        return ((FxPkgFdo*) This)->DispatchDeviceQueryPower(Irp);
+    }
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::DispatchSystemQueryPower(
+    __in FxIrp *Irp
+    )
+{
+    if (PowerPolicyIsWakeEnabled())
+    {
+        NTSTATUS status;
+
+        status = PowerPolicyHandleSystemQueryPower(
+            Irp->GetParameterPowerStateSystemState()
+            );
+
+        Irp->SetStatus(status);
+
+        if (!NT_SUCCESS(status))
+        {
+            return CompletePowerRequest(Irp, status);
+        }
+    }
+
+    //
+    // Passing down the irp because one of the following
+    // a) We don't care b/c we don't control the power policy
+    // b) we are not enabled for arming for wake from Sx
+    // c) we can wake from the queried S state
+    //
+    return _PowerPassDown(this, Irp);
 }
 
 _Must_inspect_result_
@@ -441,4 +478,23 @@ Return Value:
   --*/
 {
     DO_NOTHING();
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgFdo::DispatchDeviceQueryPower(
+    __in FxIrp *Irp
+    )
+{
+    //
+    // Either the framework is the power policy owner and we wouldn't be sending
+    // a device query power or we are a subordinate will do what the power 
+    // policy owner wants 100% of the time.
+    //
+    Irp->SetStatus(STATUS_SUCCESS);
+
+    //
+    // This will release the remove lock
+    //
+    return _PowerPassDown(this, Irp);
 }
