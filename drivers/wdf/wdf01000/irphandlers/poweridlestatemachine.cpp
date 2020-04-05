@@ -1214,8 +1214,8 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return FxIdleMax;
+    This->m_D0NotificationEvent.Clear();
+    return FxIdleInDx;
 }
 
 FxPowerIdleStates
