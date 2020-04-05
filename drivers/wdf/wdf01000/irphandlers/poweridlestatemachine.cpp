@@ -1370,8 +1370,16 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return FxIdleMax;
+    //
+    // FxPowerIdleInDx - we are not longer idle since we are not in the Dx state
+    //                   anymore
+    // FxPowerIdleIoPresentSent - We can send the io present event again
+    //
+    This->m_Flags &= ~(FxPowerIdleInDx | FxPowerIdleIoPresentSent);
+
+    This->SendD0Notification();
+
+    return FxIdlePowerUpComplete;
 }
 
 FxPowerIdleStates
