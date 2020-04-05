@@ -2283,8 +2283,35 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    NTSTATUS status;
+
+    //
+    // interrupt connect and enable
+    //
+    status = This->NotifyResourceObjectsD0(NotifyResourcesExplicitPowerup);
+
+    if (!NT_SUCCESS(status))
+    {
+        return WdfDevStatePowerWakingConnectInterruptFailed;
+    }
+
+    status = This->m_DeviceD0EntryPostInterruptsEnabled.Invoke(
+        This->m_Device->GetHandle(),
+        (WDF_POWER_DEVICE_STATE) This->m_DevicePowerState);
+
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(
+            This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "EvtDeviceD0EntryPostInterruptsEnabed WDFDEVICE 0x%p !devobj 0x%p, "
+            "old state %!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
+            This->m_Device->GetHandle(), 
+            This->m_Device->GetDeviceObject(),
+            This->m_DevicePowerState, status);
+        return WdfDevStatePowerWakingConnectInterruptFailed;
+    }
+
+    return WdfDevStatePowerWakingDmaEnable;
 }
 
 WDF_DEVICE_POWER_STATE
