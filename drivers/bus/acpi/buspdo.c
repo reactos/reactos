@@ -1310,6 +1310,7 @@ Bus_PDO_QueryResourceRequirements(
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
     PIO_RESOURCE_DESCRIPTOR RequirementDescriptor;
     BOOLEAN CurrentRes = FALSE;
+    BOOLEAN SeenStartDependent;
 
     PAGED_CODE ();
 
@@ -1360,10 +1361,19 @@ Bus_PDO_QueryResourceRequirements(
       return STATUS_UNSUCCESSFUL;
     }
 
-    resource= Buffer.Pointer;
+    SeenStartDependent = FALSE;
+    resource = Buffer.Pointer;
     /* Count number of resources */
-    while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
+    while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG && resource->Type != ACPI_RESOURCE_TYPE_END_DEPENDENT)
     {
+        if (resource->Type == ACPI_RESOURCE_TYPE_START_DEPENDENT)
+        {
+            if (SeenStartDependent)
+            {
+                break;
+            }
+            SeenStartDependent = TRUE;
+        }
         switch (resource->Type)
         {
             case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
@@ -1433,9 +1443,18 @@ Bus_PDO_QueryResourceRequirements(
     RequirementDescriptor = RequirementsList->List[0].Descriptors;
 
     /* Fill resources list structure */
-        resource = Buffer.Pointer;
+    SeenStartDependent = FALSE;
+    resource = Buffer.Pointer;
     while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG && resource->Type != ACPI_RESOURCE_TYPE_END_DEPENDENT)
     {
+        if (resource->Type == ACPI_RESOURCE_TYPE_START_DEPENDENT)
+        {
+            if (SeenStartDependent)
+            {
+                break;
+            }
+            SeenStartDependent = TRUE;
+        }
         switch (resource->Type)
         {
             case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
