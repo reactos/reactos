@@ -249,8 +249,28 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
-    return FALSE;
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxTimer* pFxTimer;
+    NTSTATUS status;
+
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Timer,
+                                   FX_TYPE_TIMER,
+                                   (PVOID*)&pFxTimer,
+                                   &pFxDriverGlobals);
+
+    if (Wait)
+    {
+        status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, PASSIVE_LEVEL);
+        if (!NT_SUCCESS(status))
+        {
+            return FALSE;
+        }
+    }
+
+    return pFxTimer->Stop(Wait);
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
