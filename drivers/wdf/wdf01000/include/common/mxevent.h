@@ -77,6 +77,17 @@ public:
         KeSetEvent(&m_Event, IO_NO_INCREMENT, FALSE);
     }
 
+    __inline
+    VOID
+    SetWithIncrement(
+        __in KPRIORITY Priority
+        )
+    {
+        ASSERT_DBGFLAG_INITIALIZED;
+
+        KeSetEvent(&m_Event, Priority, FALSE);
+    }
+
     MxEvent*
     GetSelfPointer(
         VOID

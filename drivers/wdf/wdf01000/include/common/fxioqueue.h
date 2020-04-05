@@ -640,6 +640,17 @@ public:
         VOID
         );
 
+    //
+    // Idle/Stop the Queue
+    //
+    _Must_inspect_result_
+    NTSTATUS
+    QueueIdle(
+        __in BOOLEAN                    CancelQueueRequests,
+        __in_opt PFN_WDF_IO_QUEUE_STATE IdleComplete,
+        __in_opt WDFCONTEXT             Context
+        );
+
     __inline
     NTSTATUS
     InvokeAllocateResourcesCallback(
@@ -1103,6 +1114,21 @@ public:
         __in_opt WDFCONTEXT              Context
         );
 
+    //
+    // Idle the Queue
+    //
+    _Must_inspect_result_
+    NTSTATUS
+    QueueIdleSynchronously(
+        __in BOOLEAN    CancelRequests
+        );
+
+    __declspec(noreturn)
+    VOID
+    FatalError(
+        __in NTSTATUS Status
+        );
+
 private:
 
     //
@@ -1350,6 +1376,10 @@ protected:
     static
     MdDeferredRoutineType
     _DeferredDispatchDpcThunk;
+
+    static
+    EVT_WDF_IO_QUEUE_STATE 
+    _IdleComplete;
 
 };
 

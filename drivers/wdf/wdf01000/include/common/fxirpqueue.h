@@ -74,6 +74,14 @@ public:
         __out_opt ULONG* pRequestCount
         );
 
+    _Must_inspect_result_
+    NTSTATUS
+    PeekRequest(
+        __in_opt PMdIoCsqIrpContext  TagContext,
+        __in_opt MdFileObject         FileObject,
+        __out FxRequest**          ppOutRequest
+        );
+
     //
     // Return count of queued and driver pending requests.
     //

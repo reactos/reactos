@@ -765,3 +765,181 @@ Routine Description:
 
     return Irp;
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxIrpQueue::PeekRequest(
+    __in_opt  PMdIoCsqIrpContext TagContext,
+    __in_opt  MdFileObject         FileObject,
+    __out FxRequest**          ppOutRequest
+    )
+
+/*++
+
+Routine Description:
+
+    PeekRequest allows a caller to enumerate through requests in
+    a queue, optionally only returning requests that match a specified
+    FileObject.
+
+    The first call specifies TagContext == NULL, and the first request
+    in the queue that matches the FileObject is returned.
+
+    Subsequent requests specify the previous request value as the
+    TagContext, and searching will continue at the request that follows.
+
+    If the queue is empty, there are no requests after TagContext, or no
+    requests match the FileObject, NULL is returned.
+
+    If FileObject == NULL, this matches any FileObject in a request.
+
+    If a WDF_REQUEST_PARAMETERS structure is supplied, the information
+    from the request is returned to allow the driver to further examine
+    the request to decide whether to service it.
+
+    If a TagRequest is specified, and it is not found, the return
+    status STATUS_NOT_FOUND means that the queue should
+    be re-scanned. This is because the TagRequest was cancelled from
+    the queue, or if the queue was active, delivered to the driver.
+    There may still be un-examined requests on the queue that match
+    the drivers search criteria, but the search marker has been lost.
+
+    Re-scanning the queue starting with TagRequest == NULL and
+    continuing until STATUS_NO_MORE_ENTRIES is returned will ensure
+    all requests have been examined.
+
+    Enumerating an active queue with this API could result in the
+    driver frequently having to re-scan.
+
+    If a successful return of a Request object handle occurs, the driver
+    *must* call WdfObjectDereference when done with it.
+
+    NOTE: Synchronization Details
+
+    The driver is allowed to "peek" at requests that are still on
+    the Cancel Safe Queue without removing them. This means that
+    the peek context value used (TagRequest) could go away while
+    still holding it. This does not seem bad in itself, but the request
+    could immediately be re-used by a look aside list and be re-submitted
+    to the queue. At this point, the "tag" value means a completely different
+    request.
+
+    This race is dealt with by reference counting the FxRequest object
+    that contains our PIO_CSQ_IRP_CONTEXT, so its memory remains valid
+    after a cancel, and the driver explicitly releases it with
+    WdfObjectDereference.
+
+    But if this reference is not added under the CSQ's spinlock, there
+    could be a race in which the I/O gets cancelled and the cancel
+    callback completes the request, before we add our reference count.
+    This would then result in attempting to reference count invalid
+    memory. So to close this race, this routine returns the referenced
+    FxRequest object as its result.
+
+Arguments:
+
+    TagRequest  - If !NULL, request to begin search at
+
+    FileObject  - If !NULL, FileObject to match in the request
+
+
+Returns:
+
+    STATUS_NOT_FOUND - TagContext was specified, but not
+                                found in the queue. This could be
+                                because the request was cancelled,
+                                or is part of an active queue and
+                                the request was passed to the driver
+                                or forwarded to another queue.
+
+    STATUS_NO_MORE_ENTRYS -     The queue is empty, or no more requests
+                                match the selection criteria of TagRequest
+                                and FileObject specified above.
+
+    STATUS_SUCCESS        -     A request context was returned in
+                                pOutRequest.
+
+--*/
+
+{
+    PLIST_ENTRY         nextEntry;
+    FxIrp               nextIrp(NULL);
+    PMdIoCsqIrpContext  pCsqContext;
+    BOOLEAN FoundTag =  (TagContext == NULL) ? TRUE : FALSE;
+    FxRequest*          pRequest;
+
+    for ( nextEntry = m_Queue.Flink; nextEntry != &this->m_Queue; nextEntry = nextEntry->Flink)
+    {
+        nextIrp.SetIrp(FxIrp::GetIrpFromListEntry(nextEntry));
+
+        if (nextIrp.IsCanceled())
+        {
+            //
+            // This IRP is cancelled and the WdmCancelRoutine is about to run or waiting
+            // for us to drop the lock. So skip this one.
+            //
+            continue;
+        }
+        
+        pCsqContext = (PMdIoCsqIrpContext)nextIrp.GetContext(FX_IRP_QUEUE_CSQ_CONTEXT_ENTRY);
+
+        if ( FoundTag )
+        {
+            if ( FileObject != NULL )
+            {
+                if (nextIrp.GetFileObject() == FileObject )
+                {
+                    pRequest = FxRequest::RetrieveFromCsqContext(pCsqContext);
+
+                    //
+                    // Must add the reference here under the protection
+                    // of the cancel safe queues spinlock
+                    //
+                    pRequest->ADDREF(NULL);
+
+                    *ppOutRequest = pRequest;
+
+                    return STATUS_SUCCESS;
+                }
+            }
+            else
+            {
+                pRequest = FxRequest::RetrieveFromCsqContext(pCsqContext);
+
+                //
+                // Must add the reference here under the protection
+                // of the cancel safe queues spinlock
+                //
+                pRequest->ADDREF(NULL);
+
+                *ppOutRequest = pRequest;
+
+                return STATUS_SUCCESS;
+            }
+        }
+        else
+        {
+
+            // If we found the tag, we want the *next* entry
+            if ( pCsqContext == TagContext )
+            {
+                FoundTag = TRUE;
+            }
+        }
+
+    }
+
+    //
+    // If the caller supplied a tag, and it was
+    // not found, return a different code since
+    // the caller needs to re-scan the queue.
+    //
+    if ( (TagContext != NULL) && !FoundTag )
+    {
+        return STATUS_NOT_FOUND;
+    }
+    else
+    {
+        return STATUS_NO_MORE_ENTRIES;
+    }
+}

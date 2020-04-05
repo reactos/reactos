@@ -761,6 +761,26 @@ public:
             NULL); 
     }
 
+    __inline
+    PVOID
+    GetCurrentParametersPointer(
+        VOID
+        )
+    {
+        return &(this->GetCurrentIrpStackLocation())->Parameters;
+    }
+
+    __inline
+    VOID
+    CopyParameters(
+        _Out_ PWDF_REQUEST_PARAMETERS Parameters
+        )
+    {
+        RtlMoveMemory(&Parameters->Parameters,
+                      GetCurrentParametersPointer(),
+                      sizeof(Parameters->Parameters));
+    }
+
 };
 
 //

@@ -5543,3 +5543,366 @@ Returns:
     //
     return STATUS_SUCCESS;
 }
+
+__declspec(noreturn)
+VOID
+FxIoQueue::FatalError(
+    __in NTSTATUS Status
+    )
+{
+    WDF_QUEUE_FATAL_ERROR_DATA data;
+
+    RtlZeroMemory(&data, sizeof(data));
+
+    data.Queue = GetHandle();
+    data.Request = NULL;
+    data.Status = Status;
+
+    FxVerifierBugCheck(GetDriverGlobals(),
+                       WDF_QUEUE_FATAL_ERROR,
+                       (ULONG_PTR) &data);
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxIoQueue::QueueIdleSynchronously(
+    __in BOOLEAN    CancelRequests
+    )
+/*++
+
+Routine Description:
+
+    Idle the Queue and wait for the driver-owned requests to complete.
+
+Arguments:
+
+    CancelRequests - If TRUE, functions tries to cancel outstanding requests.
+    
+Returns:
+
+--*/
+{
+    NTSTATUS status;
+#if (FX_CORE_MODE==FX_CORE_USER_MODE)
+    MxEvent* event = this->m_RequestWaitEventUm.GetSelfPointer();
+#else
+    MxEvent eventOnStack;
+    //
+    // Note that initialize always succeeds in KM so return is not checked. 
+    //
+    eventOnStack.Initialize(NotificationEvent, FALSE);             
+    MxEvent* event = eventOnStack.GetSelfPointer();
+#endif 
+
+    status = QueueIdle(CancelRequests, _IdleComplete, event->GetSelfPointer());
+
+    if(NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGIO,
+                        "Waiting for %d requests to complete "
+                        "on WDFQUEUE 0x%p",
+                        m_DriverIoCount,
+                        GetObjectHandle());
+
+        Mx::MxEnterCriticalRegion();
+
+        GetDriverGlobals()->WaitForSignal(event->GetSelfPointer(), 
+                "waiting for queue to stop, WDFQUEUE", GetHandle(),
+                GetDriverGlobals()->FxVerifierDbgWaitForSignalTimeoutInSec,
+                WaitSignalBreakUnderVerifier);
+
+
+        Mx::MxLeaveCriticalRegion();
+    }
+
+    return status;
+
+}
+
+VOID
+FxIoQueue::_IdleComplete(
+    __in WDFQUEUE       Queue,
+    __in WDFCONTEXT     Context
+    )
+/*++
+
+Routine Description:
+   Callback function when a stop completes
+
+--*/
+{
+    MxEvent* event = (MxEvent*)Context;
+
+    UNREFERENCED_PARAMETER(Queue);
+
+    event->SetWithIncrement(EVENT_INCREMENT);
+
+    return;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxIoQueue::QueueIdle(
+    __in BOOLEAN                    CancelRequests,
+    __in_opt PFN_WDF_IO_QUEUE_STATE IdleComplete,
+    __in_opt WDFCONTEXT             Context
+    )
+
+/*++
+
+Routine Description:
+
+    Idle (stop) the Queue.
+    
+    If CancelRequests == TRUE, 
+        1) any requests in the Queue that have not been presented to the device driver are
+            completed with STATUS_CANCELLED.
+        2) any requests that the driver is operating on that are cancelable will have an
+            I/O Cancel done on them.
+        3) any forward progress queued IRPs are completed with STATUS_CANCELLED.
+
+Arguments:
+
+Returns:
+
+--*/
+
+{
+    PFX_DRIVER_GLOBALS  fxDriverGlobals = GetDriverGlobals();
+    KIRQL               irql;
+    NTSTATUS            status;
+    LIST_ENTRY          fwrIrpList = {0};
+    FxRequest*          request;
+    
+
+    Lock(&irql);
+
+    // If the queue is deleted, requests will not be serviced anymore
+    if (m_Deleted)
+    {
+        status = STATUS_DELETE_PENDING;
+        DoTraceLevelMessage(fxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                            "WDFQUEUE 0x%p is already deleted, %!STATUS!",
+                            GetObjectHandle(), status);
+        Unlock(irql);
+
+        return status;
+    }
+
+    //
+    // If a IdleComplete callback is supplied, we must register it up
+    // front since a transition empty could occur in another thread.
+    //
+    if (IdleComplete != NULL)
+    {
+        //
+        // Only one Idle or Purge Complete callback can be outstanding
+        // at a time per Queue
+        //
+        if (m_IdleComplete.Method != NULL)
+        {
+            status = STATUS_INVALID_DEVICE_REQUEST;
+            DoTraceLevelMessage(fxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                                "WDFQUEUE 0x%p already has a "
+                                "IdleComplete callback registered 0x%p, "
+                                "%!STATUS!", GetObjectHandle(),
+                                m_IdleComplete.Method,
+                                status);
+            Unlock(irql);
+
+            return status;
+        }
+
+        m_IdleComplete.Method = IdleComplete;
+        m_IdleCompleteContext = Context;
+    }
+
+    // Set Accept request and Clear dispatch requests
+    SetState((FX_IO_QUEUE_SET_STATE)(FxIoQueueSetAcceptRequests | FxIoQueueClearDispatchRequests));
+
+    //
+    // Get ready to cancel current queued requests. Note that we don't want to 
+    // prevent new requests from being queue, i.e., it is legal for an upper 
+    // driver can resend another request in its completion routine.
+    //
+    if (CancelRequests)
+    {
+        //
+        // Driver wants to abort/complete all queued request and cancel or 
+        // wait for all requests the driver is currently handling. Thus we must
+        // prevent the driver from requeuing stale requests. 
+        // The 'cancel driver requests'  field gives us this ability. 
+        // It is set here, and cleared when:
+        //  (a) Driver doesn't own any more requests, or 
+        //  (b) the driver calls WdfIoQueueStart again (dispatch gate is opened).
+        // When set, the framework automatically deletes  any request that the
+        // driver requeues.
+        //
+        m_CancelDispatchedRequests = TRUE;
+
+        request = NULL; // Initial tag used by PeekRequest.
+                                      #pragma warning(disable:4127)
+        while (TRUE)
+        {
+                                      #pragma warning(default:4127)
+            status = FxRequest::PeekRequest(&m_Queue,       // in:queue
+                                            request,        // in:tag. 
+                                            NULL,           // in:file_obj
+                                            NULL,           // out:parameters
+                                            &request);      // out:request.
+            if (status != STATUS_SUCCESS)
+            {
+                ASSERT(status != STATUS_NOT_FOUND);
+                break;
+            }
+            
+            //
+            // Tag this request and release the extra ref that Peek() takes.
+            //
+            request->m_Canceled = TRUE;
+
+            request->RELEASE(NULL);
+        }        
+        
+        //
+        // Move forward progress IRPs to a temp list; we use this logic to 
+        // allow new  IRPs to be pended to the original list.
+        //
+        if (IsForwardProgressQueue())
+        {
+            InitializeListHead(&fwrIrpList);
+            GetForwardProgressIrps(&fwrIrpList, NULL);
+        }
+    }
+
+    // Unlock queue lock
+    Unlock(irql);
+
+    if (CancelRequests)
+    {
+                              #pragma warning(disable:4127)
+        while (TRUE)
+        {
+                              #pragma warning(default:4127)
+            //
+            // Get the next FxRequest from the cancel safe queue
+            //
+            Lock(&irql);
+            request = FxRequest::GetNextRequest(&m_Queue);
+            if (request == NULL)
+            {
+                DoTraceLevelMessage(
+                            fxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIO,
+                            "All WDFQUEUE 0x%p requests cancelled",
+                            GetObjectHandle());
+                Unlock(irql);
+                break;
+            }
+
+            // Irp is not cancellable now
+
+            //
+            // Make sure to purged requests only if:
+            // (a) the request was present when we started this operation.
+            // (b) any following request that is marked as cancelled.
+            //
+            if (request->IsCancelled() == FALSE)
+            {
+                status = request->InsertHeadIrpQueue(&m_Queue, NULL);
+                if (NT_SUCCESS(status))
+                {
+                    Unlock(irql);
+                    break;
+                }
+
+                ASSERT(status == STATUS_CANCELLED);
+            }
+            DoTraceLevelMessage(
+                        fxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGIO,
+                        "Cancelling WDFREQUEST 0x%p, WDFQUEUE 0x%p",
+                        request->GetHandle(),GetObjectHandle());
+            
+            //
+            // We must add a reference since the CancelForQueue path
+            // assumes we were on the FxIrpQueue with the extra reference
+            //
+            request->ADDREF(FXREQUEST_QUEUE_TAG);
+            
+            //
+            // Mark the request as cancelled, place it on the cancel list,
+            // and schedule the cancel event to the driver
+            //
+            CancelForQueue(request, irql);
+        }
+
+        //
+        // Walk the driver cancelable list cancelling the requests.
+        //
+                                                  #pragma warning(disable:4127)
+        while (TRUE)
+        {
+                                                  #pragma warning(default:4127)
+            //
+            // Get the next request of driver cancelable requests
+            //
+            Lock(&irql);
+            request = FxRequest::GetNextRequest(&m_DriverCancelable);
+            if (request == NULL)
+            {
+                DoTraceLevelMessage(
+                            fxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIO,
+                            "All driver cancellable requests cancelled "
+                            " in WDFQUEUE 0x%p",
+                            GetObjectHandle());
+                Unlock(irql);
+                break;
+            }
+
+            request->m_Canceled = TRUE;
+
+            Unlock(irql);
+
+            //
+            // If the driver follows the pattern of removing cancel status
+            // from the request before completion, then there is no race
+            // with this routine since we will not be able to retrieve any
+            // requests the driver has made non-cancellable in preparation
+            // for completion.
+            //
+            request->ADDREF(FXREQUEST_QUEUE_TAG);
+
+            CancelForDriver(request);
+
+            // The request could have been completed and released by the driver
+        }
+
+        //
+        // Cleanup forward progress IRP list.
+        //
+        if (IsForwardProgressQueue())
+        {
+            CancelIrps(&fwrIrpList);
+        }
+    }
+
+    //
+    // Since we set that no new requests may be dispatched,
+    // if both m_Queue.GetRequestCount(), m_DriverIoCount == 0, and
+    // m_Dispatch == 0, right now the queue is completely idle.
+    //
+
+    //
+    // We check if our m_PurgeComplete callback is still set
+    // since it may have been called by another thread when
+    // we dropped the lock above
+    //
+    Lock(&irql);
+    DispatchEvents(irql);
+
+    //
+    // If the driver registered an IdleComplete callback, and it was
+    // not idle in the above check, it will be called when the final
+    // callback handler from the device driver returns.
+    //
+    return STATUS_SUCCESS;
+}

@@ -288,7 +288,31 @@ Returns:
 --*/
 
 {
-    WDFNOTIMPLEMENTED();
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxIoQueue* pQueue;
+    NTSTATUS status;
+
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Queue,
+                                   FX_TYPE_QUEUE,
+                                   (PVOID*)&pQueue,
+                                   &pFxDriverGlobals);
+
+    status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, PASSIVE_LEVEL);
+    if (!NT_SUCCESS(status))
+    {
+        return;
+    }
+
+    status = pQueue->QueueIdleSynchronously(FALSE);
+
+    if (!NT_SUCCESS(status))
+    {
+        pQueue->FatalError(status);
+        return;
+    }
 }
 
 } // extern "C"

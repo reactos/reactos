@@ -639,6 +639,15 @@ public:
         }
     }
 
+    __inline
+    BOOLEAN
+    IsCancelled(
+        VOID
+        )
+    {
+        return m_Irp.IsCanceled() || m_Canceled;
+    }
+
     static
     FxRequest*
     _FromOwnerListEntry(
@@ -789,6 +798,20 @@ public:
         __deref_out FxRequest** ppOutRequest
         );
 
+    //
+    // Allow peeking at requests in the IrpQueue
+    //
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    PeekRequest(
+        __in FxIrpQueue*         IrpQueue,
+        __in_opt FxRequest*      TagRequest,
+        __in_opt MdFileObject    FileObject,
+        __out_opt PWDF_REQUEST_PARAMETERS Parameters,
+        __deref_out FxRequest**  ppOutRequest
+        );
+
     // Do not specify argument names
     FX_DECLARE_VF_FUNCTION(
     NTSTATUS, 
@@ -887,6 +910,12 @@ public:
     NTSTATUS, 
     VerifyRequestIsCurrentStackValid
     );
+
+    _Must_inspect_result_
+    NTSTATUS
+    GetParameters(
+        __out PWDF_REQUEST_PARAMETERS Parameters
+        );
 
 private:
 

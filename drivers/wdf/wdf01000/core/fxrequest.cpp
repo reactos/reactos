@@ -2152,3 +2152,113 @@ Done:
 
     return status;
 }
+
+//
+// Allow peeking at requests in the IrpQueue
+//
+_Must_inspect_result_
+NTSTATUS
+FxRequest::PeekRequest(
+    __in FxIrpQueue*          IrpQueue,
+    __in_opt FxRequest*           TagRequest,
+    __in_opt MdFileObject         FileObject,
+    __out_opt PWDF_REQUEST_PARAMETERS Parameters,
+    __deref_out FxRequest**         ppOutRequest
+    )
+{
+    NTSTATUS Status;
+
+    PMdIoCsqIrpContext TagContext = NULL;
+
+    //
+    // IrpQueue::PeekRequest works with CSQ_CONTEXT
+    // structures since this is the only value that
+    // is valid across cancellation.
+    //
+    if( TagRequest != NULL )
+    {
+        TagContext = TagRequest->GetCsqContext();
+    }
+
+    Status = IrpQueue->PeekRequest(
+                           TagContext,
+                           FileObject,
+                           ppOutRequest
+                           );
+    if(NT_SUCCESS(Status))
+    {
+        if( Parameters != NULL )
+        {
+            Status = (*ppOutRequest)->GetParameters(Parameters);
+        }
+    }
+
+    return Status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxRequest::GetParameters(
+    __out PWDF_REQUEST_PARAMETERS Parameters
+    )
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+
+    pFxDriverGlobals = GetDriverGlobals();
+
+    //
+    // No lock needed. Only reason this may be invalid is due
+    // to previous completion, which is a serious driver bug
+    // that will result in a crash anyway.
+    //
+
+    if (pFxDriverGlobals->FxVerifierIO)
+    {
+        KIRQL irql;
+        NTSTATUS status;
+
+        Lock(&irql);
+
+        status = VerifyRequestIsCurrentStackValid(pFxDriverGlobals);
+        if (NT_SUCCESS(status))
+        {
+            status = VerifyRequestIsNotCompleted(pFxDriverGlobals);
+        }
+
+        Unlock(irql);
+
+        if (!NT_SUCCESS(status))
+        {
+            return status;
+        }
+    }
+
+    ASSERT(Parameters->Size >= sizeof(WDF_REQUEST_PARAMETERS));
+
+    // How much we copied
+    Parameters->Size = sizeof(WDF_REQUEST_PARAMETERS);
+
+
+    // Copy parameters
+    Parameters->Type = (WDF_REQUEST_TYPE)m_Irp.GetMajorFunction();
+    Parameters->MinorFunction = m_Irp.GetMinorFunction();
+
+    // Copy the Parameters structure which we are a subset of
+    m_Irp.CopyParameters(Parameters);
+
+    if (pFxDriverGlobals->FxVerifierIO)
+    {
+        //
+        // If verifier is on, and the operation is an IRP_MJ_DEVICE_CONTROL
+        // with METHOD_NEITHER, then set Type3InputBuffer to zero since
+        // this should not be used to pass parameters in the normal path
+        //
+        if((m_Irp.GetMajorFunction() == IRP_MJ_DEVICE_CONTROL) &&
+            m_Irp.GetParameterIoctlCodeBufferMethod() == METHOD_NEITHER)
+        {
+            Parameters->Parameters.DeviceIoControl.Type3InputBuffer = NULL;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
