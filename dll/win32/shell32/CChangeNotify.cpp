@@ -297,6 +297,7 @@ BOOL CWorker::CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle)
 
 struct CChangeNotifyImpl
 {
+    typedef CChangeNotify::ITEM ITEM;
     CSimpleArray<ITEM> m_items;
 
     BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare)
@@ -312,7 +313,7 @@ struct CChangeNotifyImpl
             }
         }
 
-        CChangeNotify::ITEM item = { nRegID, dwUserPID, hShare };
+        ITEM item = { nRegID, dwUserPID, hShare };
         m_items.Add(item);
         return TRUE;
     }
@@ -351,7 +352,7 @@ struct CChangeNotifyImpl
 
 CChangeNotify::CChangeNotify()
     : m_nNextRegID(INVALID_REG_ID)
-    , m_pimpl(new CChangeNotify)
+    , m_pimpl(new CChangeNotifyImpl)
 {
 }
 
