@@ -2770,8 +2770,11 @@ FxPkgPnp::PowerPolSystemAsleepWakeArmedNP(
     __inout FxPkgPnp* This
     )
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePwrPolInvalid;
+    ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemAsleepWakeArmedNP);
+
+    This->PowerPolicyCompleteSystemPowerIrp();
+
+    return WdfDevStatePwrPolNull;
 }
 
 WDF_DEVICE_POWER_POLICY_STATE
