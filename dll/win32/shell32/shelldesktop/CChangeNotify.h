@@ -51,8 +51,7 @@ typedef struct NOTIFSHARE
 typedef struct HANDBAG
 {
     DWORD dwMagic;
-    LPITEMIDLIST pidl1;
-    LPITEMIDLIST pidl2;
+    LPITEMIDLIST pidls[2];
     LPDELITICKET pTicket;
 } HANDBAG, *LPHANDBAG;
 

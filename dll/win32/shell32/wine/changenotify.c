@@ -657,7 +657,7 @@ HANDLE WINAPI SHChangeNotification_Lock(
     }
 
     if (lppidls)
-        *lppidls = &pHandbag->pidl1;
+        *lppidls = pHandbag->pidls;
 
     if (lpwEventId)
         *lpwEventId = pHandbag->pTicket->wEventId;

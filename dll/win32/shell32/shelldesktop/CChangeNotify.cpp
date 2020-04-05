@@ -244,11 +244,11 @@ DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
     pHandbag->dwMagic = HANDBAG_MAGIC;
     pHandbag->pTicket = pTicket;
 
-    pHandbag->pidl1 = pHandbag->pidl2 = NULL;
+    pHandbag->pidls[0] = pHandbag->pidls[1] = NULL;
     if (pTicket->ibOffset1)
-        pHandbag->pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
+        pHandbag->pidls[0] = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
     if (pTicket->ibOffset2)
-        pHandbag->pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
+        pHandbag->pidls[1] = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
 
     return pHandbag;
 }
