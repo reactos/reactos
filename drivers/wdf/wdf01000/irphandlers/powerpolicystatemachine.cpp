@@ -3069,8 +3069,46 @@ Return Value:
 
   --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePwrPolInvalid;
+    ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemWakeDeviceWakeDisabled);
+
+    //
+    // We do not attempt to let the device remain in Dx if we are using system-
+    // managed idle timeout. This is because an S0 IRP is equivalent to a 
+    // device-power-required notification from the power framework. In response
+    // to it, we need to power up the device and notify the power framework that
+    // the device is powered on.
+    //
+    if ((This->m_PowerPolicyMachine.m_Owner->
+          m_IdleSettings.m_TimeoutMgmt.UsingSystemManagedIdleTimeout() == FALSE)
+            &&
+        (This->m_PowerPolicyMachine.m_Owner->m_IdleSettings.Enabled)
+            &&
+        (This->m_PowerPolicyMachine.m_Owner->
+          m_IdleSettings.WakeFromS0Capable == FALSE)
+            &&
+        (This->m_PowerPolicyMachine.m_Owner->
+          m_IdleSettings.PowerUpIdleDeviceOnSystemWake == FALSE))
+    {
+        return WdfDevStatePwrPolSystemWakeQueryIdle;
+    }
+    else
+    {
+        return WdfDevStatePwrPolSystemWakeDeviceToD0;
+    }
+}
+
+BOOLEAN
+IdleTimeoutManagement::UsingSystemManagedIdleTimeout(
+    VOID
+    )
+{
+    //
+    // If the value of this constant is changed, the debugger extension needs
+    // to be fixed as well.
+    //
+    C_ASSERT(0x2 == IdleTimeoutSystemManaged);
+
+    return (0 != (m_IdleTimeoutStatus & IdleTimeoutSystemManaged)); 
 }
 
 WDF_DEVICE_POWER_POLICY_STATE
