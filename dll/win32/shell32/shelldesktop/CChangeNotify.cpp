@@ -180,16 +180,14 @@ DoCreateDeliTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIS
 {
     LPDELITICKET pTicket;
     HANDLE hTicket = NULL;
-    DWORD cbPidl1 = 0, cbPidl2 = 0, ibOffset1, ibOffset2, cbSize;
+    DWORD cbPidl1 = 0, cbPidl2 = 0, ibOffset1 = 0, ibOffset2 = 0, cbSize;
 
-    ibOffset1 = 0;
     if (pidl1)
     {
         cbPidl1 = ILGetSize(pidl1);
         ibOffset1 = DWORD_ALIGNMENT(sizeof(DELITICKET));
     }
 
-    ibOffset2 = 0;
     if (pidl2)
     {
         cbPidl2 = ILGetSize(pidl2);
