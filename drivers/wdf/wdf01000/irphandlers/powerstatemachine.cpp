@@ -2073,8 +2073,40 @@ Return Value:
 
 --*/
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePowerInvalid;
+    // Top-edge queue release
+    This->m_Device->m_PkgIo->ResumeProcessingForPower();
+
+    if (This->m_SelfManagedIoMachine != NULL)
+    {
+        NTSTATUS    status;
+        FxCxCallbackProgress progress;
+
+        status = This->m_SelfManagedIoMachine->Start(&progress);
+
+        if (!NT_SUCCESS(status))
+        {
+            return WdfDevStatePowerStartSelfManagedIoFailed;
+        }
+    }
+
+    This->PowerSetDevicePowerState(WdfPowerDeviceD0);
+
+    //
+    // Send the PowerUp event to both the PnP and the Power Policy state
+    // machines.
+    //
+    This->PowerSendPowerUpEvents();
+
+    This->PowerReleasePendingDeviceIrp();
+
+    if (This->m_SharedPower.m_WaitWakeOwner)
+    {
+        return WdfDevStatePowerD0BusWakeOwner;
+    }
+    else
+    {
+        return WdfDevStatePowerD0;
+    }
 }
 
 WDF_DEVICE_POWER_STATE
