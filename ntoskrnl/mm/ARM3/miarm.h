@@ -578,18 +578,13 @@ extern MM_PAGED_POOL_INFO MmPagedPoolInfo;
 extern RTL_BITMAP MiPfnBitMap;
 extern KGUARDED_MUTEX MmPagedPoolMutex;
 extern KGUARDED_MUTEX MmSectionCommitMutex;
-extern PVOID MmPagedPoolStart;
-extern PVOID MmPagedPoolEnd;
-extern PVOID MmNonPagedSystemStart;
 extern PVOID MiSystemViewStart;
 extern SIZE_T MmSystemViewSize;
-extern PVOID MmSessionBase;
 extern PVOID MiSessionSpaceEnd;
 extern PMMPTE MiSessionImagePteStart;
 extern PMMPTE MiSessionImagePteEnd;
 extern PMMPTE MiSessionBasePte;
 extern PMMPTE MiSessionLastPte;
-extern SIZE_T MmSizeOfPagedPoolInBytes;
 extern PMMPDE MmSystemPagePtes;
 extern PVOID MmSystemCacheStart;
 extern PVOID MmSystemCacheEnd;
@@ -647,7 +642,6 @@ extern PFN_NUMBER MiNumberOfFreePages;
 extern SIZE_T MmSessionViewSize;
 extern SIZE_T MmSessionPoolSize;
 extern SIZE_T MmSessionImageSize;
-extern PVOID MiSystemViewStart;
 extern PVOID MiSessionPoolEnd;     // 0xBE000000
 extern PVOID MiSessionPoolStart;   // 0xBD000000
 extern PVOID MiSessionViewStart;   // 0xBE000000
