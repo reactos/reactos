@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Spanish language file
  * COPYRIGHT:   2018 Julio Carchi Ruiz
+ * 		2020 Julen Urizar Compains
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -25,7 +26,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Archivos faltantes"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Inserte el disco de instalación proporcionado por el fabricante,\ny entonces asegúrese de que el controlador adecuado está seleccionado abajo", IDC_FILENEEDED, 10, 10, 250, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Inserte el disco de instalación proporcionado por el fabricante,\ny asegúrese de que el controlador adecuado está seleccionado abajo", IDC_FILENEEDED, 10, 10, 250, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Copiar controladores desde:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_PATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 10, 100, 175, 14
@@ -39,12 +40,12 @@ BEGIN
     IDS_PROMPTDISK   "El archivo '%1' en %2 no se encuentra"
     IDS_UNKNOWN      "Desconocido"
     IDS_COPYFROM     "Copiar archivos desde:"
-    IDS_INFO         "Busque la ruta donde se localiza el archivo, y luego presione Aceptar."
+    IDS_INFO         "Busque la ruta donde se localiza el archivo y luego, pulse Aceptar."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Su computadora debe reiniciarse para completar la instalación. ¿Desea continuar?"
+    IDS_QUERY_REBOOT_TEXT "Su equipo debe reiniciarse para completar la instalación. ¿Desea continuar?"
     IDS_QUERY_REBOOT_CAPTION "Reiniciar"
     IDS_INF_FILE "Información del instalador"
 END
