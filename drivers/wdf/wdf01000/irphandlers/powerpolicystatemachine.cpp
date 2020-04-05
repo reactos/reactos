@@ -2800,8 +2800,19 @@ FxPkgPnp::PowerPolSystemWakeDeviceWakeTriggeredS0NP(
     __inout FxPkgPnp* This
     )
 {
-    WDFNOTIMPLEMENTED();
-    return WdfDevStatePwrPolInvalid;
+    NTSTATUS status;
+
+    ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemWakeDeviceWakeTriggeredS0NP);
+
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+
+    if (!NT_SUCCESS(status))
+    {
+        COVERAGE_TRAP();
+        return WdfDevStatePwrPolDeviceD0PowerRequestFailed;
+    }
+
+    return WdfDevStatePwrPolNull;
 }
 
 WDF_DEVICE_POWER_POLICY_STATE
