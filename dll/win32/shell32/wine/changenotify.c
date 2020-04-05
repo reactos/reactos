@@ -52,16 +52,6 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": SHELL32_ChangenotifyCS") }
 };
 static CRITICAL_SECTION SHELL32_ChangenotifyCS = { &critsect_debug, -1, 0, 0, 0, 0 };
-#ifdef __REACTOS__
-void DoChangeNotifyLock(void)
-{
-    EnterCriticalSection(&SHELL32_ChangenotifyCS);
-}
-void DoChangeNotifyUnlock(void)
-{
-    LeaveCriticalSection(&SHELL32_ChangenotifyCS);
-}
-#endif
 
 typedef SHChangeNotifyEntry *LPNOTIFYREGISTER;
 
@@ -167,10 +157,8 @@ void FreeChangeNotifications(void)
 {
 #ifdef __REACTOS__
     HWND hwndWorker;
-    EnterCriticalSection(&SHELL32_ChangenotifyCS);
     hwndWorker = DoGetNewDeliveryWorker();
     SendMessageW(hwndWorker, WM_NOTIF_REMOVEBYPID, GetCurrentProcessId(), 0);
-    LeaveCriticalSection(&SHELL32_ChangenotifyCS);
     DeleteCriticalSection(&SHELL32_ChangenotifyCS);
 #else
     LPNOTIFICATIONLIST ptr, next;
@@ -254,6 +242,7 @@ SHChangeNotifyRegister(
         {
             ERR("Old Delivery is failed\n");
             DestroyWindow(hwnd);
+            LeaveCriticalSection(&SHELL32_ChangenotifyCS);
             return INVALID_REG_ID;
         }
     }
@@ -303,7 +292,6 @@ BOOL WINAPI SHChangeNotifyDeregister(ULONG hNotify)
     LRESULT ret = 0;
     TRACE("(0x%08x)\n", hNotify);
 
-    EnterCriticalSection(&SHELL32_ChangenotifyCS);
     hwndNotif = DoGetNewDeliveryWorker();
     if (hwndNotif)
     {
@@ -313,7 +301,6 @@ BOOL WINAPI SHChangeNotifyDeregister(ULONG hNotify)
             ERR("WM_NOTIF_UNREG failed\n");
         }
     }
-    LeaveCriticalSection(&SHELL32_ChangenotifyCS);
     return ret;
 #else
     LPNOTIFICATIONLIST node;

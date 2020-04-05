@@ -64,8 +64,6 @@ EXTERN_C HWND DoGetNewDeliveryWorker(void);
 EXTERN_C void DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 EXTERN_C HWND DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg);
 EXTERN_C LPHANDBAG DoGetHandBagFromTicket(HANDLE hTicket, DWORD dwOwnerPID);
-EXTERN_C void DoChangeNotifyLock(void);
-EXTERN_C void DoChangeNotifyUnlock(void);
 
 EXTERN_C HANDLE
 DoCreateNotifShare(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources,
