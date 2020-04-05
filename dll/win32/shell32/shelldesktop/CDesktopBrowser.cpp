@@ -41,6 +41,7 @@ class CDesktopBrowser :
 private:
     HACCEL m_hAccel;
     HWND m_hWndShellView;
+    CChangeNotify m_hwndDeliWorker;
     CComPtr<IShellDesktopTray> m_Tray;
     CComPtr<IShellView>        m_ShellView;
 
@@ -431,36 +432,15 @@ LRESULT CDesktopBrowser::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     return 0;
 }
 
-typedef struct ENUMDATA
-{
-    HWND hwndGot;
-} ENUMDATA, *LPENUMDATA;
-
-static BOOL CALLBACK
-EnumWindowsProc(HWND hwnd, LPARAM lParam)
-{
-    WCHAR szClass[16];
-    LPENUMDATA data = (LPENUMDATA)lParam;
-
-    if ((DWORD)GetWindowLongPtrW(hwnd, GWLP_USERDATA) != NEWDELIWORKER_MAGIC)
-        return TRUE;
-
-    if (GetWindowTextLengthW(hwnd) != 0)
-        return TRUE;
-
-    GetClassNameW(hwnd, szClass, _countof(szClass));
-    if (lstrcmpiW(szClass, L"WorkerW") != 0)
-        return TRUE;
-
-    data->hwndGot = hwnd;
-    return FALSE;
-}
-
 LRESULT CDesktopBrowser::OnGetDeliveryWorkerWnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    ENUMDATA data = { NULL };
-    EnumWindows(EnumWindowsProc, (LPARAM)&data);
-    return (LRESULT)data.hwndGot;
+    if (!::IsWindow(m_hwndDeliWorker))
+    {
+        DWORD exstyle = WS_EX_TOOLWINDOW;
+        DWORD style = WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+        m_hwndDeliWorker.CreateWorker(NULL, exstyle, style);
+    }
+    return (LRESULT)(HWND)m_hwndDeliWorker;
 }
 
 HRESULT CDesktopBrowser_CreateInstance(IShellDesktopTray *Tray, REFIID riid, void **ppv)

@@ -9,87 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
-class CWorker : public CMessageMap
-{
-public:
-    CWorker() : m_hWnd(NULL)
-    {
-    }
-
-    static LRESULT CALLBACK
-    WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    BOOL CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle);
-
-protected:
-    HWND m_hWnd;
-};
-
-class CChangeNotify : public CWorker
-{
-public:
-    struct ITEM
-    {
-        UINT nRegID;
-        DWORD dwUserPID;
-        HANDLE hShare;
-    };
-
-    CChangeNotify() : m_nNextRegID(INVALID_REG_ID)
-    {
-    }
-
-    ~CChangeNotify()
-    {
-    }
-
-    operator HWND()
-    {
-        return m_hWnd;
-    }
-
-    void SetHWND(HWND hwnd)
-    {
-        m_hWnd = hwnd;
-    }
-
-    void clear()
-    {
-        m_hWnd = NULL;
-        m_nNextRegID = INVALID_REG_ID;
-        m_items.RemoveAll();
-    }
-
-    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare);
-    BOOL RemoveItem(UINT nRegID, DWORD dwOwnerPID);
-    void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
-
-    UINT GetNextRegID();
-    BOOL DoDelivery(HANDLE hTicket, DWORD dwOwnerPID);
-
-    BOOL ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared);
-    BOOL DoNotify(LPHANDBAG pHandBag, LPDELITICKET pTicket, LPNOTIFSHARE pShared);
-
-    LRESULT OnBang(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-
-    BEGIN_MSG_MAP(CChangeNotify)
-        MESSAGE_HANDLER(WM_NOTIF_BANG, OnBang)
-        MESSAGE_HANDLER(WM_NOTIF_UNREG, OnUnReg)
-        MESSAGE_HANDLER(WM_NOTIF_DELIVERY, OnDelivery)
-        MESSAGE_HANDLER(WM_NOTIF_SUSPEND, OnSuspendResume)
-        MESSAGE_HANDLER(WM_NOTIF_REMOVEBYPID, OnRemoveByPID);
-    END_MSG_MAP()
-
-protected:
-    UINT m_nNextRegID;
-    CSimpleArray<ITEM> m_items;
-};
-
-static CChangeNotify s_hwndNewWorker;
 static HWND s_hwndWorker = NULL;
 
 EXTERN_C void
@@ -118,47 +37,6 @@ DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     }
 }
 
-static DWORD WINAPI
-DoCreateNotifWindowThreadFunc(LPVOID pData)
-{
-    if (IsWindow(s_hwndNewWorker))
-    {
-        TRACE("s_hwndNewWorker is already created\n");
-        return 0;
-    }
-
-    DWORD exstyle = WS_EX_TOOLWINDOW;
-    DWORD style = WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-    s_hwndNewWorker.CreateWorker(NULL, exstyle, style);
-    SetWindowLongPtrW(s_hwndNewWorker, GWLP_USERDATA, NEWDELIWORKER_MAGIC);
-
-    DWORD pid;
-    GetWindowThreadProcessId(s_hwndNewWorker, &pid);
-    TRACE("s_hwndNewWorker: %p, 0x%lx\n", (HWND)s_hwndNewWorker, pid);
-    return 0;
-}
-
-static DWORD WINAPI
-ChangeNotifThreadFunc(LPVOID args)
-{
-    TRACE("ChangeNotifThreadFunc entered\n");
-
-    MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0))
-    {
-        if (!IsWindow(s_hwndNewWorker))
-            break;
-
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-    DestroyWindow(s_hwndNewWorker);
-    s_hwndNewWorker.clear();
-
-    TRACE("ChangeNotifThreadFunc leaved\n");
-    return 0;
-}
-
 EXTERN_C HWND
 DoGetNewDeliveryWorker(void)
 {
@@ -177,24 +55,11 @@ DoGetNewDeliveryWorker(void)
 EXTERN_C HWND
 DoGetOrCreateNewDeliveryWorker(void)
 {
-    if (s_hwndNewWorker && IsWindow(s_hwndNewWorker))
-        return s_hwndNewWorker;
-
     HWND hwndNewWorker = DoGetNewDeliveryWorker();
     if (hwndNewWorker && IsWindow(hwndNewWorker))
         return hwndNewWorker;
 
-    SHCreateThread(ChangeNotifThreadFunc, NULL, CTF_PROCESS_REF,
-                   DoCreateNotifWindowThreadFunc);
-
-    for (INT i = 0; i < 8; ++i)
-    {
-        if (IsWindow(s_hwndNewWorker))
-            break;
-        Sleep(50);
-    }
-
-    return s_hwndNewWorker;
+    return NULL;
 }
 
 static LRESULT CALLBACK
@@ -265,7 +130,7 @@ DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg)
     pWorker->hwnd = hwnd;
     pWorker->uMsg = wMsg;
     hwndOldWorker = SHCreateWorkerWindowW(OldDeliveryWorkerWndProc, NULL, 0, 0,
-                                       NULL, (LONG_PTR)pWorker);
+                                          NULL, (LONG_PTR)pWorker);
     if (hwndOldWorker == NULL)
     {
         ERR("hwndOldWorker == NULL\n");

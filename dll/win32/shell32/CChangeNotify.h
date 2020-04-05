@@ -8,7 +8,7 @@
 
 #define INVALID_REG_ID 0
 
-#define WM_GETDELIWORKERWND (WM_USER+25) /* 0x419 */
+#define WM_GETDELIWORKERWND (WM_USER + 25) /* 0x419 */
 
 #define WM_NOTIF_BANG (WM_USER + 1) /* 0x401 */
 #define WM_NOTIF_UNREG (WM_USER + 2) /* 0x402 */
@@ -59,7 +59,6 @@ typedef struct HANDBAG
 #define DELITICKET_MAGIC 0xDEADFACE
 #define NOTIFSHARE_MAGIC 0xB0B32D1E
 #define HANDBAG_MAGIC 0xFACEB00C
-#define NEWDELIWORKER_MAGIC 0xB1E2B0B3
 
 EXTERN_C HWND DoGetOrCreateNewDeliveryWorker(void);
 EXTERN_C HWND DoGetNewDeliveryWorker(void);
@@ -80,3 +79,85 @@ DoCreateDeliTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIS
 EXTERN_C void
 DoTransportChange(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
                   DWORD dwTick);
+
+#ifdef __cplusplus
+class CWorker : public CMessageMap
+{
+public:
+    CWorker() : m_hWnd(NULL)
+    {
+    }
+
+    static LRESULT CALLBACK
+    WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    BOOL CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle);
+
+protected:
+    HWND m_hWnd;
+};
+
+class CChangeNotify : public CWorker
+{
+public:
+    struct ITEM
+    {
+        UINT nRegID;
+        DWORD dwUserPID;
+        HANDLE hShare;
+    };
+
+    CChangeNotify() : m_nNextRegID(INVALID_REG_ID)
+    {
+    }
+
+    ~CChangeNotify()
+    {
+    }
+
+    operator HWND()
+    {
+        return m_hWnd;
+    }
+
+    void SetHWND(HWND hwnd)
+    {
+        m_hWnd = hwnd;
+    }
+
+    void clear()
+    {
+        m_hWnd = NULL;
+        m_nNextRegID = INVALID_REG_ID;
+        m_items.RemoveAll();
+    }
+
+    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare);
+    BOOL RemoveItem(UINT nRegID, DWORD dwOwnerPID);
+    void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
+
+    UINT GetNextRegID();
+    BOOL DoDelivery(HANDLE hTicket, DWORD dwOwnerPID);
+
+    BOOL ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared);
+    BOOL DoNotify(LPHANDBAG pHandBag, LPDELITICKET pTicket, LPNOTIFSHARE pShared);
+
+    LRESULT OnBang(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+    BEGIN_MSG_MAP(CChangeNotify)
+        MESSAGE_HANDLER(WM_NOTIF_BANG, OnBang)
+        MESSAGE_HANDLER(WM_NOTIF_UNREG, OnUnReg)
+        MESSAGE_HANDLER(WM_NOTIF_DELIVERY, OnDelivery)
+        MESSAGE_HANDLER(WM_NOTIF_SUSPEND, OnSuspendResume)
+        MESSAGE_HANDLER(WM_NOTIF_REMOVEBYPID, OnRemoveByPID);
+    END_MSG_MAP()
+
+protected:
+    UINT m_nNextRegID;
+    CSimpleArray<ITEM> m_items;
+};
+#endif
