@@ -4,6 +4,7 @@
  * PURPOSE:     Spanish locale file
  * COPYRIGHT:   Ismael Ferreras Morezuelas
  *              Julio Carchi Ruiz
+ *		Julen Urizar Compains (2020)
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -776,17 +777,17 @@ BEGIN
     IDS_PASTE "Insertar"
     IDS_EJECT "Extraer"
     IDS_DISCONNECT "Desconectar"
-    IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
-    IDS_SENDTO_MENU "Se&nd To"
+    IDS_OPENFILELOCATION "Abrir &ubicación del archivo"
+    IDS_DESKLINK "Crear acceso directo en el Escritorio"
+    IDS_SENDTO_MENU "E&nviar a"
 
-    IDS_MOVEERRORTITLE "Error Moving File or Folder"
-    IDS_COPYERRORTITLE "Error Copying File or Folder"
-    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
-    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
-    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
-    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
-    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
+    IDS_MOVEERRORTITLE "Error moviendo Archivo o Carpeta"
+    IDS_COPYERRORTITLE "Error copiando Archivo o Carpeta"
+    IDS_MOVEERRORSAMEFOLDER "Imposible mover '%s': La carpeta de destino es la misma que la de origen."
+    IDS_MOVEERRORSAME "Imposible mover '%s': El archivo de origen y el de destino son el mismo."
+    IDS_COPYERRORSAME "Imposible copiar '%s': El archivo de origen y el de destino son el mismo."
+    IDS_MOVEERRORSUBFOLDER "Imposible mover '%s': La carpeta de destino es un subdirectorio de la de origen."
+    IDS_COPYERRORSUBFOLDER "Imposible copiar '%s': La carpeta de destino es un subdirectorio de la de origen."
 
     IDS_CREATEFOLDER_DENIED "No se pudo crear la carpeta '%1'"
     IDS_CREATEFOLDER_CAPTION "No se pudo crear la carpeta"
@@ -817,9 +818,9 @@ BEGIN
     IDS_SHUTDOWN_PROMPT "¿Desea apagar el equipo?"
     
     /* Format Dialog Strings */
-    IDS_FORMAT_TITLE "Format Local Disk"
-    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
-    IDS_FORMAT_COMPLETE "Format Complete."
+    IDS_FORMAT_TITLE "Formatear Disco LocalFormat Local Disk"
+    IDS_FORMAT_WARNING "ADVERTENCIA: Formatear eliminará TODOS los datos de este disco.\n Para formatear, haga clic en OK. Para salir, haga clic en CANCELAR."
+    IDS_FORMAT_COMPLETE "Formato completo."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "No se pudo mostrar el diálogo Ejecutar (error interno)"
@@ -885,19 +886,19 @@ BEGIN
     IDS_PICK_ICON_FILTER "Archivos de icono (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Todos los archivos (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Programas (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0"
 
-    IDS_CANTLOCKVOLUME "No se pudo bloquear la unidad (Error Code: %lu)."
-    IDS_CANTDISMOUNTVOLUME "No se pudo desmontar la unidad (Error Code: %lu)."
-    IDS_CANTEJECTMEDIA "No se pudo extraer la unidad (Error Code: %lu)."
-    IDS_CANTSHOWPROPERTIES "No se puede mostrar las propiedades (Error Code: %lu)."
-    IDS_CANTDISCONNECT "No se pudo desconectar (Error Code: %lu)."
-    IDS_NONE "(None)"
+    IDS_CANTLOCKVOLUME "No se pudo bloquear la unidad (Código de Error: %lu)."
+    IDS_CANTDISMOUNTVOLUME "No se pudo desmontar la unidad (Código de Error: %lu)."
+    IDS_CANTEJECTMEDIA "No se pudo extraer la unidad (Código de Error: %lu)."
+    IDS_CANTSHOWPROPERTIES "No se puede mostrar las propiedades (Código de Error: %lu)."
+    IDS_CANTDISCONNECT "No se pudo desconectar (Código de Error: %lu)."
+    IDS_NONE "(Nada)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Directorio"
     IDS_BAT_FILE "Archivo por lotes de ReactOS"
     IDS_CMD_FILE "Script de comandos ReactOS"
     IDS_COM_FILE "Aplicación DOS"
-    IDS_CPL_FILE "Elemento del Panel de control"
+    IDS_CPL_FILE "Elemento del Panel de Control"
     IDS_CUR_FILE "Cursor"
     IDS_DB__FILE "Base de datos"
     IDS_DLL_FILE "Biblioteca de aplicación"
@@ -980,7 +981,7 @@ BEGIN
     IDS_NEWEXT_ADVANCED_RIGHT "A&vanzado >>"
     IDS_NEWEXT_NEW "<Nuevo>"
     IDS_NEWEXT_SPECIFY_EXT "Debe especificar una extensión."
-    IDS_NEWEXT_ALREADY_ASSOC "La extensión %s ya está asociada con el tipo de archivo %s. ¿Desea desasociar %s con %s y crear un nuevo tipo de arcivo?"
+    IDS_NEWEXT_ALREADY_ASSOC "La extensión %s ya está asociada con el tipo de archivo %s. ¿Desea desasociar %s con %s y crear un nuevo tipo de archivo?"
     IDS_NEWEXT_EXT_IN_USE "Ésta extensión ya está en uso"
 
     IDS_REMOVE_EXT "Si elimina una extensión de archivo, no podrá abrir archivos con esa extensión haciendo doble click en sus íconos.\n\n¿Está seguro de eliminar esta extensión?"
