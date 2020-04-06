@@ -17,7 +17,6 @@
 
 /* GLOBALS ********************************************************************/
 
-BOOLEAN MmZeroingPageThreadActive;
 KEVENT MmZeroingPageEvent;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -68,13 +67,12 @@ MmZeroPageThread(VOID)
                                  NULL,
                                  NULL);
         OldIrql = MiAcquirePfnLock();
-        MmZeroingPageThreadActive = TRUE;
 
         while (TRUE)
         {
             if (!MmFreePageListHead.Total)
             {
-                MmZeroingPageThreadActive = FALSE;
+                KeClearEvent(&MmZeroingPageEvent);
                 MiReleasePfnLock(OldIrql);
                 break;
             }
