@@ -623,7 +623,7 @@ static MUI_ENTRY deDEUpgradePageEntries[] =
     {
         6,
         12,
-        "Die Reparaturfunkzionen sind noch nicht alle implementiert.",
+        "Die Reparaturfunktionen sind noch nicht alle implementiert.",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
