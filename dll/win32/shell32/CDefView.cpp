@@ -2109,7 +2109,7 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
 
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     LPITEMIDLIST pidl2Clone = ILClone(pidl2);
-    ILRemoveLastID(pidl);
+    ILRemoveLastID(pidl2Clone);
     if (SHGetPathFromIDListW(pidl1, szPath1) &&
         SHGetPathFromIDListW(pidl2Clone, szPath2))
     {
