@@ -178,11 +178,11 @@ C_ASSERT(PD_COUNT == 1);
 
 /* Index of PD in which the PDE is located */
 #ifndef _X86PAE_
-/* Maximum 4 pages of memory (0 ... 3) */
-#define MiGetPdIndex(_Pde) ((MiGetPdeOffset(_Pde)) / PDE_PER_PAGE)
-#else
 /* Only 1 page of memory */
 #define MiGetPdIndex(_Pde) (0)
+#else
+/* Maximum 4 pages of memory (0 ... 3) */
+#define MiGetPdIndex(_Pde) ((MiGetPdeOffset(_Pde)) / PDE_PER_PAGE)
 #endif
 
 /* Determines a virtual address mapped to a this PTE */
