@@ -778,12 +778,8 @@ int CDefView::LV_FindItemByPidl(PCUITEMID_CHILD pidl)
     for (int i = 0; i<cItems; i++)
     {
         PCUITEMID_CHILD currentpidl = _PidlByItem(i);
-        HRESULT hr = m_pSFParent->CompareIDs(0, pidl, currentpidl);
-
-        if (SUCCEEDED(hr) && !HRESULT_CODE(hr))
-        {
+        if (ILIsEqual(pidl, currentpidl))
             return i;
-        }
     }
     return -1;
 }
