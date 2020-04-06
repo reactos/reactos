@@ -212,7 +212,7 @@ SHChangeNotifyRegister(
 
     if ((fSources & SHCNRF_NewDelivery) == 0)
     {
-        hwnd = (HWND)DoHireOldDeliveryWorker(hwnd, uMsg);
+        hwnd = DoHireOldDeliveryWorker(hwnd, uMsg);
         uMsg = WM_OLDDELI_HANDOVER;
     }
 
