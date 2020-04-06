@@ -1305,7 +1305,14 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     {
         6,
         10,
-        "Die gew\201nschte Partition wird nun formatiert. Dr\201cken Sie die EINGABETASTE, um fortzufahren.",
+        "Die gew\201nschte Partition wird nun formatiert.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_FORMAT_PROMPT
+    },
+    {
+        6,
+        12,
+        "Dr\201cken Sie die EINGABETASTE, um fortzufahren.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
     },
