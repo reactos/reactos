@@ -36,6 +36,7 @@ typedef struct _DLG_DATA
     PGINA_CONTEXT pgContext;
     HBITMAP hLogoBitmap;
     HBITMAP hBarBitmap;
+    HWND hWndBarCtrl;
     DWORD BarCounter;
     DWORD LogoWidth;
     DWORD LogoHeight;
@@ -197,6 +198,9 @@ StatusDialogProc(
                 {
                     ERR("SetTimer(IDT_BAR) failed: %d\n", GetLastError());
                 }
+
+                /* Get the animation bar control */
+                pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
             }
             return TRUE;
         }
@@ -210,8 +214,8 @@ StatusDialogProc(
                  * We can divide 413 by 7 without remainder
                  */
                 pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->BarWidth;
-                InvalidateRect(hwndDlg, NULL, FALSE);
-                UpdateWindow(hwndDlg);
+                InvalidateRect(pDlgData->hWndBarCtrl, NULL, FALSE);
+                UpdateWindow(pDlgData->hWndBarCtrl);
             }
             return TRUE;
         }
