@@ -11,6 +11,7 @@
 
 #include <ntoskrnl.h>
 #include <reactos/buildno.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -417,11 +418,11 @@ KdpScreenAcquire(VOID)
         /* Acquire ownership and reset the display */
         InbvAcquireDisplayOwnership();
         InbvResetDisplay();
-        InbvSolidColorFill(0, 0, 639, 479, 0);
+        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 0);
         InbvSetTextColor(15);
         InbvInstallDisplayStringFilter(NULL);
         InbvEnableDisplayString(TRUE);
-        InbvSetScrollRegion(0, 0, 639, 479);
+        InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
     }
 }
 

@@ -11,12 +11,6 @@
 #define BOOTCHAR_HEIGHT 13
 #define BOOTCHAR_WIDTH  8 // Each character line is encoded in a UCHAR.
 
-/*
- * Screen resolution (for default VGA)
- */
-#define SCREEN_WIDTH    640
-#define SCREEN_HEIGHT   480
-
 #ifndef _M_ARM
 #include "vga.h"
 #endif /* _M_ARM */
