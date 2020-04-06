@@ -1157,7 +1157,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     SHChangeNotifyEntry ntreg;
     ntreg.fRecursive = TRUE;
     ntreg.pidl = m_pidlParent;
-    m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_InterruptLevel | SHCNRF_ShellLevel,
+    m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_NewDelivery | SHCNRF_ShellLevel,
                                        SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
 
     /* _DoFolderViewCB(SFVM_GETNOTIFY, ??  ??) */
@@ -2125,13 +2125,24 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
 */
 LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    PCIDLIST_ABSOLUTE *Pidls = reinterpret_cast<PCIDLIST_ABSOLUTE*>(wParam);
+    HANDLE hChange = (HANDLE)wParam;
+    DWORD dwProcID = (DWORD)lParam;
+    PIDLIST_ABSOLUTE *Pidls;
+    LONG lEvent;
+    HANDLE hLock = SHChangeNotification_Lock(hChange, dwProcID, &Pidls, &lEvent);
+    if (hLock == NULL)
+    {
+        ERR("hLock == NULL\n");
+        return FALSE;
+    }
+
     BOOL bParent0 = ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]);
     BOOL bParent1 = ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]);
 
     TRACE("(%p)(%p,%p,0x%08x)\n", this, Pidls[0], Pidls[1], lParam);
 
-    switch (lParam &~ SHCNE_INTERRUPT)
+    lEvent &= ~SHCNE_INTERRUPT;
+    switch (lEvent)
     {
         case SHCNE_MKDIR:
         case SHCNE_CREATE:
@@ -2173,6 +2184,8 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             Refresh();
             break;
     }
+
+    SHChangeNotification_Unlock(hLock);
     return TRUE;
 }
 
