@@ -362,16 +362,7 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
         return TRUE;
     return FALSE;
 }
-#else   /* def __REACTOS__ */
-LPITEMIDLIST PidlFromPathW(LPCWSTR path)
-{
-#if 1 /* FIXME: This is a workaround to fix display icon. */
-    if (PathFileExistsW(path))
-        return ILCreateFromPathW(path);
 #endif
-    return SHSimpleIDListFromPathW(path);
-}
-#endif  /* def __REACTOS__ */
 
 /*************************************************************************
  * SHChangeNotify				[SHELL32.@]
@@ -422,11 +413,11 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
             }
             if (dwItem1)
             {
-                pidl1 = pidlTemp1 = PidlFromPathW(dwItem1);
+                pidl1 = pidlTemp1 = SHSimpleIDListFromPathW(dwItem1);
             }
             if (dwItem2)
             {
-                pidl2 = pidlTemp2 = PidlFromPathW(dwItem2);
+                pidl2 = pidlTemp2 = SHSimpleIDListFromPathW(dwItem2);
             }
             break;
 
