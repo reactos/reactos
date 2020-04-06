@@ -1150,9 +1150,12 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         }
     }
 
-    HWND hwndSB;
-    m_pShellBrowser->GetWindow(&hwndSB);
-    SetShellWindowEx(hwndSB, m_ListView);
+    if (m_FolderSettings.fFlags & FWF_DESKTOP)
+    {
+        HWND hwndSB;
+        m_pShellBrowser->GetWindow(&hwndSB);
+        SetShellWindowEx(hwndSB, m_ListView);
+    }
 
     SHChangeNotifyEntry ntreg;
     ntreg.fRecursive = TRUE;
