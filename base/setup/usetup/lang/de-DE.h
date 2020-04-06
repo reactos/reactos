@@ -81,7 +81,7 @@ static MUI_ENTRY deDELanguagePageEntries[] =
     {
         0,
         0,
-        "EINGABETASTE = Fortsetzen  F3 = Installation abbrechen",
+        "EINGABETASTE = Fortsetzen   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -866,7 +866,7 @@ static MUI_ENTRY deDEDisplayPageEntries[] =
     {
         0,
         0,
-        "EINGABETASTE = Fortsetzen   ESC = Zur\201ck  F3 = Installation abbrechen",
+        "EINGABETASTE = Fortsetzen   ESC = Zur\201ck   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
