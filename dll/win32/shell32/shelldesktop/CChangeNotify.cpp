@@ -11,7 +11,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
-static HWND s_hwndWorker = NULL;
+static HWND s_hwndNewWorker = NULL;
 
 EXTERN_C void
 DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
@@ -42,15 +42,18 @@ DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 EXTERN_C HWND
 DoGetNewDeliveryWorker(void)
 {
-    if (s_hwndWorker && IsWindow(s_hwndWorker))
-        return s_hwndWorker;
+    if (s_hwndNewWorker && IsWindow(s_hwndNewWorker))
+        return s_hwndNewWorker;
 
     HWND hwndShell = GetShellWindow();
     HWND hwndWorker = (HWND)SendMessageW(hwndShell, WM_GETDELIWORKERWND, 0, 0);
     if (!IsWindow(hwndWorker))
+    {
         ERR("Unable to get notification window\n");
+        hwndWorker = NULL;
+    }
 
-    s_hwndWorker = hwndWorker;
+    s_hwndNewWorker = hwndWorker;
     return hwndWorker;
 }
 
