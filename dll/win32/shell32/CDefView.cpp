@@ -819,7 +819,7 @@ BOOLEAN CDefView::LV_DeleteItem(PCUITEMID_CHILD pidl)
 
     nIndex = LV_FindItemByPidl(pidl);
 
-    return (-1 == m_ListView.DeleteItem(nIndex)) ? FALSE : TRUE;
+    return m_ListView.DeleteItem(nIndex);
 }
 
 /**********************************************************
