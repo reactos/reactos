@@ -2106,6 +2106,21 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
         }
         ILFree(deskpidl);
     }
+
+    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+    LPITEMIDLIST pidl2Clone = ILClone(pidl2);
+    ILRemoveLastID(pidl);
+    if (SHGetPathFromIDListW(pidl1, szPath1) &&
+        SHGetPathFromIDListW(pidl2Clone, szPath2))
+    {
+        if (lstrcmpiW(szPath1, szPath2) == 0)
+        {
+            ILFree(pidl2Clone);
+            return TRUE;
+        }
+    }
+    ILFree(pidl2Clone);
+
     return FALSE;
 }
 
