@@ -41,6 +41,7 @@ typedef struct NOTIFSHARE
     DWORD cbSize;
     UINT nRegID;
     HWND hwnd;
+    HWND hwndOldWorker;
     UINT uMsg;
     INT fSources;
     LONG fEvents;
@@ -66,7 +67,8 @@ EXTERN_C LPHANDBAG DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID);
 
 EXTERN_C HANDLE
 DoCreateNotifShare(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources,
-                   LONG fEvents, LONG fRecursive, LPCITEMIDLIST pidl, DWORD dwOwnerPID);
+                   LONG fEvents, LONG fRecursive, LPCITEMIDLIST pidl,
+                   DWORD dwOwnerPID, HWND hwndOldWorker);
 
 EXTERN_C HANDLE
 DoCreateDeliTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
@@ -107,6 +109,7 @@ public:
         UINT nRegID;
         DWORD dwUserPID;
         HANDLE hShare;
+        HWND hwndOldWorker;
     };
 
     CChangeNotify();
@@ -117,7 +120,7 @@ public:
         return m_hWnd;
     }
 
-    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare);
+    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare, HWND hwndOldWorker);
     BOOL RemoveItem(UINT nRegID, DWORD dwOwnerPID);
     void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
 

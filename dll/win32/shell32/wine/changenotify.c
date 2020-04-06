@@ -190,7 +190,7 @@ SHChangeNotifyRegister(
     SHChangeNotifyEntry *lpItems)
 {
 #ifdef __REACTOS__
-    HWND hwndNotif;
+    HWND hwndNotif, hwndOldWorker = NULL;
     HANDLE hShared;
     INT iItem;
     ULONG nRegID = INVALID_REG_ID;
@@ -212,7 +212,7 @@ SHChangeNotifyRegister(
 
     if ((fSources & SHCNRF_NewDelivery) == 0)
     {
-        hwnd = DoHireOldDeliveryWorker(hwnd, uMsg);
+        hwndOldWorker = hwnd = DoHireOldDeliveryWorker(hwnd, uMsg);
         uMsg = WM_OLDDELI_HANDOVER;
     }
 
@@ -229,7 +229,7 @@ SHChangeNotifyRegister(
     {
         hShared = DoCreateNotifShare(nRegID, hwnd, uMsg, fSources, wEventMask,
                                      lpItems[iItem].fRecursive, lpItems[iItem].pidl,
-                                     dwOwnerPID);
+                                     dwOwnerPID, hwndOldWorker);
         if (hShared)
         {
             TRACE("WM_NOTIF_REG: hwnd:%p, hShared:%p, pid:0x%lx\n", hwndNotif, hShared, dwOwnerPID);

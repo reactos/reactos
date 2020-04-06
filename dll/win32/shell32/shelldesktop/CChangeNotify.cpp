@@ -140,7 +140,8 @@ DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg)
 
 EXTERN_C HANDLE
 DoCreateNotifShare(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
-                   LONG fRecursive, LPCITEMIDLIST pidl, DWORD dwOwnerPID)
+                   LONG fRecursive, LPCITEMIDLIST pidl, DWORD dwOwnerPID,
+                   HWND hwndOldWorker)
 {
     DWORD cbPidl = ILGetSize(pidl);
     DWORD ibPidl = DWORD_ALIGNMENT(sizeof(NOTIFSHARE));
@@ -163,6 +164,7 @@ DoCreateNotifShare(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvent
     pShared->cbSize = cbSize;
     pShared->nRegID = nRegID;
     pShared->hwnd = hwnd;
+    pShared->hwndOldWorker = hwndOldWorker;
     pShared->uMsg = wMsg;
     pShared->fSources = fSources;
     pShared->fEvents = fEvents;
@@ -304,7 +306,7 @@ struct CChangeNotifyImpl
     typedef CChangeNotify::ITEM ITEM;
     CSimpleArray<ITEM> m_items;
 
-    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare)
+    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare, HWND hwndOldWorker)
     {
         for (INT i = 0; i < m_items.GetSize(); ++i)
         {
@@ -313,6 +315,7 @@ struct CChangeNotifyImpl
                 m_items[i].nRegID = nRegID;
                 m_items[i].dwUserPID = dwUserPID;
                 m_items[i].hShare = hShare;
+                m_items[i].hwndOldWorker = hwndOldWorker;
                 return TRUE;
             }
         }
@@ -320,6 +323,18 @@ struct CChangeNotifyImpl
         ITEM item = { nRegID, dwUserPID, hShare };
         m_items.Add(item);
         return TRUE;
+    }
+
+    void DestroyItem(ITEM& item, DWORD dwOwnerPID)
+    {
+        if (item.hwndOldWorker)
+            DestroyWindow(item.hwndOldWorker);
+
+        SHFreeShared(item.hShare, dwOwnerPID);
+        item.nRegID = INVALID_REG_ID;
+        item.dwUserPID = 0;
+        item.hShare = NULL;
+        item.hwndOldWorker = NULL;
     }
 
     BOOL RemoveItem(UINT nRegID, DWORD dwOwnerPID)
@@ -330,10 +345,7 @@ struct CChangeNotifyImpl
             if (m_items[i].nRegID == nRegID)
             {
                 bFound = TRUE;
-                SHFreeShared(m_items[i].hShare, dwOwnerPID);
-                m_items[i].nRegID = INVALID_REG_ID;
-                m_items[i].dwUserPID = 0;
-                m_items[i].hShare = NULL;
+                DestroyItem(m_items[i], dwOwnerPID);
             }
         }
         return bFound;
@@ -345,10 +357,7 @@ struct CChangeNotifyImpl
         {
             if (m_items[i].dwUserPID == dwUserPID)
             {
-                SHFreeShared(m_items[i].hShare, dwOwnerPID);
-                m_items[i].nRegID = INVALID_REG_ID;
-                m_items[i].dwUserPID = 0;
-                m_items[i].hShare = NULL;
+                DestroyItem(m_items[i], dwOwnerPID);
             }
         }
     }
@@ -365,9 +374,9 @@ CChangeNotify::~CChangeNotify()
     delete m_pimpl;
 }
 
-BOOL CChangeNotify::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare)
+BOOL CChangeNotify::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare, HWND hwndOldWorker)
 {
-    return m_pimpl->AddItem(nRegID, dwUserPID, hShare);
+    return m_pimpl->AddItem(nRegID, dwUserPID, hShare, hwndOldWorker);
 }
 
 BOOL CChangeNotify::RemoveItem(UINT nRegID, DWORD dwOwnerPID)
@@ -402,6 +411,8 @@ LRESULT CChangeNotify::OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
     DWORD dwUserPID;
     GetWindowThreadProcessId(pShared->hwnd, &dwUserPID);
 
+    HWND hwndOldWorker = pShared->hwndOldWorker;
+
     HANDLE hNewShared = SHAllocShared(pShared, pShared->cbSize, dwOwnerPID);
     if (!hNewShared)
     {
@@ -413,7 +424,7 @@ LRESULT CChangeNotify::OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
     SHUnlockShared(pShared);
 
-    return AddItem(m_nNextRegID, dwUserPID, hNewShared);
+    return AddItem(m_nNextRegID, dwUserPID, hNewShared, hwndOldWorker);
 }
 
 LRESULT CChangeNotify::OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
