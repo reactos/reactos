@@ -12,6 +12,8 @@
 #include <winnls.h>
 #include <winreg.h>
 
+#define IDT_BAR 1
+
 typedef struct _DISPLAYSTATUSMSG
 {
     PGINA_CONTEXT Context;
@@ -33,7 +35,6 @@ typedef struct _DLG_DATA
     PGINA_CONTEXT pgContext;
     HBITMAP hLogoBitmap;
     HBITMAP hBarBitmap;
-    UINT_PTR TimerID;
     DWORD BarCounter;
     DWORD LogoWidth;
     DWORD LogoHeight;
@@ -191,7 +192,10 @@ StatusDialogProc(
 
             if (DlgData_LoadBitmaps(pDlgData))
             {
-                pDlgData->TimerID = SetTimer(hwndDlg, -1, 20, NULL);
+                if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
+                {
+                    ERR("SetTimer(IDT_BAR) failed: %d\n", GetLastError());
+                }
             }
             return TRUE;
         }
@@ -244,7 +248,7 @@ StatusDialogProc(
         {
             if (pDlgData && pDlgData->hBarBitmap)
             {
-                KillTimer(hwndDlg, pDlgData->TimerID);
+                KillTimer(hwndDlg, IDT_BAR);
             }
             DlgData_Destroy(pDlgData);
             return TRUE;
