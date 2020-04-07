@@ -38,7 +38,7 @@ static MUI_ENTRY idIDSetupInitPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSLanguagePageEntries[] =
+static MUI_ENTRY idIDLanguagePageEntries[] =
 {
     {
         4,
