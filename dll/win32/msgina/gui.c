@@ -12,8 +12,6 @@
 #include <winnls.h>
 #include <winreg.h>
 
-#define IDT_BAR 1
-
 typedef struct _DISPLAYSTATUSMSG
 {
     PGINA_CONTEXT Context;
