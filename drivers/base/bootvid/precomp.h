@@ -12,7 +12,7 @@
 #define BOOTCHAR_WIDTH  8 // Each character line is encoded in a UCHAR.
 
 #ifndef _M_ARM
-#include "vga.h"
+#include "i386/pc/vga.h"
 #endif /* _M_ARM */
 
 /* Bitmap Header */
