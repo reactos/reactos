@@ -270,7 +270,6 @@ gdi32 -
   dll/win32/gdi32/objects/linedda.c     # Synced at 20090410
 
 iphlpapi -
-  dll/win32/iphlpapi/icmp.c # Synced to WineStaging-1.7.55
   modules/rostests/winetests/iphlpapi # Synced to WineStaging-1.9.11
 
 kernel32 -
