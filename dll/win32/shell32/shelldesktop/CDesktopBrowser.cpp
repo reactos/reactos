@@ -2,6 +2,7 @@
  * Shell Desktop
  *
  * Copyright 2008 Thomas Bluemel
+ * Copyright 2020 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,8 +26,6 @@
 #include <atlcoll.h>
 #endif
 
-
-
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
 static const WCHAR szProgmanClassName[]  = L"Progman";
@@ -41,6 +40,7 @@ class CDesktopBrowser :
 private:
     HACCEL m_hAccel;
     HWND m_hWndShellView;
+    CChangeNotify m_hwndDeliWorker;
     CComPtr<IShellDesktopTray> m_Tray;
     CComPtr<IShellView>        m_ShellView;
 
@@ -82,6 +82,7 @@ public:
     LRESULT OnOpenNewWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnGetDeliveryWorkerWnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 DECLARE_WND_CLASS_EX(szProgmanClassName, CS_DBLCLKS, COLOR_DESKTOP)
 
@@ -94,6 +95,7 @@ BEGIN_MSG_MAP(CBaseBar)
     MESSAGE_HANDLER(WM_EXPLORER_OPEN_NEW_WINDOW, OnOpenNewWindow)
     MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+    MESSAGE_HANDLER(WM_GETDELIWORKERWND, OnGetDeliveryWorkerWnd)
 END_MSG_MAP()
 
 BEGIN_COM_MAP(CDesktopBrowser)
@@ -217,7 +219,6 @@ HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
     _Resize();
 
     HWND hwndListView = FindWindowExW(m_hWndShellView, NULL, WC_LISTVIEW, NULL);
-    SetShellWindowEx(m_hWnd, hwndListView);
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_DESKBROWSER));
 
@@ -427,6 +428,17 @@ LRESULT CDesktopBrowser::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     ::SetFocus(m_hWndShellView);
     return 0;
+}
+
+LRESULT CDesktopBrowser::OnGetDeliveryWorkerWnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (!::IsWindow(m_hwndDeliWorker))
+    {
+        DWORD exstyle = WS_EX_TOOLWINDOW;
+        DWORD style = WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+        m_hwndDeliWorker.CreateWorker(NULL, exstyle, style);
+    }
+    return (LRESULT)(HWND)m_hwndDeliWorker;
 }
 
 HRESULT CDesktopBrowser_CreateInstance(IShellDesktopTray *Tray, REFIID riid, void **ppv)
