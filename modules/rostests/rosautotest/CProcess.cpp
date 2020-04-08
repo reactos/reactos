@@ -18,11 +18,11 @@
  */
 CProcess::CProcess(const wstring& CommandLine, LPSTARTUPINFOW StartupInfo)
 {
-    auto_array_ptr<WCHAR> CommandLinePtr(new WCHAR[CommandLine.size() + 1]);
+    unique_ptr<WCHAR[]> CommandLinePtr(new WCHAR[CommandLine.size() + 1]);
 
-    wcscpy(CommandLinePtr, CommandLine.c_str());
+    wcscpy(CommandLinePtr.get(), CommandLine.c_str());
 
-    if(!CreateProcessW(NULL, CommandLinePtr, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, StartupInfo, &m_ProcessInfo))
+    if(!CreateProcessW(NULL, CommandLinePtr.get(), NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, StartupInfo, &m_ProcessInfo))
         TESTEXCEPTION("CreateProcessW failed\n");
 }
 

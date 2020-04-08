@@ -33,7 +33,7 @@ using namespace std;
 #include <reactos/buildno.h>
 
 /* Class includes */
-#include "auto_array_ptr.h"
+// #include "auto_array_ptr.h"
 #include "CConfiguration.h"
 #include "CFatalException.h"
 #include "CInvalidParameterException.h"
