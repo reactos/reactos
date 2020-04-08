@@ -439,8 +439,8 @@ VidInitialize(IN BOOLEAN SetMode)
     if (SetMode)
     {
         /* Clear the current position */
-        curr_x = 0;
-        curr_y = 0;
+        VidpCurrentX = 0;
+        VidpCurrentY = 0;
 
         /* Reset the display and initialize it */
         if (HalResetDisplay())
@@ -467,8 +467,8 @@ NTAPI
 VidResetDisplay(IN BOOLEAN HalReset)
 {
     /* Clear the current position */
-    curr_x = 0;
-    curr_y = 0;
+    VidpCurrentX = 0;
+    VidpCurrentY = 0;
 
     /* Clear the screen with HAL if we were asked to */
     if (HalReset)

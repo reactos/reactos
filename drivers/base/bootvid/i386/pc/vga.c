@@ -2,13 +2,6 @@
 
 /* GLOBALS *******************************************************************/
 
-static ULONG ScrollRegion[4] =
-{
-    0,
-    0,
-    SCREEN_WIDTH  - 1,
-    SCREEN_HEIGHT - 1
-};
 static UCHAR lMaskTable[8] =
 {
     (1 << 8) - (1 << 0),
@@ -64,9 +57,6 @@ static ULONG lookup[16] =
 
 ULONG_PTR VgaRegisterBase = 0;
 ULONG_PTR VgaBase = 0;
-ULONG curr_x = 0;
-ULONG curr_y = 0;
-static ULONG VidTextColor = 0xF;
 static BOOLEAN ClearRow = FALSE;
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -87,7 +77,7 @@ ReadWriteMode(IN UCHAR Mode)
     __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, Mode | Value);
 }
 
-static VOID
+VOID
 PrepareForSetPixel(VOID)
 {
     /* Switch to mode 10 */
@@ -98,24 +88,6 @@ PrepareForSetPixel(VOID)
 
     /* Select the color don't care register */
     __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
-}
-
-FORCEINLINE
-VOID
-SetPixel(IN ULONG Left,
-         IN ULONG Top,
-         IN UCHAR Color)
-{
-    PUCHAR PixelPosition;
-
-    /* Calculate the pixel position */
-    PixelPosition = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)));
-
-    /* Select the bitmask register and write the mask */
-    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (PixelMask[Left & 7] << 8) | IND_BIT_MASK);
-
-    /* Read the current pixel value and add our color */
-    WRITE_REGISTER_UCHAR(PixelPosition, READ_REGISTER_UCHAR(PixelPosition) & Color);
 }
 
 #define SET_PIXELS(_PixelPtr, _PixelMask, _TextColor)       \
@@ -134,13 +106,14 @@ do {                                                        \
 # define FONT_PTR_DELTA (1)
 #endif
 
-static VOID
+VOID
 NTAPI
-DisplayCharacter(IN CHAR Character,
-                 IN ULONG Left,
-                 IN ULONG Top,
-                 IN ULONG TextColor,
-                 IN ULONG BackColor)
+DisplayCharacter(
+    _In_ CHAR Character,
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG TextColor,
+    _In_ ULONG BackColor)
 {
     PUCHAR FontChar, PixelPtr;
     ULONG Height;
@@ -226,22 +199,6 @@ DisplayCharacter(IN CHAR Character,
 
 static VOID
 NTAPI
-DisplayStringXY(IN PUCHAR String,
-                IN ULONG Left,
-                IN ULONG Top,
-                IN ULONG TextColor,
-                IN ULONG BackColor)
-{
-    /* Loop every character and adjust the position */
-    for (; *String; ++String, Left += 8)
-    {
-        /* Display a character */
-        DisplayCharacter(*String, Left, Top, TextColor, BackColor);
-    }
-}
-
-static VOID
-NTAPI
 SetPaletteEntryRGB(IN ULONG Id,
                    IN ULONG Rgb)
 {
@@ -256,10 +213,11 @@ SetPaletteEntryRGB(IN ULONG Id,
     __outpb(VGA_BASE_IO_PORT + DAC_DATA_REG_PORT, Colors[0] >> 2);
 }
 
-static VOID
+VOID
 NTAPI
-InitPaletteWithTable(IN PULONG Table,
-                     IN ULONG Count)
+InitPaletteWithTable(
+    _In_ PULONG Table,
+    _In_ ULONG Count)
 {
     ULONG i;
     PULONG Entry = Table;
@@ -328,14 +286,14 @@ VgaScroll(IN ULONG Scroll)
     /* Set Mode 1 */
     ReadWriteMode(1);
 
-    RowSize = (ScrollRegion[2] - ScrollRegion[0] + 1) / 8;
+    RowSize = (VidpScrollRegion[2] - VidpScrollRegion[0] + 1) / 8;
 
     /* Calculate the position in memory for the row */
-    OldPosition = (PUCHAR)(VgaBase + (ScrollRegion[1] + Scroll) * (SCREEN_WIDTH / 8) + ScrollRegion[0] / 8);
-    NewPosition = (PUCHAR)(VgaBase + ScrollRegion[1] * (SCREEN_WIDTH / 8) + ScrollRegion[0] / 8);
+    OldPosition = (PUCHAR)(VgaBase + (VidpScrollRegion[1] + Scroll) * (SCREEN_WIDTH / 8) + VidpScrollRegion[0] / 8);
+    NewPosition = (PUCHAR)(VgaBase + VidpScrollRegion[1] * (SCREEN_WIDTH / 8) + VidpScrollRegion[0] / 8);
 
     /* Start loop */
-    for (Top = ScrollRegion[1]; Top <= ScrollRegion[3]; ++Top)
+    for (Top = VidpScrollRegion[1]; Top <= VidpScrollRegion[3]; ++Top)
     {
 #if defined(_M_IX86) || defined(_M_AMD64)
         __movsb(NewPosition, OldPosition, RowSize);
@@ -400,257 +358,6 @@ PreserveRow(IN ULONG CurrentTop,
 #endif
 }
 
-static VOID
-NTAPI
-BitBlt(IN ULONG Left,
-       IN ULONG Top,
-       IN ULONG Width,
-       IN ULONG Height,
-       IN PUCHAR Buffer,
-       IN ULONG BitsPerPixel,
-       IN ULONG Delta)
-{
-    ULONG sx, dx, dy;
-    UCHAR color;
-    ULONG offset = 0;
-    const ULONG Bottom = Top + Height;
-    const ULONG Right = Left + Width;
-
-    /* Check if the buffer isn't 4bpp */
-    if (BitsPerPixel != 4)
-    {
-        /* FIXME: TODO */
-        DbgPrint("Unhandled BitBlt\n"
-                 "%lux%lu @ (%lu|%lu)\n"
-                 "Bits Per Pixel %lu\n"
-                 "Buffer: %p. Delta: %lu\n",
-                 Width,
-                 Height,
-                 Left,
-                 Top,
-                 BitsPerPixel,
-                 Buffer,
-                 Delta);
-        return;
-    }
-
-    PrepareForSetPixel();
-
-    /* 4bpp blitting */
-    for (dy = Top; dy < Bottom; ++dy)
-    {
-        sx = 0;
-        do
-        {
-            /* Extract color */
-            color = Buffer[offset + sx];
-
-            /* Calc destination x */
-            dx = Left + (sx << 1);
-
-            /* Set two pixels */
-            SetPixel(dx, dy, color >> 4);
-            SetPixel(dx + 1, dy, color & 0x0F);
-
-            sx++;
-        } while (dx < Right);
-        offset += Delta;
-    }
-}
-
-static VOID
-NTAPI
-RleBitBlt(IN ULONG Left,
-          IN ULONG Top,
-          IN ULONG Width,
-          IN ULONG Height,
-          IN PUCHAR Buffer)
-{
-    ULONG YDelta;
-    ULONG x;
-    ULONG RleValue, NewRleValue;
-    ULONG Color, Color2;
-    ULONG i, j;
-    ULONG Code;
-
-    PrepareForSetPixel();
-
-    /* Set Y height and current X value and start loop */
-    YDelta = Top + Height - 1;
-    x = Left;
-    for (;;)
-    {
-        /* Get the current value and advance in the buffer */
-        RleValue = *Buffer;
-        Buffer++;
-        if (RleValue)
-        {
-            /* Check if we've gone past the edge */
-            if ((x + RleValue) > (Width + Left))
-            {
-                /* Fixup the pixel value */
-                RleValue = Left - x + Width;
-            }
-
-            /* Get the new value */
-            NewRleValue = *Buffer;
-
-            /* Get the two colors */
-            Color = NewRleValue >> 4;
-            Color2 = NewRleValue & 0xF;
-
-            /* Increase buffer position */
-            Buffer++;
-
-            /* Check if we need to do a fill */
-            if (Color == Color2)
-            {
-                /* Do a fill and continue the loop */
-                RleValue += x;
-                VidSolidColorFill(x, YDelta, RleValue - 1, YDelta, (UCHAR)Color);
-                x = RleValue;
-                continue;
-            }
-
-            /* Check if the pixel value is 1 or below */
-            if (RleValue > 1)
-            {
-                /* Set loop variables */
-                for (i = (RleValue - 2) / 2 + 1; i > 0; --i)
-                {
-                    /* Set the pixels */
-                    SetPixel(x, YDelta, (UCHAR)Color);
-                    x++;
-                    SetPixel(x, YDelta, (UCHAR)Color2);
-                    x++;
-
-                    /* Decrease pixel value */
-                    RleValue -= 2;
-                }
-            }
-
-            /* Check if there is any value at all */
-            if (RleValue)
-            {
-                /* Set the pixel and increase position */
-                SetPixel(x, YDelta, (UCHAR)Color);
-                x++;
-            }
-
-            /* Start over */
-            continue;
-        }
-
-        /* Get the current pixel value */
-        RleValue = *Buffer;
-        Code = RleValue;
-        switch (Code)
-        {
-            /* Case 0 */
-            case 0:
-            {
-                /* Set new x value, decrease distance and restart */
-                x = Left;
-                YDelta--;
-                Buffer++;
-                continue;
-            }
-
-            /* Case 1 */
-            case 1:
-            {
-                /* Done */
-                return;
-            }
-
-            /* Case 2 */
-            case 2:
-            {
-                /* Set new x value, decrease distance and restart */
-                Buffer++;
-                x += *Buffer;
-                Buffer++;
-                YDelta -= *Buffer;
-                Buffer++;
-                continue;
-            }
-
-            /* Other values */
-            default:
-            {
-                Buffer++;
-                break;
-            }
-        }
-
-        /* Check if we've gone past the edge */
-        if ((x + RleValue) > (Width + Left))
-        {
-            /* Set fixed up loop count */
-            i = RleValue - Left - Width + x;
-
-            /* Fixup pixel value */
-            RleValue -= i;
-        }
-        else
-        {
-            /* Clear loop count */
-            i = 0;
-        }
-
-        /* Check the value now */
-        if (RleValue > 1)
-        {
-            /* Set loop variables */
-            for (j = (RleValue - 2) / 2 + 1; j > 0; --j)
-            {
-                /* Get the new value */
-                NewRleValue = *Buffer;
-
-                /* Get the two colors */
-                Color = NewRleValue >> 4;
-                Color2 = NewRleValue & 0xF;
-
-                /* Increase buffer position */
-                Buffer++;
-
-                /* Set the pixels */
-                SetPixel(x, YDelta, (UCHAR)Color);
-                x++;
-                SetPixel(x, YDelta, (UCHAR)Color2);
-                x++;
-
-                /* Decrease pixel value */
-                RleValue -= 2;
-            }
-        }
-
-        /* Check if there is any value at all */
-        if (RleValue)
-        {
-            /* Set the pixel and increase position */
-            Color = *Buffer >> 4;
-            Buffer++;
-            SetPixel(x, YDelta, (UCHAR)Color);
-            x++;
-            i--;
-        }
-
-        /* Check loop count now */
-        if ((LONG)i > 0)
-        {
-            /* Decrease it */
-            i--;
-
-            /* Set new position */
-            Buffer = Buffer + (i / 2) + 1;
-        }
-
-        /* Check if we need to increase the buffer */
-        if ((ULONG_PTR)Buffer & 1) Buffer++;
-    }
-}
-
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -663,54 +370,9 @@ VidSetTextColor(IN ULONG Color)
     ULONG OldColor;
 
     /* Save the old color and set the new one */
-    OldColor = VidTextColor;
-    VidTextColor = Color;
+    OldColor = VidpTextColor;
+    VidpTextColor = Color;
     return OldColor;
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-VidDisplayStringXY(IN PUCHAR String,
-                   IN ULONG Left,
-                   IN ULONG Top,
-                   IN BOOLEAN Transparent)
-{
-    ULONG BackColor;
-
-    /*
-     * If the caller wanted transparent, then send the special value (16),
-     * else use our default and call the helper routine.
-     */
-    BackColor = Transparent ? 16 : 14;
-    DisplayStringXY(String, Left, Top, 12, BackColor);
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-VidSetScrollRegion(IN ULONG Left,
-                   IN ULONG Top,
-                   IN ULONG Right,
-                   IN ULONG Bottom)
-{
-    /* Assert alignment */
-    ASSERT((Left  & 0x7) == 0);
-    ASSERT((Right & 0x7) == 7);
-
-    /* Set Scroll Region */
-    ScrollRegion[0] = Left;
-    ScrollRegion[1] = Top;
-    ScrollRegion[2] = Right;
-    ScrollRegion[3] = Bottom;
-
-    /* Set current X and Y */
-    curr_x = Left;
-    curr_y = Top;
 }
 
 /*
@@ -730,25 +392,6 @@ VidCleanUp(VOID)
  */
 VOID
 NTAPI
-VidBufferToScreenBlt(IN PUCHAR Buffer,
-                     IN ULONG Left,
-                     IN ULONG Top,
-                     IN ULONG Width,
-                     IN ULONG Height,
-                     IN ULONG Delta)
-{
-    /* Make sure we have a width and height */
-    if (!Width || !Height) return;
-
-    /* Call the helper function */
-    BitBlt(Left, Top, Width, Height, Buffer, 4, Delta);
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
 VidDisplayString(IN PUCHAR String)
 {
     ULONG TopDelta = BOOTCHAR_HEIGHT + 1;
@@ -760,22 +403,22 @@ VidDisplayString(IN PUCHAR String)
         if (*String == '\n')
         {
             /* Modify Y position */
-            curr_y += TopDelta;
-            if (curr_y + TopDelta - 1 > ScrollRegion[3])
+            VidpCurrentY += TopDelta;
+            if (VidpCurrentY + TopDelta - 1 > VidpScrollRegion[3])
             {
                 /* Scroll the view and clear the current row */
                 VgaScroll(TopDelta);
-                curr_y -= TopDelta;
-                PreserveRow(curr_y, TopDelta, TRUE);
+                VidpCurrentY -= TopDelta;
+                PreserveRow(VidpCurrentY, TopDelta, TRUE);
             }
             else
             {
                 /* Preserve the current row */
-                PreserveRow(curr_y, TopDelta, FALSE);
+                PreserveRow(VidpCurrentY, TopDelta, FALSE);
             }
 
             /* Update current X */
-            curr_x = ScrollRegion[0];
+            VidpCurrentX = VidpScrollRegion[0];
 
             /* No need to clear this row */
             ClearRow = FALSE;
@@ -783,7 +426,7 @@ VidDisplayString(IN PUCHAR String)
         else if (*String == '\r')
         {
             /* Update current X */
-            curr_x = ScrollRegion[0];
+            VidpCurrentX = VidpScrollRegion[0];
 
             /* If a new-line does not follow we will clear the current row */
             if (String[1] != '\n') ClearRow = TRUE;
@@ -793,34 +436,34 @@ VidDisplayString(IN PUCHAR String)
             /* Clear the current row if we had a return-carriage without a new-line */
             if (ClearRow)
             {
-                PreserveRow(curr_y, TopDelta, TRUE);
+                PreserveRow(VidpCurrentY, TopDelta, TRUE);
                 ClearRow = FALSE;
             }
 
             /* Display this character */
-            DisplayCharacter(*String, curr_x, curr_y, VidTextColor, 16);
-            curr_x += 8;
+            DisplayCharacter(*String, VidpCurrentX, VidpCurrentY, VidpTextColor, 16);
+            VidpCurrentX += 8;
 
             /* Check if we should scroll */
-            if (curr_x + 7 > ScrollRegion[2])
+            if (VidpCurrentX + 7 > VidpScrollRegion[2])
             {
                 /* Update Y position and check if we should scroll it */
-                curr_y += TopDelta;
-                if (curr_y + TopDelta - 1 > ScrollRegion[3])
+                VidpCurrentY += TopDelta;
+                if (VidpCurrentY + TopDelta - 1 > VidpScrollRegion[3])
                 {
                     /* Scroll the view and clear the current row */
                     VgaScroll(TopDelta);
-                    curr_y -= TopDelta;
-                    PreserveRow(curr_y, TopDelta, TRUE);
+                    VidpCurrentY -= TopDelta;
+                    PreserveRow(VidpCurrentY, TopDelta, TRUE);
                 }
                 else
                 {
                     /* Preserve the current row */
-                    PreserveRow(curr_y, TopDelta, FALSE);
+                    PreserveRow(VidpCurrentY, TopDelta, FALSE);
                 }
 
                 /* Update current X */
-                curr_x = ScrollRegion[0];
+                VidpCurrentX = VidpScrollRegion[0];
             }
         }
     }
@@ -831,84 +474,7 @@ VidDisplayString(IN PUCHAR String)
  */
 VOID
 NTAPI
-VidBitBlt(IN PUCHAR Buffer,
-          IN ULONG Left,
-          IN ULONG Top)
-{
-    PBITMAPINFOHEADER BitmapInfoHeader;
-    LONG Delta;
-    PUCHAR BitmapOffset;
-
-    /* Get the Bitmap Header */
-    BitmapInfoHeader = (PBITMAPINFOHEADER)Buffer;
-
-    /* Initialize the palette */
-    InitPaletteWithTable((PULONG)(Buffer + BitmapInfoHeader->biSize),
-                         (BitmapInfoHeader->biClrUsed) ?
-                         BitmapInfoHeader->biClrUsed : 16);
-
-    /* Make sure we can support this bitmap */
-    ASSERT((BitmapInfoHeader->biBitCount * BitmapInfoHeader->biPlanes) <= 4);
-
-    /*
-     * Calculate the delta and align it on 32-bytes, then calculate
-     * the actual start of the bitmap data.
-     */
-    Delta = (BitmapInfoHeader->biBitCount * BitmapInfoHeader->biWidth) + 31;
-    Delta >>= 3;
-    Delta &= ~3;
-    BitmapOffset = Buffer + sizeof(BITMAPINFOHEADER) + 16 * sizeof(ULONG);
-
-    /* Check the compression of the bitmap */
-    if (BitmapInfoHeader->biCompression == BI_RLE4)
-    {
-        /* Make sure we have a width and a height */
-        if ((BitmapInfoHeader->biWidth) && (BitmapInfoHeader->biHeight))
-        {
-            /* We can use RLE Bit Blt */
-            RleBitBlt(Left,
-                      Top,
-                      BitmapInfoHeader->biWidth,
-                      BitmapInfoHeader->biHeight,
-                      BitmapOffset);
-        }
-    }
-    else
-    {
-        /* Check if the height is negative */
-        if (BitmapInfoHeader->biHeight < 0)
-        {
-            /* Make it positive in the header */
-            BitmapInfoHeader->biHeight *= -1;
-        }
-        else
-        {
-            /* Update buffer offset */
-            BitmapOffset += ((BitmapInfoHeader->biHeight - 1) * Delta);
-            Delta *= -1;
-        }
-
-        /* Make sure we have a width and a height */
-        if ((BitmapInfoHeader->biWidth) && (BitmapInfoHeader->biHeight))
-        {
-            /* Do the BitBlt */
-            BitBlt(Left,
-                   Top,
-                   BitmapInfoHeader->biWidth,
-                   BitmapInfoHeader->biHeight,
-                   BitmapOffset,
-                   BitmapInfoHeader->biBitCount,
-                   Delta);
-        }
-    }
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-VidScreenToBufferBlt(IN PUCHAR Buffer,
+VidScreenToBufferBlt(OUT PUCHAR Buffer,
                      IN ULONG Left,
                      IN ULONG Top,
                      IN ULONG Width,

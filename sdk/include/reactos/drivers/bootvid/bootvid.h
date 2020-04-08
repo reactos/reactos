@@ -63,7 +63,7 @@ VidBitBlt(IN PUCHAR Buffer,
 
 VOID
 NTAPI
-VidScreenToBufferBlt(IN PUCHAR Buffer,
+VidScreenToBufferBlt(OUT PUCHAR Buffer,
                      IN ULONG Left,
                      IN ULONG Top,
                      IN ULONG Width,

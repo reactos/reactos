@@ -12,6 +12,7 @@ elseif(ARCH STREQUAL "arm")
 endif()
 
 list(APPEND SOURCE
+    common.c
     fontdata.c
     precomp.h)
 
