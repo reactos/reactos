@@ -320,7 +320,7 @@ struct CChangeNotifyImpl
             }
         }
 
-        ITEM item = { nRegID, dwUserPID, hShare };
+        ITEM item = { nRegID, dwUserPID, hShare, hwndOldWorker };
         m_items.Add(item);
         return TRUE;
     }
