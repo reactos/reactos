@@ -1,6 +1,7 @@
 /*
  *Spanish Language resource file
  * Traducido por: Javier Remacha 2007-12-19
+ *                Julen Urizar Compains 2020-09-04
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -43,10 +44,10 @@ IDS_REG_OWNER,               "Propietario"
 IDS_REG_ORG,                 "Organización"
 IDS_PRODUCT_ID,              "Identificador de Producto"
 IDS_INST_DATE,               "Fecha de Instalación"
-IDS_UP_TIME,                 "System Up Time"
-IDS_UP_TIME_FORMAT,          "%u Days, %u Hours, %u Minutes, %u Seconds"
-IDS_SYS_MANUFACTURER,        "System Manufacturer"
-IDS_SYS_MODEL,               "System Model"
+IDS_UP_TIME,                 "Tiempo de uso"
+IDS_UP_TIME_FORMAT,          "%u días, %u horas, %u minutis, %u segundos"
+IDS_SYS_MANUFACTURER,        "Fabricante"
+IDS_SYS_MODEL,               "Modelo"
 IDS_SYS_TYPE,                "Tipo de sistema"
 IDS_PROCESSORS,              "Procesador(es)"
 IDS_PROCESSORS_FORMAT,       "%u Procesador(es) Instalados."
@@ -67,11 +68,11 @@ IDS_PAGEFILE_LOC,            "Ruta(s) Archivo Paginación"
 IDS_DOMAIN,                  "Dominio"
 IDS_NETWORK_CARDS,           "Tarjeta(s) de Red"
 IDS_NETWORK_CARDS_FORMAT,    "%u No Instalada."
-IDS_CONNECTION_NAME,         "Connection Name"
-IDS_STATUS,                  "Status"
-IDS_MEDIA_DISCONNECTED,      "Media disconnected"
-IDS_DHCP_ENABLED,            "DHCP Enabled"
+IDS_CONNECTION_NAME,         "Nombre de conexión"
+IDS_STATUS,                  "Estado"
+IDS_MEDIA_DISCONNECTED,      "Media desconectado"
+IDS_DHCP_ENABLED,            "DHCP activo"
 IDS_NO,                      "No"
-IDS_IP_ADDRESSES,            "IP address(es)"
+IDS_IP_ADDRESSES,            "Direccion(es) IP"
 
 END
