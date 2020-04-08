@@ -345,7 +345,6 @@ static const struct
     { "disasm", "disasm [address] [L count]", "Disassemble count instructions at address.", KdbpCmdDisassembleX },
     { "x", "x [address] [L count]", "Display count dwords, starting at address.", KdbpCmdDisassembleX },
     { "regs", "regs", "Display general purpose registers.", KdbpCmdRegs },
-    { "cregs", "cregs", "Display control, descriptor table and task segment registers.", KdbpCmdRegs },
     { "sregs", "sregs", "Display status registers.", KdbpCmdRegs },
     { "dregs", "dregs", "Display debug registers.", KdbpCmdRegs },
     { "bt", "bt [*frameaddr|thread id]", "Prints current backtrace or from given frame address.", KdbpCmdBackTrace },
@@ -794,7 +793,7 @@ KdbpCmdDisassembleX(
     ULONG ul;
     INT i;
     ULONGLONG Result = 0;
-    ULONG_PTR Address = KdbCurrentTrapFrame->Tf.Eip;
+    ULONG_PTR Address = KdbCurrentTrapFrame->Eip;
     LONG InstLen;
 
     if (Argv[0][0] == 'x') /* display memory */
@@ -911,7 +910,7 @@ KdbpCmdRegs(
     ULONG Argc,
     PCHAR Argv[])
 {
-    PKTRAP_FRAME Tf = &KdbCurrentTrapFrame->Tf;
+    PCONTEXT Context = KdbCurrentTrapFrame;
     INT i;
     static const PCHAR EflagsBits[32] = { " CF", NULL, " PF", " BIT3", " AF", " BIT5",
                                           " ZF", " SF", " TF", " IF", " DF", " OF",
@@ -929,109 +928,51 @@ KdbpCmdRegs(
                   "   ECX  0x%08x   EDX  0x%08x\n"
                   "   ESI  0x%08x   EDI  0x%08x\n"
                   "   EBP  0x%08x\n",
-                  Tf->SegCs & 0xFFFF, Tf->Eip,
-                  Tf->HardwareSegSs, Tf->HardwareEsp,
-                  Tf->Eax, Tf->Ebx,
-                  Tf->Ecx, Tf->Edx,
-                  Tf->Esi, Tf->Edi,
-                  Tf->Ebp);
+                  Context->SegCs & 0xFFFF, Context->Eip,
+                  Context->SegSs, Context->Esp,
+                  Context->Eax, Context->Ebx,
+                  Context->Ecx, Context->Edx,
+                  Context->Esi, Context->Edi,
+                  Context->Ebp);
 
         /* Display the EFlags */
-        KdbpPrint("EFLAGS  0x%08x ", Tf->EFlags);
+        KdbpPrint("EFLAGS  0x%08x ", Context->EFlags);
         for (i = 0; i < 32; i++)
         {
             if (i == 1)
             {
-                if ((Tf->EFlags & (1 << 1)) == 0)
+                if ((Context->EFlags & (1 << 1)) == 0)
                     KdbpPrint(" !BIT1");
             }
             else if (i == 12)
             {
-                KdbpPrint(" IOPL%d", (Tf->EFlags >> 12) & 3);
+                KdbpPrint(" IOPL%d", (Context->EFlags >> 12) & 3);
             }
             else if (i == 13)
             {
             }
-            else if ((Tf->EFlags & (1 << i)) != 0)
+            else if ((Context->EFlags & (1 << i)) != 0)
             {
                 KdbpPrint(EflagsBits[i]);
             }
         }
         KdbpPrint("\n");
     }
-    else if (Argv[0][0] == 'c') /* cregs */
-    {
-        ULONG Cr0, Cr2, Cr3, Cr4;
-        KDESCRIPTOR Gdtr = {0, 0, 0}, Idtr = {0, 0, 0};
-        USHORT Ldtr, Tr;
-        static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
-                                           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                           " WP", NULL, " AM", NULL, NULL, NULL, NULL, NULL,
-                                           NULL, NULL, NULL, NULL, NULL, " NW", " CD", " PG" };
-        static const PCHAR Cr4Bits[32] = { " VME", " PVI", " TSD", " DE", " PSE", " PAE", " MCE", " PGE",
-                                           " PCE", " OSFXSR", " OSXMMEXCPT", NULL, NULL, NULL, NULL, NULL,
-                                           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-
-        /* Retrieve the control registers */
-        Cr0 = KdbCurrentTrapFrame->Cr0;
-        Cr2 = KdbCurrentTrapFrame->Cr2;
-        Cr3 = KdbCurrentTrapFrame->Cr3;
-        Cr4 = KdbCurrentTrapFrame->Cr4;
-
-        /* Retrieve the descriptor table and task segment registers */
-        Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
-        Ldtr = Ke386GetLocalDescriptorTable();
-        __sidt(&Idtr.Limit);
-        Tr = Ke386GetTr();
-
-        /* Display the control registers */
-        KdbpPrint("CR0  0x%08x ", Cr0);
-        for (i = 0; i < 32; i++)
-        {
-            if (!Cr0Bits[i])
-                continue;
-
-            if ((Cr0 & (1 << i)) != 0)
-                KdbpPrint(Cr0Bits[i]);
-        }
-        KdbpPrint("\n");
-
-        KdbpPrint("CR2  0x%08x\n", Cr2);
-        KdbpPrint("CR3  0x%08x  Pagedir-Base 0x%08x %s%s\n", Cr3, (Cr3 & 0xfffff000),
-                  (Cr3 & (1 << 3)) ? " PWT" : "", (Cr3 & (1 << 4)) ? " PCD" : "" );
-        KdbpPrint("CR4  0x%08x ", Cr4);
-        for (i = 0; i < 32; i++)
-        {
-            if (!Cr4Bits[i])
-                continue;
-
-            if ((Cr4 & (1 << i)) != 0)
-                KdbpPrint(Cr4Bits[i]);
-        }
-        KdbpPrint("\n");
-
-        /* Display the descriptor table and task segment registers */
-        KdbpPrint("GDTR Base 0x%08x  Size 0x%04x\n", Gdtr.Base, Gdtr.Limit);
-        KdbpPrint("LDTR 0x%04x\n", Ldtr);
-        KdbpPrint("IDTR Base 0x%08x  Size 0x%04x\n", Idtr.Base, Idtr.Limit);
-        KdbpPrint("TR   0x%04x\n", Tr);
-    }
     else if (Argv[0][0] == 's') /* sregs */
     {
         KdbpPrint("CS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                  Tf->SegCs & 0xffff, (Tf->SegCs & 0xffff) >> 3,
-                  (Tf->SegCs & (1 << 2)) ? 'L' : 'G', Tf->SegCs & 3);
+                  Context->SegCs & 0xffff, (Context->SegCs & 0xffff) >> 3,
+                  (Context->SegCs & (1 << 2)) ? 'L' : 'G', Context->SegCs & 3);
         KdbpPrint("DS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                  Tf->SegDs, Tf->SegDs >> 3, (Tf->SegDs & (1 << 2)) ? 'L' : 'G', Tf->SegDs & 3);
+                  Context->SegDs, Context->SegDs >> 3, (Context->SegDs & (1 << 2)) ? 'L' : 'G', Context->SegDs & 3);
         KdbpPrint("ES  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                  Tf->SegEs, Tf->SegEs >> 3, (Tf->SegEs & (1 << 2)) ? 'L' : 'G', Tf->SegEs & 3);
+                  Context->SegEs, Context->SegEs >> 3, (Context->SegEs & (1 << 2)) ? 'L' : 'G', Context->SegEs & 3);
         KdbpPrint("FS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                  Tf->SegFs, Tf->SegFs >> 3, (Tf->SegFs & (1 << 2)) ? 'L' : 'G', Tf->SegFs & 3);
+                  Context->SegFs, Context->SegFs >> 3, (Context->SegFs & (1 << 2)) ? 'L' : 'G', Context->SegFs & 3);
         KdbpPrint("GS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                  Tf->SegGs, Tf->SegGs >> 3, (Tf->SegGs & (1 << 2)) ? 'L' : 'G', Tf->SegGs & 3);
+                  Context->SegGs, Context->SegGs >> 3, (Context->SegGs & (1 << 2)) ? 'L' : 'G', Context->SegGs & 3);
         KdbpPrint("SS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                  Tf->HardwareSegSs, Tf->HardwareSegSs >> 3, (Tf->HardwareSegSs & (1 << 2)) ? 'L' : 'G', Tf->HardwareSegSs & 3);
+                  Context->SegSs, Context->SegSs >> 3, (Context->SegSs & (1 << 2)) ? 'L' : 'G', Context->SegSs & 3);
     }
     else /* dregs */
     {
@@ -1042,8 +983,8 @@ KdbpCmdRegs(
                   "DR3  0x%08x\n"
                   "DR6  0x%08x\n"
                   "DR7  0x%08x\n",
-                  Tf->Dr0, Tf->Dr1, Tf->Dr2, Tf->Dr3,
-                  Tf->Dr6, Tf->Dr7);
+                  Context->Dr0, Context->Dr1, Context->Dr2, Context->Dr3,
+                  Context->Dr6, Context->Dr7);
     }
 
     return TRUE;
@@ -1117,8 +1058,8 @@ KdbpIsNestedTss(
 }
 
 static BOOLEAN
-KdbpTrapFrameFromPrevTss(
-    IN OUT PKTRAP_FRAME TrapFrame,
+KdbpContextFromPrevTss(
+    IN OUT PCONTEXT Context,
     OUT PUSHORT TssSelector,
     IN OUT PKTSS* pTss,
     IN PKDESCRIPTOR pGdtr)
@@ -1157,8 +1098,8 @@ KdbpTrapFrameFromPrevTss(
     /* Return the parent TSS and its trap frame */
     *TssSelector = Backlink;
     *pTss = Tss;
-    TrapFrame->Eip = Eip;
-    TrapFrame->Ebp = Ebp;
+    Context->Eip = Eip;
+    Context->Ebp = Ebp;
     return TRUE;
 }
 
@@ -1171,8 +1112,8 @@ KdbpCmdBackTrace(
 {
     ULONG ul;
     ULONGLONG Result = 0;
-    KTRAP_FRAME TrapFrame = KdbCurrentTrapFrame->Tf;
-    ULONG_PTR Frame = TrapFrame.Ebp;
+    CONTEXT Context = *KdbCurrentTrapFrame;
+    ULONG_PTR Frame = Context.Ebp;
     ULONG_PTR Address;
     KDESCRIPTOR Gdtr;
     USHORT TssSelector;
@@ -1247,8 +1188,8 @@ KdbpCmdBackTrace(
     if (Argc <= 1)
     {
         KdbpPrint("Eip:\n");
-        if (!KdbSymPrintAddress((PVOID)TrapFrame.Eip, &TrapFrame))
-            KdbpPrint("<%08x>\n", TrapFrame.Eip);
+        if (!KdbSymPrintAddress((PVOID)Context.Eip, &Context))
+            KdbpPrint("<%08x>\n", Context.Eip);
         else
             KdbpPrint("\n");
     }
@@ -1274,12 +1215,12 @@ KdbpCmdBackTrace(
 
         GotNextFrame = NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof(ULONG_PTR)));
         if (GotNextFrame)
-            TrapFrame.Ebp = Frame;
+            Context.Ebp = Frame;
         // else
             // Frame = 0;
 
         /* Print the location of the call instruction (assumed 5 bytes length) */
-        if (!KdbSymPrintAddress((PVOID)(Address - 5), &TrapFrame))
+        if (!KdbSymPrintAddress((PVOID)(Address - 5), &Context))
             KdbpPrint("<%08x>\n", Address);
         else
             KdbpPrint("\n");
@@ -1304,18 +1245,18 @@ CheckForParentTSS:
         if (!KdbpIsNestedTss(TssSelector, Tss))
             break; // The TSS is not nested, we stop there.
 
-        GotNextFrame = KdbpTrapFrameFromPrevTss(&TrapFrame, &TssSelector, &Tss, &Gdtr);
+        GotNextFrame = KdbpContextFromPrevTss(&Context, &TssSelector, &Tss, &Gdtr);
         if (!GotNextFrame)
         {
             KdbpPrint("Couldn't access parent TSS 0x%04x\n", Tss->Backlink);
             break; // Cannot retrieve the parent TSS, we stop there.
         }
-        Address = TrapFrame.Eip;
-        Frame = TrapFrame.Ebp;
+        Address = Context.Eip;
+        Frame = Context.Ebp;
 
         KdbpPrint("[Parent TSS 0x%04x @ 0x%p]\n", TssSelector, Tss);
 
-        if (!KdbSymPrintAddress((PVOID)Address, &TrapFrame))
+        if (!KdbSymPrintAddress((PVOID)Address, &Context))
             KdbpPrint("<%08x>\n", Address);
         else
             KdbpPrint("\n");
@@ -3672,13 +3613,13 @@ KdbpCliMainLoop(
 
     if (EnteredOnSingleStep)
     {
-        if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip, &KdbCurrentTrapFrame->Tf))
+        if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Eip, KdbCurrentTrapFrame))
         {
-            KdbpPrint("<%08x>", KdbCurrentTrapFrame->Tf.Eip);
+            KdbpPrint("<%08x>", KdbCurrentTrapFrame->Eip);
         }
 
         KdbpPrint(": ");
-        if (KdbpDisassemble(KdbCurrentTrapFrame->Tf.Eip, KdbUseIntelSyntax) < 0)
+        if (KdbpDisassemble(KdbCurrentTrapFrame->Eip, KdbUseIntelSyntax) < 0)
         {
             KdbpPrint("<INVALID>");
         }
@@ -3862,7 +3803,7 @@ KdbpCliInit(VOID)
 
     /* Interpret the init file... */
     KdbInitFileBuffer = FileBuffer;
-    KdbEnter();
+    //KdbEnter(); // FIXME
     KdbInitFileBuffer = NULL;
 
     /* Leave critical section */

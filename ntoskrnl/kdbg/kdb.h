@@ -10,15 +10,7 @@
 /* TYPES *********************************************************************/
 
 /* from kdb.c */
-typedef struct _KDB_KTRAP_FRAME
-{
-   KTRAP_FRAME  Tf;
-   ULONG        Cr0;
-   ULONG        Cr1; /* reserved/unused */
-   ULONG        Cr2;
-   ULONG        Cr3;
-   ULONG        Cr4;
-} KDB_KTRAP_FRAME, *PKDB_KTRAP_FRAME;
+typedef CONTEXT KDB_KTRAP_FRAME, *PKDB_KTRAP_FRAME;
 
 typedef enum _KDB_BREAKPOINT_TYPE
 {
@@ -163,7 +155,7 @@ KdbpSymFindModule(
 BOOLEAN
 KdbSymPrintAddress(
     IN PVOID Address,
-    IN PKTRAP_FRAME Context
+    IN PCONTEXT Context
 );
 
 VOID
@@ -247,11 +239,15 @@ NTAPI
 KdbpGetCommandLineSettings(PCHAR p1);
 
 KD_CONTINUE_TYPE
-KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
-                           KPROCESSOR_MODE PreviousMode,
-                           PCONTEXT Context,
-                           PKTRAP_FRAME TrapFrame,
-                           BOOLEAN FirstChance);
+KdbEnterDebuggerException(IN PEXCEPTION_RECORD64 ExceptionRecord,
+                          IN KPROCESSOR_MODE PreviousMode,
+                          IN OUT PCONTEXT Context,
+                          IN BOOLEAN FirstChance);
+
+KD_CONTINUE_TYPE
+KdbEnterDebuggerFirstChanceException(
+    IN OUT PKTRAP_FRAME TrapFrame);
+
 /* other functions */
 
 NTSTATUS

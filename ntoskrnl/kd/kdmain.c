@@ -29,12 +29,17 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
 {
     KD_CONTINUE_TYPE Return = kdHandleException;
 #ifdef KDBG
+    EXCEPTION_RECORD64 ExceptionRecord64;
+
     /* Check if this is an assertion failure */
     if (ExceptionRecord->ExceptionCode == STATUS_ASSERTION_FAILURE)
     {
         /* Bump EIP to the instruction following the int 2C */
         ContextRecord->Eip += 2;
     }
+
+    ExceptionRecord32To64((PEXCEPTION_RECORD32)ExceptionRecord,
+                          &ExceptionRecord64);
 #endif
 
     /* Get out of here if the Debugger isn't connected */
@@ -42,10 +47,9 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
 
 #ifdef KDBG
     /* Call KDBG if available */
-    Return = KdbEnterDebuggerException(ExceptionRecord,
+    Return = KdbEnterDebuggerException(&ExceptionRecord64,
                                        PreviousMode,
                                        ContextRecord,
-                                       TrapFrame,
                                        !SecondChanceException);
 #else /* not KDBG */
     /* We'll manually dump the stack for the user... */
