@@ -1,4 +1,4 @@
-/* Spanish translation by Javier Remacha 2008-26-01 */
+/* Spanish translation by Javier Remacha 2008-26-01. Revision by Julen Urizar Compains 2020-09-04*/
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -28,16 +28,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEVERITY_SUCCESS        "Success"
-    IDS_SEVERITY_INFORMATIONAL  "System Information"
-    IDS_SEVERITY_WARNING        "System Warning"
-    IDS_SEVERITY_ERROR          "System Error"
+    IDS_SEVERITY_SUCCESS        "Fin con éxito"
+    IDS_SEVERITY_INFORMATIONAL  "Información del Sistema"
+    IDS_SEVERITY_WARNING        "Advertencia del Sistema"
+    IDS_SEVERITY_ERROR          "Error del Sistema"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYSTEM_PROCESS          "System Process"
-    IDS_UNKNOWN_SOFTWARE_EXCEPT "unknown software exception"
-    IDS_OK_TERMINATE_PROGRAM    "Click on OK to terminate the program."
-    IDS_CANCEL_DEBUG_PROGRAM    "Click on CANCEL to debug the program."
+    IDS_SYSTEM_PROCESS          "Proceso del Sistema"
+    IDS_UNKNOWN_SOFTWARE_EXCEPT "Excepción Desconocida de Software"
+    IDS_OK_TERMINATE_PROGRAM    "Haz clic en OK para finalizar el programa."
+    IDS_CANCEL_DEBUG_PROGRAM    "Haz clic en CANCELAR para depurar el programa."
 END
