@@ -325,10 +325,13 @@ struct CChangeNotifyImpl
         return TRUE;
     }
 
-    void DestroyItem(ITEM& item, DWORD dwOwnerPID)
+    void DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndOldWorker)
     {
-        if (item.hwndOldWorker)
+        if (item.hwndOldWorker && item.hwndOldWorker != *phwndOldWorker)
+        {
             DestroyWindow(item.hwndOldWorker);
+            *phwndOldWorker = item.hwndOldWorker;
+        }
 
         SHFreeShared(item.hShare, dwOwnerPID);
         item.nRegID = INVALID_REG_ID;
@@ -340,12 +343,13 @@ struct CChangeNotifyImpl
     BOOL RemoveItem(UINT nRegID, DWORD dwOwnerPID)
     {
         BOOL bFound = FALSE;
+        HWND hwndOldWorker = NULL;
         for (INT i = 0; i < m_items.GetSize(); ++i)
         {
             if (m_items[i].nRegID == nRegID)
             {
                 bFound = TRUE;
-                DestroyItem(m_items[i], dwOwnerPID);
+                DestroyItem(m_items[i], dwOwnerPID, &hwndOldWorker);
             }
         }
         return bFound;
@@ -353,11 +357,12 @@ struct CChangeNotifyImpl
 
     void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
     {
+        HWND hwndOldWorker = NULL;
         for (INT i = 0; i < m_items.GetSize(); ++i)
         {
             if (m_items[i].dwUserPID == dwUserPID)
             {
-                DestroyItem(m_items[i], dwOwnerPID);
+                DestroyItem(m_items[i], dwOwnerPID, &hwndOldWorker);
             }
         }
     }
