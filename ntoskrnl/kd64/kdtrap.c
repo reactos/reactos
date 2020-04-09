@@ -116,10 +116,6 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
     Handled = KdpReportExceptionStateChange(ExceptionRecord,
                                             &Prcb->ProcessorState.
                                             ContextFrame,
-#ifndef _WINKD_
-                                            TrapFrame,
-                                            PreviousMode,
-#endif
                                             SecondChanceException);
 
     /* Now restore the processor state, manually again. */

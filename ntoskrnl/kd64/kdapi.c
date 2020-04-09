@@ -1725,7 +1725,6 @@ KdpReportCommandStringStateChange(IN PSTRING NameString,
     } while (Status == ContinueProcessorReselected);
 }
 
-#ifdef _WINKD_
 BOOLEAN
 NTAPI
 KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
@@ -1780,7 +1779,6 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Return */
     return Status;
 }
-#endif
 
 VOID
 NTAPI
@@ -1844,10 +1842,6 @@ KdpSwitchProcessor(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Report a state change */
     Status = KdpReportExceptionStateChange(ExceptionRecord,
                                            ContextRecord,
-#ifndef _WINKD_
-                                           NULL,
-                                           KernelMode,
-#endif
                                            SecondChanceException);
 
     /* Restore the port data and return */

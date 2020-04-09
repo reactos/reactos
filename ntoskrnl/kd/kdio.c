@@ -43,6 +43,12 @@ volatile ULONG KdbDmesgTotalWritten = 0;
 volatile BOOLEAN KdbpIsInDmesgMode = FALSE;
 static KSPIN_LOCK KdpDmesgLogSpinLock;
 
+static ULONG KdbgNextApiNumber = DbgKdContinueApi;
+static CONTEXT KdbgContext;
+static EXCEPTION_RECORD64 KdbgExceptionRecord;
+static BOOLEAN KdbgFirstChanceException;
+static NTSTATUS KdbgContinueStatus = STATUS_SUCCESS;
+
 /* LOCKING FUNCTIONS *********************************************************/
 
 KIRQL
@@ -560,6 +566,50 @@ KdSendPacket(
 #endif
             return;
         }
+        else if (WaitStateChange->NewState == DbgKdExceptionStateChange)
+        {
+            KdbgNextApiNumber = DbgKdGetContextApi;
+            KdbgExceptionRecord = WaitStateChange->u.Exception.ExceptionRecord;
+            KdbgFirstChanceException = WaitStateChange->u.Exception.FirstChance;
+            return;
+        }
+    }
+    else if (PacketType == PACKET_TYPE_KD_STATE_MANIPULATE)
+    {
+        PDBGKD_MANIPULATE_STATE64 ManipulateState = (PDBGKD_MANIPULATE_STATE64)MessageHeader->Buffer;
+        if (ManipulateState->ApiNumber == DbgKdGetContextApi)
+        {
+            KD_CONTINUE_TYPE Result;
+
+#ifdef KDBG
+            /* Check if this is an assertion failure */
+            if (KdbgExceptionRecord.ExceptionCode == STATUS_ASSERTION_FAILURE)
+            {
+                /* Bump EIP to the instruction following the int 2C */
+                KdbgContext.Eip += 2;
+            }
+
+            Result = KdbEnterDebuggerException(&KdbgExceptionRecord,
+                                               KernelMode, // FIXME
+                                               &KdbgContext,
+                                               KdbgFirstChanceException);
+#else
+            /* We'll manually dump the stack for the user... */
+            KeRosDumpStackFrames(NULL, 0);
+            Result = kdHandleException;
+#endif
+            if (Result != kdHandleException)
+                KdbgContinueStatus = STATUS_SUCCESS;
+            else
+                KdbgContinueStatus = STATUS_UNSUCCESSFUL;
+            KdbgNextApiNumber = DbgKdSetContextApi;
+            return;
+        }
+        else if (ManipulateState->ApiNumber == DbgKdSetContextApi)
+        {
+            KdbgNextApiNumber = DbgKdContinueApi;
+            return;
+        }
     }
     UNIMPLEMENTED;
 }
@@ -586,8 +636,32 @@ KdReceivePacket(
     if (PacketType == PACKET_TYPE_KD_STATE_MANIPULATE)
     {
         PDBGKD_MANIPULATE_STATE64 ManipulateState = (PDBGKD_MANIPULATE_STATE64)MessageHeader->Buffer;
+        RtlZeroMemory(MessageHeader->Buffer, MessageHeader->MaximumLength);
+        if (KdbgNextApiNumber == DbgKdGetContextApi)
+        {
+            ManipulateState->ApiNumber = DbgKdGetContextApi;
+            MessageData->Length = 0;
+            MessageData->Buffer = (PCHAR)&KdbgContext;
+            return KdPacketReceived;
+        }
+        else if (KdbgNextApiNumber == DbgKdSetContextApi)
+        {
+            ManipulateState->ApiNumber = DbgKdSetContextApi;
+            MessageData->Length = sizeof(KdbgContext);
+            MessageData->Buffer = (PCHAR)&KdbgContext;
+            return KdPacketReceived;
+        }
+        else if (KdbgNextApiNumber != DbgKdContinueApi)
+        {
+            UNIMPLEMENTED;
+        }
         ManipulateState->ApiNumber = DbgKdContinueApi;
-        ManipulateState->u.Continue.ContinueStatus = STATUS_SUCCESS;
+        ManipulateState->u.Continue.ContinueStatus = KdbgContinueStatus;
+
+        /* Prepare for next time */
+        KdbgNextApiNumber = DbgKdContinueApi;
+        KdbgContinueStatus = STATUS_SUCCESS;
+
         return KdPacketReceived;
     }
 

@@ -281,10 +281,6 @@ NTAPI
 KdpReportExceptionStateChange(
     IN PEXCEPTION_RECORD ExceptionRecord,
     IN OUT PCONTEXT Context,
-#ifndef _WINKD_
-    IN PKTRAP_FRAME TrapFrame,
-    IN KPROCESSOR_MODE PreviousMode,
-#endif
     IN BOOLEAN SecondChanceException
 );
 

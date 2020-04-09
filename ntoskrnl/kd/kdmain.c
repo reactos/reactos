@@ -17,52 +17,6 @@ VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
 
 extern ANSI_STRING KdpLogFileName;
 
-/* PRIVATE FUNCTIONS *********************************************************/
-
-BOOLEAN
-NTAPI
-KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
-                              IN OUT PCONTEXT ContextRecord,
-                              IN PKTRAP_FRAME TrapFrame,
-                              IN KPROCESSOR_MODE PreviousMode,
-                              IN BOOLEAN SecondChanceException)
-{
-    KD_CONTINUE_TYPE Return = kdHandleException;
-#ifdef KDBG
-    EXCEPTION_RECORD64 ExceptionRecord64;
-
-    /* Check if this is an assertion failure */
-    if (ExceptionRecord->ExceptionCode == STATUS_ASSERTION_FAILURE)
-    {
-        /* Bump EIP to the instruction following the int 2C */
-        ContextRecord->Eip += 2;
-    }
-
-    ExceptionRecord32To64((PEXCEPTION_RECORD32)ExceptionRecord,
-                          &ExceptionRecord64);
-#endif
-
-    /* Get out of here if the Debugger isn't connected */
-    if (KdDebuggerNotPresent) return FALSE;
-
-#ifdef KDBG
-    /* Call KDBG if available */
-    Return = KdbEnterDebuggerException(&ExceptionRecord64,
-                                       PreviousMode,
-                                       ContextRecord,
-                                       !SecondChanceException);
-#else /* not KDBG */
-    /* We'll manually dump the stack for the user... */
-    KeRosDumpStackFrames(NULL, 0);
-#endif /* not KDBG */
-
-    /* Debugger didn't handle it, please handle! */
-    if (Return == kdHandleException) return FALSE;
-
-    /* Debugger handled it */
-    return TRUE;
-}
-
 /* PUBLIC FUNCTIONS *********************************************************/
 
 static PCHAR
