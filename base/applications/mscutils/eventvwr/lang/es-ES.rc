@@ -198,14 +198,14 @@ END
 STRINGTABLE
 BEGIN
     IDS_COPY "Tipo de evento:     %s\r\n\
-Event Source:   %s\r\n\
-Event Category: %s\r\n\
-Event ID:       %s\r\n\
-Date:           %s\r\n\
-Time:           %s\r\n\
-User:           %s\r\n\
-Computer:       %s\r\n\
-Description:\r\n%s"
+Fuente del evento:   %s\r\n\
+Categor. del evento: %s\r\n\
+ID del evento:       %s\r\n\
+Fecha:           %s\r\n\
+Hora:           %s\r\n\
+Usuario:           %s\r\n\
+Equipo:       %s\r\n\
+Descripción:\r\n%s"
 END
 
 STRINGTABLE
