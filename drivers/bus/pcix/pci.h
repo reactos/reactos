@@ -18,6 +18,7 @@
 #include <ndk/halfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/vffuncs.h>
+#include <arbiter.h>
 
 //
 // Tag used in all pool allocations (Pci Bus)
@@ -402,7 +403,7 @@ typedef struct PCI_ARBITER_INSTANCE
     PPCI_INTERFACE Interface;
     PPCI_FDO_EXTENSION BusFdoExtension;
     WCHAR InstanceName[24];
-    //ARBITER_INSTANCE CommonInstance; FIXME: Need Arbiter Headers
+    ARBITER_INSTANCE CommonInstance;
 } PCI_ARBITER_INSTANCE, *PPCI_ARBITER_INSTANCE;
 
 //
