@@ -21,7 +21,6 @@ list(APPEND SOURCE
     precomp.h)
 
 add_executable(rosautotest ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/rosautotestmsg.rc)
-set_property(TARGET rosautotest PROPERTY CXX_STANDARD 11)
 set_module_type(rosautotest win32cui UNICODE)
 add_importlibs(rosautotest advapi32 shell32 user32 wininet msvcrt kernel32 ntdll)
 add_pch(rosautotest precomp.h SOURCE)

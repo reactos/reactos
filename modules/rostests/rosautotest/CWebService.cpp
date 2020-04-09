@@ -66,7 +66,7 @@ CWebService::DoRequest(const string& InputData)
 {
     const WCHAR szHeaders[] = L"Content-Type: application/x-www-form-urlencoded";
 
-    unique_ptr<char[]> Data;
+    auto_array_ptr<char> Data;
     DWORD DataLength;
 
     /* Post our test results to the web service */
@@ -76,9 +76,9 @@ CWebService::DoRequest(const string& InputData)
         FATAL("HttpOpenRequestW failed\n");
 
     Data.reset(new char[InputData.size() + 1]);
-    strcpy(Data.get(), InputData.c_str());
+    strcpy(Data, InputData.c_str());
 
-    if(!HttpSendRequestW(m_hHTTPRequest, szHeaders, lstrlenW(szHeaders), Data.get(), (DWORD)InputData.size()))
+    if(!HttpSendRequestW(m_hHTTPRequest, szHeaders, lstrlenW(szHeaders), Data, (DWORD)InputData.size()))
         FATAL("HttpSendRequestW failed\n");
 
     /* Get the response */
@@ -87,7 +87,7 @@ CWebService::DoRequest(const string& InputData)
 
     Data.reset(new char[DataLength + 1]);
 
-    if(!InternetReadFile(m_hHTTPRequest, Data.get(), DataLength, &DataLength))
+    if(!InternetReadFile(m_hHTTPRequest, Data, DataLength, &DataLength))
         FATAL("InternetReadFile failed\n");
 
     Data[DataLength] = 0;
@@ -104,7 +104,7 @@ CWebService::DoRequest(const string& InputData)
 void
 CWebService::Finish(const char* TestType)
 {
-    unique_ptr<char[]> Response;
+    auto_array_ptr<char> Response;
     string Data;
     stringstream ss;
 
@@ -120,9 +120,9 @@ CWebService::Finish(const char* TestType)
 
     Response.reset(DoRequest(Data));
 
-    if (strcmp(Response.get(), "OK"))
+    if (strcmp(Response, "OK"))
     {
-        ss << "When finishing the test run, the server responded:" << endl << Response.get() << endl;
+        ss << "When finishing the test run, the server responded:" << endl << Response << endl;
         SSEXCEPTION;
     }
 }
@@ -178,7 +178,7 @@ CWebService::GetTestID(const char* TestType)
 PCHAR
 CWebService::GetSuiteID(const char* TestType, CTestInfo* TestInfo)
 {
-    unique_ptr<char[]> SuiteID;
+    auto_array_ptr<char> SuiteID;
     string Data;
 
     Data = "action=getsuiteid";
@@ -193,11 +193,11 @@ CWebService::GetSuiteID(const char* TestType, CTestInfo* TestInfo)
     SuiteID.reset(DoRequest(Data));
 
     /* Verify that this is really a number */
-    if(!IsNumber(SuiteID.get()))
+    if(!IsNumber(SuiteID))
     {
         stringstream ss;
 
-        ss << "Expected Suite ID, but received:" << endl << SuiteID.get() << endl;
+        ss << "Expected Suite ID, but received:" << endl << SuiteID << endl;
         SSEXCEPTION;
     }
 
@@ -216,8 +216,8 @@ CWebService::GetSuiteID(const char* TestType, CTestInfo* TestInfo)
 void
 CWebService::Submit(const char* TestType, CTestInfo* TestInfo)
 {
-    unique_ptr<char[]> Response;
-    unique_ptr<char[]> SuiteID;
+    auto_array_ptr<char> Response;
+    auto_array_ptr<char> SuiteID;
     string Data;
     stringstream ss;
 
@@ -233,15 +233,15 @@ CWebService::Submit(const char* TestType, CTestInfo* TestInfo)
     Data += "&testid=";
     Data += m_TestID;
     Data += "&suiteid=";
-    Data += SuiteID.get();
+    Data += SuiteID;
     Data += "&log=";
     Data += EscapeString(TestInfo->Log);
 
     Response.reset(DoRequest(Data));
 
-    if (strcmp(Response.get(), "OK"))
+    if (strcmp(Response, "OK"))
     {
-        ss << "When submitting the result, the server responded:" << endl << Response.get() << endl;
+        ss << "When submitting the result, the server responded:" << endl << Response << endl;
         SSEXCEPTION;
     }
 }
