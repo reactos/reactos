@@ -362,11 +362,11 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember
 
         if (SUCCEEDED(hr))
         {
-            if (!bAlreadyExists)
-            {
-                GetFullPathNameW(pszFileName, _countof(szFullPath), szFullPath, NULL);
+            GetFullPathNameW(pszFileName, _countof(szFullPath), szFullPath, NULL);
+            if (bAlreadyExists)
+                SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, szFullPath, NULL);
+            else
                 SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, szFullPath, NULL);
-            }
 
             if (m_sLinkPath)
                 HeapFree(GetProcessHeap(), 0, m_sLinkPath);
