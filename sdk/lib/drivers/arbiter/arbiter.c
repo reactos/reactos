@@ -8,10 +8,13 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NDEBUG
-#include <debug.h>
+#include <ntifs.h>
+#include <ndk/rtltypes.h>
 
 #include "arbiter.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 

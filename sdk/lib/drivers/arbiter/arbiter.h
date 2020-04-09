@@ -9,11 +9,6 @@
 #ifndef _ARBITER_H
 #define _ARBITER_H
 
-#ifndef _NTOSKRNL_
-#include <ntifs.h>
-#include <ndk/rtlfuncs.h>
-#endif
-
 typedef struct _ARBITER_ORDERING
 {
     ULONGLONG Start;
