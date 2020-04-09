@@ -4,7 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Nomor parameter tidak tepat - %s\n"
     IDS_INVALID_PARAMETER "Nomor parameter tidak tepat - %s\n"
-    IDS_INVALID_PARAMETER2 "Parameter tidak valid - %s\n"
+    IDS_INVALID_PARAMETER2 "Parameter tidak sah - %s\n"
     IDS_PATH_NOT_FOUND "Jalur tidak ditemukan - %s\n"
     IDS_ACCESS_DENIED "Akses ditolak - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "Drive telah di-SUBST\n"
