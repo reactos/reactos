@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS msgina.dll
  * FILE:            dll/win32/msgina/gui.c
  * PURPOSE:         ReactOS Logon GINA DLL
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
@@ -27,6 +27,9 @@ typedef struct _LEGALNOTICEDATA
     LPWSTR pszCaption;
     LPWSTR pszText;
 } LEGALNOTICEDATA, *PLEGALNOTICEDATA;
+
+// Timer ID for the animated dialog bar.
+#define IDT_BAR 1
 
 typedef struct _DLG_DATA
 {
