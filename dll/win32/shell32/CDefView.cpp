@@ -1160,7 +1160,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     INT nRegCount;
     SHChangeNotifyEntry ntreg[3];
     PIDLIST_ABSOLUTE pidls[3];
-    if ((m_FolderSettings.fFlags & FWF_DESKTOP) || _ILIsDesktop(m_pidlParent))
+    if (_ILIsDesktop(m_pidlParent))
     {
         nRegCount = 3;
         SHGetSpecialFolderLocation(m_hWnd, CSIDL_DESKTOPDIRECTORY, &pidls[0]);
