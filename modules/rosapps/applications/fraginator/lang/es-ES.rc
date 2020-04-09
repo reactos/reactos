@@ -18,9 +18,9 @@ BEGIN
                     WS_BORDER,7,7,78,58
     LTEXT           "Seleccione una unidad:",-1,78,40,73,8
     LTEXT           "Seleccione una acción:",-1,159,40,73,8
-    CONTROL         "Progreso1",IDC_PROGRESS,"msctls_progress32",WS_BORDER |
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER |
                     0x1,7,71,320,10
-    CONTROL         "Estático",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP |
+    CONTROL         "Static",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP |
                     SS_SUNKEN | WS_GROUP,7,86,359,10
     LTEXT           "Soy un mono, óyeme eeK",IDC_WISECRACKS,78,15,115,8
     LTEXT           "100.00%",IDC_PERCENT,337,71,30,8,0,WS_EX_RIGHT
