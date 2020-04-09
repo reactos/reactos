@@ -344,10 +344,15 @@ HRESULT STDMETHODCALLTYPE CShellLink::Load(LPCOLESTR pszFileName, DWORD dwMode)
 
 HRESULT STDMETHODCALLTYPE CShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember)
 {
+    BOOL bAlreadyExists;
+    WCHAR szFullPath[MAX_PATH];
+
     TRACE("(%p)->(%s)\n", this, debugstr_w(pszFileName));
 
     if (!pszFileName)
         return E_FAIL;
+
+    bAlreadyExists = PathFileExistsW(pszFileName);
 
     CComPtr<IStream> stm;
     HRESULT hr = SHCreateStreamOnFileW(pszFileName, STGM_READWRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE, &stm);
@@ -357,6 +362,12 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember
 
         if (SUCCEEDED(hr))
         {
+            if (!bAlreadyExists)
+            {
+                GetFullPathNameW(pszFileName, _countof(szFullPath), szFullPath, NULL);
+                SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, szFullPath, NULL);
+            }
+
             if (m_sLinkPath)
                 HeapFree(GetProcessHeap(), 0, m_sLinkPath);
 
