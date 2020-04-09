@@ -16,9 +16,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DISPLAY_FILTERS1    "Nombre Filtrado                     Num Instancias    Altitud    Frame\n"
-    IDS_DISPLAY_FILTERS2    "Nombre Filtrado                     Num Instancias   Frame\n"
-    IDS_DISPLAY_VOLUMES     "Nombre Dos                        Nombre de volumen                              SistemArchiv   Estado\n"
+    IDS_DISPLAY_FILTERS1    "Nombre Filtrado                 Num Instancias    Altitud   Frame\n"
+    IDS_DISPLAY_FILTERS2    "Nombre Filtrado                 Num Instancias  Frame\n"
+    IDS_DISPLAY_VOLUMES     "Nombre Dos                      Nombre de volumen   SistemArchiv   Estado\n"
 END
 
 STRINGTABLE
