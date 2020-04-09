@@ -34,9 +34,12 @@ else()
     set_image_base(ntkrnlmp 0x80800000)
 endif()
 
+# dynamic analysis switches
 if(STACK_PROTECTOR)
     target_link_libraries(ntkrnlmp gcc_ssp)
-elseif(RUNTIME_CHECKS)
+endif()
+
+if(RUNTIME_CHECKS)
     target_link_libraries(ntkrnlmp runtmchk)
 endif()
 
