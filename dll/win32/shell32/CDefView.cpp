@@ -1166,17 +1166,17 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         SHGetSpecialFolderLocation(m_hWnd, CSIDL_DESKTOPDIRECTORY, &pidls[0]);
         SHGetSpecialFolderLocation(m_hWnd, CSIDL_COMMON_DESKTOPDIRECTORY, &pidls[1]);
         SHGetSpecialFolderLocation(m_hWnd, CSIDL_BITBUCKET, &pidls[2]);
-        ntreg[0].fRecursive = TRUE;
+        ntreg[0].fRecursive = FALSE;
         ntreg[0].pidl = pidls[0];
-        ntreg[1].fRecursive = TRUE;
+        ntreg[1].fRecursive = FALSE;
         ntreg[1].pidl = pidls[1];
-        ntreg[2].fRecursive = TRUE;
+        ntreg[2].fRecursive = FALSE;
         ntreg[2].pidl = pidls[2];
     }
     else
     {
         nRegCount = 1;
-        ntreg[0].fRecursive = TRUE;
+        ntreg[0].fRecursive = FALSE;
         ntreg[0].pidl = m_pidlParent;
     }
     m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_NewDelivery | SHCNRF_ShellLevel,
