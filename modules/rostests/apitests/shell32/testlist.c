@@ -17,6 +17,7 @@ extern void func_IShellFolderViewCB(void);
 extern void func_menu(void);
 extern void func_OpenAs_RunDLL(void);
 extern void func_PathResolve(void);
+extern void func_SHAppBarMessage(void);
 extern void func_SHChangeNotify(void);
 extern void func_SHCreateDataObject(void);
 extern void func_SHCreateFileExtractIconW(void);
@@ -43,6 +44,7 @@ const struct test winetest_testlist[] =
     { "menu", func_menu },
     { "OpenAs_RunDLL", func_OpenAs_RunDLL },
     { "PathResolve", func_PathResolve },
+    { "SHAppBarMessage", func_SHAppBarMessage },
     { "SHChangeNotify", func_SHChangeNotify },
     { "SHCreateDataObject", func_SHCreateDataObject },
     { "SHCreateFileExtractIconW", func_SHCreateFileExtractIconW },
