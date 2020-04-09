@@ -536,58 +536,27 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
 
 BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
 {
-    BOOL ret = FALSE;
-    LPITEMIDLIST pidl = NULL, pidl1 = NULL, pidl2 = NULL;
-    WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
-    INT cch, cch1, cch2;
+    BOOL ret;
+    LPITEMIDLIST pidl, pidl1, pidl2;
 
-    szPath[0] = szPath1[0] = szPath2[0] = 0;
+    if (!pShared->ibPidl)
+        return TRUE;
 
-    if (pShared->ibPidl)
-    {
-        pidl = (LPITEMIDLIST)((LPBYTE)pShared + pShared->ibPidl);
-        SHGetPathFromIDListW(pidl, szPath);
-        PathAddBackslashW(szPath);
-    }
+    ret = FALSE;
+    pidl = (LPITEMIDLIST)((LPBYTE)pShared + pShared->ibPidl);
 
-    if (pTicket->ibOffset1)
+    if (!ret && pTicket->ibOffset1)
     {
         pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
-        if (ILIsEqual(pidl, pidl1))
+        if (ILIsEqual(pidl, pidl1) || ILIsParent(pidl, pidl1, !pShared->fRecursive))
             ret = TRUE;
-        SHGetPathFromIDListW(pidl1, szPath1);
-        PathAddBackslashW(szPath1);
     }
 
-    if (pTicket->ibOffset2)
+    if (!ret && pTicket->ibOffset2)
     {
         pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
-        if (ILIsEqual(pidl, pidl2))
+        if (ILIsEqual(pidl, pidl2) || ILIsParent(pidl, pidl2, !pShared->fRecursive))
             ret = TRUE;
-        SHGetPathFromIDListW(pidl2, szPath2);
-        PathAddBackslashW(szPath2);
-    }
-
-    if (pShared->fRecursive)
-    {
-        if (szPath1[0] == 0)
-            ret = TRUE;
-
-        cch = lstrlenW(szPath);
-        cch1 = lstrlenW(szPath1);
-        cch2 = lstrlenW(szPath2);
-        if (cch < cch1)
-        {
-            szPath1[cch] = 0;
-            if (lstrcmpiW(szPath, szPath1) == 0)
-                ret = TRUE;
-        }
-        if (cch < cch2)
-        {
-            szPath2[cch] = 0;
-            if (lstrcmpiW(szPath, szPath2) == 0)
-                ret = TRUE;
-        }
     }
 
     return ret;
