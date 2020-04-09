@@ -109,11 +109,11 @@ COMMUNICATIONS=Comunicaciones
 GAMES=Juegos
 
 FONTSUB_TITLE=FontSub
-FONTSUB_DESC=Font Substitutes Editor
+FONTSUB_DESC=Editor de Fuentes Sustitutas
 SCREENSHOT_TITLE=Captura de pantalla
 SCREENSHOT_DESC=Guarda secciones de la pantalla como un archivo de imagen.
 VCD_TITLE=Virtual CDRom Control Panel
-VCD_DESC=Manage virtual CDRom drives
+VCD_DESC=Gestiona CDRom virtuales.
 
 ; Estonian
 [Strings.0425]

@@ -2,30 +2,30 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\nValid commands :\n\
-               load        Loads a Filter driver\n\
-               unload      Unloads a Filter driver\n\
-               filters     Lists the Filters currently registered in the system\n\n\
-               volumes     Lists all volumes\n\n"
+    IDS_USAGE "\nComandos válidos :\n\
+               load        Carga un controlador de filtro\n\
+               unload      Des-carga un controlador de filtro\n\
+               filters     Listar los Filtros que estén actualmente registrados en el sistema\n\n\
+               volumes     Listar todos los volúmenes\n\n"
 
-    IDS_USAGE_LOAD      "Loads a filter driver\n"
-    IDS_USAGE_UNLOAD    "Unloads a filter driver\n"
-    IDS_USAGE_FILTERS   "Lists all registered filters\n"
-    IDS_USAGE_VOLUMES   "Lists all volumes\n"
+    IDS_USAGE_LOAD      "Carga un controlador de filtro\n"
+    IDS_USAGE_UNLOAD    "Des-carga a controlador de filtro\n"
+    IDS_USAGE_FILTERS   "Listar los Filtros registrados\n"
+    IDS_USAGE_VOLUMES   "Listar todos los volúmenes\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DISPLAY_FILTERS1    "Filter Name                     Num Instances    Altitude    Frame\n"
-    IDS_DISPLAY_FILTERS2    "Filter Name                     Num Instances   Frame\n"
-    IDS_DISPLAY_VOLUMES     "Dos Name                        Volume Name                              FileSystem   Status\n"
+    IDS_DISPLAY_FILTERS1    "Nombre Filtrado                 Num Instancias    Altitud   Frame\n"
+    IDS_DISPLAY_FILTERS2    "Nombre Filtrado                 Num Instancias  Frame\n"
+    IDS_DISPLAY_VOLUMES     "Nombre Dos                      Nombre de volumen   SistemArchiv   Estado\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_PRIV      "Failed to set the driver load privilige (0x%X)\n"
-    IDS_ERROR_FILTERS   "Failed to list the filters (0x%X)\n"
-    IDS_ERROR_LOAD      "Failed to load the filter (0x%X)\n"
-    IDS_ERROR_UNLOAD    "Failed to unload the filter (0x%X)\n"
-    IDS_ERROR_VOLUMES   "Failed to list the volumes (0x%X)\n"
+    IDS_ERROR_PRIV      "Error al configurar el controlador carga privilegio (0x%X)\n"
+    IDS_ERROR_FILTERS   "Error al listar los filtros (0x%X)\n"
+    IDS_ERROR_LOAD      "Error al cargar los filtros (0x%X)\n"
+    IDS_ERROR_UNLOAD    "Error al des-cargar los filtros (0x%X)\n"
+    IDS_ERROR_VOLUMES   "Error al listar los volúmenes (0x%X)\n"
 END

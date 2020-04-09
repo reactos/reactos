@@ -39,7 +39,7 @@ BEGIN
     LTEXT       "El instalador de ReactOS puede actualizar una de las instalaciones disponibles listadas a continuación o, si la instalación de ReactOS está dañada, intentar repararla.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&No actualizar", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Click Next to upgrade the selected OS installation, or on 'Do not upgrade' to continue a new installation without upgrading.", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "Haga click en Siguiente para actualizar el SO seleccionado, o en No actualizar para continuar una nueva instalación sin actualizar.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
