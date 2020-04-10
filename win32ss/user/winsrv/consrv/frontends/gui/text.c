@@ -343,7 +343,7 @@ GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
      * This function supposes that the system clipboard was opened.
      */
 
-    PCONSRV_CONSOLE Console = Buffer->Header.Console;
+    PCONSRV_CONSOLE Console = (PCONSRV_CONSOLE)Buffer->Header.Console;
 
     HANDLE hData;
     LPWSTR pszText;
@@ -369,7 +369,7 @@ GuiPaintCaret(
     ULONG LeftColumn,
     ULONG RightColumn)
 {
-    PCONSRV_CONSOLE Console = Buffer->Header.Console;
+    PCONSRV_CONSOLE Console = (PCONSRV_CONSOLE)Buffer->Header.Console;
 
     ULONG CursorX, CursorY, CursorHeight;
     HBRUSH CursorBrush, OldBrush;
@@ -435,7 +435,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                        PRECT rcView,
                        PRECT rcFramebuffer)
 {
-    PCONSRV_CONSOLE Console = Buffer->Header.Console;
+    PCONSRV_CONSOLE Console = (PCONSRV_CONSOLE)Buffer->Header.Console;
     ULONG TopLine, BottomLine, LeftColumn, RightColumn;
     ULONG Line, Char, Start;
     PCHAR_INFO From;

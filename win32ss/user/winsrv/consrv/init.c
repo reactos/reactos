@@ -569,7 +569,6 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
     if (!ConSrvHeap) return STATUS_NO_MEMORY;
 */
 
-    ConDrvInitConsoleSupport();
     ConSrvInitConsoleSupport();
 
     /* Setup the DLL Object */

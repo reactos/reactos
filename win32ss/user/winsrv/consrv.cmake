@@ -40,7 +40,7 @@ list(APPEND CONSRV_SOURCE
     consrv/consrv.h)
 
 #
-# Explicitely enable MS extensions to be able to use unnamed (anonymous) nested structs.
+# Explicitly enable MS extensions to be able to use unnamed (anonymous) nested structs.
 #
 # FIXME: http://www.cmake.org/Bug/view.php?id=12998
 if(MSVC)

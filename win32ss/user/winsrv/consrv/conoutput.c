@@ -35,6 +35,7 @@ CSR_API(SrvInvalidateBitMapRect)
 {
     NTSTATUS Status;
     PCONSOLE_INVALIDATEDIBITS InvalidateDIBitsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.InvalidateDIBitsRequest;
+    PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buffer;
 
     DPRINT("SrvInvalidateBitMapRect\n");
@@ -44,15 +45,17 @@ CSR_API(SrvInvalidateBitMapRect)
                                    &Buffer, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
+    Console = (PCONSRV_CONSOLE)Buffer->Header.Console;
+
     /* In text-mode only, draw the VDM buffer if present */
-    if (GetType(Buffer) == TEXTMODE_BUFFER && Buffer->Header.Console->VDMBuffer)
+    if (GetType(Buffer) == TEXTMODE_BUFFER && Console->VDMBuffer)
     {
         PTEXTMODE_SCREEN_BUFFER TextBuffer = (PTEXTMODE_SCREEN_BUFFER)Buffer;
 
         /*Status =*/ ConDrvWriteConsoleOutputVDM(Buffer->Header.Console,
                                                  TextBuffer,
-                                                 Buffer->Header.Console->VDMBuffer,
-                                                 Buffer->Header.Console->VDMBufferSize,
+                                                 Console->VDMBuffer,
+                                                 Console->VDMBufferSize,
                                                  &InvalidateDIBitsRequest->Region);
     }
 

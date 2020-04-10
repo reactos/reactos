@@ -60,14 +60,8 @@ typedef struct ConsoleInput_t
     INPUT_RECORD InputEvent;
 } ConsoleInput;
 
-// Helper for code refactoring
-// #define USE_NEW_CONSOLE_WAY
-
-#ifndef USE_NEW_CONSOLE_WAY
 #include "include/conio.h"
-#else
 #include "include/conio_winsrv.h"
-#endif
 
 #include "include/console.h"
 #include "include/settings.h"

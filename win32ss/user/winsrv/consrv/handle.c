@@ -65,7 +65,7 @@ ConSrvCloseHandle(IN PCONSOLE_IO_HANDLE Handle)
         if (Object->Type == INPUT_BUFFER)
         {
             // PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
-            PCONSOLE Console = Object->Console;
+            PCONSRV_CONSOLE Console = (PCONSRV_CONSOLE)Object->Console;
 
             /*
              * Wake up all the writing waiters related to this handle for this
@@ -125,7 +125,7 @@ static VOID ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData);
 
 static NTSTATUS
 ConSrvInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
-                       IN PCONSOLE Console,
+                       IN PCONSRV_CONSOLE Console,
                        OUT PHANDLE pInputHandle,
                        OUT PHANDLE pOutputHandle,
                        OUT PHANDLE pErrorHandle)
@@ -410,7 +410,7 @@ ConSrvGetObject(IN PCONSOLE_PROCESS_DATA ProcessData,
     ULONG Index = HandleToULong(Handle) >> 2;
     PCONSOLE_IO_HANDLE HandleEntry = NULL;
     PCONSOLE_IO_OBJECT ObjectEntry = NULL;
-    // PCONSOLE ObjectConsole;
+    // PCONSRV_CONSOLE ObjectConsole;
 
     ASSERT(Object);
     if (Entry) *Entry = NULL;
@@ -465,7 +465,8 @@ VOID
 ConSrvReleaseObject(IN PCONSOLE_IO_OBJECT Object,
                     IN BOOLEAN IsConsoleLocked)
 {
-    ConSrvReleaseConsole(Object->Console, IsConsoleLocked);
+    PCONSRV_CONSOLE ObjectConsole = (PCONSRV_CONSOLE)Object->Console;
+    ConSrvReleaseConsole(ObjectConsole, IsConsoleLocked);
 }
 
 
@@ -611,7 +612,7 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                      PCONSOLE_START_INFO ConsoleStartInfo)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     /* Validate and lock the console */
     if (!ConSrvValidateConsole(&Console,
@@ -734,7 +735,7 @@ Quit:
 NTSTATUS
 ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 {
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     PCONSOLE_PROCESS_DATA ConsoleLeaderProcess;
 
     DPRINT("ConSrvRemoveConsole\n");
@@ -808,6 +809,7 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: ConsolepOpenConsole */
 CSR_API(SrvOpenConsole)
 {
     /*
@@ -818,7 +820,7 @@ CSR_API(SrvOpenConsole)
     NTSTATUS Status;
     PCONSOLE_OPENCONSOLE OpenConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.OpenConsoleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     DWORD DesiredAccess = OpenConsoleRequest->DesiredAccess;
     DWORD ShareMode = OpenConsoleRequest->ShareMode;
@@ -877,7 +879,7 @@ CSR_API(SrvDuplicateHandle)
     NTSTATUS Status;
     PCONSOLE_DUPLICATEHANDLE DuplicateHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.DuplicateHandleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     HANDLE SourceHandle = DuplicateHandleRequest->SourceHandle;
     ULONG Index = HandleToULong(SourceHandle) >> 2;
@@ -951,7 +953,7 @@ CSR_API(SrvGetHandleInformation)
     NTSTATUS Status;
     PCONSOLE_GETHANDLEINFO GetHandleInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetHandleInfoRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     HANDLE Handle = GetHandleInfoRequest->Handle;
     ULONG Index = HandleToULong(Handle) >> 2;
@@ -1000,7 +1002,7 @@ CSR_API(SrvSetHandleInformation)
     NTSTATUS Status;
     PCONSOLE_SETHANDLEINFO SetHandleInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHandleInfoRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     HANDLE Handle = SetHandleInfoRequest->Handle;
     ULONG Index = HandleToULong(Handle) >> 2;
@@ -1051,7 +1053,7 @@ CSR_API(SrvCloseHandle)
     NTSTATUS Status;
     PCONSOLE_CLOSEHANDLE CloseHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CloseHandleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
@@ -1072,7 +1074,7 @@ CSR_API(SrvVerifyConsoleIoHandle)
     NTSTATUS Status;
     PCONSOLE_VERIFYHANDLE VerifyHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.VerifyHandleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     HANDLE IoHandle = VerifyHandleRequest->Handle;
     ULONG Index = HandleToULong(IoHandle) >> 2;

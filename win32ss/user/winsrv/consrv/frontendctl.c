@@ -72,7 +72,7 @@ CSR_API(SrvGetConsoleHardwareState)
         return Status;
     }
 
-    Console = Buff->Header.Console;
+    Console = (PCONSRV_CONSOLE)Buff->Header.Console;
     HardwareStateRequest->State = Console->HardwareState;
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
@@ -104,7 +104,7 @@ CSR_API(SrvSetConsoleHardwareState)
     }
 
     DPRINT("Setting console hardware state.\n");
-    Console = Buff->Header.Console;
+    Console = (PCONSRV_CONSOLE)Buff->Header.Console;
     Status = SetConsoleHardwareState(Console, HardwareStateRequest->State);
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
@@ -168,7 +168,7 @@ CSR_API(SrvGetLargestConsoleWindowSize)
 {
     NTSTATUS Status;
     PCONSOLE_GETLARGESTWINDOWSIZE GetLargestWindowSizeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetLargestWindowSizeRequest;
-    PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+    PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
@@ -178,7 +178,7 @@ CSR_API(SrvGetLargestConsoleWindowSize)
                                      TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    Console = Buff->Header.Console;
+    Console = (PCONSRV_CONSOLE)Buff->Header.Console;
 
     /*
      * Retrieve the largest possible console window size, without
@@ -196,7 +196,7 @@ CSR_API(SrvShowConsoleCursor)
 {
     NTSTATUS Status;
     PCONSOLE_SHOWCURSOR ShowCursorRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ShowCursorRequest;
-    PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+    PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
     Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
@@ -206,7 +206,7 @@ CSR_API(SrvShowConsoleCursor)
                                    TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    Console = Buff->Header.Console;
+    Console = (PCONSRV_CONSOLE)Buff->Header.Console;
 
     ShowCursorRequest->RefCount = TermShowMouseCursor(Console, ShowCursorRequest->Show);
 
@@ -380,7 +380,7 @@ CSR_API(SrvGetConsoleNumberOfFonts)
 {
     NTSTATUS Status;
     PCONSOLE_GETNUMFONTS GetNumFontsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetNumFontsRequest;
-    PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+    PCONSRV_CONSOLE Console;
 
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                               &Console, TRUE);
@@ -400,7 +400,7 @@ CSR_API(SrvGetConsoleFontInfo)
 {
     NTSTATUS Status;
     PCONSOLE_GETFONTINFO GetFontInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetFontInfoRequest;
-    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+    // PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
@@ -411,7 +411,7 @@ CSR_API(SrvGetConsoleFontInfo)
     if (!NT_SUCCESS(Status)) return Status;
 
     // FIXME!
-    // Console = Buff->Header.Console;
+    // Console = (PCONSRV_CONSOLE)Buff->Header.Console;
     // TermGetFontInfo(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     GetFontInfoRequest->NumFonts = 0;
@@ -425,7 +425,7 @@ CSR_API(SrvGetConsoleFontSize)
 {
     NTSTATUS Status;
     PCONSOLE_GETFONTSIZE GetFontSizeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetFontSizeRequest;
-    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+    // PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
@@ -436,7 +436,7 @@ CSR_API(SrvGetConsoleFontSize)
     if (!NT_SUCCESS(Status)) return Status;
 
     // FIXME!
-    // Console = Buff->Header.Console;
+    // Console = (PCONSRV_CONSOLE)Buff->Header.Console;
     // TermGetFontSize(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
 
@@ -449,7 +449,7 @@ CSR_API(SrvGetConsoleCurrentFont)
 {
     NTSTATUS Status;
     PCONSOLE_GETCURRENTFONT GetCurrentFontRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCurrentFontRequest;
-    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+    // PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
@@ -460,7 +460,7 @@ CSR_API(SrvGetConsoleCurrentFont)
     if (!NT_SUCCESS(Status)) return Status;
 
     // FIXME!
-    // Console = Buff->Header.Console;
+    // Console = (PCONSRV_CONSOLE)Buff->Header.Console;
     // TermGetCurrentFont(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     GetCurrentFontRequest->FontIndex = 0;
@@ -474,7 +474,7 @@ CSR_API(SrvSetConsoleFont)
 {
     NTSTATUS Status;
     PCONSOLE_SETFONT SetFontRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetFontRequest;
-    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
+    // PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
@@ -485,7 +485,7 @@ CSR_API(SrvSetConsoleFont)
     if (!NT_SUCCESS(Status)) return Status;
 
     // FIXME!
-    // Console = Buff->Header.Console;
+    // Console = (PCONSRV_CONSOLE)Buff->Header.Console;
     // TermSetFont(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
 
