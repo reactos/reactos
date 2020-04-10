@@ -537,7 +537,9 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
 BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
 {
     BOOL ret;
-    LPITEMIDLIST pidl, pidl1, pidl2;
+    LPITEMIDLIST pidl, pidl1 = NULL, pidl2 = NULL;
+    WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
+    INT cch, cch1, cch2;
 
     if (!pShared->ibPidl)
         return TRUE;
@@ -557,6 +559,36 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
         pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
         if (ILIsEqual(pidl, pidl2) || ILIsParent(pidl, pidl2, !pShared->fRecursive))
             ret = TRUE;
+    }
+
+    if (!ret && SHGetPathFromIDListW(pidl, szPath))
+    {
+        PathAddBackslashW(szPath);
+        cch = lstrlenW(szPath);
+
+        if (pidl1 && SHGetPathFromIDListW(pidl1, szPath1))
+        {
+            PathAddBackslashW(szPath1);
+            cch1 = lstrlenW(szPath1);
+            if (cch < cch1)
+            {
+                szPath1[cch] = 0;
+                if (lstrcmpiW(szPath, szPath1) == 0)
+                    ret = TRUE;
+            }
+        }
+
+        if (!ret && pidl2 && SHGetPathFromIDListW(pidl2, szPath2))
+        {
+            PathAddBackslashW(szPath2);
+            cch2 = lstrlenW(szPath2);
+            if (cch < cch2)
+            {
+                szPath2[cch] = 0;
+                if (lstrcmpiW(szPath, szPath2) == 0)
+                    ret = TRUE;
+            }
+        }
     }
 
     return ret;
