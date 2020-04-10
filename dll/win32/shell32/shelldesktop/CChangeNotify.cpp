@@ -536,7 +536,6 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
 
 BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
 {
-    BOOL ret;
     LPITEMIDLIST pidl, pidl1 = NULL, pidl2 = NULL;
     WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
     INT cch, cch1, cch2;
@@ -544,24 +543,23 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
     if (!pShared->ibPidl)
         return TRUE;
 
-    ret = FALSE;
     pidl = (LPITEMIDLIST)((LPBYTE)pShared + pShared->ibPidl);
 
-    if (!ret && pTicket->ibOffset1)
+    if (pTicket->ibOffset1)
     {
         pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
         if (ILIsEqual(pidl, pidl1) || ILIsParent(pidl, pidl1, !pShared->fRecursive))
-            ret = TRUE;
+            return TRUE;
     }
 
-    if (!ret && pTicket->ibOffset2)
+    if (pTicket->ibOffset2)
     {
         pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
         if (ILIsEqual(pidl, pidl2) || ILIsParent(pidl, pidl2, !pShared->fRecursive))
-            ret = TRUE;
+            return TRUE;
     }
 
-    if (!ret && SHGetPathFromIDListW(pidl, szPath))
+    if (SHGetPathFromIDListW(pidl, szPath))
     {
         PathAddBackslashW(szPath);
         cch = lstrlenW(szPath);
@@ -574,11 +572,11 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
             {
                 szPath1[cch] = 0;
                 if (lstrcmpiW(szPath, szPath1) == 0)
-                    ret = TRUE;
+                    return TRUE;
             }
         }
 
-        if (!ret && pidl2 && SHGetPathFromIDListW(pidl2, szPath2))
+        if (pidl2 && SHGetPathFromIDListW(pidl2, szPath2))
         {
             PathAddBackslashW(szPath2);
             cch2 = lstrlenW(szPath2);
@@ -586,10 +584,10 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
             {
                 szPath2[cch] = 0;
                 if (lstrcmpiW(szPath, szPath2) == 0)
-                    ret = TRUE;
+                    return TRUE;
             }
         }
     }
 
-    return ret;
+    return FALSE;
 }
