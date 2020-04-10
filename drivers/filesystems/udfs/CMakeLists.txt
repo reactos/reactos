@@ -51,7 +51,7 @@ if(MSVC)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(udfs PRIVATE -Wno-unused-but-set-variable)
+    target_compile_options(udfs PRIVATE -Wno-unused-but-set-variable -Wno-stringop-overflow)
 endif()
 
 set_module_type(udfs kernelmodedriver)

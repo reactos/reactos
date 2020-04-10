@@ -138,6 +138,11 @@ else()
     endif()
 endif()
 
+# GCC optimizer bug. See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85175
+if((OPTIMIZE STREQUAL "3") AND (GCC_VERSION VERSION_GREATER 8))
+    add_compile_options(-Wno-format-overflow)
+endif()
+
 # Link-time code generation
 if(LTCG)
     add_compile_options(-flto -fno-fat-lto-objects)
