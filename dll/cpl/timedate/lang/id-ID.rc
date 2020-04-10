@@ -54,6 +54,6 @@ BEGIN
     IDS_INETTIMENEXTSYNC "Penyelarasan berikutnya: %s pada %s"
     IDS_INETTIMESYNCING "Harap menunggu saat ReactOS menyelaraskan waktu dengan %s"
     IDS_INETTIMEERROR "Kesalahan terjadi ketika ReactOS menyelaraskan dengan %s"
-    IDS_INETTIMESUCFILL "Please type a NTP server name in order to synchronize the time"
-    IDS_INETTIMEWELCOME "Select a NTP server from the list or type a NTP server name to synchronize the computer's time"
+    IDS_INETTIMESUCFILL "Harap tulis nama server NTP untuk menyinkronkan waktu"
+    IDS_INETTIMEWELCOME "Pilih server NTP dari daftar atau tuliskan nama server NTP untuk menyinkronkan waktu komputer"
 END

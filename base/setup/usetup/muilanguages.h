@@ -251,9 +251,9 @@
 // #ifdef LANGUAGE_HY_AM
     // #include "lang/hy-AM.h"
 // #endif
-// #ifdef LANGUAGE_ID_ID
-    // #include "lang/id-ID.h"
-// #endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/id-ID.h"
+ #endif
 // #ifdef LANGUAGE_IS_IS
     // #include "lang/is-IS.h"
 // #endif
@@ -643,7 +643,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"0000040F", L"Icelandic", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_ID_ID
-    {L"00000421", L"Indonesian", enUSPages, enUSErrorEntries, enUSStrings},
+    {L"00000421", L"Indonesian", idIDPages, idIDErrorEntries, idIDStrings},
 #endif
 #ifdef LANGUAGE_IT_IT
     {L"00000410", L"Italian (Italy)", itITPages, itITErrorEntries, itITStrings},

@@ -778,12 +778,8 @@ int CDefView::LV_FindItemByPidl(PCUITEMID_CHILD pidl)
     for (int i = 0; i<cItems; i++)
     {
         PCUITEMID_CHILD currentpidl = _PidlByItem(i);
-        HRESULT hr = m_pSFParent->CompareIDs(0, pidl, currentpidl);
-
-        if (SUCCEEDED(hr) && !HRESULT_CODE(hr))
-        {
+        if (ILIsEqual(pidl, currentpidl))
             return i;
-        }
     }
     return -1;
 }
@@ -819,7 +815,7 @@ BOOLEAN CDefView::LV_DeleteItem(PCUITEMID_CHILD pidl)
 
     nIndex = LV_FindItemByPidl(pidl);
 
-    return (-1 == m_ListView.DeleteItem(nIndex)) ? FALSE : TRUE;
+    return m_ListView.DeleteItem(nIndex);
 }
 
 /**********************************************************
@@ -1129,7 +1125,6 @@ LRESULT CDefView::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     CComPtr<IDropTarget>     pdt;
-    SHChangeNotifyEntry      ntreg;
     CComPtr<IPersistFolder2> ppf2;
 
     TRACE("%p\n", this);
@@ -1145,9 +1140,6 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     if (ppf2)
     {
         ppf2->GetCurFolder(&m_pidlParent);
-        ntreg.fRecursive = TRUE;
-        ntreg.pidl = m_pidlParent;
-        m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_InterruptLevel | SHCNRF_ShellLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
     }
 
     if (CreateList())
@@ -1156,6 +1148,44 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         {
             FillList();
         }
+    }
+
+    if (m_FolderSettings.fFlags & FWF_DESKTOP)
+    {
+        HWND hwndSB;
+        m_pShellBrowser->GetWindow(&hwndSB);
+        SetShellWindowEx(hwndSB, m_ListView);
+    }
+
+    INT nRegCount;
+    SHChangeNotifyEntry ntreg[3];
+    PIDLIST_ABSOLUTE pidls[3];
+    if (_ILIsDesktop(m_pidlParent))
+    {
+        nRegCount = 3;
+        SHGetSpecialFolderLocation(m_hWnd, CSIDL_DESKTOPDIRECTORY, &pidls[0]);
+        SHGetSpecialFolderLocation(m_hWnd, CSIDL_COMMON_DESKTOPDIRECTORY, &pidls[1]);
+        SHGetSpecialFolderLocation(m_hWnd, CSIDL_BITBUCKET, &pidls[2]);
+        ntreg[0].fRecursive = FALSE;
+        ntreg[0].pidl = pidls[0];
+        ntreg[1].fRecursive = FALSE;
+        ntreg[1].pidl = pidls[1];
+        ntreg[2].fRecursive = FALSE;
+        ntreg[2].pidl = pidls[2];
+    }
+    else
+    {
+        nRegCount = 1;
+        ntreg[0].fRecursive = FALSE;
+        ntreg[0].pidl = m_pidlParent;
+    }
+    m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_NewDelivery | SHCNRF_ShellLevel,
+                                       SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, nRegCount, ntreg);
+    if (nRegCount == 3)
+    {
+        ILFree(pidls[0]);
+        ILFree(pidls[1]);
+        ILFree(pidls[2]);
     }
 
     /* _DoFolderViewCB(SFVM_GETNOTIFY, ??  ??) */
@@ -2100,6 +2130,21 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
         }
         ILFree(deskpidl);
     }
+
+    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+    LPITEMIDLIST pidl2Clone = ILClone(pidl2);
+    ILRemoveLastID(pidl2Clone);
+    if (SHGetPathFromIDListW(pidl1, szPath1) &&
+        SHGetPathFromIDListW(pidl2Clone, szPath2))
+    {
+        if (lstrcmpiW(szPath1, szPath2) == 0)
+        {
+            ILFree(pidl2Clone);
+            return TRUE;
+        }
+    }
+    ILFree(pidl2Clone);
+
     return FALSE;
 }
 
@@ -2108,13 +2153,24 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
 */
 LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    PCIDLIST_ABSOLUTE *Pidls = reinterpret_cast<PCIDLIST_ABSOLUTE*>(wParam);
+    HANDLE hChange = (HANDLE)wParam;
+    DWORD dwProcID = (DWORD)lParam;
+    PIDLIST_ABSOLUTE *Pidls;
+    LONG lEvent;
+    HANDLE hLock = SHChangeNotification_Lock(hChange, dwProcID, &Pidls, &lEvent);
+    if (hLock == NULL)
+    {
+        ERR("hLock == NULL\n");
+        return FALSE;
+    }
+
     BOOL bParent0 = ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]);
     BOOL bParent1 = ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]);
 
     TRACE("(%p)(%p,%p,0x%08x)\n", this, Pidls[0], Pidls[1], lParam);
 
-    switch (lParam &~ SHCNE_INTERRUPT)
+    lEvent &= ~SHCNE_INTERRUPT;
+    switch (lEvent)
     {
         case SHCNE_MKDIR:
         case SHCNE_CREATE:
@@ -2156,6 +2212,8 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             Refresh();
             break;
     }
+
+    SHChangeNotification_Unlock(hLock);
     return TRUE;
 }
 

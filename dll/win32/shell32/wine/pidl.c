@@ -1100,6 +1100,10 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathA(LPCSTR lpszPath)
         wPath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         MultiByteToWideChar(CP_ACP, 0, lpszPath, -1, wPath, len);
     }
+#ifdef __REACTOS__
+    if (PathFileExistsW(wPath))
+        return ILCreateFromPathW(wPath);
+#endif
 
     _ILParsePathW(wPath, NULL, TRUE, &pidl, NULL);
 
@@ -1113,6 +1117,10 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathW(LPCWSTR lpszPath)
     LPITEMIDLIST pidl = NULL;
 
     TRACE("%s\n", debugstr_w(lpszPath));
+#ifdef __REACTOS__
+    if (PathFileExistsW(lpszPath))
+        return ILCreateFromPathW(lpszPath);
+#endif
 
     _ILParsePathW(lpszPath, NULL, TRUE, &pidl, NULL);
     TRACE("%s %p\n", debugstr_w(lpszPath), pidl);

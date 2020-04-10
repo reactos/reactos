@@ -124,7 +124,7 @@ typedef struct _FLT_FILTER   // size = 0x120
 
 }  FLT_FILTER, *PFLT_FILTER;
 
-typedef enum _FLT_yINSTANCE_FLAGS
+typedef enum _FLT_INSTANCE_FLAGS
 {
     INSFL_CAN_BE_DETACHED = 0x01,
     INSFL_DELETING = 0x02,

@@ -2032,7 +2032,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","ObjectName",0x00000000,"LocalS
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\w32time.dll"
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\Parameters","ServiceMain",0x00000000,"W32TmServiceMain"
+HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\Parameters","ServiceMain",0x00000000,"SvchostEntry_W32Time"
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\Parameters","Type",0x00010000,"NTP"
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpClient","SpecialPollInterval",0x00010001,0x00093a80
 

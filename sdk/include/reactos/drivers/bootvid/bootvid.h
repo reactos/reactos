@@ -1,5 +1,16 @@
+/*
+ * PROJECT:     ReactOS Boot Video Driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Main BOOTVID header.
+ * COPYRIGHT:   Copyright 2007-2020 Alex Ionescu (alex.ionescu@reactos.org)
+ */
+
 #ifndef _BOOTVID_
 #define _BOOTVID_
+
+#pragma once
+
+#include "display.h"
 
 BOOLEAN
 NTAPI
@@ -52,7 +63,7 @@ VidBitBlt(IN PUCHAR Buffer,
 
 VOID
 NTAPI
-VidScreenToBufferBlt(IN PUCHAR Buffer,
+VidScreenToBufferBlt(OUT PUCHAR Buffer,
                      IN ULONG Left,
                      IN ULONG Top,
                      IN ULONG Width,
@@ -67,4 +78,4 @@ VidSolidColorFill(IN ULONG Left,
                   IN ULONG Bottom,
                   IN UCHAR Color);
 
-#endif
+#endif // _BOOTVID_
