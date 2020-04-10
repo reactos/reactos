@@ -2,6 +2,7 @@
  * ReactOS Explorer
  *
  * Copyright 2016 Sylvain Deverre <deverre dot sylv at gmail dot com>
+ * Copyright 2020 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -143,16 +144,20 @@ Cleanup:
     return hr;
 }
 
-CExplorerBand::CExplorerBand() :
-    pSite(NULL), fVisible(FALSE), bNavigating(FALSE), dwBandID(0), pidlCurrent(NULL)
+CExplorerBand::CExplorerBand()
+    : m_pSite(NULL)
+    , m_fVisible(FALSE)
+    , m_bNavigating(FALSE)
+    , m_dwBandID(0)
+    , m_pidlCurrent(NULL)
 {
 }
 
 CExplorerBand::~CExplorerBand()
 {
-    if(pidlCurrent)
+    if (m_pidlCurrent)
     {
-        ILFree(pidlCurrent);
+        ILFree(m_pidlCurrent);
     }
 }
 
@@ -164,7 +169,7 @@ void CExplorerBand::InitializeExplorerBand()
     CComPtr<IWebBrowser2>               browserService;
     SHChangeNotifyEntry                 shcne;
 
-    hr = SHGetDesktopFolder(&pDesktop);
+    hr = SHGetDesktopFolder(&m_pDesktop);
     if (FAILED_UNEXPECTEDLY(hr))
         return;
 
@@ -180,18 +185,18 @@ void CExplorerBand::InitializeExplorerBand()
     TreeView_SetImageList(m_hWnd, (HIMAGELIST)piml, TVSIL_NORMAL);
 
     // Insert the root node
-    hRoot = InsertItem(0, pDesktop, pidl, pidl, FALSE);
-    if (!hRoot)
+    m_hRoot = InsertItem(0, m_pDesktop, pidl, pidl, FALSE);
+    if (!m_hRoot)
     {
         ERR("Failed to create root item\n");
         return;
     }
 
-    NodeInfo* pNodeInfo = GetNodeInfo(hRoot);
+    NodeInfo* pNodeInfo = GetNodeInfo(m_hRoot);
 
     // Insert child nodes
-    InsertSubitems(hRoot, pNodeInfo);
-    TreeView_Expand(m_hWnd, hRoot, TVE_EXPAND);
+    InsertSubitems(m_hRoot, pNodeInfo);
+    TreeView_Expand(m_hWnd, m_hRoot, TVE_EXPAND);
 
     // Navigate to current folder position
     NavigateToCurrentFolder();
@@ -199,23 +204,23 @@ void CExplorerBand::InitializeExplorerBand()
     // Register shell notification
     shcne.pidl = pidl;
     shcne.fRecursive = TRUE;
-    shellRegID = SHChangeNotifyRegister(
+    m_shellRegID = SHChangeNotifyRegister(
         m_hWnd,
         SHCNRF_ShellLevel | SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt,
         SHCNE_DISKEVENTS | SHCNE_RENAMEFOLDER | SHCNE_RMDIR | SHCNE_MKDIR,
         WM_USER_SHELLEVENT,
         1,
         &shcne);
-    if (!shellRegID)
+    if (!m_shellRegID)
     {
         ERR("Something went wrong, error %08x\n", GetLastError());
     }
     // Register browser connection endpoint
-    hr = IUnknown_QueryService(pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
+    hr = IUnknown_QueryService(m_pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
     if (FAILED_UNEXPECTEDLY(hr))
         return;
 
-    hr = AtlAdvise(browserService, dynamic_cast<IDispatch*>(this), DIID_DWebBrowserEvents, &adviseCookie);
+    hr = AtlAdvise(browserService, dynamic_cast<IDispatch*>(this), DIID_DWebBrowserEvents, &m_adviseCookie);
     if (FAILED_UNEXPECTEDLY(hr))
         return;
 
@@ -229,16 +234,16 @@ void CExplorerBand::DestroyExplorerBand()
 
     TRACE("Cleaning up explorer band ...\n");
 
-    hr = IUnknown_QueryService(pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
+    hr = IUnknown_QueryService(m_pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
     if (FAILED_UNEXPECTEDLY(hr))
         return;
 
-    hr = AtlUnadvise(browserService, DIID_DWebBrowserEvents, adviseCookie);
+    hr = AtlUnadvise(browserService, DIID_DWebBrowserEvents, m_adviseCookie);
     /* Remove all items of the treeview */
     RevokeDragDrop(m_hWnd);
     TreeView_DeleteAllItems(m_hWnd);
-    pDesktop = NULL;
-    hRoot = NULL;
+    m_pDesktop = NULL;
+    m_hRoot = NULL;
     TRACE("Cleanup done !\n");
 }
 
@@ -262,7 +267,7 @@ HRESULT CExplorerBand::ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd)
     HWND                                browserWnd;
     HRESULT                             hr;
 
-    hr = IUnknown_QueryService(pSite, SID_SShellBrowser, IID_PPV_ARG(IOleWindow, &pBrowserOleWnd));
+    hr = IUnknown_QueryService(m_pSite, SID_SShellBrowser, IID_PPV_ARG(IOleWindow, &pBrowserOleWnd));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -287,7 +292,7 @@ HRESULT CExplorerBand::UpdateBrowser(LPITEMIDLIST pidlGoto)
     CComPtr<IShellBrowser>              pBrowserService;
     HRESULT                             hr;
 
-    hr = IUnknown_QueryService(pSite, SID_STopLevelBrowser, IID_PPV_ARG(IShellBrowser, &pBrowserService));
+    hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser, IID_PPV_ARG(IShellBrowser, &pBrowserService));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -295,10 +300,10 @@ HRESULT CExplorerBand::UpdateBrowser(LPITEMIDLIST pidlGoto)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if(pidlCurrent)
+    if (m_pidlCurrent)
     {
-        ILFree(pidlCurrent);
-        pidlCurrent = ILClone(pidlGoto);
+        ILFree(m_pidlCurrent);
+        m_pidlCurrent = ILClone(pidlGoto);
     }
     return hr;
 }
@@ -309,7 +314,7 @@ BOOL CExplorerBand::OnTreeItemExpanding(LPNMTREEVIEW pnmtv)
     NodeInfo *pNodeInfo;
 
     if (pnmtv->action == TVE_COLLAPSE) {
-        if (pnmtv->itemNew.hItem == hRoot)
+        if (pnmtv->itemNew.hItem == m_hRoot)
         {
             // Prenvent root from collapsing
             pnmtv->itemNew.mask |= TVIF_STATE;
@@ -356,7 +361,7 @@ void CExplorerBand::OnSelectionChanged(LPNMTREEVIEW pnmtv)
     NodeInfo* pNodeInfo = GetNodeInfo(pnmtv->itemNew.hItem);
 
     /* Prevents navigation if selection is initiated inside the band */
-    if (bNavigating)
+    if (m_bNavigating)
         return;
 
     UpdateBrowser(pNodeInfo->absolutePidl);
@@ -461,9 +466,9 @@ Cleanup:
         IUnknown_SetSite(contextMenu, NULL);
     if (treeMenu)
         DestroyMenu(treeMenu);
-    bNavigating = TRUE;
-    TreeView_SelectItem(m_hWnd, oldSelected);
-    bNavigating = FALSE;
+    m_bNavigating = TRUE;
+    TreeView_SelectItem(m_hWnd, m_oldSelected);
+    m_bNavigating = FALSE;
     return TRUE;
 }
 
@@ -479,13 +484,13 @@ LRESULT CExplorerBand::ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         info.hItem = NULL;
 
         // Save the current location
-        oldSelected = TreeView_GetSelection(m_hWnd);
+        m_oldSelected = TreeView_GetSelection(m_hWnd);
 
         // Move to the item selected by the treeview (don't change right pane)
         TreeView_HitTest(m_hWnd, &info);
-        bNavigating = TRUE;
+        m_bNavigating = TRUE;
         TreeView_SelectItem(m_hWnd, info.hItem);
-        bNavigating = FALSE;
+        m_bNavigating = FALSE;
     }
     return FALSE; /* let the wndproc process the message */
 }
@@ -534,15 +539,15 @@ LRESULT CExplorerBand::OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CExplorerBand::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    bFocused = TRUE;
-    IUnknown_OnFocusChangeIS(pSite, reinterpret_cast<IUnknown*>(this), TRUE);
+    m_bFocused = TRUE;
+    IUnknown_OnFocusChangeIS(m_pSite, reinterpret_cast<IUnknown*>(this), TRUE);
     bHandled = FALSE;
     return TRUE;
 }
 
 LRESULT CExplorerBand::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    IUnknown_OnFocusChangeIS(pSite, reinterpret_cast<IUnknown*>(this), FALSE);
+    IUnknown_OnFocusChangeIS(m_pSite, reinterpret_cast<IUnknown*>(this), FALSE);
     bHandled = FALSE;
     return TRUE;
 }
@@ -651,15 +656,15 @@ BOOL CExplorerBand::InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo)
         return FALSE;
     }
 
-    if (!pDesktop->CompareIDs(NULL, pidlSub, entry))
+    if (!m_pDesktop->CompareIDs(NULL, pidlSub, entry))
     {
         // We are the desktop, so use pDesktop as pFolder
-        pFolder = pDesktop;
+        pFolder = m_pDesktop;
     }
     else
     {
         // Get an IShellFolder of our pidl
-        hr = pDesktop->BindToObject(entry, NULL, IID_PPV_ARG(IShellFolder, &pFolder));
+        hr = m_pDesktop->BindToObject(entry, NULL, IID_PPV_ARG(IShellFolder, &pFolder));
         if (!SUCCEEDED(hr))
         {
             ILFree(pidlSub);
@@ -730,7 +735,7 @@ BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExp
         return FALSE;
 
     found = FALSE;
-    current = hRoot;
+    current = m_hRoot;
     parent = NULL;
     while(!found)
     {
@@ -742,7 +747,7 @@ BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExp
             return FALSE;
         }
         // If we found our node, give it back
-        if (!pDesktop->CompareIDs(0, nodeData->absolutePidl, dest))
+        if (!m_pDesktop->CompareIDs(0, nodeData->absolutePidl, dest))
         {
             if (bSelect)
                 TreeView_SelectItem(m_hWnd, current);
@@ -818,7 +823,7 @@ BOOL CExplorerBand::NavigateToCurrentFolder()
     BOOL                                result; 
     explorerPidl = NULL;
 
-    hr = IUnknown_QueryService(pSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &pBrowserService));
+    hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &pBrowserService));
     if (!SUCCEEDED(hr))
     {
         ERR("Can't get IBrowserService !\n");
@@ -831,10 +836,10 @@ BOOL CExplorerBand::NavigateToCurrentFolder()
         ERR("Unable to get browser PIDL !\n");
         return FALSE;
     }
-    bNavigating = TRUE;
+    m_bNavigating = TRUE;
     /* find PIDL into our explorer */
     result = NavigateToPIDL(explorerPidl, &dummy, TRUE, FALSE, TRUE);
-    bNavigating = FALSE;
+    m_bNavigating = FALSE;
     return result;
 }
 
@@ -851,7 +856,7 @@ BOOL CExplorerBand::DeleteItem(LPITEMIDLIST idl)
 
     parentNode = TreeView_GetParent(m_hWnd, toDelete);
     // Navigate to parent when deleting child item
-    if (!pDesktop->CompareIDs(0, idl, pidlCurrent))
+    if (!m_pDesktop->CompareIDs(0, idl, m_pidlCurrent))
     {
         TreeView_SelectItem(m_hWnd, parentNode);
     }
@@ -1009,7 +1014,7 @@ int CALLBACK CExplorerBand::CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3)
     if (_ILIsSpecialFolder(info1->relativePidl) && !_ILIsSpecialFolder(info2->relativePidl))
     {
         HRESULT hr;
-        hr = pThis->pDesktop->CompareIDs(0, info1->absolutePidl, info2->absolutePidl);
+        hr = pThis->m_pDesktop->CompareIDs(0, info1->absolutePidl, info2->absolutePidl);
         if (!hr) return 0;
         return (hr > 0) ? -1 : 1;
     }
@@ -1048,7 +1053,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::ResizeBorderDW(const RECT *prcBorder, I
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::ShowDW(BOOL fShow)
 {
-    fVisible = fShow;
+    m_fVisible = fShow;
     ShowWindow(fShow);
     return S_OK;
 }
@@ -1061,7 +1066,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::GetBandInfo(DWORD dwBandID, DWORD dwVie
     {
         return E_INVALIDARG;
     }
-    this->dwBandID = dwBandID;
+    this->m_dwBandID = dwBandID;
 
     if (pdbi->dwMask & DBIM_MINSIZE)
     {
@@ -1110,7 +1115,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::SetSite(IUnknown *pUnkSite)
     HRESULT hr;
     HWND parentWnd;
 
-    if (pUnkSite == pSite)
+    if (pUnkSite == m_pSite)
         return S_OK;
 
     TRACE("SetSite called \n");
@@ -1121,9 +1126,9 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::SetSite(IUnknown *pUnkSite)
         m_hWnd = NULL;
     }
 
-    if (pUnkSite != pSite)
+    if (pUnkSite != m_pSite)
     {
-        pSite = NULL;
+        m_pSite = NULL;
     }
 
     if(!pUnkSite)
@@ -1136,7 +1141,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::SetSite(IUnknown *pUnkSite)
         return E_INVALIDARG;
     }
 
-    pSite = pUnkSite;    
+    m_pSite = pUnkSite;
 
     if (m_hWnd)
     {
@@ -1163,7 +1168,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::GetSite(REFIID riid, void **ppvSite)
 {
     if (!ppvSite)
         return E_POINTER;
-    *ppvSite = pSite;
+    *ppvSite = m_pSite;
     return S_OK;
 }
 
@@ -1186,7 +1191,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::Exec(const GUID *pguidCmdGroup, DWORD n
 HRESULT STDMETHODCALLTYPE CExplorerBand::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
     /* FIXME: we probably want to handle more services here */
-    return IUnknown_QueryService(pSite, SID_SShellBrowser, riid, ppvObject);
+    return IUnknown_QueryService(m_pSite, SID_SShellBrowser, riid, ppvObject);
 }
 
 
@@ -1209,7 +1214,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::UIActivateIO(BOOL fActivate, LPMSG lpMs
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()
 {
-    return bFocused ? S_OK : S_FALSE;
+    return m_bFocused ? S_OK : S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::TranslateAcceleratorIO(LPMSG lpMsg)
@@ -1446,8 +1451,8 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::Invoke(DISPID dispIdMember, REFIID riid
 HRESULT STDMETHODCALLTYPE CExplorerBand::DragEnter(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWORD *pdwEffect)
 {
     ERR("Entering drag\n");
-    pCurObject = pObj;
-    oldSelected = TreeView_GetSelection(m_hWnd);
+    m_pCurObject = pObj;
+    m_oldSelected = TreeView_GetSelection(m_hWnd);
     return DragOver(glfKeyState, pt, pdwEffect);
 }
 
@@ -1470,15 +1475,15 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::DragOver(DWORD glfKeyState, POINTL pt, 
 
     if (info.hItem)
     {
-        bNavigating = TRUE;
+        m_bNavigating = TRUE;
         TreeView_SelectItem(m_hWnd, info.hItem);
-        bNavigating = FALSE;
+        m_bNavigating = FALSE;
         // Delegate to shell folder
-        if (pDropTarget && info.hItem != childTargetNode)
+        if (m_pDropTarget && info.hItem != m_childTargetNode)
         {
-            pDropTarget = NULL;
+            m_pDropTarget = NULL;
         }
-        if (info.hItem != childTargetNode)
+        if (info.hItem != m_childTargetNode)
         {
             nodeInfo = GetNodeInfo(info.hItem);
             if (!nodeInfo)
@@ -1492,10 +1497,10 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::DragOver(DWORD glfKeyState, POINTL pt, 
                 return E_FAIL;
 #endif
             if(_ILIsDesktop(nodeInfo->absolutePidl))
-                pShellFldr = pDesktop;
+                pShellFldr = m_pDesktop;
             else
             {
-                hr = pDesktop->BindToObject(nodeInfo->absolutePidl, 0, IID_PPV_ARG(IShellFolder, &pShellFldr));
+                hr = m_pDesktop->BindToObject(nodeInfo->absolutePidl, 0, IID_PPV_ARG(IShellFolder, &pShellFldr));
                 if (!SUCCEEDED(hr))
                 {
                     /* Don't allow dnd since we couldn't get our folder object */
@@ -1504,7 +1509,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::DragOver(DWORD glfKeyState, POINTL pt, 
                     return E_FAIL;
                 }
             }
-            hr = pShellFldr->CreateViewObject(m_hWnd, IID_PPV_ARG(IDropTarget, &pDropTarget));
+            hr = pShellFldr->CreateViewObject(m_hWnd, IID_PPV_ARG(IDropTarget, &m_pDropTarget));
             if (!SUCCEEDED(hr))
             {
                 /* Don't allow dnd since we couldn't get our drop target */
@@ -1512,18 +1517,18 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::DragOver(DWORD glfKeyState, POINTL pt, 
                 *pdwEffect = DROPEFFECT_NONE;
                 return E_FAIL;
             }
-            hr = pDropTarget->DragEnter(pCurObject, glfKeyState, pt, pdwEffect);
-            childTargetNode = info.hItem;
+            hr = m_pDropTarget->DragEnter(m_pCurObject, glfKeyState, pt, pdwEffect);
+            m_childTargetNode = info.hItem;
         }
-        if (pDropTarget)
+        if (m_pDropTarget)
         {
-            hr = pDropTarget->DragOver(glfKeyState, pt, pdwEffect);
+            hr = m_pDropTarget->DragOver(glfKeyState, pt, pdwEffect);
         }
     }
     else
     {
-        childTargetNode = NULL;
-        pDropTarget = NULL;
+        m_childTargetNode = NULL;
+        m_pDropTarget = NULL;
         *pdwEffect = DROPEFFECT_NONE;
     }
     return S_OK;
@@ -1531,22 +1536,22 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::DragOver(DWORD glfKeyState, POINTL pt, 
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::DragLeave()
 {
-    bNavigating = TRUE;
-    TreeView_SelectItem(m_hWnd, oldSelected);
-    bNavigating = FALSE;
-    childTargetNode = NULL;
-    if (pCurObject)
+    m_bNavigating = TRUE;
+    TreeView_SelectItem(m_hWnd, m_oldSelected);
+    m_bNavigating = FALSE;
+    m_childTargetNode = NULL;
+    if (m_pCurObject)
     {
-        pCurObject = NULL;
+        m_pCurObject = NULL;
     }
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::Drop(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWORD *pdwEffect)
 {
-    if (!pDropTarget)
+    if (!m_pDropTarget)
         return E_FAIL;
-    pDropTarget->Drop(pObj, glfKeyState, pt, pdwEffect);
+    m_pDropTarget->Drop(pObj, glfKeyState, pt, pdwEffect);
     DragLeave();
     return S_OK;
 }
