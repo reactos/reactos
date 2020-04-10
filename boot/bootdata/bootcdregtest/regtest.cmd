@@ -21,4 +21,4 @@ if exist "%WINDIR%\bin\AHKAppTests.cmd" (
 
 dbgprint --process "ipconfig"
 cd "%WINDIR%\bin"
-start rosautotest /r /s /n
+start rosautotest /r /s /n gdiplus
