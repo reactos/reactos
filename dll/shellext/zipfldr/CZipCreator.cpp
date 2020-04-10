@@ -353,6 +353,12 @@ unsigned CZipCreatorImpl::JustDoIt()
 
         MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
     }
+    else
+    {
+        WCHAR szFullPath[MAX_PATH];
+        GetFullPathNameW(strZipName, _countof(szFullPath), szFullPath, NULL);
+        SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, szFullPath, NULL);
+    }
 
     return err;
 }
