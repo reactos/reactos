@@ -5,9 +5,7 @@
 
 const PFN_PNP_POWER_CALLBACK FxPkgPdo::m_PdoPnpFunctionTable[IRP_MN_SURPRISE_REMOVAL + 1] =
 {
-    // TODO: Implement next functions
-
-    /*_PnpStartDevice,                // IRP_MN_START_DEVICE
+    _PnpStartDevice,                // IRP_MN_START_DEVICE
     _PnpQueryRemoveDevice,          // IRP_MN_QUERY_REMOVE_DEVICE
     _PnpRemoveDevice,               // IRP_MN_REMOVE_DEVICE
     _PnpCancelRemoveDevice,         // IRP_MN_CANCEL_REMOVE_DEVICE
@@ -33,17 +31,15 @@ const PFN_PNP_POWER_CALLBACK FxPkgPdo::m_PdoPnpFunctionTable[IRP_MN_SURPRISE_REM
     _PnpQueryPnpDeviceState,        // IRP_MN_QUERY_PNP_DEVICE_STATE
     _PnpQueryBusInformation,        // IRP_MN_QUERY_BUS_INFORMATION
     _PnpDeviceUsageNotification,    // IRP_MN_DEVICE_USAGE_NOTIFICATION
-    _PnpSurpriseRemoval,            // IRP_MN_SURPRISE_REMOVAL*/
+    _PnpSurpriseRemoval,            // IRP_MN_SURPRISE_REMOVAL
 };
 
 const PFN_PNP_POWER_CALLBACK  FxPkgPdo::m_PdoPowerFunctionTable[IRP_MN_QUERY_POWER + 1] =
 {
-    // TODO: Implement next functions
-
-    //_DispatchWaitWake,      // IRP_MN_WAIT_WAKE
-    //_DispatchPowerSequence, // IRP_MN_POWER_SEQUENCE
-    //_DispatchSetPower,      // IRP_MN_SET_POWER
-    //_DispatchQueryPower,    // IRP_MN_QUERY_POWER
+    _DispatchWaitWake,      // IRP_MN_WAIT_WAKE
+    _DispatchPowerSequence, // IRP_MN_POWER_SEQUENCE
+    _DispatchSetPower,      // IRP_MN_SET_POWER
+    _DispatchQueryPower,    // IRP_MN_QUERY_POWER
 };
 
 FxPkgPdo::FxPkgPdo(
@@ -328,4 +324,266 @@ Return Value:
   --*/
 {
     return CreatePowerThread();
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpQueryDeviceRelations(
+    __in    FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpQueryInterface(
+    IN FxPkgPnp* This,
+    IN FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+    Query interface handler for the PDO
+
+Arguments:
+    This - the package
+
+    Irp - the QI request
+
+Return Value:
+    NTSTATUS
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpQueryCapabilities(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpQueryResources(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpQueryResourceRequirements(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpQueryDeviceText(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This method is invoked in response to a Pnp QueryDeviceText IRP.
+    We return the decription or the location.
+
+Arguments:
+
+    Irp - a pointer to the FxIrp
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpFilterResourceRequirements(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+    Filter resource requirements for the PDO.  A chance to further muck with
+    the resources assigned to the device.
+
+Arguments:
+    This - the package
+
+    Irp - the request
+
+Return Value:
+    NTSTATUS
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpCompleteIrp(
+    __in    FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpEject(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+
+    Ejection is handled by the PnP state machine. Handle it synchronously. 
+    Don't pend it since PnP manager does not serilaize it with other state 
+    changing pnp irps if handled asynchronously. 
+
+Arguments:
+
+    This - the package
+
+    Irp - the request
+
+Return Value:
+
+    NTSTATUS
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpSetLock(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+    Set lock
+
+Arguments:
+    This - the package
+
+    Irp - the irp
+
+Return Value:
+    NTSTATUS
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpQueryId(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpQueryPnpDeviceState(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+    indicates the current device state
+
+Arguments:
+    This - the package
+
+    Irp - the request
+
+Return Value:
+    NTSTATUS
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpQueryBusInformation(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+/*++
+
+Routine Description:
+    Returns the bus information for this child
+
+Arguments:
+    This - the package
+
+    Irp - the request
+
+Return Value:
+    NTSTATUS
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPkgPdo::_PnpSurpriseRemoval(
+    __inout FxPkgPnp* This,
+    __inout FxIrp *Irp
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
 }

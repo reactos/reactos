@@ -142,10 +142,6 @@ private:
         VOID
         )
     {
-        //
-        // TODO: remove when create function table
-        //
-        __debugbreak();
         return m_PdoPnpFunctionTable;
     }
 
@@ -155,10 +151,6 @@ private:
         VOID
         )
     {
-        //
-        // TODO: remove when create function table
-        //
-	__debugbreak();
         return m_PdoPowerFunctionTable;
     }
 
@@ -265,6 +257,142 @@ private:
     WDF_DEVICE_POWER_STATE
     PowerCheckDeviceTypeOverload(
         VOID
+        );
+
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _DispatchPowerSequence(
+        __inout FxPkgPnp* This,
+        __in FxIrp *Irp
+        );
+
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _DispatchSetPower(
+        __inout FxPkgPnp* This,
+        __in FxIrp *Irp
+        );
+
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _DispatchQueryPower(
+        __inout FxPkgPnp* This,
+        __in FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryDeviceRelations(
+        __in    FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryInterface(
+        IN FxPkgPnp* This,
+        IN FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryCapabilities(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryResources(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryResourceRequirements(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryDeviceText(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpFilterResourceRequirements(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpCompleteIrp(
+        __in    FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpEject(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpSetLock(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryId(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryPnpDeviceState(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpQueryBusInformation(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
+        );
+
+    _Must_inspect_result_
+    static
+    NTSTATUS
+    _PnpSurpriseRemoval(
+        __inout FxPkgPnp* This,
+        __inout FxIrp *Irp
         );
 };
 
