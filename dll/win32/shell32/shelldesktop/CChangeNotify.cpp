@@ -45,6 +45,12 @@ DoGetNewDeliveryWorker(void)
         return s_hwndNewWorker;
 
     HWND hwndShell = GetShellWindow();
+    if (hwndShell == NULL)
+    {
+        TRACE("GetShellWindow() returned NULL\n");
+        return NULL;
+    }
+
     HWND hwndWorker = (HWND)SendMessageW(hwndShell, WM_GETDELIWORKERWND, 0, 0);
     if (!IsWindow(hwndWorker))
     {
