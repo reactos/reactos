@@ -16,7 +16,7 @@ BEGIN
     EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Parcourir...",IDC_BROWSE,174,42,54,14
     PUSHBUTTON      "Mot de passe",IDC_PASSWORD,174,66,54,14
-    LTEXT           "Click 'Next' to extract",IDC_STATUSTEXT,6,114,100,8
+    LTEXT           "Appuyez sur 'Suivant' pour extraire",IDC_STATUSTEXT,6,114,150,8
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
 END
 
