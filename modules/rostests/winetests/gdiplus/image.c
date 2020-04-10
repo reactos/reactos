@@ -3222,8 +3222,10 @@ static void test_dispose(void)
     stat = GdipDisposeImage(image);
     expect(Ok, stat);
 
+#ifndef __REACTOS__ /* This crashes with DPH (also on Windows) */
     stat = GdipDisposeImage(image);
     expect(ObjectBusy, stat);
+#endif
 
     memset(invalid_image, 0, 256);
     stat = GdipDisposeImage((GpImage*)invalid_image);
