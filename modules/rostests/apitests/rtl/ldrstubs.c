@@ -15,3 +15,8 @@ LdrpInitializeProcessCompat(PVOID pProcessActctx, PVOID* pOldShimData)
 {
 }
 
+VOID NTAPI
+AVrfInternalHeapFreeNotification(PVOID AllocationBase, SIZE_T AllocationSize)
+{
+    /* Stub for linking against rtl */
+}
