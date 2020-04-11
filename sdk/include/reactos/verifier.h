@@ -84,21 +84,103 @@ typedef struct _RTL_VERIFIER_PROVIDER_DESCRIPTOR {
 #define RTL_VRF_DBG_ENTRYPOINT_CALLS        0x20000
 
 
+
 // Verifier stop codes
+#define APPLICATION_VERIFIER_INTERNAL_ERROR                                 0x80000000
+#define APPLICATION_VERIFIER_INTERNAL_WARNING                               0x40000000
+#define APPLICATION_VERIFIER_NO_BREAK                                       0x20000000
+#define APPLICATION_VERIFIER_CONTINUABLE_BREAK                              0x10000000
 
-#define APPLICATION_VERIFIER_CORRUPT_HEAP_POINTER 0x0006
-#define APPLICATION_VERIFIER_DOUBLE_FREE 0x0007
+#define APPLICATION_VERIFIER_UNKNOWN_ERROR                                      0x0001
+#define APPLICATION_VERIFIER_ACCESS_VIOLATION                                   0x0002
+#define APPLICATION_VERIFIER_UNSYNCHRONIZED_ACCESS                              0x0003
+#define APPLICATION_VERIFIER_EXTREME_SIZE_REQUEST                               0x0004
+#define APPLICATION_VERIFIER_BAD_HEAP_HANDLE                                    0x0005
+#define APPLICATION_VERIFIER_SWITCHED_HEAP_HANDLE                               0x0006
+#define APPLICATION_VERIFIER_DOUBLE_FREE                                        0x0007
+#define APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK                               0x0008
+#define APPLICATION_VERIFIER_DESTROY_PROCESS_HEAP                               0x0009
+#define APPLICATION_VERIFIER_UNEXPECTED_EXCEPTION                               0x000A
+#define APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_EXCEPTION_RAISED_FOR_HEADER   0x000B
+#define APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_EXCEPTION_RAISED_FOR_PROBING  0x000C
+#define APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_HEADER                        0x000D
+#define APPLICATION_VERIFIER_CORRUPTED_FREED_HEAP_BLOCK                         0x000E
+#define APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_SUFFIX                        0x000F
+#define APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_START_STAMP                   0x0010
+#define APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_END_STAMP                     0x0011
+#define APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_PREFIX                        0x0012
+#define APPLICATION_VERIFIER_FIRST_CHANCE_ACCESS_VIOLATION                      0x0013
+#define APPLICATION_VERIFIER_CORRUPTED_HEAP_LIST                                0x0014
 
-#define APPLICATION_VERIFIER_EXCEPTION_WHILE_VERIFYING_BLOCK_HEADER 0x000B
-#define APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_AFTER_FREE 0x000D
-#define APPLICATION_VERIFIER_CORRUPTED_INFIX_PATTERN 0x000E
-#define APPLICATION_VERIFIER_CORRUPTED_SUFFIX_PATTERN 0x000F
-#define APPLICATION_VERIFIER_CORRUPTED_START_STAMP 0x0010
-#define APPLICATION_VERIFIER_CORRUPTED_END_STAMP 0x0011
-#define APPLICATION_VERIFIER_CORRUPTED_PREFIX_PATTERN 0x0012
+#define APPLICATION_VERIFIER_TERMINATE_THREAD_CALL                              0x0100
+#define APPLICATION_VERIFIER_STACK_OVERFLOW                                     0x0101
+#define APPLICATION_VERIFIER_INVALID_EXIT_PROCESS_CALL                          0x0102
+
+#define APPLICATION_VERIFIER_EXIT_THREAD_OWNS_LOCK                              0x0200
+#define APPLICATION_VERIFIER_LOCK_IN_UNLOADED_DLL                               0x0201
+#define APPLICATION_VERIFIER_LOCK_IN_FREED_HEAP                                 0x0202
+#define APPLICATION_VERIFIER_LOCK_DOUBLE_INITIALIZE                             0x0203
+#define APPLICATION_VERIFIER_LOCK_IN_FREED_MEMORY                               0x0204
+#define APPLICATION_VERIFIER_LOCK_CORRUPTED                                     0x0205
+#define APPLICATION_VERIFIER_LOCK_INVALID_OWNER                                 0x0206
+#define APPLICATION_VERIFIER_LOCK_INVALID_RECURSION_COUNT                       0x0207
+#define APPLICATION_VERIFIER_LOCK_INVALID_LOCK_COUNT                            0x0208
+#define APPLICATION_VERIFIER_LOCK_OVER_RELEASED                                 0x0209
+#define APPLICATION_VERIFIER_LOCK_NOT_INITIALIZED                               0x0210
+#define APPLICATION_VERIFIER_LOCK_ALREADY_INITIALIZED                           0x0211
+#define APPLICATION_VERIFIER_LOCK_IN_FREED_VMEM                                 0x0212
+#define APPLICATION_VERIFIER_LOCK_IN_UNMAPPED_MEM                               0x0213
+#define APPLICATION_VERIFIER_THREAD_NOT_LOCK_OWNER                              0x0214
+
+#define APPLICATION_VERIFIER_INVALID_HANDLE                                     0x0300
+#define APPLICATION_VERIFIER_INVALID_TLS_VALUE                                  0x0301
+#define APPLICATION_VERIFIER_INCORRECT_WAIT_CALL                                0x0302
+#define APPLICATION_VERIFIER_NULL_HANDLE                                        0x0303
+#define APPLICATION_VERIFIER_WAIT_IN_DLLMAIN                                    0x0304
+
+#define APPLICATION_VERIFIER_COM_ERROR                                          0x0400
+#define APPLICATION_VERIFIER_COM_API_IN_DLLMAIN                                 0x0401
+#define APPLICATION_VERIFIER_COM_UNHANDLED_EXCEPTION                            0x0402
+#define APPLICATION_VERIFIER_COM_UNBALANCED_COINIT                              0x0403
+#define APPLICATION_VERIFIER_COM_UNBALANCED_OLEINIT                             0x0404
+#define APPLICATION_VERIFIER_COM_UNBALANCED_SWC                                 0x0405
+#define APPLICATION_VERIFIER_COM_NULL_DACL                                      0x0406
+#define APPLICATION_VERIFIER_COM_UNSAFE_IMPERSONATION                           0x0407
+#define APPLICATION_VERIFIER_COM_SMUGGLED_WRAPPER                               0x0408
+#define APPLICATION_VERIFIER_COM_SMUGGLED_PROXY                                 0x0409
+#define APPLICATION_VERIFIER_COM_CF_SUCCESS_WITH_NULL                           0x040A
+#define APPLICATION_VERIFIER_COM_GCO_SUCCESS_WITH_NULL                          0x040B
+#define APPLICATION_VERIFIER_COM_OBJECT_IN_FREED_MEMORY                         0x040C
+#define APPLICATION_VERIFIER_COM_OBJECT_IN_UNLOADED_DLL                         0x040D
+#define APPLICATION_VERIFIER_COM_VTBL_IN_FREED_MEMORY                           0x040E
+#define APPLICATION_VERIFIER_COM_VTBL_IN_UNLOADED_DLL                           0x040F
+#define APPLICATION_VERIFIER_COM_HOLDING_LOCKS_ON_CALL                          0x0410
+
+#define APPLICATION_VERIFIER_RPC_ERROR                                          0x0500
+
+#define APPLICATION_VERIFIER_INVALID_FREEMEM                                    0x0600
+#define APPLICATION_VERIFIER_INVALID_ALLOCMEM                                   0x0601
+#define APPLICATION_VERIFIER_INVALID_MAPVIEW                                    0x0602
+#define APPLICATION_VERIFIER_PROBE_INVALID_ADDRESS                              0x0603
+#define APPLICATION_VERIFIER_PROBE_FREE_MEM                                     0x0604
+#define APPLICATION_VERIFIER_PROBE_GUARD_PAGE                                   0x0605
+#define APPLICATION_VERIFIER_PROBE_NULL                                         0x0606
+#define APPLICATION_VERIFIER_PROBE_INVALID_START_OR_SIZE                        0x0607
+#define APPLICATION_VERIFIER_SIZE_HEAP_UNEXPECTED_EXCEPTION                     0x0618
+
+#define VERIFIER_STOP(Code, Msg, Val1, Desc1, Val2, Desc2, Val3, Desc3, Val4, Desc4)    \
+    do {                                                                                \
+        RtlApplicationVerifierStop((Code),                                              \
+                                   (Msg),                                               \
+                                   (Val1), (Desc1),                                     \
+                                   (Val2), (Desc2),                                     \
+                                   (Val3), (Desc3),                                     \
+                                   (Val4), (Desc4));                                   \
+    } while (0)
 
 
-VOID NTAPI
+VOID
+NTAPI
 RtlApplicationVerifierStop(
     _In_ ULONG_PTR Code,
     _In_ PCSTR Message,
