@@ -333,7 +333,7 @@ AVrfDllUnloadNotification(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     PLIST_ENTRY Entry;
 
-    if (!(NtCurrentPeb()->NtGlobalFlag & FLG_APPLICATION_VERIFIER))
+    if (!(NtCurrentPeb()->NtGlobalFlag & FLG_APPLICATION_VERIFIER) || !AVrfpInitialized)
         return;
 
     RtlEnterCriticalSection(&AVrfpVerifierLock);
@@ -365,7 +365,7 @@ AVrfInternalHeapFreeNotification(PVOID AllocationBase, SIZE_T AllocationSize)
 {
     PLIST_ENTRY Entry;
 
-    if (!(NtCurrentPeb()->NtGlobalFlag & FLG_APPLICATION_VERIFIER))
+    if (!(NtCurrentPeb()->NtGlobalFlag & FLG_APPLICATION_VERIFIER) || !AVrfpInitialized)
         return;
 
     RtlEnterCriticalSection(&AVrfpVerifierLock);
