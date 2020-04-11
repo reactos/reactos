@@ -202,6 +202,10 @@ RtlpDphReportCorruptedBlock(
 BOOLEAN NTAPI
 RtlpDphNormalHeapValidate(PDPH_HEAP_ROOT DphRoot, ULONG Flags, PVOID BaseAddress);
 
+/* verifier.c */
+VOID NTAPI
+AVrfInternalHeapFreeNotification(PVOID AllocationBase, SIZE_T AllocationSize);
+
 
 VOID NTAPI
 RtlpDphRaiseException(NTSTATUS Status)
@@ -1712,8 +1716,7 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
             }
         }
 
-        /* FIXME: Call AV notification */
-        //AVrfInternalHeapFreeNotification();
+        AVrfInternalHeapFreeNotification(Node->pUserAllocation, Node->nUserRequestedSize);
 
         /* Go to the next node */
         Ptr = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, FALSE);
