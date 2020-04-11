@@ -59,6 +59,10 @@ add_subdirectory(vcruntime)
 add_subdirectory(wine2ros)
 add_subdirectory(wdmguid)
 
+if(SANITIZE_UB)
+    add_subdirectory(ksanitize)
+endif()
+
 else()
 
 add_subdirectory(3rdparty/zlib)
