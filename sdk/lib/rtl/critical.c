@@ -369,7 +369,7 @@ RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
     }
     else
     {
-        /* Wine stores a section name pointer in the Flags member */
+        /* HACK for Wine: stores a section name pointer in the Flags member */
         DPRINT("Assuming static: %p inside Process: %p\n",
                DebugInfo,
                NtCurrentTeb()->ClientId.UniqueProcess);
@@ -415,7 +415,7 @@ RtlDeleteCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
         /* Remove it from the list */
         RemoveEntryList(&CriticalSection->DebugInfo->ProcessLocksList);
 #if 0
-        /* We need to preserve Flags for RtlpFreeDebugInfo */
+        /* HACK for Wine: We need to preserve Flags for RtlpFreeDebugInfo */
         RtlZeroMemory(CriticalSection->DebugInfo, sizeof(RTL_CRITICAL_SECTION_DEBUG));
 #endif
     }
