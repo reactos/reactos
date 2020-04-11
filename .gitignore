@@ -9,5 +9,7 @@ modules/[Aa][Hh][Kk]_[Tt]ests
 .project
 .settings
 build
+# Probably not needed, but lets keep it to have this same structure
+!**/stlport/build/
 .vscode
 sdk/tools/winesync/winesync.cfg
