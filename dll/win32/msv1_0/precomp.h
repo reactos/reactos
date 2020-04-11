@@ -29,6 +29,7 @@
 #include <samsrv/samsrv.h>
 //#include <lsass/lsasrv.h>
 
+#include "lsa.h"
 #include "msv1_0.h"
 
 #include <wine/debug.h>
