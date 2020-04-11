@@ -550,6 +550,8 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
         return TRUE;
 
     pidl = (LPITEMIDLIST)((LPBYTE)pShared + pShared->ibPidl);
+    if (pidl->mkid.cb == 0 && pShared->fRecursive)
+        return TRUE;
 
     if (pTicket->ibOffset1)
     {
