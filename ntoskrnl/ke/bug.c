@@ -274,7 +274,6 @@ KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
     {
         /* Get the current frames (skip the two. One for the dumper, one for the caller) */
         RealFrameCount = RtlCaptureStackBackTrace(2, FrameCount, (PVOID*)Frames, NULL);
-        DPRINT1("RealFrameCount =%lu\n", RealFrameCount);
 
         /* Dump them */
         KeRosDumpStackFrameArray(Frames, RealFrameCount);
