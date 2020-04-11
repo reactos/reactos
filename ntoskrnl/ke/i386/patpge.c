@@ -118,6 +118,7 @@ Ki386BuildIdentityBuffer(PLARGE_IDENTITY_MAP IdentityMap,
     return MmGetPhysicalAddress(StartPtr);
 }
 
+NO_SANITIZE
 BOOLEAN
 NTAPI
 Ki386IdentityMapMakeValid(PLARGE_IDENTITY_MAP IdentityMap,
@@ -178,6 +179,7 @@ Ki386MapAddress(PLARGE_IDENTITY_MAP IdentityMap,
     return TRUE;
 }
 
+NO_SANITIZE
 VOID
 NTAPI
 Ki386ConvertPte(PHARDWARE_PTE Pte)

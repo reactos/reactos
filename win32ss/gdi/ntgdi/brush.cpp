@@ -417,6 +417,7 @@ NtGdiCreatePatternBrushInternal(
     return CreateBrushInternal(BR_IS_BITMAP, 0, 0, hbmPattern, hbmClient);
 }
 
+NO_SANITIZE
 __kernel_entry
 HBRUSH
 APIENTRY
@@ -507,6 +508,7 @@ cleanup:
     return hbr;
 }
 
+NO_SANITIZE
 __kernel_entry
 HBITMAP
 APIENTRY

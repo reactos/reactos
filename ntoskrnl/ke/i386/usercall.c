@@ -126,6 +126,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
 /*
  * @implemented
  */
+NO_SANITIZE
 NTSTATUS
 NTAPI
 KeUserModeCallback(IN ULONG RoutineIndex,

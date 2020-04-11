@@ -83,6 +83,7 @@ KeI386VdmInitialize(VOID)
     ZwClose(RegHandle);
 }
 
+NO_SANITIZE
 NTSTATUS
 NTAPI
 VdmpInitialize(PVOID ControlData)

@@ -16,6 +16,10 @@ add_library(vgaddi MODULE
     ${SOURCE}
     vgaddi.rc)
 
+if(SANITIZE_UB)
+    target_link_libraries(vgaddi ksanitize_w32k)
+endif()
+
 set_module_type(vgaddi kerneldll ENTRYPOINT DrvEnableDriver 12)
 add_pch(vgaddi vgaddi.h SOURCE)
 add_importlibs(vgaddi win32k)

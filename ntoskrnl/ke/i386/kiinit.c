@@ -638,6 +638,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 }
 
 CODE_SEG("INIT")
+NO_SANITIZE
 VOID
 FASTCALL
 KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
@@ -733,6 +734,7 @@ KiMarkPageAsReadOnly(
 
 CODE_SEG("INIT")
 DECLSPEC_NORETURN
+NO_SANITIZE
 VOID
 NTAPI
 KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)

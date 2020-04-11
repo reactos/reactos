@@ -322,6 +322,7 @@ KiIdleLoop(VOID)
 }
 
 BOOLEAN
+NO_SANITIZE
 FASTCALL
 KiSwapContextExit(IN PKTHREAD OldThread,
                   IN PKSWITCHFRAME SwitchFrame)

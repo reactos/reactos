@@ -13,6 +13,7 @@
 #include <ntifs.h>
 #include <ndk/halfuncs.h>
 #include <drivers/bootvid/bootvid.h>
+#include <reactos/ksanitize.h>
 
 /* Arch specific includes */
 #if defined(_M_IX86) || defined(_M_AMD64)
