@@ -17,24 +17,6 @@ const GUID FxPkgPnp::GUID_POWER_THREAD_INTERFACE = {
     0xdc7a8e51, 0x49b3, 0x4a3a, { 0x9e, 0x81, 0x62, 0x52, 0x05, 0xe7, 0xd7, 0x29 }
 };
 
-const NOT_POWER_POLICY_OWNER_STATE_TABLE FxPkgPnp::m_WdfNotPowerPolicyOwnerStates[] =
-{
-    // TODO: Fill table
-
-    // current state
-    // transition function,
-    // target states
-    // count of target states
-    // Queue state
-    //
-    { WdfDevStatePwrPolObjectCreated,
-      NULL,
-      0,//FxPkgPnp::m_NotPowerPolOwnerObjectCreatedStates,
-      0,//ARRAY_SIZE(FxPkgPnp::m_NotPowerPolOwnerObjectCreatedStates),
-      TRUE,
-    }
-};
-
 FxPkgPnp::FxPkgPnp(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in CfxDevice* Device,
