@@ -9,8 +9,11 @@ add_library(vgaddi MODULE
     ${SOURCE}
     vga_new.rc)
 
-set_module_type(vgaddi kerneldll ENTRYPOINT DrvEnableDriver 12)
+if(SANITIZE_UB)
+    target_link_libraries(vgaddi ksanitize_w32k)
+endif()
 
+set_module_type(vgaddi kerneldll ENTRYPOINT DrvEnableDriver 12)
 add_importlibs(vgaddi win32k)
 target_link_libraries(vgaddi libcntpr)
 add_dependencies(vgaddi psdk)

@@ -7,6 +7,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
 
 add_library(kdcom MODULE ${SOURCE})
+
+if(SANITIZE_UB)
+    target_link_libraries(kdcom ksanitize)
+endif()
+
 set_module_type(kdcom kerneldll ENTRYPOINT 0)
 add_importlibs(kdcom ntoskrnl hal)
 target_link_libraries(kdcom cportlib)
