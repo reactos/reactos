@@ -409,6 +409,11 @@ function(set_module_type_toolchain MODULE TYPE)
 
         # Believe it or not, cmake doesn't do that
         set_property(TARGET ${MODULE} APPEND PROPERTY LINK_DEPENDS $<TARGET_PROPERTY:native-pefixup,IMPORTED_LOCATION>)
+
+        # win32k & dependencies require a special version of ksanitize
+        if(NOT ${TYPE} STREQUAL "kerneldll")
+            target_link_libraries(${MODULE} ksanitize)
+        endif()
     endif()
 endfunction()
 

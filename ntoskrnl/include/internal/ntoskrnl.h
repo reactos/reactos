@@ -100,6 +100,8 @@
 
 #endif
 
+#include <ksanitize.h>
+
 #ifndef _WIN64
 C_ASSERT(FIELD_OFFSET(KUSER_SHARED_DATA, SystemCall) == 0x300);
 
