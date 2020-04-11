@@ -576,7 +576,9 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
         {
             PathAddBackslashW(szPath1);
             cch1 = lstrlenW(szPath1);
-            if (cch < cch1)
+            if (cch < cch1 &&
+                (pShared->fRecursive ||
+                 wcschr(&szPath1[cch], L'\\') == &szPath1[cch1 - 1]))
             {
                 szPath1[cch] = 0;
                 if (lstrcmpiW(szPath, szPath1) == 0)
@@ -588,7 +590,9 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
         {
             PathAddBackslashW(szPath2);
             cch2 = lstrlenW(szPath2);
-            if (cch < cch2)
+            if (cch < cch2 &&
+                (pShared->fRecursive ||
+                 wcschr(&szPath2[cch], L'\\') == &szPath2[cch2 - 1]))
             {
                 szPath2[cch] = 0;
                 if (lstrcmpiW(szPath, szPath2) == 0)
