@@ -103,6 +103,12 @@
 
 #endif
 
+#ifdef __SANITIZE_UB__
+#define NO_SANITIZE __attribute__ ((no_sanitize("undefined")))
+#else
+#define NO_SANITIZE
+#endif
+
 #ifndef _WIN64
 C_ASSERT(FIELD_OFFSET(KUSER_SHARED_DATA, SystemCall) == 0x300);
 

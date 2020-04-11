@@ -11,6 +11,10 @@ add_library(framebuf_new MODULE
     ${SOURCE}
     framebuf_new.rc)
 
+if(SANITIZE_UB)
+    target_link_libraries(framebuf_new ksanitize_w32k)
+endif()
+
 set_module_type(framebuf_new kerneldll ENTRYPOINT DrvEnableDriver 12)
 target_link_libraries(framebuf_new libcntpr)
 add_importlibs(framebuf_new win32k)

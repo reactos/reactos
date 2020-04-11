@@ -35,6 +35,10 @@ add_library(bootvid MODULE
     bootvid.rc
     ${CMAKE_CURRENT_BINARY_DIR}/bootvid.def)
 
+if(SANITIZE_UB)
+    target_link_libraries(bootvid ksanitize)
+endif()
+
 set_module_type(bootvid kerneldll ENTRYPOINT 0)
 add_importlibs(bootvid ntoskrnl hal)
 add_pch(bootvid precomp.h SOURCE)
