@@ -1,13 +1,13 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
+ * PROJECT:         ReactOS Utility Manager Resources DLL (UManDlg.dll)
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         About dialog file
- * COPYRIGHT:       Copyright 2019 Bișoc George (fraizeraust99 at gmail dot com)
+ * COPYRIGHT:       Copyright 2019-2020 Bișoc George (fraizeraust99 at gmail dot com)
  */
 
 /* INCLUDES *******************************************************************/
 
-#include "precomp.h"
+#include "umandlg.h"
 
 /* GLOBALS ********************************************************************/
 
@@ -43,12 +43,11 @@ INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
     {
         case WM_INITDIALOG:
         {
-            Globals.hIcon = LoadImageW(Globals.hInstance,
-                                       MAKEINTRESOURCEW(IDI_ICON_UTILMAN),
-                                       IMAGE_ICON,
-                                       0,
-                                       0,
-                                       LR_DEFAULTSIZE);
+            WCHAR wszAppPath[MAX_BUFFER];
+
+            /* Extract the icon resource from the executable process */
+            GetModuleFileNameW(NULL, wszAppPath, _countof(wszAppPath));
+            Globals.hIcon = ExtractIconW(Globals.hInstance, wszAppPath, 0);
 
             /* Set the icon within the dialog's title bar */
             if (Globals.hIcon)

@@ -1,14 +1,14 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
+ * PROJECT:         ReactOS Utility Manager Resources DLL (UManDlg.dll)
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Main dialog code file
- * COPYRIGHT:       Copyright 2019 Bișoc George (fraizeraust99 at gmail dot com)
+ * PURPOSE:         Main DLL code file
+ * COPYRIGHT:       Copyright 2019-2020 Bișoc George (fraizeraust99 at gmail dot com)
  *                  Copyright 2019 Hermes Belusca-Maito
  */
 
 /* INCLUDES *******************************************************************/
 
-#include "precomp.h"
+#include "umandlg.h"
 
 /* GLOBALS ********************************************************************/
 
@@ -99,6 +99,7 @@ BOOL DlgInitHandler(IN HWND hDlg)
     INT PosX, PosY;
     RECT rc;
     WCHAR szAboutDlg[MAX_BUFFER];
+    WCHAR wszAppPath[MAX_BUFFER];
     HMENU hSysMenu;
 
     /* Save the dialog handle */
@@ -110,13 +111,9 @@ BOOL DlgInitHandler(IN HWND hDlg)
     PosY = (GetSystemMetrics(SM_CYSCREEN) - rc.bottom) / 2;
     SetWindowPos(hDlg, 0, PosX, PosY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 
-    /* Load the icon resource */
-    Globals.hIcon = LoadImageW(Globals.hInstance,
-                               MAKEINTRESOURCEW(IDI_ICON_UTILMAN),
-                               IMAGE_ICON,
-                               0,
-                               0,
-                               LR_DEFAULTSIZE);
+    /* Extract the icon resource from the executable process */
+    GetModuleFileNameW(NULL, wszAppPath, _countof(wszAppPath));
+    Globals.hIcon = ExtractIconW(Globals.hInstance, wszAppPath, 0);
 
     /* Set the icon within the dialog's title bar */
     if (Globals.hIcon)
@@ -351,39 +348,20 @@ INT_PTR APIENTRY DlgProc(
 }
 
 /**
- * @wWinMain
+ * @UManStartDlg
  *
- * Application entry point.
- *
- * @param[in]   hInstance
- *     Application instance.
- *
- * @param[in]   hPrevInstance
- *     The previous instance of the application (not used).
- *
- * @param[in]   pCmdLine
- *     Pointer to a command line argument (in wide string -- not used).
- *
- * @param[in]   nCmdShow
- *     An integer served as a flag to note how the application will be shown (not used).
+ * Executes the dialog initialization mechanism and starts Utility Manager.
+ * The function is exported for use by the main process.
  *
  * @return
- *     Returns 0 to let the function terminating before it enters in the message loop.
+ *     Returns TRUE when the operation has succeeded, FALSE otherwise.
  *
  */
-INT WINAPI wWinMain(
-    IN HINSTANCE hInstance,
-    IN HINSTANCE hPrevInstance,
-    IN LPWSTR pCmdLine,
-    IN INT nCmdShow)
+BOOL WINAPI UManStartDlg(VOID)
 {
     HANDLE hMutex;
     DWORD dwError;
     INITCOMMONCONTROLSEX iccex;
-
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(pCmdLine);
-    UNREFERENCED_PARAMETER(nCmdShow);
 
     /* Create a mutant object for the program. */
     hMutex = CreateMutexW(NULL, FALSE, L"Utilman");
@@ -399,7 +377,7 @@ INT WINAPI wWinMain(
                 and mutex object.
             */
             CloseHandle(hMutex);
-            return 0;
+            return FALSE;
         }
     }
 
@@ -407,10 +385,6 @@ INT WINAPI wWinMain(
     iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     iccex.dwICC = ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES;
     InitCommonControlsEx(&iccex);
-
-    /* Initialize the globals */
-    ZeroMemory(&Globals, sizeof(Globals));
-    Globals.hInstance = hInstance;
 
     LoadStringW(Globals.hInstance, IDS_RUNNING,
                 Globals.szRunning, _countof(Globals.szRunning));
@@ -423,7 +397,7 @@ INT WINAPI wWinMain(
     InitUtilsList(FALSE);
 
     /* Create the dialog box of the program */
-    DialogBoxW(hInstance,
+    DialogBoxW(Globals.hInstance,
                MAKEINTRESOURCEW(IDD_MAIN_DIALOG),
                GetDesktopWindow(),
                DlgProc);
@@ -434,5 +408,49 @@ INT WINAPI wWinMain(
         CloseHandle(hMutex);
     }
 
-    return 0;
+    return TRUE;
+}
+
+/**
+ * @DllMain
+ *
+ * Core routine of the Utility Manager's library.
+ *
+ * @param[in]   hDllInstance
+ *      The entry point instance of the library.
+ *
+ * @param[in]   fdwReason
+ *      The reason argument to indicate the motive DllMain
+ *      is being called.
+ *
+ * @param[in]   lpvReserved
+ *      Reserved.
+ *
+ * @return
+ *     Returns TRUE when main call initialization has succeeded, FALSE
+ *     otherwise.
+ *
+ */
+BOOL WINAPI DllMain(IN HINSTANCE hDllInstance,
+                    IN DWORD fdwReason,
+                    IN LPVOID lpvReserved)
+{
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+        {
+            /* We don't care for DLL_THREAD_ATTACH and DLL_THREAD_DETACH notifications */
+            DisableThreadLibraryCalls(hDllInstance);
+
+            /* Initialize the globals */
+            ZeroMemory(&Globals, sizeof(Globals));
+            Globals.hInstance = hDllInstance;
+            break;
+        }
+
+        case DLL_PROCESS_DETACH:
+            break;
+    }
+
+    return TRUE;
 }

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
+ * PROJECT:         ReactOS Utility Manager Resources DLL (UManDlg.dll)
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Registry functions for Utility Manager settings management
  * COPYRIGHT:       Copyright 2020 Bișoc George (fraizeraust99 at gmail dot com)
@@ -7,7 +7,7 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "precomp.h"
+#include "umandlg.h"
 
 /* GLOBALS ********************************************************************/
 

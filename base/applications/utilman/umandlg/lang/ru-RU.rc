@@ -1,4 +1,4 @@
-﻿/*
+/*
  * PROJECT:         ReactOS Utility Manager (Accessibility)
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Russian (Russia) translation resource
@@ -30,9 +30,8 @@ CAPTION "О программе"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-    ICON IDI_ICON_UTILMAN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "Диспетчер служебных программ\n© 2019 Джордж Бисок (fraizeraust99 at gmail dot com)", IDC_STATIC, 48, 7, 150, 36
-    LTEXT "© 2019 Гермес Белуска-Майто", IDC_STATIC, 48, 33, 150, 36
+    LTEXT "Диспетчер служебных программ\n© 2019 Джордж Бисок (fraizeraust99 at gmail dot com)", IDC_STATIC, 10, 7, 150, 36
+    LTEXT "© 2019 Гермес Белуска-Майто", IDC_STATIC, 10, 33, 150, 36
     PUSHBUTTON "OK", IDOK, 75, 47, 44, 15
 END
 
