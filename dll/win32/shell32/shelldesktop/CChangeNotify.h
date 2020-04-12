@@ -59,8 +59,6 @@ typedef struct HANDBAG
 #define REGENTRY_MAGIC 0xB0B32D1E
 #define HANDBAG_MAGIC 0xFACEB00C
 
-EXTERN_C HWND DoGetNewDeliveryWorker(BOOL bCreate);
-
 #ifdef __cplusplus
 
 /////////////////////////////////////////////////////////////////////////////

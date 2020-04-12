@@ -31,38 +31,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 // from another process.
 /////////////////////////////////////////////////////////////////////////////
 
-// This function requests creation of the new delivery worker if necessary
-// and returns the window handle of the new delivery worker with cached.
-EXTERN_C HWND
-DoGetNewDeliveryWorker(BOOL bCreate)
-{
-    static HWND s_hwndNewWorker = NULL;
-
-    // use cache if any
-    if (s_hwndNewWorker && IsWindow(s_hwndNewWorker))
-        return s_hwndNewWorker;
-
-    // get the shell window
-    HWND hwndShell = GetShellWindow();
-    if (hwndShell == NULL)
-    {
-        TRACE("GetShellWindow() returned NULL\n");
-        return NULL;
-    }
-
-    // Request delivery worker to the shell window. See also CDesktopBrowser.
-    HWND hwndWorker = (HWND)SendMessageW(hwndShell, WM_SHELL_GETWORKERWND, bCreate, 0);
-    if (!IsWindow(hwndWorker))
-    {
-        ERR("Unable to get worker window\n");
-        hwndWorker = NULL;
-    }
-
-    // save and return
-    s_hwndNewWorker = hwndWorker;
-    return hwndWorker;
-}
-
 /*static*/ LRESULT CALLBACK
 CWorker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
