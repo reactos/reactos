@@ -71,7 +71,7 @@ typedef struct REGENTRY
     INT fSources;       /* the source flags */
     LONG fEvents;       /* the event flags */
     BOOL fRecursive;    /* is it recursive? */
-    HWND hwndOldWorker; /* old worker (if any) */
+    HWND hwndBroker;    /* broker window (if any) */
     UINT ibPidl;        /* offset to the PIDL */
     /* followed by a PIDL */
 } REGENTRY, *LPREGENTRY;

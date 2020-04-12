@@ -11,16 +11,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
 CRITICAL_SECTION SHELL32_ChangenotifyCS;
 
-// This function requests creation of the new delivery worker if necessary
-// and returns the window handle of the new delivery worker with cached.
+// This function requests creation of the server window if it doesn't exist yet
 static HWND
 GetNotificationServer(BOOL bCreate)
 {
-    static HWND s_hwndNewWorker = NULL;
+    static HWND s_hwndServer = NULL;
 
     // use cache if any
-    if (s_hwndNewWorker && IsWindow(s_hwndNewWorker))
-        return s_hwndNewWorker;
+    if (s_hwndServer && IsWindow(s_hwndServer))
+        return s_hwndServer;
 
     // get the shell window
     HWND hwndShell = GetShellWindow();
@@ -30,17 +29,17 @@ GetNotificationServer(BOOL bCreate)
         return NULL;
     }
 
-    // Request delivery worker to the shell window. See also CDesktopBrowser.
-    HWND hwndWorker = (HWND)SendMessageW(hwndShell, WM_DESKTOP_GET_CNOTIFY_SERVER, bCreate, 0);
-    if (!IsWindow(hwndWorker))
+    // Get the window of the notification server that runs in explorer
+    HWND hwndServer = (HWND)SendMessageW(hwndShell, WM_DESKTOP_GET_CNOTIFY_SERVER, bCreate, 0);
+    if (!IsWindow(hwndServer))
     {
-        ERR("Unable to get worker window\n");
-        hwndWorker = NULL;
+        ERR("Unable to get server window\n");
+        hwndServer = NULL;
     }
 
     // save and return
-    s_hwndNewWorker = hwndWorker;
-    return hwndWorker;
+    s_hwndServer = hwndServer;
+    return hwndServer;
 }
 
 // This function will be called from DllMain!DLL_PROCESS_ATTACH.
@@ -52,122 +51,102 @@ EXTERN_C void InitChangeNotifications(void)
 // This function will be called from DllMain!DLL_PROCESS_DETACH.
 EXTERN_C void FreeChangeNotifications(void)
 {
-    HWND hwndWorker = GetNotificationServer(FALSE);
-    if (hwndWorker)
-        SendMessageW(hwndWorker, CN_UNREGISTER_PROCESS, GetCurrentProcessId(), 0);
+    HWND hwndServer = GetNotificationServer(FALSE);
+    if (hwndServer)
+        SendMessageW(hwndServer, CN_UNREGISTER_PROCESS, GetCurrentProcessId(), 0);
     DeleteCriticalSection(&SHELL32_ChangenotifyCS);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
 // There are two delivery methods: "old delivery method" and "new delivery method".
 //
-// The old delivery method creates an old delivery worker window in the caller process
+// The old delivery method creates a broker window in the caller process
 // for message trampoline. The old delivery method is slow and deprecated.
 //
 // The new delivery method is enabled by SHCNRF_NewDelivery flag.
-// The new delivery method directly sends the delivery ticket.
+// With the new delivery method the server directly sends the delivery message.
 
-typedef struct OLDDELIVERY
+typedef CWinTraits <
+    WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+    WS_EX_TOOLWINDOW
+> CBrokerTraits;
+
+// This class brokers all notifications that don't have the SHCNRF_NewDelivery flag
+class CChangeNotifyBroker :
+    public CWindowImpl<CChangeNotifyBroker, CWindow, CBrokerTraits >
 {
-    HWND hwnd;
-    UINT uMsg;
-} OLDDELIVERY, *LPOLDDELIVERY;
-
-// Message WM_BROKER_NOTIFICATION: Perform old delivery method.
-//    wParam: The handle of delivery ticket.
-//    lParam: The owner PID of delivery ticket.
-//    return: TRUE if successful.
-static LRESULT
-BrokerNotification(HWND hwnd, WPARAM wParam, LPARAM lParam)
-{
-    HANDLE hTicket = (HANDLE)wParam;
-    DWORD dwOwnerPID = (DWORD)lParam;
-
-    TRACE("WM_BROKER_NOTIFICATION: hwnd:%p, hTicket:%p, pid:0x%lx\n",
-          hwnd, hTicket, dwOwnerPID);
-
-    // get old worker data
-    LPOLDDELIVERY pWorker = (LPOLDDELIVERY)GetWindowLongPtrW(hwnd, 0);
-    if (pWorker == NULL)
+public:
+    CChangeNotifyBroker(HWND hwndClient, UINT uMsg) :
+        m_hwndClient(hwndClient), m_uMsg(uMsg)
     {
-        ERR("pWorker is NULL\n");
-        return FALSE;
     }
 
-    // lock the ticket
-    PIDLIST_ABSOLUTE *ppidl = NULL;
-    LONG lEvent;
-    HANDLE hLock = SHChangeNotification_Lock(hTicket, dwOwnerPID, &ppidl, &lEvent);
-    if (hLock == NULL)
+    // Message handlers
+    LRESULT OnBrokerNotification(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        ERR("hLock is NULL\n");
-        return FALSE;
+        return BrokerNotification((HANDLE)wParam, (DWORD)lParam);
     }
 
-    // perform the delivery
-    TRACE("OldDeliveryWorker notifying: %p, 0x%x, %p, 0x%lx\n",
-          pWorker->hwnd, pWorker->uMsg, ppidl, lEvent);
-    SendMessageW(pWorker->hwnd, pWorker->uMsg, (WPARAM)ppidl, lEvent);
-
-    // unlock the ticket
-    SHChangeNotification_Unlock(hLock);
-    return TRUE;
-}
-
-// This is "old delivery worker" window. An old delivery worker will be
-// created in the caller process. SHChangeNotification_Lock allocates
-// a process-local memory block in response of WM_BROKER_NOTIFICATION, and
-// WM_BROKER_NOTIFICATION sends the pWorker->uMsg message.
-static LRESULT CALLBACK
-BrokerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    LPOLDDELIVERY pWorker;
-    switch (uMsg)
+    void OnFinalMessage(HWND)
     {
-        case WM_BROKER_NOTIFICATION:
-            return BrokerNotification(hwnd, wParam, lParam);
-
-        case WM_NCDESTROY:
-            TRACE("WM_NCDESTROY\n");
-            pWorker = (LPOLDDELIVERY)GetWindowLongPtrW(hwnd, 0);
-            SetWindowLongW(hwnd, 0, 0);
-            delete pWorker;
-            break;
-
-        default:
-            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+        // The server will destroy this window
+        // After the window gets destroyed we can delete this broker here
+        delete this;
     }
-    return 0;
-}
+
+    DECLARE_WND_CLASS_EX(L"WorkerW", 0, 0)
+
+    BEGIN_MSG_MAP(CChangeNotifyBroker)
+        MESSAGE_HANDLER(WM_BROKER_NOTIFICATION, OnBrokerNotification)
+    END_MSG_MAP()
+
+private:
+    HWND m_hwndClient;
+    UINT m_uMsg;
+
+    BOOL BrokerNotification(HANDLE hTicket, DWORD dwOwnerPID)
+    {
+        // lock the ticket
+        PIDLIST_ABSOLUTE *ppidl = NULL;
+        LONG lEvent;
+        HANDLE hLock = SHChangeNotification_Lock(hTicket, dwOwnerPID, &ppidl, &lEvent);
+        if (hLock == NULL)
+        {
+            ERR("hLock is NULL\n");
+            return FALSE;
+        }
+
+        // perform the delivery
+        TRACE("OldDeliveryWorker notifying: %p, 0x%x, %p, 0x%lx\n",
+              m_hwndClient, m_uMsg, ppidl, lEvent);
+        SendMessageW(m_hwndClient, m_uMsg, (WPARAM)ppidl, lEvent);
+
+        // unlock the ticket
+        SHChangeNotification_Unlock(hLock);
+        return TRUE;
+    }
+};
 
 // This function creates an old delivery worker. Used in SHChangeNotifyRegister.
 static HWND
 CreateNotificationBroker(HWND hwnd, UINT wMsg)
 {
-    // create a memory block for old delivery
-    LPOLDDELIVERY pWorker = new OLDDELIVERY;
-    if (pWorker == NULL)
+    // Create a new broker. It will be freed when the window gets destroyed
+    CChangeNotifyBroker* pBroker = new CChangeNotifyBroker(hwnd, wMsg);
+    if (pBroker == NULL)
     {
         ERR("Out of memory\n");
         return NULL;
     }
-    // populate the old delivery
-    pWorker->hwnd = hwnd;
-    pWorker->uMsg = wMsg;
-
-    // create the old delivery worker window
-    HWND hwndOldWorker = SHCreateWorkerWindowW(BrokerWndProc, NULL, 0, 0,
-                                               NULL, (LONG_PTR)pWorker);
-    if (hwndOldWorker == NULL)
+    
+    HWND hwndBroker = pBroker->Create(0);
+    if (hwndBroker == NULL)
     {
-        ERR("hwndOldWorker == NULL\n");
-        delete pWorker;
+        ERR("hwndBroker == NULL\n");
+        delete pBroker;
     }
 
-    DWORD pid;
-    GetWindowThreadProcessId(hwndOldWorker, &pid);
-    TRACE("hwndOldWorker: %p, 0x%lx\n", hwndOldWorker, pid);
-    return hwndOldWorker;
+    return hwndBroker;
 }
 
 // This function creates a delivery ticket for shell change nofitication.
@@ -265,7 +244,7 @@ DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
 static HANDLE
 CreateRegistrationParam(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
                         LONG fRecursive, LPCITEMIDLIST pidl, DWORD dwOwnerPID,
-                        HWND hwndOldWorker)
+                        HWND hwndBroker)
 {
     // pidl has variable length. To store it into the registration entry,
     // we have to consider the length of pidl.
@@ -297,7 +276,7 @@ CreateRegistrationParam(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG f
     pRegEntry->fSources = fSources;
     pRegEntry->fEvents = fEvents;
     pRegEntry->fRecursive = fRecursive;
-    pRegEntry->hwndOldWorker = hwndOldWorker;
+    pRegEntry->hwndBroker = hwndBroker;
     pRegEntry->ibPidl = 0;
     if (pidl)
     {
@@ -317,14 +296,14 @@ static void
 CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
                                DWORD dwTick)
 {
-    // get new delivery worker
-    HWND hwndWorker = GetNotificationServer(FALSE);
-    if (hwndWorker == NULL)
+    // get server window
+    HWND hwndServer = GetNotificationServer(FALSE);
+    if (hwndServer == NULL)
         return;
 
-    // the ticket owner is the process of new delivery worker.
+    // the ticket owner is the process of the server process
     DWORD pid;
-    GetWindowThreadProcessId(hwndWorker, &pid);
+    GetWindowThreadProcessId(hwndServer, &pid);
 
     // create a delivery ticket
     HANDLE hTicket = CreateNotificationParam(wEventId, uFlags, pidl1, pidl2, pid, dwTick);
@@ -335,9 +314,9 @@ CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, L
 
     // send the ticket by using CN_DELIVER_NOTIFICATION
     if ((uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
-        SendMessageW(hwndWorker, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
+        SendMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
     else
-        SendNotifyMessageW(hwndWorker, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
+        SendNotifyMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
 }
 
 /*************************************************************************
@@ -347,7 +326,7 @@ EXTERN_C ULONG WINAPI
 SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
                        INT cItems, SHChangeNotifyEntry *lpItems)
 {
-    HWND hwndWorker, hwndOldWorker = NULL;
+    HWND hwndServer, hwndBroker = NULL;
     HANDLE hRegEntry;
     INT iItem;
     ULONG nRegID = INVALID_REG_ID;
@@ -364,9 +343,9 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
         return INVALID_REG_ID;
     }
 
-    // request the new delivery worker window
-    hwndWorker = GetNotificationServer(TRUE);
-    if (hwndWorker == NULL)
+    // request the window of the server
+    hwndServer = GetNotificationServer(TRUE);
+    if (hwndServer == NULL)
         return INVALID_REG_ID;
 
     // disable new delivery method in specific condition
@@ -376,15 +355,15 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
         fSources &= ~SHCNRF_NewDelivery;
     }
 
-    // if it is old delivery method, then create the old delivery worker window
+    // if it is old delivery method, then create a broker window
     if ((fSources & SHCNRF_NewDelivery) == 0)
     {
-        hwndOldWorker = hwnd = CreateNotificationBroker(hwnd, uMsg);
+        hwndBroker = hwnd = CreateNotificationBroker(hwnd, uMsg);
         uMsg = WM_BROKER_NOTIFICATION;
     }
 
-    // The owner PID is the process ID of the new delivery worker.
-    GetWindowThreadProcessId(hwndWorker, &dwOwnerPID);
+    // The owner PID is the process ID of the server
+    GetWindowThreadProcessId(hwndServer, &dwOwnerPID);
 
     EnterCriticalSection(&SHELL32_ChangenotifyCS);
     for (iItem = 0; iItem < cItems; ++iItem)
@@ -392,14 +371,14 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
         // create a registration entry
         hRegEntry = CreateRegistrationParam(nRegID, hwnd, uMsg, fSources, wEventMask,
                                             lpItems[iItem].fRecursive, lpItems[iItem].pidl,
-                                            dwOwnerPID, hwndOldWorker);
+                                            dwOwnerPID, hwndBroker);
         if (hRegEntry)
         {
             TRACE("CN_REGISTER: hwnd:%p, hRegEntry:%p, pid:0x%lx\n",
-                  hwndWorker, hRegEntry, dwOwnerPID);
+                  hwndServer, hRegEntry, dwOwnerPID);
 
-            // send CN_REGISTER to new delivery worker
-            SendMessageW(hwndWorker, CN_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
+            // send CN_REGISTER to the server
+            SendMessageW(hwndServer, CN_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
 
             // update nRegID
             pShare = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, FALSE);
@@ -413,11 +392,11 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
             SHFreeShared(hRegEntry, dwOwnerPID);
         }
 
-        // if failed, then destroy the old worker.
+        // if failed, then destroy the broker.
         if (nRegID == INVALID_REG_ID && (fSources & SHCNRF_NewDelivery) == 0)
         {
             ERR("Old Delivery is failed\n");
-            DestroyWindow(hwndOldWorker);
+            DestroyWindow(hwndBroker);
             break;
         }
     }
@@ -434,13 +413,13 @@ SHChangeNotifyDeregister(ULONG hNotify)
 {
     TRACE("(0x%08x)\n", hNotify);
 
-    // get the new delivery worker window
-    HWND hwndWorker = GetNotificationServer(FALSE);
-    if (hwndWorker == NULL)
+    // get the server window
+    HWND hwndServer = GetNotificationServer(FALSE);
+    if (hwndServer == NULL)
         return FALSE;
 
     // send CN_UNREGISTER message and try to unregister
-    BOOL ret = (BOOL)SendMessageW(hwndWorker, CN_UNREGISTER, hNotify, 0);
+    BOOL ret = (BOOL)SendMessageW(hwndServer, CN_UNREGISTER, hNotify, 0);
     if (!ret)
         ERR("CN_UNREGISTER failed\n");
 

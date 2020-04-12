@@ -16,7 +16,7 @@ struct ITEM
     UINT nRegID;        // The registration ID.
     DWORD dwUserPID;    // The user PID; that is the process ID of the target window.
     HANDLE hRegEntry;   // The registration entry.
-    HWND hwndOldWorker; // The old delivery worker (if any).
+    HWND hwndBroker;    // Client broker window (if any).
 };
 
 typedef CWinTraits <
@@ -27,8 +27,10 @@ typedef CWinTraits <
 //////////////////////////////////////////////////////////////////////////////
 // CChangeNotifyServer
 //
-// CChangeNotifyServer class is a class for the "new delivery worker" window.
-// New delivery worker is created and used at shell window.
+// CChangeNotifyServer implements a window that handles all shell change notifications
+// It runs in the context of explorer and specifically in the thread of the shell desktop
+// Shell change notification api exported from shell32 forwards all their calls 
+// to this window where all processing takes place
 
 class CChangeNotifyServer :
     public CWindowImpl<CChangeNotifyServer, CWindow, CChangeNotifyServerTraits>,
@@ -72,10 +74,10 @@ private:
     UINT m_nNextRegID;
     CSimpleArray<ITEM> m_items;
     
-    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndOldWorker);
+    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndBroker);
     BOOL RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID);
     void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
-    void DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndOldWorker);
+    void DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndBroker);
 
     UINT GetNextRegID();
     BOOL DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID);
@@ -92,7 +94,7 @@ CChangeNotifyServer::~CChangeNotifyServer()
 {
 }
 
-BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndOldWorker)
+BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndBroker)
 {
     // find the empty room
     for (INT i = 0; i < m_items.GetSize(); ++i)
@@ -103,43 +105,43 @@ BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry
             m_items[i].nRegID = nRegID;
             m_items[i].dwUserPID = dwUserPID;
             m_items[i].hRegEntry = hRegEntry;
-            m_items[i].hwndOldWorker = hwndOldWorker;
+            m_items[i].hwndBroker = hwndBroker;
             return TRUE;
         }
     }
 
     // no empty room found
-    ITEM item = { nRegID, dwUserPID, hRegEntry, hwndOldWorker };
+    ITEM item = { nRegID, dwUserPID, hRegEntry, hwndBroker };
     m_items.Add(item);
     return TRUE;
 }
 
-void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndOldWorker)
+void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndBroker)
 {
     // destroy old worker if any and if first time
-    if (item.hwndOldWorker && item.hwndOldWorker != *phwndOldWorker)
+    if (item.hwndBroker && item.hwndBroker != *phwndBroker)
     {
-        ::DestroyWindow(item.hwndOldWorker);
-        *phwndOldWorker = item.hwndOldWorker;
+        ::DestroyWindow(item.hwndBroker);
+        *phwndBroker = item.hwndBroker;
     }
 
     SHFreeShared(item.hRegEntry, dwOwnerPID);
     item.nRegID = INVALID_REG_ID;
     item.dwUserPID = 0;
     item.hRegEntry = NULL;
-    item.hwndOldWorker = NULL;
+    item.hwndBroker = NULL;
 }
 
 BOOL CChangeNotifyServer::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
 {
     BOOL bFound = FALSE;
-    HWND hwndOldWorker = NULL;
+    HWND hwndBroker = NULL;
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
         if (m_items[i].nRegID == nRegID)
         {
             bFound = TRUE;
-            DestroyItem(m_items[i], dwOwnerPID, &hwndOldWorker);
+            DestroyItem(m_items[i], dwOwnerPID, &hwndBroker);
         }
     }
     return bFound;
@@ -147,12 +149,12 @@ BOOL CChangeNotifyServer::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
 
 void CChangeNotifyServer::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
 {
-    HWND hwndOldWorker = NULL;
+    HWND hwndBroker = NULL;
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
         if (m_items[i].dwUserPID == dwUserPID)
         {
-            DestroyItem(m_items[i], dwOwnerPID, &hwndOldWorker);
+            DestroyItem(m_items[i], dwOwnerPID, &hwndBroker);
         }
     }
 }
@@ -186,7 +188,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     GetWindowThreadProcessId(pRegEntry->hwnd, &dwUserPID);
 
     // get old worker if any
-    HWND hwndOldWorker = pRegEntry->hwndOldWorker;
+    HWND hwndBroker = pRegEntry->hwndBroker;
 
     // clone the registration entry
     HANDLE hNewEntry = SHAllocShared(pRegEntry, pRegEntry->cbSize, dwOwnerPID);
@@ -202,7 +204,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     SHUnlockShared(pRegEntry);
 
     // add an ITEM
-    return AddItem(m_nNextRegID, dwUserPID, hNewEntry, hwndOldWorker);
+    return AddItem(m_nNextRegID, dwUserPID, hNewEntry, hwndBroker);
 }
 
 // Message CN_UNREGISTER: Unregister registration entries.
