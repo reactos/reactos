@@ -332,13 +332,13 @@ DoTransportChange(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST p
                   DWORD dwTick)
 {
     // get new delivery worker
-    HWND hwndNotif = DoGetNewDeliveryWorker();
-    if (!hwndNotif)
+    HWND hwndWorker = DoGetNewDeliveryWorker();
+    if (!hwndWorker)
         return;
 
     // the ticket owner is the process of new delivery worker.
     DWORD pid;
-    GetWindowThreadProcessId(hwndNotif, &pid);
+    GetWindowThreadProcessId(hwndWorker, &pid);
 
     // create a delivery ticket
     HANDLE hTicket = DoCreateDeliTicket(wEventId, uFlags, pidl1, pidl2, pid, dwTick);
@@ -347,9 +347,9 @@ DoTransportChange(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST p
         // send the ticket by using WM_NOTIF_DELIVERY
         TRACE("hTicket: %p, 0x%lx\n", hTicket, pid);
         if ((uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
-            SendMessageW(hwndNotif, WM_NOTIF_DELIVERY, (WPARAM)hTicket, pid);
+            SendMessageW(hwndWorker, WM_NOTIF_DELIVERY, (WPARAM)hTicket, pid);
         else
-            SendNotifyMessageW(hwndNotif, WM_NOTIF_DELIVERY, (WPARAM)hTicket, pid);
+            SendNotifyMessageW(hwndWorker, WM_NOTIF_DELIVERY, (WPARAM)hTicket, pid);
     }
 }
 
@@ -739,7 +739,7 @@ EXTERN_C ULONG WINAPI
 SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
                        int cItems, SHChangeNotifyEntry *lpItems)
 {
-    HWND hwndNotif, hwndOldWorker = NULL;
+    HWND hwndWorker, hwndOldWorker = NULL;
     HANDLE hShared;
     INT iItem;
     ULONG nRegID = INVALID_REG_ID;
@@ -757,8 +757,8 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
     }
 
     // create and get the new delivery worker window
-    hwndNotif = DoGetNewDeliveryWorker();
-    if (hwndNotif == NULL)
+    hwndWorker = DoGetNewDeliveryWorker();
+    if (hwndWorker == NULL)
         return INVALID_REG_ID;
 
     // if it is old delivery, then create the old delivery worker window
@@ -775,7 +775,7 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
     }
 
     // The owner PID is the process ID of new delivery worker.
-    GetWindowThreadProcessId(hwndNotif, &dwOwnerPID);
+    GetWindowThreadProcessId(hwndWorker, &dwOwnerPID);
 
     EnterCriticalSection(&SHELL32_ChangenotifyCS);
     for (iItem = 0; iItem < cItems; ++iItem)
@@ -786,8 +786,8 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
                                      dwOwnerPID, hwndOldWorker);
         if (hShared)
         {
-            TRACE("WM_NOTIF_REG: hwnd:%p, hShared:%p, pid:0x%lx\n", hwndNotif, hShared, dwOwnerPID);
-            SendMessageW(hwndNotif, WM_NOTIF_REG, (WPARAM)hShared, dwOwnerPID);
+            TRACE("WM_NOTIF_REG: hwnd:%p, hShared:%p, pid:0x%lx\n", hwndWorker, hShared, dwOwnerPID);
+            SendMessageW(hwndWorker, WM_NOTIF_REG, (WPARAM)hShared, dwOwnerPID);
 
             pShare = (LPNOTIFSHARE)SHLockSharedEx(hShared, dwOwnerPID, FALSE);
             if (pShare)
@@ -817,16 +817,16 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
 EXTERN_C BOOL WINAPI
 SHChangeNotifyDeregister(ULONG hNotify)
 {
-    HWND hwndNotif;
+    HWND hwndWorker;
     LRESULT ret = 0;
     TRACE("(0x%08x)\n", hNotify);
 
     // get the new delivery worker window
-    hwndNotif = DoGetNewDeliveryWorker();
-    if (hwndNotif)
+    hwndWorker = DoGetNewDeliveryWorker();
+    if (hwndWorker)
     {
         // send WM_NOTIF_UNREG message and try to unregister
-        ret = SendMessageW(hwndNotif, WM_NOTIF_UNREG, hNotify, 0);
+        ret = SendMessageW(hwndWorker, WM_NOTIF_UNREG, hNotify, 0);
         if (!ret)
         {
             ERR("WM_NOTIF_UNREG failed\n");
