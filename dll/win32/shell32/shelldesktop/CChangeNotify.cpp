@@ -176,7 +176,7 @@ void CChangeNotify::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
 //   return: TRUE if successful.
 LRESULT CChangeNotify::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    TRACE("OnReg(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
+    TRACE("OnRegister(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
     // lock the registration entry
     HANDLE hRegEntry = (HANDLE)wParam;
