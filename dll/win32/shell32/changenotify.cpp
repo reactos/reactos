@@ -58,32 +58,6 @@ EXTERN_C void FreeChangeNotifications(void)
     DeleteCriticalSection(&SHELL32_ChangenotifyCS);
 }
 
-// This function handles the case of SHCNE_FREESPACE.
-static void DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
-{
-    WCHAR path1[MAX_PATH], path2[MAX_PATH];
-
-    path1[0] = 0;
-    if (pidl1)
-        SHGetPathFromIDListW(pidl1, path1);
-
-    path2[0] = 0;
-    if (pidl2)
-        SHGetPathFromIDListW(pidl2, path2);
-
-    if (path1[0])
-    {
-        if (path2[0])
-            SHChangeNotify(SHCNE_FREESPACE, SHCNF_PATHW, path1, path2);
-        else
-            SHChangeNotify(SHCNE_FREESPACE, SHCNF_PATHW, path1, NULL);
-    }
-    else
-    {
-        SHChangeNotify(SHCNE_FREESPACE, SHCNF_PATHW, NULL, NULL);
-    }
-}
-
 //////////////////////////////////////////////////////////////////////////////////////
 // There are two delivery methods: "old delivery method" and "new delivery method".
 //
@@ -533,11 +507,6 @@ SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
     switch (uFlags & SHCNF_TYPE)
     {
         case SHCNF_IDLIST:
-            if (wEventId == SHCNE_FREESPACE)
-            {
-                DoNotifyFreeSpace((LPCITEMIDLIST)dwItem1, (LPCITEMIDLIST)dwItem2);
-                goto Quit;
-            }
             pidl1 = (LPITEMIDLIST)dwItem1;
             pidl2 = (LPITEMIDLIST)dwItem2;
             break;
@@ -560,11 +529,6 @@ SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
             return;
 
         case SHCNF_PATHW:
-            if (wEventId == SHCNE_FREESPACE)
-            {
-                /* FIXME */
-                goto Quit;
-            }
             if (dwItem1)
             {
                 pidl1 = pidlTemp1 = SHSimpleIDListFromPathW((LPCWSTR)dwItem1);
@@ -591,7 +555,6 @@ SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
         DoCreateTicketAndSend(wEventId, uFlags, pidl1, pidl2, dwTick);
     }
 
-Quit:
     if (pidlTemp1)
         ILFree(pidlTemp1);
     if (pidlTemp2)
