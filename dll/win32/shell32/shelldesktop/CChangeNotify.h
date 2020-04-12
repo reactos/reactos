@@ -35,7 +35,7 @@ typedef struct DELITICKET
     DWORD ibOffset2; /* offset to pidl2 */
 } DELITICKET, *LPDELITICKET;
 
-typedef struct NOTIFSHARE
+typedef struct REGENTRY
 {
     DWORD dwMagic;
     DWORD cbSize;
@@ -47,7 +47,7 @@ typedef struct NOTIFSHARE
     LONG fEvents;
     BOOL fRecursive;
     UINT ibPidl;
-} NOTIFSHARE, *LPNOTIFSHARE;
+} REGENTRY, *LPREGENTRY;
 
 typedef struct HANDBAG
 {
@@ -57,7 +57,7 @@ typedef struct HANDBAG
 } HANDBAG, *LPHANDBAG;
 
 #define DELITICKET_MAGIC 0xDEADFACE
-#define NOTIFSHARE_MAGIC 0xB0B32D1E
+#define REGENTRY_MAGIC 0xB0B32D1E
 #define HANDBAG_MAGIC 0xFACEB00C
 
 #ifdef __cplusplus
@@ -108,8 +108,8 @@ public:
     UINT GetNextRegID();
     BOOL DoDelivery(HANDLE hTicket, DWORD dwOwnerPID);
 
-    BOOL ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared);
-    BOOL DoNotify(LPHANDBAG pHandbag, LPDELITICKET pTicket, LPNOTIFSHARE pShared);
+    BOOL ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pShared);
+    BOOL DoNotify(LPHANDBAG pHandbag, LPDELITICKET pTicket, LPREGENTRY pShared);
 
     LRESULT OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

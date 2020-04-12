@@ -190,7 +190,7 @@ DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
     // pidl has variable length. To store it into the registration entry,
     // we have to consider the length of pidl.
     DWORD cbPidl = ILGetSize(pidl);
-    DWORD ibPidl = DWORD_ALIGNMENT(sizeof(NOTIFSHARE));
+    DWORD ibPidl = DWORD_ALIGNMENT(sizeof(REGENTRY));
     DWORD cbSize = ibPidl + cbPidl;
     HANDLE hShared = SHAllocShared(NULL, cbSize, dwOwnerPID);
     if (!hShared)
@@ -200,7 +200,7 @@ DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
     }
 
     // create the registration entry and lock it
-    LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockSharedEx(hShared, dwOwnerPID, TRUE);
+    LPREGENTRY pShared = (LPREGENTRY)SHLockSharedEx(hShared, dwOwnerPID, TRUE);
     if (pShared == NULL)
     {
         ERR("SHLockSharedEx failed\n");
@@ -209,7 +209,7 @@ DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
     }
 
     // populate the registration entry
-    pShared->dwMagic = NOTIFSHARE_MAGIC;
+    pShared->dwMagic = REGENTRY_MAGIC;
     pShared->cbSize = cbSize;
     pShared->nRegID = nRegID;
     pShared->hwnd = hwnd;
@@ -496,8 +496,8 @@ LRESULT CChangeNotify::OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
     // lock the registration entry
     HANDLE hShared = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
-    LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockSharedEx(hShared, dwOwnerPID, TRUE);
-    if (!pShared || pShared->dwMagic != NOTIFSHARE_MAGIC)
+    LPREGENTRY pShared = (LPREGENTRY)SHLockSharedEx(hShared, dwOwnerPID, TRUE);
+    if (!pShared || pShared->dwMagic != REGENTRY_MAGIC)
     {
         ERR("pShared is invalid\n");
         return FALSE;
@@ -632,8 +632,8 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
             continue;
 
         // lock the registration entry
-        LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockSharedEx(hShare, dwOwnerPID, FALSE);
-        if (!pShared || pShared->dwMagic != NOTIFSHARE_MAGIC)
+        LPREGENTRY pShared = (LPREGENTRY)SHLockSharedEx(hShare, dwOwnerPID, FALSE);
+        if (!pShared || pShared->dwMagic != REGENTRY_MAGIC)
         {
             ERR("pShared is invalid\n");
             continue;
@@ -669,7 +669,7 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
     return TRUE;
 }
 
-BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
+BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pShared)
 {
     LPITEMIDLIST pidl, pidl1 = NULL, pidl2 = NULL;
     WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
@@ -772,7 +772,7 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
     INT iItem;
     ULONG nRegID = INVALID_REG_ID;
     DWORD dwOwnerPID;
-    LPNOTIFSHARE pShare;
+    LPREGENTRY pShare;
 
     TRACE("(%p,0x%08x,0x%08x,0x%08x,%d,%p)\n",
           hwnd, fSources, wEventMask, uMsg, cItems, lpItems);
@@ -817,7 +817,7 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
             TRACE("WM_NOTIF_REG: hwnd:%p, hShared:%p, pid:0x%lx\n", hwndWorker, hShared, dwOwnerPID);
             SendMessageW(hwndWorker, WM_NOTIF_REG, (WPARAM)hShared, dwOwnerPID);
 
-            pShare = (LPNOTIFSHARE)SHLockSharedEx(hShared, dwOwnerPID, FALSE);
+            pShare = (LPREGENTRY)SHLockSharedEx(hShared, dwOwnerPID, FALSE);
             if (pShare)
             {
                 nRegID = pShare->nRegID;
