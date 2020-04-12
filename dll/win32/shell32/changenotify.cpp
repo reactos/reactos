@@ -508,7 +508,7 @@ SHChangeNotification_Lock(HANDLE hTicket, DWORD dwOwnerPID, LPITEMIDLIST **lppid
         return NULL;
     }
 
-    // populate the handbag
+    // populate parameters from the handbag
     if (lppidls)
         *lppidls = pHandbag->pidls;
     if (lpwEventId)
