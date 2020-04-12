@@ -136,24 +136,21 @@ OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 // This function creates an old delivery worker. Used in SHChangeNotifyRegister.
 static HWND
-DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg)
+DoCreateOldWorker(HWND hwnd, UINT wMsg)
 {
-    LPOLDDELIVERY pWorker;
-    HWND hwndOldWorker;
-
     // create a memory block for old delivery
-    pWorker = new OLDDELIVERY;
+    LPOLDDELIVERY pWorker = new OLDDELIVERY;
     if (!pWorker)
     {
         ERR("Out of memory\n");
         return NULL;
     }
-
     // populate the old delivery
     pWorker->hwnd = hwnd;
     pWorker->uMsg = wMsg;
 
     // create the old delivery worker window
+    HWND hwndOldWorker;
     hwndOldWorker = SHCreateWorkerWindowW(OldDeliveryWorkerWndProc, NULL, 0, 0,
                                           NULL, (LONG_PTR)pWorker);
     if (hwndOldWorker == NULL)
@@ -286,7 +283,7 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
     // if it is old delivery method, then create the old delivery worker window
     if ((fSources & SHCNRF_NewDelivery) == 0)
     {
-        hwndOldWorker = hwnd = DoHireOldDeliveryWorker(hwnd, uMsg);
+        hwndOldWorker = hwnd = DoCreateOldWorker(hwnd, uMsg);
         uMsg = WM_OLDDELI_HANDOVER;
     }
 
