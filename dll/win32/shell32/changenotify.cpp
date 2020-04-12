@@ -482,10 +482,6 @@ Quit:
 
 /*************************************************************************
  * NTSHChangeNotifyRegister            [SHELL32.640]
- * NOTES
- *   Idlist is an array of structures and Count specifies how many items in the array.
- *   count should always be one when calling SHChangeNotifyRegister, or
- *   SHChangeNotifyDeregister will not work properly.
  */
 EXTERN_C ULONG WINAPI
 NTSHChangeNotifyRegister(HWND hwnd, INT fSources, LONG fEvents, UINT msg,
