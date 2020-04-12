@@ -332,7 +332,7 @@ DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
 }
 
 // This function is the body of SHChangeNotify function.
-// It creates a delivery ticket and send WM_NOTIF_DELIVERY message to
+// It creates a delivery ticket and send WM_WORKER_DELIVERY message to
 // transport the change.
 EXTERN_C void
 DoTransportChange(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
@@ -351,12 +351,12 @@ DoTransportChange(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST p
     HANDLE hTicket = DoCreateDeliTicket(wEventId, uFlags, pidl1, pidl2, pid, dwTick);
     if (hTicket)
     {
-        // send the ticket by using WM_NOTIF_DELIVERY
+        // send the ticket by using WM_WORKER_DELIVERY
         TRACE("hTicket: %p, 0x%lx\n", hTicket, pid);
         if ((uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
-            SendMessageW(hwndWorker, WM_NOTIF_DELIVERY, (WPARAM)hTicket, pid);
+            SendMessageW(hwndWorker, WM_WORKER_DELIVERY, (WPARAM)hTicket, pid);
         else
-            SendNotifyMessageW(hwndWorker, WM_NOTIF_DELIVERY, (WPARAM)hTicket, pid);
+            SendNotifyMessageW(hwndWorker, WM_WORKER_DELIVERY, (WPARAM)hTicket, pid);
     }
 }
 
@@ -492,11 +492,11 @@ void CChangeNotify::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
     m_pimpl->RemoveItemsByProcess(dwOwnerPID, dwUserPID);
 }
 
-// Message WM_NOTIF_REG:
+// Message WM_WORKER_REGISTER:
 //   wParam: The handle of registration entry.
 //   lParam: The owner PID of registration entry.
 //   return: TRUE if successful.
-LRESULT CChangeNotify::OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CChangeNotify::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnReg(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
@@ -540,13 +540,13 @@ LRESULT CChangeNotify::OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
     return AddItem(m_nNextRegID, dwUserPID, hNewShared, hwndOldWorker);
 }
 
-// Message WM_NOTIF_UNREG:
+// Message WM_WORKER_UNREGISTER:
 //   wParam: The registration ID.
 //   lParam: Ignored.
 //   return: TRUE if successful.
-LRESULT CChangeNotify::OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CChangeNotify::OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    TRACE("OnUnReg(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
+    TRACE("OnUnRegister(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
     // validate registration ID
     UINT nRegID = (UINT)wParam;
@@ -562,7 +562,7 @@ LRESULT CChangeNotify::OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     return RemoveItemsByRegID(nRegID, dwOwnerPID);
 }
 
-// Message WM_NOTIF_DELIVERY:
+// Message WM_WORKER_DELIVERY:
 //   wParam: The handle of delivery ticket.
 //   lParam: The owner PID of delivery ticket.
 //   return: TRUE if necessary.
@@ -593,7 +593,7 @@ LRESULT CChangeNotify::OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     return ret;
 }
 
-// Message WM_NOTIF_SUSPEND:
+// Message WM_WORKER_SUSPEND:
 //   (specification is unknown)
 LRESULT CChangeNotify::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
@@ -603,7 +603,7 @@ LRESULT CChangeNotify::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     return FALSE;
 }
 
-// Message WM_NOTIF_REMOVEBYPID:
+// Message WM_WORKER_REMOVEBYPID:
 //   wParam: The user PID.
 //   lParam: Ignored.
 //   return: Zero.
@@ -762,7 +762,7 @@ EXTERN_C void FreeChangeNotifications(void)
 {
     HWND hwndWorker;
     hwndWorker = DoGetNewDeliveryWorker();
-    SendMessageW(hwndWorker, WM_NOTIF_REMOVEBYPID, GetCurrentProcessId(), 0);
+    SendMessageW(hwndWorker, WM_WORKER_REMOVEBYPID, GetCurrentProcessId(), 0);
     DeleteCriticalSection(&SHELL32_ChangenotifyCS);
 }
 
@@ -821,8 +821,8 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
                                    dwOwnerPID, hwndOldWorker);
         if (hShared)
         {
-            TRACE("WM_NOTIF_REG: hwnd:%p, hShared:%p, pid:0x%lx\n", hwndWorker, hShared, dwOwnerPID);
-            SendMessageW(hwndWorker, WM_NOTIF_REG, (WPARAM)hShared, dwOwnerPID);
+            TRACE("WM_WORKER_REGISTER: hwnd:%p, hShared:%p, pid:0x%lx\n", hwndWorker, hShared, dwOwnerPID);
+            SendMessageW(hwndWorker, WM_WORKER_REGISTER, (WPARAM)hShared, dwOwnerPID);
 
             pShare = (LPREGENTRY)SHLockSharedEx(hShared, dwOwnerPID, FALSE);
             if (pShare)
@@ -860,11 +860,11 @@ SHChangeNotifyDeregister(ULONG hNotify)
     hwndWorker = DoGetNewDeliveryWorker();
     if (hwndWorker)
     {
-        // send WM_NOTIF_UNREG message and try to unregister
-        ret = SendMessageW(hwndWorker, WM_NOTIF_UNREG, hNotify, 0);
+        // send WM_WORKER_UNREGISTER message and try to unregister
+        ret = SendMessageW(hwndWorker, WM_WORKER_UNREGISTER, hNotify, 0);
         if (!ret)
         {
-            ERR("WM_NOTIF_UNREG failed\n");
+            ERR("WM_WORKER_UNREGISTER failed\n");
         }
     }
     return ret;

@@ -10,11 +10,11 @@
 
 #define WM_GETDELIWORKERWND (WM_USER + 25) /* 0x419 */
 #define WM_OLDDELI_HANDOVER (WM_USER + 1) /* 0x401 */
-#define WM_NOTIF_REG (WM_USER + 1) /* 0x401 */
-#define WM_NOTIF_UNREG (WM_USER + 2) /* 0x402 */
-#define WM_NOTIF_DELIVERY (WM_USER + 3) /* 0x403 */
-#define WM_NOTIF_SUSPEND (WM_USER + 6) /* 0x406 */
-#define WM_NOTIF_REMOVEBYPID (WM_USER + 7) /* 0x407 */
+#define WM_WORKER_REGISTER (WM_USER + 1) /* 0x401 */
+#define WM_WORKER_UNREGISTER (WM_USER + 2) /* 0x402 */
+#define WM_WORKER_DELIVERY (WM_USER + 3) /* 0x403 */
+#define WM_WORKER_SUSPEND (WM_USER + 6) /* 0x406 */
+#define WM_WORKER_REMOVEBYPID (WM_USER + 7) /* 0x407 */
 
 #define DWORD_ALIGNMENT(offset) \
     ((((offset) + sizeof(DWORD) - 1) / sizeof(DWORD)) * sizeof(DWORD))
@@ -108,18 +108,18 @@ public:
     BOOL ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pShared);
     BOOL DoNotify(LPHANDBAG pHandbag, LPDELITICKET pTicket, LPREGENTRY pShared);
 
-    LRESULT OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     BEGIN_MSG_MAP(CChangeNotify)
-        MESSAGE_HANDLER(WM_NOTIF_REG, OnReg)
-        MESSAGE_HANDLER(WM_NOTIF_UNREG, OnUnReg)
-        MESSAGE_HANDLER(WM_NOTIF_DELIVERY, OnDelivery)
-        MESSAGE_HANDLER(WM_NOTIF_SUSPEND, OnSuspendResume)
-        MESSAGE_HANDLER(WM_NOTIF_REMOVEBYPID, OnRemoveByPID);
+        MESSAGE_HANDLER(WM_WORKER_REGISTER, OnRegister)
+        MESSAGE_HANDLER(WM_WORKER_UNREGISTER, OnUnRegister)
+        MESSAGE_HANDLER(WM_WORKER_DELIVERY, OnDelivery)
+        MESSAGE_HANDLER(WM_WORKER_SUSPEND, OnSuspendResume)
+        MESSAGE_HANDLER(WM_WORKER_REMOVEBYPID, OnRemoveByPID);
     END_MSG_MAP()
 
 protected:
