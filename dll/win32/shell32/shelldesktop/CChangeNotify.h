@@ -22,35 +22,37 @@
 /* delivery ticket */
 typedef struct DELITICKET
 {
-    DWORD dwMagic;
-    LONG wEventId;
-    UINT uFlags;
-    DWORD dwTick;
+    DWORD dwMagic;   /* same as DELITICKET_MAGIC */
+    LONG wEventId;   /* event id of SHChangeNotify() */
+    UINT uFlags;     /* flags of SHChangeNotify() */
+    DWORD dwTick;    /* value of GetTickCount() */
     DWORD ibOffset1; /* offset to pidl1 */
     DWORD ibOffset2; /* offset to pidl2 */
+    /* followed by pidl1 and pidl2 */
 } DELITICKET, *LPDELITICKET;
 
 /* registration entry */
 typedef struct REGENTRY
 {
-    DWORD dwMagic;
-    DWORD cbSize;
-    UINT nRegID;
-    HWND hwnd;
-    UINT uMsg;
-    INT fSources;
-    LONG fEvents;
-    BOOL fRecursive;
-    HWND hwndOldWorker;
-    UINT ibPidl;
+    DWORD dwMagic;      /* same as REGENTRY_MAGIC */
+    DWORD cbSize;       /* the real size of this structure */
+    UINT nRegID;        /* the registration ID */
+    HWND hwnd;          /* the target window */
+    UINT uMsg;          /* the message ID used in notification */
+    INT fSources;       /* the source flags */
+    LONG fEvents;       /* the event flags */
+    BOOL fRecursive;    /* is it recursive? */
+    HWND hwndOldWorker; /* old worker (if any) */
+    UINT ibPidl;        /* offset to the PIDL */
+    /* followed by a PIDL */
 } REGENTRY, *LPREGENTRY;
 
 /* handbag */
 typedef struct HANDBAG
 {
-    DWORD dwMagic;
-    LPITEMIDLIST pidls[2];
-    LPDELITICKET pTicket;
+    DWORD dwMagic;          /* same as HANDBAG_MAGIC */
+    LPITEMIDLIST pidls[2];  /* two PIDLs */
+    LPDELITICKET pTicket;   /* the ticket */
 } HANDBAG, *LPHANDBAG;
 
 #define DELITICKET_MAGIC 0xDEADFACE
