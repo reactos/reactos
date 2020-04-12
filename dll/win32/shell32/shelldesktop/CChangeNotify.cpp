@@ -106,7 +106,7 @@ DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
 }
 
 // This function creates a "handbag" by using a delivery ticket.
-// The handbag is created in SHChangeNotification_Lock and used in OnDelivery.
+// The handbag is created in SHChangeNotification_Lock and used in OnTicket.
 // hTicket is a ticket handle of a shared memory block and dwOwnerPID is
 // the owner PID of the ticket.
 EXTERN_C LPHANDBAG
@@ -347,13 +347,13 @@ LRESULT CChangeNotify::OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     return RemoveItemsByRegID(nRegID, dwOwnerPID);
 }
 
-// Message WM_WORKER_DELIVERY: Perform a delivery.
+// Message WM_WORKER_TICKET: Perform a delivery.
 //   wParam: The handle of delivery ticket.
 //   lParam: The owner PID of delivery ticket.
 //   return: TRUE if necessary.
-LRESULT CChangeNotify::OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CChangeNotify::OnTicket(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    TRACE("OnDelivery(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
+    TRACE("OnTicket(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
     HANDLE hTicket = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
@@ -363,12 +363,12 @@ LRESULT CChangeNotify::OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     LPHANDBAG pHandbag = DoGetHandbagFromTicket(hTicket, dwOwnerPID);
     if (pHandbag && pHandbag->dwMagic == HANDBAG_MAGIC)
     {
-        // validate the handbag
+        // validate the ticket
         LPDELITICKET pTicket = pHandbag->pTicket;
         if (pTicket && pTicket->dwMagic == DELITICKET_MAGIC)
         {
             // do delivery
-            ret = DoDelivery(hTicket, dwOwnerPID);
+            ret = DoTicket(hTicket, dwOwnerPID);
         }
     }
 
@@ -409,12 +409,12 @@ UINT CChangeNotify::GetNextRegID()
     return m_nNextRegID;
 }
 
-// This function is called from CChangeNotify::OnDelivery.
+// This function is called from CChangeNotify::OnTicket.
 // The function checks all the registration entries whether the entry
 // should be notified.
-BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
+BOOL CChangeNotify::DoTicket(HANDLE hTicket, DWORD dwOwnerPID)
 {
-    TRACE("DoDelivery(%p, %p, 0x%lx)\n", m_hWnd, hTicket, dwOwnerPID);
+    TRACE("DoTicket(%p, %p, 0x%lx)\n", m_hWnd, hTicket, dwOwnerPID);
 
     // lock the delivery ticket
     LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);

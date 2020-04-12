@@ -223,7 +223,7 @@ DoCreateTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pi
 }
 
 // This function is the body of SHChangeNotify function.
-// It creates a delivery ticket and send WM_WORKER_DELIVERY message to
+// It creates a delivery ticket and send WM_WORKER_TICKET message to
 // transport the change.
 static void
 DoCreateTicketAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
@@ -243,12 +243,12 @@ DoCreateTicketAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLI
     if (hTicket == NULL)
         return;
 
-    // send the ticket by using WM_WORKER_DELIVERY
+    // send the ticket by using WM_WORKER_TICKET
     TRACE("hTicket: %p, 0x%lx\n", hTicket, pid);
     if ((uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
-        SendMessageW(hwndWorker, WM_WORKER_DELIVERY, (WPARAM)hTicket, pid);
+        SendMessageW(hwndWorker, WM_WORKER_TICKET, (WPARAM)hTicket, pid);
     else
-        SendNotifyMessageW(hwndWorker, WM_WORKER_DELIVERY, (WPARAM)hTicket, pid);
+        SendNotifyMessageW(hwndWorker, WM_WORKER_TICKET, (WPARAM)hTicket, pid);
 }
 
 /*************************************************************************
@@ -328,7 +328,6 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
         {
             ERR("Old Delivery is failed\n");
             DestroyWindow(hwndOldWorker);
-            nRegID = INVALID_REG_ID;
             break;
         }
     }

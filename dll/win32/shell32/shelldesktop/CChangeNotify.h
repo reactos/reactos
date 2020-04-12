@@ -12,7 +12,7 @@
 #define WM_OLDWORKER_HANDOVER (WM_USER + 1) /* 0x401 */
 #define WM_WORKER_REGISTER (WM_USER + 1) /* 0x401 */
 #define WM_WORKER_UNREGISTER (WM_USER + 2) /* 0x402 */
-#define WM_WORKER_DELIVERY (WM_USER + 3) /* 0x403 */
+#define WM_WORKER_TICKET (WM_USER + 3) /* 0x403 */
 #define WM_WORKER_SUSPEND (WM_USER + 6) /* 0x406 */
 #define WM_WORKER_REMOVEBYPID (WM_USER + 7) /* 0x407 */
 
@@ -111,21 +111,19 @@ public:
     void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
 
     UINT GetNextRegID();
-    BOOL DoDelivery(HANDLE hTicket, DWORD dwOwnerPID);
-
+    BOOL DoTicket(HANDLE hTicket, DWORD dwOwnerPID);
     BOOL ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry);
-    BOOL DoNotify(LPHANDBAG pHandbag, LPDELITICKET pTicket, LPREGENTRY pRegEntry);
 
     LRESULT OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnTicket(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     BEGIN_MSG_MAP(CChangeNotify)
         MESSAGE_HANDLER(WM_WORKER_REGISTER, OnRegister)
         MESSAGE_HANDLER(WM_WORKER_UNREGISTER, OnUnRegister)
-        MESSAGE_HANDLER(WM_WORKER_DELIVERY, OnDelivery)
+        MESSAGE_HANDLER(WM_WORKER_TICKET, OnTicket)
         MESSAGE_HANDLER(WM_WORKER_SUSPEND, OnSuspendResume)
         MESSAGE_HANDLER(WM_WORKER_REMOVEBYPID, OnRemoveByPID);
     END_MSG_MAP()
