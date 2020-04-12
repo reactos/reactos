@@ -140,7 +140,7 @@ DoCreateOldWorker(HWND hwnd, UINT wMsg)
 {
     // create a memory block for old delivery
     LPOLDDELIVERY pWorker = new OLDDELIVERY;
-    if (!pWorker)
+    if (pWorker == NULL)
     {
         ERR("Out of memory\n");
         return NULL;
@@ -150,9 +150,8 @@ DoCreateOldWorker(HWND hwnd, UINT wMsg)
     pWorker->uMsg = wMsg;
 
     // create the old delivery worker window
-    HWND hwndOldWorker;
-    hwndOldWorker = SHCreateWorkerWindowW(OldWorkerWndProc, NULL, 0, 0,
-                                          NULL, (LONG_PTR)pWorker);
+    HWND hwndOldWorker = SHCreateWorkerWindowW(OldWorkerWndProc, NULL, 0, 0,
+                                               NULL, (LONG_PTR)pWorker);
     if (hwndOldWorker == NULL)
     {
         ERR("hwndOldWorker == NULL\n");
@@ -173,10 +172,7 @@ DoCreateTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pi
 {
     // pidl1 and pidl2 have variable length. To store them into the delivery ticket,
     // we have to consider the offsets and the sizes of pidl1 and pidl2.
-    LPDELITICKET pTicket;
-    HANDLE hTicket = NULL;
-    DWORD cbPidl1 = 0, cbPidl2 = 0, ibOffset1 = 0, ibOffset2 = 0, cbSize;
-
+    DWORD cbPidl1 = 0, cbPidl2 = 0, ibOffset1 = 0, ibOffset2 = 0;
     if (pidl1)
     {
         cbPidl1 = ILGetSize(pidl1);
@@ -189,8 +185,8 @@ DoCreateTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pi
     }
 
     // allocate the delivery ticket
-    cbSize = ibOffset2 + cbPidl2;
-    hTicket = SHAllocShared(NULL, cbSize, dwOwnerPID);
+    DWORD cbSize = ibOffset2 + cbPidl2;
+    HANDLE hTicket = SHAllocShared(NULL, cbSize, dwOwnerPID);
     if (hTicket == NULL)
     {
         ERR("Out of memory\n");
@@ -198,7 +194,7 @@ DoCreateTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pi
     }
 
     // lock the ticket
-    pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, TRUE);
+    LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, TRUE);
     if (pTicket == NULL)
     {
         ERR("SHLockSharedEx failed\n");
@@ -231,7 +227,7 @@ DoCreateTicketAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLI
 {
     // get new delivery worker
     HWND hwndWorker = DoGetNewDeliveryWorker(FALSE);
-    if (!hwndWorker)
+    if (hwndWorker == NULL)
         return;
 
     // the ticket owner is the process of new delivery worker.
@@ -255,8 +251,8 @@ DoCreateTicketAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLI
  * SHChangeNotifyRegister           [SHELL32.2]
  */
 EXTERN_C ULONG WINAPI
-SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
-                       int cItems, SHChangeNotifyEntry *lpItems)
+SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
+                       INT cItems, SHChangeNotifyEntry *lpItems)
 {
     HWND hwndWorker, hwndOldWorker = NULL;
     HANDLE hRegEntry;
@@ -270,7 +266,7 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
 
     // sanity check
     if (wEventMask == 0 || cItems <= 0 || cItems > 0x7FFF || lpItems == NULL ||
-        !hwnd || !IsWindow(hwnd))
+        hwnd == NULL || !IsWindow(hwnd))
     {
         return INVALID_REG_ID;
     }
@@ -493,8 +489,8 @@ Quit:
  *   SHChangeNotifyDeregister will not work properly.
  */
 EXTERN_C ULONG WINAPI
-NTSHChangeNotifyRegister(HWND hwnd, int fSources, LONG fEvents, UINT msg,
-                         int count, SHChangeNotifyEntry *idlist)
+NTSHChangeNotifyRegister(HWND hwnd, INT fSources, LONG fEvents, UINT msg,
+                         INT count, SHChangeNotifyEntry *idlist)
 {
     return SHChangeNotifyRegister(hwnd, fSources | SHCNRF_NewDelivery,
                                   fEvents, msg, count, idlist);
@@ -510,11 +506,11 @@ SHChangeNotification_Lock(HANDLE hTicket, DWORD dwOwnerPID, LPITEMIDLIST **lppid
     LPHANDBAG pHandbag;
     TRACE("%p %08x %p %p\n", hTicket, dwOwnerPID, lppidls, lpwEventId);
 
-    // create a handbag from delivery ticket
+    // create a handbag from the ticket
     pHandbag = DoGetHandbagFromTicket(hTicket, dwOwnerPID);
 
     // validate the handbag
-    if (!pHandbag || pHandbag->dwMagic != HANDBAG_MAGIC)
+    if (pHandbag == NULL || pHandbag->dwMagic != HANDBAG_MAGIC)
     {
         ERR("pHandbag is invalid\n");
         return NULL;
@@ -541,7 +537,7 @@ SHChangeNotification_Unlock(HANDLE hLock)
     TRACE("%p\n", hLock);
 
     // validate the handbag
-    if (!pHandbag || pHandbag->dwMagic != HANDBAG_MAGIC)
+    if (pHandbag == NULL || pHandbag->dwMagic != HANDBAG_MAGIC)
     {
         ERR("pHandbag is invalid\n");
         return FALSE;

@@ -47,7 +47,7 @@ DoGetNewDeliveryWorker(BOOL bCreate)
     HWND hwndWorker = (HWND)SendMessageW(hwndShell, WM_GETWORKERWND, bCreate, 0);
     if (!IsWindow(hwndWorker))
     {
-        ERR("Unable to get notification window\n");
+        ERR("Unable to get worker window\n");
         hwndWorker = NULL;
     }
 
@@ -70,7 +70,7 @@ DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
 
     // create the registration entry and lock it
     HANDLE hRegEntry = SHAllocShared(NULL, cbSize, dwOwnerPID);
-    if (!hRegEntry)
+    if (hRegEntry == NULL)
     {
         ERR("Out of memory\n");
         return NULL;
@@ -114,7 +114,7 @@ DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
 {
     // validate the delivery ticket
     LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
-    if (!pTicket || pTicket->dwMagic != DELITICKET_MAGIC)
+    if (pTicket == NULL || pTicket->dwMagic != DELITICKET_MAGIC)
     {
         ERR("pTicket is invalid\n");
         return NULL;
@@ -289,7 +289,7 @@ LRESULT CChangeNotify::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     HANDLE hRegEntry = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
     LPREGENTRY pRegEntry = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, TRUE);
-    if (!pRegEntry || pRegEntry->dwMagic != REGENTRY_MAGIC)
+    if (pRegEntry == NULL || pRegEntry->dwMagic != REGENTRY_MAGIC)
     {
         ERR("pRegEntry is invalid\n");
         return FALSE;
@@ -310,7 +310,7 @@ LRESULT CChangeNotify::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
     // clone the registration entry
     HANDLE hNewShared = SHAllocShared(pRegEntry, pRegEntry->cbSize, dwOwnerPID);
-    if (!hNewShared)
+    if (hNewShared == NULL)
     {
         ERR("Out of memory\n");
         pRegEntry->nRegID = INVALID_REG_ID;
@@ -418,7 +418,7 @@ BOOL CChangeNotify::DoTicket(HANDLE hTicket, DWORD dwOwnerPID)
 
     // lock the delivery ticket
     LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
-    if (!pTicket || pTicket->dwMagic != DELITICKET_MAGIC)
+    if (pTicket == NULL || pTicket->dwMagic != DELITICKET_MAGIC)
     {
         ERR("pTicket is invalid\n");
         return FALSE;
@@ -434,7 +434,7 @@ BOOL CChangeNotify::DoTicket(HANDLE hTicket, DWORD dwOwnerPID)
 
         // lock the registration entry
         LPREGENTRY pRegEntry = (LPREGENTRY)SHLockSharedEx(hShare, dwOwnerPID, FALSE);
-        if (!pRegEntry || pRegEntry->dwMagic != REGENTRY_MAGIC)
+        if (pRegEntry == NULL || pRegEntry->dwMagic != REGENTRY_MAGIC)
         {
             ERR("pRegEntry is invalid\n");
             continue;
@@ -466,7 +466,7 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry)
     WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
     INT cch, cch1, cch2;
 
-    if (!pRegEntry->ibPidl)
+    if (pRegEntry->ibPidl == 0)
         return TRUE;
 
     // get the stored pidl
