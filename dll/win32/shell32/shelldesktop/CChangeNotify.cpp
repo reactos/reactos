@@ -485,7 +485,10 @@ void CChangeNotify::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
     m_pimpl->RemoveItemsByProcess(dwOwnerPID, dwUserPID);
 }
 
-// WM_NOTIF_REG
+// Message WM_NOTIF_REG:
+//   wParam: The handle of registration entry.
+//   lParam: The owner PID of registration entry.
+//   return: TRUE if successful.
 LRESULT CChangeNotify::OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnReg(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
@@ -530,7 +533,10 @@ LRESULT CChangeNotify::OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
     return AddItem(m_nNextRegID, dwUserPID, hNewShared, hwndOldWorker);
 }
 
-// WM_NOTIF_UNREG
+// Message WM_NOTIF_UNREG:
+//   wParam: The registration ID.
+//   lParam: Ignored.
+//   return: TRUE if successful.
 LRESULT CChangeNotify::OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnUnReg(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
@@ -549,7 +555,10 @@ LRESULT CChangeNotify::OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     return RemoveItemsByRegID(nRegID, dwOwnerPID);
 }
 
-// WM_NOTIF_DELIVERY
+// Message WM_NOTIF_DELIVERY:
+//   wParam: The handle of delivery ticket.
+//   lParam: The owner PID of delivery ticket.
+//   return: TRUE if necessary.
 LRESULT CChangeNotify::OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnDelivery(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
@@ -577,7 +586,8 @@ LRESULT CChangeNotify::OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     return ret;
 }
 
-// WM_NOTIF_SUSPEND
+// Message WM_NOTIF_SUSPEND:
+//   (specification is unknown)
 LRESULT CChangeNotify::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnSuspendResume\n");
@@ -586,7 +596,10 @@ LRESULT CChangeNotify::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     return FALSE;
 }
 
-// WM_NOTIF_REMOVEBYPID
+// Message WM_NOTIF_REMOVEBYPID:
+//   wParam: The user PID.
+//   lParam: Ignored.
+//   return: Zero.
 LRESULT CChangeNotify::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     DWORD dwOwnerPID, dwUserPID = (DWORD)wParam;
@@ -603,6 +616,9 @@ UINT CChangeNotify::GetNextRegID()
     return m_nNextRegID;
 }
 
+// This function is called from CChangeNotify::OnDelivery.
+// The function checks all the registration entries whether the entry
+// should be notified.
 BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
 {
     TRACE("DoDelivery(%p, %p, 0x%lx)\n", m_hWnd, hTicket, dwOwnerPID);
@@ -684,11 +700,11 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
     }
 
     // The paths:
-    //   "C:\\Path\\To\\FileName1"
-    //   "C:\\Path\\To\\FileName1Test"
+    //   "C:\\Path\\To\\File1"
+    //   "C:\\Path\\To\\File1Test"
     // should be distinguished, so we add backslash at last as follows:
-    //   "C:\\Path\\To\\FileName1\\"
-    //   "C:\\Path\\To\\FileName1Test\\"
+    //   "C:\\Path\\To\\File1\\"
+    //   "C:\\Path\\To\\File1Test\\"
     if (SHGetPathFromIDListW(pidl, szPath))
     {
         PathAddBackslashW(szPath);
