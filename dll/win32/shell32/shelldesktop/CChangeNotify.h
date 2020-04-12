@@ -60,11 +60,6 @@ typedef struct HANDBAG
 EXTERN_C HWND DoGetNewDeliveryWorker(BOOL bCreate);
 EXTERN_C LPHANDBAG DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID);
 
-EXTERN_C HANDLE
-DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
-                 LONG fRecursive, LPCITEMIDLIST pidl, DWORD dwOwnerPID,
-                 HWND hwndOldWorker);
-
 #ifdef __cplusplus
 
 /////////////////////////////////////////////////////////////////////////////

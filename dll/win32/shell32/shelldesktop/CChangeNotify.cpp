@@ -63,55 +63,6 @@ DoGetNewDeliveryWorker(BOOL bCreate)
     return hwndWorker;
 }
 
-// This function creates a registration entry in SHChangeNotifyRegister function.
-EXTERN_C HANDLE
-DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
-                 LONG fRecursive, LPCITEMIDLIST pidl, DWORD dwOwnerPID,
-                 HWND hwndOldWorker)
-{
-    // pidl has variable length. To store it into the registration entry,
-    // we have to consider the length of pidl.
-    DWORD cbPidl = ILGetSize(pidl);
-    DWORD ibPidl = DWORD_ALIGNMENT(sizeof(REGENTRY));
-    DWORD cbSize = ibPidl + cbPidl;
-
-    // create the registration entry and lock it
-    HANDLE hRegEntry = SHAllocShared(NULL, cbSize, dwOwnerPID);
-    if (hRegEntry == NULL)
-    {
-        ERR("Out of memory\n");
-        return NULL;
-    }
-    LPREGENTRY pRegEntry = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, TRUE);
-    if (pRegEntry == NULL)
-    {
-        ERR("SHLockSharedEx failed\n");
-        SHFreeShared(hRegEntry, dwOwnerPID);
-        return NULL;
-    }
-
-    // populate the registration entry
-    pRegEntry->dwMagic = REGENTRY_MAGIC;
-    pRegEntry->cbSize = cbSize;
-    pRegEntry->nRegID = nRegID;
-    pRegEntry->hwnd = hwnd;
-    pRegEntry->uMsg = wMsg;
-    pRegEntry->fSources = fSources;
-    pRegEntry->fEvents = fEvents;
-    pRegEntry->fRecursive = fRecursive;
-    pRegEntry->hwndOldWorker = hwndOldWorker;
-    pRegEntry->ibPidl = 0;
-    if (pidl)
-    {
-        pRegEntry->ibPidl = ibPidl;
-        memcpy((LPBYTE)pRegEntry + ibPidl, pidl, cbPidl);
-    }
-
-    // unlock and return
-    SHUnlockShared(pRegEntry);
-    return hRegEntry;
-}
-
 // This function creates a "handbag" by using a delivery ticket.
 // The handbag is created in SHChangeNotification_Lock and used in OnTicket.
 // hTicket is a ticket handle of a shared memory block and dwOwnerPID is
