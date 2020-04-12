@@ -1872,11 +1872,40 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     HeapParameters.Length = sizeof(HeapParameters);
 
     /* Check if we have Configuration Data */
-    if ((LoadConfig) && (ConfigSize == sizeof(IMAGE_LOAD_CONFIG_DIRECTORY)))
+#define VALID_CONFIG_FIELD(Name) (ConfigSize >= (FIELD_OFFSET(IMAGE_LOAD_CONFIG_DIRECTORY, Name) + sizeof(LoadConfig->Name)))
+    /* The 'original' load config ends after SecurityCookie */
+    if ((LoadConfig) && ConfigSize && (VALID_CONFIG_FIELD(SecurityCookie) || ConfigSize == LoadConfig->Size))
     {
-        /* FIXME: Custom heap settings and misc. */
-        DPRINT1("We don't support LOAD_CONFIG data yet\n");
+        if (ConfigSize != sizeof(IMAGE_LOAD_CONFIG_DIRECTORY))
+            DPRINT1("WARN: Accepting different LOAD_CONFIG size!\n");
+        else
+            DPRINT1("Applying LOAD_CONFIG\n");
+
+        if (VALID_CONFIG_FIELD(GlobalFlagsSet) && LoadConfig->GlobalFlagsSet)
+            Peb->NtGlobalFlag |= LoadConfig->GlobalFlagsSet;
+
+        if (VALID_CONFIG_FIELD(GlobalFlagsClear) && LoadConfig->GlobalFlagsClear)
+            Peb->NtGlobalFlag &= ~LoadConfig->GlobalFlagsClear;
+
+        if (VALID_CONFIG_FIELD(CriticalSectionDefaultTimeout) && LoadConfig->CriticalSectionDefaultTimeout)
+            RtlpTimeout.QuadPart = Int32x32To64(LoadConfig->CriticalSectionDefaultTimeout, -10000000);
+
+        if (VALID_CONFIG_FIELD(DeCommitFreeBlockThreshold) && LoadConfig->DeCommitFreeBlockThreshold)
+            HeapParameters.DeCommitFreeBlockThreshold = LoadConfig->DeCommitFreeBlockThreshold;
+
+        if (VALID_CONFIG_FIELD(DeCommitTotalFreeThreshold) && LoadConfig->DeCommitTotalFreeThreshold)
+            HeapParameters.DeCommitTotalFreeThreshold = LoadConfig->DeCommitTotalFreeThreshold;
+
+        if (VALID_CONFIG_FIELD(MaximumAllocationSize) && LoadConfig->MaximumAllocationSize)
+            HeapParameters.MaximumAllocationSize = LoadConfig->MaximumAllocationSize;
+
+        if (VALID_CONFIG_FIELD(VirtualMemoryThreshold) && LoadConfig->VirtualMemoryThreshold)
+            HeapParameters.VirtualMemoryThreshold = LoadConfig->VirtualMemoryThreshold;
+
+        if (VALID_CONFIG_FIELD(ProcessHeapFlags) && LoadConfig->ProcessHeapFlags)
+            HeapFlags = LoadConfig->ProcessHeapFlags;
     }
+#undef VALID_CONFIG_FIELD
 
     /* Check for custom affinity mask */
     if (Peb->ImageProcessAffinityMask)
