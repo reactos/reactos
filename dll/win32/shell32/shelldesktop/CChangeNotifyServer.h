@@ -29,13 +29,21 @@
 
 #define INVALID_REG_ID 0 /* invalid registration ID */
 
+// This message is handled by CDesktopBrowser and returns 
+// the window of CChangeNotifyServer which responds to the CN_* messages 
 #define WM_DESKTOP_GET_CNOTIFY_SERVER (WM_USER + 25) /* 0x419 */
-#define WM_OLDWORKER_HANDOVER (WM_USER + 1) /* 0x401 */
-#define WM_WORKER_REGISTER (WM_USER + 1) /* 0x401 */
-#define WM_WORKER_UNREGISTER (WM_USER + 2) /* 0x402 */
-#define WM_WORKER_TICKET (WM_USER + 3) /* 0x403 */
-#define WM_WORKER_SUSPEND (WM_USER + 6) /* 0x406 */
-#define WM_WORKER_REMOVEBYPID (WM_USER + 7) /* 0x407 */
+
+// The following messages are implemented by CChangeNotifyServer
+// CChangeNotifyServer lives in the context of explorer and delivers notifications
+// across all processes that register themselves with the SHChangeNotifyRegister api
+#define CN_REGISTER (WM_USER + 1) /* 0x401 */
+#define CN_UNREGISTER (WM_USER + 2) /* 0x402 */
+#define CN_DELIVER_NOTIFICATION (WM_USER + 3) /* 0x403 */
+#define CN_SUSPEND_RESUME (WM_USER + 6) /* 0x406 */
+#define CN_UNREGISTER_PROCESS (WM_USER + 7) /* 0x407 */
+
+// This message is implemented by the broker window which lives in the context of the client
+#define WM_BROKER_NOTIFICATION (WM_USER + 1) /* 0x401 */
 
 #define DWORD_ALIGNMENT(offset) \
     ((((offset) + sizeof(DWORD) - 1) / sizeof(DWORD)) * sizeof(DWORD))

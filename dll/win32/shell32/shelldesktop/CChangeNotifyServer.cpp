@@ -44,9 +44,10 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
     virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
 
+    // Message handlers
     LRESULT OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnTicket(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnDeliverNotification(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
@@ -60,11 +61,11 @@ public:
     DECLARE_WND_CLASS_EX(L"WorkerW", 0, 0)
 
     BEGIN_MSG_MAP(CChangeNotifyServer)
-        MESSAGE_HANDLER(WM_WORKER_REGISTER, OnRegister)
-        MESSAGE_HANDLER(WM_WORKER_UNREGISTER, OnUnRegister)
-        MESSAGE_HANDLER(WM_WORKER_TICKET, OnTicket)
-        MESSAGE_HANDLER(WM_WORKER_SUSPEND, OnSuspendResume)
-        MESSAGE_HANDLER(WM_WORKER_REMOVEBYPID, OnRemoveByPID);
+        MESSAGE_HANDLER(CN_REGISTER, OnRegister)
+        MESSAGE_HANDLER(CN_UNREGISTER, OnUnRegister)
+        MESSAGE_HANDLER(CN_DELIVER_NOTIFICATION, OnDeliverNotification)
+        MESSAGE_HANDLER(CN_SUSPEND_RESUME, OnSuspendResume)
+        MESSAGE_HANDLER(CN_UNREGISTER_PROCESS, OnRemoveByPID);
     END_MSG_MAP()
 
 private:
@@ -77,7 +78,7 @@ private:
     void DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndOldWorker);
 
     UINT GetNextRegID();
-    BOOL DoTicket(HANDLE hTicket, DWORD dwOwnerPID);
+    BOOL DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID);
     BOOL ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry);
 
 };
@@ -156,7 +157,7 @@ void CChangeNotifyServer::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID
     }
 }
 
-// Message WM_WORKER_REGISTER: Register the registration entry.
+// Message CN_REGISTER: Register the registration entry.
 //   wParam: The handle of registration entry.
 //   lParam: The owner PID of registration entry.
 //   return: TRUE if successful.
@@ -204,7 +205,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     return AddItem(m_nNextRegID, dwUserPID, hNewEntry, hwndOldWorker);
 }
 
-// Message WM_WORKER_UNREGISTER: Unregister registration entries.
+// Message CN_UNREGISTER: Unregister registration entries.
 //   wParam: The registration ID.
 //   lParam: Ignored.
 //   return: TRUE if successful.
@@ -226,26 +227,26 @@ LRESULT CChangeNotifyServer::OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lPara
     return RemoveItemsByRegID(nRegID, dwOwnerPID);
 }
 
-// Message WM_WORKER_TICKET: Perform a delivery.
+// Message CN_DELIVER_NOTIFICATION: Perform a delivery.
 //   wParam: The handle of delivery ticket.
 //   lParam: The owner PID of delivery ticket.
 //   return: TRUE if necessary.
-LRESULT CChangeNotifyServer::OnTicket(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CChangeNotifyServer::OnDeliverNotification(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    TRACE("OnTicket(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
+    TRACE("OnDeliverNotification(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
     HANDLE hTicket = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
 
     // do delivery
-    BOOL ret = DoTicket(hTicket, dwOwnerPID);
+    BOOL ret = DeliverNotification(hTicket, dwOwnerPID);
 
     // free the ticket
     SHFreeShared(hTicket, dwOwnerPID);
     return ret;
 }
 
-// Message WM_WORKER_SUSPEND: Suspend or resume the change notification.
+// Message CN_SUSPEND_RESUME: Suspend or resume the change notification.
 //   (specification is unknown)
 LRESULT CChangeNotifyServer::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
@@ -255,7 +256,7 @@ LRESULT CChangeNotifyServer::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lP
     return FALSE;
 }
 
-// Message WM_WORKER_REMOVEBYPID: Remove registration entries by PID.
+// Message CN_UNREGISTER_PROCESS: Remove registration entries by PID.
 //   wParam: The user PID.
 //   lParam: Ignored.
 //   return: Zero.
@@ -276,12 +277,12 @@ UINT CChangeNotifyServer::GetNextRegID()
     return m_nNextRegID;
 }
 
-// This function is called from CChangeNotify::OnTicket.
+// This function is called from CChangeNotifyServer::OnDeliverNotification.
 // The function checks all the registration entries whether the entry
 // should be notified.
-BOOL CChangeNotifyServer::DoTicket(HANDLE hTicket, DWORD dwOwnerPID)
+BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
 {
-    TRACE("DoTicket(%p, %p, 0x%lx)\n", m_hWnd, hTicket, dwOwnerPID);
+    TRACE("DeliverNotification(%p, %p, 0x%lx)\n", m_hWnd, hTicket, dwOwnerPID);
 
     // lock the delivery ticket
     LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
