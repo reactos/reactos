@@ -243,19 +243,19 @@ DoTransportChange(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST p
 
     // create a delivery ticket
     HANDLE hTicket = DoCreateDeliTicket(wEventId, uFlags, pidl1, pidl2, pid, dwTick);
-    if (hTicket)
-    {
-        // send the ticket by using WM_WORKER_DELIVERY
-        TRACE("hTicket: %p, 0x%lx\n", hTicket, pid);
-        if ((uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
-            SendMessageW(hwndWorker, WM_WORKER_DELIVERY, (WPARAM)hTicket, pid);
-        else
-            SendNotifyMessageW(hwndWorker, WM_WORKER_DELIVERY, (WPARAM)hTicket, pid);
-    }
+    if (hTicket == NULL)
+        return;
+
+    // send the ticket by using WM_WORKER_DELIVERY
+    TRACE("hTicket: %p, 0x%lx\n", hTicket, pid);
+    if ((uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
+        SendMessageW(hwndWorker, WM_WORKER_DELIVERY, (WPARAM)hTicket, pid);
+    else
+        SendNotifyMessageW(hwndWorker, WM_WORKER_DELIVERY, (WPARAM)hTicket, pid);
 }
 
 /*************************************************************************
- * SHChangeNotifyRegister			[SHELL32.2]
+ * SHChangeNotifyRegister           [SHELL32.2]
  */
 EXTERN_C ULONG WINAPI
 SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
@@ -290,6 +290,7 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
         uMsg = WM_OLDDELI_HANDOVER;
     }
 
+    // disable new delivery method in specific condition
     if ((fSources & SHCNRF_RecursiveInterrupt) != 0 &&
         (fSources & SHCNRF_InterruptLevel) == 0)
     {
@@ -308,25 +309,30 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
                                      dwOwnerPID, hwndOldWorker);
         if (hRegEntry)
         {
+            // send WM_WORKER_REGISTER to new delivery worker
             TRACE("WM_WORKER_REGISTER: hwnd:%p, hRegEntry:%p, pid:0x%lx\n",
                   hwndWorker, hRegEntry, dwOwnerPID);
             SendMessageW(hwndWorker, WM_WORKER_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
 
+            // update nRegID
             pShare = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, FALSE);
             if (pShare)
             {
                 nRegID = pShare->nRegID;
                 SHUnlockShared(pShare);
             }
+
+            // free registration entry
             SHFreeShared(hRegEntry, dwOwnerPID);
         }
 
+        // if failed, then destroy the old worker.
         if (nRegID == INVALID_REG_ID && (fSources & SHCNRF_NewDelivery) == 0)
         {
             ERR("Old Delivery is failed\n");
-            DestroyWindow(hwnd);
-            LeaveCriticalSection(&SHELL32_ChangenotifyCS);
-            return INVALID_REG_ID;
+            DestroyWindow(hwndOldWorker);
+            nRegID = INVALID_REG_ID;
+            break;
         }
     }
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
@@ -335,31 +341,31 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
 }
 
 /*************************************************************************
- * SHChangeNotifyDeregister			[SHELL32.4]
+ * SHChangeNotifyDeregister         [SHELL32.4]
  */
 EXTERN_C BOOL WINAPI
 SHChangeNotifyDeregister(ULONG hNotify)
 {
     HWND hwndWorker;
-    LRESULT ret = 0;
+    BOOL ret;
     TRACE("(0x%08x)\n", hNotify);
 
     // get the new delivery worker window
     hwndWorker = DoGetNewDeliveryWorker();
-    if (hwndWorker)
+    if (hwndWorker == NULL)
+        return FALSE;
+
+    // send WM_WORKER_UNREGISTER message and try to unregister
+    ret = (BOOL)SendMessageW(hwndWorker, WM_WORKER_UNREGISTER, hNotify, 0);
+    if (!ret)
     {
-        // send WM_WORKER_UNREGISTER message and try to unregister
-        ret = SendMessageW(hwndWorker, WM_WORKER_UNREGISTER, hNotify, 0);
-        if (!ret)
-        {
-            ERR("WM_WORKER_UNREGISTER failed\n");
-        }
+        ERR("WM_WORKER_UNREGISTER failed\n");
     }
     return ret;
 }
 
 /*************************************************************************
- * SHChangeNotifyUpdateEntryList       		[SHELL32.5]
+ * SHChangeNotifyUpdateEntryList            [SHELL32.5]
  */
 EXTERN_C BOOL WINAPI
 SHChangeNotifyUpdateEntryList(DWORD unknown1, DWORD unknown2,
@@ -367,7 +373,6 @@ SHChangeNotifyUpdateEntryList(DWORD unknown1, DWORD unknown2,
 {
     FIXME("(0x%08x, 0x%08x, 0x%08x, 0x%08x)\n",
           unknown1, unknown2, unknown3, unknown4);
-
     return TRUE;
 }
 
@@ -405,7 +410,7 @@ static LPCSTR DumpEvent(LONG event)
 }
 
 /*************************************************************************
- * SHChangeNotify				[SHELL32.@]
+ * SHChangeNotify               [SHELL32.@]
  */
 EXTERN_C void WINAPI
 SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
@@ -501,17 +506,17 @@ NTSHChangeNotifyRegister(HWND hwnd, int fSources, LONG fEvents, UINT msg,
 }
 
 /*************************************************************************
- * SHChangeNotification_Lock			[SHELL32.644]
+ * SHChangeNotification_Lock            [SHELL32.644]
  */
 EXTERN_C HANDLE WINAPI
-SHChangeNotification_Lock(HANDLE hChange, DWORD dwProcessId, LPITEMIDLIST **lppidls,
+SHChangeNotification_Lock(HANDLE hTicket, DWORD dwOwnerPID, LPITEMIDLIST **lppidls,
                           LPLONG lpwEventId)
 {
     LPHANDBAG pHandbag;
-    TRACE("%p %08x %p %p\n", hChange, dwProcessId, lppidls, lpwEventId);
+    TRACE("%p %08x %p %p\n", hTicket, dwOwnerPID, lppidls, lpwEventId);
 
     // create a handbag from delivery ticket
-    pHandbag = DoGetHandbagFromTicket(hChange, dwProcessId);
+    pHandbag = DoGetHandbagFromTicket(hTicket, dwOwnerPID);
 
     // validate the handbag
     if (!pHandbag || pHandbag->dwMagic != HANDBAG_MAGIC)
@@ -531,7 +536,7 @@ SHChangeNotification_Lock(HANDLE hChange, DWORD dwProcessId, LPITEMIDLIST **lppi
 }
 
 /*************************************************************************
- * SHChangeNotification_Unlock			[SHELL32.645]
+ * SHChangeNotification_Unlock          [SHELL32.645]
  */
 EXTERN_C BOOL WINAPI
 SHChangeNotification_Unlock(HANDLE hLock)
@@ -554,7 +559,7 @@ SHChangeNotification_Unlock(HANDLE hLock)
 }
 
 /*************************************************************************
- * NTSHChangeNotifyDeregister			[SHELL32.641]
+ * NTSHChangeNotifyDeregister           [SHELL32.641]
  */
 EXTERN_C DWORD WINAPI
 NTSHChangeNotifyDeregister(ULONG x1)
