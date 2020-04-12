@@ -37,11 +37,11 @@ typedef struct REGENTRY
     DWORD cbSize;
     UINT nRegID;
     HWND hwnd;
-    HWND hwndOldWorker;
     UINT uMsg;
     INT fSources;
     LONG fEvents;
     BOOL fRecursive;
+    HWND hwndOldWorker;
     UINT ibPidl;
 } REGENTRY, *LPREGENTRY;
 

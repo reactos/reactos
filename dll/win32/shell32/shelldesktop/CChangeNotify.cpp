@@ -220,11 +220,11 @@ DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
     pShared->cbSize = cbSize;
     pShared->nRegID = nRegID;
     pShared->hwnd = hwnd;
-    pShared->hwndOldWorker = hwndOldWorker;
     pShared->uMsg = wMsg;
     pShared->fSources = fSources;
     pShared->fEvents = fEvents;
     pShared->fRecursive = fRecursive;
+    pShared->hwndOldWorker = hwndOldWorker;
     pShared->ibPidl = 0;
     if (pidl)
     {
