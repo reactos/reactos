@@ -95,7 +95,7 @@ BEGIN_MSG_MAP(CBaseBar)
     MESSAGE_HANDLER(WM_EXPLORER_OPEN_NEW_WINDOW, OnOpenNewWindow)
     MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
-    MESSAGE_HANDLER(WM_GETWORKERWND, OnGetDeliveryWorkerWnd)
+    MESSAGE_HANDLER(WM_SHELL_GETWORKERWND, OnGetDeliveryWorkerWnd)
 END_MSG_MAP()
 
 BEGIN_COM_MAP(CDesktopBrowser)
@@ -430,7 +430,7 @@ LRESULT CDesktopBrowser::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     return 0;
 }
 
-// Message WM_GETWORKERWND: Get or create the new delivery worker.
+// Message WM_SHELL_GETWORKERWND: Get or create the new delivery worker.
 //   wParam: BOOL bCreate; The flag whether it creates or not.
 //   lParam: Ignored.
 //   return: The window handle of the new delivery worker.
