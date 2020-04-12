@@ -29,8 +29,8 @@
 
 #define INVALID_REG_ID 0 /* invalid registration ID */
 
-// This message is handled by CDesktopBrowser and returns 
-// the window of CChangeNotifyServer which responds to the CN_* messages 
+// This message is handled by CDesktopBrowser and returns
+// the window of CChangeNotifyServer which responds to the CN_* messages
 #define WM_DESKTOP_GET_CNOTIFY_SERVER (WM_USER + 25) /* 0x419 */
 
 // The following messages are implemented by CChangeNotifyServer

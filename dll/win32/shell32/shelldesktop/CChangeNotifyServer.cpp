@@ -23,13 +23,13 @@ typedef CWinTraits <
     WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
     WS_EX_TOOLWINDOW
 > CChangeNotifyServerTraits;
-  
+
 //////////////////////////////////////////////////////////////////////////////
 // CChangeNotifyServer
 //
 // CChangeNotifyServer implements a window that handles all shell change notifications
 // It runs in the context of explorer and specifically in the thread of the shell desktop
-// Shell change notification api exported from shell32 forwards all their calls 
+// Shell change notification api exported from shell32 forwards all their calls
 // to this window where all processing takes place
 
 class CChangeNotifyServer :
@@ -73,7 +73,7 @@ public:
 private:
     UINT m_nNextRegID;
     CSimpleArray<ITEM> m_items;
-    
+
     BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndBroker);
     BOOL RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID);
     void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
@@ -422,7 +422,7 @@ HRESULT WINAPI CChangeNotifyServer::ContextSensitiveHelp(BOOL fEnterMode)
 
 HRESULT CChangeNotifyServer::Initialize()
 {
-    // This is called by CChangeNotifyServer_CreateInstance righ after instantiation
+    // This is called by CChangeNotifyServer_CreateInstance right after instantiation
     // Create the window of the server here
     Create(0);
     if (!m_hWnd)

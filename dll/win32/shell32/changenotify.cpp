@@ -138,7 +138,7 @@ CreateNotificationBroker(HWND hwnd, UINT wMsg)
         ERR("Out of memory\n");
         return NULL;
     }
-    
+
     HWND hwndBroker = pBroker->Create(0);
     if (hwndBroker == NULL)
     {
