@@ -218,6 +218,43 @@ DoCreateTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pi
     return hTicket;
 }
 
+// This function creates a "handbag" by using a delivery ticket.
+// The handbag is created in SHChangeNotification_Lock and used in OnTicket.
+// hTicket is a ticket handle of a shared memory block and dwOwnerPID is
+// the owner PID of the ticket.
+static LPHANDBAG
+DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
+{
+    // lock and validate the delivery ticket
+    LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
+    if (pTicket == NULL || pTicket->dwMagic != DELITICKET_MAGIC)
+    {
+        ERR("pTicket is invalid\n");
+        return NULL;
+    }
+
+    // allocate the handbag
+    LPHANDBAG pHandbag = (LPHANDBAG)LocalAlloc(LMEM_FIXED, sizeof(HANDBAG));
+    if (pHandbag == NULL)
+    {
+        ERR("Out of memory\n");
+        SHUnlockShared(pTicket);
+        return NULL;
+    }
+
+    // populate the handbag
+    pHandbag->dwMagic = HANDBAG_MAGIC;
+    pHandbag->pTicket = pTicket;
+
+    pHandbag->pidls[0] = pHandbag->pidls[1] = NULL;
+    if (pTicket->ibOffset1)
+        pHandbag->pidls[0] = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
+    if (pTicket->ibOffset2)
+        pHandbag->pidls[1] = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
+
+    return pHandbag;
+}
+
 // This function creates a registration entry in SHChangeNotifyRegister function.
 static HANDLE
 DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,

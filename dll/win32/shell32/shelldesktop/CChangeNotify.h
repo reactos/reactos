@@ -58,7 +58,6 @@ typedef struct HANDBAG
 #define HANDBAG_MAGIC 0xFACEB00C
 
 EXTERN_C HWND DoGetNewDeliveryWorker(BOOL bCreate);
-EXTERN_C LPHANDBAG DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID);
 
 #ifdef __cplusplus
 

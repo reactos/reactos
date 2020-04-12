@@ -63,43 +63,6 @@ DoGetNewDeliveryWorker(BOOL bCreate)
     return hwndWorker;
 }
 
-// This function creates a "handbag" by using a delivery ticket.
-// The handbag is created in SHChangeNotification_Lock and used in OnTicket.
-// hTicket is a ticket handle of a shared memory block and dwOwnerPID is
-// the owner PID of the ticket.
-EXTERN_C LPHANDBAG
-DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
-{
-    // lock and validate the delivery ticket
-    LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
-    if (pTicket == NULL || pTicket->dwMagic != DELITICKET_MAGIC)
-    {
-        ERR("pTicket is invalid\n");
-        return NULL;
-    }
-
-    // allocate the handbag
-    LPHANDBAG pHandbag = (LPHANDBAG)LocalAlloc(LMEM_FIXED, sizeof(HANDBAG));
-    if (pHandbag == NULL)
-    {
-        ERR("Out of memory\n");
-        SHUnlockShared(pTicket);
-        return NULL;
-    }
-
-    // populate the handbag
-    pHandbag->dwMagic = HANDBAG_MAGIC;
-    pHandbag->pTicket = pTicket;
-
-    pHandbag->pidls[0] = pHandbag->pidls[1] = NULL;
-    if (pTicket->ibOffset1)
-        pHandbag->pidls[0] = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
-    if (pTicket->ibOffset2)
-        pHandbag->pidls[1] = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
-
-    return pHandbag;
-}
-
 /*static*/ LRESULT CALLBACK
 CWorker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -319,23 +282,11 @@ LRESULT CChangeNotify::OnTicket(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
     HANDLE hTicket = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
-    BOOL ret = FALSE;
 
-    // create a handbag from the delivery ticket
-    LPHANDBAG pHandbag = DoGetHandbagFromTicket(hTicket, dwOwnerPID);
-    if (pHandbag && pHandbag->dwMagic == HANDBAG_MAGIC)
-    {
-        // validate the ticket
-        LPDELITICKET pTicket = pHandbag->pTicket;
-        if (pTicket && pTicket->dwMagic == DELITICKET_MAGIC)
-        {
-            // do delivery
-            ret = DoTicket(hTicket, dwOwnerPID);
-        }
-    }
+    // do delivery
+    BOOL ret = DoTicket(hTicket, dwOwnerPID);
 
-    // unlock and free the handbag and the ticket
-    SHChangeNotification_Unlock(pHandbag);
+    // free the ticket
     SHFreeShared(hTicket, dwOwnerPID);
     return ret;
 }
