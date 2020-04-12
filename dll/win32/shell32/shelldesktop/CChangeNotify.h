@@ -19,12 +19,7 @@
 #define DWORD_ALIGNMENT(offset) \
     ((((offset) + sizeof(DWORD) - 1) / sizeof(DWORD)) * sizeof(DWORD))
 
-typedef struct OLDDELIVERYWORKER
-{
-    HWND hwnd;
-    UINT uMsg;
-} OLDDELIVERYWORKER, *LPOLDDELIVERYWORKER;
-
+// delivery ticket
 typedef struct DELITICKET
 {
     DWORD dwMagic;
@@ -35,6 +30,7 @@ typedef struct DELITICKET
     DWORD ibOffset2; /* offset to pidl2 */
 } DELITICKET, *LPDELITICKET;
 
+// registration entry
 typedef struct REGENTRY
 {
     DWORD dwMagic;
@@ -49,6 +45,7 @@ typedef struct REGENTRY
     UINT ibPidl;
 } REGENTRY, *LPREGENTRY;
 
+// handbag
 typedef struct HANDBAG
 {
     DWORD dwMagic;

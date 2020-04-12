@@ -83,6 +83,13 @@ DoGetNewDeliveryWorker(void)
     return hwndWorker;
 }
 
+typedef struct OLDDELIVERYWORKER
+{
+    HWND hwnd;
+    UINT uMsg;
+} OLDDELIVERYWORKER, *LPOLDDELIVERYWORKER;
+
+
 // This is "old delivery worker" window. An old delivery worker will be
 // created in the caller process. SHChangeNotification_Lock allocates
 // a process-local memory block in response of WM_OLDDELI_HANDOVER, and
