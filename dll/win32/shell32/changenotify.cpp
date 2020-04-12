@@ -420,12 +420,12 @@ SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
             psz1 = psz2 = NULL;
             if (dwItem1)
             {
-                MultiByteToWideChar(CP_ACP, 0, (LPCSTR)dwItem1, -1, szPath1, _countof(szPath1));
+                SHAnsiToUnicode((LPCSTR)dwItem1, szPath1, _countof(szPath1));
                 psz1 = szPath1;
             }
             if (dwItem2)
             {
-                MultiByteToWideChar(CP_ACP, 0, (LPCSTR)dwItem2, -1, szPath2, _countof(szPath2));
+                SHAnsiToUnicode((LPCSTR)dwItem2, szPath2, _countof(szPath2));
                 psz2 = szPath2;
             }
             uFlags &= ~SHCNF_TYPE;
