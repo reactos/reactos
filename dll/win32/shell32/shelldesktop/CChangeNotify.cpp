@@ -173,15 +173,15 @@ struct CChangeNotifyImpl
     // notification target item
     struct ITEM
     {
-        UINT nRegID;
-        DWORD dwUserPID;
-        HANDLE hShare;
-        HWND hwndOldWorker;
+        UINT nRegID;        // The registration ID.
+        DWORD dwUserPID;    // The user PID; that is the process ID of the target window.
+        HANDLE hRegEntry;   // The registration entry.
+        HWND hwndOldWorker; // The old delivery worker (if any).
     };
 
     CSimpleArray<ITEM> m_items;
 
-    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare, HWND hwndOldWorker)
+    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndOldWorker)
     {
         for (INT i = 0; i < m_items.GetSize(); ++i)
         {
@@ -189,30 +189,30 @@ struct CChangeNotifyImpl
             {
                 m_items[i].nRegID = nRegID;
                 m_items[i].dwUserPID = dwUserPID;
-                m_items[i].hShare = hShare;
+                m_items[i].hRegEntry = hRegEntry;
                 m_items[i].hwndOldWorker = hwndOldWorker;
                 return TRUE;
             }
         }
 
-        ITEM item = { nRegID, dwUserPID, hShare, hwndOldWorker };
+        ITEM item = { nRegID, dwUserPID, hRegEntry, hwndOldWorker };
         m_items.Add(item);
         return TRUE;
     }
 
     void DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndOldWorker)
     {
-        // destroy old worker if any and first time
+        // destroy old worker if any and if first time
         if (item.hwndOldWorker && item.hwndOldWorker != *phwndOldWorker)
         {
             DestroyWindow(item.hwndOldWorker);
             *phwndOldWorker = item.hwndOldWorker;
         }
 
-        SHFreeShared(item.hShare, dwOwnerPID);
+        SHFreeShared(item.hRegEntry, dwOwnerPID);
         item.nRegID = INVALID_REG_ID;
         item.dwUserPID = 0;
-        item.hShare = NULL;
+        item.hRegEntry = NULL;
         item.hwndOldWorker = NULL;
     }
 
@@ -262,9 +262,9 @@ CChangeNotify::~CChangeNotify()
     delete m_pimpl;
 }
 
-BOOL CChangeNotify::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare, HWND hwndOldWorker)
+BOOL CChangeNotify::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndOldWorker)
 {
-    return m_pimpl->AddItem(nRegID, dwUserPID, hShare, hwndOldWorker);
+    return m_pimpl->AddItem(nRegID, dwUserPID, hRegEntry, hwndOldWorker);
 }
 
 BOOL CChangeNotify::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
@@ -309,8 +309,8 @@ LRESULT CChangeNotify::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     HWND hwndOldWorker = pRegEntry->hwndOldWorker;
 
     // clone the registration entry
-    HANDLE hNewShared = SHAllocShared(pRegEntry, pRegEntry->cbSize, dwOwnerPID);
-    if (hNewShared == NULL)
+    HANDLE hNewEntry = SHAllocShared(pRegEntry, pRegEntry->cbSize, dwOwnerPID);
+    if (hNewEntry == NULL)
     {
         ERR("Out of memory\n");
         pRegEntry->nRegID = INVALID_REG_ID;
@@ -322,7 +322,7 @@ LRESULT CChangeNotify::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     SHUnlockShared(pRegEntry);
 
     // add an ITEM
-    return AddItem(m_nNextRegID, dwUserPID, hNewShared, hwndOldWorker);
+    return AddItem(m_nNextRegID, dwUserPID, hNewEntry, hwndOldWorker);
 }
 
 // Message WM_WORKER_UNREGISTER: Unregister registration entries.
@@ -428,12 +428,12 @@ BOOL CChangeNotify::DoTicket(HANDLE hTicket, DWORD dwOwnerPID)
     for (INT i = 0; i < m_pimpl->m_items.GetSize(); ++i)
     {
         // validate the item
-        HANDLE hShare = m_pimpl->m_items[i].hShare;
-        if (m_pimpl->m_items[i].nRegID == INVALID_REG_ID || !hShare)
+        HANDLE hRegEntry = m_pimpl->m_items[i].hRegEntry;
+        if (m_pimpl->m_items[i].nRegID == INVALID_REG_ID || hRegEntry == NULL)
             continue;
 
         // lock the registration entry
-        LPREGENTRY pRegEntry = (LPREGENTRY)SHLockSharedEx(hShare, dwOwnerPID, FALSE);
+        LPREGENTRY pRegEntry = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, FALSE);
         if (pRegEntry == NULL || pRegEntry->dwMagic != REGENTRY_MAGIC)
         {
             ERR("pRegEntry is invalid\n");
