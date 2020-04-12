@@ -110,7 +110,7 @@ public:
     }
 
     BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare, HWND hwndOldWorker);
-    BOOL RemoveItem(UINT nRegID, DWORD dwOwnerPID);
+    BOOL RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID);
     void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
 
     UINT GetNextRegID();

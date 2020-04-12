@@ -418,7 +418,7 @@ struct CChangeNotifyImpl
         item.hwndOldWorker = NULL;
     }
 
-    BOOL RemoveItem(UINT nRegID, DWORD dwOwnerPID)
+    BOOL RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
     {
         BOOL bFound = FALSE;
         HWND hwndOldWorker = NULL;
@@ -469,9 +469,9 @@ BOOL CChangeNotify::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare, HWND hw
     return m_pimpl->AddItem(nRegID, dwUserPID, hShare, hwndOldWorker);
 }
 
-BOOL CChangeNotify::RemoveItem(UINT nRegID, DWORD dwOwnerPID)
+BOOL CChangeNotify::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
 {
-    return m_pimpl->RemoveItem(nRegID, dwOwnerPID);
+    return m_pimpl->RemoveItemsByRegID(nRegID, dwOwnerPID);
 }
 
 void CChangeNotify::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
@@ -479,13 +479,14 @@ void CChangeNotify::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
     m_pimpl->RemoveItemsByProcess(dwOwnerPID, dwUserPID);
 }
 
+// WM_NOTIF_REG
 LRESULT CChangeNotify::OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnReg(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
+    // lock the registration entry
     HANDLE hShared = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
-
     LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockSharedEx(hShared, dwOwnerPID, TRUE);
     if (!pShared || pShared->dwMagic != NOTIFSHARE_MAGIC)
     {
@@ -493,16 +494,20 @@ LRESULT CChangeNotify::OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
         return FALSE;
     }
 
+    // update registration ID if necessary
     if (pShared->nRegID == INVALID_REG_ID)
         pShared->nRegID = GetNextRegID();
 
     TRACE("pShared->nRegID: %u\n", pShared->nRegID);
 
+    // get the user PID; that is the process ID of the target window
     DWORD dwUserPID;
     GetWindowThreadProcessId(pShared->hwnd, &dwUserPID);
 
+    // get old worker if any
     HWND hwndOldWorker = pShared->hwndOldWorker;
 
+    // clone the registration entry
     HANDLE hNewShared = SHAllocShared(pShared, pShared->cbSize, dwOwnerPID);
     if (!hNewShared)
     {
@@ -512,15 +517,19 @@ LRESULT CChangeNotify::OnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
         return FALSE;
     }
 
+    // unlock the registry entry
     SHUnlockShared(pShared);
 
+    // add an ITEM
     return AddItem(m_nNextRegID, dwUserPID, hNewShared, hwndOldWorker);
 }
 
+// WM_NOTIF_UNREG
 LRESULT CChangeNotify::OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnUnReg(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
+    // validate registration ID
     UINT nRegID = (UINT)wParam;
     if (nRegID == INVALID_REG_ID)
     {
@@ -528,11 +537,13 @@ LRESULT CChangeNotify::OnUnReg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         return FALSE;
     }
 
+    // remove it
     DWORD dwOwnerPID;
     GetWindowThreadProcessId(m_hWnd, &dwOwnerPID);
-    return RemoveItem(nRegID, dwOwnerPID);
+    return RemoveItemsByRegID(nRegID, dwOwnerPID);
 }
 
+// WM_NOTIF_DELIVERY
 LRESULT CChangeNotify::OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnDelivery(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
@@ -541,21 +552,26 @@ LRESULT CChangeNotify::OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     DWORD dwOwnerPID = (DWORD)lParam;
     BOOL ret = FALSE;
 
+    // create a handbag from the delivery ticket
     LPHANDBAG pHandbag = DoGetHandbagFromTicket(hTicket, dwOwnerPID);
     if (pHandbag && pHandbag->dwMagic == HANDBAG_MAGIC)
     {
+        // validate the handbag
         LPDELITICKET pTicket = pHandbag->pTicket;
         if (pTicket && pTicket->dwMagic == DELITICKET_MAGIC)
         {
+            // do delivery
             ret = DoDelivery(hTicket, dwOwnerPID);
         }
     }
 
+    // unlock and free the handbag
     SHChangeNotification_Unlock(pHandbag);
     SHFreeShared(hTicket, dwOwnerPID);
     return ret;
 }
 
+// WM_NOTIF_SUSPEND
 LRESULT CChangeNotify::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnSuspendResume\n");
@@ -564,6 +580,7 @@ LRESULT CChangeNotify::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     return FALSE;
 }
 
+// WM_NOTIF_REMOVEBYPID
 LRESULT CChangeNotify::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     DWORD dwOwnerPID, dwUserPID = (DWORD)wParam;
@@ -584,12 +601,15 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
 {
     TRACE("DoDelivery(%p, %p, 0x%lx)\n", m_hWnd, hTicket, dwOwnerPID);
 
+    // for all items
     for (INT i = 0; i < m_pimpl->m_items.GetSize(); ++i)
     {
+        // validate the item
         HANDLE hShare = m_pimpl->m_items[i].hShare;
-        if (!m_pimpl->m_items[i].nRegID || !hShare)
+        if (m_pimpl->m_items[i].nRegID == INVALID_REG_ID || !hShare)
             continue;
 
+        // lock the registration entry
         LPNOTIFSHARE pShared = (LPNOTIFSHARE)SHLockSharedEx(hShare, dwOwnerPID, FALSE);
         if (!pShared || pShared->dwMagic != NOTIFSHARE_MAGIC)
         {
@@ -597,6 +617,7 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
             continue;
         }
 
+        // lock the delivery ticket
         LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
         if (!pTicket || pTicket->dwMagic != DELITICKET_MAGIC)
         {
@@ -604,15 +625,22 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
             SHUnlockShared(pShared);
             continue;
         }
+
+        // should we notify for it?
         BOOL bNotify = ShouldNotify(pTicket, pShared);
+
+        // unlock the ticket
         SHUnlockShared(pTicket);
 
         if (bNotify)
         {
+            // do notify
             TRACE("Notifying: %p, 0x%x, %p, %lu\n",
                   pShared->hwnd, pShared->uMsg, hTicket, dwOwnerPID);
             SendMessageW(pShared->hwnd, pShared->uMsg, (WPARAM)hTicket, dwOwnerPID);
         }
+
+        // unlock the registration entry
         SHUnlockShared(pShared);
     }
 
@@ -628,10 +656,12 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
     if (!pShared->ibPidl)
         return TRUE;
 
+    // get the stored pidl
     pidl = (LPITEMIDLIST)((LPBYTE)pShared + pShared->ibPidl);
     if (pidl->mkid.cb == 0 && pShared->fRecursive)
-        return TRUE;
+        return TRUE;    // desktop is the root
 
+    // check pidl1
     if (pTicket->ibOffset1)
     {
         pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
@@ -639,6 +669,7 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
             return TRUE;
     }
 
+    // check pidl2
     if (pTicket->ibOffset2)
     {
         pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
@@ -685,11 +716,13 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
 
 CRITICAL_SECTION SHELL32_ChangenotifyCS;
 
+// This function will be called from DllMain!DLL_PROCESS_ATTACH.
 EXTERN_C void InitChangeNotifications(void)
 {
     InitializeCriticalSection(&SHELL32_ChangenotifyCS);
 }
 
+// This function will be called from DllMain!DLL_PROCESS_DETACH.
 EXTERN_C void FreeChangeNotifications(void)
 {
     HWND hwndWorker;
