@@ -423,15 +423,12 @@ HistoryReshapeAllBuffers(
 /* PUBLIC SERVER APIS *********************************************************/
 
 /* API_NUMBER: ConsolepGetCommandHistory */
-CSR_API(SrvGetConsoleCommandHistory)
+CON_API(SrvGetConsoleCommandHistory,
+        CONSOLE_GETCOMMANDHISTORY, GetCommandHistoryRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryRequest;
-    PCONSRV_CONSOLE Console;
+    NTSTATUS Status = STATUS_SUCCESS;
     ULONG BytesWritten = 0;
     PHISTORY_BUFFER Hist;
-
-    DPRINT1("SrvGetConsoleCommandHistory entered\n");
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
                                    (PVOID*)&GetCommandHistoryRequest->History,
@@ -444,10 +441,6 @@ CSR_API(SrvGetConsoleCommandHistory)
     {
         return STATUS_INVALID_PARAMETER;
     }
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
 
     Hist = HistoryFindBuffer(Console,
                              GetCommandHistoryRequest->ExeName,
@@ -508,16 +501,13 @@ CSR_API(SrvGetConsoleCommandHistory)
     // GetCommandHistoryRequest->HistoryLength = TargetBuffer - (PBYTE)GetCommandHistoryRequest->History;
     GetCommandHistoryRequest->HistoryLength = BytesWritten;
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
 /* API_NUMBER: ConsolepGetCommandHistoryLength */
-CSR_API(SrvGetConsoleCommandHistoryLength)
+CON_API(SrvGetConsoleCommandHistoryLength,
+        CONSOLE_GETCOMMANDHISTORYLENGTH, GetCommandHistoryLengthRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryLengthRequest;
-    PCONSRV_CONSOLE Console;
     PHISTORY_BUFFER Hist;
     ULONG Length = 0;
 
@@ -528,10 +518,6 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
 
     Hist = HistoryFindBuffer(Console,
                              GetCommandHistoryLengthRequest->ExeName,
@@ -552,16 +538,13 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
 
     GetCommandHistoryLengthRequest->HistoryLength = Length;
 
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /* API_NUMBER: ConsolepExpungeCommandHistory */
-CSR_API(SrvExpungeConsoleCommandHistory)
+CON_API(SrvExpungeConsoleCommandHistory,
+        CONSOLE_EXPUNGECOMMANDHISTORY, ExpungeCommandHistoryRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ExpungeCommandHistoryRequest;
-    PCONSRV_CONSOLE Console;
     PHISTORY_BUFFER Hist;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
@@ -572,26 +555,20 @@ CSR_API(SrvExpungeConsoleCommandHistory)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     Hist = HistoryFindBuffer(Console,
                              ExpungeCommandHistoryRequest->ExeName,
                              ExpungeCommandHistoryRequest->ExeLength,
                              ExpungeCommandHistoryRequest->Unicode2);
     HistoryDeleteBuffer(Hist);
 
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /* API_NUMBER: ConsolepSetNumberOfCommands */
-CSR_API(SrvSetConsoleNumberOfCommands)
+CON_API(SrvSetConsoleNumberOfCommands,
+        CONSOLE_SETHISTORYNUMBERCOMMANDS, SetHistoryNumberCommandsRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryNumberCommandsRequest;
-    PCONSRV_CONSOLE Console;
+    NTSTATUS Status = STATUS_SUCCESS;
     PHISTORY_BUFFER Hist;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
@@ -602,10 +579,6 @@ CSR_API(SrvSetConsoleNumberOfCommands)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     Hist = HistoryFindBuffer(Console,
                              SetHistoryNumberCommandsRequest->ExeName,
                              SetHistoryNumberCommandsRequest->ExeLength,
@@ -615,21 +588,21 @@ CSR_API(SrvSetConsoleNumberOfCommands)
         Status = HistoryResizeBuffer(Hist, SetHistoryNumberCommandsRequest->NumCommands);
     }
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
 /* API_NUMBER: ConsolepGetHistory */
-CSR_API(SrvGetConsoleHistory)
+CON_API_NOCONSOLE(SrvGetConsoleHistory,
+                  CONSOLE_GETSETHISTORYINFO, HistoryInfoRequest)
 {
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     NTSTATUS Status;
-    PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
     PCONSRV_CONSOLE Console;
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetConsole(ProcessData,
                               &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     HistoryInfoRequest->HistoryBufferSize      = Console->HistoryBufferSize;
     HistoryInfoRequest->NumberOfHistoryBuffers = Console->MaxNumberOfHistoryBuffers;
@@ -644,16 +617,17 @@ CSR_API(SrvGetConsoleHistory)
 }
 
 /* API_NUMBER: ConsolepSetHistory */
-CSR_API(SrvSetConsoleHistory)
+CON_API_NOCONSOLE(SrvSetConsoleHistory,
+                  CONSOLE_GETSETHISTORYINFO, HistoryInfoRequest)
 {
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     NTSTATUS Status;
-    PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
     PCONSRV_CONSOLE Console;
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetConsole(ProcessData,
                               &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     HistoryReshapeAllBuffers(Console,
                              HistoryInfoRequest->HistoryBufferSize,
@@ -669,22 +643,13 @@ CSR_API(SrvSetConsoleHistory)
 }
 
 /* API_NUMBER: ConsolepSetCommandHistoryMode */
-CSR_API(SrvSetConsoleCommandHistoryMode)
+CON_API(SrvSetConsoleCommandHistoryMode,
+        CONSOLE_SETHISTORYMODE, SetHistoryModeRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_SETHISTORYMODE SetHistoryModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryModeRequest;
-    PCONSRV_CONSOLE Console;
-
     DPRINT("SrvSetConsoleCommandHistoryMode(Mode = %d) is not yet implemented\n",
             SetHistoryModeRequest->Mode);
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     Console->InsertMode = !!(SetHistoryModeRequest->Mode & CONSOLE_OVERSTRIKE);
-
-    ConSrvReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
 }
 

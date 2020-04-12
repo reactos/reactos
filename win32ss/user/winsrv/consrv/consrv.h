@@ -63,6 +63,7 @@ typedef struct ConsoleInput_t
 #include "include/conio.h"
 #include "include/conio_winsrv.h"
 
+#include "api.h" // For the CON_API_* macros.
 #include "include/console.h"
 #include "include/settings.h"
 #include "include/term.h"
