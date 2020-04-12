@@ -229,8 +229,8 @@ DoCreateDeliTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIS
 // It creates a delivery ticket and send WM_WORKER_DELIVERY message to
 // transport the change.
 static void
-DoTransportChange(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
-                  DWORD dwTick)
+DoCreateTicketAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
+                      DWORD dwTick)
 {
     // get new delivery worker
     HWND hwndWorker = DoGetNewDeliveryWorker();
@@ -478,9 +478,8 @@ SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
 
     if (wEventId == 0 || (wEventId & SHCNE_ASSOCCHANGED) || pidl1 != NULL)
     {
-        // transport the change
         TRACE("notifying event %s(%x)\n", DumpEvent(wEventId), wEventId);
-        DoTransportChange(wEventId, uFlags, pidl1, pidl2, dwTick);
+        DoCreateTicketAndSend(wEventId, uFlags, pidl1, pidl2, dwTick);
     }
 
 Quit:
