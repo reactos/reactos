@@ -82,19 +82,19 @@ OldWorker_OnHandOver(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     // get old worker data
     LPOLDDELIVERY pWorker = (LPOLDDELIVERY)GetWindowLongPtrW(hwnd, 0);
-    if (!pWorker)
+    if (pWorker == NULL)
     {
-        ERR("!pWorker\n");
+        ERR("pWorker is NULL\n");
         return FALSE;
     }
 
-    // lock the handbag
+    // lock the ticket
     PIDLIST_ABSOLUTE *ppidl = NULL;
     LONG lEvent;
     HANDLE hLock = SHChangeNotification_Lock(hTicket, dwOwnerPID, &ppidl, &lEvent);
-    if (!hLock)
+    if (hLock == NULL)
     {
-        ERR("!hLock\n");
+        ERR("hLock is NULL\n");
         return FALSE;
     }
 
@@ -103,7 +103,7 @@ OldWorker_OnHandOver(HWND hwnd, WPARAM wParam, LPARAM lParam)
           pWorker->hwnd, pWorker->uMsg, ppidl, lEvent);
     SendMessageW(pWorker->hwnd, pWorker->uMsg, (WPARAM)ppidl, lEvent);
 
-    // unlock the handbag
+    // unlock the ticket
     SHChangeNotification_Unlock(hLock);
     return TRUE;
 }
