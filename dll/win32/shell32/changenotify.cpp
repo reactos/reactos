@@ -31,7 +31,7 @@ DoGetNewWorker(BOOL bCreate)
     }
 
     // Request delivery worker to the shell window. See also CDesktopBrowser.
-    HWND hwndWorker = (HWND)SendMessageW(hwndShell, WM_DESKTOP_GET_CNOTIFY_WORKER, bCreate, 0);
+    HWND hwndWorker = (HWND)SendMessageW(hwndShell, WM_DESKTOP_GET_CNOTIFY_SERVER, bCreate, 0);
     if (!IsWindow(hwndWorker))
     {
         ERR("Unable to get worker window\n");

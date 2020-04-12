@@ -10,171 +10,157 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
-/////////////////////////////////////////////////////////////////////////////
-// CChangeNotify is a delivery worker window that is managed by CDesktopBrowser.
-// The process of CChangeNotify is same as the process of CDesktopBrowser.
-// The caller process of SHChangeNotify function might be different from the
-// process of CChangeNotify.
-/////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////
-// The shared memory block can be allocated by shlwapi!SHAllocShared function.
-//
-// HANDLE SHAllocShared(LPCVOID lpData, DWORD dwSize, DWORD dwProcessId);
-// LPVOID SHLockShared(HANDLE hData, DWORD dwProcessId);
-// LPVOID SHLockSharedEx(HANDLE hData, DWORD dwProcessId, BOOL bWriteAccess);
-// BOOL SHUnlockShared(LPVOID lpData);
-// BOOL SHFreeShared(HANDLE hData, DWORD dwProcessId);
-//
-// The shared memory block is managed by the pair of a HANDLE value and an owner PID.
-// If the pair is known, it can be accessed by SHLockShared(Ex) function
-// from another process.
-/////////////////////////////////////////////////////////////////////////////
-
-/*static*/ LRESULT CALLBACK
-CWorker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+// notification target item
+struct ITEM
 {
-    CWorker *pThis = (CWorker *)GetWindowLongPtrW(hwnd, 0);
-    if (pThis)
-    {
-        LRESULT lResult = 0;
-        pThis->ProcessWindowMessage(hwnd, uMsg, wParam, lParam, lResult, 0);
-        return lResult;
-    }
-    return 0;
-}
-
-BOOL CWorker::CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle)
-{
-    // See also: shlwapi!SHCreateWorkerWindowW
-    if (::IsWindow(m_hWnd))
-        ::DestroyWindow(m_hWnd);
-    m_hWnd = SHCreateWorkerWindowW(WindowProc, hwndParent, dwExStyle, dwStyle,
-                                   NULL, (LONG_PTR)this);
-    return m_hWnd != NULL;
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// CChangeNotifyImpl realizes "pimpl idiom" to hide implementation from the
-// header.
-
-struct CChangeNotifyImpl
-{
-    // notification target item
-    struct ITEM
-    {
-        UINT nRegID;        // The registration ID.
-        DWORD dwUserPID;    // The user PID; that is the process ID of the target window.
-        HANDLE hRegEntry;   // The registration entry.
-        HWND hwndOldWorker; // The old delivery worker (if any).
-    };
-
-    CSimpleArray<ITEM> m_items;
-
-    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndOldWorker)
-    {
-        // find the empty room
-        for (INT i = 0; i < m_items.GetSize(); ++i)
-        {
-            if (m_items[i].nRegID == INVALID_REG_ID)
-            {
-                // found the room, populate it
-                m_items[i].nRegID = nRegID;
-                m_items[i].dwUserPID = dwUserPID;
-                m_items[i].hRegEntry = hRegEntry;
-                m_items[i].hwndOldWorker = hwndOldWorker;
-                return TRUE;
-            }
-        }
-
-        // no empty room found
-        ITEM item = { nRegID, dwUserPID, hRegEntry, hwndOldWorker };
-        m_items.Add(item);
-        return TRUE;
-    }
-
-    void DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndOldWorker)
-    {
-        // destroy old worker if any and if first time
-        if (item.hwndOldWorker && item.hwndOldWorker != *phwndOldWorker)
-        {
-            DestroyWindow(item.hwndOldWorker);
-            *phwndOldWorker = item.hwndOldWorker;
-        }
-
-        SHFreeShared(item.hRegEntry, dwOwnerPID);
-        item.nRegID = INVALID_REG_ID;
-        item.dwUserPID = 0;
-        item.hRegEntry = NULL;
-        item.hwndOldWorker = NULL;
-    }
-
-    BOOL RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
-    {
-        BOOL bFound = FALSE;
-        HWND hwndOldWorker = NULL;
-        for (INT i = 0; i < m_items.GetSize(); ++i)
-        {
-            if (m_items[i].nRegID == nRegID)
-            {
-                bFound = TRUE;
-                DestroyItem(m_items[i], dwOwnerPID, &hwndOldWorker);
-            }
-        }
-        return bFound;
-    }
-
-    void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
-    {
-        HWND hwndOldWorker = NULL;
-        for (INT i = 0; i < m_items.GetSize(); ++i)
-        {
-            if (m_items[i].dwUserPID == dwUserPID)
-            {
-                DestroyItem(m_items[i], dwOwnerPID, &hwndOldWorker);
-            }
-        }
-    }
+    UINT nRegID;        // The registration ID.
+    DWORD dwUserPID;    // The user PID; that is the process ID of the target window.
+    HANDLE hRegEntry;   // The registration entry.
+    HWND hwndOldWorker; // The old delivery worker (if any).
 };
 
+typedef CWinTraits <
+    WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+    WS_EX_TOOLWINDOW
+> CChangeNotifyServerTraits;
+  
 //////////////////////////////////////////////////////////////////////////////
-// CChangeNotify
+// CChangeNotifyServer
 //
-// CChangeNotify class is a class for the "new delivery worker" window.
+// CChangeNotifyServer class is a class for the "new delivery worker" window.
 // New delivery worker is created and used at shell window.
-// See also CDesktopBrowser.
 
-CChangeNotify::CChangeNotify()
+class CChangeNotifyServer :
+    public CWindowImpl<CChangeNotifyServer, CWindow, CChangeNotifyServerTraits>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IOleWindow
+{
+public:
+    CChangeNotifyServer();
+    virtual ~CChangeNotifyServer();
+    HRESULT Initialize();
+
+    // *** IOleWindow methods ***
+    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
+    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+
+    LRESULT OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnTicket(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+    DECLARE_NOT_AGGREGATABLE(CChangeNotifyServer)
+
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
+    BEGIN_COM_MAP(CChangeNotifyServer)
+        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+    END_COM_MAP()
+
+    DECLARE_WND_CLASS_EX(L"WorkerW", 0, 0)
+
+    BEGIN_MSG_MAP(CChangeNotifyServer)
+        MESSAGE_HANDLER(WM_WORKER_REGISTER, OnRegister)
+        MESSAGE_HANDLER(WM_WORKER_UNREGISTER, OnUnRegister)
+        MESSAGE_HANDLER(WM_WORKER_TICKET, OnTicket)
+        MESSAGE_HANDLER(WM_WORKER_SUSPEND, OnSuspendResume)
+        MESSAGE_HANDLER(WM_WORKER_REMOVEBYPID, OnRemoveByPID);
+    END_MSG_MAP()
+
+private:
+    UINT m_nNextRegID;
+    CSimpleArray<ITEM> m_items;
+    
+    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndOldWorker);
+    BOOL RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID);
+    void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
+    void DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndOldWorker);
+
+    UINT GetNextRegID();
+    BOOL DoTicket(HANDLE hTicket, DWORD dwOwnerPID);
+    BOOL ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry);
+
+};
+
+CChangeNotifyServer::CChangeNotifyServer()
     : m_nNextRegID(INVALID_REG_ID)
-    , m_pimpl(new CChangeNotifyImpl)
 {
 }
 
-CChangeNotify::~CChangeNotify()
+CChangeNotifyServer::~CChangeNotifyServer()
 {
-    delete m_pimpl;
 }
 
-BOOL CChangeNotify::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndOldWorker)
+BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndOldWorker)
 {
-    return m_pimpl->AddItem(nRegID, dwUserPID, hRegEntry, hwndOldWorker);
+    // find the empty room
+    for (INT i = 0; i < m_items.GetSize(); ++i)
+    {
+        if (m_items[i].nRegID == INVALID_REG_ID)
+        {
+            // found the room, populate it
+            m_items[i].nRegID = nRegID;
+            m_items[i].dwUserPID = dwUserPID;
+            m_items[i].hRegEntry = hRegEntry;
+            m_items[i].hwndOldWorker = hwndOldWorker;
+            return TRUE;
+        }
+    }
+
+    // no empty room found
+    ITEM item = { nRegID, dwUserPID, hRegEntry, hwndOldWorker };
+    m_items.Add(item);
+    return TRUE;
 }
 
-BOOL CChangeNotify::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
+void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndOldWorker)
 {
-    return m_pimpl->RemoveItemsByRegID(nRegID, dwOwnerPID);
+    // destroy old worker if any and if first time
+    if (item.hwndOldWorker && item.hwndOldWorker != *phwndOldWorker)
+    {
+        ::DestroyWindow(item.hwndOldWorker);
+        *phwndOldWorker = item.hwndOldWorker;
+    }
+
+    SHFreeShared(item.hRegEntry, dwOwnerPID);
+    item.nRegID = INVALID_REG_ID;
+    item.dwUserPID = 0;
+    item.hRegEntry = NULL;
+    item.hwndOldWorker = NULL;
 }
 
-void CChangeNotify::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
+BOOL CChangeNotifyServer::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
 {
-    m_pimpl->RemoveItemsByProcess(dwOwnerPID, dwUserPID);
+    BOOL bFound = FALSE;
+    HWND hwndOldWorker = NULL;
+    for (INT i = 0; i < m_items.GetSize(); ++i)
+    {
+        if (m_items[i].nRegID == nRegID)
+        {
+            bFound = TRUE;
+            DestroyItem(m_items[i], dwOwnerPID, &hwndOldWorker);
+        }
+    }
+    return bFound;
+}
+
+void CChangeNotifyServer::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
+{
+    HWND hwndOldWorker = NULL;
+    for (INT i = 0; i < m_items.GetSize(); ++i)
+    {
+        if (m_items[i].dwUserPID == dwUserPID)
+        {
+            DestroyItem(m_items[i], dwOwnerPID, &hwndOldWorker);
+        }
+    }
 }
 
 // Message WM_WORKER_REGISTER: Register the registration entry.
 //   wParam: The handle of registration entry.
 //   lParam: The owner PID of registration entry.
 //   return: TRUE if successful.
-LRESULT CChangeNotify::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnRegister(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
@@ -222,7 +208,7 @@ LRESULT CChangeNotify::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 //   wParam: The registration ID.
 //   lParam: Ignored.
 //   return: TRUE if successful.
-LRESULT CChangeNotify::OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CChangeNotifyServer::OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnUnRegister(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
@@ -244,7 +230,7 @@ LRESULT CChangeNotify::OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 //   wParam: The handle of delivery ticket.
 //   lParam: The owner PID of delivery ticket.
 //   return: TRUE if necessary.
-LRESULT CChangeNotify::OnTicket(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CChangeNotifyServer::OnTicket(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnTicket(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
@@ -261,7 +247,7 @@ LRESULT CChangeNotify::OnTicket(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 // Message WM_WORKER_SUSPEND: Suspend or resume the change notification.
 //   (specification is unknown)
-LRESULT CChangeNotify::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CChangeNotifyServer::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnSuspendResume\n");
 
@@ -273,7 +259,7 @@ LRESULT CChangeNotify::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 //   wParam: The user PID.
 //   lParam: Ignored.
 //   return: Zero.
-LRESULT CChangeNotify::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CChangeNotifyServer::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     DWORD dwOwnerPID, dwUserPID = (DWORD)wParam;
     GetWindowThreadProcessId(m_hWnd, &dwOwnerPID);
@@ -282,7 +268,7 @@ LRESULT CChangeNotify::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 }
 
 // get next valid registration ID
-UINT CChangeNotify::GetNextRegID()
+UINT CChangeNotifyServer::GetNextRegID()
 {
     m_nNextRegID++;
     if (m_nNextRegID == INVALID_REG_ID)
@@ -293,7 +279,7 @@ UINT CChangeNotify::GetNextRegID()
 // This function is called from CChangeNotify::OnTicket.
 // The function checks all the registration entries whether the entry
 // should be notified.
-BOOL CChangeNotify::DoTicket(HANDLE hTicket, DWORD dwOwnerPID)
+BOOL CChangeNotifyServer::DoTicket(HANDLE hTicket, DWORD dwOwnerPID)
 {
     TRACE("DoTicket(%p, %p, 0x%lx)\n", m_hWnd, hTicket, dwOwnerPID);
 
@@ -306,11 +292,11 @@ BOOL CChangeNotify::DoTicket(HANDLE hTicket, DWORD dwOwnerPID)
     }
 
     // for all items
-    for (INT i = 0; i < m_pimpl->m_items.GetSize(); ++i)
+    for (INT i = 0; i < m_items.GetSize(); ++i)
     {
         // validate the item
-        HANDLE hRegEntry = m_pimpl->m_items[i].hRegEntry;
-        if (m_pimpl->m_items[i].nRegID == INVALID_REG_ID || hRegEntry == NULL)
+        HANDLE hRegEntry = m_items[i].hRegEntry;
+        if (m_items[i].nRegID == INVALID_REG_ID || hRegEntry == NULL)
             continue;
 
         // lock the registration entry
@@ -341,7 +327,7 @@ BOOL CChangeNotify::DoTicket(HANDLE hTicket, DWORD dwOwnerPID)
     return TRUE;
 }
 
-BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry)
+BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry)
 {
     LPITEMIDLIST pidl, pidl1 = NULL, pidl2 = NULL;
     WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
@@ -416,4 +402,32 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry)
     }
 
     return FALSE;
+}
+
+HRESULT WINAPI CChangeNotifyServer::GetWindow(HWND* phwnd)
+{
+    if (!phwnd)
+        return E_INVALIDARG;
+    *phwnd = m_hWnd;
+    return S_OK;
+}
+
+HRESULT WINAPI CChangeNotifyServer::ContextSensitiveHelp(BOOL fEnterMode)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT CChangeNotifyServer::Initialize()
+{
+    // This is called by CChangeNotifyServer_CreateInstance righ after instantiation
+    // Create the window of the server here
+    Create(0);
+    if (!m_hWnd)
+        return E_FAIL;
+    return S_OK;
+}
+
+HRESULT CChangeNotifyServer_CreateInstance(REFIID riid, void **ppv)
+{
+    return ShellObjectCreatorInit<CChangeNotifyServer>(riid, ppv);
 }

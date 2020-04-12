@@ -6,9 +6,30 @@
  */
 #pragma once
 
+/////////////////////////////////////////////////////////////////////////////
+// CChangeNotify is a delivery worker window that is managed by CDesktopBrowser.
+// The process of CChangeNotify is same as the process of CDesktopBrowser.
+// The caller process of SHChangeNotify function might be different from the
+// process of CChangeNotify.
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+// The shared memory block can be allocated by shlwapi!SHAllocShared function.
+//
+// HANDLE SHAllocShared(LPCVOID lpData, DWORD dwSize, DWORD dwProcessId);
+// LPVOID SHLockShared(HANDLE hData, DWORD dwProcessId);
+// LPVOID SHLockSharedEx(HANDLE hData, DWORD dwProcessId, BOOL bWriteAccess);
+// BOOL SHUnlockShared(LPVOID lpData);
+// BOOL SHFreeShared(HANDLE hData, DWORD dwProcessId);
+//
+// The shared memory block is managed by the pair of a HANDLE value and an owner PID.
+// If the pair is known, it can be accessed by SHLockShared(Ex) function
+// from another process.
+/////////////////////////////////////////////////////////////////////////////
+
 #define INVALID_REG_ID 0 /* invalid registration ID */
 
-#define WM_DESKTOP_GET_CNOTIFY_WORKER (WM_USER + 25) /* 0x419 */
+#define WM_DESKTOP_GET_CNOTIFY_SERVER (WM_USER + 25) /* 0x419 */
 #define WM_OLDWORKER_HANDOVER (WM_USER + 1) /* 0x401 */
 #define WM_WORKER_REGISTER (WM_USER + 1) /* 0x401 */
 #define WM_WORKER_UNREGISTER (WM_USER + 2) /* 0x402 */
@@ -59,71 +80,4 @@ typedef struct HANDBAG
 #define REGENTRY_MAGIC 0xB0B32D1E
 #define HANDBAG_MAGIC 0xFACEB00C
 
-#ifdef __cplusplus
-
-/////////////////////////////////////////////////////////////////////////////
-// CWorker --- base class of CChangeNotify
-
-class CWorker : public CMessageMap
-{
-public:
-    CWorker() : m_hWnd(NULL)
-    {
-    }
-
-    virtual ~CWorker()
-    {
-    }
-
-    static LRESULT CALLBACK
-    WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    BOOL CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle);
-
-protected:
-    HWND m_hWnd;
-};
-
-struct CChangeNotifyImpl;
-
-/////////////////////////////////////////////////////////////////////////////
-// CChangeNotify --- a class of new delivery worker
-
-class CChangeNotify : public CWorker
-{
-public:
-    CChangeNotify();
-    virtual ~CChangeNotify();
-
-    operator HWND()
-    {
-        return m_hWnd;
-    }
-
-    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndOldWorker);
-    BOOL RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID);
-    void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
-
-    UINT GetNextRegID();
-    BOOL DoTicket(HANDLE hTicket, DWORD dwOwnerPID);
-    BOOL ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry);
-
-    LRESULT OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnTicket(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-
-    BEGIN_MSG_MAP(CChangeNotify)
-        MESSAGE_HANDLER(WM_WORKER_REGISTER, OnRegister)
-        MESSAGE_HANDLER(WM_WORKER_UNREGISTER, OnUnRegister)
-        MESSAGE_HANDLER(WM_WORKER_TICKET, OnTicket)
-        MESSAGE_HANDLER(WM_WORKER_SUSPEND, OnSuspendResume)
-        MESSAGE_HANDLER(WM_WORKER_REMOVEBYPID, OnRemoveByPID);
-    END_MSG_MAP()
-
-protected:
-    UINT m_nNextRegID;
-    CChangeNotifyImpl *m_pimpl;
-};
-#endif
+HRESULT CChangeNotifyServer_CreateInstance(REFIID riid, void **ppv);
