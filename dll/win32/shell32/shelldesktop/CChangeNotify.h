@@ -93,14 +93,6 @@ struct CChangeNotifyImpl;
 class CChangeNotify : public CWorker
 {
 public:
-    struct ITEM
-    {
-        UINT nRegID;
-        DWORD dwUserPID;
-        HANDLE hShare;
-        HWND hwndOldWorker;
-    };
-
     CChangeNotify();
     virtual ~CChangeNotify();
 

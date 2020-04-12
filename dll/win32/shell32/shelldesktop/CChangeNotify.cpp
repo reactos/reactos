@@ -22,6 +22,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 // The shared memory block is managed by the pair of a HANDLE value and an owner PID.
 // If the pair is known, it can be accessed by SHLockShared(Ex) function
 // from another process.
+/////////////////////////////////////////////////////////////////////////////
 
 // This function handles the case of SHCNE_FREESPACE.
 EXTERN_C void
@@ -85,7 +86,7 @@ DoGetNewDeliveryWorker(void)
 // This is "old delivery worker" window. An old delivery worker will be
 // created in the caller process. SHChangeNotification_Lock allocates
 // a process-local memory block in response of WM_OLDDELI_HANDOVER, and
-// post the pWorker->uMsg message.
+// send the pWorker->uMsg message.
 static LRESULT CALLBACK
 OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -98,12 +99,11 @@ OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch (uMsg)
     {
+        // Message WM_OLDDELI_HANDOVER:
+        //    wParam: the handbag handle.
+        //    lParam: the owner PID.
+        //    return: TRUE if successful.
         case WM_OLDDELI_HANDOVER:
-            // Message WM_OLDDELI_HANDOVER:
-            //    wParam: the handbag handle.
-            //    lParam: the owner PID.
-            //    return: TRUE if successful.
-
             hShared = (HANDLE)wParam;
             dwOwnerPID = (DWORD)lParam;
             TRACE("WM_OLDDELI_HANDOVER: hwnd:%p, hShared:%p, pid:0x%lx\n",
@@ -183,9 +183,9 @@ DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg)
 
 // This function creates a registration entry in SHChangeNotifyRegister function.
 EXTERN_C HANDLE
-DoCreateNotifShare(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
-                   LONG fRecursive, LPCITEMIDLIST pidl, DWORD dwOwnerPID,
-                   HWND hwndOldWorker)
+DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
+                 LONG fRecursive, LPCITEMIDLIST pidl, DWORD dwOwnerPID,
+                 HWND hwndOldWorker)
 {
     // pidl has variable length. To store it into the registration entry,
     // we have to consider the length of pidl.
@@ -381,7 +381,13 @@ BOOL CWorker::CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle)
 
 struct CChangeNotifyImpl
 {
-    typedef CChangeNotify::ITEM ITEM;
+    struct ITEM
+    {
+        UINT nRegID;
+        DWORD dwUserPID;
+        HANDLE hShare;
+        HWND hwndOldWorker;
+    };
     CSimpleArray<ITEM> m_items;
 
     BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare, HWND hwndOldWorker)
@@ -677,6 +683,12 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPNOTIFSHARE pShared)
             return TRUE;
     }
 
+    // The paths:
+    //   "C:\\Path\\To\\FileName1"
+    //   "C:\\Path\\To\\FileName1Test"
+    // should be distinguished, so we add backslash at last as follows:
+    //   "C:\\Path\\To\\FileName1\\"
+    //   "C:\\Path\\To\\FileName1Test\\"
     if (SHGetPathFromIDListW(pidl, szPath))
     {
         PathAddBackslashW(szPath);
@@ -781,9 +793,9 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
     for (iItem = 0; iItem < cItems; ++iItem)
     {
         // create a registration entry
-        hShared = DoCreateNotifShare(nRegID, hwnd, uMsg, fSources, wEventMask,
-                                     lpItems[iItem].fRecursive, lpItems[iItem].pidl,
-                                     dwOwnerPID, hwndOldWorker);
+        hShared = DoCreateRegEntry(nRegID, hwnd, uMsg, fSources, wEventMask,
+                                   lpItems[iItem].fRecursive, lpItems[iItem].pidl,
+                                   dwOwnerPID, hwndOldWorker);
         if (hShared)
         {
             TRACE("WM_NOTIF_REG: hwnd:%p, hShared:%p, pid:0x%lx\n", hwndWorker, hShared, dwOwnerPID);
