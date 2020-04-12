@@ -9,7 +9,7 @@
 #define INVALID_REG_ID 0 /* invalid registration ID */
 
 #define WM_GETDELIWORKERWND (WM_USER + 25) /* 0x419 */
-#define WM_OLDDELI_HANDOVER (WM_USER + 1) /* 0x401 */
+#define WM_OLDWORKER_HANDOVER (WM_USER + 1) /* 0x401 */
 #define WM_WORKER_REGISTER (WM_USER + 1) /* 0x401 */
 #define WM_WORKER_UNREGISTER (WM_USER + 2) /* 0x402 */
 #define WM_WORKER_DELIVERY (WM_USER + 3) /* 0x403 */

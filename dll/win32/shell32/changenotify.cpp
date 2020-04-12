@@ -67,17 +67,17 @@ typedef struct OLDDELIVERY
     UINT uMsg;
 } OLDDELIVERY, *LPOLDDELIVERY;
 
-// Message WM_OLDDELI_HANDOVER: Perform old delivery method.
+// Message WM_OLDWORKER_HANDOVER: Perform old delivery method.
 //    wParam: The handle of delivery ticket.
 //    lParam: The owner PID of delivery ticket.
 //    return: TRUE if successful.
 static LRESULT
-OldDeli_OnHandOver(HWND hwnd, WPARAM wParam, LPARAM lParam)
+OldWorker_OnHandOver(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     HANDLE hTicket = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
 
-    TRACE("WM_OLDDELI_HANDOVER: hwnd:%p, hTicket:%p, pid:0x%lx\n",
+    TRACE("WM_OLDWORKER_HANDOVER: hwnd:%p, hTicket:%p, pid:0x%lx\n",
           hwnd, hTicket, dwOwnerPID);
 
     // get old worker data
@@ -110,16 +110,16 @@ OldDeli_OnHandOver(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 // This is "old delivery worker" window. An old delivery worker will be
 // created in the caller process. SHChangeNotification_Lock allocates
-// a process-local memory block in response of WM_OLDDELI_HANDOVER, and
-// WM_OLDDELI_HANDOVER sends the pWorker->uMsg message.
+// a process-local memory block in response of WM_OLDWORKER_HANDOVER, and
+// WM_OLDWORKER_HANDOVER sends the pWorker->uMsg message.
 static LRESULT CALLBACK
-OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+OldWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LPOLDDELIVERY pWorker;
     switch (uMsg)
     {
-        case WM_OLDDELI_HANDOVER:
-            return OldDeli_OnHandOver(hwnd, wParam, lParam);
+        case WM_OLDWORKER_HANDOVER:
+            return OldWorker_OnHandOver(hwnd, wParam, lParam);
 
         case WM_NCDESTROY:
             TRACE("WM_NCDESTROY\n");
@@ -151,7 +151,7 @@ DoCreateOldWorker(HWND hwnd, UINT wMsg)
 
     // create the old delivery worker window
     HWND hwndOldWorker;
-    hwndOldWorker = SHCreateWorkerWindowW(OldDeliveryWorkerWndProc, NULL, 0, 0,
+    hwndOldWorker = SHCreateWorkerWindowW(OldWorkerWndProc, NULL, 0, 0,
                                           NULL, (LONG_PTR)pWorker);
     if (hwndOldWorker == NULL)
     {
@@ -284,7 +284,7 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
     if ((fSources & SHCNRF_NewDelivery) == 0)
     {
         hwndOldWorker = hwnd = DoCreateOldWorker(hwnd, uMsg);
-        uMsg = WM_OLDDELI_HANDOVER;
+        uMsg = WM_OLDWORKER_HANDOVER;
     }
 
     // disable new delivery method in specific condition
