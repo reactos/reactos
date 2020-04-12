@@ -21,7 +21,7 @@ EXTERN_C void InitChangeNotifications(void)
 EXTERN_C void FreeChangeNotifications(void)
 {
     HWND hwndWorker;
-    hwndWorker = DoGetNewDeliveryWorker();
+    hwndWorker = DoGetNewDeliveryWorker(FALSE);
     SendMessageW(hwndWorker, WM_WORKER_REMOVEBYPID, GetCurrentProcessId(), 0);
     DeleteCriticalSection(&SHELL32_ChangenotifyCS);
 }
@@ -230,7 +230,7 @@ DoCreateTicketAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLI
                       DWORD dwTick)
 {
     // get new delivery worker
-    HWND hwndWorker = DoGetNewDeliveryWorker();
+    HWND hwndWorker = DoGetNewDeliveryWorker(FALSE);
     if (!hwndWorker)
         return;
 
@@ -276,22 +276,22 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
     }
 
     // request the new delivery worker window
-    hwndWorker = DoGetNewDeliveryWorker();
+    hwndWorker = DoGetNewDeliveryWorker(TRUE);
     if (hwndWorker == NULL)
         return INVALID_REG_ID;
-
-    // if it is old delivery method, then create the old delivery worker window
-    if ((fSources & SHCNRF_NewDelivery) == 0)
-    {
-        hwndOldWorker = hwnd = DoCreateOldWorker(hwnd, uMsg);
-        uMsg = WM_OLDWORKER_HANDOVER;
-    }
 
     // disable new delivery method in specific condition
     if ((fSources & SHCNRF_RecursiveInterrupt) != 0 &&
         (fSources & SHCNRF_InterruptLevel) == 0)
     {
         fSources &= ~SHCNRF_NewDelivery;
+    }
+
+    // if it is old delivery method, then create the old delivery worker window
+    if ((fSources & SHCNRF_NewDelivery) == 0)
+    {
+        hwndOldWorker = hwnd = DoCreateOldWorker(hwnd, uMsg);
+        uMsg = WM_OLDWORKER_HANDOVER;
     }
 
     // The owner PID is the process ID of new delivery worker.
@@ -347,7 +347,7 @@ SHChangeNotifyDeregister(ULONG hNotify)
     TRACE("(0x%08x)\n", hNotify);
 
     // get the new delivery worker window
-    hwndWorker = DoGetNewDeliveryWorker();
+    hwndWorker = DoGetNewDeliveryWorker(FALSE);
     if (hwndWorker == NULL)
         return FALSE;
 

@@ -27,7 +27,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 // This function requests creation of the new delivery worker if necessary
 // and returns the window handle of the new delivery worker with cached.
 EXTERN_C HWND
-DoGetNewDeliveryWorker(void)
+DoGetNewDeliveryWorker(BOOL bCreate)
 {
     static HWND s_hwndNewWorker = NULL;
 
@@ -44,7 +44,7 @@ DoGetNewDeliveryWorker(void)
     }
 
     // Request delivery worker to the shell window. See also CDesktopBrowser.
-    HWND hwndWorker = (HWND)SendMessageW(hwndShell, WM_GETDELIWORKERWND, 0, 0);
+    HWND hwndWorker = (HWND)SendMessageW(hwndShell, WM_GETWORKERWND, bCreate, 0);
     if (!IsWindow(hwndWorker))
     {
         ERR("Unable to get notification window\n");
