@@ -171,8 +171,8 @@ DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg)
 // This function creates a delivery ticket for shell change nofitication.
 // Used in SHChangeNotify.
 static HANDLE
-DoCreateDeliTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
-                   DWORD dwOwnerPID, DWORD dwTick)
+DoCreateTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
+               DWORD dwOwnerPID, DWORD dwTick)
 {
     // pidl1 and pidl2 have variable length. To store them into the delivery ticket,
     // we have to consider the offsets and the sizes of pidl1 and pidl2.
@@ -242,7 +242,7 @@ DoCreateTicketAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLI
     GetWindowThreadProcessId(hwndWorker, &pid);
 
     // create a delivery ticket
-    HANDLE hTicket = DoCreateDeliTicket(wEventId, uFlags, pidl1, pidl2, pid, dwTick);
+    HANDLE hTicket = DoCreateTicket(wEventId, uFlags, pidl1, pidl2, pid, dwTick);
     if (hTicket == NULL)
         return;
 
