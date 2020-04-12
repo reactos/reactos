@@ -42,13 +42,13 @@ GetNotificationServer(BOOL bCreate)
     return hwndServer;
 }
 
-// This function will be called from DllMain!DLL_PROCESS_ATTACH.
+// This function will be called from DllMain.DLL_PROCESS_ATTACH.
 EXTERN_C void InitChangeNotifications(void)
 {
     InitializeCriticalSection(&SHELL32_ChangenotifyCS);
 }
 
-// This function will be called from DllMain!DLL_PROCESS_DETACH.
+// This function will be called from DllMain.DLL_PROCESS_DETACH.
 EXTERN_C void FreeChangeNotifications(void)
 {
     HWND hwndServer = GetNotificationServer(FALSE);
@@ -89,8 +89,8 @@ public:
 
     void OnFinalMessage(HWND)
     {
-        // The server will destroy this window
-        // After the window gets destroyed we can delete this broker here
+        // The server will destroy this window.
+        // After the window gets destroyed we can delete this broker here.
         delete this;
     }
 

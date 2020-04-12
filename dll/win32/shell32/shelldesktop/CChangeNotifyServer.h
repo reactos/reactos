@@ -7,10 +7,10 @@
 #pragma once
 
 /////////////////////////////////////////////////////////////////////////////
-// CChangeNotify is a delivery worker window that is managed by CDesktopBrowser.
-// The process of CChangeNotify is same as the process of CDesktopBrowser.
+// CChangeNotifyServer is a delivery worker window that is managed by CDesktopBrowser.
+// The process of CChangeNotifyServer is same as the process of CDesktopBrowser.
 // The caller process of SHChangeNotify function might be different from the
-// process of CChangeNotify.
+// process of CChangeNotifyServer.
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////

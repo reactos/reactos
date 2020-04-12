@@ -27,10 +27,10 @@ typedef CWinTraits <
 //////////////////////////////////////////////////////////////////////////////
 // CChangeNotifyServer
 //
-// CChangeNotifyServer implements a window that handles all shell change notifications
-// It runs in the context of explorer and specifically in the thread of the shell desktop
+// CChangeNotifyServer implements a window that handles all shell change notifications.
+// It runs in the context of explorer and specifically in the thread of the shell desktop.
 // Shell change notification api exported from shell32 forwards all their calls
-// to this window where all processing takes place
+// to this window where all processing takes place.
 
 class CChangeNotifyServer :
     public CWindowImpl<CChangeNotifyServer, CWindow, CChangeNotifyServerTraits>,
@@ -422,8 +422,8 @@ HRESULT WINAPI CChangeNotifyServer::ContextSensitiveHelp(BOOL fEnterMode)
 
 HRESULT CChangeNotifyServer::Initialize()
 {
-    // This is called by CChangeNotifyServer_CreateInstance right after instantiation
-    // Create the window of the server here
+    // This is called by CChangeNotifyServer_CreateInstance right after instantiation.
+    // Create the window of the server here.
     Create(0);
     if (!m_hWnd)
         return E_FAIL;
