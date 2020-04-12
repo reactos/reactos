@@ -372,7 +372,7 @@ LRESULT CChangeNotify::OnTicket(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         }
     }
 
-    // unlock and free the handbag
+    // unlock and free the handbag and the ticket
     SHChangeNotification_Unlock(pHandbag);
     SHFreeShared(hTicket, dwOwnerPID);
     return ret;
