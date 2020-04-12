@@ -51,7 +51,7 @@ DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     }
 }
 
-// This function creates the new delivery worker if necessary
+// This function requests creation of the new delivery worker if necessary
 // and returns the window handle of the new delivery worker with cached.
 EXTERN_C HWND
 DoGetNewDeliveryWorker(void)
@@ -70,7 +70,7 @@ DoGetNewDeliveryWorker(void)
         return NULL;
     }
 
-    // request delivery worker to the shell window
+    // Request delivery worker to the shell window. See also CDesktopBrowser.
     HWND hwndWorker = (HWND)SendMessageW(hwndShell, WM_GETDELIWORKERWND, 0, 0);
     if (!IsWindow(hwndWorker))
     {
@@ -142,6 +142,7 @@ OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return TRUE;
 
         case WM_NCDESTROY:
+            // delete old woker
             TRACE("WM_NCDESTROY\n");
             pWorker = (LPOLDDELIVERYWORKER)GetWindowLongPtrW(hwnd, 0);
             SetWindowLongW(hwnd, 0, 0);
@@ -721,6 +722,8 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pShared)
         {
             PathAddBackslashW(szPath1);
             cch1 = lstrlenW(szPath1);
+
+            // Is szPath1 a subdirectory of szPath?
             if (cch < cch1 &&
                 (pShared->fRecursive ||
                  wcschr(&szPath1[cch], L'\\') == &szPath1[cch1 - 1]))
@@ -735,6 +738,8 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pShared)
         {
             PathAddBackslashW(szPath2);
             cch2 = lstrlenW(szPath2);
+
+            // Is szPath2 a subdirectory of szPath?
             if (cch < cch2 &&
                 (pShared->fRecursive ||
                  wcschr(&szPath2[cch], L'\\') == &szPath2[cch2 - 1]))
