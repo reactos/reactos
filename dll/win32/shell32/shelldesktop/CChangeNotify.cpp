@@ -69,44 +69,44 @@ DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
     DWORD cbSize = ibPidl + cbPidl;
 
     // create the registration entry and lock it
-    HANDLE hShared = SHAllocShared(NULL, cbSize, dwOwnerPID);
-    if (!hShared)
+    HANDLE hRegEntry = SHAllocShared(NULL, cbSize, dwOwnerPID);
+    if (!hRegEntry)
     {
         ERR("Out of memory\n");
         return NULL;
     }
-    LPREGENTRY pShared = (LPREGENTRY)SHLockSharedEx(hShared, dwOwnerPID, TRUE);
-    if (pShared == NULL)
+    LPREGENTRY pRegEntry = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, TRUE);
+    if (pRegEntry == NULL)
     {
         ERR("SHLockSharedEx failed\n");
-        SHFreeShared(hShared, dwOwnerPID);
+        SHFreeShared(hRegEntry, dwOwnerPID);
         return NULL;
     }
 
     // populate the registration entry
-    pShared->dwMagic = REGENTRY_MAGIC;
-    pShared->cbSize = cbSize;
-    pShared->nRegID = nRegID;
-    pShared->hwnd = hwnd;
-    pShared->uMsg = wMsg;
-    pShared->fSources = fSources;
-    pShared->fEvents = fEvents;
-    pShared->fRecursive = fRecursive;
-    pShared->hwndOldWorker = hwndOldWorker;
-    pShared->ibPidl = 0;
+    pRegEntry->dwMagic = REGENTRY_MAGIC;
+    pRegEntry->cbSize = cbSize;
+    pRegEntry->nRegID = nRegID;
+    pRegEntry->hwnd = hwnd;
+    pRegEntry->uMsg = wMsg;
+    pRegEntry->fSources = fSources;
+    pRegEntry->fEvents = fEvents;
+    pRegEntry->fRecursive = fRecursive;
+    pRegEntry->hwndOldWorker = hwndOldWorker;
+    pRegEntry->ibPidl = 0;
     if (pidl)
     {
-        pShared->ibPidl = ibPidl;
-        memcpy((LPBYTE)pShared + ibPidl, pidl, cbPidl);
+        pRegEntry->ibPidl = ibPidl;
+        memcpy((LPBYTE)pRegEntry + ibPidl, pidl, cbPidl);
     }
 
     // unlock and return
-    SHUnlockShared(pShared);
-    return hShared;
+    SHUnlockShared(pRegEntry);
+    return hRegEntry;
 }
 
 // This function creates a "handbag" by using a delivery ticket.
-// The handbag is used in SHChangeNotification_Lock and OnDelivery.
+// The handbag is created in SHChangeNotification_Lock and used in OnDelivery.
 // hTicket is a ticket handle of a shared memory block and dwOwnerPID is
 // the owner PID of the ticket.
 EXTERN_C LPHANDBAG
@@ -286,40 +286,40 @@ LRESULT CChangeNotify::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     TRACE("OnReg(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
 
     // lock the registration entry
-    HANDLE hShared = (HANDLE)wParam;
+    HANDLE hRegEntry = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
-    LPREGENTRY pShared = (LPREGENTRY)SHLockSharedEx(hShared, dwOwnerPID, TRUE);
-    if (!pShared || pShared->dwMagic != REGENTRY_MAGIC)
+    LPREGENTRY pRegEntry = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, TRUE);
+    if (!pRegEntry || pRegEntry->dwMagic != REGENTRY_MAGIC)
     {
-        ERR("pShared is invalid\n");
+        ERR("pRegEntry is invalid\n");
         return FALSE;
     }
 
     // update registration ID if necessary
-    if (pShared->nRegID == INVALID_REG_ID)
-        pShared->nRegID = GetNextRegID();
+    if (pRegEntry->nRegID == INVALID_REG_ID)
+        pRegEntry->nRegID = GetNextRegID();
 
-    TRACE("pShared->nRegID: %u\n", pShared->nRegID);
+    TRACE("pRegEntry->nRegID: %u\n", pRegEntry->nRegID);
 
     // get the user PID; that is the process ID of the target window
     DWORD dwUserPID;
-    GetWindowThreadProcessId(pShared->hwnd, &dwUserPID);
+    GetWindowThreadProcessId(pRegEntry->hwnd, &dwUserPID);
 
     // get old worker if any
-    HWND hwndOldWorker = pShared->hwndOldWorker;
+    HWND hwndOldWorker = pRegEntry->hwndOldWorker;
 
     // clone the registration entry
-    HANDLE hNewShared = SHAllocShared(pShared, pShared->cbSize, dwOwnerPID);
+    HANDLE hNewShared = SHAllocShared(pRegEntry, pRegEntry->cbSize, dwOwnerPID);
     if (!hNewShared)
     {
         ERR("Out of memory\n");
-        pShared->nRegID = INVALID_REG_ID;
-        SHUnlockShared(pShared);
+        pRegEntry->nRegID = INVALID_REG_ID;
+        SHUnlockShared(pRegEntry);
         return FALSE;
     }
 
     // unlock the registry entry
-    SHUnlockShared(pShared);
+    SHUnlockShared(pRegEntry);
 
     // add an ITEM
     return AddItem(m_nNextRegID, dwUserPID, hNewShared, hwndOldWorker);
@@ -433,25 +433,25 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
             continue;
 
         // lock the registration entry
-        LPREGENTRY pShared = (LPREGENTRY)SHLockSharedEx(hShare, dwOwnerPID, FALSE);
-        if (!pShared || pShared->dwMagic != REGENTRY_MAGIC)
+        LPREGENTRY pRegEntry = (LPREGENTRY)SHLockSharedEx(hShare, dwOwnerPID, FALSE);
+        if (!pRegEntry || pRegEntry->dwMagic != REGENTRY_MAGIC)
         {
-            ERR("pShared is invalid\n");
+            ERR("pRegEntry is invalid\n");
             continue;
         }
 
         // should we notify for it?
-        BOOL bNotify = ShouldNotify(pTicket, pShared);
+        BOOL bNotify = ShouldNotify(pTicket, pRegEntry);
         if (bNotify)
         {
             // do notify
             TRACE("Notifying: %p, 0x%x, %p, %lu\n",
-                  pShared->hwnd, pShared->uMsg, hTicket, dwOwnerPID);
-            SendMessageW(pShared->hwnd, pShared->uMsg, (WPARAM)hTicket, dwOwnerPID);
+                  pRegEntry->hwnd, pRegEntry->uMsg, hTicket, dwOwnerPID);
+            SendMessageW(pRegEntry->hwnd, pRegEntry->uMsg, (WPARAM)hTicket, dwOwnerPID);
         }
 
         // unlock the registration entry
-        SHUnlockShared(pShared);
+        SHUnlockShared(pRegEntry);
     }
 
     // unlock the ticket
@@ -460,25 +460,25 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
     return TRUE;
 }
 
-BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pShared)
+BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry)
 {
     LPITEMIDLIST pidl, pidl1 = NULL, pidl2 = NULL;
     WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
     INT cch, cch1, cch2;
 
-    if (!pShared->ibPidl)
+    if (!pRegEntry->ibPidl)
         return TRUE;
 
     // get the stored pidl
-    pidl = (LPITEMIDLIST)((LPBYTE)pShared + pShared->ibPidl);
-    if (pidl->mkid.cb == 0 && pShared->fRecursive)
+    pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
+    if (pidl->mkid.cb == 0 && pRegEntry->fRecursive)
         return TRUE;    // desktop is the root
 
     // check pidl1
     if (pTicket->ibOffset1)
     {
         pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
-        if (ILIsEqual(pidl, pidl1) || ILIsParent(pidl, pidl1, !pShared->fRecursive))
+        if (ILIsEqual(pidl, pidl1) || ILIsParent(pidl, pidl1, !pRegEntry->fRecursive))
             return TRUE;
     }
 
@@ -486,7 +486,7 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pShared)
     if (pTicket->ibOffset2)
     {
         pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
-        if (ILIsEqual(pidl, pidl2) || ILIsParent(pidl, pidl2, !pShared->fRecursive))
+        if (ILIsEqual(pidl, pidl2) || ILIsParent(pidl, pidl2, !pRegEntry->fRecursive))
             return TRUE;
     }
 
@@ -508,7 +508,7 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pShared)
 
             // Is szPath1 a subdirectory of szPath?
             if (cch < cch1 &&
-                (pShared->fRecursive ||
+                (pRegEntry->fRecursive ||
                  wcschr(&szPath1[cch], L'\\') == &szPath1[cch1 - 1]))
             {
                 szPath1[cch] = 0;
@@ -524,7 +524,7 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pShared)
 
             // Is szPath2 a subdirectory of szPath?
             if (cch < cch2 &&
-                (pShared->fRecursive ||
+                (pRegEntry->fRecursive ||
                  wcschr(&szPath2[cch], L'\\') == &szPath2[cch2 - 1]))
             {
                 szPath2[cch] = 0;

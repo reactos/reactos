@@ -113,8 +113,8 @@ public:
     UINT GetNextRegID();
     BOOL DoDelivery(HANDLE hTicket, DWORD dwOwnerPID);
 
-    BOOL ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pShared);
-    BOOL DoNotify(LPHANDBAG pHandbag, LPDELITICKET pTicket, LPREGENTRY pShared);
+    BOOL ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry);
+    BOOL DoNotify(LPHANDBAG pHandbag, LPDELITICKET pTicket, LPREGENTRY pRegEntry);
 
     LRESULT OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

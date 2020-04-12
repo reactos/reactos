@@ -68,18 +68,19 @@ typedef struct OLDDELIVERY
 } OLDDELIVERY, *LPOLDDELIVERY;
 
 // Message WM_OLDDELI_HANDOVER: Perform old delivery method.
-//    wParam: the handbag handle.
-//    lParam: the owner PID.
+//    wParam: The handle of delivery ticket.
+//    lParam: The owner PID of delivery ticket.
 //    return: TRUE if successful.
 static LRESULT
 OldDeli_OnHandOver(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-    HANDLE hShared = (HANDLE)wParam;
+    HANDLE hTicket = (HANDLE)wParam;
     DWORD dwOwnerPID = (DWORD)lParam;
 
-    TRACE("WM_OLDDELI_HANDOVER: hwnd:%p, hShared:%p, pid:0x%lx\n",
-          hwnd, hShared, dwOwnerPID);
+    TRACE("WM_OLDDELI_HANDOVER: hwnd:%p, hTicket:%p, pid:0x%lx\n",
+          hwnd, hTicket, dwOwnerPID);
 
+    // get old worker data
     LPOLDDELIVERY pWorker = (LPOLDDELIVERY)GetWindowLongPtrW(hwnd, 0);
     if (!pWorker)
     {
@@ -90,7 +91,7 @@ OldDeli_OnHandOver(HWND hwnd, WPARAM wParam, LPARAM lParam)
     // lock the handbag
     PIDLIST_ABSOLUTE *ppidl = NULL;
     LONG lEvent;
-    HANDLE hLock = SHChangeNotification_Lock(hShared, dwOwnerPID, &ppidl, &lEvent);
+    HANDLE hLock = SHChangeNotification_Lock(hTicket, dwOwnerPID, &ppidl, &lEvent);
     if (!hLock)
     {
         ERR("!hLock\n");
@@ -261,7 +262,7 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
                        int cItems, SHChangeNotifyEntry *lpItems)
 {
     HWND hwndWorker, hwndOldWorker = NULL;
-    HANDLE hShared;
+    HANDLE hRegEntry;
     INT iItem;
     ULONG nRegID = INVALID_REG_ID;
     DWORD dwOwnerPID;
@@ -302,21 +303,22 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
     for (iItem = 0; iItem < cItems; ++iItem)
     {
         // create a registration entry
-        hShared = DoCreateRegEntry(nRegID, hwnd, uMsg, fSources, wEventMask,
-                                   lpItems[iItem].fRecursive, lpItems[iItem].pidl,
-                                   dwOwnerPID, hwndOldWorker);
-        if (hShared)
+        hRegEntry = DoCreateRegEntry(nRegID, hwnd, uMsg, fSources, wEventMask,
+                                     lpItems[iItem].fRecursive, lpItems[iItem].pidl,
+                                     dwOwnerPID, hwndOldWorker);
+        if (hRegEntry)
         {
-            TRACE("WM_WORKER_REGISTER: hwnd:%p, hShared:%p, pid:0x%lx\n", hwndWorker, hShared, dwOwnerPID);
-            SendMessageW(hwndWorker, WM_WORKER_REGISTER, (WPARAM)hShared, dwOwnerPID);
+            TRACE("WM_WORKER_REGISTER: hwnd:%p, hRegEntry:%p, pid:0x%lx\n",
+                  hwndWorker, hRegEntry, dwOwnerPID);
+            SendMessageW(hwndWorker, WM_WORKER_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
 
-            pShare = (LPREGENTRY)SHLockSharedEx(hShared, dwOwnerPID, FALSE);
+            pShare = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, FALSE);
             if (pShare)
             {
                 nRegID = pShare->nRegID;
                 SHUnlockShared(pShare);
             }
-            SHFreeShared(hShared, dwOwnerPID);
+            SHFreeShared(hRegEntry, dwOwnerPID);
         }
 
         if (nRegID == INVALID_REG_ID && (fSources & SHCNRF_NewDelivery) == 0)
