@@ -18,7 +18,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// The shared memory block can be allocated by SHAllocShared function.
+// The shared memory block can be allocated by shlwapi!SHAllocShared function.
 //
 // HANDLE SHAllocShared(LPCVOID lpData, DWORD dwSize, DWORD dwProcessId);
 // LPVOID SHLockShared(HANDLE hData, DWORD dwProcessId);
@@ -517,7 +517,7 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry)
             PathAddBackslashW(szPath1);
             cch1 = lstrlenW(szPath1);
 
-            // Is szPath1 a subdirectory of szPath?
+            // Is szPath1 a subfile or subdirectory of szPath?
             if (cch < cch1 &&
                 (pRegEntry->fRecursive ||
                  wcschr(&szPath1[cch], L'\\') == &szPath1[cch1 - 1]))
@@ -533,7 +533,7 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry)
             PathAddBackslashW(szPath2);
             cch2 = lstrlenW(szPath2);
 
-            // Is szPath2 a subdirectory of szPath?
+            // Is szPath2 a subfile or subdirectory of szPath?
             if (cch < cch2 &&
                 (pRegEntry->fRecursive ||
                  wcschr(&szPath2[cch], L'\\') == &szPath2[cch2 - 1]))
