@@ -101,7 +101,7 @@ OldDeli_OnHandOver(HWND hwnd, WPARAM wParam, LPARAM lParam)
 // This is "old delivery worker" window. An old delivery worker will be
 // created in the caller process. SHChangeNotification_Lock allocates
 // a process-local memory block in response of WM_OLDDELI_HANDOVER, and
-// send the pWorker->uMsg message.
+// WM_OLDDELI_HANDOVER sends the pWorker->uMsg message.
 static LRESULT CALLBACK
 OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -268,7 +268,7 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
         return INVALID_REG_ID;
     }
 
-    // create and get the new delivery worker window
+    // request the new delivery worker window
     hwndWorker = DoGetNewDeliveryWorker();
     if (hwndWorker == NULL)
         return INVALID_REG_ID;
