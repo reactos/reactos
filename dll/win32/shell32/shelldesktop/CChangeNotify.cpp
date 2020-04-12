@@ -112,7 +112,7 @@ DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
 EXTERN_C LPHANDBAG
 DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
 {
-    // validate the delivery ticket
+    // lock and validate the delivery ticket
     LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
     if (pTicket == NULL || pTicket->dwMagic != DELITICKET_MAGIC)
     {
@@ -157,6 +157,7 @@ CWorker::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 BOOL CWorker::CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle)
 {
+    // See also: shlwapi!SHCreateWorkerWindowW
     if (::IsWindow(m_hWnd))
         ::DestroyWindow(m_hWnd);
     m_hWnd = SHCreateWorkerWindowW(WindowProc, hwndParent, dwExStyle, dwStyle,
@@ -183,10 +184,12 @@ struct CChangeNotifyImpl
 
     BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndOldWorker)
     {
+        // find the empty room
         for (INT i = 0; i < m_items.GetSize(); ++i)
         {
             if (m_items[i].nRegID == INVALID_REG_ID)
             {
+                // found the room, populate it
                 m_items[i].nRegID = nRegID;
                 m_items[i].dwUserPID = dwUserPID;
                 m_items[i].hRegEntry = hRegEntry;
@@ -195,6 +198,7 @@ struct CChangeNotifyImpl
             }
         }
 
+        // no empty room found
         ITEM item = { nRegID, dwUserPID, hRegEntry, hwndOldWorker };
         m_items.Add(item);
         return TRUE;
@@ -493,7 +497,7 @@ BOOL CChangeNotify::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry)
     // The paths:
     //   "C:\\Path\\To\\File1"
     //   "C:\\Path\\To\\File1Test"
-    // should be distinguished, so we add backslash at last as follows:
+    // should be distinguished in comparison, so we add backslash at last as follows:
     //   "C:\\Path\\To\\File1\\"
     //   "C:\\Path\\To\\File1Test\\"
     if (SHGetPathFromIDListW(pidl, szPath))
