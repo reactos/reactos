@@ -58,6 +58,46 @@ typedef struct OLDDELIVERYWORKER
     UINT uMsg;
 } OLDDELIVERYWORKER, *LPOLDDELIVERYWORKER;
 
+// Message WM_OLDDELI_HANDOVER:
+//    wParam: the handbag handle.
+//    lParam: the owner PID.
+//    return: TRUE if successful.
+static LRESULT
+OldDeli_OnHandOver(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+    HANDLE hShared = (HANDLE)wParam;
+    DWORD dwOwnerPID = (DWORD)lParam;
+
+    TRACE("WM_OLDDELI_HANDOVER: hwnd:%p, hShared:%p, pid:0x%lx\n",
+          hwnd, hShared, dwOwnerPID);
+
+    LPOLDDELIVERYWORKER pWorker = (LPOLDDELIVERYWORKER)GetWindowLongPtrW(hwnd, 0);
+    if (!pWorker)
+    {
+        ERR("!pWorker\n");
+        return FALSE;
+    }
+
+    // lock the handbag
+    PIDLIST_ABSOLUTE *ppidl = NULL;
+    LONG lEvent;
+    HANDLE hLock = SHChangeNotification_Lock(hShared, dwOwnerPID, &ppidl, &lEvent);
+    if (!hLock)
+    {
+        ERR("!hLock\n");
+        return FALSE;
+    }
+
+    // perform the delivery
+    TRACE("OldDeliveryWorker notifying: %p, 0x%x, %p, 0x%lx\n",
+          pWorker->hwnd, pWorker->uMsg, ppidl, lEvent);
+    SendMessageW(pWorker->hwnd, pWorker->uMsg, (WPARAM)ppidl, lEvent);
+
+    // unlock the handbag
+    SHChangeNotification_Unlock(hLock);
+    return TRUE;
+}
+
 // This is "old delivery worker" window. An old delivery worker will be
 // created in the caller process. SHChangeNotification_Lock allocates
 // a process-local memory block in response of WM_OLDDELI_HANDOVER, and
@@ -65,52 +105,13 @@ typedef struct OLDDELIVERYWORKER
 static LRESULT CALLBACK
 OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    HANDLE hLock;
-    PIDLIST_ABSOLUTE *ppidl;
-    LONG lEvent;
     LPOLDDELIVERYWORKER pWorker;
-    HANDLE hShared;
-    DWORD dwOwnerPID;
-
     switch (uMsg)
     {
-        // Message WM_OLDDELI_HANDOVER:
-        //    wParam: the handbag handle.
-        //    lParam: the owner PID.
-        //    return: TRUE if successful.
         case WM_OLDDELI_HANDOVER:
-            hShared = (HANDLE)wParam;
-            dwOwnerPID = (DWORD)lParam;
-            TRACE("WM_OLDDELI_HANDOVER: hwnd:%p, hShared:%p, pid:0x%lx\n",
-                  hwnd, hShared, dwOwnerPID);
-
-            pWorker = (LPOLDDELIVERYWORKER)GetWindowLongPtrW(hwnd, 0);
-            if (!pWorker)
-            {
-                ERR("!pWorker\n");
-                break;
-            }
-
-            // lock the handbag
-            ppidl = NULL;
-            hLock = SHChangeNotification_Lock(hShared, dwOwnerPID, &ppidl, &lEvent);
-            if (!hLock)
-            {
-                ERR("!hLock\n");
-                break;
-            }
-
-            // perform the old delivery
-            TRACE("OldDeliveryWorker notifying: %p, 0x%x, %p, 0x%lx\n",
-                  pWorker->hwnd, pWorker->uMsg, ppidl, lEvent);
-            SendMessageW(pWorker->hwnd, pWorker->uMsg, (WPARAM)ppidl, lEvent);
-
-            // unlock the handbag
-            SHChangeNotification_Unlock(hLock);
-            return TRUE;
+            return OldDeli_OnHandOver(hwnd, wParam, lParam);
 
         case WM_NCDESTROY:
-            // delete old woker
             TRACE("WM_NCDESTROY\n");
             pWorker = (LPOLDDELIVERYWORKER)GetWindowLongPtrW(hwnd, 0);
             SetWindowLongW(hwnd, 0, 0);
