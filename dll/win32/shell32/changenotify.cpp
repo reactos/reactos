@@ -52,11 +52,11 @@ static void DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     }
 }
 
-typedef struct OLDDELIVERYWORKER
+typedef struct OLDDELIVERY
 {
     HWND hwnd;
     UINT uMsg;
-} OLDDELIVERYWORKER, *LPOLDDELIVERYWORKER;
+} OLDDELIVERY, *LPOLDDELIVERY;
 
 // Message WM_OLDDELI_HANDOVER:
 //    wParam: the handbag handle.
@@ -71,7 +71,7 @@ OldDeli_OnHandOver(HWND hwnd, WPARAM wParam, LPARAM lParam)
     TRACE("WM_OLDDELI_HANDOVER: hwnd:%p, hShared:%p, pid:0x%lx\n",
           hwnd, hShared, dwOwnerPID);
 
-    LPOLDDELIVERYWORKER pWorker = (LPOLDDELIVERYWORKER)GetWindowLongPtrW(hwnd, 0);
+    LPOLDDELIVERY pWorker = (LPOLDDELIVERY)GetWindowLongPtrW(hwnd, 0);
     if (!pWorker)
     {
         ERR("!pWorker\n");
@@ -105,7 +105,7 @@ OldDeli_OnHandOver(HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK
 OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    LPOLDDELIVERYWORKER pWorker;
+    LPOLDDELIVERY pWorker;
     switch (uMsg)
     {
         case WM_OLDDELI_HANDOVER:
@@ -113,7 +113,7 @@ OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_NCDESTROY:
             TRACE("WM_NCDESTROY\n");
-            pWorker = (LPOLDDELIVERYWORKER)GetWindowLongPtrW(hwnd, 0);
+            pWorker = (LPOLDDELIVERY)GetWindowLongPtrW(hwnd, 0);
             SetWindowLongW(hwnd, 0, 0);
             delete pWorker;
             break;
@@ -128,11 +128,11 @@ OldDeliveryWorkerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static HWND
 DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg)
 {
-    LPOLDDELIVERYWORKER pWorker;
+    LPOLDDELIVERY pWorker;
     HWND hwndOldWorker;
 
     // create a memory block for old delivery
-    pWorker = new OLDDELIVERYWORKER;
+    pWorker = new OLDDELIVERY;
     if (!pWorker)
     {
         ERR("Out of memory\n");
