@@ -18,24 +18,13 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-CONSOLE_IO_OBJECT_TYPE
-GRAPHICS_BUFFER_GetType(PCONSOLE_SCREEN_BUFFER This)
-{
-    // return This->Header.Type;
-    return GRAPHICS_BUFFER;
-}
-
-static CONSOLE_SCREEN_BUFFER_VTBL GraphicsVtbl =
-{
-    GRAPHICS_BUFFER_GetType,
-};
-
-
 NTSTATUS
-CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                                 IN PCONSOLE Console,
-                                 IN PCONSOLE_SCREEN_BUFFER_VTBL Vtbl,
-                                 IN SIZE_T Size);
+CONSOLE_SCREEN_BUFFER_Initialize(
+    OUT PCONSOLE_SCREEN_BUFFER* Buffer,
+    IN PCONSOLE Console,
+    IN CONSOLE_IO_OBJECT_TYPE Type,
+    IN SIZE_T Size);
+
 VOID
 CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer);
 
@@ -59,10 +48,9 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
 
     Status = CONSOLE_SCREEN_BUFFER_Initialize((PCONSOLE_SCREEN_BUFFER*)&NewBuffer,
                                               Console,
-                                              &GraphicsVtbl,
+                                              GRAPHICS_BUFFER,
                                               sizeof(GRAPHICS_SCREEN_BUFFER));
     if (!NT_SUCCESS(Status)) return Status;
-    NewBuffer->Header.Type = GRAPHICS_BUFFER;
 
     /*
      * Remember the handle to the process so that we can close or unmap
