@@ -52,6 +52,15 @@ static void DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////
+// There are two delivery methods: "old delivery method" and "new delivery method".
+//
+// The old delivery method creates an old delivery worker window in the caller process
+// for message trampoline. The old delivery method is slow and deprecated.
+//
+// The new delivery method is enabled by SHCNRF_NewDelivery flag.
+// The new delivery method directly sends the delivery ticket.
+
 typedef struct OLDDELIVERY
 {
     HWND hwnd;
@@ -273,7 +282,7 @@ SHChangeNotifyRegister(HWND hwnd, int fSources, LONG wEventMask, UINT uMsg,
     if (hwndWorker == NULL)
         return INVALID_REG_ID;
 
-    // if it is old delivery, then create the old delivery worker window
+    // if it is old delivery method, then create the old delivery worker window
     if ((fSources & SHCNRF_NewDelivery) == 0)
     {
         hwndOldWorker = hwnd = DoHireOldDeliveryWorker(hwnd, uMsg);
