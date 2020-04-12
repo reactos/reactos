@@ -256,7 +256,7 @@ SetFont(PMAP infoPtr,
                          GGI_MARK_NONEXISTING_GLYPHS) != GDI_ERROR)
     {
         j = 0;
-        for (i = 0; i < MAX_GLYPHS; i++)
+        for (i = ' ' + 1; i < MAX_GLYPHS; i++)
         {
             if (out[i] != 0xffff)
             {
