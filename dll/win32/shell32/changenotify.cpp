@@ -58,7 +58,7 @@ typedef struct OLDDELIVERY
     UINT uMsg;
 } OLDDELIVERY, *LPOLDDELIVERY;
 
-// Message WM_OLDDELI_HANDOVER:
+// Message WM_OLDDELI_HANDOVER: Perform old delivery method.
 //    wParam: the handbag handle.
 //    lParam: the owner PID.
 //    return: TRUE if successful.

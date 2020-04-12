@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#define INVALID_REG_ID 0
+#define INVALID_REG_ID 0 /* invalid registration ID */
 
 #define WM_GETDELIWORKERWND (WM_USER + 25) /* 0x419 */
 #define WM_OLDDELI_HANDOVER (WM_USER + 1) /* 0x401 */
@@ -19,7 +19,7 @@
 #define DWORD_ALIGNMENT(offset) \
     ((((offset) + sizeof(DWORD) - 1) / sizeof(DWORD)) * sizeof(DWORD))
 
-// delivery ticket
+/* delivery ticket */
 typedef struct DELITICKET
 {
     DWORD dwMagic;
@@ -30,7 +30,7 @@ typedef struct DELITICKET
     DWORD ibOffset2; /* offset to pidl2 */
 } DELITICKET, *LPDELITICKET;
 
-// registration entry
+/* registration entry */
 typedef struct REGENTRY
 {
     DWORD dwMagic;
@@ -45,7 +45,7 @@ typedef struct REGENTRY
     UINT ibPidl;
 } REGENTRY, *LPREGENTRY;
 
-// handbag
+/* handbag */
 typedef struct HANDBAG
 {
     DWORD dwMagic;

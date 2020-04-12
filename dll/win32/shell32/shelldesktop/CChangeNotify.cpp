@@ -67,14 +67,14 @@ DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
     DWORD cbPidl = ILGetSize(pidl);
     DWORD ibPidl = DWORD_ALIGNMENT(sizeof(REGENTRY));
     DWORD cbSize = ibPidl + cbPidl;
+
+    // create the registration entry and lock it
     HANDLE hShared = SHAllocShared(NULL, cbSize, dwOwnerPID);
     if (!hShared)
     {
         ERR("Out of memory\n");
         return NULL;
     }
-
-    // create the registration entry and lock it
     LPREGENTRY pShared = (LPREGENTRY)SHLockSharedEx(hShared, dwOwnerPID, TRUE);
     if (pShared == NULL)
     {
@@ -170,6 +170,7 @@ BOOL CWorker::CreateWorker(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle)
 
 struct CChangeNotifyImpl
 {
+    // notification target item
     struct ITEM
     {
         UINT nRegID;
@@ -177,6 +178,7 @@ struct CChangeNotifyImpl
         HANDLE hShare;
         HWND hwndOldWorker;
     };
+
     CSimpleArray<ITEM> m_items;
 
     BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hShare, HWND hwndOldWorker)
@@ -200,6 +202,7 @@ struct CChangeNotifyImpl
 
     void DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndOldWorker)
     {
+        // destroy old worker if any and first time
         if (item.hwndOldWorker && item.hwndOldWorker != *phwndOldWorker)
         {
             DestroyWindow(item.hwndOldWorker);
@@ -274,7 +277,7 @@ void CChangeNotify::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
     m_pimpl->RemoveItemsByProcess(dwOwnerPID, dwUserPID);
 }
 
-// Message WM_WORKER_REGISTER:
+// Message WM_WORKER_REGISTER: Register the registration entry.
 //   wParam: The handle of registration entry.
 //   lParam: The owner PID of registration entry.
 //   return: TRUE if successful.
@@ -322,7 +325,7 @@ LRESULT CChangeNotify::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     return AddItem(m_nNextRegID, dwUserPID, hNewShared, hwndOldWorker);
 }
 
-// Message WM_WORKER_UNREGISTER:
+// Message WM_WORKER_UNREGISTER: Unregister registration entries.
 //   wParam: The registration ID.
 //   lParam: Ignored.
 //   return: TRUE if successful.
@@ -344,7 +347,7 @@ LRESULT CChangeNotify::OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     return RemoveItemsByRegID(nRegID, dwOwnerPID);
 }
 
-// Message WM_WORKER_DELIVERY:
+// Message WM_WORKER_DELIVERY: Perform a delivery.
 //   wParam: The handle of delivery ticket.
 //   lParam: The owner PID of delivery ticket.
 //   return: TRUE if necessary.
@@ -375,7 +378,7 @@ LRESULT CChangeNotify::OnDelivery(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     return ret;
 }
 
-// Message WM_WORKER_SUSPEND:
+// Message WM_WORKER_SUSPEND: Suspend or resume the change notification.
 //   (specification is unknown)
 LRESULT CChangeNotify::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
@@ -385,7 +388,7 @@ LRESULT CChangeNotify::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     return FALSE;
 }
 
-// Message WM_WORKER_REMOVEBYPID:
+// Message WM_WORKER_REMOVEBYPID: Remove registration entries by PID.
 //   wParam: The user PID.
 //   lParam: Ignored.
 //   return: Zero.
@@ -397,6 +400,7 @@ LRESULT CChangeNotify::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     return 0;
 }
 
+// get next valid registration ID
 UINT CChangeNotify::GetNextRegID()
 {
     m_nNextRegID++;
