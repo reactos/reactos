@@ -741,8 +741,8 @@ NtlmQueryContextAttributes(
                 spiW->wRPCID = 10;
 
                 pOffset = (PBYTE)spiW + sizeof(SecPkgInfoW);
-                NtlmStructWriteStrW(spiW, spiSize, &spiW->Name, PKG_NAME_W, &pOffset);
-                NtlmStructWriteStrW(spiW, spiSize, &spiW->Comment, PKG_COMMENT_W, &pOffset);
+                NtlmStructWriteStrW(spiW, spiSize, &spiW->Name, PKG_NAME_W, 0, &pOffset, TRUE);
+                NtlmStructWriteStrW(spiW, spiSize, &spiW->Comment, PKG_COMMENT_W, 0, &pOffset, TRUE);
 
                 spcniW->NegotiationState = 0;
                 spcniW->PackageInfo = spiW;
@@ -763,8 +763,8 @@ NtlmQueryContextAttributes(
                 spiA->wRPCID = 10;
 
                 pOffset = (PBYTE)spiA + sizeof(SecPkgInfoA);
-                NtlmStructWriteStrA(spiA, spiSize, &spiA->Name, PKG_NAME_A, &pOffset);
-                NtlmStructWriteStrA(spiA, spiSize, &spiA->Comment, PKG_COMMENT_A, &pOffset);
+                NtlmStructWriteStrA(spiA, spiSize, &spiA->Name, PKG_NAME_A, 0, &pOffset, TRUE);
+                NtlmStructWriteStrA(spiA, spiSize, &spiA->Comment, PKG_COMMENT_A, 0, &pOffset, TRUE);
 
                 spcniA->NegotiationState = 0;
                 spcniA->PackageInfo = spiA;

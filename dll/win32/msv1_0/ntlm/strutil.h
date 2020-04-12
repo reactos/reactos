@@ -1,6 +1,12 @@
 #ifndef _STRUTIL_H
 #define _STRUTIL_H
 
+// temporary macro for conv ExtWStr to UNICODE_STRING
+#define XExtWStrToUnicodeString(ucs, ews) \
+    (ucs)->MaximumLength = (ews)->bAllocated; \
+    (ucs)->Length = (ews)->bUsed; \
+    (ucs)->Buffer = (PWCHAR)(ews)->Buffer;
+
 typedef enum _EXT_DATA_TYPE
 {
     /* unknown */
@@ -157,13 +163,13 @@ ExtStrFree(
 // NtlmUnicodeString helpers
 
 BOOLEAN
-NtlmUnicodeStringAlloc(
-    IN OUT PUNICODE_STRING Dest,
+NtlmStringAlloc(
+    IN OUT PSTRING Dst,
     IN size_t SizeInBytes);
 
 VOID
-NtlmUnicodeStringFree(
-    IN OUT PUNICODE_STRING Dest);
+NtlmStringFree(
+    IN OUT PSTRING Dst);
 
 BOOLEAN
 NtlmUnicodeStringAllocAndCopyW(

@@ -1,5 +1,12 @@
-#ifndef _SPUSER_H_
-#define _SPUSER_H_
+/*
+ * PROJECT:     Authentication Package DLL
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/win32/msv1_0/user.c
+ * PURPOSE:     header for user.c
+ * COPYRIGHT:   Copyright 2019-2020 Andreas Maier <staubim@quantentunnel.de>
+ */
+#ifndef _MSV1_0_USER_H_
+#define _MSV1_0_USER_H_
 
 
 // functions provided by LSA in SpInitialize (user mode)
@@ -92,4 +99,4 @@ void _fdTRACE(
     IN const int line, ...);
 #define fdTRACE(a,...) _fdTRACE(a,__FILE__,__LINE__ ,##__VA_ARGS__)
 
-#endif /* _SPUSER_H_ */
+#endif /* _MSV1_0_USER_H_ */

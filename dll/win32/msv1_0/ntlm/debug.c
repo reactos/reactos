@@ -115,8 +115,8 @@ void NtlmPrintHexDump(PBYTE buffer, DWORD length)
                 rgbLine[cbLine++] = buffer[i];
         }
         rgbLine[cbLine++] = 0;
-        //TRACE("%s\n", rgbLine);
-        printf("%s\n", rgbLine);
+        TRACE("%s\n", rgbLine);
+        //printf("%s\n", rgbLine);
     }
 }
 

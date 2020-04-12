@@ -18,6 +18,7 @@ list(APPEND SOURCE
     ntlm/strutil.c
     ntlm/util.c
     precomp.h
+    sam.c
     user.c
     usercontext.c
     ${CMAKE_CURRENT_BINARY_DIR}/msv1_0_stubs.c

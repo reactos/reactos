@@ -49,8 +49,9 @@
 #include "ntlm/credentials.h"
 #include "ntlm/messages.h"
 #include "ntlm/util.h"
-#include "splsa.h"
-#include "spuser.h"
+#include "sam.h"
+#include "lsa.h"
+#include "user.h"
 #include "usercontext.h"
 
 #include "pseh/pseh2.h"

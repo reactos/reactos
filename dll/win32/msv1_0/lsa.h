@@ -1,5 +1,5 @@
-#ifndef _SPLSA_H_
-#define _SPLSA_H_
+#ifndef _MSV1_0_LSA_H_
+#define _MSV1_0_LSA_H_
 
 /* Version returned by (Lsa)SpGetInfo */
 #define SECPKG_VERSION 1

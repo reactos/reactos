@@ -380,8 +380,8 @@ ExtDataIsEqual1(
 }
 
 BOOLEAN
-NtlmUnicodeStringAlloc(
-    IN OUT PUNICODE_STRING Dst,
+NtlmStringAlloc(
+    IN OUT PSTRING Dst,
     IN size_t SizeInBytes)
 {
     Dst->Length = 0;
@@ -391,15 +391,15 @@ NtlmUnicodeStringAlloc(
 }
 
 VOID
-NtlmUnicodeStringFree(
-    IN OUT PUNICODE_STRING Dest)
+NtlmStringFree(
+    IN OUT PSTRING Dst)
 {
-    if ((!Dest) || (Dest->MaximumLength == 0))
+    if ((!Dst) || (Dst->MaximumLength == 0))
         return;
-    NtlmFree(Dest->Buffer, FALSE);
-    Dest->MaximumLength = 0;
-    Dest->Length = 0;
-    Dest->Buffer = NULL;
+    NtlmFree(Dst->Buffer, FALSE);
+    Dst->MaximumLength = 0;
+    Dst->Length = 0;
+    Dst->Buffer = NULL;
 }
 
 BOOLEAN

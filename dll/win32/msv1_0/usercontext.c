@@ -8,6 +8,7 @@
 
 #include "precomp.h"
 
+#include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
 
 // user mode context and lock

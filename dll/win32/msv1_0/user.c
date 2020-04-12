@@ -1,14 +1,15 @@
 /*
  * PROJECT:     Authentication Package DLL
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/msv1_0/msv1_0.c
- * PURPOSE:     Functions needed to fill PSECPKG_USER_FUNCTION_TABLE
- *              (SpUserModeInitialize)
- * COPYRIGHT:   Copyright 2019 Andreas Maier <staubim@quantentunnel.de>
+ * FILE:        dll/win32/msv1_0/user.c
+ * PURPOSE:     NTLM-Functions returned from SpUserModeInitialize
+                (PSECPKG_USER_FUNCTION_TABLE)
+ * COPYRIGHT:   Copyright 2019-2020 Andreas Maier <staubim@quantentunnel.de>
  */
 
 #include "precomp.h"
 
+#include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
 
 #define LSA_VERSION 1

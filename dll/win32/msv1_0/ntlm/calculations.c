@@ -582,7 +582,7 @@ ComputeResponseNTLMv2(
     IN PEXT_STRING_W ServerName,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
-    IN ULONGLONG TimeStamp,
+    IN ULONGLONG ChallengeTimestamp,
     IN OUT PEXT_DATA pNtChallengeResponseData,
     OUT PLM2_RESPONSE pLmChallengeResponse,
     OUT PUSER_SESSION_KEY SessionBaseKey)
@@ -599,7 +599,6 @@ ComputeResponseNTLMv2(
         memset(ClientChallenge0, 0, MSV1_0_CHALLENGE_LENGTH);
     }
 
-
     TRACE("userdom %S\n", userdom->Buffer);
     TRACE("ServerName %S\n", ServerName->Buffer);
     TRACE("ResponseKeyLM\n");
@@ -610,8 +609,8 @@ ComputeResponseNTLMv2(
     NtlmPrintHexDump(ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
     TRACE("ClientChallenge\n");
     NtlmPrintHexDump(ClientChallenge, MSV1_0_CHALLENGE_LENGTH);
-    TRACE("TimeStamp\n");
-    TRACE("0x%x\n", TimeStamp);
+    TRACE("ChallengeTimestamp\n");
+    TRACE("0x%x\n", ChallengeTimestamp);
 
     /* alloc/fill NtResponse struct */
     ExtDataSetLength(pNtChallengeResponseData,
@@ -628,7 +627,7 @@ ComputeResponseNTLMv2(
     pNtResponse->HiRespType = 1;
     pNtResponse->Flags = 0;
     pNtResponse->MsgWord = 0;
-    pNtResponse->TimeStamp = TimeStamp;
+    pNtResponse->TimeStamp = ChallengeTimestamp;
     pNtResponse->AvPairsOff = 0;
     memcpy(pNtResponse->ChallengeFromClient, ClientChallenge,
            ARRAYSIZE(pNtResponse->ChallengeFromClient));
@@ -914,7 +913,7 @@ BOOL CliComputeResponseKeys(
 /* used by server and client */
 BOOL
 ComputeResponse(
-    IN ULONG NegFlg,
+    IN ULONG Context_NegFlg,
     IN BOOL UseNTLMv2,
     IN BOOL Anonymouse,
     IN PEXT_STRING_W userdom,
@@ -923,7 +922,7 @@ ComputeResponse(
     IN PEXT_STRING_W pServerName,
     IN UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
-    IN ULONGLONG TimeStamp,
+    IN ULONGLONG ChallengeTimestamp,
     IN OUT PEXT_DATA pNtChallengeResponseData,
     /* NTLMv1 UCHAR[16]
      * NTLMv2 PLM2_RESPONSE */
@@ -933,6 +932,7 @@ ComputeResponse(
     TRACE("%S %p %p\n",
         pServerName->Buffer, ChallengeToClient,
         userdom->Buffer);
+    TRACE("UseNTLMv2 %i\n", UseNTLMv2);
 
     #ifdef VALIDATE_NTLM
     {
@@ -949,7 +949,7 @@ ComputeResponse(
         ExtDataSetLength(pNtChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
         ExtDataSetLength(pLmChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
 
-        if (!ComputeResponseNTLMv1(NegFlg,
+        if (!ComputeResponseNTLMv1(Context_NegFlg,
                                    Anonymouse,
                                    ResponseKeyLM,
                                    ResponseKeyNT,
@@ -980,7 +980,7 @@ ComputeResponse(
                                    pServerName,
                                    ChallengeToClient,
                                    ChallengeFromClient,
-                                   TimeStamp,
+                                   ChallengeTimestamp,
                                    pNtChallengeResponseData,
                                    (PLM2_RESPONSE)pLmChallengeResponseData->Buffer,
                                    pSessionBaseKey))
@@ -998,6 +998,8 @@ ComputeResponse(
     NtlmPrintHexDump((PBYTE)pSessionBaseKey, sizeof(USER_SESSION_KEY));
     TRACE("pLmChallengeResponseData\n");
     NtlmPrintHexDump(pLmChallengeResponseData->Buffer, pLmChallengeResponseData->bUsed);
+    TRACE("ClientChallenge\n");
+    NtlmPrintHexDump(ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
     TRACE("ServerChallenge\n");
     NtlmPrintHexDump(ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
     TRACE("ResponseKeyLM\n");

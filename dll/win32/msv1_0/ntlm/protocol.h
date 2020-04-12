@@ -290,7 +290,7 @@ CliComputeResponseKeys(
 
 BOOL
 ComputeResponse(
-    IN ULONG NegFlg,
+    IN ULONG Context_NegFlg,
     IN BOOL UseNTLMv2,
     IN BOOL Anonymouse,
     IN PEXT_STRING_W userdom,
@@ -299,7 +299,7 @@ ComputeResponse(
     IN PEXT_STRING_W pServerName,
     IN UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
-    IN ULONGLONG TargetInfoTimeStamp,
+    IN ULONGLONG ChallengeTimestamp,
     IN OUT PEXT_DATA pNtChallengeResponseData,
     IN OUT PEXT_DATA pLmChallengeResponseData,
     OUT PUSER_SESSION_KEY pSessionBaseKey);
@@ -440,21 +440,6 @@ NtlmAppendToBlob(IN void* buffer,
                  IN OUT PNTLM_BLOB OutputBlob,
                  IN OUT PULONG_PTR OffSet);
 
-VOID
-NtlmStructWriteStrA(
-    IN void* dataStart,
-    IN ULONG dataSize,
-    OUT PCHAR* pDataFieldA,
-    IN const char* dataA,
-    IN OUT PBYTE* pOffset);
-VOID
-NtlmStructWriteStrW(
-    IN void* dataStart,
-    IN ULONG dataSize,
-    OUT PWCHAR* pDataFieldW,
-    IN const WCHAR* dataW,
-    IN OUT PBYTE* pOffset);
-
 /* calculations */
 BOOL
 ComputeResponseNTLMv2(
@@ -465,7 +450,7 @@ ComputeResponseNTLMv2(
     IN PEXT_STRING_W ServerName,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
-    IN ULONGLONG TimeStamp,
+    IN ULONGLONG ChallengeTimestamp,
     IN OUT PEXT_DATA pNtChallengeResponse,
     OUT PLM2_RESPONSE pLmChallengeResponse,
     OUT PUSER_SESSION_KEY SessionBaseKey);

@@ -333,8 +333,8 @@ IntAcquireCredentialsHandle(
     IN PSECPKG_CLIENT_INFO ClientInfo,
     IN ULONG CredentialsUseFlags,
     IN PEXT_STRING_W UserName,
-    IN PEXT_STRING_W Domain,
     IN PEXT_STRING_W Password,
+    IN PEXT_STRING_W Domain,
     OUT PNTLMSSP_CREDENTIAL *Cred,
     OUT PTimeStamp ExpirationTime)
 {
@@ -491,9 +491,9 @@ IntAcquireCredWithAuthData(
     PasswordByteLen = AuthData->PasswordLength * sizeof(WCHAR);
     DomainByteLen = AuthData->DomainLength * sizeof(WCHAR);
 
-    if (!NtlmUnicodeStringAlloc(&UserName, UserNameByteLen + sizeof(WCHAR)) ||
-        !NtlmUnicodeStringAlloc(&Password, PasswordByteLen + sizeof(WCHAR)) ||
-        !NtlmUnicodeStringAlloc(&Domain, DomainByteLen + sizeof(WCHAR)))
+    if (!NtlmUStrAlloc(&UserName, UserNameByteLen + sizeof(WCHAR)) ||
+        !NtlmUStrAlloc(&Password, PasswordByteLen + sizeof(WCHAR)) ||
+        !NtlmUStrAlloc(&Domain, DomainByteLen + sizeof(WCHAR)))
     {
         ret = SEC_E_INSUFFICIENT_MEMORY;
         goto done;
@@ -564,9 +564,9 @@ IntAcquireCredWithAuthData(
 done:
     if (LocalBuffer)
         NtlmFree(LocalBuffer, TRUE);
-    NtlmUnicodeStringFree(&UserName);
-    NtlmUnicodeStringFree(&Password);
-    NtlmUnicodeStringFree(&Domain);
+    NtlmUStrFree(&UserName);
+    NtlmUStrFree(&Password);
+    NtlmUStrFree(&Domain);
     ExtStrFree(&_UserName);
     ExtStrFree(&_Password);
     ExtStrFree(&_Domain);
@@ -606,6 +606,7 @@ NtlmAcquireCredentialsHandle(
     //LUID luidToUse = SYSTEM_LUID;
     PNTLMSSP_CREDENTIAL Cred;
 
+
     TRACE("AcquireCredentialsHandleW(%s, %s, 0x%08x, %p, %p, %p, %p, %p, %p)\n",
      debugstr_w(pszPrincipal), debugstr_w(pszPackage), fCredentialUse,
      pLogonID, pAuthData, pGetKeyFn, pGetKeyArgument, phCredential, ptsExpiry);
@@ -632,14 +633,23 @@ NtlmAcquireCredentialsHandle(
 
         if (pLogonID != NULL)
         {
+            /* check logon id if available */
             if ((pLogonID->LowPart != 0) ||
                 (pLogonID->HighPart != 0))
             {
                 //...
-                ERR("FIMXE -> We have a Logon Id!\n");
+                ERR("FIMXE -> We have a Logon Id: 0x%x 0x%x!\n",
+                    pLogonID->LowPart, pLogonID->HighPart);
+                if ((ClientInfo.LogonId.LowPart != pLogonID->LowPart) ||
+                    (ClientInfo.LogonId.HighPart != pLogonID->HighPart))
+                {
+                    ERR("LogonId doesnt match!\n");
+                    ret = STATUS_PRIVILEGE_NOT_HELD;//FIXME:SEC_E_...
+                    goto quit;
+                }
             }
             // label: CmpAuthData
-            else if (pAuthData == NULL)
+            if (pAuthData == NULL)
             {
                 // compare ucs
                 if (FALSE)//pwd != NULL)
@@ -655,7 +665,7 @@ NtlmAcquireCredentialsHandle(
                 }
                 ret = IntAcquireCredentialsHandle(
                     pLogonID, &ClientInfo, fCredentialUse,
-                    &username, &domain, &password, &Cred, ptsExpiry);
+                    &username, &password, &domain, &Cred, ptsExpiry);
                 if (NT_SUCCESS(ret))
                 {
                     // we're done
