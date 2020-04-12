@@ -631,6 +631,14 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
 {
     TRACE("DoDelivery(%p, %p, 0x%lx)\n", m_hWnd, hTicket, dwOwnerPID);
 
+    // lock the delivery ticket
+    LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
+    if (!pTicket || pTicket->dwMagic != DELITICKET_MAGIC)
+    {
+        ERR("pTicket is invalid\n");
+        return FALSE;
+    }
+
     // for all items
     for (INT i = 0; i < m_pimpl->m_items.GetSize(); ++i)
     {
@@ -647,21 +655,8 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
             continue;
         }
 
-        // lock the delivery ticket
-        LPDELITICKET pTicket = (LPDELITICKET)SHLockSharedEx(hTicket, dwOwnerPID, FALSE);
-        if (!pTicket || pTicket->dwMagic != DELITICKET_MAGIC)
-        {
-            ERR("pTicket is invalid\n");
-            SHUnlockShared(pShared);
-            continue;
-        }
-
         // should we notify for it?
         BOOL bNotify = ShouldNotify(pTicket, pShared);
-
-        // unlock the ticket
-        SHUnlockShared(pTicket);
-
         if (bNotify)
         {
             // do notify
@@ -673,6 +668,9 @@ BOOL CChangeNotify::DoDelivery(HANDLE hTicket, DWORD dwOwnerPID)
         // unlock the registration entry
         SHUnlockShared(pShared);
     }
+
+    // unlock the ticket
+    SHUnlockShared(pTicket);
 
     return TRUE;
 }
