@@ -96,7 +96,6 @@ add_library(shell32 MODULE
     ${SOURCE}
     wine/appbar.c
     wine/brsfolder.c
-    wine/changenotify.c
     wine/classes.c
     wine/clipboard.c
     wine/control.c

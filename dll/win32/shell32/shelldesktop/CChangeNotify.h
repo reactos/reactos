@@ -60,25 +60,11 @@ typedef struct HANDBAG
 #define NOTIFSHARE_MAGIC 0xB0B32D1E
 #define HANDBAG_MAGIC 0xFACEB00C
 
-EXTERN_C HWND DoGetNewDeliveryWorker(void);
-EXTERN_C void DoNotifyFreeSpace(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
-EXTERN_C HWND DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg);
-EXTERN_C LPHANDBAG DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID);
-
-EXTERN_C HANDLE
-DoCreateNotifShare(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources,
-                   LONG fEvents, LONG fRecursive, LPCITEMIDLIST pidl,
-                   DWORD dwOwnerPID, HWND hwndOldWorker);
-
-EXTERN_C HANDLE
-DoCreateDeliTicket(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
-                   DWORD dwOwnerPID, DWORD dwTick);
-
-EXTERN_C void
-DoTransportChange(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
-                  DWORD dwTick);
-
 #ifdef __cplusplus
+
+/////////////////////////////////////////////////////////////////////////////
+// CWorker --- base class of CChangeNotify
+
 class CWorker : public CMessageMap
 {
 public:
@@ -100,6 +86,9 @@ protected:
 };
 
 struct CChangeNotifyImpl;
+
+/////////////////////////////////////////////////////////////////////////////
+// CChangeNotify --- a class of new delivery worker
 
 class CChangeNotify : public CWorker
 {
