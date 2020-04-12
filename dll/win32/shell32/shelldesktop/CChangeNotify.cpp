@@ -11,6 +11,13 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
 /////////////////////////////////////////////////////////////////////////////
+// CChangeNotify is a delivery worker window that is managed by CDesktopBrowser.
+// The process of CChangeNotify is same as the process of CDesktopBrowser.
+// The caller process of SHChangeNotify function might be different from the
+// process of CChangeNotify.
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
 // The shared memory block can be allocated by SHAllocShared function.
 //
 // HANDLE SHAllocShared(LPCVOID lpData, DWORD dwSize, DWORD dwProcessId);
