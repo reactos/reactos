@@ -43,6 +43,15 @@ volatile ULONG KdbDmesgTotalWritten = 0;
 volatile BOOLEAN KdbpIsInDmesgMode = FALSE;
 static KSPIN_LOCK KdpDmesgLogSpinLock;
 
+KDP_DEBUG_MODE KdpDebugMode;
+LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
+KD_DISPATCH_TABLE DispatchTable[KdMax];
+
+PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
+                                         KdpSerialInit,
+                                         KdpDebugLogInit,
+                                         KdpKdbgInit};
+
 static ULONG KdbgNextApiNumber = DbgKdContinueApi;
 static CONTEXT KdbgContext;
 static EXCEPTION_RECORD64 KdbgExceptionRecord;

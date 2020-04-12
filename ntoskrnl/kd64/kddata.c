@@ -137,17 +137,6 @@ PCHAR KdPrintCircularBuffer = KdPrintDefaultCircularBuffer;
 ULONG KdPrintBufferSize = sizeof(KdPrintDefaultCircularBuffer);
 ULONG KdPrintBufferChanges = 0;
 
-#ifndef _WINKD_
-KDP_DEBUG_MODE KdpDebugMode;
-LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
-KD_DISPATCH_TABLE DispatchTable[KdMax];
-
-PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
-                                         KdpSerialInit,
-                                         KdpDebugLogInit,
-                                         KdpKdbgInit};
-#endif
-
 //
 // Debug Filter Masks
 //
