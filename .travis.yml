@@ -10,7 +10,7 @@ addons:
       clang-format-9
 
 git:
-  depth: 1
+  depth: 5
 
 env:
   global:
