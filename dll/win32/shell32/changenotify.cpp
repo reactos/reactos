@@ -14,7 +14,7 @@ CRITICAL_SECTION SHELL32_ChangenotifyCS;
 // This function requests creation of the new delivery worker if necessary
 // and returns the window handle of the new delivery worker with cached.
 static HWND
-DoGetNewDeliveryWorker(BOOL bCreate)
+DoGetNewWorker(BOOL bCreate)
 {
     static HWND s_hwndNewWorker = NULL;
 
@@ -52,7 +52,7 @@ EXTERN_C void InitChangeNotifications(void)
 // This function will be called from DllMain!DLL_PROCESS_DETACH.
 EXTERN_C void FreeChangeNotifications(void)
 {
-    HWND hwndWorker = DoGetNewDeliveryWorker(FALSE);
+    HWND hwndWorker = DoGetNewWorker(FALSE);
     if (hwndWorker)
         SendMessageW(hwndWorker, WM_WORKER_REMOVEBYPID, GetCurrentProcessId(), 0);
     DeleteCriticalSection(&SHELL32_ChangenotifyCS);
@@ -344,7 +344,7 @@ DoCreateTicketAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLI
                       DWORD dwTick)
 {
     // get new delivery worker
-    HWND hwndWorker = DoGetNewDeliveryWorker(FALSE);
+    HWND hwndWorker = DoGetNewWorker(FALSE);
     if (hwndWorker == NULL)
         return;
 
@@ -391,7 +391,7 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
     }
 
     // request the new delivery worker window
-    hwndWorker = DoGetNewDeliveryWorker(TRUE);
+    hwndWorker = DoGetNewWorker(TRUE);
     if (hwndWorker == NULL)
         return INVALID_REG_ID;
 
@@ -461,7 +461,7 @@ SHChangeNotifyDeregister(ULONG hNotify)
     TRACE("(0x%08x)\n", hNotify);
 
     // get the new delivery worker window
-    HWND hwndWorker = DoGetNewDeliveryWorker(FALSE);
+    HWND hwndWorker = DoGetNewWorker(FALSE);
     if (hwndWorker == NULL)
         return FALSE;
 
