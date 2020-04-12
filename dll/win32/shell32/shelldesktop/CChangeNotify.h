@@ -57,6 +57,19 @@ typedef struct HANDBAG
 #define REGENTRY_MAGIC 0xB0B32D1E
 #define HANDBAG_MAGIC 0xFACEB00C
 
+EXTERN_C HWND DoGetNewDeliveryWorker(void);
+EXTERN_C HWND DoHireOldDeliveryWorker(HWND hwnd, UINT wMsg);
+EXTERN_C LPHANDBAG DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID);
+
+EXTERN_C void
+DoTransportChange(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
+                  DWORD dwTick);
+
+EXTERN_C HANDLE
+DoCreateRegEntry(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG fEvents,
+                 LONG fRecursive, LPCITEMIDLIST pidl, DWORD dwOwnerPID,
+                 HWND hwndOldWorker);
+
 #ifdef __cplusplus
 
 /////////////////////////////////////////////////////////////////////////////

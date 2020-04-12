@@ -34,6 +34,7 @@ list(APPEND SOURCE
     CActiveDesktop.h
     CIDLDataObj.cpp
     CQueryAssociations.cpp
+    changenotify.cpp
     debughlp.cpp
     dialogs/dialogs.cpp
     dialogs/drive.cpp
