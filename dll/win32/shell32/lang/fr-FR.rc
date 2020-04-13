@@ -80,11 +80,11 @@ IDM_DRAGFILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Copy here", IDM_COPYHERE
-        MENUITEM "&Move here", IDM_MOVEHERE
-        MENUITEM "Create &shortcuts here", IDM_LINKHERE
+        MENUITEM "&Copier ici", IDM_COPYHERE
+        MENUITEM "&Déplacer ici", IDM_MOVEHERE
+        MENUITEM "Créer les &raccourcis ici", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Cancel", 0
+        MENUITEM "Annuler", 0
     END
 END
 
