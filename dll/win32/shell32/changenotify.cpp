@@ -117,7 +117,7 @@ private:
         }
 
         // perform the delivery
-        TRACE("OldDeliveryWorker notifying: %p, 0x%x, %p, 0x%lx\n",
+        TRACE("broker notifying: %p, 0x%x, %p, 0x%lx\n",
               m_hwndClient, m_uMsg, ppidl, lEvent);
         SendMessageW(m_hwndClient, m_uMsg, (WPARAM)ppidl, lEvent);
 
