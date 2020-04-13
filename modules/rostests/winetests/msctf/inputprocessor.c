@@ -2523,6 +2523,12 @@ static DWORD WINAPI test_MultiThreadApartment_Thread(void *param) {
     hr = CoCreateInstance(&CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, &IID_ITfThreadMgrEx, (LPVOID *)&thmgr);
     ok(SUCCEEDED(hr), "Failed to create ITfThreadMgrEx instance\n");
 
+#ifdef __REACTOS__
+    // See CORE-16797
+    if (!SUCCEEDED(hr))
+        goto err_out;
+#endif
+
     hr = ITfThreadMgrEx_QueryInterface(thmgr, &IID_ITfSource, (LPVOID *)&source);
     ok(SUCCEEDED(hr), "Failed to query ITfSource interface\n");
 
@@ -2535,6 +2541,9 @@ static DWORD WINAPI test_MultiThreadApartment_Thread(void *param) {
 
     hr = ITfThreadMgrEx_Release(thmgr);
     ok(SUCCEEDED(hr), "Failed to Release thread manager\n");
+#ifdef __REACTOS__
+err_out:
+#endif
 
     CoUninitialize();
 
