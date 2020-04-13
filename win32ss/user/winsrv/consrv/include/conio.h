@@ -12,22 +12,6 @@
 
 #include "rect.h"
 
-// This is ALMOST a HACK!!!!!!!
-// Helpers for code refactoring
-#ifdef USE_NEW_CONSOLE_WAY
-
-#define _CONSRV_CONSOLE  _WINSRV_CONSOLE
-#define  CONSRV_CONSOLE   WINSRV_CONSOLE
-#define PCONSRV_CONSOLE  PWINSRV_CONSOLE
-
-#else
-
-#define _CONSRV_CONSOLE  _CONSOLE
-#define  CONSRV_CONSOLE   CONSOLE
-#define PCONSRV_CONSOLE  PCONSOLE
-
-#endif
-
 /* Default attributes */
 #define DEFAULT_SCREEN_ATTRIB   (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
 #define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED   | \
@@ -308,26 +292,11 @@ typedef enum _CONSOLE_STATE
     CONSOLE_IN_DESTRUCTION  /* Console in destruction */
 } CONSOLE_STATE, *PCONSOLE_STATE;
 
-// HACK!!
-struct _CONSOLE;
-/* HACK: */ typedef struct _CONSOLE *PCONSOLE;
-#ifndef USE_NEW_CONSOLE_WAY
-#include "conio_winsrv.h"
-#endif
-
 typedef struct _CONSOLE
 {
 /******************************* Console Set-up *******************************/
-
-#ifndef USE_NEW_CONSOLE_WAY
-    WINSRV_CONSOLE; // HACK HACK!!
-#endif
-
     LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */
     CRITICAL_SECTION Lock;
-
-    ULONG ConsoleID;                        /* The ID of the console */
-    LIST_ENTRY ListEntry;                   /* Entry in the list of consoles */
 
     CONSOLE_STATE State;                    /* State of the console */
     TERMINAL TermIFace;                     /* Terminal-specific interface */
@@ -347,18 +316,13 @@ typedef struct _CONSOLE
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
     BOOLEAN IsCJK;                          /* TRUE if Chinese, Japanese or Korean (CJK) */
-} CONSOLE; // , *PCONSOLE;
+} CONSOLE, *PCONSOLE;
 
 /* console.c */
 VOID NTAPI
 ConDrvPause(PCONSOLE Console);
 VOID NTAPI
 ConDrvUnpause(PCONSOLE Console);
-
-NTSTATUS
-ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
-                       IN PCONSOLE_PROCESS_DATA ProcessData);
-
 
 #define GetConsoleInputBufferMode(Console)  \
     (Console)->InputBuffer.Mode

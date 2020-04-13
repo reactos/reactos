@@ -151,10 +151,6 @@ if(MSVC_IDE AND (NOT DEFINED USE_FOLDER_STRUCTURE))
     set(USE_FOLDER_STRUCTURE TRUE)
 endif()
 
-if(NOT DEFINED RUNTIME_CHECKS)
-    set(RUNTIME_CHECKS FALSE)
-endif()
-
 if(RUNTIME_CHECKS)
     add_definitions(-D__RUNTIME_CHECKS__)
     add_compile_flags("/RTC1")

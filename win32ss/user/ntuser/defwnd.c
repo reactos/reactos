@@ -547,6 +547,9 @@ IntDefWindowProc(
 
    switch (Msg)
    {
+      case WM_DEVICECHANGE:
+            return TRUE;
+
       case WM_GETTEXTLENGTH:
       {
             PWSTR buf;

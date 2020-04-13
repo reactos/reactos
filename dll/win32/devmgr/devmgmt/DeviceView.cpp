@@ -458,7 +458,6 @@ CDeviceView::ListDevicesByType()
             ClassNode = GetClassNode(&ClassGuid);
             if (ClassNode == nullptr)
             {
-                ATLASSERT(FALSE);
                 ClassIndex++;
                 continue;
             }
@@ -511,7 +510,6 @@ CDeviceView::ListDevicesByType()
                     DeviceNode = GetDeviceNode(DeviceInfoData.DevInst);
                     if (DeviceNode == nullptr)
                     {
-                        ATLASSERT(bClassUnknown == true);
                         DeviceIndex++;
                         continue;
                     }
@@ -616,7 +614,6 @@ CDeviceView::RecurseChildDevices(
     DeviceNode = dynamic_cast<CDeviceNode *>(GetDeviceNode(Device));
     if (DeviceNode == nullptr)
     {
-        ATLASSERT(FALSE);
         return false;
     }
 
@@ -651,7 +648,6 @@ CDeviceView::RecurseChildDevices(
         DeviceNode = dynamic_cast<CDeviceNode *>(GetDeviceNode(Device));
         if (DeviceNode == nullptr)
         {
-            ATLASSERT(FALSE);
             continue;
         }
 

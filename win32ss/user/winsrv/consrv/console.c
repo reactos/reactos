@@ -27,9 +27,12 @@
 
 /* GLOBALS ********************************************************************/
 
+// static ULONG CurrentConsoleID = 0;
+
 /* The list of the ConSrv consoles */
 static ULONG ConsoleListSize;
 static PCONSRV_CONSOLE* ConsoleList;
+// static LIST_ENTRY ConDrvConsoleList;
 static RTL_RESOURCE ListLock;
 
 #define ConSrvLockConsoleListExclusive()    \
@@ -41,10 +44,34 @@ static RTL_RESOURCE ListLock;
 #define ConSrvUnlockConsoleList()           \
     RtlReleaseResource(&ListLock)
 
+#if 0
+static NTSTATUS
+ConDrvInsertConsole(
+    IN PCONSOLE Console)
+{
+    ASSERT(Console);
+
+    /* All went right, so add the console to the list */
+    ConSrvLockConsoleListExclusive();
+
+    DPRINT("Insert in the list\n");
+    InsertTailList(&ConDrvConsoleList, &Console->ListEntry);
+
+    // FIXME: Move this code to the caller function!!
+    /* Get a new console ID */
+    _InterlockedExchange((PLONG)&Console->ConsoleID, CurrentConsoleID);
+    _InterlockedIncrement((PLONG)&CurrentConsoleID);
+
+    /* Unlock the console list and return success */
+    ConSrvUnlockConsoleList();
+    return STATUS_SUCCESS;
+}
+#endif
 
 static NTSTATUS
-InsertConsole(OUT PHANDLE Handle,
-              IN PCONSRV_CONSOLE Console)
+InsertConsole(
+    OUT PHANDLE Handle,
+    IN PCONSRV_CONSOLE Console)
 {
 #define CONSOLE_HANDLES_INCREMENT   2 * 3
 
@@ -163,49 +190,23 @@ RemoveConsoleByPointer(IN PCONSRV_CONSOLE Console)
     return STATUS_SUCCESS;
 }
 
-BOOLEAN NTAPI
-ConSrvValidateConsole(OUT PCONSRV_CONSOLE* Console,
-                      IN HANDLE ConsoleHandle,
-                      IN CONSOLE_STATE ExpectedState,
-                      IN BOOLEAN LockConsole)
+#if 0
+static NTSTATUS
+RemoveConsole(IN PCONSOLE Console)
 {
-    BOOLEAN RetVal = FALSE;
-    PCONSRV_CONSOLE ValidatedConsole;
+    // ASSERT(Console);
+    if (!Console) return STATUS_INVALID_PARAMETER;
 
-    BOOLEAN ValidHandle = ((HandleToULong(ConsoleHandle) & 0x3) == 0x3);
-    ULONG Index = HandleToULong(ConsoleHandle) >> 2;
+    /* Remove the console from the list */
+    ConSrvLockConsoleListExclusive();
 
-    if (!ValidHandle) return FALSE;
+    RemoveEntryList(&Console->ListEntry);
 
-    if (!Console) return FALSE;
-    *Console = NULL;
-
-    /*
-     * Forbid creation or deletion of consoles when
-     * checking for the existence of a console.
-     */
-    ConSrvLockConsoleListShared();
-
-    if (Index >= ConsoleListSize ||
-        (ValidatedConsole = ConsoleList[Index]) == NULL)
-    {
-        /* Unlock the console list and return */
-        ConSrvUnlockConsoleList();
-        return FALSE;
-    }
-
-    ValidatedConsole = ConsoleList[Index];
-
-    /* Unlock the console list and return */
+    /* Unlock the console list and return success */
     ConSrvUnlockConsoleList();
-
-    RetVal = ConDrvValidateConsoleUnsafe((PCONSOLE)ValidatedConsole,
-                                         ExpectedState,
-                                         LockConsole);
-    if (RetVal) *Console = ValidatedConsole;
-
-    return RetVal;
+    return STATUS_SUCCESS;
 }
+#endif
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -239,32 +240,51 @@ ConsoleFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
     }
 }
 
-VOID
-ConioPause(PCONSRV_CONSOLE Console, UCHAR Flags)
-{
-    Console->PauseFlags |= Flags;
-    ConDrvPause((PCONSOLE)Console);
-}
 
-VOID
-ConioUnpause(PCONSRV_CONSOLE Console, UCHAR Flags)
-{
-    Console->PauseFlags &= ~Flags;
+/* CONSOLE VALIDATION FUNCTIONS ***********************************************/
 
-    // if ((Console->PauseFlags & (PAUSED_FROM_KEYBOARD | PAUSED_FROM_SCROLLBAR | PAUSED_FROM_SELECTION)) == 0)
-    if (Console->PauseFlags == 0)
+BOOLEAN NTAPI
+ConSrvValidateConsole(OUT PCONSRV_CONSOLE* Console,
+                      IN HANDLE ConsoleHandle,
+                      IN CONSOLE_STATE ExpectedState,
+                      IN BOOLEAN LockConsole)
+{
+    BOOLEAN RetVal = FALSE;
+    PCONSRV_CONSOLE ValidatedConsole;
+
+    BOOLEAN ValidHandle = ((HandleToULong(ConsoleHandle) & 0x3) == 0x3);
+    ULONG Index = HandleToULong(ConsoleHandle) >> 2;
+
+    if (!ValidHandle) return FALSE;
+
+    if (!Console) return FALSE;
+    *Console = NULL;
+
+    /*
+     * Forbid creation or deletion of consoles when
+     * checking for the existence of a console.
+     */
+    ConSrvLockConsoleListShared();
+
+    if (Index >= ConsoleListSize ||
+        (ValidatedConsole = ConsoleList[Index]) == NULL)
     {
-        ConDrvUnpause((PCONSOLE)Console);
-
-        CsrNotifyWait(&Console->WriteWaitQueue,
-                      TRUE,
-                      NULL,
-                      NULL);
-        if (!IsListEmpty(&Console->WriteWaitQueue))
-        {
-            CsrDereferenceWait(&Console->WriteWaitQueue);
-        }
+        /* Unlock the console list and return */
+        ConSrvUnlockConsoleList();
+        return FALSE;
     }
+
+    ValidatedConsole = ConsoleList[Index];
+
+    /* Unlock the console list */
+    ConSrvUnlockConsoleList();
+
+    RetVal = ConDrvValidateConsoleUnsafe((PCONSOLE)ValidatedConsole,
+                                         ExpectedState,
+                                         LockConsole);
+    if (RetVal) *Console = ValidatedConsole;
+
+    return RetVal;
 }
 
 NTSTATUS
@@ -331,6 +351,7 @@ ConSrvInitConsoleSupport(VOID)
     /* Initialize the console list and its lock */
     ConsoleListSize = 0;
     ConsoleList = NULL;
+    // InitializeListHead(&ConDrvConsoleList);
     RtlInitializeResource(&ListLock);
 
     /* Should call LoadKeyboardLayout */
@@ -645,15 +666,27 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     DrvConsoleInfo.ScreenAttrib = ConsoleInfo->ScreenAttributes;
     DrvConsoleInfo.PopupAttrib = ConsoleInfo->PopupAttributes;
     DrvConsoleInfo.CodePage = ConsoleInfo->CodePage;
-    Status = ConDrvInitConsole(&Console, &DrvConsoleInfo);
+
+    /*
+     * Allocate a new console
+     */
+    Console = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(*Console));
+    if (Console == NULL)
+    {
+        DPRINT1("Not enough memory for console creation.\n");
+        ConSrvDeinitTerminal(&Terminal);
+        return STATUS_NO_MEMORY;
+    }
+
+    Status = ConDrvInitConsole((PCONSOLE)Console, &DrvConsoleInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Creating a new console failed, Status = 0x%08lx\n", Status);
+        ConsoleFreeHeap(Console);
         ConSrvDeinitTerminal(&Terminal);
         return Status;
     }
 
-    ASSERT(Console);
     DPRINT("Console initialized\n");
 
     /*** Register ConSrv features ***/
@@ -684,6 +717,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
 #endif
 
     /* Initialize process support */
+    // InitProcessSupport(Console);
     InitializeListHead(&Console->ProcessList);
     Console->NotifiedLastCloseProcess = NULL;
     Console->NotifyLastClose = FALSE;
@@ -695,6 +729,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     InitializeListHead(&Console->WriteWaitQueue);
 
     /* Initialize the alias and history buffers */
+    // InitAliasesHistory(Console);
     Console->Aliases = NULL;
     InitializeListHead(&Console->HistoryBuffers);
     Console->NumberOfHistoryBuffers = 0;
@@ -703,6 +738,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->HistoryNoDup      = ConsoleInfo->HistoryNoDup;
 
     /* Initialize the Input Line Discipline */
+    // InitLineInput(Console);
     Console->LineBuffer = NULL;
     Console->LinePos = Console->LineMaxSize = Console->LineSize = 0;
     Console->LineComplete = Console->LineUpPressed = FALSE;
@@ -724,7 +760,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateEvent(InitEvents[INIT_SUCCESS]) failed: %lu\n", Status);
-        ConDrvDeleteConsole(Console);
+        ConDrvDeleteConsole((PCONSOLE)Console);
         ConSrvDeinitTerminal(&Terminal);
         return Status;
     }
@@ -734,7 +770,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     {
         DPRINT1("NtCreateEvent(InitEvents[INIT_FAILURE]) failed: %lu\n", Status);
         NtClose(Console->InitEvents[INIT_SUCCESS]);
-        ConDrvDeleteConsole(Console);
+        ConDrvDeleteConsole((PCONSOLE)Console);
         ConSrvDeinitTerminal(&Terminal);
         return Status;
     }
@@ -743,19 +779,28 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
      * Attach the ConSrv terminal to the console.
      * This call makes a copy of our local Terminal variable.
      */
-    Status = ConDrvAttachTerminal(Console, &Terminal);
+    Status = ConDrvAttachTerminal((PCONSOLE)Console, &Terminal);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to register terminal to the given console, Status = 0x%08lx\n", Status);
         NtClose(Console->InitEvents[INIT_FAILURE]);
         NtClose(Console->InitEvents[INIT_SUCCESS]);
-        ConDrvDeleteConsole(Console);
+        ConDrvDeleteConsole((PCONSOLE)Console);
         ConSrvDeinitTerminal(&Terminal);
         return Status;
     }
     DPRINT("Terminal attached\n");
 
     /* All went right, so add the console to the list */
+#if 0
+    Status = ConDrvInsertConsole((PCONSOLE)Console);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        ConDrvDeleteConsole((PCONSOLE)Console);
+        return Status;
+    }
+#endif
     Status = InsertConsole(&ConsoleHandle, Console);
 
     // FIXME! We do not support at all asynchronous console creation!
@@ -773,7 +818,10 @@ ConSrvDeleteConsole(PCONSRV_CONSOLE Console)
 {
     DPRINT("ConSrvDeleteConsole\n");
 
-    // FIXME: Send a terminate message to all the processes owning this console
+    // FIXME: Send a terminate message to all the processes owning this console.
+    // NOTE: In principle there should be none, because such processes would
+    // have a reference to the console and thus this function would not have
+    // been called in the first place.
 
     /* Remove the console from the list */
     RemoveConsoleByPointer(Console);
@@ -802,9 +850,36 @@ ConSrvDeleteConsole(PCONSRV_CONSOLE Console)
 }
 
 
+VOID
+ConioPause(PCONSRV_CONSOLE Console, UCHAR Flags)
+{
+    Console->PauseFlags |= Flags;
+    ConDrvPause((PCONSOLE)Console);
+}
+
+VOID
+ConioUnpause(PCONSRV_CONSOLE Console, UCHAR Flags)
+{
+    Console->PauseFlags &= ~Flags;
+
+    // if ((Console->PauseFlags & (PAUSED_FROM_KEYBOARD | PAUSED_FROM_SCROLLBAR | PAUSED_FROM_SELECTION)) == 0)
+    if (Console->PauseFlags == 0)
+    {
+        ConDrvUnpause((PCONSOLE)Console);
+
+        CsrNotifyWait(&Console->WriteWaitQueue,
+                      TRUE,
+                      NULL,
+                      NULL);
+        if (!IsListEmpty(&Console->WriteWaitQueue))
+        {
+            CsrDereferenceWait(&Console->WriteWaitQueue);
+        }
+    }
+}
 
 
-
+/* CONSOLE PROCESS MANAGEMENT FUNCTIONS ***************************************/
 
 NTSTATUS
 ConSrvConsoleCtrlEventTimeout(IN ULONG CtrlEvent,
@@ -985,12 +1060,10 @@ ConSrvSetConsoleProcessFocus(IN PCONSRV_CONSOLE Console,
 /* PUBLIC SERVER APIS *********************************************************/
 
 /* API_NUMBER: ConsolepAlloc */
-CSR_API(SrvAllocConsole)
+CON_API_NOCONSOLE(SrvAllocConsole,
+                  CONSOLE_ALLOCCONSOLE, AllocConsoleRequest)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE_ALLOCCONSOLE AllocConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.AllocConsoleRequest;
-    PCSR_PROCESS CsrProcess = CsrGetClientThread()->Process;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
     CONSOLE_INIT_INFO ConsoleInitInfo;
 
     if (ProcessData->ConsoleHandle != NULL)
@@ -1055,10 +1128,10 @@ CSR_API(SrvAllocConsole)
 }
 
 /* API_NUMBER: ConsolepAttach */
-CSR_API(SrvAttachConsole)
+CON_API_NOCONSOLE(SrvAttachConsole,
+                  CONSOLE_ATTACHCONSOLE, AttachConsoleRequest)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE_ATTACHCONSOLE AttachConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.AttachConsoleRequest;
     PCSR_PROCESS SourceProcess = NULL;  // The parent process.
     PCSR_PROCESS TargetProcess = CsrGetClientThread()->Process; // Ourselves.
     HANDLE ProcessId = ULongToHandle(AttachConsoleRequest->ProcessId);
@@ -1143,9 +1216,20 @@ Quit:
 }
 
 /* API_NUMBER: ConsolepFree */
-CSR_API(SrvFreeConsole)
+CON_API_NOCONSOLE(SrvFreeConsole,
+                  CONSOLE_FREECONSOLE, FreeConsoleRequest)
 {
-    return ConSrvRemoveConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process));
+    /*
+     * If this process doesn't have a console handle, bail out immediately.
+     * Also the passed console handle should be the same as the process' one.
+     */
+    if ((FreeConsoleRequest->ConsoleHandle == NULL) ||
+        (FreeConsoleRequest->ConsoleHandle != ProcessData->ConsoleHandle))
+    {
+        return STATUS_INVALID_HANDLE; // STATUS_ACCESS_DENIED;
+    }
+
+    return ConSrvRemoveConsole(ProcessData);
 }
 
 NTSTATUS NTAPI
@@ -1153,22 +1237,23 @@ ConDrvGetConsoleMode(IN PCONSOLE Console,
                      IN PCONSOLE_IO_OBJECT Object,
                      OUT PULONG ConsoleMode);
 /* API_NUMBER: ConsolepGetMode */
-CSR_API(SrvGetConsoleMode)
+CON_API(SrvGetConsoleMode,
+        CONSOLE_GETSETCONSOLEMODE, ConsoleModeRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
     PCONSOLE_IO_OBJECT Object;
-
     PULONG ConsoleMode = &ConsoleModeRequest->Mode;
 
-    Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetObject(ProcessData,
                              ConsoleModeRequest->Handle,
                              &Object, NULL, GENERIC_READ, TRUE, 0);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == Object->Console);
 
     /* Get the standard console modes */
-    Status = ConDrvGetConsoleMode(Object->Console, Object,
-                                  ConsoleMode);
+    Status = ConDrvGetConsoleMode((PCONSOLE)Console, Object, ConsoleMode);
     if (NT_SUCCESS(Status))
     {
         /*
@@ -1177,13 +1262,13 @@ CSR_API(SrvGetConsoleMode)
          */
         if (INPUT_BUFFER == Object->Type)
         {
-            if (Object->Console->InsertMode || Object->Console->QuickEdit)
+            if (Console->InsertMode || Console->QuickEdit)
             {
                 /* Windows also adds ENABLE_EXTENDED_FLAGS, even if it's not documented on MSDN */
                 *ConsoleMode |= ENABLE_EXTENDED_FLAGS;
 
-                if (Object->Console->InsertMode) *ConsoleMode |= ENABLE_INSERT_MODE;
-                if (Object->Console->QuickEdit ) *ConsoleMode |= ENABLE_QUICK_EDIT_MODE;
+                if (Console->InsertMode) *ConsoleMode |= ENABLE_INSERT_MODE;
+                if (Console->QuickEdit ) *ConsoleMode |= ENABLE_QUICK_EDIT_MODE;
             }
         }
     }
@@ -1197,27 +1282,28 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
                      IN PCONSOLE_IO_OBJECT Object,
                      IN ULONG ConsoleMode);
 /* API_NUMBER: ConsolepSetMode */
-CSR_API(SrvSetConsoleMode)
+CON_API(SrvSetConsoleMode,
+        CONSOLE_GETSETCONSOLEMODE, ConsoleModeRequest)
 {
 #define CONSOLE_VALID_CONTROL_MODES ( ENABLE_EXTENDED_FLAGS | \
                                       ENABLE_INSERT_MODE    | ENABLE_QUICK_EDIT_MODE )
 // NOTE: Vista+ ENABLE_AUTO_POSITION is also a control mode.
 
     NTSTATUS Status;
-    PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
     PCONSOLE_IO_OBJECT Object;
-
     ULONG ConsoleMode = ConsoleModeRequest->Mode;
 
-    Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetObject(ProcessData,
                              ConsoleModeRequest->Handle,
                              &Object, NULL, GENERIC_WRITE, TRUE, 0);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == Object->Console);
 
     /* Set the standard console modes (without the CONSRV-specific input modes) */
     ConsoleMode &= ~CONSOLE_VALID_CONTROL_MODES; // Remove CONSRV-specific input modes.
-    Status = ConDrvSetConsoleMode(Object->Console, Object,
-                                  ConsoleMode);
+    Status = ConDrvSetConsoleMode((PCONSOLE)Console, Object, ConsoleMode);
     if (NT_SUCCESS(Status))
     {
         /*
@@ -1240,8 +1326,8 @@ CSR_API(SrvSetConsoleMode)
                 }
                 else
                 {
-                    Object->Console->InsertMode = !!(ConsoleMode & ENABLE_INSERT_MODE);
-                    Object->Console->QuickEdit  = !!(ConsoleMode & ENABLE_QUICK_EDIT_MODE);
+                    Console->InsertMode = !!(ConsoleMode & ENABLE_INSERT_MODE);
+                    Console->QuickEdit  = !!(ConsoleMode & ENABLE_QUICK_EDIT_MODE);
                 }
             }
         }
@@ -1252,11 +1338,9 @@ CSR_API(SrvSetConsoleMode)
 }
 
 /* API_NUMBER: ConsolepGetTitle */
-CSR_API(SrvGetConsoleTitle)
+CON_API(SrvGetConsoleTitle,
+        CONSOLE_GETSETCONSOLETITLE, TitleRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETSETCONSOLETITLE TitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.TitleRequest;
-    PCONSRV_CONSOLE Console;
     ULONG Length;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
@@ -1265,13 +1349,6 @@ CSR_API(SrvGetConsoleTitle)
                                   sizeof(BYTE)))
     {
         return STATUS_INVALID_PARAMETER;
-    }
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
     }
 
     /* Copy title of the console to the user title buffer */
@@ -1307,17 +1384,13 @@ CSR_API(SrvGetConsoleTitle)
         }
     }
 
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /* API_NUMBER: ConsolepSetTitle */
-CSR_API(SrvSetConsoleTitle)
+CON_API(SrvSetConsoleTitle,
+        CONSOLE_GETSETCONSOLETITLE, TitleRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETSETCONSOLETITLE TitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.TitleRequest;
-    PCONSRV_CONSOLE Console;
-
     PWCHAR Buffer;
     ULONG  Length;
 
@@ -1327,13 +1400,6 @@ CSR_API(SrvSetConsoleTitle)
                                   sizeof(BYTE)))
     {
         return STATUS_INVALID_PARAMETER;
-    }
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
     }
 
     if (TitleRequest->Unicode)
@@ -1354,10 +1420,7 @@ CSR_API(SrvSetConsoleTitle)
     /* Allocate a new buffer to hold the new title (NULL-terminated) */
     Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Length + sizeof(WCHAR));
     if (!Buffer)
-    {
-        Status = STATUS_NO_MEMORY;
-        goto Quit;
-    }
+        return STATUS_NO_MEMORY;
 
     /* Free the old title */
     ConsoleFreeUnicodeString(&Console->Title);
@@ -1383,11 +1446,8 @@ CSR_API(SrvSetConsoleTitle)
     Console->Title.Buffer[Console->Title.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     TermChangeTitle(Console);
-    Status = STATUS_SUCCESS;
 
-Quit:
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI
@@ -1395,24 +1455,15 @@ ConDrvGetConsoleCP(IN PCONSOLE Console,
                    OUT PUINT CodePage,
                    IN BOOLEAN OutputCP);
 /* API_NUMBER: ConsolepGetCP */
-CSR_API(SrvGetConsoleCP)
+CON_API(SrvGetConsoleCP,
+        CONSOLE_GETINPUTOUTPUTCP, GetConsoleCPRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleCPRequest;
-    PCONSRV_CONSOLE Console;
-
     DPRINT("SrvGetConsoleCP, getting %s Code Page\n",
             GetConsoleCPRequest->OutputCP ? "Output" : "Input");
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    Status = ConDrvGetConsoleCP(Console,
-                                &GetConsoleCPRequest->CodePage,
-                                GetConsoleCPRequest->OutputCP);
-
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return ConDrvGetConsoleCP((PCONSOLE)Console,
+                              &GetConsoleCPRequest->CodePage,
+                              GetConsoleCPRequest->OutputCP);
 }
 
 NTSTATUS NTAPI
@@ -1420,33 +1471,21 @@ ConDrvSetConsoleCP(IN PCONSOLE Console,
                    IN UINT CodePage,
                    IN BOOLEAN OutputCP);
 /* API_NUMBER: ConsolepSetCP */
-CSR_API(SrvSetConsoleCP)
+CON_API(SrvSetConsoleCP,
+        CONSOLE_SETINPUTOUTPUTCP, SetConsoleCPRequest)
 {
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
-    PCONSOLE_SETINPUTOUTPUTCP SetConsoleCPRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetConsoleCPRequest;
-    PCONSRV_CONSOLE Console;
-
     DPRINT("SrvSetConsoleCP, setting %s Code Page\n",
             SetConsoleCPRequest->OutputCP ? "Output" : "Input");
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    Status = ConDrvSetConsoleCP(Console,
-                                SetConsoleCPRequest->CodePage,
-                                SetConsoleCPRequest->OutputCP);
-
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return ConDrvSetConsoleCP((PCONSOLE)Console,
+                              SetConsoleCPRequest->CodePage,
+                              SetConsoleCPRequest->OutputCP);
 }
 
 /* API_NUMBER: ConsolepGetProcessList */
-CSR_API(SrvGetConsoleProcessList)
+CON_API(SrvGetConsoleProcessList,
+        CONSOLE_GETPROCESSLIST, GetProcessListRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETPROCESSLIST GetProcessListRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetProcessListRequest;
-    PCONSRV_CONSOLE Console;
-
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID)&GetProcessListRequest->ProcessIdsList,
                                   GetProcessListRequest->ProcessCount,
@@ -1455,76 +1494,40 @@ CSR_API(SrvGetConsoleProcessList)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    Status = ConSrvGetConsoleProcessList(Console,
-                                         GetProcessListRequest->ProcessIdsList,
-                                         GetProcessListRequest->ProcessCount,
-                                         &GetProcessListRequest->ProcessCount);
-
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return ConSrvGetConsoleProcessList(Console,
+                                       GetProcessListRequest->ProcessIdsList,
+                                       GetProcessListRequest->ProcessCount,
+                                       &GetProcessListRequest->ProcessCount);
 }
 
 /* API_NUMBER: ConsolepGenerateCtrlEvent */
-CSR_API(SrvGenerateConsoleCtrlEvent)
+CON_API(SrvGenerateConsoleCtrlEvent,
+        CONSOLE_GENERATECTRLEVENT, GenerateCtrlEventRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GENERATECTRLEVENT GenerateCtrlEventRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GenerateCtrlEventRequest;
-    PCONSRV_CONSOLE Console;
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    Status = ConSrvConsoleProcessCtrlEvent(Console,
-                                           GenerateCtrlEventRequest->ProcessGroupId,
-                                           GenerateCtrlEventRequest->CtrlEvent);
-
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return ConSrvConsoleProcessCtrlEvent(Console,
+                                         GenerateCtrlEventRequest->ProcessGroupId,
+                                         GenerateCtrlEventRequest->CtrlEvent);
 }
 
 /* API_NUMBER: ConsolepNotifyLastClose */
-CSR_API(SrvConsoleNotifyLastClose)
+CON_API(SrvConsoleNotifyLastClose,
+        CONSOLE_NOTIFYLASTCLOSE, NotifyLastCloseRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSRV_CONSOLE Console;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     /* Only one process is allowed to be registered for last close notification */
-    if (!Console->NotifyLastClose)
-    {
-        Console->NotifyLastClose = TRUE;
-        Console->NotifiedLastCloseProcess = ProcessData;
-        Status = STATUS_SUCCESS;
-    }
-    else
-    {
-        Status = STATUS_ACCESS_DENIED;
-    }
+    if (Console->NotifyLastClose)
+        return STATUS_ACCESS_DENIED;
 
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    Console->NotifyLastClose = TRUE;
+    Console->NotifiedLastCloseProcess = ProcessData;
+    return STATUS_SUCCESS;
 }
 
 /* API_NUMBER: ConsolepGetMouseInfo */
-CSR_API(SrvGetConsoleMouseInfo)
+CON_API(SrvGetConsoleMouseInfo,
+        CONSOLE_GETMOUSEINFO, GetMouseInfoRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETMOUSEINFO GetMouseInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetMouseInfoRequest;
-    PCONSRV_CONSOLE Console;
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     /* Just retrieve the number of buttons of the mouse attached to this console */
     GetMouseInfoRequest->NumButtons = GetSystemMetrics(SM_CMOUSEBUTTONS);
-
-    ConSrvReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
 }
 
@@ -1536,22 +1539,15 @@ CSR_API(SrvSetConsoleKeyShortcuts)
 }
 
 /* API_NUMBER: ConsolepGetKeyboardLayoutName */
-CSR_API(SrvGetConsoleKeyboardLayoutName)
+CON_API(SrvGetConsoleKeyboardLayoutName,
+        CONSOLE_GETKBDLAYOUTNAME, GetKbdLayoutNameRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETKBDLAYOUTNAME GetKbdLayoutNameRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetKbdLayoutNameRequest;
-    PCONSRV_CONSOLE Console;
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     /* Retrieve the keyboard layout name of the system */
     if (GetKbdLayoutNameRequest->Ansi)
         GetKeyboardLayoutNameA((PCHAR)GetKbdLayoutNameRequest->LayoutBuffer);
     else
         GetKeyboardLayoutNameW((PWCHAR)GetKbdLayoutNameRequest->LayoutBuffer);
 
-    ConSrvReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
 }
 

@@ -44,7 +44,7 @@
 #ifndef __ACPI_H__
 #define __ACPI_H__
 
-#ifdef __REACTOS__
+#if defined(__REACTOS__) && !defined(UNIT_TEST)
 /*
  * Header inclusion HACK.
  */

@@ -8,12 +8,11 @@
 
 #pragma once
 
-VOID NTAPI
-ConDrvInitConsoleSupport(VOID);
-
 NTSTATUS NTAPI
-ConDrvInitConsole(OUT PCONSOLE* NewConsole,
-                  IN PCONSOLE_INFO ConsoleInfo);
+ConDrvInitConsole(
+    IN OUT PCONSOLE Console,
+    IN PCONSOLE_INFO ConsoleInfo);
+
 NTSTATUS NTAPI
 ConDrvAttachTerminal(IN PCONSOLE Console,
                      IN PTERMINAL Terminal);

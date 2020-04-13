@@ -65,7 +65,7 @@ ConSrvCloseHandle(IN PCONSOLE_IO_HANDLE Handle)
         if (Object->Type == INPUT_BUFFER)
         {
             // PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
-            PCONSOLE Console = Object->Console;
+            PCONSRV_CONSOLE Console = (PCONSRV_CONSOLE)Object->Console;
 
             /*
              * Wake up all the writing waiters related to this handle for this
@@ -125,7 +125,7 @@ static VOID ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData);
 
 static NTSTATUS
 ConSrvInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
-                       IN PCONSOLE Console,
+                       IN PCONSRV_CONSOLE Console,
                        OUT PHANDLE pInputHandle,
                        OUT PHANDLE pOutputHandle,
                        OUT PHANDLE pErrorHandle)
@@ -410,7 +410,7 @@ ConSrvGetObject(IN PCONSOLE_PROCESS_DATA ProcessData,
     ULONG Index = HandleToULong(Handle) >> 2;
     PCONSOLE_IO_HANDLE HandleEntry = NULL;
     PCONSOLE_IO_OBJECT ObjectEntry = NULL;
-    // PCONSOLE ObjectConsole;
+    // PCONSRV_CONSOLE ObjectConsole;
 
     ASSERT(Object);
     if (Entry) *Entry = NULL;
@@ -465,7 +465,8 @@ VOID
 ConSrvReleaseObject(IN PCONSOLE_IO_OBJECT Object,
                     IN BOOLEAN IsConsoleLocked)
 {
-    ConSrvReleaseConsole(Object->Console, IsConsoleLocked);
+    PCONSRV_CONSOLE ObjectConsole = (PCONSRV_CONSOLE)Object->Console;
+    ConSrvReleaseConsole(ObjectConsole, IsConsoleLocked);
 }
 
 
@@ -611,7 +612,7 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                      PCONSOLE_START_INFO ConsoleStartInfo)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     /* Validate and lock the console */
     if (!ConSrvValidateConsole(&Console,
@@ -734,7 +735,7 @@ Quit:
 NTSTATUS
 ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 {
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     PCONSOLE_PROCESS_DATA ConsoleLeaderProcess;
 
     DPRINT("ConSrvRemoveConsole\n");
@@ -808,7 +809,9 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 
 /* PUBLIC SERVER APIS *********************************************************/
 
-CSR_API(SrvOpenConsole)
+/* API_NUMBER: ConsolepOpenConsole */
+CON_API(SrvOpenConsole,
+        CONSOLE_OPENCONSOLE, OpenConsoleRequest)
 {
     /*
      * This API opens a handle to either the input buffer or to
@@ -816,22 +819,11 @@ CSR_API(SrvOpenConsole)
      */
 
     NTSTATUS Status;
-    PCONSOLE_OPENCONSOLE OpenConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.OpenConsoleRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
     DWORD DesiredAccess = OpenConsoleRequest->DesiredAccess;
     DWORD ShareMode = OpenConsoleRequest->ShareMode;
     PCONSOLE_IO_OBJECT Object;
 
     OpenConsoleRequest->Handle = INVALID_HANDLE_VALUE;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -867,31 +859,20 @@ CSR_API(SrvOpenConsole)
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
 /* API_NUMBER: ConsolepDuplicateHandle */
-CSR_API(SrvDuplicateHandle)
+CON_API(SrvDuplicateHandle,
+        CONSOLE_DUPLICATEHANDLE, DuplicateHandleRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_DUPLICATEHANDLE DuplicateHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.DuplicateHandleRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
     HANDLE SourceHandle = DuplicateHandleRequest->SourceHandle;
     ULONG Index = HandleToULong(SourceHandle) >> 2;
     PCONSOLE_IO_HANDLE Entry;
     DWORD DesiredAccess;
 
     DuplicateHandleRequest->TargetHandle = INVALID_HANDLE_VALUE;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -941,28 +922,17 @@ CSR_API(SrvDuplicateHandle)
 Quit:
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
 /* API_NUMBER: ConsolepGetHandleInformation */
-CSR_API(SrvGetHandleInformation)
+CON_API(SrvGetHandleInformation,
+        CONSOLE_GETHANDLEINFO, GetHandleInfoRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETHANDLEINFO GetHandleInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetHandleInfoRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
     HANDLE Handle = GetHandleInfoRequest->Handle;
     ULONG Index = HandleToULong(Handle) >> 2;
     PCONSOLE_IO_HANDLE Entry;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -990,28 +960,17 @@ CSR_API(SrvGetHandleInformation)
 Quit:
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
 /* API_NUMBER: ConsolepSetHandleInformation */
-CSR_API(SrvSetHandleInformation)
+CON_API(SrvSetHandleInformation,
+        CONSOLE_SETHANDLEINFO, SetHandleInfoRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SETHANDLEINFO SetHandleInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHandleInfoRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
     HANDLE Handle = SetHandleInfoRequest->Handle;
     ULONG Index = HandleToULong(Handle) >> 2;
     PCONSOLE_IO_HANDLE Entry;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -1041,50 +1000,24 @@ CSR_API(SrvSetHandleInformation)
 Quit:
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
 /* API_NUMBER: ConsolepCloseHandle */
-CSR_API(SrvCloseHandle)
+CON_API(SrvCloseHandle,
+        CONSOLE_CLOSEHANDLE, CloseHandleRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_CLOSEHANDLE CloseHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CloseHandleRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
-
-    Status = ConSrvRemoveObject(ProcessData, CloseHandleRequest->Handle);
-
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return ConSrvRemoveObject(ProcessData, CloseHandleRequest->Handle);
 }
 
 /* API_NUMBER: ConsolepVerifyIoHandle */
-CSR_API(SrvVerifyConsoleIoHandle)
+CON_API(SrvVerifyConsoleIoHandle,
+        CONSOLE_VERIFYHANDLE, VerifyHandleRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_VERIFYHANDLE VerifyHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.VerifyHandleRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
     HANDLE IoHandle = VerifyHandleRequest->Handle;
     ULONG Index = HandleToULong(IoHandle) >> 2;
 
     VerifyHandleRequest->IsValid = FALSE;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -1104,7 +1037,6 @@ CSR_API(SrvVerifyConsoleIoHandle)
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    ConSrvReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
 }
 

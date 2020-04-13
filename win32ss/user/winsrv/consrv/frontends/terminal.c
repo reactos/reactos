@@ -262,21 +262,22 @@ ConSrvTermInitTerminal(IN OUT PTERMINAL This,
 {
     NTSTATUS Status;
     PFRONTEND FrontEnd = This->Context;
+    PCONSRV_CONSOLE ConSrvConsole = (PCONSRV_CONSOLE)Console;
 
     /* Initialize the console pointer for our frontend */
-    FrontEnd->Console = Console;
+    FrontEnd->Console = ConSrvConsole;
 
     /** HACK HACK!! Copy FrontEnd into the console!! **/
     DPRINT("Using FrontEndIFace HACK(1), should be removed after proper implementation!\n");
-    Console->FrontEndIFace = *FrontEnd;
+    ConSrvConsole->FrontEndIFace = *FrontEnd;
 
-    Status = FrontEnd->Vtbl->InitFrontEnd(FrontEnd, FrontEnd->Console);
+    Status = FrontEnd->Vtbl->InitFrontEnd(FrontEnd, ConSrvConsole);
     if (!NT_SUCCESS(Status))
         DPRINT1("InitFrontEnd failed, Status = 0x%08lx\n", Status);
 
     /** HACK HACK!! Be sure FrontEndIFace is correctly updated in the console!! **/
     DPRINT("Using FrontEndIFace HACK(2), should be removed after proper implementation!\n");
-    Console->FrontEndIFace = *FrontEnd;
+    ConSrvConsole->FrontEndIFace = *FrontEnd;
 
     return Status;
 }
@@ -969,11 +970,12 @@ static TERMINAL_VTBL ConSrvTermVtbl =
 VOID
 ResetFrontEnd(IN PCONSOLE Console)
 {
+    PCONSRV_CONSOLE ConSrvConsole = (PCONSRV_CONSOLE)Console;
     if (!Console) return;
 
     /* Reinitialize the frontend interface */
-    RtlZeroMemory(&Console->FrontEndIFace, sizeof(Console->FrontEndIFace));
-    Console->FrontEndIFace.Vtbl = &ConSrvTermVtbl;
+    RtlZeroMemory(&ConSrvConsole->FrontEndIFace, sizeof(ConSrvConsole->FrontEndIFace));
+    ConSrvConsole->FrontEndIFace.Vtbl = &ConSrvTermVtbl;
 }
 #endif
 

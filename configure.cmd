@@ -13,7 +13,7 @@ if /I "%1" == "/?" (
 :help
     echo Help for configure script
     echo Syntax: path\to\source\configure.cmd [script-options] [Cmake-options]
-    echo Available script-options: Codeblocks, Eclipse, Makefiles, clang, VSSolution, RTC
+    echo Available script-options: Codeblocks, Eclipse, Makefiles, clang, VSSolution
     echo Cmake-options: -DVARIABLE:TYPE=VALUE
     goto quit
 )
@@ -62,7 +62,6 @@ if defined ROS_ARCH (
     )
     set BUILD_ENVIRONMENT=VS
     set VS_SOLUTION=0
-    set VS_RUNTIME_CHECKS=0
     echo Detected Visual Studio Environment !BUILD_ENVIRONMENT!!VS_VERSION!-!ARCH!
 ) else (
     echo Error: Unable to detect build environment. Configure script failure.
@@ -90,8 +89,6 @@ REM Parse command line parameters
             echo. && echo Error: Creation of VS Solution files is not supported in a MinGW environment.
             echo Please run this command in a [Developer] Command Prompt for Visual Studio.
             goto quit
-        ) else if /I "%1" == "RTC" (
-            echo. && echo 	Warning: RTC switch is ignored outside of a Visual Studio environment. && echo.
         ) else if /I "%1" NEQ "" (
             echo %1| find /I "-D" > NUL
             if %ERRORLEVEL% == 0 (
@@ -128,9 +125,6 @@ REM Parse command line parameters
             ) else if "!ARCH!" == "arm" (
                 set CMAKE_ARCH=-A ARM
             )
-        ) else if /I "%1" == "RTC" (
-            echo Runtime checks enabled
-            set VS_RUNTIME_CHECKS=1
         ) else if /I "%1" NEQ "" (
             echo %1| find /I "-D" > NUL
             if %ERRORLEVEL% == 0 (
@@ -197,9 +191,9 @@ if EXIST CMakeCache.txt (
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* "%REACTOS_SOURCE_DIR%"
 ) else if %USE_CLANG_CL% == 1 (
-        cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
+    cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 %* "%REACTOS_SOURCE_DIR%"
 ) else (
-    cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
+    cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* "%REACTOS_SOURCE_DIR%"
 )
 
 if %ERRORLEVEL% NEQ 0 (

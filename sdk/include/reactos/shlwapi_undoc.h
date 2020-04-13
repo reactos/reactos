@@ -114,6 +114,11 @@ HRESULT WINAPI IUnknown_HasFocusIO(IUnknown * punk);
 HRESULT WINAPI IUnknown_TranslateAcceleratorIO(IUnknown * punk, MSG * pmsg);
 HRESULT WINAPI IUnknown_OnFocusChangeIS(LPUNKNOWN lpUnknown, LPUNKNOWN pFocusObject, BOOL bFocus);
 
+DWORD WINAPI SHAnsiToUnicode(LPCSTR lpSrcStr, LPWSTR lpDstStr, INT iLen);
+INT WINAPI SHUnicodeToAnsi(LPCWSTR lpSrcStr, LPSTR lpDstStr, INT iLen);
+
+PVOID WINAPI SHLockSharedEx(HANDLE hData, DWORD dwProcessId, BOOL bWriteAccess);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

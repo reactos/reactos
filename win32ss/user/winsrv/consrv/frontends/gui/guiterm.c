@@ -768,7 +768,7 @@ GuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
     GuiData->WindowSizeLock = TRUE;
 
     InterlockedExchangePointer((PVOID*)&GuiData->ActiveBuffer,
-                               ConDrvGetActiveScreenBuffer(GuiData->Console));
+                               ConDrvGetActiveScreenBuffer((PCONSOLE)GuiData->Console));
 
     GuiData->WindowSizeLock = FALSE;
     LeaveCriticalSection(&GuiData->Lock);
