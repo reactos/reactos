@@ -204,7 +204,7 @@ CreateNotificationParam(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEM
 }
 
 // This function creates a "handbag" by using a delivery ticket.
-// The handbag is created in SHChangeNotification_Lock and used in OnTicket.
+// The handbag is created in SHChangeNotification_Lock and used in OnBrokerNotification.
 // hTicket is a ticket handle of a shared memory block and dwOwnerPID is
 // the owner PID of the ticket.
 static LPHANDBAG
