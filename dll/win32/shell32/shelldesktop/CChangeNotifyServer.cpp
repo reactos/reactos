@@ -7,6 +7,7 @@
 #include "shelldesktop.h"
 #include "shlwapi_undoc.h"
 #include <atlsimpcoll.h>
+#include <assert.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
@@ -125,17 +126,21 @@ void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndB
         *phwndBroker = item.hwndBroker;
     }
 
+    // free
     SHFreeShared(item.hRegEntry, dwOwnerPID);
     item.nRegID = INVALID_REG_ID;
     item.dwUserPID = 0;
+#ifndef NDEBUG
     item.hRegEntry = NULL;
     item.hwndBroker = NULL;
+#endif
 }
 
 BOOL CChangeNotifyServer::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
 {
     BOOL bFound = FALSE;
     HWND hwndBroker = NULL;
+    assert(nRegID != INVALID_REG_ID);
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
         if (m_items[i].nRegID == nRegID)
@@ -150,6 +155,7 @@ BOOL CChangeNotifyServer::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
 void CChangeNotifyServer::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
 {
     HWND hwndBroker = NULL;
+    assert(dwUserPID != 0);
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
         if (m_items[i].dwUserPID == dwUserPID)
