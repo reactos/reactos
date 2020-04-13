@@ -1736,10 +1736,47 @@ typedef struct _RTL_STACK_TRACE_ENTRY
     PVOID BackTrace[32];
 } RTL_STACK_TRACE_ENTRY, *PRTL_STACK_TRACE_ENTRY;
 
+
 typedef struct _STACK_TRACE_DATABASE
 {
-    RTL_CRITICAL_SECTION CriticalSection;
+    union
+    {
+        PVOID Lock;
+
+        /* Padding for ERESOURCE */
+#if defined(_M_AMD64)
+        UCHAR Padding[0x68];
+#else
+        UCHAR Padding[56];
+#endif
+    } Lock;
+
+    BOOLEAN DumpInProgress;
+
+    PVOID CommitBase;
+    PVOID CurrentLowerCommitLimit;
+    PVOID CurrentUpperCommitLimit;
+
+    PCHAR NextFreeLowerMemory;
+    PCHAR NextFreeUpperMemory;
+
+    ULONG NumberOfEntriesAdded;
+    ULONG NumberOfAllocationFailures;
+    PRTL_STACK_TRACE_ENTRY* EntryIndexArray;
+
+    ULONG NumberOfBuckets;
+    PRTL_STACK_TRACE_ENTRY Buckets[ANYSIZE_ARRAY];
 } STACK_TRACE_DATABASE, *PSTACK_TRACE_DATABASE;
+
+// Validate that our padding is big enough:
+#ifndef NTOS_MODE_USER
+#if defined(_M_AMD64)
+C_ASSERT(sizeof(ERESOURCE) <= 0x68);
+#else
+C_ASSERT(sizeof(ERESOURCE) <= 56);
+#endif
+#endif
+
 
 //
 // Trace Database
