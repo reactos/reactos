@@ -83,7 +83,6 @@ private:
     UINT GetNextRegID();
     BOOL DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID);
     BOOL ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry);
-
 };
 
 CChangeNotifyServer::CChangeNotifyServer()
