@@ -118,7 +118,7 @@ BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry
 
 void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndBroker)
 {
-    // destroy old worker if any and if first time
+    // destroy broker if any and if first time
     if (item.hwndBroker && item.hwndBroker != *phwndBroker)
     {
         ::DestroyWindow(item.hwndBroker);
@@ -191,7 +191,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     DWORD dwUserPID;
     GetWindowThreadProcessId(pRegEntry->hwnd, &dwUserPID);
 
-    // get old worker if any
+    // get broker if any
     HWND hwndBroker = pRegEntry->hwndBroker;
 
     // clone the registration entry
