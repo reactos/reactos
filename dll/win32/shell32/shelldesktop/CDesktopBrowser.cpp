@@ -40,9 +40,11 @@ class CDesktopBrowser :
 private:
     HACCEL m_hAccel;
     HWND m_hWndShellView;
-    CChangeNotify m_hwndDeliWorker;
     CComPtr<IShellDesktopTray> m_Tray;
     CComPtr<IShellView>        m_ShellView;
+
+    CComPtr<IOleWindow>        m_ChangeNotifyServer;
+    HWND                       m_hwndChangeNotifyServer;
 
     LRESULT _NotifyTray(UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT _Resize();
@@ -82,7 +84,7 @@ public:
     LRESULT OnOpenNewWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnGetDeliveryWorkerWnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 DECLARE_WND_CLASS_EX(szProgmanClassName, CS_DBLCLKS, COLOR_DESKTOP)
 
@@ -95,7 +97,7 @@ BEGIN_MSG_MAP(CBaseBar)
     MESSAGE_HANDLER(WM_EXPLORER_OPEN_NEW_WINDOW, OnOpenNewWindow)
     MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
-    MESSAGE_HANDLER(WM_GETDELIWORKERWND, OnGetDeliveryWorkerWnd)
+    MESSAGE_HANDLER(WM_DESKTOP_GET_CNOTIFY_SERVER, OnGetChangeNotifyServer)
 END_MSG_MAP()
 
 BEGIN_COM_MAP(CDesktopBrowser)
@@ -107,7 +109,8 @@ END_COM_MAP()
 
 CDesktopBrowser::CDesktopBrowser():
     m_hAccel(NULL),
-    m_hWndShellView(NULL)
+    m_hWndShellView(NULL),
+    m_hwndChangeNotifyServer(NULL)
 {
 }
 
@@ -116,6 +119,11 @@ CDesktopBrowser::~CDesktopBrowser()
     if (m_ShellView.p != NULL && m_hWndShellView != NULL)
     {
         m_ShellView->DestroyViewWindow();
+    }
+
+    if (m_hwndChangeNotifyServer)
+    {
+        ::DestroyWindow(m_hwndChangeNotifyServer);
     }
 }
 
@@ -430,15 +438,24 @@ LRESULT CDesktopBrowser::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     return 0;
 }
 
-LRESULT CDesktopBrowser::OnGetDeliveryWorkerWnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+// Message WM_DESKTOP_GET_CNOTIFY_SERVER: Get or create the worker.
+//   wParam: BOOL bCreate; The flag whether it creates or not.
+//   lParam: Ignored.
+//   return: The window handle of the server window.
+LRESULT CDesktopBrowser::OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    if (!::IsWindow(m_hwndDeliWorker))
+    BOOL bCreate = (BOOL)wParam;
+    if (bCreate && !::IsWindow(m_hwndChangeNotifyServer))
     {
-        DWORD exstyle = WS_EX_TOOLWINDOW;
-        DWORD style = WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-        m_hwndDeliWorker.CreateWorker(NULL, exstyle, style);
+        HRESULT hres = CChangeNotifyServer_CreateInstance(IID_PPV_ARG(IOleWindow, &m_ChangeNotifyServer));
+        if (FAILED_UNEXPECTEDLY(hres))
+            return NULL;
+
+        hres = m_ChangeNotifyServer->GetWindow(&m_hwndChangeNotifyServer);
+        if (FAILED_UNEXPECTEDLY(hres))
+            return NULL;
     }
-    return (LRESULT)(HWND)m_hwndDeliWorker;
+    return (LRESULT)m_hwndChangeNotifyServer;
 }
 
 HRESULT CDesktopBrowser_CreateInstance(IShellDesktopTray *Tray, REFIID riid, void **ppv)
