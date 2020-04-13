@@ -438,7 +438,7 @@ LRESULT CDesktopBrowser::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     return 0;
 }
 
-// Message WM_DESKTOP_GET_CNOTIFY_SERVER: Get or create the worker.
+// Message WM_DESKTOP_GET_CNOTIFY_SERVER: Get or create the change notification server.
 //   wParam: BOOL bCreate; The flag whether it creates or not.
 //   lParam: Ignored.
 //   return: The window handle of the server window.
