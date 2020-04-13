@@ -73,7 +73,7 @@ typedef CWinTraits <
 
 // This class brokers all notifications that don't have the SHCNRF_NewDelivery flag
 class CChangeNotifyBroker :
-    public CWindowImpl<CChangeNotifyBroker, CWindow, CBrokerTraits >
+    public CWindowImpl<CChangeNotifyBroker, CWindow, CBrokerTraits>
 {
 public:
     CChangeNotifyBroker(HWND hwndClient, UINT uMsg) :
