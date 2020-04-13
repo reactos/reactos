@@ -284,8 +284,7 @@ UINT CChangeNotifyServer::GetNextRegID()
 }
 
 // This function is called from CChangeNotifyServer::OnDeliverNotification.
-// The function checks all the registration entries whether the entry
-// should be notified.
+// The function notifies to the registration entries that should be notified.
 BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
 {
     TRACE("DeliverNotification(%p, %p, 0x%lx)\n", m_hWnd, hTicket, dwOwnerPID);
