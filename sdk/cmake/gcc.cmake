@@ -345,6 +345,14 @@ if(NOT ARCH STREQUAL "i386")
     set(DECO_OPTION "-@")
 endif()
 
+function(fixup_load_config _target)
+    get_target_property(PEFIXUP native-pefixup IMPORTED_LOCATION_NOCONFIG)
+    add_custom_command(TARGET ${_target} POST_BUILD 
+        COMMAND "${PEFIXUP}" 
+                "$<TARGET_FILE:${_target}>"
+        COMMENT "Patching in LOAD_CONFIG")
+endfunction()
+
 function(generate_import_lib _libname _dllname _spec_file)
     # Generate the def for the import lib
     add_custom_command(

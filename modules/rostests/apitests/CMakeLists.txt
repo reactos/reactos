@@ -22,11 +22,7 @@ add_subdirectory(gdi32)
 add_subdirectory(gditools)
 add_subdirectory(iphlpapi)
 add_subdirectory(kernel32)
-if(NOT GCC)
-    # gcc / binutils are unable to add an IMAGE_LOAD_CONFIG_DIRECTORY
-    # So maybe we should resuscitate sdk/tools/pefixup.c
-    add_subdirectory(loadconfig)
-endif()
+add_subdirectory(loadconfig)
 add_subdirectory(localspl)
 add_subdirectory(mountmgr)
 add_subdirectory(msgina)

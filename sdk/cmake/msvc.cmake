@@ -371,6 +371,10 @@ function(add_delay_importlibs _module)
     target_link_libraries(${_module} delayimp)
 endfunction()
 
+function(fixup_load_config _target)
+    # msvc knows how to generate a load_config so no hacks here
+endfunction()
+
 function(generate_import_lib _libname _dllname _spec_file)
 
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_exp.def)
