@@ -215,6 +215,7 @@ DoGetHandbagFromTicket(HANDLE hTicket, DWORD dwOwnerPID)
     if (pTicket == NULL || pTicket->dwMagic != DELITICKET_MAGIC)
     {
         ERR("pTicket is invalid\n");
+        SHUnlockShared(pTicket);
         return NULL;
     }
 

@@ -130,10 +130,8 @@ void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndB
     SHFreeShared(item.hRegEntry, dwOwnerPID);
     item.nRegID = INVALID_REG_ID;
     item.dwUserPID = 0;
-#ifndef NDEBUG
     item.hRegEntry = NULL;
     item.hwndBroker = NULL;
-#endif
 }
 
 BOOL CChangeNotifyServer::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
@@ -180,6 +178,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     if (pRegEntry == NULL || pRegEntry->dwMagic != REGENTRY_MAGIC)
     {
         ERR("pRegEntry is invalid\n");
+        SHUnlockShared(pRegEntry);
         return FALSE;
     }
 
@@ -297,6 +296,7 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
     if (pTicket == NULL || pTicket->dwMagic != DELITICKET_MAGIC)
     {
         ERR("pTicket is invalid\n");
+        SHUnlockShared(pTicket);
         return FALSE;
     }
 
@@ -304,8 +304,11 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
         // validate the item
+        if (m_items[i].nRegID == INVALID_REG_ID)
+            continue;
+
         HANDLE hRegEntry = m_items[i].hRegEntry;
-        if (m_items[i].nRegID == INVALID_REG_ID || hRegEntry == NULL)
+        if (hRegEntry == NULL)
             continue;
 
         // lock the registration entry
@@ -313,6 +316,7 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
         if (pRegEntry == NULL || pRegEntry->dwMagic != REGENTRY_MAGIC)
         {
             ERR("pRegEntry is invalid\n");
+            SHUnlockShared(pRegEntry);
             continue;
         }
 
