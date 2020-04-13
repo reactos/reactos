@@ -165,7 +165,7 @@ void CChangeNotifyServer::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID
 // Message CN_REGISTER: Register the registration entry.
 //   wParam: The handle of registration entry.
 //   lParam: The owner PID of registration entry.
-//   return: TRUE if successful.
+//   return: The registration ID if successful. INVALID_REG_ID if failed.
 LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TRACE("OnRegister(%p, %u, %p, %p)\n", m_hWnd, uMsg, wParam, lParam);
@@ -182,8 +182,11 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     }
 
     // update registration ID if necessary
-    if (pRegEntry->nRegID == INVALID_REG_ID)
-        pRegEntry->nRegID = GetNextRegID();
+    UINT nRegID = pRegEntry->nRegID;
+    if (nRegID == INVALID_REG_ID)
+    {
+        pRegEntry->nRegID = nRegID = GetNextRegID();
+    }
 
     TRACE("pRegEntry->nRegID: %u\n", pRegEntry->nRegID);
 
@@ -194,21 +197,16 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     // get broker if any
     HWND hwndBroker = pRegEntry->hwndBroker;
 
-    // clone the registration entry
-    HANDLE hNewEntry = SHAllocShared(pRegEntry, pRegEntry->cbSize, dwOwnerPID);
-    if (hNewEntry == NULL)
-    {
-        ERR("Out of memory\n");
-        pRegEntry->nRegID = INVALID_REG_ID;
-        SHUnlockShared(pRegEntry);
-        return FALSE;
-    }
-
-    // unlock the registry entry
+    // unlock the registration entry
     SHUnlockShared(pRegEntry);
 
     // add an ITEM
-    return AddItem(m_nNextRegID, dwUserPID, hNewEntry, hwndBroker);
+    if (AddItem(nRegID, dwUserPID, hRegEntry, hwndBroker))
+        return nRegID;
+
+    // delete if failed
+    RemoveItemsByRegID(nRegID, dwOwnerPID);
+    return INVALID_REG_ID;
 }
 
 // Message CN_UNREGISTER: Unregister registration entries.

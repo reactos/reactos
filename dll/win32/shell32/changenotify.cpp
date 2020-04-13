@@ -332,7 +332,6 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
     INT iItem;
     ULONG nRegID = INVALID_REG_ID;
     DWORD dwOwnerPID;
-    LPREGENTRY pRegEntry;
 
     TRACE("(%p,0x%08x,0x%08x,0x%08x,%d,%p)\n",
           hwnd, fSources, wEventMask, uMsg, cItems, lpItems);
@@ -373,31 +372,26 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
         hRegEntry = CreateRegistrationParam(nRegID, hwnd, uMsg, fSources, wEventMask,
                                             lpItems[iItem].fRecursive, lpItems[iItem].pidl,
                                             dwOwnerPID, hwndBroker);
-        if (hRegEntry)
+        if (hRegEntry == NULL)
+            continue;
+
+        TRACE("CN_REGISTER: hwnd:%p, hRegEntry:%p, pid:0x%lx\n",
+              hwndServer, hRegEntry, dwOwnerPID);
+
+        // send CN_REGISTER to the server
+        nRegID = (UINT)SendMessageW(hwndServer, CN_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
+        if (nRegID == INVALID_REG_ID) // if failed
         {
-            TRACE("CN_REGISTER: hwnd:%p, hRegEntry:%p, pid:0x%lx\n",
-                  hwndServer, hRegEntry, dwOwnerPID);
-
-            // send CN_REGISTER to the server
-            SendMessageW(hwndServer, CN_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
-
-            // update nRegID
-            pRegEntry = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, FALSE);
-            if (pRegEntry)
-            {
-                nRegID = pRegEntry->nRegID;
-                SHUnlockShared(pRegEntry);
-            }
-
             // free registration entry
             SHFreeShared(hRegEntry, dwOwnerPID);
-        }
 
-        // if failed, then destroy the broker
-        if (nRegID == INVALID_REG_ID && (fSources & SHCNRF_NewDelivery) == 0)
-        {
-            ERR("Delivery failed\n");
-            DestroyWindow(hwndBroker);
+            // destroy the broker
+            if ((fSources & SHCNRF_NewDelivery) == 0)
+            {
+                ERR("Delivery failed\n");
+                DestroyWindow(hwndBroker);
+            }
+
             break;
         }
     }
