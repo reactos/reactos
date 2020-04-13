@@ -127,7 +127,7 @@ private:
     }
 };
 
-// This function creates an old delivery worker. Used in SHChangeNotifyRegister.
+// This function creates a notification broker for old method. Used in SHChangeNotifyRegister.
 static HWND
 CreateNotificationBroker(HWND hwnd, UINT wMsg)
 {
@@ -393,10 +393,10 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
             SHFreeShared(hRegEntry, dwOwnerPID);
         }
 
-        // if failed, then destroy the broker.
+        // if failed, then destroy the broker
         if (nRegID == INVALID_REG_ID && (fSources & SHCNRF_NewDelivery) == 0)
         {
-            ERR("Old Delivery is failed\n");
+            ERR("Delivery failed\n");
             DestroyWindow(hwndBroker);
             break;
         }
