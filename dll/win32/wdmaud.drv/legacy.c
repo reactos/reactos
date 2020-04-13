@@ -830,7 +830,7 @@ WdmAudGetWavePositionByLegacy(
     DeviceInfo.DeviceType = DeviceType;
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
-                                           IOCTL_OPEN_WDMAUD,
+                                           IOCTL_GETPOS,
                                            (LPVOID) &DeviceInfo,
                                            sizeof(WDMAUD_DEVICE_INFO),
                                            (LPVOID) &DeviceInfo,
