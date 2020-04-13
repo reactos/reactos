@@ -332,7 +332,7 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
     INT iItem;
     ULONG nRegID = INVALID_REG_ID;
     DWORD dwOwnerPID;
-    LPREGENTRY pShare;
+    LPREGENTRY pRegEntry;
 
     TRACE("(%p,0x%08x,0x%08x,0x%08x,%d,%p)\n",
           hwnd, fSources, wEventMask, uMsg, cItems, lpItems);
@@ -382,11 +382,11 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
             SendMessageW(hwndServer, CN_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
 
             // update nRegID
-            pShare = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, FALSE);
-            if (pShare)
+            pRegEntry = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, FALSE);
+            if (pRegEntry)
             {
-                nRegID = pShare->nRegID;
-                SHUnlockShared(pShare);
+                nRegID = pRegEntry->nRegID;
+                SHUnlockShared(pRegEntry);
             }
 
             // free registration entry
