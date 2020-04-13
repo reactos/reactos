@@ -1015,8 +1015,11 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
                         PSIZE_T FreeSize,
                         BOOLEAN Remove)
 {
+    SIZE_T OrigFreeSize = *FreeSize;
     PHEAP_FREE_ENTRY CurrentEntry, NextEntry;
     UCHAR SegmentOffset;
+
+    ASSERT(*FreeSize == FreeEntry->Size);
 
     /* Get the previous entry */
     CurrentEntry = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)FreeEntry - FreeEntry->PreviousSize);
@@ -1053,6 +1056,7 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
         /* Also update previous size if needed */
         if (!(FreeEntry->Flags & HEAP_ENTRY_LAST_ENTRY))
         {
+            ASSERT(((PHEAP_ENTRY)FreeEntry + *FreeSize)->PreviousSize == OrigFreeSize);
             ((PHEAP_ENTRY)FreeEntry + *FreeSize)->PreviousSize = (USHORT)(*FreeSize);
         }
         else
@@ -1067,12 +1071,11 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
     if (!(FreeEntry->Flags & HEAP_ENTRY_LAST_ENTRY))
     {
         NextEntry = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)FreeEntry + *FreeSize);
+        ASSERT(*FreeSize == NextEntry->PreviousSize);
 
         if (!(NextEntry->Flags & HEAP_ENTRY_BUSY) &&
             NextEntry->Size + *FreeSize <= HEAP_MAX_BLOCK_SIZE)
         {
-            ASSERT(*FreeSize == NextEntry->PreviousSize);
-
             /* Remove it if asked for */
             if (Remove)
             {
