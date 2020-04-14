@@ -1120,7 +1120,7 @@ NTAPI
 CsrCaptureArguments(IN PCSR_THREAD CsrThread,
                     IN PCSR_API_MESSAGE ApiMessage)
 {
-    PCSR_CAPTURE_BUFFER LocalCaptureBuffer = NULL, RemoteCaptureBuffer = NULL;
+    PCSR_CAPTURE_BUFFER ClientCaptureBuffer = NULL, ServerCaptureBuffer = NULL;
     SIZE_T BufferDistance;
     ULONG Length = 0;
     ULONG PointerCount;
@@ -1131,12 +1131,12 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
     _SEH2_TRY
     {
         /* Get the buffer we got from whoever called NTDLL */
-        LocalCaptureBuffer = ApiMessage->CsrCaptureData;
-        Length = LocalCaptureBuffer->Size;
+        ClientCaptureBuffer = ApiMessage->CsrCaptureData;
+        Length = ClientCaptureBuffer->Size;
 
         /* Now check if the buffer is inside our mapped section */
-        if (((ULONG_PTR)LocalCaptureBuffer < CsrThread->Process->ClientViewBase) ||
-            (((ULONG_PTR)LocalCaptureBuffer + Length) >= CsrThread->Process->ClientViewBounds))
+        if (((ULONG_PTR)ClientCaptureBuffer < CsrThread->Process->ClientViewBase) ||
+            (((ULONG_PTR)ClientCaptureBuffer + Length) >= CsrThread->Process->ClientViewBounds))
         {
             /* Return failure */
             DPRINT1("*** CSRSS: CaptureBuffer outside of ClientView\n");
@@ -1146,11 +1146,11 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
 
         /* Check if the Length is valid */
         if ((FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) +
-                (LocalCaptureBuffer->PointerCount * sizeof(PVOID)) > Length) ||
-            (LocalCaptureBuffer->PointerCount > MAXUSHORT))
+                (ClientCaptureBuffer->PointerCount * sizeof(PVOID)) > Length) ||
+            (ClientCaptureBuffer->PointerCount > MAXUSHORT))
         {
 #ifdef CSR_DBG
-            DPRINT1("*** CSRSS: CaptureBuffer %p has bad length\n", LocalCaptureBuffer);
+            DPRINT1("*** CSRSS: CaptureBuffer %p has bad length\n", ClientCaptureBuffer);
             if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
 #endif
             /* Return failure */
@@ -1165,9 +1165,9 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
         _SEH2_YIELD(return FALSE);
     } _SEH2_END;
 
-    /* We validated the incoming buffer, now allocate the remote one */
-    RemoteCaptureBuffer = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, Length);
-    if (!RemoteCaptureBuffer)
+    /* We validated the client buffer, now allocate the server buffer */
+    ServerCaptureBuffer = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, Length);
+    if (!ServerCaptureBuffer)
     {
         /* We're out of memory */
         ApiMessage->Status = STATUS_NO_MEMORY;
@@ -1175,17 +1175,17 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
     }
 
     /* Copy the client's buffer */
-    RtlMoveMemory(RemoteCaptureBuffer, LocalCaptureBuffer, Length);
+    RtlMoveMemory(ServerCaptureBuffer, ClientCaptureBuffer, Length);
 
     /* Calculate the difference between our buffer and the client's */
-    BufferDistance = (ULONG_PTR)RemoteCaptureBuffer - (ULONG_PTR)LocalCaptureBuffer;
+    BufferDistance = (ULONG_PTR)ServerCaptureBuffer - (ULONG_PTR)ClientCaptureBuffer;
 
     /*
      * All the pointer offsets correspond to pointers which point
-     * to the remote data buffer instead of the local one.
+     * to the server data buffer instead of the client one.
      */
-    PointerCount  = RemoteCaptureBuffer->PointerCount;
-    OffsetPointer = RemoteCaptureBuffer->PointerOffsetsArray;
+    PointerCount  = ServerCaptureBuffer->PointerCount;
+    OffsetPointer = ServerCaptureBuffer->PointerOffsetsArray;
     while (PointerCount--)
     {
         CurrentOffset = *OffsetPointer;
@@ -1219,15 +1219,15 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
     /* Check if we got success */
     if (ApiMessage->Status != STATUS_SUCCESS)
     {
-        /* Failure. Free the buffer and return */
-        RtlFreeHeap(CsrHeap, 0, RemoteCaptureBuffer);
+        /* Failure, free the buffer and return */
+        RtlFreeHeap(CsrHeap, 0, ServerCaptureBuffer);
         return FALSE;
     }
     else
     {
-        /* Success, save the previous buffer and use the remote capture buffer */
-        RemoteCaptureBuffer->PreviousCaptureBuffer = LocalCaptureBuffer;
-        ApiMessage->CsrCaptureData = RemoteCaptureBuffer;
+        /* Success, save the previous buffer and use the server capture buffer */
+        ServerCaptureBuffer->PreviousCaptureBuffer = ClientCaptureBuffer;
+        ApiMessage->CsrCaptureData = ServerCaptureBuffer;
     }
 
     /* Success */
@@ -1254,35 +1254,35 @@ VOID
 NTAPI
 CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
 {
-    PCSR_CAPTURE_BUFFER RemoteCaptureBuffer, LocalCaptureBuffer;
+    PCSR_CAPTURE_BUFFER ServerCaptureBuffer, ClientCaptureBuffer;
     SIZE_T BufferDistance;
     ULONG PointerCount;
     PULONG_PTR OffsetPointer;
     ULONG_PTR CurrentOffset;
 
-    /* Get the remote capture buffer */
-    RemoteCaptureBuffer = ApiMessage->CsrCaptureData;
+    /* Get the server capture buffer */
+    ServerCaptureBuffer = ApiMessage->CsrCaptureData;
 
     /* Do not continue if there is no captured buffer */
-    if (!RemoteCaptureBuffer) return;
+    if (!ServerCaptureBuffer) return;
 
-    /* If there is one, get the corresponding local capture buffer */
-    LocalCaptureBuffer = RemoteCaptureBuffer->PreviousCaptureBuffer;
+    /* If there is one, get the corresponding client capture buffer */
+    ClientCaptureBuffer = ServerCaptureBuffer->PreviousCaptureBuffer;
 
-    /* Free the previous one and use again the local capture buffer */
-    RemoteCaptureBuffer->PreviousCaptureBuffer = NULL;
-    ApiMessage->CsrCaptureData = LocalCaptureBuffer;
+    /* Free the previous one and use again the client capture buffer */
+    ServerCaptureBuffer->PreviousCaptureBuffer = NULL;
+    ApiMessage->CsrCaptureData = ClientCaptureBuffer;
 
     /* Calculate the difference between our buffer and the client's */
-    BufferDistance = (ULONG_PTR)RemoteCaptureBuffer - (ULONG_PTR)LocalCaptureBuffer;
+    BufferDistance = (ULONG_PTR)ServerCaptureBuffer - (ULONG_PTR)ClientCaptureBuffer;
 
     /*
      * All the pointer offsets correspond to pointers which point
-     * to the local data buffer instead of the remote one (revert
-     * the logic of CsrCaptureArguments).
+     * to the client data buffer instead of the server one (revert
+     * the logic of CsrCaptureArguments()).
      */
-    PointerCount  = RemoteCaptureBuffer->PointerCount;
-    OffsetPointer = RemoteCaptureBuffer->PointerOffsetsArray;
+    PointerCount  = ServerCaptureBuffer->PointerCount;
+    OffsetPointer = ServerCaptureBuffer->PointerOffsetsArray;
     while (PointerCount--)
     {
         CurrentOffset = *OffsetPointer;
@@ -1300,10 +1300,10 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
     }
 
     /* Copy the data back */
-    RtlMoveMemory(LocalCaptureBuffer, RemoteCaptureBuffer, RemoteCaptureBuffer->Size);
+    RtlMoveMemory(ClientCaptureBuffer, ServerCaptureBuffer, ServerCaptureBuffer->Size);
 
     /* Free our allocated buffer */
-    RtlFreeHeap(CsrHeap, 0, RemoteCaptureBuffer);
+    RtlFreeHeap(CsrHeap, 0, ServerCaptureBuffer);
 }
 
 /*++
