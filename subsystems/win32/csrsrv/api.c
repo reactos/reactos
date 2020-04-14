@@ -1401,7 +1401,7 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
 BOOLEAN
 NTAPI
 CsrValidateMessageString(IN PCSR_API_MESSAGE ApiMessage,
-                         IN LPWSTR *MessageString)
+                         IN PWSTR *MessageString)
 {
     if (MessageString)
     {
