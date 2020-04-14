@@ -875,8 +875,6 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
 #if defined(MBEDTLS_SSL_HW_RECORD_ACCEL)
     if( mbedtls_ssl_hw_record_init != NULL )
     {
-        int ret = 0;
-
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "going for mbedtls_ssl_hw_record_init()" ) );
 
         if( ( ret = mbedtls_ssl_hw_record_init( ssl, key1, key2, transform->keylen,
@@ -2702,15 +2700,18 @@ static void ssl_dtls_replay_reset( mbedtls_ssl_context *ssl );
 /*
  * Swap transform_out and out_ctr with the alternative ones
  */
-static void ssl_swap_epochs( mbedtls_ssl_context *ssl )
+static int ssl_swap_epochs( mbedtls_ssl_context *ssl )
 {
     mbedtls_ssl_transform *tmp_transform;
     unsigned char tmp_out_ctr[8];
+#if defined(MBEDTLS_SSL_HW_RECORD_ACCEL)
+    int ret;
+#endif /* MBEDTLS_SSL_HW_RECORD_ACCEL */
 
     if( ssl->transform_out == ssl->handshake->alt_transform_out )
     {
         MBEDTLS_SSL_DEBUG_MSG( 3, ( "skip swap epochs" ) );
-        return;
+        return( 0 );
     }
 
     MBEDTLS_SSL_DEBUG_MSG( 3, ( "swap epochs" ) );
@@ -2744,7 +2745,9 @@ static void ssl_swap_epochs( mbedtls_ssl_context *ssl )
             return( MBEDTLS_ERR_SSL_HW_ACCEL_FAILED );
         }
     }
-#endif
+#endif /* MBEDTLS_SSL_HW_RECORD_ACCEL */
+
+    return( 0 );
 }
 
 /*
@@ -2756,6 +2759,8 @@ static void ssl_swap_epochs( mbedtls_ssl_context *ssl )
  */
 int mbedtls_ssl_resend( mbedtls_ssl_context *ssl )
 {
+    int ret;
+
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> mbedtls_ssl_resend" ) );
 
     if( ssl->handshake->retransmit_state != MBEDTLS_SSL_RETRANS_SENDING )
@@ -2763,14 +2768,14 @@ int mbedtls_ssl_resend( mbedtls_ssl_context *ssl )
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "initialise resending" ) );
 
         ssl->handshake->cur_msg = ssl->handshake->flight;
-        ssl_swap_epochs( ssl );
+        if( ( ret = ssl_swap_epochs( ssl ) ) != 0 )
+            return( ret );
 
         ssl->handshake->retransmit_state = MBEDTLS_SSL_RETRANS_SENDING;
     }
 
     while( ssl->handshake->cur_msg != NULL )
     {
-        int ret;
         mbedtls_ssl_flight_item *cur = ssl->handshake->cur_msg;
 
         /* Swap epochs before sending Finished: we can't do it after
@@ -2779,7 +2784,8 @@ int mbedtls_ssl_resend( mbedtls_ssl_context *ssl )
         if( cur->type == MBEDTLS_SSL_MSG_HANDSHAKE &&
             cur->p[0] == MBEDTLS_SSL_HS_FINISHED )
         {
-            ssl_swap_epochs( ssl );
+            if( ( ret = ssl_swap_epochs( ssl ) ) != 0 )
+                return( ret );
         }
 
         memcpy( ssl->out_msg, cur->p, cur->len );
@@ -3594,29 +3600,38 @@ static int ssl_handle_possible_reconnect( mbedtls_ssl_context *ssl )
     int ret;
     size_t len;
 
+    /* Use out_msg as temporary buffer for writing out HelloVerifyRequest,
+     * because the output buffer's already around. Don't use out_buf though,
+     * as we don't want to overwrite out_ctr. */
     ret = ssl_check_dtls_clihlo_cookie(
             ssl->conf->f_cookie_write,
             ssl->conf->f_cookie_check,
             ssl->conf->p_cookie,
             ssl->cli_id, ssl->cli_id_len,
             ssl->in_buf, ssl->in_left,
-            ssl->out_buf, MBEDTLS_SSL_MAX_CONTENT_LEN, &len );
+            ssl->out_msg, MBEDTLS_SSL_MAX_CONTENT_LEN, &len );
 
     MBEDTLS_SSL_DEBUG_RET( 2, "ssl_check_dtls_clihlo_cookie", ret );
 
     if( ret == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED )
     {
+        int send_ret;
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "sending HelloVerifyRequest" ) );
+        MBEDTLS_SSL_DEBUG_BUF( 4, "output record sent to network",
+                                  ssl->out_msg, len );
         /* Don't check write errors as we can't do anything here.
          * If the error is permanent we'll catch it later,
          * if it's not, then hopefully it'll work next time. */
-        (void) ssl->f_send( ssl->p_bio, ssl->out_buf, len );
+        send_ret = ssl->f_send( ssl->p_bio, ssl->out_msg, len );
+        MBEDTLS_SSL_DEBUG_RET( 2, "ssl->f_send", send_ret );
+        (void) send_ret;
 
         return( MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED );
     }
 
     if( ret == 0 )
     {
-        /* Got a valid cookie, partially reset context */
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "cookie is valid, resetting context" ) );
         if( ( ret = ssl_session_reset_int( ssl, 1 ) ) != 0 )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "reset", ret );
