@@ -1120,34 +1120,68 @@ NTAPI
 CsrCaptureArguments(IN PCSR_THREAD CsrThread,
                     IN PCSR_API_MESSAGE ApiMessage)
 {
-    PCSR_CAPTURE_BUFFER ClientCaptureBuffer = NULL, ServerCaptureBuffer = NULL;
+    PCSR_PROCESS CsrProcess = CsrThread->Process;
+    PCSR_CAPTURE_BUFFER ClientCaptureBuffer, ServerCaptureBuffer = NULL;
+    ULONG_PTR EndOfClientBuffer;
+    SIZE_T SizeOfBufferThroughOffsetsArray;
     SIZE_T BufferDistance;
-    ULONG Length = 0;
+    ULONG Length;
     ULONG PointerCount;
     PULONG_PTR OffsetPointer;
     ULONG_PTR CurrentOffset;
 
-    /* Use SEH to make sure this is valid */
+    /* Get the buffer we got from whoever called NTDLL */
+    ClientCaptureBuffer = ApiMessage->CsrCaptureData;
+
+    /* Use SEH to validate and capture the client buffer */
     _SEH2_TRY
     {
-        /* Get the buffer we got from whoever called NTDLL */
-        ClientCaptureBuffer = ApiMessage->CsrCaptureData;
-        Length = ClientCaptureBuffer->Size;
-
-        /* Now check if the buffer is inside our mapped section */
-        if (((ULONG_PTR)ClientCaptureBuffer < CsrThread->Process->ClientViewBase) ||
-            (((ULONG_PTR)ClientCaptureBuffer + Length) >= CsrThread->Process->ClientViewBounds))
+        /* Check whether at least the buffer's header is inside our mapped section */
+        if (  ((ULONG_PTR)ClientCaptureBuffer < CsrProcess->ClientViewBase) ||
+             (((ULONG_PTR)ClientCaptureBuffer + FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray))
+                    >= CsrProcess->ClientViewBounds) )
         {
+#ifdef CSR_DBG
+            DPRINT1("*** CSRSS: CaptureBuffer outside of ClientView 1\n");
+            if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
             /* Return failure */
-            DPRINT1("*** CSRSS: CaptureBuffer outside of ClientView\n");
             ApiMessage->Status = STATUS_INVALID_PARAMETER;
             _SEH2_YIELD(return FALSE);
         }
 
-        /* Check if the Length is valid */
-        if ((FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) +
-                (ClientCaptureBuffer->PointerCount * sizeof(PVOID)) > Length) ||
-            (ClientCaptureBuffer->PointerCount > MAXUSHORT))
+        /* Capture the buffer length */
+        Length = ClientCaptureBuffer->Size;
+
+        /*
+         * Now check if the remaining of the buffer is inside our mapped section.
+         * Take also care for any possible wrap-around of the buffer end-address.
+         */
+        EndOfClientBuffer = (ULONG_PTR)ClientCaptureBuffer + Length;
+        if ( (EndOfClientBuffer < (ULONG_PTR)ClientCaptureBuffer) ||
+             (EndOfClientBuffer >= CsrProcess->ClientViewBounds) )
+        {
+#ifdef CSR_DBG
+            DPRINT1("*** CSRSS: CaptureBuffer outside of ClientView 2\n");
+            if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
+            /* Return failure */
+            ApiMessage->Status = STATUS_INVALID_PARAMETER;
+            _SEH2_YIELD(return FALSE);
+        }
+
+        /* Capture the pointer count */
+        PointerCount = ClientCaptureBuffer->PointerCount;
+
+        /*
+         * Check whether the total buffer size and the pointer count are consistent
+         * -- the array of offsets must be contained inside the buffer.
+         */
+        SizeOfBufferThroughOffsetsArray =
+            FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) +
+                (PointerCount * sizeof(PVOID));
+        if ( (PointerCount > MAXUSHORT) ||
+             (SizeOfBufferThroughOffsetsArray > Length) )
         {
 #ifdef CSR_DBG
             DPRINT1("*** CSRSS: CaptureBuffer %p has bad length\n", ClientCaptureBuffer);
@@ -1160,10 +1194,15 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+#ifdef CSR_DBG
+        DPRINT1("*** CSRSS: Took exception during capture %x\n", _SEH2_GetExceptionCode());
+        if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
         /* Return failure */
         ApiMessage->Status = STATUS_INVALID_PARAMETER;
         _SEH2_YIELD(return FALSE);
-    } _SEH2_END;
+    }
+    _SEH2_END;
 
     /* We validated the client buffer, now allocate the server buffer */
     ServerCaptureBuffer = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, Length);
@@ -1174,8 +1213,29 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
         return FALSE;
     }
 
-    /* Copy the client's buffer */
-    RtlMoveMemory(ServerCaptureBuffer, ClientCaptureBuffer, Length);
+    /*
+     * Copy the client's buffer and ensure we use the correct buffer length
+     * and pointer count we captured and used for validation earlier on.
+     */
+    _SEH2_TRY
+    {
+        RtlMoveMemory(ServerCaptureBuffer, ClientCaptureBuffer, Length);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+#ifdef CSR_DBG
+        DPRINT1("*** CSRSS: Took exception during capture %x\n", _SEH2_GetExceptionCode());
+        if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
+        /* Failure, free the buffer and return */
+        RtlFreeHeap(CsrHeap, 0, ServerCaptureBuffer);
+        ApiMessage->Status = STATUS_INVALID_PARAMETER;
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    ServerCaptureBuffer->Size = Length;
+    ServerCaptureBuffer->PointerCount = PointerCount;
 
     /* Calculate the difference between our buffer and the client's */
     BufferDistance = (ULONG_PTR)ServerCaptureBuffer - (ULONG_PTR)ClientCaptureBuffer;
@@ -1184,7 +1244,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
      * All the pointer offsets correspond to pointers which point
      * to the server data buffer instead of the client one.
      */
-    PointerCount  = ServerCaptureBuffer->PointerCount;
+    // PointerCount  = ServerCaptureBuffer->PointerCount;
     OffsetPointer = ServerCaptureBuffer->PointerOffsetsArray;
     while (PointerCount--)
     {
@@ -1192,12 +1252,30 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
 
         if (CurrentOffset != 0)
         {
+            /*
+             * Check whether the offset is pointer-aligned and whether
+             * it points inside CSR_API_MESSAGE::Data.ApiMessageData.
+             */
+            if ( ((CurrentOffset & (sizeof(PVOID)-1)) != 0) ||
+                 (CurrentOffset < FIELD_OFFSET(CSR_API_MESSAGE, Data.ApiMessageData)) ||
+                 (CurrentOffset >= sizeof(CSR_API_MESSAGE)) )
+            {
+#ifdef CSR_DBG
+                DPRINT1("*** CSRSS: CaptureBuffer MessagePointer outside of message\n");
+                if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
+                /* Invalid pointer, fail */
+                ApiMessage->Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
             /* Get the pointer corresponding to the offset */
             CurrentOffset += (ULONG_PTR)ApiMessage;
 
             /* Validate the bounds of the current pointed pointer */
-            if ((*(PULONG_PTR)CurrentOffset >= CsrThread->Process->ClientViewBase) &&
-                (*(PULONG_PTR)CurrentOffset < CsrThread->Process->ClientViewBounds))
+            if ( (*(PULONG_PTR)CurrentOffset >= ((ULONG_PTR)ClientCaptureBuffer +
+                                                 SizeOfBufferThroughOffsetsArray)) &&
+                 (*(PULONG_PTR)CurrentOffset <= (EndOfClientBuffer - sizeof(PVOID))) )
             {
                 /* Modify the pointed pointer to take into account its new position */
                 *(PULONG_PTR)CurrentOffset += BufferDistance;
@@ -1210,6 +1288,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
 #endif
                 /* Invalid pointer, fail */
                 ApiMessage->Status = STATUS_INVALID_PARAMETER;
+                break;
             }
         }
 
@@ -1278,7 +1357,7 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
 
     /*
      * All the pointer offsets correspond to pointers which point
-     * to the client data buffer instead of the server one (revert
+     * to the client data buffer instead of the server one (reverse
      * the logic of CsrCaptureArguments()).
      */
     PointerCount  = ServerCaptureBuffer->PointerCount;
@@ -1299,8 +1378,21 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
         ++OffsetPointer;
     }
 
-    /* Copy the data back */
-    RtlMoveMemory(ClientCaptureBuffer, ServerCaptureBuffer, ServerCaptureBuffer->Size);
+    /* Copy the data back into the client buffer */
+    _SEH2_TRY
+    {
+        RtlMoveMemory(ClientCaptureBuffer, ServerCaptureBuffer, ServerCaptureBuffer->Size);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+#ifdef CSR_DBG
+        DPRINT1("*** CSRSS: Took exception during release %x\n", _SEH2_GetExceptionCode());
+        if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
+        /* Return failure */
+        ApiMessage->Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     /* Free our allocated buffer */
     RtlFreeHeap(CsrHeap, 0, ServerCaptureBuffer);
