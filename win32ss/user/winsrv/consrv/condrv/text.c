@@ -36,28 +36,16 @@ do { \
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-CONSOLE_IO_OBJECT_TYPE
-TEXTMODE_BUFFER_GetType(PCONSOLE_SCREEN_BUFFER This)
-{
-    // return This->Header.Type;
-    return TEXTMODE_BUFFER;
-}
-
-static CONSOLE_SCREEN_BUFFER_VTBL TextVtbl =
-{
-    TEXTMODE_BUFFER_GetType,
-};
-
-
 /*static*/ VOID
 ClearLineBuffer(PTEXTMODE_SCREEN_BUFFER Buff);
 
-
 NTSTATUS
-CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                                 IN PCONSOLE Console,
-                                 IN PCONSOLE_SCREEN_BUFFER_VTBL Vtbl,
-                                 IN SIZE_T Size);
+CONSOLE_SCREEN_BUFFER_Initialize(
+    OUT PCONSOLE_SCREEN_BUFFER* Buffer,
+    IN PCONSOLE Console,
+    IN CONSOLE_IO_OBJECT_TYPE Type,
+    IN SIZE_T Size);
+
 VOID
 CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer);
 
@@ -86,10 +74,9 @@ TEXTMODE_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
 
     Status = CONSOLE_SCREEN_BUFFER_Initialize((PCONSOLE_SCREEN_BUFFER*)&NewBuffer,
                                               Console,
-                                              &TextVtbl,
+                                              TEXTMODE_BUFFER,
                                               sizeof(TEXTMODE_SCREEN_BUFFER));
     if (!NT_SUCCESS(Status)) return Status;
-    NewBuffer->Header.Type = TEXTMODE_BUFFER;
 
     NewBuffer->Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
                                          TextModeInfo->ScreenBufferSize.X *

@@ -320,11 +320,6 @@ PCHAR ConsoleServerApiNameTable[ConsolepMaxApiNumber - CONSRV_FIRST_API_NUMBER] 
 
 /* FUNCTIONS ******************************************************************/
 
-/* See handle.c */
-NTSTATUS
-ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
-                          IN PCONSOLE_PROCESS_DATA TargetProcessData);
-
 NTSTATUS
 NTAPI
 ConSrvNewProcess(PCSR_PROCESS SourceProcess,

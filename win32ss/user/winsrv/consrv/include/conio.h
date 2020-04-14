@@ -51,20 +51,11 @@ typedef struct _CONSOLE_IO_OBJECT
  * See conoutput.c for the implementation
  */
 
-typedef struct _CONSOLE_SCREEN_BUFFER CONSOLE_SCREEN_BUFFER,
-                                    *PCONSOLE_SCREEN_BUFFER;
+#define GetType(This)   (((PCONSOLE_SCREEN_BUFFER)(This))->Header.Type)
 
-typedef struct _CONSOLE_SCREEN_BUFFER_VTBL
-{
-    CONSOLE_IO_OBJECT_TYPE (*GetType)(PCONSOLE_SCREEN_BUFFER This);
-} CONSOLE_SCREEN_BUFFER_VTBL, *PCONSOLE_SCREEN_BUFFER_VTBL;
-
-#define GetType(This)   (This)->Vtbl->GetType(This)
-
-struct _CONSOLE_SCREEN_BUFFER
+typedef struct _CONSOLE_SCREEN_BUFFER
 {
     CONSOLE_IO_OBJECT Header;           /* Object header - MUST BE IN FIRST PLACE */
-    PCONSOLE_SCREEN_BUFFER_VTBL Vtbl;   /* Virtual table */
 
     LIST_ENTRY ListEntry;               /* Entry in console's list of buffers */
 
@@ -90,7 +81,7 @@ struct _CONSOLE_SCREEN_BUFFER
 //  USHORT   ScreenDefaultAttrib;       /* Default screen char attribute */
 //  USHORT   PopupDefaultAttrib;        /* Default popup char attribute */
     USHORT Mode;                        /* Output buffer modes */
-};
+} CONSOLE_SCREEN_BUFFER, *PCONSOLE_SCREEN_BUFFER;
 
 
 
@@ -182,8 +173,6 @@ typedef struct _CONSOLE_INPUT_BUFFER
 } CONSOLE_INPUT_BUFFER, *PCONSOLE_INPUT_BUFFER;
 
 
-typedef struct _TERMINAL TERMINAL, *PTERMINAL;
-
 /*
  * Structure used to hold console information
  */
@@ -203,6 +192,8 @@ typedef struct _CONSOLE_INFO
     ULONG   CodePage;
 
 } CONSOLE_INFO, *PCONSOLE_INFO;
+
+typedef struct _TERMINAL TERMINAL, *PTERMINAL;
 
 typedef struct _TERMINAL_VTBL
 {

@@ -80,11 +80,11 @@ IDM_DRAGFILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Copy here", IDM_COPYHERE
-        MENUITEM "&Move here", IDM_MOVEHERE
-        MENUITEM "Create &shortcuts here", IDM_LINKHERE
+        MENUITEM "&Copier ici", IDM_COPYHERE
+        MENUITEM "&Déplacer ici", IDM_MOVEHERE
+        MENUITEM "Créer les &raccourcis ici", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Cancel", 0
+        MENUITEM "Annuler", 0
     END
 END
 
@@ -919,7 +919,7 @@ BEGIN
     IDS_EDIT_VERB "Éditer"
     IDS_FIND_VERB "Chercher"
     IDS_PRINT_VERB "Imprimer"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "Ouvrir l'invite de commandes"
 
     IDS_FILE_FOLDER "%u fichiers, %u répertoires"
     IDS_PRINTERS "Imprimantes"

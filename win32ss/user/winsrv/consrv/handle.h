@@ -10,6 +10,14 @@
 
 #pragma once
 
+NTSTATUS
+ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
+                          IN PCONSOLE_PROCESS_DATA TargetProcessData);
+
+VOID
+ConSrvFreeHandlesTable(IN PCONSOLE_PROCESS_DATA ProcessData);
+
+
 VOID
 ConSrvInitObject(IN OUT PCONSOLE_IO_OBJECT Object,
                  IN CONSOLE_IO_OBJECT_TYPE Type,
