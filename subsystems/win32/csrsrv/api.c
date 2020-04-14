@@ -78,16 +78,16 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
             ((ServerDll->ValidTable) && !(ServerDll->ValidTable[ApiId])))
         {
             /* We are beyond the Maximum API ID, or it doesn't exist */
-            DPRINT1("API: %d\n", ApiId);
 #ifdef CSR_DBG
+            DPRINT1("API: %d\n", ApiId);
             DPRINT1("CSRSS: %lx (%s) is invalid ApiTableIndex for %Z or is an "
                     "invalid API to call from the server.\n",
                     ApiId,
                     ((ServerDll->NameTable) && (ServerDll->NameTable[ApiId])) ?
                     ServerDll->NameTable[ApiId] : "*** UNKNOWN ***",
                     &ServerDll->Name);
+            if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
 #endif
-            // DbgBreakPoint();
             ReplyMsg->Status = STATUS_ILLEGAL_FUNCTION;
             return STATUS_ILLEGAL_FUNCTION;
         }
@@ -189,6 +189,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     ConnectInfo->ServerProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
 
     /* Accept the Connection */
+    ASSERT(!AllowConnection || (AllowConnection && CsrProcess));
     Status = NtAcceptConnectPort(&ServerPort,
                                  AllowConnection ? UlongToPtr(CsrProcess->SequenceNumber) : 0,
                                  &ApiMessage->Header,
@@ -382,6 +383,7 @@ CsrApiRequestThread(IN PVOID Parameter)
         /* Make sure the real CID is set */
         Teb->RealClientId = Teb->ClientId;
 
+#ifdef CSR_DBG
         /* Debug check */
         if (Teb->CountOfOwnedCriticalSections)
         {
@@ -391,6 +393,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                     &ReceiveMsg, ReplyMsg);
             DbgBreakPoint();
         }
+#endif
 
         /* Wait for a message to come through */
         Status = NtReplyWaitReceivePort(ReplyPort,
@@ -404,15 +407,17 @@ CsrApiRequestThread(IN PVOID Parameter)
             /* Was it a failure or another success code? */
             if (!NT_SUCCESS(Status))
             {
+#ifdef CSR_DBG
                 /* Check for specific status cases */
                 if ((Status != STATUS_INVALID_CID) &&
                     (Status != STATUS_UNSUCCESSFUL) &&
-                    ((Status == STATUS_INVALID_HANDLE) || (ReplyPort == CsrApiPort)))
+                    ((Status != STATUS_INVALID_HANDLE) || (ReplyPort == CsrApiPort)))
                 {
                     /* Notify the debugger */
                     DPRINT1("CSRSS: ReceivePort failed - Status == %X\n", Status);
                     DPRINT1("CSRSS: ReplyPortHandle %lx CsrApiPort %lx\n", ReplyPort, CsrApiPort);
                 }
+#endif
 
                 /* We failed big time, so start out fresh */
                 ReplyMsg = NULL;
@@ -426,6 +431,9 @@ CsrApiRequestThread(IN PVOID Parameter)
                 continue;
             }
         }
+
+        // ASSERT(ReceiveMsg.Header.u1.s1.TotalLength >= sizeof(PORT_MESSAGE));
+        // ASSERT(ReceiveMsg.Header.u1.s1.TotalLength <  sizeof(ReceiveMsg));
 
         /* Use whatever Client ID we got */
         Teb->RealClientId = ReceiveMsg.Header.ClientId;
@@ -534,9 +542,11 @@ CsrApiRequestThread(IN PVOID Parameter)
                     (!(ServerDll = CsrLoadedServerDll[ServerId])))
                 {
                     /* We are beyond the Maximum Server ID */
+#ifdef CSR_DBG
                     DPRINT1("CSRSS: %lx is invalid ServerDllIndex (%08x)\n",
                             ServerId, ServerDll);
-                    // DbgBreakPoint();
+                    if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
 
                     ReplyMsg = NULL;
                     ReplyPort = CsrApiPort;
@@ -736,9 +746,11 @@ CsrApiRequestThread(IN PVOID Parameter)
             (!(ServerDll = CsrLoadedServerDll[ServerId])))
         {
             /* We are beyond the Maximum Server ID */
+#ifdef CSR_DBG
             DPRINT1("CSRSS: %lx is invalid ServerDllIndex (%08x)\n",
                     ServerId, ServerDll);
-            // DbgBreakPoint();
+            if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
 
             ReplyPort = CsrApiPort;
             ReplyMsg = &ReceiveMsg;
@@ -828,7 +840,10 @@ CsrApiRequestThread(IN PVOID Parameter)
             else if (ReplyCode == CsrReplyDeadClient)
             {
                 /* Reply to the death message */
-                NtReplyPort(ReplyPort, &ReplyMsg->Header);
+                NTSTATUS Status2;
+                Status2 = NtReplyPort(ReplyPort, &ReplyMsg->Header);
+                if (!NT_SUCCESS(Status2))
+                    DPRINT1("CSRSS: Error while replying to the death message, Status 0x%lx\n", Status2);
 
                 /* Reply back to the API port now */
                 ReplyMsg = NULL;
@@ -1042,7 +1057,8 @@ CsrConnectToUser(VOID)
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Connected = FALSE;
-    } _SEH2_END;
+    }
+    _SEH2_END;
 
     if (!Connected)
     {
@@ -1133,9 +1149,11 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
                 (LocalCaptureBuffer->PointerCount * sizeof(PVOID)) > Length) ||
             (LocalCaptureBuffer->PointerCount > MAXUSHORT))
         {
-            /* Return failure */
+#ifdef CSR_DBG
             DPRINT1("*** CSRSS: CaptureBuffer %p has bad length\n", LocalCaptureBuffer);
-            DbgBreakPoint();
+            if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
+            /* Return failure */
             ApiMessage->Status = STATUS_INVALID_PARAMETER;
             _SEH2_YIELD(return FALSE);
         }
@@ -1186,9 +1204,11 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
             }
             else
             {
-                /* Invalid pointer, fail */
+#ifdef CSR_DBG
                 DPRINT1("*** CSRSS: CaptureBuffer MessagePointer outside of ClientView\n");
-                DbgBreakPoint();
+                if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
+                /* Invalid pointer, fail */
                 ApiMessage->Status = STATUS_INVALID_PARAMETER;
             }
         }
@@ -1375,8 +1395,10 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
     }
 
     /* Failure */
+#ifdef CSR_DBG
     DPRINT1("CSRSRV: Bad message buffer %p\n", ApiMessage);
-    DbgBreakPoint();
+    if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
     return FALSE;
 }
 
