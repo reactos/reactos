@@ -83,7 +83,7 @@ static MUI_ENTRY esESLanguagePageEntries[] =
     {
         0,
         0,
-        "   INTRO = Continuar F3 = Salir",
+        "INTRO = Continuar F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -121,7 +121,7 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         6,
         12,
-        "el equipo y preparar\303\241 el segundo paso de instalaci\242n.",
+        "el equipo y preparar\240 el segundo paso de instalaci\242n.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -324,7 +324,7 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         8,
         15,
-        "Este software NO TIENE GARANT\303\215A ni restricciones de uso",
+        "Este software NO TIENE GARANT\326A ni restricciones de uso",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -678,7 +678,7 @@ static MUI_ENTRY esESComputerPageEntries[] =
     {
         6,
         8,
-        "Puede modificar el tipo de equipo en el que instalar\303\241 el SO.",
+        "Puede modificar el tipo de equipo en el que instalar\240 el SO.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1215,14 +1215,14 @@ static MUI_ENTRY esESConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         11,
-        "dispositivos, software, sistemas de arranque de un SO (como ReactOS)",
+        "dispositivos, software, sistemas de arranque de SO (como ReactOS) o",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "u otros programas fundamentales proporcionados por el fabricante del hardware.",
+        "drivers o programas prove\241dos por el fabricante del hardware.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

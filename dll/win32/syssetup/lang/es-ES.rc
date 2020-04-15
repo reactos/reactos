@@ -4,6 +4,7 @@
  * PURPOSE:     Spanish locale file
  * COPYRIGHT:   2014 Ismael Ferreras Morezuelas
  *              2018 Julio Carchi Ruiz
+ *              2020 Julen Urizar Compains
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -31,20 +32,20 @@ BEGIN
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "ReactOS Setup"
+CAPTION "Instalación de ReactOS"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
-    LTEXT "Please choose a product option:", IDC_STATIC, 35, 7, 230, 12
-    LTEXT "Product &Options:", IDC_STATIC, 5, 32, 85, 10
+    LTEXT "Por favor, escriba una opción de producto:", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "&Opciones de producto:", IDC_STATIC, 5, 32, 85, 10
     COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "Product Information", IDC_STATIC, 5, 50, 305, 85
-    LTEXT "ProductSuite:", IDC_STATIC, 20, 62, 70, 10
+    GROUPBOX "Información de producto", IDC_STATIC, 5, 50, 305, 85
+    LTEXT "Suite del Producto:", IDC_STATIC, 20, 62, 70, 10
     EDITTEXT IDC_PRODUCT_SUITE, 95, 60, 175, 14, ES_READONLY | ES_AUTOHSCROLL
-    LTEXT "ProductType:", IDC_STATIC, 20, 82, 70, 10
+    LTEXT "Tipo de Producto:", IDC_STATIC, 20, 82, 70, 10
     EDITTEXT IDC_PRODUCT_TYPE, 95, 80, 110, 14, ES_READONLY | ES_AUTOHSCROLL
-    LTEXT "Description:", IDC_STATIC, 20, 102, 70, 10
+    LTEXT "Descripción:", IDC_STATIC, 20, 102, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 99, 205, 30, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
 
@@ -55,7 +56,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Escriba su nombre completo y el nombre de su compañia u organización.", IDC_STATIC, 54, 7, 242, 21
-    LTEXT "No&mbre:", IDC_STATIC, 83, 37, 44, 8, SS_RIGHT
+    LTEXT "&Nombre:", IDC_STATIC, 83, 37, 44, 8, SS_RIGHT
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Organización:", IDC_STATIC, 83, 57, 44, 8,  SS_RIGHT
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
@@ -245,7 +246,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CLASSIC "Classic"
+    IDS_CLASSIC "Clásico"
     IDS_LAUTUS "Lautus"
     IDS_LUNAR "Lunar"
     IDS_MIZU "Mizu"
@@ -253,10 +254,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
-    IDS_PRODUCTSERVERNAME "ReactOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation (Default)"
-    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
-    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
+    IDS_PRODUCTTITLE "Opciones de producto"
+    IDS_PRODUCTSUBTITLE "Puedes seleccionar una opción de producto afectará al comportamiento del sistema."
+    IDS_PRODUCTSERVERNAME "ReactOS como Servidor"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS como Sobremesa (Por defecto)"
+    IDS_PRODUCTSERVERINFO "El sistema será reconocido como un servidor. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" serán independientes de ""Mis documentos""."
+    IDS_PRODUCTWORKSTATIONINFO "El sistema será reconocido como un PC de sobremesa. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" estarán dentro de ""Mis documentos""."
 END
