@@ -1120,8 +1120,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
                     IN PCSR_API_MESSAGE ApiMessage)
 {
     PCSR_PROCESS CsrProcess = CsrThread->Process;
-    volatile CSR_CAPTURE_BUFFER* ClientCaptureBuffer;
-    PCSR_CAPTURE_BUFFER ServerCaptureBuffer = NULL;
+    PCSR_CAPTURE_BUFFER ClientCaptureBuffer, ServerCaptureBuffer = NULL;
     ULONG_PTR EndOfClientBuffer;
     SIZE_T SizeOfBufferThroughOffsetsArray;
     SIZE_T BufferDistance;
@@ -1151,7 +1150,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
         }
 
         /* Capture the buffer length */
-        Length = ClientCaptureBuffer->Size;
+        Length = ((volatile CSR_CAPTURE_BUFFER*)ClientCaptureBuffer)->Size;
 
         /*
          * Now check if the remaining of the buffer is inside our mapped section.
@@ -1171,7 +1170,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
         }
 
         /* Capture the pointer count */
-        PointerCount = ClientCaptureBuffer->PointerCount;
+        PointerCount = ((volatile CSR_CAPTURE_BUFFER*)ClientCaptureBuffer)->PointerCount;
 
         /*
          * Check whether the total buffer size and the pointer count are consistent
