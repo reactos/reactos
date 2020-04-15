@@ -3186,7 +3186,10 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
 
     ret = openTcpFile(&tcpFile, FILE_READ_DATA);
     if (!NT_SUCCESS(ret))
+    {
+        free(indexTable);
         return ERROR_NO_DATA;
+    }
 
     for (i = indexTable->numIndexes; i >= 0; i--)
     {
