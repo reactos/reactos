@@ -939,7 +939,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                         return TRUE;
                     }
 
-#if 0
+#ifdef PASSWORDS_MANDATORY
                     /* Check if admin passwords have been entered */
                     if ((GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 128) == 0) ||
                         (GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 128) == 0))

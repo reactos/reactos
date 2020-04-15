@@ -775,9 +775,9 @@ BEGIN
     IDS_PASTE "Вставить"
     IDS_EJECT "Извлечь"
     IDS_DISCONNECT "Отсоединить"
-    IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
-    IDS_SENDTO_MENU "Se&nd To"
+    IDS_OPENFILELOCATION "Открыть &расположение файла"
+    IDS_DESKLINK "Рабочий стол (создать ярлык)"
+    IDS_SENDTO_MENU "Отправит&ь"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"
     IDS_COPYERRORTITLE "Error Copying File or Folder"
