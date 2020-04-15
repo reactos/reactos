@@ -848,7 +848,6 @@ CsrApiRequestThread(IN PVOID Parameter)
                 /* Reply back to the API port now */
                 ReplyMsg = NULL;
                 ReplyPort = CsrApiPort;
-
                 CsrDereferenceThread(CsrThread);
             }
             else if (ReplyCode == CsrReplyPending)
@@ -1121,7 +1120,8 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
                     IN PCSR_API_MESSAGE ApiMessage)
 {
     PCSR_PROCESS CsrProcess = CsrThread->Process;
-    PCSR_CAPTURE_BUFFER ClientCaptureBuffer, ServerCaptureBuffer = NULL;
+    volatile CSR_CAPTURE_BUFFER* ClientCaptureBuffer;
+    PCSR_CAPTURE_BUFFER ServerCaptureBuffer = NULL;
     ULONG_PTR EndOfClientBuffer;
     SIZE_T SizeOfBufferThroughOffsetsArray;
     SIZE_T BufferDistance;
