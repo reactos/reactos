@@ -1768,7 +1768,7 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             break;
 
         case FCIDM_SHVIEW_SNAPTOGRID:
-            //FIXME
+            m_ListView.Arrange(LVA_SNAPTOGRID);
             break;
         case FCIDM_SHVIEW_AUTOARRANGE:
             if (GetAutoArrange() == S_OK)
