@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Russian resource file
  * COPYRIGHT:   Copyright 2014-2015 Petr Akhlamov (petr-akhlamov@yandex.ru)
- *              Copyright 2017 Stanislav Motylkov (binarymaster@mail.ru)
+ *              Copyright 2017-2020 Stanislav Motylkov (binarymaster@mail.ru)
  *              Copyright 2019 Abdulganiev Rafael (abdulganiev.rafael[at]gmail.com)
  */
 
@@ -339,7 +339,7 @@ BEGIN
     IDS_SEARCHINVALID "'%1' не является допустимой папкой."
     IDS_SEARCH_FOLDER "Ищем в ""%s"""
     IDS_SEARCH_FILES_FOUND "Найдено файлов: %u"
-    IDS_SEARCH_OPEN_FOLDER "Открыть &расположение файла"
+    IDS_SEARCH_OPEN_FOLDER "Открыть &расположение объекта"
     IDS_COL_NAME "Имя"
     IDS_COL_LOCATION "В папке"
     IDS_COL_RELEVANCE "Релевантность"

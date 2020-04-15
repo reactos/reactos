@@ -775,7 +775,7 @@ BEGIN
     IDS_PASTE "Вставить"
     IDS_EJECT "Извлечь"
     IDS_DISCONNECT "Отсоединить"
-    IDS_OPENFILELOCATION "Открыть &расположение файла"
+    IDS_OPENFILELOCATION "Открыть &расположение объекта"
     IDS_DESKLINK "Рабочий стол (создать ярлык)"
     IDS_SENDTO_MENU "Отправит&ь"
 
