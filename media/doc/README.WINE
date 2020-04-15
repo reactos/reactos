@@ -313,7 +313,7 @@ msvcrt -
   sdk/lib/crt/wine/undname.c            # Synced to WineStaging-1.9.16
   sdk/lib/crt/process/thread.c          # Synced to WineStaging-1.7.55
 
-User32 -
+user32 -
   win32ss/user/user32/controls/button.c    # Synced to WineStaging-1.7.37
   win32ss/user/user32/controls/combo.c     # Synced to WineStaging-1.7.37
   win32ss/user/user32/controls/edit.c      # Synced to WineStaging-1.7.55
@@ -358,6 +358,9 @@ setupapi -
 
 win32k -
   win32ss/gdi/ntgdi/bezier.c                    # Synced to WineStaging-1.9.4 (gdi32/painting.c)
+
+winmm -
+  modules/rostests/winetests/winmm      # Synced to WineStaging-4.18
 
 ws2_32 -
   dll/win32/ws2_32/wine/async.c         # Synced to WineStaging-1.9.4
