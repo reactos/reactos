@@ -276,6 +276,8 @@ ChangeView(HWND hWnd)
     RECT rcCharmap;
 #ifndef REMOVE_ADVANCED
     RECT rcAdvanced;
+#else
+    RECT rcCopy;
 #endif
     RECT rcPanelExt;
     RECT rcPanelInt;
@@ -284,10 +286,16 @@ ChangeView(HWND hWnd)
     UINT xPos, yPos;
     UINT Width, Height;
     UINT DeskTopWidth, DeskTopHeight;
+#ifdef REMOVE_ADVANCED
+    HWND hCopy;
+#endif
 
     GetClientRect(hCharmapDlg, &rcCharmap);
 #ifndef REMOVE_ADVANCED
     GetClientRect(hAdvancedDlg, &rcAdvanced);
+#else
+    hCopy = GetDlgItem(hCharmapDlg, IDC_COPY);
+    GetClientRect(hCopy, &rcCopy);
 #endif
     GetWindowRect(hWnd, &rcPanelExt);
     GetClientRect(hWnd, &rcPanelInt);
@@ -312,6 +320,10 @@ ChangeView(HWND hWnd)
 #ifndef REMOVE_ADVANCED
     if (Settings.IsAdvancedView)
         Height += rcAdvanced.bottom;
+#else
+    /* The lack of advanced button leaves an empty gap at the bottom of the window.
+       Shrink the window height a bit here to accomodate for that lost control. */
+    Height = rcCharmap.bottom + rcCopy.bottom + 10;
 #endif
     if ((xPos + Width) > DeskTopWidth)
         xPos += DeskTopWidth - (xPos + Width);
