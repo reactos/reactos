@@ -360,7 +360,7 @@ win32k -
   win32ss/gdi/ntgdi/bezier.c                    # Synced to WineStaging-1.9.4 (gdi32/painting.c)
 
 winmm -
-  modules/rostests/winetests/winmm  # Synced to WineStaging-4.18
+  modules/rostests/winetests/winmm      # Synced to WineStaging-4.18
 
 ws2_32 -
   dll/win32/ws2_32/wine/async.c         # Synced to WineStaging-1.9.4
