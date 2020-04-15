@@ -8,7 +8,7 @@ BEGIN
     STRING_LABEL_HELP "Crea, cambia o elimina la etiqueta del volumen de un disco.\n\n\
 LABEL [unidad:][etiqueta]\n\n\
   unidad:         Especifica la letra de la unidad de un disco.\n\
-  etiqueta:       Especifica la etiqueta de la unidadSpecifies the label of the drive."
+  etiqueta:       Especifica la etiqueta de la unidad de un disco."
     STRING_LABEL_TEXT1 "El volumen en la unidad %c: es %s\n"
     STRING_LABEL_TEXT2 "El volumen en la unidad %c: no tiene etiqueta\n"
     STRING_LABEL_TEXT3 "El número de serie del volumen es %04X-%04X\n"
