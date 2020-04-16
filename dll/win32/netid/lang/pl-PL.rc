@@ -22,7 +22,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 94, 70, 155, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Grupa robocza:", IDC_WORKGROUPDOMAIN, 7, 85, 77, 8
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 94, 84, 155, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Aby użyć Kreatora identyfikacji sieciowej w celu przyłączenia się do domeny i utworzeniu konta użytkownika lokalnego, klknij przycisk Identyfikator sieciowy.", IDC_STATIC, 7, 100, 153, 32
+    LTEXT "Aby użyć Kreatora identyfikacji sieciowej w celu przyłączenia się do domeny i utworzenia konta użytkownika lokalnego, kliknij przycisk Identyfikator sieciowy.", IDC_STATIC, 7, 100, 153, 32
     PUSHBUTTON "&Identyfikator sieciowy...", IDC_NETWORK_ID, 167, 100, 82, 14
     LTEXT "Aby zmienić nazwę tego komputera lub przyłączyć się do grupy roboczej, kliknij przycisk Zmień.", IDC_STATIC, 7, 149, 153, 26
     PUSHBUTTON "Z&mień...", IDC_NETWORK_PROPERTY, 167, 149, 82, 14
