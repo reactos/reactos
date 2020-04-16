@@ -111,6 +111,8 @@ FillGrid(PMAP infoPtr,
     for (y = 0; y < YCELLS; y++)
     for (x = 0; x < XCELLS; x++)
     {
+        if (i >= infoPtr->NumValidGlyphs) break;
+
         ch = (WCHAR)infoPtr->ValidGlyphs[i];
 
         Cell = &infoPtr->Cells[y][x];
@@ -312,10 +314,14 @@ OnClick(PMAP infoPtr,
         WORD ptx,
         WORD pty)
 {
-    INT x, y;
+    INT x, y, i;
 
     x = ptx / max(1, infoPtr->CellSize.cx);
     y = pty / max(1, infoPtr->CellSize.cy);
+
+    /* make sure the mouse is within a valid glyph */
+    i = XCELLS * infoPtr->iYStart + y * XCELLS + x;
+    if (i >= infoPtr->NumValidGlyphs) return;
 
     /* if the cell is not already active */
     if (!infoPtr->Cells[y][x].bActive)
