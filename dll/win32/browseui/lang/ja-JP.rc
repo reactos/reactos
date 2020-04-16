@@ -345,6 +345,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SEARCH_RESULTS "Search Results"
     IDS_SEARCHINVALID "'%1' は有効なフォルダではありません。"
     IDS_SEARCH_FOLDER "%s を検索中"
     IDS_SEARCH_FILES_FOUND "%u 個のファイルが見つかりました"

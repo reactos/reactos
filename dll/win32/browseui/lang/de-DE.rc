@@ -346,6 +346,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SEARCH_RESULTS "Search Results"
     IDS_SEARCHINVALID "'%1' ist kein gültiger Ordner."
     IDS_SEARCH_FOLDER "%s wird durchsucht"
     IDS_SEARCH_FILES_FOUND "%u Objekte gefunden"
