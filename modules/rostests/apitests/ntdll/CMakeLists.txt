@@ -42,6 +42,7 @@ list(APPEND SOURCE
     RtlBitmap.c
     RtlComputePrivatizedDllName_U.c
     RtlCopyMappedMemory.c
+    RtlDebugInformation.c
     RtlDeleteAce.c
     RtlDetermineDosPathNameType.c
     RtlDoesFileExists.c
