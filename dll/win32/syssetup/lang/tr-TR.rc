@@ -12,15 +12,15 @@ BEGIN
     LTEXT "Kur'la sürdürmek için İleri'ye tıklayınız.", IDC_STATIC, 115, 169, 195, 17
 END
 
-IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "ReactOS geliştiricileri, (parçaları) ReactOS'u oluşturmak için kullanılmış aşağıdaki açık kaynak tasarılara teşekkür etmek istiyorlar:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS, GPL altında ruhsatlanmıştır, bu yüzden onu (onun parçalarını) yeniden kullanmak veyâ yeniden dağıtmak isterseniz GPL'ye uymalısınız.", IDC_STATIC, 15, 110, 227, 19
-    PUSHBUTTON "&GPL'yi Görüntüle...", IDC_VIEWGPL, 251, 110, 50, 19
+    LTEXT "ReactOS, GPL altında ruhsatlanmıştır, bu yüzden onu (onun parçalarını) yeniden kullanmak veyâ yeniden dağıtmak isterseniz GPL'ye uymalısınız.", IDC_STATIC, 15, 110, 220, 25
+    PUSHBUTTON "&GPL'yi Görüntüle...", IDC_VIEWGPL, 236, 110, 65, 19
     LTEXT "Kur'la sürdürmek için İleri'ye tıklayınız.", IDC_STATIC, 15, 136, 195, 17
 END
 
