@@ -423,12 +423,14 @@ MSPAINT_TITLE=Paint
 MSPAINT_DESC=Ejecuta un sencillo programa de edición de imágenes.
 CHARMAP_TITLE=Mapa de caracteres
 CHARMAP_DESC=Ejecuta el mapa de caracteres.
-CLIPBRD_TITLE=Clipboard Viewer
-CLIPBRD_DESC=Clipboard Viewer
+CLIPBRD_TITLE=Visor del Portapapeles
+CLIPBRD_DESC=Controla lo que copias y pegas en el visor del portapapeles de ReactOS.
 KBSWITCH_TITLE=Ajustes de distribución de teclado
 KBSWITCH_DESC=Cambia la distribución de teclas del equipo.
 REGEDIT_TITLE=Editor del Registro
 REGEDIT_DESC=Ejecuta la utilidad de configuración del Registro del sistema operativo.
+TASKMGR_TITLE=Administrador de tareas
+TASKMGR_DESC=Administre y gestione las tareas y procesos en funcionamiento.
 DXDIAG_TITLE=Diagnósticos de ReactX
 DXDIAG_DESC=Ejecuta el programa de diagnóstico de ReactX.
 MAGNIFY_TITLE=Lupa
@@ -447,6 +449,8 @@ WINMINE_TITLE=Buscaminas
 WINMINE_DESC=Jugar al popular juego en el que se debe despejar un campo de minas sin detonar ninguna.
 SPIDER_TITLE=Solitario Spider
 SPIDER_DESC=Jugar al popular juego de cartas de un sólo jugador.
+UTILMAN_TITLE=Herramientas de Accesibilidad
+UTILMAN_DESC=Gestiona las Herramientas de Accesibilidad y su interacción con el sistema.
 
 ; Estonian
 [Strings.0425]

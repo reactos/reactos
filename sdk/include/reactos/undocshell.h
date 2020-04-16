@@ -702,13 +702,6 @@ IStream* WINAPI SHGetViewStream(LPCITEMIDLIST, DWORD, LPCTSTR, LPCTSTR, LPCTSTR)
 
 EXTERN_C HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
 
-PVOID
-WINAPI
-SHLockSharedEx(
-    _In_  HANDLE hData,
-    _In_  DWORD dwProcessId,
-    _In_  BOOL bWriteAccess);
-
 /*****************************************************************************
  * INVALID_FILETITLE_CHARACTERS
  */

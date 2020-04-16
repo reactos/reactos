@@ -57,9 +57,9 @@ BEGIN
     GROUPBOX "Démarrage et Récupération", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Les options Démarrage et Récupération indiquent à l'ordinateur comment démarrer et quoi faire si une erreur empêche l'ordinateur de s'arrêter.", IDC_STATIC, 16, 144, 210, 30
     PUSHBUTTON "Réglages", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "Paramètres système", IDC_SYSSETTINGS, 6, 192, 80, 15
-    PUSHBUTTON "Variables d'en&vironnement", IDC_ENVVAR, 88, 192, 80, 15
-    PUSHBUTTON "Rapport d'e&rreurs", IDC_ERRORREPORT, 170, 192, 80, 15
+    PUSHBUTTON "Paramètres système", IDC_SYSSETTINGS, 6, 192, 75, 15
+    PUSHBUTTON "Variables d'en&vironnement", IDC_ENVVAR, 83, 192, 90, 15
+    PUSHBUTTON "Rapport d'e&rreurs", IDC_ERRORREPORT, 175, 192, 75, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106

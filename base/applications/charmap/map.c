@@ -324,12 +324,12 @@ OnClick(PMAP infoPtr,
         if (infoPtr->pActiveCell)
         {
             /* invalidate normal cells, required when
-                * moving a small active cell via keyboard */
+             * moving a small active cell via keyboard */
             if (!infoPtr->pActiveCell->bLarge)
             {
                 InvalidateRect(infoPtr->hMapWnd,
-                                &infoPtr->pActiveCell->CellInt,
-                                TRUE);
+                               &infoPtr->pActiveCell->CellInt,
+                               TRUE);
             }
 
             infoPtr->pActiveCell->bActive = FALSE;
@@ -556,8 +556,8 @@ MapWndProc(HWND hwnd,
             if (wParam & MK_LBUTTON)
             {
                 OnClick(infoPtr,
-                    LOWORD(lParam),
-                    HIWORD(lParam));
+                        LOWORD(lParam),
+                        HIWORD(lParam));
             }
             break;
         }

@@ -1,10 +1,10 @@
-/* Spanish translation by HUMA2000, Jose Pedro Fernández Pascual e Ismael Ferreras Morezuelas (Swyter) */
+/* Spanish translation by HUMA2000, Jose Pedro Fernández Pascual, Ismael Ferreras Morezuelas (Swyter) y Julen Urizar Compains */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
+    STRING_FILE_NOT_FOUND "Archivo no encontrado - '%s'\n"
     STRING_ATTRIB_HELP "Muestra o cambia los atributos de los archivos.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
        [/S [/D]]\n\n\
@@ -17,7 +17,7 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
   /S  Procesa los archivos coincidentes en el directorio actual\n\
       y sus subdirectorios\n\
   /D  Procesa también los directorios\n\n\
-Type ATTRIB without a parameter to display the attributes of all files.\n"
+Escriba ATTRIB sin un parámetro para mostrar los atributos de todos los archivos.\n"
     STRING_CONSOLE_ERROR "Error desconocido: %d\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Formato de parámetro erróneo - %s\n"
 END

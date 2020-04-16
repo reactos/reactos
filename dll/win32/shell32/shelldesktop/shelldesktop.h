@@ -29,7 +29,7 @@
 #include <undocuser.h>
 
 #include <shellutils.h>
-#include "CChangeNotify.h"
+#include "CChangeNotifyServer.h"
 #include "../shresdef.h"
 
 #include <wine/debug.h>

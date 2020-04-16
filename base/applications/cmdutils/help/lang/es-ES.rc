@@ -1,22 +1,23 @@
 /*
  * Spanish resource file by HUMA2000
  * Jose Pedro Fernández Pascual  2005
+ * Julen Urizar Compains 2020
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?"".\n"
+    IDS_NO_ENTRY "Este comando no está soportado por la utilidad de Ayuda.\nIntenta ""%s /?"".\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
-HELP [command]\n\n\
-  command - Display help information for this command.\n"
+    IDS_USAGE "Otorga información de Ayuda sobre los comandos de ReactOS.\n\n\
+HELP [comando]\n\n\
+  comando - Imprime la información de ayuda para ese comando.\n"
     IDS_HELP1 "Lista de todos los comandos disponibles (con descripción)\n\n\
-  help comando\n\
+  comando help\n\
   comando /?     Para más información del comando especificado.\n\n\
 ?        Muestra todos los comandos disponibles (sin la descripción).\n\
 ALIAS    Crea, borra o muestra los alias.\n\
@@ -61,7 +62,7 @@ RMDIR    Borra un directorio.\n\
 SCREEN   Mueve el cursor y opcionalmente escribe un texto.\n\
 SET      Muestra, cambia o borra variables del entorno de la ventana.\n\
 SHIFT    Marca la posición de parámetros remplazables en un archivo por lotes.\n"
-    IDS_HELP2 "START    Abre una ventana separada para ejecutar un programa o comando específicod.\n\
+    IDS_HELP2 "START    Abre una ventana separada para ejecutar un programa o comando específico.\n\
          Ejecuta CMD.\n\
 TIME     Muestra o cambia la hora del sistema.\n\
 TIMER    Permite al usuario diez paradas para ver.\n\

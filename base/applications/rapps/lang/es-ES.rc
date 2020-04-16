@@ -1,5 +1,5 @@
 /* Spanish Language resource file.
- * Translated by: ?? and Ismael Ferreras Morezuelas (Swyter) <2014-11-07> */
+ * Translated by: ?? and Ismael Ferreras Morezuelas (Swyter) <2014-11-07> and Julen Urizar Compains 2020-04-14 */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -191,7 +191,7 @@ BEGIN
     IDS_INSTALL "Instalar"
     IDS_UNINSTALL "Desinstalar"
     IDS_MODIFY "Modificar"
-    IDS_APPS_COUNT "Número de aplicaciones: %d; Selected: %d"
+    IDS_APPS_COUNT "Nº de aplicaciones: %d; Selecionadas: %d"
     IDS_WELCOME_TITLE "Bienvenido al Administrador de aplicaciones de ReactOS.\n\n"
     IDS_WELCOME_TEXT "Seleccione una categoría a la izquierda, para más tarde seleccionar la aplicación a instalar o desinstalar.\nWeb de ReactOS: "
     IDS_WELCOME_URL "http://www.reactos.org"
@@ -204,51 +204,51 @@ BEGIN
     IDS_APP_REG_REMOVE "¿Está seguro de querer borrar del Registro los datos de instalación del programa?"
     IDS_INFORMATION "Información"
     IDS_UNABLE_TO_DOWNLOAD "No se pudo descargar el paquete. No se ha encontrado la dirección de Internet."
-    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
+    IDS_UNABLE_TO_DOWNLOAD2 "¡Imposible descargar el paquete! Compruebe que está conectado a Internet."
     IDS_UNABLE_TO_REMOVE "No se pudieron borrar del Registro los datos de instalación del programa."
-    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
+    IDS_UNABLE_TO_INSTALL "No se pudo abrir el instalador"
+    IDS_UNABLE_TO_QUERY_CERT "No se pudo recabar la información de certificado.\n\n¿Quiere continuar a pesar de esto?"
     IDS_INTEG_CHECK_TITLE "Verificando integridad del paquete…"
     IDS_INTEG_CHECK_FAIL "El paquete no ha pasado la comprobación de integridad, puede haber sido alterado o estar corrupto. No se recomienda ejecutarlo."
-    IDS_INTERRUPTED_DOWNLOAD "Se ha interrumpido la descarga por un error de red. Comprueba la conexión a Internet."
+    IDS_INTERRUPTED_DOWNLOAD "Se ha interrumpido la descarga por un error de red. Compruebe la conexión a Internet."
     IDS_UNABLE_TO_WRITE "No se ha podido escribir en el disco duro, es posible que no quede espacio libre."
-    IDS_SELECT_ALL "Select/Deselect All"
-    IDS_INSTALL_SELECTED "Install Selected"
-    IDS_SELECTEDFORINST "Selected for installation"
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_SELECT_ALL "Selecccionar/Deseleccionar todo"
+    IDS_INSTALL_SELECTED "Instalar selección"
+    IDS_SELECTEDFORINST "Seleccionados para instalar"
+    IDS_MISMATCH_CERT_INFO "El certificado que usa es desconocido:\nSujeto: %s\nEmisor: %s\n¿Quiere continuar a pesar de ello?"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALLED "Installed"
-    IDS_STATUS_NOTINSTALLED "Not installed"
-    IDS_STATUS_DOWNLOADED "Downloaded"
-    IDS_STATUS_UPDATE_AVAILABLE "Update available"
-    IDS_STATUS_DOWNLOADING "Downloading…"
-    IDS_STATUS_INSTALLING "Installing…"
-    IDS_STATUS_WAITING "Waiting to install…"
-    IDS_STATUS_FINISHED "Finished"
+    IDS_STATUS_INSTALLED "Instalado"
+    IDS_STATUS_NOTINSTALLED "No instalado"
+    IDS_STATUS_DOWNLOADED "Descargado"
+    IDS_STATUS_UPDATE_AVAILABLE "Actualización disponible"
+    IDS_STATUS_DOWNLOADING "Descargando…"
+    IDS_STATUS_INSTALLING "Instalando…"
+    IDS_STATUS_WAITING "Esperando para instalar…"
+    IDS_STATUS_FINISHED "Finalizado"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE_OPENSOURCE "Open Source"
+    IDS_LICENSE_OPENSOURCE "Código abierto"
     IDS_LICENSE_FREEWARE "Freeware"
-    IDS_LICENSE_TRIAL "Trial/Demo"
+    IDS_LICENSE_TRIAL "De Prueba/Demo"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supports your language"
-    IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
-    IDS_LANGUAGE_SINGLE "Single language"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Disponible en tu idioma"
+    IDS_LANGUAGE_NO_TRANSLATION "Disponible otros idiomas"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Disponible en English"
+    IDS_LANGUAGE_SINGLE "Idioma único"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d más)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d disponible)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database…"
+    IDS_DL_DIALOG_DB_DISP "Base de datos de aplicaciones"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizando listado…"
 END
