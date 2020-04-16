@@ -45,10 +45,10 @@ list(APPEND CONSRV_SOURCE
 # FIXME: http://www.cmake.org/Bug/view.php?id=12998
 if(MSVC)
     ## NOTE: No need to specify it as we use MSVC :)
-    ##add_target_compile_flags(consrv "/Ze")
+    ##target_compile_options(consrv PRIVATE "/Ze")
     #set_source_files_properties(${CONSRV_SOURCE} PROPERTIES COMPILE_FLAGS "/Ze")
 else()
-    #add_target_compile_flags(consrv "-fms-extensions")
+    #target_compile_options(consrv PRIVATE "-fms-extensions")
     set_source_files_properties(${CONSRV_SOURCE} PROPERTIES COMPILE_FLAGS "-fms-extensions")
 endif()
 

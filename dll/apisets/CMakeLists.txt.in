@@ -25,9 +25,9 @@ function (add_apiset apiset_name baseaddress)
     set_module_type(${apiset_name} win32dll ENTRYPOINT 0 UNICODE IMAGEBASE ${baseaddress})
 
     if(NOT MSVC)
-        add_target_compile_flags(${apiset_name} "-fno-builtin")
+        target_compile_options(${apiset_name} PRIVATE -fno-builtin)
     else()
-        add_target_compile_flags(${apiset_name} "/wd4026 /wd4273")
+        target_compile_options(${apiset_name} PRIVATE /wd4026 /wd4273)
     endif()
 
     add_importlibs(${apiset_name} ${ARGN} ntdll)

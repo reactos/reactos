@@ -11,7 +11,7 @@ add_library(idndl MODULE
 set_entrypoint(idndl 0)
 
 if(NOT MSVC)
-    add_target_compile_flags(idndl "-fno-exceptions -fno-rtti")
+    target_compile_options(idndl PRIVATE -fno-exceptions -fno-rtti)
 endif()
 
 add_importlibs(idndl kernel32)

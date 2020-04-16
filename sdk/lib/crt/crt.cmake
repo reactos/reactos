@@ -604,8 +604,8 @@ endif()
 
 add_library(crt ${CRT_SOURCE} ${CRT_WINE_SOURCE} ${crt_asm})
 target_link_libraries(crt chkstk)
-add_target_compile_definitions(crt
-    __MINGW_IMPORT=extern
+target_compile_definitions(crt
+ PRIVATE    __MINGW_IMPORT=extern
     USE_MSVCRT_PREFIX
     _MSVCRT_LIB_
     _MSVCRT_

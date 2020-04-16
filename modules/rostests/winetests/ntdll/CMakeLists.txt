@@ -33,7 +33,7 @@ endif()
 add_executable(ntdll_winetest ${SOURCE} testlist.c)
 
 if(USE_CLANG_CL OR (NOT MSVC))
-    add_target_compile_flags(ntdll_winetest "-Wno-format")
+    target_compile_options(ntdll_winetest PRIVATE "-Wno-format")
 endif()
 
 set_module_type(ntdll_winetest win32cui)

@@ -608,7 +608,7 @@ function(add_importlibs _module)
     add_dependency_node(${_module})
     foreach(LIB ${ARGN})
         if("${LIB}" MATCHES "msvcrt")
-            add_target_compile_definitions(${_module} _DLL __USE_CRTIMP)
+            target_compile_definitions(${_module} PRIVATE _DLL __USE_CRTIMP)
             target_link_libraries(${_module} msvcrtex)
         endif()
         target_link_libraries(${_module} lib${LIB})
@@ -657,7 +657,7 @@ function(set_module_type MODULE TYPE)
 
     # Set unicode definitions
     if(__module_UNICODE)
-        add_target_compile_definitions(${MODULE} UNICODE _UNICODE)
+        target_compile_definitions(${MODULE} PRIVATE UNICODE _UNICODE)
     endif()
 
     # Set entry point

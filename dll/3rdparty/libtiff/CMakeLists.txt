@@ -70,5 +70,5 @@ add_pch(libtiff precomp.h SOURCE)
 add_cd_file(TARGET libtiff DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
-    add_target_compile_flags(libtiff "-Wno-unused-but-set-variable")
+    target_compile_options(libtiff PRIVATE "-Wno-unused-but-set-variable")
 endif()

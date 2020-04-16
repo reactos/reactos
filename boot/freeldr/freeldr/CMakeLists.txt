@@ -222,7 +222,7 @@ add_library(freeldr_common
 
 if(USE_CLANG_CL)
     # We need to reduce the binary size
-    add_target_compile_flags(freeldr_common "/Os")
+    target_compile_options(freeldr_common PRIVATE "/Os")
 endif()
 if(NOT MSVC AND ARCH STREQUAL "i386" AND SARCH STREQUAL "xbox")
   # Prevent a warning when doing a memcmp with address 0

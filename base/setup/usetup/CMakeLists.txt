@@ -31,7 +31,7 @@ list(APPEND SOURCE
 add_executable(usetup ${SOURCE} usetup.rc)
 
 if(USE_CLANG_CL)
-    add_target_compile_flags(usetup "-Wno-invalid-source-encoding")
+    target_compile_options(usetup PRIVATE "-Wno-invalid-source-encoding")
 endif()
 
 add_pch(usetup usetup.h SOURCE)

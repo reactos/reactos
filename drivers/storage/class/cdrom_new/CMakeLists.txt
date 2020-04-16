@@ -13,9 +13,9 @@ add_library(cdrom_new MODULE ${SOURCE})
 target_link_libraries(cdrom_new libcntpr wdmguid)
 
 if(USE_CLANG_CL OR (NOT MSVC))
-    add_target_compile_flags(cdrom_new "-Wno-format -Wno-unused-variable -Wno-pointer-sign")
+    target_compile_options(cdrom_new PRIVATE -Wno-format -Wno-unused-variable -Wno-pointer-sign)
     if(USE_CLANG_CL)
-        add_target_compile_flags(cdrom_new "-Wno-enum-conversion -Wno-tautological-constant-compare")
+        target_compile_options(cdrom_new PRIVATE -Wno-enum-conversion -Wno-tautological-constant-compare)
     endif()
 endif()
 

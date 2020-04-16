@@ -18,7 +18,7 @@ add_executable(ntkrnlmp
     ${CMAKE_CURRENT_BINARY_DIR}/ntkrnlmp.def)
 set_property(TARGET ntkrnlmp PROPERTY ENABLE_EXPORTS TRUE)
 
-add_target_compile_definitions(ntkrnlmp CONFIG_SMP)
+target_compile_definitions(ntkrnlmp PRIVATE CONFIG_SMP)
 
 if(ARCH STREQUAL "i386")
     set_entrypoint(ntkrnlmp KiSystemStartup 4)

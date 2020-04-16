@@ -23,11 +23,11 @@ list(APPEND SOURCE
 add_library(uniata MODULE ${SOURCE} idedma.rc)
 
 if(USE_CLANG_CL OR (NOT MSVC))
-    add_target_compile_flags(uniata "-Wno-narrowing")
+    target_compile_options(uniata PRIVATE "-Wno-narrowing")
     if(USE_CLANG_CL)
-        add_target_compile_flags(uniata "-Wno-unused-const-variable")
+        target_compile_options(uniata PRIVATE "-Wno-unused-const-variable")
     else()
-        add_target_compile_flags(uniata "-Wno-unused-but-set-variable")
+        target_compile_options(uniata PRIVATE "-Wno-unused-but-set-variable")
     endif()
 endif()
 

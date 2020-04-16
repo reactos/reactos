@@ -231,7 +231,7 @@ elseif(NO_ROSSYM)
 else()
     # Normal rsym build
     get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
-    
+
     set(CMAKE_C_LINK_EXECUTABLE
         "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
         "${RSYM} -s ${REACTOS_SOURCE_DIR} <TARGET> <TARGET>")
@@ -323,7 +323,7 @@ function(set_module_type_toolchain MODULE TYPE)
         #Disabled due to LD bug: ROSBE-154
         #add_linker_script(${MODULE} ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
     endif()
-    
+
     if(STACK_PROTECTOR)
         target_link_libraries(${MODULE} gcc_ssp)
     endif()
@@ -366,7 +366,7 @@ endfunction()
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-lib=<TARGET>")
 set(CMAKE_IMPLIB_DELAYED_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-delaylib=<TARGET>")
 function(spec2def _dllname _spec_file)
-    
+
     cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
 
     # Get library basename
@@ -396,7 +396,7 @@ function(spec2def _dllname _spec_file)
         if(__spec2def_NO_PRIVATE_WARNINGS)
             set(_extraflags --no-private-warnings)
         endif()
-        
+
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags})
     endif()
 endfunction()
@@ -467,7 +467,7 @@ endfunction()
 
 function(allow_warnings __module)
     # We don't allow warnings in trunk, this needs to be reworked. See CORE-6959.
-    #add_target_compile_flags(${__module} "-Wno-error")
+    #target_compile_options(${__module} PRIVATE "-Wno-error")
 endfunction()
 
 macro(add_asm_files _target)
