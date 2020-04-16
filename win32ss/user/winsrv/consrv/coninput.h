@@ -9,6 +9,13 @@
 
 #pragma once
 
+typedef struct ConsoleInput_t
+{
+    LIST_ENTRY ListEntry;
+    INPUT_RECORD InputEvent;
+} ConsoleInput;
+
+
 NTSTATUS NTAPI
 ConDrvInitInputBuffer(IN PCONSOLE Console,
                       IN ULONG InputBufferSize);

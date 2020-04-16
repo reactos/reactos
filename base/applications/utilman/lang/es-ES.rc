@@ -1,0 +1,56 @@
+﻿/*
+ * PROJECT:         ReactOS Utility Manager (Accessibility)
+ * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:         Spanish (Neutral) translation resource
+ * COPYRIGHT:       Copyright 2019 Bișoc George (fraizeraust99 at gmail dot com)
+ * TRANSLATION:     Julen Urizar Compains (julenuri at hotmail dot com)
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+IDD_MAIN_DIALOG DIALOGEX 0, 0, 284, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Herramientas de Accesibilidad"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX IDC_LISTBOX, 4, 4, 273, 56, LBS_STANDARD | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
+    CONTROL "", IDC_GROUPBOX, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 3, 62, 275, 92
+    CONTROL "Empezar", IDC_START, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 14, 76, 45, 16
+    CONTROL "Parar", IDC_STOP, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 69, 76, 45, 16
+    CONTROL "Empezar automáticamente al inicio", IDC_START_LOG_IN, "Button", BS_CHECKBOX | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_TABSTOP, 12, 101, 206, 14 
+    CONTROL "Empezar automáticamente al bloquear el Escritorio", IDC_START_DESKTOP, "Button", BS_CHECKBOX | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_TABSTOP, 12, 118, 212, 14 
+    CONTROL "Empezar automáticamente al iniciar Herramientas de Accesibilidad", IDC_START_UTILMAN, "Button", BS_CHECKBOX | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_TABSTOP, 12, 134, 212, 13 
+    CONTROL "&OK", IDC_OK, "Button", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 160, 161, 50, 14 
+    CONTROL "&Cancelar", IDC_CANCEL, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 221, 161, 50, 14 
+    CONTROL "&Ayuda", IDC_HELP_TOPICS, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_TABSTOP, 98, 161, 50, 14 
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 210, 65
+CAPTION "Acerca de las Herramientas de Accesibilidad"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+    ICON IDI_ICON_UTILMAN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "Accessibility Utility Manager\nCopyright 2019 George Bișoc (fraizeraust99 at gmail dot com)", IDC_STATIC, 48, 7, 150, 36
+    LTEXT "Copyright 2019 Hermes Belusca-Maito", IDC_STATIC, 48, 33, 150, 36
+    PUSHBUTTON "Cerrar", IDOK, 75, 47, 44, 15
+END
+
+STRINGTABLE
+BEGIN
+    IDS_OSK "Teclado en Pantalla"
+    IDS_MAGNIFIER "Lupa"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOTRUNNING "%s no está funcionando"
+    IDS_RUNNING "%s está funcionando"
+    IDS_GROUPBOX_OPTIONS_TITLE "Opciones para %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDM_ABOUT "Acerca de las Herramientas de Accesibilidad..."
+END

@@ -1164,6 +1164,21 @@ static HRESULT TiffFrameDecode_ReadTile(TiffFrameDecode *This, UINT tile_x, UINT
         {
             BYTE b = *src--;
 
+#ifdef __REACTOS__
+            dst -= 4;
+            dst[2] = (b & 0x08) ? 0xff : 0; /* R */
+            dst[1] = (b & 0x04) ? 0xff : 0; /* G */
+            dst[0] = (b & 0x02) ? 0xff : 0; /* B */
+            dst[3] = (b & 0x01) ? 0xff : 0; /* A */
+            if (count || This->decode_info.tile_width % 2 == 0)
+            {
+                dst -= 4;
+                dst[2] = (b & 0x80) ? 0xff : 0; /* R */
+                dst[1] = (b & 0x40) ? 0xff : 0; /* G */
+                dst[0] = (b & 0x20) ? 0xff : 0; /* B */
+                dst[3] = (b & 0x10) ? 0xff : 0; /* A */
+            }
+#else
             dst -= 8;
             dst[2] = (b & 0x80) ? 0xff : 0; /* R */
             dst[1] = (b & 0x40) ? 0xff : 0; /* G */
@@ -1173,6 +1188,7 @@ static HRESULT TiffFrameDecode_ReadTile(TiffFrameDecode *This, UINT tile_x, UINT
             dst[5] = (b & 0x04) ? 0xff : 0; /* G */
             dst[4] = (b & 0x02) ? 0xff : 0; /* B */
             dst[7] = (b & 0x01) ? 0xff : 0; /* A */
+#endif
         }
     }
     /* 16bpp RGBA */

@@ -2517,6 +2517,8 @@ GetParentNode:
         nDriverPages = 0;
     }
 
+    dap->pResourceList = GetResourceList(dap->szDeviceID);
+
     /* include the driver page */
     if (dap->HasDriverPage)
         dap->nDevPropSheets++;
@@ -2525,7 +2527,7 @@ GetParentNode:
     if (dap->Extended)
         dap->nDevPropSheets++;
 
-    if (dap->HasResourcePage)
+    if (dap->HasResourcePage && dap->pResourceList != NULL)
         dap->nDevPropSheets++;
 
     /* add the device property sheets */
@@ -2627,7 +2629,7 @@ GetParentNode:
                 }
             }
 
-            if (dap->HasResourcePage)
+            if (dap->HasResourcePage && dap->pResourceList)
             {
                 PROPSHEETPAGE pspDriver = {0};
                 pspDriver.dwSize = sizeof(PROPSHEETPAGE);
@@ -3059,6 +3061,9 @@ Cleanup:
         {
             DestroyIcon(DevAdvPropInfo->hDevIcon);
         }
+
+        if (DevAdvPropInfo->pResourceList != NULL)
+            HeapFree(GetProcessHeap(), 0, DevAdvPropInfo->pResourceList);
 
         HeapFree(GetProcessHeap(),
                  0,
