@@ -1205,7 +1205,7 @@ typedef struct _RTL_DEBUG_INFORMATION
     PRTL_PROCESS_LOCKS Locks;
     HANDLE SpecificHeap;
     HANDLE TargetProcessHandle;
-    RTL_PROCESS_VERIFIER_OPTIONS VerifierOptions;
+    PRTL_PROCESS_VERIFIER_OPTIONS VerifierOptions;
     HANDLE ProcessHeap;
     HANDLE CriticalSectionHandle;
     HANDLE CriticalSectionOwnerThread;
