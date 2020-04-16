@@ -926,7 +926,7 @@ BEGIN
     IDS_EDIT_VERB "Изменить"
     IDS_FIND_VERB "Поиск"
     IDS_PRINT_VERB "Печать"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "Командная строка"
 
     IDS_FILE_FOLDER "%u файлов, %u папок"
     IDS_PRINTERS "Принтеры"
