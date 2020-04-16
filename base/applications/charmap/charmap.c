@@ -283,7 +283,7 @@ ChangeView(HWND hWnd)
     RECT rcPanelInt;
     RECT rcStatus;
     UINT DeX, DeY;
-    UINT xPos, yPos;
+    LONG xPos, yPos;
     UINT Width, Height;
     UINT DeskTopWidth, DeskTopHeight;
 #ifdef REMOVE_ADVANCED
@@ -325,11 +325,12 @@ ChangeView(HWND hWnd)
        Shrink the window height a bit here to accomodate for that lost control. */
     Height = rcCharmap.bottom + rcCopy.bottom + 10;
 #endif
+    // FIXME: This fails on multi monitor setups
     if ((xPos + Width) > DeskTopWidth)
-        xPos += DeskTopWidth - (xPos + Width);
+        xPos = DeskTopWidth - Width;
 
     if ((yPos + Height) > DeskTopHeight)
-        yPos += DeskTopHeight - (yPos + Height);
+        yPos = DeskTopHeight - Height;
 
     MoveWindow(hWnd,
                xPos, yPos,
