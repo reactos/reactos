@@ -56,6 +56,7 @@ list(APPEND SOURCE
     RtlGetFullPathName_UstrEx.c
     RtlGetLengthWithoutTrailingPathSeperators.c
     RtlGetLongestNtPathLength.c
+    RtlGetNtProductType.c
     RtlHandle.c
     RtlImageRvaToVa.c
     RtlIsNameLegalDOS8Dot3.c
