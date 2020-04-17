@@ -266,7 +266,7 @@ HidParser_UsesReportId(
     IN PVOID CollectionContext,
     IN UCHAR  ReportType);
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_GetCollectionUsagePage(
     IN PVOID CollectionContext,
     OUT PUSHORT Usage,
@@ -294,7 +294,7 @@ HidParser_GetMaxUsageListLengthWithReportAndPage(
     IN UCHAR  ReportType,
     IN USAGE  UsagePage  OPTIONAL);
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_GetSpecificValueCapsWithReport(
     IN PVOID CollectionContext,
     IN UCHAR ReportType,
@@ -304,7 +304,7 @@ HidParser_GetSpecificValueCapsWithReport(
     IN OUT PUSHORT  ValueCapsLength);
 
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_GetUsagesWithReport(
     IN PVOID CollectionContext,
     IN UCHAR  ReportType,
@@ -314,7 +314,7 @@ HidParser_GetUsagesWithReport(
     IN PCHAR  ReportDescriptor,
     IN ULONG  ReportDescriptorLength);
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_GetScaledUsageValueWithReport(
     IN PVOID CollectionContext,
     IN UCHAR ReportType,
@@ -324,7 +324,7 @@ HidParser_GetScaledUsageValueWithReport(
     IN PCHAR ReportDescriptor,
     IN ULONG ReportDescriptorLength);
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_GetUsageValueWithReport(
     IN PVOID CollectionContext,
     IN UCHAR ReportType,
@@ -336,7 +336,7 @@ HidParser_GetUsageValueWithReport(
 
 /* parser.c */
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_BuildContext(
     IN PVOID ParserContext,
     IN ULONG CollectionIndex,
@@ -347,7 +347,7 @@ ULONG
 HidParser_CalculateContextSize(
     IN PHID_COLLECTION Collection);
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_ParseReportDescriptor(
     PUCHAR Report,
     ULONG ReportSize,
@@ -373,7 +373,7 @@ ULONG
 HidParser_GetTotalCollectionCount(
     IN PVOID CollectionContext);
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_BuildCollectionContext(
     IN PHID_COLLECTION RootCollection,
     IN PVOID Context,

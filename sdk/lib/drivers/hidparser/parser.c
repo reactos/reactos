@@ -33,7 +33,7 @@ HidParser_FreeCollection(
     //
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_AllocateCollection(
     IN PHID_COLLECTION ParentCollection,
     IN UCHAR Type,
@@ -52,7 +52,7 @@ HidParser_AllocateCollection(
         //
         // no memory
         //
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+        return HIDP_STATUS_INTERNAL_ERROR;
     }
 
     //
@@ -119,10 +119,10 @@ HidParser_AllocateCollection(
     //
     // done
     // 
-    return HIDPARSER_STATUS_SUCCESS;
+    return HIDP_STATUS_SUCCESS;
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_AddCollection(
     IN PHID_COLLECTION CurrentCollection,
     IN PHID_COLLECTION NewCollection)
@@ -144,7 +144,7 @@ HidParser_AddCollection(
         //
         // no memory
         //
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+        return HIDP_STATUS_INTERNAL_ERROR;
     }
 
     if (CurrentCollection->NodeCount)
@@ -175,10 +175,10 @@ HidParser_AddCollection(
     //
     // done
     //
-    return HIDPARSER_STATUS_SUCCESS;
+    return HIDP_STATUS_SUCCESS;
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_FindReportInCollection(
     IN PHID_COLLECTION Collection,
     IN UCHAR ReportType,
@@ -186,7 +186,7 @@ HidParser_FindReportInCollection(
     OUT PHID_REPORT *OutReport)
 {
     ULONG Index;
-    HIDPARSER_STATUS Status;
+    NTSTATUS Status;
 
     //
     // search in local list
@@ -199,7 +199,7 @@ HidParser_FindReportInCollection(
             // found report
             //
             *OutReport = Collection->Reports[Index];
-            return HIDPARSER_STATUS_SUCCESS;
+            return HIDP_STATUS_SUCCESS;
         }
     }
 
@@ -209,7 +209,7 @@ HidParser_FindReportInCollection(
     for(Index = 0; Index < Collection->NodeCount; Index++)
     {
         Status = HidParser_FindReportInCollection(Collection->Nodes[Index], ReportType, ReportID, OutReport);
-        if (Status == HIDPARSER_STATUS_SUCCESS)
+        if (Status == HIDP_STATUS_SUCCESS)
             return Status;
     }
 
@@ -217,11 +217,11 @@ HidParser_FindReportInCollection(
     // no such report found
     //
     *OutReport = NULL;
-    return HIDPARSER_STATUS_REPORT_NOT_FOUND;
+    return HIDP_STATUS_REPORT_DOES_NOT_EXIST;
 }
 
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_FindReport(
     IN PHID_PARSER_CONTEXT ParserContext,
     IN UCHAR ReportType,
@@ -234,7 +234,7 @@ HidParser_FindReport(
     return HidParser_FindReportInCollection(ParserContext->RootCollection->Nodes[ParserContext->RootCollection->NodeCount-1], ReportType, ReportID, OutReport);
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_AllocateReport(
     IN UCHAR ReportType,
     IN UCHAR ReportID,
@@ -251,7 +251,7 @@ HidParser_AllocateReport(
         //
         // no memory
         //
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+        return HIDP_STATUS_INTERNAL_ERROR;
     }
 
     //
@@ -264,10 +264,10 @@ HidParser_AllocateReport(
     // done
     //
     *OutReport = Report;
-    return HIDPARSER_STATUS_SUCCESS;
+    return HIDP_STATUS_SUCCESS;
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_AddReportToCollection(
     IN PHID_PARSER_CONTEXT ParserContext,
     IN PHID_COLLECTION CurrentCollection,
@@ -284,7 +284,7 @@ HidParser_AddReportToCollection(
         //
         // no memory
         //
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+        return HIDP_STATUS_INTERNAL_ERROR;
     }
 
     if (CurrentCollection->ReportCount)
@@ -310,10 +310,10 @@ HidParser_AddReportToCollection(
     //
     // completed successfully
     //
-    return HIDPARSER_STATUS_SUCCESS;
+    return HIDP_STATUS_SUCCESS;
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_GetReport(
     IN PHID_PARSER_CONTEXT ParserContext,
     IN PHID_COLLECTION Collection,
@@ -322,13 +322,13 @@ HidParser_GetReport(
     IN UCHAR CreateIfNotExists,
     OUT PHID_REPORT *OutReport)
 {
-    HIDPARSER_STATUS Status;
+    NTSTATUS Status;
 
     //
     // try finding existing report
     //
     Status = HidParser_FindReport(ParserContext, ReportType, ReportID, OutReport);
-    if (Status == HIDPARSER_STATUS_SUCCESS || CreateIfNotExists == FALSE)
+    if (Status == HIDP_STATUS_SUCCESS || CreateIfNotExists == FALSE)
     {
         //
         // founed report
@@ -340,7 +340,7 @@ HidParser_GetReport(
     // allocate new report
     //
     Status = HidParser_AllocateReport(ReportType, ReportID, OutReport);
-    if (Status != HIDPARSER_STATUS_SUCCESS)
+    if (Status != HIDP_STATUS_SUCCESS)
     {
         //
         // failed to allocate report
@@ -352,7 +352,7 @@ HidParser_GetReport(
     // add report
     //
     Status = HidParser_AddReportToCollection(ParserContext, Collection, *OutReport);
-    if (Status != HIDPARSER_STATUS_SUCCESS)
+    if (Status != HIDP_STATUS_SUCCESS)
     {
         //
         // failed to allocate report
@@ -366,7 +366,7 @@ HidParser_GetReport(
     return Status;
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_ReserveReportItems(
     IN PHID_REPORT Report,
     IN ULONG ReportCount,
@@ -381,7 +381,7 @@ HidParser_ReserveReportItems(
         // space is already allocated
         //
         *OutReport = Report;
-        return HIDPARSER_STATUS_SUCCESS;
+        return HIDP_STATUS_SUCCESS;
     }
 
     //
@@ -399,7 +399,7 @@ HidParser_ReserveReportItems(
         //
         // no memory
         //
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+        return HIDP_STATUS_INTERNAL_ERROR;
     }
 
 
@@ -421,7 +421,7 @@ HidParser_ReserveReportItems(
     //
     // completed sucessfully
     //
-    return HIDPARSER_STATUS_SUCCESS;
+    return HIDP_STATUS_SUCCESS;
 }
 
 VOID
@@ -452,7 +452,7 @@ HidParser_SignRange(
     *NewMaximum = Maximum;
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_InitReportItem(
     IN PHID_REPORT Report,
     IN PHID_REPORT_ITEM ReportItem,
@@ -575,7 +575,7 @@ HidParser_InitReportItem(
     //
     // completed successfully
     //
-    return HIDPARSER_STATUS_SUCCESS;
+    return HIDP_STATUS_SUCCESS;
 }
 
 BOOLEAN
@@ -640,7 +640,7 @@ HidParser_UpdateCollectionReport(
 }
 
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_AddMainItem(
     IN PHID_PARSER_CONTEXT ParserContext,
     IN PHID_REPORT Report,
@@ -649,7 +649,7 @@ HidParser_AddMainItem(
     IN PMAIN_ITEM_DATA ItemData,
     IN PHID_COLLECTION Collection)
 {
-    HIDPARSER_STATUS Status;
+    NTSTATUS Status;
     ULONG Index;
     PHID_REPORT NewReport;
     BOOLEAN Found;
@@ -658,7 +658,7 @@ HidParser_AddMainItem(
     // first grow report item array
     //
     Status = HidParser_ReserveReportItems(Report, GlobalItemState->ReportCount, &NewReport);
-    if (Status != HIDPARSER_STATUS_SUCCESS)
+    if (Status != HIDP_STATUS_SUCCESS)
     {
         //
         // failed to allocate memory
@@ -683,7 +683,7 @@ HidParser_AddMainItem(
     for(Index = 0; Index < GlobalItemState->ReportCount; Index++)
     {
         Status = HidParser_InitReportItem(NewReport, &NewReport->Items[NewReport->ItemCount], GlobalItemState, LocalItemState, ItemData, Index);
-        if (Status != HIDPARSER_STATUS_SUCCESS)
+        if (Status != HIDP_STATUS_SUCCESS)
         {
             //
             // failed to init report item
@@ -700,10 +700,10 @@ HidParser_AddMainItem(
     //
     // done
     //
-    return HIDPARSER_STATUS_SUCCESS;
+    return HIDP_STATUS_SUCCESS;
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_ParseReportDescriptor(
     IN PUCHAR ReportDescriptor,
     IN ULONG ReportLength,
@@ -712,7 +712,7 @@ HidParser_ParseReportDescriptor(
     PGLOBAL_ITEM_STATE LinkedGlobalItemState, NextLinkedGlobalItemState;
     ULONG Index;
     PUSAGE_VALUE NewUsageStack, UsageValue;
-    HIDPARSER_STATUS Status;
+    NTSTATUS Status;
     PHID_COLLECTION CurrentCollection, NewCollection;
     PUCHAR CurrentOffset, ReportEnd;
     PITEM_PREFIX CurrentItem;
@@ -729,14 +729,14 @@ HidParser_ParseReportDescriptor(
     ReportEnd = ReportDescriptor + ReportLength;
 
     if (ReportDescriptor >= ReportEnd)
-        return HIDPARSER_STATUS_COLLECTION_NOT_FOUND;
+        return HIDP_STATUS_USAGE_NOT_FOUND;
 
     //
     // allocate parser
     //
     ParserContext = AllocFunction(sizeof(HID_PARSER_CONTEXT));
     if (!ParserContext)
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+        return HIDP_STATUS_INTERNAL_ERROR;
 
 
     //
@@ -750,14 +750,14 @@ HidParser_ParseReportDescriptor(
         // no memory
         //
         FreeFunction(ParserContext);
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+        return HIDP_STATUS_INTERNAL_ERROR;
     }
 
     //
     // now allocate root collection
     //
     Status = HidParser_AllocateCollection(NULL, COLLECTION_LOGICAL, &ParserContext->LocalItemState, &ParserContext->RootCollection);
-    if (Status != HIDPARSER_STATUS_SUCCESS)
+    if (Status != HIDP_STATUS_SUCCESS)
     {
         //
         // no memory
@@ -765,7 +765,7 @@ HidParser_ParseReportDescriptor(
         FreeFunction(ParserContext->LocalItemState.UsageStack);
         ParserContext->LocalItemState.UsageStack = NULL;
         FreeFunction(ParserContext);
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+        return HIDP_STATUS_INTERNAL_ERROR;
     }
 
     //
@@ -870,13 +870,13 @@ HidParser_ParseReportDescriptor(
                     // allocate new collection
                     //
                     Status = HidParser_AllocateCollection(CurrentCollection, (UCHAR)Data, &ParserContext->LocalItemState, &NewCollection);
-                    ASSERT(Status == HIDPARSER_STATUS_SUCCESS);
+                    ASSERT(Status == HIDP_STATUS_SUCCESS);
 
                     //
                     // add new collection to current collection
                     //
                     Status = HidParser_AddCollection(CurrentCollection, NewCollection);
-                    ASSERT(Status == HIDPARSER_STATUS_SUCCESS);
+                    ASSERT(Status == HIDP_STATUS_SUCCESS);
 
                     //
                     // make new collection current
@@ -926,7 +926,7 @@ HidParser_ParseReportDescriptor(
                     // get report
                     //
                     Status = HidParser_GetReport(ParserContext, CurrentCollection, ReportType, ParserContext->GlobalItemState.ReportId, TRUE, &Report);
-                    ASSERT(Status == HIDPARSER_STATUS_SUCCESS);
+                    ASSERT(Status == HIDP_STATUS_SUCCESS);
 
                     // fill in a sensible default if the index isn't set
                     if (!ParserContext->LocalItemState.DesignatorIndexSet) {
@@ -946,7 +946,7 @@ HidParser_ParseReportDescriptor(
                     // add states & data to the report
                     //
                     Status = HidParser_AddMainItem(ParserContext, Report, &ParserContext->GlobalItemState, &ParserContext->LocalItemState, MainItemData, CurrentCollection);
-                    ASSERT(Status == HIDPARSER_STATUS_SUCCESS);
+                    ASSERT(Status == HIDP_STATUS_SUCCESS);
                 }
 
                 //
@@ -1241,7 +1241,7 @@ HidParser_ParseReportDescriptor(
     //
     // done
     //
-    return HIDPARSER_STATUS_SUCCESS;
+    return HIDP_STATUS_SUCCESS;
 }
 
 PHID_COLLECTION
@@ -1299,7 +1299,7 @@ HidParser_NumberOfTopCollections(
     return ParserContext->RootCollection->NodeCount;
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_BuildContext(
     IN PVOID ParserContext,
     IN ULONG CollectionIndex,
@@ -1308,7 +1308,7 @@ HidParser_BuildContext(
 {
     PHID_COLLECTION Collection;
     PVOID Context;
-    HIDPARSER_STATUS Status;
+    NTSTATUS Status;
 
     //
     // lets get the collection
@@ -1325,14 +1325,14 @@ HidParser_BuildContext(
         //
         // no memory
         //
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+        return HIDP_STATUS_INTERNAL_ERROR;
     }
 
     //
     // lets build the context
     //
     Status = HidParser_BuildCollectionContext(Collection, Context, ContextSize);
-    if (Status == HIDPARSER_STATUS_SUCCESS)
+    if (Status == HIDP_STATUS_SUCCESS)
     {
         //
         // store context

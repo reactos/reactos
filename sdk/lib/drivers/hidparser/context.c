@@ -181,7 +181,7 @@ HidParser_StoreCollection(
     return CurrentOffset - InitialOffset;
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_BuildCollectionContext(
     IN PHID_COLLECTION RootCollection,
     IN PVOID Context,
@@ -213,7 +213,7 @@ HidParser_BuildCollectionContext(
     //
     // done
     //
-    return HIDPARSER_STATUS_SUCCESS;
+    return HIDP_STATUS_SUCCESS;
 }
 
 PHID_REPORT

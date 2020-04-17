@@ -35,7 +35,7 @@ HidP_GetCaps(
 
 NTSTATUS
 TranslateStatusForUpperLayer(
-    IN HIDPARSER_STATUS Status)
+    IN NTSTATUS Status)
 {
     //
     // now we are handling only this values, for others just return
@@ -43,13 +43,13 @@ TranslateStatusForUpperLayer(
     //
     switch (Status)
     {
-    case HIDPARSER_STATUS_INSUFFICIENT_RESOURCES:
+    case HIDP_STATUS_INTERNAL_ERROR:
         return STATUS_INSUFFICIENT_RESOURCES;
-    case HIDPARSER_STATUS_INVALID_REPORT_TYPE:
+    case HIDP_STATUS_INVALID_REPORT_TYPE:
         return HIDP_STATUS_INVALID_REPORT_TYPE;
-    case HIDPARSER_STATUS_BUFFER_TOO_SMALL:
+    case HIDP_STATUS_BUFFER_TOO_SMALL:
         return STATUS_BUFFER_TOO_SMALL;
-    case HIDPARSER_STATUS_COLLECTION_NOT_FOUND:
+    case HIDP_STATUS_USAGE_NOT_FOUND:
         return STATUS_NO_DATA_DETECTED;
     default:
         return Status;

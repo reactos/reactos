@@ -10,29 +10,6 @@
 
 #pragma once
 
-//
-// status code
-//
-typedef long HIDPARSER_STATUS;
-
-//
-// result codes
-//
-typedef enum
-{
-    HIDPARSER_STATUS_SUCCESS = 0,
-    HIDPARSER_STATUS_INSUFFICIENT_RESOURCES = -1,
-    HIDPARSER_STATUS_NOT_IMPLEMENTED = -2,
-    HIDPARSER_STATUS_REPORT_NOT_FOUND = -3,
-    HIDPARSER_STATUS_COLLECTION_NOT_FOUND = -4,
-    HIDPARSER_STATUS_INVALID_REPORT_LENGTH = -5,
-    HIDPARSER_STATUS_INVALID_REPORT_TYPE = -6,
-    HIDPARSER_STATUS_BUFFER_TOO_SMALL = -7,
-    HIDPARSER_STATUS_USAGE_NOT_FOUND = -8,
-    HIDPARSER_STATUS_I8042_TRANS_UNKNOWN = -9,
-    HIDPARSER_STATUS_BAD_LOG_PHY_VALUES = -10
-}HIDPARSER_STATUS_CODES;
-
 NTSTATUS
 NTAPI
 HidParser_GetCollectionDescription(
@@ -344,7 +321,7 @@ HidParser_InitializeReportForID(
     IN OUT PCHAR  Report,
     IN ULONG  ReportLength);
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_TranslateKbdUsage(
     IN USAGE Usage,
     IN HIDP_KEYBOARD_DIRECTION  KeyAction,
@@ -352,7 +329,7 @@ HidParser_TranslateKbdUsage(
     IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
     IN PVOID  InsertCodesContext);
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_TranslateCustUsage(
     IN USAGE Usage,
     IN HIDP_KEYBOARD_DIRECTION  KeyAction,

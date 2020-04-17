@@ -14,37 +14,6 @@
 #include <debug.h>
 
 NTSTATUS
-TranslateHidParserStatus(
-    IN HIDPARSER_STATUS Status)
-{
-    switch(Status)
-    {
-        case HIDPARSER_STATUS_INSUFFICIENT_RESOURCES:
-             return HIDP_STATUS_INTERNAL_ERROR;
-        case HIDPARSER_STATUS_NOT_IMPLEMENTED:
-            return HIDP_STATUS_NOT_IMPLEMENTED;
-        case HIDPARSER_STATUS_REPORT_NOT_FOUND:
-            return HIDP_STATUS_REPORT_DOES_NOT_EXIST;
-        case HIDPARSER_STATUS_INVALID_REPORT_LENGTH:
-            return HIDP_STATUS_INVALID_REPORT_LENGTH;
-        case HIDPARSER_STATUS_INVALID_REPORT_TYPE:
-            return HIDP_STATUS_INVALID_REPORT_TYPE;
-        case HIDPARSER_STATUS_BUFFER_TOO_SMALL:
-            return HIDP_STATUS_BUFFER_TOO_SMALL;
-        case HIDPARSER_STATUS_USAGE_NOT_FOUND:
-            return HIDP_STATUS_USAGE_NOT_FOUND;
-        case HIDPARSER_STATUS_I8042_TRANS_UNKNOWN:
-            return HIDP_STATUS_I8042_TRANS_UNKNOWN;
-        case HIDPARSER_STATUS_COLLECTION_NOT_FOUND:
-            return HIDP_STATUS_NOT_IMPLEMENTED; //FIXME
-        case HIDPARSER_STATUS_BAD_LOG_PHY_VALUES:
-            return HIDP_STATUS_BAD_LOG_PHY_VALUES;
-    }
-    DPRINT1("TranslateHidParserStatus Status %ld not implemented\n", Status);
-    return HIDP_STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
 NTAPI
 HidParser_GetCollectionDescription(
     IN PHIDP_REPORT_DESCRIPTOR ReportDesc,
@@ -52,7 +21,7 @@ HidParser_GetCollectionDescription(
     IN POOL_TYPE PoolType,
     OUT PHIDP_DEVICE_DESC DeviceDescription)
 {
-    HIDPARSER_STATUS ParserStatus;
+    NTSTATUS ParserStatus;
     ULONG CollectionCount;
     ULONG Index;
     PVOID ParserContext;
@@ -61,7 +30,7 @@ HidParser_GetCollectionDescription(
     // first parse the report descriptor
     //
     ParserStatus = HidParser_ParseReportDescriptor(ReportDesc, DescLength, &ParserContext);
-    if (ParserStatus != HIDPARSER_STATUS_SUCCESS)
+    if (ParserStatus != HIDP_STATUS_SUCCESS)
     {
         //
         // failed to parse report descriptor
@@ -120,7 +89,7 @@ HidParser_GetCollectionDescription(
         //
         DeviceDescription->CollectionDesc[Index].PreparsedDataLength = HidParser_GetContextSize(ParserContext, Index);
         ParserStatus = HidParser_BuildContext(ParserContext, Index, DeviceDescription->CollectionDesc[Index].PreparsedDataLength, (PVOID*)&DeviceDescription->CollectionDesc[Index].PreparsedData);
-        if (ParserStatus != HIDPARSER_STATUS_SUCCESS)
+        if (ParserStatus != HIDP_STATUS_SUCCESS)
         {
             //
             // no memory
@@ -154,7 +123,7 @@ HidParser_GetCollectionDescription(
         // get collection usage page
         //
         ParserStatus = HidParser_GetCollectionUsagePage((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, &DeviceDescription->CollectionDesc[Index].Usage, &DeviceDescription->CollectionDesc[Index].UsagePage);
-        if (ParserStatus != HIDPARSER_STATUS_SUCCESS)
+        if (ParserStatus != HIDP_STATUS_SUCCESS)
         {
             // collection not found
             FreeFunction(DeviceDescription->CollectionDesc);
@@ -358,7 +327,7 @@ HidParser_GetSpecificValueCaps(
     OUT PHIDP_VALUE_CAPS  ValueCaps,
     IN OUT PUSHORT  ValueCapsLength)
 {
-    HIDPARSER_STATUS ParserStatus;
+    NTSTATUS ParserStatus;
 
     //
     // FIXME: implement searching in specific collection
@@ -394,19 +363,10 @@ HidParser_GetSpecificValueCaps(
         return HIDP_STATUS_INVALID_REPORT_TYPE;
     }
 
-
-    if (ParserStatus == HIDPARSER_STATUS_SUCCESS)
-    {
-        //
-        // success
-        //
-        return HIDP_STATUS_SUCCESS;
-    }
-
     //
-    // translate error
+    // return status
     //
-    return TranslateHidParserStatus(ParserStatus);
+    return ParserStatus;
 }
 
 HIDAPI
@@ -551,7 +511,7 @@ HidParser_GetUsages(
     IN PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    HIDPARSER_STATUS ParserStatus;
+    NTSTATUS ParserStatus;
 
     //
     // FIXME: implement searching in specific collection
@@ -587,18 +547,10 @@ HidParser_GetUsages(
         return HIDP_STATUS_INVALID_REPORT_TYPE;
     }
 
-    if (ParserStatus == HIDPARSER_STATUS_SUCCESS)
-    {
-        //
-        // success
-        //
-        return HIDP_STATUS_SUCCESS;
-    }
-
     //
-    // translate error
+    // return status
     //
-    return TranslateHidParserStatus(ParserStatus);
+    return ParserStatus;
 }
 
 HIDAPI
@@ -614,7 +566,7 @@ HidParser_GetScaledUsageValue(
     IN PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    HIDPARSER_STATUS ParserStatus;
+    NTSTATUS ParserStatus;
 
     //
     // FIXME: implement searching in specific collection
@@ -650,18 +602,10 @@ HidParser_GetScaledUsageValue(
         return HIDP_STATUS_INVALID_REPORT_TYPE;
     }
 
-    if (ParserStatus == HIDPARSER_STATUS_SUCCESS)
-    {
-        //
-        // success
-        //
-        return HIDP_STATUS_SUCCESS;
-    }
-
     //
-    // translate error
+    // return status
     //
-    return TranslateHidParserStatus(ParserStatus);
+    return ParserStatus;
 }
 
 HIDAPI
@@ -676,7 +620,7 @@ HidParser_TranslateUsageAndPagesToI8042ScanCodes(
    IN PVOID  InsertCodesContext)
 {
     ULONG Index;
-    HIDPARSER_STATUS Status = HIDPARSER_STATUS_SUCCESS;
+    NTSTATUS Status = HIDP_STATUS_SUCCESS;
 
     for(Index = 0; Index < UsageListLength; Index++)
     {
@@ -708,27 +652,19 @@ HidParser_TranslateUsageAndPagesToI8042ScanCodes(
         //
         // check status
         //
-        if (Status != HIDPARSER_STATUS_SUCCESS)
+        if (Status != HIDP_STATUS_SUCCESS)
         {
             //
             // failed
             //
-            return TranslateHidParserStatus(Status);
+            return Status;
         }
     }
 
-    if (Status != HIDPARSER_STATUS_SUCCESS)
-    {
-        //
-        // failed
-        //
-        return TranslateHidParserStatus(Status);
-    }
-
     //
-    // done
+    // return status
     //
-    return HIDP_STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -951,7 +887,7 @@ HidParser_GetUsageValue(
     IN PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    HIDPARSER_STATUS ParserStatus;
+    NTSTATUS ParserStatus;
 
     //
     // FIXME: implement searching in specific collection
@@ -987,18 +923,10 @@ HidParser_GetUsageValue(
         return HIDP_STATUS_INVALID_REPORT_TYPE;
     }
 
-    if (ParserStatus == HIDPARSER_STATUS_SUCCESS)
-    {
-        //
-        // success
-        //
-        return HIDP_STATUS_SUCCESS;
-    }
-
     //
-    // translate error
+    // return status
     //
-    return TranslateHidParserStatus(ParserStatus);
+    return ParserStatus;
 }
 
 NTSTATUS
