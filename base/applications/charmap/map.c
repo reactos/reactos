@@ -491,6 +491,15 @@ OnVScroll(PMAP infoPtr,
         if (abs(iYDiff) < YCELLS)
         {
             RECT rect;
+
+            // invalidate the rect around the active cell since a new cell will become active
+            if (infoPtr->pActiveCell && infoPtr->pActiveCell->bActive)
+            {
+                InvalidateRect(infoPtr->hMapWnd, 
+                               &infoPtr->pActiveCell->CellExt, 
+                               TRUE);
+            }
+            
             GetClientRect(infoPtr->hMapWnd, &rect);
             rect.top += 2;
             rect.bottom -= 2;
