@@ -25,6 +25,63 @@ HICON     hSmIcon;
 HICON     hBgIcon;
 SETTINGS  Settings;
 
+static
+VOID
+FillCharacterSetComboList(HWND hwndCombo)
+{
+    WCHAR lpCharSetText[256];
+    WCHAR* trimmedName;
+    CPINFOEXW cpInfo;
+    INT i;
+
+    if (LoadStringW(hInstance, IDS_UNICODE, lpCharSetText, SIZEOF(lpCharSetText)))
+    {
+        SendMessageW(hwndCombo,
+            CB_ADDSTRING,
+            0,
+            (LPARAM)lpCharSetText);
+    }
+
+    for (i = 0; i < SIZEOF(codePages); i++)
+    {
+        if (GetCPInfoExW(codePages[i], 0, &cpInfo))
+        {
+            trimmedName = wcsstr(cpInfo.CodePageName, L"(");
+            if (!trimmedName) trimmedName = cpInfo.CodePageName;
+
+            SendMessageW(hwndCombo,
+                CB_ADDSTRING,
+                0,
+                (LPARAM)trimmedName);
+        }
+    }
+
+    SendMessageW(hwndCombo,
+        CB_SETCURSEL,
+        0,
+        0);
+}
+
+static
+VOID
+FillGroupByComboList(HWND hwndCombo)
+{
+    WCHAR lpAllText[256];
+
+    if (LoadStringW(hInstance, IDS_ALL, lpAllText, SIZEOF(lpAllText)))
+    {
+        SendMessageW(hwndCombo,
+            CB_ADDSTRING,
+            0,
+            (LPARAM)lpAllText);
+    }
+
+    SendMessageW(hwndCombo,
+        CB_SETCURSEL,
+        0,
+        0);
+}
+
 /* Font-enumeration callback */
 static
 int
@@ -439,6 +496,24 @@ AdvancedDlgProc(HWND hDlg,
         case WM_INITDIALOG:
             return TRUE;
 
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_COMBO_CHARSET:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        INT idx = (INT)SendMessageW((HWND)lParam,
+                            CB_GETCURSEL,
+                            0,
+                            0);
+
+                        EnableWindow(GetDlgItem(hAdvancedDlg, IDC_EDIT_UNICODE), idx == 0);
+                    }
+                    break;
+            }
+        }
+
         default:
             return FALSE;
     }
@@ -466,6 +541,12 @@ PanelOnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
                                 MAKEINTRESOURCE(IDD_ADVANCED),
                                 hWnd,
                                 AdvancedDlgProc);
+
+    FillCharacterSetComboList(GetDlgItem(hAdvancedDlg, IDC_COMBO_CHARSET));
+
+    FillGroupByComboList(GetDlgItem(hAdvancedDlg, IDC_COMBO_GROUPBY));
+    EnableWindow(GetDlgItem(hAdvancedDlg, IDC_COMBO_GROUPBY), FALSE);   // FIXME: Implement
+    EnableWindow(GetDlgItem(hAdvancedDlg, IDC_BUTTON_SEARCH), FALSE);   // FIXME: Implement
 #endif
     hStatusWnd = CreateWindow(STATUSCLASSNAME,
                               NULL,

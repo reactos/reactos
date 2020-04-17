@@ -58,4 +58,6 @@ BEGIN
     IDS_LICENSE "Detta programmet är fri programvara; du kan distribuera det och/eller ändra det under villkoren enligt GNU General Public License som är utgivet av Free Software Foundation;  version 2, eller (om du så önskar) alla senare versioner.\r\n\r\nDette programmet er utgivet i hopp om att det skall kunne användas, men DET FINNS INGA GARANTIER; även utan underförstådd garanti om SÄLJBARHET eller LÄMPLIGHET FÖR ETT VISST ÄNDAMÅL.  Se på GNU General Public Licensen för mer detaljer.\r\n\r\nDu skall ha motagit en kopia av GNU General Public Licensen tillsammans med detta programmet; om du inte har fått det, skriv til Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
     IDS_ABOUT "O&m..."
     IDS_TITLE "Character Map"
+    IDS_UNICODE "Unicode"
+    IDS_ALL "All"
 END

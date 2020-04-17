@@ -55,4 +55,6 @@ BEGIN
     IDS_LICENSE "Ky program eshte falas; ju mund ta shperndani ose modifikoni nen termat e liçenses publike te GNU nga Free Software Foundation; ose versionin 2 te Liçenses, ose (opsionet tend) versionet me te reja.\r\n\r\nKy program shperndahet me shpresen qe do te jete i nevojshem, POR PA ASNJE GARANCI; madje dhe pa nënkuptimin e garancisë së tregtimit apo përshtatshmerise për qëllim të veçantë. Shiko liçensen publike te GNU per me shume detaje.\r\n\r\nJu duhet te jeni paisur me nje kopje te liçenses GNU perkrah ketij programi; nese jo, shkruani Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
     IDS_ABOUT "R&reth..."
     IDS_TITLE "Karakter Map"
+    IDS_UNICODE "Unicode"
+    IDS_ALL "All"
 END
