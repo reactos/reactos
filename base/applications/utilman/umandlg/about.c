@@ -43,11 +43,11 @@ INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
     {
         case WM_INITDIALOG:
         {
-            WCHAR wszAppPath[MAX_BUFFER];
+            WCHAR szAppPath[MAX_BUFFER];
 
             /* Extract the icon resource from the executable process */
-            GetModuleFileNameW(NULL, wszAppPath, _countof(wszAppPath));
-            Globals.hIcon = ExtractIconW(Globals.hInstance, wszAppPath, 0);
+            GetModuleFileNameW(NULL, szAppPath, _countof(szAppPath));
+            Globals.hIcon = ExtractIconW(Globals.hInstance, szAppPath, 0);
 
             /* Set the icon within the dialog's title bar */
             if (Globals.hIcon)
