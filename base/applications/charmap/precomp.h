@@ -19,10 +19,11 @@
 #define XLARGE 45
 #define YLARGE 25
 
-#define FM_SETFONT  (WM_USER + 1)
-#define FM_GETCHAR  (WM_USER + 2)
-#define FM_SETCHAR  (WM_USER + 3)
-#define FM_GETHFONT (WM_USER + 4)
+#define FM_SETFONT    (WM_USER + 1)
+#define FM_GETCHAR    (WM_USER + 2)
+#define FM_SETCHAR    (WM_USER + 3)
+#define FM_GETHFONT   (WM_USER + 4)
+#define FM_SETCHARMAP (WM_USER + 5)
 
 // the code pages to display in the advanced 'character set' combobox
 static const UINT codePages[] = { 
@@ -54,6 +55,7 @@ typedef struct _MAP
     LOGFONTW CurrentFont;
     INT iYStart;
     INT NumRows;
+    INT CharMap;
 
     USHORT ValidGlyphs[MAX_GLYPHS];
     USHORT NumValidGlyphs;

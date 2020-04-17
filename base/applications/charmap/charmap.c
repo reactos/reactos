@@ -13,7 +13,7 @@
 #include <richedit.h>
 #include <winnls.h>
 
-#define REMOVE_ADVANCED
+//#define REMOVE_ADVANCED
 
 #define ID_ABOUT    0x1
 
@@ -507,6 +507,9 @@ AdvancedDlgProc(HWND hDlg,
                             CB_GETCURSEL,
                             0,
                             0);
+                        SendMessageW(GetDlgItem(hCharmapDlg, IDC_FONTMAP),
+                            FM_SETCHARMAP,
+                            idx, 0);
 
                         EnableWindow(GetDlgItem(hAdvancedDlg, IDC_EDIT_UNICODE), idx == 0);
                     }

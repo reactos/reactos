@@ -10,6 +10,7 @@
 #include "precomp.h"
 
 #include <stdlib.h>
+#include <winnls.h>
 
 static const WCHAR szMapWndClass[] = L"FontMapWnd";
 static const WCHAR szLrgCellWndClass[] = L"LrgCellWnd";
@@ -210,6 +211,37 @@ MoveLargeCell(PMAP infoPtr)
 
 static
 VOID
+GetPossibleCharacters(WCHAR* ch, INT codePageIdx)
+{
+    INT i;
+    INT j = 0;
+
+    memset(ch, 0, sizeof(ch[0]) * MAX_GLYPHS);
+
+    if (codePageIdx <= 0 || codePageIdx > SIZEOF(codePages))
+    {
+        // this is unicode, so just load up the first MAX_GLYPHS characters
+        for (i = 0x21; i < MAX_GLYPHS; i++)
+            ch[j++] = (WCHAR)i;
+    }
+    else
+    {
+        // this is a codepage, so use NLS to translate the first 256 characters
+        CHAR multiByteString[256] = { 0 };
+        for (i = 0x21; i < 256; i++)
+            multiByteString[i] = (CHAR)i;
+
+        if (!MultiByteToWideChar(codePages[codePageIdx - 1], 0, multiByteString, 256, ch, MAX_GLYPHS))
+        {
+            // failed for some reason, so clear the array
+            memset(ch, 0, sizeof(ch[0]) * MAX_GLYPHS);
+        }
+    }
+}
+
+
+static
+VOID
 SetFont(PMAP infoPtr,
         LPWSTR lpFontName)
 {
@@ -249,8 +281,8 @@ SetFont(PMAP infoPtr,
 
     SelectObject(hdc, infoPtr->hFont);
 
-    for (i = 0; i < MAX_GLYPHS; i++)
-        ch[i] = (WCHAR)i;
+    // Get the code page associated with the selected 'character set'
+    GetPossibleCharacters(ch, infoPtr->CharMap);
 
     if (GetGlyphIndicesW(hdc,
                          ch,
@@ -259,7 +291,7 @@ SetFont(PMAP infoPtr,
                          GGI_MARK_NONEXISTING_GLYPHS) != GDI_ERROR)
     {
         j = 0;
-        for (i = ' ' + 1; i < MAX_GLYPHS; i++)
+        for (i = 0; i < MAX_GLYPHS; i++)
         {
             if (out[i] != 0xffff)
             {
@@ -536,6 +568,7 @@ MapWndProc(HWND hwnd,
 {
     PMAP infoPtr;
     LRESULT Ret = 0;
+    WCHAR lfFaceName[LF_FACESIZE];
 
     infoPtr = (PMAP)GetWindowLongPtrW(hwnd,
                                       0);
@@ -601,6 +634,14 @@ MapWndProc(HWND hwnd,
 
             break;
         }
+
+        case FM_SETCHARMAP:
+            infoPtr->CharMap = LOWORD(wParam);
+            wcsncpy(lfFaceName,
+                infoPtr->CurrentFont.lfFaceName,
+                sizeof(lfFaceName) / sizeof(lfFaceName[0]));
+            SetFont(infoPtr, lfFaceName);
+            break;
 
         case FM_SETFONT:
             SetFont(infoPtr, (LPWSTR)lParam);
