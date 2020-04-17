@@ -457,6 +457,10 @@ PanelOnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
                                MAKEINTRESOURCE(IDD_CHARMAP),
                                hWnd,
                                CharMapDlgProc);
+
+    // For now, the Help push button is disabled because of lacking of HTML Help support
+    EnableWindow(GetDlgItem(hCharmapDlg, IDC_CMHELP), FALSE);
+
 #ifndef REMOVE_ADVANCED
     hAdvancedDlg = CreateDialog(hInstance,
                                 MAKEINTRESOURCE(IDD_ADVANCED),
@@ -496,8 +500,6 @@ PanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg) {
     case WM_CREATE:
-        // For now, the Help push button is disabled because of lacking of HTML Help support
-        EnableWindow(GetDlgItem(hWnd, IDC_CMHELP), FALSE);
         return PanelOnCreate(hWnd, wParam, lParam);
 
     case WM_CLOSE:
