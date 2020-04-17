@@ -356,7 +356,7 @@ public:
     static VOID Add(DownloadInfo info);
     static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
     static INT_PTR CALLBACK DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    static unsigned WINAPI ThreadFunc(LPVOID Context);
+    static unsigned int WINAPI ThreadFunc(LPVOID Context);
     static VOID LaunchDownloadDialog(BOOL);
 };
 
@@ -433,8 +433,8 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
 
         // Start download process
         DownloadParam *param = new DownloadParam(Dlg, AppsToInstallList, szCaption);
-        DWORD ThreadId;
-        HANDLE Thread = (HANDLE)_beginthreadex(NULL, 0, ThreadFunc, (void *) param, 0, (unsigned *)&ThreadId);
+        unsigned int ThreadId;
+        HANDLE Thread = (HANDLE)_beginthreadex(NULL, 0, ThreadFunc, (void *) param, 0, &ThreadId);
 
         if (!Thread)
         {
@@ -508,7 +508,7 @@ VOID CDownloadManager::UpdateProgress(
     }
 }
 
-unsigned WINAPI CDownloadManager::ThreadFunc(LPVOID param)
+unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 {
     ATL::CStringW Path;
     PWSTR p, q;
