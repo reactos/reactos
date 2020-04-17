@@ -15,7 +15,7 @@
 #include <winspool.h>
 #include <winsplp.h>
 
-#include "../localspl_apitest.h"
+#include "../services_apitest.h"
 #include <spoolss.h>
 
 extern BOOL GetLocalsplFuncs(LPPRINTPROVIDOR pp);
