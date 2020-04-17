@@ -52,5 +52,5 @@ BEGIN
     IDS_ABOUT "À propos..."
     IDS_TITLE "Table des Caractères"
     IDS_UNICODE "Unicode"
-    IDS_ALL "All"
+    IDS_ALL "Tous"
 END
