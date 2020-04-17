@@ -1,6 +1,6 @@
 #include "common/fxpool.h"
-#include "common/mxgeneral.h"
-#include "common/mxmemory.h"
+#include "primitives/mxgeneral.h"
+#include "primitives/mxmemory.h"
 #include "common/fxpoolinlines.h"
 #include "common/dbgtrace.h"
 #include "common/fxmdl.h"

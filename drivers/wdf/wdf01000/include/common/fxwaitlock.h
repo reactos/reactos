@@ -1,8 +1,7 @@
 #ifndef _FXWAITLOCK_H_
 #define _FXWAITLOCK_H_
 
-#include "common/mxevent.h"
-#include "common/mxgeneral.h"
+#include "primitives/mxevent.h"
 #include "common/fxglobals.h"
 #include "common/fxobject.h"
 

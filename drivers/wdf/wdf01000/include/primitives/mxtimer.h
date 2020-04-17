@@ -2,7 +2,7 @@
 #define _MXTIMER_H_
 
 #include <ntddk.h>
-#include "common/mxgeneral.h"
+#include "mxgeneral.h"
 
 #define TolerableDelayUnlimited ((ULONG)-1)
 

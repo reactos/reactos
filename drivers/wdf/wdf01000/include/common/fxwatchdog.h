@@ -1,7 +1,7 @@
 #ifndef __FX_WATCHDOG__
 #define __FX_WATCHDOG__
 
-#include "common/mxtimer.h"
+#include "primitives/mxtimer.h"
 
 
 class FxPkgPnp;

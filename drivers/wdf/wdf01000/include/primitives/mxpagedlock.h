@@ -1,7 +1,7 @@
 #ifndef _MXPAGEDLOCK_H_
 #define _MXPAGEDLOCK_H_
 
-#include "common/dbgmacros.h"
+#include "dbgmacros.h"
 
 typedef FAST_MUTEX MdPagedLock;
 

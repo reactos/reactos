@@ -9,16 +9,16 @@
 #ifndef _FXOBJECT_H_
 #define _FXOBJECT_H_
 
-#include "common/fxtypes.h"
-#include "common/fxhandle.h"
-#include "common/mxlock.h"
-#include "common/fxglobals.h"
-#include "common/fxmacros.h"
-#include "common/fxtypedefs.h"
-#include "common/dbgtrace.h"
-#include "common/fxtagtracker.h"
-#include "common/fxpoolinlines.h"
-#include "common/ifxhascallbacks.h"
+#include "fxtypes.h"
+#include "fxhandle.h"
+#include "primitives/mxlock.h"
+#include "fxglobals.h"
+#include "fxmacros.h"
+#include "fxtypedefs.h"
+#include "dbgtrace.h"
+#include "fxtagtracker.h"
+#include "fxpoolinlines.h"
+#include "ifxhascallbacks.h"
 #include "wdf.h"
 
 

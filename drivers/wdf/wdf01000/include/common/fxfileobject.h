@@ -1,9 +1,9 @@
 #ifndef _FXFILEOBJECT_H_
 #define _FXFILEOBJECT_H_
 
-#include "common/fxnonpagedobject.h"
-#include "common/mxfileobject.h"
-#include "common/fxirp.h"
+#include "fxnonpagedobject.h"
+#include "primitives/mxfileobject.h"
+#include "fxirp.h"
 
 
 class FxFileObject : public FxNonPagedObject {

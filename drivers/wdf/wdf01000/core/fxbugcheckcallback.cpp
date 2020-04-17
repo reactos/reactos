@@ -2,7 +2,7 @@
 #include <ntstrsafe.h>
 #include "common/fxglobals.h"
 #include "common/fxifr.h"
-#include "common/mxmemory.h"
+#include "primitives/mxmemory.h"
 #include "common/fxmacros.h"
 
 extern "C" {

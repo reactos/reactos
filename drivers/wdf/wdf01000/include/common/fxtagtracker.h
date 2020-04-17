@@ -1,9 +1,9 @@
 #ifndef _FXTAGTRACKER_H_
 #define _FXTAGTRACKER_H_
 
-#include "common/fxstump.h"
-#include "common/mxgeneral.h"
-#include "common/dbgtrace.h"
+#include "fxstump.h"
+#include "primitives/mxgeneral.h"
+#include "dbgtrace.h"
 
 
 enum FxTagTrackerType : UCHAR {

@@ -1,10 +1,10 @@
 #ifndef _FXNONPAGEDOBJECT_H_
 #define _FXNONPAGEDOBJECT_H_
 
-#include "common/fxobject.h"
-#include "common/fxglobals.h"
-#include "common/fxverifierlock.h"
-#include "common/mxlock.h"
+#include "fxobject.h"
+#include "fxglobals.h"
+#include "fxverifierlock.h"
+#include "primitives/mxlock.h"
 
 class FxNonPagedObject : public FxObject {
 

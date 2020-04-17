@@ -1,7 +1,7 @@
 #ifndef _MXDEVICEOBJECT_H_
 #define _MXDEVICEOBJECT_H_
 
-#include "common/mxgeneral.h"
+#include "mxgeneral.h"
 
 class MxDeviceObject {
 

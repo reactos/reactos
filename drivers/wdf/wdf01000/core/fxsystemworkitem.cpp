@@ -1,7 +1,7 @@
 #include "common/fxsystemworkitem.h"
 #include "common/fxglobals.h"
 #include "common/dbgtrace.h"
-#include "common/mxgeneral.h"
+#include "primitives/mxgeneral.h"
 
 
 FxSystemWorkItem::FxSystemWorkItem(

@@ -1,10 +1,10 @@
 #ifndef _FXEVENTQUEUE_H_
 #define _FXEVENTQUEUE_H_
 
-#include "common/fxstump.h"
-#include "common/fxwaitlock.h"
-#include "common/fxirp.h"
-#include "common/mxworkitem.h"
+#include "fxstump.h"
+#include "fxwaitlock.h"
+#include "fxirp.h"
+#include "primitives/mxworkitem.h"
 
 class FxPkgPnp;
 

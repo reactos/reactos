@@ -3,9 +3,8 @@
 
 #include <ntddk.h>
 #include "wdf.h"
-#include "common/mxlock.h"
-#include "common/mxpagedlock.h"
-//#include "common/fxglobals.h"
+#include "primitives/mxlock.h"
+#include "primitives/mxpagedlock.h"
 
 
 // forward definitions

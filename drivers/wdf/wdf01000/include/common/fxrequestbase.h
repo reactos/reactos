@@ -1,12 +1,12 @@
 #ifndef _FXREQUESTBASE_H_
 #define _FXREQUESTBASE_H_
 
-#include "common/fxnonpagedobject.h"
-#include "common/fxrequestcontext.h"
-#include "common/mxtimer.h"
-#include "common/fxirpqueue.h"
-#include "common/fxrequestcallbacks.h"
-#include "common/fxioqueuecallbacks.h"
+#include "fxnonpagedobject.h"
+#include "fxrequestcontext.h"
+#include "primitives/mxtimer.h"
+#include "fxirpqueue.h"
+#include "fxrequestcallbacks.h"
+#include "fxioqueuecallbacks.h"
 
 
 //

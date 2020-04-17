@@ -1,9 +1,7 @@
 #ifndef _FXTRANSACTIONEDLIST_H_
 #define _FXTRANSACTIONEDLIST_H_
 
-#include "common/fxstump.h"
-#include "common/mxevent.h"
-#include "common/fxwaitlock.h"
+#include "fxwaitlock.h"
 
 
 enum FxListTransactionAction {
@@ -12,6 +10,7 @@ enum FxListTransactionAction {
     FxTransactionActionRemove,
 };
 
+class MxEvent;
 class FxTransactionedList;
 
 struct FxTransactionedEntry {

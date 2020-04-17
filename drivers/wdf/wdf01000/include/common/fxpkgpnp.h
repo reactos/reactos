@@ -1,20 +1,20 @@
 #ifndef _FXPKGPNP_H_
 #define _FXPKGPNP_H_
 
-#include "common/fxpackage.h"
-#include "common/mxevent.h"
-#include "common/fxpnpstatemachine.h"
-#include "common/fxpnpcallbacks.h"
-#include "common/fxpowerstatemachine.h"
-#include "common/fxpowerpolicystatemachine.h"
-#include "common/fxsystemthread.h"
-#include "common/fxsystemworkitem.h"
-#include "common/fxwaitlock.h"
-#include "common/fxtransactionedlist.h"
-#include "common/fxchildlist.h"
-#include "common/fxresource.h"
-#include "common/fxselfmanagediostatemachine.h"
-#include "common/fxrelateddevicelist.h"
+#include "fxpackage.h"
+#include "primitives/mxevent.h"
+#include "fxpnpstatemachine.h"
+#include "fxpnpcallbacks.h"
+#include "fxpowerstatemachine.h"
+#include "fxpowerpolicystatemachine.h"
+#include "fxsystemthread.h"
+#include "fxsystemworkitem.h"
+#include "fxwaitlock.h"
+#include "fxtransactionedlist.h"
+#include "fxchildlist.h"
+#include "fxresource.h"
+#include "fxselfmanagediostatemachine.h"
+#include "fxrelateddevicelist.h"
 
 
 

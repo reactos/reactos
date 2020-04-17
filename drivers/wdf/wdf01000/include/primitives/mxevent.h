@@ -2,7 +2,7 @@
 #define _MXEVENT_H_
 
 #include <ntddk.h>
-#include "common/dbgmacros.h"
+#include "dbgmacros.h"
 
 typedef KEVENT MdEvent;
 

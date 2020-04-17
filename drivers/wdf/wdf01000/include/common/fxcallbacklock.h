@@ -2,9 +2,9 @@
 #define _FXCALLBACKLOCK_H_
 
 
-#include "common/fxstump.h"
-#include "common/mxgeneral.h"
-#include "common/fxverifierlock.h"
+#include "fxstump.h"
+#include "primitives/mxgeneral.h"
+#include "fxverifierlock.h"
 
 //
 // Callback locks track current owner. This is used to determine if a callback

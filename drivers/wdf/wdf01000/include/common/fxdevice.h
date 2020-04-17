@@ -2,21 +2,21 @@
 #define _FXDEVICE_H_
 
 
-#include "common/fxnonpagedobject.h"
-#include "common/fxdisposelist.h"
-#include "common/mxdeviceobject.h"
-#include "common/fxpackage.h"
-#include "common/fxpkggeneral.h"
-#include "common/fxpkgio.h"
-#include "common/fxpkgpnp.h"
-#include "common/fxwmiirphandler.h"
-#include "common/fxdefaultirphandler.h"
-#include "common/fxirp.h"
-#include "common/fxpkgfdo.h"
-#include "common/fxcxpnppowercallbacks.h"
-#include "common/fxcxdeviceinfo.h"
-#include "common/fxiotarget.h"
-#include "common/fxpkgpdo.h"
+#include "fxnonpagedobject.h"
+#include "fxdisposelist.h"
+#include "primitives/mxdeviceobject.h"
+#include "fxpackage.h"
+#include "fxpkggeneral.h"
+#include "fxpkgio.h"
+#include "fxpkgpnp.h"
+#include "fxwmiirphandler.h"
+#include "fxdefaultirphandler.h"
+#include "fxirp.h"
+#include "fxpkgfdo.h"
+#include "fxcxpnppowercallbacks.h"
+#include "fxcxdeviceinfo.h"
+#include "fxiotarget.h"
+#include "fxpkgpdo.h"
 
 
 struct FxWdmDeviceExtension {

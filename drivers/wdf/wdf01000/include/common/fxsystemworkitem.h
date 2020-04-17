@@ -1,10 +1,10 @@
 #ifndef _FXSYSTEMWORKITEM_H
 #define _FXSYSTEMWORKITEM_H
 
-#include "common/fxglobals.h"
-#include "common/fxnonpagedobject.h"
-#include "common/fxwaitlock.h"
-#include "common/mxworkitem.h"
+#include "fxglobals.h"
+#include "fxnonpagedobject.h"
+#include "fxwaitlock.h"
+#include "primitives/mxworkitem.h"
 
 //
 // This class provides a common place for code to deal with

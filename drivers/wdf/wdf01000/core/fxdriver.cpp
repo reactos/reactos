@@ -2,7 +2,7 @@
 #include "common/fxmacros.h"
 #include "common/fxglobals.h"
 #include "common/fxtrace.h"
-#include "common/mxdriverobject.h"
+#include "primitives/mxdriverobject.h"
 #include "common/fxdevice.h"
 #include "common/fxdeviceinit.h"
 #include "wdf.h"

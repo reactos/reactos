@@ -1,8 +1,8 @@
 #ifndef _PNPPRIV_H_
 #define _PNPPRIV_H_
 
-#include "common/fxglobals.h"
-#include "common/mxdeviceobject.h"
+#include "fxglobals.h"
+#include "primitives/mxdeviceobject.h"
 
 
 __inline

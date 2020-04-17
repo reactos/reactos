@@ -1,7 +1,7 @@
 #ifndef _MXFILEOBJECT_H_
 #define _MXFILEOBJECT_H_
 
-#include "common/mxgeneral.h"
+#include "mxgeneral.h"
 
 
 class MxFileObject

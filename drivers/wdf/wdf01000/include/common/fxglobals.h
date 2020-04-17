@@ -3,12 +3,11 @@
 
 #include <ntddk.h>
 #include "wdf.h"
-#include "common/fxldr.h"
+#include "fxldr.h"
 #include "fxbugcheck.h"
-#include "common/mxlock.h"
-#include "common/fxtypes.h"
-#include "common/fxpool.h"
-#include "common/mxgeneral.h"
+#include "fxtypes.h"
+#include "fxpool.h"
+#include "primitives/mxgeneral.h"
 
 #ifdef __cplusplus
 extern "C" {

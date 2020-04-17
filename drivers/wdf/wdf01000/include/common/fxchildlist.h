@@ -1,11 +1,11 @@
 #ifndef _FXCHILDLIST_H_
 #define _FXCHILDLIST_H_
 
-#include "common/fxstump.h"
-#include "common/fxcallback.h"
-#include "common/fxnonpagedobject.h"
-#include "common/mxevent.h"
-#include "common/fxtransactionedlist.h"
+#include "fxstump.h"
+#include "fxcallback.h"
+#include "fxnonpagedobject.h"
+#include "primitives/mxevent.h"
+#include "fxtransactionedlist.h"
 
 
 enum FxChildListIteratorIndexValues {

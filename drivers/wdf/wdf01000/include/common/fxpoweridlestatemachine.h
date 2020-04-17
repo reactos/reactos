@@ -1,11 +1,11 @@
 #ifndef _FXPOWERIDLESTATEMACHINE_H_
 #define _FXPOWERIDLESTATEMACHINE_H_
 
-#include "common/fxstump.h"
-#include "common/mxgeneral.h"
-#include "common/mxtimer.h"
-#include "common/fxtagtracker.h"
-#include "common/fxwaitlock.h"
+#include "fxstump.h"
+#include "primitives/mxgeneral.h"
+#include "primitives/mxtimer.h"
+#include "fxtagtracker.h"
+#include "fxwaitlock.h"
 
 //
 // This is a magical number based on inspection.  If the queue overflows,

@@ -1,5 +1,5 @@
 #include "common/fxresource.h"
-#include "common/mxmemory.h"
+#include "primitives/mxmemory.h"
 
 
 _Must_inspect_result_

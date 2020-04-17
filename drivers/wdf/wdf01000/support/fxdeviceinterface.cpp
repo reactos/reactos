@@ -1,6 +1,6 @@
 #include "common/fxdeviceinterface.h"
 #include "common/fxdevice.h"
-#include "common/mxgeneral.h"
+#include "primitives/mxgeneral.h"
 #include "common/stringutil.h"
 
 

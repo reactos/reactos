@@ -1,7 +1,7 @@
 #ifndef _MXDRIVEROBJECT_H_
 #define _MXDRIVEROBJECT_H_
 
-#include "common/mxgeneral.h"
+#include "mxgeneral.h"
 
 
 typedef DRIVER_ADD_DEVICE MdDriverAddDeviceType, *MdDriverAddDevice;

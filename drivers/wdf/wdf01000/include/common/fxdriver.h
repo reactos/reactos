@@ -1,14 +1,13 @@
 #ifndef _FXDRIVER_H_
 #define _FXDRIVER_H_
 
-#include "common/fxnonpagedobject.h"
-#include "common/mxgeneral.h"
-#include "common/fxcallbacklock.h"
-#include "common/fxdisposelist.h"
-#include "common/mxgeneral.h"
-#include "common/mxdriverobject.h"
-#include "common/fxcallbackmutexlock.h"
-#include "common/fxdrivercallbacks.h"
+#include "fxnonpagedobject.h"
+#include "fxcallbacklock.h"
+#include "fxdisposelist.h"
+#include "primitives/mxgeneral.h"
+#include "primitives/mxdriverobject.h"
+#include "fxcallbackmutexlock.h"
+#include "fxdrivercallbacks.h"
 #include "wdf.h"
 
 

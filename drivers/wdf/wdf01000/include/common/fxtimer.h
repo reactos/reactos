@@ -1,11 +1,11 @@
 #ifndef _FXTIMER_H_
 #define _FXTIMER_H_
 
-#include "common/fxnonpagedobject.h"
-#include "common/mxtimer.h"
-#include "common/fxobject.h"
-#include "common/fxcallbacklock.h"
-#include "common/fxsystemworkitem.h"
+#include "fxnonpagedobject.h"
+#include "primitives/mxtimer.h"
+#include "fxobject.h"
+#include "fxcallbacklock.h"
+#include "fxsystemworkitem.h"
 
 //
 // Driver Frameworks TIMER Design:

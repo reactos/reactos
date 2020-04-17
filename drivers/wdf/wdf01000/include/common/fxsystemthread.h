@@ -1,8 +1,8 @@
 #ifndef _FXSYSTEMTHREAD_H_
 #define _FXSYSTEMTHREAD_H_
 
-#include "common/fxnonpagedobject.h"
-#include "common/mxevent.h"
+#include "fxnonpagedobject.h"
+#include "primitives/mxevent.h"
 
 
 class FxSystemThread : public FxNonPagedObject {

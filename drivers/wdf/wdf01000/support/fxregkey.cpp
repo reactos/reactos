@@ -1,6 +1,6 @@
 #include "common/fxregkey.h"
 #include "common/fxmacros.h"
-#include "common/mxmemory.h"
+#include "primitives/mxmemory.h"
 #include "common/dbgtrace.h"
 
 

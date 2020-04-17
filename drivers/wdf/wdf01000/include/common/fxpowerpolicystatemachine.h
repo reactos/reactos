@@ -2,14 +2,14 @@
 #define _FXPOWERPOLICYSTATEMACHINE_H_
 
 
-#include "common/fxeventqueue.h"
-#include "common/fxpoxinterface.h"
-#include "common/fxusbidleinfo.h"
-#include "common/fxpnpcallbacks.h"
-#include "common/fxpoweridlestatemachine.h"
-#include "common/fxpnpstatemachine.h"
-#include "common/mxmemory.h"
-#include "common/fxtypedefs.h"
+#include "fxeventqueue.h"
+#include "fxpoxinterface.h"
+#include "fxusbidleinfo.h"
+#include "fxpnpcallbacks.h"
+#include "fxpoweridlestatemachine.h"
+#include "fxpnpstatemachine.h"
+#include "primitives/mxmemory.h"
+#include "fxtypedefs.h"
 
 
 //

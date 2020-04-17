@@ -8,12 +8,12 @@
 #ifndef _FXIOTARGET_H_
 #define _FXIOTARGET_H_
 
-#include "common/fxnonpagedobject.h"
-#include "common/mxdeviceobject.h"
-#include "common/fxwaitlock.h"
-#include "common/fxirpqueue.h"
-#include "common/fxtransactionedlist.h"
-#include "common/fxrequestbase.h"
+#include "fxnonpagedobject.h"
+#include "primitives/mxdeviceobject.h"
+#include "fxwaitlock.h"
+#include "fxirpqueue.h"
+#include "fxtransactionedlist.h"
+#include "fxrequestbase.h"
 
 
 

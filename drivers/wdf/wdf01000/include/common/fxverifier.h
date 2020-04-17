@@ -2,8 +2,8 @@
 #define _FXVERIFIER_H_
 
 #include "fxglobals.h"
-#include "common/mxgeneral.h"
-#include "common/dbgtrace.h"
+#include "primitives/mxgeneral.h"
+#include "dbgtrace.h"
 
 enum FxEnhancedVerifierBitFlags {
     //

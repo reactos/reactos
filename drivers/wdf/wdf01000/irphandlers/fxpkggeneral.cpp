@@ -3,7 +3,7 @@
 #include "common/fxdevice.h"
 #include "common/fxdeviceinit.h"
 #include "common/fxdriver.h"
-#include "common/mxfileobject.h"
+#include "primitives/mxfileobject.h"
 #include "common/fxfileobject.h"
 #include "common/fxhandle.h"
 
