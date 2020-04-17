@@ -212,18 +212,18 @@ MoveLargeCell(PMAP infoPtr)
 
 static
 VOID
-GetPossibleCharacters(WCHAR* ch, INT codePageIdx)
+GetPossibleCharacters(WCHAR* ch, INT chLen, INT codePageIdx)
 {
     INT i;
-    INT j = 0;
 
-    memset(ch, 0, sizeof(ch[0]) * MAX_GLYPHS);
+    memset(ch, 0, sizeof(ch[0]) * chLen);
 
     if (codePageIdx <= 0 || codePageIdx > SIZEOF(codePages))
     {
-        // this is unicode, so just load up the first MAX_GLYPHS characters
-        for (i = 0x21; i < MAX_GLYPHS; i++)
-            ch[j++] = (WCHAR)i;
+        /* this is unicode, so just load up the first MAX_GLYPHS characters
+           start at 0x21 to bypass whitespace characters */
+        for (i = 0; i < min(MAX_GLYPHS, chLen); i++)
+            ch[i] = (WCHAR)(i + 0x21);
     }
     else
     {
@@ -232,10 +232,10 @@ GetPossibleCharacters(WCHAR* ch, INT codePageIdx)
         for (i = 0x21; i < 256; i++)
             multiByteString[i] = (CHAR)i;
 
-        if (!MultiByteToWideChar(codePages[codePageIdx - 1], 0, multiByteString, 256, ch, MAX_GLYPHS))
+        if (!MultiByteToWideChar(codePages[codePageIdx - 1], 0, multiByteString, 256, ch, chLen))
         {
             // failed for some reason, so clear the array
-            memset(ch, 0, sizeof(ch[0]) * MAX_GLYPHS);
+            memset(ch, 0, sizeof(ch[0]) * chLen);
         }
     }
 }
@@ -283,7 +283,7 @@ SetFont(PMAP infoPtr,
     SelectObject(hdc, infoPtr->hFont);
 
     // Get the code page associated with the selected 'character set'
-    GetPossibleCharacters(ch, infoPtr->CharMap);
+    GetPossibleCharacters(ch, MAX_GLYPHS, infoPtr->CharMap);
 
     if (GetGlyphIndicesW(hdc,
                          ch,
