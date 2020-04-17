@@ -37,9 +37,9 @@ FillCharacterSetComboList(HWND hwndCombo)
     if (LoadStringW(hInstance, IDS_UNICODE, lpCharSetText, SIZEOF(lpCharSetText)))
     {
         SendMessageW(hwndCombo,
-            CB_ADDSTRING,
-            0,
-            (LPARAM)lpCharSetText);
+                     CB_ADDSTRING,
+                     0,
+                     (LPARAM)lpCharSetText);
     }
 
     for (i = 0; i < SIZEOF(codePages); i++)
@@ -50,9 +50,9 @@ FillCharacterSetComboList(HWND hwndCombo)
             if (!trimmedName) trimmedName = cpInfo.CodePageName;
 
             SendMessageW(hwndCombo,
-                CB_ADDSTRING,
-                0,
-                (LPARAM)trimmedName);
+                         CB_ADDSTRING,
+                         0,
+                         (LPARAM)trimmedName);
         }
     }
 

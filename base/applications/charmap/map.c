@@ -41,6 +41,7 @@ SetGrid(PMAP infoPtr)
     }
 }
 
+
 static
 VOID
 DrawActiveCell(PMAP infoPtr,
@@ -647,8 +648,8 @@ MapWndProc(HWND hwnd,
         case FM_SETCHARMAP:
             infoPtr->CharMap = LOWORD(wParam);
             wcsncpy(lfFaceName,
-                infoPtr->CurrentFont.lfFaceName,
-                sizeof(lfFaceName) / sizeof(lfFaceName[0]));
+                    infoPtr->CurrentFont.lfFaceName,
+                    SIZEOF(lfFaceName));
             SetFont(infoPtr, lfFaceName);
             break;
 
