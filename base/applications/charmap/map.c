@@ -242,6 +242,7 @@ SetFont(PMAP infoPtr,
                    NULL,
                    TRUE);
 
+    if (infoPtr->pActiveCell) infoPtr->pActiveCell->bActive = FALSE;
     infoPtr->pActiveCell = &infoPtr->Cells[0][0];
 
     // Get all the valid glyphs in this font
@@ -316,12 +317,17 @@ OnClick(PMAP infoPtr,
 {
     INT x, y, i;
 
-    x = ptx / max(1, infoPtr->CellSize.cx);
-    y = pty / max(1, infoPtr->CellSize.cy);
+    x = min(XCELLS - 1, ptx / max(1, infoPtr->CellSize.cx));
+    y = min(YCELLS - 1, pty / max(1, infoPtr->CellSize.cy));
 
     /* make sure the mouse is within a valid glyph */
     i = XCELLS * infoPtr->iYStart + y * XCELLS + x;
-    if (i >= infoPtr->NumValidGlyphs) return;
+    if (i >= infoPtr->NumValidGlyphs)
+    {
+        if (infoPtr->pActiveCell) infoPtr->pActiveCell->bActive = FALSE;
+        infoPtr->pActiveCell = NULL;
+        return;
+    }
 
     /* if the cell is not already active */
     if (!infoPtr->Cells[y][x].bActive)
@@ -570,6 +576,8 @@ MapWndProc(HWND hwnd,
 
         case WM_LBUTTONDBLCLK:
         {
+            if (!infoPtr->pActiveCell) break;
+
             NotifyParentOfSelection(infoPtr,
                                     FM_SETCHAR,
                                     infoPtr->pActiveCell->ch);
