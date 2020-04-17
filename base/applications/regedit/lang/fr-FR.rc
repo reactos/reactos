@@ -507,11 +507,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Chercher"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Chercher le suivant", IDOK, 197, 7, 50, 14
-    PUSHBUTTON "Annuler", IDCANCEL, 197, 24, 50, 14
+    DEFPUSHBUTTON "Chercher le suivant", IDOK, 185, 7, 67, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 185, 24, 67, 14
     GROUPBOX "Rechercher", IDC_STATIC, 7, 25, 63, 51
-    LTEXT "Rechercher :", IDC_STATIC, 7, 8, 37, 10
-    EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
+    LTEXT "Rechercher :", IDC_STATIC, 7, 8, 42, 10
+    EDITTEXT IDC_FINDWHAT, 48, 7, 133, 13, ES_AUTOHSCROLL
     CONTROL "Clés", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 36, 35, 8
     CONTROL "&Valeurs", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
@@ -519,7 +519,7 @@ BEGIN
     CONTROL "&Données", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 60, 42, 8
     CONTROL "Chaîne complète seulement", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
-            WS_TABSTOP, 83, 32, 94, 13
+            WS_TABSTOP, 83, 32, 99, 13
     CONTROL "Sensible à la casse", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 48, 90, 12
 END
