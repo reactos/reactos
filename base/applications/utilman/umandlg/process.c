@@ -1,13 +1,13 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
+ * PROJECT:         ReactOS Utility Manager Resources DLL (UManDlg.dll)
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Process handling functions
- * COPYRIGHT:       Copyright 2019 Bișoc George (fraizeraust99 at gmail dot com)
+ * COPYRIGHT:       Copyright 2019-2020 Bișoc George (fraizeraust99 at gmail dot com)
  */
 
 /* INCLUDES *******************************************************************/
 
-#include "precomp.h"
+#include "umandlg.h"
 
 /* FUNCTIONS ******************************************************************/
 

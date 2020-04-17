@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Utility Manager (Accessibility)
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Main resource file
- * COPYRIGHT:       Copyright 2019 Bișoc George (fraizeraust99 at gmail dot com)
+ * COPYRIGHT:       Copyright 2019-2020 Bișoc George (fraizeraust99 at gmail dot com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -27,30 +27,6 @@ IDI_ICON_UTILMAN ICON "res/utilman.ico"
 
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
-#endif
-#ifdef LANGUAGE_ES_ES
-    #include "lang/es-ES.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/fr-FR.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "lang/he-IL.rc"
-#endif
-#ifdef LANGUAGE_IT_IT
-    #include "lang/it-IT.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/pl-PL.rc"
-#endif
-#ifdef LANGUAGE_RO_RO
-    #include "lang/ro-RO.rc"
-#endif
-#ifdef LANGUAGE_RU_RU
-    #include "lang/ru-RU.rc"
-#endif
-#ifdef LANGUAGE_UK_UA
-    #include "lang/uk-UA.rc"
 #endif
 
 /* EOF */
