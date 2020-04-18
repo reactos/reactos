@@ -214,7 +214,7 @@ static
 VOID
 GetPossibleCharacters(WCHAR* ch, INT chLen, INT codePageIdx)
 {
-    INT i;
+    INT i, j;
 
     memset(ch, 0, sizeof(ch[0]) * chLen);
 
@@ -222,8 +222,8 @@ GetPossibleCharacters(WCHAR* ch, INT chLen, INT codePageIdx)
     {
         /* this is unicode, so just load up the first MAX_GLYPHS characters
            start at 0x21 to bypass whitespace characters */
-        for (i = 0; i < min(MAX_GLYPHS, chLen); i++)
-            ch[i] = (WCHAR)(i + 0x21);
+        for (i = 0x21, j = 0; i < min(MAX_GLYPHS, chLen); i++)
+            ch[j++] = (WCHAR)i;
     }
     else
     {
