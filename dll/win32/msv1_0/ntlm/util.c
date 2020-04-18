@@ -71,10 +71,10 @@ NtlmAllocate(
     return buffer;
 }
 
-void
+VOID
 NtlmFree(
-    IN PVOID Buffer,
-    IN BOOL FromPrivateLsaHeap)
+    _In_ PVOID Buffer,
+    _In_ BOOL FromPrivateLsaHeap)
 {
     if (Buffer)
     {
@@ -461,10 +461,11 @@ NtlmAStrAllocAndCopyBlob(
 
 BOOL
 NtlmAStrAlloc(
-    IN OUT PSTRING Dst,
-    IN size_t SizeInBytes)
+    _Out_ PSTRING Dst,
+    _In_ USHORT SizeInBytes,
+    _In_ USHORT InitLength)
 {
-    Dst->Length = 0;
+    Dst->Length = InitLength;
     Dst->MaximumLength = SizeInBytes;
     Dst->Buffer = NtlmAllocate(SizeInBytes, FALSE);
     return (Dst->Buffer != NULL);
@@ -472,18 +473,30 @@ NtlmAStrAlloc(
 
 BOOL
 NtlmUStrAlloc(
-    IN OUT PUNICODE_STRING Dst,
-    IN size_t SizeInBytes)
+    _Inout_ PUNICODE_STRING Dst,
+    _In_ USHORT SizeInBytes,
+    _In_ USHORT InitLength)
 {
-    Dst->Length = 0;
+    Dst->Length = InitLength;
     Dst->MaximumLength = SizeInBytes;
     Dst->Buffer = NtlmAllocate(SizeInBytes, FALSE);
     return (Dst->Buffer != NULL);
 }
 
 VOID
+NtlmUStrUpper(
+    _Inout_ PUNICODE_STRING Str)
+{
+    int i1;
+    PWCHAR tmp;
+    tmp = (PWCHAR)Str->Buffer;
+    for (i1 = 0; i1 < Str->Length / sizeof(WCHAR); i1++)
+        tmp[i1] = toupper(tmp[i1]);
+}
+
+VOID
 NtlmUStrFree(
-    IN PUNICODE_STRING String)
+    _In_ PUNICODE_STRING String)
 {
     if ((String == NULL) ||
         (String->Buffer == NULL) ||
@@ -496,7 +509,7 @@ NtlmUStrFree(
 
 VOID
 NtlmAStrFree(
-    IN PSTRING String)
+    _In_ PSTRING String)
 {
     if ((String == NULL) ||
         (String->Buffer == NULL) ||

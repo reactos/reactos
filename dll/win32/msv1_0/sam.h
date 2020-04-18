@@ -31,7 +31,7 @@ typedef struct _LSA_SAM_PWD_DATA
     PUNICODE_STRING ComputerName;
     // IsNetwork - result
     LSA_SAM_NETLOGON_TYP LogonType;
-    LM_SESSION_KEY LmSessionKey;
+    LANMAN_SESSION_KEY LanmanSessionKey;
     USER_SESSION_KEY UserSessionKey;
 } LSA_SAM_PWD_DATA, *PLSA_SAM_PWD_DATA;
 

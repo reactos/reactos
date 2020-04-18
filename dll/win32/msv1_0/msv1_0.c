@@ -189,7 +189,7 @@ BuildLm20LogonProfileBuffer(
     *ProfileBufferLength = 0;
 
     if (!NtlmUStrAlloc(&ComputerNameUCS,
-                       LogonPwdData->ComputerName->Length + sizeof(WCHAR) * 3))
+                       LogonPwdData->ComputerName->Length + sizeof(WCHAR) * 3, 0))
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto done;
@@ -242,7 +242,7 @@ BuildLm20LogonProfileBuffer(
     //       what to do if not? WORKGROUP
     RtlInitUnicodeString(&LocalBuffer->LogonDomainName, NULL);
 
-    memcpy(LocalBuffer->LanmanSessionKey, &LogonPwdData->LmSessionKey, MSV1_0_LANMAN_SESSION_KEY_LENGTH);
+    memcpy(LocalBuffer->LanmanSessionKey, &LogonPwdData->LanmanSessionKey, MSV1_0_LANMAN_SESSION_KEY_LENGTH);
 
     if (!NtlmUStrWriteToStruct(LocalBuffer, BufferLength, &LocalBuffer->LogonServer,
                                &ComputerNameUCS, &PtrOffset, TRUE))
@@ -1169,7 +1169,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         PNTLMSSP_GLOBALS_SVR gsvr = lockGlobalsSvr();
         {
             Status = STATUS_SUCCESS;
-            if (!NtlmUStrAlloc(&ComputerName, gsvr->NbMachineName.bUsed + sizeof(WCHAR)))
+            if (!NtlmUStrAlloc(&ComputerName, gsvr->NbMachineName.bUsed + sizeof(WCHAR), 0))
             {
                 ERR("NtlmUCSAlloc failed!\n");
                 Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1343,6 +1343,8 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
                     &UserHandle,
                     &UserInfo,
                     SubStatus);
+        if (!NT_SUCCESS(Status))
+            goto done;
         #else
         /* Get the computer name */
         ComputerNameSize = ARRAYSIZE(ComputerName);
@@ -1597,6 +1599,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         TRACE("NtAllocateLocallyUniqueId failed (Status %08lx)\n", Status);
         goto done;
     }
+    TRACE("Logon created with id 0x%lx/0x%lx\n", LogonId->LowPart, LogonId->HighPart);
 
     /* Create the logon session */
     Status = DispatchTable.CreateLogonSession(LogonId);

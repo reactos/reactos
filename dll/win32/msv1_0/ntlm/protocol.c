@@ -679,8 +679,8 @@ CliGenerateAuthenticationMessage(
     EXT_DATA EncryptedRandomSessionKey; //USER_SESSION_KEY
     STRING ChallengeTargetInfo;
     ULONGLONG ChallengeTimestamp;
-    UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH];
-    UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH];
+    NTLM_LM_OWF_PASSWORD LmOwfPwd;
+    NTLM_NT_OWF_PASSWORD NtOwfPwd;
     UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH];
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
     PNTLMSSP_GLOBALS_CLI gcli = getGlobalsCli();
@@ -984,8 +984,8 @@ CliGenerateAuthenticationMessage(
                                 &cred->UserNameW,
                                 &cred->PasswordW,
                                 &cred->DomainNameW,
-                                ResponseKeyLM,
-                                ResponseKeyNT))
+                                LmOwfPwd,
+                                NtOwfPwd))
         goto quit;
 
     /* MS-NLMP 3.1.5.1.2 */
@@ -993,14 +993,14 @@ CliGenerateAuthenticationMessage(
                          context->UseNTLMv2,
                          Anonymouse,
                          &cred->DomainNameW,
-                         ResponseKeyLM,
-                         ResponseKeyNT,
+                         &LmOwfPwd,
+                         &NtOwfPwd,
                          &ServerName,
                          ChallengeFromClient,
                          challenge->ServerChallenge,
                          ChallengeTimestamp,
-                         &NtResponseData,
                          &LmResponseData,
+                         &NtResponseData,
                          &SessionBaseKey))
     {
         ERR("ComputeResponse error\n");
@@ -1011,7 +1011,7 @@ CliGenerateAuthenticationMessage(
                         &LmResponseData,
                         &NtResponseData,
                         challenge->ServerChallenge,
-                        ResponseKeyLM,
+                        LmOwfPwd,
                         &EncryptedRandomSessionKey,
                         &context->msg))
     {
@@ -1339,7 +1339,7 @@ SvrAuthMsgProcessDataWORKING(
         else
         {
             /* we calc the respnsekeyNT / LM with user credentials! */
-            if (!NTOWFv1((WCHAR*)passwd, ResponseKeyNt))
+            if (!NT_SUCCESS(NTOWFv1((WCHAR*)passwd, ResponseKeyNt)))
             {
                 ERR("NTOWFv1 failed\n");
                 return FALSE;
@@ -1386,8 +1386,8 @@ SvrAuthMsgProcessDataWORKING(
             ChallengeFromClient,
             context->ServerChallenge,
             ChallengeTimestamp,
-            &ExpectedNtChallengeResponse,
             &ExpectedLmChallengeResponse,
+            &ExpectedNtChallengeResponse,
             (PUSER_SESSION_KEY)SessionBaseKey.Buffer))
         {
             ret = SEC_E_INTERNAL_ERROR;
@@ -1692,7 +1692,7 @@ SvrAuthMsgProcessData(
         else
         {
             /* we calc the respnsekeyNT / LM with user credentials! */
-            if (!NTOWFv1((WCHAR*)passwd, ResponseKeyNt))
+            if (!NT_SUCCESS(NTOWFv1((WCHAR*)passwd, ResponseKeyNt))
             {
                 ERR("NTOWFv1 failed\n");
                 return FALSE;
@@ -1845,8 +1845,8 @@ SvrAuthMsgProcessData(
             ChallengeFromClient,
             context->ServerChallenge,
             TimeStamp,
-            &ExpectedNtChallengeResponse,
             &ExpectedLmChallengeResponse,
+            &ExpectedNtChallengeResponse,
             (PUSER_SESSION_KEY)SessionBaseKey.Buffer))
         {
             ret = SEC_E_INTERNAL_ERROR;

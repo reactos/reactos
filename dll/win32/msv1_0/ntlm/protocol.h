@@ -70,28 +70,27 @@ typedef char const* PCCHAR;
 typedef struct _CYPHER_BLOCK
 {
     CHAR data[8];
-}CYPHER_BLOCK, *PCYPHER_BLOCK;
+} CYPHER_BLOCK, *PCYPHER_BLOCK;
 
 typedef struct _USER_SESSION_KEY
 {
     CYPHER_BLOCK data[2];
-}USER_SESSION_KEY, *PUSER_SESSION_KEY;
+} USER_SESSION_KEY, *PUSER_SESSION_KEY;
 
 typedef struct _NT_OWF_PASSWORD
 {
     CYPHER_BLOCK data[2];
-}NT_OWF_PASSWORD, *PNT_OWF_PASSWORD;
+} NT_OWF_PASSWORD, *PNT_OWF_PASSWORD;
 
 typedef struct _LM_OWF_PASSWORD
 {
     CYPHER_BLOCK data[2];
-}LM_OWF_PASSWORD, *PLM_OWF_PASSWORD;
+} LM_OWF_PASSWORD, *PLM_OWF_PASSWORD;
 
-/* where to put? correct ?*/
-typedef struct _LM_SESSION_KEY
+typedef struct _LANMAN_SESSION_KEY
 {
     UCHAR data[MSV1_0_LANMAN_SESSION_KEY_LENGTH];
-} LM_SESSION_KEY, *PLM_SESSION_KEY;
+} LANMAN_SESSION_KEY, *PLANMAN_SESSION_KEY;
 
 typedef struct _LM2_RESPONSE
 {
@@ -192,28 +191,11 @@ typedef struct _NTLMSSP_MESSAGE_SIGNATURE_12
 /* basic functions */
 
 BOOL
-NTOWFv1(
-    IN LPCWSTR password,
-    OUT PUCHAR result);
-
-BOOL
 NTOWFv2(
     IN LPCWSTR password,
     IN LPCWSTR user,
     IN LPCWSTR domain,
     OUT UCHAR result[16]);
-
-VOID
-LMOWFv1(
-    IN PCCHAR password,
-    OUT UCHAR result[16]);
-
-BOOLEAN
-LMOWFv2(
-    LPCWSTR password,
-    LPCWSTR user,
-    LPCWSTR domain,
-    PUCHAR result);
 
 VOID
 NONCE(
@@ -287,22 +269,6 @@ CliComputeResponseKeys(
     IN PEXT_STRING_W pServerName,
     OUT UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
     OUT UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH]);
-
-BOOL
-ComputeResponse(
-    IN ULONG Context_NegFlg,
-    IN BOOL UseNTLMv2,
-    IN BOOL Anonymouse,
-    IN PEXT_STRING_W userdom,
-    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
-    IN UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH],
-    IN PEXT_STRING_W pServerName,
-    IN UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH],
-    IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
-    IN ULONGLONG ChallengeTimestamp,
-    IN OUT PEXT_DATA pNtChallengeResponseData,
-    IN OUT PEXT_DATA pLmChallengeResponseData,
-    OUT PUSER_SESSION_KEY pSessionBaseKey);
 
 BOOL
 CliComputeKeys(
@@ -451,8 +417,8 @@ ComputeResponseNTLMv2(
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG ChallengeTimestamp,
-    IN OUT PEXT_DATA pNtChallengeResponse,
     OUT PLM2_RESPONSE pLmChallengeResponse,
+    IN OUT PEXT_DATA pNtChallengeResponse,
     OUT PUSER_SESSION_KEY SessionBaseKey);
 
 BOOL
@@ -463,8 +429,8 @@ ComputeResponseNTLMv1(
     IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
-    OUT UCHAR NtChallengeResponse[MSV1_0_RESPONSE_LENGTH],
     OUT UCHAR LmChallengeResponse[MSV1_0_RESPONSE_LENGTH],
+    OUT UCHAR NtChallengeResponse[MSV1_0_RESPONSE_LENGTH],
     OUT PUSER_SESSION_KEY SessionBaseKey);
 
 VOID

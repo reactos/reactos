@@ -199,14 +199,18 @@ LsaSpAcquireCredentialsHandle(
     PTimeStamp ExpirationTime)
 {
     NTSTATUS status;
+    WCHAR* PrincipalW = NULL;
 
     fdTRACE("LsaSpAcquireCredentialsHandle(%p %i %p %p %p %p %p %p)\n",
           PrincipalName, CredentialUseFlags, LogonId,
           AuthorizationData, GetKeyFunciton, GetKeyArgument,
           CredentialHandle, ExpirationTime);
 
+    if (PrincipalName)
+        PrincipalW = PrincipalName->Buffer;
+
     status = NtlmAcquireCredentialsHandle(
-        PrincipalName->Buffer,
+        PrincipalW,
         NULL,
         CredentialUseFlags,
         LogonId,

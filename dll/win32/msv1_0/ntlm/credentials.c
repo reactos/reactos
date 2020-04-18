@@ -491,9 +491,9 @@ IntAcquireCredWithAuthData(
     PasswordByteLen = AuthData->PasswordLength * sizeof(WCHAR);
     DomainByteLen = AuthData->DomainLength * sizeof(WCHAR);
 
-    if (!NtlmUStrAlloc(&UserName, UserNameByteLen + sizeof(WCHAR)) ||
-        !NtlmUStrAlloc(&Password, PasswordByteLen + sizeof(WCHAR)) ||
-        !NtlmUStrAlloc(&Domain, DomainByteLen + sizeof(WCHAR)))
+    if (!NtlmUStrAlloc(&UserName, UserNameByteLen + sizeof(WCHAR), 0) ||
+        !NtlmUStrAlloc(&Password, PasswordByteLen + sizeof(WCHAR), 0) ||
+        !NtlmUStrAlloc(&Domain, DomainByteLen + sizeof(WCHAR), 0))
     {
         ret = SEC_E_INSUFFICIENT_MEMORY;
         goto done;

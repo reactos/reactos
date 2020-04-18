@@ -163,13 +163,14 @@ MsvpCheckNetworkPassword(
     PMSV1_0_LM20_LOGON LogonInfo = UserPwdData->LogonInfo;
     ULONG context_cli_NegFlg = 0;
     BOOL UseNTLMv2;
-    UCHAR *ResponseKeyLm;
-    UCHAR *ResponseKeyNt;
+    PNTLM_LM_OWF_PASSWORD LmOwfPwd;
+    PNTLM_NT_OWF_PASSWORD NtOwfPwd;
     UCHAR *ChallengeFromClient;//[MSV1_0_CHALLENGE_LENGTH];
     UCHAR ZeroBytes16[16];
         //PNTLMSSP_CONTEXT_SVR Context = NULL; // FIXME - maybe from CLIENT_REQUEST ...
         //UCHAR ExportedSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
     USER_SESSION_KEY SessionBaseKey;
+    STRING LanmanSessionKey;
         //UNICODE_STRING ServerName;
     // Shortcuts
     PUNICODE_STRING ad_DomainName = &LogonInfo->LogonDomainName;
@@ -184,9 +185,6 @@ MsvpCheckNetworkPassword(
     STRING ExpectedNtChallengeResponse;
     STRING ExpectedLmChallengeResponse;
 
-    // Zurückgeben??
-    UCHAR KeyExchangeKey[MSV1_0_USER_SESSION_KEY_LENGTH];
-
     TRACE("(%p %p)\n", UserPwdData, UserInfo);
 
     //FIXME: context_cli_NegFlg
@@ -197,6 +195,7 @@ MsvpCheckNetworkPassword(
     RtlZeroBytes(ZeroBytes16, MSV1_0_CHALLENGE_LENGTH);
     RtlInitString(&ExpectedLmChallengeResponse, NULL);
     RtlInitString(&ExpectedNtChallengeResponse, NULL);
+    RtlInitString(&LanmanSessionKey, NULL);
 
         //ExtDataInit(&SessionBaseKey, NULL, 0);
         //ExtDataSetLength(&SessionBaseKey, MSV1_0_USER_SESSION_KEY_LENGTH, TRUE);
@@ -255,29 +254,29 @@ MsvpCheckNetworkPassword(
     // Berücksichtigen und ggf. NULL oder so übergeben ..
     //FIXME: UserInfo->All.NtPasswordPresent
     //FIXME: UserInfo->All.LmPasswordPresent
-    ResponseKeyNt = ZeroBytes16;
+    NtOwfPwd = (PNTLM_NT_OWF_PASSWORD)ZeroBytes16;
     if (UserInfo->All.NtPasswordPresent &
         (UserInfo->All.NtOwfPassword.Length == MSV1_0_NT_OWF_PASSWORD_LENGTH))
-        ResponseKeyNt = (PUCHAR)UserInfo->All.NtOwfPassword.Buffer;
+        NtOwfPwd = (PNTLM_NT_OWF_PASSWORD)UserInfo->All.NtOwfPassword.Buffer;
 
-    ResponseKeyLm = ZeroBytes16;
+    LmOwfPwd = (PNTLM_LM_OWF_PASSWORD)ZeroBytes16;
     if (UserInfo->All.LmPasswordPresent &
         (UserInfo->All.LmOwfPassword.Length == MSV1_0_NT_OWF_PASSWORD_LENGTH))
-        ResponseKeyLm = (PUCHAR)UserInfo->All.LmOwfPassword.Buffer;
+        LmOwfPwd = (PNTLM_NT_OWF_PASSWORD)UserInfo->All.LmOwfPassword.Buffer;
 
     if (!ComputeResponse(
         context_cli_NegFlg,//FIXME: context->cli_NegFlg,
         UseNTLMv2,
         FALSE,
         &Xad_DomainName,
-        ResponseKeyLm,
-        ResponseKeyNt,
+        LmOwfPwd,
+        NtOwfPwd,
         &XServerName,
         ChallengeFromClient,
         ServerChallenge,//context_ServerChallenge,
         ChallengeTimestamp,
-        /*HACK*/(PEXT_DATA)&ExpectedNtChallengeResponse,
         /*HACK*/(PEXT_DATA)&ExpectedLmChallengeResponse,
+        /*HACK*/(PEXT_DATA)&ExpectedNtChallengeResponse,
         &SessionBaseKey))
     {
         Status = STATUS_INTERNAL_ERROR;
@@ -359,7 +358,7 @@ MsvpCheckNetworkPassword(
             TRACE("  success!\n");
             UserPwdData->LogonType = NetLogonNtKey;
             Status = STATUS_SUCCESS;
-            goto makekxkey;
+            goto setkeys;
         }
 
         TRACE("  failed!\n");
@@ -377,7 +376,7 @@ MsvpCheckNetworkPassword(
             TRACE("  success!\n");
             UserPwdData->LogonType = NetLogonLmKey;
             Status = STATUS_SUCCESS;
-            goto makekxkey;
+            goto setkeys;
         }
         TRACE("  failed!\n");
     }
@@ -386,32 +385,16 @@ MsvpCheckNetworkPassword(
     Status = STATUS_WRONG_PASSWORD;
     goto done;
 
-makekxkey:
-    // make keys and fill result info
-    // Set KeyExchangeKey to KXKEY(SessionBaseKey,
-    // AUTHENTICATE_MESSAGE.LmChallengeResponse, CHALLENGE_MESSAGE.ServerChallenge)
-    KXKEY(context_cli_NegFlg, (PUCHAR)&SessionBaseKey,
-          /*HACK*/(PEXT_DATA)&LmChallengeResponse,
-          /*HACK*/(PEXT_DATA)&NtChallengeResponse,
-          ServerChallenge/*context_ServerChallenge*/, ResponseKeyLm,
-          KeyExchangeKey);
-    TRACE("KeyExchangeKey\n");
-    NtlmPrintHexDump(KeyExchangeKey, 16);
+setkeys:
+    Status = CalcLmUserSessionKey(LmOwfPwd, &LanmanSessionKey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to calculate the User Session Key! 0x%lx\n", Status);
+        goto done;
+    }
 
-    if (!((context_cli_NegFlg & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY) &&
-          /* using NTLMv1? */
-          (LmChallengeResponse->Length != 0x18) &&
-          (NtChallengeResponse->Length != 0x18)) &&
-       (context_cli_NegFlg == NTLMSSP_REQUEST_NON_NT_SESSION_KEY))
-    {
-        RtlCopyMemory(&UserPwdData->LmSessionKey, KeyExchangeKey, MSV1_0_LANMAN_SESSION_KEY_LENGTH);
-        RtlZeroBytes(&UserPwdData->UserSessionKey, MSV1_0_USER_SESSION_KEY_LENGTH);
-    }
-    else
-    {
-        RtlCopyMemory(&UserPwdData->UserSessionKey, KeyExchangeKey, MSV1_0_USER_SESSION_KEY_LENGTH);
-        RtlZeroBytes(&UserPwdData->LmSessionKey, MSV1_0_LANMAN_SESSION_KEY_LENGTH);
-    }
+    RtlCopyMemory(&UserPwdData->UserSessionKey, &SessionBaseKey, MSV1_0_USER_SESSION_KEY_LENGTH);
+    RtlCopyMemory(&UserPwdData->LanmanSessionKey, LanmanSessionKey.Buffer, MSV1_0_LANMAN_SESSION_KEY_LENGTH);
     /*-> hier nicht mehr nötig -> LM2_LOGON_PRFOFILE füllen!*/
 
     //Set MessageMIC to AUTHENTICATE_MESSAGE.MIC
@@ -465,6 +448,7 @@ makekxkey:
 done:
     NtlmAStrFree(&ExpectedLmChallengeResponse);
     NtlmAStrFree(&ExpectedNtChallengeResponse);
+    NtlmAStrFree(&LanmanSessionKey);
     return Status;
 }
 
@@ -620,6 +604,7 @@ SamValidateNormalUser(
     {
         ERR("SamrLookupNamesInDomain failed (Status %08lx)\n", Status);
         Status = STATUS_NO_SUCH_USER;
+        /* FIXME: Try without domain? */
         goto done;
     }
 

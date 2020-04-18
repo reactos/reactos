@@ -8,13 +8,19 @@ NtStatusToSecStatus(
 
 BOOL
 NtlmAStrAlloc(
-    IN OUT PSTRING Dst,
-    IN size_t SizeInBytes);
+    _Out_ PSTRING Dst,
+    _In_ USHORT SizeInBytes,
+    _In_ USHORT InitLength);
 
 BOOL
 NtlmUStrAlloc(
-    IN OUT PUNICODE_STRING Dst,
-    IN size_t SizeInBytes);
+    _Out_ PUNICODE_STRING Dst,
+    _In_ USHORT SizeInBytes,
+    _In_ USHORT InitLength);
+
+VOID
+NtlmUStrUpper(
+    _Inout_ PUNICODE_STRING Str);
 
 // replacement for NtlmCreateExtWStrFromBlob
 NTSTATUS
@@ -32,11 +38,11 @@ NtlmAStrAllocAndCopyBlob(
 
 VOID
 NtlmUStrFree(
-    IN PUNICODE_STRING String);
+    _In_ PUNICODE_STRING String);
 
 VOID
 NtlmAStrFree(
-    IN PSTRING String);
+    _In_ PSTRING String);
 
 VOID
 NtlmInitExtStrWFromUnicodeString(
