@@ -64,8 +64,12 @@ StartSystemAudioServices(VOID);
 
 /* Debugging */
 
+#if DBG
 void logmsg(char* string, ...);
-
+#else
+#define logmsg(...) ((void)0)
 #endif
+
+#endif // AUDIOSRV_PRIVATE_H
 
 #endif /* _AUDIOSRV_PCH_ */

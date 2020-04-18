@@ -5,8 +5,11 @@ list(APPEND SOURCE
     pnp_list_lock.c
     pnp.c
     services.c
-    debug.c
     audiosrv.h)
+
+if(DBG)
+    list(APPEND SOURCE debug.c)
+endif()
 
 add_executable(audiosrv ${SOURCE} audiosrv.rc)
 set_module_type(audiosrv win32cui UNICODE)
