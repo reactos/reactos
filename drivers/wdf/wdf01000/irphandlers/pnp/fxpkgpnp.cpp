@@ -7,7 +7,7 @@
 #include "common/fxwatchdog.h"
 #include "common/fxdeviceinterface.h"
 #include "common/fxinterrupt.h"
-#include "common/pnppriv.h"
+#include "pnppriv.h"
 #include "common/fxrelateddevice.h"
 
 

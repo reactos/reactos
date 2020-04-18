@@ -1,4 +1,4 @@
-#include "common/pnppriv.h"
+#include "pnppriv.h"
 #include "common/fxirp.h"
 #include "common/dbgtrace.h"
 

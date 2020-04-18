@@ -1,7 +1,7 @@
 #ifndef _PNPPRIV_H_
 #define _PNPPRIV_H_
 
-#include "fxglobals.h"
+#include "common/fxglobals.h"
 #include "primitives/mxdeviceobject.h"
 
 

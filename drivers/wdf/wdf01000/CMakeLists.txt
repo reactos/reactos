@@ -73,14 +73,14 @@ list(APPEND SOURCE
     irphandlers/pnp/pdopower.cpp
     irphandlers/pnp/notpowerpolicyownerstatemachine.cpp
     irphandlers/pnp/interruptobject.cpp
+    irphandlers/pnp/support.cpp
     irphandlers/default/fxdefaultirphandler.cpp
     irphandlers/general/fxpkggeneral.cpp
     irphandlers/io/fxpkgio.cpp
     irphandlers/io/fxioqueue.cpp
     irphandlers/io/fxioqueueapi.cpp
-    irphandlers/fxwmiirphandler.cpp
-    irphandlers/fxwmiprovider.cpp
-    irphandlers/support.cpp
+    irphandlers/wmi/fxwmiirphandler.cpp
+    irphandlers/wmi/fxwmiprovider.cpp
     targets/fxiotarget.cpp
     targets/fxiotargetself.cpp
     dma/fxdmaenabler.cpp

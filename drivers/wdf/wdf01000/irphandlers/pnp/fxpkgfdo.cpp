@@ -1,7 +1,7 @@
 #include "common/fxpkgfdo.h"
 #include "common/fxirp.h"
 #include "common/fxdevice.h"
-#include "common/pnppriv.h"
+#include "pnppriv.h"
 
 
 const GUID GUID_REENUMERATE_SELF_INTERFACE_STANDARD = {
