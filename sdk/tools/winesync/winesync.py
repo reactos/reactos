@@ -218,7 +218,7 @@ class wine_sync:
             [self.reactos_repo.head.target])
 
         if (warning_message != ''):
-            warning_message += 'If needed, amend the current commit in your reactos tree and start this script again'
+            warning_message += 'If needed, amend the current commit in your reactos tree and start this script again\n'
 
             if not in_staging:
                 warning_message += f'You can see the details of the wine commit here: https://source.winehq.org/git/wine.git/commit/{str(wine_commit.id)}'
