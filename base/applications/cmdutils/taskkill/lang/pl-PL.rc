@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     Kończy procesy
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Polish resource file
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
+ */
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
@@ -16,6 +23,6 @@ STRINGTABLE
     STRING_ENUM_FAILED, "Błąd: Nie można wyliczyć listy procesów.\n"
     STRING_TERMINATE_FAILED, "Błąd: Nie można zakończyć procesu ""%1"".\n"
     STRING_SELF_TERMINATION, "Błąd: Proces nie może zakończyć sam siebie.\n"
-    STRING_PARAM_TOO_MUCH, "Error: Invalid syntax. '%1' option is not allowed more than '%2!d!' time(s).\n"
-    STRING_INVALID_SYNTAX, "Error: Invalid syntax.\n"
+    STRING_PARAM_TOO_MUCH, "Błąd: Nieprawidłowa składnia. Opcja '%1' nie jest dozwolona więcej niż '%2!d!' razy.\n"
+    STRING_INVALID_SYNTAX, "Błąd: Nieprawidłowa składnia.\n"
 }
