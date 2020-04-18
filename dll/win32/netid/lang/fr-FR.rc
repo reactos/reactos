@@ -14,9 +14,9 @@ BEGIN
     LTEXT "Groupe de travail :", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 103, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Pour utiliser l'Assistant Réseau, afin de rejoindre un domaine ou créer un utilisateur local, cliquez sur Identification Réseau.", IDC_STATIC, 6, 108, 160, 24
-    PUSHBUTTON "&Identification &réseau...", IDC_NETWORK_ID, 170, 114, 78, 15
+    PUSHBUTTON "ID &réseau...", IDC_NETWORK_ID, 170, 114, 78, 15
     LTEXT "Pour changer le nom de cet ordinateur ou rejoindre un domaine, cliquez sur Changer.", IDC_STATIC, 6, 149, 160, 17
-    PUSHBUTTON "&Changer...", IDC_NETWORK_PROPERTY, 170, 149, 78, 15
+    PUSHBUTTON "Modifier...", IDC_NETWORK_PROPERTY, 170, 149, 78, 15
     LTEXT "Note : Seuls les administrateurs peuvent modifier l'identification de cet ordinateur.", IDC_STATIC, 6, 179, 250, 18
 END
 
