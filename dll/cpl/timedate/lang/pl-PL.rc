@@ -5,6 +5,7 @@
  *    https://sourceforge.net/projects/reactospl
  *    Updated by Caemyr - Olaf Siejka (Jan, 2008)
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -63,6 +64,6 @@ BEGIN
     IDS_INETTIMENEXTSYNC "Następna synchronizacja w dniu %s o %s"
     IDS_INETTIMESYNCING "Proszę czekać, gdy ReactOS zsynchronizuje czas z %s"
     IDS_INETTIMEERROR "Wystąpił błąd podczas próby synchronizacji czasu z %s"
-    IDS_INETTIMESUCFILL "Please type a NTP server name in order to synchronize the time"
-    IDS_INETTIMEWELCOME "Select a NTP server from the list or type a NTP server name to synchronize the computer's time"
+    IDS_INETTIMESUCFILL "Wpisz nazwę serwera NTP, aby zsynchronizować czas"
+    IDS_INETTIMEWELCOME "Wybierz serwer NTP z listy lub wpisz nazwę serwera NTP, aby zsynchronizować czas komputera"
 END
