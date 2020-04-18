@@ -647,11 +647,18 @@ LibTCPShutdownCallback(void *arg)
      * PCB without telling us if we shutdown TX and RX. To avoid these problems, we'll clear the
      * socket context if we have called shutdown for TX and RX.
      */
-    if (msg->Input.Shutdown.shut_rx) {
-        msg->Output.Shutdown.Error = tcp_shutdown(pcb, TRUE, FALSE);
+    if (msg->Input.Shutdown.shut_rx != msg->Input.Shutdown.shut_tx) {
+        if (msg->Input.Shutdown.shut_rx) {
+            msg->Output.Shutdown.Error = tcp_shutdown(pcb, TRUE, FALSE);
+        }
+        if (msg->Input.Shutdown.shut_tx) {
+            msg->Output.Shutdown.Error = tcp_shutdown(pcb, FALSE, TRUE);
+        }
     }
-    if (msg->Input.Shutdown.shut_tx) {
-        msg->Output.Shutdown.Error = tcp_shutdown(pcb, FALSE, TRUE);
+    else {
+        if (msg->Input.Shutdown.shut_rx) {
+            msg->Output.Shutdown.Error = tcp_close(pcb);
+        }
     }
 
     if (!msg->Output.Shutdown.Error)
