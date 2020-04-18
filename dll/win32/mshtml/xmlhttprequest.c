@@ -17,6 +17,9 @@
  */
 
 #include "mshtml_private.h"
+#include "initguid.h"
+#include "msxml6.h"
+#include "objsafe.h"
 
 static HRESULT bstr_to_nsacstr(BSTR bstr, nsACString *str)
 {
@@ -319,8 +322,42 @@ static HRESULT WINAPI HTMLXMLHttpRequest_get_responseText(IHTMLXMLHttpRequest *i
 static HRESULT WINAPI HTMLXMLHttpRequest_get_responseXML(IHTMLXMLHttpRequest *iface, IDispatch **p)
 {
     HTMLXMLHttpRequest *This = impl_from_IHTMLXMLHttpRequest(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    IXMLDOMDocument *xmldoc = NULL;
+    BSTR str;
+    HRESULT hres;
+    VARIANT_BOOL vbool;
+    IObjectSafety *safety;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    hres = CoCreateInstance(&CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (void**)&xmldoc);
+    if(FAILED(hres)) {
+        ERR("CoCreateInstance failed: %08x\n", hres);
+        return hres;
+    }
+
+    hres = IHTMLXMLHttpRequest_get_responseText(iface, &str);
+    if(FAILED(hres)) {
+        IXMLDOMDocument_Release(xmldoc);
+        ERR("get_responseText failed: %08x\n", hres);
+        return hres;
+    }
+
+    hres = IXMLDOMDocument_loadXML(xmldoc, str, &vbool);
+    SysFreeString(str);
+    if(hres != S_OK || vbool != VARIANT_TRUE)
+        WARN("loadXML failed: %08x, returning an empty xmldoc\n", hres);
+
+    hres = IXMLDOMDocument_QueryInterface(xmldoc, &IID_IObjectSafety, (void**)&safety);
+    assert(SUCCEEDED(hres));
+    hres = IObjectSafety_SetInterfaceSafetyOptions(safety, NULL,
+        INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACE_USES_SECURITY_MANAGER,
+        INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACE_USES_SECURITY_MANAGER);
+    assert(SUCCEEDED(hres));
+    IObjectSafety_Release(safety);
+
+    *p = (IDispatch*)xmldoc;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLXMLHttpRequest_get_status(IHTMLXMLHttpRequest *iface, LONG *p)
