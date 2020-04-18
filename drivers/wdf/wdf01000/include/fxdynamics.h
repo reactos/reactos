@@ -16,19 +16,19 @@ NTSTATUS
 (*PFN_WDFUNIMPLEMENTED)();
 
 typedef struct _WDFFUNCTIONS {
-    PFN_WDFUNIMPLEMENTED   pfnWdfChildListCreate;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListGetDevice;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListRetrievePdo;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListRetrieveAddressDescription;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListBeginScan;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListEndScan;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListBeginIteration;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListRetrieveNextDevice;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListEndIteration;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListAddOrUpdateChildDescriptionAsPresent;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListUpdateChildDescriptionAsMissing;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListUpdateAllChildDescriptionsAsPresent;
-	PFN_WDFUNIMPLEMENTED   pfnWdfChildListRequestChildEject;
+    PFN_WDFCHILDLISTCREATE   pfnWdfChildListCreate;
+	PFN_WDFCHILDLISTGETDEVICE   pfnWdfChildListGetDevice;
+	PFN_WDFCHILDLISTRETRIEVEPDO   pfnWdfChildListRetrievePdo;
+	PFN_WDFCHILDLISTRETRIEVEADDRESSDESCRIPTION   pfnWdfChildListRetrieveAddressDescription;
+	PFN_WDFCHILDLISTBEGINSCAN   pfnWdfChildListBeginScan;
+	PFN_WDFCHILDLISTENDSCAN   pfnWdfChildListEndScan;
+	PFN_WDFCHILDLISTBEGINITERATION   pfnWdfChildListBeginIteration;
+	PFN_WDFCHILDLISTRETRIEVENEXTDEVICE   pfnWdfChildListRetrieveNextDevice;
+	PFN_WDFCHILDLISTENDITERATION   pfnWdfChildListEndIteration;
+	PFN_WDFCHILDLISTADDORUPDATECHILDDESCRIPTIONASPRESENT   pfnWdfChildListAddOrUpdateChildDescriptionAsPresent;
+	PFN_WDFCHILDLISTUPDATECHILDDESCRIPTIONASMISSING   pfnWdfChildListUpdateChildDescriptionAsMissing;
+	PFN_WDFCHILDLISTUPDATEALLCHILDDESCRIPTIONSASPRESENT   pfnWdfChildListUpdateAllChildDescriptionsAsPresent;
+	PFN_WDFCHILDLISTREQUESTCHILDEJECT   pfnWdfChildListRequestChildEject;
 	PFN_WDFUNIMPLEMENTED   pfnWdfCollectionCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfCollectionGetCount;
 	PFN_WDFUNIMPLEMENTED   pfnWdfCollectionAdd;
@@ -426,6 +426,177 @@ typedef struct _WDFVERSION {
     WDFSTRUCTURES Structures;
 
 } WDFVERSION, *PWDFVERSION;
+
+// ----- WDFCHILDLIST ----- //
+
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfChildListCreate)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    PWDF_CHILD_LIST_CONFIG Config,
+    _In_opt_
+    PWDF_OBJECT_ATTRIBUTES ChildListAttributes,
+    _Out_
+    WDFCHILDLIST* ChildList
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+WDFDEVICE
+WDFEXPORT(WdfChildListGetDevice)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+WDFDEVICE
+WDFEXPORT(WdfChildListRetrievePdo)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList,
+    _Inout_
+    PWDF_CHILD_RETRIEVE_INFO RetrieveInfo
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfChildListRetrieveAddressDescription)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList,
+    _In_
+    PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription,
+    _Inout_
+    PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER AddressDescription
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+VOID
+WDFEXPORT(WdfChildListBeginScan)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+VOID
+WDFEXPORT(WdfChildListEndScan)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+VOID
+WDFEXPORT(WdfChildListBeginIteration)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList,
+    _In_
+    PWDF_CHILD_LIST_ITERATOR Iterator
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfChildListRetrieveNextDevice)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList,
+    _In_
+    PWDF_CHILD_LIST_ITERATOR Iterator,
+    _Out_
+    WDFDEVICE* Device,
+    _Inout_opt_
+    PWDF_CHILD_RETRIEVE_INFO Info
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+VOID
+WDFEXPORT(WdfChildListEndIteration)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList,
+    _In_
+    PWDF_CHILD_LIST_ITERATOR Iterator
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfChildListAddOrUpdateChildDescriptionAsPresent)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList,
+    _In_
+    PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription,
+    _In_opt_
+    PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER AddressDescription
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfChildListUpdateChildDescriptionAsMissing)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList,
+    _In_
+    PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+VOID
+WDFEXPORT(WdfChildListUpdateAllChildDescriptionsAsPresent)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+BOOLEAN
+WDFEXPORT(WdfChildListRequestChildEject)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCHILDLIST ChildList,
+    _In_
+    PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription
+    );
+
+// ----- WDFCHILDLIST ----- //
+
 
 // ----- WDFDRIVER ----- //
 _Must_inspect_result_
@@ -897,19 +1068,19 @@ static WDFVERSION WdfVersion = {
 		sizeof(WDFVERSION),
 		sizeof(WDFFUNCTIONS)/sizeof(PVOID),
 		{
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
+			WDFEXPORT(WdfChildListCreate),
+			WDFEXPORT(WdfChildListGetDevice),
+			WDFEXPORT(WdfChildListRetrievePdo),
+			WDFEXPORT(WdfChildListRetrieveAddressDescription),
+			WDFEXPORT(WdfChildListBeginScan),
+			WDFEXPORT(WdfChildListEndScan),
+			WDFEXPORT(WdfChildListBeginIteration),
+			WDFEXPORT(WdfChildListRetrieveNextDevice),
+			WDFEXPORT(WdfChildListEndIteration),
+			WDFEXPORT(WdfChildListAddOrUpdateChildDescriptionAsPresent),
+			WDFEXPORT(WdfChildListUpdateChildDescriptionAsMissing),
+			WDFEXPORT(WdfChildListUpdateAllChildDescriptionsAsPresent),
+			WDFEXPORT(WdfChildListRequestChildEject),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
@@ -1213,8 +1384,8 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			WDFEXPORT(WdfSpinLockCreate),
-			WDFEXPORT(WdfSpinLockAcquire),//NotImplemented,
-			WDFEXPORT(WdfSpinLockRelease),//NotImplemented,
+			WDFEXPORT(WdfSpinLockAcquire),
+			WDFEXPORT(WdfSpinLockRelease),
 			WDFEXPORT(WdfTimerCreate),
 			WDFEXPORT(WdfTimerStart),
 			WDFEXPORT(WdfTimerStop),
