@@ -21,6 +21,9 @@
 #include <pecoff.h>
 #include "../../dll/win32/dbghelp/compat.h"
 
+static const char* g_ApplicationName;
+static const char* g_Target;
+
 void *rva_to_ptr(unsigned char *buffer, PIMAGE_NT_HEADERS nt_header, DWORD rva)
 {
     unsigned int i;
@@ -38,6 +41,16 @@ void *rva_to_ptr(unsigned char *buffer, PIMAGE_NT_HEADERS nt_header, DWORD rva)
     return NULL;
 }
 
+static void error(const char* message, ...)
+{
+    va_list args;
+
+    fprintf(stderr, "%s ERROR: '%s': ", g_ApplicationName, g_Target);
+
+    va_start(args, message);
+    fprintf(stderr, message, args);
+    va_end(args);
+}
 
 static void fix_checksum(unsigned char *buffer, long len, PIMAGE_NT_HEADERS nt_header)
 {
@@ -93,16 +106,16 @@ static int add_loadconfig(unsigned char *buffer, PIMAGE_NT_HEADERS nt_header)
                 }
             }
 
-            fprintf(stderr, "Export '_load_config_used' not found\n");
+            error("Export '_load_config_used' not found\n");
         }
         else
         {
-            fprintf(stderr, "Invalid rva for export directory\n");
+            error("Invalid rva for export directory\n");
         }
     }
     else
     {
-        fprintf(stderr, "No export directory\n");
+        error("No export directory\n");
     }
 
     return 1;
@@ -116,17 +129,21 @@ int main(int argc, char **argv)
     PIMAGE_DOS_HEADER dos_header;
     int result = 1;
 
+    g_ApplicationName = argv[0];
+
     if (argc < 2)
     {
-        printf("Usage: %s <filename>\n", argv[0]);
+        printf("Usage: %s <filename>\n", g_ApplicationName);
         return 1;
     }
+
+    g_Target = argv[1];
 
     /* Read the whole file to memory. */
     file = fopen(argv[1], "r+b");
     if (!file)
     {
-        fprintf(stderr, "Can't open '%s'.\n", argv[1]);
+        fprintf(stderr, "%s ERROR: Can't open '%s'.\n", g_ApplicationName, g_Target);
         return 1;
     }
 
@@ -135,7 +152,7 @@ int main(int argc, char **argv)
     if (len < sizeof(IMAGE_DOS_HEADER))
     {
         fclose(file);
-        fprintf(stderr, "'%s' isn't a PE image (too short)\n", argv[1]);
+        error("Image size too small to be a PE image\n");
         return 1;
     }
 
@@ -145,7 +162,7 @@ int main(int argc, char **argv)
     if (buffer == NULL)
     {
         fclose(file);
-        fprintf(stderr, "Not enough memory available.\n");
+        error("Not enough memory available: (Needed %u bytes).\n", len + 1);
         return 1;
     }
 
@@ -181,12 +198,12 @@ int main(int argc, char **argv)
         }
         else
         {
-            fprintf(stderr, "'%s' Invalid PE signature: %x\n", argv[1], nt_header->Signature);
+            error("Invalid PE signature: %x\n", nt_header->Signature);
         }
     }
     else
     {
-        fprintf(stderr, "'%s' Invalid DOS signature: %x\n", argv[1], dos_header->e_magic);
+        error("Invalid DOS signature: %x\n", dos_header->e_magic);
     }
 
     free(buffer);
