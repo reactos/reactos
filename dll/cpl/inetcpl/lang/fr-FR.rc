@@ -45,7 +45,7 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Général"
 BEGIN
 
-    GROUPBOX    " Page d'accueil ", IDC_STATIC, 4, 4, 312, 56
+    GROUPBOX    "Page d'accueil", IDC_STATIC, 4, 4, 312, 56
     ICON ICO_HOME, ICO_HOME, 10, 15, 21, 20
     LTEXT       "Vous pouvez spécifier l'adresse à utiliser comme page d'accueil :",
                 IDC_STATIC, 40, 14, 265, 10
@@ -109,7 +109,7 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Contenu"
 BEGIN
 
-    GROUPBOX    " Certificats ", IDC_STATIC, 4, 4, 312, 50
+    GROUPBOX    "Certificats", IDC_STATIC, 4, 4, 312, 50
     ICON ICO_CERTIFICATES, ICO_CERTIFICATES, 10, 15, 21, 20
     LTEXT       "Les certificats sont utilisés pour votre identification personnelle, celle d'autorités de certification ou d'éditeurs.",
                 IDC_STATIC, 40, 14, 252, 18
