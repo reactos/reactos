@@ -1705,6 +1705,20 @@ static nsresult NSAPI nsHttpChannelInternal_SetupFallbackChannel(nsIHttpChannelI
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+static nsresult NSAPI nsHttpChannelInternal_GetThirdPartyFlags(nsIHttpChannelInternal *iface, UINT32 *aThirdPartyFlags)
+{
+    nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
+    FIXME("(%p)->(%p)\n", This, aThirdPartyFlags);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static nsresult NSAPI nsHttpChannelInternal_SetThirdPartyFlags(nsIHttpChannelInternal *iface, UINT32 aThirdPartyFlags)
+{
+    nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
+    FIXME("(%p)->(%x)\n", This, aThirdPartyFlags);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 static nsresult NSAPI nsHttpChannelInternal_GetForceAllowThirdPartyCookie(nsIHttpChannelInternal *iface, cpp_bool *aForceThirdPartyCookie)
 {
     nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
@@ -1953,6 +1967,8 @@ static const nsIHttpChannelInternalVtbl nsHttpChannelInternalVtbl = {
     nsHttpChannelInternal_TakeAllSecurityMessages,
     nsHttpChannelInternal_SetCookie,
     nsHttpChannelInternal_SetupFallbackChannel,
+    nsHttpChannelInternal_GetThirdPartyFlags,
+    nsHttpChannelInternal_SetThirdPartyFlags,
     nsHttpChannelInternal_GetForceAllowThirdPartyCookie,
     nsHttpChannelInternal_SetForceAllowThirdPartyCookie,
     nsHttpChannelInternal_GetCanceled,
