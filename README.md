@@ -13,7 +13,7 @@
   <a href="https://reactos.org/download/">
     <img alt="Download ReactOS" src="https://img.shields.io/badge/download-latest-0688CB.svg">
   </a>
-  <a href="https://sourceforge.net/projects/reactos">
+  <a href="https://sourceforge.net/projects/reactos/">
     <img alt="SourceForge Download" src="https://img.shields.io/sourceforge/dm/reactos.svg?colorB=0688CB">
   </a>
   <a href="https://github.com/reactos/reactos/blob/master/COPYING">
@@ -124,14 +124,14 @@ The main development is done on [GitHub](https://github.com/reactos/reactos). We
 
 There is also an obsolete [SVN archive repository](https://svn.reactos.org/reactos/) that is kept for historical purposes.
 
-[travis.badge]:     https://travis-ci.org/reactos/reactos.svg?branch=master
+[travis.badge]:     https://api.travis-ci.org/reactos/reactos.svg?branch=master
 [appveyor.badge]:   https://ci.appveyor.com/api/projects/status/github/reactos/reactos?branch=master&svg=true
 [coverity.badge]:   https://scan.coverity.com/projects/205/badge.svg?flat=1
 [rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.1.6-0688CB.svg
 [rosbeunix.badge]:  https://img.shields.io/badge/RosBE_Unix-2.1.2-0688CB.svg
 [prwelcome.badge]:  https://img.shields.io/badge/PR-welcome-0688CB.svg
 
-[travis.link]:      https://travis-ci.org/reactos/reactos
+[travis.link]:      https://travis-ci.org/github/reactos/reactos
 [appveyor.link]:    https://ci.appveyor.com/project/AmineKhaldi/reactos
 [coverity.link]:    https://scan.coverity.com/projects/205
 [rosbewin.link]:    https://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.1.6/

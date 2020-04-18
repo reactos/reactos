@@ -90,7 +90,7 @@ Finding a good project to start with can be a challenge, because when starting o
   [migration to GitHub]:                                         https://reactos.org/project-news/reactos-repository-migrated-github/
   [humans are terrible at tracking large amount of information]: https://www.eurekalert.org/pub_releases/2005-03/aps-hmc030805.php
   [Pull requests]:                                               https://help.github.com/articles/about-pull-requests/
-  [tips for reviewing patches]:                                  https://drupal.org/patch/review
+  [tips for reviewing patches]:                                  https://www.drupal.org/patch/review
   [missing functionality]:                                       https://reactos.org/wiki/Missing_ReactOS_Functionality
   [patch]:                                                       https://git-scm.com/docs/git-format-patch
   [Submitting Patches]:                                          https://reactos.org/wiki/Submitting_Patches
