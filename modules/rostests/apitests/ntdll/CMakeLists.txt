@@ -58,6 +58,7 @@ list(APPEND SOURCE
     RtlGetLengthWithoutTrailingPathSeperators.c
     RtlGetLongestNtPathLength.c
     RtlGetNtProductType.c
+    RtlGetUnloadEventTrace.c
     RtlHandle.c
     RtlImageRvaToVa.c
     RtlIsNameLegalDOS8Dot3.c
