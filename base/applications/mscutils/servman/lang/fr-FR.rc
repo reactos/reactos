@@ -95,13 +95,13 @@ BEGIN
     PUSHBUTTON "Reprendre", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
     LTEXT "Nom du service :", IDC_STATIC, 4, 11, 53, 11
     LTEXT "Nom complet :", IDC_STATIC, 4, 29, 53, 11
-    LTEXT "Description:", IDC_STATIC, 4, 51, 53, 11
-    LTEXT "Répertoire de l'exécutable :", IDC_STATIC, 6, 73, 82, 9
-    LTEXT "Type de démarrage :", IDC_STATIC, 6, 108, 53, 11
-    LTEXT "Statut du service :", IDC_STATIC, 4, 138, 53, 11
+    LTEXT "Description:", IDC_STATIC, 4, 46, 53, 11
+    LTEXT "Répertoire de l'exécutable :", IDC_STATIC, 6, 73, 240, 11
+    LTEXT "Type de démarrage :", IDC_STATIC, 6, 108, 53, 24
+    LTEXT "Statut du service :", IDC_STATIC, 4, 138, 53, 24
     LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
     LTEXT "Vous pouvez définir les paramètres passés au service lorsque vous le démarrez.", IDC_STATIC, 6, 177, 240, 15
-    LTEXT "Paramètres de démarrage :", IDC_STATIC, 6, 200, 58, 11
+    LTEXT "Paramètres de démarrage :", IDC_STATIC, 6, 200, 53, 24
     EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "Éditer", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
