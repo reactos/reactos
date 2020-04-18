@@ -20,7 +20,7 @@
 
 #include "cryptuires.h"
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_DEFAULT
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
@@ -40,7 +40,7 @@ STRINGTABLE
     IDS_CERTIFICATE_BAD_TIME "Este certificado expirou ou ainda não é válido."
     IDS_CERTIFICATE_BAD_TIMENEST "O período de validade deste certificado excede o do seu emissor."
     IDS_CERTIFICATE_REVOKED "Este certificado foi revogado pelo seu emissor."
-    IDS_CERTIFICATE_VALID "Este certificado está OK."
+    IDS_CERTIFICATE_VALID "Este certificado está em conformidade."
     IDS_FIELD "Campo"
     IDS_VALUE "Valor"
     IDS_FIELDS_ALL "<Todos>"
