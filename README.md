@@ -70,7 +70,7 @@ You can always download fresh binary builds of bootable images from the ["Daily 
 
 ## Installing
 
-By default, ReactOS currently can only be installed on a machine that has a FAT16 or FAT32 partition as the active (bootable) partition. 
+By default, ReactOS currently can only be installed on a machine that has a FAT16 or FAT32 partition as the active (bootable) partition.
 The partition on which ReactOS is to be installed (which may or may not be the bootable partition) must also be formatted as FAT16 or FAT32.
 ReactOS Setup can format the partitions if needed.
 
@@ -102,10 +102,10 @@ You can also support ReactOS by [donating](https://reactos.org/donate/)! We rely
 
 ## More information
 
-ReactOS is a Free and Open Source operating system based on the Windows architecture, 
+ReactOS is a Free and Open Source operating system based on the Windows architecture,
 providing support for existing applications and drivers, and an alternative to the current dominant consumer operating system.
 
-It is not another wrapper built on Linux, like WINE. It does not attempt or plan to compete with WINE; in fact, the user-mode part of ReactOS is almost entirely WINE-based and our two teams have cooperated closely in the past. 
+It is not another wrapper built on Linux, like WINE. It does not attempt or plan to compete with WINE; in fact, the user-mode part of ReactOS is almost entirely WINE-based and our two teams have cooperated closely in the past.
 
 ReactOS is also not "yet another OS". It does not attempt to be a third player like any other alternative OS out there. People are not meant to uninstall Linux and use ReactOS instead; ReactOS is a replacement for Windows users who want a Windows replacement that behaves just like Windows.
 
