@@ -1,0 +1,137 @@
+/*
+ * Portuguese resources for the Internet control panel applet
+ *
+ * Copyright 2010 Gustavo Henrique Milaré
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_CPL_NAME        "Definições de Internet"
+    IDS_CPL_INFO        "Configurar o Explorador de Internet WINE e suas definições."
+    IDS_SEC_SETTINGS    "Definições de segurança por zona: "
+    IDS_SEC_LEVEL0      "Personalizar"
+    IDS_SEC_LEVEL1      "Muito baixa"
+    IDS_SEC_LEVEL2      "Baixa"
+    IDS_SEC_LEVEL3      "Média"
+    IDS_SEC_LEVEL4      "Alta"
+    IDS_SEC_LEVEL5      "Muito alta"
+END
+
+/* "General" propsheet */
+IDD_GENERAL DIALOGEX  0, 0, 320, 220
+STYLE DS_SHELLFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "Geral"
+BEGIN
+
+    GROUPBOX    "Página inicial ", IDC_STATIC, 4, 4, 312, 56
+    ICON ICO_HOME, ICO_HOME, 10, 15, 21, 20
+    LTEXT       "Pode alterar a página que pretende utilizar como home page.",
+                IDC_STATIC, 40, 14, 265, 10
+    EDITTEXT    IDC_HOME_EDIT, 40, 26, 270, 12, WS_VISIBLE | ES_AUTOHSCROLL
+    PUSHBUTTON  "Página &actual", IDC_HOME_CURRENT, 58, 42, 80, 14
+    PUSHBUTTON  "Página &padrão", IDC_HOME_DEFAULT, 144, 42, 80, 14
+    PUSHBUTTON  "Página em &branco", IDC_HOME_BLANK, 230, 42, 80, 14
+    GROUPBOX    "Histórico", IDC_STATIC, 4, 66, 312, 42
+    ICON ICO_HISTORY, ICO_HISTORY, 10, 78, 80, 14
+    LTEXT       "A pasta ""Histórico"" contém hiperligações às páginas que visitou recentemente.",
+                 IDC_STATIC, 40, 76, 270, 10
+    PUSHBUTTON  "Limpar &histórico...", IDC_HISTORY_DELETE, 144, 90, 80, 14
+    PUSHBUTTON  "&Definições...", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
+
+END
+
+/* "Delete browsing history" dialog */
+IDD_DELETE_HISTORY DIALOGEX  0, 0, 250, 250
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Limpar histórico de navegação"
+BEGIN
+
+    AUTOCHECKBOX   "Ficheiros temporários da internet\nCópias de páginas web em cachê, imagens e certificados.",
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "Cookies\nFicheiros guardados no computador, por websites que armazenam itens como preferências do utilizador e informações de início de sessão.",
+                    IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "Histórico\nLista de websites que visitou recentemente.",
+                    IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "Dados de formulário\nNomes de utilizador e outras informações que inseriu nos formulários.",
+                    IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "Passwords\n Passwords que inseriu em formulários",
+                    IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON  "Cancelar", IDCANCEL, 185, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Apagar", IDOK, 120, 230, 60, 15, WS_GROUP
+
+END
+
+/* "Security" propsheet */
+IDD_SECURITY DIALOGEX  0, 0, 320, 220
+STYLE DS_SHELLFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "Segurança"
+BEGIN
+
+    CONTROL     "", IDC_SEC_LISTVIEW, "SysListView32",
+                LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_VSCROLL,
+                4, 4, 312, 58
+    LTEXT       "", IDC_SEC_ZONE_INFO, 4, 68, 312, 20
+    GROUPBOX    "", IDC_SEC_GROUP, 4, 88, 312, 126
+    CONTROL     "", IDC_SEC_TRACKBAR, "msctls_trackbar32",
+                TBS_VERT | TBS_AUTOTICKS | TBS_BOTH | TBS_REVERSED, 8, 98, 32, 100
+    LTEXT       "", IDC_SEC_LEVEL, 48, 102, 180, 12
+    LTEXT       "", IDC_SEC_LEVEL_INFO, 48, 114, 260, 80
+END
+
+/* "Content" propsheet */
+IDD_CONTENT DIALOGEX  0, 0, 320, 220
+STYLE DS_SHELLFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "Conteúdo"
+BEGIN
+
+    GROUPBOX    "Certificados ", IDC_STATIC, 4, 4, 312, 50
+    ICON ICO_CERTIFICATES, ICO_CERTIFICATES, 10, 15, 21, 20
+    LTEXT       "Certificados são usados para sua identificação pessoal e para identificar certificados de autoridades e editores.",
+                IDC_STATIC, 40, 14, 252, 18
+    PUSHBUTTON  "Certificados...", IDC_CERT, 146, 34, 80, 14
+    PUSHBUTTON	"Editores...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
+
+END
+
+/* "Connections" propsheet */
+IDD_CONNECTIONS DIALOG 0, 0, 320, 220
+STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "Ligações"
+BEGIN
+    GROUPBOX        "Definições automáticas", IDC_STATIC, 4, 4, 312, 56
+    AUTOCHECKBOX    "Utilizar Web Proxy Auto-Discovery (WPAD)", IDC_USE_WPAD, 10, 14, 200, 14, BS_TOP
+    AUTOCHECKBOX    "Utilizar Proxy Auto-Config (PAC) script", IDC_USE_PAC_SCRIPT, 10, 28, 200, 14, BS_TOP
+    LTEXT           "Endereço:", IDC_STATIC, 10, 42, 40, 14
+    EDITTEXT        IDC_EDIT_PAC_SCRIPT, 50, 42, 160, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED
+    GROUPBOX        "Servidor Proxy", IDC_STATIC, 4, 66, 312, 42
+    AUTOCHECKBOX    "Utilizar servidor proxy", IDC_USE_PROXY_SERVER, 10, 76, 200, 14, BS_TOP | BS_MULTILINE
+    LTEXT           "Endereço:", IDC_STATIC, 10, 90, 40, 14
+    EDITTEXT        IDC_EDIT_PROXY_SERVER, 50, 90, 80, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT           "Porta:", IDC_STATIC, 140, 90, 30, 14
+    EDITTEXT        IDC_EDIT_PROXY_PORT, 170, 90, 40, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED | ES_NUMBER
+END
