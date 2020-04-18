@@ -295,7 +295,7 @@ SetFont(PMAP infoPtr,
         j = 0;
         for (i = 0; i < MAX_GLYPHS; i++)
         {
-            if (out[i] != 0xffff)
+            if (out[i] != 0xffff && out[i] != 0x0000)
             {
                 infoPtr->ValidGlyphs[j] = ch[i];
                 j++;
