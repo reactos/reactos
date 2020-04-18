@@ -138,6 +138,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Expandir/Contraer", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Exportar", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Descargar subárbol...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "&Cortar", ID_HEXEDIT_CUT
         MENUITEM "Cop&iar", ID_HEXEDIT_COPY
         MENUITEM "&Pegar", ID_HEXEDIT_PASTE

@@ -135,6 +135,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Expandir/Recolher", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Exportar", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Unload Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "C&ortar", ID_HEXEDIT_CUT
         MENUITEM "&Copiar", ID_HEXEDIT_COPY
         MENUITEM "&Colar", ID_HEXEDIT_PASTE

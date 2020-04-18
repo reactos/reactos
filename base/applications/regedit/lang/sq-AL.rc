@@ -139,6 +139,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Hap/Zmadho", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Exporto", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Shkarko koshere...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "Prej", ID_HEXEDIT_CUT
         MENUITEM "Kopjo", ID_HEXEDIT_COPY
         MENUITEM "Ngjit", ID_HEXEDIT_PASTE

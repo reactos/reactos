@@ -137,6 +137,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Extin&de/Restrânge", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "E&xportă", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Eli&berare registru…", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "&Decupează", ID_HEXEDIT_CUT
         MENUITEM "&Copiază", ID_HEXEDIT_COPY
         MENUITEM "&Lipește", ID_HEXEDIT_PASTE

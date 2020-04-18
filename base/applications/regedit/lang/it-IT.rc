@@ -135,6 +135,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Espandi/Raccogli", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Esporta", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Scarica Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "&Taglia", ID_HEXEDIT_CUT
         MENUITEM "&Copia", ID_HEXEDIT_COPY
         MENUITEM "&Incolla", ID_HEXEDIT_PASTE

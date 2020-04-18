@@ -135,6 +135,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Dérouler/Réduire", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Exporter", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Décharger la ruche...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "C&ouper", ID_HEXEDIT_CUT
         MENUITEM "&Copier", ID_HEXEDIT_COPY
         MENUITEM "Co&ller", ID_HEXEDIT_PASTE

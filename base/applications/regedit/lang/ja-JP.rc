@@ -135,6 +135,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "展開する/閉じる", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "エクスポート(&E)", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "ハイブのアンロード...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "切り取り(&C)", ID_HEXEDIT_CUT
         MENUITEM "コピー(&C)", ID_HEXEDIT_COPY
         MENUITEM "貼り付け(&P)", ID_HEXEDIT_PASTE

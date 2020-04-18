@@ -137,6 +137,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "&Genişlet ya da Daralt", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Ver...", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Y&ığını kaldır...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "&Kes", ID_HEXEDIT_CUT
         MENUITEM "&Çoğalt", ID_HEXEDIT_COPY
         MENUITEM "&Yapıştır", ID_HEXEDIT_PASTE

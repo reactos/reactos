@@ -135,6 +135,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Perluas/Perempit", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Ekspor", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Buang Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "&Gunting", ID_HEXEDIT_CUT
         MENUITEM "&Salin", ID_HEXEDIT_COPY
         MENUITEM "&Tempel", ID_HEXEDIT_PASTE

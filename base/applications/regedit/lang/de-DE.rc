@@ -135,6 +135,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Erweitern/Schließen", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Exportieren", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Zweig entladen...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "&Ausschneiden", ID_HEXEDIT_CUT
         MENUITEM "&Kopieren", ID_HEXEDIT_COPY
         MENUITEM "&Einfügen", ID_HEXEDIT_PASTE

@@ -135,6 +135,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Visa/dölj nivå", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Exportera", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Ta bort Registerdata...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "Klipp &ut", ID_HEXEDIT_CUT
         MENUITEM "&Kopiera", ID_HEXEDIT_COPY
         MENUITEM "Klistra &in", ID_HEXEDIT_PASTE

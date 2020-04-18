@@ -145,6 +145,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Rozwiń/Zwiń", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Eksportuj", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Wyładuj Drzewo..", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "W&ytnij", ID_HEXEDIT_CUT
         MENUITEM "&Kopiuj", ID_HEXEDIT_COPY
         MENUITEM "&Wklej", ID_HEXEDIT_PASTE

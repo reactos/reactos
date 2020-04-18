@@ -140,6 +140,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Разгръщане/Свиване", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Износ", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Изоставяне на рой...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "От&рязване", ID_HEXEDIT_CUT
         MENUITEM "За&помняне", ID_HEXEDIT_COPY
         MENUITEM "&Поставяне", ID_HEXEDIT_PASTE

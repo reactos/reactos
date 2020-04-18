@@ -135,6 +135,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "הרחב/קפל", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "יצא", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "ביטול טעינת כוורת (Hive)...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "גזור", ID_HEXEDIT_CUT
         MENUITEM "העתק", ID_HEXEDIT_COPY
         MENUITEM "הדבק", ID_HEXEDIT_PASTE

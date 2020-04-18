@@ -135,6 +135,14 @@ BEGIN
     END
     POPUP ""
     BEGIN
+        MENUITEM "Развернуть/Свернуть", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Экспорт", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Выгрузить куст...", ID_REGISTRY_UNLOADHIVE, GRAYED
+    END
+    POPUP ""
+    BEGIN
         MENUITEM "&Вырезать", ID_HEXEDIT_CUT
         MENUITEM "&Копировать", ID_HEXEDIT_COPY
         MENUITEM "Вст&авить", ID_HEXEDIT_PASTE

@@ -35,7 +35,8 @@
 #define PM_MODIFYVALUE  0
 #define PM_NEW          1
 #define PM_TREECONTEXT  2
-#define PM_HEXEDIT      3
+#define PM_ROOTITEM     3
+#define PM_HEXEDIT      4
 
 #define MAX_NEW_KEY_LEN 128
 
