@@ -133,7 +133,7 @@ BEGIN
         MENUITEM "Emero", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exporto", ID_TREE_EXPORT
-        MENUITEM "T'drejta...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "T'drejta...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "Kopjo emrin çelesit", ID_EDIT_COPYKEYNAME
     END

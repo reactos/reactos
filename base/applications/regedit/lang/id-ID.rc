@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Ganti nama", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Ekspor", ID_TREE_EXPORT
-        MENUITEM "&Perijinan...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Perijinan...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Salin Nama Kunci", ID_EDIT_COPYKEYNAME
     END

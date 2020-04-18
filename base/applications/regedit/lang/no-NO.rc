@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Gi nytt navn", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Eksport", ID_TREE_EXPORT
-        MENUITEM "&Rettigheter...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Rettigheter...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Kopier nøkkelnavn", ID_EDIT_COPYKEYNAME
     END

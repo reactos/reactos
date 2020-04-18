@@ -131,7 +131,7 @@ BEGIN
         MENUITEM "Перей&менувати", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Експорт", ID_TREE_EXPORT
-        MENUITEM "&Дозволи...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Дозволи...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Копіювати ім'я розділу", ID_EDIT_COPYKEYNAME
     END

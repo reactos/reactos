@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Renommer\tF2", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exporter", ID_TREE_EXPORT
-        MENUITEM "&Permissions...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Permissions...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copier le nom de la clé", ID_EDIT_COPYKEYNAME
     END

@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Přejmenovat", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportovat", ID_TREE_EXPORT
-        MENUITEM "Oprá&vnění...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "Oprá&vnění...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "Z&kopírovat název klíče", ID_EDIT_COPYKEYNAME
     END

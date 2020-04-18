@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Renomear", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportar", ID_TREE_EXPORT
-        MENUITEM "&Permissões...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Permissões...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copiar chave 'Nome'", ID_EDIT_COPYKEYNAME
     END

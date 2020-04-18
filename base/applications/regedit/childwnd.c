@@ -179,6 +179,11 @@ static BOOL ChildWnd_CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
     case ID_TREE_EXPORT:
         ExportRegistryFile(g_pChildWnd->hTreeWnd);
         break;
+    case ID_TREE_PERMISSIONS:
+        hSelection = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
+        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, hSelection, &hRootKey);
+        RegKeyEditPermissions(hWnd, hRootKey, NULL, keyPath);
+        break;
     case ID_EDIT_FIND:
         FindDialog(hWnd);
         break;
@@ -578,6 +583,9 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 HTREEITEM hParentItem = TreeView_GetParent(g_pChildWnd->hTreeWnd, pnmtv->itemNew.hItem);
 
                 UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL);
+
+                /* Disable the Permissions menu item for 'My Computer' */
+                EnableMenuItem(hMenuFrame , ID_EDIT_PERMISSIONS, MF_BYCOMMAND | ((hParentItem == NULL) ? MF_GRAYED : MF_ENABLED));
 
                 /*
                  * Disable Delete/Rename menu options for 'My Computer' (first item so doesn't have any parent)

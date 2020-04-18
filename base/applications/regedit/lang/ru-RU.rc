@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Переименовать", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Экспорт", ID_TREE_EXPORT
-        MENUITEM "Разре&шения...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "Разре&шения...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Копировать имя ключа", ID_EDIT_COPYKEYNAME
     END

@@ -131,7 +131,7 @@ BEGIN
         MENUITEM "&Adını Değiştir", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Ver...", ID_TREE_EXPORT
-        MENUITEM "&İzinler...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&İzinler...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Dizin Yolunu Çoğalt", ID_EDIT_COPYKEYNAME
     END

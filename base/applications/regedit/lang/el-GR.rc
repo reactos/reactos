@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "&Μετονομασία", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Εξαγωγή", ID_TREE_EXPORT
-        MENUITEM "&Δικαιώματα...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Δικαιώματα...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Αντιγραφή Ονόματος Κλειδιού", ID_EDIT_COPYKEYNAME
     END
