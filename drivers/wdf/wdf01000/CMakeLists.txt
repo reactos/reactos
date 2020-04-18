@@ -56,30 +56,30 @@ list(APPEND SOURCE
     core/fxrequestsystembuffer.cpp
     core/fxtimer.cpp
     core/fxmemoryobject.cpp
-    io/fxioqueueapi.cpp
     primitives/mxgeneral.cpp
-    irphandlers/fxpkgpnp.cpp
-    irphandlers/pnpstatemachine.cpp
-    irphandlers/pnpcallbacks.cpp
-    irphandlers/eventqueue.cpp
-    irphandlers/powerpolicystatemachine.cpp
-    irphandlers/fxdefaultirphandler.cpp
-    irphandlers/fxpkggeneral.cpp
+    irphandlers/pnp/fxpkgpnp.cpp
+    irphandlers/pnp/pnpstatemachine.cpp
+    irphandlers/pnp/pnpcallbacks.cpp
+    irphandlers/pnp/eventqueue.cpp
+    irphandlers/pnp/powerpolicystatemachine.cpp
+    irphandlers/pnp/fxpkgfdo.cpp
+    irphandlers/pnp/fdopower.cpp
+    irphandlers/pnp/poxinterface.cpp
+    irphandlers/pnp/poweridlestatemachine.cpp
+    irphandlers/pnp/fxpkgpdo.cpp
+    irphandlers/pnp/cxpnppowercallbacks.cpp
+    irphandlers/pnp/powerstatemachine.cpp
+    irphandlers/pnp/selfmanagediostatemachine.cpp
+    irphandlers/pnp/pdopower.cpp
+    irphandlers/pnp/notpowerpolicyownerstatemachine.cpp
+    irphandlers/pnp/interruptobject.cpp
+    irphandlers/default/fxdefaultirphandler.cpp
+    irphandlers/general/fxpkggeneral.cpp
+    irphandlers/io/fxpkgio.cpp
+    irphandlers/io/fxioqueue.cpp
+    irphandlers/io/fxioqueueapi.cpp
     irphandlers/fxwmiirphandler.cpp
-    irphandlers/fxpkgfdo.cpp
-    irphandlers/fdopower.cpp
-    irphandlers/poxinterface.cpp
-    irphandlers/poweridlestatemachine.cpp
-    irphandlers/fxpkgio.cpp
-    irphandlers/fxpkgpdo.cpp
-    irphandlers/cxpnppowercallbacks.cpp
-    irphandlers/powerstatemachine.cpp
-    irphandlers/selfmanagediostatemachine.cpp
-    irphandlers/fxioqueue.cpp
-    irphandlers/pdopower.cpp
     irphandlers/fxwmiprovider.cpp
-    irphandlers/notpowerpolicyownerstatemachine.cpp
-    irphandlers/interruptobject.cpp
     irphandlers/support.cpp
     targets/fxiotarget.cpp
     targets/fxiotargetself.cpp
