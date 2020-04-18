@@ -277,6 +277,7 @@ SetFont(PMAP infoPtr,
 
     if (infoPtr->pActiveCell) infoPtr->pActiveCell->bActive = FALSE;
     infoPtr->pActiveCell = &infoPtr->Cells[0][0];
+    infoPtr->pActiveCell->bActive = TRUE;
 
     // Get all the valid glyphs in this font
 
