@@ -453,7 +453,6 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
     if (!bResult)
     {
         dwErrorCode = GetLastError();
-        TRACE("EnumPrintersW failed: *pcReturned is '%d' and dwErrorCode is '%ld'!\n", *pcReturned, dwErrorCode);
         goto Cleanup;
     }
 
