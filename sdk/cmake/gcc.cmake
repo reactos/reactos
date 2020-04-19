@@ -194,6 +194,10 @@ if(SEPARATE_DBG)
     message(STATUS "Building separate debug symbols")
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/symbols)
     if(CMAKE_GENERATOR STREQUAL "Ninja")
+        # Those variables seems to be set but empty in newer CMake versions
+        # and Ninja generator relies on them to generate PDB name, so unset them.
+        unset(MSVC_C_ARCHITECTURE_ID)
+        unset(MSVC_CXX_ARCHITECTURE_ID)
         set(CMAKE_DEBUG_SYMBOL_SUFFIX "")
         set(SYMBOL_FILE <TARGET_PDB>)
     else()
