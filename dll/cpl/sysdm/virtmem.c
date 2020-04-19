@@ -442,7 +442,7 @@ OnSet(PVIRTMEM pVirtMem)
             }
 
             /* Check the valid range of the minimum size */
-            if (MinSize < 16 ||
+            if (MinSize < 2 ||
                 MinSize > pVirtMem->Pagefile[DriveIndex].FreeSize)
             {
                 ResourceMessageBox(hApplet,
@@ -456,7 +456,7 @@ OnSet(PVIRTMEM pVirtMem)
             /* Check the valid range of the maximum size */
             if (MaxSize < MinSize ||
                 MaxSize > pVirtMem->Pagefile[DriveIndex].FreeSize ||
-                MaxSize > 4095)
+                MaxSize > 4096)
             {
                 ResourceMessageBox(hApplet,
                                    NULL,
