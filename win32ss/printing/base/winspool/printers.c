@@ -450,12 +450,10 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
  
     /* Ref: https://stackoverflow.com/questions/41147180/why-enumprintersa-and-enumprintersw-request-the-same-amount-of-memory */
     bResult = EnumPrintersW(Flags, pwszName, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
-    dwErrorCode = GetLastError();
-
-    TRACE("*pcReturned is '%d' and bResult is '%d' and dwErrorCode is '%ld'.\n", *pcReturned, bResult, dwErrorCode);
-
     if (!bResult)
     {
+        dwErrorCode = GetLastError();
+        TRACE("EnumPrintersW failed: *pcReturned is '%d' and dwErrorCode is '%ld'!\n", *pcReturned, dwErrorCode);
         goto Cleanup;
     }
 
