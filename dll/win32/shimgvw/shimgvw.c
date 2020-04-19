@@ -927,7 +927,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                 break;
                 case IDC_PRINT:
-
+                //TODO : To be completed / implemented
                 break;
                 case IDC_ROT1:
                 {
