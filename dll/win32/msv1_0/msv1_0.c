@@ -43,7 +43,8 @@ BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
                    UserInfo->All.HomeDirectoryDrive.Length + sizeof(WCHAR) +
                    UserInfo->All.ScriptPath.Length + sizeof(WCHAR) +
                    UserInfo->All.ProfilePath.Length + sizeof(WCHAR) +
-                   ((wcslen(ComputerName) + 3) * sizeof(WCHAR));
+                   ((wcslen(ComputerName) + 3) * sizeof(WCHAR))
+                   /* XP-HACKFIX */+ 8;
 
     LocalBuffer = DispatchTable.AllocateLsaHeap(BufferLength);
     if (LocalBuffer == NULL)
@@ -134,10 +135,13 @@ BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     Ptr = (LPWSTR)((ULONG_PTR)Ptr + LocalBuffer->HomeDirectoryDrive.MaximumLength);
 
-    LocalBuffer->LogonServer.Length = (wcslen(ComputerName) + 2) * sizeof(WCHAR);
+    /* XP-HACKFIX */
+    //LocalBuffer->LogonServer.Length = (wcslen(ComputerName) + 2) * sizeof(WCHAR);
+    LocalBuffer->LogonServer.Length = (wcslen(ComputerName)) * sizeof(WCHAR);
     LocalBuffer->LogonServer.MaximumLength = LocalBuffer->LogonServer.Length + sizeof(WCHAR);
     LocalBuffer->LogonServer.Buffer = (LPWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)Ptr - (ULONG_PTR)LocalBuffer);
-    wcscpy(Ptr, L"\\");
+    /* XP-HACKFIX */
+    //wcscpy(Ptr, L"\\");
     wcscat(Ptr, ComputerName);
 
     LocalBuffer->UserFlags = 0;
