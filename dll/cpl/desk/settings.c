@@ -378,10 +378,11 @@ SettingsOnInitDialog(IN HWND hwndDlg)
         pMonitors = (PMONSL_MONINFO)HeapAlloc(GetProcessHeap(), 0, sizeof(MONSL_MONINFO) * Result);
         if (pMonitors)
         {
-            DWORD hack = 1280;
+            DWORD offset = 0;
             for (i = 0; i < Result; i++)
             {
-                pMonitors[i].Position.x = hack * i;
+                if (i>1) offset = offset + pMonitors[i-1].Size.cx;
+				pMonitors[i].Position.x = offset;
                 pMonitors[i].Position.y = 0;
                 pMonitors[i].Size.cx = pData->DisplayDeviceList->CurrentSettings->dmPelsWidth;
                 pMonitors[i].Size.cy = pData->DisplayDeviceList->CurrentSettings->dmPelsHeight;
