@@ -5,7 +5,7 @@
  * PURPOSE:         Settings property page
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "desk.h"
@@ -381,7 +381,10 @@ SettingsOnInitDialog(IN HWND hwndDlg)
             DWORD offset = 0;
             for (i = 0; i < Result; i++)
             {
-                if (i>1) offset = offset + pMonitors[i-1].Size.cx;
+                if (i > 1)
+                {
+                    offset += pMonitors[i - 1].Size.cx;
+                }
 				
                 pMonitors[i].Position.x = offset;
                 pMonitors[i].Position.y = 0;
