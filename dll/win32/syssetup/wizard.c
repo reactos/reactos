@@ -19,6 +19,8 @@
 #include <wincon.h>
 #include <shlobj.h>
 
+#include <tzlib.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -44,6 +46,17 @@ typedef struct _REGISTRATIONDATA
     ULONG Registered;
     PVOID DefaultContext;
 } REGISTRATIONDATA, *PREGISTRATIONDATA;
+
+typedef struct _TIMEZONE_ENTRY
+{
+    struct _TIMEZONE_ENTRY *Prev;
+    struct _TIMEZONE_ENTRY *Next;
+    WCHAR Description[128]; /* 'Display' */
+    WCHAR StandardName[32]; /* 'Std' */
+    WCHAR DaylightName[32]; /* 'Dlt' */
+    REG_TZI_FORMAT TimezoneInfo; /* 'TZI' */
+    ULONG Index;
+} TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -1237,165 +1250,92 @@ GetLargerTimeZoneEntry(PSETUPDATA SetupData, DWORD Index)
     return NULL;
 }
 
+static LONG
+RetrieveTimeZone(
+    IN HKEY hZoneKey,
+    IN PVOID Context)
+{
+    LONG lError;
+    PSETUPDATA SetupData = (PSETUPDATA)Context;
+    PTIMEZONE_ENTRY Entry;
+    PTIMEZONE_ENTRY Current;
+    ULONG DescriptionSize;
+    ULONG StandardNameSize;
+    ULONG DaylightNameSize;
+
+    Entry = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TIMEZONE_ENTRY));
+    if (Entry == NULL)
+    {
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    DescriptionSize  = sizeof(Entry->Description);
+    StandardNameSize = sizeof(Entry->StandardName);
+    DaylightNameSize = sizeof(Entry->DaylightName);
+
+    lError = QueryTimeZoneData(hZoneKey,
+                               &Entry->Index,
+                               &Entry->TimezoneInfo,
+                               Entry->Description,
+                               &DescriptionSize,
+                               Entry->StandardName,
+                               &StandardNameSize,
+                               Entry->DaylightName,
+                               &DaylightNameSize);
+    if (lError != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, Entry);
+        return lError;
+    }
+
+    if (SetupData->TimeZoneListHead == NULL &&
+        SetupData->TimeZoneListTail == NULL)
+    {
+        Entry->Prev = NULL;
+        Entry->Next = NULL;
+        SetupData->TimeZoneListHead = Entry;
+        SetupData->TimeZoneListTail = Entry;
+    }
+    else
+    {
+        Current = GetLargerTimeZoneEntry(SetupData, Entry->Index);
+        if (Current != NULL)
+        {
+            if (Current == SetupData->TimeZoneListHead)
+            {
+                /* Prepend to head */
+                Entry->Prev = NULL;
+                Entry->Next = SetupData->TimeZoneListHead;
+                SetupData->TimeZoneListHead->Prev = Entry;
+                SetupData->TimeZoneListHead = Entry;
+            }
+            else
+            {
+                /* Insert before current */
+                Entry->Prev = Current->Prev;
+                Entry->Next = Current;
+                Current->Prev->Next = Entry;
+                Current->Prev = Entry;
+            }
+        }
+        else
+        {
+            /* Append to tail */
+            Entry->Prev = SetupData->TimeZoneListTail;
+            Entry->Next = NULL;
+            SetupData->TimeZoneListTail->Next = Entry;
+            SetupData->TimeZoneListTail = Entry;
+        }
+    }
+
+    return ERROR_SUCCESS;
+}
 
 static VOID
 CreateTimeZoneList(PSETUPDATA SetupData)
 {
-    WCHAR szKeyName[256];
-    DWORD dwIndex;
-    DWORD dwNameSize;
-    DWORD dwValueSize;
-    LONG lError;
-    HKEY hZonesKey;
-    HKEY hZoneKey;
-
-    PTIMEZONE_ENTRY Entry;
-    PTIMEZONE_ENTRY Current;
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
-                      0,
-                      KEY_ALL_ACCESS,
-                      &hZonesKey))
-        return;
-
-    dwIndex = 0;
-    while (TRUE)
-    {
-        dwNameSize = 256 * sizeof(WCHAR);
-        lError = RegEnumKeyExW(hZonesKey,
-                               dwIndex,
-                               szKeyName,
-                               &dwNameSize,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL);
-        if (lError != ERROR_SUCCESS && lError != ERROR_MORE_DATA)
-            break;
-
-        if (RegOpenKeyExW(hZonesKey,
-                          szKeyName,
-                          0,
-                          KEY_ALL_ACCESS,
-                          &hZoneKey))
-            break;
-
-        Entry = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TIMEZONE_ENTRY));
-        if (Entry == NULL)
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = 64 * sizeof(WCHAR);
-        if (RegQueryValueExW(hZoneKey,
-                             L"Display",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->Description,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = 32 * sizeof(WCHAR);
-        if (RegQueryValueExW(hZoneKey,
-                             L"Std",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->StandardName,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = 32 * sizeof(WCHAR);
-        if (RegQueryValueExW(hZoneKey,
-                             L"Dlt",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->DaylightName,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = sizeof(DWORD);
-        if (RegQueryValueExW(hZoneKey,
-                             L"Index",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->Index,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = sizeof(TZ_INFO);
-        if (RegQueryValueExW(hZoneKey,
-                             L"TZI",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->TimezoneInfo,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        RegCloseKey(hZoneKey);
-
-        if (SetupData->TimeZoneListHead == NULL &&
-                SetupData->TimeZoneListTail == NULL)
-        {
-            Entry->Prev = NULL;
-            Entry->Next = NULL;
-            SetupData->TimeZoneListHead = Entry;
-            SetupData->TimeZoneListTail = Entry;
-        }
-        else
-        {
-            Current = GetLargerTimeZoneEntry(SetupData, Entry->Index);
-            if (Current != NULL)
-            {
-                if (Current == SetupData->TimeZoneListHead)
-                {
-                    /* Prepend to head */
-                    Entry->Prev = NULL;
-                    Entry->Next = SetupData->TimeZoneListHead;
-                    SetupData->TimeZoneListHead->Prev = Entry;
-                    SetupData->TimeZoneListHead = Entry;
-                }
-                else
-                {
-                    /* Insert before current */
-                    Entry->Prev = Current->Prev;
-                    Entry->Next = Current;
-                    Current->Prev->Next = Entry;
-                    Current->Prev = Entry;
-                }
-            }
-            else
-            {
-                /* Append to tail */
-                Entry->Prev = SetupData->TimeZoneListTail;
-                Entry->Next = NULL;
-                SetupData->TimeZoneListTail->Next = Entry;
-                SetupData->TimeZoneListTail = Entry;
-            }
-        }
-
-        dwIndex++;
-    }
-
-    RegCloseKey(hZonesKey);
+    EnumerateTimeZoneList(RetrieveTimeZone, SetupData);
 }
-
 
 static VOID
 DestroyTimeZoneList(PSETUPDATA SetupData)
@@ -1416,117 +1356,6 @@ DestroyTimeZoneList(PSETUPDATA SetupData)
     }
 
     SetupData->TimeZoneListTail = NULL;
-}
-
-static BOOL
-GetTimeZoneListIndex(LPDWORD lpIndex)
-{
-    WCHAR szLanguageIdString[9];
-    HKEY hKey;
-    DWORD dwValueSize;
-    DWORD Length;
-    LPWSTR Buffer;
-    LPWSTR Ptr;
-    LPWSTR End;
-    BOOL bFound = FALSE;
-    unsigned long iLanguageID;
-
-    if (*lpIndex == -1)
-    {
-        *lpIndex = 85; /* fallback to GMT time zone */
-
-        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                          L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
-                          0,
-                          KEY_ALL_ACCESS,
-                          &hKey))
-            return FALSE;
-
-        dwValueSize = 9 * sizeof(WCHAR);
-        if (RegQueryValueExW(hKey,
-                             L"Default",
-                             NULL,
-                             NULL,
-                             (LPBYTE)szLanguageIdString,
-                             &dwValueSize))
-        {
-            RegCloseKey(hKey);
-            return FALSE;
-        }
-
-        iLanguageID = wcstoul(szLanguageIdString, NULL, 16);
-        RegCloseKey(hKey);
-    }
-    else
-    {
-        iLanguageID = *lpIndex;
-    }
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
-                      0,
-                      KEY_ALL_ACCESS,
-                      &hKey))
-        return FALSE;
-
-    dwValueSize = 0;
-    if (RegQueryValueExW(hKey,
-                         L"IndexMapping",
-                         NULL,
-                         NULL,
-                         NULL,
-                         &dwValueSize))
-    {
-        RegCloseKey(hKey);
-        return FALSE;
-    }
-
-    Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwValueSize);
-    if (Buffer == NULL)
-    {
-        RegCloseKey(hKey);
-        return FALSE;
-    }
-
-    if (RegQueryValueExW(hKey,
-                         L"IndexMapping",
-                         NULL,
-                         NULL,
-                         (LPBYTE)Buffer,
-                         &dwValueSize))
-    {
-        HeapFree(GetProcessHeap(), 0, Buffer);
-        RegCloseKey(hKey);
-        return FALSE;
-    }
-
-    RegCloseKey(hKey);
-
-    Ptr = Buffer;
-    while (*Ptr != 0)
-    {
-        Length = wcslen(Ptr);
-        if (wcstoul(Ptr, NULL, 16) == iLanguageID)
-            bFound = TRUE;
-
-        Ptr = Ptr + Length + 1;
-        if (*Ptr == 0)
-            break;
-
-        if (bFound)
-        {
-            *lpIndex = wcstoul(Ptr, &End, 10);
-            HeapFree(GetProcessHeap(), 0, Buffer);
-            return TRUE;
-        }
-
-        Length = wcslen(Ptr);
-        Ptr = Ptr + Length + 1;
-    }
-
-    HeapFree(GetProcessHeap(), 0, Buffer);
-
-    return FALSE;
 }
 
 
@@ -1634,32 +1463,6 @@ GetLocalSystemTime(HWND hwnd, PSETUPDATA SetupData)
 }
 
 
-static VOID
-SetAutoDaylightInfo(HWND hwnd)
-{
-    HKEY hKey;
-    DWORD dwValue = 1;
-
-    if (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_UNCHECKED)
-    {
-        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                          L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
-                          0,
-                          KEY_SET_VALUE,
-                          &hKey))
-            return;
-
-        RegSetValueExW(hKey,
-                       L"DisableAutoDaylightTimeSet",
-                       0,
-                       REG_DWORD,
-                       (LPBYTE)&dwValue,
-                       sizeof(DWORD));
-        RegCloseKey(hKey);
-    }
-}
-
-
 static BOOL
 SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
 {
@@ -1696,7 +1499,8 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
     SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
                      SetupData);
 
-    SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
+    SetAutoDaylight(SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT,
+                                       BM_GETCHECK, 0, 0) != BST_UNCHECKED);
     if (!SetSystemLocalTime(hwndDlg, SetupData))
     {
         if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, ARRAYSIZE(Title)))
@@ -1730,6 +1534,7 @@ DateTimePageDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
@@ -1754,6 +1559,7 @@ DateTimePageDlgProc(HWND hwndDlg,
                 SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
             }
             break;
+        }
 
         case WM_TIMER:
             UpdateLocalSystemTime(hwndDlg);
