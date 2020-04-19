@@ -85,8 +85,37 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
     TRACE("Successfully ran command\n");
 
     if (wait)
-    {   /* wait for the process to exit */
-        WaitForSingleObject(info.hProcess, INFINITE);
+    {
+        HANDLE Handles[] = { info.hProcess };
+        DWORD nCount = _countof(Handles);
+        DWORD dwWait;
+        MSG msg;
+
+        /* wait for the process to exit */
+        for (;;)
+        {
+            /* We need to keep processing messages,
+               otherwise we will hang anything that is trying to send a message to us */
+            dwWait = MsgWaitForMultipleObjects(nCount, Handles, FALSE, INFINITE, QS_ALLINPUT);
+
+            /* WAIT_OBJECT_0 + nCount signals an event in the message queue,
+               so anything other than that means we are done. */
+            if (dwWait != WAIT_OBJECT_0 + nCount)
+            {
+                if (dwWait >= WAIT_OBJECT_0 && dwWait < WAIT_OBJECT_0 + nCount)
+                    TRACE("Event %u signaled\n", dwWait - WAIT_OBJECT_0);
+                else
+                    WARN("Return code: %u\n", dwWait);
+                break;
+            }
+
+            while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+            {
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            }
+        }
+
         GetExitCodeProcess(info.hProcess, &exit_code);
     }
 
