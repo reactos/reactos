@@ -439,13 +439,39 @@ LANStatusUiDetailsDlg(
                     if (MultiByteToWideChar(CP_ACP, 0, pCurAdapter->GatewayList.IpAddress.String, -1, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
                         SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
                 }
-#if 0
+
+                li.iItem = InsertItemToListView(hDlgCtrl, IDS_DHCP_SERVER);
+                if (li.iItem >= 0 && pCurAdapter->DhcpServer.IpAddress.String[0] != '0')
+                {
+                    if (MultiByteToWideChar(CP_ACP, 0, pCurAdapter->DhcpServer.IpAddress.String, -1, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+                        SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+                }
+
                 li.iItem = InsertItemToListView(hDlgCtrl, IDS_LEASE_OBTAINED);
+                if (li.iItem >= 0 && pCurAdapter->LeaseObtained != NULL)
+                {
+                    struct tm *leaseOptained;
+
+                    leaseOptained = localtime(&pCurAdapter->LeaseObtained);
+
+                    if (wcsftime(szBuffer, 100, L"%m/%d/%Y %H:%M:%S %p", leaseOptained) != 0)
+                        SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+                }
+
                 li.iItem = InsertItemToListView(hDlgCtrl, IDS_LEASE_EXPIRES);
-#endif
+                if (li.iItem >= 0 && pCurAdapter->LeaseExpires != NULL)
+                {
+                    struct tm *leaseExpire;
+
+                    leaseExpire = localtime(&pCurAdapter->LeaseExpires);
+
+                    if (wcsftime(szBuffer, 100, L"%m/%d/%Y %H:%M:%S %p", leaseExpire) != 0)
+                        SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+                }
             }
 
             dwSize = 0;
+            li.iItem = InsertItemToListView(hDlgCtrl, IDS_DNS_SERVERS);
             if (GetPerAdapterInfo(pContext->dwAdapterIndex, NULL, &dwSize) == ERROR_BUFFER_OVERFLOW)
             {
                 pPerAdapter = static_cast<PIP_PER_ADAPTER_INFO>(CoTaskMemAlloc(dwSize));
@@ -460,16 +486,20 @@ LANStatusUiDetailsDlg(
                     CoTaskMemFree(pPerAdapter);
                 }
             }
-#if 0
+
             if (pCurAdapter)
             {
                 li.iItem = InsertItemToListView(hDlgCtrl, IDS_WINS_SERVERS);
-                AddIPAddressToListView(hDlgCtrl, &pCurAdapter->PrimaryWinsServer, li.iItem);
-                AddIPAddressToListView(hDlgCtrl, &pCurAdapter->SecondaryWinsServer, li.iItem+1);
+                if (pCurAdapter->HaveWins)
+                {
+                    AddIPAddressToListView(hDlgCtrl, &pCurAdapter->PrimaryWinsServer, li.iItem);
+                    AddIPAddressToListView(hDlgCtrl, &pCurAdapter->SecondaryWinsServer, li.iItem+1);
+                }
             }
-#endif
+
             CoTaskMemFree(pAdapterInfo);
             break;
+
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_CLOSE)
             {
@@ -477,6 +507,7 @@ LANStatusUiDetailsDlg(
                 break;
             }
     }
+
     return FALSE;
 }
 
