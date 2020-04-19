@@ -74,11 +74,11 @@ namespace
             EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
             EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
         }
-		else
-		{
+        else
+        {
             EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
             EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
-		}
+        }
 
         SetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER), Info->szProxyServer);
         SetWindowTextW(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), Info->szNoProxyFor);
