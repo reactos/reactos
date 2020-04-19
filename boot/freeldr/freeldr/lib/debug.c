@@ -43,8 +43,14 @@ static UCHAR DbgChannels[DBG_CHANNELS_COUNT];
 ULONG DebugPort = RS232;
 
 /* Serial debug connection */
-ULONG ComPort  = 0; // The COM port initializer chooses the first available port starting from COM4 down to COM1.
+
+#if defined(SARCH_PC98)
+ULONG BaudRate = 9600;
+#else
 ULONG BaudRate = 115200;
+#endif
+
+ULONG ComPort  = 0; // The COM port initializer chooses the first available port starting from COM4 down to COM1.
 ULONG PortIrq  = 0; // Not used at the moment.
 
 BOOLEAN DebugStartOfLine = TRUE;
