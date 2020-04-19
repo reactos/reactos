@@ -442,8 +442,9 @@ OnSet(PVIRTMEM pVirtMem)
             }
 
             /* Check the valid range of the minimum size */
-            if (MinSize < 16 ||
-                MinSize > pVirtMem->Pagefile[DriveIndex].FreeSize)
+            if (MinSize < 2 ||
+                MinSize > pVirtMem->Pagefile[DriveIndex].FreeSize ||
+				MinSize > 4096)
             {
                 ResourceMessageBox(hApplet,
                                    NULL,
@@ -456,7 +457,7 @@ OnSet(PVIRTMEM pVirtMem)
             /* Check the valid range of the maximum size */
             if (MaxSize < MinSize ||
                 MaxSize > pVirtMem->Pagefile[DriveIndex].FreeSize ||
-                MaxSize > 4095)
+                MaxSize > 4096)
             {
                 ResourceMessageBox(hApplet,
                                    NULL,
@@ -581,15 +582,13 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         }
 
         /* Set current pagefile size */
-#if 0
         PageFileSizeMb = 0;
-        for (i = 0; i < 26; i++)
+        for (i = 0; i < pVirtMem->Count; i++)
         {
             PageFileSizeMb += pVirtMem->Pagefile[i].InitialSize;
         }
         _stprintf(szBuffer, _T("%u MB"), PageFileSizeMb);
         SetDlgItemText(hwndDlg, IDC_CURRENT, szBuffer);
-#endif
     }
 
     return TRUE;
