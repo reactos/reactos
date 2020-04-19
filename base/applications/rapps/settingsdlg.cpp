@@ -69,7 +69,7 @@ namespace
 
         CheckRadioButton(hDlg, IDC_PROXY_DEFAULT, IDC_USE_PROXY, IDC_PROXY_DEFAULT + Info->Proxy);
 
-        if (IDC_PROXY_DEFAULT + Info->Proxy == IDC_USE_PROXY)
+        if (Info->Proxy == 0)
         {
         	EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
         	EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
