@@ -581,15 +581,13 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         }
 
         /* Set current pagefile size */
-#if 0
         PageFileSizeMb = 0;
-        for (i = 0; i < 26; i++)
+        for (i = 0; i < pVirtMem->Count; i++)
         {
             PageFileSizeMb += pVirtMem->Pagefile[i].InitialSize;
         }
         _stprintf(szBuffer, _T("%u MB"), PageFileSizeMb);
         SetDlgItemText(hwndDlg, IDC_CURRENT, szBuffer);
-#endif
     }
 
     return TRUE;
