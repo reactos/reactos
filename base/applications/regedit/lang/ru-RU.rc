@@ -264,7 +264,7 @@ STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME "Имя"
     IDS_LIST_COLUMN_TYPE "Тип"
-    IDS_LIST_COLUMN_DATA "Данные"
+    IDS_LIST_COLUMN_DATA "Значение"
 END
 
 STRINGTABLE
@@ -325,7 +325,7 @@ BEGIN
     IDS_BAD_VALUE "Не удалось получить значение '%s'"
     IDS_UNSUPPORTED_TYPE "Невозможно изменить ключи этого типа (%ld)"
     IDS_TOO_BIG_VALUE "Значение слишком большое (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "Данные типа REG_MULTI_SZ не могут содержать пустые строки.\nВсе пустые строки будут удалены."
+    IDS_MULTI_SZ_EMPTY_STRING "Значение типа REG_MULTI_SZ не может содержать пустые строки.\nВсе пустые строки будут удалены."
     IDS_QUERY_DELETE_KEY_ONE "Вы действительно хотите удалить этот ключ?"
     IDS_QUERY_DELETE_KEY_MORE "Вы действительно хотите удалить эти ключи?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Подтверждение удаления ключа"
@@ -517,15 +517,15 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Искать далее", IDOK, 193, 7, 58, 14
     PUSHBUTTON "Отмена", IDCANCEL, 193, 24, 58, 14
-    GROUPBOX "Просматривать", IDC_STATIC, 7, 24, 87, 51
+    GROUPBOX "Просматривать", IDC_STATIC, 7, 24, 98, 51
     LTEXT "На&йти:", IDC_STATIC, 7, 8, 37, 10
     EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
-    CONTROL "&Ключи", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
-            WS_TABSTOP, 14, 36, 51, 8
-    CONTROL "&Значения", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
-            WS_TABSTOP, 14, 48, 51, 8
-    CONTROL "&Данные", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
-            WS_TABSTOP, 14, 60, 51, 8
+    CONTROL "Имена р&азделов", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 36, 88, 8
+    CONTROL "Имена &параметров", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 48, 88, 8
+    CONTROL "&Значения параметров", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 60, 88, 8
     CONTROL "&Искать только строку целиком", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 109, 44, 136, 13
     CONTROL "&С учетом регистра", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
