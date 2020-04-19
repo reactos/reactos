@@ -1883,6 +1883,7 @@ HKCU,"SOFTWARE\Classes\Applications",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer","SearchHidden",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer","SelectExtOnRename",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",,0x00000012
