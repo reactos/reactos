@@ -444,7 +444,7 @@ OnSet(PVIRTMEM pVirtMem)
             /* Check the valid range of the minimum size */
             if (MinSize < 2 ||
                 MinSize > pVirtMem->Pagefile[DriveIndex].FreeSize ||
-				MinSize > 4096)
+                MinSize > 4096)
             {
                 ResourceMessageBox(hApplet,
                                    NULL,
@@ -503,7 +503,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
     TCHAR szBuffer[64];
     MEMORYSTATUSEX MemoryStatus;
     ULARGE_INTEGER FreeDiskSpace;
-    UINT /*i,*/ FreeMemMb /*, PageFileSizeMb*/;
+    UINT i, FreeMemMb, PageFileSizeMb;
     INT Index;
 
     Index = (INT)SendDlgItemMessage(hwndDlg,
