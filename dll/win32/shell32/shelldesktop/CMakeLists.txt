@@ -10,6 +10,7 @@ add_definitions(
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 list(APPEND SOURCE
+    CChangeNotifyServer.cpp
     CDesktopBrowser.cpp
     dde.cpp)
 

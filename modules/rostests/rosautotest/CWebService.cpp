@@ -7,7 +7,8 @@
 
 #include "precomp.h"
 
-static const WCHAR szHostname[] = L"tlsv1.reactos.org";
+static const WCHAR szHostname[] = L"reactos.org";
+static const INTERNET_PORT ServerPort = 8443;
 static const WCHAR szServerFile[] = L"testman/webservice/";
 
 /**
@@ -26,7 +27,7 @@ CWebService::CWebService()
     if(!m_hInet)
         FATAL("InternetOpenW failed\n");
 
-    m_hHTTP = InternetConnectW(m_hInet, szHostname, INTERNET_DEFAULT_HTTPS_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    m_hHTTP = InternetConnectW(m_hInet, szHostname, ServerPort, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
 
     if(!m_hHTTP)
         FATAL("InternetConnectW failed\n");

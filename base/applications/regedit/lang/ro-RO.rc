@@ -131,9 +131,17 @@ BEGIN
         MENUITEM "&Redenumește", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "E&xportă", ID_TREE_EXPORT
-        MENUITEM "Permisiuni…", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "Permisiuni…", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copiază numele cheii", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Extin&de/Restrânge", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "E&xportă", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Eli&berare registru…", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

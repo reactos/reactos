@@ -904,6 +904,32 @@ handle_gdb_c(
 
 static
 KDSTATUS
+handle_gdb_C(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
+{
+    KDSTATUS Status;
+
+    /* Tell GDB everything is fine, we will handle it */
+    Status = send_gdb_packet("OK");
+    if (Status != KdPacketReceived)
+        return Status;
+
+    if (CurrentStateChange.NewState == DbgKdExceptionStateChange)
+    {
+        /* Debugger didn't handle the exception, report it back to the kernel */
+        State->u.Continue2.ContinueStatus = CurrentStateChange.u.Exception.ExceptionRecord.ExceptionCode;
+        State->ApiNumber = DbgKdContinueApi2;
+        return KdPacketReceived;
+    }
+    /* We should never reach this ? */
+    return ContinueManipulateStateHandler(State, MessageData, MessageLength, KdContext);
+}
+
+static
+KDSTATUS
 handle_gdb_s(
     _Out_ DBGKD_MANIPULATE_STATE64* State,
     _Out_ PSTRING MessageData,
@@ -981,6 +1007,9 @@ gdb_receive_and_interpret_packet(
             break;
         case 'c':
             Status = handle_gdb_c(State, MessageData, MessageLength, KdContext);
+            break;
+        case 'C':
+            Status = handle_gdb_C(State, MessageData, MessageLength, KdContext);
             break;
         case 'g':
             Status = LOOP_IF_SUCCESS(gdb_send_registers());

@@ -4,8 +4,8 @@ STRINGTABLE
 BEGIN
     IDS_EDIT "Edit"
     IDS_MARK "Tandai"
-    IDS_COPY "Copy\tEnter"
-    IDS_PASTE "Paste"
+    IDS_COPY "Salin\tEnter"
+    IDS_PASTE "Tempel"
     IDS_SELECTALL "Pilih Semua"
     IDS_SCROLL "Gulung"
     IDS_FIND "Cari..."
@@ -20,11 +20,11 @@ BEGIN
     IDS_SCROLLUP "Gulung Naik"
     IDS_SCROLLDOWN "Gulung Turun"
 */
-    IDS_TERMINAL_TITLE "ReactOS Console"
+    IDS_TERMINAL_TITLE "Konsol ReactOS"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MARK_TITLE "Mark"
-    IDS_SELECT_TITLE "Select"
+    IDS_MARK_TITLE "Tandai"
+    IDS_SELECT_TITLE "Pilih"
 END

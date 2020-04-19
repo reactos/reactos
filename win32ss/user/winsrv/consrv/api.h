@@ -8,6 +8,84 @@
 
 #pragma once
 
+/*
+ * Helper macros to define the CSR_API_ROUTINE-s defined in CONSRV,
+ * factoring out the common prologue and epilogue code, and including
+ * the necessary local variables.
+ */
+
+#define CON_API_NOCONSOLE_IMPL(Name, TYPE, RequestName)   \
+    NTSTATUS                                    \
+    Name##Impl(                                 \
+        IN PCONSOLE_PROCESS_DATA ProcessData,   \
+        IN OUT PCSR_API_MESSAGE ApiMessage,     \
+        IN TYPE* RequestName, /* Request */     \
+        IN OUT PCSR_REPLY_CODE ReplyCode OPTIONAL)
+
+// NTSTATUS NTAPI
+// Name(
+    // IN OUT PCSR_API_MESSAGE ApiMessage,
+    // IN OUT PCSR_REPLY_CODE  ReplyCode OPTIONAL)
+#define CON_API_NOCONSOLE_ENTRY(Name, TYPE, RequestName)    \
+    CON_API_NOCONSOLE_IMPL(Name, TYPE, RequestName);        \
+    CSR_API(Name)                               \
+    {                                           \
+        TYPE* RequestName = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.RequestName;  \
+        PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);    \
+                                                \
+        return Name##Impl(ProcessData, ApiMessage, RequestName, ReplyCode); \
+    }
+
+#define CON_API_NOCONSOLE(Name, TYPE, RequestName)      \
+    CON_API_NOCONSOLE_ENTRY(Name, TYPE, RequestName);   \
+    CON_API_NOCONSOLE_IMPL(Name, TYPE, RequestName)
+
+
+
+#define CON_API_IMPL(Name, TYPE, RequestName)   \
+    NTSTATUS                                    \
+    Name##Impl(                                 \
+        IN PCONSOLE_PROCESS_DATA ProcessData,   \
+        IN PCONSRV_CONSOLE Console,             \
+        IN OUT PCSR_API_MESSAGE ApiMessage,     \
+        IN TYPE* RequestName, /* Request */     \
+        IN OUT PCSR_REPLY_CODE ReplyCode OPTIONAL)
+
+// NTSTATUS NTAPI
+// Name(
+    // IN OUT PCSR_API_MESSAGE ApiMessage,
+    // IN OUT PCSR_REPLY_CODE  ReplyCode OPTIONAL)
+#define CON_API_ENTRY(Name, TYPE, RequestName)  \
+    CON_API_IMPL(Name, TYPE, RequestName);      \
+    CSR_API(Name)                               \
+    {                                           \
+        NTSTATUS Status;                        \
+        TYPE* RequestName = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.RequestName;  \
+        PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);    \
+        PCONSRV_CONSOLE Console;                \
+                                                \
+        Status = ConSrvGetConsole(ProcessData,  \
+                                  /* RequestName->ConsoleHandle, */   \
+                                  &Console, TRUE);              \
+        if (!NT_SUCCESS(Status))                \
+            return Status;                      \
+                                                \
+        Status = Name##Impl(ProcessData, Console,                   \
+                            ApiMessage, RequestName, ReplyCode);    \
+                                                \
+        ConSrvReleaseConsole(Console, TRUE);    \
+        return Status;                          \
+    }
+
+#define CON_API(Name, TYPE, RequestName)      \
+    CON_API_ENTRY(Name, TYPE, RequestName);   \
+    CON_API_IMPL(Name, TYPE, RequestName)
+
+
+/*
+ * List of CSR_API_ROUTINE-s defined in this module.
+ */
+
 /* alias.c */
 CSR_API(SrvAddConsoleAlias);
 CSR_API(SrvGetConsoleAlias);
@@ -104,7 +182,7 @@ CSR_API(SrvSetHandleInformation);
 CSR_API(SrvCloseHandle);
 CSR_API(SrvVerifyConsoleIoHandle);
 
-/* lineinput.c */
+/* history.c */
 CSR_API(SrvGetConsoleCommandHistory);
 CSR_API(SrvGetConsoleCommandHistoryLength);
 CSR_API(SrvExpungeConsoleCommandHistory);

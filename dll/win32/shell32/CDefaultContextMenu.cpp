@@ -8,14 +8,6 @@
 
 #include "precomp.h"
 
-extern "C"
-{
-    //fixme: this isn't in wine's shlwapi header, and the definition doesnt match the
-    // windows headers. When wine's header and lib are fixed this can be removed.
-    DWORD WINAPI SHAnsiToUnicode(LPCSTR lpSrcStr, LPWSTR lpDstStr, int iLen);
-    INT WINAPI SHUnicodeToAnsi(LPCWSTR lpSrcStr, LPSTR lpDstStr, INT iLen);
-};
-
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 
 typedef struct _DynamicShellEntry_

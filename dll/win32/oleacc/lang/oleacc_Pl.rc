@@ -2,6 +2,8 @@
  * Polish resources for oleacc
  *
  * Copyright 2009 Łukasz Wojniłowicz
+ * Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
+ *
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +24,7 @@ LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    0 "unknown object" /* undocumented */
+    0 "nieznany obiekt" /* undocumented */
     ROLE_SYSTEM_TITLEBAR    "pasek tytułu"
     ROLE_SYSTEM_MENUBAR     "pasek menu"
     ROLE_SYSTEM_SCROLLBAR   "pasek przewijania"

@@ -56,7 +56,7 @@ add_library(portcls MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/portcls.def)
 
 if(USE_CLANG_CL)
-    add_target_compile_flags(portcls "-Wno-missing-braces")
+    target_compile_options(portcls PRIVATE "-Wno-missing-braces")
 endif()
 
 target_link_libraries(portcls libcntpr ${PSEH_LIB})

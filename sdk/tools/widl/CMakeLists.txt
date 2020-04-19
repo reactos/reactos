@@ -38,11 +38,11 @@ target_link_libraries(widl PRIVATE host_includes wpphost)
 
 if(MSVC)
     # Disable warning "'>': signed/unsigned mismatch"
-    add_target_compile_flags(widl "/wd4018")
+    target_compile_options(widl PRIVATE "/wd4018")
 
     # Disable warning "unary minus operator applied to unsigned type, result still unsigned"
-    add_target_compile_flags(widl "/wd4146")
+    target_compile_options(widl PRIVATE "/wd4146")
 
     # Disable warning "'=': conversion from 'a' to 'b', possible loss of data"
-    add_target_compile_flags(widl "/wd4244")
+    target_compile_options(widl PRIVATE "/wd4244")
 endif()

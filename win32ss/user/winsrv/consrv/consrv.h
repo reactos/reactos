@@ -54,25 +54,15 @@ typedef struct _CONSOLE_PROCESS_DATA
     // LPTHREAD_START_ROUTINE ImeRoutine;
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 
-typedef struct ConsoleInput_t
-{
-    LIST_ENTRY ListEntry;
-    INPUT_RECORD InputEvent;
-} ConsoleInput;
-
-// Helper for code refactoring
-// #define USE_NEW_CONSOLE_WAY
-
-#ifndef USE_NEW_CONSOLE_WAY
 #include "include/conio.h"
-#else
 #include "include/conio_winsrv.h"
-#endif
 
+#include "api.h" // For the CON_API_* macros.
 #include "include/console.h"
 #include "include/settings.h"
 #include "include/term.h"
 #include "console.h"
+#include "coninput.h"
 #include "conoutput.h"
 #include "handle.h"
 #include "lineinput.h"

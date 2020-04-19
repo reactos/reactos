@@ -78,16 +78,16 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
             ((ServerDll->ValidTable) && !(ServerDll->ValidTable[ApiId])))
         {
             /* We are beyond the Maximum API ID, or it doesn't exist */
-            DPRINT1("API: %d\n", ApiId);
 #ifdef CSR_DBG
+            DPRINT1("API: %d\n", ApiId);
             DPRINT1("CSRSS: %lx (%s) is invalid ApiTableIndex for %Z or is an "
                     "invalid API to call from the server.\n",
                     ApiId,
                     ((ServerDll->NameTable) && (ServerDll->NameTable[ApiId])) ?
                     ServerDll->NameTable[ApiId] : "*** UNKNOWN ***",
                     &ServerDll->Name);
+            if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
 #endif
-            // DbgBreakPoint();
             ReplyMsg->Status = STATUS_ILLEGAL_FUNCTION;
             return STATUS_ILLEGAL_FUNCTION;
         }
@@ -189,6 +189,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     ConnectInfo->ServerProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
 
     /* Accept the Connection */
+    ASSERT(!AllowConnection || (AllowConnection && CsrProcess));
     Status = NtAcceptConnectPort(&ServerPort,
                                  AllowConnection ? UlongToPtr(CsrProcess->SequenceNumber) : 0,
                                  &ApiMessage->Header,
@@ -382,6 +383,7 @@ CsrApiRequestThread(IN PVOID Parameter)
         /* Make sure the real CID is set */
         Teb->RealClientId = Teb->ClientId;
 
+#ifdef CSR_DBG
         /* Debug check */
         if (Teb->CountOfOwnedCriticalSections)
         {
@@ -391,6 +393,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                     &ReceiveMsg, ReplyMsg);
             DbgBreakPoint();
         }
+#endif
 
         /* Wait for a message to come through */
         Status = NtReplyWaitReceivePort(ReplyPort,
@@ -404,15 +407,17 @@ CsrApiRequestThread(IN PVOID Parameter)
             /* Was it a failure or another success code? */
             if (!NT_SUCCESS(Status))
             {
+#ifdef CSR_DBG
                 /* Check for specific status cases */
                 if ((Status != STATUS_INVALID_CID) &&
                     (Status != STATUS_UNSUCCESSFUL) &&
-                    ((Status == STATUS_INVALID_HANDLE) || (ReplyPort == CsrApiPort)))
+                    ((Status != STATUS_INVALID_HANDLE) || (ReplyPort == CsrApiPort)))
                 {
                     /* Notify the debugger */
                     DPRINT1("CSRSS: ReceivePort failed - Status == %X\n", Status);
                     DPRINT1("CSRSS: ReplyPortHandle %lx CsrApiPort %lx\n", ReplyPort, CsrApiPort);
                 }
+#endif
 
                 /* We failed big time, so start out fresh */
                 ReplyMsg = NULL;
@@ -426,6 +431,9 @@ CsrApiRequestThread(IN PVOID Parameter)
                 continue;
             }
         }
+
+        // ASSERT(ReceiveMsg.Header.u1.s1.TotalLength >= sizeof(PORT_MESSAGE));
+        // ASSERT(ReceiveMsg.Header.u1.s1.TotalLength <  sizeof(ReceiveMsg));
 
         /* Use whatever Client ID we got */
         Teb->RealClientId = ReceiveMsg.Header.ClientId;
@@ -534,9 +542,11 @@ CsrApiRequestThread(IN PVOID Parameter)
                     (!(ServerDll = CsrLoadedServerDll[ServerId])))
                 {
                     /* We are beyond the Maximum Server ID */
+#ifdef CSR_DBG
                     DPRINT1("CSRSS: %lx is invalid ServerDllIndex (%08x)\n",
                             ServerId, ServerDll);
-                    // DbgBreakPoint();
+                    if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
 
                     ReplyMsg = NULL;
                     ReplyPort = CsrApiPort;
@@ -736,9 +746,11 @@ CsrApiRequestThread(IN PVOID Parameter)
             (!(ServerDll = CsrLoadedServerDll[ServerId])))
         {
             /* We are beyond the Maximum Server ID */
+#ifdef CSR_DBG
             DPRINT1("CSRSS: %lx is invalid ServerDllIndex (%08x)\n",
                     ServerId, ServerDll);
-            // DbgBreakPoint();
+            if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
 
             ReplyPort = CsrApiPort;
             ReplyMsg = &ReceiveMsg;
@@ -828,12 +840,14 @@ CsrApiRequestThread(IN PVOID Parameter)
             else if (ReplyCode == CsrReplyDeadClient)
             {
                 /* Reply to the death message */
-                NtReplyPort(ReplyPort, &ReplyMsg->Header);
+                NTSTATUS Status2;
+                Status2 = NtReplyPort(ReplyPort, &ReplyMsg->Header);
+                if (!NT_SUCCESS(Status2))
+                    DPRINT1("CSRSS: Error while replying to the death message, Status 0x%lx\n", Status2);
 
                 /* Reply back to the API port now */
                 ReplyMsg = NULL;
                 ReplyPort = CsrApiPort;
-
                 CsrDereferenceThread(CsrThread);
             }
             else if (ReplyCode == CsrReplyPending)
@@ -1042,7 +1056,8 @@ CsrConnectToUser(VOID)
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Connected = FALSE;
-    } _SEH2_END;
+    }
+    _SEH2_END;
 
     if (!Connected)
     {
@@ -1104,92 +1119,175 @@ NTAPI
 CsrCaptureArguments(IN PCSR_THREAD CsrThread,
                     IN PCSR_API_MESSAGE ApiMessage)
 {
-    PCSR_CAPTURE_BUFFER LocalCaptureBuffer = NULL, RemoteCaptureBuffer = NULL;
+    PCSR_PROCESS CsrProcess = CsrThread->Process;
+    PCSR_CAPTURE_BUFFER ClientCaptureBuffer, ServerCaptureBuffer = NULL;
+    ULONG_PTR EndOfClientBuffer;
+    SIZE_T SizeOfBufferThroughOffsetsArray;
     SIZE_T BufferDistance;
-    ULONG Length = 0;
+    ULONG Length;
     ULONG PointerCount;
     PULONG_PTR OffsetPointer;
     ULONG_PTR CurrentOffset;
 
-    /* Use SEH to make sure this is valid */
+    /* Get the buffer we got from whoever called NTDLL */
+    ClientCaptureBuffer = ApiMessage->CsrCaptureData;
+
+    /* Use SEH to validate and capture the client buffer */
     _SEH2_TRY
     {
-        /* Get the buffer we got from whoever called NTDLL */
-        LocalCaptureBuffer = ApiMessage->CsrCaptureData;
-        Length = LocalCaptureBuffer->Size;
-
-        /* Now check if the buffer is inside our mapped section */
-        if (((ULONG_PTR)LocalCaptureBuffer < CsrThread->Process->ClientViewBase) ||
-            (((ULONG_PTR)LocalCaptureBuffer + Length) >= CsrThread->Process->ClientViewBounds))
+        /* Check whether at least the buffer's header is inside our mapped section */
+        if (  ((ULONG_PTR)ClientCaptureBuffer < CsrProcess->ClientViewBase) ||
+             (((ULONG_PTR)ClientCaptureBuffer + FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray))
+                    >= CsrProcess->ClientViewBounds) )
         {
+#ifdef CSR_DBG
+            DPRINT1("*** CSRSS: CaptureBuffer outside of ClientView 1\n");
+            if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
             /* Return failure */
-            DPRINT1("*** CSRSS: CaptureBuffer outside of ClientView\n");
             ApiMessage->Status = STATUS_INVALID_PARAMETER;
             _SEH2_YIELD(return FALSE);
         }
 
-        /* Check if the Length is valid */
-        if ((FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) +
-                (LocalCaptureBuffer->PointerCount * sizeof(PVOID)) > Length) ||
-            (LocalCaptureBuffer->PointerCount > MAXUSHORT))
+        /* Capture the buffer length */
+        Length = ((volatile CSR_CAPTURE_BUFFER*)ClientCaptureBuffer)->Size;
+
+        /*
+         * Now check if the remaining of the buffer is inside our mapped section.
+         * Take also care for any possible wrap-around of the buffer end-address.
+         */
+        EndOfClientBuffer = (ULONG_PTR)ClientCaptureBuffer + Length;
+        if ( (EndOfClientBuffer < (ULONG_PTR)ClientCaptureBuffer) ||
+             (EndOfClientBuffer >= CsrProcess->ClientViewBounds) )
         {
+#ifdef CSR_DBG
+            DPRINT1("*** CSRSS: CaptureBuffer outside of ClientView 2\n");
+            if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
             /* Return failure */
-            DPRINT1("*** CSRSS: CaptureBuffer %p has bad length\n", LocalCaptureBuffer);
-            DbgBreakPoint();
+            ApiMessage->Status = STATUS_INVALID_PARAMETER;
+            _SEH2_YIELD(return FALSE);
+        }
+
+        /* Capture the pointer count */
+        PointerCount = ((volatile CSR_CAPTURE_BUFFER*)ClientCaptureBuffer)->PointerCount;
+
+        /*
+         * Check whether the total buffer size and the pointer count are consistent
+         * -- the array of offsets must be contained inside the buffer.
+         */
+        SizeOfBufferThroughOffsetsArray =
+            FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) +
+                (PointerCount * sizeof(PVOID));
+        if ( (PointerCount > MAXUSHORT) ||
+             (SizeOfBufferThroughOffsetsArray > Length) )
+        {
+#ifdef CSR_DBG
+            DPRINT1("*** CSRSS: CaptureBuffer %p has bad length\n", ClientCaptureBuffer);
+            if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
+            /* Return failure */
             ApiMessage->Status = STATUS_INVALID_PARAMETER;
             _SEH2_YIELD(return FALSE);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+#ifdef CSR_DBG
+        DPRINT1("*** CSRSS: Took exception during capture %x\n", _SEH2_GetExceptionCode());
+        if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
         /* Return failure */
         ApiMessage->Status = STATUS_INVALID_PARAMETER;
         _SEH2_YIELD(return FALSE);
-    } _SEH2_END;
+    }
+    _SEH2_END;
 
-    /* We validated the incoming buffer, now allocate the remote one */
-    RemoteCaptureBuffer = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, Length);
-    if (!RemoteCaptureBuffer)
+    /* We validated the client buffer, now allocate the server buffer */
+    ServerCaptureBuffer = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, Length);
+    if (!ServerCaptureBuffer)
     {
         /* We're out of memory */
         ApiMessage->Status = STATUS_NO_MEMORY;
         return FALSE;
     }
 
-    /* Copy the client's buffer */
-    RtlMoveMemory(RemoteCaptureBuffer, LocalCaptureBuffer, Length);
+    /*
+     * Copy the client's buffer and ensure we use the correct buffer length
+     * and pointer count we captured and used for validation earlier on.
+     */
+    _SEH2_TRY
+    {
+        RtlMoveMemory(ServerCaptureBuffer, ClientCaptureBuffer, Length);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+#ifdef CSR_DBG
+        DPRINT1("*** CSRSS: Took exception during capture %x\n", _SEH2_GetExceptionCode());
+        if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
+        /* Failure, free the buffer and return */
+        RtlFreeHeap(CsrHeap, 0, ServerCaptureBuffer);
+        ApiMessage->Status = STATUS_INVALID_PARAMETER;
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    ServerCaptureBuffer->Size = Length;
+    ServerCaptureBuffer->PointerCount = PointerCount;
 
     /* Calculate the difference between our buffer and the client's */
-    BufferDistance = (ULONG_PTR)RemoteCaptureBuffer - (ULONG_PTR)LocalCaptureBuffer;
+    BufferDistance = (ULONG_PTR)ServerCaptureBuffer - (ULONG_PTR)ClientCaptureBuffer;
 
     /*
      * All the pointer offsets correspond to pointers which point
-     * to the remote data buffer instead of the local one.
+     * to the server data buffer instead of the client one.
      */
-    PointerCount  = RemoteCaptureBuffer->PointerCount;
-    OffsetPointer = RemoteCaptureBuffer->PointerOffsetsArray;
+    // PointerCount  = ServerCaptureBuffer->PointerCount;
+    OffsetPointer = ServerCaptureBuffer->PointerOffsetsArray;
     while (PointerCount--)
     {
         CurrentOffset = *OffsetPointer;
 
         if (CurrentOffset != 0)
         {
+            /*
+             * Check whether the offset is pointer-aligned and whether
+             * it points inside CSR_API_MESSAGE::Data.ApiMessageData.
+             */
+            if ( ((CurrentOffset & (sizeof(PVOID)-1)) != 0) ||
+                 (CurrentOffset < FIELD_OFFSET(CSR_API_MESSAGE, Data.ApiMessageData)) ||
+                 (CurrentOffset >= sizeof(CSR_API_MESSAGE)) )
+            {
+#ifdef CSR_DBG
+                DPRINT1("*** CSRSS: CaptureBuffer MessagePointer outside of message\n");
+                if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
+                /* Invalid pointer, fail */
+                ApiMessage->Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
             /* Get the pointer corresponding to the offset */
             CurrentOffset += (ULONG_PTR)ApiMessage;
 
             /* Validate the bounds of the current pointed pointer */
-            if ((*(PULONG_PTR)CurrentOffset >= CsrThread->Process->ClientViewBase) &&
-                (*(PULONG_PTR)CurrentOffset < CsrThread->Process->ClientViewBounds))
+            if ( (*(PULONG_PTR)CurrentOffset >= ((ULONG_PTR)ClientCaptureBuffer +
+                                                 SizeOfBufferThroughOffsetsArray)) &&
+                 (*(PULONG_PTR)CurrentOffset <= (EndOfClientBuffer - sizeof(PVOID))) )
             {
                 /* Modify the pointed pointer to take into account its new position */
                 *(PULONG_PTR)CurrentOffset += BufferDistance;
             }
             else
             {
-                /* Invalid pointer, fail */
+#ifdef CSR_DBG
                 DPRINT1("*** CSRSS: CaptureBuffer MessagePointer outside of ClientView\n");
-                DbgBreakPoint();
+                if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
+                /* Invalid pointer, fail */
                 ApiMessage->Status = STATUS_INVALID_PARAMETER;
+                break;
             }
         }
 
@@ -1199,15 +1297,15 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
     /* Check if we got success */
     if (ApiMessage->Status != STATUS_SUCCESS)
     {
-        /* Failure. Free the buffer and return */
-        RtlFreeHeap(CsrHeap, 0, RemoteCaptureBuffer);
+        /* Failure, free the buffer and return */
+        RtlFreeHeap(CsrHeap, 0, ServerCaptureBuffer);
         return FALSE;
     }
     else
     {
-        /* Success, save the previous buffer and use the remote capture buffer */
-        RemoteCaptureBuffer->PreviousCaptureBuffer = LocalCaptureBuffer;
-        ApiMessage->CsrCaptureData = RemoteCaptureBuffer;
+        /* Success, save the previous buffer and use the server capture buffer */
+        ServerCaptureBuffer->PreviousCaptureBuffer = ClientCaptureBuffer;
+        ApiMessage->CsrCaptureData = ServerCaptureBuffer;
     }
 
     /* Success */
@@ -1234,35 +1332,35 @@ VOID
 NTAPI
 CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
 {
-    PCSR_CAPTURE_BUFFER RemoteCaptureBuffer, LocalCaptureBuffer;
+    PCSR_CAPTURE_BUFFER ServerCaptureBuffer, ClientCaptureBuffer;
     SIZE_T BufferDistance;
     ULONG PointerCount;
     PULONG_PTR OffsetPointer;
     ULONG_PTR CurrentOffset;
 
-    /* Get the remote capture buffer */
-    RemoteCaptureBuffer = ApiMessage->CsrCaptureData;
+    /* Get the server capture buffer */
+    ServerCaptureBuffer = ApiMessage->CsrCaptureData;
 
     /* Do not continue if there is no captured buffer */
-    if (!RemoteCaptureBuffer) return;
+    if (!ServerCaptureBuffer) return;
 
-    /* If there is one, get the corresponding local capture buffer */
-    LocalCaptureBuffer = RemoteCaptureBuffer->PreviousCaptureBuffer;
+    /* If there is one, get the corresponding client capture buffer */
+    ClientCaptureBuffer = ServerCaptureBuffer->PreviousCaptureBuffer;
 
-    /* Free the previous one and use again the local capture buffer */
-    RemoteCaptureBuffer->PreviousCaptureBuffer = NULL;
-    ApiMessage->CsrCaptureData = LocalCaptureBuffer;
+    /* Free the previous one and use again the client capture buffer */
+    ServerCaptureBuffer->PreviousCaptureBuffer = NULL;
+    ApiMessage->CsrCaptureData = ClientCaptureBuffer;
 
     /* Calculate the difference between our buffer and the client's */
-    BufferDistance = (ULONG_PTR)RemoteCaptureBuffer - (ULONG_PTR)LocalCaptureBuffer;
+    BufferDistance = (ULONG_PTR)ServerCaptureBuffer - (ULONG_PTR)ClientCaptureBuffer;
 
     /*
      * All the pointer offsets correspond to pointers which point
-     * to the local data buffer instead of the remote one (revert
-     * the logic of CsrCaptureArguments).
+     * to the client data buffer instead of the server one (reverse
+     * the logic of CsrCaptureArguments()).
      */
-    PointerCount  = RemoteCaptureBuffer->PointerCount;
-    OffsetPointer = RemoteCaptureBuffer->PointerOffsetsArray;
+    PointerCount  = ServerCaptureBuffer->PointerCount;
+    OffsetPointer = ServerCaptureBuffer->PointerOffsetsArray;
     while (PointerCount--)
     {
         CurrentOffset = *OffsetPointer;
@@ -1279,11 +1377,24 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
         ++OffsetPointer;
     }
 
-    /* Copy the data back */
-    RtlMoveMemory(LocalCaptureBuffer, RemoteCaptureBuffer, RemoteCaptureBuffer->Size);
+    /* Copy the data back into the client buffer */
+    _SEH2_TRY
+    {
+        RtlMoveMemory(ClientCaptureBuffer, ServerCaptureBuffer, ServerCaptureBuffer->Size);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+#ifdef CSR_DBG
+        DPRINT1("*** CSRSS: Took exception during release %x\n", _SEH2_GetExceptionCode());
+        if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
+        /* Return failure */
+        ApiMessage->Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     /* Free our allocated buffer */
-    RtlFreeHeap(CsrHeap, 0, RemoteCaptureBuffer);
+    RtlFreeHeap(CsrHeap, 0, ServerCaptureBuffer);
 }
 
 /*++
@@ -1375,8 +1486,10 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
     }
 
     /* Failure */
+#ifdef CSR_DBG
     DPRINT1("CSRSRV: Bad message buffer %p\n", ApiMessage);
-    DbgBreakPoint();
+    if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
     return FALSE;
 }
 
@@ -1401,7 +1514,7 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
 BOOLEAN
 NTAPI
 CsrValidateMessageString(IN PCSR_API_MESSAGE ApiMessage,
-                         IN LPWSTR *MessageString)
+                         IN PWSTR *MessageString)
 {
     if (MessageString)
     {

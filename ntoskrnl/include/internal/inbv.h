@@ -1,5 +1,8 @@
 #pragma once
 
+// Native definitions from BOOTVID (Boot Video Driver).
+#include "bootvid/bootvid.h"
+
 //
 // Driver Initialization
 //

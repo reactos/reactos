@@ -169,7 +169,7 @@ BEGIN
     PUSHBUTTON "&Arrêter", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
     AUTOCHECKBOX "Inclure les dossiers et les fichiers cachés",
-                 IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+                 IDC_SEARCH_HIDDEN, 4, 130, 144, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
 END
@@ -345,6 +345,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SEARCH_RESULTS "Résultats de la recherche"
     IDS_SEARCHINVALID "'%1' n'est pas un dossier valide."
     IDS_SEARCH_FOLDER "Recherche de %s en cours"
     IDS_SEARCH_FILES_FOUND "%u fichiers trouvés"

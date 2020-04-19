@@ -61,5 +61,5 @@ list(APPEND SOURCE
 add_library(freetype ${SOURCE})
 
 if(USE_CLANG_CL)
-    add_target_compile_flags(freetype "-Wno-tautological-constant-compare")
+    target_compile_options(freetype PRIVATE "-Wno-tautological-constant-compare")
 endif()

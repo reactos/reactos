@@ -129,9 +129,17 @@ BEGIN
         MENUITEM "&Ganti nama", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Ekspor", ID_TREE_EXPORT
-        MENUITEM "&Perijinan...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Perijinan...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Salin Nama Kunci", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Perluas/Perempit", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Ekspor", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Buang Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

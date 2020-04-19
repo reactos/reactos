@@ -1060,7 +1060,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_TCPROW), TcpTableSorter);
                 }
 
-                free(pOurTcpTable);
+                HeapFree(GetProcessHeap(),0, pOurTcpTable);
             }
         }
         break;
@@ -1105,7 +1105,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_TCPROW), TcpTableSorter);
                 }
 
-                free(pOurTcpTable);
+                HeapFree(GetProcessHeap(), 0, pOurTcpTable);
             }
         }
         break;
@@ -1150,7 +1150,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_TCPROW), TcpTableSorter);
                 }
 
-                free(pOurTcpTable);
+                HeapFree(GetProcessHeap(), 0, pOurTcpTable);
             }
         }
         break;
@@ -1178,7 +1178,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_TCPROW_OWNER_PID), TcpTableSorter);
                 }
 
-                free(pOurTcpTable);
+                HeapFree(GetProcessHeap(), 0, pOurTcpTable);
             }
         }
         break;
@@ -1224,7 +1224,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_TCPROW_OWNER_PID), TcpTableSorter);
                 }
 
-                free(pOurTcpTable);
+                HeapFree(GetProcessHeap(), 0, pOurTcpTable);
             }
         }
         break;
@@ -1270,7 +1270,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_TCPROW_OWNER_PID), TcpTableSorter);
                 }
 
-                free(pOurTcpTable);
+                HeapFree(GetProcessHeap(), 0, pOurTcpTable);
             }
         }
         break;
@@ -1298,7 +1298,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_TCPROW_OWNER_MODULE), TcpTableSorter);
                 }
 
-                free(pOurTcpTable);
+                HeapFree(GetProcessHeap(), 0, pOurTcpTable);
             }
         }
         break;
@@ -1344,7 +1344,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_TCPROW_OWNER_MODULE), TcpTableSorter);
                 }
 
-                free(pOurTcpTable);
+                HeapFree(GetProcessHeap(), 0, pOurTcpTable);
             }
         }
         break;
@@ -1390,7 +1390,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_TCPROW_OWNER_MODULE), TcpTableSorter);
                 }
 
-                free(pOurTcpTable);
+                HeapFree(GetProcessHeap(), 0, pOurTcpTable);
             }
         }
         break;
@@ -1480,7 +1480,7 @@ DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_UDPROW), UdpTableSorter);
                 }
 
-                free(pOurUdpTable);
+                HeapFree(GetProcessHeap(), 0, pOurUdpTable);
             }
         }
         break;
@@ -1507,7 +1507,7 @@ DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_UDPROW_OWNER_PID), UdpTableSorter);
                 }
 
-                free(pOurUdpTable);
+                HeapFree(GetProcessHeap(), 0, pOurUdpTable);
             }
         }
         break;
@@ -1534,7 +1534,7 @@ DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, U
                               sizeof(MIB_UDPROW_OWNER_MODULE), UdpTableSorter);
                 }
 
-                free(pOurUdpTable);
+                HeapFree(GetProcessHeap(), 0, pOurUdpTable);
             }
         }
         break;
@@ -3186,7 +3186,10 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
 
     ret = openTcpFile(&tcpFile, FILE_READ_DATA);
     if (!NT_SUCCESS(ret))
+    {
+        free(indexTable);
         return ERROR_NO_DATA;
+    }
 
     for (i = indexTable->numIndexes; i >= 0; i--)
     {

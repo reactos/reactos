@@ -134,9 +134,17 @@ BEGIN
         MENUITEM "&Premenovať", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Export", ID_TREE_EXPORT
-        MENUITEM "&Permissions...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Permissions...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copy Key Name", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Expand/Collapse", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Export", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Unload Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

@@ -15,7 +15,7 @@ list(APPEND SOURCE
 add_executable(winmm_winetest ${SOURCE})
 
 if(USE_CLANG_CL OR (NOT MSVC))
-    add_target_compile_flags(winmm_winetest "-Wno-format")
+    target_compile_options(winmm_winetest PRIVATE "-Wno-format")
 endif()
 
 target_link_libraries(winmm_winetest dxguid)

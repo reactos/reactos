@@ -328,6 +328,9 @@ User32DefWindowProc(HWND hWnd,
 
     switch (Msg)
     {
+        case WM_DEVICECHANGE:
+            return TRUE;
+
         case WM_POPUPSYSTEMMENU:
         {
             /* This is an undocumented message used by the windows taskbar to

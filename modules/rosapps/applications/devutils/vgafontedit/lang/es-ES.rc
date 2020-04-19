@@ -4,6 +4,7 @@
  * PURPOSE:     Spanish resource file
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
  * TRANSLATOR:  Javier Remacha
+ *              Julen Urizar Compains
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -14,7 +15,7 @@ CAPTION "Acerca de"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "ReactOS VGA Font Editor",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "Editor de Fuentes VGA de ReactOS",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Copyright 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "Aceptar",                         IDCANCEL,   40, 44, 55, 15
 END

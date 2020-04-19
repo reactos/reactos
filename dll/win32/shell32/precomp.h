@@ -91,6 +91,7 @@
 #include "shellmenu/shellmenu.h"
 #include "CUserNotification.h"
 #include "dialogs/folder_options.h"
+#include "shelldesktop/CChangeNotifyServer.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>

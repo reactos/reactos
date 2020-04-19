@@ -50,12 +50,6 @@
 #define _COMPONENT          ACPI_NAMESPACE
         ACPI_MODULE_NAME    ("nsnames")
 
-/* Local Prototypes */
-
-static void
-AcpiNsNormalizePathname (
-    char                    *OriginalPath);
-
 
 /*******************************************************************************
  *
@@ -508,7 +502,7 @@ Cleanup:
  *
  ******************************************************************************/
 
-static void
+void
 AcpiNsNormalizePathname (
     char                    *OriginalPath)
 {

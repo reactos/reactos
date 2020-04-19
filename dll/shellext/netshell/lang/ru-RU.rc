@@ -26,27 +26,27 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-IDD_LAN_NETSTATUS DIALOGEX 0, 0, 216, 180
+IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Общие"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Подключение", -1, 9, 8, 198, 58, BS_GROUPBOX
-    LTEXT "Состояние:", -1, 19, 20, 60, 8
-    LTEXT "Длительность:", -1, 19, 34, 60, 8
-    LTEXT "Скорость:", -1, 19, 48, 60, 8
-    GROUPBOX "Активность", -1, 9, 74, 198, 70, BS_GROUPBOX
-    RTEXT "Отправлено", -1, 20, 90, 60, 8
-    ICON "", IDC_NETSTAT, 110, 85, 32, 32
-    LTEXT "Принято", -1, 158, 90, 37, 8
-    LTEXT "Байт:", -1, 17, 115, 32, 8
-    RTEXT "000.000.000", IDC_SEND, 54, 115, 44, 8
-    RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 46, 8
-    PUSHBUTTON "&Свойства", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
-    PUSHBUTTON "&Отключить", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "", IDC_STATUS, 100, 20, 98, 8
-    RTEXT "", IDC_DURATION, 100, 34, 98, 8
-    RTEXT "", IDC_SPEED, 100, 48, 98, 8
+    GROUPBOX "Подключение", -1, 9, 8, 190, 58, BS_GROUPBOX
+    LTEXT "Состояние:", -1, 22, 20, 65, 8
+    LTEXT "Длительность:", -1, 22, 34, 65, 8
+    LTEXT "Скорость:", -1, 22, 48, 65, 8
+    GROUPBOX "Активность", -1, 9, 74, 190, 70, BS_GROUPBOX
+    LTEXT "Отправлено", -1, 60, 90, 60, 8
+    ICON "", IDC_NETSTAT, 118, 85, 32, 32
+    RTEXT "Принято", -1, 146, 90, 44, 8
+    LTEXT "Байт:", -1, 22, 115, 32, 8
+    LTEXT "000.000.000", IDC_SEND, 60, 115, 44, 8
+    RTEXT "000.000.000", IDC_RECEIVED, 146, 115, 44, 8
+    PUSHBUTTON "&Свойства", IDC_STATUS_PROPERTIES, 10, 150, 60, 14
+    PUSHBUTTON "&Отключить", IDC_ENDISABLE, 76, 150, 60, 14
+    RTEXT "", IDC_STATUS, 90, 20, 100, 8
+    RTEXT "", IDC_DURATION, 90, 34, 100, 8
+    RTEXT "", IDC_SPEED, 90, 48, 100, 8
 END
 
 IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
@@ -59,10 +59,10 @@ BEGIN
     LTEXT "IP адрес:", -1, 22, 34, 80, 8
     LTEXT "Маска подсети:", -1, 22, 48, 80, 8
     LTEXT "Шлюз по умолчанию:", -1, 22, 62, 80, 8
-    RTEXT "н/д", IDC_DETAILSTYPE, 112, 20, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSIP, 112, 34, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 112, 48, 80, 8
-    RTEXT "", IDC_DETAILSGATEWAY, 112, 62, 80, 8
+    RTEXT "н/д", IDC_DETAILSTYPE, 110, 20, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSIP, 110, 34, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 110, 48, 80, 8
+    RTEXT "", IDC_DETAILSGATEWAY, 110, 62, 80, 8
     PUSHBUTTON "&Подробности...", IDC_DETAILS, 22, 76, 62, 14
 END
 

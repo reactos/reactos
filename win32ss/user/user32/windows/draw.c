@@ -777,7 +777,7 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
 /* Ported from WINE20020904 */
 static BOOL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
 {
-    switch(uState & 0xff)
+    switch(uState & 0x1f)
     {
         case DFCS_BUTTONPUSH:
             return UITOOLS95_DFC_ButtonPush(hdc, rc, uState);
@@ -791,10 +791,10 @@ static BOOL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
         case DFCS_BUTTONRADIO:
             return UITOOLS95_DFC_ButtonCheckRadio(hdc, rc, uState, TRUE);
 
-/*
+
         default:
-            DbgPrint("Invalid button state=0x%04x\n", uState);
-*/
+            ERR("Invalid button state=0x%04x\n", uState);
+
     }
 
     return FALSE;
@@ -808,7 +808,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
     RECT myr;
     INT bkmode;
     TCHAR Symbol;
-    switch(uFlags & 0xff)
+    switch(uFlags & 0xf)
     {
         case DFCS_CAPTIONCLOSE:
 		Symbol = 'r';
@@ -826,7 +826,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
 		Symbol = '2';
 		break;
         default:
-             WARN("Invalid caption; flags=0x%04x\n", uFlags);
+             ERR("Invalid caption; flags=0x%04x\n", uFlags);
              return FALSE;
     }
     IntDrawRectEdge(dc,r,(uFlags&DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, BF_RECT | BF_MIDDLE | BF_SOFT, 1);
@@ -875,7 +875,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
     RECT myr;
     INT bkmode;
     TCHAR Symbol;
-    switch(uFlags & 0xff)
+    switch(uFlags & 0x1f)
     {
         case DFCS_SCROLLCOMBOBOX:
         case DFCS_SCROLLDOWN:
@@ -929,7 +929,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 		DeleteObject(hFont);
             return TRUE;
 	default:
-	    WARN("Invalid scroll; flags=0x%04x\n", uFlags);
+	    ERR("Invalid scroll; flags=0x%04x\n", uFlags);
             return FALSE;
     }
     IntDrawRectEdge(dc, r, (uFlags & DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, (uFlags&DFCS_FLAT) | BF_MIDDLE | BF_RECT, 1);
@@ -979,7 +979,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     RECT myr;
     INT cxy;
     cxy = UITOOLS_MakeSquareRect(r, &myr);
-    switch(uFlags & 0xff)
+    switch(uFlags & 0x1f)
     {
         case DFCS_MENUARROWUP:
             Symbol = '5';
@@ -1006,7 +1006,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
             break;
 
         default:
-            WARN("Invalid menu; flags=0x%04x\n", uFlags);
+            ERR("Invalid menu; flags=0x%04x\n", uFlags);
             return FALSE;
     }
     /* acquire ressources only if valid menu */
@@ -1020,8 +1020,8 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     /* save font */
     hOldFont = SelectObject(dc, hFont);
 
-    if ((uFlags & 0xff) == DFCS_MENUARROWUP ||  
-        (uFlags & 0xff) == DFCS_MENUARROWDOWN ) 
+    if ((uFlags & 0x1f) == DFCS_MENUARROWUP ||  
+        (uFlags & 0x1f) == DFCS_MENUARROWDOWN ) 
     {
 #if 0
        if (uFlags & DFCS_INACTIVE)

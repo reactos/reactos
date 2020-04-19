@@ -83,7 +83,7 @@
 #include <windbgkd.h>
 #include <wdbgexts.h>
 #include <kddll.h>
-#ifndef _WINKD_
+#ifdef __ROS_ROSSYM__
 #include <reactos/rossym.h>
 #endif
 

@@ -31,22 +31,22 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Geral"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Ligação ", -1, 9, 8, 182, 58, BS_GROUPBOX
-    LTEXT "Estado:", -1, 19, 20, 60, 8
-    LTEXT "Duração:", -1, 19, 34, 60, 8
-    LTEXT "Velocidade:", -1, 19, 48, 60, 8
-    GROUPBOX "Actividade ", -1, 9, 74, 182, 70, BS_GROUPBOX
-    RTEXT "Enviados", -1, 26, 90, 60, 8
+    GROUPBOX "Ligação ", -1, 9, 8, 190, 58, BS_GROUPBOX
+    LTEXT "Estado:", -1, 22, 20, 65, 8
+    LTEXT "Duração:", -1, 22, 34, 65, 8
+    LTEXT "Velocidade:", -1, 22, 48, 65, 8
+    GROUPBOX "Actividade ", -1, 9, 74, 190, 70, BS_GROUPBOX
+    LTEXT "Enviados", -1, 60, 90, 60, 8
     ICON "", IDC_NETSTAT, 110, 85, 32, 32
-    LTEXT "Recebidos", -1, 149, 90, 37, 8
-    LTEXT "Pacotes:", -1, 17, 115, 32, 8
-    RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
-    RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
-    PUSHBUTTON "&Propriedades", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
-    PUSHBUTTON "&Desabilitar", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "", IDC_STATUS, 83, 20, 98, 8
-    RTEXT "", IDC_DURATION, 83, 34, 98, 8
-    RTEXT "", IDC_SPEED, 83, 48, 98, 8
+    RTEXT "Recebidos", -1, 146, 90, 44, 8
+    LTEXT "Pacotes:", -1, 22, 115, 32, 8
+    LTEXT "000.000.000", IDC_SEND, 60, 115, 44, 8
+    RTEXT "000.000.000", IDC_RECEIVED, 146, 115, 44, 8
+    PUSHBUTTON "&Propriedades", IDC_STATUS_PROPERTIES, 10, 150, 60, 14
+    PUSHBUTTON "&Desabilitar", IDC_ENDISABLE, 76, 150, 60, 14
+    RTEXT "", IDC_STATUS, 90, 20, 100, 8
+    RTEXT "", IDC_DURATION, 90, 34, 100, 8
+    RTEXT "", IDC_SPEED, 90, 48, 100, 8
 END
 
 IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
@@ -54,7 +54,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Suporte"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Estado de ligação ", -1, 9, 8, 191, 88, BS_GROUPBOX
+    GROUPBOX "Estado de ligação ", -1, 9, 8, 190, 88, BS_GROUPBOX
     LTEXT "Tipo de endereço:", -1, 22, 20, 80, 8
     LTEXT "Endereço IP:", -1, 22, 34, 80, 8
     LTEXT "Máscara de sub-rede:", -1, 22, 48, 80, 8

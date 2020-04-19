@@ -151,10 +151,6 @@ if(MSVC_IDE AND (NOT DEFINED USE_FOLDER_STRUCTURE))
     set(USE_FOLDER_STRUCTURE TRUE)
 endif()
 
-if(NOT DEFINED RUNTIME_CHECKS)
-    set(RUNTIME_CHECKS FALSE)
-endif()
-
 if(RUNTIME_CHECKS)
     add_definitions(-D__RUNTIME_CHECKS__)
     add_compile_flags("/RTC1")
@@ -373,6 +369,10 @@ function(add_delay_importlibs _module)
         target_link_libraries(${_module} "lib${_basename}")
     endforeach()
     target_link_libraries(${_module} delayimp)
+endfunction()
+
+function(fixup_load_config _target)
+    # msvc knows how to generate a load_config so no hacks here
 endfunction()
 
 function(generate_import_lib _libname _dllname _spec_file)

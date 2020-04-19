@@ -17,7 +17,7 @@ target_link_libraries(xml2sdb PRIVATE host_includes)
 
 if(MSVC)
     # Disable warning "'=': conversion from 'a' to 'b', possible loss of data"
-    add_target_compile_flags(xml2sdb "/wd4244")
+    target_compile_options(xml2sdb PRIVATE "/wd4244")
 else()
-    add_target_compile_flags(xml2sdb "-fshort-wchar")
+    target_compile_options(xml2sdb PRIVATE "-fshort-wchar")
 endif()

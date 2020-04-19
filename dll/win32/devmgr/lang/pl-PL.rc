@@ -6,6 +6,7 @@
  *    Updated by Caemyr - Olaf Siejka (Jan 2008, Jan 2010)
  *    UTF-8 conversion by Caemyr (May, 2011)
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (November, 2011)
+ *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -168,29 +169,29 @@ BEGIN
     COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
-IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
+IDD_DEVICEDRIVER DIALOGEX 0, 0, 303, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Sterownik"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
-    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Dostawca sterownika:", -1, 37, 39, 60, 8, SS_NOPREFIX
-    EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Data sterownika:", -1, 37, 53, 60, 8, SS_NOPREFIX
-    EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Wersja sterownika:", -1, 37, 67, 60, 8, SS_NOPREFIX
-    EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Podpis cyfrowy:", -1, 37, 81, 60, 8, SS_NOPREFIX
-    EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON "&Szczegóły sterownika...", IDC_DRIVERDETAILS, 7, 106, 90, 15
-    LTEXT "Wyświetla informacje szczegółowe.", -1, 106, 110, 132, 17, SS_NOPREFIX
-    PUSHBUTTON "Akt&ualizuj sterownik...", IDC_UPDATEDRIVER, 7, 134, 90, 15
-    LTEXT "Aktualizuje oprogramowanie sterownika.", -1, 106, 138, 132, 17, SS_NOPREFIX
-    PUSHBUTTON "&Przywróć sterownik", IDC_ROLLBACKDRIVER, 7, 162, 90, 15
-    LTEXT "Przywraca poprzednio zainstalowany sterownik, jeśli po zaktualizowaniu sterownika urządzenie nie działa.", -1, 106, 162, 132, 25, SS_NOPREFIX
-    PUSHBUTTON "&Odinstaluj", IDC_UNINSTALLDRIVER, 7, 190, 90, 15
-    LTEXT "Odinstalowuje sterownik (zaawansowane).", -1, 106, 194, 132, 17, SS_NOPREFIX
+    LTEXT "", IDC_DEVNAME, 37, 9, 252, 16, SS_NOPREFIX
+    LTEXT "Dostawca sterownika:", -1, 37, 39, 71, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVPROVIDER, 117, 39, 183, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Data sterownika:", -1, 37, 53, 55, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVDATE, 117, 53, 183, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Wersja sterownika:", -1, 37, 67, 61, 8, SS_NOPREFIX
+    EDITTEXT IDC_DRVVERSION, 117, 67, 183, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Podpis cyfrowy:", -1, 37, 81, 55, 8, SS_NOPREFIX
+    EDITTEXT IDC_DIGITALSIGNER, 117, 81, 183, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON "&Szczegóły sterownika...", IDC_DRIVERDETAILS, 7, 106, 86, 15
+    LTEXT "Wyświetla informacje szczegółowe na temat plików sterownika.", -1, 101, 105, 189, 17, SS_NOPREFIX
+    PUSHBUTTON "Akt&ualizuj sterownik...", IDC_UPDATEDRIVER, 7, 134, 86, 15
+    LTEXT "Aktualizuje oprogramowanie sterownika.", -1, 101, 138, 189, 17, SS_NOPREFIX
+    PUSHBUTTON "&Przywróć sterownik", IDC_ROLLBACKDRIVER, 7, 162, 86, 15
+    LTEXT "Przywraca poprzednio zainstalowany sterownik, jeśli po zaktualizowaniu sterownika urządzenie nie działa.", -1, 101, 162, 189, 25, SS_NOPREFIX
+    PUSHBUTTON "&Odinstaluj", IDC_UNINSTALLDRIVER, 7, 190, 86, 15
+    LTEXT "Odinstalowuje sterownik (zaawansowane).", -1, 101, 194, 189, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230

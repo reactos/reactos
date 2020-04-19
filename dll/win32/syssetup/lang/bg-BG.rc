@@ -10,7 +10,7 @@ BEGIN
     LTEXT "Натиснете „Напред“ за продължаване на настройката.", IDC_STATIC, 115, 169, 200, 17
 END
 
-IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Настройка на РеактОС"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0

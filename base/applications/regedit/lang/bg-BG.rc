@@ -134,9 +134,17 @@ BEGIN
         MENUITEM "&Преименуване", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Износ", ID_TREE_EXPORT
-        MENUITEM "&Права...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Права...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Запомняне стойността на ключа", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Разгръщане/Свиване", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Износ", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Изоставяне на рой...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

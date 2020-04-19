@@ -26,6 +26,15 @@ extern void WinLdrSetupEms(IN PCHAR BootOptions);
 
 PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
 
+BOOLEAN VirtualBias = FALSE;
+BOOLEAN SosEnabled = FALSE;
+BOOLEAN PaeEnabled = FALSE;
+BOOLEAN PaeDisabled = FALSE;
+BOOLEAN SafeBoot = FALSE;
+BOOLEAN BootLogo = FALSE;
+BOOLEAN NoexecuteDisabled = FALSE;
+BOOLEAN NoexecuteEnabled = FALSE;
+
 // debug stuff
 VOID DumpMemoryAllocMap(VOID);
 
@@ -644,6 +653,95 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
             LoadModule(LoaderBlock, DirPath, KdTransportDllName, "kdcom.dll", LoaderSystemCode, &KdComDTE, 60);
         }
     }
+
+    /* Parse the boot options */
+    Options = BootOptions;
+    TRACE("LoadWindowsCore: BootOptions '%s'\n", BootOptions);
+    while (Options)
+    {
+        /* Skip possible initial whitespace */
+        Options += strspn(Options, " \t");
+
+        /* Check whether a new option starts */
+        if (*Options == '/')
+        {
+            Options++;
+
+            if (_strnicmp(Options, "3GB", 3) == 0)
+            {
+                /* We found the 3GB option. */
+                FIXME("LoadWindowsCore: 3GB - TRUE (not implemented)\n");
+                VirtualBias = TRUE;
+            }
+            if (_strnicmp(Options, "SOS", 3) == 0)
+            {
+                /* We found the SOS option. */
+                FIXME("LoadWindowsCore: SOS - TRUE (not implemented)\n");
+                SosEnabled = TRUE;
+            }
+            if (OperatingSystemVersion > _WIN32_WINNT_NT4)
+            {
+                if (_strnicmp(Options, "SAFEBOOT", 8) == 0)
+                {
+                    /* We found the SAFEBOOT option. */
+                    FIXME("LoadWindowsCore: SAFEBOOT - TRUE (not implemented)\n");
+                    SafeBoot = TRUE;
+                }
+                if (_strnicmp(Options, "PAE", 3) == 0)
+                {
+                    /* We found the PAE option. */
+                    FIXME("LoadWindowsCore: PAE - TRUE (not implemented)\n");
+                    PaeEnabled = TRUE;
+                }
+            }
+            if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
+            {
+                if (_strnicmp(Options, "NOPAE", 5) == 0)
+                {
+                    /* We found the NOPAE option. */
+                    FIXME("LoadWindowsCore: NOPAE - TRUE (not implemented)\n");
+                    PaeDisabled = TRUE;
+                }
+                if (_strnicmp(Options, "BOOTLOGO", 8) == 0)
+                {
+                    /* We found the BOOTLOGO option. */
+                    FIXME("LoadWindowsCore: BOOTLOGO - TRUE (not implemented)\n");
+                    BootLogo = TRUE;
+                }
+                if (!LoaderBlock->SetupLdrBlock)
+                {
+                    if (_strnicmp(Options, "NOEXECUTE=ALWAYSOFF", 19) == 0)
+                    {
+                        /* We found the NOEXECUTE=ALWAYSOFF option. */
+                        FIXME("LoadWindowsCore: NOEXECUTE=ALWAYSOFF - TRUE (not implemented)\n");
+                        NoexecuteDisabled = TRUE;
+                    }
+                    else if (_strnicmp(Options, "NOEXECUTE", 9) == 0)
+                    {
+                        /* We found the NOEXECUTE option. */
+                        FIXME("LoadWindowsCore: NOEXECUTE - TRUE (not implemented)\n");
+                        NoexecuteEnabled = TRUE;
+                    }
+
+                    if (_strnicmp(Options, "EXECUTE", 7) == 0)
+                    {
+                        /* We found the EXECUTE option. */
+                        FIXME("LoadWindowsCore: EXECUTE - TRUE (not implemented)\n");
+                        NoexecuteDisabled = TRUE;
+                    }
+                }
+            }
+        }
+
+        /* Search for another whitespace */
+        Options = strpbrk(Options, " \t");
+    }
+
+    if (SafeBoot)   
+    {   
+        PaeDisabled = TRUE;   
+        NoexecuteDisabled = TRUE;   
+    }   
 
     /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
     Success  = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
