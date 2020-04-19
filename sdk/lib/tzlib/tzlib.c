@@ -152,6 +152,30 @@ QueryTimeZoneData(
     LONG lError;
     DWORD dwValueSize;
 
+    if (Index)
+    {
+        dwValueSize = sizeof(*Index);
+        lError = RegQueryValueExW(hZoneKey,
+                                  L"Index",
+                                  NULL,
+                                  NULL,
+                                  (LPBYTE)Index,
+                                  &dwValueSize);
+        if (lError != ERROR_SUCCESS)
+            *Index = 0;
+    }
+
+    /* The time zone information structure is mandatory for a valid time zone */
+    dwValueSize = sizeof(*TimeZoneInfo);
+    lError = RegQueryValueExW(hZoneKey,
+                              L"TZI",
+                              NULL,
+                              NULL,
+                              (LPBYTE)TimeZoneInfo,
+                              &dwValueSize);
+    if (lError != ERROR_SUCCESS)
+        return lError;
+
     if (Description && DescriptionSize && *DescriptionSize > 0)
     {
         lError = RegQueryValueExW(hZoneKey,
@@ -161,7 +185,7 @@ QueryTimeZoneData(
                                   (LPBYTE)Description,
                                   DescriptionSize);
         if (lError != ERROR_SUCCESS)
-            return lError;
+            *Description = 0;
     }
 
     if (StandardName && StandardNameSize && *StandardNameSize > 0)
@@ -173,7 +197,7 @@ QueryTimeZoneData(
                                   (LPBYTE)StandardName,
                                   StandardNameSize);
         if (lError != ERROR_SUCCESS)
-            return lError;
+            *StandardName = 0;
     }
 
     if (DaylightName && DaylightNameSize && *DaylightNameSize > 0)
@@ -185,30 +209,10 @@ QueryTimeZoneData(
                                   (LPBYTE)DaylightName,
                                   DaylightNameSize);
         if (lError != ERROR_SUCCESS)
-            return lError;
+            *DaylightName = 0;
     }
 
-    if (Index)
-    {
-        dwValueSize = sizeof(*Index);
-        lError = RegQueryValueExW(hZoneKey,
-                                  L"Index",
-                                  NULL,
-                                  NULL,
-                                  (LPBYTE)Index,
-                                  &dwValueSize);
-        if (lError != ERROR_SUCCESS)
-            return lError;
-    }
-
-    dwValueSize = sizeof(*TimeZoneInfo);
-    lError = RegQueryValueExW(hZoneKey,
-                              L"TZI",
-                              NULL,
-                              NULL,
-                              (LPBYTE)TimeZoneInfo,
-                              &dwValueSize);
-    return lError;
+    return ERROR_SUCCESS;
 }
 
 //
