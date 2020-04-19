@@ -354,3 +354,9 @@ BEGIN
     IDS_COL_LOCATION "Dans le dossier"
     IDS_COL_RELEVANCE "Pertinence"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_PARSE_ADDR_ERR_TITLE "Explorateur ReactOS"
+    IDS_PARSE_ADDR_ERR_TEXT "L'explorateur ReactOS ne peut trouver '%1'. Veuillez vérifier l'orthographe et réessayer."
+END

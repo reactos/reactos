@@ -47,6 +47,7 @@ private:
     void AddComboBoxItem(LPITEMIDLIST pidl, int index, int indent);
     void FillOneLevel(int index, int levelIndent, int indent);
     LPITEMIDLIST GetItemData(int index);
+    HRESULT STDMETHODCALLTYPE ShowFileNotFoundError(HRESULT hRet);
 public:
     // *** IShellService methods ***
     virtual HRESULT STDMETHODCALLTYPE SetOwner(IUnknown *);
