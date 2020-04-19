@@ -146,11 +146,11 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 
     hr = pbs->GetPidl(&pidlCurrent);
     if (FAILED_UNEXPECTEDLY(hr))
-        goto cleanup;
+        goto parseabsolute;
 
     hr = psfDesktop->BindToObject(pidlCurrent, NULL, IID_PPV_ARG(IShellFolder, &psfCurrent));
     if (FAILED_UNEXPECTEDLY(hr))
-        goto cleanup;
+        goto parseabsolute;
 
     hr = psfCurrent->ParseDisplayName(topLevelWindow, NULL, address, &eaten,  &pidlRelative, &attributes);
     if (SUCCEEDED(hr))
@@ -160,6 +160,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
         goto cleanup;
     }
 
+parseabsolute:
     /* We couldn't parse a relative path, attempt to parse an absolute path */
     hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
 
