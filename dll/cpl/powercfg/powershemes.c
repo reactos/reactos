@@ -325,8 +325,6 @@ LoadConfig(
         }
     }
 
-    EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),
-                 (pScheme != pPageData->pActivePowerScheme));
 }
 
 
@@ -543,6 +541,9 @@ DelScheme(
     if (iCurSel == CB_ERR)
         return FALSE;
 
+	if (iCurSel == 0) //as per https://jira.reactos.org/browse/CORE-16893
+        return FALSE;
+
     SendMessage(hList, CB_SETCURSEL, iCurSel, 0);
 
     pScheme = (PPOWER_SCHEME)SendMessage(hList, CB_GETITEMDATA, (WPARAM)iCurSel, 0);
@@ -693,21 +694,30 @@ SaveScheme(
         {
             hwndList = GetDlgItem(hwndDlg, IDC_ENERGYLIST);
 
-            index = (INT)SendMessage(hwndList,
-                                     CB_ADDSTRING,
-                                     0,
-                                     (LPARAM)SaveSchemeData.pNewScheme->pszName);
-            if (index != CB_ERR)
+			index = (INT)SendDlgItemMessage(hwndDlg,
+                                          IDC_ENERGYLIST,
+                                          CB_FINDSTRING,
+                                          -1,
+                                          (LPARAM)SaveSchemeData.pNewScheme->pszName);
+
+			if (index != CB_ERR)
             {
-                SendMessage(hwndList,
-                            CB_SETITEMDATA,
-                            index,
-                            (LPARAM)SaveSchemeData.pNewScheme);
+				index = (INT)SendMessage(hwndList,
+										 CB_ADDSTRING,
+										 0,
+										 (LPARAM)SaveSchemeData.pNewScheme->pszName);
+				if (index != CB_ERR)
+				{
+					SendMessage(hwndList,
+								CB_SETITEMDATA,
+								index,
+								(LPARAM)SaveSchemeData.pNewScheme);
 
-                SendMessage(hwndList, CB_SETCURSEL, (WPARAM)index, 0);
+					SendMessage(hwndList, CB_SETCURSEL, (WPARAM)index, 0);
 
-                LoadConfig(hwndDlg, pPageData, SaveSchemeData.pNewScheme);
-            }
+					LoadConfig(hwndDlg, pPageData, SaveSchemeData.pNewScheme);
+				}
+			}
         }
     }
 
