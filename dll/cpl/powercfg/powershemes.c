@@ -700,7 +700,7 @@ SaveScheme(
                                           -1,
                                           (LPARAM)SaveSchemeData.pNewScheme->pszName);
 
-			if (index != CB_ERR)
+			if (index == CB_ERR)
             {
 				index = (INT)SendMessage(hwndList,
 										 CB_ADDSTRING,
