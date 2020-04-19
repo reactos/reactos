@@ -443,7 +443,8 @@ OnSet(PVIRTMEM pVirtMem)
 
             /* Check the valid range of the minimum size */
             if (MinSize < 2 ||
-                MinSize > pVirtMem->Pagefile[DriveIndex].FreeSize)
+                MinSize > pVirtMem->Pagefile[DriveIndex].FreeSize ||
+				MinSize > 4096)
             {
                 ResourceMessageBox(hApplet,
                                    NULL,
