@@ -503,7 +503,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
     TCHAR szBuffer[64];
     MEMORYSTATUSEX MemoryStatus;
     ULARGE_INTEGER FreeDiskSpace;
-    UINT i, FreeMemMb, PageFileSizeMb;
+    UINT i, FreeMemMb, RecoMemMb, PageFileSizeMb;
     INT Index;
 
     Index = (INT)SendDlgItemMessage(hwndDlg,
@@ -570,22 +570,44 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         }
 
         /* Set minimum pagefile size */
-        SetDlgItemText(hwndDlg, IDC_MINIMUM, _T("16 MB"));
+        SetDlgItemText(hwndDlg, IDC_MINIMUM, _T("2 MB"));
 
         /* Set recommended pagefile size */
         MemoryStatus.dwLength = sizeof(MEMORYSTATUSEX);
         if (GlobalMemoryStatusEx(&MemoryStatus))
         {
             FreeMemMb = (UINT)(MemoryStatus.ullTotalPhys / (1024 * 1024));
-            _stprintf(szBuffer, _T("%u MB"), FreeMemMb + (FreeMemMb / 2));
+            RecoMemMb =  FreeMemMb + (FreeMemMb / 2);
+            if(RecoMemMb>4096) RecoMemMb = 4096;
+            _stprintf(szBuffer, _T("%u MB"),RecoMemMb);
             SetDlgItemText(hwndDlg, IDC_RECOMMENDED, szBuffer);
         }
 
         /* Set current pagefile size */
         PageFileSizeMb = 0;
+        BOOL Success;
+        WIN32_FIND_DATAW FileInfo; // WIN32_FILE_ATTRIBUTE_DATA        
+		ULARGE_INTEGER FileSize;		
         for (i = 0; i < pVirtMem->Count; i++)
         {
-            PageFileSizeMb += pVirtMem->Pagefile[i].InitialSize;
+			_stprintf(szText,
+                          _T("%s\\pagefile.sys"),
+                          pVirtMem->Pagefile[i].szDrive);
+		
+			Success = GetFileAttributesExW(szText,
+                                   GetFileExInfoStandard,
+                                   (LPWIN32_FILE_ATTRIBUTE_DATA)&FileInfo);
+			if (Success)
+			{
+		 		FileSize.u.LowPart = FileInfo.nFileSizeLow;
+				FileSize.u.HighPart = FileInfo.nFileSizeHigh;
+				PageFileSizeMb += (DWORD)FileSize.QuadPart;		
+			}
+			else
+			{
+				DPRINT1("Unable to read PageFile size %s\n", szText);
+			}
+            
         }
         _stprintf(szBuffer, _T("%u MB"), PageFileSizeMb);
         SetDlgItemText(hwndDlg, IDC_CURRENT, szBuffer);
