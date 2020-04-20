@@ -586,7 +586,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
             RecoMemMb = FreeMemMb + (FreeMemMb / 2);
             if (RecoMemMb > 4096)
                 RecoMemMb = 4096;
-            _stprintf(szBuffer, _T("%u MB"),RecoMemMb);
+            _stprintf(szBuffer, _T("%u MB"), RecoMemMb);
             SetDlgItemText(hwndDlg, IDC_RECOMMENDED, szBuffer);
         }
 
