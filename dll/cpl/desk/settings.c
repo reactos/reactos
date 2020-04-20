@@ -381,16 +381,12 @@ SettingsOnInitDialog(IN HWND hwndDlg)
             DWORD offset = 0;
             for (i = 0; i < Result; i++)
             {
-                if (i > 1)
-                {
-                    offset += pMonitors[i - 1].Size.cx;
-                }
-                
                 pMonitors[i].Position.x = offset;
                 pMonitors[i].Position.y = 0;
                 pMonitors[i].Size.cx = pData->DisplayDeviceList->CurrentSettings->dmPelsWidth;
                 pMonitors[i].Size.cy = pData->DisplayDeviceList->CurrentSettings->dmPelsHeight;
                 pMonitors[i].Flags = 0;
+				offset += pMonitors[i].Size.cx;
             }
 
             SendDlgItemMessage(hwndDlg,
