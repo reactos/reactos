@@ -1324,6 +1324,8 @@ HRESULT CDefView::FillArrangeAsMenu(HMENU hmenuArrange)
 
         if (GetAutoArrange() == S_OK)
             CheckMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_CHECKED);
+        else
+            CheckMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_UNCHECKED);
 
         if (_GetSnapToGrid() == S_OK)
             CheckMenuItem(hmenuArrange, FCIDM_SHVIEW_ALIGNTOGRID, MF_CHECKED);
