@@ -385,7 +385,7 @@ SettingsOnInitDialog(IN HWND hwndDlg)
                 {
                     offset += pMonitors[i - 1].Size.cx;
                 }
-				
+                
                 pMonitors[i].Position.x = offset;
                 pMonitors[i].Position.y = 0;
                 pMonitors[i].Size.cx = pData->DisplayDeviceList->CurrentSettings->dmPelsWidth;
