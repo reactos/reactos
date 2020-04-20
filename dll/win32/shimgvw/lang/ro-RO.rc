@@ -11,6 +11,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Vizualizare fax și imagini"
     IDS_SETASDESKBG "Plasează ca decor de fundal"
+    IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Previzionare"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Imaginea următare"
