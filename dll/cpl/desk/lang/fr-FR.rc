@@ -17,16 +17,16 @@ END
 
 IDD_BACKGROUND DIALOGEX 0, 0, 246, 210
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Fond d'écran"
+CAPTION "Bureau"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74, 0
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Sélectionnez une image à utiliser comme fond d'écran", IDC_STATIC, 8, 93, 230, 9
+    LTEXT "Arrière-plan :", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "&Parcourir...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Couleur...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "Position", IDC_STATIC, 188, 128, 55, 9
+    LTEXT "Position :", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -118,13 +118,13 @@ BEGIN
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "Uti&liser de grandes icones", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "&Montrer ombrage sous les menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,
+    CONTROL "Afficher une ombre sous les menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Montrer contenu des fenêtres lorsqu'elles sont bougés", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
+    CONTROL "Afficher le contenu des fenêtres pendant leur déplacement", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Cacher les lettres soulignées pour la navigation du clavier jusqu'à ce que j'appuie sur la touche Alt",
+    CONTROL "Masquer les lettres soulignées pour la navigation au clavier jusqu'à ce que j'appuie sur la touche Alt",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "Utiliser les menus plats", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "Annuler", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Accepter", IDOK, 172, 165, 50, 14
