@@ -325,6 +325,9 @@ LoadConfig(
         }
     }
 
+    EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),
+                 (iCurSel != 0));
+
 }
 
 
