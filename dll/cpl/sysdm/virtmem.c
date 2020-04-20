@@ -510,7 +510,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
     INT Index;
     BOOL Success;
     TCHAR szText[MAX_PATH];
-    WIN32_FIND_DATAW FileInfo; // WIN32_FILE_ATTRIBUTE_DATA        
+    WIN32_FILE_ATTRIBUTE_DATA FileInfo; // WIN32_FILE_ATTRIBUTE_DATA        
     ULARGE_INTEGER FileSize;
 
     Index = (INT)SendDlgItemMessage(hwndDlg,
@@ -610,7 +610,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 			}
 			else
 			{
-				DPRINT1("Unable to read PageFile size : %s\n", szText);
+				DPRINT1("Unable to read PageFile size : %ls\n", szText);
 			}
             
         }
