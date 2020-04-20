@@ -509,7 +509,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
     UINT i, FreeMemMb, RecoMemMb, PageFileSizeMb;
     INT Index;
     BOOL Success;
-    TCHAR szText[256];
+    TCHAR szText[MAX_PATH];
     WIN32_FIND_DATAW FileInfo; // WIN32_FILE_ATTRIBUTE_DATA        
     ULARGE_INTEGER FileSize;
 
@@ -596,10 +596,10 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         for (i = 0; i < pVirtMem->Count; i++)
         {
 			_stprintf(szText,
-                          _T("%s\\pagefile.sys"),
-                          pVirtMem->Pagefile[i].szDrive);
+                          _T("%c:\\pagefile.sys"),
+                          pVirtMem->Pagefile[i].szDrive[0]);
 		
-			Success = GetFileAttributesExW(szText,
+			Success = GetFileAttributesEx(szText,
                                    GetFileExInfoStandard,
                                    (LPWIN32_FILE_ATTRIBUTE_DATA)&FileInfo);
 			if (Success)
@@ -610,7 +610,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 			}
 			else
 			{
-				DPRINT1("Unable to read PageFile size %s\n", szText);
+				DPRINT1("Unable to read PageFile size : %s\n", szText);
 			}
             
         }
