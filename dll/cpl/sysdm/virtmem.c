@@ -599,7 +599,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
                           _T("%c:\\pagefile.sys"),
                           pVirtMem->Pagefile[i].szDrive[0]);
 		
-			Success = GetFileAttributesEx(szText,
+			Success = GetFileAttributesExW(szText,
                                    GetFileExInfoStandard,
                                    (LPWIN32_FILE_ATTRIBUTE_DATA)&FileInfo);
 			if (Success)
