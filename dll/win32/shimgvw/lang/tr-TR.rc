@@ -6,6 +6,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Resim ve Belgegeçer Görüntüleyicisi"
     IDS_SETASDESKBG "Masaüstü Arka Planı Olarak Ayarla"
+    IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Ön İzleme"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Sonraki Resim"

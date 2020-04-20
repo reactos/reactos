@@ -9,6 +9,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Visualizador de imagens e faxes do ReactOS"
     IDS_SETASDESKBG "Definir como plano de fundo da área de trabalho"
+    IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Pre-visualizar"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Próxima imagem"

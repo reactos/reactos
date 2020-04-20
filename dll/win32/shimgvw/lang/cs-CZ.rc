@@ -9,6 +9,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS prohlížeč obrázků a faxů"
     IDS_SETASDESKBG "Nastavit jako pozadí plochy"
+    IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Náhled"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Další obrázek"

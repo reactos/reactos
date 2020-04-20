@@ -4,6 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS画像とFAXビュアー"
     IDS_SETASDESKBG "デスクトップの背景に設定する"
+    IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "プレビュー"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "次の画像"
