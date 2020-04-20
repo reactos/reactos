@@ -252,7 +252,7 @@ LoadConfig(
                                           0);
     if (iCurSel == CB_ERR)
         return;
-		
+        
     EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),
                 (iCurSel > 0));
 
@@ -556,8 +556,8 @@ DelScheme(
     {
         if (!DeletePwrScheme(pScheme->uId))
         {          
-			// FIXME: Show an error message box
-			DPRINT1("Unable to delete power scheme");
+            // FIXME: Show an error message box
+            DPRINT1("Unable to delete power scheme");
             return FALSE;
         }
 
@@ -570,12 +570,12 @@ DelScheme(
         iCurSel = SendMessage(hList, CB_FINDSTRING, -1, (LPARAM)pPageData->pActivePowerScheme->pszName);
         if (iCurSel != CB_ERR)
         {
-			SendMessage(hList, CB_SETCURSEL, iCurSel, 0);
-		}
-		else
-		{
-			SendMessage(hList, CB_SETCURSEL, 0, 0);
-		}
+            SendMessage(hList, CB_SETCURSEL, iCurSel, 0);
+        }
+        else
+        {
+            SendMessage(hList, CB_SETCURSEL, 0, 0);
+        }
 
         LoadConfig(hwnd, pPageData, NULL);
         return TRUE;
@@ -699,31 +699,31 @@ SaveScheme(
         {
             hwndList = GetDlgItem(hwndDlg, IDC_ENERGYLIST);
 
-			index = (INT)SendDlgItemMessage(hwndDlg,
+            index = (INT)SendDlgItemMessage(hwndDlg,
                                           IDC_ENERGYLIST,
                                           CB_FINDSTRING,
                                           -1,
                                           (LPARAM)SaveSchemeData.pNewScheme->pszName);
 
-			if (index == CB_ERR)
+            if (index == CB_ERR)
             {
-				index = (INT)SendMessage(hwndList,
-										 CB_ADDSTRING,
-										 0,
-										 (LPARAM)SaveSchemeData.pNewScheme->pszName);
-				if (index != CB_ERR)
-				{
-					SendMessage(hwndList,
-								CB_SETITEMDATA,
-								index,
-								(LPARAM)SaveSchemeData.pNewScheme);
+                index = (INT)SendMessage(hwndList,
+                                         CB_ADDSTRING,
+                                         0,
+                                         (LPARAM)SaveSchemeData.pNewScheme->pszName);
+                if (index != CB_ERR)
+                {
+                    SendMessage(hwndList,
+                                CB_SETITEMDATA,
+                                index,
+                                (LPARAM)SaveSchemeData.pNewScheme);
 
-					SendMessage(hwndList, CB_SETCURSEL, (WPARAM)index, 0);					
-					EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN), TRUE);
-				}
-				
-			}
-			LoadConfig(hwndDlg, pPageData, SaveSchemeData.pNewScheme);
+                    SendMessage(hwndList, CB_SETCURSEL, (WPARAM)index, 0);                    
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN), TRUE);
+                }
+                
+            }
+            LoadConfig(hwndDlg, pPageData, SaveSchemeData.pNewScheme);
         }
     }
 
@@ -847,7 +847,7 @@ PowerSchemesDlgProc(
                 // Initialization failed
                 // Handle error
                 DPRINT1("Pos_InitData failed");
-				MessageBox(hwndDlg,_T("Pos_InitData failed\n"), NULL, MB_OK);
+                MessageBox(hwndDlg,_T("Pos_InitData failed\n"), NULL, MB_OK);
             }
 
             if (!CreateEnergyList(hwndDlg, pPageData))
@@ -855,7 +855,7 @@ PowerSchemesDlgProc(
                 // TODO:
                 // Initialization failed
                 // Handle error
-				DPRINT1("CreateEnergyList failed");
+                DPRINT1("CreateEnergyList failed");
                 MessageBox(hwndDlg,_T("CreateEnergyList failed\n"), NULL, MB_OK);
             }
             return TRUE;
