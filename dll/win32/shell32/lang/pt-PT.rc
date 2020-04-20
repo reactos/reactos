@@ -400,7 +400,7 @@ BEGIN
     LTEXT "Ficheiro:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programas", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "Sempre &use este programa para abrir esse tipo de ficheiros", 14003, 16, 193, 232, 10
+    AUTOCHECKBOX "&Utilizar sempre este programa para abrir este tipo de ficheiro", 14003, 16, 193, 232, 10
     PUSHBUTTON "&Seleccionar...", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 206, 236, 50, 14
