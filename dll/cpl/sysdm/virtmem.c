@@ -508,6 +508,10 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
     ULARGE_INTEGER FreeDiskSpace;
     UINT i, FreeMemMb, RecoMemMb, PageFileSizeMb;
     INT Index;
+    BOOL Success;
+    TCHAR szText[256];
+    WIN32_FIND_DATAW FileInfo; // WIN32_FILE_ATTRIBUTE_DATA        
+    ULARGE_INTEGER FileSize;
 
     Index = (INT)SendDlgItemMessage(hwndDlg,
                                     IDC_PAGEFILELIST,
@@ -588,10 +592,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 
         /* Set current pagefile size */
         PageFileSizeMb = 0;
-        BOOL Success;
-        TCHAR szText[256];
-        WIN32_FIND_DATAW FileInfo; // WIN32_FILE_ATTRIBUTE_DATA        
-        ULARGE_INTEGER FileSize;		
+        		
         for (i = 0; i < pVirtMem->Count; i++)
         {
 			_stprintf(szText,
