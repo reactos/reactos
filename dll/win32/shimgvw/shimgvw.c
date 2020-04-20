@@ -240,6 +240,9 @@ static void ResetZoom(void)
     RECT Rect;
     UINT ImageWidth, ImageHeight;
 
+    if (image == NULL)
+        return;
+
     /* get disp window size and image size */
     GetClientRect(hDispWnd, &Rect);
     GdipGetImageWidth(image, &ImageWidth);
@@ -434,35 +437,52 @@ pPrintImage(HWND hwnd)
 }
 
 static VOID
+EnableToolBarButtons(BOOL bEnable)
+{
+    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, bEnable);
+    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, bEnable);
+
+    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ROT1, bEnable);
+    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ROT2, bEnable);
+    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_SAVE, bEnable);
+    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
+}
+
+static VOID
 pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
 {
     WCHAR szTitleBuf[800];
     WCHAR szResStr[512];
     LPWSTR pchFileTitle;
 
-    if (node)
+    if (image)
     {
-        if (image)
-        {
-            GdipDisposeImage(image);
-            image = NULL;
-        }
-
-        pLoadImage(node->FileName);
-
-        LoadStringW(hInstance, IDS_APPTITLE, szResStr, ARRAYSIZE(szResStr));
-        if (image != NULL)
-        {
-            pchFileTitle = PathFindFileNameW(node->FileName);
-            StringCbPrintfW(szTitleBuf, sizeof(szTitleBuf),
-                            L"%ls%ls%ls", szResStr, L" - ", pchFileTitle);
-            SetWindowTextW(hwnd, szTitleBuf);
-        }
-        else
-        {
-            SetWindowTextW(hwnd, szResStr);
-        }
+        GdipDisposeImage(image);
+        image = NULL;
     }
+
+    if (node == NULL)
+    {
+        EnableToolBarButtons(FALSE);
+        return;
+    }
+
+    pLoadImage(node->FileName);
+
+    LoadStringW(hInstance, IDS_APPTITLE, szResStr, ARRAYSIZE(szResStr));
+    if (image != NULL)
+    {
+        pchFileTitle = PathFindFileNameW(node->FileName);
+        StringCbPrintfW(szTitleBuf, sizeof(szTitleBuf),
+                        L"%ls%ls%ls", szResStr, L" - ", pchFileTitle);
+        SetWindowTextW(hwnd, szTitleBuf);
+    }
+    else
+    {
+        SetWindowTextW(hwnd, szResStr);
+    }
+
+    EnableToolBarButtons(image != NULL);
 }
 
 static SHIMGVW_FILENODE*
@@ -893,16 +913,6 @@ ImageView_InitControls(HWND hwnd)
     PrevProc = (WNDPROC) SetWindowLongPtr(hDispWnd, GWLP_WNDPROC, (LPARAM) ImageView_DispWndProc);
 
     ImageView_CreateToolBar(hwnd);
-
-    if (image == NULL)
-    {
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, FALSE);
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, FALSE);
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ROT1, FALSE);
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ROT2, FALSE);
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_SAVE, FALSE);
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_PRINT, FALSE);
-    }
 }
 
 static VOID
