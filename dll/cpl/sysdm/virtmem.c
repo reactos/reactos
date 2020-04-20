@@ -583,7 +583,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         if (GlobalMemoryStatusEx(&MemoryStatus))
         {
             FreeMemMb = (UINT)(MemoryStatus.ullTotalPhys / (1024 * 1024));
-            RecoMemMb =  FreeMemMb + (FreeMemMb / 2);
+            RecoMemMb = FreeMemMb + (FreeMemMb / 2);
             if (RecoMemMb > 4096)
                 RecoMemMb = 4096;
             _stprintf(szBuffer, _T("%u MB"),RecoMemMb);
