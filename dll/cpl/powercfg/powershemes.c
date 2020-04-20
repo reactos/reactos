@@ -10,7 +10,7 @@
  */
 
 #include "powercfg.h"
-
+#include <debug.h>
 
 typedef struct _POWER_SCHEME
 {
@@ -544,9 +544,6 @@ DelScheme(
     if (iCurSel == CB_ERR)
         return FALSE;
 
-	if (iCurSel == 0) //as per https://jira.reactos.org/browse/CORE-16893
-        return FALSE;
-
     SendMessage(hList, CB_SETCURSEL, iCurSel, 0);
 
     pScheme = (PPOWER_SCHEME)SendMessage(hList, CB_GETITEMDATA, (WPARAM)iCurSel, 0);
@@ -560,8 +557,9 @@ DelScheme(
     if (MessageBoxW(hwnd, szCookedBuffer, szTitleBuffer, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
     {
         if (!DeletePwrScheme(pScheme->uId))
-        {
-            // FIXME: Show an error message box
+        {          
+			// FIXME: Show an error message box
+			DPRINT1("Unable to delete power scheme");
             return FALSE;
         }
 
@@ -573,7 +571,13 @@ DelScheme(
 
         iCurSel = SendMessage(hList, CB_FINDSTRING, -1, (LPARAM)pPageData->pActivePowerScheme->pszName);
         if (iCurSel != CB_ERR)
-            SendMessage(hList, CB_SETCURSEL, iCurSel, 0);
+        {
+			SendMessage(hList, CB_SETCURSEL, iCurSel, 0);
+		}
+		else
+		{
+			SendMessage(hList, CB_SETCURSEL, 0, 0);
+		}
 
         LoadConfig(hwnd, pPageData, NULL);
         return TRUE;
@@ -716,11 +720,12 @@ SaveScheme(
 								index,
 								(LPARAM)SaveSchemeData.pNewScheme);
 
-					SendMessage(hwndList, CB_SETCURSEL, (WPARAM)index, 0);
-
-					LoadConfig(hwndDlg, pPageData, SaveSchemeData.pNewScheme);
+					SendMessage(hwndList, CB_SETCURSEL, (WPARAM)index, 0);					
+					EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN), TRUE);
 				}
+				
 			}
+			LoadConfig(hwndDlg, pPageData, SaveSchemeData.pNewScheme);
         }
     }
 
@@ -843,7 +848,8 @@ PowerSchemesDlgProc(
                 // TODO:
                 // Initialization failed
                 // Handle error
-                MessageBox(hwndDlg,_T("Pos_InitData failed\n"), NULL, MB_OK);
+                DPRINT1("Pos_InitData failed");
+				MessageBox(hwndDlg,_T("Pos_InitData failed\n"), NULL, MB_OK);
             }
 
             if (!CreateEnergyList(hwndDlg, pPageData))
@@ -851,6 +857,7 @@ PowerSchemesDlgProc(
                 // TODO:
                 // Initialization failed
                 // Handle error
+				DPRINT1("CreateEnergyList failed");
                 MessageBox(hwndDlg,_T("CreateEnergyList failed\n"), NULL, MB_OK);
             }
             return TRUE;
