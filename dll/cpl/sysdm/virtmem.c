@@ -9,6 +9,9 @@
 
 #include "precomp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 static BOOL OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem);
 static LPCTSTR lpKey = _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management");
 
@@ -586,6 +589,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         /* Set current pagefile size */
         PageFileSizeMb = 0;
         BOOL Success;
+		TCHAR szText[256];
         WIN32_FIND_DATAW FileInfo; // WIN32_FILE_ATTRIBUTE_DATA        
 		ULARGE_INTEGER FileSize;		
         for (i = 0; i < pVirtMem->Count; i++)
