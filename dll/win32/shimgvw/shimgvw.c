@@ -439,11 +439,6 @@ pPrintImage(HWND hwnd)
 static VOID
 EnableToolBarButtons(BOOL bEnable)
 {
-    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, bEnable);
-    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, bEnable);
-
-    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ROT1, bEnable);
-    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ROT2, bEnable);
     SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_SAVE, bEnable);
     SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
 }
