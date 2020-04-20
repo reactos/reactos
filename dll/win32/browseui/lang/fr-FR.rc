@@ -107,21 +107,21 @@ END
 
 IDM_BAND_MENU MENUEX
 BEGIN
-    MENUITEM "Sho&w Title", IDM_BAND_TITLE
-    MENUITEM "&Close Toolbar", IDM_BAND_CLOSE
+    MENUITEM "Afficher le titre", IDM_BAND_TITLE
+    MENUITEM "&Fermer la barre d'outils", IDM_BAND_CLOSE
 END
 
 IDM_POPUPMENU MENUEX DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&View", IDM_VIEW_MENU
+        POPUP "&Affichage", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Large Icons", IDM_LARGE_ICONS
-            MENUITEM "&Small Icons", IDM_SMALL_ICONS
+            MENUITEM "&Grandes icones", IDM_LARGE_ICONS
+            MENUITEM "&Petites icones", IDM_SMALL_ICONS
         END
-        MENUITEM "&Open Folder", IDM_OPEN_FOLDER
-        MENUITEM "&Show Text", IDM_SHOW_TEXT
+        MENUITEM "&Ouvrir le dossier", IDM_OPEN_FOLDER
+        MENUITEM "&Afficher le texte", IDM_SHOW_TEXT
     END    
 END
 
@@ -286,15 +286,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SMALLICONS "Small icons"
-    IDS_LARGEICONS "Large icons"
-    IDS_SHOWTEXTLABELS "Show text labels"
+    IDS_SMALLICONS "Petites icones"
+    IDS_LARGEICONS "Grandes icones"
+    IDS_SHOWTEXTLABELS "Afficher les étiquettes"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NOTEXTLABELS "No text labels"
-    IDS_SELECTIVETEXTONRIGHT "Selective text on right"
+    IDS_NOTEXTLABELS "Sans étiquettes"
+    IDS_SELECTIVETEXTONRIGHT "Aligner à droite"
 END
 
 STRINGTABLE
@@ -358,5 +358,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_PARSE_ADDR_ERR_TITLE "Explorateur ReactOS"
-    IDS_PARSE_ADDR_ERR_TEXT "L'explorateur ReactOS ne peut trouver '%1'. Veuillez vérifier l'orthographe et réessayer."
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS ne parvient pas à trouver '%1'. Vérifiez l'orthographe et réessayer."
 END
