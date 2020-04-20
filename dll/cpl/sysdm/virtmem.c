@@ -606,7 +606,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
             }
             else
             {
-                ULARGE_INTEGER Size = fdata.nFileSizeLow;
+                ULONGLONG Size = fdata.nFileSizeLow;
                 Size |= (((__int64)fdata.nFileSizeHigh) << 32);
                 Size = Size / (1024*1024);
                 PageFileSizeMb +=Size;
