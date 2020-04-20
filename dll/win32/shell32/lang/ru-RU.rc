@@ -9,7 +9,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Большие значки", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Крупные значки", FCIDM_SHVIEW_BIGICON
     MENUITEM "&Мелкие значки", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Список", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Таблица", FCIDM_SHVIEW_REPORTVIEW
@@ -18,7 +18,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Автоматически", FCIDM_SHVIEW_AUTOARRANGE
-        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+        MENUITEM "&Выровнять значки по сетке", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -29,7 +29,7 @@ BEGIN
     BEGIN
         POPUP "&Вид", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "&Большие значки", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Крупные значки", FCIDM_SHVIEW_BIGICON
             MENUITEM "&Мелкие значки", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Список", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Таблица", FCIDM_SHVIEW_REPORTVIEW
@@ -39,7 +39,7 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Автоматически", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "&Выровнять значки по сетке", FCIDM_SHVIEW_ALIGNTOGRID
         END
         MENUITEM "О&бновить", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -758,7 +758,7 @@ BEGIN
     IDS_ABOUT_VERSION_STRING "Версия %S (%S)"
 
     /* context menus */
-    IDS_VIEW_LARGE "&Большие значки"
+    IDS_VIEW_LARGE "&Крупные значки"
     IDS_VIEW_SMALL "&Мелкие значки"
     IDS_VIEW_LIST "&Список"
     IDS_VIEW_DETAILS "&Таблица"
