@@ -245,16 +245,19 @@ LoadConfig(
     PPOWER_POLICY pp;
     HWND hwndCtrl;
 
-    if (pScheme == NULL)
-    {
-        iCurSel = (INT)SendDlgItemMessage(hwndDlg,
+    iCurSel = (INT)SendDlgItemMessage(hwndDlg,
                                           IDC_ENERGYLIST,
                                           CB_GETCURSEL,
                                           0,
                                           0);
-        if (iCurSel == CB_ERR)
-            return;
+    if (iCurSel == CB_ERR)
+        return;
+		
+    EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),
+                (iCurSel > 0));
 
+    if (pScheme == NULL)
+    {
         pScheme = (PPOWER_SCHEME)SendDlgItemMessage(hwndDlg,
                                                     IDC_ENERGYLIST,
                                                     CB_GETITEMDATA,
@@ -323,11 +326,7 @@ LoadConfig(
         {
             SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
-    }
-
-    EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),
-                 (iCurSel != 0));
-
+    }  
 }
 
 
@@ -520,8 +519,7 @@ Pos_SaveData(
 
     if (SetActivePwrScheme(pScheme->uId, NULL, &pScheme->PowerPolicy))
     {
-        pPageData->pActivePowerScheme = pScheme;
-        EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN), FALSE);
+        pPageData->pActivePowerScheme = pScheme;        
     }
 }
 

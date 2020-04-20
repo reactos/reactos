@@ -8,7 +8,7 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
     LTEXT "Изберете най- подходящата настройка за този компютър. Обърнете внимание, че промяната на долните настройки ще променят избраната наредба.", -1, 45, 13, 194, 36
     GROUPBOX "За&хранване", -1, 7, 57, 240, 46
-    COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+    COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Запис като...", IDC_SAVEAS_BTN, 100, 85, 75, 15, WS_DISABLED
     PUSHBUTTON "&Изтриване", IDC_DELETE_BTN, 180, 85, 55, 15, WS_DISABLED
     GROUPBOX "Неизвестно", IDC_GRPDETAIL, 7, 108, 240, 105
