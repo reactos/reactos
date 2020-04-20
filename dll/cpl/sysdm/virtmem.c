@@ -509,8 +509,8 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
     UINT i, FreeMemMb, RecoMemMb, PageFileSizeMb;
     INT Index;
     TCHAR szText[MAX_PATH];    
-	WIN32_FIND_DATAW fdata = {0};
-	HANDLE hFind;
+    WIN32_FIND_DATAW fdata = {0};
+    HANDLE hFind;
 			
     Index = (INT)SendDlgItemMessage(hwndDlg,
                                     IDC_PAGEFILELIST,
@@ -601,19 +601,18 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 			hFind = FindFirstFileW(szText, &fdata);
 			if (hFind == INVALID_HANDLE_VALUE) 
 			{
-				DPRINT1("Unable to read PageFile size : %ls due to error %d\n", szText,GetLastError());				
+			    DPRINT1("Unable to read PageFile size : %ls due to error %d\n", szText,GetLastError());				
 			}
 			else
 			{
-
-				ULONGLONG Size = fdata.nFileSizeLow;
-				Size |= (((__int64)fdata.nFileSizeHigh) << 32);
-				Size = Size / (1024*1024);
-				PageFileSizeMb +=Size;
-				FindClose(hFind);
+			    ULONGLONG Size = fdata.nFileSizeLow;
+			    Size |= (((__int64)fdata.nFileSizeHigh) << 32);
+			    Size = Size / (1024*1024);
+			    PageFileSizeMb +=Size;
+			    FindClose(hFind);
 			}
-            
         }
+		
         _stprintf(szBuffer, _T("%u MB"), PageFileSizeMb);
         SetDlgItemText(hwndDlg, IDC_CURRENT, szBuffer);
     }
