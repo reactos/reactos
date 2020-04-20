@@ -71,13 +71,13 @@ namespace
 
         if (Info->Proxy == 0)
         {
-        	EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
-        	EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
+            EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
+            EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
         }
         else
         {
-        	EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
-        	EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
+            EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
+            EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
         }
 
         SetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER), Info->szProxyServer);
