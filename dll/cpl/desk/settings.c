@@ -386,7 +386,7 @@ SettingsOnInitDialog(IN HWND hwndDlg)
                 pMonitors[i].Size.cx = pData->DisplayDeviceList->CurrentSettings->dmPelsWidth;
                 pMonitors[i].Size.cy = pData->DisplayDeviceList->CurrentSettings->dmPelsHeight;
                 pMonitors[i].Flags = 0;
-				offset += pMonitors[i].Size.cx;
+                offset += pMonitors[i].Size.cx;
             }
 
             SendDlgItemMessage(hwndDlg,
