@@ -402,8 +402,8 @@ BEGIN
     LTEXT "קובץ:    ", 14001, 44, 25, 188, 20
     GROUPBOX "תוכניות:", -1, 7, 42, 249, 187
     CONTROL "תוכניות", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
-    PUSHBUTTON "&עיון...", 14004, 198, 207, 50, 14
+    AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 16, 193, 232, 10
+    PUSHBUTTON "&עיון...", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "אישור", IDOK, 150, 236, 50, 14
     PUSHBUTTON "ביטול", IDCANCEL, 206, 236, 50, 14
 END

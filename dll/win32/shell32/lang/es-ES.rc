@@ -399,20 +399,20 @@ BEGIN
     AUTOCHECKBOX "&Mostrar un cuadro de diálogo para confirmar la eliminación", 14004, 20, 155, 200, 10, WS_TABSTOP
 END
 
-IDD_OPEN_WITH DIALOGEX 0, 0, 284, 256
+IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Abrir con"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
-    LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 10
-    LTEXT "Archivo:    ", 14001, 44, 25, 188, 20
-    GROUPBOX "&Programas ", -1, 7, 42, 269, 187
+    LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 18
+    LTEXT "Archivo:    ", 14001, 44, 30, 188, 10
+    GROUPBOX "&Programas ", -1, 7, 42, 249, 187
     CONTROL "Programas", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "Utilizar &siempre el programa seleccionado para abrir este tipo de archivos", 14003, 15, 193, 250, 10
-    PUSHBUTTON "&Examinar...", 14004, 218, 207, 50, 14
-    DEFPUSHBUTTON "Aceptar", IDOK, 170, 236, 50, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 226, 236, 50, 14
+    AUTOCHECKBOX "&Siempre use el programa para abrir este tipo de archivos", 14003, 16, 193, 232, 10
+    PUSHBUTTON "&Examinar...", 14004, 188, 207, 60, 14
+    DEFPUSHBUTTON "Aceptar", IDOK, 150, 236, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 206, 236, 50, 14
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 294, 240
