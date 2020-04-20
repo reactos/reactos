@@ -117,8 +117,8 @@ BEGIN
     BEGIN
         POPUP "&Affichage", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Grandes icones", IDM_LARGE_ICONS
-            MENUITEM "&Petites icones", IDM_SMALL_ICONS
+            MENUITEM "&Grandes icônes", IDM_LARGE_ICONS
+            MENUITEM "&Petites icônes", IDM_SMALL_ICONS
         END
         MENUITEM "&Ouvrir le dossier", IDM_OPEN_FOLDER
         MENUITEM "&Afficher le texte", IDM_SHOW_TEXT
@@ -286,8 +286,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SMALLICONS "Petites icones"
-    IDS_LARGEICONS "Grandes icones"
+    IDS_SMALLICONS "Petites icônes"
+    IDS_LARGEICONS "Grandes icônes"
     IDS_SHOWTEXTLABELS "Afficher les étiquettes"
 END
 
