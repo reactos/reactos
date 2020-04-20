@@ -594,23 +594,23 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         		
         for (i = 0; i < pVirtMem->Count; i++)
         {
-			_stprintf(szText,
+		    _stprintf(szText,
                           _T("%c:\\pagefile.sys"),
                           pVirtMem->Pagefile[i].szDrive[0]);
 		
-			hFind = FindFirstFileW(szText, &fdata);
-			if (hFind == INVALID_HANDLE_VALUE) 
-			{
-			    DPRINT1("Unable to read PageFile size : %ls due to error %d\n", szText,GetLastError());				
-			}
-			else
-			{
-			    ULONGLONG Size = fdata.nFileSizeLow;
+		    hFind = FindFirstFileW(szText, &fdata);
+		    if (hFind == INVALID_HANDLE_VALUE) 
+		    {
+		        DPRINT1("Unable to read PageFile size : %ls due to error %d\n", szText,GetLastError());				
+		    }
+		    else
+		    {
+		        ULONGLONG Size = fdata.nFileSizeLow;
 			    Size |= (((__int64)fdata.nFileSizeHigh) << 32);
 			    Size = Size / (1024*1024);
 			    PageFileSizeMb +=Size;
 			    FindClose(hFind);
-			}
+		    }
         }
 		
         _stprintf(szBuffer, _T("%u MB"), PageFileSizeMb);
