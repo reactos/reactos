@@ -511,6 +511,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
     TCHAR szText[MAX_PATH];    
     WIN32_FIND_DATAW fdata = {0};
     HANDLE hFind;
+    ULARGE_INTEGER pfSize;
             
     Index = (INT)SendDlgItemMessage(hwndDlg,
                                     IDC_PAGEFILELIST,
@@ -606,10 +607,9 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
             }
             else
             {
-                ULONGLONG Size = fdata.nFileSizeLow;
-                Size |= (((__int64)fdata.nFileSizeHigh) << 32);
-                Size = Size / (1024*1024);
-                PageFileSizeMb +=Size;
+                pfSize.LowPart = fdata.nFileSizeLow;
+                pfSize.HighPart = fdata.nFileSizeHigh;                
+                PageFileSizeMb += pfSize.QuadPart / (1024*1024);
                 FindClose(hFind);
             }
         }
