@@ -438,20 +438,10 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
 {
     WCHAR szTitleBuf[800];
     WCHAR szResStr[512];
-    WCHAR *c;
+    LPWSTR pchFileTitle;
 
     if (node)
     {
-        c = wcsrchr(node->FileName, '\\');
-        if (c)
-        {
-            c++;
-        }
-
-        LoadStringW(hInstance, IDS_APPTITLE, szResStr, ARRAYSIZE(szResStr));
-        StringCbPrintfW(szTitleBuf, sizeof(szTitleBuf), L"%ls%ls%ls", szResStr, L" - ", c);
-        SetWindowTextW(hwnd, szTitleBuf);
-
         if (image)
         {
             GdipDisposeImage(image);
@@ -459,6 +449,19 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
         }
 
         pLoadImage(node->FileName);
+
+        LoadStringW(hInstance, IDS_APPTITLE, szResStr, ARRAYSIZE(szResStr));
+        if (image != NULL)
+        {
+            pchFileTitle = PathFindFileNameW(node->FileName);
+            StringCbPrintfW(szTitleBuf, sizeof(szTitleBuf),
+                            L"%ls%ls%ls", szResStr, L" - ", pchFileTitle);
+            SetWindowTextW(hwnd, szTitleBuf);
+        }
+        else
+        {
+            SetWindowTextW(hwnd, szResStr);
+        }
     }
 }
 
