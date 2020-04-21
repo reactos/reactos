@@ -81,8 +81,47 @@ static void Test_Buffersizes()
     }
 }
 
+
+static void Test_ProcessModules(void)
+{
+    PRTL_DEBUG_INFORMATION Buffer;
+    NTSTATUS Status;
+    ULONG RequiredSize = 0;
+    PRTL_PROCESS_MODULES ExpectedModules;
+
+    Buffer = RtlCreateQueryDebugBuffer(0, FALSE);
+    ok(Buffer != NULL, "Unable to create default buffer\n");
+    if (!Buffer)
+        return;
+
+    Status = LdrQueryProcessModuleInformation(NULL, 0, &RequiredSize);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    RequiredSize;
+    ExpectedModules = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, RequiredSize);
+
+    Status = LdrQueryProcessModuleInformation(ExpectedModules, RequiredSize, &RequiredSize);
+    ok_hex(Status, STATUS_SUCCESS);
+    if (NT_SUCCESS(Status))
+    {
+
+        Status = RtlQueryProcessDebugInformation(GetCurrentProcessId(), RTL_DEBUG_QUERY_MODULES, Buffer);
+        ok_hex(Status, STATUS_SUCCESS);
+        if (SUCCEEDED(Status))
+        {
+            ok(!memcmp(ExpectedModules, Buffer->Modules, RequiredSize), "Unexpected difference!\n");
+        }
+    }
+    if (ExpectedModules)
+        HeapFree(GetProcessHeap(), 0, ExpectedModules);
+
+    Status = RtlDestroyQueryDebugBuffer(Buffer);
+    ok_hex(Status, STATUS_SUCCESS);
+}
+
+
 START_TEST(RtlDebugInformation)
 {
     Test_Buffersizes();
-    skip("No test for remote debug information yet!\n");
+    Test_ProcessModules();
 }
