@@ -771,7 +771,6 @@ BEGIN
     IDS_EJECT "הוצא"
     IDS_DISCONNECT "נתק"
     IDS_OPENFILELOCATION "&פתח מיקום קובץ"
-    IDS_DESKLINK "שולחן העבודה (צור קיצור דרך)"
     IDS_SENDTO_MENU "&שלח אל"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"

@@ -778,7 +778,6 @@ BEGIN
     IDS_EJECT "Extraer"
     IDS_DISCONNECT "Desconectar"
     IDS_OPENFILELOCATION "Abrir &ubicación del archivo"
-    IDS_DESKLINK "Crear acceso directo en el Escritorio"
     IDS_SENDTO_MENU "E&nviar a"
 
     IDS_MOVEERRORTITLE "Error moviendo Archivo o Carpeta"

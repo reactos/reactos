@@ -769,7 +769,6 @@ BEGIN
     IDS_EJECT "Éjecter"
     IDS_DISCONNECT "Déconnecter"
     IDS_OPENFILELOCATION "Ouvrir l'empla&cement du fichier"
-    IDS_DESKLINK "Bureau (Créer un raccourci)"
     IDS_SENDTO_MENU "Envo&yer vers"
 
     IDS_MOVEERRORTITLE "Erreur lors du déplacement du fichier ou du dossier"

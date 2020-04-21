@@ -776,7 +776,6 @@ BEGIN
     IDS_EJECT "Извлечь"
     IDS_DISCONNECT "Отсоединить"
     IDS_OPENFILELOCATION "Открыть &расположение объекта"
-    IDS_DESKLINK "Рабочий стол (создать ярлык)"
     IDS_SENDTO_MENU "Отправит&ь"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"

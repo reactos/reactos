@@ -15,6 +15,10 @@ END_OBJECT_MAP()
 
 CComModule gModule;
 LONG g_ModuleRefCnt = 0;
+HINSTANCE g_hModule;
+
+BOOL CreateSendToDeskLink(LPCWSTR pszSendTo);
+BOOL CreateSendToMyDocuments(LPCWSTR pszSendTo);
 
 STDAPI DllCanUnloadNow(void)
 {
@@ -40,6 +44,10 @@ STDAPI DllRegisterServer(void)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    WCHAR szSendTo[MAX_PATH];
+    SHGetSpecialFolderPathW(NULL, szSendTo, CSIDL_SENDTO, TRUE);
+    CreateSendToMyDocuments(szSendTo);
+    CreateSendToDeskLink(szSendTo);
     return S_OK;
 }
 
@@ -112,11 +120,65 @@ CreateShellLink(
     return hr;
 }
 
+BOOL CreateSendToMyDocuments(LPCWSTR pszSendTo)
+{
+    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH], szShell32[MAX_PATH];
+
+    SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_MYDOCUMENTS, TRUE);
+
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
+    PathAppendW(szSendToFile, PathFindFileNameW(szTarget));
+    StringCbCatW(szSendToFile, sizeof(szSendToFile), L".lnk");
+
+    GetSystemDirectoryW(szShell32, _countof(szShell32));
+    PathAppendW(szShell32, L"shell32.dll");
+
+#define IDI_SHELL_MY_DOCUMENTS 235
+    HRESULT hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL,
+                                 szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
+#undef IDI_SHELL_MY_DOCUMENTS
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        ERR("CreateShellLink(%S, %S) failed!\n", szSendToFile, szTarget);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static BOOL
+CreateEmptyFile(LPCWSTR pszFile)
+{
+    HANDLE hFile;
+    hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    CloseHandle(hFile);
+    return hFile != INVALID_HANDLE_VALUE;
+}
+
+BOOL CreateSendToDeskLink(LPCWSTR pszSendTo)
+{
+    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
+
+    LoadStringW(g_hModule, IDS_DESKLINK, szTarget, _countof(szTarget));
+    StringCbCatW(szTarget, sizeof(szTarget), L".DeskLink");
+
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
+    PathAppendW(szSendToFile, szTarget);
+
+    if (!CreateEmptyFile(szSendToFile))
+    {
+        ERR("CreateEmptyFile\n");
+        return FALSE;
+    }
+    return TRUE;
+}
+
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
 {
     TRACE("%p 0x%x %p\n", hInstance, dwReason, fImpLoad);
     if (dwReason == DLL_PROCESS_ATTACH)
     {
+        g_hModule = hInstance;
         gModule.Init(ObjectMap, hInstance, NULL);
         DisableThreadLibraryCalls(hInstance);
     }

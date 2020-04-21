@@ -2,6 +2,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 {
-    IDS_DESKLINK, "Desktop (Create shortcut)"
+    IDS_DESKLINK, "Рабочий стол (создать ярлык)"
     IDS_SHORTCUT, "Shortcut to %s"
 }

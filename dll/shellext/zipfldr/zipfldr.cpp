@@ -47,6 +47,34 @@ static void init_zlib()
     fill_win32_filefunc64W(&g_FFunc);
 }
 
+static BOOL
+CreateEmptyFile(LPCWSTR pszFile)
+{
+    HANDLE hFile;
+    hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    CloseHandle(hFile);
+    return hFile != INVALID_HANDLE_VALUE;
+}
+
+static BOOL
+CreateSendToZip(LPCWSTR pszSendTo)
+{
+    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
+
+    LoadStringW(g_hModule, IDS_FRIENDLYNAME, szTarget, _countof(szTarget));
+
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
+    PathAppendW(szSendToFile, szTarget);
+    StringCbCatW(szSendToFile, sizeof(szSendToFile), L".ZFSendToTarget");
+    if (!CreateEmptyFile(szSendToFile))
+    {
+        DPRINT1("CreateEmptyFile\n");
+        return FALSE;
+    }
+    return TRUE;
+}
+
 EXTERN_C
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
@@ -86,6 +114,10 @@ STDAPI DllRegisterServer()
     hr = gModule.UpdateRegistryFromResource(IDR_ZIPFLDR, TRUE, NULL);
     if (FAILED(hr))
         return hr;
+
+    WCHAR szSendTo[MAX_PATH];
+    SHGetSpecialFolderPathW(NULL, szSendTo, CSIDL_SENDTO, TRUE);
+    CreateSendToZip(szSendTo);
 
     return S_OK;
 }

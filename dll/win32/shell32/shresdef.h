@@ -229,7 +229,6 @@
 #define IDS_DISCONNECT           340
 
 #define IDS_OPENFILELOCATION     341
-#define IDS_DESKLINK             342
 #define IDS_SENDTO_MENU          343
 
 #define IDS_MOVEERRORTITLE       344

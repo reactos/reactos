@@ -776,7 +776,6 @@ BEGIN
     IDS_EJECT "Väljuta"
     IDS_DISCONNECT "Katkesta ühendus"
     IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
     IDS_SENDTO_MENU "Se&nd To"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"
