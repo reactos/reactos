@@ -813,7 +813,7 @@ OnDestroy(
 {
     HWND hwndListView;
     INT nItems, i;
-    LVITEM Item;    
+    LVITEM Item;
 
     hwndListView = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
     if (hwndListView == NULL)
