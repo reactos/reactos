@@ -645,7 +645,10 @@ CreateSendToZip(LPCWSTR pszSendTo)
     HINSTANCE hZipFldr =
         LoadLibraryExW(L"zipfldr.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
     if (hZipFldr == NULL)
+    {
+        ERR("loading zipfldr.dll failed\n");
         return FALSE;
+    }
 
 #define IDS_FRIENDLYNAME 10195
     LoadStringW(hZipFldr, IDS_FRIENDLYNAME, szTarget, _countof(szTarget));
