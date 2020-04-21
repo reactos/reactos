@@ -1,5 +1,5 @@
 <p align=center>
-  <a href="https://reactos.org">
+  <a href="https://reactos.org/">
     <img alt="ReactOS" src="https://reactos.org/wiki/images/0/02/ReactOS_logo.png">
   </a>
 </p>
@@ -7,10 +7,10 @@
 ---
 
 <p align=center>
-  <a href="https://reactos.org/project-news/reactos-0413-released">
+  <a href="https://reactos.org/project-news/reactos-0413-released/">
     <img alt="ReactOS 0.4.13 Release" src="https://img.shields.io/badge/release-0.4.13-0688CB.svg">
   </a>
-  <a href="https://reactos.org/download">
+  <a href="https://reactos.org/download/">
     <img alt="Download ReactOS" src="https://img.shields.io/badge/download-latest-0688CB.svg">
   </a>
   <a href="https://sourceforge.net/projects/reactos">
@@ -19,7 +19,7 @@
   <a href="https://github.com/reactos/reactos/blob/master/COPYING">
     <img alt="License" src="https://img.shields.io/badge/license-GNU_GPL_2.0-0688CB.svg">
   </a>
-  <a href="https://reactos.org/donating">
+  <a href="https://reactos.org/donate/">
     <img alt="Donate" src="https://img.shields.io/badge/%24-donate-E44E4A.svg">
   </a>
   <a href="https://twitter.com/reactos">
@@ -28,12 +28,12 @@
 </p>
 
 ## Quick Links
-[Website](https://reactos.org) &bull; 
-[Official chat](https://chat.reactos.org) &bull; 
-[Wiki](https://reactos.org/wiki) &bull; 
-[Forum](https://reactos.org/forum) &bull; 
-[JIRA Bug Tracker](https://jira.reactos.org/issues) &bull; 
-[ReactOS Git mirror](https://git.reactos.org) &bull; 
+[Website](https://reactos.org/) &bull;
+[Official chat](https://chat.reactos.org/) &bull;
+[Wiki](https://reactos.org/wiki/) &bull;
+[Forum](https://reactos.org/forum/) &bull;
+[JIRA Bug Tracker](https://jira.reactos.org/issues/) &bull;
+[ReactOS Git mirror](https://git.reactos.org/) &bull;
 [Testman](https://reactos.org/testman/)
 
 ## What is ReactOS?
@@ -51,9 +51,9 @@ The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/r
 [![appveyor.badge]][appveyor.link] [![travis.badge]][travis.link] [![rosbewin.badge]][rosbewin.link] [![rosbeunix.badge]][rosbeunix.link] [![coverity.badge]][coverity.link]
 
 To build the system it is strongly advised to use the _ReactOS Build Environment (RosBE)._
-Up-to-date versions for Windows and for Unix/GNU-Linux are available from our download page at: ["Build Environment"](http://www.reactos.org/wiki/Build_Environment).
+Up-to-date versions for Windows and for Unix/GNU-Linux are available from our download page at: ["Build Environment"](https://reactos.org/wiki/Build_Environment).
 
-Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: ["Visual Studio or Microsoft Visual C++"](https://www.reactos.org/wiki/CMake#Visual_Studio_or_Microsoft_Visual_C.2B.2B).
+Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: ["Visual Studio or Microsoft Visual C++"](https://reactos.org/wiki/CMake#Visual_Studio_or_Microsoft_Visual_C.2B.2B).
 
 ### Binaries
 
@@ -64,9 +64,9 @@ To build ReactOS you must run the `configure` script in the directory you want t
 To build a bootable CD image run `ninja bootcd` from the
 build directory. This will create a CD image with a filename `bootcd.iso`.
 
-See ["Building ReactOS"](http://www.reactos.org/wiki/Building_ReactOS) for more details.
+See ["Building ReactOS"](https://reactos.org/wiki/Building_ReactOS) for more details.
 
-You can always download fresh binary builds of bootable images from the ["Daily builds"](https://www.reactos.org/getbuilds/) page.
+You can always download fresh binary builds of bootable images from the ["Daily builds"](https://reactos.org/getbuilds/) page.
 
 ## Installing
 
@@ -80,21 +80,21 @@ FAT setup may be observed.
 
 To install ReactOS from the bootable CD distribution, extract the archive contents. Then burn the CD image, boot from it, and follow the instructions.
 
-See ["Installing ReactOS"](https://www.reactos.org/wiki/Installing_ReactOS) Wiki page or [INSTALL](INSTALL) for more details.
+See ["Installing ReactOS"](https://reactos.org/wiki/Installing_ReactOS) Wiki page or [INSTALL](INSTALL) for more details.
 
 ## Testing
 
 If you discover a bug in ReactOS search on JIRA first - it might be reported already. If not report the bug providing logs and as much information as possible.
 
-See ["File Bugs"](https://www.reactos.org/wiki/File_Bugs) for a guide.
+See ["File Bugs"](https://reactos.org/wiki/File_Bugs) for a guide.
 
-__NOTE:__ The bug tracker is _not_ for discussions. Please use `#reactos` Freenode IRC channel or our [forum](https://reactos.org/forum).
+__NOTE:__ The bug tracker is _not_ for discussions. Please use `#reactos` Freenode IRC channel or our [forum](https://reactos.org/forum/).
 
 ## Contributing [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/reactos/reactos) &bull; ![prwelcome.badge]
 
 We are always looking for developers! Check [how to contribute](CONTRIBUTING.md) if you are willing to participate.
 
-You can also support ReactOS by [donating](https://reactos.org/donating)! We rely on our backers to maintain our servers and accelerate development by [hiring full-time devs](https://reactos.org/node/785).
+You can also support ReactOS by [donating](https://reactos.org/donate/)! We rely on our backers to maintain our servers and accelerate development by [hiring full-time devs](https://reactos.org/contributing/#paid-jobs).
 
 ## More information
 
@@ -105,7 +105,7 @@ It is not another wrapper built on Linux, like WINE. It does not attempt or plan
 
 ReactOS is also not "yet another OS". It does not attempt to be a third player like any other alternative OS out there. People are not meant to uninstall Linux and use ReactOS instead; ReactOS is a replacement for Windows users who want a Windows replacement that behaves just like Windows.
 
-More information is available at: [reactos.org](https://www.reactos.org).
+More information is available at: [reactos.org](https://reactos.org/).
 
 Also see the [media/doc](/media/doc/) subdirectory for some sparse notes.
 

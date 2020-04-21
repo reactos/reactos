@@ -77,7 +77,7 @@ To amend your commit with your name and e-mail (in any case you've forgot to set
 
 Finding a good project to start with can be a challenge, because when starting out you are (usually) not aware of all the possibilities. To help you find a project, here are some ideas to try:
 
-- Find a test that fails, and try to make it succeed: <https://www.reactos.org/testman/>
+- Find a test that fails, and try to make it succeed: <https://reactos.org/testman/>
 - Look around in JIRA, and if you have problems finding nice projects to start with, there is a label for this: <https://jira.reactos.org/issues/?jql=labels%20%3D%20starter-project>
 - Ask for help on [IRC]
 - Additionally, there are some tests that cause crashes/hangs, but these might be slightly harder: <https://jira.reactos.org/browse/ROSTESTS-125>
@@ -86,8 +86,8 @@ Finding a good project to start with can be a challenge, because when starting o
   [debug]:                                                       https://reactos.org/wiki/Debugging
   [JIRA]:                                                        https://jira.reactos.org/
   [filing a bug report]:                                         https://reactos.org/wiki/File_Bugs
-  [testman]:                                                     https://www.reactos.org/testman/
-  [migration to GitHub]:                                         https://www.reactos.org/project-news/reactos-repository-migrated-github
+  [testman]:                                                     https://reactos.org/testman/
+  [migration to GitHub]:                                         https://reactos.org/project-news/reactos-repository-migrated-github/
   [humans are terrible at tracking large amount of information]: https://www.eurekalert.org/pub_releases/2005-03/aps-hmc030805.php
   [Pull requests]:                                               https://help.github.com/articles/about-pull-requests/
   [tips for reviewing patches]:                                  https://drupal.org/patch/review
