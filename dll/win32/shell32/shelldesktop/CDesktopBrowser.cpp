@@ -483,6 +483,184 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *Tray)
     return static_cast<HANDLE>(Browser.Detach());
 }
 
+static BOOL
+CreateEmptyFile(LPCWSTR pszFile)
+{
+    HANDLE hFile;
+    hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    CloseHandle(hFile);
+    return hFile != INVALID_HANDLE_VALUE;
+}
+
+static HRESULT
+CreateShellLink(
+    LPCWSTR pszLinkPath,
+    LPCWSTR pszTargetPath OPTIONAL,
+    LPCITEMIDLIST pidlTarget OPTIONAL,
+    LPCWSTR pszArg OPTIONAL,
+    LPCWSTR pszDir OPTIONAL,
+    LPCWSTR pszIconPath OPTIONAL,
+    INT iIconNr OPTIONAL,
+    LPCWSTR pszComment OPTIONAL)
+{
+    IShellLinkW *psl = NULL;
+    IPersistFile *ppf = NULL;
+    HRESULT hr = CoInitialize(NULL);
+
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto Quit;
+
+    hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                          IID_PPV_ARG(IShellLinkW, &psl));
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto Quit;
+
+    if (pszTargetPath)
+    {
+        hr = psl->SetPath(pszTargetPath);
+        if (FAILED_UNEXPECTEDLY(hr))
+            goto Quit;
+    }
+    else if (pidlTarget)
+    {
+        hr = psl->SetIDList(pidlTarget);
+        if (FAILED_UNEXPECTEDLY(hr))
+            goto Quit;
+    }
+    else
+    {
+        ERR("invalid argument\n");
+        hr = E_INVALIDARG;
+        goto Quit;
+    }
+
+    if (pszArg)
+        hr = psl->SetArguments(pszArg);
+
+    if (pszDir)
+        hr = psl->SetWorkingDirectory(pszDir);
+
+    if (pszIconPath)
+        hr = psl->SetIconLocation(pszIconPath, iIconNr);
+
+    if (pszComment)
+        hr = psl->SetDescription(pszComment);
+
+    hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto Quit;
+
+    hr = ppf->Save(pszLinkPath, TRUE);
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto Quit;
+
+Quit:
+    if (psl)
+        psl->Release();
+    if (ppf)
+        ppf->Release();
+    CoUninitialize();
+    return hr;
+}
+
+static BOOL SendToFolderHasAnyItems(void)
+{
+    WCHAR szPath[MAX_PATH];
+    SHGetSpecialFolderPathW(NULL, szPath, CSIDL_SENDTO, FALSE);
+
+    PathAppendW(szPath, L"*");
+
+    WIN32_FIND_DATAW find;
+    HANDLE hFind = FindFirstFileW(szPath, &find);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    BOOL bFound = FALSE;
+    do
+    {
+        if (wcscmp(find.cFileName, L".") == 0 ||
+            wcscmp(find.cFileName, L"..") == 0 ||
+            _wcsicmp(find.cFileName, L"desktop.ini") == 0)
+        {
+            continue;
+        }
+
+        bFound = TRUE;
+        break;
+    } while (FindNextFileW(hFind, &find));
+
+    FindClose(hFind);
+    return bFound;
+}
+
+static HRESULT
+CreateSendToFiles(void)
+{
+    WCHAR szSendTo[MAX_PATH];
+    WCHAR szTarget[MAX_PATH];
+    WCHAR szSendToFile[MAX_PATH];
+    WCHAR szShell32[MAX_PATH];
+    HRESULT hr;
+
+    SHGetSpecialFolderPathW(NULL, szSendTo, CSIDL_SENDTO, TRUE);
+
+    /* create my documents */
+    SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_MYDOCUMENTS, FALSE);
+
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), szSendTo);
+    PathAppendW(szSendToFile, PathFindFileNameW(szTarget));
+    StringCbCatW(szSendToFile, sizeof(szSendToFile), L".lnk");
+
+    GetSystemDirectoryW(szShell32, _countof(szShell32));
+    PathAppendW(szShell32, L"shell32.dll");
+
+    if (!PathFileExistsW(szSendToFile))
+    {
+        hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL,
+                             szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
+        if (FAILED_UNEXPECTEDLY(hr))
+            ERR("CreateShellLink(%S, %S) failed!\n", szSendToFile, szTarget);
+    }
+
+    /* create desklink */
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), szSendTo);
+    LoadStringW(shell32_hInstance, IDS_DESKLINK, szTarget, _countof(szTarget));
+    StringCbCatW(szTarget, sizeof(szTarget), L".DeskLink");
+    PathAppendW(szSendToFile, szTarget);
+    if (!PathFileExistsW(szSendToFile))
+    {
+        if (!CreateEmptyFile(szSendToFile))
+        {
+            ERR("CreateEmptyFile\n");
+        }
+    }
+
+    /* create zipped compressed folder */
+    HINSTANCE hZipFldr =
+        LoadLibraryExW(L"zipfldr.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+    if (hZipFldr)
+    {
+#define IDS_FRIENDLYNAME 10195
+        LoadStringW(hZipFldr, IDS_FRIENDLYNAME, szTarget, _countof(szTarget));
+#undef IDS_FRIENDLYNAME
+        FreeLibrary(hZipFldr);
+
+        StringCbCopyW(szSendToFile, sizeof(szSendToFile), szSendTo);
+        PathAppendW(szSendToFile, szTarget);
+        StringCbCatW(szSendToFile, sizeof(szSendToFile), L".ZFSendToTarget");
+        if (!PathFileExistsW(szSendToFile))
+        {
+            if (!CreateEmptyFile(szSendToFile))
+            {
+                ERR("CreateEmptyFile\n");
+            }
+        }
+    }
+
+    return S_OK;
+}
+
 /*************************************************************************
  * SHCreateDesktop            [SHELL32.201]
  *
@@ -505,6 +683,9 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
     HRESULT hr = browser->QueryActiveShellView(&shellView);
     if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
+
+    if (!SendToFolderHasAnyItems())
+        CreateSendToFiles();
 
     while ((bRet = ::GetMessageW(&Msg, NULL, 0, 0)) != 0)
     {
