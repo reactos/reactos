@@ -94,7 +94,7 @@ __NOTE:__ The bug tracker is _not_ for discussions. Please use `#reactos` Freeno
 
 We are always looking for developers! Check [how to contribute](CONTRIBUTING.md) if you are willing to participate.
 
-You can also support ReactOS by [donating](https://reactos.org/donate/)! We rely on our backers to maintain our servers and accelerate development by [hiring full-time devs](https://reactos.org/contributing/).
+You can also support ReactOS by [donating](https://reactos.org/donate/)! We rely on our backers to maintain our servers and accelerate development by [hiring full-time devs](https://reactos.org/contributing/#paid-jobs).
 
 ## More information
 
