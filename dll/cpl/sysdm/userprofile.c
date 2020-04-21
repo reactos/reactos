@@ -828,7 +828,7 @@ OnDestroy(
         Item.iSubItem = 0;
         if (ListView_GetItem(hwndListView, &Item))
         {
-            if (Item.lParam != 0)            
+            if (Item.lParam != 0)
                 HeapFree(GetProcessHeap(), 0, (LPVOID)Item.lParam);
         }
     }
