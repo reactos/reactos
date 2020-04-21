@@ -486,6 +486,8 @@ START_TEST(GetTextMetrics)
             continue;
         }
 
+        trace("Testing '%s'.\n", font->font_file);
+
 #ifdef EMIT_TESTCASES
         printf("static const TEST_ENTRY g_%s[] =\n", font->entry_name);
         printf("{\n");
@@ -516,8 +518,6 @@ START_TEST(GetTextMetrics)
         for (k = 0; k < font->test_count; ++k)
         {
             const TEST_ENTRY *test = &font->tests[k];
-
-            printf("Testing '%s'.\n", font->entry_name);
 
             lf.lfHeight = test->lfHeight;
             lf.lfWidth = test->lfWidth;
