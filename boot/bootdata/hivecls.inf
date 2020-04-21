@@ -849,6 +849,18 @@ MIDFILE="Séquence MIDI"
 CDAFILE="Piste de CD Audio"
 AVIFILE="Clip Vidéo"
 
+CSSFILE="Document de feuille de style en cascade"
+SCFFILE="Commande de l'explorateur ReactOS"
+
+;; For .reg files, right-click menu
+MERGE="Fusionner"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+CONFIGURE="Configurer"
+INSTALL="Installer"
+UNINSTALL="Désinstaller"
+REPAIR="Répairer"
+TEST="Tester"
 
 ; LANG_ITALIAN SUBLANG_NEUTRAL
 [Strings.0010]
