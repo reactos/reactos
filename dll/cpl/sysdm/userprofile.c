@@ -813,8 +813,7 @@ OnDestroy(
 {
     HWND hwndListView;
     INT nItems, i;
-    LVITEM Item;
-    //PPROFILEDATA pProfileData;
+    LVITEM Item;    
 
     hwndListView = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
     if (hwndListView == NULL)
@@ -827,12 +826,11 @@ OnDestroy(
         ZeroMemory(&Item, sizeof(LVITEM));    
         Item.mask = LVIF_PARAM;
         Item.iItem = i;
-        Item.iSubItem = 0;    
+        Item.iSubItem = 0;
         if (ListView_GetItem(hwndListView, &Item))
         {
             if (Item.lParam != 0)
             {
-                //pProfileData = (PPROFILEDATA)Item.lParam;
                 HeapFree(GetProcessHeap(), 0, (LPVOID)Item.lParam);
             }
         }
@@ -868,12 +866,12 @@ UserProfileDlgProc(HWND hwndDlg,
                    LPARAM lParam)
 {
     switch (uMsg)
-    {        
+    {
         case WM_INITDIALOG:
             OnInitUserProfileDialog(hwndDlg);
             return TRUE;
 
-        case WM_DESTROY:     
+        case WM_DESTROY:
             OnDestroy(hwndDlg);
             break;
 
