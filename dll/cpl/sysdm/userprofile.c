@@ -820,7 +820,6 @@ OnDestroy(
         return;
     
     nItems = ListView_GetItemCount(hwndListView);
-
     for (i = 0; i < nItems; i++)
     {
         ZeroMemory(&Item, sizeof(LVITEM));    
