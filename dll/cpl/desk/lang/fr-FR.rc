@@ -102,17 +102,17 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
 END
 
-IDD_EFFAPPEARANCE DIALOGEX 0, 0, 285, 185
+IDD_EFFAPPEARANCE DIALOGEX 0, 0, 370, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Effets"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Utilisez l'effet de transition suivant pour les menus et les bulles d'aides",
+    CONTROL "&Utilisez l'effet de transition suivant pour les menus et les info-bulles :",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "U&tilisez la méthode suivante pour aplanir les bords des polices d'écran", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "U&tilisez la méthode suivante pour lisser les bords des polices d'écran :", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -123,7 +123,7 @@ BEGIN
     CONTROL "Afficher le contenu des fenêtres pendant leur déplacement", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "Masquer les lettres soulignées pour la navigation au clavier jusqu'à ce que j'appuie sur la touche Alt",
-            IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
+            IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 360, 19
     CONTROL "Utiliser les menus plats", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "Annuler", IDCANCEL, 226, 165, 50, 14
@@ -205,8 +205,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARDEFFECT "Standard"
-    IDS_CLEARTYPEEFFECT "Anticrénelage FreeType"
+    IDS_CLEARTYPEEFFECT "FreeType"    
+    IDS_STANDARDEFFECT "Standard"    
 END
 
 STRINGTABLE
