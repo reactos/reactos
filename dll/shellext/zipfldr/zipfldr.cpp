@@ -57,7 +57,7 @@ CreateEmptyFile(LPCWSTR pszFile)
     return hFile != INVALID_HANDLE_VALUE;
 }
 
-static BOOL
+static HRESULT
 CreateSendToZip(LPCWSTR pszSendTo)
 {
     WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
@@ -69,10 +69,10 @@ CreateSendToZip(LPCWSTR pszSendTo)
     StringCbCatW(szSendToFile, sizeof(szSendToFile), L".ZFSendToTarget");
     if (!CreateEmptyFile(szSendToFile))
     {
-        DPRINT1("CreateEmptyFile\n");
-        return FALSE;
+        DPRINT1("CreateEmptyFile('%ls')\n", szSendToFile);
+        return E_FAIL;
     }
-    return TRUE;
+    return S_OK;
 }
 
 EXTERN_C

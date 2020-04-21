@@ -17,8 +17,8 @@ CComModule gModule;
 LONG g_ModuleRefCnt = 0;
 HINSTANCE g_hModule;
 
-BOOL CreateSendToDeskLink(LPCWSTR pszSendTo);
-BOOL CreateSendToMyDocuments(LPCWSTR pszSendTo);
+HRESULT CreateSendToDeskLink(LPCWSTR pszSendTo);
+HRESULT CreateSendToMyDocuments(LPCWSTR pszSendTo);
 
 STDAPI DllCanUnloadNow(void)
 {
@@ -120,9 +120,16 @@ CreateShellLink(
     return hr;
 }
 
-BOOL CreateSendToMyDocuments(LPCWSTR pszSendTo)
+HRESULT CreateSendToMyDocuments(LPCWSTR pszSendTo)
 {
     WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH], szShell32[MAX_PATH];
+
+    HRESULT hr = CoInitialize(NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        ERR("CoInitialize failed: %08X\n", hr);
+        return hr;
+    }
 
     SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_MYDOCUMENTS, TRUE);
 
@@ -134,15 +141,16 @@ BOOL CreateSendToMyDocuments(LPCWSTR pszSendTo)
     PathAppendW(szShell32, L"shell32.dll");
 
 #define IDI_SHELL_MY_DOCUMENTS 235
-    HRESULT hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL,
-                                 szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
+    hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL,
+                         szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
 #undef IDI_SHELL_MY_DOCUMENTS
     if (FAILED_UNEXPECTEDLY(hr))
     {
         ERR("CreateShellLink(%S, %S) failed!\n", szSendToFile, szTarget);
-        return FALSE;
     }
-    return TRUE;
+
+    CoUninitialize();
+    return hr;
 }
 
 static BOOL
@@ -155,7 +163,7 @@ CreateEmptyFile(LPCWSTR pszFile)
     return hFile != INVALID_HANDLE_VALUE;
 }
 
-BOOL CreateSendToDeskLink(LPCWSTR pszSendTo)
+HRESULT CreateSendToDeskLink(LPCWSTR pszSendTo)
 {
     WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
 
@@ -167,10 +175,10 @@ BOOL CreateSendToDeskLink(LPCWSTR pszSendTo)
 
     if (!CreateEmptyFile(szSendToFile))
     {
-        ERR("CreateEmptyFile\n");
-        return FALSE;
+        ERR("CreateEmptyFile('%ls')\n", szSendToFile);
+        return E_FAIL;
     }
-    return TRUE;
+    return S_OK;
 }
 
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
