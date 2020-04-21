@@ -645,7 +645,6 @@ UpdateButtonState(
             ZeroMemory(&Item, sizeof(LVITEM));
             Item.mask = LVIF_PARAM;
             Item.iItem = iSelected;
-
             if (ListView_GetItem(hwndListView, &Item))
             {
                 if (Item.lParam != 0)
@@ -802,51 +801,36 @@ OnInitUserProfileDialog(HWND hwndDlg)
     AddUserProfiles(hwndDlg, GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST), bAdmin);
 }
 
-
-static
-VOID
-OnDestroy(
-    _In_ HWND hwndDlg)
-{
-    HWND hwndListView;
-    INT nItems, i;
-    LVITEM Item;
-
-    hwndListView = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
-    if (hwndListView == NULL)
-        return;
-    
-    nItems = ListView_GetItemCount(hwndListView);
-    for (i = 0; i < nItems; i++)
-    {
-        ZeroMemory(&Item, sizeof(LVITEM));    
-        Item.mask = LVIF_PARAM;
-        Item.iItem = i;
-        if (ListView_GetItem(hwndListView, &Item))
-        {
-            if (Item.lParam != 0)
-                HeapFree(GetProcessHeap(), 0, (LPVOID)Item.lParam);
-        }
-    }
-}
-
-
 static
 VOID
 OnNotify(
     _In_ HWND hwndDlg,
     _In_ NMHDR *nmhdr)
 {
+    LPNMLISTVIEW pNMLV;
+    
     if (nmhdr->idFrom == IDC_USERACCOUNT_LINK && nmhdr->code == NM_CLICK)
     {
         ShellExecuteW(hwndDlg, NULL, L"usrmgr.cpl", NULL, NULL, 0);
     }
     else if (nmhdr->idFrom == IDC_USERPROFILE_LIST)
     {
-        if (nmhdr->code == LVN_ITEMCHANGED)
-            UpdateButtonState(hwndDlg, nmhdr->hwndFrom);
-        else if (nmhdr->code == NM_DBLCLK)
-            ChangeUserProfileType(hwndDlg);
+        switch(nmhdr->code)
+        {
+            case LVN_ITEMCHANGED:
+                UpdateButtonState(hwndDlg, nmhdr->hwndFrom);            
+                break;
+            
+            case NM_DBLCLK:
+                ChangeUserProfileType(hwndDlg);
+                break;
+                
+            case LVN_DELETEITEM:
+                pNMLV = (LPNMLISTVIEW)nmhdr;            
+                if (pNMLV->lParam != 0)
+                    HeapFree(GetProcessHeap(), 0, (LPVOID)pNMLV->lParam);                
+                break;
+        }        
     }
 }
 
@@ -863,11 +847,7 @@ UserProfileDlgProc(HWND hwndDlg,
         case WM_INITDIALOG:
             OnInitUserProfileDialog(hwndDlg);
             return TRUE;
-
-        case WM_DESTROY:
-            OnDestroy(hwndDlg);
-            break;
-
+    
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
