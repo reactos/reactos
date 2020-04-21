@@ -168,10 +168,12 @@ ShowTimeZoneList(HWND hwnd)
 {
     TIME_ZONE_INFORMATION TimeZoneInfo;
     PTIMEZONE_ENTRY Entry;
+    BOOL bDoAdvancedTest;
     DWORD dwIndex;
     DWORD i;
 
     GetTimeZoneInformation(&TimeZoneInfo);
+    bDoAdvancedTest = (!*TimeZoneInfo.StandardName);
 
     dwIndex = 0;
     i = 0;
@@ -183,8 +185,16 @@ ShowTimeZoneList(HWND hwnd)
                      0,
                      (LPARAM)Entry->Description);
 
-        if (!wcscmp(Entry->StandardName, TimeZoneInfo.StandardName))
+        if ( (!bDoAdvancedTest && *Entry->StandardName &&
+                wcscmp(Entry->StandardName, TimeZoneInfo.StandardName) == 0) ||
+             ( (Entry->TimezoneInfo.Bias == TimeZoneInfo.Bias) &&
+               (Entry->TimezoneInfo.StandardBias == TimeZoneInfo.StandardBias) &&
+               (Entry->TimezoneInfo.DaylightBias == TimeZoneInfo.DaylightBias) &&
+               (memcmp(&Entry->TimezoneInfo.StandardDate, &TimeZoneInfo.StandardDate, sizeof(SYSTEMTIME)) == 0) &&
+               (memcmp(&Entry->TimezoneInfo.DaylightDate, &TimeZoneInfo.DaylightDate, sizeof(SYSTEMTIME)) == 0) ) )
+        {
             dwIndex = i;
+        }
 
         i++;
         Entry = Entry->Next;
