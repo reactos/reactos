@@ -88,11 +88,15 @@ If you discover a bug in ReactOS search on JIRA first - it might be reported alr
 
 See ["File Bugs"](https://reactos.org/wiki/File_Bugs) for a guide.
 
-__NOTE:__ The bug tracker is _not_ for discussions. Please use `#reactos` Freenode IRC channel or our [forum](https://reactos.org/forum/).
+__NOTE:__ The bug tracker is _not_ for discussions. Please use our [official chat](https://chat.reactos.org/) or our [forum](https://reactos.org/forum/).
 
-## Contributing [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/reactos/reactos) &bull; ![prwelcome.badge]
+## Contributing  [![prwelcome.badge]](https://reactos.org/wiki/Commiting_Changes)
 
 We are always looking for developers! Check [how to contribute](CONTRIBUTING.md) if you are willing to participate.
+
+Try out cloud-based ReactOS development using Gitpod and Docker:
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/reactos/reactos)
 
 You can also support ReactOS by [donating](https://reactos.org/donate/)! We rely on our backers to maintain our servers and accelerate development by [hiring full-time devs](https://reactos.org/contributing/#paid-jobs).
 
