@@ -555,9 +555,9 @@ DelScheme(
     if (MessageBoxW(hwnd, szCookedBuffer, szTitleBuffer, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
     {
         if (!DeletePwrScheme(pScheme->uId))
-        {          
+        {
             // FIXME: Show an error message box
-            DPRINT1("Unable to delete power scheme");
+            DPRINT1("Unable to delete power scheme\n");
             return FALSE;
         }
 
@@ -846,7 +846,7 @@ PowerSchemesDlgProc(
                 // TODO:
                 // Initialization failed
                 // Handle error
-                DPRINT1("Pos_InitData failed");
+                DPRINT1("Pos_InitData failed\n");
                 MessageBox(hwndDlg,_T("Pos_InitData failed\n"), NULL, MB_OK);
             }
 
@@ -855,7 +855,7 @@ PowerSchemesDlgProc(
                 // TODO:
                 // Initialization failed
                 // Handle error
-                DPRINT1("CreateEnergyList failed");
+                DPRINT1("CreateEnergyList failed\n");
                 MessageBox(hwndDlg,_T("CreateEnergyList failed\n"), NULL, MB_OK);
             }
             return TRUE;
