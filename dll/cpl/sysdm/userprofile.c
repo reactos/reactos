@@ -125,7 +125,6 @@ ChangeUserProfileType(
     ZeroMemory(&Item, sizeof(LVITEM));
     Item.mask = LVIF_PARAM;
     Item.iItem = iSelected;
-    Item.iSubItem = 0;
     if (!ListView_GetItem(hwndListView, &Item))
         return FALSE;
 
@@ -170,7 +169,6 @@ DeleteUserProfile(
     ZeroMemory(&Item, sizeof(LVITEM));
     Item.mask = LVIF_PARAM;
     Item.iItem = iSelected;
-    Item.iSubItem = 0;
     if (!ListView_GetItem(hwndListView, &Item))
         return FALSE;
 
@@ -253,7 +251,6 @@ CopyUserProfile(
     ZeroMemory(&Item, sizeof(LVITEM));
     Item.mask = LVIF_PARAM;
     Item.iItem = iSelected;
-    Item.iSubItem = 0;
     if (!ListView_GetItem(hwndListView, &Item))
         return FALSE;
 
@@ -648,7 +645,6 @@ UpdateButtonState(
             ZeroMemory(&Item, sizeof(LVITEM));
             Item.mask = LVIF_PARAM;
             Item.iItem = iSelected;
-            Item.iSubItem = 0;
             if (ListView_GetItem(hwndListView, &Item))
             {
                 if (Item.lParam != 0)
@@ -825,7 +821,6 @@ OnDestroy(
         ZeroMemory(&Item, sizeof(LVITEM));    
         Item.mask = LVIF_PARAM;
         Item.iItem = i;
-        Item.iSubItem = 0;
         if (ListView_GetItem(hwndListView, &Item))
         {
             if (Item.lParam != 0)
