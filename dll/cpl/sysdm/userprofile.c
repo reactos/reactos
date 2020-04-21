@@ -645,6 +645,7 @@ UpdateButtonState(
             ZeroMemory(&Item, sizeof(LVITEM));
             Item.mask = LVIF_PARAM;
             Item.iItem = iSelected;
+
             if (ListView_GetItem(hwndListView, &Item))
             {
                 if (Item.lParam != 0)
