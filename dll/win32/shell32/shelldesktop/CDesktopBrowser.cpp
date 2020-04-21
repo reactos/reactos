@@ -594,70 +594,84 @@ static BOOL SendToFolderHasAnyItems(void)
     return bFound;
 }
 
-static HRESULT
-CreateSendToFiles(void)
+static BOOL
+CreateSendToMyDocuments(LPCWSTR pszSendTo)
 {
-    WCHAR szSendTo[MAX_PATH];
-    WCHAR szTarget[MAX_PATH];
-    WCHAR szSendToFile[MAX_PATH];
-    WCHAR szShell32[MAX_PATH];
-    HRESULT hr;
+    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH], szShell32[MAX_PATH];
 
-    SHGetSpecialFolderPathW(NULL, szSendTo, CSIDL_SENDTO, TRUE);
-
-    /* create my documents */
     SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_MYDOCUMENTS, FALSE);
 
-    StringCbCopyW(szSendToFile, sizeof(szSendToFile), szSendTo);
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
     PathAppendW(szSendToFile, PathFindFileNameW(szTarget));
     StringCbCatW(szSendToFile, sizeof(szSendToFile), L".lnk");
 
     GetSystemDirectoryW(szShell32, _countof(szShell32));
     PathAppendW(szShell32, L"shell32.dll");
 
-    if (!PathFileExistsW(szSendToFile))
+    HRESULT hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL,
+                                 szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
     {
-        hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL,
-                             szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
-        if (FAILED_UNEXPECTEDLY(hr))
-            ERR("CreateShellLink(%S, %S) failed!\n", szSendToFile, szTarget);
+        ERR("CreateShellLink(%S, %S) failed!\n", szSendToFile, szTarget);
+        return FALSE;
     }
+    return TRUE;
+}
 
-    /* create desklink */
-    StringCbCopyW(szSendToFile, sizeof(szSendToFile), szSendTo);
+static BOOL
+CreateSendToDeskLink(LPCWSTR pszSendTo)
+{
+    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
+
     LoadStringW(shell32_hInstance, IDS_DESKLINK, szTarget, _countof(szTarget));
+
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
     StringCbCatW(szTarget, sizeof(szTarget), L".DeskLink");
     PathAppendW(szSendToFile, szTarget);
-    if (!PathFileExistsW(szSendToFile))
-    {
-        if (!CreateEmptyFile(szSendToFile))
-        {
-            ERR("CreateEmptyFile\n");
-        }
-    }
 
-    /* create zipped compressed folder */
+    if (!CreateEmptyFile(szSendToFile))
+    {
+        ERR("CreateEmptyFile\n");
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static BOOL
+CreateSendToZip(LPCWSTR pszSendTo)
+{
+    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
+
     HINSTANCE hZipFldr =
         LoadLibraryExW(L"zipfldr.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
-    if (hZipFldr)
-    {
+    if (hZipFldr == NULL)
+        return FALSE;
+
 #define IDS_FRIENDLYNAME 10195
-        LoadStringW(hZipFldr, IDS_FRIENDLYNAME, szTarget, _countof(szTarget));
+    LoadStringW(hZipFldr, IDS_FRIENDLYNAME, szTarget, _countof(szTarget));
 #undef IDS_FRIENDLYNAME
-        FreeLibrary(hZipFldr);
+    FreeLibrary(hZipFldr);
 
-        StringCbCopyW(szSendToFile, sizeof(szSendToFile), szSendTo);
-        PathAppendW(szSendToFile, szTarget);
-        StringCbCatW(szSendToFile, sizeof(szSendToFile), L".ZFSendToTarget");
-        if (!PathFileExistsW(szSendToFile))
-        {
-            if (!CreateEmptyFile(szSendToFile))
-            {
-                ERR("CreateEmptyFile\n");
-            }
-        }
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
+    PathAppendW(szSendToFile, szTarget);
+    StringCbCatW(szSendToFile, sizeof(szSendToFile), L".ZFSendToTarget");
+    if (!CreateEmptyFile(szSendToFile))
+    {
+        ERR("CreateEmptyFile\n");
+        return FALSE;
     }
+    return TRUE;
+}
 
+static HRESULT
+CreateSendToFiles(void)
+{
+    WCHAR szSendTo[MAX_PATH];
+    SHGetSpecialFolderPathW(NULL, szSendTo, CSIDL_SENDTO, TRUE);
+
+    CreateSendToMyDocuments(szSendTo);
+    CreateSendToDeskLink(szSendTo);
+    CreateSendToZip(szSendTo);
     return S_OK;
 }
 
