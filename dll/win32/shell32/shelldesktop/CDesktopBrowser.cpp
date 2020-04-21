@@ -564,11 +564,10 @@ Quit:
     return hr;
 }
 
-static BOOL SendToFolderHasAnyItems(void)
+static BOOL SendToFolderHasAnyItems(LPCWSTR pszSendTo)
 {
     WCHAR szPath[MAX_PATH];
-    SHGetSpecialFolderPathW(NULL, szPath, CSIDL_SENDTO, FALSE);
-
+    StringCbCopyW(szPath, sizeof(szPath), pszSendTo);
     PathAppendW(szPath, L"*");
 
     WIN32_FIND_DATAW find;
@@ -667,14 +666,11 @@ CreateSendToZip(LPCWSTR pszSendTo)
 }
 
 static HRESULT
-CreateSendToFiles(void)
+CreateSendToFiles(LPCWSTR pszSendTo)
 {
-    WCHAR szSendTo[MAX_PATH];
-    SHGetSpecialFolderPathW(NULL, szSendTo, CSIDL_SENDTO, TRUE);
-
-    CreateSendToMyDocuments(szSendTo);
-    CreateSendToDeskLink(szSendTo);
-    CreateSendToZip(szSendTo);
+    CreateSendToMyDocuments(pszSendTo);
+    CreateSendToDeskLink(pszSendTo);
+    CreateSendToZip(pszSendTo);
     return S_OK;
 }
 
@@ -701,8 +697,10 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
     if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
-    if (!SendToFolderHasAnyItems())
-        CreateSendToFiles();
+    WCHAR szSendTo[MAX_PATH];
+    SHGetSpecialFolderPathW(NULL, szSendTo, CSIDL_SENDTO, TRUE);
+    if (!SendToFolderHasAnyItems(szSendTo))
+        CreateSendToFiles(szSendTo);
 
     while ((bRet = ::GetMessageW(&Msg, NULL, 0, 0)) != 0)
     {
