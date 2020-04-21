@@ -43,7 +43,6 @@ static UCHAR DbgChannels[DBG_CHANNELS_COUNT];
 ULONG DebugPort = RS232;
 
 /* Serial debug connection */
-
 #if defined(SARCH_PC98)
 ULONG BaudRate = 9600;
 #else
