@@ -624,9 +624,9 @@ CreateSendToDeskLink(LPCWSTR pszSendTo)
     WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
 
     LoadStringW(shell32_hInstance, IDS_DESKLINK, szTarget, _countof(szTarget));
+    StringCbCatW(szTarget, sizeof(szTarget), L".DeskLink");
 
     StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
-    StringCbCatW(szTarget, sizeof(szTarget), L".DeskLink");
     PathAppendW(szSendToFile, szTarget);
 
     if (!CreateEmptyFile(szSendToFile))
