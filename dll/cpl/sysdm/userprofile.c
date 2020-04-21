@@ -645,6 +645,7 @@ UpdateButtonState(
         iSelected = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
         if (iSelected != -1)
         {
+            ZeroMemory(&Item, sizeof(LVITEM));
             Item.mask = LVIF_PARAM;
             Item.iItem = iSelected;
             Item.iSubItem = 0;
@@ -810,21 +811,30 @@ VOID
 OnDestroy(
     _In_ HWND hwndDlg)
 {
-    HWND hwndList;
+    HWND hwndListView;
     INT nItems, i;
     LVITEM Item;
+    //PPROFILEDATA pProfileData;
 
-    hwndList = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
+    hwndListView = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
+    if (hwndListView == NULL)
+        return;
+    
+    nItems = ListView_GetItemCount(hwndListView);
 
-    nItems = ListView_GetItemCount(hwndList);
     for (i = 0; i < nItems; i++)
     {
+        ZeroMemory(&Item, sizeof(LVITEM));    
+        Item.mask = LVIF_PARAM;
         Item.iItem = i;
-        Item.iSubItem = 0;
-        if (ListView_GetItem(hwndList, &Item))
+        Item.iSubItem = 0;    
+        if (ListView_GetItem(hwndListView, &Item))
         {
             if (Item.lParam != 0)
-                HeapFree(GetProcessHeap(), 0, (PVOID)Item.lParam);
+            {
+                //pProfileData = (PPROFILEDATA)Item.lParam;
+                HeapFree(GetProcessHeap(), 0, (LPVOID)Item.lParam);
+            }
         }
     }
 }
@@ -858,12 +868,12 @@ UserProfileDlgProc(HWND hwndDlg,
                    LPARAM lParam)
 {
     switch (uMsg)
-    {
+    {        
         case WM_INITDIALOG:
             OnInitUserProfileDialog(hwndDlg);
             return TRUE;
 
-        case WM_DESTROY:
+        case WM_DESTROY:     
             OnDestroy(hwndDlg);
             break;
 
