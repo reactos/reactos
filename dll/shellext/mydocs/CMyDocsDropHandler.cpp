@@ -99,7 +99,7 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     PCIDLIST_ABSOLUTE pidlParent = reinterpret_cast<PCIDLIST_ABSOLUTE>(pb + pida->aoffset[0]);
     for (iItem = 0; iItem < cItems; ++iItem)
     {
-        // query source file path
+        // query source pidl
         PCITEMID_CHILD pidlChild = reinterpret_cast<PCITEMID_CHILD>(pb + pida->aoffset[iItem + 1]);
         CComHeapPtr<ITEMIDLIST> pidl(ILCombine(pidlParent, pidlChild));
 
@@ -124,6 +124,9 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         strSrcList += szSrc;
     }
 
+    // unlock HIDA
+    GlobalUnlock(medium.hGlobal);
+
     if (iItem != cItems)
     {
         // source not found
@@ -131,18 +134,12 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         strText.Format(IDS_NOSRCFILEFOUND, szSrc[0] ? szSrc : L"(null)");
         MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
 
-        // unlock HIDA
-        GlobalUnlock(medium.hGlobal);
-
         *pdwEffect = 0;
         DragLeave();
         return E_FAIL;
     }
 
     strSrcList += L"||"; // double separators
-
-    // unlock HIDA
-    GlobalUnlock(medium.hGlobal);
 
     // lock the buffer
     LPWSTR pszzSrcList = strSrcList.GetBuffer();
