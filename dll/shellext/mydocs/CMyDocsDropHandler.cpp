@@ -96,11 +96,12 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
             strSrcList += L"|";
         strSrcList = szSrc;
     }
+    strSrcList += L"|";
+    strSrcList += L"|";
 
-    strSrcList += L"|";
-    strSrcList += L"|";
     for (INT i = 0, cch = strSrcList.GetLength(); i < cch; ++i)
     {
+        // because strSrcList[i] is constant, we have to do workaround...
         if (strSrcList[i] == L'|')
             memcpy(const_cast<WCHAR *>(&strSrcList[i]), L"\0", sizeof(WCHAR));
     }
