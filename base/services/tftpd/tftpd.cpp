@@ -543,7 +543,7 @@ void processRequest(void *lpParam)
 #ifdef __REACTOS__
                 for (MYWORD j = 0; j < _countof(cfig.hostRanges) && cfig.hostRanges[j].rangeStart; j++)
 #else
-                for (int j = 0; j <= 32 && cfig.hostRanges[j].rangeStart; j++)
+                for (int j = 0; j < 32 && cfig.hostRanges[j].rangeStart; j++)
 #endif
                 {
                     if (iip >= cfig.hostRanges[j].rangeStart && iip <= cfig.hostRanges[j].rangeEnd)
