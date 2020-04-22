@@ -1,0 +1,6 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+{
+    IDS_NOSRCFILEFOUND "Source file or folder '%ls' is not found."
+}

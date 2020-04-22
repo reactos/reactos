@@ -1,0 +1,23 @@
+/*
+ * PROJECT:     mydocs
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     MyDocs implementation
+ * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ */
+
+#include <windef.h>
+#include <winuser.h>
+#include "resource.h"
+
+#include "mydocs_version.rc"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDR_MYDOCS REGISTRY "res/mydocs.rgs"
+
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
