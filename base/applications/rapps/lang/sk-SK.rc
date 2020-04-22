@@ -196,7 +196,7 @@ BEGIN
     IDS_APPS_COUNT "Počet programov: %d; Selected: %d"
     IDS_WELCOME_TITLE "Víta Vás Manažér aplikácií systému ReactOS!\n\n" // ReactOS Application Manager
     IDS_WELCOME_TEXT "Vyberte si kategóriu na ľavej strane, potom vyberte aplikáciu, ktorú chcete nainštalovať alebo odinštalovať.\nWebstránka projektu ReactOS: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Nainštalované"
     IDS_AVAILABLEFORINST "Dostupné pre nainštalovanie"
     IDS_UPDATES "Aktualizácie"
