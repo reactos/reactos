@@ -18,7 +18,6 @@ LONG g_ModuleRefCnt = 0;
 HINSTANCE g_hModule;
 
 HRESULT CreateSendToDeskLink(LPCWSTR pszSendTo);
-HRESULT CreateSendToMyDocuments(LPCWSTR pszSendTo);
 
 STDAPI DllCanUnloadNow(void)
 {
@@ -46,7 +45,6 @@ STDAPI DllRegisterServer(void)
 
     WCHAR szSendTo[MAX_PATH];
     SHGetSpecialFolderPathW(NULL, szSendTo, CSIDL_SENDTO, TRUE);
-    CreateSendToMyDocuments(szSendTo);
     CreateSendToDeskLink(szSendTo);
     return S_OK;
 }
@@ -117,39 +115,6 @@ CreateShellLink(
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    return hr;
-}
-
-HRESULT CreateSendToMyDocuments(LPCWSTR pszSendTo)
-{
-    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH], szShell32[MAX_PATH];
-
-    HRESULT hr = CoInitialize(NULL);
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        ERR("CoInitialize failed: %08X\n", hr);
-        return hr;
-    }
-
-    SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_MYDOCUMENTS, TRUE);
-
-    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
-    PathAppendW(szSendToFile, PathFindFileNameW(szTarget));
-    StringCbCatW(szSendToFile, sizeof(szSendToFile), L".lnk");
-
-    GetSystemDirectoryW(szShell32, _countof(szShell32));
-    PathAppendW(szShell32, L"shell32.dll");
-
-#define IDI_SHELL_MY_DOCUMENTS 235
-    hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL,
-                         szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
-#undef IDI_SHELL_MY_DOCUMENTS
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        ERR("CreateShellLink(%S, %S) failed!\n", szSendToFile, szTarget);
-    }
-
-    CoUninitialize();
     return hr;
 }
 
