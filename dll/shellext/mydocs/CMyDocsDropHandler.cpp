@@ -87,6 +87,10 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
 
         if (!PathFileExistsW(szSrc))
         {
+            CStringW strText;
+            strText.Format(IDS_NOSRCFILEFOUND, szSrc);
+            MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
+
             *pdwEffect = 0;
             DragLeave();
             return E_FAIL;

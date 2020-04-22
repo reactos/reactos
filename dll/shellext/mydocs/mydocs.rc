@@ -17,3 +17,7 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDR_MYDOCS REGISTRY "res/mydocs.rgs"
+
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
