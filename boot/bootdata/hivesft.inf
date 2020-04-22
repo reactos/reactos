@@ -315,9 +315,9 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","Text",0x00000000,"@shell32.dll,-30501"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","Type",0x00000000,"radio"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","CheckedValue",0x00010001,0x00000002
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","ValueName",0x00000000,"Hidden"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","DefaultValue",0x00010001,0x00000002
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","DefaultValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","HKeyRoot",0x00010001,0x80000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","HelpID",0x00000000,"shell.hlp#51104"
 
@@ -325,9 +325,9 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","Text",0x00000000,"@shell32.dll,-30500"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","Type",0x00000000,"radio"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","CheckedValue",0x00010001,0x00000002
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","CheckedValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","ValueName",0x00000000,"Hidden"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","DefaultValue",0x00010001,0x00000002
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","DefaultValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","HKeyRoot",0x00010001,0x80000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","HelpID",0x00000000,"shell.hlp#51105"
 
