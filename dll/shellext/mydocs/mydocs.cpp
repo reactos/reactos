@@ -16,6 +16,47 @@ END_OBJECT_MAP()
 CComModule gModule;
 LONG g_ModuleRefCnt = 0;
 
+static BOOL
+CreateEmptyFile(LPCWSTR pszFile)
+{
+    HANDLE hFile;
+    hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(hFile);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static HRESULT
+CreateSendToMyDocuments(LPCWSTR pszSendTo)
+{
+    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
+
+    SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_MYDOCUMENTS, FALSE);
+
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
+    PathAppendW(szSendToFile, PathFindFileNameW(szTarget));
+    StringCbCatW(szSendToFile, sizeof(szSendToFile), L".mydocs");
+
+    if (!CreateEmptyFile(szSendToFile))
+    {
+        ERR("CreateEmptyFile(%S, %S) failed!\n", szSendToFile, szTarget);
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+static HRESULT
+GetDefaultUserSendTo(LPWSTR pszPath)
+{
+    return SHGetFolderPathW(NULL, CSIDL_SENDTO, INVALID_HANDLE_VALUE,
+                            SHGFP_TYPE_DEFAULT, pszPath);
+}
+
 STDAPI DllCanUnloadNow(void)
 {
     if (g_ModuleRefCnt)
@@ -39,6 +80,11 @@ STDAPI DllRegisterServer(void)
     HRESULT hr = gModule.DllRegisterServer(FALSE);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
+    WCHAR szSendTo[MAX_PATH];
+    hr = GetDefaultUserSendTo(szSendTo);
+    if (SUCCEEDED(hr))
+        CreateSendToMyDocuments(szSendTo);
 
     return S_OK;
 }

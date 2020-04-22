@@ -769,7 +769,6 @@ BEGIN
     IDS_EJECT "Ejectar"
     IDS_DISCONNECT "Desligar"
     IDS_OPENFILELOCATION "Abrir localização do f&icheiro"
-    IDS_DESKLINK "Área de trabalho (Criar atalho)"
     IDS_SENDTO_MENU "&Enviar para"
 
     IDS_MOVEERRORTITLE "Erro ao mover pasta ou ficheiro"

@@ -775,7 +775,6 @@ BEGIN
     IDS_EJECT "Wysuń"
     IDS_DISCONNECT "Odłącz"
     IDS_OPENFILELOCATION "O&twórz lokalizację pliku"
-    IDS_DESKLINK "Pulpit (utwórz skrót)"
     IDS_SENDTO_MENU "Wyślij d&o"
 
     IDS_MOVEERRORTITLE "Błąd przenoszenia pliku lub folderu"

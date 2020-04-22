@@ -770,7 +770,6 @@ BEGIN
     IDS_EJECT "Auswerfen"
     IDS_DISCONNECT "Trennen"
     IDS_OPENFILELOCATION "Date&ipfad öffnen"
-    IDS_DESKLINK "Desktop (Verknüpfung erstellen)"
     IDS_SENDTO_MENU "S&enden an"
 
     IDS_MOVEERRORTITLE "Fehler beim Verschieben der Datei/des Ordners"

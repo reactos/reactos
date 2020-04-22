@@ -769,7 +769,6 @@ BEGIN
     IDS_EJECT "इजेक्ट"
     IDS_DISCONNECT "डिस्कनेक्ट"
     IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
     IDS_SENDTO_MENU "Se&nd To"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"

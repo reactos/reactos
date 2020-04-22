@@ -766,7 +766,6 @@ BEGIN
     IDS_EJECT "Keluarkan"
     IDS_DISCONNECT "Putuskan"
     IDS_OPENFILELOCATION "&Buka lokasi berkas"
-    IDS_DESKLINK "Desktop (Buat pintasan)"
     IDS_SENDTO_MENU "Kiri&m Ke"
 
     IDS_MOVEERRORTITLE "Kesalahan memindahkan Berkas atau Folder"
