@@ -17,7 +17,34 @@ CComModule gModule;
 LONG g_ModuleRefCnt = 0;
 HINSTANCE g_hModule;
 
-HRESULT CreateSendToDeskLink(LPCWSTR pszSendTo);
+static BOOL
+CreateEmptyFile(LPCWSTR pszFile)
+{
+    HANDLE hFile;
+    hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    CloseHandle(hFile);
+    return hFile != INVALID_HANDLE_VALUE;
+}
+
+static HRESULT
+CreateSendToDeskLink(LPCWSTR pszSendTo)
+{
+    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
+
+    LoadStringW(g_hModule, IDS_DESKLINK, szTarget, _countof(szTarget));
+    StringCbCatW(szTarget, sizeof(szTarget), L".DeskLink");
+
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
+    PathAppendW(szSendToFile, szTarget);
+
+    if (!CreateEmptyFile(szSendToFile))
+    {
+        ERR("CreateEmptyFile('%ls')\n", szSendToFile);
+        return E_FAIL;
+    }
+    return S_OK;
+}
 
 STDAPI DllCanUnloadNow(void)
 {
@@ -116,34 +143,6 @@ CreateShellLink(
         return hr;
 
     return hr;
-}
-
-static BOOL
-CreateEmptyFile(LPCWSTR pszFile)
-{
-    HANDLE hFile;
-    hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    CloseHandle(hFile);
-    return hFile != INVALID_HANDLE_VALUE;
-}
-
-HRESULT CreateSendToDeskLink(LPCWSTR pszSendTo)
-{
-    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
-
-    LoadStringW(g_hModule, IDS_DESKLINK, szTarget, _countof(szTarget));
-    StringCbCatW(szTarget, sizeof(szTarget), L".DeskLink");
-
-    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
-    PathAppendW(szSendToFile, szTarget);
-
-    if (!CreateEmptyFile(szSendToFile))
-    {
-        ERR("CreateEmptyFile('%ls')\n", szSendToFile);
-        return E_FAIL;
-    }
-    return S_OK;
 }
 
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
