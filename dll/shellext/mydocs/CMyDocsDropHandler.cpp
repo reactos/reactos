@@ -85,7 +85,7 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
 
     // lock HIDA
     LPIDA pida = reinterpret_cast<LPIDA>(GlobalLock(medium.hGlobal));
-    UINT cItems = pida->cidl;
+    UINT iItem, cItems = pida->cidl;
 
     // get the path of "My Documents"
     WCHAR szzDir[MAX_PATH + 1];
@@ -97,13 +97,14 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     WCHAR szSrc[MAX_PATH];
     const BYTE *pb = reinterpret_cast<BYTE *>(pida);
     PCIDLIST_ABSOLUTE pidlParent = reinterpret_cast<PCIDLIST_ABSOLUTE>(pb + pida->aoffset[0]);
-    for (UINT iItem = 0; iItem < cItems; ++iItem)
+    for (iItem = 0; iItem < cItems; ++iItem)
     {
         // query source file path
         PCITEMID_CHILD pidlChild = reinterpret_cast<PCITEMID_CHILD>(pb + pida->aoffset[iItem + 1]);
         CComHeapPtr<ITEMIDLIST> pidl(ILCombine(pidlParent, pidlChild));
 
         // can get path?
+        szSrc[0] = 0;
         if (!SHGetPathFromIDListW(pidl, szSrc))
         {
             // try to retrieve path from desktop
@@ -114,24 +115,30 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
             hr = StrRetToBufW(&strret, pidl, szSrc, _countof(szSrc));
             if (FAILED_UNEXPECTEDLY(hr))
                 break;
-
             if (!PathFileExistsW(szSrc))
-            {
-                // source not found
-                CStringW strText;
-                strText.Format(IDS_NOSRCFILEFOUND, szSrc[0] ? szSrc : L"(null)");
-                MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
-
-                *pdwEffect = 0;
-                DragLeave();
-                return E_FAIL;
-            }
+                break;
         }
 
         if (iItem > 0)
             strSrcList += L'|'; // separator is '|'
         strSrcList += szSrc;
     }
+
+    if (iItem != cItems)
+    {
+        // source not found
+        CStringW strText;
+        strText.Format(IDS_NOSRCFILEFOUND, szSrc[0] ? szSrc : L"(null)");
+        MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
+
+        // unlock HIDA
+        GlobalUnlock(medium.hGlobal);
+
+        *pdwEffect = 0;
+        DragLeave();
+        return E_FAIL;
+    }
+
     strSrcList += L"||"; // double separators
 
     // unlock HIDA
