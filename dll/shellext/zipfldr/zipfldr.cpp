@@ -53,7 +53,7 @@ CreateEmptyFile(LPCWSTR pszFile)
     HANDLE hFile;
     hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
+    if (hFile != INVALID_HANDLE_VALUE)
     {
         CloseHandle(hFile);
         return TRUE;
