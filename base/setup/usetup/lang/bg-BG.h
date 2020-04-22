@@ -168,7 +168,7 @@ static MUI_ENTRY bgBGWelcomePageEntries[] =
     {
         6,
         25,
-        "http://www.reactos.org",
+        "https://reactos.org/",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
