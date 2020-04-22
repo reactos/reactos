@@ -161,7 +161,7 @@ static MUI_ENTRY huHUWelcomePageEntries[] =
     {
         6,
         24,
-        "http://www.reactos.org weboldalra.",
+        "https://reactos.org/ weboldalra.",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
