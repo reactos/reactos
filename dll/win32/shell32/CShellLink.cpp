@@ -3162,7 +3162,21 @@ HRESULT STDMETHODCALLTYPE CShellLink::Drop(IDataObject *pDataObject,
     DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p)\n", this);
-    HRESULT hr = S_OK;
+    HRESULT hr;
+
+    WCHAR szPath[MAX_PATH];
+    hr = GetPath(szPath, _countof(szPath), NULL, 0);
+    if (FAILED(hr) || !PathFileExistsW(szPath))
+    {
+        Resolve(NULL, SLR_UPDATE);
+
+        hr = GetPath(szPath, _countof(szPath), NULL, 0);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+        if (!PathFileExistsW(szPath))
+            return E_FAIL;
+    }
+
     if (m_DropTarget)
         hr = m_DropTarget->Drop(pDataObject, dwKeyState, pt, pdwEffect);
 
