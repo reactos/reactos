@@ -9,6 +9,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mydocs);
 
+static CLIPFORMAT g_cfHIDA = 0;
+
 CMyDocsDropHandler::CMyDocsDropHandler()
 {
     InterlockedIncrement(&g_ModuleRefCnt);
@@ -61,17 +63,29 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         return E_POINTER;
     }
 
-    // Retrieve an HDROP
-    STGMEDIUM stg;
-    FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-    HRESULT hr = pDataObject->GetData(&etc, &stg);
+    CComPtr<IShellFolder> pDesktop;
+    HRESULT hr = SHGetDesktopFolder(&pDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    // get the clipboard format
+    if (g_cfHIDA == 0)
+        g_cfHIDA = ::RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+
+    // Retrieve an HIDA (handle of IDA)
+    STGMEDIUM medium;
+    FORMATETC fmt = { g_cfHIDA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    hr = pDataObject->GetData(&fmt, &medium);
     if (FAILED_UNEXPECTEDLY(hr))
     {
         *pdwEffect = 0;
         DragLeave();
         return E_FAIL;
     }
-    HDROP hDrop = reinterpret_cast<HDROP>(stg.hGlobal);
+
+    // lock HIDA
+    LPIDA pida = reinterpret_cast<LPIDA>(GlobalLock(medium.hGlobal));
+    UINT cItems = pida->cidl;
 
     // get the path of "My Documents"
     WCHAR szzDir[MAX_PATH + 1];
@@ -81,29 +95,47 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     // for all source items
     CStringW strSrcList;
     WCHAR szSrc[MAX_PATH];
-    UINT cItems = ::DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
+    const BYTE *pb = reinterpret_cast<BYTE *>(pida);
+    PCIDLIST_ABSOLUTE pidlParent = reinterpret_cast<PCIDLIST_ABSOLUTE>(pb + pida->aoffset[0]);
     for (UINT iItem = 0; iItem < cItems; ++iItem)
     {
         // query source file path
-        DragQueryFileW(hDrop, iItem, szSrc, MAX_PATH);
+        PCITEMID_CHILD pidlChild = reinterpret_cast<PCITEMID_CHILD>(pb + pida->aoffset[iItem + 1]);
+        CComHeapPtr<ITEMIDLIST> pidl(ILCombine(pidlParent, pidlChild));
 
-        if (!PathFileExistsW(szSrc))
+        // can get path?
+        if (!SHGetPathFromIDListW(pidl, szSrc))
         {
-            // source not found
-            CStringW strText;
-            strText.Format(IDS_NOSRCFILEFOUND, szSrc);
-            MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
+            // try to retrieve path from desktop
+            STRRET strret;
+            hr = pDesktop->GetDisplayNameOf(pidl, SHGDN_INFOLDER, &strret);
+            if (FAILED_UNEXPECTEDLY(hr))
+                break;
+            hr = StrRetToBufW(&strret, pidl, szSrc, _countof(szSrc));
+            if (FAILED_UNEXPECTEDLY(hr))
+                break;
 
-            *pdwEffect = 0;
-            DragLeave();
-            return E_FAIL;
+            if (!PathFileExistsW(szSrc))
+            {
+                // source not found
+                CStringW strText;
+                strText.Format(IDS_NOSRCFILEFOUND, szSrc[0] ? szSrc : L"(null)");
+                MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
+
+                *pdwEffect = 0;
+                DragLeave();
+                return E_FAIL;
+            }
         }
 
         if (iItem > 0)
             strSrcList += L'|'; // separator is '|'
-        strSrcList = szSrc;
+        strSrcList += szSrc;
     }
     strSrcList += L"||"; // double separators
+
+    // unlock HIDA
+    GlobalUnlock(medium.hGlobal);
 
     // lock the buffer
     LPWSTR pszzSrcList = strSrcList.GetBuffer();
