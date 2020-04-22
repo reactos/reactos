@@ -29,17 +29,17 @@ static
 VOID
 FillCharacterSetComboList(HWND hwndCombo)
 {
-    WCHAR lpCharSetText[256];
-    WCHAR* trimmedName;
+    WCHAR szCharSetText[256];
+    LPWSTR trimmedName;
     CPINFOEXW cpInfo;
     INT i;
 
-    if (LoadStringW(hInstance, IDS_UNICODE, lpCharSetText, SIZEOF(lpCharSetText)))
+    if (LoadStringW(hInstance, IDS_UNICODE, szCharSetText, SIZEOF(szCharSetText)))
     {
         SendMessageW(hwndCombo,
                      CB_ADDSTRING,
                      0,
-                     (LPARAM)lpCharSetText);
+                     (LPARAM)szCharSetText);
     }
 
     for (i = 0; i < SIZEOF(codePages); i++)
@@ -47,7 +47,8 @@ FillCharacterSetComboList(HWND hwndCombo)
         if (GetCPInfoExW(codePages[i], 0, &cpInfo))
         {
             trimmedName = wcsstr(cpInfo.CodePageName, L"(");
-            if (!trimmedName) trimmedName = cpInfo.CodePageName;
+            if (!trimmedName) 
+                trimmedName = cpInfo.CodePageName;
 
             SendMessageW(hwndCombo,
                          CB_ADDSTRING,
@@ -56,30 +57,21 @@ FillCharacterSetComboList(HWND hwndCombo)
         }
     }
 
-    SendMessageW(hwndCombo,
-        CB_SETCURSEL,
-        0,
-        0);
+    SendMessageW(hwndCombo, CB_SETCURSEL, 0, 0);
 }
 
 static
 VOID
 FillGroupByComboList(HWND hwndCombo)
 {
-    WCHAR lpAllText[256];
+    WCHAR szAllText[256];
 
-    if (LoadStringW(hInstance, IDS_ALL, lpAllText, SIZEOF(lpAllText)))
+    if (LoadStringW(hInstance, IDS_ALL, szAllText, SIZEOF(szAllText)))
     {
-        SendMessageW(hwndCombo,
-            CB_ADDSTRING,
-            0,
-            (LPARAM)lpAllText);
+        SendMessageW(hwndCombo, CB_ADDSTRING, 0, (LPARAM)szAllText);
     }
 
-    SendMessageW(hwndCombo,
-        CB_SETCURSEL,
-        0,
-        0);
+    SendMessageW(hwndCombo, CB_SETCURSEL, 0, 0);
 }
 
 /* Font-enumeration callback */
