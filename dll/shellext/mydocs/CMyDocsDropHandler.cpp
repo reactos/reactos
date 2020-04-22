@@ -72,9 +72,9 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     }
 
     // "My Documents"
-    WCHAR szDir[MAX_PATH + 1];
-    SHGetSpecialFolderPathW(NULL, szDir, CSIDL_PERSONAL, FALSE);
-    szDir[lstrlenW(szDir) + 1] = 0;
+    WCHAR szzDir[MAX_PATH + 1];
+    SHGetSpecialFolderPathW(NULL, szzDir, CSIDL_PERSONAL, FALSE);
+    szzDir[lstrlenW(szzDir) + 1] = 0;
 
     HDROP hDrop = reinterpret_cast<HDROP>(stg.hGlobal);
     UINT cItems = ::DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
@@ -93,25 +93,27 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         }
 
         if (iItem > 0)
-            strSrcList += L"|";
+            strSrcList += L'|';
         strSrcList = szSrc;
     }
-    strSrcList += L"|";
-    strSrcList += L"|";
+    strSrcList += L"||";
 
-    for (INT i = 0, cch = strSrcList.GetLength(); i < cch; ++i)
+    INT cch = strSrcList.GetLength();
+    LPWSTR pszzSrcList = strSrcList.GetBuffer();
+    for (INT i = 0; i < cch; ++i)
     {
-        // because strSrcList[i] is constant, we have to do workaround...
-        if (strSrcList[i] == L'|')
-            memcpy(const_cast<WCHAR *>(&strSrcList[i]), L"\0", sizeof(WCHAR));
+        if (pszzSrcList[i] == L'|')
+            pszzSrcList[i] = L'\0';
     }
 
     SHFILEOPSTRUCTW fileop = { NULL };
     fileop.wFunc = FO_COPY;
-    fileop.pFrom = strSrcList;
-    fileop.pTo = szDir;
+    fileop.pFrom = pszzSrcList;
+    fileop.pTo = szzDir;
     fileop.fFlags = FOF_ALLOWUNDO | FOF_FILESONLY | FOF_MULTIDESTFILES | FOF_NOCONFIRMMKDIR;
     SHFileOperationW(&fileop);
+
+    strSrcList.ReleaseBuffer();
 
     DragLeave();
     return hr;
