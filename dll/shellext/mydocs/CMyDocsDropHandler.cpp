@@ -26,7 +26,7 @@ CMyDocsDropHandler::DragEnter(IDataObject *pDataObject, DWORD dwKeyState,
 {
     TRACE("(%p)\n", this);
 
-    *pdwEffect &= DROPEFFECT_COPY;
+    *pdwEffect &= DROPEFFECT_COPY; // Copy only
 
     return S_OK;
 }
@@ -36,7 +36,7 @@ CMyDocsDropHandler::DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p)\n", this);
 
-    *pdwEffect &= DROPEFFECT_COPY;
+    *pdwEffect &= DROPEFFECT_COPY; // Copy only
 
     return S_OK;
 }
@@ -61,6 +61,7 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         return E_POINTER;
     }
 
+    // Retrieve an HDROP
     STGMEDIUM stg;
     FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     HRESULT hr = pDataObject->GetData(&etc, &stg);
@@ -70,23 +71,25 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         DragLeave();
         return E_FAIL;
     }
+    HDROP hDrop = reinterpret_cast<HDROP>(stg.hGlobal);
 
-    // "My Documents"
+    // get the path of "My Documents"
     WCHAR szzDir[MAX_PATH + 1];
     SHGetSpecialFolderPathW(NULL, szzDir, CSIDL_PERSONAL, FALSE);
-    szzDir[lstrlenW(szzDir) + 1] = 0;
+    szzDir[lstrlenW(szzDir) + 1] = 0; // ends with double NULs
 
-    HDROP hDrop = reinterpret_cast<HDROP>(stg.hGlobal);
-    UINT cItems = ::DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
-
+    // for all source items
     CStringW strSrcList;
     WCHAR szSrc[MAX_PATH];
+    UINT cItems = ::DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
     for (UINT iItem = 0; iItem < cItems; ++iItem)
     {
+        // query source file path
         DragQueryFileW(hDrop, iItem, szSrc, MAX_PATH);
 
         if (!PathFileExistsW(szSrc))
         {
+            // source not found
             CStringW strText;
             strText.Format(IDS_NOSRCFILEFOUND, szSrc);
             MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
@@ -97,19 +100,23 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         }
 
         if (iItem > 0)
-            strSrcList += L'|';
+            strSrcList += L'|'; // separator is '|'
         strSrcList = szSrc;
     }
-    strSrcList += L"||";
+    strSrcList += L"||"; // double separators
 
-    INT cch = strSrcList.GetLength();
+    // lock the buffer
     LPWSTR pszzSrcList = strSrcList.GetBuffer();
+
+    // convert every separator to a NUL
+    INT cch = strSrcList.GetLength();
     for (INT i = 0; i < cch; ++i)
     {
         if (pszzSrcList[i] == L'|')
             pszzSrcList[i] = L'\0';
     }
 
+    // copy them
     SHFILEOPSTRUCTW fileop = { NULL };
     fileop.wFunc = FO_COPY;
     fileop.pFrom = pszzSrcList;
@@ -117,6 +124,7 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     fileop.fFlags = FOF_ALLOWUNDO | FOF_FILESONLY | FOF_MULTIDESTFILES | FOF_NOCONFIRMMKDIR;
     SHFileOperationW(&fileop);
 
+    // unlock buffer
     strSrcList.ReleaseBuffer();
 
     DragLeave();
