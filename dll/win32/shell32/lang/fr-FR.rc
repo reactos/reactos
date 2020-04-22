@@ -643,7 +643,7 @@ CAPTION "Créer une nouvelle extension"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Extension du fichier", -1, 10, 10, 85, 14
+    LTEXT "Extension du fichier :", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
     PUSHBUTTON "<< Avancé", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
     LTEXT "Type de fichier associé :", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
