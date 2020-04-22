@@ -3110,7 +3110,7 @@ TEMP_DIR="%USERPROFILE%\Lokale innstillinger\Midlertidig"
 [Strings.0015]
 EVENT_LABEL_0 = "Domyślny sygnał dźwiękowy"
 EVENT_LABEL_1 = "Błąd programu"
-EVENT_LABEL_2 = "Zamknięcie program"
+EVENT_LABEL_2 = "Zamknięcie programu"
 EVENT_LABEL_3 = "Alarm o krytycznym poziome energii baterii"
 EVENT_LABEL_4 = "Podłączenie urządzenia"
 EVENT_LABEL_5 = "Odłączenie urządzenia"
