@@ -6,6 +6,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 list(APPEND SOURCE
     EnumObjects.cpp
+    EnumParentDir.cpp
     IDataObject.cpp
     precomp.h
     resource.h)

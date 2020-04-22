@@ -21,12 +21,14 @@
 
 #include "resource.h"
 
-BOOL extract_resource(WCHAR* Filename, LPCWSTR ResourceName);
+BOOL extract_resource(WCHAR* Filename, LPCWSTR ResourceName, WCHAR* ParentFolder);
 #define InitializeShellFolder(Filename, pFolder)            InitializeShellFolder_(__FILE__, __LINE__, Filename, pFolder)
 bool InitializeShellFolder_(const char* file, int line, const WCHAR* Filename, CComPtr<IShellFolder>& spFolder);
 
 #define IsFormatAdvertised(pDataObj, cfFormat, tymed)   IsFormatAdvertised_(__FILE__, __LINE__, pDataObj, cfFormat, tymed)
 bool IsFormatAdvertised_(const char* file, int line, IDataObject* pDataObj, CLIPFORMAT cfFormat, TYMED tymed);
 
+#define ok_displayname(pFolder, pidl, Flags, Name)      ok_displayname_(__FILE__, __LINE__, pFolder, pidl, Flags, Name)
+void ok_displayname_(const char* file, int line, IShellFolder* pFolder, PCUITEMID_CHILD pidl, SHGDNF Flags, LPCWSTR Name);
 
 #endif /* _ZIPFLDR_APITEST_PRECOMP_H_ */

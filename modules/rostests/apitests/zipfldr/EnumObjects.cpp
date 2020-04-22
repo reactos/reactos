@@ -9,17 +9,19 @@
 
 static bool g_bOldZipfldr = false;
 
-#define ok_displayname(pFolder, pidl, Flags, Name)      ok_displayname_(__FILE__, __LINE__, pFolder, pidl, Flags, Name)
-static void ok_displayname_(const char* file, int line, IShellFolder* pFolder, PCUITEMID_CHILD pidl, SHGDNF Flags, LPCWSTR Name)
+void ok_displayname_(const char* file, int line, IShellFolder* pFolder, PCUITEMID_CHILD pidl, SHGDNF Flags, LPCWSTR Name)
 {
     STRRET NameRet;
     HRESULT hr;
-    ok_hr_(file, line, (hr = pFolder->GetDisplayNameOf(pidl, Flags, &NameRet)), S_OK);
+
+    hr = pFolder->GetDisplayNameOf(pidl, Flags, &NameRet);
+    ok_hr_(file, line, hr, S_OK);
     if (!SUCCEEDED(hr))
         return;
 
     WCHAR DisplayName[MAX_PATH];
-    ok_hr_(file, line, (hr = StrRetToBufW(&NameRet, pidl, DisplayName, ARRAYSIZE(DisplayName))), S_OK);
+    hr = StrRetToBufW(&NameRet, pidl, DisplayName, RTL_NUMBER_OF(DisplayName));
+    ok_hr_(file, line, hr, S_OK);
     if (!SUCCEEDED(hr))
         return;
 
@@ -61,8 +63,8 @@ static void test_EnumObjects_Files(const WCHAR* Filename, IShellFolder* pFolder)
         if (celtFetched != 1)
             break;
 
-        LPCWSTR ExpectedName = totalFetched < ARRAYSIZE(ExpectedFiles) ? ExpectedFiles[totalFetched].Name : L"<TOO MANY FILES>";
-        SFGAOF ExpectedAttributes = totalFetched < ARRAYSIZE(ExpectedFiles) ? ExpectedFiles[totalFetched].Attributes : 0xdeaddead;
+        LPCWSTR ExpectedName = totalFetched < RTL_NUMBER_OF(ExpectedFiles) ? ExpectedFiles[totalFetched].Name : L"<TOO MANY FILES>";
+        SFGAOF ExpectedAttributes = totalFetched < RTL_NUMBER_OF(ExpectedFiles) ? ExpectedFiles[totalFetched].Attributes : 0xdeaddead;
 
         totalFetched++;
 
@@ -117,7 +119,7 @@ static void test_EnumObjects_Files(const WCHAR* Filename, IShellFolder* pFolder)
         ReleaseStgMedium(&medium);
     } while (true);
 
-    ok_int(totalFetched, ARRAYSIZE(ExpectedFiles));
+    ok_int(totalFetched, RTL_NUMBER_OF(ExpectedFiles));
     ok_hr(hr, S_FALSE);
 }
 
@@ -163,9 +165,9 @@ static void test_EnumObjects_Folders(const WCHAR* Filename, IShellFolder* pFolde
         if (celtFetched != 1)
             break;
 
-        LPCWSTR ExpectedName = totalFetched < ARRAYSIZE(ExpectedFolders) ? ExpectedFolders[totalFetched].Name : L"<TOO MANY FILES>";
-        SFGAOF ExpectedAttributes = totalFetched < ARRAYSIZE(ExpectedFolders) ? ExpectedFolders[totalFetched].Attributes : 0xdeaddead;
-        LPCWSTR* ExtraFiles = totalFetched < ARRAYSIZE(ExpectedExtraFiles) ? ExpectedExtraFiles[totalFetched] : ExpectedExtraFiles[0];
+        LPCWSTR ExpectedName = totalFetched < RTL_NUMBER_OF(ExpectedFolders) ? ExpectedFolders[totalFetched].Name : L"<TOO MANY FILES>";
+        SFGAOF ExpectedAttributes = totalFetched < RTL_NUMBER_OF(ExpectedFolders) ? ExpectedFolders[totalFetched].Attributes : 0xdeaddead;
+        LPCWSTR* ExtraFiles = totalFetched < RTL_NUMBER_OF(ExpectedExtraFiles) ? ExpectedExtraFiles[totalFetched] : ExpectedExtraFiles[0];
 
         totalFetched++;
 
@@ -216,7 +218,7 @@ static void test_EnumObjects_Folders(const WCHAR* Filename, IShellFolder* pFolde
         ReleaseStgMedium(&medium);
     } while (true);
 
-    ok_int(totalFetched, ARRAYSIZE(ExpectedFolders));
+    ok_int(totalFetched, RTL_NUMBER_OF(ExpectedFolders));
     ok_hr(hr, S_FALSE);
 }
 
@@ -252,6 +254,9 @@ static void test_EnumObjects(const WCHAR* Filename)
 
 START_TEST(EnumObjects)
 {
+    skip("Code in zipfldr not implemented yet\n");
+    return;
+
     HRESULT hr = CoInitialize(NULL);
 
     ok_hr(hr, S_OK);
@@ -259,8 +264,9 @@ START_TEST(EnumObjects)
         return;
 
     WCHAR ZipTestFile[MAX_PATH];
-    if (!extract_resource(ZipTestFile, MAKEINTRESOURCEW(IDR_ZIP_TEST_ENUM)))
+    if (!extract_resource(ZipTestFile, MAKEINTRESOURCEW(IDR_ZIP_TEST_ENUM), NULL))
         return;
     test_EnumObjects(ZipTestFile);
     DeleteFileW(ZipTestFile);
+    CoUninitialize();
 }
