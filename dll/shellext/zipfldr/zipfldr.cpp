@@ -75,6 +75,13 @@ CreateSendToZip(LPCWSTR pszSendTo)
     return S_OK;
 }
 
+static HRESULT
+GetDefaultUserSendTo(LPWSTR pszPath)
+{
+    return SHGetFolderPathW(NULL, CSIDL_SENDTO, INVALID_HANDLE_VALUE,
+                            SHGFP_TYPE_DEFAULT, pszPath);
+}
+
 EXTERN_C
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
@@ -116,8 +123,9 @@ STDAPI DllRegisterServer()
         return hr;
 
     WCHAR szSendTo[MAX_PATH];
-    SHGetSpecialFolderPathW(NULL, szSendTo, CSIDL_SENDTO, TRUE);
-    CreateSendToZip(szSendTo);
+    hr = GetDefaultUserSendTo(szSendTo);
+    if (SUCCEEDED(hr))
+        CreateSendToZip(szSendTo);
 
     return S_OK;
 }

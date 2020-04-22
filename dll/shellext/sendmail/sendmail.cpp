@@ -46,6 +46,13 @@ CreateSendToDeskLink(LPCWSTR pszSendTo)
     return S_OK;
 }
 
+static HRESULT
+GetDefaultUserSendTo(LPWSTR pszPath)
+{
+    return SHGetFolderPathW(NULL, CSIDL_SENDTO, INVALID_HANDLE_VALUE,
+                            SHGFP_TYPE_DEFAULT, pszPath);
+}
+
 STDAPI DllCanUnloadNow(void)
 {
     if (g_ModuleRefCnt)
@@ -71,8 +78,10 @@ STDAPI DllRegisterServer(void)
         return hr;
 
     WCHAR szSendTo[MAX_PATH];
-    SHGetSpecialFolderPathW(NULL, szSendTo, CSIDL_SENDTO, TRUE);
-    CreateSendToDeskLink(szSendTo);
+    hr = GetDefaultUserSendTo(szSendTo);
+    if (SUCCEEDED(hr))
+        CreateSendToDeskLink(szSendTo);
+
     return S_OK;
 }
 
