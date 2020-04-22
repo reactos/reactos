@@ -95,12 +95,11 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     // for all source items
     CStringW strSrcList;
     WCHAR szSrc[MAX_PATH];
-    const BYTE *pb = reinterpret_cast<BYTE *>(pida);
-    PCIDLIST_ABSOLUTE pidlParent = reinterpret_cast<PCIDLIST_ABSOLUTE>(pb + pida->aoffset[0]);
+    PCIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pida);
     for (iItem = 0; iItem < cItems; ++iItem)
     {
         // query source pidl
-        PCITEMID_CHILD pidlChild = reinterpret_cast<PCITEMID_CHILD>(pb + pida->aoffset[iItem + 1]);
+        PCITEMID_CHILD pidlChild = HIDA_GetPIDLItem(pida, iItem);
         CComHeapPtr<ITEMIDLIST> pidl(ILCombine(pidlParent, pidlChild));
 
         // can get path?
