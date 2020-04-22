@@ -191,7 +191,7 @@ BEGIN
     IDS_APPS_COUNT          "アプリケーション数: %d; Selected: %d"
     IDS_WELCOME_TITLE       "ReactOS アプリケーション マネージャへようこそ!\n\n"
     IDS_WELCOME_TEXT        "左側からカテゴリを選択し、インストール又はアンインストールするアプリケーションを選んでください。\nReactOS ウェブ サイト: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED           "インストール済み"
     IDS_AVAILABLEFORINST    "インストール可能"
     IDS_UPDATES             "アップデート"

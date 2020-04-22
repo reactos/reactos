@@ -191,7 +191,7 @@ BEGIN
     IDS_APPS_COUNT "Numero applicazioni: %d; Selezionate: %d"
     IDS_WELCOME_TITLE "Benvenuto!\n\n"
     IDS_WELCOME_TEXT "Scegliere una categoria a sinistra, poi scegliere una applicazione da installare o disinstallare.\nReactOS Web Site: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Installato"
     IDS_AVAILABLEFORINST "Disponibile per l'installazione"
     IDS_UPDATES "Aggiornamenti"
