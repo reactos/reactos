@@ -8,6 +8,7 @@ This code is released under the MIT Licence see the Copyright file.
 
 To build on an Unixised setup:
    ./configure ; make ; make install
+   if the ./configure file does not exist, run ./autogen.sh instead.
 To build on Windows:
    see instructions on win32/Readme.txt
 

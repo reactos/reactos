@@ -148,7 +148,7 @@ xmlFreeEntity(xmlEntityPtr entity)
 /*
  * xmlCreateEntity:
  *
- * internal routine doing the entity node strutures allocations
+ * internal routine doing the entity node structures allocations
  */
 static xmlEntityPtr
 xmlCreateEntity(xmlDictPtr dict, const xmlChar *name, int type,
@@ -398,7 +398,7 @@ xmlAddDocEntity(xmlDocPtr doc, const xmlChar *name, int type,
  *
  * Create a new entity, this differs from xmlAddDocEntity() that if
  * the document is NULL or has no internal subset defined, then an
- * unlinked entity structure will be returned, it is then the responsability
+ * unlinked entity structure will be returned, it is then the responsibility
  * of the caller to link it to the document later or free it when not needed
  * anymore.
  *
@@ -548,7 +548,7 @@ xmlGetDocEntity(const xmlDoc *doc, const xmlChar *name) {
  * xmlEncodeEntitiesInternal:
  * @doc:  the document containing the string
  * @input:  A string to convert to XML.
- * @attr: are we handling an atrbute value
+ * @attr: are we handling an attribute value
  *
  * Do a global encoding of a string, replacing the predefined entities
  * and non ASCII values with their entities and CharRef counterparts.

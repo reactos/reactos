@@ -40,7 +40,7 @@ Used Version: 1.0 REV 5
 Website: http://www.gnu.org/software/adns/ | http://adns.jgaa.com
 
 Title: LibXML
-Used Version: 2.9.9
+Used Version: 2.9.10
 Website: http://xmlsoft.org | ftp://xmlsoft.org/libxml2/
 
 Title: Libxslt
@@ -84,7 +84,7 @@ Used Version: 4.1.0
 Website: http://www.simplesystems.org/libtiff/
 
 Title: mbed TLS
-Used Version: 2.7.14
+Used Version: 2.7.15
 Website: https://tls.mbed.org/
 
 Title: libpng

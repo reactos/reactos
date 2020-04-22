@@ -40,7 +40,7 @@
  * TODO:
  *
  * macro to flag unimplemented blocks
- * XML_CATALOG_PREFER user env to select between system/public prefered
+ * XML_CATALOG_PREFER user env to select between system/public preferred
  * option. C.f. Richard Tobin <richard@cogsci.ed.ac.uk>
  *> Just FYI, I am using an environment variable XML_CATALOG_PREFER with
  *> values "system" and "public".  I have made the default be "system" to
@@ -1512,8 +1512,8 @@ process_external_subset:
 	attr = elemDecl->attributes;
 	while (attr != NULL) {
 	    /*
-	     * Make sure that attributes redefinition occuring in the
-	     * internal subset are not overriden by definitions in the
+	     * Make sure that attributes redefinition occurring in the
+	     * internal subset are not overridden by definitions in the
 	     * external subset.
 	     */
 	    if (attr->defaultValue != NULL) {
@@ -1668,6 +1668,8 @@ xmlSAX2StartElement(void *ctx, const xmlChar *fullname, const xmlChar **atts)
     if (nodePush(ctxt, ret) < 0) {
         xmlUnlinkNode(ret);
         xmlFreeNode(ret);
+        if (prefix != NULL)
+            xmlFree(prefix);
         return;
     }
 
@@ -1734,8 +1736,8 @@ xmlSAX2StartElement(void *ctx, const xmlChar *fullname, const xmlChar **atts)
     }
 
     /*
-     * set the namespace node, making sure that if the default namspace
-     * is unbound on a parent we simply kee it NULL
+     * set the namespace node, making sure that if the default namespace
+     * is unbound on a parent we simply keep it NULL
      */
     if ((ns != NULL) && (ns->href != NULL) &&
 	((ns->href[0] != 0) || (ns->prefix != NULL)))
@@ -2010,7 +2012,7 @@ xmlSAX2AttributeNs(xmlParserCtxtPtr ctxt,
 	else
 	    ret->name = xmlStrdup(localname);
 
-        /* link at the end to preserv order, TODO speed up with a last */
+        /* link at the end to preserve order, TODO speed up with a last */
 	if (ctxt->node->properties == NULL) {
 	    ctxt->node->properties = ret;
 	} else {
@@ -2102,7 +2104,7 @@ xmlSAX2AttributeNs(xmlParserCtxtPtr ctxt,
 	    } else {
 	        /*
 		 * dup now contains a string of the flattened attribute
-		 * content with entities substitued. Check if we need to
+		 * content with entities substituted. Check if we need to
 		 * apply an extra layer of normalization.
 		 * It need to be done twice ... it's an extra burden related
 		 * to the ability to keep references in attributes
@@ -2135,7 +2137,7 @@ xmlSAX2AttributeNs(xmlParserCtxtPtr ctxt,
 	    }
 	} else {
 	    /*
-	     * if entities already have been substitued, then
+	     * if entities already have been substituted, then
 	     * the attribute as passed is already normalized
 	     */
 	    dup = xmlStrndup(value, valueend - value);
@@ -2398,7 +2400,7 @@ xmlSAX2StartElementNs(void *ctx,
     if (nb_attributes > 0) {
         for (j = 0,i = 0;i < nb_attributes;i++,j+=5) {
 	    /*
-	     * Handle the rare case of an undefined atribute prefix
+	     * Handle the rare case of an undefined attribute prefix
 	     */
 	    if ((attributes[j+1] != NULL) && (attributes[j+2] == NULL)) {
 		if (ctxt->dictNames) {
@@ -2584,7 +2586,7 @@ xmlSAX2Characters(void *ctx, const xmlChar *ch, int len)
 	     * The whole point of maintaining nodelen and nodemem,
 	     * xmlTextConcat is too costly, i.e. compute length,
 	     * reallocate a new buffer, move data, append ch. Here
-	     * We try to minimaze realloc() uses and avoid copying
+	     * We try to minimize realloc() uses and avoid copying
 	     * and recomputing length over and over.
 	     */
 	    if (lastChild->content == (xmlChar *)&(lastChild->properties)) {
