@@ -26,7 +26,7 @@ CMyDocsDropHandler::DragEnter(IDataObject *pDataObject, DWORD dwKeyState,
 {
     TRACE("(%p)\n", this);
 
-    *pdwEffect &= DROPEFFECT_LINK;
+    *pdwEffect &= DROPEFFECT_COPY;
 
     return S_OK;
 }
@@ -36,7 +36,7 @@ CMyDocsDropHandler::DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p)\n", this);
 
-    *pdwEffect &= DROPEFFECT_LINK;
+    *pdwEffect &= DROPEFFECT_COPY;
 
     return S_OK;
 }
