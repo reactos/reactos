@@ -3,12 +3,12 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_THEMES DIALOGEX 0, 0, 246, 210
-CAPTION "Themes"
+CAPTION "Thèmes"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Un thème est un fond d'écran et un ensemble de sons, icones et autres éléments vous permettant de personnaliser votre ordinateur en un clic.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Theme :", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "Thème :", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Enregistrer sous...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
     PUSHBUTTON "&Supprimer", IDC_THEMES_DELETE, 170, 70, 70, 14

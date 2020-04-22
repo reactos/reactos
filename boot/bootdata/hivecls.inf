@@ -849,7 +849,7 @@ MIDFILE="Séquence MIDI"
 CDAFILE="Piste de CD Audio"
 AVIFILE="Clip Vidéo"
 
-CSSFILE="Document de feuille de style en cascade"
+CSSFILE="Fichier CSS"
 SCFFILE="Commande de l'explorateur ReactOS"
 
 ;; For .reg files, right-click menu
