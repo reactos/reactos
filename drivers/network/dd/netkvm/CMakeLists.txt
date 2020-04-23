@@ -6,11 +6,11 @@ add_definitions(
    -DNDIS51_MINIPORT=1)
 
 list(APPEND SOURCE
-    common/ParaNdis-Common.c
-    common/ParaNdis-Oid.c
-    common/ParaNdis-VirtIO.c
-    common/ParaNdis-Debug.c
-    common/sw-offload.c
+    Common/ParaNdis-Common.c
+    Common/ParaNdis-Oid.c
+    Common/ParaNdis-VirtIO.c
+    Common/ParaNdis-Debug.c
+    Common/sw-offload.c
     virtio/VirtIOPCICommon.c
     virtio/VirtIOPCILegacy.c
     virtio/VirtIOPCIModern.c
