@@ -99,8 +99,16 @@
 /* for malloc(), free() */
 #include <stdlib.h>
 #include <stddef.h>     /* size_t */
+#ifndef __REACTOS__
 #include <ntifs.h>
 #include <ntddk.h>
+#endif // __REACTOS__
+
+#ifndef _USRDLL
+#ifdef __REACTOS__
+#include <ntifs.h>
+#include <ntddk.h>
+#endif // __REACTOS__
 
 #define XXH_ALLOC_TAG 0x32485858 // "XXH "
 
@@ -108,9 +116,31 @@ static void* XXH_malloc(size_t s) {
     return ExAllocatePoolWithTag(PagedPool, s, XXH_ALLOC_TAG);
 }
 
-static void  XXH_free  (void* p)  {
+static void XXH_free(void* p) {
     ExFreePool(p);
 }
+
+#else
+#ifndef __REACTOS__
+static void* XXH_malloc(size_t s) {
+    return malloc(s);
+}
+
+static void XXH_free(void* p) {
+    free(p);
+}
+#else
+#include <ndk/rtlfuncs.h>
+
+static void* XXH_malloc(size_t s) {
+    return RtlAllocateHeap(RtlGetProcessHeap(), 0, s);
+}
+
+static void XXH_free(void* p) {
+    RtlFreeHeap(RtlGetProcessHeap(), 0, p);
+}
+#endif // __REACTOS__
+#endif
 
 /* for memcpy() */
 #include <string.h>

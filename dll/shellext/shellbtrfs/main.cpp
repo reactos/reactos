@@ -327,7 +327,7 @@ static void register_clsid(const GUID clsid, const WCHAR* description) {
 
         write_reg_key(HKEY_CLASSES_ROOT, clsidkeyname, nullptr, description);
 
-        GetModuleFileNameW(module, dllpath, sizeof(dllpath));
+        GetModuleFileNameW(module, dllpath, sizeof(dllpath) / sizeof(WCHAR));
 
         write_reg_key(HKEY_CLASSES_ROOT, inproc, nullptr, dllpath);
 

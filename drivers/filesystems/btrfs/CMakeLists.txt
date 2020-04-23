@@ -5,6 +5,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers
 
 list(APPEND SOURCE
     balance.c
+    blake2b-ref.c
     boot.c
     btrfs.c
     cache.c
@@ -30,11 +31,13 @@ list(APPEND SOURCE
     scrub.c
     search.c
     security.c
+    sha256.c
     send.c
     treefuncs.c
     volume.c
     worker-thread.c
     write.c
+    xxhash.c
     zstd/entropy_common.c
     zstd/fse_compress.c
     zstd/hist.c
@@ -46,14 +49,21 @@ list(APPEND SOURCE
     zstd/error_private.c
     zstd/fse_decompress.c
     zstd/huf_compress.c
-    zstd/xxhash.c
     zstd/zstd_compress.c
     zstd/zstd_double_fast.c
     zstd/zstd_lazy.c
     zstd/zstd_opt.c
     btrfs_drv.h)
 
-add_library(btrfs MODULE ${SOURCE} btrfs.rc)
+if(ARCH STREQUAL "i386")
+    list(APPEND ASM_SOURCE crc32c-x86.S)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND ASM_SOURCE crc32c-amd64.S)
+endif()
+
+add_asm_files(btrfs_asm ${ASM_SOURCE})
+
+add_library(btrfs MODULE ${SOURCE} ${btrfs_asm} btrfs.rc)
 
 add_definitions(-D__KERNEL__)
 set_module_type(btrfs kernelmodedriver)

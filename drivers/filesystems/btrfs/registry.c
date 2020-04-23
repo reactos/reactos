@@ -101,7 +101,7 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
         Status = STATUS_SUCCESS;
         goto end;
     } else if (!NT_SUCCESS(Status)) {
-        ERR("ZwOpenKey returned %08x\n", Status);
+        ERR("ZwOpenKey returned %08lx\n", Status);
         goto end;
     }
 
@@ -201,7 +201,7 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
                 options->no_root_dir = *val;
             }
         } else if (Status != STATUS_NO_MORE_ENTRIES) {
-            ERR("ZwEnumerateValueKey returned %08x\n", Status);
+            ERR("ZwEnumerateValueKey returned %08lx\n", Status);
             goto end2;
         }
     } while (NT_SUCCESS(Status));
@@ -270,7 +270,7 @@ NTSTATUS registry_mark_volume_mounted(BTRFS_UUID* uuid) {
 
     Status = ZwCreateKey(&h, KEY_SET_VALUE, &oa, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("ZwCreateKey returned %08x\n", Status);
+        ERR("ZwCreateKey returned %08lx\n", Status);
         goto end;
     }
 
@@ -281,7 +281,7 @@ NTSTATUS registry_mark_volume_mounted(BTRFS_UUID* uuid) {
 
     Status = ZwSetValueKey(h, &mountedus, 0, REG_DWORD, &data, sizeof(DWORD));
     if (!NT_SUCCESS(Status)) {
-        ERR("ZwSetValueKey returned %08x\n", Status);
+        ERR("ZwSetValueKey returned %08lx\n", Status);
         goto end2;
     }
 
@@ -318,7 +318,7 @@ static NTSTATUS registry_mark_volume_unmounted_path(PUNICODE_STRING path) {
 
     Status = ZwOpenKey(&h, KEY_QUERY_VALUE | KEY_SET_VALUE | DELETE, &oa);
     if (!NT_SUCCESS(Status)) {
-        ERR("ZwOpenKey returned %08x\n", Status);
+        ERR("ZwOpenKey returned %08lx\n", Status);
         goto end;
     }
 
@@ -343,7 +343,7 @@ static NTSTATUS registry_mark_volume_unmounted_path(PUNICODE_STRING path) {
                 break;
             }
         } else if (Status != STATUS_NO_MORE_ENTRIES) {
-            ERR("ZwEnumerateValueKey returned %08x\n", Status);
+            ERR("ZwEnumerateValueKey returned %08lx\n", Status);
             goto end2;
         }
     } while (NT_SUCCESS(Status));
@@ -353,13 +353,13 @@ static NTSTATUS registry_mark_volume_unmounted_path(PUNICODE_STRING path) {
 
         Status = ZwSetValueKey(h, &mountedus, 0, REG_DWORD, &data, sizeof(DWORD));
         if (!NT_SUCCESS(Status)) {
-            ERR("ZwSetValueKey returned %08x\n", Status);
+            ERR("ZwSetValueKey returned %08lx\n", Status);
             goto end2;
         }
     } else {
         Status = ZwDeleteKey(h);
         if (!NT_SUCCESS(Status)) {
-            ERR("ZwDeleteKey returned %08x\n", Status);
+            ERR("ZwDeleteKey returned %08lx\n", Status);
             goto end2;
         }
     }
@@ -408,7 +408,7 @@ NTSTATUS registry_mark_volume_unmounted(BTRFS_UUID* uuid) {
 
     Status = registry_mark_volume_unmounted_path(&path);
     if (!NT_SUCCESS(Status)) {
-        ERR("registry_mark_volume_unmounted_path returned %08x\n", Status);
+        ERR("registry_mark_volume_unmounted_path returned %08lx\n", Status);
         goto end;
     }
 
@@ -466,7 +466,7 @@ static void reset_subkeys(HANDLE h, PUNICODE_STRING reg_path) {
         if (NT_SUCCESS(Status)) {
             key_name* kn;
 
-            TRACE("key: %.*S\n", kbi->NameLength / sizeof(WCHAR), kbi->Name);
+            TRACE("key: %.*S\n", (int)(kbi->NameLength / sizeof(WCHAR)), kbi->Name);
 
             if (is_uuid(kbi->NameLength, kbi->Name)) {
                 kn = ExAllocatePoolWithTag(PagedPool, sizeof(key_name), ALLOC_TAG);
@@ -489,7 +489,7 @@ static void reset_subkeys(HANDLE h, PUNICODE_STRING reg_path) {
                 InsertTailList(&key_names, &kn->list_entry);
             }
         } else if (Status != STATUS_NO_MORE_ENTRIES)
-            ERR("ZwEnumerateKey returned %08x\n", Status);
+            ERR("ZwEnumerateKey returned %08lx\n", Status);
     } while (NT_SUCCESS(Status));
 
     le = key_names.Flink;
@@ -511,7 +511,7 @@ static void reset_subkeys(HANDLE h, PUNICODE_STRING reg_path) {
 
         Status = registry_mark_volume_unmounted_path(&path);
         if (!NT_SUCCESS(Status))
-            WARN("registry_mark_volume_unmounted_path returned %08x\n", Status);
+            WARN("registry_mark_volume_unmounted_path returned %08lx\n", Status);
 
         ExFreePool(path.Buffer);
 
@@ -568,7 +568,7 @@ static void read_mappings(PUNICODE_STRING regpath) {
     Status = ZwCreateKey(&h, KEY_QUERY_VALUE, &oa, 0, NULL, REG_OPTION_NON_VOLATILE, &dispos);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("ZwCreateKey returned %08x\n", Status);
+        ERR("ZwCreateKey returned %08lx\n", Status);
         ExFreePool(path);
         return;
     }
@@ -596,7 +596,7 @@ static void read_mappings(PUNICODE_STRING regpath) {
 
                 RtlCopyMemory(&val, (uint8_t*)kvfi + kvfi->DataOffset, min(kvfi->DataLength, sizeof(uint32_t)));
 
-                TRACE("entry %u = %.*S = %u\n", i, kvfi->NameLength / sizeof(WCHAR), kvfi->Name, val);
+                TRACE("entry %lu = %.*S = %u\n", i, (int)(kvfi->NameLength / sizeof(WCHAR)), kvfi->Name, val);
 
                 add_user_mapping(kvfi->Name, kvfi->NameLength / sizeof(WCHAR), val);
             }
@@ -646,7 +646,7 @@ static void read_group_mappings(PUNICODE_STRING regpath) {
     Status = ZwCreateKey(&h, KEY_QUERY_VALUE, &oa, 0, NULL, REG_OPTION_NON_VOLATILE, &dispos);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("ZwCreateKey returned %08x\n", Status);
+        ERR("ZwCreateKey returned %08lx\n", Status);
         ExFreePool(path);
         return;
     }
@@ -675,7 +675,7 @@ static void read_group_mappings(PUNICODE_STRING regpath) {
 
                 RtlCopyMemory(&val, (uint8_t*)kvfi + kvfi->DataOffset, min(kvfi->DataLength, sizeof(uint32_t)));
 
-                TRACE("entry %u = %.*S = %u\n", i, kvfi->NameLength / sizeof(WCHAR), kvfi->Name, val);
+                TRACE("entry %lu = %.*S = %u\n", i, (int)(kvfi->NameLength / sizeof(WCHAR)), kvfi->Name, val);
 
                 add_group_mapping(kvfi->Name, kvfi->NameLength / sizeof(WCHAR), val);
             }
@@ -685,7 +685,8 @@ static void read_group_mappings(PUNICODE_STRING regpath) {
 
         ExFreePool(kvfi);
     } else if (dispos == REG_CREATED_NEW_KEY) {
-        WCHAR* builtin_users = L"S-1-5-32-545";
+        static const WCHAR builtin_users[] = L"S-1-5-32-545";
+
         UNICODE_STRING us2;
         DWORD val;
 
@@ -701,7 +702,7 @@ static void read_group_mappings(PUNICODE_STRING regpath) {
             val = 100;
             Status = ZwSetValueKey(h, &us2, 0, REG_DWORD, &val, sizeof(DWORD));
             if (!NT_SUCCESS(Status)) {
-                ERR("ZwSetValueKey returned %08x\n", Status);
+                ERR("ZwSetValueKey returned %08lx\n", Status);
                 ZwClose(h);
                 return;
             }
@@ -744,12 +745,12 @@ static void get_registry_value(HANDLE h, WCHAR* string, ULONG type, void* val, U
             } else {
                 Status = ZwDeleteValueKey(h, &us);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("ZwDeleteValueKey returned %08x\n", Status);
+                    ERR("ZwDeleteValueKey returned %08lx\n", Status);
                 }
 
                 Status = ZwSetValueKey(h, &us, 0, type, val, size);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("ZwSetValueKey returned %08x\n", Status);
+                    ERR("ZwSetValueKey returned %08lx\n", Status);
                 }
             }
         }
@@ -759,10 +760,10 @@ static void get_registry_value(HANDLE h, WCHAR* string, ULONG type, void* val, U
         Status = ZwSetValueKey(h, &us, 0, type, val, size);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("ZwSetValueKey returned %08x\n", Status);
+            ERR("ZwSetValueKey returned %08lx\n", Status);
         }
     } else {
-        ERR("ZwQueryValueKey returned %08x\n", Status);
+        ERR("ZwQueryValueKey returned %08lx\n", Status);
     }
 }
 
@@ -791,7 +792,7 @@ void read_registry(PUNICODE_STRING regpath, bool refresh) {
     Status = ZwCreateKey(&h, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &oa, 0, NULL, REG_OPTION_NON_VOLATILE, &dispos);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("ZwCreateKey returned %08x\n", Status);
+        ERR("ZwCreateKey returned %08lx\n", Status);
         return;
     }
 
@@ -861,18 +862,18 @@ void read_registry(PUNICODE_STRING regpath, bool refresh) {
                 if (log_device.Buffer[(log_device.Length / sizeof(WCHAR)) - 1] == 0)
                     log_device.Length -= sizeof(WCHAR);
             } else {
-                ERR("LogDevice was type %u, length %u\n", kvfi->Type, kvfi->DataLength);
+                ERR("LogDevice was type %lu, length %lu\n", kvfi->Type, kvfi->DataLength);
 
                 Status = ZwDeleteValueKey(h, &us);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("ZwDeleteValueKey returned %08x\n", Status);
+                    ERR("ZwDeleteValueKey returned %08lx\n", Status);
                 }
             }
         }
 
         ExFreePool(kvfi);
     } else if (Status != STATUS_OBJECT_NAME_NOT_FOUND) {
-        ERR("ZwQueryValueKey returned %08x\n", Status);
+        ERR("ZwQueryValueKey returned %08lx\n", Status);
     }
 
     ExAcquireResourceExclusiveLite(&log_lock, true);
@@ -893,7 +894,7 @@ void read_registry(PUNICODE_STRING regpath, bool refresh) {
         if (log_device.Length > 0 && debug_log_level > 0) {
             Status = IoGetDeviceObjectPointer(&log_device, FILE_WRITE_DATA, &comfo, &comdo);
             if (!NT_SUCCESS(Status))
-                DbgPrint("IoGetDeviceObjectPointer returned %08x\n", Status);
+                DbgPrint("IoGetDeviceObjectPointer returned %08lx\n", Status);
         }
     }
 
@@ -938,16 +939,16 @@ void read_registry(PUNICODE_STRING regpath, bool refresh) {
                 if (log_file.Buffer[(log_file.Length / sizeof(WCHAR)) - 1] == 0)
                     log_file.Length -= sizeof(WCHAR);
             } else {
-                ERR("LogFile was type %u, length %u\n", kvfi->Type, kvfi->DataLength);
+                ERR("LogFile was type %lu, length %lu\n", kvfi->Type, kvfi->DataLength);
 
                 Status = ZwDeleteValueKey(h, &us);
                 if (!NT_SUCCESS(Status))
-                    ERR("ZwDeleteValueKey returned %08x\n", Status);
+                    ERR("ZwDeleteValueKey returned %08lx\n", Status);
 
                 log_file.Length = 0;
             }
         } else {
-            ERR("ZwQueryValueKey returned %08\n", Status);
+            ERR("ZwQueryValueKey returned %08lx\n", Status);
             log_file.Length = 0;
         }
 
@@ -956,11 +957,11 @@ void read_registry(PUNICODE_STRING regpath, bool refresh) {
         Status = ZwSetValueKey(h, &us, 0, REG_SZ, (void*)def_log_file, sizeof(def_log_file));
 
         if (!NT_SUCCESS(Status))
-            ERR("ZwSetValueKey returned %08x\n", Status);
+            ERR("ZwSetValueKey returned %08lx\n", Status);
 
         log_file.Length = 0;
     } else {
-        ERR("ZwQueryValueKey returned %08x\n", Status);
+        ERR("ZwQueryValueKey returned %08lx\n", Status);
         log_file.Length = 0;
     }
 
@@ -994,7 +995,7 @@ void read_registry(PUNICODE_STRING regpath, bool refresh) {
             Status = ZwCreateFile(&log_handle, FILE_WRITE_DATA, &oa, &iosb, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
                                   FILE_OPEN_IF, FILE_NON_DIRECTORY_FILE | FILE_WRITE_THROUGH | FILE_SYNCHRONOUS_IO_ALERT, NULL, 0);
             if (!NT_SUCCESS(Status)) {
-                DbgPrint("ZwCreateFile returned %08x\n", Status);
+                DbgPrint("ZwCreateFile returned %08lx\n", Status);
                 log_handle = NULL;
             }
         }
@@ -1021,7 +1022,7 @@ static void __stdcall registry_work_item(PVOID Parameter) {
 
     Status = ZwNotifyChangeKey(regh, NULL, (PVOID)&wqi, (PVOID)DelayedWorkQueue, &iosb, REG_NOTIFY_CHANGE_LAST_SET, true, NULL, 0, true);
     if (!NT_SUCCESS(Status))
-        ERR("ZwNotifyChangeKey returned %08x\n", Status);
+        ERR("ZwNotifyChangeKey returned %08lx\n", Status);
 }
 
 void watch_registry(HANDLE regh) {
@@ -1032,5 +1033,5 @@ void watch_registry(HANDLE regh) {
 
     Status = ZwNotifyChangeKey(regh, NULL, (PVOID)&wqi, (PVOID)DelayedWorkQueue, &iosb, REG_NOTIFY_CHANGE_LAST_SET, true, NULL, 0, true);
     if (!NT_SUCCESS(Status))
-        ERR("ZwNotifyChangeKey returned %08x\n", Status);
+        ERR("ZwNotifyChangeKey returned %08lx\n", Status);
 }
