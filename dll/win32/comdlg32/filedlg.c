@@ -1916,7 +1916,7 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
   if (fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG)
   {
 #ifdef __REACTOS__
-	  WCHAR buf[24];
+      WCHAR buf[24];
 #else
       WCHAR buf[16];
 #endif
