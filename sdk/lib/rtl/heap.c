@@ -4,6 +4,7 @@
  * FILE:            lib/rtl/heap.c
  * PURPOSE:         RTL Heap backend allocator
  * PROGRAMMERS:     Copyright 2010 Aleksey Bragin
+ *                  Copyright 2020 Katayama Hirofumi MZ
  */
 
 /* Useful references:
@@ -3972,7 +3973,8 @@ RtlQueryHeapInformation(HANDLE HeapHandle,
     return STATUS_UNSUCCESSFUL;
 }
 
-NTSTATUS
+/* @implemented */
+ULONG
 NTAPI
 RtlMultipleAllocateHeap(IN PVOID HeapHandle,
                         IN ULONG Flags,
@@ -3980,19 +3982,80 @@ RtlMultipleAllocateHeap(IN PVOID HeapHandle,
                         IN ULONG Count,
                         OUT PVOID *Array)
 {
-    UNIMPLEMENTED;
-    return 0;
+    ULONG Index;
+    EXCEPTION_RECORD ExceptionRecord;
+
+    for (Index = 0; Index < Count; ++Index)
+    {
+        Array[Index] = RtlAllocateHeap(HeapHandle, Flags, Size);
+        if (Array[Index] == NULL)
+        {
+            /* ERROR_NOT_ENOUGH_MEMORY */
+            RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_NO_MEMORY);
+
+            if (Flags & HEAP_GENERATE_EXCEPTIONS)
+            {
+                ExceptionRecord.ExceptionCode = STATUS_NO_MEMORY;
+                ExceptionRecord.ExceptionRecord = NULL;
+                ExceptionRecord.NumberParameters = 0;
+                ExceptionRecord.ExceptionFlags = 0;
+
+                RtlRaiseException(&ExceptionRecord);
+            }
+            break;
+        }
+    }
+
+    return Index;
 }
 
-NTSTATUS
+/* @implemented */
+ULONG
 NTAPI
 RtlMultipleFreeHeap(IN PVOID HeapHandle,
                     IN ULONG Flags,
                     IN ULONG Count,
                     OUT PVOID *Array)
 {
-    UNIMPLEMENTED;
-    return 0;
+    ULONG Index;
+    EXCEPTION_RECORD ExceptionRecord;
+
+    Flags &= ~HEAP_GENERATE_EXCEPTIONS;
+
+    for (Index = 0; Index < Count; ++Index)
+    {
+        if (Array == NULL)
+        {
+            ExceptionRecord.ExceptionCode = STATUS_ACCESS_VIOLATION;
+            ExceptionRecord.ExceptionRecord = NULL;
+            ExceptionRecord.NumberParameters = 0;
+            ExceptionRecord.ExceptionFlags = 0;
+
+            RtlRaiseException(&ExceptionRecord);
+        }
+        if (Array[Index] == NULL)
+        {
+            continue;
+        }
+        _SEH2_TRY
+        {
+            if (!RtlFreeHeap(HeapHandle, Flags, Array[Index]))
+            {
+                /* ERROR_INVALID_PARAMETER */
+                RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
+                break;
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* ERROR_INVALID_PARAMETER */
+            RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
+            break;
+        }
+        _SEH2_END;
+    }
+
+    return Index;
 }
 
 /*
