@@ -1195,7 +1195,7 @@ static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam)
     /* change position and sizes of the controls */
     for( ctrl = GetWindow( hwnd, GW_CHILD); ctrl ; ctrl = GetWindow( ctrl, GW_HWNDNEXT))
     {
-        int ctrlid = GetDlgCtrlID( ctrl);
+        int ctrlid = GetDlgCtrlID( ctrl);		
         GetWindowRect( ctrl, &rc);
         MapWindowPoints( NULL, hwnd, (LPPOINT) &rc, 2);
         if( ctrl == fodInfos->DlgInfos.hwndGrip)
@@ -1915,7 +1915,11 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
   /* change Open to Save */
   if (fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG)
   {
+#ifdef __REACTOS__
+	  WCHAR buf[24];
+#else
       WCHAR buf[16];
+#endif
       LoadStringW(COMDLG32_hInstance, IDS_SAVE_BUTTON, buf, ARRAY_SIZE(buf));
       SetDlgItemTextW(hwnd, IDOK, buf);
       LoadStringW(COMDLG32_hInstance, IDS_SAVE_IN, buf, ARRAY_SIZE(buf));
