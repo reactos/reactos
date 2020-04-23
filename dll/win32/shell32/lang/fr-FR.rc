@@ -615,7 +615,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Changer l'icône"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Rechercher un icône pour ce fichier :", -1, 7, 7, 179, 10
+    LTEXT "Rechercher une icône pour ce fichier :", -1, 7, 7, 179, 10
     PUSHBUTTON "Parcourir...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
     LTEXT "Sélectionnez un icône dans la liste ci-dessous :", -1, 7, 36, 179, 10
@@ -810,7 +810,7 @@ BEGIN
     
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formater un disque logique"
-    IDS_FORMAT_WARNING "Attention: Le formatage effacera toutes les données présentes sur ce disque.\nPour formater ce disque, clickez sur OK. Pour quitter, clickez sur Annuler."
+    IDS_FORMAT_WARNING "Attention: Le formatage effacera toutes les données présentes sur ce disque.\nPour formater ce disque, cliquez sur OK. Pour quitter, cliquez sur Annuler."
     IDS_FORMAT_COMPLETE "Formatage terminé."
 
     /* Run File dialog */
@@ -975,7 +975,7 @@ BEGIN
     IDS_NEWEXT_ALREADY_ASSOC "L'extension %s est déjà associée avec le type de fichiers %s. Voulez vous désassocier %s avec %s et créer une nouvelle association de fichier pour celle-ci ?"
     IDS_NEWEXT_EXT_IN_USE "Extensions utilisées"
 
-    IDS_REMOVE_EXT "Si vous retirez une extension enregistrée, il ne sera plus possible d'ouvrir les fichiers avec cette extension en double clickant sur leur icône.\n\nÊtes-vous sûr de vouloir retirer cette extension ?"
+    IDS_REMOVE_EXT "Si vous retirez une extension enregistrée, il ne sera plus possible d'ouvrir les fichiers avec cette extension en double-cliquant sur leur icône.\n\nÊtes-vous sûr de vouloir retirer cette extension ?"
     IDS_SPECIFY_ACTION "Vous devez spécifier une action."
     IDS_INVALID_PROGRAM "Le programme spécifié ne peut être trouvé. Veuillez vérifier que le nom de fichier et le chemin sont corrects."
     IDS_REMOVE_ACTION "Voulez-vous vraiment retirer cette action ?"
