@@ -117,14 +117,14 @@ MultiHeapAllocTest()
     set_array(Array, NULL, NULL, NULL);
     TEST_ALLOC(2, -1, 0, HeapHandle, 0, 1, 2, Array);
     ok(Array[0] != NULL, "Array[0] is expected as non-NULL\n");
-    ok(Array[1] != NULL, "Array[1] is expected as NULL\n");
+    ok(Array[1] != NULL, "Array[1] is expected as non-NULL\n");
     ok(Array[2] == NULL, "Array[2] is expected as NULL\n");
 
     set_array(Array, NULL, NULL, NULL);
     TEST_ALLOC(3, -1, 0, HeapHandle, 0, 1, 3, Array);
     ok(Array[0] != NULL, "Array[0] is expected as non-NULL\n");
-    ok(Array[1] != NULL, "Array[1] is expected as NULL\n");
-    ok(Array[2] != NULL, "Array[2] is expected as NULL\n");
+    ok(Array[1] != NULL, "Array[1] is expected as non-NULL\n");
+    ok(Array[2] != NULL, "Array[2] is expected as non-NULL\n");
 
     // Array is non-NULL and contents are invalid pointers
     set_array(Array, (PVOID)1, (PVOID)2, (PVOID)3);
@@ -135,7 +135,7 @@ MultiHeapAllocTest()
 
     set_array(Array, (PVOID)1, (PVOID)2, (PVOID)3);
     TEST_ALLOC(1, -1, 0, HeapHandle, 0, 0, 1, Array);
-    ok(Array[0] != NULL, "Array[0] is expected as 1\n");
+    ok(Array[0] != NULL, "Array[0] is expected as non-NULL\n");
     ok(Array[1] == (PVOID)2, "Array[1] is expected as 2\n");
     ok(Array[2] == (PVOID)3, "Array[2] is expected as 3\n");
 
