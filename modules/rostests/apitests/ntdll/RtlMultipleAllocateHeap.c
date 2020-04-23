@@ -20,14 +20,17 @@
 // #define HEAP_CREATE_ENABLE_TRACING                          0x00020000
 // #define HEAP_CREATE_ENABLE_EXECUTE                          0x00040000
 
-#define THE_ALLOC RtlMultipleAllocateHeap
-#define THE_FREE RtlMultipleFreeHeap
+typedef ULONG (NTAPI *FN_RtlMultipleAllocateHeap)(IN PVOID, IN ULONG, IN SIZE_T, IN ULONG, OUT PVOID *);
+typedef ULONG (NTAPI *FN_RtlMultipleFreeHeap)(IN PVOID, IN ULONG, IN ULONG, OUT PVOID *);
+
+static FN_RtlMultipleAllocateHeap g_alloc = NULL;
+static FN_RtlMultipleFreeHeap g_free = NULL;
 
 #define TEST_ALLOC(ret_expected,err_expected,threw_excepted,HeapHandle,Flags,Size,Count,Array) \
     threw = 0; \
     SetLastError(-1); \
     _SEH2_TRY { \
-        ret = THE_ALLOC((HeapHandle), (Flags), (Size), (Count), (Array)); \
+        ret = g_alloc((HeapHandle), (Flags), (Size), (Count), (Array)); \
         err = GetLastError(); \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { \
         threw = _SEH2_GetExceptionCode(); \
@@ -41,7 +44,7 @@
     threw = 0; \
     SetLastError(-1); \
     _SEH2_TRY { \
-        ret = THE_ALLOC((HeapHandle), (Flags), (Size), (Count), (Array)); \
+        ret = g_alloc((HeapHandle), (Flags), (Size), (Count), (Array)); \
         err = GetLastError(); \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { \
         threw = _SEH2_GetExceptionCode(); \
@@ -54,7 +57,7 @@
     threw = 0; \
     SetLastError(-1); \
     _SEH2_TRY { \
-        ret = THE_FREE((HeapHandle), (Flags), (Count), (Array)); \
+        ret = g_free((HeapHandle), (Flags), (Count), (Array)); \
         err = GetLastError(); \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { \
         threw = _SEH2_GetExceptionCode(); \
@@ -208,76 +211,83 @@ MultiHeapFreeTest()
 
     // Array is non-NULL and contents are 1 valid pointer and 2 NULLs
     set_array(Array, NULL, NULL, NULL);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(0, -1, 0, HeapHandle, 0, 0, Array);
 
     set_array(Array, NULL, NULL, NULL);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(1, -1, 0, HeapHandle, 0, 1, Array);
 
     set_array(Array, NULL, NULL, NULL);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(2, -1, 0, HeapHandle, 0, 2, Array);
 
     set_array(Array, NULL, NULL, NULL);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(3, -1, 0, HeapHandle, 0, 3, Array);
 
     // Array is non-NULL and contents are 1 valid pointer and 2 invalids
     set_array(Array, NULL, (PVOID)2, (PVOID)3);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(0, -1, 0, HeapHandle, 0, 0, Array);
 
     set_array(Array, NULL, (PVOID)2, (PVOID)3);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(1, -1, 0, HeapHandle, 0, 1, Array);
 
     set_array(Array, NULL, (PVOID)2, (PVOID)3);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(1, ERROR_INVALID_PARAMETER, 0, HeapHandle, 0, 2, Array);
 
     set_array(Array, NULL, (PVOID)2, (PVOID)3);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(1, ERROR_INVALID_PARAMETER, 0, HeapHandle, 0, 3, Array);
 
     // Array is non-NULL and contents are 1 valid pointer and 2 invalids (generate exceptions)
     set_array(Array, NULL, (PVOID)2, (PVOID)3);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(0, -1, 0, HeapHandle, HEAP_GENERATE_EXCEPTIONS, 0, Array);
 
     set_array(Array, NULL, (PVOID)2, (PVOID)3);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(1, -1, 0, HeapHandle, HEAP_GENERATE_EXCEPTIONS, 1, Array);
 
     set_array(Array, NULL, (PVOID)2, (PVOID)3);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(1, ERROR_INVALID_PARAMETER, 0, HeapHandle, HEAP_GENERATE_EXCEPTIONS, 2, Array);
 
     set_array(Array, NULL, (PVOID)2, (PVOID)3);
-    ret = THE_ALLOC(HeapHandle, 0, 1, 1, Array);
+    ret = g_alloc(HeapHandle, 0, 1, 1, Array);
     INT_EXPECTED(ret, 1);
     TEST_FREE(1, ERROR_INVALID_PARAMETER, 0, HeapHandle, HEAP_GENERATE_EXCEPTIONS, 3, Array);
 
     // Array is non-NULL and contents are 3 valid pointers
     set_array(Array, NULL, NULL, NULL);
-    ret = THE_ALLOC(HeapHandle, 0, 3, 3, Array);
+    ret = g_alloc(HeapHandle, 0, 3, 3, Array);
     INT_EXPECTED(ret, 3);
     TEST_FREE(3, -1, 0, HeapHandle, 0, 3, Array);
 }
 
 START_TEST(RtlMultipleAllocateHeap)
 {
+    HINSTANCE ntdll = LoadLibraryA("ntdll");
+
+    g_alloc = (FN_RtlMultipleAllocateHeap)GetProcAddress(ntdll, "RtlMultipleAllocateHeap");
+    g_free = (FN_RtlMultipleFreeHeap)GetProcAddress(ntdll, "RtlMultipleFreeHeap");
+
     MultiHeapAllocTest();
     MultiHeapFreeTest();
+
+    FreeLibrary(ntdll);
 }
