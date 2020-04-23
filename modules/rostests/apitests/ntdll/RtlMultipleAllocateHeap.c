@@ -8,18 +8,6 @@
 #include <apitest.h>
 #include <windows.h>
 
-// #define HEAP_NO_SERIALIZE                                   0x00000001
-// #define HEAP_GROWABLE                                       0x00000002
-// #define HEAP_GENERATE_EXCEPTIONS                            0x00000004
-// #define HEAP_ZERO_MEMORY                                    0x00000008
-// #define HEAP_REALLOC_IN_PLACE_ONLY                          0x00000010
-// #define HEAP_TAIL_CHECKING_ENABLED                          0x00000020
-// #define HEAP_FREE_CHECKING_ENABLED                          0x00000040
-// #define HEAP_DISABLE_COALESCE_ON_FREE                       0x00000080
-// #define HEAP_CREATE_ALIGN_16                                0x00010000
-// #define HEAP_CREATE_ENABLE_TRACING                          0x00020000
-// #define HEAP_CREATE_ENABLE_EXECUTE                          0x00040000
-
 typedef ULONG (NTAPI *FN_RtlMultipleAllocateHeap)(IN PVOID, IN ULONG, IN SIZE_T, IN ULONG, OUT PVOID *);
 typedef ULONG (NTAPI *FN_RtlMultipleFreeHeap)(IN PVOID, IN ULONG, IN ULONG, OUT PVOID *);
 
