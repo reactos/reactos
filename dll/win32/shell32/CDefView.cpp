@@ -842,10 +842,11 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
         m_ListView.GetItem(&lvItem);
 
         SHFree(reinterpret_cast<LPVOID>(lvItem.lParam));
-        lvItem.mask = LVIF_PARAM|LVIF_IMAGE;
+        lvItem.mask = LVIF_PARAM | LVIF_IMAGE | LVIF_TEXT;
         lvItem.iItem = nItem;
         lvItem.iSubItem = 0;
         lvItem.lParam = reinterpret_cast<LPARAM>(ILClone(pidlNew));    /* set the item's data */
+        lvItem.pszText = LPSTR_TEXTCALLBACKW;
         lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidlNew, 0);
         m_ListView.SetItem(&lvItem);
         m_ListView.Update(nItem);
