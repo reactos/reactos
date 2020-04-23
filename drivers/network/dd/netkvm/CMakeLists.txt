@@ -1,5 +1,5 @@
 
-include_directories(BEFORE common virtio)
+include_directories(BEFORE Common virtio)
 
 add_definitions(
    -DNDIS_MINIPORT_DRIVER
