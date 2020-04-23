@@ -5,8 +5,7 @@
  * PROGRAMMER:      Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <apitest.h>
-#include <windows.h>
+#include "precomp.h"
 
 typedef ULONG (NTAPI *FN_RtlMultipleAllocateHeap)(IN PVOID, IN ULONG, IN SIZE_T, IN ULONG, OUT PVOID *);
 typedef ULONG (NTAPI *FN_RtlMultipleFreeHeap)(IN PVOID, IN ULONG, IN ULONG, OUT PVOID *);
