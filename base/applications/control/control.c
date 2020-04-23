@@ -57,18 +57,12 @@ OpenShellFolder(LPWSTR lpFolderCLSID)
 static INT
 RunControlPanel(LPCWSTR lpCmd)
 {
-    /*
-     * Old method:
-     *
     WCHAR szParameters[MAX_PATH];
-    wcscpy(szParameters, L"shell32.dll,Control_RunDLL ");
-    wcscat(szParameters, lpCmd);
-    return RUNDLL(szParameters);
-     */
+    StringCchCopyW(szParameters, ARRAYSIZE(szParameters), L"shell32.dll,Control_RunDLL ");
+    if (FAILED(StringCchCatW(szParameters, ARRAYSIZE(szParameters), lpCmd)))
+        return 0;
 
-    /* New method: */
-    Control_RunDLLW(GetDesktopWindow(), 0, lpCmd, SW_SHOW);
-    return 1;
+    return RUNDLL(szParameters);
 }
 
 INT
