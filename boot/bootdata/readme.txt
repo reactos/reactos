@@ -65,7 +65,7 @@ ReactOS - amongst other topics. Contributors to the project are always welcome.
 7. Frequently Asked Questions
 -----------------------------
 
-Some of your questions may be answered in: https://www.reactos.org/joining/faqs
+Some of your questions may be answered in: https://reactos.org/faq/
 In addition, the ReactOS forum: https://reactos.org/forum/ may contain
 complementary, yet non-official, information.
 
