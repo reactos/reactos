@@ -10,7 +10,7 @@ BEGIN
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "Versi", IDC_ROSVERSION, 10, 137, 116, 9
     LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 146, 110, 9
-    LTEXT "System Uptime:", IDC_STATIC, 4, 158, 86, 9
+    LTEXT "Waktu hidup sistem:", IDC_STATIC, 4, 158, 86, 9
     LTEXT "", IDC_UPTIME, 10, 170, 116, 9
     LTEXT "Mesin:", IDC_STATIC, 124, 116, 34, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
@@ -25,204 +25,204 @@ END
 
 IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Hardware"
+CAPTION "Perangkat Keras"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Manajer Device", IDC_STATIC, 6, 7, 244, 61
+    GROUPBOX "Manajer Perangkat", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT "Manajer Device mendaftar seluruh hardware device yang terinstalasi pada komputer anda. Gunakan Manajer Device untuk mengubah properti atas setiap device.", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON "Manajer &Device...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
-    GROUPBOX "Bimbingan Hardware", IDC_STATIC, 6, 79, 244, 61
+    LTEXT "Manajer perangkat mendaftar seluruh perangkat keras yang terpasang pada komputer anda. Gunakan Manajer Perangkat untuk mengubah properti setiap perangkat.", IDC_STATIC, 42, 18, 204, 24
+    PUSHBUTTON "Manajer &Perangkat...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
+    GROUPBOX "Bimbingan Perangkat Keras", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT "Bimbingan hardware membantu anda menginstalasi, deinstalasi, reparasi, unplug, mengeluarkan, dan mengkonfigurasi hardware anda.", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON "Bimbingan &Hardware...", IDC_HARDWARE_WIZARD, 154, 120, 90, 14
-    GROUPBOX "Profil Hardware", IDC_STATIC, 6, 149, 244, 61
+    LTEXT "Bimbingan Perangkat Keras membantu anda memasang, mencopot, memperbaiki, mencabut, mengeluarkan, dan mengonfigurasi perangkat anda.", IDC_STATIC, 42, 90, 204, 24
+    PUSHBUTTON "Bimbingan &Perangkat...", IDC_HARDWARE_WIZARD, 154, 120, 90, 14
+    GROUPBOX "Profil Perangkat Keras", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT "Profil hardware menyediakan cara bagi anda untuk menyiapkan dan menyimpan konfigurasi hardware yang berbeda.", IDC_STATIC, 42, 160, 204, 24
+    LTEXT "Profil perangkat keras menyediakan cara bagi anda untuk menyiapkan dan menyimpan konfigurasi perangkat keras yang berbeda.", IDC_STATIC, 42, 160, 204, 24
     PUSHBUTTON "Profil Hard&ware...", IDC_HARDWARE_PROFILE, 154, 190, 90, 14
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Lanjutan"
+CAPTION "Tingkat Lanjut"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Administrator privileges are required for most of these settings.", IDC_STATIC, 12, 5, 236, 8
-    GROUPBOX "Performance", IDC_STATIC, 6, 18, 244, 50
-    LTEXT "Performance options control how applications use memory, which affects the speed of your computer.", IDC_STATIC, 16, 29, 210, 17
-    PUSHBUTTON "Settings", IDC_PERFOR, 194, 48, 50, 15
-    GROUPBOX "User Profiles", IDC_STATIC, 6, 75, 244, 48
-    LTEXT "Desktop settings related to your logon", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON "Settings", IDC_USERPROFILE, 194, 103, 50, 15
-    GROUPBOX "Startup and Recovery", IDC_STATIC, 6, 131, 244, 52
-    LTEXT "Startup and recovery options tell your computer how to start and what to do if an error causes your computer to stop.", IDC_STATIC, 16, 144, 210, 19
-    PUSHBUTTON "Settings", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
-    PUSHBUTTON "Environment Variables", IDC_ENVVAR, 88, 192, 80, 15
-    PUSHBUTTON "Error Reporting", IDC_ERRORREPORT, 170, 192, 80, 15
+    LTEXT "Hak istimewa administrator diperlukan pada sebagian besar pengaturan ini.", IDC_STATIC, 12, 5, 236, 8
+    GROUPBOX "Performa", IDC_STATIC, 6, 18, 244, 50
+    LTEXT "Pilihan performa mengatur bagaimana aplikasi menggunakan memori, yang mempengaruhi kecepatan komputer anda.", IDC_STATIC, 16, 29, 210, 17
+    PUSHBUTTON "Pengaturan", IDC_PERFOR, 194, 48, 50, 15
+    GROUPBOX "Profil Pengguna", IDC_STATIC, 6, 75, 244, 48
+    LTEXT "Pengaturan desktop terhubung dengan cara masuk anda", IDC_STATIC, 16, 88, 210, 20
+    PUSHBUTTON "Pengaturan", IDC_USERPROFILE, 194, 103, 50, 15
+    GROUPBOX "Pemulaian dan perbaikan", IDC_STATIC, 6, 131, 244, 52
+    LTEXT "Pilihan Pemulaian dan perbaikan memberitahu komputer anda bagaimana cara memulai dan apa yang harus dilakukan jika suatu kesalahan menyebabkan komputer anda berhenti.", IDC_STATIC, 16, 144, 210, 19
+    PUSHBUTTON "Pengaturan", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "Pengaturan Sistem", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Variabel Lingkungan", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "Pelaporan Kesalahan", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "System Settings"
+CAPTION "Pengaturan Sistem"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Version Info", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.", IDC_STATIC, 15, 15, 183, 41
-    CONTROL "Report as Workstation", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
+    GROUPBOX "Informasi Versi", IDC_STATIC, 6, 3, 210, 73
+    LTEXT "ReactOS dibangun sebagai OS server dan melaporkannya. Cek kotak ini untuk mengubah ini hanya pada aplikasi.", IDC_STATIC, 15, 15, 183, 41
+    CONTROL "Laporkan sebagai Workstation", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
 
 IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Hardware Profiles"
+CAPTION "Profil Perangkat Keras"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT "You can set up hardware profiles for different hardware configurations. At startup, you can choose the profile you want to use.", IDC_STATIC, 46, 11, 188, 25
-    LTEXT "Available hardware profiles:", IDC_STATIC, 8, 41, 120, 8
+    LTEXT "Anda dapat mengatur profil perangkat keras untuk berbagai konfigurasinya. Saat memulai, Anda dapat memilih profil yang ingin digunakan.", IDC_STATIC, 46, 11, 188, 25
+    LTEXT "Profil perangkat keras yang tersedia:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON | WS_DISABLED
     PUSHBUTTON "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON | WS_DISABLED
-    PUSHBUTTON "&Properties", IDC_HRDPROFPROP, 8, 106, 50, 14, WS_DISABLED
-    PUSHBUTTON "&Copy", IDC_HRDPROFCOPY, 63, 106, 50, 14, WS_DISABLED
-    PUSHBUTTON "&Rename", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
-    PUSHBUTTON "&Delete", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
-    GROUPBOX "Hardware profiles selection", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "When ReactOS starts:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "&Wait until I select a hardware profile", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
-    AUTORADIOBUTTON "&Select the first profile listed if I don't select a profile in", IDC_HRDPROFSELECT, 14, 173, 190, 8
-    LTEXT "seconds", IDC_STATIC, 65, 187, 35, 8
+    PUSHBUTTON "&Properti", IDC_HRDPROFPROP, 8, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Salin", IDC_HRDPROFCOPY, 63, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Ubah Nama", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Hapus", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
+    GROUPBOX "Pemilihan profilperangkat keras", IDC_STATIC, 7, 130, 240, 75
+    LTEXT "Ketika memulai ReactOS:", IDC_STATIC, 14, 142, 210, 8
+    AUTORADIOBUTTON "&Tunggu sampai saya memilih profilperangkat keras", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
+    AUTORADIOBUTTON "Pilih p&rofil pertama yang terdaftar jika saya tidak memilihnya dalam waktu", IDC_HRDPROFSELECT, 14, 173, 190, 8
+    LTEXT "detik", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
     DEFPUSHBUTTON "OK", IDOK, 143, 213, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 197, 213, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 197, 213, 50, 14
 END
 
 IDD_HARDWAREPROFILE DIALOGEX 0, 0, 212, 188
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "General"
+CAPTION "Umum"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HARDPROF, IDC_STATIC, 10, 10, 18, 20, SS_ICON
     LTEXT "", IDC_HWPPROP_PROFILE, 48, 16, 150, 8
     LTEXT "Dock ID:", IDC_STATIC, 10, 42, 43, 8
     LTEXT "", IDC_HWPPROP_DOCKID, 64, 42, 135, 8
-    LTEXT "Serial Number:", IDC_STATIC, 10, 55, 52, 8
+    LTEXT "Nomor Seri:", IDC_STATIC, 10, 55, 52, 8
     LTEXT "", IDC_HWPPROP_SERIAL, 64, 55, 135, 8
     GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
-    AUTOCHECKBOX "This is a &portable computer", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "The docking &state is unknown", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "The computer is &docked", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
-    AUTORADIOBUTTON "The computer is &undocked", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
-    GROUPBOX "Hardware profiles selection", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "Always &include this profile as an option when ReactOS starts", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "Ini adalah Komputer &Portabel", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Status penaruhan tidak diketahui", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Komputer ini &ditaruh", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
+    AUTORADIOBUTTON "Komputer ini tidak ditar&uh", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
+    GROUPBOX "Pemilihan profil perangkat keras", IDC_STATIC, 10, 138, 192, 42
+    AUTOCHECKBOX "Selalu &sertakan profil ini sebagai opsi saat ReactOS dimulai", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Copy Profile"
+CAPTION "Salin Profil"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "From:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "Dari:", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
-    LTEXT "To:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT "Ke:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_COPYPROFILETO, 30, 30, 160, 12
     DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 199, 30, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 199, 30, 50, 14
 END
 
 IDD_RENAMEPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Rename Profile"
+CAPTION "Ubah Nama"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "From:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "Dari:", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-    LTEXT "To:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT "Ke:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_RENPROFEDITTO, 30, 30, 160, 12
     DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 196, 24, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 196, 24, 50, 14
 END
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "User Profiles"
+CAPTION "Profil Pengguna"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "User profiles contain desktop settings and other information related to your login. A different profile can be created on each computer you use, or you can select a roaming profile that is the same on every computer you use.", IDC_STATIC, 40, 11, 204, 35
-    LTEXT "Profiles stored on this computer:", IDC_STATIC, 16, 51, 204, 9
+    LTEXT "Profil pengguna berisi pengaturan desktop dan informasi lain yang terkait dengan cara masuk Anda. Profil yang berbeda dapat dibuat di setiap komputer yang anda gunakan, atau anda dapat memilih profil roaming yang sama di setiap komputer yang anda gunakan.", IDC_STATIC, 40, 11, 204, 35
+    LTEXT "Profi tersimpan di komputer ini:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Change Type", IDC_USERPROFILE_CHANGE, 90, 155, 50, 15
-    PUSHBUTTON "Delete", IDC_USERPROFILE_DELETE, 145, 155, 50, 15
-    PUSHBUTTON "Copy To", IDC_USERPROFILE_COPY, 200, 155, 50, 15
-    CONTROL "To create new user accounts, open <A>User Accounts</A> in Control Panel.",
+    PUSHBUTTON "Ubah Jenis", IDC_USERPROFILE_CHANGE, 90, 155, 50, 15
+    PUSHBUTTON "Hapus", IDC_USERPROFILE_DELETE, 145, 155, 50, 15
+    PUSHBUTTON "Salin Ke", IDC_USERPROFILE_COPY, 200, 155, 50, 15
+    CONTROL "Untuk membuat akun pengguna baru, buka <A>Akun Pengguna</A> pada Panel Kontrol.",
             IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 204, 18
     DEFPUSHBUTTON "OK", IDOK, 134, 198, 54, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 196, 198, 54, 15
+    PUSHBUTTON "Batal", IDCANCEL, 196, 198, 54, 15
 END
 
 IDD_USERPROFILE_TYPE DIALOGEX 6, 18, 225, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Change Profile Type"
+CAPTION "Ubah Jenis Profil"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
-    AUTORADIOBUTTON "&Roaming profile", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
-    AUTORADIOBUTTON "&Local profile", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
+    AUTORADIOBUTTON "Profil &Roaming", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
+    AUTORADIOBUTTON "Profil &Lokal", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
     DEFPUSHBUTTON "OK", IDOK, 60, 82, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 122, 82, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 122, 82, 50, 14
 END
 
 IDD_USERPROFILE_COPY DIALOGEX 6, 18, 261, 133
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Copy To"
+CAPTION "Salin Ke"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Copy &profile to", -1, 8, 9, 185, 52
+    GROUPBOX "Salin &profil ke", -1, 8, 9, 185, 52
     EDITTEXT IDC_USERPROFILE_COPY_PATH, 15, 23, 167, 12, ES_AUTOHSCROLL
-    PUSHBUTTON "&Browse", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
-    GROUPBOX "Permitted to use", -1, 8, 77, 185, 48
+    PUSHBUTTON "&Cari", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
+    GROUPBOX "Diizinkan untuk digunakan", -1, 8, 77, 185, 48
     LTEXT "", IDC_USERPROFILE_COPY_USER, 15, 91, 167, 8
-    PUSHBUTTON "&Change", IDC_USERPROFILE_COPY_CHANGE, 15, 105, 50, 14
+    PUSHBUTTON "&Ubah", IDC_USERPROFILE_COPY_CHANGE, 15, 105, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 204, 13, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 204, 30, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 204, 30, 50, 14
 END
 
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Startup and Recovery"
+CAPTION "Pemulaian dan Perbaikan"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "System startup", IDC_STATIC, 7, 12, 238, 95
-    LTEXT "Default operating &system:", IDC_STATIC, 14, 26, 100, 8
+    GROUPBOX "Memulai sistem", IDC_STATIC, 7, 12, 238, 95
+    LTEXT "&Sistem operasi asal:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
-    AUTOCHECKBOX "&Time to display list of operating systems:", IDC_STRECLIST, 14, 56, 150, 8
+    AUTOCHECKBOX "Wak&tu menampilkan daftar sistem operasi:", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT "seconds", IDC_STATIC, 215, 56, 25, 8
-    AUTOCHECKBOX "Time to &display recovery options when needed:", IDC_STRRECREC, 14, 70, 163, 8
+    LTEXT "detik", IDC_STATIC, 215, 56, 25, 8
+    AUTOCHECKBOX "Waktu &menampilkan pilihan perbaikan ketika dibutuhkan:", IDC_STRRECREC, 14, 70, 163, 8
     EDITTEXT IDC_STRRECRECEDIT, 179, 68, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT "seconds", IDC_STATIC, 215, 70, 25, 8
-    LTEXT "To edit the startup options file manually, click Edit.", IDC_STATIC, 14, 89, 187, 8
+    LTEXT "detik", IDC_STATIC, 215, 70, 25, 8
+    LTEXT "Untuk mengedit berkas pilihan pemulaian secara manual, klik Edit.", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON "&Edit", IDC_STRRECEDIT, 188, 87, 50, 14
-    GROUPBOX "System failure", IDC_STATIC, 7, 111, 238, 140
-    AUTOCHECKBOX "&Write an event to the system log", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
-    AUTOCHECKBOX "Se&nd an administrative alert", IDC_STRRECSENDALERT, 14, 138, 148, 10
-    AUTOCHECKBOX "Automatically &restart", IDC_STRRECRESTART, 14, 152, 145, 10
-    GROUPBOX "Write debugging information", IDC_STATIC, 12, 167, 227, 76
+    GROUPBOX "Kegagalan sistem", IDC_STATIC, 7, 111, 238, 140
+    AUTOCHECKBOX "Tulis kejadian pada log sistem", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
+    AUTOCHECKBOX "Kirim peri&ngatan administratif", IDC_STRRECSENDALERT, 14, 138, 148, 10
+    AUTOCHECKBOX "Mul&ai ulang otomatis", IDC_STRRECRESTART, 14, 152, 145, 10
+    GROUPBOX "Tulis informasi debug", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
-    LTEXT "Dump &file:", IDC_STATIC, 17, 202, 150, 8
+    LTEXT "Tim&bun berkas:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Overwrite any existing file", IDC_STRRECOVERWRITE, 17, 228, 125, 10
+    AUTOCHECKBOX "Tim&pa berkas jika tersedia", IDC_STRRECOVERWRITE, 17, 228, 125, 10
     DEFPUSHBUTTON "OK", IDOK, 141, 258, 50, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 195, 258, 50, 15
+    PUSHBUTTON "Batal", IDCANCEL, 195, 258, 50, 15
 END
 
 IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
@@ -231,9 +231,9 @@ CAPTION "Memori Virtual"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Drive  [Label Volume]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT "Ukuran File Paging (MB)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT "Ukuran halaman berkas(MB)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
-    GROUPBOX "Ukuran file paging untuk drive yang dipilih", IDC_DRIVEGROUP, 10, 70, 204, 104
+    GROUPBOX "Ukuran halaman berkas untuk drive yang dipilih", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Drive:", IDC_STATIC, 20, 80, 20, 8
     LTEXT "", IDC_DRIVE, 88, 81, 100, 9
     LTEXT "Ruang tersedia:", IDC_STATIC, 20, 92, 56, 9
@@ -242,11 +242,11 @@ BEGIN
     LTEXT "Ukuran &Maksimum (MB):", -1, 22, 131, 64, 9
     AUTORADIOBUTTON "Ukuran &Kustom", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
     AUTORADIOBUTTON "Ukuran &Diatur sistem", IDC_SYSMANSIZE, 20, 145, 88, 9
-    AUTORADIOBUTTON "&Tanpa file paging", IDC_NOPAGEFILE, 20, 158, 78,9
+    AUTORADIOBUTTON "&Tanpa halaman berkas", IDC_NOPAGEFILE, 20, 158, 78,9
     EDITTEXT IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Set", IDC_SET, 158, 154, 50, 15
-    GROUPBOX "Total ukuran file paging untuk semua drive", IDC_TOTALGROUP, 10, 177, 204, 46
+    PUSHBUTTON "Setel", IDC_SET, 158, 154, 50, 15
+    GROUPBOX "Total ukuran halaman berkas untuk semua drive", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "Minimum dibolehkan:", IDC_STATIC, 18, 188, 58, 9
     LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT "Direkomendasikan:", IDC_STATIC, 18, 199, 52, 9
@@ -303,45 +303,45 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Sistem"
-    IDS_CPLSYSTEMDESCRIPTION "Lihat informasi tentang komputer anda dan ubah berbagai setelan sistem dan hardware."
+    IDS_CPLSYSTEMDESCRIPTION "Lihat informasi tentang komputer anda dan ubah berbagai setelan sistem dan perangkat keras."
     IDS_MEGABYTE "MB RAM"
     IDS_GIGABYTE "GB RAM"
     IDS_TERABYTE "TB RAM"
     IDS_PETABYTE "PB RAM"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
-    IDS_UPTIME_FORMAT "%u Days, %02u:%02u:%02u"
+    IDS_UPTIME_FORMAT "%u Hari, %02u:%02u:%02u"
     IDS_VARIABLE "Variabel"
     IDS_VALUE "Nilai"
-    IDS_NO_DUMP "(None)"
+    IDS_NO_DUMP "(Tidak ada)"
     IDS_MINI_DUMP "Minidump (64KB)"
-    IDS_KERNEL_DUMP "Kernel dump"
-    IDS_FULL_DUMP "Complete dump"
-    IDS_USERPROFILE_NAME "Name"
-    IDS_USERPROFILE_SIZE "Size"
-    IDS_USERPROFILE_TYPE "Type"
+    IDS_KERNEL_DUMP "Timbunan Kernel"
+    IDS_FULL_DUMP "Timbunan lengkap"
+    IDS_USERPROFILE_NAME "Nama"
+    IDS_USERPROFILE_SIZE "Ukuran"
+    IDS_USERPROFILE_TYPE "Jenis"
     IDS_USERPROFILE_STATUS "Status"
-    IDS_USERPROFILE_MODIFIED "Modified"
-    IDS_USERPROFILE_LOCAL "Local"
+    IDS_USERPROFILE_MODIFIED "Diubah"
+    IDS_USERPROFILE_LOCAL "Lokal"
     IDS_USERPROFILE_ROAMING "Roaming"
-    IDS_USERPROFILE_MANDATORY "Mandatory"
-    IDS_USERPROFILE_CONFIRM_DELETE "Are you sure you want to delete %s's profile?"
-    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirm Delete"
-    IDS_USERPROFILE_ACCOUNT_UNKNOWN "Account Unknown"
-    IDS_USERPROFILE_ACCOUNT_DELETED "Account Deleted"
-    IDS_USERPROFILE_TYPE_TEXT "When %s logs onto this computer, should the operating system use the roaming profile or just the locally cached copy of the roaming profile."
-    IDS_MESSAGEBOXTITLE "System control panel applet"
-    IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
-    IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
-    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 16 MB and must not exceed the available space on the selected drive."
-    IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size, must not be larger than 4095 MB and must not exceed the available space on the selected drive."
-    IDS_PAGEFILE_NONE "None"
-    IDS_PAGEFILE_SYSTEM "System Managed"
-    IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."
-    IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini\n\nRelease Engineers\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributors\nWine Team\n\n"
-    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirm Profile Delete"
-    IDS_HWPROFILE_CONFIRM_DELETE "Are you sure you want to delete the hardware profile ""%s""?"
-    IDS_HWPROFILE_ALREADY_IN_USE "The profile name is already in use."
-    IDS_HWPROFILE_PROFILE "Profile"
-    IDS_HWPROFILE_WARNING "Warning"
+    IDS_USERPROFILE_MANDATORY "Wajib"
+    IDS_USERPROFILE_CONFIRM_DELETE "Anda yakin ingin menghapus profil %s?"
+    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Konfirmasi penghapusan"
+    IDS_USERPROFILE_ACCOUNT_UNKNOWN "Akun Tidak Diketahui"
+    IDS_USERPROFILE_ACCOUNT_DELETED "Akun Dihapus"
+    IDS_USERPROFILE_TYPE_TEXT "Ketika %s masuk ke komputer ini, seharusnya sistem operasi menggunakan profil roaming atau hanya salinan profil roaming yang di-cache secara lokal."
+    IDS_MESSAGEBOXTITLE "Applet panel kontrol sistem"
+    IDS_WARNINITIALSIZE "Masukkan nilai numerik untuk ukuran awal halaman berkas."
+    IDS_WARNMAXIMUMSIZE "Masukkan nilai numerik untuk ukuran maksimum halaman berkas."
+    IDS_WARNINITIALRANGE "Ukuran awal halaman berkas tidak boleh lebih kecil dari 16 MB dan tidak boleh melebihi ruang yang tersedia pada drive yang dipilih."
+    IDS_WARNMAXIMUMRANGE "Ukuran maksimum halaman berkas tidak boleh lebih kecil dari ukuran awal, maupun lebih besar dari 4095 MB dan tidak boleh melebihi ruang yang tersedia pada drive yang dipilih."
+    IDS_PAGEFILE_NONE "Tidak ada"
+    IDS_PAGEFILE_SYSTEM "Diatur Sistem"
+    IDS_INFOREBOOT "Anda harus memulai ulang komputer untuk menerapkan perubahan."
+    IDS_DEVS "\nReactOS Team\n\nKoordinator Proyek\n\nAleksey Bragin\n\nTim Pengembangan\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini\n\nRelease Engineers\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nTim Media\n\nMindflyer\nWierd_W\n\nselanjutnya terima kasih untuk\n\nsemua Kontributor\nTim Wine\n\n"
+    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Konfirmasi Penghapusan Profil"
+    IDS_HWPROFILE_CONFIRM_DELETE "Anda yakin ingin menghapus profil perangkat keras ""%s""?"
+    IDS_HWPROFILE_ALREADY_IN_USE "Nama profil telah digunakan."
+    IDS_HWPROFILE_PROFILE "Profil"
+    IDS_HWPROFILE_WARNING "Peringatan"
 END
