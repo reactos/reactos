@@ -618,7 +618,7 @@ BEGIN
     LTEXT "Rechercher une icône pour ce fichier :", -1, 7, 7, 179, 10
     PUSHBUTTON "Parcourir...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
-    LTEXT "Sélectionnez un icône dans la liste ci-dessous :", -1, 7, 36, 179, 10
+    LTEXT "Sélectionnez une icône dans la liste ci-dessous :", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
     PUSHBUTTON "Annuler", IDCANCEL, 135, 179, 50, 14
@@ -952,7 +952,7 @@ BEGIN
     IDS_ADVANCED_NET_CRAWLER "Rechercher automatiquement les dossiers et imprimantes partagés"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Afficher les informations concernant la taille des fichiers dans les info-bulles"
     IDS_ADVANCED_FRIENDLY_TREE "Afficher une vue simple des dossiers dans la liste des dossiers de l'Explorateur ReactOS"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Affichier le contenu des dossiers système"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Afficher le contenu des dossiers système"
     IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Afficher le chemin complet dans la barre d'adresse"
     IDS_ADVANCED_SHOW_FULL_PATH "Afficher le chemin complet dans la barre de titre"
     IDS_ADVANCED_DISABLE_THUMB_CACHE "Ne pas mettre les miniatures en cache"
@@ -965,7 +965,7 @@ BEGIN
     IDS_ADVANCED_CLASSIC_VIEW_STATE "Mémoriser les paramètres d'affichage de chaque dossier"
     IDS_ADVANCED_PERSIST_BROWSERS "Restaurer les fenêtres de dossiers ouvertes lors de la prochaine ouverture de session"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Afficher le Panneau de configuration dans le Poste de travail"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Afficher les dossiers et les fichiers NTFS cryptés ou compressés en couleur"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Afficher les dossiers et les fichiers NTFS chiffrés ou compressés en couleur"
     IDS_ADVANCED_SHOW_INFO_TIP "Afficher les info-bulles pour les fichiers et les dossiers"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< Avancé"
@@ -982,6 +982,6 @@ BEGIN
     IDS_ACTION_EXISTS "L'action '%s' est déjà enregistrée pour ce type de fichier. Veuillez saisir un nom différent et esayer de nouveau."
     IDS_EXE_FILTER "Programmes\0*.exe\0Tous les fchiers\0*.*\0"
     IDS_EDITING_ACTION "Editer l'action : "
-    IDS_NO_ICONS "Le fichier '%s' ne contient pas d'icônes.\n\nVeuillez choisir un icône dans la liste ou sélectionner un fichier différent."
+    IDS_NO_ICONS "Le fichier '%s' ne contient pas d'icônes.\n\nVeuillez choisir une icône dans la liste ou sélectionner un fichier différent."
     IDS_FILE_NOT_FOUND "Le fichier '%s' ne peut être trouvé."
 END
