@@ -286,8 +286,15 @@ START_TEST(RtlMultipleAllocateHeap)
     g_alloc = (FN_RtlMultipleAllocateHeap)GetProcAddress(ntdll, "RtlMultipleAllocateHeap");
     g_free = (FN_RtlMultipleFreeHeap)GetProcAddress(ntdll, "RtlMultipleFreeHeap");
 
-    MultiHeapAllocTest();
-    MultiHeapFreeTest();
+    if (!g_alloc || !g_free)
+    {
+        skip("RtlMultipleAllocateHeap or RtlMultipleFreeHeap not found\n");
+    }
+    else
+    {
+        MultiHeapAllocTest();
+        MultiHeapFreeTest();
+    }
 
     FreeLibrary(ntdll);
 }
