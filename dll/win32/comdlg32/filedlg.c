@@ -1195,7 +1195,7 @@ static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam)
     /* change position and sizes of the controls */
     for( ctrl = GetWindow( hwnd, GW_CHILD); ctrl ; ctrl = GetWindow( ctrl, GW_HWNDNEXT))
     {
-        int ctrlid = GetDlgCtrlID( ctrl);		
+        int ctrlid = GetDlgCtrlID( ctrl);
         GetWindowRect( ctrl, &rc);
         MapWindowPoints( NULL, hwnd, (LPPOINT) &rc, 2);
         if( ctrl == fodInfos->DlgInfos.hwndGrip)
