@@ -1,10 +1,9 @@
 /*
- * PROJECT:         ReactOS API tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test for RtlMultipleAllocateHeap and RtlMultipleFreeHeap
- * PROGRAMMER:      Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * PROJECT:     ReactOS API Tests
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Test for RtlMultipleAllocateHeap and RtlMultipleFreeHeap
+ * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
-
 #include "precomp.h"
 
 typedef ULONG (NTAPI *FN_RtlMultipleAllocateHeap)(IN PVOID, IN ULONG, IN SIZE_T, IN ULONG, OUT PVOID *);
