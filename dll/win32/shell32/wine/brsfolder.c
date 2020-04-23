@@ -630,7 +630,7 @@ static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
 
 #ifdef __REACTOS__
 static void
-BrsFolder_Treeview_DeleteBang(browse_info *info, HTREEITEM selected_item)
+BrsFolder_Treeview_DeleteFolder(browse_info *info, HTREEITEM selected_item)
 {
     TV_ITEMW item;
     TV_ITEMDATA *item_data;
@@ -670,7 +670,7 @@ static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydo
     case VK_DELETE:
         {
 #ifdef __REACTOS__
-            BrsFolder_Treeview_DeleteBang(info, selected_item);
+            BrsFolder_Treeview_DeleteFolder(info, selected_item);
 #else
             const ITEMIDLIST *item_id;
             ISFHelper *psfhlp;
