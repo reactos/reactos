@@ -4019,8 +4019,6 @@ RtlMultipleFreeHeap(IN PVOID HeapHandle,
 {
     ULONG Index;
 
-    Flags &= ~HEAP_GENERATE_EXCEPTIONS; /* ignore the generate-exception flag */
-
     for (Index = 0; Index < Count; ++Index)
     {
         if (Array[Index] == NULL)
