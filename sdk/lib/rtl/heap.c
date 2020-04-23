@@ -4018,25 +4018,14 @@ RtlMultipleFreeHeap(IN PVOID HeapHandle,
                     OUT PVOID *Array)
 {
     ULONG Index;
-    EXCEPTION_RECORD ExceptionRecord;
 
-    Flags &= ~HEAP_GENERATE_EXCEPTIONS;
+    Flags &= ~HEAP_GENERATE_EXCEPTIONS; /* ignore the generate-exception flag */
 
     for (Index = 0; Index < Count; ++Index)
     {
-        if (Array == NULL)
-        {
-            ExceptionRecord.ExceptionCode = STATUS_ACCESS_VIOLATION;
-            ExceptionRecord.ExceptionRecord = NULL;
-            ExceptionRecord.NumberParameters = 0;
-            ExceptionRecord.ExceptionFlags = 0;
-
-            RtlRaiseException(&ExceptionRecord);
-        }
         if (Array[Index] == NULL)
-        {
             continue;
-        }
+
         _SEH2_TRY
         {
             if (!RtlFreeHeap(HeapHandle, Flags, Array[Index]))
