@@ -603,6 +603,9 @@ static LRESULT BrsFolder_Treeview_Rename(browse_info *info, NMTVDISPINFOW *pnmtv
     if(!MoveFileW(old_path, new_path))
         return 0;
 
+#ifdef __REACTOS__
+    SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_PATHW, old_path, new_path);
+#endif
     SHFree(item_data->lpifq);
     SHFree(item_data->lpi);
     item_data->lpifq = SHSimpleIDListFromPathW(new_path);
@@ -625,6 +628,30 @@ static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
     return S_OK;
 }
 
+#ifdef __REACTOS__
+static void
+BrsFolder_Treeview_DeleteBang(browse_info *info, HTREEITEM selected_item)
+{
+    TV_ITEMW item;
+    TV_ITEMDATA *item_data;
+    SHFILEOPSTRUCTW fileop = { info->hwndTreeView };
+    WCHAR szzFrom[MAX_PATH + 1];
+
+    item.mask  = TVIF_PARAM;
+    item.mask  = TVIF_HANDLE | TVIF_PARAM;
+    item.hItem = selected_item;
+    SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item);
+    item_data = (TV_ITEMDATA *)item.lParam;
+
+    fileop.wFunc = FO_DELETE;
+    SHGetPathFromIDListW(item_data->lpifq, szzFrom);
+    szzFrom[lstrlenW(szzFrom) + 1] = 0;
+
+    fileop.pFrom = szzFrom;
+    fileop.fFlags = FOF_ALLOWUNDO;
+    SHFileOperationW(&fileop);
+}
+#endif
 static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydown)
 {
     HTREEITEM selected_item;
@@ -643,14 +670,7 @@ static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydo
     case VK_DELETE:
         {
 #ifdef __REACTOS__
-            /*********************************************************
-            FIXME: Add a proper alternative implementation for ReactOS
-
-            NOTES: Wine makes use of the ISFHelper interface, which we
-            don't have in ReactOS.
-            It's defined in dlls/shell32/shellfolder.h and implemented
-            in dlls/shell32/shfldr_fs.c on Wine's side.
-            *********************************************************/
+            BrsFolder_Treeview_DeleteBang(info, selected_item);
 #else
             const ITEMIDLIST *item_id;
             ISFHelper *psfhlp;
@@ -887,6 +907,9 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     if(!CreateDirectoryW(name, NULL))
         goto cleanup;
 
+#ifdef __REACTOS__
+    SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW, name, NULL);
+#endif
     /* Update parent of newly created directory */
     parent = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_CARET, 0);
     if(!parent)
@@ -1104,16 +1127,23 @@ static HTREEITEM BrsFolder_FindItemByPidl(browse_info *info, LPCITEMIDLIST pidl,
 {
     TV_ITEMW item;
     TV_ITEMDATA *item_data;
+#ifndef __REACTOS__
     HRESULT hr;
+#endif
 
     item.mask = TVIF_HANDLE | TVIF_PARAM;
     item.hItem = hItem;
     SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item);
     item_data = (TV_ITEMDATA *)item.lParam;
 
+#ifdef __REACTOS__
+    if (ILIsEqual(item_data->lpifq, pidl))
+        return hItem;
+#else
     hr = IShellFolder_CompareIDs(item_data->lpsfParent, 0, item_data->lpifq, pidl);
     if(SUCCEEDED(hr) && !HRESULT_CODE(hr))
         return hItem;
+#endif
 
     hItem = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_CHILD, (LPARAM)hItem);
 
