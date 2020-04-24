@@ -2953,8 +2953,14 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
             /* The default margins are only non zero for TrueType or Vector fonts */
             if (tm.tmPitchAndFamily & ( TMPF_VECTOR | TMPF_TRUETYPE )) {
                 if (!is_cjk(tm.tmCharSet)) {
+#ifdef __REACTOS__
+                    /* ReactOS CORE-1091 */
+                    default_left_margin = width / 4;
+                    default_right_margin = width / 4;
+#else
                     default_left_margin = width / 2;
                     default_right_margin = width / 2;
+#endif
 
                     GetClientRect(es->hwndSelf, &rc);
                     if (rc.right - rc.left < (width / 2 + width) * 2 &&
