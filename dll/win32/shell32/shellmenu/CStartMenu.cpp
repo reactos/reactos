@@ -47,6 +47,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(CStartMenu);
 #define IDM_NETWORKCONNECTIONS      557
 #define IDM_DISCONNECT              5000
 #define IDM_SECURITY                5001
+#define IDM_MYDOCUMENTS             516
+#define IDM_MYPICTURES              518
 
 /*
  * TODO:
@@ -61,7 +63,6 @@ class CShellMenuCallback :
     public IShellMenuCallback
 {
 private:
-
     HWND m_hwndTray;
     CComPtr<IShellMenu> m_pShellMenu;
     CComPtr<IBandSite> m_pBandSite;
@@ -70,6 +71,7 @@ private:
     CComPtr<IShellFolder> m_psfPrograms;
 
     LPITEMIDLIST m_pidlPrograms;
+    HMENU m_hRecentMenu;
 
     HRESULT OnInitMenu()
     {
@@ -95,6 +97,8 @@ private:
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
+        m_hRecentMenu = ::LoadMenuW(shell32_hInstance, MAKEINTRESOURCEW(IDM_RECENTMENUHEAD));
+
         return hr;
     }
 
@@ -115,6 +119,8 @@ private:
         case IDM_RUN: iconIndex = -328; break;
         case IDM_SHUTDOWN: iconIndex = -329; break;
         case IDM_SETTINGS: iconIndex = -330; break;
+        case IDM_MYDOCUMENTS: iconIndex = -235; break;
+        case IDM_MYPICTURES: iconIndex = -236; break;
 
         case IDM_CONTROLPANEL: iconIndex = -22; break;
         case IDM_NETWORKCONNECTIONS: iconIndex = -257; break;
@@ -168,6 +174,8 @@ private:
         case IDM_PROGRAMS:  csidl = CSIDL_PROGRAMS; break;
         case IDM_FAVORITES: csidl = CSIDL_FAVORITES; break;
         case IDM_DOCUMENTS: csidl = CSIDL_RECENT; break;
+        case IDM_MYDOCUMENTS: csidl = CSIDL_MYDOCUMENTS; break;
+        case IDM_MYPICTURES: csidl = CSIDL_MYPICTURES; break;
         }
 
         if (csidl)
@@ -180,6 +188,31 @@ private:
             }
             else
             {
+                if (csidl == CSIDL_RECENT)
+                {
+                    HMENU hMenu = ::CreateMenu();
+
+                    WCHAR szText[128];
+                    HMENU hSubMenu = ::GetSubMenu(m_hRecentMenu, 0);
+                    UINT i, nCount = GetMenuItemCount(hSubMenu);
+                    for (i = 0; i < nCount; ++i)
+                    {
+                        UINT nID = GetMenuItemID(hSubMenu, i);
+                        if (GetMenuString(hSubMenu, i, szText, _countof(szText), MF_BYPOSITION))
+                        {
+                            AppendMenuW(hMenu, MF_STRING | MF_ENABLED, nID, szText);
+                        }
+                        else
+                        {
+                            AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+                        }
+                    }
+
+                    hr = pShellMenu->SetMenu(hMenu, NULL, SMSET_TOP);
+                    if (FAILED_UNEXPECTEDLY(hr))
+                        return hr;
+                }
+
                 LPITEMIDLIST pidlStartMenu;
                 IShellFolder *psfDestop;
                 hr = SHGetFolderLocation(NULL, csidl, 0, 0, &pidlStartMenu);
@@ -198,7 +231,6 @@ private:
             hr = pShellMenu->SetShellFolder(psfStartMenu, NULL, NULL, 0);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
-
         }
         else
         {
@@ -240,6 +272,8 @@ private:
 
     HRESULT OnExec(LPSMDATA psmd)
     {
+        WCHAR szPath[MAX_PATH];
+
         // HACK: Because our ShellExecute can't handle CLSID components in paths, we can't launch the paths using the "open" verb.
         // FIXME: Change this back to using the path as the filename and the "open" verb, once ShellExecute can handle CLSID path components.
 
@@ -249,6 +283,16 @@ private:
             ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, SW_SHOWNORMAL);
         else if (psmd->uId == IDM_PRINTERSANDFAXES)
             ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}", NULL, SW_SHOWNORMAL);
+        else if (psmd->uId == IDM_MYDOCUMENTS)
+        {
+            SHGetSpecialFolderPathW(NULL, szPath, CSIDL_PERSONAL, FALSE);
+            ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWNORMAL);
+        }
+        else if (psmd->uId == IDM_MYPICTURES)
+        {
+            SHGetSpecialFolderPathW(NULL, szPath, CSIDL_MYPICTURES, FALSE);
+            ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWNORMAL);
+        }
         else
             PostMessageW(m_hwndTray, WM_COMMAND, psmd->uId, 0);
 

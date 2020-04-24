@@ -794,8 +794,7 @@
 #define IDM_COPYHERE 0x7
 #define IDM_MOVEHERE 0x8
 #define IDM_LINKHERE 0xB
-
-
+#define IDM_RECENTMENUHEAD 401
 
 /* Registrar scripts (RGS) */
 #define IDR_ADMINFOLDERSHORTCUT 128
