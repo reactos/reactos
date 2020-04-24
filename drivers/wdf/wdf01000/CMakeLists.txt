@@ -19,17 +19,24 @@ list(APPEND SOURCE
     object/handleapi.cpp
     object/fxtagtracker.cpp
     object/fxobjectstatemachine.cpp
+    object/fxuserobjectapi.cpp
     support/fxregkey.cpp
     support/fxstringapi.cpp
     support/fxstring.cpp
     support/stringutil.cpp
     support/fxtransactionedlist.cpp
     support/fxcollection.cpp
+    support/fxcollectionapi.cpp
     support/fxdeviceinterface.cpp
+    support/fxdeviceinterfaceapi.cpp
     support/fxspinlockapi.cpp
     support/fxspinlock.cpp
     support/fxresourcecollection.cpp
     support/fxqueryinterface.cpp
+    support/fxresourceapi.cpp
+    support/fxregistryapi.cpp
+    support/fxwaitlockapi.cpp
+    support/fxqueryinterfaceapi.cpp
     core/fxbugcheckcallback.cpp
     core/tracing.cpp
     core/fxdriver.cpp
@@ -57,6 +64,14 @@ list(APPEND SOURCE
     core/fxtimer.cpp
     core/fxmemoryobject.cpp
     core/fxchildlistapi.cpp
+    core/fxdevicecontrolapi.cpp
+    core/fxdpcapi.cpp
+    core/fxdevicefdoapi.cpp
+    core/fxfileobjectapi.cpp
+    core/fxmemorybufferreallocatedapi.cpp
+    core/fxlookasidelistapi.cpp
+    core/fxdevicepdoapi.cpp
+    core/fxworkitemapi.cpp
     primitives/mxgeneral.cpp
     irphandlers/pnp/fxpkgpnp.cpp
     irphandlers/pnp/pnpstatemachine.cpp
@@ -75,6 +90,7 @@ list(APPEND SOURCE
     irphandlers/pnp/notpowerpolicyownerstatemachine.cpp
     irphandlers/pnp/interruptobject.cpp
     irphandlers/pnp/support.cpp
+    irphandlers/pnp/fxinterruptapi.cpp
     irphandlers/default/fxdefaultirphandler.cpp
     irphandlers/general/fxpkggeneral.cpp
     irphandlers/io/fxpkgio.cpp
@@ -84,7 +100,11 @@ list(APPEND SOURCE
     irphandlers/wmi/fxwmiprovider.cpp
     targets/fxiotarget.cpp
     targets/fxiotargetself.cpp
+    targets/general/fxiotargetapi.cpp
     dma/fxdmaenabler.cpp
+    dma/fxcommonbufferapi.cpp
+    dma/fxdmaenablerapi.cpp
+    dma/fxdmatransactionapi.cpp
 )
 
 add_library(wdf01000 MODULE ${SOURCE})

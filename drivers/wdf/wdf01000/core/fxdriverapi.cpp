@@ -461,5 +461,165 @@ WDFEXPORT(WdfDriverIsVersionAvailable)(
     return FALSE;
 }
 
+__drv_maxIRQL(PASSIVE_LEVEL)
+PWSTR
+WDFEXPORT(WdfDriverGetRegistryPath)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDRIVER Driver
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return NULL;
+}
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+PDRIVER_OBJECT
+WDFEXPORT(WdfDriverWdmGetDriverObject)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDRIVER Driver
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return NULL;
+}
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDriverOpenParametersRegistryKey)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDRIVER Driver,
+    __in
+    ACCESS_MASK DesiredAccess,
+    __in_opt
+    PWDF_OBJECT_ATTRIBUTES KeyAttributes,
+    __out
+    WDFKEY* Key
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+WDFDRIVER
+WDFEXPORT(WdfWdmDriverGetWdfDriverHandle)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    PDRIVER_OBJECT DriverObject
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return NULL;
+}
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDriverRegisterTraceInfo)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    PDRIVER_OBJECT DriverObject,
+    __in
+    PFN_WDF_TRACE_CALLBACK EvtTraceCallback,
+    __in
+    PVOID ControlBlock
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDeviceMiniportCreate)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDRIVER Driver,
+    __in_opt
+    PWDF_OBJECT_ATTRIBUTES Attributes,
+    __in
+    PDEVICE_OBJECT DeviceObject,
+    __in_opt
+    PDEVICE_OBJECT AttachedDeviceObject,
+    __in_opt
+    PDEVICE_OBJECT Pdo,
+    __out
+    WDFDEVICE* Device
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+WDFEXPORT(WdfDriverMiniportUnload)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDRIVER Driver
+    )
+{
+    WDFNOTIMPLEMENTED();
+}
+
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI    
+NTSTATUS
+WDFEXPORT(WdfObjectQuery)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFOBJECT Object,
+    __in
+    CONST GUID* Guid,
+    __in
+    ULONG QueryBufferLength,
+    __out_bcount(QueryBufferLength)
+    PVOID QueryBuffer
+    )
+
+/*++
+
+Routine Description:
+
+    Query the object handle for specific information
+
+    This allows dynamic extensions to DDI's.
+
+    Currently, it is used to allow test hooks for verification
+    which are not available in a production release.
+
+Arguments:
+
+    Object - Handle to object for the query
+
+    Guid - GUID to represent the information/DDI to query for
+
+    QueryBufferLength - Length of QueryBuffer to return data in
+
+    QueryBuffer - Pointer to QueryBuffer
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 } // extern "C"

@@ -165,4 +165,92 @@ Return Value:
                               &srcOffsets);
 }
 
+_Must_inspect_result_
+__drv_when(PoolType == 1 || PoolType == 257, __drv_maxIRQL(APC_LEVEL))
+__drv_when(PoolType == 0 || PoolType == 256 || PoolType == 512, __drv_maxIRQL(DISPATCH_LEVEL))
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfMemoryCreate)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in_opt
+    PWDF_OBJECT_ATTRIBUTES Attributes,
+    __in
+    __drv_strictTypeMatch(__drv_typeExpr)
+    POOL_TYPE PoolType,
+    __in_opt
+    ULONG PoolTag,
+    __in
+    __drv_when(BufferSize == 0, __drv_reportError(BufferSize cannot be zero))
+    size_t BufferSize,
+    __out
+    WDFMEMORY* Memory,
+    __out_opt
+    PVOID* Buffer
+    )
+/*++
+
+Routine Description:
+    Creates a WDFMEMORY handle based on the caller's specifications
+
+Arguments:
+    Attributes - Attributes associated with this object
+
+    PoolType - The type of pool created
+
+    PoolTag - Tag to use when allocating the memory.  If 0, then the frameworks
+        tag is used
+
+    BufferSize - The size of the buffer represented by the returned handle
+
+    Memory - The returned handle to the caller
+
+    Buffer - (opt) Pointer to the associated memory buffer.
+
+Return Value:
+    STATUS_INVALID_PARAMETER - any required parameters are not present
+
+    STATUS_INSUFFICIENT_RESOURCES - could not allocated the object that backs
+        the handle
+
+    STATUS_SUCCESS - success
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+PVOID
+WDFAPI
+WDFEXPORT(WdfMemoryGetBuffer)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFMEMORY Memory,
+    __out_opt
+    size_t* BufferSize
+    )
+/*++
+
+Routine Description:
+    Retrieves the raw pointers associated with WDFMEMORY handle
+
+Arguments:
+    Memory - handle to the WDFMEMORY
+
+    BufferSize - the size / length of the buffer
+
+Return Value:
+    raw buffer
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return NULL;
+}
+
+
+
 } // extern "C"

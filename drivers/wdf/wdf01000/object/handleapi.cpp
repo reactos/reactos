@@ -706,4 +706,67 @@ Return Value:
     return NULL;
 }
 
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI    
+NTSTATUS
+WDFEXPORT(WdfObjectAllocateContext)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFOBJECT Handle,
+    __in
+    PWDF_OBJECT_ATTRIBUTES Attributes,
+    __deref_opt_out
+    PVOID* Context
+    )
+/*++
+
+Routine Description:
+    Allocates an additional context on the handle if the object is in the
+    correct state
+
+Arguments:
+    Handle - handle on which to add a context
+    Attributes - attributes which describe the type and size of the new context
+    Context - optional pointer which will recieve the new context
+
+Return Value:
+    STATUS_SUCCESS upon success, STATUS_OBJECT_NAME_EXISTS if the context type
+    is already attached to the handle, and !NT_SUCCESS on failure
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+__drv_maxIRQL(DISPATCH_LEVEL+1)
+WDFAPI    
+WDFOBJECT
+FASTCALL
+WDFEXPORT(WdfObjectContextGetObject)(
+    __in
+    PWDF_DRIVER_GLOBALS,
+    __in
+    PVOID ContextPointer
+    )
+/*++
+
+Routine Description:
+    Reverse of WdfObjectGetTypedContextWorker.  Function will return the handle
+    associated with the provided context pointer.
+
+Arguments:
+    ContextPointer - context pointer from which to retrieve the owning handle
+
+Return Value:
+    A valid WDF handle
+
+  --*/
+{
+    WDFNOTIMPLEMENTED();
+    return NULL;
+}
+
 } //extern "C"

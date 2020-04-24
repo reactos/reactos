@@ -48,4 +48,60 @@ Return Value:
     }
 }
 
+VOID
+WDFEXPORT(WdfVerifierKeBugCheck)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    ULONG BugCheckCode,
+    __in
+    ULONG_PTR BugCheckParameter1,
+    __in
+    ULONG_PTR BugCheckParameter2,
+    __in
+    ULONG_PTR BugCheckParameter3,
+    __in
+    ULONG_PTR BugCheckParameter4
+    )
+
+/*++
+
+Routine Description:
+
+    Common Driver Frameworks KeBugCheckEx() function. Use this function rather
+    than the system one. This routine will indicate to the bugcheck callbacks
+    that the IFR data for this driver needs to be copied to the minidump file.
+
+Arguments:
+
+    DriverGlobals -
+
+    BugCheckCode - Specifies a value that indicates the reason for the bug check.
+
+    BugCheckParameter1 - Supply additional information, such as the address and
+        data where a memory-corruption error occurred, depending on the value of
+        BugCheckCode.
+
+    BugCheckParameter2 - Supply additional information, such as the address and
+        data where a memory-corruption error occurred, depending on the value of
+        BugCheckCode.
+
+    BugCheckParameter3 - Supply additional information, such as the address and
+        data where a memory-corruption error occurred, depending on the value of
+        BugCheckCode.
+
+    BugCheckParameter4 - Supply additional information, such as the address and
+        data where a memory-corruption error occurred, depending on the value of
+        BugCheckCode.
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    WDFNOTIMPLEMENTED();
+}
+
 } // extern "C"
