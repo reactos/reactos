@@ -179,5 +179,5 @@ BEGIN
     IDS_TIMEOUT16 "Nikdy"
     IDS_DEL_SCHEME "Ste si istý, že chcete vymazať schému napájania: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Vymazať schému"
-	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

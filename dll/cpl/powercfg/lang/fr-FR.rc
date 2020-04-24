@@ -173,5 +173,5 @@ BEGIN
     IDS_TIMEOUT16 "Jamais"
     IDS_DEL_SCHEME "Êtes-vous sûr de vouloir supprimer le profil d'alimentation: ""%s"" ?"
     IDS_DEL_SCHEME_TITLE "Supprimer le profil"
-	IDS_DEL_SCHEME_ERROR "Impossible de supprimer le profil d'alimentation"
+    IDS_DEL_SCHEME_ERROR "Impossible de supprimer le profil d'alimentation"
 END

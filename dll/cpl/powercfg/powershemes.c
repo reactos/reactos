@@ -535,6 +535,7 @@ DelScheme(
     INT iCurSel;
     HWND hList;
     PPOWER_SCHEME pScheme;
+    WCHAR szErrorText[512];
 
     hList = GetDlgItem(hwnd, IDC_ENERGYLIST);
 
@@ -555,9 +556,9 @@ DelScheme(
     if (MessageBoxW(hwnd, szCookedBuffer, szTitleBuffer, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
     {
         if (!DeletePwrScheme(pScheme->uId))
-        {
-            // FIXME: Show an error message box
-            DPRINT1("Unable to delete power scheme\n");
+        {            
+            LoadStringW(hApplet, IDS_DEL_SCHEME_ERROR, szErrorText, sizeof(szErrorText) / sizeof(WCHAR));
+            MessageBoxW(NULL, szErrorText, NULL, MB_OK | MB_ICONERROR);
             return FALSE;
         }
 

@@ -179,5 +179,5 @@ BEGIN
     IDS_TIMEOUT16 "Nigdy"
     IDS_DEL_SCHEME "Czy na pewno chcesz skasować schemat oszczędzania energii: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Usuń schemat"
-	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

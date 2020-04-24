@@ -173,5 +173,5 @@ BEGIN
     IDS_TIMEOUT16 "никогда"
     IDS_DEL_SCHEME "Вы уверены, что хотите удалить схему питания: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Удалить Схему"
-	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

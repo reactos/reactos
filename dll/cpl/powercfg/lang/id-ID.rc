@@ -173,5 +173,5 @@ BEGIN
     IDS_TIMEOUT16 "Tidak pernah"
     IDS_DEL_SCHEME "Anda yakin ingin menghapus skema daya: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Hapus Skema"
-	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

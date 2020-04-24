@@ -173,5 +173,5 @@ BEGIN
     IDS_TIMEOUT16 "從不"
     IDS_DEL_SCHEME "您確定要刪除電源使用方案嗎: ""%s""?"
     IDS_DEL_SCHEME_TITLE "刪除方案"
-	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

@@ -173,5 +173,5 @@ BEGIN
     IDS_TIMEOUT16 "Ποτέ"
     IDS_DEL_SCHEME "Είστε σίγουροι ότι θέλετε να διαγράψετε αυτόν τον συνδιασμό τροφοδοσίας: ""%s"""
     IDS_DEL_SCHEME_TITLE "Διαγραφή συνδιασμού"
-	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

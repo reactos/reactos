@@ -174,5 +174,5 @@ BEGIN
     IDS_TIMEOUT16 "Nie"
     IDS_DEL_SCHEME "Soll folgendes Energieschema gelöscht werden: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Schema löschen"
-	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END
