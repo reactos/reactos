@@ -698,10 +698,10 @@ BEGIN
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Appliquer ce modèle aux sous-dossiers", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
     GROUPBOX "Images de dossier", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
-    LTEXT "Pour la vue des minuatures, vous pouvez mettre une image sur ce dossier pour vous souvenir de son contenu.", IDC_STATIC, 15, 87, 115, 33
+    LTEXT "Pour la vue des miniatures, vous pouvez mettre une image sur ce dossier pour vous souvenir de son contenu.", IDC_STATIC, 15, 87, 115, 33
     PUSHBUTTON "Choisir une image...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
     PUSHBUTTON "&Par défaut", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
-    LTEXT "Apperçu :", IDC_STATIC, 139, 85, 81, 11
+    LTEXT "Aperçu :", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
     GROUPBOX "Icônes de dossier", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
     LTEXT "Pour toutes les vues autres que Miniature, vous pouvez changer l'icône standard du ""dossier"".", IDC_STATIC, 15, 180, 210, 25
@@ -743,7 +743,7 @@ BEGIN
 
     /* special folders descriptions */
     IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configurer les paramètres administratifs pour cet ordinateur."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Personnaliser l'affichage des fichiers et dossier et modifier les associates de fichiers."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Personnaliser l'affichage des fichiers et dossiers et modifier les associations de fichiers."
     IDS_FONTS_DESCRIPTION "Ajouter, modifier et gérer les polices sur votre ordinateur."
     IDS_PRINTERS_DESCRIPTION "Affiche les imprimantes et fax installés et vous aide à en ajouter de nouveaux."
 
