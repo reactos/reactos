@@ -26,6 +26,25 @@ typedef struct _PROGRESS_DATA
 
 } PROGRESS_DATA, *PPROGRESS_DATA;
 
+VOID ShowError(DWORD dwLastError)
+{
+    LPTSTR lpMsg;
+
+    if (!FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                       FORMAT_MESSAGE_FROM_SYSTEM |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       NULL,
+                       dwLastError,
+                       LANG_USER_DEFAULT,
+                       (LPTSTR)&lpMsg,
+                       0, NULL))
+    {
+        return;
+    }
+
+    MessageBox(NULL, lpMsg, NULL, MB_OK | MB_ICONERROR);
+    LocalFree(lpMsg);
+}
 
 static VOID
 ResetProgressDialog(HWND hDlg,
@@ -66,7 +85,8 @@ ResetProgressDialog(HWND hDlg,
 
 unsigned int __stdcall ActionThread(void* Param)
 {
-    PPROGRESS_DATA ProgressData = (PPROGRESS_DATA)Param;
+    PPROGRESS_DATA ProgressData = (PPROGRESS_DATA)Param;   
+    DWORD dwResult;
 
     if (ProgressData->Action == ACTION_START)
     {
@@ -76,12 +96,17 @@ unsigned int __stdcall ActionThread(void* Param)
                             IDS_PROGRESS_INFO_START);
 
         /* Start the service */
-        if (DoStartService(ProgressData->ServiceName,
+        dwResult = DoStartService(ProgressData->ServiceName,
                            ProgressData->hProgress,
-                           ProgressData->Param))
+                           ProgressData->Param);
+        if (dwResult==SC_MANAGER_SUCCESS)
         {
             /* We're done, slide the progress bar up to the top */
             CompleteProgressBar(ProgressData->hProgress);
+        }
+        else
+        {
+            ShowError(dwResult);
         }
     }
     else if (ProgressData->Action == ACTION_STOP || ProgressData->Action == ACTION_RESTART)
@@ -108,10 +133,15 @@ unsigned int __stdcall ActionThread(void* Param)
                                     IDS_PROGRESS_INFO_STOP);
 
                 /* Stop the requested service */
-                if (DoStopService(ProgressData->ServiceName,
-                                  ProgressData->hProgress))
+                dwResult = DoStopService(ProgressData->ServiceName,
+                                  ProgressData->hProgress);
+                if (dwResult==SC_MANAGER_SUCCESS)
                 {
                     CompleteProgressBar(ProgressData->hProgress);
+                }
+                else
+                {
+                    ShowError(dwResult);
                 }
 
                 /* Move onto the next string */
@@ -124,10 +154,15 @@ unsigned int __stdcall ActionThread(void* Param)
                             ProgressData->ServiceName,
                             IDS_PROGRESS_INFO_STOP);
 
-        if (DoStopService(ProgressData->ServiceName,
-                          ProgressData->hProgress))
+        dwResult = DoStopService(ProgressData->ServiceName,
+                          ProgressData->hProgress);
+        if (dwResult==SC_MANAGER_SUCCESS)
         {
             CompleteProgressBar(ProgressData->hProgress);
+        }
+        else
+        {
+            ShowError(dwResult);
         }
 
 
@@ -140,12 +175,17 @@ unsigned int __stdcall ActionThread(void* Param)
                                 IDS_PROGRESS_INFO_START);
 
             /* Start the service */
-            if (DoStartService(ProgressData->ServiceName,
+            dwResult = DoStartService(ProgressData->ServiceName,
                                ProgressData->hProgress,
-                               NULL))
+                               NULL);
+            if (dwResult==SC_MANAGER_SUCCESS)
             {
                 /* We're done, slide the progress bar up to the top */
                 CompleteProgressBar(ProgressData->hProgress);
+            }
+            else
+            {
+                ShowError(dwResult);
             }
         }
     }
@@ -157,12 +197,17 @@ unsigned int __stdcall ActionThread(void* Param)
                             IDS_PROGRESS_INFO_PAUSE);
 
         /* Pause the service */
-        if (DoControlService(ProgressData->ServiceName,
+        dwResult = DoControlService(ProgressData->ServiceName,
                              ProgressData->hProgress,
-                             SERVICE_CONTROL_PAUSE))
+                             SERVICE_CONTROL_PAUSE);
+        if (dwResult==SC_MANAGER_SUCCESS)
         {
             /* We're done, slide the progress bar up to the top */
             CompleteProgressBar(ProgressData->hProgress);
+        }
+        else
+        {
+            ShowError(dwResult);
         }
     }
     else if (ProgressData->Action == ACTION_RESUME)
@@ -173,12 +218,17 @@ unsigned int __stdcall ActionThread(void* Param)
                             IDS_PROGRESS_INFO_RESUME);
 
         /* resume the service */
-        if (DoControlService(ProgressData->ServiceName,
+        dwResult = DoControlService(ProgressData->ServiceName,
                              ProgressData->hProgress,
-                             SERVICE_CONTROL_CONTINUE))
+                             SERVICE_CONTROL_CONTINUE);
+        if (dwResult==SC_MANAGER_SUCCESS)
         {
             /* We're done, slide the progress bar up to the top */
             CompleteProgressBar(ProgressData->hProgress);
+        }
+        else
+        {
+            ShowError(dwResult);
         }
     }
 

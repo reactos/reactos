@@ -237,7 +237,6 @@ IDD_DLG_PROGRESS DIALOGEX 6, 6, 255, 89
 CAPTION "Kontrolli i shërbimeve"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
-EXSTYLE WS_EX_TOOLWINDOW
 BEGIN
     CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
     LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
@@ -337,6 +336,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPNAME "Menaxhues i shërbimeve të ReactOS"
+    IDS_MANAGER_ERR_UNKCMD "Service Error: Unknown command"
+    IDS_MANAGER_ERR_SRVMGROPN "Service Error: Unable to open service manager"
+    IDS_MANAGER_ERR_SRVOPN "Service Error: Unable to open service"
+    IDS_MANAGER_ERR_ALLOC "Service Error: Memory allocation failed"
+    IDS_MANAGER_ERR_QSS "Service Error: Unable to query service status"
+    IDS_MANAGER_ERR_TIMEOUT "Service Error: Timeout"
+    IDS_MANAGER_ERR_UNKNOWN "Service Error: Unknown error"
 END
 
 STRINGTABLE

@@ -8,10 +8,11 @@
  */
 
 #include "precomp.h"
+#include <debug.h>
 
 #define MAX_WAIT_TIME   30000
 
-BOOL
+DWORD
 DoStartService(LPWSTR ServiceName,
                HANDLE hProgress,
                LPWSTR lpStartParams)
@@ -24,12 +25,13 @@ DoStartService(LPWSTR ServiceName,
     DWORD OldCheckPoint;
     DWORD WaitTime;
     DWORD MaxWait;
-    BOOL Result = FALSE;
+    BOOL Result = FALSE;    
 
     BOOL bWhiteSpace = TRUE;
     LPWSTR lpChar;
     DWORD dwArgsCount = 0;
-    LPCWSTR *lpArgsVector = NULL;
+	DWORD dwResult = SC_MANAGER_SUCCESS;
+	LPCWSTR *lpArgsVector = NULL;
 
     if (lpStartParams != NULL)
     {
@@ -59,7 +61,7 @@ DoStartService(LPWSTR ServiceName,
          */
         lpArgsVector = LocalAlloc(LMEM_FIXED, dwArgsCount * sizeof(LPCWSTR));
         if (!lpArgsVector)
-            return FALSE;
+            return GetLastError();
 
         /* Fill the arguments vector */
         dwArgsCount = 0;
@@ -91,9 +93,10 @@ DoStartService(LPWSTR ServiceName,
                                 SC_MANAGER_CONNECT);
     if (!hSCManager)
     {
+		dwResult = GetLastError();
         if (lpArgsVector)
             LocalFree((LPVOID)lpArgsVector);
-        return FALSE;
+        return dwResult;
     }
 
     hService = OpenServiceW(hSCManager,
@@ -101,10 +104,11 @@ DoStartService(LPWSTR ServiceName,
                             SERVICE_START | SERVICE_QUERY_STATUS);
     if (!hService)
     {
-        CloseServiceHandle(hSCManager);
+        dwResult = GetLastError();
+		CloseServiceHandle(hSCManager);
         if (lpArgsVector)
             LocalFree((LPVOID)lpArgsVector);
-        return FALSE;
+        return dwResult;
     }
 
     /* Start the service */
@@ -129,8 +133,8 @@ DoStartService(LPWSTR ServiceName,
                                         SC_STATUS_PROCESS_INFO,
                                         (LPBYTE)&ServiceStatus,
                                         sizeof(SERVICE_STATUS_PROCESS),
-                                        &BytesNeeded);
-        if (Result)
+                                        &BytesNeeded);        
+		if (Result)
         {
             Result = FALSE;
             MaxWait = MAX_WAIT_TIME;
@@ -167,6 +171,8 @@ DoStartService(LPWSTR ServiceName,
                                             &BytesNeeded))
                 {
                     /* Something went wrong... */
+                    DPRINT1("QueryServiceStatusEx failed: %d\n", GetLastError());
+                    dwResult = GetLastError();
                     break;
                 }
 
@@ -183,24 +189,29 @@ DoStartService(LPWSTR ServiceName,
                     if (GetTickCount() >= StartTickCount + MaxWait)
                     {
                         /* We have, give up */
+                        DPRINT1("Timeout\n");
+                        dwResult = ERROR_SERVICE_REQUEST_TIMEOUT;
                         break;
                     }
                 }
             }
         }
+        else
+        {
+            dwResult = GetLastError();
+        }
 
         if (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
         {
-            Result = TRUE;
+            dwResult = SC_MANAGER_SUCCESS;
         }
     }
 
     CloseServiceHandle(hService);
-
     CloseServiceHandle(hSCManager);
 
     if (lpArgsVector)
         LocalFree((LPVOID)lpArgsVector);
 
-    return Result;
+    return dwResult;
 }

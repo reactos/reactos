@@ -43,6 +43,11 @@
 #define ORD_ASCENDING   1
 #define ORD_DESCENDING  -1
 
+#define SC_MANAGER_SUCCESS    0
+//https://docs.microsoft.com/fr-fr/windows/win32/debug/system-error-codes--1000-1299-
+#define ERROR_SERVICE_REQUEST_TIMEOUT          1053
+#define ERROR_EXCEPTION_IN_SERVICE             1064 
+
 typedef struct _MAIN_WND_INFO
 {
     HWND  hMainWnd;
@@ -100,9 +105,9 @@ VOID ListViewSelectionChanged(PMAIN_WND_INFO Info, LPNMLISTVIEW pnmv);
 BOOL CreateListView(PMAIN_WND_INFO Info);
 
 /* start / stop / control */
-BOOL DoStartService(LPWSTR ServiceName, HANDLE hProgress, LPWSTR lpStartParams);
-BOOL DoStopService(LPWSTR ServiceName, HANDLE hProgress);
-BOOL DoControlService(LPWSTR ServiceName, HWND hProgress, DWORD Control);
+DWORD DoStartService(LPWSTR ServiceName, HANDLE hProgress, LPWSTR lpStartParams);
+DWORD DoStopService(LPWSTR ServiceName, HANDLE hProgress);
+DWORD DoControlService(LPWSTR ServiceName, HWND hProgress, DWORD Control);
 
 /* progress.c */
 #define DEFAULT_STEP 0
@@ -121,7 +126,6 @@ VOID FreeServiceList(PMAIN_WND_INFO Info);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);
 BOOL UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService);
 BOOL GetServiceList(PMAIN_WND_INFO Info);
-
 
 /* propsheet.c */
 typedef struct _SERVICEPROPSHEET
