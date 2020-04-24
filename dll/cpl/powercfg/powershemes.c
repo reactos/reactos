@@ -846,7 +846,7 @@ PowerSchemesDlgProc(
             {
                 // TODO:
                 // Initialization failed
-                // Handle error                
+                // Handle error
                 MessageBox(hwndDlg,_T("Pos_InitData failed\n"), NULL, MB_OK);
             }
 
