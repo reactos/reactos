@@ -283,32 +283,17 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
     }
 }
 
-typedef NTSTATUS (NTAPI *FN_NtQueryVolumeInformationFile)(HANDLE, PIO_STATUS_BLOCK,
-                                                          PVOID, ULONG, FS_INFORMATION_CLASS);
-
 // https://stackoverflow.com/questions/3098696/get-information-about-disk-drives-result-on-windows7-32-bit-system/3100268#3100268
 static BOOL
 GetDriveTypeAndCharacteristics(HANDLE hDevice, DEVICE_TYPE *pDeviceType, ULONG *pCharacteristics)
 {
-    HMODULE ntdll;
-    FN_NtQueryVolumeInformationFile pNtQueryVolumeInformationFile;
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_FS_DEVICE_INFORMATION DeviceInfo;
 
-    ntdll = GetModuleHandleA("ntdll");
-    if (ntdll == NULL)
-        return FALSE;
-
-    pNtQueryVolumeInformationFile =
-        (FN_NtQueryVolumeInformationFile)
-            GetProcAddress(ntdll, "NtQueryVolumeInformationFile");
-    if (pNtQueryVolumeInformationFile == NULL)
-        return FALSE;
-
-    Status = pNtQueryVolumeInformationFile(hDevice, &IoStatusBlock,
-                                           &DeviceInfo, sizeof(DeviceInfo),
-                                           FileFsDeviceInformation);
+    Status = NtQueryVolumeInformationFile(hDevice, &IoStatusBlock,
+                                          &DeviceInfo, sizeof(DeviceInfo),
+                                          FileFsDeviceInformation);
     if (Status == NO_ERROR)
     {
         *pDeviceType = DeviceInfo.DeviceType;
