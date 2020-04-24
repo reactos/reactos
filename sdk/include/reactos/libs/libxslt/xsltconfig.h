@@ -20,21 +20,21 @@ extern "C" {
  *
  * the version string like "1.2.3"
  */
-#define LIBXSLT_DOTTED_VERSION "1.1.33"
+#define LIBXSLT_DOTTED_VERSION "1.1.34"
 
 /**
  * LIBXSLT_VERSION:
  *
  * the version number: 1.2.3 value is 10203
  */
-#define LIBXSLT_VERSION 10133
+#define LIBXSLT_VERSION 10134
 
 /**
  * LIBXSLT_VERSION_STRING:
  *
  * the version number string, 1.2.3 value is "10203"
  */
-#define LIBXSLT_VERSION_STRING "10133"
+#define LIBXSLT_VERSION_STRING "10134"
 
 /**
  * LIBXSLT_VERSION_EXTRA:
@@ -111,6 +111,19 @@ extern "C" {
 #endif
 
 /**
+ * WITH_PROFILER:
+ *
+ * Activate the compilation of the profiler. Speed penalty
+ * is insignifiant.
+ * On by default unless --without-profiler is passed to configure
+ */
+#if 0
+#ifndef WITH_PROFILER
+#define WITH_PROFILER
+#endif
+#endif
+
+/**
  * WITH_MODULES:
  *
  * Whether module support is configured into libxslt
@@ -129,9 +142,6 @@ extern "C" {
  * This macro is used to flag unused function parameters to GCC
  */
 #ifdef __GNUC__
-#ifdef HAVE_ANSIDECL_H
-#include <ansidecl.h>
-#endif
 #ifndef ATTRIBUTE_UNUSED
 #define ATTRIBUTE_UNUSED __attribute__((unused))
 #endif
