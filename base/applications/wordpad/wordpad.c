@@ -842,6 +842,7 @@ static BOOL DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
     HANDLE hFile;
     EDITSTREAM stream;
     LRESULT ret;
+    BOOL bAlreadyExists = (GetFileAttributesW(wszSaveFileName) != 0xFFFFFFFF);
 
     hFile = CreateFileW(wszSaveFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
         FILE_ATTRIBUTE_NORMAL, NULL);
@@ -889,7 +890,11 @@ static BOOL DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
     if (wszFileName[0])
     {
         SHAddToRecentDocs(SHARD_PATHW, wszFileName);
-        SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszFileName, NULL);
+
+        if (bAlreadyExists)
+            SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, wszFileName, NULL);
+        else
+            SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszFileName, NULL);
     }
 
     SendMessageW(hEditorWnd, EM_SETMODIFY, FALSE, 0);
