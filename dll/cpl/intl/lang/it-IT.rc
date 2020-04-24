@@ -216,5 +216,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
     IDS_ERROR_NLS_CODE_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "Unable to start input.dll"
+    IDS_ERROR_UNICODE "Unable to install a new language for programs don't support unicode!"
 END
-

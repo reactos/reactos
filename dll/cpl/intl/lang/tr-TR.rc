@@ -215,4 +215,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "HKU\\.DEFAULT\\Control Panel\\International dizinini açmada bir sorun oldu."
     IDS_ERROR_NLS_CODE_REG "HKU\\.DEFAULT\\Control Panel\\International dizinini açmada bir sorun oldu."
     IDS_ERROR_INPUT_DLL "input.dll başlatılamaz."
+    IDS_ERROR_UNICODE "Unable to install a new language for programs don't support unicode!"
 END

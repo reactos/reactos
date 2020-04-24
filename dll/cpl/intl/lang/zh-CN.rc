@@ -218,5 +218,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "问题打开项: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
     IDS_ERROR_NLS_CODE_REG "问题打开项: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "无法启动 input.dll"
+    IDS_ERROR_UNICODE "Unable to install a new language for programs don't support unicode!"
 END
-

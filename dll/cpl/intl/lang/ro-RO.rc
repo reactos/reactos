@@ -215,4 +215,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
     IDS_ERROR_NLS_CODE_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
     IDS_ERROR_INPUT_DLL "„input.dll” nu a putut fi încărcat!"
+    IDS_ERROR_UNICODE "Unable to install a new language for programs don't support unicode!"
 END
