@@ -29,7 +29,7 @@ HKCR,"CLSID\%CLSID_InternetExplorerManager%\LocalServer32",,,"""%16422%\Internet
 HKCU,"Software\Microsoft\Internet Explorer\Main","ShowGoButton",2,"yes"
 #HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"https://www.winehq.org"
 HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"https://reactos.org/"
-HKCU,"Software\Microsoft\Internet Explorer\Main","Search Page",2,"http://www.google.com"
+HKCU,"Software\Microsoft\Internet Explorer\Main","Search Page",2,"https://www.google.com"
 HKCU,"Software\Microsoft\Internet Explorer\Settings","Text Color",2,"0,0,0"
 #HKLM,"Software\Microsoft\Internet Explorer\Main","Default_Page_URL",2,"https://www.winehq.org"
 HKLM,"Software\Microsoft\Internet Explorer\Main","Default_Page_URL",2,"https://reactos.org/"
