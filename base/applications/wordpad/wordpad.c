@@ -887,7 +887,10 @@ static BOOL DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
     lstrcpyW(wszFileName, wszSaveFileName);
     set_caption(wszFileName);
     if (wszFileName[0])
+    {
         SHAddToRecentDocs(SHARD_PATHW, wszFileName);
+        SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszFileName, NULL);
+    }
 
     SendMessageW(hEditorWnd, EM_SETMODIFY, FALSE, 0);
     set_fileformat(format);
