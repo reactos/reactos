@@ -449,6 +449,8 @@ getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
     return E_FAIL;
 }
 
+BOOL IsDriveFloppyA(LPCSTR pszDriveRoot);
+
 HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit> initIcon;
@@ -476,7 +478,14 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
     }
     else
     {
-        icon_idx = iDriveIconIds[DriveType];
+        if (DriveType == DRIVE_REMOVABLE && !IsDriveFloppyA(pszDrive))
+        {
+            icon_idx = IDI_SHELL_REMOVEABLE;
+        }
+        else
+        {
+            icon_idx = iDriveIconIds[DriveType];
+        }
         initIcon->SetNormalIcon(swShell32Name, -icon_idx);
     }
 
@@ -1117,7 +1126,10 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
                 hr = SHSetStrRet(&psd->str, "");
                 break;
             case 2:        /* type */
-                hr = SHSetStrRet(&psd->str, iDriveTypeIds[DriveType]);
+                if (DriveType == DRIVE_REMOVABLE && !IsDriveFloppyA(pszDrive))
+                    hr = SHSetStrRet(&psd->str, IDS_DRIVE_REMOVABLE);
+                else
+                    hr = SHSetStrRet(&psd->str, iDriveTypeIds[DriveType]);
                 break;
             case 3:        /* total size */
             case 4:        /* free size */

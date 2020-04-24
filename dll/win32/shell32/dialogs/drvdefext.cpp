@@ -3,6 +3,7 @@
  *
  * Copyright 2005 Johannes Anderwald
  * Copyright 2012 Rafal Harabien
+ * Copyright 2020 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +24,10 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+
+#define NTOS_MODE_USER
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -278,6 +283,115 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
     }
 }
 
+typedef NTSTATUS (NTAPI *FN_NtQueryVolumeInformationFile)(HANDLE, PIO_STATUS_BLOCK,
+                                                          PVOID, ULONG, FS_INFORMATION_CLASS);
+
+// https://stackoverflow.com/questions/3098696/get-information-about-disk-drives-result-on-windows7-32-bit-system/3100268#3100268
+static BOOL
+GetDriveTypeAndCharacteristics(HANDLE hDevice, DEVICE_TYPE *pDeviceType, ULONG *pCharacteristics)
+{
+    HMODULE ntdll;
+    FN_NtQueryVolumeInformationFile pNtQueryVolumeInformationFile;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_FS_DEVICE_INFORMATION DeviceInfo;
+
+    ntdll = GetModuleHandleA("ntdll");
+    if (ntdll == NULL)
+        return FALSE;
+
+    pNtQueryVolumeInformationFile =
+        (FN_NtQueryVolumeInformationFile)
+            GetProcAddress(ntdll, "NtQueryVolumeInformationFile");
+    if (pNtQueryVolumeInformationFile == NULL)
+        return FALSE;
+
+    Status = pNtQueryVolumeInformationFile(hDevice, &IoStatusBlock,
+                                           &DeviceInfo, sizeof(DeviceInfo),
+                                           FileFsDeviceInformation);
+    if (Status == NO_ERROR)
+    {
+        *pDeviceType = DeviceInfo.DeviceType;
+        *pCharacteristics = DeviceInfo.Characteristics;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOL IsDriveFloppyW(LPCWSTR pszDriveRoot)
+{
+    LPCWSTR RootPath = pszDriveRoot;
+    WCHAR szRoot[16], szDeviceName[16];
+    UINT uType;
+    HANDLE hDevice;
+    DEVICE_TYPE DeviceType;
+    ULONG ulCharacteristics;
+    BOOL ret;
+
+    lstrcpynW(szRoot, RootPath, _countof(szRoot));
+
+    if (L'a' <= szRoot[0] && szRoot[0] <= 'z')
+    {
+        szRoot[0] += ('A' - 'a');
+    }
+
+    if ('A' <= szRoot[0] && szRoot[0] <= L'Z' &&
+        szRoot[1] == L':' && szRoot[2] == 0)
+    {
+        // 'C:' --> 'C:\'
+        szRoot[2] = L'\\';
+        szRoot[3] = 0;
+    }
+
+    if (!PathIsRootW(szRoot))
+    {
+        return FALSE;
+    }
+
+    uType = GetDriveTypeW(szRoot);
+    if (uType == DRIVE_REMOVABLE)
+    {
+        if (szRoot[0] == L'A' || szRoot[0] == L'B')
+            return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+
+    lstrcpynW(szDeviceName, L"\\\\.\\", _countof(szDeviceName));
+    szDeviceName[4] = szRoot[0];
+    szDeviceName[5] = L':';
+    szDeviceName[6] = UNICODE_NULL;
+
+    hDevice = CreateFileW(szDeviceName, FILE_READ_ATTRIBUTES,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          NULL, OPEN_EXISTING, 0, NULL);
+    if (hDevice == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    ret = FALSE;
+    if (GetDriveTypeAndCharacteristics(hDevice, &DeviceType, &ulCharacteristics))
+    {
+        if ((ulCharacteristics & FILE_FLOPPY_DISKETTE) == FILE_FLOPPY_DISKETTE)
+            ret = TRUE;
+    }
+
+    CloseHandle(hDevice);
+
+    return ret;
+}
+
+BOOL IsDriveFloppyA(LPCSTR pszDriveRoot)
+{
+    WCHAR szRoot[8];
+    MultiByteToWideChar(CP_ACP, 0, pszDriveRoot, -1, szRoot, _countof(szRoot));
+    return IsDriveFloppyW(szRoot);
+}
+
 VOID
 CDrvDefExt::InitGeneralPage(HWND hwndDlg)
 {
@@ -304,7 +418,12 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     UINT IconId, TypeStrId = 0;
     switch (DriveType)
     {
-        case DRIVE_REMOVABLE: IconId = IDI_SHELL_3_14_FLOPPY; break;
+        case DRIVE_REMOVABLE:
+            if (IsDriveFloppyW(m_wszDrive))
+                IconId = IDI_SHELL_3_14_FLOPPY;
+            else
+                IconId = IDI_SHELL_REMOVEABLE;
+            break;
         case DRIVE_CDROM: IconId = IDI_SHELL_CDROM; TypeStrId = IDS_DRIVE_CDROM; break;
         case DRIVE_REMOTE: IconId = IDI_SHELL_NETDRIVE; TypeStrId = IDS_DRIVE_NETWORK; break;
         case DRIVE_RAMDISK: IconId = IDI_SHELL_RAMDISK; break;
