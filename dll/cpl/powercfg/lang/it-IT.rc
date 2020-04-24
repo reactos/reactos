@@ -171,4 +171,5 @@ BEGIN
     IDS_TIMEOUT16 "Mai"
     IDS_DEL_SCHEME "Siete sicuro di voler cancellare lo schema: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Cancellazione schema"
+	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

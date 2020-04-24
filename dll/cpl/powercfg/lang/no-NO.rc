@@ -173,4 +173,5 @@ BEGIN
     IDS_TIMEOUT16 "Aldri"
     IDS_DEL_SCHEME "Er du sikker på at du vil slette strømplanen: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Slett planen"
+	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

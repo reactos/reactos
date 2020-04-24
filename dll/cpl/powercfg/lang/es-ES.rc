@@ -173,4 +173,5 @@ BEGIN
     IDS_TIMEOUT16 "Nunca"
     IDS_DEL_SCHEME "¿Está seguro de que desea eliminar la combinación de energía: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Eliminar combinación"
+	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

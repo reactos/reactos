@@ -173,4 +173,5 @@ BEGIN
     IDS_TIMEOUT16 "Hiçbir Zaman"
     IDS_DEL_SCHEME "Güç düzenini silmek istediğinizden emin misiniz: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Düzeni Sil"
+	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

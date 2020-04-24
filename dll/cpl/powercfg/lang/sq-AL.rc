@@ -176,4 +176,5 @@ BEGIN
     IDS_TIMEOUT16 "Kurrë"
     IDS_DEL_SCHEME "Jeni te sigurte qe doni te fshini skemën energjise: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Fshij Skemen"
+	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

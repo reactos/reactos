@@ -179,4 +179,5 @@ BEGIN
     IDS_TIMEOUT16 "ніколи"
     IDS_DEL_SCHEME "Ви дійсно бажаєте видалити схему керування електроживленням: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Видалення схеми"
+	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

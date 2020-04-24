@@ -173,4 +173,5 @@ BEGIN
     IDS_TIMEOUT16 "אף פעם"
     IDS_DEL_SCHEME "Are you sure you want to delete the power scheme: ""%s""?"
     IDS_DEL_SCHEME_TITLE "מחק ערכה"
+	IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

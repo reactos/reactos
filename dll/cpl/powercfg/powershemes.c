@@ -845,8 +845,7 @@ PowerSchemesDlgProc(
             {
                 // TODO:
                 // Initialization failed
-                // Handle error
-                DPRINT1("Pos_InitData failed\n");
+                // Handle error                
                 MessageBox(hwndDlg,_T("Pos_InitData failed\n"), NULL, MB_OK);
             }
 
@@ -855,7 +854,6 @@ PowerSchemesDlgProc(
                 // TODO:
                 // Initialization failed
                 // Handle error
-                DPRINT1("CreateEnergyList failed\n");
                 MessageBox(hwndDlg,_T("CreateEnergyList failed\n"), NULL, MB_OK);
             }
             return TRUE;
