@@ -354,6 +354,43 @@ InsertItemToListView(
     return -1;
 }
 
+static
+BOOL
+tmToStr(
+    IN struct tm *pTM,
+    OUT LPWSTR szBuffer,
+    IN UINT nBufferSize)
+{
+    SYSTEMTIME st;
+    CString strBufferDate;
+    CString strBufferTime;
+    UINT nCharDate, nCharTime;
+    BOOL bResult = FALSE;
+
+    st.wYear = pTM->tm_year + 1900;
+    st.wMonth = pTM->tm_mon + 1;
+    st.wDay = pTM->tm_mday;
+    st.wHour = pTM->tm_hour;
+    st.wMinute = pTM->tm_min;
+    st.wSecond = pTM->tm_sec;
+
+    /* Check required size before cpy/cat */
+    nCharDate = GetDateFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, NULL, 0) + 1;
+    nCharTime = GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, NULL, 0) + 1;
+
+    if (GetDateFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, strBufferDate.GetBuffer(nCharDate), nCharDate) &&
+        GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, strBufferTime.GetBuffer(nCharTime), nCharTime))
+    {
+        StringCbCopy(szBuffer, nBufferSize, strBufferDate);
+        StringCbCat(szBuffer, nBufferSize, L" ");
+        StringCbCat(szBuffer, nBufferSize, strBufferTime);
+        bResult = TRUE;
+    }
+    strBufferDate.ReleaseBuffer();
+    strBufferTime.ReleaseBuffer();
+
+    return bResult;
+}
 
 INT_PTR
 CALLBACK
@@ -454,7 +491,7 @@ LANStatusUiDetailsDlg(
 
                     leaseOptained = localtime(&pCurAdapter->LeaseObtained);
 
-                    if (wcsftime(szBuffer, 100, L"%m/%d/%Y %H:%M:%S %p", leaseOptained) != 0)
+                    if (tmToStr(leaseOptained, szBuffer, _countof(szBuffer)))
                         SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
                 }
 
@@ -465,7 +502,7 @@ LANStatusUiDetailsDlg(
 
                     leaseExpire = localtime(&pCurAdapter->LeaseExpires);
 
-                    if (wcsftime(szBuffer, 100, L"%m/%d/%Y %H:%M:%S %p", leaseExpire) != 0)
+                    if (tmToStr(leaseExpire, szBuffer, _countof(szBuffer)))
                         SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
                 }
             }
@@ -479,7 +516,6 @@ LANStatusUiDetailsDlg(
                 {
                     if (GetPerAdapterInfo(pContext->dwAdapterIndex, pPerAdapter, &dwSize) == ERROR_SUCCESS)
                     {
-                        li.iItem = InsertItemToListView(hDlgCtrl, IDS_DNS_SERVERS);
                         if (li.iItem >= 0)
                             AddIPAddressToListView(hDlgCtrl, &pPerAdapter->DnsServerList, li.iItem);
                     }
