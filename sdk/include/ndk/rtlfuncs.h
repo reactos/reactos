@@ -992,27 +992,26 @@ RtlLockHeap(
     _In_ HANDLE Heap
 );
 
-_Must_inspect_result_
 NTSYSAPI
-NTSTATUS
+ULONG
 NTAPI
-RtlMultipleAllocateHeap (
+RtlMultipleAllocateHeap(
     _In_ HANDLE HeapHandle,
     _In_ ULONG Flags,
     _In_ SIZE_T Size,
     _In_ ULONG Count,
     _Out_cap_(Count) _Deref_post_bytecap_(Size) PVOID * Array
-    );
+);
 
 NTSYSAPI
-NTSTATUS
+ULONG
 NTAPI
-RtlMultipleFreeHeap (
+RtlMultipleFreeHeap(
     _In_ HANDLE HeapHandle,
     _In_ ULONG Flags,
     _In_ ULONG Count,
     _In_count_(Count) /* _Deref_ _Post_invalid_ */ PVOID * Array
-    );
+);
 
 NTSYSAPI
 NTSTATUS

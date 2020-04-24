@@ -61,6 +61,7 @@ list(APPEND SOURCE
     RtlImageRvaToVa.c
     RtlIsNameLegalDOS8Dot3.c
     RtlMemoryStream.c
+    RtlMultipleAllocateHeap.c
     RtlNtPathNameToDosPathName.c
     RtlpEnsureBufferSize.c
     RtlQueryTimeZoneInfo.c
