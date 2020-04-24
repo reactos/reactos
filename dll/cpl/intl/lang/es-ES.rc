@@ -215,9 +215,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "Hubo un problema al abrir la clave del Registro: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
     IDS_ERROR_NLS_CODE_REG "Hubo un problema al abrir la clave del Registro: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "No se pudo iniciar input.dll"
-END
-
-STRINGTABLE
-BEGIN
     IDS_ERROR_UNICODE "Unable to install a new language for programs don't support unicode!"
 END
