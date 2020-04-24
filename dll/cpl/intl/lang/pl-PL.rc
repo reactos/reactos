@@ -222,3 +222,8 @@ BEGIN
     IDS_ERROR_NLS_CODE_REG "Problem z otwarciem klucza: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "Nie można uruchomić input.dll"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_UNICODE "Unable to install a new language for programs don't support unicode!"
+END

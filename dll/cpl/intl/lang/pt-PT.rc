@@ -212,3 +212,7 @@ BEGIN
     IDS_ERROR_INPUT_DLL "Não foi possível iniciar input.dll"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_ERROR_UNICODE "Unable to install a new language for programs don't support unicode!"
+END

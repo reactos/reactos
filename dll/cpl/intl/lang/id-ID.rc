@@ -214,3 +214,8 @@ BEGIN
     IDS_ERROR_NLS_CODE_REG "Masalah membuka kunci: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "Tidak bisa memulai input.dll"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_UNICODE "Unable to install a new language for programs don't support unicode!"
+END
