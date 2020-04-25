@@ -188,6 +188,9 @@ private:
             }
             else
             {
+                BOOL bExpandMyDocuments = TRUE;
+                BOOL bExpandMyPictures = FALSE;
+
                 if (csidl == CSIDL_RECENT)
                 {
                     HMENU hMenu = ::CreateMenu();
@@ -200,7 +203,21 @@ private:
                         UINT nID = GetMenuItemID(hSubMenu, i);
                         if (GetMenuString(hSubMenu, i, szText, _countof(szText), MF_BYPOSITION))
                         {
-                            AppendMenuW(hMenu, MF_STRING | MF_ENABLED, nID, szText);
+                            if ((nID == IDM_MYDOCUMENTS && bExpandMyDocuments) ||
+                                (nID == IDM_MYPICTURES && bExpandMyPictures))
+                            {
+                                MENUITEMINFOW mii = { sizeof(mii), MIIM_TYPE | MIIM_ID | MIIM_SUBMENU };
+                                mii.fType = MFT_STRING;
+                                mii.wID = nID;
+                                mii.hSubMenu = ::CreatePopupMenu();
+                                mii.dwTypeData = szText;
+                                mii.cch = lstrlenW(szText);
+                                InsertMenuItemW(hMenu, i, TRUE, &mii);
+                            }
+                            else
+                            {
+                                AppendMenuW(hMenu, MF_STRING | MF_ENABLED, nID, szText);
+                            }
                         }
                         else
                         {
