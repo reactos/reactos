@@ -16,12 +16,6 @@
 extern "C" {
 #endif
 
-#ifdef __cplusplus
-#define PRAGMA_DIAGNOSTIC_IGNORED_DECLARATION_AFTER_STATEMENT
-#else
-#define PRAGMA_DIAGNOSTIC_IGNORED_DECLARATION_AFTER_STATEMENT _Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"")
-#endif
-
 /* CLANG must safe non-volatiles, because it uses a return-twice algorithm */
 #if defined(__clang__) && !defined(_SEH3$_FRAME_ALL_NONVOLATILES)
 #define _SEH3$_FRAME_ALL_NONVOLATILES 1
@@ -359,9 +353,6 @@ _Pragma("GCC diagnostic pop") \
         (void)&&_SEH3$_l_BeforeFilterOrFinally; \
         (void)&&_SEH3$_l_FilterOrFinally; \
 \
-_Pragma("GCC diagnostic push") \
-PRAGMA_DIAGNOSTIC_IGNORED_DECLARATION_AFTER_STATEMENT \
-\
         /* Count the try level. Outside of any __try, _SEH3$_TryLevel is 0 */ \
         enum { \
             _SEH3$_PreviousTryLevel = _SEH3$_TryLevel, \
@@ -373,8 +364,6 @@ PRAGMA_DIAGNOSTIC_IGNORED_DECLARATION_AFTER_STATEMENT \
 \
         /* Allocate a registration frame */ \
         volatile SEH3$_REGISTRATION_FRAME _SEH3$_AUTO_CLEANUP _SEH3$_TrylevelFrame; \
-\
-_Pragma("GCC diagnostic pop") \
 \
         goto _SEH3$_l_BeforeTry; \
         /* Silence warning */ goto _SEH3$_l_AfterTry; \
@@ -390,9 +379,6 @@ _Pragma("GCC diagnostic pop") \
 \
     _SEH3$_l_BeforeTry: (void)0; \
         _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
-\
-_Pragma("GCC diagnostic push") \
-PRAGMA_DIAGNOSTIC_IGNORED_DECLARATION_AFTER_STATEMENT \
 \
         /* Forward declaration of the filter function */ \
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FilterFunction); \
@@ -441,9 +427,6 @@ PRAGMA_DIAGNOSTIC_IGNORED_DECLARATION_AFTER_STATEMENT \
     _SEH3$_l_BeforeTry: (void)0; \
         _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
 \
-_Pragma("GCC diagnostic push") \
-PRAGMA_DIAGNOSTIC_IGNORED_DECLARATION_AFTER_STATEMENT \
-\
         /* Forward declaration of the finally function */ \
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FinallyFunction); \
 \
@@ -479,8 +462,6 @@ PRAGMA_DIAGNOSTIC_IGNORED_DECLARATION_AFTER_STATEMENT \
 \
         /* Implementation of the auto cleanup function */ \
         _SEH3$_DEFINE_CLEANUP_FUNC(_SEH3$_AutoCleanup); \
-\
-_Pragma("GCC diagnostic pop") \
 \
     /* Close the outer scope */ \
     }

@@ -52,7 +52,7 @@ if(NOT GCC_VERSION VERSION_LESS 4.8)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_flags_language("-std=gnu89 -Wno-microsoft" "C")
+    add_compile_flags_language("-std=gnu99 -Wno-microsoft" "C")
     set(CMAKE_LINK_DEF_FILE_FLAG "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
     set(CMAKE_LINK_LIBRARY_SUFFIX "")
@@ -70,7 +70,6 @@ if(DBG)
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
         add_compile_flags_language("-Wold-style-declaration" "C")
     endif()
-    add_compile_flags_language("-Wdeclaration-after-statement" "C")
 endif()
 
 add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
@@ -351,8 +350,8 @@ endif()
 
 function(fixup_load_config _target)
     get_target_property(PEFIXUP native-pefixup IMPORTED_LOCATION_NOCONFIG)
-    add_custom_command(TARGET ${_target} POST_BUILD 
-        COMMAND "${PEFIXUP}" 
+    add_custom_command(TARGET ${_target} POST_BUILD
+        COMMAND "${PEFIXUP}"
                 "$<TARGET_FILE:${_target}>"
         COMMENT "Patching in LOAD_CONFIG")
 endfunction()
