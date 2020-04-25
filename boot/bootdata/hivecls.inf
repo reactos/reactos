@@ -859,7 +859,7 @@ MERGE="Fusionner"
 CONFIGURE="Configurer"
 INSTALL="Installer"
 UNINSTALL="Désinstaller"
-REPAIR="Répairer"
+REPAIR="Réparer"
 TEST="Tester"
 
 ; LANG_ITALIAN SUBLANG_NEUTRAL
