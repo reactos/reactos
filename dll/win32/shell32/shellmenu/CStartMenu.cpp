@@ -155,6 +155,45 @@ private:
         return S_OK;
     }
 
+    HMENU CreateRecentMenu() const
+    {
+        HMENU hMenu = ::CreateMenu();
+        BOOL bExpandMyDocuments = TRUE;
+        BOOL bExpandMyPictures = FALSE;
+
+        WCHAR szText[128];
+        HMENU hSubMenu = ::GetSubMenu(m_hRecentMenu, 0);
+        UINT i, nCount = GetMenuItemCount(hSubMenu);
+        for (i = 0; i < nCount; ++i)
+        {
+            UINT nID = GetMenuItemID(hSubMenu, i);
+            if (GetMenuString(hSubMenu, i, szText, _countof(szText), MF_BYPOSITION))
+            {
+                if ((nID == IDM_MYDOCUMENTS && bExpandMyDocuments) ||
+                    (nID == IDM_MYPICTURES && bExpandMyPictures))
+                {
+                    MENUITEMINFOW mii = { sizeof(mii), MIIM_TYPE | MIIM_ID | MIIM_SUBMENU };
+                    mii.fType = MFT_STRING;
+                    mii.wID = nID;
+                    mii.hSubMenu = ::CreatePopupMenu();
+                    mii.dwTypeData = szText;
+                    mii.cch = lstrlenW(szText);
+                    InsertMenuItemW(hMenu, i, TRUE, &mii);
+                }
+                else
+                {
+                    AppendMenuW(hMenu, MF_STRING | MF_ENABLED, nID, szText);
+                }
+            }
+            else
+            {
+                AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+            }
+        }
+
+        return hMenu;
+    }
+
     HRESULT OnGetSubMenu(LPSMDATA psmd, REFIID iid, void ** pv)
     {
         HRESULT hr;
@@ -188,42 +227,9 @@ private:
             }
             else
             {
-                BOOL bExpandMyDocuments = TRUE;
-                BOOL bExpandMyPictures = FALSE;
-
                 if (csidl == CSIDL_RECENT)
                 {
-                    HMENU hMenu = ::CreateMenu();
-
-                    WCHAR szText[128];
-                    HMENU hSubMenu = ::GetSubMenu(m_hRecentMenu, 0);
-                    UINT i, nCount = GetMenuItemCount(hSubMenu);
-                    for (i = 0; i < nCount; ++i)
-                    {
-                        UINT nID = GetMenuItemID(hSubMenu, i);
-                        if (GetMenuString(hSubMenu, i, szText, _countof(szText), MF_BYPOSITION))
-                        {
-                            if ((nID == IDM_MYDOCUMENTS && bExpandMyDocuments) ||
-                                (nID == IDM_MYPICTURES && bExpandMyPictures))
-                            {
-                                MENUITEMINFOW mii = { sizeof(mii), MIIM_TYPE | MIIM_ID | MIIM_SUBMENU };
-                                mii.fType = MFT_STRING;
-                                mii.wID = nID;
-                                mii.hSubMenu = ::CreatePopupMenu();
-                                mii.dwTypeData = szText;
-                                mii.cch = lstrlenW(szText);
-                                InsertMenuItemW(hMenu, i, TRUE, &mii);
-                            }
-                            else
-                            {
-                                AppendMenuW(hMenu, MF_STRING | MF_ENABLED, nID, szText);
-                            }
-                        }
-                        else
-                        {
-                            AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
-                        }
-                    }
+                    HMENU hMenu = CreateRecentMenu();
 
                     hr = pShellMenu->SetMenu(hMenu, NULL, SMSET_TOP);
                     if (FAILED_UNEXPECTEDLY(hr))
