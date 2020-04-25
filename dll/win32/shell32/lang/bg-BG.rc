@@ -93,8 +93,8 @@ IDM_RECENTMENUHEAD MENUEX
 {
     POPUP ""
     {
-        MENUITEM "My Documents", 516
-        MENUITEM "My Pictures", 518
+        MENUITEM "My Documents", IDM_MYDOCUMENTS
+        MENUITEM "My Pictures", IDM_MYPICTURES
         MENUITEM SEPARATOR
     }
 }

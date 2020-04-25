@@ -47,8 +47,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(CStartMenu);
 #define IDM_NETWORKCONNECTIONS      557
 #define IDM_DISCONNECT              5000
 #define IDM_SECURITY                5001
-#define IDM_MYDOCUMENTS             516
-#define IDM_MYPICTURES              518
 
 /*
  * TODO:
