@@ -65,7 +65,7 @@ VOID InitUtilsList(BOOL bInitGui)
         /* Add the utilities in the listbox */
         for (i = 0; i < _countof(EntriesList); ++i)
         {
-            bIsRunning = IsProcessRunning(EntriesList[i].lpProgram);
+            bIsRunning = IsProcessRunning(EntriesList[i].lpszProgram);
             EntriesList[i].bState = bIsRunning;
 
             /* Load the string and append the utility's name to the format */
@@ -99,7 +99,7 @@ BOOL DlgInitHandler(IN HWND hDlg)
     INT PosX, PosY;
     RECT rc;
     WCHAR szAboutDlg[MAX_BUFFER];
-    WCHAR wszAppPath[MAX_BUFFER];
+    WCHAR szAppPath[MAX_BUFFER];
     HMENU hSysMenu;
 
     /* Save the dialog handle */
@@ -112,8 +112,8 @@ BOOL DlgInitHandler(IN HWND hDlg)
     SetWindowPos(hDlg, 0, PosX, PosY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 
     /* Extract the icon resource from the executable process */
-    GetModuleFileNameW(NULL, wszAppPath, _countof(wszAppPath));
-    Globals.hIcon = ExtractIconW(Globals.hInstance, wszAppPath, 0);
+    GetModuleFileNameW(NULL, szAppPath, _countof(szAppPath));
+    Globals.hIcon = ExtractIconW(Globals.hInstance, szAppPath, 0);
 
     /* Set the icon within the dialog's title bar */
     if (Globals.hIcon)
@@ -213,7 +213,7 @@ INT ListBoxRefreshContents(VOID)
     for (i = 0; i < _countof(EntriesList); ++i)
     {
         /* Check the utility's state */
-        bIsRunning = IsProcessRunning(EntriesList[i].lpProgram);
+        bIsRunning = IsProcessRunning(EntriesList[i].lpszProgram);
         if (bIsRunning != EntriesList[i].bState)
         {
             /* The utility's state has changed, save it */
@@ -315,11 +315,11 @@ INT_PTR APIENTRY DlgProc(
                 }
 
                 case IDC_START:
-                    LaunchProcess(EntriesList[Globals.iSelectedIndex].lpProgram);
+                    LaunchProcess(EntriesList[Globals.iSelectedIndex].lpszProgram);
                     break;
 
                 case IDC_STOP:
-                    CloseProcess(EntriesList[Globals.iSelectedIndex].lpProgram);
+                    CloseProcess(EntriesList[Globals.iSelectedIndex].lpszProgram);
                     break;
 
                 default:

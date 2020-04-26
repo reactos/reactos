@@ -38,9 +38,9 @@ INT WINAPI wWinMain(IN HINSTANCE hInstance,
                     IN INT nCmdShow)
 {
     HMODULE hModule;
-    WCHAR wszFormat[MAX_BUFFER];
-    WCHAR wszFailLoad[MAX_BUFFER];
-    WCHAR wszTitle[MAX_BUFFER];
+    WCHAR szFormat[MAX_BUFFER];
+    WCHAR szFailLoad[MAX_BUFFER];
+    WCHAR szTitle[MAX_BUFFER];
     EXECDLGROUTINE UManStartDlg;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -51,11 +51,11 @@ INT WINAPI wWinMain(IN HINSTANCE hInstance,
     hModule = LoadLibraryW(L"UManDlg.dll");
     if (!hModule)
     {
-        LoadStringW(hInstance, IDS_FAIL_INIT, wszFormat, _countof(wszFormat));
-        LoadStringW(hInstance, IDS_FAIL_INIT_TITLE, wszTitle, _countof(wszTitle));
+        LoadStringW(hInstance, IDS_FAIL_INIT, szFormat, _countof(szFormat));
+        LoadStringW(hInstance, IDS_FAIL_INIT_TITLE, szTitle, _countof(szTitle));
 
-        StringCchPrintfW(wszFailLoad, _countof(wszFailLoad), wszFormat, GetLastError());
-        MessageBoxW(GetDesktopWindow(), wszFailLoad, wszTitle, MB_ICONERROR | MB_OK);
+        StringCchPrintfW(szFailLoad, _countof(szFailLoad), szFormat, GetLastError());
+        MessageBoxW(GetDesktopWindow(), szFailLoad, szTitle, MB_ICONERROR | MB_OK);
         return -1;
     }
 

@@ -44,7 +44,7 @@ typedef struct
 
 typedef struct _UTILMAN_STATE
 {
-    LPCWSTR lpProgram;
+    LPCWSTR lpszProgram;
     UINT    uNameId;
     WCHAR   szResource[MAX_BUFFER];
     BOOL    bState;
@@ -53,15 +53,15 @@ typedef struct _UTILMAN_STATE
 typedef struct _REGISTRY_SETTINGS
 {
     /* Accessibility Registry settings */
-    LPCWSTR wszAppPath;
+    LPCWSTR lpszAppPath;
     DWORD dwAppType;
     DWORD dwClientControlCode;
-    LPCWSTR wszAppName;
-    LPCWSTR wszErrorOnLaunch;
+    LPCWSTR lpszAppName;
+    LPCWSTR lpszErrorOnLaunch;
     BOOL bHideClient;
     BOOL bStartWithUtilman;
     BOOL bStartWithROS;
-    LPCWSTR wszHungRespondAction;
+    LPCWSTR lpszHungRespondAction;
     DWORD dwHungTimeOut;
 
     /* Utility Manager Registry settings */
@@ -71,12 +71,12 @@ typedef struct _REGISTRY_SETTINGS
 typedef struct _REGISTRY_DATA
 {
     /* On-Screen Keyboard Registry data */
-    LPCWSTR lpwsOskPath;
-    LPCWSTR lpwszOskDisplayName;
+    LPCWSTR lpszOskPath;
+    LPCWSTR lpszOskDisplayName;
 
     /* Magnify Registry data */
-    LPCWSTR lpwszMagnifyPath;
-    LPCWSTR lpwszMagnifyDisplayName;
+    LPCWSTR lpszMagnifyPath;
+    LPCWSTR lpszMagnifyDisplayName;
 } REGISTRY_DATA, *PREGISTRY_DATA;
 
 /* ENUMERATIONS ***************************************************************/
@@ -97,19 +97,19 @@ VOID CheckUtilityState(BOOL bUtilState);
 BOOL WINAPI UManStartDlg(VOID);
 
 /* process.c */
-DWORD GetProcessID(IN LPCWSTR lpProcessName);
-BOOL IsProcessRunning(IN LPCWSTR lpProcessName);
-BOOL LaunchProcess(LPCWSTR lpProcessName);
-BOOL CloseProcess(IN LPCWSTR lpProcessName);
+DWORD GetProcessID(IN LPCWSTR lpszProcessName);
+BOOL IsProcessRunning(IN LPCWSTR lpszProcessName);
+BOOL LaunchProcess(IN LPCWSTR lpszProcessName);
+BOOL CloseProcess(IN LPCWSTR lpszProcessName);
 
 /* about.c */
 VOID ShowAboutDlg(HWND hDlgParent);
 INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 /* registry.c */
-BOOL InitAppRegKey(IN HKEY hPredefinedKey, IN LPCWSTR lpwszSubKey, OUT PHKEY phKey, OUT LPDWORD lpdwDisposition);
-BOOL QueryAppSettings(IN HKEY hKey, IN LPCWSTR lpwszSubKey, IN LPCWSTR lpwszRegValue, OUT PVOID ReturnedData, IN OUT LPDWORD lpdwSizeData);
-BOOL SaveAppSettings(IN HKEY hKey, IN LPCWSTR lpwszRegValue, IN DWORD dwRegType, IN PVOID Data, IN DWORD cbSize);
+BOOL InitAppRegKey(IN HKEY hPredefinedKey, IN LPCWSTR lpszSubKey, OUT PHKEY phKey, OUT LPDWORD lpdwDisposition);
+BOOL QueryAppSettings(IN HKEY hKey, IN LPCWSTR lpszSubKey, IN LPCWSTR lpszRegValue, OUT PVOID ReturnedData, IN OUT LPDWORD lpdwSizeData);
+BOOL SaveAppSettings(IN HKEY hKey, IN LPCWSTR lpszRegValue, IN DWORD dwRegType, IN PVOID Data, IN DWORD cbSize);
 
 /* Struct variable declaration */
 extern UTILMAN_GLOBALS Globals;
