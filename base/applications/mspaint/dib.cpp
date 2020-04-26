@@ -69,6 +69,8 @@ SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time, int 
     // TODO: update hRes and vRes
 
     CloseHandle(hFile);
+
+    registrySettings.SetMostRecentFile(FileName);
 }
 
 void ShowFileLoadError(LPCTSTR name)
