@@ -650,7 +650,7 @@ BrsFolder_Delete(browse_info *info, HTREEITEM selected_item)
         ERR("SHGetPathFromIDListW failed\n");
         return;
     }
-    szzFrom[lstrlenW(szzFrom) + 1] = 0; // double NULL terminated
+    szzFrom[lstrlenW(szzFrom) + 1] = 0; /* double NULL-terminated */
     fileop.pFrom = szzFrom;
 
     /* delete folder */
