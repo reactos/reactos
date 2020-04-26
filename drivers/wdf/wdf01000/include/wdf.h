@@ -5,11 +5,8 @@
 #define __deref_out_range(x,y)
 
 #include <ntddk.h>
-//
-// TODO: Add wdh headers to reactos sdk and replace hardcoded path
-//
-#include "F:\WinDDK\7600.16385.1\inc\wdf\kmdf\1.9\wdf.h"
-#include "F:\WinDDK\7600.16385.1\inc\wdf\kmdf\1.9\wdfminiport.h"
+#include <wdf/kmdf/1.9/wdf.h>
+#include <wdf/kmdf/1.9/wdfminiport.h>
 #include "common/fxmacros.h"
 #include "wdf10.h"
 #include "wdf11.h"
