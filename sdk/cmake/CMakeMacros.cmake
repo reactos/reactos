@@ -298,7 +298,7 @@ macro(dir_to_num dir var)
     elseif(${dir} STREQUAL reactos/3rdParty)
         set(${var} 63)
     elseif(${dir} STREQUAL reactos/Resources/Themes/Lunar)
-        set(${var} 64)	
+        set(${var} 64)
     elseif(${dir} STREQUAL reactos/Resources/Themes/Mizu)
         set(${var} 65)
     elseif(${dir} STREQUAL reactos/system32/spool/prtprocs/x64)
@@ -906,6 +906,21 @@ function(create_registry_hives)
         NO_CAB
         FOR bootcd regtest livecd)
 
+endfunction()
+
+function(add_driver_inf _module)
+    # Add to the inf files list
+    foreach(_file ${ARGN})
+        set(_converted_item ${CMAKE_CURRENT_BINARY_DIR}/${_file})
+        set(_source_item ${CMAKE_CURRENT_SOURCE_DIR}/${_file})
+        add_custom_command(OUTPUT "${_converted_item}"
+                           COMMAND native-utf16le "${_source_item}" "${_converted_item}"
+                           DEPENDS native-utf16le "${_source_item}")
+        add_cd_file(FILE ${_converted_item} DESTINATION reactos/inf FOR all)
+        list(APPEND _converted_inf_files ${_converted_item})
+    endforeach()
+
+    add_custom_target(${_module}_inf_files DEPENDS ${_converted_inf_files})
 endfunction()
 
 if(KDBG)

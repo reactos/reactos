@@ -1,20 +1,14 @@
 
 list(APPEND INF_FILES
-    acpi.inf
     audio.inf
     battery.inf
     bda.inf
     bth.inf
-    btrfs.inf
     c_image.inf
-    cdrom.inf
-    cpu.inf
-    disk.inf
     display.inf
     fdc.inf
     flpydisk.inf
     hal.inf
-    hdaudbus.inf
     hdc.inf
     input.inf
     keyboard.inf
@@ -25,12 +19,6 @@ list(APPEND INF_FILES
     monitor.inf
     msmouse.inf
     NET_NIC.inf
-    netamd.inf
-    nete1000.inf
-    netisa.inf
-    netkvm.inf
-    netrtl.inf
-    netrtpnt.inf
     nettcpip.inf
     ports.inf
     scsi.inf
@@ -38,10 +26,8 @@ list(APPEND INF_FILES
     unknown.inf
     usb.inf
     usbport.inf
-    usbstor.inf
     wdmaudio.inf
-    wmiacpi.inf
-    xboxdisp.inf)
+    wmiacpi.inf)
 
 list(APPEND UTF8_INF_FILES
     defltws.inf
@@ -49,17 +35,8 @@ list(APPEND UTF8_INF_FILES
     intl.inf
     layout.inf)
 
-foreach(item ${INF_FILES})
-    set(_converted_item ${CMAKE_CURRENT_BINARY_DIR}/${item})
-    set(_source_item ${CMAKE_CURRENT_SOURCE_DIR}/${item})
-    add_custom_command(OUTPUT "${_converted_item}"
-                       COMMAND native-utf16le "${_source_item}" "${_converted_item}"
-                       DEPENDS native-utf16le "${_source_item}")
-    add_cd_file(TARGET converted_inf_files FILE ${_converted_item} DESTINATION reactos/inf FOR all)
-    list(APPEND _converted_inf_files ${_converted_item})
-endforeach(item)
-
-add_custom_target(converted_inf_files DEPENDS ${_converted_inf_files})
+# module name is used for a custom target creation, so we can put any unique name here
+add_driver_inf(media_inf ${INF_FILES})
 
 foreach(item ${UTF8_INF_FILES})
     add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/inf FOR all)
