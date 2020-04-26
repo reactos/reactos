@@ -603,9 +603,6 @@ static LRESULT BrsFolder_Treeview_Rename(browse_info *info, NMTVDISPINFOW *pnmtv
     if(!MoveFileW(old_path, new_path))
         return 0;
 
-#ifdef __REACTOS__
-    SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_PATHW, old_path, new_path);
-#endif
     SHFree(item_data->lpifq);
     SHFree(item_data->lpi);
     item_data->lpifq = SHSimpleIDListFromPathW(new_path);
@@ -907,9 +904,6 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     if(!CreateDirectoryW(name, NULL))
         goto cleanup;
 
-#ifdef __REACTOS__
-    SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW, name, NULL);
-#endif
     /* Update parent of newly created directory */
     parent = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_CARET, 0);
     if(!parent)
@@ -1127,7 +1121,9 @@ static HTREEITEM BrsFolder_FindItemByPidl(browse_info *info, LPCITEMIDLIST pidl,
 {
     TV_ITEMW item;
     TV_ITEMDATA *item_data;
-#ifndef __REACTOS__
+#ifdef __REACTOS__
+    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+#else
     HRESULT hr;
 #endif
 
@@ -1139,6 +1135,12 @@ static HTREEITEM BrsFolder_FindItemByPidl(browse_info *info, LPCITEMIDLIST pidl,
 #ifdef __REACTOS__
     if (ILIsEqual(item_data->lpifq, pidl))
         return hItem;
+    if (SHGetPathFromIDListW(item_data->lpifq, szPath1) &&
+        SHGetPathFromIDListW(pidl, szPath2) &&
+        lstrcmpiW(szPath1, szPath2) == 0)
+    {
+        return hItem;
+    }
 #else
     hr = IShellFolder_CompareIDs(item_data->lpsfParent, 0, item_data->lpifq, pidl);
     if(SUCCEEDED(hr) && !HRESULT_CODE(hr))
