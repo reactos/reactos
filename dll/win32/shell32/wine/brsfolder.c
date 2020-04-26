@@ -637,11 +637,19 @@ BrsFolder_Delete(browse_info *info, HTREEITEM selected_item)
     /* get item_data */
     item.mask = TVIF_HANDLE | TVIF_PARAM;
     item.hItem = selected_item;
-    SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item);
+    if (!SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item))
+    {
+        ERR("TVM_GETITEMW failed\n");
+        return;
+    }
     item_data = (TV_ITEMDATA *)item.lParam;
 
     /* get the path */
-    SHGetPathFromIDListW(item_data->lpifq, szzFrom);
+    if (!SHGetPathFromIDListW(item_data->lpifq, szzFrom))
+    {
+        ERR("SHGetPathFromIDListW failed\n");
+        return;
+    }
     szzFrom[lstrlenW(szzFrom) + 1] = 0; // double NULL terminated
     fileop.pFrom = szzFrom;
 
