@@ -243,7 +243,7 @@ Return Value:
   --*/
 {
     NTSTATUS                    status;
-    PLIST_ENTRY                 next;
+    //PLIST_ENTRY                 next;
     FxFileObjectInfo*           fileObjInfo;
     PFX_DRIVER_GLOBALS          fxDriverGlobals;
 
@@ -1095,8 +1095,8 @@ Return Value:
     NTSTATUS                status;
     FxFileObject*           pFxFO = NULL;
     WDFFILEOBJECT           hwdfFO = NULL;
-    PLIST_ENTRY             next;
-    FxFileObjectInfo*       fileObjInfo;
+    //PLIST_ENTRY             next;
+    //FxFileObjectInfo*       fileObjInfo;
     MxFileObject            fileObject;
 
     //

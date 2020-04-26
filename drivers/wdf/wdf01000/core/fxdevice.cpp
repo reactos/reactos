@@ -203,7 +203,7 @@ DispatchWorker(
     next = (PLIST_ENTRY)DispatchContext;
 
     ASSERT(NULL != DispatchContext &&
-           ((UCHAR)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
+           ((ULONG)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
 
     //
     // Check for any driver/class-extensions' preprocess requirements.
@@ -324,7 +324,7 @@ FxDevice::_AcquireOptinRemoveLock(
     __in MdIrp Irp
     )
 {
-    NTSTATUS status;
+    //NTSTATUS status;
     FxIrp irp(Irp);
 
     //
@@ -577,9 +577,9 @@ FxDevice::_Create(
     FxDevice*           pDevice;
     NTSTATUS            status;
     WDFOBJECT           object;
-    PLIST_ENTRY         pNext;
+    //PLIST_ENTRY         pNext;
     //PWDFCXDEVICE_INIT   pCxInit; 
-    FxWdmDeviceExtension* wdmDeviceExtension;
+    //FxWdmDeviceExtension* wdmDeviceExtension;
 
     *Device = NULL;
     pInit = *DeviceInit;
@@ -799,7 +799,7 @@ Return Value:
 
 {
     PFX_DRIVER_GLOBALS  pGlobals;
-    PLIST_ENTRY         next;
+    //PLIST_ENTRY         next;
     NTSTATUS            status;
     BOOLEAN             wmiTracing;
     size_t              reqCtxSize;
@@ -1391,7 +1391,7 @@ FxDevice::ConfigureAutoForwardCleanupClose(
     )
 {
     WDF_TRI_STATE   autoForwardCleanupClose;
-    PLIST_ENTRY     next;
+    //PLIST_ENTRY     next;
     BOOLEAN         checkClientDriver;
 
     autoForwardCleanupClose = WdfUseDefault;

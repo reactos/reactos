@@ -8,7 +8,7 @@
 class FxCollectionEntry : public FxStump {
 
     friend class FxCollection;
-    friend class FxCollectionInternal;
+    friend struct FxCollectionInternal;
 
 protected:
     FxCollectionEntry(

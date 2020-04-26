@@ -94,7 +94,7 @@ WDFDEVICE_INIT::WDFDEVICE_INIT(
 
 WDFDEVICE_INIT::~WDFDEVICE_INIT()
 {
-    PLIST_ENTRY next;
+    //PLIST_ENTRY next;
     
     if (PnpPower.PnpStateCallbacks != NULL)
     {

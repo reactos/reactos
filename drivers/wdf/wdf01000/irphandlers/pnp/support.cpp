@@ -11,7 +11,7 @@ GetStackCapabilities(
     __out PDEVICE_CAPABILITIES Capabilities
     )
 {
-    ULONG i;
+    //ULONG i;
     FxAutoIrp irp;
     NTSTATUS status;
 
@@ -26,12 +26,14 @@ GetStackCapabilities(
     // pointer value we are saving, it does eventually add up on very deep stacks.
     //
     DeviceInStack->SetObject(DeviceInStack->GetAttachedDeviceReference());
-    if (DeviceInStack->GetObject() == NULL) {
+    if (DeviceInStack->GetObject() == NULL)
+    {
         goto Done;
     }
 
     irp.SetIrp(FxIrp::AllocateIrp(DeviceInStack->GetStackSize()));
-    if (irp.GetIrp() == NULL) {
+    if (irp.GetIrp() == NULL)
+    {
         goto Done;
     }
 

@@ -14,7 +14,7 @@ typedef REQUEST_POWER_COMPLETE MdRequestPowerCompleteType, *MdRequestPowerComple
 
 class FxIrp {
 
-    friend class FxAutoIrp;
+    friend struct FxAutoIrp;
 
 private:
     MdIrp m_Irp;

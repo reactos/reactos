@@ -2858,7 +2858,7 @@ Return Value:
 
   --*/
 {
-    NTSTATUS notifyPowerDownStatus;
+    //NTSTATUS notifyPowerDownStatus;
     SYSTEM_POWER_STATE systemState;
 
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSleeping);

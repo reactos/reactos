@@ -76,7 +76,6 @@ public:
         VOID
         )
     {
-        BOOLEAN wasCancelled;
     }
 
     //CHECK_RETURN_IF_USER_MODE

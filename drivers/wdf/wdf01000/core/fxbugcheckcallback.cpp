@@ -546,8 +546,8 @@ FxpGetImageBase(
     //AUX_MODULE_EXTENDED_INFO* modules = NULL;
     //AUX_MODULE_EXTENDED_INFO* module;
     PVOID addressInImage = NULL;
-    ULONG numberOfModules;
-    ULONG i;
+    //ULONG numberOfModules;
+    //ULONG i;
 
     //
     // Basic validation.
