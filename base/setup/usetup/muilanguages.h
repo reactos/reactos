@@ -200,8 +200,8 @@
 #ifdef LANGUAGE_ET_EE
     #include "lang/et-EE.h"
 #endif
-// #ifdef LANGUAGE_EU_ES
-    // #include "lang/eu-ES.h"
+#ifdef LANGUAGE_EU_ES
+    #include "lang/eu-ES.h"
 // #endif
 // #ifdef LANGUAGE_FA_IR
     // #include "lang/fa-IR.h"
@@ -478,7 +478,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"0000042C", L"Azeri (Latin)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EU_ES
-    {L"0000042D", L"Basque", enUSPages, enUSErrorEntries, enUSStrings},
+    {L"0000042D", L"Basque", euESPages, euESErrorEntries, euESStrings},
 #endif
 #ifdef LANGUAGE_BE_BY
     {L"00000423", L"Belarusian", enUSPages, enUSErrorEntries, enUSStrings},
