@@ -634,18 +634,20 @@ BrsFolder_Treeview_DeleteFolder(browse_info *info, HTREEITEM selected_item)
     SHFILEOPSTRUCTW fileop = { info->hwndTreeView };
     WCHAR szzFrom[MAX_PATH + 1];
 
-    item.mask  = TVIF_PARAM;
-    item.mask  = TVIF_HANDLE | TVIF_PARAM;
+    // get item_data
+    item.mask = TVIF_HANDLE | TVIF_PARAM;
     item.hItem = selected_item;
     SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item);
     item_data = (TV_ITEMDATA *)item.lParam;
 
-    fileop.wFunc = FO_DELETE;
+    // get the path
     SHGetPathFromIDListW(item_data->lpifq, szzFrom);
-    szzFrom[lstrlenW(szzFrom) + 1] = 0;
-
+    szzFrom[lstrlenW(szzFrom) + 1] = 0; // double NULL terminated
     fileop.pFrom = szzFrom;
+
+    // delete folder
     fileop.fFlags = FOF_ALLOWUNDO;
+    fileop.wFunc = FO_DELETE;
     SHFileOperationW(&fileop);
 }
 #endif
