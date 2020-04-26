@@ -202,7 +202,7 @@
 #endif
 #ifdef LANGUAGE_EU_ES
     #include "lang/eu-ES.h"
-// #endif
+#endif
 // #ifdef LANGUAGE_FA_IR
     // #include "lang/fa-IR.h"
 // #endif
