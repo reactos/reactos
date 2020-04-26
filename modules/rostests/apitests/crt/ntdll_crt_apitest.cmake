@@ -72,6 +72,7 @@ list(APPEND SOURCE_NTDLL
 #    labs.c
 #    log.c
     mbstowcs.c
+    mbtowc.c
 #    memchr.c
 #    memcmp.c
     # memcpy == memmove
