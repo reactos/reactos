@@ -325,6 +325,8 @@ amd64/                                      @tkreuzer
 /boot/freeldr/freeldr/arch/realmode/amd64.S @tkreuzer
 
 # Translations
+# This is the list of translation teams in ReactOS GitHub organization.
+# If you want to be part of one - hit us at https://chat.reactos.org/
 de-DE.rc    @reactos/lang-german
 fr-FR.rc    @reactos/lang-french
 nl-NL.rc    @reactos/lang-dutch
