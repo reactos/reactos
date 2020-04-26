@@ -1,4 +1,4 @@
-#include "common/mxgeneral.h"
+#include "primitives/mxgeneral.h"
 #include <ntstrsafe.h>
 
 VOID
