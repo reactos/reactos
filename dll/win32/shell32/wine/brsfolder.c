@@ -1123,6 +1123,7 @@ static HTREEITEM BrsFolder_FindItemByPidl(browse_info *info, LPCITEMIDLIST pidl,
     TV_ITEMDATA *item_data;
 #ifdef __REACTOS__
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+    LPITEMIDLIST pidl1, pidl2;
 #else
     HRESULT hr;
 #endif
@@ -1133,14 +1134,26 @@ static HTREEITEM BrsFolder_FindItemByPidl(browse_info *info, LPCITEMIDLIST pidl,
     item_data = (TV_ITEMDATA *)item.lParam;
 
 #ifdef __REACTOS__
-    if (ILIsEqual(item_data->lpifq, pidl))
+    if (ILIsEqual(pidl, item_data->lpifq))
         return hItem;
-    if (SHGetPathFromIDListW(item_data->lpifq, szPath1) &&
-        SHGetPathFromIDListW(pidl, szPath2) &&
-        lstrcmpiW(szPath1, szPath2) == 0)
+    pidl1 = ILClone(pidl);
+    pidl2 = ILClone(item_data->lpifq);
+    ILRemoveLastID(pidl1);
+    ILRemoveLastID(pidl2);
+    SHGetPathFromIDListW(pidl1, szPath1);
+    SHGetPathFromIDListW(pidl2, szPath2);
+    if (ILIsEqual(pidl1, pidl2) ||
+        (szPath1[0] && lstrcmpiW(szPath1, szPath2) == 0))
     {
-        return hItem;
+        if (ILIsEqual(ILFindLastID(pidl), ILFindLastID(item_data->lpifq)))
+        {
+            ILFree(pidl1);
+            ILFree(pidl2);
+            return hItem;
+        }
     }
+    ILFree(pidl1);
+    ILFree(pidl2);
 #else
     hr = IShellFolder_CompareIDs(item_data->lpsfParent, 0, item_data->lpifq, pidl);
     if(SUCCEEDED(hr) && !HRESULT_CODE(hr))
