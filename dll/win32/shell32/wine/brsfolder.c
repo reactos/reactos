@@ -625,6 +625,30 @@ static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
     return S_OK;
 }
 
+#ifdef __REACTOS__
+static void
+BrsFolder_Treeview_DeleteFolder(browse_info *info, HTREEITEM selected_item)
+{
+    TV_ITEMW item;
+    TV_ITEMDATA *item_data;
+    SHFILEOPSTRUCTW fileop = { info->hwndTreeView };
+    WCHAR szzFrom[MAX_PATH + 1];
+
+    item.mask  = TVIF_PARAM;
+    item.mask  = TVIF_HANDLE | TVIF_PARAM;
+    item.hItem = selected_item;
+    SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item);
+    item_data = (TV_ITEMDATA *)item.lParam;
+
+    fileop.wFunc = FO_DELETE;
+    SHGetPathFromIDListW(item_data->lpifq, szzFrom);
+    szzFrom[lstrlenW(szzFrom) + 1] = 0;
+
+    fileop.pFrom = szzFrom;
+    fileop.fFlags = FOF_ALLOWUNDO;
+    SHFileOperationW(&fileop);
+}
+#endif
 static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydown)
 {
     HTREEITEM selected_item;
@@ -643,14 +667,7 @@ static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydo
     case VK_DELETE:
         {
 #ifdef __REACTOS__
-            /*********************************************************
-            FIXME: Add a proper alternative implementation for ReactOS
-
-            NOTES: Wine makes use of the ISFHelper interface, which we
-            don't have in ReactOS.
-            It's defined in dlls/shell32/shellfolder.h and implemented
-            in dlls/shell32/shfldr_fs.c on Wine's side.
-            *********************************************************/
+            BrsFolder_Treeview_DeleteFolder(info, selected_item);
 #else
             const ITEMIDLIST *item_id;
             ISFHelper *psfhlp;
