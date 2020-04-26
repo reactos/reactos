@@ -326,4 +326,6 @@ amd64/                                      @tkreuzer
 
 # Translations
 de-DE.rc    @reactos/lang-german
+fr-FR.rc    @reactos/lang-french
 nl-NL.rc    @reactos/lang-dutch
+ru-RU.rc    @reactos/lang-russian
