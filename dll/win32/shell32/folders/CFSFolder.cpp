@@ -371,6 +371,52 @@ private:
 
         BOOL bDirectory = (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 
+        HRESULT hr;
+        if (bDirectory)
+        {
+            // Skip the current and parent directory nodes
+            if (!strcmpW(FindData.cFileName, L".") || !strcmpW(FindData.cFileName, L".."))
+                return S_OK;
+
+            // Does this directory need special handling?
+            if ((FindData.dwFileAttributes & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0)
+            {
+                WCHAR Tmp[MAX_PATH];
+                CLSID clsidFolder;
+
+                PathCombineW(Tmp, sParentDir, FindData.cFileName);
+
+                hr = SHELL32_GetCLSIDForDirectory(Tmp, L"CLSID", &clsidFolder);
+                if (SUCCEEDED(hr))
+                {
+                    ERR("SHOULD DO SOMETHING WITH CLSID?\n");
+                }
+            }
+        }
+        else
+        {
+            CLSID clsidFile;
+            LPWSTR pExtension = PathFindExtensionW(FindData.cFileName);
+            if (pExtension)
+            {
+                // FIXME: Cache this?
+                hr = GetCLSIDForFileTypeFromExtension(pExtension, L"CLSID", &clsidFile);
+                if (hr == S_OK)
+                {
+                    HKEY hkey;
+                    hr = SHRegGetCLSIDKeyW(clsidFile, L"ShellFolder", FALSE, FALSE, &hkey);
+                    if (SUCCEEDED(hr))
+                    {
+                        ::RegCloseKey(hkey);
+
+                        // This should be presented as directory!
+                        bDirectory = TRUE;
+                        TRACE("Treating '%S' as directory!\n", FindData.cFileName);
+                    }
+                }
+            }
+        }
+
         LPITEMIDLIST pidl = NULL;
         if (bDirectory)
         {
@@ -573,10 +619,60 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
     dwShellAttributes = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANLINK | SFGAO_CANRENAME | SFGAO_CANDELETE |
                         SFGAO_HASPROPSHEET | SFGAO_DROPTARGET | SFGAO_FILESYSTEM;
 
-    if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        dwShellAttributes |= (SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR | SFGAO_STORAGEANCESTOR | SFGAO_STORAGE);
+    BOOL bDirectory = (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+
+    if (!bDirectory)
+    {
+        // https://git.reactos.org/?p=reactos.git;a=blob;f=dll/shellext/zipfldr/res/zipfldr.rgs;hb=032b5aacd233cd7b83ab6282aad638c161fdc400#l9
+        WCHAR szFileName[MAX_PATH];
+        LPWSTR pExtension;
+
+        if (_ILSimpleGetTextW(pidl, szFileName, _countof(szFileName)) && (pExtension = PathFindExtensionW(szFileName)))
+        {
+            CLSID clsidFile;
+            // FIXME: Cache this?
+            HRESULT hr = GetCLSIDForFileTypeFromExtension(pExtension, L"CLSID", &clsidFile);
+            if (hr == S_OK)
+            {
+                HKEY hkey;
+                hr = SHRegGetCLSIDKeyW(clsidFile, L"ShellFolder", FALSE, FALSE, &hkey);
+                if (SUCCEEDED(hr))
+                {
+                    DWORD dwAttributes = 0;
+                    DWORD dwSize = sizeof(dwAttributes);
+                    LSTATUS Status;
+
+                    Status = SHRegGetValueW(hkey, NULL, L"Attributes", RRF_RT_REG_DWORD, NULL, &dwAttributes, &dwSize);
+                    if (Status == STATUS_SUCCESS)
+                    {
+                        ERR("Augmenting '%S' with dwAttributes=0x%x\n", szFileName, dwAttributes);
+                        dwShellAttributes |= dwAttributes;
+                    }
+                    ::RegCloseKey(hkey);
+
+                    // This should be presented as directory!
+                    bDirectory = TRUE;
+                    ERR("Treating '%S' as directory!\n", szFileName);
+                }
+            }
+        }
+    }
+
+    // This is a directory
+    if (bDirectory)
+    {
+        dwShellAttributes |= (SFGAO_FOLDER | /*SFGAO_HASSUBFOLDER |*/ SFGAO_STORAGE);
+
+        // Is this a real directory?
+        if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            dwShellAttributes |= (SFGAO_FILESYSANCESTOR | SFGAO_STORAGEANCESTOR);
+        }
+    }
     else
+    {
         dwShellAttributes |= SFGAO_STREAM;
+    }
 
     if (dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
         dwShellAttributes |=  SFGAO_HIDDEN;
