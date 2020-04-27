@@ -391,7 +391,7 @@ BEGIN
     GROUPBOX "Nastavení pro vybrané umístění", -1, 10, 72, 220, 70
     RADIOBUTTON "&Zvolená velikost:", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "M&aximální velikost (MB):", -1, 20, 105, 70, 10
+    LTEXT "M&aximální velikost (MB):", -1, 20, 105, 78, 10
     RADIOBUTTON "&Nepřesouvat soubory do Koše, odstraňovat okamžitě při smazání.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "Při mazání souborů žá&dat potvrzení", 14004, 20, 155, 140, 10, WS_TABSTOP
 END

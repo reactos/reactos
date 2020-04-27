@@ -384,8 +384,8 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Налаштування для вибраного розташування", -1, 10, 72, 220, 70
     RADIOBUTTON "&Особливий розмір:", 14001, 20, 90, 92, 10, WS_TABSTOP
-    EDITTEXT 14002, 120, 100, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "&Максимальний розмір (мб):", -1, 20, 105, 100, 10
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
+    LTEXT "&Максимальний розмір (мб):", -1, 20, 105, 92, 10
     RADIOBUTTON "Не переміщ&увати файли до кошика, а видаляти їх остаточно відразу", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "Пока&зувати діалог підтвердження видалення", 14004, 20, 155, 165, 10, WS_TABSTOP
 END
