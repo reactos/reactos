@@ -15,7 +15,7 @@ BEGIN
 //    STRING_LABEL_HELP "Wyświetla lub zmienia etykietę woluminu dysku.\n\nLABEL [dysk:][etykieta]\n"
     STRING_LABEL_HELP "Tworzy, zmienia lub usuwa etykietę woluminu dysku.\n\n\
 LABEL [dysk:][etykieta]\n\n\
-  dysk:          Określa litere dysku.\n\
+  dysk:          Określa literę dysku.\n\
   etykieta       Określa etykietę woluminu."
     STRING_LABEL_TEXT1 "Wolumin w napędzie %c: ma etykietę: %s\n"
     STRING_LABEL_TEXT2 "Wolumin w napędzie %c: nie posiada etykiety\n"
