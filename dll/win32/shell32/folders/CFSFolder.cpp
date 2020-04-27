@@ -1,53 +1,23 @@
-
 /*
- * file system folder
- *
- * Copyright 1997             Marcus Meissner
- * Copyright 1998, 1999, 2002 Juergen Schmied
- * Copyright 2019             Katayama Hirofumi MZ
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     file system folder
+ * COPYRIGHT:   Copyright 1997 Marcus Meissner
+ *              Copyright 1998, 1999, 2002 Juergen Schmied
+ *              Copyright 2019 Katayama Hirofumi MZ
+ *              Copyright 2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-HKEY OpenKeyFromFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName)
+static HRESULT SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, LPCWSTR KeyName, CLSID* pclsidFolder);
+
+
+HKEY OpenKeyFromFileType(LPWSTR pExtension, LPCWSTR KeyName)
 {
     HKEY hkey;
-
-    if (!_ILIsValue(pidl))
-    {
-        ERR("Invalid pidl!\n");
-        return NULL;
-    }
-
-    FileStructW* pDataW = _ILGetFileStructW(pidl);
-    if (!pDataW)
-    {
-        ERR("Invalid pidl!\n");
-        return NULL;
-    }
-
-    LPWSTR pExtension = PathFindExtensionW(pDataW->wszName);
-    if (!pExtension || *pExtension == NULL)
-    {
-        WARN("No extension for %S!\n", pDataW->wszName);
-        return NULL;
-    }
 
     WCHAR FullName[MAX_PATH];
     DWORD dwSize = sizeof(FullName);
@@ -60,7 +30,7 @@ HKEY OpenKeyFromFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName)
     res = RegGetValueW(HKEY_CLASSES_ROOT, pExtension, NULL, RRF_RT_REG_SZ, NULL, FullName, &dwSize);
     if (res)
     {
-        WARN("Failed to get progid for file %S, extension %S (%x), address %x, pidl: %x, error %d\n", pDataW->wszName, pExtension, pExtension, &dwSize, pidl, res);
+        WARN("Failed to get progid for extension %S (%x), error %d\n", pExtension, pExtension, res);
         return NULL;
     }
 
@@ -75,9 +45,33 @@ HKEY OpenKeyFromFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName)
     return hkey;
 }
 
-HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pclsid)
+LPWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl)
 {
-    HKEY hkeyProgId = OpenKeyFromFileType(pidl, KeyName);
+    if (!_ILIsValue(pidl))
+    {
+        ERR("Invalid pidl!\n");
+        return NULL;
+    }
+
+    FileStructW* pDataW = _ILGetFileStructW(pidl);
+    if (!pDataW)
+    {
+        ERR("Invalid pidl!\n");
+        return NULL;
+    }
+
+    LPWSTR pExtension = PathFindExtensionW(pDataW->wszName);
+    if (!pExtension || *pExtension == UNICODE_NULL)
+    {
+        WARN("No extension for %S!\n", pDataW->wszName);
+        return NULL;
+    }
+    return pExtension;
+}
+
+HRESULT GetCLSIDForFileTypeFromExtension(LPWSTR pExtension, LPCWSTR KeyName, CLSID* pclsid)
+{
+    HKEY hkeyProgId = OpenKeyFromFileType(pExtension, KeyName);
     if (!hkeyProgId)
     {
         WARN("OpenKeyFromFileType failed for key %S\n", KeyName);
@@ -128,6 +122,15 @@ HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pcl
         return hres;
 
     return S_OK;
+}
+
+HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pclsid)
+{
+    LPWSTR pExtension = ExtensionFromPidl(pidl);
+    if (!pExtension)
+        return S_FALSE;
+
+    return GetCLSIDForFileTypeFromExtension(pExtension, KeyName, pclsid);
 }
 
 static HRESULT
@@ -293,7 +296,8 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
     }
     else
     {
-        HKEY hkey = OpenKeyFromFileType(pidl, L"DefaultIcon");
+        LPWSTR pExtension = ExtensionFromPidl(pidl);
+        HKEY hkey = pExtension ? OpenKeyFromFileType(pExtension, L"DefaultIcon") : NULL;
         if (!hkey)
             WARN("Could not open DefaultIcon key!\n");
 
@@ -342,98 +346,128 @@ including formatting a drive, reconnecting a network share drive, and requesting
 be inserted in a removable drive.
 */
 
-/***********************************************************************
-*   IShellFolder implementation
-*/
 
 class CFileSysEnum :
     public CEnumIDListBase
 {
-    private:
-    public:
-        CFileSysEnum();
-        ~CFileSysEnum();
-        HRESULT WINAPI Initialize(LPWSTR sPathTarget, DWORD dwFlags);
-
-        BEGIN_COM_MAP(CFileSysEnum)
-        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-        END_COM_MAP()
-};
-
-CFileSysEnum::CFileSysEnum()
-{
-}
-
-CFileSysEnum::~CFileSysEnum()
-{
-}
-
-HRESULT WINAPI CFileSysEnum::Initialize(LPWSTR lpszPath, DWORD dwFlags)
-{
-    WIN32_FIND_DATAW stffile;
-    HANDLE hFile;
-    WCHAR  szPath[MAX_PATH];
-    BOOL succeeded = TRUE;
-    static const WCHAR stars[] = { '*','.','*',0 };
-    static const WCHAR dot[] = { '.',0 };
-    static const WCHAR dotdot[] = { '.','.',0 };
-
-    TRACE("(%p)->(path=%s flags=0x%08x)\n", this, debugstr_w(lpszPath), dwFlags);
-
-    if(!lpszPath || !lpszPath[0]) return FALSE;
-
-    wcscpy(szPath, lpszPath);
-    PathAddBackslashW(szPath);
-    wcscat(szPath,stars);
-
-    hFile = FindFirstFileW(szPath,&stffile);
-    if ( hFile != INVALID_HANDLE_VALUE )
+private:
+    HRESULT _AddFindResult(LPWSTR sParentDir, const WIN32_FIND_DATAW& FindData, DWORD dwFlags)
     {
-        BOOL findFinished = FALSE;
-
-#define HIDDEN FILE_ATTRIBUTE_HIDDEN
 #define SUPER_HIDDEN (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)
+
+        // Does it need special handling because it is hidden?
+        if (FindData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+        {
+            DWORD dwHidden = FindData.dwFileAttributes & SUPER_HIDDEN;
+
+            // Is it hidden, but are we not asked to include hidden?
+            if (dwHidden == FILE_ATTRIBUTE_HIDDEN && !(dwFlags & SHCONTF_INCLUDEHIDDEN))
+                return S_OK;
+
+            // Is it a system file, but are we not asked to include those?
+            if (dwHidden == SUPER_HIDDEN && !(dwFlags & SHCONTF_INCLUDESUPERHIDDEN))
+                return S_OK;
+        }
+
+        BOOL bDirectory = (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+
+        LPITEMIDLIST pidl = NULL;
+        if (bDirectory)
+        {
+            if (dwFlags & SHCONTF_FOLDERS)
+            {
+                TRACE("(%p)->  (folder=%s)\n", this, debugstr_w(FindData.cFileName));
+                pidl = _ILCreateFromFindDataW(&FindData);
+            }
+        }
+        else
+        {
+            if (dwFlags & SHCONTF_NONFOLDERS)
+            {
+                TRACE("(%p)->  (file  =%s)\n", this, debugstr_w(FindData.cFileName));
+                pidl = _ILCreateFromFindDataW(&FindData);
+            }
+        }
+
+        if (pidl && !AddToEnumList(pidl))
+        {
+            FAILED_UNEXPECTEDLY(E_FAIL);
+            return E_FAIL;
+        }
+
+        return S_OK;
+    }
+
+public:
+    CFileSysEnum()
+    {
+
+    }
+
+    ~CFileSysEnum()
+    {
+    }
+
+    HRESULT WINAPI Initialize(LPWSTR sPathTarget, DWORD dwFlags)
+    {
+        TRACE("(%p)->(path=%s flags=0x%08x)\n", this, debugstr_w(sPathTarget), dwFlags);
+
+        if (!sPathTarget || !sPathTarget[0])
+        {
+            FAILED_UNEXPECTEDLY(E_INVALIDARG);
+            return E_INVALIDARG;
+        }
+
+        WCHAR szFindPattern[MAX_PATH];
+        HRESULT hr = StringCchCopyW(szFindPattern, _countof(szFindPattern), sPathTarget);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        /* FIXME: UNSAFE CRAP */
+        PathAddBackslashW(szFindPattern);
+
+        hr = StringCchCatW(szFindPattern, _countof(szFindPattern), L"*.*");
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+
+        WIN32_FIND_DATAW FindData;
+        HANDLE hFind = FindFirstFileW(szFindPattern, &FindData);
+        if (hFind == INVALID_HANDLE_VALUE)
+            return HRESULT_FROM_WIN32(GetLastError());
 
         do
         {
-            if ((stffile.dwFileAttributes & HIDDEN) == 0 ||
-                ((dwFlags & SHCONTF_INCLUDEHIDDEN) &&
-                 (stffile.dwFileAttributes & SUPER_HIDDEN) == HIDDEN) ||
-                ((dwFlags & SHCONTF_INCLUDESUPERHIDDEN) &&
-                 (stffile.dwFileAttributes & SUPER_HIDDEN) == SUPER_HIDDEN))
-            {
-                LPITEMIDLIST pidl = NULL;
+            hr = _AddFindResult(sPathTarget, FindData, dwFlags);
 
-                if ( (stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
-                 dwFlags & SHCONTF_FOLDERS &&
-                 strcmpW(stffile.cFileName, dot) && strcmpW(stffile.cFileName, dotdot))
-                {
-                    pidl = _ILCreateFromFindDataW(&stffile);
-                    succeeded = succeeded && AddToEnumList(pidl);
-                }
-                else if (!(stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                 && dwFlags & SHCONTF_NONFOLDERS)
-                {
-                    pidl = _ILCreateFromFindDataW(&stffile);
-                    succeeded = succeeded && AddToEnumList(pidl);
-                }
-            }
-            if (succeeded)
+            if (FAILED_UNEXPECTEDLY(hr))
+                break;
+
+        } while(FindNextFileW(hFind, &FindData));
+
+        if (SUCCEEDED(hr))
+        {
+            DWORD dwError = GetLastError();
+            if (dwError != ERROR_NO_MORE_FILES)
             {
-                if (!FindNextFileW(hFile, &stffile))
-                {
-                    if (GetLastError() == ERROR_NO_MORE_FILES)
-                        findFinished = TRUE;
-                    else
-                        succeeded = FALSE;
-                }
+                hr = HRESULT_FROM_WIN32(dwError);
+                FAILED_UNEXPECTEDLY(hr);
             }
-        } while (succeeded && !findFinished);
-        FindClose(hFile);
+        }
+        TRACE("(%p)->(hr=0x%08x)\n", this, hr);
+        FindClose(hFind);
+        return hr;
     }
 
-    return succeeded;
-}
+    BEGIN_COM_MAP(CFileSysEnum)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+    END_COM_MAP()
+};
+
+
+/***********************************************************************
+ *   IShellFolder implementation
+ */
 
 CFSFolder::CFSFolder()
 {
