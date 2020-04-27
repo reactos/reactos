@@ -390,7 +390,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Settings for selected location", -1, 10, 72, 220, 70
     RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "M&aximum size(MB):", -1, 20, 105, 70, 10
     RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP

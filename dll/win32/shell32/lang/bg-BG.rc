@@ -385,7 +385,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Настройки за избраното място", -1, 10, 72, 220, 70
     RADIOBUTTON "У&казан размер:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "Размер до (МБ):", -1, 20, 105, 70, 10
     RADIOBUTTON "Файловете се изтриват веднага, без да се местят в кошчето.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Питане преди изтриване", 14004, 20, 155, 140, 10, WS_TABSTOP
