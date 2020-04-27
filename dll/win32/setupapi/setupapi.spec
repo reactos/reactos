@@ -503,7 +503,7 @@
 @ stub SetupRemoveFromDiskSpaceListA
 @ stub SetupRemoveFromDiskSpaceListW
 @ stdcall -stub SetupRemoveFromSourceListA(long ptr)
-@ stub SetupRemoveFromSourceListW
+@ stdcall -stub SetupRemoveFromSourceListW(long ptr)
 @ stub SetupRemoveInstallSectionFromDiskSpaceListA
 @ stub SetupRemoveInstallSectionFromDiskSpaceListW
 @ stub SetupRemoveSectionFromDiskSpaceListA
