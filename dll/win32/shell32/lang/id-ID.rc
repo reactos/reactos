@@ -384,7 +384,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Pengaturan untuk lokasi yang dipilih", -1, 10, 72, 220, 70
     RADIOBUTTON "&Ukuran khusus:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "Ukur&an maksimal (MB):", -1, 20, 105, 70, 10
     RADIOBUTTON "Jangan pindahkan berkas ke Tampungan Dau&r Ulang. Hapus segera.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Tampilkan dialog konfirmasi penghapusan", 14004, 20, 155, 140, 10, WS_TABSTOP
