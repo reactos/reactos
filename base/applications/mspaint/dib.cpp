@@ -114,6 +114,11 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
     {
         if (fIsMainFile)
         {
+            hBitmap = CreateDIBWithProperties(100, 100);
+            if (phBitmap)
+                *phBitmap = hBitmap;
+
+            imageModel.Insert(hBitmap);
             imageModel.ClearHistory();
 
             GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
