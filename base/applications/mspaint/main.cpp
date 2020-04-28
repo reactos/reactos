@@ -51,6 +51,7 @@ HINSTANCE hProgInstance;
 
 TCHAR filepathname[1000];
 BOOL isAFile = FALSE;
+BOOL imageSaved = FALSE;
 int fileSize;
 int fileHPPM = 2834;
 int fileVPPM = 2834;

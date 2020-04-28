@@ -66,34 +66,29 @@ GetDIBHeight(HBITMAP hBitmap)
 }
 
 void
-SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time, int *size, int hRes, int vRes)
+SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC)
 {
     CImage img;
     img.Attach(hBitmap);
     img.Save(FileName);  // TODO: error handling
     img.Detach();
 
-    // update time and size
-
-    HANDLE hFile =
-        CreateFile(FileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
+    WIN32_FIND_DATAW find;
+    HANDLE hFind = FindFirstFile(FileName, &find);
+    if (hFind == INVALID_HANDLE_VALUE)
         return;
+    FindClose(hFind);
 
-    if (time)
-    {
-        FILETIME ft;
-        GetFileTime(hFile, NULL, NULL, &ft);
-        FileTimeToSystemTime(&ft, time);
-    }
-    if (size)
-        *size = GetFileSize(hFile, NULL);
+    // update time and size
+    FileTimeToSystemTime(&find.ftLastWriteTime, &fileTime);
+    fileSize = find.nFileSizeLow;
 
     // TODO: update hRes and vRes
 
-    CloseHandle(hFile);
-
     registrySettings.SetMostRecentFile(FileName);
+
+    isAFile = TRUE;
+    imageSaved = TRUE;
 }
 
 void ShowFileLoadError(LPCTSTR name)
@@ -158,7 +153,11 @@ BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL is
 
     // update recent
     if (isAFile)
+    {
         registrySettings.SetMostRecentFile(filepathname);
+    }
+
+    imageSaved = TRUE;
 
     return TRUE;
 }
@@ -170,8 +169,8 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
         *phBitmap = NULL;
 
     // find the file
-    WIN32_FIND_DATAW find;
-    HANDLE hFind = FindFirstFileW(name, &find);
+    WIN32_FIND_DATA find;
+    HANDLE hFind = FindFirstFile(name, &find);
     if (hFind == INVALID_HANDLE_VALUE)
     {
         // does not exist

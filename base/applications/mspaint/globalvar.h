@@ -53,6 +53,7 @@ extern HINSTANCE hProgInstance;
 
 extern TCHAR filepathname[1000];
 extern BOOL isAFile;
+extern BOOL imageSaved;
 extern int fileSize;
 extern int fileHPPM;
 extern int fileVPPM;

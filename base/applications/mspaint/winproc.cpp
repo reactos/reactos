@@ -191,12 +191,14 @@ BOOL CMainWindow::ConfirmSave()
 
     CString strProgramName;
     strProgramName.LoadString(IDS_PROGRAMNAME);
+
     CString strSavePromptText;
     strSavePromptText.Format(IDS_SAVEPROMPTTEXT, PathFindFileName(filepathname));
+
     switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
     {
         case IDYES:
-            saveImage(FALSE);
+            saveImage(TRUE);
             return imageModel.IsImageSaved();
         case IDNO:
             return TRUE;
@@ -514,7 +516,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITCOPYTO:
             if (GetSaveFileName(&ofn) != 0)
-                SaveDIBToFile(selectionModel.GetBitmap(), ofn.lpstrFile, imageModel.GetDC(), NULL, NULL, fileHPPM, fileVPPM);
+                SaveDIBToFile(selectionModel.GetBitmap(), ofn.lpstrFile, imageModel.GetDC());
             break;
         case IDM_EDITPASTEFROM:
             if (GetOpenFileName(&ofn) != 0)
