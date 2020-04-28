@@ -102,21 +102,6 @@ void CMainWindow::saveImage(BOOL overwrite)
     }
 }
 
-void CMainWindow::UpdateApplicationProperties(HBITMAP bitmap, LPCTSTR newfilepathname)
-{
-    imageModel.Insert(bitmap);
-    CopyMemory(filepathname, newfilepathname, sizeof(filepathname));
-    CPath pathFileName(newfilepathname);
-    pathFileName.StripPath();
-    CString strTitle;
-    strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
-    SetWindowText(strTitle);
-    imageModel.ClearHistory();
-    isAFile = TRUE;
-
-    registrySettings.SetMostRecentFile(newfilepathname);
-}
-
 void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 {
     int width = GetDIBWidth(bitmap); 
@@ -181,10 +166,7 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     DragQueryFile(drophandle, 0, droppedfile, SIZEOF(droppedfile));
     DragFinish(drophandle);
 
-    if (DoLoadImageFile(m_hWnd, &bmNew, droppedfile, TRUE))
-    {
-        UpdateApplicationProperties(bmNew, droppedfile);
-    }
+    DoLoadImageFile(m_hWnd, &bmNew, droppedfile, TRUE);
     return 0;
 }
 
@@ -438,10 +420,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (GetOpenFileName(&ofn) != 0)
             {
                 HBITMAP hbmNew = NULL;
-                if (DoLoadImageFile(m_hWnd, &hbmNew, ofn.lpstrFile, TRUE))
-                {
-                    UpdateApplicationProperties(hbmNew, ofn.lpstrFile);
-                }
+                DoLoadImageFile(m_hWnd, &hbmNew, ofn.lpstrFile, TRUE);
             }
             break;
         case IDM_FILESAVE:
@@ -494,37 +473,25 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILE1:
         {
             HBITMAP bmNew = NULL;
-            if (DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile1, TRUE))
-            {
-                UpdateApplicationProperties(bmNew, registrySettings.strFile1);
-            }
+            DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile1, TRUE);
             break;
         }
         case IDM_FILE2:
         {
             HBITMAP bmNew = NULL;
-            if (DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile2, TRUE))
-            {
-                UpdateApplicationProperties(bmNew, registrySettings.strFile2);
-            }
+            DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile2, TRUE);
             break;
         }
         case IDM_FILE3:
         {
             HBITMAP bmNew = NULL;
-            if (DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile3, TRUE))
-            {
-                UpdateApplicationProperties(bmNew, registrySettings.strFile3);
-            }
+            DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile3, TRUE);
             break;
         }
         case IDM_FILE4:
         {
             HBITMAP bmNew = NULL;
-            if (DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile4, TRUE))
-            {
-                UpdateApplicationProperties(bmNew, registrySettings.strFile4);
-            }
+            DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile4, TRUE);
             break;
         }
         case IDM_EDITUNDO:
