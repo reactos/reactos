@@ -165,7 +165,7 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     DragQueryFile(hDrop, 0, droppedfile, SIZEOF(droppedfile));
     DragFinish(hDrop);
 
-    if (querySave())
+    if (ConfirmSave())
         DoLoadImageFile(m_hWnd, NULL, droppedfile, TRUE);
 
     return 0;
@@ -185,7 +185,7 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     return 0;
 }
 
-BOOL CMainWindow::querySave()
+BOOL CMainWindow::ConfirmSave()
 {
     if (imageModel.IsImageSaved())
         return TRUE;
@@ -212,7 +212,7 @@ BOOL CMainWindow::querySave()
 
 LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (querySave())
+    if (ConfirmSave())
     {
         DestroyWindow();
     }
@@ -423,7 +423,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_FILEOPEN:
-            if (querySave() && GetOpenFileName(&ofn) != 0)
+            if (ConfirmSave() && GetOpenFileName(&ofn) != 0)
             {
                 DoLoadImageFile(m_hWnd, NULL, ofn.lpstrFile, TRUE);
             }
@@ -477,22 +477,22 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_FILE1:
         {
-            querySave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile1, TRUE);
+            ConfirmSave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile1, TRUE);
             break;
         }
         case IDM_FILE2:
         {
-            querySave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile2, TRUE);
+            ConfirmSave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile2, TRUE);
             break;
         }
         case IDM_FILE3:
         {
-            querySave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile3, TRUE);
+            ConfirmSave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile3, TRUE);
             break;
         }
         case IDM_FILE4:
         {
-            querySave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile4, TRUE);
+            ConfirmSave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile4, TRUE);
             break;
         }
         case IDM_EDITUNDO:

@@ -43,5 +43,5 @@ public:
     void alignChildrenToMainWindow();
     void saveImage(BOOL overwrite);
     void InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window);
-    BOOL querySave();
+    BOOL ConfirmSave();
 };
