@@ -1,10 +1,9 @@
 /*
  * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:     Tests for QueryUserAPC and threads
+ * PURPOSE:     Tests for QueryUserAPC, SleepEx and threads
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
-
 #include "precomp.h"
 
 #define MAX_RECORD 30
