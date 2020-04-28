@@ -102,21 +102,6 @@ void CMainWindow::saveImage(BOOL overwrite)
     }
 }
 
-void CMainWindow::UpdateApplicationProperties(HBITMAP bitmap, LPCTSTR newfilepathname)
-{
-    imageModel.Insert(bitmap);
-    CopyMemory(filepathname, newfilepathname, sizeof(filepathname));
-    CPath pathFileName(newfilepathname);
-    pathFileName.StripPath();
-    CString strTitle;
-    strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
-    SetWindowText(strTitle);
-    imageModel.ClearHistory();
-    isAFile = TRUE;
-
-    registrySettings.SetMostRecentFile(newfilepathname);
-}
-
 void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 {
     int width = GetDIBWidth(bitmap); 
@@ -174,17 +159,14 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 
 LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    HDROP drophandle;
     TCHAR droppedfile[MAX_PATH];
-    HBITMAP bmNew = NULL;
-    drophandle = (HDROP)wParam;
-    DragQueryFile(drophandle, 0, droppedfile, SIZEOF(droppedfile));
-    DragFinish(drophandle);
-    LoadDIBFromFile(&bmNew, droppedfile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-    if (bmNew != NULL)
-    {
-        UpdateApplicationProperties(bmNew, droppedfile);
-    }
+
+    HDROP hDrop = (HDROP)wParam;
+    DragQueryFile(hDrop, 0, droppedfile, SIZEOF(droppedfile));
+    DragFinish(hDrop);
+
+    ConfirmSave() && DoLoadImageFile(m_hWnd, droppedfile, TRUE);
+
     return 0;
 }
 
@@ -202,29 +184,34 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     return 0;
 }
 
+BOOL CMainWindow::ConfirmSave()
+{
+    if (imageModel.IsImageSaved())
+        return TRUE;
+
+    CString strProgramName;
+    strProgramName.LoadString(IDS_PROGRAMNAME);
+
+    CString strSavePromptText;
+    strSavePromptText.Format(IDS_SAVEPROMPTTEXT, PathFindFileName(filepathname));
+
+    switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
+    {
+        case IDYES:
+            saveImage(TRUE);
+            return imageModel.IsImageSaved();
+        case IDNO:
+            return TRUE;
+        case IDCANCEL:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
 LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (!imageModel.IsImageSaved())
-    {
-        CString strProgramName;
-        strProgramName.LoadString(IDS_PROGRAMNAME);
-        CPath pathFileName(filepathname);
-        pathFileName.StripPath();
-        CString strSavePromptText;
-        strSavePromptText.Format(IDS_SAVEPROMPTTEXT, (LPCTSTR)pathFileName);
-        switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
-        {
-            case IDNO:
-                DestroyWindow();
-                break;
-            case IDYES:
-                saveImage(FALSE);
-                if (imageModel.IsImageSaved())
-                    DestroyWindow();
-                break;
-        }
-    }
-    else
+    if (ConfirmSave())
     {
         DestroyWindow();
     }
@@ -404,45 +391,15 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             SendMessage(WM_CLOSE, wParam, lParam);
             break;
         case IDM_FILENEW:
-        {
-            BOOL reset = TRUE;
-            if (!imageModel.IsImageSaved())
+            if (ConfirmSave())
             {
-                CString strProgramName;
-                strProgramName.LoadString(IDS_PROGRAMNAME);
-                CPath pathFileName(filepathname);
-                pathFileName.StripPath();
-                CString strSavePromptText;
-                strSavePromptText.Format(IDS_SAVEPROMPTTEXT, (LPCTSTR)pathFileName);
-                switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
-                {
-                    case IDNO:
-                        imageModel.imageSaved = TRUE; //TODO: move to ImageModel
-                        break;
-                    case IDYES:
-                        saveImage(FALSE);
-                        break;
-                    case IDCANCEL:
-                        reset = FALSE;
-                        break;
-                }
-            }
-            if (reset && imageModel.IsImageSaved()) //TODO: move to ImageModel
-            {
-                imageModel.Clear();
-                imageModel.ClearHistory();
+                SetBitmapAndInfo(NULL, NULL, 0, FALSE);
             }
             break;
-        }
         case IDM_FILEOPEN:
-            if (GetOpenFileName(&ofn) != 0)
+            if (ConfirmSave() && GetOpenFileName(&ofn))
             {
-                HBITMAP bmNew = NULL;
-                LoadDIBFromFile(&bmNew, ofn.lpstrFile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-                if (bmNew != NULL)
-                {
-                    UpdateApplicationProperties(bmNew, ofn.lpstrFile);
-                }
+                DoLoadImageFile(m_hWnd, ofn.lpstrFile, TRUE);
             }
             break;
         case IDM_FILESAVE:
@@ -494,42 +451,22 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_FILE1:
         {
-            HBITMAP bmNew = NULL;
-            LoadDIBFromFile(&bmNew, registrySettings.strFile1, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-            if (bmNew != NULL)
-            {
-                UpdateApplicationProperties(bmNew, registrySettings.strFile1);
-            }
+            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile1, TRUE);
             break;
         }
         case IDM_FILE2:
         {
-            HBITMAP bmNew = NULL;
-            LoadDIBFromFile(&bmNew, registrySettings.strFile2, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-            if (bmNew != NULL)
-            {
-                UpdateApplicationProperties(bmNew, registrySettings.strFile2);
-            }
+            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile2, TRUE);
             break;
         }
         case IDM_FILE3:
         {
-            HBITMAP bmNew = NULL;
-            LoadDIBFromFile(&bmNew, registrySettings.strFile3, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-            if (bmNew != NULL)
-            {
-                UpdateApplicationProperties(bmNew, registrySettings.strFile3);
-            }
+            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile3, TRUE);
             break;
         }
         case IDM_FILE4:
         {
-            HBITMAP bmNew = NULL;
-            LoadDIBFromFile(&bmNew, registrySettings.strFile4, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-            if (bmNew != NULL)
-            {
-                UpdateApplicationProperties(bmNew, registrySettings.strFile4);
-            }
+            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile4, TRUE);
             break;
         }
         case IDM_EDITUNDO:
@@ -578,18 +515,17 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_EDITCOPYTO:
-            if (GetSaveFileName(&ofn) != 0)
-                SaveDIBToFile(selectionModel.GetBitmap(), ofn.lpstrFile, imageModel.GetDC(), NULL, NULL, fileHPPM, fileVPPM);
+            if (GetSaveFileName(&ofn))
+                SaveDIBToFile(selectionModel.GetBitmap(), ofn.lpstrFile, imageModel.GetDC());
             break;
         case IDM_EDITPASTEFROM:
-            if (GetOpenFileName(&ofn) != 0)
+            if (GetOpenFileName(&ofn))
             {
-                HBITMAP bmNew = NULL;
-                LoadDIBFromFile(&bmNew, ofn.lpstrFile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-                if (bmNew != NULL)
+                HBITMAP hbmNew = DoLoadImageFile(m_hWnd, ofn.lpstrFile, FALSE);
+                if (hbmNew)
                 {
-                    InsertSelectionFromHBITMAP(bmNew, m_hWnd);
-                    DeleteObject(bmNew);
+                    InsertSelectionFromHBITMAP(hbmNew, m_hWnd);
+                    DeleteObject(hbmNew);
                 }
             }
             break;
