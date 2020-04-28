@@ -102,13 +102,18 @@ void ShowFileLoadError(LPCTSTR name)
 
 BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL isFile)
 {
-    if (*phBitmap == NULL)
+    HBITMAP hBitmap = (phBitmap ? *phBitmap : NULL);
+
+    if (hBitmap == NULL)
     {
-        *phBitmap = CreateWhiteDIB(registrySettings.BMPWidth, registrySettings.BMPHeight);
-        if (*phBitmap == NULL)
+        hBitmap = CreateWhiteDIB(registrySettings.BMPWidth, registrySettings.BMPHeight);
+        if (hBitmap == NULL)
             return FALSE;
 
-        fileHPPM = fileVPPM = 0;
+        if (phBitmap)
+            *phBitmap = hBitmap;
+
+        fileHPPM = fileVPPM = 2834;
         ZeroMemory(&fileTime, sizeof(fileTime));
     }
     else
@@ -121,7 +126,7 @@ BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL is
     }
 
     // update image
-    imageModel.Insert(*phBitmap);
+    imageModel.Insert(hBitmap);
     imageModel.ClearHistory();
 
     // update fileSize
