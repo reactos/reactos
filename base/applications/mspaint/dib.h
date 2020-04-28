@@ -9,7 +9,7 @@
 #pragma once
 
 HBITMAP CreateDIBWithProperties(int width, int height);
-HBITMAP CreateWhiteDIB(int width, int height);
+HBITMAP CreateColorDIB(int width, int height, COLORREF rgb);
 
 int GetDIBWidth(HBITMAP hbm);
 

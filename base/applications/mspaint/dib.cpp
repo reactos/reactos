@@ -27,19 +27,24 @@ CreateDIBWithProperties(int width, int height)
 }
 
 HBITMAP
-CreateWhiteDIB(int width, int height)
+CreateColorDIB(int width, int height, COLORREF rgb)
 {
     HBITMAP ret = CreateDIBWithProperties(width, height);
     if (!ret)
         return NULL;
 
-    HDC hdc = CreateCompatibleDC(NULL);
-    HGDIOBJ hbmOld = SelectObject(hdc, ret);
-    RECT rc;
-    SetRect(&rc, 0, 0, width, height);
-    FillRect(hdc, &rc, (HBRUSH)GetStockObject(WHITE_BRUSH));
-    SelectObject(hdc, hbmOld);
-    DeleteDC(hdc);
+    if (rgb)
+    {
+        HDC hdc = CreateCompatibleDC(NULL);
+        HGDIOBJ hbmOld = SelectObject(hdc, ret);
+        RECT rc;
+        SetRect(&rc, 0, 0, width, height);
+        HBRUSH hbr = CreateSolidBrush(rgb);
+        FillRect(hdc, &rc, hbr);
+        DeleteObject(hbr);
+        SelectObject(hdc, hbmOld);
+        DeleteDC(hdc);
+    }
 
     return ret;
 }
@@ -106,7 +111,8 @@ BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL is
 
     if (hBitmap == NULL)
     {
-        hBitmap = CreateWhiteDIB(registrySettings.BMPWidth, registrySettings.BMPHeight);
+        hBitmap = CreateColorDIB(registrySettings.BMPWidth,
+                                 registrySettings.BMPHeight, RGB(255, 255, 255));
         if (hBitmap == NULL)
             return FALSE;
 
