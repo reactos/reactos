@@ -75,7 +75,10 @@ BOOL SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC)
     WIN32_FIND_DATA find;
     HANDLE hFind = FindFirstFile(FileName, &find);
     if (hFind == INVALID_HANDLE_VALUE)
+    {
+        ShowFileLoadError(FileName);
         return FALSE;
+    }
     FindClose(hFind);
 
     // update time and size
@@ -114,6 +117,7 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL i
 
         fileHPPM = fileVPPM = 2834;
         ZeroMemory(&fileTime, sizeof(fileTime));
+        isFile = FALSE;
     }
     else
     {
