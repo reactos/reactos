@@ -180,8 +180,8 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     drophandle = (HDROP)wParam;
     DragQueryFile(drophandle, 0, droppedfile, SIZEOF(droppedfile));
     DragFinish(drophandle);
-    LoadDIBFromFile(&bmNew, droppedfile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-    if (bmNew != NULL)
+
+    if (DoLoadImageFile(m_hWnd, &bmNew, droppedfile, TRUE))
     {
         UpdateApplicationProperties(bmNew, droppedfile);
     }
@@ -437,11 +437,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILEOPEN:
             if (GetOpenFileName(&ofn) != 0)
             {
-                HBITMAP bmNew = NULL;
-                LoadDIBFromFile(&bmNew, ofn.lpstrFile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-                if (bmNew != NULL)
+                HBITMAP hbmNew = NULL;
+                if (DoLoadImageFile(m_hWnd, &hbmNew, ofn.lpstrFile, TRUE))
                 {
-                    UpdateApplicationProperties(bmNew, ofn.lpstrFile);
+                    UpdateApplicationProperties(hbmNew, ofn.lpstrFile);
                 }
             }
             break;
@@ -495,8 +494,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILE1:
         {
             HBITMAP bmNew = NULL;
-            LoadDIBFromFile(&bmNew, registrySettings.strFile1, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-            if (bmNew != NULL)
+            if (DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile1, TRUE))
             {
                 UpdateApplicationProperties(bmNew, registrySettings.strFile1);
             }
@@ -505,8 +503,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILE2:
         {
             HBITMAP bmNew = NULL;
-            LoadDIBFromFile(&bmNew, registrySettings.strFile2, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-            if (bmNew != NULL)
+            if (DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile2, TRUE))
             {
                 UpdateApplicationProperties(bmNew, registrySettings.strFile2);
             }
@@ -515,8 +512,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILE3:
         {
             HBITMAP bmNew = NULL;
-            LoadDIBFromFile(&bmNew, registrySettings.strFile3, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-            if (bmNew != NULL)
+            if (DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile3, TRUE))
             {
                 UpdateApplicationProperties(bmNew, registrySettings.strFile3);
             }
@@ -525,8 +521,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILE4:
         {
             HBITMAP bmNew = NULL;
-            LoadDIBFromFile(&bmNew, registrySettings.strFile4, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-            if (bmNew != NULL)
+            if (DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile4, TRUE))
             {
                 UpdateApplicationProperties(bmNew, registrySettings.strFile4);
             }
@@ -584,12 +579,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITPASTEFROM:
             if (GetOpenFileName(&ofn) != 0)
             {
-                HBITMAP bmNew = NULL;
-                LoadDIBFromFile(&bmNew, ofn.lpstrFile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-                if (bmNew != NULL)
+                HBITMAP hbmNew = NULL;
+                if (DoLoadImageFile(m_hWnd, &hbmNew, ofn.lpstrFile, FALSE))
                 {
-                    InsertSelectionFromHBITMAP(bmNew, m_hWnd);
-                    DeleteObject(bmNew);
+                    InsertSelectionFromHBITMAP(hbmNew, m_hWnd);
+                    DeleteObject(hbmNew);
                 }
             }
             break;

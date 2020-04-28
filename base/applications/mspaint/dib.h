@@ -17,6 +17,6 @@ int GetDIBHeight(HBITMAP hbm);
 void SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time, int *size, int hRes,
                    int vRes);
 
-void LoadDIBFromFile(HBITMAP *hBitmap, LPCTSTR name, LPSYSTEMTIME time, int *size, int *hRes, int *vRes);
+BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFile);
 
 void ShowFileLoadError(LPCTSTR name);

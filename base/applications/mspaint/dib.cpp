@@ -82,41 +82,105 @@ void ShowFileLoadError(LPCTSTR name)
     mainWindow.MessageBox(strText, strProgramName, MB_OK | MB_ICONEXCLAMATION);
 }
 
-void
-LoadDIBFromFile(HBITMAP * hBitmap, LPCTSTR name, LPSYSTEMTIME time, int *size, int *hRes, int *vRes)
+BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFile)
 {
+    *phBitmap = NULL;
+
+    WIN32_FIND_DATAW find;
+    HANDLE hFind = FindFirstFileW(__targv[1], &find);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        // does not exist
+        CStringW strText;
+        strText.Format(IDS_LOADERRORTEXT, name);
+        MessageBoxW(hwnd, strText, NULL, MB_ICONERROR);
+        return FALSE;
+    }
+    FindClose(hFind);
+
+    // check the file size
+    DWORD dwFileSize = find.nFileSizeLow;
+    if (fIsMainFile)
+    {
+        fileSize = dwFileSize;
+        fileHPPM = fileVPPM = 0;
+    }
+
+    // is file empty?
+    if (dwFileSize == 0)
+    {
+        if (fIsMainFile)
+        {
+            imageModel.ClearHistory();
+
+            GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
+
+            CPath pathFileName(filepathname);
+            pathFileName.StripPath();
+
+            CString strTitle;
+            strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
+            mainWindow.SetWindowText(strTitle);
+
+            isAFile = TRUE;
+            registrySettings.SetMostRecentFile(filepathname);
+
+            return TRUE;
+        }
+    }
+
     CImage img;
     img.Load(name);
-    *hBitmap = img.Detach();
+    *phBitmap = img.Detach();
 
-    if (!hBitmap)
+    if (*phBitmap == NULL)
     {
-        ShowFileLoadError(name);
-        return;
+        // cannot open and not empty
+        CStringW strText;
+        strText.Format(IDS_LOADERRORTEXT, name);
+        MessageBoxW(hwnd, strText, NULL, MB_ICONERROR);
+        return FALSE;
     }
 
-    // update time and size
-    HANDLE hFile =
-        CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
+    if (fIsMainFile)
     {
-        ShowFileLoadError(name);
-        return;
-    }
+        HANDLE hFile = CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL,
+                                  OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+        {
+            isAFile = FALSE;
+            ShowFileLoadError(name);
+            return FALSE;
+        }
 
-    if (time)
-    {
+        // update fileTime
         FILETIME ft;
         GetFileTime(hFile, NULL, NULL, &ft);
-        FileTimeToSystemTime(&ft, time);
+        FileTimeToSystemTime(&ft, &fileTime);
+
+        // update PPM
+        HDC hScreenDC = GetDC(NULL);
+        fileHPPM = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSX) * 1000 / 25.4);
+        fileVPPM = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSY) * 1000 / 25.4);
+        ReleaseDC(NULL, hScreenDC);
+
+        CloseHandle(hFile);
+
+        // valid bitmap file
+        GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
+        CPath pathFileName(filepathname);
+        pathFileName.StripPath();
+
+        CString strTitle;
+        strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
+        mainWindow.SetWindowText(strTitle);
+
+        imageModel.Insert(*phBitmap);
+        imageModel.ClearHistory();
+
+        isAFile = TRUE;
+        registrySettings.SetMostRecentFile(filepathname);
     }
-    if (size)
-        *size = GetFileSize(hFile, NULL);
 
-    HDC hScreenDC = GetDC(NULL);
-    *hRes = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSX) * 1000 / 25.4);
-    *vRes = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSY) * 1000 / 25.4);
-    ReleaseDC(NULL, hScreenDC);
-
-    CloseHandle(hFile);
+    return TRUE;
 }

@@ -252,67 +252,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     if (__argc >= 2)
     {
-        WIN32_FIND_DATAW find;
-        HANDLE hFind = FindFirstFileW(__targv[1], &find);
-        if (hFind != INVALID_HANDLE_VALUE)
-        {
-            FindClose(hFind);
-
-            // check the file size
-            if (find.nFileSizeHigh || find.nFileSizeLow)
-            {
-                // load it now
-                HBITMAP bmNew = NULL;
-                LoadDIBFromFile(&bmNew, __targv[1], &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-                if (bmNew)
-                {
-                    // valid bitmap file
-                    GetFullPathName(__targv[1], SIZEOF(filepathname), filepathname, NULL);
-                    imageModel.Insert(bmNew);
-                    CPath pathFileName(filepathname);
-                    pathFileName.StripPath();
-
-                    CString strTitle;
-                    strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
-                    mainWindow.SetWindowText(strTitle);
-
-                    imageModel.ClearHistory();
-
-                    isAFile = TRUE;
-                    registrySettings.SetMostRecentFile(filepathname);
-                }
-                else
-                {
-                    // cannot open and not empty
-                    CStringW strText;
-                    strText.Format(IDS_LOADERRORTEXT, __targv[1]);
-                    MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
-                }
-            }
-            else
-            {
-                // open the empty file
-                GetFullPathName(__targv[1], SIZEOF(filepathname), filepathname, NULL);
-                CPath pathFileName(filepathname);
-                pathFileName.StripPath();
-
-                CString strTitle;
-                strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
-                mainWindow.SetWindowText(strTitle);
-
-                imageModel.ClearHistory();
-
-                isAFile = TRUE;
-                registrySettings.SetMostRecentFile(filepathname);
-            }
-        }
-        else
-        {
-            // does not exist
-            CStringW strText;
-            strText.Format(IDS_LOADERRORTEXT, __targv[1]);
-            MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
-        }
+        HBITMAP hbmNew = NULL;
+        DoLoadImageFile(mainWindow, &hbmNew, __targv[1], TRUE);
     }
 
     /* initializing the CHOOSECOLOR structure for use with ChooseColor */
