@@ -146,6 +146,10 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
         if (hFile == INVALID_HANDLE_VALUE)
         {
             isAFile = FALSE;
+
+            DeleteObject(*phBitmap);
+            *phBitmap = NULL;
+
             ShowFileLoadError(name);
             return FALSE;
         }
