@@ -90,19 +90,19 @@ START_TEST(QueryUserAPC)
     hThread = CreateThread(NULL, 0, ThreadFunc, NULL, 0, &dwThreadId);
     ok(hThread != NULL, "hThread was NULL\n");
 
-    Sleep(300);
+    Sleep(200);
 
     AddValueToRecord(7);
     ok_long(QueueUserAPC(DoUserAPC1, hThread, 1), 1);
     AddValueToRecord(8);
 
-    Sleep(300);
+    Sleep(200);
 
     AddValueToRecord(9);
     ok_long(QueueUserAPC(DoUserAPC2, hThread, 2), 1);
     AddValueToRecord(10);
 
-    Sleep(300);
+    Sleep(200);
 
     AddValueToRecord(11);
     ok_long(QueueUserAPC(DoUserAPC3, hThread, 3), 1);
