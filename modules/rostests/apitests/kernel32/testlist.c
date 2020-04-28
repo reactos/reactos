@@ -26,6 +26,7 @@ extern void func_lstrlen(void);
 extern void func_Mailslot(void);
 extern void func_MultiByteToWideChar(void);
 extern void func_PrivMoveFileIdentityW(void);
+extern void func_QueryUserAPC(void);
 extern void func_SetComputerNameExW(void);
 extern void func_SetConsoleWindowInfo(void);
 extern void func_SetCurrentDirectory(void);
@@ -60,6 +61,7 @@ const struct test winetest_testlist[] =
     { "MailslotRead",                func_Mailslot },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },
     { "PrivMoveFileIdentityW",       func_PrivMoveFileIdentityW },
+    { "QueryUserAPC",                func_QueryUserAPC },
     { "SetComputerNameExW",          func_SetComputerNameExW },
     { "SetConsoleWindowInfo",        func_SetConsoleWindowInfo },
     { "SetCurrentDirectory",         func_SetCurrentDirectory },
