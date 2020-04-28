@@ -106,8 +106,9 @@ BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL is
 
     if (hBitmap == NULL)
     {
+        COLORREF white = RGB(255, 255, 255);
         hBitmap = CreateColorDIB(registrySettings.BMPWidth,
-                                 registrySettings.BMPHeight, RGB(255, 255, 255));
+                                 registrySettings.BMPHeight, white);
         if (hBitmap == NULL)
             return FALSE;
 
@@ -135,27 +136,19 @@ BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL is
 
     // update filepathname
     if (name && name[0])
-    {
         GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
-    }
     else
-    {
         LoadString(hProgInstance, IDS_DEFAULTFILENAME, filepathname, SIZEOF(filepathname));
-    }
 
     // set title
     CString strTitle;
     strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
     mainWindow.SetWindowText(strTitle);
 
-    // update file info
+    // update file info and recent
     isAFile = isFile;
-
-    // update recent
     if (isAFile)
-    {
         registrySettings.SetMostRecentFile(filepathname);
-    }
 
     imageSaved = TRUE;
 
@@ -187,7 +180,9 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
     {
         if (fIsMainFile)
         {
-            FileTimeToSystemTime(&find.ftLastWriteTime, &fileTime);
+            FILETIME ft;
+            FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
+            FileTimeToSystemTime(&ft, &fileTime);
             SetBitmapAndInfo(phBitmap, name, dwFileSize, TRUE);
             return TRUE;
         }
@@ -214,7 +209,9 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
 
     if (fIsMainFile)
     {
-        FileTimeToSystemTime(&find.ftLastWriteTime, &fileTime);
+        FILETIME ft;
+        FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
+        FileTimeToSystemTime(&ft, &fileTime);
         SetBitmapAndInfo(phBitmap, name, dwFileSize, TRUE);
     }
 
