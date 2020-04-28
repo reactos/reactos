@@ -162,7 +162,7 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     TCHAR droppedfile[MAX_PATH];
 
     HDROP hDrop = (HDROP)wParam;
-    DragQueryFile(hDrop, 0, droppedfile, SIZEOF(hDrop));
+    DragQueryFile(hDrop, 0, droppedfile, SIZEOF(droppedfile));
     DragFinish(hDrop);
 
     if (querySave())
