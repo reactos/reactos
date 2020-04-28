@@ -900,7 +900,7 @@ ImageView_InitControls(HWND hwnd)
 
     if (shiSettings.Maximized) ShowWindow(hwnd, SW_MAXIMIZE);
 
-    hDispWnd = CreateWindowEx(0, WC_STATIC, _T(""),
+    hDispWnd = CreateWindowEx(WS_EX_CLIENTEDGE, WC_STATIC, _T(""),
                               WS_CHILD | WS_VISIBLE,
                               0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
@@ -916,6 +916,25 @@ ImageView_OnMouseWheel(HWND hwnd, INT x, INT y, INT zDelta, UINT fwKeys)
     if (zDelta != 0)
     {
         ZoomInOrOut(zDelta > 0);
+    }
+}
+
+static VOID
+ImageView_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
+{
+    RECT rc;
+
+    SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
+
+    GetWindowRect(hToolBar, &rc);
+
+    MoveWindow(hDispWnd, 0, 0, cx, cy - (rc.bottom - rc.top), TRUE);
+
+    /* is it maximized or restored? */
+    if (state == SIZE_MAXIMIZED || state == SIZE_RESTORED)
+    {
+        /* reset zoom */
+        ResetZoom();
     }
 }
 
@@ -1065,17 +1084,8 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         }
         case WM_SIZE:
         {
-            RECT rc;
-            SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
-            GetWindowRect(hToolBar, &rc);
-            MoveWindow(hDispWnd, 1, 1, LOWORD(lParam) - 1, HIWORD(lParam) - (rc.bottom - rc.top) - 1, TRUE);
-            /* is it maximized or restored? */
-            if (wParam == SIZE_MAXIMIZED || wParam == SIZE_RESTORED)
-            {
-                /* reset zoom */
-                ResetZoom();
-            }
-            return 0L;
+            ImageView_OnSize(hwnd, (UINT)wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            return 0;
         }
         case WM_DESTROY:
         {
