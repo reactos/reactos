@@ -65,22 +65,23 @@ GetDIBHeight(HBITMAP hBitmap)
     return bm.bmHeight;
 }
 
-void
-SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC)
+BOOL SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC)
 {
     CImage img;
     img.Attach(hBitmap);
     img.Save(FileName);  // TODO: error handling
     img.Detach();
 
-    WIN32_FIND_DATAW find;
+    WIN32_FIND_DATA find;
     HANDLE hFind = FindFirstFile(FileName, &find);
     if (hFind == INVALID_HANDLE_VALUE)
-        return;
+        return FALSE;
     FindClose(hFind);
 
     // update time and size
-    FileTimeToSystemTime(&find.ftLastWriteTime, &fileTime);
+    FILETIME ft;
+    FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
+    FileTimeToSystemTime(&ft, &fileTime);
     fileSize = find.nFileSizeLow;
 
     // TODO: update hRes and vRes
@@ -89,6 +90,7 @@ SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC)
 
     isAFile = TRUE;
     imageSaved = TRUE;
+    return TRUE;
 }
 
 void ShowFileLoadError(LPCTSTR name)
@@ -100,10 +102,8 @@ void ShowFileLoadError(LPCTSTR name)
     mainWindow.MessageBox(strText, strProgramName, MB_OK | MB_ICONEXCLAMATION);
 }
 
-BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL isFile)
+HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL isFile)
 {
-    HBITMAP hBitmap = (phBitmap ? *phBitmap : NULL);
-
     if (hBitmap == NULL)
     {
         COLORREF white = RGB(255, 255, 255);
@@ -123,9 +123,6 @@ BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL is
         fileVPPM = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSY) * 1000 / 25.4);
         ReleaseDC(NULL, hScreenDC);
     }
-
-    if (phBitmap)
-        *phBitmap = hBitmap;
 
     // update image
     imageModel.Insert(hBitmap);
@@ -152,15 +149,11 @@ BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL is
 
     imageSaved = TRUE;
 
-    return TRUE;
+    return hBitmap;
 }
 
-BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFile)
+HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
 {
-    HBITMAP hBitmap = NULL;
-    if (phBitmap)
-        *phBitmap = NULL;
-
     // find the file
     WIN32_FIND_DATA find;
     HANDLE hFind = FindFirstFile(name, &find);
@@ -170,7 +163,7 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
         CStringW strText;
         strText.Format(IDS_LOADERRORTEXT, name);
         MessageBoxW(hwnd, strText, NULL, MB_ICONERROR);
-        return FALSE;
+        return NULL;
     }
     DWORD dwFileSize = find.nFileSizeLow; // get file size
     FindClose(hFind);
@@ -183,15 +176,14 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
             FILETIME ft;
             FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
             FileTimeToSystemTime(&ft, &fileTime);
-            SetBitmapAndInfo(phBitmap, name, dwFileSize, TRUE);
-            return TRUE;
+            return SetBitmapAndInfo(NULL, name, dwFileSize, TRUE);
         }
     }
 
     // load the image
     CImage img;
     img.Load(name);
-    hBitmap = img.Detach();
+    HBITMAP hBitmap = img.Detach();
 
     if (hBitmap == NULL)
     {
@@ -199,21 +191,16 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
         CStringW strText;
         strText.Format(IDS_LOADERRORTEXT, name);
         MessageBoxW(hwnd, strText, NULL, MB_ICONERROR);
-        return FALSE;
+        return NULL;
     }
-
-    if (phBitmap)
-        *phBitmap = hBitmap;
-    else
-        phBitmap = &hBitmap;
 
     if (fIsMainFile)
     {
         FILETIME ft;
         FileTimeToLocalFileTime(&find.ftLastWriteTime, &ft);
         FileTimeToSystemTime(&ft, &fileTime);
-        SetBitmapAndInfo(phBitmap, name, dwFileSize, TRUE);
+        SetBitmapAndInfo(hBitmap, name, dwFileSize, TRUE);
     }
 
-    return TRUE;
+    return hBitmap;
 }

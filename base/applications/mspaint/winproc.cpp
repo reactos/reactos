@@ -165,7 +165,7 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     DragQueryFile(hDrop, 0, droppedfile, SIZEOF(droppedfile));
     DragFinish(hDrop);
 
-    ConfirmSave() && DoLoadImageFile(m_hWnd, NULL, droppedfile, TRUE);
+    ConfirmSave() && DoLoadImageFile(m_hWnd, droppedfile, TRUE);
 
     return 0;
 }
@@ -397,9 +397,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             }
             break;
         case IDM_FILEOPEN:
-            if (ConfirmSave() && GetOpenFileName(&ofn) != 0)
+            if (ConfirmSave() && GetOpenFileName(&ofn))
             {
-                DoLoadImageFile(m_hWnd, NULL, ofn.lpstrFile, TRUE);
+                DoLoadImageFile(m_hWnd, ofn.lpstrFile, TRUE);
             }
             break;
         case IDM_FILESAVE:
@@ -451,22 +451,22 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_FILE1:
         {
-            ConfirmSave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile1, TRUE);
+            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile1, TRUE);
             break;
         }
         case IDM_FILE2:
         {
-            ConfirmSave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile2, TRUE);
+            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile2, TRUE);
             break;
         }
         case IDM_FILE3:
         {
-            ConfirmSave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile3, TRUE);
+            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile3, TRUE);
             break;
         }
         case IDM_FILE4:
         {
-            ConfirmSave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile4, TRUE);
+            ConfirmSave() && DoLoadImageFile(m_hWnd, registrySettings.strFile4, TRUE);
             break;
         }
         case IDM_EDITUNDO:
@@ -515,14 +515,14 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_EDITCOPYTO:
-            if (GetSaveFileName(&ofn) != 0)
+            if (GetSaveFileName(&ofn))
                 SaveDIBToFile(selectionModel.GetBitmap(), ofn.lpstrFile, imageModel.GetDC());
             break;
         case IDM_EDITPASTEFROM:
-            if (GetOpenFileName(&ofn) != 0)
+            if (GetOpenFileName(&ofn))
             {
-                HBITMAP hbmNew = NULL;
-                if (DoLoadImageFile(m_hWnd, &hbmNew, ofn.lpstrFile, FALSE))
+                HBITMAP hbmNew = DoLoadImageFile(m_hWnd, ofn.lpstrFile, FALSE);
+                if (hbmNew)
                 {
                     InsertSelectionFromHBITMAP(hbmNew, m_hWnd);
                     DeleteObject(hbmNew);

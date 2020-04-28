@@ -253,7 +253,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     if (__argc >= 2)
     {
-        DoLoadImageFile(mainWindow, NULL, __targv[1], TRUE);
+        DoLoadImageFile(mainWindow, __targv[1], TRUE);
     }
 
     /* initializing the CHOOSECOLOR structure for use with ChooseColor */
