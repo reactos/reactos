@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-#define MAX_RECORD 256
+#define MAX_RECORD 30
 
 static DWORD s_record_count = 0;
 static DWORD s_record[MAX_RECORD + 1] = { 0 };
