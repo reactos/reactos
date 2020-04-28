@@ -391,21 +391,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILENEW:
             if (ConfirmSave())
             {
-                imageModel.Clear();
-                imageModel.ClearHistory();
-
-                fileSize = 0;
-                fileHPPM = fileVPPM = 0;
-                filepathname[0] = 0;
-
-                LoadString(hProgInstance, IDS_DEFAULTFILENAME, filepathname, SIZEOF(filepathname));
-
-                // set title
-                CString strTitle;
-                strTitle.Format(IDS_WINDOWTITLE, filepathname);
-                mainWindow.SetWindowText(strTitle);
-
-                isAFile = FALSE;
+                HBITMAP hBitmap = NULL;
+                SetBitmapAndInfo(&hBitmap, NULL, 0, FALSE);
             }
             break;
         case IDM_FILEOPEN:

@@ -9,6 +9,7 @@
 #pragma once
 
 HBITMAP CreateDIBWithProperties(int width, int height);
+HBITMAP CreateWhiteDIB(int width, int height);
 
 int GetDIBWidth(HBITMAP hbm);
 
@@ -20,3 +21,5 @@ void SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time,
 BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFile);
 
 void ShowFileLoadError(LPCTSTR name);
+
+BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL isFile);

@@ -100,6 +100,56 @@ void ShowFileLoadError(LPCTSTR name)
     mainWindow.MessageBox(strText, strProgramName, MB_OK | MB_ICONEXCLAMATION);
 }
 
+BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL isFile)
+{
+    if (*phBitmap == NULL)
+    {
+        *phBitmap = CreateWhiteDIB(registrySettings.BMPWidth, registrySettings.BMPHeight);
+        if (*phBitmap == NULL)
+            return FALSE;
+
+        fileHPPM = fileVPPM = 0;
+        ZeroMemory(&fileTime, sizeof(fileTime));
+    }
+    else
+    {
+        // update PPMs
+        HDC hScreenDC = GetDC(NULL);
+        fileHPPM = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSX) * 1000 / 25.4);
+        fileVPPM = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSY) * 1000 / 25.4);
+        ReleaseDC(NULL, hScreenDC);
+    }
+
+    // update image
+    imageModel.Insert(*phBitmap);
+    imageModel.ClearHistory();
+
+    // update fileSize
+    fileSize = dwFileSize;
+
+    if (name && name[0])
+    {
+        GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
+    }
+    else
+    {
+        LoadString(hProgInstance, IDS_DEFAULTFILENAME, filepathname, SIZEOF(filepathname));
+    }
+
+    // set title
+    CString strTitle;
+    strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
+    mainWindow.SetWindowText(strTitle);
+
+    // update file info
+    isAFile = isFile;
+
+    if (isAFile)
+        registrySettings.SetMostRecentFile(filepathname);
+
+    return TRUE;
+}
+
 BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFile)
 {
     HBITMAP hBitmap = NULL;
@@ -125,32 +175,7 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
     {
         if (fIsMainFile)
         {
-            hBitmap = CreateWhiteDIB(registrySettings.BMPWidth, registrySettings.BMPHeight);
-            if (phBitmap)
-                *phBitmap = hBitmap;
-
-            // update image
-            imageModel.Insert(hBitmap);
-            imageModel.ClearHistory();
-
-            // update fileSize
-            fileSize = dwFileSize;
-
-            // update PPMs
-            fileHPPM = fileVPPM = 0;
-
-            // get full path
-            GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
-
-            // set title
-            CString strTitle;
-            strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
-            mainWindow.SetWindowText(strTitle);
-
-            // update file info
-            isAFile = TRUE;
-            registrySettings.SetMostRecentFile(filepathname);
-
+            SetBitmapAndInfo(phBitmap, name, dwFileSize, TRUE);
             return TRUE;
         }
     }
@@ -172,51 +197,9 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
 
     if (fIsMainFile)
     {
-        // open the saved file to get fileTime and PPMs
-        HANDLE hFile = CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL,
-                                  OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-        if (hFile == INVALID_HANDLE_VALUE)
-        {
-            ShowFileLoadError(name);
+        FileTimeToSystemTime(&find.ftLastWriteTime, &fileTime);
 
-            DeleteObject(hBitmap);
-            if (phBitmap)
-                *phBitmap = NULL;
-
-            return FALSE;
-        }
-
-        // update image
-        imageModel.Insert(hBitmap);
-        imageModel.ClearHistory();
-
-        // update fileSize
-        fileSize = dwFileSize;
-
-        // update fileTime
-        FILETIME ft;
-        GetFileTime(hFile, NULL, NULL, &ft);
-        FileTimeToSystemTime(&ft, &fileTime);
-
-        // update PPMs
-        HDC hScreenDC = GetDC(NULL);
-        fileHPPM = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSX) * 1000 / 25.4);
-        fileVPPM = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSY) * 1000 / 25.4);
-        ReleaseDC(NULL, hScreenDC);
-
-        CloseHandle(hFile);
-
-        // get full path
-        GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
-
-        // set title
-        CString strTitle;
-        strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
-        mainWindow.SetWindowText(strTitle);
-
-        // update file info
-        isAFile = TRUE;
-        registrySettings.SetMostRecentFile(filepathname);
+        SetBitmapAndInfo(phBitmap, name, dwFileSize, TRUE);
     }
 
     return TRUE;
