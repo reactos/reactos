@@ -87,7 +87,7 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
     *phBitmap = NULL;
 
     WIN32_FIND_DATAW find;
-    HANDLE hFind = FindFirstFileW(__targv[1], &find);
+    HANDLE hFind = FindFirstFileW(name, &find);
     if (hFind == INVALID_HANDLE_VALUE)
     {
         // does not exist
