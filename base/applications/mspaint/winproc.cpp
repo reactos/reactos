@@ -165,8 +165,7 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     DragQueryFile(hDrop, 0, droppedfile, SIZEOF(droppedfile));
     DragFinish(hDrop);
 
-    if (ConfirmSave())
-        DoLoadImageFile(m_hWnd, NULL, droppedfile, TRUE);
+    ConfirmSave() && DoLoadImageFile(m_hWnd, NULL, droppedfile, TRUE);
 
     return 0;
 }
