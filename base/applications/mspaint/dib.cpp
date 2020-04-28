@@ -158,7 +158,7 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
 
     if (hBitmap == NULL)
     {
-        // cannot open and not empty
+        // cannot open
         CStringW strText;
         strText.Format(IDS_LOADERRORTEXT, name);
         MessageBoxW(hwnd, strText, NULL, MB_ICONERROR);
@@ -167,6 +167,7 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
 
     if (fIsMainFile)
     {
+        // open the saved file to get fileTime and PPMs
         HANDLE hFile = CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL,
                                   OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
         if (hFile == INVALID_HANDLE_VALUE)
@@ -186,7 +187,7 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
         GetFileTime(hFile, NULL, NULL, &ft);
         FileTimeToSystemTime(&ft, &fileTime);
 
-        // update PPM
+        // update PPMs
         HDC hScreenDC = GetDC(NULL);
         fileHPPM = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSX) * 1000 / 25.4);
         fileVPPM = (int)(GetDeviceCaps(hScreenDC, LOGPIXELSY) * 1000 / 25.4);
