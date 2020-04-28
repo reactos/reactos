@@ -115,11 +115,8 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
 
             GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
 
-            CPath pathFileName(filepathname);
-            pathFileName.StripPath();
-
             CString strTitle;
-            strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
+            strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
             mainWindow.SetWindowText(strTitle);
 
             isAFile = TRUE;
@@ -168,11 +165,9 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
 
         // valid bitmap file
         GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
-        CPath pathFileName(filepathname);
-        pathFileName.StripPath();
 
         CString strTitle;
-        strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
+        strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
         mainWindow.SetWindowText(strTitle);
 
         imageModel.Insert(*phBitmap);
