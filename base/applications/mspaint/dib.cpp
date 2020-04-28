@@ -110,9 +110,6 @@ BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL is
         if (hBitmap == NULL)
             return FALSE;
 
-        if (phBitmap)
-            *phBitmap = hBitmap;
-
         fileHPPM = fileVPPM = 2834;
         ZeroMemory(&fileTime, sizeof(fileTime));
     }
@@ -125,6 +122,9 @@ BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL is
         ReleaseDC(NULL, hScreenDC);
     }
 
+    if (phBitmap)
+        *phBitmap = hBitmap;
+
     // update image
     imageModel.Insert(hBitmap);
     imageModel.ClearHistory();
@@ -132,6 +132,7 @@ BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL is
     // update fileSize
     fileSize = dwFileSize;
 
+    // update filepathname
     if (name && name[0])
     {
         GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
@@ -149,6 +150,7 @@ BOOL SetBitmapAndInfo(HBITMAP *phBitmap, LPCTSTR name, DWORD dwFileSize, BOOL is
     // update file info
     isAFile = isFile;
 
+    // update recent
     if (isAFile)
         registrySettings.SetMostRecentFile(filepathname);
 
@@ -159,7 +161,7 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
 {
     HBITMAP hBitmap = NULL;
     if (phBitmap)
-        *phBitmap = hBitmap;
+        *phBitmap = NULL;
 
     // find the file
     WIN32_FIND_DATAW find;
@@ -189,6 +191,7 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
     CImage img;
     img.Load(name);
     hBitmap = img.Detach();
+
     if (hBitmap == NULL)
     {
         // cannot open
@@ -197,8 +200,11 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
         MessageBoxW(hwnd, strText, NULL, MB_ICONERROR);
         return FALSE;
     }
+
     if (phBitmap)
         *phBitmap = hBitmap;
+    else
+        phBitmap = &hBitmap;
 
     if (fIsMainFile)
     {

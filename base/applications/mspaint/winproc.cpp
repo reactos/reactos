@@ -391,8 +391,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILENEW:
             if (ConfirmSave())
             {
-                HBITMAP hBitmap = NULL;
-                SetBitmapAndInfo(&hBitmap, NULL, 0, FALSE);
+                SetBitmapAndInfo(NULL, NULL, 0, FALSE);
             }
             break;
         case IDM_FILEOPEN:
