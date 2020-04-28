@@ -114,7 +114,7 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
     {
         if (fIsMainFile)
         {
-            hBitmap = CreateDIBWithProperties(100, 100);
+            hBitmap = CreateDIBWithProperties(registrySettings.BMPWidth, registrySettings.BMPHeight);
             if (phBitmap)
                 *phBitmap = hBitmap;
 
