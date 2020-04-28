@@ -161,12 +161,11 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 {
     HDROP drophandle;
     TCHAR droppedfile[MAX_PATH];
-    HBITMAP bmNew = NULL;
     drophandle = (HDROP)wParam;
     DragQueryFile(drophandle, 0, droppedfile, SIZEOF(droppedfile));
     DragFinish(drophandle);
 
-    DoLoadImageFile(m_hWnd, &bmNew, droppedfile, TRUE);
+    DoLoadImageFile(m_hWnd, NULL, droppedfile, TRUE);
     return 0;
 }
 
@@ -419,8 +418,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILEOPEN:
             if (GetOpenFileName(&ofn) != 0)
             {
-                HBITMAP hbmNew = NULL;
-                DoLoadImageFile(m_hWnd, &hbmNew, ofn.lpstrFile, TRUE);
+                DoLoadImageFile(m_hWnd, NULL, ofn.lpstrFile, TRUE);
             }
             break;
         case IDM_FILESAVE:
@@ -472,26 +470,22 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_FILE1:
         {
-            HBITMAP bmNew = NULL;
-            DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile1, TRUE);
+            DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile1, TRUE);
             break;
         }
         case IDM_FILE2:
         {
-            HBITMAP bmNew = NULL;
-            DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile2, TRUE);
+            DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile2, TRUE);
             break;
         }
         case IDM_FILE3:
         {
-            HBITMAP bmNew = NULL;
-            DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile3, TRUE);
+            DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile3, TRUE);
             break;
         }
         case IDM_FILE4:
         {
-            HBITMAP bmNew = NULL;
-            DoLoadImageFile(m_hWnd, &bmNew, registrySettings.strFile4, TRUE);
+            DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile4, TRUE);
             break;
         }
         case IDM_EDITUNDO:

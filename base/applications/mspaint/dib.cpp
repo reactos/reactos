@@ -84,7 +84,10 @@ void ShowFileLoadError(LPCTSTR name)
 
 BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFile)
 {
-    *phBitmap = NULL;
+    HBITMAP hBitmap = NULL;
+
+    if (phBitmap)
+        *phBitmap = NULL;
 
     WIN32_FIND_DATAW find;
     HANDLE hFind = FindFirstFileW(name, &find);
@@ -128,9 +131,9 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
 
     CImage img;
     img.Load(name);
-    *phBitmap = img.Detach();
+    hBitmap = img.Detach();
 
-    if (*phBitmap == NULL)
+    if (hBitmap == NULL)
     {
         // cannot open and not empty
         CStringW strText;
@@ -147,8 +150,9 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
         {
             isAFile = FALSE;
 
-            DeleteObject(*phBitmap);
-            *phBitmap = NULL;
+            DeleteObject(hBitmap);
+            if (phBitmap)
+                *phBitmap = NULL;
 
             ShowFileLoadError(name);
             return FALSE;
@@ -174,7 +178,10 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
         strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
         mainWindow.SetWindowText(strTitle);
 
-        imageModel.Insert(*phBitmap);
+        if (phBitmap)
+            *phBitmap = hBitmap;
+
+        imageModel.Insert(hBitmap);
         imageModel.ClearHistory();
 
         isAFile = TRUE;

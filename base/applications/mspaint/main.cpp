@@ -252,8 +252,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     if (__argc >= 2)
     {
-        HBITMAP hbmNew = NULL;
-        DoLoadImageFile(mainWindow, &hbmNew, __targv[1], TRUE);
+        DoLoadImageFile(mainWindow, NULL, __targv[1], TRUE);
     }
 
     /* initializing the CHOOSECOLOR structure for use with ChooseColor */
