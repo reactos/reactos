@@ -36,7 +36,7 @@ DoStopService(_In_z_ LPWSTR ServiceName,
     if (!hService)
     {
         dwResult = GetLastError();
-		CloseServiceHandle(hSCManager);
+        CloseServiceHandle(hSCManager);
         return dwResult;
     }
 
@@ -109,10 +109,10 @@ DoStopService(_In_z_ LPWSTR ServiceName,
             dwResult = SC_MANAGER_SUCCESS;
         }
     }
-	else
-	{
-        dwResult = GetLastError();	
-	}
+    else
+    {
+        dwResult = GetLastError();    
+    }
 
     CloseServiceHandle(hService);
     CloseServiceHandle(hSCManager);

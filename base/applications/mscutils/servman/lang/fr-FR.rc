@@ -331,13 +331,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPNAME "Gestionnaire de Services ReactOS"
-    IDS_MANAGER_ERR_UNKCMD "Erreur du Service: Commande inconnue"
-    IDS_MANAGER_ERR_SRVMGROPN "Erreur du Service: Impossible d'ouvrir le gestionnaire de service"
-    IDS_MANAGER_ERR_SRVOPN "Erreur du Service: Impossible d'ouvrir le service"
-    IDS_MANAGER_ERR_ALLOC "Erreur du Service: Défaut d'allocation de mémoire"
-    IDS_MANAGER_ERR_QSS "Erreur du Service: Impossible de récupérer l'état du service"
-    IDS_MANAGER_ERR_TIMEOUT "Erreur du Service: Délai dépassé"
-    IDS_MANAGER_ERR_UNKNOWN "Erreur du Service: Erreur inconnue"
 END
 
 STRINGTABLE

@@ -28,7 +28,7 @@ DoControlService(LPWSTR ServiceName,
     DWORD MaxWait;
     DWORD ReqState, i;
     BOOL Result;
-    DWORD dwResult = SC_MANAGER_SUCCESS;	
+    DWORD dwResult = SC_MANAGER_SUCCESS;
 
     /* Set the state we're interested in */
     switch (Control)
@@ -56,7 +56,7 @@ DoControlService(LPWSTR ServiceName,
     if (!hService)
     {
         dwResult = GetLastError();
-		CloseServiceHandle(hSCManager);
+        CloseServiceHandle(hSCManager);
         return dwResult;
     }
 
@@ -139,20 +139,20 @@ DoControlService(LPWSTR ServiceName,
                 }
             }
         }
-		else
-		{
-			dwResult = GetLastError();
-		}	
+        else
+        {
+            dwResult = GetLastError();
+        }    
 
         if (ServiceStatus.dwCurrentState == ReqState)
         {
             dwResult = SC_MANAGER_SUCCESS;
         }
     }
-	else
-	{
+    else
+    {
         dwResult = GetLastError();
-	}
+    }
 
     CloseServiceHandle(hService);
     CloseServiceHandle(hSCManager);

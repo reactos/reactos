@@ -25,13 +25,13 @@ DoStartService(LPWSTR ServiceName,
     DWORD OldCheckPoint;
     DWORD WaitTime;
     DWORD MaxWait;
-    BOOL Result = FALSE;    
+    BOOL Result = FALSE;
 
     BOOL bWhiteSpace = TRUE;
     LPWSTR lpChar;
     DWORD dwArgsCount = 0;
-	DWORD dwResult = SC_MANAGER_SUCCESS;
-	LPCWSTR *lpArgsVector = NULL;
+    DWORD dwResult = SC_MANAGER_SUCCESS;
+    LPCWSTR *lpArgsVector = NULL;
 
     if (lpStartParams != NULL)
     {
@@ -93,7 +93,7 @@ DoStartService(LPWSTR ServiceName,
                                 SC_MANAGER_CONNECT);
     if (!hSCManager)
     {
-		dwResult = GetLastError();
+        dwResult = GetLastError();
         if (lpArgsVector)
             LocalFree((LPVOID)lpArgsVector);
         return dwResult;
@@ -105,7 +105,7 @@ DoStartService(LPWSTR ServiceName,
     if (!hService)
     {
         dwResult = GetLastError();
-		CloseServiceHandle(hSCManager);
+        CloseServiceHandle(hSCManager);
         if (lpArgsVector)
             LocalFree((LPVOID)lpArgsVector);
         return dwResult;
@@ -133,8 +133,8 @@ DoStartService(LPWSTR ServiceName,
                                         SC_STATUS_PROCESS_INFO,
                                         (LPBYTE)&ServiceStatus,
                                         sizeof(SERVICE_STATUS_PROCESS),
-                                        &BytesNeeded);        
-		if (Result)
+                                        &BytesNeeded);
+        if (Result)
         {
             Result = FALSE;
             MaxWait = MAX_WAIT_TIME;

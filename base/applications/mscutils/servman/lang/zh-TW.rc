@@ -333,13 +333,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPNAME "ReactOS 服務管理員"
-    IDS_MANAGER_ERR_UNKCMD "Service Error: Unknown command"
-    IDS_MANAGER_ERR_SRVMGROPN "Service Error: Unable to open service manager"
-    IDS_MANAGER_ERR_SRVOPN "Service Error: Unable to open service"
-    IDS_MANAGER_ERR_ALLOC "Service Error: Memory allocation failed"
-    IDS_MANAGER_ERR_QSS "Service Error: Unable to query service status"
-    IDS_MANAGER_ERR_TIMEOUT "Service Error: Timeout"
-    IDS_MANAGER_ERR_UNKNOWN "Service Error: Unknown error"
 END
 
 STRINGTABLE

@@ -5,18 +5,10 @@
 #define IDA_SERVMAN 20
 
 /* about box info */
-#define IDD_ABOUTBOX                  200
-#define IDC_LICENSE_EDIT              201
-#define IDS_APPNAME                   202
-#define IDS_LICENSE                   203
-#define IDS_ERROROCCURED              204
-#define IDS_MANAGER_ERR_UNKCMD        205
-#define IDS_MANAGER_ERR_SRVMGROPN     206
-#define IDS_MANAGER_ERR_SRVOPN        207
-#define IDS_MANAGER_ERR_ALLOC         208
-#define IDS_MANAGER_ERR_QSS           209
-#define IDS_MANAGER_ERR_TIMEOUT       210
-#define IDS_MANAGER_ERR_UNKNOWN       211
+#define IDD_ABOUTBOX     200
+#define IDC_LICENSE_EDIT 201
+#define IDS_APPNAME      202
+#define IDS_LICENSE      203
 
 #define IDC_SERVLIST    1000
 #define IDC_STATUSBAR   1001
