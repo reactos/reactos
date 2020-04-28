@@ -93,7 +93,7 @@ static VOID NTAPI DoUserAPC3(ULONG_PTR Parameter)
     s_terminate_all = TRUE;
 }
 
-static void TestForSleepEx(void)
+static void JustDoIt(LPTHREAD_START_ROUTINE fn)
 {
     HANDLE hThread;
     DWORD dwThreadId;
@@ -102,7 +102,7 @@ static void TestForSleepEx(void)
     s_record_count = 0;
     ZeroMemory(s_record, sizeof(s_record));
 
-    hThread = CreateThread(NULL, 0, ThreadFunc1, NULL, 0, &dwThreadId);
+    hThread = CreateThread(NULL, 0, fn, NULL, 0, &dwThreadId);
     ok(hThread != NULL, "hThread was NULL\n");
 
     Sleep(100);
@@ -135,46 +135,14 @@ static void TestForSleepEx(void)
     CheckRecord();
 }
 
+static void TestForSleepEx(void)
+{
+    JustDoIt(ThreadFunc1);
+}
+
 static void TestForWaitForSingleObjectEx(void)
 {
-    HANDLE hThread;
-    DWORD dwThreadId;
-
-    s_terminate_all = FALSE;
-    s_record_count = 0;
-    ZeroMemory(s_record, sizeof(s_record));
-
-    hThread = CreateThread(NULL, 0, ThreadFunc2, NULL, 0, &dwThreadId);
-    ok(hThread != NULL, "hThread was NULL\n");
-
-    Sleep(100);
-
-    AddValueToRecord(7);
-    ok_long(QueueUserAPC(DoUserAPC1, hThread, 1), 1);
-    AddValueToRecord(8);
-
-    Sleep(100);
-
-    AddValueToRecord(9);
-    ok_long(QueueUserAPC(DoUserAPC2, hThread, 2), 1);
-    AddValueToRecord(10);
-
-    Sleep(100);
-
-    AddValueToRecord(11);
-    ok_long(QueueUserAPC(DoUserAPC3, hThread, 3), 1);
-    AddValueToRecord(12);
-
-    AddValueToRecord(13);
-    ok_long(WaitForSingleObject(hThread, 5 * 1000), WAIT_OBJECT_0);
-    AddValueToRecord(14);
-
-    AddValueToRecord(15);
-    ok_int(CloseHandle(hThread), TRUE);
-    hThread = NULL;
-    AddValueToRecord(16);
-
-    CheckRecord();
+    JustDoIt(ThreadFunc2);
 }
 
 START_TEST(QueryUserAPC)
