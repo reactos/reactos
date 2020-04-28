@@ -222,6 +222,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Instalează selecționate"
     IDS_SELECTEDFORINST "Selectate pentru instalare"
     IDS_MISMATCH_CERT_INFO "Certificatul în uz este necunoscut:\nSubiect: %s\nEmitent: %s\nVreți să continuați oricum?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

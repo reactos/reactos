@@ -221,6 +221,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Встановити обране"
     IDS_SELECTEDFORINST "Обрані для встановлення"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE
