@@ -20,7 +20,7 @@ static const DWORD s_expected[] =
     6, 2, 3, 14, 15,
     16
 };
-static const SIZE_T s_expected_count = sizeof(s_expected) / sizeof(s_expected[0]);
+static const SIZE_T s_expected_count = _countof(s_expected);
 
 static void AddValueToRecord(DWORD dwValue)
 {
