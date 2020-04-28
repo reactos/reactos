@@ -389,36 +389,25 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             SendMessage(WM_CLOSE, wParam, lParam);
             break;
         case IDM_FILENEW:
-        {
-            BOOL reset = TRUE;
-            if (!imageModel.IsImageSaved())
-            {
-                CString strProgramName;
-                strProgramName.LoadString(IDS_PROGRAMNAME);
-                CPath pathFileName(filepathname);
-                pathFileName.StripPath();
-                CString strSavePromptText;
-                strSavePromptText.Format(IDS_SAVEPROMPTTEXT, (LPCTSTR)pathFileName);
-                switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
-                {
-                    case IDNO:
-                        imageModel.imageSaved = TRUE; //TODO: move to ImageModel
-                        break;
-                    case IDYES:
-                        saveImage(FALSE);
-                        break;
-                    case IDCANCEL:
-                        reset = FALSE;
-                        break;
-                }
-            }
-            if (reset && imageModel.IsImageSaved()) //TODO: move to ImageModel
+            if (ConfirmSave())
             {
                 imageModel.Clear();
                 imageModel.ClearHistory();
+
+                fileSize = 0;
+                fileHPPM = fileVPPM = 0;
+                filepathname[0] = 0;
+
+                LoadString(hProgInstance, IDS_DEFAULTFILENAME, filepathname, SIZEOF(filepathname));
+
+                // set title
+                CString strTitle;
+                strTitle.Format(IDS_WINDOWTITLE, filepathname);
+                mainWindow.SetWindowText(strTitle);
+
+                isAFile = FALSE;
             }
             break;
-        }
         case IDM_FILEOPEN:
             if (ConfirmSave() && GetOpenFileName(&ofn) != 0)
             {
