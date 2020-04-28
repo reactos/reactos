@@ -188,6 +188,7 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
     {
         if (fIsMainFile)
         {
+            FileTimeToSystemTime(&find.ftLastWriteTime, &fileTime);
             SetBitmapAndInfo(phBitmap, name, dwFileSize, TRUE);
             return TRUE;
         }
@@ -215,7 +216,6 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
     if (fIsMainFile)
     {
         FileTimeToSystemTime(&find.ftLastWriteTime, &fileTime);
-
         SetBitmapAndInfo(phBitmap, name, dwFileSize, TRUE);
     }
 
