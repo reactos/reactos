@@ -159,13 +159,15 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 
 LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    HDROP drophandle;
     TCHAR droppedfile[MAX_PATH];
-    drophandle = (HDROP)wParam;
-    DragQueryFile(drophandle, 0, droppedfile, SIZEOF(droppedfile));
-    DragFinish(drophandle);
 
-    DoLoadImageFile(m_hWnd, NULL, droppedfile, TRUE);
+    HDROP hDrop = (HDROP)wParam;
+    DragQueryFile(hDrop, 0, droppedfile, SIZEOF(hDrop));
+    DragFinish(hDrop);
+
+    if (querySave())
+        DoLoadImageFile(m_hWnd, NULL, droppedfile, TRUE);
+
     return 0;
 }
 
@@ -183,29 +185,34 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     return 0;
 }
 
+BOOL CMainWindow::querySave()
+{
+    if (imageModel.IsImageSaved())
+        return TRUE;
+
+    CString strProgramName;
+    strProgramName.LoadString(IDS_PROGRAMNAME);
+    CPath pathFileName(filepathname);
+    pathFileName.StripPath();
+    CString strSavePromptText;
+    strSavePromptText.Format(IDS_SAVEPROMPTTEXT, (LPCTSTR)pathFileName);
+    switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
+    {
+        case IDYES:
+            saveImage(FALSE);
+            return imageModel.IsImageSaved();
+        case IDNO:
+            return TRUE;
+        case IDCANCEL:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
 LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (!imageModel.IsImageSaved())
-    {
-        CString strProgramName;
-        strProgramName.LoadString(IDS_PROGRAMNAME);
-        CPath pathFileName(filepathname);
-        pathFileName.StripPath();
-        CString strSavePromptText;
-        strSavePromptText.Format(IDS_SAVEPROMPTTEXT, (LPCTSTR)pathFileName);
-        switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
-        {
-            case IDNO:
-                DestroyWindow();
-                break;
-            case IDYES:
-                saveImage(FALSE);
-                if (imageModel.IsImageSaved())
-                    DestroyWindow();
-                break;
-        }
-    }
-    else
+    if (querySave())
     {
         DestroyWindow();
     }
@@ -416,7 +423,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_FILEOPEN:
-            if (GetOpenFileName(&ofn) != 0)
+            if (querySave() && GetOpenFileName(&ofn) != 0)
             {
                 DoLoadImageFile(m_hWnd, NULL, ofn.lpstrFile, TRUE);
             }
@@ -470,22 +477,22 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_FILE1:
         {
-            DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile1, TRUE);
+            querySave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile1, TRUE);
             break;
         }
         case IDM_FILE2:
         {
-            DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile2, TRUE);
+            querySave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile2, TRUE);
             break;
         }
         case IDM_FILE3:
         {
-            DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile3, TRUE);
+            querySave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile3, TRUE);
             break;
         }
         case IDM_FILE4:
         {
-            DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile4, TRUE);
+            querySave() && DoLoadImageFile(m_hWnd, NULL, registrySettings.strFile4, TRUE);
             break;
         }
         case IDM_EDITUNDO:
