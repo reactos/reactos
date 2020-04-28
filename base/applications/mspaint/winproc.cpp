@@ -191,10 +191,8 @@ BOOL CMainWindow::ConfirmSave()
 
     CString strProgramName;
     strProgramName.LoadString(IDS_PROGRAMNAME);
-    CPath pathFileName(filepathname);
-    pathFileName.StripPath();
     CString strSavePromptText;
-    strSavePromptText.Format(IDS_SAVEPROMPTTEXT, (LPCTSTR)pathFileName);
+    strSavePromptText.Format(IDS_SAVEPROMPTTEXT, PathFindFileName(filepathname));
     switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
     {
         case IDYES:
