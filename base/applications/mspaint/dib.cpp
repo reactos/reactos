@@ -103,10 +103,10 @@ void ShowFileLoadError(LPCTSTR name)
 BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFile)
 {
     HBITMAP hBitmap = NULL;
-
     if (phBitmap)
-        *phBitmap = NULL;
+        *phBitmap = hBitmap;
 
+    // find the file
     WIN32_FIND_DATAW find;
     HANDLE hFind = FindFirstFileW(name, &find);
     if (hFind == INVALID_HANDLE_VALUE)
@@ -117,15 +117,8 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
         MessageBoxW(hwnd, strText, NULL, MB_ICONERROR);
         return FALSE;
     }
+    DWORD dwFileSize = find.nFileSizeLow; // get file size
     FindClose(hFind);
-
-    // check the file size
-    DWORD dwFileSize = find.nFileSizeLow;
-    if (fIsMainFile)
-    {
-        fileSize = dwFileSize;
-        fileHPPM = fileVPPM = 0;
-    }
 
     // is file empty?
     if (dwFileSize == 0)
@@ -136,15 +129,25 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
             if (phBitmap)
                 *phBitmap = hBitmap;
 
+            // update image
             imageModel.Insert(hBitmap);
             imageModel.ClearHistory();
 
+            // update fileSize
+            fileSize = dwFileSize;
+
+            // update PPMs
+            fileHPPM = fileVPPM = 0;
+
+            // get full path
             GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
 
+            // set title
             CString strTitle;
             strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
             mainWindow.SetWindowText(strTitle);
 
+            // update file info
             isAFile = TRUE;
             registrySettings.SetMostRecentFile(filepathname);
 
@@ -152,10 +155,10 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
         }
     }
 
+    // load the image
     CImage img;
     img.Load(name);
     hBitmap = img.Detach();
-
     if (hBitmap == NULL)
     {
         // cannot open
@@ -164,6 +167,8 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
         MessageBoxW(hwnd, strText, NULL, MB_ICONERROR);
         return FALSE;
     }
+    if (phBitmap)
+        *phBitmap = hBitmap;
 
     if (fIsMainFile)
     {
@@ -172,15 +177,21 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
                                   OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
         if (hFile == INVALID_HANDLE_VALUE)
         {
-            isAFile = FALSE;
+            ShowFileLoadError(name);
 
             DeleteObject(hBitmap);
             if (phBitmap)
                 *phBitmap = NULL;
 
-            ShowFileLoadError(name);
             return FALSE;
         }
+
+        // update image
+        imageModel.Insert(hBitmap);
+        imageModel.ClearHistory();
+
+        // update fileSize
+        fileSize = dwFileSize;
 
         // update fileTime
         FILETIME ft;
@@ -195,19 +206,15 @@ BOOL DoLoadImageFile(HWND hwnd, HBITMAP *phBitmap, LPCTSTR name, BOOL fIsMainFil
 
         CloseHandle(hFile);
 
-        // valid bitmap file
+        // get full path
         GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
 
+        // set title
         CString strTitle;
         strTitle.Format(IDS_WINDOWTITLE, PathFindFileName(filepathname));
         mainWindow.SetWindowText(strTitle);
 
-        if (phBitmap)
-            *phBitmap = hBitmap;
-
-        imageModel.Insert(hBitmap);
-        imageModel.ClearHistory();
-
+        // update file info
         isAFile = TRUE;
         registrySettings.SetMostRecentFile(filepathname);
     }
