@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:     Tests for QueryUserAPC
+ * PURPOSE:     Tests for QueryUserAPC and threads
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
