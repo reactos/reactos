@@ -43,7 +43,9 @@ static VOID CheckRecord(void)
     count = abs((int)s_record_count - (int)s_expected_count);
     for (i = 0; i < count; ++i)
     {
-        ok(s_record_count == s_expected_count, "s_record_count != s_expected_count\n");
+        ok(s_record_count == s_expected_count,
+           "s_record_count: got %u vs expected %u\n",
+           (int)s_record_count, (int)s_expected_count);
     }
 }
 
