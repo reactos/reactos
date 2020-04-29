@@ -1819,9 +1819,9 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     if (NT_SUCCESS(Status))
     {
         /* To combine it into a single string */
-        swprintf((PWCHAR)PartialInfo->Data + wcslen((PWCHAR)PartialInfo->Data),
-                 L", %S",
-                 PartialInfo2->Data);
+        ((PWCHAR)(PartialInfo->Data))[PartialInfo->DataLength / sizeof(WCHAR)] = L'\0';        
+        wcsncat((PWCHAR)PartialInfo->Data, L", ", 2 * sizeof(WCHAR));
+        wcsncat((PWCHAR)PartialInfo->Data, (PWCHAR)PartialInfo2->Data, PartialInfo2->DataLength / sizeof(WCHAR));		
     }
 
     /* So that we can set this as the PROCESSOR_IDENTIFIER variable */
