@@ -11,7 +11,7 @@
 ;
 
 ;
-; Polish translation by 
+; Polish translation by; Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020) 
 ; Romanian translation by Ștefan Fulea (stefan dot fulea at mail dot com)
 ; Russian translation by Kudratov Olimjon (olim98@bk.ru)
 ; Spanish translation by Ismael Ferreras Morezuelas <2014-11-07>
@@ -54,7 +54,7 @@ Language=English
 The workstation driver is not installed.
 .
 Language=Polish
-The workstation driver is not installed.
+Nie zainstalowano sterownika stacji roboczej.
 .
 Language=Romanian
 The workstation driver is not installed.
@@ -83,7 +83,7 @@ Language=English
 The server could not be located.
 .
 Language=Polish
-The server could not be located.
+Nie można zlokalizować serwera.
 .
 Language=Romanian
 The server could not be located.
@@ -112,7 +112,7 @@ Language=English
 An internal error occurred. The network cannot access a shared memory segment.
 .
 Language=Polish
-An internal error occurred. The network cannot access a shared memory segment.
+Wystąpił błąd wewnętrzny. Sieć nie ma dostępu do wspólnego segmentu pamięci.
 .
 Language=Romanian
 An internal error occurred. The network cannot access a shared memory segment.
@@ -141,7 +141,7 @@ Language=English
 A network resource shortage occurred.
 .
 Language=Polish
-A network resource shortage occurred.
+Wystąpił niedobór zasobów sieciowych.
 .
 Language=Romanian
 A network resource shortage occurred.
@@ -170,7 +170,7 @@ Language=English
 This operation is not supported on workstations.
 .
 Language=Polish
-This operation is not supported on workstations.
+Ta operacja nie jest obsługiwana na stacjach roboczych.
 .
 Language=Romanian
 This operation is not supported on workstations.
@@ -199,7 +199,7 @@ Language=English
 The device is not connected.
 .
 Language=Polish
-The device is not connected.
+Urządzenie nie jest podłączone.
 .
 Language=Romanian
 The device is not connected.
@@ -228,7 +228,7 @@ Language=English
 The Server service is not started.
 .
 Language=Polish
-The Server service is not started.
+Nie uruchomiono usługi Serwer.
 .
 Language=Romanian
 The Server service is not started.
@@ -257,7 +257,7 @@ Language=English
 The queue is empty.
 .
 Language=Polish
-The queue is empty.
+Kolejka jest pusta.
 .
 Language=Romanian
 The queue is empty.
@@ -286,7 +286,7 @@ Language=English
 The device or directory does not exist.
 .
 Language=Polish
-The device or directory does not exist.
+Urządzenie lub katalog nie istnieje.
 .
 Language=Romanian
 The device or directory does not exist.
@@ -315,7 +315,7 @@ Language=English
 The operation is invalid on a redirected resource.
 .
 Language=Polish
-The operation is invalid on a redirected resource.
+Ta operacja na przekierowanym zasobie jest nieprawidłowa.
 .
 Language=Romanian
 The operation is invalid on a redirected resource.
@@ -344,7 +344,7 @@ Language=English
 The name has already been shared.
 .
 Language=Polish
-The name has already been shared.
+Ta nazwa została już udostępniona.
 .
 Language=Romanian
 The name has already been shared.
@@ -373,7 +373,7 @@ Language=English
 The server is currently out of the requested resource.
 .
 Language=Polish
-The server is currently out of the requested resource.
+Na serwerze brak obecnie żądanego zasobu.
 .
 Language=Romanian
 The server is currently out of the requested resource.
@@ -402,7 +402,7 @@ Language=English
 Requested addition of items exceeds the maximum allowed.
 .
 Language=Polish
-Requested addition of items exceeds the maximum allowed.
+Żądana operacja dodania elementów spowoduje przekroczenie dozwolonego maksimum.
 .
 Language=Romanian
 Requested addition of items exceeds the maximum allowed.
@@ -431,7 +431,7 @@ Language=English
 The Peer service supports only two simultaneous users.
 .
 Language=Polish
-The Peer service supports only two simultaneous users.
+Usługa Peer obsługuje tylko dwóch jednocześnie działających użytkowników.
 .
 Language=Romanian
 The Peer service supports only two simultaneous users.
@@ -460,7 +460,7 @@ Language=English
 The API return buffer is too small.
 .
 Language=Polish
-The API return buffer is too small.
+Bufor zwrotu API jest za mały.
 .
 Language=Romanian
 The API return buffer is too small.
@@ -489,7 +489,7 @@ Language=English
 A remote API error occurred.
 .
 Language=Polish
-A remote API error occurred.
+Wystąpił błąd zdalnego API.
 .
 Language=Romanian
 A remote API error occurred.
@@ -518,7 +518,7 @@ Language=English
 An error occurred when opening or reading the configuration file.
 .
 Language=Polish
-An error occurred when opening or reading the configuration file.
+Wystąpił błąd podczas otwierania lub odczytu pliku konfiguracyjnego.
 .
 Language=Romanian
 An error occurred when opening or reading the configuration file.
@@ -547,7 +547,7 @@ Language=English
 A general network error occurred.
 .
 Language=Polish
-A general network error occurred.
+Wystąpił ogólny błąd sieciowy.
 .
 Language=Romanian
 A general network error occurred.
@@ -576,7 +576,7 @@ Language=English
 The Workstation service is in an inconsistent state. Restart the computer before restarting the Workstation service.
 .
 Language=Polish
-The Workstation service is in an inconsistent state. Restart the computer before restarting the Workstation service.
+Usługa Stacja robocza jest w niezgodnym stanie. Uruchom ponownie komputer i uruchom tę usługę jeszcze raz.
 .
 Language=Romanian
 The Workstation service is in an inconsistent state. Restart the computer before restarting the Workstation service.
@@ -605,7 +605,7 @@ Language=English
 The Workstation service has not been started.
 .
 Language=Polish
-The Workstation service has not been started.
+Nie uruchomiono usługi Stacja robocza.
 .
 Language=Romanian
 The Workstation service has not been started.
@@ -634,7 +634,7 @@ Language=English
 The requested information is not available.
 .
 Language=Polish
-The requested information is not available.
+Żądane informacje nie są dostępne.
 .
 Language=Romanian
 The requested information is not available.
@@ -663,7 +663,7 @@ Language=English
 An internal error occurred.
 .
 Language=Polish
-An internal error occurred.
+Wystąpił wewnętrzny błąd systemu ReactOS.
 .
 Language=Romanian
 An internal error occurred.
@@ -692,7 +692,7 @@ Language=English
 The server is not configured for transactions.
 .
 Language=Polish
-The server is not configured for transactions.
+Serwer nie jest skonfigurowany do transakcji.
 .
 Language=Romanian
 The server is not configured for transactions.
@@ -721,7 +721,7 @@ Language=English
 The requested API is not supported on the remote server.
 .
 Language=Polish
-The requested API is not supported on the remote server.
+Żądany interfejs API nie jest obsługiwany na serwerze zdalnym.
 .
 Language=Romanian
 The requested API is not supported on the remote server.
@@ -750,7 +750,7 @@ Language=English
 The event name is invalid.
 .
 Language=Polish
-The event name is invalid.
+Nazwa zdarzenia jest nieprawidłowa.
 .
 Language=Romanian
 The event name is invalid.
@@ -779,7 +779,7 @@ Language=English
 The computer name already exists on the network. Change it and restart the computer.
 .
 Language=Polish
-The computer name already exists on the network. Change it and restart the computer.
+Nazwa komputera istnieje już w sieci. Zmień ją i ponownie uruchom komputer.
 .
 Language=Romanian
 The computer name already exists on the network. Change it and restart the computer.
@@ -808,7 +808,7 @@ Language=English
 The specified component could not be found in the configuration information.
 .
 Language=Polish
-The specified component could not be found in the configuration information.
+Nie można odnaleźć określonego składnika w informacjach konfiguracyjnych.
 .
 Language=Romanian
 The specified component could not be found in the configuration information.
@@ -837,7 +837,7 @@ Language=English
 The specified parameter could not be found in the configuration information.
 .
 Language=Polish
-The specified parameter could not be found in the configuration information.
+Nie można odnaleźć określonego parametru w informacjach konfiguracyjnych.
 .
 Language=Romanian
 The specified parameter could not be found in the configuration information.
@@ -866,7 +866,7 @@ Language=English
 A line in the configuration file is too long.
 .
 Language=Polish
-A line in the configuration file is too long.
+Jeden z wierszy pliku konfiguracyjnego jest za długi.
 .
 Language=Romanian
 A line in the configuration file is too long.
@@ -895,7 +895,7 @@ Language=English
 The printer does not exist.
 .
 Language=Polish
-The printer does not exist.
+Drukarka nie istnieje.
 .
 Language=Romanian
 The printer does not exist.
@@ -924,7 +924,7 @@ Language=English
 The print job does not exist.
 .
 Language=Polish
-The print job does not exist.
+Zadanie drukowania nie istnieje.
 .
 Language=Romanian
 The print job does not exist.
@@ -953,7 +953,7 @@ Language=English
 The printer destination cannot be found.
 .
 Language=Polish
-The printer destination cannot be found.
+Nie można odnaleźć miejsca docelowego drukowania.
 .
 Language=Romanian
 The printer destination cannot be found.
@@ -982,7 +982,7 @@ Language=English
 The printer destination already exists.
 .
 Language=Polish
-The printer destination already exists.
+Drukarka docelowa już istnieje.
 .
 Language=Romanian
 The printer destination already exists.
@@ -1011,7 +1011,7 @@ Language=English
 The printer queue already exists.
 .
 Language=Polish
-The printer queue already exists.
+Kolejka wydruku już istnieje.
 .
 Language=Romanian
 The printer queue already exists.
@@ -1040,7 +1040,7 @@ Language=English
 No more printers can be added.
 .
 Language=Polish
-No more printers can be added.
+Nie można dodać więcej drukarek.
 .
 Language=Romanian
 No more printers can be added.
@@ -1069,7 +1069,7 @@ Language=English
 No more print jobs can be added.
 .
 Language=Polish
-No more print jobs can be added.
+Nie można dodać więcej zadań drukowania.
 .
 Language=Romanian
 No more print jobs can be added.
@@ -1098,7 +1098,7 @@ Language=English
 No more printer destinations can be added.
 .
 Language=Polish
-No more printer destinations can be added.
+Nie można dodać więcej drukarek docelowych.
 .
 Language=Romanian
 No more printer destinations can be added.
@@ -1127,7 +1127,7 @@ Language=English
 This printer destination is idle and cannot accept control operations.
 .
 Language=Polish
-This printer destination is idle and cannot accept control operations.
+Ta drukarka docelowa jest bezczynna i nie może akceptować operacji sterujących.
 .
 Language=Romanian
 This printer destination is idle and cannot accept control operations.
@@ -1156,7 +1156,7 @@ Language=English
 This printer destination request contains an invalid control function.
 .
 Language=Polish
-This printer destination request contains an invalid control function.
+To żądanie drukarki docelowej zawiera nieprawidłową funkcję sterującą.
 .
 Language=Romanian
 This printer destination request contains an invalid control function.
@@ -1185,7 +1185,7 @@ Language=English
 The print processor is not responding.
 .
 Language=Polish
-The print processor is not responding.
+Procesor wydruku nie odpowiada.
 .
 Language=Romanian
 The print processor is not responding.
@@ -1214,7 +1214,7 @@ Language=English
 The spooler is not running.
 .
 Language=Polish
-The spooler is not running.
+Program buforujący nie jest uruchomiony.
 .
 Language=Romanian
 The spooler is not running.
@@ -1243,7 +1243,7 @@ Language=English
 This operation cannot be performed on the print destination in its current state.
 .
 Language=Polish
-This operation cannot be performed on the print destination in its current state.
+Nie można wykonać tej operacji na docelowym miejscu drukowania w jego obecnym stanie.
 .
 Language=Romanian
 This operation cannot be performed on the print destination in its current state.
@@ -1272,7 +1272,7 @@ Language=English
 This operation cannot be performed on the printer queue in its current state.
 .
 Language=Polish
-This operation cannot be performed on the printer queue in its current state.
+Nie można wykonać tej operacji na kolejce wydruku w jej obecnym stanie.
 .
 Language=Romanian
 This operation cannot be performed on the printer queue in its current state.
@@ -1301,7 +1301,7 @@ Language=English
 This operation cannot be performed on the print job in its current state.
 .
 Language=Polish
-This operation cannot be performed on the print job in its current state.
+Nie można wykonać tej operacji na zadaniu wydruku w jego obecnym stanie.
 .
 Language=Romanian
 This operation cannot be performed on the print job in its current state.
@@ -1330,7 +1330,7 @@ Language=English
 A spooler memory allocation failure occurred.
 .
 Language=Polish
-A spooler memory allocation failure occurred.
+Wystąpił błąd przydzielenia pamięci przez program buforujący.
 .
 Language=Romanian
 A spooler memory allocation failure occurred.
@@ -1359,7 +1359,7 @@ Language=English
 The device driver does not exist.
 .
 Language=Polish
-The device driver does not exist.
+Sterownik urządzenia nie istnieje.
 .
 Language=Romanian
 The device driver does not exist.
@@ -1388,7 +1388,7 @@ Language=English
 The data type is not supported by the print processor.
 .
 Language=Polish
-The data type is not supported by the print processor.
+Ten typ danych nie jest obsługiwany przez procesor wydruku.
 .
 Language=Romanian
 The data type is not supported by the print processor.
@@ -1417,7 +1417,7 @@ Language=English
 The print processor is not installed.
 .
 Language=Polish
-The print processor is not installed.
+Procesor wydruku nie jest zainstalowany.
 .
 Language=Romanian
 The print processor is not installed.
@@ -1446,7 +1446,7 @@ Language=English
 The service database is locked.
 .
 Language=Polish
-The service database is locked.
+Baza danych usługi jest zablokowana.
 .
 Language=Romanian
 The service database is locked.
@@ -1475,7 +1475,7 @@ Language=English
 The service table is full.
 .
 Language=Polish
-The service table is full.
+Tabela usługi jest zapełniona.
 .
 Language=Romanian
 The service table is full.
@@ -1504,7 +1504,7 @@ Language=English
 The requested service has already been started.
 .
 Language=Polish
-The requested service has already been started.
+Żądana usługa została już uruchomiona.
 .
 Language=Romanian
 The requested service has already been started.
@@ -1533,7 +1533,7 @@ Language=English
 The service does not respond to control actions.
 .
 Language=Polish
-The service does not respond to control actions.
+Usługa nie reaguje na operacje sterujące.
 .
 Language=Romanian
 The service does not respond to control actions.
@@ -1562,7 +1562,7 @@ Language=English
 The service has not been started.
 .
 Language=Polish
-The service has not been started.
+Usługa nie została uruchomiona.
 .
 Language=Romanian
 The service has not been started.
@@ -1591,7 +1591,7 @@ Language=English
 The service name is invalid.
 .
 Language=Polish
-The service name is invalid.
+Nazwa usługi jest nieprawidłowa.
 .
 Language=Romanian
 The service name is invalid.
@@ -1620,7 +1620,7 @@ Language=English
 The service is not responding to the control function.
 .
 Language=Polish
-The service is not responding to the control function.
+Usługa nie reaguje na funkcję sterującą.
 .
 Language=Romanian
 The service is not responding to the control function.
@@ -1649,7 +1649,7 @@ Language=English
 The service control is busy.
 .
 Language=Polish
-The service control is busy.
+Sterowanie usługą jest zajęte.
 .
 Language=Romanian
 The service control is busy.
@@ -1678,7 +1678,7 @@ Language=English
 The configuration file contains an invalid service program name.
 .
 Language=Polish
-The configuration file contains an invalid service program name.
+Plik konfiguracyjny zawiera nieprawidłową nazwę programu usługi.
 .
 Language=Romanian
 The configuration file contains an invalid service program name.
@@ -1707,7 +1707,7 @@ Language=English
 The service could not be controlled in its present state.
 .
 Language=Polish
-The service could not be controlled in its present state.
+Nie można sterować usługą w jej obecnym stanie.
 .
 Language=Romanian
 The service could not be controlled in its present state.
@@ -1736,7 +1736,7 @@ Language=English
 The service ended abnormally.
 .
 Language=Polish
-The service ended abnormally.
+Usługa zakończyła działanie w niestandardowy sposób.
 .
 Language=Romanian
 The service ended abnormally.
@@ -1765,7 +1765,7 @@ Language=English
 The requested pause, continue, or stop is not valid for this service.
 .
 Language=Polish
-The requested pause, continue, or stop is not valid for this service.
+Żądane wstrzymanie, kontynuowanie lub zatrzymanie nie jest prawidłowe dla tej usługi.
 .
 Language=Romanian
 The requested pause, continue, or stop is not valid for this service.
@@ -1794,7 +1794,7 @@ Language=English
 The service control dispatcher could not find the service name in the dispatch table.
 .
 Language=Polish
-The service control dispatcher could not find the service name in the dispatch table.
+Dyspozytor sterowania usługą nie może odnaleźć nazwy usługi w tabeli dyspozycji.
 .
 Language=Romanian
 The service control dispatcher could not find the service name in the dispatch table.
@@ -1823,7 +1823,7 @@ Language=English
 The service control dispatcher pipe read failed.
 .
 Language=Polish
-The service control dispatcher pipe read failed.
+Odczytanie potoku dyspozytora sterowania usługą nie powiodło się.
 .
 Language=Romanian
 The service control dispatcher pipe read failed.
@@ -1852,7 +1852,7 @@ Language=English
 A thread for the new service could not be created.
 .
 Language=Polish
-A thread for the new service could not be created.
+Nie można utworzyć wątku dla nowej usługi.
 .
 Language=Romanian
 A thread for the new service could not be created.
@@ -1881,7 +1881,7 @@ Language=English
 This workstation is already logged on to the local-area network.
 .
 Language=Polish
-This workstation is already logged on to the local-area network.
+Ta stacja robocza jest już zalogowana w sieci lokalnej.
 .
 Language=Romanian
 This workstation is already logged on to the local-area network.
@@ -1910,7 +1910,7 @@ Language=English
 The workstation is not logged on to the local-area network.
 .
 Language=Polish
-The workstation is not logged on to the local-area network.
+Ta stacja robocza nie jest zalogowana w sieci lokalnej.
 .
 Language=Romanian
 The workstation is not logged on to the local-area network.
@@ -1939,7 +1939,7 @@ Language=English
 The user name or group name parameter is invalid.
 .
 Language=Polish
-The user name or group name parameter is invalid.
+Parametr nazwy użytkownika lub nazwy grupy jest nieprawidłowy.
 .
 Language=Romanian
 The user name or group name parameter is invalid.
@@ -1968,7 +1968,7 @@ Language=English
 The password parameter is invalid.
 .
 Language=Polish
-The password parameter is invalid.
+Parametr hasła jest nieprawidłowy.
 .
 Language=Romanian
 The password parameter is invalid.
@@ -1997,7 +1997,7 @@ Language=English
 The logon processor did not add the message alias.
 .
 Language=Polish
-The logon processor did not add the message alias.
+Procesor logowania nie dodał aliasu komunikatu.
 .
 Language=Romanian
 The logon processor did not add the message alias.
@@ -2026,7 +2026,7 @@ Language=English
 The logon processor did not add the message alias.
 .
 Language=Polish
-The logon processor did not add the message alias.
+Procesor logowania nie dodał aliasu komunikatu.
 .
 Language=Romanian
 The logon processor did not add the message alias.
@@ -2055,7 +2055,7 @@ Language=English
 The logoff processor did not delete the message alias.
 .
 Language=Polish
-The logoff processor did not delete the message alias.
+Procesor wylogowania nie usunął aliasu komunikatu.
 .
 Language=Romanian
 The logoff processor did not delete the message alias.
@@ -2084,7 +2084,7 @@ Language=English
 The logoff processor did not delete the message alias.
 .
 Language=Polish
-The logoff processor did not delete the message alias.
+Procesor wylogowania nie usunął aliasu komunikatu.
 .
 Language=Romanian
 The logoff processor did not delete the message alias.
@@ -2113,7 +2113,7 @@ Language=English
 Network logons are paused.
 .
 Language=Polish
-Network logons are paused.
+Operacje logowania w sieci zostały wstrzymane.
 .
 Language=Romanian
 Network logons are paused.
@@ -2142,7 +2142,7 @@ Language=English
 A centralized logon-server conflict occurred.
 .
 Language=Polish
-A centralized logon-server conflict occurred.
+Wystąpił scentralizowany konflikt logowanie-serwer.
 .
 Language=Romanian
 A centralized logon-server conflict occurred.
@@ -2171,7 +2171,7 @@ Language=English
 The server is configured without a valid user path.
 .
 Language=Polish
-The server is configured without a valid user path.
+Serwer został skonfigurowany bez prawidłowej ścieżki użytkownika.
 .
 Language=Romanian
 The server is configured without a valid user path.
@@ -2200,7 +2200,7 @@ Language=English
 An error occurred while loading or running the logon script.
 .
 Language=Polish
-An error occurred while loading or running the logon script.
+Podczas ładowania lub uruchamiania skryptu logowania wystąpił błąd.
 .
 Language=Romanian
 An error occurred while loading or running the logon script.
@@ -2229,7 +2229,7 @@ Language=English
 The logon server was not specified.  Your computer will be logged on as STANDALONE.
 .
 Language=Polish
-The logon server was not specified.  Your computer will be logged on as STANDALONE.
+Nie określono serwera logowania. Komputer zostanie zalogowany jako STANDALONE.
 .
 Language=Romanian
 The logon server was not specified.  Your computer will be logged on as STANDALONE.
@@ -2258,7 +2258,7 @@ Language=English
 The logon server could not be found.
 .
 Language=Polish
-The logon server could not be found.
+Nie można odnaleźć serwera logowania.
 .
 Language=Romanian
 The logon server could not be found.
@@ -2287,7 +2287,7 @@ Language=English
 There is already a logon domain for this computer.
 .
 Language=Polish
-There is already a logon domain for this computer.
+Dla tego komputera istnieje już domena logowania.
 .
 Language=Romanian
 There is already a logon domain for this computer.
@@ -2316,7 +2316,7 @@ Language=English
 The logon server could not validate the logon.
 .
 Language=Polish
-The logon server could not validate the logon.
+Serwer logowania nie może sprawdzić poprawności logowania.
 .
 Language=Romanian
 The logon server could not validate the logon.
@@ -2345,7 +2345,7 @@ Language=English
 The security database could not be found.
 .
 Language=Polish
-The security database could not be found.
+Nie można odnaleźć bazy danych zabezpieczeń.
 .
 Language=Romanian
 The security database could not be found.
@@ -2374,7 +2374,7 @@ Language=English
 The group name could not be found.
 .
 Language=Polish
-The group name could not be found.
+Nie można odnaleźć nazwy grupy.
 .
 Language=Romanian
 The group name could not be found.
@@ -2403,7 +2403,7 @@ Language=English
 The user name could not be found.
 .
 Language=Polish
-The user name could not be found.
+Nie można odnaleźć nazwy użytkownika.
 .
 Language=Romanian
 The user name could not be found.
@@ -2432,7 +2432,7 @@ Language=English
 The resource name could not be found.
 .
 Language=Polish
-The resource name could not be found.
+Nie można odnaleźć nazwy zasobu.
 .
 Language=Romanian
 The resource name could not be found.
@@ -2461,7 +2461,7 @@ Language=English
 The group already exists.
 .
 Language=Polish
-The group already exists.
+Ta grupa już istnieje.
 .
 Language=Romanian
 The group already exists.
@@ -2490,7 +2490,7 @@ Language=English
 The account already exists.
 .
 Language=Polish
-The account already exists.
+To konto już istnieje.
 .
 Language=Romanian
 The account already exists.
@@ -2519,7 +2519,7 @@ Language=English
 The resource permission list already exists.
 .
 Language=Polish
-The resource permission list already exists.
+Ta lista uprawnień do zasobów już istnieje.
 .
 Language=Romanian
 The resource permission list already exists.
@@ -2548,7 +2548,7 @@ Language=English
 This operation is only allowed on the primary domain controller of the domain.
 .
 Language=Polish
-This operation is only allowed on the primary domain controller of the domain.
+Ta operacja jest dozwolona tylko na podstawowym kontrolerze domeny dla tej domeny.
 .
 Language=Romanian
 This operation is only allowed on the primary domain controller of the domain.
@@ -2577,7 +2577,7 @@ Language=English
 The security database has not been started.
 .
 Language=Polish
-The security database has not been started.
+Nie uruchomiono bazy danych zabezpieczeń.
 .
 Language=Romanian
 The security database has not been started.
@@ -2606,7 +2606,7 @@ Language=English
 There are too many names in the user accounts database.
 .
 Language=Polish
-There are too many names in the user accounts database.
+W bazie danych kont użytkowników jest zbyt wiele nazw.
 .
 Language=Romanian
 There are too many names in the user accounts database.
@@ -2635,7 +2635,7 @@ Language=English
 A disk I/O failure occurred.
 .
 Language=Polish
-A disk I/O failure occurred.
+Dyskowa operacja We/Wy nie powiodła się.
 .
 Language=Romanian
 A disk I/O failure occurred.
@@ -2664,7 +2664,7 @@ Language=English
 The limit of 64 entries per resource was exceeded.
 .
 Language=Polish
-The limit of 64 entries per resource was exceeded.
+Przekroczono limit 64 wpisów na zasób.
 .
 Language=Romanian
 The limit of 64 entries per resource was exceeded.
@@ -2693,7 +2693,7 @@ Language=English
 Deleting a user with a session is not allowed.
 .
 Language=Polish
-Deleting a user with a session is not allowed.
+Usunięcie użytkownika korzystającego z sesji nie jest dozwolone.
 .
 Language=Romanian
 Deleting a user with a session is not allowed.
@@ -2722,7 +2722,7 @@ Language=English
 The parent directory could not be located.
 .
 Language=Polish
-The parent directory could not be located.
+Nie można odnaleźć katalogu nadrzędnego.
 .
 Language=Romanian
 The parent directory could not be located.
@@ -2751,7 +2751,7 @@ Language=English
 Unable to add to the security database session cache segment.
 .
 Language=Polish
-Unable to add to the security database session cache segment.
+Nie można zwiększyć segmentu buforu sesji bazy danych zabezpieczeń.
 .
 Language=Romanian
 Unable to add to the security database session cache segment.
@@ -2780,7 +2780,7 @@ Language=English
 This operation is not allowed on this special group.
 .
 Language=Polish
-This operation is not allowed on this special group.
+Ta operacja nie jest dozwolona na tej grupie specjalnej.
 .
 Language=Romanian
 This operation is not allowed on this special group.
@@ -2809,7 +2809,7 @@ Language=English
 This user is not cached in user accounts database session cache.
 .
 Language=Polish
-This user is not cached in user accounts database session cache.
+Ten użytkownik nie jest buforowany w buforze sesji bazy danych kont użytkowników.
 .
 Language=Romanian
 This user is not cached in user accounts database session cache.
@@ -2838,7 +2838,7 @@ Language=English
 The user already belongs to this group.
 .
 Language=Polish
-The user already belongs to this group.
+Użytkownik należy już do tej grupy.
 .
 Language=Romanian
 The user already belongs to this group.
@@ -2867,7 +2867,7 @@ Language=English
 The user does not belong to this group.
 .
 Language=Polish
-The user does not belong to this group.
+Użytkownik nie należy do tej grupy.
 .
 Language=Romanian
 The user does not belong to this group.
@@ -2896,7 +2896,7 @@ Language=English
 This user account is undefined.
 .
 Language=Polish
-This user account is undefined.
+To konto użytkownika nie jest określone.
 .
 Language=Romanian
 This user account is undefined.
@@ -2925,7 +2925,7 @@ Language=English
 This user account has expired.
 .
 Language=Polish
-This user account has expired.
+Wygasła ważność tego konta użytkownika.
 .
 Language=Romanian
 This user account has expired.
@@ -2954,7 +2954,7 @@ Language=English
 The user is not allowed to log on from this workstation.
 .
 Language=Polish
-The user is not allowed to log on from this workstation.
+Użytkownik nie ma prawa logować się z tej stacji roboczej.
 .
 Language=Romanian
 The user is not allowed to log on from this workstation.
@@ -2983,7 +2983,7 @@ Language=English
 The user is not allowed to log on at this time.
 .
 Language=Polish
-The user is not allowed to log on at this time.
+Użytkownik nie ma prawa logować się o tej porze.
 .
 Language=Romanian
 The user is not allowed to log on at this time.
@@ -3012,7 +3012,7 @@ Language=English
 The password of this user has expired.
 .
 Language=Polish
-The password of this user has expired.
+Wygasła ważność hasła tego użytkownika.
 .
 Language=Romanian
 The password of this user has expired.
@@ -3041,7 +3041,7 @@ Language=English
 The password of this user cannot change.
 .
 Language=Polish
-The password of this user cannot change.
+Hasło tego użytkownika nie może ulec zmianie.
 .
 Language=Romanian
 The password of this user cannot change.
@@ -3070,7 +3070,7 @@ Language=English
 This password cannot be used now.
 .
 Language=Polish
-This password cannot be used now.
+Tego hasła nie można obecnie użyć.
 .
 Language=Romanian
 This password cannot be used now.
@@ -3099,7 +3099,7 @@ Language=English
 The password does not meet the password policy requirements. Check the minimum password length, password complexity and password history requirements.
 .
 Language=Polish
-The password does not meet the password policy requirements. Check the minimum password length, password complexity and password history requirements.
+Hasło nie odpowiada wymaganiom zasad haseł. Sprawdź minimalną długość hasła, jego złożoność i wymagania historii hasła.
 .
 Language=Romanian
 The password does not meet the password policy requirements. Check the minimum password length, password complexity and password history requirements.
@@ -3128,7 +3128,7 @@ Language=English
 The password of this user is too recent to change.
 .
 Language=Polish
-The password of this user is too recent to change.
+Hasło tego użytkownika jest zbyt nowe, aby można było je zmienić.
 .
 Language=Romanian
 The password of this user is too recent to change.
@@ -3157,7 +3157,7 @@ Language=English
 The security database is corrupted.
 .
 Language=Polish
-The security database is corrupted.
+Plik bazy danych zabezpieczeń jest uszkodzony.
 .
 Language=Romanian
 The security database is corrupted.
@@ -3186,7 +3186,7 @@ Language=English
 No updates are necessary to this replicant network/local security database.
 .
 Language=Polish
-No updates are necessary to this replicant network/local security database.
+Dla tej zreplikowanej sieciowej lub lokalnej bazy danych zabezpieczeń nie są potrzebne żadne aktualizacje.
 .
 Language=Romanian
 No updates are necessary to this replicant network/local security database.
@@ -3215,7 +3215,7 @@ Language=English
 This replicant database is outdated; synchronization is required.
 .
 Language=Polish
-This replicant database is outdated; synchronization is required.
+Ta zreplikowana baza danych jest nieaktualna; wymagana jest synchronizacja.
 .
 Language=Romanian
 This replicant database is outdated; synchronization is required.
@@ -3244,7 +3244,7 @@ Language=English
 The network connection could not be found.
 .
 Language=Polish
-The network connection could not be found.
+Nie można odnaleźć połączenia sieciowego.
 .
 Language=Romanian
 The network connection could not be found.
@@ -3273,7 +3273,7 @@ Language=English
 This asg_type is invalid.
 .
 Language=Polish
-This asg_type is invalid.
+Ten typ asg_type jest nieprawidłowy.
 .
 Language=Romanian
 This asg_type is invalid.
@@ -3302,7 +3302,7 @@ Language=English
 This device is currently being shared.
 .
 Language=Polish
-This device is currently being shared.
+To urządzenie jest właśnie udostępniane.
 .
 Language=Romanian
 This device is currently being shared.
@@ -3331,7 +3331,7 @@ Language=English
 The computer name could not be added as a message alias.  The name may already exist on the network.
 .
 Language=Polish
-The computer name could not be added as a message alias.  The name may already exist on the network.
+Nie można dodać nazwy komputera jako aliasu wiadomości. Być może ta nazwa istnieje już w sieci.
 .
 Language=Romanian
 The computer name could not be added as a message alias.  The name may already exist on the network.
@@ -3360,7 +3360,7 @@ Language=English
 The Messenger service is already started.
 .
 Language=Polish
-The Messenger service is already started.
+Usługa Posłaniec jest już uruchomiona.
 .
 Language=Romanian
 The Messenger service is already started.
@@ -3389,7 +3389,7 @@ Language=English
 The Messenger service failed to start.
 .
 Language=Polish
-The Messenger service failed to start.
+Uruchomienie usługi Posłaniec nie powiodło się.
 .
 Language=Romanian
 The Messenger service failed to start.
@@ -3418,7 +3418,7 @@ Language=English
 The message alias could not be found on the network.
 .
 Language=Polish
-The message alias could not be found on the network.
+Nie można odnaleźć aliasu komunikatu w sieci lokalnej.
 .
 Language=Romanian
 The message alias could not be found on the network.
@@ -3447,7 +3447,7 @@ Language=English
 This message alias has already been forwarded.
 .
 Language=Polish
-This message alias has already been forwarded.
+Ten alias komunikatu został już przesłany dalej.
 .
 Language=Romanian
 This message alias has already been forwarded.
@@ -3476,7 +3476,7 @@ Language=English
 This message alias has been added but is still forwarded.
 .
 Language=Polish
-This message alias has been added but is still forwarded.
+Ten alias komunikatu został dodany, ale jest nadal przesyłany dalej.
 .
 Language=Romanian
 This message alias has been added but is still forwarded.
@@ -3505,7 +3505,7 @@ Language=English
 This message alias already exists locally.
 .
 Language=Polish
-This message alias already exists locally.
+Ten alias komunikatu już istnieje lokalnie.
 .
 Language=Romanian
 This message alias already exists locally.
@@ -3534,7 +3534,7 @@ Language=English
 The maximum number of added message aliases has been exceeded.
 .
 Language=Polish
-The maximum number of added message aliases has been exceeded.
+Przekroczono maksymalną liczbę dodanych aliasów komunikatów.
 .
 Language=Romanian
 The maximum number of added message aliases has been exceeded.
@@ -3563,7 +3563,7 @@ Language=English
 The computer name could not be deleted.
 .
 Language=Polish
-The computer name could not be deleted.
+Nie można usunąć nazwy komputera.
 .
 Language=Romanian
 The computer name could not be deleted.
@@ -3592,7 +3592,7 @@ Language=English
 Messages cannot be forwarded back to the same workstation.
 .
 Language=Polish
-Messages cannot be forwarded back to the same workstation.
+Nie można przesłać komunikatów z powrotem do tej samej stacji roboczej.
 .
 Language=Romanian
 Messages cannot be forwarded back to the same workstation.
@@ -3621,7 +3621,7 @@ Language=English
 An error occurred in the domain message processor.
 .
 Language=Polish
-An error occurred in the domain message processor.
+Wystąpił błąd w procesorze komunikatów domeny.
 .
 Language=Romanian
 An error occurred in the domain message processor.
@@ -3650,7 +3650,7 @@ Language=English
 The message was sent, but the recipient has paused the Messenger service.
 .
 Language=Polish
-The message was sent, but the recipient has paused the Messenger service.
+Komunikat został wysłany, ale odbiorca wstrzymał usługę Posłaniec.
 .
 Language=Romanian
 The message was sent, but the recipient has paused the Messenger service.
@@ -3679,7 +3679,7 @@ Language=English
 The message was sent but not received.
 .
 Language=Polish
-The message was sent but not received.
+Komunikat został wysłany, ale nie odebrano go.
 .
 Language=Romanian
 The message was sent but not received.
@@ -3708,7 +3708,7 @@ Language=English
 The message alias is currently in use. Try again later.
 .
 Language=Polish
-The message alias is currently in use. Try again later.
+Alias komunikatu jest obecnie używany. Spróbuj ponownie później.
 .
 Language=Romanian
 The message alias is currently in use. Try again later.
@@ -3737,7 +3737,7 @@ Language=English
 The Messenger service has not been started.
 .
 Language=Polish
-The Messenger service has not been started.
+Usługa Posłaniec nie została uruchomiona.
 .
 Language=Romanian
 The Messenger service has not been started.
@@ -3766,7 +3766,7 @@ Language=English
 The name is not on the local computer.
 .
 Language=Polish
-The name is not on the local computer.
+Nazwa nie występuje na komputerze lokalnym.
 .
 Language=Romanian
 The name is not on the local computer.
@@ -3795,7 +3795,7 @@ Language=English
 The forwarded message alias could not be found on the network.
 .
 Language=Polish
-The forwarded message alias could not be found on the network.
+Nie można znaleźć w sieci aliasu komunikatu przesłanego dalej.
 .
 Language=Romanian
 The forwarded message alias could not be found on the network.
@@ -3824,7 +3824,7 @@ Language=English
 The message alias table on the remote station is full.
 .
 Language=Polish
-The message alias table on the remote station is full.
+Tabela aliasów komunikatów na stacji zdalnej jest zapełniona.
 .
 Language=Romanian
 The message alias table on the remote station is full.
@@ -3853,7 +3853,7 @@ Language=English
 Messages for this alias are not currently being forwarded.
 .
 Language=Polish
-Messages for this alias are not currently being forwarded.
+Komunikaty dla tego aliasu nie są obecnie przesyłane dalej.
 .
 Language=Romanian
 Messages for this alias are not currently being forwarded.
@@ -3882,7 +3882,7 @@ Language=English
 The broadcast message was truncated.
 .
 Language=Polish
-The broadcast message was truncated.
+Komunikat emisji został obcięty.
 .
 Language=Romanian
 The broadcast message was truncated.
@@ -3911,7 +3911,7 @@ Language=English
 This is an invalid device name.
 .
 Language=Polish
-This is an invalid device name.
+Ta nazwa urządzenia jest nieprawidłowa.
 .
 Language=Romanian
 This is an invalid device name.
@@ -3940,7 +3940,7 @@ Language=English
 A write fault occurred.
 .
 Language=Polish
-A write fault occurred.
+Wystąpił błąd zapisu.
 .
 Language=Romanian
 A write fault occurred.
@@ -3969,7 +3969,7 @@ Language=English
 A duplicate message alias exists on the network.
 .
 Language=Polish
-A duplicate message alias exists on the network.
+W sieci lokalnej istnieje duplikat aliasu komunikatu.
 .
 Language=Romanian
 A duplicate message alias exists on the network.
@@ -3998,7 +3998,7 @@ Language=English
 This message alias will be deleted later.
 .
 Language=Polish
-This message alias will be deleted later.
+Ten alias komunikatu zostanie usunięty później.
 .
 Language=Romanian
 This message alias will be deleted later.
@@ -4027,7 +4027,7 @@ Language=English
 The message alias was not successfully deleted from all networks.
 .
 Language=Polish
-The message alias was not successfully deleted from all networks.
+Alias komunikatu nie został pomyślnie usunięty ze wszystkich sieci.
 .
 Language=Romanian
 The message alias was not successfully deleted from all networks.
@@ -4056,7 +4056,7 @@ Language=English
 This operation is not supported on computers with multiple networks.
 .
 Language=Polish
-This operation is not supported on computers with multiple networks.
+Ta operacja nie jest obsługiwana w komputerach pracujących w wielu sieciach.
 .
 Language=Romanian
 This operation is not supported on computers with multiple networks.
@@ -4085,7 +4085,7 @@ Language=English
 This shared resource does not exist.
 .
 Language=Polish
-This shared resource does not exist.
+Ten zasób udostępniony nie istnieje.
 .
 Language=Romanian
 This shared resource does not exist.
@@ -4114,7 +4114,7 @@ Language=English
 This device is not shared.
 .
 Language=Polish
-This device is not shared.
+To urządzenie nie jest udostępnione.
 .
 Language=Romanian
 This device is not shared.
@@ -4143,7 +4143,7 @@ Language=English
 A session does not exist with that computer name.
 .
 Language=Polish
-A session does not exist with that computer name.
+Nie istnieje sesja o takiej nazwie komputera.
 .
 Language=Romanian
 A session does not exist with that computer name.
@@ -4172,7 +4172,7 @@ Language=English
 There is not an open file with that identification number.
 .
 Language=Polish
-There is not an open file with that identification number.
+Nie ma otwartego pliku o takim numerze identyfikacyjnym.
 .
 Language=Romanian
 There is not an open file with that identification number.
@@ -4201,7 +4201,7 @@ Language=English
 A failure occurred when executing a remote administration command.
 .
 Language=Polish
-A failure occurred when executing a remote administration command.
+Podczas wykonywania polecenia administracji zdalnej wystąpił błąd.
 .
 Language=Romanian
 A failure occurred when executing a remote administration command.
@@ -4230,7 +4230,7 @@ Language=English
 A failure occurred when opening a remote temporary file.
 .
 Language=Polish
-A failure occurred when opening a remote temporary file.
+Podczas otwierania zdalnego pliku tymczasowego wystąpił błąd.
 .
 Language=Romanian
 A failure occurred when opening a remote temporary file.
@@ -4259,7 +4259,7 @@ Language=English
 The data returned from a remote administration command has been truncated to 64K.
 .
 Language=Polish
-The data returned from a remote administration command has been truncated to 64K.
+Dane zwrócone z polecenia administracji zdalnej zostały obcięte do 64 KB.
 .
 Language=Romanian
 The data returned from a remote administration command has been truncated to 64K.
@@ -4288,7 +4288,7 @@ Language=English
 This device cannot be shared as both a spooled and a non-spooled resource.
 .
 Language=Polish
-This device cannot be shared as both a spooled and a non-spooled resource.
+To urządzenie nie może być udostępniane jednocześnie jako zasób buforowany i niebuforowany.
 .
 Language=Romanian
 This device cannot be shared as both a spooled and a non-spooled resource.
@@ -4317,7 +4317,7 @@ Language=English
 The information in the list of servers may be incorrect.
 .
 Language=Polish
-The information in the list of servers may be incorrect.
+Informacje na liście serwerów mogą być niepoprawne.
 .
 Language=Romanian
 The information in the list of servers may be incorrect.
@@ -4346,7 +4346,7 @@ Language=English
 The computer is not active in this domain.
 .
 Language=Polish
-The computer is not active in this domain.
+Komputer nie jest aktywny w tej domenie.
 .
 Language=Romanian
 The computer is not active in this domain.
@@ -4375,7 +4375,7 @@ Language=English
 The share must be removed from the Distributed File System before it can be deleted.
 .
 Language=Polish
-The share must be removed from the Distributed File System before it can be deleted.
+Aby ten udział został usunięty, należy usunąć go z rozproszonego systemu plików DFS.
 .
 Language=Romanian
 The share must be removed from the Distributed File System before it can be deleted.
@@ -4404,7 +4404,7 @@ Language=English
 The operation is invalid for this device.
 .
 Language=Polish
-The operation is invalid for this device.
+Ta operacja jest nieprawidłowa dla tego urządzenia.
 .
 Language=Romanian
 The operation is invalid for this device.
@@ -4433,7 +4433,7 @@ Language=English
 This device cannot be shared.
 .
 Language=Polish
-This device cannot be shared.
+Tego urządzenia nie można udostępniać.
 .
 Language=Romanian
 This device cannot be shared.
@@ -4462,7 +4462,7 @@ Language=English
 This device was not open.
 .
 Language=Polish
-This device was not open.
+To urządzenie nie było otwarte.
 .
 Language=Romanian
 This device was not open.
@@ -4491,7 +4491,7 @@ Language=English
 This device name list is invalid.
 .
 Language=Polish
-This device name list is invalid.
+Lista nazw urządzeń jest nieprawidłowa.
 .
 Language=Romanian
 This device name list is invalid.
@@ -4520,7 +4520,7 @@ Language=English
 The queue priority is invalid.
 .
 Language=Polish
-The queue priority is invalid.
+Priorytet kolejki jest nieprawidłowy.
 .
 Language=Romanian
 The queue priority is invalid.
@@ -4549,7 +4549,7 @@ Language=English
 There are no shared communication devices.
 .
 Language=Polish
-There are no shared communication devices.
+Nie ma udostępnionych urządzeń komunikacyjnych.
 .
 Language=Romanian
 There are no shared communication devices.
@@ -4578,7 +4578,7 @@ Language=English
 The queue you specified does not exist.
 .
 Language=Polish
-The queue you specified does not exist.
+Określona kolejka nie istnieje.
 .
 Language=Romanian
 The queue you specified does not exist.
@@ -4607,7 +4607,7 @@ Language=English
 This list of devices is invalid.
 .
 Language=Polish
-This list of devices is invalid.
+Ta lista urządzeń jest nieprawidłowa.
 .
 Language=Romanian
 This list of devices is invalid.
@@ -4636,7 +4636,7 @@ Language=English
 The requested device is invalid.
 .
 Language=Polish
-The requested device is invalid.
+Żądane urządzenie jest nieprawidłowe.
 .
 Language=Romanian
 The requested device is invalid.
@@ -4665,7 +4665,7 @@ Language=English
 This device is already in use by the spooler.
 .
 Language=Polish
-This device is already in use by the spooler.
+To urządzenie jest już używane przez program buforujący.
 .
 Language=Romanian
 This device is already in use by the spooler.
@@ -4694,7 +4694,7 @@ Language=English
 This device is already in use as a communication device.
 .
 Language=Polish
-This device is already in use as a communication device.
+To urządzenie jest już używane jako urządzenie komunikacyjne.
 .
 Language=Romanian
 This device is already in use as a communication device.
@@ -4723,7 +4723,7 @@ Language=English
 This computer name is invalid.
 .
 Language=Polish
-This computer name is invalid.
+Ta nazwa komputera jest nieprawidłowa.
 .
 Language=Romanian
 This computer name is invalid.
@@ -4752,7 +4752,7 @@ Language=English
 The string and prefix specified are too long.
 .
 Language=Polish
-The string and prefix specified are too long.
+Określony ciąg i prefiks są za długie.
 .
 Language=Romanian
 The string and prefix specified are too long.
@@ -4781,7 +4781,7 @@ Language=English
 This path component is invalid.
 .
 Language=Polish
-This path component is invalid.
+Ten składnik ścieżki jest nieprawidłowy.
 .
 Language=Romanian
 This path component is invalid.
@@ -4810,7 +4810,7 @@ Language=English
 Could not determine the type of input.
 .
 Language=Polish
-Could not determine the type of input.
+Nie można określić typu danych wejściowych.
 .
 Language=Romanian
 Could not determine the type of input.
@@ -4839,7 +4839,7 @@ Language=English
 The buffer for types is not big enough.
 .
 Language=Polish
-The buffer for types is not big enough.
+Bufor dla typów nie jest wystarczająco duży.
 .
 Language=Romanian
 The buffer for types is not big enough.
@@ -4868,7 +4868,7 @@ Language=English
 Profile files cannot exceed 64K.
 .
 Language=Polish
-Profile files cannot exceed 64K.
+Pliki profilów nie mogą przekraczać 64 KB.
 .
 Language=Romanian
 Profile files cannot exceed 64K.
@@ -4897,7 +4897,7 @@ Language=English
 The start offset is out of range.
 .
 Language=Polish
-The start offset is out of range.
+Przesunięcie początkowe jest spoza zakresu.
 .
 Language=Romanian
 The start offset is out of range.
@@ -4926,7 +4926,7 @@ Language=English
 The system cannot delete current connections to network resources.
 .
 Language=Polish
-The system cannot delete current connections to network resources.
+Nie można usunąć bieżących połączeń z zasobami sieciowymi.
 .
 Language=Romanian
 The system cannot delete current connections to network resources.
@@ -4955,7 +4955,7 @@ Language=English
 The system was unable to parse the command line in this file.
 .
 Language=Polish
-The system was unable to parse the command line in this file.
+Nie można przeprowadzić analizy wiersza polecenia w tym pliku.
 .
 Language=Romanian
 The system was unable to parse the command line in this file.
@@ -4984,7 +4984,7 @@ Language=English
 An error occurred while loading the profile file.
 .
 Language=Polish
-An error occurred while loading the profile file.
+Podczas ładowania pliku profilu wystąpił błąd.
 .
 Language=Romanian
 An error occurred while loading the profile file.
@@ -5013,7 +5013,7 @@ Language=English
 Errors occurred while saving the profile file.  The profile was partially saved.
 .
 Language=Polish
-Errors occurred while saving the profile file.  The profile was partially saved.
+Podczas zapisywania pliku profilu wystąpił błąd. Profil został zapisany częściowo.
 .
 Language=Romanian
 Errors occurred while saving the profile file.  The profile was partially saved.
@@ -5042,7 +5042,7 @@ Language=English
 Log file %1 is full.
 .
 Language=Polish
-Log file %1 is full.
+Plik dziennika %1 jest zapełniony.
 .
 Language=Romanian
 Log file %1 is full.
@@ -5071,7 +5071,7 @@ Language=English
 This log file has changed between reads.
 .
 Language=Polish
-This log file has changed between reads.
+Ten plik dziennika uległ zmianie między operacjami odczytu.
 .
 Language=Romanian
 This log file has changed between reads.
@@ -5100,7 +5100,7 @@ Language=English
 Log file %1 is corrupt.
 .
 Language=Polish
-Log file %1 is corrupt.
+Plik dziennika %1 jest uszkodzony.
 .
 Language=Romanian
 Log file %1 is corrupt.
@@ -5129,7 +5129,7 @@ Language=English
 The source path cannot be a directory.
 .
 Language=Polish
-The source path cannot be a directory.
+Ścieżka źródłowa nie może być katalogiem.
 .
 Language=Romanian
 The source path cannot be a directory.
@@ -5158,7 +5158,7 @@ Language=English
 The source path is illegal.
 .
 Language=Polish
-The source path is illegal.
+Ścieżka źródłowa jest niedozwolona.
 .
 Language=Romanian
 The source path is illegal.
@@ -5187,7 +5187,7 @@ Language=English
 The destination path is illegal.
 .
 Language=Polish
-The destination path is illegal.
+Ścieżka docelowa jest niedozwolona.
 .
 Language=Romanian
 The destination path is illegal.
@@ -5216,7 +5216,7 @@ Language=English
 The source and destination paths are on different servers.
 .
 Language=Polish
-The source and destination paths are on different servers.
+Ścieżki źródłowa i docelowa są na różnych serwerach.
 .
 Language=Romanian
 The source and destination paths are on different servers.
@@ -5245,7 +5245,7 @@ Language=English
 The Run server you requested is paused.
 .
 Language=Polish
-The Run server you requested is paused.
+Żądany serwer uruchamiania został wstrzymany.
 .
 Language=Romanian
 The Run server you requested is paused.
@@ -5274,7 +5274,7 @@ Language=English
 An error occurred when communicating with a Run server.
 .
 Language=Polish
-An error occurred when communicating with a Run server.
+Wystąpił błąd podczas komunikowania się z serwerem uruchamiania.
 .
 Language=Romanian
 An error occurred when communicating with a Run server.
@@ -5303,7 +5303,7 @@ Language=English
 An error occurred when starting a background process.
 .
 Language=Polish
-An error occurred when starting a background process.
+Podczas uruchamiania procesu tła wystąpił błąd.
 .
 Language=Romanian
 An error occurred when starting a background process.
@@ -5332,7 +5332,7 @@ Language=English
 The shared resource you are connected to could not be found.
 .
 Language=Polish
-The shared resource you are connected to could not be found.
+Nie można odnaleźć zasobu udostępnionego, do którego użytkownik jest podłączony.
 .
 Language=Romanian
 The shared resource you are connected to could not be found.
@@ -5361,7 +5361,7 @@ Language=English
 The LAN adapter number is invalid.
 .
 Language=Polish
-The LAN adapter number is invalid.
+Numer karty LAN jest nieprawidłowy.
 .
 Language=Romanian
 The LAN adapter number is invalid.
@@ -5390,7 +5390,7 @@ Language=English
 There are open files on the connection.
 .
 Language=Polish
-There are open files on the connection.
+W tym połączeniu są otwarte pliki.
 .
 Language=Romanian
 There are open files on the connection.
@@ -5419,7 +5419,7 @@ Language=English
 Active connections still exist.
 .
 Language=Polish
-Active connections still exist.
+Nadal istnieją aktywne połączenia.
 .
 Language=Romanian
 Active connections still exist.
@@ -5448,7 +5448,7 @@ Language=English
 This share name or password is invalid.
 .
 Language=Polish
-This share name or password is invalid.
+Ta nazwa sieciowa lub hasło są nieprawidłowe.
 .
 Language=Romanian
 This share name or password is invalid.
@@ -5477,7 +5477,7 @@ Language=English
 The device is being accessed by an active process.
 .
 Language=Polish
-The device is being accessed by an active process.
+Z urządzenia korzysta właśnie pewien aktywny proces.
 .
 Language=Romanian
 The device is being accessed by an active process.
@@ -5506,7 +5506,7 @@ Language=English
 The drive letter is in use locally.
 .
 Language=Polish
-The drive letter is in use locally.
+Litera dysku jest już używana lokalnie.
 .
 Language=Romanian
 The drive letter is in use locally.
@@ -5535,7 +5535,7 @@ Language=English
 The specified client is already registered for the specified event.
 .
 Language=Polish
-The specified client is already registered for the specified event.
+Określony klient został już zarejestrowany dla określonego zdarzenia.
 .
 Language=Romanian
 The specified client is already registered for the specified event.
@@ -5564,7 +5564,7 @@ Language=English
 The alert table is full.
 .
 Language=Polish
-The alert table is full.
+Tabela alertów jest zapełniona.
 .
 Language=Romanian
 The alert table is full.
@@ -5593,7 +5593,7 @@ Language=English
 An invalid or nonexistent alert name was raised.
 .
 Language=Polish
-An invalid or nonexistent alert name was raised.
+Użyto nieprawidłowej lub nie istniejącej nazwy alertu.
 .
 Language=Romanian
 An invalid or nonexistent alert name was raised.
@@ -5622,7 +5622,7 @@ Language=English
 The alert recipient is invalid.
 .
 Language=Polish
-The alert recipient is invalid.
+Adresat alertu jest nieprawidłowy.
 .
 Language=Romanian
 The alert recipient is invalid.
@@ -5651,7 +5651,7 @@ Language=English
 A user's session with this server has been deleted\nbecause the user's logon hours are no longer valid.
 .
 Language=Polish
-A user's session with this server has been deleted\nbecause the user's logon hours are no longer valid.
+Sesja użytkownika na tym serwerze została usunięta, ponieważ nie są to już godziny logowania dozwolone dla tego użytkownika.
 .
 Language=Romanian
 A user's session with this server has been deleted\nbecause the user's logon hours are no longer valid.
@@ -5680,7 +5680,7 @@ Language=English
 The log file does not contain the requested record number.
 .
 Language=Polish
-The log file does not contain the requested record number.
+Plik dziennika nie zawiera żądanego numeru rekordu.
 .
 Language=Romanian
 The log file does not contain the requested record number.
@@ -5709,7 +5709,7 @@ Language=English
 The user accounts database is not configured correctly.
 .
 Language=Polish
-The user accounts database is not configured correctly.
+Baza danych o kontach użytkowników nie jest poprawnie skonfigurowana.
 .
 Language=Romanian
 The user accounts database is not configured correctly.
@@ -5738,7 +5738,7 @@ Language=English
 This operation is not permitted when the Netlogon service is running.
 .
 Language=Polish
-This operation is not permitted when the Netlogon service is running.
+Ta operacja nie jest dozwolona, gdy działa usługa Netlogon.
 .
 Language=Romanian
 This operation is not permitted when the Netlogon service is running.
@@ -5767,7 +5767,7 @@ Language=English
 This operation is not allowed on the last administrative account.
 .
 Language=Polish
-This operation is not allowed on the last administrative account.
+Ta operacja nie jest dozwolona na ostatnim koncie administracyjnym.
 .
 Language=Romanian
 This operation is not allowed on the last administrative account.
@@ -5796,7 +5796,7 @@ Language=English
 Could not find domain controller for this domain.
 .
 Language=Polish
-Could not find domain controller for this domain.
+Nie można odnaleźć kontrolera tej domeny.
 .
 Language=Romanian
 Could not find domain controller for this domain.
@@ -5825,7 +5825,7 @@ Language=English
 Could not set logon information for this user.
 .
 Language=Polish
-Could not set logon information for this user.
+Nie można ustawić danych logowania dla tego użytkownika.
 .
 Language=Romanian
 Could not set logon information for this user.
@@ -5854,7 +5854,7 @@ Language=English
 The Netlogon service has not been started.
 .
 Language=Polish
-The Netlogon service has not been started.
+Usługa Netlogon nie została uruchomiona.
 .
 Language=Romanian
 The Netlogon service has not been started.
@@ -5883,7 +5883,7 @@ Language=English
 Unable to add to the user accounts database.
 .
 Language=Polish
-Unable to add to the user accounts database.
+Nie można dodać elementu do bazy danych kont użytkowników.
 .
 Language=Romanian
 Unable to add to the user accounts database.
@@ -5912,7 +5912,7 @@ Language=English
 This server's clock is not synchronized with the primary domain controller's clock.
 .
 Language=Polish
-This server's clock is not synchronized with the primary domain controller's clock.
+Zegar tego komputera nie jest zsynchronizowany z zegarem podstawowego kontrolera domeny.
 .
 Language=Romanian
 This server's clock is not synchronized with the primary domain controller's clock.
@@ -5941,7 +5941,7 @@ Language=English
 A password mismatch has been detected.
 .
 Language=Polish
-A password mismatch has been detected.
+Wykryto niedopasowanie hasła.
 .
 Language=Romanian
 A password mismatch has been detected.
@@ -5970,7 +5970,7 @@ Language=English
 The server identification does not specify a valid server.
 .
 Language=Polish
-The server identification does not specify a valid server.
+Identyfikacja serwera nie określa prawidłowego serwera.
 .
 Language=Romanian
 The server identification does not specify a valid server.
@@ -5999,7 +5999,7 @@ Language=English
 The session identification does not specify a valid session.
 .
 Language=Polish
-The session identification does not specify a valid session.
+Identyfikacja sesji nie określa prawidłowej sesji.
 .
 Language=Romanian
 The session identification does not specify a valid session.
@@ -6028,7 +6028,7 @@ Language=English
 The connection identification does not specify a valid connection.
 .
 Language=Polish
-The connection identification does not specify a valid connection.
+Identyfikacja połączenia nie określa prawidłowego połączenia.
 .
 Language=Romanian
 The connection identification does not specify a valid connection.
@@ -6057,7 +6057,7 @@ Language=English
 There is no space for another entry in the table of available servers.
 .
 Language=Polish
-There is no space for another entry in the table of available servers.
+Nie ma miejsca na kolejny wpis w tabeli dostępnych serwerów.
 .
 Language=Romanian
 There is no space for another entry in the table of available servers.
@@ -6086,7 +6086,7 @@ Language=English
 The server has reached the maximum number of sessions it supports.
 .
 Language=Polish
-The server has reached the maximum number of sessions it supports.
+Ten serwer osiągnął maksymalną liczbę obsługiwanych sesji.
 .
 Language=Romanian
 The server has reached the maximum number of sessions it supports.
@@ -6115,7 +6115,7 @@ Language=English
 The server has reached the maximum number of connections it supports.
 .
 Language=Polish
-The server has reached the maximum number of connections it supports.
+Ten serwer osiągnął maksymalną liczbę obsługiwanych połączeń.
 .
 Language=Romanian
 The server has reached the maximum number of connections it supports.
@@ -6144,7 +6144,7 @@ Language=English
 The server cannot open more files because it has reached its maximum number.
 .
 Language=Polish
-The server cannot open more files because it has reached its maximum number.
+Ten serwer nie może otworzyć więcej plików, ponieważ osiągnął już maksymalną dopuszczalną dla siebie liczbę.
 .
 Language=Romanian
 The server cannot open more files because it has reached its maximum number.
@@ -6173,7 +6173,7 @@ Language=English
 There are no alternate servers registered on this server.
 .
 Language=Polish
-There are no alternate servers registered on this server.
+Na tym serwerze nie zarejestrowano serwerów alternatywnych.
 .
 Language=Romanian
 There are no alternate servers registered on this server.
@@ -6202,7 +6202,7 @@ Language=English
 Try down-level (remote admin protocol) version of API instead.
 .
 Language=Polish
-Try down-level (remote admin protocol) version of API instead.
+Spróbuj użyć innego interfejsu API: wersji niskiego poziomu (protokołu administracji zdalnej).
 .
 Language=Romanian
 Try down-level (remote admin protocol) version of API instead.
@@ -6231,7 +6231,7 @@ Language=English
 The UPS driver could not be accessed by the UPS service.
 .
 Language=Polish
-The UPS driver could not be accessed by the UPS service.
+Usługa UPS nie może uzyskać dostępu do sterownika UPS.
 .
 Language=Romanian
 The UPS driver could not be accessed by the UPS service.
@@ -6260,7 +6260,7 @@ Language=English
 The UPS service is not configured correctly.
 .
 Language=Polish
-The UPS service is not configured correctly.
+Usługa UPS nie została prawidłowo skonfigurowana.
 .
 Language=Romanian
 The UPS service is not configured correctly.
@@ -6289,7 +6289,7 @@ Language=English
 The UPS service could not access the specified Comm Port.
 .
 Language=Polish
-The UPS service could not access the specified Comm Port.
+Usługa UPS nie może uzyskać dostępu do określonego portu Comm.
 .
 Language=Romanian
 The UPS service could not access the specified Comm Port.
@@ -6318,7 +6318,7 @@ Language=English
 The UPS indicated a line fail or low battery situation. Service not started.
 .
 Language=Polish
-The UPS indicated a line fail or low battery situation. Service not started.
+Urządzenie UPS sygnalizuje awarię zasilania lub niski stan baterii. Usługa nie została uruchomiona.
 .
 Language=Romanian
 The UPS indicated a line fail or low battery situation. Service not started.
@@ -6347,7 +6347,7 @@ Language=English
 The UPS service failed to perform a system shut down.
 .
 Language=Polish
-The UPS service failed to perform a system shut down.
+Usługa UPS: nie powiodło się zamknięcie systemu.
 .
 Language=Romanian
 The UPS service failed to perform a system shut down.
@@ -6376,7 +6376,7 @@ Language=English
 The program below returned a DOS error code:
 .
 Language=Polish
-The program below returned a DOS error code:
+Poniższy program zwrócił kod błędu DOS:
 .
 Language=Romanian
 The program below returned a DOS error code:
@@ -6405,7 +6405,7 @@ Language=English
 The program below needs more memory:
 .
 Language=Polish
-The program below needs more memory:
+Poniższy program potrzebuje więcej pamięci:
 .
 Language=Romanian
 The program below needs more memory:
@@ -6434,7 +6434,7 @@ Language=English
 The program below called an unsupported DOS function:
 .
 Language=Polish
-The program below called an unsupported DOS function:
+Poniższy program wywołał nieobsługiwaną funkcję systemu DOS:
 .
 Language=Romanian
 The program below called an unsupported DOS function:
@@ -6463,7 +6463,7 @@ Language=English
 The workstation failed to boot.
 .
 Language=Polish
-The workstation failed to boot.
+Nie powiódł się rozruch stacji roboczej.
 .
 Language=Romanian
 The workstation failed to boot.
@@ -6492,7 +6492,7 @@ Language=English
 The file below is corrupt.
 .
 Language=Polish
-The file below is corrupt.
+Poniższy plik jest uszkodzony.
 .
 Language=Romanian
 The file below is corrupt.
@@ -6521,7 +6521,7 @@ Language=English
 No loader is specified in the boot-block definition file.
 .
 Language=Polish
-No loader is specified in the boot-block definition file.
+W pliku definicji bloku rozruchu nie określono programu ładującego.
 .
 Language=Romanian
 No loader is specified in the boot-block definition file.
@@ -6550,7 +6550,7 @@ Language=English
 NetBIOS returned an error: The NCB and SMB are dumped above.
 .
 Language=Polish
-NetBIOS returned an error: The NCB and SMB are dumped above.
+System NetBIOS zwrócił błąd: zrzut bloków NCB i SMB występuje powyżej.
 .
 Language=Romanian
 NetBIOS returned an error: The NCB and SMB are dumped above.
@@ -6579,7 +6579,7 @@ Language=English
 A disk I/O error occurred.
 .
 Language=Polish
-A disk I/O error occurred.
+Wystąpił błąd We/Wy dysku.
 .
 Language=Romanian
 A disk I/O error occurred.
@@ -6608,7 +6608,7 @@ Language=English
 Image parameter substitution failed.
 .
 Language=Polish
-Image parameter substitution failed.
+Podstawienie parametru obrazu nie powiodło się.
 .
 Language=Romanian
 Image parameter substitution failed.
@@ -6637,7 +6637,7 @@ Language=English
 Too many image parameters cross disk sector boundaries.
 .
 Language=Polish
-Too many image parameters cross disk sector boundaries.
+Zbyt wiele parametrów obrazu przekracza granice sektorów dysku.
 .
 Language=Romanian
 Too many image parameters cross disk sector boundaries.
@@ -6666,7 +6666,7 @@ Language=English
 The image was not generated from a DOS diskette formatted with /S.
 .
 Language=Polish
-The image was not generated from a DOS diskette formatted with /S.
+Obraz nie został wygenerowany z dyskietki DOS sformatowanej z opcją /S.
 .
 Language=Romanian
 The image was not generated from a DOS diskette formatted with /S.
@@ -6695,7 +6695,7 @@ Language=English
 Remote boot will be restarted later.
 .
 Language=Polish
-Remote boot will be restarted later.
+Rozruch zdalny zostanie uruchomiony ponownie później.
 .
 Language=Romanian
 Remote boot will be restarted later.
@@ -6724,7 +6724,7 @@ Language=English
 The call to the Remoteboot server failed.
 .
 Language=Polish
-The call to the Remoteboot server failed.
+Wywołanie serwera rozruchu zdalnego nie powiodło się.
 .
 Language=Romanian
 The call to the Remoteboot server failed.
@@ -6753,7 +6753,7 @@ Language=English
 Cannot connect to the Remoteboot server.
 .
 Language=Polish
-Cannot connect to the Remoteboot server.
+Nie można połączyć się z serwerem rozruchu zdalnego.
 .
 Language=Romanian
 Cannot connect to the Remoteboot server.
@@ -6782,7 +6782,7 @@ Language=English
 Cannot open image file on the Remoteboot server.
 .
 Language=Polish
-Cannot open image file on the Remoteboot server.
+Nie można otworzyć pliku obrazu na serwerze rozruchu zdalnego.
 .
 Language=Romanian
 Cannot open image file on the Remoteboot server.
@@ -6811,7 +6811,7 @@ Language=English
 Connecting to the Remoteboot server...
 .
 Language=Polish
-Connecting to the Remoteboot server...
+Trwa łączenie z serwerem rozruchu zdalnego...
 .
 Language=Romanian
 Connecting to the Remoteboot server...
@@ -6840,7 +6840,7 @@ Language=English
 Connecting to the Remoteboot server...
 .
 Language=Polish
-Connecting to the Remoteboot server...
+Trwa łączenie z serwerem rozruchu zdalnego...
 .
 Language=Romanian
 Connecting to the Remoteboot server...
@@ -6869,7 +6869,7 @@ Language=English
 Remote boot service was stopped; check the error log for the cause of the problem.
 .
 Language=Polish
-Remote boot service was stopped; check the error log for the cause of the problem.
+Zatrzymano usługę rozruchu zdalnego; sprawdź przyczynę problemu w dzienniku błędów.
 .
 Language=Romanian
 Remote boot service was stopped; check the error log for the cause of the problem.
@@ -6898,7 +6898,7 @@ Language=English
 Remote boot startup failed; check the error log for the cause of the problem.
 .
 Language=Polish
-Remote boot startup failed; check the error log for the cause of the problem.
+Uruchomienie za pomocą rozruchu zdalnego nie powiodło się; sprawdź przyczynę problemu w dzienniku błędów.
 .
 Language=Romanian
 Remote boot startup failed; check the error log for the cause of the problem.
@@ -6927,7 +6927,7 @@ Language=English
 A second connection to a Remoteboot resource is not allowed.
 .
 Language=Polish
-A second connection to a Remoteboot resource is not allowed.
+Drugie połączenie z zasobem rozruchu zdalnego jest niedozwolone.
 .
 Language=Romanian
 A second connection to a Remoteboot resource is not allowed.
@@ -6956,7 +6956,7 @@ Language=English
 The browser service was configured with MaintainServerList=No.
 .
 Language=Polish
-The browser service was configured with MaintainServerList=No.
+Usługę przeglądarki skonfigurowano z parametrem MaintainServerList=No.
 .
 Language=Romanian
 The browser service was configured with MaintainServerList=No.
@@ -6985,7 +6985,7 @@ Language=English
 Service failed to start since none of the network adapters started with this service.
 .
 Language=Polish
-Service failed to start since none of the network adapters started with this service.
+Uruchomienie usługi nie powiodło się, ponieważ żadna z kart sieciowych nie została uruchomiona z tą usługą.
 .
 Language=Romanian
 Service failed to start since none of the network adapters started with this service.
@@ -7014,7 +7014,7 @@ Language=English
 Service failed to start due to bad startup information in the registry.
 .
 Language=Polish
-Service failed to start due to bad startup information in the registry.
+Uruchomienie usługi nie powiodło się z powodu złych informacji startowych zawartych w Rejestrze.
 .
 Language=Romanian
 Service failed to start due to bad startup information in the registry.
@@ -7043,7 +7043,7 @@ Language=English
 Service failed to start because its database is absent or corrupt.
 .
 Language=Polish
-Service failed to start because its database is absent or corrupt.
+Uruchomienie usługi nie powiodło się, ponieważ brak jej bazy danych lub jest ona uszkodzona.
 .
 Language=Romanian
 Service failed to start because its database is absent or corrupt.
@@ -7072,7 +7072,7 @@ Language=English
 Service failed to start because RPLFILES share is absent.
 .
 Language=Polish
-Service failed to start because RPLFILES share is absent.
+Uruchomienie usługi nie powiodło się, ponieważ brak udziału RPLFILES.
 .
 Language=Romanian
 Service failed to start because RPLFILES share is absent.
@@ -7101,7 +7101,7 @@ Language=English
 Service failed to start because RPLUSER group is absent.
 .
 Language=Polish
-Service failed to start because RPLUSER group is absent.
+Uruchomienie usługi nie powiodło się, ponieważ brak grupy RPLFILES.
 .
 Language=Romanian
 Service failed to start because RPLUSER group is absent.
@@ -7130,7 +7130,7 @@ Language=English
 Cannot enumerate service records.
 .
 Language=Polish
-Cannot enumerate service records.
+Nie można wyliczyć rekordów usługi.
 .
 Language=Romanian
 Cannot enumerate service records.
@@ -7159,7 +7159,7 @@ Language=English
 Workstation record information has been corrupted.
 .
 Language=Polish
-Workstation record information has been corrupted.
+Informacje rekordów stacji roboczej zostały uszkodzone.
 .
 Language=Romanian
 Workstation record information has been corrupted.
@@ -7188,7 +7188,7 @@ Language=English
 Workstation record was not found.
 .
 Language=Polish
-Workstation record was not found.
+Nie odnaleziono rekordu stacji roboczej.
 .
 Language=Romanian
 Workstation record was not found.
@@ -7217,7 +7217,7 @@ Language=English
 Workstation name is in use by some other workstation.
 .
 Language=Polish
-Workstation name is in use by some other workstation.
+Nazwa stacji roboczej jest używana przez inną stację roboczą.
 .
 Language=Romanian
 Workstation name is in use by some other workstation.
@@ -7246,7 +7246,7 @@ Language=English
 Profile record information has been corrupted.
 .
 Language=Polish
-Profile record information has been corrupted.
+Informacje rekordów profilu zostały uszkodzone.
 .
 Language=Romanian
 Profile record information has been corrupted.
@@ -7275,7 +7275,7 @@ Language=English
 Profile record was not found.
 .
 Language=Polish
-Profile record was not found.
+Nie odnaleziono rekordu profilu.
 .
 Language=Romanian
 Profile record was not found.
@@ -7304,7 +7304,7 @@ Language=English
 Profile name is in use by some other profile.
 .
 Language=Polish
-Profile name is in use by some other profile.
+Nazwa profilu jest używana przez inny profil.
 .
 Language=Romanian
 Profile name is in use by some other profile.
@@ -7333,7 +7333,7 @@ Language=English
 There are workstations using this profile.
 .
 Language=Polish
-There are workstations using this profile.
+Istnieją stacje robocze używające tego profilu.
 .
 Language=Romanian
 There are workstations using this profile.
@@ -7362,7 +7362,7 @@ Language=English
 Configuration record information has been corrupted.
 .
 Language=Polish
-Configuration record information has been corrupted.
+Informacje dotyczące rekordów konfiguracyjnych zostały uszkodzone.
 .
 Language=Romanian
 Configuration record information has been corrupted.
@@ -7391,7 +7391,7 @@ Language=English
 Configuration record was not found.
 .
 Language=Polish
-Configuration record was not found.
+Nie odnaleziono rekordu konfiguracji.
 .
 Language=Romanian
 Configuration record was not found.
@@ -7420,7 +7420,7 @@ Language=English
 Adapter id record information has been corrupted.
 .
 Language=Polish
-Adapter id record information has been corrupted.
+Informacje dotyczące rekordów identyfikatorów kart zostały uszkodzone.
 .
 Language=Romanian
 Adapter id record information has been corrupted.
@@ -7449,7 +7449,7 @@ Language=English
 An internal service error has occurred.
 .
 Language=Polish
-An internal service error has occurred.
+Wystąpił wewnętrzny błąd usługi.
 .
 Language=Romanian
 An internal service error has occurred.
@@ -7478,7 +7478,7 @@ Language=English
 Vendor id record information has been corrupted.
 .
 Language=Polish
-Vendor id record information has been corrupted.
+Informacje w rekordach identyfikatora producenta zostały uszkodzone.
 .
 Language=Romanian
 Vendor id record information has been corrupted.
@@ -7507,7 +7507,7 @@ Language=English
 Boot block record information has been corrupted.
 .
 Language=Polish
-Boot block record information has been corrupted.
+Informacje w rekordach bloków rozruchowych zostały uszkodzone.
 .
 Language=Romanian
 Boot block record information has been corrupted.
@@ -7536,7 +7536,7 @@ Language=English
 The user account for this workstation record is missing.
 .
 Language=Polish
-The user account for this workstation record is missing.
+Brak konta użytkownika dla tego rekordu stacji roboczej.
 .
 Language=Romanian
 The user account for this workstation record is missing.
@@ -7565,7 +7565,7 @@ Language=English
 The RPLUSER local group could not be found.
 .
 Language=Polish
-The RPLUSER local group could not be found.
+Nie można odnaleźć grupy lokalnej RPLUSER.
 .
 Language=Romanian
 The RPLUSER local group could not be found.
@@ -7594,7 +7594,7 @@ Language=English
 Boot block record was not found.
 .
 Language=Polish
-Boot block record was not found.
+Nie można odnaleźć rekordu bloku rozruchowego.
 .
 Language=Romanian
 Boot block record was not found.
@@ -7623,7 +7623,7 @@ Language=English
 Chosen profile is incompatible with this workstation.
 .
 Language=Polish
-Chosen profile is incompatible with this workstation.
+Wybrany profil jest niezgodny z tą stacją roboczą.
 .
 Language=Romanian
 Chosen profile is incompatible with this workstation.
@@ -7652,7 +7652,7 @@ Language=English
 Chosen network adapter id is in use by some other workstation.
 .
 Language=Polish
-Chosen network adapter id is in use by some other workstation.
+Wybrany identyfikator karty sieciowej jest używany przez inną stacją roboczą.
 .
 Language=Romanian
 Chosen network adapter id is in use by some other workstation.
@@ -7681,7 +7681,7 @@ Language=English
 There are profiles using this configuration.
 .
 Language=Polish
-There are profiles using this configuration.
+Istnieją profile korzystające z tej konfiguracji.
 .
 Language=Romanian
 There are profiles using this configuration.
@@ -7710,7 +7710,7 @@ Language=English
 There are workstations, profiles or configurations using this boot block.
 .
 Language=Polish
-There are workstations, profiles or configurations using this boot block.
+Istnieją stacje robocze, profile lub konfiguracje korzystające z tego bloku rozruchowego.
 .
 Language=Romanian
 There are workstations, profiles or configurations using this boot block.
@@ -7739,7 +7739,7 @@ Language=English
 Service failed to backup Remoteboot database.
 .
 Language=Polish
-Service failed to backup Remoteboot database.
+Zapisanie kopii zapasowej zdalnej bazy danych przez usługę nie powiodło się.
 .
 Language=Romanian
 Service failed to backup Remoteboot database.
@@ -7768,7 +7768,7 @@ Language=English
 Adapter record was not found.
 .
 Language=Polish
-Adapter record was not found.
+Nie odnaleziono rekordu karty.
 .
 Language=Romanian
 Adapter record was not found.
@@ -7797,7 +7797,7 @@ Language=English
 Vendor record was not found.
 .
 Language=Polish
-Vendor record was not found.
+Nie odnaleziono rekordu producenta.
 .
 Language=Romanian
 Vendor record was not found.
@@ -7826,7 +7826,7 @@ Language=English
 Vendor name is in use by some other vendor record.
 .
 Language=Polish
-Vendor name is in use by some other vendor record.
+Nazwa producenta jest używana w innym rekordzie producenta.
 .
 Language=Romanian
 Vendor name is in use by some other vendor record.
@@ -7855,7 +7855,7 @@ Language=English
 (boot name, vendor id) is in use by some other boot block record.
 .
 Language=Polish
-(boot name, vendor id) is in use by some other boot block record.
+(nazwa rozruchu, identyfikator producenta) jest w użyciu w innym rekordzie bloku rozruchowego.
 .
 Language=Romanian
 (boot name, vendor id) is in use by some other boot block record.
@@ -7884,7 +7884,7 @@ Language=English
 Configuration name is in use by some other configuration.
 .
 Language=Polish
-Configuration name is in use by some other configuration.
+Nazwa konfiguracji jest używana przez inną konfigurację.
 .
 Language=Romanian
 Configuration name is in use by some other configuration.
@@ -7913,7 +7913,7 @@ Language=English
 The internal database maintained by the DFS service is corrupt
 .
 Language=Polish
-The internal database maintained by the DFS service is corrupt
+Wewnętrzna baza danych obsługiwana przez usługę DFS jest uszkodzona
 .
 Language=Romanian
 The internal database maintained by the DFS service is corrupt
@@ -7942,7 +7942,7 @@ Language=English
 One of the records in the internal DFS database is corrupt
 .
 Language=Polish
-One of the records in the internal DFS database is corrupt
+Jeden z rekordów wewnętrznej bazy danych DFS jest uszkodzony
 .
 Language=Romanian
 One of the records in the internal DFS database is corrupt
@@ -7971,7 +7971,7 @@ Language=English
 There is no DFS name whose entry path matches the input Entry Path
 .
 Language=Polish
-There is no DFS name whose entry path matches the input Entry Path
+Nie ma nazwy systemu plików DFS o ścieżce wejściowej, która pasowałaby do ścieżki wprowadzonej
 .
 Language=Romanian
 There is no DFS name whose entry path matches the input Entry Path
@@ -8000,7 +8000,7 @@ Language=English
 A root or link with the given name already exists
 .
 Language=Polish
-A root or link with the given name already exists
+Katalog główny lub łącze o podanej nazwie już istnieje
 .
 Language=Romanian
 A root or link with the given name already exists
@@ -8029,7 +8029,7 @@ Language=English
 The server share specified is already shared in the DFS
 .
 Language=Polish
-The server share specified is already shared in the DFS
+Podany udział serwera jest już udostępniony w usłudze DFS
 .
 Language=Romanian
 The server share specified is already shared in the DFS
@@ -8058,7 +8058,7 @@ Language=English
 The indicated server share does not support the indicated DFS namespace
 .
 Language=Polish
-The indicated server share does not support the indicated DFS namespace
+Wskazany udział serwera nie obsługuje wskazanego obszaru nazw systemu plików DFS
 .
 Language=Romanian
 The indicated server share does not support the indicated DFS namespace
@@ -8087,7 +8087,7 @@ Language=English
 The operation is not valid on this portion of the namespace
 .
 Language=Polish
-The operation is not valid on this portion of the namespace
+Ta operacja nie jest prawidłowa dla tej części obszaru nazw
 .
 Language=Romanian
 The operation is not valid on this portion of the namespace
@@ -8116,7 +8116,7 @@ Language=English
 The operation is not valid on this portion of the namespace
 .
 Language=Polish
-The operation is not valid on this portion of the namespace
+Ta operacja nie jest prawidłowa dla tej części obszaru nazw
 .
 Language=Romanian
 The operation is not valid on this portion of the namespace
@@ -8145,7 +8145,7 @@ Language=English
 The operation is ambiguous because the link has multiple servers
 .
 Language=Polish
-The operation is ambiguous because the link has multiple servers
+Ta operacja jest niejednoznaczna, ponieważ to łącze dotyczy kilku serwerów
 .
 Language=Romanian
 The operation is ambiguous because the link has multiple servers
@@ -8174,7 +8174,7 @@ Language=English
 Unable to create a link
 .
 Language=Polish
-Unable to create a link
+Nie można utworzyć łącza
 .
 Language=Romanian
 Unable to create a link
@@ -8203,7 +8203,7 @@ Language=English
 The server is not DFS Aware
 .
 Language=Polish
-The server is not DFS Aware
+Ten serwer nie rozpoznaje usługi DFS
 .
 Language=Romanian
 The server is not DFS Aware
@@ -8232,7 +8232,7 @@ Language=English
 The specified rename target path is invalid
 .
 Language=Polish
-The specified rename target path is invalid
+Ścieżka docelowa podana dla operacji zmiany nazwy nie jest prawidłowa
 .
 Language=Romanian
 The specified rename target path is invalid
@@ -8261,7 +8261,7 @@ Language=English
 The specified DFS link is offline
 .
 Language=Polish
-The specified DFS link is offline
+Określone łącze systemu plików DFS jest w trybie offline
 .
 Language=Romanian
 The specified DFS link is offline
@@ -8290,7 +8290,7 @@ Language=English
 The specified server is not a server for this link
 .
 Language=Polish
-The specified server is not a server for this link
+Określony serwer nie jest serwerem tego łącza
 .
 Language=Romanian
 The specified server is not a server for this link
@@ -8319,7 +8319,7 @@ Language=English
 A cycle in the DFS name was detected
 .
 Language=Polish
-A cycle in the DFS name was detected
+Wykryto cykl w nazwie DFS
 .
 Language=Romanian
 A cycle in the DFS name was detected
@@ -8348,7 +8348,7 @@ Language=English
 The operation is not supported on a server-based DFS
 .
 Language=Polish
-The operation is not supported on a server-based DFS
+Operacja nie jest obsługiwana na DFS opartym na serwerze
 .
 Language=Romanian
 The operation is not supported on a server-based DFS
@@ -8377,7 +8377,7 @@ Language=English
 This link is already supported by the specified server-share
 .
 Language=Polish
-This link is already supported by the specified server-share
+To łącze jest już obsługiwane przez określony udział serwera
 .
 Language=Romanian
 This link is already supported by the specified server-share
@@ -8406,7 +8406,7 @@ Language=English
 Can't remove the last server-share supporting this root or link
 .
 Language=Polish
-Can't remove the last server-share supporting this root or link
+Nie można usunąć ostatniego udziału serwera obsługującego ten katalog główny lub łącze
 .
 Language=Romanian
 Can't remove the last server-share supporting this root or link
@@ -8435,7 +8435,7 @@ Language=English
 The operation is not supported for an Inter-DFS link
 .
 Language=Polish
-The operation is not supported for an Inter-DFS link
+Operacja nie jest obsługiwana dla wewnętrznego łącza systemu plików DFS
 .
 Language=Romanian
 The operation is not supported for an Inter-DFS link
@@ -8464,7 +8464,7 @@ Language=English
 The internal state of the DFS Service has become inconsistent
 .
 Language=Polish
-The internal state of the DFS Service has become inconsistent
+Stan wewnętrzny usługi DFS stał się niespójny
 .
 Language=Romanian
 The internal state of the DFS Service has become inconsistent
@@ -8493,7 +8493,7 @@ Language=English
 The DFS Service has been installed on the specified server
 .
 Language=Polish
-The DFS Service has been installed on the specified server
+Usługa DFS została zainstalowana na podanym serwerze
 .
 Language=Romanian
 The DFS Service has been installed on the specified server
@@ -8522,7 +8522,7 @@ Language=English
 The DFS data being reconciled is identical
 .
 Language=Polish
-The DFS data being reconciled is identical
+Uzgadniane dane systemu plików DFS są identyczne
 .
 Language=Romanian
 The DFS data being reconciled is identical
@@ -8551,7 +8551,7 @@ Language=English
 The DFS root cannot be deleted - Uninstall DFS if required
 .
 Language=Polish
-The DFS root cannot be deleted - Uninstall DFS if required
+Nie można usunąć katalogu głównego systemu plików DFS - w razie potrzeby odinstaluj system plików DFS
 .
 Language=Romanian
 The DFS root cannot be deleted - Uninstall DFS if required
@@ -8580,7 +8580,7 @@ Language=English
 A child or parent directory of the share is already in a DFS
 .
 Language=Polish
-A child or parent directory of the share is already in a DFS
+Katalog podrzędny lub nadrzędny udziału jest już w systemie plików DFS
 .
 Language=Romanian
 A child or parent directory of the share is already in a DFS
@@ -8609,7 +8609,7 @@ Language=English
 DFS internal error
 .
 Language=Polish
-DFS internal error
+Błąd wewnętrzny DFS
 .
 Language=Romanian
 DFS internal error
@@ -8638,7 +8638,7 @@ Language=English
 This machine is already joined to a domain.
 .
 Language=Polish
-This machine is already joined to a domain.
+Ten komputer jest już dołączony do domeny.
 .
 Language=Romanian
 This machine is already joined to a domain.
@@ -8667,7 +8667,7 @@ Language=English
 This machine is not currently joined to a domain.
 .
 Language=Polish
-This machine is not currently joined to a domain.
+Ten komputer nie jest obecnie dołączony do domeny.
 .
 Language=Romanian
 This machine is not currently joined to a domain.
@@ -8696,7 +8696,7 @@ Language=English
 This machine is a domain controller and cannot be unjoined from a domain.
 .
 Language=Polish
-This machine is a domain controller and cannot be unjoined from a domain.
+Ten komputer jest kontrolerem domeny i nie może być odłączony od domeny.
 .
 Language=Romanian
 This machine is a domain controller and cannot be unjoined from a domain.
@@ -8725,7 +8725,7 @@ Language=English
 The destination domain controller does not support creating machine accounts in OUs.
 .
 Language=Polish
-The destination domain controller does not support creating machine accounts in OUs.
+Kontroler domeny docelowej nie obsługuje tworzenia kont komputerów w OUs.
 .
 Language=Romanian
 The destination domain controller does not support creating machine accounts in OUs.
@@ -8754,7 +8754,7 @@ Language=English
 The specified workgroup name is invalid.
 .
 Language=Polish
-The specified workgroup name is invalid.
+Określona nazwa grupy roboczej jest nieprawidłowa.
 .
 Language=Romanian
 The specified workgroup name is invalid.
@@ -8783,7 +8783,7 @@ Language=English
 The specified computer name is incompatible with the default language used on the domain controller.
 .
 Language=Polish
-The specified computer name is incompatible with the default language used on the domain controller.
+Określona nazwa komputera jest niezgodna z językiem domyślnym używanym na kontrolerze domeny.
 .
 Language=Romanian
 The specified computer name is incompatible with the default language used on the domain controller.
@@ -8812,7 +8812,7 @@ Language=English
 The specified computer account could not be found.
 .
 Language=Polish
-The specified computer account could not be found.
+Odnalezienie określonego konta komputera było niemożliwe.
 .
 Language=Romanian
 The specified computer account could not be found.
@@ -8841,7 +8841,7 @@ Language=English
 This version of the operating system cannot be joined to a domain.
 .
 Language=Polish
-This version of the operating system cannot be joined to a domain.
+Tej wersji systemu ReactOS nie można przyłączyć do domeny.
 .
 Language=Romanian
 This version of the operating system cannot be joined to a domain.
@@ -8870,7 +8870,7 @@ Language=English
 Password must change at next logon
 .
 Language=Polish
-Password must change at next logon
+Hasło musi zostać zmienione przy następnym logowaniu
 .
 Language=Romanian
 Password must change at next logon
@@ -8899,7 +8899,7 @@ Language=English
 Account is locked out
 .
 Language=Polish
-Account is locked out
+Konto jest zablokowane
 .
 Language=Romanian
 Account is locked out
@@ -8928,7 +8928,7 @@ Language=English
 Password is too long
 .
 Language=Polish
-Password is too long
+Hasło jest za długie
 .
 Language=Romanian
 Password is too long
@@ -8957,7 +8957,7 @@ Language=English
 Password doesn't meet the complexity policy
 .
 Language=Polish
-Password doesn't meet the complexity policy
+Hasło nie spełnia zasady złożoności
 .
 Language=Romanian
 Password doesn't meet the complexity policy
@@ -8986,7 +8986,7 @@ Language=English
 Password doesn't meet the requirements of the filter dll's
 .
 Language=Polish
-Password doesn't meet the requirements of the filter dll's
+Hasło nie spełnia wymagań biblioteki dll filtra
 .
 Language=Romanian
 Password doesn't meet the requirements of the filter dll's
@@ -9015,7 +9015,7 @@ Language=English
 This is the last error in NERR range.
 .
 Language=Polish
-This is the last error in NERR range.
+To jest ostatni błąd w zakresie NERR.
 .
 Language=Romanian
 This is the last error in NERR range.
@@ -9050,8 +9050,8 @@ Drive %1 is nearly full. %2 bytes are available.\n
 Please warn users and delete unneeded files.
 .
 Language=Polish
-Drive %1 is nearly full. %2 bytes are available.\n
-Please warn users and delete unneeded files.
+Dysk %1 jest prawie zapełniony. Liczba dostępnych bajtów: %2.\n
+Ostrzeż użytkowników i usuń zbędne pliki.
 .
 Language=Romanian
 Drive %1 is nearly full. %2 bytes are available.\n
@@ -9087,8 +9087,8 @@ Language=English
 Please review the server's error log.
 .
 Language=Polish
-%1 errors were logged in the last %2 minutes.\n
-Please review the server's error log.
+W ciągu ostatnich %2 min zarejestrowano błędów: %1.\n
+Przejrzyj dziennik błędów na serwerze.
 .
 Language=Romanian
 %1 errors were logged in the last %2 minutes.\n
@@ -9125,9 +9125,9 @@ Please review the server's error log.  The server and/or\n
 network hardware may need service.
 .
 Language=Polish
-%1 network errors occurred in the last %2 minutes.\n
-Please review the server's error log.  The server and/or\n
-network hardware may need service.
+W ciągu ostatnich %2 min pojawiło się błędów sieciowych: %1.\n
+Przejrzyj dziennik błędów na serwerze. Serwer lub urządzenia sieciowe\n
+mogą wymagać naprawy.
 .
 Language=Romanian
 %1 network errors occurred in the last %2 minutes.\n
@@ -9169,8 +9169,8 @@ There were %1 bad password attempts in the last %2 minutes.\n
 Please review the server's audit trail.
 .
 Language=Polish
-There were %1 bad password attempts in the last %2 minutes.\n
-Please review the server's audit trail.
+W ciągu ostatnich %2 min podjęto prób złego użycia hasła: %1.\n
+Przejrzyj dziennik inspekcji na serwerze.
 .
 Language=Romanian
 There were %1 bad password attempts in the last %2 minutes.\n
@@ -9206,8 +9206,8 @@ There were %1 access-denied errors in the last %2 minutes.\n
 Please review the server's audit trail.
 .
 Language=Polish
-There were %1 access-denied errors in the last %2 minutes.\n
-Please review the server's audit trail.
+W ciągu ostatnich %2 min pojawiło się błędów odmowy dostępu: %1.\n
+Przejrzyj dziennik inspekcji na serwerze.
 .
 Language=Romanian
 There were %1 access-denied errors in the last %2 minutes.\n
@@ -9243,8 +9243,8 @@ The error log is full.  No errors will be logged until\n
 the file is cleared or the limit is raised.
 .
 Language=Polish
-The error log is full.  No errors will be logged until\n
-the file is cleared or the limit is raised.
+Dziennik błędów jest zapełniony. Błędy nie będą rejestrowane, dopóki plik nie zostanie\n
+wyczyszczony lub nie zostanie zwiększony limit jego rozmiaru.
 .
 Language=Romanian
 The error log is full.  No errors will be logged until\n
@@ -9279,7 +9279,7 @@ Language=English
 The error log is 80%% full.
 .
 Language=Polish
-The error log is 80%% full.
+Dziennik błędów jest zapełniony w 80%%.
 .
 Language=Romanian
 The error log is 80%% full.
@@ -9309,8 +9309,8 @@ The audit log is full.  No audit entries will be logged\n
 until the file is cleared or the limit is raised.
 .
 Language=Polish
-The audit log is full.  No audit entries will be logged\n
-until the file is cleared or the limit is raised.
+Dziennik inspekcji jest zapełniony. Wpisy inspekcji nie będą rejestrowane, dopóki plik\n
+nie zostanie wyczyszczony lub nie zostanie zwiększony limit jego rozmiaru.
 .
 Language=Romanian
 The audit log is full.  No audit entries will be logged\n
@@ -9345,7 +9345,7 @@ Language=English
 The audit log is 80%% full.
 .
 Language=Polish
-The audit log is 80%% full.
+Dziennik inspekcji jest zapełniony w 80%%.
 .
 Language=Romanian
 The audit log is 80%% full.
@@ -9375,8 +9375,8 @@ An error occurred closing file %1.\n
 Please check the file to make sure it is not corrupted.
 .
 Language=Polish
-An error occurred closing file %1.\n
-Please check the file to make sure it is not corrupted.
+Wystąpił błąd podczas zamykania pliku %1.\n
+Sprawdź, czy plik nie jest uszkodzony.
 .
 Language=Romanian
 An error occurred closing file %1.\n
@@ -9411,7 +9411,7 @@ Language=English
 The administrator has closed %1.
 .
 Language=Polish
-The administrator has closed %1.
+Administrator zamknął %1.
 .
 Language=Romanian
 The administrator has closed %1.
@@ -9440,7 +9440,7 @@ Language=English
 There were %1 access-denied errors in the last %2 minutes.
 .
 Language=Polish
-There were %1 access-denied errors in the last %2 minutes.
+W ciągu ostatnich %2 min pojawiło się błędów odmowy dostępu: %1.
 .
 Language=Romanian
 There were %1 access-denied errors in the last %2 minutes.
@@ -9469,7 +9469,7 @@ Language=English
 A power failure was detected at %1.  The server has been paused.
 .
 Language=Polish
-A power failure was detected at %1.  The server has been paused.
+Wykryto awarię zasilania na %1. Wstrzymano pracę serwera.
 .
 Language=Romanian
 A power failure was detected at %1.  The server has been paused.
@@ -9498,7 +9498,7 @@ Language=English
 Power has been restored at %1.  The server is no longer paused.
 .
 Language=Polish
-Power has been restored at %1.  The server is no longer paused.
+Przywrócono zasilanie dla %1. Serwer nie jest już wstrzymany.
 .
 Language=Romanian
 Power has been restored at %1.  The server is no longer paused.
@@ -9527,7 +9527,7 @@ Language=English
 The UPS service is starting shut down at %1 due to low battery.
 .
 Language=Polish
-The UPS service is starting shut down at %1 due to low battery.
+Usługa UPS rozpoczyna zamykanie systemu na %1 z powodu niskiego stanu baterii.
 .
 Language=Romanian
 The UPS service is starting shut down at %1 due to low battery.
@@ -9557,8 +9557,8 @@ There is a problem with a configuration of user specified\n
 shut down command file.  The UPS service started anyway.
 .
 Language=Polish
-There is a problem with a configuration of user specified\n
-shut down command file.  The UPS service started anyway.
+Wystąpił problem z konfiguracją określonego przez użytkownika pliku poleceń\n
+zamykania systemu. Mimo to usługa UPS została uruchomiona.
 .
 Language=Romanian
 There is a problem with a configuration of user specified\n
@@ -9596,10 +9596,10 @@ performance and replenish the volume's spare sector pool.\n\n
 The hotfix occurred while processing a remote request.
 .
 Language=Polish
-A defective sector on drive %1 has been replaced (hotfixed).\n
-No data was lost.  You should run CHKDSK soon to restore full\n
-performance and replenish the volume's spare sector pool.\n\n
-The hotfix occurred while processing a remote request.
+Uszkodzony sektor na dysku %1 został zamieniony (naprawiony).\n
+Nie utracono żadnych danych.  Należy wkrótce uruchomić program CHKDSK, aby przywrócić\n
+pełną wydajność i uzupełnić pulę sektorów zapasowych tego woluminu.\n\n
+Naprawy (hotfix) dokonano podczas przetwarzania zdalnego żądania.
 .
 Language=Romanian
 A defective sector on drive %1 has been replaced (hotfixed).\n
@@ -9647,8 +9647,8 @@ A disk error occurred on the HPFS volume in drive %1.\n
 The error occurred while processing a remote request.
 .
 Language=Polish
-A disk error occurred on the HPFS volume in drive %1.\n
-The error occurred while processing a remote request.
+Na woluminie HPFS w stacji %1 wystąpił błąd.\n
+Błąd wystąpił podczas przetwarzania zdalnego żądania.
 .
 Language=Romanian
 A disk error occurred on the HPFS volume in drive %1.\n
@@ -9686,10 +9686,10 @@ made on %1 at %2.\n
 Any updates made to the database after this time are lost.\n
 .
 Language=Polish
-The user accounts database (NET.ACC) is corrupted.  The local security\n
-system is replacing the corrupted NET.ACC with the backup\n
-made on %1 at %2.\n
-Any updates made to the database after this time are lost.\n
+Baza danych o kontach użytkowników (NET.ACC) jest uszkodzona. Lokalny system\n
+zabezpieczeń zastępuje uszkodzoną bazę (NET.ACC) kopią zapasową\n
+wykonaną w dniu %1 o godzinie %2.\n
+Wszelkie zmiany aktualizujące dokonane później w bazie danych zostaną utracone.\n
 .
 Language=Romanian
 The user accounts database (NET.ACC) is corrupted.  The local security\n
@@ -9739,10 +9739,10 @@ made on %1 at %2.\n
 Any updates made to the database after this time are lost.\n
 .
 Language=Polish
-The user accounts database (NET.ACC) is missing. The local\n
-security system is restoring the backup database\n
-made on %1 at %2.\n
-Any updates made to the database after this time are lost.\n
+Brak bazy danych o kontach użytkowników (NET.ACC). Lokalny system\n
+zabezpieczeń przywraca zapasową bazę danych\n
+wykonaną w dniu %1 o godzinie %2.\n
+Wszelkie zmiany aktualizujące dokonane później w bazie danych zostaną utracone.\n
 .
 Language=Romanian
 The user accounts database (NET.ACC) is missing. The local\n
@@ -9792,10 +9792,10 @@ database was present.\n\n
 THE SYSTEM IS NOT SECURE.\n"
 .
 Language=Polish
-Local security could not be started because the user accounts database\n
-(NET.ACC) was missing or corrupted, and no usable backup\n
-database was present.\n\n
-THE SYSTEM IS NOT SECURE.\n"
+Nie można uruchomić lokalnego systemu zabezpieczeń, ponieważ brak\n
+bazy danych o kontach użytkowników (NET.ACC) lub jest ona uszkodzona\n
+a nie ma zdatnej do użytku kopii zapasowej.\n\n
+SYSTEM NIE JEST BEZPIECZNY.\n"
 .
 Language=Romanian
 Local security could not be started because the user accounts database\n
@@ -9843,8 +9843,8 @@ The server cannot export directory %1, to client %2.\n
 It is exported from another server.
 .
 Language=Polish
-The server cannot export directory %1, to client %2.\n
-It is exported from another server.
+Serwer nie może wyeksportować katalogu %1 do klienta %2.\n
+Katalog ten jest eksportowany z innego serwera.
 .
 Language=Romanian
 The server cannot export directory %1, to client %2.\n
@@ -9880,8 +9880,8 @@ The replication server could not update directory %2 from the source\n
 on %3 due to error %1.
 .
 Language=Polish
-The replication server could not update directory %2 from the source\n
-on %3 due to error %1.
+Serwer replikacji nie mógł zaktualizować katalogu %2 ze źródła\n
+na %3 z powodu błędu %1.
 .
 Language=Romanian
 The replication server could not update directory %2 from the source\n
@@ -9917,8 +9917,8 @@ Master %1 did not send an update notice for directory %2 at the expected\n
 time.
 .
 Language=Polish
-Master %1 did not send an update notice for directory %2 at the expected\n
-time.
+Serwer główny %1 nie wysłał powiadomienia aktualizującego dla katalogu %2 \n
+w oczekiwanym czasie.
 .
 Language=Romanian
 Master %1 did not send an update notice for directory %2 at the expected\n
@@ -9953,7 +9953,7 @@ Language=English
 User %1 has exceeded account limitation %2 on server %3.
 .
 Language=Polish
-User %1 has exceeded account limitation %2 on server %3.
+Użytkownik %1 przekroczył ograniczenia konta %2 na serwerze %3.
 .
 Language=Romanian
 User %1 has exceeded account limitation %2 on server %3.
@@ -9982,7 +9982,7 @@ Language=English
 The primary domain controller for domain %1 failed.
 .
 Language=Polish
-The primary domain controller for domain %1 failed.
+Nie powiodła się operacja podstawowego kontrolera domeny dla domeny %1.
 .
 Language=Romanian
 The primary domain controller for domain %1 failed.
@@ -10012,8 +10012,8 @@ Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller f
 domain %1.
 .
 Language=Polish
-Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
-domain %1.
+Nie powiodło się uwierzytelnienie przez %2 - kontroler domeny Windows NT lub Windows 2000\n
+dla domeny %1.
 .
 Language=Romanian
 Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
@@ -10048,7 +10048,7 @@ Language=English
 The replicator attempted to log on at %2 as %1 and failed.
 .
 Language=Polish
-The replicator attempted to log on at %2 as %1 and failed.
+Replikator podjął próbę zalogowania się na %2 jako %1; próba ta nie powiodła się.
 .
 Language=Romanian
 The replicator attempted to log on at %2 as %1 and failed.
@@ -10077,7 +10077,7 @@ Language=English
 @I *LOGON HOURS %0
 .
 Language=Polish
-@I *LOGON HOURS %0
+@I *GODZINY LOGOWANIA %0
 .
 Language=Romanian
 @I *LOGON HOURS %0
@@ -10107,8 +10107,8 @@ Replicator could not access %2\n
 on %3 due to system error %1.
 .
 Language=Polish
-Replicator could not access %2\n
-on %3 due to system error %1.
+Replikator nie uzyskał dostępu do %2\n
+na %3 z powodu błędu systemu %1.
 .
 Language=Romanian
 Replicator could not access %2\n
@@ -10143,7 +10143,7 @@ Language=English
 Replicator limit for files in a directory has been exceeded.
 .
 Language=Polish
-Replicator limit for files in a directory has been exceeded.
+Przekroczono limit replikatora związany z liczbą plików w katalogu.
 .
 Language=Romanian
 Replicator limit for files in a directory has been exceeded.
@@ -10172,7 +10172,7 @@ Language=English
 Replicator limit for tree depth has been exceeded.
 .
 Language=Polish
-Replicator limit for tree depth has been exceeded.
+Przekroczono limit replikatora związany z głębokością drzewa.
 .
 Language=Romanian
 Replicator limit for tree depth has been exceeded.
@@ -10202,8 +10202,8 @@ The replicator cannot update directory %1. It has tree integrity\n
 and is the current directory for some process.
 .
 Language=Polish
-The replicator cannot update directory %1. It has tree integrity\n
-and is the current directory for some process.
+Replikator nie może zaktualizować katalogu %1. Ma on integralność drzewa\n
+i jest katalogiem bieżącym dla pewnego procesu.
 .
 Language=Romanian
 The replicator cannot update directory %1. It has tree integrity\n
@@ -10238,7 +10238,7 @@ Language=English
 Network error %1 occurred.
 .
 Language=Polish
-Network error %1 occurred.
+Wystąpił błąd sieciowy %1.
 .
 Language=Romanian
 Network error %1 occurred.
@@ -10267,7 +10267,7 @@ Language=English
 System error %1 occurred.
 .
 Language=Polish
-System error %1 occurred.
+Wystąpił błąd systemu %1.
 .
 Language=Romanian
 System error %1 occurred.
@@ -10297,8 +10297,8 @@ Cannot log on. User is currently logged on and argument TRYUSER\n
 is set to NO.
 .
 Language=Polish
-Cannot log on. User is currently logged on and argument TRYUSER\n
-is set to NO.
+Nie można się zalogować. Użytkownik jest obecnie zalogowany, a argument TRYUSER\n
+ma wartość NO.
 .
 Language=Romanian
 Cannot log on. User is currently logged on and argument TRYUSER\n
@@ -10333,7 +10333,7 @@ Language=English
 IMPORT path %1 cannot be found.
 .
 Language=Polish
-IMPORT path %1 cannot be found.
+Nie można odnaleźć ścieżki IMPORT %1.
 .
 Language=Romanian
 IMPORT path %1 cannot be found.
@@ -10362,7 +10362,7 @@ Language=English
 EXPORT path %1 cannot be found.
 .
 Language=Polish
-EXPORT path %1 cannot be found.
+Nie można odnaleźć ścieżki EXPORT %1.
 .
 Language=Romanian
 EXPORT path %1 cannot be found.
@@ -10391,7 +10391,7 @@ Language=English
 Replicated data has changed in directory %1.
 .
 Language=Polish
-Replicated data has changed in directory %1.
+Zreplikowane dane w katalogu %1 uległy zmianie.
 .
 Language=Romanian
 Replicated data has changed in directory %1.
@@ -10421,8 +10421,8 @@ Replicator failed to update signal file in directory %2 due to\n
 %1 system error.
 .
 Language=Polish
-Replicator failed to update signal file in directory %2 due to\n
-%1 system error.
+Replikator nie może zaktualizować pliku sygnału w katalogu %2 z powodu\n
+błędu systemu %1.
 .
 Language=Romanian
 Replicator failed to update signal file in directory %2 due to\n
@@ -10463,8 +10463,8 @@ The Registry or the information you just typed includes an illegal\n
 value for \"%1\".
 .
 Language=Polish
-The Registry or the information you just typed includes an illegal\n
-value for \"%1\".
+Rejestr albo wpisane właśnie dane zawierają niedozwoloną\n
+wartość dla \"%1\".
 .
 Language=Romanian
 The Registry or the information you just typed includes an illegal\n
@@ -10499,7 +10499,7 @@ Language=English
 The required parameter was not provided on the command\nline or in the configuration file.
 .
 Language=Polish
-The required parameter was not provided on the command\nline or in the configuration file.
+Nie podano wymaganego parametru w wierszu polecenia\nani w pliku konfiguracyjnym.
 .
 Language=Romanian
 The required parameter was not provided on the command\nline or in the configuration file.
@@ -10528,7 +10528,7 @@ Language=English
 LAN Manager does not recognize \"%1\" as a valid option.
 .
 Language=Polish
-LAN Manager does not recognize \"%1\" as a valid option.
+LAN Manager nie rozpoznaje \"%1\" jako prawidłowej opcji.
 .
 Language=Romanian
 LAN Manager does not recognize \"%1\" as a valid option.
@@ -10557,7 +10557,7 @@ Language=English
 A request for resource could not be satisfied.
 .
 Language=Polish
-A request for resource could not be satisfied.
+Nie można spełnić żądania zasobów.
 .
 Language=Romanian
 A request for resource could not be satisfied.
@@ -10586,7 +10586,7 @@ Language=English
 A problem exists with the system configuration.
 .
 Language=Polish
-A problem exists with the system configuration.
+Istnieje problem z konfiguracją systemu.
 .
 Language=Romanian
 A problem exists with the system configuration.
@@ -10615,7 +10615,7 @@ Language=English
 A system error has occurred.
 .
 Language=Polish
-A system error has occurred.
+Wystąpił błąd systemu.
 .
 Language=Romanian
 A system error has occurred.
@@ -10644,7 +10644,7 @@ Language=English
 An internal consistency error has occurred.
 .
 Language=Polish
-An internal consistency error has occurred.
+Wystąpił wewnętrzny błąd zgodności.
 .
 Language=Romanian
 An internal consistency error has occurred.
@@ -10673,7 +10673,7 @@ Language=English
 The configuration file or the command line has an ambiguous option.
 .
 Language=Polish
-The configuration file or the command line has an ambiguous option.
+Plik konfiguracyjny lub wiersz polecenia zawiera niejednoznaczną opcję.
 .
 Language=Romanian
 The configuration file or the command line has an ambiguous option.
@@ -10702,7 +10702,7 @@ Language=English
 The configuration file or the command line has a duplicate parameter.
 .
 Language=Polish
-The configuration file or the command line has a duplicate parameter.
+Plik konfiguracyjny lub wiersz polecenia zawiera zduplikowany parametr.
 .
 Language=Romanian
 The configuration file or the command line has a duplicate parameter.
@@ -10731,7 +10731,7 @@ Language=English
 The service did not respond to control and was stopped with\nthe DosKillProc function.
 .
 Language=Polish
-The service did not respond to control and was stopped with\nthe DosKillProc function.
+Usługa nie odpowiedziała na operację sterowania i została zatrzymana przy\nużyciu funkcji DosKillProc.
 .
 Language=Romanian
 The service did not respond to control and was stopped with\nthe DosKillProc function.
@@ -10760,7 +10760,7 @@ Language=English
 An error occurred when attempting to run the service program.
 .
 Language=Polish
-An error occurred when attempting to run the service program.
+Wystąpił błąd podczas próby uruchomienia programu usługi.
 .
 Language=Romanian
 An error occurred when attempting to run the service program.
@@ -10789,7 +10789,7 @@ Language=English
 The sub-service failed to start.
 .
 Language=Polish
-The sub-service failed to start.
+Uruchomienie usługi podrzędnej nie powiodło się.
 .
 Language=Romanian
 The sub-service failed to start.
@@ -10818,7 +10818,7 @@ Language=English
 There is a conflict in the value or use of these options: %1.
 .
 Language=Polish
-There is a conflict in the value or use of these options: %1.
+W wartości lub wykorzystaniu tych opcji wystąpił konflikt: %1.
 .
 Language=Romanian
 There is a conflict in the value or use of these options: %1.
@@ -10847,7 +10847,7 @@ Language=English
 There is a problem with the file.
 .
 Language=Polish
-There is a problem with the file.
+Wystąpił problem z tym plikiem.
 .
 Language=Romanian
 There is a problem with the file.
@@ -10876,7 +10876,7 @@ Language=English
 memory
 .
 Language=Polish
-memory
+pamięć
 .
 Language=Romanian
 memory
@@ -10905,7 +10905,7 @@ Language=English
 disk space
 .
 Language=Polish
-disk space
+miejsce na dysku
 .
 Language=Romanian
 disk space
@@ -10934,7 +10934,7 @@ Language=English
 thread
 .
 Language=Polish
-thread
+wątek
 .
 Language=Romanian
 thread
@@ -10963,7 +10963,7 @@ Language=English
 process
 .
 Language=Polish
-process
+proces
 .
 Language=Romanian
 process
@@ -10992,7 +10992,7 @@ Language=English
 Security Failure. %0
 .
 Language=Polish
-Security Failure. %0
+Błąd zabezpieczeń. %0
 .
 Language=Romanian
 Security Failure. %0
@@ -11021,7 +11021,7 @@ Language=English
 Bad or missing LAN Manager root directory.
 .
 Language=Polish
-Bad or missing LAN Manager root directory.
+Nieobecny lub zły katalog główny LAN Manager.
 .
 Language=Romanian
 Bad or missing LAN Manager root directory.
@@ -11050,7 +11050,7 @@ Language=English
 The network software is not installed.
 .
 Language=Polish
-The network software is not installed.
+Nie zainstalowano oprogramowania sieciowego.
 .
 Language=Romanian
 The network software is not installed.
@@ -11079,7 +11079,7 @@ Language=English
 The server is not started.
 .
 Language=Polish
-The server is not started.
+Serwer nie został uruchomiony.
 .
 Language=Romanian
 The server is not started.
@@ -11108,7 +11108,7 @@ Language=English
 The server cannot access the user accounts database (NET.ACC).
 .
 Language=Polish
-The server cannot access the user accounts database (NET.ACC).
+Serwer nie może uzyskać dostępu do bazy danych o kontach użytkowników (NET.ACC).
 .
 Language=Romanian
 The server cannot access the user accounts database (NET.ACC).
@@ -11137,7 +11137,7 @@ Language=English
 Incompatible files are installed in the LANMAN tree.
 .
 Language=Polish
-Incompatible files are installed in the LANMAN tree.
+W drzewie LANMAN zainstalowano niezgodne pliki.
 .
 Language=Romanian
 Incompatible files are installed in the LANMAN tree.
@@ -11166,7 +11166,7 @@ Language=English
 The LANMAN\\LOGS directory is invalid.
 .
 Language=Polish
-The LANMAN\\LOGS directory is invalid.
+Katalog LANMAN\LOGS jest nieprawidłowy.
 .
 Language=Romanian
 The LANMAN\\LOGS directory is invalid.
@@ -11195,7 +11195,7 @@ Language=English
 The domain specified could not be used.
 .
 Language=Polish
-The domain specified could not be used.
+Nie można użyć określonej domeny.
 .
 Language=Romanian
 The domain specified could not be used.
@@ -11224,7 +11224,7 @@ Language=English
 The computer name is being used as a message alias on another computer.
 .
 Language=Polish
-The computer name is being used as a message alias on another computer.
+Ta nazwa komputera jest używana jako alias komunikatu na innym komputerze.
 .
 Language=Romanian
 The computer name is being used as a message alias on another computer.
@@ -11253,7 +11253,7 @@ Language=English
 The announcement of the server name failed.
 .
 Language=Polish
-The announcement of the server name failed.
+Anons nazwy serwera nie powiódł się.
 .
 Language=Romanian
 The announcement of the server name failed.
@@ -11282,7 +11282,7 @@ Language=English
 The user accounts database is not configured correctly.
 .
 Language=Polish
-The user accounts database is not configured correctly.
+Baza danych o kontach użytkowników nie jest poprawnie skonfigurowana.
 .
 Language=Romanian
 The user accounts database is not configured correctly.
@@ -11311,7 +11311,7 @@ Language=English
 The server is not running with user-level security.
 .
 Language=Polish
-The server is not running with user-level security.
+Ten serwer nie jest uruchomiony z zabezpieczeniami na poziomie użytkownika.
 .
 Language=Romanian
 The server is not running with user-level security.
@@ -11340,7 +11340,7 @@ Language=English
 The workstation is not configured properly.
 .
 Language=Polish
-The workstation is not configured properly.
+Stacja robocza nie jest skonfigurowana poprawnie.
 .
 Language=Romanian
 The workstation is not configured properly.
@@ -11369,7 +11369,7 @@ Language=English
 View your error log for details.
 .
 Language=Polish
-View your error log for details.
+Aby uzyskać szczegółowe informacje, przejrzyj dziennik błędów.
 .
 Language=Romanian
 View your error log for details.
@@ -11398,7 +11398,7 @@ Language=English
 Unable to write to this file.
 .
 Language=Polish
-Unable to write to this file.
+Nie można przeprowadzić zapisywania w tym pliku.
 .
 Language=Romanian
 Unable to write to this file.
@@ -11428,8 +11428,8 @@ ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
 and reapply all ADDPAKs.
 .
 Language=Polish
-ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
-and reapply all ADDPAKs.
+Plik ADDPAK jest uszkodzony. Usuń plik LANMAN\\NETPROG\\ADDPAK.SER\n
+i ponownie zastosuj wszystkie elementy ADDPAK.
 .
 Language=Romanian
 ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
@@ -11464,7 +11464,7 @@ Language=English
 The LM386 server cannot be started because CACHE.EXE is not running.
 .
 Language=Polish
-The LM386 server cannot be started because CACHE.EXE is not running.
+Nie można uruchomić serwera LM386, ponieważ nie jest uruchomiony program CACHE.EXE.
 .
 Language=Romanian
 The LM386 server cannot be started because CACHE.EXE is not running.
@@ -11493,7 +11493,7 @@ Language=English
 There is no account for this computer in the security database.
 .
 Language=Polish
-There is no account for this computer in the security database.
+Dla tego komputera brak konta w bazie danych zabezpieczeń.
 .
 Language=Romanian
 There is no account for this computer in the security database.
@@ -11522,7 +11522,7 @@ Language=English
 This computer is not a member of the group SERVERS.
 .
 Language=Polish
-This computer is not a member of the group SERVERS.
+Ten komputer nie jest członkiem grupy SERWERY.
 .
 Language=Romanian
 This computer is not a member of the group SERVERS.
@@ -11551,7 +11551,7 @@ Language=English
 The group SERVERS is not present in the local security database.
 .
 Language=Polish
-The group SERVERS is not present in the local security database.
+Grupa SERWERY nie jest obecna w lokalnej bazie danych zabezpieczeń.
 .
 Language=Romanian
 The group SERVERS is not present in the local security database.
@@ -11582,9 +11582,9 @@ a member of a domain. The Netlogon service does not need to run in this\n
 configuration.
 .
 Language=Polish
-This computer is configured as a member of a workgroup, not as\n
-a member of a domain. The Netlogon service does not need to run in this\n
-configuration.
+Ten komputer jest skonfigurowany jako członek grupy roboczej, a nie\n
+domeny. W tej konfiguracji usługa Netlogon nie musi być\n
+uruchamiana.
 .
 Language=Romanian
 This computer is configured as a member of a workgroup, not as\n
@@ -11625,7 +11625,7 @@ Language=English
 The primary Domain Controller for this domain could not be located.
 .
 Language=Polish
-The primary Domain Controller for this domain could not be located.
+Nie można zlokalizować podstawowego kontrolera domeny dla tej domeny.
 .
 Language=Romanian
 The primary Domain Controller for this domain could not be located.
@@ -11656,9 +11656,9 @@ However, the computer %1 is currently claiming to be the primary domain controll
 of the domain.
 .
 Language=Polish
-This computer is configured to be the primary domain controller of its domain.\n
-However, the computer %1 is currently claiming to be the primary domain controller\n
-of the domain.
+Ten komputer jest skonfigurowany jako podstawowy kontroler domeny.\n
+w swojej własnej domenie. Jednakże obecnie komputer %1 jest zatwierdzony jako podstawowy kontroler domeny\n
+w domenie.
 .
 Language=Romanian
 This computer is configured to be the primary domain controller of its domain.\n
@@ -11699,7 +11699,7 @@ Language=English
 The service failed to authenticate with the primary domain controller.
 .
 Language=Polish
-The service failed to authenticate with the primary domain controller.
+Uwierzytelnienie usługi przez podstawowy kontroler domeny nie powiodło się.
 .
 Language=Romanian
 The service failed to authenticate with the primary domain controller.
@@ -11728,7 +11728,7 @@ Language=English
 There is a problem with the security database creation date or serial number.
 .
 Language=Polish
-There is a problem with the security database creation date or serial number.
+Wystąpił problem z datą utworzenia lub numerem seryjnym bazy danych zabezpieczeń.
 .
 Language=Romanian
 There is a problem with the security database creation date or serial number.
@@ -11762,7 +11762,7 @@ Language=English
 The operation failed because a network software error occurred.
 .
 Language=Polish
-The operation failed because a network software error occurred.
+Operacja nie powiodła się, ponieważ wystąpił sieciowy błąd oprogramowania.
 .
 Language=Romanian
 The operation failed because a network software error occurred.
@@ -11791,7 +11791,7 @@ Language=English
 The system ran out of a resource controlled by the %1 option.
 .
 Language=Polish
-The system ran out of a resource controlled by the %1 option.
+W systemie wyczerpały się zasoby kontrolowane przez opcję %1.
 .
 Language=Romanian
 The system ran out of a resource controlled by the %1 option.
@@ -11820,7 +11820,7 @@ Language=English
 The service failed to obtain a long-term lock on the\nsegment for network control blocks (NCBs). The error code is the data.
 .
 Language=Polish
-The service failed to obtain a long-term lock on the\nsegment for network control blocks (NCBs). The error code is the data.
+Nie powiodło się uzyskanie przez usługę długoterminowej blokady\nsegmentu dla bloków sterowania siecią (NCB). Przedstawione dane to kod błędu.
 .
 Language=Romanian
 The service failed to obtain a long-term lock on the\nsegment for network control blocks (NCBs). The error code is the data.
@@ -11849,7 +11849,7 @@ Language=English
 The service failed to release the long-term lock on the\nsegment for network control blocks (NCBs). The error code is the data.
 .
 Language=Polish
-The service failed to release the long-term lock on the\nsegment for network control blocks (NCBs). The error code is the data.
+Nie powiodło się zwolnienie przez usługę długoterminowej blokady\nsegmentu dla bloków sterowania siecią (NCB). Przedstawione dane to kod błędu.
 .
 Language=Romanian
 The service failed to release the long-term lock on the\nsegment for network control blocks (NCBs). The error code is the data.
@@ -11878,7 +11878,7 @@ Language=English
 There was an error stopping service %1.\nThe error code from NetServiceControl is the data.
 .
 Language=Polish
-There was an error stopping service %1.\nThe error code from NetServiceControl is the data.
+Podczas zatrzymywania usługi %1 wystąpił błąd.\nPrzedstawione dane to kod błędu z NetServiceControl.
 .
 Language=Romanian
 There was an error stopping service %1.\nThe error code from NetServiceControl is the data.
@@ -11907,7 +11907,7 @@ Language=English
 Initialization failed because of a system execution failure on\npath %1. The system error code is the data.
 .
 Language=Polish
-Initialization failed because of a system execution failure on\npath %1. The system error code is the data.
+Zainicjowanie nie powiodło się, ponieważ wystąpił systemowy błąd wykonywania na\nścieżce %1. Przedstawione dane to kod błędu systemowego.
 .
 Language=Romanian
 Initialization failed because of a system execution failure on\npath %1. The system error code is the data.
@@ -11936,7 +11936,7 @@ Language=English
 An unexpected network control block (NCB) was received. The NCB is the data.
 .
 Language=Polish
-An unexpected network control block (NCB) was received. The NCB is the data.
+Odebrano nieoczekiwany blok sterowania siecią (NCB). Przedstawione dane to blok NCB.
 .
 Language=Romanian
 An unexpected network control block (NCB) was received. The NCB is the data.
@@ -11965,7 +11965,7 @@ Language=English
 The network is not started.
 .
 Language=Polish
-The network is not started.
+Sieć nie została uruchomiona.
 .
 Language=Romanian
 The network is not started.
@@ -11994,7 +11994,7 @@ Language=English
 A DosDevIoctl or DosFsCtl to NETWKSTA.SYS failed.\nThe data shown is in this format:\nDWORD  approx CS:IP of call to ioctl or fsctl\nWORD   error code\nWORD   ioctl or fsctl number
 .
 Language=Polish
-A DosDevIoctl or DosFsCtl to NETWKSTA.SYS failed.\nThe data shown is in this format:\nDWORD  approx CS:IP of call to ioctl or fsctl\nWORD   error code\nWORD   ioctl or fsctl number
+Operacja DosDevIoctl lub DosFsCtl na NETWKSTA.SYS nie powiodła się.\nDane są przedstawiane w następującym formacie:\nDWORD  w przybliżeniu CS:IP wywołania do ioctl lub fsctl\nWORD   kod błędu\nWORD   numer ioctl lub fsctl
 .
 Language=Romanian
 A DosDevIoctl or DosFsCtl to NETWKSTA.SYS failed.\nThe data shown is in this format:\nDWORD  approx CS:IP of call to ioctl or fsctl\nWORD   error code\nWORD   ioctl or fsctl number
@@ -12023,7 +12023,7 @@ Language=English
 Unable to create or open system semaphore %1.\nThe error code is the data.
 .
 Language=Polish
-Unable to create or open system semaphore %1.\nThe error code is the data.
+Nie można utworzyć lub otworzyć semafora systemowego %1.\nPrzedstawione dane to kod błędu.
 .
 Language=Romanian
 Unable to create or open system semaphore %1.\nThe error code is the data.
@@ -12052,7 +12052,7 @@ Language=English
 Initialization failed because of an open/create error on the\nfile %1. The system error code is the data.
 .
 Language=Polish
-Initialization failed because of an open/create error on the\nfile %1. The system error code is the data.
+Zainicjowanie nie powiodło się z powodu błędu otwarcia/utworzenia \npliku %1. Przedstawione dane to kod błędu systemu.
 .
 Language=Romanian
 Initialization failed because of an open/create error on the\nfile %1. The system error code is the data.
@@ -12081,7 +12081,7 @@ Language=English
 An unexpected NetBIOS error occurred.\nThe error code is the data.
 .
 Language=Polish
-An unexpected NetBIOS error occurred.\nThe error code is the data.
+Wystąpił nieoczekiwany błąd NetBIOS.\nPrzedstawione dane to kod błędu.
 .
 Language=Romanian
 An unexpected NetBIOS error occurred.\nThe error code is the data.
@@ -12110,7 +12110,7 @@ Language=English
 An illegal server message block (SMB) was received.\nThe SMB is the data.
 .
 Language=Polish
-An illegal server message block (SMB) was received.\nThe SMB is the data.
+Odebrano niedozwolony blok komunikatów serwera (SMB).\nPrzedstawione dane to ten blok SMB.
 .
 Language=Romanian
 An illegal server message block (SMB) was received.\nThe SMB is the data.
@@ -12139,7 +12139,7 @@ Language=English
 Initialization failed because the requested service %1\ncould not be started.
 .
 Language=Polish
-Initialization failed because the requested service %1\ncould not be started.
+Nie powiodło się inicjowanie, ponieważ nie można uruchomić \nżądanej usługi %1.
 .
 Language=Romanian
 Initialization failed because the requested service %1\ncould not be started.
@@ -12168,7 +12168,7 @@ Language=English
 Some entries in the error log were lost because of a buffer\noverflow.
 .
 Language=Polish
-Some entries in the error log were lost because of a buffer\noverflow.
+Utracono niektóre wpisy dziennika błędów z powodu przepełnienia\nbuforu.
 .
 Language=Romanian
 Some entries in the error log were lost because of a buffer\noverflow.
@@ -12197,7 +12197,7 @@ Language=English
 Initialization parameters controlling resource usage other\nthan net buffers are sized so that too much memory is needed.
 .
 Language=Polish
-Initialization parameters controlling resource usage other\nthan net buffers are sized so that too much memory is needed.
+Parametry inicjowania kontrolujące wykorzystanie zasobów inne \nniż bufory sieci są skonfigurowane tak, że potrzebne jest za dużo pamięci.
 .
 Language=Romanian
 Initialization parameters controlling resource usage other\nthan net buffers are sized so that too much memory is needed.
@@ -12226,7 +12226,7 @@ Language=English
 The server cannot increase the size of a memory segment.
 .
 Language=Polish
-The server cannot increase the size of a memory segment.
+Serwer nie może zwiększyć rozmiaru segmentu pamięci.
 .
 Language=Romanian
 The server cannot increase the size of a memory segment.
@@ -12255,7 +12255,7 @@ Language=English
 Initialization failed because account file %1 is either incorrect\nor not present.
 .
 Language=Polish
-Initialization failed because account file %1 is either incorrect\nor not present.
+Zainicjowanie nie powiodło się, ponieważ plik konta %1 jest niepoprawny\nlub nieobecny.
 .
 Language=Romanian
 Initialization failed because account file %1 is either incorrect\nor not present.
@@ -12284,7 +12284,7 @@ Language=English
 Initialization failed because network %1 was not started.
 .
 Language=Polish
-Initialization failed because network %1 was not started.
+Zainicjowanie nie powiodło się, ponieważ nie uruchomiono sieci %1.
 .
 Language=Romanian
 Initialization failed because network %1 was not started.
@@ -12313,7 +12313,7 @@ Language=English
 The server failed to start. Either all three chdev\nparameters must be zero or all three must be nonzero.
 .
 Language=Polish
-The server failed to start. Either all three chdev\nparameters must be zero or all three must be nonzero.
+Uruchomienie serwera nie powiodło się. Trzy parametry chdev muszą\nbyć albo wszystkie równe zero, albo wszystkie różne od zera.
 .
 Language=Romanian
 The server failed to start. Either all three chdev\nparameters must be zero or all three must be nonzero.
@@ -12342,7 +12342,7 @@ Language=English
 A remote API request was halted due to the following\ninvalid description string: %1.
 .
 Language=Polish
-A remote API request was halted due to the following\ninvalid description string: %1.
+Zatrzymano zdalne żądanie API z powodu następującego\nnieprawidłowego ciągu opisu:: %1.
 .
 Language=Romanian
 A remote API request was halted due to the following\ninvalid description string: %1.
@@ -12371,7 +12371,7 @@ Language=English
 The network %1 ran out of network control blocks (NCBs).  You may need to increase NCBs\nfor this network.  The following information includes the\nnumber of NCBs submitted by the server when this error occurred:
 .
 Language=Polish
-The network %1 ran out of network control blocks (NCBs).  You may need to increase NCBs\nfor this network.  The following information includes the\nnumber of NCBs submitted by the server when this error occurred:
+W sieci %1 wyczerpały się bloki sterowania siecią (NCB).  Może okazać się konieczne zwiększenie liczby bloków NCB dla tej sieci. Przedstawione informacje\nzawierają liczbę bloków NCB zgłoszonych przez serwer po wystąpieniu tego błędu:
 .
 Language=Romanian
 The network %1 ran out of network control blocks (NCBs).  You may need to increase NCBs\nfor this network.  The following information includes the\nnumber of NCBs submitted by the server when this error occurred:
@@ -12400,7 +12400,7 @@ Language=English
 The server cannot create the %1 mailslot needed to send\nthe ReleaseMemory alert message.  The error received is:
 .
 Language=Polish
-The server cannot create the %1 mailslot needed to send\nthe ReleaseMemory alert message.  The error received is:
+Serwer nie może utworzyć skrzynki mailslot %1 niezbędnej do wysłania\nkomunikatu alertu ReleaseMemory. Odebrany błąd to:
 .
 Language=Romanian
 The server cannot create the %1 mailslot needed to send\nthe ReleaseMemory alert message.  The error received is:
@@ -12429,7 +12429,7 @@ Language=English
 The server failed to register for the ReleaseMemory alert,\nwith recipient %1. The error code from\nNetAlertStart is the data.
 .
 Language=Polish
-The server failed to register for the ReleaseMemory alert,\nwith recipient %1. The error code from\nNetAlertStart is the data.
+Nie powiodło się zarejestrowanie przez serwer do stosowania alarmu,\nReleaseMemory, dla odbiorcy %1. \nPrzedstawione dane to kod błędu z NetAlertStart.
 .
 Language=Romanian
 The server failed to register for the ReleaseMemory alert,\nwith recipient %1. The error code from\nNetAlertStart is the data.
@@ -12458,7 +12458,7 @@ Language=English
 The server cannot update the AT schedule file. The file\nis corrupted.
 .
 Language=Polish
-The server cannot update the AT schedule file. The file\nis corrupted.
+Serwer nie może zaktualizować pliku harmonogramu AT. \nPlik jest uszkodzony.
 .
 Language=Romanian
 The server cannot update the AT schedule file. The file\nis corrupted.
@@ -12487,7 +12487,7 @@ Language=English
 The server encountered an error when calling\nNetIMakeLMFileName. The error code is the data.
 .
 Language=Polish
-The server encountered an error when calling\nNetIMakeLMFileName. The error code is the data.
+Serwer napotkał błąd podczas wywoływania funkcji NetIMakeLMFileName\nPrzedstawione dane to kod błędu.
 .
 Language=Romanian
 The server encountered an error when calling\nNetIMakeLMFileName. The error code is the data.
@@ -12516,7 +12516,7 @@ Language=English
 Initialization failed because of a system execution failure on\npath %1. There is not enough memory to start the process.\nThe system error code is the data.
 .
 Language=Polish
-Initialization failed because of a system execution failure on\npath %1. There is not enough memory to start the process.\nThe system error code is the data.
+Zainicjowanie nie powiodło się z powodu systemowego błędu wykonywania na\nścieżce %1. Za mało pamięci do uruchomienia tego procesu.\nPrzedstawione dane to kod błędu systemu.
 .
 Language=Romanian
 Initialization failed because of a system execution failure on\npath %1. There is not enough memory to start the process.\nThe system error code is the data.
@@ -12545,7 +12545,7 @@ Language=English
 Longterm lock of the server buffers failed.\nCheck swap disk's free space and restart the system to start the server.
 .
 Language=Polish
-Longterm lock of the server buffers failed.\nCheck swap disk's free space and restart the system to start the server.
+Długoterminowa blokada buforów serwera nie powiodła się.\nSprawdź, jaka jest ilość wolnego miejsca na dysku wymiany i ponownie uruchom system, aby uruchomić serwer.
 .
 Language=Romanian
 Longterm lock of the server buffers failed.\nCheck swap disk's free space and restart the system to start the server.
@@ -12574,7 +12574,7 @@ Language=English
 The service has stopped due to repeated consecutive\noccurrences of a network control block (NCB) error.  The last bad NCB follows\nin raw data.
 .
 Language=Polish
-The service has stopped due to repeated consecutive\noccurrences of a network control block (NCB) error.  The last bad NCB follows\nin raw data.
+Usługa została zatrzymana z powodu powtarzających się wystąpień błędu\nbloków sterowania siecią (NCB). Dalej przedstawiono nieprzetworzone dane\nostatniego złego bloku NCB.
 .
 Language=Romanian
 The service has stopped due to repeated consecutive\noccurrences of a network control block (NCB) error.  The last bad NCB follows\nin raw data.
@@ -12603,7 +12603,7 @@ Language=English
 The Message server has stopped due to a lock on the\nMessage server shared data segment.
 .
 Language=Polish
-The Message server has stopped due to a lock on the\nMessage server shared data segment.
+Serwer komunikatów został zatrzymany z powodu blokady na segmencie\nudostępnionych danych tego serwera.
 .
 Language=Romanian
 The Message server has stopped due to a lock on the\nMessage server shared data segment.
@@ -12632,7 +12632,7 @@ Language=English
 A file system error occurred while opening or writing to the\nsystem message log file %1. Message logging has been\nswitched off due to the error. The error code is the data.
 .
 Language=Polish
-A file system error occurred while opening or writing to the\nsystem message log file %1. Message logging has been\nswitched off due to the error. The error code is the data.
+Podczas otwierania lub zapisywania w pliku\nsystemowego dziennika komunikatów %1 wystąpił błąd systemu plików. Z powodu tego błędu wyłączono\nrejestrowanie komunikatów. Przedstawione dane to kod błędu.
 .
 Language=Romanian
 A file system error occurred while opening or writing to the\nsystem message log file %1. Message logging has been\nswitched off due to the error. The error code is the data.
@@ -12661,7 +12661,7 @@ Language=English
 Unable to display message POPUP due to system VIO call error.\nThe error code is the data.
 .
 Language=Polish
-Unable to display message POPUP due to system VIO call error.\nThe error code is the data.
+Nie można wyświetlić komunikatu POPUP z powodu błędu systemowego wywołania VIO.\nPrzedstawione dane to kod błędu.
 .
 Language=Romanian
 Unable to display message POPUP due to system VIO call error.\nThe error code is the data.
@@ -12690,7 +12690,7 @@ Language=English
 An illegal server message block (SMB) was received.  The SMB is the data.
 .
 Language=Polish
-An illegal server message block (SMB) was received.  The SMB is the data.
+Odebrano niedozwolony blok komunikatów serwera (SMB).  Przedstawione dane to ten blok SMB.
 .
 Language=Romanian
 An illegal server message block (SMB) was received.  The SMB is the data.
@@ -12719,7 +12719,7 @@ Language=English
 The workstation information segment is bigger than 64K.\nThe size follows, in DWORD format:
 .
 Language=Polish
-The workstation information segment is bigger than 64K.\nThe size follows, in DWORD format:
+Segment informacji stacji roboczej jest większy niż 64 KB.\nDalej jest przedstawiony rozmiar w formacie DWORD:
 .
 Language=Romanian
 The workstation information segment is bigger than 64K.\nThe size follows, in DWORD format:
@@ -12748,7 +12748,7 @@ Language=English
 The workstation was unable to get the name-number of the computer.
 .
 Language=Polish
-The workstation was unable to get the name-number of the computer.
+Stacja robocza nie może uzyskać nazwy-numeru komputera.
 .
 Language=Romanian
 The workstation was unable to get the name-number of the computer.
@@ -12777,7 +12777,7 @@ Language=English
 The workstation could not initialize the Async NetBIOS Thread.\nThe error code is the data.
 .
 Language=Polish
-The workstation could not initialize the Async NetBIOS Thread.\nThe error code is the data.
+Stacja robocza nie może zainicjować asynchronicznego wątku NetBIOS.\nPrzedstawione dane to kod błędu.
 .
 Language=Romanian
 The workstation could not initialize the Async NetBIOS Thread.\nThe error code is the data.
@@ -12806,7 +12806,7 @@ Language=English
 The workstation could not open the initial shared segment.\nThe error code is the data.
 .
 Language=Polish
-The workstation could not open the initial shared segment.\nThe error code is the data.
+Stacja robocza nie może otworzyć początkowego segmentu współużytkowanego.\nPrzedstawione dane to kod błędu.
 .
 Language=Romanian
 The workstation could not open the initial shared segment.\nThe error code is the data.
@@ -12835,7 +12835,7 @@ Language=English
 The workstation host table is full.
 .
 Language=Polish
-The workstation host table is full.
+Tabela hostów stacji roboczych jest zapełniona.
 .
 Language=Romanian
 The workstation host table is full.
@@ -12864,7 +12864,7 @@ Language=English
 A bad mailslot server message block (SMB) was received.  The SMB is the data.
 .
 Language=Polish
-A bad mailslot server message block (SMB) was received.  The SMB is the data.
+Odebrano zły blok komunikatów serwera skrzynki mailslot (SMB).  Przedstawione dane to ten blok SMB.
 .
 Language=Romanian
 A bad mailslot server message block (SMB) was received.  The SMB is the data.
@@ -12893,7 +12893,7 @@ Language=English
 The workstation encountered an error while trying to start the user accounts database.\nThe error code is the data.
 .
 Language=Polish
-The workstation encountered an error while trying to start the user accounts database.\nThe error code is the data.
+W stacji roboczej wystąpił błąd podczas próby uruchomienia bazy danych o kontach użytkowników.\nPrzedstawione dane to kod błędu.
 .
 Language=Romanian
 The workstation encountered an error while trying to start the user accounts database.\nThe error code is the data.
@@ -12922,7 +12922,7 @@ Language=English
 The workstation encountered an error while responding to an SSI revalidation request.\nThe function code and the error codes are the data.
 .
 Language=Polish
-The workstation encountered an error while responding to an SSI revalidation request.\nThe function code and the error codes are the data.
+W stacji roboczej wystąpił błąd podczas odpowiedzi na żądanie ponownego sprawdzania\npoprawności SSI. Przedstawione dane to kod funkcji i kody błędów.
 .
 Language=Romanian
 The workstation encountered an error while responding to an SSI revalidation request.\nThe function code and the error codes are the data.
@@ -12951,7 +12951,7 @@ Language=English
 The Alerter service had a problem creating the list of\nalert recipients.  The error code is %1.
 .
 Language=Polish
-The Alerter service had a problem creating the list of\nalert recipients.  The error code is %1.
+Usługa Alertowanie napotkała na problem przy tworzeniu\nlisty odbiorców alertu. Kod błędu to %1.
 .
 Language=Romanian
 The Alerter service had a problem creating the list of\nalert recipients.  The error code is %1.
@@ -12980,7 +12980,7 @@ Language=English
 There was an error expanding %1 as a group name. Try\nsplitting the group into two or more smaller groups.
 .
 Language=Polish
-There was an error expanding %1 as a group name. Try\nsplitting the group into two or more smaller groups.
+Wystąpił błąd podczas rozwijania %1 jako nazwy grupy. \nSpróbuj podzielić tę grupę na mniejsze grupy.
 .
 Language=Romanian
 There was an error expanding %1 as a group name. Try\nsplitting the group into two or more smaller groups.
@@ -13009,7 +13009,7 @@ Language=English
 There was an error sending %2 the alert message -\n(\n%3 )\nThe error code is %1.
 .
 Language=Polish
-There was an error sending %2 the alert message -\n(\n%3 )\nThe error code is %1.
+Wystąpił błąd przy wysyłaniu komunikatu alertu %2 -\n(\n%3 )\nKod błędu to %1.
 .
 Language=Romanian
 There was an error sending %2 the alert message -\n(\n%3 )\nThe error code is %1.
@@ -13038,7 +13038,7 @@ Language=English
 There was an error in creating or reading the alerter mailslot.\nThe error code is %1.
 .
 Language=Polish
-There was an error in creating or reading the alerter mailslot.\nThe error code is %1.
+Wystąpił błąd podczas tworzenia lub odczytywania skrzynki mailslot.\nusługi Alertowanie. Kod błędu to %1.
 .
 Language=Romanian
 There was an error in creating or reading the alerter mailslot.\nThe error code is %1.
@@ -13067,7 +13067,7 @@ Language=English
 The server could not read the AT schedule file.
 .
 Language=Polish
-The server could not read the AT schedule file.
+Serwer nie może odczytać pliku harmonogramu AT.
 .
 Language=Romanian
 The server could not read the AT schedule file.
@@ -13096,7 +13096,7 @@ Language=English
 The server found an invalid AT schedule record.
 .
 Language=Polish
-The server found an invalid AT schedule record.
+Serwer znalazł nieprawidłowy rekord harmonogramu AT.
 .
 Language=Romanian
 The server found an invalid AT schedule record.
@@ -13125,7 +13125,7 @@ Language=English
 The server could not find an AT schedule file so it created one.
 .
 Language=Polish
-The server could not find an AT schedule file so it created one.
+Serwer nie mógł odnaleźć pliku harmonogramu AT, więc taki plik został utworzony.
 .
 Language=Romanian
 The server could not find an AT schedule file so it created one.
@@ -13154,7 +13154,7 @@ Language=English
 The server could not access the %1 network with NetBiosOpen.
 .
 Language=Polish
-The server could not access the %1 network with NetBiosOpen.
+Serwer nie mógł uzyskać dostępu do sieci %1 przy użyciu procedury NetBiosOpen.
 .
 Language=Romanian
 The server could not access the %1 network with NetBiosOpen.
@@ -13183,7 +13183,7 @@ Language=English
 The AT command processor could not run %1.
 .
 Language=Polish
-The AT command processor could not run %1.
+Procesor poleceń AT nie może uruchomić %1.
 .
 Language=Romanian
 The AT command processor could not run %1.
@@ -13212,7 +13212,7 @@ Language=English
 WARNING:  Because of a lazy-write error, drive %1 now\ncontains some corrupted data.  The cache is stopped.
 .
 Language=Polish
-WARNING:  Because of a lazy-write error, drive %1 now\ncontains some corrupted data.  The cache is stopped.
+OSTRZEŻENIE:  Z powodu błędu powolnego zapisu dysk %1 zawiera obecnie\nuszkodzone dane.  Buforowanie zostało zatrzymane.
 .
 Language=Romanian
 WARNING:  Because of a lazy-write error, drive %1 now\ncontains some corrupted data.  The cache is stopped.
@@ -13241,7 +13241,7 @@ Language=English
 A defective sector on drive %1 has been replaced (hotfixed).\nNo data was lost.  You should run CHKDSK soon to restore full\nperformance and replenish the volume's spare sector pool.\n\nThe hotfix occurred while processing a remote request.
 .
 Language=Polish
-A defective sector on drive %1 has been replaced (hotfixed).\nNo data was lost.  You should run CHKDSK soon to restore full\nperformance and replenish the volume's spare sector pool.\n\nThe hotfix occurred while processing a remote request.
+Uszkodzony sektor na dysku %1 został zamieniony (naprawiony). Nie utracono żadnych danych.\nNależy wkrótce uruchomić program CHKDSK, aby przywrócić pełną wydajność\ni uzupełnić pulę sektorów zapasowych tego woluminu.\n\nNaprawy (hotfix) dokonano podczas przetwarzania zdalnego żądania.
 .
 Language=Romanian
 A defective sector on drive %1 has been replaced (hotfixed).\nNo data was lost.  You should run CHKDSK soon to restore full\nperformance and replenish the volume's spare sector pool.\n\nThe hotfix occurred while processing a remote request.
@@ -13270,7 +13270,7 @@ Language=English
 A disk error occurred on the HPFS volume in drive %1.\nThe error occurred while processing a remote request.
 .
 Language=Polish
-A disk error occurred on the HPFS volume in drive %1.\nThe error occurred while processing a remote request.
+Na woluminie HPFS w stacji %1 wystąpił błąd.\nBłąd wystąpił podczas przetwarzania zdalnego żądania.
 .
 Language=Romanian
 A disk error occurred on the HPFS volume in drive %1.\nThe error occurred while processing a remote request.
@@ -13299,7 +13299,7 @@ Language=English
 The user accounts database (NET.ACC) is corrupted.  The local security\nsystem is replacing the corrupted NET.ACC with the backup\nmade at %1.\nAny updates made to the database after this time are lost.\n
 .
 Language=Polish
-The user accounts database (NET.ACC) is corrupted.  The local security\nsystem is replacing the corrupted NET.ACC with the backup\nmade at %1.\nAny updates made to the database after this time are lost.\n
+Baza danych o kontach użytkowników (NET.ACC) jest uszkodzona.  Lokalny system\nzabezpieczeń zastępuje uszkodzoną bazę (NET.ACC) kopią zapasową\nwykonaną o godzinie %1.\nWszelkie zmiany aktualizujące dokonane w bazie danych później zostaną utracone.\n
 .
 Language=Romanian
 The user accounts database (NET.ACC) is corrupted.  The local security\nsystem is replacing the corrupted NET.ACC with the backup\nmade at %1.\nAny updates made to the database after this time are lost.\n
@@ -13328,7 +13328,7 @@ Language=English
 The user accounts database (NET.ACC) is missing.  The local\nsecurity system is restoring the backup database\nmade at %1.\nAny updates made to the database made after this time are lost.\n
 .
 Language=Polish
-The user accounts database (NET.ACC) is missing.  The local\nsecurity system is restoring the backup database\nmade at %1.\nAny updates made to the database made after this time are lost.\n
+Brak bazy danych o kontach użytkowników (NET.ACC).  Lokalny system\nzabezpieczeń przywraca bazę danych używając kopii zapasowej\nwykonanej o godzinie %1.\nWszelkie zmiany aktualizujące dokonane w bazie danych później zostaną utracone.\n
 .
 Language=Romanian
 The user accounts database (NET.ACC) is missing.  The local\nsecurity system is restoring the backup database\nmade at %1.\nAny updates made to the database made after this time are lost.\n
@@ -13357,7 +13357,7 @@ Language=English
 Local security could not be started because the user accounts database\n(NET.ACC) was missing or corrupted, and no usable backup\ndatabase was present.\n\nTHE SYSTEM IS NOT SECURE.
 .
 Language=Polish
-Local security could not be started because the user accounts database\n(NET.ACC) was missing or corrupted, and no usable backup\ndatabase was present.\n\nTHE SYSTEM IS NOT SECURE.
+Nie można uruchomić lokalnego systemu zabezpieczeń, ponieważ brak\nbazy danych o kontach użytkowników (NET.ACC) lub jest ona uszkodzona\na nie ma zdatnej do użytku kopii zapasowej.\n\nSYSTEM NIE JEST BEZPIECZNY.
 .
 Language=Romanian
 Local security could not be started because the user accounts database\n(NET.ACC) was missing or corrupted, and no usable backup\ndatabase was present.\n\nTHE SYSTEM IS NOT SECURE.
@@ -13386,7 +13386,7 @@ Language=English
 Local security could not be started because an error\noccurred during initialization. The error code returned is %1.\n\nTHE SYSTEM IS NOT SECURE.\n
 .
 Language=Polish
-Local security could not be started because an error\noccurred during initialization. The error code returned is %1.\n\nTHE SYSTEM IS NOT SECURE.\n
+Nie można uruchomić lokalnego systemu zabezpieczeń, ponieważ\npodczas inicjowania wystąpił błąd. Zwrócony kod błędu to %1.\n\nSYSTEM NIE JEST BEZPIECZNY.\n
 .
 Language=Romanian
 Local security could not be started because an error\noccurred during initialization. The error code returned is %1.\n\nTHE SYSTEM IS NOT SECURE.\n
@@ -13415,7 +13415,7 @@ Language=English
 A NetWksta internal error has occurred:\n%1
 .
 Language=Polish
-A NetWksta internal error has occurred:\n%1
+Wystąpił wewnętrzny błąd NetWksta:\n%1
 .
 Language=Romanian
 A NetWksta internal error has occurred:\n%1
@@ -13444,7 +13444,7 @@ Language=English
 The redirector is out of a resource: %1.
 .
 Language=Polish
-The redirector is out of a resource: %1.
+Zabrakło następujących zasobów readresatora: %1.
 .
 Language=Romanian
 The redirector is out of a resource: %1.
@@ -13473,7 +13473,7 @@ Language=English
 A server message block (SMB) error occurred on the connection to %1.\nThe SMB header is the data.
 .
 Language=Polish
-A server message block (SMB) error occurred on the connection to %1.\nThe SMB header is the data.
+Wystąpił błąd bloku komunikatów serwera (SMB) podczas  połączenia z %1.\nPrzedstawione dane to nagłówek SMB.
 .
 Language=Romanian
 A server message block (SMB) error occurred on the connection to %1.\nThe SMB header is the data.
@@ -13502,7 +13502,7 @@ Language=English
 A virtual circuit error occurred on the session to %1.\nThe network control block (NCB) command and return code is the data.
 .
 Language=Polish
-A virtual circuit error occurred on the session to %1.\nThe network control block (NCB) command and return code is the data.
+Wystąpił błąd obwodu wirtualnego w sesji z %1.\nPrzedstawione dane to polecenie bloku sterowania siecią (NCB) i zwrócony kod.
 .
 Language=Romanian
 A virtual circuit error occurred on the session to %1.\nThe network control block (NCB) command and return code is the data.
@@ -13531,7 +13531,7 @@ Language=English
 Hanging up a stuck session to %1.
 .
 Language=Polish
-Hanging up a stuck session to %1.
+Zawieszanie zablokowanej sesji z %1.
 .
 Language=Romanian
 Hanging up a stuck session to %1.
@@ -13560,7 +13560,7 @@ Language=English
 A network control block (NCB) error occurred (%1).\nThe NCB is the data.
 .
 Language=Polish
-A network control block (NCB) error occurred (%1).\nThe NCB is the data.
+Wystąpił błąd bloku sterowania siecią (NCB) (%1).\nPrzedstawione dane to blok NCB.
 .
 Language=Romanian
 A network control block (NCB) error occurred (%1).\nThe NCB is the data.
@@ -13589,7 +13589,7 @@ Language=English
 A write operation to %1 failed.\nData may have been lost.
 .
 Language=Polish
-A write operation to %1 failed.\nData may have been lost.
+Nie powiodła się operacja zapisu na %1.\nDane mogły zostać utracone.
 .
 Language=Romanian
 A write operation to %1 failed.\nData may have been lost.
@@ -13618,7 +13618,7 @@ Language=English
 Reset of driver %1 failed to complete the network control block (NCB).\nThe NCB is the data.
 .
 Language=Polish
-Reset of driver %1 failed to complete the network control block (NCB).\nThe NCB is the data.
+Podczas resetowania sterownika %1 nie powiodło się zakończenie bloku sterowania siecią (NCB).\nPrzedstawione dane to blok NCB.
 .
 Language=Romanian
 Reset of driver %1 failed to complete the network control block (NCB).\nThe NCB is the data.
@@ -13647,7 +13647,7 @@ Language=English
 The amount of resource %1 requested was more\nthan the maximum. The maximum amount was allocated.
 .
 Language=Polish
-The amount of resource %1 requested was more\nthan the maximum. The maximum amount was allocated.
+Żądana wielkość zasobu %1 wynosiła więcej niż maksimum\nPrzydzielono maksymalną ilość.
 .
 Language=Romanian
 The amount of resource %1 requested was more\nthan the maximum. The maximum amount was allocated.
@@ -13676,7 +13676,7 @@ Language=English
 The server could not create a thread.\nThe THREADS parameter in the CONFIG.SYS file should be increased.
 .
 Language=Polish
-The server could not create a thread.\nThe THREADS parameter in the CONFIG.SYS file should be increased.
+Serwer nie może utworzyć wątku.\nNależy zwiększyć wartość parametru THREADS w pliku CONFIG.SYS.
 .
 Language=Romanian
 The server could not create a thread.\nThe THREADS parameter in the CONFIG.SYS file should be increased.
@@ -13705,7 +13705,7 @@ Language=English
 The server could not close %1.\nThe file is probably corrupted.
 .
 Language=Polish
-The server could not close %1.\nThe file is probably corrupted.
+Serwer nie może zamknąć %1.\nPlik jest prawdopodobnie uszkodzony.
 .
 Language=Romanian
 The server could not close %1.\nThe file is probably corrupted.
@@ -13734,7 +13734,7 @@ Language=English
 The replicator cannot update directory %1. It has tree integrity\nand is the current directory for some process.
 .
 Language=Polish
-The replicator cannot update directory %1. It has tree integrity\nand is the current directory for some process.
+Replikator nie może zaktualizować katalogu %1. Ma on\nintegralność drzewa i jest katalogiem bieżącym dla pewnego procesu.
 .
 Language=Romanian
 The replicator cannot update directory %1. It has tree integrity\nand is the current directory for some process.
@@ -13763,7 +13763,7 @@ Language=English
 The server cannot export directory %1 to client %2.\nIt is exported from another server.
 .
 Language=Polish
-The server cannot export directory %1 to client %2.\nIt is exported from another server.
+Serwer nie może wyeksportować katalogu %1 do klienta %2.\nKatalog ten jest eksportowany z innego serwera.
 .
 Language=Romanian
 The server cannot export directory %1 to client %2.\nIt is exported from another server.
@@ -13792,7 +13792,7 @@ Language=English
 The replication server could not update directory %2 from the source\non %3 due to error %1.
 .
 Language=Polish
-The replication server could not update directory %2 from the source\non %3 due to error %1.
+Serwer replikacji nie mógł zaktualizować katalogu %2 ze źródła\nna %3 z powodu błędu %1.
 .
 Language=Romanian
 The replication server could not update directory %2 from the source\non %3 due to error %1.
@@ -13821,7 +13821,7 @@ Language=English
 Master %1 did not send an update notice for directory %2 at the expected\ntime.
 .
 Language=Polish
-Master %1 did not send an update notice for directory %2 at the expected\ntime.
+Serwer główny %1 nie wysłał powiadomienia aktualizującego dla katalogu %2\nw oczekiwanym czasie.
 .
 Language=Romanian
 Master %1 did not send an update notice for directory %2 at the expected\ntime.
@@ -13855,12 +13855,12 @@ is not recognized. If this message appears again, contact your system\n
 administrator.
 .
 Language=Polish
-This computer could not authenticate with %2, a domain controller\n
-for domain %1, and therefore this computer might deny logon requests.\n
-This inability to authenticate might be caused by another computer on the\n
-same network using the same name or the password for this computer account\n
-is not recognized. If this message appears again, contact your system\n
-administrator.
+Nie powiodło się uwierzytelnienie tego komputera przez %2 - kontroler domeny\n
+ReactOS dla domeny %1, i dlatego ten komputer może odmawiać żądaniom logowania.\n
+Ta niezdolność do uwierzytelnienia może być spowodowana używaniem tej samej\n
+nazwy przez inny komputer znajdujący się w tej samej sieci lub nierozpoznaniem\n
+hasła dla konta tego komputera. Jeśli ten komunikat będzie się powtarzał\n
+skontaktuj się z administratorem.
 .
 Language=Romanian
 This computer could not authenticate with %2, a domain controller\n
@@ -13919,7 +13919,7 @@ Language=English
 The replicator attempted to log on at %2 as %1 and failed.
 .
 Language=Polish
-The replicator attempted to log on at %2 as %1 and failed.
+Replikator podjął próbę zalogowania się na %2 jako %1; próba ta nie powiodła się.
 .
 Language=Romanian
 The replicator attempted to log on at %2 as %1 and failed.
@@ -13948,7 +13948,7 @@ Language=English
 Network error %1 occurred.
 .
 Language=Polish
-Network error %1 occurred.
+Wystąpił błąd sieciowy %1.
 .
 Language=Romanian
 Network error %1 occurred.
@@ -13977,7 +13977,7 @@ Language=English
 Replicator limit for files in a directory has been exceeded.
 .
 Language=Polish
-Replicator limit for files in a directory has been exceeded.
+Przekroczono limit replikatora związany z liczbą plików w katalogu.
 .
 Language=Romanian
 Replicator limit for files in a directory has been exceeded.
@@ -14006,7 +14006,7 @@ Language=English
 Replicator limit for tree depth has been exceeded.
 .
 Language=Polish
-Replicator limit for tree depth has been exceeded.
+Przekroczono limit replikatora związany z głębokością drzewa.
 .
 Language=Romanian
 Replicator limit for tree depth has been exceeded.
@@ -14035,7 +14035,7 @@ Language=English
 Unrecognized message received in mailslot.
 .
 Language=Polish
-Unrecognized message received in mailslot.
+W skrzynce mailslot odebrano nierozpoznany komunikat.
 .
 Language=Romanian
 Unrecognized message received in mailslot.
@@ -14064,7 +14064,7 @@ Language=English
 System error %1 occurred.
 .
 Language=Polish
-System error %1 occurred.
+Wystąpił błąd systemu %1.
 .
 Language=Romanian
 System error %1 occurred.
@@ -14093,7 +14093,7 @@ Language=English
 Cannot log on. User is currently logged on and argument TRYUSER\nis set to NO.
 .
 Language=Polish
-Cannot log on. User is currently logged on and argument TRYUSER\nis set to NO.
+Nie można się zalogować. Użytkownik jest obecnie zalogowany\na argument TRYUSER ma wartość NO.
 .
 Language=Romanian
 Cannot log on. User is currently logged on and argument TRYUSER\nis set to NO.
@@ -14122,7 +14122,7 @@ Language=English
 IMPORT path %1 cannot be found.
 .
 Language=Polish
-IMPORT path %1 cannot be found.
+Nie można odnaleźć ścieżki IMPORT %1.
 .
 Language=Romanian
 IMPORT path %1 cannot be found.
@@ -14151,7 +14151,7 @@ Language=English
 EXPORT path %1 cannot be found.
 .
 Language=Polish
-EXPORT path %1 cannot be found.
+Nie można odnaleźć ścieżki EXPORT %1.
 .
 Language=Romanian
 EXPORT path %1 cannot be found.
@@ -14180,7 +14180,7 @@ Language=English
 Replicator failed to update signal file in directory %2 due to\n%1 system error.
 .
 Language=Polish
-Replicator failed to update signal file in directory %2 due to\n%1 system error.
+Replikator nie może zaktualizować pliku sygnału w katalogu %2\nz powodu błędu systemu %1.
 .
 Language=Romanian
 Replicator failed to update signal file in directory %2 due to\n%1 system error.
@@ -14209,7 +14209,7 @@ Language=English
 Disk Fault Tolerance Error\n\n%1
 .
 Language=Polish
-Disk Fault Tolerance Error\n\n%1
+Błąd odporności na awarie dysku\n\n%1
 .
 Language=Romanian
 Disk Fault Tolerance Error\n\n%1
@@ -14238,7 +14238,7 @@ Language=English
 Replicator could not access %2\non %3 due to system error %1.
 .
 Language=Polish
-Replicator could not access %2\non %3 due to system error %1.
+Replikator nie uzyskał dostępu do %2\nna %3 z powodu błędu systemu %1.
 .
 Language=Romanian
 Replicator could not access %2\non %3 due to system error %1.
@@ -14267,7 +14267,7 @@ Language=English
 The primary domain controller for domain %1 has apparently failed.
 .
 Language=Polish
-The primary domain controller for domain %1 has apparently failed.
+Prawdopodobnie nie powiodła się operacja podstawowego kontrolera domeny dla domeny %1.
 .
 Language=Romanian
 The primary domain controller for domain %1 has apparently failed.
@@ -14296,7 +14296,7 @@ Language=English
 Changing machine account password for account %1 failed with\nthe following error: %n%2
 .
 Language=Polish
-Changing machine account password for account %1 failed with\nthe following error: %n%2
+Zmiana hasła konta komputera dla konta %1 nie powiodła się z powodu następującego błędu: %n%2
 .
 Language=Romanian
 Changing machine account password for account %1 failed with\nthe following error: %n%2
@@ -14325,7 +14325,7 @@ Language=English
 An error occurred while updating the logon or logoff information for %1.
 .
 Language=Polish
-An error occurred while updating the logon or logoff information for %1.
+Podczas aktualizacji informacji logowania lub wylogowywania dla %1 wystąpił błąd.
 .
 Language=Romanian
 An error occurred while updating the logon or logoff information for %1.
@@ -14354,7 +14354,7 @@ Language=English
 An error occurred while synchronizing with primary domain controller %1
 .
 Language=Polish
-An error occurred while synchronizing with primary domain controller %1
+Podczas synchronizacji z podstawowym kontrolerem domeny %1 wystąpił błąd
 .
 Language=Romanian
 An error occurred while synchronizing with primary domain controller %1
@@ -14386,10 +14386,10 @@ Either upgrade the Domain Controller or set the RequireSignOrSeal\n
 registry entry on this machine to 0.
 .
 Language=Polish
-The session setup to the Domain Controller %1 for the domain %2 failed\n
-because %1 does not support signing or sealing the Netlogon session.\n\n
-Either upgrade the Domain Controller or set the RequireSignOrSeal\n
-registry entry on this machine to 0.
+Ustawienie sesji kontrolera %1 domeny Windows NT lub Windows 2000 dla domeny %2\n
+nie powiodło się, ponieważ %1 nie obsługuje podpisywania lub pieczętowania sesji Netlogon.\n\n
+Uaktualnij kontroler domeny albo ustaw wpis rejestru\n
+RequireSignOrSeal na tym komputerze na 0.
 .
 Language=Romanian
 The session setup to the Domain Controller %1 for the domain %2 failed\n
@@ -14436,7 +14436,7 @@ Language=English
 A power failure was detected at the server.
 .
 Language=Polish
-A power failure was detected at the server.
+Na serwerze wykryto awarię zasilania.
 .
 Language=Romanian
 A power failure was detected at the server.
@@ -14465,7 +14465,7 @@ Language=English
 The UPS service performed server shut down.
 .
 Language=Polish
-The UPS service performed server shut down.
+Usługa UPS przeprowadziła zamknięcie serwera.
 .
 Language=Romanian
 The UPS service performed server shut down.
@@ -14494,7 +14494,7 @@ Language=English
 The UPS service did not complete execution of the\nuser specified shut down command file.
 .
 Language=Polish
-The UPS service did not complete execution of the\nuser specified shut down command file.
+Usługa UPS nie zakończyła wykonywania określonego przez użytkownika\npliku poleceń zamykania systemu.
 .
 Language=Romanian
 The UPS service did not complete execution of the\nuser specified shut down command file.
@@ -14523,7 +14523,7 @@ Language=English
 The UPS driver could not be opened.  The error code is\nthe data.
 .
 Language=Polish
-The UPS driver could not be opened.  The error code is\nthe data.
+Nie można otworzyć sterownika UPS.  Przedstawione dane to\nkod błędu.
 .
 Language=Romanian
 The UPS driver could not be opened.  The error code is\nthe data.
@@ -14552,7 +14552,7 @@ Language=English
 Power has been restored.
 .
 Language=Polish
-Power has been restored.
+Przywrócono zasilanie.
 .
 Language=Romanian
 Power has been restored.
@@ -14581,7 +14581,7 @@ Language=English
 There is a problem with a configuration of user specified\nshut down command file.
 .
 Language=Polish
-There is a problem with a configuration of user specified\nshut down command file.
+Wystąpił problem z konfiguracją określonego przez użytkownika pliku\npoleceń zamykania systemu.
 .
 Language=Romanian
 There is a problem with a configuration of user specified\nshut down command file.
@@ -14610,7 +14610,7 @@ Language=English
 The UPS service failed to execute a user specified shutdown\ncommand file %1.  The error code is the data.
 .
 Language=Polish
-The UPS service failed to execute a user specified shutdown\ncommand file %1.  The error code is the data.
+Usługa UPS: nie powiodło się wykonanie określonego przez użytkownika\npliku poleceń zamykania systemu %1.  Przedstawione dane to kod błędu.
 .
 Language=Romanian
 The UPS service failed to execute a user specified shutdown\ncommand file %1.  The error code is the data.
@@ -14639,7 +14639,7 @@ Language=English
 Initialization failed because of an invalid or missing\nparameter in the configuration file %1.
 .
 Language=Polish
-Initialization failed because of an invalid or missing\nparameter in the configuration file %1.
+Zainicjowanie nie powiodło się z powodu nieprawidłowego lub nieobecnego\nparametru w pliku konfiguracyjnym %1.
 .
 Language=Romanian
 Initialization failed because of an invalid or missing\nparameter in the configuration file %1.
@@ -14668,7 +14668,7 @@ Language=English
 Initialization failed because of an invalid line in the\nconfiguration file %1. The invalid line is the data.
 .
 Language=Polish
-Initialization failed because of an invalid line in the\nconfiguration file %1. The invalid line is the data.
+Zainicjowanie nie powiodło się z powodu nieprawidłowego wiersza w pliku\nkonfiguracyjnym %1.  Przedstawione dane to nieprawidłowy wiersz.
 .
 Language=Romanian
 Initialization failed because of an invalid line in the\nconfiguration file %1. The invalid line is the data.
@@ -14697,7 +14697,7 @@ Language=English
 Initialization failed because of an error in the configuration\nfile %1.
 .
 Language=Polish
-Initialization failed because of an error in the configuration\nfile %1.
+Initialization failed because of an error in the configuration\nw pliku konfiguracyjnym %1.
 .
 Language=Romanian
 Initialization failed because of an error in the configuration\nfile %1.
@@ -14726,7 +14726,7 @@ Language=English
 The file %1 has been changed after initialization.\nThe boot-block loading was temporarily terminated.
 .
 Language=Polish
-The file %1 has been changed after initialization.\nThe boot-block loading was temporarily terminated.
+Plik %1 uległ zmieniony po zainicjowaniu.\nŁadowanie bloku rozruchu zostało tymczasowo zakończone.
 .
 Language=Romanian
 The file %1 has been changed after initialization.\nThe boot-block loading was temporarily terminated.
@@ -14755,7 +14755,7 @@ Language=English
 The files do not fit to the boot-block configuration\nfile %1. Change the BASE and ORG definitions or the order\nof the files.
 .
 Language=Polish
-The files do not fit to the boot-block configuration\nfile %1. Change the BASE and ORG definitions or the order\nof the files.
+Te pliki nie pasują do pliku konfiguracyjnego bloku rozruchu %1.\nZmień definicje BASE i ORG albo kolejność tych plików.
 .
 Language=Romanian
 The files do not fit to the boot-block configuration\nfile %1. Change the BASE and ORG definitions or the order\nof the files.
@@ -14784,7 +14784,7 @@ Language=English
 Initialization failed because the dynamic-link\nlibrary %1 returned an incorrect version number.
 .
 Language=Polish
-Initialization failed because the dynamic-link\nlibrary %1 returned an incorrect version number.
+Zainicjowanie nie powiodło się, ponieważ biblioteka dołączana\ndynamicznie %1 zwróciła nieprawidłowy numer wersji.
 .
 Language=Romanian
 Initialization failed because the dynamic-link\nlibrary %1 returned an incorrect version number.
@@ -14813,7 +14813,7 @@ Language=English
 There was an unrecoverable error in the dynamic-\nlink library of the service.
 .
 Language=Polish
-There was an unrecoverable error in the dynamic-\nlink library of the service.
+W dynamicznie dołączanej bibliotece (DLL) tej usługi\nwystąpił nieodwracalny błąd.
 .
 Language=Romanian
 There was an unrecoverable error in the dynamic-\nlink library of the service.
@@ -14842,7 +14842,7 @@ Language=English
 The system returned an unexpected error code.\nThe error code is the data.
 .
 Language=Polish
-The system returned an unexpected error code.\nThe error code is the data.
+System zwrócił nieoczekiwany kod błędu.\nPrzedstawione dane to kod błędu.
 .
 Language=Romanian
 The system returned an unexpected error code.\nThe error code is the data.
@@ -14871,7 +14871,7 @@ Language=English
 The fault-tolerance error log file, LANROOT\\LOGS\\FT.LOG,\nis more than 64K.
 .
 Language=Polish
-The fault-tolerance error log file, LANROOT\\LOGS\\FT.LOG,\nis more than 64K.
+Plik dziennika odporności na awarie, LANROOT\\LOGS\\FT.LOG,\njest większy niż 64 KB.
 .
 Language=Romanian
 The fault-tolerance error log file, LANROOT\\LOGS\\FT.LOG,\nis more than 64K.
@@ -14902,9 +14902,9 @@ update in progress bit set upon opening, which means that the\n
 system crashed while working on the error log.
 .
 Language=Polish
-The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
-update in progress bit set upon opening, which means that the\n
-system crashed while working on the error log.
+W pliku dziennika odporności na awarie, LANROOT\\LOGS\\FT.LOG,\n
+miał w chwili otwarcia ustawiony bit trwającej aktualizacji, co oznacza\n
+że podczas operacji na dzienniku błędów nastąpiła awaria systemu.
 .
 Language=Romanian
 The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
@@ -14945,7 +14945,7 @@ Language=English
 This computer has been successfully joined to domain '%1'.
 .
 Language=Polish
-This computer has been successfully joined to domain '%1'.
+Ten komputer został pomyślnie przyłączony do domeny '%1'.
 .
 Language=Romanian
 This computer has been successfully joined to domain '%1'.
@@ -14974,7 +14974,7 @@ Language=English
 This computer has been successfully joined to workgroup '%1'.
 .
 Language=Polish
-This computer has been successfully joined to workgroup '%1'.
+Ten komputer został pomyślnie przyłączony do grupy roboczej '%1'.
 .
 Language=Romanian
 This computer has been successfully joined to workgroup '%1'.
@@ -15037,7 +15037,7 @@ Language=English
 Remote IPC %0
 .
 Language=Polish
-Remote IPC %0
+Zdalne wywołanie IPC %0
 .
 Language=Romanian
 Remote IPC %0
@@ -15066,7 +15066,7 @@ Language=English
 Remote Admin %0
 .
 Language=Polish
-Remote Admin %0
+Administracja zdalna %0
 .
 Language=Romanian
 Remote Admin %0
@@ -15095,7 +15095,7 @@ Language=English
 Logon server share %0
 .
 Language=Polish
-Logon server share %0
+Udział serwera logowania %0
 .
 Language=Romanian
 Logon server share %0
@@ -15124,7 +15124,7 @@ Language=English
 A network error occurred. %0
 .
 Language=Polish
-A network error occurred. %0
+Wystąpił błąd sieciowy. %0
 .
 Language=Romanian
 A network error occurred. %0
@@ -15153,7 +15153,7 @@ Language=English
 There is not enough memory to start the Workstation service.
 .
 Language=Polish
-There is not enough memory to start the Workstation service.
+Za mało dostępnej pamięci do uruchomienia usługi Stacja robocza.
 .
 Language=Romanian
 There is not enough memory to start the Workstation service.
@@ -15182,7 +15182,7 @@ Language=English
 An error occurred when reading the NETWORKS entry in the LANMAN.INI file.
 .
 Language=Polish
-An error occurred when reading the NETWORKS entry in the LANMAN.INI file.
+Wystąpił błąd podczas odczytywania wpisu NETWORKS w pliku LANMAN.INI.
 .
 Language=Romanian
 An error occurred when reading the NETWORKS entry in the LANMAN.INI file.
@@ -15211,7 +15211,7 @@ Language=English
 This is an invalid argument: %1.
 .
 Language=Polish
-This is an invalid argument: %1.
+To jest nieprawidłowy argument: %1.
 .
 Language=Romanian
 This is an invalid argument: %1.
@@ -15240,7 +15240,7 @@ Language=English
 The %1 NETWORKS entry in the LANMAN.INI file has a\nsyntax error and will be ignored.
 .
 Language=Polish
-The %1 NETWORKS entry in the LANMAN.INI file has a\nsyntax error and will be ignored.
+We wpisie %1 NETWORKS w pliku LANMAN.INI występuje\nbłąd składniowy; wpis ten zostanie zignorowany.
 .
 Language=Romanian
 The %1 NETWORKS entry in the LANMAN.INI file has a\nsyntax error and will be ignored.
@@ -15269,7 +15269,7 @@ Language=English
 There are too many NETWORKS entries in the LANMAN.INI file.
 .
 Language=Polish
-There are too many NETWORKS entries in the LANMAN.INI file.
+W pliku LANMAN.INI jest za dużo wpisów NETWORKS.
 .
 Language=Romanian
 There are too many NETWORKS entries in the LANMAN.INI file.
@@ -15298,7 +15298,7 @@ Language=English
 An error occurred when opening network\ndevice driver %1 = %2.
 .
 Language=Polish
-An error occurred when opening network\ndevice driver %1 = %2.
+Wystąpił błąd podczas otwierania\nsterownika urządzenia sieciowego %1 = %2.
 .
 Language=Romanian
 An error occurred when opening network\ndevice driver %1 = %2.
@@ -15327,7 +15327,7 @@ Language=English
 Device driver %1 sent a bad BiosLinkage response.
 .
 Language=Polish
-Device driver %1 sent a bad BiosLinkage response.
+Sterownik urządzenia %1 wysłał złą odpowiedź BiosLinkage.
 .
 Language=Romanian
 Device driver %1 sent a bad BiosLinkage response.
@@ -15356,7 +15356,7 @@ Language=English
 The program cannot be used with this operating system.
 .
 Language=Polish
-The program cannot be used with this operating system.
+Nie można użyć tego programu w tym systemie operacyjnym.
 .
 Language=Romanian
 The program cannot be used with this operating system.
@@ -15385,7 +15385,7 @@ Language=English
 The redirector is already installed.
 .
 Language=Polish
-The redirector is already installed.
+Readresator jest już zainstalowany.
 .
 Language=Romanian
 The redirector is already installed.
@@ -15414,7 +15414,7 @@ Language=English
 Installing NETWKSTA.SYS Version %1.%2.%3  (%4)\n
 .
 Language=Polish
-Installing NETWKSTA.SYS Version %1.%2.%3  (%4)\n
+Instalowanie NETWKSTA.SYS wersja %1.%2.%3  (%4)\n
 .
 Language=Romanian
 Installing NETWKSTA.SYS Version %1.%2.%3  (%4)\n
@@ -15444,8 +15444,8 @@ There was an error installing NETWKSTA.SYS.\n\n
 Press ENTER to continue.
 .
 Language=Polish
-There was an error installing NETWKSTA.SYS.\n\n
-Press ENTER to continue.
+Wystąpił błąd podczas instalowania pliku NETWKSTA.SYS.\n\n
+Naciśnij klawisz ENTER, aby kontynuować.
 .
 Language=Romanian
 There was an error installing NETWKSTA.SYS.\n\n
@@ -15480,7 +15480,7 @@ Language=English
 Resolver linkage problem.
 .
 Language=Polish
-Resolver linkage problem.
+Problem z połączeniem programu rozpoznawania nazw.
 .
 Language=Romanian
 Resolver linkage problem.
@@ -15510,8 +15510,8 @@ Your logon time at %1 ends at %2.\n
 Please clean up and log off.
 .
 Language=Polish
-Your logon time at %1 ends at %2.\n
-Please clean up and log off.
+Czas logowania na %1 kończy się o %2.\n
+Zakończ pracę programów i wyloguj się.
 .
 Language=Romanian
 Your logon time at %1 ends at %2.\n
@@ -15546,7 +15546,7 @@ Language=English
 You will be automatically disconnected at %1.
 .
 Language=Polish
-You will be automatically disconnected at %1.
+Nastąpi automatyczne odłączenie o %1.
 .
 Language=Romanian
 You will be automatically disconnected at %1.
@@ -15575,7 +15575,7 @@ Language=English
 Your logon time at %1 has ended.
 .
 Language=Polish
-Your logon time at %1 has ended.
+Czas logowania na %1 zakończył się.
 .
 Language=Romanian
 Your logon time at %1 has ended.
@@ -15604,7 +15604,7 @@ Language=English
 Your logon time at %1 ended at %2.
 .
 Language=Polish
-Your logon time at %1 ended at %2.
+Czas logowania na %1 zakończył się o %2.
 .
 Language=Romanian
 Your logon time at %1 ended at %2.
@@ -15636,10 +15636,9 @@ disconnected, and any open files or devices you\n
 have open may lose data.
 .
 Language=Polish
-WARNING: You have until %1 to logoff. If you\n
-have not logged off at this time, your session will be\n
-disconnected, and any open files or devices you\n
-have open may lose data.
+OSTRZEŻENIE: Masz czas na wylogowanie się do %1. Jeśli tego\n
+nie zrobisz, sesja zostanie odłączona, a dane we wszystkich\n
+otwartych plikach i urządzeniach mogą być utracone\n
 .
 Language=Romanian
 WARNING: You have until %1 to logoff. If you\n
@@ -15687,8 +15686,8 @@ WARNING: You must log off at %1 now.  You have\n
 two minutes to log off, or you will be disconnected.
 .
 Language=Polish
-WARNING: You must log off at %1 now.  You have\n
-two minutes to log off, or you will be disconnected.
+OSTRZEŻENIE: Musisz wylogować się o %1. Masz na to jeszcze\n
+dwie minuty, w przeciwnym razie odłączenie nastąpi samoczynnie.
 .
 Language=Romanian
 WARNING: You must log off at %1 now.  You have\n
@@ -15724,8 +15723,8 @@ You have open files or devices, and a forced\n
 disconnection may cause you to lose data.
 .
 Language=Polish
-You have open files or devices, and a forced\n
-disconnection may cause you to lose data.
+Masz otwarte pliki lub urządzenia, a wymuszone odłączenie\n
+może spowodować utratę danych.
 .
 Language=Romanian
 You have open files or devices, and a forced\n
@@ -15760,7 +15759,7 @@ Language=English
 Default Share for Internal Use %0
 .
 Language=Polish
-Default Share for Internal Use %0
+Domyślny udział do użytku wewnętrznego %0
 .
 Language=Romanian
 Default Share for Internal Use %0
@@ -15789,7 +15788,7 @@ Language=English
 Messenger Service %0
 .
 Language=Polish
-Messenger Service %0
+Usługa Posłaniec %0
 .
 Language=Romanian
 Messenger Service %0
@@ -15852,7 +15851,7 @@ Language=English
 You used an invalid option.
 .
 Language=Polish
-You used an invalid option.
+Została użyta nieprawidłowa opcja.
 .
 Language=Romanian
 You used an invalid option.
@@ -15910,7 +15909,7 @@ Language=English
 The command contains an invalid number of arguments.
 .
 Language=Polish
-The command contains an invalid number of arguments.
+Polecenie zawiera nieprawidłową liczbę argumentów.
 .
 Language=Romanian
 The command contains an invalid number of arguments.
@@ -15939,7 +15938,7 @@ Language=English
 The command completed with one or more errors.
 .
 Language=Polish
-The command completed with one or more errors.
+Zakończono wykonywanie polecenia, przy czym wystąpił przynajmniej jeden błąd.
 .
 Language=Romanian
 The command completed with one or more errors.
@@ -15968,7 +15967,7 @@ Language=English
 You used an option with an invalid value.
 .
 Language=Polish
-You used an option with an invalid value.
+Użyto opcji o nieprawidłowej wartości.
 .
 Language=Romanian
 You used an option with an invalid value.
@@ -15997,7 +15996,7 @@ Language=English
 The option %1 is unknown.
 .
 Language=Polish
-The option %1 is unknown.
+Opcja %1 jest nieznana.
 .
 Language=Romanian
 The option %1 is unknown.
@@ -16026,7 +16025,7 @@ Language=English
 Option %1 is ambiguous.
 .
 Language=Polish
-Option %1 is ambiguous.
+Opcja %1 jest niejednoznaczna.
 .
 Language=Romanian
 Option %1 is ambiguous.
@@ -16055,7 +16054,7 @@ Language=English
 A command was used with conflicting switches.
 .
 Language=Polish
-A command was used with conflicting switches.
+Zostało użyte polecenie o sprzecznych przełącznikach.
 .
 Language=Romanian
 A command was used with conflicting switches.
@@ -16084,7 +16083,7 @@ Language=English
 Could not find subprogram %1.
 .
 Language=Polish
-Could not find subprogram %1.
+Nie można odnaleźć podprogramu %1.
 .
 Language=Romanian
 Could not find subprogram %1.
@@ -16113,7 +16112,7 @@ Language=English
 The software requires a newer version of the operating\nsystem.
 .
 Language=Polish
-The software requires a newer version of the operating\nsystem.
+To oprogramowanie wymaga nowszej wersji systemu\noperacyjnego.
 .
 Language=Romanian
 The software requires a newer version of the operating\nsystem.
@@ -16142,7 +16141,7 @@ Language=English
 More data is available than can be returned by the operating\nsystem.
 .
 Language=Polish
-More data is available than can be returned by the operating\nsystem.
+Dostępnych jest więcej danych niż może zwrócić system ReactOS.
 .
 Language=Romanian
 More data is available than can be returned by the operating\nsystem.
@@ -16171,7 +16170,7 @@ Language=English
 More help is available by typing NET HELPMSG %1.
 .
 Language=Polish
-More help is available by typing NET HELPMSG %1.
+Dostępne są dalsze informacje Pomocy; aby je uzyskać, wpisz NET HELPMSG %1.
 .
 Language=Romanian
 More help is available by typing NET HELPMSG %1.
@@ -16200,7 +16199,7 @@ Language=English
 The command can be used only on a Domain Controller.
 .
 Language=Polish
-The command can be used only on a Domain Controller.
+Tego polecenia można używać tylko na kontrolerze domeny systemu ReactOS.
 .
 Language=Romanian
 The command can be used only on a Domain Controller.
@@ -16229,7 +16228,7 @@ Language=English
 This command cannot be used on a Domain Controller.
 .
 Language=Polish
-This command cannot be used on a Domain Controller.
+Tego polecenia nie można używać na kontrolerze domeny systemu ReactOS.
 .
 Language=Romanian
 This command cannot be used on a Domain Controller.
@@ -16258,7 +16257,7 @@ Language=English
 These services are started:
 .
 Language=Polish
-These services are started:
+Uruchomiono następujące usługi systemu ReactOS:
 .
 Language=Romanian
 These services are started:
@@ -16287,7 +16286,7 @@ Language=English
 The %1 service is not started.
 .
 Language=Polish
-The %1 service is not started.
+Usługa %1 nie została uruchomiona.
 .
 Language=Romanian
 The %1 service is not started.
@@ -16316,7 +16315,7 @@ Language=English
 The %1 service is starting%0
 .
 Language=Polish
-The %1 service is starting%0
+Usługa %1 jest właśnie uruchamiana%0
 .
 Language=Romanian
 The %1 service is starting%0
@@ -16345,7 +16344,7 @@ Language=English
 The %1 service could not be started.
 .
 Language=Polish
-The %1 service could not be started.
+Nie można uruchomić usługi %1.
 .
 Language=Romanian
 The %1 service could not be started.
@@ -16374,7 +16373,7 @@ Language=English
 The %1 service was started successfully.
 .
 Language=Polish
-The %1 service was started successfully.
+Pomyślnie uruchomiono usługę %1.
 .
 Language=Romanian
 The %1 service was started successfully.
@@ -16403,7 +16402,7 @@ Language=English
 Stopping the Workstation service also stops the Server service.
 .
 Language=Polish
-Stopping the Workstation service also stops the Server service.
+Zatrzymanie usługi Stacja robocza spowoduje także zatrzymanie usługi Serwer.
 .
 Language=Romanian
 Stopping the Workstation service also stops the Server service.
@@ -16432,7 +16431,7 @@ Language=English
 The workstation has open files.
 .
 Language=Polish
-The workstation has open files.
+Na stacji roboczej są otwarte pliki.
 .
 Language=Romanian
 The workstation has open files.
@@ -16461,7 +16460,7 @@ Language=English
 The %1 service is stopping%0
 .
 Language=Polish
-The %1 service is stopping%0
+Usługa %1 jest właśnie zatrzymywana%0
 .
 Language=Romanian
 The %1 service is stopping%0
@@ -16490,7 +16489,7 @@ Language=English
 The %1 service could not be stopped.
 .
 Language=Polish
-The %1 service could not be stopped.
+Nie można zatrzymać usługi %1.
 .
 Language=Romanian
 The %1 service could not be stopped.
@@ -16519,7 +16518,7 @@ Language=English
 The %1 service was stopped successfully.
 .
 Language=Polish
-The %1 service was stopped successfully.
+Usługa %1 została zatrzymana pomyślnie.
 .
 Language=Romanian
 The %1 service was stopped successfully.
@@ -16548,7 +16547,7 @@ Language=English
 The following services are dependent on the %1 service.\nStopping the %1 service will also stop these services.
 .
 Language=Polish
-The following services are dependent on the %1 service.\nStopping the %1 service will also stop these services.
+Następujące usługi są zależne od usługi %1.\nZatrzymanie usługi %1 spowoduje także zatrzymanie tych usług.
 .
 Language=Romanian
 The following services are dependent on the %1 service.\nStopping the %1 service will also stop these services.
@@ -16577,7 +16576,7 @@ Language=English
 The service is starting or stopping.  Please try again later.
 .
 Language=Polish
-The service is starting or stopping.  Please try again later.
+Usługa jest właśnie uruchamiana lub zatrzymywana.  Spróbuj ponownie później.
 .
 Language=Romanian
 The service is starting or stopping.  Please try again later.
@@ -16606,7 +16605,7 @@ Language=English
 The service did not report an error.
 .
 Language=Polish
-The service did not report an error.
+Usługa nie zaraportowała błędu.
 .
 Language=Romanian
 The service did not report an error.
@@ -16635,7 +16634,7 @@ Language=English
 An error occurred controlling the device.
 .
 Language=Polish
-An error occurred controlling the device.
+Podczas sterowania urządzeniem wystąpił błąd.
 .
 Language=Romanian
 An error occurred controlling the device.
@@ -16664,7 +16663,7 @@ Language=English
 The %1 service was continued successfully.
 .
 Language=Polish
-The %1 service was continued successfully.
+Pomyślnie kontynuowano działanie usługi %1.
 .
 Language=Romanian
 The %1 service was continued successfully.
@@ -16693,7 +16692,7 @@ Language=English
 The %1 service was paused successfully.
 .
 Language=Polish
-The %1 service was paused successfully.
+Pomyślnie wstrzymano działanie usługi %1.
 .
 Language=Romanian
 The %1 service was paused successfully.
@@ -16722,7 +16721,7 @@ Language=English
 The %1 service failed to resume.
 .
 Language=Polish
-The %1 service failed to resume.
+Wznowienie działania usługi %1 nie powiodło się.
 .
 Language=Romanian
 The %1 service failed to resume.
@@ -16751,7 +16750,7 @@ Language=English
 The %1 service failed to pause.
 .
 Language=Polish
-The %1 service failed to pause.
+Wstrzymanie działania usługi %1 nie powiodło się.
 .
 Language=Romanian
 The %1 service failed to pause.
@@ -16780,7 +16779,7 @@ Language=English
 The %1 service continue is pending%0
 .
 Language=Polish
-The %1 service continue is pending%0
+Trwa oczekiwanie na wznowienie działania usługi %1%0
 .
 Language=Romanian
 The %1 service continue is pending%0
@@ -16809,7 +16808,7 @@ Language=English
 The %1 service pause is pending%0
 .
 Language=Polish
-The %1 service pause is pending%0
+Trwa oczekiwanie na wstrzymanie działania usługi %1%0
 .
 Language=Romanian
 The %1 service pause is pending%0
@@ -16838,7 +16837,7 @@ Language=English
 %1 was continued successfully.
 .
 Language=Polish
-%1 was continued successfully.
+Pomyślnie wznowiono działanie usługi %1.
 .
 Language=Romanian
 %1 was continued successfully.
@@ -16867,7 +16866,7 @@ Language=English
 %1 was paused successfully.
 .
 Language=Polish
-%1 was paused successfully.
+Pomyślnie wstrzymano działanie usługi %1.
 .
 Language=Romanian
 %1 was paused successfully.
@@ -16896,7 +16895,7 @@ Language=English
 The %1 service has been started by another process and is pending.%0
 .
 Language=Polish
-The %1 service has been started by another process and is pending.%0
+Usługa %1 została uruchomiona przez inny proces i jest w stanie oczekiwania.%0
 .
 Language=Romanian
 The %1 service has been started by another process and is pending.%0
@@ -16925,7 +16924,7 @@ Language=English
 A service specific error occurred: %1.
 .
 Language=Polish
-A service specific error occurred: %1.
+Wystąpił błąd specyficzny dla usługi: %1.
 .
 Language=Romanian
 A service specific error occurred: %1.
@@ -16955,7 +16954,7 @@ Language=English
 These workstations have sessions on this server:
 .
 Language=Polish
-These workstations have sessions on this server:
+Te stacje robocze mają sesje na tym serwerze:
 .
 Language=Romanian
 These workstations have sessions on this server:
@@ -16984,7 +16983,7 @@ Language=English
 These workstations have sessions with open files on this server:
 .
 Language=Polish
-These workstations have sessions with open files on this server:
+Te stacje robocze mają sesje z otwartymi plikami na tym serwerze:
 .
 Language=Romanian
 These workstations have sessions with open files on this server:
@@ -17013,7 +17012,7 @@ Language=English
 The message alias is forwarded.
 .
 Language=Polish
-The message alias is forwarded.
+Alias komunikatu został przesłany dalej.
 .
 Language=Romanian
 The message alias is forwarded.
@@ -17042,7 +17041,7 @@ Language=English
 You have these remote connections:
 .
 Language=Polish
-You have these remote connections:
+Masz następujące połączenia zdalne:
 .
 Language=Romanian
 You have these remote connections:
@@ -17071,7 +17070,7 @@ Language=English
 Continuing will cancel the connections.
 .
 Language=Polish
-Continuing will cancel the connections.
+Kontynuowanie działania spowoduje anulowanie tych połączeń.
 .
 Language=Romanian
 Continuing will cancel the connections.
@@ -17100,7 +17099,7 @@ Language=English
 The session from %1 has open files.
 .
 Language=Polish
-The session from %1 has open files.
+Sesja z %1 ma otwarte pliki.
 .
 Language=Romanian
 The session from %1 has open files.
@@ -17129,7 +17128,7 @@ Language=English
 New connections will be remembered.
 .
 Language=Polish
-New connections will be remembered.
+Nowe połączenia zostaną zapamiętane.
 .
 Language=Romanian
 New connections will be remembered.
@@ -17158,7 +17157,7 @@ Language=English
 New connections will not be remembered.
 .
 Language=Polish
-New connections will not be remembered.
+Nowe połączenia nie zostaną zapamiętane.
 .
 Language=Romanian
 New connections will not be remembered.
@@ -17187,7 +17186,7 @@ Language=English
 An error occurred while saving your profile. The state of your remembered connections has not changed.
 .
 Language=Polish
-An error occurred while saving your profile. The state of your remembered connections has not changed.
+Wystąpił błąd podczas zapisywania profilu. Stan zapamiętanych połączeń nie zmienił się.
 .
 Language=Romanian
 An error occurred while saving your profile. The state of your remembered connections has not changed.
@@ -17216,7 +17215,7 @@ Language=English
 An error occurred while reading your profile.
 .
 Language=Polish
-An error occurred while reading your profile.
+Wystąpił błąd podczas odczytywania profilu.
 .
 Language=Romanian
 An error occurred while reading your profile.
@@ -17245,7 +17244,7 @@ Language=English
 An error occurred while restoring the connection to %1.
 .
 Language=Polish
-An error occurred while restoring the connection to %1.
+Wystąpił błąd podczas odtwarzania połączenia z %1.
 .
 Language=Romanian
 An error occurred while restoring the connection to %1.
@@ -17274,7 +17273,7 @@ Language=English
 No network services are started.
 .
 Language=Polish
-No network services are started.
+Nie uruchomiono żadnych usług sieciowych.
 .
 Language=Romanian
 No network services are started.
@@ -17303,7 +17302,7 @@ Language=English
 There are no entries in the list.
 .
 Language=Polish
-There are no entries in the list.
+Na liście nie ma żadnych wpisów.
 .
 Language=Romanian
 There are no entries in the list.
@@ -17332,7 +17331,7 @@ Language=English
 Users have open files on %1.  Continuing the operation will force the files closed.
 .
 Language=Polish
-Users have open files on %1.  Continuing the operation will force the files closed.
+Użytkownicy mają na %1 otwarte pliki.  Kontynuowanie tej operacji wymusi zamknięcie tych plików.
 .
 Language=Romanian
 Users have open files on %1.  Continuing the operation will force the files closed.
@@ -17361,7 +17360,7 @@ Language=English
 The Workstation service is already running. The operating system will ignore command options for the workstation.
 .
 Language=Polish
-The Workstation service is already running. The operating system will ignore command options for the workstation.
+Usługa Stacja robocza jest już uruchomiona.  System ReactOS będzie ignorował opcje poleceń dla stacji roboczej.
 .
 Language=Romanian
 The Workstation service is already running. The operating system will ignore command options for the workstation.
@@ -17390,7 +17389,7 @@ Language=English
 There are open files and/or incomplete directory searches pending on the connection to %1.
 .
 Language=Polish
-There are open files and/or incomplete directory searches pending on the connection to %1.
+W połączeniu z %1 są otwarte pliki i/lub oczekujące na dokończenie operacje przeszukiwania katalogów.
 .
 Language=Romanian
 There are open files and/or incomplete directory searches pending on the connection to %1.
@@ -17419,7 +17418,7 @@ Language=English
 The request will be processed at a domain controller for domain %1.
 .
 Language=Polish
-The request will be processed at a domain controller for domain %1.
+Żądanie będzie przetwarzane na kontrolerze domeny dla domeny %1.
 .
 Language=Romanian
 The request will be processed at a domain controller for domain %1.
@@ -17448,7 +17447,7 @@ Language=English
 The shared queue cannot be deleted while a print job is being spooled to the queue.
 .
 Language=Polish
-The shared queue cannot be deleted while a print job is being spooled to the queue.
+Nie można usunąć udostępnionej kolejki, gdy jest do niej buforowane zadanie drukowania.
 .
 Language=Romanian
 The shared queue cannot be deleted while a print job is being spooled to the queue.
@@ -17477,7 +17476,7 @@ Language=English
 %1 has a remembered connection to %2.
 .
 Language=Polish
-%1 has a remembered connection to %2.
+Połączenie z %1 do %2 jest zapamiętane.
 .
 Language=Romanian
 %1 has a remembered connection to %2.
@@ -17506,7 +17505,7 @@ Language=English
 An error occurred while opening the Help file.
 .
 Language=Polish
-An error occurred while opening the Help file.
+Wystąpił błąd podczas otwierania pliku Pomocy.
 .
 Language=Romanian
 An error occurred while opening the Help file.
@@ -17535,7 +17534,7 @@ Language=English
 The Help file is empty.
 .
 Language=Polish
-The Help file is empty.
+Plik Pomocy jest pusty.
 .
 Language=Romanian
 The Help file is empty.
@@ -17564,7 +17563,7 @@ Language=English
 The Help file is corrupted.
 .
 Language=Polish
-The Help file is corrupted.
+Plik Pomocy jest uszkodzony.
 .
 Language=Romanian
 The Help file is corrupted.
@@ -17593,7 +17592,7 @@ Language=English
 Could not find a domain controller for domain %1.
 .
 Language=Polish
-Could not find a domain controller for domain %1.
+Nie można odnaleźć podstawowego kontrolera domeny dla domeny %1.
 .
 Language=Romanian
 Could not find a domain controller for domain %1.
@@ -17622,7 +17621,7 @@ Language=English
 This operation is privileged on systems with earlier\nversions of the software.
 .
 Language=Polish
-This operation is privileged on systems with earlier\nversions of the software.
+Ta operacja jest uprzywilejowana na komputerach z wcześniejszymi\nwersjami tego oprogramowania.
 .
 Language=Romanian
 This operation is privileged on systems with earlier\nversions of the software.
@@ -17651,7 +17650,7 @@ Language=English
 The device type is unknown.
 .
 Language=Polish
-The device type is unknown.
+Typ urządzenia jest nieznany.
 .
 Language=Romanian
 The device type is unknown.
@@ -17680,7 +17679,7 @@ Language=English
 The log file has been corrupted.
 .
 Language=Polish
-The log file has been corrupted.
+Plik dziennika jest uszkodzony.
 .
 Language=Romanian
 The log file has been corrupted.
@@ -17709,7 +17708,7 @@ Language=English
 Program filenames must end with .EXE.
 .
 Language=Polish
-Program filenames must end with .EXE.
+Nazwy plików programów muszą kończyć się rozszerzeniem .EXE.
 .
 Language=Romanian
 Program filenames must end with .EXE.
@@ -17738,7 +17737,7 @@ Language=English
 A matching share could not be found so nothing was deleted.
 .
 Language=Polish
-A matching share could not be found so nothing was deleted.
+Nie znaleziono pasującego udziału, dlatego niczego nie usunięto.
 .
 Language=Romanian
 A matching share could not be found so nothing was deleted.
@@ -17767,7 +17766,7 @@ Language=English
 A bad value is in the units-per-week field of the user record.
 .
 Language=Polish
-A bad value is in the units-per-week field of the user record.
+W polu „jednostki na tydzień” rekordu użytkownika znajduje się zła wartość.
 .
 Language=Romanian
 A bad value is in the units-per-week field of the user record.
@@ -17796,7 +17795,7 @@ Language=English
 The password is invalid for %1.
 .
 Language=Polish
-The password is invalid for %1.
+Hasło dla %1 jest nieprawidłowe.
 .
 Language=Romanian
 The password is invalid for %1.
@@ -17825,7 +17824,7 @@ Language=English
 An error occurred while sending a message to %1.
 .
 Language=Polish
-An error occurred while sending a message to %1.
+Wystąpił błąd podczas wysyłania komunikatu do %1.
 .
 Language=Romanian
 An error occurred while sending a message to %1.
@@ -17854,7 +17853,7 @@ Language=English
 The password or user name is invalid for %1.
 .
 Language=Polish
-The password or user name is invalid for %1.
+Hasło lub nazwa użytkownika dla %1 są nieprawidłowe.
 .
 Language=Romanian
 The password or user name is invalid for %1.
@@ -17883,7 +17882,7 @@ Language=English
 An error occurred when the share was deleted.
 .
 Language=Polish
-An error occurred when the share was deleted.
+Wystąpił błąd podczas usuwania udziału.
 .
 Language=Romanian
 An error occurred when the share was deleted.
@@ -17912,7 +17911,7 @@ Language=English
 The user name is invalid.
 .
 Language=Polish
-The user name is invalid.
+Nazwa użytkownika jest nieprawidłowa.
 .
 Language=Romanian
 The user name is invalid.
@@ -17941,7 +17940,7 @@ Language=English
 The password is invalid.
 .
 Language=Polish
-The password is invalid.
+Hasło jest nieprawidłowe.
 .
 Language=Romanian
 The password is invalid.
@@ -17970,7 +17969,7 @@ Language=English
 The passwords do not match.
 .
 Language=Polish
-Hasła są niezgodne.
+Hasła nie pasują do siebie.
 .
 Language=Romanian
 Parolele diferă.
@@ -17999,7 +17998,7 @@ Language=English
 Your persistent connections were not all restored.
 .
 Language=Polish
-Your persistent connections were not all restored.
+Nie wszystkie trwałe połączenia zostały przywrócone.
 .
 Language=Romanian
 Your persistent connections were not all restored.
@@ -18028,7 +18027,7 @@ Language=English
 This is not a valid computer name or domain name.
 .
 Language=Polish
-This is not a valid computer name or domain name.
+To nie jest prawidłowa nazwa komputera lub domeny.
 .
 Language=Romanian
 This is not a valid computer name or domain name.
@@ -18057,7 +18056,7 @@ Language=English
 Default permissions cannot be set for that resource.
 .
 Language=Polish
-Default permissions cannot be set for that resource.
+Dla tego zasobu nie można ustawić uprawnień domyślnych.
 .
 Language=Romanian
 Default permissions cannot be set for that resource.
@@ -18086,7 +18085,7 @@ Language=English
 A valid password was not entered.
 .
 Language=Polish
-A valid password was not entered.
+Nie wprowadzono prawidłowego hasła.
 .
 Language=Romanian
 A valid password was not entered.
@@ -18115,7 +18114,7 @@ Language=English
 A valid name was not entered.
 .
 Language=Polish
-A valid name was not entered.
+Nie wprowadzono prawidłowej nazwy.
 .
 Language=Romanian
 A valid name was not entered.
@@ -18144,7 +18143,7 @@ Language=English
 The resource named cannot be shared.
 .
 Language=Polish
-The resource named cannot be shared.
+Nie można udostępnić wymienionego zasobu.
 .
 Language=Romanian
 The resource named cannot be shared.
@@ -18173,7 +18172,7 @@ Language=English
 The permissions string contains invalid permissions.
 .
 Language=Polish
-The permissions string contains invalid permissions.
+Ciąg uprawnień zawiera nieprawidłowe uprawnienia.
 .
 Language=Romanian
 The permissions string contains invalid permissions.
@@ -18202,7 +18201,7 @@ Language=English
 You can only perform this operation on printers and communication devices.
 .
 Language=Polish
-You can only perform this operation on printers and communication devices.
+Tę operację można wykonywać tylko na drukarkach i urządzeniach komunikacyjnych.
 .
 Language=Romanian
 You can only perform this operation on printers and communication devices.
@@ -18231,7 +18230,7 @@ Language=English
 %1 is an invalid user or group name.
 .
 Language=Polish
-%1 is an invalid user or group name.
+%1 jest nieprawidłową nazwą użytkownika lub grupy.
 .
 Language=Romanian
 %1 is an invalid user or group name.
@@ -18260,7 +18259,7 @@ Language=English
 The server is not configured for remote administration.
 .
 Language=Polish
-The server is not configured for remote administration.
+Serwer nie jest skonfigurowany dla administracji zdalnej.
 .
 Language=Romanian
 The server is not configured for remote administration.
@@ -18289,7 +18288,7 @@ Language=English
 No users have sessions with this server.
 .
 Language=Polish
-No users have sessions with this server.
+Żaden użytkownik nie ma sesji z tym serwerem.
 .
 Language=Romanian
 No users have sessions with this server.
@@ -18318,7 +18317,7 @@ Language=English
 User %1 is not a member of group %2.
 .
 Language=Polish
-User %1 is not a member of group %2.
+Użytkownik %1 nie jest członkiem grupy %2.
 .
 Language=Romanian
 User %1 is not a member of group %2.
@@ -18347,7 +18346,7 @@ Language=English
 User %1 is already a member of group %2.
 .
 Language=Polish
-User %1 is already a member of group %2.
+Użytkownik %1 jest już członkiem grupy %2.
 .
 Language=Romanian
 User %1 is already a member of group %2.
@@ -18376,7 +18375,7 @@ Language=English
 There is no such user: %1.
 .
 Language=Polish
-There is no such user: %1.
+Nie ma takiego użytkownika: %1.
 .
 Language=Romanian
 There is no such user: %1.
@@ -18405,7 +18404,7 @@ Language=English
 This is an invalid response.
 .
 Language=Polish
-This is an invalid response.
+Ta odpowiedź jest nieprawidłowa.
 .
 Language=Romanian
 This is an invalid response.
@@ -18434,7 +18433,7 @@ Language=English
 No valid response was provided.
 .
 Language=Polish
-No valid response was provided.
+Nie udzielono prawidłowej odpowiedzi.
 .
 Language=Romanian
 No valid response was provided.
@@ -18463,7 +18462,7 @@ Language=English
 The destination list provided does not match the destination list of the printer queue.
 .
 Language=Polish
-The destination list provided does not match the destination list of the printer queue.
+Podana lista docelowa nie pasuje do listy docelowej kolejki wydruku.
 .
 Language=Romanian
 The destination list provided does not match the destination list of the printer queue.
@@ -18492,7 +18491,7 @@ Language=English
 Your password cannot be changed until %1.
 .
 Language=Polish
-Your password cannot be changed until %1.
+Nie można zmienić hasła aż do %1.
 .
 Language=Romanian
 Your password cannot be changed until %1.
@@ -18521,7 +18520,7 @@ Language=English
 %1 is not a recognized day of the week.
 .
 Language=Polish
-%1 is not a recognized day of the week.
+Wartość %1 nie jest rozpoznawana jako dzień tygodnia.
 .
 Language=Romanian
 %1 is not a recognized day of the week.
@@ -18550,7 +18549,7 @@ Language=English
 The time range specified ends before it starts.
 .
 Language=Polish
-The time range specified ends before it starts.
+Podany okres czasu kończy się przed rozpoczęciem.
 .
 Language=Romanian
 The time range specified ends before it starts.
@@ -18579,7 +18578,7 @@ Language=English
 %1 is not a recognized hour.
 .
 Language=Polish
-%1 is not a recognized hour.
+Wartość %1 nie jest rozpoznawana jako godzina.
 .
 Language=Romanian
 %1 is not a recognized hour.
@@ -18608,7 +18607,7 @@ Language=English
 %1 is not a valid specification for minutes.
 .
 Language=Polish
-%1 is not a valid specification for minutes.
+Wartość %1 nie jest prawidłowym określeniem minut.
 .
 Language=Romanian
 %1 is not a valid specification for minutes.
@@ -18637,7 +18636,7 @@ Language=English
 Time supplied is not exactly on the hour.
 .
 Language=Polish
-Time supplied is not exactly on the hour.
+Podany czas nie odpowiada pełnej godzinie.
 .
 Language=Romanian
 Time supplied is not exactly on the hour.
@@ -18666,7 +18665,7 @@ Language=English
 12 and 24 hour time formats may not be mixed.
 .
 Language=Polish
-12 and 24 hour time formats may not be mixed.
+Mieszanie formatów 12- i 24-godzinnego nie jest dozwolone.
 .
 Language=Romanian
 12 and 24 hour time formats may not be mixed.
@@ -18695,7 +18694,7 @@ Language=English
 %1 is not a valid 12-hour suffix.
 .
 Language=Polish
-%1 is not a valid 12-hour suffix.
+%1 nie jest prawidłowym sufiksem formatu 12-godzinnego.
 .
 Language=Romanian
 %1 is not a valid 12-hour suffix.
@@ -18724,7 +18723,7 @@ Language=English
 An illegal date format has been supplied.
 .
 Language=Polish
-An illegal date format has been supplied.
+Podano niedozwolony format daty.
 .
 Language=Romanian
 An illegal date format has been supplied.
@@ -18753,7 +18752,7 @@ Language=English
 An illegal day range has been supplied.
 .
 Language=Polish
-An illegal day range has been supplied.
+Podano niedozwolony zakres dni.
 .
 Language=Romanian
 An illegal day range has been supplied.
@@ -18782,7 +18781,7 @@ Language=English
 An illegal time range has been supplied.
 .
 Language=Polish
-An illegal time range has been supplied.
+Podano niedozwolony zakres godzin.
 .
 Language=Romanian
 An illegal time range has been supplied.
@@ -18812,8 +18811,8 @@ Arguments to NET USER are invalid. Check the minimum password\n
 length and/or arguments supplied.
 .
 Language=Polish
-Arguments to NET USER are invalid. Check the minimum password\n
-length and/or arguments supplied.
+Argumenty przekazane do NET USER są nieprawidłowe. Sprawdź, jakie są\n
+minimalna długość hasła i/lub podane argumenty.
 .
 Language=Romanian
 Arguments to NET USER are invalid. Check the minimum password\n
@@ -18848,7 +18847,7 @@ Language=English
 The value for ENABLESCRIPT must be YES.
 .
 Language=Polish
-The value for ENABLESCRIPT must be YES.
+Wartością ENABLESCRIPT musi być TAK.
 .
 Language=Romanian
 The value for ENABLESCRIPT must be YES.
@@ -18877,7 +18876,7 @@ Language=English
 An illegal country code has been supplied.
 .
 Language=Polish
-An illegal country code has been supplied.
+Podano niedozwolony kod kraju.
 .
 Language=Romanian
 An illegal country code has been supplied.
@@ -18907,8 +18906,8 @@ The user was successfully created but could not be added\n
 to the USERS local group.
 .
 Language=Polish
-The user was successfully created but could not be added\n
-to the USERS local group.
+Użytkownik został utworzony pomyślnie, ale nie można dodać go\n
+do grupy lokalnej UŻYTKOWNICY.
 .
 Language=Romanian
 The user was successfully created but could not be added\n
@@ -18943,7 +18942,7 @@ Language=English
 The user context supplied is invalid.
 .
 Language=Polish
-The user context supplied is invalid.
+Podany kontekst użytkownika jest nieprawidłowy.
 .
 Language=Romanian
 The user context supplied is invalid.
@@ -18973,8 +18972,8 @@ The dynamic-link library %1 could not be loaded, or an error\n
 occurred while trying to use it.
 .
 Language=Polish
-The dynamic-link library %1 could not be loaded, or an error\n
-occurred while trying to use it.
+Załadowanie biblioteki dołączanej dynamicznie (DLL) %1 nie powiodło się lub wystąpił\n
+błąd przy próbie jej użycia.
 .
 Language=Romanian
 The dynamic-link library %1 could not be loaded, or an error\n
@@ -19009,7 +19008,7 @@ Language=English
 Sending files is no longer supported.
 .
 Language=Polish
-Sending files is no longer supported.
+Wysyłanie plików nie jest już obsługiwane.
 .
 Language=Romanian
 Sending files is no longer supported.
@@ -19038,7 +19037,7 @@ Language=English
 You may not specify paths for ADMIN$ and IPC$ shares.
 .
 Language=Polish
-You may not specify paths for ADMIN$ and IPC$ shares.
+Użytkownik nie może określać ścieżek dla udziałów ADMIN$ i IPC$.
 .
 Language=Romanian
 You may not specify paths for ADMIN$ and IPC$ shares.
@@ -19067,7 +19066,7 @@ Language=English
 User or group %1 is already a member of local group %2.
 .
 Language=Polish
-User or group %1 is already a member of local group %2.
+Użytkownik lub grupa %1 jest już członkiem grupy lokalnej %2.
 .
 Language=Romanian
 User or group %1 is already a member of local group %2.
@@ -19096,7 +19095,7 @@ Language=English
 There is no such user or group: %1.
 .
 Language=Polish
-There is no such user or group: %1.
+Nie ma takiego użytkownika lub grupy: %1.
 .
 Language=Romanian
 There is no such user or group: %1.
@@ -19125,7 +19124,7 @@ Language=English
 There is no such computer: %1.
 .
 Language=Polish
-There is no such computer: %1.
+Nie ma takiego komputera: %1.
 .
 Language=Romanian
 There is no such computer: %1.
@@ -19154,7 +19153,7 @@ Language=English
 The computer %1 already exists.
 .
 Language=Polish
-The computer %1 already exists.
+Komputer %1 już istnieje.
 .
 Language=Romanian
 The computer %1 already exists.
@@ -19183,7 +19182,7 @@ Language=English
 There is no such global user or group: %1.
 .
 Language=Polish
-There is no such global user or group: %1.
+Nie ma takiego globalnego użytkownika lub grupy: %1.
 .
 Language=Romanian
 There is no such global user or group: %1.
@@ -19212,7 +19211,7 @@ Language=English
 Only disk shares can be marked as cacheable
 .
 Language=Polish
-Only disk shares can be marked as cacheable
+Jedynie udziały dyskowe mogą być oznaczane jako buforowalne
 .
 Language=Romanian
 Only disk shares can be marked as cacheable
@@ -19241,7 +19240,7 @@ Language=English
 The system could not find message: %1.
 .
 Language=Polish
-The system could not find message: %1.
+System nie może odnaleźć komunikatu: %1.
 .
 Language=Romanian
 The system could not find message: %1.
@@ -19270,7 +19269,7 @@ Language=English
 This schedule date is invalid.
 .
 Language=Polish
-This schedule date is invalid.
+Ta planowana data jest nieprawidłowa.
 .
 Language=Romanian
 This schedule date is invalid.
@@ -19299,7 +19298,7 @@ Language=English
 The LANMAN root directory is unavailable.
 .
 Language=Polish
-The LANMAN root directory is unavailable.
+Katalog główny LANMAN jest niedostępny.
 .
 Language=Romanian
 The LANMAN root directory is unavailable.
@@ -19328,7 +19327,7 @@ Language=English
 The SCHED.LOG file could not be opened.
 .
 Language=Polish
-The SCHED.LOG file could not be opened.
+Nie można otworzyć pliku SCHED.LOG.
 .
 Language=Romanian
 The SCHED.LOG file could not be opened.
@@ -19357,7 +19356,7 @@ Language=English
 The Server service has not been started.
 .
 Language=Polish
-The Server service has not been started.
+Usługa Serwer nie została uruchomiona.
 .
 Language=Romanian
 The Server service has not been started.
@@ -19386,7 +19385,7 @@ Language=English
 The AT job ID does not exist.
 .
 Language=Polish
-The AT job ID does not exist.
+Identyfikator zadania AT nie istnieje.
 .
 Language=Romanian
 The AT job ID does not exist.
@@ -19415,7 +19414,7 @@ Language=English
 The AT schedule file is corrupted.
 .
 Language=Polish
-The AT schedule file is corrupted.
+Plik harmonogramu AT jest uszkodzony.
 .
 Language=Romanian
 The AT schedule file is corrupted.
@@ -19444,7 +19443,7 @@ Language=English
 The delete failed due to a problem with the AT schedule file.
 .
 Language=Polish
-The delete failed due to a problem with the AT schedule file.
+Usunięcie nie powiodło się z powodu problemu z plikiem harmonogramu AT.
 .
 Language=Romanian
 The delete failed due to a problem with the AT schedule file.
@@ -19473,7 +19472,7 @@ Language=English
 The command line cannot exceed 259 characters.
 .
 Language=Polish
-The command line cannot exceed 259 characters.
+Długość wiersza polecenia nie może przekraczać 259 znaków.
 .
 Language=Romanian
 The command line cannot exceed 259 characters.
@@ -19502,7 +19501,7 @@ Language=English
 The AT schedule file could not be updated because the disk is full.
 .
 Language=Polish
-The AT schedule file could not be updated because the disk is full.
+Nie można zaktualizować pliku harmonogramu AT, ponieważ dysk jest zapełniony.
 .
 Language=Romanian
 The AT schedule file could not be updated because the disk is full.
@@ -19531,7 +19530,7 @@ Language=English
 The AT schedule file is invalid.  Please delete the file and create a new one.
 .
 Language=Polish
-The AT schedule file is invalid.  Please delete the file and create a new one.
+Plik harmonogramu AT jest nieprawidłowy. Usuń ten plik i utwórz nowy.
 .
 Language=Romanian
 The AT schedule file is invalid.  Please delete the file and create a new one.
@@ -19560,7 +19559,7 @@ Language=English
 The AT schedule file was deleted.
 .
 Language=Polish
-The AT schedule file was deleted.
+Plik harmonogramu AT został usunięty.
 .
 Language=Romanian
 The AT schedule file was deleted.
@@ -19597,15 +19596,15 @@ for the day of the month.\n\n
 You can specify the time in the 24 hour HH:MM format.
 .
 Language=Polish
-The syntax of this command is:\n\n
-AT [id] [/DELETE]\n
-AT time [/EVERY:date | /NEXT:date] command\n\n
-The AT command schedules a program command to run at a\n
-later date and time on a server.  It also displays the\n
-list of programs and commands scheduled to be run.\n\n
-You can specify the date as M,T,W,Th,F,Sa,Su or 1-31\n
-for the day of the month.\n\n
-You can specify the time in the 24 hour HH:MM format.
+Składnia tego polecenia jest następująca:\n\n
+AT [identyfikator] [/DELETE]\n
+AT godzina [/EVERY:data | /NEXT:data] polecenie\n\n
+Polecenie AT służy do planowania wykonania programu lub polecenia na serwerze\n
+o określonej godzinie i w określonym dniu. Pozwala ono też wyświetlić listę\n
+programów i poleceń zaplanowanych do wykonania.\n\n
+Datę można określić jako Pn,Wt,Sr,Cz,Pt,So,N lub 1-31\n
+(dzień miesiąca).\n\n
+Godzinę można określić w formacie 24-godzinnym: HH:MM.
 .
 Language=Romanian
 The syntax of this command is:\n\n
@@ -19683,8 +19682,8 @@ The AT command has timed-out.\n
 Please try again later.
 .
 Language=Polish
-The AT command has timed-out.\n
-Please try again later.
+Upłynął limit czasu polecenia AT.\n
+Spróbuj ponownie później.
 .
 Language=Romanian
 The AT command has timed-out.\n
@@ -19720,8 +19719,8 @@ The minimum password age for user accounts cannot be greater\n
 than the maximum password age.
 .
 Language=Polish
-The minimum password age for user accounts cannot be greater\n
-than the maximum password age.
+Minimalny okres ważności hasła dla kont użytkowników nie może być większy niż\n
+maksymalny okres ważności hasła.
 .
 Language=Romanian
 The minimum password age for user accounts cannot be greater\n
@@ -19757,8 +19756,8 @@ You have specified a value that is incompatible\n
 with servers with down-level software. Please specify a lower value.
 .
 Language=Polish
-You have specified a value that is incompatible\n
-with servers with down-level software. Please specify a lower value.
+Określono wartość, która nie jest zgodna z serwerami wyposażonymi\n
+w oprogramowanie niskiego poziomu. Określ mniejszą wartość.
 .
 Language=Romanian
 You have specified a value that is incompatible\n
@@ -19793,7 +19792,7 @@ Language=English
 %1 is not a valid computer name.
 .
 Language=Polish
-%1 is not a valid computer name.
+%1 nie jest prawidłową nazwą komputera.
 .
 Language=Romanian
 %1 is not a valid computer name.
@@ -19822,7 +19821,7 @@ Language=English
 %1 is not a valid Windows network message number.
 .
 Language=Polish
-%1 is not a valid Windows network message number.
+%1 nie jest prawidłowym numerem komunikatu sieciowego systemu ReactOS.
 .
 Language=Romanian
 %1 is not a valid Windows network message number.
@@ -19851,7 +19850,7 @@ Language=English
 Message from %1 to %2 on %3
 .
 Language=Polish
-Message from %1 to %2 on %3
+Komunikat od %1 dla %2 wysłany %3
 .
 Language=Romanian
 Message from %1 to %2 on %3
@@ -19909,7 +19908,7 @@ Language=English
 **** unexpected end of message ****
 .
 Language=Polish
-**** unexpected end of message ****
+**** nieoczekiwany koniec komunikatu ****
 .
 Language=Romanian
 **** unexpected end of message ****
@@ -19938,7 +19937,7 @@ Language=English
 Press ESC to exit
 .
 Language=Polish
-Press ESC to exit
+Aby zakończyć, naciśnij klawisz ESC
 .
 Language=Romanian
 Press ESC to exit
@@ -19996,7 +19995,7 @@ Language=English
 Current time at %1 is %2
 .
 Language=Polish
-Current time at %1 is %2
+Bieżąca godzina na %1 to %2
 .
 Language=Romanian
 Current time at %1 is %2
@@ -20027,9 +20026,9 @@ Do you want to set the local computer's time to match the\n
 time at %2? %3: %0
 .
 Language=Polish
-The current local clock is %1\n
-Do you want to set the local computer's time to match the\n
-time at %2? %3: %0
+Bieżący zegar lokalny wskazuje %1\n
+Czy chcesz ustawić czas lokalnego komputera, aby zgadzał się\n
+z czasem na %2? %3: %0
 .
 Language=Romanian
 The current local clock is %1\n
@@ -20069,7 +20068,7 @@ Language=English
 Could not locate a time-server.
 .
 Language=Polish
-Could not locate a time-server.
+Nie można zlokalizować serwera czasu.
 .
 Language=Romanian
 Could not locate a time-server.
@@ -20098,7 +20097,7 @@ Language=English
 Could not find the domain controller for domain %1.
 .
 Language=Polish
-Could not find the domain controller for domain %1.
+Nie można odnaleźć kontrolera domeny dla domeny %1.
 .
 Language=Romanian
 Could not find the domain controller for domain %1.
@@ -20127,7 +20126,7 @@ Language=English
 Local time (GMT%3) at %1 is %2
 .
 Language=Polish
-Local time (GMT%3) at %1 is %2
+Czas lokalny (GMT%3) o %1 to %2
 .
 Language=Romanian
 Local time (GMT%3) at %1 is %2
@@ -20156,7 +20155,7 @@ Language=English
 The user's home directory could not be determined.
 .
 Language=Polish
-The user's home directory could not be determined.
+Nie można określić katalogu macierzystego użytkownika.
 .
 Language=Romanian
 The user's home directory could not be determined.
@@ -20185,7 +20184,7 @@ Language=English
 The user's home directory has not been specified.
 .
 Language=Polish
-The user's home directory has not been specified.
+Nie określono katalogu macierzystego użytkownika.
 .
 Language=Romanian
 The user's home directory has not been specified.
@@ -20214,7 +20213,7 @@ Language=English
 The name specified for the user's home directory (%1) is not a universal naming convention (UNC) name.
 .
 Language=Polish
-The name specified for the user's home directory (%1) is not a universal naming convention (UNC) name.
+Nazwa podana dla katalogu macierzystego użytkownika (%1) nie jest nazwą konwencji UNC.
 .
 Language=Romanian
 The name specified for the user's home directory (%1) is not a universal naming convention (UNC) name.
@@ -20243,7 +20242,7 @@ Language=English
 Drive %1 is now connected to %2. Your home directory is %3\\%4.
 .
 Language=Polish
-Drive %1 is now connected to %2. Your home directory is %3\\%4.
+Dysk %1 jest obecnie podłączony do %2. Katalog macierzysty użytkownika to %3\\%4.
 .
 Language=Romanian
 Drive %1 is now connected to %2. Your home directory is %3\\%4.
@@ -20272,7 +20271,7 @@ Language=English
 Drive %1 is now connected to %2.
 .
 Language=Polish
-Drive %1 is now connected to %2.
+Dysk %1 jest obecnie podłączony do %2.
 .
 Language=Romanian
 Drive %1 is now connected to %2.
@@ -20301,7 +20300,7 @@ Language=English
 There are no available drive letters left.
 .
 Language=Polish
-There are no available drive letters left.
+Nie pozostały już żadne dostępne litery dysku.
 .
 Language=Romanian
 There are no available drive letters left.
@@ -20330,7 +20329,7 @@ Language=English
 %1 is not a valid domain or workgroup name.
 .
 Language=Polish
-%1 is not a valid domain or workgroup name.
+%1 nie jest prawidłową nazwą domeny lub grupy roboczej.
 .
 Language=Romanian
 %1 is not a valid domain or workgroup name.
@@ -20359,7 +20358,7 @@ Language=English
 The current SNTP value is: %1
 .
 Language=Polish
-The current SNTP value is: %1
+Bieżąca wartość SNTP to: %1
 .
 Language=Romanian
 The current SNTP value is: %1
@@ -20388,7 +20387,7 @@ Language=English
 This computer is not currently configured to use a specific SNTP server.
 .
 Language=Polish
-This computer is not currently configured to use a specific SNTP server.
+Ten komputer nie jest obecnie skonfigurowany do używania określonego serwera SNTP.
 .
 Language=Romanian
 This computer is not currently configured to use a specific SNTP server.
@@ -20417,7 +20416,7 @@ Language=English
 This current autoconfigured SNTP value is: %1
 .
 Language=Polish
-This current autoconfigured SNTP value is: %1
+Tą bieżącą skonfigurowaną automatycznie wartością SNTP jest: %1
 .
 Language=Romanian
 This current autoconfigured SNTP value is: %1
@@ -20446,7 +20445,7 @@ Language=English
 You specified too many values for the %1 option.
 .
 Language=Polish
-You specified too many values for the %1 option.
+Określono zbyt wiele wartości dla opcji %1.
 .
 Language=Romanian
 You specified too many values for the %1 option.
@@ -20504,7 +20503,7 @@ Language=English
 The syntax is incorrect.
 .
 Language=Polish
-The syntax is incorrect.
+Składnia jest niepoprawna.
 .
 Language=Romanian
 The syntax is incorrect.
@@ -20533,7 +20532,7 @@ Language=English
 You specified an invalid file number.
 .
 Language=Polish
-You specified an invalid file number.
+Określono nieprawidłowy numer pliku.
 .
 Language=Romanian
 You specified an invalid file number.
@@ -20562,7 +20561,7 @@ Language=English
 You specified an invalid print job number.
 .
 Language=Polish
-You specified an invalid print job number.
+Określono nieprawidłowy numer zadania drukowania.
 .
 Language=Romanian
 You specified an invalid print job number.
@@ -20591,7 +20590,7 @@ Language=English
 The user or group account specified cannot be found.
 .
 Language=Polish
-The user or group account specified cannot be found.
+Nie można odnaleźć określonego konta użytkownika lub grupy.
 .
 Language=Romanian
 The user or group account specified cannot be found.
@@ -20621,8 +20620,8 @@ The user was added but could not be enabled for File and Print\n
 Services for NetWare.
 .
 Language=Polish
-The user was added but could not be enabled for File and Print\n
-Services for NetWare.
+Dodano użytkownika, ale nie można włączyć dla niego obsługi plików\n
+i drukowania w systemie NetWare.
 .
 Language=Romanian
 The user was added but could not be enabled for File and Print\n
@@ -20657,7 +20656,7 @@ Language=English
 File and Print Services for NetWare is not installed.
 .
 Language=Polish
-File and Print Services for NetWare is not installed.
+Nie zainstalowano obsługi plików i drukowania w systemie NetWare.
 .
 Language=Romanian
 File and Print Services for NetWare is not installed.
@@ -20686,7 +20685,7 @@ Language=English
 Cannot set user properties for File and Print Services for NetWare.
 .
 Language=Polish
-Cannot set user properties for File and Print Services for NetWare.
+Nie można ustawić właściwości użytkownika dla obsługi plików i drukowania w systemie NetWare.
 .
 Language=Romanian
 Cannot set user properties for File and Print Services for NetWare.
@@ -20715,7 +20714,7 @@ Language=English
 Password for %1 is: %2
 .
 Language=Polish
-Password for %1 is: %2
+Hasło dla %1 to: %2
 .
 Language=Romanian
 Password for %1 is: %2
@@ -20744,7 +20743,7 @@ Language=English
 NetWare compatible logon
 .
 Language=Polish
-NetWare compatible logon
+Logowanie zgodne z systemem NetWare
 .
 Language=Romanian
 NetWare compatible logon
@@ -20894,7 +20893,7 @@ Language=English
 Always%0
 .
 Language=Polish
-Always%0
+Zawsze%0
 .
 Language=Romanian
 Always%0
@@ -20981,7 +20980,7 @@ Language=English
 Sunday%0
 .
 Language=Polish
-Sunday%0
+Niedziela%0
 .
 Language=Romanian
 Sunday%0
@@ -21010,7 +21009,7 @@ Language=English
 Monday%0
 .
 Language=Polish
-Monday%0
+Poniedzialek%0
 .
 Language=Romanian
 Monday%0
@@ -21039,7 +21038,7 @@ Language=English
 Tuesday%0
 .
 Language=Polish
-Tuesday%0
+Wtorek%0
 .
 Language=Romanian
 Tuesday%0
@@ -21068,7 +21067,7 @@ Language=English
 Wednesday%0
 .
 Language=Polish
-Wednesday%0
+Sroda%0
 .
 Language=Romanian
 Wednesday%0
@@ -21097,7 +21096,7 @@ Language=English
 Thursday%0
 .
 Language=Polish
-Thursday%0
+Czwartek%0
 .
 Language=Romanian
 Thursday%0
@@ -21126,7 +21125,7 @@ Language=English
 Friday%0
 .
 Language=Polish
-Friday%0
+Piatek%0
 .
 Language=Romanian
 Friday%0
@@ -21155,7 +21154,7 @@ Language=English
 Saturday%0
 .
 Language=Polish
-Saturday%0
+Sobota%0
 .
 Language=Romanian
 Saturday%0
@@ -21184,7 +21183,7 @@ Language=English
 Su%0
 .
 Language=Polish
-Su%0
+N%0
 .
 Language=Romanian
 Su%0
@@ -21213,7 +21212,7 @@ Language=English
 M%0
 .
 Language=Polish
-M%0
+Pn%0
 .
 Language=Romanian
 M%0
@@ -21242,7 +21241,7 @@ Language=English
 T%0
 .
 Language=Polish
-T%0
+Wt%0
 .
 Language=Romanian
 T%0
@@ -21271,7 +21270,7 @@ Language=English
 W%0
 .
 Language=Polish
-W%0
+Sr%0
 .
 Language=Romanian
 W%0
@@ -21300,7 +21299,7 @@ Language=English
 Th%0
 .
 Language=Polish
-Th%0
+Cz%0
 .
 Language=Romanian
 Th%0
@@ -21329,7 +21328,7 @@ Language=English
 F%0
 .
 Language=Polish
-F%0
+Pt%0
 .
 Language=Romanian
 F%0
@@ -21358,7 +21357,7 @@ Language=English
 S%0
 .
 Language=Polish
-S%0
+So%0
 .
 Language=Romanian
 S%0
@@ -21387,7 +21386,7 @@ Language=English
 Unknown%0
 .
 Language=Polish
-Unknown%0
+Brak danych%0
 .
 Language=Romanian
 Unknown%0
@@ -21532,7 +21531,7 @@ Language=English
 Server%0
 .
 Language=Polish
-Server%0
+Serwer%0
 .
 Language=Romanian
 Server%0
@@ -21561,7 +21560,7 @@ Language=English
 Redirector%0
 .
 Language=Polish
-Redirector%0
+Readresator%0
 .
 Language=Romanian
 Redirector%0
@@ -21590,7 +21589,7 @@ Language=English
 Application%0
 .
 Language=Polish
-Application%0
+Aplikacja%0
 .
 Language=Romanian
 Application%0
@@ -21619,7 +21618,7 @@ Language=English
 Total%0
 .
 Language=Polish
-Total%0
+Razem%0
 .
 Language=Romanian
 Total%0
@@ -21706,7 +21705,7 @@ Language=English
 (none)%0
 .
 Language=Polish
-(none)%0
+(brak)%0
 .
 Language=Romanian
 (none)%0
@@ -21735,7 +21734,7 @@ Language=English
 Device%0
 .
 Language=Polish
-Device%0
+Urządzenie%0
 .
 Language=Romanian
 Device%0
@@ -21764,7 +21763,7 @@ Language=English
 Remark%0
 .
 Language=Polish
-Remark%0
+Uwaga%0
 .
 Language=Romanian
 Remark%0
@@ -21793,7 +21792,7 @@ Language=English
 At%0
 .
 Language=Polish
-At%0
+Na%0
 .
 Language=Romanian
 At%0
@@ -21822,7 +21821,7 @@ Language=English
 Queue%0
 .
 Language=Polish
-Queue%0
+Kolejka%0
 .
 Language=Romanian
 Queue%0
@@ -21851,7 +21850,7 @@ Language=English
 Queues%0
 .
 Language=Polish
-Queues%0
+Kolejki%0
 .
 Language=Romanian
 Queues%0
@@ -21880,7 +21879,7 @@ Language=English
 User name%0
 .
 Language=Polish
-User name%0
+Nazwa użytkownika%0
 .
 Language=Romanian
 User name%0
@@ -21909,7 +21908,7 @@ Language=English
 Path%0
 .
 Language=Polish
-Path%0
+Ścieżka%0
 .
 Language=Romanian
 Path%0
@@ -21938,7 +21937,7 @@ Language=English
 (Y/N) [Y]%0
 .
 Language=Polish
-(Y/N) [Y]%0
+(T/N) [T]%0
 .
 Language=Romanian
 (Y/N) [Y]%0
@@ -21967,7 +21966,7 @@ Language=English
 (Y/N) [N]%0
 .
 Language=Polish
-(Y/N) [N]%0
+(T/N) [N]%0
 .
 Language=Romanian
 (Y/N) [N]%0
@@ -21996,7 +21995,7 @@ Language=English
 Error%0
 .
 Language=Polish
-Error%0
+Błąd%0
 .
 Language=Romanian
 Error%0
@@ -22054,7 +22053,7 @@ Language=English
 Y%0
 .
 Language=Polish
-Y%0
+T%0
 .
 Language=Romanian
 Y%0
@@ -22112,7 +22111,7 @@ Language=English
 Any%0
 .
 Language=Polish
-Any%0
+Każde%0
 .
 Language=Romanian
 Any%0
@@ -22199,7 +22198,7 @@ Language=English
 (not found)%0
 .
 Language=Polish
-(not found)%0
+(nie znaleziono)%0
 .
 Language=Romanian
 (not found)%0
@@ -22228,7 +22227,7 @@ Language=English
 (unknown)%0
 .
 Language=Polish
-(unknown)%0
+(nieznane)%0
 .
 Language=Romanian
 (unknown)%0
@@ -22257,7 +22256,7 @@ Language=English
 For help on %1 type NET HELP %1
 .
 Language=Polish
-For help on %1 type NET HELP %1
+Aby uzyskać Pomoc dla %1, wpisz NET HELP %1
 .
 Language=Romanian
 For help on %1 type NET HELP %1
@@ -22402,7 +22401,7 @@ Language=English
 Please type the password: %0
 .
 Language=Polish
-Please type the password: %0
+Wpisz hasło: %0
 .
 Language=Romanian
 Please type the password: %0
@@ -22431,7 +22430,7 @@ Language=English
 Type the password for %1: %0
 .
 Language=Polish
-Type the password for %1: %0
+Wpisz hasło dla %1: %0
 .
 Language=Romanian
 Type the password for %1: %0
@@ -22460,7 +22459,7 @@ Language=English
 Type a password for the user: %0
 .
 Language=Polish
-Type a password for the user: %0
+Wpisz hasło dla użytkownika: %0
 .
 Language=Romanian
 Type a password for the user: %0
@@ -22489,7 +22488,7 @@ Language=English
 Type the password for the shared resource: %0
 .
 Language=Polish
-Type the password for the shared resource: %0
+Wpisz hasło dla zasobu udostępnionego: %0
 .
 Language=Romanian
 Type the password for the shared resource: %0
@@ -22518,7 +22517,7 @@ Language=English
 Type your password: %0
 .
 Language=Polish
-Type your password: %0
+Wpisz swoje hasło: %0
 .
 Language=Romanian
 Type your password: %0
@@ -22547,7 +22546,7 @@ Language=English
 Retype the password to confirm: %0
 .
 Language=Polish
-Retype the password to confirm: %0
+Wpisz hasło ponownie w celu potwierdzenia: %0
 .
 Language=Romanian
 Retype the password to confirm: %0
@@ -22576,7 +22575,7 @@ Language=English
 Type the user's old password: %0
 .
 Language=Polish
-Type the user's old password: %0
+Wpisz stare hasło użytkownika: %0
 .
 Language=Romanian
 Type the user's old password: %0
@@ -22605,7 +22604,7 @@ Language=English
 Type the user's new password: %0
 .
 Language=Polish
-Type the user's new password: %0
+Wpisz nowe hasło użytkownika: %0
 .
 Language=Romanian
 Type the user's new password: %0
@@ -22634,7 +22633,7 @@ Language=English
 Type your new password: %0
 .
 Language=Polish
-Type your new password: %0
+Wpisz nowe hasło: %0
 .
 Language=Romanian
 Type your new password: %0
@@ -22663,7 +22662,7 @@ Language=English
 Type the Replicator service password: %0
 .
 Language=Polish
-Type the Replicator service password: %0
+Wpisz hasło usługi Replikator: %0
 .
 Language=Romanian
 Type the Replicator service password: %0
@@ -22692,7 +22691,7 @@ Language=English
 Type your user name, or press ENTER if it is %1: %0
 .
 Language=Polish
-Type your user name, or press ENTER if it is %1: %0
+Wpisz swoją nazwę użytkownika, albo naciśnij klawisz ENTER, jeśli jest to %1: %0
 .
 Language=Romanian
 Type your user name, or press ENTER if it is %1: %0
@@ -22722,8 +22721,8 @@ Type the domain or server where you want to change a password, or\n
 press ENTER if it is for domain %1: %0.
 .
 Language=Polish
-Type the domain or server where you want to change a password, or\n
-press ENTER if it is for domain %1: %0.
+Wpisz nazwę domeny lub serwera, na którym chcesz zmienić hasło, albo\n
+naciśnij klawisz ENTER, jeśli jest to hasło dla domeny %1: %0.
 .
 Language=Romanian
 Type the domain or server where you want to change a password, or\n
@@ -22758,7 +22757,7 @@ Language=English
 Type your user name: %0
 .
 Language=Polish
-Type your user name: %0
+Wpisz swoją nazwę użytkownika: %0
 .
 Language=Romanian
 Type your user name: %0
@@ -22787,7 +22786,7 @@ Language=English
 Network statistics for \\\\%1
 .
 Language=Polish
-Network statistics for \\\\%1
+Statystyki sieciowe dla \\\\%1
 .
 Language=Romanian
 Network statistics for \\\\%1
@@ -22816,7 +22815,7 @@ Language=English
 Printing options for %1
 .
 Language=Polish
-Printing options for %1
+Opcje drukowania dla %1
 .
 Language=Romanian
 Printing options for %1
@@ -22845,7 +22844,7 @@ Language=English
 Communication-device queues accessing %1
 .
 Language=Polish
-Communication-device queues accessing %1
+Kolejki urządzeń komunikacyjnych korzystające z %1
 .
 Language=Romanian
 Communication-device queues accessing %1
@@ -22874,7 +22873,7 @@ Language=English
 Print job detail
 .
 Language=Polish
-Print job detail
+Szczegóły zadania drukowania
 .
 Language=Romanian
 Print job detail
@@ -22903,7 +22902,7 @@ Language=English
 Communication-device queues at \\\\%1
 .
 Language=Polish
-Communication-device queues at \\\\%1
+Kolejki urządzeń komunikacyjnych na \\\\%1
 .
 Language=Romanian
 Communication-device queues at \\\\%1
@@ -22932,7 +22931,7 @@ Language=English
 Printers at %1
 .
 Language=Polish
-Printers at %1
+Drukarki na %1
 .
 Language=Romanian
 Printers at %1
@@ -22961,7 +22960,7 @@ Language=English
 Printers accessing %1
 .
 Language=Polish
-Printers accessing %1
+Drukarki korzystające z %1
 .
 Language=Romanian
 Printers accessing %1
@@ -22990,7 +22989,7 @@ Language=English
 Print jobs at %1:
 .
 Language=Polish
-Print jobs at %1:
+Zadania drukowania na %1:
 .
 Language=Romanian
 Print jobs at %1:
@@ -23019,7 +23018,7 @@ Language=English
 Shared resources at %1
 .
 Language=Polish
-Shared resources at %1
+Zasoby udostępnione na %1
 .
 Language=Romanian
 Shared resources at %1
@@ -23106,7 +23105,7 @@ Language=English
 User accounts for \\\\%1
 .
 Language=Polish
-User accounts for \\\\%1
+Konta użytkowników dla \\\\%1
 .
 Language=Romanian
 User accounts for \\\\%1
@@ -23164,7 +23163,7 @@ Language=English
 The options of this command are:
 .
 Language=Polish
-The options of this command are:
+Opcje dla tego polecenia:
 .
 Language=Romanian
 The options of this command are:
@@ -23193,7 +23192,7 @@ Language=English
 Please enter the name of the Primary Domain Controller: %0
 .
 Language=Polish
-Please enter the name of the Primary Domain Controller: %0
+Wpisz nazwę podstawowego kontrolera domeny: %0
 .
 Language=Romanian
 Please enter the name of the Primary Domain Controller: %0
@@ -23223,8 +23222,8 @@ The string you have entered is too long. The maximum\n
 is %1, please reenter. %0
 .
 Language=Polish
-The string you have entered is too long. The maximum\n
-is %1, please reenter. %0
+Wpisany ciąg jest za długi. Maksymalna długość\n
+to %1, wpisz ciąg jeszcze raz. %0
 .
 Language=Romanian
 The string you have entered is too long. The maximum\n
@@ -23259,7 +23258,7 @@ Language=English
 Sunday%0
 .
 Language=Polish
-Sunday%0
+Niedziela%0
 .
 Language=Romanian
 Sunday%0
@@ -23288,7 +23287,7 @@ Language=English
 Monday%0
 .
 Language=Polish
-Monday%0
+Poniedzialek%0
 .
 Language=Romanian
 Monday%0
@@ -23317,7 +23316,7 @@ Language=English
 Tuesday%0
 .
 Language=Polish
-Tuesday%0
+Wtorek%0
 .
 Language=Romanian
 Tuesday%0
@@ -23346,7 +23345,7 @@ Language=English
 Wednesday%0
 .
 Language=Polish
-Wednesday%0
+Sroda%0
 .
 Language=Romanian
 Wednesday%0
@@ -23375,7 +23374,7 @@ Language=English
 Thursday%0
 .
 Language=Polish
-Thursday%0
+Czwartek%0
 .
 Language=Romanian
 Thursday%0
@@ -23404,7 +23403,7 @@ Language=English
 Friday%0
 .
 Language=Polish
-Friday%0
+Piatek%0
 .
 Language=Romanian
 Friday%0
@@ -23433,7 +23432,7 @@ Language=English
 Saturday%0
 .
 Language=Polish
-Saturday%0
+Sobota%0
 .
 Language=Romanian
 Saturday%0
@@ -23462,7 +23461,7 @@ Language=English
 Su%0
 .
 Language=Polish
-Su%0
+N%0
 .
 Language=Romanian
 Su%0
@@ -23491,7 +23490,7 @@ Language=English
 M%0
 .
 Language=Polish
-M%0
+Pn%0
 .
 Language=Romanian
 M%0
@@ -23520,7 +23519,7 @@ Language=English
 T%0
 .
 Language=Polish
-T%0
+Wt%0
 .
 Language=Romanian
 T%0
@@ -23549,7 +23548,7 @@ Language=English
 W%0
 .
 Language=Polish
-W%0
+Sr%0
 .
 Language=Romanian
 W%0
@@ -23578,7 +23577,7 @@ Language=English
 Th%0
 .
 Language=Polish
-Th%0
+Cz%0
 .
 Language=Romanian
 Th%0
@@ -23607,7 +23606,7 @@ Language=English
 F%0
 .
 Language=Polish
-F%0
+Pt%0
 .
 Language=Romanian
 F%0
@@ -23636,7 +23635,7 @@ Language=English
 S%0
 .
 Language=Polish
-S%0
+So%0
 .
 Language=Romanian
 S%0
@@ -24071,7 +24070,7 @@ Language=English
 Parameters%0
 .
 Language=Polish
-Parameters%0
+Parametry%0
 .
 Language=Romanian
 Parameters%0
@@ -24129,7 +24128,7 @@ Language=English
 Privilege level%0
 .
 Language=Polish
-Privilege level%0
+Poziom uprzywilejowania%0
 .
 Language=Romanian
 Privilege level%0
@@ -24158,7 +24157,7 @@ Language=English
 Operator privileges%0
 .
 Language=Polish
-Operator privileges%0
+Przywileje operatora%0
 .
 Language=Romanian
 Operator privileges%0
@@ -24361,7 +24360,7 @@ Language=English
 Maximum disk space%0
 .
 Language=Polish
-Maximum disk space%0
+Maksymalny rozmiar miejsca na dysku%0
 .
 Language=Romanian
 Maximum disk space%0
@@ -24390,7 +24389,7 @@ Language=English
 Unlimited%0
 .
 Language=Polish
-Unlimited%0
+Bez ograniczeń%0
 .
 Language=Romanian
 Unlimited%0
@@ -24448,7 +24447,7 @@ Language=English
 Domain controller%0
 .
 Language=Polish
-Domain controller%0
+Kontroler domeny%0
 .
 Language=Romanian
 Domain controller%0
@@ -24593,7 +24592,7 @@ Language=English
 All%0
 .
 Language=Polish
-All%0
+Wszystko%0
 .
 Language=Romanian
 All%0
@@ -24622,7 +24621,7 @@ Language=English
 None%0
 .
 Language=Polish
-None%0
+Brak%0
 .
 Language=Romanian
 None%0
@@ -24651,7 +24650,7 @@ Language=English
 Daily %1 - %2%0
 .
 Language=Polish
-Daily %1 - %2%0
+Codziennie %1 - %2%0
 .
 Language=Romanian
 Daily %1 - %2%0
@@ -24941,7 +24940,7 @@ Language=English
 ReactOS root directory%0
 .
 Language=Polish
-ReactOS root directory%0
+Katalog główny systemu ReactOS%0
 .
 Language=Romanian
 ReactOS root directory%0
@@ -25028,7 +25027,7 @@ Language=English
 Other domain(s)%0
 .
 Language=Polish
-Other domain(s)%0
+Inne domeny%0
 .
 Language=Romanian
 Other domain(s)%0
@@ -25057,7 +25056,7 @@ Language=English
 COM Open Timeout (sec)%0
 .
 Language=Polish
-COM Open Timeout (sec)%0
+Limit czasu otwierania portu COM (s)%0
 .
 Language=Romanian
 COM Open Timeout (sec)%0
@@ -25086,7 +25085,7 @@ Language=English
 COM Send Count (byte)%0
 .
 Language=Polish
-COM Send Count (byte)%0
+Liczba operacji wysyłania przez port COM (bajty)%0
 .
 Language=Romanian
 COM Send Count (byte)%0
@@ -25115,7 +25114,7 @@ Language=English
 COM Send Timeout (msec)%0
 .
 Language=Polish
-COM Send Timeout (msec)%0
+Limit czasu wysyłania przez port COM (ms%0
 .
 Language=Romanian
 COM Send Timeout (msec)%0
@@ -25144,7 +25143,7 @@ Language=English
 DOS session print time-out (sec)%0
 .
 Language=Polish
-DOS session print time-out (sec)%0
+Limit czasu drukowania sesji DOS (s)%0
 .
 Language=Romanian
 DOS session print time-out (sec)%0
@@ -25173,7 +25172,7 @@ Language=English
 Maximum error log size (K)%0
 .
 Language=Polish
-Maximum error log size (K)%0
+Maksymalny rozmiar dziennika błędów (KB)%0
 .
 Language=Romanian
 Maximum error log size (K)%0
@@ -25202,7 +25201,7 @@ Language=English
 Maximum cache memory (K)%0
 .
 Language=Polish
-Maximum cache memory (K)%0
+Maksymalny rozmiar pamięci buforującej (KB)%0
 .
 Language=Romanian
 Maximum cache memory (K)%0
@@ -25231,7 +25230,7 @@ Language=English
 Number of network buffers%0
 .
 Language=Polish
-Number of network buffers%0
+Liczba buforów sieciowych%0
 .
 Language=Romanian
 Number of network buffers%0
@@ -25260,7 +25259,7 @@ Language=English
 Number of character buffers%0
 .
 Language=Polish
-Number of character buffers%0
+Liczba buforów znakowych%0
 .
 Language=Romanian
 Number of character buffers%0
@@ -25289,7 +25288,7 @@ Language=English
 Size of network buffers%0
 .
 Language=Polish
-Size of network buffers%0
+Rozmiar buforów sieciowych%0
 .
 Language=Romanian
 Size of network buffers%0
@@ -25318,7 +25317,7 @@ Language=English
 Size of character buffers%0
 .
 Language=Polish
-Size of character buffers%0
+Rozmiar buforów znakowych%0
 .
 Language=Romanian
 Size of character buffers%0
@@ -25376,7 +25375,7 @@ Language=English
 Workstation Domain DNS Name%0
 .
 Language=Polish
-Workstation Domain DNS Name%0
+Nazwa DNS domeny stacji roboczej%0
 .
 Language=Romanian
 Workstation Domain DNS Name%0
@@ -25492,7 +25491,7 @@ Language=English
 Send administrative alerts to%0
 .
 Language=Polish
-Send administrative alerts to%0
+Wyślij alerty administracyjne do%0
 .
 Language=Romanian
 Send administrative alerts to%0
@@ -25550,7 +25549,7 @@ Language=English
 Peer Server%0
 .
 Language=Polish
-Peer Server%0
+Serwer równorzędny%0
 .
 Language=Romanian
 Peer Server%0
@@ -25608,7 +25607,7 @@ Language=English
 Server Level%0
 .
 Language=Polish
-Server Level%0
+Poziom serwera%0
 .
 Language=Romanian
 Server Level%0
@@ -25637,7 +25636,7 @@ Language=English
 ReactOS Server%0
 .
 Language=Polish
-ReactOS Server%0
+Serwer ReactOS%0
 .
 Language=Romanian
 ReactOS Server%0
@@ -25753,7 +25752,7 @@ Language=English
 Maximum concurrent administrators%0
 .
 Language=Polish
-Maximum concurrent administrators%0
+Maksymalna liczba administratorów jednoczesnych%0
 .
 Language=Romanian
 Maximum concurrent administrators%0
@@ -25782,7 +25781,7 @@ Language=English
 Maximum resources shared%0
 .
 Language=Polish
-Maximum resources shared%0
+Maksymalna liczba udostępnionych zasobów%0
 .
 Language=Romanian
 Maximum resources shared%0
@@ -25811,7 +25810,7 @@ Language=English
 Maximum connections to resources%0
 .
 Language=Polish
-Maximum connections to resources%0
+Maksymalna liczba połączeń do zasobów%0
 .
 Language=Romanian
 Maximum connections to resources%0
@@ -25840,7 +25839,7 @@ Language=English
 Maximum open files on server%0
 .
 Language=Polish
-Maximum open files on server%0
+Maksymalna liczba otwartych plików na serwerze%0
 .
 Language=Romanian
 Maximum open files on server%0
@@ -25898,7 +25897,7 @@ Language=English
 Maximum file locks%0
 .
 Language=Polish
-Maximum file locks%0
+Maksymalna liczba blokad plików%0
 .
 Language=Romanian
 Maximum file locks%0
@@ -25956,7 +25955,7 @@ Language=English
 Share-level%0
 .
 Language=Polish
-Share-level%0
+Poziom udziału%0
 .
 Language=Romanian
 Share-level%0
@@ -25985,7 +25984,7 @@ Language=English
 User-level%0
 .
 Language=Polish
-User-level%0
+Poziom użytkownika%0
 .
 Language=Romanian
 User-level%0
@@ -26014,7 +26013,7 @@ Language=English
 Unlimited Server%0
 .
 Language=Polish
-Unlimited Server%0
+Nieograniczony serwer%0
 .
 Language=Romanian
 Unlimited Server%0
@@ -26072,7 +26071,7 @@ Language=English
 Lock out account after how many bad passwords?:%0\n
 .
 Language=Polish
-Lock out account after how many bad passwords?:%0\n
+Po ilu błędnie wprowadzonych hasłach blokować konto?:%0\n
 .
 Language=Romanian
 Lock out account after how many bad passwords?:%0\n
@@ -26246,7 +26245,7 @@ Language=English
 Primary Domain controller for workstation domain:%0.
 .
 Language=Polish
-Primary Domain controller for workstation domain:%0.
+Podstawowy kontroler domeny dla domeny stacji roboczej:%0.
 .
 Language=Romanian
 Primary Domain controller for workstation domain:%0.
@@ -26565,7 +26564,7 @@ Language=English
 Network errors%0
 .
 Language=Polish
-Network errors%0
+Błędy sieciowe%0
 .
 Language=Romanian
 Network errors%0
@@ -26768,7 +26767,7 @@ Language=English
 Sessions started%0
 .
 Language=Polish
-Sessions started%0
+Sesje uruchomione%0
 .
 Language=Romanian
 Sessions started%0
@@ -26797,7 +26796,7 @@ Language=English
 Sessions reconnected%0
 .
 Language=Polish
-Sessions reconnected%0
+Sesje ponownie podłączone%0
 .
 Language=Romanian
 Sessions reconnected%0
@@ -26826,7 +26825,7 @@ Language=English
 Sessions starts failed%0
 .
 Language=Polish
-Sessions starts failed%0
+Niepowodzenia uruchomień sesji%0
 .
 Language=Romanian
 Sessions starts failed%0
@@ -26855,7 +26854,7 @@ Language=English
 Sessions disconnected%0
 .
 Language=Polish
-Sessions disconnected%0
+Sesje odłączone%0
 .
 Language=Romanian
 Sessions disconnected%0
@@ -26884,7 +26883,7 @@ Language=English
 Network I/O's performed%0
 .
 Language=Polish
-Network I/O's performed%0
+Wykonane operacje sieciowe We/Wy%0
 .
 Language=Romanian
 Network I/O's performed%0
@@ -26913,7 +26912,7 @@ Language=English
 Files and pipes accessed%0
 .
 Language=Polish
-Files and pipes accessed%0
+Wykorzystane pliki i potoki%0
 .
 Language=Romanian
 Files and pipes accessed%0
@@ -27087,7 +27086,7 @@ Language=English
 Statistics since %1
 .
 Language=Polish
-Statistics since %1
+Statystyka od czasu %1
 .
 Language=Romanian
 Statistics since %1
@@ -27116,7 +27115,7 @@ Language=English
 Connections made%0
 .
 Language=Polish
-Connections made%0
+Wykonane połączenia%0
 .
 Language=Romanian
 Connections made%0
@@ -27145,7 +27144,7 @@ Language=English
 Connections failed%0
 .
 Language=Polish
-Connections failed%0
+Niepowodzenia połączeń%0
 .
 Language=Romanian
 Connections failed%0
@@ -27696,7 +27695,7 @@ Language=English
 %1 was deleted successfully.
 .
 Language=Polish
-%1 was deleted successfully.
+Pomyślnie usunięto %1.
 .
 Language=Romanian
 %1 was deleted successfully.
@@ -27725,7 +27724,7 @@ Language=English
 %1 was used successfully.
 .
 Language=Polish
-%1 was used successfully.
+Pomyślnie użyto %1.
 .
 Language=Romanian
 %1 was used successfully.
@@ -27754,7 +27753,7 @@ Language=English
 The message was successfully sent to %1.
 .
 Language=Polish
-The message was successfully sent to %1.
+Pomyślnie wysłano komunikat do %1.
 .
 Language=Romanian
 The message was successfully sent to %1.
@@ -27783,7 +27782,7 @@ Language=English
 The message name %1 was forwarded successfully.
 .
 Language=Polish
-The message name %1 was forwarded successfully.
+Pomyślnie przekazano nazwę komunikatu %1.
 .
 Language=Romanian
 The message name %1 was forwarded successfully.
@@ -27812,7 +27811,7 @@ Language=English
 The message name %1 was added successfully.
 .
 Language=Polish
-The message name %1 was added successfully.
+Pomyślnie dodano nazwę komunikatu %1.
 .
 Language=Romanian
 The message name %1 was added successfully.
@@ -27841,7 +27840,7 @@ Language=English
 The message name forwarding was successfully canceled.
 .
 Language=Polish
-The message name forwarding was successfully canceled.
+Pomyślnie anulowano przekazywanie nazwy komunikatu.
 .
 Language=Romanian
 The message name forwarding was successfully canceled.
@@ -27870,7 +27869,7 @@ Language=English
 %1 was shared successfully.
 .
 Language=Polish
-%1 was shared successfully.
+Pomyślnie udostępniono %1.
 .
 Language=Romanian
 %1 was shared successfully.
@@ -27899,7 +27898,7 @@ Language=English
 The server %1 successfully logged you on as %2.
 .
 Language=Polish
-The server %1 successfully logged you on as %2.
+Serwer %1 pomyślnie zalogował Cię jako %2.
 .
 Language=Romanian
 The server %1 successfully logged you on as %2.
@@ -27928,7 +27927,7 @@ Language=English
 %1 was logged off successfully.
 .
 Language=Polish
-%1 was logged off successfully.
+Pomyślnie wylogowano %1.
 .
 Language=Romanian
 %1 was logged off successfully.
@@ -27958,8 +27957,8 @@ Language=English
 on startup.
 .
 Language=Polish
-%1 was successfully removed from the list of shares the Server creates\n
-on startup.
+Pomyślnie usunięto %1 z listy udziałów tworzonych przez serwer\n
+przy uruchamianiu.
 .
 Language=Romanian
 %1 was successfully removed from the list of shares the Server creates\n
@@ -27994,7 +27993,7 @@ Language=English
 The password was changed successfully.
 .
 Language=Polish
-The password was changed successfully.
+Hasło zostało zmienione pomyślnie.
 .
 Language=Romanian
 The password was changed successfully.
@@ -28023,7 +28022,7 @@ Language=English
 %1 file(s) copied.
 .
 Language=Polish
-%1 file(s) copied.
+Liczba skopiowanych plików: %1.
 .
 Language=Romanian
 %1 file(s) copied.
@@ -28052,7 +28051,7 @@ Language=English
 %1 file(s) moved.
 .
 Language=Polish
-%1 file(s) moved.
+Liczba przeniesionych plików: %1.
 .
 Language=Romanian
 %1 file(s) moved.
@@ -28081,7 +28080,7 @@ Language=English
 The message was successfully sent to all users of the network.
 .
 Language=Polish
-The message was successfully sent to all users of the network.
+Pomyślnie wysłano komunikat do wszystkich użytkowników sieci.
 .
 Language=Romanian
 The message was successfully sent to all users of the network.
@@ -28110,7 +28109,7 @@ Language=English
 The message was successfully sent to domain %1.
 .
 Language=Polish
-The message was successfully sent to domain %1.
+Pomyślnie wysłano komunikat do domeny %1.
 .
 Language=Romanian
 The message was successfully sent to domain %1.
@@ -28139,7 +28138,7 @@ Language=English
 The message was successfully sent to all users of this server.
 .
 Language=Polish
-The message was successfully sent to all users of this server.
+Pomyślnie wysłano komunikat do wszystkich użytkowników tego serwera.
 .
 Language=Romanian
 The message was successfully sent to all users of this server.
@@ -28168,7 +28167,7 @@ Language=English
 The message was successfully sent to group *%1.
 .
 Language=Polish
-The message was successfully sent to group *%1.
+Pomyślnie wysłano komunikat do grupy *%1.
 .
 Language=Romanian
 The message was successfully sent to group *%1.
@@ -28197,7 +28196,7 @@ Language=English
 Microsoft LAN Manager Version %1
 .
 Language=Polish
-Microsoft LAN Manager Version %1
+Microsoft LAN Manager wersja %1
 .
 Language=Romanian
 Microsoft LAN Manager Version %1
@@ -28284,7 +28283,7 @@ Language=English
 MS-DOS Enhanced Workstation
 .
 Language=Polish
-MS-DOS Enhanced Workstation
+Stacja robocza trybu rozszerzonego MS-DOS
 .
 Language=Romanian
 MS-DOS Enhanced Workstation
@@ -28313,7 +28312,7 @@ Language=English
 Created at %1
 .
 Language=Polish
-Created at %1
+Utworzone o %1
 .
 Language=Romanian
 Created at %1
@@ -28342,7 +28341,7 @@ Language=English
 Server Name            Remark
 .
 Language=Polish
-Server Name            Remark
+Nazwa serwera          Uwaga
 .
 Language=Romanian
 Server Name            Remark
@@ -28429,7 +28428,7 @@ Language=English
 Domain
 .
 Language=Polish
-Domain
+Domena
 .
 Language=Romanian
 Domain
@@ -28458,7 +28457,7 @@ Language=English
 Resources on %1
 .
 Language=Polish
-Resources on %1
+Zasoby na %1
 .
 Language=Romanian
 Resources on %1
@@ -28487,7 +28486,7 @@ Language=English
 Invalid network provider.  Available networks are:
 .
 Language=Polish
-Invalid network provider.  Available networks are:
+Nieprawidłowy dostawca sieci.  Dostępne sieci to:
 .
 Language=Romanian
 Invalid network provider.  Available networks are:
@@ -28516,7 +28515,7 @@ Language=English
 Disk%0
 .
 Language=Polish
-Disk%0
+Dysk%0
 .
 Language=Romanian
 Disk%0
@@ -28545,7 +28544,7 @@ Language=English
 Print%0
 .
 Language=Polish
-Print%0
+Wydruk%0
 .
 Language=Romanian
 Print%0
@@ -28632,7 +28631,7 @@ Language=English
 Status       Local     Remote                    Network
 .
 Language=Polish
-Status       Local     Remote                    Network
+Stan       Lokalny     Zdalny                    Sieć
 .
 Language=Romanian
 Status       Local     Remote                    Network
@@ -28690,7 +28689,7 @@ Language=English
 Dormant%0
 .
 Language=Polish
-Dormant%0
+Uśpiony%0
 .
 Language=Romanian
 Dormant%0
@@ -28719,7 +28718,7 @@ Language=English
 Paused%0
 .
 Language=Polish
-Paused%0
+Wstrzymany%0
 .
 Language=Romanian
 Paused%0
@@ -28748,7 +28747,7 @@ Language=English
 Disconnected%0
 .
 Language=Polish
-Disconnected%0
+Rozłączony%0
 .
 Language=Romanian
 Disconnected%0
@@ -28777,7 +28776,7 @@ Language=English
 Error%0
 .
 Language=Polish
-Error%0
+Błąd%0
 .
 Language=Romanian
 Error%0
@@ -28806,7 +28805,7 @@ Language=English
 Connecting%0
 .
 Language=Polish
-Connecting%0
+Łączenie%0
 .
 Language=Romanian
 Connecting%0
@@ -28835,7 +28834,7 @@ Language=English
 Reconnecting%0
 .
 Language=Polish
-Reconnecting%0
+Rozłączanie%0
 .
 Language=Romanian
 Reconnecting%0
@@ -28864,7 +28863,7 @@ Language=English
 Status%0
 .
 Language=Polish
-Status%0
+Stan%0
 .
 Language=Romanian
 Status%0
@@ -28893,7 +28892,7 @@ Language=English
 Local name%0
 .
 Language=Polish
-Local name%0
+Nazwa lokalna%0
 .
 Language=Romanian
 Local name%0
@@ -28922,7 +28921,7 @@ Language=English
 Remote name%0
 .
 Language=Polish
-Remote name%0
+Nazwa zdalna%0
 .
 Language=Romanian
 Remote name%0
@@ -28951,7 +28950,7 @@ Language=English
 Resource type%0
 .
 Language=Polish
-Resource type%0
+Typ zasobu%0
 .
 Language=Romanian
 Resource type%0
@@ -28980,7 +28979,7 @@ Language=English
 # Opens%0
 .
 Language=Polish
-# Opens%0
+# Liczba otwarć%0
 .
 Language=Romanian
 # Opens%0
@@ -29009,7 +29008,7 @@ Language=English
 # Connections%0
 .
 Language=Polish
-# Connections%0
+# Liczba połączeń%0
 .
 Language=Romanian
 # Connections%0
@@ -29038,7 +29037,7 @@ Language=English
 Unavailable%0
 .
 Language=Polish
-Unavailable%0
+Brak dostępu%0
 .
 Language=Romanian
 Unavailable%0
@@ -29067,7 +29066,7 @@ Language=English
 Share name   Resource                        Remark
 .
 Language=Polish
-Share name   Resource                        Remark
+Udział       Zasób                           Uwaga
 .
 Language=Romanian
 Share name   Resource                        Remark
@@ -29096,7 +29095,7 @@ Language=English
 Share name%0
 .
 Language=Polish
-Share name%0
+Nazwa udziału%0
 .
 Language=Romanian
 Share name%0
@@ -29125,7 +29124,7 @@ Language=English
 Resource%0
 .
 Language=Polish
-Resource%0
+Zasób%0
 .
 Language=Romanian
 Resource%0
@@ -29154,7 +29153,7 @@ Language=English
 Spooled%0
 .
 Language=Polish
-Spooled%0
+Buforowane%0
 .
 Language=Romanian
 Spooled%0
@@ -29183,7 +29182,7 @@ Language=English
 Permission%0
 .
 Language=Polish
-Permission%0
+Uprawnienie%0
 .
 Language=Romanian
 Permission%0
@@ -29212,7 +29211,7 @@ Language=English
 Maximum users%0
 .
 Language=Polish
-Maximum users%0
+Maksymalna liczba użytkowników%0
 .
 Language=Romanian
 Maximum users%0
@@ -29241,7 +29240,7 @@ Language=English
 No limit%0
 .
 Language=Polish
-No limit%0
+Bez ograniczeń%0
 .
 Language=Romanian
 No limit%0
@@ -29270,7 +29269,7 @@ Language=English
 Users%0
 .
 Language=Polish
-Users%0
+Użytkownicy%0
 .
 Language=Romanian
 Users%0
@@ -29300,8 +29299,8 @@ The share name entered may not be accessible from some MS-DOS workstations.\n
 Are you sure you want to use this share name? %1: %0
 .
 Language=Polish
-The share name entered may not be accessible from some MS-DOS workstations.\n
-Are you sure you want to use this share name? %1: %0
+Wpisana nazwa udziału może nie być dostępna z niektórych stacji roboczych MS-DOS.\n
+Czy na pewno chcesz użyć tej nazwy udziału? %1: %0
 .
 Language=Romanian
 The share name entered may not be accessible from some MS-DOS workstations.\n
@@ -29336,7 +29335,7 @@ Language=English
 Caching%0
 .
 Language=Polish
-Caching%0
+Buforowanie%0
 .
 Language=Romanian
 Caching%0
@@ -29365,7 +29364,7 @@ Language=English
 ID         Path                                    User name            # Locks
 .
 Language=Polish
-ID         Path                                    User name            # Locks
+ID        Ścieżka                             Nazwa użytkownika   Liczba blokad
 .
 Language=Romanian
 ID         Path                                    User name            # Locks
@@ -29394,7 +29393,7 @@ Language=English
 File ID%0
 .
 Language=Polish
-File ID%0
+Identyfikator pliku%0
 .
 Language=Romanian
 File ID%0
@@ -29423,7 +29422,7 @@ Language=English
 Locks%0
 .
 Language=Polish
-Locks%0
+Blokady%0
 .
 Language=Romanian
 Locks%0
@@ -29452,7 +29451,7 @@ Language=English
 Permissions%0
 .
 Language=Polish
-Permissions%0
+Uprawnienia%0
 .
 Language=Romanian
 Permissions%0
@@ -29481,7 +29480,7 @@ Language=English
 Share name%0
 .
 Language=Polish
-Share name%0
+Nazwa udziału%0
 .
 Language=Romanian
 Share name%0
@@ -29510,7 +29509,7 @@ Language=English
 Type%0
 .
 Language=Polish
-Type%0
+Typ%0
 .
 Language=Romanian
 Type%0
@@ -29539,7 +29538,7 @@ Language=English
 Used as%0
 .
 Language=Polish
-Used as%0
+Używany jako%0
 .
 Language=Romanian
 Used as%0
@@ -29568,7 +29567,7 @@ Language=English
 Comment%0
 .
 Language=Polish
-Comment%0
+Komentarz%0
 .
 Language=Romanian
 Comment%0
@@ -29597,7 +29596,7 @@ Language=English
 Computer               User name            Client Type       Opens Idle time
 .
 Language=Polish
-Computer               User name            Client Type       Opens Idle time
+Komputer              Nazwa użytkownika     Klient Typ      Otwarcia Czas bezcz.
 .
 Language=Romanian
 Computer               User name            Client Type       Opens Idle time
@@ -29626,7 +29625,7 @@ Language=English
 Computer%0
 .
 Language=Polish
-Computer%0
+Komputer%0
 .
 Language=Romanian
 Computer%0
@@ -29655,7 +29654,7 @@ Language=English
 Sess time%0
 .
 Language=Polish
-Sess time%0
+Czas sesji%0
 .
 Language=Romanian
 Sess time%0
@@ -29684,7 +29683,7 @@ Language=English
 Idle time%0
 .
 Language=Polish
-Idle time%0
+Czas bezczynności%0
 .
 Language=Romanian
 Idle time%0
@@ -29713,7 +29712,7 @@ Language=English
 Share name     Type     # Opens
 .
 Language=Polish
-Share name     Type     # Opens
+Nazwa udziału     Typ   # Liczba otwarć
 .
 Language=Romanian
 Share name     Type     # Opens
@@ -29742,7 +29741,7 @@ Language=English
 Client type%0
 .
 Language=Polish
-Client type%0
+Typ klienta%0
 .
 Language=Romanian
 Client type%0
@@ -29771,7 +29770,7 @@ Language=English
 Guest logon%0
 .
 Language=Polish
-Guest logon%0
+Logowanie jako gość%0
 .
 Language=Romanian
 Guest logon%0
@@ -29800,7 +29799,7 @@ Language=English
 Manual caching of documents%0
 .
 Language=Polish
-Manual caching of documents%0
+Ręczne buforowanie dokumentów%0
 .
 Language=Romanian
 Manual caching of documents%0
@@ -29829,7 +29828,7 @@ Language=English
 Automatic caching of documents%0
 .
 Language=Polish
-Automatic caching of documents%0
+Automatyczne buforowanie dokumentów%0
 .
 Language=Romanian
 Automatic caching of documents%0
@@ -29858,7 +29857,7 @@ Language=English
 Automatic caching of programs and documents%0
 .
 Language=Polish
-Automatic caching of programs and documents%0
+Automatyczne buforowanie programów i dokumentów%0
 .
 Language=Romanian
 Automatic caching of programs and documents%0
@@ -29887,7 +29886,7 @@ Language=English
 Caching disabled%0
 .
 Language=Polish
-Caching disabled%0
+Buforowanie wyłączone%0
 .
 Language=Romanian
 Caching disabled%0
@@ -30061,7 +30060,7 @@ Language=English
 Name%0
 .
 Language=Polish
-Name%0
+Nazwa%0
 .
 Language=Romanian
 Name%0
@@ -30090,7 +30089,7 @@ Language=English
 Forwarded to%0
 .
 Language=Polish
-Forwarded to%0
+Przekazane do%0
 .
 Language=Romanian
 Forwarded to%0
@@ -30119,7 +30118,7 @@ Language=English
 Forwarded to you from%0
 .
 Language=Polish
-Forwarded to you from%0
+Przekazane do Ciebie z%0
 .
 Language=Romanian
 Forwarded to you from%0
@@ -30148,7 +30147,7 @@ Language=English
 Users of this server%0
 .
 Language=Polish
-Users of this server%0
+Użytkownicy tego serwera%0
 .
 Language=Romanian
 Users of this server%0
@@ -30177,7 +30176,7 @@ Language=English
 Net Send has been interrupted by a Ctrl+Break from the user.
 .
 Language=Polish
-Net Send has been interrupted by a Ctrl+Break from the user.
+Operacja Net Send została przerwana przez użytkownika w wyniku naciśnięcia klawiszy Ctrl+Break.
 .
 Language=Romanian
 Net Send has been interrupted by a Ctrl+Break from the user.
@@ -30206,7 +30205,7 @@ Language=English
 Name                         Job #      Size            Status
 .
 Language=Polish
-Name                         Job #      Size            Status
+Nazwa                   Numer zadania  Rozmiar           Stan
 .
 Language=Romanian
 Name                         Job #      Size            Status
@@ -30235,7 +30234,7 @@ Language=English
 jobs%0
 .
 Language=Polish
-jobs%0
+zadania%0
 .
 Language=Romanian
 jobs%0
@@ -30264,7 +30263,7 @@ Language=English
 Print%0
 .
 Language=Polish
-Print%0
+Wydruk%0
 .
 Language=Romanian
 Print%0
@@ -30293,7 +30292,7 @@ Language=English
 Name%0
 .
 Language=Polish
-Name%0
+Nazwa%0
 .
 Language=Romanian
 Name%0
@@ -30322,7 +30321,7 @@ Language=English
 Job #%0
 .
 Language=Polish
-Job #%0
+Zadanie nr%0
 .
 Language=Romanian
 Job #%0
@@ -30351,7 +30350,7 @@ Language=English
 Size%0
 .
 Language=Polish
-Size%0
+Rozmiar%0
 .
 Language=Romanian
 Size%0
@@ -30380,7 +30379,7 @@ Language=English
 Status%0
 .
 Language=Polish
-Status%0
+Stan%0
 .
 Language=Romanian
 Status%0
@@ -30409,7 +30408,7 @@ Language=English
 Separator file%0
 .
 Language=Polish
-Separator file%0
+Plik separatora%0
 .
 Language=Romanian
 Separator file%0
@@ -30438,7 +30437,7 @@ Language=English
 Comment%0
 .
 Language=Polish
-Comment%0
+Komentarz%0
 .
 Language=Romanian
 Comment%0
@@ -30467,7 +30466,7 @@ Language=English
 Priority%0
 .
 Language=Polish
-Priority%0
+Priorytet%0
 .
 Language=Romanian
 Priority%0
@@ -30496,7 +30495,7 @@ Language=English
 Print after%0
 .
 Language=Polish
-Print after%0
+Drukowanie po%0
 .
 Language=Romanian
 Print after%0
@@ -30525,7 +30524,7 @@ Language=English
 Print until%0
 .
 Language=Polish
-Print until%0
+Drukowanie do%0
 .
 Language=Romanian
 Print until%0
@@ -30554,7 +30553,7 @@ Language=English
 Print processor%0
 .
 Language=Polish
-Print processor%0
+Procesor wydruku%0
 .
 Language=Romanian
 Print processor%0
@@ -30583,7 +30582,7 @@ Language=English
 Additional info%0
 .
 Language=Polish
-Additional info%0
+Informacje dodatkowe%0
 .
 Language=Romanian
 Additional info%0
@@ -30612,7 +30611,7 @@ Language=English
 Parameters%0
 .
 Language=Polish
-Parameters%0
+Parametry%0
 .
 Language=Romanian
 Parameters%0
@@ -30641,7 +30640,7 @@ Language=English
 Print Devices%0
 .
 Language=Polish
-Print Devices%0
+Urządzenia drukujące%0
 .
 Language=Romanian
 Print Devices%0
@@ -30670,7 +30669,7 @@ Language=English
 Printer Active%0
 .
 Language=Polish
-Printer Active%0
+Drukarka aktywna%0
 .
 Language=Romanian
 Printer Active%0
@@ -30699,7 +30698,7 @@ Language=English
 Printer held%0
 .
 Language=Polish
-Printer held%0
+Drukarka przetrzymywana%0
 .
 Language=Romanian
 Printer held%0
@@ -30728,7 +30727,7 @@ Language=English
 Printer error%0
 .
 Language=Polish
-Printer error%0
+Błąd drukarki%0
 .
 Language=Romanian
 Printer error%0
@@ -30757,7 +30756,7 @@ Language=English
 Printer being deleted%0
 .
 Language=Polish
-Printer being deleted%0
+Drukarka jest właśnie usuwana%0
 .
 Language=Romanian
 Printer being deleted%0
@@ -30786,7 +30785,7 @@ Language=English
 Printer status unknown%0
 .
 Language=Polish
-Printer status unknown%0
+Stan drukarki jest nieznany%0
 .
 Language=Romanian
 Printer status unknown%0
@@ -30815,7 +30814,7 @@ Language=English
 Held until %1%0
 .
 Language=Polish
-Held until %1%0
+Przetrzymywane do %1%0
 .
 Language=Romanian
 Held until %1%0
@@ -30844,7 +30843,7 @@ Language=English
 Job #%0
 .
 Language=Polish
-Job #%0
+Zadanie nr%0
 .
 Language=Romanian
 Job #%0
@@ -30873,7 +30872,7 @@ Language=English
 Submitting user%0
 .
 Language=Polish
-Submitting user%0
+Przesyłanie danych użytkownika%0
 .
 Language=Romanian
 Submitting user%0
@@ -30902,7 +30901,7 @@ Language=English
 Notify%0
 .
 Language=Polish
-Notify%0
+Powiadom%0
 .
 Language=Romanian
 Notify%0
@@ -30931,7 +30930,7 @@ Language=English
 Job data type%0
 .
 Language=Polish
-Job data type%0
+Typ danych zadania%0
 .
 Language=Romanian
 Job data type%0
@@ -30960,7 +30959,7 @@ Language=English
 Job parameters%0
 .
 Language=Polish
-Job parameters%0
+Parametry zadania%0
 .
 Language=Romanian
 Job parameters%0
@@ -30989,7 +30988,7 @@ Language=English
 Waiting%0
 .
 Language=Polish
-Waiting%0
+Oczekiwanie%0
 .
 Language=Romanian
 Waiting%0
@@ -31018,7 +31017,7 @@ Language=English
 Held in queue%0
 .
 Language=Polish
-Held in queue%0
+Przetrzymywane w kolejce%0
 .
 Language=Romanian
 Held in queue%0
@@ -31047,7 +31046,7 @@ Language=English
 Spooling%0
 .
 Language=Polish
-Spooling%0
+Buforowanie%0
 .
 Language=Romanian
 Spooling%0
@@ -31076,7 +31075,7 @@ Language=English
 Paused%0
 .
 Language=Polish
-Paused%0
+Wstrzymane%0
 .
 Language=Romanian
 Paused%0
@@ -31134,7 +31133,7 @@ Language=English
 Error%0
 .
 Language=Polish
-Error%0
+Błąd%0
 .
 Language=Romanian
 Error%0
@@ -31163,7 +31162,7 @@ Language=English
 Out of paper%0
 .
 Language=Polish
-Out of paper%0
+Brak papieru%0
 .
 Language=Romanian
 Out of paper%0
@@ -31192,7 +31191,7 @@ Language=English
 Intervention required%0
 .
 Language=Polish
-Intervention required%0
+Potrzebna interwencja%0
 .
 Language=Romanian
 Intervention required%0
@@ -31221,7 +31220,7 @@ Language=English
 Printing%0
 .
 Language=Polish
-Printing%0
+Drukowanie%0
 .
 Language=Romanian
 Printing%0
@@ -31250,7 +31249,7 @@ Language=English
 on %0
 .
 Language=Polish
-on %0
+na %0
 .
 Language=Romanian
 on %0
@@ -31279,7 +31278,7 @@ Language=English
 Paused on %1%0
 .
 Language=Polish
-Paused on %1%0
+Wstrzymano na %1%0
 .
 Language=Romanian
 Paused on %1%0
@@ -31308,7 +31307,7 @@ Language=English
 Offline on %1%0
 .
 Language=Polish
-Offline on %1%0
+Offline na %1%0
 .
 Language=Romanian
 Offline on %1%0
@@ -31337,7 +31336,7 @@ Language=English
 Error on%1%0
 .
 Language=Polish
-Error on%1%0
+Błąd na%1%0
 .
 Language=Romanian
 Error on%1%0
@@ -31366,7 +31365,7 @@ Language=English
 Out of Paper on %1%0
 .
 Language=Polish
-Out of Paper on %1%0
+Brak papieru na %1%0
 .
 Language=Romanian
 Out of Paper on %1%0
@@ -31395,7 +31394,7 @@ Language=English
 Check printer on %1%0
 .
 Language=Polish
-Check printer on %1%0
+Sprawdź drukarkę na %1%0
 .
 Language=Romanian
 Check printer on %1%0
@@ -31424,7 +31423,7 @@ Language=English
 Printing on %1%0
 .
 Language=Polish
-Printing on %1%0
+Drukowanie na %1%0
 .
 Language=Romanian
 Printing on %1%0
@@ -31453,7 +31452,7 @@ Language=English
 Driver%0
 .
 Language=Polish
-Driver%0
+Sterownik%0
 .
 Language=Romanian
 Driver%0
@@ -31482,7 +31481,7 @@ Language=English
 User name              Type                 Date%0
 .
 Language=Polish
-User name              Type                 Date%0
+Nazwa użytkownika              Typ                 Data%0
 .
 Language=Romanian
 User name              Type                 Date%0
@@ -31511,7 +31510,7 @@ Language=English
 Lockout%0
 .
 Language=Polish
-Lockout%0
+Blokada%0
 .
 Language=Romanian
 Lockout%0
@@ -31540,7 +31539,7 @@ Language=English
 Service%0
 .
 Language=Polish
-Service%0
+Usługa%0
 .
 Language=Romanian
 Service%0
@@ -31569,7 +31568,7 @@ Language=English
 Server%0
 .
 Language=Polish
-Server%0
+Serwer%0
 .
 Language=Romanian
 Server%0
@@ -31598,7 +31597,7 @@ Language=English
 Server started%0
 .
 Language=Polish
-Server started%0
+Serwer został uruchomiony%0
 .
 Language=Romanian
 Server started%0
@@ -31627,7 +31626,7 @@ Language=English
 Server paused%0
 .
 Language=Polish
-Server paused%0
+Serwer został wstrzymany%0
 .
 Language=Romanian
 Server paused%0
@@ -31656,7 +31655,7 @@ Language=English
 Server continued%0
 .
 Language=Polish
-Server continued%0
+Działanie serwera jest kontynuowane%0
 .
 Language=Romanian
 Server continued%0
@@ -31685,7 +31684,7 @@ Language=English
 Server stopped%0
 .
 Language=Polish
-Server stopped%0
+Serwer został zatrzymany%0
 .
 Language=Romanian
 Server stopped%0
@@ -31714,7 +31713,7 @@ Language=English
 Session%0
 .
 Language=Polish
-Session%0
+Sesja%0
 .
 Language=Romanian
 Session%0
@@ -31743,7 +31742,7 @@ Language=English
 Logon Guest%0
 .
 Language=Polish
-Logon Guest%0
+Logowanie jako gość%0
 .
 Language=Romanian
 Logon Guest%0
@@ -31772,7 +31771,7 @@ Language=English
 Logon User%0
 .
 Language=Polish
-Logon User%0
+Logowanie jako użytkownik%0
 .
 Language=Romanian
 Logon User%0
@@ -31801,7 +31800,7 @@ Language=English
 Logon Administrator%0
 .
 Language=Polish
-Logon Administrator%0
+Administrator logowania%0
 .
 Language=Romanian
 Logon Administrator%0
@@ -31830,7 +31829,7 @@ Language=English
 Logoff normal%0
 .
 Language=Polish
-Logoff normal%0
+Wylogowanie normalne%0
 .
 Language=Romanian
 Logoff normal%0
@@ -31859,7 +31858,7 @@ Language=English
 Logon%0
 .
 Language=Polish
-Logon%0
+Logowanie%0
 .
 Language=Romanian
 Logon%0
@@ -31888,7 +31887,7 @@ Language=English
 Logoff error%0
 .
 Language=Polish
-Logoff error%0
+Błąd wylogowywania%0
 .
 Language=Romanian
 Logoff error%0
@@ -31917,7 +31916,7 @@ Language=English
 Logoff auto-disconnect%0
 .
 Language=Polish
-Logoff auto-disconnect%0
+Wylogowanie - rozłączanie automatyczne%0
 .
 Language=Romanian
 Logoff auto-disconnect%0
@@ -31946,7 +31945,7 @@ Language=English
 Logoff administrator-disconnect%0
 .
 Language=Polish
-Logoff administrator-disconnect%0
+Wylogowanie - rozłączanie przez administratora%0
 .
 Language=Romanian
 Logoff administrator-disconnect%0
@@ -31975,7 +31974,7 @@ Language=English
 Logoff forced by logon restrictions%0
 .
 Language=Polish
-Logoff forced by logon restrictions%0
+Wylogowanie wymuszone przez ograniczenia logowania%0
 .
 Language=Romanian
 Logoff forced by logon restrictions%0
@@ -32004,7 +32003,7 @@ Language=English
 Service%0
 .
 Language=Polish
-Service%0
+Usługa%0
 .
 Language=Romanian
 Service%0
@@ -32033,7 +32032,7 @@ Language=English
 %1 Installed%0
 .
 Language=Polish
-%1 Installed%0
+%1 Zainstalowano%0
 .
 Language=Romanian
 %1 Installed%0
@@ -32062,7 +32061,7 @@ Language=English
 %1 Install Pending%0
 .
 Language=Polish
-%1 Install Pending%0
+Oczekiwanie na instalację %1 %0
 .
 Language=Romanian
 %1 Install Pending%0
@@ -32091,7 +32090,7 @@ Language=English
 %1 Paused%0
 .
 Language=Polish
-%1 Paused%0
+Wstrzymano %1 %0
 .
 Language=Romanian
 %1 Paused%0
@@ -32120,7 +32119,7 @@ Language=English
 %1 Pause Pending%0
 .
 Language=Polish
-%1 Pause Pending%0
+Oczekiwanie na wstrzymanie %1%0
 .
 Language=Romanian
 %1 Pause Pending%0
@@ -32149,7 +32148,7 @@ Language=English
 %1 Continued%0
 .
 Language=Polish
-%1 Continued%0
+Operacja jest kontynuowana %1%0
 .
 Language=Romanian
 %1 Continued%0
@@ -32178,7 +32177,7 @@ Language=English
 %1 Continue Pending%0
 .
 Language=Polish
-%1 Continue Pending%0
+Oczekiwanie na kontynuację %1%0
 .
 Language=Romanian
 %1 Continue Pending%0
@@ -32207,7 +32206,7 @@ Language=English
 %1 Stopped%0
 .
 Language=Polish
-%1 Stopped%0
+Zatrzymano %1%0
 .
 Language=Romanian
 %1 Stopped%0
@@ -32236,7 +32235,7 @@ Language=English
 %1 Stop Pending%0
 .
 Language=Polish
-%1 Stop Pending%0
+Oczekiwanie na zatrzymanie %1%0
 .
 Language=Romanian
 %1 Stop Pending%0
@@ -32265,7 +32264,7 @@ Language=English
 Account%0
 .
 Language=Polish
-Account%0
+Konto%0
 .
 Language=Romanian
 Account%0
@@ -32294,7 +32293,7 @@ Language=English
 User account %1 was modified.%0
 .
 Language=Polish
-User account %1 was modified.%0
+Zmodyfikowano konto użytkownika %1.%0
 .
 Language=Romanian
 User account %1 was modified.%0
@@ -32323,7 +32322,7 @@ Language=English
 Group account %1 was modified.%0
 .
 Language=Polish
-Group account %1 was modified.%0
+Zmodyfikowano konto grupy %1.%0
 .
 Language=Romanian
 Group account %1 was modified.%0
@@ -32352,7 +32351,7 @@ Language=English
 User account %1 was deleted%0
 .
 Language=Polish
-User account %1 was deleted%0
+Usunięto konto użytkownika %1.%0
 .
 Language=Romanian
 User account %1 was deleted%0
@@ -32381,7 +32380,7 @@ Language=English
 Group account %1 was deleted%0
 .
 Language=Polish
-Group account %1 was deleted%0
+Usunięto konto grupy %1.%0
 .
 Language=Romanian
 Group account %1 was deleted%0
@@ -32410,7 +32409,7 @@ Language=English
 User account %1 was added%0
 .
 Language=Polish
-User account %1 was added%0
+Dodano konto użytkownika %1.%0
 .
 Language=Romanian
 User account %1 was added%0
@@ -32439,7 +32438,7 @@ Language=English
 Group account %1 was added%0
 .
 Language=Polish
-Group account %1 was added%0
+Dodano konto grupy %1.%0
 .
 Language=Romanian
 Group account %1 was added%0
@@ -32468,7 +32467,7 @@ Language=English
 Account system settings were modified%0
 .
 Language=Polish
-Account system settings were modified%0
+Zmodyfikowano ustawienia konta systemowego %0
 .
 Language=Romanian
 Account system settings were modified%0
@@ -32497,7 +32496,7 @@ Language=English
 Logon restriction%0
 .
 Language=Polish
-Logon restriction%0
+Ograniczenie logowania%0
 .
 Language=Romanian
 Logon restriction%0
@@ -32526,7 +32525,7 @@ Language=English
 Limit exceeded:  UNKNOWN%0
 .
 Language=Polish
-Limit exceeded:  UNKNOWN%0
+Przekroczony limit: BRAK DANYCH%0
 .
 Language=Romanian
 Limit exceeded:  UNKNOWN%0
@@ -32555,7 +32554,7 @@ Language=English
 Limit exceeded:  Logon hours%0
 .
 Language=Polish
-Limit exceeded:  Logon hours%0
+Przekroczono limit: godziny logowania%0
 .
 Language=Romanian
 Limit exceeded:  Logon hours%0
@@ -32584,7 +32583,7 @@ Language=English
 Limit exceeded:  Account expired%0
 .
 Language=Polish
-Limit exceeded:  Account expired%0
+Przekroczono limit: wygasła ważność konta%0
 .
 Language=Romanian
 Limit exceeded:  Account expired%0
@@ -32613,7 +32612,7 @@ Language=English
 Limit exceeded:  Workstation ID invalid%0
 .
 Language=Polish
-Limit exceeded:  Workstation ID invalid%0
+Przekroczono limit: nieprawidłowy identyfikator stacji roboczej%0
 .
 Language=Romanian
 Limit exceeded:  Workstation ID invalid%0
@@ -32642,7 +32641,7 @@ Language=English
 Limit exceeded:  Account disabled%0
 .
 Language=Polish
-Limit exceeded:  Account disabled%0
+Przekroczono limit: wyłączono konto%0
 .
 Language=Romanian
 Limit exceeded:  Account disabled%0
@@ -32671,7 +32670,7 @@ Language=English
 Limit exceeded:  Account deleted%0
 .
 Language=Polish
-Limit exceeded:  Account deleted%0
+Przekroczono limit: usunięto konto%0
 .
 Language=Romanian
 Limit exceeded:  Account deleted%0
@@ -32700,7 +32699,7 @@ Language=English
 Share%0
 .
 Language=Polish
-Share%0
+Udział%0
 .
 Language=Romanian
 Share%0
@@ -32729,7 +32728,7 @@ Language=English
 Use %1%0
 .
 Language=Polish
-Use %1%0
+Użycie %1%0
 .
 Language=Romanian
 Use %1%0
@@ -32758,7 +32757,7 @@ Language=English
 Unuse %1%0
 .
 Language=Polish
-Unuse %1%0
+Brak użycia %1%0
 .
 Language=Romanian
 Unuse %1%0
@@ -32787,7 +32786,7 @@ Language=English
 User's session disconnected %1%0
 .
 Language=Polish
-User's session disconnected %1%0
+Odłączono sesję użytkownika %1%0
 .
 Language=Romanian
 User's session disconnected %1%0
@@ -32816,7 +32815,7 @@ Language=English
 Administrator stopped sharing resource %1%0
 .
 Language=Polish
-Administrator stopped sharing resource %1%0
+Administrator zatrzymał udostępnianie zasobu %1%0
 .
 Language=Romanian
 Administrator stopped sharing resource %1%0
@@ -32845,7 +32844,7 @@ Language=English
 User reached limit for %1%0
 .
 Language=Polish
-User reached limit for %1%0
+Użytkownik osiągnął limit dla %1%0
 .
 Language=Romanian
 User reached limit for %1%0
@@ -32874,7 +32873,7 @@ Language=English
 Bad password%0
 .
 Language=Polish
-Bad password%0
+Złe hasło%0
 .
 Language=Romanian
 Bad password%0
@@ -32903,7 +32902,7 @@ Language=English
 Administrator privilege required%0
 .
 Language=Polish
-Administrator privilege required%0
+Wymagany przywilej administratora%0
 .
 Language=Romanian
 Administrator privilege required%0
@@ -32932,7 +32931,7 @@ Language=English
 Access%0
 .
 Language=Polish
-Access%0
+Dostęp%0
 .
 Language=Romanian
 Access%0
@@ -32961,7 +32960,7 @@ Language=English
 %1 permissions added%0
 .
 Language=Polish
-%1 permissions added%0
+Dodane uprawnienia %1%0
 .
 Language=Romanian
 %1 permissions added%0
@@ -32990,7 +32989,7 @@ Language=English
 %1 permissions modified%0
 .
 Language=Polish
-%1 permissions modified%0
+Zmodyfikowane uprawnienia %1%0
 .
 Language=Romanian
 %1 permissions modified%0
@@ -33019,7 +33018,7 @@ Language=English
 %1 permissions deleted%0
 .
 Language=Polish
-%1 permissions deleted%0
+Usunięte uprawnienia %1%0
 .
 Language=Romanian
 %1 permissions deleted%0
@@ -33048,7 +33047,7 @@ Language=English
 Access denied%0
 .
 Language=Polish
-Access denied%0
+Odmowa dostępu%0
 .
 Language=Romanian
 Access denied%0
@@ -33077,7 +33076,7 @@ Language=English
 Unknown%0
 .
 Language=Polish
-Unknown%0
+Brak danych%0
 .
 Language=Romanian
 Unknown%0
@@ -33106,7 +33105,7 @@ Language=English
 Other%0
 .
 Language=Polish
-Other%0
+Inne%0
 .
 Language=Romanian
 Other%0
@@ -33135,7 +33134,7 @@ Language=English
 Duration:%0
 .
 Language=Polish
-Duration:%0
+Czas trwania:%0
 .
 Language=Romanian
 Duration:%0
@@ -33164,7 +33163,7 @@ Language=English
 Duration: Not available%0
 .
 Language=Polish
-Duration: Not available%0
+Czas trwania: brak dostępu%0
 .
 Language=Romanian
 Duration: Not available%0
@@ -33193,7 +33192,7 @@ Language=English
 Duration: Less than one second%0
 .
 Language=Polish
-Duration: Less than one second%0
+Czas trwania: mniej niż jedna sekunda%0
 .
 Language=Romanian
 Duration: Less than one second%0
@@ -33222,7 +33221,7 @@ Language=English
 (none)%0
 .
 Language=Polish
-(none)%0
+(brak)%0
 .
 Language=Romanian
 (none)%0
@@ -33251,7 +33250,7 @@ Language=English
 Closed %1%0
 .
 Language=Polish
-Closed %1%0
+Zamknięte %1%0
 .
 Language=Romanian
 Closed %1%0
@@ -33280,7 +33279,7 @@ Language=English
 Closed %1 (disconnected)%0
 .
 Language=Polish
-Closed %1 (disconnected)%0
+Zamknięte %1 (odłączone)%0
 .
 Language=Romanian
 Closed %1 (disconnected)%0
@@ -33309,7 +33308,7 @@ Language=English
 Administrator closed %1%0
 .
 Language=Polish
-Administrator closed %1%0
+Administrator zamknął %1%0
 .
 Language=Romanian
 Administrator closed %1%0
@@ -33338,7 +33337,7 @@ Language=English
 Access ended%0
 .
 Language=Polish
-Access ended%0
+Zakończono dostęp%0
 .
 Language=Romanian
 Access ended%0
@@ -33367,7 +33366,7 @@ Language=English
 Log on to network%0
 .
 Language=Polish
-Log on to network%0
+Logowanie do sieci%0
 .
 Language=Romanian
 Log on to network%0
@@ -33396,7 +33395,7 @@ Language=English
 Logon denied%0
 .
 Language=Polish
-Logon denied%0
+Odmowa logowania%0
 .
 Language=Romanian
 Logon denied%0
@@ -33425,7 +33424,7 @@ Language=English
 Program             Message             Time%0
 .
 Language=Polish
-Program             Message             Time%0
+Program             Komunikat             Czas%0
 .
 Language=Romanian
 Program             Message             Time%0
@@ -33454,7 +33453,7 @@ Language=English
 Account locked due to %1 bad passwords%0
 .
 Language=Polish
-Account locked due to %1 bad passwords%0
+Konto zostało zablokowane z powodu %1 złych haseł%0
 .
 Language=Romanian
 Account locked due to %1 bad passwords%0
@@ -33483,7 +33482,7 @@ Language=English
 Account unlocked by administrator%0
 .
 Language=Polish
-Account unlocked by administrator%0
+Konto zostało odblokowane przez administratora%0
 .
 Language=Romanian
 Account unlocked by administrator%0
@@ -33512,7 +33511,7 @@ Language=English
 Log off network%0
 .
 Language=Polish
-Log off network%0
+Wylogowanie się z sieci%0
 .
 Language=Romanian
 Log off network%0
@@ -33570,7 +33569,7 @@ Language=English
 Subj:   ** ADMINISTRATOR ALERT **
 .
 Language=Polish
-Subj:   ** ADMINISTRATOR ALERT **
+Temat:   ** ALERT ADMINISTRATORA **
 .
 Language=Romanian
 Subj:   ** ADMINISTRATOR ALERT **
@@ -33599,7 +33598,7 @@ Language=English
 Subj:   ** PRINTING NOTIFICATION **
 .
 Language=Polish
-Subj:   ** PRINTING NOTIFICATION **
+Temat:   ** POWIADOMIENIE O DRUKOWANIU **
 .
 Language=Romanian
 Subj:   ** PRINTING NOTIFICATION **
@@ -33628,7 +33627,7 @@ Language=English
 Subj:   ** USER NOTIFICATION **
 .
 Language=Polish
-Subj:   ** USER NOTIFICATION **
+Temat:   ** POWIADOMIENIE UŻYTKOWNIKA **
 .
 Language=Romanian
 Subj:   ** USER NOTIFICATION **
@@ -33657,7 +33656,7 @@ Language=English
 From:   %1 at \\\\%2
 .
 Language=Polish
-From:   %1 at \\\\%2
+Od:   %1 na \\\\%2
 .
 Language=Romanian
 From:   %1 at \\\\%2
@@ -33686,7 +33685,7 @@ Language=English
 Print job %1 has been canceled while printing on %2.
 .
 Language=Polish
-Print job %1 has been canceled while printing on %2.
+Anulowano zadanie drukowania %1 podczas drukowania na %2.
 .
 Language=Romanian
 Print job %1 has been canceled while printing on %2.
@@ -33715,7 +33714,7 @@ Language=English
 Print job %1 has been deleted and will not print.
 .
 Language=Polish
-Print job %1 has been deleted and will not print.
+Usunięto zadanie drukowania %1 - wydruk nie zostanie wykonany.
 .
 Language=Romanian
 Print job %1 has been deleted and will not print.
@@ -33745,8 +33744,8 @@ Printing Complete\n\n
 %1 printed successfully on %2.
 .
 Language=Polish
-Printing Complete\n\n
-%1 printed successfully on %2.
+Zadanie drukowania\n\n
+%1 zakończyło się drukowanie na %2.
 .
 Language=Romanian
 Printing Complete\n\n
@@ -33776,7 +33775,7 @@ Language=English
 Print job %1 has not completed printing on %2.
 .
 Language=Polish
-Print job %1 has not completed printing on %2.
+Zadanie drukowania %1: nie zakończyło się drukowanie na %2.
 .
 Language=Romanian
 Print job %1 has not completed printing on %2.
@@ -33805,7 +33804,7 @@ Language=English
 Print job %1 has paused printing on %2.
 .
 Language=Polish
-Print job %1 has paused printing on %2.
+Zadanie drukowania %1: wstrzymano drukowanie na %2.
 .
 Language=Romanian
 Print job %1 has paused printing on %2.
@@ -33834,7 +33833,7 @@ Language=English
 Print job %1 is now printing on %2.
 .
 Language=Polish
-Print job %1 is now printing on %2.
+Zadanie drukowania %1: trwa drukowanie na %2.
 .
 Language=Romanian
 Print job %1 is now printing on %2.
@@ -33863,7 +33862,7 @@ Language=English
 The printer is out of paper.
 .
 Language=Polish
-The printer is out of paper.
+W drukarce zabrakło papieru.
 .
 Language=Romanian
 The printer is out of paper.
@@ -33892,7 +33891,7 @@ Language=English
 The printer is offline.
 .
 Language=Polish
-The printer is offline.
+Drukarka jest w trybie offline.
 .
 Language=Romanian
 The printer is offline.
@@ -33921,7 +33920,7 @@ Language=English
 Printing errors occurred.
 .
 Language=Polish
-Printing errors occurred.
+Wystąpiły błędy drukowania.
 .
 Language=Romanian
 Printing errors occurred.
@@ -33950,7 +33949,7 @@ Language=English
 There is a problem with the printer; please check it.
 .
 Language=Polish
-There is a problem with the printer; please check it.
+Wystąpił problem z drukarką; sprawdź drukarkę.
 .
 Language=Romanian
 There is a problem with the printer; please check it.
@@ -33979,7 +33978,7 @@ Language=English
 Print job %1 is being held from printing.
 .
 Language=Polish
-Print job %1 is being held from printing.
+Wstrzymano zadanie drukowania %1.
 .
 Language=Romanian
 Print job %1 is being held from printing.
@@ -34008,7 +34007,7 @@ Language=English
 Print job %1 is queued for printing.
 .
 Language=Polish
-Print job %1 is queued for printing.
+Zadanie drukowania %1 jest skierowane do kolejki drukowania.
 .
 Language=Romanian
 Print job %1 is queued for printing.
@@ -34037,7 +34036,7 @@ Language=English
 Print job %1 is being spooled.
 .
 Language=Polish
-Print job %1 is being spooled.
+Trwa buforowanie zadania drukowania %1.
 .
 Language=Romanian
 Print job %1 is being spooled.
@@ -34066,7 +34065,7 @@ Language=English
 Job was queued to %1 on %2
 .
 Language=Polish
-Job was queued to %1 on %2
+Zadanie skierowano do kolejki %1 na %2
 .
 Language=Romanian
 Job was queued to %1 on %2
@@ -34095,7 +34094,7 @@ Language=English
 Size of job is %1 bytes.
 .
 Language=Polish
-Size of job is %1 bytes.
+Rozmiar zadania w bajtach: %1.
 .
 Language=Romanian
 Size of job is %1 bytes.
@@ -34124,7 +34123,7 @@ Language=English
 To:     %1
 .
 Language=Polish
-To:     %1
+Do:     %1
 .
 Language=Romanian
 To:     %1
@@ -34153,7 +34152,7 @@ Language=English
 Date:   %1
 .
 Language=Polish
-Date:   %1
+Data:   %1
 .
 Language=Romanian
 Date:   %1
@@ -34184,9 +34183,9 @@ There was an error retrieving the message. Make sure the file\n
 NET.MSG is available.
 .
 Language=Polish
-The error code is %1.\n
-There was an error retrieving the message. Make sure the file\n
-NET.MSG is available.
+Kod błędu %1.\n
+Przy pobieraniu komunikatu wystąpił błąd. Sprawdź, czy plik\n
+NET.MSG jest dostępny.
 .
 Language=Romanian
 The error code is %1.\n
@@ -34229,9 +34228,9 @@ Printing Failed\n\n
 For more help use the print troubleshooter.
 .
 Language=Polish
-Printing Failed\n\n
-\"%1\" failed to print on %2 on %3.\n\n
-For more help use the print troubleshooter.
+Nieudane drukowanie\n\n
+\"%1\" nie można wydrukować na %2 na %3.\n\n
+Dodatkową pomoc można znaleźć w pomocy dotyczącej rozwiązywania problemów z drukowaniem.
 .
 Language=Romanian
 Printing Failed\n\n
@@ -34274,9 +34273,9 @@ Printing Failed\n\n
 For more help use the print troubleshooter.
 .
 Language=Polish
-Printing Failed\n\n
-\"%1\" failed to print on %2 on %3.  The Printer is %4.\n\n
-For more help use the print troubleshooter.
+Nieudane drukowanie\n\n
+\"%1\" nie można wydrukować na %2 na %3. Drukarką jest %4.\n\n
+Dodatkową pomoc można znaleźć w pomocy dotyczącej rozwiązywania problemów z drukowaniem.
 .
 Language=Romanian
 Printing Failed\n\n
@@ -34318,8 +34317,8 @@ Printing Complete\n\n
 \"%1\" printed successfully on %2 on %3.
 .
 Language=Polish
-Printing Complete\n\n
-\"%1\" printed successfully on %2 on %3.
+Drukowanie zakończone\n\n
+\"%1\" zakończyło się drukowanie na %2 na %3.
 .
 Language=Romanian
 Printing Complete\n\n
@@ -34354,7 +34353,7 @@ Language=English
 January%0
 .
 Language=Polish
-January%0
+Styczeń%0
 .
 Language=Romanian
 January%0
@@ -34383,7 +34382,7 @@ Language=English
 February%0
 .
 Language=Polish
-February%0
+Luty%0
 .
 Language=Romanian
 February%0
@@ -34412,7 +34411,7 @@ Language=English
 March%0
 .
 Language=Polish
-March%0
+Marzec%0
 .
 Language=Romanian
 March%0
@@ -34441,7 +34440,7 @@ Language=English
 April%0
 .
 Language=Polish
-April%0
+Kwiecień%0
 .
 Language=Romanian
 April%0
@@ -34470,7 +34469,7 @@ Language=English
 May%0
 .
 Language=Polish
-May%0
+Maj%0
 .
 Language=Romanian
 May%0
@@ -34499,7 +34498,7 @@ Language=English
 June%0
 .
 Language=Polish
-June%0
+Czerwiec%0
 .
 Language=Romanian
 June%0
@@ -34528,7 +34527,7 @@ Language=English
 July%0
 .
 Language=Polish
-July%0
+Lipiec%0
 .
 Language=Romanian
 July%0
@@ -34557,7 +34556,7 @@ Language=English
 August%0
 .
 Language=Polish
-August%0
+Sierpień%0
 .
 Language=Romanian
 August%0
@@ -34586,7 +34585,7 @@ Language=English
 September%0
 .
 Language=Polish
-September%0
+Wrzesień%0
 .
 Language=Romanian
 September%0
@@ -34615,7 +34614,7 @@ Language=English
 October%0
 .
 Language=Polish
-October%0
+Październik%0
 .
 Language=Romanian
 October%0
@@ -34644,7 +34643,7 @@ Language=English
 November%0
 .
 Language=Polish
-November%0
+Listopad%0
 .
 Language=Romanian
 November%0
@@ -34673,7 +34672,7 @@ Language=English
 December%0
 .
 Language=Polish
-December%0
+Grudzień%0
 .
 Language=Romanian
 December%0
@@ -34702,7 +34701,7 @@ Language=English
 Jan%0
 .
 Language=Polish
-Jan%0
+Sty%0
 .
 Language=Romanian
 Jan%0
@@ -34731,7 +34730,7 @@ Language=English
 Feb%0
 .
 Language=Polish
-Feb%0
+Lut%0
 .
 Language=Romanian
 Feb%0
@@ -34789,7 +34788,7 @@ Language=English
 Apr%0
 .
 Language=Polish
-Apr%0
+Kwi%0
 .
 Language=Romanian
 Apr%0
@@ -34818,7 +34817,7 @@ Language=English
 May%0
 .
 Language=Polish
-May%0
+Maj%0
 .
 Language=Romanian
 May%0
@@ -34847,7 +34846,7 @@ Language=English
 Jun%0
 .
 Language=Polish
-Jun%0
+Cze%0
 .
 Language=Romanian
 Jun%0
@@ -34876,7 +34875,7 @@ Language=English
 Jul%0
 .
 Language=Polish
-Jul%0
+Lip%0
 .
 Language=Romanian
 Jul%0
@@ -34905,7 +34904,7 @@ Language=English
 Aug%0
 .
 Language=Polish
-Aug%0
+Sie%0
 .
 Language=Romanian
 Aug%0
@@ -34934,7 +34933,7 @@ Language=English
 Sep%0
 .
 Language=Polish
-Sep%0
+Wrz%0
 .
 Language=Romanian
 Sep%0
@@ -34963,7 +34962,7 @@ Language=English
 Oct%0
 .
 Language=Polish
-Oct%0
+Paź%0
 .
 Language=Romanian
 Oct%0
@@ -34992,7 +34991,7 @@ Language=English
 Nov%0
 .
 Language=Polish
-Nov%0
+Lis%0
 .
 Language=Romanian
 Nov%0
@@ -35021,7 +35020,7 @@ Language=English
 Dec%0
 .
 Language=Polish
-Dec%0
+Gru%0
 .
 Language=Romanian
 Dec%0
@@ -35224,7 +35223,7 @@ Language=English
 WORKSTATION%0.
 .
 Language=Polish
-Stacja robocza%0.
+STACJA ROBOCZA%0.
 .
 Language=Romanian
 Stație de lucru%0.
@@ -35282,7 +35281,7 @@ Language=English
 System Default%0
 .
 Language=Polish
-System Default%0
+Domyślne ustawienia systemu%0
 .
 Language=Romanian
 System Default%0
@@ -35311,7 +35310,7 @@ Language=English
 United States%0
 .
 Language=Polish
-United States%0
+Stany Zjednoczone%0
 .
 Language=Romanian
 United States%0
@@ -35340,7 +35339,7 @@ Language=English
 Canada (French)%0
 .
 Language=Polish
-Canada (French)%0
+Kanada (francuskojęzyczna)%0
 .
 Language=Romanian
 Canada (French)%0
@@ -35369,7 +35368,7 @@ Language=English
 Latin America%0
 .
 Language=Polish
-Latin America%0
+Ameryka Łacińska%0
 .
 Language=Romanian
 Latin America%0
@@ -35398,7 +35397,7 @@ Language=English
 Netherlands%0
 .
 Language=Polish
-Netherlands%0
+Holandia%0
 .
 Language=Romanian
 Netherlands%0
@@ -35427,7 +35426,7 @@ Language=English
 Belgium%0
 .
 Language=Polish
-Belgium%0
+Belgia%0
 .
 Language=Romanian
 Belgium%0
@@ -35456,7 +35455,7 @@ Language=English
 France%0
 .
 Language=Polish
-France%0
+Francja%0
 .
 Language=Romanian
 France%0
@@ -35485,7 +35484,7 @@ Language=English
 Italy%0
 .
 Language=Polish
-Italy%0
+Włochy%0
 .
 Language=Romanian
 Italy%0
@@ -35514,7 +35513,7 @@ Language=English
 Switzerland%0
 .
 Language=Polish
-Switzerland%0
+Szwajcaria%0
 .
 Language=Romanian
 Switzerland%0
@@ -35543,7 +35542,7 @@ Language=English
 United Kingdom%0
 .
 Language=Polish
-United Kingdom%0
+Wielka Brytania%0
 .
 Language=Romanian
 United Kingdom%0
@@ -35572,7 +35571,7 @@ Language=English
 Spain%0
 .
 Language=Polish
-Spain%0
+Hiszpania%0
 .
 Language=Romanian
 Spain%0
@@ -35601,7 +35600,7 @@ Language=English
 Denmark%0
 .
 Language=Polish
-Denmark%0
+Dania%0
 .
 Language=Romanian
 Denmark%0
@@ -35630,7 +35629,7 @@ Language=English
 Sweden%0
 .
 Language=Polish
-Sweden%0
+Szwecja%0
 .
 Language=Romanian
 Sweden%0
@@ -35659,7 +35658,7 @@ Language=English
 Norway%0
 .
 Language=Polish
-Norway%0
+Norwegia%0
 .
 Language=Romanian
 Norway%0
@@ -35688,7 +35687,7 @@ Language=English
 Germany%0
 .
 Language=Polish
-Germany%0
+Niemcy%0
 .
 Language=Romanian
 Germany%0
@@ -35746,7 +35745,7 @@ Language=English
 Japan%0
 .
 Language=Polish
-Japan%0
+Japonia%0
 .
 Language=Romanian
 Japan%0
@@ -35804,7 +35803,7 @@ Language=English
 China (PRC)%0
 .
 Language=Polish
-China (PRC)%0
+Chiny (ChRL)%0
 .
 Language=Romanian
 China (PRC)%0
@@ -35833,7 +35832,7 @@ Language=English
 Taiwan%0
 .
 Language=Polish
-Taiwan%0
+Tajwan%0
 .
 Language=Romanian
 Taiwan%0
@@ -35862,7 +35861,7 @@ Language=English
 Asia%0
 .
 Language=Polish
-Asia%0
+Azja%0
 .
 Language=Romanian
 Asia%0
@@ -35891,7 +35890,7 @@ Language=English
 Portugal%0
 .
 Language=Polish
-Portugal%0
+Portugalia%0
 .
 Language=Romanian
 Portugal%0
@@ -35920,7 +35919,7 @@ Language=English
 Finland%0
 .
 Language=Polish
-Finland%0
+Finlandia%0
 .
 Language=Romanian
 Finland%0
@@ -35949,7 +35948,7 @@ Language=English
 Arabic%0
 .
 Language=Polish
-Arabic%0
+Arabski%0
 .
 Language=Romanian
 Arabic%0
@@ -35978,7 +35977,7 @@ Language=English
 Hebrew%0
 .
 Language=Polish
-Hebrew%0
+Hebrajski%0
 .
 Language=Romanian
 Hebrew%0
@@ -36007,7 +36006,7 @@ Language=English
 A power failure has occurred at %1.  Please terminate all activity with this server.
 .
 Language=Polish
-A power failure has occurred at %1.  Please terminate all activity with this server.
+Wystąpiła awaria zasilania na %1. Zakończ wszelkie działania na tym serwerze.
 .
 Language=Romanian
 A power failure has occurred at %1.  Please terminate all activity with this server.
@@ -36036,7 +36035,7 @@ Language=English
 Power has been restored at %1.  Normal operations have resumed.
 .
 Language=Polish
-Power has been restored at %1.  Normal operations have resumed.
+Przywrócono zasilanie dla %1. Podjęto normalne działania.
 .
 Language=Romanian
 Power has been restored at %1.  Normal operations have resumed.
@@ -36065,7 +36064,7 @@ Language=English
 The UPS service is starting shut down at %1.
 .
 Language=Polish
-The UPS service is starting shut down at %1.
+Usługa UPS rozpoczyna zamykanie systemu na %1.
 .
 Language=Romanian
 The UPS service is starting shut down at %1.
@@ -36094,7 +36093,7 @@ Language=English
 The UPS service is about to perform final shut down.
 .
 Language=Polish
-The UPS service is about to perform final shut down.
+Usługa UPS za chwilę ostatecznie zamknie system.
 .
 Language=Romanian
 The UPS service is about to perform final shut down.
@@ -36123,7 +36122,7 @@ Language=English
 The Workstation must be started with the NET START command.
 .
 Language=Polish
-The Workstation must be started with the NET START command.
+Usługę Stacja robocza należy uruchamiać poleceniem NET START.
 .
 Language=Romanian
 The Workstation must be started with the NET START command.
@@ -36152,7 +36151,7 @@ Language=English
 Remote IPC%0
 .
 Language=Polish
-Remote IPC%0
+Zdalne wywołanie IPC%0
 .
 Language=Romanian
 Remote IPC%0
@@ -36181,7 +36180,7 @@ Language=English
 Remote Admin%0
 .
 Language=Polish
-Remote Admin%0
+Administracja zdalna%0
 .
 Language=Romanian
 Remote Admin%0
@@ -36210,7 +36209,7 @@ Language=English
 Default share%0
 .
 Language=Polish
-Default share%0
+Domyślny udział%0
 .
 Language=Romanian
 Default share%0
@@ -36241,9 +36240,9 @@ with Windows prior to Windows 2000 will not be able to use\n
 this account. Do you want to continue this operation? %1: %0
 .
 Language=Polish
-The password entered is longer than 14 characters.  Computers\n
-with Windows prior to Windows 2000 will not be able to use\n
-this account. Do you want to continue this operation? %1: %0
+Wprowadzone hasło jest dłuższe niż 14 znaków. Komputery\n
+z systemem Windows wcześniejszym niż Windows 2000 nie będą mogły używać\n
+tego konta. Czy chcesz kontynuować tę operację? %1: %0
 .
 Language=Romanian
 The password entered is longer than 14 characters.  Computers\n
@@ -36285,8 +36284,8 @@ Language=English
 want to overwrite the remembered connection? %3: %0
 .
 Language=Polish
-%1 has a remembered connection to %2. Do you\n
-want to overwrite the remembered connection? %3: %0
+%1 zapamiętał połączenie do %2. Czy chcesz\n
+zastąpić zapamiętane połączenie? %3: %0
 .
 Language=Romanian
 %1 has a remembered connection to %2. Do you\n
@@ -36322,8 +36321,8 @@ Do you want to resume loading the profile?  The command which\n
 caused the error will be ignored. %1: %0
 .
 Language=Polish
-Do you want to resume loading the profile?  The command which\n
-caused the error will be ignored. %1: %0
+Czy chcesz wznowić ładowanie profilu? Polecenie, które\n
+spowodowało błąd, zostanie zignorowane. %1: %0
 .
 Language=Romanian
 Do you want to resume loading the profile?  The command which\n
@@ -36358,7 +36357,7 @@ Language=English
 Do you want to continue this operation? %1: %0
 .
 Language=Polish
-Do you want to continue this operation? %1: %0
+Czy chcesz kontynuować tę operację? %1: %0
 .
 Language=Romanian
 Do you want to continue this operation? %1: %0
@@ -36387,7 +36386,7 @@ Language=English
 Do you want to add this? %1: %0
 .
 Language=Polish
-Do you want to add this? %1: %0
+Czy chcesz dodać ten element? %1: %0
 .
 Language=Romanian
 Do you want to add this? %1: %0
@@ -36416,7 +36415,7 @@ Language=English
 Do you want to continue this operation? %1: %0
 .
 Language=Polish
-Do you want to continue this operation? %1: %0
+Czy chcesz kontynuować tę operację? %1: %0
 .
 Language=Romanian
 Do you want to continue this operation? %1: %0
@@ -36445,7 +36444,7 @@ Language=English
 Is it OK to start it? %1: %0
 .
 Language=Polish
-Is it OK to start it? %1: %0
+Czy można uruchomić ten element? %1: %0
 .
 Language=Romanian
 Is it OK to start it? %1: %0
@@ -36474,7 +36473,7 @@ Language=English
 Do you want to start the Workstation service? %1: %0
 .
 Language=Polish
-Do you want to start the Workstation service? %1: %0
+Czy chcesz uruchomić usługę Stacja robocza? %1: %0
 .
 Language=Romanian
 Do you want to start the Workstation service? %1: %0
@@ -36503,7 +36502,7 @@ Language=English
 Is it OK to continue disconnecting and force them closed? %1: %0
 .
 Language=Polish
-Is it OK to continue disconnecting and force them closed? %1: %0
+Czy można kontynuować rozłączanie i wymusić zamknięcia? %1: %0
 .
 Language=Romanian
 Is it OK to continue disconnecting and force them closed? %1: %0
@@ -36533,7 +36532,7 @@ Language=English
 The printer does not exist.  Do you want to create it? %1: %0
 .
 Language=Polish
-The printer does not exist.  Do you want to create it? %1: %0
+Drukarka nie istnieje.  Czy chcesz ją utworzyć? %1: %0
 .
 Language=Romanian
 The printer does not exist.  Do you want to create it? %1: %0
@@ -36562,7 +36561,7 @@ Language=English
 Never%0
 .
 Language=Polish
-Never%0
+Nigdy%0
 .
 Language=Romanian
 Never%0
@@ -36591,7 +36590,7 @@ Language=English
 Never%0
 .
 Language=Polish
-Never%0
+Nigdy%0
 .
 Language=Romanian
 Never%0
@@ -36620,7 +36619,7 @@ Language=English
 Never%0
 .
 Language=Polish
-Never%0
+Nigdy%0
 .
 Language=Romanian
 Never%0
@@ -36713,8 +36712,8 @@ The network control block (NCB) request completed successfully.\n
 The NCB is the data.
 .
 Language=Polish
-The network control block (NCB) request completed successfully.\n
-The NCB is the data.
+Pomyślnie zakończono żądanie bloku sterowania siecią (NCB).\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The network control block (NCB) request completed successfully.\n
@@ -36751,9 +36750,9 @@ SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
 The NCB is the data.
 .
 Language=Polish
-Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
-SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
-The NCB is the data.
+Niedozwolona długość buforu bloku sterowania siecią (NCB) na SEND DATAGRAM,\n
+SEND BROADCAST, ADAPTER STATUS, lub SESSION STATUS.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
@@ -36795,8 +36794,8 @@ The data descriptor array specified in the network control block (NCB) is\n
 invalid.  The NCB is the data.
 .
 Language=Polish
-The data descriptor array specified in the network control block (NCB) is\n
-invalid.  The NCB is the data.
+Tablica deskryptorów danych określona w bloku sterowania siecią (NCB)\n
+jest nieprawidłowa.  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The data descriptor array specified in the network control block (NCB) is\n
@@ -36832,8 +36831,8 @@ The command specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
 Language=Polish
-The command specified in the network control block (NCB) is illegal.\n
-The NCB is the data.
+Polecenie określone w bloku sterowania siecią (NCB) jest niedozwolone.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The command specified in the network control block (NCB) is illegal.\n
@@ -36869,8 +36868,8 @@ The message correlator specified in the network control block (NCB) is\n
 invalid.  The NCB is the data.
 .
 Language=Polish
-The message correlator specified in the network control block (NCB) is\n
-invalid.  The NCB is the data.
+Korelator komunikatów określony w bloku sterowania siecią (NCB) jest\n
+nieprawidłowy.  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The message correlator specified in the network control block (NCB) is\n
@@ -36906,8 +36905,8 @@ A network control block (NCB) command timed-out.  The session may have\n
 terminated abnormally.  The NCB is the data.
 .
 Language=Polish
-A network control block (NCB) command timed-out.  The session may have\n
-terminated abnormally.  The NCB is the data.
+Upłynął limit czasu bloku sterowania siecią (NCB). Być może sesja\n
+została zakończona w sposób niestandardowy.  Przedstawione dane to blok NCB
 .
 Language=Romanian
 A network control block (NCB) command timed-out.  The session may have\n
@@ -36943,8 +36942,8 @@ An incomplete network control block (NCB) message was received.\n
 The NCB is the data.
 .
 Language=Polish
-An incomplete network control block (NCB) message was received.\n
-The NCB is the data.
+Odebrano niepełny komunikat bloku sterowania siecią (NCB).\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 An incomplete network control block (NCB) message was received.\n
@@ -36980,8 +36979,8 @@ The buffer address specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
 Language=Polish
-The buffer address specified in the network control block (NCB) is illegal.\n
-The NCB is the data.
+Adres buforu określony w bloku sterowania siecią (NCB) jest niedozwolony.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The buffer address specified in the network control block (NCB) is illegal.\n
@@ -37017,8 +37016,8 @@ The session number specified in the network control block (NCB) is not active.\n
 The NCB is the data.
 .
 Language=Polish
-The session number specified in the network control block (NCB) is not active.\n
-The NCB is the data.
+Numer sesji określony w bloku sterowania siecią (NCB) nie jest aktywny.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The session number specified in the network control block (NCB) is not active.\n
@@ -37054,8 +37053,8 @@ No resource was available in the network adapter.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-No resource was available in the network adapter.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Na karcie sieciowej nie były dostępne żadne zasoby.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB).  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 No resource was available in the network adapter.\n
@@ -37091,8 +37090,8 @@ The session specified in the network control block (NCB) was closed.\n
 The NCB is the data.
 .
 Language=Polish
-The session specified in the network control block (NCB) was closed.\n
-The NCB is the data.
+Sesja określona w bloku sterowania siecią (NCB) została zamknięta.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The session specified in the network control block (NCB) was closed.\n
@@ -37128,8 +37127,8 @@ The network control block (NCB) command was canceled.\n
 The NCB is the data.
 .
 Language=Polish
-The network control block (NCB) command was canceled.\n
-The NCB is the data.
+Anulowano polecenie bloku sterowania siecią (NCB).\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The network control block (NCB) command was canceled.\n
@@ -37165,8 +37164,8 @@ The message segment specified in the network control block (NCB) is\n
 illogical.  The NCB is the data.
 .
 Language=Polish
-The message segment specified in the network control block (NCB) is\n
-illogical.  The NCB is the data.
+Segment komunikatów określony w bloku sterowania siecią (NCB) jest\n
+illogical.  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The message segment specified in the network control block (NCB) is\n
@@ -37202,8 +37201,8 @@ The name already exists in the local adapter name table.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-The name already exists in the local adapter name table.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Ta nazwa istnieje już w tabeli nazw karty lokalnej.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB).  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The name already exists in the local adapter name table.\n
@@ -37239,8 +37238,8 @@ The network adapter name table is full.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-The network adapter name table is full.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Tabela nazw karty sieciowej jest zapełniona.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB).  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The network adapter name table is full.\n
@@ -37276,8 +37275,8 @@ The network name has active sessions and is now de-registered.\n
 The network control block (NCB) command completed.  The NCB is the data.
 .
 Language=Polish
-The network name has active sessions and is now de-registered.\n
-The network control block (NCB) command completed.  The NCB is the data.
+Nazwa sieciowa ma aktywne sesje i jest obecnie wyrejestrowywana.\n
+Zakończono realizację polecenia bloku sterowania siecią (NCB). Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The network name has active sessions and is now de-registered.\n
@@ -37314,9 +37313,9 @@ for this session.  The network control block (NCB) command was rejected.\n
 The NCB is the data.
 .
 Language=Polish
-A previously issued Receive Lookahead command is active\n
-for this session.  The network control block (NCB) command was rejected.\n
-The NCB is the data.
+Wcześniej wydane polecenie Receive Lookahead jest aktywne dla tej sesji\n
+Odrzucono polecenie bloku sterowania siecią (NCB).\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 A previously issued Receive Lookahead command is active\n
@@ -37358,8 +37357,8 @@ The local session table is full. The network control block (NCB) request was ref
 The NCB is the data.
 .
 Language=Polish
-The local session table is full. The network control block (NCB) request was refused.\n
-The NCB is the data.
+Tabela sesji lokalnej jest zapełniona. Odmówiono realizacji żądania bloku sterowania siecią (NCB).\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The local session table is full. The network control block (NCB) request was refused.\n
@@ -37395,8 +37394,8 @@ A network control block (NCB) session open was rejected.  No LISTEN is outstandi
 on the remote computer.  The NCB is the data.
 .
 Language=Polish
-A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
-on the remote computer.  The NCB is the data.
+Odrzucono otwarcie sesji bloku sterowania siecią (NCB). Na zdalnym komputerze\n
+nie pozostała żadna zaległa operacja LISTEN. Przedstawione dane to blok NCB.
 .
 Language=Romanian
 A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
@@ -37432,8 +37431,8 @@ The name number specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
 Language=Polish
-The name number specified in the network control block (NCB) is illegal.\n
-The NCB is the data.
+Numer nazwy określony w bloku sterowania siecią (NCB) jest niedozwolony.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The name number specified in the network control block (NCB) is illegal.\n
@@ -37469,8 +37468,8 @@ The call name specified in the network control block (NCB) cannot be found or\n
 did not answer.  The NCB is the data.
 .
 Language=Polish
-The call name specified in the network control block (NCB) cannot be found or\n
-did not answer.  The NCB is the data.
+Nie można znaleźć nazwy wywołania określonej w bloku sterowania siecią (NCB)\n
+lub wywołanie pozostało bez odpowiedzi.  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The call name specified in the network control block (NCB) cannot be found or\n
@@ -37506,8 +37505,8 @@ The name specified in the network control block (NCB) was not found.  Cannot put
 00h in the NCB name.  The NCB is the data.
 .
 Language=Polish
-The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
-00h in the NCB name.  The NCB is the data.
+Nie znaleziono nazwy określonej w bloku sterowania siecią (NCB).\n
+Nie można umieścić '*' lub 00h w nazwie NCB.  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
@@ -37543,8 +37542,8 @@ The name specified in the network control block (NCB) is in use on a remote adap
 The NCB is the data.
 .
 Language=Polish
-The name specified in the network control block (NCB) is in use on a remote adapter.\n
-The NCB is the data.
+Nazwa określona w bloku sterowania siecią (NCB) jest używana na karcie zdalnej.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The name specified in the network control block (NCB) is in use on a remote adapter.\n
@@ -37580,8 +37579,8 @@ The name specified in the network control block (NCB) has been deleted.\n
 The NCB is the data.
 .
 Language=Polish
-The name specified in the network control block (NCB) has been deleted.\n
-The NCB is the data.
+Nazwa określona w bloku sterowania siecią (NCB) została usunięta.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The name specified in the network control block (NCB) has been deleted.\n
@@ -37617,8 +37616,8 @@ The session specified in the network control block (NCB) ended abnormally.\n
 The NCB is the data.
 .
 Language=Polish
-The session specified in the network control block (NCB) ended abnormally.\n
-The NCB is the data.
+Sesja określona w bloku sterowania siecią (NCB) została zakończona w sposób niestandardowy.\n
+Przedstawione dane to blok sterowania siecią (NCB).
 .
 Language=Romanian
 The session specified in the network control block (NCB) ended abnormally.\n
@@ -37654,8 +37653,8 @@ The network protocol has detected two or more identical\n
 names on the network.\tThe network control block (NCB) is the data.
 .
 Language=Polish
-The network protocol has detected two or more identical\n
-names on the network.\tThe network control block (NCB) is the data.
+Protokół sieciowy wykrył w sieci przynajmniej dwie identyczne nazwy.\n
+Przedstawione dane to blok sterowania siecią (NCB).
 .
 Language=Romanian
 The network protocol has detected two or more identical\n
@@ -37691,8 +37690,8 @@ An unexpected protocol packet was received.  There may be an\n
 incompatible remote device.  The network control block (NCB) is the data.
 .
 Language=Polish
-An unexpected protocol packet was received.  There may be an\n
-incompatible remote device.  The network control block (NCB) is the data.
+Odebrano nieoczekiwany pakiet protokołu. Może to oznaczać niezgodne urządzenie\n
+zdalne.  Przedstawione dane to blok sterowania siecią (NCB).
 .
 Language=Romanian
 An unexpected protocol packet was received.  There may be an\n
@@ -37728,8 +37727,8 @@ The NetBIOS interface is busy.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-The NetBIOS interface is busy.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Interfejs NetBIOS jest zajęty.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB).  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The NetBIOS interface is busy.\n
@@ -37765,8 +37764,8 @@ There are too many network control block (NCB) commands outstanding.\n
 The NCB request was refused.  The NCB is the data.
 .
 Language=Polish
-There are too many network control block (NCB) commands outstanding.\n
-The NCB request was refused.  The NCB is the data.
+Jest za dużo zaległych poleceń bloków sterowania siecią (NCB).\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB). Przedstawione dane to blok NCB.
 .
 Language=Romanian
 There are too many network control block (NCB) commands outstanding.\n
@@ -37802,8 +37801,8 @@ The adapter number specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
 Language=Polish
-The adapter number specified in the network control block (NCB) is illegal.\n
-The NCB is the data.
+Numer karty określony w bloku sterowania siecią (NCB) jest niedozwolony.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The adapter number specified in the network control block (NCB) is illegal.\n
@@ -37839,8 +37838,8 @@ The network control block (NCB) command completed while a cancel was occurring.\
 The NCB is the data.
 .
 Language=Polish
-The network control block (NCB) command completed while a cancel was occurring.\n
-The NCB is the data.
+Kończono wykonywanie polecenia bloku sterowania siecią (NCB), gdy nastąpiło anulowanie.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The network control block (NCB) command completed while a cancel was occurring.\n
@@ -37876,8 +37875,8 @@ The name specified in the network control block (NCB) is reserved.\n
 The NCB is the data.
 .
 Language=Polish
-The name specified in the network control block (NCB) is reserved.\n
-The NCB is the data.
+Nazwa określona w bloku sterowania siecią (NCB) jest zastrzeżona.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The name specified in the network control block (NCB) is reserved.\n
@@ -37913,8 +37912,8 @@ The network control block (NCB) command is not valid to cancel.\n
 The NCB is the data.
 .
 Language=Polish
-The network control block (NCB) command is not valid to cancel.\n
-The NCB is the data.
+Tego polecenia bloku sterowania siecią (NCB) nie można anulować.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The network control block (NCB) command is not valid to cancel.\n
@@ -37950,8 +37949,8 @@ There are multiple network control block (NCB) requests for the same session.\n
 The NCB request was refused.  The NCB is the data.
 .
 Language=Polish
-There are multiple network control block (NCB) requests for the same session.\n
-The NCB request was refused.  The NCB is the data.
+Istnieje wiele żądań bloku sterowania siecią (NCB) dla tej samej sesji.\n
+Odmówiono realizacji żądania NCB.  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 There are multiple network control block (NCB) requests for the same session.\n
@@ -37988,9 +37987,9 @@ command that may be issued is an NCB RESET. The network control block (NCB) is\n
 the data.
 .
 Language=Polish
-There has been a network adapter error. The only NetBIOS\n
-command that may be issued is an NCB RESET. The network control block (NCB) is\n
-the data.
+Wystąpiła awaria karty sieciowej. Jedyne polecenie systemu NetBIOS, jakie można\n
+wydać, to polecenie NCB RESET. Przedstawione dane to\n
+blok sterowania siecią (NCB).
 .
 Language=Romanian
 There has been a network adapter error. The only NetBIOS\n
@@ -38032,8 +38031,8 @@ The maximum number of applications was exceeded.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-The maximum number of applications was exceeded.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Przekroczono maksymalną liczbę aplikacji.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB). Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The maximum number of applications was exceeded.\n
@@ -38069,8 +38068,8 @@ The requested resources are not available.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-The requested resources are not available.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Żądane zasoby nie są dostępne.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB).  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The requested resources are not available.\n
@@ -38106,8 +38105,8 @@ A system error has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-A system error has occurred.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Wystąpił błąd systemu.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB).  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 A system error has occurred.\n
@@ -38143,8 +38142,8 @@ A ROM checksum failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-A ROM checksum failure has occurred.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Wystąpił błąd sumy kontrolnej ROM.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB).  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 A ROM checksum failure has occurred.\n
@@ -38180,8 +38179,8 @@ A RAM test failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-A RAM test failure has occurred.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Wystąpiła awaria testu pamięci RAM.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB).  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 A RAM test failure has occurred.\n
@@ -38217,8 +38216,8 @@ A digital loopback failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-A digital loopback failure has occurred.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Wystąpiła awaria cyfrowego sprzężenia zwrotnego.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB).  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 A digital loopback failure has occurred.\n
@@ -38254,8 +38253,8 @@ An analog loopback failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-An analog loopback failure has occurred.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Wystąpiła awaria analogowego sprzężenia zwrotnego.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB). Przedstawione dane to blok NCB.
 .
 Language=Romanian
 An analog loopback failure has occurred.\n
@@ -38291,8 +38290,8 @@ An interface failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-An interface failure has occurred.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Wystąpiła awaria interfejsu.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB).  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 An interface failure has occurred.\n
@@ -38328,8 +38327,8 @@ An unrecognized network control block (NCB) return code was received.\n
 The NCB is the data.
 .
 Language=Polish
-An unrecognized network control block (NCB) return code was received.\n
-The NCB is the data.
+Odebrano nierozpoznany blok sterowania siecią (NCB).\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 An unrecognized network control block (NCB) return code was received.\n
@@ -38365,8 +38364,8 @@ A network adapter malfunction has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
 Language=Polish
-A network adapter malfunction has occurred.\n
-The network control block (NCB) request was refused.  The NCB is the data.
+Wystąpiła usterka karty sieciowej.\n
+Odmówiono realizacji żądania bloku sterowania siecią (NCB).  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 A network adapter malfunction has occurred.\n
@@ -38402,8 +38401,8 @@ The network control block (NCB) command is still pending.\n
 The NCB is the data.
 .
 Language=Polish
-The network control block (NCB) command is still pending.\n
-The NCB is the data.
+Polecenie bloku sterowania siecią (NCB) nadal oczekuje na wykonanie.\n
+Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The network control block (NCB) command is still pending.\n
@@ -38444,8 +38443,8 @@ The update log on %1 is over 80%% capacity. The primary\n
 domain controller %2 is not retrieving the updates.
 .
 Language=Polish
-The update log on %1 is over 80%% capacity. The primary\n
-domain controller %2 is not retrieving the updates.
+Dziennik aktualizacji na %1 jest zapełniony w ponad 80%%. Podstawowy kontroler\n
+domeny %2 nie wczytuje aktualizacji.
 .
 Language=Romanian
 The update log on %1 is over 80%% capacity. The primary\n
@@ -38482,9 +38481,9 @@ can be added until the primary domain controller %2\n
 retrieves the updates.
 .
 Language=Polish
-The update log on %1 is full, and no further updates\n
-can be added until the primary domain controller %2\n
-retrieves the updates.
+Dziennik aktualizacji na %1 jest zapełniony; nie można dodać kolejnych aktualizacji\n
+dopóki podstawowy kontroler domeny %2\n
+nie pobierze aktualizacji.
 .
 Language=Romanian
 The update log on %1 is full, and no further updates\n
@@ -38526,8 +38525,8 @@ The time difference with the primary domain controller %1\n
 exceeds the maximum allowed skew of %2 seconds.
 .
 Language=Polish
-The time difference with the primary domain controller %1\n
-exceeds the maximum allowed skew of %2 seconds.
+Różnica czasu w stosunku do podstawowego kontrolera domeny %1\n
+przekracza dozwolone maksimum %2 sekund.
 .
 Language=Romanian
 The time difference with the primary domain controller %1\n
@@ -38563,8 +38562,8 @@ The account of user %1 has been locked out on %2\n
 due to %3 bad password attempts.
 .
 Language=Polish
-The account of user %1 has been locked out on %2\n
-due to %3 bad password attempts.
+Konto użytkownika %1 zostało zablokowane na %2\n
+z powodu %3 prób użycia złego hasła.
 .
 Language=Romanian
 The account of user %1 has been locked out on %2\n
@@ -38599,7 +38598,7 @@ Language=English
 The %1 log file cannot be opened.
 .
 Language=Polish
-The %1 log file cannot be opened.
+Nie można otworzyć pliku dziennika %1.
 .
 Language=Romanian
 The %1 log file cannot be opened.
@@ -38628,7 +38627,7 @@ Language=English
 The %1 log file is corrupted and will be cleared.
 .
 Language=Polish
-The %1 log file is corrupted and will be cleared.
+Plik dziennika %1 jest uszkodzony i zostanie wyczyszczony.
 .
 Language=Romanian
 The %1 log file is corrupted and will be cleared.
@@ -38658,8 +38657,8 @@ The Application log file could not be opened.  %1 will be used as the\n
 default log file.
 .
 Language=Polish
-The Application log file could not be opened.  %1 will be used as the\n
-default log file.
+Nie można otworzyć pliku dziennika aplikacji. Jako domyślny plik\n
+dziennika zostanie użyty plik %1.
 .
 Language=Romanian
 The Application log file could not be opened.  %1 will be used as the\n
@@ -38698,11 +38697,12 @@ message, take the following steps:%n\n
 If this dialog reappears, contact your helpdesk or system administrator.
 .
 Language=Polish
-The %1 Log is full.  If this is the first time you have seen this\n
-message, take the following steps:%n\n
-1. Click Start, click Run, type \"eventvwr\", and then click OK.%n\n
-2. Click %1, click the Action menu, click Clear All Events, and then click No.\n%n\n
-If this dialog reappears, contact your helpdesk or system administrator.
+Plik dziennika %1 jest zapełniony. Jeśli po raz pierwszy widzisz ten\n
+komunikat, wykonaj następujące kroki:%n\n
+1. Kliknij przycisk Start, kliknij polecenie Uruchom, wpisz \"eventvwr\",\n
+a następnie kliknij przycisk OK.%n\n
+2. Kliknij %1, kliknij menu Akcja, kliknij polecenie Wyczyść wszystkie zdarzenia, a następnie kliknij przycisk Nie.\n%n\n
+Jeśli to okno dialogowe pojawi się ponownie, skontaktuj się z pomocą techniczną lub administratorem systemu.
 .
 Language=Romanian
 The %1 Log is full.  If this is the first time you have seen this\n
@@ -38755,7 +38755,7 @@ Language=English
 The security database full synchronization has been initiated by the server %1.
 .
 Language=Polish
-The security database full synchronization has been initiated by the server %1.
+Serwer %1 zainicjował pełną synchronizację bazy danych zabezpieczeń.
 .
 Language=Romanian
 The security database full synchronization has been initiated by the server %1.
@@ -38785,8 +38785,8 @@ The operating system could not be started as configured.\n
 A previous working configuration was used instead.
 .
 Language=Polish
-The operating system could not be started as configured.\n
-A previous working configuration was used instead.
+Nie można uruchomić systemu ReactOS zgodnie z aktualną konfiguracją.\n
+Zamiast niej użyto poprzedniej działającej konfiguracji.
 .
 Language=Romanian
 The operating system could not be started as configured.\n
@@ -38821,7 +38821,7 @@ Language=English
 The exception 0x%1 occurred in the application %2 at location 0x%3.
 .
 Language=Polish
-The exception 0x%1 occurred in the application %2 at location 0x%3.
+W aplikacji %2 wystąpił wyjątek 0x%1 w lokalizacji 0x%3.
 .
 Language=Romanian
 The exception 0x%1 occurred in the application %2 at location 0x%3.
@@ -38853,9 +38853,9 @@ domain because the servers have different security identifiers\n
 (SID).
 .
 Language=Polish
-The servers %1 and  %3 both claim to be an NT Domain Controller for\n
-the %2 domain. One of the servers should be removed from the\n
-domain because the servers have different security identifiers\n
+Zarówno serwer %1, jak i %3 podaje, że jest kontrolerem domeny NT\n
+dla domeny %2. Jeden z tych serwerów należy usunąć\n
+z domeny, ponieważ mają one różne identyfikatory zabezpieczeń\n
 (SID).
 .
 Language=Romanian
@@ -38905,9 +38905,9 @@ controller for the %3 domain. One of the servers should be\n
 demoted or removed from the domain.
 .
 Language=Polish
-The server %1 and %2 both claim to be the primary domain\n
-controller for the %3 domain. One of the servers should be\n
-demoted or removed from the domain.
+Zarówno serwer %1, jak i %2 podaje, że jest podstawowym kontrolerem domeny dla\n
+domeny %3. Jeden z tych serwerów należy\n
+usunąć z domeny albo zdegradować.
 .
 Language=Romanian
 The server %1 and %2 both claim to be the primary domain\n
@@ -38952,11 +38952,11 @@ when the domain was reconfigured. Reestablish the trust\n
 relationship.
 .
 Language=Polish
-The computer %1 tried to connect to the server %2 using\n
-the trust relationship established by the %3 domain. However, the\n
-computer lost the correct security identifier (SID)\n
-when the domain was reconfigured. Reestablish the trust\n
-relationship.
+Nastąpiła próba podłączenia z komputera %1 do serwera %2 za pomocą\n
+relacji zaufania ustanowionej przez domenę %3.\n
+Komputer ten utracił jednak poprawny identyfikator zabezpieczeń (SID)\n
+podczas zmiany konfiguracji domeny\n
+Należy na nowo ustanowić relację zaufania.
 .
 Language=Romanian
 The computer %1 tried to connect to the server %2 using\n
@@ -39012,10 +39012,10 @@ The computer has rebooted from a bugcheck.  The bugcheck was:\n
 A full dump was not saved.
 .
 Language=Polish
-The computer has rebooted from a bugcheck.  The bugcheck was:\n
+Nastąpił ponowny rozruch komputera po operacji wykrywania błędów.  Wyniki tej operacji były następujące:\n
 %1.\n
 %2\n
-A full dump was not saved.
+Nie zapisano pełnego zrzutu.
 .
 Language=Romanian
 The computer has rebooted from a bugcheck.  The bugcheck was:\n
@@ -39065,10 +39065,10 @@ The computer has rebooted from a bugcheck.  The bugcheck was:\n
 A dump was saved in: %3.
 .
 Language=Polish
-The computer has rebooted from a bugcheck.  The bugcheck was:\n
+Nastąpił ponowny rozruch komputera po operacji wykrywania błędów.  Wyniki tej operacji były następujące:\n
 %1.\n
 %2\n
-A dump was saved in: %3.
+Zrzut zapisano w: %3.
 .
 Language=Romanian
 The computer has rebooted from a bugcheck.  The bugcheck was:\n
@@ -39117,9 +39117,9 @@ trust.)  However, %1 and %2 have the same machine security identifier\n
 (SID).  The operating system should be re-installed on either %1 or %2.
 .
 Language=Polish
-The computer or domain %1 trusts domain %2.  (This may be an indirect\n
-trust.)  However, %1 and %2 have the same machine security identifier\n
-(SID).  The operating system should be re-installed on either %1 or %2.
+Komputer lub domena %1 ufa domenie %2. (Może to być relacja pośrednia)\n
+%1 i %2 mają jednak ten sam identyfikator zabezpieczeń (SID)\n
+Należy ponownie zainstalować system NT na %1 lub na %2.
 .
 Language=Romanian
 The computer or domain %1 trusts domain %2.  (This may be an indirect\n
@@ -39162,9 +39162,9 @@ trust.)  However, %2 is not a valid name for a trusted domain.\n
 The name of the trusted domain should be changed to a valid name.
 .
 Language=Polish
-The computer or domain %1 trusts domain %2.  (This may be an indirect\n
-trust.)  However, %2 is not a valid name for a trusted domain.\n
-The name of the trusted domain should be changed to a valid name.
+Komputer lub domena %1 ufa domenie %2. (Może być to relacja pośrednia)\n
+Jednak %2 jest nieprawidłową nazwą zaufanej domeny.\n
+Należy zmienić nazwę zaufanej domeny na prawidłową nazwę.
 .
 Language=Romanian
 The computer or domain %1 trusts domain %2.  (This may be an indirect\n
@@ -39210,7 +39210,7 @@ Language=English
 Could not share the User or Script path.
 .
 Language=Polish
-Could not share the User or Script path.
+Nie można udostępnić ścieżki użytkownika lub skryptu.
 .
 Language=Romanian
 Could not share the User or Script path.
@@ -39239,7 +39239,7 @@ Language=English
 The password for this computer is not found in the local security\ndatabase.
 .
 Language=Polish
-The password for this computer is not found in the local security\ndatabase.
+W lokalnej bazie danych zabezpieczeń nie znaleziono\nhasła użytkownika.
 .
 Language=Romanian
 The password for this computer is not found in the local security\ndatabase.
@@ -39268,7 +39268,7 @@ Language=English
 An internal error occurred while accessing the computer's\nlocal or network security database.
 .
 Language=Polish
-An internal error occurred while accessing the computer's\nlocal or network security database.
+Wystąpił błąd wewnętrzny przy korzystaniu z lokalnej lub sieciowej\nbazy danych zabezpieczeń komputera.
 .
 Language=Romanian
 An internal error occurred while accessing the computer's\nlocal or network security database.
@@ -39304,9 +39304,9 @@ structures successfully. The service was terminated.  The following\n
 error occurred: %n%1
 .
 Language=Polish
-The Netlogon service could not initialize the replication data\n
-structures successfully. The service was terminated.  The following\n
-error occurred: %n%1
+Usługa Netlogon nie może pomyślnie zainicjować\n
+struktur danych replikacji. Zakończono działanie usługi\n
+Wystąpił następujący błąd: %n%1
 .
 Language=Romanian
 The Netlogon service could not initialize the replication data\n
@@ -39348,8 +39348,8 @@ The Netlogon service failed to update the domain trust list.  The\n
 following error occurred: %n%1
 .
 Language=Polish
-The Netlogon service failed to update the domain trust list.  The\n
-following error occurred: %n%1
+Aktualizacja listy zaufań domeny przez usługę Netlogon nie powiodła się\n
+Wystąpił następujący błąd: %n%1
 .
 Language=Romanian
 The Netlogon service failed to update the domain trust list.  The\n
@@ -39385,8 +39385,8 @@ The Netlogon service could not add the RPC interface.  The\n
 service was terminated. The following error occurred: %n%1
 .
 Language=Polish
-The Netlogon service could not add the RPC interface.  The\n
-service was terminated. The following error occurred: %n%1
+Usługa Netlogon nie mogła dodać interfejsu RPC. Zakończono\n
+działanie usługi. Wystąpił następujący błąd: %n%1
 .
 Language=Romanian
 The Netlogon service could not add the RPC interface.  The\n
@@ -39422,8 +39422,8 @@ The Netlogon service could not read a mailslot message from %1 due\n
 to the following error: %n%2
 .
 Language=Polish
-The Netlogon service could not read a mailslot message from %1 due\n
-to the following error: %n%2
+Usługa Netlogon nie może odczytać komunikatu ze skrzynki mailslot\n
+z %1 z powodu następującego błędu: %n%2
 .
 Language=Romanian
 The Netlogon service could not read a mailslot message from %1 due\n
@@ -39460,9 +39460,9 @@ service controller. The service was terminated. The following\n
 error occurred: %n%1
 .
 Language=Polish
-The Netlogon service failed to register the service with the\n
-service controller. The service was terminated. The following\n
-error occurred: %n%1
+Zarejestrowanie usługi na kontrolerze usług przez usługę Netlogon\n
+nie powiodło się. Usługa została zakończona\n
+Wystąpił następujący błąd: %n%1
 .
 Language=Romanian
 The Netlogon service failed to register the service with the\n
@@ -39505,9 +39505,9 @@ database changes is inconsistent. The Netlogon service is resetting\n
 the change log.
 .
 Language=Polish
-The change log cache maintained by the Netlogon service for %1\n
-database changes is inconsistent. The Netlogon service is resetting\n
-the change log.
+Bufor dziennika zmian zachowywany przez usługę Netlogon\n
+dla %1 zmian w bazie danych jest niespójny.\n
+Usługa Netlogon resetuje dziennik zmian.
 .
 Language=Romanian
 The change log cache maintained by the Netlogon service for %1\n
@@ -39549,8 +39549,8 @@ The Netlogon service could not create server share %1.  The following\n
 error occurred: %n%2
 .
 Language=Polish
-The Netlogon service could not create server share %1.  The following\n
-error occurred: %n%2
+Usługa Netlogon nie może utworzyć udziału serwera %1. Wystąpił\n
+następujący błąd: %n%2
 .
 Language=Romanian
 The Netlogon service could not create server share %1.  The following\n
@@ -39585,7 +39585,7 @@ Language=English
 The down-level logon request for the user %1 from %2 failed.
 .
 Language=Polish
-The down-level logon request for the user %1 from %2 failed.
+Nie powiodło się żądanie logowania niskiego poziomu dla użytkownika %1 z %2.
 .
 Language=Romanian
 The down-level logon request for the user %1 from %2 failed.
@@ -39614,7 +39614,7 @@ Language=English
 The down-level logoff request for the user %1 from %2 failed.
 .
 Language=Polish
-The down-level logoff request for the user %1 from %2 failed.
+Nie powiodło się żądanie wylogowania niskiego poziomu dla użytkownika %1 z %2.
 .
 Language=Romanian
 The down-level logoff request for the user %1 from %2 failed.
@@ -39644,8 +39644,8 @@ The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via
 failed.
 .
 Language=Polish
-The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
-failed.
+Nie powiodło się żądanie zalogowania (%1) w systemie Windows NT lub Windows 2000\n
+dla użytkownika %2\\%3 z %4 (przez %5).
 .
 Language=Romanian
 The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
@@ -39681,8 +39681,8 @@ The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
 failed.
 .
 Language=Polish
-The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
-failed.
+Nie powiodło się żądanie wylogowania %1 z systemu Windows NT lub Windows 2000\n
+dla użytkownika %2\\%3 z %4.
 .
 Language=Romanian
 The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
@@ -39719,9 +39719,9 @@ successfully. %2 changes(s) has(have) been returned to the\n
 caller.
 .
 Language=Polish
-The partial synchronization request from the server %1 completed\n
-successfully. %2 changes(s) has(have) been returned to the\n
-caller.
+Żądanie częściowej synchronizacji z serwera %1\n
+zostało zrealizowane pomyślnie\n
+Liczba zmian zwróconych wywołującemu: %2.
 .
 Language=Romanian
 The partial synchronization request from the server %1 completed\n
@@ -39763,8 +39763,8 @@ The partial synchronization request from the server %1 failed with\n
 the following error: %n%2
 .
 Language=Polish
-The partial synchronization request from the server %1 failed with\n
-the following error: %n%2
+Żądanie częściowej synchronizacji z serwera %1 nie powiodło się\n
+z powodu następującego błędu: %n%2
 .
 Language=Romanian
 The partial synchronization request from the server %1 failed with\n
@@ -39801,9 +39801,9 @@ successfully. %2 object(s) has(have) been returned to\n
 the caller.
 .
 Language=Polish
-The full synchronization request from the server %1 completed\n
-successfully. %2 object(s) has(have) been returned to\n
-the caller.
+Żądanie pełnej synchronizacji z serwera %1\n
+zostało zrealizowane pomyślnie\n
+Liczba obiektów zwróconych wywołującemu: %2.
 .
 Language=Romanian
 The full synchronization request from the server %1 completed\n
@@ -39845,8 +39845,8 @@ The full synchronization request from the server %1 failed with\n
 the following error: %n%2
 .
 Language=Polish
-The full synchronization request from the server %1 failed with\n
-the following error: %n%2
+Żądanie pełnej synchronizacji z serwera %1 nie powiodło się\n
+Wystąpił następujący błąd: %n%2
 .
 Language=Romanian
 The full synchronization request from the server %1 failed with\n
@@ -39883,9 +39883,9 @@ primary domain controller %2 completed successfully. %3 change(s) is(are)\n
 applied to the database.
 .
 Language=Polish
-The partial synchronization replication of the %1 database from the\n
-primary domain controller %2 completed successfully. %3 change(s) is(are)\n
-applied to the database.
+Replikacja częściowej synchronizacji bazy danych %1\n
+z podstawowego kontrolera domeny %2 została zakończona pomyślnie\n
+Liczba zmian zastosowanych w bazie danych: %3.
 .
 Language=Romanian
 The partial synchronization replication of the %1 database from the\n
@@ -39927,8 +39927,8 @@ The partial synchronization replication of the %1 database from the\n
 primary domain controller %2 failed with the following error: %n%3
 .
 Language=Polish
-The partial synchronization replication of the %1 database from the\n
-primary domain controller %2 failed with the following error: %n%3
+Replikacja częściowej synchronizacji bazy danych %1 z podstawowego kontrolera domeny %2\n
+nie powiodła się z powodu następującego błędu: %n%3
 .
 Language=Romanian
 The partial synchronization replication of the %1 database from the\n
@@ -39964,8 +39964,8 @@ The full synchronization replication of the %1 database from the\n
 primary domain controller %2 completed successfully.
 .
 Language=Polish
-The full synchronization replication of the %1 database from the\n
-primary domain controller %2 completed successfully.
+Replikacja pełnej synchronizacji bazy danych %1\n
+z podstawowego kontrolera domeny %2 została zakończona pomyślnie.
 .
 Language=Romanian
 The full synchronization replication of the %1 database from the\n
@@ -40001,8 +40001,8 @@ The full synchronization replication of the %1 database from the\n
 primary domain controller %2 failed with the following error: %n%3
 .
 Language=Polish
-The full synchronization replication of the %1 database from the\n
-primary domain controller %2 failed with the following error: %n%3
+Replikacja pełnej synchronizacji bazy danych %1 z podstawowego kontrolera domeny %2\n
+nie powiodła się z powodu następującego błędu: %n%3
 .
 Language=Romanian
 The full synchronization replication of the %1 database from the\n
@@ -40046,16 +40046,16 @@ domain. Otherwise, this computer sets up the secure session to any domain contro
 in the specified domain.
 .
 Language=Polish
-This computer was not able to set up a secure session with a domain\n
-controller in domain %1 due to the following: %n%2\n
-%nThis may lead to authentication problems. Make sure that this\n
-computer is connected to the network. If the problem persists,\n
-please contact your domain administrator.\n\n
-%n%nADDITIONAL INFO\n
-%nIf this computer is a domain controller for the specified domain, it\n
-sets up the secure session to the primary domain controller emulator in the specified\n
-domain. Otherwise, this computer sets up the secure session to any domain controller\n
-in the specified domain.
+Ten komputer nie może skonfigurować zabezpieczonej sesji z kontrolerem\n
+domeny w domenie %1 z następującego powodu: %n%2\n
+%nTo może powodować problemy z uwierzytelnianiem. Upewnij się, że ten\n
+komputer jest podłączony do sieci. Jeżeli problem się nie rozwiąże,\n
+skontaktuj się z administratorem domeny.\n\n
+%n%nINFORMACJE DODATKOWE\n
+%nJeżeli ten komputer jest kontrolerem domeny dla określonej domeny, konfiguruje\n
+zabezpieczoną sesję z emulatorem podstawowego kontrolera domeny w określonej\n
+domenie. W przeciwnym przypadku komputer może skonfigurować zabezpieczoną sesję z dowolnym kontrolerem domeny\n
+w określonej domenie.
 .
 Language=Romanian
 This computer was not able to set up a secure session with a domain\n
@@ -40139,8 +40139,8 @@ The session setup to the Domain Controller %1 for the domain %2\n
 failed because the computer %3 does not have a local security database account.
 .
 Language=Polish
-The session setup to the Domain Controller %1 for the domain %2\n
-failed because the computer %3 does not have a local security database account.
+Nie powiodło się ustawienie sesji kontrolera %1 domeny Windows NT lub Windows 2000\n
+dla domeny %2, ponieważ komputer %3 nie ma konta lokalnej bazy danych zabezpieczeń.
 .
 Language=Romanian
 The session setup to the Domain Controller %1 for the domain %2\n
@@ -40180,12 +40180,12 @@ aforementioned account is a computer account for this computer in the specified 
 Otherwise, the account is an interdomain trust account with the specified domain.
 .
 Language=Polish
-The session setup to the Domain Controller %1 for the domain %2\n
-failed because the Domain Controller did not have an account %4\n
-needed to set up the session by this computer %3.\n\n%n%nADDITIONAL DATA\n
-%nIf this computer is a member of or a Domain Controller in the specified domain, the\n
-aforementioned account is a computer account for this computer in the specified domain.\n
-Otherwise, the account is an interdomain trust account with the specified domain.
+Nie powiodło się ustawienie sesji kontrolera %1 domeny Windows NT lub Windows 2000\n
+dla domeny %2, ponieważ kontroler domeny nie miał konta %4\n
+potrzebnego do skonfigurowania sesji przez ten komputer %3.\n\n%n%nDANE DODATKOWE\n
+%nJeśli ten komputer jest członkiem lub kontrolerem domeny w określonej domenie,\n
+wyżej wymienione konto jest kontem komputera dla tego komputera w określonej domenie.\n
+W przeciwnym wypadku konto jest międzydomenowym kontem zaufania z określonej domeny.
 .
 Language=Romanian
 The session setup to the Domain Controller %1 for the domain %2\n
@@ -40246,9 +40246,9 @@ The name(s) of the account(s) referenced in the security database is\n
 %2.  The following error occurred: %n%3
 .
 Language=Polish
-The session setup from the computer %1 failed to authenticate.\n
-The name(s) of the account(s) referenced in the security database is\n
-%2.  The following error occurred: %n%3
+Nie powiodło się uwierzytelnienie instalacji sesji z komputera %1.\n
+Nazwy kont, do których odwołania występują w bazie danych, to %2\n
+Wystąpił następujący błąd: %n%3
 .
 Language=Romanian
 The session setup from the computer %1 failed to authenticate.\n
@@ -40302,20 +40302,20 @@ action should be taken on '%1':\n\n
 %n%nIf '%1' is not a Domain Controller, it should be disjoined from the domain.
 .
 Language=Polish
-The session setup from computer '%1' failed because the security database\n
-does not contain a trust account '%2' referenced by the specified computer.\n\n
-%n%nUSER ACTION\n\n
-%nIf this is the first occurrence of this event for the specified computer\n
-and account, this may be a transient issue that doesn't require any action\n
-at this time. Otherwise, the following steps may be taken to resolve this problem:\n\n
-%n%nIf '%2' is a legitimate machine account for the computer '%1', then '%1'\n
-should be rejoined to the domain.\n\n
-%n%nIf '%2' is a legitimate interdomain trust account, then the trust should\n
-be recreated.\n\n
-%n%nOtherwise, assuming that '%2' is not a legitimate account, the following\n
-action should be taken on '%1':\n\n
-%n%nIf '%1' is a Domain Controller, then the trust associated with '%2' should be deleted.\n\n
-%n%nIf '%1' is not a Domain Controller, it should be disjoined from the domain.
+Sesja skonfigurowana z komputera '%1' nie powiodła się, ponieważ baza danych zabezpieczeń\n
+nie zawiera zaufanego konta '%2' wymienionego przez określony komputer.\n\n
+%n%nAKCJA UŻYTKOWNIKA\n\n
+%nJeżeli to jest pierwsze wystąpienie tego zdarzenia dla określonego komputera\n
+i konta, może to być przejściowy problem, który nie wymaga teraz\n
+żadnej akcji. W przeciwnym przypadku można podjąć następujące kroki prowadzące do rozwiązania tego problemu:\n\n
+%n%nJeżeli '%2' jest uprawnionym kontem komputera dla komputera '%1', komputer '%1'\n
+powinien zostać przyłączony do domeny.\n\n
+%n%nJeżeli '%2' jest uprawnionym kontem zaufanym międzydomenowym, zaufanie powinno zostać\n
+utworzone ponownie.\n\n
+%n%nW przeciwnym przypadku, zakładając że konto '%2' nie jest uprawnionym kontem, należy wykonać\n
+następującą akcję na komputerze '%1':\n\n
+%n%nJeżeli komputer '%1' jest kontrolerem domeny, zaufanie skojarzone z kontem '%2' powinno zostać usunięte.\n\n
+%n%nJeżeli komputer '%1' nie jest kontrolerem domeny, powinien zostać odłączony od domeny.
 .
 Language=Romanian
 The session setup from computer '%1' failed because the security database\n
@@ -40422,7 +40422,7 @@ Language=English
 Could not register control handler with service controller %1.
 .
 Language=Polish
-Could not register control handler with service controller %1.
+Nie można zarejestrować programu obsługi sterowania na kontrolerze usług %1.
 .
 Language=Romanian
 Could not register control handler with service controller %1.
@@ -40451,7 +40451,7 @@ Language=English
 Could not set service status with service controller %1.
 .
 Language=Polish
-Could not set service status with service controller %1.
+Nie można ustawić stanu usługi na kontrolerze usług %1.
 .
 Language=Romanian
 Could not set service status with service controller %1.
@@ -40480,7 +40480,7 @@ Language=English
 Could not find the computer name %1.
 .
 Language=Polish
-Could not find the computer name %1.
+Nie można odnaleźć nazwy komputera %1.
 .
 Language=Romanian
 Could not find the computer name %1.
@@ -40509,7 +40509,7 @@ Language=English
 Could not load %1 device driver.
 .
 Language=Polish
-Could not load %1 device driver.
+Nie można załadować sterownika urządzenia %1.
 .
 Language=Romanian
 Could not load %1 device driver.
@@ -40538,7 +40538,7 @@ Language=English
 Could not load any transport.
 .
 Language=Polish
-Could not load any transport.
+Nie można załadować żadnego transportu.
 .
 Language=Romanian
 Could not load any transport.
@@ -40568,8 +40568,8 @@ Replication of the %1 Domain Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
 Language=Polish
-Replication of the %1 Domain Object \"%2\" from primary domain controller\n
-%3 failed with the following error: %n%4
+Replikacja obiektu domeny %1: \"%2\" z podstawowego kontrolera domeny %3\n
+nie powiodła się z powodu następującego błędu: %n%4
 .
 Language=Romanian
 Replication of the %1 Domain Object \"%2\" from primary domain controller\n
@@ -40605,8 +40605,8 @@ Replication of the %1 Global Group \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
 Language=Polish
-Replication of the %1 Global Group \"%2\" from primary domain controller\n
-%3 failed with the following error: %n%4
+Replikacja grupy globalnej %1: \"%2\" z podstawowego kontrolera domeny %3\n
+nie powiodła się z powodu następującego błędu: %n%4
 .
 Language=Romanian
 Replication of the %1 Global Group \"%2\" from primary domain controller\n
@@ -40642,8 +40642,8 @@ Replication of the %1 Local Group \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
 Language=Polish
-Replication of the %1 Local Group \"%2\" from primary domain controller\n
-%3 failed with the following error: %n%4
+Replikacja grupy lokalnej %1: \"%2\" z podstawowego kontrolera domeny %3\n
+nie powiodła się z powodu następującego błędu: %n%4
 .
 Language=Romanian
 Replication of the %1 Local Group \"%2\" from primary domain controller\n
@@ -40679,8 +40679,8 @@ Replication of the %1 User \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
 Language=Polish
-Replication of the %1 User \"%2\" from primary domain controller\n
-%3 failed with the following error: %n%4
+Replikacja użytkownika %1: \"%2\" z podstawowego kontrolera domeny %3\n
+nie powiodła się z powodu następującego błędu: %n%4
 .
 Language=Romanian
 Replication of the %1 User \"%2\" from primary domain controller\n
@@ -40716,8 +40716,8 @@ Replication of the %1 Policy Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
 Language=Polish
-Replication of the %1 Policy Object \"%2\" from primary domain controller\n
-%3 failed with the following error: %n%4
+Replikacja obiektu zasad %1: \"%2\" z podstawowego kontrolera domeny %3\n
+nie powiodła się z powodu następującego błędu: %n%4
 .
 Language=Romanian
 Replication of the %1 Policy Object \"%2\" from primary domain controller\n
@@ -40753,8 +40753,8 @@ Replication of the %1 Trusted Domain Object \"%2\" from primary domain controlle
 %3 failed with the following error: %n%4
 .
 Language=Polish
-Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
-%3 failed with the following error: %n%4
+Replikacja obiektu domeny zaufanej %1: \"%2\" z podstawowego kontrolera domeny %3\n
+nie powiodła się z powodu następującego błędu: %n%4
 .
 Language=Romanian
 Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
@@ -40790,8 +40790,8 @@ Replication of the %1 Account Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
 Language=Polish
-Replication of the %1 Account Object \"%2\" from primary domain controller\n
-%3 failed with the following error: %n%4
+Replikacja obiektu konta %1: \"%2\" z podstawowego kontrolera domeny %3\n
+nie powiodła się z powodu następującego błędu: %n%4
 .
 Language=Romanian
 Replication of the %1 Account Object \"%2\" from primary domain controller\n
@@ -40827,8 +40827,8 @@ Replication of the %1 Secret \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
 Language=Polish
-Replication of the %1 Secret \"%2\" from primary domain controller\n
-%3 failed with the following error: %n%4
+Replikacja sekretu %1: \"%2\" z podstawowego kontrolera domeny %3\n
+nie powiodła się z powodu następującego błędu: %n%4
 .
 Language=Romanian
 Replication of the %1 Secret \"%2\" from primary domain controller\n
@@ -40863,7 +40863,7 @@ Language=English
 The system returned the following unexpected error code: %n%1
 .
 Language=Polish
-The system returned the following unexpected error code: %n%1
+System zwrócił następujący nieoczekiwany kod błędu: %n%1
 .
 Language=Romanian
 The system returned the following unexpected error code: %n%1
@@ -40895,10 +40895,10 @@ domain or the server can be a LAN Manager server with an account in the\n
 SERVERS global group.  It cannot be both.
 .
 Language=Polish
-Netlogon has detected two machine accounts for server \"%1\".\n
-The server can be either a Windows 2000 Server that is a member of the\n
-domain or the server can be a LAN Manager server with an account in the\n
-SERVERS global group.  It cannot be both.
+Netlogon: wykryto dwa konta komputera dla serwera \"%1\".\n
+Serwer może być albo serwerem Windows 2000, który jest członkiem domeny\n
+albo serwerem LAN Manager z kontem w grupie globalnej SERVERS\n
+Nie może być jednocześnie jednym i drugim.
 .
 Language=Romanian
 Netlogon has detected two machine accounts for server \"%1\".\n
@@ -40947,9 +40947,8 @@ BDC.  Either delete some of your global groups or remove the LanMan\n
 BDCs from the domain.
 .
 Language=Polish
-This domain has more global groups than can be replicated to a LanMan\n
-BDC.  Either delete some of your global groups or remove the LanMan\n
-BDCs from the domain.
+Ta domena ma więcej grup globalnych niż można zreplikować dla LanMan BDC\n
+Usuń część grup globalnych lub usuń LanMan BDC z domeny.
 .
 Language=Romanian
 This domain has more global groups than can be replicated to a LanMan\n
@@ -40990,7 +40989,7 @@ Language=English
 The Browser driver returned the following error to Netlogon: %n%1
 .
 Language=Polish
-The Browser driver returned the following error to Netlogon: %n%1
+Sterownik przeglądarki zwrócił do usługi Netlogon następujący błąd: %n%1
 .
 Language=Romanian
 The Browser driver returned the following error to Netlogon: %n%1
@@ -41019,7 +41018,7 @@ Language=English
 Netlogon could not register the %1<1B> name for the following reason: %n%2
 .
 Language=Polish
-Netlogon could not register the %1<1B> name for the following reason: %n%2
+Usługa Netlogon nie mogła zarejestrować nazwy %1<1B> z następującego powodu: %n%2
 .
 Language=Romanian
 Netlogon could not register the %1<1B> name for the following reason: %n%2
@@ -41048,7 +41047,7 @@ Language=English
 Service failed to retrieve messages needed to boot remote boot clients.
 .
 Language=Polish
-Service failed to retrieve messages needed to boot remote boot clients.
+Pobranie przez usługę komunikatów niezbędnych do rozruchu klientów rozruchu zdalnego nie powiodło się.
 .
 Language=Romanian
 Service failed to retrieve messages needed to boot remote boot clients.
@@ -41078,8 +41077,8 @@ Service experienced a severe error and can no longer provide remote boot\n
 for 3Com 3Start remote boot clients.
 .
 Language=Polish
-Service experienced a severe error and can no longer provide remote boot\n
-for 3Com 3Start remote boot clients.
+Usługa napotkała poważny błąd i nie może już zapewniać rozruchu zdalnego\n
+klientom rozruchu zdalnego 3Com 3Start.
 .
 Language=Romanian
 Service experienced a severe error and can no longer provide remote boot\n
@@ -41114,7 +41113,7 @@ Language=English
 Service experienced a severe system error and will shut itself down.
 .
 Language=Polish
-Service experienced a severe system error and will shut itself down.
+Usługa napotkała poważny błąd systemu i nastąpi jej zamknięcie.
 .
 Language=Romanian
 Service experienced a severe system error and will shut itself down.
@@ -41144,8 +41143,8 @@ Client with computer name %1 failed to acknowledge receipt of the\n
 boot data.  Remote boot of this client was not completed.
 .
 Language=Polish
-Client with computer name %1 failed to acknowledge receipt of the\n
-boot data.  Remote boot of this client was not completed.
+Klient o nazwie komputera %1 nie potwierdził odbioru danych rozruchowych\n
+Zdalny rozruch tego klienta nie został zakończony.
 .
 Language=Romanian
 Client with computer name %1 failed to acknowledge receipt of the\n
@@ -41181,8 +41180,8 @@ Client with computer name %1 was not booted due to an error in opening\n
 file %2.
 .
 Language=Polish
-Client with computer name %1 was not booted due to an error in opening\n
-file %2.
+Rozruch klienta o nazwie komputera %1 nie powiódł się z powodu wystąpienia błędu\n
+podczas otwierania pliku %2.
 .
 Language=Romanian
 Client with computer name %1 was not booted due to an error in opening\n
@@ -41218,8 +41217,8 @@ Client with computer name %1 was not booted due to an error in reading\n
 file %2.
 .
 Language=Polish
-Client with computer name %1 was not booted due to an error in reading\n
-file %2.
+Rozruch klienta o nazwie komputera %1 nie powiódł się z powodu wystąpienia błędu\n
+podczas odczytywania pliku %2.
 .
 Language=Romanian
 Client with computer name %1 was not booted due to an error in reading\n
@@ -41255,8 +41254,8 @@ Client with computer name %1 was not booted due to insufficient memory\n
 at the remote boot server.
 .
 Language=Polish
-Client with computer name %1 was not booted due to insufficient memory\n
-at the remote boot server.
+Rozruch klienta o nazwie komputera %1 nie powiódł się z powodu niewystarczającej\n
+ilości pamięci na serwerze rozruchu zdalnego.
 .
 Language=Romanian
 Client with computer name %1 was not booted due to insufficient memory\n
@@ -41292,8 +41291,8 @@ Client with computer name %1 will be booted without using checksums\n
 because checksum for file %2 could not be calculated.
 .
 Language=Polish
-Client with computer name %1 will be booted without using checksums\n
-because checksum for file %2 could not be calculated.
+Rozruch klienta o nazwie komputera %1 będzie przeprowadzony bez używania\n
+sum kontrolnych, ponieważ nie można obliczyć sumy kontrolnej dla pliku %2.
 .
 Language=Romanian
 Client with computer name %1 will be booted without using checksums\n
@@ -41329,8 +41328,8 @@ Client with computer name %1 was not booted due to too many lines in\n
 file %2.
 .
 Language=Polish
-Client with computer name %1 was not booted due to too many lines in\n
-file %2.
+Rozruch klienta o nazwie komputera %1 nie powiódł się z powodu\n
+zbyt dużej liczby wierszy w pliku %2.
 .
 Language=Romanian
 Client with computer name %1 was not booted due to too many lines in\n
@@ -41367,9 +41366,9 @@ configuration file %2 for this client does not contain boot block\n
 line and/or loader line.
 .
 Language=Polish
-Client with computer name %1 was not booted because the boot block\n
-configuration file %2 for this client does not contain boot block\n
-line and/or loader line.
+Rozruch komputera %1 nie powiódł się, ponieważ\n
+plik konfiguracyjny %2 dla tego klienta nie zawiera wiersza bloku rozruchowego\n
+i/lub wiersza programu ładującego.
 .
 Language=Romanian
 Client with computer name %1 was not booted because the boot block\n
@@ -41411,8 +41410,8 @@ Client with computer name %1 was not booted due to a bad size of\n
 file %2.
 .
 Language=Polish
-Client with computer name %1 was not booted due to a bad size of\n
-file %2.
+Rozruch klienta o nazwie komputera %1 nie powiódł się z powodu\n
+złego rozmiaru pliku %2.
 .
 Language=Romanian
 Client with computer name %1 was not booted due to a bad size of\n
@@ -41448,8 +41447,8 @@ Client with computer name %1 was not booted due to remote boot\n
 service internal error.
 .
 Language=Polish
-Client with computer name %1 was not booted due to remote boot\n
-service internal error.
+Rozruch klienta o nazwie komputera %1 nie powiódł się z powodu\n
+wewnętrznego błędu usługi rozruchu zdalnego.
 .
 Language=Romanian
 Client with computer name %1 was not booted due to remote boot\n
@@ -41485,8 +41484,8 @@ Client with computer name %1 was not booted because file %2 has an\n
 invalid boot header.
 .
 Language=Polish
-Client with computer name %1 was not booted because file %2 has an\n
-invalid boot header.
+Rozruch klienta o nazwie komputera %1 nie powiódł się, ponieważ\n
+plik %2 ma nieprawidłowy nagłówek rozruchu.
 .
 Language=Romanian
 Client with computer name %1 was not booted because file %2 has an\n
@@ -41521,7 +41520,7 @@ Language=English
 Client with computer name %1 was not booted due to network error.
 .
 Language=Polish
-Client with computer name %1 was not booted due to network error.
+Rozruch klienta o nazwie komputera %1 nie powiódł się z powodu błędu sieciowego.
 .
 Language=Romanian
 Client with computer name %1 was not booted due to network error.
@@ -41550,7 +41549,7 @@ Language=English
 Client with adapter id %1 was not booted due to lack of resources.
 .
 Language=Polish
-Client with adapter id %1 was not booted due to lack of resources.
+Rozruch klienta o identyfikatorze karty %1 nie powiódł się z powodu braku zasobów.
 .
 Language=Romanian
 Client with adapter id %1 was not booted due to lack of resources.
@@ -41579,7 +41578,7 @@ Language=English
 Service experienced error copying file or directory %1.
 .
 Language=Polish
-Service experienced error copying file or directory %1.
+Usługa napotkała błąd podczas kopiowania pliku lub katalogu %1.
 .
 Language=Romanian
 Service experienced error copying file or directory %1.
@@ -41608,7 +41607,7 @@ Language=English
 Service experienced error deleting file or directory %1.
 .
 Language=Polish
-Service experienced error deleting file or directory %1.
+Usługa napotkała błąd podczas usuwania pliku lub katalogu %1.
 .
 Language=Romanian
 Service experienced error deleting file or directory %1.
@@ -41637,7 +41636,7 @@ Language=English
 Service experienced error setting permissions on file or directory %1.
 .
 Language=Polish
-Service experienced error setting permissions on file or directory %1.
+Usługa napotkała błąd podczas ustawiania uprawnień dla pliku lub katalogu %1.
 .
 Language=Romanian
 Service experienced error setting permissions on file or directory %1.
@@ -41666,7 +41665,7 @@ Language=English
 Service experienced error evaluating RPL configurations.
 .
 Language=Polish
-Service experienced error evaluating RPL configurations.
+Usługa napotkała błąd podczas obliczania konfiguracji RPL.
 .
 Language=Romanian
 Service experienced error evaluating RPL configurations.
@@ -41695,7 +41694,7 @@ Language=English
 Service experienced error creating RPL profiles for all configurations.
 .
 Language=Polish
-Service experienced error creating RPL profiles for all configurations.
+Usługa napotkała błąd podczas tworzenia profilów RPL dla wszystkich konfiguracji.
 .
 Language=Romanian
 Service experienced error creating RPL profiles for all configurations.
@@ -41724,7 +41723,7 @@ Language=English
 Service experienced error accessing registry.
 .
 Language=Polish
-Service experienced error accessing registry.
+Usługa napotkała błąd podczas próby dostępu do Rejestru.
 .
 Language=Romanian
 Service experienced error accessing registry.
@@ -41753,7 +41752,7 @@ Language=English
 Service experienced error replacing possibly outdated RPLDISK.SYS.
 .
 Language=Polish
-Service experienced error replacing possibly outdated RPLDISK.SYS.
+Usługa napotkała błąd podczas zamiany prawdopodobnie zdezaktualizowanego pliku RPLDISK.SYS.
 .
 Language=Romanian
 Service experienced error replacing possibly outdated RPLDISK.SYS.
@@ -41784,9 +41783,9 @@ file permissions.  These accounts are the RPLUSER local group\n
 and the user accounts for the individual RPL workstations.
 .
 Language=Polish
-Service experienced error adding security accounts or setting\n
-file permissions.  These accounts are the RPLUSER local group\n
-and the user accounts for the individual RPL workstations.
+Usługa napotkała błąd podczas dodawania kont zabezpieczeń lub ustawiania\n
+uprawnień dla plików. Konta te są grupą lokalną RPLUSER, a konta użytkowników\n
+są przeznaczone dla indywidualnych stacji roboczych RPL.
 .
 Language=Romanian
 Service experienced error adding security accounts or setting\n
@@ -41827,7 +41826,7 @@ Language=English
 Service failed to back up its database.
 .
 Language=Polish
-Service failed to back up its database.
+Zapisanie przez usługę kopii zapasowej jej bazy danych nie powiodło się.
 .
 Language=Romanian
 Service failed to back up its database.
@@ -41858,9 +41857,9 @@ missing or corrupted.  Service will attempt restoring the database\n
 from the backup.
 .
 Language=Polish
-Service failed to initialize from its database.  The database may be\n
-missing or corrupted.  Service will attempt restoring the database\n
-from the backup.
+Zainicjowanie usługi z jej bazy danych nie powiodło się. Baza danych\n
+może być nieobecna lub uszkodzona. Usługa podejmie próbę przywrócenia\n
+bazy danych z kopii zapasowej.
 .
 Language=Romanian
 Service failed to initialize from its database.  The database may be\n
@@ -41902,8 +41901,8 @@ Service failed to restore its database from the backup.  Service\n
 will not start.
 .
 Language=Polish
-Service failed to restore its database from the backup.  Service\n
-will not start.
+Przywrócenie bazy danych usługi z jej kopii zapasowej\n
+nie powiodło się. Usługa nie zostanie uruchomiona.
 .
 Language=Romanian
 Service failed to restore its database from the backup.  Service\n
@@ -41938,7 +41937,7 @@ Language=English
 Service successfully restored its database from the backup.
 .
 Language=Polish
-Service successfully restored its database from the backup.
+Usługa pomyślnie przywróciła swoją bazę danych z kopii zapasowej.
 .
 Language=Romanian
 Service successfully restored its database from the backup.
@@ -41968,8 +41967,8 @@ Service failed to initialize from its restored database.  Service\n
 will not start.
 .
 Language=Polish
-Service failed to initialize from its restored database.  Service\n
-will not start.
+Zainicjowanie usługi z przywróconej bazy danych nie powiodło się\n
+Usługa nie zostanie uruchomiona.
 .
 Language=Romanian
 Service failed to initialize from its restored database.  Service\n
@@ -42008,11 +42007,12 @@ a member workstation in domain %3, or as a server in domain %3.\n
 Use the Active Directory Users and Computers tool or Server Manager to remove the BDC account for %2.
 .
 Language=Polish
-The session setup to the Windows NT or Windows 2000 Domain Controller %1 from computer\n
-%2 using account %4 failed.  %2 is declared to be a BDC in domain %3.\n
-However, %2 tried to connect as either a DC in a trusted domain,\n
-a member workstation in domain %3, or as a server in domain %3.\n
-Use the Active Directory Users and Computers tool or Server Manager to remove the BDC account for %2.
+Nie powiodło się ustawienie sesji kontrolera domeny Windows NT lub Windows 2000 %1 z komputera\n
+%2 przy użyciu konta %4. %2 jest zadeklarowane jako BDC w domenie %3.\n
+Podjęto jednak próbę podłączenia %2 jako kontrolera domeny w zaufanej domenie,\n
+jako członkowskiej stacji roboczej w domenie %3 lub jako serwera w domenie %3.\n
+Użyj narzędzia Użytkownicy i komputery usługi Active Directory lub Menedżera\n
+serwerów, aby usunąć konto BDC dla %2.
 .
 Language=Romanian
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 from computer\n
@@ -42067,9 +42067,9 @@ attempting to convert it to NT 4.0 format. The JETCONV converter\n
 will write to the Application event log when it is finished.
 .
 Language=Polish
-The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
-attempting to convert it to NT 4.0 format. The JETCONV converter\n
-will write to the Application event log when it is finished.
+Baza danych zdalnego rozruchu była w formacie NT 3.5 / NT 3.51, a system NT\n
+próbuje konwersji tej bazy na format NT 4.0. Konwerter JETCONV dokona\n
+zapisu do dziennika zdarzeń Aplikacje po zakończeniu konwersji.
 .
 Language=Romanian
 The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
@@ -42112,9 +42112,9 @@ This group defines Lan Manager BDCs in the domain.\n
 Lan Manager BDCs are not permitted in NT domains.
 .
 Language=Polish
-Global group SERVERS exists in domain %1 and has members.\n
-This group defines Lan Manager BDCs in the domain.\n
-Lan Manager BDCs are not permitted in NT domains.
+W domenie %1 istnieje grupa globalna SERWERY i ma elementy.\n
+Grupa ta definiuje w domenie zapasowe kontrolery domeny sieci Lan Manager.\n
+Zapasowe kontrolery domeny sieci Lan Manager nie są dozwolone w domenach NT.
 .
 Language=Romanian
 Global group SERVERS exists in domain %1 and has members.\n
@@ -42162,14 +42162,14 @@ locator records of this domain controller does not support dynamic DNS updates:\
 records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
 .
 Language=Polish
-The following DNS server that is authoritative for the DNS domain controller\n
-locator records of this domain controller does not support dynamic DNS updates:\n\n
-%n%nDNS server IP address: %1\n
-%nReturned Response Code (RCODE): %2\n
-%nReturned Status Code: %3\n\n
-%n%nUSER ACTION\n\n
-%nConfigure the DNS server to allow dynamic DNS updates or manually add the DNS\n
-records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+Następujący serwer DNS autorytatywny dla rekordów lokalizatora kontrolera\n
+domeny DNS tego kontrolera domeny nie obsługuje dynamicznych aktualizacji DNS:\n\n
+%n%nAdres IP serwera DNS: %1\n
+%nZwrócony kod odpowiedzi (RCODE): %2\n
+%nZwrócony kod stanu: %3\n\n
+%n%nAKCJA UŻYTKOWNIKA\n\n
+%nSkonfiguruj serwer DNS, aby umożliwić dynamiczne aktualizacje DNS lub ręcznie dodaj\n
+rekordy DNS z pliku '%SystemRoot%\\System32\\Config\\Netlogon.dns' do bazy danych DNS.
 .
 Language=Romanian
 The following DNS server that is authoritative for the DNS domain controller\n
@@ -42257,24 +42257,25 @@ recommended.\n\n
 %nError Value: %2
 .
 Language=Polish
-The dynamic registration of the DNS record '%1' failed on the following DNS server:\n\n
-%n%nDNS server IP address: %3\n
-%nReturned Response Code (RCODE): %4\n
-%nReturned Status Code: %5\n\n
-%n%nFor computers and users to locate this domain controller, this record must be\n
-registered in DNS.\n\n
-%n%nUSER ACTION\n\n
-%nDetermine what might have caused this failure, resolve the problem, and initiate\n
-registration of the DNS records by the domain controller. To determine what might\n
-have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
-Server installation CD in Support\\Tools\\support.cab. To learn more about \n
-DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
-this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
-controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
-Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
-recommended.\n\n
-%n%nADDITIONAL DATA\n
-%nError Value: %2
+Dynamiczna rejestracja rekordu DNS '%1' nie powiodła się na następującym serwerze DNS:\n\n
+%n%nAdres IP serwera DNS: %3\n
+%nZwrócony kod odpowiedzi (RCODE): %4\n
+%nZwrócony kod stanu: %5\n\n
+%n%nTen rekord musi być zarejestrowany w systemie DNS, aby komputery i użytkownicy\n
+mogli lokalizować ten kontroler domeny.\n\n
+%n%nAKCJA UŻYTKOWNIKA\n\n
+%nOkreśl przyczynę tego błędu, rozwiąż problem i zainicjuj rejestrację rekordów DNS\n
+przez kontroler domeny. Aby określić przyczynę tego błędu, uruchom program\n
+DCDiag.exe. Można go znaleźć na dysku instalacyjnym CD systemu ReactOS Server\n
+w pliku Support\\Tools\\support.cab. Aby dowiedzieć się więcej o programie \n
+DCDiag.exe, zajrzyj do Centrum pomocy i obsługi technicznej. Aby zainicjować \n
+rejestrację rekordów DNS przez ten kontroler domeny, uruchom polecenie \n
+'nltest.exe /dsregdns' z wiersza polecenia na kontrolerze domeny lub uruchom ponownie\n
+usługę Net Logon. Program Nltest.exe jest dostępny na dysku CD Microsoft ReactOS Server\n
+Resource Kit. %n  Lub można ręcznie dodać ten rekord do systemu DNS, choć nie jest to\n
+zalecane.\n\n
+%n%nDANE DODATKOWE\n
+%nWartość błędu: %2
 .
 Language=Romanian
 The dynamic registration of the DNS record '%1' failed on the following DNS server:\n\n
@@ -42413,15 +42414,15 @@ record. To learn more about debugging DNS, see Help and Support Center.\n\n
 %nError Value: %2
 .
 Language=Polish
-The dynamic deletion of the DNS record '%1' failed on the following DNS server:\n\n
-%n%nDNS server IP address: %3\n%nReturned Response Code (RCODE): %4\n
-%nReturned Status Code: %5\n\n
-%n%nUSER ACTION\n\n
-%nTo prevent remote computers from connecting unnecessarily to the domain controller,\n
-delete the record manually or troubleshoot the failure to dynamically delete the\n
-record. To learn more about debugging DNS, see Help and Support Center.\n\n
-%n%nADDITIONAL DATA\n
-%nError Value: %2
+Dynamiczne usuwanie rekordu DNS '%1' nie powiodło się na następującym serwerze DNS:\n\n
+%n%nAdres IP serwera DNS: %3\n%nZwrócony kod odpowiedzi (RCODE): %4\n
+%nZwrócony kod stanu: %5\n\n
+%n%nAKCJA UŻYTKOWNIKA\n\n
+%nAby uchronić się przed niepotrzebnym podłączaniem komputerów zdalnych do kontrolera domeny,\n
+usuń rekord ręcznie lub rozwiąż problem, aby dynamicznie usunąć\n
+rekord. Aby dowiedzieć się więcej o debugowaniu systemu DNS, zajrzyj do Centrum pomocy i obsługi technicznej.\n\n
+%n%nDANE DODATKOWE\n
+%nWartość błędu: %2
 .
 Language=Romanian
 The dynamic deletion of the DNS record '%1' failed on the following DNS server:\n\n
@@ -42498,7 +42499,7 @@ Language=English
 Failed to create/open file %1 with the following error: %n%2
 .
 Language=Polish
-Failed to create/open file %1 with the following error: %n%2
+Nie powiodło się utworzenie/otwarcie pliku %1 z następującym błędem: %n%2
 .
 Language=Romanian
 Failed to create/open file %1 with the following error: %n%2
@@ -42528,8 +42529,8 @@ Netlogon got the following error while trying to get the subnet to site\n
 mapping information from the DS: %n%1
 .
 Language=Polish
-Netlogon got the following error while trying to get the subnet to site\n
-mapping information from the DS: %n%1
+Netlogon: uzyskano następujący błąd przy próbie uzyskania informacji\n
+o mapowaniu podsieci do lokacji z DS: %n%1
 .
 Language=Romanian
 Netlogon got the following error while trying to get the subnet to site\n
@@ -42566,9 +42567,9 @@ in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
 the IP address.  Consider adding a subnet object for this IP address.
 .
 Language=Polish
-'%1' tried to determine its site by looking up its IP address ('%2')\n
-in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
-the IP address.  Consider adding a subnet object for this IP address.
+'%1' próbował ustalić swoją witrynę, sprawdzając adres ('%2')\n
+w kontenerze usługi katalogowej Konfiguracja\Lokacje\Podsieci. Nie odnaleziono\n
+podsieci pasującej do adresu IP. Rozważ możliwość dodania obiektu podsieci dla tego adresu IP.
 .
 Language=Romanian
 '%1' tried to determine its site by looking up its IP address ('%2')\n
@@ -42611,9 +42612,9 @@ site name.  A site name must be a valid DNS label.\n
 Rename the site to be a valid name.
 .
 Language=Polish
-The site name for this computer is '%1'.  That site name is not a valid\n
-site name.  A site name must be a valid DNS label.\n
-Rename the site to be a valid name.
+Nazwą lokacji dla tego komputera jest '%1'.  Ta nazwa lokacji jest nieprawidłową\n
+nazwą. Nazwa lokacji musi być prawidłową etykietą DNS.\n
+Zmień nazwę lokacji na prawidłową nazwę.
 .
 Language=Romanian
 The site name for this computer is '%1'.  That site name is not a valid\n
@@ -42658,11 +42659,11 @@ and yy is the number of bits in the subnet mask.\n\n
 Correct the name of the subnet object.
 .
 Language=Polish
-The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
-container in the DS.  The name is not syntactically valid.  The valid\n
-syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
-and yy is the number of bits in the subnet mask.\n\n
-Correct the name of the subnet object.
+Obiekt podsieci '%1' występuje w kontenerze Configuration\\Sites\\Subnets\n
+w DS. Nazwa nie jest syntaktycznie prawidłowa. Prawidłową\n
+składnią jest xx.xx.xx.xx/yy gdzie xx.xx.xx.xx jest prawidłowym numerem podsieci IP\n
+a yy jest liczbą bitów w masce podsieci.\n\n
+Popraw nazwę obiektu podsieci.
 .
 Language=Romanian
 The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
@@ -42728,20 +42729,20 @@ the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by 
 Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
 .
 Language=Polish
-Dynamic registration or deletion of one or more DNS records associated with DNS\n
-domain '%1' failed.  These records are used by other computers to locate this\n
-server as a domain controller (if the specified domain is an Active Directory\n
-domain) or as an LDAP server (if the specified domain is an application partition).\n\n
-%n%nPossible causes of failure include:\n\n
-%n- TCP/IP properties of the network connections of this computer contain wrong IP address(es) of the preferred and alternate DNS servers\n
-%n- Specified preferred and alternate DNS servers are not running\n
-%n- DNS server(s) primary for the records to be registered is not running\n
-%n- Preferred or alternate DNS servers are configured with wrong root hints\n
-%n- Parent DNS zone contains incorrect delegation to the child zone authoritative for the DNS records that failed registration\n\n
-%n%nUSER ACTION\n\n
-%nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
-the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
-Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
+Nie można dynamicznie zarejestrować lub usunąć co najmniej jednego rekordu DNS\n
+skojarzonego z domeną DNS '%1'. Te rekordy są używane przez inne komputery do lokalizowania tego\n
+serwera jako kontrolera domeny (jeżeli określona domena jest domeną usługi Active Directory)\n
+ lub jako serwer LDAP (jeżeli określona domena jest partycją aplikacji).\n\n
+%n%nMożliwe przyczyny błędu to:\n\n
+%n- Właściwości TCP/IP połączeń sieciowych tego komputera zawierają złe adresy IP preferowanych i alternatywnych serwerów DNS\n
+%n- Określone preferowane i alternatywne serwery DNS nie działają\n
+%n- Serwery DNS podstawowe dla rejestrowania rekordów nie działają\n
+%n- Preferowane lub alternatywne serwery DNS są skonfigurowane ze złymi wskazówkami dotyczącymi serwerów głównych\n
+%n- Nadrzędna strefa DNS zawiera niepoprawne delegacje dla strefy podrzędnej, autorytatywnej dla rekordów DNS, których rejestracja nie powiodła się\n\n
+%n%nAKCJA UŻYTKOWNIKA\n\n
+%nPopraw możliwe błędy konfiguracji określone powyżej i zainicjuj rejestrację lub usuwanie\n
+rekordów DNS, uruchamiając polecenie 'nltest.exe /dsregdns' z wiersza polecenia lub uruchamiając ponownie\n
+usługę Net Logon. Program Nltest.exe jest dostępny na dysku CD ReactOS Server Resource Kit.
 .
 Language=Romanian
 Dynamic registration or deletion of one or more DNS records associated with DNS\n
@@ -42848,7 +42849,7 @@ Language=English
 Dynamic registration or deregistration of one or more DNS records failed with the following error: %n%1
 .
 Language=Polish
-Dynamic registration or deregistration of one or more DNS records failed with the following error: %n%1
+Nie można dynamiczne zarejestrować lub wyrejestrować co najmniej jednego rekordu DNS z powodu następującego błędu: %n%1
 .
 Language=Romanian
 Dynamic registration or deregistration of one or more DNS records failed with the following error: %n%1
@@ -42878,8 +42879,8 @@ The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the
 is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
 .
 Language=Polish
-The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
-is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+Ustawienie sesji kontrolera %1 domeny Windows NT lub Windows 2000 dla domeny %2\n
+nie reaguje. Bieżące wywołanie RPC z usługi Netlogon na \\\\%3 do %1 zostało anulowane.
 .
 Language=Romanian
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
@@ -42917,10 +42918,10 @@ selected to cover site '%2' for domain '%3' based on configured\n
 Directory Server replication costs.
 .
 Language=Polish
-Site '%2' does not have any Domain Controllers for domain '%3'.\n
-Domain Controllers in site '%1' have been automatically\n
-selected to cover site '%2' for domain '%3' based on configured\n
-Directory Server replication costs.
+Lokacja '%2' nie ma żadnego kontrolera domeny dla domeny '%3'.\n
+Kontroler domeny w lokacji '%1' został automatycznie\n
+wybrany do obsługi lokacji '%2' dla domeny '%3' na podstawie\n
+skonfigurowanych kosztów replikacji Serwera katalogów.
 .
 Language=Romanian
 Site '%2' does not have any Domain Controllers for domain '%3'.\n
@@ -42967,7 +42968,7 @@ Language=English
 This Domain Controller no longer automatically covers site '%1' for domain '%2'.
 .
 Language=Polish
-This Domain Controller no longer automatically covers site '%1' for domain '%2'.
+Ten kontroler domeny już nie uwzględnia automatycznie lokacji '%1' dla domeny '%2'.
 .
 Language=Romanian
 This Domain Controller no longer automatically covers site '%1' for domain '%2'.
@@ -42999,10 +43000,10 @@ selected to cover site '%2' for forest '%3' based on configured\n
 Directory Server replication costs.
 .
 Language=Polish
-Site '%2' does not have any Global Catalog servers for forest '%3'.\n
-Global Catalog servers in site '%1' have been automatically\n
-selected to cover site '%2' for forest '%3' based on configured\n
-Directory Server replication costs.
+Lokacja '%2' nie ma żadnego serwera wykazu globalnego dla lasu '%3'.\n
+Serwery wykazu globalnego w lokacji '%1' zostały automatycznie\n
+wybrane do obsługi lokacji '%2' dla lasu '%3' na podstawie skonfigurowanych\n
+kosztów replikacji Serwera katalogów.
 .
 Language=Romanian
 Site '%2' does not have any Global Catalog servers for forest '%3'.\n
@@ -43049,7 +43050,7 @@ Language=English
 This Global Catalog server no longer automatically covers site '%1' for forest '%2'.
 .
 Language=Polish
-This Global Catalog server no longer automatically covers site '%1' for forest '%2'.
+Ten serwer wykazu globalnego już nie uwzględnia automatycznie lokacji '%1' dla lasu '%2'.
 .
 Language=Romanian
 This Global Catalog server no longer automatically covers site '%1' for forest '%2'.
@@ -43080,9 +43081,9 @@ object in Active Directory failed. The updated values were '%1' and '%2'.\n
 The following error occurred: %n%3
 .
 Language=Polish
-Attempt to update HOST Service Principal Names (SPNs) of the computer\n
-object in Active Directory failed. The updated values were '%1' and '%2'.\n
-The following error occurred: %n%3
+Próba aktualizacji nazw głównych usługi (SPN) HOST obiektu\n
+komputera w usłudze Active Directory nie udała się. Zaktualizowanymi wartościami były '%1' i '%2'.\n
+Wystąpił następujący błąd: %n%3
 .
 Language=Romanian
 Attempt to update HOST Service Principal Names (SPNs) of the computer\n
@@ -43125,9 +43126,9 @@ in Active Directory failed. The updated value was '%1'.\n
 The following error occurred: %n%2
 .
 Language=Polish
-Attempt to update DNS Host Name of the computer object\n
-in Active Directory failed. The updated value was '%1'.\n
-The following error occurred: %n%2
+Próba aktualizacji nazwy hosta DNS obiektu komputera\n
+w usłudze Active Directory nie udała się. Zaktualizowaną wartością było '%1'.\n
+Wystąpił następujący błąd: %n%2
 .
 Language=Romanian
 Attempt to update DNS Host Name of the computer object\n
@@ -43172,11 +43173,11 @@ domain that this computer is a member of.\n
 The following error occurred:%n%2
 .
 Language=Polish
-No suitable Domain Controller is available for domain %1.\n
-An NT4 or older domain controller is available but it cannot\n
-be used for authentication purposes in the Windows 2000 or newer\n
-domain that this computer is a member of.\n
-The following error occurred:%n%2
+Brak odpowiedniego kontrolera domeny dostępnego dla domeny %1.\n
+Dostępny jest kontroler domeny systemu NT4 lub starszego\n
+ale nie można użyć go do celów uwierzytelniania w domenie systemu\n
+Windows 2000 lub nowszego, której członkiem jest ten komputer.\n
+Wystąpił następujący błąd:%n%2
 .
 Language=Romanian
 No suitable Domain Controller is available for domain %1.\n
@@ -43233,11 +43234,11 @@ the domain.\n
 The following error occurred:%n%2
 .
 Language=Polish
-The domain of this computer, %1 has been downgraded from Windows 2000\n
-or newer to Windows NT4 or older. The computer cannot function properly\n
-in this case for authentication purposes. This computer needs to rejoin\n
-the domain.\n
-The following error occurred:%n%2
+Domena tego komputera, %1, została obniżona z systemu Windows 2000\n
+lub nowszego do systemu Windows NT4 lub starszego. W tym przypadku komputer\n
+nie może działać właściwie w celach uwierzytelniania. Wymagane jest ponowne\n
+przyłączenie tego komputera do domeny.\n
+Wystąpił następujący błąd:%n%2
 .
 Language=Romanian
 The domain of this computer, %1 has been downgraded from Windows 2000\n
@@ -43293,10 +43294,10 @@ cover site '%2' for non-domain NC '%3' based on configured\n
 Directory Server replication costs.
 .
 Language=Polish
-Site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
-LDAP servers in site '%1' have been automatically selected to\n
-cover site '%2' for non-domain NC '%3' based on configured\n
-Directory Server replication costs.
+Lokacja '%2' nie ma żadnych serwerów LDAP dla NC niedomeny '%3'.\n
+Serwery LDAP w lokacji '%1' zostały automatycznie wybrane do\n
+obejmowania lokacji '%2' dla NC niedomeny '%3' w oparciu\n
+o koszty replikacji skonfigurowanego serwera katalogu.
 .
 Language=Romanian
 Site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
@@ -43343,7 +43344,7 @@ Language=English
 This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.
 .
 Language=Polish
-This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.
+Ten serwer LDAP nie obejmuje już automatycznie lokacji '%1' dla NC '%2' nie należącego do domeny.
 .
 Language=Romanian
 This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.
@@ -43377,12 +43378,12 @@ selected to cover site '%2' for domain '%3' based on configured\n
 Directory Server replication costs.
 .
 Language=Polish
-Site '%2' is no longer manually configured in the registry as\n
-covered by this Domain Controller for domain '%3'. As a result,\n
-site '%2' does not have any Domain Controllers for domain '%3'.\n
-Domain Controllers in site '%1' have been automatically\n
-selected to cover site '%2' for domain '%3' based on configured\n
-Directory Server replication costs.
+Lokacja '%2' nie jest już ręcznie skonfigurowana w rejestrze jako\n
+obejmowana tym kontrolerem domeny dla domeny '%3'. W rezultacie,\n
+lokacja '%2' nie ma żadnych kontrolerów domeny dla domeny '%3'.\n
+Kontrolery domeny w lokacji '%1' zostały automatycznie\n
+wybrane do obejmowania lokacji '%2' dla domeny '%3' w oparciu\n
+o koszty replikacji skonfigurowanego serwera katalogu.
 .
 Language=Romanian
 Site '%2' is no longer manually configured in the registry as\n
@@ -43443,9 +43444,9 @@ However, site '%1' is still (manually) covered by this Domain Controller for\n
 domain '%2' since this site has been manually configured in the registry.
 .
 Language=Polish
-This Domain Controller no longer automatically covers site '%1' for domain '%2'.\n
-However, site '%1' is still (manually) covered by this Domain Controller for\n
-domain '%2' since this site has been manually configured in the registry.
+Ten kontroler domeny nie obejmuje już automatycznie lokacji '%1' dla domeny '%2'.\n
+Lokacja '%1' jest jednak nadal (ręcznie) objęta tym kontrolerem domeny dla\n
+domeny '%2' ponieważ tę lokację skonfigurowano ręcznie w rejestrze.
 .
 Language=Romanian
 This Domain Controller no longer automatically covers site '%1' for domain '%2'.\n
@@ -43491,12 +43492,12 @@ selected to cover site '%2' for forest '%3' based on configured\n
 Directory Server replication costs.
 .
 Language=Polish
-Site '%2' is no longer manually configured in the registry as\n
-covered by this Global Catalog server for forest '%3'. As a result,\n
-site '%2' does not have any Global Catalog servers for forest '%3'.\n
-Global Catalog servers in site '%1' have been automatically\n
-selected to cover site '%2' for forest '%3' based on configured\n
-Directory Server replication costs.
+Lokacja '%2' nie jest już ręcznie skonfigurowana w rejestrze jako\n
+obejmowana tym serwerem Wykazu globalnego dla lasu '%3'. W rezultacie,\n
+lokacja '%2' nie ma żadnych serwerów Wykazu globalnego dla lasu '%3'.\n
+Serwery Wykazu globalnego w lokacji '%1' zostały automatycznie\n
+wybrane do obejmowania lokacji '%2' dla lasu '%3' w oparciu\n
+o koszty replikacji skonfigurowanego serwera katalogu.
 .
 Language=Romanian
 Site '%2' is no longer manually configured in the registry as\n
@@ -43557,9 +43558,9 @@ However, site '%1' is still (manually) covered by this Global catalog for\n
 forest '%2' since this site has been manually configured in the registry.
 .
 Language=Polish
-This Global Catalog server no longer automatically covers site '%1' for forest '%2'.\n
-However, site '%1' is still (manually) covered by this Global catalog for\n
-forest '%2' since this site has been manually configured in the registry.
+Ten serwer Wykazu globalnego nie obejmuje już automatycznie lokacji '%1' dla lasu '%2'.\n
+Lokacja '%1' jest jednak nadal (ręcznie) objęta tym Wykazem globalnym dla\n
+lasu '%2' ponieważ tę lokację skonfigurowano ręcznie w rejestrze.
 .
 Language=Romanian
 This Global Catalog server no longer automatically covers site '%1' for forest '%2'.\n
@@ -43605,12 +43606,12 @@ selected to cover site '%2' for non-domain NC '%3' based on\n
 configured Directory Server replication costs.
 .
 Language=Polish
-Site '%2' is no longer manually configured in the registry as\n
-covered by this LDAP server for non-domain NC '%3'. As a result,\n
-site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
-LDAP servers in site '%1' have been automatically\n
-selected to cover site '%2' for non-domain NC '%3' based on\n
-configured Directory Server replication costs.
+Lokacja '%2' nie jest już ręcznie skonfigurowana w rejestrze jako\n
+obejmowana tym serwerem LDAP dla NC niedomeny '%3'. W rezultacie,\n
+lokacja '%2' nie ma żadnych serwerów LDAP domeny dla NC niedomeny '%3'.\n
+Serwery LDAP w lokacji '%1' zostały automatycznie\n
+wybrane do obejmowania lokacji '%2' dla NC niedomeny '%3' w oparciu\n
+o koszty replikacji skonfigurowanego serwera katalogu.
 .
 Language=Romanian
 Site '%2' is no longer manually configured in the registry as\n
@@ -43671,9 +43672,9 @@ However, site '%1' is still (manually) covered by this LDAP server for\n
 non-domain NC '%2' since this site has been manually configured in the registry.
 .
 Language=Polish
-This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.\n
-However, site '%1' is still (manually) covered by this LDAP server for\n
-non-domain NC '%2' since this site has been manually configured in the registry.
+Ten serwer LDAP nie obejmuje już automatycznie lokacji '%1' dla NC '%2' nie należącego do domeny.\n
+Lokacjia '%1' jest jednak nadal (ręcznie) obejmowana przez ten serwer LDAP dla\n
+NC '%2' nie należącego do domeny, ponieważ lokację tę skonfigurowano ręcznie w rejestrze.
 .
 Language=Romanian
 This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.\n
@@ -43719,12 +43720,12 @@ Contact your domain administrator who may need to manually resolve the account n
 collision.
 .
 Language=Polish
-Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
-of the computer object in Active Directory failed because the Domain Controller\n
-'%1' had more than one account with the name '%2' corresponding to this computer.\n
-Not having SPNs registered may result in authentication failures for this computer.\n
-Contact your domain administrator who may need to manually resolve the account name\n
-collision.
+Nie powiodła się próba aktualizacji atrybutów nazw hosta DNS (DnsHostName)\n
+i nazwy głównej usługi HOST (SPN) obiektu komputera w usłudze Active Directory, ponieważ kontroler domeny %1\n
+miał więcej niż jedno konto o nazwie '%2' odpowiadające temu komputerowi.\n
+Niezarejestrowanie nazw SPN może powodować błędy uwierzytelniania dla tego komputera.\n
+Skontaktuj się z administratorem domeny, który być może będzie musiał ręcznie\n
+rozwiązać kolizję nazw kont.
 .
 Language=Romanian
 Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
@@ -43789,13 +43790,12 @@ useful for the resolution of this failure:%n\n
 DsCrackNames status = 0x%3, crack error = 0x%4.
 .
 Language=Polish
-Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
-of the computer object in Active Directory failed because this computer account\n
-name, '%2' could not be mapped to the computer object on Domain Controller '%1'.\n
-Not having SPNs registered may result in authentication failures for this computer.\n
-Contact your domain administrator. The following technical information may be\n
-useful for the resolution of this failure:%n\n
-DsCrackNames status = 0x%3, crack error = 0x%4.
+Nie powiodła się próba aktualizacji atrybutów nazw hosta DNS (DnsHostName)\n
+ i nazwy głównej usługi HOST (SPN) obiektu komputera w usłudze Active Directory, ponieważ nazwy tego konta komputera\n
+'%2' nie można zmapować do obiektu komputera w kontrolerze domeny '%1'.\n
+Niezarejestrowanie nazw SPN może powodować błędy uwierzytelniania dla tego komputera.\n
+Skontaktuj się z administratorem domeny. Do rozwiązania tego błędu mogą być przydatne następujące informacje techniczne:%n\n
+Stan DsCrackNames = 0x%3, błąd złamania = 0x%4.
 .
 Language=Romanian
 Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
@@ -43867,14 +43867,14 @@ creation of a new subnet object (whose range includes the above IP address) whic
 to the selected site object.
 .
 Language=Polish
-None of the IP addresses (%2) of this Domain Controller map to the configured site '%1'.\n
-While this may be a temporary situation due to IP address changes, it is generally\n
-recommended that the IP address of the Domain Controller (accessible to machines in\n
-its domain) maps to the Site which it services. If the above list of IP addresses is\n
-stable, consider moving this server to a site (or create one if it does not already\n
-exist) such that the above IP address maps to the selected site. This may require the\n
-creation of a new subnet object (whose range includes the above IP address) which maps\n
-to the selected site object.
+Żaden z adresów IP (%2) tego kontrolera domeny nie jest mapowany do skonfigurowanej\n
+lokacji '%1'. Choć może to być sytuacja tymczasowa wynikająca ze zmian adresu IP,\n
+na ogół zaleca się, aby adres IP kontrolera domeny (dostępny dla komputerów w jego\n
+domenie) był mapowany do obsługiwanej przez niego lokacji. Jeśli powyższa lista\n
+adresów IP jest stabilna, rozważ przeniesienie tego serwera do takiej lokacji\n
+(lub utworzenie jej, jeśli nie istnieje), w której powyższy adres IP będzie mapowany\n
+do wybranej lokacji. Może to wymagać utworzenia nowego obiektu podsieci (którego\n
+zakres zawiera powyższy adres IP), mapowanego do wybranego obiektu lokacji.
 .
 Language=Romanian
 None of the IP addresses (%2) of this Domain Controller map to the configured site '%1'.\n
@@ -43946,8 +43946,8 @@ The following error occurred while reading a parameter '%2' in the\n
 Netlogon %1 registry section:%n%3
 .
 Language=Polish
-The following error occurred while reading a parameter '%2' in the\n
-Netlogon %1 registry section:%n%3
+Wystąpił następujący błąd podczas odczytu parametru '%2'\n
+w sekcji rejestru %1 polecenia Netlogon:%n%3
 .
 Language=Romanian
 The following error occurred while reading a parameter '%2' in the\n
@@ -43984,9 +43984,9 @@ The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, res
 The value of 0x%6 has been assigned to this parameter.
 .
 Language=Polish
-The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\n
-The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, respectively.\n
-The value of 0x%6 has been assigned to this parameter.
+Klucz rejestru %1 polecenia Netlogon zawiera nieprawidłową wartość 0x%2 dla parametru '%3'.\n
+Wartości minimalna i maksymalna dozwolone dla tego parametru to, odpowiednio 0x%4 i 0x%5.\n
+Temu parametrowi przypisano wartość 0x%6.
 .
 Language=Romanian
 The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\n
@@ -44028,8 +44028,8 @@ The session setup from the computer %1 failed to authenticate.\n
 The following error occurred: %n%2
 .
 Language=Polish
-The session setup from the computer %1 failed to authenticate.\n
-The following error occurred: %n%2
+Nie powiodło się uwierzytelnienie konfiguracji sesji z komputera %1.\n
+Wystąpił następujący błąd: %n%2
 .
 Language=Romanian
 The session setup from the computer %1 failed to authenticate.\n
@@ -44067,10 +44067,10 @@ Dynamic DNS updates have been manually disabled on this domain controller.\n\n
 records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
 .
 Language=Polish
-Dynamic DNS updates have been manually disabled on this domain controller.\n\n
-%n%nUSER ACTION\n\n
-%nReconfigure this domain controller to use dynamic DNS updates or manually add the DNS\n
-records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+Dynamiczne aktualizacje DNS zostały ręcznie wyłączone w tym kontrolerze domeny.\n\n
+%n%nAKCJA UŻYTKOWNIKA\n\n
+%nKonfiguruj ponownie ten kontroler domeny, aby używał dynamicznych aktualizacji DNS lub ręcznie dodaj rekordy DNS\n
+z pliku '%SystemRoot%\\System32\\Config\\Netlogon.dns' do bazy danych DNS.
 .
 Language=Romanian
 Dynamic DNS updates have been manually disabled on this domain controller.\n\n
@@ -44137,27 +44137,27 @@ different maximum size, create the above registry value and set the desired\n
 maximum size in bytes.
 .
 Language=Polish
-During the past %1 hours there have been %2 connections to this Domain\n
-Controller from client machines whose IP addresses don't map to any of\n
-the existing sites in the enterprise. Those clients, therefore, have\n
-undefined sites and may connect to any Domain Controller including\n
-those that are in far distant locations from the clients. A client's site\n
-is determined by the mapping of its subnet to one of the existing sites.\n
-To move the above clients to one of the sites, please consider creating\n
-subnet object(s) covering the above IP addresses with mapping to one of the\n
-existing sites.  The names and IP addresses of the clients in question have\n
-been logged on this computer in the following log file\n
-'%SystemRoot%\\debug\\netlogon.log' and, potentially, in the log file\n
-'%SystemRoot%\\debug\\netlogon.bak' created if the former log becomes full.\n
-The log(s) may contain additional unrelated debugging information. To filter\n
-out the needed information, please search for lines which contain text\n
-'NO_CLIENT_SITE:'. The first word after this string is the client name and\n
-the second word is the client IP address. The maximum size of the log(s) is\n
-controlled by the following registry DWORD value\n
+W ciągu ostatnich %1 godzin ustanowiono %2 połączeń do tego kontrolera domeny\n
+z komputerów klienckich, których adresy IP nie są mapowane\n
+do żadnej z istniejących lokacji w przedsiębiorstwie. Te komputery mają\n
+zatem niezdefiniowane lokacje i mogą łączyć się z dowolnym kontrolerem domeny,\n
+w tym także z tymi, które znajdują się w miejscach odległych od klientów. Lokację\n
+klienta określa mapowanie jej podsieci do jednej z istniejących lokacji.\n
+Aby przenieść powyższych klientów do jednej z lokacji, rozważ możliwość utworzenia\n
+obiektu lub obiektów podsieci obejmujących powyższe adresy IP z mapowaniem\n
+do jednej z istniejących witryn. Nazwy i adresy IP klientów, o których mowa,\n
+zostały zarejestrowane na tym komputerze w następującym pliku dziennika:\n
+'%SystemRoot%\\debug\\netlogon.log' i, prawdopodobnie, w pliku\n
+'%SystemRoot%\\debug\\netlogon.bak' utworzonym w przypadku zapełnienia poprzedniego pliku dziennika.\n
+Dzienniki mogą zawierać dodatkowe, nieistotne informacje o debugowaniu. Aby wyfiltrować\n
+potrzebne informacje, wyszukaj wiersze zawierające tekst\n
+'NO_CLIENT_SITE:'. Pierwszy wyraz po tym ciągu stanowi nazwę klienta,\n
+a drugi - adres IP klienta. Maksymalnym rozmiarem dziennika (dzienników)\n
+steruje następująca wartość DWORD rejestru\n
 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters\\LogFileMaxSize';\n
-the default is %3 bytes.  The current maximum size is %4 bytes.  To set a\n
-different maximum size, create the above registry value and set the desired\n
-maximum size in bytes.
+wartość domyślna to tyle bajtów %3.  Bieżący rozmiar maksymalny to tyle bajtów %4.  Aby ustawić\n
+inny rozmiar maksymalny, utwórz powyższą wartość rejestru,\n
+a potem ustaw potrzebny rozmiar maksymalny w bajtach.
 .
 Language=Romanian
 During the past %1 hours there have been %2 connections to this Domain\n
@@ -44311,12 +44311,12 @@ took too long.\n\n
 '%SystemRoot%\\System32\\Config\\Netlogon.dns' from the DNS database.
 .
 Language=Polish
-The deregistration of some DNS domain controller locator records was aborted\n
-at the time of this domain controller demotion because the DNS deregistrations\n
-took too long.\n\n
-%n%nUSER ACTION\n\n
-%nManually delete the DNS records listed in the file\n
-'%SystemRoot%\\System32\\Config\\Netlogon.dns' from the DNS database.
+Wyrejestrowanie pewnych rekordów lokalizatora kontrolera domeny DNS zostało przerwane\n
+w czasie obniżania tego kontrolera domeny, ponieważ wyrejestrowania DNS\n
+zabierały zbyt dużo czasu.\n\n
+%n%nAKCJA UŻYTKOWNIKA\n\n
+%nRęcznie usuń rekordy DNS wymienione w pliku\n
+'%SystemRoot%\\System32\\Config\\Netlogon.dns' z bazy danych DNS.
 .
 Language=Romanian
 The deregistration of some DNS domain controller locator records was aborted\n
@@ -44389,21 +44389,21 @@ to this domain controller. After the misconfiguration is corrected, restart the 
 service on this machine and verify that this event log no longer appears.
 .
 Language=Polish
-The NetLogon service on this domain controller has been configured to use port %1\n
-for incoming RPC connections over TCP/IP from remote machines. However, the\n
-following error occurred when Netlogon attempted to register this port with the RPC\n
-endpoint mapper service: %n%2 %nThis will prevent the NetLogon service on remote\n
-machines from connecting to this domain controller over TCP/IP that may result in\n
-authentication problems.\n\n
-%n%nUSER ACTION\n\n
-%nThe specified port is configured via the Group Policy or via a registry value 'DcTcpipPort'\n
-under the 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters'\n
-registry key; the value configured through the Group Policy takes precedence. If the\n
-port specified is in error, reset it to a correct value. You can also remove this\n
-configuration for the port in which case the port will be assigned dynamically by\n
-the endpoint mapper at the time the NetLogon service on remote machines makes RPC connections\n
-to this domain controller. After the misconfiguration is corrected, restart the NetLogon\n
-service on this machine and verify that this event log no longer appears.
+Usługa NetLogon na tym kontrolerze domeny została skonfigurowana do używania portu %1\n
+dla przychodzących połączeń RPC przez protokół TCP/IP z komputerów zdalnych. Wystąpił jednak następujący błąd\n
+gdy usługa Netlogon próbowała zarejestrować ten port przy pomocy usługi\n
+mapowania punktów końcowych RPC: %n%2 %nTo uniemożliwi usłudze NetLogon na komputerach\n
+zdalnych łączenie się z tym kontrolerem domeny przez protokół TCP/IP, co może powodować\n
+problemy z uwierzytelnianiem.\n\n
+%n%nKONTO UŻYTKOWNIKA\n\n
+%nOkreślony port jest skonfigurowany przez zasady grup lub przez wartość rejestru 'DcTcpipPort'\n
+w kluczu rejestru 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters'\n
+wartość skonfigurowana przez zasady grup ma pierwszeństwo. Jeżeli\n
+w określonym porcie występuje błąd, zresetuj go do poprawnej wartości. Można również usunąć tę\n
+konfigurację dla portu, wtedy port będzie przypisany dynamicznie\n
+przez usługę mapowania punktów końcowych, gdy usługa NetLogon na komputerach zdalnych utworzy połączenia RPC\n
+do tego kontrolera domeny. Po poprawieniu błędu konfiguracji, uruchom ponownie usługę NetLogon\n
+na tym komputerze i zweryfikuj, że ten dziennika zdarzeń już się nie pojawia.
 .
 Language=Romanian
 The NetLogon service on this domain controller has been configured to use port %1\n
