@@ -27,7 +27,7 @@
 @ stdcall -arch=i386 __CxxQueryExceptionSize() msvcrt.__CxxQueryExceptionSize
 @ stub __CxxRegisterExceptionObject
 @ stub __CxxUnregisterExceptionObject
-@ stub __DestructExceptionObject
+@ cdecl __DestructExceptionObject() msvcrt.__DestructExceptionObject
 @ stub __FrameUnwindFilter
 @ stub __GetPlatformExceptionInfo
 @ stub __NLG_Dispatch2
