@@ -2199,7 +2199,7 @@ NET SHARE nazwaudziału=dysk:ścieżka [/GRANT:użytkownik,[READ | CHANGE | FULL
                                [/USERS:number | /UNLIMITED]
                                [/REMARK:"tekst"]
                                [/CACHE:Manual | Documents| Programs | None]
-          nazwaudziału [/USERS:liba | /UNLIMITED]
+          nazwa_udziału [/USERS:liczba | /UNLIMITED]
                     [/REMARK:"tekst"]
                     [/CACHE:Manual | Documents | Programs | None]
           {nazwaudziału | nazwaurządzenia | dysk:ścieżka} /DELETE
