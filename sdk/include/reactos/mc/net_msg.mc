@@ -3877,7 +3877,7 @@ Do opisu składni poleceń użyto następujących zasad:
 -  Elementy opcjonalnie występujące w poleceniu zawarto w znakach [ i ].
 
 -  Listy elementów zawarto w znakach { i }, które oznaczają, że
-   w poleceniu musi zostać zastosowany jeden z elementów listy
+   w poleceniu musi zostać zastosowany jeden z elementów listy.
 
 -  Znak | rozdziela elementy listy. Oznacza on, że w poleceniu może
    zostać użyty tylko jeden z rozdzielanych elementów.
