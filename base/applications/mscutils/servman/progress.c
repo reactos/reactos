@@ -28,21 +28,21 @@ typedef struct _PROGRESS_DATA
 
 VOID ShowError(DWORD dwLastError)
 {
-    LPTSTR lpMsg;
+    LPWSTR lpMsg;
 
-    if (!FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                       FORMAT_MESSAGE_FROM_SYSTEM |
-                       FORMAT_MESSAGE_IGNORE_INSERTS,
-                       NULL,
-                       dwLastError,
-                       LANG_USER_DEFAULT,
-                       (LPTSTR)&lpMsg,
-                       0, NULL))
+    if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                        FORMAT_MESSAGE_FROM_SYSTEM |
+                        FORMAT_MESSAGE_IGNORE_INSERTS,
+                        NULL,
+                        dwLastError,
+                        LANG_USER_DEFAULT,
+                        (LPWSTR)&lpMsg,
+                        0, NULL))
     {
         return;
     }
 
-    MessageBox(NULL, lpMsg, NULL, MB_OK | MB_ICONERROR);
+    MessageBoxW(NULL, lpMsg, NULL, MB_OK | MB_ICONERROR);
     LocalFree(lpMsg);
 }
 
