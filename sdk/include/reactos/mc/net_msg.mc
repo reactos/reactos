@@ -3256,7 +3256,7 @@ Opcje      Polecenie posiada następujące opcje:
                               p.m. Parametr ALL oznacza, że użytkownik zawsze
                               może się logować, brak wartości oznacza, że
                               użytkownik nigdy nie może się logować.
-                              Oddziel  wpisy dnia i godziny przecinkiem;
+                              Oddziel wpisy dnia i godziny przecinkiem;
                               wielokrotne wpisy dnia i godziny oddziel
                               średnikiem.
                               
