@@ -2307,7 +2307,7 @@ Language=Polish
 NET SHARE udostępnia zasoby serwera użytkownikom sieci. Użyte
 bez opcji wyświetla informacje o wszystkich zasobach udostępnionych
 na komputerze. Dla każdego zasobu, system ReactOS zgłasza
-nazwaurzadzenia lub nazwasciezki i powiązany z nim komentarz opisowy.
+nazwa_urządzenia lub nazwa_ścieżki i powiązany z nim komentarz opisowy.
 
 nazwa_udziału       
   Określa nazwę sieciową udostępnionego zasobu. Aby wyświetlić informacje dotyczące tylko danego zasobu, należy wpisać polecenie net share z parametrem 
