@@ -2153,7 +2153,28 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
         'I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',0
     };
 
+#if 1 /* This is a hack. See CORE-1091. */
+    /* Determine the current font's Pitch and Family to save for later */
+    LOGFONT lf;
+    HFONT hCurrentFont;
+    BYTE bPitchAndFamily = 0;
+
+    hCurrentFont = (HFONT)GetCurrentObject(hdc, OBJ_FONT);
+    if (GetObject(hCurrentFont, sizeof(LOGFONT), &lf))
+        bPitchAndFamily = lf.lfPitchAndFamily;
+
+    /* This function currently in ReactOS will always return a Truetype font */
+    /* because we cannot yet handle raster fonts. So it will return flags    */
+    /* TMPF_VECTOR and TMPF_TRUETYPE, which can cause problems in edit boxes */
+    if (!GetTextMetricsW(hdc, &tm))
+        return 0;
+
+    /* To compensate for the GetTextMetricsW call changing the PitchAndFamily */
+    /* we copy our stored value back into this field to restore the old value */
+    tm.tmPitchAndFamily = bPitchAndFamily;
+#else
     if(!GetTextMetricsW(hdc, &tm)) return 0;
+#endif
 
     if(!GetTextExtentPointW(hdc, alphabet, 52, &sz)) return 0;
 
