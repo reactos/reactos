@@ -2309,7 +2309,7 @@ bez opcji wyświetla informacje o wszystkich zasobach udostępnionych
 na komputerze. Dla każdego zasobu, system ReactOS zgłasza
 nazwaurzadzenia lub nazwasciezki i powiązany z nim komentarz opisowy.
 
-nazwaudziału       
+nazwa_udziału       
   Określa nazwę sieciową udostępnionego zasobu. Aby wyświetlić informacje dotyczące tylko danego zasobu, należy wpisać polecenie net share z parametrem 
 
 dysk:ścieżka       
