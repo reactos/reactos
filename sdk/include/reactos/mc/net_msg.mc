@@ -2328,7 +2328,7 @@ dysk:ścieżka
 /REMARK:"tekst"
   Dodaje opisowy komentarz dotyczący zasobu. Tekst należy wpisać w cudzysłowie.
                    
-nazwaurzadzenia
+nazwa_urządzenia
   Jest jedną lub kilkoma drukarkami (LPT1: do LPT9:)
   
 /DELETE
