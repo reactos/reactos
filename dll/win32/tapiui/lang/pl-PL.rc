@@ -50,7 +50,7 @@ BEGIN
     EDITTEXT 1060, 190, 152, 48, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "Kod wyłączenia alertu:", 1035, 14, 177, 170, 10
     COMBOBOX 1013, 190, 176, 48, 73, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL
-    LTEXT "Wybierz numer:", -1, 10, 195, 40, 8
+    LTEXT "Wybierz numer:", -1, 14, 195, 54, 8
     AUTORADIOBUTTON "&Tonowo", 1036, 74, 194, 50, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "&Ciągiem impulsów", 1037, 128, 194, 75, 10, NOT WS_TABSTOP
     LTEXT "Numer telefonu będzie wybrany jako:", 1052, 7, 219, 122, 8
