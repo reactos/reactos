@@ -307,10 +307,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
-    LTEXT "Zanim będziesz mógł dokonać jakichkolwiek połączeń telefonicznych albo modemowych, ReactOS porzebuje następujących informacji o twojej obecnej lokalizacji.", 2000, 95, 3, 225, 25
-    LTEXT "&W jakim kraju/regionie teraz jesteś?", -1, 95, 34, 188, 10
-    COMBOBOX 1006, 95, 45, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    LTEXT "Numer &międzymiastowy", -1, 95, 64, 188, 10
+    LTEXT "Zanim będziesz mógł dokonać jakichkolwiek połączeń telefonicznych albo modemowych, ReactOS porzebuje następujących informacji o twojej obecnej lokalizacji.", 2000, 95, 2, 188, 25
+    LTEXT "&W jakim kraju/regionie teraz jesteś?", -1, 95, 30, 188, 10
+    COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "Numer &międzymiastowy", -1, 95, 61, 188, 10
     EDITTEXT 1034, 95, 73, 40, 14, ES_AUTOHSCROLL
     LTEXT "Numer do &linii zewnętrznej", -1, 95, 97, 188, 10
     EDITTEXT 1010, 95, 109, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
