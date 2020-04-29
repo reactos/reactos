@@ -4,6 +4,7 @@
 ;// Turkish translation by 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
 ;// Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
 ;// Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
+;// Polish translation Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020) 
 
 MessageIdTypedef=DWORD
 
@@ -1367,7 +1368,7 @@ Language=Polish
    NET FILE                 NET SEND                 NET USER
    NET GROUP                NET SESSION              NET VIEW
 
-   NET HELP SYNTAX explains how to read NET HELP syntax lines.
+   NET HELP SYNTAX wyświetla, jak odczytywać linie składni NET HELP.
    NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
@@ -2194,14 +2195,14 @@ NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
           {sharename | devicename | drive:path} /DELETE
 .
 Language=Polish
-NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
+NET SHARE nazwaudziału=dysk:ścieżka [/GRANT:użytkownik,[READ | CHANGE | FULL]]
                                [/USERS:number | /UNLIMITED]
-                               [/REMARK:"text"]
+                               [/REMARK:"tekst"]
                                [/CACHE:Manual | Documents| Programs | None]
-          sharename [/USERS:number | /UNLIMITED]
-                    [/REMARK:"text"]
+          nazwaudziału [/USERS:liba | /UNLIMITED]
+                    [/REMARK:"tekst"]
                     [/CACHE:Manual | Documents | Programs | None]
-          {sharename | devicename | drive:path} /DELETE
+          {nazwaudziału | nazwaurządzenia | dysk:ścieżka} /DELETE
 .
 Language=Romanian
 NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
@@ -2303,35 +2304,47 @@ devicename         Is one or more printers (LPT1: through LPT9:)
 NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Polish
-NET SHARE makes a server's resources available to network users. When
-used without options, it lists information about all resources being
-shared on the computer. For each resource, Windows reports the
-devicename(s) or pathname(s) and a descriptive comment associated with it.
+NET SHARE udostępnia zasoby serwera użytkownikom sieci. Użyte
+bez opcji wyświetla informacje o wszystkich zasobach udostępnionych
+na komputerze. Dla każdego zasobu, system ReactOS zgłasza
+nazwaurzadzenia lub nazwasciezki i powiązany z nim komentarz opisowy.
 
-sharename          Is the network name of the shared resource. Type
-                   NET SHARE with a sharename only to display information
-                   about that share.
-drive:path         Specifies the absolute path of the directory to
-                   be shared.
-/GRANT:user,perm   Creates the share with a security descriptor that gives
-                   the requested permissions to the specified user. This
-                   option may be used more than once to give share permissions
-                   to multiple users.
-/USERS:number      Sets the maximum number of users who can
-                   simultaneously access the shared resource.
-/UNLIMITED         Specifies an unlimited number of users can
-                   simultaneously access the shared resource.
-/REMARK:"text"     Adds a descriptive comment about the resource.
-                   Enclose the text in quotation marks.
-devicename         Is one or more printers (LPT1: through LPT9:)
-                   shared by sharename.
-/DELETE            Stops sharing the resource.
-/CACHE:Manual      Enables manual client caching of programs and documents
-                   from this share.
-/CACHE:Documents   Enables automatic caching of documents from this share.
-/CACHE:Programs    Enables automatic caching of documents and programs
-                   from this share.
-/CACHE:None        Disables caching from this share.
+nazwaudziału       
+  Określa nazwę sieciową udostępnionego zasobu. Aby wyświetlić informacje dotyczące tylko danego zasobu, należy wpisać polecenie net share z parametrem 
+
+dysk:ścieżka       
+  Określa ścieżkę absolutną katalogu do udostępnienia.
+
+/GRANT:user,perm
+  Tworzy udział z deskryptorem zabezpieczeń, który nadaje wymagane uprawnienia określonemu użytkownikowi.
+  Ta opcja może być używana wiecej niż raz w celu nadania uprawnień udziału wielu użytkownikom
+                   
+/USERS:liczba_użytkowników      
+  Ustawia maksymalną liczbę użytkowników, którzy mogą jednocześnie korzystać z udostępnionego zasobu
+
+/UNLIMITED
+  Określa nieograniczoną liczbę użytkowników, którzy mogą jednocześnie korzystać z udostępnionego zasobu.
+                   
+/REMARK:"tekst"
+  Dodaje opisowy komentarz dotyczący zasobu. Tekst należy wpisać w cudzysłowie.
+                   
+nazwaurzadzenia
+  Jest jedną lub kilkoma drukarkami (LPT1: do LPT9:)
+  
+/DELETE
+  Zatrzymuje udostępnianie danego zasobu.
+  
+/CACHE:Manual
+  Włącza buforowanie klientów w trybie offline z ręczną ponowną integracją.
+
+/CACHE:Documents
+  Włącza automatyczne buforowanie dokumentów z tego udziału.
+  
+/CACHE:Programs
+  Włącza automatyczne buforowanie klientów programów.
+
+/CACHE:None
+  Wyłącza buforowanie.
 
 NET HELP command | MORE displays Help one screen at a time.
 .
@@ -3160,76 +3173,102 @@ Options      Are as follows:
 NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Polish
-NET USER creates and modifies user accounts on computers. When used
-without switches, it lists the user accounts for the computer. The 
-user account information is stored in the user accounts database.
+NET USER tworzy i modyfikuje konta użytkowników na komputerach. 
+Stosowane bez przełączników, listy kont uzytkowników na komputerze. 
+Konto użytkownika informacje są przechowywane w bazie danych kont użytkowników.
 
-username     Is the name of the user account to add, delete, modify, or 
-             view. The name of the user account can have as many as 
-             20 characters. 
-password     Assigns or changes a password for the user's account. 
-             A password must satisfy the minimum length set with the 
-             /MINPWLEN option of the NET ACCOUNTS command. It can have as 
-             many as 14 characters. 
-*            Produces a prompt for the password. The password is not 
-             displayed when you type it at a password prompt. 
-/DOMAIN      Performs the operation on a domain controller of 
-             the current domain. 
-/ADD         Adds a user account to the user accounts database. 
-/DELETE      Removes a user account from the user accounts database. 
+nazwaużytkownika
+  Nazwa konta użytkownika do dodania, usunięcia, modyfikacji
+  lub wyświetlenia. Nazwa konta użytkownika może składać się
+  maksymalnie z 20 znaków.
 
-Options      Are as follows:
+hasło
+  Przypisuje lub zmienia hasło dla konta użytkownika.
+  Hasło musi spełnić warunek minimalnej długości określony
+  opcją /MINPWLEN polecenia NET ACCOUNTS. Może ono się
+  składać z maksymalnie 14 znaków. 
+  
+*
+  Wyświetla monit o hasło. Podczas wpisywania hasła. 
+  
 
-   Options                    Description
+/DOMAIN
+  Wykonuje te operacje na kontrolerze bieżącej domeny. 
+
+/ADD
+  Dodaje konto użytkownika do bazy danych użytkowników. 
+
+/DELETE
+  Usuwa konto użytkownika z bazy danych użytkowników. 
+
+Opcje      Polecenie posiada następujące opcje:
+
+   Opcje                      Opis
    --------------------------------------------------------------------
-   /ACTIVE:{YES | NO}         Activates or deactivates the account. If 
-                              the account is not active, the user cannot
-                              access the server. The default is YES.
-   /COMMENT:"text"            Provides a descriptive comment about the
-                              user's account.  Enclose the text in
-                              quotation marks. 
-   /COUNTRYCODE:nnn           Uses the operating system country code to
-                              implement the specified language files for a
-                              user's help and error messages. A value of
-                              0 signifies the default country code. 
-   /EXPIRES:{date | NEVER}    Causes the account to expire if date is
-                              set. NEVER sets no time limit on the
-                              account. An expiration date is in the
-                              form mm/dd/yy(yy). Months can be a number,
-                              spelled out, or abbreviated with three
-                              letters. Year can be two or four numbers.
-                              Use slashes(/) (no spaces) to separate
-                              parts of the date. 
-   /FULLNAME:"name"           Is a user's full name (rather than a 
-                              username). Enclose the name in quotation
-                              marks.
-   /HOMEDIR:pathname          Sets the path for the user's home directory. 
-                              The path must exist.
-   /PASSWORDCHG:{YES | NO}    Specifies whether users can change their
-                              own password. The default is YES.
-   /PASSWORDREQ:{YES | NO}    Specifies whether a user account must have
-                              a password. The default is YES.
-   /PROFILEPATH[:path]        Sets a path for the user's logon profile.
-   /SCRIPTPATH:pathname       Is the location of the user's logon
-                              script.
-   /TIMES:{times | ALL}       Is the logon hours. TIMES is expressed as
-                              day[-day][,day[-day]],time[-time][,time
-                              [-time]], limited to 1-hour increments.
-                              Days can be spelled out or abbreviated.
-                              Hours can be 12- or 24-hour notation. For
-                              12-hour notation, use am, pm, a.m., or
-                              p.m. ALL means a user can always log on,
-                              and a blank value means a user can never 
-                              log on. Separate day and time entries with 
-                              a comma, and separate multiple day and time
-                              entries with a semicolon.
-   /USERCOMMENT:"text"        Lets an administrator add or change the User 
-                              Comment for the account. 
-   /WORKSTATIONS:{computername[,...] | *}
-                              Lists as many as eight computers from
-                              which a user can log on to the network. If 
-                              /WORKSTATIONS has no list or if the list is *,
-                              the user can log on from any computer.
+   /ACTIVE:{YES | NO}         Aktywuje lub dezaktywuje konto. Jeśli konto
+                              nie jest aktywne, użytkownik nie ma dostępu do
+                              serwera. Wartością domyślną jest YES.
+                              
+   /COMMENT:"tekst"           Opis konta użytkownika.
+                              Tekst musi być  ujęty w cudzysłów.
+                              
+   /COUNTRYCODE:nnn           Określa użycie kodu kraju w celu zastosowania
+                              specyficznych dla języka plików pomocy
+                              użytkownika i komunikatów o błędach. Wartość
+                              0 określa domyślny kod kraju. 
+                              
+   /EXPIRES:{date | NEVER}    Powoduje wygaśnięcie konta, jeśli data jest
+                              ustawiona. Wartość NEVER określa brak limitu
+                              czasu dla konta. Data wygaśnięcia konta może
+                              być podana w formacie mm/dd/rr(rr). Miesiące
+                              mogą być podane jako liczby, pełne nazwy,
+                              lub nazwy skrócone składające się z trzech
+                              liter. Rok może być podany jako dwie lub
+                              cztery cyfry. Użyj ukośników (/) (a nie
+                              spacji) do oddzielenia składników daty. 
+                              
+   /FULLNAME:"nazwisko"       Pełne imię i nazwisko użytkownika
+                              (a nie tylko nazwa użytkownika). Wpisz imię i
+                              nazwisko w cudzysłowie.
+                              
+   /HOMEDIR:ścieżka           Ustawia ścieżkę do katalogu macierzystego. 
+                              Ścieżka musi istnieć.
+                              
+   /PASSWORDCHG:{YES | NO}    Określa, czy użytkownik może zmienić własne
+                              hasło. Wartością domyślną jest YES.
+                              
+   /PASSWORDREQ:{YES | NO}    Określa czy konto użytkownika musi posiadać
+                              hasło. Wartością domyślną jest YES.
+                              
+   /PROFILEPATH[:ścieżka]     Ustawia ścieżkę dla profilu logowania
+                              użytkownika.
+   
+   /SCRIPTPATH:ścieżka        Określa lokalizację skryptu logowania dla
+                              użytkownika.
+                              
+   /TIMES:{czas | ALL}        Określa godziny logowania. Parametr TIMES jest
+                              wyrażony jako: dzień[-dzień][,dzień[-dzień]],
+                              czas[-czas],[,czas[-czas]], ograniczony jest do
+                              godzinnych przyrostów. Wpisz pełne lub skrócone
+                              nazwy dni tygodnia. Czas może być opisany
+                              w notacji 12- lub 24-godzinnej. Dla notacji
+                              12-godzinnej, użyj symbolu: am, pm, a.m. lub
+                              p.m. Parametr ALL oznacza, że użytkownik zawsze
+                              może się logować, brak wartości oznacza, że
+                              użytkownik nigdy nie może się logować.
+                              Oddziel  wpisy dnia i godziny przecinkiem;
+                              wielokrotne wpisy dnia i godziny oddziel
+                              średnikiem.
+                              
+   /USERCOMMENT:"tekst"       Pozwala administratorom na dodanie lub zmianę
+                              komentarza dla konta użytkownika. 
+                              
+   /WORKSTATIONS:{nazwa_komputera[,...] | *}
+                              Lista maksymalnie ośmiu komputerów, z których
+                              użytkownik może zalogować się do sieci. Jeśli
+                              parametr /WORKSTATIONS nie posiada listy lub
+                              jest on równy *, użytkownik może zalogować się
+                              z dowolnego komputera.
 
 NET HELP command | MORE displays Help one screen at a time.
 .
@@ -3829,33 +3868,36 @@ The following conventions are used to indicate command syntax:
 .
 Language=Polish
 SYNTAX
-The following conventions are used to indicate command syntax:
+Do opisu składni poleceń użyto następujących zasad:
 
--  Capital letters represent words that must be typed as shown. Lower-
-   case letters represent names of items that may vary, such as filenames.
+-  Wielkich liter użyto do przedstawienia slów kluczowych, które trzeba
+   wpisać tak jak pokazano. Małych liter użyto do oznaczenia nazw elementów,
+   które są zmienne, np. nazw plików.
 
--  The [ and ] characters surround optional items that can be supplied
-   with the command.
+-  Elementy opcjonalnie występujące w poleceniu zawarto w znakach [ i ].
 
--  The { and } characters surround lists of items. You must supply one
-   of the items with the command.
+-  Listy elementów zawarto w znakach { i }, które oznaczaja, że
+   w poleceniu musi zostać zastosowany jeden z elementów listy
 
--  The | character separates items in a list. Only one of the items can
-   be supplied with the command.
+-  Znak | rozdziela elementy listy. Oznacza on, że w poleceniu może
+   zostać użyty tylko jeden z rozdzielanych elementów .
 
-   For example, in the following syntax, you must type NET COMMAND and
-   either SWITCH1 or SWITCH2. Supplying a name is optional.
-       NET COMMAND [name] {SWITCH1 | SWITCH2}
+   Na przykład, poniższy zapis oznacza, że należy wpisać NET POLECENIE
+   oraz jeden z przełączników: PRZEŁĄCZNIK1 lub PRZEŁĄCZNIK2. Użycie
+   parametru nazwa jest opcjonalne.
+   NET POLECENIE [nazwa] {PRZEŁĄCZNIK1 | PRZEŁĄCZNIK2}
 
--  The [...] characters mean you can repeat the previous item.
-   Separate items with spaces.
+-  Znaki [...] oznaczają, że dozwolone jest powtarzanie poprzedniego
+  elementu. Powtarzane elementy należy rozdzielić spacjami.
 
--  The [,...] characters mean you can repeat the previous item, but
-   you must separate items with commas or semicolons, not spaces.
+-  Znaki [,...] oznaczają, że dozwolone jest powtarzanie poprzedniego
+   elementu, lecz elementy muszą być rozdzielone przecinkami lub średnikami,
+   a nie spacjami.
 
--  When typed at the command prompt, service names of two words or 
-   more must be enclosed in quotation marks. For example, 
-   NET START "COMPUTER BROWSER" starts the computer browser service.
+-  Wpisywana w wierszu polecenia nazwa usługi składająca się z dwóch
+   lub więcej wyrazów musi być ujęta w cudzysłów. Na przykład,
+   NET START "COMPUTER BROWSER" uruchamia usługę przeglądarki
+   komputera (computer browser).
 .
 Language=Romanian
 SYNTAX
