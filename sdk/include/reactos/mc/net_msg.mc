@@ -3210,7 +3210,7 @@ Opcje      Polecenie posiada następujące opcje:
                               serwera. Wartością domyślną jest YES.
                               
    /COMMENT:"tekst"           Opis konta użytkownika.
-                              Tekst musi być  ujęty w cudzysłów.
+                              Tekst musi być ujęty w cudzysłów.
                               
    /COUNTRYCODE:nnn           Określa użycie kodu kraju w celu zastosowania
                               specyficznych dla języka plików pomocy
