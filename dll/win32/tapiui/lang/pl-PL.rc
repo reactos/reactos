@@ -296,8 +296,8 @@ BEGIN
     LTEXT "Numer do &linii zewnętrznej", -1, 107, 137, 189, 10
     EDITTEXT 1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "System telefoniczny używa:", -1, 107, 168, 189, 10
-    AUTORADIOBUTTON "Wybierania &Tonowego", 1036, 107, 178, 103, 10, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "Wybierania &Ciągiem Impulsów", 1037, 107, 190, 115, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Wybierania &Tonowego", 1036, 107, 178, 110, 10, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "Wybierania &Ciągiem Impulsów", 1037, 107, 190, 110, 10, NOT WS_TABSTOP
     DEFPUSHBUTTON "OK", 1, 192, 204, 50, 14
     PUSHBUTTON "Anuluj", 2, 246, 204, 50, 14
 END
