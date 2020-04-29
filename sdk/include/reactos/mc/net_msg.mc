@@ -2202,7 +2202,7 @@ NET SHARE nazwa_udziału=dysk:ścieżka [/GRANT:użytkownik,[READ | CHANGE | FUL
           nazwa_udziału [/USERS:liczba | /UNLIMITED]
                     [/REMARK:"tekst"]
                     [/CACHE:Manual | Documents | Programs | None]
-          {nazwaudziału | nazwaurządzenia | dysk:ścieżka} /DELETE
+          {nazwa_udziału | nazwa_urządzenia | dysk:ścieżka} /DELETE
 .
 Language=Romanian
 NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
