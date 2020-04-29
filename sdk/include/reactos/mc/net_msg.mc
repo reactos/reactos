@@ -3880,7 +3880,7 @@ Do opisu składni poleceń użyto następujących zasad:
    w poleceniu musi zostać zastosowany jeden z elementów listy
 
 -  Znak | rozdziela elementy listy. Oznacza on, że w poleceniu może
-   zostać użyty tylko jeden z rozdzielanych elementów .
+   zostać użyty tylko jeden z rozdzielanych elementów.
 
    Na przykład, poniższy zapis oznacza, że należy wpisać NET POLECENIE
    oraz jeden z przełączników: PRZEŁĄCZNIK1 lub PRZEŁĄCZNIK2. Użycie
