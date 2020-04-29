@@ -7,7 +7,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 21, 20
     LTEXT "The list below displays the locations you have specified. Select the location from which you are dialing.", -1, 35, 7, 210, 16
-    LTEXT "&Localizaciones:", -1, 7, 35, 210, 8
+    LTEXT "&Ubicaciones:", -1, 7, 35, 210, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000011D, 7, 46, 238, 105, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Nueva...", 1030, 87, 155, 50, 14
     PUSHBUTTON "&Editar...", 1031, 141, 155, 50, 14
@@ -22,15 +22,15 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 202, 2000, 7, 7, 20, 20
-    LTEXT "Nombre de &localización:", -1, 35, 11, 56, 8, SS_CENTERIMAGE
+    LTEXT "Nombre de &ubicación:", -1, 35, 11, 56, 8, SS_CENTERIMAGE
     EDITTEXT 1038, 96, 8, 149, 14, ES_AUTOHSCROLL
-    LTEXT "Especificar la localización desde dónde llamará.", 2001, 7, 33, 238, 8
+    LTEXT "Especificar la ubicación desde la cual llamará.", 2001, 7, 33, 238, 8
     LTEXT "País/&región:", -1, 7, 49, 161, 8
     COMBOBOX 1006, 7, 60, 175, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Código de &área:", -1, 190, 49, 48, 8
     EDITTEXT 1034, 190, 60, 48, 12, ES_AUTOHSCROLL
     GROUPBOX "Reglas de marcado", 2002, 7, 80, 238, 92
-    LTEXT "Cuando llame desde esta localización se usarán las siguientes normas:", 2003, 14, 92, 224, 8
+    LTEXT "Cuando llame desde esta ubicación se usarán las siguientes normas:", 2003, 14, 92, 224, 8
     LTEXT "Para acceder a una línea externa en llamadas &locales, marcar:", -1, 14, 106, 170, 8
     EDITTEXT 1010, 190, 104, 48, 12, ES_AUTOHSCROLL
     LTEXT "Para acceder a una línea externa en llamadas de larga &distancia, marcar:", -1, 14, 122, 170, 8
@@ -50,40 +50,40 @@ END
 
 103 DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Area Code Rules"
+CAPTION "Reglas de Código de Área"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "An area code rule determines how phone numbers are dialed from your current area code to other area codes and within your area code.", 2000, 7, 7, 238, 16
-    LTEXT "Area &code rules:", -1, 7, 31, 238, 8
+    LTEXT "Una regla de código de área determina cómo se marcan los números para tu actual código de área hacia otros códigos de área y entre tu propio área.", 2000, 7, 7, 238, 16
+    LTEXT "Reglas de &código de área:", -1, 7, 31, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000801D, 7, 42, 238, 99, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&New...", 1030, 87, 147, 50, 14
-    PUSHBUTTON "&Edit...", 1031, 141, 147, 50, 14
-    PUSHBUTTON "&Delete", 1032, 195, 147, 50, 14
-    GROUPBOX "Description", 2006, 7, 166, 238, 45
+    PUSHBUTTON "&Nueva...", 1030, 87, 147, 50, 14
+    PUSHBUTTON "&Editar...", 1031, 141, 147, 50, 14
+    PUSHBUTTON "&Eliminar", 1032, 195, 147, 50, 14
+    GROUPBOX "Descripción", 2006, 7, 166, 238, 45
     LTEXT "", 1039, 14, 180, 224, 24
 END
 
 104 DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Calling Card"
+CAPTION "Tarjeta telefónica"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the calling card you will use, or click New to add a different card.", 2000, 7, 7, 238, 8
-    LTEXT "Card &Types:", -1, 7, 23, 238, 8
+    LTEXT "Seleccionar la tarjeta telefónica que usarás o clica en Nuevo para añadir una tarjeta diferente.", 2000, 7, 7, 238, 8
+    LTEXT "Tipo de &Tarjeta:", -1, 7, 23, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&New...", 1030, 87, 103, 50, 14
-    PUSHBUTTON "&Edit...", 1031, 141, 103, 50, 14
-    PUSHBUTTON "&Delete", 1032, 195, 103, 50, 14
-    LTEXT "A&ccount number:", -1, 7, 127, 91, 8
+    PUSHBUTTON "&Nueva ...", 1030, 87, 103, 50, 14
+    PUSHBUTTON "&Editar...", 1031, 141, 103, 50, 14
+    PUSHBUTTON "&Eliminar", 1032, 195, 103, 50, 14
+    LTEXT "N&úmero de la cuenta:", -1, 7, 127, 91, 8
     EDITTEXT 1018, 102, 125, 143, 12, ES_AUTOHSCROLL
-    LTEXT "&Personal ID Number (PIN):", -1, 7, 145, 91, 8
+    LTEXT "&Número ID Personal (PIN):", -1, 7, 145, 91, 8
     EDITTEXT 1019, 102, 143, 143, 12, ES_AUTOHSCROLL
-    GROUPBOX "Access phone numbers for", 2001, 7, 158, 238, 53
-    LTEXT "Long distance calls:", -1, 14, 172, 84, 8
+    GROUPBOX "Acceder a números de teléfono para", 2001, 7, 158, 238, 53
+    LTEXT "Llamadas de larga distancia:", -1, 14, 172, 84, 8
     LTEXT "", 1042, 102, 172, 136, 8
-    LTEXT "International calls:", -1, 14, 184, 84, 8
+    LTEXT "Llamadas internacionales:", -1, 14, 184, 84, 8
     LTEXT "", 1043, 102, 184, 136, 8
-    LTEXT "Local calls:", -1, 14, 196, 84, 8
+    LTEXT "Llamadas locales:", -1, 14, 196, 84, 8
     LTEXT "", 1051, 102, 196, 136, 8
 END
 
@@ -93,13 +93,13 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 203, 2000, 7, 7, 20, 20
-    LTEXT "&Calling card name:", -1, 35, 12, 64, 8, SS_CENTERIMAGE
+    LTEXT "&Nombre de la Tarjeta Telefónica:", -1, 35, 12, 64, 8, SS_CENTERIMAGE
     EDITTEXT 1047, 105, 9, 140, 14, ES_AUTOHSCROLL
-    LTEXT "Account &number:", -1, 7, 35, 238, 8
+    LTEXT "Número de la &cuenta:", -1, 7, 35, 238, 8
     EDITTEXT 1018, 7, 46, 116, 14, ES_AUTOHSCROLL
-    LTEXT "&Personal Identification Number (PIN):", -1, 7, 68, 238, 8
+    LTEXT "&Número de Identificación Personal (PIN):", -1, 7, 68, 238, 8
     EDITTEXT 1019, 7, 80, 116, 14, ES_AUTOHSCROLL
-    LTEXT "This calling card will be used when:", 1056, 14, 117, 224, 8
+    LTEXT "Esta tarjeta telefónica se usará cuando:", 1056, 14, 117, 224, 8
     GROUPBOX "Calling card details", 2001, 7, 105, 238, 66
     LTEXT "", 1000, 22, 131, 216, 8
     LTEXT "", 1001, 22, 143, 216, 8
@@ -108,23 +108,23 @@ END
 
 106 DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Long Distance"
+CAPTION "Larga distancia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Access number for &long distance calls:", -1, 7, 7, 238, 8
+    LTEXT "Acceder a números de &llamada de larga distancia:", -1, 7, 7, 238, 8
     EDITTEXT 1044, 7, 18, 140, 14, ES_AUTOHSCROLL
-    LTEXT "Use the buttons below to enter the dialing steps for making long-distance calls.  Enter these steps in the exact order as they appear on your calling card.", 2000, 7, 40, 238, 24
-    LTEXT "Calling ca&rd dialing steps:", -1, 7, 72, 80, 8
+    LTEXT "Utiliza los botones a continuación para introducir los pasos de marcado para las llamadas de larga distancia. Introduce esos pasos en el orden exacto como aparecen en tu tarjeta telefónica.", 2000, 7, 40, 238, 24
+    LTEXT "Pasos de marcado de la Tarjeta de &llamada:", -1, 7, 72, 80, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Move &Up", 1022, 195, 83, 50, 14
-    PUSHBUTTON "&Move Down", 1023, 195, 101, 50, 14
-    PUSHBUTTON "&Delete", 1024, 195, 119, 50, 14
-    PUSHBUTTON "Access &Number", 1025, 7, 161, 90, 14
-    PUSHBUTTON "A&ccount Number", 1018, 101, 161, 90, 14
+    PUSHBUTTON "Mover &Arriba", 1022, 195, 83, 50, 14
+    PUSHBUTTON "&Mover Abajo", 1023, 195, 101, 50, 14
+    PUSHBUTTON "&Eliminar", 1024, 195, 119, 50, 14
+    PUSHBUTTON "&Número de acceso", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Número de la &Cuenta", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
-    PUSHBUTTON "D&estination Number...", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Wait for Prompt...", 1017, 7, 197, 90, 14
-    PUSHBUTTON "&Specify Digits...", 1021, 101, 197, 90, 14
+    PUSHBUTTON "Número de D&estino...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "&Esperar para la entrada...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Especificar dígitos...", 1021, 101, 197, 90, 14
 END
 
 107 DIALOGEX 0, 0, 252, 218
@@ -132,41 +132,41 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "International"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Access number for &international calls:", -1, 7, 7, 238, 8
+    LTEXT "Acceder a números de llamada &internacional:", -1, 7, 7, 238, 8
     EDITTEXT 1045, 7, 18, 140, 14, ES_AUTOHSCROLL
-    LTEXT "Use the buttons below to enter the dialing steps for making international calls.  Enter these steps in the exact order as they appear on your calling card.", 2000, 7, 40, 244, 24
-    LTEXT "Calling ca&rd dialing steps:", -1, 7, 72, 80, 8
+    LTEXT "Utiliza los botones a continuación para introducir los pasos de marcado para las llamadas internacionales. Introduce esos pasos en el orden exacto como aparecen en tu tarjeta telefónica.", 2000, 7, 40, 244, 24
+    LTEXT "Pasos de marcado de la Tarjeta de &llamada:", -1, 7, 72, 80, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Move &Up", 1022, 195, 83, 50, 14
-    PUSHBUTTON "&Move Down", 1023, 195, 101, 50, 14
-    PUSHBUTTON "&Delete", 1024, 195, 119, 50, 14
-    PUSHBUTTON "Access &Number", 1025, 7, 161, 90, 14
-    PUSHBUTTON "A&ccount Number", 1018, 101, 161, 90, 14
+    PUSHBUTTON "Mover &Arriba", 1022, 195, 83, 50, 14
+    PUSHBUTTON "&Mover Abajo", 1023, 195, 101, 50, 14
+    PUSHBUTTON "&Eliminar", 1024, 195, 119, 50, 14
+    PUSHBUTTON "&Número de acceso", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Número de la &Cuenta", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
-    PUSHBUTTON "D&estination Number...", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Wait for Prompt...", 1017, 7, 197, 90, 14
-    PUSHBUTTON "&Specify Digits...", 1021, 101, 197, 90, 14
+    PUSHBUTTON "Número de D&estino...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "&Esperar para la entrada...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Especificar dígitos...", 1021, 101, 197, 90, 14
 END
 
 108 DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Local Calls"
+CAPTION "Llamadas locales"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Access number for &local calls:", -1, 7, 7, 238, 8
+    LTEXT "Acceder a números de llamada l&ocales:", -1, 7, 7, 238, 8
     EDITTEXT 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
-    LTEXT "Use the buttons below to enter the dialing steps for making local calls. Enter these steps in the exact order as they appear on your calling card. To make local calls without using your calling card, leave this section blank.", 2000, 7, 40, 238, 24
+    LTEXT "Utiliza los botones a continuación para introducir los pasos de marcado para las llamadas internacionales. Introduce esos pasos en el orden exacto como aparecen en tu tarjeta telefónica. Para hacer llamadas locales sin usar una tarjeta telefónica, déjalo en blanco.", 2000, 7, 40, 238, 24
     LTEXT "Calling ca&rd dialing steps:", -1, 7, 72, 238, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Move &Up", 1022, 195, 83, 50, 14
-    PUSHBUTTON "&Move Down", 1023, 195, 101, 50, 14
-    PUSHBUTTON "&Delete", 1024, 195, 119, 50, 14
-    PUSHBUTTON "Access &Number", 1025, 7, 161, 90, 14
-    PUSHBUTTON "A&ccount Number", 1018, 101, 161, 90, 14
+    PUSHBUTTON "Mover &Arriba", 1022, 195, 83, 50, 14
+    PUSHBUTTON "&Mover Abajo", 1023, 195, 101, 50, 14
+    PUSHBUTTON "&Eliminar", 1024, 195, 119, 50, 14
+    PUSHBUTTON "&Número de acceso", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Número de la &Cuenta", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
-    PUSHBUTTON "D&estination Number...", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Wait for Prompt...", 1017, 7, 197, 90, 14
-    PUSHBUTTON "&Specify Digits...", 1021, 101, 197, 90, 14
+    PUSHBUTTON "Número de D&estino...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "&Esperar para la entrada...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Especificar dígitos...", 1021, 101, 197, 90, 14
 END
 
 109 DIALOGEX 0, 0, 252, 257
@@ -209,71 +209,71 @@ BEGIN
     LTEXT "", 1003, 7, 7, 213, 8
     LTEXT "", 1039, 7, 23, 213, 8
     EDITTEXT 1031, 7, 34, 213, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "OK", 1, 116, 62, 50, 14
-    PUSHBUTTON "Cancel", 2, 170, 62, 50, 14
+    DEFPUSHBUTTON "Aceptar", 1, 116, 62, 50, 14
+    PUSHBUTTON "Cancelar", 2, 170, 62, 50, 14
 END
 
 111 DIALOGEX 0, 0, 252, 124
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Wait for"
+CAPTION "Esperar a"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the type of prompt to wait for before continuing with the dialing sequence.", 2000, 7, 7, 238, 16
-    AUTORADIOBUTTON "Wait for a &dial tone", 1009, 7, 31, 238, 10, WS_GROUP
-    AUTORADIOBUTTON "Wait for a &voice message to complete", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "Wait for a specific length of &time:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
+    LTEXT "Seleccionar el tipo de comando a esperar antes de la continuación con la secuencia de marcado.", 2000, 7, 7, 238, 16
+    AUTORADIOBUTTON "Esperar a &tono de marcado", 1009, 7, 31, 238, 10, WS_GROUP
+    AUTORADIOBUTTON "Esperar a &que el mensaje de voz haya acabado", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Esperar un &tiempo específico de retardo:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
     EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
-    LTEXT "&seconds", -1, 58, 81, 187, 8
-    DEFPUSHBUTTON "OK", 1, 141, 103, 50, 14
-    PUSHBUTTON "Cancel", 2, 195, 103, 50, 14
+    LTEXT "&segundos", -1, 58, 81, 187, 8
+    DEFPUSHBUTTON "Aceptar", 1, 141, 103, 50, 14
+    PUSHBUTTON "Cancelar", 2, 195, 103, 50, 14
 END
 
 112 DIALOGEX 0, 0, 252, 111
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Destination number"
+CAPTION "Número destinatario"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "This step will place the destination number that you will be dialing into the calling card sequence.  When dialing the destination number, which parts of the number do you want to dial?", 2000, 7, 7, 238, 24
-    AUTOCHECKBOX "Dial the &country/region code", 1027, 7, 39, 238, 10
-    AUTOCHECKBOX "Dial the &area code", 1034, 7, 55, 238, 10
-    AUTOCHECKBOX "Dial the &number", 1008, 7, 71, 238, 10, WS_DISABLED
-    DEFPUSHBUTTON "OK", 1, 141, 92, 50, 14
-    PUSHBUTTON "Cancel", 2, 195, 92, 50, 14
+    LTEXT "En este paso fijaremos el número destinatario que tú marcarás en la secuencia de la tarjeta telefónica. Cuando esté llamando al destinatario, ¿qué partes del número quiere marcar?", 2000, 7, 7, 238, 24
+    AUTOCHECKBOX "Marcar el &código de país/región", 1027, 7, 39, 238, 10
+    AUTOCHECKBOX "Marcar el &código de área", 1034, 7, 55, 238, 10
+    AUTOCHECKBOX "Marcar el &número", 1008, 7, 71, 238, 10, WS_DISABLED
+    DEFPUSHBUTTON "Aceptar", 1, 141, 92, 50, 14
+    PUSHBUTTON "Cancelar", 2, 195, 92, 50, 14
 END
 
 113 DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Advanced"
+CAPTION "Avanzado"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "The following telephony providers are installed on this computer:", -1, 40, 7, 205, 8
-    LTEXT "&Providers:", -1, 7, 35, 238, 8
+    LTEXT "Los siguientes proveedores telefónicos están instalados en tu ordenador:", -1, 40, 7, 205, 8
+    LTEXT "&Proveedores:", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
-    PUSHBUTTON "A&dd...", 1005, 87, 197, 50, 14
-    PUSHBUTTON "&Remove", 1024, 141, 197, 50, 14
-    PUSHBUTTON "&Configure...", 1031, 195, 197, 50, 14
+    PUSHBUTTON "&Añadir...", 1005, 87, 197, 50, 14
+    PUSHBUTTON "&Eliminar", 1024, 141, 197, 50, 14
+    PUSHBUTTON "&Configurar...", 1031, 195, 197, 50, 14
 END
 
 114 DIALOGEX 20, 15, 252, 127
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Add Provider"
+CAPTION "Añadir proveedor"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the provider you wish to install from the list below, and click Add.", 2000, 7, 7, 241, 8
-    LTEXT "&Telephony providers:", -1, 7, 23, 144, 10
+    LTEXT "Selecione el proveedor que desee instalar de la lista a continuación y haga clic en añadir.", 2000, 7, 7, 241, 8
+    LTEXT "&Proveedor telefónico:", -1, 7, 23, 144, 10
     LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "&Add", 1005, 141, 106, 50, 14
-    DEFPUSHBUTTON "Cancel", 2, 195, 106, 50, 14
+    PUSHBUTTON "&Añadir", 1005, 141, 106, 50, 14
+    DEFPUSHBUTTON "Cancelar", 2, 195, 106, 50, 14
 END
 
 115 DIALOGEX 10, 10, 303, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Location Information"
+CAPTION "Información de Ubicación"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
@@ -289,8 +289,8 @@ BEGIN
     LTEXT "The phone system at this location uses:", -1, 107, 168, 189, 10
     AUTORADIOBUTTON "&Tone dialing", 1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Pulse dialing", 1037, 175, 178, 57, 14, NOT WS_TABSTOP
-    DEFPUSHBUTTON "OK", 1, 192, 204, 50, 14
-    PUSHBUTTON "Cancel", 2, 246, 204, 50, 14
+    DEFPUSHBUTTON "Aceptar", 1, 192, 204, 50, 14
+    PUSHBUTTON "Cancelar", 2, 246, 204, 50, 14
 END
 
 400 DIALOGEX 0, 0, 290, 151
@@ -305,9 +305,9 @@ BEGIN
     EDITTEXT 1034, 95, 73, 40, 14, ES_AUTOHSCROLL
     LTEXT "If you dial a number to access an &outside line, what is it?", -1, 95, 96, 188, 10
     EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
-    LTEXT "The phone system at this location uses:", -1, 95, 129, 159, 10
-    AUTORADIOBUTTON "&Tone dialing", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Pulse dialing", 1037, 155, 139, 55, 12, NOT WS_TABSTOP
+    LTEXT "El sistema telefónico de esa ubicación usa:", -1, 95, 129, 159, 10
+    AUTORADIOBUTTON "&Marcado a tonos", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Marcado a pulsos", 1037, 155, 139, 55, 12, NOT WS_TABSTOP
 END
 
 500 DIALOGEX 0, 0, 235, 88
@@ -317,9 +317,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
     LTEXT "", 502, 47, 15, 180, 32
-    AUTOCHECKBOX "&In the future, always trust this page", 503, 50, 47, 147, 12
-    DEFPUSHBUTTON "&OK", 505, 110, 65, 50, 14
-    PUSHBUTTON "&Cancel", 506, 164, 65, 50, 14
+    AUTOCHECKBOX "&Siempre confiar en esta página en futuras ocasiones.", 503, 50, 47, 147, 12
+    DEFPUSHBUTTON "&Aceptar", 505, 110, 65, 50, 14
+    PUSHBUTTON "&Cancelar", 506, 164, 65, 50, 14
 END
 
 STRINGTABLE
