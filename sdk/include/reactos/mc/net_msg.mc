@@ -2317,7 +2317,7 @@ dysk:ścieżka
 
 /GRANT:user,perm
   Tworzy udział z deskryptorem zabezpieczeń, który nadaje wymagane uprawnienia określonemu użytkownikowi.
-  Ta opcja może być używana wiecej niż raz w celu nadania uprawnień udziału wielu użytkownikom
+  Ta opcja może być używana więcej niż raz w celu nadania uprawnień udziału wielu użytkownikom
                    
 /USERS:liczba_użytkowników      
   Ustawia maksymalną liczbę użytkowników, którzy mogą jednocześnie korzystać z udostępnionego zasobu
