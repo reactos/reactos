@@ -212,7 +212,7 @@
 @ cdecl -i386 __CxxQueryExceptionSize()
 @ cdecl -i386 __CxxRegisterExceptionObject()
 @ cdecl -i386 __CxxUnregisterExceptionObject()
-@ cdecl -version=0x600+ __DestructExceptionObject(ptr)
+@ cdecl __DestructExceptionObject(ptr)
 @ cdecl __RTCastToVoid(ptr) MSVCRT___RTCastToVoid
 @ cdecl __RTDynamicCast(ptr long ptr ptr long) MSVCRT___RTDynamicCast
 @ cdecl __RTtypeid(ptr) MSVCRT___RTtypeid
