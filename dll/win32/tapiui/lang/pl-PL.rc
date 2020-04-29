@@ -77,7 +77,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Karta telefoniczna"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wybierz kartę telefoniczną, jaką chcesz użyć albo kliknij na Nowa by dodać inną kartę.", 2000, 7, 7, 238, 8
+    LTEXT "Wybierz kartę telefoniczną, jaką chcesz użyć albo kliknij na Nowa by dodać inną kartę.", 2000, 7, 7, 238, 16
     LTEXT "&Rodzaje kart:", -1, 7, 23, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Nowa..", 1030, 87, 103, 50, 14
@@ -85,7 +85,7 @@ BEGIN
     PUSHBUTTON "&Usuń", 1032, 195, 103, 50, 14
     LTEXT "Numer &Konta:", -1, 7, 127, 91, 8
     EDITTEXT 1018, 102, 125, 143, 12, ES_AUTOHSCROLL
-    LTEXT "Numer &Identyfikacyjny (PIN):", -1, 7, 145, 91, 8
+    LTEXT "Numer &Identyfikacyjny (PIN):", -1, 7, 145, 96, 8
     EDITTEXT 1019, 102, 143, 143, 12, ES_AUTOHSCROLL
     GROUPBOX "Użyj do połączeń", 2001, 7, 158, 238, 53
     LTEXT "Zamiejscowych:", -1, 14, 172, 84, 8
@@ -185,9 +185,9 @@ CAPTION "Nowa reguła numeru zamiejscowego"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Ta reguła numeru zamiejscowego zostanie użyta tylko dla połączeń o podanej poniżej kombinacji numeru zamiejscowego i prefiksu.", 2000, 7, 6, 238, 16
-    LTEXT "Numer zamiejscowy na jaki dzwonisz:", -1, 7, 31, 110, 8
-    LTEXT "&Numer zamiejscowy:", -1, 7, 47, 36, 8
-    EDITTEXT 1034, 46, 44, 50, 14, ES_AUTOHSCROLL
+    LTEXT "Numer zamiejscowy na jaki dzwonisz:", -1, 7, 31, 120, 8
+    LTEXT "&Numer zamiejscowy:", -1, 7, 47, 66, 8
+    EDITTEXT 1034, 76, 44, 50, 14, ES_AUTOHSCROLL
     LTEXT "Podaj prefiks jaki ma być użyty z tą regułą numeru zamiejscowego.", -1, 14, 78, 224, 8
     AUTORADIOBUTTON "&Załącz wszystkie prefiksy z tego numeru zamiejscowego", 1014, 14, 90, 224, 12, NOT WS_TABSTOP
     AUTORADIOBUTTON "Z&ałącz tylko prefiksy z listy poniżej:", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
@@ -234,7 +234,7 @@ BEGIN
     AUTORADIOBUTTON "Czekaj przez określony czas:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
     EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
-    LTEXT "&sekund", -1, 58, 81, 187, 8
+    LTEXT "&sekund", -1, 58, 79, 187, 8
     DEFPUSHBUTTON "OK", 1, 141, 103, 50, 14
     PUSHBUTTON "Anuluj", 2, 195, 103, 50, 14
 END
@@ -259,7 +259,7 @@ CAPTION "Zaawansowane"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "Następujący dostawcy usług telefonicznych są zainstalowani na tym komputerze:", -1, 40, 7, 205, 8
+    LTEXT "Następujący dostawcy usług telefonicznych są zainstalowani na tym komputerze:", -1, 40, 7, 205, 16
     LTEXT "&Dostawcy:", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
     PUSHBUTTON "&Dodaj...", 1005, 87, 197, 50, 14
@@ -267,16 +267,16 @@ BEGIN
     PUSHBUTTON "&Konfiguruj", 1031, 195, 197, 50, 14
 END
 
-114 DIALOGEX 20, 15, 252, 134
+114 DIALOGEX 20, 15, 252, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Dodawanie dostawcy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wybierz dostawcę, którego chcesz zainstalować, z listy poniżej, i naciśnij Dodaj.", 2000, 7, 7, 241, 17
-    LTEXT "&Dostawcy usług telefonicznych:", -1, 7, 30, 144, 10
-    LISTBOX 1055, 7, 41, 238, 74, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "&Dodaj", 1005, 141, 113, 50, 14
-    DEFPUSHBUTTON "Anuluj", 2, 195, 113, 50, 14
+    LTEXT "Wybierz dostawcę, którego chcesz zainstalować, z listy poniżej, i naciśnij Dodaj.", 2000, 7, 7, 241, 16
+    LTEXT "&Dostawcy usług telefonicznych:", -1, 7, 31, 144, 10
+    LISTBOX 1055, 7, 42, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "&Dodaj", 1005, 141, 114, 50, 14
+    DEFPUSHBUTTON "Anuluj", 2, 195, 114, 50, 14
 END
 
 115 DIALOGEX 10, 10, 303, 228

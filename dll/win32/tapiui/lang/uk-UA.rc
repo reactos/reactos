@@ -30,8 +30,8 @@ CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 202, 2000, 7, 7, 20, 20
-    LTEXT "&Ім'я розташування:", -1, 35, 11, 56, 8, SS_CENTERIMAGE
-    EDITTEXT 1038, 96, 8, 149, 14, ES_AUTOHSCROLL
+    LTEXT "&Ім'я розташування:", -1, 35, 11, 67, 8, SS_CENTERIMAGE
+    EDITTEXT 1038, 104, 8, 141, 14, ES_AUTOHSCROLL
     LTEXT "Укажіть розташування, звідки ви телефонуєте.", 2001, 7, 33, 238, 8
     LTEXT "&Країна/регіон:", -1, 7, 49, 161, 8
     COMBOBOX 1006, 7, 60, 175, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
@@ -76,7 +76,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Телефонна картка"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Виберіть телефонну картку, яка використовуватиметься, або натисніть кнопку ""Створити"", щоб додати іншу картку.", 2000, 7, 7, 238, 8
+    LTEXT "Виберіть телефонну картку, яка використовуватиметься, або натисніть кнопку ""Створити"", щоб додати іншу картку.", 2000, 7, 7, 238, 16
     LTEXT "&Типи карток:", -1, 7, 23, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Створити...", 1030, 87, 103, 50, 14
@@ -195,8 +195,8 @@ BEGIN
     PUSHBUTTON "&Додати...", 1005, 95, 128, 50, 14
     PUSHBUTTON "В&идалити", 1024, 95, 146, 50, 14
     LTEXT "Набираючи номери, які містять указані префікси:", -1, 14, 184, 224, 8
-    AUTOCHECKBOX "Н&абрати:", 1012, 14, 198, 30, 12
-    EDITTEXT 1007, 46, 196, 42, 14, ES_AUTOHSCROLL
+    AUTOCHECKBOX "Н&абрати:", 1012, 14, 198, 43, 12
+    EDITTEXT 1007, 59, 196, 42, 14, ES_AUTOHSCROLL
     AUTOCHECKBOX "На&брати код міста", 1029, 14, 214, 85, 12
     DEFPUSHBUTTON "OK", 1, 141, 236, 50, 14
     PUSHBUTTON "Скасувати", 2, 195, 236, 50, 14
@@ -233,7 +233,7 @@ BEGIN
     AUTORADIOBUTTON "Чекати &протягом певного часу:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
     EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
-    LTEXT "&сек", -1, 58, 81, 187, 8
+    LTEXT "&сек", -1, 58, 79, 187, 8
     DEFPUSHBUTTON "OK", 1, 141, 103, 50, 14
     PUSHBUTTON "Скасувати", 2, 195, 103, 50, 14
 END
@@ -258,7 +258,7 @@ CAPTION "Додатково"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "На цьому комп'ютері установлені такі служби телефонного доступу:", -1, 40, 7, 205, 8
+    LTEXT "На цьому комп'ютері установлені такі служби телефонного доступу:", -1, 40, 7, 205, 16
     LTEXT "Слу&жби доступу:", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
     PUSHBUTTON "&Додати...", 1005, 87, 197, 50, 14
@@ -266,16 +266,16 @@ BEGIN
     PUSHBUTTON "&Налаштувати...", 1031, 195, 197, 50, 14
 END
 
-114 DIALOGEX 20, 15, 252, 127
+114 DIALOGEX 20, 15, 252, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Установка служби доступу"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Виберіть зі списку службу доступу, яку потрібно установити, й натисніть кнопку ""Додати"".", 2000, 7, 7, 241, 8
-    LTEXT "С&лужби телефонного доступу:", -1, 7, 23, 144, 10
-    LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "&Додати", 1005, 141, 106, 50, 14
-    DEFPUSHBUTTON "Скасувати", 2, 195, 106, 50, 14
+    LTEXT "Виберіть зі списку службу доступу, яку потрібно установити, й натисніть кнопку ""Додати"".", 2000, 7, 7, 241, 16
+    LTEXT "С&лужби телефонного доступу:", -1, 7, 31, 144, 10
+    LISTBOX 1055, 7, 42, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "&Додати", 1005, 141, 114, 50, 14
+    DEFPUSHBUTTON "Скасувати", 2, 195, 114, 50, 14
 END
 
 115 DIALOGEX 10, 10, 303, 228
@@ -295,8 +295,8 @@ BEGIN
     LTEXT "Код ви&ходу на зовнішню лінію:", -1, 107, 137, 189, 10
     EDITTEXT 1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "Тип набору номера:", -1, 107, 168, 189, 10
-    AUTORADIOBUTTON "&тоновий набір", 1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&імпульсний набір", 1037, 175, 178, 57, 14, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&тоновий набір", 1036, 107, 178, 61, 14, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&імпульсний набір", 1037, 175, 178, 69, 14, NOT WS_TABSTOP
     DEFPUSHBUTTON "OK", 1, 192, 204, 50, 14
     PUSHBUTTON "Скасувати", 2, 246, 204, 50, 14
 END
@@ -314,8 +314,8 @@ BEGIN
     LTEXT "Код ви&ходу на зовнішню лінію:", -1, 95, 96, 188, 10
     EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "Тип набору номера:", -1, 95, 129, 159, 10
-    AUTORADIOBUTTON "&тоновий набір", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&імпульсний набір", 1037, 155, 139, 55, 12, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&тоновий набір", 1036, 95, 139, 61, 12, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&імпульсний набір", 1037, 161, 139, 69, 12, NOT WS_TABSTOP
 END
 
 500 DIALOGEX 0, 0, 235, 88
