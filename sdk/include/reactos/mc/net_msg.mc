@@ -2320,7 +2320,7 @@ dysk:ścieżka
   Ta opcja może być używana więcej niż raz w celu nadania uprawnień udziału wielu użytkownikom
                    
 /USERS:liczba_użytkowników      
-  Ustawia maksymalną liczbę użytkowników, którzy mogą jednocześnie korzystać z udostępnionego zasobu
+  Ustawia maksymalną liczbę użytkowników, którzy mogą jednocześnie korzystać z udostępnionego zasobu.
 
 /UNLIMITED
   Określa nieograniczoną liczbę użytkowników, którzy mogą jednocześnie korzystać z udostępnionego zasobu.
