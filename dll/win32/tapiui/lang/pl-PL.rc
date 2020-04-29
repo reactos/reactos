@@ -196,8 +196,8 @@ BEGIN
     PUSHBUTTON "&Dodaj", 1005, 95, 128, 50, 14
     PUSHBUTTON "&Usuń", 1024, 95, 146, 50, 14
     LTEXT "Podczas wybierania numerów, które zawierają powyższe prefiksy:", -1, 14, 184, 224, 8
-    AUTOCHECKBOX "&Wybierz:", 1012, 14, 198, 66, 12
-    EDITTEXT 1007, 87, 196, 42, 14, ES_AUTOHSCROLL
+    AUTOCHECKBOX "&Wybierz:", 1012, 14, 198, 44, 12
+    EDITTEXT 1007, 60, 196, 42, 14, ES_AUTOHSCROLL
     AUTOCHECKBOX "Dołącz numer zamiejscowy", 1029, 14, 214, 118, 12
     DEFPUSHBUTTON "OK", 1, 141, 236, 50, 14
     PUSHBUTTON "Anuluj", 2, 195, 236, 50, 14
