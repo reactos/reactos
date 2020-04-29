@@ -2329,7 +2329,7 @@ dysk:ścieżka
   Dodaje opisowy komentarz dotyczący zasobu. Tekst należy wpisać w cudzysłowie.
                    
 nazwa_urządzenia
-  Jest jedną lub kilkoma drukarkami (LPT1: do LPT9:)
+  Jest jedną lub kilkoma drukarkami (LPT1: do LPT9:).
   
 /DELETE
   Zatrzymuje udostępnianie danego zasobu.
