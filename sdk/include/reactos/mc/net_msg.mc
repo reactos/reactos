@@ -2195,7 +2195,7 @@ NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
           {sharename | devicename | drive:path} /DELETE
 .
 Language=Polish
-NET SHARE nazwaudziału=dysk:ścieżka [/GRANT:użytkownik,[READ | CHANGE | FULL]]
+NET SHARE nazwa_udziału=dysk:ścieżka [/GRANT:użytkownik,[READ | CHANGE | FULL]]
                                [/USERS:number | /UNLIMITED]
                                [/REMARK:"tekst"]
                                [/CACHE:Manual | Documents| Programs | None]
