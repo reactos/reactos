@@ -3870,7 +3870,7 @@ Language=Polish
 SYNTAX
 Do opisu składni poleceń użyto następujących zasad:
 
--  Wielkich liter użyto do przedstawienia slów kluczowych, które trzeba
+-  Wielkich liter użyto do przedstawienia słów kluczowych, które trzeba
    wpisać tak jak pokazano. Małych liter użyto do oznaczenia nazw elementów,
    które są zmienne, np. nazw plików.
 
