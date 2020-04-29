@@ -25,7 +25,7 @@ AddReg = TCPIP_AddReg_Global.NT
 
 [TCPIP_AddReg_Global.NT]
 HKR,"Ndi","ClsId",0x00000000,"{A907657F-6FDF-11D0-8EFB-00C04FD912B2}"
-HKR,"Ndi","HelpText",0x00000000,"Transmission Control Protocol/Internet Protocol"
+HKR,"Ndi","HelpText",0x00000000,"%TCPIP_DEF%"
 HKR,"Ndi","Service",0x00000000,"Tcpip"
 HKR,"Ndi","CoServices",0x00010000,"Tcpip","Dhcp","Dnscache"
 
@@ -263,8 +263,8 @@ HKR,"Parameters","SearchList",0x00000000,""
 HKR,"Parameters","EnableSecurityFilters",0x00010001,0x00000000
 
 [dhcp_Service_Inst]
-DisplayName   = "DHCP Client"
-Description   = "Attempts to obtain network settings automatically from an available DHCP server"
+DisplayName   = "%DHCPCLIENT_NAME%"
+Description   = "%DHCPCLIENT_DESC%"
 ServiceType   = 0x20
 StartType     = 2
 ErrorControl  = 1
@@ -277,8 +277,8 @@ AddReg=dhcp_AddReg
 HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
 
 [dns_Service_Inst]
-DisplayName   = "DNS Client"
-Description   = "Service that caches local DNS queries"
+DisplayName   = "%DNSCLIENT_NAME%"
+Description   = "%DNSCLIENT_DESC%"
 ServiceType   = 0x20
 StartType     = 2
 ErrorControl  = 1
@@ -295,9 +295,23 @@ HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dnsrslvr.dll"
 [Strings]
 ReactOS = "ReactOS Team"
 MS_TCPIP.DisplayName = "Internet Protocol Version 4 (TCP/IPv4)"
+DNSCLIENT_NAME = "DNS Client" 
+DNSCLIENT_DESC = "Service that caches local DNS queries" 
+DHCPCLIENT_NAME = "DHCP Client" 
+DHCPCLIENT_DESC = "Attempts to obtain network settings automatically from an available DHCP server"
+TCPIP_DEF = "Transmission Control Protocol/Internet Protocol"
 
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"
+
+[Strings.040c]
+ReactOS = "Équipe ReactOS"
+MS_TCPIP.DisplayName = "Protocole Internet Version 4 (TCP/IPv4)"
+DNSCLIENT_NAME = "Client DNS" 
+DNSCLIENT_DESC = "Service de mise en cache de requêtes DNS locales" 
+DHCPCLIENT_NAME = "Client DHCP" 
+DHCPCLIENT_DESC = "Obtient les paramètres réseau automatiquement depuis un serveur DHCP"
+TCPIP_DEF = "Transmission Control Protocol/Internet Protocol"
 
 [Strings.0415]
 ReactOS = "Zespół ReactOS"
