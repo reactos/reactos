@@ -48,7 +48,7 @@ BEGIN
     EDITTEXT 1059, 190, 136, 48, 12, ES_AUTOHSCROLL
     LTEXT "Użyj następującego kodu dla połączeń &międzynarodowych:", -1, 14, 154, 170, 8
     EDITTEXT 1060, 190, 152, 48, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "Aby &wyłączyć oczekiwanie przy połączeniu, wybierz:", 1035, 10, 177, 170, 10
+    AUTOCHECKBOX "Kod wyłączenia alertu:", 1035, 14, 177, 170, 10
     COMBOBOX 1013, 190, 176, 48, 73, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL
     LTEXT "Wybierz numer:", -1, 10, 195, 40, 8
     AUTORADIOBUTTON "&Tonowo", 1036, 74, 194, 50, 10, NOT WS_TABSTOP
