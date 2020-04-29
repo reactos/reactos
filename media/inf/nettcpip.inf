@@ -315,6 +315,12 @@ TCPIP_DEF = "Transmission Control Protocol/Internet Protocol"
 
 [Strings.0415]
 ReactOS = "Zespół ReactOS"
+MS_TCPIP.DisplayName = "Protokół internetowy w wersji 4 (TCP/IPv4)"
+DNSCLIENT_NAME = "Klient DNS" 
+DNSCLIENT_DESC = "Usługa buforująca lokalne zapytania DNS" 
+DHCPCLIENT_NAME = "Klient DHCP" 
+DHCPCLIENT_DESC = "Próbuje uzyskać ustawienia sieciowe automatycznie z dostępnego serwera DHCP"
+TCPIP_DEF = "Protokół kontroli transmisji/Protokół internetowy (TCP/IP)"
 
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
