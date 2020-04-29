@@ -259,7 +259,7 @@ CAPTION "Zaawansowane"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "Następujący dostawcy usług telefonicznych są zainstalowani na tym komputerze:", -1, 40, 7, 205, 21
+    LTEXT "Następujący dostawcy usług telefonicznych są zainstalowani na tym komputerze:", -1, 40, 7, 205, 8
     LTEXT "&Dostawcy:", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
     PUSHBUTTON "&Dodaj...", 1005, 87, 197, 50, 14
