@@ -2310,7 +2310,7 @@ na komputerze. Dla każdego zasobu, system ReactOS zgłasza
 nazwa_urządzenia lub nazwa_ścieżki i powiązany z nim komentarz opisowy.
 
 nazwa_udziału       
-  Określa nazwę sieciową udostępnionego zasobu. Aby wyświetlić informacje dotyczące tylko danego zasobu, należy wpisać polecenie net share z parametrem 
+  Określa nazwę sieciową udostępnionego zasobu. Aby wyświetlić informacje dotyczące tylko danego zasobu, należy wpisać polecenie net share z parametrem.
 
 dysk:ścieżka       
   Określa ścieżkę absolutną katalogu do udostępnienia.
