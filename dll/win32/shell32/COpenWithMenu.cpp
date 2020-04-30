@@ -651,7 +651,7 @@ BOOL COpenWithList::AddAppToMRUList(SApp *pApp, LPCWSTR pwszFilename)
         /* Insert the entry */
         AddMRUStringW(hList, pApp->wszFilename);
 
-        /* Set MRU pressence */
+        /* Set MRU presence */
         pApp->bMRUList = TRUE;
 
         /* Close MRU list */
