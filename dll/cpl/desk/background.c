@@ -706,8 +706,8 @@ OnBrowseButton(HWND hwndDlg, PBACKGROUND_DATA pData)
     ofn.nFilterIndex = 0;
     ofn.lpstrFileTitle = fileTitle;
     ofn.nMaxFileTitle = 256;
-    ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrInitialDir = L"%USERPROFILE%\\My Documents\\My Pictures";
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
 
     success = GetOpenFileName(&ofn);
     HeapFree(GetProcessHeap(), 0, filter);
