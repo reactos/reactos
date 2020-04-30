@@ -363,15 +363,19 @@ function(add_cd_file)
                 add_dependencies(bootcd ${_CD_TARGET} registry_inf)
             endif()
         else()
-            # add it in reactos.cab
             dir_to_num(${_CD_DESTINATION} _num)
-            file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.cmake "\"${_CD_FILE}\" ${_num}\n")
+            foreach(item ${_CD_FILE})
+                # add it in reactos.cab
+                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.cmake "\"${item}\" ${_num}\n")
+
+                # manage dependency - file level
+                set_property(GLOBAL APPEND PROPERTY REACTOS_CAB_DEPENDS ${item})
+            endforeach()
+
             # manage dependency - target level
             if(_CD_TARGET)
                 add_dependencies(reactos_cab_inf ${_CD_TARGET})
             endif()
-            # manage dependency - file level
-            set_property(GLOBAL APPEND PROPERTY REACTOS_CAB_DEPENDS ${_CD_FILE})
         endif()
     endif() #end bootcd
 
