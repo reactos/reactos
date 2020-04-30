@@ -1821,7 +1821,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
         /* To combine it into a single string */
         swprintf((PWCHAR)PartialInfo->Data + wcslen((PWCHAR)PartialInfo->Data),
                  L", %s",
-                 PartialInfo2->Data);
+                 (PWCHAR)PartialInfo2->Data);
     }
 
     /* So that we can set this as the PROCESSOR_IDENTIFIER variable */
