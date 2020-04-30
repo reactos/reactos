@@ -635,7 +635,7 @@ OnBrowseButton(HWND hwndDlg, PBACKGROUND_DATA pData)
     OPENFILENAME ofn;
     TCHAR filename[MAX_PATH];
     TCHAR fileTitle[256];
-	TCHAR initialDir[MAX_PATH];
+    TCHAR initialDir[MAX_PATH];
     LPTSTR filter;
     LPTSTR extensions;
     BackgroundItem *backgroundItem = NULL;
@@ -653,7 +653,7 @@ OnBrowseButton(HWND hwndDlg, PBACKGROUND_DATA pData)
 
     hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
     himl = ListView_GetImageList(hwndBackgroundList, LVSIL_SMALL);
-	SHGetFolderPathW(NULL, CSIDL_MYPICTURES, NULL, 0, initialDir);
+    SHGetFolderPathW(NULL, CSIDL_MYPICTURES, NULL, 0, initialDir);
 
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
 
