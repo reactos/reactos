@@ -96,6 +96,10 @@ private:
             return hr;
 
         m_hRecentMenu = ::LoadMenuW(shell32_hInstance, MAKEINTRESOURCEW(IDM_RECENTMENUHEAD));
+        if (m_hRecentMenu == NULL)
+        {
+            ERR("m_hRecentMenu == NULL\n");
+        }
 
         return hr;
     }
@@ -153,15 +157,23 @@ private:
         return S_OK;
     }
 
-    HMENU CreateRecentMenu() const
+    HMENU CreateRecentMenu(BOOL bExpandMyDocuments, BOOL bExpandMyPictures) const
     {
         HMENU hMenu = ::CreateMenu();
+        if (hMenu == NULL)
+        {
+            ERR("HMenu == NULL\n");
+            return NULL;
+        }
 
-        BOOL bExpandMyDocuments = FALSE; /* FIXME: Get value from registry */
-        BOOL bExpandMyPictures = FALSE;  /* FIXME: Get value from registry */
+        HMENU hSubMenu = ::GetSubMenu(m_hRecentMenu, 0);
+        if (hSubMenu == NULL)
+        {
+            ERR("hSubMenu == NULL\n");
+            return NULL;
+        }
 
         WCHAR szText[128];
-        HMENU hSubMenu = ::GetSubMenu(m_hRecentMenu, 0);
         UINT i, nCount = GetMenuItemCount(hSubMenu);
         for (i = 0; i < nCount; ++i)
         {
@@ -229,7 +241,9 @@ private:
             {
                 if (csidl == CSIDL_RECENT)
                 {
-                    HMENU hMenu = CreateRecentMenu();
+                    BOOL bExpandMyDocuments = FALSE; /* FIXME: Get value from registry */
+                    BOOL bExpandMyPictures = FALSE;  /* FIXME: Get value from registry */
+                    HMENU hMenu = CreateRecentMenu(bExpandMyDocuments, bExpandMyPictures);
 
                     hr = pShellMenu->SetMenu(hMenu, NULL, SMSET_BOTTOM);
                     if (FAILED_UNEXPECTEDLY(hr))
@@ -310,13 +324,17 @@ private:
             ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}", NULL, SW_SHOWNORMAL);
         else if (psmd->uId == IDM_MYDOCUMENTS)
         {
-            SHGetSpecialFolderPathW(NULL, szPath, CSIDL_PERSONAL, FALSE);
-            ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWNORMAL);
+            if (SHGetSpecialFolderPathW(NULL, szPath, CSIDL_PERSONAL, FALSE))
+                ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWNORMAL);
+            else
+                ERR("SHGetSpecialFolderPathW failed\n");
         }
         else if (psmd->uId == IDM_MYPICTURES)
         {
-            SHGetSpecialFolderPathW(NULL, szPath, CSIDL_MYPICTURES, FALSE);
-            ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWNORMAL);
+            if (SHGetSpecialFolderPathW(NULL, szPath, CSIDL_MYPICTURES, FALSE))
+                ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWNORMAL);
+            else
+                ERR("SHGetSpecialFolderPathW failed\n");
         }
         else
             PostMessageW(m_hwndTray, WM_COMMAND, psmd->uId, 0);
