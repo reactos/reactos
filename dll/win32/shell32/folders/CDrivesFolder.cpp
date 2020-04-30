@@ -573,6 +573,7 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
     HRESULT hr = E_INVALIDARG;
     LPCWSTR szNext = NULL;
     LPITEMIDLIST pidlTemp = NULL;
+    WCHAR volumePathName[MAX_PATH];
 
     TRACE("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n", this,
           hwndOwner, pbc, lpszDisplayName, debugstr_w (lpszDisplayName),
@@ -588,6 +589,13 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
 
     if (PathGetDriveNumberW(lpszDisplayName) < 0)
         return E_INVALIDARG;
+
+    /* check if this drive actually exists */
+    if (!GetVolumePathNameW(lpszDisplayName, volumePathName, _countof(volumePathName)) ||
+        GetDriveTypeW(volumePathName) < DRIVE_REMOVABLE)
+    {
+        return HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE);
+    }
 
     pidlTemp = _ILCreateDrive(lpszDisplayName);
     if (!pidlTemp)
