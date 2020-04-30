@@ -916,11 +916,11 @@ function(add_driver_inf _module)
         add_custom_command(OUTPUT "${_converted_item}"
                            COMMAND native-utf16le "${_source_item}" "${_converted_item}"
                            DEPENDS native-utf16le "${_source_item}")
-        add_cd_file(FILE ${_converted_item} DESTINATION reactos/inf FOR all)
         list(APPEND _converted_inf_files ${_converted_item})
     endforeach()
 
     add_custom_target(${_module}_inf_files DEPENDS ${_converted_inf_files})
+    add_cd_file(FILE ${_converted_inf_files} TARGET ${_module}_inf_files DESTINATION reactos/inf FOR all)
 endfunction()
 
 if(KDBG)
