@@ -127,13 +127,13 @@ END
 
 IDD_SAVEPOWERSCHEME DIALOGEX 0, 0, 190, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Save Scheme"
+CAPTION "Сохранить схему"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Save this power scheme as:", -1, 7, 7, 104, 8
+    LTEXT "Сохранить эту схему питания как:", -1, 7, 7, 120, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 79, 40, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 133, 40, 50, 14
+    DEFPUSHBUTTON "ОК", IDOK, 79, 40, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 133, 40, 50, 14
 END
 
 STRINGTABLE
@@ -173,5 +173,5 @@ BEGIN
     IDS_TIMEOUT16 "никогда"
     IDS_DEL_SCHEME "Вы уверены, что хотите удалить схему питания: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Удалить Схему"
-    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "Не удалось удалить схему питания"
 END
