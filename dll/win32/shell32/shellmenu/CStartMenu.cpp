@@ -156,8 +156,9 @@ private:
     HMENU CreateRecentMenu() const
     {
         HMENU hMenu = ::CreateMenu();
-        BOOL bExpandMyDocuments = TRUE;
-        BOOL bExpandMyPictures = FALSE;
+
+        BOOL bExpandMyDocuments = FALSE; /* FIXME: Get value from registry */
+        BOOL bExpandMyPictures = FALSE;  /* FIXME: Get value from registry */
 
         WCHAR szText[128];
         HMENU hSubMenu = ::GetSubMenu(m_hRecentMenu, 0);
@@ -218,6 +219,7 @@ private:
         if (csidl)
         {
             IShellFolder *psfStartMenu;
+            DWORD dwFlags = SMSET_TOP;
 
             if (csidl == CSIDL_PROGRAMS && m_psfPrograms)
             {
@@ -229,9 +231,11 @@ private:
                 {
                     HMENU hMenu = CreateRecentMenu();
 
-                    hr = pShellMenu->SetMenu(hMenu, NULL, SMSET_TOP);
+                    hr = pShellMenu->SetMenu(hMenu, NULL, SMSET_BOTTOM);
                     if (FAILED_UNEXPECTEDLY(hr))
                         return hr;
+
+                    dwFlags = SMSET_BOTTOM;
                 }
 
                 LPITEMIDLIST pidlStartMenu;
@@ -249,7 +253,7 @@ private:
                     return hr;
             }
 
-            hr = pShellMenu->SetShellFolder(psfStartMenu, NULL, NULL, 0);
+            hr = pShellMenu->SetShellFolder(psfStartMenu, NULL, NULL, dwFlags);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
         }
@@ -562,7 +566,7 @@ RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = pShellMenu->SetShellFolder(psf, NULL, NULL, 0);
+    hr = pShellMenu->SetShellFolder(psf, NULL, NULL, SMSET_TOP);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
