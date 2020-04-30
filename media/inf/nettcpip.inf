@@ -327,6 +327,12 @@ ReactOS = "Echipa ReactOS"
 
 [Strings.0419]
 ReactOS = "Команда ReactOS"
+MS_TCPIP.DisplayName = "Протокол Интернета версии 4 (TCP/IPv4)"
+DNSCLIENT_NAME = "Клиент DNS" 
+DNSCLIENT_DESC = "Служба кэширования локальных DNS запросов" 
+DHCPCLIENT_NAME = "Клиент DHCP" 
+DHCPCLIENT_DESC = "Автоматически получает настройки сети с доступного DHCP сервера"
+TCPIP_DEF = "Протокол контроля передачи/Протокол Интернета (TCP/IP)"
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
