@@ -62,7 +62,7 @@
 @ stub SetupOobeInitPostServices
 @ stub SetupOobeInitPreServices
 @ stub SetupPidGen3
-@ stub SetupQueryRegisteredOsComponent
+@ stdcall -stub SetupQueryRegisteredOsComponent()
 @ stub SetupQueryRegisteredOsComponentsOrder
 @ stub SetupReadPhoneList
 @ stub SetupSetAdminPassword
