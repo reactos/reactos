@@ -98,8 +98,8 @@ IDM_RECENTMENUHEAD MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "My Documents", IDM_MYDOCUMENTS
-        MENUITEM "My Pictures", IDM_MYPICTURES
+        MENUITEM "Moje dokumenty", IDM_MYDOCUMENTS
+        MENUITEM "Moje obrazy", IDM_MYPICTURES
         MENUITEM SEPARATOR
     END
 END
