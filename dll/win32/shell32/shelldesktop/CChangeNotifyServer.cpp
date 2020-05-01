@@ -17,8 +17,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
 struct DIRLIST
 {
-    DWORD m_count;
-    LPWSTR m_items[ANYSIZE_ARRAY];
+    ~DIRLIST();
 
     static DIRLIST *
     AddItem(DIRLIST *pList, LPCWSTR pszItem, BOOL fDir);
@@ -26,14 +25,15 @@ struct DIRLIST
     static DIRLIST *
     GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive);
 
-    ~DIRLIST();
-
     BOOL Contains(LPCWSTR pszPath, BOOL fDir) const;
 
     void RenameItem(LPCWSTR pszItem1, LPCWSTR pszItem2, BOOL fDir);
     void DeleteItem(LPCWSTR pszItem, BOOL fDir);
 
 protected:
+    DWORD m_count;
+    LPWSTR m_items[ANYSIZE_ARRAY];
+
     DIRLIST()
     {
     }
