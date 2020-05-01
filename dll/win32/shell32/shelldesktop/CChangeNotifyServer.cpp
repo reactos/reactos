@@ -182,8 +182,6 @@ DIRLIST::GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive)
     return pList;
 }
 
-static DIRLIST *s_pDirList = NULL;
-
 //////////////////////////////////////////////////////////////////////////////
 // DirWatch --- directory watcher using ReadDirectoryChangesW
 
@@ -210,6 +208,7 @@ public:
     BOOL m_fDeadWatch;
     BOOL m_fRecursive;
     OVERLAPPED m_overlapped; // for async I/O
+    DIRLIST *m_pDirList;
 
     static DirWatch *Create(LPCWSTR pszDir, BOOL fSubTree = FALSE)
     {
@@ -226,6 +225,8 @@ public:
     {
         if (m_hDir != INVALID_HANDLE_VALUE && m_hDir != NULL)
             CloseHandle(m_hDir);
+
+        delete m_pDirList;
     }
 
 protected:
@@ -241,6 +242,7 @@ protected:
                              NULL, OPEN_EXISTING,
                              FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
                              NULL);
+        m_pDirList = NULL;
     }
 };
 
@@ -337,9 +339,10 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         fDir = PathIsRootW(szPath) || PathIsDirectoryW(szPath);
         dwEvent = TranslateActionToEvent(pInfo->Action, fDir);
 
+        DIRLIST*& pList = pDirWatch->m_pDirList;
         if (!fDir && dwEvent == SHCNE_DELETE)
         {
-            if (s_pDirList && s_pDirList->Contains(szPath, TRUE))
+            if (pList && pList->Contains(szPath, TRUE))
             {
                 fDir = TRUE;
                 dwEvent = SHCNE_RMDIR;
@@ -349,19 +352,19 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         switch (dwEvent)
         {
             case SHCNE_MKDIR:
-                s_pDirList = DIRLIST::AddItem(s_pDirList, szPath, TRUE);
+                pList = DIRLIST::AddItem(pList, szPath, TRUE);
                 break;
             case SHCNE_CREATE:
-                s_pDirList = DIRLIST::AddItem(s_pDirList, szPath, FALSE);
+                pList = DIRLIST::AddItem(pList, szPath, FALSE);
                 break;
             case SHCNE_RENAMEFOLDER:
-                s_pDirList->RenameItem(szTempPath, szPath, TRUE);
+                pList->RenameItem(szTempPath, szPath, TRUE);
                 break;
             case SHCNE_RENAMEITEM:
-                s_pDirList->RenameItem(szTempPath, szPath, FALSE);
+                pList->RenameItem(szTempPath, szPath, FALSE);
                 break;
             case SHCNE_RMDIR:
-                s_pDirList->DeleteItem(szPath, TRUE);
+                pList->DeleteItem(szPath, TRUE);
                 break;
         }
 
@@ -473,6 +476,8 @@ CreateDirWatch(LPREGENTRY pRegEntry)
     DirWatch *pDirWatch = DirWatch::Create(szPath, FALSE);
     if (pDirWatch == NULL)
         return NULL;
+
+    pDirWatch->m_pDirList = DIRLIST::GetDirList(NULL, szPath, FALSE);
 
     return pDirWatch;
 }
