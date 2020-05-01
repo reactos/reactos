@@ -458,7 +458,7 @@ static BOOL _BeginRead(DirWatch *pDirWatch)
 }
 
 static DirWatch *
-CreateDirWatch(LPREGENTRY pRegEntry)
+CreateDirWatchFromRegEntry(LPREGENTRY pRegEntry)
 {
     if (pRegEntry->ibPidl == 0 || pRegEntry->fEvents == 0)
         return NULL;
@@ -695,7 +695,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
         return FALSE;
     }
 
-    DirWatch *pDirWatch = CreateDirWatch(pRegEntry);
+    DirWatch *pDirWatch = CreateDirWatchFromRegEntry(pRegEntry);
     if (pDirWatch)
     {
         if (s_hThread == NULL)
