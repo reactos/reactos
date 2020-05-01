@@ -333,7 +333,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "システム コントロール パネル アプレット"
     IDS_WARNINITIALSIZE "ページングファイルの初期サイズの数値を入力して下さい。"
     IDS_WARNMAXIMUMSIZE "ページングファイルの最大サイズの数値を入力して下さい。"
-    IDS_WARNINITIALRANGE "ページングファイルの初期サイズは16 MB以上でなければなりません。また、選択中のドライブの利用可能なサイズを超えてはいけません。"
+    IDS_WARNINITIALRANGE "ページングファイルの初期サイズは2 MB以上でなければなりません。また、選択中のドライブの利用可能なサイズを超えてはいけません。"
     IDS_WARNMAXIMUMRANGE "ページングファイルの最大サイズは初期サイズ以上でなければなりません。また、4095 MB か選択中のドライブの利用可能なサイズを超えてはいけません。"
     IDS_PAGEFILE_NONE "なし"
     IDS_PAGEFILE_SYSTEM "システム管理"

@@ -335,7 +335,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "System control panel applet"
     IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
     IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
-    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 16 MB and must not exceed the available space on the selected drive."
+    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 2 MB,  must not be larger than 4095 MB and must not exceed the available space on the selected drive."
     IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size, must not be larger than 4095 MB and must not exceed the available space on the selected drive."
     IDS_PAGEFILE_NONE "None"
     IDS_PAGEFILE_SYSTEM "System Managed"

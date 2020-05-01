@@ -336,7 +336,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "系統控制面板小程序"
     IDS_WARNINITIALSIZE "爲分頁文件的初始大小輸入一個數字值。"
     IDS_WARNMAXIMUMSIZE "爲分頁文件的最大大小輸入一個數字值。"
-    IDS_WARNINITIALRANGE "分頁文件的初始大小不得小於 16 MB，並且不得超過所選磁碟上的可用空間。"
+    IDS_WARNINITIALRANGE "分頁文件的初始大小不得小於 2 MB，並且不得超過所選磁碟上的可用空間。"
     IDS_WARNMAXIMUMRANGE "分頁文件的最大大小不能小於其初始大小和不能超過所選磁碟上的可用空間。"
     IDS_PAGEFILE_NONE "無"
     IDS_PAGEFILE_SYSTEM "系統已管理"
