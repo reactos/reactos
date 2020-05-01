@@ -44,8 +44,6 @@
 #define ORD_ASCENDING   1
 #define ORD_DESCENDING  -1
 
-#define SC_MANAGER_SUCCESS    0
-
 typedef struct _MAIN_WND_INFO
 {
     HWND  hMainWnd;

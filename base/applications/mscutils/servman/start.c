@@ -30,7 +30,7 @@ DoStartService(LPWSTR ServiceName,
     BOOL bWhiteSpace = TRUE;
     LPWSTR lpChar;
     DWORD dwArgsCount = 0;
-    DWORD dwResult = SC_MANAGER_SUCCESS;
+    DWORD dwResult = ERROR_SUCCESS;
     LPCWSTR *lpArgsVector = NULL;
 
     if (lpStartParams != NULL)
@@ -203,7 +203,7 @@ DoStartService(LPWSTR ServiceName,
 
         if (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
         {
-            dwResult = SC_MANAGER_SUCCESS;
+            dwResult = ERROR_SUCCESS;
         }
     }
 

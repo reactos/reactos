@@ -23,7 +23,7 @@ DoStopService(_In_z_ LPWSTR ServiceName,
     DWORD StartTime;
     DWORD WaitTime;
     DWORD Timeout;    
-    DWORD dwResult = SC_MANAGER_SUCCESS;
+    DWORD dwResult = ERROR_SUCCESS;
     
     hSCManager = OpenSCManagerW(NULL,
                                 NULL,
@@ -106,7 +106,7 @@ DoStopService(_In_z_ LPWSTR ServiceName,
         /* If the service is stopped, return TRUE */
         if (ServiceStatus.dwCurrentState == SERVICE_STOPPED)
         {
-            dwResult = SC_MANAGER_SUCCESS;
+            dwResult = ERROR_SUCCESS;
         }
     }
     else

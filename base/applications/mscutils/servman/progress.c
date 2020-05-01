@@ -99,7 +99,7 @@ unsigned int __stdcall ActionThread(void* Param)
         dwResult = DoStartService(ProgressData->ServiceName,
                            ProgressData->hProgress,
                            ProgressData->Param);
-        if (dwResult==SC_MANAGER_SUCCESS)
+        if (dwResult==ERROR_SUCCESS)
         {
             /* We're done, slide the progress bar up to the top */
             CompleteProgressBar(ProgressData->hProgress);
@@ -135,7 +135,7 @@ unsigned int __stdcall ActionThread(void* Param)
                 /* Stop the requested service */
                 dwResult = DoStopService(ProgressData->ServiceName,
                                   ProgressData->hProgress);
-                if (dwResult==SC_MANAGER_SUCCESS)
+                if (dwResult==ERROR_SUCCESS)
                 {
                     CompleteProgressBar(ProgressData->hProgress);
                 }
@@ -156,7 +156,7 @@ unsigned int __stdcall ActionThread(void* Param)
 
         dwResult = DoStopService(ProgressData->ServiceName,
                           ProgressData->hProgress);
-        if (dwResult==SC_MANAGER_SUCCESS)
+        if (dwResult==ERROR_SUCCESS)
         {
             CompleteProgressBar(ProgressData->hProgress);
         }
@@ -178,7 +178,7 @@ unsigned int __stdcall ActionThread(void* Param)
             dwResult = DoStartService(ProgressData->ServiceName,
                                ProgressData->hProgress,
                                NULL);
-            if (dwResult==SC_MANAGER_SUCCESS)
+            if (dwResult==ERROR_SUCCESS)
             {
                 /* We're done, slide the progress bar up to the top */
                 CompleteProgressBar(ProgressData->hProgress);
@@ -200,7 +200,7 @@ unsigned int __stdcall ActionThread(void* Param)
         dwResult = DoControlService(ProgressData->ServiceName,
                              ProgressData->hProgress,
                              SERVICE_CONTROL_PAUSE);
-        if (dwResult==SC_MANAGER_SUCCESS)
+        if (dwResult==ERROR_SUCCESS)
         {
             /* We're done, slide the progress bar up to the top */
             CompleteProgressBar(ProgressData->hProgress);
@@ -221,7 +221,7 @@ unsigned int __stdcall ActionThread(void* Param)
         dwResult = DoControlService(ProgressData->ServiceName,
                              ProgressData->hProgress,
                              SERVICE_CONTROL_CONTINUE);
-        if (dwResult==SC_MANAGER_SUCCESS)
+        if (dwResult==ERROR_SUCCESS)
         {
             /* We're done, slide the progress bar up to the top */
             CompleteProgressBar(ProgressData->hProgress);
