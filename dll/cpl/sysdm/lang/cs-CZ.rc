@@ -338,7 +338,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Systémový aplet kontrolních panelů"
     IDS_WARNINITIALSIZE "Zadejte číselnou hodnotu pro počáteční velikost stránkovacího souboru."
     IDS_WARNMAXIMUMSIZE "Zadejte číselnou hodnotu pro maximální velikost stránkovacího souboru."
-    IDS_WARNINITIALRANGE "Počáteční velikost stránkovacího souboru nesmí být menší než 16 MB a nesmí překročit množství volného místa na zvolené diskové jednotce."
+    IDS_WARNINITIALRANGE "Počáteční velikost stránkovacího souboru nesmí být menší než 2 MB a nesmí překročit množství volného místa na zvolené diskové jednotce."
     IDS_WARNMAXIMUMRANGE "Maximální velikost stránkovacího souboru nesmí být menší než velikost počáteční, nesmí být větší než 4095 MB a nesmí překročit množství volného místa na zvolené diskové jednotce."
     IDS_PAGEFILE_NONE "Není"
     IDS_PAGEFILE_SYSTEM "Spravováno systémem"

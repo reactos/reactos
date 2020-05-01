@@ -333,7 +333,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Applet panel kontrol sistem"
     IDS_WARNINITIALSIZE "Masukkan nilai numerik untuk ukuran awal halaman berkas."
     IDS_WARNMAXIMUMSIZE "Masukkan nilai numerik untuk ukuran maksimum halaman berkas."
-    IDS_WARNINITIALRANGE "Ukuran awal halaman berkas tidak boleh lebih kecil dari 16 MB dan tidak boleh melebihi ruang yang tersedia pada drive yang dipilih."
+    IDS_WARNINITIALRANGE "Ukuran awal halaman berkas tidak boleh lebih kecil dari 2 MB dan tidak boleh melebihi ruang yang tersedia pada drive yang dipilih."
     IDS_WARNMAXIMUMRANGE "Ukuran maksimum halaman berkas tidak boleh lebih kecil dari ukuran awal, maupun lebih besar dari 4095 MB dan tidak boleh melebihi ruang yang tersedia pada drive yang dipilih."
     IDS_PAGEFILE_NONE "Tidak ada"
     IDS_PAGEFILE_SYSTEM "Diatur Sistem"
