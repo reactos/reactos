@@ -141,7 +141,7 @@ DIRLIST::GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive)
     WCHAR szPath[MAX_PATH];
     GetFullPathNameW(pszDir, _countof(szPath), szPath, NULL);
 
-    if (!PathIsDirectoryW(szPath))
+    if (!PathIsDirectoryW(szPath) && !PathIsRootW(szPath))
     {
         delete pList;
         return NULL;
