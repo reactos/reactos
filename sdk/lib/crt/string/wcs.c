@@ -257,7 +257,8 @@ INT CDECL wctomb( char *dst, wchar_t ch )
 /*********************************************************************
  * wcsrtombs_l (INTERNAL)
  */
-static size_t CDECL wcsrtombs_l(char *mbstr, const wchar_t **wcstr, size_t count, _locale_t locale)
+static size_t CDECL wcsrtombs_l(char *mbstr, const wchar_t **wcstr,
+            size_t count, _locale_t locale)
 {
     MSVCRT_pthreadlocinfo locinfo;
     size_t tmp = 0;
@@ -268,12 +269,32 @@ static size_t CDECL wcsrtombs_l(char *mbstr, const wchar_t **wcstr, size_t count
     else
         locinfo = ((MSVCRT__locale_t)locale)->locinfo;
 
+    if(!locinfo->lc_codepage) {
+        size_t i;
+
+        if(!mbstr)
+            return strlenW(*wcstr);
+
+        for(i=0; i<count; i++) {
+            if((*wcstr)[i] > 255) {
+                _set_errno(EILSEQ);
+                return -1;
+            }
+
+            mbstr[i] = (*wcstr)[i];
+            if(!(*wcstr)[i]) break;
+        }
+        return i;
+    }
+
     if(!mbstr) {
         tmp = WideCharToMultiByte(locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
-                *wcstr, -1, NULL, 0, NULL, &used_default)-1;
-        if(used_default)
+                *wcstr, -1, NULL, 0, NULL, &used_default);
+        if(!tmp || used_default) {
+            _set_errno(EILSEQ);
             return -1;
-        return tmp;
+        }
+        return tmp-1;
     }
 
     while(**wcstr) {
@@ -282,8 +303,10 @@ static size_t CDECL wcsrtombs_l(char *mbstr, const wchar_t **wcstr, size_t count
 
         size = WideCharToMultiByte(locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
                 *wcstr, 1, buf, 3, NULL, &used_default);
-        if(used_default)
+        if(!size || used_default) {
+            _set_errno(EILSEQ);
             return -1;
+        }
         if(tmp+size > count)
             return tmp;
 
