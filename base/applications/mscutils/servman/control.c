@@ -42,7 +42,7 @@ DoControlService(LPWSTR ServiceName,
         default:
             /* Unhandled control code */
             DPRINT1("Unknown control command: 0x%X\n", Control);
-            return ERROR_EXCEPTION_IN_SERVICE;
+            return ERROR_INVALID_SERVICE_CONTROL;
     }
 
     hSCManager = OpenSCManagerW(NULL,
