@@ -95,12 +95,6 @@ private:
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        m_hRecentMenu = ::LoadMenuW(shell32_hInstance, MAKEINTRESOURCEW(IDM_RECENTMENUHEAD));
-        if (m_hRecentMenu == NULL)
-        {
-            ERR("m_hRecentMenu == NULL\n");
-        }
-
         return hr;
     }
 
@@ -157,51 +151,38 @@ private:
         return S_OK;
     }
 
+    void InsertRecentItem(HMENU hMenu, UINT nID, INT csidl, BOOL bExpand) const
+    {
+        WCHAR szPath[MAX_PATH];
+        if (!SHGetSpecialFolderPathW(NULL, szPath, csidl, FALSE))
+        {
+            ERR("SHGetSpecialFolderPathW failed\n");
+            return;
+        }
+
+        LPWSTR pszText = PathFindFileNameW(szPath);
+        if (bExpand)
+        {
+            MENUITEMINFOW mii = { sizeof(mii), MIIM_TYPE | MIIM_ID | MIIM_SUBMENU };
+            mii.fType = MFT_STRING;
+            mii.wID = nID;
+            mii.hSubMenu = ::CreatePopupMenu();
+            mii.dwTypeData = pszText;
+            mii.cch = lstrlenW(pszText);
+            InsertMenuItemW(hMenu, GetMenuItemCount(hMenu), TRUE, &mii);
+        }
+        else
+        {
+            AppendMenuW(hMenu, MF_STRING | MF_ENABLED, nID, pszText);
+        }
+    }
+
     HMENU CreateRecentMenu(BOOL bExpandMyDocuments, BOOL bExpandMyPictures) const
     {
         HMENU hMenu = ::CreateMenu();
-        if (hMenu == NULL)
-        {
-            ERR("HMenu == NULL\n");
-            return NULL;
-        }
-
-        HMENU hSubMenu = ::GetSubMenu(m_hRecentMenu, 0);
-        if (hSubMenu == NULL)
-        {
-            ERR("hSubMenu == NULL\n");
-            return NULL;
-        }
-
-        WCHAR szText[128];
-        UINT i, nCount = GetMenuItemCount(hSubMenu);
-        for (i = 0; i < nCount; ++i)
-        {
-            UINT nID = GetMenuItemID(hSubMenu, i);
-            if (GetMenuString(hSubMenu, i, szText, _countof(szText), MF_BYPOSITION))
-            {
-                if ((nID == IDM_MYDOCUMENTS && bExpandMyDocuments) ||
-                    (nID == IDM_MYPICTURES && bExpandMyPictures))
-                {
-                    MENUITEMINFOW mii = { sizeof(mii), MIIM_TYPE | MIIM_ID | MIIM_SUBMENU };
-                    mii.fType = MFT_STRING;
-                    mii.wID = nID;
-                    mii.hSubMenu = ::CreatePopupMenu();
-                    mii.dwTypeData = szText;
-                    mii.cch = lstrlenW(szText);
-                    InsertMenuItemW(hMenu, i, TRUE, &mii);
-                }
-                else
-                {
-                    AppendMenuW(hMenu, MF_STRING | MF_ENABLED, nID, szText);
-                }
-            }
-            else
-            {
-                AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
-            }
-        }
-
+        InsertRecentItem(hMenu, IDM_MYDOCUMENTS, CSIDL_MYDOCUMENTS, bExpandMyDocuments);
+        InsertRecentItem(hMenu, IDM_MYPICTURES, CSIDL_MYPICTURES, bExpandMyPictures);
+        AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
         return hMenu;
     }
 
@@ -244,6 +225,8 @@ private:
                     BOOL bExpandMyDocuments = FALSE; /* FIXME: Get value from registry */
                     BOOL bExpandMyPictures = FALSE;  /* FIXME: Get value from registry */
                     HMENU hMenu = CreateRecentMenu(bExpandMyDocuments, bExpandMyPictures);
+                    if (hMenu == NULL)
+                        ERR("CreateRecentMenu failed\n");
 
                     hr = pShellMenu->SetMenu(hMenu, NULL, SMSET_BOTTOM);
                     if (FAILED_UNEXPECTEDLY(hr))
