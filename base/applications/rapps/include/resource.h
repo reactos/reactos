@@ -113,6 +113,8 @@
 #define IDS_UNABLE_TO_INSTALL    128
 #define IDS_SELECTEDFORINST      129
 #define IDS_MISMATCH_CERT_INFO   130
+#define IDS_UNABLE_PATH          131
+
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200

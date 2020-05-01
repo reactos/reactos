@@ -213,6 +213,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Установить выбранное"
     IDS_SELECTEDFORINST "Выбрано для установки"
     IDS_MISMATCH_CERT_INFO "Используемый сертификат не опознан:\nНазначение: %s\nВыдан: %s\nВы хотите продолжить в любом случае?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

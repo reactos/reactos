@@ -221,6 +221,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Installi valitud"
     IDS_SELECTEDFORINST "Installimiseks valitud"
     IDS_MISMATCH_CERT_INFO "Kasutatud sertifikaat on tundmatu:\nSubject: %s\nIssuer: %s\nKas soovid siiski jätkata?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

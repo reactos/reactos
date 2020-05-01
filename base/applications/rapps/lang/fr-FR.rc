@@ -212,7 +212,8 @@ BEGIN
     IDS_SELECT_ALL "Sélectionner/Désélectionner tout"
     IDS_INSTALL_SELECTED "Installer la sélection"
     IDS_SELECTEDFORINST "Sélectionnées pour installation"
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_MISMATCH_CERT_INFO "Certificat inconnu:\nSujet: %s\nEmetteur: %s\nVoulez-vous continuer ?"
+    IDS_UNABLE_PATH "Format de chemin invalide."
 END
 
 STRINGTABLE

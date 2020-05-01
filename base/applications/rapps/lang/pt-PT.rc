@@ -215,6 +215,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Instalar selecção"
     IDS_SELECTEDFORINST "Seleccionados para instalação"
     IDS_MISMATCH_CERT_INFO "O certificado usado é desconhecido:\nAssunto: %s\nIssuer: %s\nDeseja continuar mesmo assim?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE
