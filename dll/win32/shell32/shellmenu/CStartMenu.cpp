@@ -69,7 +69,6 @@ private:
     CComPtr<IShellFolder> m_psfPrograms;
 
     LPITEMIDLIST m_pidlPrograms;
-    HMENU m_hRecentMenu;
 
     HRESULT OnInitMenu()
     {
