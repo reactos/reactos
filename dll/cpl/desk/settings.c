@@ -474,6 +474,7 @@ OnBPPChanged(IN HWND hwndDlg, IN PSETTINGS_DATA pData)
     hSpectrumDC = GetDC(hSpectrumControl);
     GetClientRect(hSpectrumControl, &client);
     ShowColorSpectrum(hSpectrumDC, &client, dmNewBitsPerPel, pData);
+    ReleaseDC(hSpectrumControl, hSpectrumDC);
 
     /* Find if new parameters are valid */
     Current = pData->CurrentDisplayDevice->CurrentSettings;
