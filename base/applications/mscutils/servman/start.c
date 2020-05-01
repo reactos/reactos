@@ -8,6 +8,8 @@
  */
 
 #include "precomp.h"
+
+#define NDEBUG
 #include <debug.h>
 
 #define MAX_WAIT_TIME   30000
