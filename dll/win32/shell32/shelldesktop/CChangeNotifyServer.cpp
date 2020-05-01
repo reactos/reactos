@@ -31,7 +31,7 @@ struct DIRLIST
     void DeleteItem(LPCWSTR pszItem, BOOL fDir);
 
 protected:
-    DWORD m_count;
+    SIZE_T m_count;
     LPWSTR m_items[ANYSIZE_ARRAY];
 
     DIRLIST()
@@ -82,13 +82,19 @@ BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
 /*static*/ DIRLIST *
 DIRLIST::AddItem(DIRLIST *pList, LPCWSTR pszItem, BOOL fDir)
 {
-    SIZE_T cbDirList = sizeof(DIRLIST);
+    SIZE_T count = 0, cbDirList = sizeof(DIRLIST);
     if (pList)
-        cbDirList += pList->m_count * sizeof(LPWSTR);
+    {
+        count = pList->m_count;
+        cbDirList += count * sizeof(LPWSTR);
+    }
 
     DIRLIST *pNewList = (DIRLIST *)realloc(pList, cbDirList);
     if (pNewList == NULL)
         return pList;
+
+    if (count == 0)
+        ZeroMemory(pNewList, cbDirList);
 
     WCHAR szPath[MAX_PATH + 1];
     szPath[0] = fDir ? L'|' : L'>';
