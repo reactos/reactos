@@ -22,7 +22,9 @@ BEGIN
     PUSHBUTTON "&Síťová ID...", IDC_NETWORK_ID, 190, 114, 58, 15 //FIXME nic vic nez "sitova ID" se nevejde na tlacitko!
     LTEXT "Kliknutím na ""Změnit"" lze přejmenovat tento počítač nebo se připojit k doméně.", IDC_STATIC, 6, 149, 170, 17
     PUSHBUTTON "&Změnit...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
-    LTEXT "Poznámka: Identifikaci tohoto počítače mohou změnit pouze administrátoři.", IDC_STATIC, 6, 179, 300, 9
+    LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
+    ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
+    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222

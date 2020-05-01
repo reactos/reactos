@@ -25,7 +25,9 @@ BEGIN
     PUSHBUTTON "Іденти&фікація...", IDC_NETWORK_ID, 190, 114, 60, 15
     LTEXT "Щоб перейменувати цей комп'ютер або приєднати його до домену, натисніть кнопку ""Змінити"".", IDC_STATIC, 6, 149, 170, 17
     PUSHBUTTON "&Змінити...", IDC_NETWORK_PROPERTY, 190, 149, 60, 15
-    LTEXT "Примітка: змінити ідентифікацію цього комп'ютера можуть лише адміністратори.", IDC_STATIC, 6, 179, 230, 18
+    LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
+    ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
+    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222

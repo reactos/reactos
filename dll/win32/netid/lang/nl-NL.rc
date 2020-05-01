@@ -17,7 +17,9 @@ BEGIN
     PUSHBUTTON "&Netwerk ID...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT "Om deze computer te hernoemen of om lid te worden van een domein, klik op ""Change"".", IDC_STATIC, 6, 149, 170, 17
     PUSHBUTTON "&Wijzigen...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
-    LTEXT "Let op: Alleen Administrators mogen de indentificatie van deze computer aanpassen.", IDC_STATIC, 6, 179, 300, 9
+    LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
+    ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
+    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222

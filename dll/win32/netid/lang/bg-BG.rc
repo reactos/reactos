@@ -17,7 +17,9 @@ BEGIN
     PUSHBUTTON "&Мрежов опознавател...", IDC_NETWORK_ID, 170, 114, 85, 15
     LTEXT "За преименуване на компютъра или присъединяване към имение, натиснете „Промяна”.", IDC_STATIC, 6, 149, 170, 24
     PUSHBUTTON "Про&мяна...", IDC_NETWORK_PROPERTY, 170, 149, 85, 15
-    LTEXT "Забележка: Само управниците могат да променят опознавателите\n на компютъра.", IDC_STATIC, 6, 179, 300, 18
+    LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
+    ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
+    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222

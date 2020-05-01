@@ -24,7 +24,9 @@ BEGIN
     PUSHBUTTON "&Sieťová identifikácia", IDC_NETWORK_ID, 176, 114, 72, 15
     LTEXT "Ak chcete zmeniť názov počítača alebo sa pripojiť na doménu, kliknite na tlačidlo Zmeniť.", IDC_STATIC, 6, 149, 160, 17
     PUSHBUTTON "Z&meniť...", IDC_NETWORK_PROPERTY, 176, 149, 72, 15
-    LTEXT "Poznámka: Identifikáciu počítača môžu zmeniť len správcovia počítača.", IDC_STATIC, 6, 179, 244, 9
+    LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
+    ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
+    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222

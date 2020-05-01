@@ -20,7 +20,9 @@ BEGIN
     PUSHBUTTON "网络 ID...(&N)", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT "若要重命名此计算机或加入域，请单击""更改""。", IDC_STATIC, 6, 149, 170, 17
     PUSHBUTTON "更改...(&C)", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
-    LTEXT "注意: 只有管理员才可以更改此计算机的标识。", IDC_STATIC, 6, 179, 300, 9
+    LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
+    ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
+    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
