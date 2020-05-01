@@ -9,9 +9,12 @@
 
 #include "precomp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 #define MAX_WAIT_TIME   30000
 
-BOOL
+DWORD
 DoStopService(_In_z_ LPWSTR ServiceName,
               _In_opt_ HANDLE hProgress)
 {
@@ -22,21 +25,21 @@ DoStopService(_In_z_ LPWSTR ServiceName,
     DWORD StartTime;
     DWORD WaitTime;
     DWORD Timeout;
-    BOOL bRet = FALSE;
-
-
+    DWORD dwResult = ERROR_SUCCESS;
+    
     hSCManager = OpenSCManagerW(NULL,
                                 NULL,
                                 SC_MANAGER_CONNECT);
-    if (!hSCManager) return FALSE;
+    if (!hSCManager) return GetLastError();
 
     hService = OpenServiceW(hSCManager,
                             ServiceName,
                             SERVICE_STOP | SERVICE_QUERY_STATUS);
     if (!hService)
     {
+        dwResult = GetLastError();
         CloseServiceHandle(hSCManager);
-        return FALSE;
+        return dwResult;
     }
 
     if (hProgress)
@@ -90,21 +93,31 @@ DoStopService(_In_z_ LPWSTR ServiceName,
                 if (GetTickCount() - StartTime > Timeout)
                 {
                     /* Yep, give up */
+                    DPRINT1("Timeout\n");
+                    dwResult = ERROR_SERVICE_REQUEST_TIMEOUT;
                     break;
                 }
+            }
+            else
+            {
+                dwResult = GetLastError();
+                DPRINT1("QueryServiceStatusEx failed: %d\n", dwResult);
             }
         }
 
         /* If the service is stopped, return TRUE */
         if (ServiceStatus.dwCurrentState == SERVICE_STOPPED)
         {
-            bRet = TRUE;
+            dwResult = ERROR_SUCCESS;
         }
+    }
+    else
+    {
+        dwResult = GetLastError();    
     }
 
     CloseServiceHandle(hService);
-
     CloseServiceHandle(hSCManager);
 
-    return bRet;
+    return dwResult;
 }
