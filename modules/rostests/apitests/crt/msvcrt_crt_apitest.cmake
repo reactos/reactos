@@ -1255,7 +1255,7 @@ list(APPEND SOURCE_MSVCRT
     wcstoul.c
 #    wcsxfrm.c
 #    wctob
-#    wctomb.c
+    wctomb.c
 #    wctomb_s
 #    wprintf.c
 #    wprintf_s.c

@@ -519,7 +519,7 @@ list(APPEND SOURCE_CRTDLL
     wcstombs.c
     wcstoul.c
 #    wcsxfrm.c
-#    wctomb.c
+    wctomb.c
 #    wprintf.c
 #    wscanf.c
 )

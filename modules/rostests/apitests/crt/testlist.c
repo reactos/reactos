@@ -26,6 +26,7 @@ extern void func_strtoul(void);
 extern void func_wcsnlen(void);
 extern void func_wcstombs(void);
 extern void func_wcstoul(void);
+extern void func_wctomb(void);
 extern void func___getmainargs(void);
 
 extern void func_static_construct(void);
@@ -44,6 +45,7 @@ const struct test winetest_testlist[] =
     { "strlen", func_strlen },
     { "strtoul", func_strtoul },
     { "wcstoul", func_wcstoul },
+    { "wctomb", func_wctomb },
     { "wcstombs", func_wcstombs },
 #if defined(TEST_CRTDLL) || defined(TEST_MSVCRT) || defined(TEST_STATIC_CRT)
     // ...
