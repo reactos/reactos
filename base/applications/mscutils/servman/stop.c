@@ -98,8 +98,8 @@ DoStopService(_In_z_ LPWSTR ServiceName,
             }
             else
             {
-                DPRINT1("QueryServiceStatusEx failed: %d\n", GetLastError());
                 dwResult = GetLastError();
+                DPRINT1("QueryServiceStatusEx failed: %d\n", dwResult);
             }
         }
 

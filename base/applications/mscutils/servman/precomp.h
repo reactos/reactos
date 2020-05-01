@@ -14,6 +14,7 @@
 #include <commdlg.h>
 #include <strsafe.h>
 #include <process.h>
+#include <winerror.h>
 
 #include "resource.h"
 
@@ -44,9 +45,6 @@
 #define ORD_DESCENDING  -1
 
 #define SC_MANAGER_SUCCESS    0
-//https://docs.microsoft.com/fr-fr/windows/win32/debug/system-error-codes--1000-1299-
-#define ERROR_SERVICE_REQUEST_TIMEOUT          1053
-#define ERROR_EXCEPTION_IN_SERVICE             1064 
 
 typedef struct _MAIN_WND_INFO
 {

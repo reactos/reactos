@@ -171,8 +171,8 @@ DoStartService(LPWSTR ServiceName,
                                             &BytesNeeded))
                 {
                     /* Something went wrong... */
-                    DPRINT1("QueryServiceStatusEx failed: %d\n", GetLastError());
                     dwResult = GetLastError();
+                    DPRINT1("QueryServiceStatusEx failed: %d\n", dwResult);
                     break;
                 }
 
