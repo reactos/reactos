@@ -495,7 +495,7 @@ struct ITEM
     DWORD dwUserPID;    // The user PID; that is the process ID of the target window.
     HANDLE hRegEntry;   // The registration entry.
     HWND hwndBroker;    // Client broker window (if any).
-    DirWatch *pDirWatch; // for filesystem notification (SHCNRF_InterruptLevel)
+    DirWatch *pDirWatch; // for filesystem notification (for SHCNRF_InterruptLevel)
 };
 
 typedef CWinTraits <
@@ -705,12 +705,12 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
             unsigned tid;
             s_fTerminateAll = FALSE;
             s_hThread = (HANDLE)_beginthreadex(NULL, 0, DirWatchThreadFuncAPC, NULL, 0, &tid);
-        }
-        if (s_hThread == NULL)
-        {
-            pRegEntry->nRegID = INVALID_REG_ID;
-            SHUnlockShared(pRegEntry);
-            return FALSE;
+            if (s_hThread == NULL)
+            {
+                pRegEntry->nRegID = INVALID_REG_ID;
+                SHUnlockShared(pRegEntry);
+                return FALSE;
+            }
         }
 
         QueueUserAPC(_AddDirectoryProcAPC, s_hThread, (ULONG_PTR)pDirWatch);
