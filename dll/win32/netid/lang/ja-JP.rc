@@ -7,15 +7,15 @@ FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
     LTEXT "ReactOS は次の情報を使ってネットワーク上でこのコンピュータを\n識別します。", IDC_STATIC, 40, 5, 224, 20
-    LTEXT "コンピュータの説明:", IDC_STATIC, 6, 40, 90, 9
+    LTEXT "コンピュータの説明:", IDC_STATIC, 7, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "フル コンピュータ名:", IDC_STATIC, 6, 68, 85, 9
+    LTEXT "フル コンピュータ名:", IDC_STATIC, 7, 68, 85, 9
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "ワークグループ:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    LTEXT "ワークグループ:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "ネットワーク ID ウィザードを使ってドメインへの参加およびローカル ユーザーの作成を行うには、[ネットワーク ID] をクリックしてください。", IDC_STATIC, 6, 113, 172, 24
+    LTEXT "ネットワーク ID ウィザードを使ってドメインへの参加およびローカル ユーザーの作成を行うには、[ネットワーク ID] をクリックしてください。", IDC_STATIC, 7, 113, 172, 24
     PUSHBUTTON "ネットワーク ID(&N)...", IDC_NETWORK_ID, 180, 114, 72, 15
-    LTEXT "コンピュータ名を変更したりドメインに参加したりするには [変更] をクリックしてください。", IDC_STATIC, 6, 149, 170, 17
+    LTEXT "コンピュータ名を変更したりドメインに参加したりするには [変更] をクリックしてください。", IDC_STATIC, 7, 149, 170, 17
     PUSHBUTTON "変更(&C)...", IDC_NETWORK_PROPERTY, 180, 149, 72, 15
     LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
     ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE

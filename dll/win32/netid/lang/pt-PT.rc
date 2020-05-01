@@ -12,15 +12,15 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
     LTEXT "O ReactOS utiliza as seguintes informações para identificar o computador na rede.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT "Descrição do computador:", IDC_STATIC, 6, 40, 90, 9
+    LTEXT "Descrição do computador:", IDC_STATIC, 7, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Nome completo do computador:", IDC_STATIC, 6, 68, 85, 9
+    LTEXT "Nome completo do computador:", IDC_STATIC, 7, 68, 85, 9
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Grupo de trabalho:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    LTEXT "Grupo de trabalho:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Para utilizar o ""Assistente de identificação de rede"" para efectuar a adesão a um domínio e criar uma conta de utilizador local, clique em ""ID de rede""", IDC_STATIC, 6, 113, 172, 24
+    LTEXT "Para utilizar o ""Assistente de identificação de rede"" para efectuar a adesão a um domínio e criar uma conta de utilizador local, clique em ""ID de rede""", IDC_STATIC, 7, 113, 172, 24
     PUSHBUTTON "&ID de rede", IDC_NETWORK_ID, 190, 114, 58, 15
-    LTEXT "Para alterar o nome a este computador ou escolher um domínio, clique em ""Alterar"".", IDC_STATIC, 6, 149, 170, 17
+    LTEXT "Para alterar o nome a este computador ou escolher um domínio, clique em ""Alterar"".", IDC_STATIC, 7, 149, 170, 17
     PUSHBUTTON "&Alterar...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
     LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
     ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE

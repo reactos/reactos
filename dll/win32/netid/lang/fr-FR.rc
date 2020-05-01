@@ -7,15 +7,15 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
     LTEXT "ReactOS utilise les informations suivantes pour identifier votre ordinateur sur le réseau.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT "Description de l'ordinateur :", IDC_STATIC, 6, 40, 95, 9
+    LTEXT "Description de l'ordinateur :", IDC_STATIC, 7, 40, 95, 9
     EDITTEXT IDC_COMPDESC, 103, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Nom complet de l'ordinateur :", IDC_STATIC, 6, 68, 95, 9
+    LTEXT "Nom complet de l'ordinateur :", IDC_STATIC, 7, 68, 95, 9
     EDITTEXT IDC_COMPUTERNAME, 103, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Groupe de travail :", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    LTEXT "Groupe de travail :", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 103, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Pour utiliser l'Assistant Réseau, afin de rejoindre un domaine ou créer un utilisateur local, cliquez sur Identification Réseau.", IDC_STATIC, 6, 108, 160, 24
+    LTEXT "Pour utiliser l'Assistant Réseau, afin de rejoindre un domaine ou créer un utilisateur local, cliquez sur Identification Réseau.", IDC_STATIC, 7, 108, 160, 24
     PUSHBUTTON "ID &réseau...", IDC_NETWORK_ID, 170, 114, 78, 15
-    LTEXT "Pour changer le nom de cet ordinateur ou rejoindre un domaine, cliquez sur Modifier.", IDC_STATIC, 6, 149, 160, 17
+    LTEXT "Pour changer le nom de cet ordinateur ou rejoindre un domaine, cliquez sur Modifier.", IDC_STATIC, 7, 149, 160, 17
     PUSHBUTTON "Modifier...", IDC_NETWORK_PROPERTY, 170, 149, 78, 15
     LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
     ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
