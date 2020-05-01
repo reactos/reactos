@@ -92,7 +92,7 @@ Used Version: 1.6.37
 Website: http://libpng.sourceforge.net/
 
 Title: ACPICA
-Used Version: 20200326
+Used Version: 20200430
 Website: https://acpica.org/
 
 Title: Schily Tools, mkisofs
