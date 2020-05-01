@@ -487,7 +487,7 @@ NetworkDlg_OnOK(
                            L"SyncDomainWithMembership",
                            0,
                            REG_DWORD,
-                           (LPBYTE)pNetIdData->bSyncDomainWithMembership,
+                           (LPBYTE)&pNetIdData->bSyncDomainWithMembership,
                            sizeof(pNetIdData->bSyncDomainWithMembership));
             RegCloseKey(KeyHandle);
         }
