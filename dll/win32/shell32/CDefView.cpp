@@ -1184,8 +1184,9 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         ntreg[0].fRecursive = FALSE;
         ntreg[0].pidl = m_pidlParent;
     }
-    m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_NewDelivery | SHCNRF_ShellLevel,
-                                       SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, nRegCount, ntreg);
+    m_hNotify = SHChangeNotifyRegister(m_hWnd,
+        SHCNRF_InterruptLevel | SHCNRF_ShellLevel | SHCNRF_NewDelivery,
+        SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, nRegCount, ntreg);
     if (nRegCount == 3)
     {
         ILFree(pidls[0]);

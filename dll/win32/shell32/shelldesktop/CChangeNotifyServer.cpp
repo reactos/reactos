@@ -6,10 +6,478 @@
  */
 #include "shelldesktop.h"
 #include "shlwapi_undoc.h"
-#include <atlsimpcoll.h>
-#include <assert.h>
+#include <atlsimpcoll.h> // for CSimpleArray
+#include <process.h>     // for _beginthreadex
+#include <assert.h>      // for assert
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
+
+//////////////////////////////////////////////////////////////////////////////
+// DIRLIST --- directory list
+
+struct DIRLIST
+{
+    DWORD m_count;
+    LPWSTR m_items[ANYSIZE_ARRAY];
+
+    static DIRLIST *
+    AddItem(DIRLIST *pList, LPCWSTR pszItem, BOOL fDir);
+
+    static DIRLIST *
+    GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive);
+
+    ~DIRLIST()
+    {
+        if (this)
+        {
+            for (DWORD i = 0; i < m_count; ++i)
+            {
+                free(m_items[i]);
+            }
+            free(this);
+        }
+    }
+
+    BOOL Contains(LPCWSTR pszPath, BOOL fDir) const;
+
+    void RenameItem(LPCWSTR pszItem1, LPCWSTR pszItem2, BOOL fDir);
+    void DeleteItem(LPCWSTR pszItem, BOOL fDir);
+
+protected:
+    DIRLIST()
+    {
+    }
+};
+
+BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
+{
+    if (this == NULL)
+        return FALSE;
+
+    for (DWORD i = 0; i < m_count; ++i)
+    {
+        if (m_items[i] == NULL)
+            continue;
+
+        if (fDir)
+        {
+            if (m_items[i][0] != L'|')
+                continue;
+        }
+        else
+        {
+            if (m_items[i][0] != L'>')
+                continue;
+        }
+
+        if (lstrcmpiW(&m_items[i][1], pszPath) == 0)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+/*static*/ DIRLIST *
+DIRLIST::AddItem(DIRLIST *pList, LPCWSTR pszItem, BOOL fDir)
+{
+    SIZE_T cbDirList = sizeof(DIRLIST);
+    if (pList)
+        cbDirList += pList->m_count * sizeof(LPWSTR);
+
+    DIRLIST *pNewList = (DIRLIST *)realloc(pList, cbDirList);
+    if (pNewList == NULL)
+        return pList;
+
+    WCHAR szPath[MAX_PATH + 1];
+    szPath[0] = fDir ? L'|' : L'>';
+    lstrcpynW(&szPath[1], pszItem, _countof(szPath) - 1);
+
+    pNewList->m_items[pNewList->m_count] = _wcsdup(szPath);
+    pNewList->m_count++;
+    return pNewList;
+}
+
+void DIRLIST::RenameItem(LPCWSTR pszItem1, LPCWSTR pszItem2, BOOL fDir)
+{
+    if (this == NULL)
+        return;
+
+    WCHAR szPath[MAX_PATH + 1];
+    for (DWORD i = 0; i < m_count; ++i)
+    {
+        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszItem1))
+        {
+            szPath[0] = fDir ? L'|' : L'>';
+            lstrcpynW(&szPath[1], pszItem2, _countof(szPath) - 1);
+
+            free(m_items[i]);
+            m_items[i] = _wcsdup(szPath);
+            return;
+        }
+    }
+}
+
+void DIRLIST::DeleteItem(LPCWSTR pszItem, BOOL fDir)
+{
+    if (this == NULL)
+        return;
+
+    for (DWORD i = 0; i < m_count; ++i)
+    {
+        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszItem))
+        {
+            free(m_items[i]);
+            m_items[i] = NULL;
+            return;
+        }
+    }
+}
+
+/*static*/ DIRLIST *
+DIRLIST::GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive)
+{
+    WCHAR szPath[MAX_PATH];
+    GetFullPathNameW(pszDir, _countof(szPath), szPath, NULL);
+
+    if (!PathIsDirectoryW(szPath))
+    {
+        delete pList;
+        return NULL;
+    }
+
+    pList = AddItem(pList, szPath, TRUE);
+
+    WIN32_FIND_DATAW find;
+    PathAppendW(szPath, L"*");
+
+    HANDLE hFind = FindFirstFileW(szPath, &find);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return pList;
+
+    do
+    {
+        if (lstrcmpW(find.cFileName, L".") == 0 ||
+            lstrcmpW(find.cFileName, L"..") == 0)
+        {
+            continue;
+        }
+
+        PathRemoveFileSpecW(szPath);
+        if (lstrlenW(szPath) + lstrlenW(find.cFileName) + 1 > MAX_PATH)
+            continue;
+        PathAppendW(szPath, find.cFileName);
+
+        if (fRecursive && (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            pList = GetDirList(pList, szPath, fRecursive);
+        }
+        else
+        {
+            pList = AddItem(pList, szPath, FALSE);
+        }
+    } while (FindNextFileW(hFind, &find));
+
+    FindClose(hFind);
+
+    return pList;
+}
+
+static DIRLIST *s_pDirList = NULL;
+
+//////////////////////////////////////////////////////////////////////////////
+// DirWatch --- directory watcher using ReadDirectoryChangesW
+
+static HANDLE s_hThread = NULL;
+static BOOL s_fTerminateAll = FALSE;
+
+static unsigned __stdcall DirWatchThreadFuncAPC(void *)
+{
+    while (!s_fTerminateAll)
+    {
+        SleepEx(INFINITE, TRUE);
+    }
+    return 0;
+}
+
+#define BUFFER_SIZE 0x1000
+static BYTE s_abBuffer[BUFFER_SIZE];
+
+class DirWatch
+{
+public:
+    HANDLE m_hDir;
+    WCHAR m_szDir[MAX_PATH];
+    BOOL m_fDeadWatch;
+    BOOL m_fRecursive;
+    OVERLAPPED m_overlapped; // for async I/O
+
+    static DirWatch *Create(LPCWSTR pszDir, BOOL fSubTree = FALSE)
+    {
+        DirWatch *pDirWatch = new DirWatch(pszDir, fSubTree);
+        if (pDirWatch->m_hDir == INVALID_HANDLE_VALUE)
+        {
+            delete pDirWatch;
+            pDirWatch = NULL;
+        }
+        return pDirWatch;
+    }
+
+    ~DirWatch()
+    {
+        if (m_hDir != INVALID_HANDLE_VALUE && m_hDir != NULL)
+            CloseHandle(m_hDir);
+    }
+
+protected:
+    DirWatch(LPCWSTR pszDir, BOOL fSubTree)
+    {
+        m_fDeadWatch = FALSE;
+        m_fRecursive = fSubTree;
+
+        lstrcpynW(m_szDir, pszDir, MAX_PATH);
+
+        m_hDir = CreateFileW(pszDir, FILE_LIST_DIRECTORY,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                             NULL, OPEN_EXISTING,
+                             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
+                             NULL);
+    }
+};
+
+static BOOL _BeginRead(DirWatch *pDirWatch);
+
+static void NTAPI _AddDirectoryProcAPC(ULONG_PTR Parameter)
+{
+    DirWatch *pDirWatch = (DirWatch *)Parameter;
+    assert(pDirWatch != NULL);
+
+    _BeginRead(pDirWatch);
+}
+
+static void NTAPI _RequestTerminationAPC(ULONG_PTR Parameter)
+{
+    DirWatch *pDirWatch = (DirWatch *)Parameter;
+    assert(pDirWatch != NULL);
+
+    pDirWatch->m_fDeadWatch = TRUE;
+    CancelIo(pDirWatch->m_hDir);
+}
+
+static void NTAPI _RequestAllTerminationAPC(ULONG_PTR Parameter)
+{
+    s_fTerminateAll = TRUE;
+}
+
+static DWORD
+TranslateActionToEvent(DWORD Action, BOOL fDir)
+{
+    switch (Action)
+    {
+        case FILE_ACTION_ADDED:
+            return (fDir ? SHCNE_MKDIR : SHCNE_CREATE);
+
+        case FILE_ACTION_REMOVED:
+            return (fDir ? SHCNE_RMDIR : SHCNE_DELETE);
+
+        case FILE_ACTION_MODIFIED:
+            return (fDir ? SHCNE_UPDATEDIR : SHCNE_UPDATEITEM);
+
+        case FILE_ACTION_RENAMED_OLD_NAME:
+            break;
+
+        case FILE_ACTION_RENAMED_NEW_NAME:
+            return (fDir ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM);
+
+        default:
+            break;
+    }
+
+    return 0;
+}
+
+static void _ProcessNotification(DirWatch *pDirWatch)
+{
+    PFILE_NOTIFY_INFORMATION pInfo = (PFILE_NOTIFY_INFORMATION)s_abBuffer;
+    WCHAR szName[MAX_PATH], szPath[MAX_PATH], szTempPath[MAX_PATH];
+    DWORD dwEvent, cbName;
+    LPWSTR psz1, psz2;
+    BOOL fDir;
+
+    szPath[0] = szTempPath[0] = 0;
+    for (;;)
+    {
+        // get name
+        // NOTE: FILE_NOTIFY_INFORMATION.FileName is not null-terminated.
+        cbName = pInfo->FileNameLength;
+        if (sizeof(szName) - sizeof(UNICODE_NULL) < cbName)
+        {
+            break;
+        }
+        ZeroMemory(szName, sizeof(szName));
+        CopyMemory(szName, pInfo->FileName, cbName);
+
+        if (pDirWatch->m_fRecursive)
+        {
+            SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_INTERRUPT, SHCNF_PATHW,
+                           pDirWatch->m_szDir, NULL);
+
+            if (pInfo->NextEntryOffset == 0)
+                break;
+
+            // get next
+            pInfo = (PFILE_NOTIFY_INFORMATION)((LPBYTE)pInfo + pInfo->NextEntryOffset);
+            continue;
+        }
+
+        // get full path
+        lstrcpynW(szPath, pDirWatch->m_szDir, _countof(szPath));
+        PathAppendW(szPath, szName);
+
+        // convert action to event
+        fDir = PathIsRootW(szPath) || PathIsDirectoryW(szPath);
+        dwEvent = TranslateActionToEvent(pInfo->Action, fDir);
+
+        if (!fDir && dwEvent == SHCNE_DELETE)
+        {
+            if (s_pDirList && s_pDirList->Contains(szPath, TRUE))
+            {
+                fDir = TRUE;
+                dwEvent = SHCNE_RMDIR;
+            }
+        }
+
+        switch (dwEvent)
+        {
+            case SHCNE_MKDIR:
+                s_pDirList = DIRLIST::AddItem(s_pDirList, szPath, TRUE);
+                break;
+            case SHCNE_CREATE:
+                s_pDirList = DIRLIST::AddItem(s_pDirList, szPath, FALSE);
+                break;
+            case SHCNE_RENAMEFOLDER:
+                s_pDirList->RenameItem(szTempPath, szPath, TRUE);
+                break;
+            case SHCNE_RENAMEITEM:
+                s_pDirList->RenameItem(szTempPath, szPath, FALSE);
+                break;
+            case SHCNE_RMDIR:
+                s_pDirList->DeleteItem(szPath, TRUE);
+                break;
+        }
+
+        if (dwEvent)
+        {
+            // notify
+            if (pInfo->Action == FILE_ACTION_RENAMED_NEW_NAME)
+            {
+                psz1 = szTempPath;
+                psz2 = szPath;
+            }
+            else
+            {
+                psz1 = szPath;
+                psz2 = NULL;
+            }
+            SHChangeNotify(dwEvent | SHCNE_INTERRUPT, SHCNF_PATHW, psz1, psz2);
+        }
+        else
+        {
+            if (pInfo->Action == FILE_ACTION_RENAMED_OLD_NAME)
+            {
+                lstrcpynW(szTempPath, szPath, MAX_PATH);
+            }
+        }
+
+        if (pInfo->NextEntryOffset == 0)
+            break;
+
+        // get next
+        pInfo = (PFILE_NOTIFY_INFORMATION)((LPBYTE)pInfo + pInfo->NextEntryOffset);
+    }
+}
+
+static void CALLBACK
+_NotificationCompletion(DWORD dwErrorCode,
+                        DWORD dwNumberOfBytesTransfered,
+                        LPOVERLAPPED lpOverlapped)
+{
+    DirWatch *pDirWatch = (DirWatch *)lpOverlapped->hEvent;
+    assert(pDirWatch != NULL);
+
+    if (dwErrorCode == ERROR_INVALID_FUNCTION)
+    {
+        return;
+    }
+
+    if (dwErrorCode == ERROR_OPERATION_ABORTED ||
+        pDirWatch->m_fDeadWatch ||
+        dwNumberOfBytesTransfered == 0)
+    {
+        delete pDirWatch;
+        return;
+    }
+
+    _ProcessNotification(pDirWatch);
+
+    _BeginRead(pDirWatch);
+}
+
+// convert events to notification filter
+static DWORD
+GetFilterFromEvents(DWORD fEvents)
+{
+    return (FILE_NOTIFY_CHANGE_FILE_NAME |
+            FILE_NOTIFY_CHANGE_DIR_NAME |
+            FILE_NOTIFY_CHANGE_CREATION);
+}
+
+static BOOL _BeginRead(DirWatch *pDirWatch)
+{
+    assert(pDirWatch != NULL);
+
+    if (pDirWatch->m_fDeadWatch)
+        return FALSE;
+
+    ZeroMemory(&pDirWatch->m_overlapped, sizeof(pDirWatch->m_overlapped));
+    pDirWatch->m_overlapped.hEvent = (HANDLE)pDirWatch;
+
+    DWORD dwFilter = GetFilterFromEvents(SHCNE_ALLEVENTS);
+    if (!ReadDirectoryChangesW(pDirWatch->m_hDir, s_abBuffer, sizeof(s_abBuffer),
+                               pDirWatch->m_fRecursive, dwFilter, NULL,
+                               &pDirWatch->m_overlapped, _NotificationCompletion))
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static DirWatch *
+CreateDirWatch(LPREGENTRY pRegEntry)
+{
+    if (pRegEntry->ibPidl == 0 || pRegEntry->fEvents == 0)
+        return NULL;
+
+    if (!(pRegEntry->fSources & SHCNRF_InterruptLevel))
+        return NULL;
+
+    // get the path
+    WCHAR szPath[MAX_PATH];
+    LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
+    if (!SHGetPathFromIDListW(pidl, szPath) ||
+        (!PathIsDirectoryW(szPath) && !PathIsRootW(szPath)))
+    {
+        return NULL;
+    }
+
+    DirWatch *pDirWatch = DirWatch::Create(szPath, FALSE);
+    if (pDirWatch == NULL)
+        return NULL;
+
+    return pDirWatch;
+}
+
+//////////////////////////////////////////////////////////////////////////////
 
 // notification target item
 struct ITEM
@@ -18,6 +486,7 @@ struct ITEM
     DWORD dwUserPID;    // The user PID; that is the process ID of the target window.
     HANDLE hRegEntry;   // The registration entry.
     HWND hwndBroker;    // Client broker window (if any).
+    DirWatch *pDirWatch; // for filesystem notification (SHCNRF_InterruptLevel)
 };
 
 typedef CWinTraits <
@@ -53,6 +522,7 @@ public:
     LRESULT OnDeliverNotification(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     DECLARE_NOT_AGGREGATABLE(CChangeNotifyServer)
 
@@ -69,13 +539,15 @@ public:
         MESSAGE_HANDLER(CN_DELIVER_NOTIFICATION, OnDeliverNotification)
         MESSAGE_HANDLER(CN_SUSPEND_RESUME, OnSuspendResume)
         MESSAGE_HANDLER(CN_UNREGISTER_PROCESS, OnRemoveByPID);
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroy);
     END_MSG_MAP()
 
 private:
     UINT m_nNextRegID;
     CSimpleArray<ITEM> m_items;
 
-    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndBroker);
+    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndBroker,
+                 DirWatch *pDirWatch);
     BOOL RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID);
     void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
     void DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndBroker);
@@ -94,7 +566,8 @@ CChangeNotifyServer::~CChangeNotifyServer()
 {
 }
 
-BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndBroker)
+BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry,
+                                  HWND hwndBroker, DirWatch *pDirWatch)
 {
     // find the empty room
     for (INT i = 0; i < m_items.GetSize(); ++i)
@@ -106,12 +579,13 @@ BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry
             m_items[i].dwUserPID = dwUserPID;
             m_items[i].hRegEntry = hRegEntry;
             m_items[i].hwndBroker = hwndBroker;
+            m_items[i].pDirWatch = pDirWatch;
             return TRUE;
         }
     }
 
     // no empty room found
-    ITEM item = { nRegID, dwUserPID, hRegEntry, hwndBroker };
+    ITEM item = { nRegID, dwUserPID, hRegEntry, hwndBroker, pDirWatch };
     m_items.Add(item);
     return TRUE;
 }
@@ -119,10 +593,19 @@ BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry
 void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndBroker)
 {
     // destroy broker if any and if first time
-    if (item.hwndBroker && item.hwndBroker != *phwndBroker)
+    HWND hwndBroker = item.hwndBroker;
+    item.hwndBroker = NULL;
+    if (hwndBroker && hwndBroker != *phwndBroker)
     {
-        ::DestroyWindow(item.hwndBroker);
-        *phwndBroker = item.hwndBroker;
+        ::DestroyWindow(hwndBroker);
+        *phwndBroker = hwndBroker;
+    }
+
+    DirWatch *pDirWatch = item.pDirWatch;
+    item.pDirWatch = NULL;
+    if (pDirWatch && s_hThread)
+    {
+        QueueUserAPC(_RequestTerminationAPC, s_hThread, (ULONG_PTR)pDirWatch);
     }
 
     // free
@@ -131,6 +614,7 @@ void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndB
     item.dwUserPID = 0;
     item.hRegEntry = NULL;
     item.hwndBroker = NULL;
+    item.pDirWatch = NULL;
 }
 
 BOOL CChangeNotifyServer::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
@@ -204,11 +688,30 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
         return FALSE;
     }
 
+    DirWatch *pDirWatch = CreateDirWatch(pRegEntry);
+    if (pDirWatch)
+    {
+        if (s_hThread == NULL)
+        {
+            unsigned tid;
+            s_fTerminateAll = FALSE;
+            s_hThread = (HANDLE)_beginthreadex(NULL, 0, DirWatchThreadFuncAPC, NULL, 0, &tid);
+        }
+        if (s_hThread == NULL)
+        {
+            pRegEntry->nRegID = INVALID_REG_ID;
+            SHUnlockShared(pRegEntry);
+            return FALSE;
+        }
+
+        QueueUserAPC(_AddDirectoryProcAPC, s_hThread, (ULONG_PTR)pDirWatch);
+    }
+
     // unlock the registry entry
     SHUnlockShared(pRegEntry);
 
     // add an ITEM
-    return AddItem(m_nNextRegID, dwUserPID, hNewEntry, hwndBroker);
+    return AddItem(m_nNextRegID, dwUserPID, hNewEntry, hwndBroker, pDirWatch);
 }
 
 // Message CN_UNREGISTER: Unregister registration entries.
@@ -271,6 +774,15 @@ LRESULT CChangeNotifyServer::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lPar
     DWORD dwOwnerPID, dwUserPID = (DWORD)wParam;
     GetWindowThreadProcessId(m_hWnd, &dwOwnerPID);
     RemoveItemsByProcess(dwOwnerPID, dwUserPID);
+    return 0;
+}
+
+LRESULT CChangeNotifyServer::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (s_hThread)
+    {
+        QueueUserAPC(_RequestAllTerminationAPC, s_hThread, (ULONG_PTR)NULL);
+    }
     return 0;
 }
 
