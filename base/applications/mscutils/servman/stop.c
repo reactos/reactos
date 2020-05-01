@@ -24,7 +24,7 @@ DoStopService(_In_z_ LPWSTR ServiceName,
     DWORD BytesNeeded;
     DWORD StartTime;
     DWORD WaitTime;
-    DWORD Timeout;    
+    DWORD Timeout;
     DWORD dwResult = ERROR_SUCCESS;
     
     hSCManager = OpenSCManagerW(NULL,

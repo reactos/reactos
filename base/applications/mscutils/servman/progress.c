@@ -85,7 +85,7 @@ ResetProgressDialog(HWND hDlg,
 
 unsigned int __stdcall ActionThread(void* Param)
 {
-    PPROGRESS_DATA ProgressData = (PPROGRESS_DATA)Param;   
+    PPROGRESS_DATA ProgressData = (PPROGRESS_DATA)Param;
     DWORD dwResult;
 
     if (ProgressData->Action == ACTION_START)

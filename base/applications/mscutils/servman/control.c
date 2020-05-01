@@ -133,7 +133,7 @@ DoControlService(LPWSTR ServiceName,
                     /* It's not, make sure we haven't exceeded our wait time */
                     if (GetTickCount() >= StartTickCount + MaxWait)
                     {
-                        /* We have, give up */                        
+                        /* We have, give up */
                         DPRINT1("Timeout\n");
                         dwResult = ERROR_SERVICE_REQUEST_TIMEOUT;
                         break;
@@ -144,7 +144,7 @@ DoControlService(LPWSTR ServiceName,
         else
         {
             dwResult = GetLastError();
-        }    
+        }
 
         if (ServiceStatus.dwCurrentState == ReqState)
         {
