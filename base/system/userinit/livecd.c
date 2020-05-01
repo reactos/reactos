@@ -20,7 +20,7 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     BITMAP logoBitmap;
     BITMAP maskBitmap;
     BITMAPINFO bmpi;
-    HDC hDC = GetDC(hwndDlg);
+    HDC hDC;
     HDC hDCLogo = CreateCompatibleDC(NULL);
     HDC hDCMask = CreateCompatibleDC(NULL);
     HBITMAP hMask, hLogo, hAlphaLogo = NULL;
@@ -33,13 +33,17 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     hLogo = (HBITMAP)LoadImageW(hInstance, MAKEINTRESOURCEW(IDB_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
     hMask = (HBITMAP)LoadImageW(hInstance, MAKEINTRESOURCEW(IDB_ROSMASK), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-    if (hLogo != NULL && hMask != NULL)
+    if (hLogo != NULL && hMask != NULL && hDCLogo != NULL && hDCMask != NULL)
     {
-        GetObject(hLogo, sizeof(logoBitmap), &logoBitmap);
-        GetObject(hMask, sizeof(maskBitmap), &maskBitmap);
-
-        if (logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth)
+        GetObject(hLogo, sizeof(BITMAP), &logoBitmap);
+        GetObject(hMask, sizeof(BITMAP), &maskBitmap);
+        hDC = GetDC(hwndDlg);
+		
+        if (logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth || hDC == NULL)
             goto Cleanup;
+
+        pImgInfo->cxSource = logoBitmap.bmWidth;
+        pImgInfo->cySource = logoBitmap.bmHeight;
 
         bmpi.bmiHeader.biSize = sizeof(BITMAPINFO);
         bmpi.bmiHeader.biWidth = logoBitmap.bmWidth;
@@ -81,10 +85,11 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     }
 
 Cleanup:
-    DeleteObject(hMask);
-    DeleteObject(hLogo);
-    DeleteDC(hDCMask);
-    DeleteDC(hDCLogo);
+    if (hLogo != NULL) DeleteObject(hLogo);
+    if (hMask != NULL) DeleteObject(hMask);
+    if (hDCLogo != NULL) DeleteDC(hDCLogo);
+    if (hDCMask != NULL) DeleteDC(hDCMask);
+    if (hDC != NULL) ReleaseDC(hwndDlg, hDC);
 }
 
 

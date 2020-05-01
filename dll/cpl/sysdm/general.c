@@ -72,8 +72,8 @@ static VOID InitLogo(HWND hwndDlg)
     ZeroMemory(pImgInfo, sizeof(*pImgInfo));
     ZeroMemory(&bmpi, sizeof(bmpi));
 
-    hLogo = (HBITMAP)LoadImage(hApplet, MAKEINTRESOURCE(IDB_ROSBMP), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-    hMask = (HBITMAP)LoadImage(hApplet, MAKEINTRESOURCE(IDB_ROSMASK), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+    hLogo = (HBITMAP)LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_ROSBMP), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+    hMask = (HBITMAP)LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_ROSMASK), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
     if (hLogo != NULL && hMask != NULL && hDCLogo != NULL && hDCMask != NULL)
     {
@@ -81,13 +81,8 @@ static VOID InitLogo(HWND hwndDlg)
         GetObject(hMask, sizeof(BITMAP), &maskBitmap);
         hDC = GetDC(hwndDlg);
 
-        if(logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth || hDC == NULL)
-        {
-            DeleteDC(hDCLogo);
-            DeleteDC(hDCMask);
-            if (hDC != NULL) ReleaseDC(hwndDlg, hDC);
-            return;
-        }
+        if (logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth || hDC == NULL)
+            goto Cleanup;
 
         pImgInfo->cxSource = logoBitmap.bmWidth;
         pImgInfo->cySource = logoBitmap.bmHeight;
@@ -100,22 +95,17 @@ static VOID InitLogo(HWND hwndDlg)
         bmpi.bmiHeader.biCompression = BI_RGB;
         bmpi.bmiHeader.biSizeImage = 4 * logoBitmap.bmWidth * logoBitmap.bmHeight;
 
-        hAlphaLogo = CreateDIBSection(hDC, &bmpi, DIB_RGB_COLORS, (PVOID*)&pBits, 0, 0);
-
-        if(!hAlphaLogo)
-        {
-            DeleteDC(hDCLogo);
-            DeleteDC(hDCMask);
-            ReleaseDC(hwndDlg, hDC);
-            return;
-        }
+        /* Create a premultiplied bitmap */
+		hAlphaLogo = CreateDIBSection(hDC, &bmpi, DIB_RGB_COLORS, (PVOID*)&pBits, 0, 0);
+        if (!hAlphaLogo)
+            goto Cleanup;
 
         SelectObject(hDCLogo, hLogo);
         SelectObject(hDCMask, hMask);
 
-        for(line = logoBitmap.bmHeight - 1; line >= 0; line--)
+        for (line = logoBitmap.bmHeight - 1; line >= 0; line--)
         {
-            for(column = 0; column < logoBitmap.bmWidth; column++)
+            for (column = 0; column < logoBitmap.bmWidth; column++)
             {
                 COLORREF alpha = GetPixel(hDCMask, column, line) & 0xFF;
                 COLORREF Color = GetPixel(hDCLogo, column, line);
@@ -125,22 +115,23 @@ static VOID InitLogo(HWND hwndDlg)
                 g = GetGValue(Color) * alpha / 255;
                 b = GetBValue(Color) * alpha / 255;
 
-                *pBits++ =  b | g << 8 | r << 16 | alpha << 24;
+                *pBits++ = b | g << 8 | r << 16 | alpha << 24;
             }
-          }
-    }
+        }
+    
+		pImgInfo->hBitmap = hAlphaLogo;
+		pImgInfo->cxSource = logoBitmap.bmWidth;
+		pImgInfo->cySource = logoBitmap.bmHeight;
+		pImgInfo->iBits = logoBitmap.bmBitsPixel;
+		pImgInfo->iPlanes = logoBitmap.bmPlanes;	
+	}
 
-    pImgInfo->hBitmap = hAlphaLogo;
-    pImgInfo->cxSource = logoBitmap.bmWidth;
-    pImgInfo->cySource = logoBitmap.bmHeight;
-    pImgInfo->iBits = logoBitmap.bmBitsPixel;
-    pImgInfo->iPlanes = logoBitmap.bmPlanes;
-
+Cleanup:
     if (hLogo != NULL) DeleteObject(hLogo);
     if (hMask != NULL) DeleteObject(hMask);
     if (hDCLogo != NULL) DeleteDC(hDCLogo);
     if (hDCMask != NULL) DeleteDC(hDCMask);
-    ReleaseDC(hwndDlg, hDC);
+    if (hDC != NULL) ReleaseDC(hwndDlg, hDC);
 }
 
 LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
