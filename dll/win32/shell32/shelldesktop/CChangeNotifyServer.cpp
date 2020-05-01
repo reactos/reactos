@@ -26,17 +26,7 @@ struct DIRLIST
     static DIRLIST *
     GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive);
 
-    ~DIRLIST()
-    {
-        if (this)
-        {
-            for (DWORD i = 0; i < m_count; ++i)
-            {
-                free(m_items[i]);
-            }
-            free(this);
-        }
-    }
+    ~DIRLIST();
 
     BOOL Contains(LPCWSTR pszPath, BOOL fDir) const;
 
@@ -48,6 +38,18 @@ protected:
     {
     }
 };
+
+DIRLIST::~DIRLIST()
+{
+    if (this)
+    {
+        for (DWORD i = 0; i < m_count; ++i)
+        {
+            free(m_items[i]);
+        }
+        free(this);
+    }
+}
 
 BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
 {
