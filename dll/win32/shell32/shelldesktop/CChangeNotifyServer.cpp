@@ -105,7 +105,7 @@ void DIRLIST::RenameItem(LPCWSTR pszItem1, LPCWSTR pszItem2, BOOL fDir)
     WCHAR szPath[MAX_PATH + 1];
     for (DWORD i = 0; i < m_count; ++i)
     {
-        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszItem1))
+        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszItem1) == 0)
         {
             szPath[0] = fDir ? L'|' : L'>';
             lstrcpynW(&szPath[1], pszItem2, _countof(szPath) - 1);
@@ -124,7 +124,7 @@ void DIRLIST::DeleteItem(LPCWSTR pszItem, BOOL fDir)
 
     for (DWORD i = 0; i < m_count; ++i)
     {
-        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszItem))
+        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszItem) == 0)
         {
             free(m_items[i]);
             m_items[i] = NULL;
