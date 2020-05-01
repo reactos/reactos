@@ -270,6 +270,8 @@ static void NTAPI _RequestTerminationAPC(ULONG_PTR Parameter)
 static void NTAPI _RequestAllTerminationAPC(ULONG_PTR Parameter)
 {
     s_fTerminateAll = TRUE;
+    CloseHandle(s_hThread);
+    s_hThread = NULL;
 }
 
 static DWORD
