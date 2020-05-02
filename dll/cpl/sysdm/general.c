@@ -69,6 +69,9 @@ static VOID InitLogo(HWND hwndDlg)
     COLORREF *pBits;
     INT line, column;
 
+    if (hDC == NULL)
+        goto Cleanup;
+
     ZeroMemory(pImgInfo, sizeof(*pImgInfo));
     ZeroMemory(&bmpi, sizeof(bmpi));
 
@@ -77,15 +80,11 @@ static VOID InitLogo(HWND hwndDlg)
 
     if (hLogo != NULL && hMask != NULL && hDCLogo != NULL && hDCMask != NULL)
     {
-        GetObject(hLogo, sizeof(BITMAP), &logoBitmap);
-        GetObject(hMask, sizeof(BITMAP), &maskBitmap);
-        hDC = GetDC(hwndDlg);
+        GetObject(hLogo, sizeof(logoBitmap), &logoBitmap);
+        GetObject(hMask, sizeof(maskBitmap), &maskBitmap);
 
         if (logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth || hDC == NULL)
             goto Cleanup;
-
-        pImgInfo->cxSource = logoBitmap.bmWidth;
-        pImgInfo->cySource = logoBitmap.bmHeight;
 
         bmpi.bmiHeader.biSize = sizeof(BITMAPINFO);
         bmpi.bmiHeader.biWidth = logoBitmap.bmWidth;
@@ -96,7 +95,7 @@ static VOID InitLogo(HWND hwndDlg)
         bmpi.bmiHeader.biSizeImage = 4 * logoBitmap.bmWidth * logoBitmap.bmHeight;
 
         /* Create a premultiplied bitmap */
-		hAlphaLogo = CreateDIBSection(hDC, &bmpi, DIB_RGB_COLORS, (PVOID*)&pBits, 0, 0);
+        hAlphaLogo = CreateDIBSection(hDC, &bmpi, DIB_RGB_COLORS, (PVOID*)&pBits, 0, 0);
         if (!hAlphaLogo)
             goto Cleanup;
 
@@ -118,13 +117,13 @@ static VOID InitLogo(HWND hwndDlg)
                 *pBits++ = b | g << 8 | r << 16 | alpha << 24;
             }
         }
-    
-		pImgInfo->hBitmap = hAlphaLogo;
-		pImgInfo->cxSource = logoBitmap.bmWidth;
-		pImgInfo->cySource = logoBitmap.bmHeight;
-		pImgInfo->iBits = logoBitmap.bmBitsPixel;
-		pImgInfo->iPlanes = logoBitmap.bmPlanes;	
-	}
+
+        pImgInfo->hBitmap = hAlphaLogo;
+        pImgInfo->cxSource = logoBitmap.bmWidth;
+        pImgInfo->cySource = logoBitmap.bmHeight;
+        pImgInfo->iBits = logoBitmap.bmBitsPixel;
+        pImgInfo->iPlanes = logoBitmap.bmPlanes;
+    }
 
 Cleanup:
     if (hLogo != NULL) DeleteObject(hLogo);
