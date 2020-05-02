@@ -154,7 +154,7 @@ DIRLIST::GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive)
     GetFullPathNameW(pszDir, _countof(szPath), szPath, NULL);
 
     // is it a directory?
-    if (!PathIsDirectoryW(szPath) && !PathIsRootW(szPath))
+    if (!PathIsDirectoryW(szPath))
     {
         ERR("Not a directory\n");
         delete pList;
@@ -186,7 +186,10 @@ DIRLIST::GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive)
         // build a path
         PathRemoveFileSpecW(szPath);
         if (lstrlenW(szPath) + lstrlenW(find.cFileName) + 1 > MAX_PATH)
+        {
+            ERR("szPath is too long\n");
             continue;
+        }
         PathAppendW(szPath, find.cFileName);
 
         // add the path and do recurse
@@ -311,23 +314,17 @@ ConvertActionToEvent(DWORD Action, BOOL fDir)
     {
         case FILE_ACTION_ADDED:
             return (fDir ? SHCNE_MKDIR : SHCNE_CREATE);
-
         case FILE_ACTION_REMOVED:
             return (fDir ? SHCNE_RMDIR : SHCNE_DELETE);
-
         case FILE_ACTION_MODIFIED:
             return (fDir ? SHCNE_UPDATEDIR : SHCNE_UPDATEITEM);
-
         case FILE_ACTION_RENAMED_OLD_NAME:
             break;
-
         case FILE_ACTION_RENAMED_NEW_NAME:
             return (fDir ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM);
-
         default:
             break;
     }
-
     return 0;
 }
 
@@ -346,13 +343,13 @@ static void _ProcessNotification(DirWatch *pDirWatch)
     for (;;)
     {
         // get name (relative from pDirWatch->m_szDir)
-        // NOTE: FILE_NOTIFY_INFORMATION.FileName is not null-terminated.
         cbName = pInfo->FileNameLength;
         if (sizeof(szName) - sizeof(UNICODE_NULL) < cbName)
         {
             ERR("pInfo->FileName is longer than szName\n");
             break;
         }
+        // NOTE: FILE_NOTIFY_INFORMATION.FileName is not null-terminated.
         ZeroMemory(szName, sizeof(szName));
         CopyMemory(szName, pInfo->FileName, cbName);
 
@@ -383,7 +380,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         }
 
         // convert action to event
-        fDir = PathIsRootW(szPath) || PathIsDirectoryW(szPath);
+        fDir = PathIsDirectoryW(szPath);
         dwEvent = ConvertActionToEvent(pInfo->Action, fDir);
 
         // get the directory list of pDirWatch
@@ -491,7 +488,7 @@ _NotificationCompletion(DWORD dwErrorCode,
     // This likely means overflow, so force whole directory refresh.
     if (dwNumberOfBytesTransfered == 0)
     {
-        // do notify
+        // do notify a SHCNE_UPDATEDIR
         SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_INTERRUPT, SHCNF_PATHW,
                        pDirWatch->m_szDir, NULL);
     }
