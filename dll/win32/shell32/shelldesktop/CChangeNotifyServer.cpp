@@ -934,8 +934,15 @@ BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntr
     WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
     INT cch, cch1, cch2;
 
+    // check SHCNE_INTERRUPT and SHCNRF_InterruptLevel
+    if (pTicket->uFlags & SHCNE_INTERRUPT)
+    {
+        if (!(pRegEntry->fSources & SHCNRF_InterruptLevel))
+            return FALSE;
+    }
+
     if (pRegEntry->ibPidl == 0)
-        return TRUE;
+        return TRUE; // there is no PIDL
 
     // get the stored pidl
     pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
