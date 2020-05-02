@@ -221,7 +221,7 @@ static unsigned __stdcall DirWatchThreadFuncAPC(void *)
 }
 
 #define BUFFER_SIZE 0x1000
-static BYTE s_abBuffer[BUFFER_SIZE];
+static BYTE s_buffer[BUFFER_SIZE];
 
 class DirWatch
 {
@@ -330,7 +330,7 @@ ConvertActionToEvent(DWORD Action, BOOL fDir)
 // Notify a filesystem notification using pDirWatch.
 static void _ProcessNotification(DirWatch *pDirWatch)
 {
-    PFILE_NOTIFY_INFORMATION pInfo = (PFILE_NOTIFY_INFORMATION)s_abBuffer;
+    PFILE_NOTIFY_INFORMATION pInfo = (PFILE_NOTIFY_INFORMATION)s_buffer;
     WCHAR szName[MAX_PATH], szPath[MAX_PATH], szTempPath[MAX_PATH];
     DWORD dwEvent, cbName;
     LPWSTR psz1, psz2;
@@ -338,6 +338,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
 
     szPath[0] = szTempPath[0] = 0;
 
+    // for each info in s_buffer
     for (;;)
     {
         // get name (relative from pDirWatch->m_szDir)
@@ -517,13 +518,13 @@ static BOOL _BeginRead(DirWatch *pDirWatch)
         return FALSE; // the watch is dead
 
     // initialize the buffer and the overlapped
-    ZeroMemory(s_abBuffer, sizeof(s_abBuffer));
+    ZeroMemory(s_buffer, sizeof(s_buffer));
     ZeroMemory(&pDirWatch->m_overlapped, sizeof(pDirWatch->m_overlapped));
     pDirWatch->m_overlapped.hEvent = (HANDLE)pDirWatch;
 
     // start the directory watch
     DWORD dwFilter = GetFilterFromEvents(SHCNE_ALLEVENTS);
-    if (!ReadDirectoryChangesW(pDirWatch->m_hDir, s_abBuffer, sizeof(s_abBuffer),
+    if (!ReadDirectoryChangesW(pDirWatch->m_hDir, s_buffer, sizeof(s_buffer),
                                pDirWatch->m_fRecursive, dwFilter, NULL,
                                &pDirWatch->m_overlapped, _NotificationCompletion))
     {
