@@ -281,7 +281,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
 
     /* Always create a BIOS disk controller, no matter if we have floppy drives or not */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
-           2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+           3 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
@@ -293,19 +293,28 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
     /* Initialize resource descriptor */
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
-    PartialResourceList->Count = 3;
+    PartialResourceList->Count = 4;
 
-    /* Set IO Port */
+    /* Set IO Port 0x03F0+ */
     PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
     PartialDescriptor->Type = CmResourceTypePort;
     PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
     PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
     PartialDescriptor->u.Port.Start.LowPart = 0x03F0;
     PartialDescriptor->u.Port.Start.HighPart = 0x0;
-    PartialDescriptor->u.Port.Length = 8;
+    PartialDescriptor->u.Port.Length = 6;
+
+    /* Set IO Port 0x03F7 */
+    PartialDescriptor = &PartialResourceList->PartialDescriptors[1];
+    PartialDescriptor->Type = CmResourceTypePort;
+    PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+    PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
+    PartialDescriptor->u.Port.Start.LowPart = 0x03F7;
+    PartialDescriptor->u.Port.Start.HighPart = 0x0;
+    PartialDescriptor->u.Port.Length = 1;
 
     /* Set Interrupt */
-    PartialDescriptor = &PartialResourceList->PartialDescriptors[1];
+    PartialDescriptor = &PartialResourceList->PartialDescriptors[2];
     PartialDescriptor->Type = CmResourceTypeInterrupt;
     PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
     PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
@@ -314,7 +323,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
     PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
 
     /* Set DMA channel */
-    PartialDescriptor = &PartialResourceList->PartialDescriptors[2];
+    PartialDescriptor = &PartialResourceList->PartialDescriptors[3];
     PartialDescriptor->Type = CmResourceTypeDma;
     PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
     PartialDescriptor->Flags = 0;
