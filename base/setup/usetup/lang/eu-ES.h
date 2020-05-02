@@ -58,7 +58,7 @@ static MUI_ENTRY euESLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Hautatu instalazio hitzkuntza mesedez.",
+        "\x07  Hautatu instalazio hizkuntza, mesedez.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -733,7 +733,7 @@ static MUI_ENTRY euESFlushPageEntries[] =
     {
         10,
         6,
-        "Orain sistema ziurtatzen ari da data guztiak bilduta daude disko barruan.",
+        "Orain sistema ziurtatzen ari da data guztiak diskon bilduta daude.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1203,7 +1203,7 @@ static MUI_ENTRY euESConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         10,
-        "Sistema partizioak diagnostiko programak, hardware konfigurazioa, programak,",
+        "Sistema partizioak diagnostiko programak, hardware konfig., programak,",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1231,7 +1231,7 @@ static MUI_ENTRY euESConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         15,
-        "importantea partizionen, edo noizbait ziur zaude hoiek ezabatu nahi dituzula.",
+        "importantea partizionen, edo noizbait ziur zaude ezabatu nahi dituzula.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1711,7 +1711,7 @@ static MUI_ENTRY euESDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Sakatu L partizioa ezabatu.",
+        "\x07  Sakatu L partizioa ezabatzeko.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -2178,7 +2178,7 @@ MUI_STRING euESStrings[] =
     {STRING_PARTFORMAT,
     "Partizio hau izango da formatuta gero."},
     {STRING_NONFORMATTEDPART,
-    "Zu aukeratu duzu ReactOS instalatzeko Partizio berri edo ez-formatuta barruan."},
+    "Zu aukeratu duzu ReactOS instalatzeko partizio berri edo garbi barruan."},
     {STRING_NONFORMATTEDSYSTEMPART,
     "Oraindik sistema partizioa ez dago formatuta."},
     {STRING_NONFORMATTEDOTHERPART,
@@ -2264,7 +2264,7 @@ MUI_STRING euESStrings[] =
     {STRING_HDINFOPARTSELECT_2,
     "%6lu %s  Disko gogor %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
-    "Insalazioa sortu du partizio berria barruan"},
+    "Instalazioa sortu du partizio berria barruan"},
     {STRING_UNPSPACE,
     "    %sEzpartizionatu espazio%s           %6lu %s"},
     {STRING_MAXSIZE,
