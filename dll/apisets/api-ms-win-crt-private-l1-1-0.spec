@@ -641,6 +641,8 @@
 @ stub _o__scalbf
 @ stub _o__searchenv
 @ stub _o__searchenv_s
+@ cdecl -version=0x600+ _o__seh_filter_dll() msvcrt.__CppXcptFilter
+@ cdecl -version=0x600+ _o__seh_filter_exe() msvcrt._XcptFilter
 @ stub _o__set_abort_behavior
 @ stub _o__set_doserrno
 @ stub _o__set_errno
