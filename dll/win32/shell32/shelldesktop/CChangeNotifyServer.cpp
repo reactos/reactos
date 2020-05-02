@@ -536,11 +536,8 @@ CreateDirWatchFromRegEntry(LPREGENTRY pRegEntry)
     // get the path
     WCHAR szPath[MAX_PATH];
     LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
-    if (!SHGetPathFromIDListW(pidl, szPath) ||
-        (!PathIsDirectoryW(szPath) && !PathIsRootW(szPath)))
-    {
+    if (!SHGetPathFromIDListW(pidl, szPath) || !PathIsDirectoryW(szPath))
         return NULL;
-    }
 
     // create a DirWatch
     DirWatch *pDirWatch = DirWatch::Create(szPath, pRegEntry->fRecursive);
