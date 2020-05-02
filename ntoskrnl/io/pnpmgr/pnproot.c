@@ -435,6 +435,121 @@ QueryBinaryValueCallback(
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+CreateDeviceFromRegistry(
+    _Inout_ PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension,
+    _In_ PCWSTR DevicePath,
+    _In_ PCWSTR InstanceId,
+    _In_ HANDLE SubKeyHandle)
+{
+    NTSTATUS Status;
+    PPNPROOT_DEVICE Device;
+    HANDLE DeviceKeyHandle = NULL;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[4];
+    BUFFER Buffer1, Buffer2;
+
+    /* If the device already exists, there's nothing to do */
+    Status = LocateChildDevice(DeviceExtension, DevicePath, InstanceId, &Device);
+    if (Status != STATUS_NO_SUCH_DEVICE)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    /* Create a PPNPROOT_DEVICE object, and add it to the list of known devices */
+    Device = ExAllocatePoolWithTag(PagedPool, sizeof(PNPROOT_DEVICE), TAG_PNP_ROOT);
+    if (!Device)
+    {
+        DPRINT("ExAllocatePoolWithTag() failed\n");
+        Status = STATUS_NO_MEMORY;
+        goto cleanup;
+    }
+    RtlZeroMemory(Device, sizeof(PNPROOT_DEVICE));
+
+    /* Fill device ID and instance ID */
+    if (!RtlCreateUnicodeString(&Device->DeviceID, DevicePath))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed\n");
+        Status = STATUS_NO_MEMORY;
+        goto cleanup;
+    }
+
+    if (!RtlCreateUnicodeString(&Device->InstanceID, InstanceId))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed\n");
+        Status = STATUS_NO_MEMORY;
+        goto cleanup;
+    }
+
+    /* Open registry key to fill other informations */
+    Status = IopOpenRegistryKeyEx(&DeviceKeyHandle, SubKeyHandle, &Device->InstanceID, KEY_READ);
+    if (!NT_SUCCESS(Status))
+    {
+        /* If our key disappeared, let the caller go on */
+        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                &Device->InstanceID, Status);
+        Status = STATUS_SUCCESS;
+        goto cleanup;
+    }
+
+    /* Fill information from the device instance key */
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].QueryRoutine = QueryStringCallback;
+    QueryTable[0].Name = L"DeviceDesc";
+    QueryTable[0].EntryContext = &Device->DeviceDescription;
+
+    RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                           (PCWSTR)DeviceKeyHandle,
+                           QueryTable,
+                           NULL,
+                           NULL);
+
+    /* Fill information from the LogConf subkey */
+    Buffer1.Data = (PVOID *)&Device->ResourceRequirementsList;
+    Buffer1.Length = NULL;
+    Buffer2.Data = (PVOID *)&Device->ResourceList;
+    Buffer2.Length = &Device->ResourceListSize;
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_SUBKEY;
+    QueryTable[0].Name = L"LogConf";
+    QueryTable[1].QueryRoutine = QueryBinaryValueCallback;
+    QueryTable[1].Name = L"BasicConfigVector";
+    QueryTable[1].EntryContext = &Buffer1;
+    QueryTable[2].QueryRoutine = QueryBinaryValueCallback;
+    QueryTable[2].Name = L"BootConfig";
+    QueryTable[2].EntryContext = &Buffer2;
+
+    if (!NT_SUCCESS(RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                                           (PCWSTR)DeviceKeyHandle,
+                                           QueryTable,
+                                           NULL,
+                                           NULL)))
+    {
+        /* Non-fatal error */
+        DPRINT1("Failed to read the LogConf key for %S\\%S\n", DevicePath, InstanceId);
+    }
+
+    /* Insert the newly created device into the list */
+    InsertTailList(&DeviceExtension->DeviceListHead,
+                   &Device->ListEntry);
+    DeviceExtension->DeviceListCount++;
+    Device = NULL;
+
+cleanup:
+    if (DeviceKeyHandle != NULL)
+    {
+        ZwClose(DeviceKeyHandle);
+    }
+    if (Device != NULL)
+    {
+        /* We have a device that has not been added to device list. We need to clean it up */
+        RtlFreeUnicodeString(&Device->DeviceID);
+        RtlFreeUnicodeString(&Device->InstanceID);
+        ExFreePoolWithTag(Device, TAG_PNP_ROOT);
+    }
+    return Status;
+}
+
 static NTSTATUS
 EnumerateDevices(
     IN PDEVICE_OBJECT DeviceObject)
@@ -445,15 +560,11 @@ EnumerateDevices(
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\" REGSTR_PATH_SYSTEMENUM L"\\" REGSTR_KEY_ROOTENUM);
     UNICODE_STRING SubKeyName;
     WCHAR DevicePath[MAX_PATH + 1];
-    RTL_QUERY_REGISTRY_TABLE QueryTable[4];
-    PPNPROOT_DEVICE Device = NULL;
     HANDLE KeyHandle = NULL;
     HANDLE SubKeyHandle = NULL;
-    HANDLE DeviceKeyHandle = NULL;
     ULONG KeyInfoSize, SubKeyInfoSize;
     ULONG ResultSize;
     ULONG Index1, Index2;
-    BUFFER Buffer1, Buffer2;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     DPRINT("EnumerateDevices(FDO %p)\n", DeviceObject);
@@ -596,90 +707,15 @@ EnumerateDevices(
 
             _snwprintf(DevicePath, sizeof(DevicePath) / sizeof(WCHAR),
                        L"%s\\%s", REGSTR_KEY_ROOTENUM, KeyInfo->Name);
-            DPRINT("Found device %S\\%s!\n", DevicePath, SubKeyInfo->Name);
-            if (LocateChildDevice(DeviceExtension, DevicePath, SubKeyInfo->Name, &Device) == STATUS_NO_SUCH_DEVICE)
+            DPRINT("Found device %S\\%S!\n", DevicePath, SubKeyInfo->Name);
+            Status = CreateDeviceFromRegistry(DeviceExtension,
+                                              DevicePath,
+                                              SubKeyInfo->Name,
+                                              SubKeyHandle);
+            if (!NT_SUCCESS(Status))
             {
-                /* Create a PPNPROOT_DEVICE object, and add if in the list of known devices */
-                Device = (PPNPROOT_DEVICE)ExAllocatePoolWithTag(PagedPool, sizeof(PNPROOT_DEVICE), TAG_PNP_ROOT);
-                if (!Device)
-                {
-                    DPRINT("ExAllocatePoolWithTag() failed\n");
-                    Status = STATUS_NO_MEMORY;
-                    goto cleanup;
-                }
-                RtlZeroMemory(Device, sizeof(PNPROOT_DEVICE));
-
-                /* Fill device ID and instance ID */
-                if (!RtlCreateUnicodeString(&Device->DeviceID, DevicePath))
-                {
-                    DPRINT1("RtlCreateUnicodeString() failed\n");
-                    Status = STATUS_NO_MEMORY;
-                    goto cleanup;
-                }
-
-                if (!RtlCreateUnicodeString(&Device->InstanceID, SubKeyInfo->Name))
-                {
-                    DPRINT1("RtlCreateUnicodeString() failed\n");
-                    Status = STATUS_NO_MEMORY;
-                    goto cleanup;
-                }
-
-                /* Open registry key to fill other informations */
-                Status = IopOpenRegistryKeyEx(&DeviceKeyHandle, SubKeyHandle, &Device->InstanceID, KEY_READ);
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
-                            &Device->InstanceID, Status);
-                    break;
-                }
-
-                /* Fill information from the device instance key */
-                RtlZeroMemory(QueryTable, sizeof(QueryTable));
-                QueryTable[0].QueryRoutine = QueryStringCallback;
-                QueryTable[0].Name = L"DeviceDesc";
-                QueryTable[0].EntryContext = &Device->DeviceDescription;
-
-                RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                       (PCWSTR)DeviceKeyHandle,
-                                       QueryTable,
-                                       NULL,
-                                       NULL);
-
-                /* Fill information from the LogConf subkey */
-                Buffer1.Data = (PVOID *)&Device->ResourceRequirementsList;
-                Buffer1.Length = NULL;
-                Buffer2.Data = (PVOID *)&Device->ResourceList;
-                Buffer2.Length = &Device->ResourceListSize;
-                RtlZeroMemory(QueryTable, sizeof(QueryTable));
-                QueryTable[0].Flags = RTL_QUERY_REGISTRY_SUBKEY;
-                QueryTable[0].Name = L"LogConf";
-                QueryTable[1].QueryRoutine = QueryBinaryValueCallback;
-                QueryTable[1].Name = L"BasicConfigVector";
-                QueryTable[1].EntryContext = &Buffer1;
-                QueryTable[2].QueryRoutine = QueryBinaryValueCallback;
-                QueryTable[2].Name = L"BootConfig";
-                QueryTable[2].EntryContext = &Buffer2;
-
-                if (!NT_SUCCESS(RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                                       (PCWSTR)DeviceKeyHandle,
-                                                       QueryTable,
-                                                       NULL,
-                                                       NULL)))
-                {
-                    /* Non-fatal error */
-                    DPRINT1("Failed to read the LogConf key for %S\\%S\n", DevicePath, SubKeyInfo->Name);
-                }
-
-                ZwClose(DeviceKeyHandle);
-                DeviceKeyHandle = NULL;
-
-                /* Insert the newly created device into the list */
-                InsertTailList(
-                    &DeviceExtension->DeviceListHead,
-                    &Device->ListEntry);
-                DeviceExtension->DeviceListCount++;
+                goto cleanup;
             }
-            Device = NULL;
 
             Index2++;
         }
@@ -690,14 +726,6 @@ EnumerateDevices(
     }
 
 cleanup:
-    if (Device)
-    {
-        /* We have a device that has not been added to device list. We need to clean it up */
-        /* FIXME */
-        ExFreePoolWithTag(Device, TAG_PNP_ROOT);
-    }
-    if (DeviceKeyHandle != NULL)
-        ZwClose(DeviceKeyHandle);
     if (SubKeyHandle != NULL)
         ZwClose(SubKeyHandle);
     if (KeyHandle != NULL)
