@@ -200,7 +200,11 @@ static unsigned __stdcall DirWatchThreadFuncAPC(void *)
 {
     while (!s_fTerminateAll)
     {
+#if 1 /* FIXME: This is a HACK */
+        WaitForSingleObjectEx(GetCurrentThread(), INFINITE, TRUE);
+#else
         SleepEx(INFINITE, TRUE);
+#endif
     }
     return 0;
 }
@@ -414,19 +418,50 @@ _NotificationCompletion(DWORD dwErrorCode,
                         DWORD dwNumberOfBytesTransfered,
                         LPOVERLAPPED lpOverlapped)
 {
+    /*
+     * MSDN: The hEvent member of the OVERLAPPED structure is not used by the
+     * system, so you can use it yourself. We do just this, storing a pointer
+     * to the working struct in the overlapped structure.
+     */
     DirWatch *pDirWatch = (DirWatch *)lpOverlapped->hEvent;
     assert(pDirWatch != NULL);
 
+    /*
+     * If the FSD doesn't support directory change notifications, there's no
+     * no need to retry and requeue notification
+     */
     if (dwErrorCode == ERROR_INVALID_FUNCTION)
     {
+        ERR("ERROR_INVALID_FUNCTION\n");
         return;
     }
 
-    if (dwErrorCode == ERROR_OPERATION_ABORTED ||
-        pDirWatch->m_fDeadWatch ||
-        dwNumberOfBytesTransfered == 0)
+    /*
+     * Also, if the notify operation was canceled (like, user moved to another
+     * directory), then, don't requeue notification.
+     */
+    if (dwErrorCode == ERROR_OPERATION_ABORTED)
     {
+        ERR("ERROR_OPERATION_ABORTED\n");
+        return;
+    }
+
+    if (pDirWatch->m_fDeadWatch)
+    {
+        ERR("m_fDeadWatch\n");
         delete pDirWatch;
+        return;
+    }
+
+    /* This likely means overflow, so force whole directory refresh. */
+    if (dwNumberOfBytesTransfered == 0)
+    {
+        ZeroMemory(s_abBuffer, sizeof(s_abBuffer));
+
+        SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_INTERRUPT, SHCNF_PATHW,
+                       pDirWatch->m_szDir, NULL);
+
+        _BeginRead(pDirWatch);
         return;
     }
 
