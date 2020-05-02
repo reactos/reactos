@@ -220,6 +220,7 @@ static unsigned __stdcall DirWatchThreadFuncAPC(void *)
     return 0;
 }
 
+// the buffer for ReadDirectoryChangesW
 #define BUFFER_SIZE 0x1000
 static BYTE s_buffer[BUFFER_SIZE];
 
@@ -261,12 +262,15 @@ protected:
 
         lstrcpynW(m_szDir, pszDir, MAX_PATH);
 
+        // open the directory to watch changes (for ReadDirectoryChangesW)
         m_hDir = CreateFileW(pszDir, FILE_LIST_DIRECTORY,
                              FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                              NULL, OPEN_EXISTING,
                              FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
                              NULL);
-        m_pDirList = NULL;
+
+        // set a directory list
+        m_pDirList = DIRLIST::GetDirList(NULL, pszDir, FALSE);
     }
 };
 
@@ -448,6 +452,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
     }
 }
 
+// The completion routine of ReadDirectoryChangesW.
 static void CALLBACK
 _NotificationCompletion(DWORD dwErrorCode,
                         DWORD dwNumberOfBytesTransfered,
@@ -560,9 +565,6 @@ CreateDirWatchFromRegEntry(LPREGENTRY pRegEntry)
     DirWatch *pDirWatch = DirWatch::Create(szPath, pRegEntry->fRecursive);
     if (pDirWatch == NULL)
         return NULL;
-
-    // set a directory list
-    pDirWatch->m_pDirList = DIRLIST::GetDirList(NULL, szPath, FALSE);
 
     return pDirWatch;
 }
