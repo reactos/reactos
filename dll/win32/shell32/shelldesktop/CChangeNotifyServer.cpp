@@ -334,7 +334,6 @@ static void _ProcessNotification(DirWatch *pDirWatch)
     PFILE_NOTIFY_INFORMATION pInfo = (PFILE_NOTIFY_INFORMATION)s_buffer;
     WCHAR szName[MAX_PATH], szPath[MAX_PATH], szTempPath[MAX_PATH];
     DWORD dwEvent, cbName;
-    LPWSTR psz1, psz2;
     BOOL fDir;
 
     szPath[0] = szTempPath[0] = 0;
@@ -418,19 +417,11 @@ static void _ProcessNotification(DirWatch *pDirWatch)
 
         if (dwEvent != 0)
         {
-            if (pInfo->Action == FILE_ACTION_RENAMED_NEW_NAME)
-            {
-                psz1 = szTempPath;
-                psz2 = szPath;
-            }
-            else
-            {
-                psz1 = szPath;
-                psz2 = NULL;
-            }
-
             // notify
-            SHChangeNotify(dwEvent | SHCNE_INTERRUPT, SHCNF_PATHW, psz1, psz2);
+            if (pInfo->Action == FILE_ACTION_RENAMED_NEW_NAME)
+                SHChangeNotify(dwEvent | SHCNE_INTERRUPT, SHCNF_PATHW, szTempPath, szPath);
+            else
+                SHChangeNotify(dwEvent | SHCNE_INTERRUPT, SHCNF_PATHW, szPath, NULL);
         }
         else
         {
