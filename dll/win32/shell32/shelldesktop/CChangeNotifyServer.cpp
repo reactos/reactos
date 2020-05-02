@@ -26,7 +26,6 @@ struct DIRLIST
     GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive);
 
     BOOL Contains(LPCWSTR pszPath, BOOL fDir) const;
-
     void RenameItem(LPCWSTR pszItem1, LPCWSTR pszItem2, BOOL fDir);
     void DeleteItem(LPCWSTR pszItem, BOOL fDir);
 
@@ -115,7 +114,7 @@ void DIRLIST::RenameItem(LPCWSTR pszItem1, LPCWSTR pszItem2, BOOL fDir)
     {
         if (m_items[i] && lstrcmpiW(&m_items[i][1], pszItem1) == 0)
         {
-            szPath[0] = fDir ? L'|' : L'>';
+            szPath[0] = (fDir ? L'|' : L'>');
             lstrcpynW(&szPath[1], pszItem2, _countof(szPath) - 1);
 
             free(m_items[i]);
@@ -149,7 +148,7 @@ DIRLIST::GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive)
 
     if (!PathIsDirectoryW(szPath) && !PathIsRootW(szPath))
     {
-        // not a directory
+        ERR("Not a directory\n");
         delete pList;
         return NULL;
     }
@@ -162,7 +161,10 @@ DIRLIST::GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive)
     // enumerate the file items to remember
     HANDLE hFind = FindFirstFileW(szPath, &find);
     if (hFind == INVALID_HANDLE_VALUE)
+    {
+        ERR("FindFirstFileW failed\n");
         return pList;
+    }
 
     do
     {
@@ -181,13 +183,9 @@ DIRLIST::GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive)
 
         // add the path and do recurse
         if (fRecursive && (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-        {
             pList = GetDirList(pList, szPath, fRecursive);
-        }
         else
-        {
             pList = AddItem(pList, szPath, FALSE);
-        }
     } while (FindNextFileW(hFind, &find));
 
     FindClose(hFind);
@@ -328,11 +326,12 @@ static void _ProcessNotification(DirWatch *pDirWatch)
 
     for (;;)
     {
-        // get name (relative)
+        // get name (relative from pDirWatch->m_szDir)
         // NOTE: FILE_NOTIFY_INFORMATION.FileName is not null-terminated.
         cbName = pInfo->FileNameLength;
         if (sizeof(szName) - sizeof(UNICODE_NULL) < cbName)
         {
+            ERR("pInfo->FileName is longer than szName\n");
             break;
         }
         ZeroMemory(szName, sizeof(szName));
@@ -679,6 +678,7 @@ void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndB
         *phwndBroker = hwndBroker;
     }
 
+    // request termination of pDirWatch if any
     DirWatch *pDirWatch = item.pDirWatch;
     item.pDirWatch = NULL;
     if (pDirWatch && s_hThread)
@@ -784,7 +784,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
             }
         }
 
-        // add the watch
+        // request adding the watch
         QueueUserAPC(_AddDirectoryProcAPC, s_hThread, (ULONG_PTR)pDirWatch);
     }
 
@@ -862,6 +862,7 @@ LRESULT CChangeNotifyServer::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 {
     if (s_hThread)
     {
+        // request termination of all directory watches
         QueueUserAPC(_RequestAllTerminationAPC, s_hThread, (ULONG_PTR)NULL);
     }
     return 0;
