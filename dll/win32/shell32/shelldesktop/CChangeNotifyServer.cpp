@@ -26,10 +26,10 @@ struct DIRLIST
     ~DIRLIST();
 
     static DIRLIST *
-    AddItem(DIRLIST *pList, LPCWSTR pszPath, BOOL fDir);
+    AddItem(DIRLIST *pList OPTIONAL, LPCWSTR pszPath, BOOL fDir);
 
     static DIRLIST *
-    GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive);
+    GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive);
 
     BOOL Contains(LPCWSTR pszPath, BOOL fDir) const;
     void RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir);
@@ -85,7 +85,7 @@ BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
 }
 
 /*static*/ DIRLIST *
-DIRLIST::AddItem(DIRLIST *pList, LPCWSTR pszPath, BOOL fDir)
+DIRLIST::AddItem(DIRLIST *pList OPTIONAL, LPCWSTR pszPath, BOOL fDir)
 {
     SIZE_T count = 0, cbDirList = sizeof(DIRLIST);
     if (pList)
@@ -147,7 +147,7 @@ void DIRLIST::DeleteItem(LPCWSTR pszPath, BOOL fDir)
 }
 
 /*static*/ DIRLIST *
-DIRLIST::GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive)
+DIRLIST::GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive)
 {
     // get the full path
     WCHAR szPath[MAX_PATH];
