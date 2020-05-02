@@ -351,9 +351,10 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         ZeroMemory(szName, sizeof(szName));
         CopyMemory(szName, pInfo->FileName, cbName);
 
-        // if the watch is recursive, them notify a SHCNE_UPDATEDIR
+        // if the watch is recursive
         if (pDirWatch->m_fRecursive)
         {
+            // then, notify a SHCNE_UPDATEDIR
             SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_INTERRUPT, SHCNF_PATHW,
                            pDirWatch->m_szDir, NULL);
 
@@ -473,6 +474,7 @@ _NotificationCompletion(DWORD dwErrorCode,
         return;
     }
 
+    // is this watch dead?
     if (pDirWatch->m_fDeadWatch)
     {
         ERR("m_fDeadWatch\n");
@@ -554,7 +556,7 @@ CreateDirWatchFromRegEntry(LPREGENTRY pRegEntry)
     }
 
     // create a DirWatch
-    DirWatch *pDirWatch = DirWatch::Create(szPath, FALSE);
+    DirWatch *pDirWatch = DirWatch::Create(szPath, pRegEntry->fRecursive);
     if (pDirWatch == NULL)
         return NULL;
 
