@@ -928,10 +928,15 @@ BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntr
     WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
     INT cch, cch1, cch2;
 
-    // check SHCNE_INTERRUPT and SHCNRF_InterruptLevel
+    // check fSources
     if (pTicket->uFlags & SHCNE_INTERRUPT)
     {
         if (!(pRegEntry->fSources & SHCNRF_InterruptLevel))
+            return FALSE;
+    }
+    else
+    {
+        if (!(pRegEntry->fSources & SHCNRF_ShellLevel))
             return FALSE;
     }
 
