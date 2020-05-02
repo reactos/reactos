@@ -766,9 +766,11 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
         return FALSE;
     }
 
+    // create a directory watch if necessary
     DirWatch *pDirWatch = CreateDirWatchFromRegEntry(pRegEntry);
     if (pDirWatch)
     {
+        // create an APC thread for directory watching
         if (s_hThread == NULL)
         {
             unsigned tid;
@@ -782,6 +784,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
             }
         }
 
+        // add the watch
         QueueUserAPC(_AddDirectoryProcAPC, s_hThread, (ULONG_PTR)pDirWatch);
     }
 
