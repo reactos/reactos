@@ -247,6 +247,8 @@ public:
 
     ~DirWatch()
     {
+        TRACE("DirWatch::~DirWatch: %p\n", this);
+
         if (m_hDir != INVALID_HANDLE_VALUE && m_hDir != NULL)
             CloseHandle(m_hDir);
 
@@ -256,6 +258,8 @@ public:
 protected:
     DirWatch(LPCWSTR pszDir, BOOL fSubTree)
     {
+        TRACE("DirWatch::DirWatch: %p\n", this);
+
         m_fDeadWatch = FALSE;
         m_fRecursive = fSubTree;
 
