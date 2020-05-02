@@ -809,7 +809,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
         PartialDescriptor->u.Port.Start.LowPart = Base;
         PartialDescriptor->u.Port.Start.HighPart = 0x0;
-        PartialDescriptor->u.Port.Length = 3;
+        PartialDescriptor->u.Port.Length = 8;
 
         /* Set Interrupt */
         if (Irq[i] != (ULONG) - 1)
