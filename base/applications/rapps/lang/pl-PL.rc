@@ -1,7 +1,7 @@
 /*
  *    Translated by Caemyr - Olaf Siejka (Aug, 2009)
  *    Use ReactOS forum PM or IRC to contact me
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (May, 2020)
  *    https://reactos.org/
  *    IRC: irc.freenode.net #reactos-pl;
  */
@@ -221,7 +221,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Instaluj Zaznaczone"
     IDS_SELECTEDFORINST "Wybrane do instalacji"
     IDS_MISMATCH_CERT_INFO "Użyty certyfikat jest nieznany:\nSubject: %s\nIssuer: %s\nCzy chcesz mimo to kontynuować?"
-    IDS_UNABLE_PATH "Incorrect path format."
+    IDS_UNABLE_PATH "Niepoprawny format ścieżki."
 END
 
 STRINGTABLE
