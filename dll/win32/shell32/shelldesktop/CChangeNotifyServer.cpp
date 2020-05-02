@@ -26,14 +26,14 @@ struct DIRLIST
     ~DIRLIST();
 
     static DIRLIST *
-    AddItem(DIRLIST *pList, LPCWSTR pszItem, BOOL fDir);
+    AddItem(DIRLIST *pList, LPCWSTR pszPath, BOOL fDir);
 
     static DIRLIST *
     GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive);
 
     BOOL Contains(LPCWSTR pszPath, BOOL fDir) const;
-    void RenameItem(LPCWSTR pszItem1, LPCWSTR pszItem2, BOOL fDir);
-    void DeleteItem(LPCWSTR pszItem, BOOL fDir);
+    void RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir);
+    void DeleteItem(LPCWSTR pszPath, BOOL fDir);
 
 protected:
     SIZE_T m_count;
@@ -85,7 +85,7 @@ BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
 }
 
 /*static*/ DIRLIST *
-DIRLIST::AddItem(DIRLIST *pList, LPCWSTR pszItem, BOOL fDir)
+DIRLIST::AddItem(DIRLIST *pList, LPCWSTR pszPath, BOOL fDir)
 {
     SIZE_T count = 0, cbDirList = sizeof(DIRLIST);
     if (pList)
@@ -103,14 +103,14 @@ DIRLIST::AddItem(DIRLIST *pList, LPCWSTR pszItem, BOOL fDir)
 
     WCHAR szPath[MAX_PATH + 1];
     szPath[0] = fDir ? DL_DIR : DL_FILE;
-    lstrcpynW(&szPath[1], pszItem, _countof(szPath) - 1);
+    lstrcpynW(&szPath[1], pszPath, _countof(szPath) - 1);
 
     pNewList->m_items[pNewList->m_count] = _wcsdup(szPath);
     pNewList->m_count++;
     return pNewList;
 }
 
-void DIRLIST::RenameItem(LPCWSTR pszItem1, LPCWSTR pszItem2, BOOL fDir)
+void DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
 {
     if (this == NULL)
         return;
@@ -118,10 +118,10 @@ void DIRLIST::RenameItem(LPCWSTR pszItem1, LPCWSTR pszItem2, BOOL fDir)
     WCHAR szPath[MAX_PATH + 1];
     for (DWORD i = 0; i < m_count; ++i)
     {
-        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszItem1) == 0)
+        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszPath1) == 0)
         {
             szPath[0] = (fDir ? DL_DIR : DL_FILE);
-            lstrcpynW(&szPath[1], pszItem2, _countof(szPath) - 1);
+            lstrcpynW(&szPath[1], pszPath2, _countof(szPath) - 1);
 
             free(m_items[i]);
             m_items[i] = _wcsdup(szPath);
@@ -130,14 +130,14 @@ void DIRLIST::RenameItem(LPCWSTR pszItem1, LPCWSTR pszItem2, BOOL fDir)
     }
 }
 
-void DIRLIST::DeleteItem(LPCWSTR pszItem, BOOL fDir)
+void DIRLIST::DeleteItem(LPCWSTR pszPath, BOOL fDir)
 {
     if (this == NULL)
         return;
 
     for (DWORD i = 0; i < m_count; ++i)
     {
-        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszItem) == 0)
+        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszPath) == 0)
         {
             free(m_items[i]);
             m_items[i] = NULL;
