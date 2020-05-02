@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:     Tests for QueryUserAPC, SleepEx, WaitForSingleObjectEx etc.
+ * PURPOSE:     Tests for QueueUserAPC, SleepEx, WaitForSingleObjectEx etc.
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #include "precomp.h"
@@ -145,7 +145,7 @@ static void TestForWaitForSingleObjectEx(void)
     JustDoIt(ThreadFunc2);
 }
 
-START_TEST(QueryUserAPC)
+START_TEST(QueueUserAPC)
 {
     TestForSleepEx();
     TestForWaitForSingleObjectEx();
