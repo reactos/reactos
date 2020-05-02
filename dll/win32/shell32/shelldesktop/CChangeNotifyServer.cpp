@@ -149,6 +149,7 @@ DIRLIST::GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive)
 
     if (!PathIsDirectoryW(szPath) && !PathIsRootW(szPath))
     {
+        // not a directory
         delete pList;
         return NULL;
     }
@@ -158,23 +159,27 @@ DIRLIST::GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive)
     WIN32_FIND_DATAW find;
     PathAppendW(szPath, L"*");
 
+    // enumerate the file items to remember
     HANDLE hFind = FindFirstFileW(szPath, &find);
     if (hFind == INVALID_HANDLE_VALUE)
         return pList;
 
     do
     {
+        // ignore "." and ".."
         if (lstrcmpW(find.cFileName, L".") == 0 ||
             lstrcmpW(find.cFileName, L"..") == 0)
         {
             continue;
         }
 
+        // build a path
         PathRemoveFileSpecW(szPath);
         if (lstrlenW(szPath) + lstrlenW(find.cFileName) + 1 > MAX_PATH)
             continue;
         PathAppendW(szPath, find.cFileName);
 
+        // add the path and do recurse
         if (fRecursive && (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
         {
             pList = GetDirList(pList, szPath, fRecursive);
@@ -320,9 +325,10 @@ static void _ProcessNotification(DirWatch *pDirWatch)
     BOOL fDir;
 
     szPath[0] = szTempPath[0] = 0;
+
     for (;;)
     {
-        // get name
+        // get name (relative)
         // NOTE: FILE_NOTIFY_INFORMATION.FileName is not null-terminated.
         cbName = pInfo->FileNameLength;
         if (sizeof(szName) - sizeof(UNICODE_NULL) < cbName)
@@ -332,13 +338,14 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         ZeroMemory(szName, sizeof(szName));
         CopyMemory(szName, pInfo->FileName, cbName);
 
+        // if the watch is recursive, them notify a SHCNE_UPDATEDIR
         if (pDirWatch->m_fRecursive)
         {
             SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_INTERRUPT, SHCNF_PATHW,
                            pDirWatch->m_szDir, NULL);
 
             if (pInfo->NextEntryOffset == 0)
-                break;
+                break; // there is no next entry
 
             // get next
             pInfo = (PFILE_NOTIFY_INFORMATION)((LPBYTE)pInfo + pInfo->NextEntryOffset);
@@ -349,11 +356,21 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         lstrcpynW(szPath, pDirWatch->m_szDir, _countof(szPath));
         PathAppendW(szPath, szName);
 
+        // convert to long pathname if there is '~'
+        if (StrChrW(szPath, L'~') != NULL)
+        {
+            GetLongPathNameW(szPath, szName, _countof(szName));
+            lstrcpynW(szPath, szName, _countof(szPath));
+        }
+
         // convert action to event
         fDir = PathIsRootW(szPath) || PathIsDirectoryW(szPath);
         dwEvent = TranslateActionToEvent(pInfo->Action, fDir);
 
+        // get the directory list of pDirWatch
         DIRLIST*& pList = pDirWatch->m_pDirList;
+
+        // convert SHCNE_DELETE to SHCNE_RMDIR if the path is a directory
         if (!fDir && dwEvent == SHCNE_DELETE)
         {
             if (pList && pList->Contains(szPath, TRUE))
@@ -363,6 +380,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
             }
         }
 
+        // update pList
         switch (dwEvent)
         {
             case SHCNE_MKDIR:
@@ -382,7 +400,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
                 break;
         }
 
-        if (dwEvent)
+        if (dwEvent != 0)
         {
             // notify
             if (pInfo->Action == FILE_ACTION_RENAMED_NEW_NAME)
@@ -401,12 +419,13 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         {
             if (pInfo->Action == FILE_ACTION_RENAMED_OLD_NAME)
             {
+                // save path for next FILE_ACTION_RENAMED_NEW_NAME
                 lstrcpynW(szTempPath, szPath, MAX_PATH);
             }
         }
 
         if (pInfo->NextEntryOffset == 0)
-            break;
+            break; // there is no next entry
 
         // get next
         pInfo = (PFILE_NOTIFY_INFORMATION)((LPBYTE)pInfo + pInfo->NextEntryOffset);
@@ -456,17 +475,19 @@ _NotificationCompletion(DWORD dwErrorCode,
     /* This likely means overflow, so force whole directory refresh. */
     if (dwNumberOfBytesTransfered == 0)
     {
-        ZeroMemory(s_abBuffer, sizeof(s_abBuffer));
-
+        /* do notify */
         SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_INTERRUPT, SHCNF_PATHW,
                        pDirWatch->m_szDir, NULL);
 
+        /* restart a watch */
         _BeginRead(pDirWatch);
         return;
     }
 
+    /* do notify */
     _ProcessNotification(pDirWatch);
 
+    /* restart a watch */
     _BeginRead(pDirWatch);
 }
 
@@ -479,6 +500,7 @@ GetFilterFromEvents(DWORD fEvents)
             FILE_NOTIFY_CHANGE_CREATION);
 }
 
+// Restart a watch by using ReadDirectoryChangesW function
 static BOOL _BeginRead(DirWatch *pDirWatch)
 {
     assert(pDirWatch != NULL);
@@ -486,6 +508,7 @@ static BOOL _BeginRead(DirWatch *pDirWatch)
     if (pDirWatch->m_fDeadWatch)
         return FALSE;
 
+    ZeroMemory(s_abBuffer, sizeof(s_abBuffer));
     ZeroMemory(&pDirWatch->m_overlapped, sizeof(pDirWatch->m_overlapped));
     pDirWatch->m_overlapped.hEvent = (HANDLE)pDirWatch;
 
@@ -494,12 +517,15 @@ static BOOL _BeginRead(DirWatch *pDirWatch)
                                pDirWatch->m_fRecursive, dwFilter, NULL,
                                &pDirWatch->m_overlapped, _NotificationCompletion))
     {
+        ERR("ReadDirectoryChangesW for '%S' failed (error: %ld)\n",
+            pDirWatch->m_szDir, GetLastError());
         return FALSE;
     }
 
     return TRUE;
 }
 
+// create a DirWatch from a REGENTRY
 static DirWatch *
 CreateDirWatchFromRegEntry(LPREGENTRY pRegEntry)
 {
@@ -518,10 +544,12 @@ CreateDirWatchFromRegEntry(LPREGENTRY pRegEntry)
         return NULL;
     }
 
+    // create a DirWatch
     DirWatch *pDirWatch = DirWatch::Create(szPath, FALSE);
     if (pDirWatch == NULL)
         return NULL;
 
+    // set a directory list
     pDirWatch->m_pDirList = DIRLIST::GetDirList(NULL, szPath, FALSE);
 
     return pDirWatch;
