@@ -62,7 +62,7 @@ static VOID InitLogo(HWND hwndDlg)
     BITMAP logoBitmap;
     BITMAP maskBitmap;
     BITMAPINFO bmpi;
-    HDC hDC;
+    HDC hDC = GetDC(hwndDlg);
     HDC hDCLogo = CreateCompatibleDC(NULL);
     HDC hDCMask = CreateCompatibleDC(NULL);
     HBITMAP hMask, hLogo, hAlphaLogo = NULL;
@@ -114,7 +114,7 @@ static VOID InitLogo(HWND hwndDlg)
                 g = GetGValue(Color) * alpha / 255;
                 b = GetBValue(Color) * alpha / 255;
 
-                *pBits++ = b | g << 8 | r << 16 | alpha << 24;
+                *pBits++ = b | (g << 8) | (r << 16) | (alpha << 24);
             }
         }
 

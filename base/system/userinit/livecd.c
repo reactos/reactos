@@ -72,7 +72,7 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
                 g = GetGValue(Color) * alpha / 255;
                 b = GetBValue(Color) * alpha / 255;
 
-                *pBits++ = b | g << 8 | r << 16 | alpha << 24;
+                *pBits++ = b | (g << 8) | (r << 16) | (alpha << 24);
             }
         }
 
