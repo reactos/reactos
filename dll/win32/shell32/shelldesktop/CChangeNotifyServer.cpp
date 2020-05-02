@@ -17,6 +17,12 @@ WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
 struct DIRLIST
 {
+    enum FirstChar // the first character of each item of m_items
+    {
+        DL_DIR = L'|',
+        DL_FILE = L'>'
+    };
+
     ~DIRLIST();
 
     static DIRLIST *
@@ -62,12 +68,12 @@ BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
 
         if (fDir)
         {
-            if (m_items[i][0] != L'|')
+            if (m_items[i][0] != DL_DIR)
                 continue;
         }
         else
         {
-            if (m_items[i][0] != L'>')
+            if (m_items[i][0] != DL_FILE)
                 continue;
         }
 
@@ -96,7 +102,7 @@ DIRLIST::AddItem(DIRLIST *pList, LPCWSTR pszItem, BOOL fDir)
         ZeroMemory(pNewList, cbDirList);
 
     WCHAR szPath[MAX_PATH + 1];
-    szPath[0] = fDir ? L'|' : L'>';
+    szPath[0] = fDir ? DL_DIR : DL_FILE;
     lstrcpynW(&szPath[1], pszItem, _countof(szPath) - 1);
 
     pNewList->m_items[pNewList->m_count] = _wcsdup(szPath);
@@ -114,7 +120,7 @@ void DIRLIST::RenameItem(LPCWSTR pszItem1, LPCWSTR pszItem2, BOOL fDir)
     {
         if (m_items[i] && lstrcmpiW(&m_items[i][1], pszItem1) == 0)
         {
-            szPath[0] = (fDir ? L'|' : L'>');
+            szPath[0] = (fDir ? DL_DIR : DL_FILE);
             lstrcpynW(&szPath[1], pszItem2, _countof(szPath) - 1);
 
             free(m_items[i]);
