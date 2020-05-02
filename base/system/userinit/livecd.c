@@ -27,7 +27,7 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     COLORREF *pBits;
     INT line, column;
 
-    if (hDC == NULL)
+    if (hDC == NULL || hDCLogo == NULL || hDCMask == NULL)
         goto Cleanup;
 
     ZeroMemory(pImgInfo, sizeof(*pImgInfo));
@@ -36,7 +36,7 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     hLogo = (HBITMAP)LoadImageW(hInstance, MAKEINTRESOURCEW(IDB_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
     hMask = (HBITMAP)LoadImageW(hInstance, MAKEINTRESOURCEW(IDB_ROSMASK), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-    if (hLogo != NULL && hMask != NULL && hDCLogo != NULL && hDCMask != NULL)
+    if (hLogo != NULL && hMask != NULL)
     {
         GetObject(hLogo, sizeof(logoBitmap), &logoBitmap);
         GetObject(hMask, sizeof(maskBitmap), &maskBitmap);
@@ -84,10 +84,10 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     }
 
 Cleanup:
-    if (hLogo != NULL) DeleteObject(hLogo);
     if (hMask != NULL) DeleteObject(hMask);
-    if (hDCLogo != NULL) DeleteDC(hDCLogo);
+    if (hLogo != NULL) DeleteObject(hLogo);  
     if (hDCMask != NULL) DeleteDC(hDCMask);
+    if (hDCLogo != NULL) DeleteDC(hDCLogo);    
     if (hDC != NULL) ReleaseDC(hwndDlg, hDC);
 }
 

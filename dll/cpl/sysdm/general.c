@@ -69,7 +69,7 @@ static VOID InitLogo(HWND hwndDlg)
     COLORREF *pBits;
     INT line, column;
 
-    if (hDC == NULL)
+    if (hDC == NULL || hDCLogo == NULL || hDCMask == NULL)
         goto Cleanup;
 
     ZeroMemory(pImgInfo, sizeof(*pImgInfo));
@@ -78,12 +78,12 @@ static VOID InitLogo(HWND hwndDlg)
     hLogo = (HBITMAP)LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_ROSBMP), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
     hMask = (HBITMAP)LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_ROSMASK), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-    if (hLogo != NULL && hMask != NULL && hDCLogo != NULL && hDCMask != NULL)
+    if (hLogo != NULL && hMask != NULL)
     {
         GetObject(hLogo, sizeof(logoBitmap), &logoBitmap);
         GetObject(hMask, sizeof(maskBitmap), &maskBitmap);
 
-        if (logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth || hDC == NULL)
+        if (logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth)
             goto Cleanup;
 
         bmpi.bmiHeader.biSize = sizeof(BITMAPINFO);
@@ -126,10 +126,10 @@ static VOID InitLogo(HWND hwndDlg)
     }
 
 Cleanup:
-    if (hLogo != NULL) DeleteObject(hLogo);
     if (hMask != NULL) DeleteObject(hMask);
-    if (hDCLogo != NULL) DeleteDC(hDCLogo);
+    if (hLogo != NULL) DeleteObject(hLogo);
     if (hDCMask != NULL) DeleteDC(hDCMask);
+    if (hDCLogo != NULL) DeleteDC(hDCLogo);    
     if (hDC != NULL) ReleaseDC(hwndDlg, hDC);
 }
 
@@ -158,8 +158,8 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                     hCreditsDC = CreateCompatibleDC(hDC);
                     hLogoDC = CreateCompatibleDC(hCreditsDC);
 
-                    if (hCreditsDC == NULL || hLogoDC == NULL)
-                        break;
+                    if (hCreditsDC == NULL || hLogoDC == NULL || hDC == NULL)
+                        goto Cleanup;
 
                     SetRect(&rcCredits, 0, 0, 0, 0);
 
@@ -177,7 +177,7 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                     hCreditsBitmap = CreateBitmap(pImgInfo->cxSource, (2 * pImgInfo->cySource) + iDevsHeight + 1, pImgInfo->iPlanes, pImgInfo->iBits, NULL);
 
                     if(!hCreditsBitmap)
-                        break;
+                        goto Cleanup;
 
                     SelectObject(hLogoDC, pImgInfo->hBitmap);
                     SelectObject(hCreditsDC, hCreditsBitmap);
@@ -203,11 +203,12 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                     AlphaBlend(hCreditsDC, 0, 0, pImgInfo->cxSource, pImgInfo->cySource, hLogoDC, 0,  0, pImgInfo->cxSource, pImgInfo->cySource, BlendFunc);
                     AlphaBlend(hCreditsDC, 0, offset, pImgInfo->cxSource, pImgInfo->cySource, hLogoDC, 0,  0, pImgInfo->cxSource, pImgInfo->cySource, BlendFunc);
 
-                    DeleteDC(hLogoDC);
-                    DeleteDC(hCreditsDC);
-                    ReleaseDC(NULL, hDC);
-
                     timerid = SetTimer(hwnd, 1, ANIM_TIME, NULL);
+
+                Cleanup:
+                    if (hLogoDC != NULL) DeleteDC(hLogoDC);
+                    if (hCreditsDC != NULL) DeleteDC(hCreditsDC);
+                    if (hDC != NULL) ReleaseDC(NULL, hDC);
                 }
             }
             break;
@@ -216,21 +217,20 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             {
                 RECT rcCredits;
                 HDC hDC = GetDC(hwnd);
-                if (hDC == NULL)
-                    break;
-
-                GetClientRect(hwnd, &rcCredits);
-                SetRect(&rcCredits, 0, 0, rcCredits.right, pImgInfo->cySource);
-                FillRect(hDC, &rcCredits, GetSysColorBrush(COLOR_3DFACE));
-
+                if (hDC != NULL)
+                {
+                    GetClientRect(hwnd, &rcCredits);
+                    SetRect(&rcCredits, 0, 0, rcCredits.right, pImgInfo->cySource);
+                    FillRect(hDC, &rcCredits, GetSysColorBrush(COLOR_3DFACE));
+                    ReleaseDC(hwnd, hDC);
+                }
                 KillTimer(hwnd, timerid);
                 DeleteObject(hCreditsBitmap);
-                InvalidateRect(hwnd, NULL, FALSE);
-                ReleaseDC(hwnd, hDC);
 
                 top = 0;
                 timerid = 0;
             }
+            InvalidateRect(hwnd, NULL, FALSE);
             break;
         case WM_TIMER:
             top += ANIM_STEP;
@@ -239,19 +239,19 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             {
                 RECT rcCredits;
                 HDC hDC = GetDC(hwnd);
-                if (hDC == NULL)
-                    break;
+                if (hDC != NULL)
+                {
                 
-                GetClientRect(hwnd, &rcCredits);
-                SetRect(&rcCredits, 0, 0, rcCredits.right, pImgInfo->cySource);
-                FillRect(hDC, &rcCredits, GetSysColorBrush(COLOR_3DFACE));
-
+                    GetClientRect(hwnd, &rcCredits);
+                    SetRect(&rcCredits, 0, 0, rcCredits.right, pImgInfo->cySource);
+                    FillRect(hDC, &rcCredits, GetSysColorBrush(COLOR_3DFACE));
+                    ReleaseDC(hwnd, hDC);
+                }
                 KillTimer(hwnd, timerid);
                 DeleteObject(hCreditsBitmap);
 
                 top = 0;
                 timerid = 0;
-                ReleaseDC(hwnd, hDC);
             }
 
             InvalidateRect(hwnd, NULL, FALSE);

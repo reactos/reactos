@@ -472,6 +472,8 @@ OnBPPChanged(IN HWND hwndDlg, IN PSETTINGS_DATA pData)
     /* Show a new spectrum bitmap */
     hSpectrumControl = GetDlgItem(hwndDlg, IDC_SETTINGS_SPECTRUM);
     hSpectrumDC = GetDC(hSpectrumControl);
+    if (hSpectrumDC == NULL)
+        return;
     GetClientRect(hSpectrumControl, &client);
     ShowColorSpectrum(hSpectrumDC, &client, dmNewBitsPerPel, pData);
     ReleaseDC(hSpectrumControl, hSpectrumDC);
