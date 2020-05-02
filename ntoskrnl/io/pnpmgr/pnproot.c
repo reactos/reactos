@@ -92,16 +92,15 @@ static PDEVICE_OBJECT PnpRootDeviceObject = NULL;
 static NTSTATUS
 LocateChildDevice(
     IN PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension,
-    IN PCWSTR DeviceId,
+    IN PCUNICODE_STRING DeviceId,
     IN PCWSTR InstanceId,
     OUT PPNPROOT_DEVICE* ChildDevice)
 {
     PPNPROOT_DEVICE Device;
-    UNICODE_STRING DeviceIdU, InstanceIdU;
+    UNICODE_STRING InstanceIdU;
     PLIST_ENTRY NextEntry;
 
-    /* Initialize the strings to compare  */
-    RtlInitUnicodeString(&DeviceIdU, DeviceId);
+    /* Initialize the string to compare */
     RtlInitUnicodeString(&InstanceIdU, InstanceId);
 
     /* Start looping */
@@ -113,7 +112,7 @@ LocateChildDevice(
         Device = CONTAINING_RECORD(NextEntry, PNPROOT_DEVICE, ListEntry);
 
         /* See if the strings match */
-        if (RtlEqualUnicodeString(&DeviceIdU, &Device->DeviceID, TRUE) &&
+        if (RtlEqualUnicodeString(DeviceId, &Device->DeviceID, TRUE) &&
             RtlEqualUnicodeString(&InstanceIdU, &Device->InstanceID, TRUE))
         {
             /* They do, so set the pointer and return success */
@@ -267,7 +266,7 @@ tryagain:
         for (NextInstance = 0; NextInstance <= 9999; NextInstance++)
         {
              _snwprintf(InstancePath, sizeof(InstancePath) / sizeof(WCHAR), L"%04lu", NextInstance);
-             Status = LocateChildDevice(DeviceExtension, Device->DeviceID.Buffer, InstancePath, &Device);
+             Status = LocateChildDevice(DeviceExtension, &Device->DeviceID, InstancePath, &Device);
              if (Status == STATUS_NO_SUCH_DEVICE)
                  break;
         }
@@ -281,7 +280,7 @@ tryagain:
     }
 
     _snwprintf(InstancePath, sizeof(InstancePath) / sizeof(WCHAR), L"%04lu", NextInstance);
-    Status = LocateChildDevice(DeviceExtension, Device->DeviceID.Buffer, InstancePath, &Device);
+    Status = LocateChildDevice(DeviceExtension, &Device->DeviceID, InstancePath, &Device);
     if (Status != STATUS_NO_SUCH_DEVICE || NextInstance > 9999)
     {
         DPRINT1("NextInstance value is corrupt! (%lu)\n", NextInstance);
@@ -460,8 +459,7 @@ CreateDeviceFromRegistry(
     BUFFER Buffer1, Buffer2;
 
     /* If the device already exists, there's nothing to do */
-    NT_ASSERT(DevicePath->Buffer[DevicePath->Length / sizeof(WCHAR)] == UNICODE_NULL);
-    Status = LocateChildDevice(DeviceExtension, DevicePath->Buffer, InstanceId, &Device);
+    Status = LocateChildDevice(DeviceExtension, DevicePath, InstanceId, &Device);
     if (Status != STATUS_NO_SUCH_DEVICE)
     {
         return STATUS_SUCCESS;
