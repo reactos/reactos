@@ -149,9 +149,11 @@ void DIRLIST::DeleteItem(LPCWSTR pszItem, BOOL fDir)
 /*static*/ DIRLIST *
 DIRLIST::GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive)
 {
+    // get the full path
     WCHAR szPath[MAX_PATH];
     GetFullPathNameW(pszDir, _countof(szPath), szPath, NULL);
 
+    // is it a directory?
     if (!PathIsDirectoryW(szPath) && !PathIsRootW(szPath))
     {
         ERR("Not a directory\n");
@@ -159,12 +161,12 @@ DIRLIST::GetDirList(DIRLIST *pList, LPCWSTR pszDir, BOOL fRecursive)
         return NULL;
     }
 
+    // add the path
     pList = AddItem(pList, szPath, TRUE);
 
+    // enumerate the file items to remember
     WIN32_FIND_DATAW find;
     PathAppendW(szPath, L"*");
-
-    // enumerate the file items to remember
     HANDLE hFind = FindFirstFileW(szPath, &find);
     if (hFind == INVALID_HANDLE_VALUE)
     {
@@ -236,6 +238,7 @@ public:
         DirWatch *pDirWatch = new DirWatch(pszDir, fSubTree);
         if (pDirWatch->m_hDir == INVALID_HANDLE_VALUE)
         {
+            ERR("CreateFileW failed\n");
             delete pDirWatch;
             pDirWatch = NULL;
         }
@@ -269,6 +272,7 @@ protected:
 
 static BOOL _BeginRead(DirWatch *pDirWatch);
 
+// The APC procedure to add a DirWatch and start the directory watch
 static void NTAPI _AddDirectoryProcAPC(ULONG_PTR Parameter)
 {
     DirWatch *pDirWatch = (DirWatch *)Parameter;
@@ -277,6 +281,7 @@ static void NTAPI _AddDirectoryProcAPC(ULONG_PTR Parameter)
     _BeginRead(pDirWatch);
 }
 
+// The APC procedure to request termination of a DirWatch
 static void NTAPI _RequestTerminationAPC(ULONG_PTR Parameter)
 {
     DirWatch *pDirWatch = (DirWatch *)Parameter;
@@ -286,6 +291,7 @@ static void NTAPI _RequestTerminationAPC(ULONG_PTR Parameter)
     CancelIo(pDirWatch->m_hDir);
 }
 
+// The APC procedure to request termination of all the directory watches
 static void NTAPI _RequestAllTerminationAPC(ULONG_PTR Parameter)
 {
     s_fTerminateAll = TRUE;
@@ -293,8 +299,9 @@ static void NTAPI _RequestAllTerminationAPC(ULONG_PTR Parameter)
     s_hThread = NULL;
 }
 
+// convert the file action to an event
 static DWORD
-TranslateActionToEvent(DWORD Action, BOOL fDir)
+ConvertActionToEvent(DWORD Action, BOOL fDir)
 {
     switch (Action)
     {
@@ -320,6 +327,7 @@ TranslateActionToEvent(DWORD Action, BOOL fDir)
     return 0;
 }
 
+// Notify a filesystem notification using pDirWatch.
 static void _ProcessNotification(DirWatch *pDirWatch)
 {
     PFILE_NOTIFY_INFORMATION pInfo = (PFILE_NOTIFY_INFORMATION)s_abBuffer;
@@ -370,7 +378,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
 
         // convert action to event
         fDir = PathIsRootW(szPath) || PathIsDirectoryW(szPath);
-        dwEvent = TranslateActionToEvent(pInfo->Action, fDir);
+        dwEvent = ConvertActionToEvent(pInfo->Action, fDir);
 
         // get the directory list of pDirWatch
         DIRLIST*& pList = pDirWatch->m_pDirList;
@@ -407,7 +415,6 @@ static void _ProcessNotification(DirWatch *pDirWatch)
 
         if (dwEvent != 0)
         {
-            // notify
             if (pInfo->Action == FILE_ACTION_RENAMED_NEW_NAME)
             {
                 psz1 = szTempPath;
@@ -418,6 +425,8 @@ static void _ProcessNotification(DirWatch *pDirWatch)
                 psz1 = szPath;
                 psz2 = NULL;
             }
+
+            // notify
             SHChangeNotify(dwEvent | SHCNE_INTERRUPT, SHCNF_PATHW, psz1, psz2);
         }
         else
@@ -511,12 +520,14 @@ static BOOL _BeginRead(DirWatch *pDirWatch)
     assert(pDirWatch != NULL);
 
     if (pDirWatch->m_fDeadWatch)
-        return FALSE;
+        return FALSE; // the watch is dead
 
+    // initialize the buffer and the overlapped
     ZeroMemory(s_abBuffer, sizeof(s_abBuffer));
     ZeroMemory(&pDirWatch->m_overlapped, sizeof(pDirWatch->m_overlapped));
     pDirWatch->m_overlapped.hEvent = (HANDLE)pDirWatch;
 
+    // start the directory watch
     DWORD dwFilter = GetFilterFromEvents(SHCNE_ALLEVENTS);
     if (!ReadDirectoryChangesW(pDirWatch->m_hDir, s_abBuffer, sizeof(s_abBuffer),
                                pDirWatch->m_fRecursive, dwFilter, NULL,
@@ -524,10 +535,10 @@ static BOOL _BeginRead(DirWatch *pDirWatch)
     {
         ERR("ReadDirectoryChangesW for '%S' failed (error: %ld)\n",
             pDirWatch->m_szDir, GetLastError());
-        return FALSE;
+        return FALSE; // failure
     }
 
-    return TRUE;
+    return TRUE; // success
 }
 
 // create a DirWatch from a REGENTRY
@@ -537,6 +548,7 @@ CreateDirWatchFromRegEntry(LPREGENTRY pRegEntry)
     if (pRegEntry->ibPidl == 0 || pRegEntry->fEvents == 0)
         return NULL;
 
+    // it must be interrupt level if pRegEntry is a filesystem watch
     if (!(pRegEntry->fSources & SHCNRF_InterruptLevel))
         return NULL;
 
