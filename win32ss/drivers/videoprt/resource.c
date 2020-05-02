@@ -765,7 +765,8 @@ VideoPortGetAccessRanges(
             ERR_(VIDEOPRT, "Too many access ranges found\n");
             return ERROR_NOT_ENOUGH_MEMORY;
         }
-        else if (Descriptor->Type == CmResourceTypeMemory)
+
+        if (Descriptor->Type == CmResourceTypeMemory)
         {
             INFO_(VIDEOPRT, "Memory range starting at 0x%08x length 0x%08x\n",
                   Descriptor->u.Memory.Start.u.LowPart, Descriptor->u.Memory.Length);
