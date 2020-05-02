@@ -124,8 +124,8 @@ XboxVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
 UCHAR
 NvGetCrtc(UCHAR Index)
 {
-    *((PUCHAR) NV2A_CRTC_REGISTER_INDEX) = Index;
-    return *((PUCHAR) NV2A_CRTC_REGISTER_VALUE);
+    WRITE_REGISTER_UCHAR(NV2A_CRTC_REGISTER_INDEX, Index);
+    return READ_REGISTER_UCHAR(NV2A_CRTC_REGISTER_VALUE);
 }
 
 ULONG
@@ -175,7 +175,7 @@ VOID
 XboxVideoInit(VOID)
 {
   /* Reuse framebuffer that was set up by firmware */
-  FrameBuffer = (PVOID)*((PULONG) NV2A_CRTC_FRAMEBUFFER_START);
+  FrameBuffer = (PVOID)READ_REGISTER_ULONG(NV2A_CRTC_FRAMEBUFFER_START);
   /* Verify that framebuffer address is page-aligned */
   ASSERT((ULONG_PTR)FrameBuffer % PAGE_SIZE == 0);
 
@@ -187,8 +187,8 @@ XboxVideoInit(VOID)
     WARN("Could not detect framebuffer memory size, fallback to 4 MB\n");
   }
 
-  ScreenWidth = *((PULONG) NV2A_RAMDAC_FP_HVALID_END) + 1;
-  ScreenHeight = *((PULONG) NV2A_RAMDAC_FP_VVALID_END) + 1;
+  ScreenWidth = READ_REGISTER_ULONG(NV2A_RAMDAC_FP_HVALID_END) + 1;
+  ScreenHeight = READ_REGISTER_ULONG(NV2A_RAMDAC_FP_VVALID_END) + 1;
   /* Get BPP directly from NV2A CRTC (magic constants are from Cromwell) */
   BytesPerPixel = 8 * (((NvGetCrtc(0x19) & 0xE0) << 3) | (NvGetCrtc(0x13) & 0xFF)) / ScreenWidth;
   if (BytesPerPixel == 4)
