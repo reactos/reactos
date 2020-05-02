@@ -388,7 +388,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         // convert SHCNE_DELETE to SHCNE_RMDIR if the path is a directory
         if (!fDir && dwEvent == SHCNE_DELETE)
         {
-            if (pList && pList->Contains(szPath, TRUE))
+            if (pList->Contains(szPath, TRUE))
             {
                 fDir = TRUE;
                 dwEvent = SHCNE_RMDIR;
