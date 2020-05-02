@@ -86,19 +86,16 @@ BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
 /*static*/ DIRLIST *
 DIRLIST::AddItem(DIRLIST *pList OPTIONAL, LPCWSTR pszPath, BOOL fDir)
 {
-    SIZE_T count = 0, cbDirList = sizeof(DIRLIST);
+    SIZE_T cbDirList = sizeof(DIRLIST);
     if (pList)
-    {
-        count = pList->m_count;
-        cbDirList += count * sizeof(LPWSTR);
-    }
+        cbDirList += pList->m_count * sizeof(LPWSTR);
 
     DIRLIST *pNewList = (DIRLIST *)realloc(pList, cbDirList);
     if (pNewList == NULL)
         return pList;
 
-    if (count == 0)
-        ZeroMemory(pNewList, cbDirList);
+    if (pList == NULL)
+        pNewList->m_count = 0;
 
     WCHAR szPath[MAX_PATH + 1];
     szPath[0] = fDir ? DL_DIR : DL_FILE;
