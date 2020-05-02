@@ -19,8 +19,7 @@ struct DIRLIST
 {
     enum FirstChar // the first character of each item of m_items
     {
-        DL_DIR = L'|',
-        DL_FILE = L'>'
+        DL_DIR = L'|', DL_FILE = L'>'
     };
 
     ~DIRLIST();
@@ -338,7 +337,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
 
     szPath[0] = szTempPath[0] = 0;
 
-    // for each info in s_buffer
+    // for each entry in s_buffer
     for (;;)
     {
         // get name (relative from pDirWatch->m_szDir)
@@ -362,7 +361,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
             if (pInfo->NextEntryOffset == 0)
                 break; // there is no next entry
 
-            // get next
+            // go next entry
             pInfo = (PFILE_NOTIFY_INFORMATION)((LPBYTE)pInfo + pInfo->NextEntryOffset);
             continue;
         }
@@ -371,7 +370,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         lstrcpynW(szPath, pDirWatch->m_szDir, _countof(szPath));
         PathAppendW(szPath, szName);
 
-        // convert to long pathname if there is '~'
+        // convert to long pathname if it contains '~'
         if (StrChrW(szPath, L'~') != NULL)
         {
             GetLongPathNameW(szPath, szName, _countof(szName));
@@ -386,13 +385,10 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         DIRLIST*& pList = pDirWatch->m_pDirList;
 
         // convert SHCNE_DELETE to SHCNE_RMDIR if the path is a directory
-        if (!fDir && dwEvent == SHCNE_DELETE)
+        if (!fDir && (dwEvent == SHCNE_DELETE) && pList->Contains(szPath, TRUE))
         {
-            if (pList->Contains(szPath, TRUE))
-            {
-                fDir = TRUE;
-                dwEvent = SHCNE_RMDIR;
-            }
+            fDir = TRUE;
+            dwEvent = SHCNE_RMDIR;
         }
 
         // update pList
@@ -423,19 +419,16 @@ static void _ProcessNotification(DirWatch *pDirWatch)
             else
                 SHChangeNotify(dwEvent | SHCNE_INTERRUPT, SHCNF_PATHW, szPath, NULL);
         }
-        else
+        else if (pInfo->Action == FILE_ACTION_RENAMED_OLD_NAME)
         {
-            if (pInfo->Action == FILE_ACTION_RENAMED_OLD_NAME)
-            {
-                // save path for next FILE_ACTION_RENAMED_NEW_NAME
-                lstrcpynW(szTempPath, szPath, MAX_PATH);
-            }
+            // save path for next FILE_ACTION_RENAMED_NEW_NAME
+            lstrcpynW(szTempPath, szPath, MAX_PATH);
         }
 
         if (pInfo->NextEntryOffset == 0)
             break; // there is no next entry
 
-        // get next
+        // go next entry
         pInfo = (PFILE_NOTIFY_INFORMATION)((LPBYTE)pInfo + pInfo->NextEntryOffset);
     }
 }
