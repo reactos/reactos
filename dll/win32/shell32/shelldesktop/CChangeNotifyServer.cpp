@@ -47,7 +47,7 @@ DIRLIST::~DIRLIST()
 {
     if (this)
     {
-        for (DWORD i = 0; i < m_count; ++i)
+        for (SIZE_T i = 0; i < m_count; ++i)
         {
             free(m_items[i]);
         }
@@ -60,7 +60,7 @@ BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
     if (this == NULL)
         return FALSE;
 
-    for (DWORD i = 0; i < m_count; ++i)
+    for (SIZE_T i = 0; i < m_count; ++i)
     {
         if (m_items[i] == NULL)
             continue;
@@ -115,7 +115,7 @@ void DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
         return;
 
     WCHAR szPath[MAX_PATH + 1];
-    for (DWORD i = 0; i < m_count; ++i)
+    for (SIZE_T i = 0; i < m_count; ++i)
     {
         if (m_items[i] && lstrcmpiW(&m_items[i][1], pszPath1) == 0)
         {
@@ -134,7 +134,7 @@ void DIRLIST::DeleteItem(LPCWSTR pszPath, BOOL fDir)
     if (this == NULL)
         return;
 
-    for (DWORD i = 0; i < m_count; ++i)
+    for (SIZE_T i = 0; i < m_count; ++i)
     {
         if (m_items[i] && lstrcmpiW(&m_items[i][1], pszPath) == 0)
         {
