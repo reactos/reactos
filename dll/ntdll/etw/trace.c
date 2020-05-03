@@ -12,6 +12,19 @@
 
 #define FIXME DPRINT1
 
+ULONG
+NTAPI
+EtwRegisterTraceGuidsW(
+    WMIDPREQUEST RequestAddress,
+    PVOID RequestContext,
+    LPCGUID ControlGuid,
+    ULONG GuidCount,
+    PTRACE_GUID_REGISTRATION TraceGuidReg,
+    LPCWSTR MofImagePath,
+    LPCWSTR MofResourceName,
+    PTRACEHANDLE RegistrationHandle
+);
+
 /*
  * @unimplemented
  */
@@ -99,21 +112,43 @@ EtwUnregisterTraceGuids(
     return ERROR_SUCCESS;
 }
 
+/******************************************************************************
+ * EtwRegisterTraceGuidsA (NTDLL.@)
+ */
 ULONG
 NTAPI
 EtwRegisterTraceGuidsA(
-    WMIDPREQUEST RequestAddress,
-    PVOID RequestContext,
-    LPCGUID ControlGuid,
-    ULONG GuidCount,
-    PTRACE_GUID_REGISTRATION TraceGuidReg,
-    LPCSTR MofImagePath,
-    LPCSTR MofResourceName,
-    PTRACEHANDLE RegistrationHandle
+    _In_ WMIDPREQUEST RequestAddress,
+    _In_opt_ PVOID RequestContext,
+    _In_ LPCGUID ControlGuid,
+    _In_ ULONG GuidCount,
+    _In_reads_opt_(GuidCount) PTRACE_GUID_REGISTRATION TraceGuidReg,
+    _In_opt_ LPCSTR MofImagePath,
+    _In_opt_ LPCSTR MofResourceName,
+    _Out_ PTRACEHANDLE RegistrationHandle
 )
 {
-    FIXME("EtwRegisterTraceGuidsA stub()\n");
-    return ERROR_SUCCESS;
+    if (!RequestContext || !ControlGuid || !RegistrationHandle)
+        return ERROR_INVALID_PARAMETER;
+
+#if 0
+    // TODO: Should be NULL on XPsp2+... Test if error or simply ignored.
+    if (MofImagePath || MofResourceName)
+        return ERROR_INVALID_PARAMETER;
+#endif
+
+    FIXME("EtwRegisterTraceGuidsA(%p, %p, %p, %lu, %p, %p, %p, %p) stub\n",
+          RequestAddress, RequestContext, ControlGuid, GuidCount, TraceGuidReg,
+          MofImagePath, MofResourceName, RegistrationHandle);
+
+    return EtwRegisterTraceGuidsW(RequestAddress,
+                                  RequestContext,
+                                  ControlGuid,
+                                  GuidCount,
+                                  TraceGuidReg,
+                                  NULL,
+                                  NULL,
+                                  RegistrationHandle);
 }
 
 ULONG
