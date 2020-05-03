@@ -12,7 +12,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
-static void
+static inline void
 NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2)
 {
     SHChangeNotify(wEventId | SHCNE_INTERRUPT, SHCNF_PATHW, path1, path2);
