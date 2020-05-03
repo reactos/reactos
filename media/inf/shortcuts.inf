@@ -18,10 +18,12 @@ QuickLaunchShortcuts=26, Microsoft\Internet Explorer\Quick Launch
 %SystemRoot%\readme.txt, %README_TITLE%, %README_DESC%
 %SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE_SHORT%, %RAPPS_DESC%, 0
+%16422%\Internet Explorer\iexplore.exe, %IEXPLORE_TITLE_SHORT%, %IEXPLORE_DESC%, 0
 
 [ProgramShortcuts]
 %SystemRoot%\explorer.exe, %EXPLORER_TITLE%, %EXPLORER_DESC%, 1, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE%, %RAPPS_DESC%, 0
+%16422%\Internet Explorer\iexplore.exe, %IEXPLORE_TITLE%, %IEXPLORE_DESC%, 0
 
 [AdminToolsShortcuts]
 %SystemRoot%\system32\servman.exe, %SERVMAN_TITLE%, %SERVMAN_DESC%, 0
@@ -136,6 +138,9 @@ SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 UTILMAN_TITLE=Accessibility Utility Manager
 UTILMAN_DESC=Launch Accessibility Utility Manager
+IEXPLORE_TITLE=Wine Internet Explorer
+IEXPLORE_TITLE_SHORT=Wine Internet Explorer
+IEXPLORE_DESC=Wine Web Browser
 
 ; Bulgarian
 [Strings.0402]
@@ -585,6 +590,9 @@ SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
 UTILMAN_TITLE=Gestionnaire d'utilitaires d'accessibilité
 UTILMAN_DESC=Lance le gestionnaire d'utilitaires d'accessibilité
+IEXPLORE_TITLE=Wine Internet Explorer
+IEXPLORE_TITLE_SHORT=Wine Internet Explorer
+IEXPLORE_DESC=Lance le navigateur Wine Internet Explorer
 
 ; Hebrew
 [Strings.040D]
