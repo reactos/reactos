@@ -1,3 +1,5 @@
+# GetDomainName
+# QueryUserProperty
 @ stub RegBuildNumberQuery
 @ stub RegCdCreateA
 @ stub RegCdCreateW
@@ -10,17 +12,21 @@
 @ stub RegCloseServer
 @ stub RegConsoleShadowQueryA
 @ stub RegConsoleShadowQueryW
+# RegCreateUserConfigW
 @ stub RegDefaultUserConfigQueryA
 @ stub RegDefaultUserConfigQueryW
 @ stub RegDenyTSConnectionsPolicy
 @ stub RegFreeUtilityCommandList
+# RegGetLicensingModePolicy
 @ stub RegGetMachinePolicy
 @ stub RegGetMachinePolicyEx
+# RegGetMachinePolicyNew
 @ stub RegGetTServerVersion
 @ stub RegGetUserConfigFromUserParameters
 @ stub RegGetUserPolicy
 @ stub RegIsMachineInHelpMode
 @ stub RegIsMachinePolicyAllowHelp
+# RegIsTimeZoneRedirectionEnabled
 @ stub RegIsTServer
 @ stub RegMergeUserConfigWithUserParameters
 @ stub RegOpenServerA
@@ -58,12 +64,21 @@
 @ stub RegWinStationQueryA
 @ stub RegWinStationQueryDefaultSecurity
 @ stub RegWinStationQueryEx
+# RegWinStationQueryExNew
 @ stub RegWinStationQueryNumValueW
 @ stub RegWinStationQuerySecurityA
+# RegWinstationQuerySecurityConfig_Machine
+# RegWinstationQuerySecurityConfig_Merged
 @ stub RegWinStationQuerySecurityW
 @ stub RegWinStationQueryValueW
 @ stub RegWinStationQueryW
 @ stub RegWinStationSetNumValueW
 @ stub RegWinStationSetSecurityA
+# RegWinstationSetSecurityConfig
 @ stub RegWinStationSetSecurityW
+# SetUserProperty
+# UsrPropGetString
+# UsrPropGetValue
+# UsrPropSetString
+# UsrPropSetValue
 @ stub WaitForTSConnectionsPolicyChanges
