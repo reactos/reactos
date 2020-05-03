@@ -210,7 +210,7 @@ DIRLIST::GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive)
 static HANDLE s_hThread = NULL;
 static BOOL s_fTerminateAll = FALSE;
 
-// NOTE: Regard to Asynchronous procedure call (APC), please see:
+// NOTE: Regard to asynchronous procedure call (APC), please see:
 // https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleepex
 
 // The APC thread function for directory watch
