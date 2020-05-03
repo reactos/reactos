@@ -208,7 +208,7 @@ DIRLIST::GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive)
 // DirWatch --- directory watcher using ReadDirectoryChangesW
 
 static HANDLE s_hThreadAPC = NULL;
-static BOOL s_fTerminateAll = FALSE;
+static BOOL s_fTerminateAllWatches = FALSE;
 
 // NOTE: Regard to asynchronous procedure call (APC), please see:
 // https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleepex
@@ -216,7 +216,7 @@ static BOOL s_fTerminateAll = FALSE;
 // The APC thread function for directory watch
 static unsigned __stdcall DirWatchThreadFuncAPC(void *)
 {
-    while (!s_fTerminateAll)
+    while (!s_fTerminateAllWatches)
     {
 #if 1 // FIXME: This is a HACK
         WaitForSingleObjectEx(GetCurrentThread(), INFINITE, TRUE);
@@ -314,7 +314,7 @@ static void NTAPI _RequestTerminationAPC(ULONG_PTR Parameter)
 // The APC procedure to request termination of all the directory watches
 static void NTAPI _RequestAllTerminationAPC(ULONG_PTR Parameter)
 {
-    s_fTerminateAll = TRUE;
+    s_fTerminateAllWatches = TRUE;
     CloseHandle(s_hThreadAPC);
     s_hThreadAPC = NULL;
 }
@@ -779,7 +779,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
         if (s_hThreadAPC == NULL)
         {
             unsigned tid;
-            s_fTerminateAll = FALSE;
+            s_fTerminateAllWatches = FALSE;
             s_hThreadAPC = (HANDLE)_beginthreadex(NULL, 0, DirWatchThreadFuncAPC, NULL, 0, &tid);
             if (s_hThreadAPC == NULL)
             {
