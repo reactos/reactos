@@ -89,3 +89,5 @@ typedef struct HANDBAG
 #define HANDBAG_MAGIC 0xFACEB00C
 
 HRESULT CChangeNotifyServer_CreateInstance(REFIID riid, void **ppv);
+
+void NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2);

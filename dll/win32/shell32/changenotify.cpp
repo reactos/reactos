@@ -320,6 +320,23 @@ CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, L
         SendNotifyMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
 }
 
+void NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2)
+{
+    LPITEMIDLIST pidl1 = NULL, pidl2 = NULL;
+    if (path1)
+        pidl1 = SHSimpleIDListFromPathW(path1);
+    if (path2)
+        pidl2 = SHSimpleIDListFromPathW(path1);
+
+    CreateNotificationParamAndSend(wEventId | SHCNE_INTERRUPT, SHCNF_PATHW,
+                                   pidl1, pidl2, GetTickCount());
+
+    if (pidl1)
+        ILFree(pidl1);
+    if (pidl2)
+        ILFree(pidl2);
+}
+
 /*************************************************************************
  * SHChangeNotifyRegister           [SHELL32.2]
  */
@@ -573,7 +590,7 @@ SHChangeNotification_Lock(HANDLE hTicket, DWORD dwOwnerPID, LPITEMIDLIST **lppid
     if (lppidls)
         *lppidls = pHandbag->pidls;
     if (lpwEventId)
-        *lpwEventId = pHandbag->pTicket->wEventId;
+        *lpwEventId = (pHandbag->pTicket->wEventId & ~SHCNE_INTERRUPT);
 
     // return the handbag
     return pHandbag;

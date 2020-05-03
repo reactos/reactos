@@ -356,8 +356,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         if (pDirWatch->m_fRecursive)
         {
             // then, notify a SHCNE_UPDATEDIR
-            SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_INTERRUPT, SHCNF_PATHW,
-                           pDirWatch->m_szDir, NULL);
+            NotifyFileSystemChange(SHCNE_UPDATEDIR, pDirWatch->m_szDir, NULL);
 
             if (pInfo->NextEntryOffset == 0)
                 break; // there is no next entry
@@ -416,9 +415,9 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         {
             // notify
             if (pInfo->Action == FILE_ACTION_RENAMED_NEW_NAME)
-                SHChangeNotify(dwEvent | SHCNE_INTERRUPT, SHCNF_PATHW, szTempPath, szPath);
+                NotifyFileSystemChange(dwEvent, szTempPath, szPath);
             else
-                SHChangeNotify(dwEvent | SHCNE_INTERRUPT, SHCNF_PATHW, szPath, NULL);
+                NotifyFileSystemChange(dwEvent, szPath, NULL);
         }
         else if (pInfo->Action == FILE_ACTION_RENAMED_OLD_NAME)
         {
@@ -474,8 +473,7 @@ _NotificationCompletion(DWORD dwErrorCode,
     if (dwNumberOfBytesTransfered == 0)
     {
         // do notify a SHCNE_UPDATEDIR
-        SHChangeNotify(SHCNE_UPDATEDIR | SHCNE_INTERRUPT, SHCNF_PATHW,
-                       pDirWatch->m_szDir, NULL);
+        NotifyFileSystemChange(SHCNE_UPDATEDIR, pDirWatch->m_szDir, NULL);
     }
     else
     {
