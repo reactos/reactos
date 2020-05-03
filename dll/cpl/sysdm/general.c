@@ -153,12 +153,15 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                     TCHAR szCredits[2048];
                     INT iDevsHeight;
 
-                    top = 0;
+                    if (hDC == NULL)
+                        goto Cleanup;
+
+					top = 0;
                     offset = 0;
                     hCreditsDC = CreateCompatibleDC(hDC);
                     hLogoDC = CreateCompatibleDC(hCreditsDC);
 
-                    if (hCreditsDC == NULL || hLogoDC == NULL || hDC == NULL)
+                    if (hCreditsDC == NULL || hLogoDC == NULL)
                         goto Cleanup;
 
                     SetRect(&rcCredits, 0, 0, 0, 0);
@@ -205,7 +208,7 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
                     timerid = SetTimer(hwnd, 1, ANIM_TIME, NULL);
 
-                Cleanup:
+Cleanup:
                     if (hLogoDC != NULL) DeleteDC(hLogoDC);
                     if (hCreditsDC != NULL) DeleteDC(hCreditsDC);
                     if (hDC != NULL) ReleaseDC(NULL, hDC);
@@ -230,7 +233,8 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                 top = 0;
                 timerid = 0;
             }
-            InvalidateRect(hwnd, NULL, FALSE);
+            
+			InvalidateRect(hwnd, NULL, FALSE);
             break;
         case WM_TIMER:
             top += ANIM_STEP;
