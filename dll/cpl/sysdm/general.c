@@ -147,7 +147,7 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                 {
                     HDC hCreditsDC, hLogoDC;
                     HDC hDC = GetDC(NULL);
-                    HFONT hFont;
+                    HFONT hFont = NULL;
                     NONCLIENTMETRICS ncm;
                     RECT rcCredits;
                     TCHAR szCredits[2048];
@@ -170,6 +170,8 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
 
                     hFont = CreateFontIndirect(&ncm.lfMessageFont);
+                    if(!hFont)
+                        goto Cleanup;
                     SelectObject(hCreditsDC, hFont);
 
                     LoadString(hApplet, IDS_DEVS, szCredits, sizeof(szCredits) / sizeof(TCHAR));
@@ -209,6 +211,7 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                     timerid = SetTimer(hwnd, 1, ANIM_TIME, NULL);
 
 Cleanup:
+                    if (hFont != NULL) DeleteObject(hFont);
                     if (hLogoDC != NULL) DeleteDC(hLogoDC);
                     if (hCreditsDC != NULL) DeleteDC(hCreditsDC);
                     if (hDC != NULL) ReleaseDC(NULL, hDC);
@@ -228,13 +231,13 @@ Cleanup:
                     ReleaseDC(hwnd, hDC);
                 }
                 KillTimer(hwnd, timerid);
-                DeleteObject(hCreditsBitmap);
+                if (hCreditsBitmap != NULL) DeleteObject(hCreditsBitmap);
 
                 top = 0;
                 timerid = 0;
             }
             
-			InvalidateRect(hwnd, NULL, FALSE);
+            InvalidateRect(hwnd, NULL, FALSE);
             break;
         case WM_TIMER:
             top += ANIM_STEP;
@@ -252,7 +255,7 @@ Cleanup:
                     ReleaseDC(hwnd, hDC);
                 }
                 KillTimer(hwnd, timerid);
-                DeleteObject(hCreditsBitmap);
+                if (hCreditsBitmap != NULL) DeleteObject(hCreditsBitmap);
 
                 top = 0;
                 timerid = 0;
