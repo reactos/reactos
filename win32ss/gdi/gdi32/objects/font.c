@@ -2154,6 +2154,8 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
     };
 
 #if 1 /* This is a hack. See CORE-1091. */
+    /* It is needed because ReactOS does not support raster fonts now  */
+    /* After Raster Font support is added, then it can be removed      */
     /* Determine the current font's Pitch and Family to save for later */
     LOGFONT lf;
     HFONT hCurrentFont;
@@ -2170,8 +2172,12 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
         return 0;
 
     /* To compensate for the GetTextMetricsW call changing the PitchAndFamily */
+    /* to a Truetype one when we have a Raster Type font as our input         */
     /* we copy our stored value back into this field to restore the old value */
-    tm.tmPitchAndFamily = bPitchAndFamily;
+    if (tm.tmPitchAndFamily & ( TMPF_VECTOR | TMPF_TRUETYPE ))
+    {
+        tm.tmPitchAndFamily = bPitchAndFamily;
+    }
 #else
     if(!GetTextMetricsW(hdc, &tm)) return 0;
 #endif
