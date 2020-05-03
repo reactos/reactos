@@ -207,7 +207,7 @@ DIRLIST::GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive)
 //////////////////////////////////////////////////////////////////////////////
 // DirWatch --- directory watcher using ReadDirectoryChangesW
 
-static HANDLE s_hThread = NULL;
+static HANDLE s_hThreadAPC = NULL;
 static BOOL s_fTerminateAll = FALSE;
 
 // NOTE: Regard to asynchronous procedure call (APC), please see:
@@ -315,8 +315,8 @@ static void NTAPI _RequestTerminationAPC(ULONG_PTR Parameter)
 static void NTAPI _RequestAllTerminationAPC(ULONG_PTR Parameter)
 {
     s_fTerminateAll = TRUE;
-    CloseHandle(s_hThread);
-    s_hThread = NULL;
+    CloseHandle(s_hThreadAPC);
+    s_hThreadAPC = NULL;
 }
 
 // convert the file action to an event
@@ -686,9 +686,9 @@ void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndB
     // request termination of pDirWatch if any
     DirWatch *pDirWatch = item.pDirWatch;
     item.pDirWatch = NULL;
-    if (pDirWatch && s_hThread)
+    if (pDirWatch && s_hThreadAPC)
     {
-        QueueUserAPC(_RequestTerminationAPC, s_hThread, (ULONG_PTR)pDirWatch);
+        QueueUserAPC(_RequestTerminationAPC, s_hThreadAPC, (ULONG_PTR)pDirWatch);
     }
 
     // free
@@ -776,12 +776,12 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     if (pDirWatch)
     {
         // create an APC thread for directory watching
-        if (s_hThread == NULL)
+        if (s_hThreadAPC == NULL)
         {
             unsigned tid;
             s_fTerminateAll = FALSE;
-            s_hThread = (HANDLE)_beginthreadex(NULL, 0, DirWatchThreadFuncAPC, NULL, 0, &tid);
-            if (s_hThread == NULL)
+            s_hThreadAPC = (HANDLE)_beginthreadex(NULL, 0, DirWatchThreadFuncAPC, NULL, 0, &tid);
+            if (s_hThreadAPC == NULL)
             {
                 pRegEntry->nRegID = INVALID_REG_ID;
                 SHUnlockShared(pRegEntry);
@@ -790,7 +790,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
         }
 
         // request adding the watch
-        QueueUserAPC(_AddDirectoryProcAPC, s_hThread, (ULONG_PTR)pDirWatch);
+        QueueUserAPC(_AddDirectoryProcAPC, s_hThreadAPC, (ULONG_PTR)pDirWatch);
     }
 
     // unlock the registry entry
@@ -865,10 +865,10 @@ LRESULT CChangeNotifyServer::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lPar
 
 LRESULT CChangeNotifyServer::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (s_hThread)
+    if (s_hThreadAPC)
     {
         // request termination of all directory watches
-        QueueUserAPC(_RequestAllTerminationAPC, s_hThread, (ULONG_PTR)NULL);
+        QueueUserAPC(_RequestAllTerminationAPC, s_hThreadAPC, (ULONG_PTR)NULL);
     }
     return 0;
 }
