@@ -58,6 +58,7 @@ typedef struct
     PAGESTATE NextPage;
     RUN Run;
     IMGINFO ImageInfo;
+    struct _LIVECD_UNATTEND* Unattend;
 } STATE, *PSTATE;
 
 
