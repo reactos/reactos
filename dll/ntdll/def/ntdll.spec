@@ -71,7 +71,7 @@
 @ stdcall -stub EtwTraceEventInstance(double ptr ptr ptr)
 @ varargs EtwTraceMessage(ptr long ptr long)
 @ stdcall -stub EtwTraceMessageVa(double long ptr long ptr)
-@ stdcall EtwUnregisterTraceGuids(double)
+@ stdcall EtwUnregisterTraceGuids(int64)
 @ stdcall EtwUpdateTraceA(double str ptr)
 @ stdcall EtwUpdateTraceW(double wstr ptr)
 @ stdcall -stub EtwpGetTraceBuffer(long long long long)

@@ -19,7 +19,7 @@
 @ stdcall StartTraceW(ptr wstr ptr) advapi32.StartTraceW
 @ stdcall TraceEvent(int64 ptr) advapi32.TraceEvent
 @ stdcall TraceEventInstance(int64 ptr ptr ptr) advapi32.TraceEventInstance
-@ stdcall UnregisterTraceGuids(int64) advapi32.UnregisterTraceGuids
+@ stdcall UnregisterTraceGuids() advapi32.UnregisterTraceGuids
 @ stdcall WmiCloseBlock() advapi32.WmiCloseBlock
 @ stdcall WmiDevInstToInstanceNameA() advapi32.WmiDevInstToInstanceNameA
 @ stdcall WmiDevInstToInstanceNameW() advapi32.WmiDevInstToInstanceNameW

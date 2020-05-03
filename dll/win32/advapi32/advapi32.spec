@@ -640,7 +640,7 @@
 640 stub UninstallApplication
 641 stdcall UnlockServiceDatabase(ptr)
 642 stub UnregisterIdleTask
-643 stdcall UnregisterTraceGuids(double) ntdll.EtwUnregisterTraceGuids
+643 stdcall UnregisterTraceGuids() ntdll.EtwUnregisterTraceGuids
 644 stdcall UpdateTraceA(double str ptr) ntdll.EtwUpdateTraceA
 645 stdcall UpdateTraceW(double wstr ptr) ntdll.EtwUpdateTraceW
 646 stub WdmWmiServiceMain

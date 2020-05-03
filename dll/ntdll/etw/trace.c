@@ -82,13 +82,20 @@ EtwGetTraceEnableLevel(
     return 0xFF;
 }
 
+/******************************************************************************
+ * EtwUnregisterTraceGuids (NTDLL.@)
+ */
 ULONG
 NTAPI
 EtwUnregisterTraceGuids(
-    TRACEHANDLE RegistrationHandle
+    _In_ TRACEHANDLE RegistrationHandle
 )
 {
-    FIXME("EtwUnregisterTraceGuids stub()\n");
+    if (!RegistrationHandle)
+        return ERROR_INVALID_PARAMETER;
+
+    FIXME("EtwUnregisterTraceGuids(%I64x) stub\n", RegistrationHandle);
+
     return ERROR_SUCCESS;
 }
 
