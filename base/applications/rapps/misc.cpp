@@ -336,7 +336,7 @@ VOID CConfigParser::CacheINILocale()
     m_szCachedINISectionLocale = L"Section." + m_szLocaleID;
 
     // turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part
-    m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale + m_szLocaleID.Right(2);
+    m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale.Left(m_szCachedINISectionLocale.GetLength() - 2);
 }
 
 BOOL CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString)
