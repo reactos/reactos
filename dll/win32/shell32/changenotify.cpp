@@ -326,7 +326,7 @@ void NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2)
     if (path1)
         pidl1 = SHSimpleIDListFromPathW(path1);
     if (path2)
-        pidl2 = SHSimpleIDListFromPathW(path1);
+        pidl2 = SHSimpleIDListFromPathW(path2);
 
     CreateNotificationParamAndSend(wEventId | SHCNE_INTERRUPT, SHCNF_PATHW,
                                    pidl1, pidl2, GetTickCount());
