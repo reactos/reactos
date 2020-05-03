@@ -12,6 +12,12 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
+static void
+NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2)
+{
+    SHChangeNotify(wEventId | SHCNE_INTERRUPT, SHCNF_PATHW, path1, path2);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // DIRLIST --- directory list
 
@@ -538,7 +544,7 @@ static BOOL _BeginRead(DirWatch *pDirWatch)
 static DirWatch *
 CreateDirWatchFromRegEntry(LPREGENTRY pRegEntry)
 {
-    if (pRegEntry->ibPidl == 0 || pRegEntry->fEvents == 0)
+    if (pRegEntry->ibPidl == 0)
         return NULL;
 
     // it must be interrupt level if pRegEntry is a filesystem watch
