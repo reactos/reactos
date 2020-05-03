@@ -22,8 +22,6 @@ struct DIRLIST
         DL_DIR = L'|', DL_FILE = L'>'
     };
 
-    ~DIRLIST();
-
     static DIRLIST *
     AddItem(DIRLIST *pList OPTIONAL, LPCWSTR pszPath, BOOL fDir);
 
@@ -34,6 +32,8 @@ struct DIRLIST
     void RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir);
     void DeleteItem(LPCWSTR pszPath, BOOL fDir);
 
+    void Destroy();
+
 protected:
     SIZE_T m_count;
     LPWSTR m_items[ANYSIZE_ARRAY];
@@ -41,9 +41,13 @@ protected:
     DIRLIST()
     {
     }
+
+    ~DIRLIST()
+    {
+    }
 };
 
-DIRLIST::~DIRLIST()
+void DIRLIST::Destroy()
 {
     if (this)
     {
@@ -153,7 +157,7 @@ DIRLIST::GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive)
     if (!PathIsDirectoryW(szPath))
     {
         ERR("Not a directory\n");
-        delete pList;
+        pList->Destroy();
         return NULL;
     }
 
@@ -206,6 +210,7 @@ DIRLIST::GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive)
 static HANDLE s_hThread = NULL;
 static BOOL s_fTerminateAll = FALSE;
 
+// The APC thread function for directory watch
 static unsigned __stdcall DirWatchThreadFuncAPC(void *)
 {
     while (!s_fTerminateAll)
@@ -233,49 +238,54 @@ public:
     OVERLAPPED m_overlapped; // for async I/O
     DIRLIST *m_pDirList;
 
-    static DirWatch *Create(LPCWSTR pszDir, BOOL fSubTree = FALSE)
-    {
-        DirWatch *pDirWatch = new DirWatch(pszDir, fSubTree);
-        if (pDirWatch->m_hDir == INVALID_HANDLE_VALUE)
-        {
-            ERR("CreateFileW failed\n");
-            delete pDirWatch;
-            pDirWatch = NULL;
-        }
-        return pDirWatch;
-    }
-
-    ~DirWatch()
-    {
-        TRACE("DirWatch::~DirWatch: %p\n", this);
-
-        if (m_hDir != INVALID_HANDLE_VALUE && m_hDir != NULL)
-            CloseHandle(m_hDir);
-
-        delete m_pDirList;
-    }
+    static DirWatch *Create(LPCWSTR pszDir, BOOL fSubTree = FALSE);
+    ~DirWatch();
 
 protected:
-    DirWatch(LPCWSTR pszDir, BOOL fSubTree)
-    {
-        TRACE("DirWatch::DirWatch: %p\n", this);
-
-        m_fDeadWatch = FALSE;
-        m_fRecursive = fSubTree;
-
-        lstrcpynW(m_szDir, pszDir, MAX_PATH);
-
-        // open the directory to watch changes (for ReadDirectoryChangesW)
-        m_hDir = CreateFileW(pszDir, FILE_LIST_DIRECTORY,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                             NULL, OPEN_EXISTING,
-                             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
-                             NULL);
-
-        // set a directory list
-        m_pDirList = DIRLIST::GetDirList(NULL, pszDir, FALSE);
-    }
+    DirWatch(LPCWSTR pszDir, BOOL fSubTree);
 };
+
+DirWatch::DirWatch(LPCWSTR pszDir, BOOL fSubTree)
+{
+    TRACE("DirWatch::DirWatch: %p\n", this);
+
+    m_fDeadWatch = FALSE;
+    m_fRecursive = fSubTree;
+
+    lstrcpynW(m_szDir, pszDir, MAX_PATH);
+
+    // open the directory to watch changes (for ReadDirectoryChangesW)
+    m_hDir = CreateFileW(pszDir, FILE_LIST_DIRECTORY,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                         NULL, OPEN_EXISTING,
+                         FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
+                         NULL);
+
+    // set a directory list
+    m_pDirList = DIRLIST::GetDirList(NULL, pszDir, FALSE);
+}
+
+/*static*/ DirWatch *DirWatch::Create(LPCWSTR pszDir, BOOL fSubTree)
+{
+    DirWatch *pDirWatch = new DirWatch(pszDir, fSubTree);
+    if (pDirWatch->m_hDir == INVALID_HANDLE_VALUE)
+    {
+        ERR("CreateFileW failed\n");
+        delete pDirWatch;
+        pDirWatch = NULL;
+    }
+    return pDirWatch;
+}
+
+DirWatch::~DirWatch()
+{
+    TRACE("DirWatch::~DirWatch: %p\n", this);
+
+    if (m_hDir != INVALID_HANDLE_VALUE && m_hDir != NULL)
+        CloseHandle(m_hDir);
+
+    m_pDirList->Destroy();
+}
 
 static BOOL _BeginRead(DirWatch *pDirWatch);
 
