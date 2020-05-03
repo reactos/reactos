@@ -15,14 +15,14 @@
 ULONG
 NTAPI
 EtwRegisterTraceGuidsW(
-    WMIDPREQUEST RequestAddress,
-    PVOID RequestContext,
-    LPCGUID ControlGuid,
-    ULONG GuidCount,
-    PTRACE_GUID_REGISTRATION TraceGuidReg,
-    LPCWSTR MofImagePath,
-    LPCWSTR MofResourceName,
-    PTRACEHANDLE RegistrationHandle
+    _In_ WMIDPREQUEST RequestAddress,
+    _In_opt_ PVOID RequestContext,
+    _In_ LPCGUID ControlGuid,
+    _In_ ULONG GuidCount,
+    _In_reads_opt_(GuidCount) PTRACE_GUID_REGISTRATION TraceGuidReg,
+    _In_opt_ LPCWSTR MofImagePath,
+    _In_opt_ LPCWSTR MofResourceName,
+    _Out_ PTRACEHANDLE RegistrationHandle
 );
 
 /*
@@ -151,20 +151,64 @@ EtwRegisterTraceGuidsA(
                                   RegistrationHandle);
 }
 
+/******************************************************************************
+ * EtwRegisterTraceGuidsW (NTDLL.@)
+ *
+ * Register an event trace provider and the event trace classes that it uses
+ * to generate events.
+ *
+ * PARAMS
+ *  RequestAddress     [I]   ControlCallback function
+ *  RequestContext     [I]   Optional provider-defined context
+ *  ControlGuid        [I]   GUID of the registering provider
+ *  GuidCount          [I]   Number of elements in the TraceGuidReg array
+ *  TraceGuidReg       [I/O] Array of TRACE_GUID_REGISTRATION structures
+ *  MofImagePath       [I]   not supported, set to NULL
+ *  MofResourceName    [I]   not supported, set to NULL
+ *  RegistrationHandle [O]   Provider's registration handle
+ *
+ * RETURNS
+ *  Success: ERROR_SUCCESS
+ *  Failure: System error code
+ */
 ULONG
 NTAPI
 EtwRegisterTraceGuidsW(
-    WMIDPREQUEST RequestAddress,
-    PVOID RequestContext,
-    LPCGUID ControlGuid,
-    ULONG GuidCount,
-    PTRACE_GUID_REGISTRATION TraceGuidReg,
-    LPCWSTR MofImagePath,
-    LPCWSTR MofResourceName,
-    PTRACEHANDLE RegistrationHandle
+    _In_ WMIDPREQUEST RequestAddress,
+    _In_opt_ PVOID RequestContext,
+    _In_ LPCGUID ControlGuid,
+    _In_ ULONG GuidCount,
+    _In_reads_opt_(GuidCount) PTRACE_GUID_REGISTRATION TraceGuidReg,
+    _In_opt_ LPCWSTR MofImagePath,
+    _In_opt_ LPCWSTR MofResourceName,
+    _Out_ PTRACEHANDLE RegistrationHandle
 )
 {
-    FIXME("EtwRegisterTraceGuidsW stub()\n");
+    if (!RequestContext || !ControlGuid || !RegistrationHandle)
+        return ERROR_INVALID_PARAMETER;
+
+#if 0
+    // TODO: Should be NULL on XPsp2+... Test if error or simply ignored.
+    if (MofImagePath || MofResourceName)
+        return ERROR_INVALID_PARAMETER;
+#endif
+
+    FIXME("EtwRegisterTraceGuidsW(%p, %p, %p, %lu, %p, %p, %p, %p) stub\n",
+          RequestAddress, RequestContext, ControlGuid, GuidCount, TraceGuidReg,
+          MofImagePath, MofResourceName, RegistrationHandle);
+
+    if (TraceGuidReg)
+    {
+        ULONG i;
+        for (i = 0; i < GuidCount; i++)
+        {
+            FIXME("  register trace class %p\n", TraceGuidReg[i].Guid);
+            TraceGuidReg[i].RegHandle = UlongToPtr(0xdeadbeef);
+        }
+    }
+
+    *RegistrationHandle = (TRACEHANDLE)0xdeadbeef;
+
     return ERROR_SUCCESS;
 }
 

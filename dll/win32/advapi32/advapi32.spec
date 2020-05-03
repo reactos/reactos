@@ -527,7 +527,7 @@
 527 stdcall RegisterServiceCtrlHandlerExW(wstr ptr ptr)
 528 stdcall RegisterServiceCtrlHandlerW(wstr ptr)
 529 stdcall RegisterTraceGuidsA() ntdll.EtwRegisterTraceGuidsA
-530 stdcall RegisterTraceGuidsW(ptr ptr ptr long ptr wstr wstr ptr) ntdll.EtwRegisterTraceGuidsW
+530 stdcall RegisterTraceGuidsW() ntdll.EtwRegisterTraceGuidsW
 531 stub RemoveTraceCallback
 532 stdcall RemoveUsersFromEncryptedFile(wstr ptr)
 533 stdcall ReportEventA(long long long long ptr long long str ptr)
