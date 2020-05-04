@@ -12,6 +12,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
+// TODO: SHCNRF_RecursiveInterrupt
+
 static inline void
 NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2)
 {
@@ -20,6 +22,8 @@ NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2)
 
 //////////////////////////////////////////////////////////////////////////////
 // DIRLIST --- directory list
+
+// TODO: Share a DIRLIST in multiple Explorer
 
 struct DIRLISTITEM
 {
@@ -787,7 +791,7 @@ void CChangeNotifyServer::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID
     }
 }
 
-BOOL CreateAPCThread(void)
+static BOOL CreateAPCThread(void)
 {
     if (s_hThreadAPC != NULL)
         return TRUE;
