@@ -369,19 +369,18 @@ static void _ProcessNotification(DirWatch *pDirWatch)
     WCHAR szName[MAX_PATH], szPath[MAX_PATH], szTempPath[MAX_PATH];
     DWORD dwEvent, cbName;
     BOOL fDir;
-    WCHAR szChangePath[MAX_PATH];
 
     // if the watch is recursive
     if (pDirWatch->m_fRecursive)
     {
         // get the first change
-        if (!pDirWatch->m_DirList.GetFirstChange(szChangePath))
+        if (!pDirWatch->m_DirList.GetFirstChange(szPath))
             break;
 
         // then, notify a SHCNE_UPDATEDIR
-        if (lstrcmpiW(pDirWatch->m_szDir, szChangePath) != 0)
-            PathRemoveFileSpecW(szChangePath);
-        NotifyFileSystemChange(SHCNE_UPDATEDIR, szChangePath, NULL);
+        if (lstrcmpiW(pDirWatch->m_szDir, szPath) != 0)
+            PathRemoveFileSpecW(szPath);
+        NotifyFileSystemChange(SHCNE_UPDATEDIR, szPath, NULL);
 
         // refresh directory list
         pDirWatch->m_DirList.RemoveAll();
