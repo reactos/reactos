@@ -77,13 +77,12 @@ BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
         if (m_items[i].EqualPath(pszPath))
             return TRUE;
     }
-
     return FALSE;
 }
 
 BOOL DIRLIST::AddItem(LPCWSTR pszPath, DWORD dwFileSize, BOOL fDir)
 {
-    if (dwFileSize == 0xFFFFFFFF)
+    if (dwFileSize == INVALID_FILE_SIZE)
     {
         WIN32_FIND_DATAW find;
         HANDLE hFind = FindFirstFileW(pszPath, &find);
@@ -432,7 +431,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
                 List.AddItem(szPath, 0, TRUE);
                 break;
             case SHCNE_CREATE:
-                List.AddItem(szPath, 0xFFFFFFFF, FALSE);
+                List.AddItem(szPath, INVALID_FILE_SIZE, FALSE);
                 break;
             case SHCNE_RENAMEFOLDER:
                 List.RenameItem(szTempPath, szPath, TRUE);
