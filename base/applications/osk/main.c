@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         On-screen keyboard.
  * COPYRIGHT:       Denis ROBERT
- *                  Copyright 2019 George Bișoc (george.bisoc@reactos.org)
+ *                  Copyright 2019-2020 George Bișoc (george.bisoc@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -92,6 +92,20 @@ INT_PTR CALLBACK OSK_WarningProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lPar
     }
 
     return FALSE;
+}
+
+/***********************************************************************
+ *
+ *          OSK_WarningDlgThread
+ *
+ *  Thread procedure routine for the warning dialog box
+ */
+DWORD WINAPI OSK_WarningDlgThread(LPVOID lpParameter)
+{
+    HINSTANCE hInstance = (HINSTANCE)lpParameter;
+
+    DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_WARNINGDIALOG_OSK), Globals.hMainWnd, OSK_WarningProc);
+    return 0;
 }
 
 /***********************************************************************
@@ -811,7 +825,11 @@ int WINAPI wWinMain(HINSTANCE hInstance,
     /* If the member of the struct (bShowWarning) is set then display the dialog box */
     if (Globals.bShowWarning)
     {
-        DialogBoxW(Globals.hInstance, MAKEINTRESOURCEW(IDD_WARNINGDIALOG_OSK), Globals.hMainWnd, OSK_WarningProc);
+        /* If for whatever reason the thread fails to be created then handle the dialog box in main thread... */
+        if (CreateThread(NULL, 0, OSK_WarningDlgThread, (PVOID)Globals.hInstance, 0, NULL) == NULL)
+        {
+            DialogBoxW(Globals.hInstance, MAKEINTRESOURCEW(IDD_WARNINGDIALOG_OSK), Globals.hMainWnd, OSK_WarningProc);
+        }
     }
 
     /* Before initializing the dialog execution, check if the chosen keyboard type is standard or enhanced */
