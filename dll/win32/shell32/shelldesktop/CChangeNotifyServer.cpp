@@ -204,7 +204,7 @@ BOOL DIRLIST::GetFirstChange(LPWSTR pszPath) const
         }
         else
         {
-            if (!PathFileExists(m_items[i].strPath) ||
+            if (!PathFileExistsW(m_items[i].strPath) ||
                 PathIsDirectoryW(m_items[i].strPath))
             {
                 lstrcpynW(pszPath, m_items[i].strPath, MAX_PATH);
@@ -221,7 +221,7 @@ BOOL DIRLIST::GetFirstChange(LPWSTR pszPath) const
         if (m_items[i].IsEmpty() || m_items[i].fDir)
             continue;
 
-        hFind = FindFirstFile(m_items[i].strPath, &find);
+        hFind = FindFirstFileW(m_items[i].strPath, &find);
         FindClose(hFind);
         if (hFind == INVALID_HANDLE_VALUE ||
             find.nFileSizeLow != m_items[i].dwFileSize)
