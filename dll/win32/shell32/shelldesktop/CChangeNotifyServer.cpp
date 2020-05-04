@@ -395,7 +395,8 @@ static void _ProcessNotification(DirWatch *pDirWatch)
                 break;
 
             // then, notify a SHCNE_UPDATEDIR
-            PathRemoveFileSpecW(szChangePath);
+            if (lstrcmpiW(pDirWatch->m_szDir, szChangePath) != 0)
+                PathRemoveFileSpecW(szChangePath);
             NotifyFileSystemChange(SHCNE_UPDATEDIR, szChangePath, NULL);
 
             // update directory list
