@@ -194,19 +194,21 @@ BOOL DIRLIST::GetFirstChange(LPWSTR pszPath) const
         if (m_items[i].IsEmpty())
             continue;
 
-        if (m_items[i].fDir)
+        if (m_items[i].fDir) // item is a directory
         {
             if (!PathIsDirectoryW(m_items[i].strPath))
             {
+                // mismatched
                 lstrcpynW(pszPath, m_items[i].strPath, MAX_PATH);
                 return TRUE;
             }
         }
-        else
+        else // item is a normal file
         {
             if (!PathFileExistsW(m_items[i].strPath) ||
                 PathIsDirectoryW(m_items[i].strPath))
             {
+                // mismatched
                 lstrcpynW(pszPath, m_items[i].strPath, MAX_PATH);
                 return TRUE;
             }
@@ -221,11 +223,14 @@ BOOL DIRLIST::GetFirstChange(LPWSTR pszPath) const
         if (m_items[i].IsEmpty() || m_items[i].fDir)
             continue;
 
+        // get size
         hFind = FindFirstFileW(m_items[i].strPath, &find);
         FindClose(hFind);
+
         if (hFind == INVALID_HANDLE_VALUE ||
             find.nFileSizeLow != m_items[i].dwFileSize)
         {
+            // different size
             lstrcpynW(pszPath, m_items[i].strPath, MAX_PATH);
             return TRUE;
         }
@@ -435,7 +440,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
             dwEvent = SHCNE_RMDIR;
         }
 
-        // update pList
+        // update List
         switch (dwEvent)
         {
             case SHCNE_MKDIR:
