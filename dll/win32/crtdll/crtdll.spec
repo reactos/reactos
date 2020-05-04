@@ -20,7 +20,7 @@
   @ cdecl _CItan() msvcrt._CItan
   @ cdecl _CItanh() msvcrt._CItanh
   @ extern _HUGE_dll msvcrt._HUGE
-  @ cdecl _XcptFilter(long ptr) msvcrt._XcptFilter
+  @ cdecl _XcptFilter() msvcrt._XcptFilter
   @ cdecl __GetMainArgs(ptr ptr ptr long)
   @ extern __argc_dll msvcrt.__argc
   @ extern __argv_dll msvcrt.__argv
