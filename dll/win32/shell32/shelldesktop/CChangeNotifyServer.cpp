@@ -125,6 +125,7 @@ BOOL DIRLIST::GetDirList(LPCWSTR pszDir, BOOL fRecursive)
     // get the full path
     WCHAR szPath[MAX_PATH];
     lstrcpynW(szPath, pszDir, _countof(szPath));
+    assert(!PathIsRelativeW(szPath));
 
     // is it a directory?
     if (!PathIsDirectoryW(szPath))
