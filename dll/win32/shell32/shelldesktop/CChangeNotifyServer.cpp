@@ -93,8 +93,7 @@ BOOL DIRLIST::AddItem(LPCWSTR pszPath, DWORD dwFileSize, BOOL fDir)
     }
 
     DIRLISTITEM item = { pszPath, dwFileSize, fDir };
-    m_items.Add(item);
-    return TRUE;
+    return m_items.Add(item);
 }
 
 void DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
