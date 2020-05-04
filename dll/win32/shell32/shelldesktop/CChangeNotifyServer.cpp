@@ -7,7 +7,6 @@
 #include "shelldesktop.h"
 #include "shlwapi_undoc.h"
 #include <atlsimpcoll.h> // for CSimpleArray
-#include <atlstr.h>      // for CStringW
 #include <process.h>     // for _beginthreadex
 #include <assert.h>      // for assert
 
@@ -24,18 +23,25 @@ NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2)
 
 struct DIRLISTITEM
 {
-    CStringW strPath;
+    WCHAR szPath[MAX_PATH];
     DWORD dwFileSize;
     BOOL fDir;
 
+    DIRLISTITEM(LPCWSTR pszPath, DWORD dwSize, BOOL is_dir)
+    {
+        lstrcpynW(szPath, pszPath, _countof(szPath));
+        dwFileSize = dwSize;
+        fDir = is_dir;
+    }
+
     BOOL IsEmpty() const
     {
-        return strPath.GetLength() == 0;
+        return szPath[0] == 0;
     }
 
     BOOL EqualPath(LPCWSTR pszPath) const
     {
-        return lstrcmpiW(strPath, pszPath) == 0;
+        return lstrcmpiW(szPath, pszPath) == 0;
     }
 };
 
@@ -96,7 +102,7 @@ BOOL DIRLIST::AddItem(LPCWSTR pszPath, DWORD dwFileSize, BOOL fDir)
         dwFileSize = find.nFileSizeLow;
     }
 
-    DIRLISTITEM item = { pszPath, dwFileSize, fDir };
+    DIRLISTITEM item(pszPath, dwFileSize, fDir);
     return m_items.Add(item);
 }
 
@@ -109,7 +115,7 @@ BOOL DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
     {
         if (m_items[i].fDir == fDir && m_items[i].EqualPath(pszPath1))
         {
-            m_items[i].strPath = pszPath2;
+            lstrcpynW(m_items[i].szPath, pszPath2, _countof(m_items[i].szPath));
             return TRUE;
         }
     }
@@ -124,7 +130,7 @@ BOOL DIRLIST::DeleteItem(LPCWSTR pszPath, BOOL fDir)
     {
         if (m_items[i].fDir == fDir && m_items[i].EqualPath(pszPath))
         {
-            m_items[i].strPath.Empty();
+            m_items[i].szPath[0] = 0;
             return TRUE;
         }
     }
@@ -196,20 +202,20 @@ BOOL DIRLIST::GetFirstChange(LPWSTR pszPath) const
 
         if (m_items[i].fDir) // item is a directory
         {
-            if (!PathIsDirectoryW(m_items[i].strPath))
+            if (!PathIsDirectoryW(m_items[i].szPath))
             {
                 // mismatched
-                lstrcpynW(pszPath, m_items[i].strPath, MAX_PATH);
+                lstrcpynW(pszPath, m_items[i].szPath, MAX_PATH);
                 return TRUE;
             }
         }
         else // item is a normal file
         {
-            if (!PathFileExistsW(m_items[i].strPath) ||
-                PathIsDirectoryW(m_items[i].strPath))
+            if (!PathFileExistsW(m_items[i].szPath) ||
+                PathIsDirectoryW(m_items[i].szPath))
             {
                 // mismatched
-                lstrcpynW(pszPath, m_items[i].strPath, MAX_PATH);
+                lstrcpynW(pszPath, m_items[i].szPath, MAX_PATH);
                 return TRUE;
             }
         }
@@ -224,14 +230,14 @@ BOOL DIRLIST::GetFirstChange(LPWSTR pszPath) const
             continue;
 
         // get size
-        hFind = FindFirstFileW(m_items[i].strPath, &find);
+        hFind = FindFirstFileW(m_items[i].szPath, &find);
         FindClose(hFind);
 
         if (hFind == INVALID_HANDLE_VALUE ||
             find.nFileSizeLow != m_items[i].dwFileSize)
         {
             // different size
-            lstrcpynW(pszPath, m_items[i].strPath, MAX_PATH);
+            lstrcpynW(pszPath, m_items[i].szPath, MAX_PATH);
             return TRUE;
         }
     }
