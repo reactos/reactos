@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2006 Fatih Aşıcı, 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com), 2015-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATORS: 2006 Fatih Aşıcı, 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com), 2015-2016, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -821,34 +821,34 @@ BEGIN
     IDS_RUNDLG_BROWSE_FILTER "Çalıştırılabilir Kütükler (*.exe)\0*.exe\0Tüm Kütükler (*.*)\0*.*\0"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
-    IDS_PROGRAMS "Başlat Seçkesi\\İzlenceler"
+    IDS_PROGRAMS "Başlat Menüsü\\Programlar"
     IDS_PERSONAL "Belgelerim"
     IDS_FAVORITES "Yer İmleri"
-    IDS_STARTUP "Başlat Seçkesi\\İzlenceler\\Başlangıç"
+    IDS_STARTUP "Başlat Menüsü\\Programlar\\Başlangıç"
     IDS_RECENT "En Son"
     IDS_SENDTO "Gönder"
-    IDS_STARTMENU "Başlat Seçkesi"
-    IDS_MYMUSIC "Mûsikilerim"
-    IDS_MYVIDEO "Vidyolarım"
+    IDS_STARTMENU "Başlat Menüsü"
+    IDS_MYMUSIC "Müziklerim"
+    IDS_MYVIDEO "Videolarım"
     IDS_DESKTOPDIRECTORY "Masaüstü"
-    IDS_NETHOOD "Sunucular"
-    IDS_TEMPLATES "Kalıplar"
-    IDS_APPDATA "Uygulama Verisi"
+    IDS_NETHOOD "Ağ Komşuları"
+    IDS_TEMPLATES "Şablonlar"
+    IDS_APPDATA "Uygulama Verileri"
     IDS_PRINTHOOD "Yazıcılar"
-    IDS_LOCAL_APPDATA "Yerli Ayarlar\\Uygulama Verisi"
-    IDS_INTERNET_CACHE "Yerli Ayarlar\\Geçici Umûmî Ağ Kütükleri"
+    IDS_LOCAL_APPDATA "Yerel Ayarlar\\Uygulama Verileri"
+    IDS_INTERNET_CACHE "Yerel Ayarlar\\Geçici İnternet Dosyaları"
     IDS_COOKIES "Tanımlama Bilgileri"
-    IDS_HISTORY "Yerli Ayarlar\\Geçmiş"
-    IDS_PROGRAM_FILES "İzlence Kütükleri"
+    IDS_HISTORY "Yerel Ayarlar\\Geçmiş"
+    IDS_PROGRAM_FILES "Program Dosyaları"
     IDS_MYPICTURES "Resimlerim"
-    IDS_PROGRAM_FILES_COMMON "İzlence Kütükleri\\Ortak Kütükler"
+    IDS_PROGRAM_FILES_COMMON "Program Dosyaları\\Ortak Dosyalar"
     IDS_COMMON_DOCUMENTS "Belgeler"
-    IDS_ADMINTOOLS "Başlat Seçkesi\\İzlenceler\\Yönetim Araçları"
-    IDS_COMMON_MUSIC "Belgeler\\Mûsikilerim"
+    IDS_ADMINTOOLS "Başlat Menüsü\\Programlar\\Yönetim Araçları"
+    IDS_COMMON_MUSIC "Belgeler\\Müziklerim"
     IDS_COMMON_PICTURES "Belgeler\\Resimlerim"
-    IDS_COMMON_VIDEO "Belgeler\\Vidyolarım"
-    IDS_CDBURN_AREA "Yerli Ayarlar\\Uygulama Verisi\\Microsoft\\CD Yazma"
-    IDS_NETWORKPLACE "Ağ Komşularım"
+    IDS_COMMON_VIDEO "Belgeler\\Videolarım"
+    IDS_CDBURN_AREA "Yerel Ayarlar\\Uygulama Verileri\\Microsoft\\CD Yazma"
+    IDS_NETWORKPLACE "Ağ Bağlantılarım"
 
     IDS_NEWFOLDER "Yeni Dizin"
 
