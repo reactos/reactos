@@ -510,14 +510,16 @@ _NotificationCompletion(DWORD dwErrorCode,
     // directory), then, don't requeue notification.
     if (dwErrorCode == ERROR_OPERATION_ABORTED)
     {
-        ERR("ERROR_OPERATION_ABORTED\n");
+        TRACE("ERROR_OPERATION_ABORTED\n");
+        if (pDirWatch->m_fDeadWatch)
+            delete pDirWatch;
         return;
     }
 
     // is this watch dead?
     if (pDirWatch->m_fDeadWatch)
     {
-        ERR("m_fDeadWatch\n");
+        TRACE("m_fDeadWatch\n");
         delete pDirWatch;
         return;
     }
