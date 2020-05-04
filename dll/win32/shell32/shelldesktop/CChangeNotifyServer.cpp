@@ -375,7 +375,7 @@ static void _ProcessNotification(DirWatch *pDirWatch)
     {
         // get the first change
         if (!pDirWatch->m_DirList.GetFirstChange(szPath))
-            break;
+            return;
 
         // then, notify a SHCNE_UPDATEDIR
         if (lstrcmpiW(pDirWatch->m_szDir, szPath) != 0)
