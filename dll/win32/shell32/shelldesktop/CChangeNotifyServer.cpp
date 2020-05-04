@@ -368,12 +368,29 @@ static void _ProcessNotification(DirWatch *pDirWatch)
     PFILE_NOTIFY_INFORMATION pInfo = (PFILE_NOTIFY_INFORMATION)s_buffer;
     WCHAR szName[MAX_PATH], szPath[MAX_PATH], szTempPath[MAX_PATH];
     DWORD dwEvent, cbName;
-    BOOL fDir, fRefreshed = FALSE;
+    BOOL fDir;
     WCHAR szChangePath[MAX_PATH];
 
-    szPath[0] = szTempPath[0] = 0;
+    // if the watch is recursive
+    if (pDirWatch->m_fRecursive)
+    {
+        // get the first change
+        if (!pDirWatch->m_DirList.GetFirstChange(szChangePath))
+            break;
+
+        // then, notify a SHCNE_UPDATEDIR
+        if (lstrcmpiW(pDirWatch->m_szDir, szChangePath) != 0)
+            PathRemoveFileSpecW(szChangePath);
+        NotifyFileSystemChange(SHCNE_UPDATEDIR, szChangePath, NULL);
+
+        // refresh directory list
+        pDirWatch->m_DirList.RemoveAll();
+        pDirWatch->m_DirList.GetDirList(pDirWatch->m_szDir, TRUE);
+        return;
+    }
 
     // for each entry in s_buffer
+    szPath[0] = szTempPath[0] = 0;
     for (;;)
     {
         // get name (relative from pDirWatch->m_szDir)
@@ -386,34 +403,6 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         // NOTE: FILE_NOTIFY_INFORMATION.FileName is not null-terminated.
         ZeroMemory(szName, sizeof(szName));
         CopyMemory(szName, pInfo->FileName, cbName);
-
-        // if the watch is recursive
-        if (pDirWatch->m_fRecursive)
-        {
-            // get the first change
-            if (!pDirWatch->m_DirList.GetFirstChange(szChangePath))
-                break;
-
-            // then, notify a SHCNE_UPDATEDIR
-            if (lstrcmpiW(pDirWatch->m_szDir, szChangePath) != 0)
-                PathRemoveFileSpecW(szChangePath);
-            NotifyFileSystemChange(SHCNE_UPDATEDIR, szChangePath, NULL);
-
-            // refresh directory list
-            if (!fRefreshed)
-            {
-                pDirWatch->m_DirList.RemoveAll();
-                pDirWatch->m_DirList.GetDirList(pDirWatch->m_szDir, TRUE);
-                fRefreshed = TRUE;
-            }
-
-            if (pInfo->NextEntryOffset == 0)
-                break; // there is no next entry
-
-            // go next entry
-            pInfo = (PFILE_NOTIFY_INFORMATION)((LPBYTE)pInfo + pInfo->NextEntryOffset);
-            continue;
-        }
 
         // get full path
         lstrcpynW(szPath, pDirWatch->m_szDir, _countof(szPath));
