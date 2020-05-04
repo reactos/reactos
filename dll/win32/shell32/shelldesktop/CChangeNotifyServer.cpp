@@ -7,6 +7,7 @@
 #include "shelldesktop.h"
 #include "shlwapi_undoc.h"
 #include <atlsimpcoll.h> // for CSimpleArray
+#include <atlstr.h>      // for CStringW
 #include <process.h>     // for _beginthreadex
 #include <assert.h>      // for assert
 
@@ -21,116 +22,97 @@ NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2)
 //////////////////////////////////////////////////////////////////////////////
 // DIRLIST --- directory list
 
-struct DIRLIST
+struct DIRLISTITEM
 {
-    enum FirstChar // the first character of each item of m_items
+    CStringW strPath;
+    DWORD dwFileSize;
+    BOOL fDir;
+
+    BOOL IsEmpty() const
     {
-        DL_DIR = L'|', DL_FILE = L'>'
-    };
+        return strPath.GetLength() == 0;
+    }
 
-    static DIRLIST *
-    AddItem(DIRLIST *pList OPTIONAL, LPCWSTR pszPath, BOOL fDir);
+    BOOL EqualPath(LPCWSTR pszPath) const
+    {
+        return lstrcmpiW(strPath, pszPath) == 0;
+    }
+};
 
-    static DIRLIST *
-    GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive);
-
-    BOOL Contains(LPCWSTR pszPath, BOOL fDir) const;
-    void RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir);
-    void DeleteItem(LPCWSTR pszPath, BOOL fDir);
-
-    void Destroy();
-
-protected:
-    SIZE_T m_count;
-    LPWSTR m_items[ANYSIZE_ARRAY];
-
+class DIRLIST
+{
+public:
     DIRLIST()
     {
+    }
+
+    DIRLIST(LPCWSTR pszDir, BOOL fRecursive)
+    {
+        GetDirList(pszDir, fRecursive);
     }
 
     ~DIRLIST()
     {
     }
-};
 
-void DIRLIST::Destroy()
-{
-    if (this)
+    BOOL AddItem(LPCWSTR pszPath, DWORD dwFileSize, BOOL fDir);
+    BOOL GetDirList(LPCWSTR pszDir, BOOL fRecursive);
+    BOOL Contains(LPCWSTR pszPath, BOOL fDir) const;
+    void RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir);
+    void DeleteItem(LPCWSTR pszPath, BOOL fDir);
+    BOOL GetFirstChange(LPWSTR pszPath) const;
+
+    void RemoveAll()
     {
-        for (SIZE_T i = 0; i < m_count; ++i)
-        {
-            free(m_items[i]);
-        }
-        free(this);
+        m_items.RemoveAll();
     }
-}
+
+protected:
+    CSimpleArray<DIRLISTITEM> m_items;
+};
 
 BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
 {
-    if (this == NULL)
-        return FALSE;
-
-    for (SIZE_T i = 0; i < m_count; ++i)
+    for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        if (m_items[i] == NULL)
+        if (m_items[i].IsEmpty())
             continue;
 
-        if (fDir)
-        {
-            if (m_items[i][0] != DL_DIR)
-                continue;
-        }
-        else
-        {
-            if (m_items[i][0] != DL_FILE)
-                continue;
-        }
+        if (fDir != m_items[i].fDir)
+            continue;
 
-        if (lstrcmpiW(&m_items[i][1], pszPath) == 0)
+        if (m_items[i].EqualPath(pszPath))
             return TRUE;
     }
 
     return FALSE;
 }
 
-/*static*/ DIRLIST *
-DIRLIST::AddItem(DIRLIST *pList OPTIONAL, LPCWSTR pszPath, BOOL fDir)
+BOOL DIRLIST::AddItem(LPCWSTR pszPath, DWORD dwFileSize, BOOL fDir)
 {
-    SIZE_T cbDirList = sizeof(DIRLIST);
-    if (pList)
-        cbDirList += pList->m_count * sizeof(LPWSTR);
+    if (dwFileSize == 0xFFFFFFFF)
+    {
+        WIN32_FIND_DATAW find;
+        HANDLE hFind = FindFirstFileW(pszPath, &find);
+        if (hFind == INVALID_HANDLE_VALUE)
+            return FALSE;
+        FindClose(hFind);
+        dwFileSize = find.nFileSizeLow;
+    }
 
-    DIRLIST *pNewList = (DIRLIST *)realloc(pList, cbDirList);
-    if (pNewList == NULL)
-        return pList;
-
-    if (pList == NULL)
-        pNewList->m_count = 0;
-
-    WCHAR szPath[MAX_PATH + 1];
-    szPath[0] = fDir ? DL_DIR : DL_FILE;
-    lstrcpynW(&szPath[1], pszPath, _countof(szPath) - 1);
-
-    pNewList->m_items[pNewList->m_count] = _wcsdup(szPath);
-    pNewList->m_count++;
-    return pNewList;
+    DIRLISTITEM item = { pszPath, dwFileSize, fDir };
+    m_items.Add(item);
+    return TRUE;
 }
 
 void DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
 {
-    if (this == NULL)
-        return;
-
-    WCHAR szPath[MAX_PATH + 1];
-    for (SIZE_T i = 0; i < m_count; ++i)
+    for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszPath1) == 0)
+        if (!m_items[i].IsEmpty() && m_items[i].EqualPath(pszPath1))
         {
-            szPath[0] = (fDir ? DL_DIR : DL_FILE);
-            lstrcpynW(&szPath[1], pszPath2, _countof(szPath) - 1);
-
-            free(m_items[i]);
-            m_items[i] = _wcsdup(szPath);
+            m_items[i].strPath = pszPath2;
+            m_items[i].fDir = fDir;
             return;
         }
     }
@@ -138,22 +120,16 @@ void DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
 
 void DIRLIST::DeleteItem(LPCWSTR pszPath, BOOL fDir)
 {
-    if (this == NULL)
-        return;
-
-    for (SIZE_T i = 0; i < m_count; ++i)
+    for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        if (m_items[i] && lstrcmpiW(&m_items[i][1], pszPath) == 0)
+        if (m_items[i].IsEmpty() && m_items[i].EqualPath(pszPath))
         {
-            free(m_items[i]);
-            m_items[i] = NULL;
-            return;
+            m_items[i].strPath.Empty();
         }
     }
 }
 
-/*static*/ DIRLIST *
-DIRLIST::GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive)
+BOOL DIRLIST::GetDirList(LPCWSTR pszDir, BOOL fRecursive)
 {
     // get the full path
     WCHAR szPath[MAX_PATH];
@@ -161,23 +137,20 @@ DIRLIST::GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive)
 
     // is it a directory?
     if (!PathIsDirectoryW(szPath))
-    {
-        ERR("Not a directory\n");
-        pList->Destroy();
-        return NULL;
-    }
+        return FALSE;
 
     // add the path
-    pList = AddItem(pList, szPath, TRUE);
+    if (!AddItem(szPath, 0, TRUE))
+        return FALSE;
 
     // enumerate the file items to remember
-    WIN32_FIND_DATAW find;
     PathAppendW(szPath, L"*");
+    WIN32_FIND_DATAW find;
     HANDLE hFind = FindFirstFileW(szPath, &find);
     if (hFind == INVALID_HANDLE_VALUE)
     {
         ERR("FindFirstFileW failed\n");
-        return pList;
+        return FALSE;
     }
 
     do
@@ -200,14 +173,62 @@ DIRLIST::GetDirList(DIRLIST *pList OPTIONAL, LPCWSTR pszDir, BOOL fRecursive)
 
         // add the path and do recurse
         if (fRecursive && (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-            pList = GetDirList(pList, szPath, fRecursive);
+            GetDirList(szPath, fRecursive);
         else
-            pList = AddItem(pList, szPath, FALSE);
+            AddItem(szPath, find.nFileSizeLow, FALSE);
     } while (FindNextFileW(hFind, &find));
 
     FindClose(hFind);
 
-    return pList;
+    return TRUE;
+}
+
+BOOL DIRLIST::GetFirstChange(LPWSTR pszPath) const
+{
+    // validate paths
+    for (INT i = 0; i < m_items.GetSize(); ++i)
+    {
+        if (m_items[i].IsEmpty())
+            continue;
+
+        if (m_items[i].fDir)
+        {
+            if (!PathIsDirectoryW(m_items[i].strPath))
+            {
+                lstrcpynW(pszPath, m_items[i].strPath, MAX_PATH);
+                return TRUE;
+            }
+        }
+        else
+        {
+            if (!PathFileExists(m_items[i].strPath) ||
+                PathIsDirectoryW(m_items[i].strPath))
+            {
+                lstrcpynW(pszPath, m_items[i].strPath, MAX_PATH);
+                return TRUE;
+            }
+        }
+    }
+
+    // check sizes
+    HANDLE hFind;
+    WIN32_FIND_DATAW find;
+    for (INT i = 0; i < m_items.GetSize(); ++i)
+    {
+        if (m_items[i].IsEmpty() || m_items[i].fDir)
+            continue;
+
+        hFind = FindFirstFile(m_items[i].strPath, &find);
+        FindClose(hFind);
+        if (hFind == INVALID_HANDLE_VALUE ||
+            find.nFileSizeLow != m_items[i].dwFileSize)
+        {
+            lstrcpynW(pszPath, m_items[i].strPath, MAX_PATH);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -245,7 +266,7 @@ public:
     BOOL m_fDeadWatch;
     BOOL m_fRecursive;
     OVERLAPPED m_overlapped; // for async I/O
-    DIRLIST *m_pDirList;
+    DIRLIST m_DirList;
 
     static DirWatch *Create(LPCWSTR pszDir, BOOL fSubTree = FALSE);
     ~DirWatch();
@@ -271,7 +292,7 @@ DirWatch::DirWatch(LPCWSTR pszDir, BOOL fSubTree)
                          NULL);
 
     // set a directory list
-    m_pDirList = DIRLIST::GetDirList(NULL, pszDir, FALSE);
+    m_DirList.GetDirList(pszDir, fSubTree);
 }
 
 /*static*/ DirWatch *DirWatch::Create(LPCWSTR pszDir, BOOL fSubTree)
@@ -290,10 +311,8 @@ DirWatch::~DirWatch()
 {
     TRACE("DirWatch::~DirWatch: %p\n", this);
 
-    if (m_hDir != INVALID_HANDLE_VALUE && m_hDir != NULL)
+    if (m_hDir != INVALID_HANDLE_VALUE)
         CloseHandle(m_hDir);
-
-    m_pDirList->Destroy();
 }
 
 static BOOL _BeginRead(DirWatch *pDirWatch);
@@ -374,8 +393,18 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         // if the watch is recursive
         if (pDirWatch->m_fRecursive)
         {
+            // get the first change
+            WCHAR szChangePath[MAX_PATH];
+            if (!pDirWatch->m_DirList.GetFirstChange(szChangePath))
+                break;
+
+            // update directory list
+            pDirWatch->m_DirList.RemoveAll();
+            pDirWatch->m_DirList.GetDirList(pDirWatch->m_szDir, TRUE);
+
             // then, notify a SHCNE_UPDATEDIR
-            NotifyFileSystemChange(SHCNE_UPDATEDIR, pDirWatch->m_szDir, NULL);
+            PathRemoveFileSpecW(szChangePath);
+            NotifyFileSystemChange(SHCNE_UPDATEDIR, szChangePath, NULL);
 
             if (pInfo->NextEntryOffset == 0)
                 break; // there is no next entry
@@ -401,10 +430,10 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         dwEvent = ConvertActionToEvent(pInfo->Action, fDir);
 
         // get the directory list of pDirWatch
-        DIRLIST*& pList = pDirWatch->m_pDirList;
+        DIRLIST& List = pDirWatch->m_DirList;
 
         // convert SHCNE_DELETE to SHCNE_RMDIR if the path is a directory
-        if (!fDir && (dwEvent == SHCNE_DELETE) && pList->Contains(szPath, TRUE))
+        if (!fDir && (dwEvent == SHCNE_DELETE) && List.Contains(szPath, TRUE))
         {
             fDir = TRUE;
             dwEvent = SHCNE_RMDIR;
@@ -414,19 +443,19 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         switch (dwEvent)
         {
             case SHCNE_MKDIR:
-                pList = DIRLIST::AddItem(pList, szPath, TRUE);
+                List.AddItem(szPath, 0, TRUE);
                 break;
             case SHCNE_CREATE:
-                pList = DIRLIST::AddItem(pList, szPath, FALSE);
+                List.AddItem(szPath, 0xFFFFFFFF, FALSE);
                 break;
             case SHCNE_RENAMEFOLDER:
-                pList->RenameItem(szTempPath, szPath, TRUE);
+                List.RenameItem(szTempPath, szPath, TRUE);
                 break;
             case SHCNE_RENAMEITEM:
-                pList->RenameItem(szTempPath, szPath, FALSE);
+                List.RenameItem(szTempPath, szPath, FALSE);
                 break;
             case SHCNE_RMDIR:
-                pList->DeleteItem(szPath, TRUE);
+                List.DeleteItem(szPath, TRUE);
                 break;
         }
 
