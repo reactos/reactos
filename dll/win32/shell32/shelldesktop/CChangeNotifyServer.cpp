@@ -820,6 +820,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
             {
                 pRegEntry->nRegID = INVALID_REG_ID;
                 SHUnlockShared(pRegEntry);
+                delete pDirWatch;
                 return FALSE;
             }
         }
