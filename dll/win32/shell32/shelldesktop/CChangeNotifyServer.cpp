@@ -75,10 +75,7 @@ BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
 {
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        if (m_items[i].IsEmpty())
-            continue;
-
-        if (fDir != m_items[i].fDir)
+        if (m_items[i].IsEmpty() || fDir != m_items[i].fDir)
             continue;
 
         if (m_items[i].EqualPath(pszPath))
@@ -109,10 +106,9 @@ void DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
 {
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        if (!m_items[i].IsEmpty() && m_items[i].EqualPath(pszPath1))
+        if (m_items[i].fDir == fDir && m_items[i].EqualPath(pszPath1))
         {
             m_items[i].strPath = pszPath2;
-            m_items[i].fDir = fDir;
             return;
         }
     }
@@ -122,7 +118,7 @@ void DIRLIST::DeleteItem(LPCWSTR pszPath, BOOL fDir)
 {
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        if (m_items[i].IsEmpty() && m_items[i].EqualPath(pszPath))
+        if (m_items[i].fDir == fDir && m_items[i].EqualPath(pszPath))
         {
             m_items[i].strPath.Empty();
         }
@@ -398,13 +394,13 @@ static void _ProcessNotification(DirWatch *pDirWatch)
             if (!pDirWatch->m_DirList.GetFirstChange(szChangePath))
                 break;
 
-            // update directory list
-            pDirWatch->m_DirList.RemoveAll();
-            pDirWatch->m_DirList.GetDirList(pDirWatch->m_szDir, TRUE);
-
             // then, notify a SHCNE_UPDATEDIR
             PathRemoveFileSpecW(szChangePath);
             NotifyFileSystemChange(SHCNE_UPDATEDIR, szChangePath, NULL);
+
+            // update directory list
+            pDirWatch->m_DirList.RemoveAll();
+            pDirWatch->m_DirList.GetDirList(pDirWatch->m_szDir, TRUE);
 
             if (pInfo->NextEntryOffset == 0)
                 break; // there is no next entry
