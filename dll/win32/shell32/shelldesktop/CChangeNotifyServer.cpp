@@ -51,10 +51,6 @@ public:
         GetDirList(pszDir, fRecursive);
     }
 
-    ~DIRLIST()
-    {
-    }
-
     BOOL AddItem(LPCWSTR pszPath, DWORD dwFileSize, BOOL fDir);
     BOOL GetDirList(LPCWSTR pszDir, BOOL fRecursive);
     BOOL Contains(LPCWSTR pszPath, BOOL fDir) const;
