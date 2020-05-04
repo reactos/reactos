@@ -124,7 +124,7 @@ BOOL DIRLIST::GetDirList(LPCWSTR pszDir, BOOL fRecursive)
 {
     // get the full path
     WCHAR szPath[MAX_PATH];
-    GetFullPathNameW(pszDir, _countof(szPath), szPath, NULL);
+    lstrcpynW(szPath, pszDir, _countof(szPath));
 
     // is it a directory?
     if (!PathIsDirectoryW(szPath))
@@ -267,11 +267,11 @@ protected:
 };
 
 DirWatch::DirWatch(LPCWSTR pszDir, BOOL fSubTree)
+    : m_fDeadWatch(FALSE)
+    , m_fRecursive(fSubTree)
+    , m_DirList(pszDir, fSubTree)
 {
     TRACE("DirWatch::DirWatch: %p\n", this);
-
-    m_fDeadWatch = FALSE;
-    m_fRecursive = fSubTree;
 
     lstrcpynW(m_szDir, pszDir, MAX_PATH);
 
@@ -281,14 +281,14 @@ DirWatch::DirWatch(LPCWSTR pszDir, BOOL fSubTree)
                          NULL, OPEN_EXISTING,
                          FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
                          NULL);
-
-    // set a directory list
-    m_DirList.GetDirList(pszDir, fSubTree);
 }
 
 /*static*/ DirWatch *DirWatch::Create(LPCWSTR pszDir, BOOL fSubTree)
 {
-    DirWatch *pDirWatch = new DirWatch(pszDir, fSubTree);
+    WCHAR szFullPath[MAX_PATH];
+    GetFullPathNameW(pszDir, _countof(szFullPath), szFullPath, NULL);
+
+    DirWatch *pDirWatch = new DirWatch(szFullPath, fSubTree);
     if (pDirWatch->m_hDir == INVALID_HANDLE_VALUE)
     {
         ERR("CreateFileW failed\n");
