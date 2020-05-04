@@ -121,6 +121,7 @@ void DIRLIST::DeleteItem(LPCWSTR pszPath, BOOL fDir)
         if (m_items[i].fDir == fDir && m_items[i].EqualPath(pszPath))
         {
             m_items[i].strPath.Empty();
+            return;
         }
     }
 }
