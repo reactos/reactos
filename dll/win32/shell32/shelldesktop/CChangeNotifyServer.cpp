@@ -368,7 +368,8 @@ static void _ProcessNotification(DirWatch *pDirWatch)
     PFILE_NOTIFY_INFORMATION pInfo = (PFILE_NOTIFY_INFORMATION)s_buffer;
     WCHAR szName[MAX_PATH], szPath[MAX_PATH], szTempPath[MAX_PATH];
     DWORD dwEvent, cbName;
-    BOOL fDir;
+    BOOL fDir, fRefreshed = FALSE;
+    WCHAR szChangePath[MAX_PATH];
 
     szPath[0] = szTempPath[0] = 0;
 
@@ -390,7 +391,6 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         if (pDirWatch->m_fRecursive)
         {
             // get the first change
-            WCHAR szChangePath[MAX_PATH];
             if (!pDirWatch->m_DirList.GetFirstChange(szChangePath))
                 break;
 
@@ -399,9 +399,13 @@ static void _ProcessNotification(DirWatch *pDirWatch)
                 PathRemoveFileSpecW(szChangePath);
             NotifyFileSystemChange(SHCNE_UPDATEDIR, szChangePath, NULL);
 
-            // update directory list
-            pDirWatch->m_DirList.RemoveAll();
-            pDirWatch->m_DirList.GetDirList(pDirWatch->m_szDir, TRUE);
+            // refresh directory list
+            if (!fRefreshed)
+            {
+                pDirWatch->m_DirList.RemoveAll();
+                pDirWatch->m_DirList.GetDirList(pDirWatch->m_szDir, TRUE);
+                fRefreshed = TRUE;
+            }
 
             if (pInfo->NextEntryOffset == 0)
                 break; // there is no next entry
