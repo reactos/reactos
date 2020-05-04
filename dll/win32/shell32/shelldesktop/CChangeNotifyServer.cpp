@@ -69,6 +69,8 @@ protected:
 
 BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
 {
+    assert(!PathIsRelativeW(pszPath));
+
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
         if (m_items[i].IsEmpty() || fDir != m_items[i].fDir)
@@ -82,6 +84,8 @@ BOOL DIRLIST::Contains(LPCWSTR pszPath, BOOL fDir) const
 
 BOOL DIRLIST::AddItem(LPCWSTR pszPath, DWORD dwFileSize, BOOL fDir)
 {
+    assert(!PathIsRelativeW(pszPath));
+
     if (dwFileSize == INVALID_FILE_SIZE)
     {
         WIN32_FIND_DATAW find;
@@ -98,6 +102,9 @@ BOOL DIRLIST::AddItem(LPCWSTR pszPath, DWORD dwFileSize, BOOL fDir)
 
 void DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
 {
+    assert(!PathIsRelativeW(pszPath1));
+    assert(!PathIsRelativeW(pszPath2));
+
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
         if (m_items[i].fDir == fDir && m_items[i].EqualPath(pszPath1))
@@ -110,6 +117,8 @@ void DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
 
 void DIRLIST::DeleteItem(LPCWSTR pszPath, BOOL fDir)
 {
+    assert(!PathIsRelativeW(pszPath));
+
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
         if (m_items[i].fDir == fDir && m_items[i].EqualPath(pszPath))
