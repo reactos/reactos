@@ -536,7 +536,10 @@ static BOOL _BeginRead(DirWatch *pDirWatch)
     assert(pDirWatch != NULL);
 
     if (pDirWatch->m_fDeadWatch)
+    {
+        delete pDirWatch;
         return FALSE; // the watch is dead
+    }
 
     // initialize the buffer and the overlapped
     ZeroMemory(s_buffer, sizeof(s_buffer));
