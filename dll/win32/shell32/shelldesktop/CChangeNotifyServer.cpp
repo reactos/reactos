@@ -54,8 +54,8 @@ public:
     BOOL AddItem(LPCWSTR pszPath, DWORD dwFileSize, BOOL fDir);
     BOOL GetDirList(LPCWSTR pszDir, BOOL fRecursive);
     BOOL Contains(LPCWSTR pszPath, BOOL fDir) const;
-    void RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir);
-    void DeleteItem(LPCWSTR pszPath, BOOL fDir);
+    BOOL RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir);
+    BOOL DeleteItem(LPCWSTR pszPath, BOOL fDir);
     BOOL GetFirstChange(LPWSTR pszPath) const;
 
     void RemoveAll()
@@ -100,7 +100,7 @@ BOOL DIRLIST::AddItem(LPCWSTR pszPath, DWORD dwFileSize, BOOL fDir)
     return m_items.Add(item);
 }
 
-void DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
+BOOL DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
 {
     assert(!PathIsRelativeW(pszPath1));
     assert(!PathIsRelativeW(pszPath2));
@@ -110,12 +110,13 @@ void DIRLIST::RenameItem(LPCWSTR pszPath1, LPCWSTR pszPath2, BOOL fDir)
         if (m_items[i].fDir == fDir && m_items[i].EqualPath(pszPath1))
         {
             m_items[i].strPath = pszPath2;
-            return;
+            return TRUE;
         }
     }
+    return FALSE;
 }
 
-void DIRLIST::DeleteItem(LPCWSTR pszPath, BOOL fDir)
+BOOL DIRLIST::DeleteItem(LPCWSTR pszPath, BOOL fDir)
 {
     assert(!PathIsRelativeW(pszPath));
 
@@ -124,9 +125,10 @@ void DIRLIST::DeleteItem(LPCWSTR pszPath, BOOL fDir)
         if (m_items[i].fDir == fDir && m_items[i].EqualPath(pszPath))
         {
             m_items[i].strPath.Empty();
-            return;
+            return TRUE;
         }
     }
+    return FALSE;
 }
 
 BOOL DIRLIST::GetDirList(LPCWSTR pszDir, BOOL fRecursive)
@@ -437,22 +439,28 @@ static void _ProcessNotification(DirWatch *pDirWatch)
         switch (dwEvent)
         {
             case SHCNE_MKDIR:
-                List.AddItem(szPath, 0, TRUE);
+                if (!List.AddItem(szPath, 0, TRUE))
+                    dwEvent = 0;
                 break;
             case SHCNE_CREATE:
-                List.AddItem(szPath, INVALID_FILE_SIZE, FALSE);
+                if (!List.AddItem(szPath, INVALID_FILE_SIZE, FALSE))
+                    dwEvent = 0;
                 break;
             case SHCNE_RENAMEFOLDER:
-                List.RenameItem(szTempPath, szPath, TRUE);
+                if (!List.RenameItem(szTempPath, szPath, TRUE))
+                    dwEvent = 0;
                 break;
             case SHCNE_RENAMEITEM:
-                List.RenameItem(szTempPath, szPath, FALSE);
+                if (!List.RenameItem(szTempPath, szPath, FALSE))
+                    dwEvent = 0;
                 break;
             case SHCNE_RMDIR:
-                List.DeleteItem(szPath, TRUE);
+                if (!List.DeleteItem(szPath, TRUE))
+                    dwEvent = 0;
                 break;
             case SHCNE_DELETE:
-                List.DeleteItem(szPath, FALSE);
+                if (!List.DeleteItem(szPath, FALSE))
+                    dwEvent = 0;
                 break;
         }
 
