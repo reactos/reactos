@@ -228,62 +228,6 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     return CallWindowProcW(oldwndproc, hwnd, uMsg, wParam, lParam);
 }
 
-static VOID
-UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
-{
-    LPCWSTR keyPath, rootName;
-    LPWSTR fullPath;
-
-    /* Wipe the listview, the status bar and the address bar if the root key was selected */
-    if (TreeView_GetParent(g_pChildWnd->hTreeWnd, hItem) == NULL)
-    {
-        ListView_DeleteAllItems(g_pChildWnd->hListWnd);
-        SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)NULL);
-        SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)NULL);
-        return;
-    }
-
-    if (pszPath == NULL)
-        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, hItem, &hRootKey);
-    else
-        keyPath = pszPath;
-
-    if (keyPath)
-    {
-        RefreshListView(g_pChildWnd->hListWnd, hRootKey, keyPath);
-        rootName = get_root_key_name(hRootKey);
-        fullPath = HeapAlloc(GetProcessHeap(), 0, (wcslen(rootName) + 1 + wcslen(keyPath) + 1) * sizeof(WCHAR));
-        if (fullPath)
-        {
-            /* set (correct) the address bar text */
-            if (keyPath[0] != L'\0')
-                swprintf(fullPath, L"%s\\%s", rootName, keyPath);
-            else
-                fullPath = wcscpy(fullPath, rootName);
-            SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)fullPath);
-            SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
-            HeapFree(GetProcessHeap(), 0, fullPath);
-            /* disable hive manipulation items temporarily (enable only if necessary) */
-            EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
-            EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
-            /* compare the strings to see if we should enable/disable the "Load Hive" menus accordingly */
-            if (!(_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") &&
-                  _wcsicmp(rootName, L"HKEY_USERS")))
-            {
-                /*
-                 * enable the unload menu item if at the root, otherwise
-                 * enable the load menu item if there is no slash in
-                 * keyPath (ie. immediate child selected)
-                 */
-                if(keyPath[0] == L'\0')
-                    EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_ENABLED);
-                else if(!wcschr(keyPath, L'\\'))
-                    EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_ENABLED);
-            }
-        }
-    }
-}
-
 /*******************************************************************************
  *
  *  FUNCTION: ChildWndProc(HWND, unsigned, WORD, LONG)
@@ -472,111 +416,35 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
 
     case WM_NOTIFY:
-        if ((int)wParam == TREE_WINDOW && g_pChildWnd != NULL)
+        if(g_pChildWnd == NULL) break;
+                
+        if (((LPNMHDR)lParam)->idFrom == TREE_WINDOW)
         {
-            switch (((LPNMHDR)lParam)->code)
+            if(!TreeWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
             {
-            case TVN_ITEMEXPANDING:
-                return !OnTreeExpanding(g_pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
-            case TVN_SELCHANGED:
-            {
-                NMTREEVIEW* pnmtv = (NMTREEVIEW*)lParam;
-                /* Get the parent of the current item */
-                HTREEITEM hParentItem = TreeView_GetParent(g_pChildWnd->hTreeWnd, pnmtv->itemNew.hItem);
-
-                UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL);
-
-                /* Disable the Permissions menu item for 'My Computer' */
-                EnableMenuItem(hMenuFrame , ID_EDIT_PERMISSIONS, MF_BYCOMMAND | ((hParentItem == NULL) ? MF_GRAYED : MF_ENABLED));
-
-                /*
-                 * Disable Delete/Rename menu options for 'My Computer' (first item so doesn't have any parent)
-                 * and HKEY_* keys (their parent is 'My Computer' and the previous remark applies).
-                 */
-                if (!hParentItem || !TreeView_GetParent(g_pChildWnd->hTreeWnd, hParentItem))
-                {
-                    EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_GRAYED);
-                    EnableMenuItem(hMenuFrame , ID_EDIT_RENAME, MF_BYCOMMAND | MF_GRAYED);
-                    EnableMenuItem(hPopupMenus, ID_TREE_DELETE, MF_BYCOMMAND | MF_GRAYED);
-                    EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_GRAYED); 
-                }
-                else
-                {
-                    EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_ENABLED);
-                    EnableMenuItem(hMenuFrame , ID_EDIT_RENAME, MF_BYCOMMAND | MF_ENABLED);
-                    EnableMenuItem(hPopupMenus, ID_TREE_DELETE, MF_BYCOMMAND | MF_ENABLED);
-                    EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_ENABLED);
-                }
-
-                break;
+                goto def;
             }
-            case NM_SETFOCUS:
-                g_pChildWnd->nFocusPanel = 0;
-                break;
-            case TVN_BEGINLABELEDIT:
-            {
-                LPNMTVDISPINFO ptvdi;
-                /* cancel label edit for rootkeys  */
-                ptvdi = (LPNMTVDISPINFO) lParam;
-                if (!TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem) ||
-                    !TreeView_GetParent(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem)))
-                    return TRUE;
-                break;
-            }
-            case TVN_ENDLABELEDIT:
-            {
-                LPCWSTR keyPath;
-                HKEY hRootKey;
-                HKEY hKey = NULL;
-                LPNMTVDISPINFO ptvdi;
-                LONG lResult = TRUE;
-                WCHAR szBuffer[MAX_PATH];
-
-                ptvdi = (LPNMTVDISPINFO) lParam;
-                if (ptvdi->item.pszText)
-                {
-                    keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem), &hRootKey);
-                    _snwprintf(szBuffer, COUNT_OF(szBuffer), L"%s\\%s", keyPath, ptvdi->item.pszText);
-                    keyPath = GetItemPath(g_pChildWnd->hTreeWnd, ptvdi->item.hItem, &hRootKey);
-                    if (RegOpenKeyExW(hRootKey, szBuffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-                    {
-                        lResult = FALSE;
-                        RegCloseKey(hKey);
-                        TreeView_EditLabel(g_pChildWnd->hTreeWnd, ptvdi->item.hItem);
-                    }
-                    else
-                    {
-                        if (RenameKey(hRootKey, keyPath, ptvdi->item.pszText) != ERROR_SUCCESS)
-                            lResult = FALSE;
-                        else
-                            UpdateAddress(ptvdi->item.hItem, hRootKey, szBuffer);
-                    }
-                    return lResult;
-                }
-            }
-            default:
-                return 0;
-            }
+            
+            return Result;
         }
         else
         {
-            if ((int)wParam == LIST_WINDOW && g_pChildWnd != NULL)
+            if (((LPNMHDR)lParam)->idFrom == LIST_WINDOW)
             {
-                switch (((LPNMHDR)lParam)->code)
+                
+                if(!ListWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
                 {
-                case NM_SETFOCUS:
-                    g_pChildWnd->nFocusPanel = 1;
-                    break;
-                default:
-                    if(!ListWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
-                    {
-                        goto def;
-                    }
-                    return Result;
-                    break;
+                    goto def;
                 }
+
+                return Result;
+            }
+            else
+            {
+                goto def;
             }
         }
+        
         break;
 
     case WM_CONTEXTMENU:
