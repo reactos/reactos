@@ -283,7 +283,7 @@ DirWatch::DirWatch(LPCWSTR pszDir, BOOL fSubTree)
     , m_fRecursive(fSubTree)
     , m_DirList(pszDir, fSubTree)
 {
-    TRACE("DirWatch::DirWatch: %p\n", this);
+    TRACE("DirWatch::DirWatch: %p, '%S'\n", this, pszDir);
 
     lstrcpynW(m_szDir, pszDir, MAX_PATH);
 
@@ -312,7 +312,7 @@ DirWatch::DirWatch(LPCWSTR pszDir, BOOL fSubTree)
 
 DirWatch::~DirWatch()
 {
-    TRACE("DirWatch::~DirWatch: %p\n", this);
+    TRACE("DirWatch::~DirWatch: %p, '%S'\n", this, m_szDir);
 
     if (m_hDir != INVALID_HANDLE_VALUE)
         CloseHandle(m_hDir);
