@@ -442,6 +442,9 @@ static void _ProcessNotification(DirWatch *pDirWatch)
             case SHCNE_RMDIR:
                 List.DeleteItem(szPath, TRUE);
                 break;
+            case SHCNE_DELETE:
+                List.DeleteItem(szPath, FALSE);
+                break;
         }
 
         if (dwEvent != 0)
