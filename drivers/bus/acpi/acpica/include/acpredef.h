@@ -661,10 +661,10 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_NIC",   METHOD_0ARGS,                          /* ACPI 6.3 */
                 METHOD_RETURNS (ACPI_RTYPE_BUFFER)}},
 
-    {{"_NIG",   METHOD_1ARGS (ACPI_TYPE_BUFFER),       /* ACPI 6.3 */
+    {{"_NIG",   METHOD_0ARGS,                          /* ACPI 6.3 */
                 METHOD_RETURNS (ACPI_RTYPE_BUFFER)}},
 
-    {{"_NIH",   METHOD_0ARGS,                          /* ACPI 6.3 */
+    {{"_NIH",   METHOD_1ARGS (ACPI_TYPE_BUFFER),       /* ACPI 6.3 */
                 METHOD_RETURNS (ACPI_RTYPE_BUFFER)}},
 
     {{"_NTT",   METHOD_0ARGS,

@@ -7,9 +7,11 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winerror.h>
 #include <wingdi.h>
 #include <winsvc.h>
 #include <wincon.h>
+
 #include <shlobj.h>
 #include <commdlg.h>
 #include <strsafe.h>
@@ -100,9 +102,9 @@ VOID ListViewSelectionChanged(PMAIN_WND_INFO Info, LPNMLISTVIEW pnmv);
 BOOL CreateListView(PMAIN_WND_INFO Info);
 
 /* start / stop / control */
-BOOL DoStartService(LPWSTR ServiceName, HANDLE hProgress, LPWSTR lpStartParams);
-BOOL DoStopService(LPWSTR ServiceName, HANDLE hProgress);
-BOOL DoControlService(LPWSTR ServiceName, HWND hProgress, DWORD Control);
+DWORD DoStartService(LPWSTR ServiceName, HANDLE hProgress, LPWSTR lpStartParams);
+DWORD DoStopService(LPWSTR ServiceName, HANDLE hProgress);
+DWORD DoControlService(LPWSTR ServiceName, HWND hProgress, DWORD Control);
 
 /* progress.c */
 #define DEFAULT_STEP 0
@@ -121,7 +123,6 @@ VOID FreeServiceList(PMAIN_WND_INFO Info);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);
 BOOL UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService);
 BOOL GetServiceList(PMAIN_WND_INFO Info);
-
 
 /* propsheet.c */
 typedef struct _SERVICEPROPSHEET

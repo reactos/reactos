@@ -1795,7 +1795,7 @@ xmlFindCharEncodingHandler(const char *name) {
  *
  * The value of @inlen after return is the number of octets consumed
  *     as the return value is positive, else unpredictable.
- * The value of @outlen after return is the number of ocetes consumed.
+ * The value of @outlen after return is the number of octets consumed.
  */
 static int
 xmlIconvWrapper(iconv_t cd, unsigned char *out, int *outlen,
@@ -1863,7 +1863,7 @@ xmlIconvWrapper(iconv_t cd, unsigned char *out, int *outlen,
  *
  * The value of @inlen after return is the number of octets consumed
  *     as the return value is positive, else unpredictable.
- * The value of @outlen after return is the number of ocetes consumed.
+ * The value of @outlen after return is the number of octets consumed.
  */
 static int
 xmlUconvWrapper(uconv_t *cd, int toUnicode, unsigned char *out, int *outlen,
@@ -1972,7 +1972,7 @@ xmlEncOutputChunk(xmlCharEncodingHandler *handler, unsigned char *out,
 
 /**
  * xmlCharEncFirstLineInt:
- * @handler:	char enconding transformation data structure
+ * @handler:	char encoding transformation data structure
  * @out:  an xmlBuffer for the output.
  * @in:  an xmlBuffer for the input
  * @len:  number of bytes to convert for the first line, or -1
@@ -2059,7 +2059,7 @@ xmlCharEncFirstLineInt(xmlCharEncodingHandler *handler, xmlBufferPtr out,
 
 /**
  * xmlCharEncFirstLine:
- * @handler:	char enconding transformation data structure
+ * @handler:	char encoding transformation data structure
  * @out:  an xmlBuffer for the output.
  * @in:  an xmlBuffer for the input
  *
@@ -2546,7 +2546,7 @@ retry:
 
 /**
  * xmlCharEncOutFunc:
- * @handler:	char enconding transformation data structure
+ * @handler:	char encoding transformation data structure
  * @out:  an xmlBuffer for the output.
  * @in:  an xmlBuffer for the input
  *
@@ -2710,7 +2710,7 @@ retry:
 
 /**
  * xmlCharEncCloseFunc:
- * @handler:	char enconding transformation data structure
+ * @handler:	char encoding transformation data structure
  *
  * Generic front-end for encoding handler close function
  *
@@ -2811,7 +2811,7 @@ xmlByteConsumed(xmlParserCtxtPtr ctxt) {
 	xmlCharEncodingHandler * handler = in->buf->encoder;
         /*
 	 * Encoding conversion, compute the number of unused original
-	 * bytes from the input not consumed and substract that from
+	 * bytes from the input not consumed and subtract that from
 	 * the raw consumed value, this is not a cheap operation
 	 */
         if (in->end - in->cur > 0) {
@@ -2860,7 +2860,7 @@ xmlByteConsumed(xmlParserCtxtPtr ctxt) {
  * Returns 0 if success, -2 if the transcoding fails, or -1 otherwise
  * The value of @inlen after return is the number of octets consumed
  *     as the return value is positive, else unpredictable.
- * The value of @outlen after return is the number of ocetes consumed.
+ * The value of @outlen after return is the number of octets consumed.
  */
 static int
 UTF8ToISO8859x(unsigned char* out, int *outlen,
@@ -2976,7 +2976,7 @@ UTF8ToISO8859x(unsigned char* out, int *outlen,
  * block of chars out.
  * Returns 0 if success, or -1 otherwise
  * The value of @inlen after return is the number of octets consumed
- * The value of @outlen after return is the number of ocetes produced.
+ * The value of @outlen after return is the number of octets produced.
  */
 static int
 ISO8859xToUTF8(unsigned char* out, int *outlen,

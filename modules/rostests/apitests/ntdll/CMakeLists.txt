@@ -42,6 +42,7 @@ list(APPEND SOURCE
     RtlBitmap.c
     RtlComputePrivatizedDllName_U.c
     RtlCopyMappedMemory.c
+    RtlDebugInformation.c
     RtlDeleteAce.c
     RtlDetermineDosPathNameType.c
     RtlDoesFileExists.c
@@ -57,10 +58,12 @@ list(APPEND SOURCE
     RtlGetLengthWithoutTrailingPathSeperators.c
     RtlGetLongestNtPathLength.c
     RtlGetNtProductType.c
+    RtlGetUnloadEventTrace.c
     RtlHandle.c
     RtlImageRvaToVa.c
     RtlIsNameLegalDOS8Dot3.c
     RtlMemoryStream.c
+    RtlMultipleAllocateHeap.c
     RtlNtPathNameToDosPathName.c
     RtlpEnsureBufferSize.c
     RtlQueryTimeZoneInfo.c

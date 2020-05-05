@@ -193,7 +193,7 @@ BEGIN
     IDS_APPS_COUNT "Número de aplicativos: %d; Selected: %d"
     IDS_WELCOME_TITLE "Bem-vindo(a) a Central de Aplicativos ReactOS!\n\n"
     IDS_WELCOME_TEXT "Escolha uma categoria à esquerda, então escolha um aplicativo para instalar ou desinstalar.\nWeb Site ReactOS: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Instalado"
     IDS_AVAILABLEFORINST "Disponível para instalação"
     IDS_UPDATES "Atualizações"
@@ -215,6 +215,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

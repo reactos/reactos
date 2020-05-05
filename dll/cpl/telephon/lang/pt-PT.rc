@@ -1,0 +1,7 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "Opções do telefone e modem"
+    IDS_CPLSYSTEMDESCRIPTION "Configuração das regras de discagem telefónica e as configurações do modem."
+END

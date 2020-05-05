@@ -93,7 +93,7 @@ SetRosSpecificInfo(IN OUT PRTL_OSVERSIONINFOEXW VersionInformation)
  * @implemented
  */
 BOOLEAN NTAPI
-RtlGetNtProductType(PNT_PRODUCT_TYPE ProductType)
+RtlGetNtProductType(_Out_ PNT_PRODUCT_TYPE ProductType)
 {
     *ProductType = SharedUserData->NtProductType;
     return TRUE;

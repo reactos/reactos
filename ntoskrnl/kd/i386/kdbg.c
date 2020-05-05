@@ -13,8 +13,11 @@
 #define NDEBUG
 #include <debug.h>
 
-
+#if defined(SARCH_PC98)
+#define DEFAULT_BAUD_RATE   9600
+#else
 #define DEFAULT_BAUD_RATE   19200
+#endif
 
 #if defined(_M_IX86) || defined(_M_AMD64)
 #if defined(SARCH_PC98)

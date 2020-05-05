@@ -69,9 +69,6 @@ private:
     HRESULT LoadAllItems(HWND hwnd);
     void UnloadAllItems();
 
-    BOOL FolderHasAnyItems() const;
-    HRESULT CreateSendToFiles(LPCWSTR pszSendTo);
-
     UINT InsertSendToItems(HMENU hMenu, UINT idFirst, UINT idMenu);
 
     SENDTO_ITEM *FindItemFromIdOffset(UINT IdOffset);

@@ -39,6 +39,8 @@
 #include <wininet.h>
 #include <shellutils.h>
 
+#include <debug.h>
+
 #include <rosctrls.h>
 #include <windowsx.h>
 #include <process.h>
@@ -508,6 +510,28 @@ VOID CDownloadManager::UpdateProgress(
     }
 }
 
+VOID ShowLastError(
+    HWND hWndOwner,
+    DWORD dwLastError)
+{
+    LPWSTR lpMsg;
+    
+    if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                        FORMAT_MESSAGE_FROM_SYSTEM |
+                        FORMAT_MESSAGE_IGNORE_INSERTS,
+                        NULL,
+                        dwLastError,
+                        LANG_USER_DEFAULT,
+                        (LPWSTR)&lpMsg,
+                        0, NULL))
+    {
+        return;
+    }
+
+    MessageBoxW(hWndOwner, lpMsg, NULL, MB_OK | MB_ICONERROR);
+    LocalFree(lpMsg);
+}
+
 unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 {
     ATL::CStringW Path;
@@ -561,7 +585,10 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         {
             bCab = TRUE;
             if (!GetStorageDirectory(Path))
+            {
+                ShowLastError(hMainWnd, GetLastError());
                 goto end;
+            }
         }
         else
         {
@@ -587,7 +614,10 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         // do we have a final slash separator?
         if (!p)
+        {
+            MessageBox_LoadString(hMainWnd, IDS_UNABLE_PATH);            
             goto end;
+        }
 
         // prepare the tentative length of the filename, maybe we've to remove part of it later on
         filenameLength = wcslen(p) * sizeof(WCHAR);
@@ -601,7 +631,10 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if (GetFileAttributesW(Path.GetString()) == INVALID_FILE_ATTRIBUTES)
         {
             if (!CreateDirectoryW(Path.GetString(), NULL))
+            {
+                ShowLastError(hMainWnd, GetLastError());
                 goto end;
+            }
         }
 
         // append a \ to the provided file system path, and the filename portion from the URL after that
@@ -640,7 +673,10 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 
         if (!hOpen)
+        {
+            ShowLastError(hMainWnd, GetLastError());
             goto end;
+        }
 
         dwStatusLen = sizeof(dwStatus);
 
@@ -654,7 +690,10 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         urlComponents.lpszHostName = (LPWSTR) malloc(urlComponents.dwHostNameLength * sizeof(WCHAR));
 
         if (!InternetCrackUrlW(InfoArray[iAppId].szUrl, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
+        {
+            ShowLastError(hMainWnd, GetLastError());
             goto end;
+        }
 
         dwContentLen = 0;
 
@@ -665,13 +704,16 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
                                      0);
             if (!hFile)
             {
-                MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
+                ShowLastError(hMainWnd, GetLastError());
                 goto end;
             }
 
             // query connection
             if (!HttpQueryInfoW(hFile, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwStatusLen, NULL))
+            {
+                ShowLastError(hMainWnd, GetLastError());
                 goto end;
+            }
 
             if (dwStatus != HTTP_STATUS_OK)
             {
@@ -690,7 +732,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
                                      0);
             if (!hFile)
             {
-                MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
+                ShowLastError(hMainWnd, GetLastError());
                 goto end;
             }
 
@@ -750,20 +792,23 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         hOut = CreateFileW(Path.GetString(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
 
         if (hOut == INVALID_HANDLE_VALUE)
+        {
+            ShowLastError(hMainWnd, GetLastError());
             goto end;
+        }
 
         dwCurrentBytesRead = 0;
         do
         {
             if (!InternetReadFile(hFile, lpBuffer, _countof(lpBuffer), &dwBytesRead))
             {
-                MessageBox_LoadString(hMainWnd, IDS_INTERRUPTED_DOWNLOAD);
+                ShowLastError(hMainWnd, GetLastError());
                 goto end;
             }
 
             if (!WriteFile(hOut, &lpBuffer[0], dwBytesRead, &dwBytesWritten, NULL))
             {
-                MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_WRITE);
+                ShowLastError(hMainWnd, GetLastError());
                 goto end;
             }
 
@@ -775,7 +820,10 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         hOut = INVALID_HANDLE_VALUE;
 
         if (bCancelled)
+        {
+            DPRINT1("Operation cancelled\n");
             goto end;
+        }
 
         if (!dwContentLen)
         {
@@ -794,7 +842,10 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
             // change a few strings in the download dialog to reflect the verification process
             if (!szMsgText.LoadStringW(IDS_INTEG_CHECK_TITLE))
+            {
+                DPRINT1("Unable to load string\n");
                 goto end;
+            }
 
             SetWindowTextW(hDlg, szMsgText.GetString());
             SendMessageW(GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM) Path.GetString());
@@ -803,7 +854,10 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             if (!VerifyInteg(InfoArray[iAppId].szSHA1.GetString(), Path.GetString()))
             {
                 if (!szMsgText.LoadStringW(IDS_INTEG_CHECK_FAIL))
+                {
+                    DPRINT1("Unable to load string\n");
                     goto end;
+                }
 
                 MessageBoxW(hDlg, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
                 goto end;
@@ -839,7 +893,7 @@ run:
             }
             else
             {
-                MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_INSTALL);
+                ShowLastError(hMainWnd, GetLastError());
             }
         }
 

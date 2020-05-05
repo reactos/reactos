@@ -50,19 +50,17 @@ endif()
 
 # HACK: for VS 11+ we need to explicitly disable SSE, which is off by
 # default for older compilers. See CORE-6507
-if(MSVC_VERSION GREATER 1699 AND ARCH STREQUAL "i386")
+if(ARCH STREQUAL "i386")
     add_compile_flags("/arch:IA32")
 endif ()
 
 # VS 12+ requires /FS when used in parallel compilations
-if(MSVC_VERSION GREATER 1799 AND NOT MSVC_IDE)
+if(NOT MSVC_IDE)
     add_compile_flags("/FS")
 endif ()
 
 # VS14+ tries to use thread-safe initialization
-if(MSVC_VERSION GREATER 1899)
-    add_compile_flags("/Zc:threadSafeInit-")
-endif ()
+add_compile_flags("/Zc:threadSafeInit-")
 
 # HACK: Disable use of __CxxFrameHandler4 on VS 16.3+ (x64 only)
 # See https://developercommunity.visualstudio.com/content/problem/746534/visual-c-163-runtime-uses-an-unsupported-api-for-u.html
@@ -112,8 +110,8 @@ add_compile_flags("/wd4018")
 add_compile_flags("/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4101 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716")
 
 # - C4189: local variable initialized but not referenced
-# Not in Release mode and not with MSVC 2010
-if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT MSVC_VERSION LESS 1700))
+# Not in Release mode
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_flags("/we4189")
 endif()
 

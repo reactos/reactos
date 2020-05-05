@@ -684,7 +684,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     ofn.lpstrFile = szFName;
                     ofn.nMaxFile = _countof(szFName) - 1;
                     ofn.lpstrTitle = szCaption;
-                    ofn.Flags = OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+                    ofn.Flags = OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_EXPLORER;
                     ofn.lpstrInitialDir = prfdp->lpstrDirectory;
 
                     if (NULL == (hComdlg = LoadLibraryExW(L"comdlg32", NULL, 0)) ||

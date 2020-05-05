@@ -335,30 +335,53 @@ IntRegisterClassAtom(IN PUNICODE_STRING ClassName,
                      OUT RTL_ATOM *pAtom)
 {
     WCHAR szBuf[65];
-    PWSTR AtomName;
+    PWSTR AtomName = szBuf;
     NTSTATUS Status;
 
     if (ClassName->Length != 0)
     {
-        /* FIXME: Don't limit to 64 characters! Use SEH when allocating memory! */
-        if (ClassName->Length / sizeof(WCHAR) >= sizeof(szBuf) / sizeof(szBuf[0]))
+        if (ClassName->Length + sizeof(UNICODE_NULL) > sizeof(szBuf))
         {
-            EngSetLastError(ERROR_INVALID_PARAMETER);
-            return (RTL_ATOM)0;
+            AtomName = ExAllocatePoolWithTag(PagedPool,
+                                             ClassName->Length + sizeof(UNICODE_NULL),
+                                             TAG_USTR);
+
+            if (AtomName == NULL)
+            {
+                EngSetLastError(ERROR_OUTOFMEMORY);
+                return FALSE;
+            }
         }
 
-        RtlCopyMemory(szBuf,
-                      ClassName->Buffer,
-                      ClassName->Length);
-        szBuf[ClassName->Length / sizeof(WCHAR)] = UNICODE_NULL;
-        AtomName = szBuf;
+        _SEH2_TRY
+        {
+            RtlCopyMemory(AtomName,
+                          ClassName->Buffer,
+                          ClassName->Length);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            if (AtomName != szBuf)
+                ExFreePoolWithTag(AtomName, TAG_USTR);
+            SetLastNtError(_SEH2_GetExceptionCode());
+            _SEH2_YIELD(return FALSE);
+        }
+        _SEH2_END;
+        AtomName[ClassName->Length / sizeof(WCHAR)] = UNICODE_NULL;
     }
     else
+    {
+        ASSERT(IS_ATOM(ClassName->Buffer));
         AtomName = ClassName->Buffer;
+    }
 
     Status = RtlAddAtomToAtomTable(gAtomTable,
                                    AtomName,
                                    pAtom);
+
+    if (AtomName != ClassName->Buffer && AtomName != szBuf)
+        ExFreePoolWithTag(AtomName, TAG_USTR);
+
 
     if (!NT_SUCCESS(Status))
     {
@@ -1275,39 +1298,46 @@ IntGetAtomFromStringOrAtom(
     if (ClassName->Length != 0)
     {
         WCHAR szBuf[65];
-        PWSTR AtomName;
-        NTSTATUS Status;
+        PWSTR AtomName = szBuf;
+        NTSTATUS Status = STATUS_INVALID_PARAMETER;
 
         *Atom = 0;
 
         /* NOTE: Caller has to protect the call with SEH! */
-
-        if (ClassName->Length != 0)
+        if (ClassName->Length + sizeof(UNICODE_NULL) > sizeof(szBuf))
         {
-            /* FIXME: Don't limit to 64 characters! use SEH when allocating memory! */
-            if (ClassName->Length / sizeof(WCHAR) >= sizeof(szBuf) / sizeof(szBuf[0]))
+            AtomName = ExAllocatePoolWithTag(PagedPool,
+                                             ClassName->Length + sizeof(UNICODE_NULL),
+                                             TAG_USTR);
+            if (AtomName == NULL)
             {
-                EngSetLastError(ERROR_INVALID_PARAMETER);
-                return (RTL_ATOM)0;
+                EngSetLastError(ERROR_OUTOFMEMORY);
+                return FALSE;
             }
+        }
 
-            /* We need to make a local copy of the class name! The caller could
-               modify the buffer and we could overflow in RtlLookupAtomInAtomTable.
-               We're protected by SEH, but the ranges that might be accessed were
-               not probed... */
-            RtlCopyMemory(szBuf,
+        _SEH2_TRY
+        {
+            RtlCopyMemory(AtomName,
                           ClassName->Buffer,
                           ClassName->Length);
-            szBuf[ClassName->Length / sizeof(WCHAR)] = UNICODE_NULL;
-            AtomName = szBuf;
         }
-        else
-            AtomName = ClassName->Buffer;
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            if (AtomName != szBuf)
+                ExFreePoolWithTag(AtomName, TAG_USTR);
+            SetLastNtError(_SEH2_GetExceptionCode());
+            _SEH2_YIELD(return FALSE);
+        }
+        _SEH2_END;
+        AtomName[ClassName->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
         /* Lookup the atom */
-        Status = RtlLookupAtomInAtomTable(gAtomTable,
-                                          AtomName,
-                                          Atom);
+        Status = RtlLookupAtomInAtomTable(gAtomTable, AtomName, Atom);
+
+        if (AtomName != szBuf)
+            ExFreePoolWithTag(AtomName, TAG_USTR);
+
         if (NT_SUCCESS(Status))
         {
             Ret = TRUE;

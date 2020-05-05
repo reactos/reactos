@@ -61,7 +61,6 @@ class CShellMenuCallback :
     public IShellMenuCallback
 {
 private:
-
     HWND m_hwndTray;
     CComPtr<IShellMenu> m_pShellMenu;
     CComPtr<IBandSite> m_pBandSite;
@@ -106,20 +105,22 @@ private:
         {
             // Smaller "24x24" icons used for the start menu
             // The bitmaps are still 32x32, but the image is centered
-        case IDM_FAVORITES: iconIndex = -322; break;
-        case IDM_SEARCH: iconIndex = -323; break;
-        case IDM_HELPANDSUPPORT: iconIndex = -324; break;
-        case IDM_LOGOFF: iconIndex = -325; break;
-        case IDM_PROGRAMS:  iconIndex = -326; break;
-        case IDM_DOCUMENTS: iconIndex = -327; break;
-        case IDM_RUN: iconIndex = -328; break;
-        case IDM_SHUTDOWN: iconIndex = -329; break;
-        case IDM_SETTINGS: iconIndex = -330; break;
+        case IDM_FAVORITES: iconIndex = -IDI_SHELL_FAVOTITES; break;
+        case IDM_SEARCH: iconIndex = -IDI_SHELL_SEARCH1; break;
+        case IDM_HELPANDSUPPORT: iconIndex = -IDI_SHELL_HELP2; break;
+        case IDM_LOGOFF: iconIndex = -IDI_SHELL_LOGOFF1; break;
+        case IDM_PROGRAMS:  iconIndex = -IDI_SHELL_PROGRAMS_FOLDER1; break;
+        case IDM_DOCUMENTS: iconIndex = -IDI_SHELL_RECENT_DOCUMENTS1; break;
+        case IDM_RUN: iconIndex = -IDI_SHELL_RUN1; break;
+        case IDM_SHUTDOWN: iconIndex = -IDI_SHELL_SHUTDOWN1; break;
+        case IDM_SETTINGS: iconIndex = -IDI_SHELL_CONTROL_PANEL1; break;
+        case IDM_MYDOCUMENTS: iconIndex = -IDI_SHELL_MY_DOCUMENTS; break;
+        case IDM_MYPICTURES: iconIndex = -IDI_SHELL_MY_PICTURES; break;
 
-        case IDM_CONTROLPANEL: iconIndex = -22; break;
-        case IDM_NETWORKCONNECTIONS: iconIndex = -257; break;
-        case IDM_PRINTERSANDFAXES: iconIndex = -138; break;
-        case IDM_TASKBARANDSTARTMENU: iconIndex = -40; break;
+        case IDM_CONTROLPANEL: iconIndex = -IDI_SHELL_CONTROL_PANEL; break;
+        case IDM_NETWORKCONNECTIONS: iconIndex = -IDI_SHELL_NETWORK_CONNECTIONS2; break;
+        case IDM_PRINTERSANDFAXES: iconIndex = -IDI_SHELL_PRINTER2; break;
+        case IDM_TASKBARANDSTARTMENU: iconIndex = -IDI_SHELL_TSKBAR_STARTMENU; break;
         //case IDM_SECURITY: iconIndex = -21; break;
         //case IDM_SYNCHRONIZE: iconIndex = -21; break;
         //case IDM_DISCONNECT: iconIndex = -21; break;
@@ -149,6 +150,41 @@ private:
         return S_OK;
     }
 
+    void InsertRecentItem(HMENU hMenu, UINT nID, INT csidl, BOOL bExpand) const
+    {
+        WCHAR szPath[MAX_PATH];
+        if (!SHGetSpecialFolderPathW(NULL, szPath, csidl, FALSE))
+        {
+            ERR("SHGetSpecialFolderPathW failed\n");
+            return;
+        }
+
+        LPWSTR pszText = PathFindFileNameW(szPath);
+        if (bExpand)
+        {
+            MENUITEMINFOW mii = { sizeof(mii), MIIM_TYPE | MIIM_ID | MIIM_SUBMENU };
+            mii.fType = MFT_STRING;
+            mii.wID = nID;
+            mii.hSubMenu = ::CreatePopupMenu();
+            mii.dwTypeData = pszText;
+            mii.cch = lstrlenW(pszText);
+            InsertMenuItemW(hMenu, GetMenuItemCount(hMenu), TRUE, &mii);
+        }
+        else
+        {
+            AppendMenuW(hMenu, MF_STRING | MF_ENABLED, nID, pszText);
+        }
+    }
+
+    HMENU CreateRecentMenu(BOOL bExpandMyDocuments, BOOL bExpandMyPictures) const
+    {
+        HMENU hMenu = ::CreateMenu();
+        InsertRecentItem(hMenu, IDM_MYDOCUMENTS, CSIDL_MYDOCUMENTS, bExpandMyDocuments);
+        InsertRecentItem(hMenu, IDM_MYPICTURES, CSIDL_MYPICTURES, bExpandMyPictures);
+        AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+        return hMenu;
+    }
+
     HRESULT OnGetSubMenu(LPSMDATA psmd, REFIID iid, void ** pv)
     {
         HRESULT hr;
@@ -168,11 +204,14 @@ private:
         case IDM_PROGRAMS:  csidl = CSIDL_PROGRAMS; break;
         case IDM_FAVORITES: csidl = CSIDL_FAVORITES; break;
         case IDM_DOCUMENTS: csidl = CSIDL_RECENT; break;
+        case IDM_MYDOCUMENTS: csidl = CSIDL_MYDOCUMENTS; break;
+        case IDM_MYPICTURES: csidl = CSIDL_MYPICTURES; break;
         }
 
         if (csidl)
         {
             IShellFolder *psfStartMenu;
+            DWORD dwFlags = SMSET_TOP;
 
             if (csidl == CSIDL_PROGRAMS && m_psfPrograms)
             {
@@ -180,6 +219,21 @@ private:
             }
             else
             {
+                if (csidl == CSIDL_RECENT)
+                {
+                    BOOL bExpandMyDocuments = FALSE; /* FIXME: Get value from registry */
+                    BOOL bExpandMyPictures = FALSE;  /* FIXME: Get value from registry */
+                    HMENU hMenu = CreateRecentMenu(bExpandMyDocuments, bExpandMyPictures);
+                    if (hMenu == NULL)
+                        ERR("CreateRecentMenu failed\n");
+
+                    hr = pShellMenu->SetMenu(hMenu, NULL, SMSET_BOTTOM);
+                    if (FAILED_UNEXPECTEDLY(hr))
+                        return hr;
+
+                    dwFlags = SMSET_BOTTOM;
+                }
+
                 LPITEMIDLIST pidlStartMenu;
                 IShellFolder *psfDestop;
                 hr = SHGetFolderLocation(NULL, csidl, 0, 0, &pidlStartMenu);
@@ -195,10 +249,9 @@ private:
                     return hr;
             }
 
-            hr = pShellMenu->SetShellFolder(psfStartMenu, NULL, NULL, 0);
+            hr = pShellMenu->SetShellFolder(psfStartMenu, NULL, NULL, dwFlags);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
-
         }
         else
         {
@@ -240,6 +293,8 @@ private:
 
     HRESULT OnExec(LPSMDATA psmd)
     {
+        WCHAR szPath[MAX_PATH];
+
         // HACK: Because our ShellExecute can't handle CLSID components in paths, we can't launch the paths using the "open" verb.
         // FIXME: Change this back to using the path as the filename and the "open" verb, once ShellExecute can handle CLSID path components.
 
@@ -249,6 +304,20 @@ private:
             ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, SW_SHOWNORMAL);
         else if (psmd->uId == IDM_PRINTERSANDFAXES)
             ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}", NULL, SW_SHOWNORMAL);
+        else if (psmd->uId == IDM_MYDOCUMENTS)
+        {
+            if (SHGetSpecialFolderPathW(NULL, szPath, CSIDL_PERSONAL, FALSE))
+                ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWNORMAL);
+            else
+                ERR("SHGetSpecialFolderPathW failed\n");
+        }
+        else if (psmd->uId == IDM_MYPICTURES)
+        {
+            if (SHGetSpecialFolderPathW(NULL, szPath, CSIDL_MYPICTURES, FALSE))
+                ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWNORMAL);
+            else
+                ERR("SHGetSpecialFolderPathW failed\n");
+        }
         else
             PostMessageW(m_hwndTray, WM_COMMAND, psmd->uId, 0);
 
@@ -497,7 +566,7 @@ RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = pShellMenu->SetShellFolder(psf, NULL, NULL, 0);
+    hr = pShellMenu->SetShellFolder(psf, NULL, NULL, SMSET_TOP);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

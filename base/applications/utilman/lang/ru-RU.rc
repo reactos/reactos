@@ -1,0 +1,14 @@
+/*
+ * PROJECT:         ReactOS Utility Manager (Accessibility)
+ * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:         Russian (Russia) translation resource
+ * COPYRIGHT:       Copyright 2020 Stanislav Motylkov (binarymaster@mail.ru)
+ */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_FAIL_INIT "Не удалось инициализировать библиотеку диспетчера служебных программ! Код ошибки %lu."
+    IDS_FAIL_INIT_TITLE "Ошибка инициализации"
+END

@@ -27,7 +27,7 @@
 
 /**
  * xsltXPathFunctionLookup:
- * @ctxt:  a void * but the XSLT transformation context actually
+ * @vctxt:  a void * but the XSLT transformation context actually
  * @name:  the function name
  * @ns_uri:  the function namespace URI
  *

@@ -16,14 +16,14 @@
  *
  * Returns the process executable ID based on the given executable name.
  *
- * @param[in]   lpProcessName
+ * @param[in]   lpszProcessName
  *     The name of the executable process.
  *
  * @return
  *      Returns the ID number of the process, otherwise 0.
  *
  */
-DWORD GetProcessID(IN LPCWSTR lpProcessName)
+DWORD GetProcessID(IN LPCWSTR lpszProcessName)
 {
     PROCESSENTRY32W Process;
 
@@ -41,7 +41,7 @@ DWORD GetProcessID(IN LPCWSTR lpProcessName)
     {
         do
         {
-            if (_wcsicmp(Process.szExeFile, lpProcessName) == 0)
+            if (_wcsicmp(Process.szExeFile, lpszProcessName) == 0)
             {
                 /* The names match, return the process ID we're interested */
                 CloseHandle(hSnapshot);
@@ -60,7 +60,7 @@ DWORD GetProcessID(IN LPCWSTR lpProcessName)
  *
  * Checks if a process is running.
  *
- * @param[in]   lpProcessName
+ * @param[in]   lpszProcessName
  *     The name of the executable process.
  *
  * @return
@@ -68,13 +68,13 @@ DWORD GetProcessID(IN LPCWSTR lpProcessName)
  *     FALSE otherwise.
  *
  */
-BOOL IsProcessRunning(IN LPCWSTR lpProcessName)
+BOOL IsProcessRunning(IN LPCWSTR lpszProcessName)
 {
     DWORD dwReturn, dwProcessID;
     HANDLE hProcess;
 
     /* Get the process ID */
-    dwProcessID = GetProcessID(lpProcessName);
+    dwProcessID = GetProcessID(lpszProcessName);
     if (dwProcessID == 0)
     {
         return FALSE;
@@ -114,7 +114,7 @@ BOOL IsProcessRunning(IN LPCWSTR lpProcessName)
  *     FALSE otherwise.
  *
  */
-BOOL LaunchProcess(LPCWSTR lpProcessName)
+BOOL LaunchProcess(IN LPCWSTR lpszProcessName)
 {
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
@@ -123,7 +123,7 @@ BOOL LaunchProcess(LPCWSTR lpProcessName)
     WCHAR ExpandedCmdLine[MAX_PATH];
 
     /* Expand the process path string */
-    ExpandEnvironmentStringsW(lpProcessName, ExpandedCmdLine, ARRAYSIZE(ExpandedCmdLine));
+    ExpandEnvironmentStringsW(lpszProcessName, ExpandedCmdLine, ARRAYSIZE(ExpandedCmdLine));
 
     ZeroMemory(&pi, sizeof(pi));
     ZeroMemory(&si, sizeof(si));
@@ -181,7 +181,7 @@ BOOL LaunchProcess(LPCWSTR lpProcessName)
  *
  * Closes a process.
  *
- * @param[in]   lpProcessName
+ * @param[in]   lpszProcessName
  *     The name of the executable process.
  *
  * @return
@@ -189,13 +189,13 @@ BOOL LaunchProcess(LPCWSTR lpProcessName)
  *     FALSE otherwise.
  *
  */
-BOOL CloseProcess(IN LPCWSTR lpProcessName)
+BOOL CloseProcess(IN LPCWSTR lpszProcessName)
 {
     HANDLE hProcess;
     DWORD dwProcessID;
 
     /* Get the process ID */
-    dwProcessID = GetProcessID(lpProcessName);
+    dwProcessID = GetProcessID(lpszProcessName);
     if (dwProcessID == 0)
     {
         return FALSE;

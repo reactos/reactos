@@ -19,7 +19,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "Посетите <A HREF=""http://www.reactos.org/"">домашнюю страницу ReactOS</A>.", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "Посетите <A HREF=""https://reactos.org/"">домашнюю страницу ReactOS</A>.", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "&Лицензия...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -199,7 +199,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Загрузка операционной системы", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Операционная система по умолчанию:", IDC_STATIC, 14, 26, 145, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "О&тображать список операционных систем:", IDC_STRECLIST, 14, 56, 161, 8
     EDITTEXT IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -217,7 +217,7 @@ BEGIN
     AUTOCHECKBOX "&Отправить административное оповещение", IDC_STRRECSENDALERT, 14, 138, 165, 10
     AUTOCHECKBOX "Выполнить &автоматическую перезагрузку", IDC_STRRECRESTART, 14, 152, 160, 10
     GROUPBOX "Запись отладочной информации", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "Файл дампа памяти:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "Заменять &существующий файл дампа", IDC_STRRECOVERWRITE, 17, 228, 145, 10
@@ -333,7 +333,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Панель управления системы"
     IDS_WARNINITIALSIZE "Введите числовое значение исходного размера файла подкачки."
     IDS_WARNMAXIMUMSIZE "Введите числовое значение для параметра максимальный размер файла подкачки."
-    IDS_WARNINITIALRANGE "Начальный размер файла подкачки должен быть не меньше, чем 16 МБ и не должен превышать свободного места на выбранном диске."
+    IDS_WARNINITIALRANGE "Начальный размер файла подкачки должен быть не меньше, чем 2 МБ и не должен превышать свободного места на выбранном диске."
     IDS_WARNMAXIMUMRANGE "Максимальный размер файла подкачки должен быть не меньше, чем начальный размер, который не должен превышать свободного места на выбранном диске."
     IDS_PAGEFILE_NONE "Нет"
     IDS_PAGEFILE_SYSTEM "По выбору системы"

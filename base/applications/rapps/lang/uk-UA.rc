@@ -199,7 +199,7 @@ BEGIN
     IDS_APPS_COUNT "Kількість додатків: %d; Обрано: %d"
     IDS_WELCOME_TITLE "Ласкаво просимо в Менеджер додатків ReactOS!\n\n"
     IDS_WELCOME_TEXT "Виберіть категорію зліва, а потім виберіть програми для встановлення чи видалення.\nСторінка ReactOS: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Встановлені"
     IDS_AVAILABLEFORINST "Доступні для встановлення"
     IDS_UPDATES "Оновлення"
@@ -221,6 +221,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Встановити обране"
     IDS_SELECTEDFORINST "Обрані для встановлення"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

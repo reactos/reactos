@@ -1,8 +1,8 @@
 /*
  *    Translated by Caemyr - Olaf Siejka (Aug, 2009)
  *    Use ReactOS forum PM or IRC to contact me
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
- *    http://www.reactos.org
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (May, 2020)
+ *    https://reactos.org/
  *    IRC: irc.freenode.net #reactos-pl;
  */
 
@@ -199,7 +199,7 @@ BEGIN
     IDS_APPS_COUNT "Licznik aplikacji: %d"
     IDS_WELCOME_TITLE "Witamy w Menedżerze aplikacji ReactOS!\n\n"
     IDS_WELCOME_TEXT "Z listy po lewej wybierz kategorię, a następnie aplikację, by ją zainstalować lub odinstalować.\nStrona projektu ReactOS: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Zainstalowane"
     IDS_AVAILABLEFORINST "Dostępne"
     IDS_UPDATES "Uaktualnienia"
@@ -221,6 +221,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Instaluj Zaznaczone"
     IDS_SELECTEDFORINST "Wybrane do instalacji"
     IDS_MISMATCH_CERT_INFO "Użyty certyfikat jest nieznany:\nSubject: %s\nIssuer: %s\nCzy chcesz mimo to kontynuować?"
+    IDS_UNABLE_PATH "Niepoprawny format ścieżki."
 END
 
 STRINGTABLE

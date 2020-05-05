@@ -119,7 +119,7 @@ static NTSTATUS query_filesystems(void* data, ULONG length) {
                 Status = dev_ioctl(dev->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &mdn, sizeof(MOUNTDEV_NAME), true, NULL);
                 if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
                     ExReleaseResourceLite(&Vcb->tree_lock);
-                    ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+                    ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08lx\n", Status);
                     goto end;
                 }
 
@@ -132,7 +132,7 @@ static NTSTATUS query_filesystems(void* data, ULONG length) {
                 Status = dev_ioctl(dev->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &bfd->name_length, (ULONG)offsetof(MOUNTDEV_NAME, Name[0]) + mdn.NameLength, true, NULL);
                 if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
                     ExReleaseResourceLite(&Vcb->tree_lock);
-                    ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+                    ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08lx\n", Status);
                     goto end;
                 }
 
@@ -173,7 +173,7 @@ static NTSTATUS probe_volume(void* data, ULONG length, KPROCESSOR_MODE processor
     if (length < offsetof(MOUNTDEV_NAME, Name[0]) + mdn->NameLength)
         return STATUS_INVALID_PARAMETER;
 
-    TRACE("%.*S\n", mdn->NameLength / sizeof(WCHAR), mdn->Name);
+    TRACE("%.*S\n", (int)(mdn->NameLength / sizeof(WCHAR)), mdn->Name);
 
     if (!SeSinglePrivilegeCheck(RtlConvertLongToLuid(SE_MANAGE_VOLUME_PRIVILEGE), processor_mode))
         return STATUS_PRIVILEGE_NOT_HELD;
@@ -183,13 +183,13 @@ static NTSTATUS probe_volume(void* data, ULONG length, KPROCESSOR_MODE processor
 
     Status = IoGetDeviceObjectPointer(&path, FILE_READ_ATTRIBUTES, &FileObject, &DeviceObject);
     if (!NT_SUCCESS(Status)) {
-        ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
+        ERR("IoGetDeviceObjectPointer returned %08lx\n", Status);
         return Status;
     }
 
     Status = get_device_pnp_name(DeviceObject, &pnp_name, &guid);
     if (!NT_SUCCESS(Status)) {
-        ERR("get_device_pnp_name returned %08x\n", Status);
+        ERR("get_device_pnp_name returned %08lx\n", Status);
         ObDereferenceObject(FileObject);
         return Status;
     }
@@ -197,7 +197,7 @@ static NTSTATUS probe_volume(void* data, ULONG length, KPROCESSOR_MODE processor
     if (RtlCompareMemory(guid, &GUID_DEVINTERFACE_DISK, sizeof(GUID)) == sizeof(GUID)) {
         Status = dev_ioctl(DeviceObject, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, true, NULL);
         if (!NT_SUCCESS(Status))
-            WARN("IOCTL_DISK_UPDATE_PROPERTIES returned %08x\n", Status);
+            WARN("IOCTL_DISK_UPDATE_PROPERTIES returned %08lx\n", Status);
     }
 
     ObDereferenceObject(FileObject);
@@ -241,7 +241,7 @@ static NTSTATUS control_ioctl(PIRP Irp) {
             break;
 
         default:
-            TRACE("unhandled ioctl %x\n", IrpSp->Parameters.DeviceIoControl.IoControlCode);
+            TRACE("unhandled ioctl %lx\n", IrpSp->Parameters.DeviceIoControl.IoControlCode);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
     }
@@ -279,11 +279,6 @@ NTSTATUS __stdcall drv_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
         goto end;
     }
 
-    if (!IrpSp->FileObject || IrpSp->FileObject->FsContext != Vcb->volume_fcb) {
-        Status = STATUS_INVALID_PARAMETER;
-        goto end;
-    }
-
     switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
         case IOCTL_MOUNTDEV_QUERY_STABLE_GUID:
             Status = mountdev_query_stable_guid(Vcb, Irp);
@@ -294,7 +289,7 @@ NTSTATUS __stdcall drv_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
             goto end;
 
         default:
-            TRACE("unhandled control code %x\n", IrpSp->Parameters.DeviceIoControl.IoControlCode);
+            TRACE("unhandled control code %lx\n", IrpSp->Parameters.DeviceIoControl.IoControlCode);
             break;
     }
 
@@ -311,7 +306,7 @@ end:
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 end2:
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     if (top_level)
         IoSetTopLevelIrp(NULL);

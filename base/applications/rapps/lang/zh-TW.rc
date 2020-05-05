@@ -193,7 +193,7 @@ BEGIN
     IDS_APPS_COUNT "程式個數:%d; Selected: %d"
     IDS_WELCOME_TITLE "歡迎來到 ReactOS 程式管理員！\n\n"
     IDS_WELCOME_TEXT "從左欄選擇一個類別，然後選擇要安裝或解除安裝的程式。\nReactOS 網站:"
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "已安裝"
     IDS_AVAILABLEFORINST "可安裝"
     IDS_UPDATES "更新"
@@ -215,6 +215,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

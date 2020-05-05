@@ -139,7 +139,7 @@ else()
         add_definitions(-D_WINKD_)
     endif()
 
-    if(CMAKE_VERSION MATCHES "ReactOS")
+    if(CMAKE_VERSION MATCHES "ReactOS" AND CMAKE_VERSION VERSION_LESS 3.3.0)
         set(PCH 1 CACHE BOOL "Whether to use precompiled headers")
     else()
         set(PCH 0 CACHE BOOL "Whether to use precompiled headers")

@@ -191,7 +191,7 @@ BEGIN
     IDS_APPS_COUNT "Jumlah aplikasi: %d; Terpilih: %d"
     IDS_WELCOME_TITLE "Selamat datang di Manajer Aplikasi ReactOS!\n\n"
     IDS_WELCOME_TEXT "pilih kategori di sisi kiri, kemudian pilih aplikasi untuk dipasang atau dibongkar.\nSitus Web ReactOS: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Terpasang"
     IDS_AVAILABLEFORINST "Tersedia untuk pemasangan"
     IDS_UPDATES "Pembaruan"
@@ -213,6 +213,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Pasang terpilih"
     IDS_SELECTEDFORINST "dipilih untuk pemasangan"
     IDS_MISMATCH_CERT_INFO "Sertifikat yang dipakai tidak dikenal:\nSubyek: %s\nIssuer: %s\nYakin ingin lanjut?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

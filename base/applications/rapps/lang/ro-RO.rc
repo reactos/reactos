@@ -200,7 +200,7 @@ BEGIN
     IDS_APPS_COUNT "Numărul de programe: %d; Selectate: %d"
     IDS_WELCOME_TITLE "Bun venit la gestionarul de programe ReactOS!\n\n"
     IDS_WELCOME_TEXT "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web ReactOS: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Instalate"
     IDS_AVAILABLEFORINST "Disponibile pentru instalare"
     IDS_UPDATES "Actualizări"
@@ -222,6 +222,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Instalează selecționate"
     IDS_SELECTEDFORINST "Selectate pentru instalare"
     IDS_MISMATCH_CERT_INFO "Certificatul în uz este necunoscut:\nSubiect: %s\nEmitent: %s\nVreți să continuați oricum?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

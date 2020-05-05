@@ -8749,6 +8749,13 @@ static DWORD LISTVIEW_SetExtendedListViewStyle(LISTVIEW_INFO *infoPtr, DWORD mas
         LISTVIEW_UpdateScroll(infoPtr);
     }
 
+#ifdef __REACTOS__
+    if ((infoPtr->dwLvExStyle & LVS_EX_SNAPTOGRID) > (old_ex_style & LVS_EX_SNAPTOGRID))
+    {
+        LISTVIEW_Arrange(infoPtr, LVA_SNAPTOGRID);
+    }
+#endif
+
     LISTVIEW_InvalidateList(infoPtr);
     return old_ex_style;
 }
@@ -9081,6 +9088,14 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
     }
     Pt.x -= Origin.x;
     Pt.y -= Origin.y;
+
+#ifdef __REACTOS__
+    if (infoPtr->dwLvExStyle & LVS_EX_SNAPTOGRID)
+    {
+        Pt.x = max(0, Pt.x + (infoPtr->nItemWidth >> 1) - (Pt.x + (infoPtr->nItemWidth >> 1)) % infoPtr->nItemWidth);
+        Pt.y = max(0, Pt.y + (infoPtr->nItemHeight >> 1) - (Pt.y + (infoPtr->nItemHeight >> 1)) % infoPtr->nItemHeight);
+    }
+#endif
 
     return LISTVIEW_MoveIconTo(infoPtr, nItem, &Pt, FALSE);
 }

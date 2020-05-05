@@ -930,6 +930,9 @@ KiTrap0CHandler(IN PKTRAP_FRAME TrapFrame)
     KiSystemFatalException(EXCEPTION_STACK_FAULT, TrapFrame);
 }
 
+/* DECLSPEC_NORETURN VOID FASTCALL KiTrap0DHandler(IN PKTRAP_FRAME); */
+DECLSPEC_NORETURN VOID FASTCALL KiTrap0EHandler(IN PKTRAP_FRAME);
+
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -1118,8 +1121,8 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
      * with an invalid CS, which will generate another GPF instead.
      *
      */
-    if (((PVOID)TrapFrame->Eip >= (PVOID)KiTrap0DHandler) &&
-        ((PVOID)TrapFrame->Eip < (PVOID)KiTrap0DHandler))
+    if ((PVOID)TrapFrame->Eip >= (PVOID)KiTrap0DHandler &&
+        (PVOID)TrapFrame->Eip <  (PVOID)KiTrap0EHandler)
     {
         /* Not implemented */
         UNIMPLEMENTED_FATAL();

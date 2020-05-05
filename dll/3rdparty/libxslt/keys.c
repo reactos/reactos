@@ -223,6 +223,8 @@ skipString(const xmlChar *cur, int end) {
  */
 static int
 skipPredicate(const xmlChar *cur, int end) {
+    int level = 0;
+
     if ((cur == NULL) || (end < 0)) return(-1);
     if (cur[end] != '[') return(end);
     end++;
@@ -233,12 +235,12 @@ skipPredicate(const xmlChar *cur, int end) {
 	        return(-1);
 	    continue;
 	} else if (cur[end] == '[') {
-	    end = skipPredicate(cur, end);
-	    if (end <= 0)
-	        return(-1);
-	    continue;
-	} else if (cur[end] == ']')
-	    return(end + 1);
+            level += 1;
+	} else if (cur[end] == ']') {
+            if (level == 0)
+	        return(end + 1);
+            level -= 1;
+        }
 	end++;
     }
     return(-1);
@@ -611,6 +613,7 @@ xsltInitCtxtKey(xsltTransformContextPtr ctxt, xsltDocumentPtr idoc,
     xmlNodePtr oldContextNode;
     xsltDocumentPtr oldDocInfo;
     int	oldXPPos, oldXPSize;
+    xmlNodePtr oldXPNode;
     xmlDocPtr oldXPDoc;
     int oldXPNsNr;
     xmlNsPtr *oldXPNamespaces;
@@ -649,6 +652,7 @@ fprintf(stderr, "xsltInitCtxtKey %s : %d\n", keyDef->name, ctxt->keyInitLevel);
     oldDocInfo = ctxt->document;
     oldContextNode = ctxt->node;
 
+    oldXPNode = xpctxt->node;
     oldXPDoc = xpctxt->doc;
     oldXPPos = xpctxt->proximityPosition;
     oldXPSize = xpctxt->contextSize;
@@ -847,6 +851,7 @@ error:
     /*
     * Restore context state.
     */
+    xpctxt->node = oldXPNode;
     xpctxt->doc = oldXPDoc;
     xpctxt->nsNr = oldXPNsNr;
     xpctxt->namespaces = oldXPNamespaces;

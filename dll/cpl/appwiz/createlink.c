@@ -275,8 +275,11 @@ WelcomeDlgProc(HWND hwndDlg,
                         break;
 
                     if (SHGetPathFromIDListW(pidllist, szPath))
+                    {
                         SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, szPath);
-
+                        SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, WM_SETFOCUS, 0, 0);
+                        SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
+                    }
                     /* Free memory, if possible */
                     CoTaskMemFree(pidllist);
                     break;
@@ -405,6 +408,8 @@ FinishDlgProc(HWND hwndDlg,
                 /* TODO: Use shell32!PathCleanupSpec instead of DoConvertNameForFileSystem */
                 DoConvertNameForFileSystem(pContext->szDescription);
                 SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription);
+                SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_NAME, EM_SETSEL, 0, -1);
+                SetFocus(GetDlgItem(hwndDlg, IDC_SHORTCUT_NAME));
             }
             else if (lppsn->hdr.code == PSN_WIZFINISH)
             {

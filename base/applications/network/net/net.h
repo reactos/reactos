@@ -25,7 +25,6 @@
 #include <conutils.h>
 
 #include <net_msg.h>
-#include "resource.h"
 
 extern HMODULE hModuleNetMsg;
 

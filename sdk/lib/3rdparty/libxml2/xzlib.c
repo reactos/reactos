@@ -1,5 +1,5 @@
 /**
- * xzlib.c: front end for the transparent suport of lzma compression
+ * xzlib.c: front end for the transparent support of lzma compression
  *          at the I/O layer, based on an example file from lzma project
  *
  * See Copyright for the status of this software.
@@ -71,7 +71,7 @@ typedef struct {
     int err;                    /* error code */
     char *msg;                  /* error message */
     /* lzma stream */
-    int init;                   /* is the iniflate stream initialized */
+    int init;                   /* is the inflate stream initialized */
     lzma_stream strm;           /* stream structure in-place (not a pointer) */
     char padding1[32];          /* padding allowing to cope with possible
                                    extensions of above structure without

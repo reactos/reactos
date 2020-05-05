@@ -9,7 +9,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Большие значки", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Крупные значки", FCIDM_SHVIEW_BIGICON
     MENUITEM "&Мелкие значки", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Список", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Таблица", FCIDM_SHVIEW_REPORTVIEW
@@ -18,6 +18,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Автоматически", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "&Выровнять значки по сетке", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -28,7 +29,7 @@ BEGIN
     BEGIN
         POPUP "&Вид", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "&Большие значки", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Крупные значки", FCIDM_SHVIEW_BIGICON
             MENUITEM "&Мелкие значки", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Список", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Таблица", FCIDM_SHVIEW_REPORTVIEW
@@ -38,9 +39,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Автоматически", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "&Выровнять значки по сетке", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "В&ыровнять значки", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "О&бновить", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Вставить", FCIDM_SHVIEW_INSERT
@@ -391,8 +391,8 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Установки для выбранного расположения", -1, 10, 72, 220, 70
     RADIOBUTTON "&Другой размер:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "&Максимальный размер (МБ):", -1, 20, 105, 100, 10
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
+    LTEXT "&Максимальный размер (МБ):", -1, 20, 105, 95, 10
     RADIOBUTTON "&Уничтожать файлы сразу после удаления, не помещая их в корзину.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Запрашивать подтверждение на удаление", 14004, 20, 155, 160, 10, WS_TABSTOP
 END
@@ -758,7 +758,7 @@ BEGIN
     IDS_ABOUT_VERSION_STRING "Версия %S (%S)"
 
     /* context menus */
-    IDS_VIEW_LARGE "&Большие значки"
+    IDS_VIEW_LARGE "&Крупные значки"
     IDS_VIEW_SMALL "&Мелкие значки"
     IDS_VIEW_LIST "&Список"
     IDS_VIEW_DETAILS "&Таблица"
@@ -776,7 +776,6 @@ BEGIN
     IDS_EJECT "Извлечь"
     IDS_DISCONNECT "Отсоединить"
     IDS_OPENFILELOCATION "Открыть &расположение объекта"
-    IDS_DESKLINK "Рабочий стол (создать ярлык)"
     IDS_SENDTO_MENU "Отправит&ь"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"

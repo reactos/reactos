@@ -2,6 +2,7 @@
 #define _PCI_PCH_
 
 #include <ntifs.h>
+#include <cmreslist.h>
 
 #define TAG_PCI '0ICP'
 

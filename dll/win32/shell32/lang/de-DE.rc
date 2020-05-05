@@ -11,6 +11,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -31,9 +32,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Icons anordnen", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Aktualisieren", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Einfügen", FCIDM_SHVIEW_INSERT
@@ -384,7 +384,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Einstellungen für gewählten Ort", -1, 10, 72, 220, 70
     RADIOBUTTON "&Definierte Größe:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "M&aximale Größe (MB):", -1, 20, 105, 70, 10
     RADIOBUTTON "Dateien nicht in den Papie&rkorb verschieben, sondern sofort löschen", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "Bestätigungs&dialog nach erfolgreichem Löschvorgang anzeigen", 14004, 20, 155, 215, 10, WS_TABSTOP
@@ -770,7 +770,6 @@ BEGIN
     IDS_EJECT "Auswerfen"
     IDS_DISCONNECT "Trennen"
     IDS_OPENFILELOCATION "Date&ipfad öffnen"
-    IDS_DESKLINK "Desktop (Verknüpfung erstellen)"
     IDS_SENDTO_MENU "S&enden an"
 
     IDS_MOVEERRORTITLE "Fehler beim Verschieben der Datei/des Ordners"

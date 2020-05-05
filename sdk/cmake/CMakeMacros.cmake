@@ -298,7 +298,7 @@ macro(dir_to_num dir var)
     elseif(${dir} STREQUAL reactos/3rdParty)
         set(${var} 63)
     elseif(${dir} STREQUAL reactos/Resources/Themes/Lunar)
-        set(${var} 64)	
+        set(${var} 64)
     elseif(${dir} STREQUAL reactos/Resources/Themes/Mizu)
         set(${var} 65)
     elseif(${dir} STREQUAL reactos/system32/spool/prtprocs/x64)
@@ -363,15 +363,19 @@ function(add_cd_file)
                 add_dependencies(bootcd ${_CD_TARGET} registry_inf)
             endif()
         else()
-            # add it in reactos.cab
             dir_to_num(${_CD_DESTINATION} _num)
-            file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.cmake "\"${_CD_FILE}\" ${_num}\n")
+            foreach(item ${_CD_FILE})
+                # add it in reactos.cab
+                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.cmake "\"${item}\" ${_num}\n")
+
+                # manage dependency - file level
+                set_property(GLOBAL APPEND PROPERTY REACTOS_CAB_DEPENDS ${item})
+            endforeach()
+
             # manage dependency - target level
             if(_CD_TARGET)
                 add_dependencies(reactos_cab_inf ${_CD_TARGET})
             endif()
-            # manage dependency - file level
-            set_property(GLOBAL APPEND PROPERTY REACTOS_CAB_DEPENDS ${_CD_FILE})
         endif()
     endif() #end bootcd
 
@@ -906,6 +910,21 @@ function(create_registry_hives)
         NO_CAB
         FOR bootcd regtest livecd)
 
+endfunction()
+
+function(add_driver_inf _module)
+    # Add to the inf files list
+    foreach(_file ${ARGN})
+        set(_converted_item ${CMAKE_CURRENT_BINARY_DIR}/${_file})
+        set(_source_item ${CMAKE_CURRENT_SOURCE_DIR}/${_file})
+        add_custom_command(OUTPUT "${_converted_item}"
+                           COMMAND native-utf16le "${_source_item}" "${_converted_item}"
+                           DEPENDS native-utf16le "${_source_item}")
+        list(APPEND _converted_inf_files ${_converted_item})
+    endforeach()
+
+    add_custom_target(${_module}_inf_files DEPENDS ${_converted_inf_files})
+    add_cd_file(FILE ${_converted_inf_files} TARGET ${_module}_inf_files DESTINATION reactos/inf FOR all)
 endfunction()
 
 if(KDBG)

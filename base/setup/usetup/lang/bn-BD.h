@@ -159,7 +159,7 @@ static MUI_ENTRY bnBDWelcomePageEntries[] =
     {
         6,
         24,
-        "http://www.reactos.org",
+        "https://reactos.org/",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },

@@ -15,7 +15,7 @@ BEGIN
     IDS_PLUM "Слива"
     IDS_PUMPKIN "Тыква"
     IDS_RAIN "Дождливый день"
-    IDS_RWB "Red, White, and Blue"
+    IDS_RWB "Красный, белый, и голубой"
     IDS_CLASSIC "ReactOS классическая"
     IDS_STANDARD "ReactOS стандартная"
     IDS_ROSE "Роза"
@@ -29,7 +29,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SIZE_NORMAL "Normal"
-    IDS_SIZE_LARGE "Large"
-    IDS_SIZE_XLARGE "Extra Large"
+    IDS_SIZE_NORMAL "Обычный"
+    IDS_SIZE_LARGE "Крупный шрифт"
+    IDS_SIZE_XLARGE "Огромный шрифт"
 END

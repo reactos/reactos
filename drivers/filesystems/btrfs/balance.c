@@ -17,6 +17,7 @@
 
 #include "btrfs_drv.h"
 #include "btrfsioctl.h"
+#include "crc32c.h"
 #include <ntddstor.h>
 
 typedef struct {
@@ -96,7 +97,7 @@ static NTSTATUS add_metadata_reloc(_Requires_exclusive_lock_held_(_Curr_->tree_l
 
     Status = delete_tree_item(Vcb, tp);
     if (!NT_SUCCESS(Status)) {
-        ERR("delete_tree_item returned %08x\n", Status);
+        ERR("delete_tree_item returned %08lx\n", Status);
         ExFreePool(mr);
         return Status;
     }
@@ -191,7 +192,7 @@ static NTSTATUS add_metadata_reloc(_Requires_exclusive_lock_held_(_Curr_->tree_l
 
                     Status = delete_tree_item(Vcb, &tp2);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("delete_tree_item returned %08x\n", Status);
+                        ERR("delete_tree_item returned %08lx\n", Status);
                         return Status;
                     }
                 } else if (tp2.item->key.obj_type == TYPE_SHARED_BLOCK_REF) {
@@ -209,7 +210,7 @@ static NTSTATUS add_metadata_reloc(_Requires_exclusive_lock_held_(_Curr_->tree_l
 
                     Status = delete_tree_item(Vcb, &tp2);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("delete_tree_item returned %08x\n", Status);
+                        ERR("delete_tree_item returned %08lx\n", Status);
                         return Status;
                     }
                 }
@@ -252,7 +253,7 @@ static NTSTATUS add_metadata_reloc_parent(_Requires_exclusive_lock_held_(_Curr_-
 
     Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -273,7 +274,7 @@ static NTSTATUS add_metadata_reloc_parent(_Requires_exclusive_lock_held_(_Curr_-
 
     Status = add_metadata_reloc(Vcb, items, &tp, skinny, mr2, NULL, rollback);
     if (!NT_SUCCESS(Status)) {
-        ERR("add_metadata_reloc returned %08x\n", Status);
+        ERR("add_metadata_reloc returned %08lx\n", Status);
         return Status;
     }
 
@@ -414,7 +415,7 @@ static NTSTATUS add_metadata_reloc_extent_item(_Requires_exclusive_lock_held_(_C
         Status = insert_tree_item(Vcb, Vcb->extent_root, mr->new_address, TYPE_EXTENT_ITEM, Vcb->superblock.node_size, ei, inline_len, NULL, NULL);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("insert_tree_item returned %08x\n", Status);
+        ERR("insert_tree_item returned %08lx\n", Status);
         ExFreePool(ei);
         return Status;
     }
@@ -428,13 +429,13 @@ static NTSTATUS add_metadata_reloc_extent_item(_Requires_exclusive_lock_held_(_C
             if (ref->type == TYPE_TREE_BLOCK_REF) {
                 Status = insert_tree_item(Vcb, Vcb->extent_root, mr->new_address, TYPE_TREE_BLOCK_REF, ref->tbr.offset, NULL, 0, NULL, NULL);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("insert_tree_item returned %08x\n", Status);
+                    ERR("insert_tree_item returned %08lx\n", Status);
                     return Status;
                 }
             } else if (ref->type == TYPE_SHARED_BLOCK_REF) {
                 Status = insert_tree_item(Vcb, Vcb->extent_root, mr->new_address, TYPE_SHARED_BLOCK_REF, ref->parent->new_address, NULL, 0, NULL, NULL);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("insert_tree_item returned %08x\n", Status);
+                    ERR("insert_tree_item returned %08lx\n", Status);
                     return Status;
                 }
             }
@@ -458,7 +459,7 @@ static NTSTATUS add_metadata_reloc_extent_item(_Requires_exclusive_lock_held_(_C
 
                     Status = increase_extent_refcount(Vcb, in[i].address, Vcb->superblock.node_size, TYPE_SHARED_BLOCK_REF, &sbr, NULL, 0, NULL);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("increase_extent_refcount returned %08x\n", Status);
+                        ERR("increase_extent_refcount returned %08lx\n", Status);
                         return Status;
                     }
 
@@ -467,7 +468,7 @@ static NTSTATUS add_metadata_reloc_extent_item(_Requires_exclusive_lock_held_(_C
                     Status = decrease_extent_refcount(Vcb, in[i].address, Vcb->superblock.node_size, TYPE_SHARED_BLOCK_REF, &sbr, NULL, 0,
                                                       sbr.offset, false, NULL);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("decrease_extent_refcount returned %08x\n", Status);
+                        ERR("decrease_extent_refcount returned %08lx\n", Status);
                         return Status;
                     }
                 }
@@ -495,7 +496,7 @@ static NTSTATUS add_metadata_reloc_extent_item(_Requires_exclusive_lock_held_(_C
 
                                 Status = increase_extent_refcount(Vcb, ed2->address, ed2->size, TYPE_SHARED_DATA_REF, &sdr, NULL, 0, NULL);
                                 if (!NT_SUCCESS(Status)) {
-                                    ERR("increase_extent_refcount returned %08x\n", Status);
+                                    ERR("increase_extent_refcount returned %08lx\n", Status);
                                     return Status;
                                 }
 
@@ -504,7 +505,7 @@ static NTSTATUS add_metadata_reloc_extent_item(_Requires_exclusive_lock_held_(_C
                                 Status = decrease_extent_refcount(Vcb, ed2->address, ed2->size, TYPE_SHARED_DATA_REF, &sdr, NULL, 0,
                                                                   sdr.offset, false, NULL);
                                 if (!NT_SUCCESS(Status)) {
-                                    ERR("decrease_extent_refcount returned %08x\n", Status);
+                                    ERR("decrease_extent_refcount returned %08lx\n", Status);
                                     return Status;
                                 }
 
@@ -591,7 +592,7 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
         Status = read_data(Vcb, mr->address, Vcb->superblock.node_size, NULL, true, (uint8_t*)mr->data,
                            c && mr->address >= c->offset && mr->address < c->offset + c->chunk_item->size ? c : NULL, &pc, NULL, 0, false, NormalPagePriority);
         if (!NT_SUCCESS(Status)) {
-            ERR("read_data returned %08x\n", Status);
+            ERR("read_data returned %08lx\n", Status);
             return Status;
         }
 
@@ -656,7 +657,7 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
 
                 Status = find_item_to_level(Vcb, r, &tp, firstitem, false, mr->data->level + 1, NULL);
                 if (!NT_SUCCESS(Status) && Status != STATUS_NOT_FOUND) {
-                    ERR("find_item_to_level returned %08x\n", Status);
+                    ERR("find_item_to_level returned %08lx\n", Status);
                     return Status;
                 }
 
@@ -672,7 +673,7 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
 
                     Status = add_metadata_reloc_parent(Vcb, items, t->header.address, &mr2, rollback);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("add_metadata_reloc_parent returned %08x\n", Status);
+                        ERR("add_metadata_reloc_parent returned %08lx\n", Status);
                         return Status;
                     }
 
@@ -683,7 +684,7 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
 
                 Status = add_metadata_reloc_parent(Vcb, items, ref->sbr.offset, &mr2, rollback);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("add_metadata_reloc_parent returned %08x\n", Status);
+                    ERR("add_metadata_reloc_parent returned %08lx\n", Status);
                     return Status;
                 }
 
@@ -788,7 +789,7 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
                         Status = alloc_chunk(Vcb, flags, &newchunk, false);
 
                         if (!NT_SUCCESS(Status)) {
-                            ERR("alloc_chunk returned %08x\n", Status);
+                            ERR("alloc_chunk returned %08lx\n", Status);
                             ExReleaseResourceLite(&Vcb->chunk_lock);
                             goto end;
                         }
@@ -880,7 +881,7 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
 
                                 Status = find_item(Vcb, Vcb->root_root, &tp, &searchkey, false, NULL);
                                 if (!NT_SUCCESS(Status)) {
-                                    ERR("find_item returned %08x\n", Status);
+                                    ERR("find_item returned %08lx\n", Status);
                                     goto end;
                                 }
 
@@ -901,13 +902,13 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
 
                                 Status = delete_tree_item(Vcb, &tp);
                                 if (!NT_SUCCESS(Status)) {
-                                    ERR("delete_tree_item returned %08x\n", Status);
+                                    ERR("delete_tree_item returned %08lx\n", Status);
                                     goto end;
                                 }
 
                                 Status = insert_tree_item(Vcb, Vcb->root_root, tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, ri, sizeof(ROOT_ITEM), NULL, NULL);
                                 if (!NT_SUCCESS(Status)) {
-                                    ERR("insert_tree_item returned %08x\n", Status);
+                                    ERR("insert_tree_item returned %08lx\n", Status);
                                     goto end;
                                 }
                             }
@@ -1025,7 +1026,7 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
                     t3 = t4;
                 }
 
-                *((uint32_t*)mr->data) = ~calc_crc32c(0xffffffff, (uint8_t*)&mr->data->fs_uuid, Vcb->superblock.node_size - sizeof(mr->data->csum));
+                calc_tree_checksum(Vcb, mr->data);
 
                 tw = ExAllocatePoolWithTag(PagedPool, sizeof(tree_write), ALLOC_TAG);
                 if (!tw) {
@@ -1068,7 +1069,7 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
 
     Status = do_tree_writes(Vcb, &tree_writes, true);
     if (!NT_SUCCESS(Status)) {
-        ERR("do_tree_writes returned %08x\n", Status);
+        ERR("do_tree_writes returned %08lx\n", Status);
         goto end;
     }
 
@@ -1078,7 +1079,7 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
 
         Status = add_metadata_reloc_extent_item(Vcb, mr);
         if (!NT_SUCCESS(Status)) {
-            ERR("add_metadata_reloc_extent_item returned %08x\n", Status);
+            ERR("add_metadata_reloc_extent_item returned %08lx\n", Status);
             goto end;
         }
 
@@ -1121,7 +1122,7 @@ static NTSTATUS balance_metadata_chunk(device_extension* Vcb, chunk* c, bool* ch
 
     Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         goto end;
     }
 
@@ -1149,7 +1150,7 @@ static NTSTATUS balance_metadata_chunk(device_extension* Vcb, chunk* c, bool* ch
                 Status = add_metadata_reloc(Vcb, &items, &tp, skinny, NULL, c, &rollback);
 
                 if (!NT_SUCCESS(Status)) {
-                    ERR("add_metadata_reloc returned %08x\n", Status);
+                    ERR("add_metadata_reloc returned %08lx\n", Status);
                     goto end;
                 }
 
@@ -1175,7 +1176,7 @@ static NTSTATUS balance_metadata_chunk(device_extension* Vcb, chunk* c, bool* ch
 
     Status = write_metadata_items(Vcb, &items, NULL, c, &rollback);
     if (!NT_SUCCESS(Status)) {
-        ERR("write_metadata_items returned %08x\n", Status);
+        ERR("write_metadata_items returned %08lx\n", Status);
         goto end;
     }
 
@@ -1187,7 +1188,7 @@ end:
     if (NT_SUCCESS(Status)) {
         Status = do_write(Vcb, NULL);
         if (!NT_SUCCESS(Status))
-            ERR("do_write returned %08x\n", Status);
+            ERR("do_write returned %08lx\n", Status);
     }
 
     if (NT_SUCCESS(Status))
@@ -1241,7 +1242,7 @@ static NTSTATUS data_reloc_add_tree_edr(_Requires_lock_held_(_Curr_->tree_lock) 
     }
 
     if (!r) {
-        ERR("could not find subvol %I64x\n", edr->count);
+        ERR("could not find subvol %I64x\n", edr->root);
         return STATUS_INTERNAL_ERROR;
     }
 
@@ -1251,7 +1252,7 @@ static NTSTATUS data_reloc_add_tree_edr(_Requires_lock_held_(_Curr_->tree_lock) 
 
     Status = find_item(Vcb, r, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -1293,7 +1294,7 @@ static NTSTATUS data_reloc_add_tree_edr(_Requires_lock_held_(_Curr_->tree_lock) 
 
                         Status = add_metadata_reloc_parent(Vcb, metadata_items, tp.tree->header.address, &mr, rollback);
                         if (!NT_SUCCESS(Status)) {
-                            ERR("add_metadata_reloc_parent returned %08x\n", Status);
+                            ERR("add_metadata_reloc_parent returned %08lx\n", Status);
                             ExFreePool(ref);
                             return Status;
                         }
@@ -1338,7 +1339,7 @@ static NTSTATUS add_data_reloc(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
 
     Status = delete_tree_item(Vcb, tp);
     if (!NT_SUCCESS(Status)) {
-        ERR("delete_tree_item returned %08x\n", Status);
+        ERR("delete_tree_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -1384,7 +1385,7 @@ static NTSTATUS add_data_reloc(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
 
             Status = data_reloc_add_tree_edr(Vcb, metadata_items, dr, edr, rollback);
             if (!NT_SUCCESS(Status)) {
-                ERR("data_reloc_add_tree_edr returned %08x\n", Status);
+                ERR("data_reloc_add_tree_edr returned %08lx\n", Status);
                 return Status;
             }
         } else if (secttype == TYPE_SHARED_DATA_REF) {
@@ -1403,7 +1404,7 @@ static NTSTATUS add_data_reloc(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
 
             Status = add_metadata_reloc_parent(Vcb, metadata_items, ref->sdr.offset, &mr, rollback);
             if (!NT_SUCCESS(Status)) {
-                ERR("add_metadata_reloc_parent returned %08x\n", Status);
+                ERR("add_metadata_reloc_parent returned %08lx\n", Status);
                 ExFreePool(ref);
                 return Status;
             }
@@ -1431,13 +1432,13 @@ static NTSTATUS add_data_reloc(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
                 if (tp2.item->key.obj_type == TYPE_EXTENT_DATA_REF && tp2.item->size >= sizeof(EXTENT_DATA_REF)) {
                     Status = data_reloc_add_tree_edr(Vcb, metadata_items, dr, (EXTENT_DATA_REF*)tp2.item->data, rollback);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("data_reloc_add_tree_edr returned %08x\n", Status);
+                        ERR("data_reloc_add_tree_edr returned %08lx\n", Status);
                         return Status;
                     }
 
                     Status = delete_tree_item(Vcb, &tp2);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("delete_tree_item returned %08x\n", Status);
+                        ERR("delete_tree_item returned %08lx\n", Status);
                         return Status;
                     }
                 } else if (tp2.item->key.obj_type == TYPE_SHARED_DATA_REF && tp2.item->size >= sizeof(uint32_t)) {
@@ -1456,7 +1457,7 @@ static NTSTATUS add_data_reloc(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
 
                     Status = add_metadata_reloc_parent(Vcb, metadata_items, ref->sdr.offset, &mr, rollback);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("add_metadata_reloc_parent returned %08x\n", Status);
+                        ERR("add_metadata_reloc_parent returned %08lx\n", Status);
                         ExFreePool(ref);
                         return Status;
                     }
@@ -1466,7 +1467,7 @@ static NTSTATUS add_data_reloc(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
 
                     Status = delete_tree_item(Vcb, &tp2);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("delete_tree_item returned %08x\n", Status);
+                        ERR("delete_tree_item returned %08lx\n", Status);
                         return Status;
                     }
                 }
@@ -1620,7 +1621,7 @@ static NTSTATUS add_data_reloc_extent_item(_Requires_exclusive_lock_held_(_Curr_
 
     Status = insert_tree_item(Vcb, Vcb->extent_root, dr->new_address, TYPE_EXTENT_ITEM, dr->size, ei, inline_len, NULL, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("insert_tree_item returned %08x\n", Status);
+        ERR("insert_tree_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -1643,7 +1644,7 @@ static NTSTATUS add_data_reloc_extent_item(_Requires_exclusive_lock_held_(_Curr_
 
                 Status = insert_tree_item(Vcb, Vcb->extent_root, dr->new_address, TYPE_EXTENT_DATA_REF, ref->hash, edr, sizeof(EXTENT_DATA_REF), NULL, NULL);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("insert_tree_item returned %08x\n", Status);
+                    ERR("insert_tree_item returned %08lx\n", Status);
                     return Status;
                 }
             } else if (ref->type == TYPE_SHARED_DATA_REF) {
@@ -1659,7 +1660,7 @@ static NTSTATUS add_data_reloc_extent_item(_Requires_exclusive_lock_held_(_Curr_
 
                 Status = insert_tree_item(Vcb, Vcb->extent_root, dr->new_address, TYPE_SHARED_DATA_REF, ref->parent->new_address, sdr, sizeof(uint32_t), NULL, NULL);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("insert_tree_item returned %08x\n", Status);
+                    ERR("insert_tree_item returned %08lx\n", Status);
                     return Status;
                 }
             }
@@ -1695,7 +1696,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
 
     Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         goto end;
     }
 
@@ -1719,7 +1720,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
                 Status = add_data_reloc(Vcb, &items, &metadata_items, &tp, c, &rollback);
 
                 if (!NT_SUCCESS(Status)) {
-                    ERR("add_data_reloc returned %08x\n", Status);
+                    ERR("add_data_reloc returned %08lx\n", Status);
                     goto end;
                 }
 
@@ -1756,7 +1757,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
         data_reloc* dr = CONTAINING_RECORD(le, data_reloc, list_entry);
         bool done = false;
         LIST_ENTRY* le2;
-        uint32_t* csum;
+        void* csum;
         RTL_BITMAP bmp;
         ULONG* bmparr;
         ULONG bmplen, runlength, index, lastoff;
@@ -1805,7 +1806,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
                 Status = alloc_chunk(Vcb, Vcb->data_flags, &newchunk, false);
 
                 if (!NT_SUCCESS(Status)) {
-                    ERR("alloc_chunk returned %08x\n", Status);
+                    ERR("alloc_chunk returned %08lx\n", Status);
                     ExReleaseResourceLite(&Vcb->chunk_lock);
                     goto end;
                 }
@@ -1842,7 +1843,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
             goto end;
         }
 
-        csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(dr->size * sizeof(uint32_t) / Vcb->superblock.sector_size), ALLOC_TAG);
+        csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(dr->size * Vcb->csum_size / Vcb->superblock.sector_size), ALLOC_TAG);
         if (!csum) {
             ERR("out of memory\n");
             ExFreePool(bmparr);
@@ -1859,7 +1860,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
 
         Status = find_item(Vcb, Vcb->checksum_root, &tp, &searchkey, false, NULL);
         if (!NT_SUCCESS(Status) && Status != STATUS_NOT_FOUND) {
-            ERR("find_item returned %08x\n", Status);
+            ERR("find_item returned %08lx\n", Status);
             ExFreePool(csum);
             ExFreePool(bmparr);
             goto end;
@@ -1872,13 +1873,13 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
                 if (tp.item->key.obj_type == TYPE_EXTENT_CSUM) {
                     if (tp.item->key.offset >= dr->address + dr->size)
                         break;
-                    else if (tp.item->size >= sizeof(uint32_t) && tp.item->key.offset + (tp.item->size * Vcb->superblock.sector_size / sizeof(uint32_t)) >= dr->address) {
+                    else if (tp.item->size >= Vcb->csum_size && tp.item->key.offset + (tp.item->size * Vcb->superblock.sector_size / Vcb->csum_size) >= dr->address) {
                         uint64_t cs = max(dr->address, tp.item->key.offset);
-                        uint64_t ce = min(dr->address + dr->size, tp.item->key.offset + (tp.item->size * Vcb->superblock.sector_size / sizeof(uint32_t)));
+                        uint64_t ce = min(dr->address + dr->size, tp.item->key.offset + (tp.item->size * Vcb->superblock.sector_size / Vcb->csum_size));
 
-                        RtlCopyMemory(csum + ((cs - dr->address) / Vcb->superblock.sector_size),
-                                      tp.item->data + ((cs - tp.item->key.offset) * sizeof(uint32_t) / Vcb->superblock.sector_size),
-                                      (ULONG)((ce - cs) * sizeof(uint32_t) / Vcb->superblock.sector_size));
+                        RtlCopyMemory((uint8_t*)csum + ((cs - dr->address) * Vcb->csum_size / Vcb->superblock.sector_size),
+                                      tp.item->data + ((cs - tp.item->key.offset) * Vcb->csum_size / Vcb->superblock.sector_size),
+                                      (ULONG)((ce - cs) * Vcb->csum_size / Vcb->superblock.sector_size));
 
                         RtlClearBits(&bmp, (ULONG)((cs - dr->address) / Vcb->superblock.sector_size), (ULONG)((ce - cs) / Vcb->superblock.sector_size));
 
@@ -1924,7 +1925,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
                     Status = read_data(Vcb, dr->address + (off * Vcb->superblock.sector_size), rl * Vcb->superblock.sector_size, NULL, false, data,
                                        c, NULL, NULL, 0, false, NormalPagePriority);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("read_data returned %08x\n", Status);
+                        ERR("read_data returned %08lx\n", Status);
                         ExFreePool(csum);
                         ExFreePool(bmparr);
                         goto end;
@@ -1933,7 +1934,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
                     Status = write_data_complete(Vcb, dr->new_address + (off * Vcb->superblock.sector_size), data, rl * Vcb->superblock.sector_size,
                                                  NULL, newchunk, false, 0, NormalPagePriority);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("write_data_complete returned %08x\n", Status);
+                        ERR("write_data_complete returned %08lx\n", Status);
                         ExFreePool(csum);
                         ExFreePool(bmparr);
                         goto end;
@@ -1944,7 +1945,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
                 } while (size > 0);
             }
 
-            add_checksum_entry(Vcb, dr->new_address + (index * Vcb->superblock.sector_size), runlength, &csum[index], NULL);
+            add_checksum_entry(Vcb, dr->new_address + (index * Vcb->superblock.sector_size), runlength, (uint8_t*)csum + (index * Vcb->csum_size), NULL);
             add_checksum_entry(Vcb, dr->address + (index * Vcb->superblock.sector_size), runlength, NULL, NULL);
 
             // handle csum run
@@ -1956,10 +1957,10 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
                 else
                     rl = runlength;
 
-                Status = read_data(Vcb, dr->address + (index * Vcb->superblock.sector_size), rl * Vcb->superblock.sector_size, &csum[index], false, data,
-                                   c, NULL, NULL, 0, false, NormalPagePriority);
+                Status = read_data(Vcb, dr->address + (index * Vcb->superblock.sector_size), rl * Vcb->superblock.sector_size,
+                                   (uint8_t*)csum + (index * Vcb->csum_size), false, data, c, NULL, NULL, 0, false, NormalPagePriority);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("read_data returned %08x\n", Status);
+                    ERR("read_data returned %08lx\n", Status);
                     ExFreePool(csum);
                     ExFreePool(bmparr);
                     goto end;
@@ -1968,7 +1969,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
                 Status = write_data_complete(Vcb, dr->new_address + (index * Vcb->superblock.sector_size), data, rl * Vcb->superblock.sector_size,
                                              NULL, newchunk, false, 0, NormalPagePriority);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("write_data_complete returned %08x\n", Status);
+                    ERR("write_data_complete returned %08lx\n", Status);
                     ExFreePool(csum);
                     ExFreePool(bmparr);
                     goto end;
@@ -2001,14 +2002,14 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
                 Status = read_data(Vcb, dr->address + (off * Vcb->superblock.sector_size), rl * Vcb->superblock.sector_size, NULL, false, data,
                                    c, NULL, NULL, 0, false, NormalPagePriority);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("read_data returned %08x\n", Status);
+                    ERR("read_data returned %08lx\n", Status);
                     goto end;
                 }
 
                 Status = write_data_complete(Vcb, dr->new_address + (off * Vcb->superblock.sector_size), data, rl * Vcb->superblock.sector_size,
                                              NULL, newchunk, false, 0, NormalPagePriority);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("write_data_complete returned %08x\n", Status);
+                    ERR("write_data_complete returned %08lx\n", Status);
                     goto end;
                 }
 
@@ -2025,7 +2026,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
 
     Status = write_metadata_items(Vcb, &metadata_items, &items, NULL, &rollback);
     if (!NT_SUCCESS(Status)) {
-        ERR("write_metadata_items returned %08x\n", Status);
+        ERR("write_metadata_items returned %08lx\n", Status);
         goto end;
     }
 
@@ -2035,7 +2036,7 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, bool* change
 
         Status = add_data_reloc_extent_item(Vcb, dr);
         if (!NT_SUCCESS(Status)) {
-            ERR("add_data_reloc_extent_item returned %08x\n", Status);
+            ERR("add_data_reloc_extent_item returned %08lx\n", Status);
             goto end;
         }
 
@@ -2117,7 +2118,7 @@ end:
 
         Status = do_write(Vcb, NULL);
         if (!NT_SUCCESS(Status))
-            ERR("do_write returned %08x\n", Status);
+            ERR("do_write returned %08lx\n", Status);
     }
 
     if (NT_SUCCESS(Status)) {
@@ -2217,6 +2218,10 @@ static __inline uint64_t get_chunk_dup_type(chunk* c) {
         return BLOCK_FLAG_RAID5;
     else if (c->chunk_item->type & BLOCK_FLAG_RAID6)
         return BLOCK_FLAG_RAID6;
+    else if (c->chunk_item->type & BLOCK_FLAG_RAID1C3)
+        return BLOCK_FLAG_RAID1C3;
+    else if (c->chunk_item->type & BLOCK_FLAG_RAID1C4)
+        return BLOCK_FLAG_RAID1C4;
     else
         return BLOCK_FLAG_SINGLE;
 }
@@ -2266,7 +2271,7 @@ static bool should_balance_chunk(device_extension* Vcb, uint8_t sort, chunk* c) 
             factor = c->chunk_item->num_stripes - 1;
         else if (c->chunk_item->type & BLOCK_FLAG_RAID6)
             factor = c->chunk_item->num_stripes - 2;
-        else // SINGLE, DUPLICATE, RAID1
+        else // SINGLE, DUPLICATE, RAID1, RAID1C3, RAID1C4
             factor = 1;
 
         physsize = c->chunk_item->size / factor;
@@ -2388,14 +2393,14 @@ static NTSTATUS add_balance_item(device_extension* Vcb) {
 
     Status = find_item(Vcb, Vcb->root_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         goto end;
     }
 
     if (!keycmp(tp.item->key, searchkey)) {
         Status = delete_tree_item(Vcb, &tp);
         if (!NT_SUCCESS(Status)) {
-            ERR("delete_tree_item returned %08x\n", Status);
+            ERR("delete_tree_item returned %08lx\n", Status);
             goto end;
         }
     }
@@ -2426,7 +2431,7 @@ static NTSTATUS add_balance_item(device_extension* Vcb) {
 
     Status = insert_tree_item(Vcb, Vcb->root_root, BALANCE_ITEM_ID, TYPE_TEMP_ITEM, 0, bi, sizeof(BALANCE_ITEM), NULL, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("insert_tree_item returned %08x\n", Status);
+        ERR("insert_tree_item returned %08lx\n", Status);
         ExFreePool(bi);
         goto end;
     }
@@ -2437,7 +2442,7 @@ end:
     if (NT_SUCCESS(Status)) {
         Status = do_write(Vcb, NULL);
         if (!NT_SUCCESS(Status))
-            ERR("do_write returned %08x\n", Status);
+            ERR("do_write returned %08lx\n", Status);
     }
 
     free_trees(Vcb);
@@ -2460,20 +2465,20 @@ static NTSTATUS remove_balance_item(device_extension* Vcb) {
 
     Status = find_item(Vcb, Vcb->root_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         goto end;
     }
 
     if (!keycmp(tp.item->key, searchkey)) {
         Status = delete_tree_item(Vcb, &tp);
         if (!NT_SUCCESS(Status)) {
-            ERR("delete_tree_item returned %08x\n", Status);
+            ERR("delete_tree_item returned %08lx\n", Status);
             goto end;
         }
 
         Status = do_write(Vcb, NULL);
         if (!NT_SUCCESS(Status)) {
-            ERR("do_write returned %08x\n", Status);
+            ERR("do_write returned %08lx\n", Status);
             goto end;
         }
 
@@ -2593,7 +2598,7 @@ static NTSTATUS finish_removing_device(_Requires_exclusive_lock_held_(_Curr_->tr
         Status = do_write(Vcb, NULL);
 
         if (!NT_SUCCESS(Status))
-            ERR("do_write returned %08x\n", Status);
+            ERR("do_write returned %08lx\n", Status);
     } else
         Status = STATUS_SUCCESS;
 
@@ -2610,7 +2615,7 @@ static NTSTATUS finish_removing_device(_Requires_exclusive_lock_held_(_Curr_->tr
 
     Status = find_item(Vcb, Vcb->chunk_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -2618,7 +2623,7 @@ static NTSTATUS finish_removing_device(_Requires_exclusive_lock_held_(_Curr_->tr
         Status = delete_tree_item(Vcb, &tp);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("delete_tree_item returned %08x\n", Status);
+            ERR("delete_tree_item returned %08lx\n", Status);
             return Status;
         }
     }
@@ -2631,7 +2636,7 @@ static NTSTATUS finish_removing_device(_Requires_exclusive_lock_held_(_Curr_->tr
 
     Status = find_item(Vcb, Vcb->dev_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -2639,7 +2644,7 @@ static NTSTATUS finish_removing_device(_Requires_exclusive_lock_held_(_Curr_->tr
         Status = delete_tree_item(Vcb, &tp);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("delete_tree_item returned %08x\n", Status);
+            ERR("delete_tree_item returned %08lx\n", Status);
             return Status;
         }
     }
@@ -2656,7 +2661,7 @@ static NTSTATUS finish_removing_device(_Requires_exclusive_lock_held_(_Curr_->tr
 
     Status = do_write(Vcb, NULL);
     if (!NT_SUCCESS(Status))
-        ERR("do_write returned %08x\n", Status);
+        ERR("do_write returned %08lx\n", Status);
 
     free_trees(Vcb);
 
@@ -2666,7 +2671,7 @@ static NTSTATUS finish_removing_device(_Requires_exclusive_lock_held_(_Curr_->tr
     if (!dev->readonly && dev->devobj) {
         Status = remove_superblocks(dev);
         if (!NT_SUCCESS(Status))
-            WARN("remove_superblocks returned %08x\n", Status);
+            WARN("remove_superblocks returned %08lx\n", Status);
     }
 
     // remove entry in volume list
@@ -2693,13 +2698,13 @@ static NTSTATUS finish_removing_device(_Requires_exclusive_lock_held_(_Curr_->tr
                     RtlInitUnicodeString(&mmdevpath, MOUNTMGR_DEVICE_NAME);
                     Status = IoGetDeviceObjectPointer(&mmdevpath, FILE_READ_ATTRIBUTES, &FileObject, &mountmgr);
                     if (!NT_SUCCESS(Status))
-                        ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
+                        ERR("IoGetDeviceObjectPointer returned %08lx\n", Status);
                     else {
                         MOUNTDEV_NAME mdn;
 
                         Status = dev_ioctl(dev->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &mdn, sizeof(MOUNTDEV_NAME), true, NULL);
                         if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-                            ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+                            ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08lx\n", Status);
                         else {
                             MOUNTDEV_NAME* mdn2;
                             ULONG mdnsize = (ULONG)offsetof(MOUNTDEV_NAME, Name[0]) + mdn.NameLength;
@@ -2710,7 +2715,7 @@ static NTSTATUS finish_removing_device(_Requires_exclusive_lock_held_(_Curr_->tr
                             else {
                                 Status = dev_ioctl(dev->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, mdn2, mdnsize, true, NULL);
                                 if (!NT_SUCCESS(Status))
-                                    ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+                                    ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08lx\n", Status);
                                 else {
                                     UNICODE_STRING name;
 
@@ -2719,7 +2724,7 @@ static NTSTATUS finish_removing_device(_Requires_exclusive_lock_held_(_Curr_->tr
 
                                     Status = mountmgr_add_drive_letter(mountmgr, &name);
                                     if (!NT_SUCCESS(Status))
-                                        WARN("mountmgr_add_drive_letter returned %08x\n", Status);
+                                        WARN("mountmgr_add_drive_letter returned %08lx\n", Status);
                                 }
 
                                 ExFreePool(mdn2);
@@ -2817,7 +2822,7 @@ static void trim_unalloc_space(_Requires_lock_held_(_Curr_->tree_lock) device_ex
 
     Status = find_item(Vcb, Vcb->dev_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         return;
     }
 
@@ -2833,7 +2838,7 @@ static void trim_unalloc_space(_Requires_lock_held_(_Curr_->tree_lock) device_ex
 
                 lastoff = tp.item->key.offset + de->length;
             } else {
-                ERR("(%I64x,%x,%I64x) was %u bytes, expected %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DEV_EXTENT));
+                ERR("(%I64x,%x,%I64x) was %u bytes, expected %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DEV_EXTENT));
                 return;
             }
         }
@@ -2885,7 +2890,7 @@ static void trim_unalloc_space(_Requires_lock_held_(_Curr_->tree_lock) device_ex
 
     Status = dev_ioctl(dev->devobj, IOCTL_STORAGE_MANAGE_DATA_SET_ATTRIBUTES, dmdsa, datalen, NULL, 0, true, NULL);
     if (!NT_SUCCESS(Status))
-        WARN("IOCTL_STORAGE_MANAGE_DATA_SET_ATTRIBUTES returned %08x\n", Status);
+        WARN("IOCTL_STORAGE_MANAGE_DATA_SET_ATTRIBUTES returned %08lx\n", Status);
 
     ExFreePool(dmdsa);
 
@@ -2947,7 +2952,7 @@ static NTSTATUS try_consolidation(device_extension* Vcb, uint64_t flags, chunk**
 
             Status = balance_data_chunk(Vcb, rc, &changed);
             if (!NT_SUCCESS(Status)) {
-                ERR("balance_data_chunk returned %08x\n", Status);
+                ERR("balance_data_chunk returned %08lx\n", Status);
                 Vcb->balance.status = Status;
                 rc->list_entry_balance.Flink = NULL;
                 rc->reloc = false;
@@ -2971,7 +2976,7 @@ static NTSTATUS try_consolidation(device_extension* Vcb, uint64_t flags, chunk**
 
         Status = do_write(Vcb, NULL);
         if (!NT_SUCCESS(Status)) {
-            ERR("do_write returned %08x\n", Status);
+            ERR("do_write returned %08lx\n", Status);
             return Status;
         }
 
@@ -2988,7 +2993,7 @@ static NTSTATUS try_consolidation(device_extension* Vcb, uint64_t flags, chunk**
         *newchunk = rc;
         return Status;
     } else {
-        ERR("alloc_chunk returned %08x\n", Status);
+        ERR("alloc_chunk returned %08lx\n", Status);
         return Status;
     }
 }
@@ -3027,7 +3032,7 @@ static NTSTATUS regenerate_space_list(device_extension* Vcb, device* dev) {
                         factor = c->chunk_item->num_stripes - 1;
                     else if (c->chunk_item->type & BLOCK_FLAG_RAID6)
                         factor = c->chunk_item->num_stripes - 2;
-                    else // SINGLE, DUP, RAID1
+                    else // SINGLE, DUP, RAID1, RAID1C3, RAID1C4
                         factor = 1;
 
                     stripe_size = c->chunk_item->size / factor;
@@ -3092,7 +3097,7 @@ void __stdcall balance_thread(void* context) {
         if (!Vcb->balance.removing && !Vcb->balance.shrinking) {
             Status = add_balance_item(Vcb);
             if (!NT_SUCCESS(Status)) {
-                ERR("add_balance_item returned %08x\n", Status);
+                ERR("add_balance_item returned %08lx\n", Status);
                 Vcb->balance.status = Status;
                 goto end;
             }
@@ -3103,7 +3108,7 @@ void __stdcall balance_thread(void* context) {
                 free_trees(Vcb);
 
                 if (!NT_SUCCESS(Status)) {
-                    ERR("do_write returned %08x\n", Status);
+                    ERR("do_write returned %08lx\n", Status);
                     Vcb->balance.status = Status;
                     goto end;
                 }
@@ -3155,7 +3160,7 @@ void __stdcall balance_thread(void* context) {
             Status = load_cache_chunk(Vcb, c, NULL);
 
             if (!NT_SUCCESS(Status)) {
-                ERR("load_cache_chunk returned %08x\n", Status);
+                ERR("load_cache_chunk returned %08lx\n", Status);
                 Vcb->balance.status = Status;
                 release_chunk_lock(c, Vcb);
                 ExReleaseResourceLite(&Vcb->chunk_lock);
@@ -3182,7 +3187,7 @@ void __stdcall balance_thread(void* context) {
             if (NT_SUCCESS(Status))
                 c->balance_num = Vcb->balance.balance_num;
             else if (Status != STATUS_DISK_FULL || consolidated) {
-                ERR("alloc_chunk returned %08x\n", Status);
+                ERR("alloc_chunk returned %08lx\n", Status);
                 ExReleaseResourceLite(&Vcb->chunk_lock);
                 Vcb->balance.status = Status;
                 goto end;
@@ -3193,7 +3198,7 @@ void __stdcall balance_thread(void* context) {
             if (Status == STATUS_DISK_FULL) {
                 Status = try_consolidation(Vcb, Vcb->metadata_flags, &c);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("try_consolidation returned %08x\n", Status);
+                    ERR("try_consolidation returned %08lx\n", Status);
                     Vcb->balance.status = Status;
                     goto end;
                 } else
@@ -3213,7 +3218,7 @@ void __stdcall balance_thread(void* context) {
             if (NT_SUCCESS(Status))
                 c->balance_num = Vcb->balance.balance_num;
             else if (Status != STATUS_DISK_FULL || consolidated) {
-                ERR("alloc_chunk returned %08x\n", Status);
+                ERR("alloc_chunk returned %08lx\n", Status);
                 ExReleaseResourceLite(&Vcb->chunk_lock);
                 Vcb->balance.status = Status;
                 goto end;
@@ -3224,7 +3229,7 @@ void __stdcall balance_thread(void* context) {
             if (Status == STATUS_DISK_FULL) {
                 Status = try_consolidation(Vcb, Vcb->data_flags, &c);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("try_consolidation returned %08x\n", Status);
+                    ERR("try_consolidation returned %08lx\n", Status);
                     Vcb->balance.status = Status;
                     goto end;
                 } else
@@ -3244,7 +3249,7 @@ void __stdcall balance_thread(void* context) {
             if (NT_SUCCESS(Status))
                 c->balance_num = Vcb->balance.balance_num;
             else if (Status != STATUS_DISK_FULL || consolidated) {
-                ERR("alloc_chunk returned %08x\n", Status);
+                ERR("alloc_chunk returned %08lx\n", Status);
                 ExReleaseResourceLite(&Vcb->chunk_lock);
                 Vcb->balance.status = Status;
                 goto end;
@@ -3255,7 +3260,7 @@ void __stdcall balance_thread(void* context) {
             if (Status == STATUS_DISK_FULL) {
                 Status = try_consolidation(Vcb, Vcb->system_flags, &c);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("try_consolidation returned %08x\n", Status);
+                    ERR("try_consolidation returned %08lx\n", Status);
                     Vcb->balance.status = Status;
                     goto end;
                 } else
@@ -3296,7 +3301,7 @@ void __stdcall balance_thread(void* context) {
 
                 Status = balance_data_chunk(Vcb, c, &changed);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("balance_data_chunk returned %08x\n", Status);
+                    ERR("balance_data_chunk returned %08lx\n", Status);
                     Vcb->balance.status = Status;
                     goto end;
                 }
@@ -3340,7 +3345,7 @@ void __stdcall balance_thread(void* context) {
             do {
                 Status = balance_metadata_chunk(Vcb, c, &changed);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("balance_metadata_chunk returned %08x\n", Status);
+                    ERR("balance_metadata_chunk returned %08lx\n", Status);
                     Vcb->balance.status = Status;
                     goto end;
                 }
@@ -3410,7 +3415,7 @@ end:
                     Status = finish_removing_device(Vcb, dev);
 
                     if (!NT_SUCCESS(Status)) {
-                        ERR("finish_removing_device returned %08x\n", Status);
+                        ERR("finish_removing_device returned %08lx\n", Status);
                         dev->reloc = false;
                     }
                 } else
@@ -3444,7 +3449,7 @@ end:
                 if (dev) {
                     Status = regenerate_space_list(Vcb, dev);
                     if (!NT_SUCCESS(Status))
-                        WARN("regenerate_space_list returned %08x\n", Status);
+                        WARN("regenerate_space_list returned %08lx\n", Status);
                 }
             } else {
                 uint64_t old_size;
@@ -3454,19 +3459,19 @@ end:
 
                 Status = update_dev_item(Vcb, dev, NULL);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("update_dev_item returned %08x\n", Status);
+                    ERR("update_dev_item returned %08lx\n", Status);
                     dev->devitem.num_bytes = old_size;
                     Vcb->balance.status = Status;
 
                     Status = regenerate_space_list(Vcb, dev);
                     if (!NT_SUCCESS(Status))
-                        WARN("regenerate_space_list returned %08x\n", Status);
+                        WARN("regenerate_space_list returned %08lx\n", Status);
                 } else {
                     Vcb->superblock.total_bytes -= old_size - dev->devitem.num_bytes;
 
                     Status = do_write(Vcb, NULL);
                     if (!NT_SUCCESS(Status))
-                        ERR("do_write returned %08x\n", Status);
+                        ERR("do_write returned %08lx\n", Status);
 
                     free_trees(Vcb);
                 }
@@ -3479,7 +3484,7 @@ end:
         } else {
             Status = remove_balance_item(Vcb);
             if (!NT_SUCCESS(Status)) {
-                ERR("remove_balance_item returned %08x\n", Status);
+                ERR("remove_balance_item returned %08lx\n", Status);
                 goto end;
             }
         }
@@ -3546,7 +3551,8 @@ NTSTATUS start_balance(device_extension* Vcb, void* data, ULONG length, KPROCESS
         if (bsb->opts[i].flags & BTRFS_BALANCE_OPTS_ENABLED) {
             if (bsb->opts[i].flags & BTRFS_BALANCE_OPTS_PROFILES) {
                 bsb->opts[i].profiles &= BLOCK_FLAG_RAID0 | BLOCK_FLAG_RAID1 | BLOCK_FLAG_DUPLICATE | BLOCK_FLAG_RAID10 |
-                                         BLOCK_FLAG_RAID5 | BLOCK_FLAG_RAID6 | BLOCK_FLAG_SINGLE;
+                                         BLOCK_FLAG_RAID5 | BLOCK_FLAG_RAID6 | BLOCK_FLAG_SINGLE | BLOCK_FLAG_RAID1C3 |
+                                         BLOCK_FLAG_RAID1C4;
 
                 if (bsb->opts[i].profiles == 0)
                     return STATUS_INVALID_PARAMETER;
@@ -3595,7 +3601,8 @@ NTSTATUS start_balance(device_extension* Vcb, void* data, ULONG length, KPROCESS
                 if (bsb->opts[i].convert != BLOCK_FLAG_RAID0 && bsb->opts[i].convert != BLOCK_FLAG_RAID1 &&
                     bsb->opts[i].convert != BLOCK_FLAG_DUPLICATE && bsb->opts[i].convert != BLOCK_FLAG_RAID10 &&
                     bsb->opts[i].convert != BLOCK_FLAG_RAID5 && bsb->opts[i].convert != BLOCK_FLAG_RAID6 &&
-                    bsb->opts[i].convert != BLOCK_FLAG_SINGLE)
+                    bsb->opts[i].convert != BLOCK_FLAG_SINGLE && bsb->opts[i].convert != BLOCK_FLAG_RAID1C3 &&
+                    bsb->opts[i].convert != BLOCK_FLAG_RAID1C4)
                     return STATUS_INVALID_PARAMETER;
             }
         }
@@ -3615,7 +3622,7 @@ NTSTATUS start_balance(device_extension* Vcb, void* data, ULONG length, KPROCESS
 
     Status = PsCreateSystemThread(&Vcb->balance.thread, 0, &oa, NULL, NULL, balance_thread, Vcb);
     if (!NT_SUCCESS(Status)) {
-        ERR("PsCreateSystemThread returned %08x\n", Status);
+        ERR("PsCreateSystemThread returned %08lx\n", Status);
         return Status;
     }
 
@@ -3636,7 +3643,7 @@ NTSTATUS look_for_balance_item(_Requires_lock_held_(_Curr_->tree_lock) device_ex
 
     Status = find_item(Vcb, Vcb->root_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -3646,7 +3653,7 @@ NTSTATUS look_for_balance_item(_Requires_lock_held_(_Curr_->tree_lock) device_ex
     }
 
     if (tp.item->size < sizeof(BALANCE_ITEM)) {
-        WARN("(%I64x,%x,%I64x) was %u bytes, expected %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
+        WARN("(%I64x,%x,%I64x) was %u bytes, expected %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
              tp.item->size, sizeof(BALANCE_ITEM));
         return STATUS_INTERNAL_ERROR;
     }
@@ -3698,7 +3705,7 @@ NTSTATUS look_for_balance_item(_Requires_lock_held_(_Curr_->tree_lock) device_ex
 
     Status = PsCreateSystemThread(&Vcb->balance.thread, 0, &oa, NULL, NULL, balance_thread, Vcb);
     if (!NT_SUCCESS(Status)) {
-        ERR("PsCreateSystemThread returned %08x\n", Status);
+        ERR("PsCreateSystemThread returned %08lx\n", Status);
         return Status;
     }
 
@@ -3802,7 +3809,7 @@ NTSTATUS remove_device(device_extension* Vcb, void* data, ULONG length, KPROCESS
     uint64_t num_rw_devices;
     OBJECT_ATTRIBUTES oa;
 
-    TRACE("(%p, %p, %x)\n", Vcb, data, length);
+    TRACE("(%p, %p, %lx)\n", Vcb, data, length);
 
     if (!SeSinglePrivilegeCheck(RtlConvertLongToLuid(SE_MANAGE_VOLUME_PRIVILEGE), processor_mode))
         return STATUS_PRIVILEGE_NOT_HELD;
@@ -3849,16 +3856,21 @@ NTSTATUS remove_device(device_extension* Vcb, void* data, ULONG length, KPROCESS
 
         if (num_rw_devices == 4 &&
             ((Vcb->data_flags & BLOCK_FLAG_RAID10 || Vcb->metadata_flags & BLOCK_FLAG_RAID10 || Vcb->system_flags & BLOCK_FLAG_RAID10) ||
-             (Vcb->data_flags & BLOCK_FLAG_RAID6 || Vcb->metadata_flags & BLOCK_FLAG_RAID6 || Vcb->system_flags & BLOCK_FLAG_RAID6))
+             (Vcb->data_flags & BLOCK_FLAG_RAID6 || Vcb->metadata_flags & BLOCK_FLAG_RAID6 || Vcb->system_flags & BLOCK_FLAG_RAID6) ||
+             (Vcb->data_flags & BLOCK_FLAG_RAID1C4 || Vcb->metadata_flags & BLOCK_FLAG_RAID1C4 || Vcb->system_flags & BLOCK_FLAG_RAID1C4)
+            )
         ) {
             ExReleaseResourceLite(&Vcb->tree_lock);
-            ERR("would not be enough devices to satisfy RAID requirement (RAID6/10)\n");
+            ERR("would not be enough devices to satisfy RAID requirement (RAID6/10/1C4)\n");
             return STATUS_CANNOT_DELETE;
         }
 
-        if (num_rw_devices == 3 && (Vcb->data_flags & BLOCK_FLAG_RAID5 || Vcb->metadata_flags & BLOCK_FLAG_RAID5 || Vcb->system_flags & BLOCK_FLAG_RAID5)) {
+        if (num_rw_devices == 3 &&
+            ((Vcb->data_flags & BLOCK_FLAG_RAID5 || Vcb->metadata_flags & BLOCK_FLAG_RAID5 || Vcb->system_flags & BLOCK_FLAG_RAID5) ||
+            (Vcb->data_flags & BLOCK_FLAG_RAID1C3 || Vcb->metadata_flags & BLOCK_FLAG_RAID1C3 || Vcb->system_flags & BLOCK_FLAG_RAID1C3))
+            ) {
             ExReleaseResourceLite(&Vcb->tree_lock);
-            ERR("would not be enough devices to satisfy RAID requirement (RAID5)\n");
+            ERR("would not be enough devices to satisfy RAID requirement (RAID5/1C3)\n");
             return STATUS_CANNOT_DELETE;
         }
 
@@ -3898,7 +3910,7 @@ NTSTATUS remove_device(device_extension* Vcb, void* data, ULONG length, KPROCESS
 
     Status = PsCreateSystemThread(&Vcb->balance.thread, 0, &oa, NULL, NULL, balance_thread, Vcb);
     if (!NT_SUCCESS(Status)) {
-        ERR("PsCreateSystemThread returned %08x\n", Status);
+        ERR("PsCreateSystemThread returned %08lx\n", Status);
         dev->reloc = false;
         return Status;
     }

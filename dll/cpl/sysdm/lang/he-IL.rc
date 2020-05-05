@@ -21,7 +21,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "בקר את <A HREF=""http://www.reactos.org/"">דף הבית של ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "בקר את <A HREF=""https://reactos.org/"">דף הבית של ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "ראה רישיון...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -201,7 +201,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "אתחול המערכת", IDC_STATIC, 7, 12, 238, 95
     LTEXT "מערכת ההפעלה המהווה ברירת מחדל:", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "זמן להצגת רשימת מערכות הפעלה:", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -219,7 +219,7 @@ BEGIN
     AUTOCHECKBOX "שלח התראה מנהלית", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "הפעל מחדש באופן אוטומטי", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "כתיבת מידע לניפוי שגיאות", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "קובץ DUMP:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "שכתב קובץ קיים", IDC_STRRECOVERWRITE, 17, 228, 125, 10
@@ -335,7 +335,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "System control panel applet"
     IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
     IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
-    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 16 MB and must not exceed the available space on the selected drive."
+    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 2 MB,  must not be larger than 4095 MB and must not exceed the available space on the selected drive."
     IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size, must not be larger than 4095 MB and must not exceed the available space on the selected drive."
     IDS_PAGEFILE_NONE "ללא"
     IDS_PAGEFILE_SYSTEM "System Managed"

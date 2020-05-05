@@ -11,6 +11,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Ordna automatiskt", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -31,9 +32,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Ordna automatiskt", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Rada upp ikoner", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Uppdatera", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Klistra in", FCIDM_SHVIEW_INSERT
@@ -384,7 +384,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Inställningar för vald plats", -1, 10, 72, 220, 70
     RADIOBUTTON "&Användardefinierad storlek:", 14001, 20, 90, 100, 10, WS_TABSTOP
-    EDITTEXT 14002, 132, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "M&aximal storlek(MB):", -1, 20, 105, 70, 10
     RADIOBUTTON "Flytta inte filer till &Papperskorgen. Radera filer direkt när de tas bort.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Visa dialog för bekräftelse av borttagning", 14004, 20, 155, 150, 10, WS_TABSTOP
@@ -769,7 +769,6 @@ BEGIN
     IDS_EJECT "Eject"
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
     IDS_SENDTO_MENU "Se&nd To"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"

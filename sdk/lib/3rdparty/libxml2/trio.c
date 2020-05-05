@@ -2610,7 +2610,7 @@ TRIO_ARGS5((self, wstring, flags, width, precision),
  *
  *  The accuracy [...] is implementation defined, as is the accuracy
  *  of the conversion between floating-point internal representations
- *  and string representations performed by the libray routine in
+ *  and string representations performed by the library routine in
  *  <stdio.h>"
  */
 /* FIXME: handle all instances of constant long-double number (L)
@@ -5899,7 +5899,7 @@ TRIO_ARGS4((self, target, flags, width),
 	}
       if (trio_equal(doubleString, NAN_UPPER))
 	{
-	  /* NaN must not have a preceeding + nor - */
+	  /* NaN must not have a preceding + nor - */
 	  if (flags & FLAGS_LONGDOUBLE)
 	    {
 	      *((trio_long_double_t *)target) = trio_nan();

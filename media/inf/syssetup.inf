@@ -86,6 +86,7 @@ AddReg=Classes
 11,,msxml3.dll,1
 11,,msxml4.dll,1
 11,,msxml6.dll,1
+11,,mydocs.dll,1
 11,,netshell.dll,1
 11,,ntobjshex.dll,1
 11,,objsel.dll,1

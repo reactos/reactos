@@ -7,8 +7,8 @@ There are several ways to contribute to the development of ReactOS. The most oft
 - [Where To Start?](#where-to-start?)
 
 **Legal notice:** If you have seen Microsoft Windows source code, your contribution won't be accepted because of potential copyright violation. Before contributing, you must affirm that the following is true:
->I hereby swear that I have not used nor seen the source code to any version of the Windows operating system 
->nor any Microsoft product that may be related to the proposed project that is under a license incompatible 
+>I hereby swear that I have not used nor seen the source code to any version of the Windows operating system
+>nor any Microsoft product that may be related to the proposed project that is under a license incompatible
 >with contribution to ReactOS, including but not limited to the leaked Windows 2000 source code and the Windows Research Kernel.
 
 ## What To Do?
@@ -53,7 +53,7 @@ Since our [migration to GitHub] we gladly accept __[Pull Requests]__. Pull reque
 
 ### Patches
 
-A __[patch]__ is a set of changes to existing source code. The changes in a patch can be merged into existing source code. This process is referred to as applying a patch (to source code). Which changes a patch contains and the way the patch is structured can have significant impact on the consequences that can happen from applying the patch. 
+A __[patch]__ is a set of changes to existing source code. The changes in a patch can be merged into existing source code. This process is referred to as applying a patch (to source code). Which changes a patch contains and the way the patch is structured can have significant impact on the consequences that can happen from applying the patch.
 
 See [Submitting Patches] for details.
 
@@ -77,7 +77,7 @@ To amend your commit with your name and e-mail (in any case you've forgot to set
 
 Finding a good project to start with can be a challenge, because when starting out you are (usually) not aware of all the possibilities. To help you find a project, here are some ideas to try:
 
-- Find a test that fails, and try to make it succeed: <https://www.reactos.org/testman/>
+- Find a test that fails, and try to make it succeed: <https://reactos.org/testman/>
 - Look around in JIRA, and if you have problems finding nice projects to start with, there is a label for this: <https://jira.reactos.org/issues/?jql=labels%20%3D%20starter-project>
 - Ask for help on [IRC]
 - Additionally, there are some tests that cause crashes/hangs, but these might be slightly harder: <https://jira.reactos.org/browse/ROSTESTS-125>
@@ -86,11 +86,11 @@ Finding a good project to start with can be a challenge, because when starting o
   [debug]:                                                       https://reactos.org/wiki/Debugging
   [JIRA]:                                                        https://jira.reactos.org/
   [filing a bug report]:                                         https://reactos.org/wiki/File_Bugs
-  [testman]:                                                     https://www.reactos.org/testman/
-  [migration to GitHub]:                                         https://www.reactos.org/project-news/reactos-repository-migrated-github
+  [testman]:                                                     https://reactos.org/testman/
+  [migration to GitHub]:                                         https://reactos.org/project-news/reactos-repository-migrated-github/
   [humans are terrible at tracking large amount of information]: https://www.eurekalert.org/pub_releases/2005-03/aps-hmc030805.php
   [Pull requests]:                                               https://help.github.com/articles/about-pull-requests/
-  [tips for reviewing patches]:                                  https://drupal.org/patch/review
+  [tips for reviewing patches]:                                  https://www.drupal.org/patch/review
   [missing functionality]:                                       https://reactos.org/wiki/Missing_ReactOS_Functionality
   [patch]:                                                       https://git-scm.com/docs/git-format-patch
   [Submitting Patches]:                                          https://reactos.org/wiki/Submitting_Patches

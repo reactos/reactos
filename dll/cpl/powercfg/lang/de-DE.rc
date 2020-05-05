@@ -10,7 +10,7 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
     LTEXT "Wählen Sie das Energieschema mit den am besten zu diesem Computer passenden Einstellungen. Bedenken Sie, dass die Einstellungen das unten ausgewählte Schema modifizieren.", -1, 45, 13, 194, 36
     GROUPBOX "&Energieschemata", -1, 7, 57, 240, 46
-    COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+    COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Speichern &unter...", IDC_SAVEAS_BTN, 100, 85, 75, 15, WS_DISABLED
     PUSHBUTTON "&Löschen", IDC_DELETE_BTN, 180, 85, 55, 15, WS_DISABLED
     GROUPBOX "Unbekannt", IDC_GRPDETAIL, 7, 108, 240, 105
@@ -132,8 +132,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Energieschema speichern unter:", -1, 7, 7, 104, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    PUSHBUTTON "OK", IDOK, 79, 40, 50, 14
-    DEFPUSHBUTTON "Abbrechen", IDCANCEL, 133, 40, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 79, 40, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 133, 40, 50, 14
 END
 
 
@@ -174,4 +174,5 @@ BEGIN
     IDS_TIMEOUT16 "Nie"
     IDS_DEL_SCHEME "Soll folgendes Energieschema gelöscht werden: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Schema löschen"
+    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

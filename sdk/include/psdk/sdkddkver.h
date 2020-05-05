@@ -117,6 +117,10 @@ Abstract:
 #define NTDDI_WIN10_TH2                     0x0A000001
 #define NTDDI_WIN10_RS1                     0x0A000002
 #define NTDDI_WIN10_RS2                     0x0A000003
+#define NTDDI_WIN10_RS3                     0x0A000004
+#define NTDDI_WIN10_RS4                     0x0A000005
+#define NTDDI_WIN10_RS5                     0x0A000006
+#define NTDDI_WIN10_19H1                    0x0A000007
 
 /* Version Fields in NTDDI_VERSION */
 #define OSVERSION_MASK                      0xFFFF0000UL

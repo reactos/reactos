@@ -116,6 +116,7 @@ class CDefView :
         HRESULT _MergeToolbar();
         BOOL _Sort();
         HRESULT _DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
+        HRESULT _GetSnapToGrid();
 
     public:
         CDefView();
@@ -571,6 +572,9 @@ BOOL CDefView::CreateList()
     if (m_FolderSettings.fFlags & FWF_AUTOARRANGE)
         dwStyle |= LVS_AUTOARRANGE;
 
+    if (m_FolderSettings.fFlags & FWF_SNAPTOGRID)
+        dwExStyle |= LVS_EX_SNAPTOGRID;
+
     if (m_FolderSettings.fFlags & FWF_DESKTOP)
         m_FolderSettings.fFlags |= FWF_NOCLIENTEDGE | FWF_NOSCROLL;
 
@@ -838,10 +842,11 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
         m_ListView.GetItem(&lvItem);
 
         SHFree(reinterpret_cast<LPVOID>(lvItem.lParam));
-        lvItem.mask = LVIF_PARAM|LVIF_IMAGE;
+        lvItem.mask = LVIF_PARAM | LVIF_IMAGE | LVIF_TEXT;
         lvItem.iItem = nItem;
         lvItem.iSubItem = 0;
         lvItem.lParam = reinterpret_cast<LPARAM>(ILClone(pidlNew));    /* set the item's data */
+        lvItem.pszText = LPSTR_TEXTCALLBACKW;
         lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidlNew, 0);
         m_ListView.SetItem(&lvItem);
         m_ListView.Update(nItem);
@@ -1179,8 +1184,11 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         ntreg[0].fRecursive = FALSE;
         ntreg[0].pidl = m_pidlParent;
     }
-    m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_NewDelivery | SHCNRF_ShellLevel,
-                                       SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, nRegCount, ntreg);
+    m_hNotify = SHChangeNotifyRegister(m_hWnd,
+                                       SHCNRF_InterruptLevel | SHCNRF_ShellLevel |
+                                       SHCNRF_NewDelivery,
+                                       SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY,
+                                       nRegCount, ntreg);
     if (nRegCount == 3)
     {
         ILFree(pidls[0]);
@@ -1311,13 +1319,22 @@ HRESULT CDefView::FillArrangeAsMenu(HMENU hmenuArrange)
     if (m_FolderSettings.ViewMode == FVM_DETAILS || m_FolderSettings.ViewMode == FVM_LIST)
     {
         EnableMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hmenuArrange, FCIDM_SHVIEW_ALIGNTOGRID, MF_BYCOMMAND | MF_GRAYED);
     }
     else
     {
-        EnableMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_BYCOMMAND); 
+        EnableMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_BYCOMMAND);
+        EnableMenuItem(hmenuArrange, FCIDM_SHVIEW_ALIGNTOGRID, MF_BYCOMMAND);
 
         if (GetAutoArrange() == S_OK)
             CheckMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_CHECKED);
+        else
+            CheckMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_UNCHECKED);
+
+        if (_GetSnapToGrid() == S_OK)
+            CheckMenuItem(hmenuArrange, FCIDM_SHVIEW_ALIGNTOGRID, MF_CHECKED);
+        else
+            CheckMenuItem(hmenuArrange, FCIDM_SHVIEW_ALIGNTOGRID, MF_UNCHECKED);
     }
 
 
@@ -1769,6 +1786,12 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
         case FCIDM_SHVIEW_SNAPTOGRID:
             m_ListView.Arrange(LVA_SNAPTOGRID);
+            break;
+        case FCIDM_SHVIEW_ALIGNTOGRID:
+            if (_GetSnapToGrid() == S_OK)
+                m_ListView.SetExtendedListViewStyle(0, LVS_EX_SNAPTOGRID);
+            else
+                ArrangeGrid();
             break;
         case FCIDM_SHVIEW_AUTOARRANGE:
             if (GetAutoArrange() == S_OK)
@@ -2729,6 +2752,12 @@ HRESULT STDMETHODCALLTYPE CDefView::GetAutoArrange()
     return ((m_ListView.GetStyle() & LVS_AUTOARRANGE) ? S_OK : S_FALSE);
 }
 
+HRESULT CDefView::_GetSnapToGrid()
+{
+    DWORD dwExStyle = (DWORD)m_ListView.SendMessage(LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
+    return ((dwExStyle & LVS_EX_SNAPTOGRID) ? S_OK : S_FALSE);
+}
+
 HRESULT STDMETHODCALLTYPE CDefView::SelectItem(int iItem, DWORD dwFlags)
 {
     LVITEMW lvItem;
@@ -2905,8 +2934,8 @@ HRESULT STDMETHODCALLTYPE CDefView::GetArrangeParam(LPARAM *sort)
 
 HRESULT STDMETHODCALLTYPE CDefView::ArrangeGrid()
 {
-    FIXME("(%p) stub\n", this);
-    return E_NOTIMPL;
+    m_ListView.SetExtendedListViewStyle(LVS_EX_SNAPTOGRID, LVS_EX_SNAPTOGRID);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::AutoArrange()

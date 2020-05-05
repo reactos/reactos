@@ -549,7 +549,7 @@
 549 stdcall -noname SHCoCreateInstanceAC(ptr ptr long ptr ptr)
 550 stub -noname GetTemplateInfoFromHandle
 551 stub -noname IShellFolder_CompareIDs
-552 stub -noname SHEvaluateSystemCommandTemplate
+552 stdcall -stub -noname -version=0x501-0x502 SHEvaluateSystemCommandTemplate(wstr ptr ptr ptr)
 553 stdcall IsInternetESCEnabled()
 554 stdcall -noname -stub SHGetAllAccessSA()
 555 stdcall AssocQueryStringByKeyA(long long ptr str ptr ptr)

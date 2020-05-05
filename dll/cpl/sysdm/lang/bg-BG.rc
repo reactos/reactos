@@ -19,7 +19,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "Посетете <A HREF=""http://www.reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "Посетете <A HREF=""https://reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "&Разрешителното", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -199,7 +199,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Пускане на системата", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Подразбирана работна &система", IDC_STATIC, 14, 26, 160, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Показване на списъка с &работни системи:", IDC_STRECLIST, 14, 56, 165, 8
     EDITTEXT IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -217,7 +217,7 @@ BEGIN
     AUTOCHECKBOX "Из&пращане на административно предупреждение", IDC_STRRECSENDALERT, 14, 138, 220, 10
     AUTOCHECKBOX "Самопре&запускане", IDC_STRRECRESTART, 14, 152, 220, 10
     GROUPBOX "Записване на данни за чистене на недъзи", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "Отчетен &файл:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "За&мяна на съществуващите файлове", IDC_STRRECOVERWRITE, 17, 228, 210, 10
@@ -333,7 +333,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Приложение за таблото за управление на уредбата"
     IDS_WARNINITIALSIZE "Въведете числена стойност за началния размер на страниращия файл."
     IDS_WARNMAXIMUMSIZE "Въведете числена стойност за върховия размер на страниращия файл."
-    IDS_WARNINITIALRANGE "Началният размер на страниращия файл не трябва да е по-малък от 16 МБ и не трябва да надхвърля свободното пространство на избраното устройство."
+    IDS_WARNINITIALRANGE "Началният размер на страниращия файл не трябва да е по-малък от 2 МБ и не трябва да надхвърля свободното пространство на избраното устройство."
     IDS_WARNMAXIMUMRANGE "Върховият размер на страниращия файл не трябва да е по-малък от началния и не трябва да надвишава свободното пространство на избраното устройство"
     IDS_PAGEFILE_NONE "Няма"
     IDS_PAGEFILE_SYSTEM "System Managed"

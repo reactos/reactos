@@ -17,6 +17,7 @@ extern void func__snwprintf(void);
 extern void func__vsnprintf(void);
 extern void func__vsnwprintf(void);
 extern void func_mbstowcs(void);
+extern void func_mbtowc(void);
 extern void func_sprintf(void);
 extern void func_strcpy(void);
 extern void func_strlen(void);
@@ -25,6 +26,7 @@ extern void func_strtoul(void);
 extern void func_wcsnlen(void);
 extern void func_wcstombs(void);
 extern void func_wcstoul(void);
+extern void func_wctomb(void);
 extern void func___getmainargs(void);
 
 extern void func_static_construct(void);
@@ -35,6 +37,7 @@ const struct test winetest_testlist[] =
     { "_vsnprintf", func__vsnprintf },
     { "_vsnwprintf", func__vsnwprintf },
     { "mbstowcs", func_mbstowcs },
+    { "mbtowc", func_mbtowc },
     { "_snprintf", func__snprintf },
     { "_snwprintf", func__snwprintf },
     { "sprintf", func_sprintf },
@@ -42,6 +45,7 @@ const struct test winetest_testlist[] =
     { "strlen", func_strlen },
     { "strtoul", func_strtoul },
     { "wcstoul", func_wcstoul },
+    { "wctomb", func_wctomb },
     { "wcstombs", func_wcstombs },
 #if defined(TEST_CRTDLL) || defined(TEST_MSVCRT) || defined(TEST_STATIC_CRT)
     // ...

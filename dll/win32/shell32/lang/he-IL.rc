@@ -13,6 +13,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "סידור אוטומטי", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -33,9 +34,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "סידור אוטומטי", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "סדר סמלים", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "רענן", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "הדבק", FCIDM_SHVIEW_INSERT
@@ -386,7 +386,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "הגדרות עבור המיקום הנבחר", -1, 10, 72, 220, 70
     RADIOBUTTON "&גודל מותאם אישית:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "גודל &מרבי(MB):", -1, 20, 105, 70, 10
     RADIOBUTTON "אל תעביר קבצים לסל המחזור. הסר קבצים מיידית מתי בעת מחיקה.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "ה&צג תיבת דו-שיח לאישור מחיקה", 14004, 20, 155, 140, 10, WS_TABSTOP
@@ -771,7 +771,6 @@ BEGIN
     IDS_EJECT "הוצא"
     IDS_DISCONNECT "נתק"
     IDS_OPENFILELOCATION "&פתח מיקום קובץ"
-    IDS_DESKLINK "שולחן העבודה (צור קיצור דרך)"
     IDS_SENDTO_MENU "&שלח אל"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"

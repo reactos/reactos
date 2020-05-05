@@ -16,6 +16,7 @@
  * along with WinBtrfs.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "btrfs_drv.h"
+#include "crc32c.h"
 
 NTSTATUS load_tree(device_extension* Vcb, uint64_t addr, uint8_t* buf, root* r, tree** pt) {
     tree_header* th;
@@ -66,7 +67,7 @@ NTSTATUS load_tree(device_extension* Vcb, uint64_t addr, uint8_t* buf, root* r, 
         unsigned int i;
 
         if ((t->header.num_items * sizeof(leaf_node)) + sizeof(tree_header) > Vcb->superblock.node_size) {
-            ERR("tree at %I64x has more items than expected (%x)\n", t->header.num_items);
+            ERR("tree at %I64x has more items than expected (%x)\n", addr, t->header.num_items);
             ExFreePool(t);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
@@ -87,7 +88,7 @@ NTSTATUS load_tree(device_extension* Vcb, uint64_t addr, uint8_t* buf, root* r, 
                 td->data = NULL;
 
             if (ln[i].size + sizeof(tree_header) + sizeof(leaf_node) > Vcb->superblock.node_size) {
-                ERR("overlarge item in tree %I64x: %u > %u\n", addr, ln[i].size, Vcb->superblock.node_size - sizeof(tree_header) - sizeof(leaf_node));
+                ERR("overlarge item in tree %I64x: %u > %Iu\n", addr, ln[i].size, Vcb->superblock.node_size - sizeof(tree_header) - sizeof(leaf_node));
                 ExFreeToPagedLookasideList(&t->Vcb->tree_data_lookaside, td);
                 ExFreePool(t);
                 return STATUS_INTERNAL_ERROR;
@@ -109,7 +110,7 @@ NTSTATUS load_tree(device_extension* Vcb, uint64_t addr, uint8_t* buf, root* r, 
         unsigned int i;
 
         if ((t->header.num_items * sizeof(internal_node)) + sizeof(tree_header) > Vcb->superblock.node_size) {
-            ERR("tree at %I64x has more items than expected (%x)\n", t->header.num_items);
+            ERR("tree at %I64x has more items than expected (%x)\n", addr, t->header.num_items);
             ExFreePool(t);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
@@ -197,7 +198,7 @@ static NTSTATUS do_load_tree2(device_extension* Vcb, tree_holder* th, uint8_t* b
 
         Status = load_tree(Vcb, th->address, buf, r, &nt);
         if (!NT_SUCCESS(Status)) {
-            ERR("load_tree returned %08x\n", Status);
+            ERR("load_tree returned %08lx\n", Status);
             return Status;
         }
 
@@ -229,7 +230,7 @@ NTSTATUS do_load_tree(device_extension* Vcb, tree_holder* th, root* r, tree* t, 
     Status = read_data(Vcb, th->address, Vcb->superblock.node_size, NULL, true, buf, NULL,
                        &c, Irp, th->generation, false, NormalPagePriority);
     if (!NT_SUCCESS(Status)) {
-        ERR("read_data returned 0x%08x\n", Status);
+        ERR("read_data returned 0x%08lx\n", Status);
         ExFreePool(buf);
         return Status;
     }
@@ -250,7 +251,7 @@ NTSTATUS do_load_tree(device_extension* Vcb, tree_holder* th, root* r, tree* t, 
         ExFreePool(buf);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("do_load_tree2 returned %08x\n", Status);
+        ERR("do_load_tree2 returned %08lx\n", Status);
         return Status;
     }
 
@@ -387,7 +388,7 @@ NTSTATUS skip_to_difference(device_extension* Vcb, traverse_ptr* tp, traverse_pt
         if (Status == STATUS_NOT_FOUND)
             *ended1 = true;
         else if (!NT_SUCCESS(Status)) {
-            ERR("next_item2 returned %08x\n", Status);
+            ERR("next_item2 returned %08lx\n", Status);
             return Status;
         }
 
@@ -395,7 +396,7 @@ NTSTATUS skip_to_difference(device_extension* Vcb, traverse_ptr* tp, traverse_pt
         if (Status == STATUS_NOT_FOUND)
             *ended2 = true;
         else if (!NT_SUCCESS(Status)) {
-            ERR("next_item2 returned %08x\n", Status);
+            ERR("next_item2 returned %08lx\n", Status);
             return Status;
         }
 
@@ -403,13 +404,13 @@ NTSTATUS skip_to_difference(device_extension* Vcb, traverse_ptr* tp, traverse_pt
             if (!*ended1) {
                 Status = find_item(Vcb, t1->root, tp, &tp3.item->key, false, NULL);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("find_item returned %08x\n", Status);
+                    ERR("find_item returned %08lx\n", Status);
                     return Status;
                 }
             } else if (!*ended2) {
                 Status = find_item(Vcb, t2->root, tp2, &tp4.item->key, false, NULL);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("find_item returned %08x\n", Status);
+                    ERR("find_item returned %08lx\n", Status);
                     return Status;
                 }
             }
@@ -420,13 +421,13 @@ NTSTATUS skip_to_difference(device_extension* Vcb, traverse_ptr* tp, traverse_pt
         if (tp3.tree->header.address != tp4.tree->header.address) {
             Status = find_item(Vcb, t1->root, tp, &tp3.item->key, false, NULL);
             if (!NT_SUCCESS(Status)) {
-                ERR("find_item returned %08x\n", Status);
+                ERR("find_item returned %08lx\n", Status);
                 return Status;
             }
 
             Status = find_item(Vcb, t2->root, tp2, &tp4.item->key, false, NULL);
             if (!NT_SUCCESS(Status)) {
-                ERR("find_item returned %08x\n", Status);
+                ERR("find_item returned %08lx\n", Status);
                 return Status;
             }
 
@@ -534,7 +535,7 @@ static NTSTATUS find_item_in_tree(device_extension* Vcb, tree* t, traverse_ptr* 
         if (!td->treeholder.tree) {
             Status = do_load_tree(Vcb, &td->treeholder, t->root, t, td, Irp);
             if (!NT_SUCCESS(Status)) {
-                ERR("do_load_tree returned %08x\n", Status);
+                ERR("do_load_tree returned %08lx\n", Status);
                 return Status;
             }
         }
@@ -552,14 +553,14 @@ NTSTATUS find_item(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension
     if (!r->treeholder.tree) {
         Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("do_load_tree returned %08x\n", Status);
+            ERR("do_load_tree returned %08lx\n", Status);
             return Status;
         }
     }
 
     Status = find_item_in_tree(Vcb, r->treeholder.tree, tp, searchkey, ignore, 0, Irp);
     if (!NT_SUCCESS(Status) && Status != STATUS_NOT_FOUND) {
-        ERR("find_item_in_tree returned %08x\n", Status);
+        ERR("find_item_in_tree returned %08lx\n", Status);
     }
 
     return Status;
@@ -571,14 +572,14 @@ NTSTATUS find_item_to_level(device_extension* Vcb, root* r, traverse_ptr* tp, co
     if (!r->treeholder.tree) {
         Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("do_load_tree returned %08x\n", Status);
+            ERR("do_load_tree returned %08lx\n", Status);
             return Status;
         }
     }
 
     Status = find_item_in_tree(Vcb, r->treeholder.tree, tp, searchkey, ignore, level, Irp);
     if (!NT_SUCCESS(Status) && Status != STATUS_NOT_FOUND) {
-        ERR("find_item_in_tree returned %08x\n", Status);
+        ERR("find_item_in_tree returned %08lx\n", Status);
     }
 
     if (Status == STATUS_NOT_FOUND) {
@@ -635,7 +636,7 @@ bool find_next_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
     if (!td->treeholder.tree) {
         Status = do_load_tree(Vcb, &td->treeholder, t->parent->root, t->parent, td, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("do_load_tree returned %08x\n", Status);
+            ERR("do_load_tree returned %08lx\n", Status);
             return false;
         }
     }
@@ -650,7 +651,7 @@ bool find_next_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
         if (!fi->treeholder.tree) {
             Status = do_load_tree(Vcb, &fi->treeholder, t->parent->root, t, fi, Irp);
             if (!NT_SUCCESS(Status)) {
-                ERR("do_load_tree returned %08x\n", Status);
+                ERR("do_load_tree returned %08lx\n", Status);
                 return false;
             }
         }
@@ -724,7 +725,7 @@ bool find_prev_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
     if (!td->treeholder.tree) {
         Status = do_load_tree(Vcb, &td->treeholder, t->parent->root, t->parent, td, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("do_load_tree returned %08x\n", Status);
+            ERR("do_load_tree returned %08lx\n", Status);
             return false;
         }
     }
@@ -739,7 +740,7 @@ bool find_prev_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
         if (!li->treeholder.tree) {
             Status = do_load_tree(Vcb, &li->treeholder, t->parent->root, t, li, Irp);
             if (!NT_SUCCESS(Status)) {
-                ERR("do_load_tree returned %08x\n", Status);
+                ERR("do_load_tree returned %08lx\n", Status);
                 return false;
             }
         }
@@ -814,7 +815,7 @@ void free_trees(device_extension* Vcb) {
                     r->treeholder.tree = NULL;
 
                 if (IsListEmpty(&Vcb->trees))
-                    return;
+                    break;
             } else if (t->header.level > level)
                 empty = false;
 
@@ -880,7 +881,7 @@ NTSTATUS insert_tree_item(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock)
             if (!r->treeholder.tree) {
                 Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, Irp);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("do_load_tree returned %08x\n", Status);
+                    ERR("do_load_tree returned %08lx\n", Status);
                     return Status;
                 }
             }
@@ -893,11 +894,11 @@ NTSTATUS insert_tree_item(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock)
                 return STATUS_INTERNAL_ERROR;
             }
         } else {
-            ERR("error: find_item returned %08x\n", Status);
+            ERR("error: find_item returned %08lx\n", Status);
             return Status;
         }
     } else if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -1073,7 +1074,7 @@ void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
                                                                re->fcb->inode_item.flags & BTRFS_INODE_NODATASUM, false, NULL);
 
                             if (!NT_SUCCESS(Status))
-                                ERR("update_changed_extent_ref returned %08x\n", Status);
+                                ERR("update_changed_extent_ref returned %08lx\n", Status);
                         }
 
                         re->fcb->inode_item.st_blocks -= ed2->num_bytes;
@@ -1102,7 +1103,7 @@ void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
                                                                re->fcb->inode_item.flags & BTRFS_INODE_NODATASUM, false, NULL);
 
                             if (!NT_SUCCESS(Status))
-                                ERR("update_changed_extent_ref returned %08x\n", Status);
+                                ERR("update_changed_extent_ref returned %08lx\n", Status);
                         }
 
                         re->fcb->inode_item.st_blocks += ed2->num_bytes;
@@ -1273,7 +1274,7 @@ static NTSTATUS handle_batch_collision(device_extension* Vcb, batch_item* bi, tr
         switch (bi->operation) {
             case Batch_SetXattr: {
                 if (td->size < sizeof(DIR_ITEM)) {
-                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", bi->key.obj_id, bi->key.obj_type, bi->key.offset, td->size, sizeof(DIR_ITEM));
+                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", bi->key.obj_id, bi->key.obj_type, bi->key.offset, td->size, sizeof(DIR_ITEM));
                 } else {
                     uint8_t* newdata;
                     ULONG size = td->size;
@@ -1296,7 +1297,7 @@ static NTSTATUS handle_batch_collision(device_extension* Vcb, batch_item* bi, tr
                             // replace
 
                             if (td->size + bi->datalen - oldxasize > maxlen)
-                                ERR("DIR_ITEM would be over maximum size, truncating (%u + %u - %u > %u)\n", td->size, bi->datalen, oldxasize, maxlen);
+                                ERR("DIR_ITEM would be over maximum size, truncating (%u + %u - %lu > %u)\n", td->size, bi->datalen, oldxasize, maxlen);
 
                             newdata = ExAllocatePoolWithTag(PagedPool, td->size + bi->datalen - oldxasize, ALLOC_TAG);
                             if (!newdata) {
@@ -1492,7 +1493,7 @@ static NTSTATUS handle_batch_collision(device_extension* Vcb, batch_item* bi, tr
 
             case Batch_DeleteDirItem: {
                 if (td->size < sizeof(DIR_ITEM)) {
-                    ERR("DIR_ITEM was %u bytes, expected at least %u\n", td->size, sizeof(DIR_ITEM));
+                    ERR("DIR_ITEM was %u bytes, expected at least %Iu\n", td->size, sizeof(DIR_ITEM));
                     return STATUS_INTERNAL_ERROR;
                 } else {
                     DIR_ITEM *di, *deldi;
@@ -1567,7 +1568,7 @@ static NTSTATUS handle_batch_collision(device_extension* Vcb, batch_item* bi, tr
 
             case Batch_DeleteInodeRef: {
                 if (td->size < sizeof(INODE_REF)) {
-                    ERR("INODE_REF was %u bytes, expected at least %u\n", td->size, sizeof(INODE_REF));
+                    ERR("INODE_REF was %u bytes, expected at least %Iu\n", td->size, sizeof(INODE_REF));
                     return STATUS_INTERNAL_ERROR;
                 } else {
                     INODE_REF *ir, *delir;
@@ -1664,7 +1665,7 @@ static NTSTATUS handle_batch_collision(device_extension* Vcb, batch_item* bi, tr
 
             case Batch_DeleteInodeExtRef: {
                 if (td->size < sizeof(INODE_EXTREF)) {
-                    ERR("INODE_EXTREF was %u bytes, expected at least %u\n", td->size, sizeof(INODE_EXTREF));
+                    ERR("INODE_EXTREF was %u bytes, expected at least %Iu\n", td->size, sizeof(INODE_EXTREF));
                     return STATUS_INTERNAL_ERROR;
                 } else {
                     INODE_EXTREF *ier, *delier;
@@ -1745,7 +1746,7 @@ static NTSTATUS handle_batch_collision(device_extension* Vcb, batch_item* bi, tr
 
             case Batch_DeleteXattr: {
                 if (td->size < sizeof(DIR_ITEM)) {
-                    ERR("XATTR_ITEM was %u bytes, expected at least %u\n", td->size, sizeof(DIR_ITEM));
+                    ERR("XATTR_ITEM was %u bytes, expected at least %Iu\n", td->size, sizeof(DIR_ITEM));
                     return STATUS_INTERNAL_ERROR;
                 } else {
                     DIR_ITEM *di, *deldi;
@@ -1870,7 +1871,7 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
 
         Status = find_item(Vcb, br->r, &tp, &bi->key, true, Irp);
         if (!NT_SUCCESS(Status)) { // FIXME - handle STATUS_NOT_FOUND
-            ERR("find_item returned %08x\n", Status);
+            ERR("find_item returned %08lx\n", Status);
             return Status;
         }
 
@@ -2116,7 +2117,7 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
                 } else {
                     Status = handle_batch_collision(Vcb, bi, tp.tree, tp.item, td, &br->items, &ignore);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("handle_batch_collision returned %08x\n", Status);
+                        ERR("handle_batch_collision returned %08lx\n", Status);
 
                         if (td)
                             ExFreeToPagedLookasideList(&Vcb->tree_data_lookaside, td);
@@ -2197,7 +2198,7 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
                             } else {
                                 Status = handle_batch_collision(Vcb, bi2, tp.tree, td2, td, &br->items, &ignore);
                                 if (!NT_SUCCESS(Status)) {
-                                    ERR("handle_batch_collision returned %08x\n", Status);
+                                    ERR("handle_batch_collision returned %08lx\n", Status);
                                     return Status;
                                 }
                             }
@@ -2286,7 +2287,7 @@ NTSTATUS commit_batch_list(_Requires_exclusive_lock_held_(_Curr_->tree_lock) dev
 
         Status = commit_batch_list_root(Vcb, br2, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("commit_batch_list_root returned %08x\n", Status);
+            ERR("commit_batch_list_root returned %08lx\n", Status);
             return Status;
         }
 

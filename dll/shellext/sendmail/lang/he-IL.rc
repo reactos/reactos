@@ -1,0 +1,7 @@
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_DESKLINK, "שולחן העבודה (צור קיצור דרך)"
+    IDS_SHORTCUT, "Shortcut to %s"
+}

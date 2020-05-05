@@ -193,7 +193,7 @@ BEGIN
     IDS_APPS_COUNT "Uygulama Sayısı: %d; Seçili: %d"
     IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoş geldiniz.\n\n"
     IDS_WELCOME_TEXT "Solda bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Kurulanlar"
     IDS_AVAILABLEFORINST "Kurulum İçin Bulunanlar"
     IDS_UPDATES "Güncelleştirmeler"
@@ -215,6 +215,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Seçileni Kur"
     IDS_SELECTEDFORINST "Kurulum için seçildi"
     IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de sürdürmek istiyor musunuz?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

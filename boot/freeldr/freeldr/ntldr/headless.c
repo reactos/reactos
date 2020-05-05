@@ -67,10 +67,10 @@ WinLdrPortInitialize(IN ULONG BaudRate,
                      IN BOOLEAN TerminalConnected,
                      OUT PULONG PortId)
 {
-    /* Set default baud rate */
-    if (BaudRate == 0) BaudRate = 19200;
-
 #if defined(SARCH_PC98)
+    /* Set default baud rate */
+    if (BaudRate == 0) BaudRate = 9600;
+
     /* Check if port or address given */
     if (PortNumber)
     {
@@ -106,6 +106,9 @@ WinLdrPortInitialize(IN ULONG BaudRate,
         }
     }
 #else
+    /* Set default baud rate */
+    if (BaudRate == 0) BaudRate = 19200;
+
     /* Check if port or address given */
     if (PortNumber)
     {

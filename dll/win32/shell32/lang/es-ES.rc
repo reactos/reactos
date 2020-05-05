@@ -20,6 +20,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Ordenar automáticamente", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -40,9 +41,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Ordenar automáticamente", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Alinear iconos", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Actualizar", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Pegar", FCIDM_SHVIEW_INSERT
@@ -393,7 +393,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Configuración para la unidad seleccionada ", -1, 10, 72, 220, 70
     RADIOBUTTON "Tamaño &personalizado:", 14001, 20, 90, 88, 10, WS_TABSTOP
-    EDITTEXT 14002, 120, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "&Tamaño máximo(MB):", -1, 20, 105, 70, 10
     RADIOBUTTON "&No mover archivos a la Papelera. Eliminar todos los archivos de forma permanente.", 14003, 20, 117, 185, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Mostrar un cuadro de diálogo para confirmar la eliminación", 14004, 20, 155, 200, 10, WS_TABSTOP
@@ -778,7 +778,6 @@ BEGIN
     IDS_EJECT "Extraer"
     IDS_DISCONNECT "Desconectar"
     IDS_OPENFILELOCATION "Abrir &ubicación del archivo"
-    IDS_DESKLINK "Crear acceso directo en el Escritorio"
     IDS_SENDTO_MENU "E&nviar a"
 
     IDS_MOVEERRORTITLE "Error moviendo Archivo o Carpeta"

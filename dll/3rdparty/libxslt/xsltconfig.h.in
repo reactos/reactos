@@ -111,6 +111,19 @@ extern "C" {
 #endif
 
 /**
+ * WITH_PROFILER:
+ *
+ * Activate the compilation of the profiler. Speed penalty
+ * is insignifiant.
+ * On by default unless --without-profiler is passed to configure
+ */
+#if @WITH_PROFILER@
+#ifndef WITH_PROFILER
+#define WITH_PROFILER
+#endif
+#endif
+
+/**
  * WITH_MODULES:
  *
  * Whether module support is configured into libxslt
@@ -129,9 +142,6 @@ extern "C" {
  * This macro is used to flag unused function parameters to GCC
  */
 #ifdef __GNUC__
-#ifdef HAVE_ANSIDECL_H
-#include <ansidecl.h>
-#endif
 #ifndef ATTRIBUTE_UNUSED
 #define ATTRIBUTE_UNUSED __attribute__((unused))
 #endif

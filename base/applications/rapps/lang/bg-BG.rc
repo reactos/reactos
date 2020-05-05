@@ -195,7 +195,7 @@ BEGIN
     IDS_APPS_COUNT "Брой приложения: %d; Selected: %d"
     IDS_WELCOME_TITLE "Управителят на приложенията на РеактОС ви приветства"
     IDS_WELCOME_TEXT "Изберете раздел от лявата страна, след което изберете приложение за слагане или премахване.\nСтраницата на РеактОС: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Сложено"
     IDS_AVAILABLEFORINST "Налично за слагане"
     IDS_UPDATES "Обновления"
@@ -217,6 +217,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

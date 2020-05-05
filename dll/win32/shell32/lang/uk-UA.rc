@@ -11,6 +11,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&автоматично", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -31,9 +32,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&автоматично", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Вирівняти значки", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Оновити", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Вставити", FCIDM_SHVIEW_INSERT
@@ -384,8 +384,8 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Налаштування для вибраного розташування", -1, 10, 72, 220, 70
     RADIOBUTTON "&Особливий розмір:", 14001, 20, 90, 92, 10, WS_TABSTOP
-    EDITTEXT 14002, 120, 100, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "&Максимальний розмір (мб):", -1, 20, 105, 100, 10
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
+    LTEXT "&Максимальний розмір (мб):", -1, 20, 105, 92, 10
     RADIOBUTTON "Не переміщ&увати файли до кошика, а видаляти їх остаточно відразу", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "Пока&зувати діалог підтвердження видалення", 14004, 20, 155, 165, 10, WS_TABSTOP
 END
@@ -769,7 +769,6 @@ BEGIN
     IDS_EJECT "Витягнути"
     IDS_DISCONNECT "Відключити"
     IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
     IDS_SENDTO_MENU "Se&nd To"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"

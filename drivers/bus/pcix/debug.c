@@ -386,12 +386,15 @@ PciDebugPrintCmResList(IN PCM_RESOURCE_LIST PartialList)
         Count = FullDescriptor->PartialResourceList.Count;
         for (PartialDescriptor = FullDescriptor->PartialResourceList.PartialDescriptors;
              Count;
-             PartialDescriptor = PciNextPartialDescriptor(PartialDescriptor))
+             PartialDescriptor = CmiGetNextPartialDescriptor(PartialDescriptor))
         {
             /* Print each partial */
             PciDebugPrintPartialResource(PartialDescriptor);
             Count--;
         }
+
+        /* Go to the next full descriptor */
+        FullDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)PartialDescriptor;
     }
 
     /* Done printing data */

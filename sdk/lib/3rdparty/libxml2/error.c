@@ -238,7 +238,7 @@ xmlParserPrintFileContext(xmlParserInputPtr input) {
  * @ctx: the parser context or NULL
  * @str: the formatted error message
  *
- * Report an erro with its context, replace the 4 old error/warning
+ * Report an error with its context, replace the 4 old error/warning
  * routines.
  */
 static void
@@ -631,7 +631,7 @@ __xmlRaiseError(xmlStructuredErrorFunc schannel,
 	(channel == xmlParserValidityError) ||
 	(channel == xmlParserValidityWarning))
 	xmlReportError(to, ctxt, str, NULL, NULL);
-    else if ((channel == (xmlGenericErrorFunc) fprintf) ||
+    else if (((void(*)(void)) channel == (void(*)(void)) fprintf) ||
              (channel == xmlGenericErrorDefaultFunc))
 	xmlReportError(to, ctxt, str, channel, data);
     else

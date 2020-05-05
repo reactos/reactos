@@ -28,10 +28,16 @@
 typedef struct _NETIDDATA
 {
     WCHAR szHostName[MAX_HOSTNAME_LENGTH + 1];
+    WCHAR szOldHostName[MAX_HOSTNAME_LENGTH + 1];
     WCHAR szDomainName[MAX_DOMAINNAME_LENGTH + 1];
+    WCHAR szOldDomainName[MAX_DOMAINNAME_LENGTH + 1];
     WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    BOOL bSyncDomainWithMembership;
+    LPWSTR JoinName;
+    NETSETUP_JOIN_STATUS JoinStatus;
     BOOL bHostNameChanged;
     BOOL bDomainNameChanged;
+    BOOL bSyncDomainWithMembershipChanged;
     BOOL bEnable;
 } NETIDDATA, *PNETIDDATA;
 
@@ -90,6 +96,14 @@ GetComputerNames(
                          (LPBYTE)&pNetIdData->szHostName,
                          &dwSize);
 
+        dwSize = sizeof(pNetIdData->szOldHostName);
+        RegQueryValueExW(KeyHandle,
+                         L"HostName",
+                         0,
+                         NULL,
+                         (LPBYTE)&pNetIdData->szOldHostName,
+                         &dwSize);
+
         dwSize = sizeof(pNetIdData->szDomainName);
         RegQueryValueExW(KeyHandle,
                          L"NV Domain",
@@ -97,6 +111,23 @@ GetComputerNames(
                          NULL,
                          (LPBYTE)&pNetIdData->szDomainName,
                          &dwSize);
+
+        dwSize = sizeof(pNetIdData->szOldDomainName);
+        RegQueryValueExW(KeyHandle,
+                         L"Domain",
+                         0,
+                         NULL,
+                         (LPBYTE)&pNetIdData->szOldDomainName,
+                         &dwSize);
+
+        dwSize = sizeof(pNetIdData->bSyncDomainWithMembership);
+        if (RegQueryValueExW(KeyHandle,
+                             L"SyncDomainWithMembership",
+                             0,
+                             NULL,
+                             (LPBYTE)&pNetIdData->bSyncDomainWithMembership,
+                             &dwSize))
+            pNetIdData->bSyncDomainWithMembership = TRUE;
 
         RegCloseKey(KeyHandle);
     }
@@ -119,7 +150,75 @@ GetComputerNames(
         RegCloseKey(KeyHandle);
     }
 
+    if (NetGetJoinInformation(NULL, &pNetIdData->JoinName, &pNetIdData->JoinStatus) != NERR_Success)
+    {
+        pNetIdData->JoinName = NULL;
+        pNetIdData->JoinStatus = NetSetupUnknownStatus;
+    }
+
     return TRUE;
+}
+
+static BOOL
+IsUserAdmin(VOID)
+{
+    SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
+    PSID pAdminsSid = NULL;
+    HANDLE hToken = NULL;
+    PTOKEN_GROUPS pGroups = NULL;
+    BOOL bIsAdmin = FALSE;
+    DWORD dwSize, i;
+
+    if (!AllocateAndInitializeSid(&Authority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+                                  &pAdminsSid))
+        return FALSE;
+
+    if (!OpenProcessToken(GetCurrentProcess(),
+                          TOKEN_QUERY,
+                          &hToken))
+        goto done;
+
+    dwSize = 0;
+    GetTokenInformation(hToken,
+                        TokenGroups,
+                        NULL,
+                        0,
+                        &dwSize);
+    if (dwSize == 0)
+        goto done;
+
+    pGroups = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if (pGroups == NULL)
+        goto done;
+
+    if (!GetTokenInformation(hToken,
+                             TokenGroups,
+                             pGroups,
+                             dwSize,
+                             &dwSize))
+        goto done;
+
+    for (i = 0; i < pGroups->GroupCount; i++)
+    {
+        if (EqualSid(pGroups->Groups[i].Sid, pAdminsSid))
+        {
+            bIsAdmin = TRUE;
+            break;
+        }
+    }
+
+done:
+    if (pGroups != NULL)
+        HeapFree(GetProcessHeap(), 0, pGroups);
+
+    if (hToken != NULL)
+        CloseHandle(hToken);
+
+    if (pAdminsSid != NULL)
+        FreeSid(pAdminsSid);
+
+    return bIsAdmin;
 }
 
 static
@@ -180,7 +279,7 @@ DNSSuffixPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                 SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)pNetIdData);
 
                 SetDlgItemTextW(hDlg, 1011, pNetIdData->szDomainName);
-
+                SendDlgItemMessage(hDlg, 115, BM_SETCHECK, (WPARAM)pNetIdData->bSyncDomainWithMembership, 0);
                 SetDlgItemTextW(hDlg, 1013, pNetIdData->szComputerName);
                 EnableWindow(GetDlgItem(hDlg, IDOK), FALSE);
             }
@@ -189,10 +288,19 @@ DNSSuffixPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                case 115:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        EnableWindow(GetDlgItem(hDlg, IDOK), TRUE);
+                        pNetIdData->bSyncDomainWithMembershipChanged = TRUE;
+                    }
+                    break;
+
                 case 1011:
                     if (HIWORD(wParam) == EN_CHANGE)
                     {
                         EnableWindow(GetDlgItem(hDlg, IDOK), TRUE);
+                        pNetIdData->bDomainNameChanged = TRUE;
                     }
                     break;
 
@@ -203,12 +311,23 @@ DNSSuffixPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                         break;
                     }
 
-                    GetDlgItemTextW(hDlg, 1011, pNetIdData->szDomainName, ARRAYSIZE(pNetIdData->szDomainName));
-                    pNetIdData->bDomainNameChanged = TRUE;
+                    if (pNetIdData->bDomainNameChanged)
+                        GetDlgItemTextW(hDlg, 1011, pNetIdData->szDomainName, ARRAYSIZE(pNetIdData->szDomainName));
+
+                    if (pNetIdData->bSyncDomainWithMembershipChanged)
+                    {
+                        if (SendDlgItemMessage(hDlg, 115, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                            pNetIdData->bSyncDomainWithMembership = TRUE;
+                        else
+                            pNetIdData->bSyncDomainWithMembership = FALSE;
+                    }
+
                     EndDialog(hDlg, TRUE);
                     break;
 
                 case IDCANCEL:
+                    pNetIdData->bDomainNameChanged = FALSE;
+                    pNetIdData->bSyncDomainWithMembershipChanged = FALSE;
                     EndDialog(hDlg, FALSE);
                     break;
             }
@@ -227,6 +346,7 @@ SetRadioBtnState(HWND hDlg, BOOL IsDomain)
     EnableWindow(GetDlgItem(hDlg, 1007), !IsDomain);
 }
 
+#if 0
 static VOID
 DisableControls(HWND hDlg)
 {
@@ -235,6 +355,7 @@ DisableControls(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, 116), FALSE);
     EnableWindow(GetDlgItem(hDlg, 1007), FALSE);
 }
+#endif
 
 static
 BOOL
@@ -325,14 +446,29 @@ UpdateNetbiosName(
 
 static
 VOID
+CheckForChangedNames(
+    _In_ HWND hwndDlg,
+    _In_ PNETIDDATA pNetIdData)
+{
+    INT nShow = SW_HIDE;
+
+    if ((wcsicmp(pNetIdData->szOldHostName, pNetIdData->szHostName) != 0) ||
+        (wcsicmp(pNetIdData->szOldDomainName, pNetIdData->szDomainName) != 0))
+    {
+        nShow = SW_SHOW;
+    }
+
+    ShowWindow(GetDlgItem(hwndDlg, IDC_RESTARTICON), nShow);
+    ShowWindow(GetDlgItem(hwndDlg, IDC_RESTARTTEXT), nShow);
+}
+
+static
+VOID
 NetworkDlg_OnInitDialog(
     HWND hDlg,
     PNETIDDATA pNetIdData)
 {
-    LPWKSTA_INFO_101 wki = NULL;
     WCHAR MsgText[MAX_PATH * 2];
-    LPWSTR JoinName = NULL;
-    NETSETUP_JOIN_STATUS JoinStatus;
 
     if (LoadStringW(hDllInstance, 25, MsgText, ARRAYSIZE(MsgText)))
         SetDlgItemText(hDlg, 1017, MsgText);
@@ -341,67 +477,21 @@ NetworkDlg_OnInitDialog(
     SetDlgItemText(hDlg, 1002, pNetIdData->szHostName);
     SetFullComputerName(hDlg, 1001, pNetIdData);
 
-    if (NetGetJoinInformation(NULL, &JoinName, &JoinStatus) != NERR_Success)
+    /* Display the workgroup or domain name */
+    switch (pNetIdData->JoinStatus)
     {
-        SetRadioBtnState(hDlg, FALSE);
+        case NetSetupDomainName:
+            SetDlgItemText(hDlg, 116, pNetIdData->JoinName);
+            SetRadioBtnState(hDlg, TRUE);
+            break;
 
-        if (NetWkstaGetInfo(NULL,
-                            101,
-                            (LPBYTE*)&wki) == NERR_Success)
-        {
-            SetDlgItemText(hDlg,
-                           1007,
-                           wki->wki101_langroup);
-        }
-        else
-        {
-            DisableControls(hDlg);
-        }
+        case NetSetupWorkgroupName:
+            SetDlgItemText(hDlg, 1007, pNetIdData->JoinName);
+            SetRadioBtnState(hDlg, FALSE);
+            break;
 
-        if (wki)
-            NetApiBufferFree(wki);
-    }
-    else
-    {
-        switch (JoinStatus)
-        {
-            case NetSetupDomainName:
-                SetDlgItemText(hDlg, 116, JoinName);
-                SetRadioBtnState(hDlg, TRUE);
-                break;
-
-            case NetSetupWorkgroupName:
-                SetDlgItemText(hDlg, 1007, JoinName);
-                SetRadioBtnState(hDlg, FALSE);
-                break;
-
-            case NetSetupUnjoined:
-                break;
-
-            case NetSetupUnknownStatus:
-            default:
-                SetRadioBtnState(hDlg, FALSE);
-
-                if (NetWkstaGetInfo(NULL,
-                                    101,
-                                    (LPBYTE*)&wki) == NERR_Success)
-                {
-                    SetDlgItemText(hDlg,
-                                   1007,
-                                   wki->wki101_langroup);
-                }
-                else
-                {
-                    DisableControls(hDlg);
-                }
-
-                if (wki)
-                    NetApiBufferFree(wki);
-                break;
-        }
-
-        if (JoinName)
-            NetApiBufferFree(JoinName);
+        default:
+            break;
     }
 }
 
@@ -412,6 +502,8 @@ NetworkDlg_OnOK(
     PNETIDDATA pNetIdData)
 {
     WCHAR szMsgText[MAX_PATH], szMsgTitle[MAX_PATH];
+    HKEY KeyHandle;
+    DWORD dwError;
 
     if (pNetIdData->bHostNameChanged)
     {
@@ -429,6 +521,8 @@ NetworkDlg_OnOK(
             MessageBoxW(hDlg, szMsgText, NULL, MB_OK | MB_ICONERROR);
             return FALSE;
         }
+
+        pNetIdData->bHostNameChanged = FALSE;
     }
 
     if (pNetIdData->bDomainNameChanged)
@@ -438,6 +532,29 @@ NetworkDlg_OnOK(
             /* FIXME: Show error message */
             return FALSE;
         }
+
+        pNetIdData->bDomainNameChanged = FALSE;
+    }
+
+    if (pNetIdData->bSyncDomainWithMembershipChanged)
+    {
+        dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                L"SYSTEM\\CurrentControlSet\\Services\\TcpIp\\Parameters",
+                                0,
+                                KEY_SET_VALUE,
+                                &KeyHandle);
+        if (dwError == ERROR_SUCCESS)
+        {
+            RegSetValueExW(KeyHandle,
+                           L"SyncDomainWithMembership",
+                           0,
+                           REG_DWORD,
+                           (LPBYTE)&pNetIdData->bSyncDomainWithMembership,
+                           sizeof(pNetIdData->bSyncDomainWithMembership));
+            RegCloseKey(KeyHandle);
+        }
+
+        pNetIdData->bSyncDomainWithMembershipChanged = FALSE;
     }
 
     LoadStringW(hDllInstance, 4000, szMsgTitle, ARRAYSIZE(szMsgTitle));
@@ -524,7 +641,7 @@ NetIDPage_OnInitDialog(
     WCHAR ComputerDescription[MAX_COMPUTERDESCRIPTION_LENGTH + 1];
     DWORD RegSize = sizeof(ComputerDescription);
     HKEY KeyHandle;
-    LPWKSTA_INFO_101 wki;
+    WCHAR szBuffer[512];
     LONG lError;
 
     /* Display computer name and description */
@@ -552,10 +669,19 @@ NetIDPage_OnInitDialog(
         RegCloseKey(KeyHandle);
     }
 
-    if (NetWkstaGetInfo(NULL, 101, (LPBYTE*)&wki) == NERR_Success)
+    /* Set the workgroup or domain name */
+    LoadStringW(hDllInstance, (pNetIdData->JoinStatus == NetSetupDomainName)? 6 : 5, szBuffer, ARRAYSIZE(szBuffer));
+    SetDlgItemText(hwndDlg, IDC_WORKGROUPDOMAIN, szBuffer);
+    SetDlgItemText(hwndDlg, IDC_WORKGROUPDOMAIN_NAME, pNetIdData->JoinName);
+
+    /* Show the administrator note and disable controls when the user is not an administator */
+    if (!IsUserAdmin())
     {
-        SetDlgItemText(hwndDlg, IDC_WORKGROUPDOMAIN_NAME, wki->wki101_langroup);
-        NetApiBufferFree(wki);
+        LoadStringW(hDllInstance, 1021, szBuffer, ARRAYSIZE(szBuffer));
+        SetDlgItemText(hwndDlg, IDC_MESSAGETEXT, szBuffer);
+
+        EnableWindow(GetDlgItem(hwndDlg, IDC_NETWORK_ID), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_NETWORK_PROPERTY), FALSE);
     }
 }
 
@@ -637,6 +763,7 @@ NetIDPageProc(IN HWND hwndDlg,
                 SetFullComputerName(hwndDlg, IDC_COMPUTERNAME, pNetIdData);
                 NetIDPage_OnInitDialog(hwndDlg, pNetIdData);
                 pNetIdData->bEnable = TRUE;
+                CheckForChangedNames(hwndDlg, pNetIdData);
             }
             return TRUE;
 
@@ -665,6 +792,7 @@ NetIDPageProc(IN HWND hwndDlg,
                                        (LPARAM)pNetIdData))
                     {
                         UpdateFullComputerName(hwndDlg, IDC_COMPUTERNAME, pNetIdData);
+                        CheckForChangedNames(hwndDlg, pNetIdData);
                     }
                     break;
             }
@@ -673,6 +801,8 @@ NetIDPageProc(IN HWND hwndDlg,
         case WM_DESTROY:
             if (pNetIdData != NULL)
             {
+                if (pNetIdData->JoinName != NULL)
+                    NetApiBufferFree(pNetIdData->JoinName);
                 HeapFree(GetProcessHeap(), 0, pNetIdData);
                 pNetIdData = NULL;
                 SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)NULL);
