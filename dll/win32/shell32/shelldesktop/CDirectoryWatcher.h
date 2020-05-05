@@ -22,11 +22,11 @@ public:
     ~CDirectoryWatcher();
 
     BOOL IsDead() const;
-    BOOL RequestAddWatcher();
     BOOL RestartWatching();
+    void QuitWatching();
+    BOOL RequestAddWatcher();
     BOOL RequestTermination();
     void ReadCompletion(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
-    void CancelNotification();
 
 protected:
     BOOL m_fDead;

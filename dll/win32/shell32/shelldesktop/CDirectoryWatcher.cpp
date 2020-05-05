@@ -57,7 +57,7 @@ static void NTAPI _RequestTerminationAPC(ULONG_PTR Parameter)
     CDirectoryWatcher *pDirectoryWatcher = (CDirectoryWatcher *)Parameter;
     assert(pDirectoryWatcher != NULL);
 
-    pDirectoryWatcher->CancelNotification();
+    pDirectoryWatcher->QuitWatching();
 }
 
 // The APC procedure to request termination of all the directory watches
@@ -392,7 +392,7 @@ BOOL CDirectoryWatcher::RequestTermination()
     QueueUserAPC(_RequestAllTerminationAPC, s_hThreadAPC, (ULONG_PTR)NULL);
 }
 
-void CDirectoryWatcher::CancelNotification()
+void CDirectoryWatcher::QuitWatching()
 {
     assert(this != NULL);
 
