@@ -960,8 +960,8 @@ EnumHKCRValue(
             NULL);
         if (ErrorCode != ERROR_SUCCESS)
         {
-            /* Most likely ERROR_NO_MORE_ITEMS */
-            ERR("Returning %d.\n", ErrorCode);
+            if (ErrorCode != ERROR_NO_MORE_ITEMS)
+                ERR("Returning %d.\n", ErrorCode);
             goto Exit;
         }
         FallbackValueName[FallbackValueNameLen] = L'\0';

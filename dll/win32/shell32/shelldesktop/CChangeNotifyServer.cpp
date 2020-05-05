@@ -12,6 +12,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
+// TODO: SHCNRF_RecursiveInterrupt
+
 static inline void
 NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2)
 {
@@ -20,6 +22,8 @@ NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2)
 
 //////////////////////////////////////////////////////////////////////////////
 // DIRLIST --- directory list
+
+// TODO: Share a DIRLIST in multiple Explorer
 
 struct DIRLISTITEM
 {
@@ -787,6 +791,17 @@ void CChangeNotifyServer::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID
     }
 }
 
+static BOOL CreateAPCThread(void)
+{
+    if (s_hThreadAPC != NULL)
+        return TRUE;
+
+    unsigned tid;
+    s_fTerminateAllWatches = FALSE;
+    s_hThreadAPC = (HANDLE)_beginthreadex(NULL, 0, DirWatchThreadFuncAPC, NULL, 0, &tid);
+    return s_hThreadAPC != NULL;
+}
+
 // Message CN_REGISTER: Register the registration entry.
 //   wParam: The handle of registration entry.
 //   lParam: The owner PID of registration entry.
@@ -834,18 +849,12 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     if (pDirWatch)
     {
         // create an APC thread for directory watching
-        if (s_hThreadAPC == NULL)
+        if (!CreateAPCThread())
         {
-            unsigned tid;
-            s_fTerminateAllWatches = FALSE;
-            s_hThreadAPC = (HANDLE)_beginthreadex(NULL, 0, DirWatchThreadFuncAPC, NULL, 0, &tid);
-            if (s_hThreadAPC == NULL)
-            {
-                pRegEntry->nRegID = INVALID_REG_ID;
-                SHUnlockShared(pRegEntry);
-                delete pDirWatch;
-                return FALSE;
-            }
+            pRegEntry->nRegID = INVALID_REG_ID;
+            SHUnlockShared(pRegEntry);
+            delete pDirWatch;
+            return FALSE;
         }
 
         // request adding the watch
