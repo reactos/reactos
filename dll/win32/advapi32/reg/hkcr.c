@@ -960,7 +960,6 @@ EnumHKCRValue(
             NULL);
         if (ErrorCode != ERROR_SUCCESS)
         {
-            /* Most likely ERROR_NO_MORE_ITEMS */
             if (ErrorCode != ERROR_NO_MORE_ITEMS)
                 ERR("Returning %d.\n", ErrorCode);
             goto Exit;
