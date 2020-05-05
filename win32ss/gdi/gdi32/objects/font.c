@@ -2156,7 +2156,7 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
 #if 1 /* This is a hack. See CORE-1091. */
     /* It is needed because ReactOS does not support raster fonts now  */
     /* After Raster Font support is added, then it can be removed      */
-    /* Determine the current font's Pitch and Family to save for later */
+    /* Find the current font's logfont for testing its lf.lfFaceName   */
     LOGFONT lf;
     HFONT hCurrentFont;
 
@@ -2172,7 +2172,16 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
     /* To compensate for the GetTextMetricsW call changing the PitchAndFamily */
     /* to a Truetype one when we have a 'helv' font as our input we and (&)   */
     /* our current PitchAndFamily with 0xF9 to remove the two problem bits    */
-    if (wcsicmp(lf.lfFaceName, L"helv")==0)
+    /* Out list below checks for Raster Font Facenames                        */
+    DPRINT1("Font Facename is '%S'.\n", lf.lfFaceName);
+    if ((wcsicmp(lf.lfFaceName, L"Helv") == 0) ||
+        (wcsicmp(lf.lfFaceName, L"Courier") == 0) ||
+        (wcsicmp(lf.lfFaceName, L"MS Sans Serif") == 0) ||
+        (wcsicmp(lf.lfFaceName, L"MS Serif") == 0) ||
+        (wcsicmp(lf.lfFaceName, L"Times New Roman") == 0) ||
+        (wcsicmp(lf.lfFaceName, L"MS Shell Dlg") == 0) ||
+        (wcsicmp(lf.lfFaceName, L"System") == 0) ||
+        (wcsicmp(lf.lfFaceName, L"Terminal") == 0))
     {
         tm.tmPitchAndFamily = tm.tmPitchAndFamily & 0xF9;
     }
