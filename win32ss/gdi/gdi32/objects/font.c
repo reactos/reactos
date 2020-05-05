@@ -2159,11 +2159,9 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
     /* Determine the current font's Pitch and Family to save for later */
     LOGFONT lf;
     HFONT hCurrentFont;
-    BYTE bPitchAndFamily = 0;
 
     hCurrentFont = (HFONT)GetCurrentObject(hdc, OBJ_FONT);
-    if (GetObject(hCurrentFont, sizeof(LOGFONT), &lf))
-        bPitchAndFamily = lf.lfPitchAndFamily;
+    GetObject(hCurrentFont, sizeof(LOGFONT), &lf);
 
     /* This function currently in ReactOS will always return a Truetype font */
     /* because we cannot yet handle raster fonts. So it will return flags    */
@@ -2172,11 +2170,11 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
         return 0;
 
     /* To compensate for the GetTextMetricsW call changing the PitchAndFamily */
-    /* to a Truetype one when we have a Raster Type font as our input         */
-    /* we copy our stored value back into this field to restore the old value */
-    if (tm.tmPitchAndFamily & ( TMPF_VECTOR | TMPF_TRUETYPE ))
+    /* to a Truetype one when we have a 'helv' font as our input we and (&)   */
+    /* our current PitchAndFamily with 0xF9 to remove the two problem bits    */
+    if (wcsicmp(lf.lfFaceName, L"helv")==0)
     {
-        tm.tmPitchAndFamily = bPitchAndFamily;
+        tm.tmPitchAndFamily = tm.tmPitchAndFamily & 0xF9;
     }
 #else
     if(!GetTextMetricsW(hdc, &tm)) return 0;
