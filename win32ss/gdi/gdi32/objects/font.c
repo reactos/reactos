@@ -2172,7 +2172,7 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
     /* To compensate for the GetTextMetricsW call changing the PitchAndFamily */
     /* to a Truetype one when we have a 'helv' font as our input we and (&)   */
     /* our current PitchAndFamily with 0xF9 to remove the two problem bits    */
-    /* Out list below checks for Raster Font Facenames                        */
+    /* Our list below checks for Raster Font Facenames                        */
     DPRINT1("Font Facename is '%S'.\n", lf.lfFaceName);
     if ((wcsicmp(lf.lfFaceName, L"Helv") == 0) ||
         (wcsicmp(lf.lfFaceName, L"Courier") == 0) ||
