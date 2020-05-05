@@ -38,5 +38,3 @@ protected:
     void ProcessNotification();
     CDirectoryWatcher(LPCWSTR pszDirectoryPath, BOOL fSubTree);
 };
-
-void RequestAllDirectoryWatcher(void);
