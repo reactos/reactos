@@ -888,7 +888,7 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
     void* csum = NULL;
 #ifdef __REACTOS__
     int32_t i2;
-    uint32_t i3, j;
+    uint32_t i3;
 #endif // __REACTOS__
 
     if (fcb->Vcb->options.compress_type != 0 && fcb->prop_compression == PropCompression_None)
@@ -929,11 +929,7 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
         if (!NT_SUCCESS(Status)) {
             ERR("add_calc_job_comp returned %08lx\n", Status);
 
-#ifndef __REACTOS__
             for (unsigned int j = 0; j < i; j++) {
-#else
-            for (j = 0; j < i; j++) {
-#endif // __REACTOS__
                 KeWaitForSingleObject(&parts[j].cj->event, Executive, KernelMode, false, NULL);
                 ExFreePool(parts[j].cj);
             }
