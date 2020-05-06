@@ -144,6 +144,7 @@ BEGIN
     IDS_EVENTLOG_USER "User Logs"
     IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
+    IDS_RESTOREDEFAULTS "Do you want to restore all parameters to default value for this log ?"
     IDS_EVENTSTRINGIDNOTFOUND "A descrição para Event ID ( %lu ) em Fonte ( %s ) não foi encontrado. O computador local talvez não possua a informação de registro necessária ou mensagem de arquivos DLL para exibir mensagens de um computador remoto.\n\nThe following information is part of the event:\n\n"
 END
 

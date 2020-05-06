@@ -94,6 +94,7 @@
 #define IDS_SAVE_FILTER                 109
 #define IDS_CLEAREVENTS_MSG             110
 #define IDS_EVENTSTRINGIDNOTFOUND       111
+#define IDS_RESTOREDEFAULTS             112
 
 #define IDS_USAGE                       120
 #define IDS_EVENTLOGFILE                121

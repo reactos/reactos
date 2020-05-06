@@ -3869,7 +3869,7 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     if ((Result != ERROR_SUCCESS) || (dwType != REG_DWORD))
     {
         // dwMaxSize = 512 * 1024; /* 512 kBytes */
-        dwMaxSize = 0;
+        dwMaxSize = 512*1024;
     }
     /* Convert in KB */
     dwMaxSize /= 1024;
@@ -3884,7 +3884,7 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     if ((Result != ERROR_SUCCESS) || (dwType != REG_DWORD))
     {
         /* On Windows 2003 it is 604800 (secs) == 7 days */
-        dwRetention = 0;
+        dwRetention = 604800;
     }
     /* Convert in days, rounded up */ // ROUND_UP
     // dwRetention = ROUND_UP(dwRetention, 24*3600) / (24*3600);
@@ -4007,11 +4007,79 @@ Quit:
     }
 }
 
+static
+VOID
+SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
+{
+    LPWSTR lpLogName = EventLog->LogName;
+
+    DWORD dwType;
+    DWORD dwMaxSize = 0, dwRetention = 0;
+    HKEY hLogKey;
+    WCHAR *KeyPath;    
+    SIZE_T cbKeyPath;
+
+    if (EventLog->Permanent)
+    {
+
+    cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
+    KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
+    if (!KeyPath)
+    {
+        ShowWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return;
+    }
+
+    StringCbCopyW(KeyPath, cbKeyPath, EVENTLOG_BASE_KEY);
+    StringCbCatW(KeyPath, cbKeyPath, lpLogName);
+
+    /* Try to create/open the Event Viewer user key */
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                        KeyPath,
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_READ | KEY_WRITE,
+                        NULL,
+                        &hLogKey,
+                        NULL) != ERROR_SUCCESS)
+    {
+        ShowWin32Error(GetLastError());
+		return;
+    }
+   
+    HeapFree(GetProcessHeap(), 0, KeyPath);
+
+    dwMaxSize = GetDlgItemInt(hDlg, IDC_EDIT_MAXLOGSIZE, NULL, FALSE)*1024;
+    dwType = REG_DWORD;
+    RegSetValueExW(hLogKey,
+                   L"MaxSize",
+                   0,
+                   dwType,
+                   (LPBYTE)&dwMaxSize,
+                   sizeof(dwMaxSize));    
+
+    dwRetention = GetDlgItemInt(hDlg, IDC_EDIT_EVENTS_AGE, NULL, FALSE)*(24*3600);
+    dwType = REG_DWORD;
+    RegSetValueExW(hLogKey,
+                   L"Retention",
+                   0,
+                   dwType,
+                   (LPBYTE)&dwRetention,
+                   sizeof(dwRetention));
+    
+    RegCloseKey(hLogKey);
+    }
+}
+
 /* Message handler for EventLog Properties dialog */
 INT_PTR CALLBACK
 EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PEVENTLOG EventLog;
+    WCHAR szTitle[128];
+    WCHAR szText[256];
+    PEVENTLOGFILTER EventLogFilter;
 
     EventLog = (PEVENTLOG)GetWindowLongPtrW(hDlg, DWLP_USER);
 
@@ -4031,6 +4099,16 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_DESTROY:
             return (INT_PTR)TRUE;
 
+        case WM_NOTIFY:
+            switch (((LPNMHDR)lParam)->code)
+            {                
+                case PSN_APPLY:
+                    PropSheet_UnChanged(GetParent(hDlg), hDlg);
+                    SavePropertiesDlg(hDlg, EventLog);
+                    return (INT_PTR)TRUE;
+            }
+            break;
+                        
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -4039,12 +4117,31 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     EndDialog(hDlg, LOWORD(wParam));
                     return (INT_PTR)TRUE;
 
+                case ID_CLEARLOG:
+                    
+                    EventLogFilter = GetSelectedFilter(NULL);
+                    if (EventLogFilter && ClearEvents(EventLogFilter))
+                    {
+                        Refresh(EventLogFilter);
+                        InitPropertiesDlg(hDlg, EventLog);
+                    }
+                    return (INT_PTR)TRUE;
+                
+                case IDC_EDIT_EVENTS_AGE:
+                case IDC_EDIT_MAXLOGSIZE:
+                    if( HIWORD( wParam ) == EN_CHANGE )
+                    {
+                        PropSheet_Changed(GetParent(hDlg), hDlg);
+                    }
+                    return (INT_PTR)TRUE;
+                    
                 case IDC_OVERWRITE_AS_NEEDED:
                 {
                     CheckRadioButton(hDlg, IDC_OVERWRITE_AS_NEEDED, IDC_NO_OVERWRITE, IDC_OVERWRITE_AS_NEEDED);
                     EnableDlgItem(hDlg, IDC_EDIT_EVENTS_AGE, FALSE);
                     EnableDlgItem(hDlg, IDC_UPDOWN_EVENTS_AGE, FALSE);
-                    break;
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
+                    return (INT_PTR)TRUE;
                 }
 
                 case IDC_OVERWRITE_OLDER_THAN:
@@ -4052,7 +4149,8 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     CheckRadioButton(hDlg, IDC_OVERWRITE_AS_NEEDED, IDC_NO_OVERWRITE, IDC_OVERWRITE_OLDER_THAN);
                     EnableDlgItem(hDlg, IDC_EDIT_EVENTS_AGE, TRUE);
                     EnableDlgItem(hDlg, IDC_UPDOWN_EVENTS_AGE, TRUE);
-                    break;
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
+                    return (INT_PTR)TRUE;
                 }
 
                 case IDC_NO_OVERWRITE:
@@ -4060,7 +4158,25 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     CheckRadioButton(hDlg, IDC_OVERWRITE_AS_NEEDED, IDC_NO_OVERWRITE, IDC_NO_OVERWRITE);
                     EnableDlgItem(hDlg, IDC_EDIT_EVENTS_AGE, FALSE);
                     EnableDlgItem(hDlg, IDC_UPDOWN_EVENTS_AGE, FALSE);
-                    break;
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
+                    return (INT_PTR)TRUE;
+                }
+                
+                case IDC_RESTOREDEFAULTS:
+                {
+                    LoadStringW(hInst, IDS_APP_TITLE, szTitle, 128);
+                    LoadStringW(hInst, IDS_RESTOREDEFAULTS, szText, 256);
+
+                    if (MessageBox(hDlg, szText, szTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    {
+                        CheckRadioButton(hDlg, IDC_OVERWRITE_AS_NEEDED, IDC_NO_OVERWRITE, IDC_OVERWRITE_OLDER_THAN);
+                        EnableDlgItem(hDlg, IDC_EDIT_EVENTS_AGE, TRUE);
+                        EnableDlgItem(hDlg, IDC_UPDOWN_EVENTS_AGE, TRUE);
+                        SetDlgItemInt(hDlg, IDC_EDIT_MAXLOGSIZE, 512, FALSE);
+                        SetDlgItemInt(hDlg, IDC_EDIT_EVENTS_AGE, 7, FALSE);
+                        PropSheet_Changed(GetParent(hDlg), hDlg);
+                    }
+                    return (INT_PTR)TRUE;
                 }
 
                 case IDHELP:
@@ -4128,12 +4244,12 @@ EventLogProperties(HINSTANCE hInstance, HWND hWndParent, PEVENTLOGFILTER EventLo
     psp[1].hInstance   = hInstance;
     psp[1].pszTemplate = MAKEINTRESOURCEW(IDD_GENERAL_PAGE);
     psp[1].pfnDlgProc  = GeneralPageWndProc;
-    psp[0].lParam      = (LPARAM)EventLogFilter->EventLogs[0];
+    psp[1].lParam      = (LPARAM)EventLogFilter->EventLogs[0];
 #endif
 
     /* Create the property sheet */
     ret = PropertySheetW(&psh);
-
+    
 Quit:
     EventLogFilter_Release(EventLogFilter);
     return ret;
