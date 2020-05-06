@@ -130,5 +130,5 @@ There is also an obsolete [SVN archive repository](https://svn.reactos.org/react
 [prwelcome.badge]:  https://img.shields.io/badge/PR-welcome-0688CB.svg
 
 [coverity.link]:    https://scan.coverity.com/projects/205
-[rosbewin.link]:    http://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.2.0/
+[rosbewin.link]:    https://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.2.0/
 [rosbeunix.link]:   https://sourceforge.net/projects/reactos/files/RosBE-Unix/2.2/
