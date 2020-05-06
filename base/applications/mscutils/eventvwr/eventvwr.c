@@ -4019,8 +4019,8 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     WCHAR *KeyPath;    
     SIZE_T cbKeyPath;
 
-    if (EventLog->Permanent)
-    {
+    if (!EventLog->Permanent)
+        return;
 
     cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
     KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
@@ -4045,9 +4045,9 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
                         NULL) != ERROR_SUCCESS)
     {
         ShowWin32Error(GetLastError());
-		return;
+        return;
     }
-   
+
     HeapFree(GetProcessHeap(), 0, KeyPath);
 
     dwMaxSize = GetDlgItemInt(hDlg, IDC_EDIT_MAXLOGSIZE, NULL, FALSE)*1024;
@@ -4069,7 +4069,6 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
                    sizeof(dwRetention));
     
     RegCloseKey(hLogKey);
-    }
 }
 
 /* Message handler for EventLog Properties dialog */
@@ -4164,8 +4163,8 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 
                 case IDC_RESTOREDEFAULTS:
                 {
-                    LoadStringW(hInst, IDS_APP_TITLE, szTitle, 128);
-                    LoadStringW(hInst, IDS_RESTOREDEFAULTS, szText, 256);
+                    LoadStringW(hInst, IDS_APP_TITLE, szTitle, _countof(szTitle));
+                    LoadStringW(hInst, IDS_RESTOREDEFAULTS, szText, _countof(szText));
 
                     if (MessageBox(hDlg, szText, szTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
                     {
@@ -4249,7 +4248,7 @@ EventLogProperties(HINSTANCE hInstance, HWND hWndParent, PEVENTLOGFILTER EventLo
 
     /* Create the property sheet */
     ret = PropertySheetW(&psh);
-    
+
 Quit:
     EventLogFilter_Release(EventLogFilter);
     return ret;
