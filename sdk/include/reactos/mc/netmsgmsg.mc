@@ -14726,7 +14726,7 @@ Language=English
 The file %1 has been changed after initialization.\nThe boot-block loading was temporarily terminated.
 .
 Language=Polish
-Plik %1 uległ zmieniony po zainicjowaniu.\nŁadowanie bloku rozruchu zostało tymczasowo zakończone.
+Plik %1 został zmieniony po zainicjowaniu.\nŁadowanie bloku rozruchu zostało tymczasowo zakończone.
 .
 Language=Romanian
 The file %1 has been changed after initialization.\nThe boot-block loading was temporarily terminated.
