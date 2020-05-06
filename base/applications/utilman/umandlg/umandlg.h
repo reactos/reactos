@@ -90,10 +90,13 @@ typedef enum _WRITE_REGISTRY
 /* DECLARATIONS ***************************************************************/
 
 /* umandlg.c */
-BOOL DlgInitHandler(HWND hDlg);
-INT_PTR APIENTRY DlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
+VOID InitUtilsList(IN BOOL bInitGui);
+BOOL DlgInitHandler(IN HWND hDlg);
+VOID ShowAboutDlg(IN HWND hDlgParent);
+VOID GroupBoxUpdateTitle(VOID);
+VOID UpdateUtilityState(IN BOOL bUtilState);
+INT_PTR APIENTRY DlgProc(IN HWND hDlg, IN UINT Msg, IN WPARAM wParam, IN LPARAM lParam);
 INT ListBoxRefreshContents(VOID);
-VOID CheckUtilityState(BOOL bUtilState);
 BOOL WINAPI UManStartDlg(VOID);
 
 /* process.c */
@@ -101,10 +104,6 @@ DWORD GetProcessID(IN LPCWSTR lpszProcessName);
 BOOL IsProcessRunning(IN LPCWSTR lpszProcessName);
 BOOL LaunchProcess(IN LPCWSTR lpszProcessName);
 BOOL CloseProcess(IN LPCWSTR lpszProcessName);
-
-/* about.c */
-VOID ShowAboutDlg(HWND hDlgParent);
-INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 /* registry.c */
 BOOL InitAppRegKey(IN HKEY hPredefinedKey, IN LPCWSTR lpszSubKey, OUT PHKEY phKey, OUT LPDWORD lpdwDisposition);
