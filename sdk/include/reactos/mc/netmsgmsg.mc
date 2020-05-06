@@ -14697,7 +14697,7 @@ Language=English
 Initialization failed because of an error in the configuration\nfile %1.
 .
 Language=Polish
-Initialization failed because of an error in the configuration\nw pliku konfiguracyjnym %1.
+Zainicjowanie nie powiodło się z powodu błędu\nw pliku konfiguracyjnym %1.
 .
 Language=Romanian
 Initialization failed because of an error in the configuration\nfile %1.
