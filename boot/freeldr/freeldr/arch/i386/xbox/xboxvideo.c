@@ -20,8 +20,8 @@
  */
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(UI);
 
 PVOID FrameBuffer;
@@ -99,6 +99,24 @@ XboxVideoClearScreenColor(ULONG Color, BOOLEAN FullScreen)
           *p++ = Color;
         }
     }
+}
+
+VOID
+XboxVideoScrollUp(VOID)
+{
+    ULONG BgColor, Dummy;
+    ULONG PixelCount = ScreenWidth * CHAR_HEIGHT *
+                       (((ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT) - 1);
+    PULONG Src = (PULONG)((PUCHAR)FrameBuffer + (CHAR_HEIGHT + TOP_BOTTOM_LINES) * Delta);
+    PULONG Dst = (PULONG)((PUCHAR)FrameBuffer + TOP_BOTTOM_LINES * Delta);
+
+    XboxVideoAttrToColors(ATTR(COLOR_WHITE, COLOR_BLACK), &Dummy, &BgColor);
+
+    while (PixelCount--)
+        *Dst++ = *Src++;
+
+    for (PixelCount = 0; PixelCount < ScreenWidth * CHAR_HEIGHT; PixelCount++)
+        *Dst++ = BgColor;
 }
 
 VOID
