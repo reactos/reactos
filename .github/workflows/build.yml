@@ -36,7 +36,7 @@ jobs:
           ${{github.workspace}}/rosbe/RosBE.sh < commands
       - name: Build
         run: |
-          echo 'cd ${{github.workspace}}/build && cmake --build .' > commands
+          echo 'cd ${{github.workspace}}/build && cmake --build . -- -k 0' > commands
           ${{github.workspace}}/rosbe/RosBE.sh < commands
       - name: Generate ISOs
         run: |
@@ -82,7 +82,7 @@ jobs:
         cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
     - name: Build
       working-directory: ${{github.workspace}}\build
-      run: cmake --build .
+      run: cmake --build . -- -k 0
     - name: Generate ISOs
       working-directory: ${{github.workspace}}\build
       run: |
@@ -129,8 +129,7 @@ jobs:
         cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=amd64 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
     - name: Build
       working-directory: ${{github.workspace}}\build
-      run: |
-        cmake --build .
+      run: cmake --build . -- -k 0
     - name: Generate ISOs
       working-directory: ${{github.workspace}}\build
       run: |
