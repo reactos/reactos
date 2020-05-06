@@ -55,16 +55,15 @@ Up-to-date versions for Windows and for Unix/GNU-Linux are available from our do
 
 Alternatively one can use Microsoft Visual C++ (MSVC) version 2015+. Building with MSVC is covered here: ["Visual Studio or Microsoft Visual C++"](https://reactos.org/wiki/CMake#Visual_Studio_or_Microsoft_Visual_C.2B.2B).
 
+See ["Building ReactOS"](https://reactos.org/wiki/Building_ReactOS) article for more details.
+
 ### Binaries
 
 To build ReactOS you must run the `configure` script in the directory you want to have your build files. Choose `configure.cmd` or `configure.sh` depending on your system. Then run `ninja <modulename>` to build a module you want or just `ninja` to build all modules.
 
 ### Bootable images
 
-To build a bootable CD image run `ninja bootcd` from the
-build directory. This will create a CD image with a filename `bootcd.iso`.
-
-See ["Building ReactOS"](https://reactos.org/wiki/Building_ReactOS) for more details.
+To build a bootable CD image run `ninja bootcd` from the build directory. This will create a CD image with a filename `bootcd.iso`.
 
 You can always download fresh binary builds of bootable images from the ["Daily builds"](https://reactos.org/getbuilds/) page.
 
@@ -74,9 +73,7 @@ By default, ReactOS currently can only be installed on a machine that has a FAT1
 The partition on which ReactOS is to be installed (which may or may not be the bootable partition) must also be formatted as FAT16 or FAT32.
 ReactOS Setup can format the partitions if needed.
 
-Starting 0.4.10, ReactOS can be installed using the BtrFS file system. But
-consider this as an experimental feature and thus regressions not triggered on
-FAT setup may be observed.
+Starting 0.4.10, ReactOS can be installed using the BtrFS file system. But consider this as an experimental feature and thus regressions not triggered on FAT setup may be observed.
 
 To install ReactOS from the bootable CD distribution, extract the archive contents. Then burn the CD image, boot from it, and follow the instructions.
 
