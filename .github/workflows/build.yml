@@ -59,89 +59,89 @@ jobs:
     name: MSVC (i386)
     runs-on: windows-latest
     steps:
-    - name: Install packages
-      run: choco install ninja -y
-    - name: Install Flex and Bison
-      run: |
-        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
-        7z x flexbison.7z -O${{github.workspace}}\bin
-        echo "::add-path::${{github.workspace}}\bin"
-        echo "::set-env name=BISON_PKGDATADIR::${{github.workspace}}\bin\share\bison"
-        echo "::set-env name=M4::${{github.workspace}}\bin\m4.exe"
-    - name: Add CL to PATH
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: amd64_x86
-    - uses: actions/checkout@v2
-      with:
-        path: src
-    - name: Configure
-      run: |
-        mkdir build
-        cd build
-        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
-    - name: Build
-      working-directory: ${{github.workspace}}\build
-      run: cmake --build . -- -k 0 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
-    - name: Generate ISOs
-      working-directory: ${{github.workspace}}\build
-      run: |
-        cmake --build . --target bootcd 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
-        cmake --build . --target livecd 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
-    - name: Upload bootcd
-      uses: actions/upload-artifact@v1
-      with:
-        name: reactos-msvc-i386-${{github.sha}}
-        path: build/bootcd.iso
-    - name: Upload livecd
-      uses: actions/upload-artifact@v1
-      with:
-        name: reactos-msvc-i386-${{github.sha}}
-        path: build/livecd.iso
+      - name: Install packages
+        run: choco install ninja -y
+      - name: Install Flex and Bison
+        run: |
+          curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+          7z x flexbison.7z -O${{github.workspace}}\bin
+          echo "::add-path::${{github.workspace}}\bin"
+          echo "::set-env name=BISON_PKGDATADIR::${{github.workspace}}\bin\share\bison"
+          echo "::set-env name=M4::${{github.workspace}}\bin\m4.exe"
+      - name: Add CL to PATH
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64_x86
+      - uses: actions/checkout@v2
+        with:
+          path: src
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
+      - name: Build
+        working-directory: ${{github.workspace}}\build
+        run: cmake --build . -- -k 0 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
+      - name: Generate ISOs
+        working-directory: ${{github.workspace}}\build
+        run: |
+          cmake --build . --target bootcd 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
+          cmake --build . --target livecd 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
+      - name: Upload bootcd
+        uses: actions/upload-artifact@v1
+        with:
+          name: reactos-msvc-i386-${{github.sha}}
+          path: build/bootcd.iso
+      - name: Upload livecd
+        uses: actions/upload-artifact@v1
+        with:
+          name: reactos-msvc-i386-${{github.sha}}
+          path: build/livecd.iso
 
   build-msvc-amd64:
     name: MSVC (amd64)
     runs-on: windows-latest
     steps:
-    - name: Install packages
-      # HACK: remove all packages which contain gcc binary
-      run: |
-         choco install ninja -y
-         choco uninstall mingw strawberryperl -y
-    - name: Install Flex and Bison
-      run: |
-        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
-        7z x flexbison.7z -O${{github.workspace}}\bin
-        echo "::add-path::${{github.workspace}}\bin"
-        echo "::set-env name=BISON_PKGDATADIR::${{github.workspace}}\bin\share\bison"
-        echo "::set-env name=M4::${{github.workspace}}\bin\m4.exe"
-    - name: Add CL to PATH
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: amd64
-    - uses: actions/checkout@v2
-      with:
-        path: src
-    - name: Configure
-      run: |
-        mkdir build
-        cd build
-        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=amd64 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
-    - name: Build
-      working-directory: ${{github.workspace}}\build
-      run: cmake --build . -- -k 0 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
-    - name: Generate ISOs
-      working-directory: ${{github.workspace}}\build
-      run: |
-        cmake --build . --target bootcd 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
-        cmake --build . --target livecd 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
-    - name: Upload bootcd
-      uses: actions/upload-artifact@v1
-      with:
-        name: reactos-msvc-amd64-${{github.sha}}
-        path: build/bootcd.iso
-    - name: Upload livecd
-      uses: actions/upload-artifact@v1
-      with:
-        name: reactos-msvc-amd64-${{github.sha}}
-        path: build/livecd.iso
+      - name: Install packages
+        # HACK: remove all packages which contain gcc binary
+        run: |
+           choco install ninja -y
+           choco uninstall mingw strawberryperl -y
+      - name: Install Flex and Bison
+        run: |
+          curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+          7z x flexbison.7z -O${{github.workspace}}\bin
+          echo "::add-path::${{github.workspace}}\bin"
+          echo "::set-env name=BISON_PKGDATADIR::${{github.workspace}}\bin\share\bison"
+          echo "::set-env name=M4::${{github.workspace}}\bin\m4.exe"
+      - name: Add CL to PATH
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+      - uses: actions/checkout@v2
+        with:
+          path: src
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=amd64 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
+      - name: Build
+        working-directory: ${{github.workspace}}\build
+        run: cmake --build . -- -k 0 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
+      - name: Generate ISOs
+        working-directory: ${{github.workspace}}\build
+        run: |
+          cmake --build . --target bootcd 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
+          cmake --build . --target livecd 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
+      - name: Upload bootcd
+        uses: actions/upload-artifact@v1
+        with:
+          name: reactos-msvc-amd64-${{github.sha}}
+          path: build/bootcd.iso
+      - name: Upload livecd
+        uses: actions/upload-artifact@v1
+        with:
+          name: reactos-msvc-amd64-${{github.sha}}
+          path: build/livecd.iso
