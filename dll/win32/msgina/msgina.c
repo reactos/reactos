@@ -705,14 +705,21 @@ DoAdminUnlock(
                                      &Size);
     if (Status != STATUS_BUFFER_TOO_SMALL)
     {
-        TRACE("NtQueryInformationToken() failed (Status 0x%08lx)\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            ERR("NtQueryInformationToken(0) succeeded unexpectedly (Status 0x%08lx)\n", Status);
+        }
+        else
+        {
+            WARN("NtQueryInformationToken() failed (Status 0x%08lx)\n", Status);
+        }
         goto done;
     }
 
     Groups = HeapAlloc(GetProcessHeap(), 0, Size);
     if (Groups == NULL)
     {
-        TRACE("HeapAlloc() failed\n");
+        ERR("HeapAlloc() failed\n");
         goto done;
     }
 
@@ -723,7 +730,7 @@ DoAdminUnlock(
                                      &Size);
     if (!NT_SUCCESS(Status))
     {
-        TRACE("NtQueryInformationToken() failed (Status 0x%08lx)\n", Status);
+        WARN("NtQueryInformationToken() failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
