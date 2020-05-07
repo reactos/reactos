@@ -422,8 +422,6 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
             pData = L"ServerNT";
             cbData = sizeof(L"ServerNT");
             error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
-
-            /* FIXME: write Service Pack */
             break;
 
         case PRODUCT_OPTION_WORKSTATION:
@@ -438,8 +436,6 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
             pData = L"WinNT";
             cbData = sizeof(L"WinNT");
             error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
-
-            /* FIXME: write Service Pack */
             break;
     }
 
