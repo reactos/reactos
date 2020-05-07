@@ -39461,7 +39461,7 @@ error occurred: %n%1
 .
 Language=Polish
 Zarejestrowanie usługi na kontrolerze usług przez usługę Netlogon\n
-nie powiodło się. Usługa została zakończona\n
+nie powiodło się. Usługa została zakończona.\n
 Wystąpił następujący błąd: %n%1
 .
 Language=Romanian
