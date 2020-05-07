@@ -34,6 +34,9 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     COLORREF *pBits;
     INT line, column;
 
+    if (hDC == NULL || hDCLogo == NULL || hDCMask == NULL)
+        goto Cleanup;
+
     ZeroMemory(pImgInfo, sizeof(*pImgInfo));
     ZeroMemory(&bmpi, sizeof(bmpi));
 
@@ -76,7 +79,7 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
                 g = GetGValue(Color) * alpha / 255;
                 b = GetBValue(Color) * alpha / 255;
 
-                *pBits++ = b | g << 8 | r << 16 | alpha << 24;
+                *pBits++ = b | (g << 8) | (r << 16) | (alpha << 24);
             }
         }
 
@@ -88,10 +91,11 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     }
 
 Cleanup:
-    DeleteObject(hMask);
-    DeleteObject(hLogo);
-    DeleteDC(hDCMask);
-    DeleteDC(hDCLogo);
+    if (hMask != NULL) DeleteObject(hMask);
+    if (hLogo != NULL) DeleteObject(hLogo);  
+    if (hDCMask != NULL) DeleteDC(hDCMask);
+    if (hDCLogo != NULL) DeleteDC(hDCLogo);    
+    if (hDC != NULL) ReleaseDC(hwndDlg, hDC);
 }
 
 

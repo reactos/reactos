@@ -5,7 +5,7 @@
  * PURPOSE:         Settings property page
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "desk.h"
@@ -472,8 +472,12 @@ OnBPPChanged(IN HWND hwndDlg, IN PSETTINGS_DATA pData)
     /* Show a new spectrum bitmap */
     hSpectrumControl = GetDlgItem(hwndDlg, IDC_SETTINGS_SPECTRUM);
     hSpectrumDC = GetDC(hSpectrumControl);
+    if (hSpectrumDC == NULL)
+        return;
+
     GetClientRect(hSpectrumControl, &client);
     ShowColorSpectrum(hSpectrumDC, &client, dmNewBitsPerPel, pData);
+    ReleaseDC(hSpectrumControl, hSpectrumDC);
 
     /* Find if new parameters are valid */
     Current = pData->CurrentDisplayDevice->CurrentSettings;
