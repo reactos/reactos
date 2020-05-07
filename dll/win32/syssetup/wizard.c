@@ -6,6 +6,7 @@
  * PROGRAMMERS:     Eric Kohl
  *                  Pierre Schweitzer <heis_spiter@hotmail.com>
  *                  Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 /* INCLUDES *****************************************************************/
@@ -395,6 +396,9 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
 {
     static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
     static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
+    static const WCHAR s_szWindowsNT[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+    static const WCHAR s_szServicePack2[] = L"Service Pack 2";
+    static const WCHAR s_szServicePack3[] = L"Service Pack 3";
     HKEY hKey;
     LONG error;
     LPCWSTR pData;
@@ -418,6 +422,8 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
             pData = L"ServerNT";
             cbData = sizeof(L"ServerNT");
             error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
+
+            /* FIXME: write Service Pack */
             break;
 
         case PRODUCT_OPTION_WORKSTATION:
@@ -432,6 +438,8 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
             pData = L"WinNT";
             cbData = sizeof(L"WinNT");
             error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
+
+            /* FIXME: write Service Pack */
             break;
     }
 
@@ -445,6 +453,24 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
     dwValue = (nOption == PRODUCT_OPTION_WORKSTATION);
     cbData = sizeof(dwValue);
     error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (BYTE *)&dwValue, cbData);
+
+    RegCloseKey(hKey);
+
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey);
+    if (error)
+        return FALSE;
+
+    /* write CSDVersion value */
+    if (nOption == PRODUCT_OPTION_WORKSTATION)
+    {
+        cbData = sizeof(s_szServicePack3);
+        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (BYTE *)s_szServicePack3, cbData);
+    }
+    else
+    {
+        cbData = sizeof(s_szServicePack2);
+        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (BYTE *)s_szServicePack2, cbData);
+    }
 
     RegCloseKey(hKey);
 
@@ -499,7 +525,7 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONNAME, szText, _countof(szText));
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
 
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_WORKSTATION, 0);
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_SERVER, 0);
             OnChooseWorkstation(hwndDlg);
 
             hIcon = LoadIcon(NULL, IDI_WINLOGO);

@@ -250,8 +250,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Тип продукта"
     IDS_PRODUCTSUBTITLE "Вы можете выбрать тип продукта, который изменяет поведение системы."
-    IDS_PRODUCTSERVERNAME "Сервер ReactOS"
-    IDS_PRODUCTWORKSTATIONNAME "Рабочая станция ReactOS (по умолчанию)"
+    IDS_PRODUCTSERVERNAME "Сервер ReactOS (по умолчанию)"
+    IDS_PRODUCTWORKSTATIONNAME "Рабочая станция ReactOS"
     IDS_PRODUCTSERVERINFO "Система будет распознаваться как сервер. Приватные папки ""Мои Изображения"", ""Мои видеозаписи"" и ""Моя музыка"" не будут зависеть от папки ""Мои документы""."
     IDS_PRODUCTWORKSTATIONINFO "Система будет разпознаваться как рабочая станция. Приватные папки ""Мои изображения"", ""Мои видеозаписи"" и ""Моя музыка"" будут находится в папке ""Мои документы""."
 END
