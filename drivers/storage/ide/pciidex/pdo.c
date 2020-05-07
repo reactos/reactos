@@ -257,10 +257,10 @@ PciIdeXPdoQueryResourceRequirements(
 	Descriptor->Flags = CM_RESOURCE_PORT_IO |
 	                    CM_RESOURCE_PORT_16_BIT_DECODE |
 	                    CM_RESOURCE_PORT_POSITIVE_DECODE;
-	Descriptor->u.Port.Length = 7;
+	Descriptor->u.Port.Length = 8;
 	Descriptor->u.Port.Alignment = 1;
 	Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)CommandPortBase;
-	Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(CommandPortBase + 7 - 1);
+	Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(CommandPortBase + Descriptor->u.Port.Length - 1);
 	Descriptor++;
 
 	/* Control port base */
@@ -273,7 +273,7 @@ PciIdeXPdoQueryResourceRequirements(
 	Descriptor->u.Port.Length = 1;
 	Descriptor->u.Port.Alignment = 1;
 	Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)ControlPortBase;
-	Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(ControlPortBase + 1 - 1);
+	Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(ControlPortBase + Descriptor->u.Port.Length - 1);
 	Descriptor++;
 
 	/* Interrupt */
