@@ -19,9 +19,8 @@
 #include <windowsx.h>
 #include <wincon.h>
 #include <shlobj.h>
-#include <strsafe.h>
-
 #include <tzlib.h>
+#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
