@@ -2738,7 +2738,10 @@ GetDisplayNameFileAndID(IN LPCWSTR lpLogName,
     cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
     KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
     if (!KeyPath)
+    {
+        ShowWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
+    }
 
     StringCbCopyW(KeyPath, cbKeyPath, EVENTLOG_BASE_KEY);
     StringCbCatW(KeyPath, cbKeyPath, lpLogName);
@@ -3845,6 +3848,7 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
     if (!KeyPath)
     {
+        ShowWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         goto Quit;
     }
 
@@ -3854,6 +3858,7 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     if (RegOpenKeyExW(hkMachine, KeyPath, 0, KEY_QUERY_VALUE, &hLogKey) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, KeyPath);
+        ShowWin32Error(GetLastError());
         goto Quit;
     }
     HeapFree(GetProcessHeap(), 0, KeyPath);
@@ -3869,7 +3874,8 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     if ((Result != ERROR_SUCCESS) || (dwType != REG_DWORD))
     {
         // dwMaxSize = 512 * 1024; /* 512 kBytes */
-        dwMaxSize = 512*1024;
+        // x10 while ReactOS is Alpha
+        dwMaxSize = 512*10*1024;
     }
     /* Convert in KB */
     dwMaxSize /= 1024;
@@ -3884,17 +3890,15 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     if ((Result != ERROR_SUCCESS) || (dwType != REG_DWORD))
     {
         /* On Windows 2003 it is 604800 (secs) == 7 days */
-        dwRetention = 604800;
+        // No delete while ReactOS is Alpha        
+        dwRetention = 0;
     }
-    /* Convert in days, rounded up */ // ROUND_UP
-    // dwRetention = ROUND_UP(dwRetention, 24*3600) / (24*3600);
-    dwRetention = (dwRetention + 24*3600 - 1) / (24*3600);
-
+    /* Convert in days */    
+    if(dwRetention != INFINITE) dwRetention = (dwRetention + 24*3600 - 1) / (24*3600);
 
     RegCloseKey(hLogKey);
 
     }
-
 
 Quit:
 
@@ -3980,7 +3984,7 @@ Quit:
         SendDlgItemMessageW(hDlg, IDC_UPDOWN_EVENTS_AGE, UDM_SETRANGE, 0, (LPARAM)MAKELONG(365, 1));
 
         SetDlgItemInt(hDlg, IDC_EDIT_MAXLOGSIZE, dwMaxSize, FALSE);
-        SetDlgItemInt(hDlg, IDC_EDIT_EVENTS_AGE, dwRetention, FALSE);
+        SetDlgItemInt(hDlg, IDC_EDIT_EVENTS_AGE, (dwRetention == 0)?7:dwRetention, FALSE);
 
         if (dwRetention == 0)
         {
@@ -4060,7 +4064,8 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
                    sizeof(dwMaxSize));    
 
     dwRetention = GetDlgItemInt(hDlg, IDC_EDIT_EVENTS_AGE, NULL, FALSE)*(24*3600);
-    dwType = REG_DWORD;
+    if (IsDlgButtonChecked(hDlg, IDC_OVERWRITE_AS_NEEDED) == BST_CHECKED) dwRetention = 0;
+    if (IsDlgButtonChecked(hDlg, IDC_NO_OVERWRITE) == BST_CHECKED) dwRetention = INFINITE;
     RegSetValueExW(hLogKey,
                    L"Retention",
                    0,
@@ -4168,11 +4173,11 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                     if (MessageBox(hDlg, szText, szTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
                     {
-                        CheckRadioButton(hDlg, IDC_OVERWRITE_AS_NEEDED, IDC_NO_OVERWRITE, IDC_OVERWRITE_OLDER_THAN);
-                        EnableDlgItem(hDlg, IDC_EDIT_EVENTS_AGE, TRUE);
-                        EnableDlgItem(hDlg, IDC_UPDOWN_EVENTS_AGE, TRUE);
-                        SetDlgItemInt(hDlg, IDC_EDIT_MAXLOGSIZE, 512, FALSE);
+                        CheckRadioButton(hDlg, IDC_OVERWRITE_AS_NEEDED, IDC_NO_OVERWRITE, IDC_OVERWRITE_AS_NEEDED);
+                        SetDlgItemInt(hDlg, IDC_EDIT_MAXLOGSIZE, 5120, FALSE);
                         SetDlgItemInt(hDlg, IDC_EDIT_EVENTS_AGE, 7, FALSE);
+                        EnableDlgItem(hDlg, IDC_EDIT_EVENTS_AGE, FALSE);
+                        EnableDlgItem(hDlg, IDC_UPDOWN_EVENTS_AGE, FALSE);
                         PropSheet_Changed(GetParent(hDlg), hDlg);
                     }
                     return (INT_PTR)TRUE;
