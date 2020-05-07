@@ -392,17 +392,13 @@ AckPageDlgProc(HWND hwndDlg,
 }
 
 static BOOL
-DoWriteProductOption(PRODUCT_OPTION nOption)
+WriteProductSuiteAndType(PRODUCT_OPTION nOption)
 {
     static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
-    static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
-    static const WCHAR s_szWindowsNT[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
-    static const WCHAR s_szServicePack2[] = L"Service Pack 2";
-    static const WCHAR s_szServicePack3[] = L"Service Pack 3";
     HKEY hKey;
     LONG error;
     LPCWSTR pData;
-    DWORD cbData, dwValue;
+    DWORD cbData;
 
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
     if (error)
@@ -441,36 +437,76 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
 
     RegCloseKey(hKey);
 
+    return error == ERROR_SUCCESS;
+}
+
+static BOOL
+WriteProductRosVersion(PRODUCT_OPTION nOption)
+{
+    static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
+    HKEY hKey;
+    LONG error;
+    DWORD cbData, dwValue;
+
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szRosVersion, 0, KEY_WRITE, &hKey);
     if (error)
         return FALSE;
 
     /* write ReportAsWorkstation value */
-    dwValue = (nOption == PRODUCT_OPTION_WORKSTATION);
+    switch (nOption)
+    {
+        case PRODUCT_OPTION_SERVER:
+            dwValue = 0;
+            break;
+        case PRODUCT_OPTION_WORKSTATION:
+            dwValue = 1;
+            break;
+    }
     cbData = sizeof(dwValue);
     error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (BYTE *)&dwValue, cbData);
 
     RegCloseKey(hKey);
+    return error == ERROR_SUCCESS;
+}
+
+static BOOL
+WriteCSDVersion(PRODUCT_OPTION nOption)
+{
+    static const WCHAR s_szWindowsNT[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+    static const WCHAR s_szServicePack2[] = L"Service Pack 2";
+    static const WCHAR s_szServicePack3[] = L"Service Pack 3";
+    HKEY hKey;
+    LONG error;
+    DWORD cbData;
 
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey);
     if (error)
         return FALSE;
 
     /* write CSDVersion value */
-    if (nOption == PRODUCT_OPTION_WORKSTATION)
+    switch (nOption)
     {
-        cbData = sizeof(s_szServicePack3);
-        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (BYTE *)s_szServicePack3, cbData);
-    }
-    else
-    {
-        cbData = sizeof(s_szServicePack2);
-        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (BYTE *)s_szServicePack2, cbData);
+        case PRODUCT_OPTION_SERVER:
+            cbData = sizeof(s_szServicePack2);
+            error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (BYTE *)s_szServicePack2, cbData);
+            break;
+        case PRODUCT_OPTION_WORKSTATION:
+            cbData = sizeof(s_szServicePack3);
+            error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (BYTE *)s_szServicePack3, cbData);
+            break;
     }
 
     RegCloseKey(hKey);
 
     return error == ERROR_SUCCESS;
+}
+
+static BOOL
+DoWriteProductOption(PRODUCT_OPTION nOption)
+{
+    return WriteProductSuiteAndType(nOption) &&
+           WriteProductRosVersion(nOption) &&
+           WriteCSDVersion(nOption);
 }
 
 static void
