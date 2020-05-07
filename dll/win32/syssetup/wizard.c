@@ -474,27 +474,28 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
 }
 
 static void
-OnChooseServer(HWND hwndDlg)
+OnChooseOption(HWND hwndDlg, PRODUCT_OPTION option)
 {
     WCHAR szText[256];
 
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"Terminal Server");
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"ServerNT");
+    switch (option)
+    {
+        case PRODUCT_OPTION_SERVER:
+            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"Terminal Server");
+            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"ServerNT");
 
-    LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
-}
+            LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
+            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
+            break;
 
-static void
-OnChooseWorkstation(HWND hwndDlg)
-{
-    WCHAR szText[256];
+        case PRODUCT_OPTION_WORKSTATION:
+            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"");
+            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"WinNT");
 
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"");
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"WinNT");
-
-    LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
+            LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
+            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
+            break;
+    }
 }
 
 static INT_PTR CALLBACK
@@ -522,7 +523,7 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
 
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_SERVER, 0);
-            OnChooseWorkstation(hwndDlg);
+            OnChooseOption(hwndDlg, PRODUCT_OPTION_SERVER);
 
             hIcon = LoadIcon(NULL, IDI_WINLOGO);
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_ICON, STM_SETICON, (WPARAM)hIcon, 0);
@@ -533,19 +534,7 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (HIWORD(wParam) == CBN_SELCHANGE && IDC_PRODUCT_OPTIONS == LOWORD(wParam))
             {
                 iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
-                switch ((PRODUCT_OPTION)iItem)
-                {
-                    case PRODUCT_OPTION_SERVER:
-                        OnChooseServer(hwndDlg);
-                        break;
-
-                    case PRODUCT_OPTION_WORKSTATION:
-                        OnChooseWorkstation(hwndDlg);
-                        break;
-
-                    default:
-                        break;
-                }
+                OnChooseOption(hwndDlg, (PRODUCT_OPTION)iItem);
             }
             break;
 
@@ -560,8 +549,8 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        pSetupData->ProductOption = PRODUCT_OPTION_WORKSTATION;
-                        OnChooseWorkstation(hwndDlg);
+                        pSetupData->ProductOption = PRODUCT_OPTION_SERVER;
+                        OnChooseOption(hwndDlg, pSetupData->ProductOption);
                         DoWriteProductOption(pSetupData->ProductOption);
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
