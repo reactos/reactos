@@ -37165,7 +37165,7 @@ illogical.  The NCB is the data.
 .
 Language=Polish
 Segment komunikatów określony w bloku sterowania siecią (NCB) jest\n
-illogical.  Przedstawione dane to blok NCB.
+nielogiczny.  Przedstawione dane to blok NCB.
 .
 Language=Romanian
 The message segment specified in the network control block (NCB) is\n
