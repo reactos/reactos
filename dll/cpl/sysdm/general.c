@@ -170,7 +170,7 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
 
                     hFont = CreateFontIndirect(&ncm.lfMessageFont);
-                    if(!hFont)
+                    if (!hFont)
                         goto Cleanup;
                     SelectObject(hCreditsDC, hFont);
 
@@ -181,7 +181,7 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
                     hCreditsBitmap = CreateBitmap(pImgInfo->cxSource, (2 * pImgInfo->cySource) + iDevsHeight + 1, pImgInfo->iPlanes, pImgInfo->iBits, NULL);
 
-                    if(!hCreditsBitmap)
+                    if (!hCreditsBitmap)
                         goto Cleanup;
 
                     SelectObject(hLogoDC, pImgInfo->hBitmap);
@@ -231,7 +231,8 @@ Cleanup:
                     ReleaseDC(hwnd, hDC);
                 }
                 KillTimer(hwnd, timerid);
-                if (hCreditsBitmap != NULL) DeleteObject(hCreditsBitmap);
+                if (hCreditsBitmap != NULL)
+                    DeleteObject(hCreditsBitmap);
 
                 top = 0;
                 timerid = 0;
@@ -248,14 +249,14 @@ Cleanup:
                 HDC hDC = GetDC(hwnd);
                 if (hDC != NULL)
                 {
-                
                     GetClientRect(hwnd, &rcCredits);
                     SetRect(&rcCredits, 0, 0, rcCredits.right, pImgInfo->cySource);
                     FillRect(hDC, &rcCredits, GetSysColorBrush(COLOR_3DFACE));
                     ReleaseDC(hwnd, hDC);
                 }
                 KillTimer(hwnd, timerid);
-                if (hCreditsBitmap != NULL) DeleteObject(hCreditsBitmap);
+                if (hCreditsBitmap != NULL)
+                    DeleteObject(hCreditsBitmap);
 
                 top = 0;
                 timerid = 0;
