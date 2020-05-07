@@ -15638,7 +15638,7 @@ have open may lose data.
 Language=Polish
 OSTRZEŻENIE: Masz czas na wylogowanie się do %1. Jeśli tego\n
 nie zrobisz, sesja zostanie odłączona, a dane we wszystkich\n
-otwartych plikach i urządzeniach mogą być utracone\n
+otwartych plikach i urządzeniach mogą być utracone.
 .
 Language=Romanian
 WARNING: You have until %1 to logoff. If you\n
