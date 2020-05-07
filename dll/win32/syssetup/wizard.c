@@ -585,7 +585,6 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        pSetupData->ProductOption = PRODUCT_OPTION_SERVER;
                         OnChooseOption(hwndDlg, pSetupData->ProductOption);
                         DoWriteProductOption(pSetupData->ProductOption);
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
@@ -2443,7 +2442,10 @@ ProcessUnattendSection(
             else
                 pSetupData->DisableGeckoInst = FALSE;
         }
-
+        else if (!_wcsicmp(szName, L"ProductOption"))
+        {
+            pSetupData->ProductOption = (PRODUCT_OPTION)_wtoi(szValue);
+        }
     } while (SetupFindNextLine(&InfContext, &InfContext));
 
     if (SetupFindFirstLineW(pSetupData->hSetupInf,
