@@ -19,6 +19,7 @@
 #include <windowsx.h>
 #include <wincon.h>
 #include <shlobj.h>
+#include <strsafe.h>
 
 #include <tzlib.h>
 
@@ -540,7 +541,7 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     LPNMHDR lpnm;
     PSETUPDATA pSetupData;
     INT iItem;
-    WCHAR szText[64];
+    WCHAR szText[64], szDefault[64];;
     HICON hIcon;
 
     pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
@@ -552,14 +553,26 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSetupData);
 
+            LoadStringW(hDllInstance, IDS_DEFAULT, szDefault, _countof(szDefault));
+
             LoadStringW(hDllInstance, IDS_PRODUCTSERVERNAME, szText, _countof(szText));
+            if (PRODUCT_OPTION_DEFAULT == PRODUCT_OPTION_SERVER)
+            {
+                StringCchCatW(szText, _countof(szText), L" ");
+                StringCchCatW(szText, _countof(szText), szDefault);
+            }
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
 
             LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONNAME, szText, _countof(szText));
+            if (PRODUCT_OPTION_DEFAULT == PRODUCT_OPTION_WORKSTATION)
+            {
+                StringCchCatW(szText, _countof(szText), L" ");
+                StringCchCatW(szText, _countof(szText), szDefault);
+            }
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
 
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_SERVER, 0);
-            OnChooseOption(hwndDlg, PRODUCT_OPTION_SERVER);
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_DEFAULT, 0);
+            OnChooseOption(hwndDlg, PRODUCT_OPTION_DEFAULT);
 
             hIcon = LoadIcon(NULL, IDI_WINLOGO);
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_ICON, STM_SETICON, (WPARAM)hIcon, 0);
@@ -2721,6 +2734,7 @@ InstallWizard(VOID)
                     MB_ICONERROR | MB_OK);
         goto done;
     }
+    pSetupData->ProductOption = PRODUCT_OPTION_DEFAULT;
 
     hNetShell = LoadLibraryW(L"netshell.dll");
     if (hNetShell != NULL)

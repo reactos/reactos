@@ -246,8 +246,9 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Kiadások"
     IDS_PRODUCTSUBTITLE "Választhat egy kiadást, amely befolyásolja a rendszer viselkedését."
-    IDS_PRODUCTSERVERNAME "ReactOS Szerver (alapértelmezett)"
+    IDS_PRODUCTSERVERNAME "ReactOS Szerver"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Munkaállomás"
     IDS_PRODUCTSERVERINFO "A rendszer szerverként lesz felismerhető. A ""Képek"", ""Videók"" és ""Zenék"" személyes mappák függetlenek lesznek a ""Dokumentumok"" mappától."
     IDS_PRODUCTWORKSTATIONINFO "A rendszer munkaállomásként lesz felismerhető. A ""Képek"", ""Videók"" és ""Zenék"" személyes mappák a ""Dokumentumok"" mappában lesznek."
+    IDS_DEFAULT "(alapértelmezett)"
 END

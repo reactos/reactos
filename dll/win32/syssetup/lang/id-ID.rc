@@ -247,8 +247,9 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Pilihan Produk"
     IDS_PRODUCTSUBTITLE "Anda bisa memilih opsi produk yang bisa mempengaruhi tindakan sistem."
-    IDS_PRODUCTSERVERNAME "ReactOS Server (Asli)"
+    IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "Sistem akan dikenal sebagai server. Folder pribadi ""Gambar Saya"", ""Video Saya"" dan ""Musik Saya"" disendirikan dari ""Dokumen Saya""."
     IDS_PRODUCTWORKSTATIONINFO "Sistem akan dikenal sebagai workstation. Folder pribadi ""Gambar Saya"", ""Video Saya"" dan ""Musik Saya"" dimasukkan dalam ""Dokumen Saya""."
+    IDS_DEFAULT "(Asli)"
 END
