@@ -25114,7 +25114,7 @@ Language=English
 COM Send Timeout (msec)%0
 .
 Language=Polish
-Limit czasu wysyłania przez port COM (ms%0
+Limit czasu wysyłania przez port COM (ms)%0
 .
 Language=Romanian
 COM Send Timeout (msec)%0
