@@ -35,7 +35,7 @@ UTILMAN_STATE EntriesList[] =
  * @return
  *     Nothing.
  */
-VOID InitUtilsList(BOOL bInitGui)
+VOID InitUtilsList(IN BOOL bInitGui)
 {
     UINT i;
 
@@ -150,6 +150,29 @@ BOOL DlgInitHandler(IN HWND hDlg)
     Globals.iTimer = SetTimer(hDlg, 0, 400, NULL);
 
     return TRUE;
+}
+
+/**
+ * @ShowAboutDlg
+ *
+ * Displays the Shell "About" dialog box.
+ *
+ * @param[in]   hDlgParent
+ *     A handle to the parent dialog window.
+ *
+ * @return
+ *     Nothing.
+ *
+ */
+VOID ShowAboutDlg(IN HWND hDlgParent)
+{
+    WCHAR szApp[MAX_BUFFER];
+    WCHAR szAuthors[MAX_BUFFER];
+
+    LoadStringW(Globals.hInstance, IDS_APP_NAME, szApp, _countof(szApp));
+    LoadStringW(Globals.hInstance, IDS_AUTHORS, szAuthors, _countof(szAuthors));
+
+    ShellAboutW(hDlgParent, szApp, szAuthors, Globals.hIcon);
 }
 
 /**

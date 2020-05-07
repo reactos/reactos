@@ -25,16 +25,6 @@ BEGIN
     CONTROL "&עזרה", IDC_HELP_TOPICS, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_TABSTOP, 98, 161, 50, 14 
 END
 
-IDD_ABOUT_DIALOG DIALOGEX 22, 16, 210, 65
-CAPTION "אודות מנהל כלי הנגישות"
-FONT 8, "MS Shell Dlg", 0, 0
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-BEGIN
-    LTEXT "מנהל כלי הנגישות\nCopyright 2019 George Bișoc (fraizeraust99 at gmail dot com)", IDC_STATIC, 10, 7, 150, 36
-    LTEXT "Copyright 2019 Hermes Belusca-Maito", IDC_STATIC, 10, 33, 150, 36
-    PUSHBUTTON "סגור", IDOK, 75, 47, 44, 15
-END
-
 STRINGTABLE
 BEGIN
     IDS_OSK "לוח מקשים על התצוגה"
@@ -51,4 +41,6 @@ END
 STRINGTABLE
 BEGIN
     IDM_ABOUT "אודות מנהל כלי הנגישות..."
+    IDS_APP_NAME "מנהל כלי הנגישות"
+    IDS_AUTHORS "Copyright 2019 George Bișoc, Hermes Belusca-Maito"
 END
