@@ -1,6 +1,5 @@
 
 list(APPEND SOURCE
-    about.c
     control.c
     create.c
     delete.c

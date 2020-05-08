@@ -10,6 +10,7 @@
 #include "precomp.h"
 
 #include <windowsx.h>
+#include <shellapi.h>
 
 static const WCHAR szMainWndClass[] = L"ServManWndClass";
 
@@ -374,13 +375,16 @@ InitMainWnd(PMAIN_WND_INFO Info)
     return TRUE;
 }
 
-
 static VOID
 MainWndCommand(PMAIN_WND_INFO Info,
                WORD CmdId,
                HWND hControl)
 {
     UNREFERENCED_PARAMETER(hControl);
+
+    WCHAR szAppName[256];
+    WCHAR szAppAuthors[256];    
+    HICON hIcon;
 
     switch (CmdId)
     {
@@ -590,11 +594,12 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
         case ID_ABOUT:
-            DialogBox(hInstance,
-                      MAKEINTRESOURCE(IDD_ABOUTBOX),
-                      Info->hMainWnd,
-                      AboutDialogProc);
-            SetFocus(Info->hListView);
+            LoadStringW(hInstance, IDS_APPNAME, szAppName, sizeof(szAppName) / sizeof(WCHAR));
+            LoadStringW(hInstance, IDS_APPAUTHORS, szAppAuthors, sizeof(szAppAuthors) / sizeof(WCHAR));
+            
+            hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_SM_ICON));
+            ShellAboutW(Info->hMainWnd, szAppName, szAppAuthors, hIcon);
+            DestroyIcon(hIcon);
         break;
 
     }
