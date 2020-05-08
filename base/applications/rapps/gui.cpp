@@ -805,7 +805,7 @@ private:
     VOID InitCategoriesList()
     {
         HTREEITEM hRootItemInstalled, hRootItemAvailable;
-
+        m_TreeView->AddCategory(TVI_ROOT, IDS_RECOMMENDED, IDI_RECOMMENDED);
         hRootItemInstalled = m_TreeView->AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
         m_TreeView->AddCategory(hRootItemInstalled, IDS_APPLICATIONS, IDI_APPS);
         m_TreeView->AddCategory(hRootItemInstalled, IDS_UPDATES, IDI_APPUPD);
@@ -1162,6 +1162,10 @@ private:
                 {
                     switch (((LPNMTREEVIEW) lParam)->itemNew.lParam)
                     {
+                    case IDS_RECOMMENDED:
+                        UpdateApplicationsList(ENUM_RECOMMENDED);
+                        break;
+
                     case IDS_INSTALLED:
                         UpdateApplicationsList(ENUM_ALL_INSTALLED);
                         break;
@@ -1561,7 +1565,7 @@ private:
             break;
 
         case ID_INSTALL:
-            if (IsAvailableEnum(SelectedEnumType))
+            if (IsAvailableEnum(SelectedEnumType) || IsRecommendedEnum(SelectedEnumType))
             {
                 if (nSelectedApps > 0)
                 {
@@ -1786,6 +1790,16 @@ private:
         }
         else if (IsAvailableEnum(EnumType))
         {
+            if (bWasInInstalled)
+            {
+                m_ListView->SetCheckboxesVisible(TRUE);
+            }
+
+            // Enum available applications
+            m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);
+        }
+	else if (IsRecommendedEnum(EnumType))
+	{
             if (bWasInInstalled)
             {
                 m_ListView->SetCheckboxesVisible(TRUE);

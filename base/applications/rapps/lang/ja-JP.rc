@@ -213,6 +213,7 @@ BEGIN
     IDS_INSTALL_SELECTED "選択をインストール"
     IDS_SELECTEDFORINST "インストールを選択済み"
     IDS_MISMATCH_CERT_INFO "証明書は未知のものです:\nSubject: %s\nIssuer: %s\nそれでも続けますか？"
+    IDS_RECOMMENDED "Recommended software"
 END
 
 STRINGTABLE

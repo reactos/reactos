@@ -215,6 +215,7 @@ BEGIN
     IDS_INSTALL_SELECTED "安装已选中的"
     IDS_SELECTEDFORINST "选中以安装"
     IDS_MISMATCH_CERT_INFO "所使用的证书未知:\n主题: %s\n发行方: %s\n您是否仍然想继续？"
+    IDS_RECOMMENDED "Recommended software"
 END
 
 STRINGTABLE

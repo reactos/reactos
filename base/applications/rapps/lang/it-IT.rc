@@ -213,6 +213,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Installa le selezionate"
     IDS_SELECTEDFORINST "Selezionate per l'installazione"
     IDS_MISMATCH_CERT_INFO "Il certificato in uso è sconosciuto:\nSoggetto: %s\nEmittente: %s\nVuoi continuare comunque?"
+    IDS_RECOMMENDED "Recommended software"
 END
 
 STRINGTABLE

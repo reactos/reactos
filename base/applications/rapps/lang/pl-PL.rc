@@ -221,6 +221,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Instaluj Zaznaczone"
     IDS_SELECTEDFORINST "Wybrane do instalacji"
     IDS_MISMATCH_CERT_INFO "Użyty certyfikat jest nieznany:\nSubject: %s\nIssuer: %s\nCzy chcesz mimo to kontynuować?"
+    IDS_RECOMMENDED "Recommended software"
 END
 
 STRINGTABLE

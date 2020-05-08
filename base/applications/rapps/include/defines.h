@@ -52,6 +52,7 @@ enum AppsCategories
     ENUM_CAT_THEMES,
     ENUM_CAT_OTHER,
     ENUM_CAT_SELECTED,
+    ENUM_RECOMMENDED,
     ENUM_ALL_INSTALLED,
     ENUM_INSTALLED_APPLICATIONS = 31,
     ENUM_UPDATES = 32,
@@ -69,4 +70,9 @@ inline BOOL IsAvailableEnum(INT x)
 inline BOOL IsInstalledEnum(INT x)
 {
     return (x >= ENUM_INSTALLED_MIN && x <= ENUM_INSTALLED_MAX);
+}
+
+inline BOOL IsRecommendedEnum(INT x)
+{
+    return (x == ENUM_RECOMMENDED);
 }

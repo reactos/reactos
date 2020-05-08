@@ -213,6 +213,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Pasang terpilih"
     IDS_SELECTEDFORINST "dipilih untuk pemasangan"
     IDS_MISMATCH_CERT_INFO "Sertifikat yang dipakai tidak dikenal:\nSubyek: %s\nIssuer: %s\nYakin ingin lanjut?"
+    IDS_RECOMMENDED "Recommended software"
 END
 
 STRINGTABLE

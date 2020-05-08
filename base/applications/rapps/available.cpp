@@ -20,7 +20,8 @@
  // CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam)
     : m_IsSelected(FALSE), m_LicenseType(LICENSE_NONE), m_sFileName(sFileNameParam),
-    m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
+    m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE),
+   m_IsRecommended(FALSE)
 {
     RetrieveGeneralInfo();
 }
@@ -60,6 +61,7 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
     RetrieveLicenseType();
     RetrieveLanguages();
     RetrieveInstalledStatus();
+    RetrieveRecommended();
 
     if (m_IsInstalled)
     {
@@ -158,6 +160,22 @@ VOID CAvailableApplicationInfo::RetrieveSize()
     m_szSize.ReleaseBuffer();
 }
 
+VOID CAvailableApplicationInfo::RetrieveRecommended()
+{
+    ATL::CStringW szRecommended;
+
+    if (!m_Parser->GetString(L"Recommended", szRecommended))
+    {
+        // Key not found. Stick to default value false.
+        return;
+    }
+
+    if (szRecommended.Find(L"true") >= 0)
+    {
+	m_IsRecommended = TRUE;
+    }
+}
+
 BOOL CAvailableApplicationInfo::FindInLanguages(LCID what) const
 {
     if (!m_HasLanguageInfo)
@@ -201,6 +219,11 @@ BOOL CAvailableApplicationInfo::IsInstalled() const
 BOOL CAvailableApplicationInfo::HasInstalledVersion() const
 {
     return m_HasInstalledVersion;
+}
+
+BOOL CAvailableApplicationInfo::IsRecommended() const
+{
+    return m_IsRecommended;
 }
 
 BOOL CAvailableApplicationInfo::HasUpdate() const
@@ -377,6 +400,7 @@ skip_if_cached:
         if (EnumType == Info->m_Category
             || EnumType == ENUM_ALL_AVAILABLE
             || (EnumType == ENUM_CAT_SELECTED && Info->m_IsSelected))
+            || (EnumType == ENUM_RECOMMENDED && Info->IsRecommended())
         {
             Info->RefreshAppInfo();
 

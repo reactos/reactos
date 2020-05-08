@@ -213,6 +213,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_RECOMMENDED "Recommended software"
 END
 
 STRINGTABLE

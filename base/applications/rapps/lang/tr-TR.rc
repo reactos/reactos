@@ -215,6 +215,7 @@ BEGIN
     IDS_INSTALL_SELECTED "Seçileni Kur"
     IDS_SELECTEDFORINST "Kurulum için seçildi"
     IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de sürdürmek istiyor musunuz?"
+    IDS_RECOMMENDED "Recommended software"
 END
 
 STRINGTABLE

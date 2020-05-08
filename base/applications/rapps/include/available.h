@@ -57,6 +57,7 @@ struct CAvailableApplicationInfo
     BOOL IsInstalled() const;
     BOOL HasInstalledVersion() const;
     BOOL HasUpdate() const;
+    BOOL IsRecommended() const;
 
     // Set a timestamp
     VOID SetLastWriteTime(FILETIME* ftTime);
@@ -65,6 +66,7 @@ private:
     BOOL m_IsInstalled;
     BOOL m_HasLanguageInfo;
     BOOL m_HasInstalledVersion;
+    BOOL m_IsRecommended;
     CConfigParser* m_Parser;
 
     inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString);
@@ -75,6 +77,7 @@ private:
     VOID RetrieveInstalledVersion();
     VOID RetrieveLanguages();
     VOID RetrieveLicenseType();
+    VOID RetrieveRecommended();
     VOID RetrieveSize();
     inline BOOL FindInLanguages(LCID what) const;
 };
