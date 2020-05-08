@@ -261,8 +261,8 @@ MachInit(const char *CmdLine)
 
     /* Check for Xbox by identifying device at PCI 0:0:0, if it's
      * 0x10DE/0x02A5 then we're running on an Xbox */
-    WRITE_PORT_ULONG((ULONG *)0xCF8, CONFIG_CMD(0, 0, 0));
-    PciId = READ_PORT_ULONG((ULONG *)0xCFC);
+    WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(0, 0, 0));
+    PciId = READ_PORT_ULONG((PULONG)0xCFC);
     if (PciId != 0x02A510DE)
     {
         ERR("This is not original Xbox!\n");
