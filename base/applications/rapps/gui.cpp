@@ -1477,9 +1477,9 @@ private:
 
         szApp.LoadStringW(IDS_APPTITLE);
         szAuthors.LoadStringW(IDS_APP_AUTHORS);
-        hIcon = (HICON) LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+        hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
         ShellAboutW(m_hWnd, szApp, szAuthors, hIcon);
-        DeleteObject(hIcon);
+        DestroyIcon(hIcon);
     }
 
     VOID OnCommand(WPARAM wParam, LPARAM lParam)
