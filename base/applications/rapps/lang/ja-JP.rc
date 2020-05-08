@@ -100,16 +100,6 @@ BEGIN
     PUSHBUTTON "キャンセル", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
-IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "バージョン情報"
-FONT 9, "MS UI Gothic"
-BEGIN
-    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "ReactOS アプリケーション マネージャ\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    DEFPUSHBUTTON "閉じる", IDOK, 133, 46, 50, 14
-END
-
 STRINGTABLE
 BEGIN
     IDS_TOOLTIP_INSTALL     "インストール"
@@ -184,6 +174,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS アプリケーション マネージャ"
+    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT         "検索..."
     IDS_INSTALL             "インストール"
     IDS_UNINSTALL           "アンインストール"
