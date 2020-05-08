@@ -34,10 +34,7 @@ static VOID InitSettings(HWND hWndDlg)
     SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_ADDSTRING, 0, (LPARAM)szBultin);
 
     if (RegCreateKeyExW(HKEY_CURRENT_USER, KEY_RENDERER, 0, NULL, 0, MAXIMUM_ALLOWED, NULL, &hKeyRenderer, NULL) != ERROR_SUCCESS)
-    {
-        RegCloseKey(hKeyDrivers);
         return;
-    }
 
     if (RegQueryValueExW(hKeyRenderer, NULL, NULL, &dwType, (LPBYTE)szDriver, &dwSize) != ERROR_SUCCESS || dwSize == sizeof(WCHAR))
         SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_SETCURSEL, RENDERER_DEFAULT, 0);
