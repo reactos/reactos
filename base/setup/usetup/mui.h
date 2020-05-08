@@ -77,6 +77,26 @@ MUIGetEntry(
     IN ULONG Page,
     IN INT TextID);
 
+LPCSTR
+MUIGetEntryTextFromCoord(
+    IN ULONG Page,
+    IN SHORT X,
+    IN SHORT Y);
+
+VOID
+MUIHighlightText(
+    IN ULONG Page,
+    IN SHORT X,
+    IN SHORT Y,
+    IN SHORT Row);
+
+VOID
+MUINormalText(
+    IN ULONG Page,
+    IN SHORT X,
+    IN SHORT Y,
+    IN SHORT Row);
+
 VOID
 MUIClearText(
     IN ULONG Page,

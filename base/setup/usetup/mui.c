@@ -304,6 +304,140 @@ MUIGetEntry(
 }
 
 /**
+ * @MUIGetEntryTextFromCoord
+ *
+ * Retrieves the portion of text from a MUI entry given the X and Y coordinate points.
+ *
+ * @param[in]   Page
+ *     The MUI (Multilingual User Interface) entry page number, as a unsigned long integer.
+ *
+ * @param[in]   X
+ *      The X coordinate where the text belongs.
+ *
+ * @param[in]   Y
+ *      The Y coordinate where the text belongs.
+ *
+ * @return
+ *     Returns a pointer to a constant string pointed by the MUI entry.
+ *
+ */
+LPCSTR
+MUIGetEntryTextFromCoord(
+    IN ULONG Page,
+    IN SHORT X,
+    IN SHORT Y)
+{
+    const MUI_ENTRY * entry;
+    ULONG index;
+
+    /* Retrieve the entries of a MUI page */
+    entry = FindMUIEntriesOfPage(Page);
+    if (!entry)
+    {
+        DPRINT("MUIGetEntryTextFromCoord(): Failed to get the translated entry page!\n");
+        return NULL;
+    }
+
+    /* Loop over the entry and monitor the coordinate points that match */
+    for (index = 0; entry[index].Buffer != NULL; index++)
+    {
+        if (entry[index].X == X && entry[index].Y == Y)
+        {
+            /* They do so return the text buffer */
+            return entry[index].Buffer;
+        }
+    }
+
+    DPRINT("MUIGetEntryTextFromCoord(): The coordinate areas don't match with those from the retrieved MUI entry!\n");
+    return NULL;
+}
+
+/**
+ * @MUIHighlightText
+ *
+ * The function fills the background of the text in white (highlight).
+ *
+ * @param[in]   Page
+ *     The MUI (Multilingual User Interface) entry page number, as a unsigned long integer.
+ *
+ * @param[in]   X
+ *      The X coordinate where the text should be highlighted.
+ *
+ * @param[in]   Y
+ *      The Y coordinate where the text should be highlighted.
+ *
+ * @param[in]   Row
+ *      Number of rows to be highlighted.
+ *
+ * @return
+ *     Nothing.
+ *
+ */
+VOID
+MUIHighlightText(
+    IN ULONG Page,
+    IN SHORT X,
+    IN SHORT Y,
+    IN SHORT Row)
+{
+    LPCSTR Buffer;
+    ULONG Length;
+
+    Buffer = MUIGetEntryTextFromCoord(Page, X, Y);
+    if (!Buffer)
+    {
+        DPRINT("MUIHighlightText(): Couldn't obtain a buffer from the string text!\n");
+        return;
+    }
+
+    Length = (ULONG)strlen(Buffer);
+    CONSOLE_InvertTextXY(X, Y, Length, Row);
+}
+
+
+/**
+ * @MUINormalText
+ *
+ * The function removes the white background of the text.
+ *
+ * @param[in]   Page
+ *     The MUI (Multilingual User Interface) entry page number, as a unsigned long integer.
+ *
+ * @param[in]   X
+ *      The X coordinate where the text should be highlighted.
+ *
+ * @param[in]   Y
+ *      The Y coordinate where the text should be highlighted.
+ *
+ * @param[in]   Row
+ *      Number of rows to remove the white background.
+ *
+ * @return
+ *     Nothing.
+ *
+ */
+VOID
+MUINormalText(
+    IN ULONG Page,
+    IN SHORT X,
+    IN SHORT Y,
+    IN SHORT Row)
+{
+    LPCSTR Buffer;
+    ULONG Length;
+
+    Buffer = MUIGetEntryTextFromCoord(Page, X, Y);
+    if (!Buffer)
+    {
+        DPRINT("MUINormalText(): Couldn't obtain a buffer from the string text!\n");
+        return;
+    }
+
+    Length = (ULONG)strlen(Buffer);
+    CONSOLE_NormalTextXY(X, Y, Length, Row);
+}
+
+/**
  * @MUIClearText
  *
  * Clears a portion of text from the console output.
