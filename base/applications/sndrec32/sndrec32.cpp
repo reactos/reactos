@@ -78,30 +78,6 @@ RECT text_rect;
 RECT text2_rect;
 RECT cli;
 
-INT_PTR
-CALLBACK
-AboutDlgProc(HWND hWnd,
-             UINT msg,
-             WPARAM wp,
-             LPARAM lp)
-{
-    switch (msg)
-    {
-        case WM_COMMAND:
-            switch (LOWORD(wp))
-            {
-                case IDOK:
-                    EndDialog(hWnd, 0);
-                    return TRUE;
-            }
-            break;
-        case WM_CLOSE:
-            EndDialog(hWnd, 0);
-            return TRUE;
-    }
-    return FALSE;
-}
-
 int
 APIENTRY
 _tWinMain(HINSTANCE hInstance,
@@ -118,8 +94,8 @@ _tWinMain(HINSTANCE hInstance,
     s_info.cbSize = sizeof( NONCLIENTMETRICS );
 
     InitCommonControls();
-	
-	switch (GetUserDefaultUILanguage())
+    
+    switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
             SetProcessDefaultLayout(LAYOUT_RTL);
@@ -455,6 +431,9 @@ WndProc(HWND hWnd,
     HFONT font;
     HFONT oldfont;
     long long slid_samp = 0;
+    WCHAR szAppAuthors[100];
+    WCHAR szAppName[100];
+    HICON hIcon;
 
     /* Checking for global pointers to buffer and io audio devices */
     if ((!AUD_IN) || (!AUD_OUT) || (!AUD_BUF))
@@ -469,7 +448,7 @@ WndProc(HWND hWnd,
             /* Creating the wave bar */
             if (!InitInstance_wave(hWnd, hInst, SW_SHOWNORMAL))
             {
-                MessageBox(0, TEXT("CreateWindow() Error!"), TEXT("ERROR"), MB_ICONERROR);
+                MessageBox(0, TEXT("InitInstance_wave() Error!"), TEXT("ERROR"), MB_ICONERROR);
                 return FALSE;
             }
 
@@ -619,8 +598,12 @@ WndProc(HWND hWnd,
                     break;
 
                 case ID_ABOUT:
-                    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutDlgProc);
-                    return TRUE;
+                    LoadStringW(hInst, IDS_APP_TITLE, szAppName, sizeof(szAppName) / sizeof(WCHAR));                      
+                    LoadStringW(hInst, IDS_APP_AUTHORS, szAppAuthors, sizeof(szAppAuthors) / sizeof(WCHAR));
+
+                    hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_REACTOS_SNDREC32));
+                    ShellAboutW(hWnd, szAppName, szAppAuthors, hIcon);
+                    DestroyIcon(hIcon);                    
                     break;
 
                 case ID_FILE_SAVEAS:
