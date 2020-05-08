@@ -11,7 +11,3 @@ UnattendSetupEnabled = no
 ; see hivesys.inf for available languages
 LocaleID = 409
 
-; set product option
-; 0: ReactOS Server
-; 1: ReactOS Workstation
-ProductOption = 0
