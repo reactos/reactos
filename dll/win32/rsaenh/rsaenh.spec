@@ -23,5 +23,5 @@
 @ stdcall CPSetProvParam(long long ptr long) RSAENH_CPSetProvParam
 @ stdcall CPSignHash(long long long wstr long ptr ptr) RSAENH_CPSignHash
 @ stdcall CPVerifySignature(long long ptr long long wstr long) RSAENH_CPVerifySignature
-@ stdcall -private DllRegisterServer()
-@ stdcall -private DllUnregisterServer()
+@ stdcall DllRegisterServer()
+@ stdcall DllUnregisterServer()
