@@ -641,74 +641,74 @@ Bu dosyayı açmak istediğinizden emin misiniz?", IDC_STATIC, 35, 5, 230, 60
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Create New Extension"
+CAPTION "Yeni Dosya Uzantısı Oluştur"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&File Extension:", -1, 10, 10, 85, 14
+    LTEXT "&Dosya Uzantısı:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< Ad&vanced", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    PUSHBUTTON "<< &Gelişmiş", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    LTEXT "&İlişkili Dosya Türü:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 190, 55, 60, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 125, 55, 60, 14
+    PUSHBUTTON "İptal", IDCANCEL, 190, 55, 60, 14
 END
 
 IDD_EDITTYPE DIALOG 0, 0, 225, 190
-CAPTION "Edit File Type"
+CAPTION "Dosya Türünü Değiştir"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_EDITTYPE_ICON, 5, 8, 20, 20
     EDITTEXT IDC_EDITTYPE_TEXT, 30, 10, 115, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Change &Icon...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
-    LTEXT "&Actions:", -1, 5, 37, 70, 10
+    PUSHBUTTON "Si&mge Değiştir...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
+    LTEXT "&Eylemler:", -1, 5, 37, 70, 10
     LISTBOX IDC_EDITTYPE_LISTBOX, 5, 50, 140, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&New...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
-    PUSHBUTTON "&Edit...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
-    PUSHBUTTON "&Remove", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
-    PUSHBUTTON "&Set Default", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
-    AUTOCHECKBOX "Confirm &open after download", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
-    AUTOCHECKBOX "Al&ways show extension", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
-    AUTOCHECKBOX "&Browse in same window", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
-    DEFPUSHBUTTON "OK", IDOK, 95, 170, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 170, 60, 14
+    PUSHBUTTON "&Yeni...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
+    PUSHBUTTON "&Düzenle...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
+    PUSHBUTTON "&Sil", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
+    PUSHBUTTON "Ön &Tanımlı Yap", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
+    AUTOCHECKBOX "İ&ndirdikten sonra açmayı onayla", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
+    AUTOCHECKBOX "&Her zaman uzantıyı göster", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
+    AUTOCHECKBOX "&Aynı pencere içinde göz at", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 95, 170, 60, 14
+    PUSHBUTTON "İptal", IDCANCEL, 160, 170, 60, 14
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
-CAPTION "New Action"
+CAPTION "Yeni Eylem"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Action:", -1, 5, 7, 150, 10
+    LTEXT "&Eylem:", -1, 5, 7, 150, 10
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
-    LTEXT "App&lication used to perform action:", -1, 5, 42, 150, 10
+    LTEXT "Eyle&mi gerçekleştirmek için kullanılan uygulama:", -1, 5, 42, 150, 10
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "B&rowse...", IDC_ACTION_BROWSE, 160, 60, 60, 14
-    AUTOCHECKBOX "&Use DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
-    DEFPUSHBUTTON "OK", IDOK, 160, 20, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 40, 60, 14
+    PUSHBUTTON "&Göz At...", IDC_ACTION_BROWSE, 160, 60, 60, 14
+    AUTOCHECKBOX "&DDE Kullan", IDC_ACTION_USE_DDE, 10, 75, 103, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 160, 20, 60, 14
+    PUSHBUTTON "İptal", IDCANCEL, 160, 40, 60, 14
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
-CAPTION "Customize"
+CAPTION "Özelleştir"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "What kind of folder do you want?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "Use this &folder type as a template:", IDC_STATIC, 15, 20, 210, 12
+    GROUPBOX "Ne klasör türü istersiniz?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
+    LTEXT "&Bu klasörü bir şablon olarak kullan:", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Also apply this template to all &subfolders", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Folder pictures", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
-    LTEXT "For Thumbnails view, you can put a picture on this folder to remind you of the contents.", IDC_STATIC, 15, 87, 115, 33
-    PUSHBUTTON "Choose &Picture...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
-    PUSHBUTTON "&Restore Default", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
-    LTEXT "Preview:", IDC_STATIC, 139, 85, 81, 11
+    AUTOCHECKBOX "Bu şablonu tüm &alt klasörlere de uygula", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
+    GROUPBOX "Klasör resimleri", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
+    LTEXT "Küçük Resimler görünümü için, içerikleri hatırlamanız için bu klasör üzerine bir resim yerleştirebilirsiniz.", IDC_STATIC, 15, 87, 115, 33
+    PUSHBUTTON "&Resim Seç...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
+    PUSHBUTTON "Ö&n Tanımlıyı Geri Getir", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
+    LTEXT "Ön İzleme:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Folder icons", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "For all views except Thumbnails, you can change the standard ""folder"" icon to another icon.", IDC_STATIC, 15, 180, 210, 25
+    GROUPBOX "Klasör Simgeleri", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
+    LTEXT "Küçük Resimler görünümü dışında tüm görünümler için standart ""klasör"" simgesini başka bir simgeyle değiştirebilirsiniz.", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "Change &Icon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    PUSHBUTTON "&Simge Değiştir...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
 STRINGTABLE
@@ -721,12 +721,12 @@ BEGIN
     IDS_SHV_COLUMN_ATTRIBUTES "Öz Nitelikler"
     IDS_SHV_COLUMN_DISK_CAPACITY "Boyut"
     IDS_SHV_COLUMN_DISK_AVAILABLE "Kullanılabilir Boyut"
-    IDS_SHV_COLUMN_OWNER "İye"
-    IDS_SHV_COLUMN_GROUP "Öbek"
-    IDS_SHV_COLUMN_FILENAME "Kütük Adı"
-    IDS_SHV_COLUMN_CATEGORY "Ulam"
+    IDS_SHV_COLUMN_OWNER "Sahip"
+    IDS_SHV_COLUMN_GROUP "Grup"
+    IDS_SHV_COLUMN_FILENAME "Dosya Adı"
+    IDS_SHV_COLUMN_CATEGORY "Kategori"
     IDS_SHV_COLUMN_DELFROM "Özgün Konum"
-    IDS_SHV_COLUMN_DELDATE "Silinme Zamânı"
+    IDS_SHV_COLUMN_DELDATE "Silinme Zamanı"
     IDS_SHV_COLUMN_FONTTYPE "Yazı Tipi Türü"
     IDS_SHV_COLUMN_WORKGROUP "Çalışma Takımı"
     IDS_SHV_COLUMN_NETLOCATION "Ağ Konumu"
@@ -734,7 +734,7 @@ BEGIN
     IDS_SHV_COLUMN_STATUS "Durum"
     IDS_SHV_COLUMN_COMMENTS "Açıklamalar"
     IDS_SHV_COLUMN_LOCATION "Konum"
-    IDS_SHV_COLUMN_MODEL "Biçim"
+    IDS_SHV_COLUMN_MODEL "Model"
 
     /* special folders */
     IDS_DESKTOP "Masaüstü"
@@ -745,33 +745,33 @@ BEGIN
 
     /* special folders descriptions */
     IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Bilgisayarınız için yönetim ayarlarını yapılandır."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Kütüklerin ve dizinlerin görünümünü husûsileştir ve kütük ilişkilendirmelerini değiştir."
-    IDS_FONTS_DESCRIPTION "Bilgisayarınızda yazı tiplerini ekle, değiştir ve yönet."
-    IDS_PRINTERS_DESCRIPTION "Kurulu yazıcıları ve belgegeçer yazıcılarını gösterir ve yenilerini eklemene yardımcı olur."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Dosyaların ve klasörlerin görünümünü özelleştir ve dosya ilişkilendirmelerini değiştir."
+    IDS_FONTS_DESCRIPTION "Bilgisayarınızdaki yazı tiplerini ekle, değiştir ve yönet."
+    IDS_PRINTERS_DESCRIPTION "Kurulu yazıcıları ve faks yazıcılarını gösterir ve bunların yenilerini eklemenize yardımcı olur."
 
     /* About shell dialog version string */
     IDS_ABOUT_VERSION_STRING "Sürüm %S (%S)"
 
     /* context menus */
-    IDS_VIEW_LARGE "&Büyük Simgeler"
-    IDS_VIEW_SMALL "&Küçük Simgeler"
-    IDS_VIEW_LIST "&Dizelge"
+    IDS_VIEW_LARGE "&Büyük simgeler"
+    IDS_VIEW_SMALL "&Küçük simgeler"
+    IDS_VIEW_LIST "&Liste"
     IDS_VIEW_DETAILS "&Ayrıntılar"
     IDS_SELECT "Seç"
     IDS_OPEN "Aç"
-    IDS_CREATELINK "K&ısayol Oluştur"
-    IDS_COPY "&Çoğalt"
+    IDS_CREATELINK "Kısayol &oluştur"
+    IDS_COPY "&Kopyala"
     IDS_DELETE "&Sil"
-    IDS_PROPERTIES "&Husûsîyetler"
+    IDS_PROPERTIES "Ö&zellikler"
     IDS_CUT "K&es"
-    IDS_RESTORE "Geri Getir"
+    IDS_RESTORE "Geri getir"
     IDS_FORMATDRIVE "Biçimlendir..."
-    IDS_RENAME "Yeniden Adlandır"
+    IDS_RENAME "Yeniden adlandır"
     IDS_PASTE "Yapıştır"
-    IDS_EJECT "Eject"
-    IDS_DISCONNECT "Disconnect"
-    IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_SENDTO_MENU "Se&nd To"
+    IDS_EJECT "Çıkar"
+    IDS_DISCONNECT "Bağlantıyı Kes"
+    IDS_OPENFILELOCATION "&Dosya konumunu aç"
+    IDS_SENDTO_MENU "&Gönder"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"
     IDS_COPYERRORTITLE "Error Copying File or Folder"
