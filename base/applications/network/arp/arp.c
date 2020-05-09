@@ -60,7 +60,7 @@ VOID Usage(VOID);
  */
 DWORD DoFormatMessage(VOID)
 {
-    LPVOID lpMsgBuf;
+    LPTSTR lpMsgBuf;
     DWORD RetVal;
 
     DWORD ErrorCode = GetLastError();
@@ -79,8 +79,7 @@ DWORD DoFormatMessage(VOID)
 
         if (RetVal != 0)
         {
-            _tprintf(_T("%s"), (LPTSTR)lpMsgBuf);
-
+            _putts(lpMsgBuf);
             LocalFree(lpMsgBuf);
             /* return number of TCHAR's stored in output buffer
              * excluding '\0' - as FormatMessage does*/
@@ -88,6 +87,56 @@ DWORD DoFormatMessage(VOID)
         }
     }
     return 0;
+}
+
+VOID
+PrintMessage(
+    DWORD dwMessage)
+{
+    LPTSTR lpMsgBuf;
+    DWORD RetVal;
+
+    RetVal = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                           FORMAT_MESSAGE_FROM_HMODULE |
+                           FORMAT_MESSAGE_IGNORE_INSERTS,
+                           GetModuleHandleW(NULL),
+                           dwMessage,
+                           LANG_USER_DEFAULT,
+                           (LPTSTR)&lpMsgBuf,
+                           0,
+                           NULL);
+    if (RetVal != 0)
+    {
+        _putts(lpMsgBuf);
+        LocalFree(lpMsgBuf);
+    }
+}
+
+VOID
+PrintMessageV(
+    DWORD dwMessage,
+    ...)
+{
+    LPTSTR lpMsgBuf;
+    va_list args = NULL;
+    DWORD RetVal;
+
+    va_start(args, dwMessage);
+
+    RetVal = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE,
+                           GetModuleHandleW(NULL),
+                           dwMessage,
+                           LANG_USER_DEFAULT,
+                           (LPTSTR)&lpMsgBuf,
+                           0,
+                           &args);
+    va_end(args);
+
+    if (RetVal != 0)
+    {
+        _putts(lpMsgBuf);
+        LocalFree(lpMsgBuf);
+    }
 }
 
 /*
@@ -118,14 +167,21 @@ INT PrintEntries(PMIB_IPNETROW pIpAddRow)
     /* print cache type */
     switch (pIpAddRow->dwType)
     {
-        case MIB_IPNET_TYPE_DYNAMIC : _tprintf(_T("dynamic\n"));
-                                      break;
-        case MIB_IPNET_TYPE_STATIC : _tprintf(_T("static\n"));
-                                      break;
-        case MIB_IPNET_TYPE_INVALID : _tprintf(_T("invalid\n"));
-                                      break;
-        case MIB_IPNET_TYPE_OTHER : _tprintf(_T("other\n"));
-                                      break;
+        case MIB_IPNET_TYPE_DYNAMIC:
+            PrintMessage(10007);
+            break;
+
+        case MIB_IPNET_TYPE_STATIC:
+            PrintMessage(10008);
+            break;
+
+        case MIB_IPNET_TYPE_INVALID:
+            PrintMessage(10006);
+            break;
+
+        case MIB_IPNET_TYPE_OTHER:
+            PrintMessage(10005);
+            break;
     }
     return EXIT_SUCCESS;
 }
@@ -173,7 +229,7 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     /* check there are entries in the table */
     if (pIpNetTable->dwNumEntries == 0)
     {
-        _tprintf(_T("No ARP entires found\n"));
+        PrintMessage(10018);
         goto cleanup;
     }
 
@@ -213,8 +269,7 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 
 
     /* print header, including interface IP address and index number */
-    _tprintf(_T("\nInterface: %s --- 0x%lx \n"), szIntIpAddr, pIpNetTable->table[0].dwIndex);
-    _tprintf(_T("  Internet Address      Physical Address      Type\n"));
+    PrintMessageV(10003, szIntIpAddr, pIpNetTable->table[0].dwIndex);
 
     /* go through all ARP entries */
     for (i=0; i < pIpNetTable->dwNumEntries; i++)
@@ -269,7 +324,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     {
         if ((dwIpAddr = inet_addr(pszInetAddr)) == INADDR_NONE)
         {
-            _tprintf(_T("ARP: bad IP address: %s\n"), pszInetAddr);
+            PrintMessageV(10001, pszInetAddr);
             return EXIT_FAILURE;
         }
     }
@@ -282,7 +337,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     /* check MAC address */
     if (strlen(pszEthAddr) != 17)
     {
-        _tprintf(_T("ARP: bad argument: %s\n"), pszEthAddr);
+        PrintMessageV(10002, pszEthAddr);
         return EXIT_FAILURE;
     }
     for (i=0; i<17; i++)
@@ -292,7 +347,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
 
         if (!isxdigit(pszEthAddr[i]))
         {
-            _tprintf(_T("ARP: bad argument: %s\n"), pszEthAddr);
+            PrintMessageV(10002, pszEthAddr);
             return EXIT_FAILURE;
         }
     }
@@ -412,7 +467,7 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
             bFlushTable = TRUE;
         else if ((dwIpAddr = inet_addr(pszInetAddr)) == INADDR_NONE)
         {
-            _tprintf(_T("ARP: bad IP address: %s\n"), pszInetAddr);
+            PrintMessageV(10001, pszInetAddr);
             exit(EXIT_FAILURE);
         }
     }
@@ -508,35 +563,7 @@ cleanup:
  */
 VOID Usage(VOID)
 {
-    _tprintf(_T("\nDisplays and modifies the IP-to-Physical address translation tables used by\n"
-                "address resolution protocol (ARP).\n"
-                "\n"
-                "ARP -s inet_addr eth_addr [if_addr]\n"
-                "ARP -d inet_addr [if_addr]\n"
-                "ARP -a [inet_addr] [-N if_addr]\n"
-                "\n"
-                "  -a            Displays current ARP entries by interrogating the current\n"
-                "                protocol data.  If inet_addr is specified, the IP and Physical\n"
-                "                addresses for only the specified computer are displayed.  If\n"
-                "                more than one network interface uses ARP, entries for each ARP\n"
-                "                table are displayed.\n"
-                "  -g            Same as -a.\n"
-                "  inet_addr     Specifies an internet address.\n"
-                "  -N if_addr    Displays the ARP entries for the network interface specified\n"
-                "                by if_addr.\n"
-                "  -d            Deletes the host specified by inet_addr. inet_addr may be\n"
-                "                wildcarded with * to delete all hosts.\n"
-                "  -s            Adds the host and associates the Internet address inet_addr\n"
-                "                with the Physical address eth_addr.  The Physical address is\n"
-                "                given as 6 hexadecimal bytes separated by hyphens. The entry\n"
-                "                is permanent.\n"
-                "  eth_addr      Specifies a physical address.\n"
-                "  if_addr       If present, this specifies the Internet address of the\n"
-                "                interface whose address translation table should be modified.\n"
-                "                If not present, the first applicable interface will be used.\n"
-                "Example:\n"
-                "  > arp -s 157.55.85.212   00-aa-00-62-c6-09  .... Adds a static entry.\n"
-                "  > arp -a                                    .... Displays the arp table.\n\n"));
+    PrintMessage(10000);
 }
 
 /*
