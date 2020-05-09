@@ -1266,7 +1266,7 @@ INT WINAPI DrawTextExWorker( HDC hdc,
         if (flags & DT_VCENTER) y = rect->top +
             (rect->bottom - rect->top + (invert_y ? size.cy : -size.cy)) / 2;
         else if (flags & DT_BOTTOM)
-            y = rect->bottom + (invert_y ? 0 : -size.cy);
+            y = rect->bottom + (invert_y ? size.cy : -size.cy);
 #else
 	    if (flags & DT_VCENTER) y = rect->top +
 	    	(rect->bottom - rect->top) / 2 - size.cy / 2;
