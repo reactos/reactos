@@ -431,7 +431,6 @@ WndProc(HWND hWnd,
     HFONT font;
     HFONT oldfont;
     long long slid_samp = 0;
-    WCHAR szAppAuthors[100];
     WCHAR szAppName[100];
     HICON hIcon;
 
@@ -598,12 +597,11 @@ WndProc(HWND hWnd,
                     break;
 
                 case ID_ABOUT:
-                    LoadStringW(hInst, IDS_APP_TITLE, szAppName, sizeof(szAppName) / sizeof(WCHAR));                      
-                    LoadStringW(hInst, IDS_APP_AUTHORS, szAppAuthors, sizeof(szAppAuthors) / sizeof(WCHAR));
+                    LoadStringW(hInst, IDS_APP_TITLE, szAppName, sizeof(szAppName) / sizeof(WCHAR));
 
                     hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_REACTOS_SNDREC32));
-                    ShellAboutW(hWnd, szAppName, szAppAuthors, hIcon);
-                    DestroyIcon(hIcon);                    
+                    ShellAboutW(hWnd, szAppName, L"\0", hIcon);
+                    DestroyIcon(hIcon);
                     break;
 
                 case ID_FILE_SAVEAS:
