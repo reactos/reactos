@@ -25,7 +25,7 @@ BEGIN
         MENUITEM "Ouvrir...", ID_FILE_OPEN
         MENUITEM "Enregistrer", ID_FILE_SAVE, GRAYED
         MENUITEM "Enregistrer sous...", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "Restorer...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "Restaurer...", ID_FILE_RESTORE, GRAYED
         MENUITEM "Propriétés", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "Sortir", ID_FILE_EXIT
@@ -33,27 +33,27 @@ BEGIN
     POPUP "&Edition"
     BEGIN
         MENUITEM "&Copie", ID_EDIT_COPY
-        MENUITEM "&Paste Insert", ID_EDIT_PASTE, GRAYED
-        MENUITEM "Paste Mi&x", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM "Coller &inésrer", ID_EDIT_PASTE, GRAYED
+        MENUITEM "Coller &mélanger", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Insérer un fichier...", ID_EDIT_INSERTFILE
-        MENUITEM "&Mix with File...", ID_EDIT_MIXFILE
+        MENUITEM "&Mélanger avec un fichier...", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
-        MENUITEM "Delete &Before Current Position",ID_EDIT_DELETEBEFORE, GRAYED
-        MENUITEM "Delete &After Current Position",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM "Supprimer &avant la position actuelle",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "Supprimer a&près la position actuelle",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Propriétés A&udio", ID_EDIT_AUDIOPROPS
     END
     POPUP "Effet&s"
     BEGIN
-        MENUITEM "&Increase Volume (by 25%)", ID_EFFECTS_INCVOL
-        MENUITEM "&Decrease Volume", ID_EFFECTS_DECVOL
+        MENUITEM "&Augmenter le volume (de 25%)", ID_EFFECTS_INCVOL
+        MENUITEM "&Réduire le volume", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "&Increase Speed (by 100%)", ID_EFFECTS_INCSPD
-        MENUITEM "&Decrease Speed", ID_EFFECTS_DECSPD
+        MENUITEM "&Augmenter la vitesse (de 100%)", ID_EFFECTS_INCSPD
+        MENUITEM "&Réduire la vitesse", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
-        MENUITEM "&Add Echo", ID_EFFECTS_ECHO
-        MENUITEM "&Reverse", ID_EFFECTS_REVERSE
+        MENUITEM "&Ajouter de l'écho", ID_EFFECTS_ECHO
+        MENUITEM "&Inverser", ID_EFFECTS_REVERSE
     END
     POPUP "?"
     BEGIN
@@ -71,7 +71,7 @@ STRINGTABLE
 BEGIN
     IDS_STRPOS "Position: %.2f s"
     IDS_STRDUR "Durée : %.2f s"
-    IDS_STRBUF "Buffer: %.2f kb"
+    IDS_STRBUF "Buffer: %.2f Ko"
     IDS_STRFMT "%.1f kHz %u bits"
     IDS_STRMONO "mono"
     IDS_STRSTEREO "stéréo"
