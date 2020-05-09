@@ -74,6 +74,14 @@ Interface: %1!s! --- 0x%2!lx!
   Internet Address      Physical Address      Type
 .
 
+MessageId=10004
+SymbolicName=MSG_ARP_NO_MEMORY
+Severity=Success
+Facility=System
+Language=English
+ARP: not enough memory
+.
+
 MessageId=10005
 SymbolicName=MSG_ARP_OTHER
 Severity=Success

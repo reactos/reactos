@@ -49,10 +49,10 @@ int _CRT_glob = 0; // stop * from listing dir files in arp -d *
  * function declarations
  */
 DWORD DoFormatMessage(VOID);
-INT PrintEntries(PMIB_IPNETROW pIpAddRow);
-INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr);
-INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr);
-INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr);
+DWORD PrintEntries(PMIB_IPNETROW pIpAddRow);
+DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr);
+DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr);
+DWORD Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr);
 VOID Usage(VOID);
 
 /*
@@ -79,7 +79,7 @@ DWORD DoFormatMessage(VOID)
 
         if (RetVal != 0)
         {
-            _putts(lpMsgBuf);
+            _tprintf(_T("%s"), lpMsgBuf);
             LocalFree(lpMsgBuf);
             /* return number of TCHAR's stored in output buffer
              * excluding '\0' - as FormatMessage does*/
@@ -107,7 +107,7 @@ PrintMessage(
                            NULL);
     if (RetVal != 0)
     {
-        _putts(lpMsgBuf);
+        _tprintf(_T("%s"), lpMsgBuf);
         LocalFree(lpMsgBuf);
     }
 }
@@ -134,7 +134,7 @@ PrintMessageV(
 
     if (RetVal != 0)
     {
-        _putts(lpMsgBuf);
+        _tprintf(_T("%s"), lpMsgBuf);
         LocalFree(lpMsgBuf);
     }
 }
@@ -145,7 +145,7 @@ PrintMessageV(
  * the MAC address and the entry type to screen
  *
  */
-INT PrintEntries(PMIB_IPNETROW pIpAddRow)
+DWORD PrintEntries(PMIB_IPNETROW pIpAddRow)
 {
     IN_ADDR inaddr;
     TCHAR cMacAddr[20];
@@ -183,7 +183,8 @@ INT PrintEntries(PMIB_IPNETROW pIpAddRow)
             PrintMessage(10005);
             break;
     }
-    return EXIT_SUCCESS;
+    _putts(_T(""));
+    return NO_ERROR;
 }
 
 /*
@@ -196,9 +197,8 @@ INT PrintEntries(PMIB_IPNETROW pIpAddRow)
  *
  */
 /* FIXME: allow user to specify an interface address, via pszIfAddr */
-INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
+DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 {
-    INT iRet;
     UINT i, k;
     PMIB_IPNETTABLE pIpNetTable = NULL;
     PMIB_IPADDRTABLE pIpAddrTable = NULL;
@@ -206,6 +206,7 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     struct in_addr inaddr, inaddr2;
     PTCHAR pszIpAddr;
     TCHAR szIntIpAddr[20];
+    DWORD dwError = NO_ERROR;
 
     /* retrieve the IP-to-physical address mapping table */
 
@@ -215,11 +216,16 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     /* allocate memory for ARP address table */
     pIpNetTable = (PMIB_IPNETTABLE) HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpNetTable == NULL)
+    {
+        PrintMessage(10004);
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
+    }
 
     ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
 
-    if (GetIpNetTable(pIpNetTable, &Size, TRUE) != NO_ERROR)
+    dwError = GetIpNetTable(pIpNetTable, &Size, TRUE);
+    if (dwError != NO_ERROR)
     {
         _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
         DoFormatMessage();
@@ -244,13 +250,18 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 
     pIpAddrTable = (MIB_IPADDRTABLE *) HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpAddrTable == NULL)
+    {
+        PrintMessage(10004);
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
+    }
 
     ZeroMemory(pIpAddrTable, sizeof(*pIpAddrTable));
 
-    if ((iRet = GetIpAddrTable(pIpAddrTable, &Size, TRUE)) != NO_ERROR)
+    dwError = GetIpAddrTable(pIpAddrTable, &Size, TRUE);
+    if (dwError != NO_ERROR)
     {
-        _tprintf(_T("GetIpAddrTable failed: %d\n"), iRet);
+        _tprintf(_T("GetIpAddrTable failed: %lu\n"), dwError);
         DoFormatMessage();
         goto cleanup;
     }
@@ -291,14 +302,13 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
             PrintEntries(&pIpNetTable->table[i]);
     }
 
-    return EXIT_SUCCESS;
-
 cleanup:
     if (pIpNetTable != NULL)
         HeapFree(GetProcessHeap(), 0, pIpNetTable);
     if (pIpAddrTable != NULL)
         HeapFree(GetProcessHeap(), 0, pIpAddrTable);
-    return EXIT_FAILURE;
+
+    return dwError;
 }
 
 /*
@@ -309,36 +319,36 @@ cleanup:
  * ARP cache as a static entry.
  *
  */
-INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
+DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
 {
     PMIB_IPNETROW pAddHost = NULL;
     PMIB_IPNETTABLE pIpNetTable = NULL;
     DWORD dwIpAddr = 0;
     ULONG Size = 0;
     INT i, val, c;
+    DWORD dwError = NO_ERROR;
 
     /* error checking */
 
     /* check IP address */
-    if (pszInetAddr != NULL)
-    {
-        if ((dwIpAddr = inet_addr(pszInetAddr)) == INADDR_NONE)
-        {
-            PrintMessageV(10001, pszInetAddr);
-            return EXIT_FAILURE;
-        }
-    }
-    else
+    if (pszInetAddr == NULL)
     {
         Usage();
-        return EXIT_FAILURE;
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    dwIpAddr = inet_addr(pszInetAddr);
+    if (dwIpAddr == INADDR_NONE)
+    {
+        PrintMessageV(10001, pszInetAddr);
+        return ERROR_INVALID_PARAMETER;
     }
 
     /* check MAC address */
     if (strlen(pszEthAddr) != 17)
     {
         PrintMessageV(10002, pszEthAddr);
-        return EXIT_FAILURE;
+        return ERROR_INVALID_PARAMETER;
     }
     for (i=0; i<17; i++)
     {
@@ -348,7 +358,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
         if (!isxdigit(pszEthAddr[i]))
         {
             PrintMessageV(10002, pszEthAddr);
-            return EXIT_FAILURE;
+            return ERROR_INVALID_PARAMETER;
         }
     }
 
@@ -359,11 +369,16 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     /* allocate memory for ARP address table */
     pIpNetTable = (PMIB_IPNETTABLE) HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpNetTable == NULL)
+    {
+        PrintMessage(10004);
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
+    }
 
     ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
 
-    if (GetIpNetTable(pIpNetTable, &Size, TRUE) != NO_ERROR)
+    dwError = GetIpNetTable(pIpNetTable, &Size, TRUE);
+    if (dwError != NO_ERROR)
     {
         _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
         DoFormatMessage();
@@ -374,7 +389,11 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     /* reserve memory on heap and zero */
     pAddHost = (MIB_IPNETROW *) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
     if (pAddHost == NULL)
+    {
+        PrintMessage(10004);
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
+    }
 
     ZeroMemory(pAddHost, sizeof(MIB_IPNETROW));
 
@@ -429,16 +448,13 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
         goto cleanup;
     }
 
-    HeapFree(GetProcessHeap(), 0, pAddHost);
-
-    return EXIT_SUCCESS;
-
 cleanup:
     if (pIpNetTable != NULL)
         HeapFree(GetProcessHeap(), 0, pIpNetTable);
     if (pAddHost != NULL)
         HeapFree(GetProcessHeap(), 0, pAddHost);
-    return EXIT_FAILURE;
+
+    return dwError;
 }
 
 /*
@@ -449,32 +465,37 @@ cleanup:
  * and remove the entry from the ARP cache.
  *
  */
-INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
+DWORD Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 {
     PMIB_IPNETROW pDelHost = NULL;
     PMIB_IPNETTABLE pIpNetTable = NULL;
     ULONG Size = 0;
     DWORD dwIpAddr = 0;
     BOOL bFlushTable = FALSE;
+    DWORD dwError = NO_ERROR;
 
     /* error checking */
 
     /* check IP address */
-    if (pszInetAddr != NULL)
+    if (pszInetAddr == NULL)
     {
-        /* if wildcard is given, set flag to delete all hosts */
-        if (strncmp(pszInetAddr, "*", 1) == 0)
-            bFlushTable = TRUE;
-        else if ((dwIpAddr = inet_addr(pszInetAddr)) == INADDR_NONE)
-        {
-            PrintMessageV(10001, pszInetAddr);
-            exit(EXIT_FAILURE);
-        }
+        Usage();
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* if wildcard is given, set flag to delete all hosts */
+    if (strncmp(pszInetAddr, "*", 1) == 0)
+    {
+        bFlushTable = TRUE;
     }
     else
     {
-        Usage();
-        exit(EXIT_FAILURE);
+        dwIpAddr = inet_addr(pszInetAddr);
+        if (dwIpAddr == INADDR_NONE)
+        {
+            PrintMessageV(10001, pszInetAddr);
+            return ERROR_INVALID_PARAMETER;
+        }
     }
 
     /* We need the IpNetTable to get the adapter index */
@@ -484,11 +505,16 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     /* allocate memory for ARP address table */
     pIpNetTable = (PMIB_IPNETTABLE) HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpNetTable == NULL)
+    {
+        PrintMessage(10004);
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
+    }
 
     ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
 
-    if (GetIpNetTable(pIpNetTable, &Size, TRUE) != NO_ERROR)
+    dwError = GetIpNetTable(pIpNetTable, &Size, TRUE);
+    if (dwError != NO_ERROR)
     {
         _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
         DoFormatMessage();
@@ -498,7 +524,11 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     /* reserve memory on heap and zero */
     pDelHost = (MIB_IPNETROW *) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
     if (pDelHost == NULL)
+    {
+        PrintMessage(10004);
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
+    }
 
     ZeroMemory(pDelHost, sizeof(MIB_IPNETROW));
 
@@ -522,38 +552,34 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     if (bFlushTable != FALSE)
     {
         /* delete arp cache */
-        if (FlushIpNetTable(pDelHost->dwIndex) != NO_ERROR)
+        dwError = FlushIpNetTable(pDelHost->dwIndex);
+        if (dwError != NO_ERROR)
         {
             DoFormatMessage();
             goto cleanup;
         }
-        else
-        {
-            HeapFree(GetProcessHeap(), 0, pDelHost);
-            return EXIT_SUCCESS;
-        }
     }
     else
+    {
         /* copy converted IP address */
         pDelHost->dwAddr = dwIpAddr;
 
-    /* Add the ARP entry */
-    if (DeleteIpNetEntry(pDelHost) != NO_ERROR)
-    {
-        DoFormatMessage();
-        goto cleanup;
+        /* Delete the ARP entry */
+        dwError = DeleteIpNetEntry(pDelHost);
+        if (dwError != NO_ERROR)
+        {
+            DoFormatMessage();
+            goto cleanup;
+        }
     }
-
-    HeapFree(GetProcessHeap(), 0, pDelHost);
-
-    return EXIT_SUCCESS;
 
 cleanup:
     if (pIpNetTable != NULL)
         HeapFree(GetProcessHeap(), 0, pIpNetTable);
     if (pDelHost != NULL)
         HeapFree(GetProcessHeap(), 0, pDelHost);
-    return EXIT_FAILURE;
+
+    return dwError;
 }
 
 /*
@@ -574,59 +600,68 @@ VOID Usage(VOID)
  */
 INT main(int argc, char* argv[])
 {
+    DWORD dwError = NO_ERROR;
+
     if ((argc < 2) || (argc > 5))
     {
        Usage();
        return EXIT_FAILURE;
     }
 
-    if (argv[1][0] == '-')
+    if (argv[1][0] != '-')
     {
-        switch (argv[1][1])
-        {
-           case 'a': /* fall through */
-           case 'g':
-                     if (argc == 2)
-                         DisplayArpEntries(NULL, NULL);
-                     else if (argc == 3)
-                         DisplayArpEntries(argv[2], NULL);
-                     else if ((argc == 4) && ((strcmp(argv[2], "-N")) == 0))
-                         DisplayArpEntries(NULL, argv[3]);
-                     else if ((argc == 5) && ((strcmp(argv[3], "-N")) == 0))
-                         DisplayArpEntries(argv[2], argv[4]);
-                     else
-                     {
-                         Usage();
-                         return EXIT_FAILURE;
-                     }
-                     break;
-           case 'd': if (argc == 3)
-                         Deletehost(argv[2], NULL);
-                     else if (argc == 4)
-                         Deletehost(argv[2], argv[3]);
-                     else
-                     {
-                         Usage();
-                         return EXIT_FAILURE;
-                     }
-                     break;
-           case 's': if (argc == 4)
-                         Addhost(argv[2], argv[3], NULL);
-                     else if (argc == 5)
-                         Addhost(argv[2], argv[3], argv[4]);
-                     else
-                     {
-                         Usage();
-                         return EXIT_FAILURE;
-                     }
-                     break;
-           default:
-              Usage();
-              return EXIT_FAILURE;
-        }
-    }
-    else
         Usage();
+        return EXIT_SUCCESS;
+    }
 
-    return EXIT_SUCCESS;
+    switch (argv[1][1])
+    {
+        case 'a': /* fall through */
+        case 'g':
+            if (argc == 2)
+                dwError = DisplayArpEntries(NULL, NULL);
+            else if (argc == 3)
+                dwError = DisplayArpEntries(argv[2], NULL);
+            else if ((argc == 4) && ((strcmp(argv[2], "-N")) == 0))
+                dwError = DisplayArpEntries(NULL, argv[3]);
+            else if ((argc == 5) && ((strcmp(argv[3], "-N")) == 0))
+                dwError = DisplayArpEntries(argv[2], argv[4]);
+            else
+            {
+                Usage();
+                dwError = ERROR_INVALID_PARAMETER;
+            }
+            break;
+
+        case 'd':
+            if (argc == 3)
+                dwError = Deletehost(argv[2], NULL);
+            else if (argc == 4)
+                dwError = Deletehost(argv[2], argv[3]);
+            else
+            {
+                Usage();
+                dwError = ERROR_INVALID_PARAMETER;
+            }
+            break;
+
+        case 's':
+            if (argc == 4)
+                dwError = Addhost(argv[2], argv[3], NULL);
+            else if (argc == 5)
+                dwError = Addhost(argv[2], argv[3], argv[4]);
+            else
+            {
+                Usage();
+                dwError = ERROR_INVALID_PARAMETER;
+            }
+            break;
+
+        default:
+            Usage();
+            dwError = ERROR_INVALID_PARAMETER;
+            break;
+    }
+
+    return (dwError == NO_ERROR) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
