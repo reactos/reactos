@@ -410,28 +410,28 @@ WriteProductSuiteAndType(PRODUCT_OPTION nOption)
             /* write ProductSuite */
             pData = L"Terminal Server\0";
             cbData = sizeof(L"Terminal Server\0");
-            error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
+            error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (const BYTE *)pData, cbData);
             if (error)
                 break;
 
             /* write ProductType */
             pData = L"ServerNT";
             cbData = sizeof(L"ServerNT");
-            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
+            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (const BYTE *)pData, cbData);
             break;
 
         case PRODUCT_OPTION_WORKSTATION:
             /* write ProductSuite */
             pData = L"\0";
             cbData = sizeof(L"\0");
-            error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
+            error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (const BYTE *)pData, cbData);
             if (error)
                 break;
 
             /* write ProductType */
             pData = L"WinNT";
             cbData = sizeof(L"WinNT");
-            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
+            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (const BYTE *)pData, cbData);
             break;
     }
 
@@ -463,7 +463,7 @@ WriteProductRosVersion(PRODUCT_OPTION nOption)
             break;
     }
     cbData = sizeof(dwValue);
-    error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (BYTE *)&dwValue, cbData);
+    error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
 
     RegCloseKey(hKey);
     return error == ERROR_SUCCESS;
@@ -473,32 +473,44 @@ static BOOL
 WriteCSDVersion(PRODUCT_OPTION nOption)
 {
     static const WCHAR s_szWindowsNT[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+    static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
     static const WCHAR s_szServicePack2[] = L"Service Pack 2";
     static const WCHAR s_szServicePack3[] = L"Service Pack 3";
-    HKEY hKey;
-    LONG error;
+    HKEY hKey1, hKey2;
+    LONG error1, error2;
     DWORD cbData;
 
-    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey);
-    if (error)
+    error1 = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey1);
+    error2 = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szControlWindows, 0, KEY_WRITE, &hKey2);
+    if (error1 || error2)
+    {
+        if (hKey1)
+            RegCloseKey(hKey1);
+        if (hKey2)
+            RegCloseKey(hKey2);
         return FALSE;
+    }
 
     /* write CSDVersion value */
     switch (nOption)
     {
         case PRODUCT_OPTION_SERVER:
             cbData = sizeof(s_szServicePack2);
-            error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (BYTE *)s_szServicePack2, cbData);
+            error1 = RegSetValueExW(hKey1, L"CSDVersion", 0, REG_SZ, (const BYTE *)s_szServicePack2, cbData);
+            error2 = RegSetValueExW(hKey2, L"CSDVersion", 0, REG_SZ, (const BYTE *)s_szServicePack2, cbData);
             break;
+
         case PRODUCT_OPTION_WORKSTATION:
             cbData = sizeof(s_szServicePack3);
-            error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (BYTE *)s_szServicePack3, cbData);
+            error1 = RegSetValueExW(hKey1, L"CSDVersion", 0, REG_SZ, (const BYTE *)s_szServicePack3, cbData);
+            error2 = RegSetValueExW(hKey2, L"CSDVersion", 0, REG_SZ, (const BYTE *)s_szServicePack3, cbData);
             break;
     }
 
-    RegCloseKey(hKey);
+    RegCloseKey(hKey1);
+    RegCloseKey(hKey2);
 
-    return error == ERROR_SUCCESS;
+    return !error1 && !error2;
 }
 
 static BOOL
