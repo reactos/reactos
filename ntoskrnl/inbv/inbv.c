@@ -779,7 +779,7 @@ InbvUpdateProgressBar(IN ULONG Progress)
                           ProgressBarTop,
                           ProgressBarLeft + FillCount,
                           ProgressBarTop + 12,
-                          15);
+                          BV_COLOR_WHITE);
 
         /* Release the lock */
         InbvReleaseLock();
@@ -827,7 +827,7 @@ InbvBitBlt(IN PUCHAR Buffer,
 
 VOID
 NTAPI
-InbvScreenToBufferBlt(IN PUCHAR Buffer,
+InbvScreenToBufferBlt(OUT PUCHAR Buffer,
                       IN ULONG X,
                       IN ULONG Y,
                       IN ULONG Width,
@@ -1021,7 +1021,7 @@ InbvRotationThread(
             if (Index >= 3)
             {
                 /* Fill previous bar position */
-                VidSolidColorFill(X + ((Index - 3) * 8), Y, (X + ((Index - 3) * 8)) + 8 - 1, Y + 9 - 1, 0);
+                VidSolidColorFill(X + ((Index - 3) * 8), Y, (X + ((Index - 3) * 8)) + 8 - 1, Y + 9 - 1, BV_COLOR_BLACK);
             }
             if (Index < Total - 1)
             {
@@ -1120,9 +1120,9 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         if (SharedUserData->NtProductType == NtProductWinNt)
         {
             /* Workstation; set colors */
-            InbvSetTextColor(15);
-            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 7);
-            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 1);
+            InbvSetTextColor(BV_COLOR_WHITE);
+            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_DARK_GRAY);
+            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_RED);
 
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_WKSTA_HEADER);
@@ -1131,9 +1131,9 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         else
         {
             /* Server; set colors */
-            InbvSetTextColor(14);
-            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 6);
-            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 1);
+            InbvSetTextColor(BV_COLOR_LIGHT_CYAN);
+            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_CYAN);
+            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_RED);
 
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
@@ -1246,7 +1246,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
                 InbvScreenToBufferBlt(Buffer, VID_SKU_SAVE_AREA_LEFT,
                                       VID_SKU_SAVE_AREA_TOP, 7, 7, 8);
                 InbvSolidColorFill(VID_SKU_AREA_LEFT, VID_SKU_AREA_TOP,
-                                   VID_SKU_AREA_RIGHT, VID_SKU_AREA_BOTTOM, 0);
+                                   VID_SKU_AREA_RIGHT, VID_SKU_AREA_BOTTOM, BV_COLOR_BLACK);
                 InbvBufferToScreenBlt(Buffer, VID_SKU_SAVE_AREA_LEFT,
                                       VID_SKU_SAVE_AREA_TOP, 7, 7, 8);
 
@@ -1390,7 +1390,7 @@ FinalizeBootLogo(VOID)
     if (InbvGetDisplayState() == INBV_DISPLAY_STATE_OWNED)
     {
         /* Clear the screen */
-        VidSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 0);
+        VidSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_BLACK);
     }
 
     /* Reset progress bar and lock */
