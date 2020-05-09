@@ -39,6 +39,9 @@
 /* System menu (About) resource */
 #define IDM_ABOUT                      600
 
+/* About resource strings */
+#define IDS_APP_NAME                   700
+#define IDS_AUTHORS                    701
+
 /* Main dialog resource */
 #define IDD_MAIN_DIALOG                1000
-#define IDD_ABOUT_DIALOG               1050

@@ -60,11 +60,12 @@ XboxMemInit(VOID)
     PVOID MembaseTop = (PVOID)(64 * 1024 * 1024);
     PVOID MembaseLow = (PVOID)0;
 
-    (*(PULONG)(0xfd000000 + 0x100200)) = 0x03070103;
-    (*(PULONG)(0xfd000000 + 0x100204)) = 0x11448000;
+    WRITE_REGISTER_ULONG((PULONG)NV2A_FB_CFG0, 0x03070103);
+    WRITE_REGISTER_ULONG((PULONG)NV2A_FB_CFG0 + 4, 0x11448000);
 
-    WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
-    WRITE_PORT_ULONG((ULONG*) 0xcfc, 0x7ffffff);             /* Prep hardware for 128 Mb */
+    /* Prep hardware for 128 Mb */
+    WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(0, 0, 0x84));
+    WRITE_PORT_ULONG((PULONG)0xCFC, 0x7FFFFFF);
 
     InstalledMemoryMb = 64;
     memset(ControlRegion, TEST_PATTERN1, TEST_SIZE);
@@ -93,8 +94,8 @@ XboxMemInit(VOID)
     }
 
     /* Set hardware for amount of memory detected */
-    WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
-    WRITE_PORT_ULONG((ULONG*) 0xcfc, InstalledMemoryMb * 1024 * 1024 - 1);
+    WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(0, 0, 0x84));
+    WRITE_PORT_ULONG((PULONG)0xCFC, InstalledMemoryMb * 1024 * 1024 - 1);
 
     AvailableMemoryMb = InstalledMemoryMb;
 }

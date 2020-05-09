@@ -404,7 +404,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
             SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM) hIconSm);
         }
 
-        SetWindowLongW(Dlg, GWLP_USERDATA, 0);
+        SetWindowLongPtrW(Dlg, GWLP_USERDATA, 0);
         HWND Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
         if (Item)
         {

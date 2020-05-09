@@ -38,6 +38,8 @@
 #define LPC_CONFIG_DEVICE_INTERRUPT             0x70
 
 #define NV2A_CONTROL_OFFSET            0xFD000000
+#define   NV2A_FB_OFFSET                (0x100000 + NV2A_CONTROL_OFFSET)
+#define     NV2A_FB_CFG0                   (0x200 + NV2A_FB_OFFSET)
 #define   NV2A_CRTC_OFFSET              (0x600000 + NV2A_CONTROL_OFFSET)
 #define     NV2A_CRTC_FRAMEBUFFER_START    (0x800 + NV2A_CRTC_OFFSET)
 #define     NV2A_CRTC_REGISTER_INDEX      (0x13D4 + NV2A_CRTC_OFFSET)

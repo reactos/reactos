@@ -2,7 +2,6 @@
 spec2def(umandlg.dll umandlg.spec)
 
 add_library(umandlg MODULE
-    about.c
     process.c
     registry.c
     umandlg.c
