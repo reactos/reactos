@@ -233,63 +233,6 @@ set(CMAKE_RC_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_MODULE})
 set(CMAKE_ASM_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_MODULE})
 set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 
-if(PCH)
-    macro(add_pch _target _pch _sources)
-
-        # Workaround for the MSVC toolchain (MSBUILD) /MP bug
-        set(_temp_gch ${CMAKE_CURRENT_BINARY_DIR}/${_target}.pch)
-        if(MSVC_IDE)
-            file(TO_NATIVE_PATH ${_temp_gch} _gch)
-        else()
-            set(_gch ${_temp_gch})
-        endif()
-
-        if(IS_CPP)
-            set(_pch_language CXX)
-            if(NOT USE_CLANG_CL)
-                set(_cl_lang_flag "/TP")
-            endif()
-        else()
-            set(_pch_language C)
-            set(_cl_lang_flag "/TC")
-        endif()
-
-        if(MSVC_IDE)
-            set(_pch_path_name_flag "/Fp${_gch}")
-        endif()
-
-        if(USE_CLANG_CL)
-            set(_pch_compile_flags "${_cl_lang_flag} /Yc${_pch} /FI${_pch} /Fp${_gch}")
-        else()
-            set(_pch_compile_flags "${_cl_lang_flag} /Yc /Fp${_gch}")
-        endif()
-
-        # Build the precompiled header
-        # HEADER_FILE_ONLY FALSE: force compiling the header
-        set_source_files_properties(${_pch} PROPERTIES
-            HEADER_FILE_ONLY FALSE
-            LANGUAGE ${_pch_language}
-            COMPILE_FLAGS ${_pch_compile_flags}
-            OBJECT_OUTPUTS ${_gch})
-
-        # Prevent a race condition related to writing to the PDB files between the PCH and the excluded list of source files
-        get_target_property(_target_sources ${_target} SOURCES)
-        list(REMOVE_ITEM _target_sources ${_pch})
-        foreach(_target_src ${_target_sources})
-            set_property(SOURCE ${_target_src} APPEND PROPERTY OBJECT_DEPENDS ${_gch})
-        endforeach()
-
-        # Use the precompiled header with the specified source files, skipping the pch itself
-        list(REMOVE_ITEM ${_sources} ${_pch})
-        foreach(_src ${${_sources}})
-            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " /FI${_gch} /Yu${_gch} ${_pch_path_name_flag}")
-        endforeach()
-    endmacro()
-else()
-    macro(add_pch _target _pch _sources)
-    endmacro()
-endif()
-
 function(set_entrypoint _module _entrypoint)
     if(${_entrypoint} STREQUAL "0")
         add_target_link_flags(${_module} "/NOENTRY")

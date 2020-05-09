@@ -17,19 +17,21 @@ list(APPEND SOURCE
     getframe.c
     icmstream.c
     tmpfile.c
-    wavfile.c
-    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
-    precomp.h)
+    wavfile.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c
+    ${CMAKE_CURRENT_BINARY_DIR}/avifil32_p.c)
 
 add_library(avifil32 MODULE
     ${SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/avifil32_p.c
+    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/avifil32.def)
 
 set_module_type(avifil32 win32dll)
 target_link_libraries(avifil32 wine ${PSEH_LIB})
 add_importlibs(avifil32 msacm32 msvfw32 winmm ole32 user32 advapi32 rpcrt4 msvcrt kernel32 ntdll)
-add_pch(avifil32 precomp.h SOURCE)
+add_pch(avifil32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET avifil32 DESTINATION reactos/system32 FOR all)

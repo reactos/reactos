@@ -46,12 +46,14 @@ list(APPEND SOURCE
     service_group.cpp
     undoc.cpp
     unregister.cpp
-    version.cpp
-    private.hpp)
+    version.cpp)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.cpp)
 
 add_library(portcls MODULE
     ${SOURCE}
-    guid.cpp
+    ${PCH_SKIP_SOURCE}
     portcls.rc
     ${CMAKE_CURRENT_BINARY_DIR}/portcls.def)
 
@@ -61,6 +63,6 @@ endif()
 
 target_link_libraries(portcls libcntpr ${PSEH_LIB})
 set_module_type(portcls kernelmodedriver ENTRYPOINT 0 )
-add_pch(portcls private.hpp SOURCE)
+add_pch(portcls private.hpp "${PCH_SKIP_SOURCE}")
 add_importlibs(portcls ntoskrnl ks drmk hal)
 add_cd_file(TARGET portcls DESTINATION reactos/system32/drivers FOR all)

@@ -30,21 +30,23 @@ list(APPEND SOURCE
     usrmarshal.c
     varformat.c
     variant.c
-    vartype.c
-    precomp.h)
+    vartype.c)
 
 if(MSVC)
     add_asm_files(oleaut32_asm msvc.S)
 endif()
 
-add_library(oleaut32 MODULE
-    ${SOURCE}
-    ${oleaut32_asm}
-    oleaut32.rc
+list(APPEND PCH_SKIP_SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_oaidl_p.c
-    ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_ocidl_p.c
+    ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_ocidl_p.c)
+
+add_library(oleaut32 MODULE
+    ${SOURCE}
+    ${oleaut32_asm}
+    ${PCH_SKIP_SOURCE}
+    oleaut32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
 
 add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
@@ -53,5 +55,5 @@ set_module_type(oleaut32 win32dll)
 target_link_libraries(oleaut32 wine wineldr uuid ${PSEH_LIB})
 add_delay_importlibs(oleaut32 comctl32 urlmon windowscodecs)
 add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
-add_pch(oleaut32 precomp.h SOURCE)
+add_pch(oleaut32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET oleaut32 DESTINATION reactos/system32 FOR all)

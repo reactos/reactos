@@ -18,16 +18,18 @@ list(APPEND SOURCE
     pathiterator.c
     pen.c
     region.c
-    stringformat.c
-    precomp.h)
+    stringformat.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c
+    testlist.c)
 
 add_executable(gdiplus_winetest
     ${SOURCE}
-    guid.c
-    testlist.c
+    ${PCH_SKIP_SOURCE}
     resource.rc)
 
 set_module_type(gdiplus_winetest win32cui)
 add_importlibs(gdiplus_winetest gdiplus user32 gdi32 ole32 msvcrt kernel32)
-add_pch(gdiplus_winetest precomp.h SOURCE)
+add_pch(gdiplus_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET gdiplus_winetest)

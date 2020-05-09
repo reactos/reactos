@@ -6,12 +6,17 @@ list(APPEND SOURCE
     dsound8.c
     dsound.c
     duplex.c
-    propset.c
-    dsound_test.h)
+    propset.c)
 
-add_executable(dsound_winetest ${SOURCE} testlist.c)
+list(APPEND PCH_SKIP_SOURCE
+    testlist.c)
+
+add_executable(dsound_winetest
+    ${SOURCE}
+    ${PCH_SKIP_SOURCE})
+
 target_link_libraries(dsound_winetest uuid dxguid)
 set_module_type(dsound_winetest win32cui)
 add_importlibs(dsound_winetest ole32 user32 msvcrt kernel32)
-add_pch(dsound_winetest dsound_test.h SOURCE)
+add_pch(dsound_winetest dsound_test.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET dsound_winetest)

@@ -11,16 +11,18 @@ list(APPEND SOURCE
     function.c
     misc.c
     pdo.c
-    usbccgp.c
-    usbccgp.h)
+    usbccgp.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c)
 
 add_library(usbccgp MODULE
     ${SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     usbccgp.rc)
 
 target_link_libraries(usbccgp ${PSEH_LIB})
 set_module_type(usbccgp kernelmodedriver)
 add_importlibs(usbccgp ntoskrnl hal usbd)
-add_pch(usbccgp usbccgp.h SOURCE)
+add_pch(usbccgp usbccgp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET usbccgp DESTINATION reactos/system32/drivers NO_CAB FOR all)

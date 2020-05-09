@@ -11,18 +11,20 @@ list(APPEND SOURCE
     mimeole.c
     pop3transport.c
     protocol.c
-    smtptransport.c
-    precomp.h)
+    smtptransport.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c
+    ${CMAKE_CURRENT_BINARY_DIR}/inetcomm_stubs.c)
 
 add_library(inetcomm MODULE
     ${SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     inetcomm.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/inetcomm_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/inetcomm.def)
 
 set_module_type(inetcomm win32dll)
 target_link_libraries(inetcomm uuid wine)
 add_importlibs(inetcomm ole32 oleaut32 ws2_32 user32 propsys urlmon msvcrt kernel32 ntdll)
-add_pch(inetcomm precomp.h SOURCE)
+add_pch(inetcomm precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET inetcomm DESTINATION reactos/system32 FOR all)

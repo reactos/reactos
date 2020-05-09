@@ -26,21 +26,23 @@ list(APPEND SOURCE
     connectmanager.cpp
     lanconnectui.cpp
     lanstatusui.cpp
-    setup.cpp
-    precomp.h)
+    setup.cpp)
+
+list(APPEND PCH_SKIP_SOURCE
+    ${CMAKE_CURRENT_BINARY_DIR}/netshell_stubs.c)
 
 file(GLOB netshell_rc_deps res/*.*)
 add_rc_deps(netshell.rc ${netshell_rc_deps})
 
 add_library(netshell MODULE
     ${SOURCE}
+    ${PCH_SKIP_SOURCE}
     netshell.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/netshell_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/netshell.def)
 
 set_module_type(netshell win32dll UNICODE)
 target_link_libraries(netshell uuid wine)
 add_delay_importlibs(netshell ole32 oleaut32 shlwapi shell32)
 add_importlibs(netshell version iphlpapi gdi32 user32 advapi32 setupapi ws2_32 comctl32 msvcrt kernel32 ntdll)
-add_pch(netshell precomp.h SOURCE)
+add_pch(netshell precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET netshell DESTINATION reactos/system32 FOR all)

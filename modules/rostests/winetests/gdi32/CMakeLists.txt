@@ -15,12 +15,14 @@ list(APPEND SOURCE
     metafile.c
     palette.c
     path.c
-    pen.c
-    precomp.h)
+    pen.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    testlist.c)
 
 add_executable(gdi32_winetest
     ${SOURCE}
-    testlist.c
+    ${PCH_SKIP_SOURCE}
     resource.rc)
 
 set_module_type(gdi32_winetest win32cui)
@@ -30,5 +32,5 @@ if(MSVC)
     add_importlibs(gdi32_winetest ntdll)
 endif()
 
-add_pch(gdi32_winetest precomp.h SOURCE)
+add_pch(gdi32_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET gdi32_winetest)

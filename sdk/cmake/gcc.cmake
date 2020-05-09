@@ -419,41 +419,6 @@ endmacro()
 # PSEH lib, needed with mingw
 set(PSEH_LIB "pseh")
 
-# Macros
-if(PCH AND (NOT ENABLE_CCACHE) AND (NOT CMAKE_HOST_APPLE))
-    add_compile_flags("-Winvalid-pch -Werror=invalid-pch")
-    macro(add_pch _target _pch _sources)
-        # When including x.h GCC looks for x.h.gch first
-        set(_pch_final_name "${_target}_pch.h")
-        set(_gch ${CMAKE_CURRENT_BINARY_DIR}/${_pch_final_name}.gch)
-
-        if(IS_CPP)
-            set(_pch_language CXX)
-        else()
-            set(_pch_language C)
-        endif()
-
-        # Build the precompiled header
-        # HEADER_FILE_ONLY FALSE: force compiling the header
-        # EXTERNAL_SOURCE TRUE: don't use the .gch file when linking
-        set_source_files_properties(${_pch} PROPERTIES
-            HEADER_FILE_ONLY FALSE
-            LANGUAGE ${_pch_language}
-            EXTERNAL_SOURCE TRUE
-            OBJECT_LOCATION ${_gch})
-
-        # Include the gch in the specified source files, skipping the pch file itself
-        list(REMOVE_ITEM ${_sources} ${_pch})
-        foreach(_src ${${_sources}})
-            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -include ${CMAKE_CURRENT_BINARY_DIR}/${_pch_final_name}")
-            set_property(SOURCE ${_src} APPEND PROPERTY OBJECT_DEPENDS ${_gch})
-        endforeach()
-    endmacro()
-else()
-    macro(add_pch _target _pch _sources)
-    endmacro()
-endif()
-
 function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_address)
     set(_object_file ${_binary_file}.o)
 

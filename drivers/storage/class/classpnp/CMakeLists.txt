@@ -24,16 +24,18 @@ list(APPEND SOURCE
     power.c
     retry.c
     utils.c
-    xferpkt.c
-    classp.h)
+    xferpkt.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c)
 
 add_library(classpnp MODULE
     ${SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     class.rc
     ${CMAKE_CURRENT_BINARY_DIR}/classpnp.def)
 
-add_pch(classpnp classp.h SOURCE)
+add_pch(classpnp classp.h "${PCH_SKIP_SOURCE}")
 target_link_libraries(classpnp ${PSEH_LIB} libcntpr)
 set_module_type(classpnp kernelmodedriver)
 add_importlibs(classpnp hal ntoskrnl)

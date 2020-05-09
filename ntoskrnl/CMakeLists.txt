@@ -12,10 +12,13 @@ set(NTKRNLMP_ASM_SOURCE ${ASM_SOURCE})
 spec2def(ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
 add_asm_files(ntoskrnl_asm ${NTOSKRNL_ASM_SOURCE})
 
+list(APPEND PCH_SKIP_SOURCE
+    guid.c)
+
 add_executable(ntoskrnl
     ${ntoskrnl_asm}
     ${NTOSKRNL_SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     ntoskrnl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
 set_property(TARGET ntoskrnl PROPERTY ENABLE_EXPORTS TRUE)
@@ -52,7 +55,7 @@ elseif(RUNTIME_CHECKS)
 endif()
 
 add_importlibs(ntoskrnl hal kdcom bootvid)
-add_pch(ntoskrnl ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h NTOSKRNL_SOURCE)
+add_pch(ntoskrnl ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h "${PCH_SKIP_SOURCE}")
 add_dependencies(ntoskrnl psdk bugcodes asm)
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 

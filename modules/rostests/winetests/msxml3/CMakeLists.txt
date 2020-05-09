@@ -10,13 +10,15 @@ list(APPEND SOURCE
     schema.c
     xmldoc.c
     xmlparser.c
-    xmlview.c
-    precomp.h)
+    xmlview.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c
+    testlist.c)
 
 add_executable(msxml3_winetest
     ${SOURCE}
-    guid.c
-    testlist.c
+    ${PCH_SKIP_SOURCE}
     rsrc.rc)
 
 add_idl_headers(xmlparser_idlheader_test xmlparser.idl)
@@ -28,5 +30,5 @@ if(MSVC)
     add_importlibs(msxml3_winetest ntdll)
 endif()
 
-add_pch(msxml3_winetest precomp.h SOURCE)
+add_pch(msxml3_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET msxml3_winetest)

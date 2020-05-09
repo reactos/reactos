@@ -40,12 +40,14 @@ list(APPEND SOURCE
     toolhelp.c
     version.c
     virtual.c
-    volume.c
-    precomp.h)
+    volume.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    testlist.c)
 
 add_executable(kernel32_winetest
     ${SOURCE}
-    testlist.c
+    ${PCH_SKIP_SOURCE}
     resource.rc)
 
 if(USE_CLANG_CL OR (NOT MSVC))
@@ -54,5 +56,5 @@ endif()
 
 set_module_type(kernel32_winetest win32cui)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
-add_pch(kernel32_winetest precomp.h SOURCE)
+add_pch(kernel32_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET kernel32_winetest)

@@ -169,15 +169,17 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utxface.c
     acpica/utilities/utxferror.c
     acpica/utilities/utxfinit.c
-    acpica/utilities/utxfmutex.c
-    acpica/include/acpi.h)
+    acpica/utilities/utxfmutex.c)
 
-add_library(acpica
-    ${ACPICA_SOURCE}
+list(APPEND ACPICA_PCH_SKIP_SOURCE
     acpica/utilities/utexcep.c
     acpica/utilities/utglobal.c)
 
-add_pch(acpica acpica/include/acpi.h ACPICA_SOURCE)
+add_library(acpica
+    ${ACPICA_SOURCE}
+    ${ACPICA_PCH_SKIP_SOURCE})
+
+add_pch(acpica acpica/include/acpi.h "${ACPICA_PCH_SKIP_SOURCE}")
 set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE;ACPI_USE_SYSTEM_INTTYPES")
 add_dependencies(acpica bugcodes xdk)
 
@@ -194,8 +196,7 @@ list(APPEND ACPI_SOURCE
     pnp.c
     power.c
     buspdo.c
-    main.c
-    precomp.h)
+    main.c)
 
 add_library(acpi MODULE ${ACPI_SOURCE})
 set_module_type(acpi kernelmodedriver)

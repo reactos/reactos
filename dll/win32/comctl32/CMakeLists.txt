@@ -54,12 +54,14 @@ list(APPEND SOURCE
     tooltips.c
     trackbar.c
     treeview.c
-    updown.c
-    precomp.h)
+    updown.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    stubs.c)
 
 add_library(comctl32 MODULE
     ${SOURCE}
-    stubs.c
+    ${PCH_SKIP_SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
 
@@ -67,7 +69,7 @@ set_module_type(comctl32 win32dll UNICODE)
 target_link_libraries(comctl32 uuid wine ${PSEH_LIB})
 add_delay_importlibs(comctl32 winmm uxtheme)
 add_importlibs(comctl32 user32 gdi32 advapi32 usp10 imm32 msvcrt kernel32 ntdll)
-add_pch(comctl32 precomp.h SOURCE)
+add_pch(comctl32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET comctl32 DESTINATION reactos/system32 FOR all)
 add_cd_file(TARGET comctl32 DESTINATION reactos/winsxs/x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef FOR all)
 add_cd_file(TARGET comctl32 DESTINATION reactos/winsxs/x86_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef FOR all)

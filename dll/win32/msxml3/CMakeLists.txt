@@ -47,9 +47,13 @@ list(APPEND SOURCE
     xmldoc.c
     xmlelem.c
     xmlparser.c
-    xmlview.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/msxml3_stubs.c)
+    xmlview.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    factory.c
+    uuid.c
+    xslpattern.tab.c
+    xslpattern.yy.c)
 
 # xslpattern.tab.c/xslpattern.yy.c have been generated with relative file paths...
 set_source_files_properties(xslpattern.tab.c xslpattern.yy.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
@@ -64,11 +68,9 @@ set_source_files_properties(version.rc PROPERTIES OBJECT_DEPENDS "${msxml3_rc_de
 
 add_library(msxml3 MODULE
     ${SOURCE}
-    xslpattern.tab.c
-    xslpattern.yy.c
-    factory.c
-    uuid.c
+    ${PCH_SKIP_SOURCE}
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msxml3_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msxml3.def)
 
 add_idl_headers(xmlparser_idlheader xmlparser.idl)
@@ -76,5 +78,5 @@ set_module_type(msxml3 win32dll)
 target_link_libraries(msxml3 libxml2 iconv-static uuid wine zlib)
 add_importlibs(msxml3 urlmon ws2_32 shlwapi oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(msxml3 xmlparser_idlheader stdole2) # msxml3_v1.tlb needs stdole2.tlb
-add_pch(msxml3 precomp.h SOURCE)
+add_pch(msxml3 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET msxml3 DESTINATION reactos/system32 FOR all)

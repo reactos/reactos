@@ -12,12 +12,14 @@ list(APPEND SOURCE
     adapter.cpp
     common.cpp
     mintopo.cpp
-    minwave.cpp
-    precomp.h)
+    minwave.cpp)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.cpp)
 
 add_library(cmipci MODULE
     ${SOURCE}
-    guid.cpp
+    ${PCH_SKIP_SOURCE}
     cmipci.rc)
 
 target_link_libraries(cmipci stdunk libcntpr uuid)
@@ -28,7 +30,7 @@ if(USE_CLANG_CL OR (NOT MSVC))
     target_compile_options(cmipci PRIVATE -Wno-write-strings -Wno-switch)
 endif()
 
-add_pch(cmipci precomp.h SOURCE)
+add_pch(cmipci precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET cmipci DESTINATION reactos/system32/drivers FOR all)
 
 if(ARCH STREQUAL "i386")

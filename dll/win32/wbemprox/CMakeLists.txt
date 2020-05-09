@@ -18,16 +18,18 @@ list(APPEND SOURCE
     service.c
     services.c
     table.c
-    wbemlocator.c
-    precomp.h)
+    wbemlocator.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c
+    wql.tab.c)
 
 # wql.tab.c has been generated with relative file paths...
 set_source_files_properties(wql.tab.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
 
 add_library(wbemprox MODULE
     ${SOURCE}
-    wql.tab.c
-    guid.c
+    ${PCH_SKIP_SOURCE}
     wbemprox.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wbemprox.def)
 
@@ -36,5 +38,5 @@ set_module_type(wbemprox win32dll)
 target_link_libraries(wbemprox uuid wine)
 add_importlibs(wbemprox iphlpapi oleaut32 advapi32 user32 gdi32 version winspool ws2_32 rpcrt4 setupapi msvcrt kernel32 ntdll)
 add_dependencies(wbemprox d3d_idl_headers)
-add_pch(wbemprox precomp.h SOURCE)
+add_pch(wbemprox precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET wbemprox DESTINATION reactos/system32/wbem FOR all)

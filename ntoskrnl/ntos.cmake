@@ -41,7 +41,6 @@ else()
 endif()
 
 list(APPEND SOURCE
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h
     ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/io.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/data.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/fault.c

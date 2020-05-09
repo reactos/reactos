@@ -35,16 +35,22 @@ list(APPEND SOURCE
     SystemFirmware.c
     TerminateProcess.c
     TunnelCache.c
-    WideCharToMultiByte.c
-    precomp.h)
+    WideCharToMultiByte.c)
 
-add_executable(kernel32_apitest ${SOURCE} testlist.c kernel32_apitest.rc)
+list(APPEND PCH_SKIP_SOURCE
+    testlist.c)
+
+add_executable(kernel32_apitest
+    ${SOURCE}
+    ${PCH_SKIP_SOURCE}
+    kernel32_apitest.rc)
+
 target_link_libraries(kernel32_apitest wine ${PSEH_LIB})
 set_module_type(kernel32_apitest win32cui)
 add_delay_importlibs(kernel32_apitest advapi32 shlwapi)
 add_importlibs(kernel32_apitest msvcrt kernel32 ntdll)
 add_dependencies(kernel32_apitest FormatMessage)
-add_pch(kernel32_apitest precomp.h SOURCE)
+add_pch(kernel32_apitest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET kernel32_apitest)
 
 list(APPEND MANIFEST_FILES

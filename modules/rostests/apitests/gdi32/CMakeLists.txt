@@ -75,12 +75,18 @@ list(APPEND SOURCE
     SetWindowExtEx.c
     SetWorldTransform.c
     TextTransform.c
-    init.c
-    precomp.h)
+    init.c)
 
-add_executable(gdi32_apitest ${SOURCE} testlist.c resource.rc)
+list(APPEND PCH_SKIP_SOURCE
+    testlist.c)
+
+add_executable(gdi32_apitest
+    ${SOURCE}
+    ${PCH_SKIP_SOURCE}
+    resource.rc)
+
 target_link_libraries(gdi32_apitest ${PSEH_LIB} win32ksys)
 set_module_type(gdi32_apitest win32cui)
 add_importlibs(gdi32_apitest gdi32 user32 msvcrt kernel32 ntdll)
-add_pch(gdi32_apitest precomp.h SOURCE)
+add_pch(gdi32_apitest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET gdi32_apitest)
