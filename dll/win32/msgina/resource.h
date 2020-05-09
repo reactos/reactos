@@ -51,6 +51,10 @@
 #define IDC_REASON_DESCRIPTION   2005
 #define IDC_REASON_COMMENT       2006
 
+#define IDC_BUTTON_SLEEP         1901
+#define IDC_BUTTON_SHUTDOWN      1902
+#define IDC_BUTTON_REBOOT        1903
+
 #define IDD_LEGALNOTICE          2100
 #define IDC_LEGALNOTICE_TEXT     2101
 
