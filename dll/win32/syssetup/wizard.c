@@ -395,8 +395,7 @@ static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\
 static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
 static const WCHAR s_szWindowsNT[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
-static const WCHAR s_szServicePack2[] = L"Service Pack 2";
-static const WCHAR s_szServicePack3[] = L"Service Pack 3";
+static const WCHAR s_szCurrentBuildNumber[] = L"CurrentBuildNumber";
 
 static BOOL
 WriteProductOptionServer(void)
@@ -447,13 +446,13 @@ WriteProductOptionServer(void)
         error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey);
         if (error)
             break;
-
-        /* write WindowsNT CSDVersion */
-        cbData = sizeof(s_szServicePack2);
-        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (const BYTE *)s_szServicePack2, cbData);
+        
+        /* write WindowsNT CurrentBuildNumber */
+        cbData = sizeof(L"3790");
+        error = RegSetValueExW(hKey, s_szCurrentBuildNumber, 0, REG_SZ, (const BYTE *)L"3790", cbData);
         if (error)
             break;
-
+        
         RegCloseKey(hKey);
 
         /* open Control Windows key */
@@ -462,7 +461,9 @@ WriteProductOptionServer(void)
             break;
 
         /* write Control Windows CSDVersion */
-        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (const BYTE *)s_szServicePack2, cbData);
+        dwValue = 0x200;
+        cbData = sizeof(dwValue);
+        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
         if (error)
             break;
     } while (0);
@@ -523,10 +524,10 @@ WriteProductOptionWorkstation(void)
         error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey);
         if (error)
             break;
-
-        /* write WindowsNT CSDVersion */
-        cbData = sizeof(s_szServicePack3);
-        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (const BYTE *)s_szServicePack3, cbData);
+        
+        /* write WindowsNT CurrentBuildNumber */
+        cbData = sizeof(L"2000");
+        error = RegSetValueExW(hKey, s_szCurrentBuildNumber, 0, REG_SZ, (const BYTE *)L"2000", cbData);
         if (error)
             break;
 
@@ -538,8 +539,9 @@ WriteProductOptionWorkstation(void)
             break;
 
         /* write Control Windows CSDVersion */
-        cbData = sizeof(s_szServicePack3);
-        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_SZ, (const BYTE *)s_szServicePack3, cbData);
+        dwValue = 0x300;
+        cbData = sizeof(dwValue);
+        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
         if (error)
             break;
     } while (0);
