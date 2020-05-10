@@ -467,7 +467,8 @@ WriteProductOptionServer(void)
             break;
     } while (0);
 
-    RegCloseKey(hKey);
+    if (hKey)
+        RegCloseKey(hKey);
 
     return error == ERROR_SUCCESS;
 }
@@ -543,7 +544,8 @@ WriteProductOptionWorkstation(void)
             break;
     } while (0);
 
-    RegCloseKey(hKey);
+    if (hKey)
+        RegCloseKey(hKey);
 
     return error == ERROR_SUCCESS;
 }
