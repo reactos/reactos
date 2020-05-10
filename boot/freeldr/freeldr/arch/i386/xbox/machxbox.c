@@ -277,10 +277,6 @@ MachInit(const char *CmdLine)
     /* Set LEDs to red before anything is initialized */
     XboxSetLED("rrrr");
 
-    /* Initialize our stuff */
-    XboxMemInit();
-    XboxVideoInit();
-
     /* Setup vtbl */
     MachVtbl.ConsPutChar = XboxConsPutChar;
     MachVtbl.ConsKbHit = XboxConsKbHit;
@@ -311,6 +307,10 @@ MachInit(const char *CmdLine)
     MachVtbl.HwDetect = XboxHwDetect;
     MachVtbl.HwIdle = XboxHwIdle;
 
+    /* Initialize our stuff */
+    XboxMemInit();
+    XboxVideoInit();
+
     /* Set LEDs to orange after init */
     XboxSetLED("oooo");
 
@@ -324,6 +324,9 @@ XboxPrepareForReactOS(VOID)
     XboxVideoPrepareForReactOS();
     XboxDiskInit(FALSE);
     DiskStopFloppyMotor();
+    
+    /* Turn off debug messages to screen */
+    DebugDisableScreenPort();
 }
 
 /* EOF */
