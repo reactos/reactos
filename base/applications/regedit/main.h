@@ -27,8 +27,8 @@
 #define TREE_WINDOW     2002
 #define LIST_WINDOW     2003
 
-#define    SPLIT_WIDTH    5
-#define SPLIT_MIN  30
+#define SPLIT_WIDTH    5
+#define SPLIT_MIN     30
 
 #define COUNT_OF(a) (sizeof(a)/sizeof(a[0]))
 
