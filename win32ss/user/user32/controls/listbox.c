@@ -1289,6 +1289,14 @@ static LRESULT LISTBOX_SetColumnWidth( LB_DESCR *descr, INT width)
 {
     if (width == descr->column_width) return LB_OKAY;
     TRACE("[%p]: new column width = %d\n", descr->self, width );
+#ifdef __REACTOS__
+    if (!(descr->style & WS_VSCROLL))
+    {
+        int w = GetSystemMetrics(SM_CXVSCROLL);
+        w /= LOWORD(GetDialogBaseUnits());
+        width += w;
+    }
+#endif
     descr->column_width = width;
     LISTBOX_UpdatePage( descr );
     return LB_OKAY;
