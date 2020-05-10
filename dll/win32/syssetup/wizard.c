@@ -398,185 +398,121 @@ static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\
 static const WCHAR s_szCurrentBuildNumber[] = L"CurrentBuildNumber";
 static const WCHAR s_szCurrentVersion[] = L"CurrentVersion";
 
-static BOOL
-WriteProductOptionServer(void)
+typedef struct PRODUCT_OPTION_DATA
 {
-    HKEY hKey;
-    LONG error;
-    LPCWSTR pData;
-    DWORD dwValue, cbData;
+    LPCWSTR ProductSuite;
+    LPCWSTR ProductType;
+    DWORD ReportAsWorkstation;
+    LPCWSTR CurrentVersion;
+    LPCWSTR CurrentBuildNumber;
+    DWORD CSDVersion;
+} PRODUCT_OPTION_DATA, *LPPRODUCT_OPTION_DATA;
 
-    do
-    {
-        /* open ProductOptions key */
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
-        if (error)
-            break;
-
-        /* write ProductSuite */
-        pData = L"Terminal Server\0";
-        cbData = sizeof(L"Terminal Server\0");
-        error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (const BYTE *)pData, cbData);
-        if (error)
-            break;
-
-        /* write ProductType */
-        pData = L"ServerNT";
-        cbData = sizeof(L"ServerNT");
-        error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (const BYTE *)pData, cbData);
-        if (error)
-            break;
-
-        RegCloseKey(hKey);
-
-        /* open ReactOS version key */
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szRosVersion, 0, KEY_WRITE, &hKey);
-        if (error)
-            break;
-
-        /* write ReportAsWorkstation */
-        dwValue = 0;
-        cbData = sizeof(dwValue);
-        error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
-        if (error)
-            break;
-
-        RegCloseKey(hKey);
-
-        /* open WindowsNT key */
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey);
-        if (error)
-            break;
-
-        /* write WindowsNT CurrentVersion */
-        cbData = sizeof(L"5.2");
-        error = RegSetValueExW(hKey, s_szCurrentVersion, 0, REG_SZ, (const BYTE *)L"5.2", cbData);
-        if (error)
-            break;
-
-        /* write WindowsNT CurrentBuildNumber */
-        cbData = sizeof(L"3790");
-        error = RegSetValueExW(hKey, s_szCurrentBuildNumber, 0, REG_SZ, (const BYTE *)L"3790", cbData);
-        if (error)
-            break;
-        
-        RegCloseKey(hKey);
-
-        /* open Control Windows key */
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szControlWindows, 0, KEY_WRITE, &hKey);
-        if (error)
-            break;
-
-        /* write Control Windows CSDVersion */
-        dwValue = 0x200;
-        cbData = sizeof(dwValue);
-        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
-        if (error)
-            break;
-    } while (0);
-
-    if (hKey)
-        RegCloseKey(hKey);
-
-    return error == ERROR_SUCCESS;
-}
-
-static BOOL
-WriteProductOptionWorkstation(void)
+static const PRODUCT_OPTION_DATA s_ProductOptionData[] =
 {
-
-    HKEY hKey;
-    LONG error;
-    LPCWSTR pData;
-    DWORD dwValue, cbData;
-
-    do
     {
-        /* open ProductOptions key */
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
-        if (error)
-            break;
-
-        /* write ProductSuite */
-        pData = L"\0";
-        cbData = sizeof(L"\0");
-        error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (const BYTE *)pData, cbData);
-        if (error)
-            break;
-
-        /* write ProductType */
-        pData = L"WinNT";
-        cbData = sizeof(L"WinNT");
-        error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (const BYTE *)pData, cbData);
-        if (error)
-            break;
-
-        RegCloseKey(hKey);
-
-        /* open ReactOS version key */
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szRosVersion, 0, KEY_WRITE, &hKey);
-        if (error)
-            break;
-
-        /* write ReportAsWorkstation */
-        dwValue = 1;
-        cbData = sizeof(dwValue);
-        error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
-        if (error)
-            break;
-
-        RegCloseKey(hKey);
-
-        /* open WindowsNT key */
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey);
-        if (error)
-            break;
-
-        /* write WindowsNT CurrentVersion */
-        cbData = sizeof(L"5.1");
-        error = RegSetValueExW(hKey, s_szCurrentVersion, 0, REG_SZ, (const BYTE *)L"5.1", cbData);
-        if (error)
-            break;
-
-        /* write WindowsNT CurrentBuildNumber */
-        cbData = sizeof(L"2000");
-        error = RegSetValueExW(hKey, s_szCurrentBuildNumber, 0, REG_SZ, (const BYTE *)L"2000", cbData);
-        if (error)
-            break;
-
-        RegCloseKey(hKey);
-
-        /* open Control Windows key */
-        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szControlWindows, 0, KEY_WRITE, &hKey);
-        if (error)
-            break;
-
-        /* write Control Windows CSDVersion */
-        dwValue = 0x300;
-        cbData = sizeof(dwValue);
-        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
-        if (error)
-            break;
-    } while (0);
-
-    if (hKey)
-        RegCloseKey(hKey);
-
-    return error == ERROR_SUCCESS;
-}
+        L"Terminal Server\0",
+        L"ServerNT",
+        0,
+        L"5.2",
+        L"3790",
+        0x200
+    },
+    {
+        L"\0",
+        L"WinNT",
+        1,
+        L"5.1",
+        L"2600",
+        0x300
+    }
+};
 
 static BOOL
 DoWriteProductOption(PRODUCT_OPTION nOption)
 {
-    switch (nOption)
+    HKEY hKey;
+    LONG error;
+    LPCWSTR pszData;
+    DWORD dwValue, cbData;
+    const PRODUCT_OPTION_DATA *pData = &s_ProductOptionData[nOption];
+    ASSERT(nOption < _countof(s_ProductOptionData));
+
+    do
     {
-        case PRODUCT_OPTION_SERVER:
-            return WriteProductOptionServer();
-        case PRODUCT_OPTION_WORKSTATION:
-            return WriteProductOptionWorkstation();
-    }
-    DPRINT1("Unknown product option: %d\n", nOption);
-    return FALSE;
+        /* open ProductOptions key */
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
+        if (error)
+            break;
+
+        /* write ProductSuite */
+        pszData = pData->ProductSuite;
+        cbData = (lstrlenW(pszData) + 2) * sizeof(WCHAR);
+        error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (const BYTE *)pData, cbData);
+        if (error)
+            break;
+
+        /* write ProductType */
+        pszData = pData->ProductType;
+        cbData = (lstrlenW(pszData) + 1) * sizeof(WCHAR);
+        error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (const BYTE *)pData, cbData);
+        if (error)
+            break;
+
+        RegCloseKey(hKey);
+
+        /* open ReactOS version key */
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szRosVersion, 0, KEY_WRITE, &hKey);
+        if (error)
+            break;
+
+        /* write ReportAsWorkstation */
+        dwValue = pData->ReportAsWorkstation;
+        cbData = sizeof(dwValue);
+        error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
+        if (error)
+            break;
+
+        RegCloseKey(hKey);
+
+        /* open WindowsNT key */
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey);
+        if (error)
+            break;
+
+        /* write WindowsNT CurrentVersion */
+        pszData = pData->CurrentVersion;
+        cbData = (lstrlenW(pszData) + 1) * sizeof(WCHAR);
+        error = RegSetValueExW(hKey, s_szCurrentVersion, 0, REG_SZ, (const BYTE *)pszData, cbData);
+        if (error)
+            break;
+
+        /* write WindowsNT CurrentBuildNumber */
+        pszData = pData->CurrentBuildNumber;
+        cbData = (lstrlenW(pszData) + 1) * sizeof(WCHAR);
+        error = RegSetValueExW(hKey, s_szCurrentBuildNumber, 0, REG_SZ, (const BYTE *)pszData, cbData);
+        if (error)
+            break;
+
+        RegCloseKey(hKey);
+
+        /* open Control Windows key */
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szControlWindows, 0, KEY_WRITE, &hKey);
+        if (error)
+            break;
+
+        /* write Control Windows CSDVersion */
+        dwValue = pData->CSDVersion;
+        cbData = sizeof(dwValue);
+        error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
+        if (error)
+            break;
+    } while (0);
+
+    if (hKey)
+        RegCloseKey(hKey);
+
+    return error == ERROR_SUCCESS;
 }
 
 static void
