@@ -214,7 +214,7 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     GetIpNetTable(pIpNetTable, &Size, 0);
 
     /* allocate memory for ARP address table */
-    pIpNetTable = (PMIB_IPNETTABLE) HeapAlloc(GetProcessHeap(), 0, Size);
+    pIpNetTable = (PMIB_IPNETTABLE)HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpNetTable == NULL)
     {
         PrintMessage(10004);
@@ -239,8 +239,6 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
         goto cleanup;
     }
 
-
-
     /* Retrieve the interface-to-ip address mapping
      * table to get the IP address for adapter */
 
@@ -248,7 +246,7 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     Size = 0;
     GetIpAddrTable(pIpAddrTable, &Size, 0);
 
-    pIpAddrTable = (MIB_IPADDRTABLE *) HeapAlloc(GetProcessHeap(), 0, Size);
+    pIpAddrTable = (MIB_IPADDRTABLE *)HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpAddrTable == NULL)
     {
         PrintMessage(10004);
@@ -266,8 +264,7 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
         goto cleanup;
     }
 
-
-    for (k=0; k < pIpAddrTable->dwNumEntries; k++)
+    for (k = 0; k < pIpAddrTable->dwNumEntries; k++)
     {
         if (pIpNetTable->table[0].dwIndex == pIpAddrTable->table[k].dwIndex)
         {
@@ -283,7 +280,7 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     PrintMessageV(10003, szIntIpAddr, pIpNetTable->table[0].dwIndex);
 
     /* go through all ARP entries */
-    for (i=0; i < pIpNetTable->dwNumEntries; i++)
+    for (i = 0; i < pIpNetTable->dwNumEntries; i++)
     {
 
         /* if the user has supplied their own internet address *
@@ -350,7 +347,8 @@ DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
         PrintMessageV(10002, pszEthAddr);
         return ERROR_INVALID_PARAMETER;
     }
-    for (i=0; i<17; i++)
+
+    for (i = 0; i < 17; i++)
     {
         if (pszEthAddr[i] == SEPARATOR)
             continue;
@@ -367,7 +365,7 @@ DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     GetIpNetTable(pIpNetTable, &Size, 0);
 
     /* allocate memory for ARP address table */
-    pIpNetTable = (PMIB_IPNETTABLE) HeapAlloc(GetProcessHeap(), 0, Size);
+    pIpNetTable = (PMIB_IPNETTABLE)HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpNetTable == NULL)
     {
         PrintMessage(10004);
@@ -385,9 +383,8 @@ DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
         goto cleanup;
     }
 
-
     /* reserve memory on heap and zero */
-    pAddHost = (MIB_IPNETROW *) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
+    pAddHost = (MIB_IPNETROW *)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
     if (pAddHost == NULL)
     {
         PrintMessage(10004);
@@ -419,19 +416,18 @@ DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
 
 
     /* Encode bPhysAddr into correct byte array */
-    for (i=0; i<6; i++)
+    for (i = 0; i < 6; i++)
     {
-        val =0;
-        c = toupper(pszEthAddr[i*3]);
+        val = 0;
+        c = toupper(pszEthAddr[i * 3]);
         c = c - (isdigit(c) ? '0' : ('A' - 10));
         val += c;
         val = (val << 4);
-        c = toupper(pszEthAddr[i*3 + 1]);
+        c = toupper(pszEthAddr[i * 3 + 1]);
         c = c - (isdigit(c) ? '0' : ('A' - 10));
         val += c;
         pAddHost->bPhysAddr[i] = (BYTE)val;
     }
-
 
     /* copy converted IP address */
     pAddHost->dwAddr = dwIpAddr;
@@ -522,7 +518,7 @@ DWORD Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     }
 
     /* reserve memory on heap and zero */
-    pDelHost = (MIB_IPNETROW *) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
+    pDelHost = (MIB_IPNETROW *)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
     if (pDelHost == NULL)
     {
         PrintMessage(10004);
@@ -531,7 +527,6 @@ DWORD Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     }
 
     ZeroMemory(pDelHost, sizeof(MIB_IPNETROW));
-
 
     /* set dwIndex field to the index of a local IP address to
      * indicate the network on which the ARP entry applies */
