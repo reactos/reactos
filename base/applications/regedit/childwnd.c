@@ -416,11 +416,11 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
 
     case WM_NOTIFY:
-        if(g_pChildWnd == NULL) break;
+        if (g_pChildWnd == NULL) break;
                 
         if (((LPNMHDR)lParam)->idFrom == TREE_WINDOW)
         {
-            if(!TreeWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
+            if (!TreeWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
             {
                 goto def;
             }
@@ -432,7 +432,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             if (((LPNMHDR)lParam)->idFrom == LIST_WINDOW)
             {
                 
-                if(!ListWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
+                if (!ListWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
                 {
                     goto def;
                 }
@@ -443,8 +443,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             {
                 goto def;
             }
-        }
-        
+        }        
         break;
 
     case WM_CONTEXTMENU:
