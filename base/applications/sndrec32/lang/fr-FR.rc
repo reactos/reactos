@@ -14,14 +14,14 @@ BEGIN
     ICON IDI_SNDREC32, -1, 19, 14, 21, 20
     LTEXT "Enregistreur de Son ReactOS, version 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
     LTEXT "Copyright (C) 2009", IDC_STATIC, 56, 25, 114, 8
-    DEFPUSHBUTTON "Accepter", IDOK, 139, 54, 50, 14, WS_GROUP
+    DEFPUSHBUTTON "&Accepter", IDOK, 139, 54, 50, 14, WS_GROUP
 END
 
 IDR_MENU1 MENU
 BEGIN
-    POPUP "Fichier"
+    POPUP "&Fichier"
     BEGIN
-        MENUITEM "Nouveau", ID_FILE_NEW
+        MENUITEM "&Nouveau", ID_FILE_NEW
         MENUITEM "&Ouvrir...", ID_FILE_OPEN
         MENUITEM "&Enregistrer", ID_FILE_SAVE, GRAYED
         MENUITEM "Enregistrer &sous...", ID_FILE_SAVEAS, GRAYED
@@ -55,9 +55,9 @@ BEGIN
         MENUITEM "Aj&outer de l'écho", ID_EFFECTS_ECHO
         MENUITEM "&Inverser", ID_EFFECTS_REVERSE
     END
-    POPUP "?"
+    POPUP "&?"
     BEGIN
-        MENUITEM "À propos", ID_ABOUT
+        MENUITEM "À &propos", ID_ABOUT
     END
 END
 
