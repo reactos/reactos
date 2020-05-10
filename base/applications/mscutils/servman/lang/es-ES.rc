@@ -322,7 +322,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPNAME "Administrador de servicios de ReactOS"
-    IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
+    IDS_APPAUTHORS "Copyright (C) 2005-2007 creado por Ged Murphy (gedmurphy@reactos.org)"
 END
 
 STRINGTABLE

@@ -24,7 +24,7 @@ static const TBBUTTON Buttons [] =
     /* Note: First item for a separator is its width in pixels */
     {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
 
-    {TBICON_CREATE,  ID_CREATE,  TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },         /* create */
+    {TBICON_CREATE,  ID_CREATE,  TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },   /* create */
     {TBICON_DELETE,  ID_DELETE,  TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },   /* delete */
 
     {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
@@ -594,8 +594,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
         case ID_ABOUT:
-            LoadStringW(hInstance, IDS_APPNAME, szAppName, sizeof(szAppName) / sizeof(WCHAR));
-            LoadStringW(hInstance, IDS_APPAUTHORS, szAppAuthors, sizeof(szAppAuthors) / sizeof(WCHAR));
+            LoadStringW(hInstance, IDS_APPNAME, szAppName, _countof(szAppName));
+            LoadStringW(hInstance, IDS_APPAUTHORS, szAppAuthors, _countof(szAppAuthors));
             
             hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_SM_ICON));
             ShellAboutW(Info->hMainWnd, szAppName, szAppAuthors, hIcon);
