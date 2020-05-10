@@ -396,6 +396,7 @@ static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\Reac
 static const WCHAR s_szWindowsNT[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
 static const WCHAR s_szCurrentBuildNumber[] = L"CurrentBuildNumber";
+static const WCHAR s_szCurrentVersion[] = L"CurrentVersion";
 
 static BOOL
 WriteProductOptionServer(void)
@@ -446,7 +447,13 @@ WriteProductOptionServer(void)
         error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey);
         if (error)
             break;
-        
+
+        /* write WindowsNT CurrentVersion */
+        cbData = sizeof(L"5.2");
+        error = RegSetValueExW(hKey, s_szCurrentVersion, 0, REG_SZ, (const BYTE *)L"5.2", cbData);
+        if (error)
+            break;
+
         /* write WindowsNT CurrentBuildNumber */
         cbData = sizeof(L"3790");
         error = RegSetValueExW(hKey, s_szCurrentBuildNumber, 0, REG_SZ, (const BYTE *)L"3790", cbData);
@@ -524,7 +531,13 @@ WriteProductOptionWorkstation(void)
         error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey);
         if (error)
             break;
-        
+
+        /* write WindowsNT CurrentVersion */
+        cbData = sizeof(L"5.1");
+        error = RegSetValueExW(hKey, s_szCurrentVersion, 0, REG_SZ, (const BYTE *)L"5.1", cbData);
+        if (error)
+            break;
+
         /* write WindowsNT CurrentBuildNumber */
         cbData = sizeof(L"2000");
         error = RegSetValueExW(hKey, s_szCurrentBuildNumber, 0, REG_SZ, (const BYTE *)L"2000", cbData);
