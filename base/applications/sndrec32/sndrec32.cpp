@@ -597,8 +597,7 @@ WndProc(HWND hWnd,
                     break;
 
                 case ID_ABOUT:
-                    LoadStringW(hInst, IDS_APP_TITLE, szAppName, sizeof(szAppName) / sizeof(WCHAR));
-
+                    LoadStringW(hInst, IDS_APP_TITLE, szAppName, _countof(szAppName));
                     hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_REACTOS_SNDREC32));
                     ShellAboutW(hWnd, szAppName, L"\0", hIcon);
                     DestroyIcon(hIcon);
