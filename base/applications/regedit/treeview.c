@@ -668,8 +668,8 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
             EnableMenuItem(hMenuFrame, ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
             EnableMenuItem(hMenuFrame, ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
             /* compare the strings to see if we should enable/disable the "Load Hive" menus accordingly */
-            if (!(_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") &&
-                  _wcsicmp(rootName, L"HKEY_USERS")))
+            if (_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") != 0 ||
+                _wcsicmp(rootName, L"HKEY_USERS") != 0 )
             {
                 /*
                  * enable the unload menu item if at the root, otherwise
@@ -692,95 +692,95 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
     
     switch (((LPNMHDR)lParam)->code)
     {
-    case TVN_ITEMEXPANDING:
-        *Result = !OnTreeExpanding(g_pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
-        return TRUE;
-    case TVN_SELCHANGED:    
-        {
-        NMTREEVIEW* pnmtv = (NMTREEVIEW*)lParam;
-        /* Get the parent of the current item */
-        HTREEITEM hParentItem = TreeView_GetParent(g_pChildWnd->hTreeWnd, pnmtv->itemNew.hItem);
+		case TVN_ITEMEXPANDING:
+			*Result = !OnTreeExpanding(g_pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
+			return TRUE;
+		case TVN_SELCHANGED:    
+		{
+			NMTREEVIEW* pnmtv = (NMTREEVIEW*)lParam;
+			/* Get the parent of the current item */
+			HTREEITEM hParentItem = TreeView_GetParent(g_pChildWnd->hTreeWnd, pnmtv->itemNew.hItem);
 
-        UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL);
+			UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL);
 
-        /* Disable the Permissions menu item for 'My Computer' */
-        EnableMenuItem(hMenuFrame , ID_EDIT_PERMISSIONS, MF_BYCOMMAND | ((hParentItem == NULL) ? MF_GRAYED : MF_ENABLED));
+			/* Disable the Permissions menu item for 'My Computer' */
+			EnableMenuItem(hMenuFrame , ID_EDIT_PERMISSIONS, MF_BYCOMMAND | (hParentItem ? MF_ENABLED : MF_GRAYED));
 
-        /*
-         * Disable Delete/Rename menu options for 'My Computer' (first item so doesn't have any parent)
-         * and HKEY_* keys (their parent is 'My Computer' and the previous remark applies).
-         */
-        if (!hParentItem || !TreeView_GetParent(g_pChildWnd->hTreeWnd, hParentItem))
-        {
-            EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_GRAYED);
-            EnableMenuItem(hMenuFrame , ID_EDIT_RENAME, MF_BYCOMMAND | MF_GRAYED);
-            EnableMenuItem(hPopupMenus, ID_TREE_DELETE, MF_BYCOMMAND | MF_GRAYED);
-            EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_GRAYED); 
-        }
-        else
-        {
-            EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_ENABLED);
-            EnableMenuItem(hMenuFrame , ID_EDIT_RENAME, MF_BYCOMMAND | MF_ENABLED);
-            EnableMenuItem(hPopupMenus, ID_TREE_DELETE, MF_BYCOMMAND | MF_ENABLED);
-            EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_ENABLED);
-        }
+			/*
+			 * Disable Delete/Rename menu options for 'My Computer' (first item so doesn't have any parent)
+			 * and HKEY_* keys (their parent is 'My Computer' and the previous remark applies).
+			 */
+			if (!hParentItem || !TreeView_GetParent(g_pChildWnd->hTreeWnd, hParentItem))
+			{
+				EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_GRAYED);
+				EnableMenuItem(hMenuFrame , ID_EDIT_RENAME, MF_BYCOMMAND | MF_GRAYED);
+				EnableMenuItem(hPopupMenus, ID_TREE_DELETE, MF_BYCOMMAND | MF_GRAYED);
+				EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_GRAYED); 
+			}
+			else
+			{
+				EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_ENABLED);
+				EnableMenuItem(hMenuFrame , ID_EDIT_RENAME, MF_BYCOMMAND | MF_ENABLED);
+				EnableMenuItem(hPopupMenus, ID_TREE_DELETE, MF_BYCOMMAND | MF_ENABLED);
+				EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_ENABLED);
+			}
 
-        return TRUE;
-        }
-    case NM_SETFOCUS:
-        g_pChildWnd->nFocusPanel = 0;
-        break;
-    case TVN_BEGINLABELEDIT:
-    {
-        LPNMTVDISPINFO ptvdi;
-        /* cancel label edit for rootkeys  */
-        ptvdi = (LPNMTVDISPINFO) lParam;
-        if (!TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem) ||
-            !TreeView_GetParent(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem)))
-        {
-            *Result = TRUE;
-        }
-        else
-        {
-            *Result = FALSE;
-        }
-        return TRUE;
-    }
-    case TVN_ENDLABELEDIT:
-        {    
-        LPCWSTR keyPath;
-        HKEY hRootKey;
-        HKEY hKey = NULL;
-        LPNMTVDISPINFO ptvdi;
-        LONG lResult = TRUE;
-        WCHAR szBuffer[MAX_PATH];
+			return TRUE;
+		}
+		case NM_SETFOCUS:
+			g_pChildWnd->nFocusPanel = 0;
+			break;
+		case TVN_BEGINLABELEDIT:
+		{
+			LPNMTVDISPINFO ptvdi;
+			/* cancel label edit for rootkeys  */
+			ptvdi = (LPNMTVDISPINFO) lParam;
+			if (!TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem) ||
+				!TreeView_GetParent(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem)))
+			{
+				*Result = TRUE;
+			}
+			else
+			{
+				*Result = FALSE;
+			}
+			return TRUE;
+		}
+		case TVN_ENDLABELEDIT:
+		{    
+			LPCWSTR keyPath;
+			HKEY hRootKey;
+			HKEY hKey = NULL;
+			LPNMTVDISPINFO ptvdi;
+			LONG lResult = TRUE;
+			WCHAR szBuffer[MAX_PATH];
 
-        ptvdi = (LPNMTVDISPINFO) lParam;
-        if (ptvdi->item.pszText)
-        {
-            keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem), &hRootKey);
-            if(wcslen(keyPath))
-                _snwprintf(szBuffer, COUNT_OF(szBuffer), L"%s\\%s", keyPath, ptvdi->item.pszText);
-            else
-                _snwprintf(szBuffer, COUNT_OF(szBuffer), L"%s", ptvdi->item.pszText);
-            keyPath = GetItemPath(g_pChildWnd->hTreeWnd, ptvdi->item.hItem, &hRootKey);
-            if (RegOpenKeyExW(hRootKey, szBuffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-            {
-                lResult = FALSE;
-                RegCloseKey(hKey);
-                TreeView_EditLabel(g_pChildWnd->hTreeWnd, ptvdi->item.hItem);
-            }
-            else
-            {
-                if (RenameKey(hRootKey, keyPath, ptvdi->item.pszText) != ERROR_SUCCESS)
-                    lResult = FALSE;
-                else
-                    UpdateAddress(ptvdi->item.hItem, hRootKey, szBuffer);
-            }
-            *Result = lResult;
-        }
-        return TRUE;
-        }
+			ptvdi = (LPNMTVDISPINFO) lParam;
+			if (ptvdi->item.pszText)
+			{
+				keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem), &hRootKey);
+				if (wcslen(keyPath))
+					_snwprintf(szBuffer, COUNT_OF(szBuffer), L"%s\\%s", keyPath, ptvdi->item.pszText);
+				else
+					_snwprintf(szBuffer, COUNT_OF(szBuffer), L"%s", ptvdi->item.pszText);
+				keyPath = GetItemPath(g_pChildWnd->hTreeWnd, ptvdi->item.hItem, &hRootKey);
+				if (RegOpenKeyExW(hRootKey, szBuffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+				{
+					lResult = FALSE;
+					RegCloseKey(hKey);
+					TreeView_EditLabel(g_pChildWnd->hTreeWnd, ptvdi->item.hItem);
+				}
+				else
+				{
+					if (RenameKey(hRootKey, keyPath, ptvdi->item.pszText) != ERROR_SUCCESS)
+						lResult = FALSE;
+					else
+						UpdateAddress(ptvdi->item.hItem, hRootKey, szBuffer);
+				}
+				*Result = lResult;
+			}
+			return TRUE;
+		}
     }
     return FALSE;
 }

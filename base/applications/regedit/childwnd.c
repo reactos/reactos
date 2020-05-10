@@ -430,8 +430,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         else
         {
             if (((LPNMHDR)lParam)->idFrom == LIST_WINDOW)
-            {
-                
+            {               
                 if (!ListWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
                 {
                     goto def;
