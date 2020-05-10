@@ -199,7 +199,7 @@ DWORD PrintEntries(PMIB_IPNETROW pIpAddRow)
 /* FIXME: allow user to specify an interface address, via pszIfAddr */
 DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 {
-    UINT i, k;
+    DWORD i, k, dwCount;
     PMIB_IPNETTABLE pIpNetTable = NULL;
     PMIB_IPADDRTABLE pIpAddrTable = NULL;
     ULONG Size = 0;
@@ -227,7 +227,7 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     dwError = GetIpNetTable(pIpNetTable, &Size, TRUE);
     if (dwError != NO_ERROR)
     {
-        _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
+        _tprintf(_T("GetIpNetTable failed: %lu\n"), dwError);
         DoFormatMessage();
         goto cleanup;
     }
@@ -246,7 +246,7 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     Size = 0;
     GetIpAddrTable(pIpAddrTable, &Size, 0);
 
-    pIpAddrTable = (MIB_IPADDRTABLE *)HeapAlloc(GetProcessHeap(), 0, Size);
+    pIpAddrTable = (PMIB_IPADDRTABLE)HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpAddrTable == NULL)
     {
         PrintMessage(10004);
@@ -275,6 +275,34 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
         }
     }
 
+    /* Count relevant ARP entries */
+    dwCount = 0;
+    for (i = 0; i < pIpNetTable->dwNumEntries; i++)
+    {
+        /* if the user has supplied their own internet address *
+         * only count the arp entry which matches that */
+        if (pszInetAddr)
+        {
+            inaddr.S_un.S_addr = pIpNetTable->table[i].dwAddr;
+            pszIpAddr = inet_ntoa(inaddr);
+
+            /* check if it matches, count it */
+            if (strcmp(pszIpAddr, pszInetAddr) == 0)
+                dwCount++;
+        }
+        else
+        {
+            /* if an address is not supplied, count all entries */
+            dwCount++;
+        }
+    }
+
+    /* Print message and leave if there are no relevant ARP entries */
+    if (dwCount == 0)
+    {
+        PrintMessage(10018);
+        goto cleanup;
+    }
 
     /* print header, including interface IP address and index number */
     PrintMessageV(10003, szIntIpAddr, pIpNetTable->table[0].dwIndex);
@@ -378,13 +406,13 @@ DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     dwError = GetIpNetTable(pIpNetTable, &Size, TRUE);
     if (dwError != NO_ERROR)
     {
-        _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
+        _tprintf(_T("GetIpNetTable failed: %lu\n"), dwError);
         DoFormatMessage();
         goto cleanup;
     }
 
     /* reserve memory on heap and zero */
-    pAddHost = (MIB_IPNETROW *)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
+    pAddHost = (PMIB_IPNETROW)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
     if (pAddHost == NULL)
     {
         PrintMessage(10004);
@@ -438,7 +466,8 @@ DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
 
 
     /* Add the ARP entry */
-    if (SetIpNetEntry(pAddHost) != NO_ERROR)
+    dwError = SetIpNetEntry(pAddHost);
+    if (dwError != NO_ERROR)
     {
         DoFormatMessage();
         goto cleanup;
@@ -512,7 +541,7 @@ DWORD Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     dwError = GetIpNetTable(pIpNetTable, &Size, TRUE);
     if (dwError != NO_ERROR)
     {
-        _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
+        _tprintf(_T("GetIpNetTable failed: %lu\n"), dwError);
         DoFormatMessage();
         goto cleanup;
     }
