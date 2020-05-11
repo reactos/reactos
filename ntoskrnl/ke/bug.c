@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -292,74 +293,6 @@ KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
             KeRosDumpStackFrameArray(Frames, RealFrameCount);
         }
     }
-}
-
-VOID
-NTAPI
-KeRosDumpTriageForBugZillaReport(VOID)
-{
-#if 0
-    extern BOOLEAN KiFastSystemCallDisable, KiSMTProcessorsPresent;
-    extern ULONG KeI386MachineType, MxcsrFeatureMask;
-    extern BOOLEAN Ke386Pae, Ke386NoExecute;
-
-    DbgPrint("ReactOS has crashed! Please go to http://jira.reactos.org/ to file a bug!\n");
-    DbgPrint("\nHardware Information\n");
-    DbgPrint("Processor Architecture: %d\n"
-             "Feature Bits: %d\n"
-             "System Call Disabled: %d\n"
-             "NPX Present: %d\n"
-             "MXCsr Mask: %d\n"
-             "MXCsr Feature Mask: %d\n"
-             "XMMI Present: %d\n"
-             "FXSR Present: %d\n"
-             "Machine Type: %d\n"
-             "PAE: %d\n"
-             "NX: %d\n"
-             "Processors: %d\n"
-             "Active Processors: %d\n"
-             "Pentium LOCK Bug: %d\n"
-             "Hyperthreading: %d\n"
-             "CPU Manufacturer: %s\n"
-             "CPU Name: %wZ\n"
-             "CPUID: %d\n"
-             "CPU Type: %d\n"
-             "CPU Stepping: %d\n"
-             "CPU Speed: %d\n"
-             "CPU L2 Cache: %d\n"
-             "BIOS Date: %wZ\n"
-             "BIOS Version: %wZ\n"
-             "Video BIOS Date: %wZ\n"
-             "Video BIOS Version: %wZ\n"
-             "Memory: %d\n",
-             KeProcessorArchitecture,
-             KeFeatureBits,
-             KiFastSystemCallDisable,
-             KeI386NpxPresent,
-             KiMXCsrMask,
-             MxcsrFeatureMask,
-             KeI386XMMIPresent,
-             KeI386FxsrPresent,
-             KeI386MachineType,
-             Ke386Pae,
-             Ke386NoExecute,
-             KeNumberProcessors,
-             KeActiveProcessors,
-             KiI386PentiumLockErrataPresent,
-             KiSMTProcessorsPresent,
-             KeGetCurrentPrcb()->VendorString,
-             &KeRosProcessorName,
-             KeGetCurrentPrcb()->CpuID,
-             KeGetCurrentPrcb()->CpuType,
-             KeGetCurrentPrcb()->CpuStep,
-             KeGetCurrentPrcb()->MHz,
-             ((PKIPCR)KeGetPcr())->SecondLevelCacheSize,
-             &KeRosBiosDate,
-             &KeRosBiosVersion,
-             &KeRosVideoBiosDate,
-             &KeRosVideoBiosVersion,
-             MmNumberOfPhysicalPages * PAGE_SIZE);
-#endif
 }
 
 VOID
@@ -693,11 +626,11 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         InbvResetDisplay();
 
         /* Display blue screen */
-        InbvSolidColorFill(0, 0, 639, 479, 4);
+        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 4);
         InbvSetTextColor(15);
         InbvInstallDisplayStringFilter(NULL);
         InbvEnableDisplayString(TRUE);
-        InbvSetScrollRegion(0, 0, 639, 479);
+        InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
     }
 
     /* Check if this is a hard error */
@@ -1134,18 +1067,6 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 
             /* Break in the debugger */
             KiBugCheckDebugBreak(DBG_STATUS_BUGCHECK_FIRST);
-        }
-        else
-        {
-            /*
-             * ROS HACK.
-             * Ok, so debugging is enabled, but KDBG isn't there.
-             * We'll manually dump the stack for the user.
-             */
-            KeRosDumpStackFrames(NULL, 0);
-
-            /* ROS HACK 2: Generate something useful for Bugzilla */
-            KeRosDumpTriageForBugZillaReport();
         }
     }
 

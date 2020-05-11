@@ -126,7 +126,7 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
                        PRECT rcView,
                        PRECT rcFramebuffer)
 {
-    PCONSRV_CONSOLE Console = Buffer->Header.Console;
+    PCONSRV_CONSOLE Console = (PCONSRV_CONSOLE)Buffer->Header.Console;
     // ASSERT(Console == GuiData->Console);
 
     ConioInitLongRect(rcFramebuffer, 0, 0, 0, 0);

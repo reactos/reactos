@@ -100,7 +100,7 @@ BOOL ShimLib_StrAEqualsWNC(PCSTR szString, PCWSTR wszString)
 #endif
 
 
-_SHMALLOC(".shm") SHIMREG _shim_start = { 0 };
+_SHMALLOC(".shm$AAA") SHIMREG _shim_start = { 0 };
 _SHMALLOC(".shm$ZZZ") SHIMREG _shim_end = { 0 };
 
 
@@ -112,7 +112,7 @@ PHOOKAPI WINAPI ShimLib_GetHookAPIs(IN LPCSTR szCommandLine, IN LPCWSTR wszShimN
 {
     PSHIMREG ps = &_shim_start;
     ps++;
-    for (; ps != &_shim_end; ps++)
+    for (; ps < &_shim_end; ps++)
     {
         if (ps->GetHookAPIs != NULL && ps->ShimName != NULL)
         {

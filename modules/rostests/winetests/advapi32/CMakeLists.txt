@@ -18,7 +18,7 @@ list(APPEND SOURCE
 add_executable(advapi32_winetest ${SOURCE} testlist.c)
 
 if(USE_CLANG_CL OR (NOT MSVC))
-    add_target_compile_flags(advapi32_winetest "-Wno-format")
+    target_compile_options(advapi32_winetest PRIVATE "-Wno-format")
 endif()
 
 set_module_type(advapi32_winetest win32cui)

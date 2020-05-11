@@ -112,8 +112,8 @@ IDB_IMAGES BITMAP DISCARDABLE "resources/images.bmp"
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
-#ifdef LANGUAGE_SI_SI
-	#include "lang/sl-SI.rc"
+#ifdef LANGUAGE_SL_SI
+    #include "lang/sl-SI.rc"
 #endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"

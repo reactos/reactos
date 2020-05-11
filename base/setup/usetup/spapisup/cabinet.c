@@ -1018,134 +1018,147 @@ CabinetExtractFile(
     DPRINT("Extracting file at uncompressed offset (0x%X) Size (%d bytes)\n",
            (UINT)Search->File->FileOffset, (UINT)Search->File->FileSize);
 
-    RtlInitAnsiString(&AnsiString, Search->File->FileName);
-    wcscpy(DestName, CabinetContext->DestPath);
-    UnicodeString.MaximumLength = sizeof(DestName) - wcslen(DestName) * sizeof(WCHAR);
-    UnicodeString.Buffer = DestName + wcslen(DestName);
-    UnicodeString.Length = 0;
-    RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, FALSE);
-
-    /* Create destination file, fail if it already exists */
-    RtlInitUnicodeString(&UnicodeString, DestName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &UnicodeString,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL, NULL);
-
-    NtStatus = NtCreateFile(&DestFile,
-                            GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
-                            &ObjectAttributes,
-                            &IoStatusBlock,
-                            NULL,
-                            FILE_ATTRIBUTE_NORMAL,
-                            0,
-                            FILE_CREATE,
-                            FILE_SYNCHRONOUS_IO_NONALERT,
-                            NULL, 0);
-
-    if (!NT_SUCCESS(NtStatus))
+    if (CabinetContext->CreateFileHandler)
     {
-        DPRINT("NtCreateFile() failed (%S) (%x)\n", DestName, NtStatus);
-
-        /* If file exists, ask to overwrite file */
-        if (CabinetContext->OverwriteHandler == NULL ||
-            CabinetContext->OverwriteHandler(CabinetContext, Search->File, DestName))
+        /* Call create context */
+        CurrentDestBuffer = CabinetContext->CreateFileHandler(CabinetContext, Search->File->FileSize);
+        if (!CurrentDestBuffer)
         {
-            /* Create destination file, overwrite if it already exists */
-            NtStatus = NtCreateFile(&DestFile,
-                                    GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
-                                    &ObjectAttributes,
-                                    &IoStatusBlock,
-                                    NULL,
-                                    FILE_ATTRIBUTE_NORMAL,
-                                    0,
-                                    FILE_OVERWRITE,
-                                    FILE_SYNCHRONOUS_IO_ALERT,
-                                    NULL, 0);
-
-            if (!NT_SUCCESS(NtStatus))
-            {
-                DPRINT1("NtCreateFile() failed (%S) (%x)\n", DestName, NtStatus);
-                return CAB_STATUS_CANNOT_CREATE;
-            }
+            DPRINT1("CreateFileHandler() failed\n");
+            return CAB_STATUS_CANNOT_CREATE;
         }
-        else
-        {
-            DPRINT1("File (%S) exists\n", DestName);
-            return CAB_STATUS_FILE_EXISTS;
-        }
-    }
-
-    MaxDestFileSize.QuadPart = Search->File->FileSize;
-    NtStatus = NtCreateSection(&DestFileSection,
-                               SECTION_ALL_ACCESS,
-                               0,
-                               &MaxDestFileSize,
-                               PAGE_READWRITE,
-                               SEC_COMMIT,
-                               DestFile);
-
-    if (!NT_SUCCESS(NtStatus))
-    {
-        DPRINT1("NtCreateSection failed for %ls: %x\n", DestName, NtStatus);
-        Status = CAB_STATUS_NOMEMORY;
-        goto CloseDestFile;
-    }
-
-    DestFileBuffer = 0;
-    CabinetContext->DestFileSize = 0;
-    NtStatus = NtMapViewOfSection(DestFileSection,
-                                  NtCurrentProcess(),
-                                  &DestFileBuffer,
-                                  0, 0, 0,
-                                  &CabinetContext->DestFileSize,
-                                  ViewUnmap,
-                                  0,
-                                  PAGE_READWRITE);
-
-    if (!NT_SUCCESS(NtStatus))
-    {
-        DPRINT1("NtMapViewOfSection failed: %x\n", NtStatus);
-        Status = CAB_STATUS_NOMEMORY;
-        goto CloseDestFileSection;
-    }
-
-    CurrentDestBuffer = DestFileBuffer;
-    if (!ConvertDosDateTimeToFileTime(Search->File->FileDate,
-                                      Search->File->FileTime,
-                                      &FileTime))
-    {
-        DPRINT1("DosDateTimeToFileTime() failed\n");
-        Status = CAB_STATUS_CANNOT_WRITE;
-        goto UnmapDestFile;
-    }
-
-    NtStatus = NtQueryInformationFile(DestFile,
-                                      &IoStatusBlock,
-                                      &FileBasic,
-                                      sizeof(FILE_BASIC_INFORMATION),
-                                      FileBasicInformation);
-    if (!NT_SUCCESS(NtStatus))
-    {
-        DPRINT("NtQueryInformationFile() failed (%x)\n", NtStatus);
     }
     else
     {
-        memcpy(&FileBasic.LastAccessTime, &FileTime, sizeof(FILETIME));
+        RtlInitAnsiString(&AnsiString, Search->File->FileName);
+        wcscpy(DestName, CabinetContext->DestPath);
+        UnicodeString.MaximumLength = sizeof(DestName) - wcslen(DestName) * sizeof(WCHAR);
+        UnicodeString.Buffer = DestName + wcslen(DestName);
+        UnicodeString.Length = 0;
+        RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, FALSE);
 
-        NtStatus = NtSetInformationFile(DestFile,
-                                        &IoStatusBlock,
-                                        &FileBasic,
-                                        sizeof(FILE_BASIC_INFORMATION),
-                                        FileBasicInformation);
+        /* Create destination file, fail if it already exists */
+        RtlInitUnicodeString(&UnicodeString, DestName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &UnicodeString,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL, NULL);
+
+        NtStatus = NtCreateFile(&DestFile,
+                                GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                                &ObjectAttributes,
+                                &IoStatusBlock,
+                                NULL,
+                                FILE_ATTRIBUTE_NORMAL,
+                                0,
+                                FILE_CREATE,
+                                FILE_SYNCHRONOUS_IO_NONALERT,
+                                NULL, 0);
+
         if (!NT_SUCCESS(NtStatus))
         {
-            DPRINT("NtSetInformationFile() failed (%x)\n", NtStatus);
-        }
-    }
+            DPRINT("NtCreateFile() failed (%S) (%x)\n", DestName, NtStatus);
 
-    SetAttributesOnFile(Search->File, DestFile);
+            /* If file exists, ask to overwrite file */
+            if (CabinetContext->OverwriteHandler == NULL ||
+                CabinetContext->OverwriteHandler(CabinetContext, Search->File, DestName))
+            {
+                /* Create destination file, overwrite if it already exists */
+                NtStatus = NtCreateFile(&DestFile,
+                                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                                        &ObjectAttributes,
+                                        &IoStatusBlock,
+                                        NULL,
+                                        FILE_ATTRIBUTE_NORMAL,
+                                        0,
+                                        FILE_OVERWRITE,
+                                        FILE_SYNCHRONOUS_IO_ALERT,
+                                        NULL, 0);
+
+                if (!NT_SUCCESS(NtStatus))
+                {
+                    DPRINT1("NtCreateFile() failed (%S) (%x)\n", DestName, NtStatus);
+                    return CAB_STATUS_CANNOT_CREATE;
+                }
+            }
+            else
+            {
+                DPRINT1("File (%S) exists\n", DestName);
+                return CAB_STATUS_FILE_EXISTS;
+            }
+        }
+
+        MaxDestFileSize.QuadPart = Search->File->FileSize;
+        NtStatus = NtCreateSection(&DestFileSection,
+                                   SECTION_ALL_ACCESS,
+                                   0,
+                                   &MaxDestFileSize,
+                                   PAGE_READWRITE,
+                                   SEC_COMMIT,
+                                   DestFile);
+
+        if (!NT_SUCCESS(NtStatus))
+        {
+            DPRINT1("NtCreateSection failed for %ls: %x\n", DestName, NtStatus);
+            Status = CAB_STATUS_NOMEMORY;
+            goto CloseDestFile;
+        }
+
+        DestFileBuffer = 0;
+        CabinetContext->DestFileSize = 0;
+        NtStatus = NtMapViewOfSection(DestFileSection,
+                                      NtCurrentProcess(),
+                                      &DestFileBuffer,
+                                      0, 0, 0,
+                                      &CabinetContext->DestFileSize,
+                                      ViewUnmap,
+                                      0,
+                                      PAGE_READWRITE);
+
+        if (!NT_SUCCESS(NtStatus))
+        {
+            DPRINT1("NtMapViewOfSection failed: %x\n", NtStatus);
+            Status = CAB_STATUS_NOMEMORY;
+            goto CloseDestFileSection;
+        }
+
+        CurrentDestBuffer = DestFileBuffer;
+        if (!ConvertDosDateTimeToFileTime(Search->File->FileDate,
+                                          Search->File->FileTime,
+                                          &FileTime))
+        {
+            DPRINT1("DosDateTimeToFileTime() failed\n");
+            Status = CAB_STATUS_CANNOT_WRITE;
+            goto UnmapDestFile;
+        }
+
+        NtStatus = NtQueryInformationFile(DestFile,
+                                          &IoStatusBlock,
+                                          &FileBasic,
+                                          sizeof(FILE_BASIC_INFORMATION),
+                                          FileBasicInformation);
+        if (!NT_SUCCESS(NtStatus))
+        {
+            DPRINT("NtQueryInformationFile() failed (%x)\n", NtStatus);
+        }
+        else
+        {
+            memcpy(&FileBasic.LastAccessTime, &FileTime, sizeof(FILETIME));
+
+            NtStatus = NtSetInformationFile(DestFile,
+                                            &IoStatusBlock,
+                                            &FileBasic,
+                                            sizeof(FILE_BASIC_INFORMATION),
+                                            FileBasicInformation);
+            if (!NT_SUCCESS(NtStatus))
+            {
+                DPRINT("NtSetInformationFile() failed (%x)\n", NtStatus);
+            }
+        }
+
+        SetAttributesOnFile(Search->File, DestFile);
+    }
 
     /* Call extract event handler */
     if (CabinetContext->ExtractHandler != NULL)
@@ -1250,13 +1263,16 @@ CabinetExtractFile(
     Status = CAB_STATUS_SUCCESS;
 
 UnmapDestFile:
-    NtUnmapViewOfSection(NtCurrentProcess(), DestFileBuffer);
+    if (!CabinetContext->CreateFileHandler)
+        NtUnmapViewOfSection(NtCurrentProcess(), DestFileBuffer);
 
 CloseDestFileSection:
-    NtClose(DestFileSection);
+    if (!CabinetContext->CreateFileHandler)
+        NtClose(DestFileSection);
 
 CloseDestFile:
-    NtClose(DestFile);
+    if (!CabinetContext->CreateFileHandler)
+        NtClose(DestFile);
 
     return Status;
 }
@@ -1316,11 +1332,13 @@ CabinetSetEventHandlers(
     IN PCABINET_CONTEXT CabinetContext,
     IN PCABINET_OVERWRITE Overwrite,
     IN PCABINET_EXTRACT Extract,
-    IN PCABINET_DISK_CHANGE DiskChange)
+    IN PCABINET_DISK_CHANGE DiskChange,
+    IN PCABINET_CREATE_FILE CreateFile)
 {
     CabinetContext->OverwriteHandler = Overwrite;
     CabinetContext->ExtractHandler = Extract;
     CabinetContext->DiskChangeHandler = DiskChange;
+    CabinetContext->CreateFileHandler = CreateFile;
 }
 
 /*

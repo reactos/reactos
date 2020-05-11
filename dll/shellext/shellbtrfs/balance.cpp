@@ -383,6 +383,8 @@ void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
         if (IsDlgButtonChecked(hwndDlg, IDC_PROFILES_RAID10) == BST_CHECKED) opts->profiles |= BLOCK_FLAG_RAID10;
         if (IsDlgButtonChecked(hwndDlg, IDC_PROFILES_RAID5) == BST_CHECKED) opts->profiles |= BLOCK_FLAG_RAID5;
         if (IsDlgButtonChecked(hwndDlg, IDC_PROFILES_RAID6) == BST_CHECKED) opts->profiles |= BLOCK_FLAG_RAID6;
+        if (IsDlgButtonChecked(hwndDlg, IDC_PROFILES_RAID1C3) == BST_CHECKED) opts->profiles |= BLOCK_FLAG_RAID1C3;
+        if (IsDlgButtonChecked(hwndDlg, IDC_PROFILES_RAID1C4) == BST_CHECKED) opts->profiles |= BLOCK_FLAG_RAID1C4;
     }
 
     if (IsDlgButtonChecked(hwndDlg, IDC_DEVID) == BST_CHECKED) {
@@ -515,7 +517,7 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
                 HWND devcb, convcb;
                 btrfs_device* bd;
                 btrfs_balance_opts* opts;
-                static int convtypes[] = { IDS_SINGLE2, IDS_DUP, IDS_RAID0, IDS_RAID1, IDS_RAID5, IDS_RAID6, IDS_RAID10, 0 };
+                static int convtypes[] = { IDS_SINGLE2, IDS_DUP, IDS_RAID0, IDS_RAID1, IDS_RAID5, IDS_RAID1C3, IDS_RAID6, IDS_RAID10, IDS_RAID1C4, 0 };
                 int i, num_devices = 0, num_writeable_devices = 0;
                 wstring s, u;
                 bool balance_started = balance_status & (BTRFS_BALANCE_RUNNING | BTRFS_BALANCE_PAUSED);
@@ -601,7 +603,7 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
                         break;
                     else if (num_writeable_devices < 3 && i == 4)
                         break;
-                    else if (num_writeable_devices < 4 && i == 5)
+                    else if (num_writeable_devices < 4 && i == 6)
                         break;
                 }
 
@@ -615,6 +617,8 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
                 CheckDlgButton(hwndDlg, IDC_PROFILES_RAID10, opts->profiles & BLOCK_FLAG_RAID10 ? BST_CHECKED : BST_UNCHECKED);
                 CheckDlgButton(hwndDlg, IDC_PROFILES_RAID5, opts->profiles & BLOCK_FLAG_RAID5 ? BST_CHECKED : BST_UNCHECKED);
                 CheckDlgButton(hwndDlg, IDC_PROFILES_RAID6, opts->profiles & BLOCK_FLAG_RAID6 ? BST_CHECKED : BST_UNCHECKED);
+                CheckDlgButton(hwndDlg, IDC_PROFILES_RAID1C3, opts->profiles & BLOCK_FLAG_RAID1C3 ? BST_CHECKED : BST_UNCHECKED);
+                CheckDlgButton(hwndDlg, IDC_PROFILES_RAID1C4, opts->profiles & BLOCK_FLAG_RAID1C4 ? BST_CHECKED : BST_UNCHECKED);
 
                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_SINGLE), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_DUP), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
@@ -623,6 +627,8 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID10), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID5), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID6), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID1C3), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID1C4), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES), balance_started ? false : true);
 
                 // usage
@@ -752,6 +758,8 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
                                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID10), enabled);
                                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID5), enabled);
                                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID6), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID1C3), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID1C4), enabled);
                                 break;
                             }
 

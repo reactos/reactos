@@ -1,9 +1,0 @@
-/* Spanish Language resource file.
- * Translated by: Ismael Ferreras Morezuelas <2014-11-07> */
-
-LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
-
-STRINGTABLE
-BEGIN
-    IDS_USE_NOW_CONNECTED "%s is now connected to %s\n"
-END

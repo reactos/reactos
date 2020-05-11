@@ -146,11 +146,11 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 
     hr = pbs->GetPidl(&pidlCurrent);
     if (FAILED_UNEXPECTEDLY(hr))
-        goto cleanup;
+        goto parseabsolute;
 
     hr = psfDesktop->BindToObject(pidlCurrent, NULL, IID_PPV_ARG(IShellFolder, &psfCurrent));
     if (FAILED_UNEXPECTEDLY(hr))
-        goto cleanup;
+        goto parseabsolute;
 
     hr = psfCurrent->ParseDisplayName(topLevelWindow, NULL, address, &eaten,  &pidlRelative, &attributes);
     if (SUCCEEDED(hr))
@@ -160,6 +160,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
         goto cleanup;
     }
 
+parseabsolute:
     /* We couldn't parse a relative path, attempt to parse an absolute path */
     hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
 
@@ -173,6 +174,19 @@ cleanup:
     return hr;
 }
 
+HRESULT STDMETHODCALLTYPE CAddressEditBox::ShowFileNotFoundError(HRESULT hRet)
+{
+    CComHeapPtr<WCHAR> input;
+    int inputLength = fCombobox.GetWindowTextLength() + 2;
+
+    input.Allocate(inputLength);
+    fCombobox.GetWindowText(input, inputLength);
+
+    ShellMessageBoxW(_AtlBaseModule.GetResourceInstance(), fCombobox.m_hWnd, MAKEINTRESOURCEW(IDS_PARSE_ADDR_ERR_TEXT), MAKEINTRESOURCEW(IDS_PARSE_ADDR_ERR_TITLE), MB_OK | MB_ICONERROR, input.m_pData);
+
+    return hRet;
+}
+
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 {
     HRESULT hr;
@@ -181,7 +195,13 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
      * Parse the path is it wasn't parsed
      */
     if (!pidlLastParsed)
-        ParseNow(0);
+        hr = ParseNow(0);
+
+    /*
+     * If the destination path doesn't exist then display an error message
+     */
+    if (hr == HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE) || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+        return ShowFileNotFoundError(hr);
 
     if (!pidlLastParsed)
         return E_FAIL;

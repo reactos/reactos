@@ -37,6 +37,11 @@ list(APPEND FONT_FILES
     palab.ttf
     palabi.ttf
     palai.ttf
+    Selawik-Regular.ttf
+    Selawik-SemiBold.ttf
+    Selawik-Bold.ttf
+    Selawik-Light.ttf
+    Selawik-ExtraLight.ttf
     SourceSansPro-Regular.ttf
     SourceSansPro-Bold.ttf
     SourceSansPro-BoldIt.ttf

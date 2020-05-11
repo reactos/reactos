@@ -196,7 +196,7 @@ BEGIN
     IDS_APPS_COUNT "Počet programov: %d; Selected: %d"
     IDS_WELCOME_TITLE "Víta Vás Manažér aplikácií systému ReactOS!\n\n" // ReactOS Application Manager
     IDS_WELCOME_TEXT "Vyberte si kategóriu na ľavej strane, potom vyberte aplikáciu, ktorú chcete nainštalovať alebo odinštalovať.\nWebstránka projektu ReactOS: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Nainštalované"
     IDS_AVAILABLEFORINST "Dostupné pre nainštalovanie"
     IDS_UPDATES "Aktualizácie"
@@ -219,6 +219,7 @@ BEGIN
     IDS_SELECTEDFORINST "Selected for installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
     IDS_RECOMMENDED "Recommended software"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

@@ -4,4 +4,4 @@ list(APPEND SOURCE
     rtl.c)
 
 add_library(rtlver ${SOURCE})
-add_dependencies(rtlver xdk)
+add_dependencies(rtlver bugcodes xdk)

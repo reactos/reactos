@@ -418,19 +418,22 @@ static
 void
 Ping(void)
 {
-    PVOID ReplyBuffer = NULL;
+    PVOID ReplyBuffer;
     PVOID SendBuffer = NULL;
     DWORD ReplySize = 0;
     DWORD Status;
 
-    SendBuffer = malloc(RequestSize);
-    if (SendBuffer == NULL)
+    if (RequestSize != 0)
     {
-        ConResPrintf(StdErr, IDS_NO_RESOURCES);
-        exit(1);
-    }
+        SendBuffer = malloc(RequestSize);
+        if (SendBuffer == NULL)
+        {
+            ConResPrintf(StdErr, IDS_NO_RESOURCES);
+            exit(1);
+        }
 
-    ZeroMemory(SendBuffer, RequestSize);
+        ZeroMemory(SendBuffer, RequestSize);
+    }
 
     if (Family == AF_INET6)
     {

@@ -167,7 +167,7 @@ static NTSTATUS pnp_cancel_remove_device(PDEVICE_OBJECT DeviceObject) {
 
     Status = send_disks_pnp_message(Vcb, IRP_MN_CANCEL_REMOVE_DEVICE);
     if (!NT_SUCCESS(Status)) {
-        WARN("send_disks_pnp_message returned %08x\n", Status);
+        WARN("send_disks_pnp_message returned %08lx\n", Status);
         goto end;
     }
 
@@ -191,7 +191,7 @@ NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
     Status = send_disks_pnp_message(Vcb, IRP_MN_QUERY_REMOVE_DEVICE);
     if (!NT_SUCCESS(Status)) {
-        WARN("send_disks_pnp_message returned %08x\n", Status);
+        WARN("send_disks_pnp_message returned %08lx\n", Status);
         ExReleaseResourceLite(&Vcb->tree_lock);
         return Status;
     }
@@ -204,7 +204,7 @@ NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         free_trees(Vcb);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("do_write returned %08x\n", Status);
+            ERR("do_write returned %08lx\n", Status);
             ExReleaseResourceLite(&Vcb->tree_lock);
             return Status;
         }
@@ -227,14 +227,14 @@ static NTSTATUS pnp_remove_device(PDEVICE_OBJECT DeviceObject) {
     Status = send_disks_pnp_message(Vcb, IRP_MN_REMOVE_DEVICE);
 
     if (!NT_SUCCESS(Status))
-        WARN("send_disks_pnp_message returned %08x\n", Status);
+        WARN("send_disks_pnp_message returned %08lx\n", Status);
 
     ExReleaseResourceLite(&Vcb->tree_lock);
 
     if (DeviceObject->Vpb->Flags & VPB_MOUNTED) {
         Status = FsRtlNotifyVolumeEvent(Vcb->root_file, FSRTL_VOLUME_DISMOUNT);
         if (!NT_SUCCESS(Status)) {
-            WARN("FsRtlNotifyVolumeEvent returned %08x\n", Status);
+            WARN("FsRtlNotifyVolumeEvent returned %08lx\n", Status);
         }
 
         if (Vcb->vde)
@@ -532,7 +532,7 @@ static NTSTATUS pdo_device_usage_notification(pdo_device_extension* pdode, PIRP 
                 KeWaitForSingleObject(&context.Event, Executive, KernelMode, false, NULL);
 
             if (!NT_SUCCESS(context.Status)) {
-                ERR("IoCallDriver returned %08x\n", context.Status);
+                ERR("IoCallDriver returned %08lx\n", context.Status);
                 ExReleaseResourceLite(&pdode->child_lock);
                 return context.Status;
             }
@@ -682,7 +682,7 @@ end:
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 exit:
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     if (top_level)
         IoSetTopLevelIrp(NULL);

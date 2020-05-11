@@ -8,11 +8,11 @@ BEGIN
     "^C", CMD_COPY
     "^B", CMD_SEARCH
     "^T", CMD_GOTO
-    "R", CMD_REPLACE, VIRTKEY, CONTROL
+    "^R", CMD_REPLACE, VIRTKEY, CONTROL
     "^N", CMD_NEW
     "^A", CMD_OPEN
     "^P", CMD_PRINT
-    "^S", CMD_SAVE
+    "^G", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
     "^Z", CMD_UNDO
@@ -26,7 +26,7 @@ BEGIN
     BEGIN
         MENUITEM "&Nuevo\tCtrl+N", CMD_NEW
         MENUITEM "&Abrir\tCtrl+A", CMD_OPEN
-        MENUITEM "&Guardar\tCtrl+S", CMD_SAVE
+        MENUITEM "&Guardar\tCtrl+G", CMD_SAVE
         MENUITEM "Guardar &como...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Configurar &página...", CMD_PAGE_SETUP

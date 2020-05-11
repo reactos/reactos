@@ -29,7 +29,7 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Registro"
+    POPUP "&Archivo"
     BEGIN
         MENUITEM "&Importar archivo...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportar archivo...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -132,9 +132,17 @@ BEGIN
         MENUITEM "&Renombrar", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportar", ID_TREE_EXPORT
-        MENUITEM "&Permisos...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Permisos...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copiar nombre de clave", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Expandir/Contraer", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Exportar", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Descargar subárbol...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

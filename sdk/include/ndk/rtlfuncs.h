@@ -247,7 +247,7 @@ RtlConvertUlongToLuid(
 //
 // This macro does nothing in user mode
 //
-#define RTL_PAGED_CODE NOP_FUNCTION
+#define RTL_PAGED_CODE()
 
 #endif
 
@@ -992,27 +992,26 @@ RtlLockHeap(
     _In_ HANDLE Heap
 );
 
-_Must_inspect_result_
 NTSYSAPI
-NTSTATUS
+ULONG
 NTAPI
-RtlMultipleAllocateHeap (
+RtlMultipleAllocateHeap(
     _In_ HANDLE HeapHandle,
     _In_ ULONG Flags,
     _In_ SIZE_T Size,
     _In_ ULONG Count,
     _Out_cap_(Count) _Deref_post_bytecap_(Size) PVOID * Array
-    );
+);
 
 NTSYSAPI
-NTSTATUS
+ULONG
 NTAPI
-RtlMultipleFreeHeap (
+RtlMultipleFreeHeap(
     _In_ HANDLE HeapHandle,
     _In_ ULONG Flags,
     _In_ ULONG Count,
     _In_count_(Count) /* _Deref_ _Post_invalid_ */ PVOID * Array
-    );
+);
 
 NTSYSAPI
 NTSTATUS
@@ -2434,6 +2433,22 @@ RtlFreeBuffer(
     Buffer->Buffer = Buffer->StaticBuffer;
     Buffer->Size = Buffer->StaticSize;
 }
+
+NTSYSAPI
+VOID
+NTAPI
+RtlRunEncodeUnicodeString(
+    _Inout_ PUCHAR Hash,
+    _Inout_ PUNICODE_STRING String
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlRunDecodeUnicodeString(
+    _In_ UCHAR Hash,
+    _Inout_ PUNICODE_STRING String
+);
 
 #endif /* NTOS_MODE_USER */
 
@@ -4511,7 +4526,7 @@ RtlGetVersion(
 NTSYSAPI
 BOOLEAN
 NTAPI
-RtlGetNtProductType(OUT PNT_PRODUCT_TYPE ProductType);
+RtlGetNtProductType(_Out_ PNT_PRODUCT_TYPE ProductType);
 
 //
 // Secure Memory Functions

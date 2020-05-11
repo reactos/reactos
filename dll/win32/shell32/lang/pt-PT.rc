@@ -11,6 +11,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Auto organi&zar", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -31,9 +32,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Auto organi&zar", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Alin&har ícones", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Actualizar", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Co&lar", FCIDM_SHVIEW_INSERT
@@ -383,9 +383,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Propriedades para as localizações seleccionadas", -1, 10, 72, 220, 70
-    RADIOBUTTON "&Tamanho personalizado:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "Tamanho M&áximo(MB):", -1, 20, 105, 70, 10
+    RADIOBUTTON "&Tamanho personalizado:", 14001, 20, 90, 92, 10, WS_TABSTOP
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
+    LTEXT "Tamanho M&áximo(MB):", -1, 20, 105, 75, 10
     RADIOBUTTON "Não mover os ficheiros para a &reciclagem. Apagá-los definitivamente.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Mostrar ecrâ de confirmação de eliminação", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
@@ -400,8 +400,8 @@ BEGIN
     LTEXT "Ficheiro:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programas", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "&Utilizar sempre o programa seleccionado para abrir este tipo de ficheiros", 14003, 20, 193, 225, 10
-    PUSHBUTTON "&Seleccionar...", 14004, 198, 207, 50, 14
+    AUTOCHECKBOX "&Utilizar sempre este programa para abrir este tipo de ficheiro", 14003, 16, 193, 232, 10
+    PUSHBUTTON "&Seleccionar...", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 206, 236, 50, 14
 END
@@ -448,17 +448,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Tipos de Ficheiro"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "&Tipos de ficheiros registados:", -1, 7, 10, 70, 10
-    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 259, 80
-    PUSHBUTTON "&Novo...", IDC_FILETYPES_NEW, 120, 110, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Apagar...", IDC_FILETYPES_DELETE, 180, 110, 50, 14, WS_TABSTOP
-    GROUPBOX "Detalhes para a extensão '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 259, 70
-    LTEXT "Abre com:", -1, 12, 140, 40, 10
-    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 140, 10, 10
-    LTEXT "Nome", IDC_FILETYPES_APPNAME, 100, 140, 80, 10
-    PUSHBUTTON "&Alterar...", IDC_FILETYPES_CHANGE, 180, 140, 50, 14, WS_TABSTOP
-    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 155, 160, 40
-    PUSHBUTTON "A&vançado...", IDC_FILETYPES_ADVANCED, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "&Tipos de ficheiros registados:", -1, 7, 10, 180, 10
+    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 259, 115
+    PUSHBUTTON "&Novo...", IDC_FILETYPES_NEW, 140, 140, 55, 14, WS_TABSTOP
+    PUSHBUTTON "&Apagar...", IDC_FILETYPES_DELETE, 200, 140, 65, 14, WS_TABSTOP
+    GROUPBOX "Detalhes para a extensão '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 170, 259, 70
+    LTEXT "Abre com:", -1, 12, 180, 40, 10
+    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 180, 10, 10
+    LTEXT "Nome", IDC_FILETYPES_APPNAME, 100, 180, 80, 10
+    PUSHBUTTON "&Alterar...", IDC_FILETYPES_CHANGE, 200, 180, 60, 14, WS_TABSTOP
+    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 195, 160, 40
+    PUSHBUTTON "A&vançado...", IDC_FILETYPES_ADVANCED, 200, 215, 60, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -769,7 +769,6 @@ BEGIN
     IDS_EJECT "Ejectar"
     IDS_DISCONNECT "Desligar"
     IDS_OPENFILELOCATION "Abrir localização do f&icheiro"
-    IDS_DESKLINK "Área de trabalho (Criar atalho)"
     IDS_SENDTO_MENU "&Enviar para"
 
     IDS_MOVEERRORTITLE "Erro ao mover pasta ou ficheiro"

@@ -1446,6 +1446,20 @@ static int ecp_mul_comb( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
      * Now get m * P from M * P and normalize it
      */
     MBEDTLS_MPI_CHK( ecp_safe_invert_jac( grp, R, ! m_is_odd ) );
+
+    /*
+     * Knowledge of the jacobian coordinates may leak the last few bits of the
+     * scalar [1], and since our MPI implementation isn't constant-flow,
+     * inversion (used for coordinate normalization) may leak the full value
+     * of its input via side-channels [2].
+     *
+     * [1] https://eprint.iacr.org/2003/191
+     * [2] https://eprint.iacr.org/2020/055
+     *
+     * Avoid the leak by randomizing coordinates before we normalize them.
+     */
+    if( f_rng != 0 )
+        MBEDTLS_MPI_CHK( ecp_randomize_jac( grp, R, f_rng, p_rng ) );
     MBEDTLS_MPI_CHK( ecp_normalize_jac( grp, R ) );
 
 cleanup:
@@ -1665,6 +1679,20 @@ static int ecp_mul_mxz( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
         MBEDTLS_MPI_CHK( mbedtls_mpi_safe_cond_swap( &R->X, &RP.X, b ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_safe_cond_swap( &R->Z, &RP.Z, b ) );
     }
+
+    /*
+     * Knowledge of the projective coordinates may leak the last few bits of the
+     * scalar [1], and since our MPI implementation isn't constant-flow,
+     * inversion (used for coordinate normalization) may leak the full value
+     * of its input via side-channels [2].
+     *
+     * [1] https://eprint.iacr.org/2003/191
+     * [2] https://eprint.iacr.org/2020/055
+     *
+     * Avoid the leak by randomizing coordinates before we normalize them.
+     */
+    if( f_rng != NULL )
+        MBEDTLS_MPI_CHK( ecp_randomize_mxz( grp, R, f_rng, p_rng ) );
 
     MBEDTLS_MPI_CHK( ecp_normalize_mxz( grp, R ) );
 

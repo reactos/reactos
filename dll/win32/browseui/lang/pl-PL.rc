@@ -335,6 +335,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SEARCH_RESULTS "Search Results"
     IDS_SEARCHINVALID "Folder '%1' jest nieprawidłowy."
     IDS_SEARCH_FOLDER "Trwa wyszukiwanie %s"
     IDS_SEARCH_FILES_FOUND "Znaleziono %u plików"
@@ -342,4 +343,10 @@ BEGIN
     IDS_COL_NAME "Nazwa"
     IDS_COL_LOCATION "W folderze"
     IDS_COL_RELEVANCE "Istotność"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
 END

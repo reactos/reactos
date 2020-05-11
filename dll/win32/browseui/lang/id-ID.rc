@@ -345,6 +345,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SEARCH_RESULTS "Search Results"
     IDS_SEARCHINVALID "'%1' bukan folder yang sah."
     IDS_SEARCH_FOLDER "Mencari %s"
     IDS_SEARCH_FILES_FOUND "%u berkas ditemukan"
@@ -352,4 +353,10 @@ BEGIN
     IDS_COL_NAME "Nama"
     IDS_COL_LOCATION "Dalam Folder"
     IDS_COL_RELEVANCE "Relevansi"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
 END

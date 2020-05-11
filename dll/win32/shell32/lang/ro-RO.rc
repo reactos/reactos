@@ -13,6 +13,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Criteriu &automat", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -33,9 +34,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Criteriu &automat", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Aranjea&ză în grilă", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Împ&rospătează", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Lipește", FCIDM_SHVIEW_INSERT
@@ -385,9 +385,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Preferințe pentru locația aleasă", -1, 10, 72, 220, 70
-    RADIOBUTTON "&Dimensiune specificată:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 110, 90, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "Dimensiune maximă (Mo):", -1, 20, 105, 70, 10
+    RADIOBUTTON "&Dimensiune specificată:", 14001, 20, 90, 88, 10, WS_TABSTOP
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
+    LTEXT "Dimensiune maximă (Mo):", -1, 20, 105, 84, 10
     RADIOBUTTON "N&u arunca fișierele în Coșul de gunoi, elimină-le direct.", 14003, 20, 117, 200, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "Afișea&ză dialog de confirmare pentru ștergeri", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
@@ -402,8 +402,8 @@ BEGIN
     LTEXT "Fișier:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programe", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "&Utilizează întotdeauna această aplicație", 14003, 20, 198, 225, 10
-    PUSHBUTTON "Spe&cificare…", 14004, 198, 207, 50, 14
+    AUTOCHECKBOX "&Utilizează întotdeauna această aplicație", 14003, 16, 193, 232, 10
+    PUSHBUTTON "Spe&cificare…", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "Con&firmă", IDOK, 150, 236, 50, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 206, 236, 50, 14
 END
@@ -450,17 +450,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Tipuri de fișier"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Tipurile de fișier înregistrate:", -1, 7, 10, 120, 10
-    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-    PUSHBUTTON "N&ou…", IDC_FILETYPES_NEW, 140, 110, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Elimină", IDC_FILETYPES_DELETE, 200, 110, 50, 14, WS_TABSTOP
-    GROUPBOX "Detalii pentru extensia „%s”", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 249, 70
-    LTEXT "Va fi deschis cu:", -1, 22, 140, 50, 10
-    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 140, 10, 10
-    LTEXT "Nume aplicație", IDC_FILETYPES_APPNAME, 100, 140, 80, 10
-    PUSHBUTTON "Spe&cificare…", IDC_FILETYPES_CHANGE, 190, 140, 50, 14, WS_TABSTOP
-    LTEXT "", IDC_FILETYPES_DESCRIPTION, 22, 155, 160, 35
-    PUSHBUTTON "A&vansate…", IDC_FILETYPES_ADVANCED, 190, 175, 50, 14, WS_TABSTOP
+    LTEXT "Tipurile de fișier înregistrate:", -1, 7, 10, 180, 10
+    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 115
+    PUSHBUTTON "N&ou…", IDC_FILETYPES_NEW, 140, 140, 55, 14, WS_TABSTOP
+    PUSHBUTTON "&Elimină", IDC_FILETYPES_DELETE, 200, 140, 55, 14, WS_TABSTOP
+    GROUPBOX "Detalii pentru extensia „%s”", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 170, 249, 70
+    LTEXT "Va fi deschis cu:", -1, 12, 180, 50, 10
+    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 180, 10, 10
+    LTEXT "Nume aplicație", IDC_FILETYPES_APPNAME, 100, 180, 80, 10
+    PUSHBUTTON "Spe&cificare ", IDC_FILETYPES_CHANGE, 200, 180, 50, 14, WS_TABSTOP
+    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 195, 160, 40
+    PUSHBUTTON "A&vansate…", IDC_FILETYPES_ADVANCED, 200, 215, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -771,7 +771,6 @@ BEGIN
     IDS_EJECT "S&coate"
     IDS_DISCONNECT "Deconectea&ză"
     IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
     IDS_SENDTO_MENU "Se&nd To"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"

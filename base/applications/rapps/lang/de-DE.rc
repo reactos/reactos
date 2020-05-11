@@ -191,7 +191,7 @@ BEGIN
     IDS_APPS_COUNT "Anzahl der Anwendungen: %d, ausgewählt: %d"
     IDS_WELCOME_TITLE "Willkommen im ReactOS-Anwendungsmanager!\n\n"
     IDS_WELCOME_TEXT "Wählen Sie links eine Kategorie und dann eine Anwendung um sie zu installieren oder zu deinstallieren.\nReactOS-Webseite: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Installiert"
     IDS_AVAILABLEFORINST "Zur Installation verfügbar"
     IDS_UPDATES "Aktualisierungen"
@@ -214,6 +214,7 @@ BEGIN
     IDS_SELECTEDFORINST "Zur Installation ausgewählt"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
     IDS_RECOMMENDED "Empfohlene Software"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

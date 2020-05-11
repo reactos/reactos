@@ -4,6 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Прегледът за снимки и факсове на РеактОС"
     IDS_SETASDESKBG "Слагане като подкраска"
+    IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Преглед"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Следващо изображение"

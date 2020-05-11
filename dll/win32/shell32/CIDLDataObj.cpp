@@ -236,6 +236,8 @@ HRESULT WINAPI CIDLDataObj::GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium
         GetClipboardFormatNameA (pformatetcIn->cfFormat, szTemp, 256);
         TRACE("(%p)->(%p %p format=%s)\n", this, pformatetcIn, pmedium, szTemp);
     }
+    pmedium->hGlobal = NULL;
+    pmedium->pUnkForRelease = NULL;
     for (int n = 0; n < m_Formats.GetSize(); ++n)
     {
         const FORMATETC& fmt = m_Formats[n];

@@ -18,7 +18,7 @@ list(APPEND SOURCE
 add_library(cardlib ${SOURCE})
 
 if(NOT MSVC)
-    add_target_compile_flags(cardlib "-Wno-unused-but-set-variable")
+    target_compile_options(cardlib PRIVATE "-Wno-unused-but-set-variable")
 endif()
 
 add_dependencies(cardlib psdk)

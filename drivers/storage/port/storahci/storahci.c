@@ -2438,7 +2438,7 @@ AhciAdapterReset (
  * @param Buffer
  * @param BufferSize
  */
-__inline
+FORCEINLINE
 VOID
 AhciZeroMemory (
     __out PCHAR Buffer,
@@ -2466,7 +2466,7 @@ AhciZeroMemory (
  * @return
  * return TRUE if provided port is valid (implemented) or not
  */
-__inline
+FORCEINLINE
 BOOLEAN
 IsPortValid (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
@@ -2496,7 +2496,7 @@ IsPortValid (
  * return TRUE if Srb is successfully added to Queue
  *
  */
-__inline
+FORCEINLINE
 BOOLEAN
 AddQueue (
     __inout PAHCI_QUEUE Queue,
@@ -2527,7 +2527,7 @@ AddQueue (
  * return Srb
  *
  */
-__inline
+FORCEINLINE
 PVOID
 RemoveQueue (
     __inout PAHCI_QUEUE Queue
@@ -2590,7 +2590,7 @@ GetSrbExtension (
  * return Logical Address of the block
  *
  */
-__inline
+FORCEINLINE
 ULONG64
 AhciGetLba (
     __in PCDB Cdb,

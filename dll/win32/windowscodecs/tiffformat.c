@@ -1148,32 +1148,44 @@ static HRESULT TiffFrameDecode_ReadTile(TiffFrameDecode *This, UINT tile_x, UINT
 
         HeapFree(GetProcessHeap(), 0, srcdata);
     }
-    /* 4bpp RGBA */
+    /* 4bps RGBA */
     else if (This->decode_info.source_bpp == 4 && This->decode_info.samples == 4 && This->decode_info.bpp == 32)
     {
-        BYTE *src, *dst;
-        DWORD count;
+        BYTE *srcdata, *src, *dst;
+        DWORD x, y, count, width_bytes = (This->decode_info.tile_width * 3 + 7) / 8;
 
-        /* 1 source byte expands to 2 BGRA samples */
-        count = (This->decode_info.tile_width * This->decode_info.tile_height + 1) / 2;
+        count = width_bytes * This->decode_info.tile_height;
 
-        src = This->cached_tile + count - 1;
-        dst = This->cached_tile + This->decode_info.tile_size;
+        srcdata = HeapAlloc(GetProcessHeap(), 0, count);
+        if (!srcdata) return E_OUTOFMEMORY;
+        memcpy(srcdata, This->cached_tile, count);
 
-        while (count--)
+        for (y = 0; y < This->decode_info.tile_height; y++)
         {
-            BYTE b = *src--;
+            src = srcdata + y * width_bytes;
+            dst = This->cached_tile + y * This->decode_info.tile_width * 4;
 
-            dst -= 8;
-            dst[2] = (b & 0x80) ? 0xff : 0; /* R */
-            dst[1] = (b & 0x40) ? 0xff : 0; /* G */
-            dst[0] = (b & 0x20) ? 0xff : 0; /* B */
-            dst[3] = (b & 0x10) ? 0xff : 0; /* A */
-            dst[6] = (b & 0x08) ? 0xff : 0; /* R */
-            dst[5] = (b & 0x04) ? 0xff : 0; /* G */
-            dst[4] = (b & 0x02) ? 0xff : 0; /* B */
-            dst[7] = (b & 0x01) ? 0xff : 0; /* A */
+            /* 1 source byte expands to 2 BGRA samples */
+
+            for (x = 0; x < This->decode_info.tile_width; x += 2)
+            {
+                dst[0] = (src[0] & 0x20) ? 0xff : 0; /* B */
+                dst[1] = (src[0] & 0x40) ? 0xff : 0; /* G */
+                dst[2] = (src[0] & 0x80) ? 0xff : 0; /* R */
+                dst[3] = (src[0] & 0x10) ? 0xff : 0; /* A */
+                if (x + 1 < This->decode_info.tile_width)
+                {
+                    dst[4] = (src[0] & 0x02) ? 0xff : 0; /* B */
+                    dst[5] = (src[0] & 0x04) ? 0xff : 0; /* G */
+                    dst[6] = (src[0] & 0x08) ? 0xff : 0; /* R */
+                    dst[7] = (src[0] & 0x01) ? 0xff : 0; /* A */
+                }
+                src++;
+                dst += 8;
+            }
         }
+
+        HeapFree(GetProcessHeap(), 0, srcdata);
     }
     /* 16bpp RGBA */
     else if (This->decode_info.source_bpp == 16 && This->decode_info.samples == 4 && This->decode_info.bpp == 32)

@@ -8,7 +8,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include "msv1_0.h"
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
 
@@ -1193,6 +1193,8 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     LARGE_INTEGER PasswordLastSet;
     DWORD ComputerNameSize;
     BOOL SpecialAccount = FALSE;
+    UCHAR LogonPassHash;
+    PUNICODE_STRING ErasePassword = NULL;
 
     TRACE("LsaApLogonUserEx2()\n");
 
@@ -1268,6 +1270,18 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         Status = RtlValidateUnicodeString(0, &LogonInfo->UserName);
         if (!NT_SUCCESS(Status))
             return STATUS_INVALID_PARAMETER;
+
+        /* MS docs says max length is 0xFF bytes. But thats not the full story:
+         *
+         * A Quote from https://groups.google.com/forum/#!topic/microsoft.public.win32.programmer.kernel/eFGcCo_ZObk:
+         * "... At least on my WinXP SP2. Domain and UserName are passed
+         * in clear text, but the Password is NOT. ..."
+         *
+         * If the higher byte of length != 0 we have to use RtlRunDecodeUnicodeString.
+         */
+        LogonPassHash = (LogonInfo->Password.Length >> 8) & 0xFF;
+        LogonInfo->Password.Length = LogonInfo->Password.Length & 0xFF;
+
         /* Password is optional and can be an empty string */
         if (LogonInfo->Password.Length)
         {
@@ -1280,6 +1294,15 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             LogonInfo->Password.Buffer = NULL;
             LogonInfo->Password.MaximumLength = 0;
         }
+
+        /* Decode password */
+        if (LogonPassHash > 0)
+        {
+            RtlRunDecodeUnicodeString(LogonPassHash, &LogonInfo->Password);
+        }
+
+        /* ErasePassword will be "erased" before we return */
+        ErasePassword = &LogonInfo->Password;
 
         Status = RtlValidateUnicodeString(0, &LogonInfo->Password);
         if (!NT_SUCCESS(Status))
@@ -1574,6 +1597,12 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     }
 
 done:
+    /* Erase password */
+    if (ErasePassword)
+    {
+        RtlEraseUnicodeString(ErasePassword);
+    }
+
     /* Update the logon time/count or the bad password time/count */
     if ((UserHandle != NULL) &&
         (Status == STATUS_SUCCESS || Status == STATUS_WRONG_PASSWORD))
@@ -1687,8 +1716,6 @@ SpLsaModeInitialize(
     _Out_ PSECPKG_FUNCTION_TABLE *ppTables,
     _Out_ PULONG pcTables)
 {
-    SECPKG_FUNCTION_TABLE Tables[1];
-
     TRACE("SpLsaModeInitialize(0x%lx %p %p %p)\n",
           LsaVersion, PackageVersion, ppTables, pcTables);
 
@@ -1697,37 +1724,40 @@ SpLsaModeInitialize(
 
     *PackageVersion = SECPKG_INTERFACE_VERSION;
 
-    RtlZeroMemory(&Tables, sizeof(Tables));
+    RtlZeroMemory(NtlmLsaFn, sizeof(NtlmLsaFn));
 
-    Tables[0].InitializePackage = LsaApInitializePackage;
-//    Tables[0].LogonUser = NULL;
-    Tables[0].CallPackage = (PLSA_AP_CALL_PACKAGE)LsaApCallPackage;
-    Tables[0].LogonTerminated = LsaApLogonTerminated;
-    Tables[0].CallPackageUntrusted = LsaApCallPackageUntrusted;
-    Tables[0].CallPackagePassthrough = (PLSA_AP_CALL_PACKAGE_PASSTHROUGH)LsaApCallPackagePassthrough;
-//    Tables[0].LogonUserEx = NULL;
-    Tables[0].LogonUserEx2 = LsaApLogonUserEx2;
-//    Tables[0].Initialize = SpInitialize;
-//    Tables[0].Shutdown = NULL;
-//    Tables[0].GetInfo = NULL;
-//    Tables[0].AcceptCredentials = NULL;
-//    Tables[0].SpAcquireCredentialsHandle = NULL;
-//    Tables[0].SpQueryCredentialsAttributes = NULL;
-//    Tables[0].FreeCredentialsHandle = NULL;
-//    Tables[0].SaveCredentials = NULL;
-//    Tables[0].GetCredentials = NULL;
-//    Tables[0].DeleteCredentials = NULL;
-//    Tables[0].InitLsaModeContext = NULL;
-//    Tables[0].AcceptLsaModeContext = NULL;
-//    Tables[0].DeleteContext = NULL;
-//    Tables[0].ApplyControlToken = NULL;
-//    Tables[0].GetUserInfo = NULL;
-//    Tables[0].GetExtendedInformation = NULL;
-//    Tables[0].SpQueryContextAttributes = NULL;
-//    Tables[0].SpAddCredentials = NULL;
-//    Tables[0].SetExtendedInformation = NULL;
+    /* msv1_0 (XP, win2k) returns NULL for
+     * InitializePackage, LsaLogonUser,LsaLogonUserEx,
+     * SpQueryContextAttributes and SpAddCredentials */
+    NtlmLsaFn[0].InitializePackage = NULL;
+    NtlmLsaFn[0].LsaLogonUser = NULL;
+    NtlmLsaFn[0].CallPackage = LsaApCallPackage;
+    NtlmLsaFn[0].LogonTerminated = LsaApLogonTerminated;
+    NtlmLsaFn[0].CallPackageUntrusted = LsaApCallPackageUntrusted;
+    NtlmLsaFn[0].CallPackagePassthrough = LsaApCallPackagePassthrough;
+    NtlmLsaFn[0].LogonUserEx = NULL;
+    NtlmLsaFn[0].LogonUserEx2 = LsaApLogonUserEx2;
+    NtlmLsaFn[0].Initialize = SpInitialize;
+    NtlmLsaFn[0].Shutdown = LsaSpShutDown;
+    NtlmLsaFn[0].GetInfo = LsaSpGetInfoW;
+    NtlmLsaFn[0].AcceptCredentials = SpAcceptCredentials;
+    NtlmLsaFn[0].SpAcquireCredentialsHandle = LsaSpAcquireCredentialsHandle;
+    NtlmLsaFn[0].SpQueryCredentialsAttributes = LsaSpQueryCredentialsAttributes;
+    NtlmLsaFn[0].FreeCredentialsHandle = LsaSpFreeCredentialsHandle;
+    NtlmLsaFn[0].SaveCredentials = LsaSpSaveCredentials;
+    NtlmLsaFn[0].GetCredentials = LsaSpGetCredentials;
+    NtlmLsaFn[0].DeleteCredentials = LsaSpDeleteCredentials;
+    NtlmLsaFn[0].InitLsaModeContext = LsaSpInitLsaModeContext;
+    NtlmLsaFn[0].AcceptLsaModeContext = LsaSpAcceptLsaModeContext;
+    NtlmLsaFn[0].DeleteContext = LsaSpDeleteContext;
+    NtlmLsaFn[0].ApplyControlToken = LsaSpApplyControlToken;
+    NtlmLsaFn[0].GetUserInfo = LsaSpGetUserInfo;
+    NtlmLsaFn[0].GetExtendedInformation = LsaSpGetExtendedInformation;
+    NtlmLsaFn[0].SpQueryContextAttributes = NULL;
+    NtlmLsaFn[0].SpAddCredentials = NULL;
+    NtlmLsaFn[0].SetExtendedInformation = LsaSpSetExtendedInformation;
 
-    *ppTables = Tables;
+    *ppTables = NtlmLsaFn;
     *pcTables = 1;
 
     return STATUS_SUCCESS;

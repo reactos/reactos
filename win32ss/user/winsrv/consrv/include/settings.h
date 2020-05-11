@@ -26,7 +26,9 @@
 
 /* FUNCTIONS ******************************************************************/
 
-VOID ConSrvApplyUserSettings(IN PCONSOLE Console,
-                             IN PCONSOLE_STATE_INFO ConsoleInfo);
+VOID
+ConSrvApplyUserSettings(
+    IN PCONSRV_CONSOLE Console,
+    IN PCONSOLE_STATE_INFO ConsoleInfo);
 
 /* EOF */

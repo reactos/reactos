@@ -263,6 +263,7 @@ CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     case FCIDM_SHVIEW_AUTOARRANGE:
     case FCIDM_SHVIEW_SNAPTOGRID:
     case FCIDM_SHVIEW_REFRESH:
+    case FCIDM_SHVIEW_ALIGNTOGRID:
         if (!m_site)
             return E_FAIL;
 

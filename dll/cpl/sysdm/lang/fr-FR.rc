@@ -19,7 +19,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "Visiter la <A HREF=""http://www.reactos.org/"">page d'accueil ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "Visiter la <A HREF=""https://reactos.org/"">page d'accueil ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "Voir la &licence...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -57,9 +57,9 @@ BEGIN
     GROUPBOX "Démarrage et Récupération", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Les options Démarrage et Récupération indiquent à l'ordinateur comment démarrer et quoi faire si une erreur empêche l'ordinateur de s'arrêter.", IDC_STATIC, 16, 144, 210, 30
     PUSHBUTTON "Réglages", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "Paramètres système", IDC_SYSSETTINGS, 6, 192, 80, 15
-    PUSHBUTTON "Variables d'en&vironnement", IDC_ENVVAR, 88, 192, 80, 15
-    PUSHBUTTON "Rapport d'e&rreurs", IDC_ERRORREPORT, 170, 192, 80, 15
+    PUSHBUTTON "Paramètres système", IDC_SYSSETTINGS, 6, 192, 75, 15
+    PUSHBUTTON "Variables d'en&vironnement", IDC_ENVVAR, 83, 192, 90, 15
+    PUSHBUTTON "Rapport d'e&rreurs", IDC_ERRORREPORT, 175, 192, 75, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
@@ -122,15 +122,15 @@ END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Copy Profile"
+CAPTION "Copier le profil"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "From:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "De :", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
-    LTEXT "To:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT "Vers :", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_COPYPROFILETO, 30, 30, 160, 12
     DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 199, 30, 50, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 199, 30, 50, 14
 END
 
 IDD_RENAMEPROFILE DIALOGEX 12, 26, 256, 52
@@ -199,7 +199,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Démarrage du système", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Système d'exploitation par défaut :", IDC_STATIC, 14, 26, 110, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Affiche la liste des systèmes pendant :", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -217,7 +217,7 @@ BEGIN
     AUTOCHECKBOX "Envoyer une alerte administrative", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "Redémarrer automatiquement", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "Écrire les informations de débogage", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "Fichier Cliché :", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "&Écraser tout fichier existant", IDC_STRRECOVERWRITE, 17, 228, 125, 10
@@ -227,32 +227,32 @@ END
 
 IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Mémoire Virtuelle"
+CAPTION "Mémoire virtuelle"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Lecteur  [Nom de Volume]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT "Taille du fichier d'échange (Mo)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT "Taille du fichier d'échange (Mo)", IDC_STATIC, 115, 5, 99, 9
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Taille du fichier d'échange pour le disque sélectionné", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Lecteur :", IDC_STATIC, 20, 80, 30, 8
     LTEXT "", IDC_DRIVE, 88, 81, 100, 9
     LTEXT "Espace disponible :", IDC_STATIC, 20, 92, 66, 9
     LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT "Taille &Initiale (Mo) :", -1, 22, 118, 72, 9
-    LTEXT "Taille Ma&ximum (Mo) :", -1, 22, 131, 72, 9
+    LTEXT "Taille initiale (Mo) :", -1, 22, 118, 72, 9
+    LTEXT "Taille maximale (Mo) :", -1, 22, 131, 72, 9
     AUTORADIOBUTTON "&Taille personnalisée", IDC_CUSTOM, 20, 105, 75, 9, WS_GROUP
     AUTORADIOBUTTON "&Taille &gérée par le système", IDC_SYSMANSIZE, 20, 145, 100, 9
-    AUTORADIOBUTTON "&Pas de mémoire virtuelle", IDC_NOPAGEFILE, 20, 158, 100,9
+    AUTORADIOBUTTON "Aucun fichier d'échange", IDC_NOPAGEFILE, 20, 158, 100,9
     EDITTEXT IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Régler", IDC_SET, 158, 154, 50, 15
-    GROUPBOX "Mémoire virtuelle totale pour tous les lecteurs", IDC_TOTALGROUP, 10, 177, 204, 46
+    PUSHBUTTON "Définir", IDC_SET, 158, 154, 50, 15
+    GROUPBOX "Taille totale du fichier d'échange pour tous les lecteurs", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "Minimum alloué :", IDC_STATIC, 18, 188, 58, 9
     LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
-    LTEXT "Recommandé :", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 88, 197, 100, 9
-    LTEXT "Alloué actuellement :", IDC_STATIC, 18, 210, 66, 9
-    LTEXT "", IDC_CURRENT, 88, 208, 100, 9
+    LTEXT "Recommandée :", IDC_STATIC, 18, 199, 52, 9
+    LTEXT "", IDC_RECOMMENDED, 88, 199, 100, 9
+    LTEXT "Allouée actuellement :", IDC_STATIC, 18, 210, 70, 9
+    LTEXT "", IDC_CURRENT, 88, 210, 100, 9
     DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Annuler", IDCANCEL, 168, 230, 48, 15
 END
@@ -330,11 +330,11 @@ BEGIN
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "Account Unknown"
     IDS_USERPROFILE_ACCOUNT_DELETED "Account Deleted"
     IDS_USERPROFILE_TYPE_TEXT "When %s logs onto this computer, should the operating system use the roaming profile or just the locally cached copy of the roaming profile."
-    IDS_MESSAGEBOXTITLE "System control panel applet"
+    IDS_MESSAGEBOXTITLE "Application Système du Panneau de configuration"
     IDS_WARNINITIALSIZE "Entrez une valeur numérique pour la taille initiale du fichier d'échange."
     IDS_WARNMAXIMUMSIZE "Entrez une valeur numérique pour la taille maximale du fichier d'échange."
-    IDS_WARNINITIALRANGE "La taille initiale du fichier d'échange ne peut pas être inférieure à 16 Mo and ne doit pas dépasser l'espace libre total du disque."
-    IDS_WARNMAXIMUMRANGE "La taille maximale du fichier d'échange ne peut pas être inférieure à sa taille initiale, et ne peut pas être supérieure à 4095 Mo et ne peut pas dépasser l'espace libre total du disque."
+    IDS_WARNINITIALRANGE "La taille initiale du fichier d'échange doit être comprise entre 2 Mo et 4096 Mo, et ne peut pas excéder la quantité d'espace libre sur le lecteur que vous avez sélectionné."
+    IDS_WARNMAXIMUMRANGE "Entrez une valeur pour la taille maximale du fichier d'échange qui soit supérieure ou égale à la taille initiale du fichier d'échange, et inférieure à 4096 Mo."
     IDS_PAGEFILE_NONE "Aucun"
     IDS_PAGEFILE_SYSTEM "Géré par le système"
     IDS_INFOREBOOT "Vous devez redémarrer le système pour appliquer les changements."

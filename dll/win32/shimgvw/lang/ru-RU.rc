@@ -4,6 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Программа просмотра изображений и факсов"
     IDS_SETASDESKBG "Установить как фон рабочего стола"
+    IDS_NOPREVIEW "Предпросмотр недоступен."
     IDS_PREVIEW "Предпросмотр"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Следующее изображение"

@@ -7,6 +7,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS 图片和传真查看器"
     IDS_SETASDESKBG "设置为桌面背景"
+    IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "预览"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "下一张图片"

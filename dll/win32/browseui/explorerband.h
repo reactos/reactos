@@ -2,6 +2,7 @@
  * ReactOS Explorer
  *
  * Copyright 2016 Sylvain Deverre <deverre dot sylv at gmail dot com>
+ * Copyright 2020 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -51,27 +52,27 @@ private:
     };
 
     // *** BaseBarSite information ***
-    CComPtr<IUnknown> pSite;
-    CComPtr<IShellFolder> pDesktop;
+    CComPtr<IUnknown> m_pSite;
+    CComPtr<IShellFolder> m_pDesktop;
 
     // *** tree explorer band stuff ***
-    BOOL fVisible;
-    BOOL bNavigating;
-    BOOL bFocused;
-    DWORD dwBandID;
-    HIMAGELIST hImageList;
-    HTREEITEM  hRoot;
-    HTREEITEM  oldSelected;
-    LPITEMIDLIST pidlCurrent;
+    BOOL m_fVisible;
+    BOOL m_bNavigating;
+    BOOL m_bFocused;
+    DWORD m_dwBandID;
+    HIMAGELIST m_hImageList;
+    HTREEITEM  m_hRoot;
+    HTREEITEM  m_oldSelected;
+    LPITEMIDLIST m_pidlCurrent;
 
     // *** notification cookies ***
-    DWORD adviseCookie;
-    ULONG shellRegID;
+    DWORD m_adviseCookie;
+    ULONG m_shellRegID;
 
     // *** Drop target information ***
-    CComPtr<IDropTarget> pDropTarget;
-    HTREEITEM childTargetNode;
-    CComPtr<IDataObject> pCurObject;
+    CComPtr<IDropTarget> m_pDropTarget;
+    HTREEITEM m_childTargetNode;
+    CComPtr<IDataObject> m_pCurObject;
 
     void InitializeExplorerBand();
     void DestroyExplorerBand();

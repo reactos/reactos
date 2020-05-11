@@ -526,6 +526,7 @@ typedef struct
 /* 0x7030-0x703f are used by the shellbrowser */
 #define FCIDM_SHVIEW_AUTOARRANGE 0x7031
 #define FCIDM_SHVIEW_SNAPTOGRID 0x7032
+#define FCIDM_SHVIEW_ALIGNTOGRID 0x7033
 
 #define FCIDM_SHVIEW_HELP       0x7041
 #define FCIDM_SHVIEW_RENAME     0x7050

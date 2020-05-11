@@ -26,7 +26,7 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Registro"
+    POPUP "&File"
     BEGIN
         MENUITEM "&Importa...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Esporta...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -129,9 +129,17 @@ BEGIN
         MENUITEM "&Rinomina", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Esporta", ID_TREE_EXPORT
-        MENUITEM "&Permessi...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Permessi...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copia il nome della chiave", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Espandi/Raccogli", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Esporta", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Scarica Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

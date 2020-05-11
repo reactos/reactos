@@ -1,0 +1,29 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "cppdbg",
+      "request": "launch",
+      "name": "livecd (qemu)",
+      "preLaunchTask": "launch livecd",
+      "miDebuggerServerAddress": "localhost:9091",
+      "miDebuggerArgs": "-l 15 -ex 'set sysroot ${workspaceRoot}/build/symbols'",
+      "program": "${workspaceRoot}/build/ntoskrnl/ntoskrnl.exe",
+      "cwd": "${workspaceRoot}/build",
+      "miDebuggerPath": "i686-w64-mingw32-gdb"
+    },
+    {
+      "type": "cppdbg",
+      "request": "launch",
+      "name": "bootcd (qemu)",
+      "preLaunchTask": "launch bootcd",
+      "miDebuggerServerAddress": "localhost:9091",
+      "miDebuggerArgs": "-l 15 -ex 'set sysroot ${workspaceRoot}/build/symbols'",
+      "program": "${workspaceRoot}/build/ntoskrnl/ntoskrnl.exe",
+      "cwd": "${workspaceRoot}/build",
+      "miDebuggerPath": "i686-w64-mingw32-gdb"
+    }
+  ]
+}

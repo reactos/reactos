@@ -4,11 +4,9 @@ modules/bootcd_extras
 modules/livecd_extras
 modules/hybridcd_extras
 modules/3rdparty
-modules/ahk_tests
-modules/AHK_Tests
+modules/[Aa][Hh][Kk]_[Tt]ests
 .cproject
 .project
 .settings
-build
 .vscode
 sdk/tools/winesync/winesync.cfg

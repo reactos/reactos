@@ -337,8 +337,9 @@ FindSidInCache(IN PSIDCACHEMGR scm,
 
     /* NOTE: assumes the lists are locked! */
 
-    CurrentEntry = &scm->CacheListHead;
-    while (CurrentEntry != &scm->CacheListHead)
+    for (CurrentEntry = scm->CacheListHead.Flink;
+         CurrentEntry != &scm->CacheListHead;
+         CurrentEntry = CurrentEntry->Flink)
     {
         CacheEntry = CONTAINING_RECORD(CurrentEntry,
                                        SIDCACHEENTRY,
@@ -383,8 +384,6 @@ FindSidInCache(IN PSIDCACHEMGR scm,
             *ReqResult = ReqRes;
             break;
         }
-
-        CurrentEntry = CurrentEntry->Flink;
     }
 
     return Ret;
@@ -699,8 +698,9 @@ QueueSidLookup(IN PSIDCACHEMGR scm,
     }
     else
     {
-        CurrentEntry = &scm->QueueListHead;
-        while (CurrentEntry != &scm->QueueListHead)
+        for (CurrentEntry = scm->QueueListHead.Flink;
+             CurrentEntry != &scm->QueueListHead;
+             CurrentEntry = CurrentEntry->Flink)
         {
             QueueEntry = CONTAINING_RECORD(CurrentEntry,
                                            SIDQUEUEENTRY,
@@ -712,8 +712,6 @@ QueueSidLookup(IN PSIDCACHEMGR scm,
                 FoundEntry = QueueEntry;
                 break;
             }
-
-            CurrentEntry = CurrentEntry->Flink;
         }
     }
 
@@ -805,8 +803,9 @@ DequeueSidLookup(IN HANDLE SidCacheMgr,
         }
         else
         {
-            CurrentEntry = &scm->QueueListHead;
-            while (CurrentEntry != &scm->QueueListHead)
+            for (CurrentEntry = scm->QueueListHead.Flink;
+                 CurrentEntry != &scm->QueueListHead;
+                 CurrentEntry = CurrentEntry->Flink)
             {
                 QueueEntry = CONTAINING_RECORD(CurrentEntry,
                                                SIDQUEUEENTRY,
@@ -819,8 +818,6 @@ DequeueSidLookup(IN HANDLE SidCacheMgr,
                                    QueueEntry);
                     break;
                 }
-
-                CurrentEntry = CurrentEntry->Flink;
             }
         }
 

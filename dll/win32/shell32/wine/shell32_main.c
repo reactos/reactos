@@ -977,7 +977,7 @@ typedef struct
 /*************************************************************************
  * SHAppBarMessage            [SHELL32.@]
  */
-UINT_PTR WINAPI SHAppBarMessage(DWORD msg, PAPPBARDATA data)
+UINT_PTR WINAPI OLD_SHAppBarMessage(DWORD msg, PAPPBARDATA data)
 {
     int width=data->rc.right - data->rc.left;
     int height=data->rc.bottom - data->rc.top;

@@ -446,16 +446,12 @@ IntDeleteAllAliases(PCONSRV_CONSOLE Console)
 /* PUBLIC SERVER APIS *********************************************************/
 
 /* API_NUMBER: ConsolepAddAlias */
-CSR_API(SrvAddConsoleAlias)
+CON_API(SrvAddConsoleAlias,
+        CONSOLE_ADDGETALIAS, ConsoleAliasRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
-    PCONSRV_CONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
     PVOID lpTarget;
-
-    DPRINT("SrvAddConsoleAlias entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
                                    (PVOID*)&ConsoleAliasRequest->Source,
@@ -475,12 +471,6 @@ CSR_API(SrvAddConsoleAlias)
 
     lpTarget = (ConsoleAliasRequest->TargetLength != 0 ? ConsoleAliasRequest->Target : NULL);
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    Status = STATUS_SUCCESS;
-
     Header = IntFindAliasHeader(Console,
                                 ConsoleAliasRequest->ExeName,
                                 ConsoleAliasRequest->ExeLength,
@@ -492,10 +482,7 @@ CSR_API(SrvAddConsoleAlias)
                                       ConsoleAliasRequest->ExeLength,
                                       ConsoleAliasRequest->Unicode2);
         if (!Header)
-        {
-            Status = STATUS_NO_MEMORY;
-            goto Quit;
-        }
+            return STATUS_NO_MEMORY;
 
         IntInsertAliasHeader(&Console->Aliases, Header);
     }
@@ -507,10 +494,7 @@ CSR_API(SrvAddConsoleAlias)
                                  ConsoleAliasRequest->SourceLength,
                                  ConsoleAliasRequest->Unicode);
         if (!Entry)
-        {
-            Status = STATUS_UNSUCCESSFUL;
-            goto Quit;
-        }
+            return STATUS_UNSUCCESSFUL;
 
         IntDeleteAliasEntry(Header, Entry);
     }
@@ -523,31 +507,22 @@ CSR_API(SrvAddConsoleAlias)
                                     ConsoleAliasRequest->TargetLength,
                                     ConsoleAliasRequest->Unicode);
         if (!Entry)
-        {
-            Status = STATUS_NO_MEMORY;
-            goto Quit;
-        }
+            return STATUS_NO_MEMORY;
 
         IntInsertAliasEntry(Header, Entry);
     }
 
-Quit:
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /* API_NUMBER: ConsolepGetAlias */
-CSR_API(SrvGetConsoleAlias)
+CON_API(SrvGetConsoleAlias,
+        CONSOLE_ADDGETALIAS, ConsoleAliasRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
-    PCONSRV_CONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
     UINT Length;
     PVOID lpTarget;
-
-    DPRINT("SrvGetConsoleAlias entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
                                    (PVOID*)&ConsoleAliasRequest->Source,
@@ -573,37 +548,26 @@ CSR_API(SrvGetConsoleAlias)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     Header = IntFindAliasHeader(Console,
                                 ConsoleAliasRequest->ExeName,
                                 ConsoleAliasRequest->ExeLength,
                                 ConsoleAliasRequest->Unicode2);
     if (!Header)
-    {
-        Status = STATUS_UNSUCCESSFUL;
-        goto Quit;
-    }
+        return STATUS_UNSUCCESSFUL;
 
     Entry = IntGetAliasEntry(Console, Header,
                              ConsoleAliasRequest->Source,
                              ConsoleAliasRequest->SourceLength,
                              ConsoleAliasRequest->Unicode);
     if (!Entry)
-    {
-        Status = STATUS_UNSUCCESSFUL;
-        goto Quit;
-    }
+        return STATUS_UNSUCCESSFUL;
 
     if (ConsoleAliasRequest->Unicode)
     {
         Length = Entry->Target.Length + sizeof(WCHAR);
         if (Length > ConsoleAliasRequest->TargetLength) // FIXME: Refine computation.
         {
-            Status = STATUS_BUFFER_TOO_SMALL;
-            goto Quit;
+            return STATUS_BUFFER_TOO_SMALL;
         }
 
         RtlCopyMemory(lpTarget, Entry->Target.Buffer, Entry->Target.Length);
@@ -614,8 +578,7 @@ CSR_API(SrvGetConsoleAlias)
         Length = (Entry->Target.Length + sizeof(WCHAR)) / sizeof(WCHAR);
         if (Length > ConsoleAliasRequest->TargetLength) // FIXME: Refine computation.
         {
-            Status = STATUS_BUFFER_TOO_SMALL;
-            goto Quit;
+            return STATUS_BUFFER_TOO_SMALL;
         }
 
         ConvertInputUnicodeToAnsi(Console,
@@ -624,21 +587,16 @@ CSR_API(SrvGetConsoleAlias)
         ConsoleAliasRequest->TargetLength = Length;
     }
 
-Quit:
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /* API_NUMBER: ConsolepGetAliases */
-CSR_API(SrvGetConsoleAliases)
+CON_API(SrvGetConsoleAliases,
+        CONSOLE_GETALLALIASES, GetAllAliasesRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETALLALIASES GetAllAliasesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesRequest;
-    PCONSRV_CONSOLE Console;
     ULONG BytesWritten = 0;
     PALIAS_HEADER Header;
-
-    DPRINT("SrvGetConsoleAliases entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
                                    (PVOID)&GetAllAliasesRequest->ExeName,
@@ -652,15 +610,15 @@ CSR_API(SrvGetConsoleAliases)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     Header = IntFindAliasHeader(Console,
                                 GetAllAliasesRequest->ExeName,
                                 GetAllAliasesRequest->ExeLength,
                                 GetAllAliasesRequest->Unicode2);
-    if (!Header) goto Quit;
+    if (!Header)
+    {
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quit;
+    }
 
     if (IntGetAllConsoleAliasesLength(Header, GetAllAliasesRequest->Unicode) > GetAllAliasesRequest->AliasesBufferLength)
     {
@@ -732,19 +690,15 @@ CSR_API(SrvGetConsoleAliases)
 Quit:
     GetAllAliasesRequest->AliasesBufferLength = BytesWritten;
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
 /* API_NUMBER: ConsolepGetAliasesLength */
-CSR_API(SrvGetConsoleAliasesLength)
+CON_API(SrvGetConsoleAliasesLength,
+        CONSOLE_GETALLALIASESLENGTH, GetAllAliasesLengthRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETALLALIASESLENGTH GetAllAliasesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesLengthRequest;
-    PCONSRV_CONSOLE Console;
     PALIAS_HEADER Header;
-
-    DPRINT("SrvGetConsoleAliasesLength entered ApiMessage %p\n", ApiMessage);
 
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID)&GetAllAliasesLengthRequest->ExeName,
@@ -753,10 +707,6 @@ CSR_API(SrvGetConsoleAliasesLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
 
     Header = IntFindAliasHeader(Console,
                                 GetAllAliasesLengthRequest->ExeName,
@@ -774,19 +724,15 @@ CSR_API(SrvGetConsoleAliasesLength)
         GetAllAliasesLengthRequest->Length = 0;
     }
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
 /* API_NUMBER: ConsolepGetAliasExes */
-CSR_API(SrvGetConsoleAliasExes)
+CON_API(SrvGetConsoleAliasExes,
+        CONSOLE_GETALIASESEXES, GetAliasesExesRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETALIASESEXES GetAliasesExesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesRequest;
-    PCONSRV_CONSOLE Console;
     UINT BytesWritten = 0;
-
-    DPRINT("SrvGetConsoleAliasExes entered\n");
 
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID*)&GetAliasesExesRequest->ExeNames,
@@ -795,10 +741,6 @@ CSR_API(SrvGetConsoleAliasExes)
     {
         return STATUS_INVALID_PARAMETER;
     }
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
 
     if (IntGetConsoleAliasesExesLength(Console->Aliases, GetAliasesExesRequest->Unicode) > GetAliasesExesRequest->Length)
     {
@@ -862,29 +804,18 @@ CSR_API(SrvGetConsoleAliasExes)
 Quit:
     GetAliasesExesRequest->Length = BytesWritten;
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
 /* API_NUMBER: ConsolepGetAliasExesLength */
-CSR_API(SrvGetConsoleAliasExesLength)
+CON_API(SrvGetConsoleAliasExesLength,
+        CONSOLE_GETALIASESEXESLENGTH, GetAliasesExesLengthRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETALIASESEXESLENGTH GetAliasesExesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesLengthRequest;
-    PCONSRV_CONSOLE Console;
-
-    DPRINT("SrvGetConsoleAliasExesLength entered ApiMessage %p\n", ApiMessage);
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     GetAliasesExesLengthRequest->Length =
         IntGetConsoleAliasesExesLength(Console->Aliases,
                                        GetAliasesExesLengthRequest->Unicode);
 
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

@@ -945,8 +945,10 @@ CsrImpersonateClient(IN PCSR_THREAD CsrThread)
     if (!NT_SUCCESS(Status))
     {
         /* Failure */
+#ifdef CSR_DBG
         DPRINT1("CSRSS: Can't impersonate client thread - Status = %lx\n", Status);
         // if (Status != STATUS_BAD_IMPERSONATION_LEVEL) DbgBreakPoint();
+#endif
         return FALSE;
     }
 
@@ -1337,6 +1339,7 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
                     }
                     else if (Result == CsrShutdownCancelled)
                     {
+#ifdef CSR_DBG
                         /* Check if this was a forced shutdown */
                         if (Flags & EWX_FORCE)
                         {
@@ -1344,6 +1347,7 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
                                      CsrProcess->ClientId.UniqueProcess, i);
                             DbgBreakPoint();
                         }
+#endif
 
                         /* Shutdown was cancelled, unlock and exit */
                         CsrReleaseProcessLock();
@@ -1365,7 +1369,8 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
         }
 
         /* We've reached the final loop here, so dereference */
-        if (i == CSR_SERVER_DLL_MAX) CsrLockedDereferenceProcess(CsrProcess);
+        if (i == CSR_SERVER_DLL_MAX)
+            CsrLockedDereferenceProcess(CsrProcess);
     }
 
     /* Success path */

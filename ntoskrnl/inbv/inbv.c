@@ -1,9 +1,11 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+
 #define NDEBUG
 #include <debug.h>
-#include "bootvid/bootvid.h"
+
+#include "inbv/logo.h"
 
 /* See also mm/ARM3/miarm.h */
 #define MM_READONLY     1   // PAGE_READONLY
@@ -52,12 +54,6 @@ typedef enum _ROT_BAR_TYPE
     RB_SQUARE_CELLS,
     RB_PROGRESS_BAR
 } ROT_BAR_TYPE;
-
-/*
- * Screen resolution (for default VGA)
- */
-#define SCREEN_WIDTH  640
-#define SCREEN_HEIGHT 480
 
 /*
  * BitBltAligned() alignments
@@ -1126,7 +1122,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             /* Workstation; set colors */
             InbvSetTextColor(15);
             InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 7);
-            InbvSolidColorFill(0, 421, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 1);
+            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 1);
 
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_WKSTA_HEADER);
@@ -1137,7 +1133,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             /* Server; set colors */
             InbvSetTextColor(14);
             InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 6);
-            InbvSolidColorFill(0, 421, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 1);
+            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 1);
 
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
@@ -1145,7 +1141,8 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         }
 
         /* Set the scrolling region */
-        InbvSetScrollRegion(32, 80, 631, 400);
+        InbvSetScrollRegion(VID_SCROLL_AREA_LEFT, VID_SCROLL_AREA_TOP,
+                            VID_SCROLL_AREA_RIGHT, VID_SCROLL_AREA_BOTTOM);
 
         /* Make sure we have resources */
         if (Header && Footer)
@@ -1239,16 +1236,19 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 
             /* Set progress bar coordinates and display it */
-            InbvSetProgressBarCoordinates(259, 352);
+            InbvSetProgressBarCoordinates(VID_PROGRESS_BAR_LEFT, VID_PROGRESS_BAR_TOP);
 
 #ifdef REACTOS_SKUS
             /* Check for non-workstation products */
             if (SharedUserData->NtProductType != NtProductWinNt)
             {
                 /* Overwrite part of the logo for a server product */
-                InbvScreenToBufferBlt(Buffer, 413, 237, 7, 7, 8);
-                InbvSolidColorFill(418, 230, 454, 256, 0);
-                InbvBufferToScreenBlt(Buffer, 413, 237, 7, 7, 8);
+                InbvScreenToBufferBlt(Buffer, VID_SKU_SAVE_AREA_LEFT,
+                                      VID_SKU_SAVE_AREA_TOP, 7, 7, 8);
+                InbvSolidColorFill(VID_SKU_AREA_LEFT, VID_SKU_AREA_TOP,
+                                   VID_SKU_AREA_RIGHT, VID_SKU_AREA_BOTTOM, 0);
+                InbvBufferToScreenBlt(Buffer, VID_SKU_SAVE_AREA_LEFT,
+                                      VID_SKU_SAVE_AREA_TOP, 7, 7, 8);
 
                 /* In setup mode, you haven't selected a SKU yet */
                 if (ExpInTextModeSetup) Text = NULL;
@@ -1274,7 +1274,8 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 
 #ifdef REACTOS_SKUS
         /* Draw the SKU text if it exits */
-        if (Text) BitBltPalette(Text, TRUE, 180, 121);
+        if (Text)
+            BitBltPalette(Text, TRUE, VID_SKU_TEXT_LEFT, VID_SKU_TEXT_TOP);
 #endif
 
 #ifdef INBV_ROTBAR_IMPLEMENTED

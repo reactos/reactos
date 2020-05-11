@@ -305,6 +305,12 @@ static BOOL DoSaveFile(VOID)
 
     CloseHandle(hFile);
     HeapFree(GetProcessHeap(), 0, pTemp);
+
+    if (bRet)
+    {
+        SetFileName(Globals.szFileName);
+    }
+
     return bRet;
 }
 

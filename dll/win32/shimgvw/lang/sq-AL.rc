@@ -8,6 +8,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Vëzhguesi i Fotove dhe Faxit"
     IDS_SETASDESKBG "Vendos si Sfond Desktopi"
+    IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Shikim Paraprak"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Fotoja Tjetër"

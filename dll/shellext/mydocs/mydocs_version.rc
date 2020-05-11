@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     mydocs
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     MyDocs implementation
+ * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ */
+
+#include "mydocs_version.h"
+
+#define WINE_OLESELFREGISTER
+#define WINE_FILEVERSION WINE_FILEVERSION_MAJOR,WINE_FILEVERSION_MINOR,WINE_FILEVERSION_BUILD,WINE_FILEVERSION_PLATFORMID
+#define WINE_FILENAME_STR "mydocs.dll"
+
+#include <wine/wine_common_ver.rc>

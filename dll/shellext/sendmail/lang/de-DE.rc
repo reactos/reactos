@@ -1,0 +1,7 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_DESKLINK, "Desktop (Verknüpfung erstellen)"
+    IDS_SHORTCUT, "Shortcut to %s"
+}

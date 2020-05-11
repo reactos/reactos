@@ -581,11 +581,10 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
 /* PUBLIC SERVER APIS *********************************************************/
 
 /* API_NUMBER: ConsolepReadConsole */
-CSR_API(SrvReadConsole)
+CON_API(SrvReadConsole,
+        CONSOLE_READCONSOLE, ReadConsoleRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_READCONSOLE ReadConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadConsoleRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PVOID HandleEntry;
     PCONSOLE_INPUT_BUFFER InputBuffer;
     GET_INPUT_INFO InputInfo;
@@ -622,8 +621,16 @@ CSR_API(SrvReadConsole)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetInputBufferAndHandleEntry(ProcessData, ReadConsoleRequest->InputHandle, &InputBuffer, &HandleEntry, GENERIC_READ, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    Status = ConSrvGetInputBufferAndHandleEntry(ProcessData,
+                                                ReadConsoleRequest->InputHandle,
+                                                &InputBuffer,
+                                                &HandleEntry,
+                                                GENERIC_READ,
+                                                TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == InputBuffer->Header.Console);
 
     InputInfo.CallingThread = CsrGetClientThread();
     InputInfo.HandleEntry   = HandleEntry;
@@ -639,11 +646,10 @@ CSR_API(SrvReadConsole)
 }
 
 /* API_NUMBER: ConsolepGetConsoleInput */
-CSR_API(SrvGetConsoleInput)
+CON_API(SrvGetConsoleInput,
+        CONSOLE_GETINPUT, GetInputRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETINPUT GetInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetInputRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PVOID HandleEntry;
     PCONSOLE_INPUT_BUFFER InputBuffer;
     GET_INPUT_INFO InputInfo;
@@ -651,7 +657,9 @@ CSR_API(SrvGetConsoleInput)
     DPRINT("SrvGetConsoleInput\n");
 
     if (GetInputRequest->Flags & ~(CONSOLE_READ_KEEPEVENT | CONSOLE_READ_CONTINUE))
+    {
         return STATUS_INVALID_PARAMETER;
+    }
 
     /*
      * For optimization purposes, Windows (and hence ReactOS, too, for
@@ -678,8 +686,16 @@ CSR_API(SrvGetConsoleInput)
         }
     }
 
-    Status = ConSrvGetInputBufferAndHandleEntry(ProcessData, GetInputRequest->InputHandle, &InputBuffer, &HandleEntry, GENERIC_READ, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    Status = ConSrvGetInputBufferAndHandleEntry(ProcessData,
+                                                GetInputRequest->InputHandle,
+                                                &InputBuffer,
+                                                &HandleEntry,
+                                                GENERIC_READ,
+                                                TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == InputBuffer->Header.Console);
 
     InputInfo.CallingThread = CsrGetClientThread();
     InputInfo.HandleEntry   = HandleEntry;
@@ -705,16 +721,13 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
 #endif
 
 /* API_NUMBER: ConsolepWriteConsoleInput */
-CSR_API(SrvWriteConsoleInput)
+CON_API(SrvWriteConsoleInput,
+        CONSOLE_WRITEINPUT, WriteInputRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_WRITEINPUT WriteInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteInputRequest;
     PCONSOLE_INPUT_BUFFER InputBuffer;
     ULONG NumEventsWritten;
-
     PINPUT_RECORD InputRecord;
-
-    DPRINT("SrvWriteConsoleInput\n");
 
     /*
      * For optimization purposes, Windows (and hence ReactOS, too, for
@@ -744,7 +757,7 @@ CSR_API(SrvWriteConsoleInput)
         InputRecord = WriteInputRequest->RecordBufPtr;
     }
 
-    Status = ConSrvGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetInputBuffer(ProcessData,
                                   WriteInputRequest->InputHandle,
                                   &InputBuffer, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status))
@@ -753,26 +766,28 @@ CSR_API(SrvWriteConsoleInput)
         return Status;
     }
 
+    ASSERT((PCONSOLE)Console == InputBuffer->Header.Console);
+
     /* First translate everything to UNICODE */
     if (!WriteInputRequest->Unicode)
     {
         ULONG i;
         for (i = 0; i < WriteInputRequest->NumRecords; ++i)
         {
-            ConioInputEventToUnicode(InputBuffer->Header.Console, &InputRecord[i]);
+            ConioInputEventToUnicode((PCONSOLE)Console, &InputRecord[i]);
         }
     }
 
     /* Now, add the events */
     NumEventsWritten = 0;
-    Status = ConioAddInputEvents((PCONSRV_CONSOLE)InputBuffer->Header.Console,
+    Status = ConioAddInputEvents(Console,
                                  // InputBuffer,
                                  InputRecord,
                                  WriteInputRequest->NumRecords,
                                  &NumEventsWritten,
                                  WriteInputRequest->AppendToEnd);
 
-    // Status = ConDrvWriteConsoleInput(InputBuffer->Header.Console,
+    // Status = ConDrvWriteConsoleInput((PCONSOLE)Console,
                                      // InputBuffer,
                                      // WriteInputRequest->AppendToEnd,
                                      // InputRecord,
@@ -789,21 +804,21 @@ NTSTATUS NTAPI
 ConDrvFlushConsoleInputBuffer(IN PCONSOLE Console,
                               IN PCONSOLE_INPUT_BUFFER InputBuffer);
 /* API_NUMBER: ConsolepFlushInputBuffer */
-CSR_API(SrvFlushConsoleInputBuffer)
+CON_API(SrvFlushConsoleInputBuffer,
+        CONSOLE_FLUSHINPUTBUFFER, FlushInputBufferRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_FLUSHINPUTBUFFER FlushInputBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FlushInputBufferRequest;
     PCONSOLE_INPUT_BUFFER InputBuffer;
 
-    DPRINT("SrvFlushConsoleInputBuffer\n");
-
-    Status = ConSrvGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetInputBuffer(ProcessData,
                                   FlushInputBufferRequest->InputHandle,
                                   &InputBuffer, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvFlushConsoleInputBuffer(InputBuffer->Header.Console,
-                                           InputBuffer);
+    ASSERT((PCONSOLE)Console == InputBuffer->Header.Console);
+
+    Status = ConDrvFlushConsoleInputBuffer((PCONSOLE)Console, InputBuffer);
 
     ConSrvReleaseInputBuffer(InputBuffer, TRUE);
     return Status;
@@ -814,20 +829,21 @@ ConDrvGetConsoleNumberOfInputEvents(IN PCONSOLE Console,
                                     IN PCONSOLE_INPUT_BUFFER InputBuffer,
                                     OUT PULONG NumberOfEvents);
 /* API_NUMBER: ConsolepGetNumberOfInputEvents */
-CSR_API(SrvGetConsoleNumberOfInputEvents)
+CON_API(SrvGetConsoleNumberOfInputEvents,
+        CONSOLE_GETNUMINPUTEVENTS, GetNumInputEventsRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETNUMINPUTEVENTS GetNumInputEventsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetNumInputEventsRequest;
     PCONSOLE_INPUT_BUFFER InputBuffer;
 
-    DPRINT("SrvGetConsoleNumberOfInputEvents\n");
-
-    Status = ConSrvGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetInputBuffer(ProcessData,
                                   GetNumInputEventsRequest->InputHandle,
                                   &InputBuffer, GENERIC_READ, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvGetConsoleNumberOfInputEvents(InputBuffer->Header.Console,
+    ASSERT((PCONSOLE)Console == InputBuffer->Header.Console);
+
+    Status = ConDrvGetConsoleNumberOfInputEvents((PCONSOLE)Console,
                                                  InputBuffer,
                                                  &GetNumInputEventsRequest->NumberOfEvents);
 

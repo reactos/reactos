@@ -193,7 +193,7 @@ BEGIN
     IDS_APPS_COUNT "程序数量：%d；已选：%d"
     IDS_WELCOME_TITLE "欢迎使用 ReactOS 程序管理器！\n\n"
     IDS_WELCOME_TEXT "从左栏选择一个类别，然后选择要安装或卸载的程序。\nReactOS 网站："
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "已安装"
     IDS_AVAILABLEFORINST "可安装"
     IDS_UPDATES "更新"
@@ -216,6 +216,7 @@ BEGIN
     IDS_SELECTEDFORINST "选中以安装"
     IDS_MISMATCH_CERT_INFO "所使用的证书未知:\n主题: %s\n发行方: %s\n您是否仍然想继续？"
     IDS_RECOMMENDED "Recommended software"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

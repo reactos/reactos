@@ -11,6 +11,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&ऑटो अरेंज", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -31,9 +32,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&ऑटो अरेंज", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "लाइन अप आइकन", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "रिफ़्रिश", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "पेस्ट", FCIDM_SHVIEW_INSERT
@@ -384,7 +384,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "चयनित स्थान के लिए सेटिंग्स", -1, 10, 72, 220, 70
     RADIOBUTTON "&कस्टम साइज:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "&अधिकतम साइज (एमबी):", -1, 20, 105, 70, 10
     RADIOBUTTON "&रीसायकल बिन में फ़ाइलों को मूव न करें। हटाए जाने पर तुरंत फ़ाइलों को हटा दें।", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&हटाने का पुष्टीकरण डाइअलॉग देखाए", 14004, 20, 155, 140, 10, WS_TABSTOP
@@ -400,8 +400,8 @@ BEGIN
     LTEXT "फ़ाइल:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&प्रोग्राम", -1, 7, 42, 249, 187
     CONTROL "प्रोग्राम", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "&इस तरह की फाइल खोलने के लिए हमेशा चयनित प्रोग्राम का उपयोग करें", 14003, 20, 193, 225, 10
-    PUSHBUTTON "&ब्राउज...", 14004, 198, 207, 50, 14
+    AUTOCHECKBOX "&इस तरह की फाइल खोलने के लिए हमेशा चयनित प्रोग्राम का उपयोग करें", 14003, 16, 193, 232, 10
+    PUSHBUTTON "&ब्राउज...", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "ठीक", IDOK, 150, 236, 50, 14
     PUSHBUTTON "रद्द करें", IDCANCEL, 206, 236, 50, 14
 END
@@ -448,17 +448,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "फ़ाइल प्रकारों"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "रजिस्टर्ड फ़ाइल &प्रकार:", -1, 7, 10, 70, 10
-    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-    PUSHBUTTON "&नया", IDC_FILETYPES_NEW, 120, 110, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&हटाएं", IDC_FILETYPES_DELETE, 180, 110, 50, 14, WS_TABSTOP
-    GROUPBOX "'%s' एक्सटेंशन के लिए डिटेल्स", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 249, 70
-    LTEXT "के साथ खुलता है:", -1, 12, 140, 40, 10
-    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 140, 10, 10
-    LTEXT "एप्लिकेशन का नाम", IDC_FILETYPES_APPNAME, 100, 140, 80, 10
-    PUSHBUTTON "&चेंज...", IDC_FILETYPES_CHANGE, 180, 140, 50, 14, WS_TABSTOP
-    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 155, 160, 30
-    PUSHBUTTON "&उन्नत", IDC_FILETYPES_ADVANCED, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "रजिस्टर्ड फ़ाइल &प्रकार:", -1, 7, 10, 180, 10
+    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 115
+    PUSHBUTTON "&नया", IDC_FILETYPES_NEW, 140, 140, 55, 14, WS_TABSTOP
+    PUSHBUTTON "&हटाएं", IDC_FILETYPES_DELETE, 200, 140, 55, 14, WS_TABSTOP
+    GROUPBOX "'%s' एक्सटेंशन के लिए डिटेल्स", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 170, 249, 70
+    LTEXT "के साथ खुलता है:", -1, 12, 180, 40, 10
+    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 180, 10, 10
+    LTEXT "एप्लिकेशन का नाम", IDC_FILETYPES_APPNAME, 100, 180, 80, 10
+    PUSHBUTTON "&चेंज...", IDC_FILETYPES_CHANGE, 200, 180, 50, 14, WS_TABSTOP
+    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 195, 160, 40
+    PUSHBUTTON "&उन्नत", IDC_FILETYPES_ADVANCED, 200, 215, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -769,7 +769,6 @@ BEGIN
     IDS_EJECT "इजेक्ट"
     IDS_DISCONNECT "डिस्कनेक्ट"
     IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
     IDS_SENDTO_MENU "Se&nd To"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"

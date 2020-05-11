@@ -28,7 +28,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "<A HREF=""http://www.reactos.org/"">ReactOS-Homepage</A> besuchen", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "<A HREF=""https://reactos.org/"">ReactOS-Homepage</A> besuchen", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "&Lizenz anzeigen...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -208,7 +208,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Systemstart", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Standard-Betriebs&system:", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Anzeigedauer der Betriebssystem-Liste:", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -226,7 +226,7 @@ BEGIN
     AUTOCHECKBOX "Administrator-Warnmeldung &senden", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "Automatisch &neu starten", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "Debuginformationen schreiben", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "Dump-&Datei:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "Vorhandene Dateien &überschreiben", IDC_STRRECOVERWRITE, 17, 228, 125, 10
@@ -342,7 +342,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Systemsteuerungsoption ""System"""
     IDS_WARNINITIALSIZE "Geben Sie einen numerischen Wert für die Anfangsgröße der Auslagerungsdatei an."
     IDS_WARNMAXIMUMSIZE "Geben Sie einen numerischen Wert für die Maximalgröße der Auslagerungsdatei an."
-    IDS_WARNINITIALRANGE "Die Anfangsgröße der Auslagerungsdatei darf nicht kleiner als 16 MB sein und darf den verfügbaren Speicherplatz auf dem gewählten Laufwerk nicht überschreiten."
+    IDS_WARNINITIALRANGE "Die Anfangsgröße der Auslagerungsdatei darf nicht kleiner als 2 MB sein und darf den verfügbaren Speicherplatz auf dem gewählten Laufwerk nicht überschreiten."
     IDS_WARNMAXIMUMRANGE "Die Maximalgröße der Auslagerungsdatei darf nicht kleiner als die Anfangsgröße sein und darf den verfügbaren Speicherplatz auf dem gewählten Laufwerk nicht überschreiten."
     IDS_PAGEFILE_NONE "Keine"
     IDS_PAGEFILE_SYSTEM "Systemverwaltet"

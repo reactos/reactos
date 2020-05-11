@@ -4,6 +4,7 @@
  * PURPOSE:     Spanish locale file
  * COPYRIGHT:   Ismael Ferreras Morezuelas
  *              Julio Carchi Ruiz
+ *              Julen Urizar Compains (2020)
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -19,6 +20,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Ordenar automáticamente", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -39,9 +41,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Ordenar automáticamente", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Alinear iconos", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Actualizar", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Pegar", FCIDM_SHVIEW_INSERT
@@ -74,7 +75,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "C&ortar", IDM_CUT
         MENUITEM "&Copiar", IDM_COPY
-        MENUITEM "Paste", IDM_INSERT
+        MENUITEM "Pegar", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "C&rear acceso directo", IDM_CREATELINK
         MENUITEM "&Eliminar", IDM_DELETE
@@ -116,7 +117,7 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     LTEXT "Carpeta:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS  | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "&Crear nueva carpeta", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "Aceptar", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -392,26 +393,26 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Configuración para la unidad seleccionada ", -1, 10, 72, 220, 70
     RADIOBUTTON "Tamaño &personalizado:", 14001, 20, 90, 88, 10, WS_TABSTOP
-    EDITTEXT 14002, 120, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "&Tamaño máximo(MB):", -1, 20, 105, 70, 10
     RADIOBUTTON "&No mover archivos a la Papelera. Eliminar todos los archivos de forma permanente.", 14003, 20, 117, 185, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Mostrar un cuadro de diálogo para confirmar la eliminación", 14004, 20, 155, 200, 10, WS_TABSTOP
 END
 
-IDD_OPEN_WITH DIALOGEX 0, 0, 284, 256
+IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Abrir con"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
-    LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 10
-    LTEXT "Archivo:    ", 14001, 44, 25, 188, 20
-    GROUPBOX "&Programas ", -1, 7, 42, 269, 187
+    LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 18
+    LTEXT "Archivo:    ", 14001, 44, 30, 188, 10
+    GROUPBOX "&Programas ", -1, 7, 42, 249, 187
     CONTROL "Programas", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "Utilizar &siempre el programa seleccionado para abrir este tipo de archivos", 14003, 15, 193, 250, 10
-    PUSHBUTTON "&Examinar...", 14004, 218, 207, 50, 14
-    DEFPUSHBUTTON "Aceptar", IDOK, 170, 236, 50, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 226, 236, 50, 14
+    AUTOCHECKBOX "&Siempre use el programa para abrir este tipo de archivos", 14003, 16, 193, 232, 10
+    PUSHBUTTON "&Examinar...", 14004, 188, 207, 60, 14
+    DEFPUSHBUTTON "Aceptar", IDOK, 150, 236, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 206, 236, 50, 14
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 294, 240
@@ -456,16 +457,16 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Tipos de Archivo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "&Tipos de archivo registrados:", -1, 7, 10, 120, 10
+    LTEXT "&Tipos de archivo registrados:", -1, 7, 10, 180, 10
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 279, 80
-    PUSHBUTTON "&Nueva", IDC_FILETYPES_NEW, 170, 110, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Eli&minar", IDC_FILETYPES_DELETE, 230, 110, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Nueva", IDC_FILETYPES_NEW, 170, 110, 55, 14, WS_TABSTOP
+    PUSHBUTTON "Eli&minar", IDC_FILETYPES_DELETE, 230, 110, 55, 14, WS_TABSTOP
     GROUPBOX "Detalles para el tipo de archivo «%s»", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 279, 100
     LTEXT "Se abre con:", -1, 12, 140, 50, 10
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 140, 10, 10
     LTEXT "Aplicación", IDC_FILETYPES_APPNAME, 100, 140, 80, 10
     PUSHBUTTON "Cam&biar...", IDC_FILETYPES_CHANGE, 230, 140, 50, 14, WS_TABSTOP
-    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 165, 220, 30
+    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 165, 220, 40
     PUSHBUTTON "Opciones avanza&das", IDC_FILETYPES_ADVANCED, 190, 213, 90, 14, WS_TABSTOP
 END
 
@@ -776,17 +777,16 @@ BEGIN
     IDS_PASTE "Insertar"
     IDS_EJECT "Extraer"
     IDS_DISCONNECT "Desconectar"
-    IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
-    IDS_SENDTO_MENU "Se&nd To"
+    IDS_OPENFILELOCATION "Abrir &ubicación del archivo"
+    IDS_SENDTO_MENU "E&nviar a"
 
-    IDS_MOVEERRORTITLE "Error Moving File or Folder"
-    IDS_COPYERRORTITLE "Error Copying File or Folder"
-    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
-    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
-    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
-    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
-    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
+    IDS_MOVEERRORTITLE "Error moviendo Archivo o Carpeta"
+    IDS_COPYERRORTITLE "Error copiando Archivo o Carpeta"
+    IDS_MOVEERRORSAMEFOLDER "Imposible mover '%s': La carpeta de destino es la misma que la de origen."
+    IDS_MOVEERRORSAME "Imposible mover '%s': El archivo de origen y el de destino son el mismo."
+    IDS_COPYERRORSAME "Imposible copiar '%s': El archivo de origen y el de destino son el mismo."
+    IDS_MOVEERRORSUBFOLDER "Imposible mover '%s': La carpeta de destino es un subdirectorio de la de origen."
+    IDS_COPYERRORSUBFOLDER "Imposible copiar '%s': La carpeta de destino es un subdirectorio de la de origen."
 
     IDS_CREATEFOLDER_DENIED "No se pudo crear la carpeta '%1'"
     IDS_CREATEFOLDER_CAPTION "No se pudo crear la carpeta"
@@ -817,9 +817,9 @@ BEGIN
     IDS_SHUTDOWN_PROMPT "¿Desea apagar el equipo?"
     
     /* Format Dialog Strings */
-    IDS_FORMAT_TITLE "Format Local Disk"
-    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
-    IDS_FORMAT_COMPLETE "Format Complete."
+    IDS_FORMAT_TITLE "Formatear Disco Local"
+    IDS_FORMAT_WARNING "ADVERTENCIA: Formatear eliminará TODOS los datos de este disco.\n Para formatear, haga clic en OK. Para salir, haga clic en CANCELAR."
+    IDS_FORMAT_COMPLETE "Formato completo."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "No se pudo mostrar el diálogo Ejecutar (error interno)"
@@ -885,19 +885,19 @@ BEGIN
     IDS_PICK_ICON_FILTER "Archivos de icono (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Todos los archivos (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Programas (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0"
 
-    IDS_CANTLOCKVOLUME "No se pudo bloquear la unidad (Error Code: %lu)."
-    IDS_CANTDISMOUNTVOLUME "No se pudo desmontar la unidad (Error Code: %lu)."
-    IDS_CANTEJECTMEDIA "No se pudo extraer la unidad (Error Code: %lu)."
-    IDS_CANTSHOWPROPERTIES "No se puede mostrar las propiedades (Error Code: %lu)."
-    IDS_CANTDISCONNECT "No se pudo desconectar (Error Code: %lu)."
-    IDS_NONE "(None)"
+    IDS_CANTLOCKVOLUME "No se pudo bloquear la unidad (Código de Error: %lu)."
+    IDS_CANTDISMOUNTVOLUME "No se pudo desmontar la unidad (Código de Error: %lu)."
+    IDS_CANTEJECTMEDIA "No se pudo extraer la unidad (Código de Error: %lu)."
+    IDS_CANTSHOWPROPERTIES "No se puede mostrar las propiedades (Código de Error: %lu)."
+    IDS_CANTDISCONNECT "No se pudo desconectar (Código de Error: %lu)."
+    IDS_NONE "(Nada)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Directorio"
     IDS_BAT_FILE "Archivo por lotes de ReactOS"
     IDS_CMD_FILE "Script de comandos ReactOS"
     IDS_COM_FILE "Aplicación DOS"
-    IDS_CPL_FILE "Elemento del Panel de control"
+    IDS_CPL_FILE "Elemento del Panel de Control"
     IDS_CUR_FILE "Cursor"
     IDS_DB__FILE "Base de datos"
     IDS_DLL_FILE "Biblioteca de aplicación"
@@ -927,7 +927,7 @@ BEGIN
     IDS_EDIT_VERB "Editar"
     IDS_FIND_VERB "Buscar"
     IDS_PRINT_VERB "Imprimir"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "Abrir en Línea de Comandos"
 
     IDS_FILE_FOLDER "%u archivos, %u carpetas"
     IDS_PRINTERS "Impresoras"
@@ -980,7 +980,7 @@ BEGIN
     IDS_NEWEXT_ADVANCED_RIGHT "A&vanzado >>"
     IDS_NEWEXT_NEW "<Nuevo>"
     IDS_NEWEXT_SPECIFY_EXT "Debe especificar una extensión."
-    IDS_NEWEXT_ALREADY_ASSOC "La extensión %s ya está asociada con el tipo de archivo %s. ¿Desea desasociar %s con %s y crear un nuevo tipo de arcivo?"
+    IDS_NEWEXT_ALREADY_ASSOC "La extensión %s ya está asociada con el tipo de archivo %s. ¿Desea desasociar %s con %s y crear un nuevo tipo de archivo?"
     IDS_NEWEXT_EXT_IN_USE "Ésta extensión ya está en uso"
 
     IDS_REMOVE_EXT "Si elimina una extensión de archivo, no podrá abrir archivos con esa extensión haciendo doble click en sus íconos.\n\n¿Está seguro de eliminar esta extensión?"

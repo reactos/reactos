@@ -19,9 +19,9 @@
 
  // CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam)
-    : m_IsSelected(FALSE), m_LicenseType(LICENSE_NONE), m_sFileName(sFileNameParam),
+    : m_IsSelected(FALSE), m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
     m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE),
-   m_IsRecommended(FALSE)
+    m_IsRecommended(FALSE)
 {
     RetrieveGeneralInfo();
 }
@@ -155,7 +155,8 @@ VOID CAvailableApplicationInfo::RetrieveSize()
         GetString(L"Size", m_szSize);
         return;
     }
- 
+
+    m_SizeBytes = iSizeBytes;
     StrFormatByteSizeW(iSizeBytes, m_szSize.GetBuffer(MAX_PATH), MAX_PATH);
     m_szSize.ReleaseBuffer();
 }
@@ -399,8 +400,8 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
 skip_if_cached:
         if (EnumType == Info->m_Category
             || EnumType == ENUM_ALL_AVAILABLE
-            || (EnumType == ENUM_CAT_SELECTED && Info->m_IsSelected))
-            || (EnumType == ENUM_RECOMMENDED && Info->IsRecommended())
+            || (EnumType == ENUM_CAT_SELECTED && Info->m_IsSelected)
+            || (EnumType == ENUM_RECOMMENDED && Info->IsRecommended()))
         {
             Info->RefreshAppInfo();
 

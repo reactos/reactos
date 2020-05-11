@@ -65,6 +65,9 @@ typedef VOID (*PCABINET_DISK_CHANGE)(
     IN PCWSTR CabinetName,
     IN PCWSTR DiskLabel);
 
+typedef PVOID (*PCABINET_CREATE_FILE)(
+    IN struct _CABINET_CONTEXT* CabinetContext,
+    IN ULONG FileSize);
 
 /* Classes */
 
@@ -106,6 +109,7 @@ typedef struct _CABINET_CONTEXT
     PCABINET_OVERWRITE OverwriteHandler;
     PCABINET_EXTRACT ExtractHandler;
     PCABINET_DISK_CHANGE DiskChangeHandler;
+    PCABINET_CREATE_FILE CreateFileHandler;
     PVOID CabinetReservedArea;
 } CABINET_CONTEXT, *PCABINET_CONTEXT;
 
@@ -204,7 +208,8 @@ CabinetSetEventHandlers(
     IN PCABINET_CONTEXT CabinetContext,
     IN PCABINET_OVERWRITE Overwrite,
     IN PCABINET_EXTRACT Extract,
-    IN PCABINET_DISK_CHANGE DiskChange);
+    IN PCABINET_DISK_CHANGE DiskChange,
+    IN PCABINET_CREATE_FILE CreateFile);
 
 /* Get pointer to cabinet reserved area. NULL if none */
 PVOID

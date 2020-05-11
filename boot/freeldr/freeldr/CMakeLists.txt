@@ -222,7 +222,7 @@ add_library(freeldr_common
 
 if(USE_CLANG_CL)
     # We need to reduce the binary size
-    add_target_compile_flags(freeldr_common "/Os")
+    target_compile_options(freeldr_common PRIVATE "/Os")
 endif()
 if(NOT MSVC AND ARCH STREQUAL "i386" AND SARCH STREQUAL "xbox")
   # Prevent a warning when doing a memcmp with address 0
@@ -265,7 +265,7 @@ endif()
 add_executable(freeldr_pe ${FREELDR_BASE_SOURCE})
 add_executable(freeldr_pe_dbg EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
 
-set_target_properties(freeldr_pe freeldr_pe_dbg 
+set_target_properties(freeldr_pe freeldr_pe_dbg
     PROPERTIES
     ENABLE_EXPORTS TRUE
     DEFINE_SYMBOL "")
@@ -308,10 +308,13 @@ endif()
 target_link_libraries(freeldr_pe freeldr_common cportlib cmlib rtl libcntpr)
 target_link_libraries(freeldr_pe_dbg freeldr_common cportlib cmlib rtl libcntpr)
 
+# dynamic analysis switches
 if(STACK_PROTECTOR)
     target_link_libraries(freeldr_pe gcc_ssp)
     target_link_libraries(freeldr_pe_dbg gcc_ssp)
-elseif(RUNTIME_CHECKS)
+endif()
+
+if(RUNTIME_CHECKS)
     target_link_libraries(freeldr_pe runtmchk)
     target_link_libraries(freeldr_pe_dbg runtmchk)
     add_target_link_flags(freeldr_pe "/MERGE:.rtc=.text")

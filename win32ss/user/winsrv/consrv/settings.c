@@ -29,12 +29,13 @@ ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
                                    IN USHORT NewScreenAttrib,
                                    IN USHORT NewPopupAttrib);
 /*
- * NOTE: This function explicitely references Console->ActiveBuffer.
+ * NOTE: This function explicitly references Console->ActiveBuffer.
  * It is possible that it should go into some frontend...
  */
 VOID
-ConSrvApplyUserSettings(IN PCONSOLE Console,
-                        IN PCONSOLE_STATE_INFO ConsoleInfo)
+ConSrvApplyUserSettings(
+    IN PCONSRV_CONSOLE Console,
+    IN PCONSOLE_STATE_INFO ConsoleInfo)
 {
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
 
@@ -123,7 +124,7 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
             if (BufSize.X != ActiveBuffer->ScreenBufferSize.X ||
                 BufSize.Y != ActiveBuffer->ScreenBufferSize.Y)
             {
-                if (NT_SUCCESS(ConioResizeBuffer(Console, Buffer, BufSize)))
+                if (NT_SUCCESS(ConioResizeBuffer((PCONSOLE)Console, Buffer, BufSize)))
                     SizeChanged = TRUE;
             }
 
@@ -131,7 +132,7 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
         }
 
         /* Apply foreground and background colors for both screen and popup */
-        ConDrvChangeScreenBufferAttributes(Console,
+        ConDrvChangeScreenBufferAttributes((PCONSOLE)Console,
                                            Buffer,
                                            ConsoleInfo->ScreenAttributes,
                                            ConsoleInfo->PopupAttributes);

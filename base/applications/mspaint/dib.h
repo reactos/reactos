@@ -9,14 +9,16 @@
 #pragma once
 
 HBITMAP CreateDIBWithProperties(int width, int height);
+HBITMAP CreateColorDIB(int width, int height, COLORREF rgb);
 
 int GetDIBWidth(HBITMAP hbm);
 
 int GetDIBHeight(HBITMAP hbm);
 
-void SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time, int *size, int hRes,
-                   int vRes);
+BOOL SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC);
 
-void LoadDIBFromFile(HBITMAP *hBitmap, LPCTSTR name, LPSYSTEMTIME time, int *size, int *hRes, int *vRes);
+HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile);
 
 void ShowFileLoadError(LPCTSTR name);
+
+HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL isFile);

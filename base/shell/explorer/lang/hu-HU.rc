@@ -74,10 +74,10 @@ BEGIN
     GROUPBOX "Értesítési terület", IDC_STATIC, 6, 114, 240, 98
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
     AUTOCHECKBOX "Az óra &megjelenítése", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
-    AUTOCHECKBOX "Má&sodpercek megjelenítése", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
+    AUTOCHECKBOX "Má&sodpercek megjelenítése", IDC_TASKBARPROP_SECONDS, 120, 153, 100, 10, WS_DISABLED
     LTEXT "Rendezettebbé teheti az értesítési területet, ha elrejti azokat az ikonokat, amelyekre már régen nem kattintott rá.", IDC_STATIC, 13, 169, 223, 16
     AUTOCHECKBOX "A nem aktív &ikonok elrejtése", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
-    PUSHBUTTON "&Testreszabás...", IDC_TASKBARPROP_ICONCUST, 188, 191, 50, 14
+    PUSHBUTTON "&Testreszabás...", IDC_TASKBARPROP_ICONCUST, 188, 188, 53, 14
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218

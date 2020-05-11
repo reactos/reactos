@@ -26,13 +26,13 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Реестр"
+    POPUP "&Файл"
     BEGIN
-        MENUITEM "&Импортировать файл реестра...", ID_REGISTRY_IMPORTREGISTRYFILE
-        MENUITEM "&Экспортировать файл реестра...", ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Импортировать из файла...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Экспортировать в файл...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Загрузить куст...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Выгрузить куст...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "&Загрузить куст...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "&Выгрузить куст...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Подключить сетевой реестр...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Отключить сетевой реестр...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -47,7 +47,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Созд&ать"
         BEGIN
-            MENUITEM "Кл&юч", ID_EDIT_NEW_KEY
+            MENUITEM "&Раздел", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "&Строковый параметр", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двоичный параметр", ID_EDIT_NEW_BINARYVALUE
@@ -56,12 +56,12 @@ BEGIN
             MENUITEM "Рас&ширяемый строковый параметр", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Права доступа...", ID_EDIT_PERMISSIONS
+        MENUITEM "Разре&шения...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Удалить\tDel", ID_EDIT_DELETE
         MENUITEM "&Переименовать", ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "С&копировать имя ключа", ID_EDIT_COPYKEYNAME
+        MENUITEM "&Копировать имя раздела", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
         MENUITEM "&Найти...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Найти &далее\tF3", ID_EDIT_FINDNEXT
@@ -101,7 +101,7 @@ BEGIN
     BEGIN
         POPUP "Созд&ать"
         BEGIN
-            MENUITEM "&Ключ", ID_EDIT_NEW_KEY
+            MENUITEM "&Раздел", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "&Строковый параметр", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двоичный параметр", ID_EDIT_NEW_BINARYVALUE
@@ -115,7 +115,7 @@ BEGIN
         MENUITEM "Развернуть/Свернуть", ID_TREE_EXPANDBRANCH
         POPUP "Созд&ать"
         BEGIN
-            MENUITEM "&Ключ", ID_EDIT_NEW_KEY
+            MENUITEM "&Раздел", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "&Строковый параметр", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двоичный параметр", ID_EDIT_NEW_BINARYVALUE
@@ -129,9 +129,17 @@ BEGIN
         MENUITEM "&Переименовать", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Экспорт", ID_TREE_EXPORT
-        MENUITEM "Разре&шения...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "Разре&шения...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Копировать имя ключа", ID_EDIT_COPYKEYNAME
+        MENUITEM "&Копировать имя раздела", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Развернуть/Свернуть", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Экспорт", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Выгрузить куст...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN
@@ -256,7 +264,7 @@ STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME "Имя"
     IDS_LIST_COLUMN_TYPE "Тип"
-    IDS_LIST_COLUMN_DATA "Данные"
+    IDS_LIST_COLUMN_DATA "Значение"
 END
 
 STRINGTABLE
@@ -269,17 +277,17 @@ END
 STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU "Содержит команды для работы с реестром в целом"
-    ID_EDIT_MENU "Содержит команды для редактирования значений или ключей"
+    ID_EDIT_MENU "Содержит команды для редактирования разделов или параметров"
     ID_VIEW_MENU "Содержит команды для настройки окна реестра"
-    ID_FAVOURITES_MENU "Содержит команды для доступа к часто используемым ключам"
+    ID_FAVOURITES_MENU "Содержит команды для доступа к часто используемым разделам"
     ID_HELP_MENU "Содержит команды для отображения справки и информации о редакторе реестра"
-    ID_EDIT_NEW_MENU "Содержит команды для создания новых ключей или значений"
+    ID_EDIT_NEW_MENU "Содержит команды для создания новых разделов или параметров"
 END
 
 STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY "Изменяет значение"
-    ID_EDIT_NEW_KEY "Добавляет новый ключ"
+    ID_EDIT_NEW_KEY "Добавляет новый раздел"
     ID_EDIT_NEW_STRINGVALUE "Добавляет новое строковое значение"
     ID_EDIT_NEW_BINARYVALUE "Добавляет новое бинарное значение"
     ID_EDIT_NEW_DWORDVALUE "Добавляет новое DWORD-значение"
@@ -297,15 +305,15 @@ END
 STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT "Выход из редактора реестра"
-    ID_FAVOURITES_ADDTOFAVOURITES "Добавить ключ в избранное"
-    ID_FAVOURITES_REMOVEFAVOURITE "Удалить ключ из избранного"
+    ID_FAVOURITES_ADDTOFAVOURITES "Добавить раздел в избранное"
+    ID_FAVOURITES_REMOVEFAVOURITE "Удалить раздел из избранного"
     ID_VIEW_STATUSBAR "Показать или скрыть строку состояния"
     ID_VIEW_SPLIT "Изменить позицию разделителя между двумя панелями"
     ID_VIEW_REFRESH "Обновляет окно"
     ID_EDIT_DELETE "Удаляет выделение"
     ID_EDIT_RENAME "Переименовывает выделение"
-    ID_EDIT_COPYKEYNAME "Копирует имя выделенного ключа в буфер обмена"
-    ID_EDIT_FIND "Ищет текстовую строку в ключе, значении или данных"
+    ID_EDIT_COPYKEYNAME "Копирует имя выделенного раздела в буфер обмена"
+    ID_EDIT_FIND "Ищет текстовую строку в названии раздела, параметра или значения"
     ID_EDIT_FINDNEXT "Ищет следующее совпадение текста, заданного в предыдущем поиске"
 END
 
@@ -313,25 +321,25 @@ STRINGTABLE
 BEGIN
     IDS_ERROR "Ошибка"
     IDS_WARNING "Предупреждение"
-    IDS_BAD_KEY "Не удалось получить ключ '%s'"
-    IDS_BAD_VALUE "Не удалось получить значение '%s'"
-    IDS_UNSUPPORTED_TYPE "Невозможно изменить ключи этого типа (%ld)"
+    IDS_BAD_KEY "Не удалось получить раздел '%s'"
+    IDS_BAD_VALUE "Не удалось получить параметр '%s'"
+    IDS_UNSUPPORTED_TYPE "Невозможно изменить значение этого типа (%ld)"
     IDS_TOO_BIG_VALUE "Значение слишком большое (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "Данные типа REG_MULTI_SZ не могут содержать пустые строки.\nВсе пустые строки будут удалены."
-    IDS_QUERY_DELETE_KEY_ONE "Вы действительно хотите удалить этот ключ?"
-    IDS_QUERY_DELETE_KEY_MORE "Вы действительно хотите удалить эти ключи?"
-    IDS_QUERY_DELETE_KEY_CONFIRM "Подтверждение удаления ключа"
-    IDS_QUERY_DELETE_ONE "Вы действительно хотите удалить это значение?"
-    IDS_QUERY_DELETE_MORE "Вы действительно хотите удалить эти значения?"
-    IDS_QUERY_DELETE_CONFIRM "Подтверждение удаления значения"
-    IDS_ERR_DELVAL_CAPTION "Ошибка удаления значения"
-    IDS_ERR_DELETEVALUE "Невозможно удалить все указанные значения!"
-    IDS_ERR_RENVAL_CAPTION "Ошибка переименования значения"
-    IDS_ERR_RENVAL_TOEMPTY "Невозможно переименовать %s. Указанное значение не пустое. Введите другое значение и повторите попытку."
+    IDS_MULTI_SZ_EMPTY_STRING "Значение типа REG_MULTI_SZ не может содержать пустые строки.\nВсе пустые строки будут удалены."
+    IDS_QUERY_DELETE_KEY_ONE "Вы действительно хотите удалить этот раздел?"
+    IDS_QUERY_DELETE_KEY_MORE "Вы действительно хотите удалить эти разделы?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Подтверждение удаления раздела"
+    IDS_QUERY_DELETE_ONE "Вы действительно хотите удалить этот параметр?"
+    IDS_QUERY_DELETE_MORE "Вы действительно хотите удалить эти параметры?"
+    IDS_QUERY_DELETE_CONFIRM "Подтверждение удаления параметра"
+    IDS_ERR_DELVAL_CAPTION "Ошибка удаления параметра"
+    IDS_ERR_DELETEVALUE "Невозможно удалить все указанные параметры!"
+    IDS_ERR_RENVAL_CAPTION "Ошибка переименования параметра"
+    IDS_ERR_RENVAL_TOEMPTY "Невозможно переименовать %s. Указанное имя параметра пусто. Введите другое название и повторите попытку."
     IDS_QUERY_IMPORT_HIVE_CAPTION "Подтвердите восстановление раздела"
     IDS_QUERY_IMPORT_HIVE_MSG "Раздел будет восстановлен поверх текущего выбранного раздела.\nВсе параметры и подразделы будут удалены.\nПродолжить выполнение операции?"
-    IDS_NEW_KEY "Новый ключ #%d"
-    IDS_NEW_VALUE "Новое значение #%d"
+    IDS_NEW_KEY "Новый раздел #%d"
+    IDS_NEW_VALUE "Новый параметр #%d"
 END
 
 STRINGTABLE
@@ -365,10 +373,10 @@ STRINGTABLE
 BEGIN
     IDS_ACCESS_FULLCONTROL "Полный контроль"
     IDS_ACCESS_READ "Чтение"
-    IDS_ACCESS_QUERYVALUE "Запрос значений"
-    IDS_ACCESS_SETVALUE "Установка значений"
-    IDS_ACCESS_CREATESUBKEY "Создание подключей"
-    IDS_ACCESS_ENUMERATESUBKEYS "Перечисление подключей"
+    IDS_ACCESS_QUERYVALUE "Запрос параметров"
+    IDS_ACCESS_SETVALUE "Изменение параметров"
+    IDS_ACCESS_CREATESUBKEY "Создание разделов"
+    IDS_ACCESS_ENUMERATESUBKEYS "Перечисление разделов"
     IDS_ACCESS_NOTIFY "Уведомление"
     IDS_ACCESS_CREATELINK "Создание связи"
     IDS_ACCESS_DELETE "Удаление"
@@ -379,9 +387,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INHERIT_THISKEYONLY "Только этот ключ"
-    IDS_INHERIT_THISKEYANDSUBKEYS "Только этот ключ и подключи"
-    IDS_INHERIT_SUBKEYSONLY "Только подключи"
+    IDS_INHERIT_THISKEYONLY "Только этот раздел"
+    IDS_INHERIT_THISKEYANDSUBKEYS "Только этот раздел и подразделы"
+    IDS_INHERIT_SUBKEYSONLY "Только подразделы"
 END
 
 STRINGTABLE
@@ -509,15 +517,15 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Искать далее", IDOK, 193, 7, 58, 14
     PUSHBUTTON "Отмена", IDCANCEL, 193, 24, 58, 14
-    GROUPBOX "Просматривать", IDC_STATIC, 7, 24, 87, 51
+    GROUPBOX "Просматривать", IDC_STATIC, 7, 24, 98, 51
     LTEXT "На&йти:", IDC_STATIC, 7, 8, 37, 10
     EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
-    CONTROL "&Ключи", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
-            WS_TABSTOP, 14, 36, 51, 8
-    CONTROL "&Значения", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
-            WS_TABSTOP, 14, 48, 51, 8
-    CONTROL "&Данные", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
-            WS_TABSTOP, 14, 60, 51, 8
+    CONTROL "Имена р&азделов", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 36, 88, 8
+    CONTROL "Имена &параметров", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 48, 88, 8
+    CONTROL "&Значения параметров", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 14, 60, 88, 8
     CONTROL "&Искать только строку целиком", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 109, 44, 136, 13
     CONTROL "&С учетом регистра", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |

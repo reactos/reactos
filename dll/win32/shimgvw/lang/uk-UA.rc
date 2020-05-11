@@ -12,6 +12,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Програма перегляду зображень і факсів ReactOS"
     IDS_SETASDESKBG "Встановити як фон робочого столу"
+    IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Перегляд"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Наступне зображення"

@@ -1,0 +1,7 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "Pilihan Telepon dan Modem"
+    IDS_CPLSYSTEMDESCRIPTION "Mengonfigurasikan aturan panggilan telepon dan pengaturan modem Anda."
+END

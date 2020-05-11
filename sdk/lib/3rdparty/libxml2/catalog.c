@@ -56,7 +56,7 @@
  * TODO:
  *
  * macro to flag unimplemented blocks
- * XML_CATALOG_PREFER user env to select between system/public prefered
+ * XML_CATALOG_PREFER user env to select between system/public preferred
  * option. C.f. Richard Tobin <richard@cogsci.ed.ac.uk>
  *> Just FYI, I am using an environment variable XML_CATALOG_PREFER with
  *> values "system" and "public".  I have made the default be "system" to

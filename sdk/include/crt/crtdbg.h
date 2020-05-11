@@ -93,55 +93,118 @@ extern "C" {
 #define _STATIC_ASSERT(expr) extern char (*static_assert(void)) [(expr) ? 1 : -1]
 #endif
 
-#ifndef _ASSERT
-#define _ASSERT(expr) ((void)0)
+
+// Debug reporting functions
+
+#ifdef _DEBUG
+
+    int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, ...);
+    int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumber, const wchar_t *moduleName, const wchar_t *format, ...);
+
 #endif
 
-#ifndef _ASSERT_WRN
-#define _ASSERT_WRN(expr) ((void)0)
+
+
+
+// Assertion and error reporting
+
+#ifndef _DEBUG
+
+    #define _CrtDbgBreak() ((void)0)
+
+    #ifndef _ASSERT_EXPR
+        #define _ASSERT_EXPR(expr,expr_str) ((void)0)
+    #endif
+
+    #ifndef _ASSERT
+        #define _ASSERT(expr) ((void)0)
+    #endif
+
+    #ifndef _ASSERTE
+        #define _ASSERTE(expr) ((void)0)
+    #endif
+
+
+    #define _RPT0(rptno,msg)
+    #define _RPTN(rptno,msg,...)
+
+    #define _RPTW0(rptno,msg)
+    #define _RPTWN(rptno,msg,...)
+
+    #define _RPTF0(rptno,msg)
+    #define _RPTFN(rptno,msg,...)
+  
+    #define _RPTFW0(rptno,msg)
+    #define _RPTFWN(rptno,msg,...)
+
+
+#else // _DEBUG
+
+    #define _CrtDbgBreak() __debugbreak()
+
+    #ifndef _ASSERT_EXPR
+        #define _ASSERT_EXPR(expr,expr_str) \
+            (void)((!!(expr)) || (_CrtDbgReportW(_CRT_ASSERT, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%ls", expr_str) != 1) || (_CrtDbgBreak(), 0))
+    #endif
+
+    #ifndef _ASSERT
+        #define _ASSERT(expr) _ASSERT_EXPR((expr), NULL)
+    #endif
+
+    #ifndef _ASSERTE
+        #define _ASSERTE(expr) _ASSERT_EXPR((expr), _CRT_WIDE(#expr))
+    #endif
+
+    #define _RPT_BASE(...) \
+        (void)((_CrtDbgReport(__VA_ARGS__) != 1) || (_CrtDbgBreak(), 0))
+
+    #define _RPT_BASEW(...) \
+        (void)((_CrtDbgReportW(__VA_ARGS__) != 1) || (_CrtDbgBreak(), 0))
+
+
+    #define _RPT0(rptno,msg)        _RPT_BASE(rptno, NULL, 0, NULL, "%s", msg)
+    #define _RPTN(rptno,msg,...)    _RPT_BASE(rptno, NULL, 0, NULL, msg, __VA_ARGS__)
+
+    #define _RPTW0(rptno,msg)       _RPT_BASEW(rptno, NULL, 0, NULL, L"%s", msg)
+    #define _RPTWN(rptno,msg,...)   _RPT_BASEW(rptno, NULL, 0, NULL, msg, __VA_ARGS__)
+
+    #define _RPTF0(rptno,msg)       _RPT_BASE(rptno, __FILE__, __LINE__, NULL, "%s", msg)
+    #define _RPTFN(rptno,msg,...)   _RPT_BASE(rptno, __FILE__, __LINE__, NULL, msg, __VA_ARGS__)
+  
+    #define _RPTFW0(rptno,msg)      _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%s", msg)
+    #define _RPTFWN(rptno,msg,...)  _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, msg, __VA_ARGS__)
+
 #endif
 
-#ifndef _ASSERTE
-#define _ASSERTE(expr) ((void)0)
-#endif
 
-#ifndef _ASSERTE_WRN
-#define _ASSERTE_WRN(expr) ((void)0)
-#endif
+#define _RPT1 _RPTN
+#define _RPT2 _RPTN
+#define _RPT3 _RPTN
+#define _RPT4 _RPTN
+#define _RPT5 _RPTN
 
-#ifndef _ASSERT_EXPR
-#define _ASSERT_EXPR(expr,expr_str) ((void)0)
-#endif
 
-#ifndef _ASSERT_EXPR_WRN
-#define _ASSERT_EXPR_WRN(expr,expr_str) ((void)0)
-#endif
+#define _RPTW1 _RPTWN
+#define _RPTW2 _RPTWN
+#define _RPTW3 _RPTWN
+#define _RPTW4 _RPTWN
+#define _RPTW5 _RPTWN
 
-#ifndef _ASSERT_BASE
-#define _ASSERT_BASE _ASSERT_EXPR
-#endif
 
-#define _RPT0(rptno,msg)
-#define _RPTW0(rptno,msg)
+#define _RPTF1 _RPTFN
+#define _RPTF2 _RPTFN
+#define _RPTF3 _RPTFN
+#define _RPTF4 _RPTFN
+#define _RPTF5 _RPTFN
 
-#define _RPT1(rptno,msg,arg1)
-#define _RPTW1(rptno,msg,arg1)
-#define _RPT2(rptno,msg,arg1,arg2)
-#define _RPTW2(rptno,msg,arg1,arg2)
-#define _RPT3(rptno,msg,arg1,arg2,arg3)
-#define _RPTW3(rptno,msg,arg1,arg2,arg3)
-#define _RPT4(rptno,msg,arg1,arg2,arg3,arg4)
-#define _RPTW4(rptno,msg,arg1,arg2,arg3,arg4)
-#define _RPTF0(rptno,msg)
-#define _RPTFW0(rptno,msg)
-#define _RPTF1(rptno,msg,arg1)
-#define _RPTFW1(rptno,msg,arg1)
-#define _RPTF2(rptno,msg,arg1,arg2)
-#define _RPTFW2(rptno,msg,arg1,arg2)
-#define _RPTF3(rptno,msg,arg1,arg2,arg3)
-#define _RPTFW3(rptno,msg,arg1,arg2,arg3)
-#define _RPTF4(rptno,msg,arg1,arg2,arg3,arg4)
-#define _RPTFW4(rptno,msg,arg1,arg2,arg3,arg4)
+
+#define _RPTFW1 _RPTFWN
+#define _RPTFW2 _RPTFWN
+#define _RPTFW3 _RPTFWN
+#define _RPTFW4 _RPTFWN
+#define _RPTFW5 _RPTFWN
+
+
 
 #define _malloc_dbg(s,t,f,l) malloc(s)
 #define _calloc_dbg(c,s,t,f,l) calloc(c,s)
@@ -182,8 +245,6 @@ extern "C" {
 #define _CrtSetReportHookW2(t,f) ((int)0)
 #define _CrtSetReportMode(t,f) ((int)0)
 #define _CrtSetReportFile(t,f) ((_HFILE)0)
-
-#define _CrtDbgBreak() ((void)0)
 
 #define _CrtSetBreakAlloc(a) ((long)0)
 #define _CrtSetAllocHook(f) ((_CRT_ALLOC_HOOK)0)

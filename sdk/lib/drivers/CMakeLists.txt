@@ -1,4 +1,5 @@
 
+add_subdirectory(arbiter)
 add_subdirectory(chew)
 add_subdirectory(copysup)
 add_subdirectory(csq)

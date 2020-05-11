@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/sysdm/smbios.c
  * PURPOSE:     Retrieve device or motherboard name identifier from DMI/SMBIOS
- * COPYRIGHT:   Copyright 2018-2019 Stanislav Motylkov <x86corez@gmail.com>
+ * COPYRIGHT:   Copyright 2018-2020 Stanislav Motylkov <x86corez@gmail.com>
  *
  */
 
@@ -37,6 +37,28 @@ IsPunctuation(
     _In_ WCHAR chr)
 {
     return (chr <= L' ' || chr == L'.' || chr == L',');
+}
+
+static
+BOOL IsDigitStrA(PCHAR DmiString)
+{
+    PCHAR c = DmiString;
+    if (!c)
+    {
+        return FALSE;
+    }
+    while (*c)
+    {
+        if (*c >= '0' && *c <= '9')
+        {
+            c++;
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
+    return TRUE;
 }
 
 /*
@@ -246,12 +268,19 @@ BOOL IsGenericSystemName(PCWSTR ven, PCWSTR dev, BOOL * bRemove)
         { L"LTD Delovoy Office", TRUE, FALSE },
         { L"Motherboard by ZOTAC", TRUE, FALSE },
         // various boards
+        { L"Type2 - Board Manufacturer", TRUE, TRUE },
         { L"Type2 - Board Vendor Name1", TRUE, TRUE },
+        { L"BASE_BOARD_MANUFACTURER", TRUE, TRUE },
+        { L"$(DEFAULT_STRING)", TRUE, TRUE },
         { L"DEPO Computers", TRUE, FALSE },
         { L"-", TRUE, TRUE },
+        { L"N/A", TRUE, TRUE },
         { L"OEM", TRUE, TRUE },
         { L"O.E.M", TRUE, TRUE },
+        { L"empty", TRUE, TRUE },
+        { L"insyde", TRUE, FALSE },
         { L"Unknow", TRUE, TRUE },
+        { L"Not Applicable", TRUE, TRUE },
         // distinguish between Oracle and older VirtualBox releases (Sun, etc.)
         { L"innotek GmbH", TRUE, FALSE },
     };
@@ -275,12 +304,16 @@ BOOL IsGenericSystemName(PCWSTR ven, PCWSTR dev, BOOL * bRemove)
         { L"HuronRiver Platform", TRUE, FALSE },
         { L"SandyBridge Platform", TRUE, FALSE },
         { L"Broadwell Platform", TRUE, FALSE },
+        { L"Kabylake Platform", TRUE, FALSE },
         { L"Sabine Platform", TRUE, FALSE },
         // various boards
         { L"Base Board Product Name", TRUE, TRUE },
         { L"Base Board Version", TRUE, TRUE },
         { L"Type2 - Board Product Name1", TRUE, TRUE },
+        { L"Type2 - Board Product Name", TRUE, TRUE },
         { L"Type2 - Board Version", TRUE, TRUE },
+        { L"MODEL_NAME", TRUE, TRUE },
+        { L"$(DEFAULT_STRING)", TRUE, TRUE },
         { L"*", TRUE, TRUE },
         { L"T", TRUE, TRUE },
         { L"GEG", TRUE, TRUE },
@@ -289,6 +322,7 @@ BOOL IsGenericSystemName(PCWSTR ven, PCWSTR dev, BOOL * bRemove)
         { L"OEM", TRUE, TRUE },
         { L"INVA", TRUE, TRUE },
         { L"O.E.M", TRUE, TRUE },
+        { L"empty", TRUE, TRUE },
         { L"DNSNB", TRUE, FALSE },
         { L"12345", TRUE, FALSE },
         { L"``````", TRUE, TRUE },
@@ -296,6 +330,7 @@ BOOL IsGenericSystemName(PCWSTR ven, PCWSTR dev, BOOL * bRemove)
         { L"Desktop", FALSE, TRUE },
         { L"Invalid", FALSE, TRUE },
         { L"Reserved", TRUE, TRUE },
+        { L"Not Applicable", TRUE, TRUE },
         { L"HaierComputer", TRUE, FALSE },
         { L"DEPO Computers", TRUE, FALSE },
         { L"InsydeH2O EFI BIOS", TRUE, TRUE },
@@ -430,6 +465,29 @@ BOOL TrimNonPrintable(PCHAR DmiString)
     return FALSE;
 }
 
+/* TrimNonPrintable function wrapper. It does special preprocessing
+ * so the function returns FALSE in some corner cases, making the parser
+ * use system strings anyway (instead of board strings). */
+static
+BOOL TrimNonPrintableProd(PCHAR DmiString)
+{
+    PCHAR c;
+
+    if (!DmiString)
+    {
+        return FALSE;
+    }
+
+    /* Special handling for HP with broken revision */
+    c = strstr(DmiString, "(\xFF\xFF");
+    if (c > DmiString)
+    {
+        *c = 0;
+    }
+
+    return TrimNonPrintable(DmiString);
+}
+
 BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
 {
     static const VENDOR_LONG_NAME LongNames[] =
@@ -442,13 +500,19 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
         { L"Silicon Graphics International", L"SGI" },
         { L"Intel(R) Client Systems", L"Intel" },
         { L"InformationComputerSystems", L"ICS" },
+        { L"Bernecker + Rainer  Industrie-Elektronik", L"Bernecker & Rainer" },
         { L"CHUWI INNOVATION AND TECHNOLOGY", L"CHUWI" },
+        { L"CHUWI INNOVATION LIMITED", L"CHUWI" },
+        { L"CHUWI  INNOVATION  LIMITED", L"CHUWI" },
         { L"http://www.abit.com.tw/", L"ABIT" },
+        { L"http:\\\\www.abit.com.tw", L"ABIT" },
         { L"www.abit.com.tw", L"ABIT" },
         { L"CASPER BILGISAYAR SISTEMLERI A.S", L"Casper" },
         { L"Colorful Technology And Development", L"Colorful" },
         { L"Colorful Yu Gong Technology And Development", L"Colorful Yu Gong" },
         { L"HaierComputer", L"Haier" },
+        { L"Haier Information Technology (Shen Zhen)", L"Haier" },
+        { L"HASEECOMPUTERS", L"Hasee" },
         { L"HELIOS BUSINESS COMPUTER", L"HELIOS" },
         { L"Shanghai Zongzhi InfoTech", L"Zongzhi" },
         { L"TSING HUA TONGFANG CO.,LTD", L"TSINGHUA TONGFANG" },
@@ -466,16 +530,20 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
         { L"Systems", FALSE },
         { L"Microsystems", FALSE },
         { L"Infosystems", FALSE },
+        { L"Digital", FALSE },
         { L"Electronics", FALSE },
         { L"Electric", FALSE },
+        { L"Elektronik", FALSE },
         { L"Software", FALSE },
         { L"Foundation", FALSE },
         { L"International", FALSE },
         { L"Interantonal", FALSE }, // on purpose (some MSI boards)
         { L"INTERANTIONAL", FALSE }, // on purpose (some MSI boards)
         { L"Industrial", FALSE },
+        { L"Industrie", FALSE },
         { L"Information", FALSE },
         { L"Informatica", FALSE },
+        { L"Produkte", FALSE },
         { L"Technology", FALSE },
         { L"Tecohnology", FALSE }, // on purpose (some Gigabyte boards)
         { L"Technologies", FALSE },
@@ -486,6 +554,7 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
         { L"Co", FALSE },
         { L"Corp", FALSE },
         { L"Crop", FALSE },
+        { L"LLC", FALSE },
         { L"Ltd", FALSE },
         { L"LTDA", FALSE },
         { L"GmbH", FALSE },
@@ -501,6 +570,7 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
         { L"OOO", TRUE },
         { L"CJSC", FALSE },
         { L"INT'L", FALSE },
+        { L"INTL", FALSE },
         { L"plc", FALSE },
     };
     PVOID SMBiosBuf;
@@ -518,7 +588,7 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
     }
 
     TrimNonPrintable(DmiStrings[SYS_VENDOR]);
-    bTrimProduct = TrimNonPrintable(DmiStrings[SYS_PRODUCT]);
+    bTrimProduct = TrimNonPrintableProd(DmiStrings[SYS_PRODUCT]);
     TrimNonPrintable(DmiStrings[SYS_VERSION]);
     bTrimFamily = TrimNonPrintable(DmiStrings[SYS_FAMILY]);
     TrimNonPrintable(DmiStrings[BOARD_VENDOR]);
@@ -542,7 +612,7 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
         !wcscmp(dev, ven) ||
         bGenericName)
     {
-        BOOL bGenericVen = FALSE, bGenericDev = (wcslen(dev) == 0 || !wcscmp(dev, ven) || bTrimProduct);
+        BOOL bGenericVen = FALSE, bRemoveVen = FALSE, bGenericDev = (wcslen(dev) == 0 || !wcscmp(dev, ven) || bTrimProduct);
 
         if (bGenericName && IsGenericSystemName(ven, NULL, &bRemove))
         {
@@ -551,6 +621,7 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
                 *ven = 0;
             }
             bGenericVen = TRUE;
+            bRemoveVen = bRemove;
         }
         if (bGenericName && IsGenericSystemName(NULL, dev, &bRemove))
         {
@@ -575,6 +646,11 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
             if (IsGenericSystemName(ven, NULL, &bRemove) && bRemove)
             {
                 *ven = 0;
+
+                if (bGenericVen && !bRemoveVen)
+                {
+                    GetSMBiosStringW(DmiStrings[SYS_VENDOR], ven, _countof(ven), TRUE);
+                }
             }
             if (IsGenericSystemName(NULL, dev, &bRemove) && bRemove)
             {
@@ -604,6 +680,15 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
                 {
                     *dev = 0;
                 }
+            }
+        }
+        else if (DmiStrings[BOARD_NAME] != NULL)
+        {
+            GetSMBiosStringW(DmiStrings[BOARD_NAME], dev, _countof(dev), TRUE);
+
+            if (IsGenericSystemName(NULL, dev, &bRemove) && bRemove)
+            {
+                *dev = 0;
             }
         }
 
@@ -691,8 +776,10 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
             strcmp(tmpstr, "LENOVO") &&
             strstr(tmpstr, "LENOVO   ") == NULL &&
             strstr(tmpstr, "LENOVO PRODUCT") == NULL &&
+            strstr(tmpstr, "LENOVOPRODUCT") == NULL &&
             strstr(tmpstr, "INVALID") == NULL &&
             strncmp(tmpstr, "   ", 3) &&
+            (strlen(tmpstr) >= 3 || !IsDigitStrA(tmpstr)) &&
             strstr(DmiStrings[SYS_VERSION], "Rev ") == NULL &&
             strstr(DmiStrings[SYS_VERSION], "1.") == NULL &&
             wcsistr(dev, L"System ") == NULL && // includes System x and ThinkSystem

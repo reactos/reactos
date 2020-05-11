@@ -18,9 +18,6 @@
 /* Everyone loves 64K */
 #define _64K (64 * _1KB)
 
-/* Area mapped by a PDE */
-#define PDE_MAPPED_VA  (PTE_PER_PAGE * PAGE_SIZE)
-
 /* Size of a page table */
 #define PT_SIZE  (PTE_PER_PAGE * sizeof(MMPTE))
 
@@ -642,7 +639,6 @@ extern PMMPDE MiHighestUserPde;
 extern PFN_NUMBER MmSystemPageDirectory[PPE_PER_PAGE];
 extern PMMPTE MmSharedUserDataPte;
 extern LIST_ENTRY MmProcessList;
-extern BOOLEAN MmZeroingPageThreadActive;
 extern KEVENT MmZeroingPageEvent;
 extern ULONG MmSystemPageColor;
 extern ULONG MmProcessColorSeed;

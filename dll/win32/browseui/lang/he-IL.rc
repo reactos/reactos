@@ -329,6 +329,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SEARCH_RESULTS "Search Results"
     IDS_SEARCHINVALID "'%1' אינה תיקיה תקינה."
     IDS_SEARCH_FOLDER "מחפש ב %s"
     IDS_SEARCH_FILES_FOUND "%u קבצים נמצאו"
@@ -336,4 +337,10 @@ BEGIN
     IDS_COL_NAME "שם"
     IDS_COL_LOCATION "בתיקיה"
     IDS_COL_RELEVANCE "רלוונטיות"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
 END

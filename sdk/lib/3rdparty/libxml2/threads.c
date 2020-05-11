@@ -27,8 +27,8 @@
 #ifdef HAVE_PTHREAD_H
 #include <pthread.h>
 #elif defined HAVE_WIN32_THREADS
-//#define WIN32_LEAN_AND_MEAN
-//#include <windows.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #ifndef HAVE_COMPILER_TLS
 #include <process.h>
 #endif
@@ -82,7 +82,7 @@ static int libxml_is_threaded = 1;
 
 /*
  * TODO: this module still uses malloc/free and not xmlMalloc/xmlFree
- *       to avoid some crazyness since xmlMalloc/xmlFree may actually
+ *       to avoid some craziness since xmlMalloc/xmlFree may actually
  *       be hosted on allocated blocks needing them for the allocation ...
  */
 
@@ -239,7 +239,7 @@ xmlMutexLock(xmlMutexPtr tok)
     if (acquire_sem(tok->sem) != B_NO_ERROR) {
 #ifdef DEBUG_THREADS
         xmlGenericError(xmlGenericErrorContext,
-                        "xmlMutexLock():BeOS:Couldn't aquire semaphore\n");
+                        "xmlMutexLock():BeOS:Couldn't acquire semaphore\n");
 #endif
     }
     tok->tid = find_thread(NULL);

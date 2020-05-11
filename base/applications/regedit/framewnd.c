@@ -34,6 +34,7 @@ static WCHAR s_szFavoritesRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVers
 
 static BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
 
+extern WCHAR Suggestions[256];
 /*******************************************************************************
  * Local module support methods
  */
@@ -1257,6 +1258,38 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_EDIT_NEW_KEY:
         CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
         break;
+
+    case ID_TREE_EXPANDBRANCH:
+        TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_EXPAND);
+        break;
+    case ID_TREE_COLLAPSEBRANCH:
+        TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_COLLAPSE);
+        break;
+    case ID_TREE_RENAME:
+        SetFocus(g_pChildWnd->hTreeWnd);
+        TreeView_EditLabel(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
+        break;
+    case ID_TREE_DELETE:
+        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), &hKeyRoot);
+        if (keyPath == 0 || *keyPath == 0)
+        {
+            MessageBeep(MB_ICONHAND);
+        }
+        else if (DeleteKey(hWnd, hKeyRoot, keyPath))
+            DeleteNode(g_pChildWnd->hTreeWnd, 0);
+        break;
+    case ID_TREE_EXPORT:
+        ExportRegistryFile(g_pChildWnd->hTreeWnd);
+        break;
+    case ID_TREE_PERMISSIONS:
+        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), &hKeyRoot);
+        RegKeyEditPermissions(hWnd, hKeyRoot, NULL, keyPath);
+        break;
+    case ID_SWITCH_PANELS:
+        g_pChildWnd->nFocusPanel = !g_pChildWnd->nFocusPanel;
+        SetFocus(g_pChildWnd->nFocusPanel? g_pChildWnd->hListWnd: g_pChildWnd->hTreeWnd);
+        break;
+
     default:
         if ((LOWORD(wParam) >= ID_FAVORITES_MIN) && (LOWORD(wParam) <= ID_FAVORITES_MAX))
         {
@@ -1277,6 +1310,18 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 ChooseFavorite(szFavorite);
             }
+        }
+        else if ((LOWORD(wParam) >= ID_TREE_SUGGESTION_MIN) && (LOWORD(wParam) <= ID_TREE_SUGGESTION_MAX))
+        {
+            WORD wID = LOWORD(wParam);
+            LPCWSTR s = Suggestions;
+            while(wID > ID_TREE_SUGGESTION_MIN)
+            {
+                if (*s)
+                    s += wcslen(s) + 1;
+                wID--;
+            }
+            SelectNode(g_pChildWnd->hTreeWnd, s);
         }
         else
         {

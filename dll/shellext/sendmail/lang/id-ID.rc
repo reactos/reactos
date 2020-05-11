@@ -1,0 +1,7 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_DESKLINK, "Desktop (Buat pintasan)"
+    IDS_SHORTCUT, "Shortcut to %s"
+}

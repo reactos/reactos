@@ -31,32 +31,33 @@ ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
                            IN PCONSOLE_SCREEN_BUFFER Buffer,
                            IN PSMALL_RECT Region);
 /* API_NUMBER: ConsolepInvalidateBitMapRect */
-CSR_API(SrvInvalidateBitMapRect)
+CON_API(SrvInvalidateBitMapRect,
+        CONSOLE_INVALIDATEDIBITS, InvalidateDIBitsRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_INVALIDATEDIBITS InvalidateDIBitsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.InvalidateDIBitsRequest;
     PCONSOLE_SCREEN_BUFFER Buffer;
 
-    DPRINT("SrvInvalidateBitMapRect\n");
-
-    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetScreenBuffer(ProcessData,
                                    InvalidateDIBitsRequest->OutputHandle,
                                    &Buffer, GENERIC_READ, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
 
     /* In text-mode only, draw the VDM buffer if present */
-    if (GetType(Buffer) == TEXTMODE_BUFFER && Buffer->Header.Console->VDMBuffer)
+    if (GetType(Buffer) == TEXTMODE_BUFFER && Console->VDMBuffer)
     {
         PTEXTMODE_SCREEN_BUFFER TextBuffer = (PTEXTMODE_SCREEN_BUFFER)Buffer;
 
-        /*Status =*/ ConDrvWriteConsoleOutputVDM(Buffer->Header.Console,
+        /*Status =*/ ConDrvWriteConsoleOutputVDM((PCONSOLE)Console,
                                                  TextBuffer,
-                                                 Buffer->Header.Console->VDMBuffer,
-                                                 Buffer->Header.Console->VDMBufferSize,
+                                                 Console->VDMBuffer,
+                                                 Console->VDMBufferSize,
                                                  &InvalidateDIBitsRequest->Region);
     }
 
-    Status = ConDrvInvalidateBitMapRect(Buffer->Header.Console,
+    Status = ConDrvInvalidateBitMapRect((PCONSOLE)Console,
                                         Buffer,
                                         &InvalidateDIBitsRequest->Region);
 
@@ -71,14 +72,12 @@ ConDrvSetConsolePalette(IN PCONSOLE Console,
                         IN HPALETTE PaletteHandle,
                         IN UINT PaletteUsage);
 /* API_NUMBER: ConsolepSetPalette */
-CSR_API(SrvSetConsolePalette)
+CON_API(SrvSetConsolePalette,
+        CONSOLE_SETPALETTE, SetPaletteRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SETPALETTE SetPaletteRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetPaletteRequest;
     // PGRAPHICS_SCREEN_BUFFER Buffer;
     PCONSOLE_SCREEN_BUFFER Buffer;
-
-    DPRINT("SrvSetConsolePalette\n");
 
     // NOTE: Tests show that this function is used only for graphics screen buffers
     // and otherwise it returns FALSE + sets last error to invalid handle.
@@ -86,14 +85,17 @@ CSR_API(SrvSetConsolePalette)
     // a change of VGA palette via DAC registers (done by a call to SetConsolePalette)
     // cannot be done... So I allow it in ReactOS !
     /*
-    Status = ConSrvGetGraphicsBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetGraphicsBuffer(ProcessData,
                                      SetPaletteRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
     */
-    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetScreenBuffer(ProcessData,
                                    SetPaletteRequest->OutputHandle,
                                    &Buffer, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
 
     /*
      * Make the palette handle public, so that it can be
@@ -105,7 +107,7 @@ CSR_API(SrvSetConsolePalette)
                          &SetPaletteRequest->PaletteHandle,
                          sizeof(SetPaletteRequest->PaletteHandle));
 
-    Status = ConDrvSetConsolePalette(Buffer->Header.Console,
+    Status = ConDrvSetConsolePalette((PCONSOLE)Console,
                                      Buffer,
                                      SetPaletteRequest->PaletteHandle,
                                      SetPaletteRequest->Usage);
@@ -119,20 +121,21 @@ ConDrvGetConsoleCursorInfo(IN PCONSOLE Console,
                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
                            OUT PCONSOLE_CURSOR_INFO CursorInfo);
 /* API_NUMBER: ConsolepGetCursorInfo */
-CSR_API(SrvGetConsoleCursorInfo)
+CON_API(SrvGetConsoleCursorInfo,
+        CONSOLE_GETSETCURSORINFO, CursorInfoRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETSETCURSORINFO CursorInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CursorInfoRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
 
-    DPRINT("SrvGetConsoleCursorInfo\n");
-
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      CursorInfoRequest->OutputHandle,
                                      &Buffer, GENERIC_READ, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvGetConsoleCursorInfo(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvGetConsoleCursorInfo((PCONSOLE)Console,
                                         Buffer,
                                         &CursorInfoRequest->Info);
 
@@ -145,20 +148,21 @@ ConDrvSetConsoleCursorInfo(IN PCONSOLE Console,
                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
                            IN PCONSOLE_CURSOR_INFO CursorInfo);
 /* API_NUMBER: ConsolepSetCursorInfo */
-CSR_API(SrvSetConsoleCursorInfo)
+CON_API(SrvSetConsoleCursorInfo,
+        CONSOLE_GETSETCURSORINFO, CursorInfoRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETSETCURSORINFO CursorInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CursorInfoRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
 
-    DPRINT("SrvSetConsoleCursorInfo\n");
-
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      CursorInfoRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvSetConsoleCursorInfo(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvSetConsoleCursorInfo((PCONSOLE)Console,
                                         Buffer,
                                         &CursorInfoRequest->Info);
 
@@ -171,20 +175,21 @@ ConDrvSetConsoleCursorPosition(IN PCONSOLE Console,
                                IN PTEXTMODE_SCREEN_BUFFER Buffer,
                                IN PCOORD Position);
 /* API_NUMBER: ConsolepSetCursorPosition */
-CSR_API(SrvSetConsoleCursorPosition)
+CON_API(SrvSetConsoleCursorPosition,
+        CONSOLE_SETCURSORPOSITION, SetCursorPositionRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SETCURSORPOSITION SetCursorPositionRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetCursorPositionRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
 
-    DPRINT("SrvSetConsoleCursorPosition\n");
-
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      SetCursorPositionRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvSetConsoleCursorPosition(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvSetConsoleCursorPosition((PCONSOLE)Console,
                                             Buffer,
                                             &SetCursorPositionRequest->Position);
 
@@ -193,13 +198,12 @@ CSR_API(SrvSetConsoleCursorPosition)
 }
 
 /* API_NUMBER: ConsolepCreateScreenBuffer */
-CSR_API(SrvCreateConsoleScreenBuffer)
+CON_API(SrvCreateConsoleScreenBuffer,
+        CONSOLE_CREATESCREENBUFFER, CreateScreenBufferRequest)
 {
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
-    PCONSOLE_CREATESCREENBUFFER CreateScreenBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CreateScreenBufferRequest;
+    NTSTATUS Status;
     PCSR_PROCESS Process = CsrGetClientThread()->Process;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(Process);
-    PCONSRV_CONSOLE Console;
+    // PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(Process);
     PCONSOLE_SCREEN_BUFFER Buff;
 
     PVOID ScreenBufferInfo = NULL;
@@ -211,11 +215,6 @@ CSR_API(SrvCreateConsoleScreenBuffer)
                                          CSR_DEFAULT_CURSOR_SIZE};
     GRAPHICS_BUFFER_INFO GraphicsInfo;
     GraphicsInfo.Info = CreateScreenBufferRequest->GraphicsBufferInfo; // HACK for MSVC
-
-    DPRINT("SrvCreateConsoleScreenBuffer\n");
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
 
     if (CreateScreenBufferRequest->ScreenBufferType == CONSOLE_TEXTMODE_BUFFER)
     {
@@ -268,8 +267,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
                                       CreateScreenBufferRequest->GraphicsBufferInfo.dwBitMapInfoLength,
                                       sizeof(BYTE)))
         {
-            Status = STATUS_INVALID_PARAMETER;
-            goto Quit;
+            return STATUS_INVALID_PARAMETER;
         }
 
         ScreenBufferInfo = &GraphicsInfo;
@@ -283,13 +281,19 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         /* A graphics screen buffer is never inheritable */
         CreateScreenBufferRequest->InheritHandle = FALSE;
     }
+    else
+    {
+        DPRINT1("Invalid ScreenBuffer type %lu\n", CreateScreenBufferRequest->ScreenBufferType);
+        return STATUS_INVALID_PARAMETER;
+    }
 
     Status = ConDrvCreateScreenBuffer(&Buff,
                                       (PCONSOLE)Console,
                                       Process->ProcessHandle,
                                       CreateScreenBufferRequest->ScreenBufferType,
                                       ScreenBufferInfo);
-    if (!NT_SUCCESS(Status)) goto Quit;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Insert the new handle inside the process handles table */
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -303,7 +307,11 @@ CSR_API(SrvCreateConsoleScreenBuffer)
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    if (!NT_SUCCESS(Status)) goto Quit;
+    if (!NT_SUCCESS(Status))
+    {
+        ConDrvDeleteScreenBuffer(Buff);
+        return Status;
+    }
 
     if (CreateScreenBufferRequest->ScreenBufferType == CONSOLE_GRAPHICS_BUFFER)
     {
@@ -318,8 +326,6 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         CreateScreenBufferRequest->lpBitMap = Buffer->ClientBitMap;
     }
 
-Quit:
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
@@ -327,21 +333,21 @@ NTSTATUS NTAPI
 ConDrvSetConsoleActiveScreenBuffer(IN PCONSOLE Console,
                                    IN PCONSOLE_SCREEN_BUFFER Buffer);
 /* API_NUMBER: ConsolepSetActiveScreenBuffer */
-CSR_API(SrvSetConsoleActiveScreenBuffer)
+CON_API(SrvSetConsoleActiveScreenBuffer,
+        CONSOLE_SETACTIVESCREENBUFFER, SetScreenBufferRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SETACTIVESCREENBUFFER SetScreenBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetScreenBufferRequest;
     PCONSOLE_SCREEN_BUFFER Buffer;
 
-    DPRINT("SrvSetConsoleActiveScreenBuffer\n");
-
-    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetScreenBuffer(ProcessData,
                                    SetScreenBufferRequest->OutputHandle,
                                    &Buffer, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvSetConsoleActiveScreenBuffer(Buffer->Header.Console,
-                                                Buffer);
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvSetConsoleActiveScreenBuffer((PCONSOLE)Console, Buffer);
 
     ConSrvReleaseScreenBuffer(Buffer, TRUE);
     return Status;
@@ -490,16 +496,13 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
                         OUT PCHAR_INFO CharInfo/*Buffer*/,
                         IN OUT PSMALL_RECT ReadRegion);
 /* API_NUMBER: ConsolepReadConsoleOutput */
-CSR_API(SrvReadConsoleOutput)
+CON_API(SrvReadConsoleOutput,
+        CONSOLE_READOUTPUT, ReadOutputRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_READOUTPUT ReadOutputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadOutputRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
-
     ULONG NumCells;
     PCHAR_INFO CharInfo;
-
-    DPRINT("SrvReadConsoleOutput\n");
 
     NumCells = ConioRectWidth(&ReadOutputRequest->ReadRegion) *
                ConioRectHeight(&ReadOutputRequest->ReadRegion);
@@ -532,12 +535,15 @@ CSR_API(SrvReadConsoleOutput)
         CharInfo = ReadOutputRequest->CharInfo;
     }
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      ReadOutputRequest->OutputHandle,
                                      &Buffer, GENERIC_READ, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvReadConsoleOutput(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvReadConsoleOutput((PCONSOLE)Console,
                                      Buffer,
                                      ReadOutputRequest->Unicode,
                                      CharInfo,
@@ -554,25 +560,26 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
                          IN PCHAR_INFO CharInfo/*Buffer*/,
                          IN OUT PSMALL_RECT WriteRegion);
 /* API_NUMBER: ConsolepWriteConsoleOutput */
-CSR_API(SrvWriteConsoleOutput)
+CON_API(SrvWriteConsoleOutput,
+        CONSOLE_WRITEOUTPUT, WriteOutputRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_WRITEOUTPUT WriteOutputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteOutputRequest;
-    PTEXTMODE_SCREEN_BUFFER Buffer;
     PCSR_PROCESS Process = CsrGetClientThread()->Process;
-
+    // PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(Process);
+    PTEXTMODE_SCREEN_BUFFER Buffer;
     ULONG NumCells;
     PCHAR_INFO CharInfo;
-
-    DPRINT("SrvWriteConsoleOutput\n");
 
     NumCells = ConioRectWidth(&WriteOutputRequest->WriteRegion) *
                ConioRectHeight(&WriteOutputRequest->WriteRegion);
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      WriteOutputRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
 
     /*
      * Validate the message buffer if we do not use a process' heap buffer
@@ -637,7 +644,7 @@ CSR_API(SrvWriteConsoleOutput)
         }
     }
 
-    Status = ConDrvWriteConsoleOutput(Buffer->Header.Console,
+    Status = ConDrvWriteConsoleOutput((PCONSOLE)Console,
                                       Buffer,
                                       WriteOutputRequest->Unicode,
                                       CharInfo,
@@ -653,10 +660,10 @@ Quit:
 }
 
 /* API_NUMBER: ConsolepWriteConsole */
-CSR_API(SrvWriteConsole)
+CON_API(SrvWriteConsole,
+        CONSOLE_WRITECONSOLE, WriteConsoleRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_WRITECONSOLE WriteConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteConsoleRequest;
 
     DPRINT("SrvWriteConsole\n");
 
@@ -703,16 +710,13 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
                               // OUT PCOORD EndCoord,
                               OUT PULONG NumCodesRead OPTIONAL);
 /* API_NUMBER: ConsolepReadConsoleOutputString */
-CSR_API(SrvReadConsoleOutputString)
+CON_API(SrvReadConsoleOutputString,
+        CONSOLE_READOUTPUTCODE, ReadOutputCodeRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_READOUTPUTCODE ReadOutputCodeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadOutputCodeRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
     ULONG CodeSize;
-
     PVOID pCode;
-
-    DPRINT("SrvReadConsoleOutputString\n");
 
     switch (ReadOutputCodeRequest->CodeType)
     {
@@ -760,7 +764,7 @@ CSR_API(SrvReadConsoleOutputString)
         pCode = ReadOutputCodeRequest->pCode;
     }
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      ReadOutputCodeRequest->OutputHandle,
                                      &Buffer, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status))
@@ -769,7 +773,9 @@ CSR_API(SrvReadConsoleOutputString)
         return Status;
     }
 
-    Status = ConDrvReadConsoleOutputString(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvReadConsoleOutputString((PCONSOLE)Console,
                                            Buffer,
                                            ReadOutputCodeRequest->CodeType,
                                            pCode,
@@ -792,16 +798,13 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
                                // OUT PCOORD EndCoord,
                                OUT PULONG NumCodesWritten OPTIONAL);
 /* API_NUMBER: ConsolepWriteConsoleOutputString */
-CSR_API(SrvWriteConsoleOutputString)
+CON_API(SrvWriteConsoleOutputString,
+        CONSOLE_WRITEOUTPUTCODE, WriteOutputCodeRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_WRITEOUTPUTCODE WriteOutputCodeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteOutputCodeRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
     ULONG CodeSize;
-
     PVOID pCode;
-
-    DPRINT("SrvWriteConsoleOutputString\n");
 
     switch (WriteOutputCodeRequest->CodeType)
     {
@@ -849,7 +852,7 @@ CSR_API(SrvWriteConsoleOutputString)
         pCode = WriteOutputCodeRequest->pCode;
     }
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      WriteOutputCodeRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status))
@@ -858,7 +861,9 @@ CSR_API(SrvWriteConsoleOutputString)
         return Status;
     }
 
-    Status = ConDrvWriteConsoleOutputString(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvWriteConsoleOutputString((PCONSOLE)Console,
                                             Buffer,
                                             WriteOutputCodeRequest->CodeType,
                                             pCode,
@@ -880,14 +885,12 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN PCOORD WriteCoord,
                         OUT PULONG NumCodesWritten OPTIONAL);
 /* API_NUMBER: ConsolepFillConsoleOutput */
-CSR_API(SrvFillConsoleOutput)
+CON_API(SrvFillConsoleOutput,
+        CONSOLE_FILLOUTPUTCODE, FillOutputRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_FILLOUTPUTCODE FillOutputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FillOutputRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
     CODE_TYPE CodeType = FillOutputRequest->CodeType;
-
-    DPRINT("SrvFillConsoleOutput\n");
 
     if ( (CodeType != CODE_ASCII    ) &&
          (CodeType != CODE_UNICODE  ) &&
@@ -896,7 +899,7 @@ CSR_API(SrvFillConsoleOutput)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      FillOutputRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status))
@@ -905,7 +908,9 @@ CSR_API(SrvFillConsoleOutput)
         return Status;
     }
 
-    Status = ConDrvFillConsoleOutput(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvFillConsoleOutput((PCONSOLE)Console,
                                      Buffer,
                                      CodeType,
                                      FillOutputRequest->Code,
@@ -927,20 +932,21 @@ ConDrvGetConsoleScreenBufferInfo(IN  PCONSOLE Console,
                                  OUT PCOORD MaximumViewSize,
                                  OUT PWORD  Attributes);
 /* API_NUMBER: ConsolepGetScreenBufferInfo */
-CSR_API(SrvGetConsoleScreenBufferInfo)
+CON_API(SrvGetConsoleScreenBufferInfo,
+        CONSOLE_GETSCREENBUFFERINFO, ScreenBufferInfoRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETSCREENBUFFERINFO ScreenBufferInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ScreenBufferInfoRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
 
-    DPRINT("SrvGetConsoleScreenBufferInfo\n");
-
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      ScreenBufferInfoRequest->OutputHandle,
                                      &Buffer, GENERIC_READ, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvGetConsoleScreenBufferInfo(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvGetConsoleScreenBufferInfo((PCONSOLE)Console,
                                               Buffer,
                                               &ScreenBufferInfoRequest->ScreenBufferSize,
                                               &ScreenBufferInfoRequest->CursorPosition,
@@ -958,20 +964,21 @@ ConDrvSetConsoleTextAttribute(IN PCONSOLE Console,
                               IN PTEXTMODE_SCREEN_BUFFER Buffer,
                               IN WORD Attributes);
 /* API_NUMBER: ConsolepSetTextAttribute */
-CSR_API(SrvSetConsoleTextAttribute)
+CON_API(SrvSetConsoleTextAttribute,
+        CONSOLE_SETTEXTATTRIB, SetTextAttribRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SETTEXTATTRIB SetTextAttribRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetTextAttribRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
 
-    DPRINT("SrvSetConsoleTextAttribute\n");
-
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      SetTextAttribRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvSetConsoleTextAttribute(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvSetConsoleTextAttribute((PCONSOLE)Console,
                                            Buffer,
                                            SetTextAttribRequest->Attributes);
 
@@ -984,20 +991,21 @@ ConDrvSetConsoleScreenBufferSize(IN PCONSOLE Console,
                                  IN PTEXTMODE_SCREEN_BUFFER Buffer,
                                  IN PCOORD Size);
 /* API_NUMBER: ConsolepSetScreenBufferSize */
-CSR_API(SrvSetConsoleScreenBufferSize)
+CON_API(SrvSetConsoleScreenBufferSize,
+        CONSOLE_SETSCREENBUFFERSIZE, SetScreenBufferSizeRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SETSCREENBUFFERSIZE SetScreenBufferSizeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetScreenBufferSizeRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
 
-    DPRINT("SrvSetConsoleScreenBufferSize\n");
-
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      SetScreenBufferSizeRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvSetConsoleScreenBufferSize(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvSetConsoleScreenBufferSize((PCONSOLE)Console,
                                               Buffer,
                                               &SetScreenBufferSizeRequest->Size);
 
@@ -1015,20 +1023,21 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
                                 IN PCOORD DestinationOrigin,
                                 IN CHAR_INFO FillChar);
 /* API_NUMBER: ConsolepScrollScreenBuffer */
-CSR_API(SrvScrollConsoleScreenBuffer)
+CON_API(SrvScrollConsoleScreenBuffer,
+        CONSOLE_SCROLLSCREENBUFFER, ScrollScreenBufferRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SCROLLSCREENBUFFER ScrollScreenBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ScrollScreenBufferRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
 
-    DPRINT("SrvScrollConsoleScreenBuffer\n");
-
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      ScrollScreenBufferRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvScrollConsoleScreenBuffer(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvScrollConsoleScreenBuffer((PCONSOLE)Console,
                                              Buffer,
                                              ScrollScreenBufferRequest->Unicode,
                                              &ScrollScreenBufferRequest->ScrollRectangle,
@@ -1047,10 +1056,10 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
                            IN BOOLEAN Absolute,
                            IN PSMALL_RECT WindowRect);
 /* API_NUMBER: ConsolepSetWindowInfo */
-CSR_API(SrvSetConsoleWindowInfo)
+CON_API(SrvSetConsoleWindowInfo,
+        CONSOLE_SETWINDOWINFO, SetWindowInfoRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SETWINDOWINFO SetWindowInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetWindowInfoRequest;
     // PCONSOLE_SCREEN_BUFFER Buffer;
     PTEXTMODE_SCREEN_BUFFER Buffer;
 
@@ -1062,12 +1071,15 @@ CSR_API(SrvSetConsoleWindowInfo)
             SetWindowInfoRequest->WindowRect.Bottom);
 
     // ConSrvGetScreenBuffer
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      SetWindowInfoRequest->OutputHandle,
                                      &Buffer, GENERIC_READ, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Status = ConDrvSetConsoleWindowInfo(Buffer->Header.Console,
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvSetConsoleWindowInfo((PCONSOLE)Console,
                                         Buffer,
                                         SetWindowInfoRequest->Absolute,
                                         &SetWindowInfoRequest->WindowRect);

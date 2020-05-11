@@ -6,6 +6,7 @@
  *         UTF-8 conversion by Caemyr (May, 2011) 
  *         Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (April, 2014)
  *         Updated by Zcooger - M. St. Ciuńczyk (October, 2018)
+ *         Updated by pithwz - Piotr Hetnarowicz <piotrhwz@gmail.com> (February, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -34,7 +35,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Utwórz skrót"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Ten program konfiguracyjny pomoże ci stworzyć skróty do lokalnych lub\nsieciowych programów, plików, katalogów, komputerów, bądź addresów\nInternetowych.", -1, 120, 15, 200, 30
+    LTEXT "Ten program pomoże ci stworzyć skróty do lokalnych lub sieciowych programów, plików, katalogów, komputerów, bądź adresów Internetowych.", -1, 120, 15, 200, 30
     LTEXT "Wpisz ścieżkę dostępu do obiektu:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
     PUSHBUTTON "Przeglądaj...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT

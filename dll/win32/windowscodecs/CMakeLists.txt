@@ -1,6 +1,7 @@
 
 add_definitions(
     -D__WINESRC__
+    -D__ROS_LONG64__
     -DENTRY_PREFIX=WIC_
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL)

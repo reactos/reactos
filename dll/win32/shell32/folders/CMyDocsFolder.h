@@ -32,9 +32,14 @@ class CMyDocsFolder :
     private:
         CComPtr<IShellFolder2> m_pisfInner;
         LPITEMIDLIST m_pidlInner;
+
+        HRESULT EnsureFolder();
+
     public:
         CMyDocsFolder();
         ~CMyDocsFolder();
+
+        HRESULT WINAPI FinalConstruct();
 
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);

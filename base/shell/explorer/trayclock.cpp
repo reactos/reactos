@@ -424,12 +424,9 @@ UINT CTrayClockWnd::CalculateDueTime()
 {
     UINT uiDueTime;
 
-    /* Calculate the due time */
     GetLocalTime(&LocalTime);
     uiDueTime = 1000 - (UINT) LocalTime.wMilliseconds;
-    if (g_TaskbarSettings.bShowSeconds)
-        uiDueTime += (UINT) LocalTime.wSecond * 100;
-    else
+    if (!g_TaskbarSettings.bShowSeconds)
         uiDueTime += (59 - (UINT) LocalTime.wSecond) * 1000;
 
     if (uiDueTime < USER_TIMER_MINIMUM || uiDueTime > USER_TIMER_MAXIMUM)
@@ -455,8 +452,7 @@ BOOL CTrayClockWnd::ResetTime()
         KillTimer(ID_TRAYCLOCK_TIMER);
         IsTimerEnabled = FALSE;
     }
-
-    if (IsInitTimerEnabled)
+    else if (IsInitTimerEnabled)
     {
         KillTimer(ID_TRAYCLOCK_TIMER_INIT);
     }
@@ -466,9 +462,6 @@ BOOL CTrayClockWnd::ResetTime()
     /* Set the new timer */
     Ret = SetTimer(ID_TRAYCLOCK_TIMER_INIT, uiDueTime, NULL) != 0;
     IsInitTimerEnabled = Ret;
-
-    /* Update the time */
-    Update();
 
     return Ret;
 }
@@ -503,9 +496,6 @@ VOID CTrayClockWnd::CalibrateTimer()
             uiWait2. */
         Ret = SetTimer(ID_TRAYCLOCK_TIMER, uiWait2, NULL) != 0;
         IsTimerEnabled = Ret;
-
-        /* Update the time */
-        Update();
     }
     else
     {
@@ -513,6 +503,9 @@ VOID CTrayClockWnd::CalibrateTimer()
             minute/second ends. */
         ResetTime();
     }
+
+    /* Update the time */
+    Update();
 }
 
 LRESULT CTrayClockWnd::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -522,8 +515,7 @@ LRESULT CTrayClockWnd::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     {
         KillTimer(ID_TRAYCLOCK_TIMER);
     }
-
-    if (IsInitTimerEnabled)
+    else if (IsInitTimerEnabled)
     {
         KillTimer(ID_TRAYCLOCK_TIMER_INIT);
     }
@@ -671,7 +663,14 @@ LRESULT CTrayClockWnd::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
     m_tooltip.AddTool(&ti);
 
-    ResetTime();
+    if (!g_TaskbarSettings.sr.HideClock)
+    {
+        ResetTime();
+    }
+
+    /* Update the time */
+    Update();
+
     return TRUE;
 }
 
@@ -697,7 +696,12 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
     if (newSettings->bShowSeconds != g_TaskbarSettings.bShowSeconds)
     {
         g_TaskbarSettings.bShowSeconds = newSettings->bShowSeconds;
-        bRealign = TRUE;
+        if (!g_TaskbarSettings.sr.HideClock)
+        {
+            bRealign = TRUE;
+
+            ResetTime();
+        }
     }
 
     if (newSettings->sr.HideClock != g_TaskbarSettings.sr.HideClock)
@@ -705,6 +709,25 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
         g_TaskbarSettings.sr.HideClock = newSettings->sr.HideClock;
         ShowWindow(g_TaskbarSettings.sr.HideClock ? SW_HIDE : SW_SHOW);
         bRealign = TRUE;
+
+        if (g_TaskbarSettings.sr.HideClock)
+        {
+            /* Disable all timers */
+            if (IsTimerEnabled)
+            {
+                KillTimer(ID_TRAYCLOCK_TIMER);
+                IsTimerEnabled = FALSE;
+            }
+            else if (IsInitTimerEnabled)
+            {
+                KillTimer(ID_TRAYCLOCK_TIMER_INIT);
+                IsInitTimerEnabled = FALSE;
+            }
+        }
+        else
+        {
+            ResetTime();
+        }
     }
 
     if (bRealign)

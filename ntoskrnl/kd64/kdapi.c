@@ -2165,7 +2165,7 @@ KdSystemDebugControl(
     _In_ KPROCESSOR_MODE PreviousMode)
 {
     /* Handle some internal commands */
-    switch (Command)
+    switch ((ULONG)Command)
     {
 #if DBG
         case ' soR': /* ROS-INTERNAL */

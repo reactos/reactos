@@ -98,7 +98,7 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     set(NATIVE_TARGETS bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink utf16le xml2sdb)
     if(NOT MSVC)
-        list(APPEND NATIVE_TARGETS rsym)
+        list(APPEND NATIVE_TARGETS rsym pefixup)
     endif()
 
     export(TARGETS ${NATIVE_TARGETS} FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
@@ -139,7 +139,7 @@ else()
         add_definitions(-D_WINKD_)
     endif()
 
-    if(CMAKE_VERSION MATCHES "ReactOS")
+    if(CMAKE_VERSION MATCHES "ReactOS" AND CMAKE_VERSION VERSION_LESS 3.3.0)
         set(PCH 1 CACHE BOOL "Whether to use precompiled headers")
     else()
         set(PCH 0 CACHE BOOL "Whether to use precompiled headers")
@@ -249,7 +249,11 @@ else()
     endif()
 
     # For MSVC builds, this puts all debug symbols file in the same directory.
-    set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")
+    if (MSVC)
+        set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")
+    elseif(SEPARATE_DBG)
+        set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/symbols")
+    endif()
 
     #begin with boot so reactos_cab target is defined before all other modules
     add_subdirectory(boot)

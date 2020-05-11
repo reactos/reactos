@@ -4203,6 +4203,12 @@ ftGdiGetGlyphOutline(
     }
 
     DPRINT("ftGdiGetGlyphOutline END and needed %lu\n", needed);
+
+    if (gm.gmBlackBoxX == 0)
+        gm.gmBlackBoxX = 1;
+    if (gm.gmBlackBoxY == 0)
+        gm.gmBlackBoxY = 1;
+
     *pgm = gm;
     return needed;
 }
@@ -5830,7 +5836,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     return GotCount;
 }
 
-FORCEINLINE
+static inline
 LONG
 ScaleLong(LONG lValue, PFLOATOBJ pef)
 {

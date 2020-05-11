@@ -21,7 +21,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "Visite la <A HREF=""http://www.reactos.org/"">página Web de ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "Visite la <A HREF=""https://reactos.org/"">página Web de ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "Ver &licencia...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -201,7 +201,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Inicio del sistema ", IDC_STATIC, 7, 12, 238, 95
     LTEXT "&Sistema operativo predeterminado:", IDC_STATIC, 14, 26, 180, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Mostrar la lista de sistemas operativos durante:", IDC_STRECLIST, 14, 56, 165, 8
     EDITTEXT IDC_STRRECLISTEDIT, 180, 54, 29, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -219,7 +219,7 @@ BEGIN
     AUTOCHECKBOX "E&nviar una alerta administrativa", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "&Reiniciar automáticamente", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "Escribir información de depuración ", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "&Volcado de memoria pequeña:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "So&brescribir cualquier archivo existente", IDC_STRRECOVERWRITE, 17, 228, 150, 10
@@ -335,7 +335,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Applet de sistema del Panel de control"
     IDS_WARNINITIALSIZE "Introduzca el tamaño inicial del archivo de paginación."
     IDS_WARNMAXIMUMSIZE "Introduzca el tamaño máximo del archivo de paginación."
-    IDS_WARNINITIALRANGE "El tamaño inicial del archivo de paginación no puede ser inferior a 16 MB y no puede exceder el espacio disponible en la unidad seleccionada."
+    IDS_WARNINITIALRANGE "El tamaño inicial del archivo de paginación no puede ser inferior a 2 MB y no puede exceder el espacio disponible en la unidad seleccionada."
     IDS_WARNMAXIMUMRANGE "El tamaño máximo del archivo de paginación no puede ser inferior al tamaño inicial y no puede exceder el espacio disponible en la unidad seleccionada."
     IDS_PAGEFILE_NONE "Ninguno"
     IDS_PAGEFILE_SYSTEM "Administrado por el sistema"

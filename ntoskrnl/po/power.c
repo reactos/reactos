@@ -30,6 +30,100 @@ SYSTEM_POWER_CAPABILITIES PopCapabilities;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+static WORKER_THREAD_ROUTINE PopPassivePowerCall;
+_Use_decl_annotations_
+static
+VOID
+NTAPI
+PopPassivePowerCall(
+    PVOID Parameter)
+{
+    PIRP Irp = Parameter;
+    PIO_STACK_LOCATION IoStack;
+
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+    _Analysis_assume_(Irp != NULL);
+    IoStack = IoGetNextIrpStackLocation(Irp);
+
+    (VOID)IoCallDriver(IoStack->DeviceObject, Irp);
+}
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_same_
+static
+NTSTATUS
+PopPresentIrp(
+    _In_ PIO_STACK_LOCATION NextStack,
+    _In_ PIRP Irp)
+{
+    NTSTATUS Status;
+    BOOLEAN CallAtPassiveLevel;
+    PDEVICE_OBJECT DeviceObject;
+    PWORK_QUEUE_ITEM WorkQueueItem;
+
+    ASSERT(NextStack->MajorFunction == IRP_MJ_POWER);
+
+    DeviceObject = NextStack->DeviceObject;
+
+    /* Determine whether the IRP must be handled at PASSIVE_LEVEL.
+     * Only SET_POWER to working state can happen at raised IRQL. */
+    CallAtPassiveLevel = TRUE;
+    if ((NextStack->MinorFunction == IRP_MN_SET_POWER) &&
+        !(DeviceObject->Flags & DO_POWER_PAGABLE))
+    {
+        if (NextStack->Parameters.Power.Type == DevicePowerState &&
+            NextStack->Parameters.Power.State.DeviceState == PowerDeviceD0)
+        {
+            CallAtPassiveLevel = FALSE;
+        }
+        if (NextStack->Parameters.Power.Type == SystemPowerState &&
+            NextStack->Parameters.Power.State.SystemState == PowerSystemWorking)
+        {
+            CallAtPassiveLevel = FALSE;
+        }
+    }
+
+    if (CallAtPassiveLevel)
+    {
+        /* We need to fit a work item into the DriverContext below */
+        C_ASSERT(sizeof(Irp->Tail.Overlay.DriverContext) >= sizeof(WORK_QUEUE_ITEM));
+
+        if (KeGetCurrentIrql() == PASSIVE_LEVEL)
+        {
+            /* Already at passive, call next driver directly */
+            return IoCallDriver(DeviceObject, Irp);
+        }
+
+        /* Need to schedule a work item and return pending */
+        NextStack->Control |= SL_PENDING_RETURNED;
+
+        WorkQueueItem = (PWORK_QUEUE_ITEM)&Irp->Tail.Overlay.DriverContext;
+        ExInitializeWorkItem(WorkQueueItem,
+                             PopPassivePowerCall,
+                             Irp);
+        ExQueueWorkItem(WorkQueueItem, DelayedWorkQueue);
+
+        return STATUS_PENDING;
+    }
+
+    /* Direct call. Raise IRQL in debug to catch invalid paged memory access. */
+#if DBG
+    {
+    KIRQL OldIrql;
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+#endif
+
+    Status = IoCallDriver(DeviceObject, Irp);
+
+#if DBG
+    KeLowerIrql(OldIrql);
+    }
+#endif
+
+    return Status;
+}
+
 static
 NTSTATUS
 NTAPI
@@ -480,18 +574,35 @@ PoSetHiberRange(IN PVOID HiberContext,
 /*
  * @implemented
  */
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTSTATUS
 NTAPI
-PoCallDriver(IN PDEVICE_OBJECT DeviceObject,
-             IN OUT PIRP Irp)
+PoCallDriver(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ __drv_aliasesMem PIRP Irp)
 {
-    NTSTATUS Status;
+    PIO_STACK_LOCATION NextStack;
 
-    /* Forward to Io -- FIXME! */
-    Status = IoCallDriver(DeviceObject, Irp);
+    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
-    /* Return status */
-    return Status;
+    ASSERT(DeviceObject);
+    ASSERT(Irp);
+
+    NextStack = IoGetNextIrpStackLocation(Irp);
+    ASSERT(NextStack->MajorFunction == IRP_MJ_POWER);
+
+    /* Set DeviceObject for PopPresentIrp */
+    NextStack->DeviceObject = DeviceObject;
+
+    /* Only QUERY_POWER and SET_POWER use special handling */
+    if (NextStack->MinorFunction != IRP_MN_SET_POWER &&
+        NextStack->MinorFunction != IRP_MN_QUERY_POWER)
+    {
+        return IoCallDriver(DeviceObject, Irp);
+    }
+
+    /* Call the next driver, either directly or at PASSIVE_LEVEL */
+    return PopPresentIrp(NextStack, Irp);
 }
 
 /*

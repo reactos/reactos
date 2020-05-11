@@ -25,7 +25,7 @@ set_module_type(cmipci wdmdriver UNICODE)
 add_importlibs(cmipci portcls hal ntoskrnl)
 
 if(USE_CLANG_CL OR (NOT MSVC))
-    add_target_compile_flags(cmipci "-Wno-write-strings -Wno-switch")
+    target_compile_options(cmipci PRIVATE -Wno-write-strings -Wno-switch)
 endif()
 
 add_pch(cmipci precomp.h SOURCE)

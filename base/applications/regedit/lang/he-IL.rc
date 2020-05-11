@@ -129,9 +129,17 @@ BEGIN
         MENUITEM "שנה שם", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "יצא", ID_TREE_EXPORT
-        MENUITEM "הרשאות...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "הרשאות...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "העתק שם מפתח", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "הרחב/קפל", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "יצא", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "ביטול טעינת כוורת (Hive)...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

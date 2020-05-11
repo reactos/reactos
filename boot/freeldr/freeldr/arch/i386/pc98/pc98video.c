@@ -117,7 +117,7 @@ Pc98VideoInit(VOID)
     for (i = 0; i < RTL_NUMBER_OF(CgaPalette); i++)
         Pc98VideoSetPaletteColor(i, CgaPalette[i].Red, CgaPalette[i].Green, CgaPalette[i].Blue);
 
-    /* Int 18h AH=A0h
+    /* Int 18h AH=0Ah
      * CRT BIOS - Set text screen mode
      *
      * AL0 - text rows
@@ -137,7 +137,7 @@ Pc98VideoInit(VOID)
      * High-resolution machine:
      * AL4 - text rows, AL3 - KCG access mode
      */
-    Regs.b.ah = 0xA0;
+    Regs.b.ah = 0x0A;
     Regs.b.al = HiResoMachine ? 0x10 : 0x00;
     Int386(0x18, &Regs, &Regs); /* 80x25(31) */
 
@@ -208,7 +208,7 @@ Pc98VideoSetTextCursorPosition(UCHAR X, UCHAR Y)
     CSRWPARAM CursorParameters;
 
     RtlZeroMemory(&CursorParameters, sizeof(CSRWPARAM));
-    CursorParameters.CursorAdress = X + Y * TextCols;
+    CursorParameters.CursorAddress = X + Y * TextCols;
     CursorParameters.DotAddress = 0;
 
     WRITE_PORT_UCHAR((PUCHAR)GDC1_IO_o_COMMAND, GDC_COMMAND_CSRW);

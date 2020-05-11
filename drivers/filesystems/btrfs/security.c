@@ -106,7 +106,7 @@ void add_user_mapping(WCHAR* sidstring, ULONG sidstringlength, uint32_t uid) {
         }
 
         i++;
-        TRACE("val = %u, i = %u, ssl = %u\n", (uint32_t)val, i, sidstringlength);
+        TRACE("val = %u, i = %u, ssl = %lu\n", (uint32_t)val, i, sidstringlength);
 
         if (np == 0) {
             sid->auth[0] = (uint8_t)((val & 0xff0000000000) >> 40);
@@ -191,7 +191,7 @@ void add_group_mapping(WCHAR* sidstring, ULONG sidstringlength, uint32_t gid) {
         }
 
         i++;
-        TRACE("val = %u, i = %u, ssl = %u\n", (uint32_t)val, i, sidstringlength);
+        TRACE("val = %u, i = %u, ssl = %lu\n", (uint32_t)val, i, sidstringlength);
 
         if (np == 0) {
             sid->auth[0] = (uint8_t)((val & 0xff0000000000) >> 40);
@@ -422,20 +422,20 @@ static void get_top_level_sd(fcb* fcb) {
     Status = RtlCreateSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("RtlCreateSecurityDescriptor returned %08x\n", Status);
+        ERR("RtlCreateSecurityDescriptor returned %08lx\n", Status);
         goto end;
     }
 
     Status = uid_to_sid(fcb->inode_item.st_uid, &usersid);
     if (!NT_SUCCESS(Status)) {
-        ERR("uid_to_sid returned %08x\n", Status);
+        ERR("uid_to_sid returned %08lx\n", Status);
         goto end;
     }
 
     Status = RtlSetOwnerSecurityDescriptor(&sd, usersid, false);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("RtlSetOwnerSecurityDescriptor returned %08x\n", Status);
+        ERR("RtlSetOwnerSecurityDescriptor returned %08lx\n", Status);
         goto end;
     }
 
@@ -448,7 +448,7 @@ static void get_top_level_sd(fcb* fcb) {
     Status = RtlSetGroupSecurityDescriptor(&sd, groupsid, false);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("RtlSetGroupSecurityDescriptor returned %08x\n", Status);
+        ERR("RtlSetGroupSecurityDescriptor returned %08lx\n", Status);
         goto end;
     }
 
@@ -462,7 +462,7 @@ static void get_top_level_sd(fcb* fcb) {
     Status = RtlSetDaclSecurityDescriptor(&sd, true, acl, false);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("RtlSetDaclSecurityDescriptor returned %08x\n", Status);
+        ERR("RtlSetDaclSecurityDescriptor returned %08lx\n", Status);
         goto end;
     }
 
@@ -473,7 +473,7 @@ static void get_top_level_sd(fcb* fcb) {
     // get sd size
     Status = RtlAbsoluteToSelfRelativeSD(&sd, NULL, &buflen);
     if (Status != STATUS_SUCCESS && Status != STATUS_BUFFER_TOO_SMALL) {
-        ERR("RtlAbsoluteToSelfRelativeSD 1 returned %08x\n", Status);
+        ERR("RtlAbsoluteToSelfRelativeSD 1 returned %08lx\n", Status);
         goto end;
     }
 
@@ -491,7 +491,7 @@ static void get_top_level_sd(fcb* fcb) {
     Status = RtlAbsoluteToSelfRelativeSD(&sd, fcb->sd, &buflen);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("RtlAbsoluteToSelfRelativeSD 2 returned %08x\n", Status);
+        ERR("RtlAbsoluteToSelfRelativeSD 2 returned %08lx\n", Status);
         ExFreePool(fcb->sd);
         fcb->sd = NULL;
         goto end;
@@ -513,6 +513,12 @@ void fcb_get_sd(fcb* fcb, struct _fcb* parent, bool look_for_xattr, PIRP Irp) {
     PSID usersid = NULL, groupsid = NULL;
     SECURITY_SUBJECT_CONTEXT subjcont;
     ULONG buflen;
+    PSECURITY_DESCRIPTOR* abssd;
+    PSECURITY_DESCRIPTOR newsd;
+    PACL dacl, sacl;
+    PSID owner, group;
+    ULONG abssdlen = 0, dacllen = 0, sacllen = 0, ownerlen = 0, grouplen = 0;
+    uint8_t* buf;
 
     if (look_for_xattr && get_xattr(fcb->Vcb, fcb->subvol, fcb->inode, EA_NTACL, EA_NTACL_HASH, (uint8_t**)&fcb->sd, (uint16_t*)&buflen, Irp))
         return;
@@ -527,29 +533,104 @@ void fcb_get_sd(fcb* fcb, struct _fcb* parent, bool look_for_xattr, PIRP Irp) {
     Status = SeAssignSecurityEx(parent->sd, NULL, (void**)&fcb->sd, NULL, fcb->type == BTRFS_TYPE_DIRECTORY, SEF_DACL_AUTO_INHERIT,
                                 &subjcont, IoGetFileObjectGenericMapping(), PagedPool);
     if (!NT_SUCCESS(Status)) {
-        ERR("SeAssignSecurityEx returned %08x\n", Status);
+        ERR("SeAssignSecurityEx returned %08lx\n", Status);
+        return;
+    }
+
+    Status = RtlSelfRelativeToAbsoluteSD(fcb->sd, NULL, &abssdlen, NULL, &dacllen, NULL, &sacllen, NULL, &ownerlen,
+                                         NULL, &grouplen);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL) {
+        ERR("RtlSelfRelativeToAbsoluteSD returned %08lx\n", Status);
+        return;
+    }
+
+    if (abssdlen + dacllen + sacllen + ownerlen + grouplen == 0) {
+        ERR("RtlSelfRelativeToAbsoluteSD returned zero lengths\n");
+        return;
+    }
+
+    buf = (uint8_t*)ExAllocatePoolWithTag(PagedPool, abssdlen + dacllen + sacllen + ownerlen + grouplen, ALLOC_TAG);
+    if (!buf) {
+        ERR("out of memory\n");
+        return;
+    }
+
+    abssd = (PSECURITY_DESCRIPTOR)buf;
+    dacl = (PACL)(buf + abssdlen);
+    sacl = (PACL)(buf + abssdlen + dacllen);
+    owner = (PSID)(buf + abssdlen + dacllen + sacllen);
+    group = (PSID)(buf + abssdlen + dacllen + sacllen + ownerlen);
+
+    Status = RtlSelfRelativeToAbsoluteSD(fcb->sd, abssd, &abssdlen, dacl, &dacllen, sacl, &sacllen, owner, &ownerlen,
+                                         group, &grouplen);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL) {
+        ERR("RtlSelfRelativeToAbsoluteSD returned %08lx\n", Status);
+        ExFreePool(buf);
         return;
     }
 
     Status = uid_to_sid(fcb->inode_item.st_uid, &usersid);
     if (!NT_SUCCESS(Status)) {
-        ERR("uid_to_sid returned %08x\n", Status);
+        ERR("uid_to_sid returned %08lx\n", Status);
+        ExFreePool(buf);
         return;
     }
 
-    RtlSetOwnerSecurityDescriptor(&fcb->sd, usersid, false);
+    RtlSetOwnerSecurityDescriptor(abssd, usersid, false);
 
     gid_to_sid(fcb->inode_item.st_gid, &groupsid);
     if (!groupsid) {
         ERR("out of memory\n");
         ExFreePool(usersid);
+        ExFreePool(buf);
         return;
     }
 
-    RtlSetGroupSecurityDescriptor(&fcb->sd, groupsid, false);
+    RtlSetGroupSecurityDescriptor(abssd, groupsid, false);
+
+    buflen = 0;
+
+    Status = RtlAbsoluteToSelfRelativeSD(abssd, NULL, &buflen);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL) {
+        ERR("RtlAbsoluteToSelfRelativeSD returned %08lx\n", Status);
+        ExFreePool(usersid);
+        ExFreePool(groupsid);
+        ExFreePool(buf);
+        return;
+    }
+
+    if (buflen == 0) {
+        ERR("RtlAbsoluteToSelfRelativeSD returned a buffer size of 0\n");
+        ExFreePool(usersid);
+        ExFreePool(groupsid);
+        ExFreePool(buf);
+        return;
+    }
+
+    newsd = ExAllocatePoolWithTag(PagedPool, buflen, ALLOC_TAG);
+    if (!newsd) {
+        ERR("out of memory\n");
+        ExFreePool(usersid);
+        ExFreePool(groupsid);
+        ExFreePool(buf);
+        return;
+    }
+
+    Status = RtlAbsoluteToSelfRelativeSD(abssd, newsd, &buflen);
+    if (!NT_SUCCESS(Status)) {
+        ERR("RtlAbsoluteToSelfRelativeSD returned %08lx\n", Status);
+        ExFreePool(usersid);
+        ExFreePool(groupsid);
+        ExFreePool(buf);
+        return;
+    }
+
+    ExFreePool(fcb->sd);
+    fcb->sd = newsd;
 
     ExFreePool(usersid);
     ExFreePool(groupsid);
+    ExFreePool(buf);
 }
 
 static NTSTATUS get_file_security(PFILE_OBJECT FileObject, SECURITY_DESCRIPTOR* relsd, ULONG* buflen, SECURITY_INFORMATION flags) {
@@ -571,9 +652,9 @@ static NTSTATUS get_file_security(PFILE_OBJECT FileObject, SECURITY_DESCRIPTOR* 
     Status = SeQuerySecurityDescriptorInfo(&flags, relsd, buflen, (void**)&fcb->sd);
 
     if (Status == STATUS_BUFFER_TOO_SMALL)
-        TRACE("SeQuerySecurityDescriptorInfo returned %08x\n", Status);
+        TRACE("SeQuerySecurityDescriptorInfo returned %08lx\n", Status);
     else if (!NT_SUCCESS(Status))
-        ERR("SeQuerySecurityDescriptorInfo returned %08x\n", Status);
+        ERR("SeQuerySecurityDescriptorInfo returned %08lx\n", Status);
 
     return Status;
 }
@@ -632,7 +713,7 @@ NTSTATUS __stdcall drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
     if (IrpSp->Parameters.QuerySecurity.SecurityInformation & SACL_SECURITY_INFORMATION)
         TRACE("SACL_SECURITY_INFORMATION\n");
 
-    TRACE("length = %u\n", IrpSp->Parameters.QuerySecurity.Length);
+    TRACE("length = %lu\n", IrpSp->Parameters.QuerySecurity.Length);
 
     sd = map_user_buffer(Irp, NormalPagePriority);
     TRACE("sd = %p\n", sd);
@@ -656,7 +737,7 @@ NTSTATUS __stdcall drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
         Irp->IoStatus.Information = 0;
 
 end:
-    TRACE("Irp->IoStatus.Information = %u\n", Irp->IoStatus.Information);
+    TRACE("Irp->IoStatus.Information = %Iu\n", Irp->IoStatus.Information);
 
     Irp->IoStatus.Status = Status;
 
@@ -665,7 +746,7 @@ end:
     if (top_level)
         IoSetTopLevelIrp(NULL);
 
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     FsRtlExitFileSystem();
 
@@ -681,7 +762,7 @@ static NTSTATUS set_file_security(device_extension* Vcb, PFILE_OBJECT FileObject
     LARGE_INTEGER time;
     BTRFS_TIME now;
 
-    TRACE("(%p, %p, %p, %x)\n", Vcb, FileObject, sd, *flags);
+    TRACE("(%p, %p, %p, %lx)\n", Vcb, FileObject, sd, *flags);
 
     if (Vcb->readonly)
         return STATUS_MEDIA_WRITE_PROTECTED;
@@ -710,7 +791,7 @@ static NTSTATUS set_file_security(device_extension* Vcb, PFILE_OBJECT FileObject
     Status = SeSetSecurityDescriptorInfo(NULL, flags, sd, (void**)&fcb->sd, PagedPool, IoGetFileObjectGenericMapping());
 
     if (!NT_SUCCESS(Status)) {
-        ERR("SeSetSecurityDescriptorInfo returned %08x\n", Status);
+        ERR("SeSetSecurityDescriptorInfo returned %08lx\n", Status);
         goto end;
     }
 
@@ -812,7 +893,7 @@ end:
 
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     if (top_level)
         IoSetTopLevelIrp(NULL);
@@ -860,7 +941,7 @@ void find_gid(struct _fcb* fcb, struct _fcb* parfcb, PSECURITY_SUBJECT_CONTEXT s
 
     Status = SeQueryInformationToken(subjcont->PrimaryToken, TokenOwner, (void**)&to);
     if (!NT_SUCCESS(Status))
-        ERR("SeQueryInformationToken returned %08x\n", Status);
+        ERR("SeQueryInformationToken returned %08lx\n", Status);
     else {
         if (search_for_gid(fcb, to->Owner)) {
             ExReleaseResourceLite(&mapping_lock);
@@ -873,7 +954,7 @@ void find_gid(struct _fcb* fcb, struct _fcb* parfcb, PSECURITY_SUBJECT_CONTEXT s
 
     Status = SeQueryInformationToken(subjcont->PrimaryToken, TokenPrimaryGroup, (void**)&tpg);
     if (!NT_SUCCESS(Status))
-        ERR("SeQueryInformationToken returned %08x\n", Status);
+        ERR("SeQueryInformationToken returned %08lx\n", Status);
     else {
         if (search_for_gid(fcb, tpg->PrimaryGroup)) {
             ExReleaseResourceLite(&mapping_lock);
@@ -886,7 +967,7 @@ void find_gid(struct _fcb* fcb, struct _fcb* parfcb, PSECURITY_SUBJECT_CONTEXT s
 
     Status = SeQueryInformationToken(subjcont->PrimaryToken, TokenGroups, (void**)&tg);
     if (!NT_SUCCESS(Status))
-        ERR("SeQueryInformationToken returned %08x\n", Status);
+        ERR("SeQueryInformationToken returned %08lx\n", Status);
     else {
         ULONG i;
 
@@ -913,13 +994,13 @@ NTSTATUS fcb_get_new_sd(fcb* fcb, file_ref* parfileref, ACCESS_STATE* as) {
                                 SEF_SACL_AUTO_INHERIT, &as->SubjectSecurityContext, IoGetFileObjectGenericMapping(), PagedPool);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("SeAssignSecurityEx returned %08x\n", Status);
+        ERR("SeAssignSecurityEx returned %08lx\n", Status);
         return Status;
     }
 
     Status = RtlGetOwnerSecurityDescriptor(fcb->sd, &owner, &defaulted);
     if (!NT_SUCCESS(Status)) {
-        ERR("RtlGetOwnerSecurityDescriptor returned %08x\n", Status);
+        ERR("RtlGetOwnerSecurityDescriptor returned %08lx\n", Status);
         fcb->inode_item.st_uid = UID_NOBODY;
     } else {
         fcb->inode_item.st_uid = sid_to_uid(owner);

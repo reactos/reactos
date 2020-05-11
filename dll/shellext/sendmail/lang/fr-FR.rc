@@ -1,0 +1,7 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_DESKLINK, "Bureau (Créer un raccourci)"
+    IDS_SHORTCUT, "Raccourci vers %s"
+}

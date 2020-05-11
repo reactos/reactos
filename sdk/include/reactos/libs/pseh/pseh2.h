@@ -44,9 +44,9 @@ extern int _SEH2_VolatileExceptionCode;
 
 #define _SEH2_TRY  {
 #define _SEH2_FINALLY }  {
-#define _SEH2_EXCEPT(...) } if (_SEH2_Volatile0) {
+#define _SEH2_EXCEPT(...) } if (_SEH2_Volatile0 || (0 && (__VA_ARGS__))) {
 #define _SEH2_END }
-#define _SEH2_GetExceptionInformation()
+#define _SEH2_GetExceptionInformation() 0
 #define _SEH2_GetExceptionCode() _SEH2_VolatileExceptionCode
 #define _SEH2_AbnormalTermination() (0)
 #define _SEH2_YIELD(STMT_) STMT_

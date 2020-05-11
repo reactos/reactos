@@ -936,8 +936,14 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
 
            if (IsWindowEnabled( owner ))
            {
+               HWND captured = NULL;
                disabled_owner = owner;
                EnableWindow( disabled_owner, FALSE );
+
+               captured = GetCapture();
+
+               if (captured)
+                   SendMessageW(captured, WM_CANCELMODE, 0, 0);
            }
         }
         *modal_owner = owner;

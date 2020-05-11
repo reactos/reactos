@@ -31,6 +31,7 @@ extern void func_NtQueryVolumeInformationFile(void);
 extern void func_NtReadFile(void);
 extern void func_NtSaveKey(void);
 extern void func_NtSetInformationFile(void);
+extern void func_NtSetInformationProcess(void);
 extern void func_NtSetValueKey(void);
 extern void func_NtSetVolumeInformationFile(void);
 extern void func_NtSystemInformation(void);
@@ -40,6 +41,7 @@ extern void func_RtlAllocateHeap(void);
 extern void func_RtlBitmap(void);
 extern void func_RtlComputePrivatizedDllName_U(void);
 extern void func_RtlCopyMappedMemory(void);
+extern void func_RtlDebugInformation(void);
 extern void func_RtlDeleteAce(void);
 extern void func_RtlDetermineDosPathNameType(void);
 extern void func_RtlDosApplyFileIsolationRedirection_Ustr(void);
@@ -54,10 +56,13 @@ extern void func_RtlGetFullPathName_Ustr(void);
 extern void func_RtlGetFullPathName_UstrEx(void);
 extern void func_RtlGetLengthWithoutTrailingPathSeperators(void);
 extern void func_RtlGetLongestNtPathLength(void);
+extern void func_RtlGetNtProductType(void);
+extern void func_RtlGetUnloadEventTrace(void);
 extern void func_RtlHandle(void);
 extern void func_RtlImageRvaToVa(void);
 extern void func_RtlIsNameLegalDOS8Dot3(void);
 extern void func_RtlMemoryStream(void);
+extern void func_RtlMultipleAllocateHeap(void);
 extern void func_RtlNtPathNameToDosPathName(void);
 extern void func_RtlpEnsureBufferSize(void);
 extern void func_RtlQueryTimeZoneInformation(void);
@@ -98,6 +103,7 @@ const struct test winetest_testlist[] =
     { "NtReadFile",                     func_NtReadFile },
     { "NtSaveKey",                      func_NtSaveKey},
     { "NtSetInformationFile",           func_NtSetInformationFile },
+    { "NtSetInformationProcess",        func_NtSetInformationProcess },
     { "NtSetValueKey",                  func_NtSetValueKey},
     { "NtSetVolumeInformationFile",     func_NtSetVolumeInformationFile },
     { "NtSystemInformation",            func_NtSystemInformation },
@@ -107,6 +113,7 @@ const struct test winetest_testlist[] =
     { "RtlBitmapApi",                   func_RtlBitmap },
     { "RtlComputePrivatizedDllName_U",  func_RtlComputePrivatizedDllName_U },
     { "RtlCopyMappedMemory",            func_RtlCopyMappedMemory },
+    { "RtlDebugInformation",            func_RtlDebugInformation },
     { "RtlDeleteAce",                   func_RtlDeleteAce },
     { "RtlDetermineDosPathNameType",    func_RtlDetermineDosPathNameType },
     { "RtlDosApplyFileIsolationRedirection_Ustr", func_RtlDosApplyFileIsolationRedirection_Ustr },
@@ -121,10 +128,13 @@ const struct test winetest_testlist[] =
     { "RtlGetFullPathName_UstrEx",      func_RtlGetFullPathName_UstrEx },
     { "RtlGetLengthWithoutTrailingPathSeperators", func_RtlGetLengthWithoutTrailingPathSeperators },
     { "RtlGetLongestNtPathLength",      func_RtlGetLongestNtPathLength },
+    { "RtlGetNtProductType",            func_RtlGetNtProductType },
+    { "RtlGetUnloadEventTrace",         func_RtlGetUnloadEventTrace },
     { "RtlHandle",                      func_RtlHandle },
     { "RtlImageRvaToVa",                func_RtlImageRvaToVa },
     { "RtlIsNameLegalDOS8Dot3",         func_RtlIsNameLegalDOS8Dot3 },
     { "RtlMemoryStream",                func_RtlMemoryStream },
+    { "RtlMultipleAllocateHeap",        func_RtlMultipleAllocateHeap },
     { "RtlNtPathNameToDosPathName",     func_RtlNtPathNameToDosPathName },
     { "RtlpEnsureBufferSize",           func_RtlpEnsureBufferSize },
     { "RtlQueryTimeZoneInformation",    func_RtlQueryTimeZoneInformation },

@@ -198,7 +198,7 @@ BEGIN
     IDS_APPS_COUNT "Programantal: %d; Selected: %d"
     IDS_WELCOME_TITLE "Välkommen till ReactOS programhanterare!\n\n"
     IDS_WELCOME_TEXT "Välj en kategori till vänster, och sedan ett program för att installera eller avinstallera.\nReactOS Web sida: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Installerat"
     IDS_AVAILABLEFORINST "Tillgängliga for installation"
     IDS_UPDATES "Uppdateringar"
@@ -221,6 +221,7 @@ BEGIN
     IDS_SELECTEDFORINST "Selected for installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
     IDS_RECOMMENDED "Recommended software"
+    IDS_UNABLE_PATH "Incorrect path format."
 END
 
 STRINGTABLE

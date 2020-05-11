@@ -1,0 +1,7 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_DESKLINK, "Crear acceso directo en el Escritorio"
+    IDS_SHORTCUT, "Shortcut to %s"
+}

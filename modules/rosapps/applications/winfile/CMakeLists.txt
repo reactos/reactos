@@ -9,5 +9,5 @@ add_cd_file(TARGET winefile DESTINATION reactos/system32 FOR all)
 
 #if(NOT MSVC)
 #    FIXME: http://www.cmake.org/Bug/view.php?id=12998
-#    add_target_compile_flags(winefile "-Wno-format")
+#    target_compile_options(winefile PRIVATE "-Wno-format")
 #endif()

@@ -15,7 +15,7 @@ BEGIN
     IDS_TEMPLATES "Sablonok"
     IDS_STARTMENU "Start menü"
     IDS_PROGRAMS "Start menü\\Programok"
-    IDS_STARTUP "Start Menü\\Programok\\Automatikus indítás"
+    IDS_STARTUP "Start menü\\Programok\\Automatikus indítás"
     IDS_LOCALSETTINGS "Local Settings"
     IDS_LOCALAPPDATA "Local Settings\\Alkalmazás adatok"
     IDS_TEMP "Local Settings\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */

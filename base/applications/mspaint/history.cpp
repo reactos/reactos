@@ -161,8 +161,7 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
 
 void ImageModel::SaveImage(LPTSTR lpFileName)
 {
-    SaveDIBToFile(hBms[currInd], lpFileName, hDrawingDC, &fileTime, &fileSize, fileHPPM, fileVPPM);
-    imageSaved = TRUE;
+    SaveDIBToFile(hBms[currInd], lpFileName, hDrawingDC);
 }
 
 BOOL ImageModel::IsImageSaved()

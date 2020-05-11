@@ -87,21 +87,21 @@ BEGIN
     LTEXT "", IDC_SERV_NAME, 70, 11, 176, 11, WS_CHILD | WS_VISIBLE
     EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
     EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
-    EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+    EDITTEXT IDC_EXEPATH, 6, 86, 239, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
     COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
     PUSHBUTTON "Starten", IDC_START, 6, 155, 54, 15, WS_DISABLED
     PUSHBUTTON "Beenden", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
     PUSHBUTTON "Anhalten", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
     PUSHBUTTON "Fortsetzen", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
-    LTEXT "Dienstname:", IDC_STATIC, 4, 11, 53, 11
-    LTEXT "Anzeigename:", IDC_STATIC, 4, 29, 53, 11
-    LTEXT "Beschreibung:", IDC_STATIC, 4, 51, 53, 11
-    LTEXT "Pfad zur EXE-Datei:", IDC_STATIC, 6, 73, 82, 9
-    LTEXT "Starttyp:", IDC_STATIC, 6, 108, 53, 11
-    LTEXT "Dienststatus:", IDC_STATIC, 4, 138, 53, 11
+    LTEXT "Dienstname:", IDC_STATIC, 7, 11, 53, 11
+    LTEXT "Anzeigename:", IDC_STATIC, 7, 29, 53, 11
+    LTEXT "Beschreibung:", IDC_STATIC, 7, 51, 53, 11
+    LTEXT "Pfad zur EXE-Datei:", IDC_STATIC, 7, 73, 82, 9
+    LTEXT "Starttyp:", IDC_STATIC, 7, 108, 53, 11
+    LTEXT "Dienststatus:", IDC_STATIC, 7, 138, 53, 11
     LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
-    LTEXT "Sie können die Startparameter angeben, die übernommen werden sollen, wenn der Dienst von hier aus gestartet wird.", IDC_STATIC, 6, 177, 240, 20
-    LTEXT "Startparameter:", IDC_STATIC, 6, 200, 58, 11
+    LTEXT "Sie können die Startparameter angeben, die übernommen werden sollen, wenn der Dienst von hier aus gestartet wird.", IDC_STATIC, 7, 177, 240, 20
+    LTEXT "Startparameter:", IDC_STATIC, 7, 200, 58, 11
     EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "Bearbeiten", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
@@ -165,7 +165,7 @@ BEGIN
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
     CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW |
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
-            TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
+            TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "Einige Dienste sind von anderen Diensten, Systemtreibern und Ladegruppen abhängig. Falls eine Systemkomponente anhält oder nicht einwandfrei ausgeführt wird, kann dies Auswirkungen auf abhängige Dienste haben.", IDC_STATIC, 8, 7, 238, 38
     LTEXT "Dieser Dienst ist von folgenden Systemkomponenten abhängig", IDC_STATIC, 8, 57, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
@@ -232,7 +232,6 @@ IDD_DLG_PROGRESS DIALOGEX 6, 6, 255, 89
 CAPTION "Dienststeuerung"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
-EXSTYLE WS_EX_TOOLWINDOW
 BEGIN
     CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
     LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11

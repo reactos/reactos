@@ -2704,6 +2704,9 @@ USBH_PdoPnP(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
             DeviceCapabilities->Size = Size;
             DeviceCapabilities->Version = Version;
 
+            /* All devices connected to a hub are removable */
+            DeviceCapabilities->Removable = 1;
+
             Status = STATUS_SUCCESS;
             break;
 

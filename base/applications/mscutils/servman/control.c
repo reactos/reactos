@@ -9,9 +9,12 @@
 
 #include "precomp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 #define MAX_WAIT_TIME   30000
 
-BOOL
+DWORD
 DoControlService(LPWSTR ServiceName,
                  HWND hProgress,
                  DWORD Control)
@@ -27,6 +30,7 @@ DoControlService(LPWSTR ServiceName,
     DWORD MaxWait;
     DWORD ReqState, i;
     BOOL Result;
+    DWORD dwResult = ERROR_SUCCESS;
 
     /* Set the state we're interested in */
     switch (Control)
@@ -39,21 +43,23 @@ DoControlService(LPWSTR ServiceName,
             break;
         default:
             /* Unhandled control code */
-            return FALSE;
+            DPRINT1("Unknown control command: 0x%X\n", Control);
+            return ERROR_INVALID_SERVICE_CONTROL;
     }
 
     hSCManager = OpenSCManagerW(NULL,
                                 NULL,
                                 SC_MANAGER_CONNECT);
-    if (!hSCManager) return FALSE;
+    if (!hSCManager) return GetLastError();
 
     hService = OpenServiceW(hSCManager,
                             ServiceName,
                             SERVICE_PAUSE_CONTINUE | SERVICE_INTERROGATE | SERVICE_QUERY_STATUS);
     if (!hService)
     {
+        dwResult = GetLastError();
         CloseServiceHandle(hSCManager);
-        return FALSE;
+        return dwResult;
     }
 
         /* Send the control message to the service */
@@ -109,6 +115,8 @@ DoControlService(LPWSTR ServiceName,
                                             &BytesNeeded))
                 {
                     /* Something went wrong... */
+                    dwResult = GetLastError();
+                    DPRINT1("QueryServiceStatusEx failed: %d\n", dwResult);
                     break;
                 }
 
@@ -123,23 +131,33 @@ DoControlService(LPWSTR ServiceName,
                 else
                 {
                     /* It's not, make sure we haven't exceeded our wait time */
-                    if(GetTickCount() >= StartTickCount + MaxWait)
+                    if (GetTickCount() >= StartTickCount + MaxWait)
                     {
                         /* We have, give up */
+                        DPRINT1("Timeout\n");
+                        dwResult = ERROR_SERVICE_REQUEST_TIMEOUT;
                         break;
                     }
                 }
             }
         }
+        else
+        {
+            dwResult = GetLastError();
+        }
 
         if (ServiceStatus.dwCurrentState == ReqState)
         {
-            Result = TRUE;
+            dwResult = ERROR_SUCCESS;
         }
+    }
+    else
+    {
+        dwResult = GetLastError();
     }
 
     CloseServiceHandle(hService);
     CloseServiceHandle(hSCManager);
 
-    return Result;
+    return dwResult;
 }

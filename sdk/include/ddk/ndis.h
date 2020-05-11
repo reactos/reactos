@@ -4256,7 +4256,7 @@ NdisDprReleaseSpinLock(
  *   OUT PUCHAR Data);
  */
 #define NdisReadRegisterUchar(Register, Data) \
-  *(Data) = *(Register)
+  *(Data) = *((volatile UCHAR * const) (Register))
 
 /*
  * VOID
@@ -4265,7 +4265,7 @@ NdisDprReleaseSpinLock(
  *   OUT PULONG  Data);
  */
 #define NdisReadRegisterUlong(Register, Data)   \
-  *(Data) = *(Register)
+  *(Data) = *((volatile ULONG * const) (Register))
 
 /*
  * VOID
@@ -4274,7 +4274,7 @@ NdisDprReleaseSpinLock(
  *   OUT PUSHORT Data);
  */
 #define NdisReadRegisterUshort(Register, Data) \
-    *(Data) = *(Register)
+    *(Data) = *((volatile USHORT * const) (Register))
 
 /*
  * VOID

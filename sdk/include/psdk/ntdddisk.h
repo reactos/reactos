@@ -387,12 +387,21 @@ typedef struct _DISK_GEOMETRY_EX {
   UCHAR  Data[1];
 } DISK_GEOMETRY_EX, *PDISK_GEOMETRY_EX;
 
+#if (NTDDI_VERSION < NTDDI_WS03)
 #define DiskGeometryGetPartition(Geometry) \
    ((PDISK_PARTITION_INFO)((Geometry) + 1))
 
 #define DiskGeometryGetDetect(Geometry)\
  ((PDISK_DETECTION_INFO)(((PBYTE)DiskGeometryGetPartition(Geometry) + \
   DiskGeometryGetPartition(Geometry)->SizeOfPartitionInfo)))
+#else
+#define DiskGeometryGetPartition(Geometry) \
+   ((PDISK_PARTITION_INFO)((Geometry)->Data))
+
+#define DiskGeometryGetDetect(Geometry)\
+ ((PDISK_DETECTION_INFO)(((ULONG_PTR)DiskGeometryGetPartition(Geometry) + \
+  DiskGeometryGetPartition(Geometry)->SizeOfPartitionInfo)))
+#endif
 
 typedef struct _PARTITION_INFORMATION {
   LARGE_INTEGER  StartingOffset;
@@ -464,6 +473,9 @@ typedef struct _PARTITION_INFORMATION_EX {
   LARGE_INTEGER  PartitionLength;
   ULONG  PartitionNumber;
   BOOLEAN  RewritePartition;
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS3)
+  BOOLEAN  IsServicePartition;
+#endif
   _ANONYMOUS_UNION union {
     PARTITION_INFORMATION_MBR  Mbr;
     PARTITION_INFORMATION_GPT  Gpt;

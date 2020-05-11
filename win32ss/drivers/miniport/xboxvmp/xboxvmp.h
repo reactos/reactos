@@ -4,7 +4,7 @@
  * PURPOSE:     Simple framebuffer driver for NVIDIA NV2A XGPU
  * COPYRIGHT:   Copyright 2004 Ge van Geldorp
  *              Copyright 2004 Filip Navara
- *              Copyright 2019 Stanislav Motylkov (x86corez@gmail.com)
+ *              Copyright 2019-2020 Stanislav Motylkov (x86corez@gmail.com)
  */
 
 #pragma once
@@ -20,6 +20,7 @@
 #include "dderror.h"
 #include "devioctl.h"
 #include "miniport.h"
+#include "ioaccess.h"
 #include "video.h"
 
 #define NV2A_VIDEO_MEMORY_SIZE    (4 * 1024 * 1024)

@@ -129,9 +129,17 @@ BEGIN
         MENUITEM "&Byt namn", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportera", ID_TREE_EXPORT
-        MENUITEM "&Behörigheter...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Behörigheter...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Kopiera nyckelnamn", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Visa/dölj nivå", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Exportera", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Ta bort Registerdata...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

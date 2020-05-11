@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Russian resource file
  * COPYRIGHT:   Copyright 2014-2015 Petr Akhlamov (petr-akhlamov@yandex.ru)
- *              Copyright 2017 Stanislav Motylkov (binarymaster@mail.ru)
+ *              Copyright 2017-2020 Stanislav Motylkov (binarymaster@mail.ru)
  *              Copyright 2019 Abdulganiev Rafael (abdulganiev.rafael[at]gmail.com)
  */
 
@@ -159,8 +159,8 @@ BEGIN
     DEFPUSHBUTTON "Най&ти", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "Остановит&ь", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
-    AUTOCHECKBOX "Search Hidden Files and Folders",
-                 IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    AUTOCHECKBOX "Искать в &скрытых файлах и папках",
+                 IDC_SEARCH_HIDDEN, 4, 130, 136, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
 END
@@ -336,11 +336,18 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SEARCH_RESULTS "Результаты поиска"
     IDS_SEARCHINVALID "'%1' не является допустимой папкой."
     IDS_SEARCH_FOLDER "Ищем в ""%s"""
     IDS_SEARCH_FILES_FOUND "Найдено файлов: %u"
-    IDS_SEARCH_OPEN_FOLDER "Открыть &расположение файла"
+    IDS_SEARCH_OPEN_FOLDER "Открыть &расположение объекта"
     IDS_COL_NAME "Имя"
     IDS_COL_LOCATION "В папке"
     IDS_COL_RELEVANCE "Релевантность"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARSE_ADDR_ERR_TITLE "Проводник ReactOS"
+    IDS_PARSE_ADDR_ERR_TEXT "Проводник ReactOS не может найти '%1'. Проверьте правильность написания и попробуйте снова."
 END

@@ -129,9 +129,17 @@ BEGIN
         MENUITEM "&Renomear", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportar", ID_TREE_EXPORT
-        MENUITEM "&Permissões...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Permissões...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copiar nome da chave", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Expandir/Reduzir", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Exportar", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "&Descarregar Seção...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

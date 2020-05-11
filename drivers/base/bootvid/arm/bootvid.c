@@ -3,98 +3,11 @@
 #define NDEBUG
 #include <debug.h>
 
-#define LCDTIMING0_PPL(x)       ((((x) / 16 - 1) & 0x3f) << 2)
-#define LCDTIMING1_LPP(x)       (((x) & 0x3ff) - 1)
-#define LCDCONTROL_LCDPWR       (1 << 11)
-#define LCDCONTROL_LCDEN        (1)
-#define LCDCONTROL_LCDBPP(x)    (((x) & 7) << 1)
-#define LCDCONTROL_LCDTFT       (1 << 5)
-
-#define PL110_LCDTIMING0    (PVOID)0xE0020000
-#define PL110_LCDTIMING1    (PVOID)0xE0020004
-#define PL110_LCDTIMING2    (PVOID)0xE0020008
-#define PL110_LCDUPBASE     (PVOID)0xE0020010
-#define PL110_LCDLPBASE     (PVOID)0xE0020014
-#define PL110_LCDCONTROL    (PVOID)0xE0020018
-
-#define READ_REGISTER_ULONG(r) (*(volatile ULONG * const)(r))
-#define WRITE_REGISTER_ULONG(r, v) (*(volatile ULONG *)(r) = (v))
-
-#define READ_REGISTER_USHORT(r) (*(volatile USHORT * const)(r))
-#define WRITE_REGISTER_USHORT(r, v) (*(volatile USHORT *)(r) = (v))
-
 PUSHORT VgaArmBase;
 PHYSICAL_ADDRESS VgaPhysical;
 BOOLEAN ClearRow = FALSE;
-UCHAR VidpTextColor = 0xF;
-ULONG VidpCurrentX = 0;
-ULONG VidpCurrentY = 0;
-ULONG VidpScrollRegion[4] =
-{
-    0,
-    0,
-    SCREEN_WIDTH  - 1,
-    SCREEN_HEIGHT - 1
-};
-
-typedef struct _VGA_COLOR
-{
-    UCHAR Red;
-    UCHAR Green;
-    UCHAR Blue;
-} VGA_COLOR;
-
-VGA_COLOR VidpVga8To16BitTransform[16] =
-{
-    {0x00, 0x00, 0x00}, // Black
-    {0x00, 0x00, 0x08}, // Blue
-    {0x00, 0x08, 0x00}, // Green
-    {0x00, 0x08, 0x08}, // Cyan
-    {0x08, 0x00, 0x00}, // Red
-    {0x08, 0x00, 0x08}, // Magenta
-    {0x0B, 0x0D, 0x0F}, // Brown
-    {0x10, 0x10, 0x10}, // Light Gray
-    {0x08, 0x08, 0x08}, // Dark Gray
-    {0x00, 0x00, 0x1F}, // Light Blue
-    {0x00, 0x1F, 0x00}, // Light Green
-    {0x00, 0x1F, 0x1F}, // Light Cyan
-    {0x1F, 0x00, 0x00}, // Light Red
-    {0x1F, 0x00, 0x1F}, // Light Magenta
-    {0x1F, 0x1F, 0x00}, // Yellow
-    {0x1F, 0x1F, 0x1F}, // White
-};
 
 /* PRIVATE FUNCTIONS *********************************************************/
-
-FORCEINLINE
-USHORT
-VidpBuildColor(IN UCHAR Color)
-{
-    UCHAR Red, Green, Blue;
-
-    /* Extract color components */
-    Red   = VidpVga8To16BitTransform[Color].Red;
-    Green = VidpVga8To16BitTransform[Color].Green;
-    Blue  = VidpVga8To16BitTransform[Color].Blue;
-
-    /* Build the 16-bit color mask */
-    return ((Red & 0x1F) << 11) | ((Green & 0x1F) << 6) | ((Blue & 0x1F));
-}
-
-FORCEINLINE
-VOID
-VidpSetPixel(IN ULONG Left,
-             IN ULONG Top,
-             IN UCHAR Color)
-{
-    PUSHORT PixelPosition;
-
-    /* Calculate the pixel position */
-    PixelPosition = &VgaArmBase[Left + (Top * SCREEN_WIDTH)];
-
-    /* Set our color */
-    WRITE_REGISTER_USHORT(PixelPosition, VidpBuildColor(Color));
-}
 
 VOID
 NTAPI
@@ -121,7 +34,7 @@ DisplayCharacter(IN CHAR Character,
             if (FontChar[Top] & (UCHAR)j)
             {
                 /* We do, use the given Text Color */
-                VidpSetPixel(XOffset, Top, (UCHAR)TextColor);
+                SetPixel(XOffset, Top, (UCHAR)TextColor);
             }
             else if (BackColor < 16)
             {
@@ -129,7 +42,7 @@ DisplayCharacter(IN CHAR Character,
                  * This is a background pixel. We're drawing it
                  * unless it's transparent.
                  */
-                VidpSetPixel(XOffset, Top, (UCHAR)BackColor);
+                SetPixel(XOffset, Top, (UCHAR)BackColor);
             }
 
             /* Increase X Offset */
@@ -250,6 +163,15 @@ VidpInitializeDisplay(VOID)
                          LCDCONTROL_LCDBPP(4));
 }
 
+VOID
+NTAPI
+InitPaletteWithTable(
+    _In_ PULONG Table,
+    _In_ ULONG Count)
+{
+    UNIMPLEMENTED;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -338,62 +260,7 @@ VidSetTextColor(IN ULONG Color)
  */
 VOID
 NTAPI
-VidDisplayStringXY(IN PUCHAR String,
-                   IN ULONG Left,
-                   IN ULONG Top,
-                   IN BOOLEAN Transparent)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-VidSetScrollRegion(IN ULONG Left,
-                   IN ULONG Top,
-                   IN ULONG Right,
-                   IN ULONG Bottom)
-{
-    /* Assert alignment */
-    ASSERT((Left  & 0x7) == 0);
-    ASSERT((Right & 0x7) == 7);
-
-    /* Set Scroll Region */
-    VidpScrollRegion[0] = Left;
-    VidpScrollRegion[1] = Top;
-    VidpScrollRegion[2] = Right;
-    VidpScrollRegion[3] = Bottom;
-
-    /* Set current X and Y */
-    VidpCurrentX = Left;
-    VidpCurrentY = Top;
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
 VidCleanUp(VOID)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-VidBufferToScreenBlt(IN PUCHAR Buffer,
-                     IN ULONG Left,
-                     IN ULONG Top,
-                     IN ULONG Width,
-                     IN ULONG Height,
-                     IN ULONG Delta)
 {
     UNIMPLEMENTED;
     while (TRUE);
@@ -490,20 +357,7 @@ VidDisplayString(IN PUCHAR String)
  */
 VOID
 NTAPI
-VidBitBlt(IN PUCHAR Buffer,
-          IN ULONG Left,
-          IN ULONG Top)
-{
-    UNIMPLEMENTED;
-    //while (TRUE);
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-VidScreenToBufferBlt(IN PUCHAR Buffer,
+VidScreenToBufferBlt(OUT PUCHAR Buffer,
                      IN ULONG Left,
                      IN ULONG Top,
                      IN ULONG Width,
@@ -540,7 +394,7 @@ VidSolidColorFill(IN ULONG Left,
             //
             // Draw the pixel
             //
-            VidpSetPixel(x, y, Color);
+            SetPixel(x, y, Color);
         }
     }
 }

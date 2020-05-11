@@ -1,0 +1,35 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        '{ECF03A32-103D-11d2-854D-006008059367}' = s 'MyDocs Drop Target'
+        {
+            val 'NeverShowExt' = s ''
+            val 'NoOpen' = s 'Drag Files onto this icon to store them in My Documents'
+            val EditFlags = d '0x01'
+            DefaultIcon = e '%%SystemRoot%%\system32\shell32.dll,-235'
+            {
+            }
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+            'shellex'
+            {
+                'DropHandler' = s '{ECF03A32-103D-11d2-854D-006008059367}'
+                {
+                }
+            }
+        }
+    }
+}
+HKLM
+{
+    NoRemove Software
+    {
+        NoRemove Classes
+        {
+            '.mydocs' = s 'CLSID\{ECF03A32-103D-11d2-854D-006008059367}'
+        }
+    }
+}

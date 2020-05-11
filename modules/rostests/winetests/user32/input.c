@@ -44,11 +44,6 @@
  *
  */
 
-#ifndef __REACTOS__
-#define _WIN32_WINNT 0x401
-#define _WIN32_IE 0x0500
-#endif
-
 #include <stdarg.h>
 #include <assert.h>
 

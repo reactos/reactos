@@ -35,6 +35,9 @@
 #define MM_HIGHEST_USER_ADDRESS_WOW64   0x7FFEFFFF
 #define MM_SYSTEM_RANGE_START_WOW64     0x80000000
 
+/* The size of the virtual memory area that is mapped using a single PDE */
+#define PDE_MAPPED_VA (PTE_PER_PAGE * PAGE_SIZE)
+
 /* Misc address definitions */
 //#define MI_NON_PAGED_SYSTEM_START_MIN   MM_SYSTEM_SPACE_START // FIXME
 //#define MI_SYSTEM_PTE_START             MM_SYSTEM_SPACE_START
