@@ -436,7 +436,7 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
     LPCWSTR pszData;
     DWORD dwValue, cbData;
     const PRODUCT_OPTION_DATA *pData = &s_ProductOptionData[nOption];
-    ASSERT(nOption < _countof(s_ProductOptionData));
+    ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
 
     do
     {
@@ -516,24 +516,23 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
 }
 
 static void
-OnChooseOption(HWND hwndDlg, PRODUCT_OPTION option)
+OnChooseOption(HWND hwndDlg, PRODUCT_OPTION nOption)
 {
     WCHAR szText[256];
+    const PRODUCT_OPTION_DATA *pData = &s_ProductOptionData[nOption];
+    ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
 
-    switch (option)
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, pData->ProductSuite);
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, pData->ProductType);
+
+    switch (nOption)
     {
         case PRODUCT_OPTION_SERVER:
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"Terminal Server");
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"ServerNT");
-
             LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
             SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
             break;
 
         case PRODUCT_OPTION_WORKSTATION:
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"");
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"WinNT");
-
             LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
             SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
             break;
