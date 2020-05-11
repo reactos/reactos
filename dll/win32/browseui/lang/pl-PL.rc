@@ -4,6 +4,7 @@
  *    http://www.reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Polish translation updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (May, 2020) 
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -43,7 +44,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "Pasek sta&nu", IDM_VIEW_STATUSBAR
-        POPUP "Pasek &exploratora", IDM_VIEW_EXPLORERBAR
+        POPUP "Pasek &eksploratora", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "W&yszukaj\tCtrl+E", IDM_EXPLORERBAR_SEARCH
             MENUITEM "&Ulubione\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
@@ -158,7 +159,7 @@ BEGIN
     DEFPUSHBUTTON "Wy&szukaj", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Zatrzymaj", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
-    AUTOCHECKBOX "Search Hidden Files and Folders",
+    AUTOCHECKBOX "Przeszukaj ukryte pliki i foldery",
                  IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
@@ -226,7 +227,7 @@ END
 STRINGTABLE
 BEGIN
     9121 "Podłącza dysk sieciowy."
-    9122 "Odłącza dysk sieciowy."
+    9122 "Odłącza wybrany dysk sieciowy."
 END
 
 STRINGTABLE
@@ -245,8 +246,8 @@ END
 
 STRINGTABLE
 BEGIN
-    9362 "Otwiera katalog Ulubionych."
-    9363 "Dodaje bierzącą stronę do listy ulubionych."
+    9362 "Otwiera katalog Ulubione."
+    9363 "Dodaje bieżącą stronę do listy ulubione."
 END
 
 STRINGTABLE
@@ -335,10 +336,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCH_RESULTS "Search Results"
+    IDS_SEARCH_RESULTS "Wyniki wyszukiwania"
     IDS_SEARCHINVALID "Folder '%1' jest nieprawidłowy."
-    IDS_SEARCH_FOLDER "Trwa wyszukiwanie %s"
-    IDS_SEARCH_FILES_FOUND "Znaleziono %u plików"
+    IDS_SEARCH_FOLDER "Trwa wyszukiwanie... %s"
+    IDS_SEARCH_FILES_FOUND "Znaleziono: %u plików"
     IDS_SEARCH_OPEN_FOLDER "O&twórz folder zawierający"
     IDS_COL_NAME "Nazwa"
     IDS_COL_LOCATION "W folderze"
@@ -347,6 +348,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+    IDS_PARSE_ADDR_ERR_TITLE "Eksplorator ReactOS"
+    IDS_PARSE_ADDR_ERR_TEXT "Eksplorator systemu ReactOS nie może znaleźć elementu '%1'. Sprawdź pisownię i ponów próbę."
 END
