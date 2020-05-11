@@ -191,13 +191,17 @@ CRecycleBinEnum::~CRecycleBinEnum()
 
 HRESULT WINAPI CRecycleBinEnum::Initialize(DWORD dwFlags)
 {
-    static LPCWSTR szDrive = L"C:\\";
+    WCHAR szDrive[8];
+    if (GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive)))
+        PathAddBackslashW(szDrive);
+    else
+        StringCbCopyW(szDrive, sizeof(szDrive), L"C:\\");
 
     if (dwFlags & SHCONTF_NONFOLDERS)
     {
         TRACE("Starting Enumeration\n");
 
-        if (!EnumerateRecycleBinW(szDrive /* FIXME */ , CBEnumRecycleBin, (PVOID)this))
+        if (!EnumerateRecycleBinW(szDrive, CBEnumRecycleBin, this))
         {
             WARN("Error: EnumerateCRecycleBinW failed\n");
             return E_FAIL;
