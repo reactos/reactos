@@ -64,7 +64,7 @@ IsaPdoQueryCapabilities(
     }
     else
     {
-        DeviceCapabilities->UniqueID = TRUE;
+        DeviceCapabilities->UniqueID = FALSE;
         DeviceCapabilities->RawDeviceOK = TRUE;
         DeviceCapabilities->SilentInstall = TRUE;
     }

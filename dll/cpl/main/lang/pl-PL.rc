@@ -3,6 +3,7 @@
  *    xxrogers@users.sourceforge.net
  *    https://sourceforge.net/projects/reactospl
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Polish translation updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (May, 2020) 
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -12,20 +13,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Szybkość"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Powtarzanie znaku", -1, 5, 5, 230, 140
+    GROUPBOX "Powtarzanie znaku", -1, 5, 5, 230, 146
     ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
-    LTEXT "&Opóźnienie powtarzania:", -1, 40, 15, 50, 10
+    LTEXT "&Opóźnienie powtarzania:", -1, 40, 15, 78, 10
     LTEXT "Duże", -1, 40, 30, 20, 10
     LTEXT "Małe", -1, 200, 30, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
     ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
-    LTEXT "&Częstotliwość powtarzania", -1, 40, 70, 50, 10
+    LTEXT "&Częstotliwość powtarzania:", -1, 40, 70, 86, 10
     LTEXT "Mała", -1, 40, 85, 20, 10
     LTEXT "Duża", -1, 200, 85, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
     LTEXT "&Kliknij tutaj i przytrzymaj klawisz, aby sprawdzić szybkość powtarzania:", -1, 15, 108, 200, 20
     EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 125, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-    GROUPBOX "Częstotliwość &migania kursora", -1, 5, 145, 230, 50
+    GROUPBOX "Częstotliwość &migania kursora", -1, 5, 157, 230, 50
     LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
     LTEXT "Brak", -1, 40, 165, 30, 10
     LTEXT "Duża", -1, 200, 165, 30, 10
@@ -81,14 +82,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "&Schemat", -1, 5, 5, 170, 45
     COMBOBOX IDC_COMBO_CURSOR_SCHEME, 10, 15, 145, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Z&apisz jako...", IDC_BUTTON_SAVEAS_SCHEME, 70, 30, 50, 15
-    PUSHBUTTON "&Usuń", IDC_BUTTON_DELETE_SCHEME, 125, 30, 40, 15
+    PUSHBUTTON "Z&apisz jako...", IDC_BUTTON_SAVEAS_SCHEME, 70, 31, 50, 14
+    PUSHBUTTON "&Usuń", IDC_BUTTON_DELETE_SCHEME, 125, 31, 40, 14
     CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 190, 9, 45, 41, WS_EX_STATICEDGE
     LTEXT "&Dostosuj:", -1, 5, 60, 40, 10
     LISTBOX IDC_LISTBOX_CURSOR, 5, 70, 230, 120, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
     CHECKBOX "&Włącz cień wskaźnika", IDC_CHECK_CURSOR_SHADOW, 5, 200, 100, 10
-    PUSHBUTTON "Użyj d&omyślnego", IDC_BUTTON_USE_DEFAULT_CURSOR, 90, 200, 70, 15
-    PUSHBUTTON "&Przeglądaj...", IDC_BUTTON_BROWSE_CURSOR, 170, 200, 70, 15
+    PUSHBUTTON "Użyj d&omyślnego", IDC_BUTTON_USE_DEFAULT_CURSOR, 90, 200, 70, 14
+    PUSHBUTTON "&Przeglądaj...", IDC_BUTTON_BROWSE_CURSOR, 170, 200, 70, 14
 END
 
 IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 200, 75
@@ -96,10 +97,10 @@ STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
 CAPTION "Zapisz schemat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Zapisz ten schemat kursorów jako:", -1, 5, 5, 100, 10
+    LTEXT "Zapisz ten schemat kursorów jako:", -1, 5, 5, 144, 9
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-    PUSHBUTTON "&Ok", IDOK, 60, 45, 50, 15
-    PUSHBUTTON "&Anuluj", IDCANCEL, 115, 45, 50, 15
+    PUSHBUTTON "&Ok", IDOK, 60, 45, 50, 14
+    PUSHBUTTON "&Anuluj", IDCANCEL, 115, 45, 50, 14
 END
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
@@ -113,7 +114,7 @@ BEGIN
     CONTROL "", IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
     LTEXT "Szybko", -1, 170, 30, 30, 10
     ICON IDI_MOUSE_SPEED, IDC_ICON_MOUSE_SPEED, 15, 15, 15, 15
-    CHECKBOX "Zwiększ pr&ecyzję wskaźnika", IDC_CHECK_POINTER_PRECISION, 60, 50, 100, 10
+    CHECKBOX "Zwiększ pr&ecyzję wskaźnika", IDC_CHECK_POINTER_PRECISION, 60, 50, 151, 10
     GROUPBOX "Przyciąganie do", -1, 5, 65, 230, 40
     CHECKBOX "&Automatycznie przenieś wskaźnik na domyślny przycisk w oknie dialogowym",
              IDC_CHECK_SNAP_TO, 60, 80, 170, 20, BS_MULTILINE | BS_TOP
@@ -137,20 +138,20 @@ CAPTION "Kółko"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Przewijanie", -1, 5, 5, 230, 80
-    ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
-    LTEXT "Obrócenie kółkiem o jeden skok powoduje przewinięcie:", -1, 60, 15, 150, 10
-    RADIOBUTTON "&O tyle linii naraz:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
-    RADIOBUTTON "O jeden &ekran", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
-    EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP
-    CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER, 125, 45, 12, 12
+    ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 13, 20, 32, 32
+    LTEXT "Obrócenie kółkiem o jeden skok powoduje przewinięcie:", -1, 42, 15, 179, 10
+    RADIOBUTTON "&O tyle linii naraz:", IDC_RADIO_WHEEL_SCROLL_LINES, 42, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    RADIOBUTTON "O jeden &ekran", IDC_RADIO_WHEEL_SCROLL_PAGE, 42, 65, 90, 10
+    EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 69, 45, 37, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER, 105, 45, 11, 12
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Mysz"
-    IDS_CPLDESCRIPTION_1 "Dostosowuje ustawienia myszy."
+    IDS_CPLDESCRIPTION_1 "Dostosowuje ustawienia myszy, takie jak konfiguracja przycisków, szybkość dwukrotnego kliknięcia, wskaźniki myszy i szybkość ruchu."
     IDS_CPLNAME_2 "Klawiatura"
-    IDS_CPLDESCRIPTION_2 "Dostosowuje ustawienia klawiatury."
+    IDS_CPLDESCRIPTION_2 "Dostosowuje ustawienia klawiatury, takie jak częstotliwość migania kursora i częstotliwość powtarzania znaku."
     IDS_ARROW "Wybór normalny"
     IDS_HELP "Wybór pomocy"
     IDS_APPSTARTING "Praca w tle"
@@ -164,7 +165,7 @@ BEGIN
     IDS_SIZENWSE "Zmiana wymiarów po przekątnej 1"
     IDS_SIZENESW "Zmiana wymiarów po przekątnej 2"
     IDS_SIZEALL "Przenieś"
-    IDS_UPARROW "Alternatywny wybór"
+    IDS_UPARROW "Wybór alternatywny"
     IDS_HAND "Wybór łącza"
     IDS_NONE "(brak)"
     IDS_SYSTEM_SCHEME "(schemat systemu)"

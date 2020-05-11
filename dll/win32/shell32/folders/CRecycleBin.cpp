@@ -191,13 +191,17 @@ CRecycleBinEnum::~CRecycleBinEnum()
 
 HRESULT WINAPI CRecycleBinEnum::Initialize(DWORD dwFlags)
 {
-    static LPCWSTR szDrive = L"C:\\";
+    WCHAR szDrive[8];
+    if (GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive)))
+        PathAddBackslashW(szDrive);
+    else
+        StringCbCopyW(szDrive, sizeof(szDrive), L"C:\\");
 
     if (dwFlags & SHCONTF_NONFOLDERS)
     {
         TRACE("Starting Enumeration\n");
 
-        if (!EnumerateRecycleBinW(szDrive /* FIXME */ , CBEnumRecycleBin, (PVOID)this))
+        if (!EnumerateRecycleBinW(szDrive, CBEnumRecycleBin, this))
         {
             WARN("Error: EnumerateCRecycleBinW failed\n");
             return E_FAIL;
@@ -354,7 +358,7 @@ HRESULT WINAPI CRecycleBinItemContextMenu::QueryContextMenu(HMENU hMenu, UINT in
 HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     SEARCH_CONTEXT Context;
-    static LPCWSTR szDrive = L"C:\\";
+    WCHAR szDrive[8];
 
     TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n", this, lpcmi, lpcmi->lpVerb, lpcmi->hwnd);
 
@@ -362,6 +366,11 @@ HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
     {
         Context.pFileDetails = _ILGetRecycleStruct(apidl);
         Context.bFound = FALSE;
+
+        if (GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive)))
+            PathAddBackslashW(szDrive);
+        else
+            StringCbCopyW(szDrive, sizeof(szDrive), L"C:\\");
 
         EnumerateRecycleBinW(szDrive, CBSearchRecycleBin, (PVOID)&Context);
         if (!Context.bFound)
