@@ -358,7 +358,7 @@ HRESULT WINAPI CRecycleBinItemContextMenu::QueryContextMenu(HMENU hMenu, UINT in
 HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     SEARCH_CONTEXT Context;
-    static LPCWSTR szDrive = L"C:\\";
+    WCHAR szDrive[8];
 
     TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n", this, lpcmi, lpcmi->lpVerb, lpcmi->hwnd);
 
@@ -366,6 +366,11 @@ HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
     {
         Context.pFileDetails = _ILGetRecycleStruct(apidl);
         Context.bFound = FALSE;
+
+        if (GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive)))
+            PathAddBackslashW(szDrive);
+        else
+            StringCbCopyW(szDrive, sizeof(szDrive), L"C:\\");
 
         EnumerateRecycleBinW(szDrive, CBSearchRecycleBin, (PVOID)&Context);
         if (!Context.bFound)
