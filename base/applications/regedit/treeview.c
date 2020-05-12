@@ -625,66 +625,6 @@ done:
     return bSuccess;
 }
 
-static VOID
-UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
-{
-    LPCWSTR keyPath, rootName;
-    LPWSTR fullPath;
-    DWORD cbFullPath;
-
-    /* Wipe the listview, the status bar and the address bar if the root key was selected */
-    if (TreeView_GetParent(g_pChildWnd->hTreeWnd, hItem) == NULL)
-    {
-        ListView_DeleteAllItems(g_pChildWnd->hListWnd);
-        SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)NULL);
-        SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)NULL);
-        return;
-    }
-
-    if (pszPath == NULL)
-        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, hItem, &hRootKey);
-    else
-        keyPath = pszPath;
-
-    if (keyPath)
-    {
-        RefreshListView(g_pChildWnd->hListWnd, hRootKey, keyPath);
-        rootName = get_root_key_name(hRootKey);
-        cbFullPath = (wcslen(rootName) + 1 + wcslen(keyPath) + 1) * sizeof(WCHAR);
-        fullPath = HeapAlloc(GetProcessHeap(), 0, cbFullPath);
-        if (fullPath)
-        {
-            /* set (correct) the address bar text */
-            if (keyPath[0] != L'\0')
-                swprintf(fullPath, L"%s%s%s", rootName, keyPath[0]==L'\\'?L"":L"\\", keyPath);
-            else
-                fullPath = wcscpy(fullPath, rootName);            
-             
-            SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)fullPath);
-            SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
-            HeapFree(GetProcessHeap(), 0, fullPath);
-
-            /* disable hive manipulation items temporarily (enable only if necessary) */
-            EnableMenuItem(hMenuFrame, ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
-            EnableMenuItem(hMenuFrame, ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
-            /* compare the strings to see if we should enable/disable the "Load Hive" menus accordingly */
-            if (_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") != 0 ||
-                _wcsicmp(rootName, L"HKEY_USERS") != 0 )
-            {
-                /*
-                 * enable the unload menu item if at the root, otherwise
-                 * enable the load menu item if there is no slash in
-                 * keyPath (ie. immediate child selected)
-                 */
-                if (keyPath[0] == UNICODE_NULL)
-                    EnableMenuItem(hMenuFrame, ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_ENABLED);
-                else if (!wcschr(keyPath, L'\\'))
-                    EnableMenuItem(hMenuFrame, ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_ENABLED);
-            }
-        }
-    }
-}
-
 BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 {    
     UNREFERENCED_PARAMETER(wParam);
