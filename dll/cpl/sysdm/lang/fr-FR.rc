@@ -112,12 +112,12 @@ BEGIN
     LTEXT "Numéro de série :", IDC_STATIC, 10, 55, 93, 8
     LTEXT "", IDC_HWPPROP_SERIAL, 103, 55, 135, 8
     GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
-    AUTOCHECKBOX "Ceci est un ordinteur portable", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "L'état de la station d'accueil est inconnu", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "L'ordinateur est connecté à sa station d'accueil", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
-    AUTORADIOBUTTON "L'ordinateur est retiré de sa station d'accueil", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
+    AUTOCHECKBOX "Ceci est un ordinteur &portable", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "L'état de la &station d'accueil est inconnu", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "L'ordinateur est &connecté à sa station d'accueil", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
+    AUTORADIOBUTTON "L'ordinateur est &retiré de sa station d'accueil", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
     GROUPBOX "Sélection de profils matériels", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "Toujours inclure ce profil en tant qu'option lors du démarrage de ReactOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "Toujours &inclure ce profil en tant qu'option lors du démarrage de ReactOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
@@ -184,7 +184,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Copier le &profil vers", -1, 8, 9, 185, 52
     EDITTEXT IDC_USERPROFILE_COPY_PATH, 15, 23, 167, 12, ES_AUTOHSCROLL
-    PUSHBUTTON "&PArcourir", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
+    PUSHBUTTON "&Parcourir", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
     GROUPBOX "Utilisation possible", -1, 8, 77, 185, 48
     LTEXT "", IDC_USERPROFILE_COPY_USER, 15, 91, 167, 8
     PUSHBUTTON "&Modifier", IDC_USERPROFILE_COPY_CHANGE, 15, 105, 50, 14
@@ -326,7 +326,7 @@ BEGIN
     IDS_USERPROFILE_ROAMING "Itinérant"
     IDS_USERPROFILE_MANDATORY "Obligatoire"
     IDS_USERPROFILE_CONFIRM_DELETE "Voulez-vous supprimer le profil de %s ?"
-    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirmer suppression"
+    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirmer la suppression"
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "Compte inconnu"
     IDS_USERPROFILE_ACCOUNT_DELETED "Compte supprimé"
     IDS_USERPROFILE_TYPE_TEXT "Quand %s ouvre une session sur cet ordinateur, le système d'exploitation doit-il utiliser le profil itinérant, ou simplement la copie mise en cache localement du profil itinérant ?"
