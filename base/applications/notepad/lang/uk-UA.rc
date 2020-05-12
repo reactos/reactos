@@ -32,7 +32,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "В&ихід", CMD_EXIT
     END
-    POPUP "Пр&авка"
+    POPUP "&Редагування"
     BEGIN
         MENUITEM "С&касувати\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
@@ -62,7 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "Змі&ст", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Про Блокнот", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -70,37 +70,37 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
-CAPTION "Page Setup"
+CAPTION "Налаштування сторінки"
 BEGIN
-    GROUPBOX "Preview", 0, 240, 6, 120, 153, BS_GROUPBOX
+    GROUPBOX "Перегляд", 0, 240, 6, 120, 153, BS_GROUPBOX
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
-    GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
-    LTEXT "&Size:", stc2, 16, 22, 36, 8
+    GROUPBOX "Папір", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "&Розмір:", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Tray:", stc3, 16, 42, 36, 8
+    LTEXT "&Подача:", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
-    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
-    GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
-    LTEXT "L&eft:", stc15, 88, 82, 30, 8
+    GROUPBOX "Орієнтація", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "&Книжкова", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Портретна", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "Поля", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "&Ліве:", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Right:", stc16, 159, 82, 30, 8
+    LTEXT "Пр&аве:", stc16, 159, 82, 30, 8
     EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "T&op:", stc17, 88, 102, 30, 8
+    LTEXT "&Верхнє:", stc17, 88, 102, 30, 8
     EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Bottom:", stc18, 159, 102, 30, 8
+    LTEXT "&Нижнє:", stc18, 159, 102, 30, 8
     EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Header:", 0x140, 8, 132, 40, 15
+    LTEXT "Вер&хній колонтитул:", 0x140, 8, 132, 40, 15
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Footer:", 0x142, 8, 149, 40, 15
+    LTEXT "Н&ижній колонтитул:", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "Help", IDHELP, 8, 170, 50, 14
+    PUSHBUTTON "Допомога", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "Прин&тер...", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
@@ -143,17 +143,17 @@ BEGIN
     STRING_ALL_FILES "Усі файли (*.*)"
     STRING_TEXT_FILES_TXT "Текстові файли (*.txt)"
     STRING_TOOLARGE "Файл '%s' завеликий для блокнота.\n \
-Будь ласка використайте інший редактор."
+Будь ласка, використайте інший редактор."
     STRING_NOTEXT "Ви не ввели ніякого тексту. \
-\nБудь ласка введіть що-небудь і спробуйте ще раз"
+\nБудь ласка, введіть що-небудь і спробуйте ще раз"
     STRING_DOESNOTEXIST "Файл '%s'\nне існує\n\n \
-Хочете створити новий файл ?"
+Хочете створити новий файл?"
     STRING_NOTSAVED "Файл '%s'\nбув змінений\n\n \
-Хочете зберегти зміни ?"
-    STRING_NOTFOUND "'%s' can not be found."
+Хочете зберегти зміни?"
+    STRING_NOTFOUND "'%s' не знайдено."
     STRING_OUT_OF_MEMORY "Недостатньо пам'яті для виконання операції.\
 \nЗакрийте один або декілька додатків і повторіть спробу."
-    STRING_CANNOTFIND "Не можу знайти '%s'"
+    STRING_CANNOTFIND "Неможливо знайти '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Юнікод"
     STRING_UNICODE_BE "Юнікод (big endian)"
@@ -162,8 +162,8 @@ BEGIN
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Рядок %d, стовпчик %d"
-    STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+    STRING_PRINTERROR "Неможливо розпечатати файл '%s'.\n\nПереконайтесь, що принтер ввімкнено, та налаштовано."
 
-    STRING_TEXT_DOCUMENT "Text Document"
+    STRING_TEXT_DOCUMENT "Текстовий документ"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
 END
