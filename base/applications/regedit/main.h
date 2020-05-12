@@ -94,6 +94,7 @@ extern void ShowAboutBox(HWND hWnd);
 extern LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
 extern void ResizeWnd(int cx, int cy);
 extern LPCWSTR get_root_key_name(HKEY hRootKey);
+extern VOID UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath);
 
 /* error.c */
 extern int ErrorMessageBox(HWND hWnd, LPCWSTR lpTitle, DWORD dwErrorCode, ...);
