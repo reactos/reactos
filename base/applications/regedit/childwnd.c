@@ -228,7 +228,7 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     return CallWindowProcW(oldwndproc, hwnd, uMsg, wParam, lParam);
 }
 
-VOID
+extern VOID
 UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
 {
     LPCWSTR keyPath, rootName;
