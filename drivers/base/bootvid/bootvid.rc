@@ -2,6 +2,8 @@
 
 #if defined(SARCH_PC98)
 #define REACTOS_STR_FILE_DESCRIPTION  "NEC PC-98 Boot Video Driver"
+#elif defined(SARCH_XBOX)
+#define REACTOS_STR_FILE_DESCRIPTION  "Original Xbox Boot Video Driver"
 #else
 #define REACTOS_STR_FILE_DESCRIPTION  "VGA Boot Driver"
 #endif

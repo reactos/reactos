@@ -4,15 +4,24 @@ spec2def(bootvid.dll bootvid.spec ADD_IMPORTLIB)
 if((ARCH STREQUAL "i386") OR (ARCH STREQUAL "amd64"))
     if(SARCH STREQUAL "pc98")
         list(APPEND SOURCE
+            i386/pc98/pc98.h
             i386/pc98/bootvid.c)
+    elseif(SARCH STREQUAL "xbox")
+        list(APPEND SOURCE
+            i386/xbox/nv2a.h
+            i386/xbox/bootvid.c)
     else()
         list(APPEND SOURCE
+            i386/pc/pc.h
+            i386/pc/cmdcnst.h
             i386/pc/bootvid.c
             i386/pc/bootdata.c
+            i386/pc/vga.h
             i386/pc/vga.c)
     endif()
 elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE
+        arm/arm.h
         arm/bootvid.c)
 endif()
 

@@ -9,6 +9,8 @@
 #if defined(_M_IX86) || defined(_M_AMD64)
 #if defined(SARCH_PC98)
 #include "i386/pc98/pc98.h"
+#elif defined(SARCH_XBOX)
+#include "i386/xbox/nv2a.h"
 #else
 #include "i386/pc/vga.h"
 #include "i386/pc/pc.h"
