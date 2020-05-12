@@ -227,10 +227,16 @@ int main(int argc, const char *argv[])
 		(void) strcpy(home, pw->pw_dir);
 	}
 #endif
-	if (GetEnvironmentVariableA("SystemDrive", home, ARRAYSIZE(home)))
+	cp = getenv("SystemDrive");
+	if (cp != NULL && *cp != 0)
+	{
+		strcpy(home, cp);
 		strcat(home, "/");
+	}
 	else
+	{
 		strcpy(home, "C:/");
+	}
 	if (argc > 0) {
 		if (setjmp(toplevel))
 			exit(0);
