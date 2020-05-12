@@ -23,6 +23,12 @@
 extern "C" {
 #endif
 
+#ifdef __REACTOS__
+#ifdef _MSC_VER
+#define __thiscall __stdcall
+#endif
+#endif
+
 #ifdef __cplusplus
 #define THISCALLMETHOD_(type,method)  virtual type __thiscall method
 #else
