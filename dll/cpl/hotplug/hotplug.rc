@@ -33,6 +33,9 @@ IDI_HOTPLUG ICON "resources/1.ico"
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
 #ifdef LANGUAGE_ID_ID
     #include "lang/id-ID.rc"
 #endif
