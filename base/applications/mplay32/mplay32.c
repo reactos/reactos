@@ -1158,7 +1158,6 @@ OpenFileDialog(HWND hwnd, DWORD dwFilterIndex, LPTSTR lpType)
     OpenFileName.lpstrFilter     = szFilter;
     OpenFileName.lpstrFile       = szFile;
     OpenFileName.nMaxFile        = ARRAYSIZE(szFile);
-    OpenFileName.lpstrInitialDir = NULL;
     OpenFileName.Flags           = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_SHAREAWARE;
     OpenFileName.lpstrDefExt     = _T("\0");
     OpenFileName.nFilterIndex = dwFilterIndex;
