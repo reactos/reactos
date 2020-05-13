@@ -37,7 +37,7 @@ int AnalyzeFile();
 /*====[Globals]====*/
 FILE* manfile;
 char OpenFlag=0;
-char manpath[MAXLINE]="c:\\man\\";
+char manpath[MAX_PATH];
 /*=================*/
 
 void
@@ -49,21 +49,26 @@ SetCl(WORD cl)
 int
 OpenF(char* name)
 {
-    int retval=0;
-    char *manpath_local=(char*)malloc(sizeof(char)*MAXLINE);
+    int ret = 0;
 
-    strcpy(manpath_local, manpath); //save mandir value
-
-    if((manfile=fopen((strcat(manpath_local,name)),"r"))!=NULL)
-     {
-      OpenFlag=1;
-      AnalyzeFile();
-     }
+    if (GetEnvironmentVariableA("SystemDrive", manpath, ARRAYSIZE(manpath)))
+        strcat(manpath, "\\man\\");
     else
-     retval=-1;
+        strcpy(manpath, "C:\\man\\");
+    strcat(manpath, name);
 
-    free(manpath_local);
-    return retval;
+    manfile = fopen(manpath, "r");
+    if (manfile != NULL)
+    {
+        OpenFlag = 1;
+        AnalyzeFile();
+    }
+    else
+    {
+        ret = -1;
+    }
+
+    return ret;
 }
 
 int
