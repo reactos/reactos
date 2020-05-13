@@ -23,40 +23,27 @@ extern PUSHORT VgaArmBase;
 #define READ_REGISTER_USHORT(r) (*(volatile USHORT * const)(r))
 #define WRITE_REGISTER_USHORT(r, v) (*(volatile USHORT *)(r) = (v))
 
-PALETTE_ENTRY VidpVga8To16BitTransform[16] =
-{
-    {0x00, 0x00, 0x00}, // Black
-    {0x00, 0x00, 0x08}, // Blue
-    {0x00, 0x08, 0x00}, // Green
-    {0x00, 0x08, 0x08}, // Cyan
-    {0x08, 0x00, 0x00}, // Red
-    {0x08, 0x00, 0x08}, // Magenta
-    {0x0B, 0x0D, 0x0F}, // Brown
-    {0x10, 0x10, 0x10}, // Light Gray
-    {0x08, 0x08, 0x08}, // Dark Gray
-    {0x00, 0x00, 0x1F}, // Light Blue
-    {0x00, 0x1F, 0x00}, // Light Green
-    {0x00, 0x1F, 0x1F}, // Light Cyan
-    {0x1F, 0x00, 0x00}, // Light Red
-    {0x1F, 0x00, 0x1F}, // Light Magenta
-    {0x1F, 0x1F, 0x00}, // Yellow
-    {0x1F, 0x1F, 0x1F}, // White
-};
-
 FORCEINLINE
 USHORT
-VidpBuildColor(_In_ UCHAR Color)
+VidpBuildColor(
+    _In_ UCHAR Color)
 {
     UCHAR Red, Green, Blue;
 
     /* Extract color components */
-    Red   = VidpVga8To16BitTransform[Color].Red;
-    Green = VidpVga8To16BitTransform[Color].Green;
-    Blue  = VidpVga8To16BitTransform[Color].Blue;
+    Red   = GetRValue(DefaultPalette[Color]) >> 3;
+    Green = GetGValue(DefaultPalette[Color]) >> 3;
+    Blue  = GetBValue(DefaultPalette[Color]) >> 3;
 
     /* Build the 16-bit color mask */
     return ((Red & 0x1F) << 11) | ((Green & 0x1F) << 6) | ((Blue & 0x1F));
 }
+
+VOID
+NTAPI
+InitPaletteWithTable(
+    _In_ PULONG Table,
+    _In_ ULONG Count);
 
 FORCEINLINE
 VOID
@@ -73,3 +60,24 @@ SetPixel(
     /* Set our color */
     WRITE_REGISTER_USHORT(PixelPosition, VidpBuildColor(Color));
 }
+
+VOID
+NTAPI
+PreserveRow(
+    _In_ ULONG CurrentTop,
+    _In_ ULONG TopDelta,
+    _In_ BOOLEAN Restore);
+
+VOID
+NTAPI
+DoScroll(
+    _In_ ULONG Scroll);
+
+VOID
+NTAPI
+DisplayCharacter(
+    _In_ CHAR Character,
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG TextColor,
+    _In_ ULONG BackColor);

@@ -14,29 +14,34 @@
 
 BOOLEAN
 NTAPI
-VidInitialize(IN BOOLEAN SetMode);
+VidInitialize(
+    _In_ BOOLEAN SetMode);
 
 VOID
 NTAPI
-VidResetDisplay(IN BOOLEAN HalReset);
+VidResetDisplay(
+    _In_ BOOLEAN HalReset);
 
 ULONG
 NTAPI
-VidSetTextColor(IN ULONG Color);
+VidSetTextColor(
+    _In_ ULONG Color);
 
 VOID
 NTAPI
-VidDisplayStringXY(IN PUCHAR String,
-                   IN ULONG Left,
-                   IN ULONG Top,
-                   IN BOOLEAN Transparent);
+VidDisplayStringXY(
+    _In_ PUCHAR String,
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ BOOLEAN Transparent);
 
 VOID
 NTAPI
-VidSetScrollRegion(IN ULONG Left,
-                   IN ULONG Top,
-                   IN ULONG Right,
-                   IN ULONG Bottom);
+VidSetScrollRegion(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom);
 
 VOID
 NTAPI
@@ -44,38 +49,43 @@ VidCleanUp(VOID);
 
 VOID
 NTAPI
-VidBufferToScreenBlt(IN PUCHAR Buffer,
-                     IN ULONG Left,
-                     IN ULONG Top,
-                     IN ULONG Width,
-                     IN ULONG Height,
-                     IN ULONG Delta);
+VidBufferToScreenBlt(
+    _In_ PUCHAR Buffer,
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Width,
+    _In_ ULONG Height,
+    _In_ ULONG Delta);
 
 VOID
 NTAPI
-VidDisplayString(IN PUCHAR String);
+VidDisplayString(
+    _In_ PUCHAR String);
 
 VOID
 NTAPI
-VidBitBlt(IN PUCHAR Buffer,
-          IN ULONG Left,
-          IN ULONG Top);
+VidBitBlt(
+    _In_ PUCHAR Buffer,
+    _In_ ULONG Left,
+    _In_ ULONG Top);
 
 VOID
 NTAPI
-VidScreenToBufferBlt(OUT PUCHAR Buffer,
-                     IN ULONG Left,
-                     IN ULONG Top,
-                     IN ULONG Width,
-                     IN ULONG Height,
-                     IN ULONG Delta);
+VidScreenToBufferBlt(
+    _Out_ PUCHAR Buffer,
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Width,
+    _In_ ULONG Height,
+    _In_ ULONG Delta);
 
 VOID
 NTAPI
-VidSolidColorFill(IN ULONG Left,
-                  IN ULONG Top,
-                  IN ULONG Right,
-                  IN ULONG Bottom,
-                  IN UCHAR Color);
+VidSolidColorFill(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ UCHAR Color);
 
 #endif // _BOOTVID_
