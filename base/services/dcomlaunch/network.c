@@ -106,10 +106,12 @@ CookupNodeId(UCHAR * NodeId)
     }
 
     /* Get system drive */
-    if (GetEnvironmentVariableW(L"SystemDrive", szDrive, ARRAYSIZE(szDrive) - 1))
-        lstrcatW(szDrive, L"\\");
-    else
-        lstrcpyW(szDrive, L"C:\\");
+    GetSystemDirectoryW(szDrive, ARRAYSIZE(szDrive));
+    if (szDrive[0] != 0 && szDrive[1] == L':')
+    {
+        szDrive[2] = L'\\';
+        szDrive[3] = 0;
+    }
 
     /* And finally with free disk space */
     if (GetDiskFreeSpaceW(szDrive, &SectorsPerCluster, &BytesPerSector, &NumberOfFreeClusters, &TotalNumberOfClusters))
