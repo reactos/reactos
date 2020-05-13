@@ -45,7 +45,7 @@ CookupNodeId(UCHAR * NodeId)
     MEMORYSTATUS MemoryStatus;
     LUID Luid;
     DWORD SectorsPerCluster, BytesPerSector, NumberOfFreeClusters, TotalNumberOfClusters;
-    CHAR szDrive[8];
+    WCHAR szDrive[8];
 
     /* Initialize node id */
     memset(NodeId, 0x11, SEED_BUFFER_SIZE * sizeof(UCHAR));
@@ -106,13 +106,13 @@ CookupNodeId(UCHAR * NodeId)
     }
 
     /* Get system drive */
-    if (GetEnvironmentVariableA("SystemDrive", szDrive, ARRAYSIZE(szDrive) - 1))
-        lstrcatA(szDrive, L"\\");
+    if (GetEnvironmentVariableW(L"SystemDrive", szDrive, ARRAYSIZE(szDrive) - 1))
+        lstrcatW(szDrive, L"\\");
     else
-        lstrcpyA(szDrive, L"C:\\");
+        lstrcpyW(szDrive, L"C:\\");
 
     /* And finally with free disk space */
-    if (GetDiskFreeSpaceA(szDrive, &SectorsPerCluster, &BytesPerSector, &NumberOfFreeClusters, &TotalNumberOfClusters))
+    if (GetDiskFreeSpaceW(szDrive, &SectorsPerCluster, &BytesPerSector, &NumberOfFreeClusters, &TotalNumberOfClusters))
     {
         *NodeMiddle = *NodeMiddle ^ TotalNumberOfClusters * BytesPerSector * SectorsPerCluster;
         *NodeBegin = *NodeBegin ^ NumberOfFreeClusters * BytesPerSector * SectorsPerCluster;
