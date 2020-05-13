@@ -171,9 +171,12 @@ EXTERN_C BOOL
 WINAPI
 MakeShellURLFromPathA(LPCSTR lpPath, LPSTR lpUrl, INT cchMax)
 {
-    FIXME("MakeShellURLFromPathA() stub\n");
-    lpUrl = NULL;
-    return FALSE;
+    WCHAR szPath[MAX_PATH], szURL[MAX_PATH];
+    BOOL ret;
+    SHAnsiToUnicode(lpPath, szPath, ARRAYSIZE(szPath));
+    ret = MakeShellURLFromPathA(szPath, szURL, ARRAYSIZE(szURL));
+    SHUnicodeToAnsi(szURL, lpUrl, cchMax);
+    return ret;
 }
 
 /*
