@@ -15,6 +15,7 @@
   */
 
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
@@ -50,11 +51,19 @@ int
 OpenF(char* name)
 {
     int ret = 0;
+    char *cp;
 
-    if (GetEnvironmentVariableA("SystemDrive", manpath, ARRAYSIZE(manpath)))
+    /* C:\man\\... */
+    cp = getenv("SystemDrive");
+    if (cp && *cp)
+    {
+        strcpy(manpath, cp);
         strcat(manpath, "\\man\\");
+    }
     else
+    {
         strcpy(manpath, "C:\\man\\");
+    }
     strcat(manpath, name);
 
     manfile = fopen(manpath, "r");
