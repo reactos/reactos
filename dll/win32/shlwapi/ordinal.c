@@ -4343,7 +4343,7 @@ BOOL WINAPI SHIsLowMemoryMachine(DWORD dwType)
     }
     return is_low;
 #else
-  FIXME("(0x%08x) stub\n", x);
+  FIXME("(0x%08x) stub\n", dwType);
   return FALSE;
 #endif
 }
