@@ -193,8 +193,10 @@ HRESULT WINAPI CRecycleBinEnum::Initialize(DWORD dwFlags)
 {
     WCHAR szDrive[8];
     if (!GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive) - 1))
+    {
+        ERR("GetEnvironmentVariableW failed\n");
         return E_FAIL;
-
+    }
     PathAddBackslashW(szDrive);
 
     if (dwFlags & SHCONTF_NONFOLDERS)
@@ -368,8 +370,10 @@ HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
         Context.bFound = FALSE;
 
         if (!GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive) - 1))
+        {
+            ERR("GetEnvironmentVariableW failed\n");
             return E_FAIL;
-
+        }
         PathAddBackslashW(szDrive);
 
         EnumerateRecycleBinW(szDrive, CBSearchRecycleBin, (PVOID)&Context);
@@ -830,8 +834,10 @@ HRESULT WINAPI CRecycleBin::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     if (LOWORD(lpcmi->lpVerb) == iIdEmpty)
     {
         if (!GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive) - 1))
+        {
+            ERR("GetEnvironmentVariableW failed\n");
             return E_FAIL;
-
+        }
         PathAddBackslashW(szDrive);
 
         hr = SHEmptyRecycleBinW(lpcmi->hwnd, szDrive, 0);
