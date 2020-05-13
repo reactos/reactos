@@ -4324,16 +4324,28 @@ HRESULT WINAPI SHGetInverseCMAP(LPDWORD dest, DWORD dwSize)
  * Determine if the current computer has low memory.
  *
  * PARAMS
- *  x [I] FIXME
+ *  dwType [I] Zero.
  *
  * RETURNS
  *  TRUE if the users machine has 16 Megabytes of memory or less,
  *  FALSE otherwise.
  */
-BOOL WINAPI SHIsLowMemoryMachine (DWORD x)
+BOOL WINAPI SHIsLowMemoryMachine(DWORD dwType)
 {
+#ifdef __REACTOS__
+    MEMORYSTATUS status;
+    static int is_low = -1;
+    TRACE("(0x%08x)\n", dwType);
+    if (dwType == 0 && is_low == -1)
+    {
+        GlobalMemoryStatus(&status);
+        is_low = (status.dwTotalPhys <= 0x1000000);
+    }
+    return is_low;
+#else
   FIXME("(0x%08x) stub\n", x);
   return FALSE;
+#endif
 }
 
 /*************************************************************************
