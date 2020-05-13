@@ -174,7 +174,7 @@ MakeShellURLFromPathA(LPCSTR lpPath, LPSTR lpUrl, INT cchMax)
     WCHAR szPath[MAX_PATH], szURL[MAX_PATH];
     BOOL ret;
     SHAnsiToUnicode(lpPath, szPath, ARRAYSIZE(szPath));
-    ret = MakeShellURLFromPathA(szPath, szURL, ARRAYSIZE(szURL));
+    ret = MakeShellURLFromPathW(szPath, szURL, ARRAYSIZE(szURL));
     SHUnicodeToAnsi(szURL, lpUrl, cchMax);
     return ret;
 }
