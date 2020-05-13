@@ -434,10 +434,14 @@ FxIoQueue::DispatchEvents(
     // the driver stops taking requests, or some queue state does not
     // allow the driver to take new requests
     //
-                                                  #pragma warning(disable:4127)
+#ifdef _MSC_VER
+    #pragma warning(disable:4127)
+#endif
     while (TRUE)
     {
-                                                  #pragma warning(default:4127)
+#ifdef _MSC_VER
+    #pragma warning(default:4127)
+#endif
         //
         // totoalIoCount is sum of requests pending in the queue and requests
         // currently owned by the driver.
@@ -3733,11 +3737,19 @@ Return Value:
     ioQueue->RELEASE(Irp);
 }
 
+#ifdef __GNUC__
+VOID
+FxIoQueue::Vf_VerifyCancelForDriver (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ FxRequest* Request
+    )
+#else
 VOID
 FX_VF_METHOD(FxIoQueue, VerifyCancelForDriver) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
     _In_ FxRequest* Request
     )
+#endif
 {
     PLIST_ENTRY pEntry;
 
@@ -3845,10 +3857,14 @@ Return Value:
     
     Lock(&irql);
 
+#ifdef _MSC_VER
     #pragma warning(disable:4127)
+#endif
     while (TRUE)
     {
+#ifdef _MSC_VER        
     #pragma warning(default:4127)
+#endif
         //
         // Get the next FxRequest from the cancel safe queue
         //
@@ -4319,11 +4335,19 @@ FxIoQueue::QueueRequestFromForward(
     return STATUS_SUCCESS;
 }
 
+#ifdef __GNUC__
+SHORT
+FxIoQueue::Vf_VerifyForwardRequestUpdateFlags (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ FxRequest* Request
+    )
+#else
 SHORT
 FX_VF_METHOD(FxIoQueue, VerifyForwardRequestUpdateFlags) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
     _In_ FxRequest* Request
     )
+#endif
 {
     UNREFERENCED_PARAMETER(FxDriverGlobals);
     SHORT OldFlags = 0;
@@ -4353,6 +4377,15 @@ FX_VF_METHOD(FxIoQueue, VerifyForwardRequestUpdateFlags) (
     return OldFlags;
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxIoQueue::Vf_VerifyForwardRequest (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ FxIoQueue* pDestQueue,
+    _In_ FxRequest* pRequest
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxIoQueue, VerifyForwardRequest) (
@@ -4360,6 +4393,7 @@ FX_VF_METHOD(FxIoQueue, VerifyForwardRequest) (
     _In_ FxIoQueue* pDestQueue,
     _In_ FxRequest* pRequest
     )
+#endif
 {
     NTSTATUS status;
     KIRQL irql;
@@ -4485,10 +4519,14 @@ Returns:
         return status;
     }
 
+#ifdef _MSC_VER
     #pragma warning(disable:4127)
+#endif
     while (TRUE)
     {
+#ifdef _MSC_VER
     #pragma warning(default:4127)
+#endif
         //
         // Get the next FxRequest from the cancel safe queue
         //
@@ -4621,12 +4659,21 @@ Returns:
     return STATUS_SUCCESS;
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxIoQueue::Vf_VerifyGetRequestUpdateFlags (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ FxRequest* TagRequest
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxIoQueue, VerifyGetRequestUpdateFlags) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
     _In_ FxRequest* TagRequest
     )
+#endif
 {
     KIRQL irql;
     NTSTATUS status;
@@ -4690,11 +4737,19 @@ FX_VF_METHOD(FxIoQueue, VerifyGetRequestUpdateFlags) (
     return STATUS_SUCCESS;
 }
 
+#ifdef __GNUC__
+VOID
+FxIoQueue::Vf_VerifyGetRequestRestoreFlags(
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ FxRequest* pRequest
+    )
+#else
 VOID
 FX_VF_METHOD(FxIoQueue, VerifyGetRequestRestoreFlags)(
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
     _In_ FxRequest* pRequest
     )
+#endif
 {
     UNREFERENCED_PARAMETER(FxDriverGlobals);
     KIRQL irql;
@@ -4708,11 +4763,19 @@ FX_VF_METHOD(FxIoQueue, VerifyGetRequestRestoreFlags)(
     pRequest->Unlock(irql);
 }
 
+#ifdef __GNUC__
+VOID
+FxIoQueue::Vf_VerifyValidateCompletedRequest(
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ FxRequest* Request
+    )
+#else
 VOID
 FX_VF_METHOD(FxIoQueue, VerifyValidateCompletedRequest)(
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
     _In_ FxRequest* Request
     )
+#endif
 {
     UNREFERENCED_PARAMETER(FxDriverGlobals);
 
@@ -5042,6 +5105,15 @@ FxIoQueue::RequestCancelable(
     }
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxIoQueue::Vf_VerifyRequestCancelable (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ FxRequest* pRequest,
+    _In_ BOOLEAN Cancelable
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxIoQueue, VerifyRequestCancelable) (
@@ -5049,6 +5121,7 @@ FX_VF_METHOD(FxIoQueue, VerifyRequestCancelable) (
     _In_ FxRequest* pRequest,
     _In_ BOOLEAN Cancelable
     )
+#endif
 {
     NTSTATUS status;
     KIRQL irql;
@@ -5433,10 +5506,14 @@ Returns:
 
     if (CancelQueueRequests)
     {
-            #pragma warning(disable:4127)
+#ifdef _MSC_VER
+        #pragma warning(disable:4127)
+#endif
         while (TRUE)
         {
+#ifdef _MSC_VER
             #pragma warning(default:4127)
+#endif
             //
             // Get the next FxRequest from the cancel safe queue
             //
@@ -5477,10 +5554,14 @@ Returns:
         // Walk the driver cancelable list cancelling
         // the requests.
         //
-            #pragma warning(disable:4127)
+#ifdef _MSC_VER
+        #pragma warning(disable:4127)
+#endif
         while (TRUE)
         {
-            #pragma warning(default:4127)
+#ifdef _MSC_VER
+        #pragma warning(default:4127)
+#endif
             //
             // Get the next request of driver cancelable requests
             //
@@ -5544,8 +5625,11 @@ Returns:
     return STATUS_SUCCESS;
 }
 
-__declspec(noreturn)
+//__declspec(noreturn)
 VOID
+#ifndef __GNUC__
+DECLSPEC_NORETURN
+#endif
 FxIoQueue::FatalError(
     __in NTSTATUS Status
     )
@@ -5741,10 +5825,14 @@ Returns:
         m_CancelDispatchedRequests = TRUE;
 
         request = NULL; // Initial tag used by PeekRequest.
-                                      #pragma warning(disable:4127)
+#ifdef _MSC_VER
+        #pragma warning(disable:4127)
+#endif
         while (TRUE)
         {
-                                      #pragma warning(default:4127)
+#ifdef _MSC_VER
+        #pragma warning(default:4127)
+#endif
             status = FxRequest::PeekRequest(&m_Queue,       // in:queue
                                             request,        // in:tag. 
                                             NULL,           // in:file_obj
@@ -5780,10 +5868,14 @@ Returns:
 
     if (CancelRequests)
     {
-                              #pragma warning(disable:4127)
+#ifdef _MSC_VER
+        #pragma warning(disable:4127)
+#endif
         while (TRUE)
         {
-                              #pragma warning(default:4127)
+#ifdef _MSC_VER
+        #pragma warning(default:4127)
+#endif
             //
             // Get the next FxRequest from the cancel safe queue
             //
@@ -5838,10 +5930,14 @@ Returns:
         //
         // Walk the driver cancelable list cancelling the requests.
         //
-                                                  #pragma warning(disable:4127)
+#ifdef _MSC_VER
+        #pragma warning(disable:4127)
+#endif
         while (TRUE)
         {
-                                                  #pragma warning(default:4127)
+#ifdef _MSC_VER
+        #pragma warning(default:4127)
+#endif
             //
             // Get the next request of driver cancelable requests
             //

@@ -254,7 +254,7 @@ public:
     static
     __inline
     NTSTATUS
-    FxIrp::_IrpSynchronousCompletion(
+    _IrpSynchronousCompletion(
         __in MdDeviceObject DeviceObject,
         __in PIRP OriginalIrp,
         __in PVOID Context
@@ -305,7 +305,7 @@ public:
         NTSTATUS status;
         FxCREvent event;
 
-        SetCompletionRoutine(_IrpSynchronousCompletion,
+        SetCompletionRoutine((MdCompletionRoutine)_IrpSynchronousCompletion,
                              event.GetSelfPointer(),
                              TRUE,
                              TRUE,

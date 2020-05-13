@@ -419,7 +419,7 @@ typedef enum _WDF_DEVICE_FAILED_ACTION {
 // Declare empty definitions so that they may be referenced by
 // routines before they are defined.
 //
-typedef enum _WDF_REQUEST_TYPE WDF_REQUEST_TYPE;
+//typedef enum _WDF_REQUEST_TYPE WDF_REQUEST_TYPE;
 
 
 typedef
@@ -1158,6 +1158,9 @@ WDF_DEVICE_POWER_POLICY_IDLE_SETTINGS_INIT(
     case IdleCannotWakeFromS0:
         Settings->DxState = PowerDeviceD3;
         break;
+
+    case IdleCapsInvalid:
+    break;
     }
 }
 

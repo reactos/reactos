@@ -188,7 +188,7 @@ Return Value:
             goto CompleteIrp;
         }
 
-        do
+        /*do
         {
             FxIrpDynamicDispatchInfo* info;
                 
@@ -210,7 +210,7 @@ Return Value:
             // If registered, invoke dispatch callback for this major function.
             //
             ASSERT(index < (int)FxIrpDynamicDispatchInfo::DynamicDispatchMax);
-            /*if (NULL != info->Dispatch[index].EvtDeviceDynamicDispatch)
+            if (NULL != info->Dispatch[index].EvtDeviceDynamicDispatch)
             {
                 return info->Dispatch[index].EvtDeviceDynamicDispatch(
                                 m_Device->GetHandle(), 
@@ -222,9 +222,9 @@ Return Value:
                                 (WDFCONTEXT)((ULONG_PTR)DispatchContext | 
                                               FX_IN_DISPATCH_CALLBACK)
                                 );
-            }*/
+            }
          } while ((PLIST_ENTRY)DispatchContext != 
-                                &m_DynamicDispatchInfoListHead);
+                                &m_DynamicDispatchInfoListHead);*/
     }
 
     //
@@ -305,12 +305,21 @@ CompleteIrp:
     return status;
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxPkgIo::Vf_VerifyDispatchContext (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ WDFCONTEXT DispatchContext
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxPkgIo, VerifyDispatchContext) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
     _In_ WDFCONTEXT DispatchContext
     )
+#endif
 {
     NTSTATUS status = STATUS_SUCCESS;
     BOOLEAN ctxValid;
@@ -1240,6 +1249,8 @@ Return Value:
     case FxIoStopProcessingForPowerPurgeManaged:
     case FxIoStopProcessingForPowerPurgeNonManaged:
         m_QueuesAreShuttingDown = TRUE;
+        break;
+    case FxIoStopProcessingForPowerHold:
         break;
     }
 

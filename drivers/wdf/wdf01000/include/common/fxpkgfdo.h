@@ -16,6 +16,8 @@ struct FxStaticChildDescription {
 
 class FxPkgFdo : public FxPkgPnp {
 
+    define_super(FxPkgPnp);
+
     FxPkgFdo(
         __in PFX_DRIVER_GLOBALS FxDriverGlobals,
         __in CfxDevice *Device
@@ -101,6 +103,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpFilteredStartDeviceCompletionRoutine(
         __in    MdDeviceObject DeviceObject,
         __inout MdIrp Irp,
@@ -110,6 +113,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpStartDeviceCompletionRoutine(
         __in    MdDeviceObject DeviceObject,
         __inout MdIrp Irp,

@@ -11,7 +11,7 @@ typedef DRIVER_DISPATCH MdDriverDispatchType, *MdDriverDispatch;
 //
 // Forward declare enum 
 //
-enum FxDriverObjectUmFlags;
+//enum FxDriverObjectUmFlags;
 
 class MxDriverObject {
 

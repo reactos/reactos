@@ -35,11 +35,11 @@ struct FxTagTrackingBlock : public FxStump {
         __in_opt    PCSTR File,
         __in_opt    BOOLEAN Initial = FALSE
         ) :
+        Next(NULL),
         Tag(Tag),
         Line(Line),
         File(File),
-        StackFrames(NULL),
-        Next(NULL)
+        StackFrames(NULL)        
     {
         Mx::MxQueryTickCount(&TimeLocked);
 
@@ -73,10 +73,10 @@ struct FxTagTrackingBlock : public FxStump {
 
     struct FxTagTrackingBlock* Next;
     PVOID Tag;
-    PCCH File;
     LONG Line;
-    LARGE_INTEGER TimeLocked;
+    PCCH File;
     FxTagTrackingStackFrames* StackFrames;
+    LARGE_INTEGER TimeLocked;
 };
 
 //
@@ -135,10 +135,10 @@ private:
         FxGlobalsStump(FxDriverGlobals),
         m_TrackerType(Type),
         m_CaptureStack(CaptureStack),
-        m_Next(NULL),
+        m_OwningObject(Owner),
         m_FailedCount(0),
-        m_CurRefHistory(0),
-        m_OwningObject(Owner)
+        m_Next(NULL),        
+        m_CurRefHistory(0)        
     {
         RtlZeroMemory(m_TagHistory, sizeof(m_TagHistory));
 

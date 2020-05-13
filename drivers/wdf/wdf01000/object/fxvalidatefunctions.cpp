@@ -41,7 +41,9 @@ FxValidateObjectAttributes(
 
     if (Attributes->ContextTypeInfo != NULL)
     {
+#ifndef __GNUC__
 #pragma prefast(suppress:__WARNING_REDUNDANTTEST, "different structs of the same size")
+#endif
         if (Attributes->ContextTypeInfo->Size !=
                                         sizeof(WDF_OBJECT_CONTEXT_TYPE_INFO) &&
             Attributes->ContextTypeInfo->Size !=

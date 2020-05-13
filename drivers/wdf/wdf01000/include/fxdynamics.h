@@ -815,6 +815,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDriverCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -5131,18 +5132,14 @@ WDFEXPORT(WdfRequestMarkCancelableEx)(
     );
 
 // ----- WDFREQUEST ----- //
-
+#ifndef __GNUC__
 extern WDFVERSION WdfVersion;
+#endif
 
 WDFAPI
 NTSTATUS
 static
-NotImplemented()
-{
-	DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, "Not implemented. WDFFUNCTIONS Table: 0x%x\r\n", &WdfVersion);
-    __debugbreak();
-	return STATUS_UNSUCCESSFUL;
-}
+NotImplemented();
 
 static WDFVERSION WdfVersion = {
 		sizeof(WDFVERSION),
@@ -5546,6 +5543,16 @@ static WDFVERSION WdfVersion = {
             WDFEXPORT(WdfRequestForwardToParentDeviceIoQueue)
 		}
 	};
+
+WDFAPI
+NTSTATUS
+static
+NotImplemented()
+{
+	DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, "Not implemented. WDFFUNCTIONS Table: 0x%x\r\n", &WdfVersion);
+    __debugbreak();
+	return STATUS_UNSUCCESSFUL;
+}
 
 #ifdef __cplusplus
 }

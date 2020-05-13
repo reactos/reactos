@@ -33,7 +33,7 @@ Revision History:
 // Types
 //
 
-typedef enum _WDF_REQUEST_TYPE {
+/*typedef enum _WDF_REQUEST_TYPE {
     WdfRequestTypeCreate = 0x0,
     WdfRequestTypeCreateNamedPipe = 0x1,
     WdfRequestTypeClose = 0x2,
@@ -66,7 +66,7 @@ typedef enum _WDF_REQUEST_TYPE {
     WdfRequestTypeUsb = 0x40,
     WdfRequestTypeNoFormat = 0xFF,
     WdfRequestTypeMax,
-} WDF_REQUEST_TYPE;
+} WDF_REQUEST_TYPE;*/
 
 typedef enum _WDF_REQUEST_REUSE_FLAGS {
     WDF_REQUEST_REUSE_NO_FLAGS = 0x00000000,

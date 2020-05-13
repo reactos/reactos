@@ -1123,8 +1123,11 @@ public:
         __in BOOLEAN    CancelRequests
         );
 
-    __declspec(noreturn)
+    //__declspec(noreturn)
     VOID
+    #ifndef __GNUC__
+    DECLSPEC_NORETURN
+    #endif
     FatalError(
         __in NTSTATUS Status
         );
@@ -1169,7 +1172,7 @@ private:
     //
     // Must be called with the FxIoQueue lock held.
     //
-    __inline
+    //__inline
     VOID
     SetTransitionFromEmpty(
         VOID

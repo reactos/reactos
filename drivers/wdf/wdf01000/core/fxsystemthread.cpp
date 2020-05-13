@@ -239,7 +239,7 @@ FxSystemThread::CreateThread(
     //
     // The thread itself will release this reference in its exit routine
     //
-    ADDREF(FxSystemThread::StaticThreadThunk);
+    ADDREF((PVOID)FxSystemThread::StaticThreadThunk);
 
     status = PsCreateSystemThread(
         &threadHandle,
@@ -247,7 +247,7 @@ FxSystemThread::CreateThread(
         NULL, // Obja
         NULL, // hProcess
         NULL, // CLIENT_ID,
-        FxSystemThread::StaticThreadThunk,
+        (PKSTART_ROUTINE)FxSystemThread::StaticThreadThunk,
         this
         );
 
@@ -260,7 +260,7 @@ FxSystemThread::CreateThread(
         //
         // Release the reference taken above due to failure
         //
-        RELEASE(FxSystemThread::StaticThreadThunk);
+        RELEASE((PVOID)FxSystemThread::StaticThreadThunk);
     }
     else
     {
@@ -387,7 +387,7 @@ FxSystemThread::Thread()
             Unlock(irql);
 
             // Release the object reference held by the thread
-            RELEASE(FxSystemThread::StaticThreadThunk);
+            RELEASE((PVOID)FxSystemThread::StaticThreadThunk);
 
             status = PsTerminateSystemThread(STATUS_SUCCESS);
             UNREFERENCED_PARAMETER(status);

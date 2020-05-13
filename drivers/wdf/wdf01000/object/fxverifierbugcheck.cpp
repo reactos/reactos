@@ -4,7 +4,9 @@
 #define WDF_VIOLATION                    ((ULONG)0x0000010DL)
 
 VOID
-__declspec(noreturn)
+#ifndef __GNUC__
+DECLSPEC_NORETURN
+#endif
 FxVerifierBugCheckWorker(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in WDF_BUGCHECK_CODES WdfBugCheckCode,
@@ -37,7 +39,9 @@ Returns:
 }
 
 VOID
-__declspec(noreturn)
+#ifndef __GNUC__
+DECLSPEC_NORETURN
+#endif
 FxVerifierNullBugCheck(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PVOID ReturnAddress

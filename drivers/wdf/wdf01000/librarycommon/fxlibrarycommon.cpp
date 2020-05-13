@@ -10,6 +10,7 @@
 
 
 NTSTATUS
+NTAPI
 FxLibraryCommonCommission(VOID)
 {
 	DECLARE_CONST_UNICODE_STRING(usName, L"RtlGetVersion");
@@ -52,6 +53,7 @@ FxLibraryCommonCommission(VOID)
 }
 
 NTSTATUS
+NTAPI
 FxLibraryCommonDecommission(
 	VOID
 )
@@ -73,6 +75,7 @@ FxLibraryCommonDecommission(
 }
 
 NTSTATUS
+NTAPI
 FxLibraryCommonRegisterClient(
 	__inout PWDF_BIND_INFO        Info,
 	__deref_out PWDF_DRIVER_GLOBALS* WdfDriverGlobals,
@@ -193,6 +196,7 @@ Done:
 
 
 NTSTATUS
+NTAPI
 FxLibraryCommonUnregisterClient(
 	__in PWDF_BIND_INFO        Info,
 	__in PWDF_DRIVER_GLOBALS   WdfDriverGlobals
@@ -375,7 +379,9 @@ None.
     //
     // prefast complains about comparison of constant with constant here
     //
+#ifdef _MSC_VER
 #pragma prefast(suppress:__WARNING_CONST_CONST_COMP, "If ErrorInsertionString is not null then this is not a constant")
+#endif
     if (errorLogEntrySize <= ERROR_LOG_MAXIMUM_SIZE)
 	{
 

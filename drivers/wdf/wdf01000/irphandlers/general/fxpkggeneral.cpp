@@ -1094,7 +1094,7 @@ Return Value:
 {
     NTSTATUS                status;
     FxFileObject*           pFxFO = NULL;
-    WDFFILEOBJECT           hwdfFO = NULL;
+    //WDFFILEOBJECT           hwdfFO = NULL;
     //PLIST_ENTRY             next;
     //FxFileObjectInfo*       fileObjInfo;
     MxFileObject            fileObject;
@@ -1121,10 +1121,10 @@ Return Value:
 
     ASSERT(status == STATUS_SUCCESS);
 
-    if (pFxFO != NULL && NT_SUCCESS(status))
-    {
-        hwdfFO = pFxFO->GetHandle();
-    }
+    //if (pFxFO != NULL && NT_SUCCESS(status))
+    //{
+    //    hwdfFO = pFxFO->GetHandle();
+    //}
 
     // WDF 1.11 and later have EvtCxFileCreate
     //

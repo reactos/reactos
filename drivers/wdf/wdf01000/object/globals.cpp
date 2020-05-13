@@ -27,9 +27,16 @@ FxVerifierGetObjectDebugInfo(
 VOID
 FxOverrideDefaultVerifierSettings(
     __in    HANDLE Key,
-    __in    LPWSTR Name,
+    __in    PCWSTR Name,
+    //__in    LPWSTR Name,
     __out   PBOOLEAN OverrideValue
     );
+
+void
+__cxa_pure_virtual()
+{
+    __debugbreak();
+}
 
 
 VOID
@@ -524,6 +531,7 @@ Returns:
 
 #if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
 BOOLEAN
+NTAPI
 IsDriverVerifierActive(
     _In_ MdDriverObject DriverObject
     )
@@ -795,12 +803,16 @@ Arguments:
 
     RtlInitUnicodeString(&FunctionName, L"RtlQueryRegistryValuesEx");
 
+#ifndef __GNUC__
 #pragma warning(push)
 #pragma warning(disable: 4055)
+#endif
 
     queryFn  = (QUERYFN*)MmGetSystemRoutineAddress(&FunctionName);
 
+#ifndef __GNUC__
 #pragma warning(pop)
+#endif
 
 #endif
 
@@ -1105,10 +1117,14 @@ Return Value:
 
 	if (NT_SUCCESS(status))
 	{
+#ifndef __GNUC__
 		#pragma prefast(push)
 		#pragma prefast(suppress:__WARNING_PRECONDITION_NULLTERMINATION_VIOLATION, "FxRegKey::_VerifyMultiSzString makes sure the string is NULL-terminated")
+#endif
 		pInfo = FxVerifyAllocateDebugInfo((LPCWSTR) dataBuffer, FxDriverGlobals);
+#ifndef __GNUC__
 		#pragma prefast(pop)
+#endif
     }
 
 exit:
@@ -1123,7 +1139,8 @@ exit:
 VOID
 FxOverrideDefaultVerifierSettings(
     __in    HANDLE Key,
-    __in    LPWSTR Name,
+    __in    PCWSTR Name,
+    //__in    LPWSTR Name,
     __out   PBOOLEAN OverrideValue
     )
 {

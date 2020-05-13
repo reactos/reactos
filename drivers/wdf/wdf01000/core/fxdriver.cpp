@@ -659,7 +659,7 @@ FxDriver::AllocateDriverObjectExtensionAndStoreFxDriver(
     // the size of the variable.
     //
     status = Mx::MxAllocateDriverObjectExtension( m_DriverObject.GetObject(),
-                                                  FX_DRIVER_ID,
+                                                  (PVOID)FX_DRIVER_ID,
                                                   sizeof(FxDriver**),
                                                   (PVOID*)&ppDriver);
     if (!NT_SUCCESS(status))
@@ -683,7 +683,7 @@ FxDriver::GetFxDriver(
 {
     FxDriver* objExt;
     objExt = *(FxDriver **)Mx::MxGetDriverObjectExtension(DriverObject,
-                                                       FX_DRIVER_ID);
+                                                       (PVOID)FX_DRIVER_ID);
     ASSERT(objExt != NULL);
 
     return objExt;

@@ -138,7 +138,7 @@ PreprocessIrp(
     )
 {
     NTSTATUS        status;
-    MdDeviceObject  devObj;
+    //MdDeviceObject  devObj;
     UCHAR           major, minor;
     FxIrp irp(Irp);
 
@@ -150,7 +150,7 @@ PreprocessIrp(
     // EvtDevicePreprocess returns.  To not touch freed pool, capture all
     // values we will need before preprocessing.
     //
-    devObj = Device->GetDeviceObject();
+    //devObj = Device->GetDeviceObject();
 
     //if (Info->ClassExtension == FALSE)
     {
@@ -235,6 +235,7 @@ DispatchWorker(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxDevice::Dispatch(
     __in MdDeviceObject DeviceObject,
     __in MdIrp       Irp
@@ -248,6 +249,7 @@ FxDevice::Dispatch(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxDevice::DispatchWithLock(
     __in MdDeviceObject DeviceObject,
     __in MdIrp Irp
@@ -311,6 +313,9 @@ FxDevice::DispatchWithLock(
             &_GetFxWdmExtension(DeviceObject)->IoRemoveLock,
             Irp
             );
+        break;
+
+    case FxDeviceRemLockNotRequired:
         break;
     }
 
@@ -801,16 +806,16 @@ Return Value:
     PFX_DRIVER_GLOBALS  pGlobals;
     //PLIST_ENTRY         next;
     NTSTATUS            status;
-    BOOLEAN             wmiTracing;
+    //BOOLEAN             wmiTracing;
     size_t              reqCtxSize;
     //PWDFCXDEVICE_INIT   cxInit;
-    CCHAR               cxIndex;
+    //CCHAR               cxIndex;
     //FxCxDeviceInfo*     cxDeviceInfo;
 
     pGlobals    = GetDriverGlobals();
-    wmiTracing  = FALSE;
+    //wmiTracing  = FALSE;
     m_Exclusive = DeviceInit->Exclusive;
-    cxIndex     = 0;
+    //cxIndex     = 0;
 
     MarkDisposeOverride(ObjectDoNotLock);
 
@@ -1535,7 +1540,7 @@ FxDevice::CreateDevice(
     //
     if (DeviceInit->ShouldCreateSecure())
     {
-        PUNICODE_STRING pName, pSddl;
+        /*PUNICODE_STRING pName, pSddl;
         LPGUID pGuid;
 
         if (DeviceInit->DeviceName != NULL)
@@ -1574,7 +1579,7 @@ FxDevice::CreateDevice(
 
             // NOTE: ddk/wdmsec.h
             pSddl = NULL;//(PUNICODE_STRING) &SDDL_DEVOBJ_SYS_ALL_ADM_ALL;
-        }
+        }*/
 
         //
         // TODO: Implement IoCreateDeviceSecure

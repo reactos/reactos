@@ -51,9 +51,9 @@ FxWmiIrpHandler::FxWmiIrpHandler(
     ) :
     FxPackage(FxDriverGlobals, Device, Type),
     m_NumProviders(0), m_RegisteredState(WmiUnregistered),
-    m_WorkItem(NULL), m_WorkItemEvent(NULL), m_WorkItemQueued(FALSE),
-    m_UpdateCount(1) // bias m_UpdateCount to 1, Deregister routine will 
-                     // decrement this.
+    m_WorkItem(NULL),
+    m_UpdateCount(1),// bias m_UpdateCount to 1, Deregister routine will decrement this.
+    m_WorkItemEvent(NULL), m_WorkItemQueued(FALSE)     
 {
     InitializeListHead(&m_ProvidersListHead);
 }

@@ -193,40 +193,40 @@ const PNP_STATE_TABLE FxPkgPnp::m_WdfPnpStates[] = {
     {   NULL,
         { PnpEventAddDevice, WdfDevStatePnpInit DEBUGGED_EVENT },
         NULL,
-        { TRUE,
-          0 },
+        {{ TRUE,
+          PnpEventInvalid }},
     },
 
     //      WdfDevStatePnpCheckForDevicePresence
     {   FxPkgPnp::PnpEventCheckForDevicePresence,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpEjectFailed
     {   NULL,
         { PnpEventStartDevice, WdfDevStatePnpPdoRestart DEBUGGED_EVENT },
         FxPkgPnp::m_PnpEjectFailedOtherStates,
-        { TRUE,
-          0 },
+        {{ TRUE,
+          0 }},
     },
 
     //      WdfDevStatePnpEjectHardware
     {   FxPkgPnp::PnpEventEjectHardware,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpEjectedWaitingForRemove
     {   NULL,
         { PnpEventRemove, WdfDevStatePnpPdoRemoved DEBUGGED_EVENT },
         NULL,
-        { TRUE,
-          PnpEventSurpriseRemove },  // can receive this if parent is surprise
+        {{ TRUE,
+          PnpEventSurpriseRemove }},  // can receive this if parent is surprise
                                      // removed while the ejected pdo is waiting
                                      // for remove.
     },
@@ -235,141 +235,141 @@ const PNP_STATE_TABLE FxPkgPnp::m_WdfPnpStates[] = {
     {   NULL,
         { PnpEventStartDevice, WdfDevStatePnpInitStarting DEBUGGED_EVENT },
         FxPkgPnp::m_PnpInitOtherStates,
-        { TRUE,
-          PnpEventStartDevice },
+        {{ TRUE,
+          PnpEventStartDevice }},
     },
 
     //      WdfDevStatePnpInitStarting
     {   FxPkgPnp::PnpEventInitStarting,
         { PnpEventStartDeviceComplete, WdfDevStatePnpHardwareAvailable DEBUGGED_EVENT },
         FxPkgPnp::m_PnpInitStartingOtherStates,
-        { TRUE,
-          0 },
+        {{ TRUE,
+          0 }},
     },
 
     //      WdfDevStatePnpInitSurpriseRemoved
     {   FxPkgPnp::PnpEventInitSurpriseRemoved,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpHardwareAvailable
     {   FxPkgPnp::PnpEventHardwareAvailable,
         { PnpEventPwrPolStarted, WdfDevStatePnpEnableInterfaces DEBUGGED_EVENT },
         FxPkgPnp::m_PnpHardwareAvailableOtherStates,
-        { FALSE,
+        {{ FALSE,
           PnpEventPowerUpFailed
-        },
+        }},
     },
 
     //      WdfDevStatePnpEnableInterfaces
     {   FxPkgPnp::PnpEventEnableInterfaces,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpHardwareAvailablePowerPolicyFailed
     {   FxPkgPnp::PnpEventHardwareAvailablePowerPolicyFailed,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpQueryRemoveAskDriver
     {   FxPkgPnp::PnpEventQueryRemoveAskDriver,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpQueryRemovePending
     {   FxPkgPnp::PnpEventQueryRemovePending,
         { PnpEventRemove, WdfDevStatePnpQueriedRemoving DEBUGGED_EVENT },
         FxPkgPnp::m_PnpQueryRemovePendingOtherStates,
-        { TRUE,
-          0,
-        },
+        {{ TRUE,
+          0
+        }},
     },
 
     //      WdfDevStatePnpQueryRemoveStaticCheck
     {   FxPkgPnp::PnpEventQueryRemoveStaticCheck,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpQueriedRemoving,
     {   FxPkgPnp::PnpEventQueriedRemoving,
         { PnpEventPwrPolStopped, WdfDevStatePnpRemovingDisableInterfaces DEBUGGED_EVENT },
         FxPkgPnp::m_PnpQueriedRemovingOtherStates,
-        { FALSE,
+        {{ FALSE,
           PnpEventPowerDownFailed | // We ignore these power failed events because
           PnpEventPowerUpFailed     // they will be translated into failed power
                                     // policy events.
-        },
+        }},
     },
 
     //      WdfDevStatePnpQueryStopAskDriver
     {   FxPkgPnp::PnpEventQueryStopAskDriver,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpQueryStopPending
     {   FxPkgPnp::PnpEventQueryStopPending,
         { PnpEventStop, WdfDevStatePnpStartedStopping DEBUGGED_EVENT },
         FxPkgPnp::m_PnpQueryStopPendingOtherStates,
-        { TRUE,
-          0,
-        },
+        {{ TRUE,
+          0
+        }},
     },
 
     //      WdfDevStatePnpQueryStopStaticCheck
     {   FxPkgPnp::PnpEventQueryStopStaticCheck,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpQueryCanceled,
     {   FxPkgPnp::PnpEventQueryCanceled,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpRemoved
     {   FxPkgPnp::PnpEventRemoved,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpPdoRemoved
     {   FxPkgPnp::PnpEventPdoRemoved,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpRemovedPdoWait
     {   FxPkgPnp::PnpEventRemovedPdoWait,
         { PnpEventEject, WdfDevStatePnpEjectHardware DEBUGGED_EVENT },
         FxPkgPnp::m_PnpRemovedPdoWaitOtherStates,
-        { TRUE,
+        {{ TRUE,
           PnpEventCancelRemove | // Amazingly enough, you can get a cancel q.r.
                                  // on a PDO without seeing the query remove if
                                  // the stack is partially built
@@ -378,106 +378,106 @@ const PNP_STATE_TABLE FxPkgPnp::m_WdfPnpStates[] = {
           PnpEventPowerDownFailed // We may get this for a PDO if implicit power
                                   // down callbacks were failed. The failed power
                                   // policy stop event took care of rundown.
-        },
+        }},
     },
 
     //      WdfDevStatePnpRemovedPdoSurpriseRemoved
     {   FxPkgPnp::PnpEventRemovedPdoSurpriseRemoved,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpRemovingDisableInterfaces
     {   FxPkgPnp::PnpEventRemovingDisableInterfaces,
         { PnpEventPwrPolRemoved, WdfDevStatePnpRemoved DEBUGGED_EVENT },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpRestarting
     {   FxPkgPnp::PnpEventRestarting,
         { PnpEventPwrPolStarted, WdfDevStatePnpStarted DEBUGGED_EVENT },
         FxPkgPnp::m_PnpRestartingOtherStates,
-        { FALSE,
+        {{ FALSE,
           PnpEventPowerUpFailed
-        },
+        }},
     },
 
     //      WdfDevStatePnpStarted
     {   FxPkgPnp::PnpEventStarted,
         { PnpEventQueryRemove, WdfDevStatePnpQueryRemoveStaticCheck DEBUGGED_EVENT },
         FxPkgPnp::m_PnpStartedOtherStates,
-        { TRUE,
-          0,
-        },
+        {{ TRUE,
+          0
+        }},
     },
 
     //      WdfDevStatePnpStartedCancelStop
     {   FxPkgPnp::PnpEventStartedCancelStop,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpStartedCancelRemove
     {   FxPkgPnp::PnpEventStartedCancelRemove,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpStartedRemoving
     {   FxPkgPnp::PnpEventStartedRemoving,
         { PnpEventPwrPolStopped, WdfDevStatePnpRemovingDisableInterfaces DEBUGGED_EVENT },
         FxPkgPnp::m_PnpStartedRemovingOtherStates,
-        { TRUE,
+        {{ TRUE,
           PnpEventPowerUpFailed | // device was idled out and in Dx when we got removed
                                   // and this event is due to the power up that occured
                                   // to move it into D0 so it could be disarmed
           PnpEventPowerDownFailed
-        },
+        }},
     },
 
     //      WdfDevStatePnpStartingFromStopped
     {   FxPkgPnp::PnpEventStartingFromStopped,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpStopped
     {   FxPkgPnp::PnpEventStopped,
         { PnpEventStartDevice, WdfDevStatePnpStoppedWaitForStartCompletion DEBUGGED_EVENT },
         FxPkgPnp::m_PnpStoppedOtherStates,
-        { TRUE,
-          0,
-        },
+        {{ TRUE,
+          0
+        }},
     },
 
     //      WdfDevStatePnpStoppedWaitForStartCompletion
     {   FxPkgPnp::PnpEventStoppedWaitForStartCompletion,
         { PnpEventStartDeviceComplete, WdfDevStatePnpStartingFromStopped DEBUGGED_EVENT },
         FxPkgPnp::m_PnpStoppedWaitForStartCompletionOtherStates,
-        { TRUE,
-          0 },
+        {{ TRUE,
+          0 }},
     },
 
     //      WdfDevStatePnpStartedStopping
     {   FxPkgPnp::PnpEventStartedStopping,
         { PnpEventPwrPolStopped, WdfDevStatePnpStopped DEBUGGED_EVENT },
         FxPkgPnp::m_PnpStartedStoppingOtherStates,
-        { TRUE,
+        {{ TRUE,
           PnpEventPowerUpFailed | // device was idled out and in Dx when we got stopped
                                   // and this event is due to the power up that occured
                                   // to move it into D0 so it could be disarmed
           PnpEventPowerDownFailed
-        },
+        }},
     },
 
     // The function is named PnpEventSurpriseRemoved with a 'd' because
@@ -487,88 +487,88 @@ const PNP_STATE_TABLE FxPkgPnp::m_WdfPnpStates[] = {
     {   FxPkgPnp::PnpEventSurpriseRemoved,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpInitQueryRemove
     {   FxPkgPnp::PnpEventInitQueryRemove,
         { PnpEventRemove, WdfDevStatePnpRemoved DEBUGGED_EVENT },
         FxPkgPnp::m_PnpInitQueryRemoveOtherStates,
-        { TRUE,
-          0 },
+        {{ TRUE,
+          0 }},
     },
 
     //      WdfDevStatePnpInitQueryRemoveCanceled
     {   FxPkgPnp::PnpEventInitQueryRemoveCanceled,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { TRUE,
-          0 },
+        {{ TRUE,
+          0 }},
     },
 
     //      WdfDevStatePnpFdoRemoved
     {   FxPkgPnp::PnpEventFdoRemoved,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpRemovedWaitForChildren
     {   NULL,
         { PnpEventChildrenRemovalComplete, WdfDevStatePnpRemovedChildrenRemoved DEBUGGED_EVENT },
         NULL,
-        { TRUE,
+        {{ TRUE,
           PnpEventPowerDownFailed  // device power down even from processing remove
-        },
+        }},
     },
 
     //      WdfDevStatePnpQueriedSurpriseRemove
     {   FxPkgPnp::PnpEventQueriedSurpriseRemove,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpSurpriseRemoveIoStarted
     {   FxPkgPnp::PnpEventSurpriseRemoveIoStarted,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpFailedPowerDown
     {   FxPkgPnp::PnpEventFailedPowerDown,
         { PnpEventPwrPolStopped, WdfDevStatePnpFailedOwnHardware DEBUGGED_EVENT },
         FxPkgPnp::m_PnpFailedPowerDownOtherStates,
-        { FALSE,
-          PnpEventPowerDownFailed ,
-        },
+        {{ FALSE,
+          PnpEventPowerDownFailed
+        }},
     },
 
     //      WdfDevStatePnpFailedIoStarting
     {   FxPkgPnp::PnpEventFailedIoStarting,
         { PnpEventPwrPolStopped, WdfDevStatePnpFailedOwnHardware DEBUGGED_EVENT },
         FxPkgPnp::m_PnpFailedIoStartingOtherStates,
-        { FALSE,
+        {{ FALSE,
           PnpEventPowerDownFailed |
 
           PnpEventPowerUpFailed   // if the device idled out and then failed
                                   // d0 entry, the power up failed can be passed
                                   // up by the IoInvalidateDeviceRelations and
                                   // subsequence surprise remove event.
-        },
+        }},
     },
 
     //      WdfDevStatePnpFailedOwnHardware
     {   FxPkgPnp::PnpEventFailedOwnHardware,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpFailed
@@ -579,32 +579,32 @@ const PNP_STATE_TABLE FxPkgPnp::m_WdfPnpStates[] = {
         //{ PnpEventPwrPolRemoved, WdfDevStatePnpFailedPowerPolicyRemoved DEBUGGED_EVENT },
         { PnpEventPwrPolRemoved, WdfDevStatePnpNull DEBUGGED_EVENT },
         NULL,
-        { FALSE,
-          0,
-        },
+        {{ FALSE,
+          0
+        }},
     },
 
     //      WdfDevStatePnpFailedSurpriseRemoved
     {   FxPkgPnp::PnpEventFailedSurpriseRemoved,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0, },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpFailedStarted
     {   FxPkgPnp::PnpEventFailedStarted,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0, },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpFailedWaitForRemove,
     {   NULL,
         { PnpEventRemove, WdfDevStatePnpRemoved DEBUGGED_EVENT },
         FxPkgPnp::m_PnpFailedWaitForRemoveOtherStates,
-        { TRUE,
+        {{ TRUE,
           PnpEventPowerUpFailed | // initial power up failed, power policy start
                                   // failed event moved the state machine to the
                                   // failed state first
@@ -615,104 +615,104 @@ const PNP_STATE_TABLE FxPkgPnp::m_WdfPnpStates[] = {
                                  // and q.s. irp completed with error
           PnpEventCancelRemove   // power down failure while processing query remove
                                  // and q.r. irp completed with error
-        },
+        }},
     },
 
     //      WdfDevStatePnpFailedInit
     {   FxPkgPnp::PnpEventFailedInit,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpPdoInitFailed
     {   FxPkgPnp::PnpEventPdoInitFailed,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpRestart
     {   FxPkgPnp::PnpEventRestart,
         { PnpEventPwrPolStopped, WdfDevStatePnpRestartReleaseHardware DEBUGGED_EVENT },
         FxPkgPnp::m_PnpRestartOtherStates,
-        { FALSE,
+        {{ FALSE,
           PnpEventPowerUpFailed | // when stopping power policy, device was in
                                   // Dx and bringing it to D0 succeeded or failed
           PnpEventPowerDownFailed // same as power up
-        },
+        }},
     },
 
     //      WdfDevStatePnpRestartReleaseHardware
     {   FxPkgPnp::PnpEventRestartReleaseHardware,
         { PnpEventStartDeviceComplete, WdfDevStatePnpRestartHardwareAvailable DEBUGGED_EVENT },
         FxPkgPnp::m_PnpRestartReleaseHardware,
-        { TRUE,
+        {{ TRUE,
           PnpEventPowerDownFailed // the previous pwr policy stop
                                   // in WdfDevStaePnpRestart will
                                   // cause these events to show up here
-        },
+        }},
     },
 
     //      WdfDevStatePnpRestartHardwareAvailable
     {   FxPkgPnp::PnpEventRestartHardwareAvailable,
         { PnpEventPwrPolStarted, WdfDevStatePnpStarted DEBUGGED_EVENT },
         FxPkgPnp::m_PnpRestartHardwareAvailableOtherStates,
-        { TRUE,
+        {{ TRUE,
           PnpEventPowerUpFailed
-        },
+        }},
     },
 
     //      WdfDevStatePnpPdoRestart
     {   FxPkgPnp::PnpEventPdoRestart,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpFinal
     {   FxPkgPnp::PnpEventFinal,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { TRUE,
-          PnpEventPowerDownFailed, // on the final implicit power down, a
+        {{ TRUE,
+          PnpEventPowerDownFailed // on the final implicit power down, a
                                    // callback returned !NT_SUCCESS
-        },
+        }},
     },
 
     //      WdfDevStatePnpRemovedChildrenRemoved
     {   FxPkgPnp::PnpEventRemovedChildrenRemoved,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { TRUE,
-          0 } ,
+        {{ TRUE,
+          0 }} ,
     },
 
     //      WdfDevStatePnpQueryRemoveEnsureDeviceAwake
     {   FxPkgPnp::PnpEventQueryRemoveEnsureDeviceAwake,
         { PnpEventDeviceInD0, WdfDevStatePnpQueryRemovePending DEBUGGED_EVENT },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpQueryStopEnsureDeviceAwake
     {   FxPkgPnp::PnpEventQueryStopEnsureDeviceAwake,
         { PnpEventDeviceInD0, WdfDevStatePnpQueryStopPending DEBUGGED_EVENT },
         NULL,
-        { FALSE,
-          0 },
+        {{ FALSE,
+          0 }},
     },
 
     //      WdfDevStatePnpFailedPowerPolicyRemoved
     {   FxPkgPnp::PnpEventFailedPowerPolicyRemoved,
         { PnpEventNull, WdfDevStatePnpNull },
         NULL,
-        { FALSE,
-          0 } ,
+        {{ FALSE,
+          0 }} ,
     },
 };
 

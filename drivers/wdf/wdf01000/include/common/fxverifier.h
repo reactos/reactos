@@ -40,7 +40,9 @@ enum FxEnhancedVerifierBitFlags {
 #endif
 
 VOID
-__declspec(noreturn)
+#ifndef __GNUC__
+DECLSPEC_NORETURN
+#endif
 FxVerifierBugCheckWorker(
     __in     PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in     WDF_BUGCHECK_CODES WdfBugCheckCode,
@@ -148,7 +150,9 @@ Return Value:
 }
 
 VOID
-__declspec(noreturn)
+#ifndef __GNUC__
+DECLSPEC_NORETURN
+#endif
 FxVerifierNullBugCheck(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PVOID ReturnAddress

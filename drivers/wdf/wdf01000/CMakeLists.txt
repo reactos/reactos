@@ -1,4 +1,9 @@
 
+if(NOT MSVC)
+    add_compile_flags("-Wno-invalid-offsetof")
+    add_compile_flags_language("-std=c++11" "CXX")
+endif()
+
 include_directories(
     include)
 

@@ -66,6 +66,7 @@ class FxTransactionedList : public FxStump {
 public:
     FxTransactionedList();
 
+    virtual
     ~FxTransactionedList();
 
     NTSTATUS
@@ -225,7 +226,9 @@ public:
 
         __inline
     NTSTATUS
+#ifndef __GNUC__
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "_Must_inspect_result_ not needed in kernel mode as the function always succeeds");
+#endif
     Initialize(
         VOID
         )

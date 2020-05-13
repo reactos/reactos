@@ -25,9 +25,11 @@ typedef struct _FX_DRIVER_GLOBALS *PFX_DRIVER_GLOBALS;
 //
 class FxDriver : public FxNonPagedObject {
 
-friend class FxDevice;
-friend class FxPackage;
-friend class FxWmiIrpHandler;
+    friend class FxDevice;
+    friend class FxPackage;
+    friend class FxWmiIrpHandler;
+
+    define_super(FxNonPagedObject);
 
 private:
     

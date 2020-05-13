@@ -173,14 +173,14 @@ typedef const POWER_STATE_ENTRY_FN_RETURN_STATE_TABLE*  CPPOWER_STATE_ENTRY_FN_R
 //
 union FxPowerMachineEventQueue {
     struct {
-        FxPowerEvent Event1 : 16;
-        FxPowerEvent Event2 : 16;
-        FxPowerEvent Event3 : 16;
-        FxPowerEvent Event4 : 16;
-        FxPowerEvent Event5 : 16;
-        FxPowerEvent Event6 : 16;
-        FxPowerEvent Event7 : 16;
-        FxPowerEvent Event8 : 16;
+        FxPowerEvent Event1;// : 16;
+        FxPowerEvent Event2;// : 16;
+        FxPowerEvent Event3;// : 16;
+        FxPowerEvent Event4;// : 16;
+        FxPowerEvent Event5;// : 16;
+        FxPowerEvent Event6;// : 16;
+        FxPowerEvent Event7;// : 16;
+        FxPowerEvent Event8;// : 16;
     } E;
 
     USHORT Events[PowerEventQueueDepth];

@@ -14,8 +14,17 @@
 #include "wdf19.h"
 #include "wdf111.h"
 
-
+#if defined(_MSC_VER)
 #define WDFNOTIMPLEMENTED() (DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, __FUNCTION__" not implemented\r\n"))
+#else
+#define WDFNOTIMPLEMENTED() (DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, __FUNCTION__))
+#endif
 typedef USHORT WDFOBJECT_OFFSET, *PWDFOBJECT_OFFSET;
+
+#if !defined(_MSC_VER)
+#define define_super(s) typedef s __super
+#else
+#define define_super(s)
+#endif
 
 #endif //_WDF_H

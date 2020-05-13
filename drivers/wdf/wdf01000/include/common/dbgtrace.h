@@ -103,8 +103,10 @@ DoTraceLevelMessage    (
 #define WPP_CLEANUP(DriverObject)
 #endif
 
+extern "C" {
 extern ULONG DebugLevel;
 extern ULONG DebugFlag;
+}
 
 #endif
 

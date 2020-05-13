@@ -87,7 +87,9 @@ public:
         VOID
         )
     {
+        #ifdef _MSC_VER
         #pragma warning(disable:28129)
+        #endif
         return m_DeviceObject->Flags;
     }
 
@@ -97,7 +99,9 @@ public:
         ULONG Flags
         )
     {
+        #ifdef _MSC_VER
         #pragma warning(disable:28129)
+        #endif
         m_DeviceObject->Flags = Flags;
     }
 

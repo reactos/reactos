@@ -326,6 +326,8 @@ class FxRequest : public FxRequestBase {
     friend FxRequestOutputBuffer;
     friend FxRequestSystemBuffer;
 
+    define_super(FxRequestBase);
+
 protected:
 
     FxRequest(
@@ -337,7 +339,7 @@ protected:
         );
 
     #if DBG
-    FxRequest::~FxRequest(
+    ~FxRequest(
         VOID
         );
     #endif // DBG

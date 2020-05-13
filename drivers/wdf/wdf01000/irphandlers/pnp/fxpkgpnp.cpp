@@ -86,8 +86,8 @@ FxPkgPnp::FxPkgPnp(
     m_PowerThreadInterface.Interface.Size = sizeof(m_PowerThreadInterface);
     m_PowerThreadInterface.Interface.Version = 1;
     m_PowerThreadInterface.Interface.Context = this;
-    m_PowerThreadInterface.Interface.InterfaceReference = &FxPkgPnp::_PowerThreadInterfaceReference;
-    m_PowerThreadInterface.Interface.InterfaceDereference = &FxPkgPnp::_PowerThreadInterfaceDereference;
+    m_PowerThreadInterface.Interface.InterfaceReference = (PINTERFACE_REFERENCE)&FxPkgPnp::_PowerThreadInterfaceReference;
+    m_PowerThreadInterface.Interface.InterfaceDereference = (PINTERFACE_DEREFERENCE)&FxPkgPnp::_PowerThreadInterfaceDereference;
     m_PowerThreadInterface.PowerThreadEnqueue = &FxPkgPnp::_PowerThreadEnqueue;
     m_PowerThread = NULL;
     m_HasPowerThread = FALSE;

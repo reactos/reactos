@@ -15,6 +15,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDriverCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -186,10 +187,8 @@ WDFEXPORT(WdfDriverCreate)(
 
     if (pDriver != NULL)
     {
-
         if (NT_SUCCESS(status))
         {
-
             status = pDriver->Initialize(RegistryPath, DriverConfig, DriverAttributes);
 
             if (NT_SUCCESS(status))
@@ -322,13 +321,15 @@ WDFEXPORT(WdfDriverRetrieveVersionString)(
     NTSTATUS status;
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-    const PWCHAR pVersionStr =
+    //const PWCHAR pVersionStr =
+    LPCWCH pVersionStr =
         L"Kernel Mode Driver Framework version "
         FX_MAKE_WSTR(__WDF_MAJOR_VERSION) L"."
         FX_MAKE_WSTR(__WDF_MINOR_VERSION) L"."
         FX_MAKE_WSTR(__WDF_BUILD_NUMBER) ;
 
-    const PWCHAR pVersionStrVerifier =
+    //const PWCHAR pVersionStrVerifier =
+    LPCWCH pVersionStrVerifier =
         L"Kernel Mode Driver Framework (verifier on) version "
         FX_MAKE_WSTR(__WDF_MAJOR_VERSION) L"."
         FX_MAKE_WSTR(__WDF_MINOR_VERSION) L"."

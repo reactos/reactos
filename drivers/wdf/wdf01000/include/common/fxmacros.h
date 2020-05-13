@@ -37,14 +37,15 @@
 #define QUOTE_EXPANSION(tok) #tok
 #define FX_VF_SECTION_NAME_QUOTED(tok) QUOTE_EXPANSION(tok)
 
-#if defined(_M_ARM)
+#if defined(_M_ARM) || defined(__GNUC__)
 #define FX_VF_PAGING
 #else
 #define FX_VF_PAGING __declspec(code_seg(FX_VF_SECTION_NAME_QUOTED(WDF_FX_VF_SECTION_NAME)))
 #endif
 
 #define FX_VF_NAME_TO_IMP_NAME( fnName ) Vf_##fnName
-#define FX_VF_NAME_TO_SCOPED_IMP_NAME( classname, fnName ) classname##::Vf_##fnName
+#define FX_VF_NAME_TO_SCOPED_IMP_NAME( classname, fnName ) classname##::##fnName
+#define PREF(classname) classname##::Vf_
 #define FX_VF_QF_VOID
 #define FX_VF_QF_NTSTATUS _Must_inspect_result_
 #define FX_VF_DEFAULT_RT_VOID
@@ -57,7 +58,7 @@ FX_VF_FUNCTION( fnName )( _In_ PFX_DRIVER_GLOBALS, ##__VA_ARGS__ );
 
 #define FX_VF_METHOD( classname, fnName )   \
 FX_VF_PAGING                                \
-FX_VF_NAME_TO_SCOPED_IMP_NAME( classname, fnName )
+FX_VF_NAME_TO_SCOPED_IMP_NAME( classname, FX_VF_NAME_TO_IMP_NAME(fnName) )
 
 #define FX_VF_FUNCTION( fnName )  \
 FX_VF_PAGING                      \

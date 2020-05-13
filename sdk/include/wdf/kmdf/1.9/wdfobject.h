@@ -288,8 +288,10 @@ typedef struct _WDF_OBJECT_CONTEXT_TYPE_INFO {
 #define WDF_TYPE_DEFAULT_SECTION_NAME ".data"
 #endif // WDF_TYPE_DEFAULT_SECTION_NAME
 
+#if defined(_MSC_VER)
 #pragma section(WDF_TYPE_INIT_SECTION_NAME, read, write)
 #pragma section(WDF_TYPE_DEFAULT_SECTION_NAME)
+#endif
 
 #define WDF_DECLARE_TYPE_AND_GLOBALS(_contexttype, _UniqueType, _GetUniqueType, _section)\
                                                                         \

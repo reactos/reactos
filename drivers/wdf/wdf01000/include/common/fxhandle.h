@@ -59,7 +59,7 @@ struct FxContextHeader {
 
 // forward definitions
 typedef struct _FX_DRIVER_GLOBALS *PFX_DRIVER_GLOBALS;
-enum FxObjectType;
+enum FxObjectType : int;
 
 PVOID
 FxObjectHandleAlloc(

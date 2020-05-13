@@ -39,6 +39,7 @@ public:
         return KeGetCurrentIrql();
     }
 
+    __inline
     static
     VOID
     MxBugCheckEx(
@@ -49,7 +50,9 @@ public:
         __in ULONG_PTR  BugCheckParameter4
     )
     {
+        #if defined(_MSC_VER)
         #pragma prefast(suppress:__WARNING_USE_OTHER_FUNCTION, "KeBugCheckEx is the intent.");
+        #endif
         KeBugCheckEx(
             BugCheckCode,
             BugCheckParameter1,

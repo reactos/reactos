@@ -147,265 +147,265 @@ const POWER_STATE_TABLE FxPkgPnp::m_WdfPowerStates[] =
     { NULL,
       { PowerImplicitD0, WdfDevStatePowerStartingCheckDeviceType },
       NULL,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerDx
         | PowerWakeArrival
         | PowerMarkPageable
         | PowerMarkNonpageable
         | PowerCompleteD0
-      },
+      }},
     },
 
     { FxPkgPnp::PowerCheckDeviceType,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerCheckDeviceTypeNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerCheckParentState,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerCheckParentStateNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerEnablingWakeAtBus,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerEnablingWakeAtBusNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerD0ArmedForWake,
       { PowerDx, WdfDevStatePowerGotoDx },
       FxPkgPnp::m_PowerD0OtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerDx
         | PowerSingularEventMask
         | PowerParentToD0
-      },
+      }},
     },
 
     { FxPkgPnp::PowerD0NP,
       { PowerDx, WdfDevStatePowerGotoDxNP },
       FxPkgPnp::m_PowerD0NPOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerDx
-      },
+      }},
     },
 
     { FxPkgPnp::PowerD0BusWakeOwner,
       { PowerDx, WdfDevStatePowerGotoDx },
       FxPkgPnp::m_PowerD0BusWakeOwnerOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerDx
         | PowerWakeFailed
         | PowerImplicitD0
         | PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerD0BusWakeOwnerNP,
       { PowerDx, WdfDevStatePowerGotoDxNP },
       FxPkgPnp::m_PowerD0BusWakeOwnerNPOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerDx
         | PowerWakeFailed
         | PowerImplicitD0
         | PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerD0ArmedForWake,
       { PowerDx, WdfDevStatePowerGotoDxArmedForWake },
       FxPkgPnp::m_PowerD0ArmedForWakeOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerDx
         | PowerWakeSucceeded
         | PowerImplicitD0
         | PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerD0NP,
       { PowerDx, WdfDevStatePowerGotoDxArmedForWakeNP },
       FxPkgPnp::m_PowerD0ArmedForWakeNPOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerDx
         | PowerWakeSucceeded
         | PowerImplicitD0
         | PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerD0DisarmingWakeAtBus,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerD0DisarmingWakeAtBusNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerD0Starting,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerD0StartingConnectInterrupt,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerD0StartingDmaEnable,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerD0StartingStartSelfManagedIo,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerDecideD0State,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerGotoD3Stopped,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { NULL,
       { PowerImplicitD0, WdfDevStatePowerStartingCheckDeviceType },
       FxPkgPnp::m_PowerStoppedOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerDx
         | PowerWakeCanceled
         | PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerStartingCheckDeviceType,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerStartingChild,
       { PowerParentToD0, WdfDevStatePowerD0Starting },
       NULL,
-      { TRUE,
+      {{ TRUE,
         PowerD0
-      },
+      }},
     },
 
     { FxPkgPnp::PowerDxDisablingWakeAtBus,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerDxDisablingWakeAtBusNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerGotoDxArmedForWake,
       { PowerCompleteDx, WdfDevStatePowerGotoDxIoStopped },
       NULL,
-      { FALSE,
+      {{ FALSE,
         PowerWakeSucceeded
         | PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerGotoDxArmedForWake,
       { PowerCompleteDx, WdfDevStatePowerGotoDxIoStoppedNP },
       NULL,
-      { FALSE,
+      {{ FALSE,
         PowerWakeSucceeded
         | PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerGotoDNotZeroIoStopped,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerGotoDNotZeroIoStoppedNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerGotoDxNPFailed,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { NULL,
       { PowerD0, WdfDevStatePowerCheckDeviceType },
       FxPkgPnp::m_PowerDNotZeroOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerWakeArrival
         | PowerWakeSucceeded
@@ -414,378 +414,378 @@ const POWER_STATE_TABLE FxPkgPnp::m_WdfPowerStates[] =
         | PowerSingularEventMask
         | PowerParentToD0
         | PowerMarkPageable
-      },
+      }},
     },
 
     { NULL,
       { PowerD0, WdfDevStatePowerCheckDeviceTypeNP },
       FxPkgPnp::m_PowerDNotZeroNPOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerWakeArrival
         | PowerWakeSucceeded
         | PowerWakeFailed
         | PowerImplicitD0
         | PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerGotoDxArmedForWake,
       { PowerCompleteDx, WdfDevStatePowerGotoDxIoStoppedArmedForWake },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerGotoDxArmedForWake,
       { PowerCompleteDx, WdfDevStatePowerGotoDxIoStoppedArmedForWakeNP },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerGotoDxIoStoppedArmedForWake,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerGotoDxIoStoppedArmedForWakeNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { NULL,
       { PowerD0, WdfDevStatePowerCheckParentStateArmedForWake },
       FxPkgPnp::m_DxArmedForWakeOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerMarkPageable
-      },
+      }},
     },
 
     { NULL,
       { PowerD0, WdfDevStatePowerCheckParentStateArmedForWakeNP },
       FxPkgPnp::m_DxArmedForWakeNPOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerCheckParentStateArmedForWake,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerCheckParentStateArmedForWakeNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { NULL,
       { PowerParentToD0, WdfDevStatePowerDxDisablingWakeAtBus },
       NULL,
-      { TRUE,
+      {{ TRUE,
         PowerD0
-      },
+      }},
     },
 
     { NULL,
       { PowerParentToD0, WdfDevStatePowerDxDisablingWakeAtBusNP },
       NULL,
-      { TRUE,
+      {{ TRUE,
         PowerD0
-      },
+      }},
     },
 
     { FxPkgPnp::PowerStartSelfManagedIo,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerStartSelfManagedIoNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerStartSelfManagedIoFailed,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerStartSelfManagedIoFailedNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { NULL,
       { PowerParentToD0, WdfDevStatePowerWaking },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { NULL,
       { PowerParentToD0, WdfDevStatePowerWakingNP },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerWakePending,
       { PowerD0, WdfDevStatePowerCheckParentStateArmedForWake },
       FxPkgPnp::m_WakePendingOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerWakePending,
       { PowerD0, WdfDevStatePowerCheckParentStateArmedForWakeNP },
       FxPkgPnp::m_WakePendingNPOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
         | PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerWaking,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerWakingNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerWakingConnectInterrupt,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerWakingConnectInterruptNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerWakingConnectInterruptFailed,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerWakingConnectInterruptFailedNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerWakingDmaEnable,
       { PowerCompleteD0, WdfDevStatePowerStartSelfManagedIo },
       NULL,
-      { FALSE,
+      {{ FALSE,
         PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerWakingDmaEnableNP,
       { PowerCompleteD0, WdfDevStatePowerStartSelfManagedIoNP },
       NULL,
-      { FALSE,
+      {{ FALSE,
         PowerMarkPageable
-      },
+      }},
     },
 
     { FxPkgPnp::PowerWakingDmaEnableFailed,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerWakingDmaEnableFailedNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerReportPowerUpFailedDerefParent,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerReportPowerUpFailed,
       { PowerImplicitD3, WdfDevStatePowerPowerFailedPowerDown },
       NULL,
-      { TRUE,
+      {{ TRUE,
         PowerD0
-      },
+      }},
     },
 
     { FxPkgPnp::PowerPowerFailedPowerDown,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerReportPowerDownFailed,
       { PowerImplicitD3, WdfDevStatePowerPowerFailedPowerDown },
       NULL,
-      { TRUE,
+      {{ TRUE,
         PowerD0
-      },
+      }},
     },
 
     { FxPkgPnp::PowerInitialConnectInterruptFailed,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerInitialDmaEnableFailed,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerInitialSelfManagedIoFailed,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerInitialPowerUpFailedDerefParent,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerInitialPowerUpFailed,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerDxStoppedDisarmWake,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerDxStoppedDisarmWakeNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerGotoDxStoppedDisableInterruptNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerGotoDxStopped,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { NULL,
       { PowerImplicitD0, WdfDevStatePowerDxStoppedDecideDxState },
       FxPkgPnp::m_PowerDxStoppedOtherStates,
-      { TRUE,
+      {{ TRUE,
         PowerD0
-      },
+      }},
     },
 
     { FxPkgPnp::PowerGotoStopped,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerStoppedCompleteDx,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerDxStoppedDecideDxState,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerDxStoppedArmForWake,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerDxStoppedArmForWakeNP,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { FxPkgPnp::PowerFinalPowerDownFailed,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
     { NULL,
       { PowerEventMaximum, WdfDevStatePowerNull },
       NULL,
-      { FALSE,
-        PowerEventInvalid },
+      {{ FALSE,
+        PowerEventInvalid }},
     },
 
 };
@@ -974,6 +974,20 @@ Routine Description:
                 // on the floor.
                 //
                 PowerReleasePendingDeviceIrp();
+                break;
+
+            case PowerEventInvalid:
+            case PowerWakeArrival:
+            case PowerImplicitD0:
+            case PowerImplicitD3:
+            case PowerParentToD0:
+            case PowerMarkPageable:
+            case PowerMarkNonpageable:
+            case PowerCompleteD0:
+            case PowerCompleteDx:
+            case PowerWakeInterruptCompleteTransition:
+            case PowerPriorityEventsMask:
+            case PowerEventMaximum:
                 break;
             }
         }

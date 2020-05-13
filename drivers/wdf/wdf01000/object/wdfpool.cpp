@@ -538,7 +538,7 @@ Remarks:
     {
 
         if (FxDriverGlobals->FxVerifierOn &&
-            (FxDriverGlobals->WdfVerifierAllocateFailCount != 0xFFFFFFFF))
+            (FxDriverGlobals->WdfVerifierAllocateFailCount != -1/*0xFFFFFFFF*/))
         {
 
             //

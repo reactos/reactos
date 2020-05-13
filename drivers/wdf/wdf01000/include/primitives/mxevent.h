@@ -44,7 +44,9 @@ public:
 
     __inline
     NTSTATUS
+    #ifndef __GNUC__
     #pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "_Must_inspect_result_ not needed in kernel mode as the function always succeeds");
+    #endif
     Initialize(
     __in EVENT_TYPE Type,
     __in BOOLEAN InitialState
@@ -105,7 +107,7 @@ public:
     __drv_when(Timeout != NULL || Alertable == TRUE, _Must_inspect_result_)
     __inline
     NTSTATUS
-    MxEvent::WaitFor(
+    WaitFor(
         __in     KWAIT_REASON  WaitReason,
         __in     KPROCESSOR_MODE  WaitMode,
         __in     BOOLEAN  Alertable,

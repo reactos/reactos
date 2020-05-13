@@ -144,7 +144,40 @@ DECLARE_HANDLE( WDFIORESREQLIST );
 DECLARE_HANDLE( WDFIORESLIST );
 DECLARE_HANDLE( WDFCMRESLIST );
 
-
+typedef enum _WDF_REQUEST_TYPE {
+    WdfRequestTypeCreate = 0x0,
+    WdfRequestTypeCreateNamedPipe = 0x1,
+    WdfRequestTypeClose = 0x2,
+    WdfRequestTypeRead = 0x3,
+    WdfRequestTypeWrite = 0x4,
+    WdfRequestTypeQueryInformation = 0x5,
+    WdfRequestTypeSetInformation = 0x6,
+    WdfRequestTypeQueryEA = 0x7,
+    WdfRequestTypeSetEA = 0x8,
+    WdfRequestTypeFlushBuffers = 0x9,
+    WdfRequestTypeQueryVolumeInformation = 0xa,
+    WdfRequestTypeSetVolumeInformation = 0xb,
+    WdfRequestTypeDirectoryControl = 0xc,
+    WdfRequestTypeFileSystemControl = 0xd,
+    WdfRequestTypeDeviceControl = 0xe,
+    WdfRequestTypeDeviceControlInternal = 0xf,
+    WdfRequestTypeShutdown = 0x10,
+    WdfRequestTypeLockControl = 0x11,
+    WdfRequestTypeCleanup = 0x12,
+    WdfRequestTypeCreateMailSlot = 0x13,
+    WdfRequestTypeQuerySecurity = 0x14,
+    WdfRequestTypeSetSecurity = 0x15,
+    WdfRequestTypePower = 0x16,
+    WdfRequestTypeSystemControl = 0x17,
+    WdfRequestTypeDeviceChange = 0x18,
+    WdfRequestTypeQueryQuota = 0x19,
+    WdfRequestTypeSetQuota = 0x1A,
+    WdfRequestTypePnp = 0x1B,
+    WdfRequestTypeOther =0x1C,
+    WdfRequestTypeUsb = 0x40,
+    WdfRequestTypeNoFormat = 0xFF,
+    WdfRequestTypeMax,
+} WDF_REQUEST_TYPE;
 
 #endif // (NTDDI_VERSION >= NTDDI_WIN2K)
 

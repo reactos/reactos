@@ -7,6 +7,8 @@
 
 class FxRelatedDeviceList : protected FxSpinLockTransactionedList {
 
+    define_super(FxSpinLockTransactionedList);
+
 public:
 
     ULONG m_NeedReportMissing;
@@ -97,6 +99,7 @@ public:
         )
     {
         FxPoolFree(pointer);
+        ::operator delete(pointer);
     }
     
 };

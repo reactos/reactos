@@ -555,6 +555,10 @@ FxChildList::ProcessBusRelations(
                     pEntry->m_DescriptionState = DescriptionReportedMissing;
                     pEntry->m_ReportedMissingCallbackState = CallbackNeedsToBeInvoked;
                     break;
+
+                case DescriptionUnspecified:
+                case DescriptionReportedMissing:
+                    break;
                 }
             }
         }

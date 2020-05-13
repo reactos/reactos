@@ -821,17 +821,17 @@ Return Value:
     pThis->ProcessEventLocked(PowerIdleEventTimerExpired);
     
 #if FX_IS_KERNEL_MODE
-    PFX_DRIVER_GLOBALS pFxDriverGlobals;
-    PFN_WDF_DRIVER_DEVICE_ADD pDriverDeviceAdd;
+    //PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    //PFN_WDF_DRIVER_DEVICE_ADD pDriverDeviceAdd;
     
-    pFxDriverGlobals = GetPnpPkg(pThis)->GetDriverGlobals();
+    //pFxDriverGlobals = GetPnpPkg(pThis)->GetDriverGlobals();
 
     //
     // We need to provide XPerf with a symbol of the client to figure out
     // which component this idle timer is for. Since AddDevice is always there
     // we use that to pass the symbol along.
     //
-    pDriverDeviceAdd = pFxDriverGlobals->Driver->GetDriverDeviceAddMethod();
+    //pDriverDeviceAdd = pFxDriverGlobals->Driver->GetDriverDeviceAddMethod();
 
     //FxPerfTraceDpc(&pDriverDeviceAdd);
 #endif

@@ -39,16 +39,19 @@ typedef
 	);
 
 NTSTATUS
+NTAPI
 FxLibraryCommonCommission(
 	VOID
 );
 
 NTSTATUS
+NTAPI
 FxLibraryCommonDecommission(
 	VOID
 );
 
 NTSTATUS
+NTAPI
 FxLibraryCommonRegisterClient(
 	__inout PWDF_BIND_INFO        Info,
 	__deref_out PWDF_DRIVER_GLOBALS* WdfDriverGlobals,
@@ -56,6 +59,7 @@ FxLibraryCommonRegisterClient(
 );
 
 NTSTATUS
+NTAPI
 FxLibraryCommonUnregisterClient(
 	__in PWDF_BIND_INFO        Info,
 	__in PWDF_DRIVER_GLOBALS   WdfDriverGlobals

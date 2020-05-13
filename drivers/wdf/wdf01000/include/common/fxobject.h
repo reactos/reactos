@@ -134,7 +134,7 @@ struct FxObjectDebugExtension {
 // 1) have its size rounded up to an alignment value
 // 2) extra size and context header appended to the allocation
 //
-enum FxObjectType {
+enum FxObjectType : int{
     FxObjectTypeInvalid = 0,
     FxObjectTypeInternal,
     FxObjectTypeExternal,

@@ -69,7 +69,7 @@ WDFEXPORT(WdfCommonBufferGetAlignedLogicalAddress)(
     WDFCOMMONBUFFER CommonBuffer
     )
 {
-    LARGE_INTEGER res = {0};
+    LARGE_INTEGER res = {{0}};
     WDFNOTIMPLEMENTED();
     return res;
 }

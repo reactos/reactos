@@ -662,12 +662,12 @@ FxRegisterBugCheckCallback(
     UNICODE_STRING funcName;
     PKBUGCHECK_REASON_CALLBACK_RECORD callbackRecord;
     PFN_KE_REGISTER_BUGCHECK_REASON_CALLBACK funcPtr;
-    BOOLEAN enableDriverTracking;
+    //BOOLEAN enableDriverTracking;
 
     //
     // If any problem during this setup, disable driver tracking.
     //
-    enableDriverTracking = FxDriverGlobals->FxTrackDriverForMiniDumpLog;
+    //enableDriverTracking = FxDriverGlobals->FxTrackDriverForMiniDumpLog;
     FxDriverGlobals->FxTrackDriverForMiniDumpLog = FALSE;
 
     //

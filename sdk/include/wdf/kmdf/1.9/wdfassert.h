@@ -69,11 +69,14 @@ RtlAssert(
 // declared constants.  So suppress the OACR warning #6326 generated about the
 // potential comparison of constants.
 //
+#if defined(__GNUC__)
+#define WDFCASSERT(c)
+#else
 #define WDFCASSERT(c)   {              \
     __pragma(warning(suppress: 6326))  \
     switch(0) case (c): case 0: ;      \
     }
-
+#endif
 
 
 #endif // (NTDDI_VERSION >= NTDDI_WIN2K)

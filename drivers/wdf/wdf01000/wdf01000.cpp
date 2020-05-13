@@ -60,18 +60,21 @@ FxLibraryGlobalsType FxLibraryGlobals = { 0 };
 
 extern "C"
 NTSTATUS
+NTAPI
 WDF_LIBRARY_COMMISSION(
 	VOID
 );
 
 extern "C"
 NTSTATUS
+NTAPI
 WDF_LIBRARY_DECOMMISSION(
 	VOID
 );
 
 extern "C"
 NTSTATUS
+NTAPI
 WDF_LIBRARY_REGISTER_CLIENT(
 	__in  PWDF_BIND_INFO        Info,
 	__deref_out   PWDF_DRIVER_GLOBALS * WdfDriverGlobals,
@@ -80,6 +83,7 @@ WDF_LIBRARY_REGISTER_CLIENT(
 
 extern "C"
 NTSTATUS
+NTAPI
 WDF_LIBRARY_UNREGISTER_CLIENT(
 	__in PWDF_BIND_INFO        Info,
 	__in PWDF_DRIVER_GLOBALS   WdfDriverGlobals
@@ -213,6 +217,7 @@ DriverUnload(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 WDF_LIBRARY_COMMISSION(
     VOID
     )
@@ -226,6 +231,7 @@ WDF_LIBRARY_COMMISSION(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 WDF_LIBRARY_DECOMMISSION(
     VOID
     )
@@ -256,6 +262,7 @@ WdfBindClientHelper(
 
 extern "C"
 NTSTATUS
+NTAPI
 WDF_LIBRARY_REGISTER_CLIENT(
 	__in  PWDF_BIND_INFO        Info,
 	__deref_out   PWDF_DRIVER_GLOBALS * WdfDriverGlobals,
@@ -331,6 +338,7 @@ WDF_LIBRARY_REGISTER_CLIENT(
 
 extern "C"
 NTSTATUS
+NTAPI
 WDF_LIBRARY_UNREGISTER_CLIENT(
 	__in PWDF_BIND_INFO        Info,
 	__in PWDF_DRIVER_GLOBALS   WdfDriverGlobals
@@ -664,7 +672,7 @@ WdfDeleteKmdfVersionFromRegistry(
     parametersKey = NULL;
 
     driverExtension = (PDRV_EXTENSION)IoGetDriverObjectExtension(DriverObject,
-                                                                 DRIVER_OBJECT_EXTENSION_IDENTIFIER);
+                                                                 (PVOID)DRIVER_OBJECT_EXTENSION_IDENTIFIER);
 
     if (driverExtension == NULL || driverExtension->ParametersRegistryPath.Buffer == NULL)
 	{

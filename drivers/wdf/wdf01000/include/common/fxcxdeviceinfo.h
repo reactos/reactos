@@ -21,7 +21,8 @@ struct FxCxDeviceInfo : public FxStump {
     {
         ASSERT(IsListEmpty(&ListEntry));
 
-        for (ULONG loop = 0; loop < ARRAYSIZE(CxPnpPowerCallbackContexts); loop++)
+        //for (ULONG loop = 0; loop < ARRAYSIZE(CxPnpPowerCallbackContexts); loop++)
+        for (ULONG loop = 0; loop < FxCxCallbackMax; loop++)
         {
             if (CxPnpPowerCallbackContexts[loop] != NULL)
             {

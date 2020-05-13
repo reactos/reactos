@@ -939,6 +939,13 @@ Returns:
             //status = STATUS_SUCCESS;
         }
         break;
+
+    case EjectionRelations:
+    case PowerRelations:
+    case TargetDeviceRelation:
+    case SingleBusRelations:
+    case TransportRelations:
+        break;
     }
 
     if (NT_SUCCESS(status))
@@ -1656,6 +1663,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgFdo::_PnpFilteredStartDeviceCompletionRoutine(
     __in    MdDeviceObject DeviceObject,
     __inout MdIrp Irp,

@@ -157,11 +157,19 @@ FxObject::operator delete(
     FxPoolFree(_GetBase((FxObject*) Memory));
 }
 
+#ifdef __GNUC__
+VOID
+FxObject::Vf_VerifyConstruct (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ BOOLEAN Embedded
+    )
+#else
 VOID
 FX_VF_METHOD(FxObject, VerifyConstruct) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
     _In_ BOOLEAN Embedded
     )
+#endif
 {
     UNREFERENCED_PARAMETER(FxDriverGlobals);
 
@@ -710,10 +718,17 @@ FxObject::QueryInterface(
     return status;
 }
 
+#ifdef __GNUC__
+VOID
+FxObject::Vf_VerifyLeakDetectionConsiderObject (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+#else
 VOID
 FX_VF_METHOD(FxObject, VerifyLeakDetectionConsiderObject) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
     )
+#endif
 {
     UNREFERENCED_PARAMETER(FxDriverGlobals);
 

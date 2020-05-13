@@ -183,7 +183,7 @@ __checkReturn
 __drv_maxIRQL(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFDRIVERCREATE)(
+(NTAPI *PFN_WDFDRIVERCREATE)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in

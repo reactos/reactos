@@ -704,11 +704,19 @@ Routine Description:
     }
 }
 
+#ifdef __GNUC__
+VOID
+FxIrpQueue::Vf_VerifyRemoveIrpFromQueueByContext(
+    __in PFX_DRIVER_GLOBALS  FxDriverGlobals,
+    __in PMdIoCsqIrpContext Context
+    )
+#else
 VOID
 FX_VF_METHOD(FxIrpQueue, VerifyRemoveIrpFromQueueByContext)(
     __in PFX_DRIVER_GLOBALS  FxDriverGlobals,
     __in PMdIoCsqIrpContext Context
     )
+#endif
 /*++
 
 Routine Description:

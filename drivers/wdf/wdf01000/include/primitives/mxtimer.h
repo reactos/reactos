@@ -27,9 +27,10 @@ typedef struct _MdTimer {
     // Tracks whether the ex timer is being used 
     // 
     BOOLEAN m_IsExtTimer;
-    
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning( disable: 4201 ) // nonstandard extension used : nameless struct/union
+#endif
     
     union {
         struct {
@@ -41,8 +42,9 @@ typedef struct _MdTimer {
             KDPC TimerDpc;
         };
     };
-
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
     
     //
     // Context to be passed in to the callback function

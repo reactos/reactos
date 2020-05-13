@@ -64,21 +64,21 @@ WdfBindClientHelper(
 typedef
 _Must_inspect_result_
 NTSTATUS
-(*PFNLIBRARYCOMMISSION)(
+(NTAPI *PFNLIBRARYCOMMISSION)(
     VOID
     );
 
 typedef
 _Must_inspect_result_
 NTSTATUS
-(*PFNLIBRARYDECOMMISSION)(
+(NTAPI *PFNLIBRARYDECOMMISSION)(
     VOID
     );
 
 typedef
 _Must_inspect_result_
 NTSTATUS
-(*PFNLIBRARYREGISTERCLIENT)(
+(NTAPI *PFNLIBRARYREGISTERCLIENT)(
     __in PWDF_BIND_INFO             Info,
     __deref_out   PWDF_COMPONENT_GLOBALS   * ComponentGlobals,
     __deref_inout PVOID                    * Context
@@ -87,7 +87,7 @@ NTSTATUS
 typedef
 _Must_inspect_result_
 NTSTATUS
-(*PFNLIBRARYUNREGISTERCLIENT)(
+(NTAPI *PFNLIBRARYUNREGISTERCLIENT)(
     __in PWDF_BIND_INFO             Info,
     __in PWDF_COMPONENT_GLOBALS     DriverGlobals
     );

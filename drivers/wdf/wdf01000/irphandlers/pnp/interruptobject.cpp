@@ -692,8 +692,10 @@ Return Value:
     return result;
 }
 
+#ifdef _MSC_VER
 #pragma prefast(push)
 #pragma prefast(disable:__WARNING_UNEXPECTED_IRQL_CHANGE, "Used unannotated pointers previously")
+#endif
 
 VOID
 FxInterrupt::AcquireLock(
@@ -724,10 +726,13 @@ FxInterrupt::AcquireLock(
         m_WaitLock->AcquireLock(GetDriverGlobals(), NULL);
     }
 }
+
+#ifdef _MSC_VER
 #pragma prefast(pop)
 
 #pragma prefast(push)
 #pragma prefast(disable:__WARNING_UNEXPECTED_IRQL_CHANGE, "Used unannotated pointers previously")
+#endif
 
 VOID
 FxInterrupt::ReleaseLock(
@@ -745,7 +750,9 @@ FxInterrupt::ReleaseLock(
 
         if (NULL != kinterrupt)
         {
+#ifdef _MSC_VER
 #pragma prefast(suppress:__WARNING_CALLER_FAILING_TO_HOLD, "Unable to annotate ReleaseLock for this case.");
+#endif
             Mx::MxReleaseInterruptSpinLock(kinterrupt, m_OldIrql);
         }
     }
@@ -756,11 +763,15 @@ FxInterrupt::ReleaseLock(
         //
         ASSERT(Mx::MxGetCurrentIrql() == PASSIVE_LEVEL);
         ASSERT(m_WaitLock != NULL);
+#ifdef _MSC_VER
 #pragma prefast(suppress:__WARNING_CALLER_FAILING_TO_HOLD, "Unable to annotate ReleaseLock for this case.");
+#endif
         m_WaitLock->ReleaseLock(GetDriverGlobals());
     }
 }
+#ifdef _MSC_VER
 #pragma prefast(pop)
+#endif
 
 //
 // Enable interrupts
@@ -910,7 +921,7 @@ FxInterrupt::FlushAndRundown()
     //
     // Release the reference taken in FxInterrupt::Initialize
     //
-    RELEASE(_InterruptThunk);
+    RELEASE((PVOID)_InterruptThunk);
 }
 
 VOID
@@ -1220,9 +1231,9 @@ FxInterrupt::DisconnectInternal(
 {
     IO_DISCONNECT_INTERRUPT_PARAMETERS params;
     PKINTERRUPT interruptObject;
-    FxPkgPnp* fxPkgPnp;
+    //FxPkgPnp* fxPkgPnp;
 
-    fxPkgPnp = m_Device->m_PkgPnp;
+    //fxPkgPnp = m_Device->m_PkgPnp;
 
     //
     // Now null these pointers so that we can catch anyone trying to use them

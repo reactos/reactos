@@ -148,11 +148,19 @@ FxRequest::Complete(
     return CompleteInternal(Status);
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxRequest::Vf_VerifyRequestIsNotCompleted(
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxRequest, VerifyRequestIsNotCompleted)(
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
     )
+#endif
 {
     NTSTATUS status;
 
@@ -223,12 +231,21 @@ FxRequest::InsertTailIrpQueue(
     return status;
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxRequest::Vf_VerifyInsertIrpQueue (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ FxIrpQueue* IrpQueue
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxRequest, VerifyInsertIrpQueue) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
     _In_ FxIrpQueue* IrpQueue
     )
+#endif
 {
     NTSTATUS status;
 
@@ -468,11 +485,19 @@ Return Value:
     return status;
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxRequest::Vf_VerifyRequestIsNotCancelable(
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxRequest, VerifyRequestIsNotCancelable)(
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
     )
+#endif
 {
     NTSTATUS status;
 
@@ -498,11 +523,19 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsNotCancelable)(
     return status;
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxRequest::Vf_VerifyRequestIsDriverOwned (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxRequest, VerifyRequestIsDriverOwned) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
     )
+#endif
 {
     NTSTATUS status;
 
@@ -541,11 +574,19 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsDriverOwned) (
     return status;
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxRequest::Vf_VerifyRequestIsTagRequest (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxRequest, VerifyRequestIsTagRequest) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
     )
+#endif
 {
     NTSTATUS status;
 
@@ -620,7 +661,8 @@ FxRequestFromLookaside::SelfDestruct(
     //
     // Destroy the object
     //
-    FxRequestFromLookaside::~FxRequestFromLookaside();
+    this->~FxRequestFromLookaside();
+    //FxRequestFromLookaside::~FxRequestFromLookaside();
 
     if (IsRequestForwardedToParent())
     {
@@ -1170,11 +1212,19 @@ FxRequest::PreProcessCompletionForDriverRequest(
     RELEASE(FXREQUEST_DCRC_TAG);
 }
 
+#ifdef __GNUC__
+VOID
+FxRequest::Vf_VerifyCompleteInternal(
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ NTSTATUS Status
+    )
+#else
 VOID
 FX_VF_METHOD(FxRequest, VerifyCompleteInternal)(
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
     _In_ NTSTATUS Status
     )
+#endif
 {
     UNREFERENCED_PARAMETER(FxDriverGlobals);
     ULONG length;
@@ -1320,10 +1370,17 @@ FX_VF_METHOD(FxRequest, VerifyCompleteInternal)(
     Unlock(irql);
 }
 
+#ifdef __GNUC__
+VOID
+FxRequest::Vf_VerifierBreakpoint_RequestEarlyDisposeDeferred (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+#else
 VOID
 FX_VF_METHOD(FxRequest, VerifierBreakpoint_RequestEarlyDisposeDeferred) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
     )
+#endif
 {
     PAGED_CODE_LOCKED();
 
@@ -1357,13 +1414,13 @@ FxRequest::GetMemoryObject(
     NTSTATUS status;
     ULONG length;
     KIRQL irql;
-    BOOLEAN mapMdl, mdlMapped;
+    BOOLEAN mapMdl;//, mdlMapped;
     UCHAR majorFunction;
 
     status = STATUS_SUCCESS;
     length = 0x0;
     mapMdl = FALSE;
-    mdlMapped = FALSE;
+    //mdlMapped = FALSE;
     irql = PASSIVE_LEVEL;
     majorFunction = m_Irp.GetMajorFunction();
 
@@ -1751,11 +1808,19 @@ FxRequest::RemoveFromIrpQueue(
     }
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxRequest::Vf_VerifyRequestIsCancelable(
+     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxRequest, VerifyRequestIsCancelable)(
      _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
     )
+#endif
 {
     NTSTATUS status;
 
@@ -1780,11 +1845,19 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsCancelable)(
     return status;
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxRequest::Vf_VerifyRequestCanBeCompleted(
+    _In_ PFX_DRIVER_GLOBALS  FxDriverGlobals
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxRequest, VerifyRequestCanBeCompleted)(
     _In_ PFX_DRIVER_GLOBALS  FxDriverGlobals
     )
+#endif
 {
     NTSTATUS            status;
 
@@ -1830,11 +1903,19 @@ Done:
     return status;
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxRequest::Vf_VerifyRequestIsAllocatedFromIo(
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxRequest, VerifyRequestIsAllocatedFromIo)(
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
     )
+#endif
 {
     NTSTATUS status;
 
@@ -1857,11 +1938,19 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsAllocatedFromIo)(
     return status;
 }
 
+#ifdef __GNUC__
+_Must_inspect_result_
+NTSTATUS
+FxRequest::Vf_VerifyRequestIsCurrentStackValid(
+    _In_ PFX_DRIVER_GLOBALS  FxDriverGlobals
+    )
+#else
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxRequest, VerifyRequestIsCurrentStackValid)(
     _In_ PFX_DRIVER_GLOBALS  FxDriverGlobals
     )
+#endif
 {
     NTSTATUS status;
     MdIrp     irp;

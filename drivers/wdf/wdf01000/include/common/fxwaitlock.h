@@ -262,6 +262,8 @@ public:
 //
 class FxWaitLock : public FxObject, public FxWaitLockInternal  {
 
+    define_super(FxWaitLockInternal);
+
 public:
     // Factory function
     _Must_inspect_result_    

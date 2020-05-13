@@ -102,6 +102,8 @@ FxIsFileObjectOptional(
 //
 class FxDeviceBase : public FxNonPagedObject, public IFxHasCallbacks {
 
+    define_super(FxNonPagedObject);
+
 protected:
     FxDriver* m_Driver;
 
@@ -303,6 +305,8 @@ class FxDevice : public FxDeviceBase {
    friend class FxIrp;
    friend class FxFileObject;
    friend class FxPkgPnp;
+
+   define_super(FxDeviceBase);
 
 private:
 
@@ -602,6 +606,7 @@ public:
     static
     _Must_inspect_result_
     NTSTATUS
+    NTAPI
     Dispatch(
         __in MdDeviceObject DeviceObject,
         __in MdIrp OriginalIrp
@@ -667,6 +672,7 @@ public:
     static
     _Must_inspect_result_
     NTSTATUS
+    NTAPI
     DispatchWithLock(
         __in MdDeviceObject DeviceObject,
         __in MdIrp OriginalIrp
@@ -701,7 +707,7 @@ public:
 
     _Must_inspect_result_
     NTSTATUS
-    FxDevice::DeleteDeviceFromFailedCreate(
+    DeleteDeviceFromFailedCreate(
         __in NTSTATUS FailedStatus,
         __in BOOLEAN UseStateMachine
         );
@@ -1119,7 +1125,8 @@ public:
         while (cxInfo != NULL && smIoUsed == FALSE)
         {
 
-            for (ULONG loop = 0; loop < ARRAYSIZE(smIoCallbackList); loop++)
+            //for (ULONG loop = 0; loop < ARRAYSIZE(smIoCallbackList); loop++)
+            for (ULONG loop = 0; loop < 5; loop++)            
             {
                 callbackType = smIoCallbackList[loop];
                 context = cxInfo->CxPnpPowerCallbackContexts[callbackType];

@@ -132,7 +132,11 @@ class FxVerifierLock;
 #define FX_CALLBACKLOCK_ORDER_PACKAGE     0x30
 #define FX_CALLBACKLOCK_ORDER_QUEUE       0x31
 
+#ifdef __GNUC__
+#define FX_VERIFIER_LOCK_ENTRY(FX_OBJECT_TYPE, FX_LOCK_ORDER) { FX_OBJECT_TYPE, FX_LOCK_ORDER }
+#else
 #define FX_VERIFIER_LOCK_ENTRY(FX_OBJECT_TYPE, FX_LOCK_ORDER) { ##FX_OBJECT_TYPE, ##FX_LOCK_ORDER }
+#endif
 
 #define FX_VERIFIER_LOCK_ENTRIES()                                                                  \
             FX_VERIFIER_LOCK_ENTRY(FX_TYPE_DRIVER,              FX_LOCK_ORDER_DRIVER),              \
