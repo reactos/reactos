@@ -644,7 +644,7 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL);
 
             /* Disable the Permissions menu item for 'My Computer' */
-            EnableMenuItem(hMenuFrame , ID_EDIT_PERMISSIONS, MF_BYCOMMAND | (hParentItem ? MF_ENABLED : MF_GRAYED));
+            EnableMenuItem(hMenuFrame, ID_EDIT_PERMISSIONS, MF_BYCOMMAND | (hParentItem ? MF_ENABLED : MF_GRAYED));
 
             /*
              * Disable Delete/Rename menu options for 'My Computer' (first item so doesn't have any parent)
@@ -672,9 +672,8 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             break;
         case TVN_BEGINLABELEDIT:
         {
-            LPNMTVDISPINFO ptvdi;
-            /* cancel label edit for rootkeys  */
-            ptvdi = (LPNMTVDISPINFO) lParam;
+            LPNMTVDISPINFO ptvdi = (LPNMTVDISPINFO) lParam;
+            /* cancel label edit for rootkeys */
             if (!TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem) ||
                 !TreeView_GetParent(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem)))
             {
@@ -691,11 +690,12 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             LPCWSTR keyPath;
             HKEY hRootKey;
             HKEY hKey = NULL;
-            LPNMTVDISPINFO ptvdi;
+            LPNMTVDISPINFO ptvdi = (LPNMTVDISPINFO) lParam;
+            LONG nRenResult;
             LONG lResult = TRUE;
             WCHAR szBuffer[MAX_PATH];
+            WCHAR Caption[128];
 
-            ptvdi = (LPNMTVDISPINFO) lParam;
             if (ptvdi->item.pszText)
             {
                 keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem), &hRootKey);
@@ -712,8 +712,13 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                 }
                 else
                 {
-                    if (RenameKey(hRootKey, keyPath, ptvdi->item.pszText) != ERROR_SUCCESS)
+                    nRenResult = RenameKey(hRootKey, keyPath, ptvdi->item.pszText);
+                    if (nRenResult != ERROR_SUCCESS)
+                    {
+                        LoadStringW(hInst, IDS_ERROR, Caption, COUNT_OF(Caption));
+                        ErrorMessageBox(hWnd, Caption, nRenResult);
                         lResult = FALSE;
+                    }
                     else
                         UpdateAddress(ptvdi->item.hItem, hRootKey, szBuffer);
                 }
