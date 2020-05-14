@@ -4396,14 +4396,84 @@ VOID WINAPI FixSlashesAndColonW(LPWSTR lpwstr)
     }
 }
 
-
+#ifdef __REACTOS__
+#include <shlwapi_undoc.h>
+typedef struct APPCOMPATDATA
+{
+    LPCSTR pszFileName;
+    DWORD dwFlags;
+    WORD ver0, ver1, ver2, ver3;
+} APPCOMPATDATA, *LPAPPCOMPATDATA;
+/* See https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/util/getappcompatflags.htm */
+static const APPCOMPATDATA appcompat_list[] =
+{
+    { "ABCMM.EXE", LOADCOLUMNHANDLER },
+    { "AUTORUN.EXE", ANSI, 4, 0, 950 },
+    { "AUTORUN.EXE", ANSI, 4, 10, 1998 },
+    { "CORELDRW.EXE", OLDREGITEMGDN, 7 },
+    { "DAD9.EXE", CORELINTERNETENUM, 9 },
+    { "FILLER51.EXE ", OLDREGITEMGDN },
+    { "HOTDOG4.EXE", DOCOBJECT },
+    { "MSMONEY.EXE", WIN95SHLEXEC, 7, 5, 1107 },
+    { "PDEXPLO.EXE", CONTEXTMENU | MYCOMPUTERFIRST, 1 },
+    { "PDEXPLO.EXE", CONTEXTMENU | MYCOMPUTERFIRST, 2 },
+    { "PDEXPLO.EXE", MYCOMPUTERFIRST | OLDREGITEMGDN, 3 },
+    { "PDXWIN32.EXE", CONTEXTMENU | CORELINTERNETENUM | OLDREGITEMGDN },
+    { "PFIM80.EXE", CONTEXTMENU | CORELINTERNETENUM | OLDREGITEMGDN },
+    { "POWERPNT.EXE", WIN95SHLEXEC, 8 },
+    { "PP70.EXE", LOADCOLUMNHANDLER },
+    { "PP80.EXE", LOADCOLUMNHANDLER },
+    { "PRWIN70.EXE", CONTEXTMENU | CORELINTERNETENUM },
+    { "PRWIN8.EXE", CORELINTERNETENUM | OLDREGITEMGDN },
+    { "PRWIN9.EXE", CORELINTERNETENUM, 9 },
+    { "PS80.EXE", CONTEXTMENU | CORELINTERNETENUM | OLDREGITEMGDN },
+    { "QFINDER.EXE", CORELINTERNETENUM | OLDREGITEMGDN },
+    { "QPW.EXE", CONTEXTMENU, 7 },
+    { "QPW.EXE", ANSIDISPLAYNAMES | CORELINTERNETENUM | OLDREGITEMGDN, 8 },
+    { "QPW.EXE", CORELINTERNETENUM, 9 },
+    { "RNAAPP.EXE", CONTEXTMENU },
+    { "SITEBUILDER.EXE", CONTEXTMENU | CORELINTERNETENUM | OLDREGITEMGDN },
+    { "SIZEMGR.EXE", CORELINTERNETENUM | OLDREGITEMGDN, 3 },
+    { "softice.EXE", STAROFFICE5PRINTER, 5 },
+    { "SMARTCTR.EXE", CONTEXTMENU, 96 },
+    { "UA80.EXE", CONTEXTMENU | CORELINTERNETENUM | OLDREGITEMGDN },
+    { "UE32.EXE", OLDREGITEMGDN, 2 },
+    { "WPWIN7.EXE", CONTEXTMENU | CORELINTERNETENUM },
+    { "WPWIN8.EXE", CORELINTERNETENUM | OLDREGITEMGDN },
+    { "WPWIN9.EXE", CORELINTERNETENUM, 9 },
+};
+#endif
 /*************************************************************************
  *      @	[SHLWAPI.461]
  */
-DWORD WINAPI SHGetAppCompatFlags(DWORD dwUnknown)
+DWORD WINAPI SHGetAppCompatFlags(DWORD dwMask)
 {
-  FIXME("(0x%08x) stub\n", dwUnknown);
+#ifdef __REACTOS__
+    CHAR szPath[MAX_PATH];
+    LPSTR pszFileName;
+    SIZE_T i;
+
+    TRACE("(0x%08x)\n", dwMask);
+    if (!GetModuleFileNameA(NULL, szPath, ARRAYSIZE(szPath)))
+        return 0;
+    pszFileName = PathFindFileNameA(szPath);
+    if (pszFileName == NULL)
+        return 0;
+
+    for (i = 0; i < _countof(appcompat_list); ++i)
+    {
+        if (lstrcmpiA(appcompat_list[i].pszFileName, pszFileName) != 0)
+            continue;
+
+        /* FIXME: check version */
+        return (appcompat_list[i].dwFlags & dwMask);
+    }
+    /* FIXME */
+    return 0;
+#else
+  FIXME("(0x%08x) stub\n", dwMask);
   return 0;
+#endif
 }
 
 
