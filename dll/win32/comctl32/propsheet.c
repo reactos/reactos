@@ -3581,7 +3581,11 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         SetFocus(GetDlgItem(hwnd, IDOK));
       }
 #ifdef __REACTOS__
-      { /* try to fit it into the desktop */
+      { /* 
+           try to fit it into the desktop  
+           user32 positions the dialog based on the IDD_PROPSHEET template, 
+           but we've since made it larger by adding controls
+        */
           RECT rcWork;
           RECT rcDlg;
           int dx, dy;
