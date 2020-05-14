@@ -94,7 +94,7 @@ _tWinMain(HINSTANCE hInstance,
     s_info.cbSize = sizeof( NONCLIENTMETRICS );
 
     InitCommonControls();
-    
+
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
