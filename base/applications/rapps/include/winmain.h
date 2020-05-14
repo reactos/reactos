@@ -1,5 +1,6 @@
 #pragma once
 #include <windef.h>
+#include <WinINet.h>
 
 //TODO: Separate main and settings related definitions
 struct SETTINGS_INFO
@@ -15,6 +16,9 @@ struct SETTINGS_INFO
     INT Top;
     INT Width;
     INT Height;
+    /* Software source settings */
+    BOOL bUseSource;
+	WCHAR szSourceBaseURL[INTERNET_MAX_URL_LENGTH];
     /* Proxy settings */
     INT Proxy;
     WCHAR szProxyServer[MAX_PATH];

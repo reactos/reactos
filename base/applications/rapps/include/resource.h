@@ -54,6 +54,9 @@
 #define IDC_USE_PROXY            1015
 #define IDC_PROXY_SERVER         1016
 #define IDC_NO_PROXY_FOR         1017
+#define IDC_SOURCE_DEFAULT       1018
+#define IDC_USE_SOURCE           1019
+#define IDC_SOURCE_URL           1020
 
 /* Dialogs */
 #define IDD_SETTINGS_DIALOG      300
@@ -207,7 +210,7 @@
 /* Dialog related entries */
 #define IDS_DL_DIALOG_DB_DISP                   950
 #define IDS_DL_DIALOG_DB_DOWNLOAD_DISP          951
-
+#define IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP 952
 /* Accelerators */
 #define HOTKEYS                  715
 

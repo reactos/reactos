@@ -301,8 +301,46 @@ BOOL CAvailableApps::UpdateAppsDB()
         return TRUE;
     }
 
-    DownloadApplicationsDB(APPLICATION_DATABASE_URL);
+	WCHAR * ApplicationDataBaseURL;
+	DWORD AppDataBaseURLLength = 0;
+	
+    if(SettingsInfo.bUseSource)
+	{
+		UrlCombineW(SettingsInfo.szSourceBaseURL,
+		APPLICATION_DATABASE_FILENAME,
+		0, &AppDataBaseURLLength, 0);
+		
+		ApplicationDataBaseURL = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, AppDataBaseURLLength);
+		
+		if(!ApplicationDataBaseURL) return FALSE;
+		
+		UrlCombineW(SettingsInfo.szSourceBaseURL,
+		APPLICATION_DATABASE_FILENAME,
+		ApplicationDataBaseURL, &AppDataBaseURLLength, 0);
+		
+		DownloadApplicationsDB(ApplicationDataBaseURL, FALSE);
+	}
+	else
+	{
+		UrlCombineW(APPLICATION_DATABASE_BASEURL,
+		APPLICATION_DATABASE_FILENAME,
+		0, &AppDataBaseURLLength, 0);
+		
+		ApplicationDataBaseURL = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, AppDataBaseURLLength);
+		
+		if(!ApplicationDataBaseURL) return FALSE;
+		
+		UrlCombineW(APPLICATION_DATABASE_BASEURL,
+		APPLICATION_DATABASE_FILENAME,
+		ApplicationDataBaseURL, &AppDataBaseURLLength, 0);
+		
+		DownloadApplicationsDB(ApplicationDataBaseURL, TRUE);
+	}
 
+    
+	
+	HeapFree(GetProcessHeap(), 0, (VOID *)ApplicationDataBaseURL);
+	
     if (!ExtractFilesFromCab(m_Strings.szCabName, 
                              m_Strings.szCabDir,
                              m_Strings.szAppsPath))
