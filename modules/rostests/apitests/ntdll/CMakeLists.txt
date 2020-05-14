@@ -26,6 +26,7 @@ list(APPEND SOURCE
     NtProtectVirtualMemory.c
     NtQueryInformationFile.c
     NtQueryInformationProcess.c
+    NtQueryInformationThread.c
     NtQueryKey.c
     NtQuerySystemEnvironmentValue.c
     NtQuerySystemInformation.c
