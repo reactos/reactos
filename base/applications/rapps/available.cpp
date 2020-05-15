@@ -317,8 +317,6 @@ BOOL CAvailableApps::UpdateAppsDB()
         UrlCombineW(SettingsInfo.szSourceBaseURL,
         APPLICATION_DATABASE_FILENAME,
         ApplicationDataBaseURL, &AppDataBaseURLLength, 0);
-        
-        DownloadApplicationsDB(ApplicationDataBaseURL, FALSE);
     }
     else
     {
@@ -333,12 +331,10 @@ BOOL CAvailableApps::UpdateAppsDB()
         UrlCombineW(APPLICATION_DATABASE_BASEURL,
         APPLICATION_DATABASE_FILENAME,
         ApplicationDataBaseURL, &AppDataBaseURLLength, 0);
-        
-        DownloadApplicationsDB(ApplicationDataBaseURL, TRUE);
     }
 
-    
-    
+    DownloadApplicationsDB(ApplicationDataBaseURL, !SettingsInfo.bUseSource);
+
     HeapFree(GetProcessHeap(), 0, (VOID *)ApplicationDataBaseURL);
     
     if (!ExtractFilesFromCab(m_Strings.szCabName, 

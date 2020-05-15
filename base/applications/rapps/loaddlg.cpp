@@ -93,11 +93,9 @@ struct DownloadInfo
     }
 
     int DownloadType;
-    
     ATL::CStringW szUrl;
     ATL::CStringW szName;
     ATL::CStringW szSHA1;
-    
     ULONG SizeInBytes;
 };
 
