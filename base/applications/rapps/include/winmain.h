@@ -1,6 +1,6 @@
 #pragma once
 #include <windef.h>
-#include <WinINet.h>
+#include <wininet.h>
 
 //TODO: Separate main and settings related definitions
 struct SETTINGS_INFO
