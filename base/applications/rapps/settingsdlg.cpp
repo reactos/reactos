@@ -126,14 +126,14 @@ namespace
 
             case IDC_SOURCE_DEFAULT:
                 NewSettingsInfo.bUseSource = FALSE;
-				EnableWindow(GetDlgItem(hDlg, IDC_SOURCE_URL), NewSettingsInfo.bUseSource);
+                EnableWindow(GetDlgItem(hDlg, IDC_SOURCE_URL), NewSettingsInfo.bUseSource);
                 break;
                 
             case IDC_USE_SOURCE:
                 NewSettingsInfo.bUseSource = TRUE;
-				EnableWindow(GetDlgItem(hDlg, IDC_SOURCE_URL), NewSettingsInfo.bUseSource);
+                EnableWindow(GetDlgItem(hDlg, IDC_SOURCE_URL), NewSettingsInfo.bUseSource);
                 break;
-				
+                
             case IDC_PROXY_DEFAULT:
                 NewSettingsInfo.Proxy = 0;
                 EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
@@ -160,7 +160,7 @@ namespace
             case IDOK:
             {
                 ATL::CStringW szDir;
-				ATL::CStringW szSource;
+                ATL::CStringW szSource;
                 ATL::CStringW szProxy;
                 ATL::CStringW szNoProxy;
                 DWORD dwAttr;
@@ -172,11 +172,11 @@ namespace
                 GetWindowTextW(GetDlgItem(hDlg, IDC_SOURCE_URL),
                                szSource.GetBuffer(INTERNET_MAX_URL_LENGTH), INTERNET_MAX_URL_LENGTH);
                 szSource.ReleaseBuffer();
-				ATL::CStringW::CopyChars(NewSettingsInfo.szSourceBaseURL,
+                ATL::CStringW::CopyChars(NewSettingsInfo.szSourceBaseURL,
                                          _countof(NewSettingsInfo.szSourceBaseURL),
                                          szSource.GetString(),
                                          szSource.GetLength() + 1);
-										 
+
                 GetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER),
                                szProxy.GetBuffer(MAX_PATH), MAX_PATH);
                 szProxy.ReleaseBuffer();

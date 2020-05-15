@@ -18,7 +18,7 @@ struct SETTINGS_INFO
     INT Height;
     /* Software source settings */
     BOOL bUseSource;
-	WCHAR szSourceBaseURL[INTERNET_MAX_URL_LENGTH];
+    WCHAR szSourceBaseURL[INTERNET_MAX_URL_LENGTH];
     /* Proxy settings */
     INT Proxy;
     WCHAR szProxyServer[MAX_PATH];

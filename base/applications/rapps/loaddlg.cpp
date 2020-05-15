@@ -59,8 +59,8 @@
 enum DownloadType
 {
     DLTYPE_APPLICATION,
-	DLTYPE_DBUPDATE,
-	DLTYPE_DBUPDATE_UNOFFICIAL
+    DLTYPE_DBUPDATE,
+    DLTYPE_DBUPDATE_UNOFFICIAL
 };
 
 enum DownloadStatus
@@ -85,7 +85,7 @@ struct DownloadInfo
     DownloadInfo() {}
     DownloadInfo(const CAvailableApplicationInfo& AppInfo)
         : DownloadType(DLTYPE_APPLICATION)
-		, szUrl(AppInfo.m_szUrlDownload)
+        , szUrl(AppInfo.m_szUrlDownload)
         , szName(AppInfo.m_szName)
         , szSHA1(AppInfo.m_szSHA1)
         , SizeInBytes(AppInfo.m_SizeBytes)
@@ -93,11 +93,11 @@ struct DownloadInfo
     }
 
     int DownloadType;
-	
+    
     ATL::CStringW szUrl;
     ATL::CStringW szName;
     ATL::CStringW szSHA1;
-	
+    
     ULONG SizeInBytes;
 };
 
@@ -606,18 +606,18 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 
         // Change caption to show the currently downloaded app
-		switch(InfoArray[iAppId].DownloadType)
-		{
-		case DLTYPE_APPLICATION:
-			szNewCaption.Format(szCaption, InfoArray[iAppId].szName.GetString());
-			break;
-		case DLTYPE_DBUPDATE:
-		    szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_DOWNLOAD_DISP);
-			break;
-		case DLTYPE_DBUPDATE_UNOFFICIAL:
-			szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP);
-			break;
-		}
+        switch(InfoArray[iAppId].DownloadType)
+        {
+        case DLTYPE_APPLICATION:
+            szNewCaption.Format(szCaption, InfoArray[iAppId].szName.GetString());
+            break;
+        case DLTYPE_DBUPDATE:
+            szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_DOWNLOAD_DISP);
+            break;
+        case DLTYPE_DBUPDATE_UNOFFICIAL:
+            szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP);
+            break;
+        }
         
 
         SetWindowTextW(hDlg, szNewCaption.GetString());
@@ -985,7 +985,7 @@ VOID DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial)
     static DownloadInfo DatabaseDLInfo;
     DatabaseDLInfo.szUrl = lpUrl;
     DatabaseDLInfo.szName.LoadStringW(IDS_DL_DIALOG_DB_DISP);
-	DatabaseDLInfo.DownloadType = IsOfficial ? DLTYPE_DBUPDATE : DLTYPE_DBUPDATE_UNOFFICIAL;
+    DatabaseDLInfo.DownloadType = IsOfficial ? DLTYPE_DBUPDATE : DLTYPE_DBUPDATE_UNOFFICIAL;
     CDownloadManager::Download(DatabaseDLInfo, TRUE);
 }
 

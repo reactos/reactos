@@ -211,6 +211,7 @@
 #define IDS_DL_DIALOG_DB_DISP                   950
 #define IDS_DL_DIALOG_DB_DOWNLOAD_DISP          951
 #define IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP 952
+
 /* Accelerators */
 #define HOTKEYS                  715
 
