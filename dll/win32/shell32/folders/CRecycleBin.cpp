@@ -192,10 +192,12 @@ CRecycleBinEnum::~CRecycleBinEnum()
 HRESULT WINAPI CRecycleBinEnum::Initialize(DWORD dwFlags)
 {
     WCHAR szDrive[8];
-    if (GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive)))
-        PathAddBackslashW(szDrive);
-    else
-        StringCbCopyW(szDrive, sizeof(szDrive), L"C:\\");
+    if (!GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive) - 1))
+    {
+        ERR("GetEnvironmentVariableW failed\n");
+        return E_FAIL;
+    }
+    PathAddBackslashW(szDrive);
 
     if (dwFlags & SHCONTF_NONFOLDERS)
     {
@@ -367,10 +369,12 @@ HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
         Context.pFileDetails = _ILGetRecycleStruct(apidl);
         Context.bFound = FALSE;
 
-        if (GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive)))
-            PathAddBackslashW(szDrive);
-        else
-            StringCbCopyW(szDrive, sizeof(szDrive), L"C:\\");
+        if (!GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive) - 1))
+        {
+            ERR("GetEnvironmentVariableW failed\n");
+            return E_FAIL;
+        }
+        PathAddBackslashW(szDrive);
 
         EnumerateRecycleBinW(szDrive, CBSearchRecycleBin, (PVOID)&Context);
         if (!Context.bFound)
@@ -823,14 +827,20 @@ HRESULT WINAPI CRecycleBin::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     HRESULT hr;
     LPSHELLBROWSER lpSB;
     IShellView * lpSV = NULL;
+    WCHAR szDrive[8];
 
     TRACE("%p %p verb %p\n", this, lpcmi, lpcmi->lpVerb);
 
     if (LOWORD(lpcmi->lpVerb) == iIdEmpty)
     {
-        // FIXME
-        // path & flags
-        hr = SHEmptyRecycleBinW(lpcmi->hwnd, L"C:\\", 0);
+        if (!GetEnvironmentVariableW(L"SystemDrive", szDrive, _countof(szDrive) - 1))
+        {
+            ERR("GetEnvironmentVariableW failed\n");
+            return E_FAIL;
+        }
+        PathAddBackslashW(szDrive);
+
+        hr = SHEmptyRecycleBinW(lpcmi->hwnd, szDrive, 0);
         TRACE("result %x\n", hr);
         if (hr != S_OK)
             return hr;
