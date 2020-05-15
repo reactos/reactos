@@ -33,6 +33,7 @@ extern void func_NtReadFile(void);
 extern void func_NtSaveKey(void);
 extern void func_NtSetInformationFile(void);
 extern void func_NtSetInformationProcess(void);
+extern void func_NtSetInformationThread(void);
 extern void func_NtSetValueKey(void);
 extern void func_NtSetVolumeInformationFile(void);
 extern void func_NtSystemInformation(void);
@@ -106,6 +107,7 @@ const struct test winetest_testlist[] =
     { "NtSaveKey",                      func_NtSaveKey},
     { "NtSetInformationFile",           func_NtSetInformationFile },
     { "NtSetInformationProcess",        func_NtSetInformationProcess },
+    { "NtSetInformationThread",         func_NtSetInformationThread },
     { "NtSetValueKey",                  func_NtSetValueKey},
     { "NtSetVolumeInformationFile",     func_NtSetVolumeInformationFile },
     { "NtSystemInformation",            func_NtSystemInformation },
