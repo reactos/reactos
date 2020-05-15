@@ -92,7 +92,7 @@ struct DownloadInfo
     {
     }
 
-    int DLType;
+    DownloadType DLType;
     ATL::CStringW szUrl;
     ATL::CStringW szName;
     ATL::CStringW szSHA1;
