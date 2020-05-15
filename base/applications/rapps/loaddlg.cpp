@@ -84,7 +84,7 @@ struct DownloadInfo
 {
     DownloadInfo() {}
     DownloadInfo(const CAvailableApplicationInfo& AppInfo)
-        : DownloadType(DLTYPE_APPLICATION)
+        : DLType(DLTYPE_APPLICATION)
         , szUrl(AppInfo.m_szUrlDownload)
         , szName(AppInfo.m_szName)
         , szSHA1(AppInfo.m_szSHA1)
@@ -92,7 +92,7 @@ struct DownloadInfo
     {
     }
 
-    int DownloadType;
+    int DLType;
     ATL::CStringW szUrl;
     ATL::CStringW szName;
     ATL::CStringW szSHA1;
@@ -590,7 +590,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 
         // is this URL an update package for RAPPS? if so store it in a different place
-        if (InfoArray[iAppId].DownloadType != DLTYPE_APPLICATION)
+        if (InfoArray[iAppId].DLType != DLTYPE_APPLICATION)
         {
             if (!GetStorageDirectory(Path))
             {
@@ -604,7 +604,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 
         // Change caption to show the currently downloaded app
-        switch(InfoArray[iAppId].DownloadType)
+        switch(InfoArray[iAppId].DLType)
         {
         case DLTYPE_APPLICATION:
             szNewCaption.Format(szCaption, InfoArray[iAppId].szName.GetString());
@@ -653,7 +653,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         Path += L"\\";
         Path += (LPWSTR) (p + 1);
 
-        if ((InfoArray[iAppId].DownloadType == DLTYPE_APPLICATION) && InfoArray[iAppId].szSHA1[0] && GetFileAttributesW(Path.GetString()) != INVALID_FILE_ATTRIBUTES)
+        if ((InfoArray[iAppId].DLType == DLTYPE_APPLICATION) && InfoArray[iAppId].szSHA1[0] && GetFileAttributesW(Path.GetString()) != INVALID_FILE_ATTRIBUTES)
         {
             // only open it in case of total correctness
             if (VerifyInteg(InfoArray[iAppId].szSHA1.GetString(), Path))
@@ -771,7 +771,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 #ifdef USE_CERT_PINNING
         // are we using HTTPS to download the RAPPS update package? check if the certificate is original
         if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
-            (InfoArray[iAppId].DownloadType == DLTYPE_DBUPDATE))
+            (InfoArray[iAppId].DLType == DLTYPE_DBUPDATE))
         {
             CLocalPtr subjectName, issuerName;
             CStringW szMsgText;
@@ -848,7 +848,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         /* if this thing isn't a RAPPS update and it has a SHA-1 checksum
         verify its integrity by using the native advapi32.A_SHA1 functions */
-        if ((InfoArray[iAppId].DownloadType == DLTYPE_APPLICATION) && InfoArray[iAppId].szSHA1[0] != 0)
+        if ((InfoArray[iAppId].DLType == DLTYPE_APPLICATION) && InfoArray[iAppId].szSHA1[0] != 0)
         {
             ATL::CStringW szMsgText;
 
@@ -880,7 +880,7 @@ run:
         DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_WAITING_INSTALL);
 
         // run it
-        if (InfoArray[iAppId].DownloadType == DLTYPE_APPLICATION)
+        if (InfoArray[iAppId].DLType == DLTYPE_APPLICATION)
         {
             SHELLEXECUTEINFOW shExInfo = {0};
             shExInfo.cbSize = sizeof(shExInfo);
@@ -918,7 +918,7 @@ end:
 
         if (bTempfile)
         {
-            if (bCancelled || (SettingsInfo.bDelInstaller && (InfoArray[iAppId].DownloadType == DLTYPE_APPLICATION)))
+            if (bCancelled || (SettingsInfo.bDelInstaller && (InfoArray[iAppId].DLType == DLTYPE_APPLICATION)))
                 DeleteFileW(Path.GetString());
         }
 
@@ -983,7 +983,7 @@ VOID DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial)
     static DownloadInfo DatabaseDLInfo;
     DatabaseDLInfo.szUrl = lpUrl;
     DatabaseDLInfo.szName.LoadStringW(IDS_DL_DIALOG_DB_DISP);
-    DatabaseDLInfo.DownloadType = IsOfficial ? DLTYPE_DBUPDATE : DLTYPE_DBUPDATE_UNOFFICIAL;
+    DatabaseDLInfo.DLType = IsOfficial ? DLTYPE_DBUPDATE : DLTYPE_DBUPDATE_UNOFFICIAL;
     CDownloadManager::Download(DatabaseDLInfo, TRUE);
 }
 
