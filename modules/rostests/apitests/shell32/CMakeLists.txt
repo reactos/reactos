@@ -11,6 +11,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 list(APPEND SOURCE
     AddCommas.cpp
     CFSFolder.cpp
+	CheckEscapes.cpp
     CIDLData.cpp
     CMyComputer.cpp
     CShellDesktop.cpp

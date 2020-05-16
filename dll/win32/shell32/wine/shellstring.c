@@ -30,6 +30,7 @@
 
 #include "shell32_main.h"
 #include "undocshell.h"
+#include "shlwapi_undoc.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
