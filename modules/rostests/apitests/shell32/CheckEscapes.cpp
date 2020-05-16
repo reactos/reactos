@@ -12,8 +12,6 @@ typedef void (WINAPI *FN_CheckEscapesW)(LPWSTR string, DWORD len);
 static FN_CheckEscapesA s_pCheckEscapesA;
 static FN_CheckEscapesW s_pCheckEscapesW;
 
-#define MAX_BUFFER 16
-
 typedef struct TESTENTRYA
 {
     INT lineno;
