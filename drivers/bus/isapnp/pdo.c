@@ -191,7 +191,7 @@ IsaPdoStartReadPort(
     IN PIO_STACK_LOCATION IrpSp)
 {
     PCM_RESOURCE_LIST ResourceList = IrpSp->Parameters.StartDevice.AllocatedResources;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
     KIRQL OldIrql;
     ULONG i;
 
