@@ -1369,9 +1369,18 @@ HRESULT WINAPI SHCreateShellFolderViewEx(
  *  SHWinHelp					[SHELL32.127]
  *
  */
-HRESULT WINAPI SHWinHelp (DWORD v, DWORD w, DWORD x, DWORD z)
-{	FIXME("0x%08x 0x%08x 0x%08x 0x%08x stub\n",v,w,x,z);
-	return 0;
+HRESULT WINAPI SHWinHelp(HWND hwnd, LPCWSTR pszHelp, UINT uCommand, ULONG_PTR dwData)
+{
+    TRACE("(%p, %s, 0x%08x, %p)\n", hwnd, debugstr_w(pszHelp), uCommand, dwData);
+    if (!WinHelpW(hwnd, pszHelp, uCommand, dwData))
+    {
+#if 0
+        ShellMessageBoxW(shell32_hInstance, hwnd, MAKEINTRESOURCEW(9115),
+                         MAKEINTRESOURCEW(9116), MB_ICONSTOP);
+#endif
+        return FALSE;
+    }
+    return TRUE;
 }
 /*************************************************************************
  *  SHRunControlPanel [SHELL32.161]

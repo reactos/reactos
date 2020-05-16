@@ -78,17 +78,6 @@ BEGIN
     VK_F5, ID_REFRESH, VIRTKEY
 END
 
-IDD_ABOUTBOX DIALOGEX 22, 16, 190, 182
-CAPTION "Menedżer usług - informacje"
-FONT 8, "MS Shell Dlg", 0, 0
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-BEGIN
-    LTEXT "Menedżer usług v0.8\nCopyright (C) 2005-2007\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 40
-    PUSHBUTTON "Zamknij", IDOK, 75, 162, 44, 15
-    ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
-    EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
-END
-
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 225
 CAPTION "Ogólny"
 FONT 8, "MS Shell Dlg", 0, 0
@@ -272,7 +261,6 @@ BEGIN
     IDS_NUM_SERVICES "Numer usługi: %d"
     IDS_STOP_DEPENDS "Kiedy %s się zatrzyma, inne usługi od niej zależne również się zatrzymają"
     IDS_NO_DEPENDS "<Brak zależności>"
-    IDS_LICENSE "Niniejszy program jest wolnym oprogramowaniem; możesz go rozprowadzać dalej i/lub modyfikować na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundację Wolnego Oprogramowania - według wersji 2 tej Licencji lub (według twojego wyboru) którejś z późniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyślnej gwarancji PRZYDATNOŚCI HANDLOWEJ albo PRZYDATNOŚCI DO OKREŚLONYCH ZASTOSOWAŃ. W celu uzyskania bliższych informacji sięgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnością wraz z niniejszym programem otrzymałeś też egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeśli nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE
@@ -341,6 +329,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPNAME "Menedżer usług ReactOS"
+    IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 
 STRINGTABLE

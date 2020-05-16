@@ -25,7 +25,17 @@ static unsigned CurrentAttr = 0x0f;
 VOID
 XboxConsPutChar(int c)
 {
-    ULONG Width, Unused;
+    ULONG Width, Height, Unused;
+    BOOLEAN NeedScroll;
+
+    XboxVideoGetDisplaySize(&Width, &Height, &Unused);
+
+    NeedScroll = (CurrentCursorY >= Height);
+    if (NeedScroll)
+    {
+        XboxVideoScrollUp();
+        --CurrentCursorY;
+    }
 
     if (c == '\r')
     {
@@ -34,7 +44,9 @@ XboxConsPutChar(int c)
     else if (c == '\n')
     {
         CurrentCursorX = 0;
-        CurrentCursorY++;
+
+        if (!NeedScroll)
+            ++CurrentCursorY;
     }
     else if (c == '\t')
     {
@@ -46,13 +58,11 @@ XboxConsPutChar(int c)
         CurrentCursorX++;
     }
 
-    XboxVideoGetDisplaySize(&Width, &Unused, &Unused);
     if (CurrentCursorX >= Width)
     {
         CurrentCursorX = 0;
         CurrentCursorY++;
     }
-    // FIXME: Implement vertical screen scrolling if we are at the end of the screen.
 }
 
 BOOLEAN

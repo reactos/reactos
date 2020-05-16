@@ -305,9 +305,17 @@ static void filedlg_collect_places_pidls(FileOpenDlgInfos *fodInfos)
 {
     static const int default_places[] =
     {
+#ifdef __REACTOS__
+        CSIDL_RECENT,
         CSIDL_DESKTOP,
         CSIDL_MYDOCUMENTS,
         CSIDL_DRIVES,
+        CSIDL_NETWORK,
+#else        
+        CSIDL_DESKTOP,
+        CSIDL_MYDOCUMENTS,
+        CSIDL_DRIVES,
+#endif
     };
     unsigned int i;
     HKEY hkey;

@@ -68,17 +68,6 @@ BEGIN
     VK_F5, ID_REFRESH, VIRTKEY
 END
 
-IDD_ABOUTBOX DIALOGEX 22, 16, 190, 182
-CAPTION "À Propos du gestionnaire de services"
-FONT 8, "MS Shell Dlg", 0, 0
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-BEGIN
-    LTEXT "Gestionnaire de services v0.8\nCopyright (C) 2005-2007\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 40
-    PUSHBUTTON "Fermer", IDOK, 75, 162, 44, 15
-    ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
-    EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
-END
-
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
 CAPTION "Général"
 FONT 8, "MS Shell Dlg", 0, 0
@@ -262,7 +251,6 @@ BEGIN
     IDS_NUM_SERVICES "Services : %d"
     IDS_STOP_DEPENDS "Quand %s s'arrêtera, les services suivants s'arrêteront également :"
     IDS_NO_DEPENDS "<Pas de dépendances>"
-    IDS_LICENSE "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiée par la Free Software Foundation; dans sa version 2  (ou selon votre préférence) toute version ultérieure.\r\n\r\nCe programme est distribué dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE; sans même une garantie implicite de COMMERCIABILITÉ ou DE CONFORMITÉ A UNE UTILISATION PARTICULIÈRE. \r\n\r\nVoir la Licence Publique Générale GNU pour plus de détails. Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, écrivez à la Free Software Foundation Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA."
 END
 
 STRINGTABLE
@@ -331,6 +319,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPNAME "Gestionnaire de Services ReactOS"
+    IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 
 STRINGTABLE

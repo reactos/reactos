@@ -1,17 +1,17 @@
-/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013, 2014, 2016, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_THEMES DIALOGEX 0, 0, 246, 210
-CAPTION "Themes"
+CAPTION "Temalar"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "A theme is a background plus a set of sounds, icons, and other elements to help you personalize your computer with one click.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Theme:", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "Bir tema; bir tıklamayla bilgisayarınızı kişiselleştirmenize yardımcı olmak için bir arka planla birlikte sesler, simgeler ve diğer ögeler setidir.", IDC_STATIC, 5, 5, 235, 30
+    LTEXT "Tema:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Save &As...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
-    PUSHBUTTON "&Delete", IDC_THEMES_DELETE, 170, 70, 70, 14
+    PUSHBUTTON "&Farklı Kaydet...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
+    PUSHBUTTON "&Sil", IDC_THEMES_DELETE, 170, 70, 70, 14
     CONTROL "", IDC_THEMES_PREVIEW, "STATIC", SS_BITMAP, 5, 90, 235, 115, WS_EX_CLIENTEDGE
 END
 
@@ -32,11 +32,11 @@ END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Görüntülük Koruyucu"
+CAPTION "Ekran Koruyucu"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX "&Görüntülük Koruyucu", IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX "Ekran Koruyucu", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Ayarlar", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
     PUSHBUTTON "&Ön İzleme", IDC_SCREENS_TESTSC, 175, 102, 50, 15
@@ -44,11 +44,11 @@ BEGIN
     EDITTEXT IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
-    LTEXT "Dakîka", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "&Çıkışta Şifre Sor", IDC_SCREENS_USEPASSCHK, "button",
+    LTEXT "dakika", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL "&Çıkışta Parola Sor", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX "Göstergecin Erke Tutumu Husûsiyetleri", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
-    LTEXT "Göstergeciniz için güç ayarlarını düzenlemek için ""Güç""e tıklayınız.", IDC_STATIC, 16, 161, 146, 27
+    GROUPBOX "Monitörün Güç Tasarrufu Özellikleri", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+    LTEXT "Monitörünüzün güç ayarlarını düzenlemek için ""Güç Ayarları""na tıklayınız.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "G&üç...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
 
@@ -58,13 +58,13 @@ CAPTION "Görünüm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "G&örmelik Biçem", IDC_STATIC, 7, 130, 104, 9
+    LTEXT "G&örsel Tarz", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Renk Düzeni:", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "B&oyut:", IDC_STATIC, 7, 184, 104, 9
+    LTEXT "&Yazı Tipi Boyutu:", IDC_STATIC, 7, 184, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Etkiler...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
@@ -78,8 +78,8 @@ CAPTION "Gelişmiş Görünüm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "If you select a theme other than ReactOS classic, it will override the following settings, except in some older programs.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
-    LTEXT "&Öğe", 8, 5, 160, 50, 9
+    LTEXT "ReactOS Klasik'ten başka bir tema seçerseniz seçtiğiniz tema bazı eski programlardakiler dışında aşağıdaki ayarları hükümsüz kılacaktır.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "&Öge", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Boyut", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
@@ -109,23 +109,23 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Etkiler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Araç İpuçları ve Seçkeler İçin Aşağıdaki Geçiş Etkisi Kullan:",
+    CONTROL "&Araç ipuçları ve menüler için aşağıdaki geçiş etkisini kullan",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "&Görüntülük Yazı Tiplerinin Kıyılarını Yumuşatmak İçin Aşağıdaki Yöntemi Kullan:", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "&Ekran yazı tiplerinin kenarlarını yumuşatmak için aşağıdaki yöntemi kullan", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "&Büyük Simgeler Kullan", IDC_EFFAPPEARANCE_LARGEICONS, "button",
+    CONTROL "&Büyük simgeler kullan", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "&Seçkeler Altında Gölge Göster", IDC_EFFAPPEARANCE_SETDROPSHADOW,
+    CONTROL "&Menüler altında gölge göster", IDC_EFFAPPEARANCE_SETDROPSHADOW,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "S&ürüklerken Pencere İçeriğini Göster", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
+    CONTROL "&Sürüklerken pencere içeriğini göster", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "S&eçenek Düğmesine Basana Dek Düğme Takımıyla Gezinme İçin Altı Çizili Harfleri Gizle",
+    CONTROL "A&lt düğmesine basana kadar klavyeyle gezinme için altı çizili harfleri gizle",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "&Düz menüler kullan", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "İptal", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Tamam", IDOK, 172, 165, 50, 14
@@ -136,10 +136,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ayarlar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Göstergeçlerinizin fizîkî düzenlenmesini karşılaştırmak için göstergeç simgelerini sürükleyiniz.", -1, 3, 3, 240, 20
+    LTEXT "Monitörlerinizin fiziksel düzenlenmesini karşılaştırmak için monitör simgelerini sürükleyiniz.", -1, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
-    LTEXT "Görüntü:", 1820, 3, 107, 70, 9
+    LTEXT "Görü&ntü:", 1820, 3, 107, 70, 9
     LTEXT "<Yok>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "G&örüntülük Alanı", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
@@ -154,7 +154,7 @@ END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Görüntü", -1, 7, 6, 237, 56, WS_GROUP
@@ -162,27 +162,27 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Uyumluluk", -1, 7, 67, 237, 97
-    LTEXT "Eğer renk ayarlarını değiştirdiğinizden sonra bilgisayarınızı yeniden başlatmazsanız birtakım izlenceler yanlış çalışır.\r\n\nRenk ayarlarını değiştirdikten sonra:", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&yeni renk ayarları uygulanmadan önce bilgisayarı yeniden başlat.", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "y&eniden başlatmadan yeni renk ayarlarını uygula.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "ye&ni renk ayarlarıuygulanmadan önce bana sor.", IDC_ASKME_RB, 14, 146, 228, 10
+    LTEXT "Eğer renk ayarlarını değiştirdiğinizden sonra bilgisayarınızı yeniden başlatmazsanız bazı programlar yanlış çalışır.\r\n\nRenk ayarlarını değiştirdikten sonra:", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "Y&eni renk ayarları uygulanmadan önce bilgisayarı yeniden başlat.", IDC_RESTART_RB, 14, 116, 228, 10
+    AUTORADIOBUTTON "Ye&niden başlatmadan yeni renk ayarlarını uygula.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "Yeni &renk ayarları uygulanmadan önce bana sor.", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Display Settings"
+CAPTION "Görüntü Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Do you want to keep these display settings?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "Bu görüntü ayarlarını korumak ister misiniz?", IDC_STATIC, 7, 7, 219, 8
     LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
-    PUSHBUTTON "&Yes", IDYES, 121, 36, 50, 14
-    DEFPUSHBUTTON "&No", IDNO, 175, 36, 50, 14
+    PUSHBUTTON "&Evet", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&Hayır", IDNO, 175, 36, 50, 14
 END
 
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Düzgülü", ID_MENU_NORMAL
-    MENUITEM "Edilgin", ID_MENU_DISABLED
+    MENUITEM "Normal", ID_MENU_NORMAL
+    MENUITEM "Pasif", ID_MENU_DISABLED
     MENUITEM "Seçili", ID_MENU_SELECTED
 END
 
@@ -190,43 +190,43 @@ IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&İliştirilmiş", ID_MENU_ATTACHED
+        MENUITEM "İ&liştirilmiş", ID_MENU_ATTACHED
         MENUITEM "&Birinci", ID_MENU_PRIMARY
         MENUITEM SEPARATOR
         MENUITEM "&Tanıla", ID_MENU_IDENTIFY
-        MENUITEM "&Husûsiyetler", ID_MENU_PROPERTIES
+        MENUITEM "Ö&zellikler", ID_MENU_PROPERTIES
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SLIDEEFFECT "Kayma Etkisi"
-    IDS_FADEEFFECT "Solma Etkisi"
+    IDS_SLIDEEFFECT "Kayma etkisi"
+    IDS_FADEEFFECT "Solma etkisi"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARDEFFECT "Ölçünlü"
-    IDS_CLEARTYPEEFFECT "FreeType Düzeltmesi"
+    IDS_STANDARDEFFECT "Standart"
+    IDS_CLEARTYPEEFFECT "FreeType Örtüşme Önlemesi"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Çoklu Göstergeç)"
-    IDS_UNKNOWNMONITOR "(Bilinmeyen Göstergeç)"
+    IDS_MULTIPLEMONITORS "(Çoklu Monitör)"
+    IDS_UNKNOWNMONITOR "(Bilinmeyen Monitör)"
     IDS_ADVANCEDTITLEFMT "%s ve %s"
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Görüntü"
-    IDS_CPLDESCRIPTION "Masaüstü görünümünü ve görüntülük koruyucuyu husûsileştirir."
+    IDS_CPLDESCRIPTION "Masaüstü görünümünü ve ekran koruyucuyu özelleştirir."
     IDS_NONE "(Yok)"
     IDS_CENTER "Ortala"
     IDS_STRETCH "Uzat"
     IDS_TILE "Döşe"
-    IDS_FIT "Fit"
-    IDS_FILL "Fill"
+    IDS_FIT "Sığdır"
+    IDS_FILL "Doldur"
 END
 
 STRINGTABLE
@@ -236,7 +236,7 @@ BEGIN
     IDS_COLOR_16BIT "Yüksek Renk (16 Bitlik)"
     IDS_COLOR_24BIT "Gerçek Renk (24 Bitlik)"
     IDS_COLOR_32BIT "Gerçek Renk (32 Bitlik)"
-    IDS_PIXEL "%lux%lu Nokta"
+    IDS_PIXEL "%lux%lu Noktacık"
 END
 
 STRINGTABLE
@@ -246,42 +246,42 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INACTWIN "Edilgin Pencere"
+    IDS_INACTWIN "Pasif Pencere"
     IDS_ACTWIN "Etkin Pencere"
     IDS_WINTEXT "Pencere Metni"
     IDS_MESSBOX "İleti Penceresi"
     IDS_MESSTEXT "İleti Metni"
     IDS_BUTTEXT "Tamam"
-    IDS_CLASSIC_THEME "Kökleşik Tema"
+    IDS_CLASSIC_THEME "Klasik Tema"
 END
 
 STRINGTABLE
 BEGIN
     IDS_ELEMENT_0 "Masaüstü"
-    IDS_ELEMENT_1 "Edilgin Pencere Başlığı"
-    IDS_ELEMENT_2 "Edilgin Pencere Kıyılığı"
-    IDS_ELEMENT_3 "Etkin Pencere Başlığı"
-    IDS_ELEMENT_4 "Etkin Pencere Kıyılığı"
-    IDS_ELEMENT_5 "Seçke"
-    IDS_ELEMENT_6 "Seçili Öğeler"
+    IDS_ELEMENT_1 "Pasif pencere başlığı"
+    IDS_ELEMENT_2 "Pasif pencere kenarı"
+    IDS_ELEMENT_3 "Pasif pencere başlığı"
+    IDS_ELEMENT_4 "Pasif pencere kenarı"
+    IDS_ELEMENT_5 "Menü"
+    IDS_ELEMENT_6 "Seçili ögeler"
     IDS_ELEMENT_7 "Pencereler"
-    IDS_ELEMENT_8 "Kaydırma Çubukları"
-    IDS_ELEMENT_9 "3D Nesneler"
-    IDS_ELEMENT_10 "Renklik Etiketi"
-    IDS_ELEMENT_11 "Başlık Çubuğu"
-    IDS_ELEMENT_12 "İletişim Penceresi"
-    IDS_ELEMENT_13 "Uygulama Arka Planı"
-    IDS_ELEMENT_14 "Simge Aralığı (Yatay)"
-    IDS_ELEMENT_15 "Simge Aralığı (Dikey)"
-    IDS_ELEMENT_16 "Çabuk Yardım"
+    IDS_ELEMENT_8 "Kaydırma çubukları"
+    IDS_ELEMENT_9 "3D nesneler"
+    IDS_ELEMENT_10 "Palet başlığı"
+    IDS_ELEMENT_11 "Başlık çubuğu düğmeleri"
+    IDS_ELEMENT_12 "İletişim kutusu"
+    IDS_ELEMENT_13 "Uygulama arka planı"
+    IDS_ELEMENT_14 "Simge aralığı (yatay)"
+    IDS_ELEMENT_15 "Simge aralığı (dikey)"
+    IDS_ELEMENT_16 "Çabuk yardım"
     IDS_ELEMENT_17 "Simge"
-//  IDS_ELEMENT_18 "Edilgin Seçke Öğeleri"
+//  IDS_ELEMENT_18 "Pasif menü ögeleri"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Görüntü Ayarları"
+    IDS_DISPLAY_SETTINGS "Görüntü ayarları"
     IDS_APPLY_FAILED "Yeni ayarların uygulanması başarısız oldu."
     IDS_APPLY_NEEDS_RESTART "Değişiklikleri uygulamak için bilgisayarınızı yeniden başlatmanız gerekir."
-    IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
+    IDS_TIMEOUTTEXT "%d saniyede önceki ayarlara geri dönülecek."
 END
