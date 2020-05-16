@@ -16,6 +16,7 @@
 
 static HWND s_hwnd = NULL;
 static const WCHAR s_szName[] = L"SHChangeNotify testcase";
+static INT s_nMode;
 
 typedef enum TYPE
 {
@@ -70,11 +71,31 @@ OnCreate(HWND hwnd)
     PathAppendW(s_file2, L"File2.txt");
 
     s_pidl = ILCreateFromPathW(s_dir1);
-
     s_entry.pidl = s_pidl;
-    s_entry.fRecursive = TRUE;
+
+    INT nSources;
+    switch (s_nMode)
+    {
+        case 0:
+            s_entry.fRecursive = TRUE;
+            nSources = SHCNRF_ShellLevel;
+            break;
+
+        case 1:
+            s_entry.fRecursive = TRUE;
+            nSources = SHCNRF_ShellLevel | SHCNRF_InterruptLevel;
+            break;
+
+        case 2:
+            s_entry.fRecursive = FALSE;
+            nSources = SHCNRF_ShellLevel | SHCNRF_NewDelivery;
+            break;
+
+        default:
+            return FALSE;
+    }
     LONG fEvents = SHCNE_ALLEVENTS;
-    s_uRegID = SHChangeNotifyRegister(hwnd, SHCNRF_ShellLevel, fEvents, WM_SHELL_NOTIFY,
+    s_uRegID = SHChangeNotifyRegister(hwnd, nSources, fEvents, WM_SHELL_NOTIFY,
                                       1, &s_entry);
     return s_uRegID != 0;
 }
@@ -279,6 +300,8 @@ wWinMain(HINSTANCE hInstance,
          LPWSTR    lpCmdLine,
          INT       nCmdShow)
 {
+    s_nMode = _wtoi(lpCmdLine);
+
     WNDCLASSW wc;
     ZeroMemory(&wc, sizeof(wc));
     wc.lpfnWndProc = WindowProc;
