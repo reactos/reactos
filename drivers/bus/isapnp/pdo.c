@@ -191,7 +191,7 @@ IsaPdoStartReadPort(
     IN PIO_STACK_LOCATION IrpSp)
 {
     PCM_RESOURCE_LIST ResourceList = IrpSp->Parameters.StartDevice.AllocatedResources;
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
     KIRQL OldIrql;
     ULONG i;
 
@@ -209,11 +209,12 @@ IsaPdoStartReadPort(
     for (i = 0; i < ResourceList->List[0].PartialResourceList.Count; i++)
     {
         PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
-        if (PartialDescriptor->Type == CmResourceTypePort)
+        if (PartialDescriptor->Type == CmResourceTypePort && PartialDescriptor->u.Port.Length > 1 && !FdoExt->ReadDataPort)
         {
             PUCHAR ReadDataPort = ULongToPtr(PartialDescriptor->u.Port.Start.u.LowPart + 3);
-            if (PartialDescriptor->u.Port.Length > 1 && !FdoExt->ReadDataPort && NT_SUCCESS(IsaHwTryReadDataPort(ReadDataPort)))
+            if (NT_SUCCESS(IsaHwTryReadDataPort(ReadDataPort)))
             {
+                /* we detected some ISAPNP cards */
                 FdoExt->ReadDataPort = ReadDataPort;
                 KeAcquireSpinLock(&FdoExt->Lock, &OldIrql);
                 Status = IsaHwFillDeviceList(FdoExt);
@@ -223,6 +224,11 @@ IsaPdoStartReadPort(
                     IoInvalidateDeviceRelations(FdoExt->Pdo, BusRelations);
                     IoInvalidateDeviceRelations(FdoExt->DataPortPdo, RemovalRelations);
                 }
+            }
+            else
+            {
+                /* mark read data port as started, even if no card has been detected */
+                Status = STATUS_SUCCESS;
             }
         }
     }
