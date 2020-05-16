@@ -611,8 +611,8 @@ HRESULT WINAPI SHCreateLinks(
     UINT uFlags,
     LPITEMIDLIST *lppidlLinks);
 
-DWORD WINAPI CheckEscapesA(LPSTR string, DWORD len);
-DWORD WINAPI CheckEscapesW(LPWSTR string, DWORD len);
+VOID WINAPI CheckEscapesA(LPSTR string, DWORD len);
+VOID WINAPI CheckEscapesW(LPWSTR string, DWORD len);
 
 /* policy functions */
 BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey);

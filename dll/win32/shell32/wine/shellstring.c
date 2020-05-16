@@ -222,30 +222,25 @@ BOOL WINAPI OleStrToStrNAW (LPVOID lpOut, INT nOut, LPCVOID lpIn, INT nIn)
  * PARAMS
  *  string     [I/O] string to check and on return eventually quoted
  *  len        [I]   length of string
- *
- * RETURNS
- *  length of actual string
- *
- * NOTES
- *  Not really sure if this function returns actually a value at all. 
  */
-DWORD WINAPI CheckEscapesA(
+VOID WINAPI CheckEscapesA(
 	LPSTR	string,         /* [I/O]   string to check ??*/
 	DWORD	len)            /* [I]      is 0 */
 {
-	LPWSTR wString;
-	DWORD ret = 0;
+    LPWSTR wString;
+    TRACE("(%s %d)\n", debugstr_a(string), len);
 
-	TRACE("(%s %d)\n", debugstr_a(string), len);
-	wString = LocalAlloc(LPTR, len * sizeof(WCHAR));
-	if (wString)
-	{
-	  MultiByteToWideChar(CP_ACP, 0, string, len, wString, len);
-	  ret = CheckEscapesW(wString, len);
-	  WideCharToMultiByte(CP_ACP, 0, wString, len, string, len, NULL, NULL);
-	  LocalFree(wString);
-	}
-	return ret;
+    if (!string || !string[0])
+        return;
+
+    wString = LocalAlloc(LPTR, len * sizeof(WCHAR));
+    if (!wString)
+        return;
+
+    SHAnsiToUnicode(string, wString, len);
+    CheckEscapesW(wString, len);
+    SHUnicodeToAnsi(wString, string, len);
+    LocalFree(wString);
 }
 
 static const WCHAR strEscapedChars[] = {' ','"',',',';','^',0};
@@ -255,7 +250,7 @@ static const WCHAR strEscapedChars[] = {' ','"',',',';','^',0};
  *
  * See CheckEscapesA.
  */
-DWORD WINAPI CheckEscapesW(
+VOID WINAPI CheckEscapesW(
 	LPWSTR	string,
 	DWORD	len)
 {
@@ -273,7 +268,5 @@ DWORD WINAPI CheckEscapesW(
 	  for (;d > string;)
 	    *d-- = *s--;
 	  *d = '"';
-	  return size + 2;
 	}
-	return size;
 }
