@@ -247,11 +247,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
-    IDS_PRODUCTSERVERNAME "ReactOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
-    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
-    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
-    IDS_DEFAULT "(Default)"
+    IDS_PRODUCTTITLE "Ürün Seçenekleri"
+    IDS_PRODUCTSUBTITLE "Sisteminizin davranışını etkileyen bir ürün seçeneği seçebilirsiniz."
+    IDS_PRODUCTSERVERNAME "ReactOS Sunucu"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS İş İstasyonu"
+    IDS_PRODUCTSERVERINFO "Sistem bir sunucu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" and ""Müziklerim"" özel klasörleri ""Belgelerim""den bağımsızdır."
+    IDS_PRODUCTWORKSTATIONINFO "Sistem bir iş istasyonu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" and ""Müziklerim"" özel klasörleri ""Belgelerim""in içindedir."
+    IDS_DEFAULT "(Ön Tanımlı)"
 END

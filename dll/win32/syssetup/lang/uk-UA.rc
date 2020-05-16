@@ -253,11 +253,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
-    IDS_PRODUCTSERVERNAME "ReactOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
-    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
-    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
-    IDS_DEFAULT "(Default)"
+    IDS_PRODUCTTITLE "Тип продукту"
+    IDS_PRODUCTSUBTITLE "Ви можете вибрати тип продукту. Це вплине на поведінку системи."
+    IDS_PRODUCTSERVERNAME "Сервер ReactOS"
+    IDS_PRODUCTWORKSTATIONNAME "Робоча станція ReactOS"
+    IDS_PRODUCTSERVERINFO "Система буде розпізнаватися як сервер. Особисті папки ""Мої зображення"", ""Мої відео"" та ""Моя музика"" не будуть залежати від папки ""Мої документи""."
+    IDS_PRODUCTWORKSTATIONINFO "Система буде розпізнаватися як робоча станція. Особисті папки ""Мої зображення"", ""Мої відео"" та ""Моя музика"" будуть в папці ""Мої документи""."
+    IDS_DEFAULT "(за замовчуванням)"
 END
