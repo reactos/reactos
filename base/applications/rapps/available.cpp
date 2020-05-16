@@ -310,7 +310,7 @@ BOOL CAvailableApps::UpdateAppsDB()
         APPLICATION_DATABASE_FILENAME,
         0, &AppDataBaseURLLength, 0);
         
-        ApplicationDataBaseURL = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, AppDataBaseURLLength);
+        ApplicationDataBaseURL = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, AppDataBaseURLLength * sizeof(WCHAR));
         
         if(!ApplicationDataBaseURL) return FALSE;
         
@@ -324,7 +324,7 @@ BOOL CAvailableApps::UpdateAppsDB()
         APPLICATION_DATABASE_FILENAME,
         0, &AppDataBaseURLLength, 0);
         
-        ApplicationDataBaseURL = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, AppDataBaseURLLength);
+        ApplicationDataBaseURL = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, AppDataBaseURLLength * sizeof(WCHAR));
         
         if(!ApplicationDataBaseURL) return FALSE;
         
