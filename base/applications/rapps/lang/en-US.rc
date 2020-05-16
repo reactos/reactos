@@ -178,6 +178,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Applications Manager"
+    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Search…"
     IDS_INSTALL "Install"
     IDS_UNINSTALL "Uninstall"
