@@ -31,8 +31,6 @@
 #include "winmain.h"
 
 #define APPLICATION_DATABASE_URL L"https://rapps.reactos.org/rappmgr.cab"
-#define APPLICATION_DATABASE_BASEURL L"https://rapps.reactos.org/"
-#define APPLICATION_DATABASE_FILENAME L"rappmgr.cab"
 #define MAX_STR_LEN              256
 
 enum AppsCategories
