@@ -333,23 +333,11 @@ JustDoIt(INT nMode)
     switch (nMode)
     {
         case 0:
+        case 1:
+        case 2:
             for (size_t i = 0; i < _countof(s_TestEntriesMode0); ++i)
             {
                 DoTestEntry(&s_TestEntriesMode0[i]);
-            }
-            break;
-
-        case 1:
-            for (size_t i = 0; i < _countof(s_TestEntriesMode1); ++i)
-            {
-                DoTestEntry(&s_TestEntriesMode1[i]);
-            }
-            break;
-
-        case 2:
-            for (size_t i = 0; i < _countof(s_TestEntriesMode2); ++i)
-            {
-                DoTestEntry(&s_TestEntriesMode2[i]);
             }
             break;
     }
