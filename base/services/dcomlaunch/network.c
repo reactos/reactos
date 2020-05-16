@@ -44,7 +44,7 @@ CookupNodeId(UCHAR * NodeId)
     DWORD dwValue;
     MEMORYSTATUS MemoryStatus;
     LUID Luid;
-    WCHAR szDrive[MAX_PATH];
+    WCHAR szSystem[MAX_PATH];
     ULARGE_INTEGER FreeBytesToCaller, TotalBytes, TotalFreeBytes;
 
     /* Initialize node id */
@@ -105,11 +105,11 @@ CookupNodeId(UCHAR * NodeId)
         *NodeMiddle = *NodeMiddle ^ Luid.HighPart;
     }
 
-    /* Get system drive */
-    GetSystemDirectoryW(szDrive, ARRAYSIZE(szDrive));
+    /* Get system directory */
+    GetSystemDirectoryW(szSystem, ARRAYSIZE(szSystem));
 
     /* And finally with free disk space */
-    if (GetDiskFreeSpaceExW(szDrive, &FreeBytesToCaller, &TotalBytes, &TotalFreeBytes))
+    if (GetDiskFreeSpaceExW(szSystem, &FreeBytesToCaller, &TotalBytes, &TotalFreeBytes))
     {
         *NodeMiddle ^= FreeBytesToCaller.LowPart ^ TotalFreeBytes.HighPart;
         *NodeMiddle ^= FreeBytesToCaller.HighPart ^ TotalFreeBytes.LowPart;
