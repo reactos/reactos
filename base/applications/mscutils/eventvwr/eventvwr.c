@@ -3855,13 +3855,13 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     StringCbCopyW(KeyPath, cbKeyPath, EVENTLOG_BASE_KEY);
     StringCbCatW(KeyPath, cbKeyPath, lpLogName);
 
-    if (RegOpenKeyExW(hkMachine, KeyPath, 0, KEY_QUERY_VALUE, &hLogKey) != ERROR_SUCCESS)
+    Result = RegOpenKeyExW(hkMachine, KeyPath, 0, KEY_QUERY_VALUE, &hLogKey);
+    HeapFree(GetProcessHeap(), 0, KeyPath);
+    if (Result != ERROR_SUCCESS)
     {
-        HeapFree(GetProcessHeap(), 0, KeyPath);
-        ShowWin32Error(GetLastError());
+        ShowWin32Error(Result);
         goto Quit;
     }
-    HeapFree(GetProcessHeap(), 0, KeyPath);
 
 
     cbData = sizeof(dwMaxSize);
@@ -4017,6 +4017,7 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
 {
     LPWSTR lpLogName = EventLog->LogName;
 
+    LONG Result;
     DWORD dwMaxSize = 0, dwRetention = 0;
     HKEY hLogKey;
     WCHAR *KeyPath;    
@@ -4036,22 +4037,13 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     StringCbCopyW(KeyPath, cbKeyPath, EVENTLOG_BASE_KEY);
     StringCbCatW(KeyPath, cbKeyPath, lpLogName);
 
-    /* Try to create/open the Event Viewer user key */
-    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-                        KeyPath,
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_READ | KEY_WRITE,
-                        NULL,
-                        &hLogKey,
-                        NULL) != ERROR_SUCCESS)
+    Result = RegOpenKeyExW(hkMachine, KeyPath, 0, KEY_SET_VALUE, &hLogKey);
+    HeapFree(GetProcessHeap(), 0, KeyPath);
+    if (Result != ERROR_SUCCESS)
     {
-        ShowWin32Error(GetLastError());
+        ShowWin32Error(Result);
         return;
     }
-
-    HeapFree(GetProcessHeap(), 0, KeyPath);
 
     dwMaxSize = GetDlgItemInt(hDlg, IDC_EDIT_MAXLOGSIZE, NULL, FALSE) * 1024;
     RegSetValueExW(hLogKey,
