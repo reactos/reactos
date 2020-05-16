@@ -193,7 +193,7 @@ BEGIN
     IDS_APPLICATIONS        "アプリケーション"
     IDS_CHOOSE_FOLDER_TEXT  "プログラムのダウンロードに使用するフォルダを選択してください:"
     IDS_CHOOSE_FOLDER_ERROR "指定されたフォルダは存在しません!"
-	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
+    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "レジストリからインストールされたプログラムに関するデータを削除してもよろしいですか?"
     IDS_INFORMATION "情報"
     IDS_UNABLE_TO_DOWNLOAD "パッケージをダウンロードできません! アドレスが見つからない!"

@@ -201,7 +201,7 @@ BEGIN
     IDS_APPLICATIONS "Aplikacje"
     IDS_CHOOSE_FOLDER_TEXT "Wybierz katalog, w którym będa zapisywane pobrane programy:"
     IDS_CHOOSE_FOLDER_ERROR "Wybrałeś nieistniejący katalog! Czy chcesz utworzyć nowy?"
-	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
+    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "Czy na pewno chcesz usunąć wpis tego programu z rejestru?"
     IDS_INFORMATION "Informacja"
     IDS_UNABLE_TO_DOWNLOAD "Nie można pobrać pakietu! Nie znaleziono adresu!"

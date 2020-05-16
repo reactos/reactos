@@ -201,7 +201,7 @@ BEGIN
     IDS_APPLICATIONS "Rakendused"
     IDS_CHOOSE_FOLDER_TEXT "Vali kaust allalaadimiste jaoks:"
     IDS_CHOOSE_FOLDER_ERROR "Antud kausta ei ole olemas. Kas soovid selle luua?"
-	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
+    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "Kas soovid kindlalt kustutada installitud programmi andmed registrist?"
     IDS_INFORMATION "Informatsioon"
     IDS_UNABLE_TO_DOWNLOAD "Pakendi allalaadimine ebaõnnestus! Aadressit ei leitud!"

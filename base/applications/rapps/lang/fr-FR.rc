@@ -197,7 +197,7 @@ BEGIN
     IDS_APPLICATIONS "Applications"
     IDS_CHOOSE_FOLDER_TEXT "Choisissez un dossier dans lequel les programmes seront téléchargés :"
     IDS_CHOOSE_FOLDER_ERROR "Le dossier que vous avez spécifié n'existe pas. Le créer ?"
-	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
+    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "Êtes-vous sûr de vouloir supprimer du registre les données du programme installé ?"
     IDS_INFORMATION "Information"
     IDS_UNABLE_TO_DOWNLOAD "Impossible de télécharger le paquet : adresse introuvable !"

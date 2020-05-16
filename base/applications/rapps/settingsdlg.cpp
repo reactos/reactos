@@ -52,27 +52,27 @@ BOOL ChooseFolder(HWND hwnd)
 
 BOOL IsUrlValid(const WCHAR * Url)
 {
-	URL_COMPONENTSW UrlComponmentInfo = { 0 };
-	UrlComponmentInfo.dwStructSize = sizeof(UrlComponmentInfo);
-	UrlComponmentInfo.dwSchemeLength = 1;
-	
-	BOOL bSuccess = InternetCrackUrlW(Url, wcslen(Url), 0, &UrlComponmentInfo);
-	if(!bSuccess)
-	{
-		return FALSE;
-	}
-	
-	switch(UrlComponmentInfo.nScheme)
-	{
-		case INTERNET_SCHEME_HTTP:
-		case INTERNET_SCHEME_HTTPS:
-		case INTERNET_SCHEME_FTP:
-		// supported
-			return TRUE;
-			
-		default:
-			return FALSE;
-	}
+    URL_COMPONENTSW UrlComponmentInfo = { 0 };
+    UrlComponmentInfo.dwStructSize = sizeof(UrlComponmentInfo);
+    UrlComponmentInfo.dwSchemeLength = 1;
+    
+    BOOL bSuccess = InternetCrackUrlW(Url, wcslen(Url), 0, &UrlComponmentInfo);
+    if(!bSuccess)
+    {
+        return FALSE;
+    }
+    
+    switch(UrlComponmentInfo.nScheme)
+    {
+        case INTERNET_SCHEME_HTTP:
+        case INTERNET_SCHEME_HTTPS:
+        case INTERNET_SCHEME_FTP:
+        // supported
+            return TRUE;
+            
+        default:
+            return FALSE;
+    }
 }
 
 namespace
@@ -109,7 +109,7 @@ namespace
         
         EnableWindow(GetDlgItem(hDlg, IDC_SOURCE_URL), Info->bUseSource);
 
-        SetWindowTextW(GetDlgItem(hDlg, IDC_SOURCE_URL), Info->szSourceBaseURL);
+        SetWindowTextW(GetDlgItem(hDlg, IDC_SOURCE_URL), Info->szSourceURL);
         SetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER), Info->szProxyServer);
         SetWindowTextW(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), Info->szNoProxyFor);
     }
@@ -241,24 +241,24 @@ namespace
                         break;
                     }
                 }
-				
-				
-				if(NewSettingsInfo.bUseSource && !IsUrlValid(szSource.GetString()))
-				{
-					ATL::CStringW szMsgText;
+                
+                
+                if(NewSettingsInfo.bUseSource && !IsUrlValid(szSource.GetString()))
+                {
+                    ATL::CStringW szMsgText;
                     szMsgText.LoadStringW(IDS_URL_INVALID);
-					
-					MessageBoxW(hDlg, szMsgText.GetString(), NULL, 0);
-					SetFocus(GetDlgItem(hDlg, IDC_SOURCE_URL));
-					break;
-				}
-				else
-				{
-					ATL::CStringW::CopyChars(NewSettingsInfo.szSourceBaseURL,
-                                         _countof(NewSettingsInfo.szSourceBaseURL),
+                    
+                    MessageBoxW(hDlg, szMsgText.GetString(), NULL, 0);
+                    SetFocus(GetDlgItem(hDlg, IDC_SOURCE_URL));
+                    break;
+                }
+                else
+                {
+                    ATL::CStringW::CopyChars(NewSettingsInfo.szSourceURL,
+                                         _countof(NewSettingsInfo.szSourceURL),
                                          szSource.GetString(),
                                          szSource.GetLength() + 1);
-				}
+                }
 
                 SettingsInfo = NewSettingsInfo;
                 SaveSettings(GetParent(hDlg));
