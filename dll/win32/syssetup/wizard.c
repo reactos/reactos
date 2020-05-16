@@ -393,39 +393,20 @@ AckPageDlgProc(HWND hwndDlg,
 
 static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
 static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
-static const WCHAR s_szWindowsNT[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
-static const WCHAR s_szCurrentBuildNumber[] = L"CurrentBuildNumber";
-static const WCHAR s_szCurrentVersion[] = L"CurrentVersion";
 
 typedef struct PRODUCT_OPTION_DATA
 {
     LPCWSTR ProductSuite;
     LPCWSTR ProductType;
     DWORD ReportAsWorkstation;
-    LPCWSTR CurrentVersion;
-    LPCWSTR CurrentBuildNumber;
     DWORD CSDVersion;
 } PRODUCT_OPTION_DATA, *LPPRODUCT_OPTION_DATA;
 
 static const PRODUCT_OPTION_DATA s_ProductOptionData[] =
 {
-    {
-        L"Terminal Server\0",
-        L"ServerNT",
-        0,
-        L"5.2",
-        L"3790",
-        0x200
-    },
-    {
-        L"\0",
-        L"WinNT",
-        1,
-        L"5.1",
-        L"2600",
-        0x300
-    }
+    { L"Terminal Server\0", L"ServerNT", 0, 0x200 },
+    { L"\0", L"WinNT", 1, 0x300 }
 };
 
 static BOOL
@@ -473,27 +454,6 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
 
     RegCloseKey(hKey);
 
-    /* open WindowsNT key */
-    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWindowsNT, 0, KEY_WRITE, &hKey);
-    if (error)
-        goto Error;
-
-    /* write WindowsNT CurrentVersion */
-    pszData = pData->CurrentVersion;
-    cbData = (lstrlenW(pszData) + 1) * sizeof(WCHAR);
-    error = RegSetValueExW(hKey, s_szCurrentVersion, 0, REG_SZ, (const BYTE *)pszData, cbData);
-    if (error)
-        goto Error;
-
-    /* write WindowsNT CurrentBuildNumber */
-    pszData = pData->CurrentBuildNumber;
-    cbData = (lstrlenW(pszData) + 1) * sizeof(WCHAR);
-    error = RegSetValueExW(hKey, s_szCurrentBuildNumber, 0, REG_SZ, (const BYTE *)pszData, cbData);
-    if (error)
-        goto Error;
-
-    RegCloseKey(hKey);
-
     /* open Control Windows key */
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szControlWindows, 0, KEY_WRITE, &hKey);
     if (error)
@@ -503,8 +463,6 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
     dwValue = pData->CSDVersion;
     cbData = sizeof(dwValue);
     error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
-    if (error)
-        goto Error;
 
 Error:
     if (hKey)
