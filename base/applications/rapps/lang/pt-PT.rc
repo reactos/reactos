@@ -195,6 +195,7 @@ BEGIN
     IDS_APPLICATIONS "Aplicativos"
     IDS_CHOOSE_FOLDER_TEXT "Escolha uma pasta para armazenar os Downloads:"
     IDS_CHOOSE_FOLDER_ERROR "A pasta especificada não existe. Deseja criá-la?"
+	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "Tem certeza que deseja apagar as informações do programa instalado do registo?"
     IDS_INFORMATION "Informações"
     IDS_UNABLE_TO_DOWNLOAD "Não é possível fazer o download do pacote! Endereço não encontrado!"

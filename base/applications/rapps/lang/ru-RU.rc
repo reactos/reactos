@@ -193,6 +193,7 @@ BEGIN
     IDS_APPLICATIONS "Приложения"
     IDS_CHOOSE_FOLDER_TEXT "Выберите папку, которая будет использоваться для загрузки программ:"
     IDS_CHOOSE_FOLDER_ERROR "Указанная вами папка не существует. Создать?"
+	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "Вы действительно хотите удалить данные об установленной программе из реестра?"
     IDS_INFORMATION "Информация"
     IDS_UNABLE_TO_DOWNLOAD "Не удалось скачать приложение! Не найден адрес!"

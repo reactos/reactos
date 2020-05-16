@@ -196,6 +196,7 @@ BEGIN
     IDS_APPLICATIONS "应用程序"
     IDS_CHOOSE_FOLDER_TEXT "请选择用来保存下载文件的文件夹: "
     IDS_CHOOSE_FOLDER_ERROR "您选择的文件夹不存在。是否创建？"
+	IDS_URL_INVALID "您指定的URL无效或不支持。请更正！"
     IDS_APP_REG_REMOVE "您确定要从注册表删除该程序的数据吗？"
     IDS_INFORMATION "信息"
     IDS_UNABLE_TO_DOWNLOAD "无法下载该软件包！找不到网络的地址！"

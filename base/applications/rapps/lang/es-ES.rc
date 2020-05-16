@@ -196,6 +196,7 @@ BEGIN
     IDS_APPLICATIONS "Aplicaciones"
     IDS_CHOOSE_FOLDER_TEXT "Seleccione una carpeta de donde se descargarán los programas:"
     IDS_CHOOSE_FOLDER_ERROR "La carpeta especificada no existe."
+	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "¿Está seguro de querer borrar del Registro los datos de instalación del programa?"
     IDS_INFORMATION "Información"
     IDS_UNABLE_TO_DOWNLOAD "No se pudo descargar el paquete. No se ha encontrado la dirección de Internet."

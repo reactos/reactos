@@ -193,6 +193,7 @@ BEGIN
     IDS_APPLICATIONS "Aplikasi"
     IDS_CHOOSE_FOLDER_TEXT "Pilih folder yang akan dipakai unduhan:"
     IDS_CHOOSE_FOLDER_ERROR "Folder yang ditentukan belum ada. Buat folder?"
+	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "Yakin ingin menghapus data program yang terpasang dari registri?"
     IDS_INFORMATION "Informasi"
     IDS_UNABLE_TO_DOWNLOAD "Tidak bisa mengunduh paket! Alamat tidak ditemukan!"

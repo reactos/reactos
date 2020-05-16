@@ -195,6 +195,7 @@ BEGIN
     IDS_APPLICATIONS "Uygulamalar"
     IDS_CHOOSE_FOLDER_TEXT "İndirilenlerin saklanacağı bir dizin seçiniz:"
     IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
+	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "Kurulan programın girişini değer defterinden silmek istediğinizden emin misiniz?"
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_DOWNLOAD "Paket indirilemez! Adres bulunamadı!"

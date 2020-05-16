@@ -50,6 +50,31 @@ BOOL ChooseFolder(HWND hwnd)
     return bRet;
 }
 
+BOOL IsUrlValid(const WCHAR * Url)
+{
+	URL_COMPONENTSW UrlComponmentInfo = { 0 };
+	UrlComponmentInfo.dwStructSize = sizeof(UrlComponmentInfo);
+	UrlComponmentInfo.dwSchemeLength = 1;
+	
+	BOOL bSuccess = InternetCrackUrlW(Url, wcslen(Url), 0, &UrlComponmentInfo);
+	if(!bSuccess)
+	{
+		return FALSE;
+	}
+	
+	switch(UrlComponmentInfo.nScheme)
+	{
+		case INTERNET_SCHEME_HTTP:
+		case INTERNET_SCHEME_HTTPS:
+		case INTERNET_SCHEME_FTP:
+		// supported
+			return TRUE;
+			
+		default:
+			return FALSE;
+	}
+}
+
 namespace
 {
     inline BOOL IsCheckedDlgItem(HWND hDlg, INT nIDDlgItem)
@@ -172,10 +197,6 @@ namespace
                 GetWindowTextW(GetDlgItem(hDlg, IDC_SOURCE_URL),
                                szSource.GetBuffer(INTERNET_MAX_URL_LENGTH), INTERNET_MAX_URL_LENGTH);
                 szSource.ReleaseBuffer();
-                ATL::CStringW::CopyChars(NewSettingsInfo.szSourceBaseURL,
-                                         _countof(NewSettingsInfo.szSourceBaseURL),
-                                         szSource.GetString(),
-                                         szSource.GetLength() + 1);
 
                 GetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER),
                                szProxy.GetBuffer(MAX_PATH), MAX_PATH);
@@ -220,6 +241,24 @@ namespace
                         break;
                     }
                 }
+				
+				
+				if(NewSettingsInfo.bUseSource && !IsUrlValid(szSource.GetString()))
+				{
+					ATL::CStringW szMsgText;
+                    szMsgText.LoadStringW(IDS_URL_INVALID);
+					
+					MessageBoxW(hDlg, szMsgText.GetString(), NULL, 0);
+					SetFocus(GetDlgItem(hDlg, IDC_SOURCE_URL));
+					break;
+				}
+				else
+				{
+					ATL::CStringW::CopyChars(NewSettingsInfo.szSourceBaseURL,
+                                         _countof(NewSettingsInfo.szSourceBaseURL),
+                                         szSource.GetString(),
+                                         szSource.GetLength() + 1);
+				}
 
                 SettingsInfo = NewSettingsInfo;
                 SaveSettings(GetParent(hDlg));

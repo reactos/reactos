@@ -193,6 +193,7 @@ BEGIN
     IDS_APPLICATIONS "Applicazioni"
     IDS_CHOOSE_FOLDER_TEXT "Scegliere una cartella dove scaricare le applicazioni:"
     IDS_CHOOSE_FOLDER_ERROR "La cartella indicata non esiste. Vuoi crearla?"
+	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "Sicuro di voler cancellare dal registro i dati sui programmi installati?"
     IDS_INFORMATION "Informazioni"
     IDS_UNABLE_TO_DOWNLOAD "Impossibile scaricare il pacchetto! Indirizzo non trovato!"

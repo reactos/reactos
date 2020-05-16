@@ -201,6 +201,7 @@ BEGIN
     IDS_APPLICATIONS "Додатки"
     IDS_CHOOSE_FOLDER_TEXT "Оберіть теку, яка буде використовуватися для завантаження програм:"
     IDS_CHOOSE_FOLDER_ERROR "Ви вказали неіснуючу теку!"
+	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "Ви дійсно хочете видалити дані про встановлену програму з реєстру?"
     IDS_INFORMATION "Інформація"
     IDS_UNABLE_TO_DOWNLOAD "Неможливо завантажити додаток! Адресу не знайдено!"

@@ -195,6 +195,7 @@ BEGIN
     IDS_APPLICATIONS "應用程式"
     IDS_CHOOSE_FOLDER_TEXT "請選擇用來儲存下載檔案的資料夾:"
     IDS_CHOOSE_FOLDER_ERROR "您選擇的資料夾不存在。創建嗎？"
+	IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "您確定要從登錄檔刪除該程式的資料嗎？"
     IDS_INFORMATION "資訊"
     IDS_UNABLE_TO_DOWNLOAD "無法下載包!找不到的位址!"
