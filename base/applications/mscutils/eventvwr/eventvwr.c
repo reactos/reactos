@@ -2749,7 +2749,10 @@ GetDisplayNameFileAndID(IN LPCWSTR lpLogName,
     Result = RegOpenKeyExW(hkMachine, KeyPath, 0, KEY_QUERY_VALUE, &hLogKey);
     HeapFree(GetProcessHeap(), 0, KeyPath);
     if (Result != ERROR_SUCCESS)
+    {
+        ShowWin32Error(Result);
         return FALSE;
+    }
 
     cbData = sizeof(szModuleName);
     Result = RegQueryValueExW(hLogKey,
