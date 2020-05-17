@@ -5,7 +5,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Compatibilidade"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Se tiver problemas para executar este programa no ReactOS, seleccione o sistema operacional que o ReactOS deve reportar ao aplicativo. \n Tenha em atenção que este é um trabalho em desenvolvimento.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "Se tiver problemas para executar este programa no ReactOS, seleccione o sistema operacional que o ReactOS deve reportar ao aplicativo.\nTenha em atenção que este é um trabalho em desenvolvimento.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Mode de compatibilidade", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Exec. este programa em modo de compatibilidade para:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -37,7 +37,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Compatibilidade"
-    IDS_FAILED_NETWORK "Os modos de compatibilidade não podem ser definidos neste programa porque ele está numa unidade de rede"
-    IDS_FAILED_PROTECTED "Os modos de compatibilidade não podem ser definidos neste programa porque faz parte do ReactOS"
+    IDS_FAILED_NETWORK "Os modos de compatibilidade não podem ser definidos neste programa porque ele está numa unidade de rede."
+    IDS_FAILED_PROTECTED "Os modos de compatibilidade não podem ser definidos neste programa porque faz parte do ReactOS."
 END
-
