@@ -304,6 +304,7 @@ WDFEXPORT(WdfDriverCreate)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDriverRetrieveVersionString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -382,6 +383,7 @@ WDFEXPORT(WdfDriverRetrieveVersionString)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfDriverIsVersionAvailable)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

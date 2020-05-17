@@ -22,6 +22,7 @@ public:
 
     virtual
     NTSTATUS
+    NTAPI
     Dispatch(
         __in MdIrp Irp
         ) = 0;

@@ -355,6 +355,7 @@ FxFileObject::DeleteFileObjectFromFailedCreate(
 //
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxFileObject::_CreateFileObject(
     __in FxDevice*                   pDevice,
     __in MdIrp                        Irp,

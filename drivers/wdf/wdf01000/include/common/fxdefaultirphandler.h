@@ -13,6 +13,7 @@ public:
     _Must_inspect_result_
     virtual
     NTSTATUS
+    NTAPI
     Dispatch(
         __in MdIrp Irp
         );

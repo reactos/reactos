@@ -5,6 +5,7 @@
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 GetStackCapabilities(
     __in PFX_DRIVER_GLOBALS DriverGlobals,
     __in MxDeviceObject* DeviceInStack,

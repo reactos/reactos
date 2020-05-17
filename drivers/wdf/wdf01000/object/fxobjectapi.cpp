@@ -6,6 +6,7 @@ extern "C" {
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI    
 VOID
+NTAPI
 WDFEXPORT(WdfObjectDelete)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

@@ -5,6 +5,7 @@
 extern "C" {
 
 VOID
+NTAPI
 WDFEXPORT(WdfVerifierDbgBreakPoint)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals

@@ -450,6 +450,7 @@ public:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _CreateForPackage(
         __in CfxDevice* Device,
         __in PWDF_OBJECT_ATTRIBUTES RequestAttributes,

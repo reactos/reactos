@@ -8,6 +8,7 @@ extern "C" {
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitSetPnpPowerEventCallbacks)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -73,6 +74,7 @@ WDFEXPORT(WdfDeviceInitSetPnpPowerEventCallbacks)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitSetRequestAttributes)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

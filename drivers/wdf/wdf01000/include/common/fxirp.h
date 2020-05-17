@@ -160,6 +160,7 @@ public:
     _Must_inspect_result_
     static
     MdIrp
+    NTAPI
     AllocateIrp(
         _In_ CCHAR StackSize,
         _In_opt_ FxDevice* Device = NULL
@@ -254,6 +255,7 @@ public:
     static
     __inline
     NTSTATUS
+    NTAPI
     _IrpSynchronousCompletion(
         __in MdDeviceObject DeviceObject,
         __in PIRP OriginalIrp,

@@ -8,6 +8,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -124,6 +125,7 @@ WDFEXPORT(WdfDeviceCreate)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFQUEUE
+NTAPI
 WDFEXPORT(WdfDeviceGetDefaultQueue)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

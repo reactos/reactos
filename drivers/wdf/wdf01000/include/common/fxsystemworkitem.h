@@ -18,6 +18,7 @@ __drv_maxFunctionIRQL(DISPATCH_LEVEL)
 __drv_sameIRQL
 typedef
 VOID
+NTAPI
 EVT_SYSTEMWORKITEM(
     __in PVOID Parameter
     );
@@ -138,6 +139,7 @@ public:
     static
     _Must_inspect_result_
     NTSTATUS
+    NTAPI
     _Create(
         __in PFX_DRIVER_GLOBALS FxDriverGlobals,
         __in PVOID              WdmObject,
@@ -166,6 +168,7 @@ private:
 
     static
     MX_WORKITEM_ROUTINE 
+    NTAPI
     _WorkItemThunk;
 
     VOID

@@ -116,6 +116,7 @@ Returns:
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
 WDFAPI
+NTAPI
 WDFEXPORT(WdfRequestCompleteWithInformation)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -185,6 +186,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
+NTAPI
 WDFEXPORT(WdfRequestRetrieveOutputMemory)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -334,6 +336,7 @@ FX_VF_FUNCTION(VerifyRequestComplete) (
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
 WDFAPI
+NTAPI
 WDFEXPORT(WdfRequestComplete)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -395,6 +398,7 @@ Returns:
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
 WDFAPI
+NTAPI
 WDFEXPORT(WdfRequestSetInformation)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -486,6 +490,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
+NTAPI
 WDFEXPORT(WdfRequestRetrieveInputMemory)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -598,6 +603,7 @@ Returns:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestUnmarkCancelable)(
    __in
    PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -657,6 +663,7 @@ Returns:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestMarkCancelableEx)(
    __in
    PWDF_DRIVER_GLOBALS DriverGlobals,

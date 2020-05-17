@@ -1275,7 +1275,6 @@ FxPkgPnp::_PowerProcessEventInner(
     __in PVOID WorkerContext
     )
 {
-    
     UNREFERENCED_PARAMETER(WorkerContext);
 
     //
@@ -1305,6 +1304,7 @@ FxPkgPnp::_PowerProcessEventInner(
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventCheckForDevicePresence(
     __inout FxPkgPnp*   This
     )
@@ -1329,6 +1329,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventEjectHardware(
     __inout FxPkgPnp*   This
     )
@@ -1353,6 +1354,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventInitStarting(
     __inout FxPkgPnp* This
     )
@@ -1383,6 +1385,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventInitSurpriseRemoved(
     __inout FxPkgPnp*   This
     )
@@ -1408,6 +1411,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventHardwareAvailable(
     __inout FxPkgPnp*   This
     )
@@ -1505,6 +1509,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventStarted(
     __inout FxPkgPnp*   This
     )
@@ -1537,6 +1542,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventEnableInterfaces(
     __inout FxPkgPnp* This
     )
@@ -1642,6 +1648,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventHardwareAvailablePowerPolicyFailed(
     __inout FxPkgPnp* This
     )
@@ -1666,6 +1673,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventQueryRemoveAskDriver(
     __inout FxPkgPnp*   This
     )
@@ -1689,6 +1697,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventQueryRemovePending(
     __inout FxPkgPnp*   This
     )
@@ -1711,6 +1720,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventQueryRemoveStaticCheck(
     __inout FxPkgPnp*   This
     )
@@ -1737,6 +1747,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventQueriedRemoving(
     __inout FxPkgPnp*   This
     )
@@ -1758,6 +1769,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventQueryStopAskDriver(
     __inout FxPkgPnp*   This
     )
@@ -1781,6 +1793,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventQueryStopPending(
     __inout FxPkgPnp* This
     )
@@ -1804,6 +1817,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventQueryStopStaticCheck(
     __inout FxPkgPnp*   This
     )
@@ -1829,6 +1843,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventQueryCanceled(
     __inout FxPkgPnp*   This
     )
@@ -1851,6 +1866,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventRemoved(
     __inout FxPkgPnp*   This
     )
@@ -1873,6 +1889,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventPdoRemoved(
     __inout FxPkgPnp*   This
     )
@@ -1894,6 +1911,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventRemovedPdoWait(
     __inout FxPkgPnp* This
     )
@@ -1920,6 +1938,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventRemovedPdoSurpriseRemoved(
     __inout FxPkgPnp* This
     )
@@ -1942,6 +1961,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventRemovingDisableInterfaces(
     __inout FxPkgPnp*   This
     )
@@ -1966,6 +1986,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventRestarting(
     __inout FxPkgPnp*   This
     )
@@ -2010,6 +2031,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventStartedCancelStop(
     __inout FxPkgPnp* This
     )
@@ -2032,6 +2054,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventStartedCancelRemove(
     __inout FxPkgPnp* This
     )
@@ -2055,6 +2078,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventStartedRemoving(
     __inout FxPkgPnp* This
     )
@@ -2076,6 +2100,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventStartingFromStopped(
     __inout FxPkgPnp*   This
     )
@@ -2099,6 +2124,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventStopped(
     __inout FxPkgPnp*   This
     )
@@ -2122,6 +2148,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventStoppedWaitForStartCompletion(
     __inout FxPkgPnp* This
     )
@@ -2144,6 +2171,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventSurpriseRemoved(
     __inout FxPkgPnp*   This
     )
@@ -2167,6 +2195,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventInitQueryRemove(
     __inout FxPkgPnp* This
     )
@@ -2188,6 +2217,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventInitQueryRemoveCanceled(
     __inout FxPkgPnp* This
     )
@@ -2210,6 +2240,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventFdoRemoved(
     __inout FxPkgPnp* This
     )
@@ -2230,6 +2261,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventQueriedSurpriseRemove(
     __inout FxPkgPnp* This
     )
@@ -2252,6 +2284,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventSurpriseRemoveIoStarted(
     __inout FxPkgPnp* This
     )
@@ -2276,6 +2309,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventFailedPowerDown(
     __inout FxPkgPnp* This
     )
@@ -2306,6 +2340,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventFailedIoStarting(
     __inout FxPkgPnp* This
     )
@@ -2329,6 +2364,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventFailedOwnHardware(
     __inout FxPkgPnp* This
     )
@@ -2352,6 +2388,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventFailed(
     __inout FxPkgPnp* This
     )
@@ -2375,6 +2412,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventFailedSurpriseRemoved(
     __inout FxPkgPnp* This
     )
@@ -2402,6 +2440,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventFailedStarted(
     __inout FxPkgPnp* This
     )
@@ -2425,6 +2464,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventFailedInit(
     __inout FxPkgPnp* This
     )
@@ -2446,6 +2486,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventPdoInitFailed(
     __inout FxPkgPnp* This
     )
@@ -2467,6 +2508,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventRestart(
     __inout FxPkgPnp* This
     )
@@ -2489,6 +2531,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventRestartReleaseHardware(
     __inout FxPkgPnp* This
     )
@@ -2510,6 +2553,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventRestartHardwareAvailable(
     __inout FxPkgPnp* This
     )
@@ -2533,6 +2577,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventPdoRestart(
     __inout FxPkgPnp* This
     )
@@ -2555,6 +2600,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventFinal(
     __inout FxPkgPnp* This
     )
@@ -2577,6 +2623,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventRemovedChildrenRemoved(
     __inout FxPkgPnp* This
     )
@@ -2598,6 +2645,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventQueryRemoveEnsureDeviceAwake(
    __inout FxPkgPnp *This
    )
@@ -2618,6 +2666,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventQueryStopEnsureDeviceAwake(
    __inout FxPkgPnp *This
    )
@@ -2638,6 +2687,7 @@ Return Value:
 }
 
 WDF_DEVICE_PNP_STATE
+NTAPI
 FxPkgPnp::PnpEventFailedPowerPolicyRemoved(
     __inout FxPkgPnp* This
     )

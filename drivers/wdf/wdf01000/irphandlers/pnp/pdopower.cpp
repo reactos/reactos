@@ -68,6 +68,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_DispatchPowerSequence(
     __inout FxPkgPnp* This,
     __in FxIrp *Irp
@@ -93,6 +94,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_DispatchSetPower(
     __inout FxPkgPnp* This,
     __in FxIrp *Irp
@@ -121,6 +123,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_DispatchQueryPower(
     __inout FxPkgPnp* This,
     __in FxIrp *Irp

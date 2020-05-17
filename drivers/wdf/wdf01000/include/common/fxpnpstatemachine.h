@@ -47,7 +47,7 @@ const UCHAR FxPowerPolicyEventQueueDepth = 8;
 
 typedef
 WDF_DEVICE_PNP_STATE
-(*PFN_PNP_STATE_ENTRY_FUNCTION)(
+(NTAPI *PFN_PNP_STATE_ENTRY_FUNCTION)(
     FxPkgPnp* This
     );
 

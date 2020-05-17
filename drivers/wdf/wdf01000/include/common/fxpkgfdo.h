@@ -180,6 +180,7 @@ private:
     static
     _Must_inspect_result_
     NTSTATUS
+    NTAPI
     _PowerPassDown(
         __inout FxPkgPnp* This,
         __in FxIrp *Irp
@@ -188,6 +189,7 @@ private:
     static
     _Must_inspect_result_
     NTSTATUS
+    NTAPI
     _DispatchSetPower(
         __inout FxPkgPnp* This,
         __in FxIrp *Irp
@@ -196,6 +198,7 @@ private:
     static
     _Must_inspect_result_
     NTSTATUS
+    NTAPI
     _DispatchQueryPower(
         __inout FxPkgPnp* This,
         __in FxIrp *Irp
@@ -204,6 +207,7 @@ private:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpPassDown(
         __in FxPkgPnp* This,
         __inout FxIrp* Irp
@@ -218,6 +222,7 @@ private:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpSurpriseRemoval(
         __inout FxPkgPnp* This,
         __inout FxIrp *Irp
@@ -226,6 +231,7 @@ private:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpQueryDeviceRelations(
         __inout FxPkgPnp* This,
         __inout FxIrp *Irp
@@ -240,6 +246,7 @@ private:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpQueryInterface(
         __inout FxPkgPnp* This,
         __inout FxIrp *Irp
@@ -248,6 +255,7 @@ private:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpQueryCapabilities(
         __inout FxPkgPnp* This,
         __inout FxIrp *Irp
@@ -282,6 +290,7 @@ private:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpFilterResourceRequirements(
         __inout FxPkgPnp* This,
         __inout FxIrp *Irp
@@ -296,6 +305,7 @@ private:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpQueryPnpDeviceState(
         __inout FxPkgPnp* This,
         __inout FxIrp *Irp
@@ -361,30 +371,35 @@ private:
 
     virtual
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventCheckForDevicePresenceOverload(
         VOID
         );
 
     virtual
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventEjectHardwareOverload(
         VOID
         );
 
     virtual
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpGetPostRemoveState(
         VOID
         );
 
     virtual
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventPdoRemovedOverload(
         VOID
         );
 
     virtual
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFdoRemovedOverload(
         VOID
         );

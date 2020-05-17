@@ -154,6 +154,7 @@ FxSelfManagedIoMachine::FxSelfManagedIoMachine(
 }
 
 NTSTATUS
+NTAPI
 FxSelfManagedIoMachine::_CreateAndInit(
     _Inout_ FxSelfManagedIoMachine** SelfManagedIoMachine,
     _In_ FxPkgPnp* PkgPnp
@@ -331,6 +332,7 @@ Return Value:
 }
 
 FxSelfManagedIoStates
+NTAPI
 FxSelfManagedIoMachine::Init(
     _In_  FxSelfManagedIoMachine* This,
     _Inout_ PNTSTATUS Status,
@@ -374,6 +376,7 @@ Return Value:
 }
 
 FxSelfManagedIoStates
+NTAPI
 FxSelfManagedIoMachine::Suspending(
     _In_  FxSelfManagedIoMachine* This,
     _Inout_ PNTSTATUS Status,
@@ -413,6 +416,7 @@ Return Value:
 }
 
 FxSelfManagedIoStates
+NTAPI
 FxSelfManagedIoMachine::Restarting(
     _In_  FxSelfManagedIoMachine* This,
     _Inout_ PNTSTATUS Status,
@@ -461,6 +465,7 @@ Return Value:
 }
 
 FxSelfManagedIoStates
+NTAPI
 FxSelfManagedIoMachine::Flushing(
     _In_  FxSelfManagedIoMachine* This,
     _Inout_ PNTSTATUS Status,
@@ -489,6 +494,7 @@ Return Value:
 }
 
 FxSelfManagedIoStates
+NTAPI
 FxSelfManagedIoMachine::Cleanup(
     _In_  FxSelfManagedIoMachine* This,
     _Inout_ PNTSTATUS Status,
@@ -517,6 +523,7 @@ Return Value:
 }
 
 FxSelfManagedIoStates
+NTAPI
 FxSelfManagedIoMachine::InitStartedFailedPost(
     _In_  FxSelfManagedIoMachine* This,
     _Inout_ PNTSTATUS Status,
@@ -545,6 +552,7 @@ Return Value:
 }
 
 FxSelfManagedIoStates
+NTAPI
 FxSelfManagedIoMachine::RestartedFailedPost(
     _In_  FxSelfManagedIoMachine* This,
     _Inout_ PNTSTATUS Status,

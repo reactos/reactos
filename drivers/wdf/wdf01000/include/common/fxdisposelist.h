@@ -62,6 +62,7 @@ public:
 
     static
     NTSTATUS
+    NTAPI
     _Create(
         PFX_DRIVER_GLOBALS FxDriverGlobals,
         PVOID              WdmObject,
@@ -97,6 +98,7 @@ private:
 
     static
     VOID
+    NTAPI
     _WorkItemThunk(
         __in PVOID Parameter
         );

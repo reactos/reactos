@@ -191,6 +191,7 @@ PreprocessIrp(
 _Must_inspect_result_
 __inline
 NTSTATUS
+NTAPI
 DispatchWorker(
     __in FxDevice*  Device,
     __in MdIrp       Irp,

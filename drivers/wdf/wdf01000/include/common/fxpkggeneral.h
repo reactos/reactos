@@ -101,6 +101,7 @@ public:
     _Must_inspect_result_
     virtual
     NTSTATUS
+    NTAPI
     Dispatch(
         __inout MdIrp Irp
         );
@@ -177,11 +178,15 @@ private:
         VOID
         );
 
-    static
-    MdCompletionRoutineType _CreateCompletionRoutine;
+    static    
+    MdCompletionRoutineType
+    NTAPI
+    _CreateCompletionRoutine;
     
-    static
-    MdCompletionRoutineType _CreateCompletionRoutine2;
+    static    
+    MdCompletionRoutineType
+    NTAPI
+    _CreateCompletionRoutine2;
 
     _Must_inspect_result_
     NTSTATUS

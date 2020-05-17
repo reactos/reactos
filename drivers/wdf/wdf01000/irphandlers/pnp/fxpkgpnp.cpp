@@ -597,6 +597,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPnp::Dispatch(
     __in MdIrp Irp
     )
@@ -1036,6 +1037,7 @@ FxPkgPnp::AllocateEnumInfo(
 }
 
 VOID
+NTAPI
 FxPkgPnp::_SetPowerCapState(
     __in  ULONG Index,
     __in  DEVICE_POWER_STATE State,
@@ -1658,6 +1660,7 @@ FxPkgPnp::~FxPkgPnp()
 }
 
 VOID
+NTAPI
 FxPkgPnp::_PowerThreadInterfaceDereference(
     __inout PVOID Context
     )
@@ -1688,6 +1691,7 @@ Return Value:
 }
 
 VOID
+NTAPI
 FxPkgPnp::_PowerThreadInterfaceReference(
     __inout PVOID Context
     )
@@ -1719,6 +1723,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPnp::_PnpStartDevice(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -1746,6 +1751,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPnp::_PnpQueryStopDevice(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -1788,6 +1794,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPnp::_PnpCancelStopDevice(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -1822,6 +1829,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPnp::_PnpStopDevice(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -1848,6 +1856,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPnp::_PnpQueryRemoveDevice(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -1879,6 +1888,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPnp::_PnpCancelRemoveDevice(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -1909,6 +1919,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPnp::_PnpRemoveDevice(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -1939,6 +1950,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPnp::_PnpDeviceUsageNotification(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -2187,6 +2199,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPnp::_DispatchWaitWake(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp

@@ -9,6 +9,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoQueueCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -218,6 +219,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 WDFEXPORT(WdfIoQueueStart)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -264,6 +266,7 @@ Returns:
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+NTAPI
 WDFEXPORT(WdfIoQueueStopSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

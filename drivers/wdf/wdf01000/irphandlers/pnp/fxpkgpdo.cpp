@@ -328,6 +328,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpQueryDeviceRelations(
     __in    FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -339,6 +340,7 @@ FxPkgPdo::_PnpQueryDeviceRelations(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpQueryInterface(
     IN FxPkgPnp* This,
     IN FxIrp *Irp
@@ -364,6 +366,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpQueryCapabilities(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -375,6 +378,7 @@ FxPkgPdo::_PnpQueryCapabilities(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpQueryResources(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -386,6 +390,7 @@ FxPkgPdo::_PnpQueryResources(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpQueryResourceRequirements(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -397,6 +402,7 @@ FxPkgPdo::_PnpQueryResourceRequirements(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpQueryDeviceText(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -426,6 +432,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpFilterResourceRequirements(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -452,6 +459,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpCompleteIrp(
     __in    FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -463,6 +471,7 @@ FxPkgPdo::_PnpCompleteIrp(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpEject(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -493,6 +502,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpSetLock(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -518,6 +528,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpQueryId(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -529,6 +540,7 @@ FxPkgPdo::_PnpQueryId(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpQueryPnpDeviceState(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -554,6 +566,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpQueryBusInformation(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -579,6 +592,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgPdo::_PnpSurpriseRemoval(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp

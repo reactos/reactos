@@ -9,6 +9,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfStringCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -102,6 +103,7 @@ WDFEXPORT(WdfStringCreate)(
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+NTAPI
 WDFEXPORT(WdfStringGetUnicodeString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

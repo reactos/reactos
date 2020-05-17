@@ -123,6 +123,7 @@ FxDisposeList::DrainListLocked(
 }
 
 VOID
+NTAPI
 FxDisposeList::_WorkItemThunk(
     __in PVOID Parameter
     )
@@ -140,6 +141,7 @@ FxDisposeList::_WorkItemThunk(
 }
 
 NTSTATUS
+NTAPI
 FxDisposeList::_Create(
     PFX_DRIVER_GLOBALS FxDriverGlobals,
     PVOID              WdmObject,

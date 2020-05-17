@@ -287,6 +287,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgFdo::_PnpPassDown(
     __in FxPkgPnp* This,
     __inout FxIrp* Irp
@@ -599,6 +600,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgFdo::_PnpFilterResourceRequirements(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -809,6 +811,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgFdo::_PnpSurpriseRemoval(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -837,6 +840,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgFdo::_PnpQueryDeviceRelations(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -966,6 +970,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgFdo::_PnpQueryInterface(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -994,6 +999,7 @@ Returns:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgFdo::_PnpQueryCapabilities(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp
@@ -1232,6 +1238,7 @@ FxPkgFdo::HandleQueryCapabilitiesCompletion(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxPkgFdo::_PnpQueryPnpDeviceState(
     __inout FxPkgPnp* This,
     __inout FxIrp *Irp

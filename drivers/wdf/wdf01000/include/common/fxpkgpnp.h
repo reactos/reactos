@@ -88,7 +88,7 @@ enum FxDeviceCallbackFlags {
 typedef
 _Must_inspect_result_
 NTSTATUS
-(*PFN_PNP_POWER_CALLBACK)(
+(NTAPI *PFN_PNP_POWER_CALLBACK)(
      __inout FxPkgPnp* This,
      __inout FxIrp* Irp
      );
@@ -293,7 +293,7 @@ struct FxPowerCaps {
 
 typedef
 VOID
-(*PFN_POWER_THREAD_ENQUEUE)(
+(NTAPI *PFN_POWER_THREAD_ENQUEUE)(
      __in PVOID Context,
      __in PWORK_QUEUE_ITEM WorkItem
      );
@@ -395,6 +395,7 @@ protected:
     _Must_inspect_result_
     virtual
     NTSTATUS
+    NTAPI
     Dispatch(
         __in MdIrp Irp
         );
@@ -649,6 +650,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpStartDevice(
         __inout FxPkgPnp* This,
         __inout FxIrp* Irp
@@ -657,6 +659,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpQueryStopDevice(
         __inout FxPkgPnp* This,
         __inout FxIrp* Irp
@@ -665,6 +668,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpCancelStopDevice(
         __inout FxPkgPnp* This,
         __inout FxIrp* Irp
@@ -673,6 +677,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpStopDevice(
         __inout FxPkgPnp* This,
         __inout FxIrp* Irp
@@ -681,6 +686,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpQueryRemoveDevice(
         __inout FxPkgPnp* This,
         __inout FxIrp* Irp
@@ -689,6 +695,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpCancelRemoveDevice(
         __inout FxPkgPnp* This,
         __inout FxIrp* Irp
@@ -697,6 +704,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpRemoveDevice(
         __inout FxPkgPnp* This,
         __inout FxIrp* Irp
@@ -716,6 +724,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _PnpDeviceUsageNotification(
         __inout FxPkgPnp* This,
         __inout FxIrp* Irp
@@ -724,6 +733,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _DispatchWaitWake(
         __inout FxPkgPnp* This,
         __inout FxIrp* Irp
@@ -760,6 +770,7 @@ protected:
 
     static
     VOID
+    NTAPI
     _SetPowerCapState(
         __in  ULONG Index,
         __in  DEVICE_POWER_STATE State,
@@ -776,6 +787,7 @@ protected:
 // begin pnp state machine table based callbacks
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventCheckForDevicePresence(
         __inout FxPkgPnp* This
         );
@@ -788,150 +800,175 @@ protected:
 
     virtual
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventCheckForDevicePresenceOverload(
         VOID
         ) = 0;
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventEjectHardware(
         __inout FxPkgPnp* This
         );
 
     virtual
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventEjectHardwareOverload(
         VOID
         ) = 0;
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventInitStarting(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventInitSurpriseRemoved(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventHardwareAvailable(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventEnableInterfaces(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventHardwareAvailablePowerPolicyFailed(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventQueryRemoveAskDriver(
         __inout FxPkgPnp* This
         );
 
     static 
     WDF_DEVICE_PNP_STATE 
+    NTAPI
     PnpEventQueryRemoveEnsureDeviceAwake(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventQueryRemovePending(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventQueryRemoveStaticCheck(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventQueriedRemoving(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventQueryStopAskDriver(
         __inout FxPkgPnp* This
         );
 
     static 
     WDF_DEVICE_PNP_STATE 
+    NTAPI
     PnpEventQueryStopEnsureDeviceAwake(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventQueryStopPending(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventQueryStopStaticCheck(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventQueryCanceled(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventRemoved(
         __inout FxPkgPnp* This
         );
 
     virtual
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpGetPostRemoveState(
         VOID
         ) =0;
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventPdoRemoved(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventRemovedPdoWait(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventRemovedPdoSurpriseRemoved(
         __inout FxPkgPnp* This
         );
 
     virtual
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventPdoRemovedOverload(
         VOID
         ) =0;
 
     virtual
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFdoRemovedOverload(
         VOID
         ) =0;
@@ -949,186 +986,217 @@ protected:
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventRemovingDisableInterfaces(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventRestarting(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventStarted(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventStartedCancelStop(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventStartedCancelRemove(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventStartedRemoving(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventStartingFromStopped(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventStopped(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventStoppedWaitForStartCompletion(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventStartedStopping(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventSurpriseRemoved(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventInitQueryRemove(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventInitQueryRemoveCanceled(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFdoRemoved(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventQueriedSurpriseRemove(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventSurpriseRemoveIoStarted(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFailedPowerDown(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFailedIoStarting(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFailedOwnHardware(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFailed(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFailedPowerPolicyRemoved(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFailedSurpriseRemoved(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFailedStarted(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFailedInit(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventPdoInitFailed(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventRestart(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventRestartReleaseHardware(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventRestartHardwareAvailable(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventPdoRestart(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventRemovedChildrenRemoved(
         __inout FxPkgPnp* This
         );
 
     static
     WDF_DEVICE_PNP_STATE
+    NTAPI
     PnpEventFinal(
         __inout FxPkgPnp* This
         );
@@ -2779,6 +2847,7 @@ private:
 
     static
     VOID
+    NTAPI
     _PowerThreadEnqueue(
         __in PVOID Context,
         __in PWORK_QUEUE_ITEM WorkItem
@@ -2796,12 +2865,14 @@ private:
 
     static
     VOID
+    NTAPI
     _PowerThreadInterfaceReference(
         __inout PVOID Context
         );
 
     static
     VOID
+    NTAPI
     _PowerThreadInterfaceDereference(
         __inout PVOID Context
         );

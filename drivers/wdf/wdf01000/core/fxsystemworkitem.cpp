@@ -130,6 +130,7 @@ Return Value:
 }
 
 VOID
+NTAPI
 FxSystemWorkItem::_WorkItemThunk(
     __in MdDeviceObject DeviceObject,
     __in_opt PVOID      Context
@@ -220,6 +221,7 @@ FxSystemWorkItem::WorkItemHandler()
 //
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxSystemWorkItem::_Create(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PVOID              WdmObject,

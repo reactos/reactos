@@ -9,6 +9,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
+NTAPI
 WDFEXPORT(WdfMemoryCopyToBuffer)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -88,6 +89,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
+NTAPI
 WDFEXPORT(WdfMemoryCopyFromBuffer)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

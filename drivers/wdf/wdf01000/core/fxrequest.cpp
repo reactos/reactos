@@ -395,6 +395,7 @@ Routine Description:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxRequest::_CreateForPackage(
     __in CfxDevice* Device,
     __in PWDF_OBJECT_ATTRIBUTES RequestAttributes,

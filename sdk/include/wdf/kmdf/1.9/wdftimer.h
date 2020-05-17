@@ -35,6 +35,7 @@ __drv_functionClass(EVT_WDF_TIMER)
 __drv_sameIRQL
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 EVT_WDF_TIMER(
     __in
     WDFTIMER Timer
@@ -104,7 +105,7 @@ __checkReturn
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFTIMERCREATE)(
+(NTAPI *PFN_WDFTIMERCREATE)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in
@@ -138,7 +139,7 @@ typedef
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
-(*PFN_WDFTIMERSTART)(
+(NTAPI *PFN_WDFTIMERSTART)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in
@@ -168,7 +169,7 @@ __drv_when(Wait == __true, __drv_maxIRQL(PASSIVE_LEVEL))
 __drv_when(Wait == __false, __drv_maxIRQL(DISPATCH_LEVEL))
 WDFAPI
 BOOLEAN
-(*PFN_WDFTIMERSTOP)(
+(NTAPI *PFN_WDFTIMERSTOP)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in
@@ -198,7 +199,7 @@ typedef
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 WDFOBJECT
-(*PFN_WDFTIMERGETPARENTOBJECT)(
+(NTAPI *PFN_WDFTIMERGETPARENTOBJECT)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in

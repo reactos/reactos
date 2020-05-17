@@ -48,7 +48,7 @@ class FxPkgPnp;
 typedef
 _Must_inspect_result_
 FxSelfManagedIoStates
-(*PFN_SELF_MANAGED_IO_STATE_ENTRY_FUNCTION)(
+(NTAPI *PFN_SELF_MANAGED_IO_STATE_ENTRY_FUNCTION)(
     _In_  FxSelfManagedIoMachine*,
     _Inout_ PNTSTATUS Status,
     _Inout_opt_ FxCxCallbackProgress* Progress
@@ -121,6 +121,7 @@ public:
 
     static
     NTSTATUS
+    NTAPI
     _CreateAndInit(
         _Inout_ FxSelfManagedIoMachine** SelfManagedIoMachine,
         _In_ FxPkgPnp* PkgPnp
@@ -197,6 +198,7 @@ protected:
 
     static
     FxSelfManagedIoStates
+    NTAPI
     Init(
         _In_  FxSelfManagedIoMachine* This,
         _Inout_ PNTSTATUS Status,
@@ -205,6 +207,7 @@ protected:
 
     static
     FxSelfManagedIoStates
+    NTAPI
     Suspending(
         _In_  FxSelfManagedIoMachine* This,
         _Inout_ PNTSTATUS Status,
@@ -213,6 +216,7 @@ protected:
 
     static
     FxSelfManagedIoStates
+    NTAPI
     Restarting(
         _In_  FxSelfManagedIoMachine* This,
         _Inout_ PNTSTATUS Status,
@@ -221,6 +225,7 @@ protected:
 
     static
     FxSelfManagedIoStates
+    NTAPI
     Flushing(
         _In_  FxSelfManagedIoMachine* This,
         _Inout_ PNTSTATUS Status,
@@ -229,6 +234,7 @@ protected:
 
     static
     FxSelfManagedIoStates
+    NTAPI
     Cleanup(
         _In_  FxSelfManagedIoMachine* This,
         _Inout_ PNTSTATUS Status,
@@ -237,6 +243,7 @@ protected:
 
     static
     FxSelfManagedIoStates
+    NTAPI
     InitStartedFailedPost(
         _In_  FxSelfManagedIoMachine* This,
         _Inout_ PNTSTATUS Status,
@@ -245,6 +252,7 @@ protected:
 
     static 
     FxSelfManagedIoStates
+    NTAPI
     RestartedFailedPost(
         _In_  FxSelfManagedIoMachine* This,
         _Inout_ PNTSTATUS Status,

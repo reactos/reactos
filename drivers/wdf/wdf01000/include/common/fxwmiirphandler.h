@@ -44,6 +44,7 @@ public:
     virtual
     _Must_inspect_result_
     NTSTATUS
+    NTAPI
     Dispatch(
         __in PIRP Irp
         );

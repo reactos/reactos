@@ -207,6 +207,7 @@ __drv_functionClass(EVT_WDF_IO_QUEUE_IO_DEFAULT)
 __drv_sameIRQL
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 EVT_WDF_IO_QUEUE_IO_DEFAULT(
     __in
     WDFQUEUE Queue,
@@ -222,6 +223,7 @@ __drv_functionClass(EVT_WDF_IO_QUEUE_IO_STOP)
 __drv_sameIRQL
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 EVT_WDF_IO_QUEUE_IO_STOP(
     __in
     WDFQUEUE Queue,
@@ -238,6 +240,7 @@ __drv_functionClass(EVT_WDF_IO_QUEUE_IO_RESUME)
 __drv_sameIRQL
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 EVT_WDF_IO_QUEUE_IO_RESUME(
     __in
     WDFQUEUE Queue,
@@ -252,6 +255,7 @@ __drv_functionClass(EVT_WDF_IO_QUEUE_IO_READ)
 __drv_sameIRQL
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 EVT_WDF_IO_QUEUE_IO_READ(
     __in
     WDFQUEUE Queue,
@@ -268,6 +272,7 @@ __drv_functionClass(EVT_WDF_IO_QUEUE_IO_WRITE)
 __drv_sameIRQL
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 EVT_WDF_IO_QUEUE_IO_WRITE(
     __in
     WDFQUEUE Queue,
@@ -284,6 +289,7 @@ __drv_functionClass(EVT_WDF_IO_QUEUE_IO_DEVICE_CONTROL)
 __drv_sameIRQL
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 EVT_WDF_IO_QUEUE_IO_DEVICE_CONTROL(
     __in
     WDFQUEUE Queue,
@@ -304,6 +310,7 @@ __drv_functionClass(EVT_WDF_IO_QUEUE_IO_INTERNAL_DEVICE_CONTROL)
 __drv_sameIRQL
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 EVT_WDF_IO_QUEUE_IO_INTERNAL_DEVICE_CONTROL(
     __in
     WDFQUEUE Queue,
@@ -325,6 +332,7 @@ __drv_functionClass(EVT_WDF_IO_QUEUE_IO_CANCELED_ON_QUEUE)
 __drv_sameIRQL
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 EVT_WDF_IO_QUEUE_IO_CANCELED_ON_QUEUE(
     __in
     WDFQUEUE Queue,
@@ -340,6 +348,7 @@ __drv_functionClass(EVT_WDF_IO_QUEUE_STATE)
 __drv_sameIRQL
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 EVT_WDF_IO_QUEUE_STATE(
     __in
     WDFQUEUE Queue,
@@ -572,7 +581,7 @@ __checkReturn
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFIOQUEUECREATE)(
+(NTAPI *PFN_WDFIOQUEUECREATE)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in
@@ -643,7 +652,7 @@ typedef
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFIOQUEUESTART)(
+(NTAPI *PFN_WDFIOQUEUESTART)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in
@@ -705,7 +714,7 @@ typedef
 __drv_maxIRQL(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFIOQUEUESTOPSYNCHRONOUSLY)(
+(NTAPI *PFN_WDFIOQUEUESTOPSYNCHRONOUSLY)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in

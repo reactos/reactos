@@ -179,6 +179,7 @@ public:
 
     __inline
     MdDeviceObject
+    NTAPI
     GetAttachedDeviceReference(
         VOID
         )

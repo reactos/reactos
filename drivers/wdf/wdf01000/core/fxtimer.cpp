@@ -51,6 +51,7 @@ FxTimer::~FxTimer()
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxTimer::_Create(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PWDF_TIMER_CONFIG Config,
@@ -330,6 +331,7 @@ FxTimer::TimerHandler(
 }
 
 VOID
+NTAPI
 FxTimer::_FxTimerDpcThunk(
     __in PKDPC TimerDpc,
     __in PVOID DeferredContext,
@@ -384,6 +386,7 @@ Return Value:
 }
 
 VOID
+NTAPI
 FxTimer::_FxTimerWorkItemCallback(
     __in PVOID Parameter
     )

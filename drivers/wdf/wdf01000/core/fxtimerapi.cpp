@@ -9,6 +9,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfTimerCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -177,6 +178,7 @@ Notes:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfTimerStart)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -223,6 +225,7 @@ Returns:
 __drv_when(Wait == __true, __drv_maxIRQL(PASSIVE_LEVEL))
 __drv_when(Wait == __false, __drv_maxIRQL(DISPATCH_LEVEL))
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfTimerStop)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -275,6 +278,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFOBJECT
+NTAPI
 WDFEXPORT(WdfTimerGetParentObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

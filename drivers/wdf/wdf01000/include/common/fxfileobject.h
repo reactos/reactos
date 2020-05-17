@@ -133,6 +133,7 @@ public:
     _Must_inspect_result_
     static
     NTSTATUS
+    NTAPI
     _CreateFileObject(
         __in FxDevice*                   pDevice,
         __in MdIrp                        Irp,

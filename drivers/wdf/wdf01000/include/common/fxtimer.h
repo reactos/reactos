@@ -104,6 +104,7 @@ public:
     static
     _Must_inspect_result_
     NTSTATUS
+    NTAPI
     _Create(
         __in PFX_DRIVER_GLOBALS FxDriverGlobals,
         __in PWDF_TIMER_CONFIG Config,
@@ -185,12 +186,14 @@ private:
         VOID
         );
 
-    static
+    static    
     FN_WDF_SYSTEMWORKITEM
+    NTAPI
     _FxTimerWorkItemCallback;
 
-    static
+    static    
     MdDeferredRoutineType
+    NTAPI
     _FxTimerDpcThunk;
 
     //static
