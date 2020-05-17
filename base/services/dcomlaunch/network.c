@@ -44,7 +44,8 @@ CookupNodeId(UCHAR * NodeId)
     DWORD dwValue;
     MEMORYSTATUS MemoryStatus;
     LUID Luid;
-    DWORD SectorsPerCluster, BytesPerSector, NumberOfFreeClusters, TotalNumberOfClusters;
+    WCHAR szSystem[MAX_PATH];
+    ULARGE_INTEGER FreeBytesToCaller, TotalBytes, TotalFreeBytes;
 
     /* Initialize node id */
     memset(NodeId, 0x11, SEED_BUFFER_SIZE * sizeof(UCHAR));
@@ -104,11 +105,16 @@ CookupNodeId(UCHAR * NodeId)
         *NodeMiddle = *NodeMiddle ^ Luid.HighPart;
     }
 
+    /* Get system directory */
+    GetSystemDirectoryW(szSystem, ARRAYSIZE(szSystem));
+
     /* And finally with free disk space */
-    if (GetDiskFreeSpaceA("c:\\", &SectorsPerCluster, &BytesPerSector, &NumberOfFreeClusters, &TotalNumberOfClusters))
+    if (GetDiskFreeSpaceExW(szSystem, &FreeBytesToCaller, &TotalBytes, &TotalFreeBytes))
     {
-        *NodeMiddle = *NodeMiddle ^ TotalNumberOfClusters * BytesPerSector * SectorsPerCluster;
-        *NodeBegin = *NodeBegin ^ NumberOfFreeClusters * BytesPerSector * SectorsPerCluster;
+        *NodeMiddle ^= FreeBytesToCaller.LowPart ^ TotalFreeBytes.HighPart;
+        *NodeMiddle ^= FreeBytesToCaller.HighPart ^ TotalFreeBytes.LowPart;
+        *NodeBegin ^= TotalBytes.LowPart ^ TotalFreeBytes.LowPart;
+        *NodeBegin ^= TotalBytes.HighPart ^ TotalFreeBytes.HighPart;
     }
 
     /*
