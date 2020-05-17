@@ -263,7 +263,7 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
             }
             else
             {
-                ErrorMessage (GetLastError(), _T(""));
+                ErrorMessage (GetLastError(), NULL);
 //              FindClose(hFile);
 //              return -1;
             }

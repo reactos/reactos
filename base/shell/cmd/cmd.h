@@ -165,7 +165,11 @@ INT  CommandEchoerr (LPTSTR);
 INT  CommandEchoserr (LPTSTR);
 
 /* Prototypes for ERROR.C */
-VOID ErrorMessage (DWORD, LPTSTR, ...);
+VOID
+ErrorMessage(
+    IN DWORD dwErrorCode,
+    IN LPTSTR szFormat OPTIONAL,
+    ...);
 
 VOID error_no_pipe (VOID);
 VOID error_bad_command (LPTSTR);

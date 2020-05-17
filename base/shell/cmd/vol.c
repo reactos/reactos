@@ -41,7 +41,7 @@ PrintVolumeHeader (LPTSTR pszRootPath)
                              NULL,
                              0))
     {
-        ErrorMessage(GetLastError (), _T(""));
+        ErrorMessage(GetLastError (), NULL);
         return 1;
     }
 
