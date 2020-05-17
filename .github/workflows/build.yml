@@ -11,13 +11,28 @@ jobs:
           wget https://svn.reactos.org/storage/vperevertkin/rosbe-ci.tar.zst
           mkdir ${{github.workspace}}/rosbe
           tar -I zstd -xvf rosbe-ci.tar.zst --directory ${{github.workspace}}/rosbe
+      - name: Install other packages
+        run: sudo apt install ccache
       - uses: actions/checkout@v2
         with:
           path: src
+      - name: Set up cache for ccache
+        uses: actions/cache@v1
+        with:
+          path: ccache
+          key: ccache-gcc-i386-${{github.sha}}
+          restore-keys: |
+            ccache-gcc-i386-
+      - name: Set ccache settings
+        run: |
+          echo "::set-env name=CCACHE_BASEDIR::${{github.workspace}}"
+          echo "::set-env name=CCACHE_DIR::${{github.workspace}}/ccache"
+          echo "::set-env name=CCACHE_MAXSIZE::2G"
+          echo "::set-env name=CCACHE_SLOPPINESS::time_macros"
       - name: Configure
         run: |
           mkdir build
-          echo 'cd ${{github.workspace}}/build && ${{github.workspace}}/src/configure.sh -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1' > commands
+          echo 'cd ${{github.workspace}}/build && ${{github.workspace}}/src/configure.sh -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1' > commands
           ${{github.workspace}}/rosbe/RosBE.sh < commands
       - name: Build
         run: |
