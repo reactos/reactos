@@ -2605,7 +2605,9 @@ PNP_GetClassRegProp(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetClassRegProp() called\n");
+    DPRINT("PNP_GetClassRegProp(%p %S %lu %p %p %p %p 0x%08lx)\n",
+           hBinding, pszClassGuid, ulProperty, pulRegDataType,
+           Buffer, pulTransferLen, pulLength, ulFlags);
 
     if (pulTransferLen == NULL || pulLength == NULL)
     {
@@ -2728,7 +2730,9 @@ PNP_SetClassRegProp(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_SetClassRegProp() called\n");
+    DPRINT("PNP_SetClassRegProp(%p %S %lu %lu %p %lu 0x%08lx)\n",
+           hBinding, pszClassGuid, ulProperty, ulDataType,
+           Buffer, ulLength, ulFlags);
 
     if (ulFlags != 0)
         return CR_INVALID_FLAG;
