@@ -66,7 +66,11 @@ INT cmd_goto(LPTSTR param)
     /* jump to end of the file */
     if ( _tcsicmp( param, _T(":eof"))==0)
     {
-        bc->mempos=bc->memsize;		/* position at the end of the batchfile */
+        /* Position at the end of the batch file */
+        bc->mempos = bc->memsize;
+
+        /* Do not process any more parts of a compound command */
+        bc->current = NULL;
         return 0;
     }
 
@@ -102,7 +106,11 @@ INT cmd_goto(LPTSTR param)
         tmp2 = param;
         /* Use whole label name */
         if ((*tmp == _T(':')) && ((_tcsicmp(++tmp, param) == 0) || (_tcsicmp(tmp, ++tmp2) == 0)))
+        {
+            /* Do not process any more parts of a compound command */
+            bc->current = NULL;
             return 0;
+        }
     }
 
     ConErrResPrintf(STRING_GOTO_ERROR2, param);

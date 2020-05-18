@@ -195,6 +195,24 @@ VOID ExitBatch(VOID)
         cmd_endlocal(_T(""));
 
     bc = bc->prev;
+
+#if 0
+    /* Do not process any more parts of a compound command */
+    bc->current = NULL;
+#endif
+
+    /* If there is no more batch contexts, notify the signal handler */
+    if (!bc)
+        CheckCtrlBreak(BREAK_OUTOFBATCH);
+}
+
+/*
+ * Exit all the nested batch calls.
+ */
+VOID ExitAllBatches(VOID)
+{
+    while (bc)
+        ExitBatch();
 }
 
 /*
@@ -343,7 +361,23 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
     {
         Cmd = ParseCommand(NULL);
         if (!Cmd)
-            continue;
+        {
+            if (!bParseError)
+                continue;
+
+            /* Echo the pre-parsed batch file line on error */
+            if (bEcho && !bDisableBatchEcho)
+            {
+                if (!bIgnoreEcho)
+                    ConOutChar(_T('\n'));
+                PrintPrompt();
+                ConOutPuts(ParseLine);
+                ConOutChar(_T('\n'));
+            }
+            /* Stop all execution */
+            ExitAllBatches();
+            break;
+        }
 
         /* JPP 19980807 */
         /* Echo the command and execute it */
@@ -441,8 +475,7 @@ LPTSTR ReadBatchLine(VOID)
     /* User halt */
     if (CheckCtrlBreak(BREAK_BATCHFILE))
     {
-        while (bc)
-            ExitBatch();
+        ExitAllBatches();
         return NULL;
     }
 

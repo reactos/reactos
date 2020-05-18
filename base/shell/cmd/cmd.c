@@ -772,9 +772,21 @@ INT
 ExecuteCommand(
     IN PARSED_COMMAND *Cmd)
 {
+#define SeenGoto() \
+    (bc && bc->current == NULL)
+
     PARSED_COMMAND *Sub;
     LPTSTR First, Rest;
     INT Ret = 0;
+
+    /*
+     * Do not execute any command if we are about to exit CMD, or about to
+     * change batch execution context, e.g. in case of a CALL / GOTO / EXIT.
+     */
+    if (!Cmd)
+        return 0;
+    if (bExit || SeenGoto())
+        return 0;
 
     if (!PerformRedirection(Cmd->Redirections))
         return 1;
@@ -799,14 +811,14 @@ ExecuteCommand(
     case C_QUIET:
     case C_BLOCK:
     case C_MULTI:
-        for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
+        for (Sub = Cmd->Subcommands; Sub && !SeenGoto(); Sub = Sub->Next)
             Ret = ExecuteCommand(Sub);
         break;
 
     case C_OR:
         Sub = Cmd->Subcommands;
         Ret = ExecuteCommand(Sub);
-        if (Ret != 0)
+        if ((Ret != 0) && !SeenGoto())
         {
             nErrorLevel = Ret;
             Ret = ExecuteCommand(Sub->Next);
@@ -816,7 +828,7 @@ ExecuteCommand(
     case C_AND:
         Sub = Cmd->Subcommands;
         Ret = ExecuteCommand(Sub);
-        if (Ret == 0)
+        if ((Ret == 0) && !SeenGoto())
             Ret = ExecuteCommand(Sub->Next);
         break;
 
@@ -835,6 +847,8 @@ ExecuteCommand(
 
     UndoRedirection(Cmd->Redirections, NULL);
     return Ret;
+
+#undef SeenGoto
 }
 
 INT
@@ -842,7 +856,7 @@ ExecuteCommandWithEcho(
     IN PARSED_COMMAND *Cmd)
 {
     /* Echo the reconstructed command line */
-    if (bEcho && !bDisableBatchEcho && Cmd->Type != C_QUIET)
+    if (bEcho && !bDisableBatchEcho && Cmd && (Cmd->Type != C_QUIET))
     {
         if (!bIgnoreEcho)
             ConOutChar(_T('\n'));

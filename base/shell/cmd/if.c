@@ -187,9 +187,7 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
     else
     {
         /* Full condition was false, do the "else" command if there is one */
-        if (Cmd->Subcommands->Next)
-            return ExecuteCommand(Cmd->Subcommands->Next);
-        return 0;
+        return ExecuteCommand(Cmd->Subcommands->Next);
     }
 }
 

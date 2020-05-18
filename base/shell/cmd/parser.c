@@ -60,9 +60,9 @@ enum
 /* Scratch buffer for temporary command substitutions / expansions */
 static TCHAR TempBuf[CMDLINE_LENGTH];
 
-static BOOL bParseError;
+/*static*/ BOOL bParseError;
 static BOOL bLineContinuations;
-static TCHAR ParseLine[CMDLINE_LENGTH];
+/*static*/ TCHAR ParseLine[CMDLINE_LENGTH];
 static TCHAR *ParsePos;
 static TCHAR CurChar;
 
@@ -108,10 +108,17 @@ restart:
     return (CurChar = Char);
 }
 
+void ParseErrorEx(LPTSTR s)
+{
+    /* Only display the first error we encounter */
+    if (!bParseError)
+        error_syntax(s);
+    bParseError = TRUE;
+}
+
 static void ParseError(void)
 {
-    error_syntax(CurrentTokenType != TOK_END ? CurrentToken : NULL);
-    bParseError = TRUE;
+    ParseErrorEx(CurrentTokenType != TOK_END ? CurrentToken : NULL);
 }
 
 /*

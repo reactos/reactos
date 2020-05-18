@@ -531,9 +531,14 @@ INT CommandExit(LPTSTR param)
          * otherwise exit this command interpreter instance.
          */
         if (bc)
+        {
+            bc->current = NULL;
             ExitBatch();
+        }
         else
+        {
             bExit = TRUE;
+        }
     }
     else
     {

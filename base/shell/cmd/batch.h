@@ -45,8 +45,8 @@ extern TCHAR textline[BATCH_BUFFSIZE]; /* Buffer for reading Batch file lines */
 
 
 LPTSTR FindArg(TCHAR, BOOL *);
-LPTSTR BatchParams(LPTSTR, LPTSTR);
 VOID   ExitBatch(VOID);
+VOID   ExitAllBatches(VOID);
 INT    Batch(LPTSTR, LPTSTR, LPTSTR, PARSED_COMMAND *);
 BOOL   BatchGetString(LPTSTR lpBuffer, INT nBufferLength);
 LPTSTR ReadBatchLine(VOID);

@@ -28,10 +28,10 @@
 #include "cmdver.h"
 #include "cmddbg.h"
 
-#define BREAK_BATCHFILE 1
-#define BREAK_OUTOFBATCH 2
-#define BREAK_INPUT 3
-#define BREAK_IGNORE 4
+#define BREAK_BATCHFILE     1
+#define BREAK_OUTOFBATCH    2 /* aka. BREAK_ENDOFBATCHFILES */
+#define BREAK_INPUT         3
+#define BREAK_IGNORE        4
 
 /* define some error messages */
 #define D_ON         _T("on")
@@ -337,6 +337,10 @@ PARSED_COMMAND *ParseCommand(LPTSTR Line);
 VOID EchoCommand(PARSED_COMMAND *Cmd);
 TCHAR *Unparse(PARSED_COMMAND *Cmd, TCHAR *Out, TCHAR *OutEnd);
 VOID FreeCommand(PARSED_COMMAND *Cmd);
+
+void ParseErrorEx(LPTSTR s);
+extern BOOL bParseError;
+extern TCHAR ParseLine[CMDLINE_LENGTH];
 
 /* Prototypes from PATH.C */
 INT cmd_path (LPTSTR);

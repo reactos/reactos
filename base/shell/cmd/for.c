@@ -74,11 +74,12 @@ static BOOL GetNextElement(TCHAR **pStart, TCHAR **pEnd)
     ExecuteCommandWithEcho((Cmd)->Subcommands)
 
 /* Check if this FOR should be terminated early */
-static BOOL Exiting(PARSED_COMMAND *Cmd)
-{
-    /* Someone might have removed our context */
-    return bCtrlBreak || fc != Cmd->For.Context;
-}
+#define Exiting(Cmd) \
+    /* Someone might have removed our context */ \
+    (bCtrlBreak || (fc != (Cmd)->For.Context))
+/* Take also GOTO jumps into account */
+#define ExitingOrGoto(Cmd) \
+    (Exiting(Cmd) || (bc && bc->current == NULL))
 
 /* Read the contents of a text file into memory,
  * dynamically allocating enough space to hold it all */
@@ -251,7 +252,7 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 
     /* Loop over each file */
     End = List;
-    while (GetNextElement(&Start, &End))
+    while (!ExitingOrGoto(Cmd) && GetNextElement(&Start, &End))
     {
         FILE *InputFile;
         LPTSTR FullInput, In, NextLine;
@@ -301,9 +302,9 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
         }
 
         /* Loop over the input line by line */
-        In = FullInput;
-        Skip = SkipLines;
-        do
+        for (In = FullInput, Skip = SkipLines;
+             !ExitingOrGoto(Cmd) && (In != NULL);
+             In = NextLine)
         {
             DWORD RemainingTokens = Tokens;
             LPTSTR *CurVar = Variables;
@@ -340,7 +341,8 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
             /* Don't run unless the line had enough tokens to fill at least one variable */
             if (*Variables[0])
                 Ret = RunInstance(Cmd);
-        } while (!Exiting(Cmd) && (In = NextLine) != NULL);
+        }
+
         cmd_free(FullInput);
     }
 
@@ -360,6 +362,11 @@ static INT ForLoop(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
         params[i] = _tcstol(Start, NULL, 0);
 
     i = params[START];
+    /*
+     * Windows' CMD compatibility:
+     * Contrary to the other FOR-loops, FOR /L does not check
+     * whether a GOTO has been done, and will continue to loop.
+     */
     while (!Exiting(Cmd) &&
            (params[STEP] >= 0 ? (i <= params[END]) : (i >= params[END])))
     {
@@ -379,7 +386,7 @@ static INT ForDir(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos
     INT Ret = 0;
     TCHAR *Start, *End = List;
 
-    while (!Exiting(Cmd) && GetNextElement(&Start, &End))
+    while (!ExitingOrGoto(Cmd) && GetNextElement(&Start, &End))
     {
         if (BufPos + (End - Start) > &Buffer[CMDLINE_LENGTH])
             continue;
@@ -410,7 +417,7 @@ static INT ForDir(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos
                     continue;
                 _tcscpy(FilePart, w32fd.cFileName);
                 Ret = RunInstance(Cmd);
-            } while (!Exiting(Cmd) && FindNextFile(hFind, &w32fd));
+            } while (!ExitingOrGoto(Cmd) && FindNextFile(hFind, &w32fd));
             FindClose(hFind);
         }
         else
@@ -436,6 +443,12 @@ static INT ForRecursive(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *
 
     Ret = ForDir(Cmd, List, Buffer, BufPos);
 
+    /* NOTE (We don't apply Windows' CMD compatibility here):
+     * Windows' CMD does not check whether a GOTO has been done,
+     * and will continue to loop. */
+    if (ExitingOrGoto(Cmd))
+        return Ret;
+
     _tcscpy(BufPos, _T("*"));
     hFind = FindFirstFile(Buffer, &w32fd);
     if (hFind == INVALID_HANDLE_VALUE)
@@ -448,7 +461,11 @@ static INT ForRecursive(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *
             _tcscmp(w32fd.cFileName, _T("..")) == 0)
             continue;
         Ret = ForRecursive(Cmd, List, Buffer, _stpcpy(BufPos, w32fd.cFileName));
-    } while (!Exiting(Cmd) && FindNextFile(hFind, &w32fd));
+
+    /* NOTE (We don't apply Windows' CMD compatibility here):
+     * Windows' CMD does not check whether a GOTO has been done,
+     * and will continue to loop. */
+    } while (!ExitingOrGoto(Cmd) && FindNextFile(hFind, &w32fd));
     FindClose(hFind);
 
     return Ret;
