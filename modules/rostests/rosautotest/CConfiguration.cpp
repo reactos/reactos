@@ -19,6 +19,7 @@ CConfiguration::CConfiguration()
     : m_CrashRecovery(false),
       m_IsInteractive(false),
       m_PrintToConsole(true),
+      m_RepeatCount(1),
       m_Shutdown(false),
       m_Submit(false)
 {
@@ -52,10 +53,17 @@ CConfiguration::ParseParameters(int argc, wchar_t* argv[])
     {
         if(argv[i][0] == '-' || argv[i][0] == '/')
         {
+            unsigned long tmp_RepeatCount;
+
             switch(argv[i][1])
             {
                 case 'c':
                     ++i;
+                    if (i >= argc)
+                    {
+                        throw CInvalidParameterException();
+                    }
+
                     m_Comment = UnicodeToAscii(argv[i]);
                     break;
 
@@ -73,6 +81,23 @@ CConfiguration::ParseParameters(int argc, wchar_t* argv[])
 
                 case 'w':
                     m_Submit = true;
+                    break;
+
+                case 't':
+                    ++i;
+                    if (i >= argc)
+                    {
+                        throw CInvalidParameterException();
+                    }
+
+                    tmp_RepeatCount = wcstoul(argv[i], NULL, 10);
+
+                    if (tmp_RepeatCount == 0 || tmp_RepeatCount > 10000)
+                    {
+                        throw CInvalidParameterException();
+                    }
+
+                    m_RepeatCount = tmp_RepeatCount;
                     break;
 
                 default:
