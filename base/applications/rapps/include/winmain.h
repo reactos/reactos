@@ -16,13 +16,13 @@ struct SETTINGS_INFO
     INT Top;
     INT Width;
     INT Height;
-    /* Software source settings */
-    BOOL bUseSource;
-    WCHAR szSourceURL[INTERNET_MAX_URL_LENGTH];
     /* Proxy settings */
     INT Proxy;
     WCHAR szProxyServer[MAX_PATH];
     WCHAR szNoProxyFor[MAX_PATH];
+    /* Software source settings */
+    BOOL bUseSource;
+    WCHAR szSourceURL[INTERNET_MAX_URL_LENGTH];
 };
 
 typedef SETTINGS_INFO *PSETTINGS_INFO;
