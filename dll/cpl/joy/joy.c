@@ -85,7 +85,7 @@ AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             HWND dwComboHwnd = GetDlgItem(hwndDlg,IDC_PREFERRED_DEV_COMBO);
             if (dwComboHwnd)
             {
-                LoadString(hApplet, IDS_NONE, szBuf, _countof(szBuf));
+                LoadStringW(hApplet, IDS_NONE, szBuf, _countof(szBuf));
                 SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
                 SendMessageW(dwComboHwnd, CB_SETCURSEL , 0, (LPARAM)NULL);
             }
@@ -130,36 +130,36 @@ CustomPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            szBuf[1]=UNICODE_NULL;
+            szBuf[1] = UNICODE_NULL;
 
             CheckDlgButton(hwndDlg, IDC_JOYSTICK_RADIO, BST_CHECKED);
 
             dwComboHwnd = GetDlgItem(hwndDlg,IDC_AXES_COMBO);
             if (dwComboHwnd)
             {
-                szBuf[0]=L'2';
-                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
-                szBuf[0]=L'3';
-                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
-                szBuf[0]=L'4';
-                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
-                SendMessageW(dwComboHwnd, CB_SETCURSEL , 0, (LPARAM)NULL);
+                szBuf[0] = L'2';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+                szBuf[0] = L'3';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+                szBuf[0] = L'4';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+                SendMessageW(dwComboHwnd, CB_SETCURSEL , 0, 0);
             }
 
             dwComboHwnd = GetDlgItem(hwndDlg,IDC_BUTTONS_COMBO);
             if (dwComboHwnd)
             {
-                szBuf[0]=L'0';
-                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
-                szBuf[0]=L'1';
-                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
-                szBuf[0]=L'2';
-                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
-                szBuf[0]=L'3';
-                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
-                szBuf[0]=L'4';
-                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
-                SendMessageW(dwComboHwnd, CB_SETCURSEL , 4, (LPARAM)NULL);
+                szBuf[0] = L'0';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+                szBuf[0] = L'1';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+                szBuf[0] = L'2';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+                szBuf[0] = L'3';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+                szBuf[0] = L'4';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+                SendMessageW(dwComboHwnd, CB_SETCURSEL , 4, 0);
             }
             break;
 
