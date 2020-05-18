@@ -11,7 +11,6 @@
 #include "devmgmt.h"
 #include "MainWindow.h"
 
-
 /* DATA *****************************************************/
 
 #define BTN_PROPERTIES      0
@@ -652,11 +651,14 @@ CDeviceManager::OnCommand(_In_ WPARAM wParam,
 
         case IDM_ABOUT:
         {
-            // Apportion blame
-            MessageBoxW(m_hMainWnd,
-                        L"ReactOS Device Manager\r\nCopyright Ged Murphy 2015",
-                        L"About",
-                        MB_OK | MB_APPLMODAL);
+            CAtlStringW szAppName;
+            CAtlStringW szAppAuthors;
+            HICON hIcon;
+            szAppName.LoadStringW(g_hThisInstance, IDS_APPNAME);
+            szAppAuthors.LoadStringW(g_hThisInstance, IDS_APP_AUTHORS);
+            hIcon = LoadIconW(g_hThisInstance, MAKEINTRESOURCEW(IDI_MAIN_ICON));
+            ShellAboutW(m_hMainWnd, szAppName, szAppAuthors, hIcon);
+            DestroyIcon(hIcon);
 
             // Set focus back to the treeview
             m_DeviceView->SetFocus();
