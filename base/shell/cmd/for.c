@@ -44,7 +44,7 @@ INT cmd_for(LPTSTR param)
         return 0;
     }
 
-    error_syntax(param);
+    ParseErrorEx(param);
     return 1;
 }
 

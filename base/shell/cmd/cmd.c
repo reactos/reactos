@@ -1208,7 +1208,7 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
         ret = GetEnhancedVar(&varNameEnd, FindArg);
         if (!ret)
         {
-            error_syntax(varName);
+            ParseErrorEx(varName);
             return NULL;
         }
         *varNameLen = varNameEnd - varName;
@@ -1267,6 +1267,14 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
         {
             UINT NameLen;
             Var = GetBatchVar(Src, &NameLen);
+            if (!Var && bParseError)
+            {
+                /* Return the partially-parsed command to be
+                 * echoed for error diagnostics purposes. */
+                APPEND1(Delim);
+                APPEND(Src, DestEnd-Dest);
+                return FALSE;
+            }
             if (Var != NULL)
             {
                 VarLength = _tcslen(Var);
