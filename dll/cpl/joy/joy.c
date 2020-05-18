@@ -76,22 +76,21 @@ AddColumns(HWND hList)
 INT_PTR CALLBACK
 AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    WCHAR szBuf[256];
+    HWND hComboHwnd;
+
     UNREFERENCED_PARAMETER(lParam);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            WCHAR szBuf[256];
-            HWND hComboHwnd = GetDlgItem(hwndDlg,IDC_PREFERRED_DEV_COMBO);
-            if (hComboHwnd)
-            {
-                LoadStringW(hApplet, IDS_NONE, szBuf, _countof(szBuf));
-                SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
-                SendMessageW(hComboHwnd, CB_SETCURSEL, 0, (LPARAM)NULL);
-            }
+            hComboHwnd = GetDlgItem(hwndDlg,IDC_PREFERRED_DEV_COMBO);
+
+            LoadStringW(hApplet, IDS_NONE, szBuf, _countof(szBuf));
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            SendMessageW(hComboHwnd, CB_SETCURSEL, 0, (LPARAM)NULL);
             break;
-        }
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
