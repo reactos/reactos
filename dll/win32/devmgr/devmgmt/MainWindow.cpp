@@ -654,11 +654,15 @@ CDeviceManager::OnCommand(_In_ WPARAM wParam,
             CAtlStringW szAppName;
             CAtlStringW szAppAuthors;
             HICON hIcon;
-            szAppName.LoadStringW(g_hThisInstance, IDS_APPNAME);
-            szAppAuthors.LoadStringW(g_hThisInstance, IDS_APP_AUTHORS);
+
+            if (!szAppName.LoadStringW(g_hThisInstance, IDS_APPNAME))
+                szAppName = L"ReactOS Device Manager";
+            if (!szAppAuthors.LoadStringW(g_hThisInstance, IDS_APP_AUTHORS))
+                szAppAuthors = L"";
             hIcon = LoadIconW(g_hThisInstance, MAKEINTRESOURCEW(IDI_MAIN_ICON));
             ShellAboutW(m_hMainWnd, szAppName, szAppAuthors, hIcon);
-            DestroyIcon(hIcon);
+            if (hIcon)
+                DestroyIcon(hIcon);
 
             // Set focus back to the treeview
             m_DeviceView->SetFocus();
