@@ -123,10 +123,10 @@ AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 INT_PTR CALLBACK
 CustomPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
-
     WCHAR szBuf[2];
     HWND hComboHwnd;
+
+    UNREFERENCED_PARAMETER(lParam);
 
     switch (uMsg)
     {
@@ -136,32 +136,27 @@ CustomPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             CheckDlgButton(hwndDlg, IDC_JOYSTICK_RADIO, BST_CHECKED);
 
             hComboHwnd = GetDlgItem(hwndDlg, IDC_AXES_COMBO);
-            if (hComboHwnd)
-            {
-                szBuf[0] = L'2';
-                SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
-                szBuf[0] = L'3';
-                SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
-                szBuf[0] = L'4';
-                SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
-                SendMessageW(hComboHwnd, CB_SETCURSEL, 0, 0);
-            }
+            szBuf[0] = L'2';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'3';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'4';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            SendMessageW(hComboHwnd, CB_SETCURSEL, 0, 0);
 
             hComboHwnd = GetDlgItem(hwndDlg, IDC_BUTTONS_COMBO);
-            if (hComboHwnd)
-            {
-                szBuf[0] = L'0';
-                SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
-                szBuf[0] = L'1';
-                SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
-                szBuf[0] = L'2';
-                SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
-                szBuf[0] = L'3';
-                SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
-                szBuf[0] = L'4';
-                SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
-                SendMessageW(hComboHwnd, CB_SETCURSEL, 4, 0);
-            }
+            szBuf[0] = L'0';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'1';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'2';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'3';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'4';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            SendMessageW(hComboHwnd, CB_SETCURSEL, 4, 0);
+
             break;
 
         case WM_COMMAND:
@@ -247,7 +242,7 @@ MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            AddColumns(GetDlgItem(hwndDlg,IDC_CONTROLLER_LIST));
+            AddColumns(GetDlgItem(hwndDlg, IDC_CONTROLLER_LIST));
             s_hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
             s_hIconSm = (HICON)LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM),
                                           IMAGE_ICON,
