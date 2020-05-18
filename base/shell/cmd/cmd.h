@@ -80,7 +80,15 @@ INT ConvertULargeInteger(ULONGLONG num, LPTSTR des, UINT len, BOOL bPutSeparator
 HANDLE RunFile(DWORD, LPTSTR, LPTSTR, LPTSTR, INT);
 INT ParseCommandLine(LPTSTR);
 struct _PARSED_COMMAND;
-INT ExecuteCommand(struct _PARSED_COMMAND *Cmd);
+
+INT
+ExecuteCommand(
+    IN struct _PARSED_COMMAND *Cmd);
+
+INT
+ExecuteCommandWithEcho(
+    IN struct _PARSED_COMMAND *Cmd);
+
 LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
