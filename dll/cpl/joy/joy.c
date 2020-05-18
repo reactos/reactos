@@ -86,7 +86,7 @@ AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (dwComboHwnd)
             {
                 LoadStringW(hApplet, IDS_NONE, szBuf, _countof(szBuf));
-                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
                 SendMessageW(dwComboHwnd, CB_SETCURSEL , 0, (LPARAM)NULL);
             }
             break;
