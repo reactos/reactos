@@ -81,4 +81,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Tambahkan, hapus, dan konfigurasikan perangkat keras pengontrol permainan seperti joystick dan gamepad."
     IDS_CONTROLLER "Pengontrol"
     IDS_STATUS "Status"
+    IDS_NONE "(None)"
 END

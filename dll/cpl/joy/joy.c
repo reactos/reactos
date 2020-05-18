@@ -23,12 +23,12 @@
  * PURPOSE:         ReactOS Software Control Panel
  * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
- *	10-18-2007  Created
+ *    10-18-2007  Created
  */
 
 #include "joy.h"
 
-#define NUM_APPLETS	(1)
+#define NUM_APPLETS    (1)
 
 LONG CALLBACK SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
 HINSTANCE hApplet = 0;
@@ -80,8 +80,17 @@ AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
+            WCHAR szBuf[256];
+            HWND dwComboHwnd = GetDlgItem(hwndDlg,IDC_PREFERRED_DEV_COMBO);
+            if (dwComboHwnd)
+            {
+                LoadString(hApplet, IDS_NONE, szBuf, _countof(szBuf));
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
+                SendMessageW(dwComboHwnd, CB_SETCURSEL , 0, (LPARAM)NULL);
+            }
             break;
-
+        }
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -115,9 +124,43 @@ CustomPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
 
+    WCHAR szBuf[2];
+    HWND dwComboHwnd;
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
+            szBuf[1]=UNICODE_NULL;
+
+            CheckDlgButton(hwndDlg, IDC_JOYSTICK_RADIO, BST_CHECKED);
+
+            dwComboHwnd = GetDlgItem(hwndDlg,IDC_AXES_COMBO);
+            if (dwComboHwnd)
+            {
+                szBuf[0]=L'2';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
+                szBuf[0]=L'3';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
+                szBuf[0]=L'4';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
+                SendMessageW(dwComboHwnd, CB_SETCURSEL , 0, (LPARAM)NULL);
+            }
+
+            dwComboHwnd = GetDlgItem(hwndDlg,IDC_BUTTONS_COMBO);
+            if (dwComboHwnd)
+            {
+                szBuf[0]=L'0';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
+                szBuf[0]=L'1';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
+                szBuf[0]=L'2';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
+                szBuf[0]=L'3';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
+                szBuf[0]=L'4';
+                SendMessageW(dwComboHwnd, CB_ADDSTRING, -1, (LPARAM)szBuf);
+                SendMessageW(dwComboHwnd, CB_SETCURSEL , 4, (LPARAM)NULL);
+            }
             break;
 
         case WM_COMMAND:
