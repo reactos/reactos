@@ -422,47 +422,70 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
     /* open ProductOptions key */
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
     if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
         goto Error;
+    }
 
     /* write ProductSuite */
     pszData = pData->ProductSuite;
     cbData = (lstrlenW(pszData) + 2) * sizeof(WCHAR);
     error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (const BYTE *)pData, cbData);
     if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
         goto Error;
+    }
 
     /* write ProductType */
     pszData = pData->ProductType;
     cbData = (lstrlenW(pszData) + 1) * sizeof(WCHAR);
     error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (const BYTE *)pData, cbData);
     if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
         goto Error;
+    }
 
     RegCloseKey(hKey);
 
     /* open ReactOS version key */
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szRosVersion, 0, KEY_WRITE, &hKey);
     if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
         goto Error;
+    }
 
     /* write ReportAsWorkstation */
     dwValue = pData->ReportAsWorkstation;
     cbData = sizeof(dwValue);
     error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
     if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
         goto Error;
+    }
 
     RegCloseKey(hKey);
 
     /* open Control Windows key */
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szControlWindows, 0, KEY_WRITE, &hKey);
     if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
         goto Error;
+    }
 
     /* write Control Windows CSDVersion */
     dwValue = pData->CSDVersion;
     cbData = sizeof(dwValue);
     error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
+    }
 
 Error:
     if (hKey)
