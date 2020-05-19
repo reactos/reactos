@@ -698,8 +698,6 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         urlLength = InfoArray[iAppId].szUrl.GetLength();
         urlComponents.dwSchemeLength = urlLength + 1;
         urlComponents.lpszScheme = (LPWSTR) malloc(urlComponents.dwSchemeLength * sizeof(WCHAR));
-        urlComponents.dwHostNameLength = urlLength + 1;
-        urlComponents.lpszHostName = (LPWSTR) malloc(urlComponents.dwHostNameLength * sizeof(WCHAR));
 
         if (!InternetCrackUrlW(InfoArray[iAppId].szUrl, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
         {
@@ -766,7 +764,6 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 
         free(urlComponents.lpszScheme);
-        free(urlComponents.lpszHostName);
 
 #ifdef USE_CERT_PINNING
         // are we using HTTPS to download the RAPPS update package? check if the certificate is original
