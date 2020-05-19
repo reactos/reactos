@@ -150,6 +150,11 @@ typedef struct _SECPKG_CLIENT_INFO {
     BOOLEAN HasTcbPrivilege;
     BOOLEAN Impersonating;
     BOOLEAN Restricted;
+    /* NT 5.1 */
+    UCHAR ClientFlags;
+    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+    /* NT 6 */
+    HANDLE ClientToken;
 } SECPKG_CLIENT_INFO,
  *PSECPKG_CLIENT_INFO;
 
