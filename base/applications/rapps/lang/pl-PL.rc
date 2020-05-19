@@ -60,7 +60,7 @@ BEGIN
     END
 END
 
-IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ustawienia"
 FONT 8, "MS Shell Dlg"
@@ -74,16 +74,20 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
     PUSHBUTTON "&Wybierz", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Usuń instalatory programów po ich zainstalowaniu", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Proxy", -1, 4, 116, 240, 76
-    CONTROL "Ustawienia systemowe proxy", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
-    CONTROL "Bezpośrednio (bez proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
-    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
-    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "Bez proxy dla", -1, 27, 175, 64, 10
-    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "Domyślne", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    DEFPUSHBUTTON "OK", IDOK, 116, 195, 60, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 181, 195, 60, 14
+    GROUPBOX "Software source", -1, 4, 118, 240, 46
+    CONTROL "Use default", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
+    CONTROL "Specified source", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
+    GROUPBOX "Proxy", -1, 4, 166, 240, 76
+    CONTROL "Ustawienia systemowe proxy", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
+    CONTROL "Bezpośrednio (bez proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "Bez proxy dla", -1, 27, 225, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Domyślne", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 181, 245, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -197,6 +201,7 @@ BEGIN
     IDS_APPLICATIONS "Aplikacje"
     IDS_CHOOSE_FOLDER_TEXT "Wybierz katalog, w którym będa zapisywane pobrane programy:"
     IDS_CHOOSE_FOLDER_ERROR "Wybrałeś nieistniejący katalog! Czy chcesz utworzyć nowy?"
+    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "Czy na pewno chcesz usunąć wpis tego programu z rejestru?"
     IDS_INFORMATION "Informacja"
     IDS_UNABLE_TO_DOWNLOAD "Nie można pobrać pakietu! Nie znaleziono adresu!"
@@ -248,4 +253,5 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Baza programów"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Aktualizowanie bazy programów…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
 END
