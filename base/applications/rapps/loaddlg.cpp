@@ -563,7 +563,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
     unsigned char lpBuffer[4096];
     LPCWSTR lpszAgent = L"RApps/1.0";
-    URL_COMPONENTS urlComponents;
+    URL_COMPONENTSW urlComponents;
     size_t urlLength, filenameLength;
 
     const ATL::CSimpleArray<DownloadInfo> &InfoArray = static_cast<DownloadParam*>(param)->AppInfo;
