@@ -8,36 +8,14 @@
 #include "shelltest.h"
 #include <shlwapi.h>
 #include <stdio.h>
-
-#define WM_SHELL_NOTIFY (WM_USER + 100)
-#define WM_GET_NOTIFY_FLAGS (WM_USER + 101)
-#define WM_CLEAR_FLAGS (WM_USER + 102)
-#define WM_SET_PATHS (WM_USER + 103)
+#include "SHChangeNotify.h"
 
 static HWND s_hwnd = NULL;
 static const WCHAR s_szName[] = L"SHChangeNotify testcase";
-
-typedef enum TYPE
-{
-    TYPE_RENAMEITEM,
-    TYPE_CREATE,
-    TYPE_DELETE,
-    TYPE_MKDIR,
-    TYPE_RMDIR,
-    TYPE_UPDATEDIR,
-    TYPE_UPDATEITEM,
-    TYPE_RENAMEFOLDER,
-    TYPE_FREESPACE
-} TYPE;
+static INT s_nMode;
 
 static BYTE s_counters[TYPE_FREESPACE + 1];
 static UINT s_uRegID = 0;
-
-static WCHAR s_dir1[MAX_PATH];  // "%TEMP%\\WatchDir1"
-static WCHAR s_dir2[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir2"
-static WCHAR s_dir3[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir3"
-static WCHAR s_file1[MAX_PATH]; // "%TEMP%\\WatchDir1\\File1.txt"
-static WCHAR s_file2[MAX_PATH]; // "%TEMP%\\WatchDir1\\File2.txt"
 
 static WCHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
 
@@ -49,32 +27,34 @@ OnCreate(HWND hwnd)
 {
     s_hwnd = hwnd;
 
-    WCHAR szTemp[MAX_PATH], szPath[MAX_PATH];
-
-    GetTempPathW(_countof(szTemp), szTemp);
-    GetLongPathNameW(szTemp, szPath, _countof(szPath));
-
-    lstrcpyW(s_dir1, szPath);
-    PathAppendW(s_dir1, L"WatchDir1");
-
-    lstrcpyW(s_dir2, s_dir1);
-    PathAppendW(s_dir2, L"Dir2");
-
-    lstrcpyW(s_dir3, s_dir1);
-    PathAppendW(s_dir3, L"Dir3");
-
-    lstrcpyW(s_file1, s_dir1);
-    PathAppendW(s_file1, L"File1.txt");
-
-    lstrcpyW(s_file2, s_dir1);
-    PathAppendW(s_file2, L"File2.txt");
+    DoInitPaths();
 
     s_pidl = ILCreateFromPathW(s_dir1);
-
     s_entry.pidl = s_pidl;
-    s_entry.fRecursive = TRUE;
+
+    INT nSources;
+    switch (s_nMode)
+    {
+        case 0:
+            s_entry.fRecursive = TRUE;
+            nSources = SHCNRF_ShellLevel;
+            break;
+
+        case 1:
+            s_entry.fRecursive = TRUE;
+            nSources = SHCNRF_ShellLevel | SHCNRF_InterruptLevel;
+            break;
+
+        case 2:
+            s_entry.fRecursive = FALSE;
+            nSources = SHCNRF_ShellLevel | SHCNRF_NewDelivery;
+            break;
+
+        default:
+            return FALSE;
+    }
     LONG fEvents = SHCNE_ALLEVENTS;
-    s_uRegID = SHChangeNotifyRegister(hwnd, SHCNRF_ShellLevel, fEvents, WM_SHELL_NOTIFY,
+    s_uRegID = SHChangeNotifyRegister(hwnd, nSources, fEvents, WM_SHELL_NOTIFY,
                                       1, &s_entry);
     return s_uRegID != 0;
 }
@@ -279,6 +259,8 @@ wWinMain(HINSTANCE hInstance,
          LPWSTR    lpCmdLine,
          INT       nCmdShow)
 {
+    s_nMode = _wtoi(lpCmdLine);
+
     WNDCLASSW wc;
     ZeroMemory(&wc, sizeof(wc));
     wc.lpfnWndProc = WindowProc;
