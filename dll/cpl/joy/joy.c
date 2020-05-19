@@ -76,7 +76,6 @@ AddColumns(HWND hList)
 INT_PTR CALLBACK
 AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
     UNREFERENCED_PARAMETER(lParam);
 
     switch (uMsg)
@@ -123,7 +122,6 @@ AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 INT_PTR CALLBACK
 CustomPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
     UNREFERENCED_PARAMETER(lParam);
 
     switch (uMsg)
