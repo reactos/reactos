@@ -495,16 +495,11 @@ Error:
 }
 
 static void
-<<<<<<< HEAD
 OnChooseOption(HWND hwndDlg, PRODUCT_OPTION nOption)
-=======
-OnChooseOption(HWND hwndDlg, PRODUCT_OPTION option)
->>>>>>> ca778c6a26... fix and improve
 {
     WCHAR szText[256];
     ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
 
-<<<<<<< HEAD
     switch (nOption)
     {
         case PRODUCT_OPTION_SERVER:
@@ -520,26 +515,6 @@ OnChooseOption(HWND hwndDlg, PRODUCT_OPTION option)
     }
 
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
-=======
-    switch (option)
-    {
-        case PRODUCT_OPTION_SERVER:
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"Terminal Server");
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"ServerNT");
-
-            LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
-            break;
-
-        case PRODUCT_OPTION_WORKSTATION:
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"");
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"WinNT");
-
-            LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
-            break;
-    }
->>>>>>> ca778c6a26... fix and improve
 }
 
 static INT_PTR CALLBACK
@@ -578,13 +553,8 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
 
-<<<<<<< HEAD
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_DEFAULT, 0);
             OnChooseOption(hwndDlg, PRODUCT_OPTION_DEFAULT);
-=======
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_SERVER, 0);
-            OnChooseOption(hwndDlg, PRODUCT_OPTION_SERVER);
->>>>>>> ca778c6a26... fix and improve
 
             hIcon = LoadIcon(NULL, IDI_WINLOGO);
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_ICON, STM_SETICON, (WPARAM)hIcon, 0);
@@ -610,10 +580,6 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-<<<<<<< HEAD
-=======
-                        pSetupData->ProductOption = PRODUCT_OPTION_SERVER;
->>>>>>> ca778c6a26... fix and improve
                         OnChooseOption(hwndDlg, pSetupData->ProductOption);
                         DoWriteProductOption(pSetupData->ProductOption);
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
