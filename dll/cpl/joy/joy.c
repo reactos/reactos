@@ -23,12 +23,13 @@
  * PURPOSE:         ReactOS Software Control Panel
  * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
- *	10-18-2007  Created
+ *    10-18-2007  Created
+ *    05-18-2020  Updated (init of dialog and combobox)
  */
 
 #include "joy.h"
 
-#define NUM_APPLETS	(1)
+#define NUM_APPLETS    (1)
 
 LONG CALLBACK SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
 HINSTANCE hApplet = 0;
@@ -80,7 +81,15 @@ AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
+            WCHAR szBuf[256];
+            HWND hComboHwnd = GetDlgItem(hwndDlg,IDC_PREFERRED_DEV_COMBO);
+
+            LoadStringW(hApplet, IDS_NONE, szBuf, _countof(szBuf));
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            SendMessageW(hComboHwnd, CB_SETCURSEL, 0, (LPARAM)NULL);
             break;
+        }
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -118,7 +127,37 @@ CustomPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
+            WCHAR szBuf[2];
+            HWND hComboHwnd;
+            szBuf[1] = UNICODE_NULL;
+
+            CheckDlgButton(hwndDlg, IDC_JOYSTICK_RADIO, BST_CHECKED);
+
+            hComboHwnd = GetDlgItem(hwndDlg, IDC_AXES_COMBO);
+            szBuf[0] = L'2';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'3';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'4';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            SendMessageW(hComboHwnd, CB_SETCURSEL, 0, 0);
+
+            hComboHwnd = GetDlgItem(hwndDlg, IDC_BUTTONS_COMBO);
+            szBuf[0] = L'0';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'1';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'2';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'3';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            szBuf[0] = L'4';
+            SendMessageW(hComboHwnd, CB_ADDSTRING, 0, (LPARAM)szBuf);
+            SendMessageW(hComboHwnd, CB_SETCURSEL, 4, 0);
+
             break;
+        }
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -203,7 +242,7 @@ MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            AddColumns(GetDlgItem(hwndDlg,IDC_CONTROLLER_LIST));
+            AddColumns(GetDlgItem(hwndDlg, IDC_CONTROLLER_LIST));
             s_hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
             s_hIconSm = (HICON)LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM),
                                           IMAGE_ICON,
