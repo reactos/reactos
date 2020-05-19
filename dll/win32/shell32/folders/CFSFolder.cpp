@@ -460,8 +460,8 @@ public:
 
         if (!sPathTarget || !sPathTarget[0])
         {
-            FAILED_UNEXPECTEDLY(E_INVALIDARG);
-            return E_INVALIDARG;
+            WARN("No path for CFileSysEnum, empty result!\n");
+            return S_FALSE;
         }
 
         WCHAR szFindPattern[MAX_PATH];
