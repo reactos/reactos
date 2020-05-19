@@ -478,21 +478,21 @@ OnChooseOption(HWND hwndDlg, PRODUCT_OPTION nOption)
     const PRODUCT_OPTION_DATA *pData = &s_ProductOptionData[nOption];
     ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
 
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, pData->ProductSuite);
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, pData->ProductType);
-
     switch (nOption)
     {
         case PRODUCT_OPTION_SERVER:
             LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
             break;
 
         case PRODUCT_OPTION_WORKSTATION:
             LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
-            SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
             break;
+
+        default:
+            return;
     }
+
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
 }
 
 static INT_PTR CALLBACK

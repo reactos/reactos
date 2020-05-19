@@ -91,8 +91,6 @@
 #define IDD_PRODUCT                2400
 #define IDC_PRODUCT_ICON           2401
 #define IDC_PRODUCT_OPTIONS        2402
-#define IDC_PRODUCT_SUITE          2403
-#define IDC_PRODUCT_TYPE           2404
 #define IDC_PRODUCT_DESCRIPTION    2405
 
 #define IDS_ACKTITLE    3010
