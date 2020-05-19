@@ -498,7 +498,6 @@ static void
 OnChooseOption(HWND hwndDlg, PRODUCT_OPTION nOption)
 {
     WCHAR szText[256];
-    const PRODUCT_OPTION_DATA *pData = &s_ProductOptionData[nOption];
     ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
 
     switch (nOption)
