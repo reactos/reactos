@@ -34,12 +34,8 @@ BEGIN
     LTEXT "Ü&rün seçenekleri:", IDC_STATIC, 5, 32, 85, 10
     COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Ürün Bilgisi", IDC_STATIC, 5, 50, 305, 85
-    LTEXT "Ürün Takımı:", IDC_STATIC, 20, 62, 70, 10
-    EDITTEXT IDC_PRODUCT_SUITE, 95, 60, 175, 14, ES_READONLY | ES_AUTOHSCROLL
-    LTEXT "Ürün Türü:", IDC_STATIC, 20, 82, 70, 10
-    EDITTEXT IDC_PRODUCT_TYPE, 95, 80, 110, 14, ES_READONLY | ES_AUTOHSCROLL
-    LTEXT "Tanım:", IDC_STATIC, 20, 102, 70, 10
-    EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 99, 205, 30, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
+    LTEXT "Tanım:", IDC_STATIC, 20, 65, 70, 10
+    EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -250,7 +246,8 @@ BEGIN
     IDS_PRODUCTTITLE "Ürün Seçenekleri"
     IDS_PRODUCTSUBTITLE "Sisteminizin davranışını etkileyen bir ürün seçeneği seçebilirsiniz."
     IDS_PRODUCTSERVERNAME "ReactOS Sunucu"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS İş İstasyonu (Ön Tanımlı)"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS İş İstasyonu"
     IDS_PRODUCTSERVERINFO "Sistem bir sunucu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" and ""Müziklerim"" özel klasörleri ""Belgelerim""den bağımsızdır."
     IDS_PRODUCTWORKSTATIONINFO "Sistem bir iş istasyonu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" and ""Müziklerim"" özel klasörleri ""Belgelerim""in içindedir."
+    IDS_DEFAULT "(Ön Tanımlı)"
 END
