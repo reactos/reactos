@@ -149,6 +149,7 @@ STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "Ustawienia zaawansowane"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
     RTEXT "C&zęstotliwość próbkowania:", -1, 27, 35, 90, 8
     LTEXT "raportów na sekundę", -1, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL

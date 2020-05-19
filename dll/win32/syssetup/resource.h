@@ -87,6 +87,7 @@
 #define IDC_PS2MOUSEINPUTUPDN  2304
 #define IDC_PS2MOUSEFASTINIT   2305
 #define IDC_PS2MOUSEDEFAULTS   2306
+#define IDC_PS2STATIC          2307
 
 #define IDD_PRODUCT                2400
 #define IDC_PRODUCT_ICON           2401
