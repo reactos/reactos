@@ -541,7 +541,7 @@ typedef struct _USBHUBPORTDATA {
 #define USB_LANG_TURKISH                                    0x1f
 #define USB_LANG_URDU                                       0x20
 #define USB_LANG_INDONESIAN                                 0x21
-#define USB_LANG_UKRANIAN                                   0x22
+#define USB_LANG_UKRAINIAN                                  0x22
 #define USB_LANG_BELARUSIAN                                 0x23
 #define USB_LANG_SLOVENIAN                                  0x24
 #define USB_LANG_ESTONIAN                                   0x25

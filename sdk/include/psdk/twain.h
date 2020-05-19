@@ -1268,7 +1268,7 @@ typedef struct {
 #define TWLG_SWEDISH              TWLG_SWE
 #define TWLG_THAI                 84
 #define TWLG_TURKISH              85
-#define TWLG_UKRANIAN             86
+#define TWLG_UKRAINIAN            86
 /* More stuff added for 1.8 */
 #define TWLG_ASSAMESE             87
 #define TWLG_BENGALI              88
