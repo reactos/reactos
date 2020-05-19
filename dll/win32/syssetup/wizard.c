@@ -523,7 +523,7 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     LPNMHDR lpnm;
     PSETUPDATA pSetupData;
     INT iItem;
-    WCHAR szText[64], szDefault[64];;
+    WCHAR szText[64], szDefault[64];
     HICON hIcon;
 
     pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
