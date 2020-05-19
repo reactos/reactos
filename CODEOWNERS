@@ -327,21 +327,31 @@ amd64/                                      @tkreuzer
 # Translations
 # This is the list of translation teams in ReactOS GitHub organization.
 # If you want to be part of one - hit us at https://chat.reactos.org/
+# da-DK.*    @reactos/lang-danish
 de-DE.*    @reactos/lang-german
 es-ES.*    @reactos/lang-spanish
 et-EE.*    @reactos/lang-estonian
+# fi-FI.*    @reactos/lang-finnish
 fr-FR.*    @reactos/lang-french
 he-IL.*    @reactos/lang-hebrew
 hi-IN.*    @reactos/lang-hindi
 hu-HU.*    @reactos/lang-hungarian
 id-ID.*    @reactos/lang-indonesian
 it-IT.*    @reactos/lang-italian
+# ja-JP.*    @reactos/lang-japanese
+# ko-KR.*    @reactos/lang-korean
+# lt-LT.*    @reactos/lang-lithuanian
 nl-NL.*    @reactos/lang-dutch
+# no-NO.*    @reactos/lang-norwegian
 pl-PL.*    @reactos/lang-polish
 pt-BR.*    @reactos/lang-portuguese
 pt-PT.*    @reactos/lang-portuguese
 ro-RO.*    @reactos/lang-romanian
 ru-RU.*    @reactos/lang-russian
+# si-SI.*    @reactos/lang-slovenian
+# sk-SK.*    @reactos/lang-slovak
+# sq-AL.*    @reactos/lang-albanian
+# sv-SE.*    @reactos/lang-swedish
 tr-TR.*    @reactos/lang-turkish
 uk-UA.*    @reactos/lang-ukrainian
 zh-CN.*    @reactos/lang-chinese
