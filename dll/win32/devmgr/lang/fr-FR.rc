@@ -16,13 +16,13 @@ BEGIN
     IDS_ENABLEDEVICE "Utiliser ce périphérique (activé)"
     IDS_DISABLEDEVICE "Ne pas utiliser ce matériel (désactivé)"
     IDS_UNKNOWNDEVICE "Matériel inconnu"
-    IDS_NODRIVERLOADED "Aucun driver n'est installé pour ce matériel."
+    IDS_NODRIVERLOADED "Aucun pilote n'est installé pour ce matériel."
     IDS_DEVONPARENT "sur %1"
     IDS_TROUBLESHOOTDEV "&Dépannage..."
     IDS_ENABLEDEV "A&ctiver le matériel"
-    IDS_REINSTALLDRV "Ré&installer le Driver"
+    IDS_REINSTALLDRV "Ré&installer le pilote"
     IDS_PROPERTIES "&Propriétés"
-    IDS_UPDATEDRV "Mettre à jour le Driver..."
+    IDS_UPDATEDRV "Mettre à jour le pilote..."
     IDS_REBOOT "&Redémarrer l'ordinateur..."
     IDS_NOTAVAILABLE "Non disponible"
     IDS_NOTDIGITALLYSIGNED "Non signé numériquement"
@@ -40,7 +40,7 @@ BEGIN
     IDS_DEV_NO_PROBLEM "Ce périphérique fonctionne correctement."
     IDS_DEV_NOT_CONFIGURED "Ce périphérique n'est pas configuré correctement."
     IDS_DEV_DEVLOADER_FAILED "ReactOS n'a pas pu charger le pilote de ce périphérique car l'ordinateur signale deux types de bus %1."
-    IDS_DEV_DEVLOADER_FAILED2 "Le(s) chargeur(s) de périphérique %1 pour ce périphérique n'ont pas pu charger le driver."
+    IDS_DEV_DEVLOADER_FAILED2 "Le(s) chargeur(s) de périphérique %1 pour ce périphérique n'ont pas pu charger le pilote."
     IDS_DEV_OUT_OF_MEMORY "Le pilote de ce périphérique peut être mauvais, ou votre système peut être à court de mémoire ou d'autres ressources."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Ce périphérique ne fonctionne pas correctement parce qu'un des pilotes de ce périphérique peut être mauvais, ou votre base de registres peut être mauvaise."
     IDS_DEV_LACKED_ARBITRATOR "Le pilote de ce périphérique a demandé une ressource que ReactOS ne sait pas prendre en compte."
@@ -64,7 +64,7 @@ BEGIN
     IDS_DEV_WILL_BE_REMOVED "ReactOS est en train de supprimer ce périphérique."
     IDS_DEV_DISABLED "Ce périphérique n'est pas démarré."
     IDS_DEV_DISABLED2 "Ce périphérique est désactivé."
-    IDS_DEV_DEVLOADER_NOT_READY "Les chargeurs de ce périphérique ne peuvent pas charger les drivers requis."
+    IDS_DEV_DEVLOADER_NOT_READY "Les chargeurs de ce périphérique ne peuvent pas charger les pilotes requis."
     IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
     IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Ce périphérique est soit non présent, soit ne fonctionne pas correctement, ou n'a pas tous les pilotes installés."
@@ -174,13 +174,13 @@ BEGIN
     EDITTEXT IDC_DRVVERSION, 120, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Signature numérique :", -1, 37, 81, 80, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 120, 81, 126, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON "&Détails...", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    PUSHBUTTON "&Détails...", IDC_DRIVERDETAILS, 5, 106, 79, 15
     LTEXT "Voir les détails à propos des fichiers du Pilote.", -1, 91, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Mettre le pilote à jour...", IDC_UPDATEDRIVER, 7, 134, 75, 15
+    PUSHBUTTON "&Mettre le pilote à jour...", IDC_UPDATEDRIVER, 5, 134, 79, 15
     LTEXT "Mettre à jour le pilote du périphérique.", -1, 91, 138, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Restaurer le pilote", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
+    PUSHBUTTON "&Restaurer le pilote", IDC_ROLLBACKDRIVER, 5, 162, 79, 15
     LTEXT "Si le périphérique ne fonctionne plus après la mise à jour du pilote, permet de retourner au pilote précédemment installé.", -1, 91, 162, 154, 25, SS_NOPREFIX
-    PUSHBUTTON "Dé&sinstaller", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
+    PUSHBUTTON "Dé&sinstaller", IDC_UNINSTALLDRIVER, 5, 190, 79, 15
     LTEXT "Désinstaller le pilote (Avancé).", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
