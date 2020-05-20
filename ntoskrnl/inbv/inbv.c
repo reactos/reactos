@@ -1279,7 +1279,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
-        if (Bar)
+        if ((TempRotBarSelection == RB_SQUARE_CELLS) && Bar)
         {
             /* Save previous screen pixels to buffer */
             InbvScreenToBufferBlt(Buffer, 0, 0, 22, 9, 24);
