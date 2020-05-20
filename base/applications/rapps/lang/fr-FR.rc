@@ -245,5 +245,5 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Base de données d'applications"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Mise à jour de la base de données…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Mise à jour de la base de données… (No officielle)"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Mise à jour de la base de données… (Non officielle)"
 END
