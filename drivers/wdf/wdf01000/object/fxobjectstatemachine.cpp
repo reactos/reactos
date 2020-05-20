@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Wdf01000 driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Base objects statemachine
+ * COPYRIGHT:   Copyright 2020 mrmks04 (mrmks04@yandex.ru)
+ */
+
+
 #include "common/fxobject.h"
 #include "common/fxdevice.h"
 #include "common/fxdriver.h"

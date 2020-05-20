@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Wdf01000 driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Tracing for the driver frameworks
+ * COPYRIGHT:   Copyright 2020 mrmks04 (mrmks04@yandex.ru)
+ */
+
+
 #include "common/fxtrace.h"
 #include "common/fxifr.h"
 #include "common/fxautoregistry.h"

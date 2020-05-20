@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Wdf01000 driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     String util
+ * COPYRIGHT:   Copyright 2020 mrmks04 (mrmks04@yandex.ru)
+ */
+
+
 #include "common/stringutil.h"
 #include "common/dbgtrace.h"
 #include <ntintsafe.h>

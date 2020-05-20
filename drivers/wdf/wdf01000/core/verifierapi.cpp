@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Wdf01000 driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Global verifier worker routines
+ * COPYRIGHT:   Copyright 2020 mrmks04 (mrmks04@yandex.ru)
+ */
+
+
+
 #include "common/fxglobals.h"
 #include "common/dbgtrace.h"
 

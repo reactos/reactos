@@ -1,4 +1,12 @@
 /*
+ * PROJECT:     ReactOS Wdf01000 driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Simple transactioned list
+ * COPYRIGHT:   Copyright 2020 mrmks04 (mrmks04@yandex.ru)
+ */
+
+
+/*
 Abstract:
 
     This module implements a simple transactioned list which allows the caller

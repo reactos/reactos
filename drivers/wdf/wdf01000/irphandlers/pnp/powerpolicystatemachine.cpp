@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Wdf01000 driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Power Policy state machine for the driver
+ * COPYRIGHT:   Copyright 2020 mrmks04 (mrmks04@yandex.ru)
+ */
+
+
 #include "common/fxpowerpolicystatemachine.h"
 #include "common/fxpkgpnp.h"
 #include "common/fxpoweridlestatemachine.h"

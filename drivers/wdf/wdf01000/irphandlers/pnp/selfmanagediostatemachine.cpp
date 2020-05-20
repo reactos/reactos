@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Wdf01000 driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Self managed io state machine start / stop logic
+ * COPYRIGHT:   Copyright 2020 mrmks04 (mrmks04@yandex.ru)
+ */
+
+
 #include "common/fxselfmanagediostatemachine.h"
 #include "common/fxpkgpnp.h"
 #include "common/fxdevice.h"

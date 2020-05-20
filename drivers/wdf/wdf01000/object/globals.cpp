@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Wdf01000 driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Framework configuration globals
+ * COPYRIGHT:   Copyright 2020 mrmks04 (mrmks04@yandex.ru)
+ */
+
+
+
 #include "common/fxglobals.h"
 #include "common/fxpool.h"
 #include "common/fxmacros.h"
