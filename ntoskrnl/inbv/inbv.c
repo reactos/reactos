@@ -1284,7 +1284,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             /* Save previous screen pixels to buffer */
             InbvScreenToBufferBlt(Buffer, 0, 0, 22, 9, 24);
             /* Draw the progress bar bit */
-            InbvBitBlt(Bar, 0, 0);
+            BitBltPalette(Bar, TRUE, 0, 0);
             /* Store it in global buffer */
             InbvScreenToBufferBlt(RotBarBuffer, 0, 0, 22, 9, 24);
             /* Restore screen pixels */
