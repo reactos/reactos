@@ -228,7 +228,7 @@ STRINGTABLE
 BEGIN
     IDS_LICENSE_OPENSOURCE "Open Source"
     IDS_LICENSE_FREEWARE "Freeware"
-    IDS_LICENSE_TRIAL "Version d'essai/Demo"
+    IDS_LICENSE_TRIAL "Version d'essai / Démo"
 END
 
 STRINGTABLE
