@@ -21,7 +21,9 @@ add_executable(ntoskrnl
 set_property(TARGET ntoskrnl PROPERTY ENABLE_EXPORTS TRUE)
 set_target_properties(ntoskrnl PROPERTIES DEFINE_SYMBOL "")
 
-source_group(TREE ${REACTOS_SOURCE_DIR}/ntoskrnl PREFIX "Source Files" FILES ${NTOSKRNL_SOURCE})
+if(NOT CMAKE_VERSION VERSION_LESS 3.8.0)
+    source_group(TREE ${REACTOS_SOURCE_DIR}/ntoskrnl PREFIX "Source Files" FILES ${NTOSKRNL_SOURCE})
+endif()
 
 if(ARCH STREQUAL "i386")
     set_entrypoint(ntoskrnl KiSystemStartup 4)
