@@ -32,7 +32,7 @@ list(APPEND SOURCE
     suminfo.c
     precomp.h)
 
-if(NOT ${CMAKE_VERSION} VERSION_LESS "3.9.0")
+if(NOT CMAKE_VERSION VERSION_LESS 3.9.0)
     # CMake 3.9 and higher requires to specify this dependency manually
     # see https://gitlab.kitware.com/cmake/cmake/issues/19933
     set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS custom.dll)
