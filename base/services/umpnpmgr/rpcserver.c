@@ -4108,8 +4108,83 @@ PNP_GetNextResDes(
     DWORD *pulNextResTag,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    HKEY hConfigKey = NULL;
+    DWORD RegDataType = 0;
+    ULONG ulDataSize = 0;
+    LPBYTE lpData = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_GetNextResDes(%p %S 0x%lx %lu %lu %ul %p %p 0x%08lx)\n",
+           hBinding, pDeviceID, ulLogConfTag, ulLogConfType, ResourceID,
+           ulResourceTag, pulNextResType, pulNextResTag, ulFlags);
+
+    if (pulNextResType == NULL)
+        return CR_INVALID_POINTER;
+
+    *pulNextResType = 0;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
+
+    ret = OpenConfigurationKey(pDeviceID,
+                               &hConfigKey);
+    if (ret != CR_SUCCESS)
+    {
+        DPRINT1("OpenConfigurationKey() failed (Error %lu)\n", ret);
+        ret = CR_NO_MORE_LOG_CONF;
+        goto done;
+    }
+
+    ret = GetConfigurationData(hConfigKey,
+                               ulLogConfType,
+                               &RegDataType,
+                               &ulDataSize,
+                               &lpData);
+    if (ret != CR_SUCCESS)
+    {
+        DPRINT1("GetConfigurationData() failed (Error %lu)\n", ret);
+        ret = CR_NO_MORE_LOG_CONF;
+        goto done;
+    }
+
+    DPRINT1("Data size %lu\n", ulDataSize);
+
+    if (ulDataSize == 0 || lpData == NULL)
+    {
+        DPRINT1("No config data available!\n");
+        ret = CR_NO_MORE_LOG_CONF;
+        goto done;
+    }
+
+    /* Get the next resource descriptor */
+    if (RegDataType == REG_RESOURCE_LIST)
+    {
+        DPRINT1("FIXME: REG_RESOURCE_LIST\n");
+        /* FIXME */
+        ret = CR_NO_MORE_LOG_CONF;
+        goto done;
+    }
+    else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
+    {
+        DPRINT1("FIXME: REG_RESOURCE_REQUIREMENTS_LIST\n");
+        /* FIXME */
+        ret = CR_NO_MORE_LOG_CONF;
+        goto done;
+    }
+
+done:
+    if (lpData != NULL)
+        HeapFree(GetProcessHeap(), 0, lpData);
+
+    if (hConfigKey != NULL)
+        RegCloseKey(hConfigKey);
+
+    DPRINT1("PNP_GetNextResDes() returns %lu\n", ret);
+
+    return ret;
 }
 
 
