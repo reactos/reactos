@@ -80,7 +80,6 @@
 
 #define IDD_STATUSWINDOW_DLG 2200
 #define IDC_STATUSLABEL      2201
-#define IDC_STATUSPROGRESS   2202
 #define IDC_ROSLOGO          2202
 #define IDC_BAR              2503
 
@@ -165,3 +164,6 @@
 #define IDS_PRODUCTWORKSTATIONINFO  3905
 
 #define IDR_GPL 4000
+
+/* Timer ID for the animated dialog bar. */
+#define IDT_BAR 1
