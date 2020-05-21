@@ -395,13 +395,13 @@ static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\
 static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
 static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
 
-typedef struct PRODUCT_OPTION_DATA
+typedef struct _PRODUCT_OPTION_DATA
 {
     LPCWSTR ProductSuite;
     LPCWSTR ProductType;
     DWORD ReportAsWorkstation;
     DWORD CSDVersion;
-} PRODUCT_OPTION_DATA, *LPPRODUCT_OPTION_DATA;
+} PRODUCT_OPTION_DATA;
 
 static const PRODUCT_OPTION_DATA s_ProductOptionData[] =
 {
@@ -430,7 +430,7 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
     /* write ProductSuite */
     pszData = pData->ProductSuite;
     cbData = (lstrlenW(pszData) + 2) * sizeof(WCHAR);
-    error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (const BYTE *)pData, cbData);
+    error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (const BYTE *)pszData, cbData);
     if (error)
     {
         DPRINT1("RegSetValueExW failed\n");
@@ -440,7 +440,7 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
     /* write ProductType */
     pszData = pData->ProductType;
     cbData = (lstrlenW(pszData) + 1) * sizeof(WCHAR);
-    error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (const BYTE *)pData, cbData);
+    error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (const BYTE *)pszData, cbData);
     if (error)
     {
         DPRINT1("RegSetValueExW failed\n");
