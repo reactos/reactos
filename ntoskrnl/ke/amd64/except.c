@@ -53,8 +53,8 @@ KDESCRIPTOR KiIdtDescriptor = {{0}, sizeof(KiIdt) - 1, KiIdt};
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 KeInitExceptions(VOID)
 {

@@ -295,8 +295,8 @@ KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
     }
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 KiInitializeBugCheck(VOID)
 {

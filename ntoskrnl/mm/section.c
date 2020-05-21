@@ -2749,8 +2749,8 @@ MmpCloseSection(IN PEPROCESS Process OPTIONAL,
     DPRINT("MmpCloseSection(OB %p, HC %lu)\n", Object, ProcessHandleCount);
 }
 
-NTSTATUS
 INIT_FUNCTION
+NTSTATUS
 NTAPI
 MmCreatePhysicalMemorySection(VOID)
 {
@@ -2800,8 +2800,8 @@ MmCreatePhysicalMemorySection(VOID)
     return(STATUS_SUCCESS);
 }
 
-NTSTATUS
 INIT_FUNCTION
+NTSTATUS
 NTAPI
 MmInitSectionImplementation(VOID)
 {

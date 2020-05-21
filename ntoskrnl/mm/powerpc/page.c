@@ -445,8 +445,8 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 #endif
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID)
 {

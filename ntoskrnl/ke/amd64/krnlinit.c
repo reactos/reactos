@@ -20,9 +20,9 @@ extern BOOLEAN RtlpUse16ByteSLists;
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PKTHREAD InitThread,
                    IN PVOID IdleStack,
@@ -51,9 +51,9 @@ KiInitializeHandBuiltThread(
 
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiSystemStartupBootStack(VOID)
 {
     PLOADER_PARAMETER_BLOCK LoaderBlock = KeLoaderBlock; // hack
@@ -134,9 +134,9 @@ KiSystemStartupBootStack(VOID)
     KiIdleLoop();
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PKTHREAD InitThread,
                    IN PVOID IdleStack,
