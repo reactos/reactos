@@ -1116,7 +1116,6 @@ BOOL WINAPI
 GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded)
 {
     DWORD dwErrorCode;
-    BOOL bResult;
     PPRINTER_INFO_1A ppi1a = (PPRINTER_INFO_1A)pPrinter;
     PPRINTER_INFO_1W ppi1w = (PPRINTER_INFO_1W)pPrinter;
     PPRINTER_INFO_2A ppi2a = (PPRINTER_INFO_2A)pPrinter;
@@ -1139,8 +1138,7 @@ GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD 
         goto Cleanup;
     }
 
-    bResult = GetPrinterW(hPrinter, Level, pPrinter, cbBuf, pcbNeeded);
-    if (!bResult)
+    if (!GetPrinterW(hPrinter, Level, pPrinter, cbBuf, pcbNeeded))
     {
         dwErrorCode = GetLastError();
         goto Cleanup;
