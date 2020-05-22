@@ -36,6 +36,8 @@
 INT cmd_goto(LPTSTR param)
 {
     LPTSTR tmp, tmp2;
+    DWORD dwCurrPos;
+    BOOL bRetry;
 
     TRACE("cmd_goto(\'%s\')\n", debugstr_aw(param));
 
@@ -74,13 +76,22 @@ INT cmd_goto(LPTSTR param)
         return 0;
     }
 
-    /* jump to begin of the file */
-    bc->mempos=0;
+    /*
+     * Search the next label starting our position, until the end of the file.
+     * If none has been found, restart at the beginning of the file, and continue
+     * until reaching back our old current position.
+     */
+    bRetry = FALSE;
+    dwCurrPos = bc->mempos;
 
+retry:
     while (BatchGetString(textline, ARRAYSIZE(textline)))
     {
         INT pos;
         INT_PTR size;
+
+        if (bRetry && (bc->mempos >= dwCurrPos))
+            break;
 
         /* Strip out any trailing spaces or control chars */
         tmp = textline + _tcslen(textline) - 1;
@@ -111,6 +122,12 @@ INT cmd_goto(LPTSTR param)
             bc->current = NULL;
             return 0;
         }
+    }
+    if (!bRetry && (bc->mempos >= bc->memsize))
+    {
+        bRetry = TRUE;
+        bc->mempos = 0;
+        goto retry;
     }
 
     ConErrResPrintf(STRING_GOTO_ERROR2, param);
