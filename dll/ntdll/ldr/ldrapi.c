@@ -826,7 +826,7 @@ LdrGetProcedureAddress(IN PVOID BaseAddress,
                        OUT PVOID *ProcedureAddress)
 {
     /* Call the internal routine and tell it to execute DllInit */
-    return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE);
+    return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE, FALSE);
 }
 
 /*
@@ -1556,8 +1556,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
         /* Check if a Hotpatch is active */
         if (LdrEntry->PatchInformation)
         {
-            /* FIXME */
-            DPRINT1("We don't support Hotpatching yet\n");
+            DPRINT("roscompat: %wZ has compat info\n", &CurrentEntry->BaseDllName);
         }
 
         /* Deallocate the Entry */

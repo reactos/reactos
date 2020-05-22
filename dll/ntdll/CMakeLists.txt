@@ -17,6 +17,7 @@ list(APPEND SOURCE
     csr/capture.c
     csr/connect.c
     dbg/dbgui.c
+    ldr/appcompat.c
     ldr/ldrapi.c
     ldr/ldrinit.c
     ldr/ldrpe.c
