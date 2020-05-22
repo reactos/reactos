@@ -161,13 +161,13 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
             /* Snap the thunk */
             _SEH2_TRY
             {
-                Status = LdrpSnapThunk(ExportLdrEntry->DllBase,
+                Status = LdrpSnapThunk(ExportLdrEntry,
                                        ImportLdrEntry->DllBase,
                                        OriginalThunk,
                                        FirstThunk,
                                        ExportDirectory,
                                        ExportSize,
-                                       TRUE,
+                                       ImportLdrEntry->PatchInformation ? 3 : 1,
                                        ImportName);
 
                 /* Move to the next thunk */
@@ -217,13 +217,13 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
             /* Snap the Thunk */
             _SEH2_TRY
             {
-                Status = LdrpSnapThunk(ExportLdrEntry->DllBase,
+                Status = LdrpSnapThunk(ExportLdrEntry,
                                        ImportLdrEntry->DllBase,
                                        OriginalThunk,
                                        FirstThunk,
                                        ExportDirectory,
                                        ExportSize,
-                                       TRUE,
+                                       ImportLdrEntry->PatchInformation ? 3 : TRUE,
                                        ImportName);
 
                 /* Next thunks */
@@ -929,6 +929,8 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
         goto done;
     }
 
+    LdrpApplyRosCompatMagic(*DataTableEntry);
+
     /* Walk its import descriptor table */
     Status = LdrpWalkImportDescriptor(DllPath,
                                       *DataTableEntry);
@@ -947,7 +949,7 @@ done:
 
 NTSTATUS
 NTAPI
-LdrpSnapThunk(IN PVOID ExportBase,
+LdrpSnapThunk(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
               IN PVOID ImportBase,
               IN PIMAGE_THUNK_DATA OriginalThunk,
               IN OUT PIMAGE_THUNK_DATA Thunk,
@@ -976,6 +978,7 @@ LdrpSnapThunk(IN PVOID ExportBase,
     PANSI_STRING ForwardName;
     PVOID ForwarderHandle;
     ULONG ForwardOrdinal;
+    PROSCOMPAT_DESCRIPTOR RosCompatDescriptor;
 
     /* Check if the snap is by ordinal */
     if ((IsOrdinal = IMAGE_SNAP_BY_ORDINAL(OriginalThunk->u1.Ordinal)))
@@ -995,9 +998,9 @@ LdrpSnapThunk(IN PVOID ExportBase,
         ImportName = (LPSTR)AddressOfData->Name;
 
         /* Now get the VA of the Name and Ordinal Tables */
-        NameTable = (PULONG)((ULONG_PTR)ExportBase +
+        NameTable = (PULONG)((ULONG_PTR)ExportLdrEntry->DllBase +
                              (ULONG_PTR)ExportDirectory->AddressOfNames);
-        OrdinalTable = (PUSHORT)((ULONG_PTR)ExportBase +
+        OrdinalTable = (PUSHORT)((ULONG_PTR)ExportLdrEntry->DllBase +
                                  (ULONG_PTR)ExportDirectory->AddressOfNameOrdinals);
 
         /* Get the hint */
@@ -1005,7 +1008,7 @@ LdrpSnapThunk(IN PVOID ExportBase,
 
         /* Try to get a match by using the hint */
         if (((ULONG)Hint < ExportDirectory->NumberOfNames) &&
-             (!strcmp(ImportName, ((LPSTR)((ULONG_PTR)ExportBase + NameTable[Hint])))))
+             (!strcmp(ImportName, ((LPSTR)((ULONG_PTR)ExportLdrEntry->DllBase + NameTable[Hint])))))
         {
             /* We got a match, get the Ordinal from the hint */
             Ordinal = OrdinalTable[Hint];
@@ -1015,9 +1018,26 @@ LdrpSnapThunk(IN PVOID ExportBase,
             /* Well bummer, hint didn't work, do it the long way */
             Ordinal = LdrpNameToOrdinal(ImportName,
                                         ExportDirectory->NumberOfNames,
-                                        ExportBase,
+                                        ExportLdrEntry->DllBase,
                                         NameTable,
                                         OrdinalTable);
+
+            /* Check if that failed and the importer may import from private exports */
+            if (((ULONG)Ordinal >= ExportDirectory->NumberOfFunctions) &&
+                (Static & 2))
+            {
+                /* Check if the exporter has private exports */
+                RosCompatDescriptor = ExportLdrEntry->PatchInformation;
+                if (RosCompatDescriptor != NULL)
+                {
+                    /* Try to find the export in the private export table */
+                    Ordinal = LdrpNameToOrdinal(ImportName,
+                                                RosCompatDescriptor->NumberOfExportNames - ExportDirectory->NumberOfNames,
+                                                ExportLdrEntry->DllBase,
+                                                NameTable + ExportDirectory->NumberOfNames,
+                                                OrdinalTable + ExportDirectory->NumberOfNames);
+                }
+            }
         }
     }
 
@@ -1026,13 +1046,10 @@ LdrpSnapThunk(IN PVOID ExportBase,
     {
 FailurePath:
         /* Is this a static snap? */
-        if (Static)
+        if (Static & 1)
         {
             UNICODE_STRING SnapTarget;
             PLDR_DATA_TABLE_ENTRY LdrEntry;
-
-            /* What was the module we were searching in */
-            RtlInitAnsiString(&TempString, DllName ? DllName : "Unknown");
 
             /* What was the module we were searching for */
             if (LdrpCheckForLoadedDllHandle(ImportBase, &LdrEntry))
@@ -1042,12 +1059,14 @@ FailurePath:
 
             /* Inform the debug log */
             if (IsOrdinal)
-                DPRINT1("Failed to snap ordinal %Z!0x%x for %wZ\n", &TempString, OriginalOrdinal, &SnapTarget);
+                DPRINT1("Failed to snap ordinal %wZ!0x%x for %wZ\n", &ExportLdrEntry->BaseDllName, OriginalOrdinal, &SnapTarget);
             else
-                DPRINT1("Failed to snap %Z!%s for %wZ\n", &TempString, ImportName, &SnapTarget);
+                DPRINT1("Failed to snap %wZ!%s for %wZ\n", &ExportLdrEntry->BaseDllName, ImportName, &SnapTarget);
 
             /* These are critical errors. Setup a string for the DLL name */
-            RtlAnsiStringToUnicodeString(&HardErrorDllName, &TempString, TRUE);
+            RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                      &ExportLdrEntry->BaseDllName,
+                                      &HardErrorDllName);
 
             /* Set it as the parameter */
             HardErrorParameters[1] = (ULONG_PTR)&HardErrorDllName;
@@ -1116,11 +1135,11 @@ FailurePath:
     {
         /* The ordinal seems correct, get the AddressOfFunctions VA */
         AddressOfFunctions = (PULONG)
-                             ((ULONG_PTR)ExportBase +
+                             ((ULONG_PTR)ExportLdrEntry->DllBase +
                               (ULONG_PTR)ExportDirectory->AddressOfFunctions);
 
         /* Write the function pointer*/
-        Thunk->u1.Function = (ULONG_PTR)ExportBase + AddressOfFunctions[Ordinal];
+        Thunk->u1.Function = (ULONG_PTR)ExportLdrEntry->DllBase + AddressOfFunctions[Ordinal];
 
         /* Make sure it's within the exports */
         if ((Thunk->u1.Function > (ULONG_PTR)ExportDirectory) &&
@@ -1218,7 +1237,8 @@ FailurePath:
                                              ForwardName,
                                              ForwardOrdinal,
                                              (PVOID*)&Thunk->u1.Function,
-                                             FALSE);
+                                             FALSE,
+                                             (ExportLdrEntry->PatchInformation != NULL));
             /* If this fails, then error out */
             if (!NT_SUCCESS(Status)) goto FailurePath;
         }

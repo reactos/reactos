@@ -83,7 +83,7 @@ VOID NTAPI LdrpEnsureLoaderLockIsHeld(VOID);
 /* ldrpe.c */
 NTSTATUS
 NTAPI
-LdrpSnapThunk(IN PVOID ExportBase,
+LdrpSnapThunk(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
               IN PVOID ImportBase,
               IN PIMAGE_THUNK_DATA OriginalThunk,
               IN OUT PIMAGE_THUNK_DATA Thunk,
@@ -103,7 +103,8 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
                         IN PANSI_STRING Name,
                         IN ULONG Ordinal,
                         OUT PVOID *ProcedureAddress,
-                        IN BOOLEAN ExecuteInit);
+                        IN BOOLEAN ExecuteInit,
+                        IN BOOLEAN UsePrivateExports);
 
 PLDR_DATA_TABLE_ENTRY NTAPI
 LdrpAllocateDataTableEntry(IN PVOID BaseAddress);
@@ -223,5 +224,13 @@ NTAPI
 RtlDoesFileExists_UStr(
     IN PUNICODE_STRING FileName
 );
+
+/* appcompat.c */
+BOOLEAN
+NTAPI
+LdrpApplyRosCompatMagic(PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+extern char __ImageBase;
+
 
 /* EOF */
