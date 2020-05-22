@@ -182,7 +182,9 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
             //
             // THIS WHOLE PATH IS TODO
             //
+#if 1
             goto kernelHack;
+#else
             ASSERT(FALSE);
 
             //
@@ -200,6 +202,7 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
             // Set it
             //
             *PointerPde = TempPde;
+#endif
         }
     }
 
