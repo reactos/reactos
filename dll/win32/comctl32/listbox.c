@@ -1951,7 +1951,11 @@ static LRESULT LISTBOX_HandleHScroll( LB_DESCR *descr, WORD scrollReq, WORD pos 
         case SB_THUMBTRACK:
             info.cbSize = sizeof(info);
             info.fMask  = SIF_TRACKPOS;
+#ifdef __REACTOS__
+            GetScrollInfo( descr->self, SB_HORZ, &info );
+#else
             GetScrollInfo( descr->self, SB_VERT, &info );
+#endif
             LISTBOX_SetTopItem( descr, info.nTrackPos*descr->page_size,
                                 TRUE );
             break;
