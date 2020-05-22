@@ -826,7 +826,7 @@ LdrGetProcedureAddress(IN PVOID BaseAddress,
                        OUT PVOID *ProcedureAddress)
 {
     /* Call the internal routine and tell it to execute DllInit */
-    return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE);
+    return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE, FALSE);
 }
 
 /*

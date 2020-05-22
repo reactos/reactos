@@ -2262,6 +2262,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Initialize Wine's active context implementation for the current process */
     actctx_init(&OldShimData);
 
+    /* Apply export versioning hacks */
+    LdrpApplyRosCompatMagic(NtLdrEntry);
+
     /* Set the current directory */
     Status = RtlSetCurrentDirectory_U(&CurrentDirectory);
     if (!NT_SUCCESS(Status))
