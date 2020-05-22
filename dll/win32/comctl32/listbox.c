@@ -296,6 +296,12 @@ static LRESULT LISTBOX_SetTopItem( LB_DESCR *descr, INT index, BOOL scroll )
         else
             diff = (descr->top_item - index) * descr->item_height;
 
+#ifdef __REACTOS__
+        if (descr->style & LBS_MULTICOLUMN)
+            ScrollWindowEx(descr->self, diff, 0, NULL, NULL, 0, NULL,
+                           SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN);
+        else
+#endif
         ScrollWindowEx( descr->self, 0, diff, NULL, NULL, 0, NULL,
                         SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN );
     }
@@ -2015,6 +2021,10 @@ static LRESULT LISTBOX_HandleMouseWheel(LB_DESCR *descr, SHORT delta )
         pulScrollLines = min((UINT) descr->page_size, pulScrollLines);
         cLineScroll = pulScrollLines * (float)descr->wheel_remain / WHEEL_DELTA;
         descr->wheel_remain -= WHEEL_DELTA * cLineScroll / (int)pulScrollLines;
+#ifdef __REACTOS__
+        if (cLineScroll < 0)
+            cLineScroll -= descr->page_size;
+#endif
         LISTBOX_SetTopItem( descr, descr->top_item - cLineScroll, TRUE );
     }
     return 0;
