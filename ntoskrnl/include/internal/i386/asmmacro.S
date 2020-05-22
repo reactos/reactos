@@ -207,6 +207,10 @@ set_sane_segs:
         mov fs, ax
     endif
 
+    /* Save ExceptionList, since the C handler might use SEH */
+    mov eax, fs:[KPCR_EXCEPTION_LIST]
+    mov [esp + KTRAP_FRAME_EXCEPTION_LIST], eax
+
 #if DBG
     /* Keep the frame chain intact */
     mov eax, [esp + KTRAP_FRAME_EIP]
