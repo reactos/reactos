@@ -1000,7 +1000,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
             {
                 /* Read the number of pages we'll use */
                 PerfMemUsed = atol(PerfMem + 1) * (1024 * 1024 / PAGE_SIZE);
-                if (PerfMem)
+                if (PerfMemUsed)
                 {
                     /* FIXME: TODO */
                     DPRINT1("BBT performance mode not yet supported."
