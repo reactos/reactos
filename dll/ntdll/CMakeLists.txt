@@ -30,6 +30,7 @@ target_link_libraries(etwtrace ${PSEH_LIB})
 
 list(APPEND SOURCE
     dbg/dbgui.c
+    ldr/appcompat.c
     ldr/ldrapi.c
     ldr/ldrinit.c
     ldr/ldrpe.c

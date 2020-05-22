@@ -37,6 +37,7 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
     LPSTR ImportName;
     ULONG ForwarderChain, i, Rva, OldProtect, IatSize, ExportSize;
     SIZE_T ImportSize;
+    UCHAR SnapFlags;
     DPRINT("LdrpSnapIAT(%wZ %wZ %p %u)\n", &ExportLdrEntry->BaseDllName, &ImportLdrEntry->BaseDllName, IatEntry, EntriesValid);
 
     /* Get export directory */
@@ -131,6 +132,13 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
         return Status;
     }
 
+    /* Set snap flags. We allow private imports from our own modules */
+    SnapFlags = SNAP_STATIC;
+    if (ImportLdrEntry->PatchInformation != NULL)
+    {
+        SnapFlags |= SNAP_PRIVATE;
+    }
+
     /* Check if the Thunks are already valid */
     if (EntriesValid)
     {
@@ -161,13 +169,13 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
             /* Snap the thunk */
             _SEH2_TRY
             {
-                Status = LdrpSnapThunk(ExportLdrEntry->DllBase,
+                Status = LdrpSnapThunk(ExportLdrEntry,
                                        ImportLdrEntry->DllBase,
                                        OriginalThunk,
                                        FirstThunk,
                                        ExportDirectory,
                                        ExportSize,
-                                       TRUE,
+                                       SnapFlags,
                                        ImportName);
 
                 /* Move to the next thunk */
@@ -217,13 +225,13 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
             /* Snap the Thunk */
             _SEH2_TRY
             {
-                Status = LdrpSnapThunk(ExportLdrEntry->DllBase,
+                Status = LdrpSnapThunk(ExportLdrEntry,
                                        ImportLdrEntry->DllBase,
                                        OriginalThunk,
                                        FirstThunk,
                                        ExportDirectory,
                                        ExportSize,
-                                       TRUE,
+                                       SnapFlags,
                                        ImportName);
 
                 /* Next thunks */
@@ -934,13 +942,13 @@ done:
 
 NTSTATUS
 NTAPI
-LdrpSnapThunk(IN PVOID ExportBase,
+LdrpSnapThunk(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
               IN PVOID ImportBase,
               IN PIMAGE_THUNK_DATA OriginalThunk,
               IN OUT PIMAGE_THUNK_DATA Thunk,
               IN PIMAGE_EXPORT_DIRECTORY ExportDirectory,
               IN ULONG ExportSize,
-              IN BOOLEAN Static,
+              IN UCHAR SnapFlags,
               IN LPSTR DllName)
 {
     BOOLEAN IsOrdinal;
@@ -963,6 +971,7 @@ LdrpSnapThunk(IN PVOID ExportBase,
     PANSI_STRING ForwardName;
     PVOID ForwarderHandle;
     ULONG ForwardOrdinal;
+    PVOID ExportBase = ExportLdrEntry->DllBase;
 
     /* Check if the snap is by ordinal */
     if ((IsOrdinal = IMAGE_SNAP_BY_ORDINAL(OriginalThunk->u1.Ordinal)))
@@ -1013,13 +1022,10 @@ LdrpSnapThunk(IN PVOID ExportBase,
     {
 FailurePath:
         /* Is this a static snap? */
-        if (Static)
+        if (SnapFlags & SNAP_STATIC)
         {
             UNICODE_STRING SnapTarget;
             PLDR_DATA_TABLE_ENTRY LdrEntry;
-
-            /* What was the module we were searching in */
-            RtlInitAnsiString(&TempString, DllName ? DllName : "Unknown");
 
             /* What was the module we were searching for */
             if (LdrpCheckForLoadedDllHandle(ImportBase, &LdrEntry))
@@ -1029,12 +1035,14 @@ FailurePath:
 
             /* Inform the debug log */
             if (IsOrdinal)
-                DPRINT1("Failed to snap ordinal %Z!0x%x for %wZ\n", &TempString, OriginalOrdinal, &SnapTarget);
+                DPRINT1("Failed to snap ordinal %wZ!0x%x for %wZ\n", &ExportLdrEntry->BaseDllName, OriginalOrdinal, &SnapTarget);
             else
-                DPRINT1("Failed to snap %Z!%s for %wZ\n", &TempString, ImportName, &SnapTarget);
+                DPRINT1("Failed to snap %wZ!%s for %wZ\n", &ExportLdrEntry->BaseDllName, ImportName, &SnapTarget);
 
             /* These are critical errors. Setup a string for the DLL name */
-            RtlAnsiStringToUnicodeString(&HardErrorDllName, &TempString, TRUE);
+            RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                      &ExportLdrEntry->BaseDllName,
+                                      &HardErrorDllName);
 
             /* Set it as the parameter */
             HardErrorParameters[1] = (ULONG_PTR)&HardErrorDllName;
@@ -1101,6 +1109,17 @@ FailurePath:
     }
     else
     {
+        /* Check if we need to check export version information */
+        if (!(SnapFlags & SNAP_PRIVATE) && (ExportLdrEntry->PatchInformation != NULL))
+        {
+            /* Check if the export is allowed by current appcompat seetings */
+            if (!LdrpValidateVersionedExport(ExportLdrEntry, Ordinal))
+            {
+                /* It is not allowed, fail */
+                goto FailurePath;
+            }
+        }
+
         /* The ordinal seems correct, get the AddressOfFunctions VA */
         AddressOfFunctions = (PULONG)
                              ((ULONG_PTR)ExportBase +
@@ -1195,7 +1214,8 @@ FailurePath:
                                              ForwardName,
                                              ForwardOrdinal,
                                              (PVOID*)&Thunk->u1.Function,
-                                             FALSE);
+                                             FALSE,
+                                             (ExportLdrEntry->PatchInformation != NULL));
             /* If this fails, then error out */
             if (!NT_SUCCESS(Status)) goto FailurePath;
         }

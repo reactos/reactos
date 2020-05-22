@@ -83,14 +83,19 @@ VOID NTAPI LdrpEnsureLoaderLockIsHeld(VOID);
 /* ldrpe.c */
 NTSTATUS
 NTAPI
-LdrpSnapThunk(IN PVOID ExportBase,
+LdrpSnapThunk(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
               IN PVOID ImportBase,
               IN PIMAGE_THUNK_DATA OriginalThunk,
               IN OUT PIMAGE_THUNK_DATA Thunk,
               IN PIMAGE_EXPORT_DIRECTORY ExportEntry,
               IN ULONG ExportSize,
-              IN BOOLEAN Static,
+              IN UCHAR SnapFlags,
               IN LPSTR DllName);
+
+/* SnapFlags for LdrpSnapThunk */
+#define SNAP_DYNAMIC 0x0
+#define SNAP_STATIC  0x1
+#define SNAP_PRIVATE 0x2
 
 NTSTATUS NTAPI
 LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
@@ -116,7 +121,8 @@ LdrpGetProcedureAddress(
     _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
     _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
     _Out_ PVOID *ProcedureAddress,
-    _In_ BOOLEAN ExecuteInit);
+    _In_ BOOLEAN ExecuteInit,
+    _In_ BOOLEAN UsePrivateExports);
 
 PLDR_DATA_TABLE_ENTRY NTAPI
 LdrpAllocateDataTableEntry(IN PVOID BaseAddress);
@@ -236,6 +242,27 @@ NTAPI
 RtlDoesFileExists_UStr(
     IN PUNICODE_STRING FileName
 );
+
+/* appcompat.c */
+VOID
+NTAPI
+LdrpInitializeExportVersioning(
+    _Inout_ PLDR_DATA_TABLE_ENTRY ImageLdrEntry,
+    _Inout_ PLDR_DATA_TABLE_ENTRY NtdllLdrEntry);
+
+VOID
+NTAPI
+LdrpApplyDllExportVersioning(
+    _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+BOOLEAN
+NTAPI
+LdrpValidateVersionedExport(
+    _In_ const LDR_DATA_TABLE_ENTRY* LdrEntry,
+    _In_ ULONG OrdinalIndex);
+
+extern char __ImageBase;
+
 
 VOID
 NTAPI
