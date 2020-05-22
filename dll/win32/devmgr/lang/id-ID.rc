@@ -289,6 +289,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "Manajer Perangkat ReactOS"
+  IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Mematikan perangkat ini akan menyebabkan fungsionalitasnya berhenti.\r\nYakin ingin mematikannya?"
   IDS_CONFIRM_UNINSTALL     "Peringatan: Anda akan mencopot perangkat ini dari sistem anda.\r\nIngin melanjutkan?"
 END
