@@ -1106,18 +1106,18 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 
     if (!(ci = get_client_info( hwnd )))
     {
+#ifdef __REACTOS__
         if (message == WM_NCCREATE)
         {
-#ifdef __REACTOS__
           if (!(ci = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ci))))
              return FALSE;
            SetWindowLongPtrW( hwnd, GWLP_MDIWND, (LONG_PTR)ci );
            ci->hBmpClose = 0;
            NtUserSetWindowFNID( hwnd, FNID_MDICLIENT); // wine uses WIN_ISMDICLIENT
-#else
-           if (message == WM_NCCREATE) win_set_flags( hwnd, WIN_ISMDICLIENT, 0 );
-#endif
         }
+#else
+        if (message == WM_NCCREATE) win_set_flags( hwnd, WIN_ISMDICLIENT, 0 );
+#endif
         return unicode ? DefWindowProcW( hwnd, message, wParam, lParam ) :
                          DefWindowProcA( hwnd, message, wParam, lParam );
     }
