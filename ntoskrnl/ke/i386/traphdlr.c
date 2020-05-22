@@ -1216,56 +1216,11 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
     KiTrapReturn(TrapFrame);
 }
 
-DECLSPEC_NORETURN
-VOID
+BOOLEAN
 FASTCALL
-KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
+KiCheckForSListFault(PKTRAP_FRAME TrapFrame)
 {
-    PKTHREAD Thread;
-    BOOLEAN StoreInstruction;
-    ULONG_PTR Cr2;
-    NTSTATUS Status;
-
-    /* Save trap frame */
-    KiEnterTrap(TrapFrame);
-
-    /* Check if this is the base frame */
-    Thread = KeGetCurrentThread();
-    if (KeGetTrapFrame(Thread) != TrapFrame)
-    {
-        /* It isn't, check if this is a second nested frame */
-        if (((ULONG_PTR)KeGetTrapFrame(Thread) - (ULONG_PTR)TrapFrame) <=
-            FIELD_OFFSET(KTRAP_FRAME, EFlags))
-        {
-            /* The stack is somewhere in between frames, we need to fix it */
-            UNIMPLEMENTED_FATAL();
-        }
-    }
-
-    /* Save CR2 */
-    Cr2 = __readcr2();
-
-    /* Enable interrupts */
-    _enable();
-
-    /* Interpret the error code */
-    StoreInstruction = (TrapFrame->ErrCode & 2) != 0;
-
-    /* Check if we came in with interrupts disabled */
-    if (!(TrapFrame->EFlags & EFLAGS_INTERRUPT_MASK))
-    {
-        /* This is completely illegal, bugcheck the system */
-        KeBugCheckWithTf(IRQL_NOT_LESS_OR_EQUAL,
-                         Cr2,
-                         (ULONG_PTR)-1,
-                         TrapFrame->ErrCode,
-                         TrapFrame->Eip,
-                         TrapFrame);
-    }
-
-    /* Check for S-List fault
-
-       Explanation: An S-List fault can occur due to a race condition between 2
+    /* Explanation: An S-List fault can occur due to a race condition between 2
        threads simultaneously trying to pop an element from the S-List. After
        thread 1 has read the pointer to the top element on the S-List it is
        preempted and thread 2 calls InterlockedPopEntrySlist on the same S-List,
@@ -1329,7 +1284,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* The S-List pointer is not valid! */
-                goto NotSListFault;
+                return FALSE;
             }
             _SEH2_END;
             ResumeAddress = KeUserPopEntrySListResume;
@@ -1353,11 +1308,66 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
             /* Restart the operation */
             TrapFrame->Eip = (ULONG_PTR)ResumeAddress;
 
-            /* Continue execution */
-            KiEoiHelper(TrapFrame);
+            return TRUE;
         }
     }
-NotSListFault:
+
+    return FALSE;
+}
+
+DECLSPEC_NORETURN
+VOID
+FASTCALL
+KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+    BOOLEAN StoreInstruction;
+    ULONG_PTR Cr2;
+    NTSTATUS Status;
+
+    /* Save trap frame */
+    KiEnterTrap(TrapFrame);
+
+    /* Check if this is the base frame */
+    Thread = KeGetCurrentThread();
+    if (KeGetTrapFrame(Thread) != TrapFrame)
+    {
+        /* It isn't, check if this is a second nested frame */
+        if (((ULONG_PTR)KeGetTrapFrame(Thread) - (ULONG_PTR)TrapFrame) <=
+            FIELD_OFFSET(KTRAP_FRAME, EFlags))
+        {
+            /* The stack is somewhere in between frames, we need to fix it */
+            UNIMPLEMENTED_FATAL();
+        }
+    }
+
+    /* Save CR2 */
+    Cr2 = __readcr2();
+
+    /* Enable interrupts */
+    _enable();
+
+    /* Interpret the error code */
+    StoreInstruction = (TrapFrame->ErrCode & 2) != 0;
+
+    /* Check if we came in with interrupts disabled */
+    if (!(TrapFrame->EFlags & EFLAGS_INTERRUPT_MASK))
+    {
+        /* This is completely illegal, bugcheck the system */
+        KeBugCheckWithTf(IRQL_NOT_LESS_OR_EQUAL,
+                         Cr2,
+                         (ULONG_PTR)-1,
+                         TrapFrame->ErrCode,
+                         TrapFrame->Eip,
+                         TrapFrame);
+    }
+
+    /* Check for S-List fault */
+    if (KiCheckForSListFault(TrapFrame))
+    {
+        /* Continue execution */
+        KiEoiHelper(TrapFrame);
+    }
 
     /* Call the access fault handler */
     Status = MmAccessFault(TrapFrame->ErrCode,
