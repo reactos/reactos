@@ -5651,7 +5651,7 @@ Language=English
 A user's session with this server has been deleted\nbecause the user's logon hours are no longer valid.
 .
 Language=Polish
-Sesja użytkownika na tym serwerze została usunięta, ponieważ nie są to już godziny logowania dozwolone dla tego użytkownika.
+Sesja użytkownika na tym serwerze została usunięta,\nponieważ nie są to już godziny logowania dozwolone dla tego użytkownika.
 .
 Language=Romanian
 A user's session with this server has been deleted\nbecause the user's logon hours are no longer valid.
@@ -8725,7 +8725,7 @@ Language=English
 The destination domain controller does not support creating machine accounts in OUs.
 .
 Language=Polish
-Kontroler domeny docelowej nie obsługuje tworzenia kont komputerów w OUs.
+Kontroler domeny docelowej nie obsługuje tworzenia kont komputerów w OU.
 .
 Language=Romanian
 The destination domain controller does not support creating machine accounts in OUs.
@@ -9917,7 +9917,7 @@ Master %1 did not send an update notice for directory %2 at the expected\n
 time.
 .
 Language=Polish
-Serwer główny %1 nie wysłał powiadomienia aktualizującego dla katalogu %2 \n
+Serwer główny %1 nie wysłał powiadomienia aktualizującego dla katalogu %2\n
 w oczekiwanym czasie.
 .
 Language=Romanian
@@ -11166,7 +11166,7 @@ Language=English
 The LANMAN\\LOGS directory is invalid.
 .
 Language=Polish
-Katalog LANMAN\LOGS jest nieprawidłowy.
+Katalog LANMAN\\LOGS jest nieprawidłowy.
 .
 Language=Romanian
 The LANMAN\\LOGS directory is invalid.
@@ -11656,7 +11656,7 @@ However, the computer %1 is currently claiming to be the primary domain controll
 of the domain.
 .
 Language=Polish
-Ten komputer jest skonfigurowany jako podstawowy kontroler domeny.\n
+Ten komputer jest skonfigurowany jako podstawowy kontroler domeny\n
 w swojej własnej domenie. Jednakże obecnie komputer %1 jest zatwierdzony jako podstawowy kontroler domeny\n
 w domenie.
 .
@@ -12139,7 +12139,7 @@ Language=English
 Initialization failed because the requested service %1\ncould not be started.
 .
 Language=Polish
-Nie powiodło się inicjowanie, ponieważ nie można uruchomić \nżądanej usługi %1.
+Nie powiodło się inicjowanie, ponieważ nie można uruchomić\nżądanej usługi %1.
 .
 Language=Romanian
 Initialization failed because the requested service %1\ncould not be started.
@@ -12197,7 +12197,7 @@ Language=English
 Initialization parameters controlling resource usage other\nthan net buffers are sized so that too much memory is needed.
 .
 Language=Polish
-Parametry inicjowania kontrolujące wykorzystanie zasobów inne \nniż bufory sieci są skonfigurowane tak, że potrzebne jest za dużo pamięci.
+Parametry inicjowania kontrolujące wykorzystanie zasobów inne\nniż bufory sieci są skonfigurowane tak, że potrzebne jest za dużo pamięci.
 .
 Language=Romanian
 Initialization parameters controlling resource usage other\nthan net buffers are sized so that too much memory is needed.
@@ -12371,7 +12371,7 @@ Language=English
 The network %1 ran out of network control blocks (NCBs).  You may need to increase NCBs\nfor this network.  The following information includes the\nnumber of NCBs submitted by the server when this error occurred:
 .
 Language=Polish
-W sieci %1 wyczerpały się bloki sterowania siecią (NCB).  Może okazać się konieczne zwiększenie liczby bloków NCB dla tej sieci. Przedstawione informacje\nzawierają liczbę bloków NCB zgłoszonych przez serwer po wystąpieniu tego błędu:
+W sieci %1 wyczerpały się bloki sterowania siecią (NCB).  Może okazać się\nkonieczne zwiększenie liczby bloków NCB dla tej sieci. Przedstawione informacje\nzawierają liczbę bloków NCB zgłoszonych przez serwer po wystąpieniu tego błędu:
 .
 Language=Romanian
 The network %1 ran out of network control blocks (NCBs).  You may need to increase NCBs\nfor this network.  The following information includes the\nnumber of NCBs submitted by the server when this error occurred:
@@ -12429,7 +12429,7 @@ Language=English
 The server failed to register for the ReleaseMemory alert,\nwith recipient %1. The error code from\nNetAlertStart is the data.
 .
 Language=Polish
-Nie powiodło się zarejestrowanie przez serwer do stosowania alarmu,\nReleaseMemory, dla odbiorcy %1. \nPrzedstawione dane to kod błędu z NetAlertStart.
+Nie powiodło się zarejestrowanie przez serwer do stosowania alarmu,\nReleaseMemory, dla odbiorcy %1.\nPrzedstawione dane to kod błędu z NetAlertStart.
 .
 Language=Romanian
 The server failed to register for the ReleaseMemory alert,\nwith recipient %1. The error code from\nNetAlertStart is the data.
@@ -12458,7 +12458,7 @@ Language=English
 The server cannot update the AT schedule file. The file\nis corrupted.
 .
 Language=Polish
-Serwer nie może zaktualizować pliku harmonogramu AT. \nPlik jest uszkodzony.
+Serwer nie może zaktualizować pliku harmonogramu AT.\nPlik jest uszkodzony.
 .
 Language=Romanian
 The server cannot update the AT schedule file. The file\nis corrupted.
@@ -12487,7 +12487,7 @@ Language=English
 The server encountered an error when calling\nNetIMakeLMFileName. The error code is the data.
 .
 Language=Polish
-Serwer napotkał błąd podczas wywoływania funkcji NetIMakeLMFileName\nPrzedstawione dane to kod błędu.
+Serwer napotkał błąd podczas wywoływania funkcji NetIMakeLMFileName.\nPrzedstawione dane to kod błędu.
 .
 Language=Romanian
 The server encountered an error when calling\nNetIMakeLMFileName. The error code is the data.
@@ -12951,7 +12951,7 @@ Language=English
 The Alerter service had a problem creating the list of\nalert recipients.  The error code is %1.
 .
 Language=Polish
-Usługa Alertowanie napotkała na problem przy tworzeniu\nlisty odbiorców alertu. Kod błędu to %1.
+Usługa alarmowania Alerter napotkała na problem przy tworzeniu\nlisty odbiorców alertu. Kod błędu to %1.
 .
 Language=Romanian
 The Alerter service had a problem creating the list of\nalert recipients.  The error code is %1.
@@ -12980,7 +12980,7 @@ Language=English
 There was an error expanding %1 as a group name. Try\nsplitting the group into two or more smaller groups.
 .
 Language=Polish
-Wystąpił błąd podczas rozwijania %1 jako nazwy grupy. \nSpróbuj podzielić tę grupę na mniejsze grupy.
+Wystąpił błąd podczas rozwijania %1 jako nazwy grupy.\nSpróbuj podzielić tę grupę na mniejsze grupy.
 .
 Language=Romanian
 There was an error expanding %1 as a group name. Try\nsplitting the group into two or more smaller groups.
@@ -13038,7 +13038,7 @@ Language=English
 There was an error in creating or reading the alerter mailslot.\nThe error code is %1.
 .
 Language=Polish
-Wystąpił błąd podczas tworzenia lub odczytywania skrzynki mailslot.\nusługi Alertowanie. Kod błędu to %1.
+Wystąpił błąd podczas tworzenia lub odczytywania skrzynki mailslot\nurządzenia alarmowego. Kod błędu to %1.
 .
 Language=Romanian
 There was an error in creating or reading the alerter mailslot.\nThe error code is %1.
@@ -14093,7 +14093,7 @@ Language=English
 Cannot log on. User is currently logged on and argument TRYUSER\nis set to NO.
 .
 Language=Polish
-Nie można się zalogować. Użytkownik jest obecnie zalogowany\na argument TRYUSER ma wartość NO.
+Nie można się zalogować. Użytkownik jest obecnie zalogowany,\na argument TRYUSER ma wartość NO.
 .
 Language=Romanian
 Cannot log on. User is currently logged on and argument TRYUSER\nis set to NO.
