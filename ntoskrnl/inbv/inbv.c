@@ -1241,11 +1241,10 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 
             /* Set progress bar coordinates and display it */
-            InbvSetProgressBarCoordinates(
-                VID_PROGRESS_BAR_LEFT,
-                VID_PROGRESS_BAR_TOP,
-                VID_PROGRESS_BAR_WIDTH,
-                VID_PROGRESS_BAR_HEIGHT);
+            InbvSetProgressBarCoordinates(VID_PROGRESS_BAR_LEFT,
+                                          VID_PROGRESS_BAR_TOP,
+                                          VID_PROGRESS_BAR_WIDTH,
+                                          VID_PROGRESS_BAR_HEIGHT);
 
 #ifdef REACTOS_SKUS
             /* Check for non-workstation products */
