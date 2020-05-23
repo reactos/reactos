@@ -199,7 +199,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Fillimi Sistemit", IDC_STATIC, 7, 12, 238, 95
     LTEXT "&Sistemi Operativ Parapërzgjedhur:", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Koha për të shfaqur listën e sistemeve operative:", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -217,7 +217,7 @@ BEGIN
     AUTOCHECKBOX "Dërgo një alarm admi&nistrativ", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "Rifillo Automatikisht", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "Shkruaj informacionet e rregullimit", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "Hedh &dokumentat:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "&Mbishkruaj një dokument ekzistues", IDC_STRRECOVERWRITE, 17, 228, 125, 10
@@ -333,7 +333,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Sistemi i kontrollit panelit programeve"
     IDS_WARNINITIALSIZE "Futni një vlerë numerike për madhësinë fillestare e faqeve të dokumentave."
     IDS_WARNMAXIMUMSIZE "Futni një vlerë numerike për madhësinë maksimale e faqeve të dokumentave."
-    IDS_WARNINITIALRANGE "Madhësia fillestare e faqes së dokumentit nuk duhet të jetë më e vogël se 16 MB dhe nuk duhet të kalojë hapësirën në dispozicion në driver-in e përzgjedhur."
+    IDS_WARNINITIALRANGE "Madhësia fillestare e faqes së dokumentit nuk duhet të jetë më e vogël se 2 MB dhe nuk duhet të kalojë hapësirën në dispozicion në driver-in e përzgjedhur."
     IDS_WARNMAXIMUMRANGE "Madhësia maksimale e faqes së dokumenit nuk duhet të jetë më e vogël se madhësia e saj fillestare dhe nuk duhet të kalojë hapësirën në dispozicion në driver-in e përzgjedhur."
     IDS_PAGEFILE_NONE "Asnjë"
     IDS_PAGEFILE_SYSTEM "System Managed"

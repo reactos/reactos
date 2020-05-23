@@ -48,12 +48,14 @@ The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/r
 
 ## Building
 
-[![appveyor.badge]][appveyor.link] [![travis.badge]][travis.link] [![rosbewin.badge]][rosbewin.link] [![rosbeunix.badge]][rosbeunix.link] [![coverity.badge]][coverity.link]
+![Build](https://github.com/reactos/reactos/workflows/Build/badge.svg) [![rosbewin.badge]][rosbewin.link] [![rosbeunix.badge]][rosbeunix.link] [![coverity.badge]][coverity.link]
 
 To build the system it is strongly advised to use the _ReactOS Build Environment (RosBE)._
 Up-to-date versions for Windows and for Unix/GNU-Linux are available from our download page at: ["Build Environment"](https://reactos.org/wiki/Build_Environment).
 
-Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: ["Visual Studio or Microsoft Visual C++"](https://reactos.org/wiki/CMake#Visual_Studio_or_Microsoft_Visual_C.2B.2B).
+Alternatively one can use Microsoft Visual C++ (MSVC) version 2015+. Building with MSVC is covered here: ["Visual Studio or Microsoft Visual C++"](https://reactos.org/wiki/CMake#Visual_Studio_or_Microsoft_Visual_C.2B.2B).
+
+See ["Building ReactOS"](https://reactos.org/wiki/Building_ReactOS) article for more details.
 
 ### Binaries
 
@@ -61,10 +63,7 @@ To build ReactOS you must run the `configure` script in the directory you want t
 
 ### Bootable images
 
-To build a bootable CD image run `ninja bootcd` from the
-build directory. This will create a CD image with a filename `bootcd.iso`.
-
-See ["Building ReactOS"](https://reactos.org/wiki/Building_ReactOS) for more details.
+To build a bootable CD image run `ninja bootcd` from the build directory. This will create a CD image with a filename `bootcd.iso`.
 
 You can always download fresh binary builds of bootable images from the ["Daily builds"](https://reactos.org/getbuilds/) page.
 
@@ -74,9 +73,7 @@ By default, ReactOS currently can only be installed on a machine that has a FAT1
 The partition on which ReactOS is to be installed (which may or may not be the bootable partition) must also be formatted as FAT16 or FAT32.
 ReactOS Setup can format the partitions if needed.
 
-Starting 0.4.10, ReactOS can be installed using the BtrFS file system. But
-consider this as an experimental feature and thus regressions not triggered on
-FAT setup may be observed.
+Starting with 0.4.10, ReactOS can be installed using the BtrFS file system. But consider this as an experimental feature and thus regressions not triggered on FAT setup may be observed.
 
 To install ReactOS from the bootable CD distribution, extract the archive contents. Then burn the CD image, boot from it, and follow the instructions.
 
@@ -124,15 +121,11 @@ The main development is done on [GitHub](https://github.com/reactos/reactos). We
 
 There is also an obsolete [SVN archive repository](https://svn.reactos.org/reactos/) that is kept for historical purposes.
 
-[travis.badge]:     https://api.travis-ci.org/reactos/reactos.svg?branch=master
-[appveyor.badge]:   https://ci.appveyor.com/api/projects/status/github/reactos/reactos?branch=master&svg=true
 [coverity.badge]:   https://scan.coverity.com/projects/205/badge.svg?flat=1
-[rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.1.6-0688CB.svg
-[rosbeunix.badge]:  https://img.shields.io/badge/RosBE_Unix-2.1.2-0688CB.svg
+[rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.2.0-0688CB.svg
+[rosbeunix.badge]:  https://img.shields.io/badge/RosBE_Unix-2.2-0688CB.svg
 [prwelcome.badge]:  https://img.shields.io/badge/PR-welcome-0688CB.svg
 
-[travis.link]:      https://travis-ci.org/github/reactos/reactos
-[appveyor.link]:    https://ci.appveyor.com/project/AmineKhaldi/reactos
 [coverity.link]:    https://scan.coverity.com/projects/205
-[rosbewin.link]:    https://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.1.6/
-[rosbeunix.link]:   https://sourceforge.net/projects/reactos/files/RosBE-Unix/2.1.2/
+[rosbewin.link]:    https://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.2.0/
+[rosbeunix.link]:   https://sourceforge.net/projects/reactos/files/RosBE-Unix/2.2/

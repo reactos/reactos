@@ -27,8 +27,8 @@
 #define TREE_WINDOW     2002
 #define LIST_WINDOW     2003
 
-#define	SPLIT_WIDTH	5
-#define SPLIT_MIN  30
+#define SPLIT_WIDTH    5
+#define SPLIT_MIN     30
 
 #define COUNT_OF(a) (sizeof(a)/sizeof(a[0]))
 
@@ -94,6 +94,7 @@ extern void ShowAboutBox(HWND hWnd);
 extern LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
 extern void ResizeWnd(int cx, int cy);
 extern LPCWSTR get_root_key_name(HKEY hRootKey);
+VOID UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath);
 
 /* error.c */
 extern int ErrorMessageBox(HWND hWnd, LPCWSTR lpTitle, DWORD dwErrorCode, ...);
@@ -115,6 +116,7 @@ extern HWND CreateListView(HWND hwndParent, HMENU id, INT cx);
 extern BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath);
 extern LPCWSTR GetValueName(HWND hwndLV, int iStartAt);
 extern BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
+extern BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
 extern BOOL IsDefaultValue(HWND hwndLV, int i);
 
 /* regedit.c */

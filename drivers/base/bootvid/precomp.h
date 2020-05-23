@@ -7,8 +7,14 @@
 
 /* Arch specific includes */
 #if defined(_M_IX86) || defined(_M_AMD64)
+#if defined(SARCH_PC98)
+#include "i386/pc98/pc98.h"
+#elif defined(SARCH_XBOX)
+#include "i386/xbox/nv2a.h"
+#else
 #include "i386/pc/vga.h"
 #include "i386/pc/pc.h"
+#endif
 #elif defined(_M_ARM)
 #include "arm/arm.h"
 #else
@@ -41,35 +47,7 @@ typedef struct tagBITMAPINFOHEADER
 #define BI_RGB  0
 #define BI_RLE4 2
 
-typedef struct _PALETTE_ENTRY
-{
-    UCHAR Red;
-    UCHAR Green;
-    UCHAR Blue;
-} PALETTE_ENTRY, *PPALETTE_ENTRY;
-
-VOID
-NTAPI
-InitializePalette(VOID);
-
-VOID
-NTAPI
-DisplayCharacter(
-    _In_ CHAR Character,
-    _In_ ULONG Left,
-    _In_ ULONG Top,
-    _In_ ULONG TextColor,
-    _In_ ULONG BackColor
-);
-
-VOID
-PrepareForSetPixel(VOID);
-
-VOID
-NTAPI
-InitPaletteWithTable(
-    _In_ PULONG Table,
-    _In_ ULONG Count);
+typedef ULONG RGBQUAD;
 
 /*
  * Globals
@@ -78,6 +56,23 @@ extern UCHAR VidpTextColor;
 extern ULONG VidpCurrentX;
 extern ULONG VidpCurrentY;
 extern ULONG VidpScrollRegion[4];
-extern UCHAR FontData[256 * BOOTCHAR_HEIGHT];
+extern UCHAR VidpFontData[256 * BOOTCHAR_HEIGHT];
+extern const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS];
+
+#define RGB(r, g, b)    ((RGBQUAD)(((UCHAR)(b) | ((USHORT)((UCHAR)(g))<<8)) | (((ULONG)(UCHAR)(r))<<16)))
+
+#define GetRValue(quad)    ((UCHAR)(((quad)>>16) & 0xFF))
+#define GetGValue(quad)    ((UCHAR)(((quad)>>8) & 0xFF))
+#define GetBValue(quad)    ((UCHAR)((quad) & 0xFF))
+
+#define InitializePalette()    InitPaletteWithTable((PULONG)VidpDefaultPalette, BV_MAX_COLORS)
+
+#ifdef CHAR_GEN_UPSIDE_DOWN
+# define GetFontPtr(_Char) &VidpFontData[_Char * BOOTCHAR_HEIGHT] + BOOTCHAR_HEIGHT - 1;
+# define FONT_PTR_DELTA (-1)
+#else
+# define GetFontPtr(_Char) &VidpFontData[_Char * BOOTCHAR_HEIGHT];
+# define FONT_PTR_DELTA (1)
+#endif
 
 #endif /* _BOOTVID_PCH_ */

@@ -208,7 +208,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pornirea sistemului", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Sistemul de operare implicit:", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Perioada de afișare a sistemelor de operare:", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT IDC_STRRECLISTEDIT, 178, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -226,7 +226,7 @@ BEGIN
     AUTOCHECKBOX "T&ransmite alertă administrativă", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "Repornește &automat sistemul", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "Scriere informații de depanare", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 180, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 180, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "Fișierul de &depanare („cutie neagră”):", IDC_STATIC, 17, 198, 190, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "S&uprascrie fișierul de depanare", IDC_STRRECOVERWRITE, 17, 228, 155, 10
@@ -342,7 +342,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Specificare valori de sistem"
     IDS_WARNINITIALSIZE "Introduceți o valoare numerică pentru dimensiunea inițială a fișierului de paginare."
     IDS_WARNMAXIMUMSIZE "Introduceți o valoare numerică pentru dimensiunea maximă a fișierului de paginare."
-    IDS_WARNINITIALRANGE "Dimensiunea inițială a fișierului de paginare trebuie să fie încadrată între 16 Mo și spațiul liber disponibil al unității selectate."
+    IDS_WARNINITIALRANGE "Dimensiunea inițială a fișierului de paginare trebuie să fie încadrată între 2 Mo și spațiul liber disponibil al unității selectate."
     IDS_WARNMAXIMUMRANGE "Dimensiunea maximă a fișierului de paginare trebuie să fie încadrată între dimensiunea inițială și spațiul liber disponibil al unității selectate."
     IDS_PAGEFILE_NONE "Nespecificat"
     IDS_PAGEFILE_SYSTEM "Gestionat de sistem"

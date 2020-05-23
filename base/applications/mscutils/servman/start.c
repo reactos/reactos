@@ -9,9 +9,12 @@
 
 #include "precomp.h"
 
+#define NDEBUG
+#include <debug.h>
+
 #define MAX_WAIT_TIME   30000
 
-BOOL
+DWORD
 DoStartService(LPWSTR ServiceName,
                HANDLE hProgress,
                LPWSTR lpStartParams)
@@ -29,6 +32,7 @@ DoStartService(LPWSTR ServiceName,
     BOOL bWhiteSpace = TRUE;
     LPWSTR lpChar;
     DWORD dwArgsCount = 0;
+    DWORD dwResult = ERROR_SUCCESS;
     LPCWSTR *lpArgsVector = NULL;
 
     if (lpStartParams != NULL)
@@ -59,7 +63,7 @@ DoStartService(LPWSTR ServiceName,
          */
         lpArgsVector = LocalAlloc(LMEM_FIXED, dwArgsCount * sizeof(LPCWSTR));
         if (!lpArgsVector)
-            return FALSE;
+            return GetLastError();
 
         /* Fill the arguments vector */
         dwArgsCount = 0;
@@ -91,9 +95,10 @@ DoStartService(LPWSTR ServiceName,
                                 SC_MANAGER_CONNECT);
     if (!hSCManager)
     {
+        dwResult = GetLastError();
         if (lpArgsVector)
             LocalFree((LPVOID)lpArgsVector);
-        return FALSE;
+        return dwResult;
     }
 
     hService = OpenServiceW(hSCManager,
@@ -101,10 +106,11 @@ DoStartService(LPWSTR ServiceName,
                             SERVICE_START | SERVICE_QUERY_STATUS);
     if (!hService)
     {
+        dwResult = GetLastError();
         CloseServiceHandle(hSCManager);
         if (lpArgsVector)
             LocalFree((LPVOID)lpArgsVector);
-        return FALSE;
+        return dwResult;
     }
 
     /* Start the service */
@@ -167,6 +173,8 @@ DoStartService(LPWSTR ServiceName,
                                             &BytesNeeded))
                 {
                     /* Something went wrong... */
+                    dwResult = GetLastError();
+                    DPRINT1("QueryServiceStatusEx failed: %d\n", dwResult);
                     break;
                 }
 
@@ -183,24 +191,29 @@ DoStartService(LPWSTR ServiceName,
                     if (GetTickCount() >= StartTickCount + MaxWait)
                     {
                         /* We have, give up */
+                        DPRINT1("Timeout\n");
+                        dwResult = ERROR_SERVICE_REQUEST_TIMEOUT;
                         break;
                     }
                 }
             }
         }
+        else
+        {
+            dwResult = GetLastError();
+        }
 
         if (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
         {
-            Result = TRUE;
+            dwResult = ERROR_SUCCESS;
         }
     }
 
     CloseServiceHandle(hService);
-
     CloseServiceHandle(hSCManager);
 
     if (lpArgsVector)
         LocalFree((LPVOID)lpArgsVector);
 
-    return Result;
+    return dwResult;
 }

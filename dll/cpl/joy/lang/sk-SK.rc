@@ -85,4 +85,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Pridá, odstráni a konfiguruje hracie zariadenia, ako sú napríklad pákové ovládače alebo gamepady."
     IDS_CONTROLLER "Zariadenie"
     IDS_STATUS "Stav"
+    IDS_NONE "(None)"
 END

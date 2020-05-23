@@ -573,7 +573,7 @@ SHChangeNotification_Lock(HANDLE hTicket, DWORD dwOwnerPID, LPITEMIDLIST **lppid
     if (lppidls)
         *lppidls = pHandbag->pidls;
     if (lpwEventId)
-        *lpwEventId = pHandbag->pTicket->wEventId;
+        *lpwEventId = (pHandbag->pTicket->wEventId & ~SHCNE_INTERRUPT);
 
     // return the handbag
     return pHandbag;

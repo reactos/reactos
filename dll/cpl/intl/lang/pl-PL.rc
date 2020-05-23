@@ -4,6 +4,7 @@
  *    http://www.reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Polish translation updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (May, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -60,7 +61,7 @@ BEGIN
     GROUPBOX "Tabele konwersji stron kodowych", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Domyślne ustawienia konta użytkownika", -1, 5, 193, 234, 32
-    CHECKBOX "Zastosuj wszystkie ustawienia do bieżącego konta użytkownika i do domyślnego profilu użytkownika.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "Zastosuj wszystkie ustawienia do bieżącego konta użytkownika i do domyślnego profilu użytkownika.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 202, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -99,10 +100,10 @@ CAPTION "Waluta"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Przykład", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-    LTEXT "Dodatnie:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Ujemne:", -1, 120, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Dodatnie:", -1, 12, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_CURRENCYPOSSAMPLE, 45, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Ujemne:", -1, 123, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_CURRENCYNEGSAMPLE, 156, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Symbol &waluty:", -1, 10, 51, 111, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "F&ormat liczb dodatnich:", -1, 10, 68, 111, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
@@ -147,8 +148,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Data"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Kalendarz", -1, 7, 7, 230, 74
-    LTEXT "&Jeżeli wprowadzony zostanie rok w postaci dwóch cyfr, interpretuj go jako rok z zakresu od:", -1, 13, 18, 215, 8
+    GROUPBOX "Kalendarz", -1, 7, 2, 230, 80
+    LTEXT "&Jeżeli wprowadzony zostanie rok w postaci dwóch cyfr, interpretuj go jako rok z zakresu od:", -1, 13, 11, 215, 16
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "do", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 77, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
@@ -157,7 +158,7 @@ BEGIN
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     LTEXT "Kalendarz muzułmański:", -1, 13, 62, 60, 16
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Format daty krótkiej", -1, 7, 83, 230, 81
+    GROUPBOX "Data krótka", -1, 7, 83, 230, 81
     LTEXT "Przykład:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Przykład - z prawej do lewej:", -1, 13, 109, 60, 16
@@ -166,7 +167,7 @@ BEGIN
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
     LTEXT "Separator daty:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    GROUPBOX "Format daty długiej", -1, 7, 167, 230, 64
+    GROUPBOX "Data długa", -1, 7, 167, 230, 64
     LTEXT "Przykład:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Przykład - z prawej do lewej:", -1, 13, 193, 61, 16
@@ -181,8 +182,8 @@ CAPTION "Sortowanie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Sortowanie", -1, 7, 7, 230, 74
-    LTEXT "Metody sortowania określają porządek znaków, słów, plików i katalogów.", -1, 14, 17, 220, 25
-    LTEXT "Wybierz metodę sortowania dla twojego języka:", -1, 14, 37, 220, 22
+    LTEXT "Metody sortowania określają porządek, w jaki programy sortują znaki, słowa, pliki i katalogi.", -1, 14, 17, 220, 20
+    LTEXT "Wybierz metodę sortowania dla twojego języka:", -1, 14, 46, 220, 8
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -221,5 +222,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "Problem z otwarciem klucza: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
     IDS_ERROR_NLS_CODE_REG "Problem z otwarciem klucza: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "Nie można uruchomić input.dll"
-    IDS_ERROR_UNICODE "Nie można zainstalować nowego języka dla programów nie obsługujących unicode!"
+    IDS_ERROR_UNICODE "Nie można zainstalować nowego języka dla programów nie obsługujących Unicode!"
 END

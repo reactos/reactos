@@ -38,7 +38,7 @@ const struct test winetest_testlist[] =
     { "CShellDesktop", func_CShellDesktop },
     { "CShellLink", func_CShellLink },
     { "CUserNotification", func_CUserNotification },
-    { "DragDrop", func_DragDrop },
+    // { "DragDrop", func_DragDrop }, disabled due to CORE-17057
     { "ExtractIconEx", func_ExtractIconEx },
     { "IShellFolderViewCB", func_IShellFolderViewCB },
     { "menu", func_menu },

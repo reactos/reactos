@@ -1,8 +1,0 @@
-/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-
-STRINGTABLE
-BEGIN
-    IDS_USE_NOW_CONNECTED "%s 现在连接到 %s\n"
-END

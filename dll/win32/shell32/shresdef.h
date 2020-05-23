@@ -795,7 +795,8 @@
 #define IDM_MOVEHERE 0x8
 #define IDM_LINKHERE 0xB
 
-
+#define IDM_MYDOCUMENTS 516
+#define IDM_MYPICTURES 518
 
 /* Registrar scripts (RGS) */
 #define IDR_ADMINFOLDERSHORTCUT 128

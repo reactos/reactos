@@ -805,52 +805,115 @@ TEST="Test"
 
 ; LANG_GERMAN SUBLANG_NEUTRAL
 [Strings.0007]
+;; In shell32.dll
 CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
+
+;; In hhctrl.ocx
+;CHMFILE="Compiled HTML Help File"
+
+;; In msxml3r.dll
+;XMLFILE="XML Document"
+;XSLFILE="XSL Stylesheet"
+
+;; In msi.dll
+;MSIPACK="ReactOS Installer Package"
+
+;; In themeui.dll
+;MSSTYLESFILE="Visual Style File"
+;THEMEFILE="Theme File"
+
+;; In some multimedia exe/dll
+;WAVFILE="Wave Sound"
+;MIDFILE="MIDI Sequence"
+;CDAFILE="CD Audio Track"
+;AVIFILE="Video Clip"
+
+;; Misc file types without friendly (localized in .dll resources) name
+;CSSFILE="Cascading Style Sheet"
+;SCFFILE="ReactOS Explorer Command"
+;WMZFILE="Compressed Enhanced Metafile"
+
+;; For .reg files, right-click menu
+;MERGE="Merge"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;CONFIGURE="Configure"
+;INSTALL="Install"
+;UNINSTALL="Uninstall"
+;REPAIR="Repair"
+;TEST="Test"
 
 
 ; LANG_SPANISH SUBLANG_NEUTRAL
 [Strings.000A]
+;; In shell32.dll
 CPLFILE_OPENWITH="Abrir con el Panel de control"
 
+;; In hhctrl.ocx
+CHMFILE="Archivo de ayuda HTML compilado"
+
+;; In msxml3r.dll
+XMLFILE="Documento XML"
+XSLFILE="Hoja de estilos XSL"
+
+;; In msi.dll
+MSIPACK="Paquete de instalación de ReactOS"
+
+;; In themeui.dll
+MSSTYLESFILE="Archivo de estilo visual"
+THEMEFILE="Archivo de tema"
+
+;; In some multimedia exe/dll
+WAVFILE="Archivo de audio"
+MIDFILE="Secuencia MIDI"
+CDAFILE="Pista de audio CD"
+AVIFILE="Secuencia de vídeo"
+
+;; Misc file types without friendly (localized in .dll resources) name
+CSSFILE="Hoja de estilos en cascada"
+SCFFILE="Órden del explorador de ReactOS"
+WMZFILE="Metarchivo mejorado comprimido"
+
+;; For .reg files, right-click menu
 MERGE="Combinar"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
 CONFIGURE="Configurar"
 INSTALL="Instalar"
 UNINSTALL="Desinstalar"
 REPAIR="Reparar"
 TEST="Probar"
 
-CHMFILE="Archivo de ayuda HTML compilado"
-XMLFILE="Documento XML"
-XSLFILE="Hoja de estilos XSL"
-MSIPACK="Paquete de instalación de ReactOS"
-MSSTYLESFILE="Archivo de estilo visual"
-THEMEFILE="Archivo de tema"
-WAVFILE="Archivo de audio"
-MIDFILE="Secuencia MIDI"
-CDAFILE="Pista de audio CD"
-AVIFILE="Secuencia de vídeo"
-CSSFILE="Hoja de estilos en cascada"
-SCFFILE="Órden del explorador de ReactOS"
-WMZFILE="Metarchivo mejorado comprimido"
-
 
 ; LANG_FRENCH SUBLANG_NEUTRAL
 [Strings.000C]
+;; In shell32.dll
 CPLFILE_OPENWITH="Ouvrir avec le Panneau de Contrôle"
 
+;; In hhctrl.ocx
 CHMFILE="Fichier d'aide HTML compilé"
+
+;; In msxml3r.dll
 XMLFILE="Document XML"
 XSLFILE="Feuille de style XSL"
+
+;; In msi.dll
 MSIPACK="Package ReactOS Installer"
+
+;; In themeui.dll
 MSSTYLESFILE="Fichier de styles visuels"
 THEMEFILE="Fichier de thèmes"
+
+;; In some multimedia exe/dll
 WAVFILE="Son Wave"
 MIDFILE="Séquence MIDI"
 CDAFILE="Piste de CD Audio"
 AVIFILE="Clip Vidéo"
 
+;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Fichier CSS"
 SCFFILE="Commande de l'explorateur ReactOS"
+;WMZFILE="Compressed Enhanced Metafile"
 
 ;; For .reg files, right-click menu
 MERGE="Fusionner"
@@ -862,21 +925,41 @@ UNINSTALL="Désinstaller"
 REPAIR="Réparer"
 TEST="Tester"
 
+
 ; LANG_ITALIAN SUBLANG_NEUTRAL
 [Strings.0010]
+;; In shell32.dll
 CPLFILE_OPENWITH="Aprire con il Pannello di Controllo"
 
+;; In hhctrl.ocx
 CHMFILE="File della guida HTML compilato"
+
+;; In msxml3r.dll
 XMLFILE="Documento XML"
 XSLFILE="Foglio di stile XSL"
+
+;; In msi.dll
 MSIPACK="Pacchetto di installazione di ReactOS"
+
+;; In themeui.dll
 MSSTYLESFILE="File di stili visivi"
 THEMEFILE="File di tema visivo"
+
+;; In some multimedia exe/dll
 WAVFILE="Audio wave"
 MIDFILE="Sequenza MIDI"
 CDAFILE="Traccia Audio CD"
 AVIFILE="Filmato video"
+
+;; Misc file types without friendly (localized in .dll resources) name
+;CSSFILE="Cascading Style Sheet"
+;SCFFILE="ReactOS Explorer Command"
+;WMZFILE="Compressed Enhanced Metafile"
+
+;; For .reg files, right-click menu
 MERGE="Unione"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
 CONFIGURE="Configura"
 INSTALL="Installa"
 UNINSTALL="Rimuovi"
@@ -886,20 +969,38 @@ TEST="Prova"
 
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
+;; In shell32.dll
 CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
+
+;; In hhctrl.ocx
 CHMFILE="Skompilowany plik Pomocy w formacie HTML"
+
+;; In msxml3r.dll
 XMLFILE="Dokument XML"
 XSLFILE="Arkusz stylów XSL"
+
+;; In msi.dll
 MSIPACK="Pakiet Instalatora ReactOS"
+
+;; In themeui.dll
 MSSTYLESFILE="Plik stylu wizualnego"
 THEMEFILE="Plik motywu"
+
+;; In some multimedia exe/dll
 WAVFILE="Dźwięk typu wave"
 MIDFILE="Sekwencja MIDI"
 CDAFILE="Ścieżka CD audio"
 AVIFILE="Arkusz stylu kaskadowego"
+
+;; Misc file types without friendly (localized in .dll resources) name
+;CSSFILE="Cascading Style Sheet"
 SCFFILE="Polecenie Eksploratora ReactOS"
 WMZFILE="Skompresowany metaplik"
+
+;; For .reg files, right-click menu
 MERGE="Scal"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
 CONFIGURE="Konfiguruj"
 INSTALL="Zainstaluj"
 UNINSTALL="Odinstaluj"
@@ -909,22 +1010,38 @@ TEST="Testuj"
 
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
 [Strings.0018]
+;; In shell32.dll
 CPLFILE_OPENWITH="Deschide în Panoul de control"
 
+;; In hhctrl.ocx
 CHMFILE="Manual compilat din HTML"
+
+;; In msxml3r.dll
 XMLFILE="Document XML"
 XSLFILE="Foaie de stil XSL"
+
+;; In msi.dll
 MSIPACK="Pachet de instalare ReactOS"
+
+;; In themeui.dll
 MSSTYLESFILE="Fișier de stil vizual"
 THEMEFILE="Temă de interfață grafică"
+
+;; In some multimedia exe/dll
 WAVFILE="Fișier audio Wave"
 MIDFILE="Secvență audio MIDI"
 CDAFILE="Pistă de CD audio"
 AVIFILE="Fișier video"
+
+;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Foaie de stiluri în cascadă"
 SCFFILE="Comandă de Explorator ReactOS"
 WMZFILE="Metafișier îmbunătățit comprimat"
+
+;; For .reg files, right-click menu
 MERGE="Unește"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
 CONFIGURE="Configurează"
 INSTALL="Instalează"
 UNINSTALL="Dezinstalează"
@@ -934,21 +1051,38 @@ TEST="Testează"
 
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
+;; In shell32.dll
 CPLFILE_OPENWITH="Открыть с помощью Панели управления"
+
+;; In hhctrl.ocx
 CHMFILE="Скомпилированный HTML-файл справки"
+
+;; In msxml3r.dll
 XMLFILE="Документ XML"
 XSLFILE="XSL таблица стилей"
+
+;; In msi.dll
 MSIPACK="Пакет установщика ReactOS"
+
+;; In themeui.dll
 MSSTYLESFILE="Файл стиля оформления"
 THEMEFILE="Файл темы оформления"
+
+;; In some multimedia exe/dll
 WAVFILE="Файл аудио Wave"
 MIDFILE="Файл MIDI"
 CDAFILE="CD аудиодорожка"
 AVIFILE="Видеозапись"
+
+;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Каскадная таблица стилей"
 SCFFILE="Команда проводника ReactOS"
 WMZFILE="Сжатый расширенный метафайл"
+
+;; For .reg files, right-click menu
 MERGE="Слияние"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
 CONFIGURE="Настроить"
 INSTALL="Установить"
 UNINSTALL="Удалить"
@@ -958,6 +1092,42 @@ TEST="Тест"
 
 ; LANG_TURKISH SUBLANG_DEFAULT
 [Strings.041F]
+;; In shell32.dll
 CPLFILE_OPENWITH="Denetim Masası'yla Aç"
+
+;; In hhctrl.ocx
+;CHMFILE="Compiled HTML Help File"
+
+;; In msxml3r.dll
+;XMLFILE="XML Document"
+;XSLFILE="XSL Stylesheet"
+
+;; In msi.dll
+;MSIPACK="ReactOS Installer Package"
+
+;; In themeui.dll
+;MSSTYLESFILE="Visual Style File"
+;THEMEFILE="Theme File"
+
+;; In some multimedia exe/dll
+;WAVFILE="Wave Sound"
+;MIDFILE="MIDI Sequence"
+;CDAFILE="CD Audio Track"
+;AVIFILE="Video Clip"
+
+;; Misc file types without friendly (localized in .dll resources) name
+;CSSFILE="Cascading Style Sheet"
+;SCFFILE="ReactOS Explorer Command"
+;WMZFILE="Compressed Enhanced Metafile"
+
+;; For .reg files, right-click menu
+;MERGE="Merge"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;CONFIGURE="Configure"
+;INSTALL="Install"
+;UNINSTALL="Uninstall"
+;REPAIR="Repair"
+;TEST="Test"
 
 ; EOF

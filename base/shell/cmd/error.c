@@ -22,19 +22,23 @@
 
 #include "precomp.h"
 
-
-VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
+VOID
+ErrorMessage(
+    IN DWORD dwErrorCode,
+    IN LPTSTR szFormat OPTIONAL,
+    ...)
 {
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
-    TCHAR  szMessage[1024];
-    LPTSTR szError;
     va_list arg_ptr;
+    LPTSTR szError;
+    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    TCHAR szMessage[1024];
 
     if (dwErrorCode == ERROR_SUCCESS)
         return;
 
     nErrorLevel = 1;
 
+    *szMessage = 0;
     if (szFormat)
     {
         va_start(arg_ptr, szFormat);
@@ -48,7 +52,7 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
     {
         ConErrPrintf(_T("%s %s\n"), szError, szMessage);
         if (szError)
-            LocalFree (szError);
+            LocalFree(szError);
         return;
     }
 

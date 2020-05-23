@@ -20274,23 +20274,27 @@ Language=Polish
 Dysk %1 jest obecnie podłączony do %2.
 .
 Language=Romanian
-Drive %1 is now connected to %2.
+Conectarea %1 la %2 a fost realizată.
 .
 Language=Russian
-Drive %1 is now connected to %2.
+%1 сейчас подключен к %2.
 .
 Language=Spanish
 Drive %1 is now connected to %2.
 .
 Language=Turkish
-Drive %1 is now connected to %2.
+%1 şuna bağlandı: %2
 .
 Language=Chinese
-Drive %1 is now connected to %2.
+%1 现在连接到 %2.
 .
 Language=Taiwanese
 Drive %1 is now connected to %2.
 .
+
+; Language=Italian
+; %1 è ora connesso con %2.
+; .
 
 MessageId=3920
 Severity=Success

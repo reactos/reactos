@@ -52,7 +52,7 @@ BEGIN
     END
 END
 
-IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Configuration"
 FONT 8, "MS Shell Dlg"
@@ -66,16 +66,20 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Sélectionner", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Supprimer l'installateur du programme après l'installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Proxy", -1, 4, 116, 240, 76
-    CONTROL "Paramètres du proxy système", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
-    CONTROL "Direct (Pas de proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
-    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
-    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "Pas de proxy pour", -1, 27, 175, 64, 10
-    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "Par défaut", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    DEFPUSHBUTTON "Accepter", IDOK, 116, 195, 60, 14
-    PUSHBUTTON "Annuler", IDCANCEL, 181, 195, 60, 14
+    GROUPBOX "Source des programmes", -1, 4, 118, 240, 46
+    CONTROL "Par défaut", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
+    CONTROL "Source spécifiée", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
+    GROUPBOX "Proxy", -1, 4, 166, 240, 76
+    CONTROL "Paramètres du proxy système", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
+    CONTROL "Direct (Pas de proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "Pas de proxy pour", -1, 27, 225, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Par défaut", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
+    DEFPUSHBUTTON "Accepter", IDOK, 116, 245, 60, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 181, 245, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -98,16 +102,6 @@ BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
     PUSHBUTTON "Annuler", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
-END
-
-IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "À propos"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "ReactOS Applications Manager\nCopyright (C) 2009\npar Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    DEFPUSHBUTTON "Fermer", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -184,6 +178,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Applications Manager"
+    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Chercher…"
     IDS_INSTALL "Installer"
     IDS_UNINSTALL "Désinstaller"
@@ -198,13 +193,14 @@ BEGIN
     IDS_APPLICATIONS "Applications"
     IDS_CHOOSE_FOLDER_TEXT "Choisissez un dossier dans lequel les programmes seront téléchargés :"
     IDS_CHOOSE_FOLDER_ERROR "Le dossier que vous avez spécifié n'existe pas. Le créer ?"
+    IDS_URL_INVALID "L'URL spécifiée est invalide ou non prise en charge. Veuillez la corriger."
     IDS_APP_REG_REMOVE "Êtes-vous sûr de vouloir supprimer du registre les données du programme installé ?"
     IDS_INFORMATION "Information"
     IDS_UNABLE_TO_DOWNLOAD "Impossible de télécharger le paquet : adresse introuvable !"
     IDS_UNABLE_TO_DOWNLOAD2 "Impossible de télécharger le paquet : vérifiez votre connexion à Internet !"
     IDS_UNABLE_TO_REMOVE "Impossible de supprimer du registre les données du programme !"
     IDS_UNABLE_TO_INSTALL "Impossible d'ouvrir l'installeur !"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
+    IDS_UNABLE_TO_QUERY_CERT "Impossible de récupérer les informations de certificat.\n\nVoulez-vous continuer ?"
     IDS_INTEG_CHECK_TITLE "Vérification de l'intégrité du paquet…"
     IDS_INTEG_CHECK_FAIL "Le contrôle d'intégrité du paquet a échoué, il se peut qu'il ait été corrompu ou altéré au cours du téléchargement. L'exécution du programme n'est pas recommandée."
     IDS_INTERRUPTED_DOWNLOAD "Le téléchargement a été interrompu. Vérifiez votre connexion à Internet."
@@ -212,7 +208,8 @@ BEGIN
     IDS_SELECT_ALL "Sélectionner/Désélectionner tout"
     IDS_INSTALL_SELECTED "Installer la sélection"
     IDS_SELECTEDFORINST "Sélectionnées pour installation"
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_MISMATCH_CERT_INFO "Certificat inconnu:\nSujet: %s\nEmetteur: %s\nVoulez-vous continuer ?"
+    IDS_UNABLE_PATH "Format de chemin invalide."
 END
 
 STRINGTABLE
@@ -231,7 +228,7 @@ STRINGTABLE
 BEGIN
     IDS_LICENSE_OPENSOURCE "Open Source"
     IDS_LICENSE_FREEWARE "Freeware"
-    IDS_LICENSE_TRIAL "Trial/Demo"
+    IDS_LICENSE_TRIAL "Version d'essai / Démo"
 END
 
 STRINGTABLE
@@ -248,4 +245,5 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Base de données d'applications"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Mise à jour de la base de données…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Mise à jour de la base de données… (Non officielle)"
 END

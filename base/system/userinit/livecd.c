@@ -11,6 +11,13 @@ HWND hList;
 HWND hLocaleList;
 BOOL bSpain = FALSE;
 
+typedef struct _LIVECD_UNATTEND
+{
+    BOOL bEnabled;
+    LCID LocaleID;
+} LIVECD_UNATTEND;
+
+
 /*
  * Taken and adapted from dll/cpl/sysdm/general.c
  */
@@ -26,6 +33,9 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     HBITMAP hMask, hLogo, hAlphaLogo = NULL;
     COLORREF *pBits;
     INT line, column;
+
+    if (hDC == NULL || hDCLogo == NULL || hDCMask == NULL)
+        goto Cleanup;
 
     ZeroMemory(pImgInfo, sizeof(*pImgInfo));
     ZeroMemory(&bmpi, sizeof(bmpi));
@@ -69,7 +79,7 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
                 g = GetGValue(Color) * alpha / 255;
                 b = GetBValue(Color) * alpha / 255;
 
-                *pBits++ = b | g << 8 | r << 16 | alpha << 24;
+                *pBits++ = b | (g << 8) | (r << 16) | (alpha << 24);
             }
         }
 
@@ -81,10 +91,11 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     }
 
 Cleanup:
-    DeleteObject(hMask);
-    DeleteObject(hLogo);
-    DeleteDC(hDCMask);
-    DeleteDC(hDCLogo);
+    if (hMask != NULL) DeleteObject(hMask);
+    if (hLogo != NULL) DeleteObject(hLogo);  
+    if (hDCMask != NULL) DeleteDC(hDCMask);
+    if (hDCLogo != NULL) DeleteDC(hDCLogo);    
+    if (hDC != NULL) ReleaseDC(hwndDlg, hDC);
 }
 
 
@@ -158,6 +169,7 @@ LocalesEnumProc(LPTSTR lpLocale)
     if (!IsValidLocale(lcid, LCID_INSTALLED))
         return TRUE;
 
+    // See http://archives.miloush.net/michkap/archive/2006/09/23/768178.html for why we handle spain differently
     if (lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH), SORT_DEFAULT) ||
         lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT))
     {
@@ -194,17 +206,25 @@ LocalesEnumProc(LPTSTR lpLocale)
 
 
 static VOID
-CreateLanguagesList(HWND hwnd)
+CreateLanguagesList(HWND hwnd, PSTATE pState)
 {
     WCHAR langSel[255];
+    LCID Locale = 0;
 
     hList = hwnd;
     bSpain = FALSE;
     EnumSystemLocalesW(LocalesEnumProc, LCID_SUPPORTED);
 
-    /* Select current locale */
-    /* or should it be System and not user? */
-    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, ARRAYSIZE(langSel));
+    if (pState->Unattend->bEnabled)
+        Locale = pState->Unattend->LocaleID;
+
+    if (!Locale)
+    {
+        /* Select current locale */
+        /* or should it be System and not user? */
+        Locale = GetUserDefaultLCID();
+    }
+    GetLocaleInfoW(Locale, LOCALE_SLANGUAGE, langSel, ARRAYSIZE(langSel));
 
     SendMessageW(hList,
                  CB_SELECTSTRING,
@@ -618,8 +638,13 @@ LocaleDlgProc(
             CenterWindow(hwndDlg);
 
             /* Fill the language and keyboard layout lists */
-            CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST));
+            CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST), pState);
             CreateKeyboardLayoutList(GetDlgItem(hwndDlg, IDC_LAYOUTLIST));
+            if (pState->Unattend->bEnabled)
+            {
+                // Advance to the next page
+                PostMessageW(hwndDlg, WM_COMMAND, MAKELONG(IDOK, BN_CLICKED), 0L);
+            }
             return FALSE;
 
         case WM_DRAWITEM:
@@ -746,6 +771,13 @@ StartDlgProc(
 
             /* Center the dialog window */
             CenterWindow(hwndDlg);
+
+            if (pState->Unattend->bEnabled)
+            {
+                // Click on the 'Run' button
+                PostMessageW(hwndDlg, WM_COMMAND, MAKELONG(IDC_RUN, BN_CLICKED), 0L);
+            }
+
             return FALSE;
 
         case WM_DRAWITEM:
@@ -805,12 +837,58 @@ StartDlgProc(
     return FALSE;
 }
 
+VOID ParseUnattend(LPCWSTR UnattendInf, LIVECD_UNATTEND* pUnattend)
+{
+    WCHAR Buffer[MAX_PATH];
+
+    pUnattend->bEnabled = FALSE;
+
+    if (!GetPrivateProfileStringW(L"Unattend", L"Signature", L"", Buffer, _countof(Buffer), UnattendInf))
+    {
+        ERR("Unable to parse Signature\n");
+        return;
+    }
+
+    if (_wcsicmp(Buffer, L"$ReactOS$") && _wcsicmp(Buffer, L"$Windows NT$"))
+    {
+        TRACE("Unknown signature: %S\n", Buffer);
+        return;
+    }
+
+    if (!GetPrivateProfileStringW(L"Unattend", L"UnattendSetupEnabled", L"", Buffer, _countof(Buffer), UnattendInf))
+    {
+        ERR("Unable to parse UnattendSetupEnabled\n");
+        return;
+    }
+
+    if (_wcsicmp(Buffer, L"yes"))
+    {
+        TRACE("Unattended setup is not enabled\n", Buffer);
+        return;
+    }
+
+    pUnattend->bEnabled = TRUE;
+    pUnattend->LocaleID = 0;
+
+    if (GetPrivateProfileStringW(L"Unattend", L"LocaleID", L"", Buffer, _countof(Buffer), UnattendInf) && Buffer[0])
+    {
+        pUnattend->LocaleID = wcstol(Buffer, NULL, 16);
+    }
+}
 
 VOID
 RunLiveCD(
     PSTATE pState)
 {
+    LIVECD_UNATTEND Unattend = {0};
+    WCHAR UnattendInf[MAX_PATH];
+
     InitLogo(&pState->ImageInfo, NULL);
+
+    GetWindowsDirectoryW(UnattendInf, _countof(UnattendInf));
+    wcscat(UnattendInf, L"\\unattend.inf");
+    ParseUnattend(UnattendInf, &Unattend);
+    pState->Unattend = &Unattend;
 
     while (pState->NextPage != DONE)
     {

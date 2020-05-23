@@ -75,17 +75,6 @@ BEGIN
     VK_F5, ID_REFRESH, VIRTKEY
 END
 
-IDD_ABOUTBOX DIALOGEX 22, 16, 190, 182
-CAPTION "Om Tjänster"
-FONT 8, "MS Shell Dlg", 0, 0
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-BEGIN
-    LTEXT "Tjänster v0.8\nCopyright (C) 2005-2007\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 40
-    PUSHBUTTON "Stäng", IDOK, 75, 162, 44, 15
-    ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
-    EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
-END
-
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
 CAPTION "Allmännt"
 FONT 8, "MS Shell Dlg", 0, 0
@@ -239,7 +228,6 @@ IDD_DLG_PROGRESS DIALOGEX 6, 6, 255, 89
 CAPTION "Tjänst kontroll"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
-EXSTYLE WS_EX_TOOLWINDOW
 BEGIN
     CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
     LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
@@ -270,7 +258,6 @@ BEGIN
     IDS_NUM_SERVICES "Num tjänster: %d"
     IDS_STOP_DEPENDS "När %s stoppas, kommer också dessa tjänster att stanna"
     IDS_NO_DEPENDS "<No Dependencies>"
-    IDS_LICENSE "Detta programmet är fri programvara; du kan distribuera det och/eller ändra det under villkoren enligt GNU General Public License som är utgivet av Free Software Foundation;  version 2, eller (om du så önskar) alla senare versioner.\r\n\r\nDette programmet er utgivet i hopp om att det skall kunne användas, men DET FINNS INGA GARANTIER; även utan underförstådd garanti om SÄLJBARHET eller LÄMPLIGHET FÖR ETT VISST ÄNDAMÅL.  Se på GNU General Public Licensen för mer detaljer.\r\n\r\nDu skall ha motagit en kopia av GNU General Public Licensen tillsammans med detta programmet; om du inte har fått det, skriv til Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE
@@ -339,6 +326,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPNAME "ReactOS tjänster"
+    IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 
 STRINGTABLE

@@ -769,7 +769,8 @@ failed:
 }
 
 INT
-ExecuteCommand(PARSED_COMMAND *Cmd)
+ExecuteCommand(
+    IN PARSED_COMMAND *Cmd)
 {
     PARSED_COMMAND *Sub;
     LPTSTR First, Rest;
@@ -828,6 +829,24 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 
     UndoRedirection(Cmd->Redirections, NULL);
     return Ret;
+}
+
+INT
+ExecuteCommandWithEcho(
+    IN PARSED_COMMAND *Cmd)
+{
+    /* Echo the reconstructed command line */
+    if (bEcho && !bDisableBatchEcho && Cmd->Type != C_QUIET)
+    {
+        if (!bIgnoreEcho)
+            ConOutChar(_T('\n'));
+        PrintPrompt();
+        EchoCommand(Cmd);
+        ConOutChar(_T('\n'));
+    }
+
+    /* Run the command */
+    return ExecuteCommand(Cmd);
 }
 
 LPTSTR

@@ -199,7 +199,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Εκκίνηση συστήματος", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Προεπιλεγμένο λειτουργικό &σύστημα:", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Διάρκεια προβο&λής λίστας :", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -217,7 +217,7 @@ BEGIN
     AUTOCHECKBOX "&Αποστολή ειδοποίησης διαχειριστή", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "Α&υτόματη επανεκκίνηση", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "Εγγραφή πληροφοριών εντοπισμού σφαλμάτων", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "Αρχείο έν&δειξης σφαλμάτων:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "Α&ντικατάσταση κάθε αρχείου", IDC_STRRECOVERWRITE, 17, 228, 125, 10
@@ -333,7 +333,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "System control panel applet"
     IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
     IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
-    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 16 MB and must not exceed the available space on the selected drive."
+    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 2 MB,  must not be larger than 4095 MB and must not exceed the available space on the selected drive."
     IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size, must not be larger than 4095 MB and must not exceed the available space on the selected drive."
     IDS_PAGEFILE_NONE "Κανένα"
     IDS_PAGEFILE_SYSTEM "System Managed"

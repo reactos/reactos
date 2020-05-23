@@ -38,6 +38,6 @@ STRINGTABLE
 BEGIN
     IDS_SYSTEM_PROCESS          "Proceso del Sistema"
     IDS_UNKNOWN_SOFTWARE_EXCEPT "Excepción Desconocida de Software"
-    IDS_OK_TERMINATE_PROGRAM    "Haz clic en OK para finalizar el programa."
-    IDS_CANCEL_DEBUG_PROGRAM    "Haz clic en CANCELAR para depurar el programa."
+    IDS_OK_TERMINATE_PROGRAM    "Haz clic en ""Aceptar"" para finalizar el programa."
+    IDS_CANCEL_DEBUG_PROGRAM    "Haz clic en ""Cancelar"" para depurar el programa."
 END

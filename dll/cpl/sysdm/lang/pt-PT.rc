@@ -203,7 +203,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Arranque do sistema", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Sistema operativo predefinido:", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Mostrar a lista de &sistemas operativos durante:", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -221,7 +221,7 @@ BEGIN
     AUTOCHECKBOX "Enviar um &alerta administrativo", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "&Reiniciar automaticamente", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "Escrever informações de depuração", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "Ficheiro de imagem de erro:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "&Substituir ficheiro existente", IDC_STRRECOVERWRITE, 17, 228, 125, 10
@@ -337,7 +337,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Aplicação do painel de controle do sistema"
     IDS_WARNINITIALSIZE "Digite um valor numérico para o tamanho inicial do arquivo de paginação."
     IDS_WARNMAXIMUMSIZE "Digite um valor numérico para o tamanho máximo do arquivo de paginação."
-    IDS_WARNINITIALRANGE "O tamanho inicial do arquivo de paginação não deve ser menor que 16 MB e não deve exceder o espaço disponível na unidade seleccionada."
+    IDS_WARNINITIALRANGE "O tamanho inicial do arquivo de paginação não deve ser menor que 2 MB e não deve exceder o espaço disponível na unidade seleccionada."
     IDS_WARNMAXIMUMRANGE "O tamanho máximo do arquivo de paginação não deve ser menor que o tamanho inicial, não deve ser maior que 4095 MB e não deve exceder o espaço disponível na unidade seleccionada."
     IDS_PAGEFILE_NONE "Nenhum"
     IDS_PAGEFILE_SYSTEM "Sistema gerenciado"

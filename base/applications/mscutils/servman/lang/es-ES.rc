@@ -71,17 +71,6 @@ BEGIN
     VK_F5, ID_REFRESH, VIRTKEY
 END
 
-IDD_ABOUTBOX DIALOGEX 22, 16, 190, 182
-CAPTION "Acerca del Administrador de servicios"
-FONT 8, "MS Shell Dlg", 0, 0
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-BEGIN
-    LTEXT "Administrador de servicios v0.8\nCopyright (C) 2005-2007\ncreado por Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 40
-    PUSHBUTTON "Cerrar", IDOK, 75, 162, 44, 15
-    ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
-    EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
-END
-
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
 CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0
@@ -235,7 +224,6 @@ IDD_DLG_PROGRESS DIALOGEX 6, 6, 255, 89
 CAPTION "Control de servicios"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
-EXSTYLE WS_EX_TOOLWINDOW
 BEGIN
     CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
     LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
@@ -266,7 +254,6 @@ BEGIN
     IDS_NUM_SERVICES "Número de servicios: %d"
     IDS_STOP_DEPENDS "Cuando %s se detenga, estos otros servicios también se detendrán"
     IDS_NO_DEPENDS "<Sin dependencias>"
-    IDS_LICENSE "Este programa es software libre; puedes redistribuirlo y/o modificarlo bajo los términos de la GNU General Public License tal y como fueron publicados por la Free Software Foundation; ya sea la versión 2 de la Licencia, o (bajo tu discreción) cualquier versión posterior.\r\n\r\nEste programa se distribuye con el fin de ser útil, pero viene SIN NINGUNA GARANTÍA; sin tan siquiera la garantía implícita de COMERCIALIZACIÓN o la de IDONEIDAD PARA UN PROPÓSITO CONCRETO. Para más información lee la GNU General Public License.\r\n\r\nDeberías de haber recibido una copia de la GNU General Public License con el programa; si no, puedes escribir a la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 EE.UU."
 END
 
 STRINGTABLE
@@ -335,6 +322,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPNAME "Administrador de servicios de ReactOS"
+    IDS_APPAUTHORS "Copyright (C) 2005-2007 creado por Ged Murphy (gedmurphy@reactos.org)"
 END
 
 STRINGTABLE

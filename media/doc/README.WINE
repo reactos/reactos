@@ -74,7 +74,6 @@ dll/win32/gdiplus             # Synced to WineStaging-4.0
 dll/win32/hhctrl.ocx          # Synced to WineStaging-4.18
 dll/win32/hlink               # Synced to WineStaging-4.18
 dll/win32/hnetcfg             # Synced to WineStaging-4.18
-dll/win32/httpapi             # Synced to WineStaging-4.18
 dll/win32/iccvid              # Synced to WineStaging-4.0
 dll/win32/ieframe             # Synced to WineStaging-4.18
 dll/win32/imaadp32.acm        # Synced to WineStaging-4.0
@@ -159,6 +158,7 @@ dll/win32/qmgr                # Synced to WineStaging-4.18
 dll/win32/qmgrprxy            # Synced to WineStaging-2.9
 dll/win32/query               # Synced to WineStaging-4.18
 dll/win32/rasapi32            # Synced to WineStaging-3.3
+dll/win32/regapi              # Synced to WineStaging-5.7
 dll/win32/resutils            # Synced to WineStaging-3.3
 dll/win32/riched20            # Synced to WineStaging-4.18
 dll/win32/riched32            # Synced to WineStaging-3.3

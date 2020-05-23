@@ -144,6 +144,7 @@ BEGIN
     IDS_EVENTLOG_USER "Journaux de l'utilisateur"
     IDS_SAVE_FILTER "Journal d'événements (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "Voulez-vous enregistrer ce journal d'événements avant de l'effacer ?"
+    IDS_RESTOREDEFAULTS "Voulez-vous vraiment réinitialiser tous les paramètres pour ce journal aux valeurs par défaut ?"
     IDS_EVENTSTRINGIDNOTFOUND "La description pour l'événement d'ID ( %lu ) dans la source ( %s ) ne peut être trouvée. L'ordinateur local pourrait ne pas avoir les informations registres nécessaires ou les fichiers DLL de message pour afficher les messages depuis un ordinateur distant.\n\nLes informations suivantes font partie de l'événement :\n\n"
 END
 

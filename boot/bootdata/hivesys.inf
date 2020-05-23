@@ -1556,6 +1556,18 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Blue","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Type",0x00010001,0x00000001
 
+; Browser service
+HKLM,"SYSTEM\CurrentControlSet\Services\Browser",,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\Browser","DisplayName",0x00000000,%BROWSER_SERVICE%
+HKLM,"SYSTEM\CurrentControlSet\Services\Browser","Description",0x00000000,%BROWSER_SERVICE_DESCRIPTION%
+HKLM,"SYSTEM\CurrentControlSet\Services\Browser","DependOnService",0x00010000,"LanmanWorkstation","LanmanServer"
+HKLM,"SYSTEM\CurrentControlSet\Services\Browser","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Browser","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
+HKLM,"SYSTEM\CurrentControlSet\Services\Browser","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\Browser","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Browser","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\Browser\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\browser.dll"
+
 ; EMS Serial Administration Console Driver
 HKLM,"SYSTEM\CurrentControlSet\Services\sacdrv","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\sacdrv","Group",0x00000000,"EMS"

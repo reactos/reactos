@@ -3,5 +3,5 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE
 {
     IDS_DESKLINK, "Рабочий стол (создать ярлык)"
-    IDS_SHORTCUT, "Shortcut to %s"
+    IDS_SHORTCUT, "%s — Ярлык"
 }

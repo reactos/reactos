@@ -1,0 +1,142 @@
+name: Build
+on: [push, pull_request]
+
+jobs:
+  build-gcc-i386:
+    name: GCC (i386)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install RosBE
+        run: |
+          wget https://svn.reactos.org/storage/vperevertkin/rosbe-ci.tar.zst
+          mkdir ${{github.workspace}}/rosbe
+          tar -I zstd -xvf rosbe-ci.tar.zst --directory ${{github.workspace}}/rosbe
+      - name: Install other packages
+        run: sudo apt install ccache
+      - uses: actions/checkout@v2
+        with:
+          path: src
+      - name: Set up cache for ccache
+        uses: actions/cache@v1
+        with:
+          path: ccache
+          key: ccache-gcc-i386-${{github.sha}}
+          restore-keys: |
+            ccache-gcc-i386-
+      - name: Set ccache settings
+        run: |
+          echo "::set-env name=CCACHE_BASEDIR::${{github.workspace}}"
+          echo "::set-env name=CCACHE_DIR::${{github.workspace}}/ccache"
+          echo "::set-env name=CCACHE_MAXSIZE::2G"
+          echo "::set-env name=CCACHE_SLOPPINESS::time_macros"
+      - name: Configure
+        run: |
+          mkdir build
+          echo 'cd ${{github.workspace}}/build && ${{github.workspace}}/src/configure.sh -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1' > commands
+          ${{github.workspace}}/rosbe/RosBE.sh < commands
+      - name: Build
+        run: |
+          echo 'cd ${{github.workspace}}/build && cmake --build .' > commands
+          ${{github.workspace}}/rosbe/RosBE.sh < commands
+      - name: Generate ISOs
+        run: |
+          echo 'cd ${{github.workspace}}/build && cmake --build . --target bootcd && cmake --build . --target livecd' > commands
+          ${{github.workspace}}/rosbe/RosBE.sh < 'commands'
+      - name: Upload bootcd
+        uses: actions/upload-artifact@v1
+        with:
+          name: reactos-gcc-i386-${{github.sha}}
+          path: build/bootcd.iso
+      - name: Upload livecd
+        uses: actions/upload-artifact@v1
+        with:
+          name: reactos-gcc-i386-${{github.sha}}
+          path: build/livecd.iso
+
+  build-msvc-i386:
+    name: MSVC (i386)
+    runs-on: windows-latest
+    steps:
+    - name: Install packages
+      run: choco install ninja -y
+    - name: Install Flex and Bison
+      run: |
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        7z x flexbison.7z -O${{github.workspace}}\bin
+        echo "::add-path::${{github.workspace}}\bin"
+    - name: Add CL to PATH
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64_x86
+    - uses: actions/checkout@v2
+      with:
+        path: src
+    - name: Configure
+      run: |
+        mkdir build
+        cd build
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
+    - name: Build
+      working-directory: ${{github.workspace}}\build
+      run: cmake --build .
+    - name: Generate ISOs
+      working-directory: ${{github.workspace}}\build
+      run: |
+        cmake --build . --target bootcd
+        cmake --build . --target livecd
+    - name: Upload bootcd
+      uses: actions/upload-artifact@v1
+      with:
+        name: reactos-msvc-i386-${{github.sha}}
+        path: build/bootcd.iso
+    - name: Upload livecd
+      uses: actions/upload-artifact@v1
+      with:
+        name: reactos-msvc-i386-${{github.sha}}
+        path: build/livecd.iso
+
+  build-msvc-amd64:
+    name: MSVC (amd64)
+    runs-on: windows-latest
+    steps:
+    - name: Install packages
+      # HACK: remove all packages which contain gcc binary
+      run: |
+         choco install ninja -y
+         choco uninstall mingw strawberryperl -y
+    - name: Install Flex and Bison
+      run: |
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        7z x flexbison.7z -O${{github.workspace}}\bin
+        echo "::add-path::${{github.workspace}}\bin"
+    - name: Add CL to PATH
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64
+    - uses: actions/checkout@v2
+      with:
+        path: src
+    - name: Configure
+      run: |
+        mkdir build
+        cd build
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=amd64 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
+    - name: Build
+      working-directory: ${{github.workspace}}\build
+      run: |
+        cmake --build .
+    - name: Generate ISOs
+      working-directory: ${{github.workspace}}\build
+      run: |
+        cmake --build . --target bootcd
+        cmake --build . --target livecd
+    - name: Upload bootcd
+      uses: actions/upload-artifact@v1
+      with:
+        name: reactos-msvc-amd64-${{github.sha}}
+        path: build/bootcd.iso
+    - name: Upload livecd
+      uses: actions/upload-artifact@v1
+      with:
+        name: reactos-msvc-amd64-${{github.sha}}
+        path: build/livecd.iso

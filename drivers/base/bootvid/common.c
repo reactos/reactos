@@ -2,7 +2,7 @@
 
 /* GLOBALS ********************************************************************/
 
-UCHAR VidpTextColor = 0x0F;
+UCHAR VidpTextColor = BV_COLOR_WHITE;
 
 ULONG VidpCurrentX = 0;
 ULONG VidpCurrentY = 0;
@@ -14,6 +14,33 @@ ULONG VidpScrollRegion[4] =
     SCREEN_WIDTH  - 1,
     SCREEN_HEIGHT - 1
 };
+
+/*
+ * Boot video driver default palette is similar to the standard 16-color
+ * CGA palette, but it has Red and Blue channels swapped, and also dark
+ * and light gray colors swapped.
+ */
+const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS] =
+{
+    RGB(  0,   0,   0), /* Black */
+    RGB(128,   0,   0), /* Red */
+    RGB(  0, 128,   0), /* Green */
+    RGB(128, 128,   0), /* Brown */
+    RGB(  0,   0, 128), /* Blue */
+    RGB(128,   0, 128), /* Magenta */
+    RGB(  0, 128, 128), /* Cyan */
+    RGB(128, 128, 128), /* Dark Gray */
+    RGB(192, 192, 192), /* Light Gray */
+    RGB(255,   0,   0), /* Light Red */
+    RGB(  0, 255,   0), /* Light Green */
+    RGB(255, 255,   0), /* Yellow */
+    RGB(  0,   0, 255), /* Light Blue */
+    RGB(255,   0, 255), /* Light Magenta */
+    RGB(  0, 255, 255), /* Light Cyan */
+    RGB(255, 255, 255), /* White */
+};
+
+static BOOLEAN ClearRow = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -272,6 +299,22 @@ RleBitBlt(
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+VidSetTextColor(
+    _In_ ULONG Color)
+{
+    ULONG OldColor;
+
+    /* Save the old color and set the new one */
+    OldColor = VidpTextColor;
+    VidpTextColor = Color;
+    return OldColor;
+}
+
 VOID
 NTAPI
 VidDisplayStringXY(
@@ -286,13 +329,13 @@ VidDisplayStringXY(
      * If the caller wanted transparent, then send the special value (16),
      * else use our default and call the helper routine.
      */
-    BackColor = Transparent ? 16 : 14;
+    BackColor = Transparent ? BV_COLOR_NONE : BV_COLOR_LIGHT_CYAN;
 
     /* Loop every character and adjust the position */
-    for (; *String; ++String, Left += 8)
+    for (; *String; ++String, Left += BOOTCHAR_WIDTH)
     {
         /* Display a character */
-        DisplayCharacter(*String, Left, Top, 12, BackColor);
+        DisplayCharacter(*String, Left, Top, BV_COLOR_LIGHT_BLUE, BackColor);
     }
 }
 
@@ -305,8 +348,8 @@ VidSetScrollRegion(
     _In_ ULONG Bottom)
 {
     /* Assert alignment */
-    ASSERT((Left  & 0x7) == 0);
-    ASSERT((Right & 0x7) == 7);
+    ASSERT((Left % BOOTCHAR_WIDTH) == 0);
+    ASSERT((Right % BOOTCHAR_WIDTH) == BOOTCHAR_WIDTH - 1);
 
     /* Set Scroll Region */
     VidpScrollRegion[0] = Left;
@@ -317,6 +360,87 @@ VidSetScrollRegion(
     /* Set current X and Y */
     VidpCurrentX = Left;
     VidpCurrentY = Top;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+VidDisplayString(
+    _In_ PUCHAR String)
+{
+    /* Start looping the string */
+    for (; *String; ++String)
+    {
+        /* Treat new-line separately */
+        if (*String == '\n')
+        {
+            /* Modify Y position */
+            VidpCurrentY += BOOTCHAR_HEIGHT + 1;
+            if (VidpCurrentY + BOOTCHAR_HEIGHT > VidpScrollRegion[3])
+            {
+                /* Scroll the view and clear the current row */
+                DoScroll(BOOTCHAR_HEIGHT + 1);
+                VidpCurrentY -= BOOTCHAR_HEIGHT + 1;
+                PreserveRow(VidpCurrentY, BOOTCHAR_HEIGHT + 1, TRUE);
+            }
+            else
+            {
+                /* Preserve the current row */
+                PreserveRow(VidpCurrentY, BOOTCHAR_HEIGHT + 1, FALSE);
+            }
+
+            /* Update current X */
+            VidpCurrentX = VidpScrollRegion[0];
+
+            /* No need to clear this row */
+            ClearRow = FALSE;
+        }
+        else if (*String == '\r')
+        {
+            /* Update current X */
+            VidpCurrentX = VidpScrollRegion[0];
+
+            /* If a new-line does not follow we will clear the current row */
+            if (String[1] != '\n') ClearRow = TRUE;
+        }
+        else
+        {
+            /* Clear the current row if we had a return-carriage without a new-line */
+            if (ClearRow)
+            {
+                PreserveRow(VidpCurrentY, BOOTCHAR_HEIGHT + 1, TRUE);
+                ClearRow = FALSE;
+            }
+
+            /* Display this character */
+            DisplayCharacter(*String, VidpCurrentX, VidpCurrentY, VidpTextColor, BV_COLOR_NONE);
+            VidpCurrentX += BOOTCHAR_WIDTH;
+
+            /* Check if we should scroll */
+            if (VidpCurrentX + BOOTCHAR_WIDTH - 1 > VidpScrollRegion[2])
+            {
+                /* Update Y position and check if we should scroll it */
+                VidpCurrentY += BOOTCHAR_HEIGHT + 1;
+                if (VidpCurrentY + BOOTCHAR_HEIGHT > VidpScrollRegion[3])
+                {
+                    /* Scroll the view and clear the current row */
+                    DoScroll(BOOTCHAR_HEIGHT + 1);
+                    VidpCurrentY -= BOOTCHAR_HEIGHT + 1;
+                    PreserveRow(VidpCurrentY, BOOTCHAR_HEIGHT + 1, TRUE);
+                }
+                else
+                {
+                    /* Preserve the current row */
+                    PreserveRow(VidpCurrentY, BOOTCHAR_HEIGHT + 1, FALSE);
+                }
+
+                /* Update current X */
+                VidpCurrentX = VidpScrollRegion[0];
+            }
+        }
+    }
 }
 
 VOID
@@ -347,14 +471,16 @@ VidBitBlt(
     PBITMAPINFOHEADER BitmapInfoHeader;
     LONG Delta;
     PUCHAR BitmapOffset;
+    ULONG PaletteCount;
 
     /* Get the Bitmap Header */
     BitmapInfoHeader = (PBITMAPINFOHEADER)Buffer;
 
     /* Initialize the palette */
+    PaletteCount = BitmapInfoHeader->biClrUsed ?
+                   BitmapInfoHeader->biClrUsed : BV_MAX_COLORS;
     InitPaletteWithTable((PULONG)(Buffer + BitmapInfoHeader->biSize),
-                         (BitmapInfoHeader->biClrUsed) ?
-                         BitmapInfoHeader->biClrUsed : 16);
+                         PaletteCount);
 
     /* Make sure we can support this bitmap */
     ASSERT((BitmapInfoHeader->biBitCount * BitmapInfoHeader->biPlanes) <= 4);
@@ -366,7 +492,7 @@ VidBitBlt(
     Delta = (BitmapInfoHeader->biBitCount * BitmapInfoHeader->biWidth) + 31;
     Delta >>= 3;
     Delta &= ~3;
-    BitmapOffset = Buffer + sizeof(BITMAPINFOHEADER) + 16 * sizeof(ULONG);
+    BitmapOffset = Buffer + sizeof(BITMAPINFOHEADER) + PaletteCount * sizeof(ULONG);
 
     /* Check the compression of the bitmap */
     if (BitmapInfoHeader->biCompression == BI_RLE4)

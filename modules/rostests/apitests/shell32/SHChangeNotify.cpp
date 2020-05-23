@@ -8,33 +8,13 @@
 #include "shelltest.h"
 #include <shlwapi.h>
 #include <stdio.h>
+#include "SHChangeNotify.h"
 
-#define WM_SHELL_NOTIFY (WM_USER + 100)
-#define WM_GET_NOTIFY_FLAGS (WM_USER + 101)
-#define WM_CLEAR_FLAGS (WM_USER + 102)
-#define WM_SET_PATHS (WM_USER + 103)
-
-static WCHAR s_dir1[MAX_PATH];  // "%TEMP%\\WatchDir1"
-static WCHAR s_dir2[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir2"
-static WCHAR s_dir3[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir3"
-static WCHAR s_file1[MAX_PATH]; // "%TEMP%\\WatchDir1\\File1.txt"
-static WCHAR s_file2[MAX_PATH]; // "%TEMP%\\WatchDir1\\File2.txt"
+#define DONT_SEND 0x24242424
 
 static HWND s_hwnd = NULL;
 static const WCHAR s_szName[] = L"SHChangeNotify testcase";
-
-typedef enum TYPE
-{
-    TYPE_RENAMEITEM,
-    TYPE_CREATE,
-    TYPE_DELETE,
-    TYPE_MKDIR,
-    TYPE_RMDIR,
-    TYPE_UPDATEDIR,
-    TYPE_UPDATEITEM,
-    TYPE_RENAMEFOLDER,
-    TYPE_FREESPACE
-} TYPE;
+static WCHAR s_szSubProgram[MAX_PATH];
 
 typedef void (*ACTION)(void);
 
@@ -108,7 +88,8 @@ DoAction8(void)
     ok_int(RemoveDirectoryW(s_dir1), TRUE);
 }
 
-static const TEST_ENTRY s_TestEntries[] = {
+static const TEST_ENTRY s_TestEntriesMode0[] =
+{
     {__LINE__, SHCNE_MKDIR, s_dir1, NULL, "000100000", NULL, s_dir1, L""},
     {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", NULL, s_dir2, L""},
     {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL, s_dir2, L""},
@@ -156,6 +137,9 @@ static const TEST_ENTRY s_TestEntries[] = {
     {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", DoAction8, s_dir1, L""},
 };
 
+#define s_TestEntriesMode1 s_TestEntriesMode0
+#define s_TestEntriesMode2 s_TestEntriesMode0
+
 LPCSTR PatternFromFlags(DWORD flags)
 {
     static char s_buf[TYPE_FREESPACE + 1 + 1];
@@ -173,7 +157,10 @@ DoGetClipText(LPWSTR pszPath1, LPWSTR pszPath2)
 {
     pszPath1[0] = pszPath2[0] = 0;
 
-    if (!OpenClipboard(NULL) || !IsClipboardFormatAvailable(CF_UNICODETEXT))
+    if (!IsClipboardFormatAvailable(CF_UNICODETEXT))
+        return FALSE;
+
+    if (!OpenClipboard(NULL))
         return FALSE;
 
     WCHAR szText[MAX_PATH * 2];
@@ -201,7 +188,10 @@ DoTestEntry(const TEST_ENTRY *entry)
         (*entry->action)();
     }
 
-    SHChangeNotify(entry->event, SHCNF_PATHW | SHCNF_FLUSH, entry->item1, entry->item2);
+    if (entry->event != DONT_SEND)
+    {
+        SHChangeNotify(entry->event, SHCNF_PATHW | SHCNF_FLUSH, entry->item1, entry->item2);
+    }
 
     DWORD flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
     LPCSTR pattern = PatternFromFlags(flags);
@@ -223,30 +213,13 @@ DoTestEntry(const TEST_ENTRY *entry)
 }
 
 static BOOL
-DoInit(HWND hwnd)
+DoInit(void)
 {
-    WCHAR szTemp[MAX_PATH], szPath[MAX_PATH];
+    DoInitPaths();
 
-    GetTempPathW(_countof(szTemp), szTemp);
-    GetLongPathNameW(szTemp, szPath, _countof(szPath));
-
-    lstrcpyW(s_dir1, szPath);
-    PathAppendW(s_dir1, L"WatchDir1");
     CreateDirectoryW(s_dir1, NULL);
 
-    lstrcpyW(s_dir2, s_dir1);
-    PathAppendW(s_dir2, L"Dir2");
-
-    lstrcpyW(s_dir3, s_dir1);
-    PathAppendW(s_dir3, L"Dir3");
-
-    lstrcpyW(s_file1, s_dir1);
-    PathAppendW(s_file1, L"File1.txt");
-
-    lstrcpyW(s_file2, s_dir1);
-    PathAppendW(s_file2, L"File2.txt");
-
-    return TRUE;
+    return PathIsDirectoryW(s_dir1);
 }
 
 static void
@@ -261,44 +234,40 @@ DoEnd(HWND hwnd)
     SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
 }
 
-static BOOL CALLBACK
-PropEnumProcEx(HWND hwnd, LPWSTR lpszString, HANDLE hData, ULONG_PTR dwData)
+static BOOL
+GetSubProgramPath(void)
 {
-    if (HIWORD(lpszString))
-        trace("Prop: '%S' --> %p\n", lpszString, hData);
-    else
-        trace("Prop: '%u' --> %p\n", LOWORD(lpszString), hData);
+    GetModuleFileNameW(NULL, s_szSubProgram, _countof(s_szSubProgram));
+    PathRemoveFileSpecW(s_szSubProgram);
+    PathAppendW(s_szSubProgram, L"shell-notify.exe");
+
+    if (!PathFileExistsW(s_szSubProgram))
+    {
+        PathRemoveFileSpecW(s_szSubProgram);
+        PathAppendW(s_szSubProgram, L"testdata\\shell-notify.exe");
+
+        if (!PathFileExistsW(s_szSubProgram))
+        {
+            return FALSE;
+        }
+    }
+
     return TRUE;
 }
 
 static void
-DoPropTest(HWND hwnd)
+JustDoIt(INT nMode)
 {
-    EnumPropsExW(hwnd, PropEnumProcEx, 0);
-}
-
-START_TEST(SHChangeNotify)
-{
-    WCHAR szPath[MAX_PATH];
-    GetModuleFileNameW(NULL, szPath, _countof(szPath));
-    PathRemoveFileSpecW(szPath);
-    PathAppendW(szPath, L"shell-notify.exe");
-
-    if (!PathFileExistsW(szPath))
+    if (!DoInit())
     {
-        trace("szPath: %S\n", szPath);
-        PathRemoveFileSpecW(szPath);
-        PathAppendW(szPath, L"testdata\\shell-notify.exe");
-
-        if (!PathFileExistsW(szPath))
-        {
-            trace("szPath: %S\n", szPath);
-            skip("shell-notify.exe not found\n");
-            return;
-        }
+        skip("Unable to initialize.\n");
+        return;
     }
 
-    HINSTANCE hinst = ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWNORMAL);
+    WCHAR szParams[8];
+    wsprintfW(szParams, L"%u", nMode);
+
+    HINSTANCE hinst = ShellExecuteW(NULL, NULL, s_szSubProgram, szParams, NULL, SW_SHOWNORMAL);
     if ((INT_PTR)hinst <= 32)
     {
         skip("Unable to run shell-notify.exe.\n");
@@ -320,18 +289,38 @@ START_TEST(SHChangeNotify)
         return;
     }
 
-    if (!DoInit(s_hwnd))
+    switch (nMode)
     {
-        skip("Unable to initialize.\n");
-        return;
-    }
-
-    DoPropTest(s_hwnd);
-
-    for (size_t i = 0; i < _countof(s_TestEntries); ++i)
-    {
-        DoTestEntry(&s_TestEntries[i]);
+        case 0:
+        case 1:
+        case 2:
+            for (size_t i = 0; i < _countof(s_TestEntriesMode0); ++i)
+            {
+                DoTestEntry(&s_TestEntriesMode0[i]);
+            }
+            break;
     }
 
     DoEnd(s_hwnd);
+
+    for (int i = 0; i < 15; ++i)
+    {
+        s_hwnd = FindWindowW(s_szName, s_szName);
+        if (!s_hwnd)
+            break;
+
+        Sleep(50);
+    }
+}
+
+START_TEST(SHChangeNotify)
+{
+    if (!GetSubProgramPath())
+    {
+        skip("shell-notify.exe not found\n");
+    }
+
+    JustDoIt(0);
+    JustDoIt(1);
+    JustDoIt(2);
 }
