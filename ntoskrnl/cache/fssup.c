@@ -77,6 +77,7 @@ LIST_ENTRY CcpAllSharedCacheMaps;
 
 /* FUNCTIONS ******************************************************************/
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 CcInitializeCacheManager(VOID)
@@ -107,6 +108,7 @@ CcInitializeCacheManager(VOID)
     return TRUE;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
 CcPfInitializePrefetcher(VOID)

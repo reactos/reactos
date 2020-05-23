@@ -46,6 +46,7 @@ GENERIC_MAPPING ObpSymbolicLinkMapping =
 PDEVICE_MAP ObSystemDeviceMap = NULL;
 ULONG ObpTraceLevel = 0;
 
+INIT_FUNCTION
 VOID
 NTAPI
 PsInitializeQuotaSystem(VOID);
