@@ -6,6 +6,7 @@
  * PROGRAMMERS:     Eric Kohl
  *                  Pierre Schweitzer <heis_spiter@hotmail.com>
  *                  Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 /* INCLUDES *****************************************************************/
@@ -18,8 +19,8 @@
 #include <windowsx.h>
 #include <wincon.h>
 #include <shlobj.h>
-
 #include <tzlib.h>
+#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -390,88 +391,129 @@ AckPageDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
+static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
+static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
+static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
+
+typedef struct _PRODUCT_OPTION_DATA
+{
+    LPCWSTR ProductSuite;
+    LPCWSTR ProductType;
+    DWORD ReportAsWorkstation;
+    DWORD CSDVersion;
+} PRODUCT_OPTION_DATA;
+
+static const PRODUCT_OPTION_DATA s_ProductOptionData[] =
+{
+    { L"Terminal Server\0", L"ServerNT", 0, 0x200 },
+    { L"\0", L"WinNT", 1, 0x300 }
+};
+
 static BOOL
 DoWriteProductOption(PRODUCT_OPTION nOption)
 {
-    static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
-    static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
     HKEY hKey;
     LONG error;
-    LPCWSTR pData;
-    DWORD cbData, dwValue;
+    LPCWSTR pszData;
+    DWORD dwValue, cbData;
+    const PRODUCT_OPTION_DATA *pData = &s_ProductOptionData[nOption];
+    ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
 
+    /* open ProductOptions key */
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
     if (error)
-        return FALSE;
-
-    switch (nOption)
     {
-        case PRODUCT_OPTION_SERVER:
-            /* write ProductSuite */
-            pData = L"Terminal Server\0";
-            cbData = sizeof(L"Terminal Server\0");
-            error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
-            if (error)
-                break;
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
 
-            /* write ProductType */
-            pData = L"ServerNT";
-            cbData = sizeof(L"ServerNT");
-            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
-            break;
+    /* write ProductSuite */
+    pszData = pData->ProductSuite;
+    cbData = (lstrlenW(pszData) + 2) * sizeof(WCHAR);
+    error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (const BYTE *)pszData, cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
+    }
 
-        case PRODUCT_OPTION_WORKSTATION:
-            /* write ProductSuite */
-            pData = L"\0";
-            cbData = sizeof(L"\0");
-            error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
-            if (error)
-                break;
-
-            /* write ProductType */
-            pData = L"WinNT";
-            cbData = sizeof(L"WinNT");
-            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
-            break;
+    /* write ProductType */
+    pszData = pData->ProductType;
+    cbData = (lstrlenW(pszData) + 1) * sizeof(WCHAR);
+    error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (const BYTE *)pszData, cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
     }
 
     RegCloseKey(hKey);
 
+    /* open ReactOS version key */
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szRosVersion, 0, KEY_WRITE, &hKey);
     if (error)
-        return FALSE;
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
 
-    /* write ReportAsWorkstation value */
-    dwValue = (nOption == PRODUCT_OPTION_WORKSTATION);
+    /* write ReportAsWorkstation */
+    dwValue = pData->ReportAsWorkstation;
     cbData = sizeof(dwValue);
-    error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (BYTE *)&dwValue, cbData);
+    error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
+    }
 
     RegCloseKey(hKey);
+
+    /* open Control Windows key */
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szControlWindows, 0, KEY_WRITE, &hKey);
+    if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
+
+    /* write Control Windows CSDVersion */
+    dwValue = pData->CSDVersion;
+    cbData = sizeof(dwValue);
+    error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
+    }
+
+Error:
+    if (hKey)
+        RegCloseKey(hKey);
 
     return error == ERROR_SUCCESS;
 }
 
 static void
-OnChooseServer(HWND hwndDlg)
+OnChooseOption(HWND hwndDlg, PRODUCT_OPTION nOption)
 {
     WCHAR szText[256];
+    ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
 
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"Terminal Server");
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"ServerNT");
+    switch (nOption)
+    {
+        case PRODUCT_OPTION_SERVER:
+            LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
+            break;
 
-    LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
-}
+        case PRODUCT_OPTION_WORKSTATION:
+            LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
+            break;
 
-static void
-OnChooseWorkstation(HWND hwndDlg)
-{
-    WCHAR szText[256];
+        default:
+            return;
+    }
 
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"");
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"WinNT");
-
-    LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
 }
 
@@ -481,7 +523,7 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     LPNMHDR lpnm;
     PSETUPDATA pSetupData;
     INT iItem;
-    WCHAR szText[64];
+    WCHAR szText[64], szDefault[64];
     HICON hIcon;
 
     pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
@@ -493,14 +535,26 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSetupData);
 
+            LoadStringW(hDllInstance, IDS_DEFAULT, szDefault, _countof(szDefault));
+
             LoadStringW(hDllInstance, IDS_PRODUCTSERVERNAME, szText, _countof(szText));
+            if (PRODUCT_OPTION_DEFAULT == PRODUCT_OPTION_SERVER)
+            {
+                StringCchCatW(szText, _countof(szText), L" ");
+                StringCchCatW(szText, _countof(szText), szDefault);
+            }
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
 
             LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONNAME, szText, _countof(szText));
+            if (PRODUCT_OPTION_DEFAULT == PRODUCT_OPTION_WORKSTATION)
+            {
+                StringCchCatW(szText, _countof(szText), L" ");
+                StringCchCatW(szText, _countof(szText), szDefault);
+            }
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
 
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_WORKSTATION, 0);
-            OnChooseWorkstation(hwndDlg);
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_DEFAULT, 0);
+            OnChooseOption(hwndDlg, PRODUCT_OPTION_DEFAULT);
 
             hIcon = LoadIcon(NULL, IDI_WINLOGO);
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_ICON, STM_SETICON, (WPARAM)hIcon, 0);
@@ -511,19 +565,7 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (HIWORD(wParam) == CBN_SELCHANGE && IDC_PRODUCT_OPTIONS == LOWORD(wParam))
             {
                 iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
-                switch ((PRODUCT_OPTION)iItem)
-                {
-                    case PRODUCT_OPTION_SERVER:
-                        OnChooseServer(hwndDlg);
-                        break;
-
-                    case PRODUCT_OPTION_WORKSTATION:
-                        OnChooseWorkstation(hwndDlg);
-                        break;
-
-                    default:
-                        break;
-                }
+                OnChooseOption(hwndDlg, (PRODUCT_OPTION)iItem);
             }
             break;
 
@@ -538,8 +580,7 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        pSetupData->ProductOption = PRODUCT_OPTION_WORKSTATION;
-                        OnChooseWorkstation(hwndDlg);
+                        OnChooseOption(hwndDlg, pSetupData->ProductOption);
                         DoWriteProductOption(pSetupData->ProductOption);
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
@@ -2396,7 +2437,10 @@ ProcessUnattendSection(
             else
                 pSetupData->DisableGeckoInst = FALSE;
         }
-
+        else if (!_wcsicmp(szName, L"ProductOption"))
+        {
+            pSetupData->ProductOption = (PRODUCT_OPTION)_wtoi(szValue);
+        }
     } while (SetupFindNextLine(&InfContext, &InfContext));
 
     if (SetupFindFirstLineW(pSetupData->hSetupInf,
@@ -2672,6 +2716,7 @@ InstallWizard(VOID)
                     MB_ICONERROR | MB_OK);
         goto done;
     }
+    pSetupData->ProductOption = PRODUCT_OPTION_DEFAULT;
 
     hNetShell = LoadLibraryW(L"netshell.dll");
     if (hNetShell != NULL)

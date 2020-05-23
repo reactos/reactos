@@ -289,6 +289,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "Диспетчер устройств ReactOS"
+  IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Отключение устройства означает, что оно перестанет работать. Отключить устройство?"
   IDS_CONFIRM_UNINSTALL     "Предупреждение: Сейчас устройство будет удалено из системы.\r\nВы хотите продолжить?"
 END

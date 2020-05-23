@@ -85,4 +85,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Shtoni, hiqni, dhe konfiguroni pajisjet elektronike kontrolluese të lojërave të tilla si levë dhe pad-loje."
     IDS_CONTROLLER "Kontrollues"
     IDS_STATUS "Gjendje"
+    IDS_NONE "(None)"
 END

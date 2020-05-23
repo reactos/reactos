@@ -48,7 +48,8 @@ VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     pSettingsInfo->bSaveWndPos = TRUE;
     pSettingsInfo->bUpdateAtStart = FALSE;
     pSettingsInfo->bLogEnabled = TRUE;
-
+    pSettingsInfo->bUseSource = FALSE;
+    
     if (FAILED(SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, szDownloadDir.GetBuffer(MAX_PATH))))
     {
         szDownloadDir.ReleaseBuffer();
@@ -62,7 +63,9 @@ VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
         szDownloadDir.ReleaseBuffer();
     }
 
-    szDownloadDir += L"\\RAPPS Downloads";
+    PathAppendW(szDownloadDir.GetBuffer(MAX_PATH), L"\\RAPPS Downloads");
+    szDownloadDir.ReleaseBuffer();
+	
     ATL::CStringW::CopyChars(pSettingsInfo->szDownloadDir,
                              _countof(pSettingsInfo->szDownloadDir),
                              szDownloadDir.GetString(),

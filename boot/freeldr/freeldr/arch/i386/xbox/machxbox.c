@@ -261,8 +261,8 @@ MachInit(const char *CmdLine)
 
     /* Check for Xbox by identifying device at PCI 0:0:0, if it's
      * 0x10DE/0x02A5 then we're running on an Xbox */
-    WRITE_PORT_ULONG((ULONG *)0xCF8, CONFIG_CMD(0, 0, 0));
-    PciId = READ_PORT_ULONG((ULONG *)0xCFC);
+    WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(0, 0, 0));
+    PciId = READ_PORT_ULONG((PULONG)0xCFC);
     if (PciId != 0x02A510DE)
     {
         ERR("This is not original Xbox!\n");
@@ -276,10 +276,6 @@ MachInit(const char *CmdLine)
 
     /* Set LEDs to red before anything is initialized */
     XboxSetLED("rrrr");
-
-    /* Initialize our stuff */
-    XboxMemInit();
-    XboxVideoInit();
 
     /* Setup vtbl */
     MachVtbl.ConsPutChar = XboxConsPutChar;
@@ -311,6 +307,10 @@ MachInit(const char *CmdLine)
     MachVtbl.HwDetect = XboxHwDetect;
     MachVtbl.HwIdle = XboxHwIdle;
 
+    /* Initialize our stuff */
+    XboxMemInit();
+    XboxVideoInit();
+
     /* Set LEDs to orange after init */
     XboxSetLED("oooo");
 
@@ -324,6 +324,9 @@ XboxPrepareForReactOS(VOID)
     XboxVideoPrepareForReactOS();
     XboxDiskInit(FALSE);
     DiskStopFloppyMotor();
+    
+    /* Turn off debug messages to screen */
+    DebugDisableScreenPort();
 }
 
 /* EOF */

@@ -93,8 +93,8 @@ PLOADER_PARAMETER_BLOCK IopLoaderBlock;
 
 /* INIT FUNCTIONS ************************************************************/
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 IopInitLookasideLists(VOID)
 {
@@ -240,8 +240,8 @@ IopInitLookasideLists(VOID)
     }
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 IopCreateObjectTypes(VOID)
 {
@@ -329,8 +329,8 @@ IopCreateObjectTypes(VOID)
     return TRUE;
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 IopCreateRootDirectories(VOID)
 {
@@ -394,8 +394,8 @@ IopCreateRootDirectories(VOID)
     return TRUE;
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -464,8 +464,8 @@ IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {

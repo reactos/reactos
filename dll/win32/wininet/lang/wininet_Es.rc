@@ -20,11 +20,11 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-  IDS_LANCONNECTION "LAN Connection"
-  IDS_CERT_CA_INVALID   "The certificate is issued by an unknown or untrusted publisher."
-  IDS_CERT_DATE_INVALID "The date on the certificate is invalid."
-  IDS_CERT_CN_INVALID   "The name on the certificate does not match the site."
-  IDS_CERT_ERRORS       "There is at least one unspecified security problem with this certificate."
+  IDS_LANCONNECTION "Conexión LAN"
+  IDS_CERT_CA_INVALID   "El certificado está expedido por un editor desconocido o que no es de confianza."
+  IDS_CERT_DATE_INVALID "La fecha del certificado no es válida."
+  IDS_CERT_CN_INVALID   "El nombre que hay en el certificado no encaja con el del sitio."
+  IDS_CERT_ERRORS       "Hay por lo menos un problema de seguridad sin especificar con este certificado."
 }
 
 IDD_PROXYDLG DIALOGEX 36, 24, 220, 146
@@ -69,12 +69,12 @@ FONT 8, "MS Shell Dlg"
 
 IDD_INVCERTDLG DIALOGEX 3, 24, 250, 86
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Security Warning"
+CAPTION "Aviso de Seguridad"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "There is a problem with the certificate for this site.", -1, 40, 6, 200, 20
+ LTEXT "Hay un problema en el certificado para este sitio.", -1, 40, 6, 200, 20
  LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
- LTEXT "Do you want to continue anyway?", -1, 40, 46, 200, 20
- PUSHBUTTON "Yes", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ LTEXT "¿Quiere continuar igualmente?", -1, 40, 46, 200, 20
+ PUSHBUTTON "Sí", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "No", IDCANCEL, 100, 66, 56, 14, WS_GROUP | WS_TABSTOP
 }

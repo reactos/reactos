@@ -217,8 +217,8 @@ ExpTimerApcKernelRoutine(IN PKAPC Apc,
     ObDereferenceObjectEx(Timer, DerefsToDo);
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 ExpInitializeTimerImplementation(VOID)
 {

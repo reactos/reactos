@@ -289,6 +289,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "ReactOS Aygıt Yöneticisi"
+  IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Bu aygıtı edilginleştirmek işleyiş durmasına neden olacaktır.\r\nOnu edilginleştirmeyi gerçekten istiyor musunuz?"
   IDS_CONFIRM_UNINSTALL     "Uyarı: Bu aygıtı dizgenizden kaldırmak üzeresiniz.\r\nSürdürmek istiyor musunuz?"
 END

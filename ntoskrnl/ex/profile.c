@@ -62,8 +62,8 @@ ExpDeleteProfile(PVOID ObjectBody)
     if (Profile->Process) ObDereferenceObject(Profile->Process);
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 ExpInitializeProfileImplementation(VOID)
 {

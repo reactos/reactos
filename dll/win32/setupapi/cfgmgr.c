@@ -61,7 +61,7 @@ typedef struct _LOG_CONF_INFO
 {
     ULONG ulMagic;
     DEVINST dnDevInst;
-    ULONG ulFlags;
+    ULONG ulType;
     ULONG ulTag;
 } LOG_CONF_INFO, *PLOG_CONF_INFO;
 
@@ -947,7 +947,7 @@ CM_Add_Empty_Log_Conf_Ex(
         {
             pLogConfInfo->ulMagic = LOG_CONF_MAGIC;
             pLogConfInfo->dnDevInst = dnDevInst;
-            pLogConfInfo->ulFlags = ulFlags;
+            pLogConfInfo->ulType = ulFlags;
             pLogConfInfo->ulTag = ulLogConfTag;
 
             *plcLogConf = (LOG_CONF)pLogConfInfo;
@@ -2353,8 +2353,11 @@ CM_Free_Log_Conf_Ex(
 
     RpcTryExcept
     {
-        ret = PNP_FreeLogConf(BindingHandle, lpDevInst, pLogConfInfo->ulFlags,
-                              pLogConfInfo->ulTag, 0);
+        ret = PNP_FreeLogConf(BindingHandle,
+                              lpDevInst,
+                              pLogConfInfo->ulType,
+                              pLogConfInfo->ulTag,
+                              0);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -4646,7 +4649,7 @@ CM_Get_First_Log_Conf_Ex(
 
         pLogConfInfo->ulMagic = LOG_CONF_MAGIC;
         pLogConfInfo->dnDevInst = dnDevInst;
-        pLogConfInfo->ulFlags = ulFlags;
+        pLogConfInfo->ulType = ulFlags;
         pLogConfInfo->ulTag = ulTag;
 
         *plcLogConf = (LOG_CONF)pLogConfInfo;
@@ -5044,7 +5047,7 @@ CM_Get_Log_Conf_Priority_Ex(
     {
         ret = PNP_GetLogConfPriority(BindingHandle,
                                      lpDevInst,
-                                     pLogConfInfo->ulFlags,
+                                     pLogConfInfo->ulType,
                                      pLogConfInfo->ulTag,
                                      pPriority,
                                      0);
@@ -5132,7 +5135,7 @@ CM_Get_Next_Log_Conf_Ex(
     {
         ret = PNP_GetNextLogConf(BindingHandle,
                                  lpDevInst,
-                                 pLogConfInfo->ulFlags,
+                                 pLogConfInfo->ulType,
                                  pLogConfInfo->ulTag,
                                  &ulNewTag,
                                  0);
@@ -5154,7 +5157,7 @@ CM_Get_Next_Log_Conf_Ex(
 
         pNewLogConfInfo->ulMagic = LOG_CONF_MAGIC;
         pNewLogConfInfo->dnDevInst = pLogConfInfo->dnDevInst;
-        pNewLogConfInfo->ulFlags = pLogConfInfo->ulFlags;
+        pNewLogConfInfo->ulType = pLogConfInfo->ulType;
         pNewLogConfInfo->ulTag = ulNewTag;
 
         *plcLogConf = (LOG_CONF)pNewLogConfInfo;
@@ -5197,10 +5200,85 @@ CM_Get_Next_Res_Des_Ex(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    ULONG ulInTag, ulOutTag = 0;
+    ULONG ulInType, ulOutType = 0;
+    LPWSTR lpDevInst;
+    DEVINST dnDevInst;
+    CONFIGRET ret;
+
     FIXME("CM_Get_Next_Res_Des_Ex(%p %p %lu %p %lx %p)\n",
           prdResDes, rdResDes, ForResource, pResourceID, ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (prdResDes == NULL)
+        return CR_INVALID_POINTER;
+
+    if (IsValidLogConf((PLOG_CONF_INFO)rdResDes))
+    {
+        FIXME("LogConf found!\n");
+        dnDevInst = ((PLOG_CONF_INFO)rdResDes)->dnDevInst;
+        ulInTag = ((PLOG_CONF_INFO)rdResDes)->ulTag;
+        ulInType = ((PLOG_CONF_INFO)rdResDes)->ulType;
+    }
+#if 0
+    else if (IsValidResDes((PRES_DES_INFO)rdResDes))
+    {
+        FIXME("ResDes found!\n");
+        dnDevInst = ((PRES_DES_INFO)rdResDes)->dnDevInst;
+        ulInTag = ((PRES_DES_INFO)rdResDes)->ulTag;
+        ulInType = ((PRES_DES_INFO)rdResDes)->ulType;
+    }
+#endif
+    else
+    {
+        return CR_INVALID_RES_DES;
+    }
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    RpcTryExcept
+    {
+        ret = PNP_GetNextResDes(BindingHandle,
+                                lpDevInst,
+                                ulInTag,
+                                ulInType,
+                                ForResource,
+                                0, /* unsigned long ulResourceTag, */
+                                &ulOutTag,
+                                &ulOutType,
+                                0);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (ret != CR_SUCCESS)
+        return ret;
+
+    /* FIXME: Create the ResDes handle */
+
+    return CR_SUCCESS;
 }
 
 

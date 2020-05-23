@@ -50,11 +50,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Actualizar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Actualizar Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Actualizar &Base de dados\tCtrl+F5", ID_RESETDB
     END
 END
 
-IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Configurações"
 FONT 8, "MS Shell Dlg"
@@ -68,16 +68,20 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Escolher", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Apagar instalador após a instalação do programa", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Proxy", -1, 4, 116, 240, 76
-    CONTROL "Configurações de proxy do sistema", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
-    CONTROL "Directo (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
-    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
-    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "No proxy for", -1, 27, 175, 64, 10
-    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "Padrão", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    DEFPUSHBUTTON "OK", IDOK, 116, 195, 60, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 181, 195, 60, 14
+    GROUPBOX "Fonte do Software", -1, 4, 118, 240, 46
+    CONTROL "Utilizar predefinição", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
+    CONTROL "Fonte especificada", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
+    GROUPBOX "Proxy", -1, 4, 166, 240, 76
+    CONTROL "Configurações de proxy do sistema", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
+    CONTROL "Directo (Sem proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "Sem proxy para", -1, 27, 225, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Padrão", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 181, 245, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -102,16 +106,6 @@ BEGIN
     PUSHBUTTON "Cancelar", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
-IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "Sobre"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "Central de Aplicativos ReactOS\nCopyright (C) 2009\npor Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    DEFPUSHBUTTON "Fechar", IDOK, 133, 46, 50, 14
-END
-
 STRINGTABLE
 BEGIN
     IDS_TOOLTIP_INSTALL "Instalar"
@@ -119,7 +113,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "Modificar"
     IDS_TOOLTIP_SETTINGS "Configurações"
     IDS_TOOLTIP_REFRESH "Actualizar"
-    IDS_TOOLTIP_UPDATE_DB "Actualizar Database"
+    IDS_TOOLTIP_UPDATE_DB "Actualizar Base de dados"
     IDS_TOOLTIP_EXIT "Sair"
 END
 
@@ -154,13 +148,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nVersão: "
-    IDS_AINFO_AVAILABLEVERSION "\nVersion disponível: "
+    IDS_AINFO_AVAILABLEVERSION "\nVersão disponível: "
     IDS_AINFO_DESCRIPTION "\nDescrição: "
     IDS_AINFO_SIZE "\nTamanho: "
     IDS_AINFO_URLSITE "\nPágina: "
     IDS_AINFO_LICENSE "\nLicença: "
     IDS_AINFO_URLDOWNLOAD "\nTransferir: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nLinguagens: "
 END
 
 STRINGTABLE
@@ -180,12 +174,13 @@ BEGIN
     IDS_CAT_SCIENCE "Ciência"
     IDS_CAT_TOOLS "Ferramentas"
     IDS_CAT_VIDEO "Vídeo"
-    IDS_CAT_THEMES "Themes"
+    IDS_CAT_THEMES "Temas"
 END
 
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Central de Aplicativos ReactOS"
+    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Procurar…"
     IDS_INSTALL "Instalar"
     IDS_UNINSTALL "Desinstalar"
@@ -200,6 +195,7 @@ BEGIN
     IDS_APPLICATIONS "Aplicativos"
     IDS_CHOOSE_FOLDER_TEXT "Escolha uma pasta para armazenar os Downloads:"
     IDS_CHOOSE_FOLDER_ERROR "A pasta especificada não existe. Deseja criá-la?"
+    IDS_URL_INVALID "O URL que especificou é inválido ou não é suportado. Por favor corrija isso!"
     IDS_APP_REG_REMOVE "Tem certeza que deseja apagar as informações do programa instalado do registo?"
     IDS_INFORMATION "Informações"
     IDS_UNABLE_TO_DOWNLOAD "Não é possível fazer o download do pacote! Endereço não encontrado!"
@@ -211,11 +207,11 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "O pacote não passou na verificação de integridade, pode ter sido corrompido ou adulterado durante o download. A execução do software não é recomendada."
     IDS_INTERRUPTED_DOWNLOAD "O download foi interrompido. Verifique a ligação com a Internet."
     IDS_UNABLE_TO_WRITE "Não é possível gravar no disco. O disco pode estar cheio."
-    IDS_SELECT_ALL "Select/Deselect todos"
+    IDS_SELECT_ALL "Selec./Deselec. todos"
     IDS_INSTALL_SELECTED "Instalar selecção"
     IDS_SELECTEDFORINST "Seleccionados para instalação"
-    IDS_MISMATCH_CERT_INFO "O certificado usado é desconhecido:\nAssunto: %s\nIssuer: %s\nDeseja continuar mesmo assim?"
-    IDS_UNABLE_PATH "Incorrect path format."
+    IDS_MISMATCH_CERT_INFO "O certificado usado é desconhecido:\nAssunto: %s\nEmissor: %s\nDeseja continuar mesmo assim?"
+    IDS_UNABLE_PATH "Formato de caminho incorrecto."
 END
 
 STRINGTABLE
@@ -241,8 +237,8 @@ STRINGTABLE
 BEGIN
     IDS_LANGUAGE_AVAILABLE_TRANSLATION "Suporte para a sua língua"
     IDS_LANGUAGE_NO_TRANSLATION "Suporte para outras linguagens"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "Suporte English"
-    IDS_LANGUAGE_SINGLE "Languagem única"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Suporte Inglês"
+    IDS_LANGUAGE_SINGLE "Linguagem única"
     IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d mais)"
     IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d disponível)"
 END
@@ -251,4 +247,5 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Base de dados de aplicativos"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizar base de dados…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "A actualizar Base de dados… (Fonte não oficial)"
 END

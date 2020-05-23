@@ -1177,8 +1177,91 @@ DeleteProfileW(
     _In_opt_ LPCWSTR lpProfilePath,
     _In_opt_ LPCWSTR lpComputerName)
 {
-    DPRINT1("DeleteProfileW(%S %S %S) not implemented!\n", lpSidString, lpProfilePath, lpComputerName);
-    return TRUE; //FALSE;
+    HKEY hProfilesKey = NULL, hProfileKey = NULL;
+    WCHAR szRawProfilePath[MAX_PATH], szProfilePath[MAX_PATH];
+    DWORD dwLength, dwType;
+    DWORD dwError = ERROR_SUCCESS;
+    BOOL bRet = FALSE;
+
+    DPRINT("DeleteProfileW(%S %S %S)\n", lpSidString, lpProfilePath, lpComputerName);
+
+    if (lpSidString == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (lpProfilePath != NULL)
+    {
+        dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+                                0,
+                                KEY_QUERY_VALUE,
+                                &hProfilesKey);
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("Error: %lu\n", dwError);
+            goto done;
+        }
+
+        dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                lpSidString,
+                                0,
+                                KEY_QUERY_VALUE,
+                                &hProfileKey);
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("Error: %lu\n", dwError);
+            goto done;
+        }
+
+        /* Get the profile image path */
+        dwLength = sizeof(szRawProfilePath);
+        dwError = RegQueryValueExW(hProfileKey,
+                                   L"ProfileImagePath",
+                                   NULL,
+                                   &dwType,
+                                   (PBYTE)szRawProfilePath,
+                                   &dwLength);
+        if (dwError != ERROR_SUCCESS)
+        {
+             DPRINT1("Error: %lu\n", dwError);
+             goto done;
+        }
+
+        if (!ExpandEnvironmentStringsW(szRawProfilePath,
+                                       szProfilePath,
+                                       ARRAYSIZE(szProfilePath)))
+        {
+            dwError = GetLastError();
+            DPRINT1("Failled to expand the raw profile path (Error %lu)\n", dwError);
+            goto done;
+        }
+    }
+    else
+    {
+        StringCchCopyW(szProfilePath, ARRAYSIZE(szProfilePath), lpProfilePath);
+    }
+
+    DPRINT("ProfilePath: %S\n", szProfilePath);
+
+    if (!RemoveDirectoryPath(szProfilePath))
+    {
+        dwError = GetLastError();
+        DPRINT1("Error: %lu\n", dwError);
+        goto done;
+    }
+
+    bRet = TRUE;
+
+done:
+    if (hProfileKey != NULL)
+        RegCloseKey(hProfileKey);
+
+    if (hProfilesKey != NULL)
+        RegCloseKey(hProfilesKey);
+
+    return bRet;
 }
 
 

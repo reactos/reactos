@@ -585,6 +585,11 @@ NtGdiGetAndSetDCDword(
 
     switch (u)
     {
+        case GdiGetSetEPSPrintingEscape:
+            SafeResult = pdc->fs & DC_EPSPRINTINGESCAPE;
+            pdc->fs &= ~DC_EPSPRINTINGESCAPE;
+            break;
+
         case GdiGetSetCopyCount:
             SafeResult = pdc->ulCopyCount;
             pdc->ulCopyCount = dwIn;

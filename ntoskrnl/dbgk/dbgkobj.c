@@ -1492,8 +1492,8 @@ DbgkClearProcessDebugObject(IN PEPROCESS Process,
     return STATUS_SUCCESS;
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 DbgkInitialize(VOID)
 {

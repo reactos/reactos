@@ -111,7 +111,7 @@ ObInitializeFastReference(IN PEX_FAST_REF FastRef,
 {
     /* Check if we were given an object and reference it 7 times */
     if (Object) ObReferenceObjectEx(Object, MAX_FAST_REFS);
-    
+
     /* Setup the fast reference */
     ExInitializeFastReference(FastRef, Object);
 }
@@ -152,7 +152,7 @@ ObFastReferenceObject(IN PEX_FAST_REF FastRef)
 
     /* Otherwise, reference the object 7 times */
     ObReferenceObjectEx(Object, MAX_FAST_REFS);
-    
+
     /* Now update the reference count */
     if (!ExInsertFastReference(FastRef, Object))
     {
@@ -184,11 +184,11 @@ ObFastReplaceObject(IN PEX_FAST_REF FastRef,
 
     /* Check if we were given an object and reference it 7 times */
     if (Object) ObReferenceObjectEx(Object, MAX_FAST_REFS);
-    
+
     /* Do the swap */
     OldValue = ExSwapFastReference(FastRef, Object);
     OldObject = ExGetObjectFastReference(OldValue);
-    
+
     /* Check if we had an active object and dereference it */
     Count = ExGetCountFastReference(OldValue);
     if ((OldObject) && (Count)) ObDereferenceObjectEx(OldObject, Count);
@@ -320,7 +320,7 @@ FASTCALL
 ObfDereferenceObject(IN PVOID Object)
 {
     POBJECT_HEADER Header;
-    LONG_PTR OldCount;
+    LONG_PTR NewCount;
 
     /* Extract the object header */
     Header = OBJECT_TO_OBJECT_HEADER(Object);
@@ -332,8 +332,8 @@ ObfDereferenceObject(IN PVOID Object)
     }
 
     /* Check whether the object can now be deleted. */
-    OldCount = InterlockedDecrementSizeT(&Header->PointerCount);
-    if (!OldCount)
+    NewCount = InterlockedDecrementSizeT(&Header->PointerCount);
+    if (!NewCount)
     {
         /* Sanity check */
         ASSERT(Header->HandleCount == 0);
@@ -351,8 +351,8 @@ ObfDereferenceObject(IN PVOID Object)
         }
     }
 
-    /* Return the old count */
-    return OldCount;
+    /* Return the new count */
+    return NewCount;
 }
 
 VOID

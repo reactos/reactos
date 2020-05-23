@@ -162,7 +162,7 @@ PopShutdownHandler(VOID)
         /* Yes we do, cleanup for shutdown screen */
         if (!InbvCheckDisplayOwnership()) InbvAcquireDisplayOwnership();
         InbvResetDisplay();
-        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 0);
+        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLACK);
         InbvEnableDisplayString(TRUE);
         InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
 

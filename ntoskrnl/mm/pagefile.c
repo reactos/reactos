@@ -253,8 +253,8 @@ MiReadPageFile(
     return(Status);
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 MmInitPagingFile(VOID)
 {

@@ -301,8 +301,9 @@ BOOL CAvailableApps::UpdateAppsDB()
         return TRUE;
     }
 
-    DownloadApplicationsDB(APPLICATION_DATABASE_URL);
-
+    DownloadApplicationsDB(SettingsInfo.bUseSource ? SettingsInfo.szSourceURL : APPLICATION_DATABASE_URL,
+        !SettingsInfo.bUseSource);
+    
     if (!ExtractFilesFromCab(m_Strings.szCabName, 
                              m_Strings.szCabDir,
                              m_Strings.szAppsPath))
