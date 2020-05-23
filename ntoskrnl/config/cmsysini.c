@@ -446,8 +446,8 @@ Quit:
     return Status;
 }
 
-INIT_FUNCTION
 static
+INIT_FUNCTION
 NTSTATUS
 CmpCreateHardwareProfile(HANDLE ControlSetHandle)
 {

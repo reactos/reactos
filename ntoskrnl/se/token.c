@@ -830,8 +830,8 @@ SepDeleteToken(PVOID ObjectBody)
 }
 
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 SepInitializeTokenImplementation(VOID)
 {

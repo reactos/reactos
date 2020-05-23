@@ -129,8 +129,8 @@ done:
     return Status;
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 ObInit2(VOID)
 {
@@ -196,8 +196,8 @@ ObInit2(VOID)
     return TRUE;
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 ObInitSystem(VOID)
 {

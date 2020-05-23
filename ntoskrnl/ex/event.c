@@ -37,8 +37,8 @@ static const INFORMATION_CLASS_INFO ExEventInfoClass[] =
 
 /* FUNCTIONS *****************************************************************/
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 ExpInitializeEventImplementation(VOID)
 {

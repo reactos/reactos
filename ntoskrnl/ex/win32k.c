@@ -257,8 +257,8 @@ ExpDesktopClose(IN PEPROCESS Process OPTIONAL,
                            &Parameters);
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 ExpWin32kInit(VOID)
 {
