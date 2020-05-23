@@ -84,6 +84,7 @@ BOOLEAN InbvBootDriverInstalled = FALSE;
 static BOOLEAN InbvDisplayDebugStrings = FALSE;
 static INBV_DISPLAY_STRING_FILTER InbvDisplayFilter = NULL;
 static ULONG ProgressBarLeft = 0, ProgressBarTop = 0;
+static ULONG ProgressBarWidth = 0, ProgressBarHeight = 0;
 static BOOLEAN ShowProgressBar = FALSE;
 static INBV_PROGRESS_STATE InbvProgressState;
 static BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
@@ -769,7 +770,7 @@ InbvUpdateProgressBar(IN ULONG Progress)
     {
         /* Compute fill count */
         BoundedProgress = (InbvProgressState.Floor / 100) + Progress;
-        FillCount = 121 * (InbvProgressState.Bias * BoundedProgress) / 1000000;
+        FillCount = ProgressBarWidth * (InbvProgressState.Bias * BoundedProgress) / 1000000;
 
         /* Acquire the lock */
         InbvAcquireLock();
@@ -778,7 +779,7 @@ InbvUpdateProgressBar(IN ULONG Progress)
         VidSolidColorFill(ProgressBarLeft,
                           ProgressBarTop,
                           ProgressBarLeft + FillCount,
-                          ProgressBarTop + 12,
+                          ProgressBarTop + ProgressBarHeight,
                           15);
 
         /* Release the lock */
@@ -847,11 +848,15 @@ INIT_FUNCTION
 VOID
 NTAPI
 InbvSetProgressBarCoordinates(IN ULONG Left,
-                              IN ULONG Top)
+                              IN ULONG Top,
+                              IN ULONG Width,
+                              IN ULONG Height)
 {
     /* Update the coordinates */
-    ProgressBarLeft = Left;
-    ProgressBarTop  = Top;
+    ProgressBarLeft   = Left;
+    ProgressBarTop    = Top;
+    ProgressBarWidth  = Width;
+    ProgressBarHeight = Height;
 
     /* Enable the progress bar */
     ShowProgressBar = TRUE;
@@ -1236,7 +1241,11 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 
             /* Set progress bar coordinates and display it */
-            InbvSetProgressBarCoordinates(VID_PROGRESS_BAR_LEFT, VID_PROGRESS_BAR_TOP);
+            InbvSetProgressBarCoordinates(
+                VID_PROGRESS_BAR_LEFT,
+                VID_PROGRESS_BAR_TOP,
+                VID_PROGRESS_BAR_WIDTH,
+                VID_PROGRESS_BAR_HEIGHT);
 
 #ifdef REACTOS_SKUS
             /* Check for non-workstation products */
