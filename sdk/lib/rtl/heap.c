@@ -2633,6 +2633,7 @@ RtlReAllocateHeap(HANDLE HeapPtr,
     SIZE_T RemainderBytes, ExtraSize;
     PHEAP_VIRTUAL_ALLOC_ENTRY VirtualAllocBlock;
     EXCEPTION_RECORD ExceptionRecord;
+    UCHAR SegmentOffset;
 
     /* Return success in case of a null pointer */
     if (!Ptr)
@@ -2842,6 +2843,10 @@ RtlReAllocateHeap(HANDLE HeapPtr,
                 /* Is that the last entry */
                 if (FreeFlags & HEAP_ENTRY_LAST_ENTRY)
                 {
+                    SegmentOffset = SplitBlock->SegmentOffset;
+                    ASSERT(SegmentOffset < HEAP_SEGMENTS);
+                    Heap->Segments[SegmentOffset]->LastEntryInSegment = SplitBlock;
+
                     /* Set its size and insert it to the list */
                     SplitBlock->Size = (USHORT)FreeSize;
                     RtlpInsertFreeBlockHelper(Heap, SplitBlock, FreeSize, FALSE);
@@ -2888,6 +2893,12 @@ RtlReAllocateHeap(HANDLE HeapPtr,
                             {
                                 /* Update previous size of the next entry */
                                 ((PHEAP_FREE_ENTRY)((PHEAP_ENTRY)SplitBlock + FreeSize))->PreviousSize = (USHORT)FreeSize;
+                            }
+                            else
+                            {
+                                SegmentOffset = SplitBlock->SegmentOffset;
+                                ASSERT(SegmentOffset < HEAP_SEGMENTS);
+                                Heap->Segments[SegmentOffset]->LastEntryInSegment = SplitBlock;
                             }
 
                             /* Insert the new one back and update total size */
