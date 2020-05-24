@@ -55,6 +55,10 @@ IDR_REGISTRYFOLDER REGISTRY "resources/rgs/regfolder.rgs"
     #include "lang/pl-PL.rc"
 #endif
 
+#ifdef LANGUAGE_PT_PT
+    #include "lang/pt-PT.rc"
+#endif
+
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
