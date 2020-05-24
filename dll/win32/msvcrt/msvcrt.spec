@@ -447,7 +447,6 @@
 @ cdecl _i64toa(long long ptr long)
 @ cdecl _i64tow(long long ptr long)
 @ cdecl _initterm(ptr ptr)
-@ cdecl -version=0x600+ _initterm_e(ptr ptr)
 @ cdecl -arch=i386 _inp(long) MSVCRT__inp
 @ cdecl -arch=i386 _inpd(long) MSVCRT__inpd
 @ cdecl -arch=i386 _inpw(long) MSVCRT__inpw
