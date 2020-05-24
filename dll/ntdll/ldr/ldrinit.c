@@ -2328,15 +2328,16 @@ LdrpInitializeProcess(IN PCONTEXT Context,
             return Status;
         }
 
-        Status = LdrGetProcedureAddress(Kernel32BaseAddress,
-                                        &BaseProcessInitPostImportName,
-                                        0,
-                                        &FunctionAddress);
-
+        /* Look up BaseProcessInitPostImport and allow to get exports hidden by roscompat */
+        Status = LdrpGetProcedureAddress(Kernel32BaseAddress,
+                                         &BaseProcessInitPostImportName,
+                                         0,
+                                         &FunctionAddress,
+                                         TRUE,
+                                         TRUE);
         if (!NT_SUCCESS(Status))
         {
-            if (ShowSnaps)
-                DPRINT1("LDR: Unable to find post-import process init function, Status=0x%08lx\n", &Kernel32String, Status);
+            DPRINT1("LDR: Unable to find BaseProcessInitPostImport in kernel32, Status=0x%08lx\n", &Kernel32String, Status);
             return Status;
         }
         Kernel32ProcessInitPostImportFunction = FunctionAddress;
