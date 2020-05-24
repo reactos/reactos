@@ -431,8 +431,7 @@ void select_style( ME_Context *c, ME_Style *s )
 
     if (c->current_style)
     {
-        if (c->current_style->font_cache)
-            release_font_cache( c->current_style->font_cache );
+        release_font_cache( c->current_style->font_cache );
         c->current_style->font_cache = NULL;
     }
     c->current_style = s;
