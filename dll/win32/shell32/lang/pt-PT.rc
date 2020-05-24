@@ -738,7 +738,7 @@ BEGIN
     IDS_DESKTOP "Ambiente de trabalho"
     IDS_MYCOMPUTER "O Meu Computador"
     IDS_RECYCLEBIN_FOLDER_NAME "Reciclagem"
-    IDS_CONTROLPANEL "Painel de Controlo"
+    IDS_CONTROLPANEL "Painel de Controle"
     IDS_ADMINISTRATIVETOOLS "Ferramentas Administrativas"
 
     /* special folders descriptions */
