@@ -233,6 +233,7 @@ RtlpClearFreeListsBit(PHEAP Heap,
 {
     ULONG Index, Bit;
 
+    ASSERT(IsListEmpty(&Heap->FreeLists[FreeEntry->Size]));
     ASSERT(FreeEntry->Size < HEAP_FREELISTS);
 
     /* Calculate offset in the free list bitmap */
@@ -387,10 +388,18 @@ RtlpRemoveFreeBlock(PHEAP Heap,
 {
     SIZE_T Result, RealSize;
 
+    if (FreeEntry->Size < HEAP_FREELISTS)
+    {
+        ASSERT(Heap->FreeLists[FreeEntry->Size].Flink->Blink == &Heap->FreeLists[FreeEntry->Size]);
+        ASSERT(Heap->FreeLists[FreeEntry->Size].Flink->Flink->Blink == Heap->FreeLists[FreeEntry->Size].Flink);
+        ASSERT(Heap->FreeLists[FreeEntry->Size].Blink->Flink == &Heap->FreeLists[FreeEntry->Size]);
+        ASSERT(Heap->FreeLists[FreeEntry->Size].Blink->Blink->Flink == Heap->FreeLists[FreeEntry->Size].Blink);
+    }
     /* Remove the free block and update the freelists bitmap */
     if (RemoveEntryList(&FreeEntry->FreeList) &&
         (Dedicated || (!Dedicated && FreeEntry->Size < HEAP_FREELISTS)))
     {
+        ASSERT(IsListEmpty(&Heap->FreeLists[FreeEntry->Size]));
         RtlpClearFreeListsBit(Heap, FreeEntry);
     }
 
@@ -665,9 +674,8 @@ RtlpFindAndCommitPages(PHEAP Heap,
             /* Calculate first and last entries */
             FirstEntry = (PHEAP_ENTRY)Address;
 
-            LastEntry = Segment->LastEntryInSegment;
-            if (!(LastEntry->Flags & HEAP_ENTRY_LAST_ENTRY) ||
-                LastEntry + LastEntry->Size != FirstEntry)
+            //LastEntry = Segment->LastEntryInSegment;
+
             {
                 /* Go through the entries to find the last one */
                 if (PreviousUcr)
@@ -682,6 +690,11 @@ RtlpFindAndCommitPages(PHEAP Heap,
                 }
             }
             ASSERT((LastEntry + LastEntry->Size) == FirstEntry);
+            if ((((PHEAP_ENTRY)Segment->LastEntryInSegment)->Flags & HEAP_ENTRY_LAST_ENTRY) &&
+                (PHEAP_ENTRY)Segment->LastEntryInSegment + ((PHEAP_ENTRY)Segment->LastEntryInSegment)->Size == FirstEntry)
+            {
+                ASSERT(LastEntry == Segment->LastEntryInSegment);
+            }
 
             /* Unmark it as a last entry */
             LastEntry->Flags &= ~HEAP_ENTRY_LAST_ENTRY;
