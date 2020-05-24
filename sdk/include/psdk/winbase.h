@@ -1362,11 +1362,11 @@ typedef enum _COMPUTER_NAME_FORMAT {
 	ComputerNamePhysicalDnsFullyQualified,
 	ComputerNameMax
 } COMPUTER_NAME_FORMAT;
-#endif /* (_WIN32_WINNT >= 0x0500) */
-
-#if (_WIN32_WINNT >= 0x0600)
+ /* (_WIN32_WINNT >= 0x0500) */
+//Modified by Freakston for Syzkaller
 typedef RTL_SRWLOCK SRWLOCK, *PSRWLOCK;
 typedef RTL_CONDITION_VARIABLE CONDITION_VARIABLE, *PCONDITION_VARIABLE;
+
 #endif
 
 typedef struct _PROC_THREAD_ATTRIBUTE_LIST *PPROC_THREAD_ATTRIBUTE_LIST, *LPPROC_THREAD_ATTRIBUTE_LIST;
@@ -1494,10 +1494,12 @@ AccessCheckAndAuditAlarmA(
   _Out_ LPBOOL pfGenerateOnClose);
 
 BOOL WINAPI AccessCheckAndAuditAlarmW(LPCWSTR,LPVOID,LPWSTR,LPWSTR,PSECURITY_DESCRIPTOR,DWORD,PGENERIC_MAPPING,BOOL,PDWORD,PBOOL,PBOOL);
-#if (_WIN32_WINNT >= 0x0600)
+//
+//#if (_WIN32_WINNT >= 0x0600)
+//This was added by Freakston for testing
 VOID WINAPI AcquireSRWLockExclusive(PSRWLOCK);
 VOID WINAPI AcquireSRWLockShared(PSRWLOCK);
-#endif
+//#endif
 #if (_WIN32_WINNT >= 0x0501)
 BOOL WINAPI ActivateActCtx(_Inout_opt_ HANDLE, _Out_ ULONG_PTR*);
 #endif
@@ -2595,18 +2597,20 @@ BOOL WINAPI ImpersonateNamedPipeClient(HANDLE);
 BOOL WINAPI ImpersonateSelf(SECURITY_IMPERSONATION_LEVEL);
 BOOL WINAPI InitAtomTable(_In_ DWORD);
 BOOL WINAPI InitializeAcl(PACL,DWORD,DWORD);
-#if (_WIN32_WINNT >= 0x0600)
+//#if (_WIN32_WINNT >= 0x0600)
+//Modified by Freakston for Syzkaller
 VOID WINAPI InitializeConditionVariable(PCONDITION_VARIABLE);
-#endif
+//#endif
 VOID WINAPI InitializeCriticalSection(LPCRITICAL_SECTION);
 BOOL WINAPI InitializeCriticalSectionAndSpinCount(LPCRITICAL_SECTION,DWORD);
 DWORD WINAPI SetCriticalSectionSpinCount(LPCRITICAL_SECTION,DWORD);
 BOOL WINAPI InitializeSecurityDescriptor(PSECURITY_DESCRIPTOR,DWORD);
 BOOL WINAPI InitializeSid (PSID,PSID_IDENTIFIER_AUTHORITY,BYTE);
 
-#if (_WIN32_WINNT >= 0x0600)
+//#if (_WIN32_WINNT >= 0x0600)
+//Modified by Freakston for Syzkaller
 VOID WINAPI InitializeSRWLock(PSRWLOCK);
-#endif
+//#endif
 
 BOOL WINAPI IsBadCodePtr(_In_opt_ FARPROC);
 BOOL WINAPI IsBadHugeReadPtr(_In_opt_ CONST VOID*, _In_ UINT_PTR);
@@ -2977,10 +2981,11 @@ void WINAPI ReleaseActCtx(_Inout_ HANDLE);
 #endif
 BOOL WINAPI ReleaseMutex(HANDLE);
 BOOL WINAPI ReleaseSemaphore(HANDLE,LONG,LPLONG);
-#if (_WIN32_WINNT >= 0x0600)
+//#if (_WIN32_WINNT >= 0x0600)
+//Modified by Freakston for Syzkaller
 VOID WINAPI ReleaseSRWLockExclusive(PSRWLOCK);
 VOID WINAPI ReleaseSRWLockShared(PSRWLOCK);
-#endif
+//#endif
 BOOL WINAPI RemoveDirectoryA(LPCSTR);
 BOOL WINAPI RemoveDirectoryW(LPCWSTR);
 #if (_WIN32_WINNT >= 0x0500)
@@ -3186,10 +3191,11 @@ BOOL WINAPI SetWaitableTimer(HANDLE,const LARGE_INTEGER*,LONG,PTIMERAPCROUTINE,P
 DWORD WINAPI SignalObjectAndWait(_In_ HANDLE, _In_ HANDLE, _In_ DWORD, _In_ BOOL);
 DWORD WINAPI SizeofResource(HINSTANCE,HRSRC);
 WINBASEAPI void WINAPI Sleep(DWORD);
-#if (_WIN32_WINNT >= 0x0600)
+//#if (_WIN32_WINNT >= 0x0600)
+//Modified by Freakston for Syzkaller
 BOOL WINAPI SleepConditionVariableCS(PCONDITION_VARIABLE,PCRITICAL_SECTION,DWORD);
 BOOL WINAPI SleepConditionVariableSRW(PCONDITION_VARIABLE,PSRWLOCK,DWORD,ULONG);
-#endif
+//#endif
 DWORD WINAPI SleepEx(DWORD,BOOL);
 DWORD WINAPI SuspendThread(HANDLE);
 void WINAPI SwitchToFiber(_In_ PVOID);
@@ -3265,10 +3271,11 @@ DWORD WINAPI WaitForSingleObject(_In_ HANDLE hHandle, _In_ DWORD dwMilliseconds)
 DWORD WINAPI WaitForSingleObjectEx(HANDLE,DWORD,BOOL);
 BOOL WINAPI WaitNamedPipeA(_In_ LPCSTR, _In_ DWORD);
 BOOL WINAPI WaitNamedPipeW(_In_ LPCWSTR, _In_ DWORD);
-#if (_WIN32_WINNT >= 0x0600)
+//#if (_WIN32_WINNT >= 0x0600)
+//Modified by Freakston for Syzkaller
 VOID WINAPI WakeConditionVariable(PCONDITION_VARIABLE);
 VOID WINAPI WakeAllConditionVariable(PCONDITION_VARIABLE);
-#endif
+//#endif
 BOOL WINAPI WinLoadTrustProvider(GUID*);
 BOOL WINAPI Wow64DisableWow64FsRedirection(PVOID*);
 BOOLEAN WINAPI Wow64EnableWow64FsRedirection(_In_ BOOLEAN);
