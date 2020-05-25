@@ -873,7 +873,7 @@ CsrGetProcessLuid(IN HANDLE hProcess OPTIONAL,
                                      NULL,
                                      0,
                                      &Length);
-    if (!NT_SUCCESS(Status))
+    if (Status != STATUS_BUFFER_TOO_SMALL)
     {
         /* Close the token and fail */
         NtClose(hToken);
