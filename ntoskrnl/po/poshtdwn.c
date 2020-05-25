@@ -27,6 +27,25 @@ LIST_ENTRY PopShutdownQueue;
 KGUARDED_MUTEX PopShutdownListMutex;
 BOOLEAN PopShutdownListAvailable;
 
+/** From bootvid/precomp.h **/
+//
+// Bitmap Header
+//
+typedef struct tagBITMAPINFOHEADER
+{
+    ULONG biSize;
+    LONG biWidth;
+    LONG biHeight;
+    USHORT biPlanes;
+    USHORT biBitCount;
+    ULONG biCompression;
+    ULONG biSizeImage;
+    LONG biXPelsPerMeter;
+    LONG biYPelsPerMeter;
+    ULONG biClrUsed;
+    ULONG biClrImportant;
+} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
+/****************************/
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -149,7 +168,7 @@ VOID
 NTAPI
 PopShutdownHandler(VOID)
 {
-    PUCHAR Logo1, Logo2;
+    PVOID TextBmp, LogoBmp;
     ULONG i;
 
     /* Stop all interrupts */
@@ -167,12 +186,20 @@ PopShutdownHandler(VOID)
         InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
 
         /* Display shutdown logo and message */
-        Logo1 = InbvGetResourceAddress(IDB_SHUTDOWN_MSG);
-        Logo2 = InbvGetResourceAddress(IDB_LOGO_DEFAULT);
-        if ((Logo1) && (Logo2))
+        TextBmp = InbvGetResourceAddress(IDB_SHUTDOWN_MSG);
+        LogoBmp = InbvGetResourceAddress(IDB_LOGO_DEFAULT);
+        if ((TextBmp) && (LogoBmp))
         {
-            InbvBitBlt(Logo1, VID_SHUTDOWN_MSG_LEFT, VID_SHUTDOWN_MSG_TOP);
-            InbvBitBlt(Logo2, VID_SHUTDOWN_LOGO_LEFT, VID_SHUTDOWN_LOGO_TOP);
+            PBITMAPINFOHEADER LogoBmpInfo = LogoBmp, TextBmpInfo = TextBmp;
+
+            const ULONG Spacing = 10;
+            ULONG LogoX = SCREEN_WIDTH / 2 - LogoBmpInfo->biWidth / 2;
+            ULONG LogoY = SCREEN_HEIGHT / 2 - LogoBmpInfo->biHeight / 2 - Spacing - TextBmpInfo->biHeight;
+            ULONG TextX = SCREEN_WIDTH / 2 - TextBmpInfo->biWidth / 2;
+            ULONG TextY = LogoY + LogoBmpInfo->biHeight + Spacing;
+
+            InbvBitBlt(LogoBmp, LogoX, LogoY);
+            InbvBitBlt(TextBmp, TextX, TextY);
         }
     }
     else
