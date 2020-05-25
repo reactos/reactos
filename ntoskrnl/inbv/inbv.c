@@ -56,23 +56,6 @@ typedef enum _ROT_BAR_TYPE
 } ROT_BAR_TYPE;
 
 /*
- * BitBltAligned() alignments
- */
-typedef enum _BBLT_VERT_ALIGNMENT
-{
-    AL_VERTICAL_TOP = 0,
-    AL_VERTICAL_CENTER,
-    AL_VERTICAL_BOTTOM
-} BBLT_VERT_ALIGNMENT;
-
-typedef enum _BBLT_HORZ_ALIGNMENT
-{
-    AL_HORIZONTAL_LEFT = 0,
-    AL_HORIZONTAL_CENTER,
-    AL_HORIZONTAL_RIGHT
-} BBLT_HORZ_ALIGNMENT;
-
-/*
  * Enable this define when Inbv will support rotating progress bar.
  */
 #define INBV_ROTBAR_IMPLEMENTED
@@ -117,7 +100,7 @@ static BOOLEAN RotBarThreadActive = FALSE;
 static ROT_BAR_TYPE RotBarSelection = RB_UNSPECIFIED;
 static ROT_BAR_STATUS PltRotBarStatus = 0;
 static UCHAR RotBarBuffer[24 * 9];
-static UCHAR RotLineBuffer[SCREEN_WIDTH * 6];
+static UCHAR RotLineBuffer[SCREEN_WIDTH * VID_ROTBAR_HEIGHT];
 #endif
 
 
@@ -255,8 +238,9 @@ BootLogoFadeIn(VOID)
     }
 }
 
-static VOID
-BitBltPalette(
+VOID
+NTAPI
+InbvBitBltPalette(
     IN PVOID Image,
     IN BOOLEAN NoPalette,
     IN ULONG X,
@@ -287,8 +271,9 @@ BitBltPalette(
     }
 }
 
-static VOID
-BitBltAligned(
+VOID
+NTAPI
+InbvBitBltAligned(
     IN PVOID Image,
     IN BOOLEAN NoPalette,
     IN BBLT_HORZ_ALIGNMENT HorizontalAlignment,
@@ -342,7 +327,7 @@ BitBltAligned(
     }
 
     /* Finally draw the image */
-    BitBltPalette(Image, NoPalette, X, Y);
+    InbvBitBltPalette(Image, NoPalette, X, Y);
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -1060,11 +1045,11 @@ InbvRotationThread(
             Index %= Total;
 
             /* Right part */
-            VidBufferToScreenBlt(RotLineBuffer, Index, SCREEN_HEIGHT-6, SCREEN_WIDTH - Index, 6, SCREEN_WIDTH);
+            VidBufferToScreenBlt(RotLineBuffer, Index, SCREEN_HEIGHT-VID_ROTBAR_HEIGHT, SCREEN_WIDTH - Index, VID_ROTBAR_HEIGHT, SCREEN_WIDTH);
             if (Index > 0)
             {
                 /* Left part */
-                VidBufferToScreenBlt(RotLineBuffer + (SCREEN_WIDTH - Index) / 2, 0, SCREEN_HEIGHT-6, Index - 2, 6, SCREEN_WIDTH);
+                VidBufferToScreenBlt(RotLineBuffer + (SCREEN_WIDTH - Index) / 2, 0, SCREEN_HEIGHT-VID_ROTBAR_HEIGHT, Index - 2, VID_ROTBAR_HEIGHT, SCREEN_WIDTH);
             }
             Index += 32;
         }
@@ -1158,12 +1143,12 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         if (Header && Footer)
         {
             /* BitBlt them on the screen */
-            BitBltAligned(Footer,
+            InbvBitBltAligned(Footer,
                           TRUE,
                           AL_HORIZONTAL_CENTER,
                           AL_VERTICAL_BOTTOM,
                           0, 0, 0, 59);
-            BitBltAligned(Header,
+            InbvBitBltAligned(Header,
                           FALSE,
                           AL_HORIZONTAL_CENTER,
                           AL_VERTICAL_TOP,
@@ -1234,7 +1219,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             RtlCopyMemory(MainPalette, Palette, sizeof(MainPalette));
 
             /* Draw the logo at the center of the screen */
-            BitBltAligned(BootLogo,
+            InbvBitBltAligned(BootLogo,
                           TRUE,
                           AL_HORIZONTAL_CENTER,
                           AL_VERTICAL_CENTER,
@@ -1271,7 +1256,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 
         /* Load and draw copyright text bitmap */
         BootCopy = InbvGetResourceAddress(IDB_COPYRIGHT);
-        BitBltAligned(BootCopy,
+        InbvBitBltAligned(BootCopy,
                       TRUE,
                       AL_HORIZONTAL_LEFT,
                       AL_VERTICAL_BOTTOM,
@@ -1280,7 +1265,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #ifdef REACTOS_SKUS
         /* Draw the SKU text if it exits */
         if (Text)
-            BitBltPalette(Text, TRUE, VID_SKU_TEXT_LEFT, VID_SKU_TEXT_TOP);
+            InbvBitBltPalette(Text, TRUE, VID_SKU_TEXT_LEFT, VID_SKU_TEXT_TOP);
 #endif
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
@@ -1289,7 +1274,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             /* Save previous screen pixels to buffer */
             InbvScreenToBufferBlt(Buffer, 0, 0, 22, 9, 24);
             /* Draw the progress bar bit */
-            BitBltPalette(Bar, TRUE, 0, 0);
+            InbvBitBltPalette(Bar, TRUE, 0, 0);
             /* Store it in global buffer */
             InbvScreenToBufferBlt(RotBarBuffer, 0, 0, 22, 9, 24);
             /* Restore screen pixels */
@@ -1307,8 +1292,8 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             if (LineBmp)
             {
                 /* Draw the line and store it in global buffer */
-                BitBltPalette(LineBmp, TRUE, 0, SCREEN_HEIGHT-6);
-                InbvScreenToBufferBlt(RotLineBuffer, 0, SCREEN_HEIGHT-6, SCREEN_WIDTH, 6, SCREEN_WIDTH);
+                InbvBitBltPalette(LineBmp, TRUE, 0, SCREEN_HEIGHT-VID_ROTBAR_HEIGHT);
+                InbvScreenToBufferBlt(RotLineBuffer, 0, SCREEN_HEIGHT-VID_ROTBAR_HEIGHT, SCREEN_WIDTH, VID_ROTBAR_HEIGHT, SCREEN_WIDTH);
             }
         }
         else

@@ -19,6 +19,7 @@
 #define VID_SHUTDOWN_LOGO_TOP     114
 #define VID_SHUTDOWN_MSG_LEFT     213
 #define VID_SHUTDOWN_MSG_TOP      354
+#define VID_ROTBAR_HEIGHT 5
 
 #define VID_SKU_AREA_LEFT         418
 #define VID_SKU_AREA_TOP          230
