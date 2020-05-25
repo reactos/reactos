@@ -173,8 +173,8 @@ typedef struct tagRGBQUAD
 
 static RGBQUAD MainPalette[16];
 
-#define PALETTE_FADE_STEPS  12
-#define PALETTE_FADE_TIME   (15 * 1000) /* 15 ms */
+#define PALETTE_FADE_STEPS  9
+#define PALETTE_FADE_TIME   (2 * 1000) /* 2 ms */
 
 /** From bootvid/precomp.h **/
 //
