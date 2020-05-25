@@ -1,0 +1,45 @@
+<SDB>
+    <DATABASE>
+        <NAME>ReactOS driver compatibility database</NAME>
+        <OS_PLATFORM >1</OS_PLATFORM><!-- 2 -->
+        <DATABASE_ID>{f9ab2228-3312-4a73-b6f9-936d70e112ef}</DATABASE_ID>
+
+        <!-- APPHELP blocking is not supported yet! -->
+        <EXE NAME="something.sys" APP_NAME="BuggyDriver" VENDOR="ACME">
+            <APPHELP>...</APPHELP>
+            <MATCHING_FILE NAME="*" />
+        </EXE>
+
+        <!-- -->
+        <KDRIVER NAME="beep.sys" APP_NAME="Beep driver" VENDOR="ACME">
+            <KSHIM_REF NAME="SkipDriverUnload" />
+        </KDRIVER>
+
+        <!-- KDEVICE is not supported yet! -->
+        <KDEVICE NAME="USB:USB\VID_0000&amp;PID_0000">
+            <FLAG NAME="USB">
+                <FLAG_MASK_KERNEL>1024</FLAG_MASK_KERNEL>
+            </FLAG>
+        </KDEVICE>
+
+        <KSHIM NAME="driverscope">
+            <MODULE>NT kernel component</MODULE>
+        </KSHIM>
+
+        <KSHIM NAME="KmWin7VersionLie">
+            <MODULE>NT kernel component</MODULE>
+        </KSHIM>
+
+        <KSHIM NAME="KmWin8VersionLie">
+            <MODULE>NT kernel component</MODULE>
+        </KSHIM>
+
+        <KSHIM NAME="KmWin81VersionLie">
+            <MODULE>NT kernel component</MODULE>
+        </KSHIM>
+
+        <KSHIM NAME="SkipDriverUnload">
+            <MODULE>NT kernel component</MODULE>
+        </KSHIM>
+    </DATABASE>
+</SDB>
