@@ -2,7 +2,7 @@
  * PROJECT:     xml2sdb
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Define mapping of all shim database types to xml
- * COPYRIGHT:   Copyright 2016-2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2016-2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #pragma once
@@ -40,14 +40,13 @@ struct InExclude
 
 struct ShimRef
 {
-    ShimRef() : ShimTagid(0) { ; }
+    ShimRef() { ; }
 
     bool fromXml(XMLHandle dbNode);
-    bool toSdb(PDB pdb, Database& db);
+    bool toSdb(PDB pdb, Database& db, TAG tag_type);
 
     std::string Name;
     std::string CommandLine;
-    TAGID ShimTagid;
     std::list<InExclude> InExcludes;
 };
 
@@ -64,7 +63,7 @@ struct FlagRef
 
 struct Shim
 {
-    Shim() : Tagid(0) { ; }
+    Shim() : Tagid(0), KShim(false) { ; }
 
     bool fromXml(XMLHandle dbNode);
     bool toSdb(PDB pdb, Database& db);
@@ -73,6 +72,7 @@ struct Shim
     std::string DllFile;
     GUID FixID;
     TAGID Tagid;
+    bool KShim;
     std::list<InExclude> InExcludes;
 };
 
@@ -147,16 +147,17 @@ struct MatchingFile
 
 struct Exe
 {
-    Exe() : Tagid(0) { ; }
+    Exe() : Tagid(0), KShim(false) { ; }
 
     bool fromXml(XMLHandle dbNode);
-    bool toSdb(PDB pdb, Database& db);
+    bool toSdb(PDB pdb, Database& db, TAG tag_type);
 
     std::string Name;
     GUID ExeID;
     std::string AppName;
     std::string Vendor;
     TAGID Tagid;
+    bool KShim;
     std::list<MatchingFile> MatchingFiles;
     std::list<ShimRef> ShimRefs;
     std::list<FlagRef> FlagRefs;
@@ -185,39 +186,9 @@ struct Database
     TAGID BeginWriteListTag(PDB pdb, TAG tag);
     BOOL EndWriteListTag(PDB pdb, TAGID tagid);
 
-    void InsertShimTagid(const sdbstring& name, TAGID tagid);
-    inline void InsertShimTagid(const std::string& name, TAGID tagid)
-    {
-        InsertShimTagid(sdbstring(name.begin(), name.end()), tagid);
-    }
-    TAGID FindShimTagid(const sdbstring& name);
-    inline TAGID FindShimTagid(const std::string& name)
-    {
-        return FindShimTagid(sdbstring(name.begin(), name.end()));
-    }
-
-
-    void InsertPatchTagid(const sdbstring& name, TAGID tagid);
-    inline void InsertPatchTagid(const std::string& name, TAGID tagid)
-    {
-        InsertPatchTagid(sdbstring(name.begin(), name.end()), tagid);
-    }
-    TAGID FindPatchTagid(const sdbstring& name);
-    inline TAGID FindPatchTagid(const std::string& name)
-    {
-        return FindPatchTagid(sdbstring(name.begin(), name.end()));
-    }
-
-    void InsertFlagTagid(const sdbstring& name, TAGID tagid);
-    inline void InsertFlagTagid(const std::string& name, TAGID tagid)
-    {
-        InsertFlagTagid(sdbstring(name.begin(), name.end()), tagid);
-    }
-    TAGID FindFlagTagid(const sdbstring& name);
-    inline TAGID FindFlagTagid(const std::string& name)
-    {
-        return FindFlagTagid(sdbstring(name.begin(), name.end()));
-    }
+    TAGID FindShimTagid(const std::string& name);
+    std::string FindKShimModule(const std::string& name);
+    TAGID FindFlagTagid(const std::string& name);
 
     std::string Name;
     GUID ID;
@@ -226,9 +197,8 @@ struct Database
     std::list<Layer> Layers;
     std::list<Exe> Exes;
 
-private:
-    std::map<sdbstring, TAGID> KnownShims;
-    std::map<sdbstring, TAGID> KnownPatches;
-    std::map<sdbstring, TAGID> KnownFlags;
+    std::list<Exe> KDrivers;
+    std::list<Exe> KDevices;
+    std::list<Shim> KShims;
 };
 
