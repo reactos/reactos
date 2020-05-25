@@ -165,7 +165,11 @@ static void readdir_copy_shortname(
     /* GetShortPathName returns number of characters, not including \0 */
     *name_size_out = (CCHAR)GetShortPathNameW(name, name_out, 12);
     if (*name_size_out) {
+#ifndef __REACTOS__
         *name_size_out++;
+#else
+        (*name_size_out)++;
+#endif
         *name_size_out *= sizeof(WCHAR);
     }
 }
