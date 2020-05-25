@@ -163,7 +163,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     if (!(LpcpGetMessageFromThread(ClientThread)) ||
         !(CapturedReplyMessage.MessageId) ||
         (ClientThread->LpcReplyMessageId != CapturedReplyMessage.MessageId) ||
-        ((LpcpGetMessageFromThread(ClientThread)->Request.u2.s2.Type & ~LPC_KERNELMODE_MESSAGE) != LPC_CONNECTION_REQUEST))
+        (LpcpGetMessageType(&LpcpGetMessageFromThread(ClientThread)->Request) != LPC_CONNECTION_REQUEST))
     {
         /* Not the reply asked for, or no reply wanted, fail */
         KeReleaseGuardedMutex(&LpcpLock);

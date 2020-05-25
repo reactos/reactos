@@ -88,7 +88,7 @@ LpcpFreeToPortZone(IN PLPCP_MESSAGE Message,
     }
 
     /* Check if this is a connection request */
-    if ((Message->Request.u2.s2.Type & ~LPC_KERNELMODE_MESSAGE) == LPC_CONNECTION_REQUEST)
+    if (LpcpGetMessageType(&Message->Request) == LPC_CONNECTION_REQUEST)
     {
         /* Get the connection message */
         ConnectMessage = (PLPCP_CONNECTION_MESSAGE)(Message + 1);
@@ -177,7 +177,7 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
             if (Message)
             {
                 /* Check if it's a connection request */
-                if ((Message->Request.u2.s2.Type & ~LPC_KERNELMODE_MESSAGE) == LPC_CONNECTION_REQUEST)
+                if (LpcpGetMessageType(&Message->Request) == LPC_CONNECTION_REQUEST)
                 {
                     /* Get the connection message */
                     ConnectMessage = (PLPCP_CONNECTION_MESSAGE)(Message + 1);

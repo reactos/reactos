@@ -40,7 +40,7 @@ NtListenPort(IN HANDLE PortHandle,
         {
             /* Accept only LPC_CONNECTION_REQUEST requests */
             if ((Status != STATUS_SUCCESS) ||
-                ((ConnectMessage->u2.s2.Type & ~LPC_KERNELMODE_MESSAGE) == LPC_CONNECTION_REQUEST))
+                (LpcpGetMessageType(ConnectMessage) == LPC_CONNECTION_REQUEST))
             {
                 /* Break out */
                 _SEH2_YIELD(break);
