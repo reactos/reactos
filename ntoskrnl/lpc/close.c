@@ -37,10 +37,10 @@ LpcExitThread(IN PETHREAD Thread)
 
     /* Check if there's a reply message */
     Message = LpcpGetMessageFromThread(Thread);
-    if (Message != NULL)
+    if (Message)
     {
         Thread->LpcReplyMessage = NULL;
-        if (Message->RepliedToThread != NULL)
+        if (Message->RepliedToThread)
         {
             ObDereferenceObject(Message->RepliedToThread);
             Message->RepliedToThread = NULL;
