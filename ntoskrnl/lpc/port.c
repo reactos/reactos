@@ -296,10 +296,12 @@ NtQueryInformationPort(IN HANDLE PortHandle,
 	UNREFERENCED_PARAMETER(PortInformationClass);
 
 	PreviousMode = KeGetPreviousMode();
-	if(PreviousMode != KernelMode) {
+	if (PreviousMode != KernelMode)
+	{
 		_SEH2_TRY {
 			ProbeForWrite(PortInformation, PortInformationLength, sizeof(ULONG));
-			if(ARGUMENT_PRESENT(ReturnLength)) {
+			if (ARGUMENT_PRESENT(ReturnLength))
+			{
 				ProbeForWriteUlong(ReturnLength);
 			}
 		} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
@@ -308,11 +310,14 @@ NtQueryInformationPort(IN HANDLE PortHandle,
 		_SEH2_END;
 	}
 
-	if(ARGUMENT_PRESENT(PortHandle)) {
+	if (ARGUMENT_PRESENT(PortHandle))
+	{
 		Status = ObReferenceObjectByHandle(PortHandle, GENERIC_READ, LpcPortObjectType, PreviousMode, (PVOID*)&PortObject, NULL);
-		if(!NT_SUCCESS(Status)) {
+		if (!NT_SUCCESS(Status))
+		{
 			Status = ObReferenceObjectByHandle(PortHandle, GENERIC_READ, LpcWaitablePortObjectType, PreviousMode, (PVOID*)&PortObject, NULL);
-			if(!NT_SUCCESS(Status)) {
+			if (!NT_SUCCESS(Status))
+			{
 				return Status;
 			}
 		}
