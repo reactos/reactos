@@ -58,7 +58,7 @@ LsapIsTrustedClient(
                                      NULL,
                                      0,
                                      &Size);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
+    if (Status != STATUS_BUFFER_TOO_SMALL)
         goto done;
 
     Privileges = RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
