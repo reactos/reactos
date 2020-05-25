@@ -1090,7 +1090,7 @@ VOID
 NTAPI
 DisplayBootBitmap(IN BOOLEAN TextMode)
 {
-    PVOID BootCopy = NULL, BootProgress = NULL, BootLogo = NULL, Header = NULL, Footer = NULL;
+    PVOID BootCopy = NULL, BootLogo = NULL, Header = NULL, Footer = NULL;
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
     UCHAR Buffer[24 * 9];
@@ -1268,14 +1268,6 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             }
 #endif
         }
-
-        /* Load and draw progress bar bitmap */
-        BootProgress = InbvGetResourceAddress(IDB_PROGRESS_BAR);
-        BitBltAligned(BootProgress,
-                      TRUE,
-                      AL_HORIZONTAL_CENTER,
-                      AL_VERTICAL_CENTER,
-                      0, 118, 0, 0);
 
         /* Load and draw copyright text bitmap */
         BootCopy = InbvGetResourceAddress(IDB_COPYRIGHT);
