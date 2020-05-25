@@ -66,14 +66,17 @@ static INBV_DISPLAY_STATE InbvDisplayState = INBV_DISPLAY_STATE_DISABLED;
 BOOLEAN InbvBootDriverInstalled = FALSE;
 static BOOLEAN InbvDisplayDebugStrings = FALSE;
 static INBV_DISPLAY_STRING_FILTER InbvDisplayFilter = NULL;
-static ULONG ProgressBarLeft = 0, ProgressBarTop = 0;
-static ULONG ProgressBarWidth = 0, ProgressBarHeight = 0;
-static BOOLEAN ShowProgressBar = FALSE;
 static INBV_PROGRESS_STATE InbvProgressState;
 static BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
 static INBV_RESET_DISPLAY_PARAMETERS InbvResetDisplayParameters = NULL;
 static ULONG ResourceCount = 0;
 static PUCHAR ResourceList[1 + IDB_MAX_RESOURCE]; // First entry == NULL, followed by 'ResourceCount' entries.
+
+static ULONG ProgressBarLeft = 0, ProgressBarTop = 0;
+static ULONG ProgressBarWidth = 0, ProgressBarHeight = 0;
+static ULONG ProgressBarBackground = 0, ProgressBarForeground = BV_COLOR_WHITE;
+static BOOLEAN ProgressBarRounding = FALSE, ProgressBarShowBkg = FALSE;
+static BOOLEAN ShowProgressBar = FALSE;
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
 /*
@@ -832,22 +835,44 @@ InbvScreenToBufferBlt(OUT PUCHAR Buffer,
 CODE_SEG("INIT")
 VOID
 NTAPI
-InbvSetProgressBarCoordinates(IN ULONG Left,
-                              IN ULONG Top,
-                              IN ULONG Width,
-                              IN ULONG Height)
+InbvSetProgressBarSettings(IN ULONG Left,
+                           IN ULONG Top,
+                           IN ULONG Width,
+                           IN ULONG Height,
+                           IN ULONG ForegroundColor)
 {
-    /* Update the coordinates */
-    ProgressBarLeft   = Left;
-    ProgressBarTop    = Top;
-    ProgressBarWidth  = Width;
-    ProgressBarHeight = Height;
+    /* Update the settings */
+    ProgressBarLeft       = Left;
+    ProgressBarTop        = Top;
+    ProgressBarWidth      = Width;
+    ProgressBarHeight     = Height;
+    ProgressBarForeground = ForegroundColor;
+    ProgressBarShowBkg    = FALSE;
+    ProgressBarRounding   = FALSE;
 
     /* Enable the progress bar */
     ShowProgressBar = TRUE;
 }
 
 CODE_SEG("INIT")
+VOID
+NTAPI
+InbvSetProgressBarBackground(IN BOOLEAN Enable,
+                             IN ULONG Background)
+{
+    ProgressBarBackground = Background;
+    ProgressBarShowBkg    = Enable;
+}
+
+INIT_FUNCTION
+VOID
+NTAPI
+InbvSetProgressBarRounding(IN BOOLEAN Enable)
+{
+    ProgressBarRounding = Enable;
+}
+
+INIT_FUNCTION
 VOID
 NTAPI
 InbvSetProgressBarSubset(IN ULONG Floor,
@@ -1221,20 +1246,29 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             /* Draw the logo at the center of the screen */
             InbvBitBltAligned(BootLogo,
                           TRUE,
-                          AL_HORIZONTAL_CENTER,
-                          AL_VERTICAL_CENTER,
-                          0, 0, 0, 34);
+                          VID_BOOTLOGO_HALIGNMENT,
+                          VID_BOOTLOGO_VALIGNMENT,
+                          VID_BOOTLOGO_MARGIN_LEFT,
+                          VID_BOOTLOGO_MARGIN_TOP,
+                          VID_BOOTLOGO_MARGIN_RIGHT,
+                          VID_BOOTLOGO_MARGIN_BOTTOM);
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
             /* Choose progress bar */
             TempRotBarSelection = ROT_BAR_DEFAULT_MODE;
 #endif
 
-            /* Set progress bar coordinates and display it */
-            InbvSetProgressBarCoordinates(VID_PROGRESS_BAR_LEFT,
-                                          VID_PROGRESS_BAR_TOP,
-                                          VID_PROGRESS_BAR_WIDTH,
-                                          VID_PROGRESS_BAR_HEIGHT);
+            /* Configure progress bar */
+            InbvSetProgressBarSettings(VID_PROGRESS_BAR_LEFT,
+                                       VID_PROGRESS_BAR_TOP,
+                                       VID_PROGRESS_BAR_WIDTH,
+                                       VID_PROGRESS_BAR_HEIGHT,
+                                       VID_PROGRESS_BAR_FRGROUND);
+            InbvSetProgressBarBackground(TRUE, VID_PROGRESS_BAR_BKGROUND);
+            InbvSetProgressBarRounding(TRUE);
+
+            /* Update progress bar on screen to show a background */
+            InbvUpdateProgressBar(0);
 
 #ifdef REACTOS_SKUS
             /* Check for non-workstation products */
@@ -1258,9 +1292,12 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         BootCopy = InbvGetResourceAddress(IDB_COPYRIGHT);
         InbvBitBltAligned(BootCopy,
                       TRUE,
-                      AL_HORIZONTAL_LEFT,
-                      AL_VERTICAL_BOTTOM,
-                      22, 0, 0, 20);
+                      VID_BOOTCOPY_HALIGNMENT,
+                      VID_BOOTCOPY_VALIGNMENT,
+                      VID_BOOTCOPY_MARGIN_LEFT,
+                      VID_BOOTCOPY_MARGIN_TOP,
+                      VID_BOOTCOPY_MARGIN_RIGHT,
+                      VID_BOOTCOPY_MARGIN_BOTTOM);
 
 #ifdef REACTOS_SKUS
         /* Draw the SKU text if it exits */
