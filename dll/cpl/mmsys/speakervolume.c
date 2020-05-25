@@ -155,7 +155,7 @@ OnHScroll(
     INT id, idx, i, j;
 
     id = (INT)GetWindowLongPtr((HWND)lParam, GWLP_ID);
-    if (id < 9475 && id > 9503)
+    if (id < 9475 || id > 9503)
         return;
 
     if ((id - 9475) % 4 != 0)
