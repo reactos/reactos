@@ -703,7 +703,7 @@ DoAdminUnlock(
                                      NULL,
                                      0,
                                      &Size);
-    if ((Status != STATUS_SUCCESS) && (Status != STATUS_BUFFER_TOO_SMALL))
+    if (Status != STATUS_BUFFER_TOO_SMALL)
     {
         TRACE("NtQueryInformationToken() failed (Status 0x%08lx)\n", Status);
         goto done;
