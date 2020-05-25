@@ -744,7 +744,53 @@ InbvSolidColorFill(IN ULONG Left,
     }
 }
 
+<<<<<<< HEAD
 CODE_SEG("INIT")
+=======
+static VOID
+DrawProgressBar(IN ULONG Left,
+                IN ULONG FillCount,
+                IN BOOLEAN AllowLeftRound,
+                IN ULONG Color)
+{
+    if (!ProgressBarRounding)
+    {
+        InbvSolidColorFill(Left,
+                           ProgressBarTop,
+                           ProgressBarLeft + FillCount,
+                           ProgressBarTop + ProgressBarHeight,
+                           Color);
+    }
+    else
+    {
+        /* Left rounding */
+        if (AllowLeftRound)
+        {
+            InbvSolidColorFill(Left,
+                               ProgressBarTop + 1,
+                               ProgressBarLeft,
+                               ProgressBarTop + ProgressBarHeight - 1,
+                               Color);
+        }
+
+        /* Main line */
+        InbvSolidColorFill(Left,
+                           ProgressBarTop,
+                           ProgressBarLeft + FillCount - 1,
+                           ProgressBarTop + ProgressBarHeight,
+                           Color);
+
+        /* Right rounding */
+        InbvSolidColorFill(ProgressBarLeft + FillCount - 1,
+                           ProgressBarTop + 1,
+                           ProgressBarLeft + FillCount,
+                           ProgressBarTop + ProgressBarHeight - 1,
+                           Color);
+    }
+}
+
+INIT_FUNCTION
+>>>>>>> [NTOS:INBV] Implement progress bar rounding + background
 VOID
 NTAPI
 InbvUpdateProgressBar(IN ULONG Progress)
@@ -760,18 +806,21 @@ InbvUpdateProgressBar(IN ULONG Progress)
         BoundedProgress = (InbvProgressState.Floor / 100) + Progress;
         FillCount = ProgressBarWidth * (InbvProgressState.Bias * BoundedProgress) / 1000000;
 
-        /* Acquire the lock */
-        InbvAcquireLock();
+        /* Draw other part as a background, if required */
+        if (ProgressBarShowBkg)
+        {
+            ULONG BoundedProgressMax, FillCountMax;
+            BoundedProgressMax = (InbvProgressState.Floor / 100) + (InbvProgressState.Ceiling / 100);
 
-        /* Fill the progress bar */
-        VidSolidColorFill(ProgressBarLeft,
-                          ProgressBarTop,
-                          ProgressBarLeft + FillCount,
-                          ProgressBarTop + ProgressBarHeight,
-                          BV_COLOR_WHITE);
+            if (BoundedProgress < BoundedProgressMax-1)
+            {
+                FillCountMax = ProgressBarWidth * (InbvProgressState.Bias * BoundedProgressMax) / 1000000;
+                DrawProgressBar(ProgressBarLeft + FillCount, FillCountMax, Progress <= 1, ProgressBarBackground);
+            }
+        }
 
-        /* Release the lock */
-        InbvReleaseLock();
+        /* Draw a progress bar */
+        DrawProgressBar(ProgressBarLeft, FillCount, TRUE, ProgressBarForeground);
     }
 }
 
