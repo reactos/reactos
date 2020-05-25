@@ -276,7 +276,7 @@ NTAPI
 NtQueryPortInformationProcess(VOID)
 {
     /* This is all this function does */
-    return STATUS_UNSUCCESSFUL;
+    return TRUE;
 }
 
 NTSTATUS
