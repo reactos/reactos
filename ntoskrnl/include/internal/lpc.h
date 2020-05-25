@@ -154,7 +154,7 @@ LpcpValidateClientPort(
 //
 // Global data inside the Process Manager
 //
-extern POBJECT_TYPE LpcPortObjectType;
+extern POBJECT_TYPE LpcPortObjectType, LpcWaitablePortObjectType;
 extern ULONG LpcpNextMessageId, LpcpNextCallbackId;
 extern KGUARDED_MUTEX LpcpLock;
 extern PAGED_LOOKASIDE_LIST LpcpMessagesLookaside;

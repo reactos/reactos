@@ -240,6 +240,20 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                                      PreviousMode,
                                      NULL,
                                      (PVOID*)&Port);
+
+    /* Try waitable port type when port type do not work */
+    if (Status == STATUS_OBJECT_TYPE_MISMATCH)
+    {
+        Status = ObReferenceObjectByName(PortName,
+                                         0,
+                                         NULL,
+                                         PORT_CONNECT,
+                                         LpcWaitablePortObjectType,
+                                         PreviousMode,
+                                         NULL,
+                                         (PVOID*)&Port);
+    }
+
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to reference port '%wZ': 0x%lx\n", PortName, Status);
@@ -392,7 +406,8 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         }
 
         /* Set the section offset */
-        SectionOffset.QuadPart = CapturedClientView.SectionOffset;
+        SectionOffset.LowPart = CapturedClientView.SectionOffset;
+        SectionOffset.HighPart = 0;
 
         /* Map it */
         Status = MmMapViewOfSection(SectionToMap,
@@ -733,6 +748,15 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     return Status;
 
 Failure:
+    if (KeReadStateSemaphore(&Thread->LpcReplySemaphore))
+    {
+        KeWaitForSingleObject(&Thread->LpcReplySemaphore,
+                              WrExecutive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+    }
+
     /* Check if we had a message and free it */
     if (Message) LpcpFreeToPortZone(Message, 0);
 

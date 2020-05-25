@@ -120,7 +120,6 @@ LpcpValidateClientPort(
 
 
 /* PUBLIC FUNCTIONS **********************************************************/
-
 NTSTATUS
 NTAPI
 NtImpersonateClientOfPort(IN HANDLE PortHandle,

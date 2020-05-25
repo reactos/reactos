@@ -37,10 +37,16 @@ LpcExitThread(IN PETHREAD Thread)
 
     /* Check if there's a reply message */
     Message = LpcpGetMessageFromThread(Thread);
-    if (Message)
+    if (Message != NULL)
     {
-        /* FIXME: TODO */
-        ASSERT(FALSE);
+        Thread->LpcReplyMessage = NULL;
+        if (Message->RepliedToThread != NULL)
+        {
+            ObDereferenceObject(Message->RepliedToThread);
+            Message->RepliedToThread = NULL;
+        }
+        LPCTRACE(LPC_CLOSE_DEBUG, "Cleanup Message %lx (%d) for Thread %lx allocated\n", Message, IsListEmpty(&Message->Entry), Thread);
+        LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
     }
 
     /* Release the lock */
@@ -82,7 +88,7 @@ LpcpFreeToPortZone(IN PLPCP_MESSAGE Message,
     }
 
     /* Check if this is a connection request */
-    if (Message->Request.u2.s2.Type == LPC_CONNECTION_REQUEST)
+    if ((Message->Request.u2.s2.Type & ~LPC_KERNELMODE_MESSAGE) == LPC_CONNECTION_REQUEST)
     {
         /* Get the connection message */
         ConnectMessage = (PLPCP_CONNECTION_MESSAGE)(Message + 1);
@@ -171,7 +177,7 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
             if (Message)
             {
                 /* Check if it's a connection request */
-                if (Message->Request.u2.s2.Type == LPC_CONNECTION_REQUEST)
+                if ((Message->Request.u2.s2.Type & ~LPC_KERNELMODE_MESSAGE) == LPC_CONNECTION_REQUEST)
                 {
                     /* Get the connection message */
                     ConnectMessage = (PLPCP_CONNECTION_MESSAGE)(Message + 1);
@@ -346,6 +352,7 @@ LpcpDeletePort(IN PVOID ObjectBody)
         ClientDiedMsg.h.u1.s1.TotalLength = sizeof(ClientDiedMsg);
         ClientDiedMsg.h.u1.s1.DataLength = sizeof(ClientDiedMsg.CreateTime);
         ClientDiedMsg.h.u2.ZeroInit = 0;
+        ClientDiedMsg.h.u2.s2.DataInfoOffset = 0;
         ClientDiedMsg.h.u2.s2.Type = LPC_PORT_CLOSED;
         ClientDiedMsg.CreateTime = PsGetCurrentProcess()->CreateTime;
 
@@ -423,6 +430,7 @@ LpcpDeletePort(IN PVOID ObjectBody)
                       (Message->SenderPort == Port->ConnectedPort) ||
                       (Message->SenderPort == ConnectionPort)))
             {
+                LPCTRACE(LPC_CLOSE_DEBUG, "%s Freeing DataInfo Message %lx (%u.%u) Port: %lx\n", PsGetCurrentProcess()->ImageFileName, Message, Message->Request.MessageId, Message->Request.CallbackId, ConnectionPort);
                 /* Remove it */
                 RemoveEntryList(&Message->Entry);
                 InitializeListHead(&Message->Entry);

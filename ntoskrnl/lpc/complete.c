@@ -53,6 +53,8 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     PLPCP_CONNECTION_MESSAGE ConnectMessage;
     PLPCP_MESSAGE Message;
     PVOID ClientSectionToMap = NULL;
+    PVOID SectionToMap = NULL;
+    SIZE_T ViewSize;
     HANDLE Handle;
     PEPROCESS ClientProcess;
     PETHREAD ClientThread;
@@ -160,7 +162,8 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     /* Make sure that the client wants a reply, and this is the right one */
     if (!(LpcpGetMessageFromThread(ClientThread)) ||
         !(CapturedReplyMessage.MessageId) ||
-        (ClientThread->LpcReplyMessageId != CapturedReplyMessage.MessageId))
+        (ClientThread->LpcReplyMessageId != CapturedReplyMessage.MessageId) ||
+        ((LpcpGetMessageFromThread(ClientThread)->Request.u2.s2.Type & ~LPC_KERNELMODE_MESSAGE) != LPC_CONNECTION_REQUEST))
     {
         /* Not the reply asked for, or no reply wanted, fail */
         KeReleaseGuardedMutex(&LpcpLock);
@@ -275,7 +278,8 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     if (ClientSectionToMap)
     {
         /* Setup the offset */
-        SectionOffset.QuadPart = ConnectMessage->ClientView.SectionOffset;
+        SectionOffset.LowPart = ConnectMessage->ClientView.SectionOffset;
+        SectionOffset.HighPart = 0;
 
         /* Map the section */
         Status = MmMapViewOfSection(ClientSectionToMap,
@@ -315,11 +319,85 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     }
 
     /* Check if there's a server section */
-    if (ServerView)
+    if (NT_SUCCESS(Status) && ServerView)
     {
-        /* FIXME: TODO */
-        UNREFERENCED_PARAMETER(CapturedServerView);
-        ASSERT(FALSE);
+        SectionOffset.LowPart = CapturedServerView.SectionOffset;
+        SectionOffset.HighPart = 0;
+
+        /* Map the section */
+        Status = ObReferenceObjectByHandle(CapturedServerView.SectionHandle,
+                                           SECTION_MAP_READ |
+                                           SECTION_MAP_WRITE,
+                                           MmSectionObjectType,
+                                           PreviousMode,
+                                           (PVOID *)&SectionToMap,
+                                           NULL);
+
+        if (NT_SUCCESS(Status))
+        {
+            Status = MmMapViewOfSection(SectionToMap,
+                                        PsGetCurrentProcess(),
+                                        &ServerPort->ServerSectionBase,
+                                        0,
+                                        0,
+                                        &SectionOffset,
+                                        &CapturedServerView.ViewSize,
+                                        ViewUnmap,
+                                        0,
+                                        PAGE_READWRITE);
+
+            if (NT_SUCCESS(Status))
+            {
+                /* Section mapped into server process */
+                if (ServerPort->MappingProcess == NULL)
+                {
+                    ServerPort->MappingProcess = PsGetCurrentProcess();
+                    ObReferenceObject(ServerPort->MappingProcess);
+                }
+                CapturedServerView.SectionOffset = SectionOffset.LowPart;
+                CapturedServerView.ViewBase = ServerPort->ServerSectionBase;
+
+                SectionOffset.LowPart = CapturedServerView.SectionOffset;
+                SectionOffset.HighPart = 0;
+
+                ViewSize = CapturedServerView.ViewSize;
+                Status = MmMapViewOfSection(SectionToMap,
+                                            ClientProcess,
+                                            &ClientPort->ServerSectionBase,
+                                            0,
+                                            0,
+                                            &SectionOffset,
+                                            &ViewSize,
+                                            ViewUnmap,
+                                            0,
+                                            PAGE_READWRITE);
+                if (NT_SUCCESS(Status))
+                {
+                    /* Section mapped to client process */
+                    if (ClientPort->MappingProcess == NULL)
+                    {
+                        ClientPort->MappingProcess = ClientProcess;
+                        ObReferenceObject(ClientProcess);
+                    }
+                    CapturedServerView.ViewRemoteBase = ClientPort->ServerSectionBase;
+                    ConnectMessage->ServerView.ViewBase = ClientPort->ServerSectionBase;
+                    ConnectMessage->ServerView.ViewSize = ViewSize;
+                }
+                else
+                {
+                    ObDereferenceObject(ServerPort);
+                }
+            }
+            else
+            {
+                ObDereferenceObject(ServerPort);
+            }
+            ObDereferenceObject(SectionToMap);
+        }
+        else
+        {
+            ObDereferenceObject(ServerPort);
+        }
     }
 
     /* Reference the server port until it's fully inserted */
@@ -467,6 +545,25 @@ NtCompleteConnectPort(IN HANDLE PortHandle)
         KeReleaseGuardedMutex(&LpcpLock);
         ObDereferenceObject(Port);
         return STATUS_SUCCESS;
+    }
+
+    /* Ensure client thread is on the reply chain */
+    if (Port->ConnectionPort)
+    {
+        PLIST_ENTRY Entry;
+        for (Entry = Port->ConnectionPort->LpcReplyChainHead.Flink; Entry != (PLIST_ENTRY)(&Port->ConnectionPort->LpcReplyChainHead.Flink); Entry = Entry->Flink)
+        {
+            if (Entry == ((PLIST_ENTRY)(&Thread->LpcReplyChain.Flink)))
+            {
+                break;
+            }
+        }
+        if (Entry != ((PLIST_ENTRY)(&Thread->LpcReplyChain.Flink)))
+        {
+            KeReleaseGuardedMutex(&LpcpLock);
+            ObDereferenceObject(Port);
+            return STATUS_SUCCESS;
+        }
     }
 
     /* Clear the client thread and wake it up */

@@ -94,18 +94,18 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
 
     /* Create the Object */
     Status = ObCreateObject(PreviousMode,
-                            LpcPortObjectType,
+                            Waitable ? LpcWaitablePortObjectType : LpcPortObjectType,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
-                            sizeof(LPCP_PORT_OBJECT),
+                            Waitable ? sizeof(LPCP_PORT_OBJECT) : FIELD_OFFSET(LPCP_PORT_OBJECT, WaitEvent),
                             0,
                             0,
                             (PVOID*)&Port);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Set up the Object */
-    RtlZeroMemory(Port, sizeof(LPCP_PORT_OBJECT));
+    RtlZeroMemory(Port, (Waitable ? sizeof(LPCP_PORT_OBJECT) : FIELD_OFFSET(LPCP_PORT_OBJECT, WaitEvent)));
     Port->ConnectionPort = Port;
     Port->Creator = PsGetCurrentThread()->Cid;
     InitializeListHead(&Port->LpcDataInfoChainHead);
@@ -173,6 +173,7 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
 
     /* Now set the custom setting */
     Port->MaxMessageLength = MaxMessageLength;
+    Port->MaxConnectionInfoLength = MaxConnectionInfoLength;
 
     /* Insert it now */
     Status = ObInsertObject(Port,
