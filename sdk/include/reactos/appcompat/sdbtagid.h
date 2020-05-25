@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     All tags
  * COPYRIGHT:   Copyright 2013 Mislav Blažević
- *              Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #ifndef SDBTAGID_H
@@ -186,6 +186,10 @@ extern "C" {
 #define TAG_CONTEXT (0x18 | TAG_TYPE_LIST)
 #define TAG_CONTEXT_REF (0x19 | TAG_TYPE_LIST)
 #define TAG_SPC (0x20 | TAG_TYPE_LIST)
+#define TAG_KDEVICE (0x1A | TAG_TYPE_LIST)
+#define TAG_KDRIVER (0x1C | TAG_TYPE_LIST)
+#define TAG_KSHIM (0x25 | TAG_TYPE_LIST)
+#define TAG_KSHIM_REF (0x26 | TAG_TYPE_LIST)
 #define TAG_STRINGTABLE (0x801 | TAG_TYPE_LIST)
 #define TAG_INDEXES (0x802 | TAG_TYPE_LIST)
 #define TAG_INDEX (0x803 | TAG_TYPE_LIST)
