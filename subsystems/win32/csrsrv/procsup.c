@@ -873,6 +873,12 @@ CsrGetProcessLuid(IN HANDLE hProcess OPTIONAL,
                                      NULL,
                                      0,
                                      &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Close the token and fail */
+        NtClose(hToken);
+        return Status;
+    }
 
     /* Allocate memory for the Token Info */
     if (!(TokenStats = RtlAllocateHeap(CsrHeap, 0, Length)))
