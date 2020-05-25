@@ -74,12 +74,18 @@ CsrSetProcessSecurity(VOID)
     if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* Get the Token User Length */
-    NtQueryInformationToken(hToken, TokenUser, NULL, 0, &Length);
+    Status = NtQueryInformationToken(hToken, TokenUser, NULL, 0, &Length);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        NtClose(hToken);
+        goto Quickie;
+    }
 
     /* Allocate space for it */
     TokenInfo = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, Length);
     if (!TokenInfo)
     {
+        NtClose(hToken);
         Status = STATUS_NO_MEMORY;
         goto Quickie;
     }
@@ -153,7 +159,7 @@ CsrSetProcessSecurity(VOID)
     /* Free the memory and return */
 Quickie:
     if (ProcSd) RtlFreeHeap(CsrHeap, 0, ProcSd);
-    RtlFreeHeap(CsrHeap, 0, TokenInfo);
+    if (TokenInfo) RtlFreeHeap(CsrHeap, 0, TokenInfo);
     return Status;
 }
 
