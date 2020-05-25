@@ -3492,7 +3492,7 @@ ReadTokenSid:
                                      NULL,
                                      0,
                                      &RequiredLength);
-    if (!NT_SUCCESS(Status) && (Status != STATUS_BUFFER_TOO_SMALL))
+    if (Status != STATUS_BUFFER_TOO_SMALL)
     {
         /* NOTE - as opposed to all other registry functions windows does indeed
                   change the last error code in case the caller supplied a invalid
