@@ -42,7 +42,7 @@ SPOOLER_HANDLE, *PSPOOLER_HANDLE;
 extern HANDLE hProcessHeap;
 
 // utils.c
-extern BOOL UnicodeToAnsiInPlace(PWSTR pwszField);
+DWORD UnicodeToAnsiInPlace(PWSTR pwszField);
 
 // devmode.c
 extern void RosConvertAnsiDevModeToUnicodeDevmode(PDEVMODEA pDevModeInput, PDEVMODEW pDevModeOutput);

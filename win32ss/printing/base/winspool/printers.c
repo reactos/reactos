@@ -472,7 +472,6 @@ BOOL WINAPI
 EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;
-    BOOL bResult;
     DWORD cch;
     PWSTR pwszName = NULL;
     PSTR pszPrinterName = NULL;
@@ -525,8 +524,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
     }
  
     /* Ref: https://stackoverflow.com/questions/41147180/why-enumprintersa-and-enumprintersw-request-the-same-amount-of-memory */
-    bResult = EnumPrintersW(Flags, pwszName, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
-    if (!bResult)
+    if (!EnumPrintersW(Flags, pwszName, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned))
     {
         dwErrorCode = GetLastError();
         goto Cleanup;
@@ -1118,7 +1116,6 @@ BOOL WINAPI
 GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded)
 {
     DWORD dwErrorCode;
-    BOOL bResult;
     PPRINTER_INFO_1A ppi1a = (PPRINTER_INFO_1A)pPrinter;
     PPRINTER_INFO_1W ppi1w = (PPRINTER_INFO_1W)pPrinter;
     PPRINTER_INFO_2A ppi2a = (PPRINTER_INFO_2A)pPrinter;
@@ -1141,8 +1138,7 @@ GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD 
         goto Cleanup;
     }
 
-    bResult = GetPrinterW(hPrinter, Level, pPrinter, cbBuf, pcbNeeded);
-    if (!bResult)
+    if (!GetPrinterW(hPrinter, Level, pPrinter, cbBuf, pcbNeeded))
     {
         dwErrorCode = GetLastError();
         goto Cleanup;
@@ -1580,6 +1576,7 @@ Cleanup:
 BOOL WINAPI
 GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded)
 {   
+    DWORD dwErrorCode;
     /*
      * We are mapping multiple different pointers to the same pDriverInfo pointer here so that
      * we can use the same incoming pointer for different Levels
@@ -1591,7 +1588,6 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
     PDRIVER_INFO_5W pdi5w = (PDRIVER_INFO_5W)pDriverInfo;
     PDRIVER_INFO_6W pdi6w = (PDRIVER_INFO_6W)pDriverInfo;
 
-    BOOL bReturnValue = FALSE;
     DWORD cch;
     PWSTR pwszEnvironment = NULL;
 
@@ -1600,9 +1596,9 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
     // Check for invalid levels here for early error return. Should be 1-6.
     if (Level <  1 || Level > 6)
     {
-        SetLastError(ERROR_INVALID_LEVEL);
+        dwErrorCode = ERROR_INVALID_LEVEL;
         ERR("Invalid Level!\n");
-        goto Exit;
+        goto Cleanup;
     }
 
     if (pEnvironment)
@@ -1613,26 +1609,18 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
         pwszEnvironment = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!pwszEnvironment)
         {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             ERR("HeapAlloc failed!\n");
-            goto Exit;
+            goto Cleanup;
         }
 
         MultiByteToWideChar(CP_ACP, 0, pEnvironment, -1, pwszEnvironment, cch + 1);
     }
 
-    bReturnValue = GetPrinterDriverW(hPrinter, pwszEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
-    TRACE("*pcbNeeded is '%d' and bReturnValue is '%d' and GetLastError is '%ld'.\n", *pcbNeeded, bReturnValue, GetLastError());
-
-    if (pwszEnvironment)
+    if (!GetPrinterDriverW(hPrinter, pwszEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded))
     {
-        HeapFree(hProcessHeap, 0, pwszEnvironment);
-    }
-
-    if (!bReturnValue)
-    {
-        TRACE("GetPrinterDriverW failed!\n");
-        goto Exit;
+        dwErrorCode = GetLastError();
+        goto Cleanup;
     }
 
     // Do Unicode to ANSI conversions for strings based on Level
@@ -1640,170 +1628,307 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
     {
         case 1:
         {
-            if (!UnicodeToAnsiInPlace(pdi1w->pName))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi1w->pName);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
             break;
         }
 
         case 2:
         {
-            if (!UnicodeToAnsiInPlace(pdi2w->pName))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi2w->pName);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi2w->pEnvironment))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi2w->pEnvironment);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi2w->pDriverPath))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi2w->pDriverPath);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi2w->pDataFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi2w->pDataFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi2w->pConfigFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi2w->pConfigFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
             break;
         }
 
         case 3:
         {
-            if (!UnicodeToAnsiInPlace(pdi3w->pName))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi3w->pName);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi3w->pEnvironment))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi3w->pEnvironment);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi3w->pDriverPath))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi3w->pDriverPath);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi3w->pDataFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi3w->pDataFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi3w->pConfigFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi3w->pConfigFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi3w->pHelpFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi3w->pHelpFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi3w->pDependentFiles))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi3w->pDependentFiles);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi3w->pMonitorName))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi3w->pMonitorName);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
  
-            if (!UnicodeToAnsiInPlace(pdi3w->pDefaultDataType))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi3w->pDefaultDataType);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
             break;
         }
 
         case 4:
         {
-            if (!UnicodeToAnsiInPlace(pdi4w->pName))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi4w->pName);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi4w->pEnvironment))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi4w->pEnvironment);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi4w->pDriverPath))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi4w->pDriverPath);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi4w->pDataFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi4w->pDataFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi4w->pConfigFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi4w->pConfigFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi4w->pHelpFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi4w->pHelpFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi4w->pDependentFiles))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi4w->pDependentFiles);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi4w->pMonitorName))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi4w->pMonitorName);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
  
-            if (!UnicodeToAnsiInPlace(pdi4w->pDefaultDataType))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi4w->pDefaultDataType);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi4w->pszzPreviousNames))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi4w->pszzPreviousNames);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
             break;
         }
 
         case 5:
         {
-            if (!UnicodeToAnsiInPlace(pdi5w->pName))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi5w->pName);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi5w->pEnvironment))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi5w->pEnvironment);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi5w->pDriverPath))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi5w->pDriverPath);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi5w->pDataFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi5w->pDataFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi5w->pConfigFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi5w->pConfigFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
             break;
         }
 
         case 6:
         {
-            if (!UnicodeToAnsiInPlace(pdi6w->pName))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pName);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pEnvironment))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pEnvironment);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pDriverPath))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pDriverPath);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pDataFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pDataFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pConfigFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pConfigFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pHelpFile))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pHelpFile);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pDependentFiles))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pDependentFiles);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pMonitorName))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pMonitorName);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
  
-            if (!UnicodeToAnsiInPlace(pdi6w->pDefaultDataType))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pDefaultDataType);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pszzPreviousNames))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pszzPreviousNames);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pszMfgName))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pszMfgName);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pszOEMUrl))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pszOEMUrl);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pszHardwareID))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pszHardwareID);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
 
-            if (!UnicodeToAnsiInPlace(pdi6w->pszProvider))
-                goto Exit;
+            dwErrorCode = UnicodeToAnsiInPlace(pdi6w->pszProvider);
+            if (dwErrorCode != ERROR_SUCCESS)
+            {
+                goto Cleanup;
+            }
         }
     }
 
-    bReturnValue = TRUE;
+    dwErrorCode = ERROR_SUCCESS;
 
-Exit:
+Cleanup:
+    if (pwszEnvironment)
+    {
+        HeapFree(hProcessHeap, 0, pwszEnvironment);
+    }
 
-    return bReturnValue;
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI

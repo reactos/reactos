@@ -7,16 +7,16 @@
 
 #include "precomp.h"
 
-BOOL UnicodeToAnsiInPlace(PWSTR pwszField)
+/*
+ * Converts an incoming Unicode string to an ANSI string.
+ * It is only useful for "in-place" conversions where the ANSI string goes
+ * back into the same place where the Unicode string came into this function.
+ *
+ * It returns an error code.
+ */
+// TODO: It seems that many of the functions involving printing could use this.
+DWORD UnicodeToAnsiInPlace(PWSTR pwszField)
 {
-    /*
-     * This converts an incoming Unicode string to an ANSI string.
-     * It returns FALSE on failure, otherwise it returns TRUE.
-     * It is only useful for "in-place" conversions where the ANSI string goes
-     * back into the same place where the Unicode string came into this function.
-     * It seems that many of the functions involving printing can use this.
-     */
-
     PSTR pszTemp;
     DWORD cch;
 
@@ -29,21 +29,20 @@ BOOL UnicodeToAnsiInPlace(PWSTR pwszField)
 
     if (!pwszField)
     {
-        return TRUE;
+        return ERROR_SUCCESS;
     }
 
     cch = wcslen(pwszField);
     if (cch == 0)
     {
-        return TRUE;
+        return ERROR_SUCCESS;
     }
 
     pszTemp = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
-    if (!pszField)
+    if (!pszTemp)
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         ERR("HeapAlloc failed!\n");
-        return FALSE;   // indicates a failure to be handled by caller
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
 
     WideCharToMultiByte(CP_ACP, 0, pwszField, -1, pszTemp, cch + 1, NULL, NULL);
@@ -51,5 +50,5 @@ BOOL UnicodeToAnsiInPlace(PWSTR pwszField)
 
     HeapFree(hProcessHeap, 0, pszTemp);
 
-    return TRUE;
+    return ERROR_SUCCESS;
 }
