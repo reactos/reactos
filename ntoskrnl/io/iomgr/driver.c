@@ -896,6 +896,8 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     }
     ASSERT(NextEntry != &PsLoadedModuleList);
 
+    KseDriverLoadImage(LdrEntry);
+
     /*
      * Initialize the driver
      */
@@ -1658,6 +1660,7 @@ try_again:
         /* Returns to caller the object */
         *pDriverObject = DriverObject;
     }
+    KseShimDriverIoCallbacks(DriverObject);
 
     /* We're going to say if we don't have any DOs from DriverEntry, then we're not legacy.
      * Other parts of the I/O manager depend on this behavior */

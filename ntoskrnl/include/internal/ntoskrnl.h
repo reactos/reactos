@@ -80,6 +80,7 @@
 #include "hdl.h"
 #include "arch/intrin_i.h"
 #include <arbiter.h>
+#include "kse.h"
 
 /*
  * generic information class probing code

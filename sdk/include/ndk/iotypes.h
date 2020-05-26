@@ -935,6 +935,13 @@ typedef struct _EXTENDED_DRIVER_EXTENSION
     UNICODE_STRING ServiceKeyName;
     PIO_CLIENT_EXTENSION ClientDriverExtension;
     PFS_FILTER_CALLBACKS FsFilterCallbacks;
+
+    // Since 8
+    PVOID KseCallbacks;
+    PVOID DvCallbacks;
+
+    // Since 8.1
+    PVOID VerifierContext;
 } EXTENDED_DRIVER_EXTENSION, *PEXTENDED_DRIVER_EXTENSION;
 
 #endif // !NTOS_MODE_USER
