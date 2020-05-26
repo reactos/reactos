@@ -78,6 +78,7 @@
 #include "icif.h"
 #include "arch/intrin_i.h"
 #include <arbiter.h>
+#include "kse.h"
 
 /*
  * Use IsPointerOffset to test whether a pointer should be interpreted as an offset
