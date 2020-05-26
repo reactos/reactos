@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -34,9 +32,9 @@
 #include "winuser.h"
 #include "shlobj.h"
 #include "propvarutil.h"
+#include "strsafe.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(propsys);
 
@@ -123,10 +121,16 @@ static HRESULT PROPVAR_ConvertNumber(REFPROPVARIANT pv, int dest_bits,
     case VT_BSTR:
     {
         WCHAR *end;
-        *res = strtolW(pv->u.pwszVal, &end, 0);
+        *res = wcstol(pv->u.pwszVal, &end, 0);
         if (pv->u.pwszVal == end)
             return DISP_E_TYPEMISMATCH;
         src_signed = *res < 0;
+        break;
+    }
+    case VT_R8:
+    {
+        src_signed = TRUE;
+        *res = pv->u.dblVal;
         break;
     }
     default:
@@ -153,6 +157,18 @@ static HRESULT PROPVAR_ConvertNumber(REFPROPVARIANT pv, int dest_bits,
     }
 
     return S_OK;
+}
+
+HRESULT WINAPI PropVariantToDouble(REFPROPVARIANT propvarIn, double *ret)
+{
+    LONGLONG res;
+    HRESULT hr;
+
+    TRACE("(%p, %p)\n", propvarIn, ret);
+
+    hr = PROPVAR_ConvertNumber(propvarIn, 64, TRUE, &res);
+    if (SUCCEEDED(hr)) *ret = (double)res;
+    return hr;
 }
 
 HRESULT WINAPI PropVariantToInt16(REFPROPVARIANT propvarIn, SHORT *ret)
@@ -187,7 +203,7 @@ HRESULT WINAPI PropVariantToInt64(REFPROPVARIANT propvarIn, LONGLONG *ret)
     TRACE("%p,%p\n", propvarIn, ret);
 
     hr = PROPVAR_ConvertNumber(propvarIn, 64, TRUE, &res);
-    if (SUCCEEDED(hr)) *ret = (LONGLONG)res;
+    if (SUCCEEDED(hr)) *ret = res;
     return hr;
 }
 
@@ -287,6 +303,56 @@ HRESULT WINAPI PropVariantToBoolean(REFPROPVARIANT propvarIn, BOOL *ret)
     return hr;
 }
 
+HRESULT WINAPI PropVariantToBuffer(REFPROPVARIANT propvarIn, void *ret, UINT cb)
+{
+    HRESULT hr = S_OK;
+
+    TRACE("(%p, %p, %d)\n", propvarIn, ret, cb);
+
+    switch(propvarIn->vt)
+    {
+        case VT_VECTOR|VT_UI1:
+            if(cb > propvarIn->u.caub.cElems)
+                return E_FAIL;
+            memcpy(ret, propvarIn->u.caub.pElems, cb);
+            break;
+        case VT_ARRAY|VT_UI1:
+            FIXME("Unsupported type: VT_ARRAY|VT_UI1\n");
+            hr = E_NOTIMPL;
+            break;
+        default:
+            WARN("Unexpected type: %x\n", propvarIn->vt);
+            hr = E_INVALIDARG;
+    }
+
+    return hr;
+}
+
+
+HRESULT WINAPI PropVariantToString(REFPROPVARIANT propvarIn, PWSTR ret, UINT cch)
+{
+    HRESULT hr;
+    WCHAR *stringW = NULL;
+
+    TRACE("(%p, %p, %d)\n", propvarIn, ret, cch);
+
+    ret[0] = '\0';
+
+    if(!cch)
+        return E_INVALIDARG;
+
+    hr = PropVariantToStringAlloc(propvarIn, &stringW);
+    if(SUCCEEDED(hr))
+    {
+        if(lstrlenW(stringW) >= cch)
+            hr = STRSAFE_E_INSUFFICIENT_BUFFER;
+        lstrcpynW(ret, stringW, cch);
+        CoTaskMemFree(stringW);
+    }
+
+    return hr;
+}
+
 HRESULT WINAPI PropVariantToStringAlloc(REFPROPVARIANT propvarIn, WCHAR **ret)
 {
     WCHAR *res = NULL;
@@ -296,6 +362,7 @@ HRESULT WINAPI PropVariantToStringAlloc(REFPROPVARIANT propvarIn, WCHAR **ret)
 
     switch(propvarIn->vt)
     {
+        case VT_EMPTY:
         case VT_NULL:
             res = CoTaskMemAlloc(1*sizeof(WCHAR));
             res[0] = '\0';
@@ -517,7 +584,7 @@ static void PROPVAR_GUIDToWSTR(REFGUID guid, WCHAR *str)
         '-','%','0','2','X','%','0','2','X','-','%','0','2','X','%','0','2','X','%','0','2','X',
         '%','0','2','X','%','0','2','X','%','0','2','X','}',0};
 
-    sprintfW(str, format, guid->Data1, guid->Data2, guid->Data3,
+    swprintf(str, format, guid->Data1, guid->Data2, guid->Data3,
             guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
             guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
 }
@@ -694,7 +761,10 @@ HRESULT WINAPI PropVariantToGUID(const PROPVARIANT *ppropvar, GUID *guid)
     case VT_BSTR:
         return PROPVAR_WCHARToGUID(ppropvar->u.bstrVal, SysStringLen(ppropvar->u.bstrVal), guid);
     case VT_LPWSTR:
-        return PROPVAR_WCHARToGUID(ppropvar->u.pwszVal, strlenW(ppropvar->u.pwszVal), guid);
+        return PROPVAR_WCHARToGUID(ppropvar->u.pwszVal, lstrlenW(ppropvar->u.pwszVal), guid);
+    case VT_CLSID:
+        memcpy(guid, ppropvar->u.puuid, sizeof(*ppropvar->u.puuid));
+        return S_OK;
 
     default:
         FIXME("unsupported vt: %d\n", ppropvar->vt);
@@ -734,6 +804,9 @@ static BOOL isemptyornull(const PROPVARIANT *propvar)
         }
         return i == propvar->u.parray->cDims;
     }
+    if (propvar->vt == VT_CLSID)
+        return !propvar->u.puuid;
+
     /* FIXME: vectors, byrefs, errors? */
     return FALSE;
 }
@@ -770,7 +843,7 @@ INT WINAPI PropVariantCompareEx(REFPROPVARIANT propvar1, REFPROPVARIANT propvar2
     else
         propvar2_converted = propvar2;
 
-#define CMP_INT_VALUE(var) do { \
+#define CMP_NUM_VALUE(var) do { \
     if (propvar1->u.var > propvar2_converted->u.var) \
         res = 1; \
     else if (propvar1->u.var < propvar2_converted->u.var) \
@@ -782,28 +855,34 @@ INT WINAPI PropVariantCompareEx(REFPROPVARIANT propvar1, REFPROPVARIANT propvar2
     switch (propvar1->vt)
     {
     case VT_I1:
-        CMP_INT_VALUE(cVal);
+        CMP_NUM_VALUE(cVal);
         break;
     case VT_UI1:
-        CMP_INT_VALUE(bVal);
+        CMP_NUM_VALUE(bVal);
         break;
     case VT_I2:
-        CMP_INT_VALUE(iVal);
+        CMP_NUM_VALUE(iVal);
         break;
     case VT_UI2:
-        CMP_INT_VALUE(uiVal);
+        CMP_NUM_VALUE(uiVal);
         break;
     case VT_I4:
-        CMP_INT_VALUE(lVal);
+        CMP_NUM_VALUE(lVal);
         break;
     case VT_UI4:
-        CMP_INT_VALUE(uiVal);
+        CMP_NUM_VALUE(uiVal);
         break;
     case VT_I8:
-        CMP_INT_VALUE(hVal.QuadPart);
+        CMP_NUM_VALUE(hVal.QuadPart);
         break;
     case VT_UI8:
-        CMP_INT_VALUE(uhVal.QuadPart);
+        CMP_NUM_VALUE(uhVal.QuadPart);
+        break;
+    case VT_R4:
+        CMP_NUM_VALUE(fltVal);
+        break;
+    case VT_R8:
+        CMP_NUM_VALUE(dblVal);
         break;
     case VT_BSTR:
     case VT_LPWSTR:
@@ -820,8 +899,12 @@ INT WINAPI PropVariantCompareEx(REFPROPVARIANT propvar1, REFPROPVARIANT propvar2
         else
             res = lstrcmpA(propvar1->u.pszVal, propvar2_converted->u.pszVal);
         break;
+    case VT_CLSID:
+        res = memcmp(propvar1->u.puuid, propvar2->u.puuid, sizeof(*propvar1->u.puuid));
+        if (res) res = res > 0 ? 1 : -1;
+        break;
     default:
-        FIXME("vartype %d not handled\n", propvar1->vt);
+        FIXME("vartype %#x not handled\n", propvar1->vt);
         res = -1;
         break;
     }

@@ -34,6 +34,7 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "commctrl.h"
+#include "windowsx.h"
 
 extern HMODULE COMCTL32_hModule DECLSPEC_HIDDEN;
 extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;

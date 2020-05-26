@@ -46,7 +46,6 @@
 #include "avifile_private.h"
 #include "extrachunk.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(avifile);
@@ -625,7 +624,7 @@ static HRESULT WINAPI IPersistFile_fnGetCurFile(IPersistFile *iface, LPOLESTR *p
     if (*ppszFileName == NULL)
       return AVIERR_MEMORY;
 
-    strcpyW(*ppszFileName, This->szFileName);
+    lstrcpyW(*ppszFileName, This->szFileName);
   }
 
   return AVIERR_OK;

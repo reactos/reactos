@@ -174,7 +174,7 @@ BEGIN
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
     PUSHBUTTON "&Akhiri Proses", IDC_ENDPROCESS, 171, 189, 69, 14
     CONTROL "&Tunjukkan proses dari semua pengguna", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 111, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 138, 10
 END
 
 /* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
@@ -284,40 +284,40 @@ BEGIN
     CONTROL "CPU 31", IDC_CPU31, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 119, 41, 10
 END
 
-IDD_COLUMNS_DIALOG DIALOGEX 0, 0, 195, 199
+IDD_COLUMNS_DIALOG DIALOGEX 0, 0, 210, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Pilih Kolom"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 84, 178, 50, 14
-    PUSHBUTTON "Batal", IDCANCEL, 138, 178, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 99, 178, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 153, 178, 50, 14
     LTEXT "Pilih kolom yang akan muncul di halaman Proses pada Task Manager.", IDC_STATIC, 7, 7, 181, 17
-    CONTROL "Nama C&itra", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10
-    CONTROL "&PID (Process Identifier)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 88, 10
-    CONTROL "Pemakaian &CPU", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 53, 10
-    CONTROL "&Waktu CPU", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 48, 10
-    CONTROL "Penggunaan &Memori", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 63, 10
-    CONTROL "Penggunaan Memori &Delta", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 82, 10
-    CONTROL "Punca&k Penggunaan Memori", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 82, 10
-    CONTROL "K&esalahan Halaman", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 53, 10
+    CONTROL "Nama C&itra", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 100, 10
+    CONTROL "&PID (Process Identifier)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 100, 10
+    CONTROL "Pemakaian &CPU", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 100, 10
+    CONTROL "&Waktu CPU", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 100, 10
+    CONTROL "Penggunaan &Memori", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 100, 10
+    CONTROL "Penggunaan Memori &Delta", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 100, 10
+    CONTROL "Punca&k Penggunaan Memori", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 100, 10
+    CONTROL "K&esalahan Halaman", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 100, 10
     CONTROL "Obyek Pengg&una", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 62, 10
-    CONTROL "I/O Baca", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 49, 10
+    CONTROL "I/O Baca", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 100, 10
     CONTROL "I/O Byte Baca", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 65, 10
-    CONTROL "&Sesi ID", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 50, 10
-    CONTROL "&Nama Pengguna", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 51, 10
-    CONTROL "Kes&alahan Halaman Delta", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 28, 72, 10
-    CONTROL "Ukuran Memori Ma&ya", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 39, 77, 10
-    CONTROL "Pa&ged Pool", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 50, 53, 10
-    CONTROL "N&on-paged Pool", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 61, 67, 10
-    CONTROL "P&rioritas Dasar", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 72, 55, 10
-    CONTROL "&Jumlah Tuas", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 83, 59, 10
-    CONTROL "&Jumlah U&tas", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 94, 59, 10
-    CONTROL "Obyek GDI", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 105, 55, 10
-    CONTROL "I/O Tulis", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 116, 49, 10
-    CONTROL "I/O Byte Tulis", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
-    CONTROL "I/O Lainnya", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
-    CONTROL "I/O Byte Lainnya", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
-    CONTROL "&Baris Perintah", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
+    CONTROL "&Sesi ID", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 100, 10
+    CONTROL "&Nama Pengguna", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 100, 10
+    CONTROL "Kes&alahan Halaman Delta", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 28, 95, 10
+    CONTROL "Ukuran Memori Ma&ya", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 39, 95, 10
+    CONTROL "Pa&ged Pool", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 50, 95, 10
+    CONTROL "N&on-paged Pool", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 61, 95, 10
+    CONTROL "P&rioritas Dasar", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 72, 95, 10
+    CONTROL "&Jumlah Tuas", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 83, 95, 10
+    CONTROL "&Jumlah U&tas", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 94, 95, 10
+    CONTROL "Obyek GDI", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 105, 95, 10
+    CONTROL "I/O Tulis", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 116, 95, 10
+    CONTROL "I/O Byte Tulis", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 127, 95, 10
+    CONTROL "I/O Lainnya", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 138, 95, 10
+    CONTROL "I/O Byte Lainnya", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 149, 95, 10
+    CONTROL "&Baris Perintah", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 110, 160, 95, 10
 END
 
 /* String Tables */
@@ -366,19 +366,19 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_ENDTASK "Tells the selected tasks to close"
-    ID_GOTOPROCESS "Switches the focus to the process of the selected task"
-    ID_RESTORE "Restores the Task Manager from its hidden state"
-    ID_PROCESS_PAGE_ENDPROCESS "Removes the process from the system"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Removes this process and all descendants from the system"
-    ID_PROCESS_PAGE_DEBUG "Attaches the debugger to this process"
-    ID_PROCESS_PAGE_SETAFFINITY "Controls which processors the process will be allowed to run on"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Sets process to the REALTIME priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Sets process to the HIGH priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Sets process to the ABOVE NORMAL priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Sets process to the NORMAL priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Sets process to the BELOW NORMAL priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Sets process to the LOW priority class"
+    ID_ENDTASK "Memberitahu tugas terpilih untuk tutup"
+    ID_GOTOPROCESS "Beralih fokus proses ke tugas terpilih"
+    ID_RESTORE "Mengembalikan Manajer Tugas dari persembunyiannya"
+    ID_PROCESS_PAGE_ENDPROCESS "Menghapus suatu proses dari sistem"
+    ID_PROCESS_PAGE_ENDPROCESSTREE "Menghapus suatu proses beserta turunannya dari sistem"
+    ID_PROCESS_PAGE_DEBUG "Melampirkan debugger ke proses ini"
+    ID_PROCESS_PAGE_SETAFFINITY "Mengatur prosesor mana yang diizinkan untuk menjalankan suatu proses"
+    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Menyetel proses ke kelas prioritas WAKTU NYATA"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Menyetel proses ke kelas prioritas TINGGI"
+    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Menyetel proses ke kelas prioritas DI ATAS NORMAL"
+    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Menyetel proses ke kelas prioritas NORMAL"
+    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Menyetel proses ke kelas prioritas DI BAWAH NORMAL"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "Menyetel proses ke kelas prioritas RENDAH"
 END
 
 STRINGTABLE

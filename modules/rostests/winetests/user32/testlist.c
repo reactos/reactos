@@ -32,6 +32,7 @@ extern void func_msg_controls(void);
 extern void func_msg_layered_window(void);
 extern void func_msg_dialog(void);
 extern void func_msg_clipboard(void);
+extern void func_rawinput(void);
 extern void func_resource(void);
 extern void func_scroll(void);
 extern void func_static(void);
@@ -72,6 +73,7 @@ const struct test winetest_testlist[] =
     { "msg_layered_window", func_msg_layered_window},
     { "msg_dialog", func_msg_dialog},
     { "msg_clipboard", func_msg_clipboard},
+    { "rawinput", func_rawinput },
     { "resource", func_resource },
     { "scroll", func_scroll },
     { "static", func_static },

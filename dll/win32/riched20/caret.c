@@ -122,8 +122,14 @@ int ME_GetTextLengthEx(ME_TextEditor *editor, const GETTEXTLENGTHEX *how)
   return length; 
 }
 
-
-int ME_SetSelection(ME_TextEditor *editor, int from, int to)
+/******************************************************************
+ *    set_selection_cursors
+ *
+ * Updates the selection cursors.
+ *
+ * Note that this does not invalidate either the old or the new selections.
+ */
+int set_selection_cursors(ME_TextEditor *editor, int from, int to)
 {
   int selectionEnd = 0;
   const int len = ME_GetTextLength(editor);
@@ -139,7 +145,6 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
   {
     ME_SetCursorToStart(editor, &editor->pCursors[1]);
     ME_SetCursorToEnd(editor, &editor->pCursors[0], TRUE);
-    ME_InvalidateSelection(editor);
     return len + 1;
   }
 
@@ -165,7 +170,6 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
               end --;
           }
           editor->pCursors[1] = editor->pCursors[0];
-          ME_Repaint(editor);
       }
       return end;
     }
@@ -194,7 +198,6 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
   {
     ME_SetCursorToEnd(editor, &editor->pCursors[0], FALSE);
     editor->pCursors[1] = editor->pCursors[0];
-    ME_InvalidateSelection(editor);
     return len;
   }
 
@@ -266,36 +269,47 @@ void ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
   return;
 }
 
-
-void
-ME_MoveCaret(ME_TextEditor *editor)
+void create_caret(ME_TextEditor *editor)
 {
   int x, y, height;
 
   ME_GetCursorCoordinates(editor, &editor->pCursors[0], &x, &y, &height);
-  if(editor->bHaveFocus && !ME_IsSelection(editor))
+  ITextHost_TxCreateCaret(editor->texthost, NULL, 0, height);
+  editor->caret_height = height;
+  editor->caret_hidden = TRUE;
+}
+
+void show_caret(ME_TextEditor *editor)
+{
+  ITextHost_TxShowCaret(editor->texthost, TRUE);
+  editor->caret_hidden = FALSE;
+}
+
+void hide_caret(ME_TextEditor *editor)
+{
+  /* calls to HideCaret are cumulative; do so only once */
+  if (!editor->caret_hidden)
   {
+    ITextHost_TxShowCaret(editor->texthost, FALSE);
+    editor->caret_hidden = TRUE;
+  }
+}
+
+void update_caret(ME_TextEditor *editor)
+{
+  int x, y, height;
+
+  if (!editor->bHaveFocus) return;
+  if (!ME_IsSelection(editor))
+  {
+    ME_GetCursorCoordinates(editor, &editor->pCursors[0], &x, &y, &height);
+    if (height != editor->caret_height) create_caret(editor);
     x = min(x, editor->rcFormat.right-1);
-    ITextHost_TxCreateCaret(editor->texthost, NULL, 0, height);
     ITextHost_TxSetCaretPos(editor->texthost, x, y);
+    show_caret(editor);
   }
-}
-
-
-void ME_ShowCaret(ME_TextEditor *ed)
-{
-  ME_MoveCaret(ed);
-  if(ed->bHaveFocus && !ME_IsSelection(ed))
-    ITextHost_TxShowCaret(ed->texthost, TRUE);
-}
-
-void ME_HideCaret(ME_TextEditor *ed)
-{
-  if(!ed->bHaveFocus || ME_IsSelection(ed))
-  {
-    ITextHost_TxShowCaret(ed->texthost, FALSE);
-    DestroyCaret();
-  }
+  else
+    hide_caret(editor);
 }
 
 BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start,
@@ -1200,8 +1214,7 @@ void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum)
     }
   }
   ME_InvalidateSelection(editor);
-  ITextHost_TxShowCaret(editor->texthost, FALSE);
-  ME_ShowCaret(editor);
+  update_caret(editor);
   ME_SendSelChange(editor);
 }
 
@@ -1233,8 +1246,7 @@ void ME_MouseMove(ME_TextEditor *editor, int x, int y)
   }
 
   ME_InvalidateSelection(editor);
-  ITextHost_TxShowCaret(editor->texthost, FALSE);
-  ME_ShowCaret(editor);
+  update_caret(editor);
   ME_SendSelChange(editor);
 }
 
@@ -1627,9 +1639,9 @@ ME_ArrowKey(ME_TextEditor *editor, int nVKey, BOOL extend, BOOL ctrl)
 
   ME_InvalidateSelection(editor);
   ME_Repaint(editor);
-  ITextHost_TxShowCaret(editor->texthost, FALSE);
+  hide_caret(editor);
   ME_EnsureVisible(editor, &tmp_curs);
-  ME_ShowCaret(editor);
+  update_caret(editor);
   ME_SendSelChange(editor);
   return success;
 }

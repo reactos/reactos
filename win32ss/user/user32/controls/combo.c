@@ -2052,6 +2052,21 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPAR
                 if (GET_WHEEL_DELTA_WPARAM(wParam) < 0) return SendMessageW(hwnd, WM_KEYDOWN, VK_DOWN, 0);
                 return TRUE;
 
+        case WM_CTLCOLOR:
+        case WM_CTLCOLORMSGBOX:
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORLISTBOX:
+        case WM_CTLCOLORBTN:
+        case WM_CTLCOLORDLG:
+        case WM_CTLCOLORSCROLLBAR:
+        case WM_CTLCOLORSTATIC:
+#ifdef __REACTOS__
+            if ( pWnd && !(pWnd->state2 & WNDS2_WIN40COMPAT) ) break; // Must be Win 4.0 and above.
+#endif
+            if (lphc->owner)
+                return SendMessageW(lphc->owner, message, wParam, lParam);
+	    break;
+
 	/* Combo messages */
 
 	case CB_ADDSTRING:

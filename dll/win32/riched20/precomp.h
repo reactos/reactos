@@ -2,8 +2,6 @@
 #ifndef _RICHED20_PRECOMP_H
 #define _RICHED20_PRECOMP_H
 
-#include <wine/config.h>
-
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H

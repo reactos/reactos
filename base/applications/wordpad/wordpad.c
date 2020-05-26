@@ -3,6 +3,7 @@
  *
  * Copyright 2004 by Krzysztof Foltman
  * Copyright 2007-2008 by Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2020 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,7 +21,6 @@
  */
 
 #define WIN32_LEAN_AND_MEAN
-#define _WIN32_IE 0x0400
 
 #include <stdio.h>
 #include <assert.h>
@@ -32,6 +32,7 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <shellapi.h>
+#include <shlobj.h>
 #include <wine/unicode.h>
 
 #include "wordpad.h"
@@ -811,6 +812,8 @@ static void DoOpenFile(LPCWSTR szOpenFileName)
     SetFocus(hEditorWnd);
 
     set_caption(szOpenFileName);
+    if (szOpenFileName[0])
+        SHAddToRecentDocs(SHARD_PATHW, szOpenFileName);
 
     lstrcpyW(wszFileName, szOpenFileName);
     SendMessageW(hEditorWnd, EM_SETMODIFY, FALSE, 0);
@@ -883,6 +886,9 @@ static BOOL DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
 
     lstrcpyW(wszFileName, wszSaveFileName);
     set_caption(wszFileName);
+    if (wszFileName[0])
+        SHAddToRecentDocs(SHARD_PATHW, wszFileName);
+
     SendMessageW(hEditorWnd, EM_SETMODIFY, FALSE, 0);
     set_fileformat(format);
 
@@ -1000,8 +1006,8 @@ static void DialogOpenFile(void)
 
 static void dialog_about(void)
 {
-    HICON icon = LoadImageW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_WORDPAD), IMAGE_ICON, 48, 48, LR_SHARED);
-    ShellAboutW(hMainWnd, wszAppTitle, 0, icon);
+    HICON icon = LoadImageW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDI_WORDPAD), IMAGE_ICON, 48, 48, LR_SHARED);
+    ShellAboutW(hMainWnd, wszAppTitle, NULL, icon);
 }
 
 static INT_PTR CALLBACK formatopts_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

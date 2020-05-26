@@ -277,7 +277,7 @@ CMAPI
 HvHiveWillShrink(IN PHHIVE RegistryHive)
 {
     /* No shrinking yet */
-    UNIMPLEMENTED;
+    UNIMPLEMENTED_ONCE;
     return FALSE;
 }
 

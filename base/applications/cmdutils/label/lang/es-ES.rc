@@ -1,20 +1,20 @@
-/* Spanish translation by HUMA2000, Jose Pedro Fernández Pascual e Ismael Ferreras Morezuelas (Swyter) */
+/* Spanish translation by HUMA2000, Jose Pedro Fernández Pascual, Ismael Ferreras Morezuelas (Swyter) y Julen Urizar Compains 2020 */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
 //    STRING_LABEL_HELP "Muestra o cambia la etiqueta de una unidad.\n\nLABEL [unidad:][etiqueta]\n"
-    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
-LABEL [drive:][label]\n\n\
-  drive:          Specifies the drive letter of a drive.\n\
-  label           Specifies the label of the drive."
+    STRING_LABEL_HELP "Crea, cambia o elimina la etiqueta del volumen de un disco.\n\n\
+LABEL [unidad:][etiqueta]\n\n\
+  unidad:         Especifica la letra de la unidad de un disco.\n\
+  etiqueta:       Especifica la etiqueta de la unidad de un disco."
     STRING_LABEL_TEXT1 "El volumen en la unidad %c: es %s\n"
     STRING_LABEL_TEXT2 "El volumen en la unidad %c: no tiene etiqueta\n"
     STRING_LABEL_TEXT3 "El número de serie del volumen es %04X-%04X\n"
     STRING_LABEL_TEXT4 "Etiqueta del volumen (32 Caracteres, INTRO para ninguna)? "
-    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_PROMPT "¿Eliminar la etiqueta del volumen (Y/N)? "
     STRING_LABEL_OPTIONS "YN"
-    STRING_ERROR_INVALID_DRIVE "Especificación de unidad errónea\n"
-    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+    STRING_ERROR_INVALID_DRIVE "La unidad especificada es incorrecta\n"
+    STRING_ERROR_INVALID_LABEL "La etiqueta del volumen es incorrecta\n"
 END

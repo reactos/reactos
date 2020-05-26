@@ -115,7 +115,7 @@ void TestPadding()
     ok(bsize == 0x10001, "Expected 0x10001 got %lx\n", bsize);
 
     bsize = SendMessageW(hwnd, TB_GETBUTTONSIZE, 0, 0);
-    ok(bsize == 0x20002, "Expected 0x20002 got %lx\n", bsize);
+    ok(bsize == 0x20002 || bsize == 0xe0002, "Expected 0x20002 got %lx\n", bsize);
 
 #if 0 /* Luna specific */
     SetWindowTheme(hwnd, L"TaskBand", NULL);

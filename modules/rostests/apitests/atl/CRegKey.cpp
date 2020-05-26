@@ -81,7 +81,7 @@ START_TEST(CRegKey)
     memset(buffer, 0, sizeof(buffer));
     lret = key3.QueryValue(_T("APITEST_VALUE_NAME"), &type, buffer, &buffer_size);
     ok(lret == ERROR_ACCESS_DENIED, "Expected lret to be ERROR_ACCESS_DENIED, was: %lu\n", lret);
-    ok(type == 0 || broken(type == 203), "Expected type to be 0, was: %lu\n", type);
+    ok(type == 0 || broken(type == 203) || broken(type == 2292784), "Expected type to be 0, was: %lu\n", type);
     ok(buffer_size == sizeof(buffer), "Expected buffer_size to be %u, was: %lu\n", sizeof(buffer), buffer_size);
 
 

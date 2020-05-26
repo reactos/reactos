@@ -87,4 +87,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "添加、删除或配置游戏控制器硬件，如游戏杆和游戏板"
     IDS_CONTROLLER "控制器"
     IDS_STATUS "状态"
+    IDS_NONE "(None)"
 END

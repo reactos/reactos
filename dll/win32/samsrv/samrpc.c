@@ -2290,7 +2290,10 @@ SamrEnumerateGroupsInDomain(IN SAMPR_HANDLE DomainHandle,
 
     EnumBuffer->EntriesRead = EnumCount;
     if (EnumCount == 0)
+    {
+        Status = STATUS_NO_MORE_ENTRIES;
         goto done;
+    }
 
     EnumBuffer->Buffer = midl_user_allocate(EnumCount * sizeof(SAMPR_RID_ENUMERATION));
     if (EnumBuffer->Buffer == NULL)
@@ -2900,7 +2903,10 @@ SamrEnumerateUsersInDomain(IN SAMPR_HANDLE DomainHandle,
 
     EnumBuffer->EntriesRead = EnumCount;
     if (EnumCount == 0)
+    {
+        Status = STATUS_NO_MORE_ENTRIES;
         goto done;
+    }
 
     EnumBuffer->Buffer = midl_user_allocate(EnumCount * sizeof(SAMPR_RID_ENUMERATION));
     if (EnumBuffer->Buffer == NULL)
@@ -3281,7 +3287,10 @@ SamrEnumerateAliasesInDomain(IN SAMPR_HANDLE DomainHandle,
 
     EnumBuffer->EntriesRead = EnumCount;
     if (EnumCount == 0)
+    {
+        Status = STATUS_NO_MORE_ENTRIES;
         goto done;
+    }
 
     EnumBuffer->Buffer = midl_user_allocate(EnumCount * sizeof(SAMPR_RID_ENUMERATION));
     if (EnumBuffer->Buffer == NULL)
@@ -6155,7 +6164,7 @@ SampQueryUserLogonHours(PSAM_DB_OBJECT UserObject,
     }
 
     Status = SampGetLogonHoursAttribute(UserObject,
-                                       &InfoBuffer->LogonHours.LogonHours);
+                                        &InfoBuffer->LogonHours.LogonHours);
     if (!NT_SUCCESS(Status))
     {
         TRACE("SampGetLogonHoursAttribute failed (Status 0x%08lx)\n", Status);
@@ -7057,7 +7066,7 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer->All.WhichFields & USER_ALL_LOGONHOURS)
     {
         Status = SampGetLogonHoursAttribute(UserObject,
-                                           &InfoBuffer->All.LogonHours);
+                                            &InfoBuffer->All.LogonHours);
         if (!NT_SUCCESS(Status))
         {
             TRACE("Status 0x%08lx\n", Status);

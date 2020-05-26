@@ -161,7 +161,7 @@ static inline void  W16(unsigned char* dst, short s)
  * charge.
  *
  * SUN SOURCE CODE IS PROVIDED AS IS WITH NO WARRANTIES OF ANY KIND INCLUDING
- * THE WARRANTIES OF DESIGN, MERCHANTIBILITY AND FITNESS FOR A PARTICULAR
+ * THE WARRANTIES OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE, OR ARISING FROM A COURSE OF DEALING, USAGE OR TRADE PRACTICE.
  *
  * Sun source code is provided with no support and without any obligation on
@@ -542,8 +542,7 @@ static inline unsigned char
 ulaw2alaw(unsigned char uval)
 {
     uval &= 0xff;
-    return (unsigned char) ((uval & 0x80) ? (0xD5 ^ (_u2a[0xFF ^ uval] - 1)) :
-                            (unsigned char) (0x55 ^ (_u2a[0x7F ^ uval] - 1)));
+    return (uval & 0x80) ? (0xD5 ^ (_u2a[0xFF ^ uval] - 1)) : (0x55 ^ (_u2a[0x7F ^ uval] - 1));
 }
 
 /* -------------------------------------------------------------------------------*/

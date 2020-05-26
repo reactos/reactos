@@ -38,11 +38,10 @@ else()
     else()
         set_image_base(ntoskrnl 0x80800000)
     endif()
-    #Disabled due to LD bug: ROSBE-154
-    #add_linker_script(ntoskrnl ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
+    add_linker_script(ntoskrnl ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
 endif()
 
-target_link_libraries(ntoskrnl cportlib csq ${PSEH_LIB} cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
+target_link_libraries(ntoskrnl cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
 
 if(STACK_PROTECTOR)
     target_link_libraries(ntoskrnl gcc_ssp)

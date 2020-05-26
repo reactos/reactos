@@ -65,7 +65,7 @@ ConSrvCloseHandle(IN PCONSOLE_IO_HANDLE Handle)
         if (Object->Type == INPUT_BUFFER)
         {
             // PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
-            PCONSOLE Console = Object->Console;
+            PCONSRV_CONSOLE Console = (PCONSRV_CONSOLE)Object->Console;
 
             /*
              * Wake up all the writing waiters related to this handle for this
@@ -115,89 +115,6 @@ ConSrvCloseHandle(IN PCONSOLE_IO_HANDLE Handle)
     RtlZeroMemory(Handle, sizeof(*Handle)); // Be sure the whole entry is invalidated.
 }
 
-
-
-
-
-
-/* Forward declaration, used in ConSrvInitHandlesTable */
-static VOID ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData);
-
-static NTSTATUS
-ConSrvInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
-                       IN PCONSOLE Console,
-                       OUT PHANDLE pInputHandle,
-                       OUT PHANDLE pOutputHandle,
-                       OUT PHANDLE pErrorHandle)
-{
-    NTSTATUS Status;
-    HANDLE InputHandle  = INVALID_HANDLE_VALUE,
-           OutputHandle = INVALID_HANDLE_VALUE,
-           ErrorHandle  = INVALID_HANDLE_VALUE;
-
-    /*
-     * Initialize the handles table. Use temporary variables to store
-     * the handles values in such a way that, if we fail, we don't
-     * return to the caller invalid handle values.
-     *
-     * Insert the IO handles.
-     */
-
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
-    /* Insert the Input handle */
-    Status = ConSrvInsertObject(ProcessData,
-                                &InputHandle,
-                                &Console->InputBuffer.Header,
-                                GENERIC_READ | GENERIC_WRITE,
-                                TRUE,
-                                FILE_SHARE_READ | FILE_SHARE_WRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to insert the input handle\n");
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        ConSrvFreeHandlesTable(ProcessData);
-        return Status;
-    }
-
-    /* Insert the Output handle */
-    Status = ConSrvInsertObject(ProcessData,
-                                &OutputHandle,
-                                &Console->ActiveBuffer->Header,
-                                GENERIC_READ | GENERIC_WRITE,
-                                TRUE,
-                                FILE_SHARE_READ | FILE_SHARE_WRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to insert the output handle\n");
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        ConSrvFreeHandlesTable(ProcessData);
-        return Status;
-    }
-
-    /* Insert the Error handle */
-    Status = ConSrvInsertObject(ProcessData,
-                                &ErrorHandle,
-                                &Console->ActiveBuffer->Header,
-                                GENERIC_READ | GENERIC_WRITE,
-                                TRUE,
-                                FILE_SHARE_READ | FILE_SHARE_WRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to insert the error handle\n");
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        ConSrvFreeHandlesTable(ProcessData);
-        return Status;
-    }
-
-    /* Return the newly created handles */
-    *pInputHandle  = InputHandle;
-    *pOutputHandle = OutputHandle;
-    *pErrorHandle  = ErrorHandle;
-
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    return STATUS_SUCCESS;
-}
 
 NTSTATUS
 ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
@@ -251,7 +168,7 @@ Quit:
     return Status;
 }
 
-static VOID
+VOID
 ConSrvFreeHandlesTable(IN PCONSOLE_PROCESS_DATA ProcessData)
 {
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -410,7 +327,7 @@ ConSrvGetObject(IN PCONSOLE_PROCESS_DATA ProcessData,
     ULONG Index = HandleToULong(Handle) >> 2;
     PCONSOLE_IO_HANDLE HandleEntry = NULL;
     PCONSOLE_IO_OBJECT ObjectEntry = NULL;
-    // PCONSOLE ObjectConsole;
+    // PCONSRV_CONSOLE ObjectConsole;
 
     ASSERT(Object);
     if (Entry) *Entry = NULL;
@@ -465,350 +382,16 @@ VOID
 ConSrvReleaseObject(IN PCONSOLE_IO_OBJECT Object,
                     IN BOOLEAN IsConsoleLocked)
 {
-    ConSrvReleaseConsole(Object->Console, IsConsoleLocked);
-}
-
-
-
-NTSTATUS
-ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                      PHANDLE pInputHandle,
-                      PHANDLE pOutputHandle,
-                      PHANDLE pErrorHandle,
-                      PCONSOLE_INIT_INFO ConsoleInitInfo)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    HANDLE ConsoleHandle;
-    PCONSRV_CONSOLE Console;
-
-    /*
-     * We are about to create a new console. However when ConSrvNewProcess
-     * was called, we didn't know that we wanted to create a new console and
-     * therefore, we by default inherited the handles table from our parent
-     * process. It's only now that we notice that in fact we do not need
-     * them, because we've created a new console and thus we must use it.
-     *
-     * Therefore, free the handles table so that we can recreate
-     * a new one later on.
-     */
-    ConSrvFreeHandlesTable(ProcessData);
-
-    /* Initialize a new Console owned by this process */
-    DPRINT("Initialization of console '%S' for process '%S' on desktop '%S'\n",
-           ConsoleInitInfo->ConsoleTitle ? ConsoleInitInfo->ConsoleTitle : L"n/a",
-           ConsoleInitInfo->AppName ? ConsoleInitInfo->AppName : L"n/a",
-           ConsoleInitInfo->Desktop ? ConsoleInitInfo->Desktop : L"n/a");
-    Status = ConSrvInitConsole(&ConsoleHandle,
-                               &Console,
-                               ConsoleInitInfo,
-                               ProcessData->Process);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Console initialization failed\n");
-        return Status;
-    }
-
-    /* Assign the new console handle */
-    ProcessData->ConsoleHandle = ConsoleHandle;
-
-    /* Initialize the handles table */
-    Status = ConSrvInitHandlesTable(ProcessData,
-                                    Console,
-                                    pInputHandle,
-                                    pOutputHandle,
-                                    pErrorHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize the handles table\n");
-        ConSrvDeleteConsole(Console);
-        ProcessData->ConsoleHandle = NULL;
-        return Status;
-    }
-
-    /* Duplicate the Initialization Events */
-    Status = NtDuplicateObject(NtCurrentProcess(),
-                               Console->InitEvents[INIT_SUCCESS],
-                               ProcessData->Process->ProcessHandle,
-                               &ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_SUCCESS],
-                               EVENT_ALL_ACCESS, 0, 0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtDuplicateObject(InitEvents[INIT_SUCCESS]) failed: %lu\n", Status);
-        ConSrvFreeHandlesTable(ProcessData);
-        ConSrvDeleteConsole(Console);
-        ProcessData->ConsoleHandle = NULL;
-        return Status;
-    }
-
-    Status = NtDuplicateObject(NtCurrentProcess(),
-                               Console->InitEvents[INIT_FAILURE],
-                               ProcessData->Process->ProcessHandle,
-                               &ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_FAILURE],
-                               EVENT_ALL_ACCESS, 0, 0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtDuplicateObject(InitEvents[INIT_FAILURE]) failed: %lu\n", Status);
-        NtDuplicateObject(ProcessData->Process->ProcessHandle,
-                          ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_SUCCESS],
-                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
-        ConSrvFreeHandlesTable(ProcessData);
-        ConSrvDeleteConsole(Console);
-        ProcessData->ConsoleHandle = NULL;
-        return Status;
-    }
-
-    /* Duplicate the Input Event */
-    Status = NtDuplicateObject(NtCurrentProcess(),
-                               Console->InputBuffer.ActiveEvent,
-                               ProcessData->Process->ProcessHandle,
-                               &ConsoleInitInfo->ConsoleStartInfo->InputWaitHandle,
-                               EVENT_ALL_ACCESS, 0, 0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtDuplicateObject(InputWaitHandle) failed: %lu\n", Status);
-        NtDuplicateObject(ProcessData->Process->ProcessHandle,
-                          ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_FAILURE],
-                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
-        NtDuplicateObject(ProcessData->Process->ProcessHandle,
-                          ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_SUCCESS],
-                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
-        ConSrvFreeHandlesTable(ProcessData);
-        ConSrvDeleteConsole(Console);
-        ProcessData->ConsoleHandle = NULL;
-        return Status;
-    }
-
-    /* Mark the process as having a console */
-    ProcessData->ConsoleApp = TRUE;
-    ProcessData->Process->Flags |= CsrProcessIsConsoleApp;
-
-    /* Return the console handle to the caller */
-    ConsoleInitInfo->ConsoleStartInfo->ConsoleHandle = ProcessData->ConsoleHandle;
-
-    /*
-     * Insert the process into the processes list of the console,
-     * and set its foreground priority.
-     */
-    InsertHeadList(&Console->ProcessList, &ProcessData->ConsoleLink);
-    ConSrvSetProcessFocus(ProcessData->Process, Console->HasFocus);
-
-    /* Add a reference count because the process is tied to the console */
-    _InterlockedIncrement(&Console->ReferenceCount);
-
-    /* Update the internal info of the terminal */
-    TermRefreshInternalInfo(Console);
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                     HANDLE ConsoleHandle,
-                     BOOLEAN CreateNewHandlesTable,
-                     PHANDLE pInputHandle,
-                     PHANDLE pOutputHandle,
-                     PHANDLE pErrorHandle,
-                     PCONSOLE_START_INFO ConsoleStartInfo)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE Console;
-
-    /* Validate and lock the console */
-    if (!ConSrvValidateConsole(&Console,
-                               ConsoleHandle,
-                               CONSOLE_RUNNING, TRUE))
-    {
-        // FIXME: Find another status code
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Inherit the console */
-    ProcessData->ConsoleHandle = ConsoleHandle;
-
-    if (CreateNewHandlesTable)
-    {
-        /*
-         * We are about to create a new console. However when ConSrvNewProcess
-         * was called, we didn't know that we wanted to create a new console and
-         * therefore, we by default inherited the handles table from our parent
-         * process. It's only now that we notice that in fact we do not need
-         * them, because we've created a new console and thus we must use it.
-         *
-         * Therefore, free the handles table so that we can recreate
-         * a new one later on.
-         */
-        ConSrvFreeHandlesTable(ProcessData);
-
-        /* Initialize the handles table */
-        Status = ConSrvInitHandlesTable(ProcessData,
-                                        Console,
-                                        pInputHandle,
-                                        pOutputHandle,
-                                        pErrorHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to initialize the handles table\n");
-            ProcessData->ConsoleHandle = NULL;
-            goto Quit;
-        }
-    }
-
-    /* Duplicate the Initialization Events */
-    Status = NtDuplicateObject(NtCurrentProcess(),
-                               Console->InitEvents[INIT_SUCCESS],
-                               ProcessData->Process->ProcessHandle,
-                               &ConsoleStartInfo->InitEvents[INIT_SUCCESS],
-                               EVENT_ALL_ACCESS, 0, 0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtDuplicateObject(InitEvents[INIT_SUCCESS]) failed: %lu\n", Status);
-        ConSrvFreeHandlesTable(ProcessData);
-        ProcessData->ConsoleHandle = NULL;
-        goto Quit;
-    }
-
-    Status = NtDuplicateObject(NtCurrentProcess(),
-                               Console->InitEvents[INIT_FAILURE],
-                               ProcessData->Process->ProcessHandle,
-                               &ConsoleStartInfo->InitEvents[INIT_FAILURE],
-                               EVENT_ALL_ACCESS, 0, 0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtDuplicateObject(InitEvents[INIT_FAILURE]) failed: %lu\n", Status);
-        NtDuplicateObject(ProcessData->Process->ProcessHandle,
-                          ConsoleStartInfo->InitEvents[INIT_SUCCESS],
-                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
-        ConSrvFreeHandlesTable(ProcessData);
-        ProcessData->ConsoleHandle = NULL;
-        goto Quit;
-    }
-
-    /* Duplicate the Input Event */
-    Status = NtDuplicateObject(NtCurrentProcess(),
-                               Console->InputBuffer.ActiveEvent,
-                               ProcessData->Process->ProcessHandle,
-                               &ConsoleStartInfo->InputWaitHandle,
-                               EVENT_ALL_ACCESS, 0, 0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtDuplicateObject(InputWaitHandle) failed: %lu\n", Status);
-        NtDuplicateObject(ProcessData->Process->ProcessHandle,
-                          ConsoleStartInfo->InitEvents[INIT_FAILURE],
-                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
-        NtDuplicateObject(ProcessData->Process->ProcessHandle,
-                          ConsoleStartInfo->InitEvents[INIT_SUCCESS],
-                          NULL, NULL, 0, 0, DUPLICATE_CLOSE_SOURCE);
-        ConSrvFreeHandlesTable(ProcessData); // NOTE: Always free the handles table.
-        ProcessData->ConsoleHandle = NULL;
-        goto Quit;
-    }
-
-    /* Mark the process as having a console */
-    ProcessData->ConsoleApp = TRUE;
-    ProcessData->Process->Flags |= CsrProcessIsConsoleApp;
-
-    /* Return the console handle to the caller */
-    ConsoleStartInfo->ConsoleHandle = ProcessData->ConsoleHandle;
-
-    /*
-     * Insert the process into the processes list of the console,
-     * and set its foreground priority.
-     */
-    InsertHeadList(&Console->ProcessList, &ProcessData->ConsoleLink);
-    ConSrvSetProcessFocus(ProcessData->Process, Console->HasFocus);
-
-    /* Add a reference count because the process is tied to the console */
-    _InterlockedIncrement(&Console->ReferenceCount);
-
-    /* Update the internal info of the terminal */
-    TermRefreshInternalInfo(Console);
-
-    Status = STATUS_SUCCESS;
-
-Quit:
-    /* Unlock the console and return */
-    LeaveCriticalSection(&Console->Lock);
-    return Status;
-}
-
-NTSTATUS
-ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
-{
-    PCONSOLE Console;
-    PCONSOLE_PROCESS_DATA ConsoleLeaderProcess;
-
-    DPRINT("ConSrvRemoveConsole\n");
-
-    /* Mark the process as not having a console anymore */
-    ProcessData->ConsoleApp = FALSE;
-    ProcessData->Process->Flags &= ~CsrProcessIsConsoleApp;
-
-    /* Validate and lock the console */
-    if (!ConSrvValidateConsole(&Console,
-                               ProcessData->ConsoleHandle,
-                               CONSOLE_RUNNING, TRUE))
-    {
-        // FIXME: Find another status code
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    DPRINT("ConSrvRemoveConsole - Locking OK\n");
-
-    /* Retrieve the console leader process */
-    ConsoleLeaderProcess = ConSrvGetConsoleLeaderProcess(Console);
-
-    /* Close all console handles and free the handles table */
-    ConSrvFreeHandlesTable(ProcessData);
-
-    /* Detach the process from the console */
-    ProcessData->ConsoleHandle = NULL;
-
-    /* Remove the process from the console's list of processes */
-    RemoveEntryList(&ProcessData->ConsoleLink);
-
-    /* Check whether the console should send a last close notification */
-    if (Console->NotifyLastClose)
-    {
-        /* If we are removing the process which wants the last close notification... */
-        if (ProcessData == Console->NotifiedLastCloseProcess)
-        {
-            /* ... just reset the flag and the pointer... */
-            Console->NotifyLastClose = FALSE;
-            Console->NotifiedLastCloseProcess = NULL;
-        }
-        /*
-         * ... otherwise, if we are removing the console leader process
-         * (that cannot be the process wanting the notification, because
-         * the previous case already dealt with it)...
-         */
-        else if (ProcessData == ConsoleLeaderProcess)
-        {
-            /*
-             * ... reset the flag first (so that we avoid multiple notifications)
-             * and then send the last close notification.
-             */
-            Console->NotifyLastClose = FALSE;
-            ConSrvConsoleCtrlEvent(CTRL_LAST_CLOSE_EVENT, Console->NotifiedLastCloseProcess);
-
-            /* Only now, reset the pointer */
-            Console->NotifiedLastCloseProcess = NULL;
-        }
-    }
-
-    /* Update the internal info of the terminal */
-    TermRefreshInternalInfo(Console);
-
-    /* Release the console */
-    DPRINT("ConSrvRemoveConsole - Decrement Console->ReferenceCount = %lu\n", Console->ReferenceCount);
-    ConSrvReleaseConsole(Console, TRUE);
-
-    return STATUS_SUCCESS;
+    PCONSRV_CONSOLE ObjectConsole = (PCONSRV_CONSOLE)Object->Console;
+    ConSrvReleaseConsole(ObjectConsole, IsConsoleLocked);
 }
 
 
 /* PUBLIC SERVER APIS *********************************************************/
 
-CSR_API(SrvOpenConsole)
+/* API_NUMBER: ConsolepOpenConsole */
+CON_API(SrvOpenConsole,
+        CONSOLE_OPENCONSOLE, OpenConsoleRequest)
 {
     /*
      * This API opens a handle to either the input buffer or to
@@ -816,22 +399,11 @@ CSR_API(SrvOpenConsole)
      */
 
     NTSTATUS Status;
-    PCONSOLE_OPENCONSOLE OpenConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.OpenConsoleRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
     DWORD DesiredAccess = OpenConsoleRequest->DesiredAccess;
     DWORD ShareMode = OpenConsoleRequest->ShareMode;
     PCONSOLE_IO_OBJECT Object;
 
     OpenConsoleRequest->Handle = INVALID_HANDLE_VALUE;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -867,30 +439,20 @@ CSR_API(SrvOpenConsole)
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
-CSR_API(SrvDuplicateHandle)
+/* API_NUMBER: ConsolepDuplicateHandle */
+CON_API(SrvDuplicateHandle,
+        CONSOLE_DUPLICATEHANDLE, DuplicateHandleRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_DUPLICATEHANDLE DuplicateHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.DuplicateHandleRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
     HANDLE SourceHandle = DuplicateHandleRequest->SourceHandle;
     ULONG Index = HandleToULong(SourceHandle) >> 2;
     PCONSOLE_IO_HANDLE Entry;
     DWORD DesiredAccess;
 
     DuplicateHandleRequest->TargetHandle = INVALID_HANDLE_VALUE;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -940,27 +502,17 @@ CSR_API(SrvDuplicateHandle)
 Quit:
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
-CSR_API(SrvGetHandleInformation)
+/* API_NUMBER: ConsolepGetHandleInformation */
+CON_API(SrvGetHandleInformation,
+        CONSOLE_GETHANDLEINFO, GetHandleInfoRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETHANDLEINFO GetHandleInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetHandleInfoRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
     HANDLE Handle = GetHandleInfoRequest->Handle;
     ULONG Index = HandleToULong(Handle) >> 2;
     PCONSOLE_IO_HANDLE Entry;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -988,27 +540,17 @@ CSR_API(SrvGetHandleInformation)
 Quit:
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
-CSR_API(SrvSetHandleInformation)
+/* API_NUMBER: ConsolepSetHandleInformation */
+CON_API(SrvSetHandleInformation,
+        CONSOLE_SETHANDLEINFO, SetHandleInfoRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SETHANDLEINFO SetHandleInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHandleInfoRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
     HANDLE Handle = SetHandleInfoRequest->Handle;
     ULONG Index = HandleToULong(Handle) >> 2;
     PCONSOLE_IO_HANDLE Entry;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -1038,48 +580,24 @@ CSR_API(SrvSetHandleInformation)
 Quit:
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
-CSR_API(SrvCloseHandle)
+/* API_NUMBER: ConsolepCloseHandle */
+CON_API(SrvCloseHandle,
+        CONSOLE_CLOSEHANDLE, CloseHandleRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_CLOSEHANDLE CloseHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CloseHandleRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
-
-    Status = ConSrvRemoveObject(ProcessData, CloseHandleRequest->Handle);
-
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return ConSrvRemoveObject(ProcessData, CloseHandleRequest->Handle);
 }
 
-CSR_API(SrvVerifyConsoleIoHandle)
+/* API_NUMBER: ConsolepVerifyIoHandle */
+CON_API(SrvVerifyConsoleIoHandle,
+        CONSOLE_VERIFYHANDLE, VerifyHandleRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_VERIFYHANDLE VerifyHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.VerifyHandleRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
     HANDLE IoHandle = VerifyHandleRequest->Handle;
     ULONG Index = HandleToULong(IoHandle) >> 2;
 
     VerifyHandleRequest->IsValid = FALSE;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -1099,7 +617,6 @@ CSR_API(SrvVerifyConsoleIoHandle)
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    ConSrvReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
 }
 

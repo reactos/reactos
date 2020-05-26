@@ -1190,7 +1190,7 @@ CFileDefExt::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDataObj, HKE
     format.tymed = TYMED_HGLOBAL;
 
     hr = pDataObj->GetData(&format, &stgm);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (!DragQueryFileW((HDROP)stgm.hGlobal, 0, m_wszPath, _countof(m_wszPath)))

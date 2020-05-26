@@ -21,6 +21,8 @@
 #define _WINE
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stddef.h>
 #include "windows.h"
 #include "mmsystem.h"
@@ -258,6 +260,17 @@ static void test_midi_mci(HWND hwnd)
     if(!err) ok(!strcmp(buf, "false"), "capability can record is %s\n", buf);
 }
 
+static BYTE SysEx_reset[] = {
+    0xF0, 0x7E, 0x7F, 0x09, 0x01, 0xF7 /* GM System ON */
+};
+static BYTE SysEx_volume_off[] = {
+    0xF0, 0x7F, 0x7F, 0x04, 0x01, 0x00, 0x00, 0xF7
+};
+static BYTE SysEx_volume_full[] = {
+    0xF0, 0x7F, 0x7F, 0x04, 0x01, 0x00, 0x7F, 0xF7
+};
+static BOOL found_fluidsynth;
+static const char fluidsynth_prefix[] = "Synth input port ";
 
 static void test_midiOut_device(UINT udev, HWND hwnd)
 {
@@ -417,6 +430,67 @@ static void test_midiOut_device(UINT udev, HWND hwnd)
         test_notification(hwnd, "midiOutClose", 0, WHATEVER);
     }
     test_notification(hwnd, "midiOut over", 0, WHATEVER);
+    if (!strncmp(capsA.szPname, fluidsynth_prefix, strlen(fluidsynth_prefix)) ||
+        (udev == MIDIMAPPER && found_fluidsynth)) {
+        found_fluidsynth = TRUE;
+        skip("FluidSynth (at least 1.1.6) doesn't support desired System Exclusive message.\n");
+        return;
+    }
+
+    if (hwnd)
+        rc = midiOutOpen(&hm, udev, (DWORD_PTR)hwnd, (DWORD_PTR)MYCBINST, CALLBACK_WINDOW);
+    else
+        rc = midiOutOpen(&hm, udev, (DWORD_PTR)callback_func, (DWORD_PTR)MYCBINST, CALLBACK_FUNCTION);
+    ok(!rc, "midiOutOpen(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+    test_notification(hwnd, "midiOutOpen", MOM_OPEN, 0);
+
+    memset(&mhdr, 0, sizeof(mhdr));
+    mhdr.lpData = (LPSTR)SysEx_reset;
+    mhdr.dwBufferLength = sizeof(SysEx_reset);
+    rc = midiOutPrepareHeader(hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiOutPrepareHeader rc=%s\n", mmsys_error(rc));
+    rc = midiOutLongMsg(hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiOutLongMsg rc=%s\n", mmsys_error(rc));
+    rc = midiOutUnprepareHeader(hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiOutUnprepare rc=%s\n", mmsys_error(rc));
+    test_notification(hwnd, "midiOutLongMsg", MOM_DONE, (DWORD_PTR)&mhdr);
+    Sleep(60);
+
+    mhdr.lpData = (LPSTR)SysEx_volume_off;
+    mhdr.dwBufferLength = sizeof(SysEx_volume_off);
+    rc = midiOutPrepareHeader(hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiOutPrepareHeader rc=%s\n", mmsys_error(rc));
+    rc = midiOutLongMsg(hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiOutLongMsg rc=%s\n", mmsys_error(rc));
+    rc = midiOutUnprepareHeader(hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiOutUnprepare rc=%s\n", mmsys_error(rc));
+    test_notification(hwnd, "midiOutLongMsg", MOM_DONE, (DWORD_PTR)&mhdr);
+
+    {
+        DWORD e = 0x006F4593; /* velocity 111, note #69, channel 4 */
+        trace("ShortMsg type %x (muted)\n", LOBYTE(LOWORD(e)));
+        rc = midiOutShortMsg(hm, e);
+        ok(!rc, "midiOutShortMsg rc=%s\n", mmsys_error(rc));
+        /* We can't hear this voice due to volume settings */
+        if (!rc) Sleep(200);
+
+        rc = midiOutShortMsg(hm, 0x00004593); /* velocity 0 */
+        ok(!rc, "midiOutShortMsg rc=%s\n", mmsys_error(rc));
+    }
+
+    mhdr.lpData = (LPSTR)SysEx_volume_full;
+    mhdr.dwBufferLength = sizeof(SysEx_volume_full);
+    rc = midiOutPrepareHeader(hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiOutPrepareHeader rc=%s\n", mmsys_error(rc));
+    rc = midiOutLongMsg(hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiOutLongMsg rc=%s\n", mmsys_error(rc));
+    rc = midiOutUnprepareHeader(hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiOutUnprepare rc=%s\n", mmsys_error(rc));
+    test_notification(hwnd, "midiOutLongMsg", MOM_DONE, (DWORD_PTR)&mhdr);
+
+    rc = midiOutClose(hm);
+    ok(!rc, "midiOutClose rc=%s\n", mmsys_error(rc));
+    test_notification(hwnd, "midiOuClose", MOM_CLOSE, 0);
 }
 
 static void test_position(HMIDISTRM hm, UINT typein, UINT typeout)
@@ -436,6 +510,11 @@ static void test_position(HMIDISTRM hm, UINT typein, UINT typeout)
         break;
     case TIME_MIDI:
         trace("Stream position song pointer %u\n", mmtime.u.midi.songptrpos);
+        break;
+    case TIME_SMPTE:
+        trace("Stream position %02u:%02u:%02u.%02u/%02u\n",
+              mmtime.u.smpte.hour, mmtime.u.smpte.min, mmtime.u.smpte.sec,
+              mmtime.u.smpte.frame, mmtime.u.smpte.fps);
         break;
     }
 }
@@ -461,6 +540,53 @@ static MIDISHORTEVENT strmNops[] = { /* Test callback + dwOffset */
   { 0, 0, (MEVT_NOP <<24)| MEVT_F_CALLBACK },
 };
 
+static MIDISHORTEVENT strmNopsWithDelta[] = {
+  {  0, 0, (MEVT_NOP <<24)| MEVT_F_CALLBACK },
+  { 12, 0, (MEVT_NOP <<24)| MEVT_F_CALLBACK },
+};
+
+struct time_stamp_records {
+    UINT  count;
+    DWORD time_stamp[2];
+    HANDLE done;
+};
+
+static void CALLBACK time_stamp_callback(HMIDIOUT hmo, UINT msg, DWORD_PTR instance, DWORD_PTR p1, DWORD_PTR p2)
+{
+    struct time_stamp_records *records = (struct time_stamp_records *)instance;
+    switch (msg) {
+    case MM_MOM_POSITIONCB:
+        if (records->count < ARRAY_SIZE(records->time_stamp))
+            records->time_stamp[records->count] = GetTickCount();
+        records->count++;
+        break;
+    case MM_MOM_DONE:
+        SetEvent(records->done);
+        break;
+    }
+}
+
+static DWORD get_position(HMIDISTRM hm, UINT type)
+{
+    MMRESULT rc;
+    MMTIME mmtime;
+    mmtime.wType = type;
+    rc = midiStreamPosition(hm, &mmtime, sizeof(mmtime));
+    if (rc != MMSYSERR_NOERROR || mmtime.wType != type)
+        return MAXDWORD;
+
+    switch (mmtime.wType) {
+    case TIME_MS:
+        return mmtime.u.ms;
+    case TIME_TICKS:
+        return mmtime.u.ticks;
+    case TIME_MIDI:
+        return mmtime.u.midi.songptrpos;
+    default:
+        return MAXDWORD;
+    }
+}
+
 static MMRESULT playStream(HMIDISTRM hm, LPMIDIHDR lpMidiHdr)
 {
     MMRESULT rc = midiStreamOut(hm, lpMidiHdr, sizeof(MIDIHDR));
@@ -479,6 +605,10 @@ static void test_midiStream(UINT udev, HWND hwnd)
         MIDIPROPTEMPO tempo;
         MIDIPROPTIMEDIV tdiv;
     } midiprop;
+    DWORD diff, expected, ret;
+    const DWORD MARGIN = 50;
+    struct time_stamp_records records;
+    MIDIOUTCAPSA capsA;
 
     if (hwnd)
         rc = midiStreamOpen(&hm, &udev, 1, (DWORD_PTR)hwnd, (DWORD_PTR)MYCBINST, CALLBACK_WINDOW);
@@ -502,7 +632,7 @@ static void test_midiStream(UINT udev, HWND hwnd)
     midiprop.tdiv.cbStruct = sizeof(midiprop.tdiv);
     rc = midiStreamProperty(hm, (void*)&midiprop, MIDIPROP_GET|MIDIPROP_TIMEDIV);
     ok(!rc, "midiStreamProperty TIMEDIV rc=%s\n", mmsys_error(rc));
-    todo_wine ok(24==LOWORD(midiprop.tdiv.dwTimeDiv), "default stream time division %u\n", midiprop.tdiv.dwTimeDiv);
+    ok(24==LOWORD(midiprop.tdiv.dwTimeDiv), "default stream time division %u\n", midiprop.tdiv.dwTimeDiv);
 
     memset(&mhdr, 0, sizeof(mhdr));
     mhdr.dwUser   = 0x56FA552C;
@@ -570,7 +700,7 @@ static void test_midiStream(UINT udev, HWND hwnd)
 
         test_position(hm, TIME_MS,      TIME_MS);
         test_position(hm, TIME_TICKS,   TIME_TICKS);
-        todo_wine test_position(hm, TIME_MIDI,    TIME_MIDI);
+        test_position(hm, TIME_MIDI,    TIME_MIDI);
         test_position(hm, TIME_SMPTE,   TIME_MS);
         test_position(hm, TIME_SAMPLES, TIME_MS);
         test_position(hm, TIME_BYTES,   TIME_MS);
@@ -714,6 +844,210 @@ static void test_midiStream(UINT udev, HWND hwnd)
         rc = midiStreamClose(hm);
         ok(!rc, "midiStreamClose rc=%s\n", mmsys_error(rc));
     }
+
+    /* Test the player time clock and positions */
+    memset(&records, 0, sizeof(records));
+    records.done = CreateEventA(NULL, FALSE, FALSE, NULL);
+    ok(records.done != NULL, "CreateEvent failed (dev=%d)\n", udev);
+
+    rc = midiStreamOpen(&hm, &udev, 1, (DWORD_PTR)time_stamp_callback, (DWORD_PTR)&records, CALLBACK_FUNCTION);
+    ok(!rc, "midiStreamOpen(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+
+    expected = 0;
+    ret = get_position(hm, TIME_MS);
+    ok(ret == expected, "expected %u, got %u\n", expected, ret);
+
+    memset(&mhdr, 0, sizeof(mhdr));
+    mhdr.lpData = (LPSTR)strmNopsWithDelta;
+    mhdr.dwBytesRecorded = mhdr.dwBufferLength = sizeof(strmNopsWithDelta);
+    rc = midiOutPrepareHeader((HMIDIOUT)hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiOutPrepareHeader(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+
+    rc = midiStreamOut(hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiStreamOut(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+
+    ret = get_position(hm, TIME_MS);
+    ok(ret == expected, "expected %u, got %u\n", expected, ret);
+
+    rc = midiStreamRestart(hm);
+    ok(!rc, "midiStreamRestart(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+    Sleep(50);
+
+    rc = midiStreamPause(hm);
+    ok(!rc, "midiStreamPause(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+
+    expected = 50;
+    ret = get_position(hm, TIME_MS);
+    ok(ret >= expected && ret < expected + MARGIN, "expected %ums or greater, got %ums\n", expected, ret);
+    expected = ret;
+
+    Sleep(100);
+
+    ret = get_position(hm, TIME_MS);
+    ok(ret == expected, "expected %ums, got %ums\n", expected, ret);
+
+    rc = midiStreamRestart(hm);
+    ok(!rc, "midiStreamRestart(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+
+    Sleep(1);
+    ret = get_position(hm, TIME_MS);
+    ok(ret > expected && ret < expected + MARGIN, "expected greater than %ums, got %ums\n", expected, ret);
+    expected = ret;
+
+    ret = get_position(hm, TIME_TICKS);
+    ok(ret > strmNopsWithDelta[0].dwDeltaTime && ret < strmNopsWithDelta[1].dwDeltaTime,
+       "TIME_TICKS position is continuous, got %u\n", ret);
+
+    /* shouldn't set time division property while playing */
+    midiprop.tdiv.cbStruct  = sizeof(midiprop.tdiv);
+    midiprop.tdiv.dwTimeDiv = 24;
+    rc = midiStreamProperty(hm, (void*)&midiprop, MIDIPROP_SET | MIDIPROP_TIMEDIV);
+    ok(rc == MMSYSERR_INVALPARAM, "midiStreamProperty(SET|TIMEDIV, dev=%d) rc=%s\n", udev, mmsys_error(rc));
+
+    ret = WaitForSingleObject(records.done, INFINITE);
+    ok(ret == WAIT_OBJECT_0, "WaitForSingleObject failed, got %d\n", ret);
+
+    rc = midiStreamPause(hm);
+    ok(!rc, "midiStreamPause(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+
+    expected = 250; /* = 12 ticks in 120 BPM */
+    ret = get_position(hm, TIME_MS);
+    ok(ret >= expected - MARGIN && ret <= expected + MARGIN,
+       "expected greater than %ums, got %ums\n", expected, ret);
+    trace("after playing, got %ums\n", ret);
+
+    /* set tempo to 240 BPM */
+    midiprop.tempo.cbStruct = sizeof(midiprop.tempo);
+    midiprop.tempo.dwTempo = 250000;
+    rc = midiStreamProperty(hm, (void*)&midiprop, MIDIPROP_SET | MIDIPROP_TEMPO);
+    ok(!rc, "midiStreamProperty(SET|TEMPO, dev=%d) rc=%s\n", udev, mmsys_error(rc));
+
+    /* a tempo change doesn't affect elapsed ticks */
+    ret = get_position(hm, TIME_TICKS);
+    ok(ret >= strmNopsWithDelta[1].dwDeltaTime && ret < strmNopsWithDelta[1].dwDeltaTime + 3,
+       "expected %u ticks, got %u\n", strmNopsWithDelta[1].dwDeltaTime, ret);
+
+    midiprop.tdiv.cbStruct = sizeof(midiprop.tdiv);
+    rc = midiStreamProperty(hm, (void*)&midiprop, MIDIPROP_GET | MIDIPROP_TIMEDIV);
+    ok(!rc, "midiStreamProperty(GET|TIMEDIV, dev=%d) rc=%s\n", udev, mmsys_error(rc));
+    ok(midiprop.tdiv.dwTimeDiv == 24, "expected 24, got %u\n", midiprop.tdiv.dwTimeDiv);
+
+    /* TIME_MIDI value is a quarter of TIME_TICKS, rounded */
+    expected = (ret + midiprop.tdiv.dwTimeDiv/8) / (midiprop.tdiv.dwTimeDiv/4);
+    ret = get_position(hm, TIME_MIDI);
+    ok(ret == expected, "expected song pointer %u, got %u\n", expected, ret);
+
+    ok(records.count == 2, "expected 2 MM_MOM_DONE messages, got %d\n", records.count);
+
+    /* Time between midiStreamPause and midiStreamRestart isn't counted.
+       So, the second event happens at dwDeltaTime(250ms) + 100ms after the first event. */
+    expected = 250 + 100;
+    diff = records.time_stamp[1] - records.time_stamp[0];
+    ok(diff >= expected - MARGIN && diff <= expected + MARGIN,
+       "expected %u ~ %ums, got %ums (dev=%d)\n", expected - MARGIN, expected + MARGIN, diff, udev);
+
+    rc = midiOutUnprepareHeader((HMIDIOUT)hm, &mhdr, sizeof(mhdr));
+    ok(!rc, "midiOutUnprepareHeader(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+
+    rc = midiStreamStop(hm);
+    ok(!rc, "midiStreamStop(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+
+    ret = get_position(hm, TIME_MS);
+    ok(ret == 0, "expected 0ms, got %ums\n", ret);
+
+    midiprop.tdiv.cbStruct  = sizeof(midiprop.tdiv);
+    midiprop.tdiv.dwTimeDiv = 0xe204; /* 30 fps, 4 ticks/frame */
+    rc = midiStreamProperty(hm, (void*)&midiprop, MIDIPROP_SET | MIDIPROP_TIMEDIV);
+    ok(!rc, "midiStreamProperty(SET|TIMEDIV, dev=%d) rc=%s\n", udev, mmsys_error(rc));
+
+    test_position(hm, TIME_MS,      TIME_MS);
+    test_position(hm, TIME_TICKS,   TIME_TICKS);
+    test_position(hm, TIME_MIDI,    TIME_MS);
+    todo_wine test_position(hm, TIME_SMPTE,   TIME_SMPTE);
+    test_position(hm, TIME_SAMPLES, TIME_MS);
+    test_position(hm, TIME_BYTES,   TIME_MS);
+
+    rc = midiStreamClose(hm);
+    ok(!rc, "midiStreamClose(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+    CloseHandle(records.done);
+
+    rc = midiOutGetDevCapsA((UINT_PTR)udev, &capsA, sizeof(capsA));
+    ok(!rc, "midiOutGetDevCaps(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+    if (!strncmp(capsA.szPname, fluidsynth_prefix, strlen(fluidsynth_prefix)) ||
+        (udev == MIDIMAPPER && found_fluidsynth)) {
+        found_fluidsynth = TRUE;
+        skip("FluidSynth (at least 1.1.6) doesn't support desired System Exclusive message.\n");
+        return;
+    }
+
+#define ROUNDUP4(n) (((n) + 3) & ~3)
+    hm = NULL;
+    if (hwnd)
+        rc = midiStreamOpen(&hm, &udev, 1, (DWORD_PTR)hwnd, (DWORD_PTR)MYCBINST, CALLBACK_WINDOW);
+    else
+        rc = midiStreamOpen(&hm, &udev, 1, (DWORD_PTR)callback_func, (DWORD_PTR)MYCBINST, CALLBACK_FUNCTION);
+    ok(!rc, "midiOutOpen(dev=%d) rc=%s\n", udev, mmsys_error(rc));
+    test_notification(hwnd, "midiStreamOpen", MOM_OPEN, 0);
+
+    midiprop.tdiv.cbStruct  = sizeof(midiprop.tdiv);
+    midiprop.tdiv.dwTimeDiv = 480;
+    rc = midiStreamProperty(hm, (LPBYTE)&midiprop, MIDIPROP_TIMEDIV | MIDIPROP_SET);
+    ok(!rc, "midiStreamProperty(TimeDiv) rc=%s\n", mmsys_error(rc));
+
+    rc = midiStreamRestart(hm);
+    ok(!rc, "midiStreamRestart rc=%s\n", mmsys_error(rc));
+
+    memset(&mhdr, 0, sizeof(mhdr));
+    mhdr.dwBufferLength = sizeof(MIDISHORTEVENT) * 5 + ROUNDUP4(sizeof(SysEx_reset)) +
+        ROUNDUP4(sizeof(SysEx_volume_off)) + ROUNDUP4(sizeof(SysEx_volume_full));
+    mhdr.lpData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mhdr.dwBufferLength);
+    ok(mhdr.lpData!=NULL, "No %d bytes of memory!\n", mhdr.dwBufferLength);
+    if (mhdr.lpData) {
+        MIDIEVENT *e;
+        char *p = mhdr.lpData;
+        /* GM System ON */
+        e = (MIDIEVENT *)p;
+        e->dwEvent = MEVT_F_LONG | sizeof(SysEx_reset);
+        memcpy(&e->dwParms[0], SysEx_reset, sizeof(SysEx_reset));
+        p += sizeof(MIDISHORTEVENT) + ROUNDUP4(sizeof(SysEx_reset));
+        /* Master volume: off */
+        e = (MIDIEVENT *)p;
+        e->dwDeltaTime = 96;
+        e->dwEvent = MEVT_F_LONG | sizeof(SysEx_volume_off);
+        memcpy(&e->dwParms[0], SysEx_volume_off, sizeof(SysEx_volume_off));
+        p += sizeof(MIDISHORTEVENT) + ROUNDUP4(sizeof(SysEx_volume_off));
+        /* Note On (We can't hear this voice due to volume settings) */
+        e = (MIDIEVENT *)p;
+        e->dwEvent = MEVT_F_SHORT | 0x6F4593; /* note #69 */
+        p += sizeof(MIDISHORTEVENT);
+        /* Note Off */
+        e = (MIDIEVENT *)p;
+        e->dwDeltaTime = 240;
+        e->dwEvent = MEVT_F_SHORT | 0x004593; /* velocity 0 */
+        p += sizeof(MIDISHORTEVENT);
+        /* Master volume: full */
+        e = (MIDIEVENT *)p;
+        e->dwEvent = MEVT_F_LONG | sizeof(SysEx_volume_full);
+        memcpy(&e->dwParms[0], SysEx_volume_full, sizeof(SysEx_volume_full));
+        p += sizeof(MIDISHORTEVENT) + ROUNDUP4(sizeof(SysEx_volume_full));
+        mhdr.dwBytesRecorded = (DWORD)(p - mhdr.lpData);
+#undef ROUNDUP4
+
+        rc = midiOutPrepareHeader((HMIDIOUT)hm, &mhdr, sizeof(mhdr));
+        ok(!rc, "midiOutPrepareHeader rc=%s\n", mmsys_error(rc));
+
+        rc = playStream(hm, &mhdr);
+        ok(!rc, "midiStreamOut rc=%s\n", mmsys_error(rc));
+        test_notification(hwnd, "midiStreamOut", MOM_DONE, (DWORD_PTR)&mhdr);
+
+        rc = midiOutUnprepareHeader((HMIDIOUT)hm, &mhdr, sizeof(mhdr));
+        ok(!rc, "midiOutUnprepare rc=%s\n", mmsys_error(rc));
+
+        HeapFree(GetProcessHeap(), 0, mhdr.lpData);
+    }
+    rc = midiStreamClose(hm);
+    ok(!rc, "midiOutClose rc=%s\n", mmsys_error(rc));
+    test_notification(hwnd, "midiStreamClose", MOM_CLOSE, 0);
 }
 
 static BOOL scan_subkeys(HKEY parent, const LPCSTR *sub_keys)

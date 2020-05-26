@@ -17,3 +17,6 @@
 #define IDC_WORKGROUPDOMAIN      204
 #define IDC_NETWORK_ID           205
 #define IDC_NETWORK_PROPERTY     206
+#define IDC_MESSAGETEXT          207
+#define IDC_RESTARTICON          208
+#define IDC_RESTARTTEXT          209

@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include <stdarg.h>
 
 #define NONAMELESSUNION
@@ -28,7 +26,6 @@
 #include "winreg.h"
 #include "wine/debug.h"
 #include "wine/list.h"
-#include "wine/unicode.h"
 
 #include "initguid.h"
 #include "ole2.h"
@@ -448,7 +445,7 @@ static HRESULT load_devices_from_reg(void)
             && SUCCEEDED(MMDevice_GetPropValue(&guid, curflow, (const PROPERTYKEY*)&DEVPKEY_Device_FriendlyName, &pv))
             && pv.vt == VT_LPWSTR)
         {
-            DWORD size_bytes = (strlenW(pv.u.pwszVal) + 1) * sizeof(WCHAR);
+            DWORD size_bytes = (lstrlenW(pv.u.pwszVal) + 1) * sizeof(WCHAR);
             WCHAR *name = HeapAlloc(GetProcessHeap(), 0, size_bytes);
             memcpy(name, pv.u.pwszVal, size_bytes);
             MMDevice_Create(name, &guid, curflow,
@@ -1431,7 +1428,7 @@ static HRESULT WINAPI MMDevPropStore_GetAt(IPropertyStore *iface, DWORD prop, PR
     RegCloseKey(propkey);
     buffer[38] = 0;
     CLSIDFromString(buffer, &key->fmtid);
-    key->pid = atoiW(&buffer[39]);
+    key->pid = wcstol(&buffer[39], NULL, 10);
     return S_OK;
 }
 

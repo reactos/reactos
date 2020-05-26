@@ -36,6 +36,7 @@ typedef struct _parser_ctx_t {
     const WCHAR *ptr;
 
     script_ctx_t *script;
+    struct _compiler_ctx_t *compiler;
     source_elements_t *source;
     BOOL nl;
     BOOL implicit_nl_semicolon;
@@ -49,7 +50,7 @@ typedef struct _parser_ctx_t {
     heap_pool_t heap;
 } parser_ctx_t;
 
-HRESULT script_parse(script_ctx_t*,const WCHAR*,const WCHAR*,BOOL,parser_ctx_t**) DECLSPEC_HIDDEN;
+HRESULT script_parse(script_ctx_t*,struct _compiler_ctx_t*,const WCHAR*,const WCHAR*,BOOL,parser_ctx_t**) DECLSPEC_HIDDEN;
 void parser_release(parser_ctx_t*) DECLSPEC_HIDDEN;
 
 int parser_lex(void*,parser_ctx_t*) DECLSPEC_HIDDEN;
@@ -65,7 +66,7 @@ static inline void *parser_alloc_tmp(parser_ctx_t *ctx, DWORD size)
 }
 
 BOOL is_identifier_char(WCHAR) DECLSPEC_HIDDEN;
-BOOL unescape(WCHAR*) DECLSPEC_HIDDEN;
+BOOL unescape(WCHAR*,size_t*) DECLSPEC_HIDDEN;
 HRESULT parse_decimal(const WCHAR**,const WCHAR*,double*) DECLSPEC_HIDDEN;
 
 typedef enum {
@@ -80,11 +81,10 @@ typedef struct {
     literal_type_t type;
     union {
         double dval;
-        const WCHAR *wstr;
+        jsstr_t *str;
         BOOL bval;
         struct {
-            const WCHAR *str;
-            DWORD str_len;
+            jsstr_t *str;
             DWORD flags;
         } regexp;
     } u;
@@ -401,3 +401,5 @@ static inline double get_ccnum(ccval_t v)
 {
     return v.is_num ? v.u.n : v.u.b;
 }
+
+jsstr_t *compiler_alloc_string_len(struct _compiler_ctx_t*,const WCHAR *,unsigned) DECLSPEC_HIDDEN;

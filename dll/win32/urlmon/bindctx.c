@@ -45,7 +45,7 @@ static void *get_callback_iface(BindStatusCallback *This, REFIID riid)
     void *ret;
     HRESULT hres;
 
-    hres = IBindStatusCallback_QueryInterface(This->callback, riid, (void**)&ret);
+    hres = IBindStatusCallback_QueryInterface(This->callback, riid, &ret);
     if(FAILED(hres) && This->serv_prov)
         hres = IServiceProvider_QueryService(This->serv_prov, riid, riid, &ret);
 

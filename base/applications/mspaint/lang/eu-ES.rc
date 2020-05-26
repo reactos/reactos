@@ -9,19 +9,19 @@ BEGIN
         MENUITEM "Gorde\tCtrl+S", IDM_FILESAVE
         MENUITEM "Gorde &honela...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "Kamera-tik edo Eskaner-tik...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
-        MENUITEM "Page View", IDM_FILEPAGEVIEW
-        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
-        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "Ikusi orria", IDM_FILEPAGEVIEW
+        MENUITEM "Konfiguratu orria...", IDM_FILEPAGESETUP
+        MENUITEM "Inprimatu...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM "Bidali...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "Ezarri azteko plano gisa (Lauza moduan)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Ezarri azteko plano gisa (erdian)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Ezarri azteko plano gisa (tiratuta)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "Azkenaldian erabilitako fitxategien", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Irten\tAlt+F4", IDM_FILEEXIT
     END
@@ -33,8 +33,8 @@ BEGIN
         MENUITEM "Ebaki\tCtrl+X", IDM_EDITCUT
         MENUITEM "Kopiatu\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Itsasti\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Borrar selección\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Invertir selección", IDM_EDITINVERTSELECTION
+        MENUITEM "Selekzioa ezabatu\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "selekzioa alderantzikatu", IDM_EDITINVERTSELECTION
         MENUITEM "Huatatu dena\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Kopiatu hona...", IDM_EDITCOPYTO
@@ -47,9 +47,9 @@ BEGIN
         MENUITEM "Egoera Barra", IDM_VIEWSTATUSBAR, CHECKED
         MENUITEM "Testuaren tresna-barra", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "Zoom"
+        POPUP "Zoom-a"
         BEGIN
-            POPUP "Definido por el usuario"
+            POPUP "Erabiltzaile zehatz"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -63,13 +63,13 @@ BEGIN
             MENUITEM "Erakutsi sareta\tCtrl+G", IDM_VIEWSHOWGRID
             MENUITEM "Erakutsi koadro txikia", IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "Ver en pantalla completa\tCtrl+F", IDM_VIEWFULLSCREEN
+        MENUITEM "Pantaila osoan ikusi\tCtrl+F", IDM_VIEWFULLSCREEN
     END
     POPUP "I&rudia"
     BEGIN
         MENUITEM "Irauli/biratu...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Recortar", IDM_IMAGECROP
+        MENUITEM "Hedatu/Zeharkatu...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "Moztu", IDM_IMAGECROP
         MENUITEM "Alderantzikatu koloreak\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Atributuak...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Garbitu irudia\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
@@ -79,8 +79,8 @@ BEGIN
     BEGIN
         MENUITEM "Editatu koloreak...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
-        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
+        MENUITEM "Paleta modernua", IDM_COLORSMODERNPALETTE
+        MENUITEM "Paleta zaharra", IDM_COLORSOLDPALETTE
     END
     POPUP "&Laguntza"
     BEGIN
@@ -159,9 +159,9 @@ END
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Stretch and skew image"
+CAPTION "Argazki Hedatu eta Zeharkatu"
 BEGIN
-    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    GROUPBOX "Hedatu", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
     LTEXT "Horizontalki:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
@@ -170,15 +170,15 @@ BEGIN
     LTEXT "Bertikalki:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
     LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
-    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    GROUPBOX "Zeharkatu", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
     ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
     LTEXT "Horizontalki:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    LTEXT "gradu", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
     ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
     LTEXT "Bertikalki:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
+    LTEXT "gradu", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "Ados", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Utzi", IDCANCEL, 170, 24, 48, 14
 END
@@ -187,9 +187,9 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
-    IDS_INFOTITLE "Paint para ReactOS"
-    IDS_INFOTEXT "Paint para ReactOS is available under the GNU Lesser General Public License (LGPL, ver www.gnu.org)"
-    IDS_SAVEPROMPTTEXT "¿Guardar cambios cambios a %s?"
+    IDS_INFOTITLE "ReactOS-ko Paint"
+    IDS_INFOTEXT "Available under the GNU Lesser General Public License (LGPL, ver www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "%s aldaketak gorde nahi duzu?"
     IDS_DEFAULTFILENAME "Izegabea.bmp"
     IDS_MINIATURETITLE "Miniatura"
     IDS_TOOLTIP1 "Hautatu forma librea"
@@ -209,12 +209,12 @@ BEGIN
     IDS_TOOLTIP15 "Elipsea"
     IDS_TOOLTIP16 "Laukizuzen biribildua"
     IDS_ALLFILES "Fitxategi gustiak"
-    IDS_ALLPICTUREFILES "All Picture Files"
-    IDS_FILESIZE "%d bytes"
-    IDS_PRINTRES "%d x %d pixels per meter"
-    IDS_INTNUMBERS "Please enter integral numbers only!"
-    IDS_PERCENTAGE "The percentage must be between 1 and 500."
-    IDS_ANGLE "The angle must be between -89 and 89."
-    IDS_LOADERRORTEXT "The file %s could not be loaded."
-    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+    IDS_ALLPICTUREFILES "Argazki fitxategi guztiak"
+    IDS_FILESIZE "%d byte-k"
+    IDS_PRINTRES "%d x %d pixel-ak metro"
+    IDS_INTNUMBERS "Mezedez sartu zembaki oso bakarrik!"
+    IDS_PERCENTAGE "Ehuneko  1 eta 500 tartean izan behar da."
+    IDS_ANGLE "Angelu -89 eta 89 tartean izan behar da."
+    IDS_LOADERRORTEXT "%s artxiboaren karga ez ahal da."
+    IDS_ENLARGEPROMPTTEXT "Klipboard dagoen argazkia bitmap-a baino handiagoa da.\nNahi duzu bitmap-a luzatu?"
 END

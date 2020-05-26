@@ -2,9 +2,6 @@
 #ifndef _ITSS_PCH_
 #define _ITSS_PCH_
 
-#include <wine/config.h>
-#include <wine/port.h>
-
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -18,7 +15,6 @@
 #include <objbase.h>
 
 #include <wine/itss.h>
-#include <wine/unicode.h>
 #include <wine/debug.h>
 
 #include "chm_lib.h"

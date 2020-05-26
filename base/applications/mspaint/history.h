@@ -21,8 +21,6 @@ private:
     int undoSteps;
     int redoSteps;
 public:
-    BOOL imageSaved;
-
     ImageModel();
     void CopyPrevious(void);
     void Undo(void);

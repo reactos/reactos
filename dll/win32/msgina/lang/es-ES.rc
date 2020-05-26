@@ -4,6 +4,7 @@
  * PURPOSE:    Spanish Language Resource File
  * COPYRIGHT:  2015-01-02 Ismael Ferreras Morezuelas
  *             2018-08-04 Julio Carchi Ruiz
+               2020-03-06 Julen Urizar Compains
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -156,7 +157,7 @@ BEGIN
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 190, 27
     GROUPBOX "Eventos de Apagado", IDC_STATIC, 9, 122, 257, 146
-    LTEXT "Seleccione la opción que mejor describa el motivo del apagado de esta computadora.", IDC_STATIC, 39, 134, 190, 17
+    LTEXT "Seleccione la opción que mejor describa el motivo del apagado de este equipo.", IDC_STATIC, 39, 134, 190, 17
     LTEXT "&Opción:", IDC_STATIC, 39, 154, 80, 8
     AUTOCHECKBOX "&Planificado", IDC_REASON_PLANNED, 182, 154, 47, 10
     COMBOBOX IDC_REASON_LIST, 39, 165, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -207,14 +208,14 @@ BEGIN
     IDS_PASSWORDCHANGED "La contraseña se ha cambiado correctamente."
     IDS_LOGONTITLE "Mensaje de inicio de sesión"
     IDS_LOGONWRONGUSERORPWD "El sistema no pudo iniciar sesión. Asegúrese de que su usuario y dominio son correctos y pruebe de nuevo. Las contraseñas distinguen entre mayúsculas y minúsculas."
-    IDS_LOGONUSERDISABLED "La cuenta ha sido desactivada. Contacte con su administrador del sistema."
+    IDS_LOGONUSERDISABLED "La cuenta ha sido desactivada. Contacte con su Administrador del Sistema."
     IDS_PASSWORDMUSTCHANGE "Es necesario cambiar la contraseña en el primer inicio de sesión."
     IDS_PASSWORDEXPIRED "La contraseña ha expirado y debe cambiarse."
     IDS_ACCOUNTEXPIRED "Su cuenta ha expirado. Contacte con su administrador del sistema."
-    IDS_ACCOUNTLOCKED "Unable to log you on beacuse your account has been locked out. Please see your system administrator."
-    IDS_INVALIDLOGONHOURS "Your account has time restrictions that prevent you from logging on at this time. Please try again later."
-    IDS_INVALIDWORKSTATION "Your account is configured to prevent you from using this computer. Please try another computer."
-    IDS_ACCOUNTRESTRICTION "Unable to log you on because of an account restriction."
+    IDS_ACCOUNTLOCKED "Es imposible acceder porque tu cuenta ha sido bloqueada. Contacte con su Administrador del Sistema."
+    IDS_INVALIDLOGONHOURS "En este momento, tu cuenta tiene restricciones horarias para acceder. Inténtelo de nuevo más tarde."
+    IDS_INVALIDWORKSTATION "Su cuenta está configurada para no permitirte usar este equipo. Inténtelo en otro equipo."
+    IDS_ACCOUNTRESTRICTION "Es imposible acceder porque tu cuenta tiene restricciones."
 END
 
 /* Shutdown Dialog Strings */
@@ -229,6 +230,6 @@ BEGIN
     IDS_SHUTDOWN_LOGOFF_DESC "Termina la sesión actual permitiendo que otros usuarios inicien sesión en el sistema."
     IDS_SHUTDOWN_SHUTDOWN_DESC "Termina la sesión actual y apaga el sistema para que el equipo se pueda desenchufar con seguridad."
     IDS_SHUTDOWN_RESTART_DESC "Termina la sesión actual y reinicia el sistema."
-    IDS_SHUTDOWN_SLEEP_DESC "Pone el sistema en modo de bajo consumo."
+    IDS_SHUTDOWN_SLEEP_DESC "Pone el sistema en modo de bajo consumo o suspensión."
     IDS_SHUTDOWN_HIBERNATE_DESC "Guarda la sesión actual y apaga el equipo."
 END

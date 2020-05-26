@@ -57,7 +57,7 @@ GetHostnameFromCommand(
         goto Cleanup;
 
     /* Delete the expected ending line feed character */
-    len = strlen(pszHostnameBuffer);
+    len = lstrlenA(pszHostnameBuffer);
     if (pszHostnameBuffer[len-1] == '\r' || pszHostnameBuffer[len-1] == '\n')
         pszHostnameBuffer[len-1] = ANSI_NULL;
 
@@ -143,7 +143,7 @@ START_TEST(gethostname)
     /* Change Hostname in the Registry */
     szHostNameNew[0] = ANSI_NULL;
     strcat(szHostNameNew, "ROSHOSTNAME1");
-    cbData = strlen(szHostNameNew) + 1;
+    cbData = lstrlenA(szHostNameNew) + 1;
 
     Error = RegSetValueExA(hKeyHN, "Hostname", 0, REG_SZ, (LPBYTE)szHostNameNew, cbData);
     ok(Error == ERROR_SUCCESS, "Error setting new registry value (%ld).\n", GetLastError());
@@ -176,7 +176,7 @@ START_TEST(gethostname)
     ok(pos == 0, "hostbuffer '%s' should have been szHostNameNew '%s'.\n", hostbuffer, szHostNameNew);
 
     /* Reset the original registry entry */
-    cbData = strlen(szHostNameOld) + 1;
+    cbData = lstrlenA(szHostNameOld) + 1;
 
     Error = RegSetValueExA(hKeyHN, "Hostname", 0, REG_SZ, (LPBYTE)szHostNameOld, cbData);
     ok(Error == ERROR_SUCCESS, "Error resetting new registry value back (%ld).\n", GetLastError());
@@ -204,7 +204,7 @@ START_TEST(gethostname)
     /* Change Hostname in the Registry */
     szHostNameNew[0] = ANSI_NULL;
     strcat(szHostNameNew, "ROSHOSTNAME1");
-    cbData = strlen(szHostNameNew) + 1;
+    cbData = lstrlenA(szHostNameNew) + 1;
 
     Error = RegSetValueExA(hKeyHN, "Hostname", 0, REG_SZ, (LPBYTE)szHostNameNew, cbData);
     ok(Error == ERROR_SUCCESS, "Error setting new registry value (%ld).\n", GetLastError());
@@ -222,7 +222,7 @@ START_TEST(gethostname)
     ok(pos == 0, "szHostNameNew '%s' should be hostbuffer '%s'.\n", szHostNameNew, hostbuffer);
 
     /* Reset the original registry entry */
-    cbData = strlen(szHostNameOld) + 1;
+    cbData = lstrlenA(szHostNameOld) + 1;
 
     Error = RegSetValueExA(hKeyHN, "Hostname", 0, REG_SZ, (LPBYTE)szHostNameOld, cbData);
     ok(Error == ERROR_SUCCESS, "Error resetting new registry value back (%ld).\n", GetLastError());

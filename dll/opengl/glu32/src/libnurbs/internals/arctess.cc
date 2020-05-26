@@ -381,13 +381,13 @@ ArcTessellator::tessellateNonlinear( Arc *arc, REAL geo_stepsize, REAL arc_steps
 #ifndef NOELIMINATION
 	int ocanremove = 0;
 #endif
-    	register long order =  bezierArc->order;
+    	long order =  bezierArc->order;
 	for( step=1, ++vert; step<nsteps; step++, vert++ ) {
-	    register REAL p = dp * step;
-    	    register REAL u = pow_u[0];
-            register REAL v = pow_v[0];
-	    register REAL w = pow_w[0];
-	    for( register int i = 1; i < order; i++ ) {
+	    REAL p = dp * step;
+    	    REAL u = pow_u[0];
+            REAL v = pow_v[0];
+	    REAL w = pow_w[0];
+	    for( int i = 1; i < order; i++ ) {
 	        u = u * p + pow_u[i];
 	        v = v * p + pow_v[i];
 	        w = w * p + pow_w[i];
@@ -444,12 +444,12 @@ ArcTessellator::tessellateNonlinear( Arc *arc, REAL geo_stepsize, REAL arc_steps
 #ifndef NOELIMINATION
 	int ocanremove = 0;
 #endif
-    	register long order =  bezierArc->order;
+    	long order =  bezierArc->order;
 	for( step=1, ++vert; step<nsteps; step++, vert++ ) {
-	    register REAL p = dp * step;
-	    register REAL u = pow_u[0];
-            register REAL v = pow_v[0];
-            for( register int i = 1; i < bezierArc->order; i++ ) {
+	    REAL p = dp * step;
+	    REAL u = pow_u[0];
+            REAL v = pow_v[0];
+            for( int i = 1; i < bezierArc->order; i++ ) {
 	        u = u * p + pow_u[i];
 	        v = v * p + pow_v[i];
             }
@@ -591,9 +591,9 @@ const REAL ArcTessellator::gl_Bernstein[][MAXORDER][MAXORDER] = {
 void
 ArcTessellator::trim_power_coeffs( BezierArc *bez_arc, REAL *p, int coord )
 {
-    register int stride = bez_arc->stride;
-    register int order = bez_arc->order;
-    register REAL *base = bez_arc->cpts + coord;
+    int stride = bez_arc->stride;
+    int order = bez_arc->order;
+    REAL *base = bez_arc->cpts + coord;
 
     REAL const (*mat)[MAXORDER][MAXORDER] = &gl_Bernstein[order-1];
     REAL const (*lrow)[MAXORDER] = &(*mat)[order];
@@ -601,9 +601,9 @@ ArcTessellator::trim_power_coeffs( BezierArc *bez_arc, REAL *p, int coord )
     /* WIN32 didn't like the following line within the for-loop */
     REAL const (*row)[MAXORDER] =  &(*mat)[0];
     for( ; row != lrow; row++ ) {
-	register REAL s = 0.0;
-	register REAL *point = base;
-	register REAL const *mlast = *row + order;
+	REAL s = 0.0;
+	REAL *point = base;
+	REAL const *mlast = *row + order;
 	for( REAL const *m = *row; m != mlast; m++, point += stride ) 
 	    s += *(m) * (*point);
 	*(p++) = s;

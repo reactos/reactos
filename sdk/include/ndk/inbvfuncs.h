@@ -51,7 +51,6 @@ InbvNotifyDisplayOwnershipLost(
 //
 // Installation Functions
 //
-INIT_FUNCTION
 VOID
 NTAPI
 InbvEnableBootDriver(
@@ -114,13 +113,6 @@ InbvSolidColorFill(
     _In_ ULONG Right,
     _In_ ULONG Bottom,
     _In_ ULONG Color
-);
-
-VOID
-NTAPI
-InbvSetProgressBarSubset(
-    _In_ ULONG Floor,
-    _In_ ULONG Ceiling
 );
 
 #endif

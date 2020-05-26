@@ -68,7 +68,7 @@
     X(new,        1, ARG_UINT,   0)        \
     X(new_obj,    1, 0,0)                  \
     X(null,       1, 0,0)                  \
-    X(obj_prop,   1, ARG_BSTR,   ARG_UINT) \
+    X(obj_prop,   1, ARG_STR,    ARG_UINT) \
     X(or,         1, 0,0)                  \
     X(pop,        1, ARG_UINT,   0)        \
     X(pop_except, 0, ARG_ADDR,   0)        \

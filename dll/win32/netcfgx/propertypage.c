@@ -746,6 +746,7 @@ WriteParameterArray(
     _In_ HWND hwnd,
     _In_ PPARAMETER_ARRAY ParamArray)
 {
+    SP_DEVINSTALL_PARAMS_W InstallParams;
     PPARAMETER Param;
     HKEY hDriverKey;
     INT i;
@@ -793,6 +794,19 @@ WriteParameterArray(
     }
 
     RegCloseKey(hDriverKey);
+
+    /* Notify the installer of changes to the properties */
+    InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
+    if (SetupDiGetDeviceInstallParamsW(ParamArray->DeviceInfoSet,
+                                       ParamArray->DeviceInfoData,
+                                       &InstallParams))
+    {
+        InstallParams.FlagsEx |= DI_FLAGSEX_PROPCHANGE_PENDING;
+
+        SetupDiSetDeviceInstallParamsW(ParamArray->DeviceInfoSet,
+                                       ParamArray->DeviceInfoData,
+                                       &InstallParams);
+    }
 }
 
 

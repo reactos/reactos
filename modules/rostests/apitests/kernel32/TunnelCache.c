@@ -176,6 +176,7 @@ Test_LongTests(void)
     ok(GetFileTime(hFile, &File1Time, NULL, NULL) != FALSE, "GetFileTime() failed\n");
     CloseHandle(hFile);
 
+    ros_skip_flaky
     ok(RtlCompareMemory(&FileTime, &File1Time, sizeof(FILETIME)) == sizeof(FILETIME), "Tunnel cache failed\n");
 
     DeleteFile("file2");

@@ -64,12 +64,12 @@ START_TEST(PathUnExpandEnvStrings)
      */
     ret = GetEnvironmentVariableW(L"SystemRoot", TestStr, _countof(TestStr));
     ok(ret, "got %lu\n", ret);
-    len = wcslen(TestStr);
+    len = lstrlenW(TestStr);
     ret = GetEnvironmentVariableW(L"SystemRoot", TestStr + len, _countof(TestStr) - len);
     ok(ret, "got %lu\n", ret);
 
     StringCchCopyW(ExpStr, _countof(ExpStr), L"%SystemRoot%");
-    len = wcslen(ExpStr);
+    len = lstrlenW(ExpStr);
     ret = GetEnvironmentVariableW(L"SystemRoot", ExpStr + len, _countof(ExpStr) - len);
     ok(ret, "got %lu\n", ret);
     DO_TEST(TRUE, TestStr, ExpStr);
@@ -79,7 +79,7 @@ START_TEST(PathUnExpandEnvStrings)
      * Unexpansion fails.
      */
     StringCchCopyW(TestStr, _countof(TestStr), L"%SystemRoot%\\");
-    len = wcslen(TestStr);
+    len = lstrlenW(TestStr);
     ret = GetEnvironmentVariableW(L"ProgramFiles", TestStr + len, _countof(TestStr) - len);
     ok(ret, "got %lu\n", ret);
     DO_TEST(FALSE, TestStr, L"%SystemRoot%\\%ProgramFiles%");
@@ -100,7 +100,7 @@ START_TEST(PathUnExpandEnvStrings)
     ret = GetEnvironmentVariableW(L"SystemRoot", TestStr, _countof(TestStr));
     ok(ret, "got %lu\n", ret);
     StringCchCatW(TestStr, _countof(TestStr), L"\\notepad.exe ");
-    len = wcslen(TestStr);
+    len = lstrlenW(TestStr);
     ret = GetEnvironmentVariableW(L"SystemRoot", TestStr + len, _countof(TestStr) - len);
     ok(ret, "got %lu\n", ret);
     StringCchCatW(TestStr, _countof(TestStr), L"\\file.txt");
@@ -111,7 +111,7 @@ START_TEST(PathUnExpandEnvStrings)
      * Unexpansion succeeds only on the first path.
      */
     StringCchCopyW(ExpStr, _countof(ExpStr), L"%SystemRoot%\\notepad.exe ");
-    len = wcslen(ExpStr);
+    len = lstrlenW(ExpStr);
     ret = GetEnvironmentVariableW(L"SystemRoot", ExpStr + len, _countof(ExpStr) - len);
     ok(ret, "got %lu\n", ret);
     StringCchCatW(ExpStr, _countof(ExpStr), L"\\file.txt");

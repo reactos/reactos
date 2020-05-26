@@ -30,7 +30,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 %lex-param { parser_ctx_t *ctx }
 %parse-param { parser_ctx_t *ctx }
-%pure-parser
+%define api.pure
 %start CCExpr
 
 %union {

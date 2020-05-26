@@ -1488,11 +1488,11 @@ VOID
 typedef struct _DISPATCHER_CONTEXT
 {
     ULONG64 ControlPc;
-    PVOID ImageBase;
-    PVOID FunctionEntry;
-    PVOID EstablisherFrame;
+    ULONG64 ImageBase;
+    PRUNTIME_FUNCTION FunctionEntry;
+    ULONG64 EstablisherFrame;
     ULONG64 TargetIp;
-    PVOID ContextRecord;
+    struct _CONTEXT *ContextRecord;
     PEXCEPTION_ROUTINE LanguageHandler;
     PVOID HandlerData;
     PUNWIND_HISTORY_TABLE HistoryTable;
@@ -2097,7 +2097,7 @@ typedef struct _CONTEXT
 #else
 #error "undefined processor type"
 #endif
-typedef CONTEXT *PCONTEXT,*LPCONTEXT;
+typedef CONTEXT *PCONTEXT;
 
 #define EXCEPTION_MAXIMUM_PARAMETERS 15
 #define EXCEPTION_NONCONTINUABLE  0x01
@@ -2145,7 +2145,7 @@ typedef struct _EXCEPTION_RECORD64 {
 typedef struct _EXCEPTION_POINTERS {
   PEXCEPTION_RECORD ExceptionRecord;
   PCONTEXT ContextRecord;
-} EXCEPTION_POINTERS,*PEXCEPTION_POINTERS, *LPEXCEPTION_POINTERS;
+} EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
 
 typedef struct _SECURITY_ATTRIBUTES {
     DWORD nLength;

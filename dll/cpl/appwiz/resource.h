@@ -28,6 +28,7 @@
 #define IDS_NO_MEMORY               2026
 #define IDS_NO_DIRECTORY            2027
 #define IDS_INVALID_PATH            2028
+#define IDS_INVALID_NAME            2029
 
 #define IDS_DOWNLOADING        14
 #define IDS_INSTALLING         15

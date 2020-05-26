@@ -24,7 +24,7 @@ list(APPEND SOURCE
 add_executable(spoolsv ${SOURCE} spoolsv.rc)
 
 if(USE_CLANG_CL)
-    add_target_compile_flags(spoolsv "-Wno-cast-calling-convention")
+    target_compile_options(spoolsv PRIVATE "-Wno-cast-calling-convention")
 endif()
 
 set_module_type(spoolsv win32cui UNICODE)

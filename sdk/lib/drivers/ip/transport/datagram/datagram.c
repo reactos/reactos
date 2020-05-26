@@ -49,14 +49,15 @@ BOOLEAN DGRemoveIRP(
     return Found;
 }
 
-VOID DGDeliverData(
-  PADDRESS_FILE AddrFile,
-  PIP_ADDRESS SrcAddress,
-  PIP_ADDRESS DstAddress,
-  USHORT SrcPort,
-  USHORT DstPort,
-  PIP_PACKET IPPacket,
-  UINT DataSize)
+VOID
+DGDeliverData(
+    PADDRESS_FILE AddrFile,
+    PIP_ADDRESS SrcAddress,
+    PIP_ADDRESS DstAddress,
+    USHORT SrcPort,
+    USHORT DstPort,
+    PIP_PACKET IPPacket,
+    UINT DataSize)
 /*
  * FUNCTION: Delivers datagram data to a user
  * ARGUMENTS:
@@ -72,141 +73,148 @@ VOID DGDeliverData(
  *     handler if it exists, otherwise we drop the packet.
  */
 {
-  KIRQL OldIrql;
-  PTDI_IND_RECEIVE_DATAGRAM ReceiveHandler;
-  PVOID HandlerContext;
-  LONG AddressLength;
-  PVOID SourceAddress;
-  ULONG BytesTaken;
-  NTSTATUS Status;
-  PVOID DataBuffer;
+    KIRQL OldIrql;
+    LONG AddressLength;
+    PVOID SourceAddress;
+    ULONG BytesTaken;
+    NTSTATUS Status;
+    PVOID DataBuffer;
 
-  TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    TI_DbgPrint(MIN_TRACE, ("Called.\n"));
 
-  LockObject(AddrFile, &OldIrql);
+    LockObject(AddrFile, &OldIrql);
 
-  if (AddrFile->Protocol == IPPROTO_UDP)
+    if (AddrFile->Protocol == IPPROTO_UDP)
     {
-      DataBuffer = IPPacket->Data;
+        DataBuffer = IPPacket->Data;
     }
-  else
+    else if (AddrFile->HeaderIncl)       
     {
-      if (AddrFile->HeaderIncl)
-          DataBuffer = IPPacket->Header;
-      else
-      {
-          DataBuffer = IPPacket->Data;
-          DataSize -= IPPacket->HeaderSize;
-      }
+        DataBuffer = IPPacket->Header;
+    }
+    else
+    {
+        DataBuffer = IPPacket->Data;
+        DataSize -= IPPacket->HeaderSize;
     }
 
-  if (!IsListEmpty(&AddrFile->ReceiveQueue))
+    if (!IsListEmpty(&AddrFile->ReceiveQueue))
     {
-      PLIST_ENTRY CurrentEntry;
-      PDATAGRAM_RECEIVE_REQUEST Current = NULL;
-      PTA_IP_ADDRESS RTAIPAddress;
+        PLIST_ENTRY CurrentEntry;
+        PDATAGRAM_RECEIVE_REQUEST Current = NULL;
+        PTA_IP_ADDRESS RTAIPAddress;
 
-      TI_DbgPrint(MAX_TRACE, ("There is a receive request.\n"));
+        TI_DbgPrint(MAX_TRACE, ("There is a receive request.\n"));
 
-      /* Search receive request list to find a match */
-      CurrentEntry = AddrFile->ReceiveQueue.Flink;
-      while(CurrentEntry != &AddrFile->ReceiveQueue) {
-          Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
-          CurrentEntry = CurrentEntry->Flink;
-	  if( DstPort == AddrFile->Port &&
-              (AddrIsEqual(DstAddress, &AddrFile->Address) ||
-               AddrIsUnspecified(&AddrFile->Address) ||
-               AddrIsUnspecified(DstAddress))) {
+        /* Search receive request list to find a match */
+        CurrentEntry = AddrFile->ReceiveQueue.Flink;
+        while (CurrentEntry != &AddrFile->ReceiveQueue)
+        {
+            Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
+            CurrentEntry = CurrentEntry->Flink;
+            if (DstPort == AddrFile->Port &&
+               (AddrIsEqual(DstAddress, &AddrFile->Address) ||
+                AddrIsUnspecified(&AddrFile->Address) ||
+                AddrIsUnspecified(DstAddress)))
+            {
 
-	      /* Remove the request from the queue */
-	      RemoveEntryList(&Current->ListEntry);
+                /* Remove the request from the queue */
+                RemoveEntryList(&Current->ListEntry);
 
-              TI_DbgPrint(MAX_TRACE, ("Suitable receive request found.\n"));
+                TI_DbgPrint(MAX_TRACE, ("Suitable receive request found.\n"));
 
-              TI_DbgPrint(MAX_TRACE,
+                TI_DbgPrint(MAX_TRACE,
                            ("Target Buffer: %x, Source Buffer: %x, Size %d\n",
                             Current->Buffer, DataBuffer, DataSize));
 
-              /* Copy the data into buffer provided by the user */
-	      RtlCopyMemory( Current->Buffer,
-			     DataBuffer,
-			     MIN(Current->BufferSize, DataSize) );
+                /* Copy the data into buffer provided by the user */
+                RtlCopyMemory(Current->Buffer,
+                     DataBuffer,
+                     MIN(Current->BufferSize, DataSize));
 
-	      RTAIPAddress = (PTA_IP_ADDRESS)Current->ReturnInfo->RemoteAddress;
-	      RTAIPAddress->TAAddressCount = 1;
-	      RTAIPAddress->Address->AddressType = TDI_ADDRESS_TYPE_IP;
-          RTAIPAddress->Address->AddressLength = TDI_ADDRESS_LENGTH_IP;
-	      RTAIPAddress->Address->Address->sin_port = SrcPort;
-          RTAIPAddress->Address->Address->in_addr = SrcAddress->Address.IPv4Address;
-          RtlZeroMemory(RTAIPAddress->Address->Address->sin_zero, 8);
+                RTAIPAddress = (PTA_IP_ADDRESS)Current->ReturnInfo->RemoteAddress;
+                RTAIPAddress->TAAddressCount = 1;
+                RTAIPAddress->Address->AddressType = TDI_ADDRESS_TYPE_IP;
+                RTAIPAddress->Address->AddressLength = TDI_ADDRESS_LENGTH_IP;
+                RTAIPAddress->Address->Address->sin_port = SrcPort;
+                RTAIPAddress->Address->Address->in_addr = SrcAddress->Address.IPv4Address;
+                RtlZeroMemory(RTAIPAddress->Address->Address->sin_zero, 8);
 
-	      TI_DbgPrint(MAX_TRACE, ("(A: %08x) Addr %08x Port %04x\n",
-				      RTAIPAddress,
-				      SrcAddress->Address.IPv4Address, SrcPort));
+                TI_DbgPrint(MAX_TRACE, ("(A: %08x) Addr %08x Port %04x\n",
+                            RTAIPAddress,
+                            SrcAddress->Address.IPv4Address, SrcPort));
 
-              ReferenceObject(AddrFile);
-              UnlockObject(AddrFile, OldIrql);
+                ReferenceObject(AddrFile);
+                UnlockObject(AddrFile, OldIrql);
 
-              /* Complete the receive request */
-              if (Current->BufferSize < DataSize)
-                  Current->Complete(Current->Context, STATUS_BUFFER_OVERFLOW, Current->BufferSize);
-              else
-                  Current->Complete(Current->Context, STATUS_SUCCESS, DataSize);
+                /* Complete the receive request */
+                if (Current->BufferSize < DataSize)
+                    Current->Complete(Current->Context, STATUS_BUFFER_OVERFLOW, Current->BufferSize);
+                else
+                    Current->Complete(Current->Context, STATUS_SUCCESS, DataSize);
 
-              LockObject(AddrFile, &OldIrql);
-              DereferenceObject(AddrFile);
-	  }
-      }
-
-      UnlockObject(AddrFile, OldIrql);
-    }
-  else if (AddrFile->RegisteredReceiveDatagramHandler)
-    {
-      TI_DbgPrint(MAX_TRACE, ("Calling receive event handler.\n"));
-
-      ReceiveHandler = AddrFile->ReceiveDatagramHandler;
-      HandlerContext = AddrFile->ReceiveDatagramHandlerContext;
-
-      if (SrcAddress->Type == IP_ADDRESS_V4)
-        {
-          AddressLength = sizeof(IPv4_RAW_ADDRESS);
-          SourceAddress = &SrcAddress->Address.IPv4Address;
-        }
-      else /* (Address->Type == IP_ADDRESS_V6) */
-        {
-          AddressLength = sizeof(IPv6_RAW_ADDRESS);
-          SourceAddress = SrcAddress->Address.IPv6Address;
+                LockObject(AddrFile, &OldIrql);
+                DereferenceObject(AddrFile);
+            }
         }
 
-      ReferenceObject(AddrFile);
-      UnlockObject(AddrFile, OldIrql);
-
-      Status = (*ReceiveHandler)(HandlerContext,
-        AddressLength,
-        SourceAddress,
-        0,
-        NULL,
-        TDI_RECEIVE_ENTIRE_MESSAGE,
-        DataSize,
-        DataSize,
-        &BytesTaken,
-        DataBuffer,
-        NULL);
-
-      if (STATUS_SUCCESS != Status)
-          TI_DbgPrint(MAX_TRACE, ("receive handler signaled failure with Status 0x%x\n", Status));
-
-      DereferenceObject(AddrFile);
+        UnlockObject(AddrFile, OldIrql);
     }
-  else
+    else if (AddrFile->RegisteredReceiveDatagramHandler)
     {
-      UnlockObject(AddrFile, OldIrql);
-      TI_DbgPrint(MAX_TRACE, ("Discarding datagram.\n"));
+        PTDI_IND_RECEIVE_DATAGRAM ReceiveHandler = AddrFile->ReceiveDatagramHandler;
+        PVOID HandlerContext = AddrFile->ReceiveDatagramHandlerContext;
+        PVOID OptionsData = NULL;
+        INT32 OptionsSize = 0;
+
+        TI_DbgPrint(MAX_TRACE, ("Calling receive event handler.\n"));
+
+        if (SrcAddress->Type == IP_ADDRESS_V4)
+        {
+            AddressLength = sizeof(IPv4_RAW_ADDRESS);
+            SourceAddress = &SrcAddress->Address.IPv4Address;
+            OptionsSize = IPPacket->HeaderSize - sizeof(IPv4_HEADER);
+            if (OptionsSize > 0)
+            {
+                OptionsData = (PUCHAR)IPPacket->Header + sizeof(IPv4_HEADER);
+            }
+        }
+        else /* (Address->Type == IP_ADDRESS_V6) */
+        {
+            AddressLength = sizeof(IPv6_RAW_ADDRESS);
+            SourceAddress = SrcAddress->Address.IPv6Address;
+        }
+
+        ReferenceObject(AddrFile);
+        UnlockObject(AddrFile, OldIrql);
+
+        TI_DbgPrint(MIN_TRACE, ("OptionsSize %d DataSize: %u\n", OptionsSize, DataSize));
+
+        Status = (*ReceiveHandler)(HandlerContext,
+            AddressLength,
+            SourceAddress,
+            OptionsSize,
+            OptionsData,
+            TDI_RECEIVE_ENTIRE_MESSAGE,
+            DataSize,
+            DataSize,
+            &BytesTaken,
+            DataBuffer,
+            NULL);
+
+        if (STATUS_SUCCESS != Status)
+            TI_DbgPrint(MAX_TRACE, ("receive handler signaled failure with Status 0x%x\n", Status));
+
+        DereferenceObject(AddrFile);
+    }
+    else
+    {
+        UnlockObject(AddrFile, OldIrql);
+        TI_DbgPrint(MAX_TRACE, ("Discarding datagram.\n"));
     }
 
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+    TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
-
 
 VOID DGReceiveComplete(PVOID Context, NTSTATUS Status, ULONG Count) {
     PDATAGRAM_RECEIVE_REQUEST ReceiveRequest =

@@ -756,6 +756,7 @@ InstallLiveCD(VOID)
         /* Start the TCP/IP protocol driver */
         SetupStartService(L"Tcpip", FALSE);
         SetupStartService(L"Dhcp", FALSE);
+        SetupStartService(L"Dnscache", FALSE);
     }
 
     /* Register components */
@@ -1274,6 +1275,7 @@ InstallReactOS(VOID)
         /* Start the TCP/IP protocol driver */
         SetupStartService(L"Tcpip", FALSE);
         SetupStartService(L"Dhcp", FALSE);
+        SetupStartService(L"Dnscache", FALSE);
     }
 
     InstallWizard();

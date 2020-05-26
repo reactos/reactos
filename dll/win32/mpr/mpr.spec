@@ -32,8 +32,8 @@
 @ stdcall NPSDeviceGetNumberA(str ptr ptr)
 @ stdcall NPSDeviceGetStringA(long long ptr ptr)
 @ stdcall NPSGetProviderHandleA(ptr)
-@ stdcall NPSGetProviderNameA(long ptr)
-@ stdcall NPSGetSectionNameA(long ptr)
+@ stdcall NPSGetProviderNameA(ptr ptr)
+@ stdcall NPSGetSectionNameA(ptr ptr)
 @ stdcall NPSNotifyGetContextA(ptr)
 @ stdcall NPSNotifyRegisterA(long ptr)
 @ stdcall NPSSetCustomTextA(str)
@@ -101,7 +101,7 @@
 @ stdcall WNetOpenEnumW(long long long ptr ptr)
 @ stub WNetPasswordChangeNotify
 @ stub WNetPropertyDialogA
-@ stdcall WNetRemoveCachedPassword(long long long)
+@ stdcall WNetRemoveCachedPassword(ptr long long)
 @ stub WNetRestoreConnection
 @ stdcall WNetRestoreConnectionA(long str)
 @ stdcall WNetRestoreConnectionW(long wstr)

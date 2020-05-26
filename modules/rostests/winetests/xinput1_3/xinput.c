@@ -126,6 +126,9 @@ static void test_get_state(void)
         }
     }
 
+    result = pXInputGetState(0, NULL);
+    ok(result == ERROR_BAD_ARGUMENTS, "XInputGetState returned (%d)\n", result);
+
     result = pXInputGetState(XUSER_MAX_COUNT, &state);
     ok(result == ERROR_BAD_ARGUMENTS, "XInputGetState returned (%d)\n", result);
 
@@ -292,7 +295,7 @@ START_TEST(xinput)
     void *pXInputGetStateEx_Ordinal;
     int i;
 
-    for (i = 0; i < sizeof(libs) / sizeof(libs[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(libs); i++)
     {
         hXinput = LoadLibraryA( libs[i].name );
 

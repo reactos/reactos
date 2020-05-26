@@ -3,6 +3,8 @@
 #include <wdm.h>
 #include <initguid.h>
 #include <wdmguid.h>
+#include <usb.h>
+#include <usbiodef.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 

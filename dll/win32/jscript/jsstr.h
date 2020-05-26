@@ -102,7 +102,7 @@ jsstr_t *jsstr_alloc_buf(unsigned,WCHAR**) DECLSPEC_HIDDEN;
 
 static inline jsstr_t *jsstr_alloc(const WCHAR *str)
 {
-    return jsstr_alloc_len(str, strlenW(str));
+    return jsstr_alloc_len(str, lstrlenW(str));
 }
 
 void jsstr_free(jsstr_t*) DECLSPEC_HIDDEN;

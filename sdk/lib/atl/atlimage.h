@@ -377,14 +377,7 @@ public:
     HRESULT Load(LPCTSTR pszFileName) throw()
     {
         // convert the file name string into Unicode
-        // TODO: use a string class
-#ifdef UNICODE
-        LPCWSTR pszNameW = pszFileName;
-#else
-        WCHAR szPath[MAX_PATH];
-        ::MultiByteToWideChar(CP_ACP, 0, pszFileName, -1, szPath, MAX_PATH);
-        LPCWSTR pszNameW = szPath;
-#endif
+        CStringW pszNameW(pszFileName);
 
         // create a GpBitmap object from file
         using namespace Gdiplus;
@@ -555,14 +548,7 @@ public:
         // TODO & FIXME: set parameters (m_rgbTransColor etc.)
 
         // convert the file name string into Unicode
-        // TODO: use a string class
-#ifdef UNICODE
-        LPCWSTR pszNameW = pszFileName;
-#else
-        WCHAR szPath[MAX_PATH];
-        ::MultiByteToWideChar(CP_ACP, 0, pszFileName, -1, szPath, MAX_PATH);
-        LPCWSTR pszNameW = szPath;
-#endif
+        CStringW pszNameW(pszFileName);
 
         // if the file type is null, get the file type from extension
         const GUID *FileType = &guidFileType;

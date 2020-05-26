@@ -47,12 +47,12 @@ BEGIN
   使用 '/nh' 要隐藏页眉。 默认情况下数据显示在表中。\n\
 \n\
 语法:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <格式>] [/nh] \n\
-  whoami /all [/fo <格式>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <格式>] [/nh]\n\
+  whoami /all [/fo <格式>] [/nh]\n\
 \n\
-例子: \n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+例子:\n\
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

@@ -18,7 +18,7 @@ foreach(_file ${TEXTFILES})
 endforeach()
 
 set_source_files_properties(mizu.rc PROPERTIES OBJECT_DEPENDS "${_converted_files}")
-add_library(mizu.msstyles SHARED mizu.rc)
+add_library(mizu.msstyles MODULE mizu.rc)
 set_module_type(mizu.msstyles module)
 set_target_properties(mizu.msstyles PROPERTIES SUFFIX "")
 add_cd_file(TARGET mizu.msstyles DESTINATION reactos/Resources/Themes/Mizu FOR all)

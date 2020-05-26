@@ -53,7 +53,23 @@ DECLARE_INTERFACE_(IMILBitmapSource,IUnknown)
     STDMETHOD_(HRESULT,GetResolution)(THIS_ double *,double *) PURE;
     STDMETHOD_(HRESULT,CopyPalette)(THIS_ IWICPalette *) PURE;
     STDMETHOD_(HRESULT,CopyPixels)(THIS_ const WICRect *,UINT,UINT,BYTE *) PURE;
-    /*** IMILBitmapSource methods ***/
+};
+#undef INTERFACE
+
+#define INTERFACE IMILBitmap
+DECLARE_INTERFACE_(IMILBitmap,IMILBitmapSource)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IWICBitmapSource methods ***/
+    STDMETHOD_(HRESULT,GetSize)(THIS_ UINT *,UINT *) PURE;
+    STDMETHOD_(HRESULT,GetPixelFormat)(THIS_ int *) PURE;
+    STDMETHOD_(HRESULT,GetResolution)(THIS_ double *,double *) PURE;
+    STDMETHOD_(HRESULT,CopyPalette)(THIS_ IWICPalette *) PURE;
+    STDMETHOD_(HRESULT,CopyPixels)(THIS_ const WICRect *,UINT,UINT,BYTE *) PURE;
+    /*** IMILBitmap methods ***/
     STDMETHOD_(HRESULT,unknown1)(THIS_ void **) PURE;
     STDMETHOD_(HRESULT,Lock)(THIS_ const WICRect *,DWORD,IWICBitmapLock **) PURE;
     STDMETHOD_(HRESULT,Unlock)(THIS_ IWICBitmapLock *) PURE;
@@ -64,7 +80,7 @@ DECLARE_INTERFACE_(IMILBitmapSource,IUnknown)
 #undef INTERFACE
 
 #define INTERFACE IMILBitmapScaler
-DECLARE_INTERFACE_(IMILBitmapScaler,IUnknown)
+DECLARE_INTERFACE_(IMILBitmapScaler,IMILBitmapSource)
 {
     /*** IUnknown methods ***/
     STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
@@ -78,26 +94,11 @@ DECLARE_INTERFACE_(IMILBitmapScaler,IUnknown)
     STDMETHOD_(HRESULT,CopyPixels)(THIS_ const WICRect *,UINT,UINT,BYTE *) PURE;
     /*** IMILBitmapScaler methods ***/
     STDMETHOD_(HRESULT,unknown1)(THIS_ void **) PURE;
-    STDMETHOD_(HRESULT,Initialize)(THIS_ IMILBitmapSource *,UINT,UINT,WICBitmapInterpolationMode);
+    STDMETHOD_(HRESULT,Initialize)(THIS_ IMILBitmapSource *,UINT,UINT,WICBitmapInterpolationMode) PURE;
 };
 #undef INTERFACE
 
-#ifdef __i386__  /* thiscall functions are i386-specific */
-
-#define THISCALL(func) __thiscall_ ## func
-#define DEFINE_THISCALL_WRAPPER(func,args) \
-    extern typeof(func) THISCALL(func); \
-    __ASM_STDCALL_FUNC(__thiscall_ ## func, args, \
-                    "popl %eax\n\t" \
-                    "pushl %ecx\n\t" \
-                    "pushl %eax\n\t" \
-                    "jmp " __ASM_NAME(#func) __ASM_STDCALL(args) )
-#else /* __i386__ */
-
-#define THISCALL(func) func
-#define DEFINE_THISCALL_WRAPPER(func,args) /* nothing */
-
-#endif /* __i386__ */
+#define THISCALLMETHOD_(type,method)  type (__thiscall *method)
 
 #define INTERFACE IMILUnknown1
 DECLARE_INTERFACE_(IMILUnknown1,IUnknown)

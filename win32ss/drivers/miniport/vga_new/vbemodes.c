@@ -363,7 +363,7 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
             {
                 /* Read the screen stride (scanline size) */
                 ScreenStride = RaiseToPower2(VbeModeInfo->BytesPerScanLine);
-                //ASSERT(ScreenStride <= MAX_USHORT);
+                //ASSERT(ScreenStride <= MAXUSHORT);
                 VgaMode->wbytes = (USHORT)ScreenStride;
                 VideoDebugPrint((0, "ScanLines: %lx Stride: %lx\n", VbeModeInfo->BytesPerScanLine, VgaMode->wbytes));
 
@@ -391,7 +391,7 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
                 VideoDebugPrint((0, "LINEAR MODE!!!\n"));
                 ScreenStride = (VbeVersion >= 0x300) ? VbeModeInfo->LinBytesPerScanLine : 0;
                 if (!ScreenStride) ScreenStride = VbeModeInfo->BytesPerScanLine;
-                //ASSERT(ScreenStride <= MAX_USHORT);
+                //ASSERT(ScreenStride <= MAXUSHORT);
                 VgaMode->wbytes = (USHORT)ScreenStride;
                 VideoDebugPrint((0, "ScanLines: %lx Stride: %lx\n", VbeModeInfo->BytesPerScanLine, VgaMode->wbytes));
 

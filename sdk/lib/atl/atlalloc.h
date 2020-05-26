@@ -98,18 +98,18 @@ class CHeapPtr
 {
 public:
     CHeapPtr() :
-        m_Data(NULL)
+        m_pData(NULL)
     {
     }
 
     explicit CHeapPtr(T *lp) :
-        m_Data(lp)
+        m_pData(lp)
     {
     }
 
     explicit CHeapPtr(CHeapPtr<T, Allocator> &lp)
     {
-        m_Data = lp.Detach();
+        m_pData = lp.Detach();
     }
 
     ~CHeapPtr()
@@ -119,24 +119,24 @@ public:
 
     CHeapPtr<T, Allocator>& operator = (CHeapPtr<T, Allocator> &lp)
     {
-        if (lp.m_Data != m_Data)
+        if (lp.m_pData != m_pData)
             Attach(lp.Detach());
         return *this;
     }
 
     bool AllocateBytes(_In_ size_t nBytes)
     {
-        ATLASSERT(m_Data == NULL);
-        m_Data = static_cast<T*>(Allocator::Allocate(nBytes));
-        return m_Data != NULL;
+        ATLASSERT(m_pData == NULL);
+        m_pData = static_cast<T*>(Allocator::Allocate(nBytes));
+        return m_pData != NULL;
     }
 
     bool ReallocateBytes(_In_ size_t nBytes)
     {
-        T* newData = static_cast<T*>(Allocator::Reallocate(m_Data, nBytes));
+        T* newData = static_cast<T*>(Allocator::Reallocate(m_pData, nBytes));
         if (newData == NULL)
             return false;
-        m_Data = newData;
+        m_pData = newData;
         return true;
     }
 
@@ -152,43 +152,43 @@ public:
 
     void Free()
     {
-        if (m_Data)
+        if (m_pData)
         {
-            Allocator::Free(m_Data);
-            m_Data = NULL;
+            Allocator::Free(m_pData);
+            m_pData = NULL;
         }
     }
 
     void Attach(T *lp)
     {
-        Allocator::Free(m_Data);
-        m_Data = lp;
+        Allocator::Free(m_pData);
+        m_pData = lp;
     }
 
     T *Detach()
     {
-        T *saveP = m_Data;
-        m_Data = NULL;
+        T *saveP = m_pData;
+        m_pData = NULL;
         return saveP;
     }
 
     T **operator &()
     {
-        ATLASSERT(m_Data == NULL);
-        return &m_Data;
+        ATLASSERT(m_pData == NULL);
+        return &m_pData;
     }
 
     operator T* () const
     {
-        return m_Data;
+        return m_pData;
     }
 
     T* operator->() const
     {
-        return m_Data;
+        return m_pData;
     }
 
-protected:
-    T *m_Data;
+public:
+    T *m_pData;
 };
 

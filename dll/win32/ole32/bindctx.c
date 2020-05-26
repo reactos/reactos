@@ -446,7 +446,7 @@ static HRESULT BindCtxImpl_GetObjectIndex(BindCtxImpl* This,
                 if ( ( (This->bindCtxTable[i].pkeyObj==NULL) && (pszkey==NULL) ) ||
                      ( (This->bindCtxTable[i].pkeyObj!=NULL) &&
                        (pszkey!=NULL) &&
-                       (lstrcmpW(This->bindCtxTable[i].pkeyObj,pszkey)==0)
+                       (wcscmp(This->bindCtxTable[i].pkeyObj,pszkey)==0)
                      )
                    )
 

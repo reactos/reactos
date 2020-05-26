@@ -37,8 +37,8 @@ RmapListFree(
     ExFreePoolWithTag(P, TAG_RMAP);
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 MmInitializeRmapList(VOID)
 {

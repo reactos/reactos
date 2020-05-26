@@ -69,19 +69,9 @@ static BOOL GetNextElement(TCHAR **pStart, TCHAR **pEnd)
 }
 
 /* Execute a single instance of a FOR command */
-static INT RunInstance(PARSED_COMMAND *Cmd)
-{
-    if (bEcho && !bDisableBatchEcho && Cmd->Subcommands->Type != C_QUIET)
-    {
-        if (!bIgnoreEcho)
-            ConOutChar(_T('\n'));
-        PrintPrompt();
-        EchoCommand(Cmd->Subcommands);
-        ConOutChar(_T('\n'));
-    }
-    /* Just run the command (variable expansion is done in DoDelayedExpansion) */
-    return ExecuteCommand(Cmd->Subcommands);
-}
+/* Just run the command (variable expansion is done in DoDelayedExpansion) */
+#define RunInstance(Cmd) \
+    ExecuteCommandWithEcho((Cmd)->Subcommands)
 
 /* Check if this FOR should be terminated early */
 static BOOL Exiting(PARSED_COMMAND *Cmd)

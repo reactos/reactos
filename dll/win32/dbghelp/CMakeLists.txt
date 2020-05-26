@@ -7,10 +7,6 @@ endif()
 if(NOT CMAKE_CROSSCOMPILING)
     add_definitions(-DDBGHELP_STATIC_LIB)
 
-    if(ARCH STREQUAL "i386")
-        add_definitions(-D_X86_)
-    endif()
-
     include_directories(
         ${REACTOS_SOURCE_DIR}/tools
         ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
@@ -32,6 +28,7 @@ if(NOT CMAKE_CROSSCOMPILING)
     endif()
 
     add_library(dbghelphost ${SOURCE})
+    target_link_libraries(dbghelphost PRIVATE host_includes)
 else()
     add_definitions(
         -D__WINESRC__

@@ -2,6 +2,7 @@
  * Unit test suite for localspl API functions: local print monitor
  *
  * Copyright 2006-2007 Detlef Riekenberg
+ * Copyright 2019 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -37,24 +38,35 @@
 
 static HMODULE  hdll;
 static HMODULE  hlocalmon;
+static HANDLE   hmon;
 static LPMONITOREX (WINAPI *pInitializePrintMonitor)(LPWSTR);
+static LPMONITOR2  (WINAPI *pInitializePrintMonitor2)(PMONITORINIT, LPHANDLE);
 
 static LPMONITOREX pm;
+static LPMONITOR2 pm2;
 static BOOL  (WINAPI *pEnumPorts)(LPWSTR, DWORD, LPBYTE, DWORD, LPDWORD, LPDWORD);
+static BOOL  (WINAPI *pEnumPorts2)(HANDLE, LPWSTR, DWORD, LPBYTE, DWORD, LPDWORD, LPDWORD);
 static BOOL  (WINAPI *pOpenPort)(LPWSTR, PHANDLE);
+static BOOL  (WINAPI *pOpenPort2)(HANDLE, LPWSTR, PHANDLE);
 static BOOL  (WINAPI *pOpenPortEx)(LPWSTR, LPWSTR, PHANDLE, struct _MONITOR *);
+static BOOL  (WINAPI *pOpenPortEx2)(HANDLE, HANDLE, LPWSTR, LPWSTR, PHANDLE, struct _MONITOR2 *);
 static BOOL  (WINAPI *pStartDocPort)(HANDLE, LPWSTR, DWORD, DWORD, LPBYTE);
 static BOOL  (WINAPI *pWritePort)(HANDLE hPort, LPBYTE, DWORD, LPDWORD);
 static BOOL  (WINAPI *pReadPort)(HANDLE hPort, LPBYTE, DWORD, LPDWORD);
 static BOOL  (WINAPI *pEndDocPort)(HANDLE);
 static BOOL  (WINAPI *pClosePort)(HANDLE);
 static BOOL  (WINAPI *pAddPort)(LPWSTR, HWND, LPWSTR);
+static BOOL  (WINAPI *pAddPort2)(HANDLE, LPWSTR, HWND, LPWSTR);
 static BOOL  (WINAPI *pAddPortEx)(LPWSTR, DWORD, LPBYTE, LPWSTR);
+static BOOL  (WINAPI *pAddPortEx2)(HANDLE, LPWSTR, DWORD, LPBYTE, LPWSTR);
 static BOOL  (WINAPI *pConfigurePort)(LPWSTR, HWND, LPWSTR);
+static BOOL  (WINAPI *pConfigurePort2)(HANDLE, LPWSTR, HWND, LPWSTR);
 static BOOL  (WINAPI *pDeletePort)(LPWSTR, HWND, LPWSTR);
+static BOOL  (WINAPI *pDeletePort2)(HANDLE, LPWSTR, HWND, LPWSTR);
 static BOOL  (WINAPI *pGetPrinterDataFromPort)(HANDLE, DWORD, LPWSTR, LPWSTR, DWORD, LPWSTR, DWORD, LPDWORD);
 static BOOL  (WINAPI *pSetPortTimeOuts)(HANDLE, LPCOMMTIMEOUTS, DWORD);
-static BOOL  (WINAPI *pXcvOpenPort)(LPCWSTR, ACCESS_MASK, PHANDLE phXcv);
+static BOOL  (WINAPI *pXcvOpenPort)(LPCWSTR, ACCESS_MASK, PHANDLE);
+static BOOL  (WINAPI *pXcvOpenPort2)(HANDLE, LPCWSTR, ACCESS_MASK, PHANDLE);
 static DWORD (WINAPI *pXcvDataPort)(HANDLE, LPCWSTR, PBYTE, DWORD, PBYTE, DWORD, PDWORD);
 static BOOL  (WINAPI *pXcvClosePort)(HANDLE);
 
@@ -126,6 +138,91 @@ static WCHAR have_lpt[PORTNAME_MAXSIZE];
 static WCHAR have_file[PORTNAME_MAXSIZE];
 
 /* ########################### */
+
+static LONG WINAPI CreateKey(HANDLE hcKey, LPCWSTR pszSubKey, DWORD dwOptions,
+                REGSAM samDesired, PSECURITY_ATTRIBUTES pSecurityAttributes,
+                PHANDLE phckResult, PDWORD pdwDisposition, HANDLE hSpooler)
+{
+    ok(0, "should not be called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static LONG WINAPI OpenKey(HANDLE hcKey, LPCWSTR pszSubKey, REGSAM samDesired,
+                PHANDLE phkResult, HANDLE hSpooler)
+{
+    ok(0, "should not be called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static LONG WINAPI CloseKey(HANDLE hcKey, HANDLE hSpooler)
+{
+    ok(0, "should not be called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static LONG WINAPI DeleteKey(HANDLE hcKey, LPCWSTR pszSubKey, HANDLE hSpooler)
+{
+    ok(0, "should not be called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static LONG WINAPI EnumKey(HANDLE hcKey, DWORD dwIndex, LPWSTR pszName,
+                PDWORD pcchName, PFILETIME pftLastWriteTime, HANDLE hSpooler)
+{
+    ok(0, "should not be called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static LONG WINAPI QueryInfoKey(HANDLE hcKey, PDWORD pcSubKeys, PDWORD pcbKey,
+                PDWORD pcValues, PDWORD pcbValue, PDWORD pcbData,
+                PDWORD pcbSecurityDescriptor, PFILETIME pftLastWriteTime,
+                HANDLE hSpooler)
+{
+    ok(0, "should not be called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static LONG WINAPI SetValue(HANDLE hcKey, LPCWSTR pszValue, DWORD dwType,
+                const BYTE* pData, DWORD cbData, HANDLE hSpooler)
+{
+    ok(0, "should not be called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static LONG WINAPI DeleteValue(HANDLE hcKey, LPCWSTR pszValue, HANDLE hSpooler)
+{
+    ok(0, "should not be called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static LONG WINAPI EnumValue(HANDLE hcKey, DWORD dwIndex, LPWSTR pszValue,
+                PDWORD pcbValue, PDWORD pType, PBYTE pData, PDWORD pcbData,
+                HANDLE hSpooler)
+{
+    ok(0, "should not be called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static LONG WINAPI QueryValue(HANDLE hcKey, LPCWSTR pszValue, PDWORD pType,
+                PBYTE pData, PDWORD pcbData, HANDLE hSpooler)
+{
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static MONITORREG monreg =
+{
+    sizeof(MONITORREG),
+    CreateKey,
+    OpenKey,
+    CloseKey,
+    DeleteKey,
+    EnumKey,
+    QueryInfoKey,
+    SetValue,
+    DeleteValue,
+    EnumValue,
+    QueryValue
+};
 
 static DWORD delete_port(LPWSTR portname)
 {
@@ -605,6 +702,8 @@ static void test_InitializePrintMonitor(void)
 {
     LPMONITOREX res;
 
+    if (!pInitializePrintMonitor) return;
+
     SetLastError(0xdeadbeef);
     res = pInitializePrintMonitor(NULL);
     /* The Parameter was unchecked before w2k */
@@ -618,14 +717,32 @@ static void test_InitializePrintMonitor(void)
         "returned %p with %u\n (expected '!= NULL' or: NULL with "
         "ERROR_INVALID_PARAMETER)\n", res, GetLastError());
 
-
     /* Every call with a non-empty string returns the same Pointer */
     SetLastError(0xdeadbeef);
     res = pInitializePrintMonitor(Monitors_LocalPortW);
     ok( res == pm,
         "returned %p with %u (expected %p)\n", res, GetLastError(), pm);
+    ok(res->dwMonitorSize == sizeof(MONITOR), "wrong dwMonitorSize %u\n", res->dwMonitorSize);
 }
 
+static void test_InitializePrintMonitor2(void)
+{
+    MONITORINIT init;
+    MONITOR2 *monitor2;
+    HANDLE hmon;
+
+    if (!pInitializePrintMonitor2) return;
+
+    memset(&init, 0, sizeof(init));
+    init.cbSize = sizeof(init);
+    init.hckRegistryRoot = 0;
+    init.pMonitorReg = &monreg;
+    init.bLocal = TRUE;
+
+    monitor2 = pInitializePrintMonitor2(&init, &hmon);
+    ok(monitor2 != NULL, "InitializePrintMonitor2 error %u\n", GetLastError());
+    ok(monitor2->cbSize >= FIELD_OFFSET(MONITOR2, pfnSendRecvBidiDataFromPort), "wrong cbSize %u\n", monitor2->cbSize);
+}
 
 /* ########################### */
 
@@ -1349,11 +1466,12 @@ static void test_XcvOpenPort(void)
 /* ########################### */
 
 #define GET_MONITOR_FUNC(name) \
-            if(numentries > 0) { \
-                numentries--; \
-                p##name = pm->Monitor.pfn##name ;  \
-            }
+    if (pm) p##name = pm->Monitor.pfn##name; \
+    else if (pm2) p##name = pm2->pfn##name;
 
+#define GET_MONITOR_FUNC2(name) \
+    if (pm) p##name = pm->Monitor.pfn##name; \
+    else if (pm2) p##name##2 = pm2->pfn##name;
 
 START_TEST(localmon)
 {
@@ -1376,6 +1494,7 @@ START_TEST(localmon)
     ok(res != 0, "with %u\n", GetLastError());
 
     pInitializePrintMonitor = (void *) GetProcAddress(hdll, "InitializePrintMonitor");
+    pInitializePrintMonitor2 = (void *) GetProcAddress(hdll, "InitializePrintMonitor2");
 
     if (!pInitializePrintMonitor) {
         /* The Monitor for "Local Ports" was in a separate dll before w2k */
@@ -1384,34 +1503,60 @@ START_TEST(localmon)
             pInitializePrintMonitor = (void *) GetProcAddress(hlocalmon, "InitializePrintMonitor");
         }
     }
-    if (!pInitializePrintMonitor) return;
+    if (!pInitializePrintMonitor && !pInitializePrintMonitor2) {
+        skip("InitializePrintMonitor or InitializePrintMonitor2 not found\n");
+        return;
+    }
 
     /* Native localmon.dll / localspl.dll need a valid Port-Entry in:
        a) since xp: HKLM\Software\Microsoft\Windows NT\CurrentVersion\Ports 
        b) up to w2k: Section "Ports" in win.ini
        or InitializePrintMonitor fails. */
-    pm = pInitializePrintMonitor(Monitors_LocalPortW);
-    if (pm) {
-        numentries = (pm->dwMonitorSize ) / sizeof(VOID *);
-        /* NT4: 14, since w2k: 17 */
-        ok( numentries == 14 || numentries == 17, 
-            "dwMonitorSize (%d) => %d Functions\n", pm->dwMonitorSize, numentries);
+    if (pInitializePrintMonitor)
+        pm = pInitializePrintMonitor(Monitors_LocalPortW);
+    else if (pInitializePrintMonitor2) {
+        MONITORINIT init;
 
-        GET_MONITOR_FUNC(EnumPorts);
-        GET_MONITOR_FUNC(OpenPort);
-        GET_MONITOR_FUNC(OpenPortEx);
+        memset(&init, 0, sizeof(init));
+        init.cbSize = sizeof(init);
+        init.hckRegistryRoot = 0;
+        init.pMonitorReg = &monreg;
+        init.bLocal = TRUE;
+
+        pm2 = pInitializePrintMonitor2(&init, &hmon);
+        ok(pm2 != NULL, "InitializePrintMonitor2 error %u\n", GetLastError());
+        ok(pm2->cbSize >= FIELD_OFFSET(MONITOR2, pfnSendRecvBidiDataFromPort), "wrong cbSize %u\n", pm2->cbSize);
+    }
+
+    if (pm || pm2) {
+        if (pm) {
+            ok(pm->dwMonitorSize == sizeof(MONITOR), "wrong dwMonitorSize %u\n", pm->dwMonitorSize);
+            numentries = (pm->dwMonitorSize ) / sizeof(VOID *);
+            /* NT4: 14, since w2k: 17 */
+            ok( numentries == 14 || numentries == 17,
+                "dwMonitorSize (%u) => %u Functions\n", pm->dwMonitorSize, numentries);
+        }
+        else if (pm2) {
+            numentries = (pm2->cbSize ) / sizeof(VOID *);
+            ok( numentries >= 20,
+                "cbSize (%u) => %u Functions\n", pm2->cbSize, numentries);
+        }
+
+        GET_MONITOR_FUNC2(EnumPorts);
+        GET_MONITOR_FUNC2(OpenPort);
+        GET_MONITOR_FUNC2(OpenPortEx);
         GET_MONITOR_FUNC(StartDocPort);
         GET_MONITOR_FUNC(WritePort);
         GET_MONITOR_FUNC(ReadPort);
         GET_MONITOR_FUNC(EndDocPort);
         GET_MONITOR_FUNC(ClosePort);
-        GET_MONITOR_FUNC(AddPort);
-        GET_MONITOR_FUNC(AddPortEx);
-        GET_MONITOR_FUNC(ConfigurePort);
-        GET_MONITOR_FUNC(DeletePort);
+        GET_MONITOR_FUNC2(AddPort);
+        GET_MONITOR_FUNC2(AddPortEx);
+        GET_MONITOR_FUNC2(ConfigurePort);
+        GET_MONITOR_FUNC2(DeletePort);
         GET_MONITOR_FUNC(GetPrinterDataFromPort);
         GET_MONITOR_FUNC(SetPortTimeOuts);
-        GET_MONITOR_FUNC(XcvOpenPort);
+        GET_MONITOR_FUNC2(XcvOpenPort);
         GET_MONITOR_FUNC(XcvDataPort);
         GET_MONITOR_FUNC(XcvClosePort);
 
@@ -1427,6 +1572,7 @@ START_TEST(localmon)
     }
 
     test_InitializePrintMonitor();
+    test_InitializePrintMonitor2();
 
     find_installed_ports();
 

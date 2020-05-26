@@ -35,7 +35,6 @@
 #include "resource.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -432,15 +431,15 @@ static void update_result_text(HWND hdlg, const ps_struct_t *ps_struct)
     }
 
     LoadStringW(OLEDLG_hInstance, res_id, resource_txt, ARRAY_SIZE(resource_txt));
-    if((ptr = strstrW(resource_txt, percent_s)))
+    if((ptr = wcsstr(resource_txt, percent_s)))
     {
         /* FIXME handle %s in ResultText. Sub appname if IDS_PS_PASTE_OBJECT{_AS_ICON}.  Else sub appropriate type name */
-        size_t result_txt_len = strlenW(pent->lpstrResultText);
+        size_t result_txt_len = lstrlenW(pent->lpstrResultText);
         ptrdiff_t offs = (char*)ptr - (char*)resource_txt;
-        result_txt = HeapAlloc(GetProcessHeap(), 0, (strlenW(resource_txt) + result_txt_len - 1) * sizeof(WCHAR));
+        result_txt = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(resource_txt) + result_txt_len - 1) * sizeof(WCHAR));
         memcpy(result_txt, resource_txt, offs);
         memcpy((char*)result_txt + offs, pent->lpstrResultText, result_txt_len * sizeof(WCHAR));
-        memcpy((char*)result_txt + offs + result_txt_len * sizeof(WCHAR), ptr + 2, (strlenW(ptr + 2) + 1) * sizeof(WCHAR));
+        memcpy((char*)result_txt + offs + result_txt_len * sizeof(WCHAR), ptr + 2, (lstrlenW(ptr + 2) + 1) * sizeof(WCHAR));
     }
     else
         result_txt = resource_txt;

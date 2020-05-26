@@ -23,7 +23,6 @@
  */
 
 #include <precomp.h>
-
 #ifdef PACKBITS_SUPPORT
 /*
  * TIFF Library.

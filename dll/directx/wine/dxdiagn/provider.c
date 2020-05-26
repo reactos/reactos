@@ -20,13 +20,16 @@
  *
  */
 
-#include "config.h"
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
+#ifdef __REACTOS__
+#include <wchar.h>
+#endif
+
 #include "dxdiag_private.h"
-#include "wine/unicode.h"
 #include "winver.h"
 #include "objidl.h"
 #include "uuids.h"
@@ -35,7 +38,7 @@
 #include "d3d9.h"
 #include "strmif.h"
 #include "initguid.h"
-#include "fil_data.h"
+#include "wine/fil_data.h"
 #include "psapi.h"
 #include "wbemcli.h"
 #include "dsound.h"
@@ -271,13 +274,13 @@ static IDxDiagContainerImpl_Container *allocate_information_node(const WCHAR *na
 
     if (name)
     {
-        ret->contName = HeapAlloc(GetProcessHeap(), 0, (strlenW(name) + 1) * sizeof(*name));
+        ret->contName = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(name) + 1) * sizeof(*name));
         if (!ret->contName)
         {
             HeapFree(GetProcessHeap(), 0, ret);
             return NULL;
         }
-        strcpyW(ret->contName, name);
+        lstrcpyW(ret->contName, name);
     }
 
     list_init(&ret->subContainers);
@@ -294,13 +297,13 @@ static IDxDiagContainerImpl_Property *allocate_property_information(const WCHAR 
     if (!ret)
         return NULL;
 
-    ret->propName = HeapAlloc(GetProcessHeap(), 0, (strlenW(name) + 1) * sizeof(*name));
+    ret->propName = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(name) + 1) * sizeof(*name));
     if (!ret->propName)
     {
         HeapFree(GetProcessHeap(), 0, ret);
         return NULL;
     }
-    strcpyW(ret->propName, name);
+    lstrcpyW(ret->propName, name);
 
     return ret;
 }
@@ -495,7 +498,7 @@ static BOOL is_netmeeting_running(void)
 
         for (i = 0; i < list_count; i++)
         {
-            if (get_process_name_from_pid(pid_list[i], process_name, sizeof(process_name)/sizeof(WCHAR)) &&
+            if (get_process_name_from_pid(pid_list[i], process_name, ARRAY_SIZE(process_name)) &&
                 !lstrcmpW(conf_exe, process_name))
             {
                 HeapFree(GetProcessHeap(), 0, pid_list);
@@ -519,21 +522,23 @@ static HRESULT fill_language_information(IDxDiagContainerImpl_Container *node)
     HRESULT hr;
 
     /* szLanguagesLocalized */
-    GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_SNATIVELANGNAME, system_lang, sizeof(system_lang)/sizeof(WCHAR));
-    LoadStringW(dxdiagn_instance, IDS_REGIONAL_SETTING, regional_setting, sizeof(regional_setting)/sizeof(WCHAR));
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SNATIVELANGNAME, user_lang, sizeof(user_lang)/sizeof(WCHAR));
+    GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_SNATIVELANGNAME, system_lang, ARRAY_SIZE(system_lang));
+    LoadStringW(dxdiagn_instance, IDS_REGIONAL_SETTING, regional_setting, ARRAY_SIZE(regional_setting));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SNATIVELANGNAME, user_lang, ARRAY_SIZE(user_lang));
 
-    snprintfW(language_str, sizeof(language_str)/sizeof(WCHAR), languages_fmtW, system_lang, regional_setting, user_lang);
+    swprintf(language_str, languages_fmtW, system_lang, regional_setting,
+              user_lang);
 
     hr = add_bstr_property(node, szLanguagesLocalized, language_str);
     if (FAILED(hr))
         return hr;
 
     /* szLanguagesEnglish */
-    GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_SENGLANGUAGE, system_lang, sizeof(system_lang)/sizeof(WCHAR));
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SENGLANGUAGE, user_lang, sizeof(user_lang)/sizeof(WCHAR));
+    GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_SENGLANGUAGE, system_lang, ARRAY_SIZE(system_lang));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SENGLANGUAGE, user_lang, ARRAY_SIZE(user_lang));
 
-    snprintfW(language_str, sizeof(language_str)/sizeof(WCHAR), languages_fmtW, system_lang, regional_setting_engW, user_lang);
+    swprintf(language_str, languages_fmtW, system_lang,
+              regional_setting_engW, user_lang);
 
     hr = add_bstr_property(node, szLanguagesEnglish, language_str);
     if (FAILED(hr))
@@ -556,21 +561,21 @@ static HRESULT fill_datetime_information(IDxDiagContainerImpl_Container *node)
 
     GetLocalTime(&curtime);
 
-    GetTimeFormatW(LOCALE_NEUTRAL, 0, &curtime, time_fmtW, time_str, sizeof(time_str)/sizeof(WCHAR));
+    GetTimeFormatW(LOCALE_NEUTRAL, 0, &curtime, time_fmtW, time_str, ARRAY_SIZE(time_str));
 
     /* szTimeLocalized */
-    GetDateFormatW(LOCALE_USER_DEFAULT, DATE_LONGDATE, &curtime, NULL, date_str, sizeof(date_str)/sizeof(WCHAR));
+    GetDateFormatW(LOCALE_USER_DEFAULT, DATE_LONGDATE, &curtime, NULL, date_str, ARRAY_SIZE(date_str));
 
-    snprintfW(datetime_str, sizeof(datetime_str)/sizeof(WCHAR), datetime_fmtW, date_str, time_str);
+    swprintf(datetime_str, datetime_fmtW, date_str, time_str);
 
     hr = add_bstr_property(node, szTimeLocalized, datetime_str);
     if (FAILED(hr))
         return hr;
 
     /* szTimeEnglish */
-    GetDateFormatW(LOCALE_NEUTRAL, 0, &curtime, date_fmtW, date_str, sizeof(date_str)/sizeof(WCHAR));
+    GetDateFormatW(LOCALE_NEUTRAL, 0, &curtime, date_fmtW, date_str, ARRAY_SIZE(date_str));
 
-    snprintfW(datetime_str, sizeof(datetime_str)/sizeof(WCHAR), datetime_fmtW, date_str, time_str);
+    swprintf(datetime_str, datetime_fmtW, date_str, time_str);
 
     hr = add_bstr_property(node, szTimeEnglish, datetime_str);
     if (FAILED(hr))
@@ -597,7 +602,7 @@ static HRESULT fill_os_string_information(IDxDiagContainerImpl_Container *node, 
 
     /* FIXME: OS detection should be performed, and localized OS strings
      * should contain translated versions of the "build" phrase. */
-    for (i = 0; i < sizeof(prop_list)/sizeof(prop_list[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(prop_list); i++)
     {
         hr = add_bstr_property(node, prop_list[i], winxpW);
         if (FAILED(hr))
@@ -675,7 +680,8 @@ static HRESULT fill_processor_information(IDxDiagContainerImpl_Container *node)
     if(FAILED(hr))
         return hr;
 
-    sprintfW(print_buf, processor_fmtW, V_BSTR(&cpu_name), V_I4(&cpu_no), V_I4(&clock_speed));
+    swprintf(print_buf, processor_fmtW,
+             V_BSTR(&cpu_name), V_I4(&cpu_no), V_I4(&clock_speed));
     VariantClear(&cpu_name);
     VariantClear(&cpu_no);
     VariantClear(&clock_speed);
@@ -799,25 +805,26 @@ static HRESULT build_systeminfo_tree(IDxDiagContainerImpl_Container *node)
         return hr;
 
     /* FIXME: Roundoff should not be done with truncated division. */
-    snprintfW(print_buf, sizeof(print_buf)/sizeof(WCHAR), physmem_fmtW, (DWORD)(msex.ullTotalPhys / (1024 * 1024)));
+    swprintf(print_buf, physmem_fmtW,
+              (DWORD)(msex.ullTotalPhys / (1024 * 1024)));
     hr = add_bstr_property(node, szPhysicalMemoryEnglish, print_buf);
     if (FAILED(hr))
         return hr;
 
     usedpage_mb = (DWORD)((msex.ullTotalPageFile - msex.ullAvailPageFile) / (1024 * 1024));
     availpage_mb = (DWORD)(msex.ullAvailPageFile / (1024 * 1024));
-    LoadStringW(dxdiagn_instance, IDS_PAGE_FILE_FORMAT, localized_pagefile_fmt, sizeof(localized_pagefile_fmt)/sizeof(WCHAR));
+    LoadStringW(dxdiagn_instance, IDS_PAGE_FILE_FORMAT, localized_pagefile_fmt,
+                ARRAY_SIZE(localized_pagefile_fmt));
     args[0] = usedpage_mb;
     args[1] = availpage_mb;
-    FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                   localized_pagefile_fmt, 0, 0, print_buf,
-                   sizeof(print_buf)/sizeof(*print_buf), (__ms_va_list*)args);
+    FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY, localized_pagefile_fmt,
+                   0, 0, print_buf, ARRAY_SIZE(print_buf), (__ms_va_list*)args);
 
     hr = add_bstr_property(node, szPageFileLocalized, print_buf);
     if (FAILED(hr))
         return hr;
 
-    snprintfW(print_buf, sizeof(print_buf)/sizeof(WCHAR), pagefile_fmtW, usedpage_mb, availpage_mb);
+    swprintf(print_buf, pagefile_fmtW, usedpage_mb, availpage_mb);
 
     hr = add_bstr_property(node, szPageFileEnglish, print_buf);
     if (FAILED(hr))
@@ -829,7 +836,7 @@ static HRESULT build_systeminfo_tree(IDxDiagContainerImpl_Container *node)
     if (FAILED(hr))
         return hr;
 
-    count = sizeof(computer_name)/sizeof(WCHAR);
+    count = ARRAY_SIZE(computer_name);
     if (!GetComputerNameW(computer_name, &count))
         return E_FAIL;
 
@@ -918,31 +925,37 @@ static BOOL get_texture_memory(GUID *adapter, DWORD *available_mem)
 
 static const WCHAR *vendor_id_to_manufacturer_string(DWORD vendor_id)
 {
+    unsigned int i;
+
     static const WCHAR atiW[] = {'A','T','I',' ','T','e','c','h','n','o','l','o','g','i','e','s',' ','I','n','c','.',0};
     static const WCHAR nvidiaW[] = {'N','V','I','D','I','A',0};
     static const WCHAR intelW[] = {'I','n','t','e','l',' ','C','o','r','p','o','r','a','t','i','o','n',0};
+    static const WCHAR vmwareW[] = {'V','M','w','a','r','e',0};
+    static const WCHAR redhatW[] = {'R','e','d',' ','H','a','t',0};
     static const WCHAR unknownW[] = {'U','n','k','n','o','w','n',0};
-
-    /* Enumeration copied from dlls/wined3d/wined3d_private.h and slightly modified. */
-    enum pci_vendor
+    static const struct
     {
-        HW_VENDOR_AMD = 0x1002,
-        HW_VENDOR_NVIDIA = 0x10de,
-        HW_VENDOR_INTEL = 0x8086,
+        DWORD id;
+        const WCHAR *name;
+    }
+    vendors[] =
+    {
+        {0x1002, atiW},
+        {0x10de, nvidiaW},
+        {0x15ad, vmwareW},
+        {0x1af4, redhatW},
+        {0x8086, intelW},
     };
 
-    switch (vendor_id)
+    for (i = 0; i < ARRAY_SIZE(vendors); ++i)
     {
-    case HW_VENDOR_AMD:
-        return atiW;
-    case HW_VENDOR_NVIDIA:
-        return nvidiaW;
-    case HW_VENDOR_INTEL:
-        return intelW;
-    default:
-        FIXME("Unknown PCI vendor ID 0x%04x\n", vendor_id);
-        return unknownW;
+        if (vendors[i].id == vendor_id)
+            return vendors[i].name;
     }
+
+    FIXME("Unknown PCI vendor ID 0x%04x.\n", vendor_id);
+
+    return unknownW;
 }
 
 static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node)
@@ -985,7 +998,7 @@ static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node
         DWORD available_mem = 0;
         BOOL hardware_accel;
 
-        snprintfW(buffer, sizeof(buffer)/sizeof(WCHAR), adapterid_fmtW, index);
+        swprintf(buffer, adapterid_fmtW, index);
         display_adapter = allocate_information_node(buffer);
         if (!display_adapter)
         {
@@ -1002,9 +1015,11 @@ static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node
             WCHAR descriptionW[sizeof(adapter_info.Description)];
             WCHAR devicenameW[sizeof(adapter_info.DeviceName)];
 
-            MultiByteToWideChar(CP_ACP, 0, adapter_info.Driver, -1, driverW, sizeof(driverW)/sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, adapter_info.Description, -1, descriptionW, sizeof(descriptionW)/sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, adapter_info.DeviceName, -1, devicenameW, sizeof(devicenameW)/sizeof(WCHAR));
+            MultiByteToWideChar(CP_ACP, 0, adapter_info.Driver, -1, driverW, ARRAY_SIZE(driverW));
+            MultiByteToWideChar(CP_ACP, 0, adapter_info.Description, -1, descriptionW,
+                                ARRAY_SIZE(descriptionW));
+            MultiByteToWideChar(CP_ACP, 0, adapter_info.DeviceName, -1, devicenameW,
+                                ARRAY_SIZE(devicenameW));
 
             hr = add_bstr_property(display_adapter, szDriverName, driverW);
             if (FAILED(hr))
@@ -1018,7 +1033,7 @@ static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node
             if (FAILED(hr))
                 goto cleanup;
 
-            snprintfW(buffer, sizeof(buffer)/sizeof(WCHAR), driverversion_fmtW,
+            swprintf(buffer, driverversion_fmtW,
                       HIWORD(adapter_info.DriverVersion.u.HighPart), LOWORD(adapter_info.DriverVersion.u.HighPart),
                       HIWORD(adapter_info.DriverVersion.u.LowPart), LOWORD(adapter_info.DriverVersion.u.LowPart));
 
@@ -1026,22 +1041,22 @@ static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node
             if (FAILED(hr))
                 goto cleanup;
 
-            snprintfW(buffer, sizeof(buffer)/sizeof(WCHAR), id_fmtW, adapter_info.VendorId);
+            swprintf(buffer, id_fmtW, adapter_info.VendorId);
             hr = add_bstr_property(display_adapter, szVendorId, buffer);
             if (FAILED(hr))
                 goto cleanup;
 
-            snprintfW(buffer, sizeof(buffer)/sizeof(WCHAR), id_fmtW, adapter_info.DeviceId);
+            swprintf(buffer, id_fmtW, adapter_info.DeviceId);
             hr = add_bstr_property(display_adapter, szDeviceId, buffer);
             if (FAILED(hr))
                 goto cleanup;
 
-            snprintfW(buffer, sizeof(buffer)/sizeof(WCHAR), subsysid_fmtW, adapter_info.SubSysId);
+            swprintf(buffer, subsysid_fmtW, adapter_info.SubSysId);
             hr = add_bstr_property(display_adapter, szSubSysId, buffer);
             if (FAILED(hr))
                 goto cleanup;
 
-            snprintfW(buffer, sizeof(buffer)/sizeof(WCHAR), id_fmtW, adapter_info.Revision);
+            swprintf(buffer, id_fmtW, adapter_info.Revision);
             hr = add_bstr_property(display_adapter, szRevisionId, buffer);
             if (FAILED(hr))
                 goto cleanup;
@@ -1075,7 +1090,7 @@ static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node
             if (FAILED(hr))
                 goto cleanup;
 
-            snprintfW(buffer, sizeof(buffer)/sizeof(WCHAR), mode_fmtW, adapter_mode.Width, adapter_mode.Height,
+            swprintf(buffer, mode_fmtW, adapter_mode.Width, adapter_mode.Height,
                       depth_for_pixelformat(adapter_mode.Format), adapter_mode.RefreshRate);
 
             hr = add_bstr_property(display_adapter, szDisplayModeLocalized, buffer);
@@ -1110,7 +1125,7 @@ static HRESULT fill_display_information_d3d(IDxDiagContainerImpl_Container *node
         if (!get_texture_memory(&adapter_info.DeviceIdentifier, &available_mem))
             WARN("get_texture_memory helper failed\n");
 
-        snprintfW(buffer, sizeof(buffer)/sizeof(buffer[0]), mem_fmt, available_mem / 1000000.0f);
+        swprintf(buffer, mem_fmt, available_mem / 1000000.0f);
 
         hr = add_bstr_property(display_adapter, szDisplayMemoryLocalized, buffer);
         if (FAILED(hr))
@@ -1289,7 +1304,7 @@ static HRESULT fill_display_information_fallback(IDxDiagContainerImpl_Container 
     {
         static const WCHAR mem_fmt[] = {'%','.','1','f',' ','M','B',0};
 
-        snprintfW(buffer, sizeof(buffer)/sizeof(buffer[0]), mem_fmt, tmp / 1000000.0f);
+        swprintf(buffer, mem_fmt, tmp / 1000000.0f);
 
         hr = add_bstr_property(display_adapter, szDisplayMemoryLocalized, buffer);
         if (FAILED(hr))
@@ -1330,7 +1345,7 @@ static HRESULT fill_display_information_fallback(IDxDiagContainerImpl_Container 
     if (FAILED(hr))
         goto cleanup;
 
-    for (tmp = 0; tmp < sizeof(empty_properties)/sizeof(empty_properties[0]); tmp++)
+    for (tmp = 0; tmp < ARRAY_SIZE(empty_properties); tmp++)
     {
         hr = add_bstr_property(display_adapter, empty_properties[tmp], szEmpty);
         if (FAILED(hr))
@@ -1393,7 +1408,7 @@ BOOL CALLBACK dsound_enum(LPGUID guid, LPCWSTR desc, LPCWSTR module, LPVOID cont
     /* the default device is enumerated twice, one time without GUID */
     if (!guid) return TRUE;
 
-    snprintfW(buffer, sizeof(buffer)/sizeof(WCHAR), deviceid_fmtW, enum_ctx->index);
+    _snwprintf(buffer, sizeof(buffer)/sizeof(WCHAR), deviceid_fmtW, enum_ctx->index);
     device = allocate_information_node(buffer);
     if (!device)
     {
@@ -1417,8 +1432,8 @@ BOOL CALLBACK dsound_enum(LPGUID guid, LPCWSTR desc, LPCWSTR module, LPVOID cont
         return FALSE;
 
     name = module;
-    if ((p = strrchrW(name, '\\'))) name = p + 1;
-    if ((p = strrchrW(name, '/'))) name = p + 1;
+    if ((p = wcsrchr(name, '\\'))) name = p + 1;
+    if ((p = wcsrchr(name, '/'))) name = p + 1;
 
     enum_ctx->hr = add_bstr_property(device, szDriverName, name);
     if (FAILED(enum_ctx->hr))
@@ -1556,12 +1571,9 @@ static HRESULT fill_file_description(IDxDiagContainerImpl_Container *node, const
 
     if (boolret)
     {
-        snprintfW(szVersion_v, sizeof(szVersion_v)/sizeof(szVersion_v[0]),
-                  szVersionFormat,
-                  HIWORD(pFileInfo->dwFileVersionMS),
-                  LOWORD(pFileInfo->dwFileVersionMS),
-                  HIWORD(pFileInfo->dwFileVersionLS),
-                  LOWORD(pFileInfo->dwFileVersionLS));
+        swprintf(szVersion_v, szVersionFormat,
+                  HIWORD(pFileInfo->dwFileVersionMS), LOWORD(pFileInfo->dwFileVersionMS),
+                  HIWORD(pFileInfo->dwFileVersionLS), LOWORD(pFileInfo->dwFileVersionLS));
 
         TRACE("Found version as (%s)\n", debugstr_w(szVersion_v));
 
@@ -1633,14 +1645,14 @@ static HRESULT build_directxfiles_tree(IDxDiagContainerImpl_Container *node)
 
     GetSystemDirectoryW(szFilePath, MAX_PATH);
 
-    for (i = 0; i < sizeof(dlls) / sizeof(dlls[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(dlls); i++)
     {
         static const WCHAR szFormat[] = {'%','d',0};
 
         WCHAR szFileID[5];
         IDxDiagContainerImpl_Container *file_container;
 
-        snprintfW(szFileID, sizeof(szFileID)/sizeof(szFileID[0]), szFormat, i);
+        swprintf(szFileID, szFormat, i);
 
         file_container = allocate_information_node(szFileID);
         if (!file_container)
@@ -1710,12 +1722,12 @@ static HRESULT fill_filter_data_information(IDxDiagContainerImpl_Container *subc
     if (FAILED(hr))
         goto cleanup;
 
-    hr = IAMFilterData_ParseFilterData(pFilterData, pData, cb, (BYTE **)&ppRF);
+    hr = IAMFilterData_ParseFilterData(pFilterData, pData, cb, &ppRF);
     if (FAILED(hr))
         goto cleanup;
     pRF = ((REGFILTER2**)ppRF)[0];
 
-    snprintfW(bufferW, sizeof(bufferW)/sizeof(bufferW[0]), szVersionFormat, pRF->dwVersion);
+    swprintf(bufferW, szVersionFormat, pRF->dwVersion);
     hr = add_bstr_property(subcont, szVersionW, bufferW);
     if (FAILED(hr))
         goto cleanup;
@@ -1887,7 +1899,7 @@ static HRESULT build_directshowfilters_tree(IDxDiagContainerImpl_Container *node
             WCHAR bufferW[10];
             IDxDiagContainerImpl_Container *subcont;
 
-            snprintfW(bufferW, sizeof(bufferW)/sizeof(bufferW[0]), szIdFormat, i);
+            swprintf(bufferW, szIdFormat, i);
             subcont = allocate_information_node(bufferW);
             if (!subcont)
             {
@@ -1984,7 +1996,7 @@ static HRESULT build_information_tree(IDxDiagContainerImpl_Container **pinfo_roo
     if (!info_root)
         return E_OUTOFMEMORY;
 
-    for (index = 0; index < sizeof(root_children)/sizeof(root_children[0]); index++)
+    for (index = 0; index < ARRAY_SIZE(root_children); index++)
     {
         IDxDiagContainerImpl_Container *node;
         HRESULT hr;

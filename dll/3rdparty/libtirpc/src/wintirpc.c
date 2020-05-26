@@ -93,6 +93,9 @@ BOOL winsock_fini(void)
 	return TRUE;
 }
 
+#ifdef __REACTOS__
+char NETCONFIG[MAX_PATH] = "";
+#endif
 BOOL WINAPI DllMain/*tirpc_main*/(HINSTANCE hinstDLL,	// DLL module handle
 					   DWORD fdwReason,	// reason called
 					   LPVOID lpvReserved)	// reserved
@@ -109,6 +112,12 @@ BOOL WINAPI DllMain/*tirpc_main*/(HINSTANCE hinstDLL,	// DLL module handle
 		// The DLL is loading due to process
 		// initialization or a call to LoadLibrary. 
         case DLL_PROCESS_ATTACH:
+#ifdef __REACTOS__
+            if (!GetSystemDirectoryA(NETCONFIG, ARRAYSIZE(NETCONFIG)))
+                return FALSE;
+
+            lstrcatA(NETCONFIG, "\\drivers\\etc\\netconfig");
+#endif
 			
 			// Initialize socket library
 			if (winsock_init() == FALSE)

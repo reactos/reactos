@@ -31,6 +31,7 @@
 #include "muifonts.h"
 #include "muilanguages.h"
 #include "registry.h"
+#include "substset.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -498,17 +499,28 @@ AddFontsSettingsToRegistry(
     while (MuiSubFonts[uIndex].FontName != NULL)
     {
         RtlInitUnicodeString(&ValueName, MuiSubFonts[uIndex].FontName);
-        Status = NtSetValueKey(KeyHandle,
-                               &ValueName,
-                               0,
-                               REG_SZ,
-                               (PVOID)MuiSubFonts[uIndex].SubFontName,
-                               (wcslen(MuiSubFonts[uIndex].SubFontName)+1) * sizeof(WCHAR));
-        if (!NT_SUCCESS(Status))
+        if (MuiSubFonts[uIndex].SubFontName)
         {
-            DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
-            NtClose(KeyHandle);
-            return FALSE;
+            Status = NtSetValueKey(KeyHandle,
+                                   &ValueName,
+                                   0,
+                                   REG_SZ,
+                                   (PVOID)MuiSubFonts[uIndex].SubFontName,
+                                   (wcslen(MuiSubFonts[uIndex].SubFontName)+1) * sizeof(WCHAR));
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
+                NtClose(KeyHandle);
+                return FALSE;
+            }
+        }
+        else
+        {
+            Status = NtDeleteValueKey(KeyHandle, &ValueName);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtDeleteValueKey failed, Status = %lx\n", Status);
+            }
         }
 
         uIndex++;
@@ -547,5 +559,54 @@ AddCodePage(
 
     return FALSE;
 }
+
+#ifdef __REACTOS__ /* HACK */
+BOOL
+DoRegistryFontFixup(PFONTSUBSTSETTINGS pSettings, LANGID LangID)
+{
+    if (pSettings->bFoundFontMINGLIU)
+        AddFontsSettingsToRegistry(FontFixupMINGLIU);
+    if (pSettings->bFoundFontSIMSUN)
+        AddFontsSettingsToRegistry(FontFixupSIMSUN);
+    if (pSettings->bFoundFontMSSONG)
+        AddFontsSettingsToRegistry(FontFixupMSSONG);
+    if (pSettings->bFoundFontMSGOTHIC)
+        AddFontsSettingsToRegistry(FontFixupMSGOTHIC);
+    if (pSettings->bFoundFontMSMINCHO)
+        AddFontsSettingsToRegistry(FontFixupMSMINCHO);
+    if (pSettings->bFoundFontGULIM)
+        AddFontsSettingsToRegistry(FontFixupGULIM);
+    if (pSettings->bFoundFontBATANG)
+        AddFontsSettingsToRegistry(FontFixupBATANG);
+
+    switch (PRIMARYLANGID(LangID))
+    {
+        case LANG_CHINESE:
+            if (SUBLANGID(LangID) == SUBLANG_CHINESE_SIMPLIFIED)
+            {
+                if (pSettings->bFoundFontSIMSUN)
+                    AddFontsSettingsToRegistry(SimplifiedChineseFontFixup);
+            }
+            else
+            {
+                if (pSettings->bFoundFontMINGLIU)
+                    AddFontsSettingsToRegistry(TraditionalChineseFontFixup);
+            }
+            break;
+
+        case LANG_JAPANESE:
+            if (pSettings->bFoundFontMSGOTHIC)
+                AddFontsSettingsToRegistry(JapaneseFontFixup);
+            break;
+
+        case LANG_KOREAN:
+            if (pSettings->bFoundFontBATANG)
+                AddFontsSettingsToRegistry(KoreanFontFixup);
+            break;
+    }
+
+    return TRUE;
+}
+#endif /* HACK */
 
 /* EOF */

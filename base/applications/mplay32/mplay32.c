@@ -1149,14 +1149,8 @@ OpenFileDialog(HWND hwnd, DWORD dwFilterIndex, LPTSTR lpType)
 {
     OPENFILENAME OpenFileName;
     TCHAR szFile[MAX_PATH + 1] = _T("");
-    TCHAR szCurrentDir[MAX_PATH];
 
     ZeroMemory(&OpenFileName, sizeof(OpenFileName));
-
-    if (!GetCurrentDirectory(ARRAYSIZE(szCurrentDir), szCurrentDir))
-    {
-        StringCbCopy(szCurrentDir, sizeof(szCurrentDir), _T("c:\\"));
-    }
 
     OpenFileName.lStructSize     = sizeof(OpenFileName);
     OpenFileName.hwndOwner       = hwnd;
@@ -1164,7 +1158,6 @@ OpenFileDialog(HWND hwnd, DWORD dwFilterIndex, LPTSTR lpType)
     OpenFileName.lpstrFilter     = szFilter;
     OpenFileName.lpstrFile       = szFile;
     OpenFileName.nMaxFile        = ARRAYSIZE(szFile);
-    OpenFileName.lpstrInitialDir = szCurrentDir;
     OpenFileName.Flags           = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_SHAREAWARE;
     OpenFileName.lpstrDefExt     = _T("\0");
     OpenFileName.nFilterIndex = dwFilterIndex;
@@ -1447,7 +1440,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 case IDM_ABOUT:
                 {
                     HICON mplayIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
-                    ShellAbout(hwnd, szAppTitle, 0, mplayIcon);
+                    ShellAbout(hwnd, szAppTitle, NULL, mplayIcon);
                     DeleteObject(mplayIcon);
                     break;
                 }

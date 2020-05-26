@@ -1,0 +1,52 @@
+diff --git a/modules/rostests/winetests/d3dx9_36/mesh.c b/modules/rostests/winetests/d3dx9_36/mesh.c
+index 3fcd65f..5cb000a 100644
+--- a/modules/rostests/winetests/d3dx9_36/mesh.c
++++ b/modules/rostests/winetests/d3dx9_36/mesh.c
+@@ -10123,10 +10123,10 @@ static void test_clone_mesh(void)
+ 
+         hr = mesh->lpVtbl->CloneMesh(mesh, tc[i].clone_options, tc[i].new_declaration,
+                                      test_context->device, &mesh_clone);
+-        ok(hr == D3D_OK, "CloneMesh test case %d failed. Got %x\n, expected D3D_OK\n", i, hr);
++        ok(hr == D3D_OK, "CloneMesh test case %d failed. Got %x, expected D3D_OK.\n", i, hr);
+ 
+         hr = mesh_clone->lpVtbl->GetDeclaration(mesh_clone, new_declaration);
+-        ok(hr == D3D_OK, "GetDeclaration test case %d failed. Got %x\n, expected D3D_OK\n", i, hr);
++        ok(hr == D3D_OK, "GetDeclaration test case %d failed. Got %x, expected D3D_OK.\n", i, hr);
+         /* Check declaration elements */
+         for (j = 0; tc[i].new_declaration[j].Stream != 0xFF; j++)
+         {
+@@ -10313,7 +10313,7 @@ static void test_valid_mesh(void)
+ 
+         hr = D3DXValidMesh(mesh, tc[i].adjacency, &errors_and_warnings);
+         todo_wine ok(hr == tc[i].exp_hr, "D3DXValidMesh test case %d failed. "
+-                     "Got %x\n, expected %x\n", i, hr, tc[i].exp_hr);
++                "Got %x, expected %x.\n", i, hr, tc[i].exp_hr);
+ 
+         /* Note errors_and_warnings is deliberately not checked because that
+          * would require copying wast amounts of the text output. */
+@@ -10457,7 +10457,7 @@ static void test_optimize_faces(void)
+                                tc[i].num_vertices, tc[i].indices_are_32bit,
+                                face_remap);
+         ok(hr == D3D_OK, "D3DXOptimizeFaces test case %d failed. "
+-           "Got %x\n, expected D3D_OK\n", i, hr);
++                "Got %x, expected D3D_OK.\n", i, hr);
+ 
+         /* Compare face remap with expected face remap */
+         for (j = 0; j < tc[i].num_faces; j++)
+@@ -10475,14 +10475,14 @@ static void test_optimize_faces(void)
+                            tc[0].num_vertices, tc[0].indices_are_32bit,
+                            NULL);
+     ok(hr == D3DERR_INVALIDCALL, "D3DXOptimizeFaces passed NULL face_remap "
+-       "pointer. Got %x\n, expected D3DERR_INVALIDCALL\n", hr);
++            "pointer. Got %x, expected D3DERR_INVALIDCALL.\n", hr);
+ 
+     /* Number of faces must be smaller than 2^15 */
+     hr = D3DXOptimizeFaces(tc[0].indices, 2 << 15,
+                            tc[0].num_vertices, FALSE,
+                            &smallest_face_remap);
+     ok(hr == D3DERR_INVALIDCALL, "D3DXOptimizeFaces should not accept 2^15 "
+-    "faces when using 16-bit indices. Got %x\n, expected D3DERR_INVALIDCALL\n", hr);
++            "faces when using 16-bit indices. Got %x, expected D3DERR_INVALIDCALL.\n", hr);
+ }
+ 
+ static HRESULT clear_normals(ID3DXMesh *mesh)

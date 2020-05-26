@@ -18,7 +18,7 @@ add_executable(ntkrnlmp
     ${CMAKE_CURRENT_BINARY_DIR}/ntkrnlmp.def)
 set_property(TARGET ntkrnlmp PROPERTY ENABLE_EXPORTS TRUE)
 
-add_target_compile_definitions(ntkrnlmp CONFIG_SMP)
+target_compile_definitions(ntkrnlmp PRIVATE CONFIG_SMP)
 
 if(ARCH STREQUAL "i386")
     set_entrypoint(ntkrnlmp KiSystemStartup 4)
@@ -34,13 +34,16 @@ else()
     set_image_base(ntkrnlmp 0x80800000)
 endif()
 
+# dynamic analysis switches
 if(STACK_PROTECTOR)
     target_link_libraries(ntkrnlmp gcc_ssp)
-elseif(RUNTIME_CHECKS)
+endif()
+
+if(RUNTIME_CHECKS)
     target_link_libraries(ntkrnlmp runtmchk)
 endif()
 
-target_link_libraries(ntkrnlmp cportlib csq ${PSEH_LIB} cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
+target_link_libraries(ntkrnlmp cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
 add_importlibs(ntkrnlmp hal kdcom bootvid)
 add_pch(ntkrnlmp ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h NTKRNLMP_SOURCE)
 add_dependencies(ntkrnlmp psdk bugcodes asm)

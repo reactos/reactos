@@ -3,7 +3,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Sposób użycia: %s [dysk:] [-F] [-V] [-R] [-C] \n\n\
+Sposób użycia: %s [dysk:] [-F] [-V] [-R] [-C]\n\n\
 [dysk:]     Określa dysk do sprawdzenia.\n\
 -F          Naprawia błędy na dysku.\n\
 -V          Wyświetla pełne ścieżki wszystkich plików na dysku.\n\

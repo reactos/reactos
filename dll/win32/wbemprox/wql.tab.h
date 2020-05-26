@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.0.  */
+/* A Bison parser, made by GNU Bison 3.4.1.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -29,6 +30,9 @@
 
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
+
+/* Undocumented macros, especially those whose name start with YY_,
+   are private implementation details.  Do not rely on them.  */
 
 #ifndef YY_WQL_E_REACTOSSYNC_GCC_DLL_WIN32_WBEMPROX_WQL_TAB_H_INCLUDED
 # define YY_WQL_E_REACTOSSYNC_GCC_DLL_WIN32_WBEMPROX_WQL_TAB_H_INCLUDED
@@ -62,37 +66,42 @@ extern int wql_debug;
     TK_MINUS = 272,
     TK_ILLEGAL = 273,
     TK_BY = 274,
-    TK_STRING = 275,
-    TK_ID = 276,
-    TK_OR = 277,
-    TK_AND = 278,
-    TK_NOT = 279,
-    TK_EQ = 280,
-    TK_NE = 281,
-    TK_LT = 282,
-    TK_GT = 283,
-    TK_LE = 284,
-    TK_GE = 285,
-    TK_LIKE = 286
+    TK_ASSOCIATORS = 275,
+    TK_OF = 276,
+    TK_STRING = 277,
+    TK_ID = 278,
+    TK_PATH = 279,
+    TK_OR = 280,
+    TK_AND = 281,
+    TK_NOT = 282,
+    TK_EQ = 283,
+    TK_NE = 284,
+    TK_LT = 285,
+    TK_GT = 286,
+    TK_LE = 287,
+    TK_GE = 288,
+    TK_LIKE = 289
   };
 #endif
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 194 "wql.y" /* yacc.c:1909  */
+#line 222 "wql.y"
 
     struct string str;
     WCHAR *string;
     struct property *proplist;
+    struct keyword *keywordlist;
     struct view *view;
     struct expr *expr;
     int integer;
 
-#line 95 "wql.tab.h" /* yacc.c:1909  */
+#line 102 "wql.tab.h"
+
 };
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif

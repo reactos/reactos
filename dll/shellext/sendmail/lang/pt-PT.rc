@@ -1,0 +1,7 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_DESKLINK, "Área de trabalho (Criar atalho)"
+    IDS_SHORTCUT, "Shortcut to %s"
+}

@@ -26,7 +26,6 @@
 #include "rpcndr.h"
 #include "wine/winternl.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 #include "rpc_binding.h"
@@ -93,7 +92,7 @@ static BOOL compare_networkoptions(LPCWSTR opts1, LPCWSTR opts2)
         return TRUE;
     if ((opts1 == NULL) || (opts2 == NULL))
         return FALSE;
-    return !strcmpW(opts1, opts2);
+    return !wcscmp(opts1, opts2);
 }
 
 RPC_STATUS RPCRT4_GetAssociation(LPCSTR Protseq, LPCSTR NetworkAddr,
@@ -154,7 +153,7 @@ RPC_STATUS RpcServerAssoc_GetAssociation(LPCSTR Protseq, LPCSTR NetworkAddr,
                 (!NetworkAddr || !assoc->NetworkAddr || !strcmp(NetworkAddr, assoc->NetworkAddr)) &&
                 !strcmp(Endpoint, assoc->Endpoint) &&
                 ((!assoc->NetworkOptions == !NetworkOptions) &&
-                 (!NetworkOptions || !strcmpW(NetworkOptions, assoc->NetworkOptions))))
+                 (!NetworkOptions || !wcscmp(NetworkOptions, assoc->NetworkOptions))))
             {
                 assoc->refs++;
                 *assoc_out = assoc;

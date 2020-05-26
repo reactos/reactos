@@ -34,10 +34,11 @@ GRAPHICS_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer);
 
 
 NTSTATUS
-CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                                 IN PCONSOLE Console,
-                                 IN PCONSOLE_SCREEN_BUFFER_VTBL Vtbl,
-                                 IN SIZE_T Size)
+CONSOLE_SCREEN_BUFFER_Initialize(
+    OUT PCONSOLE_SCREEN_BUFFER* Buffer,
+    IN PCONSOLE Console,
+    IN CONSOLE_IO_OBJECT_TYPE Type,
+    IN SIZE_T Size)
 {
     if (Buffer == NULL || Console == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -46,32 +47,37 @@ CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
     if (*Buffer == NULL) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Initialize the header with the default type */
-    ConSrvInitObject(&(*Buffer)->Header, SCREEN_BUFFER, Console);
-    (*Buffer)->Vtbl = Vtbl;
+    ConSrvInitObject(&(*Buffer)->Header, Type /* SCREEN_BUFFER */, Console);
     return STATUS_SUCCESS;
 }
 
 VOID
 CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
 {
-    if (Buffer->Header.Type == TEXTMODE_BUFFER)
+    switch (Buffer->Header.Type)
     {
+    case TEXTMODE_BUFFER:
         TEXTMODE_BUFFER_Destroy(Buffer);
-    }
-    else if (Buffer->Header.Type == GRAPHICS_BUFFER)
-    {
+        break;
+
+    case GRAPHICS_BUFFER:
         GRAPHICS_BUFFER_Destroy(Buffer);
-    }
-    else if (Buffer->Header.Type == SCREEN_BUFFER)
+        break;
+
+    case SCREEN_BUFFER:
     {
         /* Free the palette handle */
-        if (Buffer->PaletteHandle != NULL) DeleteObject(Buffer->PaletteHandle);
+        if (Buffer->PaletteHandle != NULL)
+            DeleteObject(Buffer->PaletteHandle);
 
         /* Free the screen buffer memory */
         ConsoleFreeHeap(Buffer);
+        break;
     }
-    // else
-    //     do_nothing;
+
+    default:
+        break;
+    }
 }
 
 // ConDrvCreateConsoleScreenBuffer
@@ -82,7 +88,7 @@ ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                          IN ULONG BufferType,
                          IN PVOID ScreenBufferInfo)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     if ( Console == NULL || Buffer == NULL ||
         (BufferType != CONSOLE_TEXTMODE_BUFFER && BufferType != CONSOLE_GRAPHICS_BUFFER) )
@@ -94,18 +100,19 @@ ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
     if (ProcessHandle == NULL)
         ProcessHandle = NtCurrentProcess();
 
-    if (BufferType == CONSOLE_TEXTMODE_BUFFER)
+    switch (BufferType)
     {
+    case CONSOLE_TEXTMODE_BUFFER:
         Status = TEXTMODE_BUFFER_Initialize(Buffer, Console, ProcessHandle,
                                             (PTEXTMODE_BUFFER_INFO)ScreenBufferInfo);
-    }
-    else if (BufferType == CONSOLE_GRAPHICS_BUFFER)
-    {
+        break;
+
+    case CONSOLE_GRAPHICS_BUFFER:
         Status = GRAPHICS_BUFFER_Initialize(Buffer, Console, ProcessHandle,
                                             (PGRAPHICS_BUFFER_INFO)ScreenBufferInfo);
-    }
-    else
-    {
+        break;
+
+    default:
         /* Never ever go there!! */
         ASSERT(FALSE);
     }
@@ -329,8 +336,7 @@ ConDrvSetConsoleCursorPosition(IN PCONSOLE Console,
     OldCursorX = Buffer->CursorPosition.X;
     OldCursorY = Buffer->CursorPosition.Y;
     Buffer->CursorPosition = *Position;
-    // Buffer->CursorPosition.X = Position->X;
-    // Buffer->CursorPosition.Y = Position->Y;
+
     if ( ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer) &&
          (!TermSetScreenInfo(Console, (PCONSOLE_SCREEN_BUFFER)Buffer, OldCursorX, OldCursorY)) )
     {

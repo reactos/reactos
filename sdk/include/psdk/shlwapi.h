@@ -262,23 +262,23 @@ typedef INT SRRF;
 LSTATUS
 WINAPI
 SHRegGetValueA(
-  _In_ HKEY,
-  _In_opt_ LPCSTR,
-  _In_opt_ LPCSTR,
-  _In_ SRRF,
-  _Out_opt_ LPDWORD,
-  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _In_ HKEY hkey,
+  _In_opt_ LPCSTR pszSubKey,
+  _In_opt_ LPCSTR pszValue,
+  _In_ SRRF srrfFlags,
+  _Out_opt_ LPDWORD pdwType,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID pvData,
   _Inout_opt_ LPDWORD pcbData);
 
 LSTATUS
 WINAPI
 SHRegGetValueW(
-  _In_ HKEY,
-  _In_opt_ LPCWSTR,
-  _In_opt_ LPCWSTR,
-  _In_ SRRF,
-  _Out_opt_ LPDWORD,
-  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _In_ HKEY hkey,
+  _In_opt_ LPCWSTR pszSubKey,
+  _In_opt_ LPCWSTR pszValue,
+  _In_ SRRF srrfFlags,
+  _Out_opt_ LPDWORD pdwType,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID pvData,
   _Inout_opt_ LPDWORD pcbData);
 
 #define SHRegGetValue WINELIB_NAME_AW(SHRegGetValue)
@@ -1738,14 +1738,14 @@ HRESULT
 WINAPI
 StrRetToStrA(
   _Inout_ STRRET*,
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCUITEMID_CHILD,
   _Outptr_ LPSTR*);
 
 HRESULT
 WINAPI
 StrRetToStrW(
   _Inout_ STRRET*,
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCUITEMID_CHILD,
   _Outptr_ LPWSTR*);
 
 #define StrRetToStr WINELIB_NAME_AW(StrRetToStr)
@@ -1754,7 +1754,7 @@ HRESULT
 WINAPI
 StrRetToBufA(
   _Inout_ STRRET*,
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCUITEMID_CHILD,
   _Out_writes_(cchBuf) LPSTR,
   UINT cchBuf);
 
@@ -1762,7 +1762,7 @@ HRESULT
 WINAPI
 StrRetToBufW(
   _Inout_ STRRET*,
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCUITEMID_CHILD,
   _Out_writes_(cchBuf) LPWSTR,
   UINT cchBuf);
 
@@ -1772,7 +1772,7 @@ HRESULT
 WINAPI
 StrRetToBSTR(
   _Inout_ STRRET*,
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCUITEMID_CHILD,
   _Outptr_ BSTR*);
 
 BOOL WINAPI IsCharSpaceA(CHAR);
@@ -2002,7 +2002,7 @@ HRESULT WINAPI DllInstall(BOOL, _In_opt_ LPCWSTR) DECLSPEC_HIDDEN;
 HRESULT
 WINAPI
 SHGetViewStatePropertyBag(
-  _In_opt_ LPCITEMIDLIST pidl,
+  _In_opt_ PCIDLIST_ABSOLUTE pidl,
   _In_opt_ LPWSTR bag_name,
   DWORD flags,
   _In_ REFIID riid,
@@ -2072,7 +2072,11 @@ BOOL WINAPI IsOS(DWORD);
 typedef struct
 {
     const IID *piid;
-    int        dwOffset;
+#if defined(__REACTOS__) || (WINVER >= _WIN32_WINNT_WIN10)
+    DWORD dwOffset;
+#else
+    int dwOffset;
+#endif
 } QITAB, *LPQITAB;
 
 HRESULT

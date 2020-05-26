@@ -42,10 +42,6 @@
 #include "olectl.h"
 #include "uuids.h"
 
-#ifndef RC_INVOKED
-#include "wine/unicode.h"
-#endif
-
 /**********************************************************************
  * Dll lifetime tracking declaration for devenum.dll
  */
@@ -53,19 +49,11 @@ extern LONG dll_refs DECLSPEC_HIDDEN;
 static inline void DEVENUM_LockModule(void) { InterlockedIncrement(&dll_refs); }
 static inline void DEVENUM_UnlockModule(void) { InterlockedDecrement(&dll_refs); }
 
-
-/**********************************************************************
- * ClassFactory declaration for devenum.dll
- */
-typedef struct
-{
-    IClassFactory IClassFactory_iface;
-} ClassFactoryImpl;
-
 enum device_type
 {
     DEVICE_FILTER,
     DEVICE_CODEC,
+    DEVICE_DMO,
 };
 
 typedef struct
@@ -75,13 +63,16 @@ typedef struct
     CLSID class;
     BOOL has_class;
     enum device_type type;
-    WCHAR *name;
+    union
+    {
+        WCHAR *name;    /* for filters and codecs */
+        CLSID clsid;    /* for DMOs */
+    };
 } MediaCatMoniker;
 
 MediaCatMoniker * DEVENUM_IMediaCatMoniker_Construct(void) DECLSPEC_HIDDEN;
 HRESULT create_EnumMoniker(REFCLSID class, IEnumMoniker **enum_mon) DECLSPEC_HIDDEN;
 
-extern ClassFactoryImpl DEVENUM_ClassFactory DECLSPEC_HIDDEN;
 extern ICreateDevEnum DEVENUM_CreateDevEnum DECLSPEC_HIDDEN;
 extern IParseDisplayName DEVENUM_ParseDisplayName DECLSPEC_HIDDEN;
 
@@ -90,12 +81,13 @@ extern IParseDisplayName DEVENUM_ParseDisplayName DECLSPEC_HIDDEN;
  */
 
 static const WCHAR backslashW[] = {'\\',0};
-static const WCHAR clsidW[] = {'C','L','S','I','D','\\',0};
+static const WCHAR clsidW[] = {'C','L','S','I','D',0};
 static const WCHAR instanceW[] = {'\\','I','n','s','t','a','n','c','e',0};
 static const WCHAR wszActiveMovieKey[] = {'S','o','f','t','w','a','r','e','\\',
                                           'M','i','c','r','o','s','o','f','t','\\',
                                           'A','c','t','i','v','e','M','o','v','i','e','\\',
                                           'd','e','v','e','n','u','m','\\',0};
 static const WCHAR deviceW[] = {'@','d','e','v','i','c','e',':',0};
-
-extern const WCHAR clsid_keyname[6] DECLSPEC_HIDDEN;
+static const WCHAR dmoW[] = {'d','m','o',':',0};
+static const WCHAR swW[] = {'s','w',':',0};
+static const WCHAR cmW[] = {'c','m',':',0};

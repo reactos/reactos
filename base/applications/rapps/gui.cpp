@@ -1469,6 +1469,19 @@ private:
         }
     }
 
+    VOID ShowAboutDlg()
+    {
+        ATL::CStringW szApp;
+        ATL::CStringW szAuthors;
+        HICON hIcon;
+
+        szApp.LoadStringW(IDS_APPTITLE);
+        szAuthors.LoadStringW(IDS_APP_AUTHORS);
+        hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+        ShellAboutW(m_hWnd, szApp, szAuthors, hIcon);
+        DestroyIcon(hIcon);
+    }
+
     VOID OnCommand(WPARAM wParam, LPARAM lParam)
     {
         WORD wCommand = LOWORD(wParam);
@@ -1605,7 +1618,7 @@ private:
             break;
 
         case ID_ABOUT:
-            ShowAboutDialog();
+            ShowAboutDlg();
             break;
 
         case ID_CHECK_ALL:
@@ -1850,6 +1863,29 @@ public:
 
         return CWindowImpl::Create(NULL, r, szWindowName.GetString(), WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
     }
+
+    void HandleTabOrder(int direction)
+    {
+        HWND Controls[] = { m_Toolbar->m_hWnd, m_SearchBar->m_hWnd, m_TreeView->m_hWnd, m_ListView->m_hWnd, m_RichEdit->m_hWnd };
+        // When there is no control found, go to the first or last (depending on tab vs shift-tab)
+        int current = direction > 0 ? 0 : (_countof(Controls) - 1);
+        HWND hActive = ::GetFocus();
+        for (size_t n = 0; n < _countof(Controls); ++n)
+        {
+            if (hActive == Controls[n])
+            {
+                current = n + direction;
+                break;
+            }
+        }
+
+        if (current < 0)
+            current = (_countof(Controls) - 1);
+        else if ((UINT)current >= _countof(Controls))
+            current = 0;
+
+        ::SetFocus(Controls[current]);
+    }
 };
 
 VOID ShowMainWindow(INT nShowCmd)
@@ -1877,6 +1913,16 @@ VOID ShowMainWindow(INT nShowCmd)
     {
         if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
         {
+            if (Msg.message == WM_CHAR &&
+                Msg.wParam == VK_TAB)
+            {
+                // Move backwards if shift is held down
+                int direction = (GetKeyState(VK_SHIFT) & 0x8000) ? -1 : 1;
+
+                wnd->HandleTabOrder(direction);
+                continue;
+            }
+
             TranslateMessage(&Msg);
             DispatchMessageW(&Msg);
         }

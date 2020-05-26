@@ -33,20 +33,9 @@ public:
         }
         else
         {
-            /* Our CString does not support FormatMessage yet */
-            CStringA message(MAKEINTRESOURCE(IDS_PASSWORD_FILE_TEXT));
-            CHeapPtr<CHAR, CLocalAllocator> formatted;
-
-            DWORD_PTR args[2] =
-            {
-                (DWORD_PTR)m_Filename.GetString(),
-                NULL
-            };
-
-            ::FormatMessageA(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                             message, 0, 0, (LPSTR)&formatted, 0, (va_list*)args);
-
-            ::SetDlgItemTextA(m_hWnd, IDC_MESSAGE, formatted);
+            CStringA message;
+            message.FormatMessage(IDS_PASSWORD_FILE_TEXT, m_Filename.GetString());
+            ::SetDlgItemTextA(m_hWnd, IDC_MESSAGE, message);
         }
         return TRUE;
     }

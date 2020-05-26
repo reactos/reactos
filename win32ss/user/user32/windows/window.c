@@ -159,16 +159,18 @@ RtlGetExpWinVer( HMODULE hModule )
     if ( hModule && !((ULONG_PTR)hModule >> 16))
     {
         pinth = RtlImageNtHeader( hModule );
-
-        dwMajorVersion = pinth->OptionalHeader.MajorSubsystemVersion;
-
-        if ( dwMajorVersion == 1 )
+        if ( pinth )
         {
-            dwMajorVersion = 3;
-        }
-        else
-        {
-            dwMinorVersion = pinth->OptionalHeader.MinorSubsystemVersion;
+            dwMajorVersion = pinth->OptionalHeader.MajorSubsystemVersion;
+
+            if ( dwMajorVersion == 1 )
+            {
+                dwMajorVersion = 3;
+            }
+            else
+            {
+                dwMinorVersion = pinth->OptionalHeader.MinorSubsystemVersion;
+            }
         }
     }
     return MAKELONG(MAKEWORD(dwMinorVersion, dwMajorVersion), 0);
@@ -411,7 +413,7 @@ CreateWindowExA(DWORD dwExStyle,
         if (pWndParent->fnid != FNID_MDICLIENT) // wine uses WIN_ISMDICLIENT
         {
            WARN("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
-           return NULL;
+           goto skip_mdi;
         }
 
         /* lpParams of WM_[NC]CREATE is different for MDI children.
@@ -477,6 +479,7 @@ CreateWindowExA(DWORD dwExStyle,
         }
     }
 
+skip_mdi:
     hwnd = User32CreateWindowEx(dwExStyle,
                                 lpClassName,
                                 lpWindowName,
@@ -536,7 +539,7 @@ CreateWindowExW(DWORD dwExStyle,
         if (pWndParent->fnid != FNID_MDICLIENT)
         {
            WARN("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
-           return NULL;
+           goto skip_mdi;
         }
 
         /* lpParams of WM_[NC]CREATE is different for MDI children.
@@ -602,6 +605,7 @@ CreateWindowExW(DWORD dwExStyle,
         }
     }
 
+skip_mdi:
     hwnd = User32CreateWindowEx(dwExStyle,
                                 (LPCSTR)lpClassName,
                                 (LPCSTR)lpWindowName,

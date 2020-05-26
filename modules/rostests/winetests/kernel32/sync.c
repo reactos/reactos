@@ -18,9 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __REACTOS__
-#define _WIN32_WINNT 0x500
-#endif
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -778,6 +775,7 @@ static void test_iocp_callback(void)
 static void CALLBACK timer_queue_cb1(PVOID p, BOOLEAN timedOut)
 {
     int *pn = p;
+    disable_success_count
     ok(timedOut, "Timer callbacks should always time out\n");
     ++*pn;
 }
@@ -2571,12 +2569,14 @@ static DWORD WINAPI apc_deadlock_thread(void *param)
         size = 0x1000;
         status = pNtAllocateVirtualMemory(pi->hProcess, &base, 0, &size,
                                           MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+        disable_success_count
         ok(!status, "expected STATUS_SUCCESS, got %08x\n", status);
         ok(base != NULL, "expected base != NULL, got %p\n", base);
         SetEvent(info->event);
 
         size = 0;
         status = pNtFreeVirtualMemory(pi->hProcess, &base, &size, MEM_RELEASE);
+        disable_success_count
         ok(!status, "expected STATUS_SUCCESS, got %08x\n", status);
         SetEvent(info->event);
     }
@@ -2613,6 +2613,7 @@ static void test_apc_deadlock(void)
     result = WaitForSingleObject(event, 1000);
     ok(result == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", result);
 
+    disable_success_count
     for (i = 0; i < 1000; i++)
     {
         result = SuspendThread(pi.hThread);

@@ -20,6 +20,7 @@
  */
 
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -29,7 +30,6 @@
 #include "winnls.h"
 #include "setupapi.h"
 #include "advpub.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "advpack_private.h"
 
@@ -139,7 +139,7 @@ void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir)
         /* SetupGetLineTextW returns the value if there is only one key, but
          * returns the whole line if there is more than one key
          */
-        if (!(value = strchrW(line, '=')))
+        if (!(value = wcschr(line, '=')))
         {
             SetupGetStringFieldW(&context, 0, NULL, 0, &size);
             key = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
@@ -158,10 +158,10 @@ void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir)
             value++;
 
         /* Extract the flags */
-        ptr = strchrW(value, ',');
+        ptr = wcschr(value, ',');
         if (ptr) {
             *ptr = '\0';
-            flags = atolW(ptr+1);
+            flags = wcstol(ptr+1, NULL, 10);
         }
 
         /* set dest to pszWorkingDir if key is SourceDir */
@@ -177,7 +177,7 @@ void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir)
         /* set all ldids to dest */
         while ((ptr = get_parameter(&key, ',', FALSE)))
         {
-            ldid = atolW(ptr);
+            ldid = wcstol(ptr, NULL, 10);
             SetupSetDirectoryIdW(hInf, ldid, dest);
         }
         HeapFree(GetProcessHeap(), 0, key_copy);

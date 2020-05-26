@@ -102,48 +102,6 @@ handle_switch_str(FILE *outFile, char *sw, char *arg, char *desc)
 }
 
 static int
-handle_switch_pstr(FILE *outFile, char **psw, char *arg, char *desc)
-{
-    int changed =0;
-
-    if (arg)
-    {
-        if (strcmp(arg,"") != 0)
-        {
-            if (strcmp(arg,KDBG_ESC_OFF) == 0)
-            {
-                if (*psw)
-                    changed = 1;
-                free(*psw);
-                *psw = NULL;
-            }
-            else
-            {
-                if (!*psw)
-                {
-                    *psw = malloc(LINESIZE);
-                    **psw = '\0';
-                }
-
-                if (strcmp(arg, *psw) != 0)
-                {
-                    strcpy(*psw, arg);
-                    changed = 1;
-                }
-            }
-        }
-    }
-    if (desc)
-    {
-        esclog(outFile, "%s is \"%s\" (%s)\n", desc, *psw, changed ? "changed":"unchanged");
-        if (!arg)
-            esclog(outFile, "(readonly)\n");
-    }
-
-    return changed;
-}
-
-static int
 handle_address_cmd(FILE *outFile, char *arg)
 {
     PLIST_MEMBER plm;
@@ -257,36 +215,6 @@ handle_escape_cmd(FILE *outFile, char *Line)
     case 'r':
         handle_switch(outFile, &opt_raw, arg, "-r Raw");
         break;
-    case 'R':
-        changed = handle_switch_pstr(outFile, &opt_Revision, arg, NULL);
-        opt_Revision_check = 0;
-        if (opt_Revision)
-        {
-            opt_Revision_check = 1;
-            if (strstr(opt_Revision, "check") == opt_Revision)
-            {
-                esclog(outFile, "-R is \"%s\" (%s)\n", opt_Revision, changed ? "changed":"unchanged");
-            }
-            else if (strstr(opt_Revision, "regscan") == opt_Revision)
-            {
-                char *s = strchr(opt_Revision, ',');
-
-                revinfo.range = DEF_RANGE;
-                if (s)
-                {
-                    *s++ = '\0';
-                    revinfo.range = atoi(s);
-                }
-                regscan(outFile);
-            }
-            else if (strstr(opt_Revision, "regclear") == opt_Revision)
-            {
-                list_clear(&sources);
-                summ.regfound = 0;
-                esclog(outFile, "cleared regression scan results\n");
-            }
-        }
-        break;
     case 's':
         if (strcmp(arg,"clear") == 0)
         {
@@ -302,7 +230,6 @@ handle_escape_cmd(FILE *outFile, char *Line)
         {
             handle_switch(outFile, &opt_undo, "1", "-u Undo");
             handle_switch(outFile, &opt_redo, "1", "-U Undo and reprocess");
-            opt_Revision_check = 1;
         }
         esclog(outFile, "-S Sources option is %d+%d,\"%s\"\n", opt_Source, opt_SrcPlus, opt_SourcesPath);
         esclog(outFile, "(Setting source tree not implemented)\n");

@@ -328,8 +328,8 @@ USBSTOR_PdoHandleQueryHardwareId(
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     LPCSTR GenericType, DeviceType;
     LPWSTR Buffer;
-    CHAR Id1[50], Id2[50], Id3[50], Id4[50], Id5[50], Id6[50];
-    ULONG Id1Length, Id2Length, Id3Length, Id4Length, Id5Length,Id6Length;
+    CHAR Id1[50], Id2[50], Id3[50], Id4[50], Id5[50], Id6[50], Id7[50];
+    ULONG Id1Length, Id2Length, Id3Length, Id4Length, Id5Length, Id6Length, Id7Length;
     ULONG Offset, TotalLength, Length;
     PINQUIRYDATA InquiryData;
 
@@ -389,23 +389,34 @@ USBSTOR_PdoHandleQueryHardwareId(
     DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId4 %s\n", Id4);
 
     // generate id 5
-    // USBSTOR\SCSIType
+    // SCSIType_VendorId(8)_ProductId(16)_Revision(1)
     RtlZeroMemory(Id5, sizeof(Id5));
     Offset = 0;
-    Offset = sprintf(&Id5[Offset], "USBSTOR\\");
-    Offset += sprintf(&Id5[Offset], GenericType);
+    Offset = sprintf(&Id5[Offset], DeviceType);
+    Offset += CopyField(InquiryData->VendorId, &Id5[Offset], 8);
+    Offset += CopyField(InquiryData->ProductId, &Id5[Offset], 16);
+    Offset += CopyField(InquiryData->ProductRevisionLevel, &Id5[Offset], 1);
     Id5Length = strlen(Id5) + 1;
     DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId5 %s\n", Id5);
 
     // generate id 6
-    // SCSIType
+    // USBSTOR\SCSIType
     RtlZeroMemory(Id6, sizeof(Id6));
     Offset = 0;
-    Offset = sprintf(&Id6[Offset], GenericType);
+    Offset = sprintf(&Id6[Offset], "USBSTOR\\");
+    Offset += sprintf(&Id6[Offset], GenericType);
     Id6Length = strlen(Id6) + 1;
     DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId6 %s\n", Id6);
 
-    TotalLength = Id1Length + Id2Length + Id3Length + Id4Length + Id5Length + Id6Length + 1;
+    // generate id 7
+    // SCSIType
+    RtlZeroMemory(Id7, sizeof(Id7));
+    Offset = 0;
+    Offset = sprintf(&Id7[Offset], GenericType);
+    Id7Length = strlen(Id7) + 1;
+    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId7 %s\n", Id7);
+
+    TotalLength = Id1Length + Id2Length + Id3Length + Id4Length + Id5Length + Id6Length + Id7Length + 1;
 
     Buffer = (LPWSTR)AllocateItem(PagedPool, TotalLength * sizeof(WCHAR));
     if (!Buffer)
@@ -424,6 +435,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     USBSTOR_ConvertToUnicodeString(Id4, Length, Offset, Buffer, &Offset);
     USBSTOR_ConvertToUnicodeString(Id5, Length, Offset, Buffer, &Offset);
     USBSTOR_ConvertToUnicodeString(Id6, Length, Offset, Buffer, &Offset);
+    USBSTOR_ConvertToUnicodeString(Id7, Length, Offset, Buffer, &Offset);
 
     ASSERT(Offset + 1 == Length);
 

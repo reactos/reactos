@@ -18,17 +18,23 @@
 
 #define NONAMELESSUNION
 
+
 #include "wine/unicode.h"
 #include "objbase.h"
 #include "dinput_private.h"
 #include "device_private.h"
 #include "resource.h"
 
+#include "wine/heap.h"
+
 typedef struct {
     int nobjects;
     IDirectInputDevice8W *lpdid;
     DIDEVICEINSTANCEW ddi;
     DIDEVICEOBJECTINSTANCEW ddo[256];
+    /* ActionFormat for every user.
+     * In same order as ConfigureDevicesData usernames */
+    DIACTIONFORMATW *user_afs;
 } DeviceData;
 
 typedef struct {
@@ -38,10 +44,11 @@ typedef struct {
 
 typedef struct {
     IDirectInput8W *lpDI;
-    LPDIACTIONFORMATW lpdiaf;
     LPDIACTIONFORMATW original_lpdiaf;
     DIDevicesData devices_data;
     int display_only;
+    int nusernames;
+    WCHAR **usernames;
 } ConfigureDevicesData;
 
 /*
@@ -57,27 +64,43 @@ static BOOL CALLBACK collect_objects(LPCDIDEVICEOBJECTINSTANCEW lpddo, LPVOID pv
     return DIENUM_CONTINUE;
 }
 
-static BOOL CALLBACK count_devices(LPCDIDEVICEINSTANCEW lpddi, IDirectInputDevice8W *lpdid, DWORD dwFlags, DWORD dwRemaining, LPVOID pvRef)
-{
-    DIDevicesData *data = (DIDevicesData*) pvRef;
-
-    data->ndevices++;
-    return DIENUM_CONTINUE;
-}
-
 static BOOL CALLBACK collect_devices(LPCDIDEVICEINSTANCEW lpddi, IDirectInputDevice8W *lpdid, DWORD dwFlags, DWORD dwRemaining, LPVOID pvRef)
 {
-    DIDevicesData *data = (DIDevicesData*) pvRef;
-    DeviceData *device = &data->devices[data->ndevices];
-    device->lpdid = lpdid;
-    device->ddi = *lpddi;
+    ConfigureDevicesData *data = (ConfigureDevicesData*) pvRef;
+    DeviceData *device;
+    int i, j;
 
     IDirectInputDevice_AddRef(lpdid);
+
+    /* alloc array for devices if this is our first device */
+    if (!data->devices_data.ndevices)
+        data->devices_data.devices = HeapAlloc(GetProcessHeap(), 0, sizeof(DeviceData) * (dwRemaining + 1));
+    device = &data->devices_data.devices[data->devices_data.ndevices];
+    device->lpdid = lpdid;
+    device->ddi = *lpddi;
 
     device->nobjects = 0;
     IDirectInputDevice_EnumObjects(lpdid, collect_objects, (LPVOID) device, DIDFT_ALL);
 
-    data->ndevices++;
+    device->user_afs = heap_alloc(sizeof(*device->user_afs) * data->nusernames);
+    memset(device->user_afs, 0, sizeof(*device->user_afs) * data->nusernames);
+    for (i = 0; i < data->nusernames; i++)
+    {
+        DIACTIONFORMATW *user_af = &device->user_afs[i];
+        user_af->dwNumActions = data->original_lpdiaf->dwNumActions;
+        user_af->guidActionMap = data->original_lpdiaf->guidActionMap;
+        user_af->rgoAction = heap_alloc(sizeof(DIACTIONW) * data->original_lpdiaf->dwNumActions);
+        memset(user_af->rgoAction, 0, sizeof(DIACTIONW) * data->original_lpdiaf->dwNumActions);
+        for (j = 0; j < user_af->dwNumActions; j++)
+        {
+            user_af->rgoAction[j].dwSemantic = data->original_lpdiaf->rgoAction[j].dwSemantic;
+            user_af->rgoAction[j].dwFlags = data->original_lpdiaf->rgoAction[j].dwFlags;
+            user_af->rgoAction[j].u.lptszActionName = data->original_lpdiaf->rgoAction[j].u.lptszActionName;
+        }
+        IDirectInputDevice8_BuildActionMap(lpdid, user_af, data->usernames[i], 0);
+    }
+
+    data->devices_data.ndevices++;
     return DIENUM_CONTINUE;
 }
 
@@ -170,10 +193,18 @@ static DeviceData* get_cur_device(HWND dialog)
     return &data->devices_data.devices[sel];
 }
 
-static LPDIACTIONFORMATW get_cur_lpdiaf(HWND dialog)
+static DIACTIONFORMATW *get_cur_lpdiaf(HWND dialog)
 {
     ConfigureDevicesData *data = (ConfigureDevicesData*) GetWindowLongPtrW(dialog, DWLP_USER);
-    return data->lpdiaf;
+    int controller_sel = SendDlgItemMessageW(dialog, IDC_CONTROLLERCOMBO, CB_GETCURSEL, 0, 0);
+    int player_sel = SendDlgItemMessageW(dialog, IDC_PLAYERCOMBO, CB_GETCURSEL, 0, 0);
+    return &data->devices_data.devices[controller_sel].user_afs[player_sel];
+}
+
+static DIACTIONFORMATW *get_original_lpdiaf(HWND dialog)
+{
+    ConfigureDevicesData *data = (ConfigureDevicesData*) GetWindowLongPtrW(dialog, DWLP_USER);
+    return data->original_lpdiaf;
 }
 
 static int dialog_display_only(HWND dialog)
@@ -182,40 +213,36 @@ static int dialog_display_only(HWND dialog)
     return data->display_only;
 }
 
-static void init_devices(HWND dialog, IDirectInput8W *lpDI, DIDevicesData *data, LPDIACTIONFORMATW lpdiaf)
+static void init_devices(HWND dialog, ConfigureDevicesData *data)
 {
     int i;
 
-    /* Count devices */
-    data->ndevices = 0;
-    IDirectInput8_EnumDevicesBySemantics(lpDI, NULL, lpdiaf, count_devices, (LPVOID) data, 0);
-
-    /* Allocate devices */
-    data->devices = HeapAlloc(GetProcessHeap(), 0, sizeof(DeviceData) * data->ndevices);
-
     /* Collect and insert */
-    data->ndevices = 0;
-    IDirectInput8_EnumDevicesBySemantics(lpDI, NULL, lpdiaf, collect_devices, (LPVOID) data, 0);
+    data->devices_data.ndevices = 0;
+    IDirectInput8_EnumDevicesBySemantics(data->lpDI, NULL, data->original_lpdiaf, collect_devices, (LPVOID) data, 0);
 
-    for (i=0; i < data->ndevices; i++)
-        SendDlgItemMessageW(dialog, IDC_CONTROLLERCOMBO, CB_ADDSTRING, 0, (LPARAM) data->devices[i].ddi.tszProductName );
+    for (i = 0; i < data->devices_data.ndevices; i++)
+        SendDlgItemMessageW(dialog, IDC_CONTROLLERCOMBO, CB_ADDSTRING, 0, (LPARAM) data->devices_data.devices[i].ddi.tszProductName );
+    for (i = 0; i < data->nusernames; i++)
+        SendDlgItemMessageW(dialog, IDC_PLAYERCOMBO, CB_ADDSTRING, 0, (LPARAM) data->usernames[i]);
 }
 
 static void destroy_data(HWND dialog)
 {
-    int i;
+    int i, j;
     ConfigureDevicesData *data = (ConfigureDevicesData*) GetWindowLongPtrW(dialog, DWLP_USER);
     DIDevicesData *devices_data = &data->devices_data;
 
     /* Free the devices */
     for (i=0; i < devices_data->ndevices; i++)
+    {
         IDirectInputDevice8_Release(devices_data->devices[i].lpdid);
+        for (j=0; j < data->nusernames; j++)
+            heap_free(devices_data->devices[i].user_afs[j].rgoAction);
+        heap_free(devices_data->devices[i].user_afs);
+    }
 
     HeapFree(GetProcessHeap(), 0, devices_data->devices);
-
-    /* Free the backup LPDIACTIONFORMATW  */
-    HeapFree(GetProcessHeap(), 0, data->original_lpdiaf->rgoAction);
-    HeapFree(GetProcessHeap(), 0, data->original_lpdiaf);
 }
 
 static void fill_device_object_list(HWND dialog)
@@ -231,6 +258,7 @@ static void fill_device_object_list(HWND dialog)
     /* Add each object */
     for (i=0; i < device->nobjects; i++)
     {
+        DWORD ddo_inst, ddo_type;
         int action = -1;
 
         item.mask = LVIF_TEXT | LVIF_PARAM;
@@ -241,12 +269,20 @@ static void fill_device_object_list(HWND dialog)
 
         /* Add the item */
         SendDlgItemMessageW(dialog, IDC_DEVICEOBJECTSLIST, LVM_INSERTITEMW, 0, (LPARAM) &item);
+        ddo_inst = DIDFT_GETINSTANCE(device->ddo[i].dwType);
+        ddo_type = DIDFT_GETTYPE(device->ddo[i].dwType);
 
-        /* Search for an assigned action  for this device */
+        /* Search for an assigned action for this device */
         for (j=0; j < lpdiaf->dwNumActions; j++)
         {
+            DWORD af_inst = DIDFT_GETINSTANCE(lpdiaf->rgoAction[j].dwObjID);
+            DWORD af_type = DIDFT_GETTYPE(lpdiaf->rgoAction[j].dwObjID);
+            if (af_type == DIDFT_PSHBUTTON) af_type = DIDFT_BUTTON;
+            if (af_type == DIDFT_RELAXIS) af_type = DIDFT_AXIS;
+            /* NOTE previously compared dwType == dwObjId but default buildActionMap actions
+             * were PSHBUTTON and RELAXS and didnt show up on config */
             if (IsEqualGUID(&lpdiaf->rgoAction[j].guidInstance, &device->ddi.guidInstance) &&
-                lpdiaf->rgoAction[j].dwObjID == device->ddo[i].dwType)
+                ddo_inst == af_inst && ddo_type & af_type)
             {
                 action = j;
                 break;
@@ -260,7 +296,7 @@ static void fill_device_object_list(HWND dialog)
 static void show_suitable_actions(HWND dialog)
 {
     DeviceData *device = get_cur_device(dialog);
-    LPDIACTIONFORMATW lpdiaf = get_cur_lpdiaf(dialog);
+    LPDIACTIONFORMATW lpdiaf = get_original_lpdiaf(dialog);
     int i, added = 0;
     int obj = lv_get_cur_item(dialog);
 
@@ -298,10 +334,13 @@ static void assign_action(HWND dialog)
     int obj = lv_get_cur_item(dialog);
     int old_action = lv_get_item_data(dialog, obj);
     int used_obj;
-
-    DIDEVICEOBJECTINSTANCEW ddo = device->ddo[obj];
+    DWORD type;
 
     if (old_action == action) return;
+    if (obj < 0) return;
+    if (lpdiaf->rgoAction[old_action].dwFlags & DIA_APPFIXED) return;
+
+    type = device->ddo[obj].dwType;
 
     /* Clear old action */
     if (old_action != -1)
@@ -320,7 +359,7 @@ static void assign_action(HWND dialog)
     lv_set_action(dialog, used_obj, -1, lpdiaf);
 
     /* Set new action */
-    lpdiaf->rgoAction[action].dwObjID = ddo.dwType;
+    lpdiaf->rgoAction[action].dwObjID = type;
     lpdiaf->rgoAction[action].guidInstance = device->ddi.guidInstance;
     lpdiaf->rgoAction[action].dwHow = DIAH_USERCONFIG;
 
@@ -328,24 +367,35 @@ static void assign_action(HWND dialog)
     lv_set_action(dialog, obj, action, lpdiaf);
 }
 
-static void copy_actions(LPDIACTIONFORMATW to, LPDIACTIONFORMATW from)
-{
-    DWORD i;
-    for (i=0; i < from->dwNumActions; i++)
-    {
-        to->rgoAction[i].guidInstance = from->rgoAction[i].guidInstance;
-        to->rgoAction[i].dwObjID = from->rgoAction[i].dwObjID;
-        to->rgoAction[i].dwHow = from->rgoAction[i].dwHow;
-        to->rgoAction[i].u.lptszActionName = from->rgoAction[i].u.lptszActionName;
-    }
-}
-
 static void reset_actions(HWND dialog)
 {
     ConfigureDevicesData *data = (ConfigureDevicesData*) GetWindowLongPtrW(dialog, DWLP_USER);
-    LPDIACTIONFORMATW to = data->lpdiaf, from = data->original_lpdiaf;
+    DIDevicesData *ddata = (DIDevicesData*) &data->devices_data;
+    unsigned i, j;
 
-    copy_actions(to, from);
+    for (i = 0; i < data->devices_data.ndevices; i++)
+    {
+        DeviceData *device = &ddata->devices[i];
+        for (j = 0; j < data->nusernames; j++)
+            IDirectInputDevice8_BuildActionMap(device->lpdid, &device->user_afs[j], data->usernames[j], DIDBAM_HWDEFAULTS);
+    }
+}
+
+static void save_actions(HWND dialog) {
+    ConfigureDevicesData *data = (ConfigureDevicesData*) GetWindowLongPtrW(dialog, DWLP_USER);
+    DIDevicesData *ddata = (DIDevicesData*) &data->devices_data;
+    unsigned i, j;
+    if (!data->display_only) {
+        for (i = 0; i < ddata->ndevices; i++)
+        {
+            DeviceData *device = &ddata->devices[i];
+            for (j = 0; j < data->nusernames; j++)
+            {
+                if (save_mapping_settings(device->lpdid, &device->user_afs[j], data->usernames[j]) != DI_OK)
+                    MessageBoxA(dialog, "Could not save settings", 0, MB_ICONERROR);
+            }
+        }
+    }
 }
 
 static INT_PTR CALLBACK ConfigureDevicesDlgProc(HWND dialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -357,25 +407,26 @@ static INT_PTR CALLBACK ConfigureDevicesDlgProc(HWND dialog, UINT uMsg, WPARAM w
             ConfigureDevicesData *data = (ConfigureDevicesData*) lParam;
 
             /* Initialize action format and enumerate devices */
-            init_devices(dialog, data->lpDI, &data->devices_data, data->lpdiaf);
+            init_devices(dialog, data);
 
             /* Store information in the window */
             SetWindowLongPtrW(dialog, DWLP_USER, (LONG_PTR) data);
 
             init_listview_columns(dialog);
 
-            /* Create a backup action format for CANCEL and RESET operations */
-            data->original_lpdiaf = HeapAlloc(GetProcessHeap(), 0, sizeof(*data->original_lpdiaf));
-            data->original_lpdiaf->dwNumActions = data->lpdiaf->dwNumActions;
-            data->original_lpdiaf->rgoAction = HeapAlloc(GetProcessHeap(), 0, sizeof(DIACTIONW)*data->lpdiaf->dwNumActions);
-            copy_actions(data->original_lpdiaf, data->lpdiaf);
-
             /* Select the first device and show its actions */
             SendDlgItemMessageW(dialog, IDC_CONTROLLERCOMBO, CB_SETCURSEL, 0, 0);
+            SendDlgItemMessageW(dialog, IDC_PLAYERCOMBO, CB_SETCURSEL, 0, 0);
             fill_device_object_list(dialog);
+
+            ShowCursor(TRUE);
 
             break;
         }
+
+        case WM_DESTROY:
+            ShowCursor(FALSE);
+            break;
 
         case WM_NOTIFY:
 
@@ -407,6 +458,7 @@ static INT_PTR CALLBACK ConfigureDevicesDlgProc(HWND dialog, UINT uMsg, WPARAM w
                     break;
 
                 case IDC_CONTROLLERCOMBO:
+                case IDC_PLAYERCOMBO:
 
                     switch (HIWORD(wParam))
                     {
@@ -417,12 +469,12 @@ static INT_PTR CALLBACK ConfigureDevicesDlgProc(HWND dialog, UINT uMsg, WPARAM w
                     break;
 
                 case IDOK:
+                    save_actions(dialog);
                     EndDialog(dialog, 0);
                     destroy_data(dialog);
                     break;
 
                 case IDCANCEL:
-                    reset_actions(dialog);
                     EndDialog(dialog, 0);
                     destroy_data(dialog);
                     break;
@@ -445,15 +497,48 @@ HRESULT _configure_devices(IDirectInput8W *iface,
                            LPVOID pvRefData
 )
 {
+    int i;
+    DWORD size;
+    WCHAR *username = NULL;
     ConfigureDevicesData data;
     data.lpDI = iface;
-    data.lpdiaf = lpdiCDParams->lprgFormats;
+    data.original_lpdiaf = lpdiCDParams->lprgFormats;
     data.display_only = !(dwFlags & DICD_EDIT);
+    data.nusernames = lpdiCDParams->dwcUsers;
+    if (lpdiCDParams->lptszUserNames == NULL)
+    {
+        /* Get default user name */
+        GetUserNameW(NULL, &size);
+        username = heap_alloc(size * sizeof(WCHAR) );
+        GetUserNameW(username, &size);
+        data.nusernames = 1;
+        data.usernames = heap_alloc(sizeof(WCHAR *));
+        data.usernames[0] = username;
+    }
+    else
+    {
+        WCHAR *p = lpdiCDParams->lptszUserNames;
+        data.usernames = heap_alloc(sizeof(WCHAR *) * data.nusernames);
+        for (i = 0; i < data.nusernames; i++)
+        {
+            if (*p)
+            {
+                data.usernames[i] = p;
+                while (*(p++));
+            }
+            else
+                /* Return if there is an empty string */
+                return DIERR_INVALIDPARAM;
+        }
+    }
 
     InitCommonControls();
 
     DialogBoxParamW(DINPUT_instance, (const WCHAR *)MAKEINTRESOURCE(IDD_CONFIGUREDEVICES),
             lpdiCDParams->hwnd, ConfigureDevicesDlgProc, (LPARAM)&data);
+
+    heap_free(username);
+    heap_free(data.usernames);
 
     return DI_OK;
 }

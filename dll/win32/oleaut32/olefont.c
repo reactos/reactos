@@ -35,7 +35,6 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "wine/list.h"
-#include "wine/unicode.h"
 #include "objbase.h"
 #include "oleauto.h"    /* for SysAllocString(....) */
 #include "ole2.h"
@@ -230,7 +229,7 @@ static HRESULT dec_ext_ref(HFONT hfont)
 static WCHAR *strdupW(const WCHAR* str)
 {
     WCHAR *ret;
-    DWORD size = (strlenW(str) + 1) * sizeof(WCHAR);
+    DWORD size = (lstrlenW(str) + 1) * sizeof(WCHAR);
 
     ret = HeapAlloc(GetProcessHeap(), 0, size);
     if(ret)
@@ -1063,8 +1062,8 @@ static HRESULT WINAPI OLEFontImpl_IsEqual(
     return S_FALSE;
 
   /* Check from string */
-  left_len = strlenW(left->description.lpstrName);
-  right_len = strlenW(right->description.lpstrName);
+  left_len = lstrlenW(left->description.lpstrName);
+  right_len = lstrlenW(right->description.lpstrName);
   ret = CompareStringW(0,0,left->description.lpstrName, left_len,
     right->description.lpstrName, right_len);
   if (ret != CSTR_EQUAL)
@@ -1727,7 +1726,7 @@ static HRESULT WINAPI OLEFontImpl_Save(
   /* FontName */
   if (this->description.lpstrName)
     string_size = WideCharToMultiByte( CP_ACP, 0, this->description.lpstrName,
-                                       strlenW(this->description.lpstrName), NULL, 0, NULL, NULL );
+                                       lstrlenW(this->description.lpstrName), NULL, 0, NULL, NULL );
   else
     string_size = 0;
 
@@ -1738,7 +1737,7 @@ static HRESULT WINAPI OLEFontImpl_Save(
   {
       if (!(writeBuffer = HeapAlloc( GetProcessHeap(), 0, string_size ))) return E_OUTOFMEMORY;
       WideCharToMultiByte( CP_ACP, 0, this->description.lpstrName,
-                           strlenW(this->description.lpstrName),
+                           lstrlenW(this->description.lpstrName),
                            writeBuffer, string_size, NULL, NULL );
 
       IStream_Write(pOutStream, writeBuffer, string_size, &written);
@@ -1774,7 +1773,7 @@ static HRESULT WINAPI OLEFontImpl_GetSizeMax(
 
   if (this->description.lpstrName!=0)
       pcbSize->u.LowPart += WideCharToMultiByte( CP_ACP, 0, this->description.lpstrName,
-                                                 strlenW(this->description.lpstrName),
+                                                 lstrlenW(this->description.lpstrName),
                                                  NULL, 0, NULL, NULL );
 
   return S_OK;

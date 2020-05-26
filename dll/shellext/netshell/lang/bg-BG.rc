@@ -15,8 +15,8 @@ BEGIN
     PUSHBUTTON "&Свойства", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Описание", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Component Description goes here...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "Показване на значе в задачната лента при свързаност", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "Уведомяване при ограничена или липсваща свързаност", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    AUTOCHECKBOX "Показване на значе в задачната лента при свързаност", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "Уведомяване при ограничена или липсваща свързаност", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 180
@@ -31,22 +31,22 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Общи"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Свързване", -1, 9, 8, 182, 58, BS_GROUPBOX
-    LTEXT "Състояние:", -1, 19, 20, 60, 8
-    LTEXT "Продължителност:", -1, 19, 34, 65, 8
-    LTEXT "Скорост:", -1, 19, 48, 60, 8
-    GROUPBOX "Дейност", -1, 9, 74, 182, 70, BS_GROUPBOX
-    RTEXT "Пратени", -1, 26, 90, 60, 8
-    ICON "", IDC_NETSTAT, 110, 85, 18, 20
-    LTEXT "Получени", -1, 149, 90, 37, 8
-    LTEXT "Байта:", -1, 17, 115, 32, 8
-    RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
-    RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
-    PUSHBUTTON "&Свойства", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
-    PUSHBUTTON "&Изключване", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "", IDC_STATUS, 83, 20, 98, 8
-    RTEXT "", IDC_DURATION, 83, 34, 98, 8
-    RTEXT "", IDC_SPEED, 83, 48, 98, 8
+    GROUPBOX "Свързване", -1, 9, 8, 190, 58, BS_GROUPBOX
+    LTEXT "Състояние:", -1, 22, 20, 65, 8
+    LTEXT "Продължителност:", -1, 22, 34, 65, 8
+    LTEXT "Скорост:", -1, 22, 48, 65, 8
+    GROUPBOX "Дейност", -1, 9, 74, 190, 70, BS_GROUPBOX
+    LTEXT "Пратени", -1, 60, 90, 60, 8
+    ICON "", IDC_NETSTAT, 110, 85, 32, 32
+    RTEXT "Получени", -1, 146, 90, 44, 8
+    LTEXT "Байта:", -1, 22, 115, 32, 8
+    LTEXT "000.000.000", IDC_SEND, 60, 115, 44, 8
+    RTEXT "000.000.000", IDC_RECEIVED, 146, 115, 44, 8
+    PUSHBUTTON "&Свойства", IDC_STATUS_PROPERTIES, 10, 150, 60, 14
+    PUSHBUTTON "&Изключване", IDC_ENDISABLE, 76, 150, 60, 14
+    RTEXT "", IDC_STATUS, 90, 20, 100, 8
+    RTEXT "", IDC_DURATION, 90, 34, 100, 8
+    RTEXT "", IDC_SPEED, 90, 48, 100, 8
 END
 
 IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
@@ -59,10 +59,10 @@ BEGIN
     LTEXT "IP адрес:", -1, 22, 34, 80, 8
     LTEXT "Мрежова маска:", -1, 22, 48, 80, 8
     LTEXT "Подразбиран разпределител (gateway):", -1, 22, 62, 80, 8
-    RTEXT "Неналично", IDC_DETAILSTYPE, 112, 20, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSIP, 112, 34, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 112, 48, 80, 8
-    RTEXT "", IDC_DETAILSGATEWAY, 112, 62, 80, 8
+    RTEXT "Неналично", IDC_DETAILSTYPE, 110, 20, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSIP, 110, 34, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 110, 48, 80, 8
+    RTEXT "", IDC_DETAILSGATEWAY, 110, 62, 80, 8
     PUSHBUTTON "&Подробности...", IDC_DETAILS, 22, 76, 62, 14
 END
 

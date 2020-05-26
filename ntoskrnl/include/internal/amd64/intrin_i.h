@@ -1,22 +1,22 @@
 #ifndef _INTRIN_INTERNAL_
 #define _INTRIN_INTERNAL_
 
-VOID
 FORCEINLINE
+VOID
 KeSetCurrentIrql(KIRQL Irql)
 {
     __writecr8(Irql);
 }
 
-PKGDTENTRY64
 FORCEINLINE
+PKGDTENTRY64
 KiGetGdtEntry(PVOID pGdt, USHORT Selector)
 {
     return (PKGDTENTRY64)((ULONG64)pGdt + (Selector & ~RPL_MASK));
 }
 
-PVOID
 FORCEINLINE
+PVOID
 KiGetGdtDescriptorBase(PKGDTENTRY Entry)
 {
     return (PVOID)((ULONG64)Entry->BaseLow |
@@ -25,8 +25,8 @@ KiGetGdtDescriptorBase(PKGDTENTRY Entry)
                    (ULONG64)Entry->BaseUpper << 32);
 }
 
-VOID
 FORCEINLINE
+VOID
 KiSetGdtDescriptorBase(PKGDTENTRY Entry, ULONG64 Base)
 {
     Entry->BaseLow = Base & 0xffff;
@@ -35,16 +35,16 @@ KiSetGdtDescriptorBase(PKGDTENTRY Entry, ULONG64 Base)
     Entry->BaseUpper = Base >> 32;
 }
 
-VOID
 FORCEINLINE
+VOID
 KiSetGdtDescriptorLimit(PKGDTENTRY Entry, ULONG Limit)
 {
     Entry->LimitLow = Limit & 0xffff;
     Entry->Bits.LimitHigh = Limit >> 16;
 }
 
-VOID
 FORCEINLINE
+VOID
 KiInitGdtEntry(PKGDTENTRY64 Entry, ULONG64 Base, ULONG Size, UCHAR Type, UCHAR Dpl)
 {
     KiSetGdtDescriptorBase(Entry, Base);

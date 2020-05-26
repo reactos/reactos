@@ -79,6 +79,45 @@ InbvPortInitialize(IN  ULONG   BaudRate,
     /* Not yet supported */
     ASSERT(IsMMIODevice == FALSE);
 
+#if defined(SARCH_PC98)
+    /* Set default baud rate */
+    if (BaudRate == 0) BaudRate = 9600;
+
+    /* Check if port or address given */
+    if (PortNumber)
+    {
+        /* Pick correct address for port */
+        if (!PortAddress)
+        {
+            if (PortNumber == 1)
+            {
+                PortAddress = (PUCHAR)0x30;
+            }
+            else
+            {
+                PortAddress = (PUCHAR)0x238;
+                PortNumber = 2;
+            }
+        }
+    }
+    else
+    {
+        /* Pick correct port for address */
+        PortAddress = (PUCHAR)0x30;
+        if (CpDoesPortExist(PortAddress))
+        {
+            PortNumber = 1;
+        }
+        else
+        {
+            PortAddress = (PUCHAR)0x238;
+            if (!CpDoesPortExist(PortAddress))
+                return FALSE;
+
+            PortNumber = 2;
+        }
+    }
+#else
     /* Set default baud rate */
     if (BaudRate == 0) BaudRate = 19200;
 
@@ -123,6 +162,7 @@ InbvPortInitialize(IN  ULONG   BaudRate,
             PortNumber = 1;
         }
     }
+#endif
 
     /* Initialize the port unless it's already up, and then return it */
     if (Port[PortNumber - 1].Address) return FALSE;

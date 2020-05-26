@@ -36,9 +36,6 @@
  *   PropertyStorage_ReadFromStream
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -52,7 +49,7 @@
 #include "winbase.h"
 #include "winnls.h"
 #include "winuser.h"
-#include "wine/unicode.h"
+#include "wine/asm.h"
 #include "wine/debug.h"
 #include "dictionary.h"
 #include "storage32.h"
@@ -60,10 +57,6 @@
 #include "oleauto.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
-
-#ifdef _MSC_VER
-#define __ASM_STDCALL_FUNC(name,args,code)
-#endif
 
 static inline StorageImpl *impl_from_IPropertySetStorage( IPropertySetStorage *iface )
 {
@@ -375,7 +368,7 @@ static HRESULT PropertyStorage_StringCopy(LPCSTR src, LCID srcCP, LPSTR *dst,
         size_t len;
 
         if (dstCP == CP_UNICODE)
-            len = (strlenW((LPCWSTR)src) + 1) * sizeof(WCHAR);
+            len = (lstrlenW((LPCWSTR)src) + 1) * sizeof(WCHAR);
         else
             len = strlen(src) + 1;
         *dst = CoTaskMemAlloc(len * sizeof(WCHAR));
@@ -943,7 +936,7 @@ static int PropertyStorage_PropNameCompare(const void *a, const void *b,
     {
         TRACE("(%s, %s)\n", debugstr_w(a), debugstr_w(b));
         if (This->grfFlags & PROPSETFLAG_CASE_SENSITIVE)
-            return lstrcmpW(a, b);
+            return wcscmp(a, b);
         else
             return lstrcmpiW(a, b);
     }
@@ -2513,7 +2506,7 @@ static void prop_enum_copy_cb(IUnknown *parent, void *orig, void *dest)
 
     if (dictionary_find(storage->propid_to_name, UlongToPtr(src_prop->propid), (void**)&name))
     {
-        DWORD size = (strlenW(name) + 1) * sizeof(WCHAR);
+        DWORD size = (lstrlenW(name) + 1) * sizeof(WCHAR);
 
         dest_prop->lpwstrName = CoTaskMemAlloc(size);
         if (!dest_prop->lpwstrName) return;

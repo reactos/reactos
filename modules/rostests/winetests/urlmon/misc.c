@@ -61,6 +61,8 @@ DEFINE_GUID(CLSID_AboutProtocol, 0x3050F406, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xA
     }while(0)
 
 DEFINE_EXPECT(ParseUrl);
+DEFINE_EXPECT(ParseUrl_ENCODE);
+DEFINE_EXPECT(ParseUrl_UNESCAPE);
 DEFINE_EXPECT(QI_IInternetProtocolInfo);
 DEFINE_EXPECT(CreateInstance);
 DEFINE_EXPECT(unk_Release);
@@ -376,6 +378,13 @@ static void test_CoInternetParseUrl(void)
 
         memset(buf, 0xf0, sizeof(buf));
         hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_ENCODE, 0, buf,
+                ARRAY_SIZE(buf), &size, 0);
+        ok(hres == S_OK, "[%d] encoding failed: %08x\n", i, hres);
+        ok(size == lstrlenW(parse_tests[i].encoded_url), "[%d] wrong size\n", i);
+        ok(!lstrcmpW(parse_tests[i].encoded_url, buf), "[%d] wrong encoded url\n", i);
+
+        memset(buf, 0xf0, sizeof(buf));
+        hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_UNESCAPE, 0, buf,
                 ARRAY_SIZE(buf), &size, 0);
         ok(hres == S_OK, "[%d] encoding failed: %08x\n", i, hres);
         ok(size == lstrlenW(parse_tests[i].encoded_url), "[%d] wrong size\n", i);
@@ -875,9 +884,9 @@ static HRESULT WINAPI InternetProtocolInfo_ParseUrl(IInternetProtocolInfo *iface
         PARSEACTION ParseAction, DWORD dwParseFlags, LPWSTR pwzResult, DWORD cchResult,
         DWORD *pcchResult, DWORD dwReserved)
 {
-    CHECK_EXPECT2(ParseUrl);
-
-    if(ParseAction == PARSE_SECURITY_URL) {
+    switch(ParseAction) {
+    case PARSE_SECURITY_URL:
+        CHECK_EXPECT2(ParseUrl);
         if(pcchResult)
             *pcchResult = ARRAY_SIZE(url1);
 
@@ -886,6 +895,17 @@ static HRESULT WINAPI InternetProtocolInfo_ParseUrl(IInternetProtocolInfo *iface
 
         memcpy(pwzResult, url1, sizeof(url1));
         return S_OK;
+    case PARSE_ENCODE:
+        CHECK_EXPECT2(ParseUrl_ENCODE);
+        break;
+
+    case PARSE_UNESCAPE:
+        CHECK_EXPECT2(ParseUrl_UNESCAPE);
+        break;
+
+    default:
+        CHECK_EXPECT2(ParseUrl);
+        break;
     }
 
     return E_NOTIMPL;
@@ -1030,24 +1050,34 @@ static void test_NameSpace(void)
     expect_cf = &test_protocol_cf;
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(CreateInstance);
-    SET_EXPECT(ParseUrl);
+    SET_EXPECT(ParseUrl_ENCODE);
 
     hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
     CHECK_CALLED(CreateInstance);
-    CHECK_CALLED(ParseUrl);
+    CHECK_CALLED(ParseUrl_ENCODE);
 
     qiret = S_OK;
     SET_EXPECT(QI_IInternetProtocolInfo);
-    SET_EXPECT(ParseUrl);
+    SET_EXPECT(ParseUrl_ENCODE);
 
     hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
-    CHECK_CALLED(ParseUrl);
+    CHECK_CALLED(ParseUrl_ENCODE);
+
+    qiret = S_OK;
+    SET_EXPECT(QI_IInternetProtocolInfo);
+    SET_EXPECT(ParseUrl_UNESCAPE);
+
+    hres = pCoInternetParseUrl(url8, PARSE_UNESCAPE, 0, buf, ARRAY_SIZE(buf), &size, 0);
+    ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
+
+    CHECK_CALLED(QI_IInternetProtocolInfo);
+    CHECK_CALLED(ParseUrl_UNESCAPE);
 
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
@@ -1097,38 +1127,38 @@ static void test_NameSpace(void)
     ok(hres == S_OK, "RegisterNameSpace failed: %08x\n", hres);
 
     SET_EXPECT(QI_IInternetProtocolInfo);
-    SET_EXPECT(ParseUrl);
+    SET_EXPECT(ParseUrl_ENCODE);
 
     hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
-    CHECK_CALLED(ParseUrl);
+    CHECK_CALLED(ParseUrl_ENCODE);
 
     hres = IInternetSession_UnregisterNameSpace(session, &test_protocol_cf, wszTest);
     ok(hres == S_OK, "UnregisterNameSpace failed: %08x\n", hres);
 
     SET_EXPECT(QI_IInternetProtocolInfo);
-    SET_EXPECT(ParseUrl);
+    SET_EXPECT(ParseUrl_ENCODE);
 
     hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
-    CHECK_CALLED(ParseUrl);
+    CHECK_CALLED(ParseUrl_ENCODE);
 
     hres = IInternetSession_UnregisterNameSpace(session, &test_protocol_cf, wszTest);
     ok(hres == S_OK, "UnregisterNameSpace failed: %08x\n", hres);
 
     expect_cf = &test_protocol_cf2;
     SET_EXPECT(QI_IInternetProtocolInfo);
-    SET_EXPECT(ParseUrl);
+    SET_EXPECT(ParseUrl_ENCODE);
 
     hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
-    CHECK_CALLED(ParseUrl);
+    CHECK_CALLED(ParseUrl_ENCODE);
 
     hres = IInternetSession_UnregisterNameSpace(session, &test_protocol_cf, wszTest);
     ok(hres == S_OK, "UnregisterNameSpace failed: %08x\n", hres);

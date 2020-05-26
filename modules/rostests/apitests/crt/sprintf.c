@@ -6,6 +6,7 @@
  */
 
 #include <apitest.h>
+#include <apitest_guard.h>
 
 #define WIN32_NO_STATUS
 #include <stdio.h>
@@ -25,53 +26,6 @@
 #endif
 #endif
 
-static
-PVOID
-AllocateGuarded(
-    SIZE_T SizeRequested)
-{
-    NTSTATUS Status;
-    SIZE_T Size = PAGE_ROUND_UP(SizeRequested + PAGE_SIZE);
-    PVOID VirtualMemory = NULL;
-    PCHAR StartOfBuffer;
-
-    Status = NtAllocateVirtualMemory(NtCurrentProcess(), &VirtualMemory, 0, &Size, MEM_RESERVE, PAGE_NOACCESS);
-
-    if (!NT_SUCCESS(Status))
-        return NULL;
-
-    Size -= PAGE_SIZE;
-    if (Size)
-    {
-        Status = NtAllocateVirtualMemory(NtCurrentProcess(), &VirtualMemory, 0, &Size, MEM_COMMIT, PAGE_READWRITE);
-        if (!NT_SUCCESS(Status))
-        {
-            Size = 0;
-            Status = NtFreeVirtualMemory(NtCurrentProcess(), &VirtualMemory, &Size, MEM_RELEASE);
-            ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
-            return NULL;
-        }
-    }
-
-    StartOfBuffer = VirtualMemory;
-    StartOfBuffer += Size - SizeRequested;
-
-    return StartOfBuffer;
-}
-
-static
-VOID
-FreeGuarded(
-    PVOID Pointer)
-{
-    NTSTATUS Status;
-    PVOID VirtualMemory = (PVOID)PAGE_ROUND_DOWN((SIZE_T)Pointer);
-    SIZE_T Size = 0;
-
-    Status = NtFreeVirtualMemory(NtCurrentProcess(), &VirtualMemory, &Size, MEM_RELEASE);
-    ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
-}
-
 /* NOTE: This test is not only used for all the CRT apitests, but also for
  *       user32's wsprintf. Make sure to test them all */
 START_TEST(sprintf)
@@ -88,12 +42,20 @@ START_TEST(sprintf)
     StartSeh()
         Length = sprintf(NULL, "");
         ok_int(Length, 0);
+#if TEST_CRTDLL || TEST_USER32
     EndSeh(STATUS_ACCESS_VIOLATION);
+#else
+    EndSeh(STATUS_SUCCESS);
+#endif
 
     StartSeh()
         Length = sprintf(NULL, "Hello");
         ok_int(Length, 5);
+#if TEST_CRTDLL || TEST_USER32
     EndSeh(STATUS_ACCESS_VIOLATION);
+#else
+    EndSeh(STATUS_SUCCESS);
+#endif
 
     /* some basic formats */
     Length = sprintf(Buffer, "abcde");

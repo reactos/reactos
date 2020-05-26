@@ -16,6 +16,8 @@
 #include <wchar.h>
 #include <commctrl.h>
 #include <cpl.h>
+#include <debug.h>
+#include <strsafe.h>
 
 #include "resource.h"
 
@@ -32,6 +34,15 @@ typedef struct
   UINT idDescription;
   APPLET_PROC AppletProc;
 } APPLET, *PAPPLET;
+
+typedef struct
+{
+    WCHAR szSyncSuc[BUFSIZE];
+    WCHAR szSyncWait[BUFSIZE];
+    WCHAR szSyncErr[BUFSIZE];
+    WCHAR szSyncType[BUFSIZE];
+    WCHAR szSyncInit[BUFSIZE];
+} SYNC_STATUS, *PSYNC_STATUS;
 
 extern HINSTANCE hApplet;
 

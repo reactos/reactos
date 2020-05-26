@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,9 @@
 #include "acinterp.h"
 #include "acnamesp.h"
 #include "acdebug.h"
-
+#ifdef ACPI_EXEC_APP
+#include "aecommon.h"
+#endif
 
 #define _COMPONENT          ACPI_DISPATCHER
         ACPI_MODULE_NAME    ("dswexec")
@@ -396,7 +398,10 @@ AcpiDsExecEndOp (
     UINT32                  OpClass;
     ACPI_PARSE_OBJECT       *NextOp;
     ACPI_PARSE_OBJECT       *FirstArg;
-
+#ifdef ACPI_EXEC_APP
+    char                    *Namepath;
+    ACPI_OPERAND_OBJECT     *ObjDesc;
+#endif
 
     ACPI_FUNCTION_TRACE_PTR (DsExecEndOp, WalkState);
 
@@ -609,6 +614,29 @@ AcpiDsExecEndOp (
             }
 
             Status = AcpiDsEvalBufferFieldOperands (WalkState, Op);
+            if (ACPI_FAILURE (Status))
+            {
+                break;
+            }
+
+#ifdef ACPI_EXEC_APP
+            /*
+             * AcpiExec support for namespace initialization file (initialize
+             * BufferFields in this code.)
+             */
+            Namepath = AcpiNsGetExternalPathname (Op->Common.Node);
+            Status = AeLookupInitFileEntry (Namepath, &ObjDesc);
+            if (ACPI_SUCCESS (Status))
+            {
+                Status = AcpiExWriteDataToField (ObjDesc, Op->Common.Node->Object, NULL);
+                if ACPI_FAILURE (Status)
+                {
+                    ACPI_EXCEPTION ((AE_INFO, Status, "While writing to buffer field"));
+                }
+            }
+            ACPI_FREE (Namepath);
+            Status = AE_OK;
+#endif
             break;
 
 

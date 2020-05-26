@@ -19,6 +19,7 @@ WndProc(
     _In_ WPARAM wParam,
     _In_ LPARAM lParam)
 {
+    disable_success_count
     ok(GetCurrentThreadId() == dwThreadId, "Thread 0x%lx instead of 0x%lx\n", GetCurrentThreadId(), dwThreadId);
     if (message == WM_PAINT)
     {

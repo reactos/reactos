@@ -2,8 +2,6 @@
 #ifndef _WBEMDISP_PRECOMP_H_
 #define _WBEMDISP_PRECOMP_H_
 
-#include <wine/config.h>
-
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -19,7 +17,6 @@
 #include <wbemdisp.h>
 
 #include <wine/debug.h>
-#include <wine/unicode.h>
 
 #include "wbemdisp_private.h"
 

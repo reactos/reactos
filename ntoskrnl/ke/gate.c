@@ -44,7 +44,7 @@ KeWaitForGate(IN PKGATE Gate,
     do
     {
         /* Acquire the APC lock */
-        KiAcquireApcLock(Thread, &ApcLock);
+        KiAcquireApcLockRaiseToSynch(Thread, &ApcLock);
 
         /* Check if a kernel APC is pending and we're below APC_LEVEL */
         if ((Thread->ApcState.KernelApcPending) &&
@@ -58,7 +58,7 @@ KeWaitForGate(IN PKGATE Gate,
         {
             /* Check if we have a queue and lock the dispatcher if so */
             Queue = Thread->Queue;
-            if (Queue) KiAcquireDispatcherLockAtDpcLevel();
+            if (Queue) KiAcquireDispatcherLockAtSynchLevel();
 
             /* Lock the thread */
             KiAcquireThreadLock(Thread);
@@ -77,7 +77,7 @@ KeWaitForGate(IN PKGATE Gate,
                 KiReleaseThreadLock(Thread);
 
                 /* Release the gate lock */
-                if (Queue) KiReleaseDispatcherLockFromDpcLevel();
+                if (Queue) KiReleaseDispatcherLockFromSynchLevel();
 
                 /* Release the APC lock and return */
                 KiReleaseApcLock(&ApcLock);
@@ -116,11 +116,11 @@ KeWaitForGate(IN PKGATE Gate,
                 KiActivateWaiterQueue(Queue);
 
                 /* Release the dispatcher lock */
-                KiReleaseDispatcherLockFromDpcLevel();
+                KiReleaseDispatcherLockFromSynchLevel();
             }
 
             /* Release the APC lock but stay at DPC level */
-            KiReleaseApcLockFromDpcLevel(&ApcLock);
+            KiReleaseApcLockFromSynchLevel(&ApcLock);
 
             /* Find a new thread to run */
             Status = KiSwapThread(Thread, KeGetCurrentPrcb());
@@ -203,7 +203,7 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
             if (WaitThread->Queue)
             {
                 /* Acquire the dispatcher lock */
-                KiAcquireDispatcherLockAtDpcLevel();
+                KiAcquireDispatcherLockAtSynchLevel();
 
                 /* Check if we still have one */
                 if (WaitThread->Queue)
@@ -213,7 +213,7 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
                 }
 
                 /* Release lock */
-                KiReleaseDispatcherLockFromDpcLevel();
+                KiReleaseDispatcherLockFromSynchLevel();
             }
 
             /* Make the thread ready */

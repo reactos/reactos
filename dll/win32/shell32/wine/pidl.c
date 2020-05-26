@@ -638,7 +638,7 @@ BOOL WINAPI ILIsParent(LPCITEMIDLIST pidlParent, LPCITEMIDLIST pidlChild, BOOL b
  * NOTES
  *  exported by ordinal.
  */
-LPITEMIDLIST WINAPI ILFindChild(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+PUIDLIST_RELATIVE WINAPI ILFindChild(PIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE pidl2)
 {
     LPCITEMIDLIST pidltemp1 = pidl1;
     LPCITEMIDLIST pidltemp2 = pidl2;
@@ -674,7 +674,7 @@ LPITEMIDLIST WINAPI ILFindChild(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
             ret = NULL; /* elements of pidl1 left*/
     }
     TRACE_(shell)("--- %p\n", ret);
-    return (LPITEMIDLIST)ret; /* pidl 1 is shorter */
+    return (PUIDLIST_RELATIVE)ret; /* pidl 1 is shorter */
 }
 
 /*************************************************************************
@@ -1100,6 +1100,10 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathA(LPCSTR lpszPath)
         wPath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         MultiByteToWideChar(CP_ACP, 0, lpszPath, -1, wPath, len);
     }
+#ifdef __REACTOS__
+    if (PathFileExistsW(wPath))
+        return ILCreateFromPathW(wPath);
+#endif
 
     _ILParsePathW(wPath, NULL, TRUE, &pidl, NULL);
 
@@ -1113,6 +1117,10 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathW(LPCWSTR lpszPath)
     LPITEMIDLIST pidl = NULL;
 
     TRACE("%s\n", debugstr_w(lpszPath));
+#ifdef __REACTOS__
+    if (PathFileExistsW(lpszPath))
+        return ILCreateFromPathW(lpszPath);
+#endif
 
     _ILParsePathW(lpszPath, NULL, TRUE, &pidl, NULL);
     TRACE("%s %p\n", debugstr_w(lpszPath), pidl);

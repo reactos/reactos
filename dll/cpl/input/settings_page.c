@@ -64,7 +64,7 @@ CreateLayoutIcon(LPWSTR szLayout, BOOL bIsDefault)
                             ExtTextOutW(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, L"", 0, NULL);
 
                             SelectObject(hdc, hFont);
-                            DrawTextW(hdc, L"\x2022", 1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+                            DrawFrameControl(hdc, &rect, DFC_MENU, DFCS_MENUBULLET);
                         }
                         else
                         {

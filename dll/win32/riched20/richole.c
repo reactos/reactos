@@ -372,7 +372,7 @@ static inline BOOL is_equal_textfont_prop_value(enum textfont_prop_id propid, te
     case FONT_WEIGHT:
         return left->l == right->l;
     case FONT_NAME:
-        return !strcmpW(left->str, right->str);
+        return !wcscmp(left->str, right->str);
     case FONT_POSITION:
     case FONT_SIZE:
     case FONT_SPACING:
@@ -1399,6 +1399,16 @@ IRichEditOle_fnGetObject(IRichEditOle *me, LONG iob,
         else
             reobj = cursor.pRun->member.run.reobj;
     }
+    else if (iob == REO_IOB_SELECTION)
+    {
+        ME_Cursor *from, *to;
+
+        ME_GetSelection(This->editor, &from, &to);
+        if (!from->pRun->member.run.reobj)
+            return E_INVALIDARG;
+        else
+            reobj = from->pRun->member.run.reobj;
+    }
     else
     {
         if (iob > IRichEditOle_GetObjectCount(me))
@@ -1686,7 +1696,7 @@ static HRESULT WINAPI ITextRange_fnSetText(ITextRange *me, BSTR str)
     }
 
     /* it's safer not to rely on stored BSTR length */
-    len = strlenW(str);
+    len = lstrlenW(str);
     cursor = editor->pCursors[0];
     ME_CursorFromCharOfs(editor, This->start, &editor->pCursors[0]);
     style = ME_GetInsertStyle(editor, 0);
@@ -2027,6 +2037,7 @@ static HRESULT WINAPI ITextRange_fnSetIndex(ITextRange *me, LONG unit, LONG inde
 static void cp2range(ME_TextEditor *editor, LONG *cp1, LONG *cp2)
 {
     int len = ME_GetTextLength(editor) + 1;
+
     *cp1 = max(*cp1, 0);
     *cp2 = max(*cp2, 0);
     *cp1 = min(*cp1, len);
@@ -2146,7 +2157,7 @@ static HRESULT WINAPI ITextRange_fnSelect(ITextRange *me)
     if (!This->child.reole)
         return CO_E_RELEASED;
 
-    ME_SetSelection(This->child.reole->editor, This->start, This->end);
+    set_selection(This->child.reole->editor, This->start, This->end);
     return S_OK;
 }
 
@@ -2506,6 +2517,10 @@ static HRESULT WINAPI ITextRange_fnScrollIntoView(ITextRange *me, LONG value)
         ME_CursorFromCharOfs(editor, This->start, &cursor);
         ME_GetCursorCoordinates(editor, &cursor, &x, &y, &height);
         break;
+    case tomEnd:
+        ME_CursorFromCharOfs(editor, This->end, &cursor);
+        ME_GetCursorCoordinates(editor, &cursor, &x, &y, &height);
+        break;
     default:
         FIXME("bStart value %d not handled\n", value);
         return E_NOTIMPL;
@@ -2715,10 +2730,6 @@ static HRESULT WINAPI TextFont_SetDuplicate(ITextFont *iface, ITextFont *pFont)
 {
     ITextFontImpl *This = impl_from_ITextFont(iface);
     FIXME("(%p)->(%p): stub\n", This, pFont);
-
-    if (This->range && !get_range_reole(This->range))
-        return CO_E_RELEASED;
-
     return E_NOTIMPL;
 }
 
@@ -2726,10 +2737,6 @@ static HRESULT WINAPI TextFont_CanChange(ITextFont *iface, LONG *ret)
 {
     ITextFontImpl *This = impl_from_ITextFont(iface);
     FIXME("(%p)->(%p): stub\n", This, ret);
-
-    if (This->range && !get_range_reole(This->range))
-        return CO_E_RELEASED;
-
     return E_NOTIMPL;
 }
 
@@ -2737,10 +2744,6 @@ static HRESULT WINAPI TextFont_IsEqual(ITextFont *iface, ITextFont *font, LONG *
 {
     ITextFontImpl *This = impl_from_ITextFont(iface);
     FIXME("(%p)->(%p %p): stub\n", This, font, ret);
-
-    if (This->range && !get_range_reole(This->range))
-        return CO_E_RELEASED;
-
     return E_NOTIMPL;
 }
 
@@ -2914,10 +2917,6 @@ static HRESULT WINAPI TextFont_GetStyle(ITextFont *iface, LONG *value)
 {
     ITextFontImpl *This = impl_from_ITextFont(iface);
     FIXME("(%p)->(%p): stub\n", This, value);
-
-    if (This->range && !get_range_reole(This->range))
-        return CO_E_RELEASED;
-
     return E_NOTIMPL;
 }
 
@@ -2925,10 +2924,6 @@ static HRESULT WINAPI TextFont_SetStyle(ITextFont *iface, LONG value)
 {
     ITextFontImpl *This = impl_from_ITextFont(iface);
     FIXME("(%p)->(%d): stub\n", This, value);
-
-    if (This->range && !get_range_reole(This->range))
-        return CO_E_RELEASED;
-
     return E_NOTIMPL;
 }
 
@@ -4754,7 +4749,7 @@ static HRESULT WINAPI ITextSelection_fnSetText(ITextSelection *me, BSTR str)
         return CO_E_RELEASED;
 
     editor = This->reOle->editor;
-    len = strlenW(str);
+    len = lstrlenW(str);
     ME_GetSelectionOfs(editor, &from, &to);
     ME_ReplaceSel(editor, FALSE, str, len);
 
@@ -4866,7 +4861,7 @@ static HRESULT WINAPI ITextSelection_fnSetStart(ITextSelection *me, LONG value)
     ME_GetSelectionOfs(This->reOle->editor, &start, &end);
     hr = textrange_setstart(This->reOle, value, &start, &end);
     if (hr == S_OK)
-        ME_SetSelection(This->reOle->editor, start, end);
+        set_selection(This->reOle->editor, start, end);
 
     return hr;
 }
@@ -4901,7 +4896,7 @@ static HRESULT WINAPI ITextSelection_fnSetEnd(ITextSelection *me, LONG value)
     ME_GetSelectionOfs(This->reOle->editor, &start, &end);
     hr = textrange_setend(This->reOle, value, &start, &end);
     if (hr == S_OK)
-        ME_SetSelection(This->reOle->editor, start, end);
+        set_selection(This->reOle->editor, start, end);
 
     return hr;
 }
@@ -5020,7 +5015,7 @@ static HRESULT WINAPI ITextSelection_fnCollapse(ITextSelection *me, LONG bStart)
     ME_GetSelectionOfs(This->reOle->editor, &start, &end);
     hres = range_Collapse(bStart, &start, &end);
     if (SUCCEEDED(hres))
-        ME_SetSelection(This->reOle->editor, start, end);
+        set_selection(This->reOle->editor, start, end);
     return hres;
 }
 
@@ -5712,7 +5707,7 @@ LRESULT CreateIRichEditOle(IUnknown *outer_unk, ME_TextEditor *editor, LPVOID *p
         reo->outer_unk = outer_unk;
     else
         reo->outer_unk = &reo->IUnknown_inner;
-    *ppvObj = &reo->IRichEditOle_iface;
+    *ppvObj = &reo->IUnknown_inner;
 
     return 1;
 }
@@ -5931,10 +5926,4 @@ void ME_CopyReObject(REOBJECT *dst, const REOBJECT *src, DWORD flags)
         dst->polesite = src->polesite;
         IOleClientSite_AddRef(dst->polesite);
     }
-}
-
-void ME_GetITextDocument2OldInterface(IRichEditOle *iface, LPVOID *ppvObj)
-{
-    IRichEditOleImpl *This = impl_from_IRichEditOle(iface);
-    *ppvObj = &This->ITextDocument2Old_iface;
 }

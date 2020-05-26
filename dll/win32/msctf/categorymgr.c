@@ -18,9 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include <stdarg.h>
+#ifdef __REACTOS__
+#include <wchar.h>
+#endif
 
 #define COBJMACROS
 
@@ -33,7 +34,6 @@
 #include "winerror.h"
 #include "objbase.h"
 
-#include "wine/unicode.h"
 
 #include "msctf.h"
 #include "msctf_internal.h"
@@ -115,7 +115,7 @@ static HRESULT WINAPI CategoryMgr_RegisterCategory ( ITfCategoryMgr *iface,
     TRACE("(%p) %s %s %s\n",This,debugstr_guid(rclsid), debugstr_guid(rcatid), debugstr_guid(rguid));
 
     StringFromGUID2(rclsid, buf, 39);
-    sprintfW(fullkey,fmt,szwSystemTIPKey,buf);
+    swprintf(fullkey,fmt,szwSystemTIPKey,buf);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,fullkey, 0, KEY_READ | KEY_WRITE,
                 &tipkey ) != ERROR_SUCCESS)
@@ -123,7 +123,7 @@ static HRESULT WINAPI CategoryMgr_RegisterCategory ( ITfCategoryMgr *iface,
 
     StringFromGUID2(rcatid, buf, 39);
     StringFromGUID2(rguid, buf2, 39);
-    sprintfW(fullkey,fmt2,ctg,ctg,buf,buf2);
+    swprintf(fullkey,fmt2,ctg,ctg,buf,buf2);
 
     res = RegCreateKeyExW(tipkey, fullkey, 0, NULL, 0, KEY_READ | KEY_WRITE,
             NULL, &catkey, NULL);
@@ -131,7 +131,7 @@ static HRESULT WINAPI CategoryMgr_RegisterCategory ( ITfCategoryMgr *iface,
 
     if (!res)
     {
-        sprintfW(fullkey,fmt2,ctg,itm,buf2,buf);
+        swprintf(fullkey,fmt2,ctg,itm,buf2,buf);
         res = RegCreateKeyExW(tipkey, fullkey, 0, NULL, 0, KEY_READ | KEY_WRITE,
                 NULL, &itmkey, NULL);
 
@@ -163,7 +163,7 @@ static HRESULT WINAPI CategoryMgr_UnregisterCategory ( ITfCategoryMgr *iface,
     TRACE("(%p) %s %s %s\n",This,debugstr_guid(rclsid), debugstr_guid(rcatid), debugstr_guid(rguid));
 
     StringFromGUID2(rclsid, buf, 39);
-    sprintfW(fullkey,fmt,szwSystemTIPKey,buf);
+    swprintf(fullkey,fmt,szwSystemTIPKey,buf);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,fullkey, 0, KEY_READ | KEY_WRITE,
                 &tipkey ) != ERROR_SUCCESS)
@@ -171,11 +171,9 @@ static HRESULT WINAPI CategoryMgr_UnregisterCategory ( ITfCategoryMgr *iface,
 
     StringFromGUID2(rcatid, buf, 39);
     StringFromGUID2(rguid, buf2, 39);
-    sprintfW(fullkey,fmt2,ctg,ctg,buf,buf2);
-
-    sprintfW(fullkey,fmt2,ctg,itm,buf2,buf);
+    swprintf(fullkey,fmt2,ctg,ctg,buf,buf2);
     RegDeleteTreeW(tipkey, fullkey);
-    sprintfW(fullkey,fmt2,ctg,itm,buf2,buf);
+    swprintf(fullkey,fmt2,ctg,itm,buf2,buf);
     RegDeleteTreeW(tipkey, fullkey);
 
     RegCloseKey(tipkey);
@@ -216,7 +214,7 @@ static HRESULT WINAPI CategoryMgr_FindClosestCategory ( ITfCategoryMgr *iface,
         return E_INVALIDARG;
 
     StringFromGUID2(rguid, buf, 39);
-    sprintfW(fullkey,fmt,szwSystemTIPKey,buf,buf);
+    swprintf(fullkey,fmt,szwSystemTIPKey,buf,buf);
     *pcatid = GUID_NULL;
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,fullkey, 0, KEY_READ, &key ) !=

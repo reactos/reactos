@@ -28,17 +28,6 @@ SCardBeginTransaction(SCARDHANDLE hCard)
  */
 LONG
 WINAPI
-SCardCancel(SCARDCONTEXT hContext)
-{
-  UNIMPLEMENTED;
-  return SCARD_F_UNKNOWN_ERROR;
-}
-
-/*
- * @unimplemented
- */
-LONG
-WINAPI
 SCardConnectA(SCARDCONTEXT hContext,
               LPCSTR szReader,
               DWORD dwShareMode,

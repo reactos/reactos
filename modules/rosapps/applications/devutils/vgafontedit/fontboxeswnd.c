@@ -30,13 +30,6 @@ GetCharacterRect(IN UINT uFontRow, IN UINT uFontColumn, OUT LPRECT CharacterRect
     CharacterRect->bottom = CharacterRect->top + CHARACTER_BOX_HEIGHT;
 }
 
-__inline VOID
-GetCharacterPosition(IN UINT uCharacter, OUT PUINT uFontRow, OUT PUINT uFontColumn)
-{
-    *uFontRow = uCharacter / 16;
-    *uFontColumn = uCharacter % 16;
-}
-
 static INT
 FontBoxesHitTest(IN UINT xPos, IN UINT yPos, OUT LPRECT CharacterRect)
 {

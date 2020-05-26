@@ -615,6 +615,8 @@ PsImpersonateClient(IN PETHREAD Thread,
 {
     PPS_IMPERSONATION_INFORMATION Impersonation, OldData;
     PTOKEN OldToken = NULL;
+    PEJOB Job;
+
     PAGED_CODE();
     PSTRACE(PS_SECURITY_DEBUG, "Thread: %p, Token: %p\n", Thread, Token);
 
@@ -668,8 +670,32 @@ PsImpersonateClient(IN PETHREAD Thread,
             }
         }
 
-        /* Check if this is a job, which we don't support yet */
-        if (Thread->ThreadsProcess->Job) ASSERT(FALSE);
+        /* FIXME: If the process token can't impersonate, we need to make a copy instead */
+
+        /* Check if this is a job */
+        Job = Thread->ThreadsProcess->Job;
+        if (Job != NULL)
+        {
+            /* No admin allowed in this job */
+            if ((Job->SecurityLimitFlags & JOB_OBJECT_SECURITY_NO_ADMIN) &&
+                SeTokenIsAdmin(Token))
+            {
+                return STATUS_ACCESS_DENIED;
+            }
+
+            /* No restricted tokens allowed in this job */
+            if ((Job->SecurityLimitFlags & JOB_OBJECT_SECURITY_RESTRICTED_TOKEN) &&
+                SeTokenIsRestricted(Token))
+            {
+                return STATUS_ACCESS_DENIED;
+            }
+
+            /* We don't support job filters yet */
+            if (Job->Filter != NULL)
+            {
+                ASSERT(Job->Filter == NULL);
+            }
+        }
 
         /* Lock thread security */
         PspLockThreadSecurityExclusive(Thread);

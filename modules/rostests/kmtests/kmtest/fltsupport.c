@@ -67,11 +67,11 @@ KmtFltCreateService(
 {
     WCHAR ServicePath[MAX_PATH];
 
-    StringCbCopy(ServicePath, sizeof ServicePath, ServiceName);
-    StringCbCat(ServicePath, sizeof ServicePath, L"_drv.sys");
+    StringCbCopyW(ServicePath, sizeof(ServicePath), ServiceName);
+    StringCbCatW(ServicePath, sizeof(ServicePath), L"_drv.sys");
 
-    StringCbCopy(TestServiceName, sizeof TestServiceName, L"Kmtest-");
-    StringCbCat(TestServiceName, sizeof TestServiceName, ServiceName);
+    StringCbCopyW(TestServiceName, sizeof(TestServiceName), L"Kmtest-");
+    StringCbCatW(TestServiceName, sizeof(TestServiceName), ServiceName);
 
     return KmtpCreateService(TestServiceName,
                              ServicePath,
@@ -455,9 +455,9 @@ KmtFltAddAltitude(
     DWORD Zero = 0;
     LONG Error;
 
-    StringCbCopy(KeyPath, sizeof KeyPath, L"SYSTEM\\CurrentControlSet\\Services\\");
-    StringCbCat(KeyPath, sizeof KeyPath, TestServiceName);
-    StringCbCat(KeyPath, sizeof KeyPath, L"\\Instances\\");
+    StringCbCopyW(KeyPath, sizeof(KeyPath), L"SYSTEM\\CurrentControlSet\\Services\\");
+    StringCbCatW(KeyPath, sizeof(KeyPath), TestServiceName);
+    StringCbCatW(KeyPath, sizeof(KeyPath), L"\\Instances\\");
 
     Error = RegCreateKeyEx(HKEY_LOCAL_MACHINE,
                            KeyPath,
@@ -473,15 +473,15 @@ KmtFltAddAltitude(
         return Error;
     }
 
-    StringCbCopy(DefaultInstance, sizeof DefaultInstance, TestServiceName);
-    StringCbCat(DefaultInstance, sizeof DefaultInstance, L" Instance");
+    StringCbCopyW(DefaultInstance, sizeof(DefaultInstance), TestServiceName);
+    StringCbCatW(DefaultInstance, sizeof(DefaultInstance), L" Instance");
 
     Error = RegSetValueExW(hKey,
                            L"DefaultInstance",
                            0,
                            REG_SZ,
                            (LPBYTE)DefaultInstance,
-                           (wcslen(DefaultInstance) + 1) * sizeof(WCHAR));
+                           (lstrlenW(DefaultInstance) + 1) * sizeof(WCHAR));
     if (Error != ERROR_SUCCESS)
     {
         goto Quit;
@@ -498,7 +498,7 @@ KmtFltAddAltitude(
                            0,
                            REG_SZ,
                            (LPBYTE)Altitude,
-                           (wcslen(Altitude) + 1) * sizeof(WCHAR));
+                           (lstrlenW(Altitude) + 1) * sizeof(WCHAR));
     if (Error != ERROR_SUCCESS)
     {
         goto Quit;

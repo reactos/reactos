@@ -270,6 +270,29 @@ static const HRESULT SetCoop_real_window[16] =  {
     E_INVALIDARG, S_OK,         S_OK,         E_INVALIDARG,
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG};
 
+static BOOL CALLBACK EnumAllFeedback(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
+{
+    trace("---- Device Information ----\n"
+          "Product Name  : %s\n"
+          "Instance Name : %s\n"
+          "devType       : 0x%08x\n"
+          "GUID Product  : %s\n"
+          "GUID Instance : %s\n"
+          "HID Page      : 0x%04x\n"
+          "HID Usage     : 0x%04x\n",
+          lpddi->tszProductName,
+          lpddi->tszInstanceName,
+          lpddi->dwDevType,
+          wine_dbgstr_guid(&lpddi->guidProduct),
+          wine_dbgstr_guid(&lpddi->guidInstance),
+          lpddi->wUsagePage,
+          lpddi->wUsage);
+
+    ok(!(IsEqualGUID(&GUID_SysMouse, &lpddi->guidProduct) || IsEqualGUID(&GUID_SysKeyboard, &lpddi->guidProduct)), "Invalid device returned.\n");
+
+    return DIENUM_CONTINUE;
+}
+
 static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
 {
     HRESULT hr;
@@ -298,7 +321,7 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
     DIPROPDWORD dip_gain_set, dip_gain_get;
     struct effect_enum effect_data;
 
-    ok(data->version > 0x0300, "Joysticks not supported in version 0x%04x\n", data->version);
+    ok(data->version >= 0x0300, "Joysticks not supported in version 0x%04x\n", data->version);
  
     hr = IDirectInput_CreateDevice(data->pDI, &lpddi->guidInstance, NULL, NULL);
     ok(hr==E_POINTER,"IDirectInput_CreateDevice() should have returned "
@@ -379,7 +402,23 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
     dpg.diph.dwHow = DIPH_DEVICE;
 
     hr = IDirectInputDevice_GetProperty(pJoystick, DIPROP_GUIDANDPATH, &dpg.diph);
-    todo_wine ok(SUCCEEDED(hr), "IDirectInput_GetProperty() for DIPROP_GUIDANDPATH failed: %08x\n", hr);
+    ok(SUCCEEDED(hr), "IDirectInput_GetProperty() for DIPROP_GUIDANDPATH failed: %08x\n", hr);
+
+    {
+        static const WCHAR formatW[] = {'\\','\\','?','\\','%','*','[','^','#',']','#','v','i','d','_',
+                                        '%','0','4','x','&','p','i','d','_','%','0','4','x',0};
+        static const WCHAR miW[] = {'m','i','_',0};
+        static const WCHAR igW[] = {'i','g','_',0};
+        int vid, pid;
+
+        _wcslwr(dpg.wszPath);
+        count = swscanf(dpg.wszPath, formatW, &vid, &pid);
+        ok(count == 2, "DIPROP_GUIDANDPATH path has wrong format. Expected count: 2 Got: %i Path: %s\n",
+           count, wine_dbgstr_w(dpg.wszPath));
+        ok(wcsstr(dpg.wszPath, miW) != 0 || wcsstr(dpg.wszPath, igW) != 0,
+           "DIPROP_GUIDANDPATH path should contain either 'ig_' or 'mi_' substring. Path: %s\n",
+           wine_dbgstr_w(dpg.wszPath));
+    }
 
     hr = IDirectInputDevice_SetDataFormat(pJoystick, NULL);
     ok(hr==E_POINTER,"IDirectInputDevice_SetDataFormat() should have returned "
@@ -870,6 +909,24 @@ static void joystick_tests(DWORD version)
         trace("  Version Not Supported\n");
 }
 
+static void test_enum_feedback(void)
+{
+    HRESULT hr;
+    IDirectInputA *pDI;
+    ULONG ref;
+    HINSTANCE hInstance = GetModuleHandleW(NULL);
+
+    hr = DirectInputCreateA(hInstance, 0x0700, &pDI, NULL);
+    ok(hr==DI_OK||hr==DIERR_OLDDIRECTINPUTVERSION, "DirectInputCreateA() failed: %08x\n", hr);
+    if (hr==DI_OK && pDI!=0) {
+        hr = IDirectInput_EnumDevices(pDI, 0, EnumAllFeedback, NULL, DIEDFL_ATTACHEDONLY | DIEDFL_FORCEFEEDBACK);
+        ok(hr==DI_OK,"IDirectInput_EnumDevices() failed: %08x\n", hr);
+        ref = IDirectInput_Release(pDI);
+        ok(ref==0,"IDirectInput_Release() reference count = %d\n", ref);
+    } else if (hr==DIERR_OLDDIRECTINPUTVERSION)
+        trace("  Version Not Supported\n");
+}
+
 START_TEST(joystick)
 {
     CoInitialize(NULL);
@@ -877,6 +934,8 @@ START_TEST(joystick)
     joystick_tests(0x0700);
     joystick_tests(0x0500);
     joystick_tests(0x0300);
+
+    test_enum_feedback();
 
     CoUninitialize();
 }

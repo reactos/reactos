@@ -15,7 +15,7 @@ IntCreateDICW(
     UNICODE_STRING Device, Output;
     HDC hdc = NULL;
     BOOL Display = FALSE, Default = FALSE;
-    ULONG UMdhpdev = 0;
+    HANDLE UMdhpdev = 0;
 
     HANDLE hspool = NULL;
 
@@ -65,7 +65,7 @@ IntCreateDICW(
                        iType,             // DCW 0 and ICW 1.
                        Display,
                        hspool,
-                       (PVOID) &UMdhpdev );
+                       &UMdhpdev );
 #if 0
 // Handle something other than a normal dc object.
     if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)

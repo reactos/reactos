@@ -29,7 +29,7 @@ LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
                    WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE | TBSTYLE_TOOLTIPS);
     hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
     toolbar.SendMessage(TB_SETIMAGELIST, 0, (LPARAM) hImageList);
-    tempBm = (HBITMAP) LoadImage((HINSTANCE)GetWindowLongPtr(GWLP_HINSTANCE), MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);
+    tempBm = (HBITMAP) LoadImage(hProgInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);
     ImageList_AddMasked(hImageList, tempBm, 0xff00ff);
     DeleteObject(tempBm);
     toolbar.SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
@@ -42,7 +42,7 @@ LRESULT CToolBox::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
         if (i % 2 == 1)
             wrapnow = TBSTATE_WRAP;
 
-        LoadString((HINSTANCE)GetWindowLongPtr(GWLP_HINSTANCE), IDS_TOOLTIP1 + i, tooltips[i], 30);
+        LoadString(hProgInstance, IDS_TOOLTIP1 + i, tooltips[i], 30);
         ZeroMemory(&tbbutton, sizeof(TBBUTTON));
         tbbutton.iString   = (INT_PTR) tooltips[i];
         tbbutton.fsStyle   = TBSTYLE_CHECKGROUP;

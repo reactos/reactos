@@ -34,6 +34,16 @@
 #include "initguid.h"
 
 DEFINE_GUID(PKEY_WineTest, 0x7b317433, 0xdfa3, 0x4c44, 0xad, 0x3e, 0x2f, 0x80, 0x4b, 0x90, 0xdb, 0xf4);
+DEFINE_GUID(DUMMY_GUID1, 0x12345678, 0x1234,0x1234, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19);
+
+#define EXPECT_REF(obj,ref) _expect_ref((IUnknown *)obj, ref, __LINE__)
+static void _expect_ref(IUnknown *obj, ULONG ref, int line)
+{
+    ULONG rc;
+    IUnknown_AddRef(obj);
+    rc = IUnknown_Release(obj);
+    ok_(__FILE__,line)(rc == ref, "expected refcount %d, got %d\n", ref, rc);
+}
 
 static void test_inmemorystore(void)
 {
@@ -249,12 +259,116 @@ static void test_persistserialized(void)
     IPersistSerializedPropStorage_Release(serialized);
 }
 
+static void test_PSCreateMemoryPropertyStore(void)
+{
+    IPropertyStore *propstore, *propstore1;
+    IPersistSerializedPropStorage *serialized;
+    IPropertyStoreCache *propstorecache;
+    HRESULT hr;
+
+    /* PSCreateMemoryPropertyStore(&IID_IPropertyStore, NULL); crashes */
+
+    hr = PSCreateMemoryPropertyStore(&IID_IPropertyStore, (void **)&propstore);
+    ok(hr == S_OK, "PSCreateMemoryPropertyStore failed: 0x%08x.\n", hr);
+    ok(propstore != NULL, "got %p.\n", propstore);
+    EXPECT_REF(propstore, 1);
+
+    hr = PSCreateMemoryPropertyStore(&IID_IPersistSerializedPropStorage, (void **)&serialized);
+    todo_wine ok(hr == S_OK, "PSCreateMemoryPropertyStore failed: 0x%08x.\n", hr);
+    todo_wine ok(serialized != NULL, "got %p.\n", serialized);
+    EXPECT_REF(propstore, 1);
+    if(serialized)
+    {
+        EXPECT_REF(serialized, 1);
+        IPersistSerializedPropStorage_Release(serialized);
+    }
+
+    hr = PSCreateMemoryPropertyStore(&IID_IPropertyStoreCache, (void **)&propstorecache);
+    ok(hr == S_OK, "PSCreateMemoryPropertyStore failed: 0x%08x.\n", hr);
+    ok(propstorecache != NULL, "got %p.\n", propstore);
+    ok(propstorecache != (IPropertyStoreCache *)propstore, "pointer are equal: %p, %p.\n", propstorecache, propstore);
+    EXPECT_REF(propstore, 1);
+    EXPECT_REF(propstorecache, 1);
+
+    hr = PSCreateMemoryPropertyStore(&IID_IPropertyStore, (void **)&propstore1);
+    ok(hr == S_OK, "PSCreateMemoryPropertyStore failed: 0x%08x.\n", hr);
+    ok(propstore1 != NULL, "got %p.\n", propstore);
+    ok(propstore1 != propstore, "pointer are equal: %p, %p.\n", propstore1, propstore);
+    EXPECT_REF(propstore, 1);
+    EXPECT_REF(propstore1, 1);
+    EXPECT_REF(propstorecache, 1);
+
+    IPropertyStore_Release(propstore1);
+    IPropertyStore_Release(propstore);
+    IPropertyStoreCache_Release(propstorecache);
+}
+
+static void  test_propertystore(void)
+{
+    IPropertyStore *propstore;
+    HRESULT hr;
+    PROPVARIANT propvar, ret_propvar;
+    PROPERTYKEY propkey;
+    DWORD count = 0;
+
+    hr = PSCreateMemoryPropertyStore(&IID_IPropertyStore, (void **)&propstore);
+    ok(hr == S_OK, "PSCreateMemoryPropertyStore failed: 0x%08x.\n", hr);
+    ok(propstore != NULL, "got %p.\n", propstore);
+
+    hr = IPropertyStore_GetCount(propstore, &count);
+    ok(hr == S_OK, "IPropertyStore_GetCount failed: 0x%08x.\n", hr);
+    ok(!count, "got wrong property count: %d, expected 0.\n", count);
+
+    PropVariantInit(&propvar);
+    propvar.vt = VT_I4;
+    U(propvar).lVal = 123;
+    propkey.fmtid = DUMMY_GUID1;
+    propkey.pid = PID_FIRST_USABLE;
+    hr = IPropertyStore_SetValue(propstore, &propkey, &propvar);
+    ok(hr == S_OK, "IPropertyStore_SetValue failed: 0x%08x.\n", hr);
+    hr = IPropertyStore_Commit(propstore);
+    ok(hr == S_OK, "IPropertyStore_Commit failed: 0x%08x.\n", hr);
+    hr = IPropertyStore_GetCount(propstore, &count);
+    ok(hr == S_OK, "IPropertyStore_GetCount failed: 0x%08x.\n", hr);
+    ok(count == 1, "got wrong property count: %d, expected 1.\n", count);
+    PropVariantInit(&ret_propvar);
+    ret_propvar.vt = VT_I4;
+    hr = IPropertyStore_GetValue(propstore, &propkey, &ret_propvar);
+    ok(hr == S_OK, "IPropertyStore_GetValue failed: 0x%08x.\n", hr);
+    ok(ret_propvar.vt == VT_I4, "got wrong property type: %x.\n", ret_propvar.vt);
+    ok(U(ret_propvar).lVal == 123, "got wrong value: %d, expected 123.\n", U(ret_propvar).lVal);
+    PropVariantClear(&propvar);
+    PropVariantClear(&ret_propvar);
+
+    PropVariantInit(&propvar);
+    propkey.fmtid = DUMMY_GUID1;
+    propkey.pid = PID_FIRST_USABLE;
+    hr = IPropertyStore_SetValue(propstore, &propkey, &propvar);
+    ok(hr == S_OK, "IPropertyStore_SetValue failed: 0x%08x.\n", hr);
+    hr = IPropertyStore_Commit(propstore);
+    ok(hr == S_OK, "IPropertyStore_Commit failed: 0x%08x.\n", hr);
+    hr = IPropertyStore_GetCount(propstore, &count);
+    ok(hr == S_OK, "IPropertyStore_GetCount failed: 0x%08x.\n", hr);
+    ok(count == 1, "got wrong property count: %d, expected 1.\n", count);
+    PropVariantInit(&ret_propvar);
+    hr = IPropertyStore_GetValue(propstore, &propkey, &ret_propvar);
+    ok(hr == S_OK, "IPropertyStore_GetValue failed: 0x%08x.\n", hr);
+    ok(ret_propvar.vt == VT_EMPTY, "got wrong property type: %x.\n", ret_propvar.vt);
+    ok(!U(ret_propvar).lVal, "got wrong value: %d, expected 0.\n", U(ret_propvar).lVal);
+    PropVariantClear(&propvar);
+    PropVariantClear(&ret_propvar);
+
+    IPropertyStore_Release(propstore);
+}
+
 START_TEST(propstore)
 {
     CoInitialize(NULL);
 
     test_inmemorystore();
     test_persistserialized();
+    test_PSCreateMemoryPropertyStore();
+    test_propertystore();
 
     CoUninitialize();
 }

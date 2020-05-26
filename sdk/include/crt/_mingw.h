@@ -7,7 +7,9 @@
 #ifndef _INC_MINGW
 #define _INC_MINGW
 
+#ifndef _INTEGRAL_MAX_BITS
 #define _INTEGRAL_MAX_BITS 64
+#endif
 
 #ifndef MINGW64
 #define MINGW64

@@ -117,7 +117,7 @@ Trimline::getNextPts( REAL vval, Backend& backend )
     reset(); swap(); append( tinterp );
     assert( tinterp->param[1] >= vval );
 
-    register TrimVertex *p;
+    TrimVertex *p;
     for( p=jarcl.getnextpt() ; p->param[1] >= vval; p=jarcl.getnextpt() ) {
 	append( p ); 
     }
@@ -139,7 +139,7 @@ Trimline::getPrevPts( REAL vval, Backend& backend )
     reset(); swap(); append( tinterp );
     assert( tinterp->param[1] >= vval );
 
-    register TrimVertex *q;
+    TrimVertex *q;
     for( q=jarcl.getprevpt(); q->param[1] >= vval; q=jarcl.getprevpt() ) {
 	append( q );
     }
@@ -165,7 +165,7 @@ Trimline::getNextPts( Arc_ptr botarc )
     TrimVertex *lastpt1 = &lastpwl->pts[lastpwl->npts-1];
 #endif
     TrimVertex *lastpt2 = botarc->pwlArc->pts;
-    register TrimVertex *p = jarcl.getnextpt();
+    TrimVertex *p = jarcl.getnextpt();
     for( append( p ); p != lastpt2; append( p ) ) {
 	assert( p != lastpt1 );
 	p = jarcl.getnextpt();
@@ -183,7 +183,7 @@ Trimline::getPrevPts( Arc_ptr botarc )
     TrimVertex *lastpt2 = botarc->pwlArc->pts;
 #endif
 
-    register TrimVertex *q =  jarcl.getprevpt();
+    TrimVertex *q =  jarcl.getprevpt();
     for( append( q ); q != lastpt1; append( q ) ) {
 	assert( q != lastpt2 );
 	q = jarcl.getprevpt();

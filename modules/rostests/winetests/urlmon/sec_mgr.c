@@ -21,12 +21,6 @@
 #define COBJMACROS
 #define CONST_VTABLE
 
-/* needed for IInternetZoneManagerEx2 */
-#ifdef __REACTOS__
-#undef _WIN32_IE
-#endif
-#define _WIN32_IE 0x0700
-
 #include <wine/test.h>
 #include <stdarg.h>
 #include <stddef.h>

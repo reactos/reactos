@@ -22,11 +22,11 @@
 @ stdcall CoCreateInstanceEx(ptr ptr long ptr long ptr)
 # CoCreateObjectInContext
 # CoDeactivateObject
-@ stdcall -stub CoDisableCallCancellation(ptr)
+@ stdcall CoDisableCallCancellation(ptr)
 @ stdcall -stub -version=0x600+ CoDisconnectContext(long)
 @ stdcall CoDisconnectObject(ptr long)
 @ stdcall CoDosDateTimeToFileTime(long long ptr) kernel32.DosDateTimeToFileTime
-@ stdcall -stub CoEnableCallCancellation(ptr)
+@ stdcall CoEnableCallCancellation(ptr)
 @ stdcall CoFileTimeNow(ptr)
 @ stdcall CoFileTimeToDosDateTime(ptr ptr ptr) kernel32.FileTimeToDosDateTime
 @ stdcall CoFreeAllLibraries()

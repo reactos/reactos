@@ -65,7 +65,6 @@ static BOOL get_run_glyph_buffers( ME_Run *run )
 static HRESULT shape_run( ME_Context *c, ME_Run *run )
 {
     HRESULT hr;
-    HFONT old_font;
     int i;
 
     if (!run->glyphs)
@@ -82,7 +81,7 @@ static HRESULT shape_run( ME_Context *c, ME_Run *run )
         run->clusters = heap_alloc( run->max_clusters * sizeof(WORD) );
     }
 
-    old_font = ME_SelectStyleFont( c, run->style );
+    select_style( c, run->style );
     while (1)
     {
         hr = ScriptShape( c->hDC, &run->style->script_cache, get_text( run, 0 ), run->len, run->max_glyphs,
@@ -102,8 +101,6 @@ static HRESULT shape_run( ME_Context *c, ME_Run *run )
         for (i = 0, run->nWidth = 0; i < run->num_glyphs; i++)
             run->nWidth += run->advances[i];
     }
-
-    ME_UnselectStyleFont( c, run->style, old_font );
 
     return hr;
 }

@@ -7,6 +7,7 @@
  * UPDATED:    2009-07    Gabriel Ilardi             (gabrielilardi [at] hotmail [dot] it)
  * UPDATED:    2014-12-31 Ismael Ferreras Morezuelas (swyterzone [plus] ros [at] gmail [dot] com)
  * UPDATED:    2018-08-01 Julio Carchi Ruiz          (contacto [at] julcar [dot] info [dot] tm)
+ * UPDATED:    2020-03-06 Julen Urizar Compains      (julenuri [at] hotmail [dot] com)
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -111,7 +112,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Personalizar notificaciones"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "ReactOS muestra íconos para tareas activas o urgentes, y oculta las inactivas. Usted puede cambiar este comportamiento en la siguiente lista.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "ReactOS muestra iconos para tareas activas o urgentes, y oculta las inactivas. Usted puede cambiar este comportamiento en la siguiente lista.", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "Seleccione un elemento, entonces elija su comportamiento:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
@@ -151,7 +152,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&No ejecutar esta revisión al iniciar el sistema", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "Ya existe un archivo o carpeta en su computadora con el nombre %s el cual podría causar que ciertos programas dejen de funcionar correctamente. Renombrarlo a %s resolvería este problema. ¿Le gustaría renombrarlo ahora?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "Ya existe un archivo o carpeta en su equipo con el nombre %s, lo que podría causar que ciertos programas dejen de funcionar correctamente. Renombrarlo a %s resolvería este problema. ¿Le gustaría renombrarlo ahora?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
@@ -175,11 +176,11 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX         "Seleccione el tamaño de los íconos", IDC_STATIC, 7, 7, 238, 37
+    GROUPBOX         "Seleccione el tamaño de los iconos", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
-    AUTORADIOBUTTON  "Íconos &grandes", IDC_CHOOSELARGE, 43, 25, 53, 10
-    AUTORADIOBUTTON  "Íconos &pequeños", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON  "Iconos &grandes", IDC_CHOOSELARGE, 43, 25, 53, 10
+    AUTORADIOBUTTON  "Iconos &pequeños", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "Programas ", IDC_STATIC, 7, 49, 238, 70
     LTEXT            "El Menú Inicio contiene accesos directos a los programas más usados. Borrar esta lista no desinstala los programas.", IDC_STATIC, 14, 63, 224, 20
     LTEXT            "&Número de programas en el Menú Inicio:", IDC_STATIC, 14, 86, 112, 8

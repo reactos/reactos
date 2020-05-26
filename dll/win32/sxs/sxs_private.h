@@ -34,7 +34,7 @@ static inline WCHAR *strdupW( const WCHAR *src )
     WCHAR *dst;
 
     if (!src) return NULL;
-    dst = HeapAlloc( GetProcessHeap(), 0, (strlenW( src ) + 1) * sizeof(WCHAR) );
-    if (dst) strcpyW( dst, src );
+    dst = HeapAlloc( GetProcessHeap(), 0, (lstrlenW( src ) + 1) * sizeof(WCHAR) );
+    if (dst) lstrcpyW( dst, src );
     return dst;
 }

@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 %{
-#include "config.h"
 #include "wine/debug.h"
 
 #include <stdio.h>
@@ -35,13 +34,13 @@ struct hlsl_parse_ctx hlsl_ctx;
 struct YYLTYPE;
 static void set_location(struct source_location *loc, const struct YYLTYPE *l);
 
-void hlsl_message(const char *fmt, ...)
+void WINAPIV hlsl_message(const char *fmt, ...)
 {
-    va_list args;
+    __ms_va_list args;
 
-    va_start(args, fmt);
+    __ms_va_start(args, fmt);
     compilation_message(&hlsl_ctx.messages, fmt, args);
-    va_end(args);
+    __ms_va_end(args);
 }
 
 static const char *hlsl_get_error_level_name(enum hlsl_error_level level)
@@ -55,18 +54,18 @@ static const char *hlsl_get_error_level_name(enum hlsl_error_level level)
     return names[level];
 }
 
-void hlsl_report_message(const char *filename, DWORD line, DWORD column,
+void WINAPIV hlsl_report_message(const char *filename, DWORD line, DWORD column,
         enum hlsl_error_level level, const char *fmt, ...)
 {
-    va_list args;
+    __ms_va_list args;
     char *string = NULL;
     int rc, size = 0;
 
     while (1)
     {
-        va_start(args, fmt);
+        __ms_va_start(args, fmt);
         rc = vsnprintf(string, size, fmt, args);
-        va_end(args);
+        __ms_va_end(args);
 
         if (rc >= 0 && rc < size)
             break;
@@ -123,7 +122,7 @@ static BOOL declare_variable(struct hlsl_ir_var *decl, BOOL local)
     BOOL ret;
 
     TRACE("Declaring variable %s.\n", decl->name);
-    if (decl->node.data_type->type == HLSL_CLASS_MATRIX)
+    if (decl->data_type->type == HLSL_CLASS_MATRIX)
     {
         if (!(decl->modifiers & (HLSL_MODIFIER_ROW_MAJOR | HLSL_MODIFIER_COLUMN_MAJOR)))
         {
@@ -132,7 +131,7 @@ static BOOL declare_variable(struct hlsl_ir_var *decl, BOOL local)
         }
     }
     else
-        check_invalid_matrix_modifiers(decl->modifiers, &decl->node.loc);
+        check_invalid_matrix_modifiers(decl->modifiers, &decl->loc);
 
     if (local)
     {
@@ -140,12 +139,12 @@ static BOOL declare_variable(struct hlsl_ir_var *decl, BOOL local)
                 | HLSL_STORAGE_GROUPSHARED | HLSL_STORAGE_UNIFORM);
         if (invalid)
         {
-            hlsl_report_message(decl->node.loc.file, decl->node.loc.line, decl->node.loc.col, HLSL_LEVEL_ERROR,
+            hlsl_report_message(decl->loc.file, decl->loc.line, decl->loc.col, HLSL_LEVEL_ERROR,
                     "modifier '%s' invalid for local variables", debug_modifiers(invalid));
         }
         if (decl->semantic)
         {
-            hlsl_report_message(decl->node.loc.file, decl->node.loc.line, decl->node.loc.col, HLSL_LEVEL_ERROR,
+            hlsl_report_message(decl->loc.file, decl->loc.line, decl->loc.col, HLSL_LEVEL_ERROR,
                     "semantics are not allowed on local variables");
             return FALSE;
         }
@@ -154,7 +153,7 @@ static BOOL declare_variable(struct hlsl_ir_var *decl, BOOL local)
     {
         if (find_function(decl->name))
         {
-            hlsl_report_message(decl->node.loc.file, decl->node.loc.line, decl->node.loc.col, HLSL_LEVEL_ERROR,
+            hlsl_report_message(decl->loc.file, decl->loc.line, decl->loc.col, HLSL_LEVEL_ERROR,
                     "redefinition of '%s'", decl->name);
             return FALSE;
         }
@@ -164,9 +163,9 @@ static BOOL declare_variable(struct hlsl_ir_var *decl, BOOL local)
     {
         struct hlsl_ir_var *old = get_variable(hlsl_ctx.cur_scope, decl->name);
 
-        hlsl_report_message(decl->node.loc.file, decl->node.loc.line, decl->node.loc.col, HLSL_LEVEL_ERROR,
+        hlsl_report_message(decl->loc.file, decl->loc.line, decl->loc.col, HLSL_LEVEL_ERROR,
                 "\"%s\" already declared", decl->name);
-        hlsl_report_message(old->node.loc.file, old->node.loc.line, old->node.loc.col, HLSL_LEVEL_NOTE,
+        hlsl_report_message(old->loc.file, old->loc.line, old->loc.col, HLSL_LEVEL_NOTE,
                 "\"%s\" was previously declared here", old->name);
         return FALSE;
     }
@@ -258,9 +257,8 @@ static void declare_predefined_types(struct hlsl_scope *scope)
 
 static struct hlsl_ir_if *loop_condition(struct list *cond_list)
 {
+    struct hlsl_ir_node *cond, *not_cond;
     struct hlsl_ir_if *out_cond;
-    struct hlsl_ir_expr *not_cond;
-    struct hlsl_ir_node *cond, *operands[3];
     struct hlsl_ir_jump *jump;
     unsigned int count = list_count(cond_list);
 
@@ -277,16 +275,13 @@ static struct hlsl_ir_if *loop_condition(struct list *cond_list)
         return NULL;
     }
     out_cond->node.type = HLSL_IR_IF;
-    operands[0] = cond;
-    operands[1] = operands[2] = NULL;
-    not_cond = new_expr(HLSL_IR_UNOP_LOGIC_NOT, operands, &cond->loc);
-    if (!not_cond)
+    if (!(not_cond = new_unary_expr(HLSL_IR_UNOP_LOGIC_NOT, cond, cond->loc)))
     {
         ERR("Out of memory.\n");
         d3dcompiler_free(out_cond);
         return NULL;
     }
-    out_cond->condition = &not_cond->node;
+    out_cond->condition = not_cond;
     jump = d3dcompiler_alloc(sizeof(*jump));
     if (!jump)
     {
@@ -379,29 +374,24 @@ oom:
     return NULL;
 }
 
-static unsigned int initializer_size(struct list *initializer)
+static unsigned int initializer_size(const struct parse_initializer *initializer)
 {
-    unsigned int count = 0;
-    struct hlsl_ir_node *node;
+    unsigned int count = 0, i;
 
-    LIST_FOR_EACH_ENTRY(node, initializer, struct hlsl_ir_node, entry)
+    for (i = 0; i < initializer->args_count; ++i)
     {
-        count += components_count_type(node->data_type);
+        count += components_count_type(initializer->args[i]->data_type);
     }
-    TRACE("Initializer size = %u\n", count);
+    TRACE("Initializer size = %u.\n", count);
     return count;
 }
 
-static unsigned int components_count_expr_list(struct list *list)
+static void free_parse_initializer(struct parse_initializer *initializer)
 {
-    struct hlsl_ir_node *node;
-    unsigned int count = 0;
-
-    LIST_FOR_EACH_ENTRY(node, list, struct hlsl_ir_node, entry)
-    {
-        count += components_count_type(node->data_type);
-    }
-    return count;
+    unsigned int i;
+    for (i = 0; i < initializer->args_count; ++i)
+        free_instr(initializer->args[i]);
+    d3dcompiler_free(initializer->args);
 }
 
 static struct hlsl_ir_swizzle *new_swizzle(DWORD s, unsigned int components,
@@ -501,35 +491,35 @@ static struct hlsl_ir_swizzle *get_swizzle(struct hlsl_ir_node *value, const cha
     return NULL;
 }
 
-static void struct_var_initializer(struct list *list, struct hlsl_ir_var *var, struct list *initializer)
+static void struct_var_initializer(struct list *list, struct hlsl_ir_var *var,
+        struct parse_initializer *initializer)
 {
-    struct hlsl_type *type = var->node.data_type;
-    struct hlsl_ir_node *node;
+    struct hlsl_type *type = var->data_type;
     struct hlsl_struct_field *field;
-    struct list *cur_node;
     struct hlsl_ir_node *assignment;
     struct hlsl_ir_deref *deref;
+    unsigned int i = 0;
 
     if (initializer_size(initializer) != components_count_type(type))
     {
-        hlsl_report_message(var->node.loc.file, var->node.loc.line, var->node.loc.col, HLSL_LEVEL_ERROR,
+        hlsl_report_message(var->loc.file, var->loc.line, var->loc.col, HLSL_LEVEL_ERROR,
                 "structure initializer mismatch");
-        free_instr_list(initializer);
+        free_parse_initializer(initializer);
         return;
     }
-    cur_node = list_head(initializer);
-    assert(cur_node);
-    node = LIST_ENTRY(cur_node, struct hlsl_ir_node, entry);
+
     LIST_FOR_EACH_ENTRY(field, type->e.elements, struct hlsl_struct_field, entry)
     {
-        if (!cur_node)
+        struct hlsl_ir_node *node = initializer->args[i];
+
+        if (i++ >= initializer->args_count)
         {
-            d3dcompiler_free(initializer);
+            d3dcompiler_free(initializer->args);
             return;
         }
         if (components_count_type(field->type) == components_count_type(node->data_type))
         {
-            deref = new_record_deref(&var->node, field);
+            deref = new_record_deref(&new_var_deref(var)->node, field);
             if (!deref)
             {
                 ERR("Out of memory.\n");
@@ -541,19 +531,12 @@ static void struct_var_initializer(struct list *list, struct hlsl_ir_var *var, s
         }
         else
             FIXME("Initializing with \"mismatched\" fields is not supported yet.\n");
-        cur_node = list_next(initializer, cur_node);
-        node = LIST_ENTRY(cur_node, struct hlsl_ir_node, entry);
     }
 
     /* Free initializer elements in excess. */
-    while (cur_node)
-    {
-        struct list *next = list_next(initializer, cur_node);
-        free_instr(node);
-        cur_node = next;
-        node = LIST_ENTRY(cur_node, struct hlsl_ir_node, entry);
-    }
-    d3dcompiler_free(initializer);
+    for (; i < initializer->args_count; ++i)
+        free_instr(initializer->args[i]);
+    d3dcompiler_free(initializer->args);
 }
 
 static struct list *declare_vars(struct hlsl_type *basic_type, DWORD modifiers, struct list *var_list)
@@ -587,13 +570,12 @@ static struct list *declare_vars(struct hlsl_type *basic_type, DWORD modifiers, 
             d3dcompiler_free(v);
             continue;
         }
-        var->node.type = HLSL_IR_VAR;
         if (v->array_size)
             type = new_array_type(basic_type, v->array_size);
         else
             type = basic_type;
-        var->node.data_type = type;
-        var->node.loc = v->loc;
+        var->data_type = type;
+        var->loc = v->loc;
         var->name = v->name;
         var->modifiers = modifiers;
         var->semantic = v->semantic;
@@ -606,7 +588,7 @@ static struct list *declare_vars(struct hlsl_type *basic_type, DWORD modifiers, 
             local = FALSE;
         }
 
-        if (var->modifiers & HLSL_MODIFIER_CONST && !(var->modifiers & HLSL_STORAGE_UNIFORM) && !v->initializer)
+        if (var->modifiers & HLSL_MODIFIER_CONST && !(var->modifiers & HLSL_STORAGE_UNIFORM) && !v->initializer.args_count)
         {
             hlsl_report_message(v->loc.file, v->loc.line, v->loc.col,
                     HLSL_LEVEL_ERROR, "const variable without initializer");
@@ -624,10 +606,9 @@ static struct list *declare_vars(struct hlsl_type *basic_type, DWORD modifiers, 
         }
         TRACE("Declared variable %s.\n", var->name);
 
-        if (v->initializer)
+        if (v->initializer.args_count)
         {
-            unsigned int size = initializer_size(v->initializer);
-            struct hlsl_ir_node *node;
+            unsigned int size = initializer_size(&v->initializer);
 
             TRACE("Variable with initializer.\n");
             if (type->type <= HLSL_CLASS_LAST_NUMERIC
@@ -637,7 +618,7 @@ static struct list *declare_vars(struct hlsl_type *basic_type, DWORD modifiers, 
                 {
                     hlsl_report_message(v->loc.file, v->loc.line, v->loc.col, HLSL_LEVEL_ERROR,
                             "'%s' initializer does not match", v->name);
-                    free_instr_list(v->initializer);
+                    free_parse_initializer(&v->initializer);
                     d3dcompiler_free(v);
                     continue;
                 }
@@ -647,43 +628,43 @@ static struct list *declare_vars(struct hlsl_type *basic_type, DWORD modifiers, 
             {
                 hlsl_report_message(v->loc.file, v->loc.line, v->loc.col, HLSL_LEVEL_ERROR,
                         "'%s' initializer does not match", v->name);
-                free_instr_list(v->initializer);
+                free_parse_initializer(&v->initializer);
                 d3dcompiler_free(v);
                 continue;
             }
 
             if (type->type == HLSL_CLASS_STRUCT)
             {
-                struct_var_initializer(statements_list, var, v->initializer);
+                struct_var_initializer(statements_list, var, &v->initializer);
                 d3dcompiler_free(v);
                 continue;
             }
             if (type->type > HLSL_CLASS_LAST_NUMERIC)
             {
                 FIXME("Initializers for non scalar/struct variables not supported yet.\n");
-                free_instr_list(v->initializer);
+                free_parse_initializer(&v->initializer);
                 d3dcompiler_free(v);
                 continue;
             }
             if (v->array_size > 0)
             {
                 FIXME("Initializing arrays is not supported yet.\n");
-                free_instr_list(v->initializer);
+                free_parse_initializer(&v->initializer);
                 d3dcompiler_free(v);
                 continue;
             }
-            if (list_count(v->initializer) > 1)
+            if (v->initializer.args_count > 1)
             {
                 FIXME("Complex initializers are not supported yet.\n");
-                free_instr_list(v->initializer);
+                free_parse_initializer(&v->initializer);
                 d3dcompiler_free(v);
                 continue;
             }
-            node = LIST_ENTRY(list_head(v->initializer), struct hlsl_ir_node, entry);
-            assignment = make_assignment(&var->node, ASSIGN_OP_ASSIGN,
-                    BWRITERSP_WRITEMASK_ALL, node);
+
+            assignment = make_assignment(&new_var_deref(var)->node, ASSIGN_OP_ASSIGN,
+                    BWRITERSP_WRITEMASK_ALL, v->initializer.args[0]);
+            d3dcompiler_free(v->initializer.args);
             list_add_tail(statements_list, &assignment->entry);
-            d3dcompiler_free(v->initializer);
         }
         d3dcompiler_free(v);
     }
@@ -731,11 +712,11 @@ static struct list *gen_struct_fields(struct hlsl_type *type, DWORD modifiers, s
         field->name = v->name;
         field->modifiers = modifiers;
         field->semantic = v->semantic;
-        if (v->initializer)
+        if (v->initializer.args_count)
         {
             hlsl_report_message(v->loc.file, v->loc.line, v->loc.col, HLSL_LEVEL_ERROR,
                     "struct field with an initializer.\n");
-            free_instr_list(v->initializer);
+            free_parse_initializer(&v->initializer);
         }
         list_add_tail(list, &field->entry);
         d3dcompiler_free(v);
@@ -818,9 +799,8 @@ static BOOL add_func_parameter(struct list *list, struct parse_parameter *param,
         ERR("Out of memory.\n");
         return FALSE;
     }
-    decl->node.type = HLSL_IR_VAR;
-    decl->node.data_type = param->type;
-    decl->node.loc = *loc;
+    decl->data_type = param->type;
+    decl->loc = *loc;
     decl->name = param->name;
     decl->semantic = param->semantic;
     decl->reg_reservation = param->reg_reservation;
@@ -831,7 +811,7 @@ static BOOL add_func_parameter(struct list *list, struct parse_parameter *param,
         free_declaration(decl);
         return FALSE;
     }
-    list_add_tail(list, &decl->node.entry);
+    list_add_tail(list, &decl->param_entry);
     return TRUE;
 }
 
@@ -903,7 +883,7 @@ static const struct hlsl_ir_function_decl *get_overloaded_func(struct wine_rb_tr
 %}
 
 %locations
-%error-verbose
+%define parse.error verbose
 %expect 1
 
 %union
@@ -914,11 +894,11 @@ static const struct hlsl_ir_function_decl *get_overloaded_func(struct wine_rb_tr
     BOOL boolval;
     char *name;
     DWORD modifiers;
-    struct hlsl_ir_var *var;
     struct hlsl_ir_node *instr;
     struct list *list;
     struct parse_function function;
     struct parse_parameter parameter;
+    struct parse_initializer initializer;
     struct parse_variable_def *variable_def;
     struct parse_if_body if_body;
     enum parse_unary_op unary_op;
@@ -1042,15 +1022,14 @@ static const struct hlsl_ir_function_decl *get_overloaded_func(struct wine_rb_tr
 %type <type> unnamed_struct_spec
 %type <list> type_specs
 %type <variable_def> type_spec
-%type <list> complex_initializer
-%type <list> initializer_expr_list
+%type <initializer> complex_initializer
+%type <initializer> initializer_expr_list
 %type <instr> initializer_expr
 %type <modifiers> var_modifiers
 %type <list> field
 %type <list> parameters
 %type <list> param_list
 %type <instr> expr
-%type <var> variable
 %type <intval> array
 %type <list> statement
 %type <list> statement_list
@@ -1103,28 +1082,28 @@ hlsl_prog:                /* empty */
                                 {
                                     if (decl->body && $2.decl->body)
                                     {
-                                        hlsl_report_message($2.decl->node.loc.file, $2.decl->node.loc.line,
-                                                $2.decl->node.loc.col, HLSL_LEVEL_ERROR,
+                                        hlsl_report_message($2.decl->loc.file, $2.decl->loc.line,
+                                                $2.decl->loc.col, HLSL_LEVEL_ERROR,
                                                 "redefinition of function %s", debugstr_a($2.name));
-                                        return 1;
+                                        YYABORT;
                                     }
-                                    else if (!compare_hlsl_types(decl->node.data_type, $2.decl->node.data_type))
+                                    else if (!compare_hlsl_types(decl->return_type, $2.decl->return_type))
                                     {
-                                        hlsl_report_message($2.decl->node.loc.file, $2.decl->node.loc.line,
-                                                $2.decl->node.loc.col, HLSL_LEVEL_ERROR,
+                                        hlsl_report_message($2.decl->loc.file, $2.decl->loc.line,
+                                                $2.decl->loc.col, HLSL_LEVEL_ERROR,
                                                 "redefining function %s with a different return type",
                                                 debugstr_a($2.name));
-                                        hlsl_report_message(decl->node.loc.file, decl->node.loc.line, decl->node.loc.col, HLSL_LEVEL_NOTE,
+                                        hlsl_report_message(decl->loc.file, decl->loc.line, decl->loc.col, HLSL_LEVEL_NOTE,
                                                 "%s previously declared here",
                                                 debugstr_a($2.name));
-                                        return 1;
+                                        YYABORT;
                                     }
                                 }
 
-                                if ($2.decl->node.data_type->base_type == HLSL_TYPE_VOID && $2.decl->semantic)
+                                if ($2.decl->return_type->base_type == HLSL_TYPE_VOID && $2.decl->semantic)
                                 {
-                                    hlsl_report_message($2.decl->node.loc.file, $2.decl->node.loc.line,
-                                            $2.decl->node.loc.col, HLSL_LEVEL_ERROR,
+                                    hlsl_report_message($2.decl->loc.file, $2.decl->loc.line,
+                                            $2.decl->loc.col, HLSL_LEVEL_ERROR,
                                             "void function with a semantic");
                                 }
 
@@ -1199,7 +1178,7 @@ named_struct_spec:        var_modifiers KW_STRUCT any_identifier '{' fields_list
                                 {
                                     hlsl_report_message(hlsl_ctx.source_file, @3.first_line, @3.first_column,
                                             HLSL_LEVEL_ERROR, "redefinition of '%s'", $3);
-                                    return 1;
+                                    YYABORT;
                                 }
 
                                 ret = add_type_to_scope(hlsl_ctx.cur_scope, $$);
@@ -1207,7 +1186,7 @@ named_struct_spec:        var_modifiers KW_STRUCT any_identifier '{' fields_list
                                 {
                                     hlsl_report_message(hlsl_ctx.source_file, @3.first_line, @3.first_column,
                                             HLSL_LEVEL_ERROR, "redefinition of struct '%s'", $3);
-                                    return 1;
+                                    YYABORT;
                                 }
                             }
 
@@ -1278,7 +1257,7 @@ func_prototype:           var_modifiers type var_identifier '(' parameters ')' c
                                 {
                                     hlsl_report_message(hlsl_ctx.source_file, @3.first_line, @3.first_column,
                                             HLSL_LEVEL_ERROR, "redefinition of '%s'\n", $3);
-                                    return 1;
+                                    YYABORT;
                                 }
                                 if ($2->base_type == HLSL_TYPE_VOID && $7.semantic)
                                 {
@@ -1295,11 +1274,11 @@ func_prototype:           var_modifiers type var_identifier '(' parameters ')' c
                                 if (!$$.decl)
                                 {
                                     ERR("Out of memory.\n");
-                                    return -1;
+                                    YYABORT;
                                 }
                                 $$.name = $3;
                                 $$.decl->semantic = $7.semantic;
-                                set_location(&$$.decl->node.loc, &@3);
+                                set_location(&$$.decl->loc, &@3);
                             }
 
 compound_statement:       '{' '}'
@@ -1378,7 +1357,7 @@ param_list:               parameter
                                 {
                                     ERR("Error adding function parameter %s.\n", $1.name);
                                     set_parse_status(&hlsl_ctx.status, PARSE_ERR);
-                                    return -1;
+                                    YYABORT;
                                 }
                             }
                         | param_list ',' parameter
@@ -1391,7 +1370,7 @@ param_list:               parameter
                                 {
                                     hlsl_report_message(loc.file, loc.line, loc.col, HLSL_LEVEL_ERROR,
                                             "duplicate parameter %s", $3.name);
-                                    return 1;
+                                    YYABORT;
                                 }
                             }
 
@@ -1415,7 +1394,7 @@ input_mods:               /* Empty */
                                 {
                                     hlsl_report_message(hlsl_ctx.source_file, @2.first_line, @2.first_column,
                                             HLSL_LEVEL_ERROR, "duplicate input-output modifiers");
-                                    return 1;
+                                    YYABORT;
                                 }
                                 $$ = $1 | $2;
                             }
@@ -1444,14 +1423,14 @@ type:                     base_type
                                     hlsl_message("Line %u: vectors of non-scalar types are not allowed.\n",
                                             hlsl_ctx.line_no);
                                     set_parse_status(&hlsl_ctx.status, PARSE_ERR);
-                                    return 1;
+                                    YYABORT;
                                 }
                                 if ($5 < 1 || $5 > 4)
                                 {
                                     hlsl_message("Line %u: vector size must be between 1 and 4.\n",
                                             hlsl_ctx.line_no);
                                     set_parse_status(&hlsl_ctx.status, PARSE_ERR);
-                                    return 1;
+                                    YYABORT;
                                 }
 
                                 $$ = new_hlsl_type(NULL, HLSL_CLASS_VECTOR, $3->base_type, $5, 1);
@@ -1463,14 +1442,14 @@ type:                     base_type
                                     hlsl_message("Line %u: matrices of non-scalar types are not allowed.\n",
                                             hlsl_ctx.line_no);
                                     set_parse_status(&hlsl_ctx.status, PARSE_ERR);
-                                    return 1;
+                                    YYABORT;
                                 }
                                 if ($5 < 1 || $5 > 4 || $7 < 1 || $7 > 4)
                                 {
                                     hlsl_message("Line %u: matrix dimensions must be between 1 and 4.\n",
                                             hlsl_ctx.line_no);
                                     set_parse_status(&hlsl_ctx.status, PARSE_ERR);
-                                    return 1;
+                                    YYABORT;
                                 }
 
                                 $$ = new_hlsl_type(NULL, HLSL_CLASS_MATRIX, $3->base_type, $5, $7);
@@ -1539,7 +1518,7 @@ declaration_statement:    declaration
                                 if (!$$)
                                 {
                                     ERR("Out of memory\n");
-                                    return -1;
+                                    YYABORT;
                                 }
                                 list_init($$);
                             }
@@ -1550,7 +1529,7 @@ typedef:                  KW_TYPEDEF var_modifiers type type_specs ';'
 
                                 set_location(&loc, &@1);
                                 if (!add_typedef($2, $3, $4, &loc))
-                                    return 1;
+                                    YYABORT;
                             }
                         | KW_TYPEDEF struct_spec type_specs ';'
                             {
@@ -1558,7 +1537,7 @@ typedef:                  KW_TYPEDEF var_modifiers type type_specs ';'
 
                                 set_location(&loc, &@1);
                                 if (!add_typedef(0, $2, $3, &loc))
-                                    return 1;
+                                    YYABORT;
                             }
 
 type_specs:               type_spec
@@ -1690,9 +1669,10 @@ var_modifiers:            /* Empty */
 
 complex_initializer:      initializer_expr
                             {
-                                $$ = d3dcompiler_alloc(sizeof(*$$));
-                                list_init($$);
-                                list_add_head($$, &$1->entry);
+                                $$.args_count = 1;
+                                if (!($$.args = d3dcompiler_alloc(sizeof(*$$.args))))
+                                    YYABORT;
+                                $$.args[0] = $1;
                             }
                         | '{' initializer_expr_list '}'
                             {
@@ -1710,14 +1690,17 @@ initializer_expr:         assignment_expr
 
 initializer_expr_list:    initializer_expr
                             {
-                                $$ = d3dcompiler_alloc(sizeof(*$$));
-                                list_init($$);
-                                list_add_head($$, &$1->entry);
+                                $$.args_count = 1;
+                                if (!($$.args = d3dcompiler_alloc(sizeof(*$$.args))))
+                                    YYABORT;
+                                $$.args[0] = $1;
                             }
                         | initializer_expr_list ',' initializer_expr
                             {
                                 $$ = $1;
-                                list_add_tail($$, &$3->entry);
+                                if (!($$.args = d3dcompiler_realloc($$.args, ($$.args_count + 1) * sizeof(*$$.args))))
+                                    YYABORT;
+                                $$.args[$$.args_count++] = $3;
                             }
 
 boolean:                  KW_TRUE
@@ -1754,7 +1737,7 @@ jump_statement:           KW_RETURN expr ';'
                                 if (!jump)
                                 {
                                     ERR("Out of memory\n");
-                                    return -1;
+                                    YYABORT;
                                 }
                                 jump->node.type = HLSL_IR_JUMP;
                                 set_location(&jump->node.loc, &@1);
@@ -1777,7 +1760,7 @@ selection_statement:      KW_IF '(' expr ')' if_body
                                 if (!instr)
                                 {
                                     ERR("Out of memory\n");
-                                    return -1;
+                                    YYABORT;
                                 }
                                 instr->node.type = HLSL_IR_IF;
                                 set_location(&instr->node.loc, &@1);
@@ -1814,7 +1797,7 @@ loop_statement:           KW_WHILE '(' expr ')' statement
                                 if (!cond)
                                 {
                                     ERR("Out of memory.\n");
-                                    return -1;
+                                    YYABORT;
                                 }
                                 list_init(cond);
                                 list_add_head(cond, &$3->entry);
@@ -1829,7 +1812,7 @@ loop_statement:           KW_WHILE '(' expr ')' statement
                                 if (!cond)
                                 {
                                     ERR("Out of memory.\n");
-                                    return -1;
+                                    YYABORT;
                                 }
                                 list_init(cond);
                                 list_add_head(cond, &$5->entry);
@@ -1875,7 +1858,7 @@ primary_expr:             C_FLOAT
                                 if (!c)
                                 {
                                     ERR("Out of memory.\n");
-                                    return -1;
+                                    YYABORT;
                                 }
                                 c->node.type = HLSL_IR_CONSTANT;
                                 set_location(&c->node.loc, &yylloc);
@@ -1889,7 +1872,7 @@ primary_expr:             C_FLOAT
                                 if (!c)
                                 {
                                     ERR("Out of memory.\n");
-                                    return -1;
+                                    YYABORT;
                                 }
                                 c->node.type = HLSL_IR_CONSTANT;
                                 set_location(&c->node.loc, &yylloc);
@@ -1903,7 +1886,7 @@ primary_expr:             C_FLOAT
                                 if (!c)
                                 {
                                     ERR("Out of memory.\n");
-                                    return -1;
+                                    YYABORT;
                                 }
                                 c->node.type = HLSL_IR_CONSTANT;
                                 set_location(&c->node.loc, &yylloc);
@@ -1911,10 +1894,19 @@ primary_expr:             C_FLOAT
                                 c->v.value.b[0] = $1;
                                 $$ = &c->node;
                             }
-                        | variable
+                        | VAR_IDENTIFIER
                             {
-                                struct hlsl_ir_deref *deref = new_var_deref($1);
-                                if (deref)
+                                struct hlsl_ir_deref *deref;
+                                struct hlsl_ir_var *var;
+
+                                if (!(var = get_variable(hlsl_ctx.cur_scope, $1)))
+                                {
+                                    hlsl_message("Line %d: variable '%s' not declared\n",
+                                            hlsl_ctx.line_no, $1);
+                                    set_parse_status(&hlsl_ctx.status, PARSE_ERR);
+                                    YYABORT;
+                                }
+                                if ((deref = new_var_deref(var)))
                                 {
                                     $$ = &deref->node;
                                     set_location(&$$->loc, &@1);
@@ -1927,27 +1919,12 @@ primary_expr:             C_FLOAT
                                 $$ = $2;
                             }
 
-variable:                 VAR_IDENTIFIER
-                            {
-                                struct hlsl_ir_var *var;
-                                var = get_variable(hlsl_ctx.cur_scope, $1);
-                                if (!var)
-                                {
-                                    hlsl_message("Line %d: variable '%s' not declared\n",
-                                            hlsl_ctx.line_no, $1);
-                                    set_parse_status(&hlsl_ctx.status, PARSE_ERR);
-                                    return 1;
-                                }
-                                $$ = var;
-                            }
-
 postfix_expr:             primary_expr
                             {
                                 $$ = $1;
                             }
                         | postfix_expr OP_INC
                             {
-                                struct hlsl_ir_node *operands[3];
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
@@ -1955,18 +1932,15 @@ postfix_expr:             primary_expr
                                 {
                                     hlsl_report_message(loc.file, loc.line, loc.col, HLSL_LEVEL_ERROR,
                                             "modifying a const expression");
-                                    return 1;
+                                    YYABORT;
                                 }
-                                operands[0] = $1;
-                                operands[1] = operands[2] = NULL;
-                                $$ = &new_expr(HLSL_IR_UNOP_POSTINC, operands, &loc)->node;
+                                $$ = new_unary_expr(HLSL_IR_UNOP_POSTINC, $1, loc);
                                 /* Post increment/decrement expressions are considered const */
                                 $$->data_type = clone_hlsl_type($$->data_type);
                                 $$->data_type->modifiers |= HLSL_MODIFIER_CONST;
                             }
                         | postfix_expr OP_DEC
                             {
-                                struct hlsl_ir_node *operands[3];
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
@@ -1974,11 +1948,9 @@ postfix_expr:             primary_expr
                                 {
                                     hlsl_report_message(loc.file, loc.line, loc.col, HLSL_LEVEL_ERROR,
                                             "modifying a const expression");
-                                    return 1;
+                                    YYABORT;
                                 }
-                                operands[0] = $1;
-                                operands[1] = operands[2] = NULL;
-                                $$ = &new_expr(HLSL_IR_UNOP_POSTDEC, operands, &loc)->node;
+                                $$ = new_unary_expr(HLSL_IR_UNOP_POSTDEC, $1, loc);
                                 /* Post increment/decrement expressions are considered const */
                                 $$->data_type = clone_hlsl_type($$->data_type);
                                 $$->data_type->modifiers |= HLSL_MODIFIER_CONST;
@@ -2003,7 +1975,7 @@ postfix_expr:             primary_expr
                                             if (!deref)
                                             {
                                                 ERR("Out of memory\n");
-                                                return -1;
+                                                YYABORT;
                                             }
                                             deref->node.loc = loc;
                                             $$ = &deref->node;
@@ -2014,7 +1986,7 @@ postfix_expr:             primary_expr
                                     {
                                         hlsl_report_message(loc.file, loc.line, loc.col, HLSL_LEVEL_ERROR,
                                                 "invalid subscript %s", debugstr_a($3));
-                                        return 1;
+                                        YYABORT;
                                     }
                                 }
                                 else if ($1->data_type->type <= HLSL_CLASS_LAST_NUMERIC)
@@ -2026,7 +1998,7 @@ postfix_expr:             primary_expr
                                     {
                                         hlsl_report_message(loc.file, loc.line, loc.col, HLSL_LEVEL_ERROR,
                                                 "invalid swizzle %s", debugstr_a($3));
-                                        return 1;
+                                        YYABORT;
                                     }
                                     $$ = &swizzle->node;
                                 }
@@ -2034,7 +2006,7 @@ postfix_expr:             primary_expr
                                 {
                                     hlsl_report_message(loc.file, loc.line, loc.col, HLSL_LEVEL_ERROR,
                                             "invalid subscript %s", debugstr_a($3));
-                                    return 1;
+                                    YYABORT;
                                 }
                             }
                         | postfix_expr '[' expr ']'
@@ -2050,7 +2022,7 @@ postfix_expr:             primary_expr
                                 if (!deref)
                                 {
                                     ERR("Out of memory\n");
-                                    return -1;
+                                    YYABORT;
                                 }
                                 deref->node.type = HLSL_IR_DEREF;
                                 set_location(&loc, &@2);
@@ -2078,7 +2050,7 @@ postfix_expr:             primary_expr
                                     d3dcompiler_free(deref);
                                     free_instr($1);
                                     free_instr($3);
-                                    return 1;
+                                    YYABORT;
                                 }
                                 if ($3->data_type->type != HLSL_CLASS_SCALAR)
                                 {
@@ -2087,7 +2059,7 @@ postfix_expr:             primary_expr
                                     d3dcompiler_free(deref);
                                     free_instr($1);
                                     free_instr($3);
-                                    return 1;
+                                    YYABORT;
                                 }
                                 deref->type = HLSL_IR_DEREF_ARRAY;
                                 deref->v.array.array = $1;
@@ -2107,29 +2079,31 @@ postfix_expr:             primary_expr
                                     hlsl_message("Line %u: unexpected modifier in a constructor.\n",
                                             hlsl_ctx.line_no);
                                     set_parse_status(&hlsl_ctx.status, PARSE_ERR);
-                                    return -1;
+                                    YYABORT;
                                 }
                                 if ($2->type > HLSL_CLASS_LAST_NUMERIC)
                                 {
                                     hlsl_message("Line %u: constructors are allowed only for numeric data types.\n",
                                             hlsl_ctx.line_no);
                                     set_parse_status(&hlsl_ctx.status, PARSE_ERR);
-                                    return -1;
+                                    YYABORT;
                                 }
-                                if ($2->dimx * $2->dimy != components_count_expr_list($4))
+                                if ($2->dimx * $2->dimy != initializer_size(&$4))
                                 {
                                     hlsl_message("Line %u: wrong number of components in constructor.\n",
                                             hlsl_ctx.line_no);
                                     set_parse_status(&hlsl_ctx.status, PARSE_ERR);
-                                    return -1;
+                                    YYABORT;
                                 }
+                                assert($4.args_count <= ARRAY_SIZE(constructor->args));
 
                                 constructor = d3dcompiler_alloc(sizeof(*constructor));
                                 constructor->node.type = HLSL_IR_CONSTRUCTOR;
                                 set_location(&constructor->node.loc, &@3);
                                 constructor->node.data_type = $2;
-                                constructor->arguments = $4;
-
+                                constructor->args_count = $4.args_count;
+                                memcpy(constructor->args, $4.args, $4.args_count * sizeof(*$4.args));
+                                d3dcompiler_free($4.args);
                                 $$ = &constructor->node;
                             }
 
@@ -2139,7 +2113,6 @@ unary_expr:               postfix_expr
                             }
                         | OP_INC unary_expr
                             {
-                                struct hlsl_ir_node *operands[3];
                                 struct source_location loc;
 
                                 set_location(&loc, &@1);
@@ -2147,15 +2120,12 @@ unary_expr:               postfix_expr
                                 {
                                     hlsl_report_message(loc.file, loc.line, loc.col, HLSL_LEVEL_ERROR,
                                             "modifying a const expression");
-                                    return 1;
+                                    YYABORT;
                                 }
-                                operands[0] = $2;
-                                operands[1] = operands[2] = NULL;
-                                $$ = &new_expr(HLSL_IR_UNOP_PREINC, operands, &loc)->node;
+                                $$ = new_unary_expr(HLSL_IR_UNOP_PREINC, $2, loc);
                             }
                         | OP_DEC unary_expr
                             {
-                                struct hlsl_ir_node *operands[3];
                                 struct source_location loc;
 
                                 set_location(&loc, &@1);
@@ -2163,17 +2133,14 @@ unary_expr:               postfix_expr
                                 {
                                     hlsl_report_message(loc.file, loc.line, loc.col, HLSL_LEVEL_ERROR,
                                             "modifying a const expression");
-                                    return 1;
+                                    YYABORT;
                                 }
-                                operands[0] = $2;
-                                operands[1] = operands[2] = NULL;
-                                $$ = &new_expr(HLSL_IR_UNOP_PREDEC, operands, &loc)->node;
+                                $$ = new_unary_expr(HLSL_IR_UNOP_PREDEC, $2, loc);
                             }
                         | unary_op unary_expr
                             {
                                 enum hlsl_ir_expr_op ops[] = {0, HLSL_IR_UNOP_NEG,
                                         HLSL_IR_UNOP_LOGIC_NOT, HLSL_IR_UNOP_BIT_NOT};
-                                struct hlsl_ir_node *operands[3];
                                 struct source_location loc;
 
                                 if ($1 == UNARY_OP_PLUS)
@@ -2182,10 +2149,8 @@ unary_expr:               postfix_expr
                                 }
                                 else
                                 {
-                                    operands[0] = $2;
-                                    operands[1] = operands[2] = NULL;
                                     set_location(&loc, &@1);
-                                    $$ = &new_expr(ops[$1], operands, &loc)->node;
+                                    $$ = new_unary_expr(ops[$1], $2, loc);
                                 }
                             }
                           /* var_modifiers just to avoid shift/reduce conflicts */
@@ -2201,7 +2166,7 @@ unary_expr:               postfix_expr
                                 {
                                     hlsl_report_message(loc.file, loc.line, loc.col, HLSL_LEVEL_ERROR,
                                             "unexpected modifier in a cast");
-                                    return 1;
+                                    YYABORT;
                                 }
 
                                 if ($4)
@@ -2214,7 +2179,7 @@ unary_expr:               postfix_expr
                                     hlsl_report_message(loc.file, loc.line, loc.col, HLSL_LEVEL_ERROR,
                                             "can't cast from %s to %s",
                                             debug_hlsl_type(src_type), debug_hlsl_type(dst_type));
-                                    return 1;
+                                    YYABORT;
                                 }
 
                                 expr = new_cast($6, dst_type, &loc);
@@ -2247,21 +2212,21 @@ mul_expr:                 unary_expr
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
-                                $$ = &hlsl_mul($1, $3, &loc)->node;
+                                $$ = new_binary_expr(HLSL_IR_BINOP_MUL, $1, $3, loc);
                             }
                         | mul_expr '/' unary_expr
                             {
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
-                                $$ = &hlsl_div($1, $3, &loc)->node;
+                                $$ = new_binary_expr(HLSL_IR_BINOP_DIV, $1, $3, loc);
                             }
                         | mul_expr '%' unary_expr
                             {
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
-                                $$ = &hlsl_mod($1, $3, &loc)->node;
+                                $$ = new_binary_expr(HLSL_IR_BINOP_MOD, $1, $3, loc);
                             }
 
 add_expr:                 mul_expr
@@ -2273,14 +2238,14 @@ add_expr:                 mul_expr
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
-                                $$ = &hlsl_add($1, $3, &loc)->node;
+                                $$ = new_binary_expr(HLSL_IR_BINOP_ADD, $1, $3, loc);
                             }
                         | add_expr '-' mul_expr
                             {
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
-                                $$ = &hlsl_sub($1, $3, &loc)->node;
+                                $$ = new_binary_expr(HLSL_IR_BINOP_SUB, $1, $3, loc);
                             }
 
 shift_expr:               add_expr
@@ -2305,28 +2270,28 @@ relational_expr:          shift_expr
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
-                                $$ = &hlsl_lt($1, $3, &loc)->node;
+                                $$ = new_binary_expr(HLSL_IR_BINOP_LESS, $1, $3, loc);
                             }
                         | relational_expr '>' shift_expr
                             {
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
-                                $$ = &hlsl_gt($1, $3, &loc)->node;
+                                $$ = new_binary_expr(HLSL_IR_BINOP_GREATER, $1, $3, loc);
                             }
                         | relational_expr OP_LE shift_expr
                             {
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
-                                $$ = &hlsl_le($1, $3, &loc)->node;
+                                $$ = new_binary_expr(HLSL_IR_BINOP_LEQUAL, $1, $3, loc);
                             }
                         | relational_expr OP_GE shift_expr
                             {
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
-                                $$ = &hlsl_ge($1, $3, &loc)->node;
+                                $$ = new_binary_expr(HLSL_IR_BINOP_GEQUAL, $1, $3, loc);
                             }
 
 equality_expr:            relational_expr
@@ -2338,14 +2303,14 @@ equality_expr:            relational_expr
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
-                                $$ = &hlsl_eq($1, $3, &loc)->node;
+                                $$ = new_binary_expr(HLSL_IR_BINOP_EQUAL, $1, $3, loc);
                             }
                         | equality_expr OP_NE relational_expr
                             {
                                 struct source_location loc;
 
                                 set_location(&loc, &@2);
-                                $$ = &hlsl_ne($1, $3, &loc)->node;
+                                $$ = new_binary_expr(HLSL_IR_BINOP_NEQUAL, $1, $3, loc);
                             }
 
 bitand_expr:              equality_expr
@@ -2415,11 +2380,11 @@ assignment_expr:          conditional_expr
                                 {
                                     hlsl_report_message(loc.file, loc.line, loc.col, HLSL_LEVEL_ERROR,
                                             "l-value is const");
-                                    return 1;
+                                    YYABORT;
                                 }
                                 $$ = make_assignment($1, $2, BWRITERSP_WRITEMASK_ALL, $3);
                                 if (!$$)
-                                    return 1;
+                                    YYABORT;
                                 $$->loc = loc;
                             }
 

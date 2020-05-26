@@ -16,15 +16,7 @@ __C_specific_handler(
     return 0;
 }
 
-DWORD
-__CxxFrameHandler(
-    PEXCEPTION_RECORD rec,
-    EXCEPTION_REGISTRATION_RECORD* ExceptionRegistrationFrame,
-    PCONTEXT context,
-    EXCEPTION_REGISTRATION_RECORD** _ExceptionRecord)
+void __cdecl _local_unwind(void* frame, void* target)
 {
-    UNIMPLEMENTED;
-    __debugbreak();
-    return 0;
+    RtlUnwind(frame, target, NULL, 0);
 }
-

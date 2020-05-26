@@ -52,98 +52,87 @@ SetConsoleHardwareState(PCONSRV_CONSOLE Console, ULONG ConsoleHwState)
 }
 #endif
 
-CSR_API(SrvGetConsoleHardwareState)
+/* API_NUMBER: ConsolepGetHardwareState */
+CON_API(SrvGetConsoleHardwareState,
+        CONSOLE_GETSETHWSTATE, HardwareStateRequest)
 {
 #if 0
     NTSTATUS Status;
-    PCONSOLE_GETSETHWSTATE HardwareStateRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HardwareStateRequest;
     PCONSOLE_SCREEN_BUFFER Buff;
-    PCONSRV_CONSOLE Console;
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                    HardwareStateRequest->OutputHandle,
                                    &Buff,
                                    GENERIC_READ,
                                    TRUE);
     if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to get console handle in SrvGetConsoleHardwareState\n");
         return Status;
-    }
 
-    Console = Buff->Header.Console;
+    ASSERT((PCONSOLE)Console == Buff->Header.Console);
+
     HardwareStateRequest->State = Console->HardwareState;
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
-    return Status;
+    return STATUS_SUCCESS;
 #else
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 #endif
 }
 
-CSR_API(SrvSetConsoleHardwareState)
+/* API_NUMBER: ConsolepSetHardwareState */
+CON_API(SrvSetConsoleHardwareState,
+        CONSOLE_GETSETHWSTATE, HardwareStateRequest)
 {
 #if 0
     NTSTATUS Status;
-    PCONSOLE_GETSETHWSTATE HardwareStateRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HardwareStateRequest;
     PCONSOLE_SCREEN_BUFFER Buff;
-    PCONSRV_CONSOLE Console;
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                    HardwareStateRequest->OutputHandle,
                                    &Buff,
                                    GENERIC_WRITE,
                                    TRUE);
     if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to get console handle in SrvSetConsoleHardwareState\n");
         return Status;
-    }
+
+    ASSERT((PCONSOLE)Console == Buff->Header.Console);
 
     DPRINT("Setting console hardware state.\n");
-    Console = Buff->Header.Console;
     Status = SetConsoleHardwareState(Console, HardwareStateRequest->State);
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
-    return Status;
+    return STATUS_SUCCESS;
 #else
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 #endif
 }
 
-CSR_API(SrvGetConsoleDisplayMode)
+/* API_NUMBER: ConsolepGetDisplayMode */
+CON_API(SrvGetConsoleDisplayMode,
+        CONSOLE_GETDISPLAYMODE, GetDisplayModeRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETDISPLAYMODE GetDisplayModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetDisplayModeRequest;
-    PCONSRV_CONSOLE Console;
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     GetDisplayModeRequest->DisplayMode = TermGetDisplayMode(Console);
-
-    ConSrvReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvSetConsoleDisplayMode)
+/* API_NUMBER: ConsolepSetDisplayMode */
+CON_API(SrvSetConsoleDisplayMode,
+        CONSOLE_SETDISPLAYMODE, SetDisplayModeRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SETDISPLAYMODE SetDisplayModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetDisplayModeRequest;
-    PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetScreenBuffer(ProcessData,
                                    SetDisplayModeRequest->OutputHandle,
                                    &Buff,
                                    GENERIC_WRITE,
                                    TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Console = (PCONSRV_CONSOLE)Buff->Header.Console;
+    ASSERT((PCONSOLE)Console == Buff->Header.Console);
 
     if (TermSetDisplayMode(Console, SetDisplayModeRequest->DisplayMode))
     {
@@ -159,21 +148,22 @@ CSR_API(SrvSetConsoleDisplayMode)
     return Status;
 }
 
-CSR_API(SrvGetLargestConsoleWindowSize)
+/* API_NUMBER: ConsolepGetLargestWindowSize */
+CON_API(SrvGetLargestConsoleWindowSize,
+        CONSOLE_GETLARGESTWINDOWSIZE, GetLargestWindowSizeRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETLARGESTWINDOWSIZE GetLargestWindowSizeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetLargestWindowSizeRequest;
-    PCONSOLE /*PCONSRV_CONSOLE*/ Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      GetLargestWindowSizeRequest->OutputHandle,
                                      &Buff,
                                      GENERIC_READ,
                                      TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Console = Buff->Header.Console;
+    ASSERT((PCONSOLE)Console == Buff->Header.Console);
 
     /*
      * Retrieve the largest possible console window size, without
@@ -186,21 +176,22 @@ CSR_API(SrvGetLargestConsoleWindowSize)
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvShowConsoleCursor)
+/* API_NUMBER: ConsolepShowCursor */
+CON_API(SrvShowConsoleCursor,
+        CONSOLE_SHOWCURSOR, ShowCursorRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SHOWCURSOR ShowCursorRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ShowCursorRequest;
-    PCONSOLE /*PCONSRV_CONSOLE*/ Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetScreenBuffer(ProcessData,
                                    ShowCursorRequest->OutputHandle,
                                    &Buff,
                                    GENERIC_WRITE,
                                    TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Console = Buff->Header.Console;
+    ASSERT((PCONSOLE)Console == Buff->Header.Console);
 
     ShowCursorRequest->RefCount = TermShowMouseCursor(Console, ShowCursorRequest->Show);
 
@@ -208,25 +199,26 @@ CSR_API(SrvShowConsoleCursor)
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvSetConsoleCursor)
+/* API_NUMBER: ConsolepSetCursor */
+CON_API(SrvSetConsoleCursor,
+        CONSOLE_SETCURSOR, SetCursorRequest)
 {
     NTSTATUS Status;
     BOOL Success;
-    PCONSOLE_SETCURSOR SetCursorRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetCursorRequest;
-    PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
     // NOTE: Tests show that this function is used only for graphics screen buffers
     // and otherwise it returns FALSE and sets last error to ERROR_INVALID_HANDLE.
     // I find that behaviour is ridiculous but ok, let's accept it at the moment...
-    Status = ConSrvGetGraphicsBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetGraphicsBuffer(ProcessData,
                                      SetCursorRequest->OutputHandle,
                                      &Buff,
                                      GENERIC_WRITE,
                                      TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Console = (PCONSRV_CONSOLE)Buff->Header.Console;
+    ASSERT((PCONSOLE)Console == Buff->Header.Console);
 
     Success = TermSetMouseCursor(Console, SetCursorRequest->CursorHandle);
 
@@ -234,21 +226,22 @@ CSR_API(SrvSetConsoleCursor)
     return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
-CSR_API(SrvConsoleMenuControl)
+/* API_NUMBER: ConsolepMenuControl */
+CON_API(SrvConsoleMenuControl,
+        CONSOLE_MENUCONTROL, MenuControlRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_MENUCONTROL MenuControlRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.MenuControlRequest;
-    PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetScreenBuffer(ProcessData,
                                    MenuControlRequest->OutputHandle,
                                    &Buff,
                                    GENERIC_WRITE,
                                    TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    Console = (PCONSRV_CONSOLE)Buff->Header.Console;
+    ASSERT((PCONSOLE)Console == Buff->Header.Console);
 
     MenuControlRequest->MenuHandle = TermMenuControl(Console,
                                                      MenuControlRequest->CmdIdLow,
@@ -258,21 +251,12 @@ CSR_API(SrvConsoleMenuControl)
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvSetConsoleMenuClose)
+/* API_NUMBER: ConsolepSetMenuClose */
+CON_API(SrvSetConsoleMenuClose,
+        CONSOLE_SETMENUCLOSE, SetMenuCloseRequest)
 {
-    NTSTATUS Status;
-    BOOL Success;
-    PCONSOLE_SETMENUCLOSE SetMenuCloseRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetMenuCloseRequest;
-    PCONSRV_CONSOLE Console;
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    Success = TermSetMenuClose(Console, SetMenuCloseRequest->Enable);
-
-    ConSrvReleaseConsole(Console, TRUE);
-    return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
+    return (TermSetMenuClose(Console, SetMenuCloseRequest->Enable)
+                ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 /* Used by USERSRV!SrvGetThreadConsoleDesktop() */
@@ -311,95 +295,59 @@ GetThreadConsoleDesktop(
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvGetConsoleWindow)
+/* API_NUMBER: ConsolepGetConsoleWindow */
+CON_API(SrvGetConsoleWindow,
+        CONSOLE_GETWINDOW, GetWindowRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETWINDOW GetWindowRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetWindowRequest;
-    PCONSRV_CONSOLE Console;
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     GetWindowRequest->WindowHandle = TermGetConsoleWindowHandle(Console);
-
-    ConSrvReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvSetConsoleIcon)
+/* API_NUMBER: ConsolepSetIcon */
+CON_API(SrvSetConsoleIcon,
+        CONSOLE_SETICON, SetIconRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_SETICON SetIconRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetIconRequest;
-    PCONSRV_CONSOLE Console;
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    Status = (TermChangeIcon(Console, SetIconRequest->IconHandle)
-                ? STATUS_SUCCESS
-                : STATUS_UNSUCCESSFUL);
-
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return (TermChangeIcon(Console, SetIconRequest->IconHandle)
+                ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
-CSR_API(SrvGetConsoleSelectionInfo)
+/* API_NUMBER: ConsolepGetSelectionInfo */
+CON_API(SrvGetConsoleSelectionInfo,
+        CONSOLE_GETSELECTIONINFO, GetSelectionInfoRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETSELECTIONINFO GetSelectionInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetSelectionInfoRequest;
-    PCONSRV_CONSOLE Console;
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    Status = (TermGetSelectionInfo(Console, &GetSelectionInfoRequest->Info)
-                ? STATUS_SUCCESS
-                : STATUS_UNSUCCESSFUL);
-
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return (TermGetSelectionInfo(Console, &GetSelectionInfoRequest->Info)
+                ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
-
-
-CSR_API(SrvGetConsoleNumberOfFonts)
+/* API_NUMBER: ConsolepGetNumberOfFonts */
+CON_API(SrvGetConsoleNumberOfFonts,
+        CONSOLE_GETNUMFONTS, GetNumFontsRequest)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETNUMFONTS GetNumFontsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetNumFontsRequest;
-    PCONSOLE /*PCONSRV_CONSOLE*/ Console;
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
     // FIXME!
     // TermGetNumberOfFonts(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     GetNumFontsRequest->NumFonts = 0;
-
-    ConSrvReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvGetConsoleFontInfo)
+/* API_NUMBER: ConsolepGetFontInfo */
+CON_API(SrvGetConsoleFontInfo,
+        CONSOLE_GETFONTINFO, GetFontInfoRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETFONTINFO GetFontInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetFontInfoRequest;
-    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      GetFontInfoRequest->OutputHandle,
                                      &Buff,
                                      GENERIC_READ,
                                      TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == Buff->Header.Console);
 
     // FIXME!
-    // Console = Buff->Header.Console;
     // TermGetFontInfo(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     GetFontInfoRequest->NumFonts = 0;
@@ -408,22 +356,24 @@ CSR_API(SrvGetConsoleFontInfo)
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvGetConsoleFontSize)
+/* API_NUMBER: ConsolepGetFontSize */
+CON_API(SrvGetConsoleFontSize,
+        CONSOLE_GETFONTSIZE, GetFontSizeRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETFONTSIZE GetFontSizeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetFontSizeRequest;
-    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      GetFontSizeRequest->OutputHandle,
                                      &Buff,
                                      GENERIC_READ,
                                      TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == Buff->Header.Console);
 
     // FIXME!
-    // Console = Buff->Header.Console;
     // TermGetFontSize(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
 
@@ -431,22 +381,24 @@ CSR_API(SrvGetConsoleFontSize)
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvGetConsoleCurrentFont)
+/* API_NUMBER: ConsolepGetCurrentFont */
+CON_API(SrvGetConsoleCurrentFont,
+        CONSOLE_GETCURRENTFONT, GetCurrentFontRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_GETCURRENTFONT GetCurrentFontRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCurrentFontRequest;
-    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      GetCurrentFontRequest->OutputHandle,
                                      &Buff,
                                      GENERIC_READ,
                                      TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == Buff->Header.Console);
 
     // FIXME!
-    // Console = Buff->Header.Console;
     // TermGetCurrentFont(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     GetCurrentFontRequest->FontIndex = 0;
@@ -455,22 +407,24 @@ CSR_API(SrvGetConsoleCurrentFont)
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvSetConsoleFont)
+/* API_NUMBER: ConsolepSetFont */
+CON_API(SrvSetConsoleFont,
+        CONSOLE_SETFONT, SetFontRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_SETFONT SetFontRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetFontRequest;
-    // PCONSOLE /*PCONSRV_CONSOLE*/ Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ProcessData,
                                      SetFontRequest->OutputHandle,
                                      &Buff,
                                      GENERIC_WRITE,
                                      TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == Buff->Header.Console);
 
     // FIXME!
-    // Console = Buff->Header.Console;
     // TermSetFont(Console, ...);
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
 

@@ -469,17 +469,20 @@ static UINT ICO_ExtractIconExW(
 
                     icon = CreateIconFromResourceEx(imageData, entry->icHeader.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
 
+                    HeapFree(GetProcessHeap(), 0, cursorData);
+
                     if (icon)
                     {
-                        RetPtr[index] = icon;
-                        iconCount = 1;
-                    }
+                        if (RetPtr)
+                            RetPtr[index] = icon;
+                        else
+                            DestroyIcon(icon);
 
-                    if(cursorData != NULL)
-                        HeapFree(GetProcessHeap(), 0, cursorData);
+                        iconCount = 1;
+                        break;
+                    }
                 }
             }
-
         }
         ret = iconCount;	/* return number of retrieved icons */
     }

@@ -804,7 +804,7 @@ HRESULT WINAPI MkParseDisplayNameEx(IBindCtx *pbc, LPCWSTR szDisplayName, ULONG 
 
         hres = CreateURLMoniker(NULL, szDisplayName, ppmk);
         if(SUCCEEDED(hres)) {
-            *pchEaten = strlenW(szDisplayName);
+            *pchEaten = lstrlenW(szDisplayName);
             return hres;
         }
     }
@@ -887,7 +887,7 @@ HRESULT WINAPI URLDownloadToCacheFileW(LPUNKNOWN lpUnkCaller, LPCWSTR szURL, LPW
                               header, sizeof(header), NULL, NULL))
         return E_FAIL;
 
-    if (strlenW(cache_path) > dwBufLength)
+    if (lstrlenW(cache_path) > dwBufLength)
         return E_OUTOFMEMORY;
 
     lstrcpyW(szFileName, cache_path);

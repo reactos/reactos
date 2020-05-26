@@ -908,7 +908,7 @@ BEGIN
     DEFPUSHBUTTON "Tamam", 1, 87, 146, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 2, 151, 146, 60, 14
     CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 140, 205, 1
-    LTEXT "Bir etki alanı girebilirsiniz ya da etki alanı alanını boş bırakabilirsiniz. \n(Etki alanı adları Umûmî Ağ'a bağlantılar için gerekli değildir.)", -1, 8, 38, 209, 26
+    LTEXT "Bir etki alanı girebilirsiniz ya da etki alanı alanını boş bırakabilirsiniz.\n(Etki alanı adları Umûmî Ağ'a bağlantılar için gerekli değildir.)", -1, 8, 38, 209, 26
 END
 
 502 DIALOGEX 20, 60, 215, 73
@@ -2355,7 +2355,7 @@ BEGIN
     7389 "Şimdi seçtiğiniz aygıtın var olan yaplandırma seçenekleri yok.\0"
     7390 "Geçersiz Aralık\0"
     7391 "Gelen Bağlantılar için edilgin ""%1""i istediniz. Bunu edilginleştirmek için ""Sunucu"" hizmetini durdurmalısınız. Bir kez durdu mu bu  bilgisayardaki tüm paylşılan dizinler ve yazıcılar bir başka bilgisayar için artık var olmayacaktır. ""Sunucu"" hizmetini durdurmak için size izin verecek bir dizge konsolu getirmek ister misiniz?\r\n\nBigisayar Yönetimi altında Dizge Araçları'na tıklayınız ve sonra Hizmetler'e tıklayınız. Sağ bölmede Sunucu'ya sağ tıklayınız ve durdurmayı tıklayınız.\0"
-    7392 "Bu dizilik giriş bir başka bilgisayara bir doğrudan bağlantıda kullanım için etkin değil. O, bu yardımcıyı bitirdiğinizden sonra etkinleştirilecektir. Sonra bu bağlantı için simgeye sağ tıklamayla ve Husûsiyetler'i seçmekle sonra giriş hızını ve diğer husûsiyetleri yapılandırabilirsiniz. \n\0"
+    7392 "Bu dizilik giriş bir başka bilgisayara bir doğrudan bağlantıda kullanım için etkin değil. O, bu yardımcıyı bitirdiğinizden sonra etkinleştirilecektir. Sonra bu bağlantı için simgeye sağ tıklamayla ve Husûsiyetler'i seçmekle sonra giriş hızını ve diğer husûsiyetleri yapılandırabilirsiniz.\n\0"
     7393 "Gelen Bağlantılar\0"
     7394 "Girdiğiniz IP adresi havuzu geçersiz.\0"
     7395 "Sağlanan maske geçersiz.\0"

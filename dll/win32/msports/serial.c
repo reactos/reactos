@@ -229,6 +229,7 @@ WritePortSettings(
     HWND hwnd,
     PPORT_DATA pPortData)
 {
+    SP_PROPCHANGE_PARAMS PropChangeParams;
     WCHAR szPortData[32];
     HWND hwndControl;
     INT nBaudRateIndex;
@@ -328,6 +329,21 @@ WritePortSettings(
                  WM_WININICHANGE,
                  0,
                  (LPARAM)pPortData->szPortName);
+
+    /* Notify the installer (and device) */
+    PropChangeParams.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+    PropChangeParams.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+    PropChangeParams.Scope = DICS_FLAG_GLOBAL;
+    PropChangeParams.StateChange = DICS_PROPCHANGE;
+
+    SetupDiSetClassInstallParams(pPortData->DeviceInfoSet,
+                                 pPortData->DeviceInfoData,
+                                 (PSP_CLASSINSTALL_HEADER)&PropChangeParams,
+                                 sizeof(SP_PROPCHANGE_PARAMS));
+
+    SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,
+                              pPortData->DeviceInfoSet,
+                              pPortData->DeviceInfoData);
 
     TRACE("Done!\n");
 }

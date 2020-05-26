@@ -18,6 +18,8 @@
 #include <ndk/halfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/vffuncs.h>
+#include <arbiter.h>
+#include <cmreslist.h>
 
 //
 // Tag used in all pool allocations (Pci Bus)
@@ -402,7 +404,7 @@ typedef struct PCI_ARBITER_INSTANCE
     PPCI_INTERFACE Interface;
     PPCI_FDO_EXTENSION BusFdoExtension;
     WCHAR InstanceName[24];
-    //ARBITER_INSTANCE CommonInstance; FIXME: Need Arbiter Headers
+    ARBITER_INSTANCE CommonInstance;
 } PCI_ARBITER_INSTANCE, *PPCI_ARBITER_INSTANCE;
 
 //
@@ -1172,12 +1174,6 @@ PciQueryCapabilities(
     IN OUT PDEVICE_CAPABILITIES DeviceCapability
 );
 
-PCM_PARTIAL_RESOURCE_DESCRIPTOR
-NTAPI
-PciNextPartialDescriptor(
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor
-);
-
 //
 // Configuration Routines
 //
@@ -1786,10 +1782,10 @@ PciCacheLegacyDeviceRouting(
     IN PDEVICE_OBJECT DeviceObject,
     IN ULONG BusNumber,
     IN ULONG SlotNumber,
-    IN UCHAR InterruptLine, 
-    IN UCHAR InterruptPin, 
-    IN UCHAR BaseClass, 
-    IN UCHAR SubClass, 
+    IN UCHAR InterruptLine,
+    IN UCHAR InterruptPin,
+    IN UCHAR BaseClass,
+    IN UCHAR SubClass,
     IN PDEVICE_OBJECT PhysicalDeviceObject,
     IN PPCI_PDO_EXTENSION PdoExtension,
     OUT PDEVICE_OBJECT *pFoundDeviceObject

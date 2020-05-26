@@ -176,7 +176,7 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         selectionModel.ModifyDestRect(m_ptDelta, m_iAction);
 
         CString strSize;
-        strSize.Format(_T("%d x %d"), selectionModel.GetDestRectWidth(), selectionModel.GetDestRectHeight());
+        strSize.Format(_T("%ld x %ld"), selectionModel.GetDestRectWidth(), selectionModel.GetDestRectHeight());
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
 
         if (toolsModel.GetActiveTool() == TOOL_TEXT)

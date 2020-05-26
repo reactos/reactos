@@ -7,6 +7,7 @@ list(APPEND SOURCE
     bidi.c
     bracket.c
     breaking.c
+    direction.c
     indic.c
     indicsyllable.c
     linebreak.c

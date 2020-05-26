@@ -167,7 +167,9 @@ static ULONG WINAPI LinuxInputEffectImpl_AddRef(
 	LPDIRECTINPUTEFFECT iface)
 {
     LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
-    return InterlockedIncrement(&(This->ref));
+    ULONG ref = InterlockedIncrement(&This->ref);
+    TRACE( "(%p) ref %d\n", This, ref );
+    return ref;
 }
 
 static HRESULT WINAPI LinuxInputEffectImpl_Download(
@@ -758,6 +760,8 @@ static ULONG WINAPI LinuxInputEffectImpl_Release(LPDIRECTINPUTEFFECT iface)
 {
     LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
     ULONG ref = InterlockedDecrement(&(This->ref));
+
+    TRACE( "(%p) ref %d\n", This, ref );
 
     if (ref == 0)
     {

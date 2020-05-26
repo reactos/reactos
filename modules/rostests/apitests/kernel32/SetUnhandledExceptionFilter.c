@@ -54,7 +54,13 @@ static LONG WINAPI ExceptionFilterSSESupport(LPEXCEPTION_POINTERS exp)
     
     ok((ctx->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL, "Context does not contain control register.\n");
     
+#ifdef _M_IX86
     ctx->Eip += 3;
+#elif defined(_M_AMD64)
+    ctx->Rip += 3;
+#else
+#error Architecture not handled
+#endif
 
     return EXCEPTION_CONTINUE_EXECUTION;
 }
@@ -65,12 +71,17 @@ static LONG WINAPI ExceptionFilterSSEException(LPEXCEPTION_POINTERS exp)
 {
     PEXCEPTION_RECORD rec = exp->ExceptionRecord;
     PCONTEXT ctx = exp->ContextRecord;
+#ifdef _M_AMD64
+    ULONG ExpectedExceptionCode = STATUS_FLOAT_DIVIDE_BY_ZERO;
+#else
+    ULONG ExpectedExceptionCode = STATUS_FLOAT_MULTIPLE_TRAPS;
+#endif
     
     trace("Exception raised while dividing by 0.\n");
     
-    ok(rec->ExceptionCode == STATUS_FLOAT_MULTIPLE_TRAPS, "Exception code is 0x%08x.\n", (unsigned int)rec->ExceptionCode);
+    ok(rec->ExceptionCode == ExpectedExceptionCode, "Exception code is 0x%08x.\n", (unsigned int)rec->ExceptionCode);
     
-    if(rec->ExceptionCode != STATUS_FLOAT_MULTIPLE_TRAPS)
+    if(rec->ExceptionCode != ExpectedExceptionCode)
     {
         trace("Unexpected exception code, terminating!\n");
         return EXCEPTION_EXECUTE_HANDLER;
@@ -80,7 +91,13 @@ static LONG WINAPI ExceptionFilterSSEException(LPEXCEPTION_POINTERS exp)
     
     ExceptionCaught = TRUE;
     
+#ifdef _M_IX86
     ctx->Eip += 3;
+#elif defined(_M_AMD64)
+    ctx->Rip += 3;
+#else
+#error Architecture not handled
+#endif
 
     return EXCEPTION_CONTINUE_EXECUTION;
 }
@@ -96,11 +113,19 @@ VOID TestSSEExceptions(VOID)
     p = SetUnhandledExceptionFilter(ExceptionFilterSSESupport);
     ok(p == NULL, "Previous filter should be NULL\n");
 #ifdef _MSC_VER
+#if defined(_M_AMD64)
+    {
+        __m128 xmm = { { 0 } };
+        xmm = _mm_xor_ps(xmm, xmm);
+        if (!ExceptionCaught) supportsSSE = TRUE;
+    }
+#else
     __asm
     {
         xorps xmm0, xmm0
         mov supportsSSE, 0x1
     }
+#endif
 #else
     __asm__(
         "xorps %%xmm0, %%xmm0\n"
@@ -124,6 +149,14 @@ VOID TestSSEExceptions(VOID)
 
     /* We can't use _mm_div_ps, as it masks the exception before performing anything*/
 #if defined(_MSC_VER)
+#if defined(_M_AMD64)
+    {
+        __m128 xmm1 = { { 1., 1. } }, xmm2 = { { 0 } };
+        /* Wait, aren't exceptions masked? Yes, but actually no. */
+        xmm1 = _mm_div_ps(xmm1, xmm2);
+        if (!ExceptionCaught) supportsSSE = TRUE;
+    }
+#else
     __asm
     {
         xorps xmm0, xmm0
@@ -140,6 +173,7 @@ VOID TestSSEExceptions(VOID)
         /* Clean up */
         add esp, 16
     }
+#endif
 #else
     __asm__ (
         "xorps %%xmm0, %%xmm0\n"

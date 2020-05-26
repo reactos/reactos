@@ -1143,6 +1143,7 @@ op_vol_accs_dnd:
                     // Only say ..CK OFF !!!!
                     if(RC == STATUS_OBJECT_NAME_NOT_FOUND)
                         RC = STATUS_OBJECT_PATH_NOT_FOUND;
+                    ReturnedInformation = FILE_DOES_NOT_EXIST;
                     try_return(RC);
                 }
 

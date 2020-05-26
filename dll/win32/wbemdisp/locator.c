@@ -18,7 +18,6 @@
 
 #define COBJMACROS
 
-#include "config.h"
 #include <stdarg.h>
 
 #include "windef.h"
@@ -31,7 +30,6 @@
 
 #include "wine/debug.h"
 #include "wine/heap.h"
-#include "wine/unicode.h"
 #include "wbemdisp_private.h"
 #include "wbemdisp_classes.h"
 
@@ -620,8 +618,8 @@ static HRESULT init_members( struct object *object )
         {
             count++;
             SysFreeString( name );
-            IWbemClassObject_Release( sig_in );
-            IWbemClassObject_Release( sig_out );
+            if (sig_in) IWbemClassObject_Release( sig_in );
+            if (sig_out) IWbemClassObject_Release( sig_out );
         }
         IWbemClassObject_EndMethodEnumeration( object->object );
     }
@@ -659,8 +657,8 @@ static HRESULT init_members( struct object *object )
                 IWbemClassObject_EndMethodEnumeration( object->object );
                 goto error;
             }
-            IWbemClassObject_Release( sig_in );
-            IWbemClassObject_Release( sig_out );
+            if (sig_in) IWbemClassObject_Release( sig_in );
+            if (sig_out) IWbemClassObject_Release( sig_out );
             TRACE( "added method %s\n", debugstr_w(name) );
         }
         IWbemClassObject_EndMethodEnumeration( object->object );
@@ -683,7 +681,7 @@ static DISPID get_member_dispid( struct object *object, const WCHAR *name )
     UINT i;
     for (i = 0; i < object->nb_members; i++)
     {
-        if (!strcmpiW( object->members[i].name, name ))
+        if (!wcsicmp( object->members[i].name, name ))
         {
             if (!object->members[i].dispid)
             {
@@ -1704,12 +1702,12 @@ static HRESULT WINAPI services_DeleteAsync(
 static BSTR build_query_string( const WCHAR *class )
 {
     static const WCHAR selectW[] = {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',0};
-    UINT len = strlenW(class) + ARRAY_SIZE(selectW);
+    UINT len = lstrlenW(class) + ARRAY_SIZE(selectW);
     BSTR ret;
 
     if (!(ret = SysAllocStringLen( NULL, len ))) return NULL;
-    strcpyW( ret, selectW );
-    strcatW( ret, class );
+    lstrcpyW( ret, selectW );
+    lstrcatW( ret, class );
     return ret;
 }
 
@@ -2134,22 +2132,22 @@ static BSTR build_resource_string( BSTR server, BSTR namespace )
     ULONG len, len_server = 0, len_namespace = 0;
     BSTR ret;
 
-    if (server && *server) len_server = strlenW( server );
+    if (server && *server) len_server = lstrlenW( server );
     else len_server = 1;
-    if (namespace && *namespace) len_namespace = strlenW( namespace );
+    if (namespace && *namespace) len_namespace = lstrlenW( namespace );
     else len_namespace = ARRAY_SIZE(defaultW) - 1;
 
     if (!(ret = SysAllocStringLen( NULL, 2 + len_server + 1 + len_namespace ))) return NULL;
 
     ret[0] = ret[1] = '\\';
-    if (server && *server) strcpyW( ret + 2, server );
+    if (server && *server) lstrcpyW( ret + 2, server );
     else ret[2] = '.';
 
     len = len_server + 2;
     ret[len++] = '\\';
 
-    if (namespace && *namespace) strcpyW( ret + len, namespace );
-    else strcpyW( ret + len, defaultW );
+    if (namespace && *namespace) lstrcpyW( ret + len, namespace );
+    else lstrcpyW( ret + len, defaultW );
     return ret;
 }
 

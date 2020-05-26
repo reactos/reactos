@@ -12,8 +12,11 @@
 #ifdef NEWCC
 #include <cache/newcc.h>
 #endif
+
 #define NDEBUG
 #include <debug.h>
+
+#include "inbv/logo.h"
 
 /* GLOBALS *******************************************************************/
 
@@ -159,17 +162,17 @@ PopShutdownHandler(VOID)
         /* Yes we do, cleanup for shutdown screen */
         if (!InbvCheckDisplayOwnership()) InbvAcquireDisplayOwnership();
         InbvResetDisplay();
-        InbvSolidColorFill(0, 0, 639, 479, 0);
+        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLACK);
         InbvEnableDisplayString(TRUE);
-        InbvSetScrollRegion(0, 0, 639, 479);
+        InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
 
         /* Display shutdown logo and message */
         Logo1 = InbvGetResourceAddress(IDB_SHUTDOWN_MSG);
         Logo2 = InbvGetResourceAddress(IDB_LOGO_DEFAULT);
         if ((Logo1) && (Logo2))
         {
-            InbvBitBlt(Logo1, 220, 352);
-            InbvBitBlt(Logo2, 222, 111);
+            InbvBitBlt(Logo1, VID_SHUTDOWN_MSG_LEFT, VID_SHUTDOWN_MSG_TOP);
+            InbvBitBlt(Logo2, VID_SHUTDOWN_LOGO_LEFT, VID_SHUTDOWN_LOGO_TOP);
         }
     }
     else

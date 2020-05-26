@@ -515,7 +515,7 @@ NtUserCallTwoParam(
             {
                 break;
             }
-            if (MsqIsHung(Window->head.pti))
+            if (MsqIsHung(Window->head.pti, MSQ_HUNG))
             {
                 // TODO: Make the window ghosted and activate.
                 break;

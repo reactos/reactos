@@ -117,7 +117,7 @@ SetupExtractFile(
 
         CabinetInitialize(&QueueHeader->CabinetContext);
         CabinetSetEventHandlers(&QueueHeader->CabinetContext,
-                                NULL, NULL, NULL);
+                                NULL, NULL, NULL, NULL);
         CabinetSetCabinetName(&QueueHeader->CabinetContext, CabinetFileName);
 
         CabStatus = CabinetOpen(&QueueHeader->CabinetContext);

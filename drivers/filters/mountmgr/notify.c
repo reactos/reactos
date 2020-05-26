@@ -328,6 +328,7 @@ MountMgrNotify(IN PDEVICE_EXTENSION DeviceExtension)
     {
         NextEntry = RemoveHeadList(&(DeviceExtension->IrpListHead));
         Irp = CONTAINING_RECORD(NextEntry, IRP, Tail.Overlay.ListEntry);
+        IoSetCancelRoutine(Irp, NULL);
         InsertTailList(&CopyList, &(Irp->Tail.Overlay.ListEntry));
     }
     IoReleaseCancelSpinLock(OldIrql);

@@ -10,6 +10,8 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "history.h"
+#include "../concfg/font.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -27,22 +29,28 @@ ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
                                    IN USHORT NewScreenAttrib,
                                    IN USHORT NewPopupAttrib);
 /*
- * NOTE: This function explicitely references Console->ActiveBuffer.
+ * NOTE: This function explicitly references Console->ActiveBuffer.
  * It is possible that it should go into some frontend...
  */
 VOID
-ConSrvApplyUserSettings(IN PCONSOLE Console,
-                        IN PCONSOLE_STATE_INFO ConsoleInfo)
+ConSrvApplyUserSettings(
+    IN PCONSRV_CONSOLE Console,
+    IN PCONSOLE_STATE_INFO ConsoleInfo)
 {
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
 
     /*
      * Apply terminal-edition settings:
      * - QuickEdit and Insert modes,
-     * - history settings.
+     * - History settings.
      */
     Console->QuickEdit  = !!ConsoleInfo->QuickEdit;
     Console->InsertMode = !!ConsoleInfo->InsertMode;
+    /// Console->InputBufferSize = 0;
+    HistoryReshapeAllBuffers(Console,
+                             ConsoleInfo->HistoryBufferSize,
+                             ConsoleInfo->NumberOfHistoryBuffers,
+                             ConsoleInfo->HistoryNoDup);
 
     /* Copy the new console palette */
     // FIXME: Possible buffer overflow if s_colors is bigger than ConsoleInfo->ColorTable.
@@ -59,6 +67,8 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
         Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
         // ConDrvSetConsoleCP(Console, ConsoleInfo->CodePage, TRUE);    // Output
         // ConDrvSetConsoleCP(Console, ConsoleInfo->CodePage, FALSE);   // Input
+
+        Console->IsCJK = IsCJKCodePage(Console->OutputCodePage);
     }
 
     // FIXME: Check ConsoleInfo->WindowSize with respect to
@@ -114,7 +124,7 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
             if (BufSize.X != ActiveBuffer->ScreenBufferSize.X ||
                 BufSize.Y != ActiveBuffer->ScreenBufferSize.Y)
             {
-                if (NT_SUCCESS(ConioResizeBuffer(Console, Buffer, BufSize)))
+                if (NT_SUCCESS(ConioResizeBuffer((PCONSOLE)Console, Buffer, BufSize)))
                     SizeChanged = TRUE;
             }
 
@@ -122,7 +132,7 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
         }
 
         /* Apply foreground and background colors for both screen and popup */
-        ConDrvChangeScreenBufferAttributes(Console,
+        ConDrvChangeScreenBufferAttributes((PCONSOLE)Console,
                                            Buffer,
                                            ConsoleInfo->ScreenAttributes,
                                            ConsoleInfo->PopupAttributes);

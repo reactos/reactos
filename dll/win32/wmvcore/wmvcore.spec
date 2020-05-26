@@ -1,17 +1,17 @@
-@ stub WMCheckURLExtension
+@ stdcall WMCheckURLExtension(wstr)
 @ stdcall WMCheckURLScheme(wstr)
-@ stub WMCreateBackupRestorerPrivate
-@ stub WMCreateSyncReaderPriv
+@ stdcall WMCreateBackupRestorerPrivate(ptr ptr) WMCreateBackupRestorer
 @ stub WMIsAvailableOffline
 @ stub WMValidateData
 @ stdcall -private DllRegisterServer()
-@ stub WMCreateBackupRestorer
+@ stdcall WMCreateBackupRestorer(ptr ptr)
 @ stdcall WMCreateEditor(ptr)
 @ stub WMCreateIndexer
 @ stdcall WMCreateProfileManager(ptr)
 @ stdcall WMCreateReader(ptr long ptr)
 @ stdcall WMCreateReaderPriv(ptr)
 @ stdcall WMCreateSyncReader(ptr long ptr)
+@ stdcall WMCreateSyncReaderPriv(ptr)
 @ stdcall WMCreateWriter(ptr ptr)
 @ stub WMCreateWriterFileSink
 @ stub WMCreateWriterNetworkSink

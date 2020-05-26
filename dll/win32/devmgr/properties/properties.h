@@ -53,6 +53,7 @@ typedef struct _DEVADVPROP_INFO
         };
     };
 
+    PVOID pResourceList;
     WCHAR szDevName[255];
     WCHAR szTemp[255];
     WCHAR szDeviceID[1];
@@ -78,6 +79,10 @@ ResourcesProcDriverDlgProc(IN HWND hwndDlg,
                      IN UINT uMsg,
                      IN WPARAM wParam,
                      IN LPARAM lParam);
+
+PVOID
+GetResourceList(
+    _In_ LPWSTR pszDeviceID);
 
 /* ADVPROP.C */
 

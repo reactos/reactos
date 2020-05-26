@@ -26,6 +26,7 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "wine/winternl.h"
 #include "winuser.h"
 #include "winnls.h"
 #include "htmlhelp.h"
@@ -39,7 +40,6 @@
 #endif
 
 #include "wine/itss.h"
-#include "wine/unicode.h"
 #include "wine/heap.h"
 #include "wine/list.h"
 
@@ -258,7 +258,7 @@ static inline LPWSTR strdupW(LPCWSTR str)
     if(!str)
         return NULL;
 
-    size = (strlenW(str)+1)*sizeof(WCHAR);
+    size = (lstrlenW(str)+1)*sizeof(WCHAR);
     ret = heap_alloc(size);
     memcpy(ret, str, size);
 

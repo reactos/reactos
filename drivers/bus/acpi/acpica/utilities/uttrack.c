@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -756,7 +756,7 @@ AcpiUtDumpAllocations (
 
                     case ACPI_DESC_TYPE_PARSER:
 
-                        AcpiOsPrintf ("AmlOpcode 0x%04hX\n",
+                        AcpiOsPrintf ("AmlOpcode 0x%04X\n",
                             Descriptor->Op.Asl.AmlOpcode);
                         break;
 

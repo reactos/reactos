@@ -16,9 +16,13 @@
 char * CDECL _strupr(char *x)
 {
 	char  *y=x;
+	char ch, upper;
 
 	while (*y) {
-		*y=toupper(*y);
+		ch = *y;
+		upper = toupper(ch);
+		if (ch != upper)
+			*y = upper;
 		y++;
 	}
 	return x;

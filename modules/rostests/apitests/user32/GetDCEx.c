@@ -416,18 +416,53 @@ Test_GetDCEx_CS_SwitchedStyle()
     static const PSTR pszClassName = "TestClass_CS_SwitchedStyle";
     ATOM atomClass;
     HWND hwnd1, hwnd2;
+    HDC hdc1, hdc2, hdcClass;
 
-    atomClass = RegisterClassHelper(pszClassName, CS_OWNDC, WndProc);
+    /* Create a class with CS_CLASSDC */
+    atomClass = RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
     ok(atomClass != 0, "Failed to register class\n");
 
+    /* Create the 2 windows */
     hwnd1 = CreateWindowHelper(pszClassName, "Test Window1");
     ok(hwnd1 != NULL, "Failed to create hwnd1\n");
-
-    ok(SetClassLongPtrA(hwnd1, GCL_STYLE, CS_CLASSDC) == CS_OWNDC, "unexpected style\n");
-    ok(GetClassLongPtrA(hwnd1, GCL_STYLE) == CS_CLASSDC, "class style not set\n");
-
     hwnd2 = CreateWindowHelper(pszClassName, "Test Window2");
     ok(hwnd2 != NULL, "Failed to create hwnd2\n");
+
+    /* Get the class DC from the Windows */
+    hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE);
+    hdc2 = GetDCEx(hwnd2, NULL, DCX_USESTYLE);
+    hdcClass = hdc1;
+    ok(hdc1 == hdc2, "Expected same DC\n");
+    ok(ReleaseDC(hwnd2, hdc2) == TRUE, "ReleaseDC failed\n");
+
+    /* Switch the class to CS_OWNDC */
+    ok(SetClassLongPtrA(hwnd1, GCL_STYLE, CS_OWNDC) == CS_CLASSDC, "unexpected style\n");
+    ok(GetClassLongPtrA(hwnd1, GCL_STYLE) == CS_OWNDC, "class style not set\n");
+
+    /* Release the DC and try to get another one, this should fail now */
+    ok(ReleaseDC(hwnd1, hdc1) == TRUE, "ReleaseDC failed\n");
+    hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE);
+    ok(hdc1 == NULL, "GetDCEx should fail\n");
+
+    /* Destroy the 1st window, this should move it's own DC to the cache,
+       but not the class DC, but they are the same, so... */
+    DestroyWindow(hwnd1);
+
+    /* Create another window, this time it should have it's own DC */
+    hwnd1 = CreateWindowHelper(pszClassName, "Test Window1");
+    ok(hwnd1 != NULL, "Failed to create hwnd1\n");
+    hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE);
+    ok(hdc1 != NULL, "GetDXEx failed\n");
+    ok(hdc1 != hdc2, "Should get different DC\n");
+
+    /* Switch the class back to CS_CLASSDC */
+    ok(SetClassLongPtrA(hwnd2, GCL_STYLE, CS_CLASSDC) == CS_OWNDC, "unexpected style\n");
+    ok(GetClassLongPtrA(hwnd2, GCL_STYLE) == CS_CLASSDC, "class style not set\n");
+
+    /* Get the 2nd window's DC, this should still be the class DC */
+    hdc2 = GetDCEx(hwnd2, NULL, DCX_USESTYLE);
+    ok(hdc2 != hdc1, "Expected different DC\n");
+    ok(hdc2 == hdcClass, "Expected class DC\n");
 
     DestroyWindow(hwnd1);
     DestroyWindow(hwnd2);

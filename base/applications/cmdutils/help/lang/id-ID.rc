@@ -4,7 +4,7 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "Perintah ini tidak didukung oleh utilitas bantuan.\nCoba ""%s /?""\n."
+    IDS_NO_ENTRY "Perintah ini tidak didukung oleh utilitas bantuan.\nCoba ""%s /?"".\n"
 END
 
 STRINGTABLE

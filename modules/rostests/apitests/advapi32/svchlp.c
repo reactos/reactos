@@ -30,7 +30,7 @@ void send_msg(const char *type, const char *msg)
     char buf[512];
 
     StringCbPrintfA(buf, sizeof(buf), "%s:%s", type, msg);
-    WriteFile(hClientPipe, buf, strlen(buf)+1, &written, NULL);
+    WriteFile(hClientPipe, buf, lstrlenA(buf)+1, &written, NULL);
 }
 
 void service_trace(const char *msg, ...)

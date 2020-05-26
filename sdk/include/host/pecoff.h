@@ -202,7 +202,7 @@ typedef struct _IMAGE_SECTION_HEADER {
 typedef struct _IMAGE_BASE_RELOCATION {
 	DWORD VirtualAddress;
 	DWORD SizeOfBlock;
-    WORD  TypeOffset[1];
+	// Followed by: WORD TypeOffset[ANYSIZE_ARRAY];
 } IMAGE_BASE_RELOCATION,*PIMAGE_BASE_RELOCATION;
 #pragma pack(pop)
 

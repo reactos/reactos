@@ -11,7 +11,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Visa data sida-efter-sida på skärmen.\n\n\
   MORE < [Enhet:][Mapp]Filnamn\n\
-  Kommando | MORE \n\
+  Kommando | MORE\n\
   MORE [Enhet:][Mapp]Filnamn\n\n\
   [Enhet:][Mapp]Filnamn    En fil, Välj innehåll som skall visas.\n\
   Kommando\t\t     Ett kommando, Välj vad som skall visas.\n\n\

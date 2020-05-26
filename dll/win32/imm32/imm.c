@@ -33,7 +33,6 @@
 #include "winnls.h"
 #include "winreg.h"
 #include "wine/list.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -119,8 +118,15 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 static CRITICAL_SECTION threaddata_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
 static BOOL disable_ime;
 
-#define is_himc_ime_unicode(p)  (p->immKbd->imeInfo.fdwProperty & IME_PROP_UNICODE)
-#define is_kbd_ime_unicode(p)  (p->imeInfo.fdwProperty & IME_PROP_UNICODE)
+static inline BOOL is_himc_ime_unicode(const InputContextData *data)
+{
+    return !!(data->immKbd->imeInfo.fdwProperty & IME_PROP_UNICODE);
+}
+
+static inline BOOL is_kbd_ime_unicode(const ImmHkl *hkl)
+{
+    return !!(hkl->imeInfo.fdwProperty & IME_PROP_UNICODE);
+}
 
 static BOOL IMM_DestroyContext(HIMC hIMC);
 static InputContextData* get_imc_data(HIMC hIMC);
@@ -311,8 +317,8 @@ static HMODULE load_graphics_driver(void)
 
     if (!guid_atom) return 0;
     memcpy( key, key_pathW, sizeof(key_pathW) );
-    if (!GlobalGetAtomNameW( guid_atom, key + strlenW(key), 40 )) return 0;
-    strcatW( key, displayW );
+    if (!GlobalGetAtomNameW( guid_atom, key + lstrlenW(key), 40 )) return 0;
+    lstrcatW( key, displayW );
     if (RegOpenKeyW( HKEY_LOCAL_MACHINE, key, &hkey )) return 0;
     size = sizeof(path);
     if (!RegQueryValueExW( hkey, driverW, NULL, NULL, (BYTE *)path, &size )) ret = LoadLibraryW( path );
@@ -1202,52 +1208,70 @@ BOOL WINAPI ImmGetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
 
 /* Helpers for the GetCompositionString functions */
 
-static INT CopyCompStringIMEtoClient(InputContextData *data, LPBYTE source, INT slen, LPBYTE target, INT tlen,
-                                     BOOL unicode )
+/* Source encoding is defined by context, source length is always given in respective characters. Destination buffer
+   length is always in bytes. */
+static INT CopyCompStringIMEtoClient(const InputContextData *data, const void *src, INT src_len, void *dst,
+        INT dst_len, BOOL unicode)
 {
-    INT rc;
+    int char_size = unicode ? sizeof(WCHAR) : sizeof(char);
+    INT ret;
 
-    if (is_himc_ime_unicode(data) && !unicode)
-        rc = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)source, slen, (LPSTR)target, tlen, NULL, NULL);
-    else if (!is_himc_ime_unicode(data) && unicode)
-        rc = MultiByteToWideChar(CP_ACP, 0, (LPSTR)source, slen, (LPWSTR)target, tlen) * sizeof(WCHAR);
+    if (is_himc_ime_unicode(data) ^ unicode)
+    {
+        if (unicode)
+            ret = MultiByteToWideChar(CP_ACP, 0, src, src_len, dst, dst_len / sizeof(WCHAR));
+        else
+            ret = WideCharToMultiByte(CP_ACP, 0, src, src_len, dst, dst_len, NULL, NULL);
+        ret *= char_size;
+    }
     else
     {
-        int dlen = (unicode)?sizeof(WCHAR):sizeof(CHAR);
-        memcpy( target, source, min(slen,tlen)*dlen);
-        rc = slen*dlen;
+        if (dst_len)
+        {
+            ret = min(src_len * char_size, dst_len);
+            memcpy(dst, src, ret);
+        }
+        else
+            ret = src_len * char_size;
     }
 
-    return rc;
+    return ret;
 }
 
-static INT CopyCompAttrIMEtoClient(InputContextData *data, LPBYTE source, INT slen, LPBYTE ssource, INT sslen,
-                                   LPBYTE target, INT tlen, BOOL unicode )
+/* Composition string encoding is defined by context, returned attributes correspond to string, converted according to
+   passed mode. String length is in characters, attributes are in byte arrays. */
+static INT CopyCompAttrIMEtoClient(const InputContextData *data, const BYTE *src, INT src_len, const void *comp_string,
+        INT str_len, BYTE *dst, INT dst_len, BOOL unicode)
 {
+    union
+    {
+        const void *str;
+        const WCHAR *strW;
+        const char *strA;
+    } string;
     INT rc;
+
+    string.str = comp_string;
 
     if (is_himc_ime_unicode(data) && !unicode)
     {
-        rc = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)ssource, sslen, NULL, 0, NULL, NULL);
-        if (tlen)
+        rc = WideCharToMultiByte(CP_ACP, 0, string.strW, str_len, NULL, 0, NULL, NULL);
+        if (dst_len)
         {
-            const BYTE *src = source;
-            LPBYTE dst = target;
             int i, j = 0, k = 0;
 
-            if (rc < tlen)
-                tlen = rc;
-            for (i = 0; i < sslen; ++i)
+            if (rc < dst_len)
+                dst_len = rc;
+            for (i = 0; i < str_len; ++i)
             {
                 int len;
 
-                len = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)ssource + i, 1,
-                                          NULL, 0, NULL, NULL);
+                len = WideCharToMultiByte(CP_ACP, 0, string.strW + i, 1, NULL, 0, NULL, NULL);
                 for (; len > 0; --len)
                 {
                     dst[j++] = src[k];
 
-                    if (j >= tlen)
+                    if (j >= dst_len)
                         goto end;
                 }
                 ++k;
@@ -1258,23 +1282,21 @@ static INT CopyCompAttrIMEtoClient(InputContextData *data, LPBYTE source, INT sl
     }
     else if (!is_himc_ime_unicode(data) && unicode)
     {
-        rc = MultiByteToWideChar(CP_ACP, 0, (LPSTR)ssource, sslen, NULL, 0);
-        if (tlen)
+        rc = MultiByteToWideChar(CP_ACP, 0, string.strA, str_len, NULL, 0);
+        if (dst_len)
         {
-            const BYTE *src = source;
-            LPBYTE dst = target;
             int i, j = 0;
 
-            if (rc < tlen)
-                tlen = rc;
-            for (i = 0; i < sslen; ++i)
+            if (rc < dst_len)
+                dst_len = rc;
+            for (i = 0; i < str_len; ++i)
             {
-                if (IsDBCSLeadByte(((LPSTR)ssource)[i]))
+                if (IsDBCSLeadByte(string.strA[i]))
                     continue;
 
                 dst[j++] = src[i];
 
-                if (j >= tlen)
+                if (j >= dst_len)
                     break;
             }
             rc = j;
@@ -1282,8 +1304,8 @@ static INT CopyCompAttrIMEtoClient(InputContextData *data, LPBYTE source, INT sl
     }
     else
     {
-        memcpy( target, source, min(slen,tlen));
-        rc = slen;
+        memcpy(dst, src, min(src_len, dst_len));
+        rc = src_len;
     }
 
     return rc;
@@ -1623,7 +1645,7 @@ static BOOL needs_ime_window(HWND hwnd)
 {
     WCHAR classW[8];
 
-    if (GetClassNameW(hwnd, classW, ARRAY_SIZE(classW)) && !strcmpW(classW, szwIME))
+    if (GetClassNameW(hwnd, classW, ARRAY_SIZE(classW)) && !lstrcmpW(classW, szwIME))
         return FALSE;
     if (GetClassLongPtrW(hwnd, GCL_STYLE) & CS_IME) return FALSE;
 

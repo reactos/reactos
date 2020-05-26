@@ -51,15 +51,19 @@ public:
     /* Link file formats */
 
     #include "pshpack1.h"
-
     struct volume_info
     {
         DWORD type;
         DWORD serial;
         WCHAR label[12];  /* assume 8.3 */
     };
-
     #include "poppack.h"
+
+    enum IDCMD
+    {
+        IDCMD_OPEN = 0,
+        IDCMD_OPENFILELOCATION
+    };
 
 private:
     /* Cached link header */
@@ -83,13 +87,13 @@ private:
     LPDBLIST      m_pDBList; /* Optional data block list (in the extra data section) */
     BOOL          m_bInInit;    // in initialization or not
     HICON         m_hIcon;
+    UINT          m_idCmdFirst;
 
     /* Pointers to strings inside Logo3/Darwin info blocks, cached for debug info purposes only */
     LPWSTR sProduct;
     LPWSTR sComponent;
 
     LPWSTR        m_sLinkPath;
-    INT           m_iIdOpen;     /* ID of the "Open" entry in the context menu */
 
     CComPtr<IUnknown>    m_site;
     CComPtr<IDropTarget> m_DropTarget;
@@ -101,6 +105,9 @@ private:
     HRESULT WriteAdvertiseInfo(LPCWSTR string, DWORD dwSig);
     HRESULT SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile);
     HICON CreateShortcutIcon(LPCWSTR wszIconPath, INT IconIndex);
+
+    HRESULT DoOpen(LPCMINVOKECOMMANDINFO lpici);
+    HRESULT DoOpenFileLocation();
 
 public:
     CShellLink();

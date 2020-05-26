@@ -38,7 +38,6 @@
 #include "avifile_private.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 
@@ -155,7 +154,7 @@ static BOOL AVIFILE_GetFileHandlerByExtension(LPCWSTR szFile, LPCLSID lpclsid)
 {
   CHAR   szRegKey[25];
   CHAR   szValue[100];
-  LPWSTR szExt = strrchrW(szFile, '.');
+  LPWSTR szExt = wcsrchr(szFile, '.');
   LONG   len = ARRAY_SIZE(szValue);
 
   if (szExt == NULL)

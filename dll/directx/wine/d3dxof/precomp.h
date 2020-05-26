@@ -2,8 +2,6 @@
 #ifndef _D3DXOF_PRECOMP_H_
 #define _D3DXOF_PRECOMP_H_
 
-#include <wine/config.h>
-
 #include <stdio.h>
 
 #define WIN32_NO_STATUS

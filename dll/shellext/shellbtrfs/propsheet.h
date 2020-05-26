@@ -111,8 +111,11 @@ public:
 
         sizes[0] = sizes[1] = sizes[2] = sizes[3] = sizes[4] = 0;
         totalsize = allocsize = sparsesize = 0;
+        num_extents = 0;
+        sector_size = 0;
         size_format[0] = 0;
         cr_format[0] = 0;
+        frag_format[0] = 0;
 
         InterlockedIncrement(&objs_loaded);
     }
@@ -168,7 +171,7 @@ public:
     bool readonly;
     bool can_change_perms;
     bool can_change_nocow;
-    WCHAR size_format[255], cr_format[255];
+    WCHAR size_format[255], cr_format[255], frag_format[255];
     HANDLE thread;
     uint32_t min_mode, max_mode, mode, mode_set;
     uint64_t min_flags, max_flags, flags, flags_set;
@@ -184,9 +187,10 @@ private:
     STGMEDIUM stgm;
     bool stgm_set;
     bool flags_changed, perms_changed, uid_changed, gid_changed;
-    uint64_t sizes[5], totalsize, allocsize, sparsesize;
+    uint64_t sizes[5], totalsize, allocsize, sparsesize, num_extents;
     deque<wstring> search_list;
     wstring filename;
+    uint32_t sector_size;
 
     void apply_changes_file(HWND hDlg, const wstring& fn);
     HRESULT check_file(const wstring& fn, UINT i, UINT num_files, UINT* sv);

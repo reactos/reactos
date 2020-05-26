@@ -21,7 +21,9 @@
 #include "wine/debug.h"
 #include "wine/heap.h"
 #include "wine/list.h"
-#include "wine/unicode.h"
+#ifdef __REACTOS__
+#include <winnls.h>
+#endif
 
 IClientSecurity client_security DECLSPEC_HIDDEN;
 struct list *table_list DECLSPEC_HIDDEN;
@@ -92,7 +94,6 @@ struct column
 {
     const WCHAR *name;
     UINT type;
-    VARTYPE vartype; /* 0 for default mapping */
 };
 
 enum fill_status
@@ -127,6 +128,7 @@ struct property
 
 struct array
 {
+    UINT elem_size;
     UINT count;
     void *ptr;
 };
@@ -134,7 +136,6 @@ struct array
 struct field
 {
     UINT type;
-    VARTYPE vartype; /* 0 for default mapping */
     union
     {
         LONGLONG ival;
@@ -150,13 +151,30 @@ struct record
     struct table *table;
 };
 
+struct keyword
+{
+    const WCHAR *name;
+    const WCHAR *value;
+    const struct keyword *next;
+};
+
+enum view_type
+{
+    VIEW_TYPE_SELECT,
+    VIEW_TYPE_ASSOCIATORS,
+};
+
 struct view
 {
-    const struct property *proplist;
-    struct table *table;
+    enum view_type type;
+    const WCHAR *path;                      /* ASSOCIATORS OF query */
+    const struct keyword *keywordlist;
+    const struct property *proplist;        /* SELECT query */
     const struct expr *cond;
+    UINT table_count;
+    struct table **table;
+    UINT result_count;
     UINT *result;
-    UINT  count;
 };
 
 struct query
@@ -166,16 +184,29 @@ struct query
     struct list mem;
 };
 
+struct path
+{
+    WCHAR *class;
+    UINT   class_len;
+    WCHAR *filter;
+    UINT   filter_len;
+};
+
+HRESULT parse_path( const WCHAR *, struct path ** ) DECLSPEC_HIDDEN;
+void free_path( struct path * ) DECLSPEC_HIDDEN;
+WCHAR *query_from_path( const struct path * ) DECLSPEC_HIDDEN;
+
 struct query *create_query(void) DECLSPEC_HIDDEN;
 void free_query( struct query * ) DECLSPEC_HIDDEN;
 struct query *addref_query( struct query * ) DECLSPEC_HIDDEN;
 void release_query( struct query *query ) DECLSPEC_HIDDEN;
 HRESULT exec_query( const WCHAR *, IEnumWbemClassObject ** ) DECLSPEC_HIDDEN;
 HRESULT parse_query( const WCHAR *, struct view **, struct list * ) DECLSPEC_HIDDEN;
-HRESULT create_view( const struct property *, const WCHAR *, const struct expr *,
-                     struct view ** ) DECLSPEC_HIDDEN;
+HRESULT create_view( enum view_type, const WCHAR *, const struct keyword *, const WCHAR *, const struct property *,
+                     const struct expr *, struct view ** ) DECLSPEC_HIDDEN;
 void destroy_view( struct view * ) DECLSPEC_HIDDEN;
 HRESULT execute_view( struct view * ) DECLSPEC_HIDDEN;
+struct table *get_view_table( const struct view *, UINT ) DECLSPEC_HIDDEN;
 void init_table_list( void ) DECLSPEC_HIDDEN;
 struct table *grab_table( const WCHAR * ) DECLSPEC_HIDDEN;
 struct table *addref_table( struct table * ) DECLSPEC_HIDDEN;
@@ -195,15 +226,14 @@ BSTR get_value_bstr( const struct table *, UINT, UINT ) DECLSPEC_HIDDEN;
 HRESULT set_value( const struct table *, UINT, UINT, LONGLONG, CIMTYPE ) DECLSPEC_HIDDEN;
 BOOL is_method( const struct table *, UINT ) DECLSPEC_HIDDEN;
 HRESULT get_method( const struct table *, const WCHAR *, class_method ** ) DECLSPEC_HIDDEN;
-HRESULT get_propval( const struct view *, UINT, const WCHAR *, VARIANT *,
-                     CIMTYPE *, LONG * ) DECLSPEC_HIDDEN;
+HRESULT get_propval( const struct view *, UINT, const WCHAR *, VARIANT *, CIMTYPE *, LONG * ) DECLSPEC_HIDDEN;
 HRESULT put_propval( const struct view *, UINT, const WCHAR *, VARIANT *, CIMTYPE ) DECLSPEC_HIDDEN;
 HRESULT to_longlong( VARIANT *, LONGLONG *, CIMTYPE * ) DECLSPEC_HIDDEN;
 SAFEARRAY *to_safearray( const struct array *, CIMTYPE ) DECLSPEC_HIDDEN;
 VARTYPE to_vartype( CIMTYPE ) DECLSPEC_HIDDEN;
 void destroy_array( struct array *, CIMTYPE ) DECLSPEC_HIDDEN;
-BOOL is_selected_prop( const struct view *, const WCHAR * ) DECLSPEC_HIDDEN;
-HRESULT get_properties( const struct view *, LONG, SAFEARRAY ** ) DECLSPEC_HIDDEN;
+BOOL is_result_prop( const struct view *, const WCHAR * ) DECLSPEC_HIDDEN;
+HRESULT get_properties( const struct view *, UINT, LONG, SAFEARRAY ** ) DECLSPEC_HIDDEN;
 HRESULT get_object( const WCHAR *, IWbemClassObject ** ) DECLSPEC_HIDDEN;
 BSTR get_method_name( const WCHAR *, UINT ) DECLSPEC_HIDDEN;
 void set_variant( VARTYPE, LONGLONG, void *, VARIANT * ) DECLSPEC_HIDDEN;
@@ -233,7 +263,17 @@ static inline WCHAR *heap_strdupW( const WCHAR *src )
 {
     WCHAR *dst;
     if (!src) return NULL;
-    if ((dst = heap_alloc( (strlenW( src ) + 1) * sizeof(WCHAR) ))) strcpyW( dst, src );
+    if ((dst = heap_alloc( (lstrlenW( src ) + 1) * sizeof(WCHAR) ))) lstrcpyW( dst, src );
+    return dst;
+}
+
+static inline WCHAR *heap_strdupAW( const char *src )
+{
+    int len;
+    WCHAR *dst;
+    if (!src) return NULL;
+    len = MultiByteToWideChar( CP_ACP, 0, src, -1, NULL, 0 );
+    if ((dst = heap_alloc( len * sizeof(*dst) ))) MultiByteToWideChar( CP_ACP, 0, src, -1, dst, len );
     return dst;
 }
 

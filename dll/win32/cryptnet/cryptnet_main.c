@@ -18,9 +18,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #define NONAMELESSUNION
 #define CERT_REVOCATION_PARA_HAS_EXTRA_FIELDS
 

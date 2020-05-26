@@ -1,7 +1,7 @@
 /*
  * transupp.c
  *
- * Copyright (C) 1997-2017, Thomas G. Lane, Guido Vollbeding.
+ * Copyright (C) 1997-2019, Thomas G. Lane, Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -14,6 +14,8 @@
 
 /* Although this file really shouldn't have access to the library internals,
  * it's helpful to let it call jround_up() and jcopy_block_row().
+ * Also, the (switchable) virtual memory adaptation code for
+ * the drop feature has dependencies on library internals.
  */
 #define JPEG_INTERNALS
 
@@ -75,6 +77,274 @@
  */
 
 
+/* Drop code may be used with or without virtual memory adaptation code.
+ * This code has some dependencies on internal library behavior, so you
+ * may choose to disable it.  For example, it doesn't make a difference
+ * if you only use jmemnobs anyway.
+ */
+#ifndef DROP_REQUEST_FROM_SRC
+#define DROP_REQUEST_FROM_SRC 1		/* 0 disables adaptation */
+#endif
+
+
+#if DROP_REQUEST_FROM_SRC
+/* Force jpeg_read_coefficients to request
+ * the virtual coefficient arrays from
+ * the source decompression object.
+ */
+METHODDEF(jvirt_barray_ptr)
+drop_request_virt_barray (j_common_ptr cinfo, int pool_id, boolean pre_zero,
+			  JDIMENSION blocksperrow, JDIMENSION numrows,
+			  JDIMENSION maxaccess)
+{
+  j_common_ptr srcinfo = (j_common_ptr) cinfo->client_data;
+
+  return (*srcinfo->mem->request_virt_barray)
+	  (srcinfo, pool_id, pre_zero,
+	   blocksperrow, numrows, maxaccess);
+}
+
+
+/* Force jpeg_read_coefficients to return
+ * after requesting and before accessing
+ * the virtual coefficient arrays.
+ */
+METHODDEF(int)
+drop_consume_input (j_decompress_ptr cinfo)
+{
+  return JPEG_SUSPENDED;
+}
+
+
+METHODDEF(void)
+drop_start_input_pass (j_decompress_ptr cinfo)
+{
+  cinfo->inputctl->consume_input = drop_consume_input;
+}
+
+
+LOCAL(void)
+drop_request_from_src (j_decompress_ptr dropinfo, j_decompress_ptr srcinfo)
+{
+  void *save_client_data;
+  JMETHOD(jvirt_barray_ptr, save_request_virt_barray,
+	  (j_common_ptr cinfo, int pool_id, boolean pre_zero,
+	   JDIMENSION blocksperrow, JDIMENSION numrows, JDIMENSION maxaccess));
+  JMETHOD(void, save_start_input_pass, (j_decompress_ptr cinfo));
+
+  /* Set custom method pointers, save original pointers */
+  save_client_data = dropinfo->client_data;
+  dropinfo->client_data = (void *) srcinfo;
+  save_request_virt_barray = dropinfo->mem->request_virt_barray;
+  dropinfo->mem->request_virt_barray = drop_request_virt_barray;
+  save_start_input_pass = dropinfo->inputctl->start_input_pass;
+  dropinfo->inputctl->start_input_pass = drop_start_input_pass;
+
+  /* Execute only initialization part.
+   * Requested coefficient arrays will be realized later by the srcinfo object.
+   * Next call to the same function will then do the actual data reading.
+   * NB: since we request the coefficient arrays from another object,
+   * the inherent realization call is effectively a no-op.
+   */
+  (void) jpeg_read_coefficients(dropinfo);
+
+  /* Reset method pointers */
+  dropinfo->client_data = save_client_data;
+  dropinfo->mem->request_virt_barray = save_request_virt_barray;
+  dropinfo->inputctl->start_input_pass = save_start_input_pass;
+  /* Do input initialization for first scan now,
+   * which also resets the consume_input method.
+   */
+  (*save_start_input_pass)(dropinfo);
+}
+#endif /* DROP_REQUEST_FROM_SRC */
+
+
+LOCAL(void)
+dequant_comp (j_decompress_ptr cinfo, jpeg_component_info *compptr,
+	      jvirt_barray_ptr coef_array, JQUANT_TBL *qtblptr1)
+{
+  JDIMENSION blk_x, blk_y;
+  int offset_y, k;
+  JQUANT_TBL *qtblptr;
+  JBLOCKARRAY buffer;
+  JBLOCKROW block;
+  JCOEFPTR ptr;
+
+  qtblptr = compptr->quant_table;
+  for (blk_y = 0; blk_y < compptr->height_in_blocks;
+       blk_y += compptr->v_samp_factor) {
+    buffer = (*cinfo->mem->access_virt_barray)
+      ((j_common_ptr) cinfo, coef_array, blk_y,
+       (JDIMENSION) compptr->v_samp_factor, TRUE);
+    for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
+      block = buffer[offset_y];
+      for (blk_x = 0; blk_x < compptr->width_in_blocks; blk_x++) {
+	ptr = block[blk_x];
+	for (k = 0; k < DCTSIZE2; k++)
+	  if (qtblptr->quantval[k] != qtblptr1->quantval[k])
+	    ptr[k] *= qtblptr->quantval[k] / qtblptr1->quantval[k];
+      }
+    }
+  }
+}
+
+
+LOCAL(void)
+requant_comp (j_decompress_ptr cinfo, jpeg_component_info *compptr,
+	      jvirt_barray_ptr coef_array, JQUANT_TBL *qtblptr1)
+{
+  JDIMENSION blk_x, blk_y;
+  int offset_y, k;
+  JQUANT_TBL *qtblptr;
+  JBLOCKARRAY buffer;
+  JBLOCKROW block;
+  JCOEFPTR ptr;
+  JCOEF temp, qval;
+
+  qtblptr = compptr->quant_table;
+  for (blk_y = 0; blk_y < compptr->height_in_blocks;
+       blk_y += compptr->v_samp_factor) {
+    buffer = (*cinfo->mem->access_virt_barray)
+      ((j_common_ptr) cinfo, coef_array, blk_y,
+       (JDIMENSION) compptr->v_samp_factor, TRUE);
+    for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
+      block = buffer[offset_y];
+      for (blk_x = 0; blk_x < compptr->width_in_blocks; blk_x++) {
+	ptr = block[blk_x];
+	for (k = 0; k < DCTSIZE2; k++) {
+	  temp = qtblptr->quantval[k];
+	  qval = qtblptr1->quantval[k];
+	  if (temp != qval) {
+	    temp *= ptr[k];
+	    /* The following quantization code is a copy from jcdctmgr.c */
+#ifdef FAST_DIVIDE
+#define DIVIDE_BY(a,b)	a /= b
+#else
+#define DIVIDE_BY(a,b)	if (a >= b) a /= b; else a = 0
+#endif
+	    if (temp < 0) {
+	      temp = -temp;
+	      temp += qval>>1;	/* for rounding */
+	      DIVIDE_BY(temp, qval);
+	      temp = -temp;
+	    } else {
+	      temp += qval>>1;	/* for rounding */
+	      DIVIDE_BY(temp, qval);
+	    }
+	    ptr[k] = temp;
+	  }
+	}
+      }
+    }
+  }
+}
+
+
+/* Calculate largest common denominator with Euclid's algorithm.
+ */
+LOCAL(JCOEF)
+largest_common_denominator(JCOEF a, JCOEF b)
+{
+  JCOEF c;
+
+  do {
+    c = a % b;
+    a = b;
+    b = c;
+  } while (c);
+
+  return a;
+}
+
+
+LOCAL(void)
+adjust_quant(j_decompress_ptr srcinfo, jvirt_barray_ptr *src_coef_arrays,
+	     j_decompress_ptr dropinfo, jvirt_barray_ptr *drop_coef_arrays,
+	     boolean trim, j_compress_ptr dstinfo)
+{
+  jpeg_component_info *compptr1, *compptr2;
+  JQUANT_TBL *qtblptr1, *qtblptr2, *qtblptr3;
+  int ci, k;
+
+  for (ci = 0; ci < dstinfo->num_components &&
+	       ci < dropinfo->num_components; ci++) {
+    compptr1 = srcinfo->comp_info + ci;
+    compptr2 = dropinfo->comp_info + ci;
+    qtblptr1 = compptr1->quant_table;
+    qtblptr2 = compptr2->quant_table;
+    for (k = 0; k < DCTSIZE2; k++) {
+      if (qtblptr1->quantval[k] != qtblptr2->quantval[k]) {
+	if (trim)
+	  requant_comp(dropinfo, compptr2, drop_coef_arrays[ci], qtblptr1);
+	else {
+	  qtblptr3 = dstinfo->quant_tbl_ptrs[compptr1->quant_tbl_no];
+	  for (k = 0; k < DCTSIZE2; k++)
+	    if (qtblptr1->quantval[k] != qtblptr2->quantval[k])
+	      qtblptr3->quantval[k] = largest_common_denominator
+		(qtblptr1->quantval[k], qtblptr2->quantval[k]);
+	  dequant_comp(srcinfo, compptr1, src_coef_arrays[ci], qtblptr3);
+	  dequant_comp(dropinfo, compptr2, drop_coef_arrays[ci], qtblptr3);
+	}
+	break;
+      }
+    }
+  }
+}
+
+
+LOCAL(void)
+do_drop (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
+	 JDIMENSION x_crop_offset, JDIMENSION y_crop_offset,
+	 jvirt_barray_ptr *src_coef_arrays,
+	 j_decompress_ptr dropinfo, jvirt_barray_ptr *drop_coef_arrays,
+	 JDIMENSION drop_width, JDIMENSION drop_height)
+/* Drop.  If the dropinfo component number is smaller than the destination's,
+ * we fill in the remaining components with zero.  This provides the feature
+ * of dropping grayscale into (arbitrarily sampled) color images.
+ */
+{
+  JDIMENSION comp_width, comp_height;
+  JDIMENSION blk_y, x_drop_blocks, y_drop_blocks;
+  int ci, offset_y;
+  JBLOCKARRAY src_buffer, dst_buffer;
+  jpeg_component_info *compptr;
+
+  for (ci = 0; ci < dstinfo->num_components; ci++) {
+    compptr = dstinfo->comp_info + ci;
+    comp_width = drop_width * compptr->h_samp_factor;
+    comp_height = drop_height * compptr->v_samp_factor;
+    x_drop_blocks = x_crop_offset * compptr->h_samp_factor;
+    y_drop_blocks = y_crop_offset * compptr->v_samp_factor;
+    for (blk_y = 0; blk_y < comp_height; blk_y += compptr->v_samp_factor) {
+      dst_buffer = (*srcinfo->mem->access_virt_barray)
+	((j_common_ptr) srcinfo, src_coef_arrays[ci], blk_y + y_drop_blocks,
+	 (JDIMENSION) compptr->v_samp_factor, TRUE);
+      if (ci < dropinfo->num_components) {
+#if DROP_REQUEST_FROM_SRC
+	src_buffer = (*srcinfo->mem->access_virt_barray)
+	  ((j_common_ptr) srcinfo, drop_coef_arrays[ci], blk_y,
+#else
+	src_buffer = (*dropinfo->mem->access_virt_barray)
+	  ((j_common_ptr) dropinfo, drop_coef_arrays[ci], blk_y,
+#endif
+	   (JDIMENSION) compptr->v_samp_factor, FALSE);
+	for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
+	  jcopy_block_row(src_buffer[offset_y],
+			  dst_buffer[offset_y] + x_drop_blocks,
+			  comp_width);
+	}
+      } else {
+	for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
+	  FMEMZERO(dst_buffer[offset_y] + x_drop_blocks,
+		   comp_width * SIZEOF(JBLOCK));
+	} 	
+      }
+    }
+  }
+}
+
+
 LOCAL(void)
 do_crop (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
 	 JDIMENSION x_crop_offset, JDIMENSION y_crop_offset,
@@ -114,10 +384,10 @@ do_crop (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
 
 
 LOCAL(void)
-do_crop_ext (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
-	     JDIMENSION x_crop_offset, JDIMENSION y_crop_offset,
-	     jvirt_barray_ptr *src_coef_arrays,
-	     jvirt_barray_ptr *dst_coef_arrays)
+do_crop_ext_zero (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
+		  JDIMENSION x_crop_offset, JDIMENSION y_crop_offset,
+		  jvirt_barray_ptr *src_coef_arrays,
+		  jvirt_barray_ptr *dst_coef_arrays)
 /* Crop.  This is only used when no rotate/flip is requested with the crop.
  * Extension: If the destination size is larger than the source, we fill in
  * the extra area with zero (neutral gray).  Note we also have to zero partial
@@ -148,7 +418,7 @@ do_crop_ext (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
 	 (JDIMENSION) compptr->v_samp_factor, TRUE);
       if (dstinfo->jpeg_height > srcinfo->output_height) {
 	if (dst_blk_y < y_crop_blocks ||
-	    dst_blk_y >= comp_height + y_crop_blocks) {
+	    dst_blk_y >= y_crop_blocks + comp_height) {
 	  for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
 	    FMEMZERO(dst_buffer[offset_y],
 		     compptr->width_in_blocks * SIZEOF(JBLOCK));
@@ -174,16 +444,200 @@ do_crop_ext (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
 	  jcopy_block_row(src_buffer[offset_y],
 			  dst_buffer[offset_y] + x_crop_blocks,
 			  comp_width);
-	  if (compptr->width_in_blocks > comp_width + x_crop_blocks) {
+	  if (compptr->width_in_blocks > x_crop_blocks + comp_width) {
 	    FMEMZERO(dst_buffer[offset_y] +
-		       comp_width + x_crop_blocks,
+		       x_crop_blocks + comp_width,
 		     (compptr->width_in_blocks -
-		       comp_width - x_crop_blocks) * SIZEOF(JBLOCK));
+		       x_crop_blocks - comp_width) * SIZEOF(JBLOCK));
 	  }
 	} else {
 	  jcopy_block_row(src_buffer[offset_y] + x_crop_blocks,
 			  dst_buffer[offset_y],
 			  compptr->width_in_blocks);
+	}
+      }
+    }
+  }
+}
+
+
+LOCAL(void)
+do_crop_ext_flat (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
+		  JDIMENSION x_crop_offset, JDIMENSION y_crop_offset,
+		  jvirt_barray_ptr *src_coef_arrays,
+		  jvirt_barray_ptr *dst_coef_arrays)
+/* Crop.  This is only used when no rotate/flip is requested with the crop.
+ * Extension: The destination width is larger than the source and we fill in
+ * the extra area with the DC of the adjacent block.  Note we also have to
+ * fill partial iMCUs at the right and bottom edge of the source image area
+ * in this case.
+ */
+{
+  JDIMENSION MCU_cols, MCU_rows, comp_width, comp_height;
+  JDIMENSION dst_blk_x, dst_blk_y, x_crop_blocks, y_crop_blocks;
+  int ci, offset_y;
+  JCOEF dc;
+  JBLOCKARRAY src_buffer, dst_buffer;
+  jpeg_component_info *compptr;
+
+  MCU_cols = srcinfo->output_width /
+    (dstinfo->max_h_samp_factor * dstinfo->min_DCT_h_scaled_size);
+  MCU_rows = srcinfo->output_height /
+    (dstinfo->max_v_samp_factor * dstinfo->min_DCT_v_scaled_size);
+
+  for (ci = 0; ci < dstinfo->num_components; ci++) {
+    compptr = dstinfo->comp_info + ci;
+    comp_width = MCU_cols * compptr->h_samp_factor;
+    comp_height = MCU_rows * compptr->v_samp_factor;
+    x_crop_blocks = x_crop_offset * compptr->h_samp_factor;
+    y_crop_blocks = y_crop_offset * compptr->v_samp_factor;
+    for (dst_blk_y = 0; dst_blk_y < compptr->height_in_blocks;
+	 dst_blk_y += compptr->v_samp_factor) {
+      dst_buffer = (*srcinfo->mem->access_virt_barray)
+	((j_common_ptr) srcinfo, dst_coef_arrays[ci], dst_blk_y,
+	 (JDIMENSION) compptr->v_samp_factor, TRUE);
+      if (dstinfo->jpeg_height > srcinfo->output_height) {
+	if (dst_blk_y < y_crop_blocks ||
+	    dst_blk_y >= y_crop_blocks + comp_height) {
+	  for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
+	    FMEMZERO(dst_buffer[offset_y],
+		     compptr->width_in_blocks * SIZEOF(JBLOCK));
+	  }
+	  continue;
+	}
+	src_buffer = (*srcinfo->mem->access_virt_barray)
+	  ((j_common_ptr) srcinfo, src_coef_arrays[ci],
+	   dst_blk_y - y_crop_blocks,
+	   (JDIMENSION) compptr->v_samp_factor, FALSE);
+      } else {
+	src_buffer = (*srcinfo->mem->access_virt_barray)
+	  ((j_common_ptr) srcinfo, src_coef_arrays[ci],
+	   dst_blk_y + y_crop_blocks,
+	   (JDIMENSION) compptr->v_samp_factor, FALSE);
+      }
+      for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
+	if (x_crop_blocks > 0) {
+	  FMEMZERO(dst_buffer[offset_y],
+		   x_crop_blocks * SIZEOF(JBLOCK));
+	  dc = src_buffer[offset_y][0][0];
+	  for (dst_blk_x = 0; dst_blk_x < x_crop_blocks; dst_blk_x++) {
+	    dst_buffer[offset_y][dst_blk_x][0] = dc;
+	  }
+	}
+	jcopy_block_row(src_buffer[offset_y],
+			dst_buffer[offset_y] + x_crop_blocks,
+			comp_width);
+	if (compptr->width_in_blocks > x_crop_blocks + comp_width) {
+	  FMEMZERO(dst_buffer[offset_y] +
+		     x_crop_blocks + comp_width,
+		   (compptr->width_in_blocks -
+		     x_crop_blocks - comp_width) * SIZEOF(JBLOCK));
+	  dc = src_buffer[offset_y][comp_width - 1][0];
+	  for (dst_blk_x = x_crop_blocks + comp_width;
+	       dst_blk_x < compptr->width_in_blocks; dst_blk_x++) {
+	    dst_buffer[offset_y][dst_blk_x][0] = dc;
+	  }
+	}
+      }
+    }
+  }
+}
+
+
+LOCAL(void)
+do_crop_ext_reflect (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
+		     JDIMENSION x_crop_offset, JDIMENSION y_crop_offset,
+		     jvirt_barray_ptr *src_coef_arrays,
+		     jvirt_barray_ptr *dst_coef_arrays)
+/* Crop.  This is only used when no rotate/flip is requested with the crop.
+ * Extension: The destination width is larger than the source and we fill in
+ * the extra area with repeated reflections of the source region.  Note we
+ * also have to fill partial iMCUs at the right and bottom edge of the source
+ * image area in this case.
+ */
+{
+  JDIMENSION MCU_cols, MCU_rows, comp_width, comp_height, src_blk_x;
+  JDIMENSION dst_blk_x, dst_blk_y, x_crop_blocks, y_crop_blocks;
+  int ci, k, offset_y;
+  JBLOCKARRAY src_buffer, dst_buffer;
+  JBLOCKROW src_row_ptr, dst_row_ptr;
+  JCOEFPTR src_ptr, dst_ptr;
+  jpeg_component_info *compptr;
+
+  MCU_cols = srcinfo->output_width /
+    (dstinfo->max_h_samp_factor * dstinfo->min_DCT_h_scaled_size);
+  MCU_rows = srcinfo->output_height /
+    (dstinfo->max_v_samp_factor * dstinfo->min_DCT_v_scaled_size);
+
+  for (ci = 0; ci < dstinfo->num_components; ci++) {
+    compptr = dstinfo->comp_info + ci;
+    comp_width = MCU_cols * compptr->h_samp_factor;
+    comp_height = MCU_rows * compptr->v_samp_factor;
+    x_crop_blocks = x_crop_offset * compptr->h_samp_factor;
+    y_crop_blocks = y_crop_offset * compptr->v_samp_factor;
+    for (dst_blk_y = 0; dst_blk_y < compptr->height_in_blocks;
+	 dst_blk_y += compptr->v_samp_factor) {
+      dst_buffer = (*srcinfo->mem->access_virt_barray)
+	((j_common_ptr) srcinfo, dst_coef_arrays[ci], dst_blk_y,
+	 (JDIMENSION) compptr->v_samp_factor, TRUE);
+      if (dstinfo->jpeg_height > srcinfo->output_height) {
+	if (dst_blk_y < y_crop_blocks ||
+	    dst_blk_y >= y_crop_blocks + comp_height) {
+	  for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
+	    FMEMZERO(dst_buffer[offset_y],
+		     compptr->width_in_blocks * SIZEOF(JBLOCK));
+	  }
+	  continue;
+	}
+	src_buffer = (*srcinfo->mem->access_virt_barray)
+	  ((j_common_ptr) srcinfo, src_coef_arrays[ci],
+	   dst_blk_y - y_crop_blocks,
+	   (JDIMENSION) compptr->v_samp_factor, FALSE);
+      } else {
+	src_buffer = (*srcinfo->mem->access_virt_barray)
+	  ((j_common_ptr) srcinfo, src_coef_arrays[ci],
+	   dst_blk_y + y_crop_blocks,
+	   (JDIMENSION) compptr->v_samp_factor, FALSE);
+      }
+      for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
+	/* Copy source region */
+	jcopy_block_row(src_buffer[offset_y],
+			dst_buffer[offset_y] + x_crop_blocks,
+			comp_width);
+	if (x_crop_blocks > 0) {
+	  /* Reflect to left */
+	  dst_row_ptr = dst_buffer[offset_y] + x_crop_blocks;
+	  for (dst_blk_x = x_crop_blocks; dst_blk_x > 0;) {
+	    src_row_ptr = dst_row_ptr;	   /* (re)set axis of reflection */
+	    for (src_blk_x = comp_width; src_blk_x > 0 && dst_blk_x > 0;
+		 src_blk_x--, dst_blk_x--) {
+	      dst_ptr = *--dst_row_ptr;	   /* destination goes left */
+	      src_ptr = *src_row_ptr++;	   /* source goes right */
+	      /* this unrolled loop doesn't need to know which row it's on... */
+	      for (k = 0; k < DCTSIZE2; k += 2) {
+		*dst_ptr++ = *src_ptr++;   /* copy even column */
+		*dst_ptr++ = - *src_ptr++; /* copy odd column with sign change */
+	      }
+	    }
+	  }
+	}
+	if (compptr->width_in_blocks > x_crop_blocks + comp_width) {
+	  /* Reflect to right */
+	  dst_row_ptr = dst_buffer[offset_y] + x_crop_blocks + comp_width;
+	  for (dst_blk_x = compptr->width_in_blocks - x_crop_blocks - comp_width;
+	       dst_blk_x > 0;) {
+	    src_row_ptr = dst_row_ptr;	   /* (re)set axis of reflection */
+	    for (src_blk_x = comp_width; src_blk_x > 0 && dst_blk_x > 0;
+		 src_blk_x--, dst_blk_x--) {
+	      dst_ptr = *dst_row_ptr++;	   /* destination goes right */
+	      src_ptr = *--src_row_ptr;	   /* source goes left */
+	      /* this unrolled loop doesn't need to know which row it's on... */
+	      for (k = 0; k < DCTSIZE2; k += 2) {
+		*dst_ptr++ = *src_ptr++;   /* copy even column */
+		*dst_ptr++ = - *src_ptr++; /* copy odd column with sign change */
+	      }
+	    }
+	  }
 	}
       }
     }
@@ -267,6 +721,78 @@ do_flatten (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
 	} else continue;
 	for (blk_x = x_wipe_blocks; blk_x < wipe_right; blk_x++) {
 	  buffer[offset_y][blk_x][0] = (JCOEF) average;
+	}
+      }
+    }
+  }
+}
+
+
+LOCAL(void)
+do_reflect (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
+	    JDIMENSION x_crop_offset,
+	    jvirt_barray_ptr *src_coef_arrays,
+	    JDIMENSION drop_width, JDIMENSION drop_height)
+/* Reflect - drop content of specified area, similar to wipe, but
+ * fill with repeated reflections of the outside area, instead of zero.
+ * NB: y_crop_offset is assumed to be zero.
+ */
+{
+  JDIMENSION x_wipe_blocks, wipe_width;
+  JDIMENSION y_wipe_blocks, wipe_bottom;
+  JDIMENSION src_blk_x, dst_blk_x;
+  int ci, k, offset_y;
+  JBLOCKARRAY buffer;
+  JBLOCKROW src_row_ptr, dst_row_ptr;
+  JCOEFPTR src_ptr, dst_ptr;
+  jpeg_component_info *compptr;
+
+  for (ci = 0; ci < dstinfo->num_components; ci++) {
+    compptr = dstinfo->comp_info + ci;
+    x_wipe_blocks = x_crop_offset * compptr->h_samp_factor;
+    wipe_width = drop_width * compptr->h_samp_factor;
+    wipe_bottom = drop_height * compptr->v_samp_factor;
+    for (y_wipe_blocks = 0; y_wipe_blocks < wipe_bottom;
+	 y_wipe_blocks += compptr->v_samp_factor) {
+      buffer = (*srcinfo->mem->access_virt_barray)
+	((j_common_ptr) srcinfo, src_coef_arrays[ci], y_wipe_blocks,
+	 (JDIMENSION) compptr->v_samp_factor, TRUE);
+      for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
+	if (x_wipe_blocks > 0) {
+	  /* Reflect from left */
+	  dst_row_ptr = buffer[offset_y] + x_wipe_blocks;
+	  for (dst_blk_x = wipe_width; dst_blk_x > 0;) {
+	    src_row_ptr = dst_row_ptr;	   /* (re)set axis of reflection */
+	    for (src_blk_x = x_wipe_blocks;
+		 src_blk_x > 0 && dst_blk_x > 0; src_blk_x--, dst_blk_x--) {
+	      dst_ptr = *dst_row_ptr++;	   /* destination goes right */
+	      src_ptr = *--src_row_ptr;	   /* source goes left */
+	      /* this unrolled loop doesn't need to know which row it's on... */
+	      for (k = 0; k < DCTSIZE2; k += 2) {
+		*dst_ptr++ = *src_ptr++;   /* copy even column */
+		*dst_ptr++ = - *src_ptr++; /* copy odd column with sign change */
+	      }
+	    }
+	  }
+	} else if (compptr->width_in_blocks > x_wipe_blocks + wipe_width) {
+	  /* Reflect from right */
+	  dst_row_ptr = buffer[offset_y] + x_wipe_blocks + wipe_width;
+	  for (dst_blk_x = wipe_width; dst_blk_x > 0;) {
+	    src_row_ptr = dst_row_ptr;	   /* (re)set axis of reflection */
+	    src_blk_x = compptr->width_in_blocks - x_wipe_blocks - wipe_width;
+	    for (; src_blk_x > 0 && dst_blk_x > 0; src_blk_x--, dst_blk_x--) {
+	      dst_ptr = *--dst_row_ptr;	   /* destination goes left */
+	      src_ptr = *src_row_ptr++;	   /* source goes right */
+	      /* this unrolled loop doesn't need to know which row it's on... */
+	      for (k = 0; k < DCTSIZE2; k += 2) {
+		*dst_ptr++ = *src_ptr++;   /* copy even column */
+		*dst_ptr++ = - *src_ptr++; /* copy odd column with sign change */
+	      }
+	    }
+	  }
+	} else {
+	  FMEMZERO(buffer[offset_y] + x_wipe_blocks,
+		   wipe_width * SIZEOF(JBLOCK));
 	}
       }
     }
@@ -932,7 +1458,7 @@ jt_read_integer (const char ** strptr, JDIMENSION * result)
  * The routine returns TRUE if the spec string is valid, FALSE if not.
  *
  * The crop spec string should have the format
- *	<width>[f]x<height>[f]{+-}<xoffset>{+-}<yoffset>
+ *	<width>[{fr}]x<height>[{fr}]{+-}<xoffset>{+-}<yoffset>
  * where width, height, xoffset, and yoffset are unsigned integers.
  * Each of the elements can be omitted to indicate a default value.
  * (A weakness of this style is that it is not possible to omit xoffset
@@ -957,6 +1483,9 @@ jtransform_parse_crop_spec (jpeg_transform_info *info, const char *spec)
     if (*spec == 'f' || *spec == 'F') {
       spec++;
       info->crop_width_set = JCROP_FORCE;
+    } else if (*spec == 'r' || *spec == 'R') {
+      spec++;
+      info->crop_width_set = JCROP_REFLECT;
     } else
       info->crop_width_set = JCROP_POS;
   }
@@ -968,6 +1497,9 @@ jtransform_parse_crop_spec (jpeg_transform_info *info, const char *spec)
     if (*spec == 'f' || *spec == 'F') {
       spec++;
       info->crop_height_set = JCROP_FORCE;
+    } else if (*spec == 'r' || *spec == 'R') {
+      spec++;
+      info->crop_height_set = JCROP_REFLECT;
     } else
       info->crop_height_set = JCROP_POS;
   }
@@ -1042,10 +1574,10 @@ jtransform_request_workspace (j_decompress_ptr srcinfo,
   jvirt_barray_ptr *coef_arrays;
   boolean need_workspace, transpose_it;
   jpeg_component_info *compptr;
-  JDIMENSION xoffset, yoffset;
+  JDIMENSION xoffset, yoffset, dtemp;
   JDIMENSION width_in_iMCUs, height_in_iMCUs;
   JDIMENSION width_in_blocks, height_in_blocks;
-  int ci, h_samp_factor, v_samp_factor;
+  int itemp, ci, h_samp_factor, v_samp_factor;
 
   /* Determine number of components in output image */
   if (info->force_grayscale &&
@@ -1115,7 +1647,6 @@ jtransform_request_workspace (j_decompress_ptr srcinfo,
       info->iMCU_sample_height =
 	srcinfo->max_v_samp_factor * srcinfo->min_DCT_v_scaled_size;
     }
-    break;
   }
 
   /* If cropping has been requested, compute the crop area's position and
@@ -1179,7 +1710,54 @@ jtransform_request_workspace (j_decompress_ptr srcinfo,
     else
       yoffset = info->output_height - info->crop_height - info->crop_yoffset;
     /* Now adjust so that upper left corner falls at an iMCU boundary */
-    if (info->transform == JXFORM_WIPE) {
+    switch (info->transform) {
+    case JXFORM_DROP:
+      /* Ensure the effective drop region will not exceed the requested */
+      itemp = info->iMCU_sample_width;
+      dtemp = itemp - 1 - ((xoffset + itemp - 1) % itemp);
+      xoffset += dtemp;
+      if (info->crop_width <= dtemp)
+	info->drop_width = 0;
+      else if (xoffset + info->crop_width - dtemp == info->output_width)
+	/* Matching right edge: include partial iMCU */
+	info->drop_width = (info->crop_width - dtemp + itemp - 1) / itemp;
+      else
+	info->drop_width = (info->crop_width - dtemp) / itemp;
+      itemp = info->iMCU_sample_height;
+      dtemp = itemp - 1 - ((yoffset + itemp - 1) % itemp);
+      yoffset += dtemp;
+      if (info->crop_height <= dtemp)
+	info->drop_height = 0;
+      else if (yoffset + info->crop_height - dtemp == info->output_height)
+	/* Matching bottom edge: include partial iMCU */
+	info->drop_height = (info->crop_height - dtemp + itemp - 1) / itemp;
+      else
+	info->drop_height = (info->crop_height - dtemp) / itemp;
+      /* Check if sampling factors match for dropping */
+      if (info->drop_width != 0 && info->drop_height != 0)
+	for (ci = 0; ci < info->num_components &&
+		     ci < info->drop_ptr->num_components; ci++) {
+	  if (info->drop_ptr->comp_info[ci].h_samp_factor *
+	      srcinfo->max_h_samp_factor !=
+	      srcinfo->comp_info[ci].h_samp_factor *
+	      info->drop_ptr->max_h_samp_factor)
+	    ERREXIT6(srcinfo, JERR_BAD_DROP_SAMPLING, ci,
+	      info->drop_ptr->comp_info[ci].h_samp_factor,
+	      info->drop_ptr->max_h_samp_factor,
+	      srcinfo->comp_info[ci].h_samp_factor,
+	      srcinfo->max_h_samp_factor, 'h');
+	  if (info->drop_ptr->comp_info[ci].v_samp_factor *
+	      srcinfo->max_v_samp_factor !=
+	      srcinfo->comp_info[ci].v_samp_factor *
+	      info->drop_ptr->max_v_samp_factor)
+	    ERREXIT6(srcinfo, JERR_BAD_DROP_SAMPLING, ci,
+	      info->drop_ptr->comp_info[ci].v_samp_factor,
+	      info->drop_ptr->max_v_samp_factor,
+	      srcinfo->comp_info[ci].v_samp_factor,
+	      srcinfo->max_v_samp_factor, 'v');
+	}
+      break;
+    case JXFORM_WIPE:
       /* Ensure the effective wipe region will cover the requested */
       info->drop_width = (JDIMENSION) jdiv_round_up
 	((long) (info->crop_width + (xoffset % info->iMCU_sample_width)),
@@ -1187,7 +1765,8 @@ jtransform_request_workspace (j_decompress_ptr srcinfo,
       info->drop_height = (JDIMENSION) jdiv_round_up
 	((long) (info->crop_height + (yoffset % info->iMCU_sample_height)),
 	 (long) info->iMCU_sample_height);
-    } else {
+      break;
+    default:
       /* Ensure the effective crop region will cover the requested */
       if (info->crop_width_set == JCROP_FORCE ||
 	  info->crop_width > info->output_width)
@@ -1275,6 +1854,11 @@ jtransform_request_workspace (j_decompress_ptr srcinfo,
     break;
   case JXFORM_WIPE:
     break;
+  case JXFORM_DROP:
+#if DROP_REQUEST_FROM_SRC
+    drop_request_from_src(info->drop_ptr, srcinfo);
+#endif
+    break;
   }
 
   /* Allocate workspace if needed.
@@ -1282,15 +1866,13 @@ jtransform_request_workspace (j_decompress_ptr srcinfo,
    * so that transform routines need not worry about missing edge blocks.
    */
   if (need_workspace) {
-    coef_arrays = (jvirt_barray_ptr *)
-      (*srcinfo->mem->alloc_small) ((j_common_ptr) srcinfo, JPOOL_IMAGE,
-	SIZEOF(jvirt_barray_ptr) * info->num_components);
-    width_in_iMCUs = (JDIMENSION)
-      jdiv_round_up((long) info->output_width,
-		    (long) info->iMCU_sample_width);
-    height_in_iMCUs = (JDIMENSION)
-      jdiv_round_up((long) info->output_height,
-		    (long) info->iMCU_sample_height);
+    coef_arrays = (jvirt_barray_ptr *) (*srcinfo->mem->alloc_small)
+      ((j_common_ptr) srcinfo, JPOOL_IMAGE,
+       SIZEOF(jvirt_barray_ptr) * info->num_components);
+    width_in_iMCUs = (JDIMENSION) jdiv_round_up
+      ((long) info->output_width, (long) info->iMCU_sample_width);
+    height_in_iMCUs = (JDIMENSION) jdiv_round_up
+      ((long) info->output_height, (long) info->iMCU_sample_height);
     for (ci = 0; ci < info->num_components; ci++) {
       compptr = srcinfo->comp_info + ci;
       if (info->num_components == 1) {
@@ -1574,13 +2156,19 @@ jtransform_adjust_parameters (j_decompress_ptr srcinfo,
   dstinfo->jpeg_width = info->output_width;
   dstinfo->jpeg_height = info->output_height;
 
-  /* Transpose destination image parameters */
+  /* Transpose destination image parameters, adjust quantization */
   switch (info->transform) {
   case JXFORM_TRANSPOSE:
   case JXFORM_TRANSVERSE:
   case JXFORM_ROT_90:
   case JXFORM_ROT_270:
     transpose_critical_parameters(dstinfo);
+    break;
+  case JXFORM_DROP:
+    if (info->drop_width != 0 && info->drop_height != 0)
+      adjust_quant(srcinfo, src_coef_arrays,
+		   info->drop_ptr, info->drop_coef_arrays,
+		   info->trim, dstinfo);
     break;
   default:
     break;
@@ -1637,10 +2225,22 @@ jtransform_execute_transform (j_decompress_ptr srcinfo,
   switch (info->transform) {
   case JXFORM_NONE:
     if (info->output_width > srcinfo->output_width ||
-	info->output_height > srcinfo->output_height)
-      do_crop_ext(srcinfo, dstinfo, info->x_crop_offset, info->y_crop_offset,
-		  src_coef_arrays, dst_coef_arrays);
-    else if (info->x_crop_offset != 0 || info->y_crop_offset != 0)
+	info->output_height > srcinfo->output_height) {
+      if (info->output_width > srcinfo->output_width &&
+	  info->crop_width_set == JCROP_REFLECT)
+	do_crop_ext_reflect(srcinfo, dstinfo,
+			    info->x_crop_offset, info->y_crop_offset,
+			    src_coef_arrays, dst_coef_arrays);
+      else if (info->output_width > srcinfo->output_width &&
+	       info->crop_width_set == JCROP_FORCE)
+	do_crop_ext_flat(srcinfo, dstinfo,
+			 info->x_crop_offset, info->y_crop_offset,
+			 src_coef_arrays, dst_coef_arrays);
+      else
+	do_crop_ext_zero(srcinfo, dstinfo,
+			 info->x_crop_offset, info->y_crop_offset,
+			 src_coef_arrays, dst_coef_arrays);
+    } else if (info->x_crop_offset != 0 || info->y_crop_offset != 0)
       do_crop(srcinfo, dstinfo, info->x_crop_offset, info->y_crop_offset,
 	      src_coef_arrays, dst_coef_arrays);
     break;
@@ -1677,12 +2277,28 @@ jtransform_execute_transform (j_decompress_ptr srcinfo,
 	       src_coef_arrays, dst_coef_arrays);
     break;
   case JXFORM_WIPE:
-    if (info->crop_width_set != JCROP_FORCE)
-      do_wipe(srcinfo, dstinfo, info->x_crop_offset, info->y_crop_offset,
-	      src_coef_arrays, info->drop_width, info->drop_height);
-    else
+    if (info->crop_width_set == JCROP_REFLECT &&
+	info->y_crop_offset == 0 && info->drop_height ==
+	(JDIMENSION) jdiv_round_up
+	  ((long) info->output_height, (long) info->iMCU_sample_height) &&
+	(info->x_crop_offset == 0 ||
+	 info->x_crop_offset + info->drop_width ==
+	 (JDIMENSION) jdiv_round_up
+	   ((long) info->output_width, (long) info->iMCU_sample_width)))
+      do_reflect(srcinfo, dstinfo, info->x_crop_offset,
+		 src_coef_arrays, info->drop_width, info->drop_height);
+    else if (info->crop_width_set == JCROP_FORCE)
       do_flatten(srcinfo, dstinfo, info->x_crop_offset, info->y_crop_offset,
 		 src_coef_arrays, info->drop_width, info->drop_height);
+    else
+      do_wipe(srcinfo, dstinfo, info->x_crop_offset, info->y_crop_offset,
+	      src_coef_arrays, info->drop_width, info->drop_height);
+    break;
+  case JXFORM_DROP:
+    if (info->drop_width != 0 && info->drop_height != 0)
+      do_drop(srcinfo, dstinfo, info->x_crop_offset, info->y_crop_offset,
+	      src_coef_arrays, info->drop_ptr, info->drop_coef_arrays,
+	      info->drop_width, info->drop_height);
     break;
   }
 }

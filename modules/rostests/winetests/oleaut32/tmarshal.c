@@ -410,7 +410,8 @@ static inline struct disp_obj *impl_from_ISomethingFromDispatch(ISomethingFromDi
 static HRESULT WINAPI disp_obj_QueryInterface(ISomethingFromDispatch *iface, REFIID iid, void **out)
 {
     if (IsEqualGUID(iid, &IID_IUnknown) || IsEqualGUID(iid, &IID_IDispatch)
-            || IsEqualGUID(iid, &IID_ISomethingFromDispatch))
+            || IsEqualGUID(iid, &IID_ISomethingFromDispatch)
+            || IsEqualGUID(iid, &DIID_ItestIF4))
     {
         *out = iface;
         ISomethingFromDispatch_AddRef(iface);
@@ -1440,6 +1441,28 @@ static HRESULT WINAPI Widget_rect(IWidget *iface, RECT in, RECT *out, RECT *in_p
     return S_OK;
 }
 
+static HRESULT WINAPI Widget_complex_struct(IWidget *iface, struct complex in)
+{
+    HRESULT hr;
+
+    ok(in.c == 98, "Got char %d.\n", in.c);
+    ok(in.i == 76543, "Got int %d.\n", in.i);
+    ok(*in.pi == 2, "Got int pointer %d.\n", *in.pi);
+    ok(**in.ppi == 10, "Got int double pointer %d.\n", **in.ppi);
+    hr = ISomethingFromDispatch_anotherfn(in.iface);
+    ok(hr == 0x01234567, "Got wrong hr %#x.\n", hr);
+    hr = ISomethingFromDispatch_anotherfn(*in.iface_ptr);
+    ok(hr == 0x01234567, "Got wrong hr %#x.\n", hr);
+    ok(!lstrcmpW(in.bstr, test_bstr2), "Got string %s.\n", wine_dbgstr_w(in.bstr));
+    ok(V_VT(&in.var) == VT_I4, "Got wrong type %u.\n", V_VT(&in.var));
+    ok(V_I4(&in.var) == 123, "Got wrong value %d.\n", V_I4(&in.var));
+    ok(!memcmp(&in.mystruct, &test_mystruct1, sizeof(MYSTRUCT)), "Structs didn't match.\n");
+    ok(!memcmp(in.arr, test_array1, sizeof(array_t)), "Arrays didn't match.\n");
+    ok(in.myint == 456, "Got int %d.\n", in.myint);
+
+    return S_OK;
+}
+
 static HRESULT WINAPI Widget_array(IWidget *iface, array_t in, array_t out, array_t in_out)
 {
     static const array_t empty = {0};
@@ -1458,21 +1481,21 @@ static HRESULT WINAPI Widget_variant_array(IWidget *iface, VARIANT in[2], VARIAN
 {
     ok(V_VT(&in[0]) == VT_I4, "Got wrong type %u.\n", V_VT(&in[0]));
     ok(V_I4(&in[0]) == 1, "Got wrong value %d.\n", V_I4(&in[0]));
-    ok(V_VT(&in[1]) == VT_I4, "Got wrong type %u.\n", V_VT(&in[1]));
-    ok(V_I4(&in[1]) == 2, "Got wrong value %d.\n", V_I4(&in[1]));
+    ok(V_VT(&in[1]) == (VT_BYREF|VT_I4), "Got wrong type %u.\n", V_VT(&in[1]));
+    ok(*V_I4REF(&in[1]) == 2, "Got wrong value %d.\n", *V_I4REF(&in[1]));
     ok(V_VT(&out[0]) == VT_EMPTY, "Got wrong type %u.\n", V_VT(&out[0]));
     ok(V_VT(&out[1]) == VT_EMPTY, "Got wrong type %u.\n", V_VT(&out[1]));
     ok(V_VT(&in_out[0]) == VT_I4, "Got wrong type %u.\n", V_VT(&in_out[0]));
     ok(V_I4(&in_out[0]) == 5, "Got wrong type %u.\n", V_VT(&in_out[0]));
-    ok(V_VT(&in_out[1]) == VT_I4, "Got wrong type %u.\n", V_VT(&in_out[1]));
-    ok(V_I4(&in_out[1]) == 6, "Got wrong type %u.\n", V_VT(&in_out[1]));
+    ok(V_VT(&in_out[1]) == VT_BSTR, "Got wrong type %u.\n", V_VT(&in_out[1]));
+    ok(!lstrcmpW(V_BSTR(&in_out[1]), test_bstr1), "Got wrong value %s.\n", wine_dbgstr_w(V_BSTR(&in[1])));
 
-    V_VT(&in[0]) = VT_I1;     V_I1(&in[0])     = 7;
-    V_VT(&in[1]) = VT_I1;     V_I1(&in[1])     = 8;
-    V_VT(&out[0]) = VT_I1;    V_I1(&out[0])    = 9;
-    V_VT(&out[1]) = VT_I1;    V_I1(&out[1])    = 10;
-    V_VT(&in_out[0]) = VT_I1; V_I1(&in_out[0]) = 11;
-    V_VT(&in_out[1]) = VT_I1; V_I1(&in_out[1]) = 12;
+    V_VT(&in[0]) = VT_I1;          V_I1(&in[0])          = 7;
+    V_VT(&in[1]) = VT_I1;          V_I1(&in[1])          = 8;
+    V_VT(&out[0]) = VT_I1;         V_I1(&out[0])         = 9;
+    V_VT(&out[1]) = VT_BSTR;       V_BSTR(&out[1])       = SysAllocString(test_bstr2);
+    V_VT(&in_out[0]) = VT_I1;      V_I1(&in_out[0])      = 11;
+    V_VT(&in_out[1]) = VT_UNKNOWN; V_UNKNOWN(&in_out[1]) = (IUnknown *)create_disp_obj();
 
     return S_OK;
 }
@@ -1599,6 +1622,7 @@ static const struct IWidgetVtbl Widget_VTable =
     Widget_mystruct_ptr_ptr,
     Widget_thin_struct,
     Widget_rect,
+    Widget_complex_struct,
     Widget_array,
     Widget_variant_array,
     Widget_mystruct_array,
@@ -2499,6 +2523,9 @@ static void test_marshal_struct(IWidget *widget, IDispatch *disp)
 {
     MYSTRUCT out, in_ptr, in_out, *in_ptr_ptr;
     RECT rect_out, rect_in_ptr, rect_in_out;
+    ISomethingFromDispatch *sfd;
+    struct complex complex;
+    int i, i2, *pi = &i2;
     HRESULT hr;
 
     memcpy(&out, &test_mystruct2, sizeof(MYSTRUCT));
@@ -2530,14 +2557,35 @@ static void test_marshal_struct(IWidget *widget, IDispatch *disp)
     ok(EqualRect(&rect_out, &test_rect5), "Rects didn't match.\n");
     ok(EqualRect(&rect_in_ptr, &test_rect3), "Rects didn't match.\n");
     ok(EqualRect(&rect_in_out, &test_rect7), "Rects didn't match.\n");
+
+    /* Test complex structs. */
+    complex.c = 98;
+    complex.i = 76543;
+    i = 2;
+    complex.pi = &i;
+    i2 = 10;
+    complex.ppi = &pi;
+    complex.iface = create_disp_obj();
+    sfd = create_disp_obj();
+    complex.iface_ptr = &sfd;
+    complex.bstr = SysAllocString(test_bstr2);
+    V_VT(&complex.var) = VT_I4;
+    V_I4(&complex.var) = 123;
+    memcpy(&complex.mystruct, &test_mystruct1, sizeof(MYSTRUCT));
+    memcpy(complex.arr, test_array1, sizeof(array_t));
+    complex.myint = 456;
+    hr = IWidget_complex_struct(widget, complex);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
 }
 
 static void test_marshal_array(IWidget *widget, IDispatch *disp)
 {
     VARIANT var_in[2], var_out[2], var_in_out[2];
+    ISomethingFromDispatch *proxy_sfd;
     array_t in, out, in_out;
     MYSTRUCT struct_in[2];
     HRESULT hr;
+    int i = 2;
 
     memcpy(in, test_array1, sizeof(array_t));
     memcpy(out, test_array2, sizeof(array_t));
@@ -2548,26 +2596,32 @@ static void test_marshal_array(IWidget *widget, IDispatch *disp)
     ok(!memcmp(&out, &test_array5, sizeof(array_t)), "Arrays didn't match.\n");
     ok(!memcmp(&in_out, &test_array6, sizeof(array_t)), "Arrays didn't match.\n");
 
-    V_VT(&var_in[0]) = VT_I4;     V_I4(&var_in[0])     = 1;
-    V_VT(&var_in[1]) = VT_I4;     V_I4(&var_in[1])     = 2;
-    V_VT(&var_out[0]) = VT_I4;    V_I4(&var_out[0])    = 3;
-    V_VT(&var_out[1]) = VT_I4;    V_I4(&var_out[1])    = 4;
-    V_VT(&var_in_out[0]) = VT_I4; V_I4(&var_in_out[0]) = 5;
-    V_VT(&var_in_out[1]) = VT_I4; V_I4(&var_in_out[1]) = 6;
+    V_VT(&var_in[0]) = VT_I4;          V_I4(&var_in[0])       = 1;
+    V_VT(&var_in[1]) = VT_BYREF|VT_I4; V_I4REF(&var_in[1])    = &i;
+    V_VT(&var_out[0]) = VT_I4;         V_I4(&var_out[0])      = 3;
+    V_VT(&var_out[1]) = VT_I4;         V_I4(&var_out[1])      = 4;
+    V_VT(&var_in_out[0]) = VT_I4;      V_I4(&var_in_out[0])   = 5;
+    V_VT(&var_in_out[1]) = VT_BSTR;    V_BSTR(&var_in_out[1]) = SysAllocString(test_bstr1);
     hr = IWidget_variant_array(widget, var_in, var_out, var_in_out);
     ok(hr == S_OK, "Got hr %#x.\n", hr);
     ok(V_VT(&var_in[0]) == VT_I4, "Got wrong type %u.\n", V_VT(&var_in[0]));
     ok(V_I4(&var_in[0]) == 1, "Got wrong value %d.\n", V_I4(&var_in[0]));
-    ok(V_VT(&var_in[1]) == VT_I4, "Got wrong type %u.\n", V_VT(&var_in[1]));
-    ok(V_I4(&var_in[1]) == 2, "Got wrong value %d.\n", V_I4(&var_in[1]));
+    ok(V_VT(&var_in[1]) == (VT_BYREF|VT_I4), "Got wrong type %u.\n", V_VT(&var_in[1]));
+    ok(V_I4REF(&var_in[1]) == &i, "Got wrong value %p.\n", V_I4REF(&var_in[1]));
+    ok(i == 2, "Got wrong value %d.\n", i);
     ok(V_VT(&var_out[0]) == VT_I1, "Got wrong type %u.\n", V_VT(&var_out[0]));
     ok(V_I1(&var_out[0]) == 9, "Got wrong value %u.\n", V_VT(&var_out[0]));
-    ok(V_VT(&var_out[1]) == VT_I1, "Got wrong type %u.\n", V_VT(&var_out[1]));
-    ok(V_I1(&var_out[1]) == 10, "Got wrong value %u.\n", V_VT(&var_out[1]));
+    ok(V_VT(&var_out[1]) == VT_BSTR, "Got wrong type %u.\n", V_VT(&var_out[1]));
+    ok(!lstrcmpW(V_BSTR(&var_out[1]), test_bstr2), "Got wrong value %s.\n", wine_dbgstr_w(V_BSTR(&var_out[1])));
     ok(V_VT(&var_in_out[0]) == VT_I1, "Got wrong type %u.\n", V_VT(&var_in_out[0]));
     ok(V_I1(&var_in_out[0]) == 11, "Got wrong value %u.\n", V_VT(&var_in_out[0]));
-    ok(V_VT(&var_in_out[1]) == VT_I1, "Got wrong type %u.\n", V_VT(&var_in_out[1]));
-    ok(V_I1(&var_in_out[1]) == 12, "Got wrong value %u.\n", V_VT(&var_in_out[1]));
+    ok(V_VT(&var_in_out[1]) == VT_UNKNOWN, "Got wrong type %u.\n", V_VT(&var_in_out[1]));
+    hr = IUnknown_QueryInterface(V_UNKNOWN(&var_in_out[1]), &IID_ISomethingFromDispatch, (void **)&proxy_sfd);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+    hr = ISomethingFromDispatch_anotherfn(proxy_sfd);
+    ok(hr == 0x01234567, "Got hr %#x.\n", hr);
+    ISomethingFromDispatch_Release(proxy_sfd);
+    release_iface(V_UNKNOWN(&var_in_out[1]));
 
     memcpy(&struct_in[0], &test_mystruct1, sizeof(MYSTRUCT));
     memcpy(&struct_in[1], &test_mystruct2, sizeof(MYSTRUCT));
@@ -3592,6 +3646,37 @@ static void test_external_connection(void)
     IStream_Release(stream);
 }
 
+static void test_marshal_dispinterface(void)
+{
+    static const LARGE_INTEGER zero;
+
+    ISomethingFromDispatch *disp_obj = create_disp_obj();
+    ITypeInfo *typeinfo = NULL;
+    IDispatch *proxy_disp;
+    IStream *stream;
+    HANDLE thread;
+    HRESULT hr;
+    ULONG ref;
+    DWORD tid;
+
+    CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    tid = start_host_object(stream, &DIID_ItestIF4, (IUnknown *)disp_obj, MSHLFLAGS_NORMAL, &thread);
+    IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
+    hr = CoUnmarshalInterface(stream, &DIID_ItestIF4, (void **)&proxy_disp);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+
+    hr = IDispatch_GetTypeInfo(proxy_disp, 0xdeadbeef, 0, &typeinfo);
+    ok(hr == 0xbeefdead, "Got hr %#x.\n", hr);
+
+    ref = IDispatch_Release(proxy_disp);
+    ok(!ref, "Got outstanding refcount %d.\n", ref);
+    ref = IStream_Release(stream);
+    ok(!ref, "Got outstanding refcount %d.\n", ref);
+    end_host_object(tid, thread);
+    ref = ISomethingFromDispatch_Release(disp_obj);
+    ok(!ref, "Got outstanding refcount %d.\n", ref);
+}
+
 START_TEST(tmarshal)
 {
     HRESULT hr;
@@ -3613,6 +3698,7 @@ START_TEST(tmarshal)
     test_StaticWidget();
     test_libattr();
     test_external_connection();
+    test_marshal_dispinterface();
 
     hr = UnRegisterTypeLib(&LIBID_TestTypelib, 2, 5, LOCALE_NEUTRAL,
                            sizeof(void*) == 8 ? SYS_WIN64 : SYS_WIN32);

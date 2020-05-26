@@ -431,7 +431,7 @@ KmtpCreateService(
     assert(wcsrchr(DriverPath, L'\\') != NULL);
     wcsrchr(DriverPath, L'\\')[1] = L'\0';
 
-    result = StringCbCat(DriverPath, sizeof DriverPath, ServicePath);
+    result = StringCbCatW(DriverPath, sizeof(DriverPath), ServicePath);
     if (FAILED(result))
         error_value_goto(Error, result, cleanup);
 

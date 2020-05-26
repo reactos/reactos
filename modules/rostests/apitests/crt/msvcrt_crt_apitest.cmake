@@ -1119,7 +1119,7 @@ list(APPEND SOURCE_MSVCRT
 #    mbsrtowcs_s
     mbstowcs.c
 #    mbstowcs_s Not exported in 2k3 Sp1
-#    mbtowc.c
+    mbtowc.c
 #    memchr.c
 #    memcmp.c
 #    memcpy.c
@@ -1255,7 +1255,7 @@ list(APPEND SOURCE_MSVCRT
     wcstoul.c
 #    wcsxfrm.c
 #    wctob
-#    wctomb.c
+    wctomb.c
 #    wctomb_s
 #    wprintf.c
 #    wprintf_s.c
@@ -1375,7 +1375,7 @@ endif()
 
 # Startup code doesn't go together well with the static CRT... too much __imp_
 #add_executable(static_crt_apitest testlist.c ${SOURCE_MSVCRT})
-#add_target_compile_definitions(static_crt_apitest TEST_STATIC_CRT)
+#target_compile_definitions(static_crt_apitest PRIVATE TEST_STATIC_CRT)
 #target_link_libraries(static_crt_apitest ${PSEH_LIB} crt wine)
 #set_module_type(static_crt_apitest win32cui)
 #add_importlibs(static_crt_apitest kernel32 ntdll)
@@ -1391,7 +1391,7 @@ endif()
 #add_rostests_file(TARGET static_crt_dll_startup)
 
 add_executable(msvcrt_crt_apitest testlist.c ${SOURCE_MSVCRT})
-add_target_compile_definitions(msvcrt_crt_apitest TEST_MSVCRT)
+target_compile_definitions(msvcrt_crt_apitest PRIVATE TEST_MSVCRT)
 target_link_libraries(msvcrt_crt_apitest wine ${PSEH_LIB})
 set_module_type(msvcrt_crt_apitest win32cui)
 add_importlibs(msvcrt_crt_apitest msvcrt kernel32 ntdll)

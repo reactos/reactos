@@ -17,6 +17,7 @@
  */
 
 #include "mshtml_private.h"
+#include <wine/asm.h>
 
 /*
  * This object wraps any unrecognized interface overriding its IUnknown methods, allowing

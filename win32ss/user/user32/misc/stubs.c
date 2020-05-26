@@ -508,12 +508,57 @@ DestroyReasons(PVOID Pointer)
     return FALSE;
 }
 
-BOOL
+NTSTATUS
 WINAPI
-DeviceEventWorker(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5)
+DeviceEventWorker(HWND hwnd, WPARAM wParam, LPARAM lParam, DWORD Data, ULONG_PTR *uResult)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    USER_API_MESSAGE ApiMessage;
+    PUSER_DEVICE_EVENT_MSG pusem = &ApiMessage.Data.DeviceEventMsg;
+
+    pusem->hwnd = hwnd;
+    pusem->wParam = wParam;
+    pusem->lParam = lParam;
+    pusem->Data = Data;
+    pusem->Result = 0;
+
+    TRACE("DeviceEventWorker : hwnd %p, wParam %d, lParam %d, Data %d, uResult %p\n", hwnd, wParam, lParam, Data, uResult);
+
+    if ( lParam == 0 )
+    {
+        CsrClientCallServer( (PCSR_API_MESSAGE)&ApiMessage,
+                              NULL,
+                              CSR_CREATE_API_NUMBER( USERSRV_SERVERDLL_INDEX, UserpDeviceEvent ),
+                              sizeof(*pusem) );
+    }
+    else
+    {
+        PCSR_CAPTURE_BUFFER pcsrcb = NULL;
+        PDEV_BROADCAST_HDR pdev_br = (PDEV_BROADCAST_HDR)lParam;
+        ULONG BufferSize = pdev_br->dbch_size;
+
+        pcsrcb = CsrAllocateCaptureBuffer( 1, BufferSize );
+
+        if ( !pcsrcb )
+        {
+            return STATUS_NO_MEMORY;
+        }
+
+        CsrCaptureMessageBuffer( pcsrcb, (PVOID)lParam, BufferSize, (PVOID*)&pusem->lParam );
+
+        CsrClientCallServer( (PCSR_API_MESSAGE)&ApiMessage,
+                              pcsrcb,
+                              CSR_CREATE_API_NUMBER( USERSRV_SERVERDLL_INDEX, UserpDeviceEvent ),
+                              sizeof(*pusem) );
+
+        CsrFreeCaptureBuffer( pcsrcb );
+    }
+
+    if (NT_SUCCESS(ApiMessage.Status))
+    {
+        *uResult = pusem->Result;
+    }
+
+    return ApiMessage.Status;
 }
 
 BOOL

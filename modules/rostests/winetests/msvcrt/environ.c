@@ -47,6 +47,8 @@ void __cdecl __wgetmainargs(int *, wchar_t ***, wchar_t ***, int, int *);
 
 static char ***(__cdecl *p__p__environ)(void);
 static WCHAR ***(__cdecl *p__p__wenviron)(void);
+static void (*p_get_environ)(char ***);
+static void (*p_get_wenviron)(WCHAR ***);
 
 static char ***p_environ;
 static WCHAR ***p_wenviron;
@@ -59,6 +61,8 @@ static void init(void)
     p__p__wenviron = (void *)GetProcAddress(hmod, "__p__wenviron");
     p_environ = (void *)GetProcAddress(hmod, "_environ");
     p_wenviron = (void *)GetProcAddress(hmod, "_wenviron");
+    p_get_environ = (void *)GetProcAddress(hmod, "_get_environ");
+    p_get_wenviron = (void *)GetProcAddress(hmod, "_get_wenviron");
 }
 
 static void test_system(void)
@@ -93,7 +97,17 @@ static void test__environ(void)
             "Expected _environ pointers to be identical\n" );
     }
     else
-        win_skip( "__p__environ() is not available\n" );
+        skip( "__p__environ() is not available\n" );
+
+    if (p_get_environ)
+    {
+        char **retptr;
+        p_get_environ(&retptr);
+        ok( retptr == *p_environ,
+            "Expected _environ pointers to be identical\n" );
+    }
+    else
+        win_skip( "_get_environ() is not available\n" );
 
     /* Note that msvcrt from Windows versions older than Vista
      * expects the mode pointer parameter to be valid.*/
@@ -149,7 +163,17 @@ static void test__wenviron(void)
             "Expected _wenviron pointers to be NULL\n" );
     }
     else
-        win_skip( "__p__wenviron() is not available\n" );
+        skip( "__p__wenviron() is not available\n" );
+
+    if (p_get_wenviron)
+    {
+        WCHAR **retptr;
+        p_get_wenviron(&retptr);
+        ok( retptr == NULL,
+            "Expected _wenviron pointers to be NULL\n" );
+    }
+    else
+        win_skip( "_get_wenviron() is not available\n" );
 
     /* __getmainargs doesn't initialize _wenviron. */
     __getmainargs(&argc, &argv, &envp, 0, &mode);
@@ -188,6 +212,14 @@ static void test__wenviron(void)
     if (p__p__wenviron)
     {
         ok( *p__p__wenviron() == *p_wenviron,
+            "Expected _wenviron pointers to be identical\n" );
+    }
+
+    if (p_get_wenviron)
+    {
+        WCHAR **retptr;
+        p_get_wenviron(&retptr);
+        ok( retptr == *p_wenviron,
             "Expected _wenviron pointers to be identical\n" );
     }
 

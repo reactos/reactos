@@ -88,7 +88,7 @@ PciStallForPowerChange(IN PPCI_PDO_EXTENSION PdoExtension,
                 /* Do a wait for the timeout specified instead */
                 Interval.QuadPart = -10 * TimeoutEntry;
                 Interval.QuadPart -= KeQueryTimeIncrement() - 1;
-                KeDelayExecutionThread(0, 0, &Interval);
+                KeDelayExecutionThread(KernelMode, FALSE, &Interval);
             }
         }
 

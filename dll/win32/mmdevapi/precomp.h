@@ -2,9 +2,6 @@
 #ifndef _MMDEVAPI_PRECOMP_H_
 #define _MMDEVAPI_PRECOMP_H_
 
-#include <wine/config.h>
-#include <wine/port.h>
-
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -18,13 +15,13 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winreg.h>
+#include <winnls.h>
 #include <objbase.h>
 #include <audiopolicy.h>
 #include <endpointvolume.h>
 #include <mmdeviceapi.h>
 
 #include <wine/debug.h>
-#include <wine/unicode.h>
 
 #include "mmdevapi.h"
 

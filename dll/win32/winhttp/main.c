@@ -18,6 +18,7 @@
 
 #define COBJMACROS
 #include "config.h"
+#include "ws2tcpip.h"
 #include <stdarg.h>
 
 #include "windef.h"

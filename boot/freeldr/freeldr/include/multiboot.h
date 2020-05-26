@@ -90,6 +90,27 @@ typedef struct elf_section_header_table
   unsigned long shndx;
 } elf_section_header_table_t;
 
+/* The Multiboot information. */
+typedef struct multiboot_info
+{
+  unsigned long flags;
+  unsigned long mem_lower;
+  unsigned long mem_upper;
+  unsigned long boot_device;
+  unsigned long cmdline;
+  unsigned long mods_count;
+  unsigned long mods_addr;
+  union
+  {
+    aout_symbol_table_t aout_sym;
+    elf_section_header_table_t elf_sec;
+  } u;
+  unsigned long mmap_length;
+  unsigned long mmap_addr;
+  unsigned long drives_length;
+  unsigned long drives_addr;
+} multiboot_info_t;
+
 /* The memory map. Be careful that the offset 0 is base_addr_low
    but no size. */
 typedef struct memory_map

@@ -5,10 +5,8 @@
 #define IDA_SERVMAN 20
 
 /* about box info */
-#define IDD_ABOUTBOX     200
-#define IDC_LICENSE_EDIT 201
-#define IDS_APPNAME      202
-#define IDS_LICENSE      203
+#define IDS_APPAUTHORS   200
+#define IDS_APPNAME      201
 
 #define IDC_SERVLIST    1000
 #define IDC_STATUSBAR   1001

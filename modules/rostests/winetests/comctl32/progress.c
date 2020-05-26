@@ -254,6 +254,13 @@ static void test_PBM_STEPIT(void)
         { 3, 15,  5 },
         { 3, 15, -5 },
         { 3, 15, 50 },
+        { -15, 15,  5 },
+        { -3, -2, -5 },
+        { 0, 0, 1 },
+        { 5, 5, 1 },
+        { 0, 0, -1 },
+        { 5, 5, -1 },
+        { 10, 5, 2 },
     };
     HWND progress;
     int i, j;
@@ -261,12 +268,16 @@ static void test_PBM_STEPIT(void)
     for (i = 0; i < ARRAY_SIZE(stepit_tests); i++)
     {
         struct stepit_test *test = &stepit_tests[i];
+        PBRANGE range;
         LRESULT ret;
 
         progress = create_progress(0);
 
         ret = SendMessageA(progress, PBM_SETRANGE32, test->min, test->max);
         ok(ret != 0, "Unexpected return value.\n");
+
+        SendMessageA(progress, PBM_GETRANGE, 0, (LPARAM)&range);
+        ok(range.iLow == test->min && range.iHigh == test->max, "Unexpected range.\n");
 
         SendMessageA(progress, PBM_SETPOS, test->min, 0);
         SendMessageA(progress, PBM_SETSTEP, test->step, 0);
@@ -277,15 +288,20 @@ static void test_PBM_STEPIT(void)
             int current;
 
             pos += test->step;
-            if (pos > test->max)
-                pos = (pos - test->min) % (test->max - test->min) + test->min;
-            if (pos < test->min)
-                pos = (pos - test->min) % (test->max - test->min) + test->max;
+            if (test->min != test->max)
+            {
+                if (pos > test->max)
+                    pos = (pos - test->min) % (test->max - test->min) + test->min;
+                if (pos < test->min)
+                    pos = (pos - test->min) % (test->max - test->min) + test->max;
+            }
+            else
+                pos = test->min;
 
             SendMessageA(progress, PBM_STEPIT, 0, 0);
 
             current = SendMessageA(progress, PBM_GETPOS, 0, 0);
-            ok(current == pos, "Unexpected position %d, expected %d.\n", current, pos);
+            ok(current == pos, "%u: unexpected position %d, expected %d.\n", i, current, pos);
         }
 
         DestroyWindow(progress);

@@ -27,6 +27,7 @@ test_NhGetInterfaceNameFromGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     ULONG ulOutBufLen;
     WCHAR Name[MAX_INTERFACE_NAME_LEN + 4];
     GUID UniqueGUID = MY_TEST_GUID;
+    SIZE_T Length;
 
     // Test NULL GUID
     SetLastError(0xbeeffeed);
@@ -104,11 +105,11 @@ test_NhGetInterfaceNameFromGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     ok(ulOutBufLen > 0,
        "ulOutBufLen is %ld, expected > 0\n",
        ulOutBufLen);
-    Error = wcslen(Name);
-    ok(Error > 0,
+    Length = wcslen(Name);
+    ok(Length > 0,
        "wcslen(Name) is %ld, expected > 0\n",
-       Error);
-    if (Error > 0)
+       Length);
+    if (Length > 0)
         trace("Adapter name: \"%S\"\n", Name);
 
     // Test correct values, but with new unique GUID
@@ -159,6 +160,7 @@ test_NhGetInterfaceNameFromDeviceGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     ULONG ulOutBufLen;
     WCHAR Name[MAX_INTERFACE_NAME_LEN];
     GUID UniqueGUID = MY_TEST_GUID;
+    SIZE_T Length;
 
     // Test NULL GUID
     // Windows XP: NhGetInterfaceNameFromDeviceGuid throws exception here
@@ -241,11 +243,11 @@ test_NhGetInterfaceNameFromDeviceGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     ok(ulOutBufLen > 0,
        "ulOutBufLen is %ld, expected > 0\n",
        ulOutBufLen);
-    Error = wcslen(Name);
-    ok(Error > 0,
+    Length = wcslen(Name);
+    ok(Length > 0,
        "wcslen(Name) is %ld, expected > 0\n",
-       Error);
-    if (Error > 0)
+       Length);
+    if (Length > 0)
         trace("Adapter name: \"%S\"\n", Name);
 
     // Test correct values, but with new unique GUID

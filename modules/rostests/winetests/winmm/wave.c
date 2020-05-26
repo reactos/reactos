@@ -109,11 +109,11 @@ static char* wave_generate_la(WAVEFORMATEX* wfx, double duration, DWORD* size)
     for (i=0;i<nb_samples;i++) {
         double y=sin(440.0*2*PI*i/wfx->nSamplesPerSec);
         if (wfx->wBitsPerSample==8) {
-            unsigned char sample=(unsigned char)((double)127.5*(y+1.0));
+            unsigned char sample=(unsigned char)(127.5*(y+1.0));
             for (j = 0; j < wfx->nChannels; j++)
                 *b++=sample;
         } else if (wfx->wBitsPerSample==16) {
-            signed short sample=(signed short)((double)32767.5*y-0.5);
+            signed short sample=(signed short)(32767.5*y-0.5);
             for (j = 0; j < wfx->nChannels; j++) {
                 b[0]=sample & 0xff;
                 b[1]=sample >> 8;
@@ -672,8 +672,7 @@ static void wave_out_test_deviceOut(int device, double duration, int headers, in
        (rc==MMSYSERR_INVALFLAG && (flags & WAVE_FORMAT_DIRECT)),
        "waveOutOpen(%s): format=%dx%2dx%d flags=%x(%s) rc=%s\n",
        dev_name(device),pwfx->nSamplesPerSec,pwfx->wBitsPerSample,
-       pwfx->nChannels,CALLBACK_EVENT|flags,
-       wave_open_flags(CALLBACK_EVENT|flags),wave_out_error(rc));
+       pwfx->nChannels,flags,wave_open_flags(flags),wave_out_error(rc));
     if ((rc==WAVERR_BADFORMAT || rc==MMSYSERR_NOTSUPPORTED) &&
        (flags & WAVE_FORMAT_DIRECT) && (pcaps->dwFormats & format))
         trace(" Reason: The device lists this format as supported in its "
@@ -1048,7 +1047,7 @@ static void wave_out_test_device(UINT_PTR device)
                                 CALLBACK_EVENT,&capsA,TRUE,FALSE,FALSE);
     }
 
-    for (f=0;f<NB_WIN_FORMATS;f++) {
+    for (f = 0; f < ARRAY_SIZE(win_formats); f++) {
         format.wFormatTag=WAVE_FORMAT_PCM;
         format.nChannels=win_formats[f][3];
         format.wBitsPerSample=win_formats[f][2];
@@ -1422,6 +1421,28 @@ static void wave_out_test_device(UINT_PTR device)
     } else
         trace("waveOutOpen(%s): 32 bit float samples not supported\n",
               dev_name(device));
+
+    /* Test invalid parameters */
+
+    format.wFormatTag = WAVE_FORMAT_PCM;
+    format.nChannels = 1;
+    format.nSamplesPerSec = 11025;
+    format.nBlockAlign = 1;
+    format.nAvgBytesPerSec = 11025 * 1;
+    format.wBitsPerSample = 8;
+    format.cbSize = 0;
+
+    format.nAvgBytesPerSec = 0;
+    rc = waveOutOpen(&wout, device, &format, 0, 0, 0);
+    ok(rc == MMSYSERR_NOERROR,
+       "waveOutOpen(%s): returned %s\n",dev_name(device),wave_out_error(rc));
+    waveOutClose(wout);
+    format.nAvgBytesPerSec = 11025 * 1;
+
+    format.nSamplesPerSec = 0;
+    rc = waveOutOpen(&wout, device, &format, 0, 0, 0);
+    ok(rc == MMSYSERR_INVALPARAM || rc == WAVERR_BADFORMAT, /* XP and lower return WAVERR_BADFORMAT */
+       "waveOutOpen(%s): returned %s\n",dev_name(device),wave_out_error(rc));
 }
 
 static void wave_out_tests(void)
@@ -1446,6 +1467,16 @@ static void wave_out_tests(void)
     if(rc != MMSYSERR_NOTSUPPORTED)
         ok((ndev == 0 && (preferred == -1 || broken(preferred != -1))) ||
                 preferred < ndev, "Got invalid preferred device: 0x%x\n", preferred);
+
+    rc = waveOutMessage((HWAVEOUT)WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET,
+         (DWORD_PTR)-1  , 0);
+    ok(rc == MMSYSERR_INVALPARAM || rc == MMSYSERR_BADDEVICEID, /* w2008+wvista */
+       "waveOutMessage(DRVM_MAPPER_PREFERRED_GET) failed: %u\n", rc);
+
+    rc = waveOutMessage((HWAVEOUT)WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET,
+         0, (DWORD_PTR)&status);
+    ok(rc == MMSYSERR_INVALPARAM || rc == MMSYSERR_BADDEVICEID, /* w2008+wvista */
+       "waveOutMessage(DRVM_MAPPER_PREFERRED_GET) failed: %u\n", rc);
 
     rc=waveOutGetDevCapsA(ndev+1,&capsA,sizeof(capsA));
     ok(rc==MMSYSERR_BADDEVICEID,

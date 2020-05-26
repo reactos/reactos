@@ -38,6 +38,15 @@
 
 #include "volpropsheet.h"
 #include "resource.h"
+#ifndef __REACTOS__
+#include "mountmgr.h"
+#else
+#include "mountmgr_local.h"
+#endif
+
+#ifndef __REACTOS__
+static const NTSTATUS STATUS_OBJECT_NAME_NOT_FOUND = 0xC0000034;
+#endif
 
 HRESULT __stdcall BtrfsVolPropSheet::QueryInterface(REFIID riid, void **ppObj) {
     if (riid == IID_IUnknown || riid == IID_IShellPropSheetExt) {
@@ -163,8 +172,12 @@ void BtrfsVolPropSheet::FormatUsage(HWND hwndDlg, wstring& s, btrfs_usage* usage
 
     static const uint64_t types[] = { BLOCK_FLAG_DATA, BLOCK_FLAG_DATA | BLOCK_FLAG_METADATA, BLOCK_FLAG_METADATA, BLOCK_FLAG_SYSTEM };
     static const ULONG typestrings[] = { IDS_USAGE_DATA, IDS_USAGE_MIXED, IDS_USAGE_METADATA, IDS_USAGE_SYSTEM };
-    static const uint64_t duptypes[] = { 0, BLOCK_FLAG_DUPLICATE, BLOCK_FLAG_RAID0, BLOCK_FLAG_RAID1, BLOCK_FLAG_RAID10, BLOCK_FLAG_RAID5, BLOCK_FLAG_RAID6 };
-    static const ULONG dupstrings[] = { IDS_SINGLE, IDS_DUP, IDS_RAID0, IDS_RAID1, IDS_RAID10, IDS_RAID5, IDS_RAID6 };
+    static const uint64_t duptypes[] = { 0, BLOCK_FLAG_DUPLICATE, BLOCK_FLAG_RAID0, BLOCK_FLAG_RAID1, BLOCK_FLAG_RAID10, BLOCK_FLAG_RAID5,
+                                         BLOCK_FLAG_RAID6, BLOCK_FLAG_RAID1C3, BLOCK_FLAG_RAID1C4 };
+    static const ULONG dupstrings[] = { IDS_SINGLE, IDS_DUP, IDS_RAID0, IDS_RAID1, IDS_RAID10, IDS_RAID5, IDS_RAID6, IDS_RAID1C3, IDS_RAID1C4 };
+
+    static const uint64_t raid_types = BLOCK_FLAG_DUPLICATE | BLOCK_FLAG_RAID0 | BLOCK_FLAG_RAID1 | BLOCK_FLAG_RAID10 | BLOCK_FLAG_RAID5 |
+                                       BLOCK_FLAG_RAID6 | BLOCK_FLAG_RAID1C3 | BLOCK_FLAG_RAID1C4;
 
     s = L"";
 
@@ -318,9 +331,7 @@ void BtrfsVolPropSheet::FormatUsage(HWND hwndDlg, wstring& s, btrfs_usage* usage
             bue = usage;
 
             while (true) {
-                if ((bue->type & types[i]) == types[i] &&
-                    ((duptypes[j] == 0 && (bue->type & (BLOCK_FLAG_DUPLICATE | BLOCK_FLAG_RAID0 | BLOCK_FLAG_RAID1 | BLOCK_FLAG_RAID10 | BLOCK_FLAG_RAID5 | BLOCK_FLAG_RAID6)) == 0)
-                    || bue->type & duptypes[j])) {
+                if ((bue->type & types[i]) == types[i] && ((duptypes[j] == 0 && (bue->type & raid_types) == 0) || bue->type & duptypes[j])) {
                     wstring sizestring, usedstring, typestring, dupstring;
 
                     if (bue->type & BLOCK_FLAG_DATA && bue->type & BLOCK_FLAG_METADATA && (types[i] == BLOCK_FLAG_DATA || types[i] == BLOCK_FLAG_METADATA))
@@ -705,7 +716,7 @@ void BtrfsVolPropSheet::RefreshDevList(HWND devlist) {
 
         RtlZeroMemory(&lvi, sizeof(LVITEMW));
         lvi.mask = LVIF_TEXT | LVIF_PARAM;
-        lvi.iItem = SendMessageW(devlist, LVM_GETITEMCOUNT, 0, 0);
+        lvi.iItem = (int)SendMessageW(devlist, LVM_GETITEMCOUNT, 0, 0);
         lvi.lParam = (LPARAM)bd->dev_id;
 
         s = to_wstring(bd->dev_id);
@@ -1035,19 +1046,18 @@ INT_PTR CALLBACK BtrfsVolPropSheet::DeviceDlgProc(HWND hwndDlg, UINT uMsg, WPARA
                             {
                                 WCHAR sel[MAX_PATH];
                                 HWND devlist;
-                                int index;
                                 LVITEMW lvi;
 
                                 devlist = GetDlgItem(hwndDlg, IDC_DEVLIST);
 
-                                index = SendMessageW(devlist, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+                                auto index = SendMessageW(devlist, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
 
                                 if (index == -1)
                                     return true;
 
                                 RtlZeroMemory(&lvi, sizeof(LVITEMW));
                                 lvi.mask = LVIF_TEXT;
-                                lvi.iItem = index;
+                                lvi.iItem = (int)index;
                                 lvi.iSubItem = 0;
                                 lvi.pszText = sel;
                                 lvi.cchTextMax = sizeof(sel) / sizeof(WCHAR);
@@ -1063,19 +1073,18 @@ INT_PTR CALLBACK BtrfsVolPropSheet::DeviceDlgProc(HWND hwndDlg, UINT uMsg, WPARA
                                 WCHAR modfn[MAX_PATH], sel[MAX_PATH], sel2[MAX_PATH];
                                 HWND devlist;
                                 SHELLEXECUTEINFOW sei;
-                                int index;
                                 LVITEMW lvi;
 
                                 devlist = GetDlgItem(hwndDlg, IDC_DEVLIST);
 
-                                index = SendMessageW(devlist, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+                                auto index = SendMessageW(devlist, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
 
                                 if (index == -1)
                                     return true;
 
                                 RtlZeroMemory(&lvi, sizeof(LVITEMW));
                                 lvi.mask = LVIF_TEXT;
-                                lvi.iItem = index;
+                                lvi.iItem = (int)index;
                                 lvi.iSubItem = 0;
                                 lvi.pszText = sel;
                                 lvi.cchTextMax = sizeof(sel) / sizeof(WCHAR);
@@ -1129,7 +1138,6 @@ INT_PTR CALLBACK BtrfsVolPropSheet::DeviceDlgProc(HWND hwndDlg, UINT uMsg, WPARA
                             case IDC_DEVICE_RESIZE:
                             {
                                 HWND devlist;
-                                int index;
                                 LVITEMW lvi;
                                 wstring t;
                                 WCHAR modfn[MAX_PATH], sel[100];
@@ -1137,14 +1145,14 @@ INT_PTR CALLBACK BtrfsVolPropSheet::DeviceDlgProc(HWND hwndDlg, UINT uMsg, WPARA
 
                                 devlist = GetDlgItem(hwndDlg, IDC_DEVLIST);
 
-                                index = SendMessageW(devlist, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+                                auto index = SendMessageW(devlist, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
 
                                 if (index == -1)
                                     return true;
 
                                 RtlZeroMemory(&lvi, sizeof(LVITEMW));
                                 lvi.mask = LVIF_TEXT;
-                                lvi.iItem = index;
+                                lvi.iItem = (int)index;
                                 lvi.iSubItem = 0;
                                 lvi.pszText = sel;
                                 lvi.cchTextMax = sizeof(sel) / sizeof(WCHAR);
@@ -1288,6 +1296,36 @@ void BtrfsVolPropSheet::ShowScrub(HWND hwndDlg) {
     CloseHandle(sei.hProcess);
 }
 
+void BtrfsVolPropSheet::ShowChangeDriveLetter(HWND hwndDlg) {
+    wstring t;
+    WCHAR modfn[MAX_PATH];
+    SHELLEXECUTEINFOW sei;
+
+    GetModuleFileNameW(module, modfn, sizeof(modfn) / sizeof(WCHAR));
+
+#ifndef __REACTOS__
+    t = L"\""s + modfn + L"\",ShowChangeDriveLetter "s + fn;
+#else
+    t = wstring(L"\"") + modfn + wstring(L"\",ShowChangeDriveLetter ") + fn;
+#endif
+
+    RtlZeroMemory(&sei, sizeof(sei));
+
+    sei.cbSize = sizeof(sei);
+    sei.hwnd = hwndDlg;
+    sei.lpVerb = L"runas";
+    sei.lpFile = L"rundll32.exe";
+    sei.lpParameters = t.c_str();
+    sei.nShow = SW_SHOW;
+    sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+
+    if (!ShellExecuteExW(&sei))
+        throw last_error(GetLastError());
+
+    WaitForSingleObject(sei.hProcess, INFINITE);
+    CloseHandle(sei.hProcess);
+}
+
 static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     try {
         switch (uMsg) {
@@ -1331,6 +1369,7 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                     SetDlgItemTextW(hwndDlg, IDC_UUID, L"");
 
                 SendMessageW(GetDlgItem(hwndDlg, IDC_VOL_SCRUB), BCM_SETSHIELD, 0, true);
+                SendMessageW(GetDlgItem(hwndDlg, IDC_VOL_CHANGE_DRIVE_LETTER), BCM_SETSHIELD, 0, true);
 
                 return false;
             }
@@ -1367,6 +1406,10 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
 
                                 case IDC_VOL_SCRUB:
                                     bps->ShowScrub(hwndDlg);
+                                break;
+
+                                case IDC_VOL_CHANGE_DRIVE_LETTER:
+                                    bps->ShowChangeDriveLetter(hwndDlg);
                                 break;
                             }
                         }
@@ -1430,6 +1473,156 @@ HRESULT __stdcall BtrfsVolPropSheet::ReplacePage(UINT uPageID, LPFNADDPROPSHEETP
     return S_OK;
 }
 
+void BtrfsChangeDriveLetter::do_change(HWND hwndDlg) {
+    unsigned int sel = (unsigned int)SendDlgItemMessageW(hwndDlg, IDC_DRIVE_LETTER_COMBO, CB_GETCURSEL, 0, 0);
+
+    if (sel >= 0 && sel < letters.size()) {
+        wstring dd;
+
+        if (fn.length() == 3 && fn[1] == L':' && fn[2] == L'\\') {
+            dd = L"\\DosDevices\\?:";
+
+            dd[12] = fn[0];
+        } else
+#ifndef __REACTOS__
+            throw runtime_error("Volume path was not root of drive.");
+#else
+            error_message(nullptr, "Volume path was not root of drive.");
+#endif
+
+        mountmgr mm;
+        wstring dev_name;
+
+        {
+            auto v = mm.query_points(dd);
+
+            if (v.empty())
+#ifndef __REACTOS__
+                throw runtime_error("Error finding device name.");
+#else
+                error_message(nullptr, "Error finding device name.");
+#endif
+
+            dev_name = v[0].device_name;
+        }
+
+        wstring new_dd = L"\\DosDevices\\?:";
+        new_dd[12] = letters[sel];
+
+        mm.delete_points(dd);
+
+        try {
+            mm.create_point(new_dd, dev_name);
+        } catch (...) {
+            // if fails, try to recreate old symlink, so we're not left with no drive letter at all
+            mm.create_point(dd, dev_name);
+            throw;
+        }
+    }
+
+    EndDialog(hwndDlg, 1);
+}
+
+INT_PTR BtrfsChangeDriveLetter::DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    try {
+        switch (uMsg) {
+            case WM_INITDIALOG:
+            {
+                HWND cb = GetDlgItem(hwndDlg, IDC_DRIVE_LETTER_COMBO);
+
+                SendMessageW(cb, CB_RESETCONTENT, 0, 0);
+
+                mountmgr mm;
+                wstring drv;
+
+                drv = L"\\DosDevices\\?:";
+
+                for (wchar_t l = 'A'; l <= 'Z'; l++) {
+                    bool found = true;
+
+                    drv[12] = l;
+
+                    try {
+                        auto v = mm.query_points(drv);
+
+                        if (v.empty())
+                            found = false;
+                    } catch (const ntstatus_error& ntstatus) {
+                        if (ntstatus.Status == STATUS_OBJECT_NAME_NOT_FOUND)
+                            found = false;
+                        else
+                            throw;
+                    }
+
+                    if (!found) {
+                        wstring str = L"?:";
+
+                        str[0] = l;
+                        letters.push_back(l);
+
+                        SendMessageW(cb, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str.c_str()));
+                    }
+                }
+
+                break;
+            }
+
+            case WM_COMMAND:
+                switch (HIWORD(wParam)) {
+                    case BN_CLICKED:
+                        switch (LOWORD(wParam)) {
+                            case IDOK:
+                                do_change(hwndDlg);
+                                return true;
+
+                            case IDCANCEL:
+                                EndDialog(hwndDlg, 0);
+                                return true;
+                        }
+                        break;
+                }
+            break;
+        }
+    } catch (const exception& e) {
+        error_message(hwndDlg, e.what());
+    }
+
+    return false;
+}
+
+#ifdef __REACTOS__
+INT_PTR CALLBACK VolPropSheetDlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    BtrfsChangeDriveLetter* bcdl;
+
+    if (uMsg == WM_INITDIALOG) {
+        SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        bcdl = (BtrfsChangeDriveLetter*)lParam;
+    } else
+        bcdl = (BtrfsChangeDriveLetter*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+
+    return bcdl->DlgProc(hwndDlg, uMsg, wParam, lParam);
+}
+#endif
+
+void BtrfsChangeDriveLetter::show() {
+#ifndef __REACTOS__
+    DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_DRIVE_LETTER), hwnd, [](HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+        BtrfsChangeDriveLetter* bcdl;
+
+        if (uMsg == WM_INITDIALOG) {
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+            bcdl = (BtrfsChangeDriveLetter*)lParam;
+        } else
+            bcdl = (BtrfsChangeDriveLetter*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+
+        return bcdl->DlgProc(hwndDlg, uMsg, wParam, lParam);
+    }, (LPARAM)this);
+#else
+    DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_DRIVE_LETTER), hwnd, VolPropSheetDlgproc, (LPARAM)this);
+#endif
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -1486,6 +1679,12 @@ void CALLBACK ResetStatsW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nC
     } catch (const exception& e) {
         error_message(hwnd, e.what());
     }
+}
+
+void CALLBACK ShowChangeDriveLetterW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
+    BtrfsChangeDriveLetter bcdl(hwnd, lpszCmdLine);
+
+    bcdl.show();
 }
 
 #ifdef __cplusplus

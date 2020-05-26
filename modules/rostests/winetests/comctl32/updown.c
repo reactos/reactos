@@ -28,7 +28,6 @@
  *   - check UDM_SETBUDDY message
  *   - check UDM_GETBUDDY message
  *   - up-down control and buddy control must have the same parent
- *   - up-down control notifies its parent window when its position changes with UDN_DELTAPOS + WM_VSCROLL or WM_HSCROLL
  *   - check UDS_ALIGN[LEFT,RIGHT]...check that width of buddy window is decreased
  *   - check that UDS_SETBUDDYINT sets the caption of the buddy window when it is changed
  *   - check that the thousands operator is set for large numbers
@@ -165,6 +164,32 @@ static const struct message test_updown_pos_nochange_seq[] = {
     { 0 }
 };
 
+static const struct message test_updown_pos_notifications_seq[] = {
+    { WM_CTLCOLOREDIT, sent|optional },
+    { WM_COMMAND, sent|wparam, MAKELONG(0, EN_SETFOCUS) },
+    { WM_NOTIFY, sent|id, 0, 0, UDN_DELTAPOS },
+    { WM_COMMAND, sent|wparam, MAKELONG(0, EN_UPDATE) },
+    { WM_COMMAND, sent|wparam, MAKELONG(0, EN_CHANGE) },
+    { WM_VSCROLL, sent|wparam, MAKELONG(SB_THUMBPOSITION, 51) },
+    { WM_CTLCOLOREDIT, sent|optional },
+    { WM_VSCROLL, sent|wparam, MAKELONG(SB_ENDSCROLL, 51) },
+    /* no WM_NOTIFY(NM_RELEASEDCAPTURE) message */
+    { 0 }
+};
+
+static const struct message test_updown_pos_notifications_horz_seq[] = {
+    { WM_CTLCOLOREDIT, sent|optional },
+    { WM_COMMAND, sent|wparam, MAKELONG(0, EN_SETFOCUS) },
+    { WM_NOTIFY, sent|id, 0, 0, UDN_DELTAPOS },
+    { WM_COMMAND, sent|wparam, MAKELONG(0, EN_UPDATE) },
+    { WM_COMMAND, sent|wparam, MAKELONG(0, EN_CHANGE) },
+    { WM_HSCROLL, sent|wparam, MAKELONG(SB_THUMBPOSITION, 51) },
+    { WM_CTLCOLOREDIT, sent|optional },
+    { WM_HSCROLL, sent|wparam, MAKELONG(SB_ENDSCROLL, 51) },
+    /* no WM_NOTIFY(NM_RELEASEDCAPTURE) message */
+    { 0 }
+};
+
 static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static LONG defwndproc_counter = 0;
@@ -186,6 +211,8 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         if (defwndproc_counter) msg.flags |= defwinproc;
         msg.wParam = wParam;
         msg.lParam = lParam;
+        if (message == WM_NOTIFY && lParam)
+            msg.id = ((NMHDR*)lParam)->code;
         add_message(sequences, PARENT_SEQ_INDEX, &msg);
     }
 
@@ -900,6 +927,52 @@ static void test_CreateUpDownControl(void)
     DestroyWindow(updown);
 }
 
+static void test_updown_pos_notifications(void)
+{
+    HWND updown;
+    RECT rect;
+    UINT x, y;
+    int result;
+
+    /* test updown control notifications without UDS_HORZ style */
+    updown = create_updown_control(UDS_ALIGNRIGHT | UDS_SETBUDDYINT, g_edit);
+    SetFocus(updown);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    /* click on the up-arrow button */
+    GetClientRect(updown, &rect);
+    x = rect.left + (rect.right - rect.left) / 2;
+    y = rect.top + (rect.bottom - rect.top) / 4;
+    result = SendMessageA(updown, WM_LBUTTONDOWN, 0, MAKELPARAM(x, y));
+    expect(result, 0);
+    result = SendMessageA(updown, WM_LBUTTONUP, 0, MAKELPARAM(x, y));
+    expect(result, 0);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, test_updown_pos_notifications_seq,
+                "test updown to parent notify (vertical)", FALSE);
+
+    DestroyWindow(updown);
+
+    /* test updown control notifications with UDS_HORZ style */
+    updown = create_updown_control(UDS_ALIGNRIGHT | UDS_SETBUDDYINT | UDS_HORZ, g_edit);
+    SetFocus(updown);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    /* click on the right-arrow button */
+    GetClientRect(updown, &rect);
+    x = rect.left + (rect.right - rect.left) * 3 / 4;
+    y = rect.top + (rect.bottom - rect.top) / 2;
+    result = SendMessageA(updown, WM_LBUTTONDOWN, 0, MAKELPARAM(x, y));
+    expect(result, 0);
+    result = SendMessageA(updown, WM_LBUTTONUP, 0, MAKELPARAM(x, y));
+    expect(result, 0);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, test_updown_pos_notifications_horz_seq,
+                "test updown to parent notify (horizontal)", FALSE);
+
+    DestroyWindow(updown);
+}
+
 static void init_functions(void)
 {
     HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
@@ -931,6 +1004,7 @@ START_TEST(updown)
     test_updown_unicode();
     test_UDS_SETBUDDYINT();
     test_CreateUpDownControl();
+    test_updown_pos_notifications();
 
     DestroyWindow(g_edit);
     DestroyWindow(parent_wnd);

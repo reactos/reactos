@@ -56,4 +56,6 @@ BEGIN
     IDS_INETTIMENEXTSYNC "Următoarea sincronizare: %s la %s"
     IDS_INETTIMESYNCING "Așteptați sincronizarea cu %s"
     IDS_INETTIMEERROR "A survenit o eroare la sincronizarea cu %s"
+    IDS_INETTIMESUCFILL "Scrie numele serverului NTP pentru a sincroniza timpul"
+    IDS_INETTIMEWELCOME "Selectați un server NTP din lista de sus sau scrie numele serverului NTP pentru a sincroniza timpul calculatorului"
 END

@@ -76,8 +76,6 @@ typedef struct _MASTER_BOOT_RECORD
     USHORT MasterBootRecordMagic;             // 510
 } MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
 
-/* Tag for Fstub allocations */
-#define TAG_FSTUB 'BtsF'
 /* Partition entry size (bytes) - FIXME: It's hardcoded as Microsoft does, but according to specs, it shouldn't be */
 #define PARTITION_ENTRY_SIZE 128
 /* Defines "EFI PART" */

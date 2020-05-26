@@ -43,7 +43,7 @@ typedef enum {
 
 typedef struct _xmlC14NVisibleNsStack {
     int nsCurEnd;           /* number of nodes in the set */
-    int nsPrevStart;        /* the begginning of the stack for previous visible node */
+    int nsPrevStart;        /* the beginning of the stack for previous visible node */
     int nsPrevEnd;          /* the end of the stack for previous visible node */
     int nsMax;              /* size of the array as allocated */
     xmlNsPtr	*nsTab;	    /* array of ns in no particular order */
@@ -226,7 +226,7 @@ xmlC14NErrRelativeNamespace(const char *ns_uri)
  * xmlC14NErr:
  * @ctxt:  a C14N evaluation context
  * @node:  the context node
- * @error:  the erorr code
+ * @error:  the error code
  * @msg:  the message
  * @extra:  extra informations
  *
@@ -1827,7 +1827,7 @@ xmlC14NNewCtx(xmlDocPtr doc,
     }
 
     /*
-     * Set "mode" flag and remember list of incluseve prefixes
+     * Set "mode" flag and remember list of inclusive prefixes
      * for exclusive c14n
      */
     ctx->mode = mode;
@@ -2039,7 +2039,7 @@ xmlC14NDocDumpMemory(xmlDocPtr doc, xmlNodeSetPtr nodes,
     (void) xmlOutputBufferClose(buf);
 
     if ((*doc_txt_ptr == NULL) && (ret > 0)) {
-        xmlC14NErrMemory("coping canonicanized document");
+        xmlC14NErrMemory("coping canonicalized document");
         return (-1);
     }
     return (ret);
@@ -2057,7 +2057,7 @@ xmlC14NDocDumpMemory(xmlDocPtr doc, xmlNodeSetPtr nodes,
  *			canonicalization, ignored otherwise)
  * @with_comments:	include comments in the result (!=0) or not (==0)
  * @filename:		the filename to store canonical XML image
- * @compression:	the compression level (zlib requred):
+ * @compression:	the compression level (zlib required):
  *				-1 - libxml default,
  *				 0 - uncompressed,
  *				>0 - compression level
@@ -2100,7 +2100,7 @@ xmlC14NDocSave(xmlDocPtr doc, xmlNodeSetPtr nodes,
     ret = xmlC14NDocSaveTo(doc, nodes, mode, inclusive_ns_prefixes,
                            with_comments, buf);
     if (ret < 0) {
-        xmlC14NErrInternal("cannicanize document to buffer");
+        xmlC14NErrInternal("canonize document to buffer");
         (void) xmlOutputBufferClose(buf);
         return (-1);
     }

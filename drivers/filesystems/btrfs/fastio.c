@@ -336,15 +336,33 @@ static NTSTATUS __stdcall fast_io_release_for_ccflush(PFILE_OBJECT FileObject, P
 
 _Function_class_(FAST_IO_WRITE)
 static BOOLEAN __stdcall fast_io_write(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, BOOLEAN Wait, ULONG LockKey, PVOID Buffer, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
-    if (FsRtlCopyWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject)) {
-        fcb* fcb = FileObject->FsContext;
+    fcb* fcb = FileObject->FsContext;
+    bool ret;
 
-        fcb->inode_item.st_size = fcb->Header.FileSize.QuadPart;
+    FsRtlEnterFileSystem();
 
-        return true;
+    if (!ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, Wait)) {
+        FsRtlExitFileSystem();
+        return false;
     }
 
-    return false;
+    if (!ExAcquireResourceExclusiveLite(fcb->Header.Resource, Wait)) {
+        ExReleaseResourceLite(&fcb->Vcb->tree_lock);
+        FsRtlExitFileSystem();
+        return false;
+    }
+
+    ret = FsRtlCopyWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
+
+    if (ret)
+        fcb->inode_item.st_size = fcb->Header.FileSize.QuadPart;
+
+    ExReleaseResourceLite(fcb->Header.Resource);
+    ExReleaseResourceLite(&fcb->Vcb->tree_lock);
+
+    FsRtlExitFileSystem();
+
+    return ret;
 }
 
 _Function_class_(FAST_IO_LOCK)
@@ -354,7 +372,7 @@ static BOOLEAN __stdcall fast_io_lock(PFILE_OBJECT FileObject, PLARGE_INTEGER Fi
     BOOLEAN ret;
     fcb* fcb = FileObject->FsContext;
 
-    TRACE("(%p, %I64x, %I64x, %p, %x, %u, %u, %p, %p)\n", FileObject, FileOffset ? FileOffset->QuadPart : 0, Length ? Length->QuadPart : 0,
+    TRACE("(%p, %I64x, %I64x, %p, %lx, %u, %u, %p, %p)\n", FileObject, FileOffset ? FileOffset->QuadPart : 0, Length ? Length->QuadPart : 0,
           ProcessId, Key, FailImmediately, ExclusiveLock, IoStatus, DeviceObject);
 
     if (fcb->type != BTRFS_TYPE_FILE) {
@@ -384,7 +402,7 @@ static BOOLEAN __stdcall fast_io_unlock_single(PFILE_OBJECT FileObject, PLARGE_I
                                                ULONG Key, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
     fcb* fcb = FileObject->FsContext;
 
-    TRACE("(%p, %I64x, %I64x, %p, %x, %p, %p)\n", FileObject, FileOffset ? FileOffset->QuadPart : 0, Length ? Length->QuadPart : 0,
+    TRACE("(%p, %I64x, %I64x, %p, %lx, %p, %p)\n", FileObject, FileOffset ? FileOffset->QuadPart : 0, Length ? Length->QuadPart : 0,
           ProcessId, Key, IoStatus, DeviceObject);
 
     IoStatus->Information = 0;
@@ -440,7 +458,7 @@ static BOOLEAN __stdcall fast_io_unlock_all_by_key(PFILE_OBJECT FileObject, PVOI
                                                    PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
     fcb* fcb = FileObject->FsContext;
 
-    TRACE("(%p, %p, %x, %p, %p)\n", FileObject, ProcessId, Key, IoStatus, DeviceObject);
+    TRACE("(%p, %p, %lx, %p, %p)\n", FileObject, ProcessId, Key, IoStatus, DeviceObject);
 
     IoStatus->Information = 0;
 

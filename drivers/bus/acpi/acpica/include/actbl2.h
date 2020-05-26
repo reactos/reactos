@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,6 +79,7 @@
 #define ACPI_SIG_SBST           "SBST"      /* Smart Battery Specification Table */
 #define ACPI_SIG_SDEI           "SDEI"      /* Software Delegated Exception Interface Table */
 #define ACPI_SIG_SDEV           "SDEV"      /* Secure Devices table */
+#define ACPI_SIG_NHLT           "NHLT"      /* Non-HDAudio Link Table */
 
 
 /*
@@ -349,7 +350,8 @@ typedef struct acpi_ivrs_header
 
 enum AcpiIvrsType
 {
-    ACPI_IVRS_TYPE_HARDWARE         = 0x10,
+    ACPI_IVRS_TYPE_HARDWARE1        = 0x10,
+    ACPI_IVRS_TYPE_HARDWARE2        = 0x11,
     ACPI_IVRS_TYPE_MEMORY1          = 0x20,
     ACPI_IVRS_TYPE_MEMORY2          = 0x21,
     ACPI_IVRS_TYPE_MEMORY3          = 0x22
@@ -377,16 +379,30 @@ enum AcpiIvrsType
 
 /* 0x10: I/O Virtualization Hardware Definition Block (IVHD) */
 
-typedef struct acpi_ivrs_hardware
+typedef struct acpi_ivrs_hardware_10
 {
     ACPI_IVRS_HEADER        Header;
     UINT16                  CapabilityOffset;   /* Offset for IOMMU control fields */
     UINT64                  BaseAddress;        /* IOMMU control registers */
     UINT16                  PciSegmentGroup;
     UINT16                  Info;               /* MSI number and unit ID */
-    UINT32                  Reserved;
+    UINT32                  FeatureReporting;
 
-} ACPI_IVRS_HARDWARE;
+} ACPI_IVRS_HARDWARE1;
+
+/* 0x11: I/O Virtualization Hardware Definition Block (IVHD) */
+
+typedef struct acpi_ivrs_hardware_11
+{
+    ACPI_IVRS_HEADER        Header;
+    UINT16                  CapabilityOffset;   /* Offset for IOMMU control fields */
+    UINT64                  BaseAddress;        /* IOMMU control registers */
+    UINT16                  PciSegmentGroup;
+    UINT16                  Info;               /* MSI number and unit ID */
+    UINT32                  Attributes;
+    UINT64                  EfrRegisterImage;
+    UINT64                  Reserved;
+} ACPI_IVRS_HARDWARE2;
 
 /* Masks for Info field above */
 

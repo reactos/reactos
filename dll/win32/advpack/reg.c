@@ -22,11 +22,11 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
+#include "winnls.h"
 #include "winerror.h"
 #include "winuser.h"
 #include "winternl.h"
 #include "advpub.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(advpack);
@@ -186,16 +186,16 @@ static HRESULT write_predefined_strings(HMODULE hm, LPCWSTR ini_path)
     *sys_root = '\0';
     GetEnvironmentVariableW(SystemRoot, sys_root, ARRAY_SIZE(sys_root));
 
-    if(!strncmpiW(sys_root, mod_path + 1, strlenW(sys_root)))
+    if(!_wcsnicmp(sys_root, mod_path + 1, lstrlenW(sys_root)))
     {
         *sys_mod_path = '\"';
-        strcpyW(sys_mod_path + 1, escaped_SystemRoot);
-        strcatW(sys_mod_path, mod_path + 1 + strlenW(sys_root));
+        lstrcpyW(sys_mod_path + 1, escaped_SystemRoot);
+        lstrcatW(sys_mod_path, mod_path + 1 + lstrlenW(sys_root));
     }
     else
     {
         FIXME("SYS_MOD_PATH needs more work\n");
-        strcpyW(sys_mod_path, mod_path);
+        lstrcpyW(sys_mod_path, mod_path);
     }
 
     WritePrivateProfileStringW(Strings, SYS_MOD_PATH, sys_mod_path, ini_path);

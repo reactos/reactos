@@ -8027,7 +8027,7 @@ static void test_get_ownerDocument(void)
     IXMLDOMDocument_Release(doc2);
     IXMLDOMDocument_Release(doc3);
     IXMLDOMDocument2_Release(doc);
-    IXMLDOMDocument2_Release(doc_owner);
+    //IXMLDOMDocument2_Release(doc_owner); FIXME: double-free!
     free_bstrs();
 }
 

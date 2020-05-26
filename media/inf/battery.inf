@@ -103,6 +103,13 @@ GenericMfg = "(Batteries génériques)"
 ACPI\PNP0C0A.DeviceDesc = "Batterie à méthode de contrôle compatible ACPI"
 ACPI\ACPI0003.DeviceDesc = "Adaptateur secteur"
 
+[Strings.040D]
+ReactOS = "צוות ReactOS"
+BatteryClassName = "סוללות"
+
+GenericMfg = "(סוללות כלליות)"
+ACPI\PNP0C0A.DeviceDesc = "ACPI-compliant control method battery"
+ACPI\ACPI0003.DeviceDesc = "AC adapter"
 [Strings.0415]
 ReactOS = "Zespół ReactOS"
 BatteryClassName = "Baterie"

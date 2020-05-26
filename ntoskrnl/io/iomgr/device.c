@@ -914,9 +914,9 @@ IoAttachDevice(PDEVICE_OBJECT SourceDevice,
                PUNICODE_STRING TargetDeviceName,
                PDEVICE_OBJECT *AttachedDevice)
 {
-   NTSTATUS Status;
-   PFILE_OBJECT FileObject = NULL;
-   PDEVICE_OBJECT TargetDevice = NULL;
+    NTSTATUS Status;
+    PFILE_OBJECT FileObject = NULL;
+    PDEVICE_OBJECT TargetDevice = NULL;
 
     /* Call the helper routine for an attach operation */
     Status = IopGetDeviceObjectPointer(TargetDeviceName,

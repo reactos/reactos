@@ -1,53 +1,23 @@
-
 /*
- * file system folder
- *
- * Copyright 1997             Marcus Meissner
- * Copyright 1998, 1999, 2002 Juergen Schmied
- * Copyright 2019             Katayama Hirofumi MZ
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     file system folder
+ * COPYRIGHT:   Copyright 1997 Marcus Meissner
+ *              Copyright 1998, 1999, 2002 Juergen Schmied
+ *              Copyright 2019 Katayama Hirofumi MZ
+ *              Copyright 2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-HKEY OpenKeyFromFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName)
+static HRESULT SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, LPCWSTR KeyName, CLSID* pclsidFolder);
+
+
+HKEY OpenKeyFromFileType(LPWSTR pExtension, LPCWSTR KeyName)
 {
     HKEY hkey;
-
-    if (!_ILIsValue(pidl))
-    {
-        ERR("Invalid pidl!\n");
-        return NULL;
-    }
-
-    FileStructW* pDataW = _ILGetFileStructW(pidl);
-    if (!pDataW)
-    {
-        ERR("Invalid pidl!\n");
-        return NULL;
-    }
-
-    LPWSTR pExtension = PathFindExtensionW(pDataW->wszName);
-    if (!pExtension || *pExtension == NULL)
-    {
-        WARN("No extension for %S!\n", pDataW->wszName);
-        return NULL;
-    }
 
     WCHAR FullName[MAX_PATH];
     DWORD dwSize = sizeof(FullName);
@@ -60,7 +30,7 @@ HKEY OpenKeyFromFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName)
     res = RegGetValueW(HKEY_CLASSES_ROOT, pExtension, NULL, RRF_RT_REG_SZ, NULL, FullName, &dwSize);
     if (res)
     {
-        WARN("Failed to get progid for file %S, extension %S (%x), address %x, pidl: %x, error %d\n", pDataW->wszName, pExtension, pExtension, &dwSize, pidl, res);
+        WARN("Failed to get progid for extension %S (%x), error %d\n", pExtension, pExtension, res);
         return NULL;
     }
 
@@ -75,9 +45,33 @@ HKEY OpenKeyFromFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName)
     return hkey;
 }
 
-HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pclsid)
+LPWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl)
 {
-    HKEY hkeyProgId = OpenKeyFromFileType(pidl, KeyName);
+    if (!_ILIsValue(pidl))
+    {
+        ERR("Invalid pidl!\n");
+        return NULL;
+    }
+
+    FileStructW* pDataW = _ILGetFileStructW(pidl);
+    if (!pDataW)
+    {
+        ERR("Invalid pidl!\n");
+        return NULL;
+    }
+
+    LPWSTR pExtension = PathFindExtensionW(pDataW->wszName);
+    if (!pExtension || *pExtension == UNICODE_NULL)
+    {
+        WARN("No extension for %S!\n", pDataW->wszName);
+        return NULL;
+    }
+    return pExtension;
+}
+
+HRESULT GetCLSIDForFileTypeFromExtension(LPWSTR pExtension, LPCWSTR KeyName, CLSID* pclsid)
+{
+    HKEY hkeyProgId = OpenKeyFromFileType(pExtension, KeyName);
     if (!hkeyProgId)
     {
         WARN("OpenKeyFromFileType failed for key %S\n", KeyName);
@@ -128,6 +122,15 @@ HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pcl
         return hres;
 
     return S_OK;
+}
+
+HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pclsid)
+{
+    LPWSTR pExtension = ExtensionFromPidl(pidl);
+    if (!pExtension)
+        return S_FALSE;
+
+    return GetCLSIDForFileTypeFromExtension(pExtension, KeyName, pclsid);
 }
 
 static HRESULT
@@ -293,7 +296,8 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
     }
     else
     {
-        HKEY hkey = OpenKeyFromFileType(pidl, L"DefaultIcon");
+        LPWSTR pExtension = ExtensionFromPidl(pidl);
+        HKEY hkey = pExtension ? OpenKeyFromFileType(pExtension, L"DefaultIcon") : NULL;
         if (!hkey)
             WARN("Could not open DefaultIcon key!\n");
 
@@ -310,8 +314,15 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
 
             if (!wcscmp(L"%1", wTemp)) /* icon is in the file */
             {
-                ILGetDisplayNameExW(psf, pidl, wTemp, 0);
+                ILGetDisplayNameExW(psf, pidl, wTemp, ILGDN_FORPARSING);
                 icon_idx = 0;
+
+                INT ret = ExtractIconExW(wTemp, -1, NULL, NULL, 0);
+                if (ret <= 0)
+                {
+                    StringCbCopyW(wTemp, sizeof(wTemp), swShell32Name);
+                    icon_idx = -IDI_SHELL_EXE;
+                }
             }
 
             initIcon->SetNormalIcon(wTemp, icon_idx);
@@ -335,98 +346,180 @@ including formatting a drive, reconnecting a network share drive, and requesting
 be inserted in a removable drive.
 */
 
-/***********************************************************************
-*   IShellFolder implementation
-*/
 
 class CFileSysEnum :
     public CEnumIDListBase
 {
-    private:
-    public:
-        CFileSysEnum();
-        ~CFileSysEnum();
-        HRESULT WINAPI Initialize(LPWSTR sPathTarget, DWORD dwFlags);
-
-        BEGIN_COM_MAP(CFileSysEnum)
-        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-        END_COM_MAP()
-};
-
-CFileSysEnum::CFileSysEnum()
-{
-}
-
-CFileSysEnum::~CFileSysEnum()
-{
-}
-
-HRESULT WINAPI CFileSysEnum::Initialize(LPWSTR lpszPath, DWORD dwFlags)
-{
-    WIN32_FIND_DATAW stffile;
-    HANDLE hFile;
-    WCHAR  szPath[MAX_PATH];
-    BOOL succeeded = TRUE;
-    static const WCHAR stars[] = { '*','.','*',0 };
-    static const WCHAR dot[] = { '.',0 };
-    static const WCHAR dotdot[] = { '.','.',0 };
-
-    TRACE("(%p)->(path=%s flags=0x%08x)\n", this, debugstr_w(lpszPath), dwFlags);
-
-    if(!lpszPath || !lpszPath[0]) return FALSE;
-
-    wcscpy(szPath, lpszPath);
-    PathAddBackslashW(szPath);
-    wcscat(szPath,stars);
-
-    hFile = FindFirstFileW(szPath,&stffile);
-    if ( hFile != INVALID_HANDLE_VALUE )
+private:
+    HRESULT _AddFindResult(LPWSTR sParentDir, const WIN32_FIND_DATAW& FindData, DWORD dwFlags)
     {
-        BOOL findFinished = FALSE;
+#define SUPER_HIDDEN (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)
+
+        // Does it need special handling because it is hidden?
+        if (FindData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+        {
+            DWORD dwHidden = FindData.dwFileAttributes & SUPER_HIDDEN;
+
+            // Is it hidden, but are we not asked to include hidden?
+            if (dwHidden == FILE_ATTRIBUTE_HIDDEN && !(dwFlags & SHCONTF_INCLUDEHIDDEN))
+                return S_OK;
+
+            // Is it a system file, but are we not asked to include those?
+            if (dwHidden == SUPER_HIDDEN && !(dwFlags & SHCONTF_INCLUDESUPERHIDDEN))
+                return S_OK;
+        }
+
+        BOOL bDirectory = (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+
+        HRESULT hr;
+        if (bDirectory)
+        {
+            // Skip the current and parent directory nodes
+            if (!strcmpW(FindData.cFileName, L".") || !strcmpW(FindData.cFileName, L".."))
+                return S_OK;
+
+            // Does this directory need special handling?
+            if ((FindData.dwFileAttributes & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0)
+            {
+                WCHAR Tmp[MAX_PATH];
+                CLSID clsidFolder;
+
+                PathCombineW(Tmp, sParentDir, FindData.cFileName);
+
+                hr = SHELL32_GetCLSIDForDirectory(Tmp, L"CLSID", &clsidFolder);
+                if (SUCCEEDED(hr))
+                {
+                    ERR("SHOULD DO SOMETHING WITH CLSID?\n");
+                }
+            }
+        }
+        else
+        {
+            CLSID clsidFile;
+            LPWSTR pExtension = PathFindExtensionW(FindData.cFileName);
+            if (pExtension)
+            {
+                // FIXME: Cache this?
+                hr = GetCLSIDForFileTypeFromExtension(pExtension, L"CLSID", &clsidFile);
+                if (hr == S_OK)
+                {
+                    HKEY hkey;
+                    hr = SHRegGetCLSIDKeyW(clsidFile, L"ShellFolder", FALSE, FALSE, &hkey);
+                    if (SUCCEEDED(hr))
+                    {
+                        ::RegCloseKey(hkey);
+
+                        // This should be presented as directory!
+                        bDirectory = TRUE;
+                        TRACE("Treating '%S' as directory!\n", FindData.cFileName);
+                    }
+                }
+            }
+        }
+
+        LPITEMIDLIST pidl = NULL;
+        if (bDirectory)
+        {
+            if (dwFlags & SHCONTF_FOLDERS)
+            {
+                TRACE("(%p)->  (folder=%s)\n", this, debugstr_w(FindData.cFileName));
+                pidl = _ILCreateFromFindDataW(&FindData);
+            }
+        }
+        else
+        {
+            if (dwFlags & SHCONTF_NONFOLDERS)
+            {
+                TRACE("(%p)->  (file  =%s)\n", this, debugstr_w(FindData.cFileName));
+                pidl = _ILCreateFromFindDataW(&FindData);
+            }
+        }
+
+        if (pidl && !AddToEnumList(pidl))
+        {
+            FAILED_UNEXPECTEDLY(E_FAIL);
+            return E_FAIL;
+        }
+
+        return S_OK;
+    }
+
+public:
+    CFileSysEnum()
+    {
+
+    }
+
+    ~CFileSysEnum()
+    {
+    }
+
+    HRESULT WINAPI Initialize(LPWSTR sPathTarget, DWORD dwFlags)
+    {
+        TRACE("(%p)->(path=%s flags=0x%08x)\n", this, debugstr_w(sPathTarget), dwFlags);
+
+        if (!sPathTarget || !sPathTarget[0])
+        {
+            WARN("No path for CFileSysEnum, empty result!\n");
+            return S_FALSE;
+        }
+
+        WCHAR szFindPattern[MAX_PATH];
+        HRESULT hr = StringCchCopyW(szFindPattern, _countof(szFindPattern), sPathTarget);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        /* FIXME: UNSAFE CRAP */
+        PathAddBackslashW(szFindPattern);
+
+        hr = StringCchCatW(szFindPattern, _countof(szFindPattern), L"*.*");
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+
+        WIN32_FIND_DATAW FindData;
+        HANDLE hFind = FindFirstFileW(szFindPattern, &FindData);
+        if (hFind == INVALID_HANDLE_VALUE)
+            return HRESULT_FROM_WIN32(GetLastError());
 
         do
         {
-            if ( !(stffile.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-             || (dwFlags & SHCONTF_INCLUDEHIDDEN) )
-            {
-                LPITEMIDLIST pidl = NULL;
+            hr = _AddFindResult(sPathTarget, FindData, dwFlags);
 
-                if ( (stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
-                 dwFlags & SHCONTF_FOLDERS &&
-                 strcmpW(stffile.cFileName, dot) && strcmpW(stffile.cFileName, dotdot))
-                {
-                    pidl = _ILCreateFromFindDataW(&stffile);
-                    succeeded = succeeded && AddToEnumList(pidl);
-                }
-                else if (!(stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                 && dwFlags & SHCONTF_NONFOLDERS)
-                {
-                    pidl = _ILCreateFromFindDataW(&stffile);
-                    succeeded = succeeded && AddToEnumList(pidl);
-                }
-            }
-            if (succeeded)
+            if (FAILED_UNEXPECTEDLY(hr))
+                break;
+
+        } while(FindNextFileW(hFind, &FindData));
+
+        if (SUCCEEDED(hr))
+        {
+            DWORD dwError = GetLastError();
+            if (dwError != ERROR_NO_MORE_FILES)
             {
-                if (!FindNextFileW(hFile, &stffile))
-                {
-                    if (GetLastError() == ERROR_NO_MORE_FILES)
-                        findFinished = TRUE;
-                    else
-                        succeeded = FALSE;
-                }
+                hr = HRESULT_FROM_WIN32(dwError);
+                FAILED_UNEXPECTEDLY(hr);
             }
-        } while (succeeded && !findFinished);
-        FindClose(hFile);
+        }
+        TRACE("(%p)->(hr=0x%08x)\n", this, hr);
+        FindClose(hFind);
+        return hr;
     }
 
-    return succeeded;
-}
+    BEGIN_COM_MAP(CFileSysEnum)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+    END_COM_MAP()
+};
+
+
+/***********************************************************************
+ *   IShellFolder implementation
+ */
 
 CFSFolder::CFSFolder()
 {
-    pclsid = (CLSID *)&CLSID_ShellFSFolder;
-    sPathTarget = NULL;
-    pidlRoot = NULL;
+    m_pclsid = &CLSID_ShellFSFolder;
+    m_sPathTarget = NULL;
+    m_pidlRoot = NULL;
     m_bGroupPolicyActive = 0;
 }
 
@@ -434,8 +527,8 @@ CFSFolder::~CFSFolder()
 {
     TRACE("-- destroying IShellFolder(%p)\n", this);
 
-    SHFree(pidlRoot);
-    SHFree(sPathTarget);
+    SHFree(m_pidlRoot);
+    SHFree(m_sPathTarget);
 }
 
 
@@ -490,22 +583,23 @@ LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path)
     return pidl;
 }
 
-void SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, CLSID* pclsidFolder)
+static HRESULT SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, LPCWSTR KeyName, CLSID* pclsidFolder)
 {
     WCHAR wszCLSIDValue[CHARS_IN_GUID];
     WCHAR wszDesktopIni[MAX_PATH];
     StringCchCopyW(wszDesktopIni, MAX_PATH, pwszDir);
     StringCchCatW(wszDesktopIni, MAX_PATH, L"\\desktop.ini");
 
-    if (GetPrivateProfileStringW(L".ShellClassInfo", 
-                                 L"CLSID", 
+    if (GetPrivateProfileStringW(L".ShellClassInfo",
+                                 KeyName,
                                  L"",
-                                 wszCLSIDValue, 
-                                 CHARS_IN_GUID, 
+                                 wszCLSIDValue,
+                                 CHARS_IN_GUID,
                                  wszDesktopIni))
     {
-        CLSIDFromString (wszCLSIDValue, pclsidFolder);
+        return CLSIDFromString(wszCLSIDValue, pclsidFolder);
     }
+    return E_FAIL;
 }
 
 HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes)
@@ -525,10 +619,60 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
     dwShellAttributes = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANLINK | SFGAO_CANRENAME | SFGAO_CANDELETE |
                         SFGAO_HASPROPSHEET | SFGAO_DROPTARGET | SFGAO_FILESYSTEM;
 
-    if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        dwShellAttributes |= (SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR | SFGAO_STORAGEANCESTOR | SFGAO_STORAGE);
+    BOOL bDirectory = (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+
+    if (!bDirectory)
+    {
+        // https://git.reactos.org/?p=reactos.git;a=blob;f=dll/shellext/zipfldr/res/zipfldr.rgs;hb=032b5aacd233cd7b83ab6282aad638c161fdc400#l9
+        WCHAR szFileName[MAX_PATH];
+        LPWSTR pExtension;
+
+        if (_ILSimpleGetTextW(pidl, szFileName, _countof(szFileName)) && (pExtension = PathFindExtensionW(szFileName)))
+        {
+            CLSID clsidFile;
+            // FIXME: Cache this?
+            HRESULT hr = GetCLSIDForFileTypeFromExtension(pExtension, L"CLSID", &clsidFile);
+            if (hr == S_OK)
+            {
+                HKEY hkey;
+                hr = SHRegGetCLSIDKeyW(clsidFile, L"ShellFolder", FALSE, FALSE, &hkey);
+                if (SUCCEEDED(hr))
+                {
+                    DWORD dwAttributes = 0;
+                    DWORD dwSize = sizeof(dwAttributes);
+                    LSTATUS Status;
+
+                    Status = SHRegGetValueW(hkey, NULL, L"Attributes", RRF_RT_REG_DWORD, NULL, &dwAttributes, &dwSize);
+                    if (Status == STATUS_SUCCESS)
+                    {
+                        ERR("Augmenting '%S' with dwAttributes=0x%x\n", szFileName, dwAttributes);
+                        dwShellAttributes |= dwAttributes;
+                    }
+                    ::RegCloseKey(hkey);
+
+                    // This should be presented as directory!
+                    bDirectory = TRUE;
+                    ERR("Treating '%S' as directory!\n", szFileName);
+                }
+            }
+        }
+    }
+
+    // This is a directory
+    if (bDirectory)
+    {
+        dwShellAttributes |= (SFGAO_FOLDER | /*SFGAO_HASSUBFOLDER |*/ SFGAO_STORAGE);
+
+        // Is this a real directory?
+        if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            dwShellAttributes |= (SFGAO_FILESYSANCESTOR | SFGAO_STORAGEANCESTOR);
+        }
+    }
     else
+    {
         dwShellAttributes |= SFGAO_STREAM;
+    }
 
     if (dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
         dwShellAttributes |=  SFGAO_HIDDEN;
@@ -640,7 +784,7 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
         else
         {
             /* build the full pathname to the element */
-            lstrcpynW(szPath, sPathTarget, MAX_PATH - 1);
+            lstrcpynW(szPath, m_sPathTarget, MAX_PATH - 1);
             PathAddBackslashW(szPath);
             len = wcslen(szPath);
             lstrcpynW(szPath + len, szElement, MAX_PATH - len);
@@ -688,7 +832,7 @@ HRESULT WINAPI CFSFolder::EnumObjects(
     DWORD dwFlags,
     LPENUMIDLIST *ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CFileSysEnum>(sPathTarget, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
+    return ShellObjectCreatorInit<CFileSysEnum>(m_sPathTarget, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 /**************************************************************************
@@ -711,7 +855,7 @@ HRESULT WINAPI CFSFolder::BindToObject(
     CComPtr<IShellFolder> pSF;
     HRESULT hr;
 
-    if (!pidlRoot || !ppvOut || !pidl || !pidl->mkid.cb)
+    if (!m_pidlRoot || !ppvOut || !pidl || !pidl->mkid.cb)
     {
         ERR("CFSFolder::BindToObject: Invalid parameters\n");
         return E_INVALIDARG;
@@ -733,7 +877,7 @@ HRESULT WINAPI CFSFolder::BindToObject(
     PERSIST_FOLDER_TARGET_INFO pfti = {0};
     pfti.dwAttributes = -1;
     pfti.csidl = -1;
-    PathCombineW(pfti.szTargetParsingName, sPathTarget, pDataW->wszName);
+    PathCombineW(pfti.szTargetParsingName, m_sPathTarget, pDataW->wszName);
 
     /* Get the CLSID to bind to */
     CLSID clsidFolder;
@@ -742,7 +886,7 @@ HRESULT WINAPI CFSFolder::BindToObject(
         clsidFolder = CLSID_ShellFSFolder;
 
         if ((pData->uFileAttribs & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0)
-            SHELL32_GetCLSIDForDirectory(pfti.szTargetParsingName, &clsidFolder);
+            SHELL32_GetCLSIDForDirectory(pfti.szTargetParsingName, L"CLSID", &clsidFolder);
     }
     else
     {
@@ -753,7 +897,7 @@ HRESULT WINAPI CFSFolder::BindToObject(
             return hr;
     }
 
-    hr = SHELL32_BindToSF(pidlRoot, &pfti, pidl, &clsidFolder, riid, ppvOut);
+    hr = SHELL32_BindToSF(m_pidlRoot, &pfti, pidl, &clsidFolder, riid, ppvOut);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -857,30 +1001,73 @@ HRESULT WINAPI CFSFolder::CreateViewObject(HWND hwndOwner,
     {
         *ppvOut = NULL;
 
-        if (IsEqualIID (riid, IID_IDropTarget))
-            hr = CFSDropTarget_CreateInstance(sPathTarget, riid, ppvOut);
-        else if (IsEqualIID (riid, IID_IContextMenu))
-        {
-            HKEY hKeys[16];
-            UINT cKeys = 0;
-            AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
+        BOOL bIsDropTarget = IsEqualIID (riid, IID_IDropTarget);
+        BOOL bIsShellView = !bIsDropTarget && IsEqualIID (riid, IID_IShellView);
 
-            DEFCONTEXTMENU dcm;
-            dcm.hwnd = hwndOwner;
-            dcm.pcmcb = this;
-            dcm.pidlFolder = pidlRoot;
-            dcm.psf = this;
-            dcm.cidl = 0;
-            dcm.apidl = NULL;
-            dcm.cKeys = cKeys;
-            dcm.aKeys = hKeys;
-            dcm.punkAssociationInfo = NULL;
-            hr = SHCreateDefaultContextMenu (&dcm, riid, ppvOut);
-        }
-        else if (IsEqualIID (riid, IID_IShellView))
+        if (bIsDropTarget || bIsShellView)
         {
-            SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this, NULL, this};
-            hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
+            DWORD dwDirAttributes = _ILGetFileAttributes(ILFindLastID(m_pidlRoot), NULL, 0);
+
+            if ((dwDirAttributes & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0)
+            {
+                CLSID clsidFolder;
+                hr = SHELL32_GetCLSIDForDirectory(m_sPathTarget, L"UICLSID", &clsidFolder);
+                if (SUCCEEDED(hr))
+                {
+                    CComPtr<IPersistFolder> spFolder;
+                    hr = SHCoCreateInstance(NULL, &clsidFolder, NULL, IID_PPV_ARG(IPersistFolder, &spFolder));
+                    if (!FAILED_UNEXPECTEDLY(hr))
+                    {
+                        hr = spFolder->Initialize(m_pidlRoot);
+
+                        if (!FAILED_UNEXPECTEDLY(hr))
+                        {
+                            hr = spFolder->QueryInterface(riid, ppvOut);
+                        }
+                    }
+                }
+                else
+                {
+                    // No desktop.ini, or no UICLSID present, continue as if nothing happened
+                    hr = E_INVALIDARG;
+                }
+            }
+        }
+
+        if (!SUCCEEDED(hr))
+        {
+            // No UICLSID handler found, continue to the default handlers
+            if (bIsDropTarget)
+            {
+                hr = CFSDropTarget_CreateInstance(m_sPathTarget, riid, ppvOut);
+            }
+            else if (IsEqualIID (riid, IID_IContextMenu))
+            {
+                HKEY hKeys[16];
+                UINT cKeys = 0;
+                AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
+
+                DEFCONTEXTMENU dcm;
+                dcm.hwnd = hwndOwner;
+                dcm.pcmcb = this;
+                dcm.pidlFolder = m_pidlRoot;
+                dcm.psf = this;
+                dcm.cidl = 0;
+                dcm.apidl = NULL;
+                dcm.cKeys = cKeys;
+                dcm.aKeys = hKeys;
+                dcm.punkAssociationInfo = NULL;
+                hr = SHCreateDefaultContextMenu (&dcm, riid, ppvOut);
+            }
+            else if (bIsShellView)
+            {
+                SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this, NULL, this};
+                hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
+            }
+            else
+            {
+                hr = E_INVALIDARG;
+            }
         }
     }
     TRACE("-- (%p)->(interface=%p)\n", this, ppvOut);
@@ -911,7 +1098,7 @@ HRESULT WINAPI CFSFolder::GetAttributesOf(UINT cidl,
 
     if(cidl == 0)
     {
-        LPCITEMIDLIST rpidl = ILFindLastID(pidlRoot);
+        LPCITEMIDLIST rpidl = ILFindLastID(m_pidlRoot);
 
         if (_ILIsFolder(rpidl) || _ILIsValue(rpidl))
         {
@@ -920,7 +1107,7 @@ HRESULT WINAPI CFSFolder::GetAttributesOf(UINT cidl,
         else if (_ILIsDrive(rpidl))
         {
             IShellFolder *psfParent = NULL;
-            hr = SHBindToParent(pidlRoot, IID_PPV_ARG(IShellFolder, &psfParent), NULL);
+            hr = SHBindToParent(m_pidlRoot, IID_PPV_ARG(IShellFolder, &psfParent), NULL);
             if(SUCCEEDED(hr))
             {
                 hr = psfParent->GetAttributesOf(1, &rpidl, (SFGAOF*)rgfInOut);
@@ -1007,7 +1194,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
             DEFCONTEXTMENU dcm;
             dcm.hwnd = hwndOwner;
             dcm.pcmcb = this;
-            dcm.pidlFolder = pidlRoot;
+            dcm.pidlFolder = m_pidlRoot;
             dcm.psf = this;
             dcm.cidl = cidl;
             dcm.apidl = apidl;
@@ -1020,7 +1207,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         {
             if (cidl >= 1) 
             {
-                hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
+                hr = IDataObject_Constructor (hwndOwner, m_pidlRoot, apidl, cidl, TRUE, (IDataObject **)&pObj);
             }
             else
             {
@@ -1039,7 +1226,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
             /* only interested in attempting to bind to shell folders, not files (except exe), so if we fail, rebind to root */
             if (cidl != 1 || FAILED(hr = this->_GetDropTarget(apidl[0], (LPVOID*) &pObj)))
             {
-                hr = CFSDropTarget_CreateInstance(sPathTarget, riid, (LPVOID*) &pObj);
+                hr = CFSDropTarget_CreateInstance(m_sPathTarget, riid, (LPVOID*) &pObj);
             }
         }
         else
@@ -1141,9 +1328,9 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
         /* If it is an empty pidl return only the path of the folder */
         if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) && 
             (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
-            sPathTarget)
+            m_sPathTarget)
         {
-            return SHSetStrRet(strRet, sPathTarget);
+            return SHSetStrRet(strRet, m_sPathTarget);
         }
         return E_INVALIDARG;
     }
@@ -1155,9 +1342,9 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
 
     if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
         (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
-        sPathTarget)
+        m_sPathTarget)
     {
-        lstrcpynW(pszPath, sPathTarget, MAX_PATH);
+        lstrcpynW(pszPath, m_sPathTarget, MAX_PATH);
         PathAddBackslashW(pszPath);
         len = wcslen(pszPath);
     }
@@ -1204,11 +1391,11 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     }
 
     /* build source path */
-    PathCombineW(szSrc, sPathTarget, pDataW->wszName);
+    PathCombineW(szSrc, m_sPathTarget, pDataW->wszName);
 
     /* build destination path */
     if (dwFlags == SHGDN_NORMAL || dwFlags & SHGDN_INFOLDER)
-        PathCombineW(szDest, sPathTarget, lpName);
+        PathCombineW(szDest, m_sPathTarget, lpName);
     else
         lstrcpynW(szDest, lpName, MAX_PATH);
 
@@ -1358,7 +1545,7 @@ HRESULT WINAPI CFSFolder::GetClassID(CLSID * lpClassId)
     if (!lpClassId)
         return E_POINTER;
 
-    *lpClassId = *pclsid;
+    *lpClassId = *m_pclsid;
 
     return S_OK;
 }
@@ -1367,7 +1554,7 @@ HRESULT WINAPI CFSFolder::GetClassID(CLSID * lpClassId)
  * CFSFolder::Initialize
  *
  * NOTES
- *  sPathTarget is not set. Don't know how to handle in a non rooted environment.
+ *  m_sPathTarget is not set. Don't know how to handle in a non rooted environment.
  */
 HRESULT WINAPI CFSFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
@@ -1375,23 +1562,23 @@ HRESULT WINAPI CFSFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 
     TRACE ("(%p)->(%p)\n", this, pidl);
 
-    SHFree (pidlRoot);     /* free the old pidl */
-    pidlRoot = ILClone (pidl); /* set my pidl */
+    SHFree(m_pidlRoot);     /* free the old pidl */
+    m_pidlRoot = ILClone (pidl); /* set my pidl */
 
-    SHFree (sPathTarget);
-    sPathTarget = NULL;
+    SHFree (m_sPathTarget);
+    m_sPathTarget = NULL;
 
     /* set my path */
     if (SHGetPathFromIDListW (pidl, wszTemp))
     {
         int len = wcslen(wszTemp);
-        sPathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
-        if (!sPathTarget)
+        m_sPathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
+        if (!m_sPathTarget)
             return E_OUTOFMEMORY;
-        memcpy(sPathTarget, wszTemp, (len + 1) * sizeof(WCHAR));
+        memcpy(m_sPathTarget, wszTemp, (len + 1) * sizeof(WCHAR));
     }
 
-    TRACE ("--(%p)->(%s)\n", this, debugstr_w(sPathTarget));
+    TRACE ("--(%p)->(%s)\n", this, debugstr_w(m_sPathTarget));
     return S_OK;
 }
 
@@ -1405,7 +1592,7 @@ HRESULT WINAPI CFSFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
     if (!pidl)
         return E_POINTER;
 
-    *pidl = ILClone(pidlRoot);
+    *pidl = ILClone(m_pidlRoot);
     return S_OK;
 }
 
@@ -1430,15 +1617,15 @@ HRESULT WINAPI CFSFolder::InitializeEx(IBindCtx * pbc, LPCITEMIDLIST pidlRootx,
     if (ppfti && ppfti->pidlTargetFolder)
         pdump(ppfti->pidlTargetFolder);
 
-    if (pidlRoot)
-        __SHFreeAndNil(&pidlRoot);    /* free the old */
-    if (sPathTarget)
-        __SHFreeAndNil(&sPathTarget);
+    if (m_pidlRoot)
+        __SHFreeAndNil(&m_pidlRoot);    /* free the old */
+    if (m_sPathTarget)
+        __SHFreeAndNil(&m_sPathTarget);
 
     /*
      * Root path and pidl
      */
-    pidlRoot = ILClone(pidlRootx);
+    m_pidlRoot = ILClone(pidlRootx);
 
     /*
      *  the target folder is spezified in csidl OR pidlTargetFolder OR
@@ -1451,19 +1638,19 @@ HRESULT WINAPI CFSFolder::InitializeEx(IBindCtx * pbc, LPCITEMIDLIST pidlRootx,
             if (SHGetSpecialFolderPathW(0, wszTemp, ppfti->csidl,
                                         ppfti->csidl & CSIDL_FLAG_CREATE)) {
                 int len = wcslen(wszTemp);
-                sPathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
-                if (!sPathTarget)
+                m_sPathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
+                if (!m_sPathTarget)
                     return E_OUTOFMEMORY;
-                memcpy(sPathTarget, wszTemp, (len + 1) * sizeof(WCHAR));
+                memcpy(m_sPathTarget, wszTemp, (len + 1) * sizeof(WCHAR));
             }
         }
         else if (ppfti->szTargetParsingName[0])
         {
             int len = wcslen(ppfti->szTargetParsingName);
-            sPathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
-            if (!sPathTarget)
+            m_sPathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
+            if (!m_sPathTarget)
                 return E_OUTOFMEMORY;
-            memcpy(sPathTarget, ppfti->szTargetParsingName,
+            memcpy(m_sPathTarget, ppfti->szTargetParsingName,
                    (len + 1) * sizeof(WCHAR));
         }
         else if (ppfti->pidlTargetFolder)
@@ -1471,17 +1658,17 @@ HRESULT WINAPI CFSFolder::InitializeEx(IBindCtx * pbc, LPCITEMIDLIST pidlRootx,
             if (SHGetPathFromIDListW(ppfti->pidlTargetFolder, wszTemp))
             {
                 int len = wcslen(wszTemp);
-                sPathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
-                if (!sPathTarget)
+                m_sPathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
+                if (!m_sPathTarget)
                     return E_OUTOFMEMORY;
-                memcpy(sPathTarget, wszTemp, (len + 1) * sizeof(WCHAR));
+                memcpy(m_sPathTarget, wszTemp, (len + 1) * sizeof(WCHAR));
             }
         }
     }
 
-    TRACE("--(%p)->(target=%s)\n", this, debugstr_w(sPathTarget));
-    pdump(pidlRoot);
-    return (sPathTarget) ? S_OK : E_FAIL;
+    TRACE("--(%p)->(target=%s)\n", this, debugstr_w(m_sPathTarget));
+    pdump(m_pidlRoot);
+    return (m_sPathTarget) ? S_OK : E_FAIL;
 }
 
 HRESULT WINAPI CFSFolder::GetFolderTargetInfo(PERSIST_FOLDER_TARGET_INFO * ppfti)
@@ -1573,7 +1760,7 @@ HRESULT CFSFolder::_CreateShellExtInstance(const CLSID *pclsid, LPCITEMIDLIST pi
         return E_INVALIDARG;
     }
 
-    PathCombineW(wszPath, sPathTarget, pDataW->wszName);
+    PathCombineW(wszPath, m_sPathTarget, pDataW->wszName);
 
     CComPtr<IPersistFile> pp;
     hr = SHCoCreateInstance(NULL, pclsid, NULL, IID_PPV_ARG(IPersistFile, &pp));
@@ -1601,10 +1788,10 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
     {
         if (uMsg == DFM_INVOKECOMMAND && wParam == 0)
         {
-            PUITEMID_CHILD pidlChild = ILClone(ILFindLastID(pidlRoot));
-            LPITEMIDLIST pidlParent = ILClone(pidlRoot);
+            PUITEMID_CHILD pidlChild = ILClone(ILFindLastID(m_pidlRoot));
+            LPITEMIDLIST pidlParent = ILClone(m_pidlRoot);
             ILRemoveLastID(pidlParent);
-            HRESULT hr = SH_ShowPropertiesDialog(sPathTarget, pidlParent, &pidlChild);
+            HRESULT hr = SH_ShowPropertiesDialog(m_sPathTarget, pidlParent, &pidlChild);
             if (FAILED(hr))
                 ERR("SH_ShowPropertiesDialog failed\n");
             ILFree(pidlChild);
@@ -1674,7 +1861,7 @@ HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_D
     WCHAR szPath[MAX_PATH], szIniFile[MAX_PATH];
 
     // does the folder exists?
-    if (!SHGetPathFromIDListW(pidlRoot, szPath) || !PathIsDirectoryW(szPath))
+    if (!SHGetPathFromIDListW(m_pidlRoot, szPath) || !PathIsDirectoryW(szPath))
     {
         return E_INVALIDARG;
     }

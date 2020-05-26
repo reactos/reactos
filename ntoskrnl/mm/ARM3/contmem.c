@@ -444,11 +444,16 @@ MiAllocateContiguousMemory(IN SIZE_T NumberOfBytes,
     //
     // Otherwise, we'll go try to find some
     //
-    return MiFindContiguousMemory(LowestAcceptablePfn,
-                                  HighestAcceptablePfn,
-                                  BoundaryPfn,
-                                  SizeInPages,
-                                  CacheType);
+    BaseAddress = MiFindContiguousMemory(LowestAcceptablePfn,
+                                         HighestAcceptablePfn,
+                                         BoundaryPfn,
+                                         SizeInPages,
+                                         CacheType);
+    if (!BaseAddress)
+    {
+        DPRINT1("Unable to allocate contiguous memory for %d bytes (%d pages), out of memory!\n", NumberOfBytes, SizeInPages);
+    }
+    return BaseAddress;
 }
 
 VOID

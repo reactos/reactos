@@ -87,6 +87,14 @@ typedef struct _USER_CREATE_SYSTEM_THREAD
     BOOL bRemote;
 } USER_CREATE_SYSTEM_THREAD, *PUSER_CREATE_SYSTEM_THREAD;
 
+typedef struct _USER_DEVICE_EVENT_MSG {
+    HWND hwnd;
+    WPARAM wParam;
+    LPARAM lParam;
+    DWORD Data;
+    ULONG_PTR Result;
+} USER_DEVICE_EVENT_MSG, *PUSER_DEVICE_EVENT_MSG;
+
 typedef struct _USER_API_MESSAGE
 {
     PORT_MESSAGE Header;
@@ -104,6 +112,7 @@ typedef struct _USER_API_MESSAGE
         USER_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
         USER_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;
         USER_CREATE_SYSTEM_THREAD CreateSystemThreadRequest;
+        USER_DEVICE_EVENT_MSG DeviceEventMsg;
     } Data;
 } USER_API_MESSAGE, *PUSER_API_MESSAGE;
 

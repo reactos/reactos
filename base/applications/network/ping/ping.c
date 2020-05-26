@@ -418,24 +418,35 @@ static
 void
 Ping(void)
 {
-    PVOID ReplyBuffer = NULL;
+    PVOID ReplyBuffer;
     PVOID SendBuffer = NULL;
     DWORD ReplySize = 0;
     DWORD Status;
 
-    SendBuffer = malloc(RequestSize);
-    if (SendBuffer == NULL)
+    if (RequestSize != 0)
     {
-        ConResPrintf(StdErr, IDS_NO_RESOURCES);
-        exit(1);
+        SendBuffer = malloc(RequestSize);
+        if (SendBuffer == NULL)
+        {
+            ConResPrintf(StdErr, IDS_NO_RESOURCES);
+            exit(1);
+        }
+
+        ZeroMemory(SendBuffer, RequestSize);
     }
 
-    ZeroMemory(SendBuffer, RequestSize);
-
     if (Family == AF_INET6)
+    {
         ReplySize += sizeof(ICMPV6_ECHO_REPLY);
+    }
     else
+    {
+#ifdef _WIN64
+        ReplySize += sizeof(ICMP_ECHO_REPLY32);
+#else
         ReplySize += sizeof(ICMP_ECHO_REPLY);
+#endif
+    }
 
     ReplySize += RequestSize + SIZEOF_ICMP_ERROR + SIZEOF_IO_STATUS_BLOCK;
 
@@ -566,10 +577,18 @@ Ping(void)
         }
         else
         {
+#ifdef _WIN64
+            PICMP_ECHO_REPLY32 pEchoReply;
+#else
             PICMP_ECHO_REPLY pEchoReply;
+#endif
             IPAddr *IP4Addr;
 
+#ifdef _WIN64
+            pEchoReply = (PICMP_ECHO_REPLY32)ReplyBuffer;
+#else
             pEchoReply = (PICMP_ECHO_REPLY)ReplyBuffer;
+#endif
 
             IP4Addr = (IPAddr *)&pEchoReply->Address;
             SockAddrIn.sin_family = AF_INET;

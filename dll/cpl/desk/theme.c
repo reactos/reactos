@@ -1058,3 +1058,34 @@ cleanup:
 
     return ret;
 }
+
+/* TODO: */
+INT_PTR CALLBACK
+ThemesPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    LPNMHDR lpnm;
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            break;
+
+        case WM_COMMAND:
+            break;
+
+        case WM_NOTIFY:
+            lpnm = (LPNMHDR)lParam;
+            switch (lpnm->code)
+            {
+                case PSN_APPLY:
+                    SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)TEXT(""));
+                    return TRUE;
+            }
+            break;
+
+        case WM_DESTROY:
+            break;
+    }
+
+    return FALSE;
+}

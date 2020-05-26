@@ -6,7 +6,7 @@ BEGIN
     MSG_COPYRIGHT_1 "This is free software, and you are welcome to redistribute\nit under certain conditions.\n\n"
     MSG_USAGE "Usage: TELNET [params][host [port]]\n\n  params\n    -d:FILENAME.EXT  Dumps all incoming data to FILENAME.EXT.\n  host              Host name or IP address of the remote host to connect to.\n"
     MSG_USAGE_1 "  port              Service port to open (default is telnet port 23).\n\n"
-    MSG_HELP "Commands may be abbreviated.  Commands are:\n  \ncl[ose]         close current connection\nop[en]          connect to a site\nq[uit]          exit telnet\n"
+    MSG_HELP "Commands may be abbreviated.  Commands are:\n\ncl[ose]         close current connection\nop[en]          connect to a site\nq[uit]          exit telnet\n"
     MSG_HELP_1 "ke[ys]          changes/displays keymaps (write keys to see the options)\nse[t]           displays/alters configuration options\nz               suspend\n? h[elp]        print help information\n"
     MSG_INVCMD "Invalid command.  Type ? for help.\n"
     MSG_ERROR "%1 failed.\n"

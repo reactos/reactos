@@ -21,11 +21,14 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
+#ifdef __REACTOS__
+#include "winnls.h"
+#endif
 #include "ole2.h"
 #include "rpcproxy.h"
 #include "inseng.h"
 #include "wine/heap.h"
-#include "wine/unicode.h"
+
 
 static inline char *strdupA(const char *src)
 {
@@ -38,8 +41,8 @@ static inline WCHAR *strdupW(const WCHAR *src)
 {
     WCHAR *dest;
     if (!src) return NULL;
-    dest = HeapAlloc(GetProcessHeap(), 0, (strlenW(src) + 1) * sizeof(WCHAR));
-    if (dest) strcpyW(dest, src);
+    dest = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(src) + 1) * sizeof(WCHAR));
+    if (dest) lstrcpyW(dest, src);
     return dest;
 }
 

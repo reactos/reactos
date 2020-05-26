@@ -18,7 +18,6 @@
 
 #define COBJMACROS
 
-#include "config.h"
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -28,7 +27,6 @@
 #include "wbemcli.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "wmiutils_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wmiutils);
@@ -100,7 +98,7 @@ static HRESULT WINAPI status_code_GetErrorCodeText(
 
     FIXME("%p, 0x%08x, 0x%04x, 0x%08x, %p\n", iface, res, lcid, flags, text);
 
-    sprintfW(msg, fmt, res);
+    swprintf(msg, fmt, res);
     *text = SysAllocString(msg);
     return WBEM_S_NO_ERROR;
 }
@@ -118,7 +116,7 @@ static HRESULT WINAPI status_code_GetFacilityCodeText(
 
     FIXME("%p, 0x%08x, 0x%04x, 0x%08x, %p\n", iface, res, lcid, flags, text);
 
-    sprintfW(msg, fmt, res);
+    swprintf(msg, fmt, res);
     *text = SysAllocString(msg);
     return WBEM_S_NO_ERROR;
 }

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -116,7 +116,7 @@ const char        *AcpiGbl_RegionTypes[ACPI_NUM_PREDEFINED_REGIONS] =
     "IPMI",              /* 0x07 */
     "GeneralPurposeIo",  /* 0x08 */
     "GenericSerialBus",  /* 0x09 */
-    "PlatformCommChannel"/* 0x0A */
+    "PCC"                /* 0x0A */
 };
 
 

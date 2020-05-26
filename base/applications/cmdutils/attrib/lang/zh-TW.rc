@@ -5,6 +5,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
+    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ATTRIB_HELP "顯示或更改檔案屬性。\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] 檔案 ...\n\
        [/S [/D]]\n\n\

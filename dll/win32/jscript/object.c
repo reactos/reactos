@@ -32,8 +32,11 @@ static const WCHAR propertyIsEnumerableW[] =
     {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
 static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 
+static const WCHAR createW[] = {'c','r','e','a','t','e',0};
 static const WCHAR getOwnPropertyDescriptorW[] =
     {'g','e','t','O','w','n','P','r','o','p','e','r','t','y','D','e','s','c','r','i','p','t','o','r',0};
+static const WCHAR getPrototypeOfW[] =
+    {'g','e','t','P','r','o','t','o','t','y','p','e','O','f',0};
 static const WCHAR definePropertyW[] = {'d','e','f','i','n','e','P','r','o','p','e','r','t','y',0};
 
 static const WCHAR definePropertiesW[] = {'d','e','f','i','n','e','P','r','o','p','e','r','t','i','e','s',0};
@@ -86,11 +89,11 @@ static HRESULT Object_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
         jsstr_t *ret;
         WCHAR *ptr;
 
-        ret = jsstr_alloc_buf(9+strlenW(str), &ptr);
+        ret = jsstr_alloc_buf(9+lstrlenW(str), &ptr);
         if(!ret)
             return E_OUTOFMEMORY;
 
-        sprintfW(ptr, formatW, str);
+        swprintf(ptr, formatW, str);
         *r = jsval_string(ret);
     }
 
@@ -406,6 +409,57 @@ static HRESULT to_property_descriptor(script_ctx_t *ctx, jsdisp_t *attr_obj, pro
     return hres;
 }
 
+static HRESULT jsdisp_define_properties(script_ctx_t *ctx, jsdisp_t *obj, jsval_t list_val)
+{
+    DISPID id = DISPID_STARTENUM;
+    property_desc_t prop_desc;
+    IDispatch *list_disp;
+    jsdisp_t *list_obj, *desc_obj;
+    jsval_t desc_val;
+    BSTR name;
+    HRESULT hres;
+
+    hres = to_object(ctx, list_val, &list_disp);
+    if(FAILED(hres))
+        return hres;
+
+    if(!(list_obj = to_jsdisp(list_disp))) {
+        FIXME("non-JS list obj\n");
+        IDispatch_Release(list_disp);
+        return E_NOTIMPL;
+    }
+
+    while(1) {
+        hres = jsdisp_next_prop(list_obj, id, TRUE, &id);
+        if(hres != S_OK)
+            break;
+
+        hres = jsdisp_propget(list_obj, id, &desc_val);
+        if(FAILED(hres))
+            break;
+
+        if(!is_object_instance(desc_val) || !get_object(desc_val) || !(desc_obj = to_jsdisp(get_object(desc_val)))) {
+            jsval_release(desc_val);
+            break;
+        }
+
+        hres = to_property_descriptor(ctx, desc_obj, &prop_desc);
+        jsdisp_release(desc_obj);
+        if(FAILED(hres))
+            break;
+
+        hres = IDispatchEx_GetMemberName(&list_obj->IDispatchEx_iface, id, &name);
+        if(SUCCEEDED(hres))
+            hres = jsdisp_define_property(obj, name, &prop_desc);
+        release_property_descriptor(&prop_desc);
+        if(FAILED(hres))
+            break;
+    }
+
+    jsdisp_release(list_obj);
+    return FAILED(hres) ? hres : S_OK;
+}
+
 static HRESULT Object_defineProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
                                      unsigned argc, jsval_t *argv, jsval_t *r)
 {
@@ -446,14 +500,28 @@ static HRESULT Object_defineProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD fl
 
     hres = jsdisp_define_property(obj, name, &prop_desc);
     release_property_descriptor(&prop_desc);
+    if(SUCCEEDED(hres) && r)
+        *r = jsval_obj(jsdisp_addref(obj));
     return hres;
 }
 
 static HRESULT Object_defineProperties(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
                                      unsigned argc, jsval_t *argv, jsval_t *r)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    jsdisp_t *obj;
+    HRESULT hres;
+
+    if(argc < 1 || !is_object_instance(argv[0]) || !get_object(argv[0]) || !(obj = to_jsdisp(get_object(argv[0])))) {
+        FIXME("not an object\n");
+        return E_NOTIMPL;
+    }
+
+    TRACE("%p\n", obj);
+
+    hres = jsdisp_define_properties(ctx, obj, argc >= 2 ? argv[1] : jsval_undefined());
+    if(SUCCEEDED(hres) && r)
+        *r = jsval_obj(jsdisp_addref(obj));
+    return hres;
 }
 
 static HRESULT Object_getOwnPropertyDescriptor(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
@@ -519,10 +587,76 @@ static HRESULT Object_getOwnPropertyDescriptor(script_ctx_t *ctx, vdisp_t *jsthi
     return hres;
 }
 
+static HRESULT Object_create(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
+                             unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    jsdisp_t *proto = NULL, *obj;
+    HRESULT hres;
+
+    if(!argc || (!is_object_instance(argv[0]) && !is_null(argv[0]))) {
+        FIXME("Invalid arg\n");
+        return E_INVALIDARG;
+    }
+
+    TRACE("(%s)\n", debugstr_jsval(argv[0]));
+
+    if(argc && is_object_instance(argv[0])) {
+        if(get_object(argv[0]))
+            proto = to_jsdisp(get_object(argv[0]));
+        if(!proto) {
+            FIXME("Non-JS prototype\n");
+            return E_NOTIMPL;
+        }
+    }else if(!is_null(argv[0])) {
+        FIXME("Invalid arg %s\n", debugstr_jsval(argc ? argv[0] : jsval_undefined()));
+        return E_INVALIDARG;
+    }
+
+    hres = create_dispex(ctx, NULL, proto, &obj);
+    if(FAILED(hres))
+        return hres;
+
+    if(argc >= 2 && !is_undefined(argv[1]))
+        hres = jsdisp_define_properties(ctx, obj, argv[1]);
+
+    if(SUCCEEDED(hres) && r)
+        *r = jsval_obj(obj);
+    else
+        jsdisp_release(obj);
+    return hres;
+}
+
+static HRESULT Object_getPrototypeOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
+                                     unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    jsdisp_t *obj;
+
+    if(!argc || !is_object_instance(argv[0])) {
+        FIXME("invalid arguments\n");
+        return E_NOTIMPL;
+    }
+
+    TRACE("(%s)\n", debugstr_jsval(argv[1]));
+
+    obj = to_jsdisp(get_object(argv[0]));
+    if(!obj) {
+        FIXME("Non-JS object\n");
+        return E_NOTIMPL;
+    }
+
+    if(r)
+        *r = obj->prototype
+            ? jsval_obj(jsdisp_addref(obj->prototype))
+            : jsval_null();
+    return S_OK;
+}
+
 static const builtin_prop_t ObjectConstr_props[] = {
+    {createW,                   Object_create,                      PROPF_ES5|PROPF_METHOD|2},
     {definePropertiesW,         Object_defineProperties,            PROPF_ES5|PROPF_METHOD|2},
     {definePropertyW,           Object_defineProperty,              PROPF_ES5|PROPF_METHOD|2},
-    {getOwnPropertyDescriptorW, Object_getOwnPropertyDescriptor,    PROPF_ES5|PROPF_METHOD|2}
+    {getOwnPropertyDescriptorW, Object_getOwnPropertyDescriptor,    PROPF_ES5|PROPF_METHOD|2},
+    {getPrototypeOfW,           Object_getPrototypeOf,              PROPF_ES5|PROPF_METHOD|1}
 };
 
 static const builtin_info_t ObjectConstr_info = {

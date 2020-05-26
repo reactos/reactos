@@ -67,6 +67,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define _NOCSECT_TYPE
 #include <ddrawi.h>
 #include <imm.h>
+#include <dbt.h>
 
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>

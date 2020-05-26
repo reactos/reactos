@@ -129,6 +129,16 @@ TestCStr 3, "3"
 if isEnglishLang then TestCStr 3.5, "3.5"
 if isEnglishLang then TestCStr true, "True"
 
+sub testCStrError()
+    on error resume next
+    Error.clear()
+    CStr(null)
+    call ok(Err.number = 94, "Err.number = " & Err.number)
+    if isEnglishLang then call ok(Err.source = "Microsoft VBScript runtime error", "Err.source = " & Err.source)
+    if isEnglishLang then call ok(Err.description = "Invalid use of Null", "Err.description = " & Err.description)
+end sub
+call testCStrError()
+
 Call ok(getVT(Chr(120)) = "VT_BSTR", "getVT(Chr(120)) = " & getVT(Chr(120)))
 Call ok(getVT(Chr(255)) = "VT_BSTR", "getVT(Chr(255)) = " & getVT(Chr(255)))
 Call ok(Chr(120) = "x", "Chr(120) = " & Chr(120))
@@ -144,6 +154,7 @@ sub testChrError
         call Err.clear()
         call Chr(-1)
         call ok(Err.number = 5, "Err.number = " & Err.number)
+        if isEnglishLang then call ok(Err.description = "Invalid procedure call or argument", "Err.description = " & Err.description)
 
         call Err.clear()
         call Chr(256)
@@ -236,6 +247,19 @@ Dim arr2(2, 4)
 Call ok(UBound(arr2) = 2, "UBound(x) = " & UBound(x))
 Call ok(UBound(arr2, 1) = 2, "UBound(x) = " & UBound(x))
 Call ok(UBound(arr2, 2) = 4, "UBound(x) = " & UBound(x))
+
+sub testUBoundError()
+    on error resume next
+    call Err.clear()
+    call UBound()
+    call ok(Err.number = 450, "Err.number = " & Err.number)
+    call Err.clear()
+    call UBound(arr, 1, 2)
+    call ok(Err.number = 450, "Err.number = " & Err.number)
+    if isEnglishLang then call ok(Err.description = "Wrong number of arguments or invalid property assignment", _
+                                  "Err.description = " & Err.description)
+end sub
+call testUBoundError()
 
 Dim newObject
 Set newObject = New ValClass
@@ -493,6 +517,17 @@ TestStrComp Empty,  "ABC",  1,  -1
 TestStrComp "ABC",  Empty,  1,  1
 TestStrComp vbNull, vbNull, 1,  0
 TestStrComp "",     vbNull, 1,  -1
+
+sub testStrCompError()
+    on error resume next
+    call Err.clear()
+    call StrComp()
+    call ok(Err.number = 450, "Err.number = " & Err.number)
+    call Err.clear()
+    call StrComp("a", "a", 0, 1)
+    call ok(Err.number = 450, "Err.number = " & Err.number)
+end sub
+call testStrCompError()
 
 Call ok(Len("abc") = 3, "Len(abc) = " & Len("abc"))
 Call ok(Len("") = 0, "Len() = " & Len(""))
@@ -1066,6 +1101,9 @@ Call ok(VarType(Null) = vbNull, "VarType(Null) = " & VarType(Null))
 Call ok(getVT(VarType(Null)) = "VT_I2", "getVT(VarType(Null)) = " & getVT(VarType(Null)))
 Call ok(VarType(255) = vbInteger, "VarType(255) = " & VarType(255))
 Call ok(getVT(VarType(255)) = "VT_I2", "getVT(VarType(255)) = " & getVT(VarType(255)))
+set x = new EmptyClass
+Call ok(VarType(x) = vbObject, "VarType(x) = " & VarType(x))
+Call ok(getVT(VarType(x)) = "VT_I2", "getVT(VarType(x)) = " & getVT(VarType(x)))
 Call ok(VarType(32768) = vbLong, "VarType(32768) = " & VarType(32768))
 Call ok(getVT(VarType(32768)) = "VT_I2", "getVT(VarType(32768)) = " & getVT(VarType(32768)))
 Call ok(VarType(CSng(0.5)) = vbSingle, "VarType(CSng(0.5)) = " & VarType(CSng(0.5)))
@@ -1080,6 +1118,8 @@ Call ok(VarType(CBool(0.5)) = vbBoolean, "VarType(CBool(0.5)) = " & VarType(CBoo
 Call ok(getVT(VarType(CBool(0.5))) = "VT_I2", "getVT(VarType(CBool(0.5))) = " & getVT(VarType(CBool(0.5))))
 Call ok(VarType(CByte(255)) = vbByte, "VarType(CByte(255)) = " & VarType(CByte(255)))
 Call ok(getVT(VarType(CByte(255))) = "VT_I2", "getVT(VarType(CByte(255))) = " & getVT(VarType(CByte(255))))
+Call ok(VarType(arr) = (vbArray or vbVariant), "VarType(arr) = " & VarType(arr))
+Call ok(getVT(VarType(arr)) = "VT_I2", "getVT(VarType(arr)) = " & getVT(VarType(arr)))
 
 Call ok(Sgn(Empty) = 0, "Sgn(MyEmpty) = " & Sgn(Empty))
 Call ok(getVT(Sgn(Empty)) = "VT_I2", "getVT(Sgn(MyEmpty)) = " & getVT(Sgn(Empty)))
@@ -1407,6 +1447,21 @@ Call ok(getVT(Log(CByte(2))) = "VT_R8", "getVT(Log(CByte(2))) = " & getVT(Log(CB
 Call ok(getVT(Date) = "VT_DATE", "getVT(Date) = " & getVT(Date))
 Call ok(getVT(Time) = "VT_DATE", "getVT(Time) = " & getVT(Time))
 
+Call ok(getVT(Day(now)) = "VT_I2", "getVT(Day(now)) = " & getVT(Day(now)))
+Call ok(Day(2) = 1, "Day(2) = " & Day(2))
+Call ok(getVT(Month(now)) = "VT_I2", "getVT(Month(now)) = " & getVT(Month(now)))
+Call ok(Month(2) = 1, "Month(2) = " & Month(2))
+Call ok(getVT(Year(now)) = "VT_I2", "getVT(Year(now)) = " & getVT(Year(now)))
+Call ok(Year(2) = 1900, "Year(2) = " & Year(2))
+Call ok(getVT(Hour(now)) = "VT_I2", "getVT(Hour(now)) = " & getVT(Hour(now)))
+Call ok(Hour(2) = 0, "Hour(2) = " & Hour(2))
+Call ok(Hour(2.75) = 18, "Hour(2) = " & Hour(2.75))
+Call ok(getVT(Minute(now)) = "VT_I2", "getVT(Minute(now)) = " & getVT(Minute(now)))
+Call ok(Minute(2) = 0, "Minute(2) = " & Minute(2))
+Call ok(Minute(2.02083) = 30, "Minute(2.02083) = " & Minute(2.02083))
+Call ok(getVT(Second(now)) = "VT_I2", "getVT(Second(now)) = " & getVT(Second(now)))
+Call ok(Second(2) = 0, "Second(2) = " & Second(2))
+
 Sub testRGBError(arg1, arg2, arg3, error_num)
     on error resume next
     Dim x
@@ -1430,5 +1485,134 @@ Call testRGBError(-1, &h1e&, &h3b&, 5)
 Call testRGBError(&h4d&, -2, &h2f&, 5)
 
 Call ok(getVT(Timer) = "VT_R4", "getVT(Timer) = " & getVT(Timer))
+
+sub testAsc(arg, expected)
+    dim x
+    x = Asc(arg)
+    call ok(x = expected, "x = " & x & " expected " & expected)
+    call ok(getVT(x) = "VT_I2*", "getVT = " & getVT(x))
+end sub
+
+sub testAscError()
+    on error resume next
+    call Err.clear()
+    call Asc(null)
+    Call ok(Err.number = 94, "Err.number = " & Err.number)
+    call Err.clear()
+    call Asc(empty)
+    Call ok(Err.number = 5, "Err.number = " & Err.number)
+    call Err.clear()
+    call Asc()
+    Call ok(Err.number = 450, "Err.number = " & Err.number)
+    call Err.clear()
+    call Asc(Chr(260)) ' some versions of vista allow it
+    Call ok(Err.number = 5 or Err.number = 0, "asc4 Err.number = " & Err.number)
+    call Err.clear()
+    call Asc("")
+    Call ok(Err.number = 5, "Err.number = " & Err.number)
+end sub
+
+call testAsc("T", 84)
+call testAsc("test", 116)
+call testAsc("3", 51)
+call testAsc(3, 51)
+call testAsc("   ", 32)
+call testAsc(Chr(255), 255)
+call testAsc(Chr(0), 0)
+if isEnglishLang then testAsc true, 84
+call testAscError()
+
+sub testErrNumber(n)
+    call ok(err.number = n, "err.number = " & err.number & " expected " & n)
+end sub
+
+sub testErrRaise()
+    on error resume next
+    call ok(err.number = 0, "err.number = " & err.number)
+    err.raise 1
+    call ok(err.number = 1, "err.number = " & err.number)
+    err.raise
+    call ok(err.number = 450, "err.number = " & err.number)
+    call testErrNumber(450)
+    err.raise &h10000&
+    call ok(err.number = 5, "err.number = " & err.number)
+
+    err.clear
+    call ok(getVT(err.source) = "VT_BSTR", "err.source = " & err.source)
+    call ok(getVT(err.description) = "VT_BSTR", "err.description = " & err.description)
+    call ok(getVT(err.helpfile) = "VT_BSTR", "err.helpfile = " & err.helpfile)
+    call ok(getVT(err.helpcontext) = "VT_I4", "err.helpcontext = " & err.helpcontext)
+    call ok(err.source = "", "err.source = " & err.source)
+    call ok(err.description = "", "err.description = " & err.description)
+    call ok(err.helpfile = "", "err.helpfile = " & err.helpfile)
+    call ok(err.helpcontext = 0, "err.helpcontext = " & err.helpcontext)
+
+    err.raise 1, "abc"
+    call ok(err.number = 1, "err.number = " & err.number)
+    call ok(err.source = "abc", "err.source = " & err.source)
+    if isEnglishLang then call ok(err.description = "Unknown runtime error", "err.description = " & err.description)
+    call ok(err.helpfile = "", "err.helpfile = " & err.helpfile)
+
+    err.raise 1, 2, "desc", "hf", 1
+    call ok(err.number = 1, "err.number = " & err.number)
+    call ok(getVT(err.source) = "VT_BSTR", "err.source = " & err.source)
+    call ok(err.source = "2", "err.source = " & err.source)
+    call ok(err.description = "desc", "err.description = " & err.description)
+    call ok(err.helpfile = "hf", "err.helpfile = " & err.helpfile)
+    call ok(getVT(err.helpcontext) = "VT_I4", "err.helpcontext = " & err.helpcontext)
+    call ok(err.helpcontext = 1, "err.helpcontext = " & err.helpcontext)
+
+    err.raise 5
+    call ok(err.number = 5, "err.number = " & err.number)
+    call ok(err.source = "2", "err.source = " & err.source)
+    call ok(err.description = "desc", "err.description = " & err.description)
+    call ok(err.helpfile = "hf", "err.helpfile = " & err.helpfile)
+    call ok(getVT(err.helpcontext) = "VT_I4", "err.helpcontext = " & err.helpcontext)
+    call ok(err.helpcontext = 1, "err.helpcontext = " & err.helpcontext)
+
+    err.clear
+    err.raise &h8007000E&
+    call ok(err.number = 7, "err.number = " & err.number)
+    if isEnglishLang then call ok(err.source = "Microsoft VBScript runtime error", "err.source = " & err.source)
+    if isEnglishLang then call ok(err.description = "Out of memory", "err.description = " & err.description)
+    call ok(err.helpfile = "", "err.helpfile = " & err.helpfile)
+    call ok(err.helpcontext = 0, "err.helpcontext = " & err.helpcontext)
+
+    err.clear
+    err.raise 1, "test"
+    err.raise &h8007000E&
+    call ok(err.number = 7, "err.number = " & err.number)
+    call ok(err.source = "test", "err.source = " & err.source)
+    if isEnglishLang then call ok(err.description = "Unknown runtime error", "err.description = " & err.description)
+    call ok(err.helpfile = "", "err.helpfile = " & err.helpfile)
+    call ok(err.helpcontext = 0, "err.helpcontext = " & err.helpcontext)
+
+    err.raise 1, 2, "desc", "hf", 1
+    err.unknownIdent
+    call ok(err.number = 438, "err.number = " & err.number)
+    if isEnglishLang then call ok(err.source = "Microsoft VBScript runtime error", "err.source = " & err.source)
+    if isEnglishLang then call ok(err.description = "Object doesn't support this property or method", _
+                                  "err.description = " & err.description)
+    call ok(err.helpfile = "", "err.helpfile = " & err.helpfile)
+    call ok(err.helpcontext = 0, "err.helpcontext = " & err.helpcontext)
+
+    e = err
+    call ok(getVT(e) = "VT_I4*", "getVT(e) = " & getVT(e))
+    call ok(e = 438, "e = " & e)
+
+    err.raise 1, 2, "desc", "hf", 1
+    on error goto 0
+    call ok(err.number = 0, "err.number = " & err.number)
+    call ok(err.source = "", "err.source = " & err.source)
+    call ok(err.description = "", "err.description = " & err.description)
+    call ok(err.helpfile = "", "err.helpfile = " & err.helpfile)
+    call ok(err.helpcontext = 0, "err.helpcontext = " & err.helpcontext)
+
+    dim e
+    e = err
+    call ok(getVT(e) = "VT_I4*", "getVT(e) = " & getVT(e))
+    call ok(e = 0, "e = " & e)
+end sub
+call testErrRaise()
 
 Call reportSuccess()

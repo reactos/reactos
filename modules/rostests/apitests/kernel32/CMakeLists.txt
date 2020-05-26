@@ -27,6 +27,7 @@ list(APPEND SOURCE
     Mailslot.c
     MultiByteToWideChar.c
     PrivMoveFileIdentityW.c
+    QueueUserAPC.c
     SetComputerNameExW.c
     SetConsoleWindowInfo.c
     SetCurrentDirectory.c

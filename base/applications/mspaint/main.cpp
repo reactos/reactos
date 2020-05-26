@@ -51,6 +51,7 @@ HINSTANCE hProgInstance;
 
 TCHAR filepathname[1000];
 BOOL isAFile = FALSE;
+BOOL imageSaved = FALSE;
 int fileSize;
 int fileHPPM = 2834;
 int fileVPPM = 2834;
@@ -155,25 +156,16 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     TCHAR ofnFilename[1000];
     TCHAR ofnFiletitle[256];
     TCHAR miniaturetitle[100];
-    static int custColors[16] = { 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
+    static COLORREF custColors[16] = {
+        0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff
     };
 
     /* init font for text tool */
+    ZeroMemory(&lfTextFont, sizeof(lfTextFont));
     lfTextFont.lfHeight = 0;
-    lfTextFont.lfWidth = 0;
-    lfTextFont.lfEscapement = 0;
-    lfTextFont.lfOrientation = 0;
     lfTextFont.lfWeight = FW_NORMAL;
-    lfTextFont.lfItalic = FALSE;
-    lfTextFont.lfUnderline = FALSE;
-    lfTextFont.lfStrikeOut = FALSE;
     lfTextFont.lfCharSet = DEFAULT_CHARSET;
-    lfTextFont.lfOutPrecision = OUT_DEFAULT_PRECIS;
-    lfTextFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-    lfTextFont.lfQuality = DEFAULT_QUALITY;
-    lfTextFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-    lstrcpy(lfTextFont.lfFaceName, _T(""));
     hfontTextFont = CreateFontIndirect(&lfTextFont);
 
     hProgInstance = hThisInstance;
@@ -261,79 +253,15 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     if (__argc >= 2)
     {
-        WIN32_FIND_DATAW find;
-        HANDLE hFind = FindFirstFileW(__targv[1], &find);
-        if (hFind != INVALID_HANDLE_VALUE)
-        {
-            FindClose(hFind);
-
-            // check the file size
-            if (find.nFileSizeHigh || find.nFileSizeLow)
-            {
-                // load it now
-                HBITMAP bmNew = NULL;
-                LoadDIBFromFile(&bmNew, __targv[1], &fileTime, &fileSize, &fileHPPM, &fileVPPM);
-                if (bmNew)
-                {
-                    // valid bitmap file
-                    GetFullPathName(__targv[1], SIZEOF(filepathname), filepathname, NULL);
-                    imageModel.Insert(bmNew);
-                    CPath pathFileName(filepathname);
-                    pathFileName.StripPath();
-
-                    CString strTitle;
-                    strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
-                    mainWindow.SetWindowText(strTitle);
-
-                    imageModel.ClearHistory();
-
-                    isAFile = TRUE;
-                    registrySettings.SetMostRecentFile(filepathname);
-                }
-                else
-                {
-                    // cannot open and not empty
-                    CStringW strText;
-                    strText.Format(IDS_LOADERRORTEXT, __targv[1]);
-                    MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
-                }
-            }
-            else
-            {
-                // open the empty file
-                GetFullPathName(__targv[1], SIZEOF(filepathname), filepathname, NULL);
-                CPath pathFileName(filepathname);
-                pathFileName.StripPath();
-
-                CString strTitle;
-                strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
-                mainWindow.SetWindowText(strTitle);
-
-                imageModel.ClearHistory();
-
-                isAFile = TRUE;
-                registrySettings.SetMostRecentFile(filepathname);
-            }
-        }
-        else
-        {
-            // does not exist
-            CStringW strText;
-            strText.Format(IDS_LOADERRORTEXT, __targv[1]);
-            MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
-        }
+        DoLoadImageFile(mainWindow, __targv[1], TRUE);
     }
 
     /* initializing the CHOOSECOLOR structure for use with ChooseColor */
+    ZeroMemory(&choosecolor, sizeof(choosecolor));
     choosecolor.lStructSize    = sizeof(CHOOSECOLOR);
     choosecolor.hwndOwner      = hwnd;
-    choosecolor.hInstance      = NULL;
     choosecolor.rgbResult      = 0x00ffffff;
-    choosecolor.lpCustColors   = (COLORREF*) &custColors;
-    choosecolor.Flags          = 0;
-    choosecolor.lCustData      = 0;
-    choosecolor.lpfnHook       = NULL;
-    choosecolor.lpTemplateName = NULL;
+    choosecolor.lpCustColors   = custColors;
 
     /* initializing the OPENFILENAME structure for use with GetOpenFileName and GetSaveFileName */
     CopyMemory(ofnFilename, filepathname, sizeof(filepathname));

@@ -21,11 +21,13 @@
 #ifndef __WINE_CRYPT_H
 #define __WINE_CRYPT_H
 
-//#include <stdarg.h>
+#ifndef __REACTOS__
+#include <stdarg.h>
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wincrypt.h"
+#include "windef.h"
+#include "winbase.h"
+#include "wincrypt.h"
+#endif
 
 typedef struct tagPROVFUNCS
 {
@@ -63,7 +65,7 @@ typedef struct tagPROVFUNCS
 typedef struct tagCRYPTPROV
 {
 	DWORD dwMagic;
-	UINT refcount;
+	LONG refcount;
 	HMODULE hModule;
 	PPROVFUNCS pFuncs;
         HCRYPTPROV hPrivate;  /*CSP's handle - Should not be given to application under any circumstances!*/

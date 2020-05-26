@@ -31,7 +31,6 @@ typedef struct
 
 extern HINSTANCE hApplet;
 extern GLOBAL_POWER_POLICY gGPP;
-extern POWER_POLICY gPP[];
 
 #define MAX_POWER_PAGES 32
 

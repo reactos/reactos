@@ -45,7 +45,6 @@ Int386:
     sub rsp, 40
     //.ENDPROLOG
 
-int386_2:
     /* Copy the int vector to shared memory */
     mov dword ptr [BSS_IntVector], ecx
 

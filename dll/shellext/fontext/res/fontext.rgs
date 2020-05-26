@@ -1,0 +1,14 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        ForceRemove {BD84B380-8CA2-1069-AB1D-08000948F534} = s 'Fonts'
+        {
+            InprocServer32 = s 'fontext.dll'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+            DefaultIcon = s '%MODULE%'
+        }
+    }
+}

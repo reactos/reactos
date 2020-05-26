@@ -175,7 +175,7 @@ static void test_IsRectEmpty(void)
         {{-109, -107, -103, -101}, FALSE},
     };
 
-    for (i = 0; i < sizeof(rtest)/sizeof(rtest[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(rtest); i++) {
         ret = IsRectEmpty(&rtest[i].rect);
         ok(ret == rtest[i].ret, "Test %d: IsRectEmpty returned %s for %s\n", i,
            ret ? "TRUE" : "FALSE", wine_dbgstr_rect(&rtest[i].rect));

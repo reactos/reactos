@@ -47,12 +47,12 @@ BEGIN
   Başlıkları gizlemek için ""/nh"" kullanınız. Ön tanımlı olarak veri bir çizelge içinde görüntülenmiştir.\n\
 \n\
 YAZIM:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <Biçim>] [/nh] \n\
-  whoami /all [/fo <Biçim>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Biçim>] [/nh]\n\
+  whoami /all [/fo <Biçim>] [/nh]\n\
 \n\
-ÖRNEKLER: \n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+ÖRNEKLER:\n\
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

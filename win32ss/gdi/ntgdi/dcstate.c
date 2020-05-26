@@ -282,7 +282,7 @@ NtGdiSaveDC(
     }
     hdcSave = pdcSave->BaseObject.hHmgr;
 
-    InterlockedIncrement(&pdc->ppdev->cPdevRefs);
+    PDEVOBJ_vReference(pdc->ppdev);
     DC_vInitDc(pdcSave, DCTYPE_MEMORY, pdc->ppdev);
 
     /* Handle references here correctly */

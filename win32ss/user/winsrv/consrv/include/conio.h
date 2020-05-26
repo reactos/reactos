@@ -12,22 +12,6 @@
 
 #include "rect.h"
 
-// This is ALMOST a HACK!!!!!!!
-// Helpers for code refactoring
-#ifdef USE_NEW_CONSOLE_WAY
-
-#define _CONSRV_CONSOLE  _WINSRV_CONSOLE
-#define  CONSRV_CONSOLE   WINSRV_CONSOLE
-#define PCONSRV_CONSOLE  PWINSRV_CONSOLE
-
-#else
-
-#define _CONSRV_CONSOLE  _CONSOLE
-#define  CONSRV_CONSOLE   CONSOLE
-#define PCONSRV_CONSOLE  PCONSOLE
-
-#endif
-
 /* Default attributes */
 #define DEFAULT_SCREEN_ATTRIB   (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
 #define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED   | \
@@ -67,20 +51,11 @@ typedef struct _CONSOLE_IO_OBJECT
  * See conoutput.c for the implementation
  */
 
-typedef struct _CONSOLE_SCREEN_BUFFER CONSOLE_SCREEN_BUFFER,
-                                    *PCONSOLE_SCREEN_BUFFER;
+#define GetType(This)   (((PCONSOLE_SCREEN_BUFFER)(This))->Header.Type)
 
-typedef struct _CONSOLE_SCREEN_BUFFER_VTBL
-{
-    CONSOLE_IO_OBJECT_TYPE (*GetType)(PCONSOLE_SCREEN_BUFFER This);
-} CONSOLE_SCREEN_BUFFER_VTBL, *PCONSOLE_SCREEN_BUFFER_VTBL;
-
-#define GetType(This)   (This)->Vtbl->GetType(This)
-
-struct _CONSOLE_SCREEN_BUFFER
+typedef struct _CONSOLE_SCREEN_BUFFER
 {
     CONSOLE_IO_OBJECT Header;           /* Object header - MUST BE IN FIRST PLACE */
-    PCONSOLE_SCREEN_BUFFER_VTBL Vtbl;   /* Virtual table */
 
     LIST_ENTRY ListEntry;               /* Entry in console's list of buffers */
 
@@ -93,8 +68,6 @@ struct _CONSOLE_SCREEN_BUFFER
     COORD   ViewOrigin;                 /* Beginning offset for the actual display area */
 
 /***** Put that VV in TEXTMODE_SCREEN_BUFFER ?? *****/
-    USHORT  VirtualY;                   /* Top row of buffer being displayed, reported to callers */
-
     COORD   CursorPosition;             /* Current cursor position */
     BOOLEAN CursorBlinkOn;
     BOOLEAN ForceCursorOff;
@@ -105,10 +78,10 @@ struct _CONSOLE_SCREEN_BUFFER
     HPALETTE PaletteHandle;             /* Handle to the color palette associated to this buffer */
     UINT     PaletteUsage;              /* The new use of the system palette. See SetSystemPaletteUse 'uUsage' parameter */
 
-//  WORD   ScreenDefaultAttrib;         /* Default screen char attribute */
-//  WORD   PopupDefaultAttrib;          /* Default popup char attribute */
+//  USHORT   ScreenDefaultAttrib;       /* Default screen char attribute */
+//  USHORT   PopupDefaultAttrib;        /* Default popup char attribute */
     USHORT Mode;                        /* Output buffer modes */
-};
+} CONSOLE_SCREEN_BUFFER, *PCONSOLE_SCREEN_BUFFER;
 
 
 
@@ -141,6 +114,7 @@ struct _CONSOLE_SCREEN_BUFFER
 typedef struct _TEXTMODE_BUFFER_INFO
 {
     COORD   ScreenBufferSize;
+    COORD   ViewSize;
     USHORT  ScreenAttrib;
     USHORT  PopupAttrib;
     ULONG   CursorSize;
@@ -151,10 +125,11 @@ typedef struct _TEXTMODE_SCREEN_BUFFER
 {
     CONSOLE_SCREEN_BUFFER;      /* Screen buffer base class - MUST BE IN FIRST PLACE */
 
+    USHORT     VirtualY;        /* Top row of buffer being displayed, reported to callers */
     PCHAR_INFO Buffer;          /* Pointer to UNICODE screen buffer (Buffer->Char.UnicodeChar only is valid, not Char.AsciiChar) */
 
-    WORD ScreenDefaultAttrib;   /* Default screen char attribute */
-    WORD PopupDefaultAttrib;    /* Default popup char attribute */
+    USHORT ScreenDefaultAttrib; /* Default screen char attribute */
+    USHORT PopupDefaultAttrib;  /* Default popup char attribute */
 } TEXTMODE_SCREEN_BUFFER, *PTEXTMODE_SCREEN_BUFFER;
 
 
@@ -189,15 +164,14 @@ typedef struct _CONSOLE_INPUT_BUFFER
 {
     CONSOLE_IO_OBJECT Header;       /* Object header - MUST BE IN FIRST PLACE */
 
-    ULONG       InputBufferSize;    /* Size of this input buffer -- UNUSED!! */
-    LIST_ENTRY  InputEvents;        /* List head for input event queue */
-    HANDLE      ActiveEvent;        /* Event set when an input event is added in its queue */
+    ULONG       InputBufferSize;    /* Size of this input buffer (maximum number of events) -- UNUSED!! */
+    ULONG       NumberOfEvents;     /* Current number of events in the queue */
+    LIST_ENTRY  InputEvents;        /* Input events queue list head */
+    HANDLE      ActiveEvent;        /* Event set when an input event is added to the queue */
 
     USHORT      Mode;               /* Input buffer modes */
 } CONSOLE_INPUT_BUFFER, *PCONSOLE_INPUT_BUFFER;
 
-
-typedef struct _TERMINAL TERMINAL, *PTERMINAL;
 
 /*
  * Structure used to hold console information
@@ -218,6 +192,8 @@ typedef struct _CONSOLE_INFO
     ULONG   CodePage;
 
 } CONSOLE_INFO, *PCONSOLE_INFO;
+
+typedef struct _TERMINAL TERMINAL, *PTERMINAL;
 
 typedef struct _TERMINAL_VTBL
 {
@@ -307,31 +283,16 @@ typedef enum _CONSOLE_STATE
     CONSOLE_IN_DESTRUCTION  /* Console in destruction */
 } CONSOLE_STATE, *PCONSOLE_STATE;
 
-// HACK!!
-struct _CONSOLE;
-/* HACK: */ typedef struct _CONSOLE *PCONSOLE;
-#ifndef USE_NEW_CONSOLE_WAY
-#include "conio_winsrv.h"
-#endif
-
 typedef struct _CONSOLE
 {
 /******************************* Console Set-up *******************************/
-
-#ifndef USE_NEW_CONSOLE_WAY
-    WINSRV_CONSOLE; // HACK HACK!!
-#endif
-
     LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */
     CRITICAL_SECTION Lock;
-
-    ULONG ConsoleID;                        /* The ID of the console */
-    LIST_ENTRY ListEntry;                   /* Entry in the list of consoles */
 
     CONSOLE_STATE State;                    /* State of the console */
     TERMINAL TermIFace;                     /* Terminal-specific interface */
 
-    HANDLE UnpauseEvent;                    /* When != NULL, event for pausing the console */
+    BOOLEAN ConsolePaused;                  /* If TRUE, the console is paused */
 
 /******************************** Input buffer ********************************/
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
@@ -345,8 +306,8 @@ typedef struct _CONSOLE
 /****************************** Other properties ******************************/
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
-
-} CONSOLE; // , *PCONSOLE;
+    BOOLEAN IsCJK;                          /* TRUE if Chinese, Japanese or Korean (CJK) */
+} CONSOLE, *PCONSOLE;
 
 /* console.c */
 VOID NTAPI
@@ -354,19 +315,22 @@ ConDrvPause(PCONSOLE Console);
 VOID NTAPI
 ConDrvUnpause(PCONSOLE Console);
 
-NTSTATUS
-ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
-                       IN PCONSOLE_PROCESS_DATA ProcessData);
-
-
 #define GetConsoleInputBufferMode(Console)  \
     (Console)->InputBuffer.Mode
 
 
 /* conoutput.c */
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
+NTSTATUS ConioResizeBuffer(PCONSOLE Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
+
+/* wcwidth.c */
+int mk_wcwidth_cjk(wchar_t ucs);
+
+// NOTE: The check against 0x80 is to avoid calling the helper function
+// for characters that we already know are not full-width.
+#define IS_FULL_WIDTH(wch)  \
+    (((USHORT)(wch) >= 0x0080) && (mk_wcwidth_cjk(wch) == 2))
 
 /* EOF */

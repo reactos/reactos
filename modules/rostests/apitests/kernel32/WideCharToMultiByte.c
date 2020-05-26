@@ -19,8 +19,8 @@ Utf8Convert_(
     _In_ PCSTR File,
     _In_ INT Line)
 {
-    size_t WideLen;
-    size_t Utf8Len;
+    int WideLen;
+    int Utf8Len;
     char Buffer[32];
     int Ret;
     ULONG i;
@@ -28,8 +28,8 @@ Utf8Convert_(
     PCSTR ExpectedUtf8;
 
     ExpectedUtf8 = ntv6(1) ? ExpectedUtf8_Vista : ExpectedUtf8_2003;
-    WideLen = wcslen(WideString);
-    Utf8Len = strlen(ExpectedUtf8);
+    WideLen = lstrlenW(WideString);
+    Utf8Len = lstrlenA(ExpectedUtf8);
 
     /* Get length only */
     Ret = WideCharToMultiByte(CP_UTF8, 0, WideString, WideLen, NULL, 0, NULL, NULL);

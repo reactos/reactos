@@ -18,6 +18,8 @@
  */
 
 #include "precomp.h"
+#include <stdlib.h>
+#include <strsafe.h>
 
 #include "resource.h"
 
@@ -233,12 +235,12 @@ DoSaveFileAs(
 
     if (pChildInfo->pFileName != NULL)
     {
-        _tcscpy(szPath, pChildInfo->pFileName);
+        StringCbCopy(szPath, sizeof(szPath), pChildInfo->pFileName);
     }
     else
     {
-        GetWindowText(pChildInfo->hwnd, szPath, MAX_PATH);
-        _tcscat(szPath, TEXT(".msc"));
+        GetWindowText(pChildInfo->hwnd, szPath, _countof(szPath));
+        StringCbCat(szPath, sizeof(szPath), TEXT(".msc"));
     }
 
     saveas.lStructSize = sizeof(OPENFILENAME);

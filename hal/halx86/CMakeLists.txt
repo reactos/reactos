@@ -32,7 +32,12 @@ function(add_hal _halname)
         target_link_libraries(${_halname} ${_haldata_LIBS})
     endif()
 
-    target_link_libraries(${_halname} libcntpr)
+    if (${_halname} STREQUAL "hal")
+        target_link_libraries(${_halname} libcntpr arbiter)
+    else()
+        target_link_libraries(${_halname} libcntpr)
+    endif()
+
     add_importlibs(${_halname} ntoskrnl)
     #add_pch(${_halname} include/hal.h)
     add_dependencies(${_halname} psdk asm)

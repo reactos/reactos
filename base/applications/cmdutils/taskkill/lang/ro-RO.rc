@@ -18,4 +18,6 @@ STRINGTABLE
     STRING_ENUM_FAILED, "Eroare: Procesele nu au putut fi enumerate.\n"
     STRING_TERMINATE_FAILED, "Eroare: Procesul «%1» nu poate fi oprit.\n"
     STRING_SELF_TERMINATION, "Eroare: Auto-terminarea nu este permisă.\n"
+    STRING_PARAM_TOO_MUCH, "Error: Invalid syntax. '%1' option is not allowed more than '%2!d!' time(s).\n"
+    STRING_INVALID_SYNTAX, "Error: Invalid syntax.\n"
 }

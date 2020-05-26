@@ -19,6 +19,7 @@ Hib_InitDialog(HWND hwndDlg)
     TCHAR szTemp[MAX_PATH];
     LPTSTR lpRoot;
     ULARGE_INTEGER FreeBytesAvailable, TotalNumberOfBytes, TotalNumberOfFreeBytes;
+    BOOLEAN bHibernate;
 
     if (GetPwrCapabilities(&PowerCaps))
     {
@@ -58,6 +59,12 @@ Hib_InitDialog(HWND hwndDlg)
         {
             ShowWindow(GetDlgItem(hwndDlg, IDC_TOLESSFREESPACE), FALSE);
             EnableWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEFILE), TRUE);
+        }
+
+        bHibernate = PowerCaps.HiberFilePresent ? TRUE : FALSE;
+        if (CallNtPowerInformation(SystemReserveHiberFile, &bHibernate, sizeof(bHibernate), NULL, 0) != STATUS_SUCCESS)
+        {
+            EnableWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEFILE), FALSE);
         }
     }
 }

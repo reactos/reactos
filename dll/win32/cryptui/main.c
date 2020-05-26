@@ -16,9 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include <stdarg.h>
+#include <wchar.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -40,7 +39,6 @@
 #include "hlink.h"
 #include "winreg.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptui);
 
@@ -895,11 +893,11 @@ static void get_cert_usages(PCCERT_CONTEXT cert, LPWSTR *str)
                  CRYPT_ENHKEY_USAGE_OID_GROUP_ID);
 
                 if (info)
-                    len += strlenW(info->pwszName);
+                    len += lstrlenW(info->pwszName);
                 else
                     len += strlen(usage->rgpszUsageIdentifier[i]);
                 if (i < usage->cUsageIdentifier - 1)
-                    len += strlenW(commaSpace);
+                    len += lstrlenW(commaSpace);
             }
             *str = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
             if (*str)
@@ -913,8 +911,8 @@ static void get_cert_usages(PCCERT_CONTEXT cert, LPWSTR *str)
 
                     if (info)
                     {
-                        strcpyW(ptr, info->pwszName);
-                        ptr += strlenW(info->pwszName);
+                        lstrcpyW(ptr, info->pwszName);
+                        ptr += lstrlenW(info->pwszName);
                     }
                     else
                     {
@@ -926,8 +924,8 @@ static void get_cert_usages(PCCERT_CONTEXT cert, LPWSTR *str)
                     }
                     if (i < usage->cUsageIdentifier - 1)
                     {
-                        strcpyW(ptr, commaSpace);
-                        ptr += strlenW(commaSpace);
+                        lstrcpyW(ptr, commaSpace);
+                        ptr += lstrlenW(commaSpace);
                     }
                 }
                 *ptr = 0;
@@ -1087,7 +1085,7 @@ static int cert_mgr_sort_by_text(HWND lv, int col, int index1, int index2)
     item.pszText = buf2;
     item.iItem = index2;
     SendMessageW(lv, LVM_GETITEMW, 0, (LPARAM)&item);
-    return strcmpW(buf1, buf2);
+    return lstrcmpW(buf1, buf2);
 }
 
 static int CALLBACK cert_mgr_sort_by_subject(LPARAM lp1, LPARAM lp2, LPARAM lp)
@@ -1389,12 +1387,12 @@ static BOOL WINAPI enum_store_callback(const void *pvSystemStore,
         {
             storeInfo->type = SystemStore;
             storeInfo->u.name = HeapAlloc(GetProcessHeap(), 0,
-             (strlenW(pvSystemStore) + 1) * sizeof(WCHAR));
+             (lstrlenW(pvSystemStore) + 1) * sizeof(WCHAR));
             if (storeInfo->u.name)
             {
                 tvis.u.item.mask |= TVIF_PARAM;
                 tvis.u.item.lParam = (LPARAM)storeInfo;
-                strcpyW(storeInfo->u.name, pvSystemStore);
+                lstrcpyW(storeInfo->u.name, pvSystemStore);
             }
             else
             {
@@ -1994,7 +1992,7 @@ static void add_local_oid_text_to_control(HWND text, LPCSTR oid)
         len = LoadStringW(hInstance, entry->id, (LPWSTR)&str, 0);
         ptr = str;
         do {
-            if ((linebreak = memchrW(ptr, '\n', len)))
+            if ((linebreak = wmemchr(ptr, '\n', len)))
             {
                 WCHAR copy[MAX_STRING_LEN];
 
@@ -2247,9 +2245,9 @@ static WCHAR *get_user_notice_from_qualifier(const CRYPT_OBJID_BLOB *qualifier)
      &qualifierValue, &size))
     {
         str = HeapAlloc(GetProcessHeap(), 0,
-         (strlenW(qualifierValue->pszDisplayText) + 1) * sizeof(WCHAR));
+         (lstrlenW(qualifierValue->pszDisplayText) + 1) * sizeof(WCHAR));
         if (str)
-            strcpyW(str, qualifierValue->pszDisplayText);
+            lstrcpyW(str, qualifierValue->pszDisplayText);
         LocalFree(qualifierValue);
     }
     return str;
@@ -2459,7 +2457,7 @@ static LRESULT CALLBACK user_notice_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
         text = GetDlgItem(hwnd, IDC_USERNOTICE);
         issuerStatement = (struct IssuerStatement *)lp;
         add_unformatted_text_to_control(text, issuerStatement->userNotice,
-         strlenW(issuerStatement->userNotice));
+         lstrlenW(issuerStatement->userNotice));
         if (issuerStatement->cps)
             SetWindowLongPtrW(hwnd, DWLP_USER, (LPARAM)issuerStatement->cps);
         else
@@ -2588,7 +2586,7 @@ static WCHAR *field_format_version(PCCERT_CONTEXT cert)
     WCHAR *buf = HeapAlloc(GetProcessHeap(), 0, 12 * sizeof(WCHAR));
 
     if (buf)
-        sprintfW(buf, fmt, cert->pCertInfo->dwVersion);
+        swprintf(buf, fmt, cert->pCertInfo->dwVersion);
     return buf;
 }
 
@@ -2603,7 +2601,7 @@ static WCHAR *format_hex_string(void *pb, DWORD cb)
         WCHAR *ptr;
 
         for (i = 0, ptr = buf; i < cb; i++, ptr += 3)
-            sprintfW(ptr, fmt, ((BYTE *)pb)[i]);
+            swprintf(ptr, fmt, ((BYTE *)pb)[i]);
     }
     return buf;
 }
@@ -2706,7 +2704,7 @@ static WCHAR *field_format_public_key(PCCERT_CONTEXT cert)
              * good idea, but as this isn't a sentence fragment, it shouldn't
              * be word-order dependent.
              */
-            len = strlenW(fmt) + strlenW(oidInfo->pwszName) +
+            len = lstrlenW(fmt) + lstrlenW(oidInfo->pwszName) +
                 cert->pCertInfo->SubjectPublicKeyInfo.PublicKey.cbData * 8;
             buf = HeapAlloc(GetProcessHeap(), 0, len * sizeof(*buf));
             if (buf)
@@ -2898,7 +2896,7 @@ static WCHAR *field_format_extension_hex_with_ascii(const CERT_EXTENSION *ext)
             {
                 /* Output as hex bytes first */
                 for (j = i; j < min(i + 8, ext->Value.cbData); j++, ptr += 3)
-                    sprintfW(ptr, fmt, ext->Value.pbData[j]);
+                    swprintf(ptr, fmt, ext->Value.pbData[j]);
                 /* Pad the hex output with spaces for alignment */
                 if (j == ext->Value.cbData && j % 8)
                 {
@@ -2907,15 +2905,15 @@ static WCHAR *field_format_extension_hex_with_ascii(const CERT_EXTENSION *ext)
                     for (; j % 8; j++, ptr += ARRAY_SIZE(pad))
                         memcpy(ptr, pad, sizeof(pad));
                 }
-                /* The last sprintfW included a space, so just insert one
+                /* The last swprintf included a space, so just insert one
                  * more space between the hex bytes and the ASCII output
                  */
                 *ptr++ = ' ';
                 /* Output as ASCII bytes */
                 for (j = i; j < min(i + 8, ext->Value.cbData); j++, ptr++)
                 {
-                    if (isprintW(ext->Value.pbData[j]) &&
-                     !isspaceW(ext->Value.pbData[j]))
+                    if (iswprint(ext->Value.pbData[j]) &&
+                     !iswspace(ext->Value.pbData[j]))
                         *ptr = ext->Value.pbData[j];
                     else
                         *ptr = '.';
@@ -3502,7 +3500,7 @@ static void set_cert_string_property(PCCERT_CONTEXT cert, DWORD prop,
         CRYPT_DATA_BLOB blob;
 
         blob.pbData = (BYTE *)str;
-        blob.cbData = (strlenW(str) + 1) * sizeof(WCHAR);
+        blob.cbData = (lstrlenW(str) + 1) * sizeof(WCHAR);
         CertSetCertificateContextProperty(cert, prop, 0, &blob);
     }
     else
@@ -3836,7 +3834,7 @@ static LRESULT CALLBACK detail_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
                  */
                 SendMessageW(valueCtl, EM_SETSEL, 0, -1);
                 add_unformatted_text_to_control(valueCtl, val,
-                 val ? strlenW(val) : 0);
+                 val ? lstrlenW(val) : 0);
                 if (val != buf)
                     HeapFree(GetProcessHeap(), 0, val);
             }
@@ -4931,7 +4929,7 @@ static WCHAR *make_import_file_filter(DWORD dwFlags)
          (dwFlags & import_filters[i].allowFlags))
         {
             len = LoadStringW(hInstance, import_filters[i].id, (LPWSTR)&str, 0);
-            totalLen += len + strlenW(import_filters[i].filter) + 2;
+            totalLen += len + lstrlenW(import_filters[i].filter) + 2;
         }
     }
     filter = HeapAlloc(GetProcessHeap(), 0, totalLen * sizeof(WCHAR));
@@ -4950,8 +4948,8 @@ static WCHAR *make_import_file_filter(DWORD dwFlags)
                 memcpy(ptr, str, len * sizeof(WCHAR));
                 ptr += len;
                 *ptr++ = 0;
-                strcpyW(ptr, import_filters[i].filter);
-                ptr += strlenW(import_filters[i].filter) + 1;
+                lstrcpyW(ptr, import_filters[i].filter);
+                ptr += lstrlenW(import_filters[i].filter) + 1;
             }
         }
         *ptr++ = 0;
@@ -5010,19 +5008,19 @@ static BOOL import_validate_filename(HWND hwnd, struct ImportWizData *data,
          FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
          GetLastError(), 0, (LPWSTR) &msgBuf, 0, NULL);
         fullError = HeapAlloc(GetProcessHeap(), 0,
-         (strlenW(error) + strlenW(fileName) + strlenW(msgBuf) + 3)
+         (lstrlenW(error) + lstrlenW(fileName) + lstrlenW(msgBuf) + 3)
          * sizeof(WCHAR));
         if (fullError)
         {
             LPWSTR ptr = fullError;
 
-            strcpyW(ptr, error);
-            ptr += strlenW(error);
-            strcpyW(ptr, fileName);
-            ptr += strlenW(fileName);
+            lstrcpyW(ptr, error);
+            ptr += lstrlenW(error);
+            lstrcpyW(ptr, fileName);
+            ptr += lstrlenW(fileName);
             *ptr++ = ':';
             *ptr++ = '\n';
-            strcpyW(ptr, msgBuf);
+            lstrcpyW(ptr, msgBuf);
             MessageBoxW(hwnd, fullError, pTitle, MB_ICONERROR | MB_OK);
             HeapFree(GetProcessHeap(), 0, fullError);
         }
@@ -5994,7 +5992,7 @@ static LRESULT CALLBACK export_password_dlg_proc(HWND hwnd, UINT msg,
                      (LPARAM)password);
                     SendMessageW(passwordConfirmEdit, WM_GETTEXT,
                      passwordConfirmLen + 1, (LPARAM)passwordConfirm);
-                    if (strcmpW(password, passwordConfirm))
+                    if (lstrcmpW(password, passwordConfirm))
                     {
                         export_password_mismatch(hwnd, data);
                         SetWindowLongPtrW(hwnd, DWLP_MSGRESULT, 1);
@@ -6057,17 +6055,17 @@ static LPWSTR export_append_extension(const struct ExportWizData *data,
             extension = cer;
         }
     }
-    dot = strrchrW(fileName, '.');
+    dot = wcsrchr(fileName, '.');
     if (dot)
-        appendExtension = strcmpiW(dot, extension) != 0;
+        appendExtension = wcsicmp(dot, extension) != 0;
     else
         appendExtension = TRUE;
     if (appendExtension)
     {
         fileName = HeapReAlloc(GetProcessHeap(), 0, fileName,
-         (strlenW(fileName) + strlenW(extension) + 1) * sizeof(WCHAR));
+         (lstrlenW(fileName) + lstrlenW(extension) + 1) * sizeof(WCHAR));
         if (fileName)
-            strcatW(fileName, extension);
+            lstrcatW(fileName, extension);
     }
     return fileName;
 }
@@ -6128,19 +6126,19 @@ static BOOL export_validate_filename(HWND hwnd, struct ExportWizData *data,
              FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
              GetLastError(), 0, (LPWSTR) &msgBuf, 0, NULL);
             fullError = HeapAlloc(GetProcessHeap(), 0,
-             (strlenW(error) + strlenW(fileName) + strlenW(msgBuf) + 3)
+             (lstrlenW(error) + lstrlenW(fileName) + lstrlenW(msgBuf) + 3)
              * sizeof(WCHAR));
             if (fullError)
             {
                 LPWSTR ptr = fullError;
 
-                strcpyW(ptr, error);
-                ptr += strlenW(error);
-                strcpyW(ptr, fileName);
-                ptr += strlenW(fileName);
+                lstrcpyW(ptr, error);
+                ptr += lstrlenW(error);
+                lstrcpyW(ptr, fileName);
+                ptr += lstrlenW(fileName);
                 *ptr++ = ':';
                 *ptr++ = '\n';
-                strcpyW(ptr, msgBuf);
+                lstrcpyW(ptr, msgBuf);
                 MessageBoxW(hwnd, fullError, pTitle, MB_ICONERROR | MB_OK);
                 HeapFree(GetProcessHeap(), 0, fullError);
             }
@@ -6199,9 +6197,9 @@ static WCHAR *make_export_file_filter(DWORD exportFormat, DWORD subjectChoice)
         }
     }
     baseLen = LoadStringW(hInstance, baseID, (LPWSTR)&baseFilter, 0);
-    totalLen += baseLen + strlenW(filterStr) + 2;
+    totalLen += baseLen + lstrlenW(filterStr) + 2;
     allLen = LoadStringW(hInstance, IDS_IMPORT_FILTER_ALL, (LPWSTR)&all, 0);
-    totalLen += allLen + strlenW(filter_all) + 2;
+    totalLen += allLen + lstrlenW(filter_all) + 2;
     filter = HeapAlloc(GetProcessHeap(), 0, totalLen * sizeof(WCHAR));
     if (filter)
     {
@@ -6211,13 +6209,13 @@ static WCHAR *make_export_file_filter(DWORD exportFormat, DWORD subjectChoice)
         memcpy(ptr, baseFilter, baseLen * sizeof(WCHAR));
         ptr += baseLen;
         *ptr++ = 0;
-        strcpyW(ptr, filterStr);
-        ptr += strlenW(filterStr) + 1;
+        lstrcpyW(ptr, filterStr);
+        ptr += lstrlenW(filterStr) + 1;
         memcpy(ptr, all, allLen * sizeof(WCHAR));
         ptr += allLen;
         *ptr++ = 0;
-        strcpyW(ptr, filter_all);
-        ptr += strlenW(filter_all) + 1;
+        lstrcpyW(ptr, filter_all);
+        ptr += lstrlenW(filter_all) + 1;
         *ptr++ = 0;
     }
     return filter;
@@ -7550,8 +7548,21 @@ PCCERT_CONTEXT WINAPI CryptUIDlgSelectCertificateFromStore(HCERTSTORE hCertStore
                                                            LPCWSTR pwszDisplayString, DWORD dwDontUseColumn,
                                                            DWORD dwFlags, void *pvReserved)
 {
-    FIXME("%p %p %s %s %d %d %p: stub\n", hCertStore, hwnd, debugstr_w(pwszTitle), debugstr_w(pwszDisplayString), dwDontUseColumn, dwFlags, pvReserved);
-    return NULL;
+    CRYPTUI_SELECTCERTIFICATE_STRUCTW sc;
+
+    TRACE("%p %p %s %s %x %x %p\n", hCertStore, hwnd, debugstr_w(pwszTitle), debugstr_w(pwszDisplayString), dwDontUseColumn, dwFlags, pvReserved);
+
+    memset(&sc, 0, sizeof(sc));
+
+    sc.dwSize = sizeof(sc);
+    sc.hwndParent = hwnd;
+    sc.dwFlags = dwFlags;
+    sc.szTitle = pwszTitle;
+    sc.szDisplayString = pwszDisplayString;
+    sc.dwDontUseColumn = dwDontUseColumn;
+    sc.cDisplayStores = 1;
+    sc.rghDisplayStores = &hCertStore;
+    return CryptUIDlgSelectCertificateW(&sc);
 }
 
 BOOL WINAPI CryptUIWizDigitalSign(DWORD flags, HWND parent, LPCWSTR title, PCCRYPTUI_WIZ_DIGITAL_SIGN_INFO info,

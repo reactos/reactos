@@ -136,7 +136,7 @@ CAPTION "Configurações das teclas de filtragem"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Atalho do teclado", -1, 6, 11, 234, 62
-    LTEXT "O atalho para as teclas de filtragem é:  \nmanter a tecla SHIFT direita pressionada por oito segundos.",
+    LTEXT "O atalho para as teclas de filtragem é:\nmanter a tecla SHIFT direita pressionada por oito segundos.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Usar atalho", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Opções de filtragem", -1, 6, 79, 234, 79
@@ -163,7 +163,7 @@ CAPTION "Configurações das teclas de alternância"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Atalho do teclado", -1, 6, 11, 234, 62
-    LTEXT "O atalho para as teclas de alternância é:  \nmanter a tecla NUM LOCK pressionada por cinco segundos.",
+    LTEXT "O atalho para as teclas de alternância é:\nmanter a tecla NUM LOCK pressionada por cinco segundos.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Usar atalho", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
@@ -176,7 +176,7 @@ CAPTION "Configurações de alto contraste"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Atalho do teclado", -1, 6, 11, 234, 62
-    LTEXT "O atalho para o alto contraste é:  \npressionar ALT esquerda + SHIFT esquerda + PRINT SCREEN.",
+    LTEXT "O atalho para o alto contraste é:\npressionar ALT esquerda + SHIFT esquerda + PRINT SCREEN.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Usar atalho", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Esquema de aparência de alto contraste", -1, 6, 83, 234, 44
@@ -193,7 +193,7 @@ CAPTION "Configurações das teclas para mouse"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Atalho do teclado", -1, 6, 11, 234, 62
-    LTEXT "O atalho para as teclas para mouse é:  \npressionar ALT esquerda + SHIFT esquerda + NUM LOCK.",
+    LTEXT "O atalho para as teclas para mouse é:\npressionar ALT esquerda + SHIFT esquerda + NUM LOCK.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Usar atalho", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14

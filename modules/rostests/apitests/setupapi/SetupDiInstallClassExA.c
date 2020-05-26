@@ -39,7 +39,7 @@ static void create_inf_file(LPCSTR filename, const char *data)
     HANDLE handle = CreateFileA(filename, GENERIC_WRITE, 0, NULL,
                                 CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     assert(handle != INVALID_HANDLE_VALUE);
-    ret = WriteFile(handle, data, strlen(data), &res, NULL);
+    ret = WriteFile(handle, data, lstrlenA(data), &res, NULL);
     assert(ret != 0);
     CloseHandle(handle);
 }
@@ -277,7 +277,7 @@ static void test_SetupDiInstallClassExA(void)
 START_TEST(SetupDiInstallClassExA)
 {
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
-    DWORD len;
+    SIZE_T len;
 
     GetCurrentDirectoryA(MAX_PATH, prev_path);
     GetTempPathA(MAX_PATH, temp_path);

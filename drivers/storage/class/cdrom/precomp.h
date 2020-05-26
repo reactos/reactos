@@ -3,5 +3,7 @@
 
 #include <ntdef.h>
 #include <ntstatus.h>
+#include <mountmgr.h>
+#include <mountdev.h>
 
 #endif /* _CDROM_PCH_ */

@@ -9,7 +9,6 @@ REM ECHO
 REM START /WAIT abiword.exe
 REM start /WAIT dbgprint.exe SYSREG_CHECKPOINT:ABIWORD_INSTALL_COMPLETE
 
-
 REM ECHO
 REM ECHO Installing OpenOffice
 REM ECHO
@@ -19,10 +18,9 @@ REM start /WAIT dbgprint.exe SYSREG_CHECKPOINT:OPENOFFICE_INSTALL_COMPLETE
 ECHO 
 ECHO Informing Sysreg that we are done
 ECHO
-START C:\ReactOS\bin\dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE  
+START dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE
 
 ECHO
 ECHO Shutting down ReactOS
 ECHO
 START shutdown.exe shutdown
-

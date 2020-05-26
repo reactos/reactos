@@ -674,6 +674,13 @@ static void test_PdhLookupPerfNameByIndexA( void )
     ok(size == sizeof("% Processor Time"), "PdhLookupPerfNameByIndexA failed %d\n", size);
 
     size = sizeof(buffer);
+    ret = PdhLookupPerfNameByIndexA( NULL, 238, buffer, &size );
+    ok(ret == ERROR_SUCCESS, "PdhLookupPerfNameByIndexA failed 0x%08x\n", ret);
+    ok(!lstrcmpA( buffer, "Processor" ),
+       "PdhLookupPerfNameByIndexA failed, got %s expected \'Processor\'\n", buffer);
+    ok(size == sizeof("Processor"), "PdhLookupPerfNameByIndexA failed %d\n", size);
+
+    size = sizeof(buffer);
     ret = PdhLookupPerfNameByIndexA( NULL, 674, NULL, &size );
     ok(ret == PDH_INVALID_ARGUMENT ||
        ret == PDH_MORE_DATA, /* win2k3 */

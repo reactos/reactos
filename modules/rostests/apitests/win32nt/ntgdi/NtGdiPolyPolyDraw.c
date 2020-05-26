@@ -128,7 +128,7 @@ Test_Params(void)
     TEST(GetLastError() == 0);
 
     SetLastError(0);
-    ret = NtGdiPolyPolyDraw(hDC, Points, (PVOID)0x81000000, 2, 1);
+    ret = NtGdiPolyPolyDraw(hDC, Points, (PVOID)(LONG_PTR)0x81000000, 2, 1);
     TEST(ret == 0);
     TEST(GetLastError() == 0);
 
@@ -138,7 +138,7 @@ Test_Params(void)
     TEST(GetLastError() == 0);
 
     SetLastError(0);
-    ret = NtGdiPolyPolyDraw(hDC, (PVOID)0x81000000, Count1, 2, 1);
+    ret = NtGdiPolyPolyDraw(hDC, (PVOID)(LONG_PTR)0x81000000, Count1, 2, 1);
     TEST(ret == 0);
     TEST(GetLastError() == 0);
 

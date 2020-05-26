@@ -42,7 +42,6 @@
 #include "rpcndr.h"
 #include "ndrtypes.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -131,8 +130,6 @@ static inline void align_pointer_offset_clear( unsigned char **ptr, unsigned cha
 #define NDR_POINTER_ID(pStubMsg) (NDR_POINTER_ID_BASE + ((pStubMsg)->UniquePtrCount++) * 4)
 #define NDR_TABLE_SIZE 128
 #define NDR_TABLE_MASK 127
-
-#define NDRSContextFromValue(user_context) (NDR_SCONTEXT)((char *)(user_context) - (char *)NDRSContextValue((NDR_SCONTEXT)NULL))
 
 static unsigned char *WINAPI NdrBaseTypeMarshall(PMIDL_STUB_MESSAGE, unsigned char *, PFORMAT_STRING);
 static unsigned char *WINAPI NdrBaseTypeUnmarshall(PMIDL_STUB_MESSAGE, unsigned char **, PFORMAT_STRING, unsigned char);
@@ -1873,7 +1870,7 @@ static inline void array_compute_and_size_conformance(
     else
     {
       TRACE("string=%s\n", debugstr_w((LPCWSTR)pMemory));
-      pStubMsg->ActualCount = strlenW((LPCWSTR)pMemory)+1;
+      pStubMsg->ActualCount = lstrlenW((LPCWSTR)pMemory)+1;
     }
 
     if (pFormat[1] == FC_STRING_SIZED)
@@ -1996,7 +1993,7 @@ static inline void array_compute_and_write_conformance(
     else
     {
       TRACE("string=%s\n", debugstr_w((LPCWSTR)pMemory));
-      pStubMsg->ActualCount = strlenW((LPCWSTR)pMemory)+1;
+      pStubMsg->ActualCount = lstrlenW((LPCWSTR)pMemory)+1;
     }
     if (pFormat[1] == FC_STRING_SIZED)
       pFormat = ComputeConformance(pStubMsg, pMemory, pFormat + 2, 0);
@@ -7002,7 +6999,7 @@ static unsigned char *WINAPI NdrContextHandleMarshall(
     }
     else
     {
-        NDR_SCONTEXT ctxt = NDRSContextFromValue(pMemory);
+        NDR_SCONTEXT ctxt = CONTAINING_RECORD(pMemory, struct _NDR_SCONTEXT, userContext);
         NDR_RUNDOWN rundown = pStubMsg->StubDesc->apfnNdrRundownRoutines[pFormat[2]];
         NdrServerContextNewMarshall(pStubMsg, ctxt, rundown, pFormat);
     }
@@ -7031,10 +7028,15 @@ static unsigned char *WINAPI NdrContextHandleUnmarshall(
 
     if (pStubMsg->IsClient)
     {
+        NDR_CCONTEXT *ccontext;
+        if (pFormat[1] & HANDLE_PARAM_IS_VIA_PTR)
+            ccontext = *(NDR_CCONTEXT **)ppMemory;
+        else
+            ccontext = (NDR_CCONTEXT *)ppMemory;
         /* [out]-only or [ret] param */
         if ((pFormat[1] & (HANDLE_PARAM_IS_IN|HANDLE_PARAM_IS_OUT)) == HANDLE_PARAM_IS_OUT)
-            **(NDR_CCONTEXT **)ppMemory = NULL;
-        NdrClientContextUnmarshall(pStubMsg, *(NDR_CCONTEXT **)ppMemory, pStubMsg->RpcMsg->Handle);
+            *ccontext = NULL;
+        NdrClientContextUnmarshall(pStubMsg, ccontext, pStubMsg->RpcMsg->Handle);
     }
     else
     {
@@ -7258,7 +7260,10 @@ NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
  */
 void WINAPI NdrCorrelationInitialize(PMIDL_STUB_MESSAGE pStubMsg, void *pMemory, ULONG CacheSize, ULONG Flags)
 {
-    FIXME("(%p, %p, %d, 0x%x): semi-stub\n", pStubMsg, pMemory, CacheSize, Flags);
+    static int once;
+
+    if (!once++)
+        FIXME("(%p, %p, %d, 0x%x): semi-stub\n", pStubMsg, pMemory, CacheSize, Flags);
 
     if (pStubMsg->CorrDespIncrement == 0)
         pStubMsg->CorrDespIncrement = 2; /* size of the normal (non-range) /robust payload */
@@ -7296,5 +7301,8 @@ void WINAPI NdrCorrelationPass(PMIDL_STUB_MESSAGE pStubMsg)
  */
 void WINAPI NdrCorrelationFree(PMIDL_STUB_MESSAGE pStubMsg)
 {
-    FIXME("(%p): stub\n", pStubMsg);
+    static int once;
+
+    if (!once++)
+        FIXME("(%p): stub\n", pStubMsg);
 }

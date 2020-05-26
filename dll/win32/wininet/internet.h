@@ -335,8 +335,8 @@ typedef struct {
 
 typedef struct {
     data_stream_t data_stream;
-    DWORD content_length;
-    DWORD content_read;
+    ULONGLONG content_length;
+    ULONGLONG content_read;
 } netconn_stream_t;
 
 #define READ_BUFFER_SIZE 8192
@@ -372,7 +372,7 @@ typedef struct
     struct HttpAuthInfo *proxyAuthInfo;
 
     CRITICAL_SECTION read_section;  /* section to protect the following fields */
-    DWORD contentLength;  /* total number of bytes to be read */
+    ULONGLONG contentLength;  /* total number of bytes to be read */
     BOOL  read_gzip;      /* are we reading in gzip mode? */
     DWORD read_pos;       /* current read position in read_buf */
     DWORD read_size;      /* valid data size in read_buf */
@@ -428,7 +428,7 @@ VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
                            DWORD dwStatusInfoLength) DECLSPEC_HIDDEN;
 WCHAR *INTERNET_FindProxyForProtocol(LPCWSTR szProxy, LPCWSTR proto) DECLSPEC_HIDDEN;
 
-DWORD create_netconn(BOOL,server_t*,DWORD,BOOL,DWORD,netconn_t**) DECLSPEC_HIDDEN;
+DWORD create_netconn(server_t*,DWORD,BOOL,DWORD,netconn_t**) DECLSPEC_HIDDEN;
 void free_netconn(netconn_t*) DECLSPEC_HIDDEN;
 void NETCON_unload(void) DECLSPEC_HIDDEN;
 DWORD NETCON_secure_connect(netconn_t*,server_t*) DECLSPEC_HIDDEN;
@@ -456,6 +456,7 @@ static inline req_file_t *req_file_addref(req_file_t *req_file)
 BOOL init_urlcache(void) DECLSPEC_HIDDEN;
 void free_urlcache(void) DECLSPEC_HIDDEN;
 void free_cookie(void) DECLSPEC_HIDDEN;
+void free_authorization_cache(void) DECLSPEC_HIDDEN;
 
 void init_winsock(void) DECLSPEC_HIDDEN;
 

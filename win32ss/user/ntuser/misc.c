@@ -296,10 +296,9 @@ NtUserGetThreadState(
          {
            PTHREADINFO pti;
            pti = PsGetCurrentThreadWin32Thread();
-           pti->timeLast = EngGetTickCount32();
-           pti->pcti->tickLastMsgChecked = pti->timeLast;
+           pti->pcti->timeLastRead = EngGetTickCount32();
+           break;
          }
-         break;
 
       case THREADSTATE_GETINPUTSTATE:
          ret = LOWORD(IntGetQueueStatus(QS_POSTMESSAGE|QS_TIMER|QS_PAINT|QS_SENDMESSAGE|QS_INPUT)) & (QS_KEY | QS_MOUSEBUTTON);
@@ -725,8 +724,8 @@ void UserDbgAssertThreadInfo(BOOL showCaller)
     ASSERT(pci->ulClientDelta == DesktopHeapGetUserDelta());
     if (pti->pcti && pci->pDeskInfo)
         ASSERT(pci->pClientThreadInfo == (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta));
-    if (pti->pcti && IsListEmpty(&pti->SentMessagesListHead))
-        ASSERT((pti->pcti->fsChangeBits & QS_SENDMESSAGE) == 0);
+    //if (pti->pcti && IsListEmpty(&pti->SentMessagesListHead))
+    //    ASSERT((pti->pcti->fsChangeBits & QS_SENDMESSAGE) == 0);
     if (pti->KeyboardLayout)
         ASSERT(pci->hKL == pti->KeyboardLayout->hkl);
     if(pti->rpdesk != NULL)

@@ -246,11 +246,15 @@ class CFolderViewCB :
     public IShellFolderViewCB
 {
 public:
+    CFolderViewCB(void) :
+        m_RefCount(1)
+    {
+    }
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void  **ppvObject)
     {
-        if (riid == IID_IShellFolderViewCB || riid == IID_IUnknown)
+        if (riid == IID_IShellFolderViewCB)
         {
-            *ppvObject = this;
+            *ppvObject = static_cast<IShellFolderViewCB*>(this);
             AddRef();
             return S_OK;
         }
@@ -259,12 +263,12 @@ public:
     virtual ULONG STDMETHODCALLTYPE AddRef(void)
     {
         InterlockedIncrement(&g_AddRef);
-        return 2;
+        return InterlockedIncrement(&m_RefCount);
     }
     virtual ULONG STDMETHODCALLTYPE Release(void)
     {
         InterlockedIncrement(&g_Release);
-        return 1;
+        return InterlockedDecrement(&m_RefCount);
     }
     virtual HRESULT STDMETHODCALLTYPE MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
@@ -272,6 +276,8 @@ public:
         add_msg(uMsg, wParam, lParam);
         return E_NOTIMPL;
     }
+private:
+    LONG m_RefCount;
 };
 
 
@@ -450,7 +456,7 @@ START_TEST(IShellFolderViewCB)
     if (!SUCCEEDED(hr))
         return;
 
-    ok_int(g_AddRef, 2);
+    ok_int(g_AddRef, 1);
     ok_int(g_Release, 0);
 
     clear_list();
@@ -579,26 +585,19 @@ START_TEST(IShellFolderViewCB)
     {
         IShellFolderViewCB* oldPtr;
 
-        g_AddRef = 0;
-        g_Release = 0;
-
         hr = folderView->SetCallback(NULL, &oldPtr);
-        ok_int(g_AddRef, 0);
+        ok_int(g_AddRef, 1);
         ok_int(g_Release, 0);
-
-        g_AddRef = 0;
-        g_Release = 0;
 
         /* Last pointer is not optional! */
         IShellFolderViewCB* oldPtr2;
         hr = folderView->SetCallback(oldPtr, &oldPtr2);
-        ok_int(g_AddRef, 1);
+        ok_int(g_AddRef, 2);
         ok_int(g_Release, 0);
     }
 
-
     ULONG refCount = psv->Release();
-    ok(refCount == 0, "refCount = %lu\n", refCount);
+    ok(refCount == 1, "refCount = %lu\n", refCount);
 
     static message release_list[] =
     {

@@ -9,11 +9,6 @@ add_definitions(
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(atl.dll atl.spec ADD_IMPORTLIB)
 
-if(MSVC)
-    # Disable warning C4477 (printf format warnings)
-    add_compile_flags("/wd4477")
-endif()
-
 list(APPEND SOURCE
     atl.c
     atl30.c

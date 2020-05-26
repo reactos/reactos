@@ -71,7 +71,7 @@ static const char* convert_input_data(const char *data, DWORD size, DWORD *new_s
     }
     *ptr = '\0';
 
-    *new_size = strlen(new_data);
+    *new_size = lstrlenA(new_data);
     return new_data;
 }
 

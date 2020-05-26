@@ -71,12 +71,15 @@ BOOLEAN KdpContextSent;
 //
 // Debug Trap Handlers
 //
+#ifdef _WINKD_
 PKDEBUG_ROUTINE KiDebugRoutine = KdpStub;
 PKDEBUG_SWITCH_ROUTINE KiDebugSwitchRoutine;
+#endif
 
 //
 // Debugger Configuration Settings
 //
+#ifdef _WINKD_
 BOOLEAN KdBreakAfterSymbolLoad;
 BOOLEAN KdPitchDebugger;
 BOOLEAN KdDebuggerNotPresent;
@@ -89,6 +92,7 @@ BOOLEAN KdpDebuggerStructuresInitialized;
 BOOLEAN KdEnteredDebugger;
 ULONG KdDisableCount;
 LARGE_INTEGER KdPerformanceCounterRate;
+#endif
 
 //
 // Breakpoint Data
@@ -237,19 +241,66 @@ ULONG Kd_VSSDYNDISK_Mask;
 ULONG Kd_VERIFIER_Mask;
 ULONG Kd_VDS_Mask;
 ULONG Kd_VDSBAS_Mask;
+ULONG Kd_VDSDYN_Mask;   // Specified in Vista+
 ULONG Kd_VDSDYNDR_Mask;
+ULONG Kd_VDSLDR_Mask;   // Specified in Vista+
 ULONG Kd_VDSUTIL_Mask;
 ULONG Kd_DFRGIFC_Mask;
 ULONG Kd_DEFAULT_Mask;
 ULONG Kd_MM_Mask;
 ULONG Kd_DFSC_Mask;
 ULONG Kd_WOW64_Mask;
+//
+// Components specified in Vista+, some of which we also use in ReactOS
+//
+ULONG Kd_ALPC_Mask;
+ULONG Kd_WDI_Mask;
+ULONG Kd_PERFLIB_Mask;
+ULONG Kd_KTM_Mask;
+ULONG Kd_IOSTRESS_Mask;
+ULONG Kd_HEAP_Mask;
+ULONG Kd_WHEA_Mask;
+ULONG Kd_USERGDI_Mask;
+ULONG Kd_MMCSS_Mask;
+ULONG Kd_TPM_Mask;
+ULONG Kd_THREADORDER_Mask;
+ULONG Kd_ENVIRON_Mask;
+ULONG Kd_EMS_Mask;
+ULONG Kd_WDT_Mask;
+ULONG Kd_FVEVOL_Mask;
+ULONG Kd_NDIS_Mask;
+ULONG Kd_NVCTRACE_Mask;
+ULONG Kd_LUAFV_Mask;
+ULONG Kd_APPCOMPAT_Mask;
+ULONG Kd_USBSTOR_Mask;
+ULONG Kd_SBP2PORT_Mask;
+ULONG Kd_COVERAGE_Mask;
+ULONG Kd_CACHEMGR_Mask;
+ULONG Kd_MOUNTMGR_Mask;
+ULONG Kd_CFR_Mask;
+ULONG Kd_TXF_Mask;
+ULONG Kd_KSECDD_Mask;
+ULONG Kd_FLTREGRESS_Mask;
+ULONG Kd_MPIO_Mask;
+ULONG Kd_MSDSM_Mask;
+ULONG Kd_UDFS_Mask;
+ULONG Kd_PSHED_Mask;
+ULONG Kd_STORVSP_Mask;
+ULONG Kd_LSASS_Mask;
+ULONG Kd_SSPICLI_Mask;
+ULONG Kd_CNG_Mask;
+ULONG Kd_EXFAT_Mask;
+ULONG Kd_FILETRACE_Mask;
+ULONG Kd_XSAVE_Mask;
+ULONG Kd_SE_Mask;
+ULONG Kd_DRIVEEXTENDER_Mask;
+// End Mask
 ULONG Kd_ENDOFTABLE_Mask;
 
 //
 // Debug Filter Component Table
 //
-PULONG KdComponentTable[104] =
+PULONG KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES] =
 {
     &Kd_SYSTEM_Mask,
     &Kd_SMSS_Mask,
@@ -347,13 +398,61 @@ PULONG KdComponentTable[104] =
     &Kd_VERIFIER_Mask,
     &Kd_VDS_Mask,
     &Kd_VDSBAS_Mask,
+    &Kd_VDSDYN_Mask,    // Specified in Vista+
     &Kd_VDSDYNDR_Mask,
+    &Kd_VDSLDR_Mask,    // Specified in Vista+
     &Kd_VDSUTIL_Mask,
     &Kd_DFRGIFC_Mask,
     &Kd_DEFAULT_Mask,
     &Kd_MM_Mask,
     &Kd_DFSC_Mask,
     &Kd_WOW64_Mask,
+
+//
+// Components specified in Vista+, some of which we also use in ReactOS
+//
+    &Kd_ALPC_Mask,
+    &Kd_WDI_Mask,
+    &Kd_PERFLIB_Mask,
+    &Kd_KTM_Mask,
+    &Kd_IOSTRESS_Mask,
+    &Kd_HEAP_Mask,
+    &Kd_WHEA_Mask,
+    &Kd_USERGDI_Mask,
+    &Kd_MMCSS_Mask,
+    &Kd_TPM_Mask,
+    &Kd_THREADORDER_Mask,
+    &Kd_ENVIRON_Mask,
+    &Kd_EMS_Mask,
+    &Kd_WDT_Mask,
+    &Kd_FVEVOL_Mask,
+    &Kd_NDIS_Mask,
+    &Kd_NVCTRACE_Mask,
+    &Kd_LUAFV_Mask,
+    &Kd_APPCOMPAT_Mask,
+    &Kd_USBSTOR_Mask,
+    &Kd_SBP2PORT_Mask,
+    &Kd_COVERAGE_Mask,
+    &Kd_CACHEMGR_Mask,
+    &Kd_MOUNTMGR_Mask,
+    &Kd_CFR_Mask,
+    &Kd_TXF_Mask,
+    &Kd_KSECDD_Mask,
+    &Kd_FLTREGRESS_Mask,
+    &Kd_MPIO_Mask,
+    &Kd_MSDSM_Mask,
+    &Kd_UDFS_Mask,
+    &Kd_PSHED_Mask,
+    &Kd_STORVSP_Mask,
+    &Kd_LSASS_Mask,
+    &Kd_SSPICLI_Mask,
+    &Kd_CNG_Mask,
+    &Kd_EXFAT_Mask,
+    &Kd_FILETRACE_Mask,
+    &Kd_XSAVE_Mask,
+    &Kd_SE_Mask,
+    &Kd_DRIVEEXTENDER_Mask,
+    // End Mask
     &Kd_ENDOFTABLE_Mask,
 };
 

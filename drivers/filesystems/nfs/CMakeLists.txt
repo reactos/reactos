@@ -15,9 +15,9 @@ target_link_libraries(nfs41_driver ntoskrnl_vista rdbsslib rxce copysup memcmp $
 add_importlibs(nfs41_driver ntoskrnl hal)
 
 if(USE_CLANG_CL OR (NOT MSVC))
-    add_target_compile_flags(nfs41_driver "-Wno-switch")
+    target_compile_options(nfs41_driver PRIVATE "-Wno-switch")
     if(USE_CLANG_CL)
-        add_target_compile_flags(nfs41_driver "-Wno-unused-value")
+        target_compile_options(nfs41_driver PRIVATE "-Wno-unused-value")
     endif()
 endif()
 

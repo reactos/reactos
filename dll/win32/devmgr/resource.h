@@ -3,6 +3,7 @@
 #define IDC_STATIC          -1
 
 #define IDS_APPNAME         10
+#define IDS_APP_AUTHORS     11
 
 #define IDI_MAIN_ICON       20
 #define IDB_ROOT_IMAGE      21

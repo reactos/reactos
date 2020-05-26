@@ -151,10 +151,9 @@ BOOL CheckCtrlBreak(INT mode)
 
             LoadString(CMD_ModuleHandle, STRING_COPY_OPTION, options, ARRAYSIZE(options));
 
-            /* we need to be sure the string arrives on the screen! */
+            ConOutResPuts(STRING_CANCEL_BATCH_FILE);
             do
             {
-                ConOutResPuts(STRING_CANCEL_BATCH_FILE);
                 c = _totupper(cgetchar());
             } while (!(_tcschr(options, c) || c == _T('\3')) || !c);
 

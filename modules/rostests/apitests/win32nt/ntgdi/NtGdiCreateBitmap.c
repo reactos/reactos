@@ -51,7 +51,7 @@ void Test_NtGdiCreateBitmap_Params(void)
 
     /* Test negative cy and invalid bits */
     SetLastError(ERROR_SUCCESS);
-    ok_ptr(NtGdiCreateBitmap(1, -2, 1, 1, (BYTE*)0x80001234), NULL);
+    ok_ptr(NtGdiCreateBitmap(1, -2, 1, 1, (BYTE*)(LONG_PTR)0x80001234), NULL);
     ok_long(GetLastError(), ERROR_SUCCESS);
 
     /* Test huge size */
@@ -66,7 +66,7 @@ void Test_NtGdiCreateBitmap_Params(void)
 
     /* Test huge size and invalid bits */
     SetLastError(ERROR_SUCCESS);
-    ok_ptr(NtGdiCreateBitmap(100000, 100000, 1, 1, (BYTE*)0x80001234), NULL);
+    ok_ptr(NtGdiCreateBitmap(100000, 100000, 1, 1, (BYTE*)(LONG_PTR)0x80001234), NULL);
     ok_long(GetLastError(), ERROR_SUCCESS);
 
     /* Test cPlanes == 0 */
@@ -148,7 +148,7 @@ void Test_NtGdiCreateBitmap_Params(void)
 
     /* Test bad pointer */
     SetLastError(ERROR_SUCCESS);
-    ok_ptr(NtGdiCreateBitmap(1, 1, 1, 1, (BYTE*)0x80001234), NULL);
+    ok_ptr(NtGdiCreateBitmap(1, 1, 1, 1, (BYTE*)(LONG_PTR)0x80001234), NULL);
     ok_long(GetLastError(), ERROR_SUCCESS);
 
     /* Test pointer alignment */

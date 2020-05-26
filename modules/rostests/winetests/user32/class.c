@@ -18,11 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* To get CS_DROPSHADOW with the MSVC headers */
-#ifndef __REACTOS__
-#define _WIN32_WINNT 0x0501
-#endif
-
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -117,6 +112,8 @@ static void ClassTest(HINSTANCE hInstance, BOOL global)
         return;
     ok(classatom, "failed to register class\n");
 
+    ok(GetClipboardFormatNameW(classatom, str, ARRAY_SIZE(str)) != 0, "atom not found\n");
+
     ok(!RegisterClassW (&cls),
         "RegisterClass of the same class should fail for the second time\n");
 
@@ -171,7 +168,7 @@ static void ClassTest(HINSTANCE hInstance, BOOL global)
     }
 
     /* check GetClassName */
-    i = GetClassNameW(hTestWnd, str, sizeof(str)/sizeof(str[0]));
+    i = GetClassNameW(hTestWnd, str, ARRAY_SIZE(str));
     ok(i == lstrlenW(className),
         "GetClassName returned incorrect length\n");
     ok(!lstrcmpW(className,str),
@@ -232,6 +229,8 @@ static void ClassTest(HINSTANCE hInstance, BOOL global)
     ok(UnregisterClassW(className, hInstance),
         "UnregisterClass() failed\n");
 
+    ok(GetClipboardFormatNameW(classatom, str, ARRAY_SIZE(str)) == 0,
+        "atom still found\n");
     return;
 }
 
@@ -647,7 +646,6 @@ static void test_builtinproc(void)
         "ScrollBar",
         "#32770",  /* dialog */
     };
-    static const int NUM_NORMAL_CLASSES = (sizeof(NORMAL_CLASSES)/sizeof(NORMAL_CLASSES[0]));
     static const char classA[] = "deftest";
     static const WCHAR classW[] = {'d','e','f','t','e','s','t',0};
     WCHAR unistring[] = {0x142, 0x40e, 0x3b4, 0};  /* a string that would be destroyed by a W->A->W conversion */
@@ -658,7 +656,7 @@ static void test_builtinproc(void)
     WCHAR buf[128];
     ATOM atom;
     HWND hwnd;
-    int i;
+    unsigned int i;
 
     pDefWindowProcA = (void *)GetProcAddress(GetModuleHandleA("user32.dll"), "DefWindowProcA");
     pDefWindowProcW = (void *)GetProcAddress(GetModuleHandleA("user32.dll"), "DefWindowProcW");
@@ -728,7 +726,7 @@ static void test_builtinproc(void)
     ok(IsWindowUnicode(hwnd) ||
        broken(!IsWindowUnicode(hwnd)) /* Windows 8 and 10 */,
        "Windows should be Unicode\n");
-    SendMessageW(hwnd, WM_GETTEXT, sizeof(buf) / sizeof(buf[0]), (LPARAM)buf);
+    SendMessageW(hwnd, WM_GETTEXT, ARRAY_SIZE(buf), (LPARAM)buf);
     if (IsWindowUnicode(hwnd))
         ok(memcmp(buf, unistring, sizeof(unistring)) == 0, "WM_GETTEXT invalid return\n");
     else
@@ -773,7 +771,7 @@ static void test_builtinproc(void)
 
     /* For most of the builtin controls both GetWindowLongPtrA and W returns a pointer that is executed directly
      * by CallWindowProcA/W */
-    for (i = 0; i < NUM_NORMAL_CLASSES; i++)
+    for (i = 0; i < ARRAY_SIZE(NORMAL_CLASSES); i++)
     {
         WNDPROC procA, procW;
         hwnd = CreateWindowExA(0, NORMAL_CLASSES[i], classA, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 680, 260,
@@ -880,7 +878,7 @@ static void test_builtinproc(void)
 
 static LRESULT WINAPI TestDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    return DefWindowProcA(hWnd, uMsg, wParam, lParam);
+    return DefDlgProcA(hWnd, uMsg, wParam, lParam);
 }
 
 static BOOL RegisterTestDialog(HINSTANCE hInstance)
@@ -942,7 +940,7 @@ static const struct
 static void test_extra_values(void)
 {
     int i;
-    for(i=0; i< sizeof(extra_values)/sizeof(extra_values[0]); i++)
+    for(i = 0; i < ARRAY_SIZE(extra_values); i++)
     {
         WNDCLASSEXA wcx;
         BOOL ret = GetClassInfoExA(NULL,extra_values[i].name,&wcx);
@@ -1000,6 +998,7 @@ if (0) { /* crashes under XP */
     SetLastError(0xdeadbeef);
     ret = GetClassInfoExA(0, "static", &wcx);
     ok(ret, "GetClassInfoExA() error %d\n", GetLastError());
+    ok(GetLastError() == 0xdeadbeef, "Unexpected error code %d\n", GetLastError());
     ok(wcx.cbSize == 0, "expected 0, got %u\n", wcx.cbSize);
     ok(wcx.lpfnWndProc != NULL, "got null proc\n");
 
@@ -1135,7 +1134,7 @@ static void test_comctl32_class( const char *name )
 
         name++;
 
-        GetTempPathA(sizeof(path)/sizeof(path[0]), path);
+        GetTempPathA(ARRAY_SIZE(path), path);
         strcat(path, "comctl32_class.manifest");
 
         create_manifest_file(path, comctl32_manifest);
@@ -1163,7 +1162,7 @@ static void test_comctl32_class( const char *name )
         if (!ret)
             goto skiptest;
 
-        MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, sizeof(nameW)/sizeof(WCHAR) );
+        MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, ARRAY_SIZE(nameW));
         ret = GetClassInfoW( 0, nameW, &wcW );
         ok( ret, "GetClassInfoW failed for %s\n", name );
         module = GetModuleHandleA( "comctl32" );
@@ -1189,7 +1188,7 @@ static void test_comctl32_class( const char *name )
         ret = GetClassInfoA( 0, name, &wcA );
         ok( ret || broken(!ret) /* <= winxp */, "GetClassInfoA failed for %s\n", name );
         if (!ret) return;
-        MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, sizeof(nameW)/sizeof(WCHAR) );
+        MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, ARRAY_SIZE(nameW));
         ret = GetClassInfoW( 0, nameW, &wcW );
         ok( ret, "GetClassInfoW failed for %s\n", name );
         module = GetModuleHandleA( "comctl32" );
@@ -1245,7 +1244,7 @@ static void test_comctl32_classes(void)
     };
 
     winetest_get_mainargs( &argv );
-    for (i = 0; i < sizeof(classes) / sizeof(classes[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(classes); i++)
     {
         memset( &startup, 0, sizeof(startup) );
         startup.cb = sizeof( startup );
@@ -1321,10 +1320,10 @@ static void test_actctx_classes(void)
     ATOM class;
     HINSTANCE hinst;
     char buff[64];
-    HWND hwnd;
+    HWND hwnd, hwnd2;
     char path[MAX_PATH];
 
-    GetTempPathA(sizeof(path)/sizeof(path[0]), path);
+    GetTempPathA(ARRAY_SIZE(path), path);
     strcat(path, "actctx_classes.manifest");
 
     create_manifest_file(path, main_manifest);
@@ -1355,6 +1354,12 @@ static void test_actctx_classes(void)
     hwnd = CreateWindowExA(0, testclass, "test", 0, 0, 0, 0, 0, 0, 0, hinst, 0);
     ok(hwnd != NULL, "Failed to create a window.\n");
 
+    hwnd2 = FindWindowExA(NULL, NULL, "MyTestClass", NULL);
+    ok(hwnd2 == hwnd, "Failed to find test window.\n");
+
+    hwnd2 = FindWindowExA(NULL, NULL, "4.3.2.1!MyTestClass", NULL);
+    ok(hwnd2 == NULL, "Unexpected find result %p.\n", hwnd2);
+
     ret = GetClassNameA(hwnd, buff, sizeof(buff));
     ok(ret, "Failed to get class name.\n");
     ok(!strcmp(buff, testclass), "Unexpected class name.\n");
@@ -1377,6 +1382,17 @@ static void test_actctx_classes(void)
     ret = GetClassNameA(hwnd, buff, sizeof(buff));
     ok(ret, "Failed to get class name.\n");
     ok(!strcmp(buff, testclass), "Unexpected class name.\n");
+
+    DestroyWindow(hwnd);
+
+    hwnd = CreateWindowExA(0, "4.3.2.1!MyTestClass", "test", 0, 0, 0, 0, 0, 0, 0, hinst, 0);
+    ok(hwnd != NULL, "Failed to create a window.\n");
+
+    hwnd2 = FindWindowExA(NULL, NULL, "MyTestClass", NULL);
+    ok(hwnd2 == hwnd, "Failed to find test window.\n");
+
+    hwnd2 = FindWindowExA(NULL, NULL, "4.3.2.1!MyTestClass", NULL);
+    ok(hwnd2 == NULL, "Unexpected find result %p.\n", hwnd2);
 
     DestroyWindow(hwnd);
 

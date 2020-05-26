@@ -288,7 +288,7 @@ static HANDLE create_temp_file(WCHAR *temp_file)
     HANDLE file = INVALID_HANDLE_VALUE;
     WCHAR temp_path[MAX_PATH];
 
-    if (GetTempPathW(sizeof(temp_path) / sizeof(temp_path[0]), temp_path))
+    if (GetTempPathW(ARRAY_SIZE(temp_path), temp_path))
     {
         static const WCHAR img[] = { 'i','m','g',0 };
 
@@ -1211,7 +1211,7 @@ static void test_wintrust_digest(void)
     BOOL ret;
     int i, j;
 
-    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
         file = create_temp_file(pathW);
         ok(file != INVALID_HANDLE_VALUE, "failed to create temporary file\n");
@@ -1300,6 +1300,14 @@ static void test_get_known_usages(void)
      "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 }
 
+static void test_WTHelperGetProvCertFromChain(void)
+{
+    CRYPT_PROVIDER_CERT *cert;
+
+    cert = WTHelperGetProvCertFromChain(NULL, 0);
+    ok(!cert, "got certificate\n");
+}
+
 START_TEST(softpub)
 {
     InitFunctionPtrs();
@@ -1308,4 +1316,5 @@ START_TEST(softpub)
     test_wintrust();
     test_wintrust_digest();
     test_get_known_usages();
+    test_WTHelperGetProvCertFromChain();
 }

@@ -1286,7 +1286,7 @@ static UINT ctrl_container_resize(FileDialogImpl *This, UINT container_width)
 
     /* Move the controls to their final destination
      */
-    cur_col_pos = 0, cur_row_pos = 0;
+    cur_col_pos = 0; cur_row_pos = 0;
     LIST_FOR_EACH_ENTRY(ctrl, &This->cctrls, customctrl, entry)
     {
         if(ctrl->cdcstate & CDCS_VISIBLE)

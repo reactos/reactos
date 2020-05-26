@@ -40,7 +40,6 @@
 #include <string.h>
 #include "private_mciavi.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mciavi);
 
@@ -253,13 +252,13 @@ static	DWORD	MCIAVI_mciOpen(UINT wDevID, DWORD dwFlags,
 	    /* FIXME : what should be done id wma->hFile is already != 0, or the driver is playin' */
 	    TRACE("MCI_OPEN_ELEMENT %s!\n", debugstr_w(lpOpenParms->lpstrElementName));
 
-            wma->lpFileName = HeapAlloc(GetProcessHeap(), 0, (strlenW(lpOpenParms->lpstrElementName) + 1) * sizeof(WCHAR));
-            strcpyW(wma->lpFileName, lpOpenParms->lpstrElementName);
+            wma->lpFileName = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(lpOpenParms->lpstrElementName) + 1) * sizeof(WCHAR));
+            lstrcpyW(wma->lpFileName, lpOpenParms->lpstrElementName);
 
 	    if (lpOpenParms->lpstrElementName[0] == '@') {
 		/* The file name @11223344 encodes an AVIFile handle in decimal notation
 		 * in Win3.1 and w2k/NT, but this feature is absent in win95 (KB140750).
-		 * wma->hFile = LongToHandle(strtolW(lpOpenParms->lpstrElementName+1, NULL, 10)); */
+		 * wma->hFile = LongToHandle(wcstol(lpOpenParms->lpstrElementName+1, NULL, 10)); */
 		FIXME("Using AVIFile/Stream %s NIY\n", debugstr_w(lpOpenParms->lpstrElementName));
 	    }
 	    wma->hFile = mmioOpenW(lpOpenParms->lpstrElementName, NULL,
@@ -556,7 +555,7 @@ static	DWORD	MCIAVI_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms
     if (dwFlags & MCI_DGV_PLAY_REVERSE) return MCIERR_UNSUPPORTED_FUNCTION;
     if (dwFlags & MCI_TEST)	return 0;
 
-    if (dwFlags & (MCI_MCIAVI_PLAY_WINDOW|MCI_MCIAVI_PLAY_FULLSCREEN|MCI_MCIAVI_PLAY_FULLBY2))
+    if (dwFlags & (MCI_MCIAVI_PLAY_WINDOW|MCI_MCIAVI_PLAY_FULLBY2))
 	FIXME("Unsupported flag %08x\n", dwFlags);
 
     EnterCriticalSection(&wma->cs);
@@ -591,7 +590,18 @@ static	DWORD	MCIAVI_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms
 
     LeaveCriticalSection(&wma->cs);
 
-    if (!(GetWindowLongW(wma->hWndPaint, GWL_STYLE) & WS_VISIBLE))
+    if (dwFlags & MCI_MCIAVI_PLAY_FULLSCREEN)
+    {
+        HMONITOR mon = MonitorFromWindow(wma->hWndPaint, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO mi;
+        mi.cbSize = sizeof(mi);
+        GetMonitorInfoA(mon, &mi);
+        wma->hWndPaint = CreateWindowA("STATIC", NULL, WS_POPUP | WS_VISIBLE, mi.rcMonitor.left,
+            mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom - mi.rcMonitor.top,
+            NULL, NULL, NULL, 0);
+    }
+    /* if not fullscreen ensure the window is visible */
+    else if (!(GetWindowLongW(wma->hWndPaint, GWL_STYLE) & WS_VISIBLE))
         ShowWindow(wma->hWndPaint, SW_SHOWNA);
 
     EnterCriticalSection(&wma->cs);

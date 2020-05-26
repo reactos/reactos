@@ -1,5 +1,6 @@
 LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
+/* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
@@ -17,7 +18,7 @@ BEGIN
     IDS_STARTUP "Käynnistä Valikko\\Kaikki Ohjelmat\\Käynnistys"
     IDS_LOCALSETTINGS "Paikalliset Asetukset"
     IDS_LOCALAPPDATA "Paikalliset Asetukset\\Application Data"
-    IDS_TEMP "Paikalliset Asetukset\\Temp"
+    IDS_TEMP "Paikalliset Asetukset\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Paikalliset Asetukset\\Temporary Internet Files"
     IDS_HISTORY "Paikalliset Asetukset\\Historia"
     IDS_COOKIES "Keksit"

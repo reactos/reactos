@@ -27,11 +27,15 @@
 #include "commctrl.h"
 #include "rpcproxy.h"
 
+#ifdef __REACTOS__
+#include <wchar.h>
+#include <winnls.h>
+#endif
+
 #include "initguid.h"
 #include "oleacc_private.h"
 #include "resource.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(oleacc);
@@ -114,7 +118,7 @@ static accessible_create get_builtin_accessible_obj(HWND hwnd, LONG objid)
     TRACE("got window class: %s\n", debugstr_w(class_name));
 
     for(i=0; i<ARRAY_SIZE(builtin_classes); i++) {
-        if(!strcmpiW(class_name, builtin_classes[i].name)) {
+        if(!wcsicmp(class_name, builtin_classes[i].name)) {
             accessible_create ret;
 
             ret = (objid==OBJID_CLIENT ?
@@ -198,13 +202,13 @@ HRESULT WINAPI ObjectFromLresult( LRESULT result, REFIID riid, WPARAM wParam, vo
     if(memcmp(atom_str, lresult_atom_prefix, sizeof(lresult_atom_prefix)))
         return E_FAIL;
     p = atom_str + ARRAY_SIZE(lresult_atom_prefix);
-    proc_id = strtoulW(p, &p, 16);
+    proc_id = wcstoul(p, &p, 16);
     if(*p != ':')
         return E_FAIL;
-    server_mapping = ULongToHandle( strtoulW(p+1, &p, 16) );
+    server_mapping = ULongToHandle( wcstoul(p+1, &p, 16) );
     if(*p != ':')
         return E_FAIL;
-    size = strtoulW(p+1, &p, 16);
+    size = wcstoul(p+1, &p, 16);
     if(*p != 0)
         return E_FAIL;
 
@@ -320,7 +324,7 @@ LRESULT WINAPI LresultFromObject( REFIID riid, WPARAM wParam, LPUNKNOWN pAcc )
     }
 
     memcpy(atom_str, lresult_atom_prefix, sizeof(lresult_atom_prefix));
-    sprintfW(atom_str+ARRAY_SIZE(lresult_atom_prefix), atom_fmt, GetCurrentProcessId(),
+    swprintf(atom_str+ARRAY_SIZE(lresult_atom_prefix), atom_fmt, GetCurrentProcessId(),
              HandleToUlong(mapping), stat.cbSize.u.LowPart);
     atom = GlobalAddAtomW(atom_str);
     if(!atom) {

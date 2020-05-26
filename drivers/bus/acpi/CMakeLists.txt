@@ -203,6 +203,7 @@ target_link_libraries(acpi wdmguid acpica memcmp strtol ${PSEH_LIB})
 add_importlibs(acpi ntoskrnl hal)
 add_pch(acpi precomp.h ACPI_SOURCE)
 add_cd_file(TARGET acpi DESTINATION reactos/system32/drivers NO_CAB FOR all)
+add_driver_inf(acpi acpi.inf)
 
 add_subdirectory(cmbatt)
 add_subdirectory(compbatt)

@@ -65,8 +65,11 @@ CAutoComplete::~CAutoComplete()
     TRACE(" destroying IAutoComplete(%p)\n", this);
     HeapFree(GetProcessHeap(), 0, quickComplete);
     HeapFree(GetProcessHeap(), 0, txtbackup);
-    RemovePropW(hwndEdit, autocomplete_propertyW);
-    SetWindowLongPtrW(hwndEdit, GWLP_WNDPROC, (LONG_PTR)wpOrigEditProc);
+    if (wpOrigEditProc)
+    {
+        SetWindowLongPtrW(hwndEdit, GWLP_WNDPROC, (LONG_PTR)wpOrigEditProc);
+        RemovePropW(hwndEdit, autocomplete_propertyW);
+    }
     if (hwndListBox)
         DestroyWindow(hwndListBox);
 }
@@ -148,10 +151,27 @@ HRESULT WINAPI CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR p
 
     this->hwndEdit = hwndEdit;
     this->initialized = TRUE;
-    this->wpOrigEditProc = (WNDPROC)SetWindowLongPtrW(hwndEdit, GWLP_WNDPROC, (LONG_PTR) ACEditSubclassProc);
+
     /* Keep at least one reference to the object until the edit window is destroyed. */
     this->AddRef();
-    SetPropW( this->hwndEdit, autocomplete_propertyW, (HANDLE)this );
+
+    /* If another AutoComplete object was previously assigned to this edit control,
+       release it but keep the same callback on the control, to avoid an infinite
+       recursive loop in ACEditSubclassProc while the property is set to this object */
+    CAutoComplete *prev = static_cast<CAutoComplete *>(GetPropW(hwndEdit, autocomplete_propertyW));
+
+    if (prev && prev->initialized)
+    {
+        this->wpOrigEditProc = prev->wpOrigEditProc;
+        SetPropW(hwndEdit, autocomplete_propertyW, this);
+        prev->wpOrigEditProc = NULL;
+        prev->Release();
+    }
+    else
+    {
+        SetPropW( this->hwndEdit, autocomplete_propertyW, (HANDLE)this );
+        this->wpOrigEditProc = (WNDPROC)SetWindowLongPtrW(hwndEdit, GWLP_WNDPROC, (LONG_PTR)ACEditSubclassProc);
+    }
 
     if (options & ACO_AUTOSUGGEST)
     {

@@ -799,6 +799,7 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: UserpExitWindowsEx */
 CSR_API(SrvExitWindowsEx)
 {
     NTSTATUS Status;
@@ -823,6 +824,7 @@ CSR_API(SrvExitWindowsEx)
     return Status;
 }
 
+/* API_NUMBER: UserpEndTask */
 CSR_API(SrvEndTask)
 {
     PUSER_END_TASK EndTaskRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.EndTaskRequest;
@@ -867,6 +869,7 @@ CSR_API(SrvEndTask)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: UserpRecordShutdownReason */
 CSR_API(SrvRecordShutdownReason)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);

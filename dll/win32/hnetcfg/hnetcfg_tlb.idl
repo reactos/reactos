@@ -21,3 +21,4 @@
 #pragma makedep regtypelib
 
 #include "netfw.idl"
+#include "natupnp.idl"

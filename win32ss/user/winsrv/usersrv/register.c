@@ -26,6 +26,7 @@ extern HANDLE CsrApiPort;
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: UserpRegisterLogonProcess */
 CSR_API(SrvRegisterLogonProcess)
 {
     PUSER_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.RegisterLogonProcessRequest;
@@ -76,6 +77,7 @@ CSR_API(SrvRegisterLogonProcess)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: UserpRegisterServicesProcess */
 CSR_API(SrvRegisterServicesProcess)
 {
     PUSER_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.RegisterServicesProcessRequest;

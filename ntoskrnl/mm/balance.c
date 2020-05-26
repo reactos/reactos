@@ -47,8 +47,8 @@ static KTIMER MiBalancerTimer;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
 {
@@ -76,8 +76,8 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
     MiMemoryConsumers[MC_USER].PagesTarget = NrAvailablePages - MiMinimumAvailablePages;
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 MmInitializeMemoryConsumer(
     ULONG Consumer,
@@ -360,8 +360,8 @@ MiBalancerThread(PVOID Unused)
                 KIRQL OldIrql = MiAcquirePfnLock();
                 PMMPDE pointerPde;
                 for (Address = (ULONG_PTR)MI_LOWEST_VAD_ADDRESS;
-                        Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
-                        Address += (PAGE_SIZE * PTE_COUNT))
+                     Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
+                     Address += PTE_PER_PAGE * PAGE_SIZE)
                 {
                     if (MiQueryPageTableReferences((PVOID)Address) == 0)
                     {
@@ -443,8 +443,8 @@ BOOLEAN MmRosNotifyAvailablePage(PFN_NUMBER Page)
     return TRUE;
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 MiInitBalancerThread(VOID)
 {

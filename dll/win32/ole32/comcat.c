@@ -33,7 +33,6 @@
 #include "comcat.h"
 #include "compobj_private.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -267,7 +266,7 @@ static HRESULT COMCAT_IsClassOfCategories(
 	    if (res != ERROR_SUCCESS && res != ERROR_MORE_DATA) break;
 	    if (size != CHARS_IN_GUID-1) continue; /* bogus catid in registry */
 	    for (string = req_strings; *string; string += CHARS_IN_GUID)
-		if (!strcmpiW(string, keyname)) break;
+		if (!wcsicmp(string, keyname)) break;
 	    if (!*string) {
 		RegCloseKey(subkey);
 		return S_FALSE;
@@ -1279,9 +1278,9 @@ static HRESULT CATIDEnumGUID_Construct(REFCLSID rclsid, LPCWSTR postfix, IEnumGU
 
     This->IEnumGUID_iface.lpVtbl = &CATIDEnumGUIDVtbl;
     This->ref = 1;
-    strcpyW(keyname, prefixW);
-    strcatW(keyname, clsidW);
-    strcatW(keyname, postfix);
+    lstrcpyW(keyname, prefixW);
+    lstrcatW(keyname, clsidW);
+    lstrcatW(keyname, postfix);
 
     open_classes_key(HKEY_CLASSES_ROOT, keyname, KEY_READ, &This->key);
 

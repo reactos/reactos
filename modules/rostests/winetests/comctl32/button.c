@@ -47,8 +47,9 @@ static BOOL (WINAPI *pImageList_Destroy)(HIMAGELIST);
 /****************** button message test *************************/
 #define ID_BUTTON 0x000e
 
-#define COMBINED_SEQ_INDEX 0
-#define NUM_MSG_SEQUENCES  1
+#define COMBINED_SEQ_INDEX  0
+#define PARENT_CD_SEQ_INDEX 1
+#define NUM_MSG_SEQUENCES   2
 
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
 
@@ -160,11 +161,40 @@ static LRESULT CALLBACK button_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
     return ret;
 }
 
+static struct
+{
+    DWORD button;
+    UINT line;
+    UINT state;
+    DWORD ret;
+    BOOL empty;
+} test_cd;
+
+#define set_test_cd_state(s) do { \
+    test_cd.state = (s); \
+    test_cd.empty = TRUE; \
+    test_cd.line = __LINE__; \
+} while (0)
+
+#define set_test_cd_ret(r) do { \
+    test_cd.ret = (r); \
+    test_cd.empty = TRUE; \
+    test_cd.line = __LINE__; \
+} while (0)
+
+static void disable_test_cd(void)
+{
+    test_cd.line = 0;
+}
+
 static LRESULT WINAPI test_parent_wndproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static LONG defwndproc_counter = 0;
     static LONG beginpaint_counter = 0;
+    static HDC cd_first_hdc;
     struct message msg = { 0 };
+    NMCUSTOMDRAW *cd = (NMCUSTOMDRAW*)lParam;
+    NMBCDROPDOWN *bcd = (NMBCDROPDOWN*)lParam;
     LRESULT ret;
 
     if (ignore_message( message )) return 0;
@@ -182,6 +212,76 @@ static LRESULT WINAPI test_parent_wndproc(HWND hwnd, UINT message, WPARAM wParam
         msg.wParam = wParam;
         msg.lParam = lParam;
         add_message(sequences, COMBINED_SEQ_INDEX, &msg);
+    }
+
+    if (message == WM_NOTIFY && cd->hdr.code == NM_CUSTOMDRAW && test_cd.line)
+    {
+        /* Ignore an inconsistency across Windows versions */
+        UINT state = cd->uItemState & ~CDIS_SHOWKEYBOARDCUES;
+
+        /* Some Windows configurations paint twice with different DC */
+        if (test_cd.empty)
+        {
+            cd_first_hdc = cd->hdc;
+            test_cd.empty = FALSE;
+        }
+
+        ok_(__FILE__,test_cd.line)(!(cd->dwDrawStage & CDDS_ITEM),
+            "[%u] CDDS_ITEM is set\n", test_cd.button);
+
+        ok_(__FILE__,test_cd.line)(state == test_cd.state,
+            "[%u] expected uItemState %u, got %u\n", test_cd.button,
+            test_cd.state, state);
+
+        msg.message = message;
+        msg.flags = sent|parent|wparam|lparam|id|custdraw;
+        msg.wParam = wParam;
+        msg.lParam = lParam;
+        msg.id = NM_CUSTOMDRAW;
+        msg.stage = cd->dwDrawStage;
+        if (cd->hdc == cd_first_hdc)
+            add_message(sequences, PARENT_CD_SEQ_INDEX, &msg);
+
+        ret = test_cd.ret;
+        switch (msg.stage)
+        {
+            case CDDS_PREERASE:
+                ret &= ~CDRF_NOTIFYPOSTPAINT;
+                cd->dwItemSpec = 0xdeadbeef;
+                break;
+            case CDDS_PREPAINT:
+                ret &= ~CDRF_NOTIFYPOSTERASE;
+                break;
+            case CDDS_POSTERASE:
+            case CDDS_POSTPAINT:
+                ok_(__FILE__,test_cd.line)(cd->dwItemSpec == 0xdeadbeef,
+                    "[%u] NMCUSTOMDRAW was not shared, stage %u\n", test_cd.button, msg.stage);
+                break;
+        }
+        return ret;
+    }
+
+    if (message == WM_NOTIFY && bcd->hdr.code == BCN_DROPDOWN)
+    {
+        UINT button = GetWindowLongW(bcd->hdr.hwndFrom, GWL_STYLE) & BS_TYPEMASK;
+        RECT rc;
+
+        GetClientRect(bcd->hdr.hwndFrom, &rc);
+
+        ok(bcd->hdr.hwndFrom != NULL, "Received BCN_DROPDOWN with no hwnd attached, wParam %lu id %lu\n",
+           wParam, bcd->hdr.idFrom);
+        ok(bcd->hdr.idFrom == wParam, "[%u] Mismatch between wParam (%lu) and idFrom (%lu)\n",
+           button, wParam, bcd->hdr.idFrom);
+        ok(EqualRect(&rc, &bcd->rcButton), "[%u] Wrong rcButton, expected %s got %s\n",
+           button, wine_dbgstr_rect(&rc), wine_dbgstr_rect(&bcd->rcButton));
+
+        msg.message = message;
+        msg.flags = sent|parent|wparam|lparam|id;
+        msg.wParam = wParam;
+        msg.lParam = lParam;
+        msg.id = BCN_DROPDOWN;
+        add_message(sequences, COMBINED_SEQ_INDEX, &msg);
+        return 0;
     }
 
     if (message == WM_PAINT)
@@ -461,6 +561,60 @@ static const struct message setcheck_radio_redraw_seq[] =
     { 0 }
 };
 
+static const struct message empty_cd_seq[] = { { 0 } };
+
+static const struct message pre_cd_seq[] =
+{
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREERASE },
+    { 0 }
+};
+
+static const struct message pre_pre_cd_seq[] =
+{
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREERASE },
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREPAINT },
+    { 0 }
+};
+
+static const struct message pre_post_pre_cd_seq[] =
+{
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREERASE },
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_POSTERASE },
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREPAINT },
+    { 0 }
+};
+
+static const struct message pre_pre_post_cd_seq[] =
+{
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREERASE },
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREPAINT },
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_POSTPAINT },
+    { 0 }
+};
+
+static const struct message pre_post_pre_post_cd_seq[] =
+{
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREERASE },
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_POSTERASE },
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREPAINT },
+    { WM_NOTIFY, sent|parent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_POSTPAINT },
+    { 0 }
+};
+
+static const struct message bcn_dropdown_seq[] =
+{
+    { WM_KEYDOWN, sent|wparam|lparam, VK_DOWN, 0 },
+    { BCM_SETDROPDOWNSTATE, sent|wparam|lparam|defwinproc, 1, 0 },
+    { WM_NOTIFY, sent|parent|id, 0, 0, BCN_DROPDOWN },
+    { BCM_SETDROPDOWNSTATE, sent|wparam|lparam|defwinproc, 0, 0 },
+    { WM_KEYUP, sent|wparam|lparam, VK_DOWN, 0xc0000000 },
+    { WM_PAINT, sent },
+    { WM_DRAWITEM, sent|parent|optional },  /* for owner draw button */
+    { WM_PAINT, sent|optional },            /* sometimes sent rarely */
+    { WM_DRAWITEM, sent|parent|optional },
+    { 0 }
+};
+
 static HWND create_button(DWORD style, HWND parent)
 {
     HMENU menuid = 0;
@@ -479,6 +633,13 @@ static HWND create_button(DWORD style, HWND parent)
 
 static void test_button_messages(void)
 {
+    enum cd_seq_type
+    {
+        cd_seq_empty,
+        cd_seq_normal,
+        cd_seq_optional
+    };
+
     static const struct
     {
         DWORD style;
@@ -489,55 +650,74 @@ static void test_button_messages(void)
         const struct message *setstate;
         const struct message *clearstate;
         const struct message *setcheck;
+        enum cd_seq_type cd_setfocus_type;
+        enum cd_seq_type cd_setstyle_type;
+        enum cd_seq_type cd_setstate_type;
+        enum cd_seq_type cd_setcheck_type;
     } button[] = {
         { BS_PUSHBUTTON, DLGC_BUTTON | DLGC_UNDEFPUSHBUTTON,
           setfocus_seq, killfocus_seq, setstyle_seq,
-          setstate_seq, setstate_seq, setcheck_ignored_seq },
+          setstate_seq, setstate_seq, setcheck_ignored_seq,
+          cd_seq_normal, cd_seq_normal, cd_seq_normal, cd_seq_optional },
         { BS_DEFPUSHBUTTON, DLGC_BUTTON | DLGC_DEFPUSHBUTTON,
           setfocus_seq, killfocus_seq, setstyle_seq,
-          setstate_seq, setstate_seq, setcheck_ignored_seq },
+          setstate_seq, setstate_seq, setcheck_ignored_seq,
+          cd_seq_normal, cd_seq_normal, cd_seq_normal, cd_seq_optional },
         { BS_CHECKBOX, DLGC_BUTTON,
           setfocus_static_seq, killfocus_static_seq, setstyle_static_seq,
-          setstate_static_seq, setstate_static_seq, setcheck_static_seq },
+          setstate_static_seq, setstate_static_seq, setcheck_static_seq,
+          cd_seq_optional, cd_seq_optional, cd_seq_optional, cd_seq_optional },
         { BS_AUTOCHECKBOX, DLGC_BUTTON,
           setfocus_static_seq, killfocus_static_seq, setstyle_static_seq,
-          setstate_static_seq, setstate_static_seq, setcheck_static_seq },
+          setstate_static_seq, setstate_static_seq, setcheck_static_seq,
+          cd_seq_optional, cd_seq_optional, cd_seq_optional, cd_seq_optional },
         { BS_RADIOBUTTON, DLGC_BUTTON | DLGC_RADIOBUTTON,
           setfocus_static_seq, killfocus_static_seq, setstyle_static_seq,
-          setstate_static_seq, setstate_static_seq, setcheck_radio_redraw_seq },
+          setstate_static_seq, setstate_static_seq, setcheck_radio_redraw_seq,
+          cd_seq_optional, cd_seq_optional, cd_seq_optional, cd_seq_optional },
         { BS_3STATE, DLGC_BUTTON,
           setfocus_static_seq, killfocus_static_seq, setstyle_static_seq,
-          setstate_static_seq, setstate_static_seq, setcheck_static_seq },
+          setstate_static_seq, setstate_static_seq, setcheck_static_seq,
+          cd_seq_optional, cd_seq_optional, cd_seq_optional, cd_seq_optional },
         { BS_AUTO3STATE, DLGC_BUTTON,
           setfocus_static_seq, killfocus_static_seq, setstyle_static_seq,
-          setstate_static_seq, setstate_static_seq, setcheck_static_seq },
+          setstate_static_seq, setstate_static_seq, setcheck_static_seq,
+          cd_seq_optional, cd_seq_optional, cd_seq_optional, cd_seq_optional },
         { BS_GROUPBOX, DLGC_STATIC,
           setfocus_groupbox_seq, killfocus_static_seq, setstyle_static_seq,
-          setstate_static_seq, setstate_static_seq, setcheck_ignored_seq },
+          setstate_static_seq, setstate_static_seq, setcheck_ignored_seq,
+          cd_seq_empty, cd_seq_empty, cd_seq_empty, cd_seq_empty },
         { BS_USERBUTTON, DLGC_BUTTON | DLGC_UNDEFPUSHBUTTON,
           setfocus_seq, killfocus_seq, setstyle_user_seq,
-          setstate_user_seq, clearstate_seq, setcheck_ignored_seq },
+          setstate_user_seq, clearstate_seq, setcheck_ignored_seq,
+          cd_seq_normal, cd_seq_empty, cd_seq_empty, cd_seq_empty },
         { BS_AUTORADIOBUTTON, DLGC_BUTTON | DLGC_RADIOBUTTON,
           setfocus_static_seq, killfocus_static_seq, setstyle_static_seq,
-          setstate_static_seq, setstate_static_seq, setcheck_radio_redraw_seq },
+          setstate_static_seq, setstate_static_seq, setcheck_radio_redraw_seq,
+          cd_seq_optional, cd_seq_optional, cd_seq_optional, cd_seq_optional },
         { BS_OWNERDRAW, DLGC_BUTTON,
           setfocus_ownerdraw_seq, killfocus_ownerdraw_seq, setstyle_ownerdraw_seq,
-          setstate_ownerdraw_seq, clearstate_ownerdraw_seq, setcheck_ignored_seq },
+          setstate_ownerdraw_seq, clearstate_ownerdraw_seq, setcheck_ignored_seq,
+          cd_seq_empty, cd_seq_empty, cd_seq_empty, cd_seq_empty },
         { BS_SPLITBUTTON, DLGC_BUTTON | DLGC_UNDEFPUSHBUTTON | DLGC_WANTARROWS,
           setfocus_seq, killfocus_seq, setstyle_seq,
-          setstate_seq, setstate_seq, setcheck_ignored_seq },
+          setstate_seq, setstate_seq, setcheck_ignored_seq,
+          cd_seq_optional, cd_seq_optional, cd_seq_optional, cd_seq_empty },
         { BS_DEFSPLITBUTTON, DLGC_BUTTON | DLGC_DEFPUSHBUTTON | DLGC_WANTARROWS,
           setfocus_seq, killfocus_seq, setstyle_seq,
-          setstate_seq, setstate_seq, setcheck_ignored_seq },
+          setstate_seq, setstate_seq, setcheck_ignored_seq,
+          cd_seq_optional, cd_seq_optional, cd_seq_optional, cd_seq_empty },
         { BS_COMMANDLINK, DLGC_BUTTON | DLGC_UNDEFPUSHBUTTON,
           setfocus_seq, killfocus_seq, setstyle_seq,
-          setstate_seq, setstate_seq, setcheck_ignored_seq },
+          setstate_seq, setstate_seq, setcheck_ignored_seq,
+          cd_seq_optional, cd_seq_optional, cd_seq_optional, cd_seq_empty },
         { BS_DEFCOMMANDLINK, DLGC_BUTTON | DLGC_DEFPUSHBUTTON,
           setfocus_seq, killfocus_seq, setstyle_seq,
-          setstate_seq, setstate_seq, setcheck_ignored_seq },
+          setstate_seq, setstate_seq, setcheck_ignored_seq,
+          cd_seq_optional, cd_seq_optional, cd_seq_optional, cd_seq_empty }
     };
     LOGFONTA logfont = { 0 };
-    const struct message *seq;
+    const struct message *seq, *cd_seq;
     HFONT zfont, hfont2;
     unsigned int i;
     HWND hwnd, parent;
@@ -565,6 +745,11 @@ static void test_button_messages(void)
     hfont2 = CreateFontIndirectA(&logfont);
     ok(hfont2 != NULL, "Failed to create Tahoma font\n");
 
+#define check_cd_seq(type, context) do { \
+        if (button[i].type != cd_seq_optional || !test_cd.empty) \
+            ok_sequence(sequences, PARENT_CD_SEQ_INDEX, cd_seq, "[CustomDraw] " context, FALSE); \
+    } while(0)
+
     for (i = 0; i < ARRAY_SIZE(button); i++)
     {
         HFONT prevfont, hfont;
@@ -572,6 +757,7 @@ static void test_button_messages(void)
         DWORD style, state;
         HDC hdc;
 
+        test_cd.button = button[i].style;
         hwnd = create_button(button[i].style, parent);
         ok(hwnd != NULL, "Failed to create a button.\n");
 
@@ -599,27 +785,35 @@ static void test_button_messages(void)
         SetFocus(0);
         flush_events();
         SetFocus(0);
+        cd_seq = (button[i].cd_setfocus_type == cd_seq_empty) ? empty_cd_seq : pre_pre_cd_seq;
         flush_sequences(sequences, NUM_MSG_SEQUENCES);
+        set_test_cd_ret(CDRF_DODEFAULT);
+        set_test_cd_state(CDIS_FOCUS);
 
-        todo = button[i].style != BS_OWNERDRAW;
         ok(GetFocus() == 0, "expected focus 0, got %p\n", GetFocus());
         SetFocus(hwnd);
         SendMessageA(hwnd, WM_APP, 0, 0); /* place a separator mark here */
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
-        ok_sequence(sequences, COMBINED_SEQ_INDEX, button[i].setfocus, "SetFocus(hwnd) on a button", todo);
+        ok_sequence(sequences, COMBINED_SEQ_INDEX, button[i].setfocus, "SetFocus(hwnd) on a button", FALSE);
+        check_cd_seq(cd_setfocus_type, "SetFocus(hwnd)");
 
-        todo = button[i].style == BS_OWNERDRAW;
+        set_test_cd_state(0);
         SetFocus(0);
         SendMessageA(hwnd, WM_APP, 0, 0); /* place a separator mark here */
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
-        ok_sequence(sequences, COMBINED_SEQ_INDEX, button[i].killfocus, "SetFocus(0) on a button", todo);
+        ok_sequence(sequences, COMBINED_SEQ_INDEX, button[i].killfocus, "SetFocus(0) on a button", FALSE);
+        check_cd_seq(cd_setfocus_type, "SetFocus(0)");
         ok(GetFocus() == 0, "expected focus 0, got %p\n", GetFocus());
+
+        cd_seq = (button[i].cd_setstyle_type == cd_seq_empty) ? empty_cd_seq : pre_pre_cd_seq;
+        set_test_cd_state(0);
 
         SendMessageA(hwnd, BM_SETSTYLE, button[i].style | BS_BOTTOM, TRUE);
         SendMessageA(hwnd, WM_APP, 0, 0); /* place a separator mark here */
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
         todo = button[i].style == BS_OWNERDRAW;
         ok_sequence(sequences, COMBINED_SEQ_INDEX, button[i].setstyle, "BM_SETSTYLE on a button", todo);
+        check_cd_seq(cd_setstyle_type, "BM_SETSTYLE");
 
         style = GetWindowLongA(hwnd, GWL_STYLE);
         style &= ~(WS_VISIBLE | WS_CHILD | BS_NOTIFY);
@@ -629,12 +823,15 @@ static void test_button_messages(void)
         state = SendMessageA(hwnd, BM_GETSTATE, 0, 0);
         ok(state == 0, "expected state 0, got %04x\n", state);
 
+        cd_seq = (button[i].cd_setstate_type == cd_seq_empty) ? empty_cd_seq : pre_pre_cd_seq;
         flush_sequences(sequences, NUM_MSG_SEQUENCES);
+        set_test_cd_state(CDIS_SELECTED);
 
         SendMessageA(hwnd, BM_SETSTATE, TRUE, 0);
         SendMessageA(hwnd, WM_APP, 0, 0); /* place a separator mark here */
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
         ok_sequence(sequences, COMBINED_SEQ_INDEX, button[i].setstate, "BM_SETSTATE/TRUE on a button", FALSE);
+        check_cd_seq(cd_setstate_type, "BM_SETSTATE/TRUE");
 
         state = SendMessageA(hwnd, BM_GETSTATE, 0, 0);
         ok(state == BST_PUSHED, "expected state 0x0004, got %04x\n", state);
@@ -644,11 +841,13 @@ static void test_button_messages(void)
         ok(style == button[i].style, "expected style %04x got %04x\n", button[i].style, style);
 
         flush_sequences(sequences, NUM_MSG_SEQUENCES);
+        set_test_cd_state(0);
 
         SendMessageA(hwnd, BM_SETSTATE, FALSE, 0);
         SendMessageA(hwnd, WM_APP, 0, 0); /* place a separator mark here */
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
         ok_sequence(sequences, COMBINED_SEQ_INDEX, button[i].clearstate, "BM_SETSTATE/FALSE on a button", FALSE);
+        check_cd_seq(cd_setstate_type, "BM_SETSTATE/FALSE");
 
         state = SendMessageA(hwnd, BM_GETSTATE, 0, 0);
         ok(state == 0, "expected state 0, got %04x\n", state);
@@ -660,7 +859,9 @@ static void test_button_messages(void)
         state = SendMessageA(hwnd, BM_GETCHECK, 0, 0);
         ok(state == BST_UNCHECKED, "expected BST_UNCHECKED, got %04x\n", state);
 
+        cd_seq = (button[i].cd_setcheck_type == cd_seq_empty) ? empty_cd_seq : pre_pre_cd_seq;
         flush_sequences(sequences, NUM_MSG_SEQUENCES);
+        set_test_cd_state(0);
 
         if (button[i].style == BS_RADIOBUTTON ||
             button[i].style == BS_AUTORADIOBUTTON)
@@ -674,6 +875,7 @@ static void test_button_messages(void)
         SendMessageA(hwnd, WM_APP, 0, 0); /* place a separator mark here */
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
         ok_sequence(sequences, COMBINED_SEQ_INDEX, seq, "BM_SETCHECK on a button", FALSE);
+        check_cd_seq(cd_setcheck_type, "BM_SETCHECK");
 
         state = SendMessageA(hwnd, BM_GETCHECK, 0, 0);
         ok(state == BST_UNCHECKED, "expected BST_UNCHECKED, got %04x\n", state);
@@ -683,11 +885,13 @@ static void test_button_messages(void)
         ok(style == button[i].style, "expected style %04x got %04x\n", button[i].style, style);
 
         flush_sequences(sequences, NUM_MSG_SEQUENCES);
+        set_test_cd_state(0);
 
         SendMessageA(hwnd, BM_SETCHECK, BST_CHECKED, 0);
         SendMessageA(hwnd, WM_APP, 0, 0); /* place a separator mark here */
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
         ok_sequence(sequences, COMBINED_SEQ_INDEX, button[i].setcheck, "BM_SETCHECK on a button", FALSE);
+        check_cd_seq(cd_setcheck_type, "BM_SETCHECK");
 
         state = SendMessageA(hwnd, BM_GETCHECK, 0, 0);
         if (button[i].style == BS_PUSHBUTTON ||
@@ -735,8 +939,59 @@ static void test_button_messages(void)
 
         DeleteDC(hdc);
 
+        /* Test Custom Draw return values */
+        if (button[i].cd_setfocus_type != cd_seq_empty &&
+            broken(button[i].style != BS_USERBUTTON) /* WinXP */)
+        {
+            static const struct
+            {
+                const char *context;
+                LRESULT val;
+                const struct message *seq;
+            } ret[] = {
+                { "CDRF_DODEFAULT", CDRF_DODEFAULT, pre_pre_cd_seq },
+                { "CDRF_DOERASE", CDRF_DOERASE, pre_pre_cd_seq },
+                { "CDRF_SKIPDEFAULT", CDRF_SKIPDEFAULT, pre_cd_seq },
+                { "CDRF_SKIPDEFAULT | CDRF_NOTIFYPOSTERASE | CDRF_NOTIFYPOSTPAINT",
+                   CDRF_SKIPDEFAULT | CDRF_NOTIFYPOSTERASE | CDRF_NOTIFYPOSTPAINT, pre_cd_seq },
+                { "CDRF_NOTIFYPOSTERASE", CDRF_NOTIFYPOSTERASE, pre_post_pre_cd_seq },
+                { "CDRF_NOTIFYPOSTPAINT", CDRF_NOTIFYPOSTPAINT, pre_pre_post_cd_seq },
+                { "CDRF_NOTIFYPOSTERASE | CDRF_NOTIFYPOSTPAINT",
+                   CDRF_NOTIFYPOSTERASE | CDRF_NOTIFYPOSTPAINT, pre_post_pre_post_cd_seq },
+            };
+            UINT k;
+
+            for (k = 0; k < ARRAY_SIZE(ret); k++)
+            {
+                disable_test_cd();
+                SetFocus(0);
+                set_test_cd_ret(ret[k].val);
+                set_test_cd_state(CDIS_FOCUS);
+                SetFocus(hwnd);
+                flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+                while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+                if (button[i].cd_setfocus_type != cd_seq_optional || !test_cd.empty)
+                    ok_sequence(sequences, PARENT_CD_SEQ_INDEX, ret[k].seq, ret[k].context, FALSE);
+            }
+        }
+
+        disable_test_cd();
+
+        if (!broken(LOBYTE(LOWORD(GetVersion())) < 6))  /* not available pre-Vista */
+        {
+            /* Send down arrow key to make the buttons send the drop down notification */
+            flush_sequences(sequences, NUM_MSG_SEQUENCES);
+            SendMessageW(hwnd, WM_KEYDOWN, VK_DOWN, 0);
+            SendMessageW(hwnd, WM_KEYUP, VK_DOWN, 0xc0000000);
+            while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+            ok_sequence(sequences, COMBINED_SEQ_INDEX, bcn_dropdown_seq, "BCN_DROPDOWN from the button", FALSE);
+        }
+
         DestroyWindow(hwnd);
     }
+
+#undef check_cd_seq
 
     DeleteObject(hfont2);
     DestroyWindow(parent);
@@ -1228,6 +1483,214 @@ static void register_parent_class(void)
     RegisterClassA(&cls);
 }
 
+static void test_bcm_splitinfo(HWND hwnd)
+{
+    UINT button = GetWindowLongA(hwnd, GWL_STYLE) & BS_TYPEMASK;
+    int glyph_size = GetSystemMetrics(SM_CYMENUCHECK);
+    int border_w = GetSystemMetrics(SM_CXEDGE) * 2;
+    BUTTON_SPLITINFO info, dummy;
+    HIMAGELIST img;
+    BOOL ret;
+
+    memset(&info, 0xCC, sizeof(info));
+    info.mask = 0;
+    memcpy(&dummy, &info, sizeof(info));
+
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    if (ret != TRUE)
+    {
+        static BOOL once;
+        if (!once)
+            win_skip("BCM_GETSPLITINFO message is unavailable. Skipping related tests\n");  /* Pre-Vista */
+        once = TRUE;
+        return;
+    }
+    ok(!memcmp(&info, &dummy, sizeof(info)), "[%u] split info struct was changed with mask = 0\n", button);
+
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, 0);
+    ok(ret == FALSE, "[%u] expected FALSE, got %d\n", button, ret);
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, 0);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+
+    info.mask = BCSIF_GLYPH | BCSIF_SIZE | BCSIF_STYLE;
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == (BCSIF_GLYPH | BCSIF_SIZE | BCSIF_STYLE), "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.himlGlyph == (HIMAGELIST)0x36, "[%u] expected 0x36 default glyph, got 0x%p\n", button, info.himlGlyph);
+    ok(info.uSplitStyle == BCSS_STRETCH, "[%u] expected 0x%08x default style, got 0x%08x\n", button, BCSS_STRETCH, info.uSplitStyle);
+    ok(info.size.cx == glyph_size, "[%u] expected %d default size.cx, got %d\n", button, glyph_size, info.size.cx);
+    ok(info.size.cy == 0, "[%u] expected 0 default size.cy, got %d\n", button, info.size.cy);
+
+    info.mask = BCSIF_SIZE;
+    info.size.cx = glyph_size + 7;
+    info.size.cy = 0;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    info.size.cx = info.size.cy = 0xdeadbeef;
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == BCSIF_SIZE, "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.size.cx == glyph_size + 7, "[%u] expected %d, got %d\n", button, glyph_size + 7, info.size.cx);
+    ok(info.size.cy == 0, "[%u] expected 0, got %d\n", button, info.size.cy);
+
+    /* Invalid size.cx resets it to default glyph size, while size.cy is stored */
+    info.size.cx = 0;
+    info.size.cy = -20;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    info.size.cx = info.size.cy = 0xdeadbeef;
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == BCSIF_SIZE, "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.size.cx == glyph_size, "[%u] expected %d, got %d\n", button, glyph_size, info.size.cx);
+    ok(info.size.cy == -20, "[%u] expected -20, got %d\n", button, info.size.cy);
+
+    info.size.cx = -glyph_size - 7;
+    info.size.cy = -10;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    info.size.cx = info.size.cy = 0xdeadbeef;
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == BCSIF_SIZE, "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.size.cx == glyph_size, "[%u] expected %d, got %d\n", button, glyph_size, info.size.cx);
+    ok(info.size.cy == -10, "[%u] expected -10, got %d\n", button, info.size.cy);
+
+    /* Set to a valid size other than glyph_size */
+    info.mask = BCSIF_SIZE;
+    info.size.cx = glyph_size + 7;
+    info.size.cy = 11;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    info.size.cx = info.size.cy = 0xdeadbeef;
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == BCSIF_SIZE, "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.size.cx == glyph_size + 7, "[%u] expected %d, got %d\n", button, glyph_size + 7, info.size.cx);
+    ok(info.size.cy == 11, "[%u] expected 11, got %d\n", button, info.size.cy);
+
+    /* Change the glyph, size.cx should be automatically adjusted and size.cy set to 0 */
+    dummy.mask = BCSIF_GLYPH;
+    dummy.himlGlyph = (HIMAGELIST)0x35;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&dummy);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    info.mask = BCSIF_GLYPH | BCSIF_SIZE;
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == (BCSIF_GLYPH | BCSIF_SIZE), "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.himlGlyph == (HIMAGELIST)0x35, "[%u] expected 0x35, got %p\n", button, info.himlGlyph);
+    ok(info.size.cx == glyph_size, "[%u] expected %d, got %d\n", button, glyph_size, info.size.cx);
+    ok(info.size.cy == 0, "[%u] expected 0, got %d\n", button, info.size.cy);
+
+    /* Unless the size is specified manually */
+    dummy.mask = BCSIF_GLYPH | BCSIF_SIZE;
+    dummy.himlGlyph = (HIMAGELIST)0x34;
+    dummy.size.cx = glyph_size + 11;
+    dummy.size.cy = 7;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&dummy);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == (BCSIF_GLYPH | BCSIF_SIZE), "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.himlGlyph == (HIMAGELIST)0x34, "[%u] expected 0x34, got %p\n", button, info.himlGlyph);
+    ok(info.size.cx == glyph_size + 11, "[%u] expected %d, got %d\n", button, glyph_size, info.size.cx);
+    ok(info.size.cy == 7, "[%u] expected 7, got %d\n", button, info.size.cy);
+
+    /* Add the BCSS_IMAGE style manually with the wrong BCSIF_GLYPH mask, should treat it as invalid image */
+    info.mask = BCSIF_GLYPH | BCSIF_STYLE;
+    info.himlGlyph = (HIMAGELIST)0x37;
+    info.uSplitStyle = BCSS_IMAGE;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    info.mask |= BCSIF_SIZE;
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == (BCSIF_GLYPH | BCSIF_STYLE | BCSIF_SIZE), "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.himlGlyph == (HIMAGELIST)0x37, "[%u] expected 0x37, got %p\n", button, info.himlGlyph);
+    ok(info.uSplitStyle == BCSS_IMAGE, "[%u] expected 0x%08x style, got 0x%08x\n", button, BCSS_IMAGE, info.uSplitStyle);
+    ok(info.size.cx == border_w, "[%u] expected %d, got %d\n", button, border_w, info.size.cx);
+    ok(info.size.cy == 0, "[%u] expected 0, got %d\n", button, info.size.cy);
+
+    /* Change the size to prevent ambiguity */
+    dummy.mask = BCSIF_SIZE;
+    dummy.size.cx = glyph_size + 5;
+    dummy.size.cy = 4;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&dummy);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == (BCSIF_GLYPH | BCSIF_STYLE | BCSIF_SIZE), "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.himlGlyph == (HIMAGELIST)0x37, "[%u] expected 0x37, got %p\n", button, info.himlGlyph);
+    ok(info.uSplitStyle == BCSS_IMAGE, "[%u] expected 0x%08x style, got 0x%08x\n", button, BCSS_IMAGE, info.uSplitStyle);
+    ok(info.size.cx == glyph_size + 5, "[%u] expected %d, got %d\n", button, glyph_size + 5, info.size.cx);
+    ok(info.size.cy == 4, "[%u] expected 4, got %d\n", button, info.size.cy);
+
+    /* Now remove the BCSS_IMAGE style manually with the wrong BCSIF_IMAGE mask */
+    info.mask = BCSIF_IMAGE | BCSIF_STYLE;
+    info.himlGlyph = (HIMAGELIST)0x35;
+    info.uSplitStyle = BCSS_STRETCH;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    info.mask |= BCSIF_SIZE;
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == (BCSIF_IMAGE | BCSIF_STYLE | BCSIF_SIZE), "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.himlGlyph == (HIMAGELIST)0x35, "[%u] expected 0x35, got %p\n", button, info.himlGlyph);
+    ok(info.uSplitStyle == BCSS_STRETCH, "[%u] expected 0x%08x style, got 0x%08x\n", button, BCSS_STRETCH, info.uSplitStyle);
+    ok(info.size.cx == glyph_size, "[%u] expected %d, got %d\n", button, glyph_size, info.size.cx);
+    ok(info.size.cy == 0, "[%u] expected 0, got %d\n", button, info.size.cy);
+
+    /* Add a proper valid image, the BCSS_IMAGE style should be set automatically */
+    img = pImageList_Create(42, 33, ILC_COLOR, 1, 1);
+    ok(img != NULL, "[%u] failed to create ImageList\n", button);
+    info.mask = BCSIF_IMAGE;
+    info.himlGlyph = img;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    info.mask |= BCSIF_STYLE | BCSIF_SIZE;
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == (BCSIF_IMAGE | BCSIF_STYLE | BCSIF_SIZE), "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.himlGlyph == img, "[%u] expected %p, got %p\n", button, img, info.himlGlyph);
+    ok(info.uSplitStyle == (BCSS_IMAGE | BCSS_STRETCH), "[%u] expected 0x%08x style, got 0x%08x\n", button, BCSS_IMAGE | BCSS_STRETCH, info.uSplitStyle);
+    ok(info.size.cx == 42 + border_w, "[%u] expected %d, got %d\n", button, 42 + border_w, info.size.cx);
+    ok(info.size.cy == 0, "[%u] expected 0, got %d\n", button, info.size.cy);
+    pImageList_Destroy(img);
+    dummy.mask = BCSIF_SIZE;
+    dummy.size.cx = glyph_size + 5;
+    dummy.size.cy = 4;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&dummy);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+
+    /* Change it to a glyph; when both specified, BCSIF_GLYPH takes priority */
+    info.mask = BCSIF_GLYPH | BCSIF_IMAGE;
+    info.himlGlyph = (HIMAGELIST)0x37;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    info.mask |= BCSIF_STYLE | BCSIF_SIZE;
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == (BCSIF_GLYPH | BCSIF_IMAGE | BCSIF_STYLE | BCSIF_SIZE), "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.himlGlyph == (HIMAGELIST)0x37, "[%u] expected 0x37, got %p\n", button, info.himlGlyph);
+    ok(info.uSplitStyle == BCSS_STRETCH, "[%u] expected 0x%08x style, got 0x%08x\n", button, BCSS_STRETCH, info.uSplitStyle);
+    ok(info.size.cx == glyph_size, "[%u] expected %d, got %d\n", button, glyph_size, info.size.cx);
+    ok(info.size.cy == 0, "[%u] expected 0, got %d\n", button, info.size.cy);
+
+    /* Try a NULL image */
+    info.mask = BCSIF_IMAGE;
+    info.himlGlyph = NULL;
+    ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    info.mask |= BCSIF_STYLE | BCSIF_SIZE;
+    ret = SendMessageA(hwnd, BCM_GETSPLITINFO, 0, (LPARAM)&info);
+    ok(ret == TRUE, "[%u] expected TRUE, got %d\n", button, ret);
+    ok(info.mask == (BCSIF_IMAGE | BCSIF_STYLE | BCSIF_SIZE), "[%u] wrong mask, got %u\n", button, info.mask);
+    ok(info.himlGlyph == NULL, "[%u] expected NULL, got %p\n", button, info.himlGlyph);
+    ok(info.uSplitStyle == (BCSS_IMAGE | BCSS_STRETCH), "[%u] expected 0x%08x style, got 0x%08x\n", button, BCSS_IMAGE | BCSS_STRETCH, info.uSplitStyle);
+    ok(info.size.cx == border_w, "[%u] expected %d, got %d\n", button, border_w, info.size.cx);
+    ok(info.size.cy == 0, "[%u] expected 0, got %d\n", button, info.size.cy);
+}
+
 static void test_button_data(void)
 {
     static const DWORD styles[] =
@@ -1279,6 +1742,9 @@ static void test_button_data(void)
             ok(desc->parent == parent, "Unexpected 'parent' field.\n");
             ok(desc->style == (WS_CHILD | BS_NOTIFY | styles[i]), "Unexpected 'style' field.\n");
         }
+
+        /* Data set and retrieved by these messages is valid for all buttons */
+        test_bcm_splitinfo(hwnd);
 
         DestroyWindow(hwnd);
     }
@@ -1431,14 +1897,31 @@ static void test_bcm_get_ideal_size(void)
 {
     static const char *button_text2 = "WWWW\nWWWW";
     static const char *button_text = "WWWW";
+    static const WCHAR button_note_short[] = { 'W',0 };
+    static const WCHAR button_note_long[]  = { 'W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W',0 };
+    static const WCHAR button_note_wordy[] = { 'T','h','i','s',' ','i','s',' ','a',' ','l','o','n','g',' ','n','o','t','e',' ','f','o','r',' ','t','h','e',' ','b','u','t','t','o','n',',',' ',
+                                               'w','i','t','h',' ','m','a','n','y',' ','w','o','r','d','s',',',' ','w','h','i','c','h',' ','s','h','o','u','l','d',' ','b','e',' ',
+                                               'o','v','e','r','a','l','l',' ','l','o','n','g','e','r',' ','t','h','a','n',' ','t','h','e',' ','t','e','x','t',' ','(','g','i','v','e','n',' ',
+                                               't','h','e',' ','s','m','a','l','l','e','r',' ','f','o','n','t',')',' ','a','n','d',' ','t','h','u','s',' ','w','r','a','p','.',0 };
     static const DWORD imagelist_aligns[] = {BUTTON_IMAGELIST_ALIGN_LEFT, BUTTON_IMAGELIST_ALIGN_RIGHT,
                                              BUTTON_IMAGELIST_ALIGN_TOP, BUTTON_IMAGELIST_ALIGN_BOTTOM,
                                              BUTTON_IMAGELIST_ALIGN_CENTER};
     static const DWORD aligns[] = {0,         BS_TOP,     BS_LEFT,        BS_RIGHT,   BS_BOTTOM,
                                    BS_CENTER, BS_VCENTER, BS_RIGHTBUTTON, WS_EX_RIGHT};
     DWORD default_style = WS_TABSTOP | WS_POPUP | WS_VISIBLE;
-    const LONG client_width = 400, client_height = 200;
-    LONG image_width, height, line_count, text_width;
+    const LONG client_width = 400, client_height = 200, extra_width = 123, large_height = 500;
+    struct
+    {
+        DWORD style;
+        LONG extra_width;
+    } pushtype[] =
+    {
+        { BS_PUSHBUTTON, 0 },
+        { BS_DEFPUSHBUTTON, 0 },
+        { BS_SPLITBUTTON, extra_width * 2 + GetSystemMetrics(SM_CXEDGE) },
+        { BS_DEFSPLITBUTTON, extra_width * 2 + GetSystemMetrics(SM_CXEDGE) }
+    };
+    LONG image_width = 48, height = 48, line_count, text_width;
     HFONT hfont, prev_font;
     DWORD style, type;
     BOOL ret;
@@ -1453,7 +1936,7 @@ static void test_bcm_get_ideal_size(void)
     HIMAGELIST himl;
     BUTTON_IMAGELIST biml = {0};
     RECT rect;
-    INT i, j;
+    INT i, j, k;
 
     /* Check for NULL pointer handling */
     hwnd = CreateWindowA(WC_BUTTONA, button_text, BS_PUSHBUTTON | default_style, 0, 0, client_width, client_height,
@@ -1496,116 +1979,141 @@ static void test_bcm_get_ideal_size(void)
 
     /* Tests for image placements */
     /* Prepare bitmap */
-    image_width = 48;
-    height = 48;
     hdc = GetDC(0);
     hmask = CreateCompatibleBitmap(hdc, image_width, height);
     hbmp = CreateCompatibleBitmap(hdc, image_width, height);
-
-    /* Only bitmap for push button, ideal size should be enough for image and text */
-    hwnd = CreateWindowA(WC_BUTTONA, button_text, BS_DEFPUSHBUTTON | BS_BITMAP | default_style, 0, 0, client_width,
-                         client_height, NULL, NULL, 0, NULL);
-    ok(hwnd != NULL, "Expect hwnd not NULL\n");
-    SendMessageA(hwnd, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hbmp);
-    SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)TRUE);
-    ZeroMemory(&size, sizeof(size));
-    ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
-    ok(ret, "Expect BCM_GETIDEALSIZE message to return true\n");
-    /* Ideal size contains text rect even show bitmap only */
-    ok((size.cx >= image_width + text_width && size.cy >= max(height, tm.tmHeight)),
-            "Expect ideal cx %d >= %d and ideal cy %d >= %d\n", size.cx, image_width + text_width,
-            size.cy, max(height, tm.tmHeight));
-    DestroyWindow(hwnd);
-
-    /* Image alignments when button has bitmap and text*/
-    for (i = 0; i < ARRAY_SIZE(aligns); i++)
-        for (j = 0; j < ARRAY_SIZE(aligns); j++)
-        {
-            style = BS_DEFPUSHBUTTON | default_style | aligns[i] | aligns[j];
-            hwnd = CreateWindowA(WC_BUTTONA, button_text, style, 0, 0, client_width, client_height, NULL, NULL, 0, NULL);
-            ok(hwnd != NULL, "Expect hwnd not NULL\n");
-            SendMessageA(hwnd, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hbmp);
-            SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)TRUE);
-            ZeroMemory(&size, sizeof(size));
-            ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
-            ok(ret, "Expect BCM_GETIDEALSIZE message to return true\n");
-            if (!(style & (BS_CENTER | BS_VCENTER)) || ((style & BS_CENTER) && (style & BS_CENTER) != BS_CENTER)
-                || !(style & BS_VCENTER) || (style & BS_VCENTER) == BS_VCENTER)
-                ok((size.cx >= image_width + text_width && size.cy >= max(height, tm.tmHeight)),
-                   "Style: 0x%08x expect ideal cx %d >= %d and ideal cy %d >= %d\n", style, size.cx,
-                   image_width + text_width, size.cy, max(height, tm.tmHeight));
-            else
-                ok((size.cx >= max(text_width, height) && size.cy >= height + tm.tmHeight),
-                   "Style: 0x%08x expect ideal cx %d >= %d and ideal cy %d >= %d\n", style, size.cx,
-                   max(text_width, height), size.cy, height + tm.tmHeight);
-            DestroyWindow(hwnd);
-        }
-
-    /* Image list alignments */
     himl = pImageList_Create(image_width, height, ILC_COLOR, 1, 1);
     pImageList_Add(himl, hbmp, 0);
-    biml.himl = himl;
-    for (i = 0; i < ARRAY_SIZE(imagelist_aligns); i++)
+
+#define set_split_info(hwnd) do { \
+    BUTTON_SPLITINFO _info; \
+    int _ret; \
+    _info.mask = BCSIF_SIZE; \
+    _info.size.cx = extra_width; \
+    _info.size.cy = large_height; \
+    _ret = SendMessageA(hwnd, BCM_SETSPLITINFO, 0, (LPARAM)&_info); \
+    ok(_ret == TRUE, "Expected BCM_SETSPLITINFO message to return true\n"); \
+} while (0)
+
+    for (k = 0; k < ARRAY_SIZE(pushtype); k++)
     {
-        biml.uAlign = imagelist_aligns[i];
-        hwnd = CreateWindowA(WC_BUTTONA, button_text, BS_DEFPUSHBUTTON | default_style, 0, 0, client_width,
-            client_height, NULL, NULL, 0, NULL);
+        /* Only bitmap for push button, ideal size should be enough for image and text */
+        hwnd = CreateWindowA(WC_BUTTONA, button_text, pushtype[k].style | BS_BITMAP | default_style, 0, 0, client_width,
+                             client_height, NULL, NULL, 0, NULL);
         ok(hwnd != NULL, "Expect hwnd not NULL\n");
+        set_split_info(hwnd);
+        SendMessageA(hwnd, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hbmp);
         SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)TRUE);
-        SendMessageA(hwnd, BCM_SETIMAGELIST, 0, (LPARAM)&biml);
         ZeroMemory(&size, sizeof(size));
         ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
         ok(ret, "Expect BCM_GETIDEALSIZE message to return true\n");
-        if (biml.uAlign == BUTTON_IMAGELIST_ALIGN_TOP || biml.uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
-            ok((size.cx >= max(text_width, height) && size.cy >= height + tm.tmHeight),
-               "Align:%d expect ideal cx %d >= %d and ideal cy %d >= %d\n", biml.uAlign, size.cx,
-               max(text_width, height), size.cy, height + tm.tmHeight);
-        else if (biml.uAlign == BUTTON_IMAGELIST_ALIGN_LEFT || biml.uAlign == BUTTON_IMAGELIST_ALIGN_RIGHT)
-            ok((size.cx >= image_width + text_width && size.cy >= max(height, tm.tmHeight)),
-               "Align:%d expect ideal cx %d >= %d and ideal cy %d >= %d\n", biml.uAlign, size.cx,
-               image_width + text_width, size.cy, max(height, tm.tmHeight));
-        else
-            ok(size.cx >= image_width && size.cy >= height, "Align:%d expect ideal cx %d >= %d and ideal cy %d >= %d\n",
-               biml.uAlign, size.cx, image_width, size.cy, height);
+        /* Ideal size contains text rect even show bitmap only */
+        ok(size.cx >= image_width + text_width + pushtype[k].extra_width && size.cy >= max(height, tm.tmHeight),
+                "Expect ideal cx %d >= %d and ideal cy %d >= %d\n", size.cx,
+                image_width + text_width + pushtype[k].extra_width, size.cy, max(height, tm.tmHeight));
+        ok(size.cy < large_height, "Expect ideal cy %d < %d\n", size.cy, large_height);
         DestroyWindow(hwnd);
+
+        /* Image alignments when button has bitmap and text*/
+        for (i = 0; i < ARRAY_SIZE(aligns); i++)
+            for (j = 0; j < ARRAY_SIZE(aligns); j++)
+            {
+                style = pushtype[k].style | default_style | aligns[i] | aligns[j];
+                hwnd = CreateWindowA(WC_BUTTONA, button_text, style, 0, 0, client_width, client_height, NULL, NULL, 0, NULL);
+                ok(hwnd != NULL, "Expect hwnd not NULL\n");
+                set_split_info(hwnd);
+                SendMessageA(hwnd, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hbmp);
+                SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)TRUE);
+                ZeroMemory(&size, sizeof(size));
+                ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
+                ok(ret, "Expect BCM_GETIDEALSIZE message to return true\n");
+                if (!(style & (BS_CENTER | BS_VCENTER)) || ((style & BS_CENTER) && (style & BS_CENTER) != BS_CENTER)
+                    || !(style & BS_VCENTER) || (style & BS_VCENTER) == BS_VCENTER)
+                    ok(size.cx >= image_width + text_width + pushtype[k].extra_width && size.cy >= max(height, tm.tmHeight),
+                       "Style: 0x%08x expect ideal cx %d >= %d and ideal cy %d >= %d\n", style, size.cx,
+                       image_width + text_width + pushtype[k].extra_width, size.cy, max(height, tm.tmHeight));
+                else
+                    ok(size.cx >= max(text_width, height) + pushtype[k].extra_width && size.cy >= height + tm.tmHeight,
+                       "Style: 0x%08x expect ideal cx %d >= %d and ideal cy %d >= %d\n", style, size.cx,
+                       max(text_width, height) + pushtype[k].extra_width, size.cy, height + tm.tmHeight);
+                ok(size.cy < large_height, "Expect ideal cy %d < %d\n", size.cy, large_height);
+                DestroyWindow(hwnd);
+            }
+
+        /* Image list alignments */
+        biml.himl = himl;
+        for (i = 0; i < ARRAY_SIZE(imagelist_aligns); i++)
+        {
+            biml.uAlign = imagelist_aligns[i];
+            hwnd = CreateWindowA(WC_BUTTONA, button_text, pushtype[k].style | default_style, 0, 0, client_width,
+                client_height, NULL, NULL, 0, NULL);
+            ok(hwnd != NULL, "Expect hwnd not NULL\n");
+            set_split_info(hwnd);
+            SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)TRUE);
+            SendMessageA(hwnd, BCM_SETIMAGELIST, 0, (LPARAM)&biml);
+            ZeroMemory(&size, sizeof(size));
+            ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
+            ok(ret, "Expect BCM_GETIDEALSIZE message to return true\n");
+            if (biml.uAlign == BUTTON_IMAGELIST_ALIGN_TOP || biml.uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
+                ok(size.cx >= max(text_width, height) + pushtype[k].extra_width && size.cy >= height + tm.tmHeight,
+                   "Align:%d expect ideal cx %d >= %d and ideal cy %d >= %d\n", biml.uAlign, size.cx,
+                   max(text_width, height) + pushtype[k].extra_width, size.cy, height + tm.tmHeight);
+            else if (biml.uAlign == BUTTON_IMAGELIST_ALIGN_LEFT || biml.uAlign == BUTTON_IMAGELIST_ALIGN_RIGHT)
+                ok(size.cx >= image_width + text_width + pushtype[k].extra_width && size.cy >= max(height, tm.tmHeight),
+                   "Align:%d expect ideal cx %d >= %d and ideal cy %d >= %d\n", biml.uAlign, size.cx,
+                   image_width + text_width + pushtype[k].extra_width, size.cy, max(height, tm.tmHeight));
+            else
+                ok(size.cx >= image_width + pushtype[k].extra_width && size.cy >= height,
+                   "Align:%d expect ideal cx %d >= %d and ideal cy %d >= %d\n",
+                   biml.uAlign, size.cx, image_width + pushtype[k].extra_width, size.cy, height);
+            ok(size.cy < large_height, "Expect ideal cy %d < %d\n", size.cy, large_height);
+            DestroyWindow(hwnd);
+        }
+
+        /* Icon as image */
+        /* Create icon from bitmap */
+        ZeroMemory(&icon_info, sizeof(icon_info));
+        icon_info.fIcon = TRUE;
+        icon_info.hbmMask = hmask;
+        icon_info.hbmColor = hbmp;
+        hicon = CreateIconIndirect(&icon_info);
+
+        /* Only icon, ideal size should be enough for image and text */
+        hwnd = CreateWindowA(WC_BUTTONA, button_text, pushtype[k].style | BS_ICON | default_style, 0, 0, client_width,
+                             client_height, NULL, NULL, 0, NULL);
+        ok(hwnd != NULL, "Expect hwnd not NULL\n");
+        set_split_info(hwnd);
+        SendMessageA(hwnd, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hicon);
+        SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)TRUE);
+        ZeroMemory(&size, sizeof(size));
+        ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
+        ok(ret, "Expect BCM_GETIDEALSIZE message to return true\n");
+        /* Ideal size contains text rect even show icons only */
+        ok(size.cx >= image_width + text_width + pushtype[k].extra_width && size.cy >= max(height, tm.tmHeight),
+           "Expect ideal cx %d >= %d and ideal cy %d >= %d\n", size.cx,
+           image_width + text_width + pushtype[k].extra_width, size.cy, max(height, tm.tmHeight));
+        ok(size.cy < large_height, "Expect ideal cy %d < %d\n", size.cy, large_height);
+        DestroyWindow(hwnd);
+
+        /* Show icon and text */
+        hwnd = CreateWindowA(WC_BUTTONA, button_text, pushtype[k].style | default_style, 0, 0, client_width,
+            client_height, NULL, NULL, 0, NULL);
+        ok(hwnd != NULL, "Expect hwnd not NULL\n");
+        set_split_info(hwnd);
+        SendMessageA(hwnd, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hicon);
+        SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)TRUE);
+        ZeroMemory(&size, sizeof(size));
+        ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
+        ok(ret, "Expect BCM_GETIDEALSIZE message to return true\n");
+        ok(size.cx >= image_width + text_width + pushtype[k].extra_width && size.cy >= max(height, tm.tmHeight),
+           "Expect ideal cx %d >= %d and ideal cy %d >= %d\n", size.cx,
+           image_width + text_width + pushtype[k].extra_width, size.cy, max(height, tm.tmHeight));
+        ok(size.cy < large_height, "Expect ideal cy %d < %d\n", size.cy, large_height);
+        DestroyWindow(hwnd);
+        DestroyIcon(hicon);
     }
 
-    /* Icon as image */
-    /* Create icon from bitmap */
-    ZeroMemory(&icon_info, sizeof(icon_info));
-    icon_info.fIcon = TRUE;
-    icon_info.hbmMask = hmask;
-    icon_info.hbmColor = hbmp;
-    hicon = CreateIconIndirect(&icon_info);
-
-    /* Only icon, ideal size should be enough for image and text */
-    hwnd = CreateWindowA(WC_BUTTONA, button_text, BS_DEFPUSHBUTTON | BS_ICON | default_style, 0, 0, client_width,
-                         client_height, NULL, NULL, 0, NULL);
-    ok(hwnd != NULL, "Expect hwnd not NULL\n");
-    SendMessageA(hwnd, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hicon);
-    SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)TRUE);
-    ZeroMemory(&size, sizeof(size));
-    ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
-    ok(ret, "Expect BCM_GETIDEALSIZE message to return true\n");
-    /* Ideal size contains text rect even show icons only */
-    ok((size.cx >= image_width + text_width && size.cy >= max(height, tm.tmHeight)),
-       "Expect ideal cx %d >= %d and ideal cy %d >= %d\n", size.cx, image_width + text_width, size.cy,
-       max(height, tm.tmHeight));
-    DestroyWindow(hwnd);
-
-    /* Show icon and text */
-    hwnd = CreateWindowA(WC_BUTTONA, button_text, BS_DEFPUSHBUTTON | default_style, 0, 0, client_width,
-        client_height, NULL, NULL, 0, NULL);
-    ok(hwnd != NULL, "Expect hwnd not NULL\n");
-    SendMessageA(hwnd, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hicon);
-    SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)TRUE);
-    ZeroMemory(&size, sizeof(size));
-    ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
-    ok(ret, "Expect BCM_GETIDEALSIZE message to return true\n");
-    ok((size.cx >= image_width + text_width && size.cy >= max(height, tm.tmHeight)),
-       "Expect ideal cx %d >= %d and ideal cy %d >= %d\n", size.cx, image_width + text_width, size.cy,
-       max(height, tm.tmHeight));
-    DestroyWindow(hwnd);
+#undef set_split_info
 
     /* Checkbox */
     /* Both bitmap and text for checkbox, ideal size is only enough for text because it doesn't support image(but not image list)*/
@@ -1667,8 +2175,8 @@ static void test_bcm_get_ideal_size(void)
 
         if (type == BS_COMMANDLINK || type == BS_DEFCOMMANDLINK)
         {
-            todo_wine ok((size.cx == 0 && size.cy > 0), "Style 0x%08x expect ideal cx %d >= %d and ideal cy %d >= %d\n",
-                         style, size.cx, 0, size.cy, 0);
+            ok((size.cx == 0 && size.cy > 0), "Style 0x%08x expect ideal cx %d == %d and ideal cy %d > %d\n",
+               style, size.cx, 0, size.cy, 0);
         }
         else
         {
@@ -1704,9 +2212,9 @@ static void test_bcm_get_ideal_size(void)
             }
             else if (type == BS_COMMANDLINK || type == BS_DEFCOMMANDLINK)
             {
-                todo_wine ok((size.cx == 0 && size.cy > 0),
-                             "Style 0x%08x expect ideal cx %d >= %d and ideal cy %d >= %d\n", style, size.cx, 0,
-                             size.cy, 0);
+                ok((size.cx == 0 && size.cy > 0),
+                   "Style 0x%08x expect ideal cx %d == %d and ideal cy %d > %d\n", style, size.cx, 0,
+                   size.cy, 0);
             }
             else
             {
@@ -1718,8 +2226,58 @@ static void test_bcm_get_ideal_size(void)
         }
     }
 
+    /* Command Link with note */
+    hwnd = CreateWindowA(WC_BUTTONA, "a", style, 0, 0, client_width, client_height, NULL, NULL, 0, NULL);
+    ok(hwnd != NULL, "Expected hwnd not NULL\n");
+    SendMessageA(hwnd, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hbmp);
+    ret = SendMessageA(hwnd, BCM_SETNOTE, 0, (LPARAM)button_note_short);
+    ok(ret == TRUE, "Expected BCM_SETNOTE to return true\n");
+    size.cx = 13;
+    size.cy = 0;
+    ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
+    ok(ret == TRUE, "Expected BCM_GETIDEALSIZE message to return true\n");
+    ok(size.cx == 13 && size.cy > 0, "Expected ideal cx %d == %d and ideal cy %d > %d\n", size.cx, 13, size.cy, 0);
+    height = size.cy;
+    size.cx = 32767;
+    size.cy = 7;
+    ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
+    ok(ret == TRUE, "Expected BCM_GETIDEALSIZE message to return true\n");
+    ok(size.cx < 32767, "Expected ideal cx to have been adjusted\n");
+    ok(size.cx > image_width && size.cy == height, "Expected ideal cx %d > %d and ideal cy %d == %d\n", size.cx, image_width, size.cy, height);
+
+    /* Try longer note without word breaks, shouldn't extend height because no word splitting */
+    ret = SendMessageA(hwnd, BCM_SETNOTE, 0, (LPARAM)button_note_long);
+    ok(ret == TRUE, "Expected BCM_SETNOTE to return true\n");
+    k = size.cx;
+    size.cy = 0;
+    ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
+    ok(ret == TRUE, "Expected BCM_GETIDEALSIZE message to return true\n");
+    ok(size.cx == k && size.cy == height, "Expected ideal cx %d == %d and ideal cy %d == %d\n", size.cx, k, size.cy, height);
+
+    /* Now let it extend the width */
+    size.cx = 32767;
+    size.cy = 0;
+    ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
+    ok(ret == TRUE, "Expected BCM_GETIDEALSIZE message to return true\n");
+    ok(size.cx > k && size.cy == height, "Expected ideal cx %d > %d and ideal cy %d == %d\n", size.cx, k, size.cy, height);
+
+    /* Use a very long note with words and the same width, should extend the height due to word wrap */
+    ret = SendMessageA(hwnd, BCM_SETNOTE, 0, (LPARAM)button_note_wordy);
+    ok(ret == TRUE, "Expected BCM_SETNOTE to return true\n");
+    k = size.cx;
+    ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
+    ok(ret == TRUE, "Expected BCM_GETIDEALSIZE message to return true\n");
+    ok(size.cx <= k && size.cy > height, "Expected ideal cx %d <= %d and ideal cy %d > %d\n", size.cx, k, size.cy, height);
+
+    /* Now try the wordy note with a width smaller than the image itself, which prevents wrapping */
+    size.cx = 13;
+    ret = SendMessageA(hwnd, BCM_GETIDEALSIZE, 0, (LPARAM)&size);
+    ok(ret == TRUE, "Expected BCM_GETIDEALSIZE message to return true\n");
+    ok(size.cx == 13 && size.cy == height, "Expected ideal cx %d == %d and ideal cy %d == %d\n", size.cx, 13, size.cy, height);
+    DestroyWindow(hwnd);
+
+
     pImageList_Destroy(himl);
-    DestroyIcon(hicon);
     DeleteObject(hbmp);
     DeleteObject(hmask);
     ReleaseDC(0, hdc);

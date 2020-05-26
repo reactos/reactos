@@ -1,6 +1,7 @@
 
 add_definitions(
     -D__WINESRC__
+    -D__ROS_LONG64__
     -DUSE_WIN32_OPENGL)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
@@ -19,7 +20,7 @@ list(APPEND SOURCE
     volume.c
     precomp.h)
 
-add_library(d3d8 SHARED
+add_library(d3d8 MODULE
     ${SOURCE}
     guid.c
     version.rc

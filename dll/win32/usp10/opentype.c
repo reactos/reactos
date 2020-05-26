@@ -658,7 +658,7 @@ static VOID *load_CMAP_format12_table(HDC hdc, ScriptCache *psc)
     return NULL;
 }
 
-static int compare_group(const void *a, const void* b)
+static int __cdecl compare_group(const void *a, const void* b)
 {
     const DWORD *chr = a;
     const CMAP_SegmentedCoverage_group *group = b;

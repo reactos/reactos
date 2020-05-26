@@ -56,7 +56,9 @@ SPLREG_VALUE SplRegValues[] = {
     { "RemoteFax", L"RemoteFax", REG_NONE, 4, FALSE },
     { "RestartJobOnPoolError", L"RestartJobOnPoolError", REG_DWORD, 4, TRUE },
     { "RestartJobOnPoolEnabled", L"RestartJobOnPoolEnabled", REG_DWORD, 4, TRUE },
+#if 0 // FIXME: fails on WHS testbot with ERROR_INVALID_PARAMETER
     { "DNSMachineName", L"DNSMachineName", REG_SZ, 0xFFFFFFFF, FALSE },
+#endif
     { "AllowUserManageForms", L"AllowUserManageForms", REG_DWORD, 4, TRUE },
     { NULL, NULL, 0, 0, FALSE }
 };

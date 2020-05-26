@@ -34,7 +34,6 @@ LINEINFO lastLine;
 FILE *logFile        = NULL;
 LIST cache;
 SUMM summ;
-REVINFO revinfo;
 
 
 static void
@@ -99,7 +98,6 @@ reportSource(FILE *outFile)
 static void
 report(FILE *outFile)
 {
-    reportRevision(outFile);
     reportSource(outFile);
     clearLastLine();
 }
@@ -535,17 +533,6 @@ translate_files(FILE *inFile, FILE *outFile)
         }
     }
 
-    if (opt_Revision && (strstr(opt_Revision, "regscan") == opt_Revision))
-    {
-        char *s = strchr(opt_Revision, ',');
-        if (s)
-        {
-            *s++ = '\0';
-            revinfo.range = atoi(s);
-        }
-        regscan(outFile);
-    }
-
     if (opt_stats)
     {
         stat_print(outFile, &summ);
@@ -571,7 +558,6 @@ main(int argc, const char **argv)
     memset(&cache, 0, sizeof(LIST));
     memset(&sources, 0, sizeof(LIST));
     stat_clear(&summ);
-    memset(&revinfo, 0, sizeof(REVINFO));
     clearLastLine();
 
     optInit = optionInit(argc, argv);
@@ -584,12 +570,6 @@ main(int argc, const char **argv)
     }
 
     argc -= optCount;
-
-    if (opt_Revision && (strcmp(opt_Revision, "update") == 0))
-    {
-        res = updateSvnlog();
-        goto cleanup;
-    }
 
     if (check_directory(opt_force))
     {
@@ -677,13 +657,6 @@ main(int argc, const char **argv)
         PCLOSE(dbgIn);
 
 cleanup:
-    // See optionParse().
-    if (opt_Revision)
-    {
-        free(opt_Revision);
-        opt_Revision = NULL;
-    }
-
     // See optionInit().
     if (opt_Pipe)
     {

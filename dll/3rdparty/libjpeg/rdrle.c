@@ -2,6 +2,7 @@
  * rdrle.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
+ * Modified 2019 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -68,7 +69,7 @@ typedef struct _rle_source_struct {
   jvirt_sarray_ptr image;       /* virtual array to hold the image */
   JDIMENSION row;		/* current row # in the virtual array */
   rle_hdr header;               /* Input file information */
-  rle_pixel** rle_row;          /* holds a row returned by rle_getrow() */
+  rle_pixel **rle_row;          /* holds a row returned by rle_getrow() */
 
 } rle_source_struct;
 
@@ -95,19 +96,14 @@ start_input_rle (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
     break;
   case RLE_NOT_RLE:
     ERREXIT(cinfo, JERR_RLE_NOT);
-    break;
   case RLE_NO_SPACE:
     ERREXIT(cinfo, JERR_RLE_MEM);
-    break;
   case RLE_EMPTY:
     ERREXIT(cinfo, JERR_RLE_EMPTY);
-    break;
   case RLE_EOF:
     ERREXIT(cinfo, JERR_RLE_EOF);
-    break;
   default:
     ERREXIT(cinfo, JERR_RLE_BADERROR);
-    break;
   }
 
   /* Figure out what we have, set private vars and return values accordingly */
@@ -155,16 +151,15 @@ start_input_rle (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
    * (GRAYSCALE scanlines don't need converting)
    */
   if (source->visual != GRAYSCALE) {
-    source->rle_row = (rle_pixel**) (*cinfo->mem->alloc_sarray)
+    source->rle_row = (rle_pixel **) (*cinfo->mem->alloc_sarray)
       ((j_common_ptr) cinfo, JPOOL_IMAGE,
-       (JDIMENSION) width, (JDIMENSION) cinfo->input_components);
+       width, (JDIMENSION) cinfo->input_components);
   }
 
   /* request a virtual array to hold the image */
   source->image = (*cinfo->mem->request_virt_sarray)
     ((j_common_ptr) cinfo, JPOOL_IMAGE, FALSE,
-     (JDIMENSION) (width * source->header.ncolors),
-     (JDIMENSION) height, (JDIMENSION) 1);
+     width * (JDIMENSION) source->header.ncolors, height, (JDIMENSION) 1);
 
 #ifdef PROGRESS_REPORT
   if (progress != NULL) {
@@ -242,16 +237,13 @@ load_image (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
 {
   rle_source_ptr source = (rle_source_ptr) sinfo;
   JDIMENSION row, col;
-  JSAMPROW  scanline, red_ptr, green_ptr, blue_ptr;
+  JSAMPROW scanline, red_ptr, green_ptr, blue_ptr;
   rle_pixel **rle_row;
   rle_map *colormap;
   char channel;
 #ifdef PROGRESS_REPORT
   cd_progress_ptr progress = (cd_progress_ptr) cinfo->progress;
 #endif
-
-  colormap = source->header.cmap;
-  rle_row = source->rle_row;
 
   /* Read the RLE data into our virtual array.
    * We assume here that (a) rle_pixel is represented the same as JSAMPLE,
@@ -273,12 +265,12 @@ load_image (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
   case PSEUDOCOLOR:
     for (row = 0; row < cinfo->image_height; row++) {
       rle_row = (rle_pixel **) (*cinfo->mem->access_virt_sarray)
-         ((j_common_ptr) cinfo, source->image, row, (JDIMENSION) 1, TRUE);
+	((j_common_ptr) cinfo, source->image, row, (JDIMENSION) 1, TRUE);
       rle_getrow(&source->header, rle_row);
 #ifdef PROGRESS_REPORT
       if (progress != NULL) {
-        progress->pub.pass_counter++;
-        (*progress->pub.progress_monitor) ((j_common_ptr) cinfo);
+	progress->pub.pass_counter++;
+	(*progress->pub.progress_monitor) ((j_common_ptr) cinfo);
       }
 #endif
     }
@@ -286,48 +278,50 @@ load_image (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
 
   case MAPPEDGRAY:
   case TRUECOLOR:
+    rle_row = source->rle_row;
+    colormap = source->header.cmap;
     for (row = 0; row < cinfo->image_height; row++) {
-      scanline = * (*cinfo->mem->access_virt_sarray)
-        ((j_common_ptr) cinfo, source->image, row, (JDIMENSION) 1, TRUE);
-      rle_row = source->rle_row;
       rle_getrow(&source->header, rle_row);
+      scanline = * (*cinfo->mem->access_virt_sarray)
+	((j_common_ptr) cinfo, source->image, row, (JDIMENSION) 1, TRUE);
 
       for (col = 0; col < cinfo->image_width; col++) {
-        for (channel = 0; channel < source->header.ncolors; channel++) {
-          *scanline++ = (JSAMPLE)
-            (colormap[GETJSAMPLE(rle_row[channel][col]) + 256 * channel] >> 8);
-        }
+	for (channel = 0; channel < source->header.ncolors; channel++) {
+	  *scanline++ = (JSAMPLE)
+	    (colormap[GETJSAMPLE(rle_row[channel][col]) + 256 * channel] >> 8);
+	}
       }
 
 #ifdef PROGRESS_REPORT
       if (progress != NULL) {
-        progress->pub.pass_counter++;
-        (*progress->pub.progress_monitor) ((j_common_ptr) cinfo);
+	progress->pub.pass_counter++;
+	(*progress->pub.progress_monitor) ((j_common_ptr) cinfo);
       }
 #endif
     }
     break;
 
   case DIRECTCOLOR:
+    rle_row = source->rle_row;
     for (row = 0; row < cinfo->image_height; row++) {
-      scanline = * (*cinfo->mem->access_virt_sarray)
-        ((j_common_ptr) cinfo, source->image, row, (JDIMENSION) 1, TRUE);
       rle_getrow(&source->header, rle_row);
+      scanline = * (*cinfo->mem->access_virt_sarray)
+	((j_common_ptr) cinfo, source->image, row, (JDIMENSION) 1, TRUE);
 
       red_ptr   = rle_row[0];
       green_ptr = rle_row[1];
       blue_ptr  = rle_row[2];
 
       for (col = cinfo->image_width; col > 0; col--) {
-        *scanline++ = *red_ptr++;
-        *scanline++ = *green_ptr++;
-        *scanline++ = *blue_ptr++;
+	*scanline++ = *red_ptr++;
+	*scanline++ = *green_ptr++;
+	*scanline++ = *blue_ptr++;
       }
 
 #ifdef PROGRESS_REPORT
       if (progress != NULL) {
-        progress->pub.pass_counter++;
-        (*progress->pub.progress_monitor) ((j_common_ptr) cinfo);
+	progress->pub.pass_counter++;
+	(*progress->pub.progress_monitor) ((j_common_ptr) cinfo);
       }
 #endif
     }
@@ -373,15 +367,14 @@ jinit_read_rle (j_compress_ptr cinfo)
   rle_source_ptr source;
 
   /* Create module interface object */
-  source = (rle_source_ptr)
-      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-                                  SIZEOF(rle_source_struct));
+  source = (rle_source_ptr) (*cinfo->mem->alloc_small)
+    ((j_common_ptr) cinfo, JPOOL_IMAGE, SIZEOF(rle_source_struct));
   /* Fill in method ptrs */
   source->pub.start_input = start_input_rle;
   source->pub.finish_input = finish_input_rle;
   source->pub.get_pixel_rows = load_image;
 
-  return (cjpeg_source_ptr) source;
+  return &source->pub;
 }
 
 #endif /* RLE_SUPPORTED */

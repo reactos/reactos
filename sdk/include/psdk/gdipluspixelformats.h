@@ -22,70 +22,75 @@
 typedef DWORD ARGB;
 typedef INT PixelFormat;
 
-#define    PixelFormatIndexed   0x00010000
-#define    PixelFormatGDI       0x00020000
-#define    PixelFormatAlpha     0x00040000
-#define    PixelFormatPAlpha    0x00080000
-#define    PixelFormatExtended  0x00100000
-#define    PixelFormatCanonical 0x00200000
+#define PixelFormatIndexed 0x00010000
+#define PixelFormatGDI 0x00020000
+#define PixelFormatAlpha 0x00040000
+#define PixelFormatPAlpha 0x00080000
+#define PixelFormatExtended 0x00100000
+#define PixelFormatCanonical 0x00200000
 
-#define    PixelFormatUndefined 0
-#define    PixelFormatDontCare  0
+#define PixelFormatUndefined 0
+#define PixelFormatDontCare 0
 
-#define    PixelFormat1bppIndexed       (1 | ( 1 << 8) | PixelFormatIndexed | PixelFormatGDI)
-#define    PixelFormat4bppIndexed       (2 | ( 4 << 8) | PixelFormatIndexed | PixelFormatGDI)
-#define    PixelFormat8bppIndexed       (3 | ( 8 << 8) | PixelFormatIndexed | PixelFormatGDI)
-#define    PixelFormat16bppGrayScale    (4 | (16 << 8) | PixelFormatExtended)
-#define    PixelFormat16bppRGB555       (5 | (16 << 8) | PixelFormatGDI)
-#define    PixelFormat16bppRGB565       (6 | (16 << 8) | PixelFormatGDI)
-#define    PixelFormat16bppARGB1555     (7 | (16 << 8) | PixelFormatAlpha | PixelFormatGDI)
-#define    PixelFormat24bppRGB          (8 | (24 << 8) | PixelFormatGDI)
-#define    PixelFormat32bppRGB          (9 | (32 << 8) | PixelFormatGDI)
-#define    PixelFormat32bppARGB         (10 | (32 << 8) | PixelFormatAlpha | PixelFormatGDI | PixelFormatCanonical)
-#define    PixelFormat32bppPARGB        (11 | (32 << 8) | PixelFormatAlpha | PixelFormatPAlpha | PixelFormatGDI)
-#define    PixelFormat48bppRGB          (12 | (48 << 8) | PixelFormatExtended)
-#define    PixelFormat64bppARGB         (13 | (64 << 8) | PixelFormatAlpha  | PixelFormatCanonical | PixelFormatExtended)
-#define    PixelFormat64bppPARGB        (14 | (64 << 8) | PixelFormatAlpha  | PixelFormatPAlpha | PixelFormatExtended)
-#define    PixelFormat32bppCMYK         (15 | (32 << 8))
-#define    PixelFormatMax               16
+#define PixelFormat1bppIndexed (1 | (1 << 8) | PixelFormatIndexed | PixelFormatGDI)
+#define PixelFormat4bppIndexed (2 | (4 << 8) | PixelFormatIndexed | PixelFormatGDI)
+#define PixelFormat8bppIndexed (3 | (8 << 8) | PixelFormatIndexed | PixelFormatGDI)
+#define PixelFormat16bppGrayScale (4 | (16 << 8) | PixelFormatExtended)
+#define PixelFormat16bppRGB555 (5 | (16 << 8) | PixelFormatGDI)
+#define PixelFormat16bppRGB565 (6 | (16 << 8) | PixelFormatGDI)
+#define PixelFormat16bppARGB1555 (7 | (16 << 8) | PixelFormatAlpha | PixelFormatGDI)
+#define PixelFormat24bppRGB (8 | (24 << 8) | PixelFormatGDI)
+#define PixelFormat32bppRGB (9 | (32 << 8) | PixelFormatGDI)
+#define PixelFormat32bppARGB (10 | (32 << 8) | PixelFormatAlpha | PixelFormatGDI | PixelFormatCanonical)
+#define PixelFormat32bppPARGB (11 | (32 << 8) | PixelFormatAlpha | PixelFormatPAlpha | PixelFormatGDI)
+#define PixelFormat48bppRGB (12 | (48 << 8) | PixelFormatExtended)
+#define PixelFormat64bppARGB (13 | (64 << 8) | PixelFormatAlpha | PixelFormatCanonical | PixelFormatExtended)
+#define PixelFormat64bppPARGB (14 | (64 << 8) | PixelFormatAlpha | PixelFormatPAlpha | PixelFormatExtended)
+#define PixelFormat32bppCMYK (15 | (32 << 8))
+#define PixelFormatMax 16
 
-static inline BOOL IsIndexedPixelFormat(PixelFormat format)
+static inline BOOL
+IsIndexedPixelFormat(PixelFormat format)
 {
     return (format & PixelFormatIndexed) != 0;
 }
 
-static inline BOOL IsAlphaPixelFormat(PixelFormat format)
+static inline BOOL
+IsAlphaPixelFormat(PixelFormat format)
 {
     return (format & PixelFormatAlpha) != 0;
 }
 
-static inline BOOL IsCanonicalPixelFormat(PixelFormat format)
+static inline BOOL
+IsCanonicalPixelFormat(PixelFormat format)
 {
     return (format & PixelFormatCanonical) != 0;
 }
 
-static inline BOOL IsExtendedPixelFormat(PixelFormat format)
+static inline BOOL
+IsExtendedPixelFormat(PixelFormat format)
 {
     return (format & PixelFormatExtended) != 0;
 }
 
-static inline UINT GetPixelFormatSize(PixelFormat format)
+static inline UINT
+GetPixelFormatSize(PixelFormat format)
 {
     return (format >> 8) & 0xff;
 }
 
 enum PaletteFlags
 {
-    PaletteFlagsHasAlpha        = 1,
-    PaletteFlagsGrayScale       = 2,
-    PaletteFlagsHalftone        = 4
+    PaletteFlagsHasAlpha = 1,
+    PaletteFlagsGrayScale = 2,
+    PaletteFlagsHalftone = 4
 };
 
 #ifdef __cplusplus
 
 struct ColorPalette
 {
-public:
+  public:
     UINT Flags;
     UINT Count;
     ARGB Entries[1];
@@ -100,7 +105,7 @@ typedef struct ColorPalette
     ARGB Entries[1];
 } ColorPalette;
 
-#endif  /* end of c typedefs */
+#endif /* end of c typedefs */
 
 typedef enum DitherType
 {

@@ -54,7 +54,7 @@ MCIERR_UNRECOGNIZED_KEYWORD, 	"Driver tidak dapat mengenali parameter perintah y
 MCIERR_UNRECOGNIZED_COMMAND,	"Driver todal dapat mengenali perintah yang ditetapkan."
 MCIERR_HARDWARE, 		"Ada masalah dengan device media anda. Pastikan ia bekerja dengan baik atau hubungi manufakturer device."
 MCIERR_INVALID_DEVICE_NAME, 	"Device yang ditetapkan tidak dibuka atau tidak dikenal oleh MCI."
-MCIERR_OUT_OF_MEMORY, 		"Memori tidak cukup tersedia untuk tugas ini. \nKeluar satu atau lebih aplikasi untuk menaikkan ketersediaan memori, dan kemudian coba lagi."
+MCIERR_OUT_OF_MEMORY, 		"Memori tidak cukup tersedia untuk tugas ini.\nKeluar satu atau lebih aplikasi untuk menaikkan ketersediaan memori, dan kemudian coba lagi."
 MCIERR_DEVICE_OPEN, 		"Nama device sudah digunakan sebagai alias oleh aplikasi ini. Gunakan alias unik."
 MCIERR_CANNOT_LOAD_DRIVER, 	"Ada masalah tidak terdeteksi dalam pengambilan device driver yang ditetapkan."
 MCIERR_MISSING_COMMAND_STRING, 	"Tidak ada perintah yang ditetapkan."

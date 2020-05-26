@@ -1,14 +1,12 @@
 @ stub HttpAddFragmentToCache
-@ stdcall HttpAddUrl(ptr wstr ptr)
-@ stub HttpAddUrlToConfigGroup
-@ stub HttpCancelHttpRequest
+@ stdcall -stub HttpAddUrl(ptr wstr ptr)
+@ stdcall -stub HttpAddUrlToUrlGroup(int64 wstr int64 long)
 @ stub HttpCreateAppPool
 @ stub HttpCreateConfigGroup
 @ stub HttpCreateFilter
-@ stdcall HttpCreateHttpHandle(ptr long)
-@ stdcall HttpCreateServerSession(long ptr long)
+@ stdcall -stub HttpCreateHttpHandle(ptr long)
 @ stub HttpDeleteConfigGroup
-@ stdcall HttpDeleteServiceConfiguration(ptr long ptr long ptr)
+@ stdcall -stub HttpDeleteServiceConfiguration(ptr long ptr long ptr)
 @ stub HttpFilterAccept
 @ stub HttpFilterAppRead
 @ stub HttpFilterAppWrite
@@ -19,35 +17,29 @@
 @ stub HttpFilterRawWriteAndAppRead
 @ stub HttpFlushResponseCache
 @ stub HttpGetCounters
-@ stdcall HttpInitialize(long long ptr)
-@ stub HttpInitializeServerContext
+@ stdcall -stub HttpInitialize(long long ptr)
 @ stub HttpOpenAppPool
 @ stub HttpOpenControlChannel
 @ stub HttpOpenFilter
 @ stub HttpQueryAppPoolInformation
 @ stub HttpQueryConfigGroupInformation
 @ stub HttpQueryControlChannelInformation
-@ stub HttpQueryServerContextInformation
-@ stdcall HttpQueryServiceConfiguration(ptr long ptr long ptr long ptr ptr)
+@ stdcall -stub HttpQueryServiceConfiguration(ptr long ptr long ptr long ptr ptr)
 @ stub HttpReadFragmentFromCache
 @ stub HttpReceiveClientCertificate
-@ stub HttpReceiveHttpRequest
-@ stub HttpReceiveHttpResponse
-@ stub HttpReceiveRequestEntityBody
+@ stdcall -stub HttpReceiveHttpRequest(ptr int64 long ptr long ptr ptr)
+@ stdcall -stub HttpReceiveRequestEntityBody(ptr int64 long ptr long ptr ptr)
 @ stub HttpRemoveAllUrlsFromConfigGroup
-@ stub HttpRemoveUrl
-@ stub HttpRemoveUrlFromConfigGroup
-@ stub HttpSendHttpRequest
-@ stub HttpSendHttpResponse
-@ stub HttpSendRequestEntityBody
+@ stdcall -stub HttpRemoveUrl(ptr wstr)
+@ stdcall -stub HttpRemoveUrlFromUrlGroup(int64 wstr long)
+@ stdcall -stub HttpSendHttpResponse(ptr int64 long ptr ptr ptr ptr long ptr ptr)
 @ stub HttpSendResponseEntityBody
 @ stub HttpSetAppPoolInformation
 @ stub HttpSetConfigGroupInformation
 @ stub HttpSetControlChannelInformation
-@ stub HttpSetServerContextInformation
-@ stdcall HttpSetServiceConfiguration(ptr long ptr long ptr)
+@ stdcall -stub HttpSetServiceConfiguration(ptr long ptr long ptr)
 @ stub HttpShutdownAppPool
 @ stub HttpShutdownFilter
-@ stdcall HttpTerminate(long ptr)
+@ stdcall -stub HttpTerminate(long ptr)
 @ stub HttpWaitForDemandStart
 @ stub HttpWaitForDisconnect

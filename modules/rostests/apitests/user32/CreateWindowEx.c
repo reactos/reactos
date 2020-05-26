@@ -3,7 +3,7 @@
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Test for CreateWindowEx
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
- *                  Mark Jansen
+ *                  Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -94,6 +94,7 @@ DWORD g_ChildNcExpectExStyle = 0;
 DWORD g_ChildExpectStyle = 0;
 DWORD g_ChildExpectExStyle = 0;
 
+#undef ok_hex_
 #define ok_hex_(expression, result) \
     do { \
         int _value = (expression); \

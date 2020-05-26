@@ -688,17 +688,64 @@ ApplyOrCancelChanges(
     }
 }
 
+VOID
+FreeComponentItem(NetCfgComponentItem *pItem)
+{
+    CoTaskMemFree(pItem->szDisplayName);
+    CoTaskMemFree(pItem->szHelpText);
+    CoTaskMemFree(pItem->szId);
+    CoTaskMemFree(pItem->szBindName);
+    CoTaskMemFree(pItem->szNodeId);
+    CoTaskMemFree(pItem->pszBinding);
+    CoTaskMemFree(pItem);
+}
+
 HRESULT
 WINAPI
 INetCfg_fnUninitialize(
     INetCfg * iface)
 {
     INetCfgImpl *This = (INetCfgImpl *)iface;
+    NetCfgComponentItem *pItem;
 
     if (!This->bInitialized)
         return NETCFG_E_NOT_INITIALIZED;
 
-    return E_FAIL;
+    /* Free the services */
+    while (This->pService != NULL)
+    {
+        pItem = This->pService;
+        This->pService = pItem->pNext;
+        FreeComponentItem(pItem);
+    }
+
+    /* Free the clients */
+    while (This->pClient != NULL)
+    {
+        pItem = This->pClient;
+        This->pClient = pItem->pNext;
+        FreeComponentItem(pItem);
+    }
+
+    /* Free the protocols */
+    while (This->pProtocol != NULL)
+    {
+        pItem = This->pProtocol;
+        This->pProtocol = pItem->pNext;
+        FreeComponentItem(pItem);
+    }
+
+    /* Free the adapters */
+    while (This->pNet != NULL)
+    {
+        pItem = This->pNet;
+        This->pNet = pItem->pNext;
+        FreeComponentItem(pItem);
+    }
+
+    This->bInitialized = FALSE;
+
+    return S_OK;
 }
 
 

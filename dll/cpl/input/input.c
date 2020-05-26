@@ -10,14 +10,11 @@
 
 #include "input.h"
 
-#include <cpl.h>
-
 #define NUM_APPLETS    (1)
 
-static LONG CALLBACK SystemApplet(VOID);
+static LONG CALLBACK SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
 
 HINSTANCE hApplet = NULL;
-static HWND hCPLWindow;
 
 /* Applets */
 static APPLET Applets[NUM_APPLETS] =
@@ -57,7 +54,7 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 
 /* First Applet */
 static LONG CALLBACK
-SystemApplet(VOID)
+SystemApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     PROPSHEETPAGEW page[2];
     PROPSHEETHEADERW header;
@@ -69,7 +66,7 @@ SystemApplet(VOID)
 
     header.dwSize      = sizeof(header);
     header.dwFlags     = PSH_PROPSHEETPAGE | PSH_USEICONID | PSH_USECALLBACK;
-    header.hwndParent  = hCPLWindow;
+    header.hwndParent  = hwnd;
     header.hInstance   = hApplet;
     header.pszIcon     = MAKEINTRESOURCEW(IDI_KEY_SHORT_ICO);
     header.pszCaption  = szCaption;
@@ -114,8 +111,7 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             break;
 
         case CPL_DBLCLK:
-            hCPLWindow = hwndCPl;
-            Applets[i].AppletProc();
+            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
             break;
     }
 

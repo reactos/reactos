@@ -1,0 +1,6 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_NOSRCFILEFOUND "Исходный файл или директория '%ls' не найдены."
+}

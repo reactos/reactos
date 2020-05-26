@@ -8,6 +8,7 @@
 #include "precomp.h"
 
 #include <winsvc.h>
+#include <versionhelpers.h>
 
 enum ServiceCommands
 {
@@ -84,7 +85,7 @@ void CheckValidation(UNICODE_STRING* PathName)
     CacheEntry.ImageName = *PathName;
     CacheEntry.ImageHandle = (HANDLE)2;
     Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
-    ok_ntstatus(Status, STATUS_NOT_FOUND);
+    ok_ntstatus(Status, IsWindows7OrGreater() ? STATUS_NOT_FOUND : STATUS_INVALID_PARAMETER);
 
     /* Validate the handling of an invalid service number */
     Status = pNtApphelpCacheControl(999, NULL);
@@ -156,7 +157,7 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
     CacheEntry.ImageName = ntPath;
     CacheEntry.ImageHandle = 0;
     Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
-    ok_ntstatus(Status, STATUS_NOT_FOUND);
+    ok_ntstatus(Status, IsWindows7OrGreater() ? STATUS_NOT_FOUND : STATUS_INVALID_PARAMETER);
 
     /* re-add it for the next test */
     RequestAddition(service_handle, TRUE);
@@ -164,7 +165,7 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
     ok_ntstatus(Status, STATUS_SUCCESS);
     CacheEntry.ImageHandle = (HANDLE)1;
     Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
-    ok_ntstatus(Status, STATUS_NOT_FOUND);
+    ok_ntstatus(Status, IsWindows7OrGreater() ? STATUS_NOT_FOUND : STATUS_INVALID_PARAMETER);
 
     /* and again */
     RequestAddition(service_handle, TRUE);
@@ -176,7 +177,7 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
     CacheEntry.ImageHandle = (HANDLE)0x80000000;
 #endif
     Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
-    ok_ntstatus(Status, STATUS_NOT_FOUND);
+    ok_ntstatus(Status, IsWindows7OrGreater() ? STATUS_NOT_FOUND : STATUS_INVALID_PARAMETER);
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, ntPath.Buffer);
 }

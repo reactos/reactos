@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     ReactOS CryptExt Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Ukrainian (Ukraine) resource translation
+ * COPYRIGHT:   Copyright 2019 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFILE "Цей файл не є корректним файлом сертифікату."
+    IDS_CER_FILE "Файл сертифікату"
+END

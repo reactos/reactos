@@ -3032,6 +3032,7 @@ static void test_queryreader(void)
                     ok(hr == E_INVALIDARG, "got %#x\n", hr);
 
                     IWICMetadataQueryReader_Release(new_reader);
+                    PropVariantClear(&value);
                 }
                 else if (value.vt == VT_LPSTR)
                     ok(!lstrcmpA(U(value).pszVal, test_data[i].str_value), "%u: expected %s, got %s\n",

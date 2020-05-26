@@ -65,6 +65,7 @@ enum IWidget_dispids
     DISPID_TM_STRUCT_PTR_PTR,
     DISPID_TM_THIN_STRUCT,
     DISPID_TM_RECT,
+    DISPID_TM_COMPLEX_STRUCT,
     DISPID_TM_ARRAY,
     DISPID_TM_VARIANT_ARRAY,
     DISPID_TM_STRUCT_ARRAY,
@@ -104,6 +105,8 @@ library TestTypelib
     } MYSTRUCT;
 
     typedef [public] int myint_t;
+
+    typedef int array_t[4];
 
     coclass ApplicationObject2;
 
@@ -335,7 +338,23 @@ library TestTypelib
         [id(DISPID_TM_RECT)]
         HRESULT rect([in] RECT in, [out] RECT *out, [in] RECT *in_ptr, [in, out] RECT *in_out);
 
-        typedef int array_t[4];
+        struct complex
+        {
+            char c;
+            int i;
+            int *pi;
+            int **ppi;
+            ISomethingFromDispatch *iface;
+            ISomethingFromDispatch **iface_ptr;
+            BSTR bstr;
+            VARIANT var;
+            MYSTRUCT mystruct;
+            array_t arr;
+            myint_t myint;
+        };
+
+        [id(DISPID_TM_COMPLEX_STRUCT)]
+        HRESULT complex_struct([in] struct complex in);
 
         [id(DISPID_TM_ARRAY)]
         HRESULT array([in] array_t in, [out] array_t out, [in, out] array_t in_out);

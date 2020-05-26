@@ -20,7 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -33,7 +32,6 @@
 #include "ole2.h"
 
 #include "wine/itss.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 #include "itsstor.h"
@@ -292,9 +290,9 @@ static HRESULT WINAPI ITS_IMonikerImpl_GetDisplayName(
 
     TRACE("%p %p %p %p\n", iface, pbc, pmkToLeft, ppszDisplayName);
 
-    len = strlenW( This->szFile ) + strlenW( This->szHtml );
+    len = lstrlenW( This->szFile ) + lstrlenW( This->szHtml );
     str = CoTaskMemAlloc( len*sizeof(WCHAR) );
-    sprintfW( str, szFormat, This->szFile, This->szHtml );
+    swprintf( str, szFormat, This->szFile, This->szHtml );
 
     *ppszDisplayName = str;
     
@@ -354,12 +352,12 @@ static HRESULT ITS_IMoniker_create( IMoniker **ppObj, LPCWSTR name, DWORD n )
     DWORD sz;
 
     /* szFile[1] has space for one character already */
-    sz = FIELD_OFFSET( ITS_IMonikerImpl, szFile[strlenW( name ) + 1] );
+    sz = FIELD_OFFSET( ITS_IMonikerImpl, szFile[lstrlenW( name ) + 1] );
 
     itsmon = HeapAlloc( GetProcessHeap(), 0, sz );
     itsmon->IMoniker_iface.lpVtbl = &ITS_IMonikerImpl_Vtbl;
     itsmon->ref = 1;
-    strcpyW( itsmon->szFile, name );
+    lstrcpyW( itsmon->szFile, name );
     itsmon->szHtml = &itsmon->szFile[n];
 
     while( *itsmon->szHtml == ':' )
@@ -443,11 +441,11 @@ static HRESULT WINAPI ITS_IParseDisplayNameImpl_ParseDisplayName(
     TRACE("%p %s %p %p\n", This,
           debugstr_w( pszDisplayName ), pchEaten, ppmkOut );
 
-    if( strncmpiW( pszDisplayName, szPrefix, prefix_len ) )
+    if( _wcsnicmp( pszDisplayName, szPrefix, prefix_len ) )
         return MK_E_SYNTAX;
 
     /* search backwards for a double colon */
-    for( n = strlenW( pszDisplayName ) - 3; prefix_len <= n; n-- )
+    for( n = lstrlenW( pszDisplayName ) - 3; prefix_len <= n; n-- )
         if( ( pszDisplayName[n] == ':' ) && ( pszDisplayName[n+1] == ':' ) )
             break;
 
@@ -457,7 +455,7 @@ static HRESULT WINAPI ITS_IParseDisplayNameImpl_ParseDisplayName(
     if( !pszDisplayName[n+2] )
         return MK_E_SYNTAX;
 
-    *pchEaten = strlenW( pszDisplayName ) - n - 3;
+    *pchEaten = lstrlenW( pszDisplayName ) - n - 3;
 
     return ITS_IMoniker_create( ppmkOut,
               &pszDisplayName[prefix_len], n-prefix_len );

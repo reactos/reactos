@@ -10,7 +10,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Uso: %s [drive:] [-F] [-V] [-R] [-C] \n\n\
+Uso: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
 [drive:]    Specifica un disco per il controllo.\n\
 -F          Risolvi gli errori del disco.\n\
 -V          Visualizza il percorso del file di ogni file del disco.\n\

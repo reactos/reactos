@@ -7,9 +7,13 @@
 char * CDECL _strlwr(char *x)
 {
 	char  *y=x;
+	char ch, lower;
 
 	while (*y) {
-		*y=tolower(*y);
+		ch = *y;
+		lower = tolower(ch);
+		if (ch != lower)
+			*y = lower;
 		y++;
 	}
 	return x;

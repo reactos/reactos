@@ -1,0 +1,224 @@
+/*
+ * Copyright 2018 Alistair Leslie-Hughes
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+import "oaidl.idl";
+import "ocidl.idl";
+
+#if !defined(progid) && !defined(__WIDL__)
+#define threading(model)
+#define progid(str)
+#define vi_progid(str)
+#endif
+
+[
+    object,
+    uuid(6F10711F-729B-41E5-93B8-F21D0F818DF1),
+    dual,
+    pointer_default(unique)
+]
+interface IStaticPortMapping : IDispatch
+{
+    [propget, id(1)]
+    HRESULT ExternalIPAddress ([out, retval] BSTR *value);
+
+    [propget, id(2)]
+    HRESULT ExternalPort([out, retval] long *value);
+
+    [propget, id(3)]
+    HRESULT InternalPort([out, retval] long *value);
+
+    [propget, id(4)]
+    HRESULT Protocol([out, retval] BSTR *value);
+
+    [propget, id(5)]
+    HRESULT InternalClient([out, retval] BSTR *value);
+
+    [propget, id(6)]
+    HRESULT Enabled([out, retval] VARIANT_BOOL *value);
+
+    [propget, id(7)]
+    HRESULT Description([out, retval] BSTR *value);
+
+    [id(8)]
+    HRESULT EditInternalClient ([in] BSTR client);
+
+    [id(9)]
+    HRESULT Enable ([in] VARIANT_BOOL enable);
+
+    [id(10)]
+    HRESULT EditDescription ([in] BSTR description);
+
+    [id(11)]
+    HRESULT EditInternalPort ([in] long port);
+};
+
+[
+    object,
+    uuid(cd1f3e77-66d6-4664-82c7-36dbb641d0f1),
+    dual,
+    pointer_default(unique)
+]
+interface IStaticPortMappingCollection : IDispatch
+{
+    [propget, id(DISPID_NEWENUM), hidden, restricted]
+    HRESULT _NewEnum([out, retval] IUnknown **value);
+
+    [propget, id(DISPID_VALUE)]
+    HRESULT Item([in] long port, [in] BSTR protocol, [out, retval] IStaticPortMapping **mapping);
+
+    [propget, id(1)]
+    HRESULT Count([out, retval] long *value);
+
+    [id(2)]
+    HRESULT Remove([in] long port, [in] BSTR protocol);
+
+    [id(3)]
+    HRESULT Add([in] long external, [in] BSTR protocol, [in] long internal, [in] BSTR client,
+        [in] VARIANT_BOOL enabled, [in] BSTR description, [out, retval] IStaticPortMapping **mapping);
+};
+
+[
+    object,
+    uuid(4FC80282-23B6-4378-9A27-CD8F17C9400C),
+    dual,
+    pointer_default(unique)
+]
+interface IDynamicPortMapping : IDispatch
+{
+    [propget, id(1)]
+    HRESULT ExternalIPAddress ([out, retval] BSTR *value);
+
+    [propget, id(2)]
+    HRESULT RemoteHost ([out, retval] BSTR *value);
+
+    [propget, id(3)]
+    HRESULT ExternalPort([out, retval] long *value);
+
+    [propget, id(4)]
+    HRESULT Protocol([out, retval] BSTR *value);
+
+    [propget, id(5)]
+    HRESULT InternalPort([out, retval] long *value);
+
+    [propget, id(6)]
+    HRESULT InternalClient([out, retval] BSTR *value);
+
+    [propget, id(7)]
+    HRESULT Enabled([out, retval] VARIANT_BOOL *value);
+
+    [propget, id(8)]
+    HRESULT Description([out, retval] BSTR *value);
+
+    [propget, id(9)]
+    HRESULT LeaseDuration([out, retval] long *value);
+
+    [id(10)]
+    HRESULT RenewLease([in] long desired, [out, retval] long *duration);
+
+    [id(11)]
+    HRESULT EditInternalClient ([in] BSTR client);
+
+    [id(12)]
+    HRESULT Enable ([in] VARIANT_BOOL enabled);
+
+    [id(13)]
+    HRESULT EditDescription ([in] BSTR description);
+
+    [id(14)]
+    HRESULT EditInternalPort ([in] long port);
+};
+
+[
+    object,
+    uuid(b60de00f-156e-4e8d-9ec1-3a2342c10899),
+    dual,
+    pointer_default(unique)
+]
+interface IDynamicPortMappingCollection : IDispatch
+{
+    [propget, id(DISPID_NEWENUM), hidden, restricted]
+    HRESULT _NewEnum([out, retval] IUnknown **value);
+
+    [propget, id(DISPID_VALUE)]
+    HRESULT Item([in] BSTR host, [in] long port, [in] BSTR orotocol,
+        [out, retval] IDynamicPortMapping **mapping);
+
+    [propget, id(1)]
+    HRESULT Count([out, retval] long *value);
+
+    [id(2)]
+    HRESULT Remove([in] BSTR host, [in] long port, [in] BSTR protocol);
+
+    [id(3)]
+    HRESULT Add([in] BSTR host, [in] long port, [in] BSTR protocol, [in] long internal,
+        [in] BSTR client, [in] VARIANT_BOOL enabled, [in] BSTR Description,
+        [in] long duration, [out, retval] IDynamicPortMapping **mapping);
+};
+
+[
+    object,
+    uuid(624bd588-9060-4109-b0b0-1adbbcac32df),
+    dual,
+    pointer_default(unique)
+]
+interface INATEventManager : IDispatch
+{
+    [id(1), propput]
+    HRESULT ExternalIPAddressCallback ([in] IUnknown *unk);
+
+    [id(2), propput]
+    HRESULT NumberOfEntriesCallback ([in] IUnknown *unk);
+};
+
+[
+    object,
+    uuid(b171c812-cc76-485a-94d8-b6b3a2794e99),
+    dual,
+    pointer_default(unique)
+]
+interface IUPnPNAT : IDispatch
+{
+    [propget, id(1)]
+    HRESULT StaticPortMappingCollection ([out, retval] IStaticPortMappingCollection **collection);
+
+    [propget, id(2)]
+    HRESULT DynamicPortMappingCollection ([out, retval] IDynamicPortMappingCollection **collection);
+
+    [propget, id(3)]
+    HRESULT NATEventManager ([out, retval] INATEventManager **manager);
+};
+
+[
+    id(2),
+    uuid(1c565858-f302-471e-b409-f180aa4abec6),
+    version(1.0)
+]
+library NATUPNPLib
+{
+    importlib("stdole2.tlb");
+
+    [
+        vi_progid("HNetCfg.NATUPnP"),
+        progid("HNetCfg.NATUPnP.1"),
+        threading(apartment),
+        uuid(ae1e00aa-3fd5-403c-8a27-2bbdc30cd0e1)
+    ]
+    coclass UPnPNAT
+    {
+        [default] interface IUPnPNAT;
+    };
+};

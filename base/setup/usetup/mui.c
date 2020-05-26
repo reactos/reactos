@@ -256,6 +256,202 @@ MUIGetString(
     return "<nostring>";
 }
 
+/**
+ * @MUIGetEntry
+ *
+ * Retrieves a MUI entry of a page, given the page number and the text ID.
+ *
+ * @param[in]   Page
+ *     The MUI (Multilingual User Interface) entry page number, as a unsigned long integer.
+ *
+ * @param[in]   TextID
+ *      The text identification number (ID), as a unsigned integer. The parameter is used to identify
+ *      its MUI properties like the coordinates, text style flag and its buffer content.
+ *
+ * @return
+ *     Returns a constant MUI entry.
+ *
+ */
+const MUI_ENTRY *
+MUIGetEntry(
+    IN ULONG Page,
+    IN INT TextID)
+{
+    const MUI_ENTRY * entry;
+    ULONG index;
+
+    /* Retrieve the entries of a MUI page */
+    entry = FindMUIEntriesOfPage(Page);
+    if (!entry)
+    {
+        DPRINT("MUIGetEntryData(): Failed to get the translated entry page!\n");
+        return NULL;
+    }
+
+    /* Loop over the ID entries and check if it matches with one of them */
+    for (index = 0; entry[index].Buffer != NULL; index++)
+    {
+        if (entry[index].TextID == TextID)
+        {
+            /* They match so return the MUI entry */
+            return &entry[index];
+        }
+    }
+
+    /* Page number or ID are incorrect so in this case bail out */
+    DPRINT("Couldn't get the MUI entry field from the page!\n");
+    return NULL;
+}
+
+/**
+ * @MUIClearText
+ *
+ * Clears a portion of text from the console output.
+ *
+ * @param[in]   Page
+ *     The MUI (Multilingual User Interface) entry page number, as a unsigned long integer.
+ *
+ * @param[in]   TextID
+ *      The text identification number (ID), as an integer. The parameter is used to identify
+ *      its MUI properties like the coordinates, text style flag and its buffer content.
+ *
+ * @return
+ *     Nothing.
+ *
+ */
+VOID
+MUIClearText(
+    IN ULONG Page,
+    IN INT TextID)
+{
+    const MUI_ENTRY * entry;
+
+    /* Get the MUI entry */
+    entry = MUIGetEntry(Page, TextID);
+
+    if (!entry)
+        return;
+
+    /* Remove the text by using CONSOLE_ClearTextXY() */
+    CONSOLE_ClearTextXY(
+        entry->X,
+        entry->Y,
+        (ULONG)strlen(entry->Buffer));
+}
+
+/**
+ * @MUIClearStyledText
+ *
+ * Clears a portion of text from the console output, given the actual state style flag of the text.
+ *
+ * @param[in]   Page
+ *     The MUI (Multilingual User Interface) entry page number, as a unsigned long integer.
+ *
+ * @param[in]   TextID
+ *      The text identification number (ID), as an integer. The parameter is used to identify
+ *      its MUI properties like the coordinates, text style flag and its buffer content.
+ *
+ * @param[in]   Flags
+ *      The text style flag, as an integer. The flag determines the style of the text, such
+ *      as being highlighted, underlined, high padding and so on.
+ *
+ * @return
+ *     Nothing.
+ *
+ */
+VOID
+MUIClearStyledText(
+    IN ULONG Page,
+    IN INT TextID,
+    IN INT Flags)
+{
+    const MUI_ENTRY * entry;
+
+    /* Get the MUI entry */
+    entry = MUIGetEntry(Page, TextID);
+
+    if (!entry)
+        return;
+
+    /* Now, begin removing the text by calling CONSOLE_ClearStyledText() */
+    CONSOLE_ClearStyledText(
+        entry->X,
+        entry->Y,
+        Flags,
+        (ULONG)strlen(entry->Buffer));
+}
+
+/**
+ * @MUISetText
+ *
+ * Prints a text to the console output.
+ *
+ * @param[in]   Page
+ *     The MUI (Multilingual User Interface) entry page number, as a unsigned long integer.
+ *
+ * @param[in]   TextID
+ *      The text identification number (ID), as an integer. The parameter is used to identify
+ *      its MUI properties like the coordinates, text style flag and its buffer content.
+ *
+ * @return
+ *     Nothing.
+ *
+ */
+VOID
+MUISetText(
+    IN ULONG Page,
+    IN INT TextID)
+{
+    const MUI_ENTRY * entry;
+
+    /* Get the MUI entry */
+    entry = MUIGetEntry(Page, TextID);
+
+    if (!entry)
+        return;
+
+    /* Print the text to the console output by calling CONSOLE_SetTextXY() */
+    CONSOLE_SetTextXY(entry->X, entry->Y, entry->Buffer);
+}
+
+/**
+ * @MUISetStyledText
+ *
+ * Prints a text to the console output, with a style for it.
+ *
+ * @param[in]   Page
+ *     The MUI (Multilingual User Interface) entry page number, as a unsigned long integer.
+ *
+ * @param[in]   TextID
+ *      The text identification number (ID), as an integer. The parameter is used to identify
+ *      its MUI properties like the coordinates, text style flag and its buffer content.
+ *
+ *  @param[in]   Flags
+ *      The text style flag, as an integer. The flag determines the style of the text, such
+ *      as being highlighted, underlined, high padding and so on.
+ *
+ * @return
+ *     Nothing.
+ *
+ */
+VOID
+MUISetStyledText(
+    IN ULONG Page,
+    IN INT TextID,
+    IN INT Flags)
+{
+    const MUI_ENTRY * entry;
+
+    /* Get the MUI entry */
+    entry = MUIGetEntry(Page, TextID);
+
+    if (!entry)
+        return;
+
+    /* Print the text to the console output by calling CONSOLE_SetStyledText() */
+    CONSOLE_SetStyledText(entry->X, entry->Y, Flags, entry->Buffer);
+}
+
 VOID
 SetConsoleCodePage(VOID)
 {

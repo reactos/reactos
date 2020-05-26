@@ -263,8 +263,8 @@ NTSTATUS
 FltpGetObjectName(_In_ PVOID Object,
                   _Inout_ PUNICODE_STRING ObjectName)
 {
-    POBJECT_NAME_INFORMATION ObjectNameInfo = NULL;
     OBJECT_NAME_INFORMATION LocalNameInfo;
+    POBJECT_NAME_INFORMATION ObjectNameInfo = &LocalNameInfo;
     ULONG ReturnLength;
     NTSTATUS Status;
 
@@ -310,7 +310,7 @@ FltpGetObjectName(_In_ PVOID Object,
         }
     }
 
-    if (ObjectNameInfo)
+    if (ObjectNameInfo != &LocalNameInfo)
     {
         ExFreePoolWithTag(ObjectNameInfo, FM_TAG_UNICODE_STRING);
     }

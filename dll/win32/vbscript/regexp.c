@@ -1142,8 +1142,8 @@ lexHex:
             for (i = rangeStart; i <= localMax; i++) {
                 WCHAR uch, dch;
 
-                uch = toupperW(i);
-                dch = tolowerW(i);
+                uch = towupper(i);
+                dch = towlower(i);
                 if(maxch < uch)
                     maxch = uch;
                 if(maxch < dch)
@@ -1988,7 +1988,7 @@ FlatNIMatcher(REGlobalData *gData, match_state_t *x, const WCHAR *matchChars,
     if (length > (size_t)(gData->cpend - x->cp))
         return NULL;
     for (i = 0; i != length; i++) {
-        if (toupperW(matchChars[i]) != toupperW(x->cp[i]))
+        if (towupper(matchChars[i]) != towupper(x->cp[i]))
             return NULL;
     }
     x->cp += length;
@@ -2035,7 +2035,7 @@ BackrefMatcher(REGlobalData *gData, match_state_t *x, size_t parenIndex)
     parenContent = &gData->cpbegin[cap->index];
     if (gData->regexp->flags & REG_FOLD) {
         for (i = 0; i < len; i++) {
-            if (toupperW(parenContent[i]) != toupperW(x->cp[i]))
+            if (towupper(parenContent[i]) != towupper(x->cp[i]))
                 return NULL;
         }
     } else {
@@ -2226,12 +2226,12 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
                 continue;
               case 's':
                 for (i = (INT)charSet->length; i >= 0; i--)
-                    if (isspaceW(i))
+                    if (iswspace(i))
                         AddCharacterToCharSet(charSet, (WCHAR)i);
                 continue;
               case 'S':
                 for (i = (INT)charSet->length; i >= 0; i--)
-                    if (!isspaceW(i))
+                    if (!iswspace(i))
                         AddCharacterToCharSet(charSet, (WCHAR)i);
                 continue;
               case 'w':
@@ -2263,8 +2263,8 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
                     WCHAR uch, dch;
 
                     AddCharacterToCharSet(charSet, i);
-                    uch = toupperW(i);
-                    dch = tolowerW(i);
+                    uch = towupper(i);
+                    dch = towlower(i);
                     if (i != uch)
                         AddCharacterToCharSet(charSet, uch);
                     if (i != dch)
@@ -2276,8 +2276,8 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
             inRange = FALSE;
         } else {
             if (gData->regexp->flags & REG_FOLD) {
-                AddCharacterToCharSet(charSet, toupperW(thisCh));
-                AddCharacterToCharSet(charSet, tolowerW(thisCh));
+                AddCharacterToCharSet(charSet, towupper(thisCh));
+                AddCharacterToCharSet(charSet, towlower(thisCh));
             } else {
                 AddCharacterToCharSet(charSet, thisCh);
             }
@@ -2411,13 +2411,13 @@ SimpleMatch(REGlobalData *gData, match_state_t *x, REOp op,
         }
         break;
       case REOP_SPACE:
-        if (x->cp != gData->cpend && isspaceW(*x->cp)) {
+        if (x->cp != gData->cpend && iswspace(*x->cp)) {
             result = x;
             result->cp++;
         }
         break;
       case REOP_NONSPACE:
-        if (x->cp != gData->cpend && !isspaceW(*x->cp)) {
+        if (x->cp != gData->cpend && !iswspace(*x->cp)) {
             result = x;
             result->cp++;
         }
@@ -2463,7 +2463,7 @@ SimpleMatch(REGlobalData *gData, match_state_t *x, REOp op,
         break;
       case REOP_FLAT1i:
         matchCh = *pc++;
-        if (x->cp != gData->cpend && toupperW(*x->cp) == toupperW(matchCh)) {
+        if (x->cp != gData->cpend && towupper(*x->cp) == towupper(matchCh)) {
             result = x;
             result->cp++;
         }
@@ -2480,7 +2480,7 @@ SimpleMatch(REGlobalData *gData, match_state_t *x, REOp op,
       case REOP_UCFLAT1i:
         matchCh = GET_ARG(pc);
         pc += ARG_LEN;
-        if (x->cp != gData->cpend && toupperW(*x->cp) == toupperW(matchCh)) {
+        if (x->cp != gData->cpend && towupper(*x->cp) == towupper(matchCh)) {
             result = x;
             result->cp++;
         }

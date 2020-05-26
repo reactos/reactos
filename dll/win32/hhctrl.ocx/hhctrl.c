@@ -97,38 +97,43 @@ static const char *command_to_string(UINT command)
 #undef X
 }
 
-static BOOL resolve_filename(const WCHAR *filename, WCHAR *fullname, DWORD buflen, WCHAR **index, WCHAR **window)
+static BOOL resolve_filename(const WCHAR *env_filename, WCHAR *fullname, DWORD buflen, WCHAR **index, WCHAR **window)
 {
-    const WCHAR *extra;
-    WCHAR chm_file[MAX_PATH];
-
     static const WCHAR helpW[] = {'\\','h','e','l','p','\\',0};
     static const WCHAR delimW[] = {':',':',0};
     static const WCHAR delim2W[] = {'>',0};
 
-    filename = skip_schema(filename);
+    DWORD env_len;
+    WCHAR *filename, *extra;
+
+    env_filename = skip_schema(env_filename);
 
     /* the format is "helpFile[::/index][>window]" */
     if (index) *index = NULL;
     if (window) *window = NULL;
 
-    extra = strstrW(filename, delim2W);
+    env_len = ExpandEnvironmentStringsW(env_filename, NULL, 0);
+    if (!env_len)
+        return 0;
+
+    filename = heap_alloc(env_len * sizeof(WCHAR));
+    if (filename == NULL)
+        return 0;
+
+    ExpandEnvironmentStringsW(env_filename, filename, env_len);
+
+    extra = wcsstr(filename, delim2W);
     if (extra)
     {
-        memcpy(chm_file, filename, (extra-filename)*sizeof(WCHAR));
-        chm_file[extra-filename] = 0;
-        filename = chm_file;
+        *extra = 0;
         if (window)
             *window = strdupW(extra+1);
     }
 
-    extra = strstrW(filename, delimW);
+    extra = wcsstr(filename, delimW);
     if (extra)
     {
-        if (filename != chm_file)
-            memcpy(chm_file, filename, (extra-filename)*sizeof(WCHAR));
-        chm_file[extra-filename] = 0;
-        filename = chm_file;
+        *extra = 0;
         if (index)
             *index = strdupW(extra+2);
     }
@@ -137,9 +142,12 @@ static BOOL resolve_filename(const WCHAR *filename, WCHAR *fullname, DWORD bufle
     if (GetFileAttributesW(fullname) == INVALID_FILE_ATTRIBUTES)
     {
         GetWindowsDirectoryW(fullname, buflen);
-        strcatW(fullname, helpW);
-        strcatW(fullname, filename);
+        lstrcatW(fullname, helpW);
+        lstrcatW(fullname, filename);
     }
+
+    heap_free(filename);
+
     return (GetFileAttributesW(fullname) != INVALID_FILE_ATTRIBUTES);
 }
 
@@ -206,12 +214,12 @@ HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR dat
                 static const WCHAR delimW[] = {':',':',0};
                 const WCHAR *i = (const WCHAR *)data;
 
-                index = strstrW(i, delimW);
+                index = wcsstr(i, delimW);
                 if(index)
                 {
                     if(memcmp(info->pCHMInfo->szFile, i, index-i))
                         FIXME("Opening a CHM file in the context of another is not supported.\n");
-                    index += strlenW(delimW);
+                    index += lstrlenW(delimW);
                 }
                 else
                     index = i;

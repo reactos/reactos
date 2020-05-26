@@ -11,17 +11,19 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
     LTEXT "ReactOS përdor informacionin e mëposhtëm për të identifikuar kompjuterin tuaj në rrjet.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT "Përshkrimi Kompjuterit:", IDC_STATIC, 6, 40, 90, 9
+    LTEXT "Përshkrimi Kompjuterit:", IDC_STATIC, 7, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Emri plotë kompjuterit:", IDC_STATIC, 6, 68, 85, 9
+    LTEXT "Emri plotë kompjuterit:", IDC_STATIC, 7, 68, 85, 9
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "GrupPune:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    LTEXT "GrupPune:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Për të përdorur Magjistarin Rrjetit Identifikues për t'u futur në një domain dhe për të krijuar një përdorues lokal, klikoni ""ID Rrjetit"".", IDC_STATIC, 6, 113, 172, 24
+    LTEXT "Për të përdorur Magjistarin Rrjetit Identifikues për t'u futur në një domain dhe për të krijuar një përdorues lokal, klikoni ""ID Rrjetit"".", IDC_STATIC, 7, 113, 172, 24
     PUSHBUTTON "&ID Rrjetit...", IDC_NETWORK_ID, 190, 114, 58, 15
-    LTEXT "Për të riemërtuar këtë kompjuter apo të bashkohet me një domain, klikoni ""Ndrysho"".", IDC_STATIC, 6, 149, 170, 17
+    LTEXT "Për të riemërtuar këtë kompjuter apo të bashkohet me një domain, klikoni ""Ndrysho"".", IDC_STATIC, 7, 149, 170, 17
     PUSHBUTTON "&Ndrysho...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
-    LTEXT "Shënim: Vetëm Administratorët mund të ndryshojnë identifikimin e këtij kompjuteri.", IDC_STATIC, 6, 179, 300, 9
+    LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
+    ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
+    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -68,15 +70,20 @@ BEGIN
     4 "Emri Kompjuterit Ndryshon"
     5 "GrupPune:"
     6 "Domain:"
+    7 "The domain name ""%1"" does not conform to Internet Domain Name Service specifications, although it is a legal ReactOS name. You must use ReactOS DNS server for non-standard names."
+    8 "The domain name ""%1"" is not properly formatted. Periods (.) are used to separate domains. Each domain is limited to 63 characters. Example: domain-1.reactos.org."
+    10 "The new computer name ""%1"" is too long. The name may not be longer than 63 characters."
+    11 "The new computer name entered is not properly formatted. Standard names may contain letters (a-z, A-Z), numbers (0-9), and hyphens (-), but no spaces or periods (.). The name may not consist entirely of digits."
     22 "Mirësivine tek %1 grupipunës."
     23 "Mirësivine tek %1 domain."
     24 "Ju duhet të rinisni këtë kompjuter që ndryshimet të hyjnë në fuqi."
     25 "Ju mund të ndryshoni emrin dhe anëtarësimin e këtij kompjuteri. Ndryshimet mund të ndikojnë në hyrjet e burimeve në rrjet."
     1021 "Shenime: Vetëm Administratorët mund të ndryshojnë identifikimin e këtij kompjuteri."
     1022 "Shenim: Identifikimi i kompjuterit nuk mund të ndryshohet sepse:"
-    1030 "Emri i ri kompjuterik ""%s"" përmban karaktere të cilat nuk janë të lejuara. Karakterët të cilat nuk janë të lejuar përfshijnë ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
-    /* Windows allows using these characters, although it displays a warning message.
-       Forbidding the use of these characters means incompatibility with Windows. */
+    1029 "The new computer name ""%1"" is a number. The name may not be a number."
+    1030 "Emri i ri kompjuterik ""%1"" përmban karaktere të cilat nuk janë të lejuara. Karakterët të cilat nuk janë të lejuar përfshijnë ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / and ?"
+    1031 "The first domain of the domain name ""%1"" is a number. The first domain may not be a number."
+    1032 "The domain name ""%1"" contains characters which are not allowed. Standard DNS names may contain letters (a-z, A-Z), numbers (0-9), and hyphens, but no spaces. Periods (.) are used to separate domains. Example: domain-1.reactos.org."
     3210 "&Detaje >>"
     3220 "<< &Detaje"
     4000 "Informacion"

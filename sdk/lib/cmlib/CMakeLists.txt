@@ -26,10 +26,11 @@ else()
         -D__NO_CTYPE_INLINES
         -DCMLIB_HOST)
     add_library(cmlibhost ${SOURCE})
+    target_include_directories(cmlibhost INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
     if(NOT MSVC)
-        add_target_compile_flags(cmlibhost "-fshort-wchar -Wno-multichar")
+        target_compile_options(cmlibhost PRIVATE -fshort-wchar -Wno-multichar)
     endif()
 
-    target_link_libraries(cmlibhost unicode)
+    target_link_libraries(cmlibhost PRIVATE host_includes)
 endif()

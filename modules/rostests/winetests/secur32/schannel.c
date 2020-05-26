@@ -435,11 +435,13 @@ static void testAcquireSecurityContext(void)
     ok(ret, "CertSetCertificateContextProperty failed: %08x\n", GetLastError());
     st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
         NULL, &schanCred, NULL, NULL, &cred, NULL);
-    ok(st == SEC_E_UNKNOWN_CREDENTIALS || st == SEC_E_INTERNAL_ERROR /* WinNT */,
+    ok(st == SEC_E_UNKNOWN_CREDENTIALS || st == SEC_E_INTERNAL_ERROR /* WinNT */ ||
+       st == SEC_E_INSUFFICIENT_MEMORY /* win10 */,
        "Expected SEC_E_UNKNOWN_CREDENTIALS or SEC_E_INTERNAL_ERROR, got %08x\n", st);
     st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
         NULL, &schanCred, NULL, NULL, &cred, NULL);
-    ok(st == SEC_E_UNKNOWN_CREDENTIALS || st == SEC_E_INTERNAL_ERROR /* WinNT */,
+    ok(st == SEC_E_UNKNOWN_CREDENTIALS || st == SEC_E_INTERNAL_ERROR /* WinNT */ ||
+       st == SEC_E_INSUFFICIENT_MEMORY /* win10 */,
         "Expected SEC_E_UNKNOWN_CREDENTIALS or SEC_E_INTERNAL_ERROR, got %08x\n", st);
 
     ret = CryptAcquireContextW(&csp, cspNameW, MS_DEF_PROV_W, PROV_RSA_FULL,
@@ -489,12 +491,13 @@ static void testAcquireSecurityContext(void)
         schanCred.dwVersion = SCH_CRED_V3;
         st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
          NULL, &schanCred, NULL, NULL, &cred, NULL);
-        ok(st == SEC_E_OK, "AcquireCredentialsHandleA failed: %08x\n", st);
+        ok(st == SEC_E_OK || st == SEC_E_INSUFFICIENT_MEMORY /* win10 */,
+           "AcquireCredentialsHandleA failed: %08x\n", st);
         FreeCredentialsHandle(&cred);
         st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
          NULL, &schanCred, NULL, NULL, &cred, NULL);
-        ok(st == SEC_E_OK ||
-           st == SEC_E_UNKNOWN_CREDENTIALS, /* win2k3 */
+        ok(st == SEC_E_OK || st == SEC_E_UNKNOWN_CREDENTIALS /* win2k3 */ ||
+           st == SEC_E_INSUFFICIENT_MEMORY /* win10 */,
            "AcquireCredentialsHandleA failed: %08x\n", st);
         FreeCredentialsHandle(&cred);
         schanCred.dwVersion = SCHANNEL_CRED_VERSION;
@@ -533,7 +536,7 @@ static void testAcquireSecurityContext(void)
            st == SEC_E_INVALID_TOKEN /* WinNT */, "st = %08x\n", st);
         st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
          NULL, &schanCred, NULL, NULL, &cred, NULL);
-        ok(st == SEC_E_UNKNOWN_CREDENTIALS,
+        ok(st == SEC_E_UNKNOWN_CREDENTIALS || st == SEC_E_NO_CREDENTIALS,
          "Expected SEC_E_UNKNOWN_CREDENTIALS, got %08x\n", st);
         /* FIXME: what about two valid certs? */
 
@@ -843,7 +846,7 @@ todo_wine
 
     buffers[1].pBuffers[0].cbBuffer = ret;
     status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
-            ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
+            ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM|ISC_REQ_USE_SUPPLIED_CREDS,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
     buffers[1].pBuffers[0].cbBuffer = buf_size;
     while (status == SEC_I_CONTINUE_NEEDED)
@@ -860,17 +863,20 @@ todo_wine
         buf->BufferType = SECBUFFER_TOKEN;
 
         status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
-            ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
+            ISC_REQ_USE_SUPPLIED_CREDS,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
         buffers[1].pBuffers[0].cbBuffer = buf_size;
     }
 
     ok(buffers[0].pBuffers[0].cbBuffer == 0, "Output buffer size was not set to 0.\n");
-    ok(status == SEC_E_OK, "InitializeSecurityContext failed: %08x\n", status);
+    ok(status == SEC_E_OK || broken(status == SEC_E_ILLEGAL_MESSAGE) /* winxp */,
+       "InitializeSecurityContext failed: %08x\n", status);
     if(status != SEC_E_OK) {
         skip("Handshake failed\n");
         return;
     }
+    ok(attrs == (ISC_RET_REPLAY_DETECT|ISC_RET_SEQUENCE_DETECT|ISC_RET_CONFIDENTIALITY|ISC_RET_STREAM|ISC_RET_USED_SUPPLIED_CREDS),
+       "got %08x\n", attrs);
 
     status = QueryCredentialsAttributesA(&cred_handle, SECPKG_CRED_ATTR_NAMES, &names);
     ok(status == SEC_E_NO_CREDENTIALS || status == SEC_E_UNSUPPORTED_FUNCTION /* before Vista */, "expected SEC_E_NO_CREDENTIALS, got %08x\n", status);

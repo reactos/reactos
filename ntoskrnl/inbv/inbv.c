@@ -1,9 +1,11 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+
 #define NDEBUG
 #include <debug.h>
-#include "bootvid/bootvid.h"
+
+#include "inbv/logo.h"
 
 /* See also mm/ARM3/miarm.h */
 #define MM_READONLY     1   // PAGE_READONLY
@@ -54,12 +56,6 @@ typedef enum _ROT_BAR_TYPE
 } ROT_BAR_TYPE;
 
 /*
- * Screen resolution (for default VGA)
- */
-#define SCREEN_WIDTH  640
-#define SCREEN_HEIGHT 480
-
-/*
  * BitBltAligned() alignments
  */
 typedef enum _BBLT_VERT_ALIGNMENT
@@ -88,6 +84,7 @@ BOOLEAN InbvBootDriverInstalled = FALSE;
 static BOOLEAN InbvDisplayDebugStrings = FALSE;
 static INBV_DISPLAY_STRING_FILTER InbvDisplayFilter = NULL;
 static ULONG ProgressBarLeft = 0, ProgressBarTop = 0;
+static ULONG ProgressBarWidth = 0, ProgressBarHeight = 0;
 static BOOLEAN ShowProgressBar = FALSE;
 static INBV_PROGRESS_STATE InbvProgressState;
 static BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
@@ -495,7 +492,6 @@ InbvReleaseLock(VOID)
     if (InbvOldIrql <= DISPATCH_LEVEL) KeLowerIrql(OldIrql);
 }
 
-INIT_FUNCTION
 VOID
 NTAPI
 InbvEnableBootDriver(IN BOOLEAN Enable)
@@ -774,7 +770,7 @@ InbvUpdateProgressBar(IN ULONG Progress)
     {
         /* Compute fill count */
         BoundedProgress = (InbvProgressState.Floor / 100) + Progress;
-        FillCount = 121 * (InbvProgressState.Bias * BoundedProgress) / 1000000;
+        FillCount = ProgressBarWidth * (InbvProgressState.Bias * BoundedProgress) / 1000000;
 
         /* Acquire the lock */
         InbvAcquireLock();
@@ -783,8 +779,8 @@ InbvUpdateProgressBar(IN ULONG Progress)
         VidSolidColorFill(ProgressBarLeft,
                           ProgressBarTop,
                           ProgressBarLeft + FillCount,
-                          ProgressBarTop + 12,
-                          15);
+                          ProgressBarTop + ProgressBarHeight,
+                          BV_COLOR_WHITE);
 
         /* Release the lock */
         InbvReleaseLock();
@@ -832,7 +828,7 @@ InbvBitBlt(IN PUCHAR Buffer,
 
 VOID
 NTAPI
-InbvScreenToBufferBlt(IN PUCHAR Buffer,
+InbvScreenToBufferBlt(OUT PUCHAR Buffer,
                       IN ULONG X,
                       IN ULONG Y,
                       IN ULONG Width,
@@ -848,19 +844,25 @@ InbvScreenToBufferBlt(IN PUCHAR Buffer,
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
 InbvSetProgressBarCoordinates(IN ULONG Left,
-                              IN ULONG Top)
+                              IN ULONG Top,
+                              IN ULONG Width,
+                              IN ULONG Height)
 {
     /* Update the coordinates */
-    ProgressBarLeft = Left;
-    ProgressBarTop  = Top;
+    ProgressBarLeft   = Left;
+    ProgressBarTop    = Top;
+    ProgressBarWidth  = Width;
+    ProgressBarHeight = Height;
 
     /* Enable the progress bar */
     ShowProgressBar = TRUE;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
 InbvSetProgressBarSubset(IN ULONG Floor,
@@ -1024,7 +1026,7 @@ InbvRotationThread(
             if (Index >= 3)
             {
                 /* Fill previous bar position */
-                VidSolidColorFill(X + ((Index - 3) * 8), Y, (X + ((Index - 3) * 8)) + 8 - 1, Y + 9 - 1, 0);
+                VidSolidColorFill(X + ((Index - 3) * 8), Y, (X + ((Index - 3) * 8)) + 8 - 1, Y + 9 - 1, BV_COLOR_BLACK);
             }
             if (Index < Total - 1)
             {
@@ -1123,9 +1125,9 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         if (SharedUserData->NtProductType == NtProductWinNt)
         {
             /* Workstation; set colors */
-            InbvSetTextColor(15);
-            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 7);
-            InbvSolidColorFill(0, 421, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 1);
+            InbvSetTextColor(BV_COLOR_WHITE);
+            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_DARK_GRAY);
+            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_RED);
 
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_WKSTA_HEADER);
@@ -1134,9 +1136,9 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         else
         {
             /* Server; set colors */
-            InbvSetTextColor(14);
-            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 6);
-            InbvSolidColorFill(0, 421, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 1);
+            InbvSetTextColor(BV_COLOR_LIGHT_CYAN);
+            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_CYAN);
+            InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_RED);
 
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
@@ -1144,7 +1146,8 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         }
 
         /* Set the scrolling region */
-        InbvSetScrollRegion(32, 80, 631, 400);
+        InbvSetScrollRegion(VID_SCROLL_AREA_LEFT, VID_SCROLL_AREA_TOP,
+                            VID_SCROLL_AREA_RIGHT, VID_SCROLL_AREA_BOTTOM);
 
         /* Make sure we have resources */
         if (Header && Footer)
@@ -1238,16 +1241,22 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 
             /* Set progress bar coordinates and display it */
-            InbvSetProgressBarCoordinates(259, 352);
+            InbvSetProgressBarCoordinates(VID_PROGRESS_BAR_LEFT,
+                                          VID_PROGRESS_BAR_TOP,
+                                          VID_PROGRESS_BAR_WIDTH,
+                                          VID_PROGRESS_BAR_HEIGHT);
 
 #ifdef REACTOS_SKUS
             /* Check for non-workstation products */
             if (SharedUserData->NtProductType != NtProductWinNt)
             {
                 /* Overwrite part of the logo for a server product */
-                InbvScreenToBufferBlt(Buffer, 413, 237, 7, 7, 8);
-                InbvSolidColorFill(418, 230, 454, 256, 0);
-                InbvBufferToScreenBlt(Buffer, 413, 237, 7, 7, 8);
+                InbvScreenToBufferBlt(Buffer, VID_SKU_SAVE_AREA_LEFT,
+                                      VID_SKU_SAVE_AREA_TOP, 7, 7, 8);
+                InbvSolidColorFill(VID_SKU_AREA_LEFT, VID_SKU_AREA_TOP,
+                                   VID_SKU_AREA_RIGHT, VID_SKU_AREA_BOTTOM, BV_COLOR_BLACK);
+                InbvBufferToScreenBlt(Buffer, VID_SKU_SAVE_AREA_LEFT,
+                                      VID_SKU_SAVE_AREA_TOP, 7, 7, 8);
 
                 /* In setup mode, you haven't selected a SKU yet */
                 if (ExpInTextModeSetup) Text = NULL;
@@ -1273,16 +1282,17 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 
 #ifdef REACTOS_SKUS
         /* Draw the SKU text if it exits */
-        if (Text) BitBltPalette(Text, TRUE, 180, 121);
+        if (Text)
+            BitBltPalette(Text, TRUE, VID_SKU_TEXT_LEFT, VID_SKU_TEXT_TOP);
 #endif
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
-        if (Bar)
+        if ((TempRotBarSelection == RB_SQUARE_CELLS) && Bar)
         {
             /* Save previous screen pixels to buffer */
             InbvScreenToBufferBlt(Buffer, 0, 0, 22, 9, 24);
             /* Draw the progress bar bit */
-            InbvBitBlt(Bar, 0, 0);
+            BitBltPalette(Bar, TRUE, 0, 0);
             /* Store it in global buffer */
             InbvScreenToBufferBlt(RotBarBuffer, 0, 0, 22, 9, 24);
             /* Restore screen pixels */
@@ -1388,7 +1398,7 @@ FinalizeBootLogo(VOID)
     if (InbvGetDisplayState() == INBV_DISPLAY_STATE_OWNED)
     {
         /* Clear the screen */
-        VidSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 0);
+        VidSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_BLACK);
     }
 
     /* Reset progress bar and lock */

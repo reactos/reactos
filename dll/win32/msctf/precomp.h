@@ -2,9 +2,8 @@
 #ifndef _MSCTF_PRECOMP_H
 #define _MSCTF_PRECOMP_H
 
-#include <wine/config.h>
-
 #include <stdarg.h>
+#include <wchar.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -21,7 +20,6 @@
 #include <shlwapi.h>
 
 #include <wine/list.h>
-#include <wine/unicode.h>
 #include <wine/debug.h>
 
 #include "msctf_internal.h"

@@ -272,14 +272,18 @@ ConvertDDBtoDIB(PSCREENSHOT pScrSht)
 		cClrBits = 24;
 	else cClrBits = 32;
 
-	if (cClrBits != 24)
-        pScrSht->lpbi = (PBITMAPINFO) HeapAlloc(GetProcessHeap(),
-                                                0,
-                                                sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * (1 << cClrBits));
-    else
-        pScrSht->lpbi = (PBITMAPINFO) HeapAlloc(GetProcessHeap(),
-                                                0,
-                                                sizeof(BITMAPINFOHEADER));
+  if (cClrBits != 24)
+  {
+    pScrSht->lpbi = (PBITMAPINFO) HeapAlloc(GetProcessHeap(),
+                                            0,
+                                            sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * (1 << cClrBits));
+  }
+  else
+  {
+    pScrSht->lpbi = (PBITMAPINFO) HeapAlloc(GetProcessHeap(),
+                                            0,
+                                            sizeof(BITMAPINFOHEADER));
+  }
 
 	if (!pScrSht->lpbi)
 	{

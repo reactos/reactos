@@ -65,6 +65,7 @@ PriorityQ *pqNewPriorityQ( int (*leq)(PQkey key1, PQkey key2) )
      return NULL;
   }
 
+  pq->order = NULL;
   pq->size = 0;
   pq->max = INIT_SIZE;
   pq->initialized = FALSE;

@@ -4395,11 +4395,7 @@ CryptImportKey(
   _In_ DWORD dwFlags,
   _Out_ HCRYPTKEY *phKey);
 
-#if (NTDDI_VERSION >= NTDDI_WINXP)
 WINADVAPI BOOL WINAPI CryptReleaseContext(_In_ HCRYPTPROV, _In_ DWORD);
-#else
-WINADVAPI BOOL WINAPI CryptReleaseContext(_In_ HCRYPTPROV, _In_ ULONG_PTR);
-#endif
 
 WINADVAPI
 BOOL

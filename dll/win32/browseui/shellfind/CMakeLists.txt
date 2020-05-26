@@ -16,7 +16,7 @@ list(APPEND SOURCE
 add_library(shellfind ${SOURCE})
 
 if(NOT MSVC)
-    add_target_compile_flags(shellfind "-Wno-unused-but-set-variable")
+    target_compile_options(shellfind PRIVATE "-Wno-unused-but-set-variable")
 endif()
 
 add_pch(shellfind shellfind.h SOURCE)

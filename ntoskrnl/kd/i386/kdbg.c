@@ -13,11 +13,18 @@
 #define NDEBUG
 #include <debug.h>
 
-
+#if defined(SARCH_PC98)
+#define DEFAULT_BAUD_RATE   9600
+#else
 #define DEFAULT_BAUD_RATE   19200
+#endif
 
 #if defined(_M_IX86) || defined(_M_AMD64)
+#if defined(SARCH_PC98)
+const ULONG BaseArray[] = {0, 0x30, 0x238};
+#else
 const ULONG BaseArray[] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
+#endif
 #elif defined(_M_PPC)
 const ULONG BaseArray[] = {0, 0x800003F8};
 #elif defined(_M_MIPS)

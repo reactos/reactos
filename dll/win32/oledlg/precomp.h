@@ -16,10 +16,10 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <winnls.h>
 #include <oledlg.h>
 
 #include <wine/debug.h>
-#include <wine/unicode.h>
 
 #include "oledlg_private.h"
 #include "resource.h"

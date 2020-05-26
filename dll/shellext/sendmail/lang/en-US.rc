@@ -1,0 +1,7 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+{
+    IDS_DESKLINK, "Desktop (Create shortcut)"
+    IDS_SHORTCUT, "Shortcut to %s"
+}

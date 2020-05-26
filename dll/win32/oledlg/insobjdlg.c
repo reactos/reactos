@@ -29,7 +29,6 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 #include "oledlg.h"
 #include "resource.h"

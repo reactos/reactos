@@ -2890,6 +2890,10 @@ WSPSetSockOpt(
                   return SOCKET_ERROR;
               }
 
+              /* FIXME: We should not have to limit the packet receive buffer size like this. workaround for CORE-15804 */
+              if (*(PULONG)optval > 0x2000)
+                  *(PULONG)optval = 0x2000;
+
               SetSocketInformation(Socket,
                                    AFD_INFO_RECEIVE_WINDOW_SIZE,
                                    NULL,

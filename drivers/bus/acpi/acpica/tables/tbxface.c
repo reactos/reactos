@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -260,14 +260,14 @@ ACPI_EXPORT_SYMBOL_INIT (AcpiReallocateRootTable)
  *
  * PARAMETERS:  Signature           - ACPI signature of needed table
  *              Instance            - Which instance (for SSDTs)
- *              OutTableHeader      - The pointer to the table header to fill
+ *              OutTableHeader      - The pointer to the where the table header
+ *                                    is returned
  *
- * RETURN:      Status and pointer to mapped table header
+ * RETURN:      Status and a copy of the table header
  *
- * DESCRIPTION: Finds an ACPI table header.
- *
- * NOTE:        Caller is responsible in unmapping the header with
- *              AcpiOsUnmapMemory
+ * DESCRIPTION: Finds and returns an ACPI table header. Caller provides the
+ *              memory where a copy of the header is to be returned
+ *              (fixed length).
  *
  ******************************************************************************/
 

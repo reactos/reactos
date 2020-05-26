@@ -34,7 +34,6 @@
 #include "mlang.h"
 
 #include "wine/list.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 #include "inetcomm_private.h"
@@ -415,7 +414,7 @@ static HRESULT WINAPI MimeInternat_ConvertString(IMimeInternational *iface, CODE
         break;
     case VT_LPWSTR:
         cpiSource = CP_UNICODE;
-        src_len = strlenW(pIn->u.pwszVal) * sizeof(WCHAR);
+        src_len = lstrlenW(pIn->u.pwszVal) * sizeof(WCHAR);
         break;
     default:
         return E_INVALIDARG;

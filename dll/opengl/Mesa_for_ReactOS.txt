@@ -1,42 +1,8 @@
-Here is a brief explanation on how to sync Mesa in trunk base.
+Windows provides OpenGL 1.1 with platform-specific extensions (WGL) in its
+software implementation of OpenGL. The purpose of Mesa in this directory is to
+provide an equivalent of that. In order to accomplish just this purpose, it is
+based on Mesa 2.6 and not intended to be synchronized with recent versions.
+See CORE-7499 for details.
 
-Current version is 8.0.4
-
-- SOURCE FILES :
-________________
-
-All unnecessary files and directories where removed from the tree, as it's already a huge piece of code.
-
- - build tools (bin, configs, scons, src/gallium/tools) were removed, as we don't use it.
- - documentation (docs, src/gallium/docs, doxygen) were removed. If you want to contribute to libMesa, you'd better use their build system, not our adapted one
- - tests and testing tools were removed (test, src/gallium/tests, src/gallium/tools)
- - egl functionality (src/egl) is useless to us and were removed.
- - gbm functionality (src/gbm) is useless to us and were removed.
- - getopt implementation (src/getopt, for MSVC compatibility) is useless to us, we already have one
- - glx (src/glx) functionality is useless to us and were removed.
- - src/gallium
-   - All gallium drivers (src/gallium/driver) where deleted, except for the softpipe  one.
-   - All gallium state trackers (src/gallium/state_trackers) were removed, except for the wgl one
-   - All gallium targets (src/gallium/targets) were removed, except for the libgl-gdi one.
-   - All gallium window system backends (src/gallium/winsys) were removed, except for the gdi one (sw/gdi)
- - src/mapi
-   - only mapi and glapi directories were relevant and kept
- - src/mesa
-   - All MESA drivers where deleted (src/mesa/drivers), except for the "common" part and osmesa (off-screen mesa) library.
-   - Architecture specifics were removed. x86 and x86_64 might be restored in future
- - src/glu where kept and will be used for the glu32 dll implementation
-
-
-- GENERATED FILES:
-__________________
-
-libMesa build system generates source files (using scons).
-They were taken from an out-of-source build an put in the "generated" directory, using the same 
-directory structure for the sake of ease of maintainability.
-
-
-- CMAKELISTS FILES:
-___________________
-
-Those files were written using the Sconscript and source list files as reference. I think that diff-ing them between two 
-versions would permit to easily update the cmake configuration files.
+If you look for a modern software OpenGL implemenation, a Mesa package with
+the Gallium LLVMpipe driver is available on RAPPS.

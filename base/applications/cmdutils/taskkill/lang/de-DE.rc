@@ -16,4 +16,6 @@ STRINGTABLE
     STRING_ENUM_FAILED, "Fehler: Prozessliste kann nicht aufgebaut werden.\n"
     STRING_TERMINATE_FAILED, "Fehler: Prozess ""%1"" kann nicht beendet werden.\n"
     STRING_SELF_TERMINATION, "Fehler: Der Prozess kann sich nicht selbst beenden.\n"
+    STRING_PARAM_TOO_MUCH, "Error: Invalid syntax. '%1' option is not allowed more than '%2!d!' time(s).\n"
+    STRING_INVALID_SYNTAX, "Error: Invalid syntax.\n"
 }

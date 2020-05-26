@@ -1417,6 +1417,8 @@ SkipCheck:
                 HardErrorParameters[0] = (ULONG_PTR)&IllegalDll;
                 HardErrorParameters[1] = (ULONG_PTR)&OverlapDll;
 
+                DPRINT1("Illegal DLL relocation! %wZ overlaps %wZ\n", &OverlapDll, &IllegalDll);
+
                 /* Raise the error */
                 ZwRaiseHardError(STATUS_ILLEGAL_DLL_RELOCATION,
                                  2,

@@ -32,6 +32,7 @@
 #include "urlmon.h"
 #include "wininet.h"
 #include "mshtml.h"
+#include "shlwapi.h"
 
 #include "wine/test.h"
 
@@ -2905,7 +2906,7 @@ static void init_bind_test(int protocol, DWORD flags, DWORD t)
         url_a = (flags & BINDTEST_INVALID_CN) ? "https://4.15.184.77/favicon.ico" : "https://test.winehq.org/tests/hello.html";
         break;
     case FTP_TEST:
-        url_a = "ftp://ftp.winehq.org/welcome.msg";
+        url_a = "ftp://ftp.winehq.org/welcome%2emsg";
         break;
     default:
         url_a = "winetest:test";
@@ -2968,6 +2969,13 @@ static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
     ok(hres == S_OK, "failed to create moniker: %08x\n", hres);
     if(FAILED(hres))
         return;
+
+    if(protocol == FTP_TEST)
+    {
+        /* FTP urls don't have any escape characters so convert the url to what is expected */
+        DWORD size = 0;
+        UrlUnescapeW(current_url, NULL, &size, URL_UNESCAPE_INPLACE);
+    }
 
     hres = IMoniker_QueryInterface(mon, &IID_IBinding, (void**)&bind);
     ok(hres == E_NOINTERFACE, "IMoniker should not have IBinding interface\n");

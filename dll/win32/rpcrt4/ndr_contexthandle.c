@@ -263,9 +263,6 @@ void WINAPI NDRSContextMarshall2(RPC_BINDING_HANDLE hBinding,
     if (!binding->server || !binding->Assoc)
         RpcRaiseException(RPC_S_INVALID_BINDING);
 
-    if (Flags & RPC_CONTEXT_HANDLE_FLAGS)
-        FIXME("unimplemented flags: 0x%x\n", Flags & RPC_CONTEXT_HANDLE_FLAGS);
-
     if (SContext->userContext)
     {
         status = RpcServerAssoc_UpdateContextHandle(binding->Assoc, SContext, CtxGuard, userRunDownIn);
@@ -336,9 +333,6 @@ NDR_SCONTEXT WINAPI NDRSContextUnmarshall2(RPC_BINDING_HANDLE hBinding,
 
     if (!binding->server || !binding->Assoc)
         RpcRaiseException(RPC_S_INVALID_BINDING);
-
-    if (Flags & RPC_CONTEXT_HANDLE_FLAGS)
-        FIXME("unimplemented flags: 0x%x\n", Flags & RPC_CONTEXT_HANDLE_FLAGS);
 
     if (!pBuff || (!context_ndr->attributes &&
                    UuidIsNil((UUID *)&context_ndr->uuid, &status)))

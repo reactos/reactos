@@ -45,12 +45,12 @@ BEGIN
   Użyj opcji '/nh', żeby ukryć nagłówki. Domyślnie dane są wyświetlone w tabeli.\n\
 \n\
 SKŁADNIA:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
-  whoami /all [/fo <Format>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh]\n\
+  whoami /all [/fo <Format>] [/nh]\n\
 \n\
-PRZYKŁADY: \n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+PRZYKŁADY:\n\
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

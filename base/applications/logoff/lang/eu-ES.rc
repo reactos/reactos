@@ -1,0 +1,16 @@
+/*
+ * Basque/Euskara Language Log Off resource file
+ * Made by: Julen Urizar Compains 2020-04-26
+ */
+
+LANGUAGE LANG_BASQUE, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Bilera itxi.\n\n\
+  /v\t\tErakutzen du eginen ekintza informazioa.\n\
+  /?\t\tErakutzen du informazioa.\n\n"
+    IDS_LOGOFF_REMOTE "Bilera ixten ari da urruneko makinan."
+    IDS_LOGOFF_LOCAL "Bilera ixten ari da honeko makinan."
+    IDS_ILLEGAL_PARAM "Baliogabe parametroak\n"
+END

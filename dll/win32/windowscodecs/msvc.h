@@ -1,6 +1,4 @@
 
-#define __ASM_STDCALL_FUNC(name,args,code)
-
 #define typeof(X_) __typeof_ ## X_
 
 struct IMILUnknown1;

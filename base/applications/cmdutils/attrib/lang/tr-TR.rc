@@ -4,6 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ATTRIB_HELP "Kütük öz niteliklerini görüntüler ya da değiştirir.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] kütük ...\n\
        [/S [/D]]\n\n\

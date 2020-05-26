@@ -45,6 +45,7 @@ list(APPEND SOURCE
     c_28598.c
     c_28599.c
     c_28600.c
+    c_28601.c
     c_28603.c
     c_28604.c
     c_28605.c
@@ -83,15 +84,16 @@ list(APPEND SOURCE
     wctomb.c
     wctype.c)
 
-add_library(unicode ${SOURCE})
+add_library(unicode STATIC ${SOURCE})
+target_link_libraries(unicode PRIVATE host_includes)
 
 if(MSVC)
     # Disable warning "'<': signed/unsigned mismatch"
-    add_target_compile_flags(unicode "/wd4018")
+    target_compile_options(unicode PRIVATE "/wd4018")
 
     # Disable warning "unary minus operator applied to unsigned type, result still unsigned"
-    add_target_compile_flags(unicode "/wd4146")
+    target_compile_options(unicode PRIVATE "/wd4146")
 
     # Disable warning "conversion from 'const WCHAR' to 'char', possible loss of data"
-    add_target_compile_flags(unicode "/wd4244")
+    target_compile_options(unicode PRIVATE "/wd4244")
 endif()

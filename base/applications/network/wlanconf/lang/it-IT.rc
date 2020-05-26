@@ -8,7 +8,7 @@ WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
 \t-w WEP\t\tSpecifica una chiave WEP da usare.\n\
 \t-a\t\tSpecifica la rete di destinazione ad-hoc\n\
 \t-d\t\tDisconnetti dall'AP corrente.\n\
-\t-s\t\tEsegue la scansione e visualizza un elenco \n\
+\t-s\t\tEsegue la scansione e visualizza un elenco\n\
 \t\t\tdi punti di accesso raggiungibili.\n\n\
 In assenza di parametri verranno stampate le informazioni relative alla connessione WLAN corrente\n"
     IDS_NO_NETWORK "Nessuna rete trovata\n"

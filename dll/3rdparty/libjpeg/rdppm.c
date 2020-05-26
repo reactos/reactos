@@ -2,7 +2,7 @@
  * rdppm.c
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 2009-2017 by Bill Allombert, Guido Vollbeding.
+ * Modified 2009-2019 by Bill Allombert, Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -19,11 +19,6 @@
  * the file is indeed PPM format).
  */
 
-#include "cdjpeg.h"		/* Common decls for cjpeg/djpeg applications */
-
-#ifdef PPM_SUPPORTED
-
-
 /* Portions of this code are based on the PBMPLUS library, which is:
 **
 ** Copyright (C) 1988 by Jef Poskanzer.
@@ -36,6 +31,10 @@
 ** implied warranty.
 */
 
+#include "cdjpeg.h"		/* Common decls for cjpeg/djpeg applications */
+
+#ifdef PPM_SUPPORTED
+
 
 /* Macros to deal with unsigned chars as efficiently as compiler allows */
 
@@ -43,11 +42,10 @@
 typedef unsigned char U_CHAR;
 #define UCH(x)	((int) (x))
 #else /* !HAVE_UNSIGNED_CHAR */
-#ifdef CHAR_IS_UNSIGNED
 typedef char U_CHAR;
+#ifdef CHAR_IS_UNSIGNED
 #define UCH(x)	((int) (x))
 #else
-typedef char U_CHAR;
 #define UCH(x)	((int) (x) & 0xFF)
 #endif
 #endif /* HAVE_UNSIGNED_CHAR */
@@ -358,7 +356,6 @@ start_input_ppm (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
     break;
   default:
     ERREXIT(cinfo, JERR_PPM_NOT);
-    break;
   }
 
   /* fetch the remaining header info */
@@ -449,9 +446,8 @@ start_input_ppm (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
     source->pub.buffer_height = 1;
   } else {
     /* Need to translate anyway, so make a separate sample buffer. */
-    source->pub.buffer = (*cinfo->mem->alloc_sarray)
-      ((j_common_ptr) cinfo, JPOOL_IMAGE,
-       (JDIMENSION) w * cinfo->input_components, (JDIMENSION) 1);
+    source->pub.buffer = (*cinfo->mem->alloc_sarray) ((j_common_ptr) cinfo,
+      JPOOL_IMAGE, (JDIMENSION) w * cinfo->input_components, (JDIMENSION) 1);
     source->pub.buffer_height = 1;
   }
 
@@ -461,7 +457,7 @@ start_input_ppm (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
 
     /* On 16-bit-int machines we have to be careful of maxval = 65535 */
     source->rescale = (JSAMPLE *) (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo,
-      JPOOL_IMAGE, (size_t) (((long) maxval + 1L) * SIZEOF(JSAMPLE)));
+      JPOOL_IMAGE, ((size_t) maxval + (size_t) 1) * SIZEOF(JSAMPLE));
     half_maxval = maxval / 2;
     for (val = 0; val <= (INT32) maxval; val++) {
       /* The multiplication here must be done in 32 bits to avoid overflow */
@@ -492,9 +488,8 @@ jinit_read_ppm (j_compress_ptr cinfo)
   ppm_source_ptr source;
 
   /* Create module interface object */
-  source = (ppm_source_ptr)
-      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-				  SIZEOF(ppm_source_struct));
+  source = (ppm_source_ptr) (*cinfo->mem->alloc_small)
+    ((j_common_ptr) cinfo, JPOOL_IMAGE, SIZEOF(ppm_source_struct));
   /* Fill in method ptrs, except get_pixel_rows which start_input sets */
   source->pub.start_input = start_input_ppm;
   source->pub.finish_input = finish_input_ppm;

@@ -22,8 +22,9 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
+#include <wchar.h>
+
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "winbase.h"
 #include "winuser.h"
 #include "winnt.h"
@@ -6150,13 +6151,13 @@ VarBoolFromStr_CheckLocalised:
   if (VARIANT_GetLocalisedText(langId, IDS_TRUE, szBuff))
   {
     /* Compare against localised strings, ignoring case */
-    if (!strcmpiW(strIn, szBuff))
+    if (!wcsicmp(strIn, szBuff))
     {
       *pBoolOut = VARIANT_TRUE; /* Matched localised 'true' text */
       return hRes;
     }
     VARIANT_GetLocalisedText(langId, IDS_FALSE, szBuff);
-    if (!strcmpiW(strIn, szBuff))
+    if (!wcsicmp(strIn, szBuff))
     {
       *pBoolOut = VARIANT_FALSE; /* Matched localised 'false' text */
       return hRes;
@@ -6171,9 +6172,9 @@ VarBoolFromStr_CheckLocalised:
   }
 
   /* All checks against localised text have failed, try #TRUE#/#FALSE# */
-  if (!strcmpW(strIn, szFalse))
+  if (!wcscmp(strIn, szFalse))
     *pBoolOut = VARIANT_FALSE;
-  else if (!strcmpW(strIn, szTrue))
+  else if (!wcscmp(strIn, szTrue))
     *pBoolOut = VARIANT_TRUE;
   else
   {
@@ -6356,7 +6357,7 @@ static BSTR VARIANT_MakeBstr(LCID lcid, DWORD dwFlags, WCHAR *szOut)
                      szOut, NULL, szConverted, ARRAY_SIZE(szConverted));
     szOut = szConverted;
   }
-  return SysAllocStringByteLen((LPCSTR)szOut, strlenW(szOut) * sizeof(WCHAR));
+  return SysAllocStringByteLen((LPCSTR)szOut, lstrlenW(szOut) * sizeof(WCHAR));
 }
 
 /* Create a (possibly localised) BSTR from a UI8 and sign */
@@ -6487,8 +6488,8 @@ static BSTR VARIANT_BstrReplaceDecimal(const WCHAR * buff, LCID lcid, ULONG dwFl
     minFormat.NegativeOrder = 1; /* NLS_NEG_LEFT */
 
     /* count number of decimal digits in string */
-    p = strchrW( buff, '.' );
-    if (p) minFormat.NumDigits = strlenW(p + 1);
+    p = wcschr( buff, '.' );
+    if (p) minFormat.NumDigits = lstrlenW(p + 1);
 
     numbuff[0] = '\0';
     if (!GetNumberFormatW(lcid, 0, buff, &minFormat, numbuff, ARRAY_SIZE(numbuff)))
@@ -6513,7 +6514,7 @@ static HRESULT VARIANT_BstrFromReal(DOUBLE dblIn, LCID lcid, ULONG dwFlags,
   if (!pbstrOut)
     return E_INVALIDARG;
 
-  sprintfW( buff, lpszFormat, dblIn );
+  swprintf( buff, lpszFormat, dblIn );
 
   /* Negative zeroes are disallowed (some applications depend on this).
      If buff starts with a minus, and then nothing follows but zeroes
@@ -6523,7 +6524,7 @@ static HRESULT VARIANT_BstrFromReal(DOUBLE dblIn, LCID lcid, ULONG dwFlags,
   if (buff[0] == '-')
   {
     static const WCHAR szAccept[] = {'0', '.', '\0'};
-    if (strlenW(buff + 1) == strspnW(buff + 1, szAccept))
+    if (lstrlenW(buff + 1) == wcsspn(buff + 1, szAccept))
     { buff[0] = '0'; buff[1] = '\0'; }
   }
 
@@ -6814,7 +6815,7 @@ HRESULT WINAPI VarBstrFromDate(DATE dateIn, LCID lcid, ULONG dwFlags, BSTR* pbst
 
   if (!(dwFlags & VAR_DATEVALUEONLY))
   {
-    time = date + strlenW(date);
+    time = date + lstrlenW(date);
     if (time != date)
       *time++ = ' ';
     if (!GetTimeFormatW(lcid, dwFormatFlags, &st, NULL, time, ARRAY_SIZE(date)-(time-date)))
@@ -7658,25 +7659,25 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
   /* Parse the string into our structure */
   while (*strIn)
   {
-    if (isdigitW(*strIn))
+    if (iswdigit(*strIn))
     {
       if (dp.dwCount >= 6)
       {
         hRet = DISP_E_TYPEMISMATCH;
         break;
       }
-      dp.dwValues[dp.dwCount] = strtoulW(strIn, &strIn, 10);
+      dp.dwValues[dp.dwCount] = wcstoul(strIn, &strIn, 10);
       dp.dwCount++;
       strIn--;
     }
-    else if (isalphaW(*strIn))
+    else if (iswalpha(*strIn))
     {
       BOOL bFound = FALSE;
 
       for (i = 0; i < ARRAY_SIZE(tokens); i++)
       {
-        DWORD dwLen = strlenW(tokens[i]);
-        if (dwLen && !strncmpiW(strIn, tokens[i], dwLen))
+        DWORD dwLen = lstrlenW(tokens[i]);
+        if (dwLen && !_wcsnicmp(strIn, tokens[i], dwLen))
         {
           if (i <= 25)
           {
@@ -7755,7 +7756,7 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
       else
         dp.dwFlags[dp.dwCount - 1] |= DP_DATESEP;
     }
-    else if (*strIn == ',' || isspaceW(*strIn))
+    else if (*strIn == ',' || iswspace(*strIn))
     {
       if (*strIn == ',' && !strIn[1])
         hRet = DISP_E_TYPEMISMATCH;

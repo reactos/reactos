@@ -152,7 +152,7 @@ Ingin membuat berkas baru?"
 Ingin menyimpan perubahan?"
     STRING_NOTFOUND "'%s' tidak bisa ditemukan."
     STRING_OUT_OF_MEMORY "Memori tidak cukup untuk menyelesaikan tugas \
-ini. \nTutup satu atau lebih aplikasi untuk meningkatkan jumlah \nmemori \
+ini.\nTutup satu atau lebih aplikasi untuk meningkatkan jumlah\nmemori \
 bebas."
     STRING_CANNOTFIND "Tidak bisa menemukan '%s'"
     STRING_ANSI "ANSI"

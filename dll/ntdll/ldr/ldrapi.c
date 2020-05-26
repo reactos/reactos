@@ -1449,8 +1449,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
         /* Get the current entry */
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, HashLinks);
 
-        /* FIXME: Log the Unload Event */
-        //LdrpRecordUnloadEvent(LdrEntry);
+        LdrpRecordUnloadEvent(LdrEntry);
 
         /* Set the entry and clear it from the list */
         CurrentEntry = LdrEntry;
@@ -1656,6 +1655,21 @@ LdrFlushAlternateResourceModules(VOID)
 {
     UNIMPLEMENTED;
     return FALSE;
+}
+
+/*
+ * @unimplemented
+ * See https://www.kernelmode.info/forum/viewtopic.php?t=991
+ */
+NTSTATUS
+NTAPI
+LdrSetAppCompatDllRedirectionCallback(
+    _In_ ULONG Flags,
+    _In_ PLDR_APP_COMPAT_DLL_REDIRECTION_CALLBACK_FUNCTION CallbackFunction,
+    _In_opt_ PVOID CallbackData)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

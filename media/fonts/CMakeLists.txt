@@ -33,14 +33,19 @@ list(APPEND FONT_FILES
     georgiaz.ttf
     lucon.ttf
     Marlett.ttf
-    micross.ttf
     pala.ttf
     palab.ttf
     palabi.ttf
     palai.ttf
-    symbol.ttf
-    tahoma.ttf
-    tahomabd.ttf
+    Selawik-Regular.ttf
+    Selawik-SemiBold.ttf
+    Selawik-Bold.ttf
+    Selawik-Light.ttf
+    Selawik-ExtraLight.ttf
+    SourceSansPro-Regular.ttf
+    SourceSansPro-Bold.ttf
+    SourceSansPro-BoldIt.ttf
+    SourceSansPro-It.ttf
     #ssee874.fon # to be added
     #ssee1255.fon # to be added
     #ssee1256.fon # to be added
@@ -49,6 +54,9 @@ list(APPEND FONT_FILES
     #sserifeg.fon # to be added
     #sserifer.fon # to be added
     #sserifet.fon # to be added
+    symbol.ttf
+    tahoma.ttf
+    tahomabd.ttf
     times.ttf
     timesbd.ttf
     timesbi.ttf
@@ -61,7 +69,8 @@ list(APPEND FONT_FILES
     verdanab.ttf
     verdanaz.ttf
     verdanai.ttf
-    verdana.ttf)
+    verdana.ttf
+    wingding.ttf)
 
 foreach(item ${FONT_FILES})
     add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/Fonts FOR all)

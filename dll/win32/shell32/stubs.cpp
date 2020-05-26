@@ -39,17 +39,6 @@ SHFindComputer(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 /*
  * Unimplemented
  */
-EXTERN_C HRESULT
-WINAPI
-SHLimitInputEdit(HWND hWnd, IShellFolder *psf)
-{
-    FIXME("SHLimitInputEdit() stub\n");
-    return S_FALSE;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C BOOL
 WINAPI
 SHLimitInputCombo(HWND hWnd, LPVOID lpUnknown)
@@ -182,9 +171,12 @@ EXTERN_C BOOL
 WINAPI
 MakeShellURLFromPathA(LPCSTR lpPath, LPSTR lpUrl, INT cchMax)
 {
-    FIXME("MakeShellURLFromPathA() stub\n");
-    lpUrl = NULL;
-    return FALSE;
+    WCHAR szPath[MAX_PATH], szURL[MAX_PATH];
+    BOOL ret;
+    SHAnsiToUnicode(lpPath, szPath, _countof(szPath));
+    ret = MakeShellURLFromPathW(szPath, szURL, _countof(szURL));
+    SHUnicodeToAnsi(szURL, lpUrl, cchMax);
+    return ret;
 }
 
 /*
@@ -461,8 +453,12 @@ EXTERN_C BOOL
 WINAPI
 SheShortenPathA(LPSTR lpPath, BOOL bShorten)
 {
-    FIXME("SheShortenPathA() stub\n");
-    return FALSE;
+    BOOL ret;
+    WCHAR szPath[MAX_PATH];
+    MultiByteToWideChar(CP_ACP, 0, lpPath, -1, szPath, _countof(szPath));
+    ret = SheShortenPathW(szPath, bShorten);
+    WideCharToMultiByte(CP_ACP, 0, szPath, -1, lpPath, MAX_PATH, NULL, NULL);
+    return ret;
 }
 
 /*

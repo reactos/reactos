@@ -26,7 +26,6 @@
  *	  embedded driver handling scheme in msacm32.dll which isn't done yet
  */
 
-#include "config.h"
 
 #include <assert.h>
 #include <stdarg.h>

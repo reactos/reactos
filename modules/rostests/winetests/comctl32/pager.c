@@ -564,9 +564,11 @@ static void test_wm_notifyformat(void)
     static const INT formats[] = {NFR_UNICODE, NFR_ANSI};
     HWND parent, pager, child;
     LRESULT ret;
+    BOOL bret;
     INT i;
 
-    ok(register_notifyformat_class(), "Register test class failed, error 0x%08x\n", GetLastError());
+    bret = register_notifyformat_class();
+    ok(bret, "Register test class failed, error 0x%08x\n", GetLastError());
 
     for (i = 0; i < ARRAY_SIZE(formats); i++)
     {
@@ -1280,9 +1282,11 @@ static void test_wm_notify(void)
         {&nmtv, sizeof(nmtv), &nmtv.itemOld.mask, TVIF_TEXT, &nmtv.itemOld.pszText, &nmtv.itemOld.cchTextMax,
          TVN_SELCHANGEDW, TVN_SELCHANGEDA, CONVERT_SEND, TVITEM_OLD_HANDLER}
     };
+    BOOL bret;
     INT i;
 
-    ok(register_test_notify_class(), "Register test class failed, error 0x%08x\n", GetLastError());
+    bret = register_test_notify_class();
+    ok(bret, "Register test class failed, error 0x%08x\n", GetLastError());
 
     parent = CreateWindowA(class, "parent", WS_OVERLAPPED, 0, 0, 100, 100, 0, 0, GetModuleHandleA(0), 0);
     ok(parent != NULL, "CreateWindow failed\n");

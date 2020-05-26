@@ -197,7 +197,7 @@ BOOL WINAPI Shell_NotifyIconW(DWORD dwMessage, PNOTIFYICONDATAW pnid)
     }
 
     /* Send the data */
-    data.dwData = 1;
+    data.dwData = TABDMC_NOTIFY;
     data.cbData = sizeof(tnid);
     data.lpData = &tnid;
     if (SendMessageW(hShellTrayWnd, WM_COPYDATA, (WPARAM)pnid->hWnd, (LPARAM)&data))

@@ -1,5 +1,6 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
+/* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Dokumente und Einstellungen"
@@ -17,7 +18,7 @@ BEGIN
     IDS_STARTUP "Startmenü\\Programme\\Autostart"
     IDS_LOCALSETTINGS "Lokale Einstellungen"
     IDS_LOCALAPPDATA "Lokale Einstellungen\\Anwendungsdaten"
-    IDS_TEMP "Lokale Einstellungen\\Temp"
+    IDS_TEMP "Lokale Einstellungen\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Lokale Einstellungen\\Temporary Internet Files"
     IDS_HISTORY "Lokale Einstellungen\\Verlauf"
     IDS_COOKIES "Cookies"

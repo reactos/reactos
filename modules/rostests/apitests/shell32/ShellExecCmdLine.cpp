@@ -7,6 +7,7 @@
 #include "shelltest.h"
 #include <shlwapi.h>
 #include <strsafe.h>
+#include <versionhelpers.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -132,12 +133,31 @@ HRESULT WINAPI ShellExecCmdLine(
     else
     {
         pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
-        if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
+        if (szFile[0] != UNICODE_NULL && szFile[1] == L':' &&
+            szFile[2] == UNICODE_NULL)
+        {
+            PathAddBackslashW(szFile);
+        }
+
+        WCHAR szCurDir[MAX_PATH];
+        GetCurrentDirectoryW(_countof(szCurDir), szCurDir);
+        if (pwszStartDir)
+        {
+            SetCurrentDirectoryW(pwszStartDir);
+        }
+
+        if (PathIsRelativeW(szFile) &&
+            GetFullPathNameW(szFile, _countof(szFile2), szFile2, NULL) &&
+            PathFileExistsW(szFile2))
+        {
+            StringCchCopyW(szFile, _countof(szFile), szFile2);
+        }
+        else if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
         }
@@ -150,6 +170,11 @@ HRESULT WINAPI ShellExecCmdLine(
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
             pchParams = NULL;
+        }
+
+        if (pwszStartDir)
+        {
+            SetCurrentDirectoryW(szCurDir);
         }
 
         if (!(dwSeclFlags & SECL_ALLOW_NONEXE))
@@ -430,6 +455,13 @@ START_TEST(ShellExecCmdLine)
     using namespace std;
 
 #ifndef ShellExecCmdLine
+    // CHECKME
+    if (!IsWindowsVistaOrGreater())
+    {
+        skip("ShellExecCmdLine is not available on this platform\n");
+        return;
+    }
+
     HMODULE hShell32 = GetModuleHandleA("shell32");
     g_pShellExecCmdLine = (SHELLEXECCMDLINE)GetProcAddress(hShell32, (LPCSTR)(INT_PTR)265);
     if (!g_pShellExecCmdLine)

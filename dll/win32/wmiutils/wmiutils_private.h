@@ -17,7 +17,6 @@
  */
 
 #include "wine/heap.h"
-#include "wine/unicode.h"
 
 HRESULT WbemPath_create(LPVOID *) DECLSPEC_HIDDEN;
 HRESULT WbemStatusCodeText_create(LPVOID *) DECLSPEC_HIDDEN;
@@ -26,6 +25,6 @@ static inline WCHAR *strdupW( const WCHAR *src )
 {
     WCHAR *dst;
     if (!src) return NULL;
-    if ((dst = heap_alloc( (strlenW( src ) + 1) * sizeof(WCHAR) ))) strcpyW( dst, src );
+    if ((dst = heap_alloc( (lstrlenW( src ) + 1) * sizeof(WCHAR) ))) lstrcpyW( dst, src );
     return dst;
 }

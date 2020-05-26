@@ -21,159 +21,220 @@
 
 class Matrix : public GdiplusBase
 {
-  friend class Pen;
-  friend class Region;
+    friend class Pen;
+    friend class Region;
+    friend class GraphicsPath;
+    friend class Brush;
+    friend class LinearGradientBrush;
+    friend class TextureBrush;
 
-public:
-  Matrix(const RectF &rect, const PointF *dstplg)
-  {
-    status = DllExports::GdipCreateMatrix3(&rect, dstplg, &matrix);
-  }
+  public:
+    Matrix(const RectF &rect, const PointF *dstplg)
+    {
+        lastStatus = DllExports::GdipCreateMatrix3(&rect, dstplg, &nativeMatrix);
+    }
 
-  Matrix(const Rect &rect, const Point *dstplg)
-  {
-    status = DllExports::GdipCreateMatrix3I(&rect, dstplg, &matrix);
-  }
+    Matrix(const Rect &rect, const Point *dstplg)
+    {
+        lastStatus = DllExports::GdipCreateMatrix3I(&rect, dstplg, &nativeMatrix);
+    }
 
-  Matrix(VOID)
-  {
-    status = DllExports::GdipCreateMatrix(&matrix);
-  }
+    Matrix()
+    {
+        lastStatus = DllExports::GdipCreateMatrix(&nativeMatrix);
+    }
 
-  Matrix(REAL m11, REAL m12, REAL m21, REAL m22, REAL dx, REAL dy)
-  {
-    status = DllExports::GdipCreateMatrix2(m11, m12, m21, m22, dx, dy, &matrix);
-  }
+    Matrix(REAL m11, REAL m12, REAL m21, REAL m22, REAL dx, REAL dy)
+    {
+        lastStatus = DllExports::GdipCreateMatrix2(m11, m12, m21, m22, dx, dy, &nativeMatrix);
+    }
 
-  Matrix *Clone(VOID)
-  {
-    Matrix *cloneMatrix = new Matrix();  // FIXME: Matrix::matrix already initialized --> potential memory leak
-    cloneMatrix->status = DllExports::GdipCloneMatrix(matrix, cloneMatrix ? &cloneMatrix->matrix : NULL);
-    return cloneMatrix;
-  }
+    Matrix *
+    Clone() const
+    {
+        GpMatrix *cloneMatrix = NULL;
+        SetStatus(DllExports::GdipCloneMatrix(nativeMatrix, &cloneMatrix));
 
-  ~Matrix(VOID)
-  {
-    DllExports::GdipDeleteMatrix(matrix);
-  }
+        if (lastStatus != Ok)
+            return NULL;
 
-  BOOL Equals(const Matrix* matrix)
-  {
-    BOOL result;
-    SetStatus(DllExports::GdipIsMatrixEqual(this->matrix, matrix ? matrix->matrix : NULL, &result));
-    return result;
-  }
+        Matrix *newMatrix = new Matrix(cloneMatrix);
+        if (!newMatrix)
+            DllExports::GdipDeleteMatrix(cloneMatrix);
 
-  Status GetElements(REAL *m) const
-  {
-    return SetStatus(DllExports::GdipGetMatrixElements(matrix, m));
-  }
+        return newMatrix;
+    }
 
-  Status GetLastStatus(VOID)
-  {
-    return status;
-  }
+    ~Matrix()
+    {
+        DllExports::GdipDeleteMatrix(nativeMatrix);
+    }
 
-  Status Invert(VOID)
-  {
-    return SetStatus(DllExports::GdipInvertMatrix(matrix));
-  }
+    BOOL
+    Equals(const Matrix *matrix) const
+    {
+        BOOL result;
+        SetStatus(DllExports::GdipIsMatrixEqual(nativeMatrix, matrix ? getNat(matrix) : NULL, &result));
+        return result;
+    }
 
-  BOOL IsIdentity(VOID)
-  {
-    BOOL result;
-    SetStatus(DllExports::GdipIsMatrixIdentity(matrix, &result));
-    return result;
-  }
+    Status
+    GetElements(REAL *m) const
+    {
+        return SetStatus(DllExports::GdipGetMatrixElements(nativeMatrix, m));
+    }
 
-  BOOL IsInvertible(VOID)
-  {
-    BOOL result;
-    SetStatus(DllExports::GdipIsMatrixInvertible(matrix, &result));
-    return result;
-  }
+    Status
+    GetLastStatus() const
+    {
+        return lastStatus;
+    }
 
-  Status Multiply(const Matrix *matrix, MatrixOrder order)
-  {
-    return SetStatus(DllExports::GdipMultiplyMatrix(this->matrix, matrix ? matrix->matrix : NULL, order));
-  }
+    Status
+    Invert()
+    {
+        return SetStatus(DllExports::GdipInvertMatrix(nativeMatrix));
+    }
 
-  REAL OffsetX(VOID)
-  {
-    return 0;
-  }
+    BOOL
+    IsIdentity() const
+    {
+        BOOL result;
+        SetStatus(DllExports::GdipIsMatrixIdentity(nativeMatrix, &result));
+        return result;
+    }
 
-  REAL OffsetY(VOID)
-  {
-    return 0;
-  }
+    BOOL
+    IsInvertible() const
+    {
+        BOOL result;
+        SetStatus(DllExports::GdipIsMatrixInvertible(nativeMatrix, &result));
+        return result;
+    }
 
-  Status Reset(VOID)
-  {
-    return NotImplemented;
-  }
+    Status
+    Multiply(const Matrix *matrix, MatrixOrder order = MatrixOrderPrepend)
+    {
+        return SetStatus(DllExports::GdipMultiplyMatrix(nativeMatrix, matrix ? getNat(matrix) : NULL, order));
+    }
 
-  Status Rotate(REAL angle, MatrixOrder order)
-  {
-    return SetStatus(DllExports::GdipRotateMatrix(matrix, angle, order));
-  }
+    REAL
+    OffsetX() const
+    {
+        REAL elements[6];
+        if (GetElements(elements) == Ok)
+            return elements[4];
+        return 0.0f;
+    }
 
-  Status RotateAt(REAL angle, const PointF &center, MatrixOrder order)
-  {
-    return NotImplemented;
-  }
+    REAL
+    OffsetY() const
+    {
+        REAL elements[6];
+        if (GetElements(elements) == Ok)
+            return elements[5];
+        return 0.0f;
+    }
 
-  Status Scale(REAL scaleX, REAL scaleY, MatrixOrder order)
-  {
-    return SetStatus(DllExports::GdipScaleMatrix(matrix, scaleX, scaleY, order));
-  }
+    Status
+    Reset()
+    {
+        return SetStatus(DllExports::GdipSetMatrixElements(nativeMatrix, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0));
+    }
 
-  Status SetElements(REAL m11, REAL m12, REAL m21, REAL m22, REAL dx, REAL dy)
-  {
-    return SetStatus(DllExports::GdipSetMatrixElements(matrix, m11, m12, m21, m22, dx, dy));
-  }
+    Status
+    Rotate(REAL angle, MatrixOrder order = MatrixOrderPrepend)
+    {
+        return SetStatus(DllExports::GdipRotateMatrix(nativeMatrix, angle, order));
+    }
 
-  Status Shear(REAL shearX, REAL shearY, MatrixOrder order)
-  {
-    return SetStatus(DllExports::GdipShearMatrix(matrix, shearX, shearY, order));
-  }
+    Status
+    RotateAt(REAL angle, const PointF &center, MatrixOrder order = MatrixOrderPrepend)
+    {
+        if (order == MatrixOrderPrepend)
+        {
+            SetStatus(DllExports::GdipTranslateMatrix(nativeMatrix, center.X, center.Y, order));
+            SetStatus(DllExports::GdipRotateMatrix(nativeMatrix, angle, order));
+            return SetStatus(DllExports::GdipTranslateMatrix(nativeMatrix, -center.X, -center.Y, order));
+        }
+        else
+        {
+            SetStatus(DllExports::GdipTranslateMatrix(nativeMatrix, -center.X, -center.Y, order));
+            SetStatus(DllExports::GdipRotateMatrix(nativeMatrix, angle, order));
+            return SetStatus(DllExports::GdipTranslateMatrix(nativeMatrix, center.X, center.Y, order));
+        }
+    }
 
-  Status TransformPoints(Point *pts, INT count)
-  {
-    return SetStatus(DllExports::GdipTransformMatrixPointsI(matrix, pts, count));
-  }
+    Status
+    Scale(REAL scaleX, REAL scaleY, MatrixOrder order = MatrixOrderPrepend)
+    {
+        return SetStatus(DllExports::GdipScaleMatrix(nativeMatrix, scaleX, scaleY, order));
+    }
 
-  Status TransformPoints(PointF *pts, INT count)
-  {
-    return SetStatus(DllExports::GdipTransformMatrixPoints(matrix, pts, count));
-  }
+    Status
+    SetElements(REAL m11, REAL m12, REAL m21, REAL m22, REAL dx, REAL dy)
+    {
+        return SetStatus(DllExports::GdipSetMatrixElements(nativeMatrix, m11, m12, m21, m22, dx, dy));
+    }
 
-  Status TransformVectors(Point *pts, INT count)
-  {
-    return SetStatus(DllExports::GdipVectorTransformMatrixPointsI(matrix, pts, count));
-  }
+    Status
+    Shear(REAL shearX, REAL shearY, MatrixOrder order = MatrixOrderPrepend)
+    {
+        return SetStatus(DllExports::GdipShearMatrix(nativeMatrix, shearX, shearY, order));
+    }
 
-  Status TransformVectors(PointF *pts, INT count)
-  {
-    return SetStatus(DllExports::GdipVectorTransformMatrixPoints(matrix, pts, count));
-  }
+    Status
+    TransformPoints(Point *pts, INT count)
+    {
+        return SetStatus(DllExports::GdipTransformMatrixPointsI(nativeMatrix, pts, count));
+    }
 
-  Status Translate(REAL offsetX, REAL offsetY, MatrixOrder order)
-  {
-    return SetStatus(DllExports::GdipTranslateMatrix(matrix, offsetX, offsetY, order));
-  }
+    Status
+    TransformPoints(PointF *pts, INT count)
+    {
+        return SetStatus(DllExports::GdipTransformMatrixPoints(nativeMatrix, pts, count));
+    }
 
-private:
-  mutable Status status;
-  GpMatrix *matrix;
+    Status
+    TransformVectors(Point *pts, INT count)
+    {
+        return SetStatus(DllExports::GdipVectorTransformMatrixPointsI(nativeMatrix, pts, count));
+    }
 
-  Status SetStatus(Status status) const
-  {
-    if (status == Ok)
-      return status;
-    this->status = status;
-    return status;
-  }
+    Status
+    TransformVectors(PointF *pts, INT count)
+    {
+        return SetStatus(DllExports::GdipVectorTransformMatrixPoints(nativeMatrix, pts, count));
+    }
+
+    Status
+    Translate(REAL offsetX, REAL offsetY, MatrixOrder order = MatrixOrderPrepend)
+    {
+        return SetStatus(DllExports::GdipTranslateMatrix(nativeMatrix, offsetX, offsetY, order));
+    }
+
+  protected:
+    GpMatrix *nativeMatrix;
+    mutable Status lastStatus;
+
+    Matrix(GpMatrix *matrix) : nativeMatrix(matrix), lastStatus(Ok)
+    {
+    }
+
+    Status
+    SetStatus(Status status) const
+    {
+        if (status != Ok)
+            lastStatus = status;
+        return status;
+    }
+
+    // get native
+    friend inline GpMatrix *&
+    getNat(const Matrix *matrix)
+    {
+        return const_cast<Matrix *>(matrix)->nativeMatrix;
+    }
 };
 
 #endif /* _GDIPLUSMATRIX_H */

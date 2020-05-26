@@ -7,6 +7,7 @@
 typedef [handle] wchar_t *WKSSVC_IDENTIFY_HANDLE;
 typedef [handle] wchar_t *WKSSVC_IMPERSONATE_HANDLE;
 
+cpp_quote("#ifndef _LMJOIN_H")
 typedef enum _NETSETUP_JOIN_STATUS
 {
     NetSetupUnknownStatus = 0,
@@ -14,6 +15,7 @@ typedef enum _NETSETUP_JOIN_STATUS
     NetSetupWorkgroupName,
     NetSetupDomainName
 } NETSETUP_JOIN_STATUS, *PNETSETUP_JOIN_STATUS;
+cpp_quote("#endif")
 
 typedef enum _NETSETUP_NAME_TYPE
 {

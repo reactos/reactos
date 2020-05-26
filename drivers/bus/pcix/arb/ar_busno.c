@@ -34,11 +34,38 @@ NTSTATUS
 NTAPI
 arbusno_Initializer(IN PVOID Instance)
 {
-    UNREFERENCED_PARAMETER(Instance);
+    PPCI_ARBITER_INSTANCE Arbiter = Instance;
+    PPCI_FDO_EXTENSION FdoExtension;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    RtlZeroMemory(&Arbiter->CommonInstance, sizeof(Arbiter->CommonInstance));
+
+    FdoExtension = Arbiter->BusFdoExtension;
+
     /* Not yet implemented */
     UNIMPLEMENTED;
-    //while (TRUE);
-    return STATUS_SUCCESS;
+
+#if 0
+    Arbiter->CommonInstance.UnpackRequirement = arbusno_UnpackRequirement;
+    Arbiter->CommonInstance.PackResource = arbusno_PackResource;
+    Arbiter->CommonInstance.UnpackResource = arbusno_UnpackResource;
+    Arbiter->CommonInstance.ScoreRequirement = arbusno_ScoreRequirement;
+#endif
+
+    Status = ArbInitializeArbiterInstance(&Arbiter->CommonInstance,
+                                          FdoExtension->FunctionalDeviceObject,
+                                          CmResourceTypeBusNumber,
+                                          Arbiter->InstanceName,
+                                          L"Pci",
+                                          NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("arbusno_Initializer: init arbiter return %X", Status);
+    }
+
+    return Status;
 }
 
 NTSTATUS

@@ -16,6 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
+#include <wchar.h>
+#endif
+
 #include "wshom_private.h"
 #include "wshom.h"
 
@@ -25,7 +29,6 @@
 
 #include "wine/debug.h"
 #include "wine/heap.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wshom);
 
@@ -455,14 +458,16 @@ static HRESULT WINAPI WshEnvironment_get_Item(IWshEnvironment *iface, BSTR name,
         return E_POINTER;
 
     len = GetEnvironmentVariableW(name, NULL, 0);
-    *value = SysAllocStringLen(NULL, len);
-    if (!*value)
-        return E_OUTOFMEMORY;
-
     if (len)
-        GetEnvironmentVariableW(name, *value, len+1);
+    {
+        *value = SysAllocStringLen(NULL, len - 1);
+        if (*value)
+            GetEnvironmentVariableW(name, *value, len);
+    }
+    else
+        *value = SysAllocStringLen(NULL, 0);
 
-    return S_OK;
+    return *value ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT WINAPI WshEnvironment_put_Item(IWshEnvironment *iface, BSTR name, BSTR value)
@@ -654,11 +659,11 @@ static HRESULT WINAPI WshCollection_Item(IWshCollection *iface, VARIANT *index, 
     }
 
     folder = V_BSTR(index);
-    if (!strcmpiW(folder, desktopW))
+    if (!wcsicmp(folder, desktopW))
         kind = CSIDL_DESKTOP;
-    else if (!strcmpiW(folder, allusersdesktopW))
+    else if (!wcsicmp(folder, allusersdesktopW))
         kind = CSIDL_COMMON_DESKTOPDIRECTORY;
-    else if (!strcmpiW(folder, allusersprogramsW))
+    else if (!wcsicmp(folder, allusersprogramsW))
         kind = CSIDL_COMMON_PROGRAMS;
     else
     {
@@ -697,7 +702,7 @@ static HRESULT WINAPI WshCollection_get_length(IWshCollection *iface, LONG *coun
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WshCollection__NewEnum(IWshCollection *iface, IUnknown *Enum)
+static HRESULT WINAPI WshCollection__NewEnum(IWshCollection *iface, IUnknown **Enum)
 {
     WshCollection *This = impl_from_IWshCollection(iface);
     FIXME("(%p)->(%p): stub\n", This, Enum);
@@ -921,7 +926,7 @@ static HRESULT WINAPI WshShortcut_get_IconLocation(IWshShortcut *iface, BSTR *Ic
     hr = IShellLinkW_GetIconLocation(This->link, buffW, ARRAY_SIZE(buffW), &icon);
     if (FAILED(hr)) return hr;
 
-    sprintfW(pathW, fmtW, buffW, icon);
+    swprintf(pathW, fmtW, buffW, icon);
     *IconPath = SysAllocString(pathW);
     if (!*IconPath) return E_OUTOFMEMORY;
 
@@ -939,7 +944,7 @@ static HRESULT WINAPI WshShortcut_put_IconLocation(IWshShortcut *iface, BSTR Ico
     TRACE("(%p)->(%s)\n", This, debugstr_w(IconPath));
 
     /* scan for icon id */
-    ptr = strrchrW(IconPath, ',');
+    ptr = wcsrchr(IconPath, ',');
     if (!ptr)
     {
         WARN("icon index not found\n");
@@ -949,10 +954,10 @@ static HRESULT WINAPI WshShortcut_put_IconLocation(IWshShortcut *iface, BSTR Ico
     path = SysAllocStringLen(IconPath, ptr-IconPath);
 
     /* skip spaces if any */
-    while (isspaceW(*++ptr))
+    while (iswspace(*++ptr))
         ;
 
-    icon = atoiW(ptr);
+    icon = wcstol(ptr, NULL, 10);
 
     hr = IShellLinkW_SetIconLocation(This->link, path, icon);
     SysFreeString(path);
@@ -1218,12 +1223,37 @@ static inline BOOL is_optional_argument(const VARIANT *arg)
     return V_VT(arg) == VT_ERROR && V_ERROR(arg) == DISP_E_PARAMNOTFOUND;
 }
 
+static WCHAR *split_command( BSTR cmd, WCHAR **params )
+{
+    WCHAR *ret, *ptr;
+    BOOL in_quotes = FALSE;
+
+    if (!(ret = heap_alloc((lstrlenW(cmd) + 1) * sizeof(WCHAR)))) return NULL;
+    lstrcpyW( ret, cmd );
+
+    *params = NULL;
+    for (ptr = ret; *ptr; ptr++)
+    {
+        if (*ptr == '"') in_quotes = !in_quotes;
+        else if (*ptr == ' ' && !in_quotes)
+        {
+            *ptr = 0;
+            *params = ptr + 1;
+            break;
+        }
+    }
+
+    return ret;
+}
+
 static HRESULT WINAPI WshShell3_Run(IWshShell3 *iface, BSTR cmd, VARIANT *style, VARIANT *wait, DWORD *exit_code)
 {
     SHELLEXECUTEINFOW info;
     int waitforprocess;
+    WCHAR *file, *params;
     VARIANT s;
     HRESULT hr;
+    BOOL ret;
 
     TRACE("(%s %s %s %p)\n", debugstr_w(cmd), debugstr_variant(style), debugstr_variant(wait), exit_code);
 
@@ -1251,13 +1281,18 @@ static HRESULT WINAPI WshShell3_Run(IWshShell3 *iface, BSTR cmd, VARIANT *style,
         waitforprocess = V_I4(&w);
     }
 
+    if (!(file = split_command(cmd, &params))) return E_OUTOFMEMORY;
+
     memset(&info, 0, sizeof(info));
     info.cbSize = sizeof(info);
     info.fMask = waitforprocess ? SEE_MASK_NOASYNC | SEE_MASK_NOCLOSEPROCESS : SEE_MASK_DEFAULT;
-    info.lpFile = cmd;
+    info.lpFile = file;
+    info.lpParameters = params;
     info.nShow = V_I4(&s);
 
-    if (!ShellExecuteExW(&info))
+    ret = ShellExecuteExW(&info);
+    heap_free( file );
+    if (!ret)
     {
         TRACE("ShellExecute failed, %d\n", GetLastError());
         return HRESULT_FROM_WIN32(GetLastError());
@@ -1266,6 +1301,7 @@ static HRESULT WINAPI WshShell3_Run(IWshShell3 *iface, BSTR cmd, VARIANT *style,
     {
         if (waitforprocess)
         {
+            WaitForSingleObject(info.hProcess, INFINITE);
             GetExitCodeProcess(info.hProcess, exit_code);
             CloseHandle(info.hProcess);
         }
@@ -1409,9 +1445,9 @@ static HKEY get_root_key(const WCHAR *path)
     int i;
 
     for (i = 0; i < ARRAY_SIZE(rootkeys); i++) {
-        if (!strncmpW(path, rootkeys[i].full, strlenW(rootkeys[i].full)))
+        if (!wcsncmp(path, rootkeys[i].full, lstrlenW(rootkeys[i].full)))
             return rootkeys[i].hkey;
-        if (rootkeys[i].abbrev[0] && !strncmpW(path, rootkeys[i].abbrev, strlenW(rootkeys[i].abbrev)))
+        if (rootkeys[i].abbrev[0] && !wcsncmp(path, rootkeys[i].abbrev, lstrlenW(rootkeys[i].abbrev)))
             return rootkeys[i].hkey;
     }
 
@@ -1424,17 +1460,17 @@ static HRESULT split_reg_path(const WCHAR *path, WCHAR **subkey, WCHAR **value)
     *value = NULL;
 
     /* at least one separator should be present */
-    *subkey = strchrW(path, '\\');
+    *subkey = wcschr(path, '\\');
     if (!*subkey)
         return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
 
     /* default value or not */
-    if ((*subkey)[strlenW(*subkey)-1] == '\\') {
+    if ((*subkey)[lstrlenW(*subkey)-1] == '\\') {
         (*subkey)++;
         *value = NULL;
     }
     else {
-        *value = strrchrW(*subkey, '\\');
+        *value = wcsrchr(*subkey, '\\');
         if (*value - *subkey > 1) {
             unsigned int len = *value - *subkey - 1;
             WCHAR *ret;
@@ -1546,7 +1582,7 @@ static HRESULT WINAPI WshShell3_RegRead(IWshShell3 *iface, BSTR name, VARIANT *v
             bound.cElements = 0;
             while (*ptr) {
                 bound.cElements++;
-                ptr += strlenW(ptr)+1;
+                ptr += lstrlenW(ptr)+1;
             }
 
             sa = SafeArrayCreate(VT_VARIANT, 1, &bound);
@@ -1563,7 +1599,7 @@ static HRESULT WINAPI WshShell3_RegRead(IWshShell3 *iface, BSTR name, VARIANT *v
             while (*ptr) {
                 V_VT(v) = VT_BSTR;
                 V_BSTR(v) = SysAllocString(ptr);
-                ptr += strlenW(ptr)+1;
+                ptr += lstrlenW(ptr)+1;
                 v++;
             }
 
@@ -1621,13 +1657,13 @@ static HRESULT WINAPI WshShell3_RegWrite(IWshShell3 *iface, BSTR name, VARIANT *
         if (V_VT(type) != VT_BSTR)
             return E_INVALIDARG;
 
-        if (!strcmpW(V_BSTR(type), regszW))
+        if (!wcscmp(V_BSTR(type), regszW))
             regtype = REG_SZ;
-        else if (!strcmpW(V_BSTR(type), regdwordW))
+        else if (!wcscmp(V_BSTR(type), regdwordW))
             regtype = REG_DWORD;
-        else if (!strcmpW(V_BSTR(type), regexpandszW))
+        else if (!wcscmp(V_BSTR(type), regexpandszW))
             regtype = REG_EXPAND_SZ;
-        else if (!strcmpW(V_BSTR(type), regbinaryW))
+        else if (!wcscmp(V_BSTR(type), regbinaryW))
             regtype = REG_BINARY;
         else {
             FIXME("unrecognized value type %s\n", debugstr_w(V_BSTR(type)));

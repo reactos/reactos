@@ -15,7 +15,7 @@ END
 STRINGTABLE
 BEGIN
     //Power related strings
-    IDS_PWR_PROPERTIES        "&Adjust Power Properties"
+    IDS_PWR_PROPERTIES        "&Modifier les paramètres d'alimentation"
     IDS_PWR_METER             "&Open Power Meter"
     IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "%u%% remaining"

@@ -12,14 +12,12 @@
 
 #include "resource.h"
 
-typedef LONG (CALLBACK *CPLAPPLET_PROC)(VOID);
-
 typedef struct
 {
     int idIcon;
     int idName;
     int idDescription;
-    CPLAPPLET_PROC AppletProc;
+    APPLET_PROC AppletProc;
 } APPLET, *PAPPLET;
 
 typedef struct
@@ -28,7 +26,7 @@ typedef struct
     WCHAR szWorkingDirectory[MAX_PATH];
     WCHAR szDescription[MAX_PATH];
     WCHAR szLinkName[MAX_PATH];
-}CREATE_LINK_CONTEXT, *PCREATE_LINK_CONTEXT;
+} CREATE_LINK_CONTEXT, *PCREATE_LINK_CONTEXT;
 
 
 extern HINSTANCE hApplet;

@@ -50,6 +50,31 @@ BOOL ChooseFolder(HWND hwnd)
     return bRet;
 }
 
+BOOL IsUrlValid(const WCHAR * Url)
+{
+    URL_COMPONENTSW UrlComponmentInfo = { 0 };
+    UrlComponmentInfo.dwStructSize = sizeof(UrlComponmentInfo);
+    UrlComponmentInfo.dwSchemeLength = 1;
+    
+    BOOL bSuccess = InternetCrackUrlW(Url, wcslen(Url), 0, &UrlComponmentInfo);
+    if(!bSuccess)
+    {
+        return FALSE;
+    }
+    
+    switch(UrlComponmentInfo.nScheme)
+    {
+        case INTERNET_SCHEME_HTTP:
+        case INTERNET_SCHEME_HTTPS:
+        case INTERNET_SCHEME_FTP:
+        // supported
+            return TRUE;
+            
+        default:
+            return FALSE;
+    }
+}
+
 namespace
 {
     inline BOOL IsCheckedDlgItem(HWND hDlg, INT nIDDlgItem)
@@ -69,12 +94,22 @@ namespace
 
         CheckRadioButton(hDlg, IDC_PROXY_DEFAULT, IDC_USE_PROXY, IDC_PROXY_DEFAULT + Info->Proxy);
 
-        if (IDC_PROXY_DEFAULT + Info->Proxy == IDC_USE_PROXY)
+        if (Info->Proxy == 2)
         {
             EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
             EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
         }
+        else
+        {
+            EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
+            EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
+        }
+        
+        CheckRadioButton(hDlg, IDC_SOURCE_DEFAULT, IDC_USE_SOURCE, Info->bUseSource ? IDC_USE_SOURCE : IDC_SOURCE_DEFAULT);
+        
+        EnableWindow(GetDlgItem(hDlg, IDC_SOURCE_URL), Info->bUseSource);
 
+        SetWindowTextW(GetDlgItem(hDlg, IDC_SOURCE_URL), Info->szSourceURL);
         SetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER), Info->szProxyServer);
         SetWindowTextW(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), Info->szNoProxyFor);
     }
@@ -114,6 +149,16 @@ namespace
                 NewSettingsInfo.bDelInstaller = IsCheckedDlgItem(hDlg, IDC_DEL_AFTER_INSTALL);
                 break;
 
+            case IDC_SOURCE_DEFAULT:
+                NewSettingsInfo.bUseSource = FALSE;
+                EnableWindow(GetDlgItem(hDlg, IDC_SOURCE_URL), NewSettingsInfo.bUseSource);
+                break;
+                
+            case IDC_USE_SOURCE:
+                NewSettingsInfo.bUseSource = TRUE;
+                EnableWindow(GetDlgItem(hDlg, IDC_SOURCE_URL), NewSettingsInfo.bUseSource);
+                break;
+                
             case IDC_PROXY_DEFAULT:
                 NewSettingsInfo.Proxy = 0;
                 EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
@@ -140,6 +185,7 @@ namespace
             case IDOK:
             {
                 ATL::CStringW szDir;
+                ATL::CStringW szSource;
                 ATL::CStringW szProxy;
                 ATL::CStringW szNoProxy;
                 DWORD dwAttr;
@@ -147,6 +193,10 @@ namespace
                 GetWindowTextW(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT),
                                szDir.GetBuffer(MAX_PATH), MAX_PATH);
                 szDir.ReleaseBuffer();
+
+                GetWindowTextW(GetDlgItem(hDlg, IDC_SOURCE_URL),
+                               szSource.GetBuffer(INTERNET_MAX_URL_LENGTH), INTERNET_MAX_URL_LENGTH);
+                szSource.ReleaseBuffer();
 
                 GetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER),
                                szProxy.GetBuffer(MAX_PATH), MAX_PATH);
@@ -190,6 +240,24 @@ namespace
                         SetFocus(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT));
                         break;
                     }
+                }
+                
+                
+                if(NewSettingsInfo.bUseSource && !IsUrlValid(szSource.GetString()))
+                {
+                    ATL::CStringW szMsgText;
+                    szMsgText.LoadStringW(IDS_URL_INVALID);
+                    
+                    MessageBoxW(hDlg, szMsgText.GetString(), NULL, 0);
+                    SetFocus(GetDlgItem(hDlg, IDC_SOURCE_URL));
+                    break;
+                }
+                else
+                {
+                    ATL::CStringW::CopyChars(NewSettingsInfo.szSourceURL,
+                                         _countof(NewSettingsInfo.szSourceURL),
+                                         szSource.GetString(),
+                                         szSource.GetLength() + 1);
                 }
 
                 SettingsInfo = NewSettingsInfo;

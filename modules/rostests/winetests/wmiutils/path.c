@@ -137,7 +137,7 @@ static void test_IWbemPath_SetText(void)
     hr = IWbemPath_SetText( path, WBEMPATH_CREATE_ACCEPT_ALL, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
 
-    for (i = 0; i < sizeof(test)/sizeof(test[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(test); i++)
     {
         hr = IWbemPath_SetText( path, test[i].mode, test[i].path );
         todo_wine_if (test[i].todo)
@@ -149,7 +149,7 @@ static void test_IWbemPath_SetText(void)
             ULONG len;
 
             memset( buf, 0x55, sizeof(buf) );
-            len = sizeof(buf)/sizeof(buf[0]);
+            len = ARRAY_SIZE(buf);
             hr = IWbemPath_GetText( path, WBEMPATH_GET_ORIGINAL, &len, buf );
             ok( hr == S_OK, "%u got %08x\n", i, hr );
             ok( !lstrcmpW( buf, test[i].path ), "%u unexpected path %s\n", i, wine_dbgstr_w(buf) );
@@ -185,12 +185,12 @@ static void test_IWbemPath_GetText(void)
     hr = IWbemPath_GetText( path, 0, NULL, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetText( path, 0, &len, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
-    ok( len == sizeof(buf)/sizeof(buf[0]), "unexpected length %u\n", len );
+    ok( len == ARRAY_SIZE(buf), "unexpected length %u\n", len );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, 0, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -200,19 +200,19 @@ static void test_IWbemPath_GetText(void)
     hr = IWbemPath_GetText( path, WBEMPATH_GET_ORIGINAL, NULL, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetText( path, WBEMPATH_GET_ORIGINAL, &len, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
-    ok( len == sizeof(buf)/sizeof(buf[0]), "unexpected length %u\n", len );
+    ok( len == ARRAY_SIZE(buf), "unexpected length %u\n", len );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_ORIGINAL, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !buf[0], "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
     ok( len == 1, "unexpected length %u\n", len );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_SERVER_TOO, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -227,35 +227,35 @@ static void test_IWbemPath_GetText(void)
     ok( hr == S_OK, "got %08x\n", hr );
     ok( count == 2, "got %u\n", count );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_SERVER_TOO, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, path9 ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
     ok( len == lstrlenW( path9 ) + 1, "unexpected length %u\n", len );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_SERVER_AND_NAMESPACE_ONLY, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, path13 ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
     ok( len == lstrlenW( path13 ) + 1, "unexpected length %u\n", len );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_RELATIVE_ONLY, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, path14 ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
     ok( len == lstrlenW( path14 ) + 1, "unexpected length %u\n", len );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_NAMESPACE_ONLY, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, path15 ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
     ok( len == lstrlenW( path15 ) + 1, "unexpected length %u\n", len );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, 0, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -283,7 +283,7 @@ static void test_IWbemPath_GetText(void)
     ok( hr == S_OK, "got %08x\n", hr );
     ok( len == lstrlenW( path16 ) + 1, "unexpected length %u\n", len );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_SERVER_TOO, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -293,21 +293,21 @@ static void test_IWbemPath_GetText(void)
     hr = IWbemPath_SetText( path, WBEMPATH_CREATE_ACCEPT_ALL, path17 );
     ok( hr == S_OK, "got %08x\n", hr );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_SERVER_TOO, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, path17 ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
     ok( len == lstrlenW( path17 ) + 1, "unexpected length %u\n", len );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, 0, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, expected1W ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
     ok( len == lstrlenW( expected1W ) + 1, "unexpected length %u\n", len );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_RELATIVE_ONLY, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -317,7 +317,7 @@ static void test_IWbemPath_GetText(void)
     hr = IWbemPath_SetText( path, WBEMPATH_CREATE_ACCEPT_ALL, path15 );
     ok( hr == S_OK, "got %08x\n", hr );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_SERVER_TOO, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -339,7 +339,7 @@ static void test_IWbemPath_GetText(void)
     hr = IWbemPath_SetText( path, WBEMPATH_CREATE_ACCEPT_ALL, serviceW );
     ok( hr == S_OK, "got %08x\n", hr );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_RELATIVE_ONLY, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -352,7 +352,7 @@ static void test_IWbemPath_GetText(void)
     hr = IWbemPath_SetText( path, WBEMPATH_CREATE_ACCEPT_ALL, classW );
     ok( hr == S_OK, "got %08x\n", hr );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     memset( buf, 0x55, sizeof(buf) );
     hr = IWbemPath_GetText( path, WBEMPATH_GET_RELATIVE_ONLY, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -379,14 +379,14 @@ static void test_IWbemPath_GetClassName(void)
     hr = IWbemPath_GetClassName( path, &len, NULL );
     ok( hr == WBEM_E_INVALID_OBJECT_PATH, "got %08x\n", hr );
 
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetClassName( path, &len, buf );
     ok( hr == WBEM_E_INVALID_OBJECT_PATH, "got %08x\n", hr );
 
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetClassName( path, &len, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
-    ok( len == sizeof(buf) / sizeof(buf[0]), "unexpected length %u\n", len );
+    ok( len == ARRAY_SIZE(buf), "unexpected length %u\n", len );
 
     hr = IWbemPath_SetText( path, WBEMPATH_CREATE_ACCEPT_ALL, path17 );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -395,13 +395,13 @@ static void test_IWbemPath_GetClassName(void)
     hr = IWbemPath_GetClassName( path, &len, NULL );
     ok( hr == S_OK, "got %08x\n", hr );
 
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetClassName( path, &len, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
-    ok( len == sizeof(buf) / sizeof(buf[0]), "unexpected length %u\n", len );
+    ok( len == ARRAY_SIZE(buf), "unexpected length %u\n", len );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetClassName( path, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, classW ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
@@ -432,7 +432,7 @@ static void test_IWbemPath_SetClassName(void)
     ok( hr == S_OK, "got %08x\n", hr );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetClassName( path, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, classW ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
@@ -465,14 +465,14 @@ static void test_IWbemPath_GetServer(void)
     hr = IWbemPath_GetServer( path, &len, NULL );
     ok( hr == WBEM_E_NOT_AVAILABLE, "got %08x\n", hr );
 
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetServer( path, &len, buf );
     ok( hr == WBEM_E_NOT_AVAILABLE, "got %08x\n", hr );
 
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetServer( path, &len, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
-    ok( len == sizeof(buf) / sizeof(buf[0]), "unexpected length %u\n", len );
+    ok( len == ARRAY_SIZE(buf), "unexpected length %u\n", len );
 
     hr = IWbemPath_SetText( path, WBEMPATH_CREATE_ACCEPT_ALL, path17 );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -481,13 +481,13 @@ static void test_IWbemPath_GetServer(void)
     hr = IWbemPath_GetServer( path, &len, NULL );
     ok( hr == S_OK, "got %08x\n", hr );
 
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetServer( path, &len, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
-    ok( len == sizeof(buf) / sizeof(buf[0]), "unexpected length %u\n", len );
+    ok( len == ARRAY_SIZE(buf), "unexpected length %u\n", len );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetServer( path, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, dotW ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
@@ -574,7 +574,7 @@ static void test_IWbemPath_SetServer(void)
     hr = IWbemPath_SetServer( path, NULL );
     ok( hr == S_OK, "got %08x\n", hr );
 
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetServer( path, &len, buf );
     ok( hr == WBEM_E_NOT_AVAILABLE, "got %08x\n", hr );
 
@@ -585,7 +585,7 @@ static void test_IWbemPath_SetServer(void)
     ok( hr == S_OK, "got %08x\n", hr );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetServer( path, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, serverW ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
@@ -601,7 +601,7 @@ static void test_IWbemPath_SetServer(void)
     hr = IWbemPath_SetServer( path, NULL );
     ok( hr == S_OK, "got %08x\n", hr );
 
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetServer( path, &len, buf );
     ok( hr == WBEM_E_NOT_AVAILABLE, "got %08x\n", hr );
 
@@ -632,14 +632,14 @@ static void test_IWbemPath_GetNamespaceAt(void)
     hr = IWbemPath_GetNamespaceAt( path, 0, &len, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
 
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetNamespaceAt( path, 0, &len, buf );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
 
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetNamespaceAt( path, 0, &len, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
-    ok( len == sizeof(buf) / sizeof(buf[0]), "unexpected length %u\n", len );
+    ok( len == ARRAY_SIZE(buf), "unexpected length %u\n", len );
 
     hr = IWbemPath_SetText( path, WBEMPATH_CREATE_ACCEPT_ALL, path17 );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -648,20 +648,20 @@ static void test_IWbemPath_GetNamespaceAt(void)
     hr = IWbemPath_GetNamespaceAt( path, 2, &len, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
 
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetNamespaceAt( path, 0, &len, NULL );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
-    ok( len == sizeof(buf) / sizeof(buf[0]), "unexpected length %u\n", len );
+    ok( len == ARRAY_SIZE(buf), "unexpected length %u\n", len );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetNamespaceAt( path, 0, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, rootW ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
     ok( len == lstrlenW( rootW ) + 1, "unexpected length %u\n", len );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetNamespaceAt( path, 1, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, cimv2W ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
@@ -706,7 +706,7 @@ static void test_IWbemPath_RemoveAllNamespaces(void)
         "got %s\n", wine_dbgstr_longlong(flags) );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetNamespaceAt( path, 0, &len, buf );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
 
@@ -760,7 +760,7 @@ static void test_IWbemPath_RemoveNamespaceAt(void)
     ok( count == 1, "got %u\n", count );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetNamespaceAt( path, 0, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, cimv2W ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
@@ -781,7 +781,7 @@ static void test_IWbemPath_RemoveNamespaceAt(void)
     ok( !count, "got %u\n", count );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetNamespaceAt( path, 0, &len, buf );
     ok( hr == WBEM_E_INVALID_PARAMETER, "got %08x\n", hr );
 
@@ -825,7 +825,7 @@ static void test_IWbemPath_SetNamespaceAt(void)
         "got %s\n", wine_dbgstr_longlong(flags) );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetNamespaceAt( path, 0, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, cimv2W ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
@@ -846,14 +846,14 @@ static void test_IWbemPath_SetNamespaceAt(void)
     ok( count == 2, "got %u\n", count );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetNamespaceAt( path, 0, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, rootW ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );
     ok( len == lstrlenW( rootW ) + 1, "unexpected length %u\n", len );
 
     buf[0] = 0;
-    len = sizeof(buf) / sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     hr = IWbemPath_GetNamespaceAt( path, 1, &len, buf );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( !lstrcmpW( buf, cimv2W ), "unexpected buffer contents %s\n", wine_dbgstr_w(buf) );

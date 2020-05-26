@@ -15,7 +15,7 @@
 #define TAG_COLORMAP       'MLOC' /* Color map */
 #define TAG_GDIHNDTBLE     'bthG' /* GDI handle table */
 #define TAG_DIB            ' BID' /* Dib */
-#define TAG_INTERNAL_SYNC  'sync' /* Internal synchronization object. Waiting for a better suggestion than 'sync' */
+#define TAG_INTERNAL_SYNC  'cnys' /* Internal synchronization object. Waiting for a better suggestion than 'sync' */
 
 /* GDI objects from the handle table */
 #define TAG_DC          GDITAG_HMGR_LOOKASIDE_DC_TYPE

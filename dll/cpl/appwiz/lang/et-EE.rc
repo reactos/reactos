@@ -92,4 +92,5 @@ BEGIN
     IDS_NO_MEMORY "No memory could be allocated!"
     IDS_NO_DIRECTORY "No directory given!"
     IDS_INVALID_PATH "The given path is invalid!"
+    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
 END

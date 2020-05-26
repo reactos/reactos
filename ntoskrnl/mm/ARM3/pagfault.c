@@ -2576,7 +2576,7 @@ MmSetExecuteOptions(IN ULONG ExecuteOptions)
     }
 
     /* Change the NX state in the process lock */
-    KiAcquireProcessLock(CurrentProcess, &ProcessLock);
+    KiAcquireProcessLockRaiseToSynch(CurrentProcess, &ProcessLock);
 
     /* Don't change anything if the permanent flag was set */
     if (!CurrentProcess->Flags.Permanent)

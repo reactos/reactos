@@ -62,11 +62,11 @@ static void parse_obj_node_param(ContentItem *item, ContentItem *hhc_root, const
         return;
     }
 
-    if(!strncasecmp("name", ptr, len)) {
+    if(!_strnicmp("name", ptr, len)) {
         param = &item->name;
-    }else if(!strncasecmp("merge", ptr, len)) {
+    }else if(!_strnicmp("merge", ptr, len)) {
         param = &merge;
-    }else if(!strncasecmp("local", ptr, len)) {
+    }else if(!_strnicmp("local", ptr, len)) {
         param = &item->local;
     }else {
         WARN("unhandled param %s\n", debugstr_an(ptr, len));
@@ -148,9 +148,9 @@ static ContentItem *parse_sitemap_object(HHInfo *info, stream_t *stream, Content
 
         TRACE("%s\n", node.buf);
 
-        if(!strcasecmp(node_name.buf, "/object"))
+        if(!_strnicmp(node_name.buf, "/object", -1))
             break;
-        if(!strcasecmp(node_name.buf, "param"))
+        if(!_strnicmp(node_name.buf, "param", -1))
             parse_obj_node_param(item, hhc_root, node.buf, info->pCHMInfo->codePage);
 
         strbuf_zero(&node);
@@ -195,7 +195,7 @@ static ContentItem *parse_ul(HHInfo *info, stream_t *stream, ContentItem *hhc_ro
 
         TRACE("%s\n", node.buf);
 
-        if(!strcasecmp(node_name.buf, "object")) {
+        if(!_strnicmp(node_name.buf, "object", -1)) {
             const char *ptr;
             int len;
 
@@ -210,10 +210,10 @@ static ContentItem *parse_ul(HHInfo *info, stream_t *stream, ContentItem *hhc_ro
                 if(!ret)
                     ret = prev;
             }
-        }else if(!strcasecmp(node_name.buf, "ul")) {
+        }else if(!_strnicmp(node_name.buf, "ul", -1)) {
             new_item = parse_ul(info, stream, hhc_root);
             insert_item(prev, new_item, INSERT_CHILD);
-        }else if(!strcasecmp(node_name.buf, "/ul")) {
+        }else if(!_strnicmp(node_name.buf, "/ul", -1)) {
             break;
         }
 
@@ -245,7 +245,7 @@ static ContentItem *parse_hhc(HHInfo *info, IStream *str, ContentItem *hhc_root,
 
         TRACE("%s\n", node.buf);
 
-        if(!strcasecmp(node_name.buf, "ul")) {
+        if(!_strnicmp(node_name.buf, "ul", -1)) {
             ContentItem *item = parse_ul(info, &stream, hhc_root);
             prev = insert_item(prev, item, INSERT_CHILD);
             if(!ret)
@@ -268,7 +268,7 @@ static void insert_content_item(HWND hwnd, ContentItem *parent, ContentItem *ite
 
     memset(&tvis, 0, sizeof(tvis));
     tvis.u.item.mask = TVIF_TEXT|TVIF_PARAM|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
-    tvis.u.item.cchTextMax = strlenW(item->name)+1;
+    tvis.u.item.cchTextMax = lstrlenW(item->name)+1;
     tvis.u.item.pszText = item->name;
     tvis.u.item.lParam = (LPARAM)item;
     tvis.u.item.iImage = item->child ? HHTV_FOLDER : HHTV_DOCUMENT;

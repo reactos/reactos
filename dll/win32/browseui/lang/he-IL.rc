@@ -152,7 +152,7 @@ BEGIN
     DEFPUSHBUTTON "&חפש", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&עצור", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
-    AUTOCHECKBOX "Search Hidden Files and Folders",
+    AUTOCHECKBOX "חפש עבור קבצים ותיקיות מוסתרים",
                  IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
@@ -329,6 +329,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SEARCH_RESULTS "Search Results"
     IDS_SEARCHINVALID "'%1' אינה תיקיה תקינה."
     IDS_SEARCH_FOLDER "מחפש ב %s"
     IDS_SEARCH_FILES_FOUND "%u קבצים נמצאו"
@@ -336,4 +337,10 @@ BEGIN
     IDS_COL_NAME "שם"
     IDS_COL_LOCATION "בתיקיה"
     IDS_COL_RELEVANCE "רלוונטיות"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
 END

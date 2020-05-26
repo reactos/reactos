@@ -129,9 +129,17 @@ BEGIN
         MENUITEM "名前の変更(&R)", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "エクスポート(&E)", ID_TREE_EXPORT
-        MENUITEM "アクセス許可(&P)...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "アクセス許可(&P)...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "キー名のコピー(&C)", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "展開する/閉じる", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "エクスポート(&E)", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "ハイブのアンロード...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

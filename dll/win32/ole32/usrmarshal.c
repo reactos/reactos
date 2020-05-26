@@ -35,7 +35,6 @@
 #include "oleauto.h"
 #include "rpcproxy.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -1716,7 +1715,7 @@ ULONG __RPC_USER STGMEDIUM_UserSize(ULONG *pFlags, ULONG StartingSize, STGMEDIUM
         {
             TRACE("file name is %s\n", debugstr_w(pStgMedium->u.lpszFileName));
             size += 3 * sizeof(DWORD) +
-                (strlenW(pStgMedium->u.lpszFileName) + 1) * sizeof(WCHAR);
+                (lstrlenW(pStgMedium->u.lpszFileName) + 1) * sizeof(WCHAR);
         }
         break;
     case TYMED_ISTREAM:
@@ -1814,7 +1813,7 @@ unsigned char * __RPC_USER STGMEDIUM_UserMarshal(ULONG *pFlags, unsigned char *p
         if (pStgMedium->u.lpszFileName)
         {
             DWORD len;
-            len = strlenW(pStgMedium->u.lpszFileName);
+            len = lstrlenW(pStgMedium->u.lpszFileName);
             /* conformance */
             *(DWORD *)pBuffer = len + 1;
             pBuffer += sizeof(DWORD);
@@ -2126,7 +2125,7 @@ ULONG __RPC_USER SNB_UserSize(ULONG *pFlags, ULONG StartingSize, SNB *pSnb)
 
         while (*ptrW)
         {
-            size += (strlenW(*ptrW) + 1)*sizeof(WCHAR);
+            size += (lstrlenW(*ptrW) + 1)*sizeof(WCHAR);
             ptrW++;
         }
     }
@@ -2161,7 +2160,7 @@ unsigned char * __RPC_USER SNB_UserMarshal(ULONG *pFlags, unsigned char *pBuffer
 
         while (*ptrW)
         {
-            ULONG len = strlenW(*ptrW) + 1;
+            ULONG len = lstrlenW(*ptrW) + 1;
 
             wire->strcnt++;
             wire->charcnt += len;
@@ -2202,7 +2201,7 @@ unsigned char * __RPC_USER SNB_UserUnmarshal(ULONG *pFlags, unsigned char *pBuff
 
         for (i = 0; i < wire->strcnt; i++)
         {
-            ULONG len = strlenW(src);
+            ULONG len = lstrlenW(src);
             memcpy(dest, src, (len + 1)*sizeof(WCHAR));
             *ptrW = dest;
             src += len + 1;

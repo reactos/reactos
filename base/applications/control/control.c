@@ -43,8 +43,8 @@ OpenShellFolder(LPWSTR lpFolderCLSID)
      * Open a shell folder using "explorer.exe". The passed CLSIDs
      * are all subfolders of the "Control Panel" shell folder.
      */
-    StringCbCopy(szParameters, sizeof(szParameters), L"/n,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}");
-    StringCbCat(szParameters,sizeof(szParameters), lpFolderCLSID);
+    StringCbCopyW(szParameters, sizeof(szParameters), L"/n,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}");
+    StringCbCatW(szParameters, sizeof(szParameters), lpFolderCLSID);
 
     return (INT_PTR)ShellExecuteW(NULL,
                                   L"open",
@@ -57,18 +57,12 @@ OpenShellFolder(LPWSTR lpFolderCLSID)
 static INT
 RunControlPanel(LPCWSTR lpCmd)
 {
-    /*
-     * Old method:
-     *
     WCHAR szParameters[MAX_PATH];
-    wcscpy(szParameters, L"shell32.dll,Control_RunDLL ");
-    wcscat(szParameters, lpCmd);
-    return RUNDLL(szParameters);
-     */
+    StringCchCopyW(szParameters, ARRAYSIZE(szParameters), L"shell32.dll,Control_RunDLL ");
+    if (FAILED(StringCchCatW(szParameters, ARRAYSIZE(szParameters), lpCmd)))
+        return 0;
 
-    /* New method: */
-    Control_RunDLLW(GetDesktopWindow(), 0, lpCmd, SW_SHOW);
-    return 1;
+    return RUNDLL(szParameters);
 }
 
 INT
@@ -86,7 +80,7 @@ wWinMain(HINSTANCE hInstance,
 
     /* Check one of the built-in control panel handlers */
     if (!_wcsicmp(lpCmdLine, L"admintools"))           return OpenShellFolder(L"\\::{D20EA4E1-3957-11d2-A40B-0C5020524153}");
-    else if (!_wcsicmp(lpCmdLine, L"color"))           return RunControlPanel(L"desk.cpl");       /* TODO: Switch to the "Apperance" tab */
+    else if (!_wcsicmp(lpCmdLine, L"color"))           return RunControlPanel(L"desk.cpl,,2");
     else if (!_wcsicmp(lpCmdLine, L"date/time"))       return RunControlPanel(L"timedate.cpl");
     else if (!_wcsicmp(lpCmdLine, L"desktop"))         return RunControlPanel(L"desk.cpl");
     else if (!_wcsicmp(lpCmdLine, L"folders"))         return RUNDLL(L"shell32.dll,Options_RunDLL");
@@ -97,7 +91,7 @@ wWinMain(HINSTANCE hInstance,
     else if (!_wcsicmp(lpCmdLine, L"mouse"))           return RunControlPanel(L"main.cpl @0");
     else if (!_wcsicmp(lpCmdLine, L"netconnections"))  return OpenShellFolder(L"\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}");
     else if (!_wcsicmp(lpCmdLine, L"netware"))         return RunControlPanel(L"nwc.cpl");
-    else if (!_wcsicmp(lpCmdLine, L"ports"))           return RunControlPanel(L"sysdm.cpl");      /* TODO: Switch to the "Computer Name" tab */
+    else if (!_wcsicmp(lpCmdLine, L"ports"))           return RunControlPanel(L"sysdm.cpl,,1");
     else if (!_wcsicmp(lpCmdLine, L"printers"))        return OpenShellFolder(L"\\::{2227A280-3AEA-1069-A2DE-08002B30309D}");
     else if (!_wcsicmp(lpCmdLine, L"scannercamera"))   return OpenShellFolder(L"\\::{E211B736-43FD-11D1-9EFB-0000F8757FCD}");
     else if (!_wcsicmp(lpCmdLine, L"schedtasks"))      return OpenShellFolder(L"\\::{D6277990-4C6A-11CF-8D87-00AA0060F5BF}");

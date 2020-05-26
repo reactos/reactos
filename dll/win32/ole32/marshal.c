@@ -32,7 +32,6 @@
 #include "objbase.h"
 #include "ole2.h"
 #include "winerror.h"
-#include "wine/unicode.h"
 
 #include "compobj_private.h"
 

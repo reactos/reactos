@@ -20,7 +20,6 @@
 
 #include "oleacc_private.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
 
@@ -353,7 +352,7 @@ static HRESULT WINAPI Client_accLocation(IAccessible *iface, LONG *pxLeft,
     if(!GetClientRect(This->hwnd, &rect))
         return S_OK;
 
-    pt.x = rect.left,
+    pt.x = rect.left;
     pt.y = rect.top;
     MapWindowPoints(This->hwnd, NULL, &pt, 1);
     *pxLeft = pt.x;

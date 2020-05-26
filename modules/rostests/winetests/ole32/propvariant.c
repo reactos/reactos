@@ -18,6 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+#ifdef __REACTOS__
+#define CONST_VTABLE
+#endif
+
 #include "windows.h"
 #include "wtypes.h"
 #include "ddeml.h"
@@ -44,28 +49,28 @@ static const struct valid_mapping
 {
     { PROP_V0 , PROP_INV, PROP_INV, PROP_INV }, /* VT_EMPTY */
     { PROP_V0 , PROP_INV, PROP_INV, PROP_INV }, /* VT_NULL */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_I2 */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_I4 */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_R4 */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_R8 */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_CY */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_DATE */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_BSTR */
-    { PROP_V1 , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_DISPATCH */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_ERROR */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_BOOL */
-    { PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_VARIANT */
-    { PROP_V1 , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_UNKNOWN */
-    { PROP_V1 , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_DECIMAL */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_I2 */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_I4 */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_R4 */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_R8 */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_CY */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_DATE */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_BSTR */
+    { PROP_V1 , PROP_V1 , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_DISPATCH */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_ERROR */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_BOOL */
+    { PROP_V1 | PROP_TODO , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_VARIANT */
+    { PROP_V1 , PROP_V1, PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_UNKNOWN */
+    { PROP_V1 , PROP_V1 , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_DECIMAL */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* 15 */
-    { PROP_V1 , PROP_V1 | PROP_TODO , PROP_V1 , PROP_V1 | PROP_TODO  }, /* VT_I1 */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI1 */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI2 */
-    { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI4 */
+    { PROP_V1 , PROP_V1 , PROP_V1 , PROP_V1 | PROP_TODO  }, /* VT_I1 */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI1 */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI2 */
+    { PROP_V0 , PROP_V1 , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI4 */
     { PROP_V0 , PROP_V1A | PROP_TODO, PROP_V0 , PROP_V1A | PROP_TODO }, /* VT_I8 */
     { PROP_V0 , PROP_V1A | PROP_TODO, PROP_V0 , PROP_V1A | PROP_TODO }, /* VT_UI8 */
-    { PROP_V1 , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_INT */
-    { PROP_V1 , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_UINT */
+    { PROP_V1 , PROP_V1 , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_INT */
+    { PROP_V1 , PROP_V1 , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_UINT */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* VT_VOID */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* VT_HRESULT */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* VT_PTR */
@@ -298,12 +303,60 @@ static void test_validtypes(void)
     }
 }
 
+struct unk_impl
+{
+    IUnknown IUnknown_iface;
+    LONG ref;
+};
+
+static inline struct unk_impl *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, struct unk_impl, IUnknown_iface);
+}
+
+static HRESULT WINAPI unk_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+{
+    struct unk_impl *This = impl_from_IUnknown(iface);
+    if(winetest_debug > 1)
+        trace("Call to unk_QueryInterface()\n");
+    *ppv = &This->IUnknown_iface;
+    IUnknown_AddRef(iface);
+    return S_OK;
+}
+
+static ULONG WINAPI unk_AddRef(IUnknown *iface)
+{
+    struct unk_impl *This = impl_from_IUnknown(iface);
+    if(winetest_debug > 1)
+        trace("Call to unk_AddRef()\n");
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI unk_Release(IUnknown *iface)
+{
+    struct unk_impl *This = impl_from_IUnknown(iface);
+    if(winetest_debug > 1)
+        trace("Call to unk_Release()\n");
+    return InterlockedDecrement(&This->ref);
+}
+
+static const IUnknownVtbl unk_vtbl =
+{
+    unk_QueryInterface,
+    unk_AddRef,
+    unk_Release
+};
+
 static void test_copy(void)
 {
     static char szTestString[] = "Test String";
     static WCHAR wszTestString[] = {'T','e','s','t',' ','S','t','r','i','n','g',0};
+    struct unk_impl unk_obj = {{&unk_vtbl}, 1};
     PROPVARIANT propvarSrc;
     PROPVARIANT propvarDst;
+    SAFEARRAY *sa;
+    SAFEARRAYBOUND sabound;
+    LONG saindex;
     HRESULT hr;
 
     propvarSrc.vt = VT_BSTR;
@@ -333,6 +386,39 @@ static void test_copy(void)
     ok(!strcmp(U(propvarSrc).pszVal, U(propvarDst).pszVal), "String not copied properly\n");
     hr = PropVariantClear(&propvarDst);
     ok(hr == S_OK, "PropVariantClear(...VT_LPSTR...) failed\n");
+    memset(&propvarSrc, 0, sizeof(propvarSrc));
+
+    propvarSrc.vt = VT_UNKNOWN;
+    U(propvarSrc).punkVal = &unk_obj.IUnknown_iface;
+    hr = PropVariantCopy(&propvarDst, &propvarSrc);
+    ok(hr == S_OK, "PropVariantCopy(...VT_UNKNOWN...) failed: 0x%08x.\n", hr);
+    ok(U(propvarDst).punkVal == &unk_obj.IUnknown_iface, "Got wrong IUnknown pointer\n");
+    ok(unk_obj.ref == 2, "got wrong refcount: %d.\n", unk_obj.ref);
+    hr = PropVariantClear(&propvarDst);
+    ok(hr == S_OK, "PropVariantClear(...VT_UNKNOWN...) failed: 0x%08x.\n", hr);
+    ok(unk_obj.ref == 1, "got wrong refcount: %d.\n", unk_obj.ref);
+    memset(&propvarSrc, 0, sizeof(propvarSrc));
+
+    sabound.lLbound = 0;
+    sabound.cElements = 2;
+    sa = SafeArrayCreate(VT_UNKNOWN, 1, &sabound);
+    saindex = 0;
+    SafeArrayPutElement(sa, &saindex, &unk_obj.IUnknown_iface);
+    saindex = 1;
+    SafeArrayPutElement(sa, &saindex, &unk_obj.IUnknown_iface);
+    ok(unk_obj.ref == 3, "got wrong refcount: %d.\n", unk_obj.ref);
+
+    propvarSrc.vt = VT_ARRAY | VT_UNKNOWN;
+    U(propvarSrc).parray = sa;
+    hr = PropVariantCopy(&propvarDst, &propvarSrc);
+    ok(hr == S_OK, "PropVariantCopy(...VT_ARRAY|VT_UNKNOWN...) failed: 0x%08x.\n", hr);
+    ok(unk_obj.ref == 5, "got wrong refcount: %d.\n", unk_obj.ref);
+    hr = PropVariantClear(&propvarDst);
+    ok(hr == S_OK, "PropVariantClear(...VT_ARRAY|VT_UNKNOWN...) failed: 0x%08x.\n", hr);
+    ok(unk_obj.ref == 3, "got wrong refcount: %d.\n", unk_obj.ref);
+    hr = PropVariantClear(&propvarSrc);
+    ok(hr == S_OK, "PropVariantClear(...VT_ARRAY|VT_UNKNOWN...) failed: 0x%08x.\n", hr);
+    ok(unk_obj.ref == 1, "got wrong refcount: %d.\n", unk_obj.ref);
     memset(&propvarSrc, 0, sizeof(propvarSrc));
 }
 

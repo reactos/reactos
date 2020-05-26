@@ -19,21 +19,13 @@
  * VDM Subsystem
  */
 
-CSR_API(SrvRegisterConsoleVDM)
+/* API_NUMBER: ConsolepRegisterVDM */
+CON_API(SrvRegisterConsoleVDM,
+        CONSOLE_REGISTERVDM, RegisterVDMRequest)
 {
     NTSTATUS Status;
-    PCONSOLE_REGISTERVDM RegisterVDMRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.RegisterVDMRequest;
-    PCONSRV_CONSOLE Console;
 
     DPRINT1("SrvRegisterConsoleVDM(%d)\n", RegisterVDMRequest->RegisterFlags);
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console, status %lx\n", Status);
-        return Status;
-    }
 
     if (RegisterVDMRequest->RegisterFlags != 0)
     {
@@ -68,7 +60,7 @@ CSR_API(SrvRegisterConsoleVDM)
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Error: Impossible to create a shared section, Status = 0x%08lx\n", Status);
-            goto Quit;
+            return Status;
         }
 
         /*
@@ -90,7 +82,7 @@ CSR_API(SrvRegisterConsoleVDM)
         {
             DPRINT1("Error: Impossible to map the shared section, Status = 0x%08lx\n", Status);
             NtClose(Console->VDMBufferSection);
-            goto Quit;
+            return Status;
         }
 
         /*
@@ -114,14 +106,14 @@ CSR_API(SrvRegisterConsoleVDM)
             DPRINT1("Error: Impossible to map the shared section, Status = 0x%08lx\n", Status);
             NtUnmapViewOfSection(NtCurrentProcess(), Console->VDMBuffer);
             NtClose(Console->VDMBufferSection);
-            goto Quit;
+            return Status;
         }
 
         // TODO: Duplicate the event handles.
 
         RegisterVDMRequest->VDMBuffer = Console->ClientVDMBuffer;
 
-        Status = STATUS_SUCCESS;
+        return STATUS_SUCCESS;
     }
     else
     {
@@ -142,13 +134,12 @@ CSR_API(SrvRegisterConsoleVDM)
         Console->VDMBuffer = Console->ClientVDMBuffer = NULL;
 
         Console->VDMBufferSize.X = Console->VDMBufferSize.Y = 0;
-    }
 
-Quit:
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+        return STATUS_SUCCESS;
+    }
 }
 
+/* API_NUMBER: ConsolepVDMOperation */
 CSR_API(SrvVDMConsoleOperation)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
@@ -160,12 +151,14 @@ CSR_API(SrvVDMConsoleOperation)
  * OS/2 Subsystem
  */
 
+/* API_NUMBER: ConsolepRegisterOS2 */
 CSR_API(SrvRegisterConsoleOS2)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/* API_NUMBER: ConsolepSetOS2OemFormat */
 CSR_API(SrvSetConsoleOS2OemFormat)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
@@ -177,12 +170,14 @@ CSR_API(SrvSetConsoleOS2OemFormat)
  * IME Subsystem
  */
 
+/* API_NUMBER: ConsolepRegisterConsoleIME */
 CSR_API(SrvRegisterConsoleIME)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/* API_NUMBER: ConsolepUnregisterConsoleIME */
 CSR_API(SrvUnregisterConsoleIME)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);

@@ -57,7 +57,6 @@
 #include "winerror.h"
 #include "ole2.h"
 #include "compobj_private.h"
-#include "wine/unicode.h"
 #include "wine/list.h"
 #include "wine/debug.h"
 
@@ -1003,7 +1002,7 @@ static HRESULT save_mfpict(DataCacheEntry *entry, BOOL contents, IStream *stream
         meta_place_rec.bounding_box[3] = (LONGLONG)mfpict->yExt * meta_place_rec.inch / 2540;
         GlobalUnlock(entry->stgmedium.u.hMetaFilePict);
 
-        for (check = (WORD *)&meta_place_rec; check != (WORD *)&meta_place_rec.checksum; check++)
+        for (check = (WORD *)&meta_place_rec; check != &meta_place_rec.checksum; check++)
             meta_place_rec.checksum ^= *check;
         hr = IStream_Write(stream, &meta_place_rec, sizeof(struct meta_placeable), NULL);
         if (hr == S_OK && data_size)

@@ -179,7 +179,7 @@ public:
 
             WCHAR path[MAX_PATH];
 
-            StringCbCopyW(path, _countof(path), m_NtPath);
+            StringCbCopyW(path, sizeof(path), m_NtPath);
             PathAppendW(path, info->entryName);
 
             LPITEMIDLIST first = ILCloneFirst(pidl);
@@ -635,7 +635,7 @@ public:
     {
         m_shellPidl = ILClone(pidl);
 
-        StringCbCopy(m_NtPath, _countof(m_NtPath), L"\\");
+        StringCbCopyW(m_NtPath, sizeof(m_NtPath), L"\\");
 
         return S_OK;
     }

@@ -1,0 +1,4 @@
+#define REACTOS_STR_FILE_DESCRIPTION  "DNS-Client"
+#define REACTOS_STR_INTERNAL_NAME     "dnsrslvr"
+#define REACTOS_STR_ORIGINAL_FILENAME "dnsrslvr.dll"
+#include <reactos/version.rc>

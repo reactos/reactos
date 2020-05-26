@@ -31,11 +31,11 @@ BEGIN
                   /flushdns | /displaydns | /registerdns |\n \
                   /showclassid bağdaştırıcı |\n \
                   /setclassid bağdaştırıcı [sınıf kimliği] ]\n \
-    \n \
+\n \
     nereye\n \
         bağdaştırıcı     Bağlantı adı\n \
                        (* ve ? umûmî arama damgalarına izin verilmiştir, örneklere bakınız)\n \
-    \n \
+\n \
         Seçenekler:\n \
            /?           Bu yardım iletisini görüntüle.\n \
            /all         Tüm yapılandırma bilgisini görüntüle.\n \
@@ -46,15 +46,15 @@ BEGIN
            /displaydns  DNS Çözücü ön belleğinin içeriğini görüntüle.\n \
            /showclassid Bağdaştırıcı için izin verilen tüm DHCP sınıf kimliklerini görüntüler.\n \
            /setclassid  DHCP sınıf kimliğini değiştirir.\n \
-    \n \
+\n \
     Ön tanımlı, TCP/IP için tüm kayıtlı bağdaştırıcılar için yalnızca\n \
     IP adresini, alt ağ maskesini ve ön tanımlı geçidi görüntülemektir.\n \
-    \n \
+\n \
     release ve renew için, bir bağdaştırıcı adı belirtilmemişse TCP/IP için tüm kayıtlı\n \
     bağdaştırıcılar için IP adres kirâları bırakılacak veyâ yenilenecektir.\n \
-    \n \
+\n \
     setclassid için, bir sınıf kimliği belirtilmemişse sınıf kimliği silinmiş olacaktır.\n \
-    \n \
+\n \
     Örnekler:\n \
         > ipconfig                   ... Bilgi gösterir.\n \
         > ipconfig /all              ... Ayrıntılı bilgi gösterir.\n \

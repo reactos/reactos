@@ -18,7 +18,7 @@ CACLS nomfichier [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
    /R user       Supprime les droits d'accès de l'utilisateur spécifié\n\
                  (valide uniquement avec /E).\n\
    /P user:perm  Remplace les droits d'accès de l'utilisateur spécifié.\n\
-                 Perm peut valoir : N  Aucun \n\
+                 Perm peut valoir : N  Aucun\n\
                                     R  Lecture\n\
                                     W  Écriture\n\
                                     C  Modification (Écriture)\n\

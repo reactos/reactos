@@ -306,6 +306,11 @@ public: // Configuration methods
         return SendMessageW(TB_SETHOTITEM, item);
     }
 
+    DWORD SetDrawTextFlags(DWORD useBits, DWORD bitState)
+    {
+        return SendMessageW(TB_SETDRAWTEXTFLAGS, useBits, bitState);
+    }
+
 public: // Button list management methods
     int GetButtonCount()
     {

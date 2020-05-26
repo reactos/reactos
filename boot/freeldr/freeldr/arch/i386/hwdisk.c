@@ -396,6 +396,8 @@ EnumerateHarddisks(OUT PBOOLEAN BootDriveReported)
     return DiskCount;
 }
 
+// FIXME: Copied from pcdisk.c
+// Actually this function is REALLY PC-specific!!
 static BOOLEAN
 DiskIsDriveRemovable(UCHAR DriveNumber)
 {

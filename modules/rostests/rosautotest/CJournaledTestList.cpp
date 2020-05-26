@@ -90,7 +90,7 @@ void
 CJournaledTestList::SerializeIntoJournal(const string& String)
 {
     DWORD BytesWritten;
-    WriteFile(m_hJournal, String.c_str(), String.size() + 1, &BytesWritten, NULL);
+    WriteFile(m_hJournal, String.c_str(), (ULONG)String.size() + 1, &BytesWritten, NULL);
     FlushFileBuffers(m_hJournal);
 }
 
@@ -106,7 +106,7 @@ void
 CJournaledTestList::SerializeIntoJournal(const wstring& String)
 {
     DWORD BytesWritten;
-    WriteFile(m_hJournal, String.c_str(), (String.size() + 1) * sizeof(WCHAR), &BytesWritten, NULL);
+    WriteFile(m_hJournal, String.c_str(), ((ULONG)String.size() + 1) * sizeof(WCHAR), &BytesWritten, NULL);
     FlushFileBuffers(m_hJournal);
 }
 

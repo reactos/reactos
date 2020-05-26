@@ -14,6 +14,7 @@
 #define IDS_CPLSYSTEMDESCRIPTION 1099
 #define IDS_CONTROLLER           1151
 #define IDS_STATUS               1152
+#define IDS_NONE                 1200
 
 /* Controls */
 #define IDC_CONTROLLER_LIST         1020

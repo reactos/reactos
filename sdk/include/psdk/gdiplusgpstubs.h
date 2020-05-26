@@ -21,30 +21,78 @@
 
 #ifdef __cplusplus
 
-class GpGraphics {};
-class GpPen {};
-class GpBrush {};
-class GpHatch : public GpBrush {};
-class GpSolidFill : public GpBrush {};
-class GpPath {};
-class GpMatrix {};
-class GpPathIterator {};
-class GpCustomLineCap {};
-class GpAdjustableArrowCap : public GpCustomLineCap {};
-class GpImage {};
-class GpMetafile : public GpImage {};
-class GpImageAttributes {};
-class GpCachedBitmap {};
-class GpBitmap : public GpImage {};
-class GpPathGradient : public GpBrush {};
-class GpLineGradient : public GpBrush {};
-class GpTexture : public GpBrush {};
-class GpFont {};
-class GpFontCollection {};
-class GpFontFamily {};
-class GpStringFormat {};
-class GpRegion {};
-class CGpEffect {};
+class GpGraphics
+{
+};
+class GpPen
+{
+};
+class GpBrush
+{
+};
+class GpHatch : public GpBrush
+{
+};
+class GpSolidFill : public GpBrush
+{
+};
+class GpPath
+{
+};
+class GpMatrix
+{
+};
+class GpPathIterator
+{
+};
+class GpCustomLineCap
+{
+};
+class GpAdjustableArrowCap : public GpCustomLineCap
+{
+};
+class GpImage
+{
+};
+class GpMetafile : public GpImage
+{
+};
+class GpImageAttributes
+{
+};
+class GpCachedBitmap
+{
+};
+class GpBitmap : public GpImage
+{
+};
+class GpPathGradient : public GpBrush
+{
+};
+class GpLineGradient : public GpBrush
+{
+};
+class GpTexture : public GpBrush
+{
+};
+class GpFont
+{
+};
+class GpFontCollection
+{
+};
+class GpFontFamily
+{
+};
+class GpStringFormat
+{
+};
+class GpRegion
+{
+};
+class CGpEffect
+{
+};
 
 #else /* end of c++ declarations */
 

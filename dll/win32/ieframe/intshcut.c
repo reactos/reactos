@@ -94,15 +94,15 @@ static BOOL run_winemenubuilder( const WCHAR *args )
     void *redir;
 
     GetSystemDirectoryW( app, MAX_PATH - ARRAY_SIZE( menubuilder ));
-    strcatW( app, menubuilder );
+    lstrcatW( app, menubuilder );
 
-    len = (strlenW( app ) + strlenW( args ) + 1) * sizeof(WCHAR);
+    len = (lstrlenW( app ) + lstrlenW( args ) + 1) * sizeof(WCHAR);
     buffer = heap_alloc( len );
     if( !buffer )
         return FALSE;
 
-    strcpyW( buffer, app );
-    strcatW( buffer, args );
+    lstrcpyW( buffer, app );
+    lstrcatW( buffer, args );
 
     TRACE("starting %s\n",debugstr_w(buffer));
 
@@ -136,7 +136,7 @@ static BOOL StartLinkProcessor( LPCOLESTR szLink )
     if( !buffer )
         return FALSE;
 
-    sprintfW( buffer, szFormat, szLink );
+    swprintf( buffer, szFormat, szLink );
     ret = run_winemenubuilder( buffer );
     heap_free( buffer );
     return ret;
@@ -521,7 +521,7 @@ static HRESULT WINAPI PersistFile_Load(IPersistFile *pFile, LPCOLESTR pszFileNam
         int iconindex;
         PROPSPEC ps;
         PROPVARIANT pv;
-        iconindex = strtolW(iconindexstring, NULL, 10);
+        iconindex = wcstol(iconindexstring, NULL, 10);
         ps.ulKind = PRSPEC_PROPID;
         ps.u.propid = PID_IS_ICONINDEX;
         pv.vt = VT_I4;

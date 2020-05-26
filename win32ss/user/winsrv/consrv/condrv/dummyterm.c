@@ -61,7 +61,7 @@ DummyWriteStream(IN OUT PTERMINAL This,
      */
 
     // /* Stop here if the console is paused */
-    // if (Console->UnpauseEvent != NULL) return STATUS_PENDING;
+    // if (Console->ConsolePaused) return STATUS_PENDING;
 
     return STATUS_PENDING;
 }

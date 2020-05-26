@@ -5,7 +5,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "AT komutu, belirlenen bir zamanda bilgisayarda çalıştırmak için komutları\n\
-ve izlenceleri zamanlar. AT komutunu çalıştırmak için Zamanlayıcı hizmeti \n\
+ve izlenceleri zamanlar. AT komutunu çalıştırmak için Zamanlayıcı hizmeti\n\
 çalıştırılmalıdır.\n\n\
 AT [\\\\bilgisayar adı] [ [kimlik] [/DELETE] | /DELETE [/YES]]\n\
 AT [\\\\bilgisayar adı] saat [/INTERACTIVE]\n\

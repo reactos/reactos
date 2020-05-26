@@ -1,0 +1,39 @@
+diff --git a/dll/directx/wine/d3dx9_36/surface.c b/dll/directx/wine/d3dx9_36/surface.c
+index 6e2c10a..01729ea 100644
+--- a/dll/directx/wine/d3dx9_36/surface.c
++++ b/dll/directx/wine/d3dx9_36/surface.c
+@@ -111,6 +111,7 @@ static const GUID *d3dformat_to_wic_guid(D3DFORMAT format)
+ #define DDS_PF_RGB 0x40
+ #define DDS_PF_YUV 0x200
+ #define DDS_PF_LUMINANCE 0x20000
++#define DDS_PF_BUMPLUMINANCE 0x40000
+ #define DDS_PF_BUMPDUDV 0x80000
+ 
+ struct dds_pixel_format
+@@ -334,6 +335,17 @@ static D3DFORMAT dds_bump_to_d3dformat(const struct dds_pixel_format *pixel_form
+     return D3DFMT_UNKNOWN;
+ }
+ 
++static D3DFORMAT dds_bump_luminance_to_d3dformat(const struct dds_pixel_format *pixel_format)
++{
++    if (pixel_format->bpp == 32 && pixel_format->rmask == 0x000000ff && pixel_format->gmask == 0x0000ff00
++            && pixel_format->bmask == 0x00ff0000)
++        return D3DFMT_X8L8V8U8;
++
++    WARN("Unknown bump pixel format (%u, %#x, %#x, %#x, %#x)\n", pixel_format->bpp,
++        pixel_format->rmask, pixel_format->gmask, pixel_format->bmask, pixel_format->amask);
++    return D3DFMT_UNKNOWN;
++}
++
+ static D3DFORMAT dds_pixel_format_to_d3dformat(const struct dds_pixel_format *pixel_format)
+ {
+     TRACE("pixel_format: size %u, flags %#x, fourcc %#x, bpp %u.\n", pixel_format->size,
+@@ -351,6 +363,8 @@ static D3DFORMAT dds_pixel_format_to_d3dformat(const struct dds_pixel_format *pi
+         return dds_alpha_to_d3dformat(pixel_format);
+     if (pixel_format->flags & DDS_PF_BUMPDUDV)
+         return dds_bump_to_d3dformat(pixel_format);
++    if (pixel_format->flags & DDS_PF_BUMPLUMINANCE)
++        return dds_bump_luminance_to_d3dformat(pixel_format);
+ 
+     WARN("Unknown pixel format (flags %#x, fourcc %#x, bpp %u, r %#x, g %#x, b %#x, a %#x)\n",
+         pixel_format->flags, pixel_format->fourcc, pixel_format->bpp,

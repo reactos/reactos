@@ -86,6 +86,7 @@ static void test_IReferenceClock_methods(const char * clockdesc, IReferenceClock
     /* FIXME: How much deviation should be allowed after a sleep? */
     /* 0.3% is common, and 0.4% is sometimes observed. */
     diff = time2 - time1;
+    ros_skip_flaky
     ok (9940000 <= diff && diff <= 10240000, "%s - Expected difference around 10000000, got %u\n", clockdesc, diff);
 
 }

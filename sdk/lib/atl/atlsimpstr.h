@@ -608,7 +608,7 @@ private:
         return pNewData;
     }
 
-
+protected:
     static void ThrowMemoryException()
     {
         AtlThrow(E_OUTOFMEMORY);
@@ -618,7 +618,6 @@ private:
     {
         AtlThrow(E_INVALIDARG);
     }
-
 };
 
 #ifdef UNICODE

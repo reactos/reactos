@@ -169,15 +169,10 @@ static const ULONG position_base[51] = {
     1835008, 1966080, 2097152
 };
 
-struct LZXstate *LZXinit(int window)
+struct LZXstate *LZXinit(int wndsize)
 {
     struct LZXstate *pState=NULL;
-    ULONG wndsize = 1 << window;
     int i, posn_slots;
-
-    /* LZX supports window sizes of 2^15 (32Kb) through 2^21 (2Mb) */
-    /* if a previously allocated window is big enough, keep it     */
-    if (window < 15 || window > 21) return NULL;
 
     /* allocate state and associated window */
     pState = HeapAlloc(GetProcessHeap(), 0, sizeof(struct LZXstate));
@@ -190,12 +185,8 @@ struct LZXstate *LZXinit(int window)
     pState->window_size = wndsize;
 
     /* calculate required position slots */
-    if (window == 20) posn_slots = 42;
-    else if (window == 21) posn_slots = 50;
-    else posn_slots = window << 1;
-
-    /** alternatively **/
-    /* posn_slots=i=0; while (i < wndsize) i += 1 << extra_bits[posn_slots++]; */
+    posn_slots = i = 0;
+    while (i < wndsize) i += 1 << extra_bits[posn_slots++];
 
     /* initialize other state */
     pState->R0  =  pState->R1  = pState->R2 = 1;
@@ -797,7 +788,7 @@ int main(int c, char **v)
     int i;
     int count=0;
     int w = atoi(v[1]);
-    LZXinit(&state, w);
+    LZXinit(&state, 1 << w);
     fout = fopen(v[2], "wb");
     for (i=3; i<c; i++)
     {

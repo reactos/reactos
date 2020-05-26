@@ -1989,10 +1989,10 @@ OpenSCManagerA(LPCSTR lpMachineName,
     }
     RpcEndExcept;
 
+    SetLastError(dwError);
     if (dwError != ERROR_SUCCESS)
     {
         TRACE("ROpenSCManagerA() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
         return NULL;
     }
 
@@ -2033,10 +2033,10 @@ OpenSCManagerW(LPCWSTR lpMachineName,
     }
     RpcEndExcept;
 
+    SetLastError(dwError);
     if (dwError != ERROR_SUCCESS)
     {
         TRACE("ROpenSCManagerW() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
         return NULL;
     }
 

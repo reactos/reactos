@@ -1300,9 +1300,9 @@ DisplayWizard(
     IN HWND hwndParent,
     IN UINT startPage)
 {
-    PROPSHEETHEADER psh;
+    PROPSHEETHEADER psh = {0};
     HPROPSHEETPAGE ahpsp[IDD_MAXIMUMPAGE + 1];
-    PROPSHEETPAGE psp;
+    PROPSHEETPAGE psp = {0};
 
     /* zero based index */
     startPage -= IDD_FIRSTPAGE;

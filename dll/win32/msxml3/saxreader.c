@@ -149,6 +149,8 @@ static saxreader_feature get_saxreader_feature(const WCHAR *name)
     return FeatureUnknown;
 }
 
+static const WCHAR empty_str;
+
 struct bstrpool
 {
     BSTR *pool;
@@ -1665,8 +1667,8 @@ static void libxmlStartElementNS(
                     &uri, &local, &element->qname, &This->IVBSAXAttributes_iface);
         else
             hr = ISAXContentHandler_startElement(handler->handler,
-                    uri, SysStringLen(uri),
-                    local, SysStringLen(local),
+                    uri ? uri : &empty_str, SysStringLen(uri),
+                    local ? local : &empty_str, SysStringLen(local),
                     element->qname, SysStringLen(element->qname),
                     &This->ISAXAttributes_iface);
 
@@ -1739,8 +1741,8 @@ static void libxmlEndElementNS(
     else
         hr = ISAXContentHandler_endElement(
                 handler->handler,
-                uri, SysStringLen(uri),
-                local, SysStringLen(local),
+                uri ? uri : &empty_str, SysStringLen(uri),
+                local ? local : &empty_str, SysStringLen(local),
                 element->qname, SysStringLen(element->qname));
 
     free_attribute_values(This);

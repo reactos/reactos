@@ -2,6 +2,7 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ATTRIB_HELP "Viser eller endrer filattributtene.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fil ...\n\
        [/S [/D]]\n\n\

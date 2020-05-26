@@ -90,7 +90,11 @@ DEFINE_EXPECT(global_success_i);
 DEFINE_EXPECT(global_notexists_d);
 DEFINE_EXPECT(global_propargput_d);
 DEFINE_EXPECT(global_propargput_i);
+DEFINE_EXPECT(global_propargputop_d);
+DEFINE_EXPECT(global_propargputop_get_i);
+DEFINE_EXPECT(global_propargputop_put_i);
 DEFINE_EXPECT(global_testargtypes_i);
+DEFINE_EXPECT(global_calleval_i);
 DEFINE_EXPECT(puredisp_prop_d);
 DEFINE_EXPECT(puredisp_noprop_d);
 DEFINE_EXPECT(puredisp_value);
@@ -106,6 +110,10 @@ DEFINE_EXPECT(testobj_noprop_d);
 DEFINE_EXPECT(testobj_onlydispid_d);
 DEFINE_EXPECT(testobj_onlydispid_i);
 DEFINE_EXPECT(testobj_notexists_d);
+DEFINE_EXPECT(testobj_newenum);
+DEFINE_EXPECT(enumvariant_next_0);
+DEFINE_EXPECT(enumvariant_next_1);
+DEFINE_EXPECT(enumvariant_reset);
 DEFINE_EXPECT(GetItemInfo_testVal);
 DEFINE_EXPECT(ActiveScriptSite_OnScriptError);
 DEFINE_EXPECT(invoke_func);
@@ -144,6 +152,9 @@ DEFINE_EXPECT(BindHandler);
 #define DISPID_GLOBAL_TESTPROPPUTREF 0x101b
 #define DISPID_GLOBAL_GETSCRIPTSTATE 0x101c
 #define DISPID_GLOBAL_BINDEVENTHANDLER 0x101d
+#define DISPID_GLOBAL_TESTENUMOBJ   0x101e
+#define DISPID_GLOBAL_CALLEVAL      0x101f
+#define DISPID_GLOBAL_PROPARGPUTOP  0x1020
 
 #define DISPID_GLOBAL_TESTPROPDELETE      0x2000
 #define DISPID_GLOBAL_TESTNOPROPDELETE    0x2001
@@ -219,6 +230,101 @@ static void _test_grfdex(unsigned line, DWORD grfdex, DWORD expect)
     ok_(__FILE__,line)(grfdex == expect, "grfdex = %x, expected %x\n", grfdex, expect);
 }
 
+static HRESULT WINAPI EnumVARIANT_QueryInterface(IEnumVARIANT *iface, REFIID riid, void **ppv)
+{
+    *ppv = NULL;
+
+    if (IsEqualGUID(riid, &IID_IEnumVARIANT))
+        *ppv = iface;
+    else
+        return E_NOINTERFACE;
+
+    return S_OK;
+}
+
+static ULONG WINAPI EnumVARIANT_AddRef(IEnumVARIANT *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI EnumVARIANT_Release(IEnumVARIANT *iface)
+{
+    return 1;
+}
+
+static int EnumVARIANT_index = 0;
+static int EnumVARIANT_next_0_count = 0;
+static HRESULT WINAPI EnumVARIANT_Next(
+    IEnumVARIANT *This,
+    ULONG celt,
+    VARIANT *rgVar,
+    ULONG *pCeltFetched)
+{
+    ok(rgVar != NULL, "rgVar is NULL\n");
+    ok(celt == 1, "celt = %d\n", celt);
+    ok(pCeltFetched == NULL, "pCeltFetched is not NULL\n");
+
+    if (!rgVar)
+        return S_FALSE;
+
+    if (EnumVARIANT_index == 0)
+    {
+        EnumVARIANT_next_0_count--;
+        if (EnumVARIANT_next_0_count <= 0)
+            CHECK_EXPECT(enumvariant_next_0);
+
+        V_VT(rgVar) = VT_I4;
+        V_I4(rgVar) = 123;
+
+        if (pCeltFetched)
+            *pCeltFetched = 1;
+        EnumVARIANT_index++;
+        return S_OK;
+    }
+
+    CHECK_EXPECT(enumvariant_next_1);
+
+    if (pCeltFetched)
+        *pCeltFetched = 0;
+    return S_FALSE;
+
+}
+
+static HRESULT WINAPI EnumVARIANT_Skip(
+    IEnumVARIANT *This,
+    ULONG celt)
+{
+    ok(0, "EnumVariant_Skip: unexpected call\n");
+    return E_NOTIMPL;
+}
+static HRESULT WINAPI EnumVARIANT_Reset(
+    IEnumVARIANT *This)
+{
+    CHECK_EXPECT(enumvariant_reset);
+    EnumVARIANT_index = 0;
+    return S_OK;
+}
+
+static HRESULT WINAPI EnumVARIANT_Clone(
+    IEnumVARIANT *This,
+    IEnumVARIANT **ppEnum)
+{
+    ok(0, "EnumVariant_Clone: unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static IEnumVARIANTVtbl testEnumVARIANTVtbl = {
+    EnumVARIANT_QueryInterface,
+    EnumVARIANT_AddRef,
+    EnumVARIANT_Release,
+    EnumVARIANT_Next,
+    EnumVARIANT_Skip,
+    EnumVARIANT_Reset,
+    EnumVARIANT_Clone
+};
+
+static IEnumVARIANT testEnumVARIANT = { &testEnumVARIANTVtbl };
+
 static HRESULT WINAPI DispatchEx_QueryInterface(IDispatchEx *iface, REFIID riid, void **ppv)
 {
     *ppv = NULL;
@@ -252,7 +358,6 @@ static HRESULT WINAPI DispatchEx_GetTypeInfoCount(IDispatchEx *iface, UINT *pcti
 static HRESULT WINAPI DispatchEx_GetTypeInfo(IDispatchEx *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
-    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
@@ -319,6 +424,28 @@ static HRESULT WINAPI DispatchEx_GetNameSpaceParent(IDispatchEx *iface, IUnknown
 {
     ok(0, "unexpected call\n");
     return E_NOTIMPL;
+}
+
+static HRESULT WINAPI testObj_Invoke(IDispatchEx *iface, DISPID id,
+                            REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
+                            VARIANT *pvarRes, EXCEPINFO *pei, UINT *puArgErr)
+{
+    switch(id) {
+    case DISPID_NEWENUM:
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pvarRes != NULL, "pvarRes == NULL\n");
+        ok(pei == NULL, "pei != NULL\n");
+
+        CHECK_EXPECT(testobj_newenum);
+        V_VT(pvarRes) = VT_DISPATCH;
+        V_DISPATCH(pvarRes) = (IDispatch*)&testEnumVARIANT;
+        return S_OK;
+    }
+
+    ok(0, "unexpected call %x\n", id);
+    return DISP_E_MEMBERNOTFOUND;
 }
 
 static HRESULT WINAPI testObj_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD grfdex, DISPID *pid)
@@ -454,7 +581,7 @@ static IDispatchExVtbl testObjVtbl = {
     DispatchEx_GetTypeInfoCount,
     DispatchEx_GetTypeInfo,
     DispatchEx_GetIDsOfNames,
-    DispatchEx_Invoke,
+    testObj_Invoke,
     testObj_GetDispID,
     testObj_InvokeEx,
     testObj_DeleteMemberByName,
@@ -805,6 +932,13 @@ static HRESULT WINAPI Global_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD 
         return S_OK;
     }
 
+    if(!strcmp_wa(bstrName, "propArgPutOp")) {
+        CHECK_EXPECT(global_propargputop_d);
+        test_grfdex(grfdex, fdexNameCaseSensitive);
+        *pid = DISPID_GLOBAL_PROPARGPUTOP;
+        return S_OK;
+    }
+
     if(!strcmp_wa(bstrName, "propArgPutO")) {
         CHECK_EXPECT(global_propargput_d);
         test_grfdex(grfdex, fdexNameEnsure|fdexNameCaseSensitive);
@@ -859,6 +993,16 @@ static HRESULT WINAPI Global_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD 
 
     if(!strcmp_wa(bstrName, "bindEventHandler")) {
         *pid = DISPID_GLOBAL_BINDEVENTHANDLER;
+        return S_OK;
+    }
+
+    if(!strcmp_wa(bstrName, "testEnumObj")) {
+        *pid = DISPID_GLOBAL_TESTENUMOBJ;
+        return S_OK;
+    }
+
+    if(!strcmp_wa(bstrName, "callEval")) {
+        *pid = DISPID_GLOBAL_CALLEVAL;
         return S_OK;
     }
 
@@ -1253,6 +1397,55 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         ok(V_I4(pdp->rgvarg+2) == 0, "V_I4(pdp->rgvarg+2) = %d\n", V_I4(pdp->rgvarg+2));
         return S_OK;
 
+    case DISPID_GLOBAL_PROPARGPUTOP:
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->rgvarg != NULL, "rgvarg != NULL\n");
+        ok(pei != NULL, "pei == NULL\n");
+
+        switch(wFlags) {
+        case INVOKE_PROPERTYGET | INVOKE_FUNC:
+            CHECK_EXPECT(global_propargputop_get_i);
+
+            ok(pdp->cNamedArgs == 0, "cNamedArgs = %d\n", pdp->cNamedArgs);
+            ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+            ok(pdp->cArgs == 2, "cArgs = %d\n", pdp->cArgs);
+            ok(pdp->cNamedArgs == 0, "cNamedArgs = %d\n", pdp->cNamedArgs);
+            ok(pvarRes != NULL, "pvarRes = NULL\n");
+
+            ok(V_VT(pdp->rgvarg) == VT_I4, "V_VT(pdp->rgvarg) = %d\n", V_VT(pdp->rgvarg));
+            ok(V_I4(pdp->rgvarg) == 1, "V_I4(pdp->rgvarg) = %d\n", V_I4(pdp->rgvarg));
+
+            ok(V_VT(pdp->rgvarg+1) == VT_I4, "V_VT(pdp->rgvarg+1) = %d\n", V_VT(pdp->rgvarg+1));
+            ok(V_I4(pdp->rgvarg+1) == 0, "V_I4(pdp->rgvarg+1) = %d\n", V_I4(pdp->rgvarg+1));
+
+            V_VT(pvarRes) = VT_I4;
+            V_I4(pvarRes) = 6;
+            break;
+        case INVOKE_PROPERTYPUT:
+            CHECK_EXPECT(global_propargputop_put_i);
+
+            ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
+            ok(pdp->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT, "pdp->rgdispidNamedArgs[0] = %d\n", pdp->rgdispidNamedArgs[0]);
+            ok(pdp->rgdispidNamedArgs != NULL, "rgdispidNamedArgs == NULL\n");
+            ok(pdp->cArgs == 3, "cArgs = %d\n", pdp->cArgs);
+            ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
+            ok(!pvarRes, "pvarRes != NULL\n");
+
+            ok(V_VT(pdp->rgvarg) == VT_I4, "V_VT(pdp->rgvarg) = %d\n", V_VT(pdp->rgvarg));
+            ok(V_I4(pdp->rgvarg) == 8, "V_I4(pdp->rgvarg) = %d\n", V_I4(pdp->rgvarg));
+
+            ok(V_VT(pdp->rgvarg+1) == VT_I4, "V_VT(pdp->rgvarg+1) = %d\n", V_VT(pdp->rgvarg+1));
+            ok(V_I4(pdp->rgvarg+1) == 1, "V_I4(pdp->rgvarg+1) = %d\n", V_I4(pdp->rgvarg+1));
+
+            ok(V_VT(pdp->rgvarg+2) == VT_I4, "V_VT(pdp->rgvarg+2) = %d\n", V_VT(pdp->rgvarg+2));
+            ok(V_I4(pdp->rgvarg+2) == 0, "V_I4(pdp->rgvarg+2) = %d\n", V_I4(pdp->rgvarg+2));
+            break;
+        default:
+            ok(0, "wFlags = %x\n", wFlags);
+        }
+
+        return S_OK;
+
     case DISPID_GLOBAL_OBJECT_FLAG: {
         IDispatchEx *dispex;
         BSTR str;
@@ -1315,7 +1508,7 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         return S_OK;
 
     case DISPID_GLOBAL_TESTARGTYPES: {
-        VARIANT args[8], v;
+        VARIANT args[10], v;
         DISPPARAMS dp = {args, NULL, ARRAY_SIZE(args), 0};
         HRESULT hres;
 
@@ -1358,12 +1551,53 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         V_VT(args+6) = VT_R4;
         V_R4(args+6) = 0.5;
         V_VT(args+7) = VT_UI2;
-        V_R4(args+7) = 3;
+        V_UI2(args+7) = 3;
+        V_VT(args+8) = VT_UI1;
+        V_UI1(args+8) = 4;
+        V_VT(args+9) = VT_I1;
+        V_I1(args+9) = 5;
         V_VT(&v) = VT_I4;
         V_I4(&v) = 2;
         hres = IDispatch_Invoke(V_DISPATCH(pdp->rgvarg), DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dp, NULL, NULL, NULL);
         ok(hres == S_OK, "Invoke failed: %08x\n", hres);
 
+        return S_OK;
+    }
+
+    case DISPID_GLOBAL_CALLEVAL: {
+        IDispatchEx *eval_func;
+        DISPPARAMS params;
+        VARIANT arg, res;
+        HRESULT hres;
+
+        CHECK_EXPECT(global_calleval_i);
+
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pvarRes == NULL, "pvarRes != NULL\n");
+        ok(pei != NULL, "pei == NULL\n");
+
+        ok(V_VT(pdp->rgvarg) == VT_DISPATCH, "V_VT(arg) = %d\n", V_VT(pdp->rgvarg));
+        hres = IDispatch_QueryInterface(V_DISPATCH(pdp->rgvarg), &IID_IDispatchEx, (void**)&eval_func);
+        ok(hres == S_OK, "Could not get IDispatchEx iface: %08x\n", hres);
+
+        params.rgvarg = &arg;
+        params.rgdispidNamedArgs = NULL;
+        params.cArgs = 1;
+        params.cNamedArgs = 0;
+        V_VT(&arg) = VT_BSTR;
+
+        V_BSTR(&arg) = a2bstr("var x = 5; v");
+        V_VT(&res) = VT_ERROR;
+        hres = IDispatchEx_InvokeEx(eval_func, DISPID_VALUE, 0, DISPATCH_METHOD, &params, &res, NULL, NULL);
+        ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+        ok(V_VT(&res) == VT_I4, "eval returned type %u\n", V_VT(&res));
+        ok(V_I4(&res) == 2, "eval returned %d\n", V_I4(&res));
+        SysFreeString(V_BSTR(&arg));
+        IDispatchEx_Release(eval_func);
         return S_OK;
     }
     }
@@ -2366,6 +2600,107 @@ static void test_invokeex(void)
     IActiveScript_Release(script);
 }
 
+static void test_eval(void)
+{
+    IActiveScriptParse *parser;
+    IDispatchEx *script_dispex;
+    IDispatch *script_disp;
+    IActiveScript *engine;
+    VARIANT arg, res;
+    DISPPARAMS params;
+    DISPID id, v_id;
+    BSTR str;
+    HRESULT hres;
+
+    engine = create_script();
+
+    hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+
+    hres = IActiveScriptParse_InitNew(parser);
+    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+
+    hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
+    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+
+    SET_EXPECT(GetItemInfo_testVal);
+    hres = IActiveScript_AddNamedItem(engine, test_valW,
+            SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|SCRIPTITEM_GLOBALMEMBERS);
+    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+    CHECK_CALLED(GetItemInfo_testVal);
+
+    hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+
+    hres = IActiveScript_GetScriptDispatch(engine, NULL, &script_disp);
+    ok(hres == S_OK, "GetScriptDispatch failed: %08x\n", hres);
+    ok(script_disp != NULL, "script_disp == NULL\n");
+
+    hres = IDispatch_QueryInterface(script_disp, &IID_IDispatchEx, (void**)&script_dispex);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08x\n", hres);
+    IDispatch_Release(script_disp);
+
+    str = a2bstr("eval");
+    hres = IDispatchEx_GetDispID(script_dispex, str, 0, &id);
+    ok(hres == S_OK, "Could not get eval dispid: %08x\n", hres);
+    SysFreeString(str);
+
+    params.rgvarg = &arg;
+    params.rgdispidNamedArgs = NULL;
+    params.cArgs = 1;
+    params.cNamedArgs = 0;
+    V_VT(&arg) = VT_BSTR;
+
+    V_BSTR(&arg) = a2bstr("var v = 1;");
+    V_VT(&res) = VT_ERROR;
+    hres = IDispatchEx_InvokeEx(script_dispex, id, 0, DISPATCH_METHOD, &params, &res, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(V_VT(&res) == VT_EMPTY, "eval returned type %u\n", V_VT(&res));
+    SysFreeString(V_BSTR(&arg));
+
+    V_BSTR(&arg) = a2bstr("v");
+    V_VT(&res) = VT_ERROR;
+    hres = IDispatchEx_InvokeEx(script_dispex, id, 0, DISPATCH_METHOD, &params, &res, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(V_VT(&res) == VT_I4, "eval returned type %u\n", V_VT(&res));
+    ok(V_I4(&res) == 1, "eval returned %d\n", V_I4(&res));
+    SysFreeString(V_BSTR(&arg));
+
+    str = a2bstr("v");
+    hres = IDispatchEx_GetDispID(script_dispex, str, 0, &v_id);
+    ok(hres == S_OK, "Could not get v dispid: %08x\n", hres);
+    SysFreeString(str);
+
+    params.rgvarg = NULL;
+    params.cArgs = 0;
+    V_VT(&res) = VT_ERROR;
+    hres = IDispatchEx_InvokeEx(script_dispex, v_id, 0, DISPATCH_PROPERTYGET, &params, &res, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(V_VT(&res) == VT_I4, "eval returned type %u\n", V_VT(&res));
+    ok(V_I4(&res) == 1, "eval returned %d\n", V_I4(&res));
+
+    SET_EXPECT(global_calleval_i);
+    str = a2bstr("(function(){"
+                 "    var v = 2;"
+                 "    callEval(eval);"
+                 "    ok(x === 5, 'x = ' + x);"
+                 "})();");
+    hres = IActiveScriptParse_ParseScriptText(parser, str, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
+    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+    SysFreeString(str);
+    CHECK_CALLED(global_calleval_i);
+
+    str = a2bstr("x");
+    hres = IDispatchEx_GetDispID(script_dispex, str, 0, &id);
+    ok(hres == DISP_E_UNKNOWNNAME, "GetDispID(x) returned %08x\n", hres);
+    SysFreeString(str);
+
+    IDispatchEx_Release(script_dispex);
+    IActiveScriptParse_Release(parser);
+    IActiveScript_Close(engine);
+    IActiveScript_Release(engine);
+}
+
 struct bom_test
 {
     WCHAR str[1024];
@@ -2651,9 +2986,25 @@ static BOOL run_tests(void)
     CHECK_CALLED(global_propargput_d);
     CHECK_CALLED(global_propargput_i);
 
+    SET_EXPECT(global_propargputop_d);
+    SET_EXPECT(global_propargputop_get_i);
+    SET_EXPECT(global_propargputop_put_i);
+    parse_script_a("var t=0; propArgPutOp(t++, t++) += t++;");
+    CHECK_CALLED(global_propargputop_d);
+    CHECK_CALLED(global_propargputop_get_i);
+    CHECK_CALLED(global_propargputop_put_i);
+
+    SET_EXPECT(global_propargputop_d);
+    SET_EXPECT(global_propargputop_get_i);
+    SET_EXPECT(global_propargputop_put_i);
+    parse_script_a("var t=0; propArgPutOp(t++, t++) ^= 14;");
+    CHECK_CALLED(global_propargputop_d);
+    CHECK_CALLED(global_propargputop_get_i);
+    CHECK_CALLED(global_propargputop_put_i);
+
     SET_EXPECT(global_testargtypes_i);
     parse_script_a("testArgTypes(dispUnk, intProp(), intProp, getShort(), shortProp,"
-                   "function(ui2,r4,i4ref,ui4,nullunk,d,i,s) {"
+                   "function(i1,ui1,ui2,r4,i4ref,ui4,nullunk,d,i,s) {"
                    "    ok(getVT(i) === 'VT_I4', 'getVT(i) = ' + getVT(i));"
                    "    ok(getVT(s) === 'VT_I4', 'getVT(s) = ' + getVT(s));"
                    "    ok(getVT(d) === 'VT_DISPATCH', 'getVT(d) = ' + getVT(d));"
@@ -2666,6 +3017,10 @@ static BOOL run_tests(void)
                    "    ok(r4 === 0.5, 'r4 = ' + r4);"
                    "    ok(getVT(r4) === 'VT_R8', 'getVT(r4) = ' + getVT(r4));"
                    "    ok(getVT(ui2) === 'VT_I4', 'getVT(ui2) = ' + getVT(ui2));"
+                   "    ok(getVT(ui1) === 'VT_I4', 'getVT(ui1) = ' + getVT(ui1));"
+                   "    ok(ui1 === 4, 'ui1 = ' + ui1);"
+                   "    ok(getVT(i1) === 'VT_I4', 'getVT(i1) = ' + getVT(i1));"
+                   "    ok(i1 === 5, 'i1 = ' + i1);"
                    "});");
     CHECK_CALLED(global_testargtypes_i);
 
@@ -2682,6 +3037,46 @@ static BOOL run_tests(void)
     parse_script_a("@if(true)\nif(@_jscript) reportSuccess();\n@end");
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
+
+    EnumVARIANT_index = 0;
+    EnumVARIANT_next_0_count = 1;
+    SET_EXPECT(testobj_newenum);
+    SET_EXPECT(enumvariant_next_0);
+    parse_script_a("new Enumerator(testObj);");
+    CHECK_CALLED(testobj_newenum);
+    CHECK_CALLED(enumvariant_next_0);
+
+    EnumVARIANT_index = 0;
+    EnumVARIANT_next_0_count = 2;
+    SET_EXPECT(testobj_newenum);
+    SET_EXPECT(enumvariant_next_0);
+    SET_EXPECT(enumvariant_reset);
+    parse_script_a("(function () {"
+                   "    var testEnumObj = new Enumerator(testObj);"
+                   "    var tmp = testEnumObj.moveFirst();"
+                   "    ok(tmp == undefined, \"testEnumObj.moveFirst() = \" + tmp);"
+                   "})()");
+    CHECK_CALLED(testobj_newenum);
+    CHECK_CALLED(enumvariant_next_0);
+    CHECK_CALLED(enumvariant_reset);
+
+    EnumVARIANT_index = 0;
+    EnumVARIANT_next_0_count = 1;
+    SET_EXPECT(testobj_newenum);
+    SET_EXPECT(enumvariant_next_0);
+    SET_EXPECT(enumvariant_next_1);
+    parse_script_a("(function () {"
+                   "    var testEnumObj = new Enumerator(testObj);"
+                   "    while (!testEnumObj.atEnd())"
+                   "    {"
+                   "        ok(testEnumObj.item() == 123, "
+                   "         \"testEnumObj.item() = \"+testEnumObj.item());"
+                   "        testEnumObj.moveNext();"
+                   "    }"
+                   "})()");
+    CHECK_CALLED(testobj_newenum);
+    CHECK_CALLED(enumvariant_next_0);
+    CHECK_CALLED(enumvariant_next_1);
 
     run_from_res("lang.js");
     run_from_res("api.js");
@@ -2711,6 +3106,7 @@ static BOOL run_tests(void)
 
     test_script_exprs();
     test_invokeex();
+    test_eval();
 
     parse_script_with_error_a(
         "?",

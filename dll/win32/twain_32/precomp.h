@@ -2,8 +2,6 @@
 #ifndef _TWAIN32_PRECOMP_H
 #define _TWAIN32_PRECOMP_H
 
-#include <wine/config.h>
-
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 

@@ -5,9 +5,9 @@
 @ stub AppPolicyGetCreateFileAccess
 @ stub AppPolicyGetLifecycleManagement
 @ stub AppPolicyGetMediaFoundationCodecLoading
-@ stub AppPolicyGetProcessTerminationMethod
+@ stdcall -stub AppPolicyGetProcessTerminationMethod(long ptr)
 @ stub AppPolicyGetShowDeveloperDiagnostic
-@ stub AppPolicyGetThreadInitializationType
+@ stdcall -stub AppPolicyGetThreadInitializationType(long ptr)
 @ stub AppPolicyGetWindowingModel
 @ stub GetApplicationUserModelIdFromToken
 @ stub GetPackageFamilyNameFromToken

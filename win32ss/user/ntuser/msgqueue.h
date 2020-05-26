@@ -127,7 +127,7 @@ enum internal_event_message
 
 extern LIST_ENTRY usmList;
 
-BOOL FASTCALL MsqIsHung(PTHREADINFO pti);
+BOOL FASTCALL MsqIsHung(PTHREADINFO pti, DWORD TimeOut);
 VOID CALLBACK HungAppSysTimerProc(HWND,UINT,UINT_PTR,DWORD);
 NTSTATUS FASTCALL co_MsqSendMessage(PTHREADINFO ptirec,
            HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,

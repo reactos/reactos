@@ -1485,16 +1485,31 @@ static void test_edit_control_scroll(void)
     DestroyWindow (hwEdit);
 }
 
+static BOOL is_cjk(HDC dc)
+{
+    const DWORD FS_DBCS_MASK = FS_JISJAPAN|FS_CHINESESIMP|FS_WANSUNG|FS_CHINESETRAD|FS_JOHAB;
+    FONTSIGNATURE fs;
+
+    switch (GdiGetCodePage(dc)) {
+    case 932: case 936: case 949: case 950: case 1361:
+        return TRUE;
+    default:
+        return (GetTextCharsetInfo(dc, &fs, 0) != DEFAULT_CHARSET &&
+                (fs.fsCsb[0] & FS_DBCS_MASK));
+    }
+}
+
 static void test_margins_usefontinfo(UINT charset)
 {
-    INT margins, threshold, expect, empty_expect, small_expect;
     HWND hwnd;
     HDC hdc;
+    TEXTMETRICW tm;
     SIZE size;
-    BOOL cjk;
     LOGFONTA lf;
     HFONT hfont;
     RECT rect;
+    INT margins, threshold, expect, empty_expect;
+    const UINT small_margins = MAKELONG(1, 5);
 
     memset(&lf, 0, sizeof(lf));
     lf.lfHeight = -11;
@@ -1513,43 +1528,31 @@ static void test_margins_usefontinfo(UINT charset)
 
     hdc = GetDC(hwnd);
     hfont = SelectObject(hdc, hfont);
-    size.cx = GdiGetCharDimensions( hdc, NULL, &size.cy );
-    expect = MAKELONG(size.cx / 2, size.cx / 2);
-    small_expect = 0;
-    empty_expect = size.cx >= 28 ? small_expect : expect;
-
-    charset = GetTextCharset(hdc);
-    switch (charset)
-    {
-    case SHIFTJIS_CHARSET:
-    case HANGUL_CHARSET:
-    case GB2312_CHARSET:
-    case CHINESEBIG5_CHARSET:
-        cjk = TRUE;
-        break;
-    default:
-        cjk = FALSE;
+    size.cx = GdiGetCharDimensions( hdc, &tm, &size.cy );
+    if ((charset != tm.tmCharSet && charset != DEFAULT_CHARSET) ||
+        !(tm.tmPitchAndFamily & (TMPF_TRUETYPE | TMPF_VECTOR))) {
+        skip("%s for charset %d isn't available\n", lf.lfFaceName, charset);
+        hfont = SelectObject(hdc, hfont);
+        ReleaseDC(hwnd, hdc);
+        DestroyWindow(hwnd);
+        DeleteObject(hfont);
+        return;
     }
-
+    expect = MAKELONG(size.cx / 2, size.cx / 2);
     hfont = SelectObject(hdc, hfont);
     ReleaseDC(hwnd, hdc);
 
     margins = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
     ok(margins == 0, "got %x\n", margins);
     SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, MAKELPARAM(TRUE, 0));
-    margins = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
-    if (!cjk)
-        ok(margins == expect, "%d: got %d, %d\n", charset, HIWORD(margins), LOWORD(margins));
-    else
-    {
-        ok(HIWORD(margins) > 0 && LOWORD(margins) > 0, "%d: got %d, %d\n", charset, HIWORD(margins), LOWORD(margins));
-        expect = empty_expect = small_expect = margins;
-    }
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO));
+    expect = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
     DestroyWindow(hwnd);
 
-    threshold = (size.cx / 2 + size.cx) * 2;
+    threshold = HIWORD(expect) + LOWORD(expect) + size.cx * 2;
+    empty_expect = threshold > 80 ? small_margins : expect;
 
-    /* Size below which non-cjk margins are zero */
+    /* Size below the threshold, margins remain unchanged */
     hwnd = CreateWindowExA(0, "Edit", "A", WS_POPUP, 0, 0, threshold - 1, 100, NULL, NULL, NULL, NULL);
     ok(hwnd != NULL, "got %p\n", hwnd);
     GetClientRect(hwnd, &rect);
@@ -1559,11 +1562,13 @@ static void test_margins_usefontinfo(UINT charset)
     ok(margins == 0, "got %x\n", margins);
 
     SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, MAKELPARAM(TRUE, 0));
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, small_margins);
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO));
     margins = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
-    ok(margins == small_expect, "%d: got %d, %d\n", charset, HIWORD(margins), LOWORD(margins));
+    ok(margins == small_margins, "%d: got %d, %d\n", charset, HIWORD(margins), LOWORD(margins));
     DestroyWindow(hwnd);
 
-    /* Size at which non-cjk margins become non-zero */
+    /* Size at the threshold, margins become non-zero */
     hwnd = CreateWindowExA(0, "Edit", "A", WS_POPUP, 0, 0, threshold, 100, NULL, NULL, NULL, NULL);
     ok(hwnd != NULL, "got %p\n", hwnd);
     GetClientRect(hwnd, &rect);
@@ -1573,6 +1578,8 @@ static void test_margins_usefontinfo(UINT charset)
     ok(margins == 0, "got %x\n", margins);
 
     SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, MAKELPARAM(TRUE, 0));
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, small_margins);
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO));
     margins = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
     ok(margins == expect, "%d: got %d, %d\n", charset, HIWORD(margins), LOWORD(margins));
     DestroyWindow(hwnd);
@@ -1587,11 +1594,158 @@ static void test_margins_usefontinfo(UINT charset)
     ok(margins == 0, "got %x\n", margins);
 
     SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, MAKELPARAM(TRUE, 0));
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, small_margins);
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO));
     margins = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
     ok(margins == empty_expect, "%d: got %d, %d\n", charset, HIWORD(margins), LOWORD(margins));
     DestroyWindow(hwnd);
 
     DeleteObject(hfont);
+}
+
+static INT get_cjk_fontinfo_margin(INT width, INT side_bearing)
+{
+    INT margin;
+    if (side_bearing < 0)
+        margin = min(-side_bearing, width/2);
+    else
+        margin = 0;
+    return margin;
+}
+
+static DWORD get_cjk_font_margins(HDC hdc)
+{
+    ABC abc[256];
+    SHORT left, right;
+    UINT i;
+
+    if (!GetCharABCWidthsW(hdc, 0, 255, abc))
+        return 0;
+
+    left = right = 0;
+    for (i = 0; i < ARRAY_SIZE(abc); i++) {
+        if (-abc[i].abcA > right) right = -abc[i].abcA;
+        if (-abc[i].abcC > left)  left  = -abc[i].abcC;
+    }
+    return MAKELONG(left, right);
+}
+
+static void test_margins_default(const char* facename, UINT charset)
+{
+    HWND hwnd;
+    HDC hdc;
+    TEXTMETRICW tm;
+    SIZE size;
+    BOOL cjk;
+    LOGFONTA lf;
+    HFONT hfont;
+    RECT rect;
+    INT margins, expect, font_expect;
+    const UINT small_margins = MAKELONG(1, 5);
+    const WCHAR EditW[] = {'E','d','i','t',0}, strW[] = {'W',0};
+    struct char_width_info {
+        INT lsb, rsb, unknown;
+    } info;
+    HMODULE hgdi32;
+    BOOL (WINAPI *pGetCharWidthInfo)(HDC, struct char_width_info *);
+
+    hgdi32 = GetModuleHandleA("gdi32.dll");
+    pGetCharWidthInfo = (void *)GetProcAddress(hgdi32, "GetCharWidthInfo");
+
+    memset(&lf, 0, sizeof(lf));
+    lf.lfHeight = -11;
+    lf.lfWeight = FW_NORMAL;
+    lf.lfCharSet = charset;
+    strcpy(lf.lfFaceName, facename);
+
+    hfont = CreateFontIndirectA(&lf);
+    ok(hfont != NULL, "got %p\n", hfont);
+
+    /* Unicode version */
+    hwnd = CreateWindowExW(0, EditW, strW, WS_POPUP, 0, 0, 5000, 1000, NULL, NULL, NULL, NULL);
+    ok(hwnd != NULL, "got %p\n", hwnd);
+    GetClientRect(hwnd, &rect);
+    ok(!IsRectEmpty(&rect), "got rect %s\n", wine_dbgstr_rect(&rect));
+
+    hdc = GetDC(hwnd);
+    hfont = SelectObject(hdc, hfont);
+    size.cx = GdiGetCharDimensions( hdc, &tm, &size.cy );
+    if ((charset != tm.tmCharSet && charset != DEFAULT_CHARSET) ||
+        !(tm.tmPitchAndFamily & (TMPF_TRUETYPE | TMPF_VECTOR))) {
+        skip("%s for charset %d isn't available\n", lf.lfFaceName, charset);
+        hfont = SelectObject(hdc, hfont);
+        ReleaseDC(hwnd, hdc);
+        DestroyWindow(hwnd);
+        DeleteObject(hfont);
+        return;
+    }
+    cjk = is_cjk(hdc);
+    if (cjk && pGetCharWidthInfo && pGetCharWidthInfo(hdc, &info)) {
+        short left, right;
+
+        left  = get_cjk_fontinfo_margin(size.cx, info.lsb);
+        right = get_cjk_fontinfo_margin(size.cx, info.rsb);
+        expect = MAKELONG(left, right);
+
+        font_expect = get_cjk_font_margins(hdc);
+        if (!font_expect)
+            /* In this case, margins aren't updated */
+            font_expect = small_margins;
+    }
+    else
+        font_expect = expect = MAKELONG(size.cx / 2, size.cx / 2);
+
+    hfont = SelectObject(hdc, hfont);
+    ReleaseDC(hwnd, hdc);
+
+    margins = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
+    ok(margins == 0, "got %x\n", margins);
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, small_margins);
+    SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, MAKELPARAM(TRUE, 0));
+    margins = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
+    ok(margins == font_expect, "%s:%d: got %d, %d\n", facename, charset, HIWORD(margins), LOWORD(margins));
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, small_margins);
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO));
+    margins = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
+    ok(margins == expect, "%s:%d: expected %d, %d, got %d, %d\n", facename, charset, HIWORD(expect), LOWORD(expect), HIWORD(margins), LOWORD(margins));
+    DestroyWindow(hwnd);
+
+    /* ANSI version */
+    hwnd = CreateWindowExA(0, "Edit", "A", WS_POPUP, 0, 0, 5000, 1000, NULL, NULL, NULL, NULL);
+    ok(hwnd != NULL, "got %p\n", hwnd);
+    GetClientRect(hwnd, &rect);
+    ok(!IsRectEmpty(&rect), "got rect %s\n", wine_dbgstr_rect(&rect));
+
+    margins = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
+    ok(margins == 0, "got %x\n", margins);
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, small_margins);
+    SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, MAKELPARAM(TRUE, 0));
+    margins = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
+    ok(margins == font_expect, "%s:%d: got %d, %d\n", facename, charset, HIWORD(margins), LOWORD(margins));
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, small_margins);
+    SendMessageA(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO));
+    margins = SendMessageA(hwnd, EM_GETMARGINS, 0, 0);
+    ok(margins == expect, "%s:%d: expected %d, %d, got %d, %d\n", facename, charset, HIWORD(expect), LOWORD(expect), HIWORD(margins), LOWORD(margins));
+    DestroyWindow(hwnd);
+
+    DeleteObject(hfont);
+}
+
+static INT CALLBACK find_font_proc(const LOGFONTA *elf, const TEXTMETRICA *ntm, DWORD type, LPARAM lParam)
+{
+    return 0;
+}
+
+static BOOL is_font_installed(const char*name)
+{
+    HDC hdc = GetDC(NULL);
+    BOOL ret = FALSE;
+
+    if (!EnumFontFamiliesA(hdc, name, find_font_proc, 0))
+        ret = TRUE;
+
+    ReleaseDC(NULL, hdc);
+    return ret;
 }
 
 static void test_margins(void)
@@ -1668,27 +1822,45 @@ static void test_margins(void)
        but not by < Win 8 and Win 10. */
 
     test_margins_usefontinfo(DEFAULT_CHARSET);
-}
 
-static INT CALLBACK find_font_proc(const LOGFONTA *elf, const TEXTMETRICA *ntm, DWORD type, LPARAM lParam)
-{
-    return 0;
+    test_margins_default("Tahoma", ANSI_CHARSET);
+    test_margins_default("Tahoma", EASTEUROPE_CHARSET);
+
+    test_margins_default("Tahoma", HANGUL_CHARSET);
+    test_margins_default("Tahoma", CHINESEBIG5_CHARSET);
+
+    if (is_font_installed("MS PGothic")) {
+        test_margins_default("MS PGothic", SHIFTJIS_CHARSET);
+        test_margins_default("MS PGothic", GREEK_CHARSET);
+    }
+    else
+        skip("MS PGothic is not available, skipping some margin tests\n");
+
+    if (is_font_installed("Ume P Gothic")) {
+        test_margins_default("Ume P Gothic", SHIFTJIS_CHARSET);
+        test_margins_default("Ume P Gothic", GREEK_CHARSET);
+    }
+    else
+        skip("Ume P Gothic is not available, skipping some margin tests\n");
+
+    if (is_font_installed("SimSun")) {
+        test_margins_default("SimSun", GB2312_CHARSET);
+        test_margins_default("SimSun", ANSI_CHARSET);
+    }
+    else
+        skip("SimSun is not available, skipping some margin tests\n");
 }
 
 static void test_margins_font_change(void)
 {
-    DWORD margins, font_margins, ret;
+    DWORD margins, font_margins;
     HFONT hfont, hfont2;
     HWND hwEdit;
     LOGFONTA lf;
-    HDC hdc;
 
-    hdc = GetDC(0);
-    ret = EnumFontFamiliesA(hdc, "Arial", find_font_proc, 0);
-    ReleaseDC(0, hdc);
-    if (ret)
+    if (!is_font_installed("Arial"))
     {
-        trace("Arial not found - skipping font change margin tests\n");
+        skip("Arial not found - skipping font change margin tests\n");
         return;
     }
 
@@ -1699,7 +1871,7 @@ static void test_margins_font_change(void)
     memset(&lf, 0, sizeof(lf));
     strcpy(lf.lfFaceName, "Arial");
     lf.lfHeight = 16;
-    lf.lfCharSet = DEFAULT_CHARSET;
+    lf.lfCharSet = GREEK_CHARSET; /* to avoid associated charset feature */
     hfont = CreateFontIndirectA(&lf);
     lf.lfHeight = 30;
     hfont2 = CreateFontIndirectA(&lf);
@@ -3143,6 +3315,9 @@ static void test_change_focus(void)
     HWND hwnd, parent_wnd;
     WNDPROC oldproc;
     MSG msg;
+    POINT orig_pos;
+
+    GetCursorPos(&orig_pos);
 
     parent_wnd = CreateWindowA("ParentWnd", "", WS_OVERLAPPEDWINDOW,
             0, 0, 200, 200, NULL, NULL, GetModuleHandleA(NULL), NULL);
@@ -3157,6 +3332,8 @@ static void test_change_focus(void)
     oldproc = (WNDPROC)SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)edit_subclass_proc);
     SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)oldproc);
 
+    SetCursorPos(400, 400);
+
     SetFocus(parent_wnd);
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     SetFocus(hwnd);
@@ -3167,6 +3344,8 @@ static void test_change_focus(void)
     SetFocus(parent_wnd);
     while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
     ok_sequence(sequences, COMBINED_SEQ_INDEX, killfocus_combined_seq, "Kill focus", TRUE);
+
+    SetCursorPos(orig_pos.x, orig_pos.y);
 
     DestroyWindow(hwnd);
 }

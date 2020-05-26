@@ -20,13 +20,15 @@
 #endif
 
 #include "btrfs_drv.h"
+#include "xxhash.h"
+#include "crc32c.h"
 #ifndef __REACTOS__
 #ifndef _MSC_VER
 #include <cpuid.h>
 #else
 #include <intrin.h>
 #endif
-#endif
+#endif // __REACTOS__
 #include <ntddscsi.h>
 #include "btrfs.h"
 #include <ata.h>
@@ -55,7 +57,7 @@ NTSTATUS RtlStringCbVPrintfA(char* pszDest, size_t cbDest, const char* pszFormat
 #define INCOMPAT_SUPPORTED (BTRFS_INCOMPAT_FLAGS_MIXED_BACKREF | BTRFS_INCOMPAT_FLAGS_DEFAULT_SUBVOL | BTRFS_INCOMPAT_FLAGS_MIXED_GROUPS | \
                             BTRFS_INCOMPAT_FLAGS_COMPRESS_LZO | BTRFS_INCOMPAT_FLAGS_BIG_METADATA | BTRFS_INCOMPAT_FLAGS_RAID56 | \
                             BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF | BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA | BTRFS_INCOMPAT_FLAGS_NO_HOLES | \
-                            BTRFS_INCOMPAT_FLAGS_COMPRESS_ZSTD)
+                            BTRFS_INCOMPAT_FLAGS_COMPRESS_ZSTD | BTRFS_INCOMPAT_FLAGS_METADATA_UUID | BTRFS_INCOMPAT_FLAGS_RAID1C34)
 #define COMPAT_RO_SUPPORTED (BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE | BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE_VALID)
 
 static const WCHAR device_name[] = {'\\','B','t','r','f','s',0};
@@ -66,7 +68,7 @@ DEFINE_GUID(BtrfsBusInterface, 0x4d414874, 0x6865, 0x6761, 0x6d, 0x65, 0x83, 0x6
 PDRIVER_OBJECT drvobj;
 PDEVICE_OBJECT master_devobj, busobj;
 #ifndef __REACTOS__
-bool have_sse42 = false, have_sse2 = false;
+bool have_sse2 = false;
 #endif
 uint64_t num_reads = 0;
 LIST_ENTRY uid_map_list, gid_map_list;
@@ -86,6 +88,7 @@ uint32_t mount_no_trim = 0;
 uint32_t mount_clear_cache = 0;
 uint32_t mount_allow_degraded = 0;
 uint32_t mount_readonly = 0;
+uint32_t mount_no_root_dir = 0;
 uint32_t no_pnp = 0;
 bool log_started = false;
 UNICODE_STRING log_device, log_file, registry_path;
@@ -98,6 +101,8 @@ tIoUnregisterPlugPlayNotificationEx fIoUnregisterPlugPlayNotificationEx;
 tFsRtlGetEcpListFromIrp fFsRtlGetEcpListFromIrp;
 tFsRtlGetNextExtraCreateParameter fFsRtlGetNextExtraCreateParameter;
 tFsRtlValidateReparsePointBuffer fFsRtlValidateReparsePointBuffer;
+tFsRtlCheckLockForOplockRequest fFsRtlCheckLockForOplockRequest;
+tFsRtlAreThereCurrentOrInProgressFileLocks fFsRtlAreThereCurrentOrInProgressFileLocks;
 bool diskacc = false;
 void *notification_entry = NULL, *notification_entry2 = NULL, *notification_entry3 = NULL;
 ERESOURCE pdo_list_lock, mapping_lock;
@@ -107,6 +112,8 @@ HANDLE degraded_wait_handle = NULL, mountmgr_thread_handle = NULL;
 bool degraded_wait = true;
 KEVENT mountmgr_thread_event;
 bool shutting_down = false;
+ERESOURCE boot_lock;
+extern uint64_t boot_subvol;
 
 #ifdef _DEBUG
 PFILE_OBJECT comfo = NULL;
@@ -165,9 +172,9 @@ void _debug_message(_In_ const char* func, _In_ char* s, ...) {
     }
 
 #ifdef DEBUG_LONG_MESSAGES
-    sprintf(buf2, "%p:%s:%s:%u:", PsGetCurrentThread(), func, file, line);
+    sprintf(buf2, "%p:%s:%s:%u:", (void*)PsGetCurrentThread(), func, file, line);
 #else
-    sprintf(buf2, "%p:%s:", PsGetCurrentThread(), func);
+    sprintf(buf2, "%p:%s:", (void*)PsGetCurrentThread(), func);
 #endif
     buf = &buf2[strlen(buf2)];
 
@@ -241,7 +248,7 @@ void _debug_message(_In_ const char* func, _In_ char* s, ...) {
             IoFreeMdl(Irp->MdlAddress);
 
         if (!NT_SUCCESS(Status)) {
-            DbgPrint("failed to write to COM1 - error %08x\n", Status);
+            DbgPrint("failed to write to COM1 - error %08lx\n", Status);
             goto exit;
         }
 
@@ -255,7 +262,7 @@ exit:
         Status = ZwWriteFile(log_handle, NULL, NULL, NULL, &iosb, buf2, length, NULL, NULL);
 
         if (!NT_SUCCESS(Status)) {
-            DbgPrint("failed to write to file - error %08x\n", Status);
+            DbgPrint("failed to write to file - error %08lx\n", Status);
         }
     }
 
@@ -283,31 +290,6 @@ static void __stdcall DriverUnload(_In_ PDRIVER_OBJECT DriverObject) {
     UNICODE_STRING dosdevice_nameW;
 
     TRACE("(%p)\n", DriverObject);
-
-    free_cache();
-
-    IoUnregisterFileSystem(DriverObject->DeviceObject);
-
-    if (notification_entry2) {
-        if (fIoUnregisterPlugPlayNotificationEx)
-            fIoUnregisterPlugPlayNotificationEx(notification_entry2);
-        else
-            IoUnregisterPlugPlayNotification(notification_entry2);
-    }
-
-    if (notification_entry3) {
-        if (fIoUnregisterPlugPlayNotificationEx)
-            fIoUnregisterPlugPlayNotificationEx(notification_entry3);
-        else
-            IoUnregisterPlugPlayNotification(notification_entry3);
-    }
-
-    if (notification_entry) {
-        if (fIoUnregisterPlugPlayNotificationEx)
-            fIoUnregisterPlugPlayNotificationEx(notification_entry);
-        else
-            IoUnregisterPlugPlayNotification(notification_entry);
-    }
 
     dosdevice_nameW.Buffer = (WCHAR*)dosdevice_name;
     dosdevice_nameW.Length = dosdevice_nameW.MaximumLength = sizeof(dosdevice_name) - sizeof(WCHAR);
@@ -371,7 +353,7 @@ static bool get_last_inode(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock
 
     Status = find_item(Vcb, r, &tp, &searchkey, false, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
+        ERR("error - find_item returned %08lx\n", Status);
         return false;
     }
 
@@ -459,7 +441,7 @@ bool get_xattr(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
 
     Status = find_item(Vcb, subvol, &tp, &searchkey, false, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
+        ERR("error - find_item returned %08lx\n", Status);
         return false;
     }
 
@@ -469,7 +451,7 @@ bool get_xattr(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
     }
 
     if (tp.item->size < sizeof(DIR_ITEM)) {
-        ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DIR_ITEM));
+        ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DIR_ITEM));
         return false;
     }
 
@@ -504,7 +486,6 @@ static NTSTATUS __stdcall drv_close(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP 
 
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-    // FIXME - unmount if called for volume
     // FIXME - call FsRtlNotifyUninitializeSync(&Vcb->NotifySync) if unmounting
 
     Status = close_file(IrpSp->FileObject, Irp);
@@ -518,7 +499,7 @@ end:
     if (top_level)
         IoSetTopLevelIrp(NULL);
 
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     FsRtlExitFileSystem();
 
@@ -560,6 +541,8 @@ static NTSTATUS __stdcall drv_flush_buffers(_In_ PDEVICE_OBJECT DeviceObject, _I
         goto end;
     }
 
+    FsRtlCheckOplock(fcb_oplock(fcb), Irp, NULL, NULL, NULL);
+
     Irp->IoStatus.Information = 0;
 
     fcb->Header.IsFastIoPossible = fast_io_possible(fcb);
@@ -581,7 +564,7 @@ static NTSTATUS __stdcall drv_flush_buffers(_In_ PDEVICE_OBJECT DeviceObject, _I
 end:
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     if (top_level)
         IoSetTopLevelIrp(NULL);
@@ -603,18 +586,26 @@ static void calculate_total_space(_In_ device_extension* Vcb, _Out_ uint64_t* to
     } else if (Vcb->data_flags & BLOCK_FLAG_RAID6) {
         nfactor = Vcb->superblock.num_devices - 2;
         dfactor = Vcb->superblock.num_devices;
+    } else if (Vcb->data_flags & BLOCK_FLAG_RAID1C3) {
+        nfactor = 1;
+        dfactor = 3;
+    } else if (Vcb->data_flags & BLOCK_FLAG_RAID1C4) {
+        nfactor = 1;
+        dfactor = 4;
     } else {
         nfactor = 1;
         dfactor = 1;
     }
 
-    sectors_used = Vcb->superblock.bytes_used / Vcb->superblock.sector_size;
+    sectors_used = (Vcb->superblock.bytes_used / Vcb->superblock.sector_size) * nfactor / dfactor;
 
     *totalsize = (Vcb->superblock.total_bytes / Vcb->superblock.sector_size) * nfactor / dfactor;
     *freespace = sectors_used > *totalsize ? 0 : (*totalsize - sectors_used);
 }
 
 #ifndef __REACTOS__
+#define INIT_UNICODE_STRING(var, val) UNICODE_STRING us##var; us##var.Buffer = (WCHAR*)val; us##var.Length = us##var.MaximumLength = sizeof(val) - sizeof(WCHAR);
+
 // This function exists because we have to lie about our FS type in certain situations.
 // MPR!MprGetConnection queries the FS type, and compares it to a whitelist. If it doesn't match,
 // it will return ERROR_NO_NET_OR_BAD_PATH, which prevents UAC from working.
@@ -631,17 +622,10 @@ static bool lie_about_fs_type() {
     ULONG_PTR wow64info;
 #endif
 
-    static const WCHAR mpr[] = L"MPR.DLL";
-    static const WCHAR cmd[] = L"CMD.EXE";
-    static const WCHAR fsutil[] = L"FSUTIL.EXE";
-    UNICODE_STRING mprus, cmdus, fsutilus;
-
-    mprus.Buffer = (WCHAR*)mpr;
-    mprus.Length = mprus.MaximumLength = sizeof(mpr) - sizeof(WCHAR);
-    cmdus.Buffer = (WCHAR*)cmd;
-    cmdus.Length = cmdus.MaximumLength = sizeof(cmd) - sizeof(WCHAR);
-    fsutilus.Buffer = (WCHAR*)fsutil;
-    fsutilus.Length = fsutilus.MaximumLength = sizeof(fsutil) - sizeof(WCHAR);
+    INIT_UNICODE_STRING(mpr, L"MPR.DLL");
+    INIT_UNICODE_STRING(cmd, L"CMD.EXE");
+    INIT_UNICODE_STRING(fsutil, L"FSUTIL.EXE");
+    INIT_UNICODE_STRING(storsvc, L"STORSVC.DLL");
 
     if (!PsGetCurrentProcess())
         return false;
@@ -656,7 +640,7 @@ static bool lie_about_fs_type() {
     Status = ZwQueryInformationProcess(NtCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi), &retlen);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("ZwQueryInformationProcess returned %08x\n", Status);
+        ERR("ZwQueryInformationProcess returned %08lx\n", Status);
         return false;
     }
 
@@ -673,31 +657,40 @@ static bool lie_about_fs_type() {
         LDR_DATA_TABLE_ENTRY* entry = CONTAINING_RECORD(le, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
         bool blacklist = false;
 
-        if (entry->FullDllName.Length >= mprus.Length) {
+        if (entry->FullDllName.Length >= usmpr.Length) {
             UNICODE_STRING name;
 
-            name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - mprus.Length) / sizeof(WCHAR)];
-            name.Length = name.MaximumLength = mprus.Length;
+            name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - usmpr.Length) / sizeof(WCHAR)];
+            name.Length = name.MaximumLength = usmpr.Length;
 
-            blacklist = FsRtlAreNamesEqual(&name, &mprus, true, NULL);
+            blacklist = FsRtlAreNamesEqual(&name, &usmpr, true, NULL);
         }
 
-        if (!blacklist && entry->FullDllName.Length >= cmdus.Length) {
+        if (!blacklist && entry->FullDllName.Length >= uscmd.Length) {
             UNICODE_STRING name;
 
-            name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - cmdus.Length) / sizeof(WCHAR)];
-            name.Length = name.MaximumLength = cmdus.Length;
+            name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - uscmd.Length) / sizeof(WCHAR)];
+            name.Length = name.MaximumLength = uscmd.Length;
 
-            blacklist = FsRtlAreNamesEqual(&name, &cmdus, true, NULL);
+            blacklist = FsRtlAreNamesEqual(&name, &uscmd, true, NULL);
         }
 
-        if (!blacklist && entry->FullDllName.Length >= fsutilus.Length) {
+        if (!blacklist && entry->FullDllName.Length >= usfsutil.Length) {
             UNICODE_STRING name;
 
-            name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - fsutilus.Length) / sizeof(WCHAR)];
-            name.Length = name.MaximumLength = fsutilus.Length;
+            name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - usfsutil.Length) / sizeof(WCHAR)];
+            name.Length = name.MaximumLength = usfsutil.Length;
 
-            blacklist = FsRtlAreNamesEqual(&name, &fsutilus, true, NULL);
+            blacklist = FsRtlAreNamesEqual(&name, &usfsutil, true, NULL);
+        }
+
+        if (!blacklist && entry->FullDllName.Length >= usstorsvc.Length) {
+            UNICODE_STRING name;
+
+            name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - usstorsvc.Length) / sizeof(WCHAR)];
+            name.Length = name.MaximumLength = usstorsvc.Length;
+
+            blacklist = FsRtlAreNamesEqual(&name, &usstorsvc, true, NULL);
         }
 
         if (blacklist) {
@@ -728,7 +721,7 @@ static bool lie_about_fs_type() {
 
     return false;
 }
-#endif
+#endif // __REACTOS__
 
 // version of RtlUTF8ToUnicodeN for Vista and below
 NTSTATUS utf8_to_utf16(WCHAR* dest, ULONG dest_max, ULONG* dest_len, char* src, ULONG src_len) {
@@ -1088,13 +1081,13 @@ static NTSTATUS __stdcall drv_query_volume_information(_In_ PDEVICE_OBJECT Devic
             ULONG label_len, orig_label_len;
 
             TRACE("FileFsVolumeInformation\n");
-            TRACE("max length = %u\n", IrpSp->Parameters.QueryVolume.Length);
+            TRACE("max length = %lu\n", IrpSp->Parameters.QueryVolume.Length);
 
             ExAcquireResourceSharedLite(&Vcb->tree_lock, true);
 
             Status = utf8_to_utf16(NULL, 0, &label_len, Vcb->superblock.label, (ULONG)strlen(Vcb->superblock.label));
             if (!NT_SUCCESS(Status)) {
-                ERR("utf8_to_utf16 returned %08x\n", Status);
+                ERR("utf8_to_utf16 returned %08lx\n", Status);
                 ExReleaseResourceLite(&Vcb->tree_lock);
                 break;
             }
@@ -1110,7 +1103,7 @@ static NTSTATUS __stdcall drv_query_volume_information(_In_ PDEVICE_OBJECT Devic
                 overflow = true;
             }
 
-            TRACE("label_len = %u\n", label_len);
+            TRACE("label_len = %lu\n", label_len);
 
             ffvi.VolumeCreationTime.QuadPart = 0; // FIXME
             ffvi.VolumeSerialNumber = Vcb->superblock.uuid.uuid[12] << 24 | Vcb->superblock.uuid.uuid[13] << 16 | Vcb->superblock.uuid.uuid[14] << 8 | Vcb->superblock.uuid.uuid[15];
@@ -1124,12 +1117,12 @@ static NTSTATUS __stdcall drv_query_volume_information(_In_ PDEVICE_OBJECT Devic
 
                 Status = utf8_to_utf16(&data->VolumeLabel[0], label_len, &bytecount, Vcb->superblock.label, (ULONG)strlen(Vcb->superblock.label));
                 if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL) {
-                    ERR("utf8_to_utf16 returned %08x\n", Status);
+                    ERR("utf8_to_utf16 returned %08lx\n", Status);
                     ExReleaseResourceLite(&Vcb->tree_lock);
                     break;
                 }
 
-                TRACE("label = %.*S\n", label_len / sizeof(WCHAR), data->VolumeLabel);
+                TRACE("label = %.*S\n", (int)(label_len / sizeof(WCHAR)), data->VolumeLabel);
             }
 
             ExReleaseResourceLite(&Vcb->tree_lock);
@@ -1158,6 +1151,7 @@ static NTSTATUS __stdcall drv_query_volume_information(_In_ PDEVICE_OBJECT Devic
                 data->Flags |= SSINFO_FLAGS_TRIM_ENABLED;
 
             BytesCopied = sizeof(FILE_FS_SECTOR_SIZE_INFORMATION);
+            Status = STATUS_SUCCESS;
 
             break;
         }
@@ -1183,7 +1177,7 @@ end:
     if (top_level)
         IoSetTopLevelIrp(NULL);
 
-    TRACE("query volume information returning %08x\n", Status);
+    TRACE("query volume information returning %08lx\n", Status);
 
     FsRtlExitFileSystem();
 
@@ -1265,6 +1259,7 @@ NTSTATUS create_root(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) devi
     r->root_item.num_references = 1;
     r->fcbs_version = 0;
     r->checked_for_orphans = true;
+    r->dropped = false;
     InitializeListHead(&r->fcbs);
     RtlZeroMemory(r->fcbs_ptrs, sizeof(LIST_ENTRY*) * 256);
 
@@ -1275,7 +1270,7 @@ NTSTATUS create_root(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) devi
 
     Status = insert_tree_item(Vcb, Vcb->root_root, id, TYPE_ROOT_ITEM, offset, ri, sizeof(ROOT_ITEM), &tp, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("insert_tree_item returned %08x\n", Status);
+        ERR("insert_tree_item returned %08lx\n", Status);
         ExFreePool(ri);
 
         if (t)
@@ -1331,7 +1326,7 @@ static NTSTATUS set_label(_In_ device_extension* Vcb, _In_ FILE_FS_LABEL_INFORMA
     NTSTATUS Status;
     ULONG vollen, i;
 
-    TRACE("label = %.*S\n", ffli->VolumeLabelLength / sizeof(WCHAR), ffli->VolumeLabel);
+    TRACE("label = %.*S\n", (int)(ffli->VolumeLabelLength / sizeof(WCHAR)), ffli->VolumeLabel);
 
     vollen = ffli->VolumeLabelLength;
 
@@ -1376,7 +1371,7 @@ release:
     ExReleaseResourceLite(&Vcb->tree_lock);
 
 end:
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     return Status;
 }
@@ -1439,7 +1434,7 @@ end:
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
 
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     IoCompleteRequest( Irp, IO_NO_INCREMENT );
 
@@ -1449,95 +1444,6 @@ end:
     FsRtlExitFileSystem();
 
     return Status;
-}
-
-static WCHAR* file_desc_fcb(_In_ fcb* fcb) {
-    char s[60];
-    NTSTATUS Status;
-    UNICODE_STRING us;
-    ANSI_STRING as;
-
-    if (fcb->debug_desc)
-        return fcb->debug_desc;
-
-    if (fcb == fcb->Vcb->volume_fcb)
-        return L"volume FCB";
-
-    fcb->debug_desc = ExAllocatePoolWithTag(PagedPool, 60 * sizeof(WCHAR), ALLOC_TAG);
-    if (!fcb->debug_desc)
-        return L"(memory error)";
-
-    // I know this is pretty hackish...
-    // GCC doesn't like %llx in sprintf, and MSVC won't let us use swprintf
-    // without the CRT, which breaks drivers.
-
-    sprintf(s, "subvol %x, inode %x", (uint32_t)fcb->subvol->id, (uint32_t)fcb->inode);
-
-    as.Buffer = s;
-    as.Length = as.MaximumLength = (USHORT)strlen(s);
-
-    us.Buffer = fcb->debug_desc;
-    us.MaximumLength = 60 * sizeof(WCHAR);
-    us.Length = 0;
-
-    Status = RtlAnsiStringToUnicodeString(&us, &as, false);
-    if (!NT_SUCCESS(Status))
-        return L"(RtlAnsiStringToUnicodeString error)";
-
-    us.Buffer[us.Length / sizeof(WCHAR)] = 0;
-
-    return fcb->debug_desc;
-}
-
-WCHAR* file_desc_fileref(_In_ file_ref* fileref) {
-    NTSTATUS Status;
-    UNICODE_STRING fn;
-    ULONG reqlen;
-
-    if (fileref->debug_desc)
-        return fileref->debug_desc;
-
-    fn.Length = fn.MaximumLength = 0;
-    Status = fileref_get_filename(fileref, &fn, NULL, &reqlen);
-    if (Status != STATUS_BUFFER_OVERFLOW)
-        return L"ERROR";
-
-    if (reqlen > 0xffff - sizeof(WCHAR))
-        return L"(too long)";
-
-    fileref->debug_desc = ExAllocatePoolWithTag(PagedPool, reqlen + sizeof(WCHAR), ALLOC_TAG);
-    if (!fileref->debug_desc)
-        return L"(memory error)";
-
-    fn.Buffer = fileref->debug_desc;
-    fn.Length = 0;
-    fn.MaximumLength = (USHORT)(reqlen + sizeof(WCHAR));
-
-    Status = fileref_get_filename(fileref, &fn, NULL, &reqlen);
-    if (!NT_SUCCESS(Status)) {
-        ExFreePool(fileref->debug_desc);
-        fileref->debug_desc = NULL;
-        return L"ERROR";
-    }
-
-    fileref->debug_desc[fn.Length / sizeof(WCHAR)] = 0;
-
-    return fileref->debug_desc;
-}
-
-_Ret_z_
-WCHAR* file_desc(_In_ PFILE_OBJECT FileObject) {
-    fcb* fcb = FileObject->FsContext;
-    ccb* ccb = FileObject->FsContext2;
-    file_ref* fileref = ccb ? ccb->fileref : NULL;
-
-    if (fcb->Header.Flags2 & FSRTL_FLAG2_IS_PAGING_FILE)
-        return L"(paging file)";
-
-    if (fileref)
-        return file_desc_fileref(fileref);
-    else
-        return file_desc_fcb(fcb);
 }
 
 void send_notification_fileref(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_ ULONG action, _In_opt_ PUNICODE_STRING stream) {
@@ -1550,7 +1456,7 @@ void send_notification_fileref(_In_ file_ref* fileref, _In_ ULONG filter_match, 
     fn.Length = fn.MaximumLength = 0;
     Status = fileref_get_filename(fileref, &fn, NULL, &reqlen);
     if (Status != STATUS_BUFFER_OVERFLOW) {
-        ERR("fileref_get_filename returned %08x\n", Status);
+        ERR("fileref_get_filename returned %08lx\n", Status);
         return;
     }
 
@@ -1570,7 +1476,7 @@ void send_notification_fileref(_In_ file_ref* fileref, _In_ ULONG filter_match, 
 
     Status = fileref_get_filename(fileref, &fn, &name_offset, &reqlen);
     if (!NT_SUCCESS(Status)) {
-        ERR("fileref_get_filename returned %08x\n", Status);
+        ERR("fileref_get_filename returned %08lx\n", Status);
         ExFreePool(fn.Buffer);
         return;
     }
@@ -1580,7 +1486,7 @@ void send_notification_fileref(_In_ file_ref* fileref, _In_ ULONG filter_match, 
     ExFreePool(fn.Buffer);
 }
 
-void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_ ULONG action, _In_opt_ PUNICODE_STRING stream) {
+static void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_ ULONG action, _In_opt_ PUNICODE_STRING stream) {
     fcb* fcb = fileref->fcb;
     LIST_ENTRY* le;
     NTSTATUS Status;
@@ -1601,7 +1507,7 @@ void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_
         Status = open_fileref_by_inode(fcb->Vcb, fcb->subvol, hl->parent, &parfr, NULL);
 
         if (!NT_SUCCESS(Status))
-            ERR("open_fileref_by_inode returned %08x\n", Status);
+            ERR("open_fileref_by_inode returned %08lx\n", Status);
         else if (!parfr->deleted) {
             UNICODE_STRING fn;
             ULONG pathlen;
@@ -1609,7 +1515,7 @@ void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_
             fn.Length = fn.MaximumLength = 0;
             Status = fileref_get_filename(parfr, &fn, NULL, &pathlen);
             if (Status != STATUS_BUFFER_OVERFLOW) {
-                ERR("fileref_get_filename returned %08x\n", Status);
+                ERR("fileref_get_filename returned %08lx\n", Status);
                 free_fileref(parfr);
                 break;
             }
@@ -1633,7 +1539,7 @@ void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_
 
             Status = fileref_get_filename(parfr, &fn, NULL, NULL);
             if (!NT_SUCCESS(Status)) {
-                ERR("fileref_get_filename returned %08x\n", Status);
+                ERR("fileref_get_filename returned %08lx\n", Status);
                 free_fileref(parfr);
                 ExFreePool(fn.Buffer);
                 break;
@@ -1659,6 +1565,61 @@ void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_
     }
 
     ExReleaseResourceLite(&fcb->Vcb->fileref_lock);
+}
+
+typedef struct {
+    file_ref* fileref;
+    ULONG filter_match;
+    ULONG action;
+    PUNICODE_STRING stream;
+    PIO_WORKITEM work_item;
+} notification_fcb;
+
+_Function_class_(IO_WORKITEM_ROUTINE)
+static void __stdcall notification_work_item(PDEVICE_OBJECT DeviceObject, PVOID con) {
+    notification_fcb* nf = con;
+
+    UNUSED(DeviceObject);
+
+    ExAcquireResourceSharedLite(&nf->fileref->fcb->Vcb->tree_lock, TRUE); // protect us from fileref being reaped
+
+    send_notification_fcb(nf->fileref, nf->filter_match, nf->action, nf->stream);
+
+    free_fileref(nf->fileref);
+
+    ExReleaseResourceLite(&nf->fileref->fcb->Vcb->tree_lock);
+
+    IoFreeWorkItem(nf->work_item);
+
+    ExFreePool(nf);
+}
+
+void queue_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_ ULONG action, _In_opt_ PUNICODE_STRING stream) {
+    notification_fcb* nf;
+    PIO_WORKITEM work_item;
+
+    nf = ExAllocatePoolWithTag(PagedPool, sizeof(notification_fcb), ALLOC_TAG);
+    if (!nf) {
+        ERR("out of memory\n");
+        return;
+    }
+
+    work_item = IoAllocateWorkItem(master_devobj);
+    if (!work_item) {
+        ERR("out of memory\n");
+        ExFreePool(nf);
+        return;
+    }
+
+    InterlockedIncrement(&fileref->refcount);
+
+    nf->fileref = fileref;
+    nf->filter_match = filter_match;
+    nf->action = action;
+    nf->stream = stream;
+    nf->work_item = work_item;
+
+    IoQueueWorkItem(work_item, notification_work_item, DelayedWorkQueue, nf);
 }
 
 void mark_fcb_dirty(_In_ fcb* fcb) {
@@ -1719,8 +1680,15 @@ void reap_fcb(fcb* fcb) {
             fcb->subvol->fcbs_ptrs[c] = NULL;
     }
 
-    if (fcb->list_entry.Flink)
+    if (fcb->list_entry.Flink) {
         RemoveEntryList(&fcb->list_entry);
+
+        if (fcb->subvol && fcb->subvol->dropped && IsListEmpty(&fcb->subvol->fcbs)) {
+            ExDeleteResourceLite(&fcb->subvol->nonpaged->load_tree_lock);
+            ExFreePool(fcb->subvol->nonpaged);
+            ExFreePool(fcb->subvol);
+        }
+    }
 
     if (fcb->list_entry_all.Flink)
         RemoveEntryList(&fcb->list_entry_all);
@@ -1745,9 +1713,6 @@ void reap_fcb(fcb* fcb) {
 
     if (fcb->adsdata.Buffer)
         ExFreePool(fcb->adsdata.Buffer);
-
-    if (fcb->debug_desc)
-        ExFreePool(fcb->debug_desc);
 
     while (!IsListEmpty(&fcb->extents)) {
         LIST_ENTRY* le = RemoveHeadList(&fcb->extents);
@@ -1795,6 +1760,7 @@ void reap_fcb(fcb* fcb) {
         ExFreePool(fcb->hash_ptrs_uc);
 
     FsRtlUninitializeFileLock(&fcb->lock);
+    FsRtlUninitializeOplock(fcb_oplock(fcb));
 
     if (fcb->pool_type == NonPagedPool)
         ExFreePool(fcb);
@@ -1831,7 +1797,7 @@ void free_fileref(_Inout_ file_ref* fr) {
 
 #ifdef _DEBUG
     if (rc < 0) {
-        ERR("fileref %p: refcount now %i\n", fr, rc);
+        ERR("fileref %p: refcount now %li\n", fr, rc);
         int3;
     }
 #endif
@@ -1841,9 +1807,6 @@ void reap_fileref(device_extension* Vcb, file_ref* fr) {
     // FIXME - do we need a file_ref lock?
 
     // FIXME - do delete if needed
-
-    if (fr->debug_desc)
-        ExFreePool(fr->debug_desc);
 
     ExDeleteResourceLite(&fr->nonpaged->fileref_lock);
 
@@ -1868,6 +1831,9 @@ void reap_fileref(device_extension* Vcb, file_ref* fr) {
         free_fileref(fr->parent);
 
     free_fcb(fr->fcb);
+
+    if (fr->oldutf8.Buffer)
+        ExFreePool(fr->oldutf8.Buffer);
 
     ExFreeToPagedLookasideList(&Vcb->fileref_lookaside, fr);
 }
@@ -1911,7 +1877,7 @@ static NTSTATUS close_file(_In_ PFILE_OBJECT FileObject, _In_ PIRP Irp) {
 
     ccb = FileObject->FsContext2;
 
-    TRACE("close called for %S (fcb == %p)\n", file_desc(FileObject), fcb);
+    TRACE("close called for fcb %p)\n", fcb);
 
     // FIXME - make sure notification gets sent if file is being deleted
 
@@ -1980,12 +1946,18 @@ void uninit(_In_ device_extension* Vcb) {
         ExReleaseResourceLite(&Vcb->tree_lock);
     }
 
+    if (Vcb->vde && Vcb->vde->mounted_device == Vcb->devobj)
+        Vcb->vde->mounted_device = NULL;
+
     IoAcquireVpbSpinLock(&irql);
     Vcb->Vpb->Flags &= ~VPB_MOUNTED;
     Vcb->Vpb->Flags |= VPB_DIRECT_WRITES_ALLOWED;
+    Vcb->Vpb->DeviceObject = NULL;
     IoReleaseVpbSpinLock(irql);
 
-    RemoveEntryList(&Vcb->list_entry);
+    // FIXME - needs global_loading_lock to be held
+    if (Vcb->list_entry.Flink)
+        RemoveEntryList(&Vcb->list_entry);
 
     if (Vcb->balance.thread) {
         Vcb->balance.paused = false;
@@ -2032,7 +2004,7 @@ void uninit(_In_ device_extension* Vcb) {
 
     Status = registry_mark_volume_unmounted(&Vcb->superblock.uuid);
     if (!NT_SUCCESS(Status) && Status != STATUS_TOO_LATE)
-        WARN("registry_mark_volume_unmounted returned %08x\n", Status);
+        WARN("registry_mark_volume_unmounted returned %08lx\n", Status);
 
     for (i = 0; i < Vcb->calcthreads.num_threads; i++) {
         Vcb->calcthreads.threads[i].quit = true;
@@ -2046,7 +2018,6 @@ void uninit(_In_ device_extension* Vcb) {
         ZwClose(Vcb->calcthreads.threads[i].handle);
     }
 
-    ExDeleteResourceLite(&Vcb->calcthreads.lock);
     ExFreePool(Vcb->calcthreads.threads);
 
     time.QuadPart = 0;
@@ -2069,6 +2040,21 @@ void uninit(_In_ device_extension* Vcb) {
         }
 
         le = le->Flink;
+    }
+
+    while (!IsListEmpty(&Vcb->all_fcbs)) {
+        fcb* fcb = CONTAINING_RECORD(Vcb->all_fcbs.Flink, struct _fcb, list_entry_all);
+
+        reap_fcb(fcb);
+    }
+
+    while (!IsListEmpty(&Vcb->sys_chunks)) {
+        sys_chunk* sc = CONTAINING_RECORD(RemoveHeadList(&Vcb->sys_chunks), sys_chunk, list_entry);
+
+        if (sc->data)
+            ExFreePool(sc->data);
+
+        ExFreePool(sc);
     }
 
     while (!IsListEmpty(&Vcb->roots)) {
@@ -2110,8 +2096,6 @@ void uninit(_In_ device_extension* Vcb) {
         ExFreePool(c->chunk_item);
         ExFreePool(c);
     }
-
-    // FIXME - free any open fcbs?
 
     while (!IsListEmpty(&Vcb->devices)) {
         device* dev = CONTAINING_RECORD(RemoveHeadList(&Vcb->devices), device, list_entry);
@@ -2156,6 +2140,11 @@ void uninit(_In_ device_extension* Vcb) {
     ExDeleteNPagedLookasideList(&Vcb->fcb_np_lookaside);
 
     ZwClose(Vcb->flush_thread_handle);
+
+    if (Vcb->devobj->AttachedDevice)
+        IoDetachDevice(Vcb->devobj);
+
+    IoDeleteDevice(Vcb->devobj);
 }
 
 static NTSTATUS delete_fileref_fcb(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject, _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback) {
@@ -2167,7 +2156,7 @@ static NTSTATUS delete_fileref_fcb(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT
     if (fileref->fcb->type != BTRFS_TYPE_DIRECTORY && fileref->fcb->inode_item.st_size > 0) {
         Status = excise_extents(fileref->fcb->Vcb, fileref->fcb, 0, sector_align(fileref->fcb->inode_item.st_size, fileref->fcb->Vcb->superblock.sector_size), Irp, rollback);
         if (!NT_SUCCESS(Status)) {
-            ERR("excise_extents returned %08x\n", Status);
+            ERR("excise_extents returned %08lx\n", Status);
             return Status;
         }
     }
@@ -2192,7 +2181,7 @@ static NTSTATUS delete_fileref_fcb(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT
         } _SEH2_END;
 
         if (!NT_SUCCESS(Status)) {
-            ERR("CcSetFileSizes threw exception %08x\n", Status);
+            ERR("CcSetFileSizes threw exception %08lx\n", Status);
             return Status;
         }
     }
@@ -2258,7 +2247,7 @@ NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject
             } else {
                 Status = delete_fileref_fcb(fileref, FileObject, Irp, rollback);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("delete_fileref_fcb returned %08x\n", Status);
+                    ERR("delete_fileref_fcb returned %08lx\n", Status);
                     ExReleaseResourceLite(fileref->fcb->Header.Resource);
                     return Status;
                 }
@@ -2320,7 +2309,7 @@ NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject
     // remove dir_child from parent
 
     if (fileref->dc) {
-        TRACE("delete file %.*S\n", fileref->dc->name.Length / sizeof(WCHAR), fileref->dc->name.Buffer);
+        TRACE("delete file %.*S\n", (int)(fileref->dc->name.Length / sizeof(WCHAR)), fileref->dc->name.Buffer);
 
         ExAcquireResourceExclusiveLite(&fileref->parent->fcb->nonpaged->dir_children_lock, true);
         RemoveEntryList(&fileref->dc->list_entry_index);
@@ -2422,6 +2411,8 @@ static NTSTATUS __stdcall drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIR
         goto exit;
     }
 
+    FsRtlCheckOplock(fcb_oplock(fcb), Irp, NULL, NULL, NULL);
+
     // We have to use the pointer to Vcb stored in the fcb, as we can receive cleanup
     // messages belonging to other devices.
 
@@ -2435,7 +2426,7 @@ static NTSTATUS __stdcall drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIR
         fileref = ccb ? ccb->fileref : NULL;
 
         TRACE("cleanup called for FileObject %p\n", FileObject);
-        TRACE("fileref %p (%S), refcount = %u, open_count = %u\n", fileref, file_desc(FileObject), fileref ? fileref->refcount : 0, fileref ? fileref->open_count : 0);
+        TRACE("fileref %p, refcount = %li, open_count = %li\n", fileref, fileref ? fileref->refcount : 0, fileref ? fileref->open_count : 0);
 
         ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, true);
 
@@ -2475,14 +2466,15 @@ static NTSTATUS __stdcall drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIR
 
         if (fileref && (oc == 0 || (fileref->delete_on_close && fileref->posix_delete))) {
             if (!fcb->Vcb->removing) {
-                if (oc == 0 && fileref->fcb->inode_item.st_nlink == 0 && fileref != fcb->Vcb->root_fileref && fcb != fcb->Vcb->volume_fcb) { // last handle closed on POSIX-deleted file
+                if (oc == 0 && fileref->fcb->inode_item.st_nlink == 0 && fileref != fcb->Vcb->root_fileref &&
+                    fcb != fcb->Vcb->volume_fcb && !fcb->ads) { // last handle closed on POSIX-deleted file
                     LIST_ENTRY rollback;
 
                     InitializeListHead(&rollback);
 
                     Status = delete_fileref_fcb(fileref, FileObject, Irp, &rollback);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("delete_fileref_fcb returned %08x\n", Status);
+                        ERR("delete_fileref_fcb returned %08lx\n", Status);
                         do_rollback(fcb->Vcb, &rollback);
                         ExReleaseResourceLite(fileref->fcb->Header.Resource);
                         ExReleaseResourceLite(&fcb->Vcb->tree_lock);
@@ -2513,7 +2505,7 @@ static NTSTATUS __stdcall drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIR
 
                     Status = delete_fileref(fileref, FileObject, oc > 0 && fileref->posix_delete, Irp, &rollback);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("delete_fileref returned %08x\n", Status);
+                        ERR("delete_fileref returned %08lx\n", Status);
                         do_rollback(fcb->Vcb, &rollback);
                         ExReleaseResourceLite(&fcb->Vcb->fileref_lock);
                         ExReleaseResourceLite(&fcb->Vcb->tree_lock);
@@ -2525,11 +2517,16 @@ static NTSTATUS __stdcall drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIR
                     clear_rollback(&rollback);
                 } else if (FileObject->Flags & FO_CACHE_SUPPORTED && FileObject->SectionObjectPointer->DataSectionObject) {
                     IO_STATUS_BLOCK iosb;
+
+                    if (locked) {
+                        ExReleaseResourceLite(fcb->Header.Resource);
+                        locked = false;
+                    }
+
                     CcFlushCache(FileObject->SectionObjectPointer, NULL, 0, &iosb);
 
-                    if (!NT_SUCCESS(iosb.Status)) {
-                        ERR("CcFlushCache returned %08x\n", iosb.Status);
-                    }
+                    if (!NT_SUCCESS(iosb.Status))
+                        ERR("CcFlushCache returned %08lx\n", iosb.Status);
 
                     if (!ExIsResourceAcquiredSharedLite(fcb->Header.PagingIoResource)) {
                         ExAcquireResourceExclusiveLite(fcb->Header.PagingIoResource, true);
@@ -2558,7 +2555,7 @@ static NTSTATUS __stdcall drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIR
     Status = STATUS_SUCCESS;
 
 exit:
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
@@ -2590,7 +2587,7 @@ bool get_file_attributes_from_xattr(_In_reads_bytes_(len) char* val, _In_ uint16
                 dosnum |= val[i] + 10 - 'a';
         }
 
-        TRACE("DOSATTRIB: %08x\n", dosnum);
+        TRACE("DOSATTRIB: %08lx\n", dosnum);
 
         *atts = dosnum;
 
@@ -2647,9 +2644,8 @@ ULONG get_file_attributes(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_ex
             break;
     }
 
-    if (dotfile) {
+    if (dotfile || (r->id == BTRFS_ROOT_FSTREE && inode == SUBVOL_ROOT_INODE))
         att |= FILE_ATTRIBUTE_HIDDEN;
-    }
 
     att |= FILE_ATTRIBUTE_ARCHIVE;
 
@@ -2728,7 +2724,7 @@ NTSTATUS sync_read_phys(_In_ PDEVICE_OBJECT DeviceObject, _In_ PFILE_OBJECT File
         } _SEH2_END;
 
         if (!NT_SUCCESS(Status)) {
-            ERR("MmProbeAndLockPages threw exception %08x\n", Status);
+            ERR("MmProbeAndLockPages threw exception %08lx\n", Status);
             IoFreeMdl(Irp->MdlAddress);
             goto exit;
         }
@@ -2762,6 +2758,63 @@ exit:
     return Status;
 }
 
+bool check_superblock_checksum(superblock* sb) {
+    switch (sb->csum_type) {
+        case CSUM_TYPE_CRC32C: {
+            uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
+
+            if (crc32 == *((uint32_t*)sb->checksum))
+                return true;
+
+            WARN("crc32 was %08x, expected %08x\n", crc32, *((uint32_t*)sb->checksum));
+
+            break;
+        }
+
+        case CSUM_TYPE_XXHASH: {
+            uint64_t hash = XXH64(&sb->uuid, sizeof(superblock) - sizeof(sb->checksum), 0);
+
+            if (hash == *((uint64_t*)sb->checksum))
+                return true;
+
+            WARN("superblock hash was %I64x, expected %I64x\n", hash, *((uint64_t*)sb->checksum));
+
+            break;
+        }
+
+        case CSUM_TYPE_SHA256: {
+            uint8_t hash[SHA256_HASH_SIZE];
+
+            calc_sha256(hash, &sb->uuid, sizeof(superblock) - sizeof(sb->checksum));
+
+            if (RtlCompareMemory(hash, sb, SHA256_HASH_SIZE) == SHA256_HASH_SIZE)
+                return true;
+
+            WARN("superblock hash was invalid\n");
+
+            break;
+        }
+
+        case CSUM_TYPE_BLAKE2: {
+            uint8_t hash[BLAKE2_HASH_SIZE];
+
+            blake2b(hash, sizeof(hash), &sb->uuid, sizeof(superblock) - sizeof(sb->checksum));
+
+            if (RtlCompareMemory(hash, sb, BLAKE2_HASH_SIZE) == BLAKE2_HASH_SIZE)
+                return true;
+
+            WARN("superblock hash was invalid\n");
+
+            break;
+        }
+
+        default:
+            WARN("unrecognized csum type %x\n", sb->csum_type);
+    }
+
+    return false;
+}
+
 static NTSTATUS read_superblock(_In_ device_extension* Vcb, _In_ PDEVICE_OBJECT device, _In_ PFILE_OBJECT fileobj, _In_ uint64_t length) {
     NTSTATUS Status;
     superblock* sb;
@@ -2786,14 +2839,12 @@ static NTSTATUS read_superblock(_In_ device_extension* Vcb, _In_ PDEVICE_OBJECT 
     valid_superblocks = 0;
 
     while (superblock_addrs[i] > 0) {
-        uint32_t crc32;
-
         if (i > 0 && superblock_addrs[i] + to_read > length)
             break;
 
         Status = sync_read_phys(device, fileobj, superblock_addrs[i], to_read, (PUCHAR)sb, false);
         if (!NT_SUCCESS(Status)) {
-            ERR("Failed to read superblock %u: %08x\n", i, Status);
+            ERR("Failed to read superblock %lu: %08lx\n", i, Status);
             ExFreePool(sb);
             return Status;
         }
@@ -2805,19 +2856,15 @@ static NTSTATUS read_superblock(_In_ device_extension* Vcb, _In_ PDEVICE_OBJECT 
                 return STATUS_UNRECOGNIZED_VOLUME;
             }
         } else {
-            TRACE("got superblock %u!\n", i);
+            TRACE("got superblock %lu!\n", i);
 
-            crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
-
-            if (crc32 != *((uint32_t*)sb->checksum))
-                WARN("crc32 was %08x, expected %08x\n", crc32, *((uint32_t*)sb->checksum));
-            else if (sb->sector_size == 0)
+            if (sb->sector_size == 0)
                 WARN("superblock sector size was 0\n");
             else if (sb->node_size < sizeof(tree_header) + sizeof(internal_node) || sb->node_size > 0x10000)
                 WARN("invalid node size %x\n", sb->node_size);
             else if ((sb->node_size % sb->sector_size) != 0)
                 WARN("node size %x was not a multiple of sector_size %x\n", sb->node_size, sb->sector_size);
-            else if (valid_superblocks == 0 || sb->generation > Vcb->superblock.generation) {
+            else if (check_superblock_checksum(sb) && (valid_superblocks == 0 || sb->generation > Vcb->superblock.generation)) {
                 RtlCopyMemory(&Vcb->superblock, sb, sizeof(superblock));
                 valid_superblocks++;
             }
@@ -2898,6 +2945,7 @@ static NTSTATUS add_root(_Inout_ device_extension* Vcb, _In_ uint64_t id, _In_ u
     r->send_ops = 0;
     r->fcbs_version = 0;
     r->checked_for_orphans = false;
+    r->dropped = false;
     InitializeListHead(&r->fcbs);
     RtlZeroMemory(r->fcbs_ptrs, sizeof(LIST_ENTRY*) * 256);
 
@@ -2978,7 +3026,7 @@ static NTSTATUS look_for_roots(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
 
     Status = find_item(Vcb, Vcb->root_root, &tp, &searchkey, false, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
+        ERR("error - find_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -2989,13 +3037,13 @@ static NTSTATUS look_for_roots(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
             ROOT_ITEM* ri = (ROOT_ITEM*)tp.item->data;
 
             if (tp.item->size < offsetof(ROOT_ITEM, byte_limit)) {
-                ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, offsetof(ROOT_ITEM, byte_limit));
+                ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, offsetof(ROOT_ITEM, byte_limit));
             } else {
                 TRACE("root %I64x - address %I64x\n", tp.item->key.obj_id, ri->block_number);
 
                 Status = add_root(Vcb, tp.item->key.obj_id, ri->block_number, ri->generation, &tp);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("add_root returned %08x\n", Status);
+                    ERR("add_root returned %08lx\n", Status);
                     return Status;
                 }
             }
@@ -3025,7 +3073,7 @@ static NTSTATUS look_for_roots(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
         Status = create_root(Vcb, BTRFS_ROOT_DATA_RELOC, &reloc_root, false, 0, Irp);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("create_root returned %08x\n", Status);
+            ERR("create_root returned %08lx\n", Status);
             return Status;
         }
 
@@ -3058,7 +3106,7 @@ static NTSTATUS look_for_roots(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
 
         Status = insert_tree_item(Vcb, reloc_root, SUBVOL_ROOT_INODE, TYPE_INODE_ITEM, 0, ii, sizeof(INODE_ITEM), NULL, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("insert_tree_item returned %08x\n", Status);
+            ERR("insert_tree_item returned %08lx\n", Status);
             ExFreePool(ii);
             return Status;
         }
@@ -3077,7 +3125,7 @@ static NTSTATUS look_for_roots(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
 
         Status = insert_tree_item(Vcb, reloc_root, SUBVOL_ROOT_INODE, TYPE_INODE_REF, SUBVOL_ROOT_INODE, ir, irlen, NULL, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("insert_tree_item returned %08x\n", Status);
+            ERR("insert_tree_item returned %08lx\n", Status);
             ExFreePool(ir);
             return Status;
         }
@@ -3112,7 +3160,7 @@ static NTSTATUS find_disk_holes(_In_ _Requires_lock_held_(_Curr_->tree_lock) dev
 
     Status = find_item(Vcb, Vcb->dev_root, &tp, &searchkey, false, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
+        ERR("error - find_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -3126,14 +3174,14 @@ static NTSTATUS find_disk_holes(_In_ _Requires_lock_held_(_Curr_->tree_lock) dev
                 if (tp.item->key.offset > lastaddr) {
                     Status = add_space_entry(&dev->space, NULL, lastaddr, tp.item->key.offset - lastaddr);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("add_space_entry returned %08x\n", Status);
+                        ERR("add_space_entry returned %08lx\n", Status);
                         return Status;
                     }
                 }
 
                 lastaddr = tp.item->key.offset + de->length;
             } else {
-                ERR("(%I64x,%x,%I64x) was %u bytes, expected %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DEV_EXTENT));
+                ERR("(%I64x,%x,%I64x) was %u bytes, expected %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DEV_EXTENT));
             }
         }
 
@@ -3149,7 +3197,7 @@ static NTSTATUS find_disk_holes(_In_ _Requires_lock_held_(_Curr_->tree_lock) dev
     if (lastaddr < dev->devitem.num_bytes) {
         Status = add_space_entry(&dev->space, NULL, lastaddr, dev->devitem.num_bytes - lastaddr);
         if (!NT_SUCCESS(Status)) {
-            ERR("add_space_entry returned %08x\n", Status);
+            ERR("add_space_entry returned %08lx\n", Status);
             return Status;
         }
     }
@@ -3271,7 +3319,7 @@ static bool is_device_removable(_In_ PDEVICE_OBJECT devobj) {
     Status = dev_ioctl(devobj, IOCTL_STORAGE_GET_HOTPLUG_INFO, NULL, 0, &shi, sizeof(STORAGE_HOTPLUG_INFO), true, NULL);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("dev_ioctl returned %08x\n", Status);
+        ERR("dev_ioctl returned %08lx\n", Status);
         return false;
     }
 
@@ -3286,7 +3334,7 @@ static ULONG get_device_change_count(_In_ PDEVICE_OBJECT devobj) {
     Status = dev_ioctl(devobj, IOCTL_STORAGE_CHECK_VERIFY, NULL, 0, &cc, sizeof(ULONG), true, &iosb);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("dev_ioctl returned %08x\n", Status);
+        ERR("dev_ioctl returned %08lx\n", Status);
         return 0;
     }
 
@@ -3315,7 +3363,7 @@ void init_device(_In_ device_extension* Vcb, _Inout_ device* dev, _In_ bool get_
                            &sdn, sizeof(STORAGE_DEVICE_NUMBER), true, NULL);
 
         if (!NT_SUCCESS(Status)) {
-            WARN("IOCTL_STORAGE_GET_DEVICE_NUMBER returned %08x\n", Status);
+            WARN("IOCTL_STORAGE_GET_DEVICE_NUMBER returned %08lx\n", Status);
             dev->disk_num = 0xffffffff;
             dev->part_num = 0xffffffff;
         } else {
@@ -3358,7 +3406,7 @@ void init_device(_In_ device_extension* Vcb, _Inout_ device* dev, _In_ bool get_
                        apte, aptelen, true, NULL);
 
     if (!NT_SUCCESS(Status))
-        TRACE("IOCTL_ATA_PASS_THROUGH returned %08x for IDENTIFY DEVICE\n", Status);
+        TRACE("IOCTL_ATA_PASS_THROUGH returned %08lx for IDENTIFY DEVICE\n", Status);
     else {
         IDENTIFY_DEVICE_DATA* idd = (IDENTIFY_DEVICE_DATA*)((uint8_t*)apte + sizeof(ATA_PASS_THROUGH_EX));
 
@@ -3412,7 +3460,7 @@ static NTSTATUS load_chunk_root(_In_ _Requires_lock_held_(_Curr_->tree_lock) dev
 
     Status = find_item(Vcb, Vcb->chunk_root, &tp, &searchkey, false, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
+        ERR("error - find_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -3421,7 +3469,7 @@ static NTSTATUS load_chunk_root(_In_ _Requires_lock_held_(_Curr_->tree_lock) dev
 
         if (tp.item->key.obj_id == 1 && tp.item->key.obj_type == TYPE_DEV_ITEM) {
             if (tp.item->size < sizeof(DEV_ITEM)) {
-                ERR("(%I64x,%x,%I64x) was %u bytes, expected %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DEV_ITEM));
+                ERR("(%I64x,%x,%I64x) was %u bytes, expected %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DEV_ITEM));
             } else {
                 DEV_ITEM* di = (DEV_ITEM*)tp.item->data;
                 LIST_ENTRY* le;
@@ -3526,7 +3574,7 @@ static NTSTATUS load_chunk_root(_In_ _Requires_lock_held_(_Curr_->tree_lock) dev
             }
         } else if (tp.item->key.obj_type == TYPE_CHUNK_ITEM) {
             if (tp.item->size < sizeof(CHUNK_ITEM)) {
-                ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(CHUNK_ITEM));
+                ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(CHUNK_ITEM));
             } else {
                 c = ExAllocatePoolWithTag(NonPagedPool, sizeof(chunk), ALLOC_TAG);
 
@@ -3590,7 +3638,7 @@ static NTSTATUS load_chunk_root(_In_ _Requires_lock_held_(_Curr_->tree_lock) dev
 
                     for (i = 0; i < c->chunk_item->num_stripes; i++) {
                         c->devices[i] = find_device_from_uuid(Vcb, &cis[i].dev_uuid);
-                        TRACE("device %I64u = %p\n", i, c->devices[i]);
+                        TRACE("device %u = %p\n", i, c->devices[i]);
 
                         if (!c->devices[i]) {
                             ERR("missing device\n");
@@ -3739,7 +3787,7 @@ void protect_superblocks(_Inout_ chunk* c) {
                     space_list_subtract(c, false, c->offset + off_start, off_end - off_start, NULL);
                 }
             }
-        } else { // SINGLE, DUPLICATE, RAID1
+        } else { // SINGLE, DUPLICATE, RAID1, RAID1C3, RAID1C4
             for (j = 0; j < ci->num_stripes; j++) {
                 if (cis[j].offset + ci->size > superblock_addrs[i] && cis[j].offset <= superblock_addrs[i] + sizeof(superblock)) {
                     TRACE("cut out superblock in chunk %I64x\n", c->offset);
@@ -3770,6 +3818,12 @@ uint64_t chunk_estimate_phys_size(device_extension* Vcb, chunk* c, uint64_t u) {
     } else if (c->chunk_item->type & BLOCK_FLAG_RAID6) {
         nfactor = Vcb->superblock.num_devices - 2;
         dfactor = Vcb->superblock.num_devices;
+    } else if (c->chunk_item->type & BLOCK_FLAG_RAID1C3) {
+        nfactor = 1;
+        dfactor = 3;
+    } else if (c->chunk_item->type & BLOCK_FLAG_RAID1C4) {
+        nfactor = 1;
+        dfactor = 4;
     } else {
         nfactor = 1;
         dfactor = 1;
@@ -3798,7 +3852,7 @@ NTSTATUS find_chunk_usage(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_ex
 
         Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, false, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("error - find_item returned %08x\n", Status);
+            ERR("error - find_item returned %08lx\n", Status);
             return Status;
         }
 
@@ -3812,7 +3866,7 @@ NTSTATUS find_chunk_usage(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_ex
 
                 Vcb->superblock.bytes_used += chunk_estimate_phys_size(Vcb, c, bgi->used);
             } else {
-                ERR("(%I64x;%I64x,%x,%I64x) is %u bytes, expected %u\n",
+                ERR("(%I64x;%I64x,%x,%I64x) is %u bytes, expected %Iu\n",
                     Vcb->extent_root->id, tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(BLOCK_GROUP_ITEM));
             }
         }
@@ -3883,7 +3937,7 @@ static NTSTATUS load_sys_chunks(_In_ device_extension* Vcb) {
 }
 
 _Ret_maybenull_
-static root* find_default_subvol(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _In_opt_ PIRP Irp) {
+root* find_default_subvol(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _In_opt_ PIRP Irp) {
     LIST_ENTRY* le;
 
     static const char fn[] = "default";
@@ -3913,7 +3967,7 @@ static root* find_default_subvol(_In_ _Requires_lock_held_(_Curr_->tree_lock) de
 
         Status = find_item(Vcb, Vcb->root_root, &tp, &searchkey, false, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("error - find_item returned %08x\n", Status);
+            ERR("error - find_item returned %08lx\n", Status);
             goto end;
         }
 
@@ -3923,14 +3977,14 @@ static root* find_default_subvol(_In_ _Requires_lock_held_(_Curr_->tree_lock) de
         }
 
         if (tp.item->size < sizeof(DIR_ITEM)) {
-            ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DIR_ITEM));
+            ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DIR_ITEM));
             goto end;
         }
 
         di = (DIR_ITEM*)tp.item->data;
 
         if (tp.item->size < sizeof(DIR_ITEM) - 1 + di->n) {
-            ERR("(%I64x,%x,%I64x) was %u bytes, expected %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DIR_ITEM) - 1 + di->n);
+            ERR("(%I64x,%x,%I64x) was %u bytes, expected %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(DIR_ITEM) - 1 + di->n);
             goto end;
         }
 
@@ -3974,7 +4028,7 @@ end:
 void init_file_cache(_In_ PFILE_OBJECT FileObject, _In_ CC_FILE_SIZES* ccfs) {
     TRACE("(%p, %p)\n", FileObject, ccfs);
 
-    CcInitializeCacheMap(FileObject, ccfs, false, cache_callbacks, FileObject);
+    CcInitializeCacheMap(FileObject, ccfs, false, &cache_callbacks, FileObject);
 
     if (diskacc)
         fCcSetAdditionalCacheAttributesEx(FileObject, CC_ENABLE_DISK_IO_ACCOUNTING);
@@ -3998,6 +4052,7 @@ uint32_t get_num_of_processors() {
 
 static NTSTATUS create_calc_threads(_In_ PDEVICE_OBJECT DeviceObject) {
     device_extension* Vcb = DeviceObject->DeviceExtension;
+    OBJECT_ATTRIBUTES oa;
     ULONG i;
 
     Vcb->calcthreads.num_threads = get_num_of_processors();
@@ -4009,22 +4064,25 @@ static NTSTATUS create_calc_threads(_In_ PDEVICE_OBJECT DeviceObject) {
     }
 
     InitializeListHead(&Vcb->calcthreads.job_list);
-    ExInitializeResourceLite(&Vcb->calcthreads.lock);
+    KeInitializeSpinLock(&Vcb->calcthreads.spinlock);
     KeInitializeEvent(&Vcb->calcthreads.event, NotificationEvent, false);
 
     RtlZeroMemory(Vcb->calcthreads.threads, sizeof(drv_calc_thread) * Vcb->calcthreads.num_threads);
+
+    InitializeObjectAttributes(&oa, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
 
     for (i = 0; i < Vcb->calcthreads.num_threads; i++) {
         NTSTATUS Status;
 
         Vcb->calcthreads.threads[i].DeviceObject = DeviceObject;
+        Vcb->calcthreads.threads[i].number = i;
         KeInitializeEvent(&Vcb->calcthreads.threads[i].finished, NotificationEvent, false);
 
-        Status = PsCreateSystemThread(&Vcb->calcthreads.threads[i].handle, 0, NULL, NULL, NULL, calc_thread, &Vcb->calcthreads.threads[i]);
+        Status = PsCreateSystemThread(&Vcb->calcthreads.threads[i].handle, 0, &oa, NULL, NULL, calc_thread, &Vcb->calcthreads.threads[i]);
         if (!NT_SUCCESS(Status)) {
             ULONG j;
 
-            ERR("PsCreateSystemThread returned %08x\n", Status);
+            ERR("PsCreateSystemThread returned %08lx\n", Status);
 
             for (j = 0; j < i; j++) {
                 Vcb->calcthreads.threads[i].quit = true;
@@ -4046,7 +4104,7 @@ static bool is_btrfs_volume(_In_ PDEVICE_OBJECT DeviceObject) {
 
     Status = dev_ioctl(DeviceObject, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &mdn, sizeof(MOUNTDEV_NAME), true, NULL);
     if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
-        ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+        ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08lx\n", Status);
         return false;
     }
 
@@ -4060,7 +4118,7 @@ static bool is_btrfs_volume(_In_ PDEVICE_OBJECT DeviceObject) {
 
     Status = dev_ioctl(DeviceObject, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, mdn2, mdnsize, true, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+        ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08lx\n", Status);
         ExFreePool(mdn2);
         return false;
     }
@@ -4082,7 +4140,7 @@ static NTSTATUS get_device_pnp_name_guid(_In_ PDEVICE_OBJECT DeviceObject, _Out_
 
     Status = IoGetDeviceInterfaces((PVOID)guid, NULL, 0, &list);
     if (!NT_SUCCESS(Status)) {
-        ERR("IoGetDeviceInterfaces returned %08x\n", Status);
+        ERR("IoGetDeviceInterfaces returned %08lx\n", Status);
         return Status;
     }
 
@@ -4160,7 +4218,6 @@ static NTSTATUS check_mount_device(_In_ PDEVICE_OBJECT DeviceObject, _Out_ bool*
     NTSTATUS Status;
     ULONG to_read;
     superblock* sb;
-    uint32_t crc32;
     UNICODE_STRING pnp_name;
     const GUID* guid;
 
@@ -4174,7 +4231,7 @@ static NTSTATUS check_mount_device(_In_ PDEVICE_OBJECT DeviceObject, _Out_ bool*
 
     Status = sync_read_phys(DeviceObject, NULL, superblock_addrs[0], to_read, (PUCHAR)sb, true);
     if (!NT_SUCCESS(Status)) {
-        ERR("sync_read_phys returned %08x\n", Status);
+        ERR("sync_read_phys returned %08lx\n", Status);
         goto end;
     }
 
@@ -4183,10 +4240,7 @@ static NTSTATUS check_mount_device(_In_ PDEVICE_OBJECT DeviceObject, _Out_ bool*
         goto end;
     }
 
-    crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
-
-    if (crc32 != *((uint32_t*)sb->checksum)) {
-        WARN("crc32 was %08x, expected %08x\n", crc32, *((uint32_t*)sb->checksum));
+    if (!check_superblock_checksum(sb)) {
         Status = STATUS_SUCCESS;
         goto end;
     }
@@ -4197,16 +4251,11 @@ static NTSTATUS check_mount_device(_In_ PDEVICE_OBJECT DeviceObject, _Out_ bool*
 
     Status = get_device_pnp_name(DeviceObject, &pnp_name, &guid);
     if (!NT_SUCCESS(Status)) {
-        WARN("get_device_pnp_name returned %08x\n", Status);
+        WARN("get_device_pnp_name returned %08lx\n", Status);
         pnp_name.Length = 0;
     }
 
-    if (pnp_name.Length == 0)
-        *pno_pnp = true;
-    else {
-        *pno_pnp = false;
-        volume_arrival(drvobj, &pnp_name);
-    }
+    *pno_pnp = pnp_name.Length == 0;
 
     if (pnp_name.Buffer)
         ExFreePool(pnp_name.Buffer);
@@ -4223,7 +4272,6 @@ static bool still_has_superblock(_In_ PDEVICE_OBJECT device, _In_ PFILE_OBJECT f
     NTSTATUS Status;
     ULONG to_read;
     superblock* sb;
-    PDEVICE_OBJECT device2;
 
     if (!device)
         return false;
@@ -4238,7 +4286,7 @@ static bool still_has_superblock(_In_ PDEVICE_OBJECT device, _In_ PFILE_OBJECT f
 
     Status = sync_read_phys(device, fileobj, superblock_addrs[0], to_read, (PUCHAR)sb, true);
     if (!NT_SUCCESS(Status)) {
-        ERR("Failed to read superblock: %08x\n", Status);
+        ERR("Failed to read superblock: %08lx\n", Status);
         ExFreePool(sb);
         return false;
     }
@@ -4248,23 +4296,26 @@ static bool still_has_superblock(_In_ PDEVICE_OBJECT device, _In_ PFILE_OBJECT f
         ExFreePool(sb);
         return false;
     } else {
-        uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
-
-        if (crc32 != *((uint32_t*)sb->checksum)) {
-            WARN("crc32 was %08x, expected %08x\n", crc32, *((uint32_t*)sb->checksum));
+        if (!check_superblock_checksum(sb)) {
             ExFreePool(sb);
             return false;
         }
     }
 
-    device2 = device;
+    ObReferenceObject(device);
 
-    do {
-        device2->Flags &= ~DO_VERIFY_VOLUME;
-        device2 = IoGetLowerDeviceObject(device2);
-    } while (device2);
+    while (device) {
+        PDEVICE_OBJECT device2 = IoGetLowerDeviceObject(device);
+
+        device->Flags &= ~DO_VERIFY_VOLUME;
+
+        ObDereferenceObject(device);
+
+        device = device2;
+    }
 
     ExFreePool(sb);
+
     return true;
 }
 
@@ -4286,6 +4337,9 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     pdo_device_extension* pdode = NULL;
     volume_child* vc;
     uint64_t readobjsize;
+    OBJECT_ATTRIBUTES oa;
+    device_extension* real_devext;
+    KIRQL irql;
 
     TRACE("(%p, %p)\n", DeviceObject, Irp);
 
@@ -4297,12 +4351,18 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
     DeviceToMount = IrpSp->Parameters.MountVolume.DeviceObject;
 
+    real_devext = IrpSp->Parameters.MountVolume.Vpb->RealDevice->DeviceExtension;
+
+    // Make sure we're not trying to mount the PDO
+    if (IrpSp->Parameters.MountVolume.Vpb->RealDevice->DriverObject == drvobj && real_devext->type == VCB_TYPE_PDO)
+        return STATUS_UNRECOGNIZED_VOLUME;
+
     if (!is_btrfs_volume(DeviceToMount)) {
         bool not_pnp = false;
 
         Status = check_mount_device(DeviceToMount, &not_pnp);
         if (!NT_SUCCESS(Status))
-            WARN("check_mount_device returned %08x\n", Status);
+            WARN("check_mount_device returned %08lx\n", Status);
 
         if (!not_pnp) {
             Status = STATUS_UNRECOGNIZED_VOLUME;
@@ -4313,8 +4373,17 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
         pdo = DeviceToMount;
 
-        while (IoGetLowerDeviceObject(pdo)) {
-            pdo = IoGetLowerDeviceObject(pdo);
+        ObReferenceObject(pdo);
+
+        while (true) {
+            PDEVICE_OBJECT pdo2 = IoGetLowerDeviceObject(pdo);
+
+            ObDereferenceObject(pdo);
+
+            if (!pdo2)
+                break;
+            else
+                pdo = pdo2;
         }
 
         ExAcquireResourceSharedLite(&pdo_list_lock, true);
@@ -4393,7 +4462,7 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
                            &gli, sizeof(gli), true, NULL);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("error reading length information: %08x\n", Status);
+            ERR("error reading length information: %08lx\n", Status);
             goto exit;
         }
 
@@ -4402,7 +4471,7 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
     Status = IoCreateDevice(drvobj, sizeof(device_extension), NULL, FILE_DEVICE_DISK_FILE_SYSTEM, 0, false, &NewDeviceObject);
     if (!NT_SUCCESS(Status)) {
-        ERR("IoCreateDevice returned %08x\n", Status);
+        ERR("IoCreateDevice returned %08lx\n", Status);
         Status = STATUS_UNRECOGNIZED_VOLUME;
         goto exit;
     }
@@ -4454,12 +4523,15 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
     Status = registry_load_volume_options(Vcb);
     if (!NT_SUCCESS(Status)) {
-        ERR("registry_load_volume_options returned %08x\n", Status);
+        ERR("registry_load_volume_options returned %08lx\n", Status);
         goto exit;
     }
 
+    if (pdode && RtlCompareMemory(&boot_uuid, &pdode->uuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID) && boot_subvol != 0)
+        Vcb->options.subvol_id = boot_subvol;
+
     if (pdode && pdode->children_loaded < pdode->num_children && (!Vcb->options.allow_degraded || !finished_probing || degraded_wait)) {
-        ERR("could not mount as %u device(s) missing\n", pdode->num_children - pdode->children_loaded);
+        ERR("could not mount as %I64u device(s) missing\n", pdode->num_children - pdode->children_loaded);
         Status = STATUS_DEVICE_NOT_READY;
         goto exit;
     }
@@ -4476,6 +4548,9 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
         goto exit;
     }
 
+    if (!(Vcb->superblock.incompat_flags & BTRFS_INCOMPAT_FLAGS_METADATA_UUID))
+        Vcb->superblock.metadata_uuid = Vcb->superblock.uuid;
+
     Vcb->readonly = false;
     if (Vcb->superblock.compat_ro_flags & ~COMPAT_RO_SUPPORTED) {
         WARN("mounting read-only because of unsupported flags (%I64x)\n", Vcb->superblock.compat_ro_flags & ~COMPAT_RO_SUPPORTED);
@@ -4487,6 +4562,33 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
     Vcb->superblock.generation++;
     Vcb->superblock.incompat_flags |= BTRFS_INCOMPAT_FLAGS_MIXED_BACKREF;
+
+    if (Vcb->superblock.log_tree_addr != 0) {
+        FIXME("FIXME - replay transaction log (clearing for now)\n");
+        Vcb->superblock.log_tree_addr = 0;
+    }
+
+    switch (Vcb->superblock.csum_type) {
+        case CSUM_TYPE_CRC32C:
+            Vcb->csum_size = sizeof(uint32_t);
+            break;
+
+        case CSUM_TYPE_XXHASH:
+            Vcb->csum_size = sizeof(uint64_t);
+            break;
+
+        case CSUM_TYPE_SHA256:
+            Vcb->csum_size = SHA256_HASH_SIZE;
+            break;
+
+        case CSUM_TYPE_BLAKE2:
+            Vcb->csum_size = BLAKE2_HASH_SIZE;
+            break;
+
+        default:
+            ERR("unrecognized csum type %x\n", Vcb->superblock.csum_type);
+            break;
+    }
 
     InitializeListHead(&Vcb->devices);
     dev = ExAllocatePoolWithTag(NonPagedPool, sizeof(device), ALLOC_TAG);
@@ -4539,7 +4641,7 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     InitializeListHead(&Vcb->sys_chunks);
     Status = load_sys_chunks(Vcb);
     if (!NT_SUCCESS(Status)) {
-        ERR("load_sys_chunks returned %08x\n", Status);
+        ERR("load_sys_chunks returned %08lx\n", Status);
         goto exit;
     }
 
@@ -4574,13 +4676,13 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
     Status = load_chunk_root(Vcb, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("load_chunk_root returned %08x\n", Status);
+        ERR("load_chunk_root returned %08lx\n", Status);
         goto exit;
     }
 
     if (Vcb->superblock.num_devices > 1) {
         if (Vcb->devices_loaded < Vcb->superblock.num_devices && (!Vcb->options.allow_degraded || !finished_probing)) {
-            ERR("could not mount as %u device(s) missing\n", Vcb->superblock.num_devices - Vcb->devices_loaded);
+            ERR("could not mount as %I64u device(s) missing\n", Vcb->superblock.num_devices - Vcb->devices_loaded);
 
             IoRaiseInformationalHardError(IO_ERR_INTERNAL_ERROR, NULL, NULL);
 
@@ -4626,14 +4728,14 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
     Status = look_for_roots(Vcb, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("look_for_roots returned %08x\n", Status);
+        ERR("look_for_roots returned %08lx\n", Status);
         goto exit;
     }
 
     if (!Vcb->readonly) {
         Status = find_chunk_usage(Vcb, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("find_chunk_usage returned %08x\n", Status);
+            ERR("find_chunk_usage returned %08lx\n", Status);
             goto exit;
         }
     }
@@ -4654,7 +4756,7 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
         Status = clear_free_space_cache(Vcb, &batchlist, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("clear_free_space_cache returned %08x\n", Status);
+            ERR("clear_free_space_cache returned %08lx\n", Status);
             clear_batch_list(Vcb, &batchlist);
             goto exit;
         }
@@ -4662,7 +4764,7 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
     Status = commit_batch_list(Vcb, &batchlist, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("commit_batch_list returned %08x\n", Status);
+        ERR("commit_batch_list returned %08lx\n", Status);
         goto exit;
     }
 
@@ -4736,7 +4838,7 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
     Status = load_dir_children(Vcb, root_fcb, true, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("load_dir_children returned %08x\n", Status);
+        ERR("load_dir_children returned %08lx\n", Status);
         goto exit;
     }
 
@@ -4746,7 +4848,7 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
     Status = find_item(Vcb, root_fcb->subvol, &tp, &searchkey, false, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
+        ERR("error - find_item returned %08lx\n", Status);
         goto exit;
     }
 
@@ -4762,6 +4864,9 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     fcb_get_sd(root_fcb, NULL, true, Irp);
 
     root_fcb->atts = get_file_attributes(Vcb, root_fcb->subvol, root_fcb->inode, root_fcb->type, false, false, Irp);
+
+    if (root_fcb->subvol->id == BTRFS_ROOT_FSTREE)
+        root_fcb->atts &= ~FILE_ATTRIBUTE_HIDDEN;
 
     Vcb->root_fileref = create_fileref(Vcb);
     if (!Vcb->root_fileref) {
@@ -4797,7 +4902,7 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     Vcb->root_file->FsContext2 = root_ccb;
 
     _SEH2_TRY {
-        CcInitializeCacheMap(Vcb->root_file, (PCC_FILE_SIZES)(&root_fcb->Header.AllocationSize), false, cache_callbacks, Vcb->root_file);
+        CcInitializeCacheMap(Vcb->root_file, (PCC_FILE_SIZES)(&root_fcb->Header.AllocationSize), false, &cache_callbacks, Vcb->root_file);
     } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
         Status = _SEH2_GetExceptionCode();
         goto exit;
@@ -4809,12 +4914,14 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
         Status = find_disk_holes(Vcb, dev2, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("find_disk_holes returned %08x\n", Status);
+            ERR("find_disk_holes returned %08lx\n", Status);
             goto exit;
         }
 
         le = le->Flink;
     }
+
+    IoAcquireVpbSpinLock(&irql);
 
     NewDeviceObject->Vpb = IrpSp->Parameters.MountVolume.Vpb;
     IrpSp->Parameters.MountVolume.Vpb->DeviceObject = NewDeviceObject;
@@ -4822,34 +4929,40 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     NewDeviceObject->Vpb->VolumeLabelLength = 4; // FIXME
     NewDeviceObject->Vpb->VolumeLabel[0] = '?';
     NewDeviceObject->Vpb->VolumeLabel[1] = 0;
-    NewDeviceObject->Vpb->ReferenceCount++; // FIXME - should we deref this at any point?
+    NewDeviceObject->Vpb->ReferenceCount++;
+
+    IoReleaseVpbSpinLock(irql);
 
     KeInitializeEvent(&Vcb->flush_thread_finished, NotificationEvent, false);
 
-    Status = PsCreateSystemThread(&Vcb->flush_thread_handle, 0, NULL, NULL, NULL, flush_thread, NewDeviceObject);
+    InitializeObjectAttributes(&oa, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+    Status = PsCreateSystemThread(&Vcb->flush_thread_handle, 0, &oa, NULL, NULL, flush_thread, NewDeviceObject);
     if (!NT_SUCCESS(Status)) {
-        ERR("PsCreateSystemThread returned %08x\n", Status);
+        ERR("PsCreateSystemThread returned %08lx\n", Status);
         goto exit;
     }
 
     Status = create_calc_threads(NewDeviceObject);
     if (!NT_SUCCESS(Status)) {
-        ERR("create_calc_threads returned %08x\n", Status);
+        ERR("create_calc_threads returned %08lx\n", Status);
         goto exit;
     }
 
     Status = registry_mark_volume_mounted(&Vcb->superblock.uuid);
     if (!NT_SUCCESS(Status))
-        WARN("registry_mark_volume_mounted returned %08x\n", Status);
+        WARN("registry_mark_volume_mounted returned %08lx\n", Status);
 
     Status = look_for_balance_item(Vcb);
     if (!NT_SUCCESS(Status) && Status != STATUS_NOT_FOUND)
-        WARN("look_for_balance_item returned %08x\n", Status);
+        WARN("look_for_balance_item returned %08lx\n", Status);
 
     Status = STATUS_SUCCESS;
 
     if (vde)
         vde->mounted_device = NewDeviceObject;
+
+    Vcb->devobj = NewDeviceObject;
 
     ExInitializeResourceLite(&Vcb->send_load_lock);
 
@@ -4927,7 +5040,6 @@ exit2:
 static NTSTATUS verify_device(_In_ device_extension* Vcb, _Inout_ device* dev) {
     NTSTATUS Status;
     superblock* sb;
-    uint32_t crc32;
     ULONG to_read, cc;
 
     if (!dev->devobj)
@@ -4939,7 +5051,7 @@ static NTSTATUS verify_device(_In_ device_extension* Vcb, _Inout_ device* dev) {
         Status = dev_ioctl(dev->devobj, IOCTL_STORAGE_CHECK_VERIFY, NULL, 0, &cc, sizeof(ULONG), true, &iosb);
 
         if (IoIsErrorUserInduced(Status)) {
-            ERR("IOCTL_STORAGE_CHECK_VERIFY returned %08x (user-induced)\n", Status);
+            ERR("IOCTL_STORAGE_CHECK_VERIFY returned %08lx (user-induced)\n", Status);
 
             if (Vcb->vde) {
                 pdo_device_extension* pdode = Vcb->vde->pdode;
@@ -4968,7 +5080,7 @@ static NTSTATUS verify_device(_In_ device_extension* Vcb, _Inout_ device* dev) {
                     ExReleaseResourceLite(&pdode->child_lock);
             }
         } else if (!NT_SUCCESS(Status)) {
-            ERR("IOCTL_STORAGE_CHECK_VERIFY returned %08x\n", Status);
+            ERR("IOCTL_STORAGE_CHECK_VERIFY returned %08lx\n", Status);
             return Status;
         } else if (iosb.Information < sizeof(ULONG)) {
             ERR("iosb.Information was too short\n");
@@ -4988,7 +5100,7 @@ static NTSTATUS verify_device(_In_ device_extension* Vcb, _Inout_ device* dev) {
 
     Status = sync_read_phys(dev->devobj, dev->fileobj, superblock_addrs[0], to_read, (PUCHAR)sb, true);
     if (!NT_SUCCESS(Status)) {
-        ERR("Failed to read superblock: %08x\n", Status);
+        ERR("Failed to read superblock: %08lx\n", Status);
         ExFreePool(sb);
         return Status;
     }
@@ -4999,11 +5111,7 @@ static NTSTATUS verify_device(_In_ device_extension* Vcb, _Inout_ device* dev) {
         return STATUS_WRONG_VOLUME;
     }
 
-    crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
-    TRACE("crc32 was %08x, expected %08x\n", crc32, *((uint32_t*)sb->checksum));
-
-    if (crc32 != *((uint32_t*)sb->checksum)) {
-        ERR("checksum error\n");
+    if (!check_superblock_checksum(sb)) {
         ExFreePool(sb);
         return STATUS_WRONG_VOLUME;
     }
@@ -5145,7 +5253,7 @@ static NTSTATUS __stdcall drv_file_system_control(_In_ PDEVICE_OBJECT DeviceObje
     }
 
 end:
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     if (Irp) {
         Irp->IoStatus.Status = Status;
@@ -5166,7 +5274,7 @@ _Function_class_(DRIVER_DISPATCH)
 static NTSTATUS __stdcall drv_lock_control(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
-    fcb* fcb = IrpSp->FileObject->FsContext;
+    fcb* fcb = IrpSp->FileObject ? IrpSp->FileObject->FsContext : NULL;
     device_extension* Vcb = DeviceObject->DeviceExtension;
     bool top_level;
 
@@ -5185,12 +5293,20 @@ static NTSTATUS __stdcall drv_lock_control(_In_ PDEVICE_OBJECT DeviceObject, _In
 
     TRACE("lock control\n");
 
+    if (!fcb) {
+        ERR("fcb was NULL\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto exit;
+    }
+
+    FsRtlCheckOplock(fcb_oplock(fcb), Irp, NULL, NULL, NULL);
+
     Status = FsRtlProcessFileLock(&fcb->lock, Irp, NULL);
 
     fcb->Header.IsFastIoPossible = fast_io_possible(fcb);
 
 exit:
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     if (top_level)
         IoSetTopLevelIrp(NULL);
@@ -5200,13 +5316,130 @@ exit:
     return Status;
 }
 
+void do_shutdown(PIRP Irp) {
+    LIST_ENTRY* le;
+    bus_device_extension* bde;
+
+    shutting_down = true;
+    KeSetEvent(&mountmgr_thread_event, 0, false);
+
+    le = VcbList.Flink;
+    while (le != &VcbList) {
+        LIST_ENTRY* le2 = le->Flink;
+
+        device_extension* Vcb = CONTAINING_RECORD(le, device_extension, list_entry);
+        volume_device_extension* vde = Vcb->vde;
+        PDEVICE_OBJECT devobj = vde ? vde->device : NULL;
+
+        TRACE("shutting down Vcb %p\n", Vcb);
+
+        if (vde)
+            InterlockedIncrement(&vde->open_count);
+
+        if (devobj)
+            ObReferenceObject(devobj);
+
+        dismount_volume(Vcb, true, Irp);
+
+        if (vde) {
+            NTSTATUS Status;
+            UNICODE_STRING mmdevpath;
+            PDEVICE_OBJECT mountmgr;
+            PFILE_OBJECT mountmgrfo;
+            KIRQL irql;
+            PVPB newvpb;
+
+            RtlInitUnicodeString(&mmdevpath, MOUNTMGR_DEVICE_NAME);
+            Status = IoGetDeviceObjectPointer(&mmdevpath, FILE_READ_ATTRIBUTES, &mountmgrfo, &mountmgr);
+            if (!NT_SUCCESS(Status))
+                ERR("IoGetDeviceObjectPointer returned %08lx\n", Status);
+            else {
+                remove_drive_letter(mountmgr, &vde->name);
+
+                ObDereferenceObject(mountmgrfo);
+            }
+
+            vde->removing = true;
+
+            newvpb = ExAllocatePoolWithTag(NonPagedPool, sizeof(VPB), ALLOC_TAG);
+            if (!newvpb) {
+                ERR("out of memory\n");
+                return;
+            }
+
+            RtlZeroMemory(newvpb, sizeof(VPB));
+
+            newvpb->Type = IO_TYPE_VPB;
+            newvpb->Size = sizeof(VPB);
+            newvpb->RealDevice = newvpb->DeviceObject = vde->device;
+            newvpb->Flags = VPB_DIRECT_WRITES_ALLOWED;
+
+            IoAcquireVpbSpinLock(&irql);
+            vde->device->Vpb = newvpb;
+            IoReleaseVpbSpinLock(irql);
+
+            if (InterlockedDecrement(&vde->open_count) == 0)
+                free_vol(vde);
+        }
+
+        if (devobj)
+            ObDereferenceObject(devobj);
+
+        le = le2;
+    }
+
+#ifdef _DEBUG
+    if (comfo) {
+        ObDereferenceObject(comfo);
+        comdo = NULL;
+        comfo = NULL;
+    }
+#endif
+
+    IoUnregisterFileSystem(master_devobj);
+
+    if (notification_entry2) {
+        if (fIoUnregisterPlugPlayNotificationEx)
+            fIoUnregisterPlugPlayNotificationEx(notification_entry2);
+        else
+            IoUnregisterPlugPlayNotification(notification_entry2);
+
+        notification_entry2 = NULL;
+    }
+
+    if (notification_entry3) {
+        if (fIoUnregisterPlugPlayNotificationEx)
+            fIoUnregisterPlugPlayNotificationEx(notification_entry3);
+        else
+            IoUnregisterPlugPlayNotification(notification_entry3);
+
+        notification_entry3 = NULL;
+    }
+
+    if (notification_entry) {
+        if (fIoUnregisterPlugPlayNotificationEx)
+            fIoUnregisterPlugPlayNotificationEx(notification_entry);
+        else
+            IoUnregisterPlugPlayNotification(notification_entry);
+
+        notification_entry = NULL;
+    }
+
+    bde = busobj->DeviceExtension;
+
+    if (bde->attached_device)
+        IoDetachDevice(bde->attached_device);
+
+    IoDeleteDevice(busobj);
+    IoDeleteDevice(master_devobj);
+}
+
 _Dispatch_type_(IRP_MJ_SHUTDOWN)
 _Function_class_(DRIVER_DISPATCH)
 static NTSTATUS __stdcall drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     NTSTATUS Status;
     bool top_level;
     device_extension* Vcb = DeviceObject->DeviceExtension;
-    LIST_ENTRY* le;
 
     FsRtlEnterFileSystem();
 
@@ -5221,45 +5454,7 @@ static NTSTATUS __stdcall drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PI
 
     Status = STATUS_SUCCESS;
 
-    shutting_down = true;
-    KeSetEvent(&mountmgr_thread_event, 0, false);
-
-    le = VcbList.Flink;
-    while (le != &VcbList) {
-        bool open_files;
-        LIST_ENTRY* le2 = le->Flink;
-
-        Vcb = CONTAINING_RECORD(le, device_extension, list_entry);
-
-        TRACE("shutting down Vcb %p\n", Vcb);
-
-        ExAcquireResourceExclusiveLite(&Vcb->tree_lock, true);
-        Vcb->removing = true;
-        open_files = Vcb->open_files > 0;
-
-        if (Vcb->need_write && !Vcb->readonly) {
-            Status = do_write(Vcb, Irp);
-            if (!NT_SUCCESS(Status))
-                ERR("do_write returned %08x\n", Status);
-        }
-
-        free_trees(Vcb);
-
-        ExReleaseResourceLite(&Vcb->tree_lock);
-
-        if (!open_files)
-            uninit(Vcb);
-
-        le = le2;
-    }
-
-#ifdef _DEBUG
-    if (comfo) {
-        ObDereferenceObject(comfo);
-        comdo = NULL;
-        comfo = NULL;
-    }
-#endif
+    do_shutdown(Irp);
 
 end:
     Irp->IoStatus.Status = Status;
@@ -5275,6 +5470,114 @@ end:
     return Status;
 }
 
+static bool device_still_valid(device* dev, uint64_t expected_generation) {
+    NTSTATUS Status;
+    unsigned int to_read;
+    superblock* sb;
+
+    to_read = (unsigned int)(dev->devobj->SectorSize == 0 ? sizeof(superblock) : sector_align(sizeof(superblock), dev->devobj->SectorSize));
+
+    sb = ExAllocatePoolWithTag(NonPagedPool, to_read, ALLOC_TAG);
+    if (!sb) {
+        ERR("out of memory\n");
+        return false;
+    }
+
+    Status = sync_read_phys(dev->devobj, dev->fileobj, superblock_addrs[0], to_read, (PUCHAR)sb, false);
+    if (!NT_SUCCESS(Status)) {
+        ERR("sync_read_phys returned %08lx\n", Status);
+        ExFreePool(sb);
+        return false;
+    }
+
+    if (sb->magic != BTRFS_MAGIC) {
+        ERR("magic not found\n");
+        ExFreePool(sb);
+        return false;
+    }
+
+    if (!check_superblock_checksum(sb)) {
+        ExFreePool(sb);
+        return false;
+    }
+
+    if (sb->generation > expected_generation) {
+        ERR("generation was %I64x, expected %I64x\n", sb->generation, expected_generation);
+        ExFreePool(sb);
+        return false;
+    }
+
+    ExFreePool(sb);
+
+    return true;
+}
+
+_Function_class_(IO_WORKITEM_ROUTINE)
+static void __stdcall check_after_wakeup(PDEVICE_OBJECT DeviceObject, PVOID con) {
+    device_extension* Vcb = (device_extension*)con;
+    LIST_ENTRY* le;
+
+    UNUSED(DeviceObject);
+
+    ExAcquireResourceExclusiveLite(&Vcb->tree_lock, true);
+
+    le = Vcb->devices.Flink;
+
+    // FIXME - do reads in parallel?
+
+    while (le != &Vcb->devices) {
+        device* dev = CONTAINING_RECORD(le, device, list_entry);
+
+        if (dev->devobj) {
+            if (!device_still_valid(dev, Vcb->superblock.generation - 1)) {
+                PDEVICE_OBJECT voldev = Vcb->Vpb->RealDevice;
+                KIRQL irql;
+                PVPB newvpb;
+
+                WARN("forcing remount\n");
+
+                newvpb = ExAllocatePoolWithTag(NonPagedPool, sizeof(VPB), ALLOC_TAG);
+                if (!newvpb) {
+                    ERR("out of memory\n");
+                    return;
+                }
+
+                RtlZeroMemory(newvpb, sizeof(VPB));
+
+                newvpb->Type = IO_TYPE_VPB;
+                newvpb->Size = sizeof(VPB);
+                newvpb->RealDevice = voldev;
+                newvpb->Flags = VPB_DIRECT_WRITES_ALLOWED;
+
+                Vcb->removing = true;
+
+                IoAcquireVpbSpinLock(&irql);
+                voldev->Vpb = newvpb;
+                IoReleaseVpbSpinLock(irql);
+
+                Vcb->vde = NULL;
+
+                ExReleaseResourceLite(&Vcb->tree_lock);
+
+                if (Vcb->open_files == 0)
+                    uninit(Vcb);
+                else { // remove from VcbList
+                    ExAcquireResourceExclusiveLite(&global_loading_lock, true);
+                    RemoveEntryList(&Vcb->list_entry);
+                    Vcb->list_entry.Flink = NULL;
+                    ExReleaseResourceLite(&global_loading_lock);
+                }
+
+                return;
+            }
+        }
+
+        le = le->Flink;
+    }
+
+    ExReleaseResourceLite(&Vcb->tree_lock);
+}
+
 _Dispatch_type_(IRP_MJ_POWER)
 _Function_class_(DRIVER_DISPATCH)
 static NTSTATUS __stdcall drv_power(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
@@ -5283,7 +5586,7 @@ static NTSTATUS __stdcall drv_power(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP 
     device_extension* Vcb = DeviceObject->DeviceExtension;
     bool top_level;
 
-    FsRtlEnterFileSystem();
+    // no need for FsRtlEnterFileSystem, as this only ever gets called in a system thread
 
     top_level = is_top_level(Irp);
 
@@ -5291,6 +5594,46 @@ static NTSTATUS __stdcall drv_power(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP 
 
     if (Vcb && Vcb->type == VCB_TYPE_VOLUME) {
         volume_device_extension* vde = DeviceObject->DeviceExtension;
+
+        if (IrpSp->MinorFunction == IRP_MN_QUERY_POWER && IrpSp->Parameters.Power.Type == SystemPowerState &&
+            IrpSp->Parameters.Power.State.SystemState != PowerSystemWorking && vde->mounted_device) {
+            device_extension* Vcb2 = vde->mounted_device->DeviceExtension;
+
+            /* If power state is about to go to sleep or hibernate, do a flush. We do this on IRP_MJ_QUERY_POWER
+            * rather than IRP_MJ_SET_POWER because we know that the hard disks are still awake. */
+
+            if (Vcb2) {
+                ExAcquireResourceExclusiveLite(&Vcb2->tree_lock, true);
+
+                if (Vcb2->need_write && !Vcb2->readonly) {
+                    TRACE("doing protective flush on power state change\n");
+                    Status = do_write(Vcb2, NULL);
+                } else
+                    Status = STATUS_SUCCESS;
+
+                free_trees(Vcb2);
+
+                if (!NT_SUCCESS(Status))
+                    ERR("do_write returned %08lx\n", Status);
+
+                ExReleaseResourceLite(&Vcb2->tree_lock);
+            }
+        } else if (IrpSp->MinorFunction == IRP_MN_SET_POWER && IrpSp->Parameters.Power.Type == SystemPowerState &&
+            IrpSp->Parameters.Power.State.SystemState == PowerSystemWorking && vde->mounted_device) {
+            device_extension* Vcb2 = vde->mounted_device->DeviceExtension;
+
+            /* If waking up, make sure that the FS hasn't been changed while we've been out (e.g., by dual-boot Linux) */
+
+            if (Vcb2) {
+                PIO_WORKITEM work_item;
+
+                work_item = IoAllocateWorkItem(DeviceObject);
+                if (!work_item) {
+                    ERR("out of memory\n");
+                } else
+                    IoQueueWorkItem(work_item, check_after_wakeup, DelayedWorkQueue, Vcb2);
+            }
+        }
 
         PoStartNextPowerIrp(Irp);
         IoSkipCurrentIrpStackLocation(Irp);
@@ -5325,8 +5668,6 @@ static NTSTATUS __stdcall drv_power(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP 
 exit:
     if (top_level)
         IoSetTopLevelIrp(NULL);
-
-    FsRtlExitFileSystem();
 
     return Status;
 }
@@ -5380,7 +5721,7 @@ exit:
     return Status;
 }
 
-bool is_file_name_valid(_In_ PUNICODE_STRING us, _In_ bool posix) {
+bool is_file_name_valid(_In_ PUNICODE_STRING us, _In_ bool posix, _In_ bool stream) {
     ULONG i;
 
     if (us->Length < sizeof(WCHAR))
@@ -5391,7 +5732,8 @@ bool is_file_name_valid(_In_ PUNICODE_STRING us, _In_ bool posix) {
 
     for (i = 0; i < us->Length / sizeof(WCHAR); i++) {
         if (us->Buffer[i] == '/' || us->Buffer[i] == 0 ||
-            (!posix && (us->Buffer[i] == '<' || us->Buffer[i] == '>' || us->Buffer[i] == ':' || us->Buffer[i] == '"' ||
+            (!posix && (us->Buffer[i] == '/' || us->Buffer[i] == ':')) ||
+            (!posix && !stream && (us->Buffer[i] == '<' || us->Buffer[i] == '>' || us->Buffer[i] == '"' ||
             us->Buffer[i] == '|' || us->Buffer[i] == '?' || us->Buffer[i] == '*' || (us->Buffer[i] >= 1 && us->Buffer[i] <= 31))))
             return false;
     }
@@ -5515,12 +5857,16 @@ static void init_serial(bool first_time) {
 
     Status = IoGetDeviceObjectPointer(&log_device, FILE_WRITE_DATA, &comfo, &comdo);
     if (!NT_SUCCESS(Status)) {
-        ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
+        ERR("IoGetDeviceObjectPointer returned %08lx\n", Status);
 
         if (first_time) {
-            Status = PsCreateSystemThread(&serial_thread_handle, 0, NULL, NULL, NULL, serial_thread, NULL);
+            OBJECT_ATTRIBUTES oa;
+
+            InitializeObjectAttributes(&oa, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+            Status = PsCreateSystemThread(&serial_thread_handle, 0, &oa, NULL, NULL, serial_thread, NULL);
             if (!NT_SUCCESS(Status)) {
-                ERR("PsCreateSystemThread returned %08x\n", Status);
+                ERR("PsCreateSystemThread returned %08lx\n", Status);
                 return;
             }
         }
@@ -5528,22 +5874,25 @@ static void init_serial(bool first_time) {
 }
 #endif
 
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) && (defined(_X86_) || defined(_AMD64_))
 static void check_cpu() {
     unsigned int cpuInfo[4];
+    bool have_sse42;
+
 #ifndef _MSC_VER
     __get_cpuid(1, &cpuInfo[0], &cpuInfo[1], &cpuInfo[2], &cpuInfo[3]);
     have_sse42 = cpuInfo[2] & bit_SSE4_2;
     have_sse2 = cpuInfo[3] & bit_SSE2;
 #else
-   __cpuid(cpuInfo, 1);
-   have_sse42 = cpuInfo[2] & (1 << 20);
-   have_sse2 = cpuInfo[3] & (1 << 26);
+    __cpuid(cpuInfo, 1);
+    have_sse42 = cpuInfo[2] & (1 << 20);
+    have_sse2 = cpuInfo[3] & (1 << 26);
 #endif
 
-    if (have_sse42)
+    if (have_sse42) {
         TRACE("SSE4.2 is supported\n");
-    else
+        calc_crc32c = calc_crc32c_hw;
+    } else
         TRACE("SSE4.2 not supported\n");
 
     if (have_sse2)
@@ -5573,7 +5922,7 @@ static void init_logging() {
                               FILE_OPEN_IF, FILE_NON_DIRECTORY_FILE | FILE_WRITE_THROUGH | FILE_SYNCHRONOUS_IO_ALERT, NULL, 0);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("ZwCreateFile returned %08x\n", Status);
+            ERR("ZwCreateFile returned %08lx\n", Status);
             goto end;
         }
 
@@ -5588,7 +5937,7 @@ static void init_logging() {
             Status = ZwQueryInformationFile(log_handle, &iosb, &fsi, sizeof(FILE_STANDARD_INFORMATION), FileStandardInformation);
 
             if (!NT_SUCCESS(Status)) {
-                ERR("ZwQueryInformationFile returned %08x\n", Status);
+                ERR("ZwQueryInformationFile returned %08lx\n", Status);
                 goto end;
             }
 
@@ -5597,14 +5946,14 @@ static void init_logging() {
             Status = ZwSetInformationFile(log_handle, &iosb, &fpi, sizeof(FILE_POSITION_INFORMATION), FilePositionInformation);
 
             if (!NT_SUCCESS(Status)) {
-                ERR("ZwSetInformationFile returned %08x\n", Status);
+                ERR("ZwSetInformationFile returned %08lx\n", Status);
                 goto end;
             }
 
             Status = ZwWriteFile(log_handle, NULL, NULL, NULL, &iosb, (void*)delim, sizeof(delim) - 1, NULL, NULL);
 
             if (!NT_SUCCESS(Status)) {
-                ERR("ZwWriteFile returned %08x\n", Status);
+                ERR("ZwWriteFile returned %08lx\n", Status);
                 goto end;
             }
         }
@@ -5627,7 +5976,7 @@ static void init_logging() {
         ExFreePool(dateline);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("ZwWriteFile returned %08x\n", Status);
+            ERR("ZwWriteFile returned %08lx\n", Status);
             goto end;
         }
     }
@@ -5665,10 +6014,17 @@ NTSTATUS __stdcall AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Physica
     LIST_ENTRY* le;
     NTSTATUS Status;
     UNICODE_STRING volname;
-    ULONG i, j;
+    ULONG i;
+    WCHAR* s;
     pdo_device_extension* pdode = NULL;
     PDEVICE_OBJECT voldev;
     volume_device_extension* vde;
+    UNICODE_STRING arc_name_us;
+    WCHAR* anp;
+
+    static const WCHAR arc_name_prefix[] = L"\\ArcName\\btrfs(";
+
+    WCHAR arc_name[(sizeof(arc_name_prefix) / sizeof(WCHAR)) - 1 + 37];
 
     TRACE("(%p, %p)\n", DriverObject, PhysicalDeviceObject);
 
@@ -5692,7 +6048,12 @@ NTSTATUS __stdcall AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Physica
         goto end;
     }
 
-    ExAcquireResourceSharedLite(&pdode->child_lock, true);
+    ExAcquireResourceExclusiveLite(&pdode->child_lock, true);
+
+    if (pdode->vde) { // if already done, return success
+        Status = STATUS_SUCCESS;
+        goto end2;
+    }
 
     volname.Length = volname.MaximumLength = (sizeof(BTRFS_VOLUME_PREFIX) - sizeof(WCHAR)) + ((36 + 1) * sizeof(WCHAR));
     volname.Buffer = ExAllocatePoolWithTag(PagedPool, volname.MaximumLength, ALLOC_TAG); // FIXME - when do we free this?
@@ -5704,26 +6065,43 @@ NTSTATUS __stdcall AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Physica
     }
 
     RtlCopyMemory(volname.Buffer, BTRFS_VOLUME_PREFIX, sizeof(BTRFS_VOLUME_PREFIX) - sizeof(WCHAR));
+    RtlCopyMemory(arc_name, arc_name_prefix, sizeof(arc_name_prefix) - sizeof(WCHAR));
 
-    j = (sizeof(BTRFS_VOLUME_PREFIX) / sizeof(WCHAR)) - 1;
+    anp = &arc_name[(sizeof(arc_name_prefix) / sizeof(WCHAR)) - 1];
+    s = &volname.Buffer[(sizeof(BTRFS_VOLUME_PREFIX) / sizeof(WCHAR)) - 1];
+
     for (i = 0; i < 16; i++) {
-        volname.Buffer[j] = hex_digit(pdode->uuid.uuid[i] >> 4); j++;
-        volname.Buffer[j] = hex_digit(pdode->uuid.uuid[i] & 0xf); j++;
+        *s = *anp = hex_digit(pdode->uuid.uuid[i] >> 4);
+        s++;
+        anp++;
+
+        *s = *anp = hex_digit(pdode->uuid.uuid[i] & 0xf);
+        s++;
+        anp++;
 
         if (i == 3 || i == 5 || i == 7 || i == 9) {
-            volname.Buffer[j] = '-';
-            j++;
+            *s = *anp = '-';
+            s++;
+            anp++;
         }
     }
 
-    volname.Buffer[j] = '}';
+    *s = '}';
+    *anp = ')';
 
     Status = IoCreateDevice(drvobj, sizeof(volume_device_extension), &volname, FILE_DEVICE_DISK,
                             WdmlibRtlIsNtDdiVersionAvailable(NTDDI_WIN8) ? FILE_DEVICE_ALLOW_APPCONTAINER_TRAVERSAL : 0, false, &voldev);
     if (!NT_SUCCESS(Status)) {
-        ERR("IoCreateDevice returned %08x\n", Status);
+        ERR("IoCreateDevice returned %08lx\n", Status);
         goto end2;
     }
+
+    arc_name_us.Buffer = arc_name;
+    arc_name_us.Length = arc_name_us.MaximumLength = sizeof(arc_name);
+
+    Status = IoCreateSymbolicLink(&arc_name_us, &volname);
+    if (!NT_SUCCESS(Status))
+        WARN("IoCreateSymbolicLink returned %08lx\n", Status);
 
     voldev->SectorSize = PhysicalDeviceObject->SectorSize;
     voldev->Flags |= DO_DIRECT_IO;
@@ -5736,11 +6114,12 @@ NTSTATUS __stdcall AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Physica
     vde->pdo = PhysicalDeviceObject;
     vde->pdode = pdode;
     vde->removing = false;
+    vde->dead = false;
     vde->open_count = 0;
 
     Status = IoRegisterDeviceInterface(PhysicalDeviceObject, &GUID_DEVINTERFACE_VOLUME, NULL, &vde->bus_name);
     if (!NT_SUCCESS(Status))
-        WARN("IoRegisterDeviceInterface returned %08x\n", Status);
+        WARN("IoRegisterDeviceInterface returned %08lx\n", Status);
 
     vde->attached_device = IoAttachDeviceToDeviceStack(voldev, PhysicalDeviceObject);
 
@@ -5749,11 +6128,16 @@ NTSTATUS __stdcall AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Physica
     if (pdode->removable)
         voldev->Characteristics |= FILE_REMOVABLE_MEDIA;
 
+    if (RtlCompareMemory(&boot_uuid, &pdode->uuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
+        voldev->Flags |= DO_SYSTEM_BOOT_PARTITION;
+        PhysicalDeviceObject->Flags |= DO_SYSTEM_BOOT_PARTITION;
+    }
+
     voldev->Flags &= ~DO_DEVICE_INITIALIZING;
 
     Status = IoSetDeviceInterfaceState(&vde->bus_name, true);
     if (!NT_SUCCESS(Status))
-        WARN("IoSetDeviceInterfaceState returned %08x\n", Status);
+        WARN("IoSetDeviceInterfaceState returned %08lx\n", Status);
 
     Status = STATUS_SUCCESS;
 
@@ -5775,7 +6159,7 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
     control_device_extension* cde;
     bus_device_extension* bde;
     HANDLE regh;
-    OBJECT_ATTRIBUTES oa;
+    OBJECT_ATTRIBUTES oa, system_thread_attributes;
     ULONG dispos;
 
     InitializeListHead(&uid_map_list);
@@ -5812,7 +6196,7 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
     TRACE("DriverEntry\n");
 
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) && (defined(_X86_) || defined(_AMD64_))
     check_cpu();
 #endif
 
@@ -5844,12 +6228,16 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
         RtlInitUnicodeString(&name, L"CcSetAdditionalCacheAttributesEx");
         fCcSetAdditionalCacheAttributesEx = (tCcSetAdditionalCacheAttributesEx)MmGetSystemRoutineAddress(&name);
+
+        RtlInitUnicodeString(&name, L"FsRtlCheckLockForOplockRequest");
+        fFsRtlCheckLockForOplockRequest = (tFsRtlCheckLockForOplockRequest)MmGetSystemRoutineAddress(&name);
     } else {
         fPsUpdateDiskCounters = NULL;
         fCcCopyReadEx = NULL;
         fCcCopyWriteEx = NULL;
         fCcSetAdditionalCacheAttributesEx = NULL;
         fFsRtlUpdateDiskCounters = NULL;
+        fFsRtlCheckLockForOplockRequest = NULL;
     }
 
     if (WdmlibRtlIsNtDdiVersionAvailable(NTDDI_WIN7)) {
@@ -5857,8 +6245,13 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
         RtlInitUnicodeString(&name, L"IoUnregisterPlugPlayNotificationEx");
         fIoUnregisterPlugPlayNotificationEx = (tIoUnregisterPlugPlayNotificationEx)MmGetSystemRoutineAddress(&name);
-    } else
+
+        RtlInitUnicodeString(&name, L"FsRtlAreThereCurrentOrInProgressFileLocks");
+        fFsRtlAreThereCurrentOrInProgressFileLocks = (tFsRtlAreThereCurrentOrInProgressFileLocks)MmGetSystemRoutineAddress(&name);
+    } else {
         fIoUnregisterPlugPlayNotificationEx = NULL;
+        fFsRtlAreThereCurrentOrInProgressFileLocks = NULL;
+    }
 
     if (WdmlibRtlIsNtDdiVersionAvailable(NTDDI_VISTA)) {
         UNICODE_STRING name;
@@ -5916,7 +6309,7 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
     Status = IoCreateDevice(DriverObject, sizeof(control_device_extension), &device_nameW, FILE_DEVICE_DISK_FILE_SYSTEM,
                             FILE_DEVICE_SECURE_OPEN, false, &DeviceObject);
     if (!NT_SUCCESS(Status)) {
-        ERR("IoCreateDevice returned %08x\n", Status);
+        ERR("IoCreateDevice returned %08lx\n", Status);
         return Status;
     }
 
@@ -5931,15 +6324,11 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
     Status = IoCreateSymbolicLink(&dosdevice_nameW, &device_nameW);
     if (!NT_SUCCESS(Status)) {
-        ERR("IoCreateSymbolicLink returned %08x\n", Status);
+        ERR("IoCreateSymbolicLink returned %08lx\n", Status);
         return Status;
     }
 
-    Status = init_cache();
-    if (!NT_SUCCESS(Status)) {
-        ERR("init_cache returned %08x\n", Status);
-        return Status;
-    }
+    init_cache();
 
     InitializeListHead(&VcbList);
     ExInitializeResourceLite(&global_loading_lock);
@@ -5950,7 +6339,7 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
     InitializeObjectAttributes(&oa, RegistryPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
     Status = ZwCreateKey(&regh, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY, &oa, 0, NULL, REG_OPTION_NON_VOLATILE, &dispos);
     if (!NT_SUCCESS(Status)) {
-        ERR("ZwCreateKey returned %08x\n", Status);
+        ERR("ZwCreateKey returned %08lx\n", Status);
         return Status;
     }
 
@@ -5959,7 +6348,7 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
     Status = IoCreateDevice(DriverObject, sizeof(bus_device_extension), NULL, FILE_DEVICE_UNKNOWN,
                             FILE_DEVICE_SECURE_OPEN, false, &busobj);
     if (!NT_SUCCESS(Status)) {
-        ERR("IoCreateDevice returned %08x\n", Status);
+        ERR("IoCreateDevice returned %08lx\n", Status);
         return Status;
     }
 
@@ -5972,13 +6361,13 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
     Status = IoReportDetectedDevice(drvobj, InterfaceTypeUndefined, 0xFFFFFFFF, 0xFFFFFFFF,
                                     NULL, NULL, 0, &bde->buspdo);
     if (!NT_SUCCESS(Status)) {
-        ERR("IoReportDetectedDevice returned %08x\n", Status);
+        ERR("IoReportDetectedDevice returned %08lx\n", Status);
         return Status;
     }
 
     Status = IoRegisterDeviceInterface(bde->buspdo, &BtrfsBusInterface, NULL, &bde->bus_name);
     if (!NT_SUCCESS(Status))
-        WARN("IoRegisterDeviceInterface returned %08x\n", Status);
+        WARN("IoRegisterDeviceInterface returned %08lx\n", Status);
 
     bde->attached_device = IoAttachDeviceToDeviceStack(busobj, bde->buspdo);
 
@@ -5986,36 +6375,40 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
     Status = IoSetDeviceInterfaceState(&bde->bus_name, true);
     if (!NT_SUCCESS(Status))
-        WARN("IoSetDeviceInterfaceState returned %08x\n", Status);
+        WARN("IoSetDeviceInterfaceState returned %08lx\n", Status);
 
     IoInvalidateDeviceRelations(bde->buspdo, BusRelations);
 
-    Status = PsCreateSystemThread(&degraded_wait_handle, 0, NULL, NULL, NULL, degraded_wait_thread, NULL);
+    InitializeObjectAttributes(&system_thread_attributes, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+    Status = PsCreateSystemThread(&degraded_wait_handle, 0, &system_thread_attributes, NULL, NULL, degraded_wait_thread, NULL);
     if (!NT_SUCCESS(Status))
-        WARN("PsCreateSystemThread returned %08x\n", Status);
+        WARN("PsCreateSystemThread returned %08lx\n", Status);
+
+    ExInitializeResourceLite(&boot_lock);
 
     Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange, PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
                                             (PVOID)&GUID_DEVINTERFACE_VOLUME, DriverObject, volume_notification, DriverObject, &notification_entry2);
     if (!NT_SUCCESS(Status))
-        ERR("IoRegisterPlugPlayNotification returned %08x\n", Status);
+        ERR("IoRegisterPlugPlayNotification returned %08lx\n", Status);
 
     Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange, PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
                                             (PVOID)&GUID_DEVINTERFACE_HIDDEN_VOLUME, DriverObject, volume_notification, DriverObject, &notification_entry3);
     if (!NT_SUCCESS(Status))
-        ERR("IoRegisterPlugPlayNotification returned %08x\n", Status);
+        ERR("IoRegisterPlugPlayNotification returned %08lx\n", Status);
 
     Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange, PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
                                             (PVOID)&GUID_DEVINTERFACE_DISK, DriverObject, pnp_notification, DriverObject, &notification_entry);
     if (!NT_SUCCESS(Status))
-        ERR("IoRegisterPlugPlayNotification returned %08x\n", Status);
+        ERR("IoRegisterPlugPlayNotification returned %08lx\n", Status);
 
     finished_probing = true;
 
     KeInitializeEvent(&mountmgr_thread_event, NotificationEvent, false);
 
-    Status = PsCreateSystemThread(&mountmgr_thread_handle, 0, NULL, NULL, NULL, mountmgr_thread, NULL);
+    Status = PsCreateSystemThread(&mountmgr_thread_handle, 0, &system_thread_attributes, NULL, NULL, mountmgr_thread, NULL);
     if (!NT_SUCCESS(Status))
-        WARN("PsCreateSystemThread returned %08x\n", Status);
+        WARN("PsCreateSystemThread returned %08lx\n", Status);
 
     IoRegisterFileSystem(DeviceObject);
 

@@ -139,7 +139,7 @@ Hull::nextupper( GridTrimVertex *gv )
 }
 
 GridTrimVertex *
-Hull::nextlower( register GridTrimVertex *gv )
+Hull::nextlower( GridTrimVertex *gv )
 {
     if( lower.left ) {
 	gv->set( lower.left->next() );

@@ -1001,15 +1001,16 @@ typedef struct _UCALLOUT_FRAME
 typedef struct _DISPATCHER_CONTEXT
 {
     ULONG64 ControlPc;
-    PVOID ImageBase;
-    PVOID FunctionEntry;
-    PVOID EstablisherFrame;
+    ULONG64 ImageBase;
+    struct _RUNTIME_FUNCTION *FunctionEntry;
+    ULONG64 EstablisherFrame;
     ULONG64 TargetIp;
-    PVOID ContextRecord;
-    PVOID LanguageHandler;
+    PCONTEXT ContextRecord;
+    PEXCEPTION_ROUTINE LanguageHandler;
     PVOID HandlerData;
-    PVOID HistoryTable;
+    struct _UNWIND_HISTORY_TABLE *HistoryTable;
     ULONG ScopeIndex;
+    ULONG Fill0;
 } DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
 
 typedef struct _KSTART_FRAME

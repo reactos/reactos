@@ -24,7 +24,7 @@ ChildWnd* g_pChildWnd;
 static int last_split;
 HBITMAP SizingPattern = 0;
 HBRUSH  SizingBrush = 0;
-static WCHAR Suggestions[256];
+WCHAR Suggestions[256];
 
 extern LPCWSTR get_root_key_name(HKEY hRootKey)
 {
@@ -131,94 +131,6 @@ static void finish_splitbar(HWND hWnd, int x)
 
 /*******************************************************************************
  *
- *  FUNCTION: ChildWnd_CmdWndProc(HWND, unsigned, WORD, LONG)
- *
- *  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
- *
- */
-
-static BOOL ChildWnd_CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    HTREEITEM hSelection;
-    HKEY hRootKey;
-    LPCWSTR keyPath, s;
-    WORD wID = LOWORD(wParam);
-
-    UNREFERENCED_PARAMETER(message);
-
-    switch (wID)
-    {
-        /* Parse the menu selections: */
-    case ID_REGISTRY_EXIT:
-        DestroyWindow(hWnd);
-        break;
-    case ID_VIEW_REFRESH:
-        /* TODO */
-        break;
-    case ID_TREE_EXPANDBRANCH:
-        TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_EXPAND);
-        break;
-    case ID_TREE_COLLAPSEBRANCH:
-        TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_COLLAPSE);
-        break;
-    case ID_TREE_RENAME:
-        SetFocus(g_pChildWnd->hTreeWnd);
-        TreeView_EditLabel(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
-        break;
-    case ID_TREE_DELETE:
-        hSelection = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
-        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, hSelection, &hRootKey);
-
-        if (keyPath == 0 || *keyPath == 0)
-        {
-            MessageBeep(MB_ICONHAND);
-        }
-        else if (DeleteKey(hWnd, hRootKey, keyPath))
-            DeleteNode(g_pChildWnd->hTreeWnd, 0);
-        break;
-    case ID_TREE_EXPORT:
-        ExportRegistryFile(g_pChildWnd->hTreeWnd);
-        break;
-    case ID_EDIT_FIND:
-        FindDialog(hWnd);
-        break;
-    case ID_EDIT_COPYKEYNAME:
-        hSelection = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
-        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, hSelection, &hRootKey);
-        CopyKeyName(hWnd, hRootKey, keyPath);
-        break;
-    case ID_EDIT_NEW_KEY:
-        CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
-        break;
-    case ID_EDIT_NEW_STRINGVALUE:
-    case ID_EDIT_NEW_BINARYVALUE:
-    case ID_EDIT_NEW_DWORDVALUE:
-        SendMessageW(hFrameWnd, WM_COMMAND, wParam, lParam);
-        break;
-    case ID_SWITCH_PANELS:
-        g_pChildWnd->nFocusPanel = !g_pChildWnd->nFocusPanel;
-        SetFocus(g_pChildWnd->nFocusPanel? g_pChildWnd->hListWnd: g_pChildWnd->hTreeWnd);
-        break;
-    default:
-        if ((wID >= ID_TREE_SUGGESTION_MIN) && (wID <= ID_TREE_SUGGESTION_MAX))
-        {
-            s = Suggestions;
-            while(wID > ID_TREE_SUGGESTION_MIN)
-            {
-                if (*s)
-                    s += wcslen(s) + 1;
-                wID--;
-            }
-            SelectNode(g_pChildWnd->hTreeWnd, s);
-            break;
-        }
-        return FALSE;
-    }
-    return TRUE;
-}
-
-/*******************************************************************************
- *
  *  Key suggestion
  */
 
@@ -316,11 +228,12 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     return CallWindowProcW(oldwndproc, hwnd, uMsg, wParam, lParam);
 }
 
-static VOID
+VOID
 UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
 {
     LPCWSTR keyPath, rootName;
     LPWSTR fullPath;
+    DWORD cbFullPath;
 
     /* Wipe the listview, the status bar and the address bar if the root key was selected */
     if (TreeView_GetParent(g_pChildWnd->hTreeWnd, hItem) == NULL)
@@ -340,33 +253,36 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
     {
         RefreshListView(g_pChildWnd->hListWnd, hRootKey, keyPath);
         rootName = get_root_key_name(hRootKey);
-        fullPath = HeapAlloc(GetProcessHeap(), 0, (wcslen(rootName) + 1 + wcslen(keyPath) + 1) * sizeof(WCHAR));
+        cbFullPath = (wcslen(rootName) + 1 + wcslen(keyPath) + 1) * sizeof(WCHAR);
+        fullPath = HeapAlloc(GetProcessHeap(), 0, cbFullPath);
         if (fullPath)
         {
             /* set (correct) the address bar text */
             if (keyPath[0] != L'\0')
-                swprintf(fullPath, L"%s\\%s", rootName, keyPath);
+                swprintf(fullPath, L"%s%s%s", rootName, keyPath[0]==L'\\'?L"":L"\\", keyPath);
             else
                 fullPath = wcscpy(fullPath, rootName);
+             
             SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)fullPath);
             SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
             HeapFree(GetProcessHeap(), 0, fullPath);
+
             /* disable hive manipulation items temporarily (enable only if necessary) */
-            EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
-            EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
+            EnableMenuItem(hMenuFrame, ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
+            EnableMenuItem(hMenuFrame, ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
             /* compare the strings to see if we should enable/disable the "Load Hive" menus accordingly */
-            if (!(_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") &&
-                  _wcsicmp(rootName, L"HKEY_USERS")))
+            if (_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") != 0 ||
+                _wcsicmp(rootName, L"HKEY_USERS") != 0)
             {
                 /*
                  * enable the unload menu item if at the root, otherwise
                  * enable the load menu item if there is no slash in
                  * keyPath (ie. immediate child selected)
                  */
-                if(keyPath[0] == L'\0')
-                    EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_ENABLED);
-                else if(!wcschr(keyPath, L'\\'))
-                    EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_ENABLED);
+                if (keyPath[0] == UNICODE_NULL)
+                    EnableMenuItem(hMenuFrame, ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_ENABLED);
+                else if (!wcschr(keyPath, L'\\'))
+                    EnableMenuItem(hMenuFrame, ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_ENABLED);
             }
         }
     }
@@ -394,6 +310,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         WNDPROC oldproc;
         HFONT hFont;
         WCHAR buffer[MAX_PATH];
+        DWORD style;
 
         /* Load "My Computer" string */
         LoadStringW(hInst, IDS_MY_COMPUTER, buffer, COUNT_OF(buffer));
@@ -404,12 +321,21 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         wcsncpy(g_pChildWnd->szPath, buffer, MAX_PATH);
         g_pChildWnd->nSplitPos = 190;
         g_pChildWnd->hWnd = hWnd;
-        g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
+
+        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+        g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, style,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
-        g_pChildWnd->hAddressBtnWnd = CreateWindowExW(0, L"Button", L"\x00BB", WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_TEXT | BS_CENTER | BS_VCENTER | BS_FLAT | BS_DEFPUSHBUTTON,
+
+        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_ICON | BS_CENTER |
+                BS_VCENTER | BS_FLAT | BS_DEFPUSHBUTTON;
+        g_pChildWnd->hAddressBtnWnd = CreateWindowExW(0, L"Button", L"\x00BB", style,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
+        g_pChildWnd->hArrowIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_ARROW),
+                                                    IMAGE_ICON, 12, 12, 0);
+        SendMessageW(g_pChildWnd->hAddressBtnWnd, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_pChildWnd->hArrowIcon);
+
         GetClientRect(hWnd, &rc);
         g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU) TREE_WINDOW);
         g_pChildWnd->hListWnd = CreateListView(hWnd, (HMENU) LIST_WINDOW, rc.right - g_pChildWnd->nSplitPos);
@@ -439,12 +365,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         {
             PostMessageW(g_pChildWnd->hAddressBarWnd, WM_KEYUP, VK_RETURN, 0);
         }
-
-        if (!ChildWnd_CmdWndProc(hWnd, message, wParam, lParam))
-        {
-            goto def;
-        }
-        break;
+        break; //goto def;
     case WM_SETCURSOR:
         if (LOWORD(lParam) == HTCLIENT)
         {
@@ -462,6 +383,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         DestroyListView(g_pChildWnd->hListWnd);
         DestroyTreeView(g_pChildWnd->hTreeWnd);
         DestroyMainMenu();
+        DestroyIcon(g_pChildWnd->hArrowIcon);
         HeapFree(GetProcessHeap(), 0, g_pChildWnd);
         g_pChildWnd = NULL;
         PostQuitMessage(0);
@@ -554,108 +476,33 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
 
     case WM_NOTIFY:
-        if ((int)wParam == TREE_WINDOW && g_pChildWnd != NULL)
+        if (g_pChildWnd == NULL) break;
+                
+        if (((LPNMHDR)lParam)->idFrom == TREE_WINDOW)
         {
-            switch (((LPNMHDR)lParam)->code)
+            if (!TreeWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
             {
-            case TVN_ITEMEXPANDING:
-                return !OnTreeExpanding(g_pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
-            case TVN_SELCHANGED:
-            {
-                NMTREEVIEW* pnmtv = (NMTREEVIEW*)lParam;
-                /* Get the parent of the current item */
-                HTREEITEM hParentItem = TreeView_GetParent(g_pChildWnd->hTreeWnd, pnmtv->itemNew.hItem);
-
-                UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL);
-
-                /*
-                 * Disable Delete/Rename menu options for 'My Computer' (first item so doesn't have any parent)
-                 * and HKEY_* keys (their parent is 'My Computer' and the previous remark applies).
-                 */
-                if (!hParentItem || !TreeView_GetParent(g_pChildWnd->hTreeWnd, hParentItem))
-                {
-                    EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_GRAYED);
-                    EnableMenuItem(hMenuFrame , ID_EDIT_RENAME, MF_BYCOMMAND | MF_GRAYED);
-                    EnableMenuItem(hPopupMenus, ID_TREE_DELETE, MF_BYCOMMAND | MF_GRAYED);
-                    EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_GRAYED); 
-                }
-                else
-                {
-                    EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_ENABLED);
-                    EnableMenuItem(hMenuFrame , ID_EDIT_RENAME, MF_BYCOMMAND | MF_ENABLED);
-                    EnableMenuItem(hPopupMenus, ID_TREE_DELETE, MF_BYCOMMAND | MF_ENABLED);
-                    EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_ENABLED);
-                }
-
-                break;
+                goto def;
             }
-            case NM_SETFOCUS:
-                g_pChildWnd->nFocusPanel = 0;
-                break;
-            case TVN_BEGINLABELEDIT:
-            {
-                LPNMTVDISPINFO ptvdi;
-                /* cancel label edit for rootkeys  */
-                ptvdi = (LPNMTVDISPINFO) lParam;
-                if (!TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem) ||
-                    !TreeView_GetParent(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem)))
-                    return TRUE;
-                break;
-            }
-            case TVN_ENDLABELEDIT:
-            {
-                LPCWSTR keyPath;
-                HKEY hRootKey;
-                HKEY hKey = NULL;
-                LPNMTVDISPINFO ptvdi;
-                LONG lResult = TRUE;
-                WCHAR szBuffer[MAX_PATH];
-
-                ptvdi = (LPNMTVDISPINFO) lParam;
-                if (ptvdi->item.pszText)
-                {
-                    keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem), &hRootKey);
-                    _snwprintf(szBuffer, COUNT_OF(szBuffer), L"%s\\%s", keyPath, ptvdi->item.pszText);
-                    keyPath = GetItemPath(g_pChildWnd->hTreeWnd, ptvdi->item.hItem, &hRootKey);
-                    if (RegOpenKeyExW(hRootKey, szBuffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-                    {
-                        lResult = FALSE;
-                        RegCloseKey(hKey);
-                        TreeView_EditLabel(g_pChildWnd->hTreeWnd, ptvdi->item.hItem);
-                    }
-                    else
-                    {
-                        if (RenameKey(hRootKey, keyPath, ptvdi->item.pszText) != ERROR_SUCCESS)
-                            lResult = FALSE;
-                        else
-                            UpdateAddress(ptvdi->item.hItem, hRootKey, szBuffer);
-                    }
-                    return lResult;
-                }
-            }
-            default:
-                return 0;
-            }
+            
+            return Result;
         }
         else
         {
-            if ((int)wParam == LIST_WINDOW && g_pChildWnd != NULL)
+            if (((LPNMHDR)lParam)->idFrom == LIST_WINDOW)
             {
-                switch (((LPNMHDR)lParam)->code)
+                if (!ListWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
                 {
-                case NM_SETFOCUS:
-                    g_pChildWnd->nFocusPanel = 1;
-                    break;
-                default:
-                    if(!ListWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
-                    {
-                        goto def;
-                    }
-                    return Result;
-                    break;
+                    goto def;
                 }
+
+                return Result;
             }
-        }
+            else
+            {
+                goto def;
+            }
+        }        
         break;
 
     case WM_CONTEXTMENU:
@@ -715,6 +562,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             HKEY hRootKey;
             int iLastPos;
             WORD wID;
+            BOOL isRoot;
 
             pt.x = (short) LOWORD(lParam);
             pt.y = (short) HIWORD(lParam);
@@ -744,8 +592,10 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
             if (hti.flags & TVHT_ONITEM)
             {
-                hContextMenu = GetSubMenu(hPopupMenus, PM_TREECONTEXT);
                 TreeView_SelectItem(g_pChildWnd->hTreeWnd, hti.hItem);
+
+                isRoot = (TreeView_GetParent(g_pChildWnd->hTreeWnd, hti.hItem) == NULL);
+                hContextMenu = GetSubMenu(hPopupMenus, isRoot ?  PM_ROOTITEM : PM_TREECONTEXT);
 
                 memset(&item, 0, sizeof(item));
                 item.mask = TVIF_STATE | TVIF_CHILDREN;
@@ -762,48 +612,51 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 mii.dwTypeData = (LPWSTR) buffer;
                 SetMenuItemInfo(hContextMenu, 0, TRUE, &mii);
 
-                /* Remove any existing suggestions */
-                memset(&mii, 0, sizeof(mii));
-                mii.cbSize = sizeof(mii);
-                mii.fMask = MIIM_ID;
-                GetMenuItemInfo(hContextMenu, GetMenuItemCount(hContextMenu) - 1, TRUE, &mii);
-                if ((mii.wID >= ID_TREE_SUGGESTION_MIN) && (mii.wID <= ID_TREE_SUGGESTION_MAX))
+                if (isRoot == FALSE)
                 {
-                    do
+                    /* Remove any existing suggestions */
+                    memset(&mii, 0, sizeof(mii));
+                    mii.cbSize = sizeof(mii);
+                    mii.fMask = MIIM_ID;
+                    GetMenuItemInfo(hContextMenu, GetMenuItemCount(hContextMenu) - 1, TRUE, &mii);
+                    if ((mii.wID >= ID_TREE_SUGGESTION_MIN) && (mii.wID <= ID_TREE_SUGGESTION_MAX))
                     {
-                        iLastPos = GetMenuItemCount(hContextMenu) - 1;
-                        GetMenuItemInfo(hContextMenu, iLastPos, TRUE, &mii);
-                        RemoveMenu(hContextMenu, iLastPos, MF_BYPOSITION);
+                        do
+                        {
+                            iLastPos = GetMenuItemCount(hContextMenu) - 1;
+                            GetMenuItemInfo(hContextMenu, iLastPos, TRUE, &mii);
+                            RemoveMenu(hContextMenu, iLastPos, MF_BYPOSITION);
+                        }
+                        while((mii.wID >= ID_TREE_SUGGESTION_MIN) && (mii.wID <= ID_TREE_SUGGESTION_MAX));
                     }
-                    while((mii.wID >= ID_TREE_SUGGESTION_MIN) && (mii.wID <= ID_TREE_SUGGESTION_MAX));
-                }
 
-                /* Come up with suggestions */
-                keyPath = GetItemPath(g_pChildWnd->hTreeWnd, NULL, &hRootKey);
-                SuggestKeys(hRootKey, keyPath, Suggestions, COUNT_OF(Suggestions));
-                if (Suggestions[0])
-                {
-                    AppendMenu(hContextMenu, MF_SEPARATOR, 0, NULL);
-
-                    LoadStringW(hInst, IDS_GOTO_SUGGESTED_KEY, resource, COUNT_OF(resource));
-
-                    s = Suggestions;
-                    wID = ID_TREE_SUGGESTION_MIN;
-                    while(*s && (wID <= ID_TREE_SUGGESTION_MAX))
+                    /* Come up with suggestions */
+                    keyPath = GetItemPath(g_pChildWnd->hTreeWnd, NULL, &hRootKey);
+                    SuggestKeys(hRootKey, keyPath, Suggestions, COUNT_OF(Suggestions));
+                    if (Suggestions[0])
                     {
-                        _snwprintf(buffer, COUNT_OF(buffer), resource, s);
+                        AppendMenu(hContextMenu, MF_SEPARATOR, 0, NULL);
 
-                        memset(&mii, 0, sizeof(mii));
-                        mii.cbSize = sizeof(mii);
-                        mii.fMask = MIIM_STRING | MIIM_ID;
-                        mii.wID = wID++;
-                        mii.dwTypeData = buffer;
-                        InsertMenuItem(hContextMenu, GetMenuItemCount(hContextMenu), TRUE, &mii);
+                        LoadStringW(hInst, IDS_GOTO_SUGGESTED_KEY, resource, COUNT_OF(resource));
 
-                        s += wcslen(s) + 1;
+                        s = Suggestions;
+                        wID = ID_TREE_SUGGESTION_MIN;
+                        while(*s && (wID <= ID_TREE_SUGGESTION_MAX))
+                        {
+                            _snwprintf(buffer, COUNT_OF(buffer), resource, s);
+
+                            memset(&mii, 0, sizeof(mii));
+                            mii.cbSize = sizeof(mii);
+                            mii.fMask = MIIM_STRING | MIIM_ID;
+                            mii.wID = wID++;
+                            mii.dwTypeData = buffer;
+                            InsertMenuItem(hContextMenu, GetMenuItemCount(hContextMenu), TRUE, &mii);
+
+                            s += wcslen(s) + 1;
+                        }
                     }
                 }
-                TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, g_pChildWnd->hWnd, NULL);
+                TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd/*g_pChildWnd->hWnd*/, NULL);
             }
         }
         break;

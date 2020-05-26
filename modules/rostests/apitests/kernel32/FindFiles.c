@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include <versionhelpers.h>
 
 /*
  * NOTE: This test supposes the following requirements:
@@ -37,7 +38,7 @@ static LPSTR*   myARGV;
 #endif
 
 #define ok_err(error) \
-    ok(GetLastError() == (error), "Wrong last error. Expected %lu, got %lu\n", (DWORD)(error), GetLastError())
+    ok_int(GetLastError(), error)
 
 
 /*
@@ -116,7 +117,7 @@ static void Test_FindFirstFileA(void)
     testType2_A("C:\\*", 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
 
     testType1_A("\\", 0xdeadbeef, INVALID_HANDLE_VALUE, ERROR_FILE_NOT_FOUND, TRUE);
-    testType1_A("\\\\", 0xdeadbeef, INVALID_HANDLE_VALUE, ERROR_INVALID_NAME, TRUE);
+    testType1_A("\\\\", 0xdeadbeef, INVALID_HANDLE_VALUE, IsWindows7OrGreater() ? ERROR_INVALID_NAME : ERROR_BAD_NETPATH, TRUE);
     testType2_A("\\*", 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
 
     /* Restore the old current directory */
@@ -134,7 +135,7 @@ static void Test_FindFirstFileA(void)
     testType2_A("C:\\*", 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
 
     testType1_A("\\", 0xdeadbeef, INVALID_HANDLE_VALUE, ERROR_FILE_NOT_FOUND, TRUE);
-    testType1_A("\\\\", 0xdeadbeef, INVALID_HANDLE_VALUE, ERROR_INVALID_NAME, TRUE);
+    testType1_A("\\\\", 0xdeadbeef, INVALID_HANDLE_VALUE, IsWindows7OrGreater() ? ERROR_INVALID_NAME : ERROR_BAD_NETPATH, TRUE);
     testType2_A("\\*", 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
 
     /* Restore the old current directory */
@@ -307,7 +308,7 @@ static void Test_FindFirstFileW(void)
     testType2_W(L"C:\\*", 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
 
     testType1_W(L"\\", 0xdeadbeef, INVALID_HANDLE_VALUE, ERROR_FILE_NOT_FOUND, TRUE);
-    testType1_W(L"\\\\", 0xdeadbeef, INVALID_HANDLE_VALUE, ERROR_INVALID_NAME, TRUE);
+    testType1_W(L"\\\\", 0xdeadbeef, INVALID_HANDLE_VALUE, IsWindows7OrGreater() ? ERROR_INVALID_NAME : ERROR_BAD_NETPATH, TRUE);
     testType2_W(L"\\*", 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
 
     /* Restore the old current directory */
@@ -325,7 +326,7 @@ static void Test_FindFirstFileW(void)
     testType2_W(L"C:\\*", 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
 
     testType1_W(L"\\", 0xdeadbeef, INVALID_HANDLE_VALUE, ERROR_FILE_NOT_FOUND, TRUE);
-    testType1_W(L"\\\\", 0xdeadbeef, INVALID_HANDLE_VALUE, ERROR_INVALID_NAME, TRUE);
+    testType1_W(L"\\\\", 0xdeadbeef, INVALID_HANDLE_VALUE, IsWindows7OrGreater() ? ERROR_INVALID_NAME : ERROR_BAD_NETPATH, TRUE);
     testType2_W(L"\\*", 0xdeadbeef, INVALID_HANDLE_VALUE, 0xdeadbeef);
 
     /* Restore the old current directory */

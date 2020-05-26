@@ -452,8 +452,6 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
     if (!NT_SUCCESS(Status))
         goto ByeBye;
 
-    Lookaside = TRUE;
-
     NewDeviceObject->Flags |= DO_DIRECT_IO;
     Vcb = (PVOID)NewDeviceObject->DeviceExtension;
     RtlZeroMemory(Vcb, sizeof(NTFS_VCB));
@@ -465,6 +463,8 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
                                Vcb);
     if (!NT_SUCCESS(Status))
         goto ByeBye;
+
+    Lookaside = TRUE;
 
     NewDeviceObject->Vpb = DeviceToMount->Vpb;
 
@@ -564,11 +564,11 @@ ByeBye:
         if (Ccb)
             ExFreePool(Ccb);
 
-        if (NewDeviceObject)
-            IoDeleteDevice(NewDeviceObject);
-
         if (Lookaside)
             ExDeleteNPagedLookasideList(&Vcb->FileRecLookasideList);
+
+        if (NewDeviceObject)
+            IoDeleteDevice(NewDeviceObject);
     }
 
     DPRINT("NtfsMountVolume() done (Status: %lx)\n", Status);

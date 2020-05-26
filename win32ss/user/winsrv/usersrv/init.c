@@ -119,6 +119,7 @@ CreateSystemThreads(PVOID pParam)
     return 0;
 }
 
+/* API_NUMBER: UserpCreateSystemThreads */
 CSR_API(SrvCreateSystemThreads)
 {
     NTSTATUS Status = CsrExecServerThread(CreateSystemThreads, 0);
@@ -130,12 +131,14 @@ CSR_API(SrvCreateSystemThreads)
     return Status;
 }
 
+/* API_NUMBER: UserpActivateDebugger */
 CSR_API(SrvActivateDebugger)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/* API_NUMBER: UserpGetThreadConsoleDesktop */
 CSR_API(SrvGetThreadConsoleDesktop)
 {
     NTSTATUS Status;
@@ -153,12 +156,14 @@ CSR_API(SrvGetThreadConsoleDesktop)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: UserpDeviceEvent */
 CSR_API(SrvDeviceEvent)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/* API_NUMBER: UserpLogon */
 CSR_API(SrvLogon)
 {
     PUSER_LOGON LogonRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.LogonRequest;

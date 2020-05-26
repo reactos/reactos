@@ -21,10 +21,11 @@
  */
 VP_STATUS
 NTAPI
-VideoPortCreateEvent(IN PVOID HwDeviceExtension,
-                     IN ULONG EventFlag,
-                     IN PVOID Unused,
-                     OUT PEVENT *Event)
+VideoPortCreateEvent(
+    _In_ PVOID HwDeviceExtension,
+    _In_ ULONG EventFlag,
+    _In_ PVOID Unused,
+    _Out_ PEVENT* pEvent)
 {
     VP_STATUS Result = NO_ERROR;
     PVIDEO_PORT_EVENT EngEvent;
@@ -40,7 +41,7 @@ VideoPortCreateEvent(IN PVOID HwDeviceExtension,
 
         /* Set KEVENT pointer */
         EngEvent->pKEvent = EngEvent + 1;
-        
+
         /* Initialize the kernel event */
         KeInitializeEvent(EngEvent->pKEvent,
                           (EventFlag & EVENT_TYPE_MASK) ?
@@ -48,13 +49,13 @@ VideoPortCreateEvent(IN PVOID HwDeviceExtension,
                           EventFlag & INITIAL_EVENT_STATE_MASK);
 
         /* Pass pointer to our structure to the caller */
-        *Event = (PEVENT)EngEvent;
+        *pEvent = (PEVENT)EngEvent;
         DPRINT("VideoPortCreateEvent() created %p\n", EngEvent);
     }
     else
     {
         /* Out of memory */
-        DPRINT("VideoPortCreateEvent() failed\n");    
+        DPRINT("VideoPortCreateEvent() failed\n");
         Result = ERROR_NOT_ENOUGH_MEMORY;
     }
 
@@ -67,8 +68,9 @@ VideoPortCreateEvent(IN PVOID HwDeviceExtension,
  */
 VP_STATUS
 NTAPI
-VideoPortDeleteEvent(IN PVOID HwDeviceExtension,
-                     IN PEVENT Event)
+VideoPortDeleteEvent(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PEVENT Event)
 {
     /* Handle error cases */
     if (!Event) return ERROR_INVALID_PARAMETER;
@@ -76,7 +78,7 @@ VideoPortDeleteEvent(IN PVOID HwDeviceExtension,
     if (!Event->pKEvent) return ERROR_INVALID_PARAMETER;
 
     /* Free storage */
-    ExFreePool(Event);
+    ExFreePoolWithTag(Event, TAG_VIDEO_PORT);
 
     /* Indicate success */
     return NO_ERROR;
@@ -87,9 +89,11 @@ VideoPortDeleteEvent(IN PVOID HwDeviceExtension,
  */
 LONG
 NTAPI
-VideoPortSetEvent(IN PVOID HwDeviceExtension,
-                  IN PEVENT Event)
+VideoPortSetEvent(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PEVENT Event)
 {
+    ASSERT(Event);
     return KeSetEvent(Event->pKEvent, IO_NO_INCREMENT, FALSE);
 }
 
@@ -98,10 +102,25 @@ VideoPortSetEvent(IN PVOID HwDeviceExtension,
  */
 VOID
 NTAPI
-VideoPortClearEvent(IN PVOID HwDeviceExtension,
-                    IN PEVENT Event)
+VideoPortClearEvent(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PEVENT Event)
 {
+    ASSERT(Event);
     KeClearEvent(Event->pKEvent);
+}
+
+/*
+ * @implemented
+ */
+LONG
+NTAPI
+VideoPortReadStateEvent(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PEVENT Event)
+{
+    ASSERT(Event);
+    return KeReadStateEvent(Event->pKEvent);
 }
 
 /*
@@ -109,18 +128,19 @@ VideoPortClearEvent(IN PVOID HwDeviceExtension,
  */
 VP_STATUS
 NTAPI
-VideoPortWaitForSingleObject(IN PVOID HwDeviceExtension,
-                             IN PVOID Event,
-                             IN PLARGE_INTEGER Timeout OPTIONAL)
+VideoPortWaitForSingleObject(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PVOID Event,
+    _In_opt_ PLARGE_INTEGER Timeout)
 {
     PVIDEO_PORT_EVENT EngEvent = Event;
     NTSTATUS Status;
-    
+
     /* Handle error cases */
     if (!EngEvent) return ERROR_INVALID_PARAMETER;
     if (!EngEvent->pKEvent) return ERROR_INVALID_PARAMETER;
     if (EngEvent->fFlags & ENG_EVENT_USERMAPPED) return ERROR_INVALID_PARAMETER;
-    
+
     /* Do the actual wait */
     Status = KeWaitForSingleObject(EngEvent->pKEvent,
                                    Executive,
@@ -137,7 +157,7 @@ VideoPortWaitForSingleObject(IN PVOID HwDeviceExtension,
         /* All other success codes are Win32 success */
         return NO_ERROR;
     }
-    
+
     /* Otherwise, return default Win32 failure */
     return ERROR_INVALID_PARAMETER;
 }

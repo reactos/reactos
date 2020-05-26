@@ -34,6 +34,7 @@ static void test_device_info(HANDLE device)
 {
     PHIDP_PREPARSED_DATA ppd;
     HIDP_CAPS Caps;
+    HIDD_ATTRIBUTES attributes;
     NTSTATUS status;
     BOOL rc;
     WCHAR device_name[128];
@@ -47,6 +48,10 @@ static void test_device_info(HANDLE device)
     trace("Found device %s (%02x, %02x)\n", wine_dbgstr_w(device_name), Caps.UsagePage, Caps.Usage);
     rc = HidD_FreePreparsedData(ppd);
     ok(rc, "Failed to free preparsed data(0x%x)\n", GetLastError());
+    rc = HidD_GetAttributes(device, &attributes);
+    ok(rc, "Failed to get device attributes (0x%x)\n", GetLastError());
+    ok(attributes.Size == sizeof(attributes), "Unexpected HIDD_ATTRIBUTES size: %d\n", attributes.Size);
+    trace("Device attributes: vid:%04x pid:%04x ver:%04x\n", attributes.VendorID, attributes.ProductID, attributes.VersionNumber);
 }
 
 static void run_for_each_device(device_test *test)
@@ -79,10 +84,17 @@ static void run_for_each_device(device_test *test)
                 trace("Not enough permissions to read device %s.\n", wine_dbgstr_w(data->DevicePath));
                 continue;
             }
+            if (file == INVALID_HANDLE_VALUE && GetLastError() == ERROR_SHARING_VIOLATION)
+            {
+                trace("Device is busy: %s.\n", wine_dbgstr_w(data->DevicePath));
+                continue;
+            }
+
             ok(file != INVALID_HANDLE_VALUE, "Failed to open %s, error %u.\n",
                 wine_dbgstr_w(data->DevicePath), GetLastError());
 
-            test(file);
+            if (file != INVALID_HANDLE_VALUE)
+                test(file);
 
             CloseHandle(file);
         }

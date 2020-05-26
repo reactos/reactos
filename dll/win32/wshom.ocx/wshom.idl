@@ -383,7 +383,7 @@ library IWshRuntimeLibrary
         HRESULT length([out, retval] long *out_Count);
 
         [id(DISPID_NEWENUM)]
-        HRESULT _NewEnum([out, retval] IUnknown *out_Enum);
+        HRESULT _NewEnum([out, retval] IUnknown **out_Enum);
     }
 
     [

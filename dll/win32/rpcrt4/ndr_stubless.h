@@ -204,8 +204,8 @@ typedef struct _NDR_EHD_CONTEXT
      * NDR_CONTEXT_HANDLE_SERIALIZE = 0x02
      * NDR_CONTEXT_HANDLE_NO_SERIALIZE = 0x04
      * NDR_STRICT_CONTEXT_HANDLE = 0x08
+     * HANDLE_PARAM_IS_RETURN = 0x10
      * HANDLE_PARAM_IS_OUT = 0x20
-     * HANDLE_PARAM_IS_RETURN = 0x21
      * HANDLE_PARAM_IS_IN = 0x40
      * HANDLE_PARAM_IS_VIA_PTR = 0x80
      */
@@ -225,6 +225,23 @@ typedef struct _NDR_EHD_CONTEXT
 } NDR_EHD_CONTEXT;
 
 #include "poppack.h"
+
+struct async_call_data
+{
+    MIDL_STUB_MESSAGE *pStubMsg;
+    const NDR_PROC_HEADER *pProcHeader;
+    PFORMAT_STRING pHandleFormat;
+    PFORMAT_STRING pParamFormat;
+    RPC_BINDING_HANDLE hBinding;
+    /* size of stack */
+    unsigned short stack_size;
+    /* number of parameters. optional for client to give it to us */
+    unsigned int number_of_params;
+    /* location to put retval into */
+    LONG_PTR *retval_ptr;
+    /* correlation cache */
+    ULONG_PTR NdrCorrCache[256];
+};
 
 enum stubless_phase
 {
@@ -248,3 +265,4 @@ PFORMAT_STRING convert_old_args( PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFo
                                  unsigned int stack_size, BOOL object_proc,
                                  void *buffer, unsigned int size, unsigned int *count ) DECLSPEC_HIDDEN;
 RPC_STATUS NdrpCompleteAsyncClientCall(RPC_ASYNC_STATE *pAsync, void *Reply) DECLSPEC_HIDDEN;
+RPC_STATUS NdrpCompleteAsyncServerCall(RPC_ASYNC_STATE *pAsync, void *Reply) DECLSPEC_HIDDEN;

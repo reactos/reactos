@@ -233,3 +233,82 @@ Failure:
     SetLastError(ERROR_INVALID_DATA);
     return FALSE;
 }
+
+void RosConvertAnsiDevModeToUnicodeDevmode(PDEVMODEA pDevModeInput, PDEVMODEW pDevModeOutput)
+{
+    // FIXME: This function should become ConvertAnsiDevModeToUnicodeDevmode when its parameters are known!
+
+    // Check if a pDevModeInput and pDevModeOutput are both not NULL.
+    if (!pDevModeInput || !pDevModeOutput)
+        return;
+
+    pDevModeOutput = GdiConvertToDevmodeW(pDevModeInput);
+}
+
+// Internal counterpart to GdiConvertToDevmodeW from gdi32
+static __inline DEVMODEA*
+_ConvertToDevmodeA(const DEVMODEW *dmW)
+{
+    DEVMODEA *dmA;
+    WORD dmA_size, dmW_size;
+    size_t BytesToCopy;
+
+    dmW_size = dmW->dmSize;
+
+    /* this is the minimal dmSize that XP accepts */
+    if (dmW_size < FIELD_OFFSET(DEVMODEW, dmFields))
+        return NULL;
+
+    // Guard against callers that set dmSize incorrectly.
+    if (dmW_size > sizeof(DEVMODEW))
+        dmW_size = sizeof(DEVMODEW);
+
+    // dmA_size must become dmW_size without the additional 1 byte per character for each Unicode string (dmDeviceName and dmFormName).
+    dmA_size = dmW_size - CCHDEVICENAME;
+    if (dmW_size >= FIELD_OFFSET(DEVMODEW, dmFormName) + CCHFORMNAME * sizeof(WCHAR))
+        dmA_size -= CCHFORMNAME;
+
+    // Allocate the required bytes, that is dmSize for the ANSI DEVMODEA structure plus any extra bytes requested through dmDriverExtra.
+    dmA = HeapAlloc(GetProcessHeap(), 0, dmA_size + dmW->dmDriverExtra);
+    if (!dmA) return NULL;
+
+    // Every valid DEVMODEW has a dmDeviceName, which we convert to ANSI here.
+    WideCharToMultiByte(CP_ACP, 0, dmW->dmDeviceName, -1, (LPSTR)dmA->dmDeviceName, CCHDEVICENAME, NULL, NULL);
+
+    // Copy everything up to dmFormName or the remaining dmW_size, whatever is smaller.
+    BytesToCopy = min(FIELD_OFFSET(DEVMODEW, dmFormName) - FIELD_OFFSET(DEVMODEW, dmSpecVersion), dmW_size - CCHDEVICENAME * sizeof(WCHAR));
+    memcpy(&dmA->dmSpecVersion, &dmW->dmSpecVersion, BytesToCopy);
+
+    // Handle dmFormName if the input DEVMODEW is large enough to contain one.
+    if (dmW_size >= FIELD_OFFSET(DEVMODEW, dmFormName) + CCHFORMNAME * sizeof(WCHAR))
+    {
+        if (dmW->dmFields & DM_FORMNAME)
+            WideCharToMultiByte(CP_ACP, 0, dmW->dmFormName, -1, (LPSTR)dmA->dmFormName, CCHFORMNAME, NULL, NULL);
+        else
+            dmA->dmFormName[0] = 0;
+
+        // Copy the remaining fields.
+        if (dmW_size > FIELD_OFFSET(DEVMODEW, dmLogPixels))
+            memcpy(&dmA->dmLogPixels, &dmW->dmLogPixels, dmW_size - FIELD_OFFSET(DEVMODEW, dmLogPixels));
+    }
+
+    // Append dmDriverExtra if required.
+    if (dmW->dmDriverExtra)
+        memcpy((char *)dmA + dmA_size, (const char *)dmW + dmW_size, dmW->dmDriverExtra);
+
+    // Set the corrected dmSize and we are done.
+    dmA->dmSize = dmA_size;
+
+    return dmA;
+}
+
+void RosConvertUnicodeDevModeToAnsiDevmode(PDEVMODEW pDevModeInput, PDEVMODEA pDevModeOutput)
+{
+    // FIXME: This function should become ConvertUnicodeDevModeToAnsiDevmode when its parameters are known!
+
+    // Check if a pDevModeInput and pDevModeOutput are both not NULL.
+    if (!pDevModeInput || !pDevModeOutput)
+        return;
+
+    pDevModeOutput = _ConvertToDevmodeA(pDevModeInput);
+}

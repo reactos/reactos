@@ -241,7 +241,7 @@ OpenGroupByName(
                                     &Use);
     if (!NT_SUCCESS(Status))
     {
-        WARN("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        WARN("SamLookupNamesInDomain(%wZ) failed (Status %08lx)\n", GroupName, Status);
         return NetpNtStatusToApiStatus(Status);
     }
 
@@ -521,7 +521,7 @@ NetGroupAddUser(
                                 NULL);
     if (ApiStatus != NERR_Success)
     {
-        ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        ERR("OpenGroupByName(%wZ) failed (ApiStatus %lu)\n", &GroupName, ApiStatus);
         if (ApiStatus == ERROR_NONE_MAPPED)
             ApiStatus = NERR_GroupNotFound;
         goto done;
@@ -534,7 +534,7 @@ NetGroupAddUser(
                                     &Use);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        ERR("SamLookupNamesInDomain(%wZ) failed (Status %08lx)\n", &UserName, Status);
         ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
@@ -631,7 +631,7 @@ NetGroupDel(
                                 NULL);
     if (ApiStatus != NERR_Success)
     {
-        ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        ERR("OpenGroupByName(%wZ) failed (ApiStatus %lu)\n", &GroupName, ApiStatus);
         if (ApiStatus == ERROR_NONE_MAPPED)
             ApiStatus = NERR_GroupNotFound;
         goto done;
@@ -720,7 +720,7 @@ NetGroupDelUser(
                                 NULL);
     if (ApiStatus != NERR_Success)
     {
-        ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        ERR("OpenGroupByName(%wZ) failed (ApiStatus %lu)\n", &GroupName, ApiStatus);
         if (ApiStatus == ERROR_NONE_MAPPED)
             ApiStatus = NERR_GroupNotFound;
         goto done;
@@ -733,7 +733,7 @@ NetGroupDelUser(
                                     &Use);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        ERR("SamLookupNamesInDomain(%wZ) failed (Status %08lx)\n", &UserName, Status);
         ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
@@ -1083,7 +1083,7 @@ NetGroupGetInfo(
                                 &RelativeId);
     if (ApiStatus != NERR_Success)
     {
-        ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        ERR("OpenGroupByName(%wZ) failed (ApiStatus %lu)\n", &GroupName, ApiStatus);
         if (ApiStatus == ERROR_NONE_MAPPED)
             ApiStatus = NERR_GroupNotFound;
         goto done;
@@ -1210,7 +1210,7 @@ NetGroupGetUsers(
                                     NULL);
         if (ApiStatus != NERR_Success)
         {
-            ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+            ERR("OpenGroupByName(%wZ) failed (ApiStatus %lu)\n", &GroupName, ApiStatus);
             if (ApiStatus == ERROR_NONE_MAPPED)
                 ApiStatus = NERR_GroupNotFound;
             goto done;
@@ -1440,7 +1440,7 @@ NetGroupSetInfo(
                                 NULL);
     if (ApiStatus != NERR_Success)
     {
-        WARN("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        WARN("OpenGroupByName(%wZ) failed (ApiStatus %lu)\n", &GroupName, ApiStatus);
         if (ApiStatus == ERROR_NONE_MAPPED)
             ApiStatus = NERR_GroupNotFound;
         goto done;
@@ -1697,7 +1697,7 @@ NetGroupSetUsers(
                                 NULL);
     if (ApiStatus != NERR_Success)
     {
-        ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        ERR("OpenGroupByName(%wZ) failed (ApiStatus %lu)\n", &GroupName, ApiStatus);
         if (ApiStatus == ERROR_NONE_MAPPED)
             ApiStatus = NERR_GroupNotFound;
         goto done;

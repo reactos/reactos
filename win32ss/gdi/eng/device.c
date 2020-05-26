@@ -8,7 +8,9 @@
  */
 
 #include <win32k.h>
-DBG_DEFAULT_CHANNEL(EngDev)
+#include <ntddvdeo.h>
+
+DBG_DEFAULT_CHANNEL(EngDev);
 
 PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
 PGRAPHICS_DEVICE gpVgaGraphicsDevice;
@@ -51,8 +53,8 @@ EngpPopulateDeviceModeList(
      * This is a REG_MULTI_SZ string */
     for (; *pwsz; pwsz += wcslen(pwsz) + 1)
     {
-        TRACE("trying driver: %ls\n", pwsz);
         /* Try to load the display driver */
+        TRACE("Trying driver: %ls\n", pwsz);
         pldev = EngLoadImageEx(pwsz, LDEV_DEVICE_DISPLAY);
         if (!pldev)
         {
@@ -83,8 +85,7 @@ EngpPopulateDeviceModeList(
 
             /* Some drivers like the VBox driver don't fill the dmDeviceName
                with the name of the display driver. So fix that here. */
-            wcsncpy(pdm->dmDeviceName, pwsz, CCHDEVICENAME);
-            pdm->dmDeviceName[CCHDEVICENAME - 1] = 0;
+            RtlStringCbCopyW(pdm->dmDeviceName, sizeof(pdm->dmDeviceName), pwsz);
         }
 
         // FIXME: release the driver again until it's used?
@@ -157,6 +158,70 @@ EngpPopulateDeviceModeList(
     return TRUE;
 }
 
+extern VOID
+UserRefreshDisplay(IN PPDEVOBJ ppdev);
+
+// PVIDEO_WIN32K_CALLOUT
+VOID
+NTAPI
+VideoPortCallout(
+    _In_ PVOID Params)
+{
+/*
+ * IMPORTANT NOTICE!! On Windows XP/2003 this function triggers the creation of
+ * a specific VideoPortCalloutThread() system thread using the same mechanism
+ * as the RIT/desktop/Ghost system threads.
+ */
+
+    PVIDEO_WIN32K_CALLBACKS_PARAMS CallbackParams = (PVIDEO_WIN32K_CALLBACKS_PARAMS)Params;
+
+    TRACE("VideoPortCallout(0x%p, 0x%x)\n",
+          CallbackParams, CallbackParams ? CallbackParams->CalloutType : -1);
+
+    if (!CallbackParams)
+        return;
+
+    switch (CallbackParams->CalloutType)
+    {
+        case VideoFindAdapterCallout:
+        {
+            TRACE("VideoPortCallout: VideoFindAdapterCallout called - Param = %s\n",
+                  CallbackParams->Param ? "TRUE" : "FALSE");
+            if (CallbackParams->Param == TRUE)
+            {
+                /* Re-enable the display */
+                UserRefreshDisplay(gppdevPrimary);
+            }
+            else
+            {
+                /* Disable the display */
+                NOTHING; // Nothing to do for the moment...
+            }
+
+            CallbackParams->Status = STATUS_SUCCESS;
+            break;
+        }
+
+        case VideoPowerNotifyCallout:
+        case VideoDisplaySwitchCallout:
+        case VideoEnumChildPdoNotifyCallout:
+        case VideoWakeupCallout:
+        case VideoChangeDisplaySettingsCallout:
+        case VideoPnpNotifyCallout:
+        case VideoDxgkDisplaySwitchCallout:
+        case VideoDxgkMonitorEventCallout:
+        case VideoDxgkFindAdapterTdrCallout:
+            ERR("VideoPortCallout: CalloutType 0x%x is UNIMPLEMENTED!\n", CallbackParams->CalloutType);
+            CallbackParams->Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        default:
+            ERR("VideoPortCallout: Unknown CalloutType 0x%x\n", CallbackParams->CalloutType);
+            CallbackParams->Status = STATUS_UNSUCCESSFUL;
+            break;
+    }
+}
+
 PGRAPHICS_DEVICE
 NTAPI
 EngpRegisterGraphicsDevice(
@@ -169,10 +234,10 @@ EngpRegisterGraphicsDevice(
     PDEVICE_OBJECT pDeviceObject;
     PFILE_OBJECT pFileObject;
     NTSTATUS Status;
+    VIDEO_WIN32K_CALLBACKS Win32kCallbacks;
+    ULONG ulReturn;
     PWSTR pwsz;
     ULONG cj;
-    SIZE_T cjWritten;
-    BOOL bEnable = TRUE;
 
     TRACE("EngpRegisterGraphicsDevice(%wZ)\n", pustrDeviceName);
 
@@ -186,33 +251,57 @@ EngpRegisterGraphicsDevice(
         return NULL;
     }
 
-    /* Try to open the driver */
+    /* Try to open and enable the device */
     Status = IoGetDeviceObjectPointer(pustrDeviceName,
                                       FILE_READ_DATA | FILE_WRITE_DATA,
                                       &pFileObject,
                                       &pDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        ERR("Could not open driver %wZ, 0x%lx\n", pustrDeviceName, Status);
+        ERR("Could not open device %wZ, 0x%lx\n", pustrDeviceName, Status);
         ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
         return NULL;
     }
-
-    /* Enable the device */
-    EngFileWrite(pFileObject, &bEnable, sizeof(BOOL), &cjWritten);
 
     /* Copy the device and file object pointers */
     pGraphicsDevice->DeviceObject = pDeviceObject;
     pGraphicsDevice->FileObject = pFileObject;
 
-    /* Copy device name */
-    RtlStringCbCopyNW(pGraphicsDevice->szNtDeviceName,
-                     sizeof(pGraphicsDevice->szNtDeviceName),
-                     pustrDeviceName->Buffer,
-                     pustrDeviceName->Length);
+    /* Initialize and register the device with videoprt for Win32k callbacks */
+    Win32kCallbacks.PhysDisp = pGraphicsDevice;
+    Win32kCallbacks.Callout = VideoPortCallout;
+    // Reset the data being returned prior to the call.
+    Win32kCallbacks.bACPI = FALSE;
+    Win32kCallbacks.pPhysDeviceObject = NULL;
+    Win32kCallbacks.DualviewFlags = 0;
+    Status = (NTSTATUS)EngDeviceIoControl((HANDLE)pDeviceObject,
+                                          IOCTL_VIDEO_INIT_WIN32K_CALLBACKS,
+                                          &Win32kCallbacks,
+                                          sizeof(Win32kCallbacks),
+                                          &Win32kCallbacks,
+                                          sizeof(Win32kCallbacks),
+                                          &ulReturn);
+    if (Status != ERROR_SUCCESS)
+    {
+        ERR("EngDeviceIoControl(0x%p, IOCTL_VIDEO_INIT_WIN32K_CALLBACKS) failed, Status 0x%lx\n",
+            pDeviceObject, Status);
+    }
+    // TODO: Set flags according to the results.
+    // if (Win32kCallbacks.bACPI)
+    // if (Win32kCallbacks.DualviewFlags & ???)
+    // Win32kCallbacks.pPhysDeviceObject;
 
-    /* Create a win device name (FIXME: virtual devices!) */
-    swprintf(pGraphicsDevice->szWinDeviceName, L"\\\\.\\DISPLAY%d", (int)giDevNum);
+    /* Copy the device name */
+    RtlStringCbCopyNW(pGraphicsDevice->szNtDeviceName,
+                      sizeof(pGraphicsDevice->szNtDeviceName),
+                      pustrDeviceName->Buffer,
+                      pustrDeviceName->Length);
+
+    /* Create a Win32 device name (FIXME: virtual devices!) */
+    RtlStringCbPrintfW(pGraphicsDevice->szWinDeviceName,
+                       sizeof(pGraphicsDevice->szWinDeviceName),
+                       L"\\\\.\\DISPLAY%d",
+                       (int)giDevNum);
 
     /* Allocate a buffer for the strings */
     cj = pustrDiplayDrivers->Length + pustrDescription->Length + sizeof(WCHAR);
@@ -225,13 +314,13 @@ EngpRegisterGraphicsDevice(
         return NULL;
     }
 
-    /* Copy display driver names */
+    /* Copy the display driver names */
     pGraphicsDevice->pDiplayDrivers = pwsz;
     RtlCopyMemory(pGraphicsDevice->pDiplayDrivers,
                   pustrDiplayDrivers->Buffer,
                   pustrDiplayDrivers->Length);
 
-    /* Copy description */
+    /* Copy the description */
     pGraphicsDevice->pwszDescription = pwsz + pustrDiplayDrivers->Length / sizeof(WCHAR);
     RtlCopyMemory(pGraphicsDevice->pwszDescription,
                   pustrDescription->Buffer,
@@ -265,7 +354,7 @@ EngpRegisterGraphicsDevice(
     if (!gpGraphicsDeviceFirst)
         gpGraphicsDeviceFirst = pGraphicsDevice;
 
-    /* Increment device number */
+    /* Increment the device number */
     giDevNum++;
 
     /* Unlock loader */
@@ -274,7 +363,6 @@ EngpRegisterGraphicsDevice(
 
     return pGraphicsDevice;
 }
-
 
 PGRAPHICS_DEVICE
 NTAPI
@@ -320,7 +408,6 @@ EngpFindGraphicsDevice(
 
     return pGraphicsDevice;
 }
-
 
 static
 NTSTATUS

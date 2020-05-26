@@ -12,7 +12,7 @@ BEGIN
     LTEXT "若要继续，请单击“下一步”。", IDC_STATIC, 115, 169, 195, 17
 END
 
-IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS 安装程序 "
 FONT 9, "宋体", 0, 0, 0x0
@@ -22,6 +22,20 @@ BEGIN
     LTEXT "ReactOS 基于 GPL 许可证发布，因此如果您需要二次开发或重新发布 ReactOS 的部分或全部，必须遵循 GPL 许可。", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "查看 GPL(&V)...", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "请单击“下一步”继续安装。", IDC_STATIC, 15, 136, 195, 17
+END
+
+IDD_PRODUCT DIALOGEX 0, 0, 317, 143
+CAPTION "ReactOS Setup"
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
+    LTEXT "Please choose a product option:", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "Product &Options:", IDC_STATIC, 5, 32, 85, 10
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "Product Information", IDC_STATIC, 5, 50, 305, 85
+    LTEXT "Description:", IDC_STATIC, 20, 65, 70, 10
+    EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -137,6 +151,7 @@ STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "高级设置"
 FONT 9, "宋体"
 BEGIN
+    GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
     RTEXT "采样率(&S):", -1, 27, 35, 90, 8
     LTEXT "每秒报告", -1, 169, 35, 54, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -205,7 +220,7 @@ BEGIN
     IDS_STATUS_INSTALL_DEV "正在安装设备驱动程序..."
 END
 
-/* ATTENTION: Synchronize the translation of these strings with shell32 */
+/* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
 /* If there is no special situation, please DO NOT change English folder names 
 into Chinese, or it may cause problems in the system. */
 
@@ -228,4 +243,15 @@ BEGIN
     IDS_LAUTUS "Lautus"
     IDS_LUNAR "Lunar"
     IDS_MIZU "Mizu"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PRODUCTTITLE "Product Options"
+    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSERVERNAME "ReactOS Server"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
+    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
+    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
+    IDS_DEFAULT "(Default)"
 END

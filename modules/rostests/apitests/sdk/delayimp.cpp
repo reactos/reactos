@@ -18,6 +18,7 @@
 #include <intshcut.h>
 #include <sfc.h>
 #include <imagehlp.h>
+#include <mmddk.h>
 
 /* Compatibility with the MS defines */
 
@@ -383,9 +384,9 @@ PTR Rva2Addr(PIMAGE_DOS_HEADER dos, RVA rva)
 }
 
 
-unsigned g_winmm_snd_play_a[] = { dliStartProcessing, dliNotePreLoadLibrary, dliNotePreGetProcAddress, dliNoteEndProcessing, LAST_DLI };
-unsigned g_winmm_snd_play_w[] = { dliStartProcessing, dliNotePreGetProcAddress, dliNoteEndProcessing, LAST_DLI };
-unsigned g_winmm_play_w[] = { dliStartProcessing, dliNotePreGetProcAddress, dliFailGetProc, dliNoteEndProcessing, LAST_DLI };
+unsigned g_winmm_get_cur_task[] = { dliStartProcessing, dliNotePreLoadLibrary, dliNotePreGetProcAddress, dliNoteEndProcessing, LAST_DLI };
+unsigned g_winmm_midi_out_close[] = { dliStartProcessing, dliNotePreGetProcAddress, dliNoteEndProcessing, LAST_DLI };
+unsigned g_winmm_mide_in_close[] = { dliStartProcessing, dliNotePreGetProcAddress, dliFailGetProc, dliNoteEndProcessing, LAST_DLI };
 unsigned g_sfc_key[] = { dliStartProcessing, dliNotePreLoadLibrary, dliFailLoadLib, dliNotePreGetProcAddress, dliNoteEndProcessing, LAST_DLI };
 unsigned g_sfc_file[] = { dliStartProcessing, dliNotePreGetProcAddress, dliNoteEndProcessing, LAST_DLI };
 unsigned g_version_a[] = { dliStartProcessing, dliNotePreLoadLibrary, dliNotePreGetProcAddress, dliFailGetProc, dliNoteEndProcessing, LAST_DLI };
@@ -449,45 +450,43 @@ START_TEST(delayimp)
     }
 
     /* Test the normal flow without a dll loaded */
-    BOOL ret = 123;
-    SetExpectedDli(g_winmm_snd_play_a);
+    SetExpectedDli(g_winmm_get_cur_task);
     g_ExpectedDll = WINMM_DLLNAME;
-    g_ExpectedName = "sndPlaySoundA";
-    ret = sndPlaySoundA(NULL, SND_NOWAIT | SND_NOSTOP);
-    ok(ret == TRUE, "Expected ret to be TRUE, was %u\n", ret);
+    g_ExpectedName = "mmGetCurrentTask";
+    DWORD task = mmGetCurrentTask();
+    ok(task == GetCurrentThreadId(), "Expected ret to be current thread id (0x%lx), was 0x%lx\n", GetCurrentThreadId(), task);
     CheckDliDone();
 
     /* Test the normal flow with a dll loaded */
-    SetExpectedDli(g_winmm_snd_play_w);
+    SetExpectedDli(g_winmm_midi_out_close);
     g_ExpectedDll = WINMM_DLLNAME;
-    g_ExpectedName = "sndPlaySoundW";
-    ret = sndPlaySoundW(NULL, SND_NOWAIT | SND_NOSTOP);
-    ok(ret == TRUE, "Expected ret to be TRUE, was %u\n", ret);
+    g_ExpectedName = "midiOutClose";
+    DWORD err = midiOutClose((HMIDIOUT)(ULONG_PTR)0xdeadbeef);
+    ok(err == MMSYSERR_INVALHANDLE, "Expected err to be MMSYSERR_INVALHANDLE, was 0x%lx\n", err);
     CheckDliDone();
 
     /* Make sure GetProcAddress fails, also ignore the Failure hook, use the exception to set the address */
-    SetExpectedDli(g_winmm_play_w);
+    SetExpectedDli(g_winmm_mide_in_close);
     g_ExpectedDll = WINMM_DLLNAME;
-    g_ExpectedName = "playSoundW";
+    g_ExpectedName = "MixerClose";
     g_BreakFunctionName = true;
-    ret = 123;
     _SEH2_TRY
     {
-        ret = PlaySoundW(NULL, NULL, SND_NOWAIT | SND_NOSTOP);
+        err = mixerClose((HMIXER)(ULONG_PTR)0xdeadbeef);
     }
     _SEH2_EXCEPT(ExceptionFilter(_SEH2_GetExceptionInformation(), _SEH2_GetExceptionCode()))
     {
-        ;
+        err = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
-    ok(ret == TRUE, "Expected ret to be TRUE, was %u\n", ret);
+    ok(err == MMSYSERR_INVALHANDLE, "Expected err to be MMSYSERR_INVALHANDLE, was 0x%lx\n", err);
     CheckDliDone();
     ok(g_BreakFunctionName == false, "Expected the functionname to be changed\n");
-
+    
     /* Make the LoadLib fail, manually load the library in the Failure Hook,
     Respond to the dliNotePreGetProcAddress with an alternate function address */
     SetExpectedDli(g_sfc_key);
-    ret = SfcIsKeyProtected(NULL, NULL, NULL);
+    BOOL ret = SfcIsKeyProtected(NULL, NULL, NULL);
     ok(ret == 12345, "Expected ret to be 12345, was %u\n", ret);    /* The original function returns FALSE! */
     CheckDliDone();
 

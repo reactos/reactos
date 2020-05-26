@@ -157,7 +157,7 @@ Test_General(void)
     SetLastError(0xbadbad00);
     hBrush = CreateSolidBrush(123);
     ok(hBrush != NULL, "Failed to create brush\n");
-    ok_long(GetObjectA(hBrush, 0, &TestStruct), sizeof(LOGBRUSH));
+    ok_long(GetObjectA(hBrush, 0, &TestStruct), 0);
     ok_err(0xbadbad00);
     DeleteObject(hBrush);
     SetLastError(0xbadbad00);

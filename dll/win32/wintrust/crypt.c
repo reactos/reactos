@@ -33,7 +33,6 @@
 #include "winternl.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 
@@ -75,7 +74,7 @@ static HCATINFO create_catinfo(const WCHAR *filename)
         SetLastError(ERROR_OUTOFMEMORY);
         return INVALID_HANDLE_VALUE;
     }
-    strcpyW(ci->file, filename);
+    lstrcpyW(ci->file, filename);
     ci->magic = CATINFO_MAGIC;
     return ci;
 }
@@ -125,13 +124,13 @@ BOOL WINAPI CryptCATAdminAcquireContext(HCATADMIN *catAdmin,
     }
 
     GetSystemDirectoryW(catroot_dir, MAX_PATH);
-    strcatW(catroot_dir, catroot);
+    lstrcatW(catroot_dir, catroot);
 
     /* create the directory if it doesn't exist */
     CreateDirectoryW(catroot_dir, NULL);
 
     if (!sys) sys = &defsys;
-    sprintfW(ca->path, fmt, catroot_dir, sys->Data1, sys->Data2,
+    swprintf(ca->path, fmt, catroot_dir, sys->Data1, sys->Data2,
              sys->Data3, sys->Data4[0], sys->Data4[1], sys->Data4[2],
              sys->Data4[3], sys->Data4[4], sys->Data4[5], sys->Data4[6],
              sys->Data4[7]);
@@ -144,6 +143,17 @@ BOOL WINAPI CryptCATAdminAcquireContext(HCATADMIN *catAdmin,
 
     *catAdmin = ca;
     return TRUE;
+}
+
+/***********************************************************************
+ *             CryptCATAdminAcquireContext2 (WINTRUST.@)
+ */
+BOOL WINAPI CryptCATAdminAcquireContext2(HCATADMIN *catAdmin, const GUID *sys, const WCHAR *algorithm,
+                                         const CERT_STRONG_SIGN_PARA *policy, DWORD flags)
+{
+    FIXME("%p %s %s %p %x stub\n", catAdmin, debugstr_guid(sys), debugstr_w(algorithm), policy, flags);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /***********************************************************************
@@ -173,15 +183,15 @@ HCATINFO WINAPI CryptCATAdminAddCatalog(HCATADMIN catAdmin, PWSTR catalogFile,
         return NULL;
     }
 
-    len = strlenW(ca->path) + strlenW(selectBaseName) + 2;
+    len = lstrlenW(ca->path) + lstrlenW(selectBaseName) + 2;
     if (!(target = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
     {
         SetLastError(ERROR_OUTOFMEMORY);
         return NULL;
     }
-    strcpyW(target, ca->path);
-    strcatW(target, slashW);
-    strcatW(target, selectBaseName);
+    lstrcpyW(target, ca->path);
+    lstrcatW(target, slashW);
+    lstrcatW(target, selectBaseName);
 
     if (!CopyFileW(catalogFile, target, FALSE))
     {
@@ -197,7 +207,7 @@ HCATINFO WINAPI CryptCATAdminAddCatalog(HCATADMIN catAdmin, PWSTR catalogFile,
         return NULL;
     }
     ci->magic = CATINFO_MAGIC;
-    strcpyW(ci->file, target);
+    lstrcpyW(ci->file, target);
 
     HeapFree(GetProcessHeap(), 0, target);
     return ci;
@@ -297,15 +307,15 @@ HCATINFO WINAPI CryptCATAdminEnumCatalogFromHash(HCATADMIN hCatAdmin, BYTE* pbHa
     {
         WCHAR *path;
 
-        size = strlenW(ca->path) * sizeof(WCHAR) + sizeof(globW);
+        size = lstrlenW(ca->path) * sizeof(WCHAR) + sizeof(globW);
         if (!(path = HeapAlloc(GetProcessHeap(), 0, size)))
         {
             CryptReleaseContext(prov, 0);
             SetLastError(ERROR_OUTOFMEMORY);
             return NULL;
         }
-        strcpyW(path, ca->path);
-        strcatW(path, globW);
+        lstrcpyW(path, ca->path);
+        lstrcatW(path, globW);
 
         FindClose(ca->find);
         ca->find = FindFirstFileW(path, &data);
@@ -331,15 +341,15 @@ HCATINFO WINAPI CryptCATAdminEnumCatalogFromHash(HCATADMIN hCatAdmin, BYTE* pbHa
         struct catinfo *ci;
         HANDLE hcat;
 
-        size = (strlenW(ca->path) + strlenW(data.cFileName) + 2) * sizeof(WCHAR);
+        size = (lstrlenW(ca->path) + lstrlenW(data.cFileName) + 2) * sizeof(WCHAR);
         if (!(filename = HeapAlloc(GetProcessHeap(), 0, size)))
         {
             SetLastError(ERROR_OUTOFMEMORY);
             return NULL;
         }
-        strcpyW(filename, ca->path);
-        strcatW(filename, slashW);
-        strcatW(filename, data.cFileName);
+        lstrcpyW(filename, ca->path);
+        lstrcatW(filename, slashW);
+        lstrcatW(filename, data.cFileName);
 
         hcat = CryptCATOpen(filename, CRYPTCAT_OPEN_EXISTING, prov, 0, 0);
         if (hcat == INVALID_HANDLE_VALUE)
@@ -476,22 +486,22 @@ BOOL WINAPI CryptCATAdminRemoveCatalog(HCATADMIN hCatAdmin, LPCWSTR pwszCatalogF
 
     /* Only delete when there is a filename and no path */
     if (pwszCatalogFile && pwszCatalogFile[0] != 0 &&
-        !strchrW(pwszCatalogFile, '\\') && !strchrW(pwszCatalogFile, '/') &&
-        !strchrW(pwszCatalogFile, ':'))
+        !wcschr(pwszCatalogFile, '\\') && !wcschr(pwszCatalogFile, '/') &&
+        !wcschr(pwszCatalogFile, ':'))
     {
         static const WCHAR slashW[] = {'\\',0};
         WCHAR *target;
         DWORD len;
 
-        len = strlenW(ca->path) + strlenW(pwszCatalogFile) + 2;
+        len = lstrlenW(ca->path) + lstrlenW(pwszCatalogFile) + 2;
         if (!(target = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
         {
             SetLastError(ERROR_OUTOFMEMORY);
             return FALSE;
         }
-        strcpyW(target, ca->path);
-        strcatW(target, slashW);
-        strcatW(target, pwszCatalogFile);
+        lstrcpyW(target, ca->path);
+        lstrcatW(target, slashW);
+        lstrcatW(target, pwszCatalogFile);
 
         DeleteFileW(target);
 
@@ -517,9 +527,9 @@ BOOL WINAPI CryptCATAdminResolveCatalogPath(HCATADMIN hcatadmin, WCHAR *catalog_
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    strcpyW(info->wszCatalogFile, ca->path);
-    strcatW(info->wszCatalogFile, slashW);
-    strcatW(info->wszCatalogFile, catalog_file);
+    lstrcpyW(info->wszCatalogFile, ca->path);
+    lstrcatW(info->wszCatalogFile, slashW);
+    lstrcatW(info->wszCatalogFile, catalog_file);
 
     return TRUE;
 }
@@ -834,7 +844,7 @@ BOOL WINAPI CryptCATCatalogInfoFromContext(HCATINFO hcatinfo, CATALOG_INFO *info
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    strcpyW(info->wszCatalogFile, ci->file);
+    lstrcpyW(info->wszCatalogFile, ci->file);
     return TRUE;
 }
 

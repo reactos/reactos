@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.4.1.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -40,11 +41,14 @@
    define necessary library symbols; they are noted "INFRINGES ON
    USER NAME SPACE" below.  */
 
+/* Undocumented macros, especially those whose name start with YY_,
+   are private implementation details.  Do not rely on them.  */
+
 /* Identify Bison output.  */
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.0.2"
+#define YYBISON_VERSION "3.4.1"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -69,8 +73,10 @@
 #define yylval          asmshader_lval
 #define yychar          asmshader_char
 
-/* Copy the first part of user declarations.  */
-#line 22 "asmshader.y" /* yacc.c:339  */
+/* First part of user prologue.  */
+#line 22 "asmshader.y"
+
+#include "wine/debug.h"
 
 #include "d3dcompiler_private.h"
 
@@ -78,13 +84,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(asmshader);
 
 struct asm_parser asm_ctx;
 
-void asmparser_message(struct asm_parser *ctx, const char *fmt, ...)
+void WINAPIV asmparser_message(struct asm_parser *ctx, const char *fmt, ...)
 {
-    va_list args;
+    __ms_va_list args;
 
-    va_start(args, fmt);
+    __ms_va_start(args, fmt);
     compilation_message(&ctx->messages, fmt, args);
-    va_end(args);
+    __ms_va_end(args);
 }
 
 static void asmshader_error(char const *s) {
@@ -114,13 +120,17 @@ int asmshader_lex(void);
 
 
 
-#line 122 "asmshader.tab.c" /* yacc.c:339  */
+#line 124 "asmshader.tab.c"
 
 # ifndef YY_NULLPTR
-#  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULLPTR nullptr
+#  if defined __cplusplus
+#   if 201103L <= __cplusplus
+#    define YY_NULLPTR nullptr
+#   else
+#    define YY_NULLPTR 0
+#   endif
 #  else
-#   define YY_NULLPTR 0
+#   define YY_NULLPTR ((void*)0)
 #  endif
 # endif
 
@@ -132,7 +142,10 @@ int asmshader_lex(void);
 # define YYERROR_VERBOSE 0
 #endif
 
-
+/* Use api.header.include to #include this header
+   instead of duplicating it here.  */
+#ifndef YY_ASMSHADER_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_ASMSHADER_TAB_H_INCLUDED
+# define YY_ASMSHADER_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_ASMSHADER_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -311,10 +324,9 @@ extern int asmshader_debug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 70 "asmshader.y" /* yacc.c:355  */
+#line 68 "asmshader.y"
 
     struct {
         float           val;
@@ -349,8 +361,10 @@ union YYSTYPE
     struct rel_reg      rel_reg;
     struct src_regs     sregs;
 
-#line 357 "asmshader.tab.c" /* yacc.c:355  */
+#line 365 "asmshader.tab.c"
+
 };
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif
@@ -360,11 +374,9 @@ extern YYSTYPE asmshader_lval;
 
 int asmshader_parse (void);
 
+#endif /* !YY_ASMSHADER_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_ASMSHADER_TAB_H_INCLUDED  */
 
 
-/* Copy the second part of user declarations.  */
-
-#line 372 "asmshader.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -385,13 +397,13 @@ typedef signed char yytype_int8;
 #ifdef YYTYPE_UINT16
 typedef YYTYPE_UINT16 yytype_uint16;
 #else
-typedef unsigned short int yytype_uint16;
+typedef unsigned short yytype_uint16;
 #endif
 
 #ifdef YYTYPE_INT16
 typedef YYTYPE_INT16 yytype_int16;
 #else
-typedef short int yytype_int16;
+typedef short yytype_int16;
 #endif
 
 #ifndef YYSIZE_T
@@ -403,7 +415,7 @@ typedef short int yytype_int16;
 #  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
 #  define YYSIZE_T size_t
 # else
-#  define YYSIZE_T unsigned int
+#  define YYSIZE_T unsigned
 # endif
 #endif
 
@@ -439,15 +451,6 @@ typedef short int yytype_int16;
 # define YY_ATTRIBUTE_UNUSED YY_ATTRIBUTE ((__unused__))
 #endif
 
-#if !defined _Noreturn \
-     && (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112)
-# if defined _MSC_VER && 1200 <= _MSC_VER
-#  define _Noreturn __declspec (noreturn)
-# else
-#  define _Noreturn YY_ATTRIBUTE ((__noreturn__))
-# endif
-#endif
-
 /* Suppress unused-variable warnings by "using" E.  */
 #if ! defined lint || defined __GNUC__
 # define YYUSE(E) ((void) (E))
@@ -455,7 +458,7 @@ typedef short int yytype_int16;
 # define YYUSE(E) /* empty */
 #endif
 
-#if defined __GNUC__ && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
+#if defined __GNUC__ && ! defined __ICC && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
 /* Suppress an incorrect diagnostic about yylval being uninitialized.  */
 # define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN \
     _Pragma ("GCC diagnostic push") \
@@ -474,6 +477,8 @@ typedef short int yytype_int16;
 # define YY_INITIAL_VALUE(Value) /* Nothing. */
 #endif
 
+
+#define YY_ASSERT(E) ((void) (0 && (E)))
 
 #if ! defined yyoverflow || YYERROR_VERBOSE
 
@@ -617,16 +622,16 @@ union yyalloc
 /* YYNSTATES -- Number of states.  */
 #define YYNSTATES  552
 
-/* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
-   by yylex, with out-of-bounds checking.  */
 #define YYUNDEFTOK  2
 #define YYMAXUTOK   417
 
+/* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
+   as returned by yylex, with out-of-bounds checking.  */
 #define YYTRANSLATE(YYX)                                                \
-  ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
+  ((unsigned) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
 
 /* YYTRANSLATE[TOKEN-NUM] -- Symbol number corresponding to TOKEN-NUM
-   as returned by yylex, without out-of-bounds checking.  */
+   as returned by yylex.  */
 static const yytype_uint8 yytranslate[] =
 {
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -677,29 +682,29 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   311,   311,   316,   321,   326,   331,   336,   341,   346,
-     351,   356,   361,   366,   371,   376,   382,   383,   388,   392,
-     397,   403,   408,   413,   418,   423,   428,   433,   438,   443,
-     448,   453,   458,   463,   468,   473,   478,   483,   488,   493,
-     498,   503,   508,   513,   518,   523,   528,   533,   538,   543,
-     548,   553,   558,   563,   575,   587,   610,   633,   655,   677,
-     687,   702,   709,   716,   720,   724,   728,   733,   738,   743,
-     748,   753,   758,   763,   768,   773,   778,   783,   788,   793,
-     798,   803,   808,   813,   818,   823,   828,   833,   838,   843,
-     849,   854,   859,   864,   875,   880,   885,   890,   895,   900,
-     905,   910,   915,   920,   925,   930,   935,   940,   945,   950,
-     955,   960,   965,   970,   975,   980,   987,   995,  1004,  1008,
-    1012,  1016,  1022,  1028,  1034,  1038,  1042,  1048,  1052,  1056,
-    1060,  1064,  1068,  1072,  1076,  1082,  1088,  1093,  1100,  1115,
-    1121,  1137,  1141,  1163,  1168,  1182,  1186,  1199,  1204,  1209,
-    1214,  1219,  1224,  1229,  1234,  1239,  1245,  1250,  1261,  1269,
-    1277,  1285,  1310,  1324,  1338,  1348,  1352,  1357,  1365,  1373,
-    1381,  1390,  1399,  1409,  1413,  1417,  1421,  1425,  1429,  1434,
-    1438,  1443,  1447,  1453,  1457,  1461,  1465,  1469,  1473,  1479,
-    1483,  1489,  1495,  1501,  1507,  1513,  1517,  1521,  1525,  1529,
-    1533,  1538,  1539,  1540,  1541,  1542,  1543,  1545,  1551,  1557,
-    1563,  1569,  1575,  1581,  1587,  1593,  1599,  1605,  1611,  1617,
-    1623,  1630,  1634,  1639,  1643,  1647,  1651,  1656,  1664
+       0,   309,   309,   314,   319,   324,   329,   334,   339,   344,
+     349,   354,   359,   364,   369,   374,   380,   381,   386,   390,
+     395,   401,   406,   411,   416,   421,   426,   431,   436,   441,
+     446,   451,   456,   461,   466,   471,   476,   481,   486,   491,
+     496,   501,   506,   511,   516,   521,   526,   531,   536,   541,
+     546,   551,   556,   561,   573,   585,   608,   631,   653,   675,
+     685,   700,   707,   714,   718,   722,   726,   731,   736,   741,
+     746,   751,   756,   761,   766,   771,   776,   781,   786,   791,
+     796,   801,   806,   811,   816,   821,   826,   831,   836,   841,
+     847,   852,   857,   862,   873,   878,   883,   888,   893,   898,
+     903,   908,   913,   918,   923,   928,   933,   938,   943,   948,
+     953,   958,   963,   968,   973,   978,   985,   993,  1002,  1006,
+    1010,  1014,  1020,  1026,  1032,  1036,  1040,  1046,  1050,  1054,
+    1058,  1062,  1066,  1070,  1074,  1080,  1086,  1091,  1098,  1113,
+    1119,  1135,  1139,  1161,  1166,  1180,  1184,  1197,  1202,  1207,
+    1212,  1217,  1222,  1227,  1232,  1237,  1243,  1248,  1259,  1267,
+    1275,  1283,  1308,  1322,  1336,  1346,  1350,  1355,  1363,  1371,
+    1379,  1388,  1397,  1407,  1411,  1415,  1419,  1423,  1427,  1432,
+    1436,  1441,  1445,  1451,  1455,  1459,  1463,  1467,  1471,  1477,
+    1481,  1487,  1493,  1499,  1505,  1511,  1515,  1519,  1523,  1527,
+    1531,  1536,  1537,  1538,  1539,  1540,  1541,  1543,  1549,  1555,
+    1561,  1567,  1573,  1579,  1585,  1591,  1597,  1603,  1609,  1615,
+    1621,  1628,  1632,  1637,  1641,  1645,  1649,  1654,  1662
 };
 #endif
 
@@ -1218,22 +1223,22 @@ static const yytype_uint8 yyr2[] =
 
 #define YYRECOVERING()  (!!yyerrstatus)
 
-#define YYBACKUP(Token, Value)                                  \
-do                                                              \
-  if (yychar == YYEMPTY)                                        \
-    {                                                           \
-      yychar = (Token);                                         \
-      yylval = (Value);                                         \
-      YYPOPSTACK (yylen);                                       \
-      yystate = *yyssp;                                         \
-      goto yybackup;                                            \
-    }                                                           \
-  else                                                          \
-    {                                                           \
-      yyerror (YY_("syntax error: cannot back up")); \
-      YYERROR;                                                  \
-    }                                                           \
-while (0)
+#define YYBACKUP(Token, Value)                                    \
+  do                                                              \
+    if (yychar == YYEMPTY)                                        \
+      {                                                           \
+        yychar = (Token);                                         \
+        yylval = (Value);                                         \
+        YYPOPSTACK (yylen);                                       \
+        yystate = *yyssp;                                         \
+        goto yybackup;                                            \
+      }                                                           \
+    else                                                          \
+      {                                                           \
+        yyerror (YY_("syntax error: cannot back up")); \
+        YYERROR;                                                  \
+      }                                                           \
+  while (0)
 
 /* Error token number */
 #define YYTERROR        1
@@ -1273,37 +1278,37 @@ do {                                                                      \
 } while (0)
 
 
-/*----------------------------------------.
-| Print this symbol's value on YYOUTPUT.  |
-`----------------------------------------*/
+/*-----------------------------------.
+| Print this symbol's value on YYO.  |
+`-----------------------------------*/
 
 static void
-yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+yy_symbol_value_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep)
 {
-  FILE *yyo = yyoutput;
-  YYUSE (yyo);
+  FILE *yyoutput = yyo;
+  YYUSE (yyoutput);
   if (!yyvaluep)
     return;
 # ifdef YYPRINT
   if (yytype < YYNTOKENS)
-    YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
+    YYPRINT (yyo, yytoknum[yytype], *yyvaluep);
 # endif
   YYUSE (yytype);
 }
 
 
-/*--------------------------------.
-| Print this symbol on YYOUTPUT.  |
-`--------------------------------*/
+/*---------------------------.
+| Print this symbol on YYO.  |
+`---------------------------*/
 
 static void
-yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+yy_symbol_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep)
 {
-  YYFPRINTF (yyoutput, "%s %s (",
+  YYFPRINTF (yyo, "%s %s (",
              yytype < YYNTOKENS ? "token" : "nterm", yytname[yytype]);
 
-  yy_symbol_value_print (yyoutput, yytype, yyvaluep);
-  YYFPRINTF (yyoutput, ")");
+  yy_symbol_value_print (yyo, yytype, yyvaluep);
+  YYFPRINTF (yyo, ")");
 }
 
 /*------------------------------------------------------------------.
@@ -1337,7 +1342,7 @@ do {                                                            \
 static void
 yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, int yyrule)
 {
-  unsigned long int yylno = yyrline[yyrule];
+  unsigned long yylno = yyrline[yyrule];
   int yynrhs = yyr2[yyrule];
   int yyi;
   YYFPRINTF (stderr, "Reducing stack by rule %d (line %lu):\n",
@@ -1348,7 +1353,7 @@ yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, int yyrule)
       YYFPRINTF (stderr, "   $%d = ", yyi + 1);
       yy_symbol_print (stderr,
                        yystos[yyssp[yyi + 1 - yynrhs]],
-                       &(yyvsp[(yyi + 1) - (yynrhs)])
+                       &yyvsp[(yyi + 1) - (yynrhs)]
                                               );
       YYFPRINTF (stderr, "\n");
     }
@@ -1452,7 +1457,10 @@ yytnamerr (char *yyres, const char *yystr)
           case '\\':
             if (*++yyp != '\\')
               goto do_not_strip_quotes;
-            /* Fall through.  */
+            else
+              goto append;
+
+          append:
           default:
             if (yyres)
               yyres[yyn] = *yyp;
@@ -1470,7 +1478,7 @@ yytnamerr (char *yyres, const char *yystr)
   if (! yyres)
     return yystrlen (yystr);
 
-  return yystpcpy (yyres, yystr) - yyres;
+  return (YYSIZE_T) (yystpcpy (yyres, yystr) - yyres);
 }
 # endif
 
@@ -1548,10 +1556,10 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                 yyarg[yycount++] = yytname[yyx];
                 {
                   YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULLPTR, yytname[yyx]);
-                  if (! (yysize <= yysize1
-                         && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
+                  if (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM)
+                    yysize = yysize1;
+                  else
                     return 2;
-                  yysize = yysize1;
                 }
               }
         }
@@ -1563,6 +1571,7 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
       case N:                               \
         yyformat = S;                       \
       break
+    default: /* Avoid compiler warnings. */
       YYCASE_(0, YY_("syntax error"));
       YYCASE_(1, YY_("syntax error, unexpected %s"));
       YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
@@ -1574,9 +1583,10 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
 
   {
     YYSIZE_T yysize1 = yysize + yystrlen (yyformat);
-    if (! (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
+    if (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM)
+      yysize = yysize1;
+    else
       return 2;
-    yysize = yysize1;
   }
 
   if (*yymsg_alloc < yysize)
@@ -1702,23 +1712,33 @@ yyparse (void)
   yychar = YYEMPTY; /* Cause a token to be read.  */
   goto yysetstate;
 
+
 /*------------------------------------------------------------.
-| yynewstate -- Push a new state, which is found in yystate.  |
+| yynewstate -- push a new state, which is found in yystate.  |
 `------------------------------------------------------------*/
- yynewstate:
+yynewstate:
   /* In all cases, when you get here, the value and location stacks
      have just been pushed.  So pushing a state here evens the stacks.  */
   yyssp++;
 
- yysetstate:
-  *yyssp = yystate;
+
+/*--------------------------------------------------------------------.
+| yynewstate -- set current state (the top of the stack) to yystate.  |
+`--------------------------------------------------------------------*/
+yysetstate:
+  YYDPRINTF ((stderr, "Entering state %d\n", yystate));
+  YY_ASSERT (0 <= yystate && yystate < YYNSTATES);
+  *yyssp = (yytype_int16) yystate;
 
   if (yyss + yystacksize - 1 <= yyssp)
+#if !defined yyoverflow && !defined YYSTACK_RELOCATE
+    goto yyexhaustedlab;
+#else
     {
       /* Get the current used size of the three stacks, in elements.  */
-      YYSIZE_T yysize = yyssp - yyss + 1;
+      YYSIZE_T yysize = (YYSIZE_T) (yyssp - yyss + 1);
 
-#ifdef yyoverflow
+# if defined yyoverflow
       {
         /* Give user a chance to reallocate the stack.  Use copies of
            these so that the &'s don't force the real ones into
@@ -1734,14 +1754,10 @@ yyparse (void)
                     &yyss1, yysize * sizeof (*yyssp),
                     &yyvs1, yysize * sizeof (*yyvsp),
                     &yystacksize);
-
         yyss = yyss1;
         yyvs = yyvs1;
       }
-#else /* no yyoverflow */
-# ifndef YYSTACK_RELOCATE
-      goto yyexhaustedlab;
-# else
+# else /* defined YYSTACK_RELOCATE */
       /* Extend the stack our own way.  */
       if (YYMAXDEPTH <= yystacksize)
         goto yyexhaustedlab;
@@ -1757,35 +1773,33 @@ yyparse (void)
           goto yyexhaustedlab;
         YYSTACK_RELOCATE (yyss_alloc, yyss);
         YYSTACK_RELOCATE (yyvs_alloc, yyvs);
-#  undef YYSTACK_RELOCATE
+# undef YYSTACK_RELOCATE
         if (yyss1 != yyssa)
           YYSTACK_FREE (yyss1);
       }
 # endif
-#endif /* no yyoverflow */
 
       yyssp = yyss + yysize - 1;
       yyvsp = yyvs + yysize - 1;
 
       YYDPRINTF ((stderr, "Stack size increased to %lu\n",
-                  (unsigned long int) yystacksize));
+                  (unsigned long) yystacksize));
 
       if (yyss + yystacksize - 1 <= yyssp)
         YYABORT;
     }
-
-  YYDPRINTF ((stderr, "Entering state %d\n", yystate));
+#endif /* !defined yyoverflow && !defined YYSTACK_RELOCATE */
 
   if (yystate == YYFINAL)
     YYACCEPT;
 
   goto yybackup;
 
+
 /*-----------.
 | yybackup.  |
 `-----------*/
 yybackup:
-
   /* Do appropriate processing given the current state.  Read a
      lookahead token if we need one and don't already have one.  */
 
@@ -1843,7 +1857,6 @@ yybackup:
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
   *++yyvsp = yylval;
   YY_IGNORE_MAYBE_UNINITIALIZED_END
-
   goto yynewstate;
 
 
@@ -1858,7 +1871,7 @@ yydefault:
 
 
 /*-----------------------------.
-| yyreduce -- Do a reduction.  |
+| yyreduce -- do a reduction.  |
 `-----------------------------*/
 yyreduce:
   /* yyn is the number of a rule to reduce with.  */
@@ -1878,455 +1891,455 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 2:
-#line 312 "asmshader.y" /* yacc.c:1646  */
+  case 2:
+#line 310 "asmshader.y"
     {
                             asm_ctx.funcs->end(&asm_ctx);
                         }
-#line 1891 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1900 "asmshader.tab.c"
     break;
 
   case 3:
-#line 317 "asmshader.y" /* yacc.c:1646  */
+#line 315 "asmshader.y"
     {
                             TRACE("Vertex shader 1.0\n");
                             create_vs10_parser(&asm_ctx);
                         }
-#line 1900 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1909 "asmshader.tab.c"
     break;
 
   case 4:
-#line 322 "asmshader.y" /* yacc.c:1646  */
+#line 320 "asmshader.y"
     {
                             TRACE("Vertex shader 1.1\n");
                             create_vs11_parser(&asm_ctx);
                         }
-#line 1909 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1918 "asmshader.tab.c"
     break;
 
   case 5:
-#line 327 "asmshader.y" /* yacc.c:1646  */
+#line 325 "asmshader.y"
     {
                             TRACE("Vertex shader 2.0\n");
                             create_vs20_parser(&asm_ctx);
                         }
-#line 1918 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1927 "asmshader.tab.c"
     break;
 
   case 6:
-#line 332 "asmshader.y" /* yacc.c:1646  */
+#line 330 "asmshader.y"
     {
                             TRACE("Vertex shader 2.x\n");
                             create_vs2x_parser(&asm_ctx);
                         }
-#line 1927 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1936 "asmshader.tab.c"
     break;
 
   case 7:
-#line 337 "asmshader.y" /* yacc.c:1646  */
+#line 335 "asmshader.y"
     {
                             TRACE("Vertex shader 3.0\n");
                             create_vs30_parser(&asm_ctx);
                         }
-#line 1936 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1945 "asmshader.tab.c"
     break;
 
   case 8:
-#line 342 "asmshader.y" /* yacc.c:1646  */
+#line 340 "asmshader.y"
     {
                             TRACE("Pixel  shader 1.0\n");
                             create_ps10_parser(&asm_ctx);
                         }
-#line 1945 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1954 "asmshader.tab.c"
     break;
 
   case 9:
-#line 347 "asmshader.y" /* yacc.c:1646  */
+#line 345 "asmshader.y"
     {
                             TRACE("Pixel  shader 1.1\n");
                             create_ps11_parser(&asm_ctx);
                         }
-#line 1954 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1963 "asmshader.tab.c"
     break;
 
   case 10:
-#line 352 "asmshader.y" /* yacc.c:1646  */
+#line 350 "asmshader.y"
     {
                             TRACE("Pixel  shader 1.2\n");
                             create_ps12_parser(&asm_ctx);
                         }
-#line 1963 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1972 "asmshader.tab.c"
     break;
 
   case 11:
-#line 357 "asmshader.y" /* yacc.c:1646  */
+#line 355 "asmshader.y"
     {
                             TRACE("Pixel  shader 1.3\n");
                             create_ps13_parser(&asm_ctx);
                         }
-#line 1972 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1981 "asmshader.tab.c"
     break;
 
   case 12:
-#line 362 "asmshader.y" /* yacc.c:1646  */
+#line 360 "asmshader.y"
     {
                             TRACE("Pixel  shader 1.4\n");
                             create_ps14_parser(&asm_ctx);
                         }
-#line 1981 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1990 "asmshader.tab.c"
     break;
 
   case 13:
-#line 367 "asmshader.y" /* yacc.c:1646  */
+#line 365 "asmshader.y"
     {
                             TRACE("Pixel  shader 2.0\n");
                             create_ps20_parser(&asm_ctx);
                         }
-#line 1990 "asmshader.tab.c" /* yacc.c:1646  */
+#line 1999 "asmshader.tab.c"
     break;
 
   case 14:
-#line 372 "asmshader.y" /* yacc.c:1646  */
+#line 370 "asmshader.y"
     {
                             TRACE("Pixel  shader 2.x\n");
                             create_ps2x_parser(&asm_ctx);
                         }
-#line 1999 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2008 "asmshader.tab.c"
     break;
 
   case 15:
-#line 377 "asmshader.y" /* yacc.c:1646  */
+#line 375 "asmshader.y"
     {
                             TRACE("Pixel  shader 3.0\n");
                             create_ps30_parser(&asm_ctx);
                         }
-#line 2008 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2017 "asmshader.tab.c"
     break;
 
   case 17:
-#line 384 "asmshader.y" /* yacc.c:1646  */
+#line 382 "asmshader.y"
     {
                                 /* Nothing to do */
                             }
-#line 2016 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2025 "asmshader.tab.c"
     break;
 
   case 18:
-#line 389 "asmshader.y" /* yacc.c:1646  */
+#line 387 "asmshader.y"
     {
 
                             }
-#line 2024 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2033 "asmshader.tab.c"
     break;
 
   case 19:
-#line 393 "asmshader.y" /* yacc.c:1646  */
+#line 391 "asmshader.y"
     {
                                 TRACE("predicate\n");
                                 asm_ctx.funcs->predicate(&asm_ctx, &(yyvsp[-1].reg));
                             }
-#line 2033 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2042 "asmshader.tab.c"
     break;
 
   case 20:
-#line 398 "asmshader.y" /* yacc.c:1646  */
+#line 396 "asmshader.y"
     {
                                 TRACE("coissue\n");
                                 asm_ctx.funcs->coissue(&asm_ctx);
                             }
-#line 2042 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2051 "asmshader.tab.c"
     break;
 
   case 21:
-#line 404 "asmshader.y" /* yacc.c:1646  */
+#line 402 "asmshader.y"
     {
                                 TRACE("ADD\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_ADD, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2051 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2060 "asmshader.tab.c"
     break;
 
   case 22:
-#line 409 "asmshader.y" /* yacc.c:1646  */
+#line 407 "asmshader.y"
     {
                                 TRACE("NOP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_NOP, 0, 0, 0, 0, 0, 0);
                             }
-#line 2060 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2069 "asmshader.tab.c"
     break;
 
   case 23:
-#line 414 "asmshader.y" /* yacc.c:1646  */
+#line 412 "asmshader.y"
     {
                                 TRACE("MOV\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_MOV, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2069 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2078 "asmshader.tab.c"
     break;
 
   case 24:
-#line 419 "asmshader.y" /* yacc.c:1646  */
+#line 417 "asmshader.y"
     {
                                 TRACE("SUB\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_SUB, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2078 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2087 "asmshader.tab.c"
     break;
 
   case 25:
-#line 424 "asmshader.y" /* yacc.c:1646  */
+#line 422 "asmshader.y"
     {
                                 TRACE("MAD\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_MAD, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 3);
                             }
-#line 2087 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2096 "asmshader.tab.c"
     break;
 
   case 26:
-#line 429 "asmshader.y" /* yacc.c:1646  */
+#line 427 "asmshader.y"
     {
                                 TRACE("MUL\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_MUL, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2096 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2105 "asmshader.tab.c"
     break;
 
   case 27:
-#line 434 "asmshader.y" /* yacc.c:1646  */
+#line 432 "asmshader.y"
     {
                                 TRACE("RCP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_RCP, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2105 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2114 "asmshader.tab.c"
     break;
 
   case 28:
-#line 439 "asmshader.y" /* yacc.c:1646  */
+#line 437 "asmshader.y"
     {
                                 TRACE("RSQ\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_RSQ, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2114 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2123 "asmshader.tab.c"
     break;
 
   case 29:
-#line 444 "asmshader.y" /* yacc.c:1646  */
+#line 442 "asmshader.y"
     {
                                 TRACE("DP3\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_DP3, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2123 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2132 "asmshader.tab.c"
     break;
 
   case 30:
-#line 449 "asmshader.y" /* yacc.c:1646  */
+#line 447 "asmshader.y"
     {
                                 TRACE("DP4\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_DP4, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2132 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2141 "asmshader.tab.c"
     break;
 
   case 31:
-#line 454 "asmshader.y" /* yacc.c:1646  */
+#line 452 "asmshader.y"
     {
                                 TRACE("MIN\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_MIN, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2141 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2150 "asmshader.tab.c"
     break;
 
   case 32:
-#line 459 "asmshader.y" /* yacc.c:1646  */
+#line 457 "asmshader.y"
     {
                                 TRACE("MAX\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_MAX, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2150 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2159 "asmshader.tab.c"
     break;
 
   case 33:
-#line 464 "asmshader.y" /* yacc.c:1646  */
+#line 462 "asmshader.y"
     {
                                 TRACE("SLT\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_SLT, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2159 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2168 "asmshader.tab.c"
     break;
 
   case 34:
-#line 469 "asmshader.y" /* yacc.c:1646  */
+#line 467 "asmshader.y"
     {
                                 TRACE("SGE\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_SGE, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2168 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2177 "asmshader.tab.c"
     break;
 
   case 35:
-#line 474 "asmshader.y" /* yacc.c:1646  */
+#line 472 "asmshader.y"
     {
                                 TRACE("ABS\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_ABS, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2177 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2186 "asmshader.tab.c"
     break;
 
   case 36:
-#line 479 "asmshader.y" /* yacc.c:1646  */
+#line 477 "asmshader.y"
     {
                                 TRACE("EXP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_EXP, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2186 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2195 "asmshader.tab.c"
     break;
 
   case 37:
-#line 484 "asmshader.y" /* yacc.c:1646  */
+#line 482 "asmshader.y"
     {
                                 TRACE("LOG\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_LOG, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2195 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2204 "asmshader.tab.c"
     break;
 
   case 38:
-#line 489 "asmshader.y" /* yacc.c:1646  */
+#line 487 "asmshader.y"
     {
                                 TRACE("LOGP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_LOGP, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2204 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2213 "asmshader.tab.c"
     break;
 
   case 39:
-#line 494 "asmshader.y" /* yacc.c:1646  */
+#line 492 "asmshader.y"
     {
                                 TRACE("EXPP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_EXPP, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2213 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2222 "asmshader.tab.c"
     break;
 
   case 40:
-#line 499 "asmshader.y" /* yacc.c:1646  */
+#line 497 "asmshader.y"
     {
                                 TRACE("DST\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_DST, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2222 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2231 "asmshader.tab.c"
     break;
 
   case 41:
-#line 504 "asmshader.y" /* yacc.c:1646  */
+#line 502 "asmshader.y"
     {
                                 TRACE("LRP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_LRP, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 3);
                             }
-#line 2231 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2240 "asmshader.tab.c"
     break;
 
   case 42:
-#line 509 "asmshader.y" /* yacc.c:1646  */
+#line 507 "asmshader.y"
     {
                                 TRACE("FRC\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_FRC, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2240 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2249 "asmshader.tab.c"
     break;
 
   case 43:
-#line 514 "asmshader.y" /* yacc.c:1646  */
+#line 512 "asmshader.y"
     {
                                 TRACE("POW\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_POW, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2249 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2258 "asmshader.tab.c"
     break;
 
   case 44:
-#line 519 "asmshader.y" /* yacc.c:1646  */
+#line 517 "asmshader.y"
     {
                                 TRACE("CRS\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_CRS, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2258 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2267 "asmshader.tab.c"
     break;
 
   case 45:
-#line 524 "asmshader.y" /* yacc.c:1646  */
+#line 522 "asmshader.y"
     {
                                 TRACE("SGN\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_SGN, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 3);
                             }
-#line 2267 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2276 "asmshader.tab.c"
     break;
 
   case 46:
-#line 529 "asmshader.y" /* yacc.c:1646  */
+#line 527 "asmshader.y"
     {
                                 TRACE("NRM\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_NRM, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2276 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2285 "asmshader.tab.c"
     break;
 
   case 47:
-#line 534 "asmshader.y" /* yacc.c:1646  */
+#line 532 "asmshader.y"
     {
                                 TRACE("SINCOS\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_SINCOS, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2285 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2294 "asmshader.tab.c"
     break;
 
   case 48:
-#line 539 "asmshader.y" /* yacc.c:1646  */
+#line 537 "asmshader.y"
     {
                                 TRACE("M4x4\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_M4x4, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2294 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2303 "asmshader.tab.c"
     break;
 
   case 49:
-#line 544 "asmshader.y" /* yacc.c:1646  */
+#line 542 "asmshader.y"
     {
                                 TRACE("M4x3\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_M4x3, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2303 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2312 "asmshader.tab.c"
     break;
 
   case 50:
-#line 549 "asmshader.y" /* yacc.c:1646  */
+#line 547 "asmshader.y"
     {
                                 TRACE("M3x4\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_M3x4, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2312 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2321 "asmshader.tab.c"
     break;
 
   case 51:
-#line 554 "asmshader.y" /* yacc.c:1646  */
+#line 552 "asmshader.y"
     {
                                 TRACE("M3x3\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_M3x3, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2321 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2330 "asmshader.tab.c"
     break;
 
   case 52:
-#line 559 "asmshader.y" /* yacc.c:1646  */
+#line 557 "asmshader.y"
     {
                                 TRACE("M3x2\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_M3x2, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2330 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2339 "asmshader.tab.c"
     break;
 
   case 53:
-#line 564 "asmshader.y" /* yacc.c:1646  */
+#line 562 "asmshader.y"
     {
                                 struct shader_reg reg;
                                 TRACE("Output reg declaration\n");
@@ -2338,11 +2351,11 @@ yyreduce:
                                 reg.u.writemask = BWRITERSP_WRITEMASK_ALL;
                                 asm_ctx.funcs->dcl_output(&asm_ctx, (yyvsp[-1].declaration).dclusage, (yyvsp[-1].declaration).regnum, &reg);
                             }
-#line 2346 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2355 "asmshader.tab.c"
     break;
 
   case 54:
-#line 576 "asmshader.y" /* yacc.c:1646  */
+#line 574 "asmshader.y"
     {
                                 struct shader_reg reg;
                                 TRACE("Output reg declaration\n");
@@ -2354,11 +2367,11 @@ yyreduce:
                                 reg.u.writemask = (yyvsp[0].writemask);
                                 asm_ctx.funcs->dcl_output(&asm_ctx, (yyvsp[-2].declaration).dclusage, (yyvsp[-2].declaration).regnum, &reg);
                             }
-#line 2362 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2371 "asmshader.tab.c"
     break;
 
   case 55:
-#line 588 "asmshader.y" /* yacc.c:1646  */
+#line 586 "asmshader.y"
     {
                                 struct shader_reg reg;
                                 TRACE("Input reg declaration\n");
@@ -2381,11 +2394,11 @@ yyreduce:
                                 reg.u.writemask = BWRITERSP_WRITEMASK_ALL;
                                 asm_ctx.funcs->dcl_input(&asm_ctx, (yyvsp[-2].declaration).dclusage, (yyvsp[-2].declaration).regnum, (yyvsp[-1].modshift).mod, &reg);
                             }
-#line 2389 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2398 "asmshader.tab.c"
     break;
 
   case 56:
-#line 611 "asmshader.y" /* yacc.c:1646  */
+#line 609 "asmshader.y"
     {
                                 struct shader_reg reg;
                                 TRACE("Input reg declaration\n");
@@ -2408,11 +2421,11 @@ yyreduce:
                                 reg.u.writemask = (yyvsp[0].writemask);
                                 asm_ctx.funcs->dcl_input(&asm_ctx, (yyvsp[-3].declaration).dclusage, (yyvsp[-3].declaration).regnum, (yyvsp[-2].modshift).mod, &reg);
                             }
-#line 2416 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2425 "asmshader.tab.c"
     break;
 
   case 57:
-#line 634 "asmshader.y" /* yacc.c:1646  */
+#line 632 "asmshader.y"
     {
                                 struct shader_reg reg;
                                 TRACE("Input reg declaration\n");
@@ -2434,11 +2447,11 @@ yyreduce:
                                 reg.u.writemask = BWRITERSP_WRITEMASK_ALL;
                                 asm_ctx.funcs->dcl_input(&asm_ctx, 0, 0, (yyvsp[-1].modshift).mod, &reg);
                             }
-#line 2442 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2451 "asmshader.tab.c"
     break;
 
   case 58:
-#line 656 "asmshader.y" /* yacc.c:1646  */
+#line 654 "asmshader.y"
     {
                                 struct shader_reg reg;
                                 TRACE("Input reg declaration\n");
@@ -2460,11 +2473,11 @@ yyreduce:
                                 reg.u.writemask = (yyvsp[0].writemask);
                                 asm_ctx.funcs->dcl_input(&asm_ctx, 0, 0, (yyvsp[-2].modshift).mod, &reg);
                             }
-#line 2468 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2477 "asmshader.tab.c"
     break;
 
   case 59:
-#line 678 "asmshader.y" /* yacc.c:1646  */
+#line 676 "asmshader.y"
     {
                                 TRACE("Sampler declared\n");
                                 if((yyvsp[-1].modshift).shift != 0) {
@@ -2474,11 +2487,11 @@ yyreduce:
                                 }
                                 asm_ctx.funcs->dcl_sampler(&asm_ctx, (yyvsp[-2].samplertype), (yyvsp[-1].modshift).mod, (yyvsp[0].regnum), asm_ctx.line_no);
                             }
-#line 2482 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2491 "asmshader.tab.c"
     break;
 
   case 60:
-#line 688 "asmshader.y" /* yacc.c:1646  */
+#line 686 "asmshader.y"
     {
                                 TRACE("Sampler declared\n");
                                 if((yyvsp[-1].modshift).shift != 0) {
@@ -2493,301 +2506,301 @@ yyreduce:
                                 }
                                 asm_ctx.funcs->dcl_sampler(&asm_ctx, BWRITERSTT_UNKNOWN, (yyvsp[-1].modshift).mod, (yyvsp[0].regnum), asm_ctx.line_no);
                             }
-#line 2501 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2510 "asmshader.tab.c"
     break;
 
   case 61:
-#line 703 "asmshader.y" /* yacc.c:1646  */
+#line 701 "asmshader.y"
     {
                                 TRACE("Error rule: sampler decl of input reg\n");
                                 asmparser_message(&asm_ctx, "Line %u: Sampler declarations of input regs is not valid\n",
                                                   asm_ctx.line_no);
                                 set_parse_status(&asm_ctx.status,  PARSE_WARN);
                             }
-#line 2512 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2521 "asmshader.tab.c"
     break;
 
   case 62:
-#line 710 "asmshader.y" /* yacc.c:1646  */
+#line 708 "asmshader.y"
     {
                                 TRACE("Error rule: sampler decl of output reg\n");
                                 asmparser_message(&asm_ctx, "Line %u: Sampler declarations of output regs is not valid\n",
                                                   asm_ctx.line_no);
                                 set_parse_status(&asm_ctx.status,  PARSE_WARN);
                             }
-#line 2523 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2532 "asmshader.tab.c"
     break;
 
   case 63:
-#line 717 "asmshader.y" /* yacc.c:1646  */
+#line 715 "asmshader.y"
     {
                                 asm_ctx.funcs->constF(&asm_ctx, (yyvsp[-8].regnum), (yyvsp[-6].immval).val, (yyvsp[-4].immval).val, (yyvsp[-2].immval).val, (yyvsp[0].immval).val);
                             }
-#line 2531 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2540 "asmshader.tab.c"
     break;
 
   case 64:
-#line 721 "asmshader.y" /* yacc.c:1646  */
+#line 719 "asmshader.y"
     {
                                 asm_ctx.funcs->constI(&asm_ctx, (yyvsp[-8].regnum), (yyvsp[-6].immval).val, (yyvsp[-4].immval).val, (yyvsp[-2].immval).val, (yyvsp[0].immval).val);
                             }
-#line 2539 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2548 "asmshader.tab.c"
     break;
 
   case 65:
-#line 725 "asmshader.y" /* yacc.c:1646  */
+#line 723 "asmshader.y"
     {
                                 asm_ctx.funcs->constB(&asm_ctx, (yyvsp[-2].regnum), (yyvsp[0].immbool));
                             }
-#line 2547 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2556 "asmshader.tab.c"
     break;
 
   case 66:
-#line 729 "asmshader.y" /* yacc.c:1646  */
+#line 727 "asmshader.y"
     {
                                 TRACE("REP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_REP, 0, 0, 0, 0, &(yyvsp[0].sregs), 1);
                             }
-#line 2556 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2565 "asmshader.tab.c"
     break;
 
   case 67:
-#line 734 "asmshader.y" /* yacc.c:1646  */
+#line 732 "asmshader.y"
     {
                                 TRACE("ENDREP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_ENDREP, 0, 0, 0, 0, 0, 0);
                             }
-#line 2565 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2574 "asmshader.tab.c"
     break;
 
   case 68:
-#line 739 "asmshader.y" /* yacc.c:1646  */
+#line 737 "asmshader.y"
     {
                                 TRACE("IF\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_IF, 0, 0, 0, 0, &(yyvsp[0].sregs), 1);
                             }
-#line 2574 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2583 "asmshader.tab.c"
     break;
 
   case 69:
-#line 744 "asmshader.y" /* yacc.c:1646  */
+#line 742 "asmshader.y"
     {
                                 TRACE("IFC\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_IFC, 0, 0, (yyvsp[-1].comptype), 0, &(yyvsp[0].sregs), 2);
                             }
-#line 2583 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2592 "asmshader.tab.c"
     break;
 
   case 70:
-#line 749 "asmshader.y" /* yacc.c:1646  */
+#line 747 "asmshader.y"
     {
                                 TRACE("ELSE\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_ELSE, 0, 0, 0, 0, 0, 0);
                             }
-#line 2592 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2601 "asmshader.tab.c"
     break;
 
   case 71:
-#line 754 "asmshader.y" /* yacc.c:1646  */
+#line 752 "asmshader.y"
     {
                                 TRACE("ENDIF\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_ENDIF, 0, 0, 0, 0, 0, 0);
                             }
-#line 2601 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2610 "asmshader.tab.c"
     break;
 
   case 72:
-#line 759 "asmshader.y" /* yacc.c:1646  */
+#line 757 "asmshader.y"
     {
                                 TRACE("BREAK\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_BREAK, 0, 0, 0, 0, 0, 0);
                             }
-#line 2610 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2619 "asmshader.tab.c"
     break;
 
   case 73:
-#line 764 "asmshader.y" /* yacc.c:1646  */
+#line 762 "asmshader.y"
     {
                                 TRACE("BREAKC\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_BREAKC, 0, 0, (yyvsp[-1].comptype), 0, &(yyvsp[0].sregs), 2);
                             }
-#line 2619 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2628 "asmshader.tab.c"
     break;
 
   case 74:
-#line 769 "asmshader.y" /* yacc.c:1646  */
+#line 767 "asmshader.y"
     {
                                 TRACE("BREAKP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_BREAKP, 0, 0, 0, 0, &(yyvsp[0].sregs), 1);
                             }
-#line 2628 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2637 "asmshader.tab.c"
     break;
 
   case 75:
-#line 774 "asmshader.y" /* yacc.c:1646  */
+#line 772 "asmshader.y"
     {
                                 TRACE("CALL\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_CALL, 0, 0, 0, 0, &(yyvsp[0].sregs), 1);
                             }
-#line 2637 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2646 "asmshader.tab.c"
     break;
 
   case 76:
-#line 779 "asmshader.y" /* yacc.c:1646  */
+#line 777 "asmshader.y"
     {
                                 TRACE("CALLNZ\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_CALLNZ, 0, 0, 0, 0, &(yyvsp[0].sregs), 2);
                             }
-#line 2646 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2655 "asmshader.tab.c"
     break;
 
   case 77:
-#line 784 "asmshader.y" /* yacc.c:1646  */
+#line 782 "asmshader.y"
     {
                                 TRACE("LOOP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_LOOP, 0, 0, 0, 0, &(yyvsp[0].sregs), 2);
                             }
-#line 2655 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2664 "asmshader.tab.c"
     break;
 
   case 78:
-#line 789 "asmshader.y" /* yacc.c:1646  */
+#line 787 "asmshader.y"
     {
                                 TRACE("RET\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_RET, 0, 0, 0, 0, 0, 0);
                             }
-#line 2664 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2673 "asmshader.tab.c"
     break;
 
   case 79:
-#line 794 "asmshader.y" /* yacc.c:1646  */
+#line 792 "asmshader.y"
     {
                                 TRACE("ENDLOOP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_ENDLOOP, 0, 0, 0, 0, 0, 0);
                             }
-#line 2673 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2682 "asmshader.tab.c"
     break;
 
   case 80:
-#line 799 "asmshader.y" /* yacc.c:1646  */
+#line 797 "asmshader.y"
     {
                                 TRACE("LABEL\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_LABEL, 0, 0, 0, 0, &(yyvsp[0].sregs), 1);
                             }
-#line 2682 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2691 "asmshader.tab.c"
     break;
 
   case 81:
-#line 804 "asmshader.y" /* yacc.c:1646  */
+#line 802 "asmshader.y"
     {
                                 TRACE("SETP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_SETP, 0, 0, (yyvsp[-3].comptype), &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2691 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2700 "asmshader.tab.c"
     break;
 
   case 82:
-#line 809 "asmshader.y" /* yacc.c:1646  */
+#line 807 "asmshader.y"
     {
                                 TRACE("TEXLDL\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXLDL, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2700 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2709 "asmshader.tab.c"
     break;
 
   case 83:
-#line 814 "asmshader.y" /* yacc.c:1646  */
+#line 812 "asmshader.y"
     {
                                 TRACE("LIT\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_LIT, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2709 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2718 "asmshader.tab.c"
     break;
 
   case 84:
-#line 819 "asmshader.y" /* yacc.c:1646  */
+#line 817 "asmshader.y"
     {
                                 TRACE("MOVA\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_MOVA, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2718 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2727 "asmshader.tab.c"
     break;
 
   case 85:
-#line 824 "asmshader.y" /* yacc.c:1646  */
+#line 822 "asmshader.y"
     {
                                 TRACE("CND\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_CND, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 3);
                             }
-#line 2727 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2736 "asmshader.tab.c"
     break;
 
   case 86:
-#line 829 "asmshader.y" /* yacc.c:1646  */
+#line 827 "asmshader.y"
     {
                                 TRACE("CMP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_CMP, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 3);
                             }
-#line 2736 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2745 "asmshader.tab.c"
     break;
 
   case 87:
-#line 834 "asmshader.y" /* yacc.c:1646  */
+#line 832 "asmshader.y"
     {
                                 TRACE("DP2ADD\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_DP2ADD, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 3);
                             }
-#line 2745 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2754 "asmshader.tab.c"
     break;
 
   case 88:
-#line 839 "asmshader.y" /* yacc.c:1646  */
+#line 837 "asmshader.y"
     {
                                 TRACE("TEXCOORD\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXCOORD, (yyvsp[-1].modshift).mod, (yyvsp[-1].modshift).shift, 0, &(yyvsp[0].reg), 0, 0);
                             }
-#line 2754 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2763 "asmshader.tab.c"
     break;
 
   case 89:
-#line 844 "asmshader.y" /* yacc.c:1646  */
+#line 842 "asmshader.y"
     {
                                 TRACE("TEXCRD\n");
                                 /* texcoord and texcrd share the same opcode */
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXCOORD, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2764 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2773 "asmshader.tab.c"
     break;
 
   case 90:
-#line 850 "asmshader.y" /* yacc.c:1646  */
+#line 848 "asmshader.y"
     {
                                 TRACE("TEXKILL\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXKILL, 0, 0, 0, &(yyvsp[0].reg), 0, 0);
                             }
-#line 2773 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2782 "asmshader.tab.c"
     break;
 
   case 91:
-#line 855 "asmshader.y" /* yacc.c:1646  */
+#line 853 "asmshader.y"
     {
                                 TRACE("TEX\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEX, (yyvsp[-1].modshift).mod, (yyvsp[-1].modshift).shift, 0, &(yyvsp[0].reg), 0, 0);
                             }
-#line 2782 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2791 "asmshader.tab.c"
     break;
 
   case 92:
-#line 860 "asmshader.y" /* yacc.c:1646  */
+#line 858 "asmshader.y"
     {
                                 TRACE("TEXDEPTH\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXDEPTH, (yyvsp[-1].modshift).mod, (yyvsp[-1].modshift).shift, 0, &(yyvsp[0].reg), 0, 0);
                             }
-#line 2791 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2800 "asmshader.tab.c"
     break;
 
   case 93:
-#line 865 "asmshader.y" /* yacc.c:1646  */
+#line 863 "asmshader.y"
     {
                                 TRACE("TEXLD\n");
                                 /* There is more than one acceptable syntax for texld:
@@ -2798,209 +2811,209 @@ yyreduce:
                                    These variations are handled in asmparser.c */
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEX, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2806 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2815 "asmshader.tab.c"
     break;
 
   case 94:
-#line 876 "asmshader.y" /* yacc.c:1646  */
+#line 874 "asmshader.y"
     {
                                 TRACE("TEXLDP\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXLDP, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2815 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2824 "asmshader.tab.c"
     break;
 
   case 95:
-#line 881 "asmshader.y" /* yacc.c:1646  */
+#line 879 "asmshader.y"
     {
                                 TRACE("TEXLDB\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXLDB, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2824 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2833 "asmshader.tab.c"
     break;
 
   case 96:
-#line 886 "asmshader.y" /* yacc.c:1646  */
+#line 884 "asmshader.y"
     {
                                 TRACE("TEXBEM\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXBEM, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2833 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2842 "asmshader.tab.c"
     break;
 
   case 97:
-#line 891 "asmshader.y" /* yacc.c:1646  */
+#line 889 "asmshader.y"
     {
                                 TRACE("TEXBEML\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXBEML, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2842 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2851 "asmshader.tab.c"
     break;
 
   case 98:
-#line 896 "asmshader.y" /* yacc.c:1646  */
+#line 894 "asmshader.y"
     {
                                 TRACE("TEXREG2AR\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXREG2AR, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2851 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2860 "asmshader.tab.c"
     break;
 
   case 99:
-#line 901 "asmshader.y" /* yacc.c:1646  */
+#line 899 "asmshader.y"
     {
                                 TRACE("TEXREG2GB\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXREG2GB, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2860 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2869 "asmshader.tab.c"
     break;
 
   case 100:
-#line 906 "asmshader.y" /* yacc.c:1646  */
+#line 904 "asmshader.y"
     {
                                 TRACE("TEXREG2RGB\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXREG2RGB, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2869 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2878 "asmshader.tab.c"
     break;
 
   case 101:
-#line 911 "asmshader.y" /* yacc.c:1646  */
+#line 909 "asmshader.y"
     {
                                 TRACE("TEXM3x2PAD\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXM3x2PAD, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2878 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2887 "asmshader.tab.c"
     break;
 
   case 102:
-#line 916 "asmshader.y" /* yacc.c:1646  */
+#line 914 "asmshader.y"
     {
                                 TRACE("INSTR_TEXM3x3PAD\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXM3x3PAD, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2887 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2896 "asmshader.tab.c"
     break;
 
   case 103:
-#line 921 "asmshader.y" /* yacc.c:1646  */
+#line 919 "asmshader.y"
     {
                                 TRACE("TEXM3x3SPEC\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXM3x3SPEC, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2896 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2905 "asmshader.tab.c"
     break;
 
   case 104:
-#line 926 "asmshader.y" /* yacc.c:1646  */
+#line 924 "asmshader.y"
     {
                                 TRACE("TEXM3x3VSPEC\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXM3x3VSPEC, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2905 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2914 "asmshader.tab.c"
     break;
 
   case 105:
-#line 931 "asmshader.y" /* yacc.c:1646  */
+#line 929 "asmshader.y"
     {
                                 TRACE("TEXM3x3TEX\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXM3x3TEX, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2914 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2923 "asmshader.tab.c"
     break;
 
   case 106:
-#line 936 "asmshader.y" /* yacc.c:1646  */
+#line 934 "asmshader.y"
     {
                                 TRACE("TEXDP3TEX\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXDP3TEX, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2923 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2932 "asmshader.tab.c"
     break;
 
   case 107:
-#line 941 "asmshader.y" /* yacc.c:1646  */
+#line 939 "asmshader.y"
     {
                                 TRACE("TEXM3x2DEPTH\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXM3x2DEPTH, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2932 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2941 "asmshader.tab.c"
     break;
 
   case 108:
-#line 946 "asmshader.y" /* yacc.c:1646  */
+#line 944 "asmshader.y"
     {
                                 TRACE("TEXM3x2TEX\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXM3x2TEX, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2941 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2950 "asmshader.tab.c"
     break;
 
   case 109:
-#line 951 "asmshader.y" /* yacc.c:1646  */
+#line 949 "asmshader.y"
     {
                                 TRACE("TEXDP3\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXDP3, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2950 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2959 "asmshader.tab.c"
     break;
 
   case 110:
-#line 956 "asmshader.y" /* yacc.c:1646  */
+#line 954 "asmshader.y"
     {
                                 TRACE("TEXM3x3\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXM3x3, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2959 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2968 "asmshader.tab.c"
     break;
 
   case 111:
-#line 961 "asmshader.y" /* yacc.c:1646  */
+#line 959 "asmshader.y"
     {
                                 TRACE("BEM\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_BEM, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 2);
                             }
-#line 2968 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2977 "asmshader.tab.c"
     break;
 
   case 112:
-#line 966 "asmshader.y" /* yacc.c:1646  */
+#line 964 "asmshader.y"
     {
                                 TRACE("DSX\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_DSX, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2977 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2986 "asmshader.tab.c"
     break;
 
   case 113:
-#line 971 "asmshader.y" /* yacc.c:1646  */
+#line 969 "asmshader.y"
     {
                                 TRACE("DSY\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_DSY, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 1);
                             }
-#line 2986 "asmshader.tab.c" /* yacc.c:1646  */
+#line 2995 "asmshader.tab.c"
     break;
 
   case 114:
-#line 976 "asmshader.y" /* yacc.c:1646  */
+#line 974 "asmshader.y"
     {
                                 TRACE("TEXLDD\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_TEXLDD, (yyvsp[-3].modshift).mod, (yyvsp[-3].modshift).shift, 0, &(yyvsp[-2].reg), &(yyvsp[0].sregs), 4);
                             }
-#line 2995 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3004 "asmshader.tab.c"
     break;
 
   case 115:
-#line 981 "asmshader.y" /* yacc.c:1646  */
+#line 979 "asmshader.y"
     {
                                 TRACE("PHASE\n");
                                 asm_ctx.funcs->instr(&asm_ctx, BWRITERSIO_PHASE, 0, 0, 0, 0, 0, 0);
                             }
-#line 3004 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3013 "asmshader.tab.c"
     break;
 
   case 116:
-#line 988 "asmshader.y" /* yacc.c:1646  */
+#line 986 "asmshader.y"
     {
                                 (yyval.reg).regnum = (yyvsp[-1].reg).regnum;
                                 (yyval.reg).type = (yyvsp[-1].reg).type;
@@ -3008,11 +3021,11 @@ yyreduce:
                                 (yyval.reg).srcmod = BWRITERSPSM_NONE;
                                 set_rel_reg(&(yyval.reg), &(yyvsp[0].rel_reg));
                             }
-#line 3016 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3025 "asmshader.tab.c"
     break;
 
   case 117:
-#line 996 "asmshader.y" /* yacc.c:1646  */
+#line 994 "asmshader.y"
     {
                                 (yyval.reg).regnum = (yyvsp[-1].reg).regnum;
                                 (yyval.reg).type = (yyvsp[-1].reg).type;
@@ -3020,186 +3033,186 @@ yyreduce:
                                 (yyval.reg).srcmod = BWRITERSPSM_NONE;
                                 (yyval.reg).rel_reg = NULL;
                             }
-#line 3028 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3037 "asmshader.tab.c"
     break;
 
   case 118:
-#line 1005 "asmshader.y" /* yacc.c:1646  */
+#line 1003 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_TEMP;
                         }
-#line 3036 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3045 "asmshader.tab.c"
     break;
 
   case 119:
-#line 1009 "asmshader.y" /* yacc.c:1646  */
+#line 1007 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_OUTPUT;
                         }
-#line 3044 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3053 "asmshader.tab.c"
     break;
 
   case 120:
-#line 1013 "asmshader.y" /* yacc.c:1646  */
+#line 1011 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_INPUT;
                         }
-#line 3052 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3061 "asmshader.tab.c"
     break;
 
   case 121:
-#line 1017 "asmshader.y" /* yacc.c:1646  */
+#line 1015 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register c%u is not a valid destination register\n",
                                               asm_ctx.line_no, (yyvsp[0].regnum));
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3062 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3071 "asmshader.tab.c"
     break;
 
   case 122:
-#line 1023 "asmshader.y" /* yacc.c:1646  */
+#line 1021 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register i%u is not a valid destination register\n",
                                               asm_ctx.line_no, (yyvsp[0].regnum));
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3072 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3081 "asmshader.tab.c"
     break;
 
   case 123:
-#line 1029 "asmshader.y" /* yacc.c:1646  */
+#line 1027 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register b%u is not a valid destination register\n",
                                               asm_ctx.line_no, (yyvsp[0].regnum));
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3082 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3091 "asmshader.tab.c"
     break;
 
   case 124:
-#line 1035 "asmshader.y" /* yacc.c:1646  */
+#line 1033 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_TEXTURE;
                         }
-#line 3090 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3099 "asmshader.tab.c"
     break;
 
   case 125:
-#line 1039 "asmshader.y" /* yacc.c:1646  */
+#line 1037 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_TEXCRDOUT;
                         }
-#line 3098 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3107 "asmshader.tab.c"
     break;
 
   case 126:
-#line 1043 "asmshader.y" /* yacc.c:1646  */
+#line 1041 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register s%u is not a valid destination register\n",
                                               asm_ctx.line_no, (yyvsp[0].regnum));
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3108 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3117 "asmshader.tab.c"
     break;
 
   case 127:
-#line 1049 "asmshader.y" /* yacc.c:1646  */
+#line 1047 "asmshader.y"
     {
                             (yyval.reg).regnum = BWRITERSRO_POSITION; (yyval.reg).type = BWRITERSPR_RASTOUT;
                         }
-#line 3116 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3125 "asmshader.tab.c"
     break;
 
   case 128:
-#line 1053 "asmshader.y" /* yacc.c:1646  */
+#line 1051 "asmshader.y"
     {
                             (yyval.reg).regnum = BWRITERSRO_POINT_SIZE; (yyval.reg).type = BWRITERSPR_RASTOUT;
                         }
-#line 3124 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3133 "asmshader.tab.c"
     break;
 
   case 129:
-#line 1057 "asmshader.y" /* yacc.c:1646  */
+#line 1055 "asmshader.y"
     {
                             (yyval.reg).regnum = BWRITERSRO_FOG; (yyval.reg).type = BWRITERSPR_RASTOUT;
                         }
-#line 3132 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3141 "asmshader.tab.c"
     break;
 
   case 130:
-#line 1061 "asmshader.y" /* yacc.c:1646  */
+#line 1059 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_ATTROUT;
                         }
-#line 3140 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3149 "asmshader.tab.c"
     break;
 
   case 131:
-#line 1065 "asmshader.y" /* yacc.c:1646  */
+#line 1063 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_COLOROUT;
                         }
-#line 3148 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3157 "asmshader.tab.c"
     break;
 
   case 132:
-#line 1069 "asmshader.y" /* yacc.c:1646  */
+#line 1067 "asmshader.y"
     {
                             (yyval.reg).regnum = 0; (yyval.reg).type = BWRITERSPR_DEPTHOUT;
                         }
-#line 3156 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3165 "asmshader.tab.c"
     break;
 
   case 133:
-#line 1073 "asmshader.y" /* yacc.c:1646  */
+#line 1071 "asmshader.y"
     {
                             (yyval.reg).regnum = 0; (yyval.reg).type = BWRITERSPR_PREDICATE;
                         }
-#line 3164 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3173 "asmshader.tab.c"
     break;
 
   case 134:
-#line 1077 "asmshader.y" /* yacc.c:1646  */
+#line 1075 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register vPos is not a valid destination register\n",
                                               asm_ctx.line_no);
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3174 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3183 "asmshader.tab.c"
     break;
 
   case 135:
-#line 1083 "asmshader.y" /* yacc.c:1646  */
+#line 1081 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register vFace is not a valid destination register\n",
                                               asm_ctx.line_no);
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3184 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3193 "asmshader.tab.c"
     break;
 
   case 136:
-#line 1089 "asmshader.y" /* yacc.c:1646  */
+#line 1087 "asmshader.y"
     {
                             /* index 0 is hardcoded for the addr register */
                             (yyval.reg).regnum = 0; (yyval.reg).type = BWRITERSPR_ADDR;
                         }
-#line 3193 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3202 "asmshader.tab.c"
     break;
 
   case 137:
-#line 1094 "asmshader.y" /* yacc.c:1646  */
+#line 1092 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register aL is not a valid destination register\n",
                                               asm_ctx.line_no);
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3203 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3212 "asmshader.tab.c"
     break;
 
   case 138:
-#line 1101 "asmshader.y" /* yacc.c:1646  */
+#line 1099 "asmshader.y"
     {
                             if((yyvsp[0].wm_components).writemask == SWIZZLE_ERR) {
                                 asmparser_message(&asm_ctx, "Line %u: Invalid writemask specified\n",
@@ -3213,21 +3226,21 @@ yyreduce:
                                 TRACE("Writemask: %x\n", (yyval.writemask));
                             }
                         }
-#line 3221 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3230 "asmshader.tab.c"
     break;
 
   case 139:
-#line 1116 "asmshader.y" /* yacc.c:1646  */
+#line 1114 "asmshader.y"
     {
                             (yyval.wm_components).writemask = 1 << (yyvsp[0].component);
                             (yyval.wm_components).last = (yyvsp[0].component);
                             (yyval.wm_components).idx = 1;
                         }
-#line 3231 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3240 "asmshader.tab.c"
     break;
 
   case 140:
-#line 1122 "asmshader.y" /* yacc.c:1646  */
+#line 1120 "asmshader.y"
     {
                             if((yyvsp[-1].wm_components).writemask == SWIZZLE_ERR || (yyvsp[-1].wm_components).idx == 4)
                                 /* Wrong writemask */
@@ -3241,20 +3254,20 @@ yyreduce:
                                 }
                             }
                         }
-#line 3249 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3258 "asmshader.tab.c"
     break;
 
   case 141:
-#line 1137 "asmshader.y" /* yacc.c:1646  */
+#line 1135 "asmshader.y"
     {
                             (yyval.swizzle) = BWRITERVS_NOSWIZZLE;
                             TRACE("Default swizzle: %08x\n", (yyval.swizzle));
                         }
-#line 3258 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3267 "asmshader.tab.c"
     break;
 
   case 142:
-#line 1142 "asmshader.y" /* yacc.c:1646  */
+#line 1140 "asmshader.y"
     {
                             if((yyvsp[0].sw_components).swizzle == SWIZZLE_ERR) {
                                 asmparser_message(&asm_ctx, "Line %u: Invalid swizzle\n",
@@ -3275,20 +3288,20 @@ yyreduce:
                                 TRACE("Got a swizzle: %08x\n", (yyval.swizzle));
                             }
                         }
-#line 3283 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3292 "asmshader.tab.c"
     break;
 
   case 143:
-#line 1164 "asmshader.y" /* yacc.c:1646  */
+#line 1162 "asmshader.y"
     {
                             (yyval.sw_components).swizzle = (yyvsp[0].component);
                             (yyval.sw_components).idx = 1;
                         }
-#line 3292 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3301 "asmshader.tab.c"
     break;
 
   case 144:
-#line 1169 "asmshader.y" /* yacc.c:1646  */
+#line 1167 "asmshader.y"
     {
                             if((yyvsp[-1].sw_components).idx == 4) {
                                 /* Too many sw_components */
@@ -3300,20 +3313,20 @@ yyreduce:
                                 (yyval.sw_components).idx = (yyvsp[-1].sw_components).idx + 1;
                             }
                         }
-#line 3308 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3317 "asmshader.tab.c"
     break;
 
   case 145:
-#line 1182 "asmshader.y" /* yacc.c:1646  */
+#line 1180 "asmshader.y"
     {
                             (yyval.modshift).mod = 0;
                             (yyval.modshift).shift = 0;
                         }
-#line 3317 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3326 "asmshader.tab.c"
     break;
 
   case 146:
-#line 1187 "asmshader.y" /* yacc.c:1646  */
+#line 1185 "asmshader.y"
     {
                             (yyval.modshift).mod = (yyvsp[-1].modshift).mod | (yyvsp[0].modshift).mod;
                             if((yyvsp[-1].modshift).shift && (yyvsp[0].modshift).shift) {
@@ -3325,101 +3338,101 @@ yyreduce:
                                 (yyval.modshift).shift = (yyvsp[-1].modshift).shift | (yyvsp[0].modshift).shift;
                             }
                         }
-#line 3333 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3342 "asmshader.tab.c"
     break;
 
   case 147:
-#line 1200 "asmshader.y" /* yacc.c:1646  */
+#line 1198 "asmshader.y"
     {
                             (yyval.modshift).mod = 0;
                             (yyval.modshift).shift = 1;
                         }
-#line 3342 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3351 "asmshader.tab.c"
     break;
 
   case 148:
-#line 1205 "asmshader.y" /* yacc.c:1646  */
+#line 1203 "asmshader.y"
     {
                             (yyval.modshift).mod = 0;
                             (yyval.modshift).shift = 2;
                         }
-#line 3351 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3360 "asmshader.tab.c"
     break;
 
   case 149:
-#line 1210 "asmshader.y" /* yacc.c:1646  */
+#line 1208 "asmshader.y"
     {
                             (yyval.modshift).mod = 0;
                             (yyval.modshift).shift = 3;
                         }
-#line 3360 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3369 "asmshader.tab.c"
     break;
 
   case 150:
-#line 1215 "asmshader.y" /* yacc.c:1646  */
+#line 1213 "asmshader.y"
     {
                             (yyval.modshift).mod = 0;
                             (yyval.modshift).shift = 15;
                         }
-#line 3369 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3378 "asmshader.tab.c"
     break;
 
   case 151:
-#line 1220 "asmshader.y" /* yacc.c:1646  */
+#line 1218 "asmshader.y"
     {
                             (yyval.modshift).mod = 0;
                             (yyval.modshift).shift = 14;
                         }
-#line 3378 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3387 "asmshader.tab.c"
     break;
 
   case 152:
-#line 1225 "asmshader.y" /* yacc.c:1646  */
+#line 1223 "asmshader.y"
     {
                             (yyval.modshift).mod = 0;
                             (yyval.modshift).shift = 13;
                         }
-#line 3387 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3396 "asmshader.tab.c"
     break;
 
   case 153:
-#line 1230 "asmshader.y" /* yacc.c:1646  */
+#line 1228 "asmshader.y"
     {
                             (yyval.modshift).mod = BWRITERSPDM_SATURATE;
                             (yyval.modshift).shift = 0;
                         }
-#line 3396 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3405 "asmshader.tab.c"
     break;
 
   case 154:
-#line 1235 "asmshader.y" /* yacc.c:1646  */
+#line 1233 "asmshader.y"
     {
                             (yyval.modshift).mod = BWRITERSPDM_PARTIALPRECISION;
                             (yyval.modshift).shift = 0;
                         }
-#line 3405 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3414 "asmshader.tab.c"
     break;
 
   case 155:
-#line 1240 "asmshader.y" /* yacc.c:1646  */
+#line 1238 "asmshader.y"
     {
                             (yyval.modshift).mod = BWRITERSPDM_MSAMPCENTROID;
                             (yyval.modshift).shift = 0;
                         }
-#line 3414 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3423 "asmshader.tab.c"
     break;
 
   case 156:
-#line 1246 "asmshader.y" /* yacc.c:1646  */
+#line 1244 "asmshader.y"
     {
                             (yyval.sregs).reg[0] = (yyvsp[0].reg);
                             (yyval.sregs).count = 1;
                         }
-#line 3423 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3432 "asmshader.tab.c"
     break;
 
   case 157:
-#line 1251 "asmshader.y" /* yacc.c:1646  */
+#line 1249 "asmshader.y"
     {
                             if((yyval.sregs).count == MAX_SRC_REGS){
                                 asmparser_message(&asm_ctx, "Line %u: Too many source registers in this instruction\n",
@@ -3429,11 +3442,11 @@ yyreduce:
                             else
                                 (yyval.sregs).reg[(yyval.sregs).count++] = (yyvsp[0].reg);
                         }
-#line 3437 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3446 "asmshader.tab.c"
     break;
 
   case 158:
-#line 1262 "asmshader.y" /* yacc.c:1646  */
+#line 1260 "asmshader.y"
     {
                             (yyval.reg).type = (yyvsp[-2].reg).type;
                             (yyval.reg).regnum = (yyvsp[-2].reg).regnum;
@@ -3441,11 +3454,11 @@ yyreduce:
                             (yyval.reg).srcmod = BWRITERSPSM_NONE;
                             set_rel_reg(&(yyval.reg), &(yyvsp[-1].rel_reg));
                         }
-#line 3449 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3458 "asmshader.tab.c"
     break;
 
   case 159:
-#line 1270 "asmshader.y" /* yacc.c:1646  */
+#line 1268 "asmshader.y"
     {
                             (yyval.reg).type = (yyvsp[-3].reg).type;
                             (yyval.reg).regnum = (yyvsp[-3].reg).regnum;
@@ -3453,11 +3466,11 @@ yyreduce:
                             (yyval.reg).srcmod = (yyvsp[-1].srcmod);
                             (yyval.reg).u.swizzle = (yyvsp[0].swizzle);
                         }
-#line 3461 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3470 "asmshader.tab.c"
     break;
 
   case 160:
-#line 1278 "asmshader.y" /* yacc.c:1646  */
+#line 1276 "asmshader.y"
     {
                             (yyval.reg).type = (yyvsp[-2].reg).type;
                             (yyval.reg).regnum = (yyvsp[-2].reg).regnum;
@@ -3465,11 +3478,11 @@ yyreduce:
                             set_rel_reg(&(yyval.reg), &(yyvsp[-1].rel_reg));
                             (yyval.reg).u.swizzle = (yyvsp[0].swizzle);
                         }
-#line 3473 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3482 "asmshader.tab.c"
     break;
 
   case 161:
-#line 1286 "asmshader.y" /* yacc.c:1646  */
+#line 1284 "asmshader.y"
     {
                             (yyval.reg).type = (yyvsp[-3].reg).type;
                             (yyval.reg).regnum = (yyvsp[-3].reg).regnum;
@@ -3494,11 +3507,11 @@ yyreduce:
                             }
                             (yyval.reg).u.swizzle = (yyvsp[0].swizzle);
                         }
-#line 3502 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3511 "asmshader.tab.c"
     break;
 
   case 162:
-#line 1311 "asmshader.y" /* yacc.c:1646  */
+#line 1309 "asmshader.y"
     {
                             if((yyvsp[-4].immval).val != 1.0 || (!(yyvsp[-4].immval).integer)) {
                                 asmparser_message(&asm_ctx, "Line %u: Only \"1 - reg\" is valid for D3DSPSM_COMP, "
@@ -3512,11 +3525,11 @@ yyreduce:
                             set_rel_reg(&(yyval.reg), &(yyvsp[-1].rel_reg));
                             (yyval.reg).u.swizzle = (yyvsp[0].swizzle);
                         }
-#line 3520 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3529 "asmshader.tab.c"
     break;
 
   case 163:
-#line 1325 "asmshader.y" /* yacc.c:1646  */
+#line 1323 "asmshader.y"
     {
                             /* For nicer error reporting */
                             if((yyvsp[-5].immval).val != 1.0 || (!(yyvsp[-5].immval).integer)) {
@@ -3530,11 +3543,11 @@ yyreduce:
                                 set_parse_status(&asm_ctx.status,  PARSE_ERR);
                             }
                         }
-#line 3538 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3547 "asmshader.tab.c"
     break;
 
   case 164:
-#line 1339 "asmshader.y" /* yacc.c:1646  */
+#line 1337 "asmshader.y"
     {
                             (yyval.reg).type = (yyvsp[-1].reg).type;
                             (yyval.reg).regnum = (yyvsp[-1].reg).regnum;
@@ -3542,29 +3555,29 @@ yyreduce:
                             (yyval.reg).srcmod = BWRITERSPSM_NOT;
                             (yyval.reg).u.swizzle = (yyvsp[0].swizzle);
                         }
-#line 3550 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3559 "asmshader.tab.c"
     break;
 
   case 165:
-#line 1348 "asmshader.y" /* yacc.c:1646  */
+#line 1346 "asmshader.y"
     {
                             (yyval.rel_reg).has_rel_reg = FALSE;
                             (yyval.rel_reg).additional_offset = 0;
                         }
-#line 3559 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3568 "asmshader.tab.c"
     break;
 
   case 166:
-#line 1353 "asmshader.y" /* yacc.c:1646  */
+#line 1351 "asmshader.y"
     {
                             (yyval.rel_reg).has_rel_reg = FALSE;
                             (yyval.rel_reg).additional_offset = (yyvsp[-1].immval).val;
                         }
-#line 3568 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3577 "asmshader.tab.c"
     break;
 
   case 167:
-#line 1358 "asmshader.y" /* yacc.c:1646  */
+#line 1356 "asmshader.y"
     {
                             (yyval.rel_reg).has_rel_reg = TRUE;
                             (yyval.rel_reg).type = (yyvsp[-2].reg).type;
@@ -3572,11 +3585,11 @@ yyreduce:
                             (yyval.rel_reg).rel_regnum = (yyvsp[-2].reg).regnum;
                             (yyval.rel_reg).swizzle = (yyvsp[-1].swizzle);
                         }
-#line 3580 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3589 "asmshader.tab.c"
     break;
 
   case 168:
-#line 1366 "asmshader.y" /* yacc.c:1646  */
+#line 1364 "asmshader.y"
     {
                             (yyval.rel_reg).has_rel_reg = TRUE;
                             (yyval.rel_reg).type = (yyvsp[-2].reg).type;
@@ -3584,11 +3597,11 @@ yyreduce:
                             (yyval.rel_reg).rel_regnum = (yyvsp[-2].reg).regnum;
                             (yyval.rel_reg).swizzle = (yyvsp[-1].swizzle);
                         }
-#line 3592 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3601 "asmshader.tab.c"
     break;
 
   case 169:
-#line 1374 "asmshader.y" /* yacc.c:1646  */
+#line 1372 "asmshader.y"
     {
                             (yyval.rel_reg).has_rel_reg = TRUE;
                             (yyval.rel_reg).type = (yyvsp[-4].reg).type;
@@ -3596,11 +3609,11 @@ yyreduce:
                             (yyval.rel_reg).rel_regnum = (yyvsp[-4].reg).regnum;
                             (yyval.rel_reg).swizzle = (yyvsp[-3].swizzle);
                         }
-#line 3604 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3613 "asmshader.tab.c"
     break;
 
   case 170:
-#line 1382 "asmshader.y" /* yacc.c:1646  */
+#line 1380 "asmshader.y"
     {
                             (yyval.rel_reg).has_rel_reg = TRUE;
                             (yyval.rel_reg).type = (yyvsp[-4].reg).type;
@@ -3608,11 +3621,11 @@ yyreduce:
                             (yyval.rel_reg).rel_regnum = (yyvsp[-4].reg).regnum;
                             (yyval.rel_reg).swizzle = (yyvsp[-3].swizzle);
                         }
-#line 3616 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3625 "asmshader.tab.c"
     break;
 
   case 171:
-#line 1391 "asmshader.y" /* yacc.c:1646  */
+#line 1389 "asmshader.y"
     {
                             if(!(yyvsp[0].immval).integer) {
                                 asmparser_message(&asm_ctx, "Line %u: Unexpected float %f\n",
@@ -3621,11 +3634,11 @@ yyreduce:
                             }
                             (yyval.immval).val = (yyvsp[0].immval).val;
                         }
-#line 3629 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3638 "asmshader.tab.c"
     break;
 
   case 172:
-#line 1400 "asmshader.y" /* yacc.c:1646  */
+#line 1398 "asmshader.y"
     {
                             if(!(yyvsp[0].immval).integer) {
                                 asmparser_message(&asm_ctx, "Line %u: Unexpected float %f\n",
@@ -3634,473 +3647,473 @@ yyreduce:
                             }
                             (yyval.immval).val = (yyvsp[-2].immval).val + (yyvsp[0].immval).val;
                         }
-#line 3642 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3651 "asmshader.tab.c"
     break;
 
   case 173:
-#line 1410 "asmshader.y" /* yacc.c:1646  */
+#line 1408 "asmshader.y"
     {
                             (yyval.srcmod) = BWRITERSPSM_BIAS;
                         }
-#line 3650 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3659 "asmshader.tab.c"
     break;
 
   case 174:
-#line 1414 "asmshader.y" /* yacc.c:1646  */
+#line 1412 "asmshader.y"
     {
                             (yyval.srcmod) = BWRITERSPSM_X2;
                         }
-#line 3658 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3667 "asmshader.tab.c"
     break;
 
   case 175:
-#line 1418 "asmshader.y" /* yacc.c:1646  */
+#line 1416 "asmshader.y"
     {
                             (yyval.srcmod) = BWRITERSPSM_SIGN;
                         }
-#line 3666 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3675 "asmshader.tab.c"
     break;
 
   case 176:
-#line 1422 "asmshader.y" /* yacc.c:1646  */
+#line 1420 "asmshader.y"
     {
                             (yyval.srcmod) = BWRITERSPSM_DZ;
                         }
-#line 3674 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3683 "asmshader.tab.c"
     break;
 
   case 177:
-#line 1426 "asmshader.y" /* yacc.c:1646  */
+#line 1424 "asmshader.y"
     {
                             (yyval.srcmod) = BWRITERSPSM_DW;
                         }
-#line 3682 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3691 "asmshader.tab.c"
     break;
 
   case 178:
-#line 1430 "asmshader.y" /* yacc.c:1646  */
+#line 1428 "asmshader.y"
     {
                             (yyval.srcmod) = BWRITERSPSM_ABS;
                         }
-#line 3690 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3699 "asmshader.tab.c"
     break;
 
   case 179:
-#line 1435 "asmshader.y" /* yacc.c:1646  */
+#line 1433 "asmshader.y"
     {
                             (yyval.reg).regnum = 0; (yyval.reg).type = BWRITERSPR_ADDR;
                         }
-#line 3698 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3707 "asmshader.tab.c"
     break;
 
   case 180:
-#line 1439 "asmshader.y" /* yacc.c:1646  */
+#line 1437 "asmshader.y"
     {
                             (yyval.reg).regnum = 0; (yyval.reg).type = BWRITERSPR_LOOP;
                         }
-#line 3706 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3715 "asmshader.tab.c"
     break;
 
   case 181:
-#line 1444 "asmshader.y" /* yacc.c:1646  */
+#line 1442 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_TEMP;
                         }
-#line 3714 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3723 "asmshader.tab.c"
     break;
 
   case 182:
-#line 1448 "asmshader.y" /* yacc.c:1646  */
+#line 1446 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register o%u is not a valid source register\n",
                                               asm_ctx.line_no, (yyvsp[0].regnum));
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3724 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3733 "asmshader.tab.c"
     break;
 
   case 183:
-#line 1454 "asmshader.y" /* yacc.c:1646  */
+#line 1452 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_INPUT;
                         }
-#line 3732 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3741 "asmshader.tab.c"
     break;
 
   case 184:
-#line 1458 "asmshader.y" /* yacc.c:1646  */
+#line 1456 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_CONST;
                         }
-#line 3740 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3749 "asmshader.tab.c"
     break;
 
   case 185:
-#line 1462 "asmshader.y" /* yacc.c:1646  */
+#line 1460 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_CONSTINT;
                         }
-#line 3748 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3757 "asmshader.tab.c"
     break;
 
   case 186:
-#line 1466 "asmshader.y" /* yacc.c:1646  */
+#line 1464 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_CONSTBOOL;
                         }
-#line 3756 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3765 "asmshader.tab.c"
     break;
 
   case 187:
-#line 1470 "asmshader.y" /* yacc.c:1646  */
+#line 1468 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_TEXTURE;
                         }
-#line 3764 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3773 "asmshader.tab.c"
     break;
 
   case 188:
-#line 1474 "asmshader.y" /* yacc.c:1646  */
+#line 1472 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register oT%u is not a valid source register\n",
                                               asm_ctx.line_no, (yyvsp[0].regnum));
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3774 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3783 "asmshader.tab.c"
     break;
 
   case 189:
-#line 1480 "asmshader.y" /* yacc.c:1646  */
+#line 1478 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_SAMPLER;
                         }
-#line 3782 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3791 "asmshader.tab.c"
     break;
 
   case 190:
-#line 1484 "asmshader.y" /* yacc.c:1646  */
+#line 1482 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register oPos is not a valid source register\n",
                                               asm_ctx.line_no);
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3792 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3801 "asmshader.tab.c"
     break;
 
   case 191:
-#line 1490 "asmshader.y" /* yacc.c:1646  */
+#line 1488 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register oFog is not a valid source register\n",
                                               asm_ctx.line_no);
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3802 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3811 "asmshader.tab.c"
     break;
 
   case 192:
-#line 1496 "asmshader.y" /* yacc.c:1646  */
+#line 1494 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register oD%u is not a valid source register\n",
                                               asm_ctx.line_no, (yyvsp[0].regnum));
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3812 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3821 "asmshader.tab.c"
     break;
 
   case 193:
-#line 1502 "asmshader.y" /* yacc.c:1646  */
+#line 1500 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register oC%u is not a valid source register\n",
                                               asm_ctx.line_no, (yyvsp[0].regnum));
                             set_parse_status(&asm_ctx.status,  PARSE_WARN);
                         }
-#line 3822 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3831 "asmshader.tab.c"
     break;
 
   case 194:
-#line 1508 "asmshader.y" /* yacc.c:1646  */
+#line 1506 "asmshader.y"
     {
                             asmparser_message(&asm_ctx, "Line %u: Register oDepth is not a valid source register\n",
                                               asm_ctx.line_no);
                             set_parse_status(&asm_ctx.status, PARSE_WARN);
                         }
-#line 3832 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3841 "asmshader.tab.c"
     break;
 
   case 195:
-#line 1514 "asmshader.y" /* yacc.c:1646  */
+#line 1512 "asmshader.y"
     {
                             (yyval.reg).regnum = 0; (yyval.reg).type = BWRITERSPR_PREDICATE;
                         }
-#line 3840 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3849 "asmshader.tab.c"
     break;
 
   case 196:
-#line 1518 "asmshader.y" /* yacc.c:1646  */
+#line 1516 "asmshader.y"
     {
                             (yyval.reg).regnum = 0; (yyval.reg).type = BWRITERSPR_MISCTYPE;
                         }
-#line 3848 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3857 "asmshader.tab.c"
     break;
 
   case 197:
-#line 1522 "asmshader.y" /* yacc.c:1646  */
+#line 1520 "asmshader.y"
     {
                             (yyval.reg).regnum = 1; (yyval.reg).type = BWRITERSPR_MISCTYPE;
                         }
-#line 3856 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3865 "asmshader.tab.c"
     break;
 
   case 198:
-#line 1526 "asmshader.y" /* yacc.c:1646  */
+#line 1524 "asmshader.y"
     {
                             (yyval.reg).regnum = 0; (yyval.reg).type = BWRITERSPR_ADDR;
                         }
-#line 3864 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3873 "asmshader.tab.c"
     break;
 
   case 199:
-#line 1530 "asmshader.y" /* yacc.c:1646  */
+#line 1528 "asmshader.y"
     {
                             (yyval.reg).regnum = 0; (yyval.reg).type = BWRITERSPR_LOOP;
                         }
-#line 3872 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3881 "asmshader.tab.c"
     break;
 
   case 200:
-#line 1534 "asmshader.y" /* yacc.c:1646  */
+#line 1532 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_LABEL;
                         }
-#line 3880 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3889 "asmshader.tab.c"
     break;
 
   case 201:
-#line 1538 "asmshader.y" /* yacc.c:1646  */
+#line 1536 "asmshader.y"
     { (yyval.comptype) = BWRITER_COMPARISON_GT;       }
-#line 3886 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3895 "asmshader.tab.c"
     break;
 
   case 202:
-#line 1539 "asmshader.y" /* yacc.c:1646  */
+#line 1537 "asmshader.y"
     { (yyval.comptype) = BWRITER_COMPARISON_LT;       }
-#line 3892 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3901 "asmshader.tab.c"
     break;
 
   case 203:
-#line 1540 "asmshader.y" /* yacc.c:1646  */
+#line 1538 "asmshader.y"
     { (yyval.comptype) = BWRITER_COMPARISON_GE;       }
-#line 3898 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3907 "asmshader.tab.c"
     break;
 
   case 204:
-#line 1541 "asmshader.y" /* yacc.c:1646  */
+#line 1539 "asmshader.y"
     { (yyval.comptype) = BWRITER_COMPARISON_LE;       }
-#line 3904 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3913 "asmshader.tab.c"
     break;
 
   case 205:
-#line 1542 "asmshader.y" /* yacc.c:1646  */
+#line 1540 "asmshader.y"
     { (yyval.comptype) = BWRITER_COMPARISON_EQ;       }
-#line 3910 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3919 "asmshader.tab.c"
     break;
 
   case 206:
-#line 1543 "asmshader.y" /* yacc.c:1646  */
+#line 1541 "asmshader.y"
     { (yyval.comptype) = BWRITER_COMPARISON_NE;       }
-#line 3916 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3925 "asmshader.tab.c"
     break;
 
   case 207:
-#line 1546 "asmshader.y" /* yacc.c:1646  */
+#line 1544 "asmshader.y"
     {
                             TRACE("dcl_position%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_POSITION;
                         }
-#line 3926 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3935 "asmshader.tab.c"
     break;
 
   case 208:
-#line 1552 "asmshader.y" /* yacc.c:1646  */
+#line 1550 "asmshader.y"
     {
                             TRACE("dcl_blendweight%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_BLENDWEIGHT;
                         }
-#line 3936 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3945 "asmshader.tab.c"
     break;
 
   case 209:
-#line 1558 "asmshader.y" /* yacc.c:1646  */
+#line 1556 "asmshader.y"
     {
                             TRACE("dcl_blendindices%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_BLENDINDICES;
                         }
-#line 3946 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3955 "asmshader.tab.c"
     break;
 
   case 210:
-#line 1564 "asmshader.y" /* yacc.c:1646  */
+#line 1562 "asmshader.y"
     {
                             TRACE("dcl_normal%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_NORMAL;
                         }
-#line 3956 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3965 "asmshader.tab.c"
     break;
 
   case 211:
-#line 1570 "asmshader.y" /* yacc.c:1646  */
+#line 1568 "asmshader.y"
     {
                             TRACE("dcl_psize%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_PSIZE;
                         }
-#line 3966 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3975 "asmshader.tab.c"
     break;
 
   case 212:
-#line 1576 "asmshader.y" /* yacc.c:1646  */
+#line 1574 "asmshader.y"
     {
                             TRACE("dcl_texcoord%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_TEXCOORD;
                         }
-#line 3976 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3985 "asmshader.tab.c"
     break;
 
   case 213:
-#line 1582 "asmshader.y" /* yacc.c:1646  */
+#line 1580 "asmshader.y"
     {
                             TRACE("dcl_tangent%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_TANGENT;
                         }
-#line 3986 "asmshader.tab.c" /* yacc.c:1646  */
+#line 3995 "asmshader.tab.c"
     break;
 
   case 214:
-#line 1588 "asmshader.y" /* yacc.c:1646  */
+#line 1586 "asmshader.y"
     {
                             TRACE("dcl_binormal%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_BINORMAL;
                         }
-#line 3996 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4005 "asmshader.tab.c"
     break;
 
   case 215:
-#line 1594 "asmshader.y" /* yacc.c:1646  */
+#line 1592 "asmshader.y"
     {
                             TRACE("dcl_tessfactor%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_TESSFACTOR;
                         }
-#line 4006 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4015 "asmshader.tab.c"
     break;
 
   case 216:
-#line 1600 "asmshader.y" /* yacc.c:1646  */
+#line 1598 "asmshader.y"
     {
                             TRACE("dcl_positiont%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_POSITIONT;
                         }
-#line 4016 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4025 "asmshader.tab.c"
     break;
 
   case 217:
-#line 1606 "asmshader.y" /* yacc.c:1646  */
+#line 1604 "asmshader.y"
     {
                             TRACE("dcl_color%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_COLOR;
                         }
-#line 4026 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4035 "asmshader.tab.c"
     break;
 
   case 218:
-#line 1612 "asmshader.y" /* yacc.c:1646  */
+#line 1610 "asmshader.y"
     {
                             TRACE("dcl_fog%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_FOG;
                         }
-#line 4036 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4045 "asmshader.tab.c"
     break;
 
   case 219:
-#line 1618 "asmshader.y" /* yacc.c:1646  */
+#line 1616 "asmshader.y"
     {
                             TRACE("dcl_depth%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_DEPTH;
                         }
-#line 4046 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4055 "asmshader.tab.c"
     break;
 
   case 220:
-#line 1624 "asmshader.y" /* yacc.c:1646  */
+#line 1622 "asmshader.y"
     {
                             TRACE("dcl_sample%u\n", (yyvsp[0].regnum));
                             (yyval.declaration).regnum = (yyvsp[0].regnum);
                             (yyval.declaration).dclusage = BWRITERDECLUSAGE_SAMPLE;
                         }
-#line 4056 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4065 "asmshader.tab.c"
     break;
 
   case 221:
-#line 1631 "asmshader.y" /* yacc.c:1646  */
+#line 1629 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_INPUT;
                         }
-#line 4064 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4073 "asmshader.tab.c"
     break;
 
   case 222:
-#line 1635 "asmshader.y" /* yacc.c:1646  */
+#line 1633 "asmshader.y"
     {
                             (yyval.reg).regnum = (yyvsp[0].regnum); (yyval.reg).type = BWRITERSPR_TEXTURE;
                         }
-#line 4072 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4081 "asmshader.tab.c"
     break;
 
   case 223:
-#line 1640 "asmshader.y" /* yacc.c:1646  */
+#line 1638 "asmshader.y"
     {
                             (yyval.samplertype) = BWRITERSTT_1D;
                         }
-#line 4080 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4089 "asmshader.tab.c"
     break;
 
   case 224:
-#line 1644 "asmshader.y" /* yacc.c:1646  */
+#line 1642 "asmshader.y"
     {
                             (yyval.samplertype) = BWRITERSTT_2D;
                         }
-#line 4088 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4097 "asmshader.tab.c"
     break;
 
   case 225:
-#line 1648 "asmshader.y" /* yacc.c:1646  */
+#line 1646 "asmshader.y"
     {
                             (yyval.samplertype) = BWRITERSTT_CUBE;
                         }
-#line 4096 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4105 "asmshader.tab.c"
     break;
 
   case 226:
-#line 1652 "asmshader.y" /* yacc.c:1646  */
+#line 1650 "asmshader.y"
     {
                             (yyval.samplertype) = BWRITERSTT_VOLUME;
                         }
-#line 4104 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4113 "asmshader.tab.c"
     break;
 
   case 227:
-#line 1657 "asmshader.y" /* yacc.c:1646  */
+#line 1655 "asmshader.y"
     {
                             (yyval.reg).type = BWRITERSPR_PREDICATE;
                             (yyval.reg).regnum = 0;
@@ -4108,11 +4121,11 @@ yyreduce:
                             (yyval.reg).srcmod = BWRITERSPSM_NONE;
                             (yyval.reg).u.swizzle = (yyvsp[-1].swizzle);
                         }
-#line 4116 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4125 "asmshader.tab.c"
     break;
 
   case 228:
-#line 1665 "asmshader.y" /* yacc.c:1646  */
+#line 1663 "asmshader.y"
     {
                             (yyval.reg).type = BWRITERSPR_PREDICATE;
                             (yyval.reg).regnum = 0;
@@ -4120,11 +4133,12 @@ yyreduce:
                             (yyval.reg).srcmod = BWRITERSPSM_NOT;
                             (yyval.reg).u.swizzle = (yyvsp[-1].swizzle);
                         }
-#line 4128 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4137 "asmshader.tab.c"
     break;
 
 
-#line 4132 "asmshader.tab.c" /* yacc.c:1646  */
+#line 4141 "asmshader.tab.c"
+
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -4149,14 +4163,13 @@ yyreduce:
   /* Now 'shift' the result of the reduction.  Determine what state
      that goes to, based on the state we popped back to and the rule
      number reduced by.  */
-
-  yyn = yyr1[yyn];
-
-  yystate = yypgoto[yyn - YYNTOKENS] + *yyssp;
-  if (0 <= yystate && yystate <= YYLAST && yycheck[yystate] == *yyssp)
-    yystate = yytable[yystate];
-  else
-    yystate = yydefgoto[yyn - YYNTOKENS];
+  {
+    const int yylhs = yyr1[yyn] - YYNTOKENS;
+    const int yyi = yypgoto[yylhs] + *yyssp;
+    yystate = (0 <= yyi && yyi <= YYLAST && yycheck[yyi] == *yyssp
+               ? yytable[yyi]
+               : yydefgoto[yylhs]);
+  }
 
   goto yynewstate;
 
@@ -4239,12 +4252,10 @@ yyerrlab:
 | yyerrorlab -- error raised explicitly by YYERROR.  |
 `---------------------------------------------------*/
 yyerrorlab:
-
-  /* Pacify compilers like GCC when the user code never invokes
-     YYERROR and the label yyerrorlab therefore never appears in user
-     code.  */
-  if (/*CONSTCOND*/ 0)
-     goto yyerrorlab;
+  /* Pacify compilers when the user code never invokes YYERROR and the
+     label yyerrorlab therefore never appears in user code.  */
+  if (0)
+    YYERROR;
 
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYERROR.  */
@@ -4306,12 +4317,14 @@ yyacceptlab:
   yyresult = 0;
   goto yyreturn;
 
+
 /*-----------------------------------.
 | yyabortlab -- YYABORT comes here.  |
 `-----------------------------------*/
 yyabortlab:
   yyresult = 1;
   goto yyreturn;
+
 
 #if !defined yyoverflow || YYERROR_VERBOSE
 /*-------------------------------------------------.
@@ -4323,6 +4336,10 @@ yyexhaustedlab:
   /* Fall through.  */
 #endif
 
+
+/*-----------------------------------------------------.
+| yyreturn -- parsing is finished, return the result.  |
+`-----------------------------------------------------*/
 yyreturn:
   if (yychar != YYEMPTY)
     {
@@ -4352,7 +4369,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1673 "asmshader.y" /* yacc.c:1906  */
+#line 1671 "asmshader.y"
 
 
 struct bwriter_shader *parse_asm_shader(char **messages)

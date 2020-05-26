@@ -12,9 +12,9 @@
 // Default size of the DbgPrint log buffer
 //
 #if DBG
-#define KD_DEFAULT_LOG_BUFFER_SIZE                      0x8000
+#define KD_DEFAULT_LOG_BUFFER_SIZE  0x8000
 #else
-#define KD_DEFAULT_LOG_BUFFER_SIZE                      0x1000
+#define KD_DEFAULT_LOG_BUFFER_SIZE  0x1000
 #endif
 
 //
@@ -211,26 +211,26 @@ KdDisableDebuggerWithLock(
 NTSTATUS
 NTAPI
 KdpPrint(
-    IN ULONG ComponentId,
-    IN ULONG Level,
-    IN LPSTR String,
-    IN USHORT Length,
-    IN KPROCESSOR_MODE PreviousMode,
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKEXCEPTION_FRAME ExceptionFrame,
-    OUT PBOOLEAN Handled
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level,
+    _In_reads_bytes_(Length) PCHAR String,
+    _In_ USHORT Length,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame,
+    _Out_ PBOOLEAN Handled
 );
 
 USHORT
 NTAPI
 KdpPrompt(
-    IN LPSTR PromptString,
-    IN USHORT PromptLength,
-    OUT LPSTR ResponseString,
-    IN USHORT MaximumResponseLength,
-    IN KPROCESSOR_MODE PreviousMode,
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKEXCEPTION_FRAME ExceptionFrame
+    _In_reads_bytes_(PromptLength) PCHAR PromptString,
+    _In_ USHORT PromptLength,
+    _Out_writes_bytes_(MaximumResponseLength) PCHAR ResponseString,
+    _In_ USHORT MaximumResponseLength,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame
 );
 
 VOID
@@ -345,12 +345,12 @@ KdpAllowDisable(
 NTSTATUS
 NTAPI
 KdpCopyMemoryChunks(
-    IN ULONG64 Address,
-    IN PVOID Buffer,
-    IN ULONG TotalSize,
-    IN ULONG ChunkSize,
-    IN ULONG Flags,
-    OUT PULONG ActualSize OPTIONAL
+    _In_ ULONG64 Address,
+    _In_ PVOID Buffer,
+    _In_ ULONG TotalSize,
+    _In_ ULONG ChunkSize,
+    _In_ ULONG Flags,
+    _Out_opt_ PULONG ActualSize
 );
 
 //
@@ -359,16 +359,16 @@ KdpCopyMemoryChunks(
 VOID
 NTAPI
 KdpMoveMemory(
-    IN PVOID Destination,
-    IN PVOID Source,
-    IN SIZE_T Length
+    _In_ PVOID Destination,
+    _In_ PVOID Source,
+    _In_ SIZE_T Length
 );
 
 VOID
 NTAPI
 KdpZeroMemory(
-    IN PVOID Destination,
-    IN SIZE_T Length
+    _In_ PVOID Destination,
+    _In_ SIZE_T Length
 );
 
 //
@@ -510,7 +510,7 @@ KdpSysCheckLowMemory(
 VOID
 __cdecl
 KdpDprintf(
-    IN PCHAR Format,
+    _In_ PCHAR Format,
     ...
 );
 
@@ -546,9 +546,7 @@ extern BOOLEAN KdpControlCPressed;
 extern BOOLEAN KdpContextSent;
 extern KSPIN_LOCK KdpDebuggerLock;
 extern LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
-extern ULONG KdComponentTableSize;
-extern ULONG Kd_WIN2000_Mask;
-extern PULONG KdComponentTable[104];
+
 extern CHAR KdpMessageBuffer[0x1000], KdpPathBuffer[0x1000];
 extern CHAR KdPrintDefaultCircularBuffer[KD_DEFAULT_LOG_BUFFER_SIZE];
 extern BREAKPOINT_ENTRY KdpBreakpointTable[KD_BREAKPOINT_MAX];
@@ -559,3 +557,164 @@ extern ULONG KdpNumInternalBreakpoints;
 extern ULONG_PTR KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
 extern ULONG TraceDataBuffer[40];
 extern ULONG TraceDataBufferPosition;
+
+//
+// Debug Filter Component Table
+//
+#define MAX_KD_COMPONENT_TABLE_ENTRIES  147
+extern ULONG KdComponentTableSize;
+extern PULONG KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES];
+
+//
+// Debug Filter Masks
+//
+extern ULONG Kd_WIN2000_Mask;
+extern ULONG Kd_SYSTEM_Mask;
+extern ULONG Kd_SMSS_Mask;
+extern ULONG Kd_SETUP_Mask;
+extern ULONG Kd_NTFS_Mask;
+extern ULONG Kd_FSTUB_Mask;
+extern ULONG Kd_CRASHDUMP_Mask;
+extern ULONG Kd_CDAUDIO_Mask;
+extern ULONG Kd_CDROM_Mask;
+extern ULONG Kd_CLASSPNP_Mask;
+extern ULONG Kd_DISK_Mask;
+extern ULONG Kd_REDBOOK_Mask;
+extern ULONG Kd_STORPROP_Mask;
+extern ULONG Kd_SCSIPORT_Mask;
+extern ULONG Kd_SCSIMINIPORT_Mask;
+extern ULONG Kd_CONFIG_Mask;
+extern ULONG Kd_I8042PRT_Mask;
+extern ULONG Kd_SERMOUSE_Mask;
+extern ULONG Kd_LSERMOUS_Mask;
+extern ULONG Kd_KBDHID_Mask;
+extern ULONG Kd_MOUHID_Mask;
+extern ULONG Kd_KBDCLASS_Mask;
+extern ULONG Kd_MOUCLASS_Mask;
+extern ULONG Kd_TWOTRACK_Mask;
+extern ULONG Kd_WMILIB_Mask;
+extern ULONG Kd_ACPI_Mask;
+extern ULONG Kd_AMLI_Mask;
+extern ULONG Kd_HALIA64_Mask;
+extern ULONG Kd_VIDEO_Mask;
+extern ULONG Kd_SVCHOST_Mask;
+extern ULONG Kd_VIDEOPRT_Mask;
+extern ULONG Kd_TCPIP_Mask;
+extern ULONG Kd_DMSYNTH_Mask;
+extern ULONG Kd_NTOSPNP_Mask;
+extern ULONG Kd_FASTFAT_Mask;
+extern ULONG Kd_SAMSS_Mask;
+extern ULONG Kd_PNPMGR_Mask;
+extern ULONG Kd_NETAPI_Mask;
+extern ULONG Kd_SCSERVER_Mask;
+extern ULONG Kd_SCCLIENT_Mask;
+extern ULONG Kd_SERIAL_Mask;
+extern ULONG Kd_SERENUM_Mask;
+extern ULONG Kd_UHCD_Mask;
+extern ULONG Kd_RPCPROXY_Mask;
+extern ULONG Kd_AUTOCHK_Mask;
+extern ULONG Kd_DCOMSS_Mask;
+extern ULONG Kd_UNIMODEM_Mask;
+extern ULONG Kd_SIS_Mask;
+extern ULONG Kd_FLTMGR_Mask;
+extern ULONG Kd_WMICORE_Mask;
+extern ULONG Kd_BURNENG_Mask;
+extern ULONG Kd_IMAPI_Mask;
+extern ULONG Kd_SXS_Mask;
+extern ULONG Kd_FUSION_Mask;
+extern ULONG Kd_IDLETASK_Mask;
+extern ULONG Kd_SOFTPCI_Mask;
+extern ULONG Kd_TAPE_Mask;
+extern ULONG Kd_MCHGR_Mask;
+extern ULONG Kd_IDEP_Mask;
+extern ULONG Kd_PCIIDE_Mask;
+extern ULONG Kd_FLOPPY_Mask;
+extern ULONG Kd_FDC_Mask;
+extern ULONG Kd_TERMSRV_Mask;
+extern ULONG Kd_W32TIME_Mask;
+extern ULONG Kd_PREFETCHER_Mask;
+extern ULONG Kd_RSFILTER_Mask;
+extern ULONG Kd_FCPORT_Mask;
+extern ULONG Kd_PCI_Mask;
+extern ULONG Kd_DMIO_Mask;
+extern ULONG Kd_DMCONFIG_Mask;
+extern ULONG Kd_DMADMIN_Mask;
+extern ULONG Kd_WSOCKTRANSPORT_Mask;
+extern ULONG Kd_VSS_Mask;
+extern ULONG Kd_PNPMEM_Mask;
+extern ULONG Kd_PROCESSOR_Mask;
+extern ULONG Kd_DMSERVER_Mask;
+extern ULONG Kd_SR_Mask;
+extern ULONG Kd_INFINIBAND_Mask;
+extern ULONG Kd_IHVDRIVER_Mask;
+extern ULONG Kd_IHVVIDEO_Mask;
+extern ULONG Kd_IHVAUDIO_Mask;
+extern ULONG Kd_IHVNETWORK_Mask;
+extern ULONG Kd_IHVSTREAMING_Mask;
+extern ULONG Kd_IHVBUS_Mask;
+extern ULONG Kd_HPS_Mask;
+extern ULONG Kd_RTLTHREADPOOL_Mask;
+extern ULONG Kd_LDR_Mask;
+extern ULONG Kd_TCPIP6_Mask;
+extern ULONG Kd_ISAPNP_Mask;
+extern ULONG Kd_SHPC_Mask;
+extern ULONG Kd_STORPORT_Mask;
+extern ULONG Kd_STORMINIPORT_Mask;
+extern ULONG Kd_PRINTSPOOLER_Mask;
+extern ULONG Kd_VSSDYNDISK_Mask;
+extern ULONG Kd_VERIFIER_Mask;
+extern ULONG Kd_VDS_Mask;
+extern ULONG Kd_VDSBAS_Mask;
+extern ULONG Kd_VDSDYN_Mask;   // Specified in Vista+
+extern ULONG Kd_VDSDYNDR_Mask;
+extern ULONG Kd_VDSLDR_Mask;   // Specified in Vista+
+extern ULONG Kd_VDSUTIL_Mask;
+extern ULONG Kd_DFRGIFC_Mask;
+extern ULONG Kd_DEFAULT_Mask;
+extern ULONG Kd_MM_Mask;
+extern ULONG Kd_DFSC_Mask;
+extern ULONG Kd_WOW64_Mask;
+//
+// Components specified in Vista+, some of which we also use in ReactOS
+//
+extern ULONG Kd_ALPC_Mask;
+extern ULONG Kd_WDI_Mask;
+extern ULONG Kd_PERFLIB_Mask;
+extern ULONG Kd_KTM_Mask;
+extern ULONG Kd_IOSTRESS_Mask;
+extern ULONG Kd_HEAP_Mask;
+extern ULONG Kd_WHEA_Mask;
+extern ULONG Kd_USERGDI_Mask;
+extern ULONG Kd_MMCSS_Mask;
+extern ULONG Kd_TPM_Mask;
+extern ULONG Kd_THREADORDER_Mask;
+extern ULONG Kd_ENVIRON_Mask;
+extern ULONG Kd_EMS_Mask;
+extern ULONG Kd_WDT_Mask;
+extern ULONG Kd_FVEVOL_Mask;
+extern ULONG Kd_NDIS_Mask;
+extern ULONG Kd_NVCTRACE_Mask;
+extern ULONG Kd_LUAFV_Mask;
+extern ULONG Kd_APPCOMPAT_Mask;
+extern ULONG Kd_USBSTOR_Mask;
+extern ULONG Kd_SBP2PORT_Mask;
+extern ULONG Kd_COVERAGE_Mask;
+extern ULONG Kd_CACHEMGR_Mask;
+extern ULONG Kd_MOUNTMGR_Mask;
+extern ULONG Kd_CFR_Mask;
+extern ULONG Kd_TXF_Mask;
+extern ULONG Kd_KSECDD_Mask;
+extern ULONG Kd_FLTREGRESS_Mask;
+extern ULONG Kd_MPIO_Mask;
+extern ULONG Kd_MSDSM_Mask;
+extern ULONG Kd_UDFS_Mask;
+extern ULONG Kd_PSHED_Mask;
+extern ULONG Kd_STORVSP_Mask;
+extern ULONG Kd_LSASS_Mask;
+extern ULONG Kd_SSPICLI_Mask;
+extern ULONG Kd_CNG_Mask;
+extern ULONG Kd_EXFAT_Mask;
+extern ULONG Kd_FILETRACE_Mask;
+extern ULONG Kd_XSAVE_Mask;
+extern ULONG Kd_SE_Mask;
+extern ULONG Kd_DRIVEEXTENDER_Mask;

@@ -26,7 +26,7 @@ static void send_msg(const char *type, const char *msg)
     char buf[512];
 
     StringCbPrintfA(buf, sizeof(buf), "%s:%s", type, msg);
-    WriteFile(pipe_handle, buf, strlen(buf)+1, &written, NULL);
+    WriteFile(pipe_handle, buf, lstrlenA(buf)+1, &written, NULL);
 }
 
 #if 0

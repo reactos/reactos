@@ -7,6 +7,7 @@
  */
 #define _CM_
 #include "cmlib.h"
+#include <cmreslist.h>
 
 //
 // Define this if you want debugging support

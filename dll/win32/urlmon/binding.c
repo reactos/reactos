@@ -199,10 +199,10 @@ static LPWSTR get_mime_clsid(LPCWSTR mime, CLSID *clsid)
          'C','o','n','t','e','n','t',' ','T','y','p','e','\\'};
     static const WCHAR clsidW[] = {'C','L','S','I','D',0};
 
-    len = strlenW(mime)+1;
+    len = lstrlenW(mime)+1;
     key_name = heap_alloc(sizeof(mime_keyW) + len*sizeof(WCHAR));
     memcpy(key_name, mime_keyW, sizeof(mime_keyW));
-    strcpyW(key_name + ARRAY_SIZE(mime_keyW), mime);
+    lstrcpyW(key_name + ARRAY_SIZE(mime_keyW), mime);
 
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, key_name, &hkey);
     heap_free(key_name);

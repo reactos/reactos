@@ -66,7 +66,7 @@ static void wsprintfATest(void)
         win_skip( "I64 formats not supported\n" );
         return;
     }
-    for (i = 0; i < sizeof(i64_formats)/sizeof(i64_formats[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(i64_formats); i++)
     {
         rc = wsprintfA(buf, i64_formats[i].fmt, i64_formats[i].value);
         ok(rc == strlen(i64_formats[i].res), "%u: wsprintfA length failure: rc=%d\n", i, rc);
@@ -98,10 +98,10 @@ static void wsprintfWTest(void)
         win_skip( "I64 formats not supported\n" );
         return;
     }
-    for (i = 0; i < sizeof(i64_formats)/sizeof(i64_formats[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(i64_formats); i++)
     {
-        MultiByteToWideChar( CP_ACP, 0, i64_formats[i].fmt, -1, fmt, sizeof(fmt)/sizeof(WCHAR) );
-        MultiByteToWideChar( CP_ACP, 0, i64_formats[i].res, -1, res, sizeof(res)/sizeof(WCHAR) );
+        MultiByteToWideChar( CP_ACP, 0, i64_formats[i].fmt, -1, fmt, ARRAY_SIZE(fmt));
+        MultiByteToWideChar( CP_ACP, 0, i64_formats[i].res, -1, res, ARRAY_SIZE(res));
         rc = wsprintfW(buf, fmt, i64_formats[i].value);
         ok(rc == lstrlenW(res), "%u: wsprintfW length failure: rc=%d\n", i, rc);
         ok(!lstrcmpW(buf, res), "%u: wrong result [%s]\n", i, wine_dbgstr_w(buf));

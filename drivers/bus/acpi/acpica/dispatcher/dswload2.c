@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,9 @@
 #include "acinterp.h"
 #include "acnamesp.h"
 #include "acevents.h"
+#ifdef ACPI_EXEC_APP
+#include "aecommon.h"
+#endif
 
 #define _COMPONENT          ACPI_DISPATCHER
         ACPI_MODULE_NAME    ("dswload2")
@@ -423,6 +426,10 @@ AcpiDsLoad2EndOp (
     ACPI_NAMESPACE_NODE     *NewNode;
     UINT32                  i;
     UINT8                   RegionSpace;
+#ifdef ACPI_EXEC_APP
+    ACPI_OPERAND_OBJECT     *ObjDesc;
+    char                    *Namepath;
+#endif
 
 
     ACPI_FUNCTION_TRACE (DsLoad2EndOp);
@@ -519,6 +526,11 @@ AcpiDsLoad2EndOp (
          * be evaluated later during the execution phase
          */
         Status = AcpiDsCreateBufferField (Op, WalkState);
+        if ACPI_FAILURE (Status)
+        {
+            ACPI_EXCEPTION ((AE_INFO, Status, "CreateBufferField failure"));
+            goto Cleanup;
+        }
         break;
 
      case AML_TYPE_NAMED_FIELD:
@@ -658,6 +670,31 @@ AcpiDsLoad2EndOp (
         case AML_NAME_OP:
 
             Status = AcpiDsCreateNode (WalkState, Node, Op);
+            if (ACPI_FAILURE (Status))
+            {
+                goto Cleanup;
+            }
+
+#ifdef ACPI_EXEC_APP
+            /*
+             * AcpiExec support for namespace initialization file (initialize
+             * Name opcodes in this code.)
+             */
+            Namepath = AcpiNsGetExternalPathname (Node);
+            Status = AeLookupInitFileEntry (Namepath, &ObjDesc);
+            if (ACPI_SUCCESS (Status))
+            {
+                /* Detach any existing object, attach new object */
+
+                if (Node->Object)
+                {
+                    AcpiNsDetachObject (Node);
+                }
+                AcpiNsAttachObject (Node, ObjDesc, ObjDesc->Common.Type);
+            }
+            ACPI_FREE (Namepath);
+            Status = AE_OK;
+#endif
             break;
 
         case AML_METHOD_OP:

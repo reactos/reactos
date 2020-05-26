@@ -21,7 +21,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
-#include "config.h"
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -29,9 +28,6 @@
 #include <stdio.h>
 
 #include <sys/types.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
@@ -40,9 +36,8 @@
 #include "winver.h"
 #include "winuser.h"
 #include "winnls.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "lzexpand.h"
-#include "wine/unicode.h"
 #include "winerror.h"
 #include "wine/debug.h"
 
@@ -594,7 +589,7 @@ typedef struct
 #define VersionInfo16_Value( ver )  \
     DWORD_ALIGN( (ver), (ver)->szKey + strlen((ver)->szKey) + 1 )
 #define VersionInfo32_Value( ver )  \
-    DWORD_ALIGN( (ver), (ver)->szKey + strlenW((ver)->szKey) + 1 )
+    DWORD_ALIGN( (ver), (ver)->szKey + lstrlenW((ver)->szKey) + 1 )
 
 #define VersionInfo16_Children( ver )  \
     (const VS_VERSION_INFO_STRUCT16 *)( VersionInfo16_Value( ver ) + \
@@ -870,7 +865,7 @@ static const VS_VERSION_INFO_STRUCT16 *VersionInfo16_FindChild( const VS_VERSION
 
     while ((char *)child < (char *)info + info->wLength )
     {
-        if (!strncasecmp( child->szKey, szKey, cbKey ) && !child->szKey[cbKey])
+        if (!_strnicmp( child->szKey, szKey, cbKey ) && !child->szKey[cbKey])
             return child;
 
 	if (!(child->wLength)) return NULL;
@@ -890,7 +885,7 @@ static const VS_VERSION_INFO_STRUCT32 *VersionInfo32_FindChild( const VS_VERSION
 
     while ((char *)child < (char *)info + info->wLength )
     {
-        if (!strncmpiW( child->szKey, szKey, cbKey ) && !child->szKey[cbKey])
+        if (!_wcsnicmp( child->szKey, szKey, cbKey ) && !child->szKey[cbKey])
             return child;
 
         if (!(child->wLength)) return NULL;
@@ -1087,7 +1082,7 @@ BOOL WINAPI VerQueryValueW( LPCVOID pBlock, LPCWSTR lpSubBlock,
 
         HeapFree(GetProcessHeap(), 0, lpSubBlockA);
 
-        if (ret && strcmpiW( lpSubBlock, rootW ) && strcmpiW( lpSubBlock, varfileinfoW ))
+        if (ret && wcsicmp( lpSubBlock, rootW ) && wcsicmp( lpSubBlock, varfileinfoW ))
         {
             /* Set lpBuffer so it points to the 'empty' area where we store
              * the converted strings
@@ -1360,8 +1355,8 @@ DWORD WINAPI VerFindFileW( DWORD flags,LPCWSTR lpszFilename,LPCWSTR lpszWinDir,
     if (lpszFilename && !testFileExistenceW(curDir, lpszFilename, TRUE))
         retval |= VFF_FILEINUSE;
 
-    curDirSizeReq = strlenW(curDir) + 1;
-    destDirSizeReq = strlenW(destDir) + 1;
+    curDirSizeReq = lstrlenW(curDir) + 1;
+    destDirSizeReq = lstrlenW(destDir) + 1;
 
     /* Make sure that the pointers to the size of the buffers are
        valid; if not, do NOTHING with that buffer.  If that pointer

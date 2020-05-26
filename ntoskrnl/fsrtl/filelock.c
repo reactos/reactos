@@ -51,9 +51,9 @@ typedef struct _LOCK_SHARED_RANGE
 }
     LOCK_SHARED_RANGE, *PLOCK_SHARED_RANGE;
 
-#define TAG_TABLE 'LTAB'
-#define TAG_RANGE 'FSRA'
-#define TAG_FLOCK 'FLCK'
+#define TAG_TABLE 'BATL'
+#define TAG_RANGE 'ARSF'
+#define TAG_FLOCK 'KCLF'
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

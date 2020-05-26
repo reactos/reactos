@@ -10,7 +10,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
     LTEXT           "Utilidad de configuración del sistema\nVersión 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
-//  "Copyright (C) 2005-"COPYRIGHT_YEAR" Equipo de ReactOS \n"
+//  "Copyright (C) 2005-"COPYRIGHT_YEAR" Equipo de ReactOS\n"
     LTEXT           "Copyright (C) ReactOS Team 2005-2015\n\
 Christoph von Wittich (Christoph@ApiViewer.de)\n\
 Gregor Schneider (Gregor.Schneider@reactos.org)\n\

@@ -1,0 +1,22 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_CAPTURE_MOUSE, "&Tangkap penunjuk tetikus"
+    IDS_RELEASE_MOUSE, "&Lepas penunjuk tetikus"
+    IDS_VDM_MENU     , "ReactOS &VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VDM_DUMPMEM_TXT ,   "Tampung Memori (&Teks)"
+    IDS_VDM_DUMPMEM_BIN ,   "Tampung Memori (&Biner)"
+    IDS_VDM_MOUNT_FLOPPY,   "Masukkan floppy pada drive %d <%s>..."
+    IDS_VDM_EJECT_FLOPPY,   "Keluarkan floppy pada drive %d"
+    IDS_VDM_QUIT        ,   "&Keluar dari ReactOS VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NO_MEDIA,   "Tidak ada media"
+END

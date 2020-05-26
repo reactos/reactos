@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@
 #ifndef __ACPI_H__
 #define __ACPI_H__
 
-#ifdef __REACTOS__
+#if defined(__REACTOS__) && !defined(UNIT_TEST)
 /*
  * Header inclusion HACK.
  */

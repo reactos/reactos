@@ -228,11 +228,11 @@ static WCHAR *FindHTMLHelpSetting(HHInfo *info, const WCHAR *extW)
     WCHAR *filename;
     HRESULT hr;
 
-    filename = heap_alloc( (strlenW(info->pCHMInfo->compiledFile)
-                            + strlenW(periodW) + strlenW(extW) + 1) * sizeof(WCHAR) );
-    strcpyW(filename, info->pCHMInfo->compiledFile);
-    strcatW(filename, periodW);
-    strcatW(filename, extW);
+    filename = heap_alloc( (lstrlenW(info->pCHMInfo->compiledFile)
+                            + lstrlenW(periodW) + lstrlenW(extW) + 1) * sizeof(WCHAR) );
+    lstrcpyW(filename, info->pCHMInfo->compiledFile);
+    lstrcatW(filename, periodW);
+    lstrcatW(filename, extW);
     hr = IStorage_OpenStream(pStorage, filename, NULL, STGM_READ, 0, &pStream);
     if (FAILED(hr))
     {
@@ -483,11 +483,11 @@ LPCWSTR skip_schema(LPCWSTR url)
     static const WCHAR msits_schema[] = {'m','s','-','i','t','s',':'};
     static const WCHAR mk_schema[] = {'m','k',':','@','M','S','I','T','S','t','o','r','e',':'};
 
-    if(!strncmpiW(its_schema, url, ARRAY_SIZE(its_schema)))
+    if(!_wcsnicmp(its_schema, url, ARRAY_SIZE(its_schema)))
         return url + ARRAY_SIZE(its_schema);
-    if(!strncmpiW(msits_schema, url, ARRAY_SIZE(msits_schema)))
+    if(!_wcsnicmp(msits_schema, url, ARRAY_SIZE(msits_schema)))
         return url + ARRAY_SIZE(msits_schema);
-    if(!strncmpiW(mk_schema, url, ARRAY_SIZE(mk_schema)))
+    if(!_wcsnicmp(mk_schema, url, ARRAY_SIZE(mk_schema)))
         return url + ARRAY_SIZE(mk_schema);
 
     return url;
@@ -500,15 +500,15 @@ void SetChmPath(ChmPath *file, LPCWSTR base_file, LPCWSTR path)
 
     path = skip_schema(path);
 
-    ptr = strstrW(path, separatorW);
+    ptr = wcsstr(path, separatorW);
     if(ptr) {
         WCHAR chm_file[MAX_PATH];
         WCHAR rel_path[MAX_PATH];
         WCHAR base_path[MAX_PATH];
         LPWSTR p;
 
-        strcpyW(base_path, base_file);
-        p = strrchrW(base_path, '\\');
+        lstrcpyW(base_path, base_file);
+        p = wcsrchr(base_path, '\\');
         if(p)
             *p = 0;
 
@@ -595,7 +595,7 @@ WCHAR *GetDocumentTitle(CHMInfo *info, LPCWSTR document)
 
         TRACE("%s\n", node.buf);
 
-        if(!strcasecmp(node_name.buf, "title")) {
+        if(!_strnicmp(node_name.buf, "title", -1)) {
             if(next_content(&stream, &content) && content.len > 1)
             {
                 document_title = strdupnAtoW(&content.buf[1], content.len-1);

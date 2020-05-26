@@ -68,7 +68,6 @@ static const unsigned int win_formats[][4] = {
     {WAVE_FORMAT_96M16, 96000, 16, 1},
     {WAVE_FORMAT_96S16, 96000, 16, 2}
 };
-#define NB_WIN_FORMATS (sizeof(win_formats)/sizeof(*win_formats))
 
 extern const char* dev_name(int);
 extern const char* wave_open_flags(DWORD);

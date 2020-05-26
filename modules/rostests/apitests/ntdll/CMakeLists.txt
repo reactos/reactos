@@ -26,6 +26,7 @@ list(APPEND SOURCE
     NtProtectVirtualMemory.c
     NtQueryInformationFile.c
     NtQueryInformationProcess.c
+    NtQueryInformationThread.c
     NtQueryKey.c
     NtQuerySystemEnvironmentValue.c
     NtQuerySystemInformation.c
@@ -33,13 +34,16 @@ list(APPEND SOURCE
     NtReadFile.c
     NtSaveKey.c
     NtSetInformationFile.c
+    NtSetInformationProcess.c
     NtSetValueKey.c
     NtSetVolumeInformationFile.c
+    NtUnloadDriver.c
     NtWriteFile.c
     RtlAllocateHeap.c
     RtlBitmap.c
     RtlComputePrivatizedDllName_U.c
     RtlCopyMappedMemory.c
+    RtlDebugInformation.c
     RtlDeleteAce.c
     RtlDetermineDosPathNameType.c
     RtlDoesFileExists.c
@@ -54,17 +58,20 @@ list(APPEND SOURCE
     RtlGetFullPathName_UstrEx.c
     RtlGetLengthWithoutTrailingPathSeperators.c
     RtlGetLongestNtPathLength.c
+    RtlGetNtProductType.c
+    RtlGetUnloadEventTrace.c
     RtlHandle.c
     RtlImageRvaToVa.c
-    RtlInitializeBitMap.c
     RtlIsNameLegalDOS8Dot3.c
     RtlMemoryStream.c
+    RtlMultipleAllocateHeap.c
     RtlNtPathNameToDosPathName.c
     RtlpEnsureBufferSize.c
     RtlQueryTimeZoneInfo.c
     RtlReAllocateHeap.c
     RtlUnicodeStringToAnsiString.c
     RtlUpcaseUnicodeStringToCountedOemString.c
+    RtlValidateUnicodeString.c
     StackOverflow.c
     SystemInfo.c
     Timer.c

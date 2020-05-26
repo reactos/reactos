@@ -18,8 +18,6 @@
  */
 
 #define COBJMACROS
-#include "config.h"
-#include "wine/port.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -32,7 +30,6 @@
 #include "winnt.h"
 #include "winreg.h"
 #include "winnls.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 #include "dplayx_global.h"
@@ -1440,14 +1437,14 @@ static BOOL DP_CopyDPNAMEStruct( LPDPNAME lpDst, const DPNAME *lpSrc, BOOL bAnsi
     if( lpSrc->u1.lpszShortNameA )
     {
         lpDst->u1.lpszShortName = HeapAlloc( GetProcessHeap(), 0,
-                                              (strlenW(lpSrc->u1.lpszShortName)+1)*sizeof(WCHAR) );
-        strcpyW( lpDst->u1.lpszShortName, lpSrc->u1.lpszShortName );
+                                              (lstrlenW(lpSrc->u1.lpszShortName)+1)*sizeof(WCHAR) );
+        lstrcpyW( lpDst->u1.lpszShortName, lpSrc->u1.lpszShortName );
     }
     if( lpSrc->u2.lpszLongNameA )
     {
         lpDst->u2.lpszLongName = HeapAlloc( GetProcessHeap(), 0,
-                                             (strlenW(lpSrc->u2.lpszLongName)+1)*sizeof(WCHAR) );
-        strcpyW( lpDst->u2.lpszLongName, lpSrc->u2.lpszLongName );
+                                             (lstrlenW(lpSrc->u2.lpszLongName)+1)*sizeof(WCHAR) );
+        lstrcpyW( lpDst->u2.lpszLongName, lpSrc->u2.lpszLongName );
     }
   }
 

@@ -11,6 +11,11 @@
 #include <errno.h>
 #include <winsock2.h>
 
+/* Fix for old MinGW. */
+#ifndef _WINSOCKAPI_
+#define _WINSOCKAPI_
+#endif
+
 /* the following is a workaround a problem for 'inline' keyword in said
    header when compiled with Borland C++ 6 */
 #if defined(__BORLANDC__) && !defined(__cplusplus)

@@ -21,7 +21,7 @@ IDR_BROWSE_MAIN_MENU MENU
     }
     POPUP "&Tampilan"
     {
-        POPUP "Bilah&Alat"
+        POPUP "Bilah &Alat"
         {
             MENUITEM "Bilah &Standar",           ID_BROWSE_BAR_STD
             MENUITEM "Bilah &Alamat",            ID_BROWSE_BAR_ADDR

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -94,6 +94,10 @@
 #endif /* DEBUGGER_THREADING */
 
 #define DEBUGGER_THREADING  0   /* integrated with DDB */
+
+#ifdef INVARIANTS
+#define ACPI_MUTEX_DEBUG
+#endif
 
 #else /* _KERNEL */
 

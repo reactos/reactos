@@ -73,6 +73,7 @@ Int386_return:
     mov ecx, REGS_SIZE / 4
     rep movsd
 
+    /* Restore all registers + segment registers */
     popa
     pop gs
     pop fs

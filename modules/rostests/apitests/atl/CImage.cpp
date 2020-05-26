@@ -204,11 +204,11 @@ START_TEST(CImage)
     ok(bOK, "Expected bOK to be TRUE, was: %d\n", bOK);
 
     width = image2.GetWidth();
-    ok(width == 48, "Expected width to be 48, was: %d\n", width);
+    ok_int(width, 48);
     height = image2.GetHeight();
-    ok(height == 48, "Expected height to be 48, was: %d\n", height);
+    ok_int(height, 48);
     bpp = image2.GetBPP();
-    ok(bpp == 8, "Expected bpp to be 8, was: %d\n", bpp);
+    ok_int(bpp, 32);
 
     for (n = 0; n < _countof(szFiles); ++n)
     {
@@ -234,12 +234,12 @@ START_TEST(CImage)
         bpp = image2.GetBPP();
         if (n == 3)
         {
-            ok(bpp == 24, "Expected bpp to be 24, was: %d (for %i)\n", bpp, n);
+            ok(bpp == 32, "Expected bpp to be 32, was: %d (for %i)\n", bpp, n);
             determine_file_bpp(file, PixelFormat24bppRGB);
         }
         else
         {
-            ok(bpp == 8, "Expected bpp to be 8, was: %d (for %i)\n", bpp, n);
+            ok(bpp == 32, "Expected bpp to be 32, was: %d (for %i)\n", bpp, n);
             determine_file_bpp(file, PixelFormat8bppIndexed);
         }
         color = image1.GetPixel(5, 5);

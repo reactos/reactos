@@ -411,7 +411,7 @@ DriverEntry(
 			NULL,
 			0,
 			sizeof(FFS_IRP_CONTEXT),
-			'SFF',
+			' SFF',
 			0);
 
 	ExInitializeNPagedLookasideList(&(FFSGlobal->FFSFcbLookasideList),
@@ -419,7 +419,7 @@ DriverEntry(
 			NULL,
 			0,
 			sizeof(FFS_FCB),
-			'SFF',
+			' SFF',
 			0);
 
 	ExInitializeNPagedLookasideList(&(FFSGlobal->FFSCcbLookasideList),
@@ -427,7 +427,7 @@ DriverEntry(
 			NULL,
 			0,
 			sizeof(FFS_CCB),
-			'SFF',
+			' SFF',
 			0);
 
 	ExInitializePagedLookasideList(&(FFSGlobal->FFSMcbLookasideList),
@@ -435,7 +435,7 @@ DriverEntry(
 			NULL,
 			0,
 			sizeof(FFS_MCB),
-			'SFF',
+			' SFF',
 			0);
 
 #if FFS_UNLOAD

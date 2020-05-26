@@ -565,9 +565,7 @@ START_TEST(pdb)
 {
     char szDllName[MAX_PATH];
     char szDllPath[MAX_PATH], szOldDir[MAX_PATH];
-#ifdef _M_IX86
     HMODULE hMod;
-#endif
     DWORD64 BaseAddress;
     DWORD dwErr, Options;
 
@@ -608,7 +606,6 @@ START_TEST(pdb)
     test_SymRegCallback(proc(), szDllName, TRUE);
     test_SymRegCallback(proc(), szDllName, FALSE);
 
-#ifdef _M_IX86
     hMod = LoadLibraryA(szDllName);
     if (hMod)
     {
@@ -631,7 +628,6 @@ START_TEST(pdb)
 
         FreeLibrary(hMod);
     }
-#endif
 
     cleanup_msvc_dll();
 }

@@ -120,7 +120,7 @@ BEGIN
     IDS_HELP_CMD_DESC_MERGE "MERGE\t\t- 将子磁盘与父磁盘合并。\n"
     IDS_HELP_CMD_DESC_OFFLINE "OFFLINE\t\t- 将当前标记为脱机的磁盘设置为联机。\n"
     IDS_HELP_CMD_DESC_ONLINE "ONLINE\t\t- 将当前标记为联机的磁盘设置为脱机。\n"
-    IDS_HELP_CMD_DESC_RECOVER "RECOVER\t\t- 刷新无效包中的所有磁盘的状态，\n\t\t  并重新同步具有过时丛或奇偶校 \n\t\t  验数据的镜像卷和 RAID5 卷。\n"
+    IDS_HELP_CMD_DESC_RECOVER "RECOVER\t\t- 刷新无效包中的所有磁盘的状态，\n\t\t  并重新同步具有过时丛或奇偶校\n\t\t  验数据的镜像卷和 RAID5 卷。\n"
     IDS_HELP_CMD_DESC_REM "REM\t\t- 无作用。这用来注释脚本。\n"
     IDS_HELP_CMD_DESC_REMOVE "REMOVE\t\t- 删除驱动器号或指派的装载点。\n"
     IDS_HELP_CMD_DESC_REPAIR "REPAIR\t\t- 用失败的成员修复 RAID 5 卷。\n"

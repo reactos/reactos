@@ -303,7 +303,7 @@ ULONG CDECL LdapMapErrorToWin32( ULONG err )
 {
     TRACE( "(0x%08x)\n", err );
 
-    if (err >= sizeof(WLDAP32_errormap)/sizeof(WLDAP32_errormap[0]))
+    if (err >= ARRAY_SIZE( WLDAP32_errormap ))
         return ERROR_DS_GENERIC_ERROR;
     return WLDAP32_errormap[err];
 }

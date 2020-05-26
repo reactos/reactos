@@ -371,6 +371,9 @@ IopShutdownBaseFileSystems(IN PLIST_ENTRY ListHead)
                                          DEVICE_OBJECT,
                                          Queue.ListEntry);
 
+        /* Go to the next entry */
+        ListEntry = ListEntry->Flink;
+
         /* Get the attached device */
         DeviceObject = IoGetAttachedDevice(DeviceObject);
 
@@ -400,9 +403,6 @@ IopShutdownBaseFileSystems(IN PLIST_ENTRY ListHead)
 
         IopDecrementDeviceObjectRef(DeviceObject, FALSE);
         ObDereferenceObject(DeviceObject);
-
-        /* Go to the next entry */
-        ListEntry = ListEntry->Flink;
     }
 }
 

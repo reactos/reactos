@@ -21,3 +21,4 @@
 @ stdcall -private SendSubvolW(ptr ptr wstr long)
 @ stdcall -private RecvSubvolW(ptr ptr wstr long)
 @ stdcall -private ResizeDeviceW(ptr ptr wstr long)
+@ stdcall -private ShowChangeDriveLetterW(ptr ptr wstr long)

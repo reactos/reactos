@@ -163,6 +163,7 @@ ClockWndProc(HWND hwnd,
             pClockData->cyClient = HIWORD(lParam);
             break;
 
+        case WM_TIMECHANGE:
         case WM_TIMER:
             GetLocalTime(&pClockData->stCurrent);
             InvalidateRect(hwnd, NULL, FALSE);

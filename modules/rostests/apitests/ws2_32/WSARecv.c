@@ -47,6 +47,7 @@ void Test_WSARecv()
     WSAOVERLAPPED overlapped;
     char szGetRequest[] = "GET / HTTP/1.0\r\n\r\n";
     struct fd_set readable;
+    BOOL ret;
 
     /* Start up Winsock */
     iResult = WSAStartup(MAKEWORD(2, 2), &wdata);
@@ -95,8 +96,9 @@ void Test_WSARecv()
 
     /* Send the GET request */
     buffers.buf = szGetRequest;
-    buffers.len = strlen(szGetRequest);
+    buffers.len = lstrlenA(szGetRequest);
     dwSent = 0;
+    WSASetLastError(0xdeadbeef);
     iResult = WSASend(sck, &buffers, 1, &dwSent, 0, &overlapped, NULL);
     err = WSAGetLastError();
     ok(iResult == 0 || (iResult == SOCKET_ERROR && err == WSA_IO_PENDING), "iResult = %d, %d\n", iResult, err);
@@ -104,7 +106,8 @@ void Test_WSARecv()
     {
         iResult = WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, WSARecv_TIMEOUT, TRUE);
         ok(iResult == WSA_WAIT_EVENT_0, "WSAWaitForMultipleEvents failed %d\n", iResult);
-        ok(WSAGetOverlappedResult(sck, &overlapped, &dwSent, TRUE, &dwFlags), "WSAGetOverlappedResult failed %d\n", WSAGetLastError());
+        ret = WSAGetOverlappedResult(sck, &overlapped, &dwSent, TRUE, &dwFlags);
+        ok(ret, "WSAGetOverlappedResult failed %d\n", WSAGetLastError());
     }
     ok(dwSent == strlen(szGetRequest), "dwSent %ld != %d\n", dwSent, strlen(szGetRequest));
 #if 0 /* break windows too */
@@ -132,6 +135,7 @@ void Test_WSARecv()
     dwFlags = MSG_PEEK;
     dwRecv = sizeof(szRecvBuf);
     ok(overlapped.hEvent != NULL, "WSACreateEvent failed %d\n", WSAGetLastError());
+    WSASetLastError(0xdeadbeef);
     iResult = WSARecv(sck, &buffers, 1, &dwRecv, &dwFlags, &overlapped, NULL);
     err = WSAGetLastError();
     ok(iResult == 0 || (iResult == SOCKET_ERROR && err == WSA_IO_PENDING), "iResult = %d, %d\n", iResult, err);
@@ -139,7 +143,8 @@ void Test_WSARecv()
     {
         iResult = WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, WSARecv_TIMEOUT, TRUE);
         ok(iResult == WSA_WAIT_EVENT_0, "WSAWaitForMultipleEvents failed %d\n", iResult);
-        ok(WSAGetOverlappedResult(sck, &overlapped, &dwRecv, TRUE, &dwFlags), "WSAGetOverlappedResult failed %d\n", WSAGetLastError());
+        ret = WSAGetOverlappedResult(sck, &overlapped, &dwRecv, TRUE, &dwFlags);
+        ok(ret, "WSAGetOverlappedResult failed %d\n", WSAGetLastError());
     }
     ok(dwRecv == sizeof(szRecvBuf), "dwRecv %ld != %d\n", dwRecv, sizeof(szRecvBuf));
     /* normal overlapped, no completion */
@@ -148,6 +153,7 @@ void Test_WSARecv()
     dwFlags = 0;
     dwRecv = sizeof(szBuf);
     WSAResetEvent(overlapped.hEvent);
+    WSASetLastError(0xdeadbeef);
     iResult = WSARecv(sck, &buffers, 1, &dwRecv, &dwFlags, &overlapped, NULL);
     err = WSAGetLastError();
     ok(iResult == 0 || (iResult == SOCKET_ERROR && err == WSA_IO_PENDING), "iResult = %d, %d\n", iResult, err);
@@ -155,7 +161,8 @@ void Test_WSARecv()
     {
         iResult = WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, WSARecv_TIMEOUT, TRUE);
         ok(iResult == WSA_WAIT_EVENT_0, "WSAWaitForMultipleEvents failed %d\n", iResult);
-        ok(WSAGetOverlappedResult(sck, &overlapped, &dwRecv, TRUE, &dwFlags), "WSAGetOverlappedResult failed %d\n", WSAGetLastError());
+        ret = WSAGetOverlappedResult(sck, &overlapped, &dwRecv, TRUE, &dwFlags);
+        ok(ret, "WSAGetOverlappedResult failed %d\n", WSAGetLastError());
     }
     ok(dwRecv == sizeof(szBuf), "dwRecv %ld != %d\n", dwRecv, sizeof(szBuf));
     ok(memcmp(szRecvBuf, szBuf, sizeof(szBuf)) == 0, "MSG_PEEK shouldn't have moved the pointer\n");
@@ -163,6 +170,7 @@ void Test_WSARecv()
     dwFlags = 0;
     dwRecv = sizeof(szBuf);
     WSAResetEvent(overlapped.hEvent);
+    WSASetLastError(0xdeadbeef);
     iResult = WSARecv(sck, &buffers, 1, &dwRecv, &dwFlags, &overlapped, &completion);
     err = WSAGetLastError();
     ok(iResult == 0 || (iResult == SOCKET_ERROR && err == WSA_IO_PENDING), "iResult = %d, %d\n", iResult, err);
@@ -170,18 +178,21 @@ void Test_WSARecv()
     {
         iResult = WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, WSARecv_TIMEOUT, TRUE);
         ok(iResult == WSA_WAIT_EVENT_0, "WSAWaitForMultipleEvents failed %d\n", iResult);
-        ok(WSAGetOverlappedResult(sck, &overlapped, &dwRecv, TRUE, &dwFlags), "WSAGetOverlappedResult failed %d\n", WSAGetLastError());
+        ret = WSAGetOverlappedResult(sck, &overlapped, &dwRecv, TRUE, &dwFlags);
+        ok(ret, "WSAGetOverlappedResult failed %d\n", WSAGetLastError());
     }
-    ok(WSACloseEvent(overlapped.hEvent), "WSAGetOverlappedResult failed %d\n", WSAGetLastError());
+    ret = WSACloseEvent(overlapped.hEvent);
+    ok(ret, "WSACloseEvent failed %d\n", WSAGetLastError());
     ok(dwRecv == sizeof(szBuf), "dwRecv %ld != %d\n", dwRecv, sizeof(szBuf));
     /* no overlapped with completion */
     dwFlags = 0;
     dwRecv = sizeof(szBuf);
+    WSASetLastError(0xdeadbeef);
     /* call doesn't fail, but completion is not called */
     iResult = WSARecv(sck, &buffers, 1, &dwRecv, &dwFlags, NULL, &completion);
     err = WSAGetLastError();
     ok(iResult == 0 || (iResult == SOCKET_ERROR && err == WSA_IO_PENDING), "iResult = %d, %d\n", iResult, err);
-    ok(WSAGetLastError() == 0, "WSAGetLastError failed %d\n", WSAGetLastError());
+    ok(err == 0, "WSARecv failed %d\n", err);
     ok(dwRecv == sizeof(szBuf), "dwRecv %ld != %d and 0\n", dwRecv, sizeof(szBuf));
 
     closesocket(sck);

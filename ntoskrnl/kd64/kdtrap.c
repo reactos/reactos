@@ -166,7 +166,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                 /* Call the worker routine */
                 ReturnStatus = KdpPrint((ULONG)KdpGetParameterThree(ContextRecord),
                                         (ULONG)KdpGetParameterFour(ContextRecord),
-                                        (LPSTR)ExceptionRecord->ExceptionInformation[1],
+                                        (PCHAR)ExceptionRecord->ExceptionInformation[1],
                                         (USHORT)ExceptionRecord->ExceptionInformation[2],
                                         PreviousMode,
                                         TrapFrame,
@@ -174,17 +174,16 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                                         &Handled);
 
                 /* Update the return value for the caller */
-                KeSetContextReturnRegister(ContextRecord,
-                                           ReturnStatus);
+                KeSetContextReturnRegister(ContextRecord, ReturnStatus);
                 break;
 
             /* DbgPrompt */
             case BREAKPOINT_PROMPT:
 
                 /* Call the worker routine */
-                ReturnLength = KdpPrompt((LPSTR)ExceptionRecord->ExceptionInformation[1],
+                ReturnLength = KdpPrompt((PCHAR)ExceptionRecord->ExceptionInformation[1],
                                          (USHORT)ExceptionRecord->ExceptionInformation[2],
-                                         (LPSTR)KdpGetParameterThree(ContextRecord),
+                                         (PCHAR)KdpGetParameterThree(ContextRecord),
                                          (USHORT)KdpGetParameterFour(ContextRecord),
                                          PreviousMode,
                                          TrapFrame,
@@ -205,10 +204,8 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
             case BREAKPOINT_LOAD_SYMBOLS:
 
                 /* Call the worker routine */
-                KdpSymbol((PSTRING)ExceptionRecord->
-                          ExceptionInformation[1],
-                          (PKD_SYMBOLS_INFO)ExceptionRecord->
-                          ExceptionInformation[2],
+                KdpSymbol((PSTRING)ExceptionRecord->ExceptionInformation[1],
+                          (PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2],
                           Unload,
                           PreviousMode,
                           ContextRecord,
@@ -221,10 +218,8 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
             case BREAKPOINT_COMMAND_STRING:
 
                 /* Call the worker routine */
-                KdpCommandString((PSTRING)ExceptionRecord->
-                                 ExceptionInformation[1],
-                                 (PSTRING)ExceptionRecord->
-                                 ExceptionInformation[2],
+                KdpCommandString((PSTRING)ExceptionRecord->ExceptionInformation[1],
+                                 (PSTRING)ExceptionRecord->ExceptionInformation[2],
                                  PreviousMode,
                                  ContextRecord,
                                  TrapFrame,

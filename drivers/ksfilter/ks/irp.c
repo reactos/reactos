@@ -349,10 +349,9 @@ KsQueryInformationFile(
     PFAST_IO_DISPATCH FastIoDispatch;
     PIRP Irp;
     PIO_STACK_LOCATION IoStack;
-    IO_STATUS_BLOCK IoStatus;
+    IO_STATUS_BLOCK IoStatusBlock;
     KEVENT Event;
     LARGE_INTEGER Offset;
-    IO_STATUS_BLOCK StatusBlock;
     NTSTATUS Status;
 
     /* get related file object */
@@ -368,20 +367,35 @@ KsQueryInformationFile(
         if (FileInformationClass == FileBasicInformation)
         {
             /* use FastIoQueryBasicInfo routine */
-            if (FastIoDispatch->FastIoQueryBasicInfo)
+            if (FastIoDispatch->FastIoQueryBasicInfo != NULL &&
+                FastIoDispatch->FastIoQueryBasicInfo(
+                  FileObject,
+                  TRUE,
+                  (PFILE_BASIC_INFORMATION)FileInformation,
+                  &IoStatusBlock,
+                  DeviceObject))
             {
-                return FastIoDispatch->FastIoQueryBasicInfo(FileObject, TRUE, (PFILE_BASIC_INFORMATION)FileInformation, &IoStatus, DeviceObject);
+                /* request was handled */
+                return IoStatusBlock.Status;
             }
         }
         else if (FileInformationClass == FileStandardInformation)
         {
-            /* use FastIoQueryBasicInfo routine */
-            if (FastIoDispatch->FastIoQueryBasicInfo)
+            /* use FastIoQueryStandardInfo routine */
+            if (FastIoDispatch->FastIoQueryStandardInfo != NULL &&
+                FastIoDispatch->FastIoQueryStandardInfo(
+                  FileObject,
+                  TRUE,
+                  (PFILE_STANDARD_INFORMATION)FileInformation,
+                  &IoStatusBlock,
+                  DeviceObject))
             {
-                return FastIoDispatch->FastIoQueryStandardInfo(FileObject, TRUE, (PFILE_STANDARD_INFORMATION)FileInformation, &IoStatus, DeviceObject);
+                /* request was handled */
+                return IoStatusBlock.Status;
             }
         }
     }
+
     /* clear event */
     KeClearEvent(&FileObject->Event);
 
@@ -392,8 +406,7 @@ KsQueryInformationFile(
     Offset.QuadPart = 0L;
 
     /* build the request */
-    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_QUERY_INFORMATION, IoGetRelatedDeviceObject(FileObject), NULL, 0, &Offset, &Event, &StatusBlock);
-
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_QUERY_INFORMATION, IoGetRelatedDeviceObject(FileObject), NULL, 0, &Offset, &Event, &IoStatusBlock);
     if (!Irp)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -418,7 +431,7 @@ KsQueryInformationFile(
        if (FileObject->Flags & FO_SYNCHRONOUS_IO)
            Status = FileObject->FinalStatus;
        else
-           Status = StatusBlock.Status;
+           Status = IoStatusBlock.Status;
     }
 
     /* done */
@@ -482,7 +495,6 @@ KsSetInformationFile(
 
     /* build the irp */
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SET_INFORMATION, DeviceObject, NULL, 0, &Offset, &Event, &IoStatus);
-
     if (!Irp)
     {
         /* failed to allocate irp */

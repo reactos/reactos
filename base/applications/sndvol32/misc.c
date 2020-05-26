@@ -159,6 +159,116 @@ CloseAppConfig(VOID)
 }
 
 BOOL
+LoadXYCoordWnd(IN PPREFERENCES_CONTEXT PrefContext)
+{
+    HKEY hKey;
+    LONG lResult;
+    TCHAR DeviceMixerSettings[256];
+    DWORD dwData;
+    DWORD cbData = sizeof(dwData);
+
+    /* Append the registry key path and device name key into one single string */
+    StringCchPrintf(DeviceMixerSettings, _countof(DeviceMixerSettings), TEXT("%s\\%s"), AppRegSettings, PrefContext->DeviceName);
+
+    lResult = RegOpenKeyEx(HKEY_CURRENT_USER,
+                           DeviceMixerSettings,
+                           0,
+                           KEY_READ,
+                           &hKey);
+    if (lResult != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    lResult = RegQueryValueEx(hKey,
+                              TEXT("X"),
+                              0,
+                              0,
+                              (LPBYTE)&dwData,
+                              &cbData);
+    if (lResult != ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* Cache the X coordinate point */
+    PrefContext->MixerWindow->WndPosX = dwData;
+
+    lResult = RegQueryValueEx(hKey,
+                              TEXT("Y"),
+                              0,
+                              0,
+                              (LPBYTE)&dwData,
+                              &cbData);
+    if (lResult != ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* Cache the Y coordinate point */
+    PrefContext->MixerWindow->WndPosY = dwData;
+    
+    RegCloseKey(hKey);
+    return TRUE;
+}
+
+BOOL
+SaveXYCoordWnd(IN HWND hWnd,
+               IN PPREFERENCES_CONTEXT PrefContext)
+{
+    HKEY hKey;
+    LONG lResult;
+    TCHAR DeviceMixerSettings[256];
+    WINDOWPLACEMENT wp;
+    
+    /* Get the placement coordinate data from the window */
+    wp.length = sizeof(WINDOWPLACEMENT);
+    GetWindowPlacement(hWnd, &wp);
+
+    /* Append the registry key path and device name key into one single string */
+    StringCchPrintf(DeviceMixerSettings, _countof(DeviceMixerSettings), TEXT("%s\\%s"), AppRegSettings, PrefContext->DeviceName);
+
+    lResult = RegOpenKeyEx(HKEY_CURRENT_USER,
+                           DeviceMixerSettings,
+                           0,
+                           KEY_SET_VALUE,
+                           &hKey);
+    if (lResult != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    lResult = RegSetValueEx(hKey,
+                            TEXT("X"),
+                            0,
+                            REG_DWORD,
+                            (LPBYTE)&wp.rcNormalPosition.left,
+                            sizeof(wp.rcNormalPosition.left));
+    if (lResult != ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    lResult = RegSetValueEx(hKey,
+                            TEXT("Y"),
+                            0,
+                            REG_DWORD,
+                            (LPBYTE)&wp.rcNormalPosition.top,
+                            sizeof(wp.rcNormalPosition.top));
+    if (lResult != ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    RegCloseKey(hKey);
+    return TRUE;
+}
+
+BOOL
 WriteLineConfig(IN LPTSTR szDeviceName,
                 IN LPTSTR szLineName,
                 IN PSNDVOL_REG_LINESTATE LineState,

@@ -221,25 +221,16 @@ PortClsPower(
     // get currrent stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (IoStack->MinorFunction != IRP_MN_SET_POWER && IoStack->MinorFunction != IRP_MN_QUERY_POWER)
-    {
-        // just forward the request
-        Status = PcForwardIrpSynchronous(DeviceObject, Irp);
-
-        // start next power irp
-        PoStartNextPowerIrp(Irp);
-
-        // complete request
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-        // done
-        return Status;
-    }
-
-
     // get device extension
     DeviceExtension = (PPCLASS_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+
+    if (IoStack->MinorFunction != IRP_MN_SET_POWER && IoStack->MinorFunction != IRP_MN_QUERY_POWER)
+    {
+        // forward unknown requests down the stack and forget
+        PoStartNextPowerIrp(Irp);
+        IoSkipCurrentIrpStackLocation(Irp);
+        return PoCallDriver(DeviceExtension->PrevDeviceObject, Irp);
+    }
 
     // get current request type
     if (IoStack->Parameters.Power.Type == DevicePowerState)
@@ -250,8 +241,10 @@ PortClsPower(
             // nothing has changed
             if (IoStack->MinorFunction == IRP_MN_QUERY_POWER)
             {
-                // only forward query requests
-                Status = PcForwardIrpSynchronous(DeviceObject, Irp);
+                // only forward query requests; we can forget about them
+                PoStartNextPowerIrp(Irp);
+                IoSkipCurrentIrpStackLocation(Irp);
+                return PoCallDriver(DeviceExtension->PrevDeviceObject, Irp);
             }
 
             // start next power irp
@@ -274,22 +267,20 @@ PortClsPower(
                 PowerState = IoStack->Parameters.Power.State;
                 Status = DeviceExtension->AdapterPowerManagement->QueryPowerChangeState(PowerState);
 
-                // sanity check
-                PC_ASSERT(Status == STATUS_SUCCESS);
+                if (!NT_SUCCESS(Status))
+                {
+                    // fail the IRP if the adapter power manager failed
+                    PoStartNextPowerIrp(Irp);
+                    Irp->IoStatus.Status = Status;
+                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    return Status;
+                }
             }
 
             // only forward query requests
-            PcForwardIrpSynchronous(DeviceObject, Irp);
-
-            // start next power irp
             PoStartNextPowerIrp(Irp);
-
-            // complete request
-            Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-            // done
-            return Status;
+            IoSkipCurrentIrpStackLocation(Irp);
+            return PoCallDriver(DeviceExtension->PrevDeviceObject, Irp);
         }
         else
         {
@@ -340,7 +331,7 @@ PortClsPower(
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
                 // done
-                return Status;
+                return STATUS_PENDING;
             }
 
             // setup power context
@@ -359,7 +350,7 @@ PortClsPower(
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
                 // done
-                return Status;
+                return STATUS_PENDING;
             }
 
             // done
@@ -371,17 +362,9 @@ PortClsPower(
             DeviceExtension->SystemPowerState = IoStack->Parameters.Power.State.SystemState;
 
             // only forward query requests
-            Status = PcForwardIrpSynchronous(DeviceObject, Irp);
-
-            // start next power irp
             PoStartNextPowerIrp(Irp);
-
-            // complete request
-            Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-            // done
-            return Status;
+            IoSkipCurrentIrpStackLocation(Irp);
+            return PoCallDriver(DeviceExtension->PrevDeviceObject, Irp);
         }
     }
 }

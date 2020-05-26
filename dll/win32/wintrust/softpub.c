@@ -210,12 +210,31 @@ static DWORD SOFTPUB_GetMessageFromFile(CRYPT_PROVIDER_DATA *data, HANDLE file,
     return err;
 }
 
+static BOOL hash_file_data( HANDLE file, DWORD start, DWORD end, HCRYPTHASH hash )
+{
+    DWORD bytes_read, size = end - start;
+    DWORD buffer_size = min( size, 1024*1024 );
+    BYTE *buffer = HeapAlloc( GetProcessHeap(), 0, buffer_size );
+
+    if (!buffer) return FALSE;
+    SetFilePointer( file, start, NULL, FILE_BEGIN );
+    while (size)
+    {
+        if (!ReadFile( file, buffer, min( buffer_size, size ), &bytes_read, NULL )) break;
+        if (!bytes_read) break;
+        if (!CryptHashData( hash, buffer, bytes_read, 0 )) break;
+        size -= bytes_read;
+    }
+    HeapFree( GetProcessHeap(), 0, buffer );
+    return !size;
+}
+
 /* See https://www.cs.auckland.ac.nz/~pgut001/pubs/authenticode.txt
  * for details about the hashing.
  */
 static BOOL SOFTPUB_HashPEFile(HANDLE file, HCRYPTHASH hash)
 {
-    DWORD pos, checksum, security_dir;
+    DWORD checksum, security_dir;
     IMAGE_DOS_HEADER dos_header;
     union
     {
@@ -225,7 +244,6 @@ static BOOL SOFTPUB_HashPEFile(HANDLE file, HCRYPTHASH hash)
     IMAGE_DATA_DIRECTORY secdir;
     LARGE_INTEGER file_size;
     DWORD bytes_read;
-    BYTE buffer[1024];
     BOOL ret;
 
     if (!GetFileSizeEx(file, &file_size))
@@ -237,10 +255,7 @@ static BOOL SOFTPUB_HashPEFile(HANDLE file, HCRYPTHASH hash)
         return FALSE;
 
     if (dos_header.e_magic != IMAGE_DOS_SIGNATURE)
-    {
-        ERR("Unrecognized IMAGE_DOS_HEADER magic %04x\n", dos_header.e_magic);
         return FALSE;
-    }
     if (dos_header.e_lfanew >= 256 * 1024 * 1024) /* see RtlImageNtHeaderEx */
         return FALSE;
     if (dos_header.e_lfanew + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader.MajorLinkerVersion) > file_size.QuadPart)
@@ -253,10 +268,7 @@ static BOOL SOFTPUB_HashPEFile(HANDLE file, HCRYPTHASH hash)
         return FALSE;
 
     if (nt_header.nt32.Signature != IMAGE_NT_SIGNATURE)
-    {
-        ERR("Unrecognized IMAGE_NT_HEADERS signature %08x\n", nt_header.nt32.Signature);
         return FALSE;
-    }
 
     if (nt_header.nt32.OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC)
     {
@@ -277,10 +289,7 @@ static BOOL SOFTPUB_HashPEFile(HANDLE file, HCRYPTHASH hash)
         secdir       = nt_header.nt64.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY];
     }
     else
-    {
-        ERR("Unrecognized OptionalHeader magic %04x\n", nt_header.nt32.OptionalHeader.Magic);
         return FALSE;
-    }
 
     if (secdir.VirtualAddress < security_dir + sizeof(IMAGE_DATA_DIRECTORY))
         return FALSE;
@@ -289,40 +298,10 @@ static BOOL SOFTPUB_HashPEFile(HANDLE file, HCRYPTHASH hash)
     if (secdir.VirtualAddress + secdir.Size != file_size.QuadPart)
         return FALSE;
 
-    /* Hash until checksum. */
-    SetFilePointer(file, 0, NULL, FILE_BEGIN);
-    for (pos = 0; pos < checksum; pos += bytes_read)
-    {
-        ret = ReadFile(file, buffer, min(sizeof(buffer), checksum - pos), &bytes_read, NULL);
-        if (!ret || !bytes_read)
-            return FALSE;
-        if (!CryptHashData(hash, buffer, bytes_read, 0))
-            return FALSE;
-    }
-
-    /* Hash until the DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY] entry. */
-    checksum += sizeof(DWORD);
-    SetFilePointer(file, checksum, NULL, FILE_BEGIN);
-    for (pos = checksum; pos < security_dir; pos += bytes_read)
-    {
-        ret = ReadFile(file, buffer, min(sizeof(buffer), security_dir - pos), &bytes_read, NULL);
-        if (!ret || !bytes_read)
-            return FALSE;
-        if (!CryptHashData(hash, buffer, bytes_read, 0))
-            return FALSE;
-    }
-
-    /* Hash until the end of the file. */
-    security_dir += sizeof(IMAGE_DATA_DIRECTORY);
-    SetFilePointer(file, security_dir, NULL, FILE_BEGIN);
-    for (pos = security_dir; pos < secdir.VirtualAddress; pos += bytes_read)
-    {
-        ret = ReadFile(file, buffer, min(sizeof(buffer), secdir.VirtualAddress - pos), &bytes_read, NULL);
-        if (!ret || !bytes_read)
-            return FALSE;
-        if (!CryptHashData(hash, buffer, bytes_read, 0))
-            return FALSE;
-    }
+    if (!hash_file_data( file, 0, checksum, hash )) return FALSE;
+    if (!hash_file_data( file, checksum + sizeof(DWORD), security_dir, hash )) return FALSE;
+    if (!hash_file_data( file, security_dir + sizeof(IMAGE_DATA_DIRECTORY), secdir.VirtualAddress, hash ))
+        return FALSE;
 
     return TRUE;
 }
@@ -716,11 +695,9 @@ static LPCSTR filetime_to_str(const FILETIME *time)
 
     if (!time) return NULL;
 
-    GetLocaleInfoA(LOCALE_SYSTEM_DEFAULT, LOCALE_SSHORTDATE, dateFmt,
-     sizeof(dateFmt) / sizeof(dateFmt[0]));
+    GetLocaleInfoA(LOCALE_SYSTEM_DEFAULT, LOCALE_SSHORTDATE, dateFmt, ARRAY_SIZE(dateFmt));
     FileTimeToSystemTime(time, &sysTime);
-    GetDateFormatA(LOCALE_SYSTEM_DEFAULT, 0, &sysTime, dateFmt, date,
-     sizeof(date) / sizeof(date[0]));
+    GetDateFormatA(LOCALE_SYSTEM_DEFAULT, 0, &sysTime, dateFmt, date, ARRAY_SIZE(date));
     return date;
 }
 

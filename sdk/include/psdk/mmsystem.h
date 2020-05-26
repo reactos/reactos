@@ -1151,12 +1151,12 @@ typedef struct midihdr_tag {
 	LPSTR lpData;
 	DWORD dwBufferLength;
 	DWORD dwBytesRecorded;
-	DWORD dwUser;
+	DWORD_PTR dwUser;
 	DWORD dwFlags;
 	struct midihdr_tag *lpNext;
-	DWORD reserved;
+	DWORD_PTR reserved;
 	DWORD dwOffset;
-	DWORD dwReserved[8];
+	DWORD_PTR dwReserved[8];
 } MIDIHDR,*PMIDIHDR,*LPMIDIHDR;
 
 typedef struct midievent_tag {
@@ -1234,7 +1234,7 @@ typedef struct tagMIXERLINEA {
 	DWORD dwSource;
 	DWORD dwLineID;
 	DWORD fdwLine;
-	DWORD dwUser;
+	DWORD_PTR dwUser;
 	DWORD dwComponentType;
 	DWORD cChannels;
 	DWORD cConnections;
@@ -1257,7 +1257,7 @@ typedef struct tagMIXERLINEW {
 	DWORD dwSource;
 	DWORD dwLineID;
 	DWORD fdwLine;
-	DWORD dwUser;
+	DWORD_PTR dwUser;
 	DWORD dwComponentType;
 	DWORD cChannels;
 	DWORD cConnections;
@@ -1693,16 +1693,26 @@ typedef struct tagMCI_WAVE_SET_PARMS {
 	DWORD dwAudio;
 	UINT wInput;
 	UINT wOutput;
+#ifdef _WIN64
+	DWORD wFormatTag;
+	DWORD nChannels;
+#else
 	WORD wFormatTag;
 	WORD wReserved2;
 	WORD nChannels;
 	WORD wReserved3;
+#endif
 	DWORD nSamplesPerSec;
 	DWORD nAvgBytesPerSec;
+#ifdef _WIN64
+	DWORD nBlockAlign;
+	DWORD wBitsPerSample;
+#else
 	WORD nBlockAlign;
 	WORD wReserved4;
 	WORD wBitsPerSample;
 	WORD wReserved5;
+#endif
 } MCI_WAVE_SET_PARMS,*PMCI_WAVE_SET_PARMS,*LPMCI_WAVE_SET_PARMS;
 
 typedef struct tagWAVEOUTCAPS2A {

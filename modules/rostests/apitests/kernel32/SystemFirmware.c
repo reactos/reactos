@@ -468,7 +468,7 @@ test_Functions()
         test_EnumBuffer(Entries[i].Signature, NULL, sizeof(Buffer), NULL, NULL,
                         Entries[i].ErrInsuff, Entries[i].ErrSuccess);
         // Test with wrong buffer
-        test_EnumBuffer(Entries[i].Signature, (PVOID *)0xbeeffeed, sizeof(Buffer), NULL, NULL,
+        test_EnumBuffer(Entries[i].Signature, (PVOID *)(LONG_PTR)0xbeeffeed, sizeof(Buffer), NULL, NULL,
                         Entries[i].ErrInsuff, Entries[i].ErrSuccess);
         // Test with correct buffer
         test_EnumBuffer(Entries[i].Signature, &Buffer, sizeof(Buffer), &TableCount[i], &FirstTableID[i],
@@ -482,7 +482,7 @@ test_Functions()
         test_GetBuffer(Entries[i].Signature, 0xbeeffeed, NULL, sizeof(Buffer),
                        TRUE, Entries[i].ErrInsuff, Entries[i].ErrSuccess);
         // Test with fake ID and wrong buffer
-        test_GetBuffer(Entries[i].Signature, 0xbeeffeed, (PVOID *)0xbeeffeed, sizeof(Buffer),
+        test_GetBuffer(Entries[i].Signature, 0xbeeffeed, (PVOID *)(LONG_PTR)0xbeeffeed, sizeof(Buffer),
                        TRUE, Entries[i].ErrInsuff, Entries[i].ErrSuccess);
         // Test with fake ID and correct buffer
         test_GetBuffer(Entries[i].Signature, 0xbeeffeed, &Buffer, sizeof(Buffer),
@@ -502,7 +502,7 @@ test_Functions()
         test_GetBuffer(Entries[i].Signature, FirstTableID[i], NULL, sizeof(Buffer),
                        FALSE, Entries[i].ErrInsuff, Entries[i].ErrSuccess);
         // Test with correct ID and wrong buffer
-        test_GetBuffer(Entries[i].Signature, FirstTableID[i], (PVOID *)0xbeeffeed, sizeof(Buffer),
+        test_GetBuffer(Entries[i].Signature, FirstTableID[i], (PVOID *)(LONG_PTR)0xbeeffeed, sizeof(Buffer),
                        FALSE, Entries[i].ErrInsuff, Entries[i].ErrSuccess);
         // Test with correct ID and correct buffer
         test_GetBuffer(Entries[i].Signature, FirstTableID[i], &Buffer, sizeof(Buffer),

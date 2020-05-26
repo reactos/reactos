@@ -103,16 +103,29 @@ static ULONG WINAPI InternetExplorer_Release(IWebBrowser2 *iface)
 static HRESULT WINAPI InternetExplorer_GetTypeInfoCount(IWebBrowser2 *iface, UINT *pctinfo)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, pctinfo);
+
+    *pctinfo = 1;
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetExplorer_GetTypeInfo(IWebBrowser2 *iface, UINT iTInfo, LCID lcid,
                                      LPTYPEINFO *ppTInfo)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%d %d %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    ITypeInfo *typeinfo;
+    HRESULT hres;
+
+    TRACE("(%p)->(%d %d %p)\n", This, iTInfo, lcid, ppTInfo);
+
+    hres = get_typeinfo(IWebBrowser2_tid, &typeinfo);
+    if(FAILED(hres))
+        return hres;
+
+    ITypeInfo_AddRef(typeinfo);
+    *ppTInfo = typeinfo;
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetExplorer_GetIDsOfNames(IWebBrowser2 *iface, REFIID riid,
@@ -120,9 +133,17 @@ static HRESULT WINAPI InternetExplorer_GetIDsOfNames(IWebBrowser2 *iface, REFIID
                                        LCID lcid, DISPID *rgDispId)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%s %p %d %d %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-            lcid, rgDispId);
-    return E_NOTIMPL;
+    ITypeInfo *typeinfo;
+    HRESULT hres;
+
+    TRACE("(%p)->(%s %p %d %d %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+          lcid, rgDispId);
+
+    hres = get_typeinfo(IWebBrowser2_tid, &typeinfo);
+    if(FAILED(hres))
+        return hres;
+
+    return ITypeInfo_GetIDsOfNames(typeinfo, rgszNames, cNames, rgDispId);
 }
 
 static HRESULT WINAPI InternetExplorer_Invoke(IWebBrowser2 *iface, DISPID dispIdMember,
@@ -131,9 +152,18 @@ static HRESULT WINAPI InternetExplorer_Invoke(IWebBrowser2 *iface, DISPID dispId
                                 EXCEPINFO *pExepInfo, UINT *puArgErr)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%d %s %d %08x %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+    ITypeInfo *typeinfo;
+    HRESULT hres;
+
+    TRACE("(%p)->(%d %s %d %08x %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
             lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
-    return E_NOTIMPL;
+
+    hres = get_typeinfo(IWebBrowser2_tid, &typeinfo);
+    if(FAILED(hres))
+        return hres;
+
+    return ITypeInfo_Invoke(typeinfo, &This->IWebBrowser2_iface, dispIdMember, wFlags, pDispParams,
+            pVarResult, pExepInfo, puArgErr);
 }
 
 static HRESULT WINAPI InternetExplorer_GoBack(IWebBrowser2 *iface)
@@ -318,8 +348,11 @@ static HRESULT WINAPI InternetExplorer_get_LocationURL(IWebBrowser2 *iface, BSTR
 static HRESULT WINAPI InternetExplorer_get_Busy(IWebBrowser2 *iface, VARIANT_BOOL *pBool)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%p)\n", This, pBool);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, pBool);
+
+    *pBool = This->doc_host.busy;
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetExplorer_Quit(IWebBrowser2 *iface)

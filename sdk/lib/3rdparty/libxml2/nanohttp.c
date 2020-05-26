@@ -1143,12 +1143,12 @@ xmlNanoHTTPConnectHost(const char *host, int port)
 
 	    switch (h_errno) {
 		case HOST_NOT_FOUND:
-		    h_err_txt = "Authoritive host not found";
+		    h_err_txt = "Authoritative host not found";
 		    break;
 
 		case TRY_AGAIN:
 		    h_err_txt =
-			"Non-authoritive host not found or server failure.";
+			"Non-authoritative host not found or server failure.";
 		    break;
 
 		case NO_RECOVERY:

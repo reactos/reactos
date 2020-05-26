@@ -400,6 +400,7 @@ static INT_PTR CALLBACK
 ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     INT Index;
+    LVITEM Item;
 
     switch (uMsg)
     {
@@ -433,7 +434,6 @@ ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     }
                     else
                     {
-                        LVITEM Item;
                         PWSTR pts;
 
                         ZeroMemory(&Item, sizeof(LV_ITEM));
@@ -453,9 +453,6 @@ ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_DESTROY:
         {
-            INT Index;
-            LVITEM Item;
-
             for (Index = ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_PROBELIST)); --Index > 0;)
             {
                 ZeroMemory(&Item, sizeof(LV_ITEM));

@@ -430,7 +430,7 @@ BEGIN
     IDS_MSG_UNABLEDEBUGPROCESS "Ute av stand til feilsøking prosess"
     IDS_MSG_WARNINGDEBUG "ADVARSEL: Feilretning denne prosess kan følge å miste data.\nEr du sikker du vil tilknytte feilsøkingsprogramet?"
     IDS_MSG_TASKMGRWARNING "Oppgavebehandler advarsel"
-    IDS_MSG_WARNINGTERMINATING "ADVARSEL: Avsluttes en prosess kan forutsake uønsket\nresultat inkluderer miste av data og systemet kan bli ustabilt. \nprosessen vil ikke kunne gjenopprette sin tilstand eller \ndata slik de var før avslutting. Er du sikker på at du vil\navslutte prosessen?"
+    IDS_MSG_WARNINGTERMINATING "ADVARSEL: Avsluttes en prosess kan forutsake uønsket\nresultat inkluderer miste av data og systemet kan bli ustabilt.\nprosessen vil ikke kunne gjenopprette sin tilstand eller\ndata slik de var før avslutting. Er du sikker på at du vil\navslutte prosessen?"
     IDS_MSG_UNABLETERMINATEPRO "Ikke i stand til å avslutte prosess"
     IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Ikke i stand til endre prioritet"

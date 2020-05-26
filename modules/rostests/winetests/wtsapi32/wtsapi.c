@@ -47,21 +47,21 @@ static void test_WTSEnumerateProcessesW(void)
     ret = WTSEnumerateProcessesW(WTS_CURRENT_SERVER_HANDLE, 1, 1, &info, &count);
     ok(!ret, "expected WTSEnumerateProcessesW to fail\n");
     ok(GetLastError()== ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got: %d\n", GetLastError());
-    if (info) WTSFreeMemory(info);
+    WTSFreeMemory(info);
 
     info = NULL;
     SetLastError(0xdeadbeef);
     ret = WTSEnumerateProcessesW(WTS_CURRENT_SERVER_HANDLE, 0, 0, &info, &count);
     ok(!ret, "expected WTSEnumerateProcessesW to fail\n");
     ok(GetLastError()== ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got: %d\n", GetLastError());
-    if (info) WTSFreeMemory(info);
+    WTSFreeMemory(info);
 
     info = NULL;
     SetLastError(0xdeadbeef);
     ret = WTSEnumerateProcessesW(WTS_CURRENT_SERVER_HANDLE, 0, 2, &info, &count);
     ok(!ret, "expected WTSEnumerateProcessesW to fail\n");
     ok(GetLastError()== ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got: %d\n", GetLastError());
-    if (info) WTSFreeMemory(info);
+    WTSFreeMemory(info);
 
     SetLastError(0xdeadbeef);
     ret = WTSEnumerateProcessesW(WTS_CURRENT_SERVER_HANDLE, 0, 1, NULL, &count);
@@ -73,7 +73,7 @@ static void test_WTSEnumerateProcessesW(void)
     ret = WTSEnumerateProcessesW(WTS_CURRENT_SERVER_HANDLE, 0, 1, &info, NULL);
     ok(!ret, "expected WTSEnumerateProcessesW to fail\n");
     ok(GetLastError()== ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got: %d\n", GetLastError());
-    if (info) WTSFreeMemory(info);
+    WTSFreeMemory(info);
 
     count = 0;
     info = NULL;
@@ -86,10 +86,37 @@ static void test_WTSEnumerateProcessesW(void)
         found = found || !lstrcmpW(pname, info[i].pProcessName);
     }
     ok(found || broken(!ret), "process name %s not found\n", wine_dbgstr_w(pname));
-    if (info) WTSFreeMemory(info);
+    WTSFreeMemory(info);
+}
+
+static void test_WTSQuerySessionInformationW(void)
+{
+    BOOL ret;
+    WCHAR *buf;
+    DWORD count;
+
+    count = 0;
+    buf = NULL;
+    ret = WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE, WTS_CURRENT_SESSION, WTSUserName, &buf, &count);
+    ok(ret, "got %u\n", GetLastError());
+    ok(buf != NULL, "buf not set\n");
+    ok(count == (lstrlenW(buf) + 1) * sizeof(WCHAR), "got %u\n", count);
+    WTSFreeMemory(buf);
+}
+
+static void test_WTSQueryUserToken(void)
+{
+    BOOL ret;
+
+    SetLastError(0xdeadbeef);
+    ret = WTSQueryUserToken(WTS_CURRENT_SESSION, NULL);
+    ok(!ret, "expected WTSQueryUserToken to fail\n");
+    ok(GetLastError()==ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got: %d\n", GetLastError());
 }
 
 START_TEST (wtsapi)
 {
     test_WTSEnumerateProcessesW();
+    test_WTSQuerySessionInformationW();
+    test_WTSQueryUserToken();
 }

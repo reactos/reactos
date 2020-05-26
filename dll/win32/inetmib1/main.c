@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -319,7 +318,7 @@ static DWORD oidToIpAddr(AsnObjectIdentifier *oid)
 }
 
 typedef void (*oidToKeyFunc)(AsnObjectIdentifier *oid, void *dst);
-typedef int (*compareFunc)(const void *key, const void *value);
+typedef int (__cdecl *compareFunc)(const void *key, const void *value);
 
 /* Finds the first value in the table that matches key.  Returns its 1-based
  * index if found, or 0 if not found.
@@ -770,7 +769,7 @@ static void oidToIpAddrRow(AsnObjectIdentifier *oid, void *dst)
     row->dwAddr = oidToIpAddr(oid);
 }
 
-static int compareIpAddrRow(const void *a, const void *b)
+static int __cdecl compareIpAddrRow(const void *a, const void *b)
 {
     const MIB_IPADDRROW *key = a, *value = b;
 
@@ -863,7 +862,7 @@ static void oidToIpForwardRow(AsnObjectIdentifier *oid, void *dst)
     row->dwForwardDest = oidToIpAddr(oid);
 }
 
-static int compareIpForwardRow(const void *a, const void *b)
+static int __cdecl compareIpForwardRow(const void *a, const void *b)
 {
     const MIB_IPFORWARDROW *key = a, *value = b;
 
@@ -1221,7 +1220,7 @@ static void oidToUdpRow(AsnObjectIdentifier *oid, void *dst)
     row->dwLocalPort = oid->ids[4];
 }
 
-static int compareUdpRow(const void *a, const void *b)
+static int __cdecl compareUdpRow(const void *a, const void *b)
 {
     const MIB_UDPROW *key = a, *value = b;
     int ret;

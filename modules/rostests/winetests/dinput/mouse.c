@@ -152,15 +152,20 @@ else {
     ok(hr == S_OK && cnt > 0, "GetDeviceData() failed: %08x cnt:%d\n", hr, cnt);
 
     mouse_event(MOUSEEVENTF_MOVE, 10, 10, 0, 0);
-    IDirectInputDevice_Unacquire(pMouse);
+    hr = IDirectInputDevice_Unacquire(pMouse);
+    ok(hr == S_OK, "Failed: %08x\n", hr);
     cnt = 1;
     hr = IDirectInputDevice_GetDeviceData(pMouse, sizeof(mouse_state), &mouse_state, &cnt, 0);
     ok(hr == S_OK && cnt > 0, "GetDeviceData() failed: %08x cnt:%d\n", hr, cnt);
 
-    IDirectInputDevice_Acquire(pMouse);
+    hr = IDirectInputDevice_Acquire(pMouse);
+    ok(hr == S_OK, "Failed: %08x\n", hr);
     mouse_event(MOUSEEVENTF_MOVE, 10, 10, 0, 0);
-    IDirectInputDevice_Unacquire(pMouse);
-    IDirectInputDevice_Acquire(pMouse);
+    hr = IDirectInputDevice_Unacquire(pMouse);
+    ok(hr == S_OK, "Failed: %08x\n", hr);
+
+    hr = IDirectInputDevice_Acquire(pMouse);
+    ok(hr == S_OK, "Failed: %08x\n", hr);
     cnt = 1;
     hr = IDirectInputDevice_GetDeviceData(pMouse, sizeof(mouse_state), &mouse_state, &cnt, 0);
     ok(hr == S_OK && cnt > 0, "GetDeviceData() failed: %08x cnt:%d\n", hr, cnt);
@@ -202,6 +207,65 @@ else {
     DestroyWindow( hwnd2 );
 }
 
+static void test_GetDeviceInfo(IDirectInputA *pDI)
+{
+    HRESULT hr;
+    IDirectInputDeviceA *pMouse = NULL;
+    DIDEVICEINSTANCEA instA;
+    DIDEVICEINSTANCE_DX3A inst3A;
+
+    hr = IDirectInput_CreateDevice(pDI, &GUID_SysMouse, &pMouse, NULL);
+    ok(SUCCEEDED(hr), "IDirectInput_CreateDevice() failed: %08x\n", hr);
+    if (FAILED(hr)) return;
+
+    instA.dwSize = sizeof(instA);
+    hr = IDirectInputDevice_GetDeviceInfo(pMouse, &instA);
+    ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+    inst3A.dwSize = sizeof(inst3A);
+    hr = IDirectInputDevice_GetDeviceInfo(pMouse, (DIDEVICEINSTANCEA *)&inst3A);
+    ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+    ok(instA.dwSize != inst3A.dwSize, "got %d, %d \n", instA.dwSize, inst3A.dwSize);
+    ok(IsEqualGUID(&instA.guidInstance, &inst3A.guidInstance), "got %s, %s\n",
+            wine_dbgstr_guid(&instA.guidInstance), wine_dbgstr_guid(&inst3A.guidInstance) );
+    ok(IsEqualGUID(&instA.guidProduct, &inst3A.guidProduct), "got %s, %s\n",
+            wine_dbgstr_guid(&instA.guidProduct), wine_dbgstr_guid(&inst3A.guidProduct) );
+    ok(instA.dwDevType == inst3A.dwDevType, "got %d, %d\n", instA.dwDevType, inst3A.dwDevType);
+
+    IUnknown_Release(pMouse);
+}
+
+static BOOL CALLBACK EnumAxes(const DIDEVICEOBJECTINSTANCEA *pdidoi, void *pContext)
+{
+    if (IsEqualIID(&pdidoi->guidType, &GUID_XAxis) ||
+        IsEqualIID(&pdidoi->guidType, &GUID_YAxis) ||
+        IsEqualIID(&pdidoi->guidType, &GUID_ZAxis))
+    {
+        ok(pdidoi->dwFlags & DIDOI_ASPECTPOSITION, "Missing DIDOI_ASPECTPOSITION, flags are 0x%x\n",
+            pdidoi->dwFlags);
+    }
+    else
+        ok(pdidoi->dwFlags == 0, "Flags are 0x%x\n", pdidoi->dwFlags);
+
+    return DIENUM_CONTINUE;
+}
+
+static void test_mouse_EnumObjects(IDirectInputA *pDI)
+{
+    HRESULT hr;
+    IDirectInputDeviceA *pMouse = NULL;
+
+    hr = IDirectInput_CreateDevice(pDI, &GUID_SysMouse, &pMouse, NULL);
+    ok(SUCCEEDED(hr), "IDirectInput_CreateDevice() failed: %08x\n", hr);
+    if (FAILED(hr)) return;
+
+    hr = IDirectInputDevice_EnumObjects(pMouse, EnumAxes, NULL, DIDFT_ALL);
+    ok(hr==DI_OK,"IDirectInputDevice_EnumObjects() failed: %08x\n", hr);
+
+    if (pMouse) IUnknown_Release(pMouse);
+}
+
 static void mouse_tests(void)
 {
     HRESULT hr;
@@ -228,6 +292,8 @@ static void mouse_tests(void)
 
         test_set_coop(pDI, hwnd);
         test_acquire(pDI, hwnd);
+        test_GetDeviceInfo(pDI);
+        test_mouse_EnumObjects(pDI);
 
         DestroyWindow(hwnd);
     }

@@ -26,8 +26,8 @@ CAPTION "Përgjithshëm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 202, 2000, 7, 7, 20, 20
-    LTEXT "Vendndodhja &emri:", -1, 35, 11, 56, 8, SS_CENTERIMAGE
-    EDITTEXT 1038, 96, 8, 149, 14, ES_AUTOHSCROLL
+    LTEXT "Vendndodhja &emri:", -1, 35, 11, 61, 8, SS_CENTERIMAGE
+    EDITTEXT 1038, 101, 8, 144, 14, ES_AUTOHSCROLL
     LTEXT "Specifikoni vendin nga të cili ju do të formoni numrin.", 2001, 7, 33, 238, 8
     LTEXT "Shteti/&rajon:", -1, 7, 49, 161, 8
     COMBOBOX 1006, 7, 60, 175, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
@@ -72,7 +72,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Kartë Thirrje"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Zgjidhni kartë e thirrjeve që ju do të përdorni, ose kliko E're për të shtuar një kartë tjetër.", 2000, 7, 7, 238, 8
+    LTEXT "Zgjidhni kartë e thirrjeve që ju do të përdorni, ose kliko E're për të shtuar një kartë tjetër.", 2000, 7, 7, 238, 16
     LTEXT "&Tipi Kartës:", -1, 7, 23, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
     PUSHBUTTON "&E're...", 1030, 87, 103, 50, 14
@@ -97,7 +97,7 @@ CAPTION "Përgjithshëm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 203, 2000, 7, 7, 20, 20
-    LTEXT "Emri Kartës Thirrëse:", -1, 35, 12, 64, 8, SS_CENTERIMAGE
+    LTEXT "Emri Kartës Thirrëse:", -1, 35, 12, 69, 8, SS_CENTERIMAGE
     EDITTEXT 1047, 105, 9, 140, 14, ES_AUTOHSCROLL
     LTEXT "Numri llogarisë:", -1, 7, 35, 238, 8
     EDITTEXT 1018, 7, 46, 116, 14, ES_AUTOHSCROLL
@@ -180,9 +180,9 @@ CAPTION "Rregulli i Ri Pre-Fiksit"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Ky pre-fiks i zonës do të aplikohet vetëm për thirrjet e bëra në pre-fiksin dhe kombinimi pre-fiksi që ke dhënë më poshtë.", 2000, 7, 6, 238, 16
-    LTEXT "Prefiksi i rrethit që jeni duke thirrur:", -1, 7, 31, 110, 8
-    LTEXT "Prefiksi i zonës:", -1, 7, 47, 36, 8
-    EDITTEXT 1034, 46, 44, 50, 14, ES_AUTOHSCROLL
+    LTEXT "Prefiksi i rrethit që jeni duke thirrur:", -1, 7, 31, 115, 8
+    LTEXT "Prefiksi i zonës:", -1, 7, 47, 50, 8
+    EDITTEXT 1034, 60, 44, 50, 14, ES_AUTOHSCROLL
     LTEXT "Specifiko the pre-fiksin për tu përdorur në këtë rregull pre-fiks zonë.", -1, 14, 78, 224, 8
     AUTORADIOBUTTON "&Përfshij të gjithë pre-fikset pre-fiks i rrethit", 1014, 14, 90, 224, 12, NOT WS_TABSTOP
     AUTORADIOBUTTON "Përfshij &vetëm pre-fikset në listën poshtë:", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
@@ -229,7 +229,7 @@ BEGIN
     AUTORADIOBUTTON "Prisni për një gjatësi specifik të kohës:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
     EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
-    LTEXT "&sekonda", -1, 58, 81, 187, 8
+    LTEXT "&sekonda", -1, 58, 79, 187, 8
     DEFPUSHBUTTON "OK", 1, 141, 103, 50, 14
     PUSHBUTTON "Anulo", 2, 195, 103, 50, 14
 END
@@ -254,7 +254,7 @@ CAPTION "Përparuar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "Ofruesit e mëposhtme telefonisë janë instaluar në këtë kompjuter:", -1, 40, 7, 205, 8
+    LTEXT "Ofruesit e mëposhtme telefonisë janë instaluar në këtë kompjuter:", -1, 40, 7, 205, 16
     LTEXT "&Ofruesit:", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
     PUSHBUTTON "Shto...", 1005, 87, 197, 50, 14
@@ -262,16 +262,16 @@ BEGIN
     PUSHBUTTON "&Konfiguro...", 1031, 195, 197, 50, 14
 END
 
-114 DIALOGEX 20, 15, 252, 127
+114 DIALOGEX 20, 15, 252, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Shto Ofrues"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Zgjidhni ofruesin që ju dëshironi të instaloni nga lista më poshtë, dhe klikoni Shto.", 2000, 7, 7, 241, 8
-    LTEXT "&Ofrues Telefonie:", -1, 7, 23, 144, 10
-    LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "&Shto", 1005, 141, 106, 50, 14
-    DEFPUSHBUTTON "Anulo", 2, 195, 106, 50, 14
+    LTEXT "Zgjidhni ofruesin që ju dëshironi të instaloni nga lista më poshtë, dhe klikoni Shto.", 2000, 7, 7, 241, 16
+    LTEXT "&Ofrues Telefonie:", -1, 7, 31, 144, 10
+    LISTBOX 1055, 7, 42, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "&Shto", 1005, 141, 114, 50, 14
+    DEFPUSHBUTTON "Anulo", 2, 195, 114, 50, 14
 END
 
 115 DIALOGEX 10, 10, 303, 228

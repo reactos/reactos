@@ -962,6 +962,7 @@ bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unkno
 
 /*
  * @implemented
+ * Synchronized with WINE dlls/gdi32/driver.c
  */
 DEVMODEW *
 WINAPI
@@ -986,15 +987,19 @@ GdiConvertToDevmodeW(const DEVMODEA *dmA)
     dmW = HeapAlloc(GetProcessHeap(), 0, dmW_size + dmA->dmDriverExtra);
     if (!dmW) return NULL;
 
-    MultiByteToWideChar(CP_ACP, 0, (const char*) dmA->dmDeviceName, CCHDEVICENAME,
-                        dmW->dmDeviceName, CCHDEVICENAME);
+    MultiByteToWideChar(CP_ACP, 0, (const char*) dmA->dmDeviceName, -1,
+                                   dmW->dmDeviceName, CCHDEVICENAME);
     /* copy slightly more, to avoid long computations */
     memcpy(&dmW->dmSpecVersion, &dmA->dmSpecVersion, dmA_size - CCHDEVICENAME);
 
     if (dmA_size >= FIELD_OFFSET(DEVMODEA, dmFormName) + CCHFORMNAME)
     {
-        MultiByteToWideChar(CP_ACP, 0, (const char*) dmA->dmFormName, CCHFORMNAME,
-                            dmW->dmFormName, CCHFORMNAME);
+        if (dmA->dmFields & DM_FORMNAME)
+            MultiByteToWideChar(CP_ACP, 0, (const char*) dmA->dmFormName, -1,
+                                       dmW->dmFormName, CCHFORMNAME);
+        else
+            dmW->dmFormName[0] = 0;
+
         if (dmA_size > FIELD_OFFSET(DEVMODEA, dmLogPixels))
             memcpy(&dmW->dmLogPixels, &dmA->dmLogPixels, dmA_size - FIELD_OFFSET(DEVMODEA, dmLogPixels));
     }

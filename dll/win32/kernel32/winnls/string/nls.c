@@ -28,10 +28,10 @@ static const char UTF8Length[128] =
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x90 - 0x9F */
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xA0 - 0xAF */
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0xB0 - 0xBF */
-   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0xC0 - 0xCF */
+   0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0xC0 - 0xCF */
    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, /* 0xD0 - 0xDF */
    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, /* 0xE0 - 0xEF */
-   3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 0, 0  /* 0xF0 - 0xFF */
+   3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0  /* 0xF0 - 0xFF */
 };
 
 /* First byte mask depending on UTF-8 sequence length. */
@@ -389,21 +389,27 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
         for (; MultiByteString < MbsEnd; WideCharCount++)
         {
             Char = *MultiByteString++;
-            if (Char < 0xC0)
+            if (Char < 0x80)
             {
                 TrailLength = 0;
                 continue;
             }
-            if (Char >= 0xF8 || (Char & 0xC0) == 0x80)
+            if ((Char & 0xC0) == 0x80)
             {
                 TrailLength = 0;
                 StringIsValid = FALSE;
                 continue;
             }
 
+            TrailLength = UTF8Length[Char - 0x80];
+            if (TrailLength == 0)
+            {
+                StringIsValid = FALSE;
+                continue;
+            }
+
             CharIsValid = TRUE;
             MbsPtrSave = MultiByteString;
-            TrailLength = UTF8Length[Char - 0x80];
             WideChar = Char & UTF8Mask[TrailLength];
 
             while (TrailLength && MultiByteString < MbsEnd)
@@ -427,9 +433,10 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
         if (TrailLength)
         {
             WideCharCount++;
+            StringIsValid = FALSE;
         }
 
-        if (Flags == MB_ERR_INVALID_CHARS && (!StringIsValid || TrailLength))
+        if (Flags == MB_ERR_INVALID_CHARS && !StringIsValid)
         {
             SetLastError(ERROR_NO_UNICODE_TRANSLATION);
             return 0;
@@ -449,16 +456,24 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
             TrailLength = 0;
             continue;
         }
-        if (Char >= 0xF8 || Char == 0x80 || (Char & 0xC0) == 0x80)
+        if ((Char & 0xC0) == 0x80)
         {
             *WideCharString++ = InvalidChar;
             TrailLength = 0;
+            StringIsValid = FALSE;
+            continue;
+        }
+
+        TrailLength = UTF8Length[Char - 0x80];
+        if (TrailLength == 0)
+        {
+            *WideCharString++ = InvalidChar;
+            StringIsValid = FALSE;
             continue;
         }
 
         CharIsValid = TRUE;
         MbsPtrSave = MultiByteString;
-        TrailLength = UTF8Length[Char - 0x80];
         WideChar = Char & UTF8Mask[TrailLength];
 
         while (TrailLength && MultiByteString < MbsEnd)
@@ -481,6 +496,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
         {
             *WideCharString++ = InvalidChar;
             MultiByteString = MbsPtrSave;
+            StringIsValid = FALSE;
         }
     }
 
@@ -638,14 +654,9 @@ IntMultiByteToWideCharCP(UINT CodePage,
                 continue;
             }
 
-            if (MultiByteString == MbsEnd)
+            if (MultiByteString == MbsEnd || *MultiByteString == 0)
             {
-                *WideCharString++ = MultiByteTable[Char];
-            }
-            else if (*MultiByteString == 0)
-            {
-                *WideCharString++ = UNICODE_NULL;
-                MultiByteString++;
+                *WideCharString++ = CodePageTable->UniDefaultChar;
             }
             else
             {

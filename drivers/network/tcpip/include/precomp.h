@@ -15,7 +15,9 @@
 #include <tilists.h>
 #include <lock.h>
 #include <interface.h>
+#include <fileobjs.h>
 #include <chew/chew.h>
 #include <pseh/pseh2.h>
+#include <psdk/ipexport.h>
 
 #endif /* _TCPIP_PCH_ */

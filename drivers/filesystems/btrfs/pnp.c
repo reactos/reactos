@@ -167,7 +167,7 @@ static NTSTATUS pnp_cancel_remove_device(PDEVICE_OBJECT DeviceObject) {
 
     Status = send_disks_pnp_message(Vcb, IRP_MN_CANCEL_REMOVE_DEVICE);
     if (!NT_SUCCESS(Status)) {
-        WARN("send_disks_pnp_message returned %08x\n", Status);
+        WARN("send_disks_pnp_message returned %08lx\n", Status);
         goto end;
     }
 
@@ -185,14 +185,15 @@ NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     ExAcquireResourceExclusiveLite(&Vcb->tree_lock, true);
 
     if (Vcb->root_fileref && Vcb->root_fileref->fcb && (Vcb->root_fileref->open_count > 0 || has_open_children(Vcb->root_fileref))) {
-        Status = STATUS_ACCESS_DENIED;
-        goto end;
+        ExReleaseResourceLite(&Vcb->tree_lock);
+        return STATUS_ACCESS_DENIED;
     }
 
     Status = send_disks_pnp_message(Vcb, IRP_MN_QUERY_REMOVE_DEVICE);
     if (!NT_SUCCESS(Status)) {
-        WARN("send_disks_pnp_message returned %08x\n", Status);
-        goto end;
+        WARN("send_disks_pnp_message returned %08lx\n", Status);
+        ExReleaseResourceLite(&Vcb->tree_lock);
+        return Status;
     }
 
     Vcb->removing = true;
@@ -203,17 +204,18 @@ NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         free_trees(Vcb);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("do_write returned %08x\n", Status);
-            goto end;
+            ERR("do_write returned %08lx\n", Status);
+            ExReleaseResourceLite(&Vcb->tree_lock);
+            return Status;
         }
     }
 
-
-    Status = STATUS_SUCCESS;
-end:
     ExReleaseResourceLite(&Vcb->tree_lock);
 
-    return Status;
+    if (Vcb->open_files == 0)
+        uninit(Vcb);
+
+    return STATUS_SUCCESS;
 }
 
 static NTSTATUS pnp_remove_device(PDEVICE_OBJECT DeviceObject) {
@@ -225,14 +227,14 @@ static NTSTATUS pnp_remove_device(PDEVICE_OBJECT DeviceObject) {
     Status = send_disks_pnp_message(Vcb, IRP_MN_REMOVE_DEVICE);
 
     if (!NT_SUCCESS(Status))
-        WARN("send_disks_pnp_message returned %08x\n", Status);
+        WARN("send_disks_pnp_message returned %08lx\n", Status);
 
     ExReleaseResourceLite(&Vcb->tree_lock);
 
     if (DeviceObject->Vpb->Flags & VPB_MOUNTED) {
         Status = FsRtlNotifyVolumeEvent(Vcb->root_file, FSRTL_VOLUME_DISMOUNT);
         if (!NT_SUCCESS(Status)) {
-            WARN("FsRtlNotifyVolumeEvent returned %08x\n", Status);
+            WARN("FsRtlNotifyVolumeEvent returned %08lx\n", Status);
         }
 
         if (Vcb->vde)
@@ -294,7 +296,10 @@ static NTSTATUS bus_query_device_relations(PIRP Irp) {
 
     le = pdo_list.Flink;
     while (le != &pdo_list) {
-        num_children++;
+        pdo_device_extension* pdode = CONTAINING_RECORD(le, pdo_device_extension, list_entry);
+
+        if (!pdode->dont_report)
+            num_children++;
 
         le = le->Flink;
     }
@@ -315,9 +320,11 @@ static NTSTATUS bus_query_device_relations(PIRP Irp) {
     while (le != &pdo_list) {
         pdo_device_extension* pdode = CONTAINING_RECORD(le, pdo_device_extension, list_entry);
 
-        ObReferenceObject(pdode->pdo);
-        dr->Objects[i] = pdode->pdo;
-        i++;
+        if (!pdode->dont_report) {
+            ObReferenceObject(pdode->pdo);
+            dr->Objects[i] = pdode->pdo;
+            i++;
+        }
 
         le = le->Flink;
     }
@@ -525,7 +532,7 @@ static NTSTATUS pdo_device_usage_notification(pdo_device_extension* pdode, PIRP 
                 KeWaitForSingleObject(&context.Event, Executive, KernelMode, false, NULL);
 
             if (!NT_SUCCESS(context.Status)) {
-                ERR("IoCallDriver returned %08x\n", context.Status);
+                ERR("IoCallDriver returned %08lx\n", context.Status);
                 ExReleaseResourceLite(&pdode->child_lock);
                 return context.Status;
             }
@@ -535,6 +542,29 @@ static NTSTATUS pdo_device_usage_notification(pdo_device_extension* pdode, PIRP 
     }
 
     ExReleaseResourceLite(&pdode->child_lock);
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS pdo_query_device_relations(PDEVICE_OBJECT pdo, PIRP Irp) {
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    PDEVICE_RELATIONS device_relations;
+
+    if (IrpSp->Parameters.QueryDeviceRelations.Type != TargetDeviceRelation)
+        return Irp->IoStatus.Status;
+
+    device_relations = ExAllocatePoolWithTag(PagedPool, sizeof(DEVICE_RELATIONS), ALLOC_TAG);
+    if (!device_relations) {
+        ERR("out of memory\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    device_relations->Count = 1;
+    device_relations->Objects[0] = pdo;
+
+    ObReferenceObject(pdo);
+
+    Irp->IoStatus.Information = (ULONG_PTR)device_relations;
 
     return STATUS_SUCCESS;
 }
@@ -559,6 +589,8 @@ static NTSTATUS pdo_pnp(PDEVICE_OBJECT pdo, PIRP Irp) {
         case IRP_MN_DEVICE_USAGE_NOTIFICATION:
             return pdo_device_usage_notification(pdode, Irp);
 
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+            return pdo_query_device_relations(pdo, Irp);
     }
 
     return Irp->IoStatus.Status;
@@ -650,7 +682,7 @@ end:
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
 exit:
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     if (top_level)
         IoSetTopLevelIrp(NULL);

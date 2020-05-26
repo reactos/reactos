@@ -3,7 +3,7 @@
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Xbox specific routines
  * COPYRIGHT:       Copyright 2004 Gé van Geldorp (gvg@reactos.com)
- *                  Copyright 2019 Stanislav Motylkov (x86corez@gmail.com)
+ *                  Copyright 2019-2020 Stanislav Motylkov (x86corez@gmail.com)
  *
  * REFERENCES:      https://xboxdevwiki.net/SMBus
  *                  https://github.com/XboxDev/cromwell/blob/master/drivers/pci/i2cio.c
@@ -16,6 +16,8 @@
 
 #include <hal.h>
 #include <ntdddisk.h>
+
+#define TAG_HAL_XBOX 'XlaH'
 
 #define SMB_IO_BASE 0xC000
 

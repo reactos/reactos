@@ -353,18 +353,9 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
             continue;
 
         /* JPP 19980807 */
-        /* Echo batch file line */
-        if (bEcho && !bDisableBatchEcho && Cmd->Type != C_QUIET)
-        {
-            if (!bIgnoreEcho)
-                ConOutChar(_T('\n'));
-            PrintPrompt();
-            EchoCommand(Cmd);
-            ConOutChar(_T('\n'));
-        }
-
+        /* Echo the command and execute it */
         bc->current = Cmd;
-        ret = ExecuteCommand(Cmd);
+        ret = ExecuteCommandWithEcho(Cmd);
         FreeCommand(Cmd);
     }
 

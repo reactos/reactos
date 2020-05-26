@@ -145,7 +145,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"ObjectSecurityMode",
@@ -153,7 +152,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"LUIDDeviceMapsDisabled",
@@ -161,7 +159,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"LSA",
         L"AuditBaseDirectories",
@@ -169,7 +166,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"LSA",
         L"AuditBaseObjects",
@@ -177,7 +173,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"LSA\\audit",
         L"ProcessAccessesToAudit",
@@ -185,7 +180,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"TimeZoneInformation",
         L"ActiveTimeBias",
@@ -193,7 +187,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"TimeZoneInformation",
         L"Bias",
@@ -201,7 +194,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"TimeZoneInformation",
         L"RealTimeIsUniversal",
@@ -209,7 +201,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"GlobalFlag",
@@ -217,7 +208,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"PagedPoolQuota",
@@ -225,7 +215,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"NonPagedPoolQuota",
@@ -233,7 +222,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"PagingFileQuota",
@@ -241,7 +229,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"AllocationPreference",
@@ -249,7 +236,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"DynamicMemory",
@@ -257,7 +243,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"Mirroring",
@@ -265,7 +250,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"SystemViewSize",
@@ -273,7 +257,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"SessionImageSize",
@@ -281,7 +264,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"SessionPoolSize",
@@ -289,7 +271,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"PoolUsageMaximum",
@@ -297,7 +278,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"MapAllocationFragment",
@@ -305,7 +285,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"PagedPoolSize",
@@ -313,7 +292,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"NonPagedPoolSize",
@@ -321,7 +299,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"NonPagedPoolMaximumPercent",
@@ -329,7 +306,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"LargeSystemCache",
@@ -337,7 +313,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"LargeStackSize",
@@ -345,7 +320,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"SystemPages",
@@ -353,7 +327,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"LowMemoryThreshold",
@@ -361,7 +334,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"HighMemoryThreshold",
@@ -369,7 +341,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"DisablePagingExecutive",
@@ -377,7 +348,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"ModifiedPageLife",
@@ -385,7 +355,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"SecondLevelDataCache",
@@ -393,7 +362,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"ClearPageFileAtShutdown",
@@ -401,7 +369,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"PoolTagSmallTableSize",
@@ -409,7 +376,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"PoolTagBigTableSize",
@@ -417,7 +383,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"PoolTag",
@@ -425,7 +390,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"PoolTagOverruns",
@@ -433,7 +397,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"SnapUnloads",
@@ -441,7 +404,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"ProtectNonPagedPool",
@@ -449,7 +411,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"TrackLockedPages",
@@ -457,7 +418,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"TrackPtes",
@@ -465,7 +425,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"VerifyDrivers",
@@ -473,7 +432,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         &MmVerifyDriverBufferLength,
         &MmVerifyDriverBufferType
     },
-
     {
         L"Session Manager\\Memory Management",
         L"VerifyDriverLevel",
@@ -481,7 +439,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"VerifyMode",
@@ -489,7 +446,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"LargePageMinimum",
@@ -497,7 +453,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"EnforceWriteProtection",
@@ -505,7 +460,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"MakeLowMemory",
@@ -513,7 +467,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"WriteWatch",
@@ -521,7 +474,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Memory Management",
         L"MinimumStackCommitInBytes",
@@ -529,7 +481,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Executive",
         L"AdditionalCriticalWorkerThreads",
@@ -537,7 +488,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Executive",
         L"AdditionalDelayedWorkerThreads",
@@ -545,7 +495,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Executive",
         L"PriorityQuantumMatrix",
@@ -553,7 +502,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         &DummyData,
         NULL
     },
-
     {
         L"Session Manager\\Kernel",
         L"DpcQueueDepth",
@@ -561,7 +509,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Kernel",
         L"MinimumDpcRate",
@@ -569,7 +516,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Kernel",
         L"AdjustDpcThreshold",
@@ -577,7 +523,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Kernel",
         L"IdealDpcRate",
@@ -585,7 +530,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Kernel",
         L"ObUnsecureGlobalNames",
@@ -593,7 +537,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         &ObpUnsecureGlobalNamesLength,
         NULL
     },
-
     {
         L"Session Manager\\I/O System",
         L"CountOperations",
@@ -601,7 +544,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\I/O System",
         L"LargeIrpStackLocations",
@@ -609,7 +551,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\I/O System",
         L"IoVerifierLevel",
@@ -617,7 +558,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"ResourceTimeoutCount",
@@ -625,7 +565,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"CriticalSectionTimeout",
@@ -633,7 +572,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"HeapSegmentReserve",
@@ -648,7 +586,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"HeapDeCommitTotalFreeThreshold",
@@ -656,7 +593,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"HeapDeCommitFreeBlockThreshold",
@@ -664,7 +600,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"ProductOptions",
         L"ProductType",
@@ -672,7 +607,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Terminal Server",
         L"TSEnabled",
@@ -680,7 +614,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Terminal Server",
         L"TSAppCompat",
@@ -697,7 +630,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         &CmSuiteBufferLength,
         &CmSuiteBufferType
     },
-
     {
         L"Windows",
         L"CSDVersion",
@@ -705,7 +637,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Windows",
         L"CSDReleaseType",
@@ -713,7 +644,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Nls\\Language",
         L"Default",
@@ -721,7 +651,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         &CmDefaultLanguageIdLength,
         &CmDefaultLanguageIdType
     },
-
     {
         L"Nls\\Language",
         L"InstallLanguage",
@@ -729,7 +658,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         &CmInstallUILanguageIdLength,
         &CmInstallUILanguageIdType
     },
-
     {
         L"\0\0",
         L"RegistrySizeLimit",
@@ -737,7 +665,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         &DummyData,
         &DummyData
     },
-
     {
         L"Session Manager",
         L"ForceNpxEmulation",
@@ -745,7 +672,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"PowerPolicySimulate",
@@ -753,7 +679,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager\\Executive",
         L"MaxTimeSeparationBeforeCorrect",
@@ -761,7 +686,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Windows",
         L"ShutdownTime",
@@ -769,7 +693,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         &DummyData,
         NULL
     },
-
     {
         L"PriorityControl",
         L"Win32PrioritySeparation",
@@ -777,7 +700,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"EnableTimerWatchdog",
@@ -785,7 +707,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"Session Manager",
         L"Debugger Retries",
@@ -794,6 +715,9 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL
     },
 
+//
+// Debug Filter Masks - See kd64/kddata.c
+//
     {
         L"Session Manager\\Debug Print Filter",
         L"WIN2000",
@@ -801,8 +725,1034 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
-    /* TODO: Add the other masks */
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SYSTEM",
+        &Kd_SYSTEM_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SMSS",
+        &Kd_SMSS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SETUP",
+        &Kd_SETUP_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"NTFS",
+        &Kd_NTFS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"FSTUB",
+        &Kd_FSTUB_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"CRASHDUMP",
+        &Kd_CRASHDUMP_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"CDAUDIO",
+        &Kd_CDAUDIO_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"CDROM",
+        &Kd_CDROM_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"CLASSPNP",
+        &Kd_CLASSPNP_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"DISK",
+        &Kd_DISK_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"REDBOOK",
+        &Kd_REDBOOK_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"STORPROP",
+        &Kd_STORPROP_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SCSIPORT",
+        &Kd_SCSIPORT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SCSIMINIPORT",
+        &Kd_SCSIMINIPORT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"CONFIG",
+        &Kd_CONFIG_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"I8042PRT",
+        &Kd_I8042PRT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SERMOUSE",
+        &Kd_SERMOUSE_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"LSERMOUS",
+        &Kd_LSERMOUS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"KBDHID",
+        &Kd_KBDHID_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"MOUHID",
+        &Kd_MOUHID_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"KBDCLASS",
+        &Kd_KBDCLASS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"MOUCLASS",
+        &Kd_MOUCLASS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"TWOTRACK",
+        &Kd_TWOTRACK_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"WMILIB",
+        &Kd_WMILIB_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"ACPI",
+        &Kd_ACPI_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"AMLI",
+        &Kd_AMLI_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"HALIA64",
+        &Kd_HALIA64_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VIDEO",
+        &Kd_VIDEO_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SVCHOST",
+        &Kd_SVCHOST_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VIDEOPRT",
+        &Kd_VIDEOPRT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"TCPIP",
+        &Kd_TCPIP_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"DMSYNTH",
+        &Kd_DMSYNTH_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"NTOSPNP",
+        &Kd_NTOSPNP_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"FASTFAT",
+        &Kd_FASTFAT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SAMSS",
+        &Kd_SAMSS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"PNPMGR",
+        &Kd_PNPMGR_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"NETAPI",
+        &Kd_NETAPI_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SCSERVER",
+        &Kd_SCSERVER_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SCCLIENT",
+        &Kd_SCCLIENT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SERIAL",
+        &Kd_SERIAL_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SERENUM",
+        &Kd_SERENUM_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"UHCD",
+        &Kd_UHCD_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"RPCPROXY",
+        &Kd_RPCPROXY_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"AUTOCHK",
+        &Kd_AUTOCHK_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"DCOMSS",
+        &Kd_DCOMSS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"UNIMODEM",
+        &Kd_UNIMODEM_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SIS",
+        &Kd_SIS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"FLTMGR",
+        &Kd_FLTMGR_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"WMICORE",
+        &Kd_WMICORE_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"BURNENG",
+        &Kd_BURNENG_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"IMAPI",
+        &Kd_IMAPI_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SXS",
+        &Kd_SXS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"FUSION",
+        &Kd_FUSION_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"IDLETASK",
+        &Kd_IDLETASK_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SOFTPCI",
+        &Kd_SOFTPCI_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"TAPE",
+        &Kd_TAPE_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"MCHGR",
+        &Kd_MCHGR_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"IDEP",
+        &Kd_IDEP_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"PCIIDE",
+        &Kd_PCIIDE_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"FLOPPY",
+        &Kd_FLOPPY_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"FDC",
+        &Kd_FDC_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"TERMSRV",
+        &Kd_TERMSRV_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"W32TIME",
+        &Kd_W32TIME_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"PREFETCHER",
+        &Kd_PREFETCHER_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"RSFILTER",
+        &Kd_RSFILTER_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"FCPORT",
+        &Kd_FCPORT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"PCI",
+        &Kd_PCI_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"DMIO",
+        &Kd_DMIO_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"DMCONFIG",
+        &Kd_DMCONFIG_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"DMADMIN",
+        &Kd_DMADMIN_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"WSOCKTRANSPORT",
+        &Kd_WSOCKTRANSPORT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VSS",
+        &Kd_VSS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"PNPMEM",
+        &Kd_PNPMEM_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"PROCESSOR",
+        &Kd_PROCESSOR_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"DMSERVER",
+        &Kd_DMSERVER_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SR",
+        &Kd_SR_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"INFINIBAND",
+        &Kd_INFINIBAND_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"IHVDRIVER",
+        &Kd_IHVDRIVER_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"IHVVIDEO",
+        &Kd_IHVVIDEO_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"IHVAUDIO",
+        &Kd_IHVAUDIO_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"IHVNETWORK",
+        &Kd_IHVNETWORK_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"IHVSTREAMING",
+        &Kd_IHVSTREAMING_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"IHVBUS",
+        &Kd_IHVBUS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"HPS",
+        &Kd_HPS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"RTLTHREADPOOL",
+        &Kd_RTLTHREADPOOL_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"LDR",
+        &Kd_LDR_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"TCPIP6",
+        &Kd_TCPIP6_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"ISAPNP",
+        &Kd_ISAPNP_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SHPC",
+        &Kd_SHPC_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"STORPORT",
+        &Kd_STORPORT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"STORMINIPORT",
+        &Kd_STORMINIPORT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"PRINTSPOOLER",
+        &Kd_PRINTSPOOLER_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VSSDYNDISK",
+        &Kd_VSSDYNDISK_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VERIFIER",
+        &Kd_VERIFIER_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VDS",
+        &Kd_VDS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VDSBAS",
+        &Kd_VDSBAS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VDSDYN",
+        &Kd_VDSDYN_Mask,    // Specified in Vista+
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VDSDYNDR",
+        &Kd_VDSDYNDR_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VDSLDR",
+        &Kd_VDSLDR_Mask,    // Specified in Vista+
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VDSUTIL",
+        &Kd_VDSUTIL_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"DFRGIFC",
+        &Kd_DFRGIFC_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"DEFAULT",
+        &Kd_DEFAULT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"MM",
+        &Kd_MM_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"DFSC",
+        &Kd_DFSC_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"WOW64",
+        &Kd_WOW64_Mask,
+        NULL,
+        NULL
+    },
+//
+// Components specified in Vista+, some of which we also use in ReactOS
+//
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"ALPC",
+        &Kd_ALPC_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"WDI",
+        &Kd_WDI_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"PERFLIB",
+        &Kd_PERFLIB_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"KTM",
+        &Kd_KTM_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"IOSTRESS",
+        &Kd_IOSTRESS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"HEAP",
+        &Kd_HEAP_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"WHEA",
+        &Kd_WHEA_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"USERGDI",
+        &Kd_USERGDI_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"MMCSS",
+        &Kd_MMCSS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"TPM",
+        &Kd_TPM_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"THREADORDER",
+        &Kd_THREADORDER_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"ENVIRON",
+        &Kd_ENVIRON_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"EMS",
+        &Kd_EMS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"WDT",
+        &Kd_WDT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"FVEVOL",
+        &Kd_FVEVOL_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"NDIS",
+        &Kd_NDIS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"NVCTRACE",
+        &Kd_NVCTRACE_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"LUAFV",
+        &Kd_LUAFV_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"APPCOMPAT",
+        &Kd_APPCOMPAT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"USBSTOR",
+        &Kd_USBSTOR_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SBP2PORT",
+        &Kd_SBP2PORT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"COVERAGE",
+        &Kd_COVERAGE_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"CACHEMGR",
+        &Kd_CACHEMGR_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"MOUNTMGR",
+        &Kd_MOUNTMGR_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"CFR",
+        &Kd_CFR_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"TXF",
+        &Kd_TXF_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"KSECDD",
+        &Kd_KSECDD_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"FLTREGRESS",
+        &Kd_FLTREGRESS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"MPIO",
+        &Kd_MPIO_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"MSDSM",
+        &Kd_MSDSM_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"UDFS",
+        &Kd_UDFS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"PSHED",
+        &Kd_PSHED_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"STORVSP",
+        &Kd_STORVSP_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"LSASS",
+        &Kd_LSASS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SSPICLI",
+        &Kd_SSPICLI_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"CNG",
+        &Kd_CNG_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"EXFAT",
+        &Kd_EXFAT_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"FILETRACE",
+        &Kd_FILETRACE_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"XSAVE",
+        &Kd_XSAVE_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"SE",
+        &Kd_SE_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"DRIVEEXTENDER",
+        &Kd_DRIVEEXTENDER_Mask,
+        NULL,
+        NULL
+    },
+//
+// END OF Debug Filter Masks
+//
 
     {
         L"WMI",
@@ -811,7 +1761,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"WMI\\Trace",
         L"UsePerformanceClock",
@@ -819,7 +1768,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         L"WMI\\Trace",
         L"TraceAlignment",
@@ -827,7 +1775,6 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
     {
         NULL,
         NULL,

@@ -613,8 +613,7 @@ void ME_TabPressedInTable(ME_TextEditor *editor, BOOL bSelectedRow)
   }
   ME_InvalidateSelection(editor);
   ME_Repaint(editor);
-  ITextHost_TxShowCaret(editor->texthost, FALSE);
-  ME_ShowCaret(editor);
+  update_caret(editor);
   ME_SendSelChange(editor);
 }
 

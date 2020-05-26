@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <shellutils.h>
 #include <strsafe.h>
+#include <shlwapi.h>
 
 /* [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer] */
 /* The contents of RegValue ShellState. */
@@ -71,6 +72,84 @@ static int read_key(REGSHELLSTATE *prss)
     return 0;
 }
 
+extern "C" HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create);
+
+static int read_advanced_key(SHELLSTATE* pss)
+{
+    HKEY hKey;
+    DWORD dwValue, dwSize;
+
+    hKey = SHGetShellKey(1, L"Advanced", FALSE);
+    if (hKey == NULL)
+    {
+        return 0;
+    }
+
+    dwSize = sizeof(dwValue);
+    if (SHQueryValueExW(hKey, L"Hidden", NULL, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        pss->fShowAllObjects = (dwValue == 1);
+        pss->fShowSysFiles = (dwValue == 2);
+    }
+
+    dwSize = sizeof(dwValue);
+    if (SHQueryValueExW(hKey, L"HideFileExt", NULL, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        pss->fShowExtensions = (dwValue == 0);
+    }
+
+    dwSize = sizeof(dwValue);
+    if (SHQueryValueExW(hKey, L"DontPrettyPath", NULL, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        pss->fDontPrettyPath = (dwValue != 0);
+    }
+
+    dwSize = sizeof(dwValue);
+    if (SHQueryValueExW(hKey, L"MapNetDrvBtn", NULL, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        pss->fMapNetDrvBtn = (dwValue != 0);
+    }
+
+    dwSize = sizeof(dwValue);
+    if (SHQueryValueExW(hKey, L"ShowInfoTip", NULL, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        pss->fShowInfoTip = (dwValue != 0);
+    }
+
+    dwSize = sizeof(dwValue);
+    if (SHQueryValueExW(hKey, L"HideIcons", NULL, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        pss->fHideIcons = (dwValue != 0);
+    }
+
+    dwSize = sizeof(dwValue);
+    if (SHQueryValueExW(hKey, L"WebView", NULL, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        pss->fWebView = (dwValue != 0);
+    }
+
+    dwSize = sizeof(dwValue);
+    if (SHQueryValueExW(hKey, L"Filter", NULL, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        pss->fFilter = (dwValue != 0);
+    }
+
+    dwSize = sizeof(dwValue);
+    if (SHQueryValueExW(hKey, L"ShowSuperHidden", NULL, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        pss->fShowSuperHidden = (dwValue != 0);
+    }
+
+    dwSize = sizeof(dwValue);
+    if (SHQueryValueExW(hKey, L"NoNetCrawling", NULL, NULL, &dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        pss->fNoNetCrawling = (dwValue != 0);
+    }
+
+    RegCloseKey(hKey);
+    return 0;
+}
+
 static int dump_pss(SHELLSTATE *pss)
 {
     dump("SHELLSTATE", pss, sizeof(*pss));
@@ -81,7 +160,7 @@ START_TEST(ShellState)
 {
     OSVERSIONINFO osinfo;
     REGSHELLSTATE rss;
-    SHELLSTATE *pss;
+    SHELLSTATE ss, *pss;
     SHELLFLAGSTATE FlagState;
     LPBYTE pb;
     int ret;
@@ -128,6 +207,8 @@ START_TEST(ShellState)
     dump_pss(pss);
     ok(rss.dwSize >= 0x24, "rss.dwSize was %ld (0x%lX).\n", rss.dwSize, rss.dwSize);
 
+    read_advanced_key(&rss.ss);
+
 #define DUMP_LONG(x) trace(#x ": 0x%08X\n", int(x));
 #define DUMP_BOOL(x) trace(#x ": %d\n", !!int(x));
     DUMP_BOOL(pss->fShowAllObjects);
@@ -170,14 +251,36 @@ START_TEST(ShellState)
     // For future:
     // SSF_AUTOCHECKSELECT, SSF_ICONSONLY, SSF_SHOWTYPEOVERLAY, SSF_SHOWSTATUSBAR
 
+    /* Get the settings */
+    memset(&ss, 0, sizeof(ss));
+    SHGetSetSettings(&ss, SSF_MASK, FALSE);
+#define CHECK_REG_FLAG(x) ok(pss->x == ss.x, "ss.%s expected %d, was %d\n", #x, (int)pss->x, (int)ss.x)
+    CHECK_REG_FLAG(fShowAllObjects);
+    CHECK_REG_FLAG(fShowExtensions);
+    CHECK_REG_FLAG(fNoConfirmRecycle);
+    CHECK_REG_FLAG(fShowSysFiles);    // No use
+    CHECK_REG_FLAG(fShowCompColor);
+    CHECK_REG_FLAG(fDoubleClickInWebView);
+    CHECK_REG_FLAG(fDesktopHTML);
+    CHECK_REG_FLAG(fWin95Classic);
+    CHECK_REG_FLAG(fDontPrettyPath);
+    CHECK_REG_FLAG(fShowAttribCol);
+    CHECK_REG_FLAG(fMapNetDrvBtn);
+    CHECK_REG_FLAG(fShowInfoTip);
+    CHECK_REG_FLAG(fHideIcons);
+#if NTDDI_VERSION >= 0x06000000     // for future use
+    CHECK_REG_FLAG(fAutoCheckSelect);
+    CHECK_REG_FLAG(fIconsOnly);
+#endif
+
+    /* Get the flag settings */
     memset(&FlagState, 0, sizeof(FlagState));
     SHGetSettings(&FlagState, SSF_MASK);
-
-#define CHECK_FLAG(x) ok(pss->x == FlagState.x, "FlagState.%s expected %d, was %d\n", #x, (int)pss->x, (int)FlagState.x)
+#define CHECK_FLAG(x) ok(ss.x == FlagState.x, "FlagState.%s expected %d, was %d\n", #x, (int)ss.x, (int)FlagState.x)
     CHECK_FLAG(fShowAllObjects);
     CHECK_FLAG(fShowExtensions);
     CHECK_FLAG(fNoConfirmRecycle);
-    //CHECK_FLAG(fShowSysFiles);    // No use
+    CHECK_FLAG(fShowSysFiles);    // No use
     CHECK_FLAG(fShowCompColor);
     CHECK_FLAG(fDoubleClickInWebView);
     CHECK_FLAG(fDesktopHTML);

@@ -83,4 +83,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Oyun çubukları ve oyun kolları gibi oyun denetleyicisi donanımlarını ekler, çıkarır ve yapılandırır."
     IDS_CONTROLLER "Denetleyici"
     IDS_STATUS "Durum"
+    IDS_NONE "(None)"
 END

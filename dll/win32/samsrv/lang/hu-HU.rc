@@ -1,0 +1,25 @@
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_DOMAIN_BUILTIN_NAME "Beépített"
+    IDS_GROUP_NONE_NAME "Nincs"
+    IDS_GROUP_NONE_COMMENT "Normál felhasználók"
+    IDS_ALIAS_ADMINISTRATORS_NAME "Rendszergazdák"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "A rendszergazdáknak korlátlan hozzáférésük van a számítógéphez vagy tartományhoz."
+    IDS_ALIAS_GUESTS_NAME "Vendégek"
+    IDS_ALIAS_GUESTS_COMMENT "A vendégek alapértelmezés szerint ugyanazokkal a jogokkal rendelkeznek, mint a Felhasználók csoport tagjai."
+    IDS_ALIAS_POWER_USERS_NAME "Haladó felhasználók"
+    IDS_ALIAS_POWER_USERS_COMMENT "A haladó felhasználók a legtöbb adminisztrációs joggal rendelkeznek, bizonyos korlátozásokkal."
+    IDS_ALIAS_USERS_NAME "Felhasználók"
+    IDS_ALIAS_USERS_COMMENT "A felhasználók nem tudnak rendszerszintű változtatásokat végrehajtani."
+    /*
+     * ATTENTION: 
+     *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
+     */
+    IDS_USER_ADMINISTRATOR_NAME "Rendszergazda"
+    IDS_USER_ADMINISTRATOR_COMMENT "Beépített fiók a számítógép vagy tartomány adminisztrálásához."
+    IDS_USER_GUEST_NAME "Vendég"
+    IDS_USER_GUEST_COMMENT "Beépített fiók a számítógép vagy tartomány vendégként való hozzáféréséhez."
+END

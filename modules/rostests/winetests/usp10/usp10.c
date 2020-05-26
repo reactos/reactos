@@ -1713,6 +1713,8 @@ static void test_ScriptShapeOpenType(HDC hdc)
         DeleteObject(hfont);
     }
 
+    hfont = NULL;
+    ros_skip_flaky
     test_valid = find_font_for_range(hdc, "Estrangelo Edessa", 71, test_syriac[0], &hfont, &hfont_orig, &fingerprint_estrangelo);
     if (hfont != NULL)
     {
@@ -2091,6 +2093,7 @@ static void test_ScriptShape(HDC hdc)
 static void test_ScriptPlace(HDC hdc)
 {
     static const WCHAR test1[] = {'t', 'e', 's', 't',0};
+    static const WCHAR test2[] = {0x3044, 0x308d, 0x306f,0}; /* Hiragana, Iroha */
     BOOL ret;
     HRESULT hr;
     SCRIPT_CACHE sc = NULL;
@@ -2101,6 +2104,9 @@ static void test_ScriptPlace(HDC hdc)
     int nb, widths[4];
     GOFFSET offset[4];
     ABC abc[4];
+    HFONT hfont, prev_hfont;
+    LOGFONTA lf;
+    TEXTMETRICW tm;
 
     hr = ScriptItemize(test1, 4, 2, NULL, NULL, items, NULL);
     ok(hr == S_OK, "ScriptItemize should return S_OK not %08x\n", hr);
@@ -2154,6 +2160,62 @@ static void test_ScriptPlace(HDC hdc)
     ok(ret, "ExtTextOutW should return TRUE\n");
 
     ScriptFreeCache(&sc);
+
+    /* test CJK bitmap font which has associated font */
+    memset(&lf, 0, sizeof(lf));
+    strcpy(lf.lfFaceName, "Fixedsys");
+    lf.lfCharSet = DEFAULT_CHARSET;
+    hfont = CreateFontIndirectA(&lf);
+    prev_hfont = SelectObject(hdc, hfont);
+    ret = GetTextMetricsW(hdc, &tm);
+    ok(ret, "GetTextMetrics failed\n");
+
+    switch(tm.tmCharSet) {
+    case SHIFTJIS_CHARSET:
+    case HANGUL_CHARSET:
+    case GB2312_CHARSET:
+    case CHINESEBIG5_CHARSET:
+    {
+        SIZE sz;
+        DWORD len = lstrlenW(test2), i, total;
+        ret = GetTextExtentExPointW(hdc, test2, len, 0, NULL, NULL, &sz);
+        ok(ret, "GetTextExtentExPoint failed\n");
+
+        if (sz.cx > len * tm.tmAveCharWidth)
+        {
+            hr = ScriptItemize(test2, len, 2, NULL, NULL, items, NULL);
+            ok(hr == S_OK, "ScriptItemize should return S_OK not %08x\n", hr);
+            ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
+
+            items[0].a.fNoGlyphIndex = TRUE;
+            memset(glyphs, 'a', sizeof(glyphs));
+            hr = ScriptShape(hdc, &sc, test2, len, ARRAY_SIZE(glyphs), &items[0].a, glyphs, logclust, attrs, &nb);
+            ok(hr == S_OK, "ScriptShape should return S_OK not %08x\n", hr);
+
+            memset(offset, 'a', sizeof(offset));
+            memset(widths, 'a', sizeof(widths));
+            hr = ScriptPlace(hdc, &sc, glyphs, ARRAY_SIZE(widths), attrs, &items[0].a, widths, offset, NULL);
+            ok(hr == S_OK, "ScriptPlace should return S_OK not %08x\n", hr);
+
+            for (total = 0, i = 0; i < nb; i++)
+            {
+                ok(offset[i].du == 0, "[%d] expected 0, got %d\n", i, offset[i].du);
+                ok(offset[i].dv == 0, "[%d] expected 0, got %d\n", i, offset[i].dv);
+                ok(widths[i] > tm.tmAveCharWidth, "[%d] expected greater than %d, got %d\n",
+                   i, tm.tmAveCharWidth, widths[i]);
+                total += widths[i];
+            }
+            ok(total == sz.cx, "expected %d, got %d\n", sz.cx, total);
+        }
+        else
+            skip("Associated font is unavailable\n");
+
+        break;
+    }
+    default:
+        skip("Non-CJK locale\n");
+    }
+    SelectObject(hdc, prev_hfont);
 }
 
 static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256])
@@ -2345,7 +2407,7 @@ static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
     hr = ScriptGetCMap(hdc, &psc, TestItem1, cInChars, 0, pwOutGlyphs3);
     ok( hr == S_OK, "ScriptGetCMap(NULL,&psc,NULL,0,0,NULL), expected S_OK, "
                     "got %08x\n", hr);
-    ok( psc != NULL, "ScritpGetCMap expected psc to be not NULL\n");
+    ok( psc != NULL, "ScriptGetCMap expected psc to be not NULL\n");
     ScriptFreeCache( &psc);
 
     /* Set psc to NULL, to be able to check if a pointer is returned in psc */
@@ -3019,6 +3081,7 @@ static void test_ScriptXtoX(void)
         WORD clust = 0;
         INT advance = 16;
         hr = ScriptXtoCP(iX, 1, 1, &clust, psva, &advance, &sa, &piCP, &piTrailing);
+        ok(hr == S_OK, "ScriptXtoCP failed, hr %#x.\n", hr);
         ok(piCP==0 && piTrailing==0,"%i should return 0(%i) and 0(%i)\n",iX, piCP,piTrailing);
     }
     for (iX = 8; iX < 16; iX++)
@@ -3026,6 +3089,7 @@ static void test_ScriptXtoX(void)
         WORD clust = 0;
         INT advance = 16;
         hr = ScriptXtoCP(iX, 1, 1, &clust, psva, &advance, &sa, &piCP, &piTrailing);
+        ok(hr == S_OK, "ScriptXtoCP failed, hr %#x.\n", hr);
         ok(piCP==0 && piTrailing==1,"%i should return 0(%i) and 1(%i)\n",iX, piCP,piTrailing);
     }
 

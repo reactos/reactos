@@ -4,6 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(wmvcore.dll wmvcore.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    reader.c
     wmvcore_main.c
     writer.c
     ${CMAKE_CURRENT_BINARY_DIR}/wmvcore_stubs.c

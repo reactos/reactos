@@ -20,8 +20,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
 #include "wine/debug.h"
 
 #include "d3d9types.h"

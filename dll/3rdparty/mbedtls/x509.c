@@ -121,7 +121,7 @@ int mbedtls_x509_get_alg_null( unsigned char **p, const unsigned char *end,
 }
 
 /*
- * Parse an algorithm identifier with (optional) paramaters
+ * Parse an algorithm identifier with (optional) parameters
  */
 int mbedtls_x509_get_alg( unsigned char **p, const unsigned char *end,
                   mbedtls_x509_buf *alg, mbedtls_x509_buf *params )
@@ -1089,7 +1089,7 @@ cleanup:
     mbedtls_x509_crt_free( &clicert );
 #else
     ((void) verbose);
-#endif /* MBEDTLS_CERTS_C && MBEDTLS_SHA1_C */
+#endif /* MBEDTLS_CERTS_C && MBEDTLS_SHA256_C */
     return( ret );
 }
 

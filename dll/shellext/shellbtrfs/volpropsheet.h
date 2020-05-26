@@ -92,6 +92,7 @@ public:
     INT_PTR CALLBACK DeviceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void ShowDevices(HWND hwndDlg);
     void ShowScrub(HWND hwndDlg);
+    void ShowChangeDriveLetter(HWND hwndDlg);
     INT_PTR CALLBACK StatsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void ShowStats(HWND hwndDlg, uint64_t devid);
     void ResetStats(HWND hwndDlg);
@@ -109,4 +110,20 @@ private:
     bool stgm_set;
     wstring fn;
     uint64_t stats_dev;
+};
+
+class BtrfsChangeDriveLetter {
+public:
+    BtrfsChangeDriveLetter(HWND hwnd, const wstring_view& fn) : hwnd(hwnd), fn(fn) {
+    }
+
+    void show();
+    INT_PTR DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+private:
+    void do_change(HWND hwndDlg);
+
+    HWND hwnd;
+    wstring fn;
+    vector<wchar_t> letters;
 };

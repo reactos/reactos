@@ -41,6 +41,7 @@ Call ok(10. = 10, "10. <> 10")
 Call ok(&hffFFffFF& = -1, "&hffFFffFF& <> -1")
 Call ok(&hffFFffFF& = -1, "&hffFFffFF& <> -1")
 Call ok(34e5 = 3400000, "34e5 <> 3400000")
+Call ok(34e+5 = 3400000, "34e+5 <> 3400000")
 Call ok(56.789e5 = 5678900, "56.789e5 = 5678900")
 Call ok(56.789e-2 = 0.56789, "56.789e-2 <> 0.56789")
 Call ok(1e-94938484 = 0, "1e-... <> 0")
@@ -1093,6 +1094,14 @@ Call ok(getVT(cs) = "VT_BSTR", "getVT(cs) = " & getVT(cs))
 Call ok(isNull(cnull), "cnull = " & cnull)
 Call ok(getVT(cnull) = "VT_NULL", "getVT(cnull) = " & getVT(cnull))
 
+Call ok(+1 = 1, "+1 != 1")
+Call ok(+true = true, "+1 != 1")
+Call ok(getVT(+true) = "VT_BOOL", "getVT(+true) = " & getVT(+true))
+Call ok(+"true" = "true", """+true"" != true")
+Call ok(getVT(+"true") = "VT_BSTR", "getVT(+""true"") = " & getVT(+"true"))
+Call ok(+obj is obj, "+obj != obj")
+Call ok(+--+-+1 = -1, "+--+-+1 != -1")
+
 if false then Const conststr = "str"
 Call ok(conststr = "str", "conststr = " & conststr)
 Call ok(getVT(conststr) = "VT_BSTR", "getVT(conststr) = " & getVT(conststr))
@@ -1344,5 +1353,130 @@ end class
 ' ...but there is no way to use it because builtin instance is always created
 set x = new RegExp
 Call ok(x.Global = false, "x.Global = " & x.Global)
+
+sub test_nothing_errors
+    dim x
+    on error resume next
+
+    x = 1
+    err.clear
+    x = nothing
+    call ok(err.number = 91, "err.number = " & err.number)
+    call ok(x = 1, "x = " & x)
+
+    err.clear
+    x = not nothing
+    call ok(err.number = 91, "err.number = " & err.number)
+    call ok(x = 1, "x = " & x)
+
+    err.clear
+    x = "" & nothing
+    call ok(err.number = 91, "err.number = " & err.number)
+    call ok(x = 1, "x = " & x)
+end sub
+call test_nothing_errors()
+
+sub test_identifiers
+    ' test keywords that can also be a declared identifier
+    Dim default
+    default = "xx"
+    Call ok(default = "xx", "default = " & default & " expected ""xx""")
+
+    Dim error
+    error = "xx"
+    Call ok(error = "xx", "error = " & error & " expected ""xx""")
+
+    Dim explicit
+    explicit = "xx"
+    Call ok(explicit = "xx", "explicit = " & explicit & " expected ""xx""")
+
+    Dim step
+    step = "xx"
+    Call ok(step = "xx", "step = " & step & " expected ""xx""")
+end sub
+call test_identifiers()
+
+sub test_dotIdentifiers
+    ' test keywords that can also be an identifier after a dot
+    ' Call ok(testObj.rem = 10, "testObj.rem = " & testObj.rem & " expected 10")
+    Call ok(testObj.true = 10, "testObj.true = " & testObj.true & " expected 10")
+    Call ok(testObj.false = 10, "testObj.false = " & testObj.false & " expected 10")
+    Call ok(testObj.not = 10, "testObj.not = " & testObj.not & " expected 10")
+    Call ok(testObj.and = 10, "testObj.and = " & testObj.and & " expected 10")
+    Call ok(testObj.or = 10, "testObj.or = " & testObj.or & " expected 10")
+    Call ok(testObj.xor = 10, "testObj.xor = " & testObj.xor & " expected 10")
+    Call ok(testObj.eqv = 10, "testObj.eqv = " & testObj.eqv & " expected 10")
+    Call ok(testObj.imp = 10, "testObj.imp = " & testObj.imp & " expected 10")
+    Call ok(testObj.is = 10, "testObj.is = " & testObj.is & " expected 10")
+    Call ok(testObj.mod = 10, "testObj.mod = " & testObj.mod & " expected 10")
+    Call ok(testObj.call = 10, "testObj.call = " & testObj.call & " expected 10")
+    Call ok(testObj.dim = 10, "testObj.dim = " & testObj.dim & " expected 10")
+    Call ok(testObj.sub = 10, "testObj.sub = " & testObj.sub & " expected 10")
+    Call ok(testObj.function = 10, "testObj.function = " & testObj.function & " expected 10")
+    Call ok(testObj.get = 10, "testObj.get = " & testObj.get & " expected 10")
+    Call ok(testObj.let = 10, "testObj.let = " & testObj.let & " expected 10")
+    Call ok(testObj.const = 10, "testObj.const = " & testObj.const & " expected 10")
+    Call ok(testObj.if = 10, "testObj.if = " & testObj.if & " expected 10")
+    Call ok(testObj.else = 10, "testObj.else = " & testObj.else & " expected 10")
+    Call ok(testObj.elseif = 10, "testObj.elseif = " & testObj.elseif & " expected 10")
+    Call ok(testObj.end = 10, "testObj.end = " & testObj.end & " expected 10")
+    Call ok(testObj.then = 10, "testObj.then = " & testObj.then & " expected 10")
+    Call ok(testObj.exit = 10, "testObj.exit = " & testObj.exit & " expected 10")
+    Call ok(testObj.while = 10, "testObj.while = " & testObj.while & " expected 10")
+    Call ok(testObj.wend = 10, "testObj.wend = " & testObj.wend & " expected 10")
+    Call ok(testObj.do = 10, "testObj.do = " & testObj.do & " expected 10")
+    Call ok(testObj.loop = 10, "testObj.loop = " & testObj.loop & " expected 10")
+    Call ok(testObj.until = 10, "testObj.until = " & testObj.until & " expected 10")
+    Call ok(testObj.for = 10, "testObj.for = " & testObj.for & " expected 10")
+    Call ok(testObj.to = 10, "testObj.to = " & testObj.to & " expected 10")
+    Call ok(testObj.each = 10, "testObj.each = " & testObj.each & " expected 10")
+    Call ok(testObj.in = 10, "testObj.in = " & testObj.in & " expected 10")
+    Call ok(testObj.select = 10, "testObj.select = " & testObj.select & " expected 10")
+    Call ok(testObj.case = 10, "testObj.case = " & testObj.case & " expected 10")
+    Call ok(testObj.byref = 10, "testObj.byref = " & testObj.byref & " expected 10")
+    Call ok(testObj.byval = 10, "testObj.byval = " & testObj.byval & " expected 10")
+    Call ok(testObj.option = 10, "testObj.option = " & testObj.option & " expected 10")
+    Call ok(testObj.nothing = 10, "testObj.nothing = " & testObj.nothing & " expected 10")
+    Call ok(testObj.empty = 10, "testObj.empty = " & testObj.empty & " expected 10")
+    Call ok(testObj.null = 10, "testObj.null = " & testObj.null & " expected 10")
+    Call ok(testObj.class = 10, "testObj.class = " & testObj.class & " expected 10")
+    Call ok(testObj.set = 10, "testObj.set = " & testObj.set & " expected 10")
+    Call ok(testObj.new = 10, "testObj.new = " & testObj.new & " expected 10")
+    Call ok(testObj.public = 10, "testObj.public = " & testObj.public & " expected 10")
+    Call ok(testObj.private = 10, "testObj.private = " & testObj.private & " expected 10")
+    Call ok(testObj.next = 10, "testObj.next = " & testObj.next & " expected 10")
+    Call ok(testObj.on = 10, "testObj.on = " & testObj.on & " expected 10")
+    Call ok(testObj.resume = 10, "testObj.resume = " & testObj.resume & " expected 10")
+    Call ok(testObj.goto = 10, "testObj.goto = " & testObj.goto & " expected 10")
+end sub
+call test_dotIdentifiers
+
+' Test End statements not required to be preceeded by a newline or separator
+Sub EndTestSub
+    x = 1 End Sub
+
+Sub EndTestSubWithCall
+    x = 1
+    Call ok(x = 1, "x = " & x)End Sub
+Call EndTestSubWithCall()
+
+Function EndTestFunc(x)
+    Call ok(x > 0, "x = " & x)End Function
+EndTestFunc(1)
+
+Class EndTestClassWithStorageId
+    Public x End Class
+
+Class EndTestClassWithDim
+    Dim x End Class
+
+Class EndTestClassWithFunc
+    Function test(ByVal x)
+        x = 0 End Function End Class
+
+Class EndTestClassWithProperty
+    Public x
+    Public default Property Get defprop
+        defprop = x End Property End Class
 
 reportSuccess()

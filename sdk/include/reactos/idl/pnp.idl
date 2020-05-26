@@ -551,8 +551,8 @@ interface pnp
     __stdcall
     PNP_DeviceInstanceAction(
         [in] handle_t hBinding,
-        [in] DWORD ulAction,
-        [in] DWORD ulFlags,
+        [in] DWORD ulMajorAction,
+        [in] DWORD ulMinorAction,
         [in, string, unique] LPWSTR pszDeviceInstance1,
         [in, string, unique] LPWSTR pszDeviceInstance2);
 

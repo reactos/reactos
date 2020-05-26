@@ -5,7 +5,7 @@ list(APPEND SOURCE
     netplwiz.c
     SHDisconnectNetDrives.c)
 
-add_library(netplwiz SHARED
+add_library(netplwiz MODULE
     ${SOURCE}
     netplwiz.rc
     ${CMAKE_CURRENT_BINARY_DIR}/netplwiz_stubs.c

@@ -393,7 +393,7 @@ VideoPortInt10(
     INT10_BIOS_ARGUMENTS Int10BiosArguments;
     VP_STATUS Status;
 
-    if (!CsrssInitialized)
+    if (!CsrProcess)
     {
         return ERROR_INVALID_PARAMETER;
     }

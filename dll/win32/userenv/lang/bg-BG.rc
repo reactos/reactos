@@ -1,5 +1,6 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
+/* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Документи и настройки"
@@ -17,7 +18,7 @@ BEGIN
     IDS_STARTUP "Пусков изборник\\Приложения\\Самопускащи"
     IDS_LOCALSETTINGS "Местни настройки"
     IDS_LOCALAPPDATA "Местни настройки\\Приложни данни"
-    IDS_TEMP "Местни настройки\\Временни"
+    IDS_TEMP "Местни настройки\\Временни" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Местни настройки\\Временни файлове за интернет"
     IDS_HISTORY "Местни настройки\\Посетени"
     IDS_COOKIES "Курабийки"

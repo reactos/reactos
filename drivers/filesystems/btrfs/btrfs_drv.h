@@ -63,12 +63,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#ifndef __REACTOS__
-// Not actually used
-#include <emmintrin.h>
-#endif /* __REACTOS__ */
 #include "btrfs.h"
 #include "btrfsioctl.h"
+
+#if !defined(__REACTOS__) && (defined(_X86_) || defined(_AMD64_))
+#include <emmintrin.h>
+#endif
 
 #ifdef __REACTOS__
 C_ASSERT(sizeof(bool) == 1);
@@ -117,12 +117,16 @@ C_ASSERT(sizeof(bool) == 1);
 
 #define READ_AHEAD_GRANULARITY COMPRESSED_EXTENT_SIZE // really ought to be a multiple of COMPRESSED_EXTENT_SIZE
 
-#define IO_REPARSE_TAG_LXSS_SYMLINK 0xa000001d // undocumented?
+#ifndef IO_REPARSE_TAG_LX_SYMLINK
 
-#define IO_REPARSE_TAG_LXSS_SOCKET      0x80000023
-#define IO_REPARSE_TAG_LXSS_FIFO        0x80000024
-#define IO_REPARSE_TAG_LXSS_CHARDEV     0x80000025
-#define IO_REPARSE_TAG_LXSS_BLOCKDEV    0x80000026
+#define IO_REPARSE_TAG_LX_SYMLINK 0xa000001d
+
+#define IO_REPARSE_TAG_AF_UNIX          0x80000023
+#define IO_REPARSE_TAG_LX_FIFO          0x80000024
+#define IO_REPARSE_TAG_LX_CHR           0x80000025
+#define IO_REPARSE_TAG_LX_BLK           0x80000026
+
+#endif
 
 #define BTRFS_VOLUME_PREFIX L"\\Device\\Btrfs{"
 
@@ -136,6 +140,12 @@ C_ASSERT(sizeof(bool) == 1);
 #define finally if (1)
 #endif
 
+#ifndef __REACTOS__
+#ifdef __GNUC__
+#define InterlockedIncrement64(a) __sync_add_and_fetch(a, 1)
+#endif
+#endif // __REACTOS__
+
 #ifndef FILE_SUPPORTS_BLOCK_REFCOUNTING
 #define FILE_SUPPORTS_BLOCK_REFCOUNTING 0x08000000
 #endif
@@ -148,9 +158,21 @@ C_ASSERT(sizeof(bool) == 1);
 #define FILE_DEVICE_ALLOW_APPCONTAINER_TRAVERSAL 0x00020000
 #endif
 
+#ifndef __REACTOS__
+#ifndef _MSC_VER
 typedef struct _FILE_ID_128 {
     UCHAR Identifier[16];
 } FILE_ID_128, *PFILE_ID_128;
+
+#define FILE_CS_FLAG_CASE_SENSITIVE_DIR                 1
+#endif
+#else
+typedef struct _FILE_ID_128 {
+    UCHAR Identifier[16];
+} FILE_ID_128, *PFILE_ID_128;
+
+#define FILE_CS_FLAG_CASE_SENSITIVE_DIR                 1
+#endif // __REACTOS__
 
 typedef struct _DUPLICATE_EXTENTS_DATA {
     HANDLE FileHandle;
@@ -184,9 +206,6 @@ typedef struct _FSCTL_SET_INTEGRITY_INFORMATION_BUFFER {
 #define _Requires_lock_held_(a)
 #define _Requires_exclusive_lock_held_(a)
 #define _Releases_lock_(a)
-#define _Out_writes_bytes_opt_(a)
-#define _Pre_satisfies_(a)
-#define _Post_satisfies_(a)
 #define _Releases_exclusive_lock_(a)
 #define _Dispatch_type_(a)
 #define _Create_lock_level_(a)
@@ -196,11 +215,13 @@ typedef struct _FSCTL_SET_INTEGRITY_INFORMATION_BUFFER {
 #define _Acquires_exclusive_lock_(a)
 #define _Acquires_shared_lock_(a)
 #endif
-#endif
+#endif // __REACTOS__
 
 _Create_lock_level_(tree_lock)
 _Create_lock_level_(fcb_lock)
 _Lock_level_order_(tree_lock, fcb_lock)
+
+#define MAX_HASH_SIZE 32
 
 struct _device_extension;
 
@@ -220,7 +241,7 @@ typedef struct {
     bool unique;
     bool ignore;
     bool inserted;
-    uint32_t* csum;
+    void* csum;
 
     LIST_ENTRY list_entry;
 
@@ -248,6 +269,7 @@ typedef struct {
     UNICODE_STRING name_uc;
     ULONG size;
     struct _file_ref* fileref;
+    bool root_dir;
     LIST_ENTRY list_entry_index;
     LIST_ENTRY list_entry_hash;
     LIST_ENTRY list_entry_hash_uc;
@@ -285,7 +307,6 @@ typedef struct _fcb {
     PKTHREAD lazy_writer_thread;
     ULONG atts;
     SHARE_ACCESS share_access;
-    WCHAR* debug_desc;
     bool csum_loaded;
     LIST_ENTRY extents;
     ANSI_STRING reparse_xattr;
@@ -299,6 +320,7 @@ typedef struct _fcb {
     bool marked_as_orphan;
     bool case_sensitive;
     bool case_sensitive_set;
+    OPLOCK oplock;
 
     LIST_ENTRY dir_children_index;
     LIST_ENTRY dir_children_hash;
@@ -344,7 +366,6 @@ typedef struct _file_ref {
     LONG refcount;
     LONG open_count;
     struct _file_ref* parent;
-    WCHAR* debug_desc;
     dir_child* dc;
 
     bool dirty;
@@ -455,6 +476,7 @@ typedef struct _root {
     LONG send_ops;
     uint64_t fcbs_version;
     bool checked_for_orphans;
+    bool dropped;
     LIST_ENTRY fcbs;
     LIST_ENTRY* fcbs_ptrs[256];
     LIST_ENTRY list_entry;
@@ -611,27 +633,42 @@ typedef struct {
     LIST_ENTRY list_entry;
 } sys_chunk;
 
+enum calc_thread_type {
+    calc_thread_crc32c,
+    calc_thread_xxhash,
+    calc_thread_sha256,
+    calc_thread_blake2,
+    calc_thread_decomp_zlib,
+    calc_thread_decomp_lzo,
+    calc_thread_decomp_zstd,
+    calc_thread_comp_zlib,
+    calc_thread_comp_lzo,
+    calc_thread_comp_zstd,
+};
+
 typedef struct {
-    uint8_t* data;
-    uint32_t* csum;
-    uint32_t sectors;
-    LONG pos, done;
-    KEVENT event;
-    LONG refcount;
     LIST_ENTRY list_entry;
+    void* in;
+    void* out;
+    unsigned int inlen, outlen, off, space_left;
+    LONG left, not_started;
+    KEVENT event;
+    enum calc_thread_type type;
+    NTSTATUS Status;
 } calc_job;
 
 typedef struct {
     PDEVICE_OBJECT DeviceObject;
     HANDLE handle;
     KEVENT finished;
+    unsigned int number;
     bool quit;
 } drv_calc_thread;
 
 typedef struct {
     ULONG num_threads;
     LIST_ENTRY job_list;
-    ERESOURCE lock;
+    KSPIN_LOCK spinlock;
     drv_calc_thread* threads;
     KEVENT event;
 } drv_calc_threads;
@@ -652,6 +689,7 @@ typedef struct {
     bool no_trim;
     bool clear_cache;
     bool allow_degraded;
+    bool no_root_dir;
 } mount_options;
 
 #define VCB_TYPE_FS         1
@@ -729,6 +767,7 @@ typedef struct _device_extension {
     uint32_t type;
     mount_options options;
     PVPB Vpb;
+    PDEVICE_OBJECT devobj;
     struct _volume_device_extension* vde;
     LIST_ENTRY devices;
 #ifdef DEBUG_CHUNK_LOCKS
@@ -736,6 +775,7 @@ typedef struct _device_extension {
 #endif
     uint64_t devices_loaded;
     superblock superblock;
+    unsigned int csum_size;
     bool readonly;
     bool removing;
     bool locked;
@@ -831,6 +871,7 @@ typedef struct {
     void* notification_entry;
     ULONG disk_num;
     ULONG part_num;
+    bool boot_volume;
     LIST_ENTRY list_entry;
 } volume_child;
 
@@ -846,6 +887,7 @@ typedef struct _volume_device_extension {
     UNICODE_STRING bus_name;
     PDEVICE_OBJECT attached_device;
     bool removing;
+    bool dead;
     LONG open_count;
 } volume_device_extension;
 
@@ -855,6 +897,7 @@ typedef struct pdo_device_extension {
     volume_device_extension* vde;
     PDEVICE_OBJECT pdo;
     bool removable;
+    bool dont_report;
 
     uint64_t num_children;
     uint64_t children_loaded;
@@ -912,6 +955,7 @@ typedef struct {
     uint32_t length;
     uint8_t* data;
     chunk* c;
+    bool allocated;
     LIST_ENTRY list_entry;
 } tree_write;
 
@@ -1082,9 +1126,9 @@ NTSTATUS create_root(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) devi
 void uninit(_In_ device_extension* Vcb);
 NTSTATUS dev_ioctl(_In_ PDEVICE_OBJECT DeviceObject, _In_ ULONG ControlCode, _In_reads_bytes_opt_(InputBufferSize) PVOID InputBuffer, _In_ ULONG InputBufferSize,
                    _Out_writes_bytes_opt_(OutputBufferSize) PVOID OutputBuffer, _In_ ULONG OutputBufferSize, _In_ bool Override, _Out_opt_ IO_STATUS_BLOCK* iosb);
-bool is_file_name_valid(_In_ PUNICODE_STRING us, _In_ bool posix);
+bool is_file_name_valid(_In_ PUNICODE_STRING us, _In_ bool posix, _In_ bool stream);
 void send_notification_fileref(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_ ULONG action, _In_opt_ PUNICODE_STRING stream);
-void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_ ULONG action, _In_opt_ PUNICODE_STRING stream);
+void queue_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_ ULONG action, _In_opt_ PUNICODE_STRING stream);
 
 #ifdef DEBUG_CHUNK_LOCKS
 #define acquire_chunk_lock(c, Vcb) { ExAcquireResourceExclusiveLite(&c->lock, true); InterlockedIncrement(&Vcb->chunk_locks_held); }
@@ -1094,9 +1138,6 @@ void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_
 #define release_chunk_lock(c, Vcb) ExReleaseResourceLite(&(c)->lock)
 #endif
 
-_Ret_z_
-WCHAR* file_desc(_In_ PFILE_OBJECT FileObject);
-WCHAR* file_desc_fileref(_In_ file_ref* fileref);
 void mark_fcb_dirty(_In_ fcb* fcb);
 void mark_fileref_dirty(_In_ file_ref* fileref);
 NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject, _In_ bool make_orphan, _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback);
@@ -1122,6 +1163,12 @@ NTSTATUS utf8_to_utf16(WCHAR* dest, ULONG dest_max, ULONG* dest_len, char* src, 
 NTSTATUS utf16_to_utf8(char* dest, ULONG dest_max, ULONG* dest_len, WCHAR* src, ULONG src_len);
 uint32_t get_num_of_processors();
 
+_Ret_maybenull_
+root* find_default_subvol(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _In_opt_ PIRP Irp);
+
+void do_shutdown(PIRP Irp);
+bool check_superblock_checksum(superblock* sb);
+
 #ifdef _MSC_VER
 #define funcname __FUNCTION__
 #else
@@ -1143,7 +1190,12 @@ extern uint32_t mount_no_trim;
 extern uint32_t mount_clear_cache;
 extern uint32_t mount_allow_degraded;
 extern uint32_t mount_readonly;
+extern uint32_t mount_no_root_dir;
 extern uint32_t no_pnp;
+
+#ifndef __GNUC__
+#define __attribute__(x)
+#endif
 
 #ifdef _DEBUG
 
@@ -1152,25 +1204,25 @@ extern uint32_t debug_log_level;
 
 #ifdef DEBUG_LONG_MESSAGES
 
-#define MSG(fn, file, line, s, level, ...) (!log_started || level <= debug_log_level) ? _debug_message(fn, file, line, s, ##__VA_ARGS__) : 0
+#define MSG(fn, file, line, s, level, ...) (!log_started || level <= debug_log_level) ? _debug_message(fn, file, line, s, ##__VA_ARGS__) : (void)0
 
 #define TRACE(s, ...) MSG(funcname, __FILE__, __LINE__, s, 3, ##__VA_ARGS__)
 #define WARN(s, ...) MSG(funcname, __FILE__, __LINE__, s, 2, ##__VA_ARGS__)
 #define FIXME(s, ...) MSG(funcname, __FILE__, __LINE__, s, 1, ##__VA_ARGS__)
 #define ERR(s, ...) MSG(funcname, __FILE__, __LINE__, s, 1, ##__VA_ARGS__)
 
-void _debug_message(_In_ const char* func, _In_ const char* file, _In_ unsigned int line, _In_ char* s, ...);
+void _debug_message(_In_ const char* func, _In_ const char* file, _In_ unsigned int line, _In_ char* s, ...) __attribute__((format(printf, 4, 5)));
 
 #else
 
-#define MSG(fn, s, level, ...) (!log_started || level <= debug_log_level) ? _debug_message(fn, s, ##__VA_ARGS__) : 0
+#define MSG(fn, s, level, ...) (!log_started || level <= debug_log_level) ? _debug_message(fn, s, ##__VA_ARGS__) : (void)0
 
 #define TRACE(s, ...) MSG(funcname, s, 3, ##__VA_ARGS__)
 #define WARN(s, ...) MSG(funcname, s, 2, ##__VA_ARGS__)
 #define FIXME(s, ...) MSG(funcname, s, 1, ##__VA_ARGS__)
 #define ERR(s, ...) MSG(funcname, s, 1, ##__VA_ARGS__)
 
-void _debug_message(_In_ const char* func, _In_ char* s, ...);
+void _debug_message(_In_ const char* func, _In_ char* s, ...) __attribute__((format(printf, 2, 3)));
 
 #endif
 
@@ -1191,8 +1243,13 @@ void _free_fcb(_Inout_ fcb* fcb, _In_ const char* func);
 // in fastio.c
 void init_fast_io_dispatch(FAST_IO_DISPATCH** fiod);
 
-// in crc32c.c
-uint32_t calc_crc32c(_In_ uint32_t seed, _In_reads_bytes_(msglen) uint8_t* msg, _In_ ULONG msglen);
+// in sha256.c
+void calc_sha256(uint8_t* hash, const void* input, size_t len);
+#define SHA256_HASH_SIZE 32
+
+// in blake2b-ref.c
+void blake2b(void *out, size_t outlen, const void* in, size_t inlen);
+#define BLAKE2_HASH_SIZE 32
 
 typedef struct {
     LIST_ENTRY* list;
@@ -1274,9 +1331,8 @@ void remove_volume_child(_Inout_ _Requires_exclusive_lock_held_(_Curr_->child_lo
                          _In_ volume_child* vc, _In_ bool skip_dev);
 
 // in cache.c
-NTSTATUS init_cache();
-void free_cache();
-extern CACHE_MANAGER_CALLBACKS* cache_callbacks;
+void init_cache();
+extern CACHE_MANAGER_CALLBACKS cache_callbacks;
 
 // in write.c
 NTSTATUS write_file(device_extension* Vcb, PIRP Irp, bool wait, bool deferred_write);
@@ -1302,14 +1358,11 @@ bool insert_extent_chunk(_In_ device_extension* Vcb, _In_ fcb* fcb, _In_ chunk* 
                          _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback, _In_ uint8_t compression, _In_ uint64_t decoded_size, _In_ bool file_write, _In_ uint64_t irp_offset);
 
 NTSTATUS do_write_file(fcb* fcb, uint64_t start_data, uint64_t end_data, void* data, PIRP Irp, bool file_write, uint32_t irp_offset, LIST_ENTRY* rollback);
-NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void* data, PIRP Irp, LIST_ENTRY* rollback);
 bool find_data_address_in_chunk(device_extension* Vcb, chunk* c, uint64_t length, uint64_t* address);
 void get_raid56_lock_range(chunk* c, uint64_t address, uint64_t length, uint64_t* lockaddr, uint64_t* locklen);
-NTSTATUS calc_csum(_In_ device_extension* Vcb, _In_reads_bytes_(sectors*Vcb->superblock.sector_size) uint8_t* data,
-                   _In_ uint32_t sectors, _Out_writes_bytes_(sectors*sizeof(uint32_t)) uint32_t* csum);
 void add_insert_extent_rollback(LIST_ENTRY* rollback, fcb* fcb, extent* ext);
 NTSTATUS add_extent_to_fcb(_In_ fcb* fcb, _In_ uint64_t offset, _In_reads_bytes_(edsize) EXTENT_DATA* ed, _In_ uint16_t edsize,
-                           _In_ bool unique, _In_opt_ _When_(return >= 0, __drv_aliasesMem) uint32_t* csum, _In_ LIST_ENTRY* rollback);
+                           _In_ bool unique, _In_opt_ _When_(return >= 0, __drv_aliasesMem) void* csum, _In_ LIST_ENTRY* rollback);
 void add_extent(_In_ fcb* fcb, _In_ LIST_ENTRY* prevextle, _In_ __drv_aliasesMem extent* newext);
 
 // in dirctrl.c
@@ -1380,7 +1433,7 @@ NTSTATUS open_fileref(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusiv
                       _In_ bool case_sensitive, _In_opt_ PIRP Irp);
 NTSTATUS open_fcb(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lock_held_(_Curr_->fcb_lock) device_extension* Vcb,
                   root* subvol, uint64_t inode, uint8_t type, PANSI_STRING utf8, bool always_add_hl, fcb* parent, fcb** pfcb, POOL_TYPE pooltype, PIRP Irp);
-NTSTATUS load_csum(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, uint32_t* csum, uint64_t start, uint64_t length, PIRP Irp);
+NTSTATUS load_csum(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, void* csum, uint64_t start, uint64_t length, PIRP Irp);
 NTSTATUS load_dir_children(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, fcb* fcb, bool ignore_size, PIRP Irp);
 NTSTATUS add_dir_child(fcb* fcb, uint64_t inode, bool subvol, PANSI_STRING utf8, PUNICODE_STRING name, uint8_t type, dir_child** pdc);
 NTSTATUS open_fileref_child(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lock_held_(_Curr_->fcb_lock) _In_ device_extension* Vcb,
@@ -1398,6 +1451,7 @@ void do_unlock_volume(device_extension* Vcb);
 void trim_whole_device(device* dev);
 void flush_subvol_fcbs(root* subvol);
 bool fcb_is_inline(fcb* fcb);
+NTSTATUS dismount_volume(device_extension* Vcb, bool shutdown, PIRP Irp);
 
 // in flushthread.c
 
@@ -1411,13 +1465,14 @@ NTSTATUS write_data_phys(_In_ PDEVICE_OBJECT device, _In_ PFILE_OBJECT fileobj, 
                          _In_reads_bytes_(length) void* data, _In_ uint32_t length);
 bool is_tree_unique(device_extension* Vcb, tree* t, PIRP Irp);
 NTSTATUS do_tree_writes(device_extension* Vcb, LIST_ENTRY* tree_writes, bool no_free);
-void add_checksum_entry(device_extension* Vcb, uint64_t address, ULONG length, uint32_t* csum, PIRP Irp);
+void add_checksum_entry(device_extension* Vcb, uint64_t address, ULONG length, void* csum, PIRP Irp);
 bool find_metadata_address_in_chunk(device_extension* Vcb, chunk* c, uint64_t* address);
 void add_trim_entry_avoid_sb(device_extension* Vcb, device* dev, uint64_t address, uint64_t size);
 NTSTATUS insert_tree_item_batch(LIST_ENTRY* batchlist, device_extension* Vcb, root* r, uint64_t objid, uint8_t objtype, uint64_t offset,
                                 _In_opt_ _When_(return >= 0, __drv_aliasesMem) void* data, uint16_t datalen, enum batch_operation operation);
 NTSTATUS flush_partial_stripe(device_extension* Vcb, chunk* c, partial_stripe* ps);
 NTSTATUS update_dev_item(device_extension* Vcb, device* device, PIRP Irp);
+void calc_tree_checksum(device_extension* Vcb, tree_header* th);
 
 // in read.c
 
@@ -1425,14 +1480,18 @@ _Dispatch_type_(IRP_MJ_READ)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS __stdcall drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS read_data(_In_ device_extension* Vcb, _In_ uint64_t addr, _In_ uint32_t length, _In_reads_bytes_opt_(length*sizeof(uint32_t)/Vcb->superblock.sector_size) uint32_t* csum,
+NTSTATUS read_data(_In_ device_extension* Vcb, _In_ uint64_t addr, _In_ uint32_t length, _In_reads_bytes_opt_(length*sizeof(uint32_t)/Vcb->superblock.sector_size) void* csum,
                    _In_ bool is_tree, _Out_writes_bytes_(length) uint8_t* buf, _In_opt_ chunk* c, _Out_opt_ chunk** pc, _In_opt_ PIRP Irp, _In_ uint64_t generation, _In_ bool file_read,
                    _In_ ULONG priority);
 NTSTATUS read_file(fcb* fcb, uint8_t* data, uint64_t start, uint64_t length, ULONG* pbr, PIRP Irp);
 NTSTATUS read_stream(fcb* fcb, uint8_t* data, uint64_t start, ULONG length, ULONG* pbr);
 NTSTATUS do_read(PIRP Irp, bool wait, ULONG* bytes_read);
-NTSTATUS check_csum(device_extension* Vcb, uint8_t* data, uint32_t sectors, uint32_t* csum);
+NTSTATUS check_csum(device_extension* Vcb, uint8_t* data, uint32_t sectors, void* csum);
 void raid6_recover2(uint8_t* sectors, uint16_t num_stripes, ULONG sector_size, uint16_t missing1, uint16_t missing2, uint8_t* out);
+void get_tree_checksum(device_extension* Vcb, tree_header* th, void* csum);
+bool check_tree_checksum(device_extension* Vcb, tree_header* th);
+void get_sector_csum(device_extension* Vcb, void* buf, void* csum);
+bool check_sector_csum(device_extension* Vcb, void* buf, void* csum);
 
 // in pnp.c
 
@@ -1491,7 +1550,10 @@ void watch_registry(HANDLE regh);
 NTSTATUS zlib_decompress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32_t outlen);
 NTSTATUS lzo_decompress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32_t outlen, uint32_t inpageoff);
 NTSTATUS zstd_decompress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32_t outlen);
-NTSTATUS write_compressed_bit(fcb* fcb, uint64_t start_data, uint64_t end_data, void* data, bool* compressed, PIRP Irp, LIST_ENTRY* rollback);
+NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void* data, PIRP Irp, LIST_ENTRY* rollback);
+NTSTATUS zlib_compress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32_t outlen, unsigned int level, unsigned int* space_left);
+NTSTATUS lzo_compress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32_t outlen, unsigned int* space_left);
+NTSTATUS zstd_compress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32_t outlen, uint32_t level, unsigned int* space_left);
 
 // in galois.c
 void galois_double(uint8_t* data, uint32_t len);
@@ -1511,8 +1573,12 @@ NTSTATUS __stdcall drv_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
 _Function_class_(KSTART_ROUTINE)
 void __stdcall calc_thread(void* context);
 
-NTSTATUS add_calc_job(device_extension* Vcb, uint8_t* data, uint32_t sectors, uint32_t* csum, calc_job** pcj);
-void free_calc_job(calc_job* cj);
+void do_calc_job(device_extension* Vcb, uint8_t* data, uint32_t sectors, void* csum);
+NTSTATUS add_calc_job_decomp(device_extension* Vcb, uint8_t compression, void* in, unsigned int inlen,
+                             void* out, unsigned int outlen, unsigned int off, calc_job** pcj);
+NTSTATUS add_calc_job_comp(device_extension* Vcb, uint8_t compression, void* in, unsigned int inlen,
+                           void* out, unsigned int outlen, calc_job** pcj);
+void calc_thread_main(device_extension* Vcb, calc_job* cj);
 
 // in balance.c
 NTSTATUS start_balance(device_extension* Vcb, void* data, ULONG length, KPROCESSOR_MODE processor_mode);
@@ -1552,6 +1618,8 @@ NTSTATUS mountmgr_add_drive_letter(PDEVICE_OBJECT mountmgr, PUNICODE_STRING devp
 _Function_class_(DRIVER_NOTIFICATION_CALLBACK_ROUTINE)
 NTSTATUS __stdcall pnp_removal(PVOID NotificationStructure, PVOID Context);
 
+void free_vol(volume_device_extension* vde);
+
 // in scrub.c
 NTSTATUS start_scrub(device_extension* Vcb, KPROCESSOR_MODE processor_mode);
 NTSTATUS query_scrub(device_extension* Vcb, KPROCESSOR_MODE processor_mode, void* data, ULONG length);
@@ -1564,15 +1632,70 @@ NTSTATUS send_subvol(device_extension* Vcb, void* data, ULONG datalen, PFILE_OBJ
 NTSTATUS read_send_buffer(device_extension* Vcb, PFILE_OBJECT FileObject, void* data, ULONG datalen, ULONG_PTR* retlen, KPROCESSOR_MODE processor_mode);
 
 // in fsrtl.c
-NTSTATUS compat_FsRtlValidateReparsePointBuffer(IN ULONG BufferLength, IN PREPARSE_DATA_BUFFER ReparseBuffer);
+NTSTATUS __stdcall compat_FsRtlValidateReparsePointBuffer(IN ULONG BufferLength, IN PREPARSE_DATA_BUFFER ReparseBuffer);
 
 // in boot.c
 void __stdcall check_system_root(PDRIVER_OBJECT DriverObject, PVOID Context, ULONG Count);
+void boot_add_device(DEVICE_OBJECT* pdo);
+extern BTRFS_UUID boot_uuid;
 
 // based on function in sys/sysmacros.h
 #define makedev(major, minor) (((minor) & 0xFF) | (((major) & 0xFFF) << 8) | (((uint64_t)((minor) & ~0xFF)) << 12) | (((uint64_t)((major) & ~0xFFF)) << 32))
 
-#define fast_io_possible(fcb) (!FsRtlAreThereCurrentFileLocks(&fcb->lock) && !fcb->Vcb->readonly ? FastIoIsPossible : FastIoIsQuestionable)
+#ifndef __REACTOS__
+// not in mingw yet
+#ifndef _MSC_VER
+typedef struct {
+    FSRTL_COMMON_FCB_HEADER DUMMYSTRUCTNAME;
+    PFAST_MUTEX FastMutex;
+    LIST_ENTRY FilterContexts;
+    EX_PUSH_LOCK PushLock;
+    PVOID* FileContextSupportPointer;
+    union {
+        OPLOCK Oplock;
+        PVOID ReservedForRemote;
+    };
+    PVOID ReservedContext;
+} FSRTL_ADVANCED_FCB_HEADER_NEW;
+
+#define FSRTL_FCB_HEADER_V2 2
+
+#else
+#define FSRTL_ADVANCED_FCB_HEADER_NEW FSRTL_ADVANCED_FCB_HEADER
+#endif
+#else
+typedef struct {
+    FSRTL_COMMON_FCB_HEADER DUMMYSTRUCTNAME;
+    PFAST_MUTEX FastMutex;
+    LIST_ENTRY FilterContexts;
+    EX_PUSH_LOCK PushLock;
+    PVOID* FileContextSupportPointer;
+    union {
+        OPLOCK Oplock;
+        PVOID ReservedForRemote;
+    };
+    PVOID ReservedContext;
+} FSRTL_ADVANCED_FCB_HEADER_NEW;
+
+#define FSRTL_FCB_HEADER_V2 2
+#endif // __REACTOS__
+
+static __inline POPLOCK fcb_oplock(fcb* fcb) {
+    if (fcb->Header.Version >= FSRTL_FCB_HEADER_V2)
+        return &((FSRTL_ADVANCED_FCB_HEADER_NEW*)&fcb->Header)->Oplock;
+    else
+        return &fcb->oplock;
+}
+
+static __inline FAST_IO_POSSIBLE fast_io_possible(fcb* fcb) {
+    if (!FsRtlOplockIsFastIoPossible(fcb_oplock(fcb)))
+        return FastIoIsNotPossible;
+
+    if (!FsRtlAreThereCurrentFileLocks(&fcb->lock) && !fcb->Vcb->readonly)
+        return FastIoIsPossible;
+
+    return FastIoIsQuestionable;
+}
 
 static __inline void print_open_trees(device_extension* Vcb) {
     LIST_ENTRY* le = Vcb->trees.Flink;
@@ -1606,10 +1729,9 @@ static __inline bool write_fcb_compressed(fcb* fcb) {
 static __inline void do_xor(uint8_t* buf1, uint8_t* buf2, uint32_t len) {
     uint32_t j;
 #ifndef __REACTOS__
+#if defined(_X86_) || defined(_AMD64_)
     __m128i x1, x2;
-#endif
 
-#ifndef __REACTOS__
     if (have_sse2 && ((uintptr_t)buf1 & 0xf) == 0 && ((uintptr_t)buf2 & 0xf) == 0) {
         while (len >= 16) {
             x1 = _mm_load_si128((__m128i*)buf1);
@@ -1622,7 +1744,23 @@ static __inline void do_xor(uint8_t* buf1, uint8_t* buf2, uint32_t len) {
             len -= 16;
         }
     }
+#elif defined(_ARM_) || defined(_ARM64_)
+    uint64x2_t x1, x2;
+
+    if (((uintptr_t)buf1 & 0xf) == 0 && ((uintptr_t)buf2 & 0xf) == 0) {
+        while (len >= 16) {
+            x1 = vld1q_u64((const uint64_t*)buf1);
+            x2 = vld1q_u64((const uint64_t*)buf2);
+            x1 = veorq_u64(x1, x2);
+            vst1q_u64((uint64_t*)buf1, x1);
+
+            buf1 += 16;
+            buf2 += 16;
+            len -= 16;
+        }
+    }
 #endif
+#endif // __REACTOS__
 
     for (j = 0; j < len; j++) {
         *buf1 ^= *buf2;
@@ -1738,16 +1876,16 @@ static __inline uint64_t fcb_alloc_size(fcb* fcb) {
         return sector_align(fcb->inode_item.st_size, fcb->Vcb->superblock.sector_size);
 }
 
-typedef BOOLEAN (*tPsIsDiskCountersEnabled)();
+typedef BOOLEAN (__stdcall *tPsIsDiskCountersEnabled)();
 
-typedef VOID (*tPsUpdateDiskCounters)(PEPROCESS Process, ULONG64 BytesRead, ULONG64 BytesWritten,
-                                      ULONG ReadOperationCount, ULONG WriteOperationCount, ULONG FlushOperationCount);
+typedef VOID (__stdcall *tPsUpdateDiskCounters)(PEPROCESS Process, ULONG64 BytesRead, ULONG64 BytesWritten,
+                                                ULONG ReadOperationCount, ULONG WriteOperationCount, ULONG FlushOperationCount);
 
-typedef BOOLEAN (*tCcCopyWriteEx)(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, BOOLEAN Wait,
-                                  PVOID Buffer, PETHREAD IoIssuerThread);
+typedef BOOLEAN (__stdcall *tCcCopyWriteEx)(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, BOOLEAN Wait,
+                                            PVOID Buffer, PETHREAD IoIssuerThread);
 
-typedef BOOLEAN (*tCcCopyReadEx)(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, BOOLEAN Wait,
-                                 PVOID Buffer, PIO_STATUS_BLOCK IoStatus, PETHREAD IoIssuerThread);
+typedef BOOLEAN (__stdcall *tCcCopyReadEx)(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, BOOLEAN Wait,
+                                           PVOID Buffer, PIO_STATUS_BLOCK IoStatus, PETHREAD IoIssuerThread);
 
 #ifndef CC_ENABLE_DISK_IO_ACCOUNTING
 #define CC_ENABLE_DISK_IO_ACCOUNTING 0x00000010
@@ -1758,22 +1896,26 @@ typedef struct _ECP_LIST ECP_LIST;
 typedef struct _ECP_LIST *PECP_LIST;
 #endif
 
-typedef VOID (*tCcSetAdditionalCacheAttributesEx)(PFILE_OBJECT FileObject, ULONG Flags);
+typedef VOID (__stdcall *tCcSetAdditionalCacheAttributesEx)(PFILE_OBJECT FileObject, ULONG Flags);
 
-typedef VOID (*tFsRtlUpdateDiskCounters)(ULONG64 BytesRead, ULONG64 BytesWritten);
+typedef VOID (__stdcall *tFsRtlUpdateDiskCounters)(ULONG64 BytesRead, ULONG64 BytesWritten);
 
-typedef NTSTATUS (*tIoUnregisterPlugPlayNotificationEx)(PVOID NotificationEntry);
+typedef NTSTATUS (__stdcall *tIoUnregisterPlugPlayNotificationEx)(PVOID NotificationEntry);
 
-typedef NTSTATUS (*tFsRtlGetEcpListFromIrp)(PIRP Irp, PECP_LIST* EcpList);
+typedef NTSTATUS (__stdcall *tFsRtlGetEcpListFromIrp)(PIRP Irp, PECP_LIST* EcpList);
 
-typedef NTSTATUS (*tFsRtlGetNextExtraCreateParameter)(PECP_LIST EcpList, PVOID CurrentEcpContext, LPGUID NextEcpType,
-                                                      PVOID* NextEcpContext, ULONG* NextEcpContextSize);
+typedef NTSTATUS (__stdcall *tFsRtlGetNextExtraCreateParameter)(PECP_LIST EcpList, PVOID CurrentEcpContext, LPGUID NextEcpType,
+                                                                PVOID* NextEcpContext, ULONG* NextEcpContextSize);
 
-typedef NTSTATUS (*tFsRtlValidateReparsePointBuffer)(ULONG BufferLength, PREPARSE_DATA_BUFFER ReparseBuffer);
+typedef NTSTATUS (__stdcall *tFsRtlValidateReparsePointBuffer)(ULONG BufferLength, PREPARSE_DATA_BUFFER ReparseBuffer);
+
+typedef BOOLEAN (__stdcall *tFsRtlCheckLockForOplockRequest)(PFILE_LOCK FileLock, PLARGE_INTEGER AllocationSize);
+
+typedef BOOLEAN (__stdcall *tFsRtlAreThereCurrentOrInProgressFileLocks)(PFILE_LOCK FileLock);
 
 #ifndef __REACTOS__
 #ifndef _MSC_VER
-PEPROCESS PsGetThreadProcess(_In_ PETHREAD Thread); // not in mingw
+PEPROCESS __stdcall PsGetThreadProcess(_In_ PETHREAD Thread); // not in mingw
 #endif
 
 // not in DDK headers - taken from winternl.h
@@ -1822,7 +1964,7 @@ typedef struct _PEB {
     PVOID Reserved7[1];
     ULONG SessionId;
 } PEB,*PPEB;
-#endif
+#endif /* __REACTOS__ */
 
 #ifdef _MSC_VER
 __kernel_entry

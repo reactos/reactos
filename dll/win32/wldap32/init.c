@@ -30,6 +30,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
+#include "wine/winternl.h"
 
 #include "winldap_private.h"
 #include "wldap32.h"
@@ -114,10 +115,10 @@ oom:
 /* Determine if a URL starts with a known LDAP scheme */
 static BOOL has_ldap_scheme( char *url )
 {
-    return !strncasecmp( url, "ldap://", 7 )  ||
-           !strncasecmp( url, "ldaps://", 8 ) ||
-           !strncasecmp( url, "ldapi://", 8 ) ||
-           !strncasecmp( url, "cldap://", 8 );
+    return !_strnicmp( url, "ldap://", 7 )  ||
+           !_strnicmp( url, "ldaps://", 8 ) ||
+           !_strnicmp( url, "ldapi://", 8 ) ||
+           !_strnicmp( url, "cldap://", 8 );
 }
 
 /* Flatten an array of hostnames into a space separated string of URLs.

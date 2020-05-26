@@ -149,6 +149,7 @@ static void check_wnd_state_(const char *file, int line,
     /* foreground can be moved to a different app pretty much at any time */
     if (foreground && GetForegroundWindow() &&
         GetWindowThreadProcessId(GetForegroundWindow(), NULL) == GetCurrentThreadId())
+        disable_success_count
         ok_(file, line)(foreground == GetForegroundWindow(), "GetForegroundWindow() = %p\n", GetForegroundWindow());
     ok_(file, line)(focus == GetFocus(), "GetFocus() = %p\n", GetFocus());
     ok_(file, line)(capture == GetCapture(), "GetCapture() = %p\n", GetCapture());
@@ -164,6 +165,7 @@ static void check_active_state_(const char *file, int line,
     /* foreground can be moved to a different app pretty much at any time */
     if (foreground && GetForegroundWindow() &&
         GetWindowThreadProcessId(GetForegroundWindow(), NULL) == GetCurrentThreadId())
+        disable_success_count
         ok_(file, line)(foreground == GetForegroundWindow(), "GetForegroundWindow() = %p\n", GetForegroundWindow());
     ok_(file, line)(focus == GetFocus(), "GetFocus() = %p\n", GetFocus());
 }
@@ -774,6 +776,7 @@ static LRESULT WINAPI main_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 	    break;
 	}
 	case WM_WINDOWPOSCHANGED:
+    disable_success_count
 	{
             RECT rc1, rc2;
 	    WINDOWPOS *winpos = (WINDOWPOS *)lparam;
@@ -966,6 +969,8 @@ static void verify_window_info(const char *hook, HWND hwnd, const WINDOWINFO *in
     if (GetForegroundWindow())
         ok(info->dwWindowStatus == status, "wrong dwWindowStatus: %04x != %04x active %p fg %p in hook %s\n",
            info->dwWindowStatus, status, GetActiveWindow(), GetForegroundWindow(), hook);
+    else
+        ok(1, "Just counting");
 
     /* win2k and XP return broken border info in GetWindowInfo most of
      * the time, so there is no point in testing it.
@@ -981,6 +986,7 @@ if (0)
 }
     ok(info->atomWindowType == GetClassLongA(hwnd, GCW_ATOM), "wrong atomWindowType for %p in hook %s\n",
        hwnd, hook);
+    todo_ros
     ok(info->wCreatorVersion == 0x0400 /* NT4, Win2000, XP, Win2003 */ ||
        info->wCreatorVersion == 0x0500 /* Vista */,
        "wrong wCreatorVersion %04x for %p in hook %s\n", info->wCreatorVersion, hwnd, hook);
@@ -3091,8 +3097,10 @@ static void test_SetActiveWindow(HWND hwnd)
     ok(hwnd2 == hwnd, "SetActiveWindow returned %p instead of %p\n", hwnd2, hwnd);
     if (!GetActiveWindow())  /* doesn't always work on vista */
     {
+        ros_skip_flaky
         check_wnd_state(0, 0, 0, 0);
         hwnd2 = SetActiveWindow(hwnd);
+        ros_skip_flaky
         ok(hwnd2 == 0, "SetActiveWindow returned %p instead of 0\n", hwnd2);
     }
     check_wnd_state(hwnd, hwnd, hwnd, 0);

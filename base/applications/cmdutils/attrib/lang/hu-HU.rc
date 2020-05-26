@@ -4,6 +4,7 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ATTRIB_HELP "Állományok attribútumok megjelenítése vagy beállításai.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] állomány ...\n\
        [/S [/D]]\n\n\

@@ -32,7 +32,7 @@ CNode::CNode(const CNode &Node)
     m_DeviceId = Node.m_DeviceId;
     m_ClassImage = Node.m_ClassImage;
 
-    StringCbCopyW(m_DisplayName, DISPLAY_NAME_LEN, Node.m_DisplayName);
+    StringCbCopyW(m_DisplayName, sizeof(m_DisplayName), Node.m_DisplayName);
     CopyMemory(&m_ClassGuid, &Node.m_ClassGuid, sizeof(GUID));
 }
 

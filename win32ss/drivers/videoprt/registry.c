@@ -20,7 +20,6 @@
  */
 
 #include "videoprt.h"
-
 #include <ndk/obfuncs.h>
 
 #define NDEBUG
@@ -122,7 +121,7 @@ IntCopyRegistryKey(
                              &ObjectAttributes,
                              0,
                              NULL,
-                             0,
+                             REG_OPTION_NON_VOLATILE,
                              NULL);
         if (!NT_SUCCESS(Status))
         {

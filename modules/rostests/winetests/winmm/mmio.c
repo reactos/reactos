@@ -606,7 +606,7 @@ static LRESULT CALLBACK mmio_test_IOProc(LPSTR lpMMIOInfo, UINT uMessage, LPARAM
     case MMIOM_OPEN:
         if (lpInfo->fccIOProc == FOURCC_DOS)
             lpInfo->fccIOProc = mmioFOURCC('F', 'A', 'I', 'L');
-        for (i = 0; i < sizeof(lpInfo->adwInfo) / sizeof(*lpInfo->adwInfo); i++)
+        for (i = 0; i < ARRAY_SIZE(lpInfo->adwInfo); i++)
             ok(lpInfo->adwInfo[i] == 0, "[%d] Expected 0, got %u\n", i, lpInfo->adwInfo[i]);
         return MMSYSERR_NOERROR;
     case MMIOM_CLOSE:

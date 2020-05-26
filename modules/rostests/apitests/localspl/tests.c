@@ -167,7 +167,7 @@ _RunRemoteTest(const char* szTestName)
     }
 
     // Send the test name.
-    if (!WriteFile(hCommandPipe, szTestName, strlen(szTestName) + sizeof(char), &cbWritten, NULL))
+    if (!WriteFile(hCommandPipe, szTestName, lstrlenA(szTestName) + sizeof(char), &cbWritten, NULL))
     {
         skip("WriteFile failed with error %lu!\n", GetLastError());
         goto Cleanup;

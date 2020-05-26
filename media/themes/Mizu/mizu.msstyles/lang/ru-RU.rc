@@ -31,7 +31,7 @@ STRINGTABLE
 5002, "Команда ReactOS"
 5003, "Foxlet, основан на Lautus"
 5004, "Выпущен под GNU/GPL 2.0, 2019"
-5005, "http://www.reactos.org"
+5005, "https://reactos.org/"
 5006, "1.0"
 5007, "Визуальный стиль для ReactOS"
 }

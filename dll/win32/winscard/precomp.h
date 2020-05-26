@@ -2,8 +2,6 @@
 #ifndef _WINSCARD_PCH_
 #define _WINSCARD_PCH_
 
-#include <wine/config.h>
-
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS

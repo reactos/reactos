@@ -1138,9 +1138,9 @@ static int WINAPI int_func( int a0, int a1, int a2, int a3, int a4 )
 
 static double WINAPI double_func( double a0, float a1, double a2, int a3 )
 {
-    ok( a0 == 1.2, "wrong arg0 %f\n", (double)a0 );
+    ok( a0 == 1.2, "wrong arg0 %f\n", a0 );
     ok( a1 == 3.25, "wrong arg1 %f\n", (double)a1 );
-    ok( a2 == 1.2e12, "wrong arg2 %f\n", (double)a2);
+    ok( a2 == 1.2e12, "wrong arg2 %f\n", a2);
     ok( a3 == -4433.0, "wrong arg3 %f\n", (double)a3 );
     return 4321;
 }
@@ -4807,7 +4807,7 @@ static void test_dump_typelib(const char *name)
 
         for (func = 0; func < typeattr->cFuncs; func++)
         {
-            function_info *fn_info = (function_info *)&ti->funcs[func];
+            const function_info *fn_info = &ti->funcs[func];
             FUNCDESC *desc;
             BSTR namesTab[256];
             UINT cNames;
@@ -4963,6 +4963,7 @@ static void test_register_typelib(BOOL system_registration)
     HKEY hkey;
     REGSAM opposite = (sizeof(void*) == 8 ? KEY_WOW64_32KEY : KEY_WOW64_64KEY);
     BOOL is_wow64 = FALSE;
+    LONG size;
     struct
     {
         TYPEKIND kind;
@@ -5071,7 +5072,26 @@ static void test_register_typelib(BOOL system_registration)
 
         ret = RegOpenKeyExA(HKEY_CLASSES_ROOT, key_name, 0, KEY_READ, &hkey);
         ok(ret == expect_ret, "%d: got %d\n", i, ret);
-        if(ret == ERROR_SUCCESS) RegCloseKey(hkey);
+        if (ret == ERROR_SUCCESS)
+        {
+            size = sizeof(uuid);
+            ret = RegQueryValueA(hkey, "ProxyStubClsid32", uuid, &size);
+            ok(!ret, "Failed to get proxy GUID, error %u.\n", ret);
+
+            if (attrs[i].kind == TKIND_INTERFACE || (attrs[i].flags & TYPEFLAG_FDUAL))
+            {
+                ok(!strcasecmp(uuid, "{00020424-0000-0000-c000-000000000046}"),
+                        "Got unexpected proxy CLSID %s.\n", uuid);
+            }
+            else
+            {
+                ok(!strcasecmp(uuid, "{00020420-0000-0000-c000-000000000046}"),
+                        "Got unexpected proxy CLSID %s.\n", uuid);
+            }
+
+            RegCloseKey(hkey);
+        }
+
 
         /* 32-bit typelibs should be registered into both registry bit modes */
         if (is_win64 || is_wow64)

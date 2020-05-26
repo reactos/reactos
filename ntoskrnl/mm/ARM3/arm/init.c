@@ -37,7 +37,7 @@ ULONG MmSessionPoolSize;
 ULONG MmSessionImageSize;
 PVOID MiSystemViewStart;
 ULONG MmSystemViewSize;
-PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
+PFN_NUMBER MmSystemPageDirectory[PPE_PER_PAGE];
 PMMPDE MmSystemPagePtes;
 ULONG MmNumberOfSystemPtes;
 ULONG MxPfnAllocation;
@@ -57,9 +57,9 @@ PVOID MmHyperSpaceEnd;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     //

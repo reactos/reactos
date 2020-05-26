@@ -1380,10 +1380,10 @@ static void test_XDR_datatypes(void)
             break;
         case VT_R8:
             if (!strcmp(ptr->typename, "float"))
-                ok(V_R8(&v) == (double)3.14159, "got %f\n", V_R8(&v));
+                ok(V_R8(&v) == 3.14159, "got %f\n", V_R8(&v));
             else
             todo_wine
-                ok(V_R8(&v) == (double)3.14159265358979323846, "got %.20f\n", V_R8(&v));
+                ok(V_R8(&v) == 3.14159265358979323846, "got %.20f\n", V_R8(&v));
             break;
         case VT_UI1:
             ok(V_UI1(&v) == 0xFF, "got %02x\n", V_UI1(&v));

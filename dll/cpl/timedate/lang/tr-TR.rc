@@ -56,4 +56,6 @@ BEGIN
     IDS_INETTIMENEXTSYNC "Bir Sonraki Eşleştirme: %s.%s"
     IDS_INETTIMESYNCING "ReactOS, saati %s ile eşleştirirken lütfen bekleyiniz."
     IDS_INETTIMEERROR "ReactOS, %s ile eşleştirirken bir yanlışlık oldu."
+    IDS_INETTIMESUCFILL "Please type a NTP server name in order to synchronize the time"
+    IDS_INETTIMEWELCOME "Select a NTP server from the list or type a NTP server name to synchronize the computer's time"
 END

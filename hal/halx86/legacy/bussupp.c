@@ -792,7 +792,7 @@ ShowSize(ULONG x)
     {
         DbgPrint("%d", x);
     }
-    DbgPrint("]\n");
+    DbgPrint("]");
 }
 
 /*
@@ -980,6 +980,7 @@ HalpDebugPciDumpBus(IN ULONG i,
                          (Mem & PCI_ADDRESS_MEMORY_PREFETCHABLE) ? "" : "non-");
                 ShowSize(Size);
             }
+            DbgPrint("\n");
         }
     }
 }

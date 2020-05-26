@@ -1,6 +1,7 @@
 
 include_directories(
     ${REACTOS_SOURCE_DIR}
+    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/arbiter
     ${REACTOS_SOURCE_DIR}/sdk/lib/cmlib
     include
     ${CMAKE_CURRENT_BINARY_DIR}/include
@@ -151,6 +152,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/symlink.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/util.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/volume.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/arbs.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/plugplay.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpdma.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpinit.c
@@ -160,6 +162,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpres.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnproot.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnputil.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/io/debug.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/apc.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/balmgr.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/bug.c
@@ -369,7 +372,6 @@ if(NOT _WINKD_)
     if(ARCH STREQUAL "i386")
         list(APPEND SOURCE
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdbg.c
-            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdmemsup.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/gdbstub.c)
         if(KDBG)
             list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/i386/kdb_help.S)
@@ -377,9 +379,8 @@ if(NOT _WINKD_)
         endif()
     elseif(ARCH STREQUAL "amd64")
         list(APPEND SOURCE
-            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/amd64/kd.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdbg.c  # Use the x86 file
-            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/amd64/kdmemsup.c)
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/amd64/kd.c)
         if(KDBG)
             list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/amd64/kdb_help.S)
             list(APPEND SOURCE
@@ -407,7 +408,10 @@ if(NOT _WINKD_)
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/kdbg.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdinit.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdio.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c)
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdapi.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kddata.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdprint.c)
 
 else() # _WINKD_
 

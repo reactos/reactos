@@ -18,6 +18,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Automaatkorralda", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -38,9 +39,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Automaatkorralda", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Joonda koordinaatvõrguga", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Värskenda", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Kleebi", FCIDM_SHVIEW_INSERT
@@ -142,11 +142,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Versioon ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Autoriõigus 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
@@ -395,7 +391,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Seaded valitud asukohale", -1, 10, 72, 220, 70
     RADIOBUTTON "&Kohandatud maht:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "M&aksimaalne maht(MB):", -1, 20, 105, 80, 10
     RADIOBUTTON "Ära teiselda faile prügikasti. Eemalda failid kohe kustutamisel", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Kuva kustutuskinnituse dialoogiboks", 14004, 20, 155, 140, 10, WS_TABSTOP
@@ -411,8 +407,8 @@ BEGIN
     LTEXT "Fail:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programmid", -1, 7, 42, 249, 187
     CONTROL "Programmid", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "&Ava seda tüüpi fail alati valitud programmiga", 14003, 20, 193, 225, 10
-    PUSHBUTTON "&Sirvi...", 14004, 198, 207, 50, 14
+    AUTOCHECKBOX "&Ava seda tüüpi fail alati valitud programmiga", 14003, 16, 193, 232, 10
+    PUSHBUTTON "&Sirvi...", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Loobu", IDCANCEL, 206, 236, 50, 14
 END
@@ -459,17 +455,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Failitüübid"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Registreeritud faili&tüübid:", -1, 7, 10, 70, 10
-    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-    PUSHBUTTON "&Uus", IDC_FILETYPES_NEW, 120, 110, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Kustuta", IDC_FILETYPES_DELETE, 180, 110, 50, 14, WS_TABSTOP
-    GROUPBOX "Failitüübi '%s' üksikasjad", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 249, 70
-    LTEXT "Avamisprogramm:", -1, 12, 140, 60, 10
-    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 140, 10, 10
-    LTEXT "Appname", IDC_FILETYPES_APPNAME, 100, 140, 80, 10
-    PUSHBUTTON "&Muuda...", IDC_FILETYPES_CHANGE, 180, 140, 50, 14, WS_TABSTOP
-    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 155, 160, 30
-    PUSHBUTTON "&Täpsemalt", IDC_FILETYPES_ADVANCED, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "Registreeritud faili&tüübid:", -1, 7, 10, 180, 10
+    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 115
+    PUSHBUTTON "&Uus", IDC_FILETYPES_NEW, 140, 140, 55, 14, WS_TABSTOP
+    PUSHBUTTON "&Kustuta", IDC_FILETYPES_DELETE, 200, 140, 55, 14, WS_TABSTOP
+    GROUPBOX "Failitüübi '%s' üksikasjad", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 170, 249, 70
+    LTEXT "Avamisprogramm:", -1, 12, 180, 60, 10
+    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 180, 10, 10
+    LTEXT "Appname", IDC_FILETYPES_APPNAME, 100, 180, 80, 10
+    PUSHBUTTON "&Muuda...", IDC_FILETYPES_CHANGE, 200, 180, 50, 14, WS_TABSTOP
+    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 195, 160, 40
+    PUSHBUTTON "&Täpsemalt", IDC_FILETYPES_ADVANCED, 200, 215, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -758,6 +754,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "Saad lisada, muuta ja  hallata oma arvutis fonte."
     IDS_PRINTERS_DESCRIPTION "Kuvab installitud printerid ja faksprinterid ja aitab teil uusi lisada."
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Versioon %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "&Suured ikoonid"
     IDS_VIEW_SMALL "&Väikesed ikoonid"
@@ -776,6 +775,16 @@ BEGIN
     IDS_PASTE "Kleebi"
     IDS_EJECT "Väljuta"
     IDS_DISCONNECT "Katkesta ühendus"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_SENDTO_MENU "Se&nd To"
+
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "Ei saa luua kausta '%1'"
     IDS_CREATEFOLDER_CAPTION "Ei saa kausta luua"
@@ -816,7 +825,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Sirvi"
     IDS_RUNDLG_BROWSE_FILTER "Rakendatavad failid (*.exe)\0*.exe\0Kõik failid (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Start Menu\\Programs"
     IDS_PERSONAL "Minu dokumendid"
     IDS_FAVORITES "Lemmikud"
@@ -879,6 +888,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Ei saa meediumit väljutada (Veateade: %lu)."
     IDS_CANTSHOWPROPERTIES "Ei saa atribuute näidata (Veateade: %lu)."
     IDS_CANTDISCONNECT "Ei saa lahti ühendada (Veateade: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Kaust"
@@ -915,6 +925,7 @@ BEGIN
     IDS_EDIT_VERB "Muuda"
     IDS_FIND_VERB "Leia"
     IDS_PRINT_VERB "Prindi"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Faili, %u Kausta"
     IDS_PRINTERS "Printerid"

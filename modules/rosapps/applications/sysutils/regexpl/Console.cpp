@@ -716,7 +716,9 @@ Paste:
 				ASSERT(dwCompletionOffset <= dwCurrentCharOffset);
 
         // Save not changing part (context) of completion in m_pchBuffer1
-				_tcsncpy(m_pchBuffer1,m_pchBuffer,dwCompletionOffset);
+
+				// FIXME: dwCompletionOffset is always 0 here
+				// _tcsncpy(m_pchBuffer1,m_pchBuffer,dwCompletionOffset);
 				m_pchBuffer1[dwCompletionOffset] = 0;
 
         // Size of changing part

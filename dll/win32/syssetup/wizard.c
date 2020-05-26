@@ -6,6 +6,7 @@
  * PROGRAMMERS:     Eric Kohl
  *                  Pierre Schweitzer <heis_spiter@hotmail.com>
  *                  Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 /* INCLUDES *****************************************************************/
@@ -18,6 +19,8 @@
 #include <windowsx.h>
 #include <wincon.h>
 #include <shlobj.h>
+#include <tzlib.h>
+#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -44,6 +47,17 @@ typedef struct _REGISTRATIONDATA
     ULONG Registered;
     PVOID DefaultContext;
 } REGISTRATIONDATA, *PREGISTRATIONDATA;
+
+typedef struct _TIMEZONE_ENTRY
+{
+    struct _TIMEZONE_ENTRY *Prev;
+    struct _TIMEZONE_ENTRY *Next;
+    WCHAR Description[128]; /* 'Display' */
+    WCHAR StandardName[32]; /* 'Std' */
+    WCHAR DaylightName[32]; /* 'Dlt' */
+    REG_TZI_FORMAT TimezoneInfo; /* 'TZI' */
+    ULONG Index;
+} TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -355,9 +369,228 @@ AckPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_PRODUCT);
+                        return TRUE;
+                    }
+                    break;
+
+                case PSN_WIZBACK:
+                    pSetupData->UnattendSetup = FALSE;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        break;
+
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
+static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
+static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
+static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
+
+typedef struct _PRODUCT_OPTION_DATA
+{
+    LPCWSTR ProductSuite;
+    LPCWSTR ProductType;
+    DWORD ReportAsWorkstation;
+    DWORD CSDVersion;
+} PRODUCT_OPTION_DATA;
+
+static const PRODUCT_OPTION_DATA s_ProductOptionData[] =
+{
+    { L"Terminal Server\0", L"ServerNT", 0, 0x200 },
+    { L"\0", L"WinNT", 1, 0x300 }
+};
+
+static BOOL
+DoWriteProductOption(PRODUCT_OPTION nOption)
+{
+    HKEY hKey;
+    LONG error;
+    LPCWSTR pszData;
+    DWORD dwValue, cbData;
+    const PRODUCT_OPTION_DATA *pData = &s_ProductOptionData[nOption];
+    ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
+
+    /* open ProductOptions key */
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
+    if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
+
+    /* write ProductSuite */
+    pszData = pData->ProductSuite;
+    cbData = (lstrlenW(pszData) + 2) * sizeof(WCHAR);
+    error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (const BYTE *)pszData, cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
+    }
+
+    /* write ProductType */
+    pszData = pData->ProductType;
+    cbData = (lstrlenW(pszData) + 1) * sizeof(WCHAR);
+    error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (const BYTE *)pszData, cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
+    }
+
+    RegCloseKey(hKey);
+
+    /* open ReactOS version key */
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szRosVersion, 0, KEY_WRITE, &hKey);
+    if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
+
+    /* write ReportAsWorkstation */
+    dwValue = pData->ReportAsWorkstation;
+    cbData = sizeof(dwValue);
+    error = RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
+    }
+
+    RegCloseKey(hKey);
+
+    /* open Control Windows key */
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szControlWindows, 0, KEY_WRITE, &hKey);
+    if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
+
+    /* write Control Windows CSDVersion */
+    dwValue = pData->CSDVersion;
+    cbData = sizeof(dwValue);
+    error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
+    }
+
+Error:
+    if (hKey)
+        RegCloseKey(hKey);
+
+    return error == ERROR_SUCCESS;
+}
+
+static void
+OnChooseOption(HWND hwndDlg, PRODUCT_OPTION nOption)
+{
+    WCHAR szText[256];
+    ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
+
+    switch (nOption)
+    {
+        case PRODUCT_OPTION_SERVER:
+            LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
+            break;
+
+        case PRODUCT_OPTION_WORKSTATION:
+            LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
+            break;
+
+        default:
+            return;
+    }
+
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
+}
+
+static INT_PTR CALLBACK
+ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    LPNMHDR lpnm;
+    PSETUPDATA pSetupData;
+    INT iItem;
+    WCHAR szText[64], szDefault[64];
+    HICON hIcon;
+
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSetupData);
+
+            LoadStringW(hDllInstance, IDS_DEFAULT, szDefault, _countof(szDefault));
+
+            LoadStringW(hDllInstance, IDS_PRODUCTSERVERNAME, szText, _countof(szText));
+            if (PRODUCT_OPTION_DEFAULT == PRODUCT_OPTION_SERVER)
+            {
+                StringCchCatW(szText, _countof(szText), L" ");
+                StringCchCatW(szText, _countof(szText), szDefault);
+            }
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
+
+            LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONNAME, szText, _countof(szText));
+            if (PRODUCT_OPTION_DEFAULT == PRODUCT_OPTION_WORKSTATION)
+            {
+                StringCchCatW(szText, _countof(szText), L" ");
+                StringCchCatW(szText, _countof(szText), szDefault);
+            }
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
+
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_DEFAULT, 0);
+            OnChooseOption(hwndDlg, PRODUCT_OPTION_DEFAULT);
+
+            hIcon = LoadIcon(NULL, IDI_WINLOGO);
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_ICON, STM_SETICON, (WPARAM)hIcon, 0);
+            return TRUE;
+        }
+
+        case WM_COMMAND:
+            if (HIWORD(wParam) == CBN_SELCHANGE && IDC_PRODUCT_OPTIONS == LOWORD(wParam))
+            {
+                iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
+                OnChooseOption(hwndDlg, (PRODUCT_OPTION)iItem);
+            }
+            break;
+
+        case WM_NOTIFY:
+        {
+            lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                    /* Enable the Back and Next buttons */
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+                    if (pSetupData->UnattendSetup)
+                    {
+                        OnChooseOption(hwndDlg, pSetupData->ProductOption);
+                        DoWriteProductOption(pSetupData->ProductOption);
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
                     }
+                    break;
+
+                case PSN_WIZNEXT:
+                    iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
+                    pSetupData->ProductOption = (PRODUCT_OPTION)iItem;
+                    DoWriteProductOption(pSetupData->ProductOption);
                     break;
 
                 case PSN_WIZBACK:
@@ -556,7 +789,10 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
         return FALSE;
     }
 
-    /* Try to also set DNS hostname */
+    /* Set the physical DNS domain */
+    SetComputerNameExW(ComputerNamePhysicalDnsDomain, L"");
+
+    /* Set the physical DNS hostname */
     SetComputerNameExW(ComputerNamePhysicalDnsHostname, ComputerName);
 
     /* Set the accounts domain name */
@@ -757,7 +993,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                         return TRUE;
                     }
 
-#if 0
+#ifdef PASSWORDS_MANDATORY
                     /* Check if admin passwords have been entered */
                     if ((GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 128) == 0) ||
                         (GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 128) == 0))
@@ -1055,165 +1291,92 @@ GetLargerTimeZoneEntry(PSETUPDATA SetupData, DWORD Index)
     return NULL;
 }
 
+static LONG
+RetrieveTimeZone(
+    IN HKEY hZoneKey,
+    IN PVOID Context)
+{
+    LONG lError;
+    PSETUPDATA SetupData = (PSETUPDATA)Context;
+    PTIMEZONE_ENTRY Entry;
+    PTIMEZONE_ENTRY Current;
+    ULONG DescriptionSize;
+    ULONG StandardNameSize;
+    ULONG DaylightNameSize;
+
+    Entry = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TIMEZONE_ENTRY));
+    if (Entry == NULL)
+    {
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    DescriptionSize  = sizeof(Entry->Description);
+    StandardNameSize = sizeof(Entry->StandardName);
+    DaylightNameSize = sizeof(Entry->DaylightName);
+
+    lError = QueryTimeZoneData(hZoneKey,
+                               &Entry->Index,
+                               &Entry->TimezoneInfo,
+                               Entry->Description,
+                               &DescriptionSize,
+                               Entry->StandardName,
+                               &StandardNameSize,
+                               Entry->DaylightName,
+                               &DaylightNameSize);
+    if (lError != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, Entry);
+        return lError;
+    }
+
+    if (SetupData->TimeZoneListHead == NULL &&
+        SetupData->TimeZoneListTail == NULL)
+    {
+        Entry->Prev = NULL;
+        Entry->Next = NULL;
+        SetupData->TimeZoneListHead = Entry;
+        SetupData->TimeZoneListTail = Entry;
+    }
+    else
+    {
+        Current = GetLargerTimeZoneEntry(SetupData, Entry->Index);
+        if (Current != NULL)
+        {
+            if (Current == SetupData->TimeZoneListHead)
+            {
+                /* Prepend to head */
+                Entry->Prev = NULL;
+                Entry->Next = SetupData->TimeZoneListHead;
+                SetupData->TimeZoneListHead->Prev = Entry;
+                SetupData->TimeZoneListHead = Entry;
+            }
+            else
+            {
+                /* Insert before current */
+                Entry->Prev = Current->Prev;
+                Entry->Next = Current;
+                Current->Prev->Next = Entry;
+                Current->Prev = Entry;
+            }
+        }
+        else
+        {
+            /* Append to tail */
+            Entry->Prev = SetupData->TimeZoneListTail;
+            Entry->Next = NULL;
+            SetupData->TimeZoneListTail->Next = Entry;
+            SetupData->TimeZoneListTail = Entry;
+        }
+    }
+
+    return ERROR_SUCCESS;
+}
 
 static VOID
 CreateTimeZoneList(PSETUPDATA SetupData)
 {
-    WCHAR szKeyName[256];
-    DWORD dwIndex;
-    DWORD dwNameSize;
-    DWORD dwValueSize;
-    LONG lError;
-    HKEY hZonesKey;
-    HKEY hZoneKey;
-
-    PTIMEZONE_ENTRY Entry;
-    PTIMEZONE_ENTRY Current;
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
-                      0,
-                      KEY_ALL_ACCESS,
-                      &hZonesKey))
-        return;
-
-    dwIndex = 0;
-    while (TRUE)
-    {
-        dwNameSize = 256 * sizeof(WCHAR);
-        lError = RegEnumKeyExW(hZonesKey,
-                               dwIndex,
-                               szKeyName,
-                               &dwNameSize,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL);
-        if (lError != ERROR_SUCCESS && lError != ERROR_MORE_DATA)
-            break;
-
-        if (RegOpenKeyExW(hZonesKey,
-                          szKeyName,
-                          0,
-                          KEY_ALL_ACCESS,
-                          &hZoneKey))
-            break;
-
-        Entry = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TIMEZONE_ENTRY));
-        if (Entry == NULL)
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = 64 * sizeof(WCHAR);
-        if (RegQueryValueExW(hZoneKey,
-                             L"Display",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->Description,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = 32 * sizeof(WCHAR);
-        if (RegQueryValueExW(hZoneKey,
-                             L"Std",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->StandardName,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = 32 * sizeof(WCHAR);
-        if (RegQueryValueExW(hZoneKey,
-                             L"Dlt",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->DaylightName,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = sizeof(DWORD);
-        if (RegQueryValueExW(hZoneKey,
-                             L"Index",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->Index,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = sizeof(TZ_INFO);
-        if (RegQueryValueExW(hZoneKey,
-                             L"TZI",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->TimezoneInfo,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        RegCloseKey(hZoneKey);
-
-        if (SetupData->TimeZoneListHead == NULL &&
-                SetupData->TimeZoneListTail == NULL)
-        {
-            Entry->Prev = NULL;
-            Entry->Next = NULL;
-            SetupData->TimeZoneListHead = Entry;
-            SetupData->TimeZoneListTail = Entry;
-        }
-        else
-        {
-            Current = GetLargerTimeZoneEntry(SetupData, Entry->Index);
-            if (Current != NULL)
-            {
-                if (Current == SetupData->TimeZoneListHead)
-                {
-                    /* Prepend to head */
-                    Entry->Prev = NULL;
-                    Entry->Next = SetupData->TimeZoneListHead;
-                    SetupData->TimeZoneListHead->Prev = Entry;
-                    SetupData->TimeZoneListHead = Entry;
-                }
-                else
-                {
-                    /* Insert before current */
-                    Entry->Prev = Current->Prev;
-                    Entry->Next = Current;
-                    Current->Prev->Next = Entry;
-                    Current->Prev = Entry;
-                }
-            }
-            else
-            {
-                /* Append to tail */
-                Entry->Prev = SetupData->TimeZoneListTail;
-                Entry->Next = NULL;
-                SetupData->TimeZoneListTail->Next = Entry;
-                SetupData->TimeZoneListTail = Entry;
-            }
-        }
-
-        dwIndex++;
-    }
-
-    RegCloseKey(hZonesKey);
+    EnumerateTimeZoneList(RetrieveTimeZone, SetupData);
 }
-
 
 static VOID
 DestroyTimeZoneList(PSETUPDATA SetupData)
@@ -1234,117 +1397,6 @@ DestroyTimeZoneList(PSETUPDATA SetupData)
     }
 
     SetupData->TimeZoneListTail = NULL;
-}
-
-static BOOL
-GetTimeZoneListIndex(LPDWORD lpIndex)
-{
-    WCHAR szLanguageIdString[9];
-    HKEY hKey;
-    DWORD dwValueSize;
-    DWORD Length;
-    LPWSTR Buffer;
-    LPWSTR Ptr;
-    LPWSTR End;
-    BOOL bFound = FALSE;
-    unsigned long iLanguageID;
-
-    if (*lpIndex == -1)
-    {
-        *lpIndex = 85; /* fallback to GMT time zone */
-
-        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                          L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
-                          0,
-                          KEY_ALL_ACCESS,
-                          &hKey))
-            return FALSE;
-
-        dwValueSize = 9 * sizeof(WCHAR);
-        if (RegQueryValueExW(hKey,
-                             L"Default",
-                             NULL,
-                             NULL,
-                             (LPBYTE)szLanguageIdString,
-                             &dwValueSize))
-        {
-            RegCloseKey(hKey);
-            return FALSE;
-        }
-
-        iLanguageID = wcstoul(szLanguageIdString, NULL, 16);
-        RegCloseKey(hKey);
-    }
-    else
-    {
-        iLanguageID = *lpIndex;
-    }
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
-                      0,
-                      KEY_ALL_ACCESS,
-                      &hKey))
-        return FALSE;
-
-    dwValueSize = 0;
-    if (RegQueryValueExW(hKey,
-                         L"IndexMapping",
-                         NULL,
-                         NULL,
-                         NULL,
-                         &dwValueSize))
-    {
-        RegCloseKey(hKey);
-        return FALSE;
-    }
-
-    Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwValueSize);
-    if (Buffer == NULL)
-    {
-        RegCloseKey(hKey);
-        return FALSE;
-    }
-
-    if (RegQueryValueExW(hKey,
-                         L"IndexMapping",
-                         NULL,
-                         NULL,
-                         (LPBYTE)Buffer,
-                         &dwValueSize))
-    {
-        HeapFree(GetProcessHeap(), 0, Buffer);
-        RegCloseKey(hKey);
-        return FALSE;
-    }
-
-    RegCloseKey(hKey);
-
-    Ptr = Buffer;
-    while (*Ptr != 0)
-    {
-        Length = wcslen(Ptr);
-        if (wcstoul(Ptr, NULL, 16) == iLanguageID)
-            bFound = TRUE;
-
-        Ptr = Ptr + Length + 1;
-        if (*Ptr == 0)
-            break;
-
-        if (bFound)
-        {
-            *lpIndex = wcstoul(Ptr, &End, 10);
-            HeapFree(GetProcessHeap(), 0, Buffer);
-            return TRUE;
-        }
-
-        Length = wcslen(Ptr);
-        Ptr = Ptr + Length + 1;
-    }
-
-    HeapFree(GetProcessHeap(), 0, Buffer);
-
-    return FALSE;
 }
 
 
@@ -1452,32 +1504,6 @@ GetLocalSystemTime(HWND hwnd, PSETUPDATA SetupData)
 }
 
 
-static VOID
-SetAutoDaylightInfo(HWND hwnd)
-{
-    HKEY hKey;
-    DWORD dwValue = 1;
-
-    if (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_UNCHECKED)
-    {
-        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                          L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
-                          0,
-                          KEY_SET_VALUE,
-                          &hKey))
-            return;
-
-        RegSetValueExW(hKey,
-                       L"DisableAutoDaylightTimeSet",
-                       0,
-                       REG_DWORD,
-                       (LPBYTE)&dwValue,
-                       sizeof(DWORD));
-        RegCloseKey(hKey);
-    }
-}
-
-
 static BOOL
 SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
 {
@@ -1514,7 +1540,8 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
     SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
                      SetupData);
 
-    SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
+    SetAutoDaylight(SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT,
+                                       BM_GETCHECK, 0, 0) != BST_UNCHECKED);
     if (!SetSystemLocalTime(hwndDlg, SetupData))
     {
         if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, ARRAYSIZE(Title)))
@@ -1548,6 +1575,7 @@ DateTimePageDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
@@ -1572,6 +1600,7 @@ DateTimePageDlgProc(HWND hwndDlg,
                 SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
             }
             break;
+        }
 
         case WM_TIMER:
             UpdateLocalSystemTime(hwndDlg);
@@ -2408,7 +2437,10 @@ ProcessUnattendSection(
             else
                 pSetupData->DisableGeckoInst = FALSE;
         }
-
+        else if (!_wcsicmp(szName, L"ProductOption"))
+        {
+            pSetupData->ProductOption = (PRODUCT_OPTION)_wtoi(szValue);
+        }
     } while (SetupFindNextLine(&InfContext, &InfContext));
 
     if (SetupFindFirstLineW(pSetupData->hSetupInf,
@@ -2658,7 +2690,7 @@ typedef DWORD(WINAPI *PFNREQUESTWIZARDPAGES)(PDWORD, HPROPSHEETPAGE *, PSETUPDAT
 VOID
 InstallWizard(VOID)
 {
-    PROPSHEETHEADER psh;
+    PROPSHEETHEADER psh = {0};
     HPROPSHEETPAGE *phpage = NULL;
     PROPSHEETPAGE psp = {0};
     UINT nPages = 0;
@@ -2667,7 +2699,7 @@ InstallWizard(VOID)
     PSETUPDATA pSetupData = NULL;
     HMODULE hNetShell = NULL;
     PFNREQUESTWIZARDPAGES pfn = NULL;
-    DWORD dwPageCount = 9, dwNetworkPageCount = 0;
+    DWORD dwPageCount = 10, dwNetworkPageCount = 0;
 
     LogItem(L"BEGIN_SECTION", L"InstallWizard");
 
@@ -2684,6 +2716,7 @@ InstallWizard(VOID)
                     MB_ICONERROR | MB_OK);
         goto done;
     }
+    pSetupData->ProductOption = PRODUCT_OPTION_DEFAULT;
 
     hNetShell = LoadLibraryW(L"netshell.dll");
     if (hNetShell != NULL)
@@ -2732,6 +2765,14 @@ InstallWizard(VOID)
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_ACKSUBTITLE);
     psp.pszTemplate = MAKEINTRESOURCE(IDD_ACKPAGE);
     psp.pfnDlgProc = AckPageDlgProc;
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create the Product page */
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PRODUCTTITLE);
+    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PRODUCTSUBTITLE);
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_PRODUCT);
+    psp.pfnDlgProc = ProductPageDlgProc;
     phpage[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the Locale page */

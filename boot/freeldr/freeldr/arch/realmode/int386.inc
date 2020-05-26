@@ -37,13 +37,25 @@ Int386:
     mov ax, word ptr cs:[BSS_RegisterSet + REGS_GS]
     mov gs, ax
 
+    /* Setup ebp only if EBP != 0, otherwise use it only as output */
+    mov eax, dword ptr cs:[BSS_RegisterSet + REGS_EBP]
+    test eax, eax
+    jz Int386_set_registers
+    mov ebp, eax
+
+Int386_set_registers:
     mov eax, dword ptr cs:[BSS_RegisterSet + REGS_EAX]
     mov ebx, dword ptr cs:[BSS_RegisterSet + REGS_EBX]
     mov ecx, dword ptr cs:[BSS_RegisterSet + REGS_ECX]
     mov edx, dword ptr cs:[BSS_RegisterSet + REGS_EDX]
     mov esi, dword ptr cs:[BSS_RegisterSet + REGS_ESI]
     mov edi, dword ptr cs:[BSS_RegisterSet + REGS_EDI]
-    // Don't setup ebp, we only use it as output!
+#if defined(SARCH_PC98)
+    /* Always set EBP register even if its equals zero.
+     * Otherwise the DISK BIOS calls will store garbage data in a output buffer.
+     */
+    mov ebp, dword ptr cs:[BSS_RegisterSet + REGS_EBP]
+#endif
 
     /* Call the interrupt vector */
     /*int       Int386_vector*/
@@ -72,6 +84,7 @@ Int386_vector_opcode:
     pushfd
     pop dword ptr cs:[BSS_RegisterSet + REGS_EFLAGS]
 
+    /* Restore all registers + segment registers */
     popad
     pop gs
     pop fs

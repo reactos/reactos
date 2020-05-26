@@ -2,7 +2,7 @@
  * rdswitch.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
- * Modified 2003-2015 by Guido Vollbeding.
+ * Modified 2003-2019 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -249,9 +249,8 @@ bogus:
      * NOTE: for cjpeg's use, JPOOL_IMAGE is the right lifetime for this data,
      * but if you want to compress multiple images you'd want JPOOL_PERMANENT.
      */
-    scanptr = (jpeg_scan_info *)
-      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-				  scanno * SIZEOF(jpeg_scan_info));
+    scanptr = (jpeg_scan_info *) (*cinfo->mem->alloc_small)
+      ((j_common_ptr) cinfo, JPOOL_IMAGE, scanno * SIZEOF(jpeg_scan_info));
     MEMCOPY(scanptr, scans, scanno * SIZEOF(jpeg_scan_info));
     cinfo->scan_info = scanptr;
     cinfo->num_scans = scanno;

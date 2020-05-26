@@ -67,7 +67,7 @@ xmlModuleErrMemory(xmlModulePtr module, const char *extra)
  *
  * Opens a module/shared library given its name or path
  * NOTE: that due to portability issues, behaviour can only be
- * guaranteed with @name using ASCII. We canot guarantee that
+ * guaranteed with @name using ASCII. We cannot guarantee that
  * an UTF-8 string would work, which is why name is a const char *
  * and not a const xmlChar * .
  * TODO: options are not yet implemented.
@@ -109,7 +109,7 @@ xmlModuleOpen(const char *name, int options ATTRIBUTE_UNUSED)
  *
  * Lookup for a symbol address in the given module
  * NOTE: that due to portability issues, behaviour can only be
- * guaranteed with @name using ASCII. We canot guarantee that
+ * guaranteed with @name using ASCII. We cannot guarantee that
  * an UTF-8 string would work, which is why name is a const char *
  * and not a const xmlChar * .
  *

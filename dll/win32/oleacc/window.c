@@ -20,7 +20,6 @@
 
 #include "oleacc_private.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
 

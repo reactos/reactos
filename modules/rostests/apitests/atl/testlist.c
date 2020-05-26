@@ -10,6 +10,7 @@ extern void func_CComHeapPtr(void);
 extern void func_CComObject(void);
 extern void func_CComQIPtr(void);
 extern void func_CComVariant(void);
+extern void func_CHeapPtrList(void);
 extern void func_CImage(void);
 extern void func_CRegKey(void);
 extern void func_CSimpleArray(void);
@@ -27,6 +28,7 @@ const struct test winetest_testlist[] =
     { "CComObject", func_CComObject },
     { "CComQIPtr", func_CComQIPtr },
     { "CComVariant", func_CComVariant },
+    { "CHeapPtrList", func_CHeapPtrList },
     { "CImage", func_CImage },
     { "CRegKey", func_CRegKey },
     { "CSimpleArray", func_CSimpleArray },

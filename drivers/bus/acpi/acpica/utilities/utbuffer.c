@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,8 +78,10 @@ AcpiUtDumpBuffer (
     UINT32                  j;
     UINT32                  Temp32;
     UINT8                   BufChar;
+    UINT32                  DisplayDataOnly = Display & DB_DISPLAY_DATA_ONLY;
 
 
+    Display &= ~DB_DISPLAY_DATA_ONLY;
     if (!Buffer)
     {
         AcpiOsPrintf ("Null Buffer Pointer in DumpBuffer!\n");
@@ -97,7 +99,10 @@ AcpiUtDumpBuffer (
     {
         /* Print current offset */
 
-        AcpiOsPrintf ("%8.4X: ", (BaseOffset + i));
+        if (!DisplayDataOnly)
+        {
+            AcpiOsPrintf ("%8.4X: ", (BaseOffset + i));
+        }
 
         /* Print 16 hex chars */
 
@@ -149,38 +154,41 @@ AcpiUtDumpBuffer (
          * Print the ASCII equivalent characters but watch out for the bad
          * unprintable ones (printable chars are 0x20 through 0x7E)
          */
-        AcpiOsPrintf (" ");
-        for (j = 0; j < 16; j++)
+        if (!DisplayDataOnly)
         {
-            if (i + j >= Count)
+            AcpiOsPrintf (" ");
+            for (j = 0; j < 16; j++)
             {
-                AcpiOsPrintf ("\n");
-                return;
+                if (i + j >= Count)
+                {
+                    AcpiOsPrintf ("\n");
+                    return;
+                }
+
+                /*
+                 * Add comment characters so rest of line is ignored when
+                 * compiled
+                 */
+                if (j == 0)
+                {
+                    AcpiOsPrintf ("// ");
+                }
+
+                BufChar = Buffer[(ACPI_SIZE) i + j];
+                if (isprint (BufChar))
+                {
+                    AcpiOsPrintf ("%c", BufChar);
+                }
+                else
+                {
+                    AcpiOsPrintf (".");
+                }
             }
 
-            /*
-             * Add comment characters so rest of line is ignored when
-             * compiled
-             */
-            if (j == 0)
-            {
-                AcpiOsPrintf ("// ");
-            }
+            /* Done with that line. */
 
-            BufChar = Buffer[(ACPI_SIZE) i + j];
-            if (isprint (BufChar))
-            {
-                AcpiOsPrintf ("%c", BufChar);
-            }
-            else
-            {
-                AcpiOsPrintf (".");
-            }
+            AcpiOsPrintf ("\n");
         }
-
-        /* Done with that line. */
-
-        AcpiOsPrintf ("\n");
         i += 16;
     }
 

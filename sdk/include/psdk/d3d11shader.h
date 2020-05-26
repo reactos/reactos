@@ -202,6 +202,7 @@ DECLARE_INTERFACE_(ID3D11ShaderReflection, IUnknown)
     STDMETHOD_(UINT, GetNumInterfaceSlots)(THIS) PURE;
     STDMETHOD(GetMinFeatureLevel)(THIS_ enum D3D_FEATURE_LEVEL *level) PURE;
     STDMETHOD_(UINT, GetThreadGroupSize)(THIS_ UINT *sizex, UINT *sizey, UINT *sizez) PURE;
+    STDMETHOD_(UINT64, GetRequiresFlags)(THIS) PURE;
 };
 #undef INTERFACE
 

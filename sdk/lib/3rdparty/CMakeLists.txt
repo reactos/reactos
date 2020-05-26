@@ -1,6 +1,5 @@
 
 add_subdirectory(adns)
-add_subdirectory(bzip2)
 add_subdirectory(cardlib)
 add_subdirectory(freetype)
 add_subdirectory(libmpg123)

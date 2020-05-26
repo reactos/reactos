@@ -58,6 +58,8 @@ testNoEnumerables("Function");
 testNoEnumerables("Function.prototype");
 testNoEnumerables("testNoEnumerates");
 testNoEnumerables("VBArray");
+testNoEnumerables("new Enumerator()");
+testNoEnumerables("Enumerator()");
 
 ok(Object.propertyIsEnumerable("prototype") === false, "Object.prototype is enumerable");
 ok(Math.propertyIsEnumerable("E") === false, "Math.E is enumerable");
@@ -154,6 +156,12 @@ i = parseInt("1", 37);
 ok(isNaN(i), "parseInt('1', 37) = " + i);
 i = parseInt("1", 36);
 ok(i === 1, "parseInt('1', 36) = " + i);
+i = parseInt("0x1f", 16);
+ok(i === 31, "parseInt('0xf', 16) = " + i);
+i = parseInt("0x", 16);
+ok(isNaN(i), "parseInt('0x', 16) = " + i);
+i = parseInt("0x1f", 17);
+ok(i === 0, "parseInt('0xf', 16) = " + i);
 
 tmp = encodeURI("abc");
 ok(tmp === "abc", "encodeURI('abc') = " + tmp);
@@ -341,6 +349,8 @@ ok(tmp === "[object Object]", "toString.call(this) = " + tmp);
 ok(tmp === "[object Object]", "toString.call(arguments) = " + tmp);
 tmp = Object.prototype.toString.call(new VBArray(createArray()));
 ok(tmp === "[object Object]", "toString.call(new VBArray()) = " + tmp);
+(tmp = new Enumerator()).f = Object.prototype.toString;
+ok(tmp.f() === "[object Object]", "tmp.f() = " + tmp.f());
 
 function TSTestConstr() {}
 TSTestConstr.prototype = { toString: function() { return "test"; } };
@@ -639,6 +649,43 @@ r = "".split();
 ok(typeof(r) === "object", "typeof(r) = " + typeof(r));
 ok(r.length === 1, "r.length = " + r.length);
 ok(r[0] === "", "r[0] = " + r[0]);
+
+(function() {
+    function test(string, separator, result) {
+        var r = string.split(separator);
+        ok(r == result, "\"" + string + "\".split(" + separator + ") returned " + r + " expected " + result);
+    }
+
+    test("test", /^|\s+/, "test");
+    test("test", /$|\s+/, "test");
+    test("test", /^|./, "t");
+    test("test", /.*/, "");
+    test("test", /x*/, "t,e,s,t");
+    test("test", /$|x*/, "t,e,s,t");
+    test("test", /^|x*/, "t,e,s,t");
+    test("test", /t*/, "e,s");
+    test("xaabaax", /a*|b*/, "x,b,x");
+    test("xaabaax", /a+|b+/, "x,x");
+    test("xaabaax", /a+|b*/, "x,x");
+    test("xaaxbaax", /b+|a+/, "x,x,x");
+    test("test", /^|t/, "tes");
+    test("test", /^|t/, "tes");
+    test("a,,b", /,/, "a,b");
+    test("ab", /a*/, "b");
+    test("aab", "a", ",,b");
+    test("a", "a", ",");
+
+    function test_length(string, separator, len) {
+        var r = string.split(separator);
+        ok(r.length === len, "\"" + string + "\".split(" + separator + ").length = "
+           + r.length + " expected " + len);
+    }
+
+    test_length("", /a*/, 0);
+    test_length("", /a+/, 1);
+    test_length("", "", 0);
+    test_length("", "x", 1);
+})();
 
 tmp = "abcd".indexOf("bc",0);
 ok(tmp === 1, "indexOf = " + tmp);
@@ -1870,11 +1917,11 @@ ok(isNaN(tmp), "Math.tan(-Infinity) is not NaN");
 
     s = JSON.stringify(testObj);
     ok(s === undefined || s === "undefined" /* broken on some old versions */,
-       "stringify(testObj) returned " + s + " expected undfined");
+       "stringify(testObj) returned " + s + " expected undefined");
 
     s = JSON.stringify(undefined);
     ok(s === undefined || s === "undefined" /* broken on some old versions */,
-       "stringify(undefined) returned " + s + " expected undfined");
+       "stringify(undefined) returned " + s + " expected undefined");
 
     var parse_tests = [
         ["true", true],
@@ -1887,7 +1934,10 @@ ok(isNaN(tmp), "Math.tan(-Infinity) is not NaN");
         ["[false,{},{\"x\": []}]", [false,{},{x:[]}]],
         ["0", 0],
         ["- 1", -1],
-        ["1e2147483648", Infinity]
+        ["1e2147483648", Infinity],
+        ["0.5", 0.5],
+        ["0e5", 0],
+        [".5", 0.5]
     ];
 
     function json_cmp(x, y) {
@@ -2408,6 +2458,7 @@ var exception_array = {
     E_OBJECT_EXPECTED:     { type: "TypeError", number: -2146823281 },
     E_OBJECT_REQUIRED:     { type: "TypeError", number: -2146827864 },
     E_UNSUPPORTED_ACTION:  { type: "TypeError", number: -2146827843 },
+    E_NOT_ENUMERATOR:      { type: "TypeError", number: -2146823273 },
     E_NOT_VBARRAY:         { type: "TypeError", number: -2146823275 },
     E_INVALID_DELETE:      { type: "TypeError", number: -2146823276 },
     E_UNDEFINED:           { type: "TypeError", number: -2146823279 },
@@ -2672,6 +2723,15 @@ testArrayHostThis("reverse");
 testArrayHostThis("join");
 testArrayHostThis("pop");
 testArrayHostThis("sort");
+
+function testEnumeratorThis(func) {
+    testThisExcept(Enumerator.prototype[func], "E_NOT_ENUMERATOR");
+}
+
+testEnumeratorThis("atEnd");
+testEnumeratorThis("item");
+testEnumeratorThis("moveFirst");
+testEnumeratorThis("moveNext");
 
 function testObjectInherit(obj, constr, ts, tls, vo) {
     ok(obj instanceof Object, "obj is not instance of Object");
@@ -2964,5 +3024,10 @@ ok(tmp.getItem(3, 2) == 13, "tmp.getItem(3, 2) = " + tmp.getItem(3, 2));
 ok(tmp.toArray() == "2,3,12,13,22,23,32,33,42,43", "tmp.toArray() = " + tmp.toArray());
 ok(createArray().toArray() == "2,3,12,13,22,23,32,33,42,43",
         "createArray.toArray()=" + createArray().toArray());
+
+obj = new Enumerator();
+ok(obj.atEnd(), "atEnd() = " + obj.atEnd());
+obj.moveFirst();
+ok(obj.atEnd(), "atEnd() = " + obj.atEnd());
 
 reportSuccess();

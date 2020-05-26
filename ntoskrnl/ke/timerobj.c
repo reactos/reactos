@@ -184,13 +184,13 @@ KiCompleteTimer(IN PKTIMER Timer,
     KiReleaseTimerLock(LockQueue);
 
     /* Acquire dispatcher lock */
-    KiAcquireDispatcherLockAtDpcLevel();
+    KiAcquireDispatcherLockAtSynchLevel();
 
     /* Signal the timer if it's still on our list */
     if (!IsListEmpty(&ListHead)) RequestInterrupt = KiSignalTimer(Timer);
 
     /* Release the dispatcher lock */
-    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseDispatcherLockFromSynchLevel();
 
     /* Request a DPC if needed */
     if (RequestInterrupt) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
@@ -321,7 +321,7 @@ KeSetTimerEx(IN OUT PKTIMER Timer,
         RequestInterrupt = KiSignalTimer(Timer);
         
         /* Release the dispatcher lock */
-        KiReleaseDispatcherLockFromDpcLevel();
+        KiReleaseDispatcherLockFromSynchLevel();
         
         /* Check if we need to do an interrupt */
         if (RequestInterrupt) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);        

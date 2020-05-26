@@ -1,52 +1,8 @@
 
 #include "precomp.h"
+#include <versionhelpers.h>
 
-static
-PVOID
-AllocateGuarded(
-    _In_ SIZE_T SizeRequested)
-{
-    NTSTATUS Status;
-    SIZE_T Size = PAGE_ROUND_UP(SizeRequested + PAGE_SIZE);
-    PVOID VirtualMemory = NULL;
-    PCHAR StartOfBuffer;
-
-    Status = NtAllocateVirtualMemory(NtCurrentProcess(), &VirtualMemory, 0, &Size, MEM_RESERVE, PAGE_NOACCESS);
-
-    if (!NT_SUCCESS(Status))
-        return NULL;
-
-    Size -= PAGE_SIZE;
-    if (Size)
-    {
-        Status = NtAllocateVirtualMemory(NtCurrentProcess(), &VirtualMemory, 0, &Size, MEM_COMMIT, PAGE_READWRITE);
-        if (!NT_SUCCESS(Status))
-        {
-            Size = 0;
-            Status = NtFreeVirtualMemory(NtCurrentProcess(), &VirtualMemory, &Size, MEM_RELEASE);
-            ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
-            return NULL;
-        }
-    }
-
-    StartOfBuffer = VirtualMemory;
-    StartOfBuffer += Size - SizeRequested;
-
-    return StartOfBuffer;
-}
-
-static
-VOID
-FreeGuarded(
-    _In_ PVOID Pointer)
-{
-    NTSTATUS Status;
-    PVOID VirtualMemory = (PVOID)PAGE_ROUND_DOWN((SIZE_T)Pointer);
-    SIZE_T Size = 0;
-
-    Status = NtFreeVirtualMemory(NtCurrentProcess(), &VirtualMemory, &Size, MEM_RELEASE);
-    ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
-}
+static BOOL IsBroken = FALSE;
 
 void
 Test_RtlFindMostSignificantBit(void)
@@ -93,6 +49,10 @@ Test_RtlInitializeBitMap(void)
     }
     _SEH2_END;
     ok_int(Exception, 1);
+
+    RtlInitializeBitMap(&BitMapHeader, NULL, -1);
+    ok_int(BitMapHeader.SizeOfBitMap, -1);
+    ok_ptr(BitMapHeader.Buffer, NULL);
 
     memset(Buffer, 0xcc, sizeof(Buffer));
     RtlInitializeBitMap(&BitMapHeader, Buffer, 0);
@@ -325,20 +285,31 @@ Test_RtlNumberOfSetBits(void)
     Buffer[0] = 0xff00ff0f;
     Buffer[1] = 0x3F303F30;
 
-    RtlInitializeBitMap(&BitMapHeader, Buffer, 0);
-    ok_int(RtlNumberOfSetBits(&BitMapHeader), 0);
-
-    RtlInitializeBitMap(&BitMapHeader, Buffer, 4);
-    ok_int(RtlNumberOfSetBits(&BitMapHeader), 4);
-
-    RtlInitializeBitMap(&BitMapHeader, Buffer, 31);
-    ok_int(RtlNumberOfSetBits(&BitMapHeader), 19);
+    RtlInitializeBitMap(&BitMapHeader, Buffer, 64);
+    ok_int(RtlNumberOfSetBits(&BitMapHeader), 36);
+    ok_hex(Buffer[0], 0xff00ff0f);
+    ok_hex(Buffer[1], 0x3F303F30);
 
     RtlInitializeBitMap(&BitMapHeader, Buffer, 56);
     ok_int(RtlNumberOfSetBits(&BitMapHeader), 30);
+    ok_hex(Buffer[0], 0xff00ff0f);
+    ok_hex(Buffer[1], 0x3F303F30);
 
-    RtlInitializeBitMap(&BitMapHeader, Buffer, 64);
-    ok_int(RtlNumberOfSetBits(&BitMapHeader), 36);
+    RtlInitializeBitMap(&BitMapHeader, Buffer, 31);
+    ok_int(RtlNumberOfSetBits(&BitMapHeader), 19);
+    ok_hex(Buffer[0], IsBroken ? 0x7f00ff0f : 0xff00ff0f);
+    ok_hex(Buffer[1], 0x3F303F30);
+
+    RtlInitializeBitMap(&BitMapHeader, Buffer, 4);
+    ok_int(RtlNumberOfSetBits(&BitMapHeader), 4);
+    ok_hex(Buffer[0], IsBroken ? 0x7f00ff0f : 0xff00ff0f);
+    ok_hex(Buffer[1], 0x3F303F30);
+
+    RtlInitializeBitMap(&BitMapHeader, Buffer, 0);
+    ok_int(RtlNumberOfSetBits(&BitMapHeader), 0);
+    ok_hex(Buffer[0], IsBroken ? 0x7f00ff0f : 0x7f00ff0f);
+    ok_hex(Buffer[1], 0x3F303F30);
+
     FreeGuarded(Buffer);
 }
 
@@ -352,20 +323,31 @@ Test_RtlNumberOfClearBits(void)
     Buffer[0] = 0xff00fff0;
     Buffer[1] = 0x3F303F30;
 
-    RtlInitializeBitMap(&BitMapHeader, Buffer, 0);
-    ok_int(RtlNumberOfClearBits(&BitMapHeader), 0);
-
-    RtlInitializeBitMap(&BitMapHeader, Buffer, 4);
-    ok_int(RtlNumberOfClearBits(&BitMapHeader), 4);
-
-    RtlInitializeBitMap(&BitMapHeader, Buffer, 31);
-    ok_int(RtlNumberOfClearBits(&BitMapHeader), 12);
+    RtlInitializeBitMap(&BitMapHeader, Buffer, 64);
+    ok_int(RtlNumberOfClearBits(&BitMapHeader), 28);
+    ok_hex(Buffer[0], 0xff00fff0);
+    ok_hex(Buffer[1], 0x3F303F30);
 
     RtlInitializeBitMap(&BitMapHeader, Buffer, 56);
     ok_int(RtlNumberOfClearBits(&BitMapHeader), 26);
+    ok_hex(Buffer[0], 0xff00fff0);
+    ok_hex(Buffer[1], 0x3F303F30);
 
-    RtlInitializeBitMap(&BitMapHeader, Buffer, 64);
-    ok_int(RtlNumberOfClearBits(&BitMapHeader), 28);
+    RtlInitializeBitMap(&BitMapHeader, Buffer, 31);
+    ok_int(RtlNumberOfClearBits(&BitMapHeader), 12);
+    ok_hex(Buffer[0], IsBroken ? 0x7f00fff0 : 0xff00fff0);
+    ok_hex(Buffer[1], 0x3F303F30);
+
+    RtlInitializeBitMap(&BitMapHeader, Buffer, 4);
+    ok_int(RtlNumberOfClearBits(&BitMapHeader), 4);
+    ok_hex(Buffer[0], IsBroken ? 0x7f00ff00 : 0xff00fff0);
+    ok_hex(Buffer[1], 0x3F303F30);
+
+    RtlInitializeBitMap(&BitMapHeader, Buffer, 0);
+    ok_int(RtlNumberOfClearBits(&BitMapHeader), 0);
+    ok_hex(Buffer[0], IsBroken ? 0x7f00ff00 : 0xff00fff0);
+    ok_hex(Buffer[1], 0x3F303F30);
+
     FreeGuarded(Buffer);
 }
 
@@ -618,6 +600,12 @@ Test_RtlFindLongestRunClear(void)
 
 START_TEST(RtlBitmap)
 {
+    /* Windows 2003 has broken bitmap code that modifies the buffer */
+    if (!IsWindows7OrGreater() && !IsReactOS())
+    {
+        IsBroken = TRUE;
+    }
+
     Test_RtlFindMostSignificantBit();
     Test_RtlFindLeastSignificantBit();
     Test_RtlInitializeBitMap();

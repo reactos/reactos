@@ -602,7 +602,7 @@ static void test_palette_from_bitmap(void)
     ok(hr == S_OK, "GetColorCount error %#x\n", hr);
     ok(count == 2, "expected 2, got %u\n", count);
 
-    /* without trasparent color */
+    /* without transparent color */
     hr = IWICPalette_InitializeFromBitmap(palette, (IWICBitmapSource *)bitmap, 16, FALSE);
     ok(hr == S_OK, "InitializeFromBitmap error %#x\n", hr);
     type = -1;
@@ -619,7 +619,7 @@ static void test_palette_from_bitmap(void)
     ok(ret == count, "expected %u, got %u\n", count, ret);
     ok(color[count - 1] != 0, "expected !0, got %08x\n", color[count - 1]);
 
-    /* with trasparent color */
+    /* with transparent color */
     hr = IWICPalette_InitializeFromBitmap(palette, (IWICBitmapSource *)bitmap, 16, TRUE);
     ok(hr == S_OK, "InitializeFromBitmap error %#x\n", hr);
     type = -1;

@@ -217,6 +217,14 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 #define JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE      0x2000
 
 //
+// Job Security Limit Flags
+//
+#define JOB_OBJECT_SECURITY_NO_ADMIN            0x0001
+#define JOB_OBJECT_SECURITY_RESTRICTED_TOKEN    0x0002
+#define JOB_OBJECT_SECURITY_ONLY_TOKEN          0x0004
+#define JOB_OBJECT_SECURITY_FILTER_TOKENS       0x0008
+
+//
 // Cross Thread Flags
 //
 #define CT_TERMINATED_BIT                       0x1
@@ -902,7 +910,7 @@ typedef struct _PROCESS_SESSION_INFORMATION
 
 #endif
 
-typedef struct _PROCESS_PRIORITY_CLASS
+typedef struct DECLSPEC_ALIGN(4) _PROCESS_PRIORITY_CLASS
 {
     BOOLEAN Foreground;
     UCHAR PriorityClass;

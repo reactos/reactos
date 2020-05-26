@@ -30,6 +30,71 @@
 #include "wincodec.h"
 #include "wine/test.h"
 
+#include "initguid.h"
+DEFINE_GUID(IID_IMILUnknown,0x0ccd7824,0xdc16,0x4d09,0xbc,0xa8,0x6b,0x09,0xc4,0xef,0x55,0x35);
+DEFINE_GUID(IID_IMILBitmap,0xb1784d3f,0x8115,0x4763,0x13,0xaa,0x32,0xed,0xdb,0x68,0x29,0x4a);
+DEFINE_GUID(IID_IMILBitmapSource,0x7543696a,0xbc8d,0x46b0,0x5f,0x81,0x8d,0x95,0x72,0x89,0x72,0xbe);
+DEFINE_GUID(IID_IMILBitmapLock,0xa67b2b53,0x8fa1,0x4155,0x8f,0x64,0x0c,0x24,0x7a,0x8f,0x84,0xcd);
+DEFINE_GUID(IID_IMILBitmapScaler,0xa767b0f0,0x1c8c,0x4aef,0x56,0x8f,0xad,0xf9,0x6d,0xcf,0xd5,0xcb);
+DEFINE_GUID(IID_IMILFormatConverter,0x7e2a746f,0x25c5,0x4851,0xb3,0xaf,0x44,0x3b,0x79,0x63,0x9e,0xc0);
+DEFINE_GUID(IID_IMILPalette,0xca8e206f,0xf22c,0x4af7,0x6f,0xba,0x7b,0xed,0x5e,0xb1,0xc9,0x2f);
+
+#undef INTERFACE
+#define INTERFACE IMILBitmapSource
+DECLARE_INTERFACE_(IMILBitmapSource,IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IWICBitmapSource methods ***/
+    STDMETHOD_(HRESULT,GetSize)(THIS_ UINT *,UINT *) PURE;
+    STDMETHOD_(HRESULT,GetPixelFormat)(THIS_ int *) PURE;
+    STDMETHOD_(HRESULT,GetResolution)(THIS_ double *,double *) PURE;
+    STDMETHOD_(HRESULT,CopyPalette)(THIS_ IWICPalette *) PURE;
+    STDMETHOD_(HRESULT,CopyPixels)(THIS_ const WICRect *,UINT,UINT,BYTE *) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IMILBitmap
+DECLARE_INTERFACE_(IMILBitmap,IMILBitmapSource)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IWICBitmapSource methods ***/
+    STDMETHOD_(HRESULT,GetSize)(THIS_ UINT *,UINT *) PURE;
+    STDMETHOD_(HRESULT,GetPixelFormat)(THIS_ int *) PURE;
+    STDMETHOD_(HRESULT,GetResolution)(THIS_ double *,double *) PURE;
+    STDMETHOD_(HRESULT,CopyPalette)(THIS_ IWICPalette *) PURE;
+    STDMETHOD_(HRESULT,CopyPixels)(THIS_ const WICRect *,UINT,UINT,BYTE *) PURE;
+    /*** IMILBitmap methods ***/
+    STDMETHOD_(HRESULT,unknown1)(THIS_ void **) PURE;
+    STDMETHOD_(HRESULT,Lock)(THIS_ const WICRect *,DWORD,IWICBitmapLock **) PURE;
+    STDMETHOD_(HRESULT,Unlock)(THIS_ IWICBitmapLock *) PURE;
+    STDMETHOD_(HRESULT,SetPalette)(THIS_ IWICPalette *) PURE;
+    STDMETHOD_(HRESULT,SetResolution)(THIS_ double,double) PURE;
+    STDMETHOD_(HRESULT,AddDirtyRect)(THIS_ const WICRect *) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IMILBitmapScaler
+DECLARE_INTERFACE_(IMILBitmapScaler,IMILBitmapSource)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IWICBitmapSource methods ***/
+    STDMETHOD_(HRESULT,GetSize)(THIS_ UINT *,UINT *) PURE;
+    STDMETHOD_(HRESULT,GetPixelFormat)(THIS_ int *) PURE;
+    STDMETHOD_(HRESULT,GetResolution)(THIS_ double *,double *) PURE;
+    STDMETHOD_(HRESULT,CopyPalette)(THIS_ IWICPalette *) PURE;
+    STDMETHOD_(HRESULT,CopyPixels)(THIS_ const WICRect *,UINT,UINT,BYTE *) PURE;
+    /*** IMILBitmapScaler methods ***/
+    STDMETHOD_(HRESULT,unknown1)(THIS_ void **) PURE;
+    STDMETHOD_(HRESULT,Initialize)(THIS_ IMILBitmapSource *,UINT,UINT,WICBitmapInterpolationMode);
+};
+
 static IWICImagingFactory *factory;
 
 static HRESULT WINAPI bitmapsource_QueryInterface(IWICBitmapSource *iface, REFIID iid, void **ppv)
@@ -1088,6 +1153,7 @@ static void test_bitmap_scaler(void)
     double res_x, res_y;
     IWICBitmap *bitmap;
     UINT width, height;
+    BYTE buf[16];
     HRESULT hr;
 
     hr = IWICImagingFactory_CreateBitmap(factory, 4, 2, &GUID_WICPixelFormat24bppBGR, WICBitmapCacheOnLoad, &bitmap);
@@ -1163,6 +1229,9 @@ static void test_bitmap_scaler(void)
     ok(hr == E_INVALIDARG, "Unexpected hr %#x.\n", hr);
 
     hr = IWICBitmapScaler_GetSize(scaler, &width, &height);
+    ok(hr == WINCODEC_ERR_NOTINITIALIZED, "Unexpected hr %#x.\n", hr);
+
+    hr = IWICBitmapScaler_CopyPixels(scaler, NULL, 1, sizeof(buf), buf);
     ok(hr == WINCODEC_ERR_NOTINITIALIZED, "Unexpected hr %#x.\n", hr);
 
     hr = IWICBitmapScaler_Initialize(scaler, (IWICBitmapSource *)bitmap, 0, 2,
@@ -1245,6 +1314,158 @@ static void test_bitmap_scaler(void)
     IWICBitmap_Release(bitmap);
 }
 
+static LONG obj_refcount(void *obj)
+{
+    IUnknown_AddRef((IUnknown *)obj);
+    return IUnknown_Release((IUnknown *)obj);
+}
+
+static void test_IMILBitmap(void)
+{
+    HRESULT hr;
+    IWICBitmap *bitmap;
+    IWICBitmapScaler *scaler;
+    IMILBitmap *mil_bitmap;
+    IMILBitmapSource *mil_source;
+    IMILBitmapScaler *mil_scaler;
+    IUnknown *wic_unknown, *mil_unknown;
+    WICPixelFormatGUID format;
+    int MIL_format;
+    UINT width, height;
+    double dpix, dpiy;
+    BYTE buf[256];
+
+    /* Bitmap */
+    hr = IWICImagingFactory_CreateBitmap(factory, 1, 1, &GUID_WICPixelFormat24bppBGR,
+                                         WICBitmapCacheOnDemand, &bitmap);
+    ok(hr == S_OK, "CreateBitmap error %#x\n", hr);
+
+    ok(obj_refcount(bitmap) == 1, "ref count %d\n", obj_refcount(bitmap));
+
+    hr = IWICBitmap_GetPixelFormat(bitmap, &format);
+    ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
+    ok(IsEqualGUID(&format, &GUID_WICPixelFormat24bppBGR), "wrong format %s\n", wine_dbgstr_guid(&format));
+
+    hr = IWICBitmap_GetResolution(bitmap, &dpix, &dpiy);
+    ok(hr == S_OK, "GetResolution error %#x\n", hr);
+    ok(dpix == 0.0, "got %f, expected 0.0\n", dpix);
+    ok(dpiy == 0.0, "got %f, expected 0.0\n", dpiy);
+
+    hr = IWICBitmap_SetResolution(bitmap, 12.0, 34.0);
+    ok(hr == S_OK, "SetResolution error %#x\n", hr);
+
+    hr = IWICBitmap_GetResolution(bitmap, &dpix, &dpiy);
+    ok(hr == S_OK, "GetResolution error %#x\n", hr);
+    ok(dpix == 12.0, "got %f, expected 12.0\n", dpix);
+    ok(dpiy == 34.0, "got %f, expected 34.0\n", dpiy);
+
+    hr = IWICBitmap_GetSize(bitmap, &width, &height);
+    ok(hr == S_OK, "GetSize error %#x\n", hr);
+    ok(width == 1, "got %u, expected 1\n", width);
+    ok(height == 1, "got %u, expected 1\n", height);
+
+    hr = IWICBitmap_QueryInterface(bitmap, &IID_IMILBitmap, (void **)&mil_bitmap);
+    ok(hr == S_OK, "QueryInterface error %#x\n", hr);
+
+    ok(obj_refcount(bitmap) == 2, "ref count %d\n", obj_refcount(bitmap));
+    ok(obj_refcount(mil_bitmap) == 2, "ref count %d\n", obj_refcount(mil_bitmap));
+
+    hr = IWICBitmap_QueryInterface(bitmap, &IID_IUnknown, (void **)&wic_unknown);
+    ok(hr == S_OK, "QueryInterface error %#x\n", hr);
+
+    hr = mil_bitmap->lpVtbl->QueryInterface(mil_bitmap, &IID_IUnknown, (void **)&mil_unknown);
+    ok(hr == S_OK, "QueryInterface error %#x\n", hr);
+    ok((void *)wic_unknown->lpVtbl == (void *)mil_unknown->lpVtbl, "wrong lpVtbl ptrs %p != %p\n", wic_unknown->lpVtbl, mil_unknown->lpVtbl);
+
+    IUnknown_Release(wic_unknown);
+    IUnknown_Release(mil_unknown);
+
+    hr = IWICBitmap_QueryInterface(bitmap, &IID_IMILBitmapSource, (void **)&mil_source);
+    ok(hr == S_OK, "QueryInterface error %#x\n", hr);
+    ok((void *)mil_source->lpVtbl == (void *)mil_bitmap->lpVtbl, "IMILBitmap->lpVtbl should be equal to IMILBitmapSource->lpVtbl\n");
+
+    ok(obj_refcount(bitmap) == 3, "ref count %d\n", obj_refcount(bitmap));
+    ok(obj_refcount(mil_bitmap) == 3, "ref count %d\n", obj_refcount(mil_bitmap));
+    ok(obj_refcount(mil_source) == 3, "ref count %d\n", obj_refcount(mil_source));
+
+    hr = mil_source->lpVtbl->GetPixelFormat(mil_source, &MIL_format);
+    ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
+    ok(MIL_format == 0x0c, "wrong format %d\n", MIL_format);
+
+    hr = mil_source->lpVtbl->GetResolution(mil_source, &dpix, &dpiy);
+    ok(hr == S_OK, "GetResolution error %#x\n", hr);
+    ok(dpix == 12.0, "got %f, expected 12.0\n", dpix);
+    ok(dpiy == 34.0, "got %f, expected 34.0\n", dpiy);
+
+    hr = mil_source->lpVtbl->GetSize(mil_source, &width, &height);
+    ok(hr == S_OK, "GetSize error %#x\n", hr);
+    ok(width == 1, "got %u, expected 1\n", width);
+    ok(height == 1, "got %u, expected 1\n", height);
+
+    /* Scaler */
+    hr = IWICImagingFactory_CreateBitmapScaler(factory, &scaler);
+    ok(hr == S_OK, "CreateBitmapScaler error %#x\n", hr);
+
+    ok(obj_refcount(scaler) == 1, "ref count %d\n", obj_refcount(scaler));
+
+    hr = IWICBitmapScaler_QueryInterface(scaler, &IID_IMILBitmapScaler, (void **)&mil_scaler);
+    ok(hr == S_OK, "QueryInterface error %#x\n", hr);
+
+    ok(obj_refcount(scaler) == 2, "ref count %d\n", obj_refcount(scaler));
+    ok(obj_refcount(mil_scaler) == 2, "ref count %d\n", obj_refcount(mil_scaler));
+
+    hr = IWICBitmapScaler_QueryInterface(scaler, &IID_IUnknown, (void **)&wic_unknown);
+    ok(hr == S_OK, "QueryInterface error %#x\n", hr);
+
+    hr = mil_scaler->lpVtbl->QueryInterface(mil_scaler, &IID_IUnknown, (void **)&mil_unknown);
+    ok(hr == S_OK, "QueryInterface error %#x\n", hr);
+    ok((void *)wic_unknown->lpVtbl == (void *)mil_unknown->lpVtbl, "wrong lpVtbl ptrs %p != %p\n", wic_unknown->lpVtbl, mil_unknown->lpVtbl);
+
+    IUnknown_Release(wic_unknown);
+    IUnknown_Release(mil_unknown);
+
+    hr = mil_scaler->lpVtbl->GetPixelFormat(mil_scaler, &MIL_format);
+    ok(hr == WINCODEC_ERR_NOTINITIALIZED, "GetPixelFormat error %#x\n", hr);
+
+    hr = mil_scaler->lpVtbl->GetResolution(mil_scaler, &dpix, &dpiy);
+    ok(hr == WINCODEC_ERR_NOTINITIALIZED, "GetResolution error %#x\n", hr);
+
+    hr = mil_scaler->lpVtbl->GetSize(mil_scaler, &width, &height);
+    ok(hr == WINCODEC_ERR_NOTINITIALIZED, "GetSize error %#x\n", hr);
+
+    memset(buf, 0xde, sizeof(buf));
+    hr = mil_scaler->lpVtbl->CopyPixels(mil_scaler, NULL, 3, sizeof(buf), buf);
+    ok(hr == WINCODEC_ERR_NOTINITIALIZED, "CopyPixels error %#x\n", hr);
+
+    hr = mil_scaler->lpVtbl->Initialize(mil_scaler, mil_source, 1, 1, 1);
+    ok(hr == S_OK, "Initialize error %#x\n", hr);
+
+    hr = mil_scaler->lpVtbl->GetPixelFormat(mil_scaler, &MIL_format);
+    ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
+    ok(MIL_format == 0x0c, "wrong format %d\n", MIL_format);
+
+    hr = mil_scaler->lpVtbl->GetResolution(mil_scaler, &dpix, &dpiy);
+    ok(hr == S_OK, "GetResolution error %#x\n", hr);
+    ok(dpix == 12.0, "got %f, expected 12.0\n", dpix);
+    ok(dpiy == 34.0, "got %f, expected 34.0\n", dpiy);
+
+    hr = mil_scaler->lpVtbl->GetSize(mil_scaler, &width, &height);
+    ok(hr == S_OK, "GetSize error %#x\n", hr);
+    ok(width == 1, "got %u, expected 1\n", width);
+    ok(height == 1, "got %u, expected 1\n", height);
+
+    memset(buf, 0xde, sizeof(buf));
+    hr = mil_scaler->lpVtbl->CopyPixels(mil_scaler, NULL, 3, sizeof(buf), buf);
+    ok(hr == S_OK, "CopyPixels error %#x\n", hr);
+    ok(buf[0] == 0 && buf[1] == 0 && buf[2] == 0 && buf[3] == 0xde,"wrong data: %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3]);
+
+    mil_scaler->lpVtbl->Release(mil_scaler);
+    IWICBitmapScaler_Release(scaler);
+    mil_source->lpVtbl->Release(mil_source);
+    mil_bitmap->lpVtbl->Release(mil_bitmap);
+    IWICBitmap_Release(bitmap);
+}
+
 START_TEST(bitmap)
 {
     HRESULT hr;
@@ -1255,6 +1476,7 @@ START_TEST(bitmap)
         &IID_IWICImagingFactory, (void**)&factory);
     ok(SUCCEEDED(hr), "CoCreateInstance failed, hr=%x\n", hr);
 
+    test_IMILBitmap();
     test_createbitmap();
     test_createbitmapfromsource();
     test_CreateBitmapFromMemory();

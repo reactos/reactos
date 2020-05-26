@@ -45,7 +45,6 @@ RunInstallReactOS(INT argc, WCHAR* argv[])
         RetVal = InstallReactOS(argc, argv);
     }
 
-    FreeLibrary(hDll);
     return RetVal;
 }
 

@@ -6,7 +6,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Kullanım bilgisi için ""EVENTCREATE /?"" yazınız.\n"
     IDS_HELP "\n\
-EVENTCREATE [/S bilgisayar [/U [etki alanı\\]kullanıcı [/P şifre]]] \n\
+EVENTCREATE [/S bilgisayar [/U [etki alanı\\]kullanıcı [/P şifre]]]\n\
             /ID olay kimliği {[/L kayıt adı] | [/SO kaynak]} /T tür /C ulam\n\
             /D tanım\n\
 \n\

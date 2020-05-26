@@ -40,7 +40,7 @@ START_TEST(NtGdiExtTextOutW)
     hDC = GetDC(hWnd);
 
     lpstr = L"Hallo";
-    len = wcslen(lpstr);
+    len = lstrlenW(lpstr);
 
     ret = NtGdiExtTextOutW(hDC, 0, 0, 0, &rect, lpstr, len, Dx, 0);
     ok_int(ret, 1);

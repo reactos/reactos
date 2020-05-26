@@ -18,9 +18,11 @@
 
 #define COBJMACROS
 
-#include "config.h"
 #include <stdarg.h>
 #include <limits.h>
+#ifdef __REACTOS__
+#include <wchar.h>
+#endif
 
 #include "windef.h"
 #include "winbase.h"
@@ -32,7 +34,6 @@
 #include "scrrun_private.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "wine/heap.h"
 
 #ifdef __REACTOS__
@@ -201,6 +202,7 @@ static HRESULT create_folder(const WCHAR*, IFolder**);
 static HRESULT create_file(BSTR, IFile**);
 static HRESULT create_foldercoll_enum(struct foldercollection*, IUnknown**);
 static HRESULT create_filecoll_enum(struct filecollection*, IUnknown**);
+static HRESULT create_drivecoll_enum(struct drivecollection*, IUnknown**);
 
 static inline BOOL is_dir_data(const WIN32_FIND_DATAW *data)
 {
@@ -208,8 +210,8 @@ static inline BOOL is_dir_data(const WIN32_FIND_DATAW *data)
     static const WCHAR dotW[] = {'.',0};
 
     return (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
-            strcmpW(data->cFileName, dotdotW) &&
-            strcmpW(data->cFileName, dotW);
+            wcscmp(data->cFileName, dotdotW) &&
+            wcscmp(data->cFileName, dotW);
 }
 
 static inline BOOL is_file_data(const WIN32_FIND_DATAW *data)
@@ -222,10 +224,10 @@ static BSTR get_full_path(BSTR path, const WIN32_FIND_DATAW *data)
     int len = SysStringLen(path);
     WCHAR buffW[MAX_PATH];
 
-    strcpyW(buffW, path);
+    lstrcpyW(buffW, path);
     if (path[len-1] != '\\')
-        strcatW(buffW, bsW);
-    strcatW(buffW, data->cFileName);
+        lstrcatW(buffW, bsW);
+    lstrcatW(buffW, data->cFileName);
 
     return SysAllocString(buffW);
 }
@@ -694,7 +696,7 @@ static const ITextStreamVtbl textstreamvtbl = {
     textstream_Close
 };
 
-static HRESULT create_textstream(const WCHAR *filename, DWORD disposition, IOMode mode, BOOL unicode, ITextStream **ret)
+static HRESULT create_textstream(const WCHAR *filename, DWORD disposition, IOMode mode, Tristate format, ITextStream **ret)
 {
     struct textstream *stream;
     DWORD access = 0;
@@ -709,7 +711,7 @@ static HRESULT create_textstream(const WCHAR *filename, DWORD disposition, IOMod
         access = GENERIC_WRITE;
         break;
     case ForAppending:
-        access = FILE_APPEND_DATA;
+        access = GENERIC_READ | GENERIC_WRITE;
         break;
     default:
         return E_INVALIDARG;
@@ -721,7 +723,6 @@ static HRESULT create_textstream(const WCHAR *filename, DWORD disposition, IOMod
     stream->ITextStream_iface.lpVtbl = &textstreamvtbl;
     stream->ref = 1;
     stream->mode = mode;
-    stream->unicode = unicode;
     stream->first_read = TRUE;
 
     stream->file = CreateFileW(filename, access, 0, NULL, disposition, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -737,14 +738,39 @@ static HRESULT create_textstream(const WCHAR *filename, DWORD disposition, IOMod
     else
         stream->size.QuadPart = 0;
 
-    /* Write Unicode BOM */
-    if (unicode && mode == ForWriting && (disposition == CREATE_ALWAYS || disposition == CREATE_NEW)) {
-        DWORD written = 0;
-        BOOL ret = WriteFile(stream->file, &utf16bom, sizeof(utf16bom), &written, NULL);
-        if (!ret || written != sizeof(utf16bom)) {
-            ITextStream_Release(&stream->ITextStream_iface);
-            return create_error(GetLastError());
+    if (mode == ForWriting)
+    {
+        stream->unicode = format == TristateTrue;
+        /* Write Unicode BOM */
+        if (stream->unicode && (disposition == CREATE_ALWAYS || disposition == CREATE_NEW)) {
+            DWORD written = 0;
+            BOOL ret = WriteFile(stream->file, &utf16bom, sizeof(utf16bom), &written, NULL);
+            if (!ret || written != sizeof(utf16bom)) {
+                ITextStream_Release(&stream->ITextStream_iface);
+                return create_error(GetLastError());
+            }
         }
+    }
+    else
+    {
+        if (format == TristateUseDefault)
+        {
+            BYTE buf[64];
+            DWORD read;
+            BOOL ret;
+
+            ret = ReadFile(stream->file, buf, sizeof(buf), &read, NULL);
+            if (!ret) {
+                ITextStream_Release(&stream->ITextStream_iface);
+                return create_error(GetLastError());
+            }
+
+            stream->unicode = IsTextUnicode(buf, read, NULL);
+            if (mode == ForReading) SetFilePointer(stream->file, 0, 0, FILE_BEGIN);
+        }
+        else stream->unicode = format != TristateFalse;
+
+        if (mode == ForAppending) SetFilePointer(stream->file, 0, 0, FILE_END);
     }
 
     init_classinfo(&CLSID_TextStream, (IUnknown *)&stream->ITextStream_iface, &stream->classinfo);
@@ -1168,11 +1194,11 @@ static HANDLE start_enumeration(const WCHAR *path, WIN32_FIND_DATAW *data, BOOL 
     int len;
     HANDLE handle;
 
-    strcpyW(pathW, path);
-    len = strlenW(pathW);
+    lstrcpyW(pathW, path);
+    len = lstrlenW(pathW);
     if (len && pathW[len-1] != '\\')
-        strcatW(pathW, bsW);
-    strcatW(pathW, allW);
+        lstrcatW(pathW, bsW);
+    lstrcatW(pathW, allW);
     handle = FindFirstFileW(pathW, data);
     if (handle == INVALID_HANDLE_VALUE) return 0;
 
@@ -1559,8 +1585,8 @@ static HRESULT WINAPI drivecoll_enumvariant_Reset(IEnumVARIANT *iface)
 static HRESULT WINAPI drivecoll_enumvariant_Clone(IEnumVARIANT *iface, IEnumVARIANT **pclone)
 {
     struct enumvariant *This = impl_from_IEnumVARIANT(iface);
-    FIXME("(%p)->(%p): stub\n", This, pclone);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", This, pclone);
+    return create_drivecoll_enum(This->data.u.drivecoll.coll, (IUnknown**)pclone);
 }
 
 static const IEnumVARIANTVtbl drivecollenumvariantvtbl = {
@@ -1741,8 +1767,8 @@ static HRESULT WINAPI foldercoll_get_Count(IFolderCollection *iface, LONG *count
 
     *count = 0;
 
-    strcpyW(pathW, This->path);
-    strcatW(pathW, allW);
+    lstrcpyW(pathW, This->path);
+    lstrcatW(pathW, allW);
     handle = FindFirstFileW(pathW, &data);
     if (handle == INVALID_HANDLE_VALUE)
         return HRESULT_FROM_WIN32(GetLastError());
@@ -1936,8 +1962,8 @@ static HRESULT WINAPI filecoll_get_Count(IFileCollection *iface, LONG *count)
 
     *count = 0;
 
-    strcpyW(pathW, This->path);
-    strcatW(pathW, allW);
+    lstrcpyW(pathW, This->path);
+    lstrcatW(pathW, allW);
     handle = FindFirstFileW(pathW, &data);
     if (handle == INVALID_HANDLE_VALUE)
         return HRESULT_FROM_WIN32(GetLastError());
@@ -2290,7 +2316,7 @@ static HRESULT WINAPI folder_get_Name(IFolder *iface, BSTR *name)
 
     *name = NULL;
 
-    ptr = strrchrW(This->path, '\\');
+    ptr = wcsrchr(This->path, '\\');
     if (ptr)
     {
         *name = SysAllocString(ptr+1);
@@ -2640,7 +2666,7 @@ static HRESULT WINAPI file_get_Name(IFile *iface, BSTR *name)
 
     *name = NULL;
 
-    ptr = strrchrW(This->path, '\\');
+    ptr = wcsrchr(This->path, '\\');
     if (ptr)
     {
         *name = SysAllocString(ptr+1);
@@ -2816,12 +2842,7 @@ static HRESULT WINAPI file_OpenAsTextStream(IFile *iface, IOMode mode, Tristate 
 
     TRACE("(%p)->(%d %d %p)\n", This, mode, format, stream);
 
-    if (format == TristateUseDefault) {
-        FIXME("default format not handled, defaulting to unicode\n");
-        format = TristateTrue;
-    }
-
-    return create_textstream(This->path, OPEN_EXISTING, mode, format == TristateTrue, stream);
+    return create_textstream(This->path, OPEN_EXISTING, mode, format, stream);
 }
 
 static const IFileVtbl file_vtbl = {
@@ -3034,9 +3055,9 @@ static HRESULT WINAPI filesys_BuildPath(IFileSystem3 *iface, BSTR Path,
             ret = SysAllocStringLen(NULL, path_len + name_len);
             if (ret)
             {
-                strcpyW(ret, Path);
+                lstrcpyW(ret, Path);
                 ret[path_len] = 0;
-                strcatW(ret, Name);
+                lstrcatW(ret, Name);
             }
         }
         else if (Path[path_len-1] != '\\' && Name[0] != '\\')
@@ -3044,10 +3065,10 @@ static HRESULT WINAPI filesys_BuildPath(IFileSystem3 *iface, BSTR Path,
             ret = SysAllocStringLen(NULL, path_len + name_len + 1);
             if (ret)
             {
-                strcpyW(ret, Path);
+                lstrcpyW(ret, Path);
                 if (Path[path_len-1] != ':')
-                    strcatW(ret, bsW);
-                strcatW(ret, Name);
+                    lstrcatW(ret, bsW);
+                lstrcatW(ret, Name);
             }
         }
         else
@@ -3055,8 +3076,8 @@ static HRESULT WINAPI filesys_BuildPath(IFileSystem3 *iface, BSTR Path,
             ret = SysAllocStringLen(NULL, path_len + name_len);
             if (ret)
             {
-                strcpyW(ret, Path);
-                strcatW(ret, Name);
+                lstrcpyW(ret, Path);
+                lstrcatW(ret, Name);
             }
         }
     }
@@ -3080,7 +3101,7 @@ static HRESULT WINAPI filesys_GetDriveName(IFileSystem3 *iface, BSTR path, BSTR 
 
     *drive = NULL;
 
-    if (path && strlenW(path) > 1 && path[1] == ':')
+    if (path && lstrlenW(path) > 1 && path[1] == ':')
         *drive = SysAllocStringLen(path, 2);
 
     return S_OK;
@@ -3150,7 +3171,7 @@ static HRESULT WINAPI filesys_GetFileName(IFileSystem3 *iface, BSTR Path,
         return S_OK;
     }
 
-    for(end=strlenW(Path)-1; end>=0; end--)
+    for(end=lstrlenW(Path)-1; end>=0; end--)
         if(Path[end]!='/' && Path[end]!='\\')
             break;
 
@@ -3185,7 +3206,7 @@ static HRESULT WINAPI filesys_GetBaseName(IFileSystem3 *iface, BSTR Path,
         return S_OK;
     }
 
-    for(end=strlenW(Path)-1; end>=0; end--)
+    for(end=lstrlenW(Path)-1; end>=0; end--)
         if(Path[end]!='/' && Path[end]!='\\')
             break;
 
@@ -3255,7 +3276,7 @@ static HRESULT WINAPI filesys_GetAbsolutePathName(IFileSystem3 *iface, BSTR Path
     if(!len)
         return E_FAIL;
 
-    buf[0] = toupperW(buf[0]);
+    buf[0] = towupper(buf[0]);
     if(len>3 && buf[len-1] == '\\')
         buf[--len] = 0;
 
@@ -3269,7 +3290,7 @@ static HRESULT WINAPI filesys_GetAbsolutePathName(IFileSystem3 *iface, BSTR Path
         if(fh == INVALID_HANDLE_VALUE)
             break;
 
-        exp_len = strlenW(fdata.cFileName);
+        exp_len = lstrlenW(fdata.cFileName);
         if(exp_len == i-beg)
             memcpy(buf+beg, fdata.cFileName, exp_len*sizeof(WCHAR));
         FindClose(fh);
@@ -3300,7 +3321,7 @@ static HRESULT WINAPI filesys_GetTempName(IFileSystem3 *iface, BSTR *pbstrResult
 
     if(!RtlGenRandom(&random, sizeof(random)))
         return E_FAIL;
-    sprintfW(*pbstrResult, fmt, random & 0xfffff);
+    swprintf(*pbstrResult, fmt, random & 0xfffff);
     return S_OK;
 }
 
@@ -3317,7 +3338,7 @@ static HRESULT WINAPI filesys_DriveExists(IFileSystem3 *iface, BSTR DriveSpec,
     len = SysStringLen(DriveSpec);
 
     if (len >= 1) {
-        driveletter = toupperW(DriveSpec[0]);
+        driveletter = towupper(DriveSpec[0]);
         if (driveletter >= 'A' && driveletter <= 'Z'
                 && (len < 2 || DriveSpec[1] == ':')
                 && (len < 3 || DriveSpec[2] == '\\')) {
@@ -3375,7 +3396,7 @@ static HRESULT WINAPI filesys_GetDrive(IFileSystem3 *iface, BSTR DriveSpec,
     if (!len)
         return E_INVALIDARG;
     else if (len <= 3) {
-        driveletter = toupperW(DriveSpec[0]);
+        driveletter = towupper(DriveSpec[0]);
         if (driveletter < 'A' || driveletter > 'Z'
                 || (len >= 2 && DriveSpec[1] != ':')
                 || (len == 3 && DriveSpec[2] != '\\'))
@@ -3492,7 +3513,7 @@ static inline HRESULT delete_file(const WCHAR *file, DWORD file_len, VARIANT_BOO
         if(ffd.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_DEVICE))
             continue;
 
-        name_len = strlenW(ffd.cFileName);
+        name_len = lstrlenW(ffd.cFileName);
         if(len+name_len+1 >= MAX_PATH) {
             FindClose(f);
             return E_FAIL;
@@ -3554,7 +3575,7 @@ static HRESULT delete_folder(const WCHAR *folder, DWORD folder_len, VARIANT_BOOL
                     (ffd.cFileName[1]=='.' && ffd.cFileName[2]==0)))
             continue;
 
-        name_len = strlenW(ffd.cFileName);
+        name_len = lstrlenW(ffd.cFileName);
         if(len+name_len+3 >= MAX_PATH) {
             FindClose(f);
             return E_FAIL;
@@ -3670,7 +3691,7 @@ static inline HRESULT copy_file(const WCHAR *source, DWORD source_len,
         if(ffd.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_DEVICE))
             continue;
 
-        name_len = strlenW(ffd.cFileName);
+        name_len = lstrlenW(ffd.cFileName);
         if(src_len+name_len+1>=MAX_PATH || dst_len+name_len+1>=MAX_PATH) {
             FindClose(f);
             return E_FAIL;
@@ -3772,7 +3793,7 @@ static HRESULT copy_folder(const WCHAR *source, DWORD source_len, const WCHAR *d
                     (ffd.cFileName[1]=='.' && ffd.cFileName[2]==0)))
             continue;
 
-        name_len = strlenW(ffd.cFileName);
+        name_len = lstrlenW(ffd.cFileName);
         if(dst_len+name_len>=MAX_PATH || src_len+name_len+2>=MAX_PATH) {
             FindClose(f);
             return E_FAIL;
@@ -3856,7 +3877,7 @@ static HRESULT WINAPI filesys_CreateTextFile(IFileSystem3 *iface, BSTR filename,
     TRACE("%p %s %d %d %p\n", iface, debugstr_w(filename), overwrite, unicode, stream);
 
     disposition = overwrite == VARIANT_TRUE ? CREATE_ALWAYS : CREATE_NEW;
-    return create_textstream(filename, disposition, ForWriting, !!unicode, stream);
+    return create_textstream(filename, disposition, ForWriting, unicode ? TristateTrue : TristateFalse, stream);
 }
 
 static HRESULT WINAPI filesys_OpenTextFile(IFileSystem3 *iface, BSTR filename,
@@ -3866,14 +3887,9 @@ static HRESULT WINAPI filesys_OpenTextFile(IFileSystem3 *iface, BSTR filename,
     DWORD disposition;
 
     TRACE("(%p)->(%s %d %d %d %p)\n", iface, debugstr_w(filename), mode, create, format, stream);
+
     disposition = create == VARIANT_TRUE ? OPEN_ALWAYS : OPEN_EXISTING;
-
-    if (format == TristateUseDefault) {
-        FIXME("default format not handled, defaulting to unicode\n");
-        format = TristateTrue;
-    }
-
-    return create_textstream(filename, disposition, mode, format == TristateTrue, stream);
+    return create_textstream(filename, disposition, mode, format, stream);
 }
 
 static HRESULT WINAPI filesys_GetStandardStream(IFileSystem3 *iface,
@@ -3898,7 +3914,7 @@ static void get_versionstring(VS_FIXEDFILEINFO *info, WCHAR *ver)
     c = (WORD)((version >> 16) & 0xffff);
     d = (WORD)( version & 0xffff);
 
-    sprintfW(ver, fmtW, a, b, c, d);
+    swprintf(ver, fmtW, a, b, c, d);
 }
 
 static HRESULT WINAPI filesys_GetFileVersion(IFileSystem3 *iface, BSTR name, BSTR *version)

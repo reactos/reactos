@@ -242,8 +242,19 @@ extern "C" {
 #define WMN_LAST (0U-1200U)
 #endif
 
+#define BCSIF_GLYPH 0x00000001
+#define BCSIF_IMAGE 0x00000002
+#define BCSIF_STYLE 0x00000004
+#define BCSIF_SIZE  0x00000008
+
+#define BCSS_STRETCH 0x00000002
+#define BCSS_IMAGE   0x00000008
+
 #define BCN_FIRST (0U-1250U)
 #define BCN_LAST (0U-1350U)
+
+#define BCN_HOTITEMCHANGE (BCN_FIRST + 1)
+#define BCN_DROPDOWN (BCN_FIRST + 2)
 
 #define MSGF_COMMCTRL_BEGINDRAG 0x4200
 #define MSGF_COMMCTRL_SIZEHEADER 0x4201
@@ -909,6 +920,19 @@ extern "C" {
   } NMHDFILTERBTNCLICK,*LPNMHDFILTERBTNCLICK;
 
 #endif /* !NOHEADER */
+
+typedef struct tagBUTTON_SPLITINFO {
+  UINT mask;
+  HIMAGELIST himlGlyph;
+  UINT uSplitStyle;
+  SIZE size;
+} BUTTON_SPLITINFO, *PBUTTON_SPLITINFO;
+
+typedef struct tagNMBCDROPDOWN {
+  NMHDR hdr;
+  RECT rcButton;
+} NMBCDROPDOWN;
+
 
 #ifndef NOTOOLBAR
 
@@ -4625,6 +4649,9 @@ typedef struct {
 #define BCM_SETSHIELD (BCM_FIRST+0xC)
 #define Button_SetElevationRequiredState(hwnd,frequired) (BOOL)SNDMSG((hwnd),BCM_SETSHIELD,0,(LPARAM)(frequired))
 
+#define BCM_SETDROPDOWNSTATE (BCM_FIRST + 6)
+#define BCM_SETSPLITINFO (BCM_FIRST + 7)
+#define BCM_GETSPLITINFO (BCM_FIRST + 8)
 #define BCM_SETNOTE (BCM_FIRST + 9)
 #define BCM_GETNOTE (BCM_FIRST + 10)
 #define BCM_GETNOTELENGTH (BCM_FIRST + 11)
@@ -4633,8 +4660,6 @@ typedef struct {
     NMHDR hdr;
     DWORD dwFlags;
   } NMBCHOTITEM,*LPNMBCHOTITEM;
-
-#define BCN_HOTITEMCHANGE (BCN_FIRST+0x1)
 
 #define BST_HOT 0x200
 

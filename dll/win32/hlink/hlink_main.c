@@ -119,7 +119,7 @@ HRESULT WINAPI HlinkCreateFromString( LPCWSTR pwzTarget, LPCWSTR pwzLocation,
 
     if (pwzTarget)
     {
-        hash = strchrW(pwzTarget, '#');
+        hash = wcschr(pwzTarget, '#');
         if (hash)
         {
             if (hash == pwzTarget)
@@ -280,11 +280,11 @@ HRESULT WINAPI HlinkIsShortcut(LPCWSTR pwzFileName)
     if(!pwzFileName)
         return E_INVALIDARG;
 
-    len = strlenW(pwzFileName)-4;
+    len = lstrlenW(pwzFileName)-4;
     if(len < 0)
         return S_FALSE;
 
-    return strcmpiW(pwzFileName+len, url_ext) ? S_FALSE : S_OK;
+    return wcsicmp(pwzFileName+len, url_ext) ? S_FALSE : S_OK;
 }
 
 /***********************************************************************
@@ -389,7 +389,7 @@ HRESULT WINAPI HlinkParseDisplayName(LPBC pibc, LPCWSTR pwzDisplayName, BOOL fNo
     if(fNoForceAbs)
         FIXME("Unsupported fNoForceAbs\n");
 
-    if(!strncmpiW(pwzDisplayName, file_colonW, ARRAY_SIZE(file_colonW))) {
+    if(!_wcsnicmp(pwzDisplayName, file_colonW, ARRAY_SIZE(file_colonW))) {
         pwzDisplayName += ARRAY_SIZE(file_colonW);
         eaten += ARRAY_SIZE(file_colonW);
 
@@ -409,7 +409,7 @@ HRESULT WINAPI HlinkParseDisplayName(LPBC pibc, LPCWSTR pwzDisplayName, BOOL fNo
 
     hres = CreateFileMoniker(pwzDisplayName, ppimk);
     if(SUCCEEDED(hres))
-        *pcchEaten = eaten + strlenW(pwzDisplayName);
+        *pcchEaten = eaten + lstrlenW(pwzDisplayName);
 
     return hres;
 }

@@ -18,7 +18,7 @@ foreach(_file ${TEXTFILES})
 endforeach()
 
 set_source_files_properties(lunar.rc PROPERTIES OBJECT_DEPENDS "${_converted_files}")
-add_library(lunar.msstyles SHARED lunar.rc)
+add_library(lunar.msstyles MODULE lunar.rc)
 set_module_type(lunar.msstyles module)
 set_target_properties(lunar.msstyles PROPERTIES SUFFIX "")
 add_cd_file(TARGET lunar.msstyles DESTINATION reactos/Resources/Themes/Lunar FOR all)

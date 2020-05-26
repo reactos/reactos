@@ -38,6 +38,7 @@
 /* Strings */
 #define IDS_APPTITLE    100
 #define IDS_SETASDESKBG 101
+#define IDS_NOPREVIEW   102
 #define IDS_PREVIEW     550
 
 /* Friendly File Type Names */

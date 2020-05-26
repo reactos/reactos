@@ -83,7 +83,7 @@ printMixerLine(LPMIXERLINEW MixerLine, IN ULONG MixerIndex)
     printf("dwDestination %lu\n", MixerLine->dwDestination);
     printf("dwLineID %lx\n", MixerLine->dwLineID);
     printf("dwSource %lx\n", MixerLine->dwSource);
-    printf("dwUser %lu\n", MixerLine->dwUser);
+    printf("dwUser %Iu\n", MixerLine->dwUser);
     printf("fdwLine %lu\n", MixerLine->fdwLine);
     printf("szName %S\n", MixerLine->szName);
     printf("szShortName %S\n", MixerLine->szShortName);

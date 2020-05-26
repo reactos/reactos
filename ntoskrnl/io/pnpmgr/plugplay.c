@@ -91,30 +91,6 @@ IopQueueTargetDeviceEvent(const GUID *Guid,
 }
 
 
-/*
- * Remove the current PnP event from the tail of the event queue
- * and signal IopPnpNotifyEvent if there is yet another event in the queue.
- */
-static NTSTATUS
-IopRemovePlugPlayEvent(VOID)
-{
-    /* Remove a pnp event entry from the tail of the queue */
-    if (!IsListEmpty(&IopPnpEventQueueHead))
-    {
-        ExFreePool(CONTAINING_RECORD(RemoveTailList(&IopPnpEventQueueHead), PNP_EVENT_ENTRY, ListEntry));
-    }
-
-    /* Signal the next pnp event in the queue */
-    if (!IsListEmpty(&IopPnpEventQueueHead))
-    {
-        KeSetEvent(&IopPnpNotifyEvent,
-                   0,
-                   FALSE);
-    }
-
-    return STATUS_SUCCESS;
-}
-
 static PDEVICE_OBJECT
 IopTraverseDeviceNode(PDEVICE_NODE Node, PUNICODE_STRING DeviceInstance)
 {
@@ -244,6 +220,34 @@ IopPnpEnumerateDevice(PPLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA DeviceData)
 
     return Status;
 }
+
+
+/*
+ * Remove the current PnP event from the tail of the event queue
+ * and signal IopPnpNotifyEvent if there is yet another event in the queue.
+ */
+static
+NTSTATUS
+IopRemovePlugPlayEvent(
+    _In_ PPLUGPLAY_CONTROL_USER_RESPONSE_DATA ResponseData)
+{
+    /* Remove a pnp event entry from the tail of the queue */
+    if (!IsListEmpty(&IopPnpEventQueueHead))
+    {
+        ExFreePool(CONTAINING_RECORD(RemoveTailList(&IopPnpEventQueueHead), PNP_EVENT_ENTRY, ListEntry));
+    }
+
+    /* Signal the next pnp event in the queue */
+    if (!IsListEmpty(&IopPnpEventQueueHead))
+    {
+        KeSetEvent(&IopPnpNotifyEvent,
+                   0,
+                   FALSE);
+    }
+
+    return STATUS_SUCCESS;
+}
+
 
 static NTSTATUS
 IopGetInterfaceDeviceList(PPLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA DeviceList)
@@ -1348,7 +1352,7 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
         case PlugPlayControlUserResponse:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_USER_RESPONSE_DATA))
                 return STATUS_INVALID_PARAMETER;
-            return IopRemovePlugPlayEvent();
+            return IopRemovePlugPlayEvent((PPLUGPLAY_CONTROL_USER_RESPONSE_DATA)Buffer);
 
 //        case PlugPlayControlGenerateLegacyDevice:
 

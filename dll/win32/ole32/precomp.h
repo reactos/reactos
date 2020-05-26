@@ -2,8 +2,6 @@
 #ifndef _OLE32_PCH_
 #define _OLE32_PCH_
 
-#include <wine/config.h>
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -30,7 +28,6 @@
 
 #include <wine/debug.h>
 #include <wine/list.h>
-#include <wine/unicode.h>
 
 #include "compobj_private.h"
 #include "dictionary.h"

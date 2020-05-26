@@ -2,9 +2,9 @@
 @ stub VssFreeSnapshotProperties
 @ stub ShouldBlockRevert
 @ stub ??0CVssJetWriter@@QAE@XZ
-@ cdecl -arch=i386 ??0CVssWriter@@QAE@XZ(ptr) __thiscall_VSSAPI_CVssWriter_default_ctor
+@ cdecl -arch=i386 ??0CVssWriter@@QAE@XZ(ptr) VSSAPI_CVssWriter_default_ctor
 @ stub ??1CVssJetWriter@@UAE@XZ
-@ cdecl -arch=i386 ??1CVssWriter@@UAE@XZ(ptr) __thiscall_VSSAPI_CVssWriter_dtor
+@ cdecl -arch=i386 ??1CVssWriter@@UAE@XZ(ptr) VSSAPI_CVssWriter_dtor
 @ stub ?AreComponentsSelected@CVssJetWriter@@IBG_NXZ
 @ stub ?AreComponentsSelected@CVssWriter@@IBG_NXZ
 @ stub ?CreateVssBackupComponents@@YGJPAPAVIVssBackupComponents@@@Z
@@ -27,7 +27,7 @@
 @ stub ?GetSnapshotDeviceName@CVssJetWriter@@IBGJPBGPAPBG@Z
 @ stub ?GetSnapshotDeviceName@CVssWriter@@IBGJPBGPAPBG@Z
 @ stub ?Initialize@CVssJetWriter@@QAGJU_GUID@@PBG_N211K@Z
-@ cdecl -arch=i386 ?Initialize@CVssWriter@@QAGJU_GUID@@PBGW4VSS_USAGE_TYPE@@W4VSS_SOURCE_TYPE@@W4_VSS_APPLICATION_LEVEL@@KW4VSS_ALTERNATE_WRITER_STATE@@_N@Z(ptr ptr wstr long long long long long long wstr) __thiscall_VSSAPI_CVssWriter_Initialize
+@ cdecl -arch=i386 ?Initialize@CVssWriter@@QAGJU_GUID@@PBGW4VSS_USAGE_TYPE@@W4VSS_SOURCE_TYPE@@W4_VSS_APPLICATION_LEVEL@@KW4VSS_ALTERNATE_WRITER_STATE@@_N@Z(ptr ptr wstr long long long long long long wstr) VSSAPI_CVssWriter_Initialize
 @ stub ?InstallAlternateWriter@CVssWriter@@QAGJU_GUID@@0@Z
 @ stub ?IsBootableSystemStateBackedUp@CVssJetWriter@@IBG_NXZ
 @ stub ?IsBootableSystemStateBackedUp@CVssWriter@@IBG_NXZ
@@ -67,9 +67,9 @@
 @ stub ?OnVSSShutdown@CVssWriter@@UAG_NXZ
 @ stub ?SetWriterFailure@CVssJetWriter@@IAGJJ@Z
 @ stub ?SetWriterFailure@CVssWriter@@IAGJJ@Z
-@ cdecl -arch=i386 ?Subscribe@CVssWriter@@QAGJK@Z(ptr long) __thiscall_VSSAPI_CVssWriter_Subscribe
+@ cdecl -arch=i386 ?Subscribe@CVssWriter@@QAGJK@Z(ptr long) VSSAPI_CVssWriter_Subscribe
 @ stub ?Uninitialize@CVssJetWriter@@QAGXXZ
-@ cdecl -arch=i386 ?Unsubscribe@CVssWriter@@QAGJXZ(ptr) __thiscall_VSSAPI_CVssWriter_Unsubscribe
+@ cdecl -arch=i386 ?Unsubscribe@CVssWriter@@QAGJXZ(ptr) VSSAPI_CVssWriter_Unsubscribe
 @ stub CreateVssBackupComponentsInternal
 @ stub CreateVssExamineWriterMetadataInternal
 @ stub CreateVssExpressWriterInternal

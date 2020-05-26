@@ -1,0 +1,26 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {7BA4C740-9E81-11CF-99D3-00AA004AE837} = s 'ReactOS SendTo Object Service'
+		{
+			val flags = d '1'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+	NoRemove AllFilesystemObjects
+	{
+		NoRemove shellex
+		{
+			NoRemove ContextMenuHandlers
+			{
+				ForceRemove SendTo = s '{7BA4C740-9E81-11CF-99D3-00AA004AE837}'
+				{
+				}
+			}
+		}
+	}
+}

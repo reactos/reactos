@@ -393,7 +393,7 @@ IsFtVolume(IN PUNICODE_STRING SymbolicName)
     }
 
     /* Check if this is a FT volume */
-    return IsRecognizedPartition(PartitionInfo.PartitionType);
+    return IsFTPartition(PartitionInfo.PartitionType);
 }
 
 /*
@@ -524,11 +524,12 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* If we didn't find a drive letter online
-     * ensure there's no GPT drive letter nor no drive entry
+     * ensure this is not a no drive entry
+    * by querying GPT attributes & database
      */
     if (NextEntry == &(DeviceInformation->SymbolicLinksListHead))
     {
-        if (GptDriveLetter || HasNoDriveLetterEntry(DeviceInformation->UniqueId))
+        if (!GptDriveLetter || HasNoDriveLetterEntry(DeviceInformation->UniqueId))
         {
             DriveLetterInfo->DriveLetterWasAssigned = FALSE;
             DriveLetterInfo->CurrentDriveLetter = 0;
@@ -609,7 +610,7 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
          DriveLetterInfo->CurrentDriveLetter <= L'Z';
          DriveLetterInfo->CurrentDriveLetter++)
     {
-        NameBuffer[LETTER_POSITION] = DeviceInformation->SuggestedDriveLetter;
+        NameBuffer[LETTER_POSITION] = DriveLetterInfo->CurrentDriveLetter;
 
         Status = MountMgrCreatePointWorker(DeviceExtension, &SymbolicName, &TargetDeviceName);
         if (NT_SUCCESS(Status))

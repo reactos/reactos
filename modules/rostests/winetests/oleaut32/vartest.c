@@ -2715,15 +2715,13 @@ static void test_VarSub(void)
     ok(hres == S_OK && V_VT(&result) == VT_CY,
         "VarSub: expected coerced type VT_CY, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromCy(V_CY(&result), &r);
-    ok(hres == S_OK && EQ_DOUBLE(r, 4702.0),
-        "VarSub: CY value %f, expected %f\n", r, (double)4720);
+    ok(hres == S_OK && EQ_DOUBLE(r, 4702.0), "VarSub: CY value %f, expected %f\n", r, 4720.0);
 
     hres = pVarSub(&left, &dec, &result);
     ok(hres == S_OK && V_VT(&result) == VT_DECIMAL,
         "VarSub: expected coerced type VT_DECIMAL, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromDec(&V_DECIMAL(&result), &r);
-    ok(hres == S_OK && EQ_DOUBLE(r, -6.8),
-        "VarSub: DECIMAL value %f, expected %f\n", r, (double)-15.2);
+    ok(hres == S_OK && EQ_DOUBLE(r, -6.8), "VarSub: DECIMAL value %f, expected %f\n", r, -6.8);
 
     SysFreeString(lbstr);
     SysFreeString(rbstr);
@@ -5534,12 +5532,12 @@ static void test_VarMul(void)
     hres = pVarMul(&cy, &right, &result);
     ok(hres == S_OK && V_VT(&result) == VT_CY, "VarMul: expected coerced type VT_CY, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromCy(V_CY(&result), &r);
-    ok(hres == S_OK && EQ_DOUBLE(r, 42399.0), "VarMul: CY value %f, expected %f\n", r, (double)42399);
+    ok(hres == S_OK && EQ_DOUBLE(r, 42399.0), "VarMul: CY value %f, expected %f\n", r, 42399.0);
 
     hres = pVarMul(&left, &dec, &result);
     ok(hres == S_OK && V_VT(&result) == VT_DECIMAL, "VarMul: expected coerced type VT_DECIMAL, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromDec(&V_DECIMAL(&result), &r);
-    ok(hres == S_OK && EQ_DOUBLE(r, 46.2), "VarMul: DECIMAL value %f, expected %f\n", r, (double)46.2);
+    ok(hres == S_OK && EQ_DOUBLE(r, 46.2), "VarMul: DECIMAL value %f, expected %f\n", r, 46.2);
 
     SysFreeString(lbstr);
     SysFreeString(rbstr);
@@ -5705,7 +5703,7 @@ static void test_VarAdd(void)
     hres = pVarAdd(&left, &right, &result);
     ok(hres == S_OK && V_VT(&result) == VT_BSTR, "VarAdd: expected coerced type VT_BSTR, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromStr(V_BSTR(&result), 0, 0, &r);
-    ok(hres == S_OK && EQ_DOUBLE(r, 1212.0), "VarAdd: BSTR value %f, expected %f\n", r, (double)1212);
+    ok(hres == S_OK && EQ_DOUBLE(r, 1212.0), "VarAdd: BSTR value %f, expected %f\n", r, 1212.0);
     VariantClear(&result);
 
     /* Manuly test some VT_CY and VT_DECIMAL variants */
@@ -5725,12 +5723,12 @@ static void test_VarAdd(void)
     hres = pVarAdd(&cy, &right, &result);
     ok(hres == S_OK && V_VT(&result) == VT_CY, "VarAdd: expected coerced type VT_CY, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromCy(V_CY(&result), &r);
-    ok(hres == S_OK && EQ_DOUBLE(r, 4720.0), "VarAdd: CY value %f, expected %f\n", r, (double)4720);
+    ok(hres == S_OK && EQ_DOUBLE(r, 4720.0), "VarAdd: CY value %f, expected %f\n", r, 4720.0);
 
     hres = pVarAdd(&left, &dec, &result);
     ok(hres == S_OK && V_VT(&result) == VT_DECIMAL, "VarAdd: expected coerced type VT_DECIMAL, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromDec(&V_DECIMAL(&result), &r);
-    ok(hres == S_OK && EQ_DOUBLE(r, -15.2), "VarAdd: DECIMAL value %f, expected %f\n", r, (double)-15.2);
+    ok(hres == S_OK && EQ_DOUBLE(r, -15.2), "VarAdd: DECIMAL value %f, expected %f\n", r, -15.2);
     VariantClear(&result);
 
     SysFreeString(lbstr);
@@ -7995,40 +7993,37 @@ static void test_VarDiv(void)
     ok(hres == S_OK && V_VT(&result) == VT_R8,
         "VARDIV: expected coerced type VT_R8, got %s!\n", vtstr(V_VT(&result)));
     ok(hres == S_OK && EQ_DOUBLE(V_R8(&result), 1.0),
-        "VARDIV: CY value %f, expected %f\n", V_R8(&result), (double)1.0);
+        "VARDIV: CY value %f, expected %f\n", V_R8(&result), 1.0);
 
     hres = pVarDiv(&cy, &right, &result);
     ok(hres == S_OK && V_VT(&result) == VT_R8,
         "VARDIV: expected coerced type VT_R8, got %s!\n", vtstr(V_VT(&result)));
     ok(hres == S_OK && EQ_DOUBLE(V_R8(&result), 5000.0),
-        "VARDIV: CY value %f, expected %f\n", V_R8(&result), (double)5000.0);
+        "VARDIV: CY value %f, expected %f\n", V_R8(&result), 5000.0);
 
     hres = pVarDiv(&left, &cy, &result);
     ok(hres == S_OK && V_VT(&result) == VT_R8,
         "VARDIV: expected coerced type VT_R8, got %s!\n", vtstr(V_VT(&result)));
     ok(hres == S_OK && EQ_DOUBLE(V_R8(&result), 0.01),
-        "VARDIV: CY value %f, expected %f\n", V_R8(&result), (double)0.01);
+        "VARDIV: CY value %f, expected %f\n", V_R8(&result), 0.01);
 
     hres = pVarDiv(&left, &dec, &result);
     ok(hres == S_OK && V_VT(&result) == VT_DECIMAL,
         "VARDIV: expected coerced type VT_DECIMAL, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromDec(&V_DECIMAL(&result), &r);
-    ok(hres == S_OK && EQ_DOUBLE(r, 50.0),
-        "VARDIV: DECIMAL value %f, expected %f\n", r, (double)50.0);
+    ok(hres == S_OK && EQ_DOUBLE(r, 50.0), "VARDIV: DECIMAL value %f, expected %f\n", r, 50.0);
 
     hres = pVarDiv(&dec, &dec, &result);
     ok(hres == S_OK && V_VT(&result) == VT_DECIMAL,
         "VARDIV: expected coerced type VT_DECIMAL, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromDec(&V_DECIMAL(&result), &r);
-    ok(hres == S_OK && EQ_DOUBLE(r, 1.0),
-        "VARDIV: DECIMAL value %f, expected %f\n", r, (double)1.0);
+    ok(hres == S_OK && EQ_DOUBLE(r, 1.0), "VARDIV: DECIMAL value %f, expected %f\n", r, 1.0);
 
     hres = pVarDiv(&dec, &right, &result);
     ok(hres == S_OK && V_VT(&result) == VT_DECIMAL,
         "VARDIV: expected coerced type VT_DECIMAL, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromDec(&V_DECIMAL(&result), &r);
-    ok(hres == S_OK && EQ_DOUBLE(r, 1.0),
-        "VARDIV: DECIMAL value %f, expected %f\n", r, (double)1.0);
+    ok(hres == S_OK && EQ_DOUBLE(r, 1.0), "VARDIV: DECIMAL value %f, expected %f\n", r, 1.0);
 
     /* Check for division by zero and overflow */
     V_VT(&left) = VT_R8;

@@ -6,7 +6,7 @@
  */
 
 #ifndef _INC_WINXX
-#define _INC_WINXX      7   /* Version 7 */
+#define _INC_WINXX      8   /* Version 8 */
 
 #pragma once
 
@@ -537,6 +537,14 @@
 #undef FORWARD_WM_NCACTIVATE
 #define FORWARD_WM_NCACTIVATE(hwnd, fActive, hwndActDeact, fMinimized, fn) \
     (BOOL)(DWORD)(fn)((hwnd), WM_NCACTIVATE, (WPARAM)(BOOL)(fActive), 0L)
+
+/* LRESULT Cls_OnSettingChange(HWND hwnd, UINT_PTR wFlag, LPCTSTR pszSection) */
+#undef HANDLE_WM_SETTINGCHANGE
+#define HANDLE_WM_SETTINGCHANGE(hwnd,wParam,lParam,fn) \
+    ((fn)((hwnd), (UINT_PTR)(wParam), (LPCTSTR)(LPARAM)(lParam)), 0L)
+#undef FORWARD_WM_SETTINGCHANGE
+#define FORWARD_WM_SETTINGCHANGE(hwnd,wFlag,pszSection,fn) \
+    (LRESULT)(fn)((hwnd), WM_SETTINGCHANGE, (WPARAM)(UINT_PTR)(wFlag), (LPARAM)(LPCTSTR)(pszSection))
 
 /* LONG Edit_OnGetSel(HWND hwnd, LPDWORD lpdwStart, LPDWORD lpdwEnd) */
 #define HANDLE_EM_GETSEL(hwnd, wParam, lParam, fn) \

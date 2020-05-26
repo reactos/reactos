@@ -1559,6 +1559,10 @@ MMixerInitializeFilter(
         {
             /* try get name with component id */
             Status = MMixerGetDeviceNameWithComponentId(MixerContext, MixerData->hDevice, MixerInfo->MixCaps.szPname);
+            if (Status != MM_STATUS_SUCCESS)
+            {
+                MixerInfo->MixCaps.szPname[0] = L'\0';
+            }
         }
 
         /* initialize line list */

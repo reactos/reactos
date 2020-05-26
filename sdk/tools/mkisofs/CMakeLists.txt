@@ -83,27 +83,27 @@ target_link_libraries(mkisofs libmdigest libschily libsiconv)
 if(MSVC)
     # mkisofs uses K&R-style function definitions to support very old compilers.
     # MSVC complains about the resulting foo() vs. foo(void) mismatches.
-    add_target_compile_flags(mkisofs "/wd4113")
+    target_compile_options(mkisofs PRIVATE "/wd4113")
 
     if (ARCH STREQUAL "amd64")
         # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
-        add_target_compile_flags(mkisofs "/wd4267")
+        target_compile_options(mkisofs PRIVATE "/wd4267")
 
         # Disable warning "'type cast': pointer truncation from 'const char *' to 'long'"
-        add_target_compile_flags(libschily "/wd4311")
+        target_compile_options(libschily PRIVATE "/wd4311")
     endif()
 
     # Disable warning "'<': signed/unsigned mismatch"
-    add_target_compile_flags(mkisofs "/wd4018")
+    target_compile_options(mkisofs PRIVATE "/wd4018")
 
     # Disable warning "'nchar': unreferenced local variable"
-    add_target_compile_flags(mkisofs "/wd4101")
+    target_compile_options(mkisofs PRIVATE "/wd4101")
 
     # Disable warning "'+=': conversion from 'x' to 'y', possible loss of data"
-    add_target_compile_flags(libschily "/wd4244")
-    add_target_compile_flags(mkisofs "/wd4244")
+    target_compile_options(libschily PRIVATE "/wd4244")
+    target_compile_options(mkisofs PRIVATE "/wd4244")
 else()
     # libschily implements an own printf function with support for the %r formatter.
     # Silence compilers checking for invalid formatting sequences.
-    add_target_compile_flags(libschily "-Wno-format")
+    target_compile_options(libschily PRIVATE "-Wno-format")
 endif()

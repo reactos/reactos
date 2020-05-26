@@ -36,12 +36,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -62,8 +56,6 @@
 #include "initguid.h"
 #include "wincodec.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
-#include "wine/library.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(olepicture);
 
@@ -2522,7 +2514,7 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
   *ppvRet = NULL;
 
   /* Convert file URLs to DOS paths. */
-  if (strncmpW(szURLorPath, file, 5) == 0) {
+  if (wcsncmp(szURLorPath, file, 5) == 0) {
       DWORD size;
       hRes = CoInternetParseUrl(szURLorPath, PARSE_PATH_FROM_URL, 0, path_buf,
                                 ARRAY_SIZE(path_buf), &size, 0);

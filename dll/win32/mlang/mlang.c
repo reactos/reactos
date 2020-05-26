@@ -21,7 +21,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -38,7 +37,6 @@
 #include "mlang.h"
 #include "mimeole.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/list.h"
 
@@ -1283,12 +1281,12 @@ static HRESULT lcid_from_rfc1766(IEnumRfc1766 *iface, LCID *lcid, LPCWSTR rfc176
 
     while (IEnumRfc1766_Next(iface, 1, &info, &num) == S_OK)
     {
-        if (!strcmpiW(info.wszRfc1766, rfc1766))
+        if (!wcsicmp(info.wszRfc1766, rfc1766))
         {
             *lcid = info.lcid;
             return S_OK;
         }
-        if (strlenW(rfc1766) == 2 && !memcmp(info.wszRfc1766, rfc1766, 2 * sizeof(WCHAR)))
+        if (lstrlenW(rfc1766) == 2 && !memcmp(info.wszRfc1766, rfc1766, 2 * sizeof(WCHAR)))
         {
             *lcid = PRIMARYLANGID(info.lcid);
             return S_OK;
@@ -2426,7 +2424,7 @@ static BOOL CALLBACK enum_locales_proc(LPWSTR locale)
 
     info = &data->info[data->total];
 
-    info->lcid = strtolW(locale, &end, 16);
+    info->lcid = wcstol(locale, &end, 16);
     if (*end) /* invalid number */
         return FALSE;
 
@@ -2764,14 +2762,14 @@ static HRESULT WINAPI fnIMultiLanguage3_GetCharsetInfo(
             {
                 pCharsetInfo->uiCodePage = mlang_data[i].family_codepage;
                 pCharsetInfo->uiInternetEncoding = mlang_data[i].mime_cp_info[n].cp;
-                strcpyW(pCharsetInfo->wszCharset, csetW);
+                lstrcpyW(pCharsetInfo->wszCharset, csetW);
                 return S_OK;
             }
             if (mlang_data[i].mime_cp_info[n].alias && !lstrcmpiW(Charset, mlang_data[i].mime_cp_info[n].alias))
             {
                 pCharsetInfo->uiCodePage = mlang_data[i].family_codepage;
                 pCharsetInfo->uiInternetEncoding = mlang_data[i].mime_cp_info[n].cp;
-                strcpyW(pCharsetInfo->wszCharset, mlang_data[i].mime_cp_info[n].alias);
+                lstrcpyW(pCharsetInfo->wszCharset, mlang_data[i].mime_cp_info[n].alias);
                 return S_OK;
             }
         }
@@ -2793,7 +2791,7 @@ static HRESULT WINAPI fnIMultiLanguage3_GetCharsetInfo(
             {
                 pCharsetInfo->uiCodePage = mlang_data[i].family_codepage;
                 pCharsetInfo->uiInternetEncoding = mlang_data[i].mime_cp_info[n].cp;
-                strcpyW(pCharsetInfo->wszCharset, csetW);
+                lstrcpyW(pCharsetInfo->wszCharset, csetW);
                 return S_OK;
             }
         }
@@ -3951,7 +3949,7 @@ static BOOL register_codepages(void)
     {
         for (info = family->mime_cp_info; info < family->mime_cp_info + family->number_of_cp; info++)
         {
-            sprintfW(buf, formatW, info->cp);
+            swprintf(buf, formatW, info->cp);
             status = RegCreateKeyW(db_key, buf, &key);
             if (status != ERROR_SUCCESS)
                 continue;

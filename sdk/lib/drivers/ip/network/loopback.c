@@ -36,7 +36,7 @@ VOID LoopTransmit(
  *   NdisPacket  = Pointer to NDIS packet to send
  *   Offset      = Offset in packet where packet data starts
  *   LinkAddress = Pointer to link address
- *   Type        = LAN protocol type (unused)
+ *   Type        = LAN protocol type
  */
 {
     PCHAR PacketBuffer;
@@ -48,6 +48,13 @@ VOID LoopTransmit(
     ASSERT_KM_POINTER(NdisPacket);
     ASSERT_KM_POINTER(PC(NdisPacket));
     ASSERT_KM_POINTER(PC(NdisPacket)->DLComplete);
+
+    if (Type != LAN_PROTO_IPv4)
+    {
+        TI_DbgPrint(MAX_TRACE, ("Received unsupported protocol %u\n", Type));
+        PC(NdisPacket)->DLComplete(PC(NdisPacket)->Context, NdisPacket, NDIS_STATUS_NOT_SUPPORTED);
+        return;
+    }
 
     TI_DbgPrint(MAX_TRACE, ("Called (NdisPacket = %x)\n", NdisPacket));
 
@@ -112,7 +119,7 @@ NDIS_STATUS LoopRegisterAdapter(
 
   Loopback = IPCreateInterface(&BindInfo);
   if (!Loopback) return NDIS_STATUS_RESOURCES;
-    
+
   Loopback->MTU = 16384;
 
   Loopback->Name.Buffer = L"Loopback";
@@ -124,7 +131,7 @@ NDIS_STATUS LoopRegisterAdapter(
   AddrInitIPv4(&Loopback->Broadcast, LOOPBACK_BCASTADDR_IPv4);
 
   IPRegisterInterface(Loopback);
-    
+
   IPAddInterfaceRoute(Loopback);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));

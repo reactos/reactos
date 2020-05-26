@@ -215,6 +215,11 @@
 #   S: Maintained
 /dll/ntdll/ @HeisSpiter @learn-more @ThFabba @tkreuzer
 
+# Printing
+#   M: ColinFinck, Colin Finck
+#   S: Maintained
+/win32ss/printing/ @ColinFinck
+
 # ReactOS API Tests
 #   M:
 #   R: learn-more, learn_more, Mark Jansen
@@ -245,7 +250,7 @@
 #   M:
 #   R: learn-more, learn_more, Mark Jansen
 #   S: Maintained
-/dll/shellext   @learn-more
+/dll/shellext/  @learn-more
 
 # UniATA
 #   M: ThFabba, Thomas Faber
@@ -275,7 +280,6 @@
 #   R: Extravert-ir, extravert34, Victor Perevertkin
 #   S: Maintained
 /drivers/usb/                           @ThFabba @Extravert-ir
-/sdk/lib/drivers/libusb/                @ThFabba @Extravert-ir
 /sdk/include/reactos/drivers/usbport/   @ThFabba @Extravert-ir
 
 # Virtual CD-ROM
@@ -321,5 +325,24 @@ amd64/                                      @tkreuzer
 /boot/freeldr/freeldr/arch/realmode/amd64.S @tkreuzer
 
 # Translations
-de-DE.rc    @reactos/lang-german
-nl-NL.rc    @reactos/lang-dutch
+# This is the list of translation teams in ReactOS GitHub organization.
+# If you want to be part of one - hit us at https://chat.reactos.org/
+de-DE.*    @reactos/lang-german
+es-ES.*    @reactos/lang-spanish
+et-EE.*    @reactos/lang-estonian
+fr-FR.*    @reactos/lang-french
+he-IL.*    @reactos/lang-hebrew
+hi-IN.*    @reactos/lang-hindi
+hu-HU.*    @reactos/lang-hungarian
+id-ID.*    @reactos/lang-indonesian
+it-IT.*    @reactos/lang-italian
+nl-NL.*    @reactos/lang-dutch
+pl-PL.*    @reactos/lang-polish
+pt-BR.*    @reactos/lang-portuguese
+pt-PT.*    @reactos/lang-portuguese
+ro-RO.*    @reactos/lang-romanian
+ru-RU.*    @reactos/lang-russian
+tr-TR.*    @reactos/lang-turkish
+uk-UA.*    @reactos/lang-ukrainian
+zh-CN.*    @reactos/lang-chinese
+zh-TW.*    @reactos/lang-chinese

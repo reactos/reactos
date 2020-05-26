@@ -55,7 +55,7 @@ static PVOID NTAPI McbMappingAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 {
     PVOID Result;
     PBASE_MCB Mcb = (PBASE_MCB)Table->TableContext;
-    Result = ExAllocatePoolWithTag(Mcb->PoolType, Bytes, 'LMCB');
+    Result = ExAllocatePoolWithTag(Mcb->PoolType, Bytes, 'BCML');
     DPRINT("McbMappingAllocate(%lu) => %p\n", Bytes, Result);
     return Result;
 }
@@ -63,7 +63,7 @@ static PVOID NTAPI McbMappingAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 static VOID NTAPI McbMappingFree(PRTL_GENERIC_TABLE Table, PVOID Buffer)
 {
     DPRINT("McbMappingFree(%p)\n", Buffer);
-    ExFreePoolWithTag(Buffer, 'LMCB');
+    ExFreePoolWithTag(Buffer, 'BCML');
 }
 
 static
@@ -429,7 +429,7 @@ FsRtlInitializeBaseMcb(IN PBASE_MCB OpaqueMcb,
     {
         Mcb->Mapping = ExAllocatePoolWithTag(PoolType | POOL_RAISE_IF_ALLOCATION_FAILURE,
                                              sizeof(LARGE_MCB_MAPPING),
-                                             'FSBC');
+                                             'CBSF');
     }
 
     Mcb->PoolType = PoolType;
@@ -1041,7 +1041,7 @@ FsRtlUninitializeBaseMcb(IN PBASE_MCB Mcb)
     }
     else
     {
-        ExFreePoolWithTag(Mcb->Mapping, 'FSBC');
+        ExFreePoolWithTag(Mcb->Mapping, 'CBSF');
     }
 }
 

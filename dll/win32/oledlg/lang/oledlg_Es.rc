@@ -25,10 +25,10 @@ STRINGTABLE
   IDS_BROWSE            "Explorar"
   IDS_NOTOLEMOD         "El archivo no parece ser un módulo OLE válido. Incapaz de registrar el control OLE."
   IDS_NOTOLEMODCAPTION  "Añadir control"
-  IDS_VERBMENU_OBJECT   "&Object"
-  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
-  IDS_VERBMENU_CONVERT  "&Convert..."
-  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
+  IDS_VERBMENU_OBJECT   "&Objeto"
+  IDS_VERBMENU_OBJECT_WITH_NAME "&Objeto %1"
+  IDS_VERBMENU_CONVERT  "&Convertir..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "&Objeto %1 %2"
 }
 
 STRINGTABLE

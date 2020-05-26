@@ -1875,7 +1875,10 @@ if (0) { /* crashes */
         path = NULL;
         hr = pSHGetKnownFolderPath(folder_id, KF_FLAG_DEFAULT, NULL, &path);
         if (FAILED(hr))
+        {
+            ok(path == NULL, "expected path == NULL\n");
             continue;
+        }
         ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
         ok(path != NULL, "expected path != NULL\n");
 

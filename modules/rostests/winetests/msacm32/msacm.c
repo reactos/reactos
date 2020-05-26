@@ -1106,7 +1106,7 @@ static void test_convert(void)
     MMRESULT mmr;
     unsigned i;
 
-    for (i = 0; i < sizeof(expected_output)/sizeof(struct stream_output); i++)
+    for (i = 0; i < ARRAY_SIZE(expected_output); i++)
     {
         mmr = acmStreamOpen(&has, NULL, (WAVEFORMATEX *)&expected_output[i].src, (WAVEFORMATEX *)&expected_output[i].dst, NULL, 0, 0, 0);
         ok(mmr == MMSYSERR_NOERROR, "#%d: open failed: 0x%x\n", i, mmr);
@@ -1322,28 +1322,40 @@ static void test_mp3(void)
     src.nBlockSize = 0;
 
     mr = acmStreamOpen(&has, NULL, (WAVEFORMATEX*)&src, &dst, NULL, 0, 0, 0);
-    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
-    mr = acmStreamClose(has, 0);
-    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
-
+    ok(mr == MMSYSERR_NOERROR || broken(mr == ACMERR_NOTPOSSIBLE) /* Win 2008 */,
+       "failed with error 0x%x\n", mr);
+    if (mr == MMSYSERR_NOERROR)
+    {
+       mr = acmStreamClose(has, 0);
+       ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+    }
     src.nBlockSize = 576;
     src.wfx.nAvgBytesPerSec = 0;
 
     mr = acmStreamOpen(&has, NULL, (WAVEFORMATEX*)&src, &dst, NULL, 0, 0, 0);
-    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
-    /* causes a division by zero exception */
-    if (0) acmStreamSize(has, 4000, &output, ACM_STREAMSIZEF_SOURCE);
-    mr = acmStreamClose(has, 0);
-    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+    ok(mr == MMSYSERR_NOERROR || broken(mr == ACMERR_NOTPOSSIBLE) /* Win 2008 */,
+       "failed with error 0x%x\n", mr);
+    if (mr == MMSYSERR_NOERROR)
+    {
+       /* causes a division by zero exception in XP, Vista,
+          but throws ACMERR_NOTPOSSIBLE on others */
+       if (0) acmStreamSize(has, 4000, &output, ACM_STREAMSIZEF_SOURCE);
+       mr = acmStreamClose(has, 0);
+       ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+    }
 
     src.wfx.nAvgBytesPerSec = 2000;
 
     mr = acmStreamOpen(&has, NULL, (WAVEFORMATEX*)&src, &dst, NULL, 0, 0, 0);
-    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
-    mr = acmStreamSize(has, 4000, &output, ACM_STREAMSIZEF_SOURCE);
-    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
-    mr = acmStreamClose(has, 0);
-    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+    ok(mr == MMSYSERR_NOERROR || broken(mr == ACMERR_NOTPOSSIBLE) /* Win 2008 */,
+       "failed with error 0x%x\n", mr);
+    if (mr == MMSYSERR_NOERROR)
+    {
+       mr = acmStreamSize(has, 4000, &output, ACM_STREAMSIZEF_SOURCE);
+       ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+       mr = acmStreamClose(has, 0);
+       ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+    }
 }
 
 static struct

@@ -65,7 +65,7 @@ static const WCHAR wszZoneMapDomainsKey[] = {'S','o','f','t','w','a','r','e','\\
 
 static inline BOOL is_drive_path(const WCHAR *path)
 {
-    return isalphaW(*path) && *(path+1) == ':';
+    return iswalpha(*path) && *(path+1) == ':';
 }
 
 /* List of schemes types Windows seems to expect to be hierarchical. */
@@ -184,8 +184,8 @@ static HRESULT get_zone_from_reg(LPCWSTR schema, DWORD *zone)
 static BOOL matches_domain_pattern(LPCWSTR pattern, LPCWSTR str, BOOL implicit_wildcard, LPCWSTR *matched)
 {
     BOOL matches = FALSE;
-    DWORD pattern_len = strlenW(pattern);
-    DWORD str_len = strlenW(str);
+    DWORD pattern_len = lstrlenW(pattern);
+    DWORD str_len = lstrlenW(str);
 
     TRACE("(%d) Checking if %s matches %s\n", implicit_wildcard, debugstr_w(str), debugstr_w(pattern));
 
@@ -201,7 +201,7 @@ static BOOL matches_domain_pattern(LPCWSTR pattern, LPCWSTR str, BOOL implicit_w
              * So in this case 'str' would have to end with ".google.com" in order
              * to map to this pattern.
              */
-            if(str_len >= pattern_len+1 && !strcmpiW(str+(str_len-pattern_len+1), pattern+1)) {
+            if(str_len >= pattern_len+1 && !wcsicmp(str+(str_len-pattern_len+1), pattern+1)) {
                 /* Check if there's another '.' inside of the "unmatched" portion
                  * of 'str'.
                  *
@@ -215,14 +215,10 @@ static BOOL matches_domain_pattern(LPCWSTR pattern, LPCWSTR str, BOOL implicit_w
                  * a match.
                  */
                 const WCHAR *ptr;
-                if(str_len > pattern_len+1 && (ptr = memrchrW(str, '.', str_len-pattern_len-2))) {
-                    if(implicit_wildcard) {
-                        matches = TRUE;
-                        *matched = ptr+1;
-                    }
-                } else {
+                for (ptr = str + str_len - pattern_len; ptr > str; ptr--) if (ptr[-1] == '.') break;
+                if (ptr == str || implicit_wildcard) {
                     matches = TRUE;
-                    *matched = str;
+                    *matched = ptr;
                 }
             }
         } else if(implicit_wildcard && str_len > pattern_len) {
@@ -241,7 +237,7 @@ static BOOL matches_domain_pattern(LPCWSTR pattern, LPCWSTR str, BOOL implicit_w
              *
              * Doesn't match the pattern.
              */
-            if(str[str_len-pattern_len-1] == '.' && !strcmpiW(str+(str_len-pattern_len), pattern)) {
+            if(str[str_len-pattern_len-1] == '.' && !wcsicmp(str+(str_len-pattern_len), pattern)) {
                 matches = TRUE;
                 *matched = str+(str_len-pattern_len);
             }
@@ -249,7 +245,7 @@ static BOOL matches_domain_pattern(LPCWSTR pattern, LPCWSTR str, BOOL implicit_w
             /* The pattern doesn't have an implicit wildcard, or an explicit wildcard,
              * so 'str' has to be an exact match to the 'pattern'.
              */
-            if(!strcmpiW(str, pattern)) {
+            if(!wcsicmp(str, pattern)) {
                 matches = TRUE;
                 *matched = str;
             }
@@ -409,7 +405,7 @@ static HRESULT search_domain_for_zone(HKEY domains, LPCWSTR domain, DWORD domain
              *  The mapping would only happen if the "org" key had an explicit subkey
              *  called "www".
              */
-            if(check_domain && !domain_offset && !strchrW(host, matched-host-1))
+            if(check_domain && !domain_offset && !wcschr(host, matched-host-1))
                 found = get_zone_for_scheme(domain_key, schema, zone);
         }
         RegCloseKey(domain_key);
@@ -532,7 +528,7 @@ static HRESULT map_security_uri_to_zone(IUri *uri, DWORD *zone)
     if(FAILED(hres))
         return hres;
 
-    if(!strcmpiW(scheme, fileW)) {
+    if(!wcsicmp(scheme, fileW)) {
         BSTR path;
         WCHAR *ptr, *path_start, root[20];
 
@@ -547,7 +543,7 @@ static HRESULT map_security_uri_to_zone(IUri *uri, DWORD *zone)
         else
             path_start = path;
 
-        if((ptr = strchrW(path_start, ':')) && ptr-path_start+1 < ARRAY_SIZE(root)) {
+        if((ptr = wcschr(path_start, ':')) && ptr-path_start+1 < ARRAY_SIZE(root)) {
             UINT type;
 
             memcpy(root, path_start, (ptr-path_start+1)*sizeof(WCHAR));
@@ -597,7 +593,7 @@ static HRESULT map_url_to_zone(LPCWSTR url, DWORD *zone, LPWSTR *ret_url)
 
     hres = CoInternetGetSecurityUrl(url, &secur_url, PSU_SECURITY_URL_ONLY, 0);
     if(hres != S_OK) {
-        DWORD size = strlenW(url)*sizeof(WCHAR);
+        DWORD size = lstrlenW(url)*sizeof(WCHAR);
 
         secur_url = CoTaskMemAlloc(size);
         if(!secur_url)
@@ -1322,7 +1318,7 @@ static LPDWORD build_zonemap_from_reg(void)
 
                 data = new_data;
             }
-            data[used] = atoiW(name);
+            data[used] = wcstol(name, NULL, 10);
         }
     }
     if (used) {
@@ -1875,7 +1871,7 @@ static HRESULT parse_security_url(const WCHAR *url, PSUACTION action, WCHAR **re
         if(!protocol_info)
             break;
 
-        size = strlenW(url)+1;
+        size = lstrlenW(url)+1;
         new_url = CoTaskMemAlloc(size*sizeof(WCHAR));
         if(!new_url) {
             hres = E_OUTOFMEMORY;
@@ -1904,7 +1900,7 @@ static HRESULT parse_security_url(const WCHAR *url, PSUACTION action, WCHAR **re
             }
         }
 
-        if(parse_hres != S_OK || !strcmpW(url, new_url))
+        if(parse_hres != S_OK || !wcscmp(url, new_url))
             break;
 
         CoTaskMemFree(alloc_url);
@@ -1921,7 +1917,7 @@ static HRESULT parse_security_url(const WCHAR *url, PSUACTION action, WCHAR **re
     }
 
     if(action == PSU_DEFAULT && (protocol_info = get_protocol_info(url))) {
-        size = strlenW(url)+1;
+        size = lstrlenW(url)+1;
         new_url = CoTaskMemAlloc(size * sizeof(WCHAR));
         if(new_url) {
             new_size = 0;
@@ -1964,7 +1960,7 @@ static HRESULT parse_security_url(const WCHAR *url, PSUACTION action, WCHAR **re
     }
 
     if(!alloc_url) {
-        size = strlenW(url)+1;
+        size = lstrlenW(url)+1;
         alloc_url = CoTaskMemAlloc(size * sizeof(WCHAR));
         if(!alloc_url)
             return E_OUTOFMEMORY;
@@ -2001,7 +1997,7 @@ HRESULT WINAPI CoInternetGetSecurityUrl(LPCWSTR pwzUrl, LPWSTR *ppwzSecUrl, PSUA
             case URL_SCHEME_FTP:
             case URL_SCHEME_HTTP:
             case URL_SCHEME_HTTPS:
-                size = strlenW(secure_url)+1;
+                size = lstrlenW(secure_url)+1;
                 new_url = CoTaskMemAlloc(size * sizeof(WCHAR));
                 if(new_url)
                     hres = UrlGetPartW(secure_url, new_url, &size, URL_PART_HOSTNAME, URL_PARTFLAG_KEEPSCHEME);

@@ -13,7 +13,7 @@ rem   []------------------------------------[]
 rem []==[Config area]==[]
 set MANED=edit
 set MANMORE=cat
-set MAN=c:\ReactOS\man
+set MAN=%WINDIR%\man
 rem []==[End of config area]==[]
 
 goto chk_param

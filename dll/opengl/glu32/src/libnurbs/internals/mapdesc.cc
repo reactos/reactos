@@ -156,7 +156,7 @@ Mapdesc::copyPt( REAL *d, REAL *s )
  *--------------------------------------------------------------------------
  */
 void
-Mapdesc::sumPt( REAL *dst, REAL *src1, REAL *src2, register REAL alpha, register REAL beta )
+Mapdesc::sumPt( REAL *dst, REAL *src1, REAL *src2, REAL alpha, REAL beta )
 {
     assert( hcoords > 0 );
     switch( hcoords  ) {
@@ -204,10 +204,10 @@ Mapdesc::clipbits( REAL *p )
     assert( inhcoords >= 0 );
     assert( inhcoords <= 3 );
 
-    register int nc = inhcoords;
-    register REAL pw = p[nc];
-    register REAL nw = -pw;
-    register unsigned int bits = 0;
+    int nc = inhcoords;
+    REAL pw = p[nc];
+    REAL nw = -pw;
+    unsigned int bits = 0;
 
     if( pw == 0.0 ) return mask;
 

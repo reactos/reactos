@@ -96,8 +96,8 @@
 @ stub WcsGetDefaultRenderingIntent
 @ stdcall WcsGetUsePerUserProfiles(wstr long ptr)
 @ stub WcsGpCanInstallOrUninstallProfiles
-@ stub WcsOpenColorProfileA
-@ stub WcsOpenColorProfileW
+@ stdcall WcsOpenColorProfileA(ptr ptr ptr long long long long)
+@ stdcall WcsOpenColorProfileW(ptr ptr ptr long long long long)
 @ stub WcsSetCalibrationManagementState
 @ stub WcsSetDefaultColorProfile
 @ stub WcsSetDefaultRenderingIntent

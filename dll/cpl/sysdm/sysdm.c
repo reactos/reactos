@@ -9,12 +9,10 @@
 
 #include "precomp.h"
 
-#include <cpl.h>
 #include <regstr.h>
 
-LONG CALLBACK SystemApplet(VOID);
+static LONG APIENTRY SystemApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 HINSTANCE hApplet = 0;
-HWND hCPLWindow;
 
 /* Applets */
 APPLET Applets[NUM_APPLETS] =
@@ -140,22 +138,28 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 
 /* First Applet */
 LONG CALLBACK
-SystemApplet(VOID)
+SystemApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     HPROPSHEETPAGE hpsp[MAX_SYSTEM_PAGES];
     PROPSHEETHEADER psh;
     HMODULE hNetIdDll;
     HPSXA hpsxa = NULL;
+    INT nPage = 0;
     LONG Ret;
     static INITCOMMONCONTROLSEX icc = {sizeof(INITCOMMONCONTROLSEX), ICC_LINK_CLASS};
 
     if (!InitCommonControlsEx(&icc))
         return 0;
 
+    if (uMsg == CPL_STARTWPARMSW && lParam != 0)
+    {
+        nPage = _wtoi((PWSTR)lParam);
+    }
+
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
-    psh.hwndParent = hCPLWindow;
+    psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_USERPROF);
     psh.pszCaption = MAKEINTRESOURCE(IDS_CPLSYSTEMNAME);
@@ -175,6 +179,9 @@ SystemApplet(VOID)
     {
         SHAddFromPropSheetExtArray(hpsxa, PropSheetAddPage, (LPARAM)&psh);
     }
+
+    if (nPage != 0 && nPage <= psh.nPages)
+        psh.nStartPage = nPage;
 
     Ret = (LONG)(PropertySheet(&psh) != -1);
 
@@ -219,9 +226,12 @@ CPlApplet(HWND hwndCPl,
             break;
 
         case CPL_DBLCLK:
-            hCPLWindow = hwndCPl;
-            Applets[i].AppletProc();
+            Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
             break;
+
+        case CPL_STARTWPARMSW:
+            return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+
     }
 
     return FALSE;

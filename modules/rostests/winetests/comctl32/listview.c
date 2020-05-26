@@ -6475,6 +6475,86 @@ static void test_LVM_GETCOUNTPERPAGE(void)
     ok(ret, "Failed to unregister test class.\n");
 }
 
+static void test_item_state_change(void)
+{
+    static const DWORD styles[] = { LVS_ICON, LVS_LIST, LVS_REPORT, LVS_SMALLICON };
+    LVITEMA item;
+    HWND hwnd;
+    DWORD res;
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(styles); i++)
+    {
+        hwnd = create_listview_control(styles[i]);
+
+        insert_item(hwnd, 0);
+
+        /* LVM_SETITEMSTATE with mask */
+        memset(&g_nmlistview, 0xcc, sizeof(g_nmlistview));
+        memset(&item, 0, sizeof(item));
+        item.mask = LVIF_STATE;
+        item.stateMask = LVIS_SELECTED;
+        item.state = LVIS_SELECTED;
+        res = SendMessageA(hwnd, LVM_SETITEMSTATE, 0, (LPARAM)&item);
+        ok(res, "Failed to set item state.\n");
+
+        ok(g_nmlistview.iItem == item.iItem, "Unexpected item %d.\n", g_nmlistview.iItem);
+        ok(g_nmlistview.iSubItem == item.iSubItem, "Unexpected subitem %d.\n", g_nmlistview.iSubItem);
+        ok(g_nmlistview.lParam == item.lParam, "Unexpected lParam.\n");
+        ok(g_nmlistview.uNewState == LVIS_SELECTED, "got new state 0x%08x\n", g_nmlistview.uNewState);
+        ok(g_nmlistview.uOldState == 0, "got old state 0x%08x\n", g_nmlistview.uOldState);
+        ok(g_nmlistview.uChanged == LVIF_STATE, "got changed 0x%08x\n", g_nmlistview.uChanged);
+
+        /* LVM_SETITEMSTATE 0 mask */
+        memset(&g_nmlistview, 0xcc, sizeof(g_nmlistview));
+        memset(&item, 0, sizeof(item));
+        item.stateMask = LVIS_SELECTED;
+        item.state = 0;
+        res = SendMessageA(hwnd, LVM_SETITEMSTATE, 0, (LPARAM)&item);
+        ok(res, "Failed to set item state.\n");
+
+        ok(g_nmlistview.iItem == item.iItem, "Unexpected item %d.\n", g_nmlistview.iItem);
+        ok(g_nmlistview.iSubItem == item.iSubItem, "Unexpected subitem %d.\n", g_nmlistview.iSubItem);
+        ok(g_nmlistview.lParam == item.lParam, "Unexpected lParam.\n");
+        ok(g_nmlistview.uNewState == 0, "Unexpected new state %#x.\n", g_nmlistview.uNewState);
+        ok(g_nmlistview.uOldState == LVIS_SELECTED, "Unexpected old state %#x.\n", g_nmlistview.uOldState);
+        ok(g_nmlistview.uChanged == LVIF_STATE, "Unexpected change mask %#x.\n", g_nmlistview.uChanged);
+
+        /* LVM_SETITEM changes state */
+        memset(&g_nmlistview, 0xcc, sizeof(g_nmlistview));
+        memset(&item, 0, sizeof(item));
+        item.stateMask = LVIS_SELECTED;
+        item.state = LVIS_SELECTED;
+        item.mask = LVIF_STATE;
+        res = SendMessageA(hwnd, LVM_SETITEMA, 0, (LPARAM)&item);
+        ok(res, "Failed to set item.\n");
+
+        ok(g_nmlistview.iItem == item.iItem, "Unexpected item %d.\n", g_nmlistview.iItem);
+        ok(g_nmlistview.iSubItem == item.iSubItem, "Unexpected subitem %d.\n", g_nmlistview.iSubItem);
+        ok(g_nmlistview.lParam == item.lParam, "Unexpected lParam.\n");
+        ok(g_nmlistview.uNewState == LVIS_SELECTED, "Unexpected new state %#x.\n", g_nmlistview.uNewState);
+        ok(g_nmlistview.uOldState == 0, "Unexpected old state %#x.\n", g_nmlistview.uOldState);
+        ok(g_nmlistview.uChanged == LVIF_STATE, "Unexpected change mask %#x.\n", g_nmlistview.uChanged);
+
+        /* LVM_SETITEM no state changes */
+        memset(&g_nmlistview, 0xcc, sizeof(g_nmlistview));
+        memset(&item, 0, sizeof(item));
+        item.lParam = 11;
+        item.mask = LVIF_PARAM;
+        res = SendMessageA(hwnd, LVM_SETITEMA, 0, (LPARAM)&item);
+        ok(res, "Failed to set item.\n");
+
+        ok(g_nmlistview.iItem == item.iItem, "Unexpected item %d.\n", g_nmlistview.iItem);
+        ok(g_nmlistview.iSubItem == item.iSubItem, "Unexpected subitem %d.\n", g_nmlistview.iSubItem);
+        ok(g_nmlistview.lParam == item.lParam, "Unexpected lParam.\n");
+        ok(g_nmlistview.uNewState == 0, "Unexpected new state %#x.\n", g_nmlistview.uNewState);
+        ok(g_nmlistview.uOldState == 0, "Unexpected old state %#x.\n", g_nmlistview.uOldState);
+        ok(g_nmlistview.uChanged == LVIF_PARAM, "Unexpected change mask %#x.\n", g_nmlistview.uChanged);
+
+        DestroyWindow(hwnd);
+    }
+}
+
 START_TEST(listview)
 {
     ULONG_PTR ctx_cookie;
@@ -6538,6 +6618,7 @@ START_TEST(listview)
     test_LVSCW_AUTOSIZE();
     test_LVN_ENDLABELEDIT();
     test_LVM_GETCOUNTPERPAGE();
+    test_item_state_change();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {
@@ -6582,6 +6663,7 @@ START_TEST(listview)
     test_LVSCW_AUTOSIZE();
     test_LVN_ENDLABELEDIT();
     test_LVM_GETCOUNTPERPAGE();
+    test_item_state_change();
 
     unload_v6_module(ctx_cookie, hCtx);
 

@@ -53,6 +53,7 @@ OUT LPDWORD lpReboot);
 #include <winnls.h>
 #include <wincon.h>
 #include <shlobj.h>
+#include <shellapi.h>
 #include <shlwapi.h>
 #include <strsafe.h>
 #include <process.h>

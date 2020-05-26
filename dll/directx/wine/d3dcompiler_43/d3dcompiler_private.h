@@ -25,6 +25,7 @@
 #include "wine/debug.h"
 #include "wine/list.h"
 #include "wine/rbtree.h"
+#include "wine/heap.h"
 
 #define COBJMACROS
 #include "windef.h"
@@ -284,8 +285,8 @@ struct bwriter_shader *parse_asm_shader(char **messages) DECLSPEC_HIDDEN;
 #define PRINTF_ATTR(fmt,args)
 #endif
 
-void compilation_message(struct compilation_messages *msg, const char *fmt, va_list args) DECLSPEC_HIDDEN;
-void asmparser_message(struct asm_parser *ctx, const char *fmt, ...) PRINTF_ATTR(2,3) DECLSPEC_HIDDEN;
+void compilation_message(struct compilation_messages *msg, const char *fmt, __ms_va_list args) DECLSPEC_HIDDEN;
+void WINAPIV asmparser_message(struct asm_parser *ctx, const char *fmt, ...) PRINTF_ATTR(2,3) DECLSPEC_HIDDEN;
 static inline void set_parse_status(enum parse_status *current, enum parse_status update)
 {
     if (update == PARSE_ERR)
@@ -705,13 +706,11 @@ struct source_location
 
 enum hlsl_ir_node_type
 {
-    HLSL_IR_VAR = 0,
-    HLSL_IR_ASSIGNMENT,
+    HLSL_IR_ASSIGNMENT = 0,
     HLSL_IR_CONSTANT,
     HLSL_IR_CONSTRUCTOR,
     HLSL_IR_DEREF,
     HLSL_IR_EXPR,
-    HLSL_IR_FUNCTION_DECL,
     HLSL_IR_IF,
     HLSL_IR_LOOP,
     HLSL_IR_JUMP,
@@ -755,12 +754,13 @@ struct reg_reservation
 
 struct hlsl_ir_var
 {
-    struct hlsl_ir_node node;
+    struct hlsl_type *data_type;
+    struct source_location loc;
     const char *name;
     const char *semantic;
     unsigned int modifiers;
     const struct reg_reservation *reg_reservation;
-    struct list scope_entry;
+    struct list scope_entry, param_entry;
 
     struct hlsl_var_allocation *allocation;
 };
@@ -775,7 +775,8 @@ struct hlsl_ir_function
 
 struct hlsl_ir_function_decl
 {
-    struct hlsl_ir_node node;
+    struct hlsl_type *return_type;
+    struct source_location loc;
     struct wine_rb_entry entry;
     struct hlsl_ir_function *func;
     const char *semantic;
@@ -951,7 +952,8 @@ struct hlsl_ir_constant
 struct hlsl_ir_constructor
 {
     struct hlsl_ir_node node;
-    struct list *arguments;
+    struct hlsl_ir_node *args[16];
+    unsigned int args_count;
 };
 
 struct hlsl_scope
@@ -978,6 +980,12 @@ struct parse_colon_attribute
     struct reg_reservation *reg_reservation;
 };
 
+struct parse_initializer
+{
+    struct hlsl_ir_node **args;
+    unsigned int args_count;
+};
+
 struct parse_variable_def
 {
     struct list entry;
@@ -987,7 +995,7 @@ struct parse_variable_def
     unsigned int array_size;
     const char *semantic;
     struct reg_reservation *reg_reservation;
-    struct list *initializer;
+    struct parse_initializer initializer;
 };
 
 struct parse_function
@@ -1054,15 +1062,9 @@ enum hlsl_error_level
     HLSL_LEVEL_NOTE,
 };
 
-void hlsl_message(const char *fmt, ...) PRINTF_ATTR(1,2) DECLSPEC_HIDDEN;
-void hlsl_report_message(const char *filename, DWORD line, DWORD column,
+void WINAPIV hlsl_message(const char *fmt, ...) PRINTF_ATTR(1,2) DECLSPEC_HIDDEN;
+void WINAPIV hlsl_report_message(const char *filename, DWORD line, DWORD column,
         enum hlsl_error_level level, const char *fmt, ...) PRINTF_ATTR(5,6) DECLSPEC_HIDDEN;
-
-static inline struct hlsl_ir_var *var_from_node(const struct hlsl_ir_node *node)
-{
-    assert(node->type == HLSL_IR_VAR);
-    return CONTAINING_RECORD(node, struct hlsl_ir_var, node);
-}
 
 static inline struct hlsl_ir_expr *expr_from_node(const struct hlsl_ir_node *node)
 {
@@ -1134,28 +1136,6 @@ struct hlsl_ir_expr *new_expr(enum hlsl_ir_expr_op op, struct hlsl_ir_node **ope
         struct source_location *loc) DECLSPEC_HIDDEN;
 struct hlsl_ir_expr *new_cast(struct hlsl_ir_node *node, struct hlsl_type *type,
 	struct source_location *loc) DECLSPEC_HIDDEN;
-struct hlsl_ir_expr *hlsl_mul(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc) DECLSPEC_HIDDEN;
-struct hlsl_ir_expr *hlsl_div(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc) DECLSPEC_HIDDEN;
-struct hlsl_ir_expr *hlsl_mod(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc) DECLSPEC_HIDDEN;
-struct hlsl_ir_expr *hlsl_add(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc) DECLSPEC_HIDDEN;
-struct hlsl_ir_expr *hlsl_sub(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc) DECLSPEC_HIDDEN;
-struct hlsl_ir_expr *hlsl_lt(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc) DECLSPEC_HIDDEN;
-struct hlsl_ir_expr *hlsl_gt(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc) DECLSPEC_HIDDEN;
-struct hlsl_ir_expr *hlsl_le(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc) DECLSPEC_HIDDEN;
-struct hlsl_ir_expr *hlsl_ge(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc) DECLSPEC_HIDDEN;
-struct hlsl_ir_expr *hlsl_eq(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc) DECLSPEC_HIDDEN;
-struct hlsl_ir_expr *hlsl_ne(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc) DECLSPEC_HIDDEN;
 struct hlsl_ir_deref *new_var_deref(struct hlsl_ir_var *var) DECLSPEC_HIDDEN;
 struct hlsl_ir_deref *new_record_deref(struct hlsl_ir_node *record, struct hlsl_struct_field *field) DECLSPEC_HIDDEN;
 struct hlsl_ir_node *make_assignment(struct hlsl_ir_node *left, enum parse_assign_op assign_op,
@@ -1178,6 +1158,19 @@ void free_instr(struct hlsl_ir_node *node) DECLSPEC_HIDDEN;
 void free_instr_list(struct list *list) DECLSPEC_HIDDEN;
 void free_function_rb(struct wine_rb_entry *entry, void *context) DECLSPEC_HIDDEN;
 
+static inline struct hlsl_ir_node *new_unary_expr(enum hlsl_ir_expr_op op,
+        struct hlsl_ir_node *op1, struct source_location loc)
+{
+    struct hlsl_ir_node *operands[3] = {op1};
+    return &new_expr(op, operands, &loc)->node;
+}
+
+static inline struct hlsl_ir_node *new_binary_expr(enum hlsl_ir_expr_op op,
+        struct hlsl_ir_node *op1, struct hlsl_ir_node *op2, struct source_location loc)
+{
+    struct hlsl_ir_node *operands[3] = {op1, op2};
+    return &new_expr(op, operands, &loc)->node;
+}
 
 #define MAKE_TAG(ch0, ch1, ch2, ch3) \
     ((DWORD)(ch0) | ((DWORD)(ch1) << 8) | \

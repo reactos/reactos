@@ -18,9 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #define NONAMELESSUNION
 
 #include "editor.h"
@@ -123,17 +120,17 @@ ME_StreamOutMove(ME_OutStream *pStream, const char *buffer, int len)
 }
 
 
-static BOOL
+static BOOL WINAPIV
 ME_StreamOutPrint(ME_OutStream *pStream, const char *format, ...)
 {
   char string[STREAMOUT_BUFFER_SIZE]; /* This is going to be enough */
   int len;
-  va_list valist;
+  __ms_va_list valist;
 
-  va_start(valist, format);
+  __ms_va_start(valist, format);
   len = vsnprintf(string, sizeof(string), format, valist);
-  va_end(valist);
-  
+  __ms_va_end(valist);
+
   return ME_StreamOutMove(pStream, string, len);
 }
 
@@ -245,7 +242,7 @@ static void add_font_to_fonttbl( ME_OutStream *stream, ME_Style *style )
     {
         for (i = 0; i < stream->nFontTblLen; i++)
             if (table[i].bCharSet == charset
-                && (table[i].szFaceName == face || !lstrcmpW(table[i].szFaceName, face)))
+                && (table[i].szFaceName == face || !wcscmp(table[i].szFaceName, face)))
                 break;
 
         if (i == stream->nFontTblLen && i < STREAMOUT_FONTTBL_SIZE)
@@ -270,7 +267,7 @@ static BOOL find_font_in_fonttbl( ME_OutStream *stream, CHARFORMAT2W *fmt, unsig
     for (i = 0; i < stream->nFontTblLen; i++)
     {
         if (facename == stream->fonttbl[i].szFaceName
-            || !lstrcmpW(facename, stream->fonttbl[i].szFaceName))
+            || !wcscmp(facename, stream->fonttbl[i].szFaceName))
             if (!(fmt->dwMask & CFM_CHARSET)
                 || fmt->bCharSet == stream->fonttbl[i].bCharSet)
             {
@@ -841,7 +838,7 @@ ME_StreamOutRTFCharProps(ME_OutStream *pStream, CHARFORMAT2W *fmt)
       }
   }
   
-  if (strcmpW(old_fmt->szFaceName, fmt->szFaceName) ||
+  if (wcscmp(old_fmt->szFaceName, fmt->szFaceName) ||
       old_fmt->bCharSet != fmt->bCharSet)
   {
     if (find_font_in_fonttbl( pStream, fmt, &i ))

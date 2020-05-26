@@ -45,7 +45,14 @@ cpp_quote("#define SCRIPTPROP_INVOKEVERSIONING       0x00004000")
 cpp_quote("#define SCRIPTPROP_HACK_FIBERSUPPORT                0x70000000")
 cpp_quote("#define SCRIPTPROP_HACK_TRIDENTEVENTSINK            0x70000001")
 cpp_quote("#define SCRIPTPROP_ABBREVIATE_GLOBALNAME_RESOLUTION 0x70000002")
- 
+
+typedef enum tagSCRIPTLANGUAGEVERSION {
+    SCRIPTLANGUAGEVERSION_DEFAULT = 0,
+    SCRIPTLANGUAGEVERSION_5_7     = 1,
+    SCRIPTLANGUAGEVERSION_5_8     = 2,
+    SCRIPTLANGUAGEVERSION_MAX     = 255
+} SCRIPTLANGUAGEVERSION;
+
 typedef enum tagSCRIPTSTATE {
     SCRIPTSTATE_UNINITIALIZED = 0,
     SCRIPTSTATE_STARTED       = 1,
@@ -70,6 +77,11 @@ typedef enum tagSCRIPTUICHANDLING {
     SCRIPTUICHANDLING_NOUIERROR   = 1,
     SCRIPTUICHANDLING_NOUIDEFAULT = 2
 } SCRIPTUICHANDLING;
+
+typedef enum tagSCRIPTGCTYPE {
+    SCRIPTGCTYPE_NORMAL     = 0,
+    SCRIPTGCTYPE_EXHAUSTIVE = 1
+} SCRIPTGCTYPE;
 
 typedef DWORD SCRIPTTHREADID;
 cpp_quote("#define SCRIPTTHREADID_CURRENT ((SCRIPTTHREADID)-1)")
@@ -101,6 +113,7 @@ cpp_quote("                                        SCRIPTTEXT_ISVISIBLE | \\")
 cpp_quote("                                        SCRIPTTEXT_ISEXPRESSION | \\")
 cpp_quote("                                        SCRIPTTEXT_ISPERSISTENT | \\")
 cpp_quote("                                        SCRIPTTEXT_HOSTMANAGESSOURCE)")
+cpp_quote("#define SCRIPTPROC_ISEXPRESSION        0x00000020")
 cpp_quote("#define SCRIPTPROC_HOSTMANAGESSOURCE   0x00000080")
 cpp_quote("#define SCRIPTPROC_IMPLICIT_THIS       0x00000100")
 cpp_quote("#define SCRIPTPROC_IMPLICIT_PARENTS    0x00000200")
@@ -550,4 +563,15 @@ interface IActiveScriptProperty : IUnknown
             [in] DWORD dwProperty,
             [in] VARIANT *pvarIndex,
             [in] VARIANT *pvarValue);
+}
+
+[
+    object,
+    uuid(6aa2c4a0-2b53-11d4-a2a0-00104bd35090),
+    pointer_default(unique)
+]
+interface IActiveScriptGarbageCollector : IUnknown
+{
+    HRESULT CollectGarbage(
+            [in] SCRIPTGCTYPE gctype);
 }

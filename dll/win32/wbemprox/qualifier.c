@@ -18,8 +18,10 @@
 
 #define COBJMACROS
 
-#include "config.h"
 #include <stdarg.h>
+#ifdef __REACTOS__
+#include <wchar.h>
+#endif
 
 #include "windef.h"
 #include "winbase.h"
@@ -102,19 +104,32 @@ static HRESULT create_qualifier_enum( const WCHAR *class, const WCHAR *member, c
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','_','_','Q','U','A','L',
          'I','F','I','E','R','S',' ','W','H','E','R','E',' ','C','l','a','s','s','=',
          '\'','%','s','\'',' ','A','N','D',' ','M','e','m','b','e','r','=','\'','%','s','\'',0};
-    static const WCHAR noneW[] = {'_','_','N','O','N','E',0};
+    static const WCHAR fmt3W[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','_','_','Q','U','A','L',
+         'I','F','I','E','R','S',' ','W','H','E','R','E',' ','C','l','a','s','s','=',
+         '\'','%','s','\'',0};
     WCHAR *query;
     HRESULT hr;
     int len;
 
-    if (!member) member = noneW;
-    len = strlenW( class ) + strlenW( member );
-    if (name) len += strlenW( name ) + ARRAY_SIZE(fmtW);
-    else len += ARRAY_SIZE(fmt2W);
-
-    if (!(query = heap_alloc( len * sizeof(WCHAR) ))) return E_OUTOFMEMORY;
-    if (name) sprintfW( query, fmtW, class, member, name );
-    else sprintfW( query, fmt2W, class, member );
+    if (member && name)
+    {
+        len = lstrlenW( class ) + lstrlenW( member ) + lstrlenW( name ) + ARRAY_SIZE(fmtW);
+        if (!(query = heap_alloc( len * sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+        swprintf( query, fmtW, class, member, name );
+    }
+    else if (member)
+    {
+        len = lstrlenW( class ) + lstrlenW( member ) + ARRAY_SIZE(fmt2W);
+        if (!(query = heap_alloc( len * sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+        swprintf( query, fmt2W, class, member );
+    }
+    else
+    {
+        len = lstrlenW( class ) + ARRAY_SIZE(fmt3W);
+        if (!(query = heap_alloc( len * sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+        swprintf( query, fmt3W, class );
+    }
 
     hr = exec_query( query, iter );
     heap_free( query );
@@ -124,9 +139,9 @@ static HRESULT create_qualifier_enum( const WCHAR *class, const WCHAR *member, c
 static HRESULT get_qualifier_value( const WCHAR *class, const WCHAR *member, const WCHAR *name,
                                     VARIANT *val, LONG *flavor )
 {
-    static const WCHAR qualifiersW[] = {'_','_','Q','U','A','L','I','F','I','E','R','S',0};
     static const WCHAR intvalueW[] = {'I','n','t','e','g','e','r','V','a','l','u','e',0};
     static const WCHAR strvalueW[] = {'S','t','r','i','n','g','V','a','l','u','e',0};
+    static const WCHAR boolvalueW[] = {'B','o','o','l','V','a','l','u','e',0};
     static const WCHAR flavorW[] = {'F','l','a','v','o','r',0};
     static const WCHAR typeW[] = {'T','y','p','e',0};
     IEnumWbemClassObject *iter;
@@ -137,7 +152,7 @@ static HRESULT get_qualifier_value( const WCHAR *class, const WCHAR *member, con
     hr = create_qualifier_enum( class, member, name, &iter );
     if (FAILED( hr )) return hr;
 
-    hr = create_class_object( qualifiersW, iter, 0, NULL, &obj );
+    hr = create_class_object( NULL, iter, 0, NULL, &obj );
     IEnumWbemClassObject_Release( iter );
     if (FAILED( hr )) return hr;
 
@@ -156,6 +171,9 @@ static HRESULT get_qualifier_value( const WCHAR *class, const WCHAR *member, con
         break;
     case CIM_SINT32:
         hr = IWbemClassObject_Get( obj, intvalueW, 0, val, NULL, NULL );
+        break;
+    case CIM_BOOLEAN:
+        hr = IWbemClassObject_Get( obj, boolvalueW, 0, val, NULL, NULL );
         break;
     default:
         ERR("unhandled type %u\n", V_UI4( &var ));
@@ -176,7 +194,12 @@ static HRESULT WINAPI qualifier_set_Get(
 {
     struct qualifier_set *set = impl_from_IWbemQualifierSet( iface );
 
-    FIXME("%p, %s, %08x, %p, %p\n", iface, debugstr_w(wszName), lFlags, pVal, plFlavor);
+    TRACE("%p, %s, %08x, %p, %p\n", iface, debugstr_w(wszName), lFlags, pVal, plFlavor);
+    if (lFlags)
+    {
+        FIXME("flags %08x not supported\n", lFlags);
+        return E_NOTIMPL;
+    }
     return get_qualifier_value( set->class, set->member, wszName, pVal, plFlavor );
 }
 
@@ -203,8 +226,28 @@ static HRESULT WINAPI qualifier_set_GetNames(
     LONG lFlags,
     SAFEARRAY **pNames )
 {
-    FIXME("%p, %08x, %p\n", iface, lFlags, pNames);
-    return E_NOTIMPL;
+    struct qualifier_set *set = impl_from_IWbemQualifierSet( iface );
+    IEnumWbemClassObject *iter;
+    IWbemClassObject *obj;
+    HRESULT hr;
+
+    TRACE("%p, %08x, %p\n", iface, lFlags, pNames);
+    if (lFlags)
+    {
+        FIXME("flags %08x not supported\n", lFlags);
+        return E_NOTIMPL;
+    }
+
+    hr = create_qualifier_enum( set->class, set->member, NULL, &iter );
+    if (FAILED( hr )) return hr;
+
+    hr = create_class_object( NULL, iter, 0, NULL, &obj );
+    IEnumWbemClassObject_Release( iter );
+    if (FAILED( hr )) return hr;
+
+    hr = IWbemClassObject_GetNames( obj, NULL, 0, NULL, pNames );
+    IWbemClassObject_Release( obj );
+    return hr;
 }
 
 static HRESULT WINAPI qualifier_set_BeginEnumeration(

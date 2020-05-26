@@ -137,6 +137,8 @@ extern BOOLEAN IsUnattendedSetup;
 
 /* FUNCTIONS ****************************************************************/
 
+#include "substset.h"
+
 VOID
 CheckUnattendedSetup(
     IN OUT PUSETUP_DATA pSetupData);
@@ -194,6 +196,7 @@ UpdateRegistry(
     /**/IN PPARTLIST PartitionList,      /* HACK HACK! */
     /**/IN WCHAR DestinationDriveLetter, /* HACK HACK! */
     /**/IN PCWSTR SelectedLanguageId,    /* HACK HACK! */
-    IN PREGISTRY_STATUS_ROUTINE StatusRoutine OPTIONAL);
+    IN PREGISTRY_STATUS_ROUTINE StatusRoutine OPTIONAL,
+    IN PFONTSUBSTSETTINGS SubstSettings OPTIONAL);
 
 /* EOF */

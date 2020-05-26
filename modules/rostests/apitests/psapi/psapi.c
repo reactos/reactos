@@ -88,13 +88,13 @@ static BOOLEAN IntGetModuleInformation(LPCSTR Module, BOOLEAN IsDriver, BOOLEAN 
     if (BaseName)
     {
         strcpy(Info->Path, Module);
-        Info->Len = strlen(Info->Path);
+        Info->Len = lstrlenA(Info->Path);
     }
     else
     {
         /* Skip disk */
         strcpy(Info->Path, System + 2);
-        Info->Len = strlen(Info->Path);
+        Info->Len = lstrlenA(Info->Path);
     }
 
     return TRUE;

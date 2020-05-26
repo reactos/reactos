@@ -75,7 +75,6 @@
 #undef SetRect
 #undef ShowCursor
 #undef UnionRect
-#undef DPRINTF
 #endif
 
 #define COBJMACROS

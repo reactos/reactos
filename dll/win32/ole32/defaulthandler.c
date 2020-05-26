@@ -60,7 +60,6 @@
 #include "compobj_private.h"
 #include "storage32.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -449,14 +448,14 @@ static HRESULT WINAPI DefaultHandler_SetHostNames(
   {
       if ((This->containerApp = HeapAlloc( GetProcessHeap(), 0,
                                            (lstrlenW(szContainerApp) + 1) * sizeof(WCHAR) )))
-          strcpyW( This->containerApp, szContainerApp );
+          lstrcpyW( This->containerApp, szContainerApp );
   }
 
   if (szContainerObj)
   {
       if ((This->containerObj = HeapAlloc( GetProcessHeap(), 0,
                                            (lstrlenW(szContainerObj) + 1) * sizeof(WCHAR) )))
-          strcpyW( This->containerObj, szContainerObj );
+          lstrcpyW( This->containerObj, szContainerObj );
   }
   return S_OK;
 }

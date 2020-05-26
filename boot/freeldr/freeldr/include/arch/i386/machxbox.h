@@ -38,6 +38,8 @@
 #define LPC_CONFIG_DEVICE_INTERRUPT             0x70
 
 #define NV2A_CONTROL_OFFSET            0xFD000000
+#define   NV2A_FB_OFFSET                (0x100000 + NV2A_CONTROL_OFFSET)
+#define     NV2A_FB_CFG0                   (0x200 + NV2A_FB_OFFSET)
 #define   NV2A_CRTC_OFFSET              (0x600000 + NV2A_CONTROL_OFFSET)
 #define     NV2A_CRTC_FRAMEBUFFER_START    (0x800 + NV2A_CRTC_OFFSET)
 #define     NV2A_CRTC_REGISTER_INDEX      (0x13D4 + NV2A_CRTC_OFFSET)
@@ -46,9 +48,7 @@
 #define     NV2A_RAMDAC_FP_HVALID_END      (0x838 + NV2A_RAMDAC_OFFSET)
 #define     NV2A_RAMDAC_FP_VVALID_END      (0x818 + NV2A_RAMDAC_OFFSET)
 
-extern UCHAR XboxFont8x16[256 * 16];
-
-VOID XboxMachInit(const char *CmdLine);
+extern UCHAR BitmapFont8x16[256 * 16];
 
 VOID XboxConsPutChar(int Ch);
 BOOLEAN XboxConsKbHit(VOID);
@@ -69,11 +69,13 @@ VOID XboxVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
 VOID XboxVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue);
 VOID XboxVideoSync(VOID);
 VOID XboxVideoPrepareForReactOS(VOID);
+VOID XboxVideoScrollUp(VOID);
 VOID XboxPrepareForReactOS(VOID);
 
 VOID XboxMemInit(VOID);
 PFREELDR_MEMORY_DESCRIPTOR XboxMemGetMemoryMap(ULONG *MemoryMapSize);
 
+VOID XboxDiskInit(BOOLEAN Init);
 BOOLEAN XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 BOOLEAN XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
 ULONG XboxDiskGetCacheableBlockCount(UCHAR DriveNumber);

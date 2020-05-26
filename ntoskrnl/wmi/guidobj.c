@@ -204,6 +204,7 @@ WmipCreateGuidObject(
     }
 
     RtlZeroMemory(GuidObject, sizeof(*GuidObject));
+    KeInitializeEvent(&GuidObject->Event, NotificationEvent, FALSE);
     GuidObject->Guid = *Guid;
 
     *OutGuidObject = GuidObject;

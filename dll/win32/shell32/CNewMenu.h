@@ -54,7 +54,6 @@ private:
     };
 
     LPITEMIDLIST m_pidlFolder;
-    LPWSTR m_wszPath;
     SHELLNEW_ITEM *m_pItems;
     SHELLNEW_ITEM *m_pLinkItem; // Points to the link handler item in the m_pItems list.
     CComPtr<IUnknown> m_pSite;

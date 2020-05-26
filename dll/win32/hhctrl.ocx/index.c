@@ -43,7 +43,7 @@ static void fill_index_tree(HWND hwnd, IndexItem *item)
         lvi.iItem = index++;
         lvi.mask = LVIF_TEXT|LVIF_PARAM|LVIF_INDENT;
         lvi.iIndent = item->indentLevel;
-        lvi.cchTextMax = strlenW(item->keyword)+1;
+        lvi.cchTextMax = lstrlenW(item->keyword)+1;
         lvi.pszText = item->keyword;
         lvi.lParam = (LPARAM)item;
         item->id = (HTREEITEM)SendMessageW(hwnd, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
@@ -83,20 +83,20 @@ static void parse_index_obj_node_param(IndexItem *item, const char *text, UINT c
     /* Allocate a new sub-item, either on the first run or whenever a
      * sub-topic has filled out both the "name" and "local" params.
      */
-    if(item->itemFlags == 0x11 && (!strncasecmp("name", ptr, len) || !strncasecmp("local", ptr, len)))
+    if(item->itemFlags == 0x11 && (!_strnicmp("name", ptr, len) || !_strnicmp("local", ptr, len)))
         item_realloc(item, item->nItems+1);
-    if(!strncasecmp("keyword", ptr, len)) {
+    if(!_strnicmp("keyword", ptr, len)) {
         param = &item->keyword;
-    }else if(!item->keyword && !strncasecmp("name", ptr, len)) {
+    }else if(!item->keyword && !_strnicmp("name", ptr, len)) {
         /* Some HTML Help index files use an additional "name" parameter
          * rather than the "keyword" parameter.  In this case, the first
          * occurrence of the "name" parameter is the keyword.
          */
         param = &item->keyword;
-    }else if(!strncasecmp("name", ptr, len)) {
+    }else if(!_strnicmp("name", ptr, len)) {
         item->itemFlags |= 0x01;
         param = &item->items[item->nItems-1].name;
-    }else if(!strncasecmp("local", ptr, len)) {
+    }else if(!_strnicmp("local", ptr, len)) {
         item->itemFlags |= 0x10;
         param = &item->items[item->nItems-1].local;
     }else {
@@ -137,9 +137,9 @@ static IndexItem *parse_index_sitemap_object(HHInfo *info, stream_t *stream)
 
         TRACE("%s\n", node.buf);
 
-        if(!strcasecmp(node_name.buf, "param")) {
+        if(!_strnicmp(node_name.buf, "param", -1)) {
             parse_index_obj_node_param(item, node.buf, info->pCHMInfo->codePage);
-        }else if(!strcasecmp(node_name.buf, "/object")) {
+        }else if(!_strnicmp(node_name.buf, "/object", -1)) {
             break;
         }else {
             WARN("Unhandled tag! %s\n", node_name.buf);
@@ -173,7 +173,7 @@ static IndexItem *parse_li(HHInfo *info, stream_t *stream)
 
         TRACE("%s\n", node.buf);
 
-        if(!strcasecmp(node_name.buf, "object")) {
+        if(!_strnicmp(node_name.buf, "object", -1)) {
             const char *ptr;
             int len;
 
@@ -228,11 +228,11 @@ static void parse_hhindex(HHInfo *info, IStream *str, IndexItem *item)
 
         TRACE("%s\n", node.buf);
 
-        if(!strcasecmp(node_name.buf, "li")) {
+        if(!_strnicmp(node_name.buf, "li", -1)) {
             IndexItem *new_item;
 
             new_item = parse_li(info, &stream);
-            if(new_item && item->keyword && strcmpW(new_item->keyword, item->keyword) == 0) {
+            if(new_item && item->keyword && lstrcmpW(new_item->keyword, item->keyword) == 0) {
                 int num_items = item->nItems;
 
                 item_realloc(item, num_items+1);
@@ -246,9 +246,9 @@ static void parse_hhindex(HHInfo *info, IStream *str, IndexItem *item)
                 item = item->next;
                 item->indentLevel = indent_level;
             }
-        }else if(!strcasecmp(node_name.buf, "ul")) {
+        }else if(!_strnicmp(node_name.buf, "ul", -1)) {
             indent_level++;
-        }else if(!strcasecmp(node_name.buf, "/ul")) {
+        }else if(!_strnicmp(node_name.buf, "/ul", -1)) {
             indent_level--;
         }else {
             WARN("Unhandled tag! %s\n", node_name.buf);

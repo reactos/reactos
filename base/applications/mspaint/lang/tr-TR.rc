@@ -196,7 +196,7 @@ BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
     IDS_INFOTITLE "ReactOS için Paint"
-    IDS_INFOTEXT "ReactOS için Paint, GNU Kısıtlı Genel Kamu Lisansı (LGPL, bakınız: www.gnu.org) altında vardır."
+    IDS_INFOTEXT "GNU Kısıtlı Genel Kamu Lisansı (LGPL, bakınız: www.gnu.org) altında vardır."
     IDS_SAVEPROMPTTEXT "%s için yapılan değişiklikleri saklamak ister misiniz?"
     IDS_DEFAULTFILENAME "Adsız.bmp"
     IDS_MINIATURETITLE "Küçük Resim"

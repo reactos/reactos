@@ -45,7 +45,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
          */
 
         /* 1- Write the WinMain's command line. */
-        dwStringSize = (wcslen(lpCmdLine) + 1) * sizeof(WCHAR);
+        dwStringSize = (lstrlenW(lpCmdLine) + 1) * sizeof(WCHAR);
 
         WriteFile(hFile,
                   &dwStringSize,
@@ -60,7 +60,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
                   NULL);
 
         /* 2- Write the Win32 mode command line. */
-        dwStringSize = (wcslen(CmdLine) + 1) * sizeof(WCHAR);
+        dwStringSize = (lstrlenW(CmdLine) + 1) * sizeof(WCHAR);
 
         WriteFile(hFile,
                   &dwStringSize,

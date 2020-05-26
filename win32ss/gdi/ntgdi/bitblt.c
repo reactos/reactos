@@ -471,16 +471,11 @@ NtGdiMaskBlt(
 
     if (UsesSource)
     {
-        {
-            BitmapSrc = DCSrc->dclevel.pSurface;
-            if (!BitmapSrc)
-                goto cleanup;
-        }
-    }
+        BitmapSrc = DCSrc->dclevel.pSurface;
+        if (!BitmapSrc)
+            goto cleanup;
 
-    /* Create the XLATEOBJ. */
-    if (UsesSource)
-    {
+        /* Create the XLATEOBJ. */
         EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
         XlateObj = &exlo.xlo;
     }

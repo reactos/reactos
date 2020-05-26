@@ -330,6 +330,9 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT lResult;
 
+    /* Skip asynchronous WM_TIMER messages */
+    if (uMsg == WM_TIMER) return InnerWindowProc(hwnd, uMsg, wParam, lParam);
+
     /* build s_prefix */
     DoBuildPrefix();
 

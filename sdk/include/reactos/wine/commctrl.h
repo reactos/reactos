@@ -5,11 +5,6 @@
 #define DPA_GetPtr DPA_GetPtr_wine_hack
 #define FlatSB_SetScrollProp FlatSB_SetScrollProp_wine_hack
 
-#if (_WIN32_IE < 0x501)
-#undef _WIN32_IE
-#define _WIN32_IE 0x0501
-#endif
-
 #include <psdk/commctrl.h>
 
 #ifdef __cplusplus

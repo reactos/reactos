@@ -1,6 +1,7 @@
 
 add_definitions(
     -D__WINESRC__
+    -D__ROS_LONG64__
     -DUSE_WIN32_OPENGL)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
@@ -25,11 +26,11 @@ list(APPEND SOURCE
 
 if(MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #add_target_compile_flags(ddraw "/FIwine/typeof.h")
+    #target_compile_options(ddraw PRIVATE "/FIwine/typeof.h")
     set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/FIwine/typeof.h")
 endif()
 
-add_library(ddraw SHARED
+add_library(ddraw MODULE
     ${SOURCE}
     ddraw.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def)

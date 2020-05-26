@@ -10,20 +10,11 @@ static VOID InitSettings(HWND hWndDlg)
 {
     HKEY hKeyRenderer;
     HKEY hKeyDrivers;
+    DWORD dwType = 0;
+    DWORD dwSize = MAX_KEY_LENGTH;
     WCHAR szBuffer[MAX_KEY_LENGTH];
     WCHAR szBultin[MAX_KEY_LENGTH];
     WCHAR szDriver[MAX_KEY_LENGTH];
-    DWORD dwType = 0;
-    DWORD dwSize = MAX_KEY_LENGTH; 
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, KEY_DRIVERS, 0, KEY_READ, &hKeyDrivers) != ERROR_SUCCESS)
-        return;
-
-    if (RegCreateKeyExW(HKEY_CURRENT_USER, KEY_RENDERER, 0, NULL, 0, MAXIMUM_ALLOWED, NULL, &hKeyRenderer, NULL) != ERROR_SUCCESS)
-    {
-        RegCloseKey(hKeyDrivers);
-        return;
-    }
 
     LoadString(hApplet, IDS_DEBUG_DNM, (LPTSTR)szBultin, 127);
     SendDlgItemMessageW(hWndDlg, IDC_DEBUG_OUTPUT, CB_ADDSTRING, 0, (LPARAM)szBultin);
@@ -42,23 +33,30 @@ static VOID InitSettings(HWND hWndDlg)
     LoadString(hApplet, IDS_RENDERER_RSWR, (LPTSTR)szBultin, 127);
     SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_ADDSTRING, 0, (LPARAM)szBultin);
 
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, KEY_RENDERER, 0, NULL, 0, MAXIMUM_ALLOWED, NULL, &hKeyRenderer, NULL) != ERROR_SUCCESS)
+        return;
+
     if (RegQueryValueExW(hKeyRenderer, NULL, NULL, &dwType, (LPBYTE)szDriver, &dwSize) != ERROR_SUCCESS || dwSize == sizeof(WCHAR))
         SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_SETCURSEL, RENDERER_DEFAULT, 0);
+
+    RegCloseKey(hKeyRenderer);
 
     if (dwType == REG_SZ)
     {
         DWORD ret;
-        INT iKey;
+        DWORD iKey;
 
         if (wcsncmp(szBultin, szDriver, MAX_KEY_LENGTH) == 0)
             SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_SETCURSEL, RENDERER_RSWR, 0);
 
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, KEY_DRIVERS, 0, KEY_READ, &hKeyDrivers) != ERROR_SUCCESS)
+            return;
+
         ret = RegQueryInfoKeyW(hKeyDrivers, NULL, NULL, NULL, &dwNumDrivers, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
-        if (ret != ERROR_SUCCESS || dwNumDrivers <= 0)
+        if (ret != ERROR_SUCCESS || dwNumDrivers == 0)
         {
             RegCloseKey(hKeyDrivers);
-            RegCloseKey(hKeyRenderer);
             return;
         }
 
@@ -90,10 +88,9 @@ static VOID InitSettings(HWND hWndDlg)
             if (wcsncmp(szBuffer, szDriver, MAX_KEY_LENGTH) == 0)
                 SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_SETCURSEL, iKey + 2, 0);
         }
-    }
 
-    RegCloseKey(hKeyDrivers);
-    RegCloseKey(hKeyRenderer);
+        RegCloseKey(hKeyDrivers);
+    }
 
     return;
 }
@@ -139,7 +136,7 @@ static VOID SaveSettings(HWND hWndDlg)
         {
             WCHAR szBuffer[MAX_KEY_LENGTH];
             LoadString(hApplet, IDS_RENDERER_RSWR, (LPTSTR)szBuffer, 127);
-            RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+            RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)szBuffer, (DWORD)((wcslen(szBuffer) + 1) * sizeof(WCHAR)));
             break;
         }
 
@@ -148,8 +145,8 @@ static VOID SaveSettings(HWND hWndDlg)
             /* Adjustment for DEFAULT and RSWR renderers */
             iSel -= 2;
 
-            if (iSel >= 0 && iSel <= dwNumDrivers)
-                RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)pOglDrivers[iSel], (wcslen(pOglDrivers[iSel]) + 1) * sizeof(WCHAR));
+            if (iSel >= 0 && iSel < dwNumDrivers)
+                RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)pOglDrivers[iSel], (DWORD)((wcslen(pOglDrivers[iSel]) + 1) * sizeof(WCHAR)));
 
             break;
         }
@@ -192,8 +189,9 @@ INT_PTR CALLBACK GeneralPageProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM 
         case WM_DESTROY:
             if (pOglDrivers != NULL)
             {
-                INT iKey;
-                for (iKey = 0; iKey <= dwNumDrivers; iKey++)
+                DWORD iKey;
+
+                for (iKey = 0; iKey < dwNumDrivers; ++iKey)
                     HeapFree(GetProcessHeap(), 0, pOglDrivers[iKey]);
 
                 HeapFree(GetProcessHeap(), 0, pOglDrivers);

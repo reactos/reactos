@@ -17,16 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 
 #define COBJMACROS
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
-#include "wine/library.h"
 
 #include "ole2.h"
 #include "olectl.h"
@@ -44,7 +40,6 @@
 
 #include "mmdevapi.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mmdevapi);
 
@@ -139,7 +134,7 @@ static BOOL WINAPI init_driver(INIT_ONCE *once, void *param, void **context)
 
     TRACE("Loading driver list %s\n", wine_dbgstr_w(driver_list));
     for(next = p = driver_list; next; p = next + 1){
-        next = strchrW(p, ',');
+        next = wcschr(p, ',');
         if(next)
             *next = '\0';
 

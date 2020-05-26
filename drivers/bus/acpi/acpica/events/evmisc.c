@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2019, Intel Corp.
+ * Copyright (C) 2000 - 2020, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -292,11 +292,16 @@ AcpiEvTerminate (
         /* Disable all GPEs in all GPE blocks */
 
         Status = AcpiEvWalkGpeList (AcpiHwDisableGpeBlock, NULL);
+        if (ACPI_FAILURE (Status))
+        {
+            ACPI_EXCEPTION ((AE_INFO, Status,
+                "Could not disable GPEs in GPE block"));
+        }
 
         Status = AcpiEvRemoveGlobalLockHandler ();
-        if (ACPI_FAILURE(Status))
+        if (ACPI_FAILURE (Status))
         {
-            ACPI_ERROR ((AE_INFO,
+            ACPI_EXCEPTION ((AE_INFO, Status,
                 "Could not remove Global Lock handler"));
         }
 
@@ -306,7 +311,7 @@ AcpiEvTerminate (
     /* Remove SCI handlers */
 
     Status = AcpiEvRemoveAllSciHandlers ();
-    if (ACPI_FAILURE(Status))
+    if (ACPI_FAILURE (Status))
     {
         ACPI_ERROR ((AE_INFO,
             "Could not remove SCI handler"));
@@ -315,6 +320,12 @@ AcpiEvTerminate (
     /* Deallocate all handler objects installed within GPE info structs */
 
     Status = AcpiEvWalkGpeList (AcpiEvDeleteGpeHandlers, NULL);
+    if (ACPI_FAILURE (Status))
+    {
+        ACPI_EXCEPTION ((AE_INFO, Status,
+            "Could not delete GPE handlers"));
+    }
+
 
     /* Return to original mode if necessary */
 

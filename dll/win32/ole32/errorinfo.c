@@ -34,7 +34,6 @@
 #include "oleauto.h"
 #include "winerror.h"
 
-#include "wine/unicode.h"
 #include "compobj_private.h"
 
 #include "wine/debug.h"
@@ -48,7 +47,7 @@ static inline WCHAR *heap_strdupW(const WCHAR *str)
     if(str) {
         size_t size;
 
-        size = (strlenW(str)+1)*sizeof(WCHAR);
+        size = (lstrlenW(str)+1)*sizeof(WCHAR);
         ret = heap_alloc(size);
         if(ret)
             memcpy(ret, str, size);

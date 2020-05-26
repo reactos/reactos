@@ -174,7 +174,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance,
 	CreateWnd(hWnd, L"Static", L"Button V6 with imagelist and no themes", 0, 4, -1);
 	CreateButtonSet(hWnd, &hwnd[60], 4, 0,  BS_PUSHBUTTON);
 	CreateButtonSet(hWnd, &hwnd[65], 5, 0,  BS_DEFPUSHBUTTON);
-    CreateButtonSet(hWnd, &hwnd[70], 4, 5,  BS_PUSHBUTTON|WS_DISABLED);
+	CreateButtonSet(hWnd, &hwnd[70], 4, 5,  BS_PUSHBUTTON|WS_DISABLED);
 	CreateButtonSet(hWnd, &hwnd[75], 5, 5,  BS_GROUPBOX);
 	CreateButtonSet(hWnd, &hwnd[80], 4, 10, BS_CHECKBOX);
 	CreateButtonSet(hWnd, &hwnd[85], 5, 10, BS_RADIOBUTTON);
@@ -182,8 +182,8 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance,
 	for (int i = 30; i < 90; i++)
 		SetWindowTheme(hwnd[i], L"", L"");
 
-    for (int i = 60; i< 90; i++)
-        SendMessageW(hwnd[i], BCM_SETIMAGELIST, 0, (LPARAM)&btniml);
+	for (int i = 60; i< 90; i++)
+		SendMessageW(hwnd[i], BCM_SETIMAGELIST, 0, (LPARAM)&btniml);
 
 	CreateWnd(hWnd, L"Static", L"Button V6 with themes and imagelist", 0, 6, -1);
 	CreateButtonSet(hWnd, &hwnd[120], 6, 0,  BS_PUSHBUTTON);
@@ -201,8 +201,8 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance,
 	CreateButtonSet(hWnd, &hwnd[110], 8, 10, BS_CHECKBOX);
 	CreateButtonSet(hWnd, &hwnd[115], 9, 10, BS_RADIOBUTTON);
 
-    for (int i = 120; i< 150; i++)
-        SendMessageW(hwnd[i], BCM_SETIMAGELIST, 0, (LPARAM)&btniml);
+	for (int i = 120; i< 150; i++)
+		SendMessageW(hwnd[i], BCM_SETIMAGELIST, 0, (LPARAM)&btniml);
 
 	if (bActivated) DeactivateActCtx(0, cookie);
     

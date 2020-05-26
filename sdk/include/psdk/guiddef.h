@@ -107,21 +107,21 @@ typedef GUID FMTID,*LPFMTID;
 
 #endif /* ndef __IID_DEFINED__ */
 
-#if defined(__cplusplus) && !defined(CINTERFACE)
+#ifdef __cplusplus
 #define REFGUID             const GUID &
 #define REFCLSID            const CLSID &
 #define REFIID              const IID &
 #define REFFMTID            const FMTID &
-#else /* !defined(__cplusplus) && !defined(CINTERFACE) */
+#else
 #define REFGUID             const GUID* __MIDL_CONST
 #define REFCLSID            const CLSID* __MIDL_CONST
 #define REFIID              const IID* __MIDL_CONST
 #define REFFMTID            const FMTID* __MIDL_CONST
-#endif /* !defined(__cplusplus) && !defined(CINTERFACE) */
+#endif
 
 #if !defined(__midl) && !defined(__WIDL__)
 #include <string.h>
-#if defined(__cplusplus) && !defined(CINTERFACE)
+#ifdef __cplusplus
 
 __inline int InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
 {
@@ -137,7 +137,7 @@ __inline int IsEqualGUID(REFGUID rguid1, REFGUID rguid2)
     return !memcmp(&rguid1, &rguid2, sizeof(GUID));
 }
 
-#else /* defined(__cplusplus) && !defined(CINTERFACE) */
+#else
 
 #define InlineIsEqualGUID(rguid1, rguid2) \
     (((unsigned long *)rguid1)[0] == ((unsigned long *)rguid2)[0] && \
@@ -146,10 +146,10 @@ __inline int IsEqualGUID(REFGUID rguid1, REFGUID rguid2)
      ((unsigned long *)rguid1)[3] == ((unsigned long *)rguid2)[3])
 #define IsEqualGUID(rguid1, rguid2) (!memcmp(rguid1, rguid2, sizeof(GUID)))
 
-#endif /* defined(__cplusplus) && !defined(CINTERFACE) */
+#endif
 #endif /* __midl && __WIDL__ */
 
-#if defined(__cplusplus) && !defined(CINTERFACE)
+#ifdef __cplusplus
 #include <string.h>
 #if !defined _SYS_GUID_OPERATOR_EQ_ && !defined _NO_SYS_GUID_OPERATOR_EQ_
 #define _SYS_GUID_OPERATOR_EQ_

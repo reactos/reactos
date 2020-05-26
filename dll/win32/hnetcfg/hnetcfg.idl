@@ -51,3 +51,27 @@ coclass NetFwOpenPort { interface INetFwOpenPort; }
     uuid(e2b3c97f-6ae1-41ac-817a-f6f92166d7dd)
 ]
 coclass NetFwPolicy2 { interface INetFwPolicy2; }
+
+[
+    helpstring("HNetCfg.FwRule"),
+    progid("HNetCfg.FwRule"),
+    threading(both),
+    uuid(2c5bc43e-3369-4c33-ab0c-be9469677af4)
+]
+coclass NetFwRule { interface INetFwRule; }
+
+[
+    helpstring("HNetCfg.FwProduct"),
+    progid("HNetCfg.FwProduct"),
+    threading(both),
+    uuid(9d745ed8-c514-4d1d-bf42-751fed2d5ac7)
+]
+coclass NetFwProduct { interface INetFwProduct; }
+
+[
+    helpstring("HNetCfg.FwProducts"),
+    progid("HNetCfg.FwProducts"),
+    threading(both),
+    uuid(cc19079b-8272-4d73-bb70-cdb533527b61)
+]
+coclass NetFwProducts { interface INetFwProducts; }

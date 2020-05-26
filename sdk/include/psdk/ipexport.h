@@ -28,14 +28,14 @@ typedef ULONG IPAddr;
 typedef ULONG IPMask;
 typedef ULONG IP_STATUS;
 
-struct ip_option_information
+typedef struct ip_option_information
 {
     unsigned char  Ttl;
     unsigned char  Tos;
     unsigned char  Flags;
     unsigned char  OptionsSize;
     unsigned char* OptionsData;
-};
+} IP_OPTION_INFORMATION, *PIP_OPTION_INFORMATION;
 
 #if defined(_WIN64)
 
@@ -64,20 +64,31 @@ struct ip_option_information32
 #define MAX_OPT_SIZE    40
 
 
-struct icmp_echo_reply
+typedef struct icmp_echo_request
 {
-    IPAddr                       Address;
-    ULONG                        Status;
-    ULONG                        RoundTripTime;
-    unsigned short               DataSize;
-    unsigned short               Reserved;
-    void*                        Data;
-    struct ip_option_information Options;
-};
+    IPAddr Address;
+    UINT32 Timeout;
+    UINT16 DataOffset;
+    UINT16 DataSize;
+    UINT8 HasOptions;
+    UINT8 Ttl;
+    UINT8 Tos;
+    UINT8 Flags;
+    UINT16 OptionsOffset;
+    UINT8 OptionsSize;
+    UINT8 Padding;
+} ICMP_ECHO_REQUEST, *PICMP_ECHO_REQUEST;
 
-typedef struct ip_option_information IP_OPTION_INFORMATION, *PIP_OPTION_INFORMATION;
-
-typedef struct icmp_echo_reply ICMP_ECHO_REPLY, *PICMP_ECHO_REPLY;
+typedef struct icmp_echo_reply
+{
+    IPAddr Address;
+    UINT32 Status;
+    UINT32 RoundTripTime;
+    UINT16 DataSize;
+    UINT16 Reserved;
+    PVOID Data;
+    IP_OPTION_INFORMATION Options;
+} ICMP_ECHO_REPLY, *PICMP_ECHO_REPLY;
 
 #ifdef _WIN64
 struct icmp_echo_reply32
@@ -163,6 +174,16 @@ typedef struct _IPV6_ADDRESS_EX {
   ULONG sin6_scope_id;
 } IPV6_ADDRESS_EX, *PIPV6_ADDRESS_EX;
 #include <poppack.h>
+
+typedef struct _ICMPV6_ECHO_REQUEST
+{
+    IPV6_ADDRESS_EX DestinationAddress;
+    IPV6_ADDRESS_EX SourceAddress;
+    UINT32          Timeout;
+    UINT16          Unknown1;
+    UINT16          Ttl;            // XXX: These seem unnecessarily large.
+    UINT32          Flags;          //      Is something else in the struct?
+} ICMPV6_ECHO_REQUEST, *PICMPV6_ECHO_REQUEST;
 
 typedef struct icmpv6_echo_reply_lh {
   IPV6_ADDRESS_EX Address;

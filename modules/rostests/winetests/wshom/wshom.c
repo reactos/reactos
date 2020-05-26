@@ -56,6 +56,13 @@ static void _test_provideclassinfo(IDispatch *disp, const GUID *guid, int line)
     ITypeInfo_Release(ti);
 }
 
+#define CHECK_BSTR_LENGTH(str) check_bstr_length(str, __LINE__)
+static void check_bstr_length(BSTR str, int line)
+{
+    ok_(__FILE__, line)(SysStringLen(str) == lstrlenW(str), "Unexpected string length %u vs %u.\n",
+            SysStringLen(str), lstrlenW(str));
+}
+
 static void test_wshshell(void)
 {
     static const WCHAR notepadW[] = {'n','o','t','e','p','a','d','.','e','x','e',0};
@@ -66,6 +73,17 @@ static void test_wshshell(void)
     static const WCHAR path2W[] = {'P','A','T','H',0};
     static const WCHAR dummydirW[] = {'d','e','a','d','p','a','r','r','o','t',0};
     static const WCHAR emptyW[] = {'e','m','p','t','y',0};
+    static const WCHAR cmdexeW[] = {'\\','c','m','d','.','e','x','e',0};
+    static const WCHAR testdirW[] = {'w','s','h','o','m',' ','t','e','s','t',' ','d','i','r',0};
+    static const WCHAR paramsW[] =
+        {' ','/','c',' ','r','d',' ','/','s',' ','/','q',' ','c',':','\\','n','o','s','u','c','h','d','i','r',0};
+    static const WCHAR cmdW[] =
+        {'c','m','d','.','e','x','e',' ','/','c',' ','r','d',' ','/','s',' ','/','q',' ','c',':','\\',
+         'n','o','s','u','c','h','d','i','r',0};
+    static const WCHAR cmd2W[] =
+        {'"','c','m','d','.','e','x','e',' ','"',' ','/','c',' ','r','d',' ','/','s',' ','/','q',' ','c',':','\\',
+         'n','o','s','u','c','h','d','i','r',0};
+    WCHAR path[MAX_PATH], path2[MAX_PATH], buf[MAX_PATH];
     IWshEnvironment *env;
     IWshExec *shexec;
     IWshShell3 *sh3;
@@ -82,7 +100,7 @@ static void test_wshshell(void)
     EXCEPINFO ei;
     VARIANT arg, res, arg2;
     BSTR str, ret;
-    DWORD retval;
+    DWORD retval, attrs;
     UINT err;
 
     hr = CoCreateInstance(&CLSID_WshShell, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
@@ -145,6 +163,7 @@ static void test_wshshell(void)
     hr = IWshCollection_Item(coll, &arg, &res);
     EXPECT_HR(hr, S_OK);
     ok(V_VT(&res) == VT_BSTR, "got res type %d\n", V_VT(&res));
+    CHECK_BSTR_LENGTH(V_BSTR(&res));
     SysFreeString(str);
     VariantClear(&res);
 
@@ -200,6 +219,7 @@ static void test_wshshell(void)
     hr = IWshEnvironment_get_Item(env, str, &ret);
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(ret && *ret == 0, "got %s\n", wine_dbgstr_w(ret));
+    CHECK_BSTR_LENGTH(ret);
     SysFreeString(ret);
     SysFreeString(str);
 
@@ -208,6 +228,7 @@ static void test_wshshell(void)
     hr = IWshEnvironment_get_Item(env, str, &ret);
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(ret && *ret != 0, "got %s\n", wine_dbgstr_w(ret));
+    CHECK_BSTR_LENGTH(ret);
     SysFreeString(ret);
     SysFreeString(str);
 
@@ -238,8 +259,52 @@ static void test_wshshell(void)
     hr = IWshShell3_Run(sh3, str, &arg, &arg2, &retval);
     ok(hr == DISP_E_TYPEMISMATCH, "got 0x%08x\n", hr);
     ok(retval == 10, "got %u\n", retval);
-
     SysFreeString(str);
+
+    V_VT(&arg2) = VT_BOOL;
+    V_BOOL(&arg2) = VARIANT_TRUE;
+
+    retval = 0xdeadbeef;
+    str = SysAllocString(cmdW);
+    hr = IWshShell3_Run(sh3, str, &arg, &arg2, &retval);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    todo_wine ok(retval == ERROR_FILE_NOT_FOUND, "got %u\n", retval);
+    SysFreeString(str);
+
+    retval = 0xdeadbeef;
+    str = SysAllocString(cmd2W);
+    hr = IWshShell3_Run(sh3, str, &arg, &arg2, &retval);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    todo_wine ok(retval == ERROR_FILE_NOT_FOUND, "got %u\n", retval);
+    SysFreeString(str);
+
+    GetSystemDirectoryW(path, ARRAY_SIZE(path));
+    lstrcatW(path, cmdexeW);
+    attrs = GetFileAttributesW(path);
+    ok(attrs != INVALID_FILE_ATTRIBUTES, "cmd.exe not found\n");
+
+    /* copy cmd.exe to a path with spaces */
+    GetTempPathW(ARRAY_SIZE(path2), path2);
+    lstrcatW(path2, testdirW);
+    CreateDirectoryW(path2, NULL);
+    lstrcatW(path2, cmdexeW);
+    CopyFileW(path, path2, FALSE);
+
+    buf[0] = '"';
+    lstrcpyW(buf + 1, path2);
+    buf[lstrlenW(buf)] = '"';
+    lstrcpyW(buf + lstrlenW(path2) + 2, paramsW);
+
+    retval = 0xdeadbeef;
+    str = SysAllocString(buf);
+    hr = IWshShell3_Run(sh3, str, &arg, &arg2, &retval);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    todo_wine ok(retval == ERROR_FILE_NOT_FOUND, "got %u\n", retval);
+    SysFreeString(str);
+
+    DeleteFileW(path2);
+    path2[lstrlenW(path2) - lstrlenW(cmdexeW)] = 0;
+    RemoveDirectoryW(path2);
 
     /* current directory */
     if (0) /* crashes on native */
@@ -249,6 +314,7 @@ static void test_wshshell(void)
     hr = IWshShell3_get_CurrentDirectory(sh3, &str);
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(str && str[0] != 0, "got empty string\n");
+    CHECK_BSTR_LENGTH(str);
     SysFreeString(str);
 
     hr = IWshShell3_put_CurrentDirectory(sh3, NULL);
@@ -385,6 +451,7 @@ static void test_registry(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(V_VT(&value) == VT_BSTR, "got %d\n", V_VT(&value));
     ok(!lstrcmpW(V_BSTR(&value), foobarW), "got %s\n", wine_dbgstr_w(V_BSTR(&value)));
+    CHECK_BSTR_LENGTH(V_BSTR(&value));
     VariantClear(&value);
     SysFreeString(name);
 
@@ -397,6 +464,7 @@ static void test_registry(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(V_VT(&value) == VT_BSTR, "got %d\n", V_VT(&value));
     ok(SysStringLen(V_BSTR(&value)) == 6, "len %d\n", SysStringLen(V_BSTR(&value)));
+    CHECK_BSTR_LENGTH(V_BSTR(&value));
     VariantClear(&value);
     SysFreeString(name);
 
@@ -473,6 +541,7 @@ static void test_registry(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(V_VT(&v) == VT_BSTR, "got %d\n", V_VT(&v));
     ok(!lstrcmpW(V_BSTR(&v), fooW), "got %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    CHECK_BSTR_LENGTH(V_BSTR(&v));
     VariantClear(&v);
     VariantClear(&value);
 

@@ -5,7 +5,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Usage: %s [drive:] [-F] [-V] [-R] [-C] \n\n\
+Usage: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
 [drive:]    Specifies the drive to check.\n\
 -F          Disk üzerindeki hataları onarır.\n\
 -V          Disk üzerindeki bütün dosyaların tam yollarını görüntüler.\n\

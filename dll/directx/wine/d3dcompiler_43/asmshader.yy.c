@@ -1,6 +1,6 @@
-#line 2 "asmshader.yy.c"
+#line 1 "asmshader.yy.c"
 
-#line 4 "asmshader.yy.c"
+#line 3 "asmshader.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -8,11 +8,17 @@
 
 #define yy_create_buffer asmshader__create_buffer
 #define yy_delete_buffer asmshader__delete_buffer
-#define yy_flex_debug asmshader__flex_debug
+#define yy_scan_buffer asmshader__scan_buffer
+#define yy_scan_string asmshader__scan_string
+#define yy_scan_bytes asmshader__scan_bytes
 #define yy_init_buffer asmshader__init_buffer
 #define yy_flush_buffer asmshader__flush_buffer
 #define yy_load_buffer_state asmshader__load_buffer_state
 #define yy_switch_to_buffer asmshader__switch_to_buffer
+#define yypush_buffer_state asmshader_push_buffer_state
+#define yypop_buffer_state asmshader_pop_buffer_state
+#define yyensure_buffer_stack asmshader_ensure_buffer_stack
+#define yy_flex_debug asmshader__flex_debug
 #define yyin asmshader_in
 #define yyleng asmshader_leng
 #define yylex asmshader_lex
@@ -27,10 +33,244 @@
 
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
-#define YY_FLEX_MINOR_VERSION 5
-#define YY_FLEX_SUBMINOR_VERSION 35
+#define YY_FLEX_MINOR_VERSION 6
+#define YY_FLEX_SUBMINOR_VERSION 4
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
+#endif
+
+#ifdef yy_create_buffer
+#define asmshader__create_buffer_ALREADY_DEFINED
+#else
+#define yy_create_buffer asmshader__create_buffer
+#endif
+
+#ifdef yy_delete_buffer
+#define asmshader__delete_buffer_ALREADY_DEFINED
+#else
+#define yy_delete_buffer asmshader__delete_buffer
+#endif
+
+#ifdef yy_scan_buffer
+#define asmshader__scan_buffer_ALREADY_DEFINED
+#else
+#define yy_scan_buffer asmshader__scan_buffer
+#endif
+
+#ifdef yy_scan_string
+#define asmshader__scan_string_ALREADY_DEFINED
+#else
+#define yy_scan_string asmshader__scan_string
+#endif
+
+#ifdef yy_scan_bytes
+#define asmshader__scan_bytes_ALREADY_DEFINED
+#else
+#define yy_scan_bytes asmshader__scan_bytes
+#endif
+
+#ifdef yy_init_buffer
+#define asmshader__init_buffer_ALREADY_DEFINED
+#else
+#define yy_init_buffer asmshader__init_buffer
+#endif
+
+#ifdef yy_flush_buffer
+#define asmshader__flush_buffer_ALREADY_DEFINED
+#else
+#define yy_flush_buffer asmshader__flush_buffer
+#endif
+
+#ifdef yy_load_buffer_state
+#define asmshader__load_buffer_state_ALREADY_DEFINED
+#else
+#define yy_load_buffer_state asmshader__load_buffer_state
+#endif
+
+#ifdef yy_switch_to_buffer
+#define asmshader__switch_to_buffer_ALREADY_DEFINED
+#else
+#define yy_switch_to_buffer asmshader__switch_to_buffer
+#endif
+
+#ifdef yypush_buffer_state
+#define asmshader_push_buffer_state_ALREADY_DEFINED
+#else
+#define yypush_buffer_state asmshader_push_buffer_state
+#endif
+
+#ifdef yypop_buffer_state
+#define asmshader_pop_buffer_state_ALREADY_DEFINED
+#else
+#define yypop_buffer_state asmshader_pop_buffer_state
+#endif
+
+#ifdef yyensure_buffer_stack
+#define asmshader_ensure_buffer_stack_ALREADY_DEFINED
+#else
+#define yyensure_buffer_stack asmshader_ensure_buffer_stack
+#endif
+
+#ifdef yylex
+#define asmshader_lex_ALREADY_DEFINED
+#else
+#define yylex asmshader_lex
+#endif
+
+#ifdef yyrestart
+#define asmshader_restart_ALREADY_DEFINED
+#else
+#define yyrestart asmshader_restart
+#endif
+
+#ifdef yylex_init
+#define asmshader_lex_init_ALREADY_DEFINED
+#else
+#define yylex_init asmshader_lex_init
+#endif
+
+#ifdef yylex_init_extra
+#define asmshader_lex_init_extra_ALREADY_DEFINED
+#else
+#define yylex_init_extra asmshader_lex_init_extra
+#endif
+
+#ifdef yylex_destroy
+#define asmshader_lex_destroy_ALREADY_DEFINED
+#else
+#define yylex_destroy asmshader_lex_destroy
+#endif
+
+#ifdef yyget_debug
+#define asmshader_get_debug_ALREADY_DEFINED
+#else
+#define yyget_debug asmshader_get_debug
+#endif
+
+#ifdef yyset_debug
+#define asmshader_set_debug_ALREADY_DEFINED
+#else
+#define yyset_debug asmshader_set_debug
+#endif
+
+#ifdef yyget_extra
+#define asmshader_get_extra_ALREADY_DEFINED
+#else
+#define yyget_extra asmshader_get_extra
+#endif
+
+#ifdef yyset_extra
+#define asmshader_set_extra_ALREADY_DEFINED
+#else
+#define yyset_extra asmshader_set_extra
+#endif
+
+#ifdef yyget_in
+#define asmshader_get_in_ALREADY_DEFINED
+#else
+#define yyget_in asmshader_get_in
+#endif
+
+#ifdef yyset_in
+#define asmshader_set_in_ALREADY_DEFINED
+#else
+#define yyset_in asmshader_set_in
+#endif
+
+#ifdef yyget_out
+#define asmshader_get_out_ALREADY_DEFINED
+#else
+#define yyget_out asmshader_get_out
+#endif
+
+#ifdef yyset_out
+#define asmshader_set_out_ALREADY_DEFINED
+#else
+#define yyset_out asmshader_set_out
+#endif
+
+#ifdef yyget_leng
+#define asmshader_get_leng_ALREADY_DEFINED
+#else
+#define yyget_leng asmshader_get_leng
+#endif
+
+#ifdef yyget_text
+#define asmshader_get_text_ALREADY_DEFINED
+#else
+#define yyget_text asmshader_get_text
+#endif
+
+#ifdef yyget_lineno
+#define asmshader_get_lineno_ALREADY_DEFINED
+#else
+#define yyget_lineno asmshader_get_lineno
+#endif
+
+#ifdef yyset_lineno
+#define asmshader_set_lineno_ALREADY_DEFINED
+#else
+#define yyset_lineno asmshader_set_lineno
+#endif
+
+#ifdef yywrap
+#define asmshader_wrap_ALREADY_DEFINED
+#else
+#define yywrap asmshader_wrap
+#endif
+
+#ifdef yyalloc
+#define asmshader_alloc_ALREADY_DEFINED
+#else
+#define yyalloc asmshader_alloc
+#endif
+
+#ifdef yyrealloc
+#define asmshader_realloc_ALREADY_DEFINED
+#else
+#define yyrealloc asmshader_realloc
+#endif
+
+#ifdef yyfree
+#define asmshader_free_ALREADY_DEFINED
+#else
+#define yyfree asmshader_free
+#endif
+
+#ifdef yytext
+#define asmshader_text_ALREADY_DEFINED
+#else
+#define yytext asmshader_text
+#endif
+
+#ifdef yyleng
+#define asmshader_leng_ALREADY_DEFINED
+#else
+#define yyleng asmshader_leng
+#endif
+
+#ifdef yyin
+#define asmshader_in_ALREADY_DEFINED
+#else
+#define yyin asmshader_in
+#endif
+
+#ifdef yyout
+#define asmshader_out_ALREADY_DEFINED
+#else
+#define yyout asmshader_out
+#endif
+
+#ifdef yy_flex_debug
+#define asmshader__flex_debug_ALREADY_DEFINED
+#else
+#define yy_flex_debug asmshader__flex_debug
+#endif
+
+#ifdef yylineno
+#define asmshader_lineno_ALREADY_DEFINED
+#else
+#define yylineno asmshader_lineno
 #endif
 
 /* First, we deal with  platform-specific or compiler-specific issues. */
@@ -103,60 +343,48 @@ typedef unsigned int flex_uint32_t;
 #define UINT32_MAX             (4294967295U)
 #endif
 
+#ifndef SIZE_MAX
+#define SIZE_MAX               (~(size_t)0)
+#endif
+
 #endif /* ! C99 */
 
 #endif /* ! FLEXINT_H */
 
-#ifdef __cplusplus
+/* begin standard C++ headers. */
 
-/* The "const" storage-class-modifier is valid. */
-#define YY_USE_CONST
-
-#else	/* ! __cplusplus */
-
-/* C99 requires __STDC__ to be defined as 1. */
-#if defined (__STDC__)
-
-#define YY_USE_CONST
-
-#endif	/* defined (__STDC__) */
-#endif	/* ! __cplusplus */
-
-#ifdef YY_USE_CONST
+/* TODO: this is always defined, so inline it */
 #define yyconst const
+
+#if defined(__GNUC__) && __GNUC__ >= 3
+#define yynoreturn __attribute__((__noreturn__))
 #else
-#define yyconst
+#define yynoreturn
 #endif
 
 /* Returned upon end-of-file. */
 #define YY_NULL 0
 
-/* Promotes a possibly negative, possibly signed char to an unsigned
- * integer for use as an array index.  If the signed char is negative,
- * we want to instead treat it as an 8-bit unsigned char, hence the
- * double cast.
+/* Promotes a possibly negative, possibly signed char to an
+ *   integer in range [0..255] for use as an array index.
  */
-#define YY_SC_TO_UI(c) ((unsigned int) (unsigned char) c)
+#define YY_SC_TO_UI(c) ((YY_CHAR) (c))
 
 /* Enter a start condition.  This macro really ought to take a parameter,
  * but we do it the disgusting crufty way forced on us by the ()-less
  * definition of BEGIN.
  */
 #define BEGIN (yy_start) = 1 + 2 *
-
 /* Translate the current start state into a value that can be later handed
  * to BEGIN to return to the state.  The YYSTATE alias is for lex
  * compatibility.
  */
 #define YY_START (((yy_start) - 1) / 2)
 #define YYSTATE YY_START
-
 /* Action number for EOF rule of a given start state. */
 #define YY_STATE_EOF(state) (YY_END_OF_BUFFER + state + 1)
-
 /* Special action meaning "start processing a new file". */
-#define YY_NEW_FILE asmshader_restart(asmshader_in  )
-
+#define YY_NEW_FILE yyrestart( yyin  )
 #define YY_END_OF_BUFFER_CHAR 0
 
 /* Size of default input buffer. */
@@ -181,36 +409,36 @@ typedef unsigned int flex_uint32_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
 
-extern int asmshader_leng;
+#ifndef YY_TYPEDEF_YY_SIZE_T
+#define YY_TYPEDEF_YY_SIZE_T
+typedef size_t yy_size_t;
+#endif
 
-extern FILE *asmshader_in, *asmshader_out;
+extern int yyleng;
+
+extern FILE *yyin, *yyout;
 
 #define EOB_ACT_CONTINUE_SCAN 0
 #define EOB_ACT_END_OF_FILE 1
 #define EOB_ACT_LAST_MATCH 2
-
+    
     #define YY_LESS_LINENO(n)
+    #define YY_LINENO_REWIND_TO(ptr)
     
 /* Return all but the first "n" matched characters back to the input stream. */
 #define yyless(n) \
 	do \
 		{ \
-		/* Undo effects of setting up asmshader_text. */ \
+		/* Undo effects of setting up yytext. */ \
         int yyless_macro_arg = (n); \
         YY_LESS_LINENO(yyless_macro_arg);\
 		*yy_cp = (yy_hold_char); \
 		YY_RESTORE_YY_MORE_OFFSET \
 		(yy_c_buf_p) = yy_cp = yy_bp + yyless_macro_arg - YY_MORE_ADJ; \
-		YY_DO_BEFORE_ACTION; /* set up asmshader_text again */ \
+		YY_DO_BEFORE_ACTION; /* set up yytext again */ \
 		} \
 	while ( 0 )
-
 #define unput(c) yyunput( c, (yytext_ptr)  )
-
-#ifndef YY_TYPEDEF_YY_SIZE_T
-#define YY_TYPEDEF_YY_SIZE_T
-typedef size_t yy_size_t;
-#endif
 
 #ifndef YY_STRUCT_YY_BUFFER_STATE
 #define YY_STRUCT_YY_BUFFER_STATE
@@ -224,7 +452,7 @@ struct yy_buffer_state
 	/* Size of input buffer in bytes, not including room for EOB
 	 * characters.
 	 */
-	yy_size_t yy_buf_size;
+	int yy_buf_size;
 
 	/* Number of characters read into yy_ch_buf, not including EOB
 	 * characters.
@@ -252,7 +480,7 @@ struct yy_buffer_state
 
     int yy_bs_lineno; /**< The line count. */
     int yy_bs_column; /**< The column count. */
-    
+
 	/* Whether to try to fill the input buffer when we reach the
 	 * end of it.
 	 */
@@ -269,8 +497,8 @@ struct yy_buffer_state
 	 * possible backing-up.
 	 *
 	 * When we actually see the EOF, we change the status to "new"
-	 * (via asmshader_restart()), so that the user can continue scanning by
-	 * just pointing asmshader_in at a new input file.
+	 * (via yyrestart()), so that the user can continue scanning by
+	 * just pointing yyin at a new input file.
 	 */
 #define YY_BUFFER_EOF_PENDING 2
 
@@ -280,7 +508,7 @@ struct yy_buffer_state
 /* Stack of input buffers. */
 static size_t yy_buffer_stack_top = 0; /**< index of top of stack. */
 static size_t yy_buffer_stack_max = 0; /**< capacity of stack. */
-static YY_BUFFER_STATE * yy_buffer_stack = 0; /**< Stack as an array. */
+static YY_BUFFER_STATE * yy_buffer_stack = NULL; /**< Stack as an array. */
 
 /* We provide macros for accessing buffer states in case in the
  * future we want to put the buffer states in a more general
@@ -291,106 +519,101 @@ static YY_BUFFER_STATE * yy_buffer_stack = 0; /**< Stack as an array. */
 #define YY_CURRENT_BUFFER ( (yy_buffer_stack) \
                           ? (yy_buffer_stack)[(yy_buffer_stack_top)] \
                           : NULL)
-
 /* Same as previous macro, but useful when we know that the buffer stack is not
  * NULL or when we need an lvalue. For internal use only.
  */
 #define YY_CURRENT_BUFFER_LVALUE (yy_buffer_stack)[(yy_buffer_stack_top)]
 
-/* yy_hold_char holds the character lost when asmshader_text is formed. */
+/* yy_hold_char holds the character lost when yytext is formed. */
 static char yy_hold_char;
 static int yy_n_chars;		/* number of characters read into yy_ch_buf */
-int asmshader_leng;
+int yyleng;
 
 /* Points to current character in buffer. */
-static char *yy_c_buf_p = (char *) 0;
+static char *yy_c_buf_p = NULL;
 static int yy_init = 0;		/* whether we need to initialize */
 static int yy_start = 0;	/* start state number */
 
-/* Flag which is used to allow asmshader_wrap()'s to do buffer switches
- * instead of setting up a fresh asmshader_in.  A bit of a hack ...
+/* Flag which is used to allow yywrap()'s to do buffer switches
+ * instead of setting up a fresh yyin.  A bit of a hack ...
  */
 static int yy_did_buffer_switch_on_eof;
 
-void asmshader_restart (FILE *input_file  );
-void asmshader__switch_to_buffer (YY_BUFFER_STATE new_buffer  );
-YY_BUFFER_STATE asmshader__create_buffer (FILE *file,int size  );
-void asmshader__delete_buffer (YY_BUFFER_STATE b  );
-void asmshader__flush_buffer (YY_BUFFER_STATE b  );
-void asmshader_push_buffer_state (YY_BUFFER_STATE new_buffer  );
-void asmshader_pop_buffer_state (void );
+void yyrestart ( FILE *input_file  );
+void yy_switch_to_buffer ( YY_BUFFER_STATE new_buffer  );
+YY_BUFFER_STATE yy_create_buffer ( FILE *file, int size  );
+void yy_delete_buffer ( YY_BUFFER_STATE b  );
+void yy_flush_buffer ( YY_BUFFER_STATE b  );
+void yypush_buffer_state ( YY_BUFFER_STATE new_buffer  );
+void yypop_buffer_state ( void );
 
-static void asmshader_ensure_buffer_stack (void );
-static void asmshader__load_buffer_state (void );
-static void asmshader__init_buffer (YY_BUFFER_STATE b,FILE *file  );
+static void yyensure_buffer_stack ( void );
+static void yy_load_buffer_state ( void );
+static void yy_init_buffer ( YY_BUFFER_STATE b, FILE *file  );
+#define YY_FLUSH_BUFFER yy_flush_buffer( YY_CURRENT_BUFFER )
 
-#define YY_FLUSH_BUFFER asmshader__flush_buffer(YY_CURRENT_BUFFER )
+YY_BUFFER_STATE yy_scan_buffer ( char *base, yy_size_t size  );
+YY_BUFFER_STATE yy_scan_string ( const char *yy_str  );
+YY_BUFFER_STATE yy_scan_bytes ( const char *bytes, int len  );
 
-YY_BUFFER_STATE asmshader__scan_buffer (char *base,yy_size_t size  );
-YY_BUFFER_STATE asmshader__scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE asmshader__scan_bytes (yyconst char *bytes,int len  );
+void *yyalloc ( yy_size_t  );
+void *yyrealloc ( void *, yy_size_t  );
+void yyfree ( void *  );
 
-void *asmshader_alloc (yy_size_t  );
-void *asmshader_realloc (void *,yy_size_t  );
-void asmshader_free (void *  );
-
-#define yy_new_buffer asmshader__create_buffer
-
+#define yy_new_buffer yy_create_buffer
 #define yy_set_interactive(is_interactive) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){ \
-        asmshader_ensure_buffer_stack (); \
+        yyensure_buffer_stack (); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            asmshader__create_buffer(asmshader_in,YY_BUF_SIZE ); \
+            yy_create_buffer( yyin, YY_BUF_SIZE ); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_is_interactive = is_interactive; \
 	}
-
 #define yy_set_bol(at_bol) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){\
-        asmshader_ensure_buffer_stack (); \
+        yyensure_buffer_stack (); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            asmshader__create_buffer(asmshader_in,YY_BUF_SIZE ); \
+            yy_create_buffer( yyin, YY_BUF_SIZE ); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_at_bol = at_bol; \
 	}
-
 #define YY_AT_BOL() (YY_CURRENT_BUFFER_LVALUE->yy_at_bol)
 
 /* Begin user sect3 */
 
-#define asmshader_wrap(n) 1
+#define asmshader_wrap() (/*CONSTCOND*/1)
 #define YY_SKIP_YYWRAP
+typedef flex_uint8_t YY_CHAR;
 
-typedef unsigned char YY_CHAR;
-
-FILE *asmshader_in = (FILE *) 0, *asmshader_out = (FILE *) 0;
+FILE *yyin = NULL, *yyout = NULL;
 
 typedef int yy_state_type;
 
-extern int asmshader_lineno;
+extern int yylineno;
+int yylineno = 1;
 
-int asmshader_lineno = 1;
+extern char *yytext;
+#ifdef yytext_ptr
+#undef yytext_ptr
+#endif
+#define yytext_ptr yytext
 
-extern char *asmshader_text;
-#define yytext_ptr asmshader_text
-
-static yy_state_type yy_get_previous_state (void );
-static yy_state_type yy_try_NUL_trans (yy_state_type current_state  );
-static int yy_get_next_buffer (void );
-static void yy_fatal_error (yyconst char msg[]  );
+static yy_state_type yy_get_previous_state ( void );
+static yy_state_type yy_try_NUL_trans ( yy_state_type current_state  );
+static int yy_get_next_buffer ( void );
+static void yynoreturn yy_fatal_error ( const char* msg  );
 
 /* Done after the current pattern has been matched and before the
- * corresponding action - sets up asmshader_text.
+ * corresponding action - sets up yytext.
  */
 #define YY_DO_BEFORE_ACTION \
 	(yytext_ptr) = yy_bp; \
-	asmshader_leng = (size_t) (yy_cp - yy_bp); \
+	yyleng = (int) (yy_cp - yy_bp); \
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-
 #define YY_NUM_RULES 174
 #define YY_END_OF_BUFFER 175
 /* This struct is not used in this scanner,
@@ -400,7 +623,7 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[481] =
+static const flex_int16_t yy_accept[481] =
     {   0,
         0,    0,  175,  173,  171,  172,  173,  149,  173,  141,
       142,  143,  139,  140,  119,  173,  136,  170,  173,  120,
@@ -456,7 +679,7 @@ static yyconst flex_int16_t yy_accept[481] =
         0,    0,  151,  158,   74,   71,  152,  151,  152,    0
     } ;
 
-static yyconst flex_int32_t yy_ec[256] =
+static const YY_CHAR yy_ec[256] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
         1,    1,    4,    1,    1,    1,    1,    1,    1,    1,
@@ -488,7 +711,7 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst flex_int32_t yy_meta[56] =
+static const YY_CHAR yy_meta[56] =
     {   0,
         1,    1,    2,    1,    1,    1,    1,    1,    1,    1,
         1,    3,    1,    4,    4,    4,    4,    4,    4,    4,
@@ -498,7 +721,7 @@ static yyconst flex_int32_t yy_meta[56] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst flex_int16_t yy_base[491] =
+static const flex_int16_t yy_base[491] =
     {   0,
         0,    0,  889,  890,  886,  890,  884,  890,  883,  890,
       890,  890,  890,   44,   51,  872,   45,    0,   67,   59,
@@ -555,7 +778,7 @@ static yyconst flex_int16_t yy_base[491] =
       635,  645,  649,  658,  666,  674,  682,  691,  699,  711
     } ;
 
-static yyconst flex_int16_t yy_def[491] =
+static const flex_int16_t yy_def[491] =
     {   0,
       480,    1,  480,  480,  480,  480,  480,  480,  481,  480,
       480,  480,  480,  480,  480,  480,  482,  483,  480,  480,
@@ -612,7 +835,7 @@ static yyconst flex_int16_t yy_def[491] =
       480,  480,  480,  480,  480,  480,  480,  480,  480,  480
     } ;
 
-static yyconst flex_int16_t yy_nxt[946] =
+static const flex_int16_t yy_nxt[946] =
     {   0,
         4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
        14,   15,   16,   17,   17,   17,   17,   17,   17,   17,
@@ -720,7 +943,7 @@ static yyconst flex_int16_t yy_nxt[946] =
       480,  480,  480,  480,  480
     } ;
 
-static yyconst flex_int16_t yy_chk[946] =
+static const flex_int16_t yy_chk[946] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -831,8 +1054,8 @@ static yyconst flex_int16_t yy_chk[946] =
 static yy_state_type yy_last_accepting_state;
 static char *yy_last_accepting_cpos;
 
-extern int asmshader__flex_debug;
-int asmshader__flex_debug = 0;
+extern int yy_flex_debug;
+int yy_flex_debug = 0;
 
 /* The intent behind this definition is that it'll catch
  * any uses of REJECT which flex missed.
@@ -841,7 +1064,7 @@ int asmshader__flex_debug = 0;
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-char *asmshader_text;
+char *yytext;
 #line 1 "asmshader.l"
 /*
  * Direct3D shader assembler
@@ -864,14 +1087,13 @@ char *asmshader_text;
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #line 23 "asmshader.l"
-#include "config.h"
-#include "wine/port.h"
 #include "wine/debug.h"
 
 #include "d3dcompiler_private.h"
 #include "asmshader.tab.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(asmshader);
+#line 1096 "asmshader.yy.c"
 #define YY_NO_INPUT 1
 /* Swizzles and writemasks consist of a dot and up to 4 x, y, z or w characters,
  * or up to 4 a, r, g, b characters. There are different rules for swizzles and
@@ -882,7 +1104,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(asmshader);
 /* Not really a register, but it is considered as such */
 /* Comments */
 /* Whitespaces are spaces, tabs and newlines */
-#line 886 "asmshader.yy.c"
+#line 1107 "asmshader.yy.c"
 
 #define INITIAL 0
 
@@ -893,41 +1115,41 @@ WINE_DEFAULT_DEBUG_CHANNEL(asmshader);
  */
 #include <unistd.h>
 #endif
-
+    
 #ifndef YY_EXTRA_TYPE
 #define YY_EXTRA_TYPE void *
 #endif
 
-static int yy_init_globals (void );
+static int yy_init_globals ( void );
 
 /* Accessor methods to globals.
    These are made visible to non-reentrant scanners for convenience. */
 
-int asmshader_lex_destroy (void );
+int yylex_destroy ( void );
 
-int asmshader_get_debug (void );
+int yyget_debug ( void );
 
-void asmshader_set_debug (int debug_flag  );
+void yyset_debug ( int debug_flag  );
 
-YY_EXTRA_TYPE asmshader_get_extra (void );
+YY_EXTRA_TYPE yyget_extra ( void );
 
-void asmshader_set_extra (YY_EXTRA_TYPE user_defined  );
+void yyset_extra ( YY_EXTRA_TYPE user_defined  );
 
-FILE *asmshader_get_in (void );
+FILE *yyget_in ( void );
 
-void asmshader_set_in  (FILE * in_str  );
+void yyset_in  ( FILE * _in_str  );
 
-FILE *asmshader_get_out (void );
+FILE *yyget_out ( void );
 
-void asmshader_set_out  (FILE * out_str  );
+void yyset_out  ( FILE * _out_str  );
 
-int asmshader_get_leng (void );
+			int yyget_leng ( void );
 
-char *asmshader_get_text (void );
+char *yyget_text ( void );
 
-int asmshader_get_lineno (void );
+int yyget_lineno ( void );
 
-void asmshader_set_lineno (int line_number  );
+void yyset_lineno ( int _line_number  );
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -935,26 +1157,29 @@ void asmshader_set_lineno (int line_number  );
 
 #ifndef YY_SKIP_YYWRAP
 #ifdef __cplusplus
-extern "C" int asmshader_wrap (void );
+extern "C" int yywrap ( void );
 #else
-extern int asmshader_wrap (void );
+extern int yywrap ( void );
 #endif
+#endif
+
+#ifndef YY_NO_UNPUT
+    
 #endif
 
 #ifndef yytext_ptr
-static void yy_flex_strncpy (char *,yyconst char *,int );
+static void yy_flex_strncpy ( char *, const char *, int );
 #endif
 
 #ifdef YY_NEED_STRLEN
-static int yy_flex_strlen (yyconst char * );
+static int yy_flex_strlen ( const char * );
 #endif
 
 #ifndef YY_NO_INPUT
-
 #ifdef __cplusplus
-static int yyinput (void );
+static int yyinput ( void );
 #else
-static int input (void );
+static int input ( void );
 #endif
 
 #endif
@@ -974,7 +1199,7 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO do { if (fwrite( asmshader_text, asmshader_leng, 1, asmshader_out )) {} } while (0)
+#define ECHO do { if (fwrite( yytext, (size_t) yyleng, 1, yyout )) {} } while (0)
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -985,20 +1210,20 @@ static int input (void );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		size_t n; \
+		int n; \
 		for ( n = 0; n < max_size && \
-			     (c = getc( asmshader_in )) != EOF && c != '\n'; ++n ) \
+			     (c = getc( yyin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
 		if ( c == '\n' ) \
 			buf[n++] = (char) c; \
-		if ( c == EOF && ferror( asmshader_in ) ) \
+		if ( c == EOF && ferror( yyin ) ) \
 			YY_FATAL_ERROR( "input in flex scanner failed" ); \
 		result = n; \
 		} \
 	else \
 		{ \
 		errno=0; \
-		while ( (result = fread(buf, 1, max_size, asmshader_in))==0 && ferror(asmshader_in)) \
+		while ( (result = (int) fread(buf, 1, (yy_size_t) max_size, yyin)) == 0 && ferror(yyin)) \
 			{ \
 			if( errno != EINTR) \
 				{ \
@@ -1006,7 +1231,7 @@ static int input (void );
 				break; \
 				} \
 			errno=0; \
-			clearerr(asmshader_in); \
+			clearerr(yyin); \
 			} \
 		}\
 \
@@ -1039,12 +1264,12 @@ static int input (void );
 #ifndef YY_DECL
 #define YY_DECL_IS_OURS 1
 
-extern int asmshader_lex (void);
+extern int yylex (void);
 
-#define YY_DECL int asmshader_lex (void)
+#define YY_DECL int yylex (void)
 #endif /* !YY_DECL */
 
-/* Code executed at the beginning of each rule, after asmshader_text and asmshader_leng
+/* Code executed at the beginning of each rule, after yytext and yyleng
  * have been set up.
  */
 #ifndef YY_USER_ACTION
@@ -1053,7 +1278,7 @@ extern int asmshader_lex (void);
 
 /* Code executed at the end of each rule. */
 #ifndef YY_BREAK
-#define YY_BREAK break;
+#define YY_BREAK /*LINTED*/break;
 #endif
 
 #define YY_RULE_SETUP \
@@ -1063,16 +1288,10 @@ extern int asmshader_lex (void);
  */
 YY_DECL
 {
-	register yy_state_type yy_current_state;
-	register char *yy_cp, *yy_bp;
-	register int yy_act;
+	yy_state_type yy_current_state;
+	char *yy_cp, *yy_bp;
+	int yy_act;
     
-#line 105 "asmshader.l"
-
-
-    /* Common instructions(vertex and pixel shaders) */
-#line 1075 "asmshader.yy.c"
-
 	if ( !(yy_init) )
 		{
 		(yy_init) = 1;
@@ -1084,26 +1303,34 @@ YY_DECL
 		if ( ! (yy_start) )
 			(yy_start) = 1;	/* first start state */
 
-		if ( ! asmshader_in )
-			asmshader_in = stdin;
+		if ( ! yyin )
+			yyin = stdin;
 
-		if ( ! asmshader_out )
-			asmshader_out = stdout;
+		if ( ! yyout )
+			yyout = stdout;
 
 		if ( ! YY_CURRENT_BUFFER ) {
-			asmshader_ensure_buffer_stack ();
+			yyensure_buffer_stack ();
 			YY_CURRENT_BUFFER_LVALUE =
-				asmshader__create_buffer(asmshader_in,YY_BUF_SIZE );
+				yy_create_buffer( yyin, YY_BUF_SIZE );
 		}
 
-		asmshader__load_buffer_state( );
+		yy_load_buffer_state(  );
 		}
 
-	while ( 1 )		/* loops until end-of-file is reached */
+	{
+#line 103 "asmshader.l"
+
+
+#line 106 "asmshader.l"
+    /* Common instructions(vertex and pixel shaders) */
+#line 1327 "asmshader.yy.c"
+
+	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
 		yy_cp = (yy_c_buf_p);
 
-		/* Support of asmshader_text. */
+		/* Support of yytext. */
 		*yy_cp = (yy_hold_char);
 
 		/* yy_bp points to the position in yy_ch_buf of the start of
@@ -1115,7 +1342,7 @@ YY_DECL
 yy_match:
 		do
 			{
-			register YY_CHAR yy_c = yy_ec[YY_SC_TO_UI(*yy_cp)];
+			YY_CHAR yy_c = yy_ec[YY_SC_TO_UI(*yy_cp)] ;
 			if ( yy_accept[yy_current_state] )
 				{
 				(yy_last_accepting_state) = yy_current_state;
@@ -1125,9 +1352,9 @@ yy_match:
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
 				if ( yy_current_state >= 481 )
-					yy_c = yy_meta[(unsigned int) yy_c];
+					yy_c = yy_meta[yy_c];
 				}
-			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
+			yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 			++yy_cp;
 			}
 		while ( yy_current_state != 480 );
@@ -1152,564 +1379,564 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 108 "asmshader.l"
+#line 107 "asmshader.l"
 {return INSTR_ADD;          }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 109 "asmshader.l"
+#line 108 "asmshader.l"
 {return INSTR_NOP;          }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 110 "asmshader.l"
+#line 109 "asmshader.l"
 {return INSTR_MOV;          }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 111 "asmshader.l"
+#line 110 "asmshader.l"
 {return INSTR_SUB;          }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 112 "asmshader.l"
+#line 111 "asmshader.l"
 {return INSTR_MAD;          }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 113 "asmshader.l"
+#line 112 "asmshader.l"
 {return INSTR_MUL;          }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 114 "asmshader.l"
+#line 113 "asmshader.l"
 {return INSTR_RCP;          }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 115 "asmshader.l"
+#line 114 "asmshader.l"
 {return INSTR_RSQ;          }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 116 "asmshader.l"
+#line 115 "asmshader.l"
 {return INSTR_DP3;          }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 117 "asmshader.l"
+#line 116 "asmshader.l"
 {return INSTR_DP4;          }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 118 "asmshader.l"
+#line 117 "asmshader.l"
 {return INSTR_MIN;          }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 119 "asmshader.l"
+#line 118 "asmshader.l"
 {return INSTR_MAX;          }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 120 "asmshader.l"
+#line 119 "asmshader.l"
 {return INSTR_SLT;          }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 121 "asmshader.l"
+#line 120 "asmshader.l"
 {return INSTR_SGE;          }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 122 "asmshader.l"
+#line 121 "asmshader.l"
 {return INSTR_ABS;          }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 123 "asmshader.l"
+#line 122 "asmshader.l"
 {return INSTR_EXP;          }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 124 "asmshader.l"
+#line 123 "asmshader.l"
 {return INSTR_LOG;          }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 125 "asmshader.l"
+#line 124 "asmshader.l"
 {return INSTR_EXPP;         }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 126 "asmshader.l"
+#line 125 "asmshader.l"
 {return INSTR_LOGP;         }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 127 "asmshader.l"
+#line 126 "asmshader.l"
 {return INSTR_DST;          }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 128 "asmshader.l"
+#line 127 "asmshader.l"
 {return INSTR_LRP;          }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 129 "asmshader.l"
+#line 128 "asmshader.l"
 {return INSTR_FRC;          }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 130 "asmshader.l"
+#line 129 "asmshader.l"
 {return INSTR_POW;          }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 131 "asmshader.l"
+#line 130 "asmshader.l"
 {return INSTR_CRS;          }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 132 "asmshader.l"
+#line 131 "asmshader.l"
 {return INSTR_SGN;          }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 133 "asmshader.l"
+#line 132 "asmshader.l"
 {return INSTR_NRM;          }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 134 "asmshader.l"
+#line 133 "asmshader.l"
 {return INSTR_SINCOS;       }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 135 "asmshader.l"
+#line 134 "asmshader.l"
 {return INSTR_M4x4;         }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 136 "asmshader.l"
+#line 135 "asmshader.l"
 {return INSTR_M4x3;         }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 137 "asmshader.l"
+#line 136 "asmshader.l"
 {return INSTR_M3x4;         }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 138 "asmshader.l"
+#line 137 "asmshader.l"
 {return INSTR_M3x3;         }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 139 "asmshader.l"
+#line 138 "asmshader.l"
 {return INSTR_M3x2;         }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 140 "asmshader.l"
+#line 139 "asmshader.l"
 {return INSTR_DCL;          }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 141 "asmshader.l"
+#line 140 "asmshader.l"
 {return INSTR_DEF;          }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 142 "asmshader.l"
+#line 141 "asmshader.l"
 {return INSTR_DEFB;         }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 143 "asmshader.l"
+#line 142 "asmshader.l"
 {return INSTR_DEFI;         }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 144 "asmshader.l"
+#line 143 "asmshader.l"
 {return INSTR_REP;          }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 145 "asmshader.l"
+#line 144 "asmshader.l"
 {return INSTR_ENDREP;       }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 146 "asmshader.l"
+#line 145 "asmshader.l"
 {return INSTR_IF;           }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 147 "asmshader.l"
+#line 146 "asmshader.l"
 {return INSTR_ELSE;         }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 148 "asmshader.l"
+#line 147 "asmshader.l"
 {return INSTR_ENDIF;        }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 149 "asmshader.l"
+#line 148 "asmshader.l"
 {return INSTR_BREAK;        }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 150 "asmshader.l"
+#line 149 "asmshader.l"
 {return INSTR_BREAKP;       }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 151 "asmshader.l"
+#line 150 "asmshader.l"
 {return INSTR_CALL;         }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 152 "asmshader.l"
+#line 151 "asmshader.l"
 {return INSTR_CALLNZ;       }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 153 "asmshader.l"
+#line 152 "asmshader.l"
 {return INSTR_LOOP;         }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 154 "asmshader.l"
+#line 153 "asmshader.l"
 {return INSTR_RET;          }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 155 "asmshader.l"
+#line 154 "asmshader.l"
 {return INSTR_ENDLOOP;      }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 156 "asmshader.l"
+#line 155 "asmshader.l"
 {return INSTR_LABEL;        }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 157 "asmshader.l"
+#line 156 "asmshader.l"
 {return INSTR_SETP;         }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 158 "asmshader.l"
+#line 157 "asmshader.l"
 {return INSTR_TEXLDL;       }
 	YY_BREAK
 /* Vertex shader only instructions  */
 case 52:
 YY_RULE_SETUP
-#line 161 "asmshader.l"
+#line 160 "asmshader.l"
 {return INSTR_LIT;          }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 162 "asmshader.l"
+#line 161 "asmshader.l"
 {return INSTR_MOVA;         }
 	YY_BREAK
 /* Pixel shader only instructions   */
 case 54:
 YY_RULE_SETUP
-#line 165 "asmshader.l"
+#line 164 "asmshader.l"
 {return INSTR_CND;          }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 166 "asmshader.l"
+#line 165 "asmshader.l"
 {return INSTR_CMP;          }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 167 "asmshader.l"
+#line 166 "asmshader.l"
 {return INSTR_DP2ADD;       }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 168 "asmshader.l"
+#line 167 "asmshader.l"
 {return INSTR_TEXCOORD;     }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 169 "asmshader.l"
+#line 168 "asmshader.l"
 {return INSTR_TEXCRD;       }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 170 "asmshader.l"
+#line 169 "asmshader.l"
 {return INSTR_TEXKILL;      }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 171 "asmshader.l"
+#line 170 "asmshader.l"
 {return INSTR_TEX;          }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 172 "asmshader.l"
+#line 171 "asmshader.l"
 {return INSTR_TEXLD;        }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 173 "asmshader.l"
+#line 172 "asmshader.l"
 {return INSTR_TEXBEM;       }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 174 "asmshader.l"
+#line 173 "asmshader.l"
 {return INSTR_TEXBEML;      }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 175 "asmshader.l"
+#line 174 "asmshader.l"
 {return INSTR_TEXREG2AR;    }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 176 "asmshader.l"
+#line 175 "asmshader.l"
 {return INSTR_TEXREG2GB;    }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 177 "asmshader.l"
+#line 176 "asmshader.l"
 {return INSTR_TEXREG2RGB;   }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 178 "asmshader.l"
+#line 177 "asmshader.l"
 {return INSTR_TEXM3x2PAD;   }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 179 "asmshader.l"
+#line 178 "asmshader.l"
 {return INSTR_TEXM3x2TEX;   }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 180 "asmshader.l"
+#line 179 "asmshader.l"
 {return INSTR_TEXM3x3PAD;   }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 181 "asmshader.l"
+#line 180 "asmshader.l"
 {return INSTR_TEXM3x3SPEC;  }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 182 "asmshader.l"
+#line 181 "asmshader.l"
 {return INSTR_TEXM3x3VSPEC; }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 183 "asmshader.l"
+#line 182 "asmshader.l"
 {return INSTR_TEXM3x3TEX;   }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 184 "asmshader.l"
+#line 183 "asmshader.l"
 {return INSTR_TEXDP3TEX;    }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 185 "asmshader.l"
+#line 184 "asmshader.l"
 {return INSTR_TEXM3x2DEPTH; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 186 "asmshader.l"
+#line 185 "asmshader.l"
 {return INSTR_TEXDP3;       }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 187 "asmshader.l"
+#line 186 "asmshader.l"
 {return INSTR_TEXM3x3;      }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 188 "asmshader.l"
+#line 187 "asmshader.l"
 {return INSTR_TEXDEPTH;     }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 189 "asmshader.l"
+#line 188 "asmshader.l"
 {return INSTR_BEM;          }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 190 "asmshader.l"
+#line 189 "asmshader.l"
 {return INSTR_DSX;          }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 191 "asmshader.l"
+#line 190 "asmshader.l"
 {return INSTR_DSY;          }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 192 "asmshader.l"
+#line 191 "asmshader.l"
 {return INSTR_TEXLDP;       }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 193 "asmshader.l"
+#line 192 "asmshader.l"
 {return INSTR_TEXLDB;       }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 194 "asmshader.l"
+#line 193 "asmshader.l"
 {return INSTR_TEXLDD;       }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 195 "asmshader.l"
+#line 194 "asmshader.l"
 {return INSTR_PHASE;        }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 197 "asmshader.l"
+#line 196 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 1);
+                            asmshader_lval.regnum = atoi(yytext + 1);
                             return REG_TEMP;
                         }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 201 "asmshader.l"
+#line 200 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 1);
+                            asmshader_lval.regnum = atoi(yytext + 1);
                             return REG_OUTPUT;
                         }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 205 "asmshader.l"
+#line 204 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 1);
+                            asmshader_lval.regnum = atoi(yytext + 1);
                             return REG_INPUT;
                         }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 209 "asmshader.l"
+#line 208 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 1);
+                            asmshader_lval.regnum = atoi(yytext + 1);
                             return REG_CONSTFLOAT;
                         }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 213 "asmshader.l"
+#line 212 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 1);
+                            asmshader_lval.regnum = atoi(yytext + 1);
                             return REG_CONSTINT;
                         }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 217 "asmshader.l"
+#line 216 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 1);
+                            asmshader_lval.regnum = atoi(yytext + 1);
                             return REG_CONSTBOOL;
                         }
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 221 "asmshader.l"
+#line 220 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 1);
+                            asmshader_lval.regnum = atoi(yytext + 1);
                             return REG_TEXTURE;
                         }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 225 "asmshader.l"
+#line 224 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 2);
+                            asmshader_lval.regnum = atoi(yytext + 2);
                             return REG_TEXCRDOUT;
                         }
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 229 "asmshader.l"
+#line 228 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 1);
+                            asmshader_lval.regnum = atoi(yytext + 1);
                             return REG_SAMPLER;
                         }
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 233 "asmshader.l"
+#line 232 "asmshader.l"
 {return REG_OPOS;           }
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 234 "asmshader.l"
+#line 233 "asmshader.l"
 {return REG_OFOG;           }
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 235 "asmshader.l"
+#line 234 "asmshader.l"
 {return REG_OPTS;           }
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 236 "asmshader.l"
+#line 235 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 2);
+                            asmshader_lval.regnum = atoi(yytext + 2);
                             return REG_VERTEXCOLOR;
                         }
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 240 "asmshader.l"
+#line 239 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 2);
+                            asmshader_lval.regnum = atoi(yytext + 2);
                             return REG_FRAGCOLOR;
                         }
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 244 "asmshader.l"
+#line 243 "asmshader.l"
 {return REG_FRAGDEPTH;      }
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 245 "asmshader.l"
+#line 244 "asmshader.l"
 {return REG_VPOS;           }
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 246 "asmshader.l"
+#line 245 "asmshader.l"
 {return REG_VFACE;          }
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 247 "asmshader.l"
+#line 246 "asmshader.l"
 {return REG_ADDRESS;        }
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 248 "asmshader.l"
+#line 247 "asmshader.l"
 {return REG_LOOP;           }
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 249 "asmshader.l"
+#line 248 "asmshader.l"
 {return REG_PREDICATE;      }
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 251 "asmshader.l"
+#line 250 "asmshader.l"
 {
-                            asmshader_lval.regnum = atoi(asmshader_text + 1);
+                            asmshader_lval.regnum = atoi(yytext + 1);
                             return REG_LABEL;
                         }
 	YY_BREAK
@@ -1718,79 +1945,79 @@ YY_RULE_SETUP
      */
 case 106:
 YY_RULE_SETUP
-#line 259 "asmshader.l"
+#line 258 "asmshader.l"
 {return VER_VS10;       }
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
-#line 260 "asmshader.l"
+#line 259 "asmshader.l"
 {return VER_VS11;       }
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
-#line 262 "asmshader.l"
+#line 261 "asmshader.l"
 {return VER_VS20;       }
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 263 "asmshader.l"
+#line 262 "asmshader.l"
 {return VER_VS2X;       }
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 264 "asmshader.l"
+#line 263 "asmshader.l"
 {return VER_VS30;       }
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 266 "asmshader.l"
+#line 265 "asmshader.l"
 {return VER_PS10;       }
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 267 "asmshader.l"
+#line 266 "asmshader.l"
 {return VER_PS11;       }
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 268 "asmshader.l"
+#line 267 "asmshader.l"
 {return VER_PS12;       }
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
-#line 269 "asmshader.l"
+#line 268 "asmshader.l"
 {return VER_PS13;       }
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
-#line 270 "asmshader.l"
+#line 269 "asmshader.l"
 {return VER_PS14;       }
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-#line 272 "asmshader.l"
+#line 271 "asmshader.l"
 {return VER_PS20;       }
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 273 "asmshader.l"
+#line 272 "asmshader.l"
 {return VER_PS2X;       }
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
-#line 274 "asmshader.l"
+#line 273 "asmshader.l"
 {return VER_PS30;       }
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
-#line 276 "asmshader.l"
-{return asmshader_text[0];      }
+#line 275 "asmshader.l"
+{return yytext[0];      }
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
-#line 277 "asmshader.l"
+#line 276 "asmshader.l"
 {
-                            switch(asmshader_text[0]) {
+                            switch(yytext[0]) {
                                 case 'x':
                                 case 'r':
                                     asmshader_lval.component = 0;
@@ -1814,92 +2041,92 @@ YY_RULE_SETUP
 /* Output modifiers */
 case 121:
 YY_RULE_SETUP
-#line 300 "asmshader.l"
+#line 299 "asmshader.l"
 {return SHIFT_X2;           }
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-#line 301 "asmshader.l"
+#line 300 "asmshader.l"
 {return SHIFT_X4;           }
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
-#line 302 "asmshader.l"
+#line 301 "asmshader.l"
 {return SHIFT_X8;           }
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 303 "asmshader.l"
+#line 302 "asmshader.l"
 {return SHIFT_D2;           }
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
-#line 304 "asmshader.l"
+#line 303 "asmshader.l"
 {return SHIFT_D4;           }
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 305 "asmshader.l"
+#line 304 "asmshader.l"
 {return SHIFT_D8;           }
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
-#line 306 "asmshader.l"
+#line 305 "asmshader.l"
 {return MOD_SAT;            }
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 307 "asmshader.l"
+#line 306 "asmshader.l"
 {return MOD_PP;             }
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
-#line 308 "asmshader.l"
+#line 307 "asmshader.l"
 {return MOD_CENTROID;       }
 	YY_BREAK
 /* compare params */
 case 130:
 YY_RULE_SETUP
-#line 311 "asmshader.l"
+#line 310 "asmshader.l"
 {return COMP_GT;            }
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
-#line 312 "asmshader.l"
+#line 311 "asmshader.l"
 {return COMP_LT;            }
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
-#line 313 "asmshader.l"
+#line 312 "asmshader.l"
 {return COMP_GE;            }
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
-#line 314 "asmshader.l"
+#line 313 "asmshader.l"
 {return COMP_LE;            }
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 315 "asmshader.l"
+#line 314 "asmshader.l"
 {return COMP_EQ;            }
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
-#line 316 "asmshader.l"
+#line 315 "asmshader.l"
 {return COMP_NE;            }
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
-#line 318 "asmshader.l"
+#line 317 "asmshader.l"
 {
-                            asmshader_lval.immval.val = atof(asmshader_text);
-                            asmshader_lval.immval.integer = ((strstr(asmshader_text, ".") == NULL) && (strstr(asmshader_text, "f") == NULL));
+                            asmshader_lval.immval.val = atof(yytext);
+                            asmshader_lval.immval.integer = ((strstr(yytext, ".") == NULL) && (strstr(yytext, "f") == NULL));
                             return IMMVAL;
                         }
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
-#line 323 "asmshader.l"
+#line 322 "asmshader.l"
 {
                             asmshader_lval.immbool = TRUE;
                             return IMMBOOL;
@@ -1907,7 +2134,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 138:
 YY_RULE_SETUP
-#line 327 "asmshader.l"
+#line 326 "asmshader.l"
 {
                             asmshader_lval.immbool = FALSE;
                             return IMMBOOL;
@@ -1915,296 +2142,296 @@ YY_RULE_SETUP
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
-#line 332 "asmshader.l"
-{return asmshader_text[0];          }
+#line 331 "asmshader.l"
+{return yytext[0];          }
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
-#line 333 "asmshader.l"
-{return asmshader_text[0];          }
+#line 332 "asmshader.l"
+{return yytext[0];          }
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
-#line 334 "asmshader.l"
-{return asmshader_text[0];          }
+#line 333 "asmshader.l"
+{return yytext[0];          }
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
-#line 335 "asmshader.l"
-{return asmshader_text[0];          }
+#line 334 "asmshader.l"
+{return yytext[0];          }
 	YY_BREAK
 /* for relative addressing */
 case 143:
 YY_RULE_SETUP
-#line 338 "asmshader.l"
-{return asmshader_text[0];          }
+#line 337 "asmshader.l"
+{return yytext[0];          }
 	YY_BREAK
 case 144:
 YY_RULE_SETUP
-#line 340 "asmshader.l"
+#line 339 "asmshader.l"
 {return SMOD_BIAS;          }
 	YY_BREAK
 /* No _x2 here; it is identical to MOD_X2 */
 case 145:
 YY_RULE_SETUP
-#line 342 "asmshader.l"
+#line 341 "asmshader.l"
 {return SMOD_SCALEBIAS;     }
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
-#line 343 "asmshader.l"
+#line 342 "asmshader.l"
 {return SMOD_DZ;            }
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
-#line 344 "asmshader.l"
+#line 343 "asmshader.l"
 {return SMOD_DW;            }
 	YY_BREAK
 case 148:
 YY_RULE_SETUP
-#line 345 "asmshader.l"
+#line 344 "asmshader.l"
 {return SMOD_ABS;           }
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
-#line 347 "asmshader.l"
+#line 346 "asmshader.l"
 {return SMOD_NOT;           }
 	YY_BREAK
 case 150:
 YY_RULE_SETUP
-#line 349 "asmshader.l"
+#line 348 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_position")] == '\0') {
+                            if(yytext[strlen("_position")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_position"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_position"));
                             }
                             return USAGE_POSITION;
                         }
 	YY_BREAK
 case 151:
 YY_RULE_SETUP
-#line 357 "asmshader.l"
+#line 356 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_blendweight")] == '\0') {
+                            if(yytext[strlen("_blendweight")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_blendweight"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_blendweight"));
                             }
                             return USAGE_BLENDWEIGHT;
                         }
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
-#line 365 "asmshader.l"
+#line 364 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_blendindices")] == '\0') {
+                            if(yytext[strlen("_blendindices")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_blendindices"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_blendindices"));
                             }
                             return USAGE_BLENDINDICES;
                         }
 	YY_BREAK
 case 153:
 YY_RULE_SETUP
-#line 373 "asmshader.l"
+#line 372 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_normal")] == '\0') {
+                            if(yytext[strlen("_normal")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_normal"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_normal"));
                             }
                             return USAGE_NORMAL;
                         }
 	YY_BREAK
 case 154:
 YY_RULE_SETUP
-#line 381 "asmshader.l"
+#line 380 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_psize")] == '\0') {
+                            if(yytext[strlen("_psize")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_psize"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_psize"));
                             }
                             return USAGE_PSIZE;
                         }
 	YY_BREAK
 case 155:
 YY_RULE_SETUP
-#line 389 "asmshader.l"
+#line 388 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_texcoord")] == '\0') {
+                            if(yytext[strlen("_texcoord")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_texcoord"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_texcoord"));
                             }
                             return USAGE_TEXCOORD;
                         }
 	YY_BREAK
 case 156:
 YY_RULE_SETUP
-#line 397 "asmshader.l"
+#line 396 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_tangent")] == '\0') {
+                            if(yytext[strlen("_tangent")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_tangent"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_tangent"));
                             }
                             return USAGE_TANGENT;
                         }
 	YY_BREAK
 case 157:
 YY_RULE_SETUP
-#line 405 "asmshader.l"
+#line 404 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_binormal")] == '\0') {
+                            if(yytext[strlen("_binormal")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_binormal"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_binormal"));
                             }
                             return USAGE_BINORMAL;
                         }
 	YY_BREAK
 case 158:
 YY_RULE_SETUP
-#line 413 "asmshader.l"
+#line 412 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_tessfactor")] == '\0') {
+                            if(yytext[strlen("_tessfactor")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_tessfactor"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_tessfactor"));
                             }
                             return USAGE_TESSFACTOR;
                         }
 	YY_BREAK
 case 159:
 YY_RULE_SETUP
-#line 421 "asmshader.l"
+#line 420 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_positiont")] == '\0') {
+                            if(yytext[strlen("_positiont")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_positiont"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_positiont"));
                             }
                             return USAGE_POSITIONT;
                         }
 	YY_BREAK
 case 160:
 YY_RULE_SETUP
-#line 429 "asmshader.l"
+#line 428 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_color")] == '\0') {
+                            if(yytext[strlen("_color")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_color"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_color"));
                             }
                             return USAGE_COLOR;
                         }
 	YY_BREAK
 case 161:
 YY_RULE_SETUP
-#line 437 "asmshader.l"
+#line 436 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_fog")] == '\0') {
+                            if(yytext[strlen("_fog")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_fog"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_fog"));
                             }
                             return USAGE_FOG;
                         }
 	YY_BREAK
 case 162:
 YY_RULE_SETUP
-#line 445 "asmshader.l"
+#line 444 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_depth")] == '\0') {
+                            if(yytext[strlen("_depth")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_depth"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_depth"));
                             }
                             return USAGE_DEPTH;
                         }
 	YY_BREAK
 case 163:
 YY_RULE_SETUP
-#line 453 "asmshader.l"
+#line 452 "asmshader.l"
 {
-                            if(asmshader_text[strlen("_sample")] == '\0') {
+                            if(yytext[strlen("_sample")] == '\0') {
                                 asmshader_lval.regnum = 0;
                             } else {
-                                asmshader_lval.regnum = atoi(asmshader_text + strlen("_sample"));
+                                asmshader_lval.regnum = atoi(yytext + strlen("_sample"));
                             }
                             return USAGE_SAMPLE;
                         }
 	YY_BREAK
 case 164:
 YY_RULE_SETUP
-#line 462 "asmshader.l"
+#line 461 "asmshader.l"
 { return SAMPTYPE_1D;       }
 	YY_BREAK
 case 165:
 YY_RULE_SETUP
-#line 463 "asmshader.l"
+#line 462 "asmshader.l"
 { return SAMPTYPE_2D;       }
 	YY_BREAK
 case 166:
 YY_RULE_SETUP
-#line 464 "asmshader.l"
+#line 463 "asmshader.l"
 { return SAMPTYPE_CUBE;     }
 	YY_BREAK
 case 167:
 YY_RULE_SETUP
-#line 465 "asmshader.l"
+#line 464 "asmshader.l"
 { return SAMPTYPE_VOLUME;   }
 	YY_BREAK
 case 168:
 /* rule 168 can match eol */
 YY_RULE_SETUP
-#line 467 "asmshader.l"
+#line 466 "asmshader.l"
 {
                             /* TODO: update current line information */
-                            TRACE("line info update: %s", asmshader_text);
+                            TRACE("line info update: %s", yytext);
                         }
 	YY_BREAK
 /* Skip comments */
 case 169:
 YY_RULE_SETUP
-#line 473 "asmshader.l"
+#line 472 "asmshader.l"
 {                           }
 	YY_BREAK
 case 170:
 YY_RULE_SETUP
-#line 474 "asmshader.l"
+#line 473 "asmshader.l"
 {                           }
 	YY_BREAK
 case 171:
 YY_RULE_SETUP
-#line 476 "asmshader.l"
+#line 475 "asmshader.l"
 { /* Do nothing */          }
 	YY_BREAK
 case 172:
 /* rule 172 can match eol */
 YY_RULE_SETUP
-#line 477 "asmshader.l"
+#line 476 "asmshader.l"
 {
                             asm_ctx.line_no++;
                         }
 	YY_BREAK
 case 173:
 YY_RULE_SETUP
-#line 481 "asmshader.l"
+#line 480 "asmshader.l"
 {
-                            asmparser_message(&asm_ctx, "Line %u: Unexpected input %s\n", asm_ctx.line_no, asmshader_text);
+                            asmparser_message(&asm_ctx, "Line %u: Unexpected input %s\n", asm_ctx.line_no, yytext);
                             set_parse_status(&asm_ctx.status, PARSE_ERR);
                         }
 	YY_BREAK
 case 174:
 YY_RULE_SETUP
-#line 486 "asmshader.l"
+#line 485 "asmshader.l"
 ECHO;
 	YY_BREAK
-#line 2208 "asmshader.yy.c"
+#line 2434 "asmshader.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2221,15 +2448,15 @@ case YY_STATE_EOF(INITIAL):
 			{
 			/* We're scanning a new file or input source.  It's
 			 * possible that this happened because the user
-			 * just pointed asmshader_in at a new source and called
-			 * asmshader_lex().  If so, then we have to assure
+			 * just pointed yyin at a new source and called
+			 * yylex().  If so, then we have to assure
 			 * consistency between YY_CURRENT_BUFFER and our
 			 * globals.  Here is the right place to do so, because
 			 * this is the first action (other than possibly a
 			 * back-up) that will match for the new input source.
 			 */
 			(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_n_chars;
-			YY_CURRENT_BUFFER_LVALUE->yy_input_file = asmshader_in;
+			YY_CURRENT_BUFFER_LVALUE->yy_input_file = yyin;
 			YY_CURRENT_BUFFER_LVALUE->yy_buffer_status = YY_BUFFER_NORMAL;
 			}
 
@@ -2283,11 +2510,11 @@ case YY_STATE_EOF(INITIAL):
 				{
 				(yy_did_buffer_switch_on_eof) = 0;
 
-				if ( asmshader_wrap( ) )
+				if ( yywrap(  ) )
 					{
 					/* Note: because we've taken care in
 					 * yy_get_next_buffer() to have set up
-					 * asmshader_text, we can now set up
+					 * yytext, we can now set up
 					 * yy_c_buf_p so that if some total
 					 * hoser (like flex itself) wants to
 					 * call the scanner after we return the
@@ -2336,7 +2563,8 @@ case YY_STATE_EOF(INITIAL):
 			"fatal flex scanner internal error--no action found" );
 	} /* end of action switch */
 		} /* end of scanning one token */
-} /* end of asmshader_lex */
+	} /* end of user's declarations */
+} /* end of yylex */
 
 /* yy_get_next_buffer - try to read in a new buffer
  *
@@ -2347,9 +2575,9 @@ case YY_STATE_EOF(INITIAL):
  */
 static int yy_get_next_buffer (void)
 {
-    	register char *dest = YY_CURRENT_BUFFER_LVALUE->yy_ch_buf;
-	register char *source = (yytext_ptr);
-	register int number_to_move, i;
+    	char *dest = YY_CURRENT_BUFFER_LVALUE->yy_ch_buf;
+	char *source = (yytext_ptr);
+	int number_to_move, i;
 	int ret_val;
 
 	if ( (yy_c_buf_p) > &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[(yy_n_chars) + 1] )
@@ -2378,7 +2606,7 @@ static int yy_get_next_buffer (void)
 	/* Try to read more data. */
 
 	/* First move last chars to start of buffer. */
-	number_to_move = (int) ((yy_c_buf_p) - (yytext_ptr)) - 1;
+	number_to_move = (int) ((yy_c_buf_p) - (yytext_ptr) - 1);
 
 	for ( i = 0; i < number_to_move; ++i )
 		*(dest++) = *(source++);
@@ -2398,7 +2626,7 @@ static int yy_get_next_buffer (void)
 			{ /* Not enough room in the buffer - grow it. */
 
 			/* just a shorter name for the current buffer */
-			YY_BUFFER_STATE b = YY_CURRENT_BUFFER;
+			YY_BUFFER_STATE b = YY_CURRENT_BUFFER_LVALUE;
 
 			int yy_c_buf_p_offset =
 				(int) ((yy_c_buf_p) - b->yy_ch_buf);
@@ -2414,11 +2642,12 @@ static int yy_get_next_buffer (void)
 
 				b->yy_ch_buf = (char *)
 					/* Include room in for 2 EOB chars. */
-					asmshader_realloc((void *) b->yy_ch_buf,b->yy_buf_size + 2  );
+					yyrealloc( (void *) b->yy_ch_buf,
+							 (yy_size_t) (b->yy_buf_size + 2)  );
 				}
 			else
 				/* Can't grow it, we don't own it. */
-				b->yy_ch_buf = 0;
+				b->yy_ch_buf = NULL;
 
 			if ( ! b->yy_ch_buf )
 				YY_FATAL_ERROR(
@@ -2436,7 +2665,7 @@ static int yy_get_next_buffer (void)
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), (size_t) num_to_read );
+			(yy_n_chars), num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -2446,7 +2675,7 @@ static int yy_get_next_buffer (void)
 		if ( number_to_move == YY_MORE_ADJ )
 			{
 			ret_val = EOB_ACT_END_OF_FILE;
-			asmshader_restart(asmshader_in  );
+			yyrestart( yyin  );
 			}
 
 		else
@@ -2460,12 +2689,15 @@ static int yy_get_next_buffer (void)
 	else
 		ret_val = EOB_ACT_CONTINUE_SCAN;
 
-	if ((yy_size_t) ((yy_n_chars) + number_to_move) > YY_CURRENT_BUFFER_LVALUE->yy_buf_size) {
+	if (((yy_n_chars) + number_to_move) > YY_CURRENT_BUFFER_LVALUE->yy_buf_size) {
 		/* Extend the array by 50%, plus the number we really need. */
-		yy_size_t new_size = (yy_n_chars) + number_to_move + ((yy_n_chars) >> 1);
-		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) asmshader_realloc((void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf,new_size  );
+		int new_size = (yy_n_chars) + number_to_move + ((yy_n_chars) >> 1);
+		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) yyrealloc(
+			(void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf, (yy_size_t) new_size  );
 		if ( ! YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
 			YY_FATAL_ERROR( "out of dynamic memory in yy_get_next_buffer()" );
+		/* "- 2" to take care of EOB's */
+		YY_CURRENT_BUFFER_LVALUE->yy_buf_size = (int) (new_size - 2);
 	}
 
 	(yy_n_chars) += number_to_move;
@@ -2481,14 +2713,14 @@ static int yy_get_next_buffer (void)
 
     static yy_state_type yy_get_previous_state (void)
 {
-	register yy_state_type yy_current_state;
-	register char *yy_cp;
+	yy_state_type yy_current_state;
+	char *yy_cp;
     
 	yy_current_state = (yy_start);
 
 	for ( yy_cp = (yytext_ptr) + YY_MORE_ADJ; yy_cp < (yy_c_buf_p); ++yy_cp )
 		{
-		register YY_CHAR yy_c = (*yy_cp ? yy_ec[YY_SC_TO_UI(*yy_cp)] : 1);
+		YY_CHAR yy_c = (*yy_cp ? yy_ec[YY_SC_TO_UI(*yy_cp)] : 1);
 		if ( yy_accept[yy_current_state] )
 			{
 			(yy_last_accepting_state) = yy_current_state;
@@ -2498,9 +2730,9 @@ static int yy_get_next_buffer (void)
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
 			if ( yy_current_state >= 481 )
-				yy_c = yy_meta[(unsigned int) yy_c];
+				yy_c = yy_meta[yy_c];
 			}
-		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
+		yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 		}
 
 	return yy_current_state;
@@ -2513,10 +2745,10 @@ static int yy_get_next_buffer (void)
  */
     static yy_state_type yy_try_NUL_trans  (yy_state_type yy_current_state )
 {
-	register int yy_is_jam;
-    	register char *yy_cp = (yy_c_buf_p);
+	int yy_is_jam;
+    	char *yy_cp = (yy_c_buf_p);
 
-	register YY_CHAR yy_c = 1;
+	YY_CHAR yy_c = 1;
 	if ( yy_accept[yy_current_state] )
 		{
 		(yy_last_accepting_state) = yy_current_state;
@@ -2526,13 +2758,17 @@ static int yy_get_next_buffer (void)
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
 		if ( yy_current_state >= 481 )
-			yy_c = yy_meta[(unsigned int) yy_c];
+			yy_c = yy_meta[yy_c];
 		}
-	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
+	yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 	yy_is_jam = (yy_current_state == 480);
 
-	return yy_is_jam ? 0 : yy_current_state;
+		return yy_is_jam ? 0 : yy_current_state;
 }
+
+#ifndef YY_NO_UNPUT
+
+#endif
 
 #ifndef YY_NO_INPUT
 #ifdef __cplusplus
@@ -2558,7 +2794,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			int offset = (yy_c_buf_p) - (yytext_ptr);
+			int offset = (int) ((yy_c_buf_p) - (yytext_ptr));
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -2575,14 +2811,14 @@ static int yy_get_next_buffer (void)
 					 */
 
 					/* Reset buffer status. */
-					asmshader_restart(asmshader_in );
+					yyrestart( yyin );
 
 					/*FALLTHROUGH*/
 
 				case EOB_ACT_END_OF_FILE:
 					{
-					if ( asmshader_wrap( ) )
-						return EOF;
+					if ( yywrap(  ) )
+						return 0;
 
 					if ( ! (yy_did_buffer_switch_on_eof) )
 						YY_NEW_FILE;
@@ -2601,7 +2837,7 @@ static int yy_get_next_buffer (void)
 		}
 
 	c = *(unsigned char *) (yy_c_buf_p);	/* cast for 8-bit char's */
-	*(yy_c_buf_p) = '\0';	/* preserve asmshader_text */
+	*(yy_c_buf_p) = '\0';	/* preserve yytext */
 	(yy_hold_char) = *++(yy_c_buf_p);
 
 	return c;
@@ -2613,32 +2849,32 @@ static int yy_get_next_buffer (void)
  * 
  * @note This function does not reset the start condition to @c INITIAL .
  */
-    void asmshader_restart  (FILE * input_file )
+    void yyrestart  (FILE * input_file )
 {
     
 	if ( ! YY_CURRENT_BUFFER ){
-        asmshader_ensure_buffer_stack ();
+        yyensure_buffer_stack ();
 		YY_CURRENT_BUFFER_LVALUE =
-            asmshader__create_buffer(asmshader_in,YY_BUF_SIZE );
+            yy_create_buffer( yyin, YY_BUF_SIZE );
 	}
 
-	asmshader__init_buffer(YY_CURRENT_BUFFER,input_file );
-	asmshader__load_buffer_state( );
+	yy_init_buffer( YY_CURRENT_BUFFER, input_file );
+	yy_load_buffer_state(  );
 }
 
 /** Switch to a different input buffer.
  * @param new_buffer The new input buffer.
  * 
  */
-    void asmshader__switch_to_buffer  (YY_BUFFER_STATE  new_buffer )
+    void yy_switch_to_buffer  (YY_BUFFER_STATE  new_buffer )
 {
     
 	/* TODO. We should be able to replace this entire function body
 	 * with
-	 *		asmshader_pop_buffer_state();
-	 *		asmshader_push_buffer_state(new_buffer);
+	 *		yypop_buffer_state();
+	 *		yypush_buffer_state(new_buffer);
      */
-	asmshader_ensure_buffer_stack ();
+	yyensure_buffer_stack ();
 	if ( YY_CURRENT_BUFFER == new_buffer )
 		return;
 
@@ -2651,21 +2887,21 @@ static int yy_get_next_buffer (void)
 		}
 
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
-	asmshader__load_buffer_state( );
+	yy_load_buffer_state(  );
 
 	/* We don't actually know whether we did this switch during
-	 * EOF (asmshader_wrap()) processing, but the only time this flag
-	 * is looked at is after asmshader_wrap() is called, so it's safe
+	 * EOF (yywrap()) processing, but the only time this flag
+	 * is looked at is after yywrap() is called, so it's safe
 	 * to go ahead and always set it.
 	 */
 	(yy_did_buffer_switch_on_eof) = 1;
 }
 
-static void asmshader__load_buffer_state  (void)
+static void yy_load_buffer_state  (void)
 {
     	(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_n_chars;
 	(yytext_ptr) = (yy_c_buf_p) = YY_CURRENT_BUFFER_LVALUE->yy_buf_pos;
-	asmshader_in = YY_CURRENT_BUFFER_LVALUE->yy_input_file;
+	yyin = YY_CURRENT_BUFFER_LVALUE->yy_input_file;
 	(yy_hold_char) = *(yy_c_buf_p);
 }
 
@@ -2675,35 +2911,35 @@ static void asmshader__load_buffer_state  (void)
  * 
  * @return the allocated buffer state.
  */
-    YY_BUFFER_STATE asmshader__create_buffer  (FILE * file, int  size )
+    YY_BUFFER_STATE yy_create_buffer  (FILE * file, int  size )
 {
 	YY_BUFFER_STATE b;
     
-	b = (YY_BUFFER_STATE) asmshader_alloc(sizeof( struct yy_buffer_state )  );
+	b = (YY_BUFFER_STATE) yyalloc( sizeof( struct yy_buffer_state )  );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in asmshader__create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
 
 	b->yy_buf_size = size;
 
 	/* yy_ch_buf has to be 2 characters longer than the size given because
 	 * we need to put in 2 end-of-buffer characters.
 	 */
-	b->yy_ch_buf = (char *) asmshader_alloc(b->yy_buf_size + 2  );
+	b->yy_ch_buf = (char *) yyalloc( (yy_size_t) (b->yy_buf_size + 2)  );
 	if ( ! b->yy_ch_buf )
-		YY_FATAL_ERROR( "out of dynamic memory in asmshader__create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
 
 	b->yy_is_our_buffer = 1;
 
-	asmshader__init_buffer(b,file );
+	yy_init_buffer( b, file );
 
 	return b;
 }
 
 /** Destroy the buffer.
- * @param b a buffer created with asmshader__create_buffer()
+ * @param b a buffer created with yy_create_buffer()
  * 
  */
-    void asmshader__delete_buffer (YY_BUFFER_STATE  b )
+    void yy_delete_buffer (YY_BUFFER_STATE  b )
 {
     
 	if ( ! b )
@@ -2713,27 +2949,27 @@ static void asmshader__load_buffer_state  (void)
 		YY_CURRENT_BUFFER_LVALUE = (YY_BUFFER_STATE) 0;
 
 	if ( b->yy_is_our_buffer )
-		asmshader_free((void *) b->yy_ch_buf  );
+		yyfree( (void *) b->yy_ch_buf  );
 
-	asmshader_free((void *) b  );
+	yyfree( (void *) b  );
 }
 
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
- * such as during a asmshader_restart() or at EOF.
+ * such as during a yyrestart() or at EOF.
  */
-    static void asmshader__init_buffer  (YY_BUFFER_STATE  b, FILE * file )
+    static void yy_init_buffer  (YY_BUFFER_STATE  b, FILE * file )
 
 {
 	int oerrno = errno;
     
-	asmshader__flush_buffer(b );
+	yy_flush_buffer( b );
 
 	b->yy_input_file = file;
 	b->yy_fill_buffer = 1;
 
-    /* If b is the current buffer, then asmshader__init_buffer was _probably_
-     * called from asmshader_restart() or through yy_get_next_buffer.
+    /* If b is the current buffer, then yy_init_buffer was _probably_
+     * called from yyrestart() or through yy_get_next_buffer.
      * In that case, we don't want to reset the lineno or column.
      */
     if (b != YY_CURRENT_BUFFER){
@@ -2750,7 +2986,7 @@ static void asmshader__load_buffer_state  (void)
  * @param b the buffer state to be flushed, usually @c YY_CURRENT_BUFFER.
  * 
  */
-    void asmshader__flush_buffer (YY_BUFFER_STATE  b )
+    void yy_flush_buffer (YY_BUFFER_STATE  b )
 {
     	if ( ! b )
 		return;
@@ -2770,7 +3006,7 @@ static void asmshader__load_buffer_state  (void)
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
 	if ( b == YY_CURRENT_BUFFER )
-		asmshader__load_buffer_state( );
+		yy_load_buffer_state(  );
 }
 
 /** Pushes the new state onto the stack. The new state becomes
@@ -2779,14 +3015,14 @@ static void asmshader__load_buffer_state  (void)
  *  @param new_buffer The new state.
  *  
  */
-void asmshader_push_buffer_state (YY_BUFFER_STATE new_buffer )
+void yypush_buffer_state (YY_BUFFER_STATE new_buffer )
 {
     	if (new_buffer == NULL)
 		return;
 
-	asmshader_ensure_buffer_stack();
+	yyensure_buffer_stack();
 
-	/* This block is copied from asmshader__switch_to_buffer. */
+	/* This block is copied from yy_switch_to_buffer. */
 	if ( YY_CURRENT_BUFFER )
 		{
 		/* Flush out information for old buffer. */
@@ -2800,8 +3036,8 @@ void asmshader_push_buffer_state (YY_BUFFER_STATE new_buffer )
 		(yy_buffer_stack_top)++;
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
 
-	/* copied from asmshader__switch_to_buffer. */
-	asmshader__load_buffer_state( );
+	/* copied from yy_switch_to_buffer. */
+	yy_load_buffer_state(  );
 	(yy_did_buffer_switch_on_eof) = 1;
 }
 
@@ -2809,18 +3045,18 @@ void asmshader_push_buffer_state (YY_BUFFER_STATE new_buffer )
  *  The next element becomes the new top.
  *  
  */
-void asmshader_pop_buffer_state (void)
+void yypop_buffer_state (void)
 {
     	if (!YY_CURRENT_BUFFER)
 		return;
 
-	asmshader__delete_buffer(YY_CURRENT_BUFFER );
+	yy_delete_buffer(YY_CURRENT_BUFFER );
 	YY_CURRENT_BUFFER_LVALUE = NULL;
 	if ((yy_buffer_stack_top) > 0)
 		--(yy_buffer_stack_top);
 
 	if (YY_CURRENT_BUFFER) {
-		asmshader__load_buffer_state( );
+		yy_load_buffer_state(  );
 		(yy_did_buffer_switch_on_eof) = 1;
 	}
 }
@@ -2828,9 +3064,9 @@ void asmshader_pop_buffer_state (void)
 /* Allocates the stack if it does not exist.
  *  Guarantees space for at least one push.
  */
-static void asmshader_ensure_buffer_stack (void)
+static void yyensure_buffer_stack (void)
 {
-	int num_to_alloc;
+	yy_size_t num_to_alloc;
     
 	if (!(yy_buffer_stack)) {
 
@@ -2838,15 +3074,15 @@ static void asmshader_ensure_buffer_stack (void)
 		 * scanner will even need a stack. We use 2 instead of 1 to avoid an
 		 * immediate realloc on the next call.
          */
-		num_to_alloc = 1;
-		(yy_buffer_stack) = (struct yy_buffer_state**)asmshader_alloc
+      num_to_alloc = 1; /* After all that talk, this was set to 1 anyways... */
+		(yy_buffer_stack) = (struct yy_buffer_state**)yyalloc
 								(num_to_alloc * sizeof(struct yy_buffer_state*)
 								);
 		if ( ! (yy_buffer_stack) )
-			YY_FATAL_ERROR( "out of dynamic memory in asmshader_ensure_buffer_stack()" );
-								  
+			YY_FATAL_ERROR( "out of dynamic memory in yyensure_buffer_stack()" );
+
 		memset((yy_buffer_stack), 0, num_to_alloc * sizeof(struct yy_buffer_state*));
-				
+
 		(yy_buffer_stack_max) = num_to_alloc;
 		(yy_buffer_stack_top) = 0;
 		return;
@@ -2855,15 +3091,15 @@ static void asmshader_ensure_buffer_stack (void)
 	if ((yy_buffer_stack_top) >= ((yy_buffer_stack_max)) - 1){
 
 		/* Increase the buffer to prepare for a possible push. */
-		int grow_size = 8 /* arbitrary grow size */;
+		yy_size_t grow_size = 8 /* arbitrary grow size */;
 
 		num_to_alloc = (yy_buffer_stack_max) + grow_size;
-		(yy_buffer_stack) = (struct yy_buffer_state**)asmshader_realloc
+		(yy_buffer_stack) = (struct yy_buffer_state**)yyrealloc
 								((yy_buffer_stack),
 								num_to_alloc * sizeof(struct yy_buffer_state*)
 								);
 		if ( ! (yy_buffer_stack) )
-			YY_FATAL_ERROR( "out of dynamic memory in asmshader_ensure_buffer_stack()" );
+			YY_FATAL_ERROR( "out of dynamic memory in yyensure_buffer_stack()" );
 
 		/* zero only the new slots.*/
 		memset((yy_buffer_stack) + (yy_buffer_stack_max), 0, grow_size * sizeof(struct yy_buffer_state*));
@@ -2875,9 +3111,9 @@ static void asmshader_ensure_buffer_stack (void)
  * @param base the character buffer
  * @param size the size in bytes of the character buffer
  * 
- * @return the newly allocated buffer state object. 
+ * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE asmshader__scan_buffer  (char * base, yy_size_t  size )
+YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
 {
 	YY_BUFFER_STATE b;
     
@@ -2885,49 +3121,49 @@ YY_BUFFER_STATE asmshader__scan_buffer  (char * base, yy_size_t  size )
 	     base[size-2] != YY_END_OF_BUFFER_CHAR ||
 	     base[size-1] != YY_END_OF_BUFFER_CHAR )
 		/* They forgot to leave room for the EOB's. */
-		return 0;
+		return NULL;
 
-	b = (YY_BUFFER_STATE) asmshader_alloc(sizeof( struct yy_buffer_state )  );
+	b = (YY_BUFFER_STATE) yyalloc( sizeof( struct yy_buffer_state )  );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in asmshader__scan_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_buffer()" );
 
-	b->yy_buf_size = size - 2;	/* "- 2" to take care of EOB's */
+	b->yy_buf_size = (int) (size - 2);	/* "- 2" to take care of EOB's */
 	b->yy_buf_pos = b->yy_ch_buf = base;
 	b->yy_is_our_buffer = 0;
-	b->yy_input_file = 0;
+	b->yy_input_file = NULL;
 	b->yy_n_chars = b->yy_buf_size;
 	b->yy_is_interactive = 0;
 	b->yy_at_bol = 1;
 	b->yy_fill_buffer = 0;
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
-	asmshader__switch_to_buffer(b  );
+	yy_switch_to_buffer( b  );
 
 	return b;
 }
 
-/** Setup the input buffer state to scan a string. The next call to asmshader_lex() will
+/** Setup the input buffer state to scan a string. The next call to yylex() will
  * scan from a @e copy of @a str.
  * @param yystr a NUL-terminated string to scan
  * 
  * @return the newly allocated buffer state object.
  * @note If you want to scan bytes that may contain NUL values, then use
- *       asmshader__scan_bytes() instead.
+ *       yy_scan_bytes() instead.
  */
-YY_BUFFER_STATE asmshader__scan_string (yyconst char * yystr )
+YY_BUFFER_STATE yy_scan_string (const char * yystr )
 {
     
-	return asmshader__scan_bytes(yystr,strlen(yystr) );
+	return yy_scan_bytes( yystr, (int) strlen(yystr) );
 }
 
-/** Setup the input buffer state to scan the given bytes. The next call to asmshader_lex() will
+/** Setup the input buffer state to scan the given bytes. The next call to yylex() will
  * scan from a @e copy of @a bytes.
  * @param yybytes the byte buffer to scan
  * @param _yybytes_len the number of bytes in the buffer pointed to by @a bytes.
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE asmshader__scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
+YY_BUFFER_STATE yy_scan_bytes  (const char * yybytes, int  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
@@ -2935,19 +3171,19 @@ YY_BUFFER_STATE asmshader__scan_bytes  (yyconst char * yybytes, int  _yybytes_le
 	int i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
-	n = _yybytes_len + 2;
-	buf = (char *) asmshader_alloc(n  );
+	n = (yy_size_t) (_yybytes_len + 2);
+	buf = (char *) yyalloc( n  );
 	if ( ! buf )
-		YY_FATAL_ERROR( "out of dynamic memory in asmshader__scan_bytes()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_bytes()" );
 
 	for ( i = 0; i < _yybytes_len; ++i )
 		buf[i] = yybytes[i];
 
 	buf[_yybytes_len] = buf[_yybytes_len+1] = YY_END_OF_BUFFER_CHAR;
 
-	b = asmshader__scan_buffer(buf,n );
+	b = yy_scan_buffer( buf, n );
 	if ( ! b )
-		YY_FATAL_ERROR( "bad buffer in asmshader__scan_bytes()" );
+		YY_FATAL_ERROR( "bad buffer in yy_scan_bytes()" );
 
 	/* It's okay to grow etc. this buffer, and we should throw it
 	 * away when we're done.
@@ -2961,9 +3197,9 @@ YY_BUFFER_STATE asmshader__scan_bytes  (yyconst char * yybytes, int  _yybytes_le
 #define YY_EXIT_FAILURE 2
 #endif
 
-static void yy_fatal_error (yyconst char* msg )
+static void yynoreturn yy_fatal_error (const char* msg )
 {
-    	(void) fprintf( stderr, "%s\n", msg );
+			fprintf( stderr, "%s\n", msg );
 	exit( YY_EXIT_FAILURE );
 }
 
@@ -2973,14 +3209,14 @@ static void yy_fatal_error (yyconst char* msg )
 #define yyless(n) \
 	do \
 		{ \
-		/* Undo effects of setting up asmshader_text. */ \
+		/* Undo effects of setting up yytext. */ \
         int yyless_macro_arg = (n); \
         YY_LESS_LINENO(yyless_macro_arg);\
-		asmshader_text[asmshader_leng] = (yy_hold_char); \
-		(yy_c_buf_p) = asmshader_text + yyless_macro_arg; \
+		yytext[yyleng] = (yy_hold_char); \
+		(yy_c_buf_p) = yytext + yyless_macro_arg; \
 		(yy_hold_char) = *(yy_c_buf_p); \
 		*(yy_c_buf_p) = '\0'; \
-		asmshader_leng = yyless_macro_arg; \
+		yyleng = yyless_macro_arg; \
 		} \
 	while ( 0 )
 
@@ -2989,126 +3225,126 @@ static void yy_fatal_error (yyconst char* msg )
 /** Get the current line number.
  * 
  */
-int asmshader_get_lineno  (void)
+int yyget_lineno  (void)
 {
-        
-    return asmshader_lineno;
+    
+    return yylineno;
 }
 
 /** Get the input stream.
  * 
  */
-FILE *asmshader_get_in  (void)
+FILE *yyget_in  (void)
 {
-        return asmshader_in;
+        return yyin;
 }
 
 /** Get the output stream.
  * 
  */
-FILE *asmshader_get_out  (void)
+FILE *yyget_out  (void)
 {
-        return asmshader_out;
+        return yyout;
 }
 
 /** Get the length of the current token.
  * 
  */
-int asmshader_get_leng  (void)
+int yyget_leng  (void)
 {
-        return asmshader_leng;
+        return yyleng;
 }
 
 /** Get the current token.
  * 
  */
 
-char *asmshader_get_text  (void)
+char *yyget_text  (void)
 {
-        return asmshader_text;
+        return yytext;
 }
 
 /** Set the current line number.
- * @param line_number
+ * @param _line_number line number
  * 
  */
-void asmshader_set_lineno (int  line_number )
+void yyset_lineno (int  _line_number )
 {
     
-    asmshader_lineno = line_number;
+    yylineno = _line_number;
 }
 
 /** Set the input stream. This does not discard the current
  * input buffer.
- * @param in_str A readable stream.
+ * @param _in_str A readable stream.
  * 
- * @see asmshader__switch_to_buffer
+ * @see yy_switch_to_buffer
  */
-void asmshader_set_in (FILE *  in_str )
+void yyset_in (FILE *  _in_str )
 {
-        asmshader_in = in_str ;
+        yyin = _in_str ;
 }
 
-void asmshader_set_out (FILE *  out_str )
+void yyset_out (FILE *  _out_str )
 {
-        asmshader_out = out_str ;
+        yyout = _out_str ;
 }
 
-int asmshader_get_debug  (void)
+int yyget_debug  (void)
 {
-        return asmshader__flex_debug;
+        return yy_flex_debug;
 }
 
-void asmshader_set_debug (int  bdebug )
+void yyset_debug (int  _bdebug )
 {
-        asmshader__flex_debug = bdebug ;
+        yy_flex_debug = _bdebug ;
 }
 
 static int yy_init_globals (void)
 {
         /* Initialization is the same as for the non-reentrant scanner.
-     * This function is called from asmshader_lex_destroy(), so don't allocate here.
+     * This function is called from yylex_destroy(), so don't allocate here.
      */
 
-    (yy_buffer_stack) = 0;
+    (yy_buffer_stack) = NULL;
     (yy_buffer_stack_top) = 0;
     (yy_buffer_stack_max) = 0;
-    (yy_c_buf_p) = (char *) 0;
+    (yy_c_buf_p) = NULL;
     (yy_init) = 0;
     (yy_start) = 0;
 
 /* Defined in main.c */
 #ifdef YY_STDINIT
-    asmshader_in = stdin;
-    asmshader_out = stdout;
+    yyin = stdin;
+    yyout = stdout;
 #else
-    asmshader_in = (FILE *) 0;
-    asmshader_out = (FILE *) 0;
+    yyin = NULL;
+    yyout = NULL;
 #endif
 
     /* For future reference: Set errno on error, since we are called by
-     * asmshader_lex_init()
+     * yylex_init()
      */
     return 0;
 }
 
-/* asmshader_lex_destroy is for both reentrant and non-reentrant scanners. */
-int asmshader_lex_destroy  (void)
+/* yylex_destroy is for both reentrant and non-reentrant scanners. */
+int yylex_destroy  (void)
 {
     
     /* Pop the buffer stack, destroying each element. */
 	while(YY_CURRENT_BUFFER){
-		asmshader__delete_buffer(YY_CURRENT_BUFFER  );
+		yy_delete_buffer( YY_CURRENT_BUFFER  );
 		YY_CURRENT_BUFFER_LVALUE = NULL;
-		asmshader_pop_buffer_state();
+		yypop_buffer_state();
 	}
 
 	/* Destroy the stack itself. */
-	asmshader_free((yy_buffer_stack) );
+	yyfree((yy_buffer_stack) );
 	(yy_buffer_stack) = NULL;
 
     /* Reset the globals. This is important in a non-reentrant scanner so the next time
-     * asmshader_lex() is called, initialization will occur. */
+     * yylex() is called, initialization will occur. */
     yy_init_globals( );
 
     return 0;
@@ -3119,18 +3355,19 @@ int asmshader_lex_destroy  (void)
  */
 
 #ifndef yytext_ptr
-static void yy_flex_strncpy (char* s1, yyconst char * s2, int n )
+static void yy_flex_strncpy (char* s1, const char * s2, int n )
 {
-	register int i;
+		
+	int i;
 	for ( i = 0; i < n; ++i )
 		s1[i] = s2[i];
 }
 #endif
 
 #ifdef YY_NEED_STRLEN
-static int yy_flex_strlen (yyconst char * s )
+static int yy_flex_strlen (const char * s )
 {
-	register int n;
+	int n;
 	for ( n = 0; s[n]; ++n )
 		;
 
@@ -3138,13 +3375,14 @@ static int yy_flex_strlen (yyconst char * s )
 }
 #endif
 
-void *asmshader_alloc (yy_size_t  size )
+void *yyalloc (yy_size_t  size )
 {
-	return (void *) malloc( size );
+			return malloc(size);
 }
 
-void *asmshader_realloc  (void * ptr, yy_size_t  size )
+void *yyrealloc  (void * ptr, yy_size_t  size )
 {
+		
 	/* The cast to (char *) in the following accommodates both
 	 * implementations that use char* generic pointers, and those
 	 * that use void* generic pointers.  It works with the latter
@@ -3152,18 +3390,17 @@ void *asmshader_realloc  (void * ptr, yy_size_t  size )
 	 * any pointer type to void*, and deal with argument conversions
 	 * as though doing an assignment.
 	 */
-	return (void *) realloc( (char *) ptr, size );
+	return realloc(ptr, size);
 }
 
-void asmshader_free (void * ptr )
+void yyfree (void * ptr )
 {
-	free( (char *) ptr );	/* see asmshader_realloc() for (char *) cast */
+			free( (char *) ptr );	/* see yyrealloc() for (char *) cast */
 }
 
 #define YYTABLES_NAME "yytables"
 
-#line 486 "asmshader.l"
-
+#line 485 "asmshader.l"
 
 
 struct bwriter_shader *SlAssembleShader(const char *text, char **messages) {

@@ -223,8 +223,8 @@
 @ stub SetupAddSectionToDiskSpaceListW
 @ stdcall SetupAddToDiskSpaceListA(long str int64 long ptr long)
 @ stdcall SetupAddToDiskSpaceListW(long wstr int64 long ptr long)
-@ stub SetupAddToSourceListA
-@ stub SetupAddToSourceListW
+@ stdcall SetupAddToSourceListA(long str)
+@ stdcall SetupAddToSourceListW(long wstr)
 @ stub SetupAdjustDiskSpaceListA
 @ stub SetupAdjustDiskSpaceListW
 @ stub SetupBackupErrorA
@@ -502,8 +502,8 @@
 @ stub SetupRemoveFileLogEntryW
 @ stub SetupRemoveFromDiskSpaceListA
 @ stub SetupRemoveFromDiskSpaceListW
-@ stub SetupRemoveFromSourceListA
-@ stub SetupRemoveFromSourceListW
+@ stdcall -stub SetupRemoveFromSourceListA(long str)
+@ stdcall -stub SetupRemoveFromSourceListW(long wstr)
 @ stub SetupRemoveInstallSectionFromDiskSpaceListA
 @ stub SetupRemoveInstallSectionFromDiskSpaceListW
 @ stub SetupRemoveSectionFromDiskSpaceListA

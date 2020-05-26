@@ -13,13 +13,16 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
 NTAPI
-KdpMoveMemory(IN PVOID Destination,
-              IN PVOID Source,
-              IN SIZE_T Length)
+KdpMoveMemory(
+    _In_ PVOID Destination,
+    _In_ PVOID Source,
+    _In_ SIZE_T Length)
 {
     PCHAR DestinationBytes, SourceBytes;
 
@@ -31,8 +34,9 @@ KdpMoveMemory(IN PVOID Destination,
 
 VOID
 NTAPI
-KdpZeroMemory(IN PVOID Destination,
-              IN SIZE_T Length)
+KdpZeroMemory(
+    _In_ PVOID Destination,
+    _In_ SIZE_T Length)
 {
     PCHAR DestinationBytes;
 
@@ -43,12 +47,13 @@ KdpZeroMemory(IN PVOID Destination,
 
 NTSTATUS
 NTAPI
-KdpCopyMemoryChunks(IN ULONG64 Address,
-                    IN PVOID Buffer,
-                    IN ULONG TotalSize,
-                    IN ULONG ChunkSize,
-                    IN ULONG Flags,
-                    OUT PULONG ActualSize OPTIONAL)
+KdpCopyMemoryChunks(
+    _In_ ULONG64 Address,
+    _In_ PVOID Buffer,
+    _In_ ULONG TotalSize,
+    _In_ ULONG ChunkSize,
+    _In_ ULONG Flags,
+    _Out_opt_ PULONG ActualSize)
 {
     NTSTATUS Status;
     ULONG RemainingLength, CopyChunk;
@@ -84,8 +89,8 @@ KdpCopyMemoryChunks(IN ULONG64 Address,
         }
 
         /*
-         * The chunk size can be larger than the remaining size if this isn't
-         * the first round, so check if we need to shrink it back
+         * The chunk size can be larger than the remaining size if this
+         * isn't the first round, so check if we need to shrink it back.
          */
         while (CopyChunk > RemainingLength)
         {
@@ -94,10 +99,7 @@ KdpCopyMemoryChunks(IN ULONG64 Address,
         }
 
         /* Do the copy */
-        Status = MmDbgCopyMemory(Address,
-                                 Buffer,
-                                 CopyChunk,
-                                 Flags);
+        Status = MmDbgCopyMemory(Address, Buffer, CopyChunk, Flags);
         if (!NT_SUCCESS(Status))
         {
             /* Copy failed, break out */
@@ -110,18 +112,18 @@ KdpCopyMemoryChunks(IN ULONG64 Address,
         RemainingLength = RemainingLength - CopyChunk;
     }
 
-    /*
-     * We may have modified executable code, flush the instruction cache
-     */
-     KeSweepICache((PVOID)(ULONG_PTR)Address, TotalSize);
+    /* We may have modified executable code, flush the instruction cache */
+    KeSweepICache((PVOID)(ULONG_PTR)Address, TotalSize);
 
     /*
-     * Return the size we managed to copy
-     * and return success if we could copy the whole range
+     * Return the size we managed to copy and return
+     * success if we could copy the whole range.
      */
     if (ActualSize) *ActualSize = TotalSize - RemainingLength;
     return RemainingLength == 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
+
+#ifdef _WINKD_
 
 VOID
 NTAPI
@@ -529,7 +531,7 @@ KdpWriteVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
-KdpReadPhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
+KdpReadPhysicalMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                       IN PSTRING Data,
                       IN PCONTEXT Context)
 {
@@ -592,7 +594,7 @@ KdpReadPhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
-KdpWritePhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
+KdpWritePhysicalMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                        IN PSTRING Data,
                        IN PCONTEXT Context)
 {
@@ -1201,12 +1203,12 @@ KdpWriteIoSpaceExtended(IN PDBGKD_MANIPULATE_STATE64 State,
 
     /* Call the internal routine */
     State->ReturnStatus = KdpSysWriteIoSpace(WriteIoExtended->InterfaceType,
-                                            WriteIoExtended->BusNumber,
-                                            WriteIoExtended->AddressSpace,
-                                            WriteIoExtended->IoAddress,
-                                            &WriteIoExtended->DataValue,
-                                            WriteIoExtended->DataSize,
-                                            &WriteIoExtended->DataSize);
+                                             WriteIoExtended->BusNumber,
+                                             WriteIoExtended->AddressSpace,
+                                             WriteIoExtended->IoAddress,
+                                             &WriteIoExtended->DataValue,
+                                             WriteIoExtended->DataSize,
+                                             &WriteIoExtended->DataSize);
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -1275,7 +1277,7 @@ KdpSendWaitContinue(IN ULONG PacketType,
 
     /*
      * Reset the context state to ensure the debugger has received
-     * the current context before it sets it
+     * the current context before it sets it.
      */
     KdpContextSent = FALSE;
 
@@ -1395,13 +1397,13 @@ SendPacket:
             case DbgKdReadPhysicalMemoryApi:
 
                 /* Read  physical memory */
-                KdpReadPhysicalmemory(&ManipulateState, &Data, Context);
+                KdpReadPhysicalMemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdWritePhysicalMemoryApi:
 
                 /* Write  physical memory */
-                KdpWritePhysicalmemory(&ManipulateState, &Data, Context);
+                KdpWritePhysicalMemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdQuerySpecialCallsApi:
@@ -1545,7 +1547,7 @@ SendPacket:
                 break;
 
             case DbgKdGetContextExApi:
-            
+
                 /* Extended Context Get */
                 KdpGetContextEx(&ManipulateState, &Data, Context);
                 break;
@@ -2120,7 +2122,11 @@ KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
     return STATUS_SUCCESS;
 }
 
+#endif // _WINKD_
+
 /* PUBLIC FUNCTIONS **********************************************************/
+
+#ifdef _WINKD_
 
 /*
  * @implemented
@@ -2149,24 +2155,50 @@ KdDisableDebugger(VOID)
  */
 NTSTATUS
 NTAPI
-KdSystemDebugControl(IN SYSDBG_COMMAND Command,
-                     IN PVOID InputBuffer,
-                     IN ULONG InputBufferLength,
-                     OUT PVOID OutputBuffer,
-                     IN ULONG OutputBufferLength,
-                     IN OUT PULONG ReturnLength,
-                     IN KPROCESSOR_MODE PreviousMode)
+KdSystemDebugControl(
+    _In_ SYSDBG_COMMAND Command,
+    _In_ PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_ PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _Inout_ PULONG ReturnLength,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
-    /* handle sime internal commands */
-    if (Command == ' soR')
+    /* Handle some internal commands */
+    switch ((ULONG)Command)
     {
-        switch ((ULONG_PTR)InputBuffer)
+#if DBG
+        case ' soR': /* ROS-INTERNAL */
         {
-            case 0x24:
-                MmDumpArmPfnDatabase(FALSE);
-                break;
+            switch ((ULONG_PTR)InputBuffer)
+            {
+                case 0x21: // DumpAllThreads:
+                    PspDumpThreads(TRUE);
+                    break;
+
+                case 0x22: // DumpUserThreads:
+                    PspDumpThreads(FALSE);
+                    break;
+
+                case 0x24: // KdSpare3:
+                    MmDumpArmPfnDatabase(FALSE);
+                    break;
+
+                default:
+                    break;
+            }
+            return STATUS_SUCCESS;
         }
-        return STATUS_SUCCESS;
+
+        /* Special case for stack frame dumps */
+        case 'DsoR':
+        {
+            KeRosDumpStackFrames((PULONG_PTR)InputBuffer, InputBufferLength);
+            break;
+        }
+#endif
+        default:
+            break;
     }
 
     /* Local kernel debugging is not yet supported */
@@ -2271,7 +2303,7 @@ KdRefreshDebuggerNotPresent(VOID)
     /* Check if the debugger is completely disabled */
     if (KdPitchDebugger)
     {
-        /* Don't try to refresh then -- fail early */
+        /* Don't try to refresh then, fail early */
         return TRUE;
     }
 
@@ -2279,8 +2311,8 @@ KdRefreshDebuggerNotPresent(VOID)
     Enable = KdEnterDebugger(NULL, NULL);
 
     /*
-     * Attempt to send a string to the debugger to refresh the
-     * connection state
+     * Attempt to send a string to the debugger
+     * to refresh the connection state.
      */
     KdpDprintf("KDTARGET: Refreshing KD connection\n");
 
@@ -2292,13 +2324,16 @@ KdRefreshDebuggerNotPresent(VOID)
     return DebuggerNotPresent;
 }
 
+#endif // _WINKD_
+
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-NtQueryDebugFilterState(IN ULONG ComponentId,
-                        IN ULONG Level)
+NtQueryDebugFilterState(
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level)
 {
     PULONG Mask;
 
@@ -2311,23 +2346,29 @@ NtQueryDebugFilterState(IN ULONG ComponentId,
     else if (ComponentId == MAXULONG)
     {
         /*
-         * This is the internal ID used for DbgPrint messages without ID and
-         * Level. Use the system-wide mask for those.
+         * This is the internal ID used for DbgPrint messages without ID
+         * and Level. Use the system-wide mask for those.
          */
         Mask = &Kd_WIN2000_Mask;
     }
     else
     {
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        /* Use the default component ID */
+        Mask = &Kd_DEFAULT_Mask;
+        // Level = DPFLTR_INFO_LEVEL; // Override the Level.
+#else
         /* Invalid ID, fail */
         return STATUS_INVALID_PARAMETER_1;
+#endif
     }
 
-    /* Convert Level to bit field if necessary */
+    /* Convert Level to bit field if required */
     if (Level < 32) Level = 1 << Level;
+    Level &= ~DPFLTR_MASK;
 
     /* Determine if this Level is filtered out */
-    if ((Kd_WIN2000_Mask & Level) ||
-        (*Mask & Level))
+    if ((Kd_WIN2000_Mask & Level) || (*Mask & Level))
     {
         /* This mask will get through to the debugger */
         return (NTSTATUS)TRUE;
@@ -2344,15 +2385,15 @@ NtQueryDebugFilterState(IN ULONG ComponentId,
  */
 NTSTATUS
 NTAPI
-NtSetDebugFilterState(IN ULONG ComponentId,
-                      IN ULONG Level,
-                      IN BOOLEAN State)
+NtSetDebugFilterState(
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level,
+    _In_ BOOLEAN State)
 {
     PULONG Mask;
 
     /* Modifying debug filters requires the debug privilege */
-    if (!SeSinglePrivilegeCheck(SeDebugPrivilege,
-                                ExGetPreviousMode()))
+    if (!SeSinglePrivilegeCheck(SeDebugPrivilege, ExGetPreviousMode()))
     {
         /* Fail */
         return STATUS_ACCESS_DENIED;
@@ -2367,32 +2408,31 @@ NtSetDebugFilterState(IN ULONG ComponentId,
     else if (ComponentId == MAXULONG)
     {
         /*
-         * This is the internal ID used for DbgPrint messages without ID and
-         * Level. Use the system-wide mask for those.
+         * This is the internal ID used for DbgPrint messages without ID
+         * and Level. Use the system-wide mask for those.
          */
         Mask = &Kd_WIN2000_Mask;
     }
     else
     {
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        /* Use the default component ID */
+        Mask = &Kd_DEFAULT_Mask;
+#else
         /* Invalid ID, fail */
         return STATUS_INVALID_PARAMETER_1;
+#endif
     }
 
     /* Convert Level to bit field if required */
     if (Level < 32) Level = 1 << Level;
+    Level &= ~DPFLTR_MASK;
 
-    /* Check what kind of operation this is */
+    /* Set or remove the Level */
     if (State)
-    {
-        /* Set the Level */
         *Mask |= Level;
-    }
     else
-    {
-        /* Remove the Level */
         *Mask &= ~Level;
-    }
 
-    /* Success */
     return STATUS_SUCCESS;
 }

@@ -52,6 +52,11 @@ VersionLieInfo g_Win7SP1 = { 0x1db10106, 6, 1, 7601, VER_PLATFORM_WIN32_NT, 1, 0
 VersionLieInfo g_Win8RTM = { 0x23f00206, 6, 2, 9200, VER_PLATFORM_WIN32_NT, 0, 0 };
 VersionLieInfo g_Win81RTM = { 0x25800306, 6, 3, 9600, VER_PLATFORM_WIN32_NT, 0, 0 };
 
+VersionLieInfo g_Win10RTM = { 0x47ba000a, 10, 0, 18362, VER_PLATFORM_WIN32_NT, 0, 0 };
+
+VersionLieInfo g_Win2k16RTM = { 0x3fab000a, 10, 0, 16299, VER_PLATFORM_WIN32_NT, 0, 0 };
+VersionLieInfo g_Win2k19RTM = { 0x4563000a, 10, 0, 17763, VER_PLATFORM_WIN32_NT, 0, 0 };
+
 /* Fill the OSVERSIONINFO[EX][W|A] struct with the info from the generic VersionLieInfo */
 
 BOOL FakeVersion(LPOSVERSIONINFOEXA pResult, VersionLieInfo* pFake)
@@ -171,6 +176,7 @@ BOOL WINAPI SHIM_OBJ_NAME(APIHook_GetVersionExW)(LPOSVERSIONINFOEXA lpOsVersionI
 #define VERSION_INFO    g_WinNT4SP5
 #include "versionlie.inl"
 
+
 #define SHIM_NS         Win2000VersionLie
 #define VERSION_INFO    g_Win2000
 #include "versionlie.inl"
@@ -235,6 +241,7 @@ BOOL WINAPI SHIM_OBJ_NAME(APIHook_GetVersionExW)(LPOSVERSIONINFOEXA lpOsVersionI
 #define VERSION_INFO    g_Win7SP1
 #include "versionlie.inl"
 
+
 #define SHIM_NS         Win8RTMVersionLie
 #define VERSION_INFO    g_Win8RTM
 #include "versionlie.inl"
@@ -244,3 +251,16 @@ BOOL WINAPI SHIM_OBJ_NAME(APIHook_GetVersionExW)(LPOSVERSIONINFOEXA lpOsVersionI
 #include "versionlie.inl"
 
 
+#define SHIM_NS         Win10RTMVersionLie
+#define VERSION_INFO    g_Win10RTM
+#include "versionlie.inl"
+
+
+#define SHIM_NS         Win2k16RTMVersionLie
+#define VERSION_INFO    g_Win2k16RTM
+#include "versionlie.inl"
+
+
+#define SHIM_NS         Win2k19RTMVersionLie
+#define VERSION_INFO    g_Win2k19RTM
+#include "versionlie.inl"

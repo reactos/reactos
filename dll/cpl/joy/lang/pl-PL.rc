@@ -89,4 +89,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Dodaje, usuwa i konfiguruje Kontrolery gier, takie jak joysticki, pady czy kierownice."
     IDS_CONTROLLER "Kontroler"
     IDS_STATUS "Stan"
+    IDS_NONE "(None)"
 END

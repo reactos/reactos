@@ -33,14 +33,14 @@ BEGIN
     IDS_USAGE
     "\nSPOSÓB UŻYCIA:\n \
         ipconfig [/? | /all | /renew [karta] | /release [karta] |\n \
-                  /flushdns | /displaydns | /registerdns \n \
+                  /flushdns | /displaydns | /registerdns\n \
                   /showclassid karta |\n \
                   /setclassid karta [identyfikator_klasy] ]\n \
-    \n \
+\n \
     gdzie\n \
         karta           Nazwa połączenia\n \
                         (dozwolone symbole zastępcze * i ?, zobacz przykłady)\n \
-    \n \
+\n \
          Opcje:\n \
            /?           Wyświetla ten komunikat pomocy.\n \
            /all         Wyświetla pełne informacje o konfiguracji.\n \
@@ -51,17 +51,17 @@ BEGIN
            /displaydns  Wyświetla zawartość buforu programu rozpoznającego nazwy DNS.\n \
            /showclassid Wyświetla wszystkie identyfikatory klas DHCP dozwolone dla karty.\n \
            /setclassid  Modyfikuje identyfikator klasy DHCP.\n \
-    \n \
+\n \
     Zachowanie domyślne to wyświetlanie tylko adresu IP, maski podsieci i bramy\n \
     domyślnej dla każdej karty związanej z protokołem TCP/IP.\n \
-    \n \
+\n \
     Jeśli dla parametrów Release i Renew nie zostanie określona nazwa karty,\n \
     zwolnieniu lub odnowieniu ulegają dzierżawy adresów IP dla wszystkich kart\n \
     związanych z protokołem TCP/IP.\n \
-    \n \
+\n \
     Jeśli dla parametru Setclassid nie zostanie określony\n \
     identyfikator_klasy, to identyfikator_klasy jest usuwany.\n \
-    \n \
+\n \
     Przykłady:\n \
         > ipconfig                   ... Pokazuje informacje.\n \
         > ipconfig /all              ... Pokazuje szczegółowe informacje.\n \

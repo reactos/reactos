@@ -2791,7 +2791,7 @@ WCacheRelease__(
         MyFreePool__(Cache->FrameList);
     if(Cache->CachedBlocksList)
         MyFreePool__(Cache->CachedBlocksList);
-    if(Cache->CachedBlocksList)
+    if(Cache->CachedModifiedBlocksList)
         MyFreePool__(Cache->CachedModifiedBlocksList);
     if(Cache->CachedFramesList)
         MyFreePool__(Cache->CachedFramesList);

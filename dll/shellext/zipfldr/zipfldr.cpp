@@ -31,6 +31,7 @@ public:
 BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_ZipFolderStorageHandler, CZipFolder)
     OBJECT_ENTRY(CLSID_ZipFolderContextMenu, CZipFolder)
+    OBJECT_ENTRY(CLSID_ZipFolderSendTo, CSendToZip)
 END_OBJECT_MAP()
 
 CZipFldrModule gModule;
@@ -44,6 +45,45 @@ zlib_filefunc64_def g_FFunc;
 static void init_zlib()
 {
     fill_win32_filefunc64W(&g_FFunc);
+}
+
+static BOOL
+CreateEmptyFile(LPCWSTR pszFile)
+{
+    HANDLE hFile;
+    hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(hFile);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static HRESULT
+CreateSendToZip(LPCWSTR pszSendTo)
+{
+    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
+
+    LoadStringW(g_hModule, IDS_FRIENDLYNAME, szTarget, _countof(szTarget));
+
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
+    PathAppendW(szSendToFile, szTarget);
+    StringCbCatW(szSendToFile, sizeof(szSendToFile), L".ZFSendToTarget");
+    if (!CreateEmptyFile(szSendToFile))
+    {
+        DPRINT1("CreateEmptyFile('%ls')\n", szSendToFile);
+        return E_FAIL;
+    }
+    return S_OK;
+}
+
+static HRESULT
+GetDefaultUserSendTo(LPWSTR pszPath)
+{
+    return SHGetFolderPathW(NULL, CSIDL_SENDTO, INVALID_HANDLE_VALUE,
+                            SHGFP_TYPE_DEFAULT, pszPath);
 }
 
 EXTERN_C
@@ -85,6 +125,11 @@ STDAPI DllRegisterServer()
     hr = gModule.UpdateRegistryFromResource(IDR_ZIPFLDR, TRUE, NULL);
     if (FAILED(hr))
         return hr;
+
+    WCHAR szSendTo[MAX_PATH];
+    hr = GetDefaultUserSendTo(szSendTo);
+    if (SUCCEEDED(hr))
+        CreateSendToZip(szSendTo);
 
     return S_OK;
 }

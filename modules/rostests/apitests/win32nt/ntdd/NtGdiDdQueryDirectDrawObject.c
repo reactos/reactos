@@ -196,7 +196,7 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
         // pHalInfo->vmiData->dwAlphaAlign
 
         /* the primary display address */
-        RTEST( ( (DWORD)pHalInfo->vmiData.pvPrimary & (~0x80000000)) != 0 );
+        RTEST( ( (DWORD_PTR)pHalInfo->vmiData.pvPrimary & (~0x80000000)) != 0 );
 
         /* test see if we got back the pvmList here
          * acording msdn vmiData.dwNumHeaps and vmiData.pvmList
@@ -231,8 +231,8 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
         if (pHalInfo->dwFlags != 0)
         {
             RTEST( (pHalInfo->dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0 );
-            RTEST( ( (DWORD)pHalInfo->GetDriverInfo & 0x80000000) != 0 );
-            ASSERT( ((DWORD)pHalInfo->GetDriverInfo & 0x80000000) != 0 );
+            RTEST( ( (DWORD_PTR)pHalInfo->GetDriverInfo & 0x80000000) != 0 );
+            ASSERT( ((DWORD_PTR)pHalInfo->GetDriverInfo & 0x80000000) != 0 );
         }
 
         /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
@@ -244,9 +244,9 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
         *
         * point to kmode direcly to the win32k.sys, win32k.sys is kmode and it is kmode address we getting back
         */
-        RTEST( ( (DWORD)pHalInfo->lpD3DGlobalDriverData & (~0x80000000)) != 0 );
-        RTEST( ( (DWORD)pHalInfo->lpD3DHALCallbacks & (~0x80000000)) != 0 );
-        RTEST( ( (DWORD)pHalInfo->lpD3DHALCallbacks & (~0x80000000)) != 0 );
+        RTEST( ( (DWORD_PTR)pHalInfo->lpD3DGlobalDriverData & (~0x80000000)) != 0 );
+        RTEST( ( (DWORD_PTR)pHalInfo->lpD3DHALCallbacks & (~0x80000000)) != 0 );
+        RTEST( ( (DWORD_PTR)pHalInfo->lpD3DHALCallbacks & (~0x80000000)) != 0 );
     }
 
     /* Backup DD_HALINFO so we do not need resting it */
@@ -504,7 +504,7 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     if (puD3dBufferCallbacks->dwFlags & DDHAL_D3DBUFCB32_CANCREATED3DBUF)
     {
         /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
-        RTEST( ( (DWORD)puD3dBufferCallbacks->CanCreateD3DBuffer & (~0x80000000)) != 0 );
+        RTEST( ( (DWORD_PTR)puD3dBufferCallbacks->CanCreateD3DBuffer & (~0x80000000)) != 0 );
     }
     else
     {
@@ -514,7 +514,7 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     if (puD3dBufferCallbacks->dwFlags & DDHAL_D3DBUFCB32_CREATED3DBUF)
     {
         /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
-        RTEST( ( (DWORD)puD3dBufferCallbacks->CreateD3DBuffer & (~0x80000000)) != 0 );
+        RTEST( ( (DWORD_PTR)puD3dBufferCallbacks->CreateD3DBuffer & (~0x80000000)) != 0 );
     }
     else
     {
@@ -524,7 +524,7 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     if (puD3dBufferCallbacks->dwFlags & DDHAL_D3DBUFCB32_DESTROYD3DBUF)
     {
         /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
-        RTEST( ( (DWORD)puD3dBufferCallbacks->DestroyD3DBuffer & (~0x80000000)) != 0 );
+        RTEST( ( (DWORD_PTR)puD3dBufferCallbacks->DestroyD3DBuffer & (~0x80000000)) != 0 );
     }
     else
     {
@@ -534,7 +534,7 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     if (puD3dBufferCallbacks->dwFlags & DDHAL_D3DBUFCB32_LOCKD3DBUF)
     {
         /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
-        RTEST( ( (DWORD)puD3dBufferCallbacks->LockD3DBuffer & (~0x80000000)) != 0 );
+        RTEST( ( (DWORD_PTR)puD3dBufferCallbacks->LockD3DBuffer & (~0x80000000)) != 0 );
     }
     else
     {
@@ -544,7 +544,7 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     if (puD3dBufferCallbacks->dwFlags & DDHAL_D3DBUFCB32_UNLOCKD3DBUF)
     {
         /* point to kmode direcly to the graphic drv, the drv is kmode and it is kmode address we getting back*/
-        RTEST( ( (DWORD)puD3dBufferCallbacks->UnlockD3DBuffer & (~0x80000000)) != 0 );
+        RTEST( ( (DWORD_PTR)puD3dBufferCallbacks->UnlockD3DBuffer & (~0x80000000)) != 0 );
     }
     else
     {
@@ -653,7 +653,7 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
             }
             RTEST(myDesc->ddsCaps.dwCaps == DDSCAPS_TEXTURE);
 
-            myDesc = (DDSURFACEDESC *) (((DWORD) myDesc) + sizeof(DDSURFACEDESC));
+            myDesc = (DDSURFACEDESC *) (((DWORD_PTR) myDesc) + sizeof(DDSURFACEDESC));
         }
     }
 

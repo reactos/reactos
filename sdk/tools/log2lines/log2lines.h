@@ -5,7 +5,6 @@
 #include <rsym.h>
 
 #include "config.h"
-#include "revision.h"
 #include "stat.h"
 #include "list.h"
 
@@ -24,7 +23,6 @@ struct lineinfo_struct
 typedef struct lineinfo_struct LINEINFO;
 
 extern SUMM summ;
-extern REVINFO revinfo;
 extern LIST cache;
 extern FILE *logFile;
 extern LINEINFO lastLine;

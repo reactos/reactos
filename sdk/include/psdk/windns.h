@@ -741,7 +741,7 @@ DnsQuery_A(
   _In_ PCSTR pszName,
   _In_ WORD wType,
   _In_ DWORD Options,
-  _Inout_opt_ PIP4_ARRAY pExtra,
+  _Inout_opt_ PVOID pExtra,
   _Outptr_result_maybenull_ PDNS_RECORD *ppQueryResults,
   _Outptr_opt_result_maybenull_ PVOID *pReserved);
 
@@ -751,7 +751,7 @@ DnsQuery_W(
   _In_ PCWSTR pszName,
   _In_ WORD wType,
   _In_ DWORD Options,
-  _Inout_opt_ PIP4_ARRAY pExtra,
+  _Inout_opt_ PVOID pExtra,
   _Outptr_result_maybenull_ PDNS_RECORD *ppQueryResults,
   _Outptr_opt_result_maybenull_ PVOID *pReserved);
 
@@ -761,7 +761,7 @@ DnsQuery_UTF8(
   _In_ PCSTR pszName,
   _In_ WORD wType,
   _In_ DWORD Options,
-  _Inout_opt_ PIP4_ARRAY pExtra,
+  _Inout_opt_ PVOID pExtra,
   _Outptr_result_maybenull_ PDNS_RECORD *ppQueryResults,
   _Outptr_opt_result_maybenull_ PVOID *pReserved);
 

@@ -177,7 +177,8 @@ static bool_t check_for_files()
     }
     else
     {
-        StringCchCopyA(config_path, ARRAYSIZE(config_path), "C:\\ReactOS\\system32\\drivers\\etc\\netconfig");
+        eprintf("GetSystemDirectoryA failed with error %ld\n", GetLastError());
+        return FALSE;
     }
 
     fd = fopen(config_path, "r");

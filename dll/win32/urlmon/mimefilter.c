@@ -548,12 +548,12 @@ static BOOL is_known_mime_type(const WCHAR *mime)
     unsigned i;
 
     for(i=0; i < ARRAY_SIZE(mime_filters_any_pos); i++) {
-        if(!strcmpW(mime, mime_filters_any_pos[i].mime))
+        if(!wcscmp(mime, mime_filters_any_pos[i].mime))
             return TRUE;
     }
 
     for(i=0; i < ARRAY_SIZE(mime_filters); i++) {
-        if(!strcmpW(mime, mime_filters[i].mime))
+        if(!wcscmp(mime, mime_filters[i].mime))
             return TRUE;
     }
 
@@ -569,7 +569,7 @@ static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *p
         if(!proposed_mime)
             return E_FAIL;
 
-        len = strlenW(proposed_mime)+1;
+        len = lstrlenW(proposed_mime)+1;
         *ret_mime = CoTaskMemAlloc(len*sizeof(WCHAR));
         if(!*ret_mime)
             return E_OUTOFMEMORY;
@@ -578,15 +578,15 @@ static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *p
         return S_OK;
     }
 
-    if(proposed_mime && (!strcmpW(proposed_mime, app_octetstreamW)
-                || !strcmpW(proposed_mime, text_plainW)))
+    if(proposed_mime && (!wcscmp(proposed_mime, app_octetstreamW)
+                || !wcscmp(proposed_mime, text_plainW)))
         proposed_mime = NULL;
 
     if(proposed_mime) {
         ret = proposed_mime;
 
         for(i=0; i < ARRAY_SIZE(mime_filters_any_pos); i++) {
-            if(!strcmpW(proposed_mime, mime_filters_any_pos[i].mime)) {
+            if(!wcscmp(proposed_mime, mime_filters_any_pos[i].mime)) {
                 any_pos_mime = i;
                 for(len=size; len>0; len--) {
                     if(mime_filters_any_pos[i].filter(buf+size-len, len))
@@ -600,7 +600,7 @@ static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *p
 
         if(i == ARRAY_SIZE(mime_filters_any_pos)) {
             for(i=0; i < ARRAY_SIZE(mime_filters); i++) {
-                if(!strcmpW(proposed_mime, mime_filters[i].mime)) {
+                if(!wcscmp(proposed_mime, mime_filters[i].mime)) {
                     if(!mime_filters[i].filter(buf, size))
                         ret = NULL;
                     break;
@@ -663,7 +663,7 @@ static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *p
 
     TRACE("found %s for %s\n", debugstr_w(ret), debugstr_an((const char*)buf, min(32, size)));
 
-    len = strlenW(ret)+1;
+    len = lstrlenW(ret)+1;
     *ret_mime = CoTaskMemAlloc(len*sizeof(WCHAR));
     if(!*ret_mime)
         return E_OUTOFMEMORY;

@@ -18,9 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,7 +33,6 @@
 
 #include "rpcproxy.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 #include "cpsf.h"
@@ -49,7 +45,7 @@ static void format_clsid( WCHAR *buffer, const CLSID *clsid )
                                     '%','0','2','X','%','0','2','X','-','%','0','2','X','%','0','2','X',
                                     '%','0','2','X','%','0','2','X','%','0','2','X','%','0','2','X','}',0};
 
-    sprintfW( buffer, clsid_formatW, clsid->Data1, clsid->Data2, clsid->Data3,
+    swprintf( buffer, clsid_formatW, clsid->Data1, clsid->Data2, clsid->Data3,
               clsid->Data4[0], clsid->Data4[1], clsid->Data4[2], clsid->Data4[3],
               clsid->Data4[4], clsid->Data4[5], clsid->Data4[6], clsid->Data4[7] );
 
@@ -261,14 +257,14 @@ HRESULT WINAPI NdrDllRegisterProxy(HMODULE hDll,
       TRACE("registering %s %s => %s\n",
             debugstr_a(name), debugstr_guid(proxy->header.piid), debugstr_w(clsid));
 
-      strcpyW( keyname, interfaceW );
-      format_clsid( keyname + strlenW(keyname), proxy->header.piid );
+      lstrcpyW( keyname, interfaceW );
+      format_clsid( keyname + lstrlenW(keyname), proxy->header.piid );
       if (RegCreateKeyW(HKEY_CLASSES_ROOT, keyname, &key) == ERROR_SUCCESS) {
         WCHAR num[10];
         if (name)
           RegSetValueExA(key, NULL, 0, REG_SZ, (const BYTE *)name, strlen(name)+1);
         RegSetValueW( key, clsid32W, REG_SZ, clsid, 0 );
-        sprintfW(num, numformatW, proxy->header.DispatchTableCount);
+        swprintf(num, numformatW, proxy->header.DispatchTableCount);
         RegSetValueW( key, nummethodsW, REG_SZ, num, 0 );
         RegCloseKey(key);
       }
@@ -277,15 +273,15 @@ HRESULT WINAPI NdrDllRegisterProxy(HMODULE hDll,
   }
 
   /* register clsid to point to module */
-  strcpyW( keyname, clsidW );
-  strcatW( keyname, clsid );
+  lstrcpyW( keyname, clsidW );
+  lstrcatW( keyname, clsid );
   len = GetModuleFileNameW(hDll, module, ARRAY_SIZE(module));
   if (len && len < sizeof(module)) {
       TRACE("registering CLSID %s => %s\n", debugstr_w(clsid), debugstr_w(module));
       if (RegCreateKeyW(HKEY_CLASSES_ROOT, keyname, &key) == ERROR_SUCCESS) {
           RegSetValueExW(key, NULL, 0, REG_SZ, (const BYTE *)psfactoryW, sizeof(psfactoryW));
           if (RegCreateKeyW(key, inprocserverW, &subkey) == ERROR_SUCCESS) {
-              RegSetValueExW(subkey, NULL, 0, REG_SZ, (LPBYTE)module, (strlenW(module)+1)*sizeof(WCHAR));
+              RegSetValueExW(subkey, NULL, 0, REG_SZ, (LPBYTE)module, (lstrlenW(module)+1)*sizeof(WCHAR));
               RegSetValueExW(subkey, threadingmodelW, 0, REG_SZ, (const BYTE *)bothW, sizeof(bothW));
               RegCloseKey(subkey);
           }
@@ -325,16 +321,16 @@ HRESULT WINAPI NdrDllUnregisterProxy(HMODULE hDll,
 
       TRACE("unregistering %s %s\n", debugstr_a(name), debugstr_guid(proxy->header.piid));
 
-      strcpyW( keyname, interfaceW );
-      format_clsid( keyname + strlenW(keyname), proxy->header.piid );
+      lstrcpyW( keyname, interfaceW );
+      format_clsid( keyname + lstrlenW(keyname), proxy->header.piid );
       RegDeleteTreeW(HKEY_CLASSES_ROOT, keyname);
     }
     pProxyFileList++;
   }
 
   /* unregister clsid */
-  strcpyW( keyname, clsidW );
-  strcatW( keyname, clsid );
+  lstrcpyW( keyname, clsidW );
+  lstrcatW( keyname, clsid );
   RegDeleteTreeW(HKEY_CLASSES_ROOT, keyname);
 
   return S_OK;

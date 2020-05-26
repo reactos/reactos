@@ -312,7 +312,7 @@ static ME_String *para_num_get_str( ME_Paragraph *para, WORD num )
     {
     case PFN_ARABIC:
     default:
-        p += sprintfW( p, fmtW, num );
+        p += swprintf( p, fmtW, num );
         break;
 
     case PFN_LCLETTER:
@@ -399,9 +399,9 @@ void para_num_init( ME_Context *c, ME_Paragraph *para )
     static const WCHAR bullet_font[] = {'S','y','m','b','o','l',0};
     static const WCHAR bullet_str[] = {0xb7, 0};
     static const WCHAR spaceW[] = {' ', 0};
-    HFONT old_font;
     SIZE sz;
 
+    if (!para->fmt.wNumbering) return;
     if (para->para_num.style && para->para_num.text) return;
 
     if (!para->para_num.style)
@@ -432,12 +432,11 @@ void para_num_init( ME_Context *c, ME_Paragraph *para )
             para->para_num.text = ME_MakeStringConst( bullet_str, 1 );
     }
 
-    old_font = ME_SelectStyleFont( c, para->para_num.style );
+    select_style( c, para->para_num.style );
     GetTextExtentPointW( c->hDC, para->para_num.text->szData, para->para_num.text->nLen, &sz );
     para->para_num.width = sz.cx;
     GetTextExtentPointW( c->hDC, spaceW, 1, &sz );
     para->para_num.width += sz.cx;
-    ME_UnselectStyleFont( c, para->para_num.style, old_font );
 }
 
 void para_num_clear( struct para_num *pn )

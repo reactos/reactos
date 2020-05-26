@@ -34,34 +34,87 @@ CMyDocsFolder::~CMyDocsFolder()
         SHFree(m_pidlInner);
 }
 
+HRESULT WINAPI CMyDocsFolder::FinalConstruct()
+{
+    m_pidlInner = _ILCreateMyDocuments();
+
+    if (!m_pidlInner)
+        return E_OUTOFMEMORY;
+
+    return S_OK;
+}
+
+HRESULT CMyDocsFolder::EnsureFolder()
+{
+    ATLASSERT(m_pidlInner);
+
+    if (m_pisfInner)
+        return S_OK;
+
+
+    HRESULT hr = SHELL32_CoCreateInitSF(m_pidlInner,
+                                        &CLSID_ShellFSFolder,
+                                        CSIDL_PERSONAL,
+                                        IID_PPV_ARG(IShellFolder2, &m_pisfInner));
+
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
+}
+
 HRESULT WINAPI CMyDocsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
         ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
 }
 
 HRESULT WINAPI CMyDocsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->EnumObjects(hwndOwner, dwFlags, ppEnumIDList);
 }
 
 HRESULT WINAPI CMyDocsFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->BindToObject(pidl, pbcReserved, riid, ppvOut);
 }
 
 HRESULT WINAPI CMyDocsFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->BindToStorage(pidl, pbcReserved, riid, ppvOut);
 }
 
 HRESULT WINAPI CMyDocsFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->CompareIDs(lParam, pidl1, pidl2);
 }
 
 HRESULT WINAPI CMyDocsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->CreateViewObject(hwndOwner, riid, ppvOut);
 }
 
@@ -70,6 +123,10 @@ HRESULT WINAPI CMyDocsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
     static const DWORD dwMyDocumentsAttributes =
         SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | SFGAO_CANCOPY |
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
+
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
 
     if(cidl)
         return m_pisfInner->GetAttributesOf(cidl, apidl, rgfInOut);
@@ -91,6 +148,10 @@ HRESULT WINAPI CMyDocsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
 HRESULT WINAPI CMyDocsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, ppvOut);
 }
 
@@ -98,6 +159,10 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
 {
     if (!strRet || !pidl)
         return E_INVALIDARG;
+
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
 
     /* If we got an fs item just forward to the fs folder */
     if (!_ILIsSpecialFolder(pidl))
@@ -120,41 +185,73 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
 HRESULT WINAPI CMyDocsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */
         LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->SetNameOf(hwndOwner, pidl, lpName, dwFlags, pPidlOut);
 }
 
 HRESULT WINAPI CMyDocsFolder::GetDefaultSearchGUID(GUID *pguid)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->GetDefaultSearchGUID(pguid);
 }
 
 HRESULT WINAPI CMyDocsFolder::EnumSearches(IEnumExtraSearch ** ppenum)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->EnumSearches(ppenum);
 }
 
 HRESULT WINAPI CMyDocsFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->GetDefaultColumn(dwRes, pSort, pDisplay);
 }
 
 HRESULT WINAPI CMyDocsFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->GetDefaultColumnState(iColumn, pcsFlags);
 }
 
 HRESULT WINAPI CMyDocsFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->GetDetailsEx(pidl, pscid, pv);
 }
 
 HRESULT WINAPI CMyDocsFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->GetDetailsOf(pidl, iColumn, psd);
 }
 
 HRESULT WINAPI CMyDocsFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
+    HRESULT hr = EnsureFolder();
+    if (FAILED(hr))
+        return hr;
+
     return m_pisfInner->MapColumnToSCID(column, pscid);
 }
 
@@ -170,14 +267,18 @@ HRESULT WINAPI CMyDocsFolder::GetClassID(CLSID *lpClassId)
 
 HRESULT WINAPI CMyDocsFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
+    if (m_pisfInner)
+        return E_INVALIDARG;
+
+    if (m_pidlInner)
+        SHFree(m_pidlInner);
+
     m_pidlInner = ILClone(pidl);
+
     if (!m_pidlInner)
         return E_OUTOFMEMORY;
 
-    return SHELL32_CoCreateInitSF(m_pidlInner, 
-                                  &CLSID_ShellFSFolder,
-                                  CSIDL_PERSONAL,
-                                  IID_PPV_ARG(IShellFolder2, &m_pisfInner));
+    return EnsureFolder();
 }
 
 HRESULT WINAPI CMyDocsFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)

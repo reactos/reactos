@@ -242,8 +242,8 @@ Substitute(
     PWCHAR Dest = Buffer;
     UNICODE_STRING String;
 
-    SystemDriveLength = wcslen(SystemDriveName) * sizeof(WCHAR);
-    SystemRootLength = wcslen(SystemRootName) * sizeof(WCHAR);
+    SystemDriveLength = (ULONG)wcslen(SystemDriveName) * sizeof(WCHAR);
+    SystemRootLength = (ULONG)wcslen(SystemRootName) * sizeof(WCHAR);
 
     RtlInitUnicodeString(&String, Template);
     ASSERT(String.Length % sizeof(WCHAR) == 0);

@@ -4,13 +4,11 @@ add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_idl_headers(devenum_fil_data_header fil_data.idl)
 spec2def(devenum.dll devenum.spec)
 
 list(APPEND SOURCE
     createdevenum.c
     devenum_main.c
-    factory.c
     mediacatenum.c
     parsedisplayname.c
     precomp.h)
@@ -24,7 +22,7 @@ set_source_files_properties(devenum.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT
 set_module_type(devenum win32dll UNICODE)
 target_link_libraries(devenum strmiids uuid wine)
 add_delay_importlibs(devenum msvfw32)
-add_importlibs(devenum advapi32 advapi32_vista ole32 oleaut32 winmm user32 avicap32 msacm32 dsound msvcrt kernel32 ntdll)
-add_dependencies(devenum devenum_fil_data_header)
+add_importlibs(devenum advapi32 advapi32_vista ole32 oleaut32 winmm user32 avicap32 msacm32 dsound msdmo msvcrt kernel32 ntdll)
+add_dependencies(devenum wineheaders)
 add_pch(devenum precomp.h SOURCE)
 add_cd_file(TARGET devenum DESTINATION reactos/system32 FOR all)

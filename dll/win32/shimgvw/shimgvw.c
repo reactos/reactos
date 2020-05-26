@@ -18,12 +18,14 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <wingdi.h>
+#include <wincon.h>
 #include <windowsx.h>
 #include <objbase.h>
 #include <commctrl.h>
 #include <commdlg.h>
 #include <gdiplus.h>
 #include <tchar.h>
+#include <shlobj.h>
 #include <strsafe.h>
 #include <shlwapi.h>
 
@@ -35,7 +37,7 @@
 HINSTANCE hInstance;
 SHIMGVW_SETTINGS shiSettings;
 SHIMGVW_FILENODE *currentFile;
-GpImage *image;
+GpImage *image = NULL;
 WNDPROC PrevProc = NULL;
 
 HWND hDispWnd, hToolBar;
@@ -184,6 +186,9 @@ static void ZoomInOrOut(BOOL bZoomIn)
 {
     INT i;
 
+    if (image == NULL)
+        return;
+
     if (bZoomIn)    /* zoom in */
     {
         /* find next step */
@@ -234,6 +239,9 @@ static void ResetZoom(void)
 {
     RECT Rect;
     UINT ImageWidth, ImageHeight;
+
+    if (image == NULL)
+        return;
 
     /* get disp window size and image size */
     GetClientRect(hDispWnd, &Rect);
@@ -304,6 +312,9 @@ static void pLoadImage(LPWSTR szOpenFileName)
     }
     Anime_LoadInfo();
 
+    if (szOpenFileName && szOpenFileName[0])
+        SHAddToRecentDocs(SHARD_PATHW, szOpenFileName);
+
     /* reset zoom */
     ResetZoom();
 
@@ -323,6 +334,9 @@ static void pSaveImageAs(HWND hwnd)
     size_t sizeRemain;
     UINT j;
     WCHAR *c;
+
+    if (image == NULL)
+        return;
 
     GdipGetImageEncodersSize(&num, &size);
     codecInfo = malloc(size);
@@ -417,31 +431,53 @@ static void pSaveImageAs(HWND hwnd)
 }
 
 static VOID
+pPrintImage(HWND hwnd)
+{
+    /* FIXME */
+}
+
+static VOID
+EnableToolBarButtons(BOOL bEnable)
+{
+    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_SAVE, bEnable);
+    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
+}
+
+static VOID
 pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
 {
     WCHAR szTitleBuf[800];
     WCHAR szResStr[512];
-    WCHAR *c;
+    LPWSTR pchFileTitle;
 
-    if (node)
+    if (image)
     {
-        c = wcsrchr(node->FileName, '\\');
-        if (c)
-        {
-            c++;
-        }
-
-        LoadStringW(hInstance, IDS_APPTITLE, szResStr, ARRAYSIZE(szResStr));
-        StringCbPrintfW(szTitleBuf, sizeof(szTitleBuf), L"%ls%ls%ls", szResStr, L" - ", c);
-        SetWindowTextW(hwnd, szTitleBuf);
-
-        if (image)
-        {
-            GdipDisposeImage(image);
-        }
-
-        pLoadImage(node->FileName);
+        GdipDisposeImage(image);
+        image = NULL;
     }
+
+    if (node == NULL)
+    {
+        EnableToolBarButtons(FALSE);
+        return;
+    }
+
+    pLoadImage(node->FileName);
+
+    LoadStringW(hInstance, IDS_APPTITLE, szResStr, ARRAYSIZE(szResStr));
+    if (image != NULL)
+    {
+        pchFileTitle = PathFindFileNameW(node->FileName);
+        StringCbPrintfW(szTitleBuf, sizeof(szTitleBuf),
+                        L"%ls%ls%ls", szResStr, L" - ", pchFileTitle);
+        SetWindowTextW(hwnd, szTitleBuf);
+    }
+    else
+    {
+        SetWindowTextW(hwnd, szResStr);
+    }
+
+    EnableToolBarButtons(image != NULL);
 }
 
 static SHIMGVW_FILENODE*
@@ -580,6 +616,26 @@ ImageView_UpdateWindow(HWND hwnd)
     UpdateWindow(hwnd);
 }
 
+static HBRUSH CreateCheckerBoardBrush(HDC hdc)
+{
+    static const CHAR pattern[] =
+        "\x28\x00\x00\x00\x10\x00\x00\x00\x10\x00\x00\x00\x01\x00\x04\x00\x00\x00"
+        "\x00\x00\x80\x00\x00\x00\x23\x2E\x00\x00\x23\x2E\x00\x00\x10\x00\x00\x00"
+        "\x00\x00\x00\x00\x99\x99\x99\x00\xCC\xCC\xCC\x00\x00\x00\x00\x00\x00\x00"
+        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x11\x11\x11\x11"
+        "\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00"
+        "\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00"
+        "\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11"
+        "\x11\x11\x00\x00\x00\x00\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00"
+        "\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11"
+        "\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11"
+        "\x00\x00\x00\x00\x11\x11\x11\x11\x00\x00\x00\x00\x11\x11\x11\x11";
+
+    return CreateDIBPatternBrushPt(pattern, DIB_RGB_COLORS);
+}
+
 static VOID
 ImageView_DrawImage(HWND hwnd)
 {
@@ -591,6 +647,9 @@ ImageView_DrawImage(HWND hwnd)
     HDC hdc;
     HBRUSH white;
     HGDIOBJ hbrOld;
+    UINT uFlags;
+    WCHAR szText[128];
+    HGDIOBJ hFontOld;
 
     hdc = BeginPaint(hwnd, &ps);
     if (!hdc)
@@ -606,18 +665,34 @@ ImageView_DrawImage(HWND hwnd)
         return;
     }
 
-    GdipGetImageWidth(image, &ImageWidth);
-    GdipGetImageHeight(image, &ImageHeight);
+    GetClientRect(hwnd, &rect);
+    white = GetStockObject(WHITE_BRUSH);
 
-    if (GetClientRect(hwnd, &rect))
+    if (image == NULL)
     {
+        FillRect(hdc, &rect, white);
+
+        LoadStringW(hInstance, IDS_NOPREVIEW, szText, ARRAYSIZE(szText));
+
+        SetTextColor(hdc, RGB(0, 0, 0));
+        SetBkMode(hdc, TRANSPARENT);
+
+        hFontOld = SelectObject(hdc, GetStockObject(DEFAULT_GUI_FONT));
+        DrawTextW(hdc, szText, -1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER |
+                                          DT_NOPREFIX);
+        SelectObject(hdc, hFontOld);
+    }
+    else
+    {
+        GdipGetImageWidth(image, &ImageWidth);
+        GdipGetImageHeight(image, &ImageHeight);
+
         ZoomedWidth = (ImageWidth * ZoomPercents) / 100;
         ZoomedHeight = (ImageHeight * ZoomPercents) / 100;
 
         x = (rect.right - ZoomedWidth) / 2;
         y = (rect.bottom - ZoomedHeight) / 2;
 
-        white = GetStockObject(WHITE_BRUSH);
         // Fill top part
         margin = rect;
         margin.bottom = y - 1;
@@ -652,9 +727,24 @@ ImageView_DrawImage(HWND hwnd)
             GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
         }
 
-        hbrOld = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-        Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
-        SelectObject(hdc, hbrOld);
+        uFlags = 0;
+        GdipGetImageFlags(image, &uFlags);
+
+        if (uFlags & (ImageFlagsHasAlpha | ImageFlagsHasTranslucent))
+        {
+            HBRUSH hbr = CreateCheckerBoardBrush(hdc);
+            hbrOld = SelectObject(hdc, hbr);
+            Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
+            SelectObject(hdc, hbrOld);
+            DeleteObject(hbr);
+        }
+        else
+        {
+            hbrOld = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
+            SelectObject(hdc, hbrOld);
+        }
+
         GdipDrawImageRectI(graphics, image, x, y, ZoomedWidth, ZoomedHeight);
     }
     GdipDeleteGraphics(graphics);
@@ -810,7 +900,7 @@ ImageView_InitControls(HWND hwnd)
 
     if (shiSettings.Maximized) ShowWindow(hwnd, SW_MAXIMIZE);
 
-    hDispWnd = CreateWindowEx(0, WC_STATIC, _T(""),
+    hDispWnd = CreateWindowEx(WS_EX_CLIENTEDGE, WC_STATIC, _T(""),
                               WS_CHILD | WS_VISIBLE,
                               0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
@@ -826,6 +916,25 @@ ImageView_OnMouseWheel(HWND hwnd, INT x, INT y, INT zDelta, UINT fwKeys)
     if (zDelta != 0)
     {
         ZoomInOrOut(zDelta > 0);
+    }
+}
+
+static VOID
+ImageView_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
+{
+    RECT rc;
+
+    SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
+
+    GetWindowRect(hToolBar, &rc);
+
+    MoveWindow(hDispWnd, 0, 0, cx, cy - (rc.bottom - rc.top), TRUE);
+
+    /* is it maximized or restored? */
+    if (state == SIZE_MAXIMIZED || state == SIZE_RESTORED)
+    {
+        /* reset zoom */
+        ResetZoom();
     }
 }
 
@@ -862,46 +971,50 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     currentFile = currentFile->Prev;
                     pLoadImageFromNode(currentFile, hwnd);
                 }
-
                 break;
+
                 case IDC_NEXT:
                 {
                     currentFile = currentFile->Next;
                     pLoadImageFromNode(currentFile, hwnd);
                 }
+                break;
 
-                break;
                 case IDC_ZOOMP:
-                {
                     ZoomInOrOut(TRUE);
-                }
-                break;
+                    break;
+
                 case IDC_ZOOMM:
-                {
                     ZoomInOrOut(FALSE);
-                }
-                break;
+                    break;
+
                 case IDC_SAVE:
                     pSaveImageAs(hwnd);
+                    break;
 
-                break;
                 case IDC_PRINT:
+                    pPrintImage(hwnd);
+                    break;
 
-                break;
                 case IDC_ROT1:
                 {
-                    GdipImageRotateFlip(image, Rotate270FlipNone);
-                    ImageView_UpdateWindow(hwnd);
+                    if (image)
+                    {
+                        GdipImageRotateFlip(image, Rotate270FlipNone);
+                        ImageView_UpdateWindow(hwnd);
+                    }
+                    break;
                 }
 
-                break;
                 case IDC_ROT2:
                 {
-                    GdipImageRotateFlip(image, Rotate90FlipNone);
-                    ImageView_UpdateWindow(hwnd);
+                    if (image)
+                    {
+                        GdipImageRotateFlip(image, Rotate90FlipNone);
+                        ImageView_UpdateWindow(hwnd);
+                    }
+                    break;
                 }
-
-                break;
             }
         }
         break;
@@ -971,17 +1084,8 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         }
         case WM_SIZE:
         {
-            RECT rc;
-            SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
-            GetWindowRect(hToolBar, &rc);
-            MoveWindow(hDispWnd, 1, 1, LOWORD(lParam) - 1, HIWORD(lParam) - (rc.bottom - rc.top) - 1, TRUE);
-            /* is it maximized or restored? */
-            if (wParam == SIZE_MAXIMIZED || wParam == SIZE_RESTORED)
-            {
-                /* reset zoom */
-                ResetZoom();
-            }
-            return 0L;
+            ImageView_OnSize(hwnd, (UINT)wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            return 0;
         }
         case WM_DESTROY:
         {
@@ -1065,7 +1169,10 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     pFreeFileList(currentFile);
 
     if (image)
+    {
         GdipDisposeImage(image);
+        image = NULL;
+    }
 
     Anime_FreeInfo();
 

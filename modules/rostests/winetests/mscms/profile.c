@@ -660,35 +660,36 @@ static void test_EnumColorProfilesA( char *standardprofile )
     record.dwDataColorSpace = SPACE_RGB;
 
     total = 0;
+    SetLastError( 0xdeadbeef );
     ret = pEnumColorProfilesA( NULL, &record, NULL, &total, &number );
-    ok( !ret, "EnumColorProfilesA() failed (%d)\n", GetLastError() );
+    ok( !ret, "EnumColorProfilesA succeeded\n" );
+    if (have_color_profile) ok( GetLastError() == ERROR_INSUFFICIENT_BUFFER, "got %u\n", GetLastError() );
     buffer = HeapAlloc( GetProcessHeap(), 0, total );
 
     size = total;
     ret = pEnumColorProfilesA( machine, &record, buffer, &size, &number );
-    ok( !ret, "EnumColorProfilesA() succeeded (%d)\n", GetLastError() );
+    ok( !ret, "EnumColorProfilesA succeeded\n" );
 
     ret = pEnumColorProfilesA( NULL, NULL, buffer, &size, &number );
-    ok( !ret, "EnumColorProfilesA() succeeded (%d)\n", GetLastError() );
+    ok( !ret, "EnumColorProfilesA succeeded\n" );
 
     ret = pEnumColorProfilesA( NULL, &record, buffer, NULL, &number );
-    ok( !ret, "EnumColorProfilesA() succeeded (%d)\n", GetLastError() );
+    ok( !ret, "EnumColorProfilesA succeeded\n" );
 
     ret = pEnumColorProfilesA( NULL, &record, buffer, &size, &number );
     todo_wine_if (!have_color_profile)
-        ok( ret, "EnumColorProfilesA() failed (%d)\n", GetLastError() );
+        ok( ret, "EnumColorProfilesA failed %u\n", GetLastError() );
 
     size = 0;
-
     ret = pEnumColorProfilesA( NULL, &record, buffer, &size, &number );
-    ok( !ret, "EnumColorProfilesA() succeeded (%d)\n", GetLastError() );
+    ok( !ret, "EnumColorProfilesA succeeded\n" );
 
     /* Functional checks */
 
     size = total;
     ret = pEnumColorProfilesA( NULL, &record, buffer, &size, &number );
     todo_wine_if (!have_color_profile)
-        ok( ret, "EnumColorProfilesA() failed (%d)\n", GetLastError() );
+        ok( ret, "EnumColorProfilesA failed %u\n", GetLastError() );
 
     HeapFree( GetProcessHeap(), 0, buffer );
 }
@@ -710,34 +711,36 @@ static void test_EnumColorProfilesW( WCHAR *standardprofileW )
     record.dwDataColorSpace = SPACE_RGB;
 
     total = 0;
+    SetLastError( 0xdeadbeef );
     ret = pEnumColorProfilesW( NULL, &record, NULL, &total, &number );
-    ok( !ret, "EnumColorProfilesW() failed (%d)\n", GetLastError() );
+    ok( !ret, "EnumColorProfilesW succeeded\n" );
+    if (have_color_profile) ok( GetLastError() == ERROR_INSUFFICIENT_BUFFER, "got %u\n", GetLastError() );
     buffer = HeapAlloc( GetProcessHeap(), 0, total * sizeof(WCHAR) );
 
     size = total;
     ret = pEnumColorProfilesW( machineW, &record, buffer, &size, &number );
-    ok( !ret, "EnumColorProfilesW() succeeded (%d)\n", GetLastError() );
+    ok( !ret, "EnumColorProfilesW succeeded\n" );
 
     ret = pEnumColorProfilesW( NULL, NULL, buffer, &size, &number );
-    ok( !ret, "EnumColorProfilesW() succeeded (%d)\n", GetLastError() );
+    ok( !ret, "EnumColorProfilesW succeeded\n" );
 
     ret = pEnumColorProfilesW( NULL, &record, buffer, NULL, &number );
-    ok( !ret, "EnumColorProfilesW() succeeded (%d)\n", GetLastError() );
+    ok( !ret, "EnumColorProfilesW succeeded\n" );
 
     ret = pEnumColorProfilesW( NULL, &record, buffer, &size, &number );
     todo_wine_if (!have_color_profile)
-        ok( ret, "EnumColorProfilesW() failed (%d)\n", GetLastError() );
+        ok( ret, "EnumColorProfilesW failed %u\n", GetLastError() );
 
     size = 0;
     ret = pEnumColorProfilesW( NULL, &record, buffer, &size, &number );
-    ok( !ret, "EnumColorProfilesW() succeeded (%d)\n", GetLastError() );
+    ok( !ret, "EnumColorProfilesW succeeded\n" );
 
     /* Functional checks */
 
     size = total;
     ret = pEnumColorProfilesW( NULL, &record, buffer, &size, &number );
     todo_wine_if (!have_color_profile)
-        ok( ret, "EnumColorProfilesW() failed (%d)\n", GetLastError() );
+        ok( ret, "EnumColorProfilesW failed %u\n", GetLastError() );
 
     HeapFree( GetProcessHeap(), 0, buffer );
 }

@@ -31,12 +31,16 @@ extern "C" {
 
 extern __m128 _mm_load_ss(float const*);
 extern int _mm_cvt_ss2si(__m128);
+__m128 _mm_xor_ps(__m128 a, __m128 b);
+__m128 _mm_div_ps(__m128 a, __m128 b);
 
 #ifdef _MSC_VER
 unsigned int _mm_getcsr(void);
 #pragma intrinsic(_mm_getcsr)
 void _mm_setcsr(unsigned int);
 #pragma intrinsic(_mm_setcsr)
+#pragma intrinsic(_mm_xor_ps)
+#pragma intrinsic(_mm_div_ps)
 #else
 
 #ifndef __INTRIN_INLINE

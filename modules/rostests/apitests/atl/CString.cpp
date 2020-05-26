@@ -117,15 +117,6 @@ static void test_basetypes()
     }
 }
 
-// Allocation strategy seems to differ a bit between us and MS's atl.
-// if someone cares enough to find out why, feel free to change the macro below.
-#ifdef __GNUC__
-#define ALLOC_EXPECT(a, b)  b
-#else
-#define ALLOC_EXPECT(a, b)  a
-#endif
-
-
 #undef ok
 #undef _T
 
@@ -169,11 +160,6 @@ static void test_basetypes()
 START_TEST(CString)
 {
     test_basetypes();
-
-    if ((ALLOC_EXPECT(1, 2)) == 2)
-    {
-        skip("Ignoring real GetAllocLength() lenght\n");
-    }
 
     test_operators_initW();
     test_operators_initA();

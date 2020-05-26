@@ -16,6 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#if 0
+#pragma makedep install
+#endif
+
 interface IAMAnalogVideoDecoder;
 interface IAMAnalogVideoEncoder;
 interface IAMAudioInputMixer;
@@ -23,6 +27,7 @@ interface IAMAudioRendererStats;
 interface IAMBufferNegotiation;
 interface IAMCameraControl;
 interface IAMCertifiedOutputProtection;
+interface IAMClockSlave;
 interface IAMCopyCaptureFileProgress;
 interface IAMCrossbar;
 interface IAMDevMemoryAllocator;
@@ -173,7 +178,7 @@ interface IFilterMapper : IUnknown
          [in]  CLSID clsInMaj,
          [in]  CLSID clsInSub,
          [in]  BOOL  bRender,
-         [in]  BOOL  bOututNeeded,
+         [in]  BOOL  bOutputNeeded,
          [in]  CLSID clsOutMaj,
          [in]  CLSID clsOutSub
        );
@@ -801,6 +806,18 @@ interface IConfigInterleaving : IUnknown
 [
     local,
     object,
+    uuid(4d5466b0-a49c-11d1-abe8-00a0c905f375),
+    pointer_default(unique)
+
+]
+interface IAMClockAdjust : IUnknown
+{
+    HRESULT SetClockDelta([in] REFERENCE_TIME rtDelta);
+};
+
+[
+    local,
+    object,
     uuid(9fd52741-176d-4b36-8f51-ca8f933223be),
     pointer_default(unique)
 ]
@@ -926,23 +943,6 @@ interface IDistributorNotify : IUnknown
     HRESULT NotifyGraphChange(void);
 }
 
-typedef enum
-{
-    AM_STREAM_INFO_START_DEFINED   = 0x01,
-    AM_STREAM_INFO_STOP_DEFINED    = 0x02,
-    AM_STREAM_INFO_DISCARDING      = 0x04,
-    AM_STREAM_INFO_STOP_SEND_EXTRA = 0x10
-} AM_STREAM_INFO_FLAGS;
-
-typedef struct
-{
-    REFERENCE_TIME tStart;
-    REFERENCE_TIME tStop;
-    DWORD dwStartCookie;
-    DWORD dwStopCookie;
-    DWORD dwFlags;
-}AM_STREAM_INFO;
-
 
 /*****************************************************************************
  * IAMStreamConfig interface
@@ -954,6 +954,43 @@ typedef struct
 ]
 interface IAMStreamConfig : IUnknown
 {
+    typedef struct _VIDEO_STREAM_CONFIG_CAPS {
+        GUID  guid;
+        ULONG VideoStandard;
+        SIZE  InputSize;
+        SIZE  MinCroppingSize;
+        SIZE  MaxCroppingSize;
+        int   CropGranularityX;
+        int   CropGranularityY;
+        int   CropAlignX;
+        int   CropAlignY;
+        SIZE  MinOutputSize;
+        SIZE  MaxOutputSize;
+        int   OutputGranularityX;
+        int   OutputGranularityY;
+        int   StretchTapsX;
+        int   StretchTapsY;
+        int   ShrinkTapsX;
+        int   ShrinkTapsY;
+        LONGLONG MinFrameInterval;
+        LONGLONG MaxFrameInterval;
+        LONG  MinBitsPerSecond;
+        LONG  MaxBitsPerSecond;
+    } VIDEO_STREAM_CONFIG_CAPS;
+
+    typedef struct _AUDIO_STREAM_CONFIG_CAPS {
+        GUID guid;
+        ULONG MinimumChannels;
+        ULONG MaximumChannels;
+        ULONG ChannelsGranularity;
+        ULONG MinimumBitsPerSample;
+        ULONG MaximumBitsPerSample;
+        ULONG BitsPerSampleGranularity;
+        ULONG MinimumSampleFrequency;
+        ULONG MaximumSampleFrequency;
+        ULONG SampleFrequencyGranularity;
+    } AUDIO_STREAM_CONFIG_CAPS;
+
     HRESULT SetFormat( [in] AM_MEDIA_TYPE *pmt);
     HRESULT GetFormat( [in] AM_MEDIA_TYPE **pmt);
     HRESULT GetNumberOfCapabilities( [out] int *piCount, [out] int *piSize);
@@ -1149,6 +1186,45 @@ interface IKsPropertySet : IUnknown
 cpp_quote("#endif /* _IKsPropertySet_ */")
 
 [
+    local,
+    object,
+    uuid(6025a880-c0d5-11d0-bd4e-00a0c911ce86),
+    pointer_default(unique)
+]
+interface IMediaPropertyBag : IPropertyBag
+{
+    typedef IMediaPropertyBag *LPMEDIAPROPERTYBAG;
+
+    HRESULT EnumProperty(
+            [in]  ULONG iProperty,
+            [in, out] VARIANT *pvarPropertyName,
+            [in, out] VARIANT *pvarPropertyValue);
+}
+
+
+[
+    local,
+    object,
+    uuid(5738e040-b67f-11d0-bd4d-00a0c911ce86),
+    pointer_default(unique)
+]
+interface IPersistMediaPropertyBag : IPersist
+{
+    HRESULT InitNew(void);
+
+    HRESULT Load(
+            [in] IMediaPropertyBag *pPropBag,
+            [in] IErrorLog *pErrorLog);
+
+    HRESULT Save(
+            [in] IMediaPropertyBag *pPropBag,
+            [in] BOOL fClearDirty,
+            [in] BOOL fSaveAllProperties);
+
+    typedef IPersistMediaPropertyBag *LPPERSISTMEDIAPROPERTYBAG;
+}
+
+[
     object,
     uuid(36b73883-c2c8-11cf-8b46-00805f6cef60),
     pointer_default(unique)
@@ -1157,19 +1233,6 @@ interface ISeekingPassThru : IUnknown
 {
     HRESULT Init( [in] BOOL bSupportRendering, [in] IPin *pPin);
 }
-
-[
-    local,
-    object,
-    uuid(4d5466b0-a49c-11d1-abe8-00a0c905f375),
-    pointer_default(unique)
-
-]
-interface IAMClockAdjust : IUnknown
-{
-    HRESULT SetClockDelta([in] REFERENCE_TIME rtDelta);
-};
-
 
 enum _AM_FILTER_MISC_FLAGS
 {
@@ -1219,21 +1282,64 @@ interface IAMBufferNegotiation : IUnknown
 
 }
 
+[
+    local,
+    object,
+    uuid(d8d715a0-6e5e-11d0-b3f0-00aa003761c5),
+    pointer_default(unique)
+]
+interface IAMVfwCaptureDialogs : IUnknown
+{
+    HRESULT HasDialog(
+            [in] int dialog);
+    HRESULT ShowDialog(
+            [in] int dialog,
+            [in] HWND hwnd);
+    HRESULT SendDriverMessage(
+            [in] int dialog,
+            [in] int msg,
+            [in] long data1,
+            [in] long data2);
+}
+
 #include <axextendenums.h>
 
+typedef enum
+{
+    AM_STREAM_INFO_START_DEFINED   = 0x01,
+    AM_STREAM_INFO_STOP_DEFINED    = 0x02,
+    AM_STREAM_INFO_DISCARDING      = 0x04,
+    AM_STREAM_INFO_STOP_SEND_EXTRA = 0x10
+} AM_STREAM_INFO_FLAGS;
+
+typedef struct
+{
+    REFERENCE_TIME tStart;
+    REFERENCE_TIME tStop;
+    DWORD dwStartCookie;
+    DWORD dwStopCookie;
+    DWORD dwFlags;
+}AM_STREAM_INFO;
+
 [
+    local,
     object,
     uuid(36b73881-c2c8-11cf-8b46-00805f6cef60),
     pointer_default(unique)
 ]
 interface IAMStreamControl : IUnknown
 {
-    HRESULT StartAt( [in] REFERENCE_TIME * ptStart,
-                     [in] DWORD dwCookie );
-    HRESULT StopAt(  [in] REFERENCE_TIME * ptStop,
-                     [in] BOOL bSendExtra,
-                     [in] DWORD dwCookie );
-    HRESULT GetInfo( [out] AM_STREAM_INFO *pInfo);
+    HRESULT StartAt(
+        [in] const REFERENCE_TIME *ptStart,
+        [in] DWORD dwCookie);
+
+    HRESULT StopAt(
+        [in] const REFERENCE_TIME *ptStop,
+        [in] BOOL bSendExtra,
+        [in] DWORD dwCookie);
+
+    HRESULT GetInfo(
+        [out] AM_STREAM_INFO *pInfo);
 }
 
 typedef enum tagTVAudioMode

@@ -1,0 +1,362 @@
+/*
+ * Copyright 2009 Andrew Hill
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+/* Menus */
+
+IDM_CABINET_CONTEXTMENU MENUEX
+BEGIN
+    POPUP "", 264,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "&Szokásos gombok", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Címsor", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Hivatkozások", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Eszköztárak rögzítése", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Testreszabás...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "Szö&vegcímkék", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Ugrás gomb", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDM_CABINET_MAINMENU MENUEX
+BEGIN
+    POPUP "&Fájl", FCIDM_MENU_FILE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Be&zárás", IDM_FILE_CLOSE
+    END
+    POPUP "S&zerkesztés", FCIDM_MENU_EDIT
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+    END
+    POPUP "&Nézet", FCIDM_MENU_VIEW
+    BEGIN
+        POPUP "&Eszköztárak", IDM_VIEW_TOOLBARS
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "Álla&potsor", IDM_VIEW_STATUSBAR
+        POPUP "Bön&gészősáv", IDM_VIEW_EXPLORERBAR
+        BEGIN
+            MENUITEM "Ke&resés\tCtrl+E", IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Kedvencek\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "Mé&dia", IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&Előzmények\tCtrl+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "&Mappák", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
+        END
+        MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP "&Ugrás", FCIDM_MENU_EXPLORE
+        BEGIN
+            MENUITEM "&Vissza\tAlt+Left Arrow", IDM_GOTO_BACK
+            MENUITEM "&Előre\tAlt+Right Arrow", IDM_GOTO_FORWARD
+            MENUITEM "Egy szinttel &feljebb", IDM_GOTO_UPONELEVEL
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Kezdőlap\tAlt+Home", IDM_GOTO_HOMEPAGE
+        END
+        MENUITEM "&Frissítés", IDM_VIEW_REFRESH
+    END
+    POPUP "Ked&vencek", FCIDM_MENU_FAVORITES
+    BEGIN
+        MENUITEM "&Hozzáadás a kedvencekhez...", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "Kedvencek &rendezése...", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "(üres)", IDM_FAVORITES_EMPTY
+    END
+    POPUP "&Eszközök", FCIDM_MENU_TOOLS
+    BEGIN
+        MENUITEM "Hálózati meghajtó &csatlakoztatása...", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "Hálózati meghajtó &leválasztása...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&Szinkronizálás...", IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Mappabeállítások...", IDM_TOOLS_FOLDEROPTIONS
+    END
+    POPUP "&Súgó", FCIDM_MENU_HELP
+    BEGIN
+        MENUITEM "&Névjegy", IDM_HELP_ABOUT
+    END
+END
+
+IDM_TASKBAR_TOOLBARS MENUEX
+BEGIN
+    POPUP "&Eszköztárak", -1, MFT_STRING, MFS_ENABLED, 0
+    BEGIN
+        MENUITEM "&Asztal", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
+        MENUITEM "&Gyorsindítás", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
+        MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "Új &eszköztár...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
+    END
+END
+
+IDM_BAND_MENU MENUEX
+BEGIN
+    MENUITEM "&Címsor megjelentítése", IDM_BAND_TITLE
+    MENUITEM "Az eszköztár &bezárása", IDM_BAND_CLOSE
+END
+
+IDM_POPUPMENU MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        POPUP "&Nézet", IDM_VIEW_MENU
+        BEGIN
+            MENUITEM "&Nagy ikonok", IDM_LARGE_ICONS
+            MENUITEM "&Kis ikonok", IDM_SMALL_ICONS
+        END
+        MENUITEM "&Mappa megnyitása", IDM_OPEN_FOLDER
+        MENUITEM "&Szöveg megjelenítése", IDM_SHOW_TEXT
+    END    
+END
+
+/* Dialogs */
+
+IDD_PROGRESS_DLG DIALOGEX 0, 0, 260, 85
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_ANIMATION, ANIMATE_CLASSA, 0, 12, 10, 236, 30 /* TODO: style */
+    LTEXT "", IDC_TEXT_LINE,     7, 45, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
+    CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
+    PUSHBUTTON "Cancel", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+END
+
+IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "Te&xt options:", -1, 4, 2, 48, 15
+    COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Ico&n options:", -1, 4, 20, 48, 15
+    COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_SEARCH_DLG DIALOGEX 0, 0, 260, 85
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | WS_DLGFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Search by any or all of the criteria below.", IDC_SEARCH_LABEL, 4, 2, 120, 20
+
+    LTEXT "All or part &of the file name:", -1, 10, 25, 500, 10
+    EDITTEXT IDC_SEARCH_FILENAME, 10, 35, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+
+    LTEXT "A &word or phrase in the file:", -1, 10, 50, 500, 10
+    EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+
+    LTEXT "&Look in:", -1, 10, 75, 500, 10
+    CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
+
+    DEFPUSHBUTTON "Sea&rch", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Stop", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
+
+    AUTOCHECKBOX "Search Hidden Files and Folders",
+                 IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+
+    CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
+END
+
+/* Accelerators */
+
+IDR_ACCELERATORS ACCELERATORS
+BEGIN
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    "R", IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    VK_HOME, IDM_GOTO_HOMEPAGE, VIRTKEY, ALT, NOINVERT
+    "D", IDM_FAVORITES_ADDTOFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
+    VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+    VK_UP, IDM_GOTO_UPONELEVEL, VIRTKEY, ALT
+    VK_BACK, 41010, NOINVERT, VIRTKEY
+    "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
+    "E", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
+    "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "H", IDM_EXPLORERBAR_HISTORY, VIRTKEY, CONTROL, NOINVERT
+END
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_CANCELLING "Canceling..."
+    IDS_REMAINING  "Remaining"
+END
+
+STRINGTABLE
+BEGIN
+    800 "Contains commands for manipulating the selected items."
+END
+
+STRINGTABLE
+BEGIN
+    864 "Contains edit commands."
+END
+
+STRINGTABLE
+BEGIN
+    928 "Contains commands for manipulating the view."
+END
+
+STRINGTABLE
+BEGIN
+    992 "Contains tools commands."
+END
+
+STRINGTABLE
+BEGIN
+    1056 "Contains commands for displaying Help."
+END
+
+STRINGTABLE
+BEGIN
+    9025 "Closes the window."
+    9026 "Goes up one level."
+END
+
+STRINGTABLE
+BEGIN
+    9121 "Connects to a network drive."
+    9122 "Disconnects from a network drive."
+END
+
+STRINGTABLE
+BEGIN
+    9250 "Displays program information, version number, and copyright."
+    9252 "Displays information for debugging."
+END
+
+STRINGTABLE
+BEGIN
+    9281 "Goes to the previous page."
+    9282 "Goes to the next page."
+    9283 "Enables you to change settings."
+    9285 "Goes to your home page."
+END
+
+STRINGTABLE
+BEGIN
+    9362 "Opens the Favorites folder."
+    9363 "Adds the current page to your Favorites list."
+END
+
+STRINGTABLE
+BEGIN
+    9505 "Shows or hides toolbars."
+    9506 "Shows or hides the status bar."
+    9508 "Displays the Standard Buttons toolbar."
+    9509 "Displays the Address bar."
+    9510 "Displays the Quick Links bar."
+    9516 "Locks the sizes and positions of the toolbars."
+END
+
+STRINGTABLE
+BEGIN
+    9533 "Customizes the toolbar."
+END
+
+STRINGTABLE
+BEGIN
+    9552 "Shows or hides an Explorer bar."
+    9553 "Shows the Search bar."
+    9554 "Shows the Favorites bar."
+    9555 "Shows the History bar."
+    9557 "Shows the Folders bar."
+    9559 "Shows the Media Bar."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SMALLICONS "Small icons"
+    IDS_LARGEICONS "Large icons"
+    IDS_SHOWTEXTLABELS "Show text labels"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOTEXTLABELS "No text labels"
+    IDS_SELECTIVETEXTONRIGHT "Selective text on right"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GOBUTTONLABEL "|Ugrás||"
+    IDS_GOBUTTONTIPTEMPLATE "Ugrás a következőre: ""%s"""
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCHLABEL "Keresés"
+    IDS_ADDRESSBANDLABEL "&Cím"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FOLDERSLABEL "Mappák"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HISTORYTEXT "&Előzmények\tCtrl+H"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UP "Fel"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BACK "Back to %s"
+    IDS_FORWARD "Forward to %s"
+    IDS_FOLDER_OPTIONS "Folder Options"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BROWSEFORNEWTOOLAR "Choose a folder"
+    IDS_TOOLBAR_ERR_TITLE "Eszköztár"
+    IDS_TOOLBAR_ERR_TEXT "Cannot create toolbar."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_RESULTS "Search Results"
+    IDS_SEARCHINVALID "'%1' is not a valid folder."
+    IDS_SEARCH_FOLDER "Searching %s"
+    IDS_SEARCH_FILES_FOUND "%u files found"
+    IDS_SEARCH_OPEN_FOLDER "Open Containing &Folder"
+    IDS_COL_NAME "Név"
+    IDS_COL_LOCATION "In Folder"
+    IDS_COL_RELEVANCE "Relevance"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+END

@@ -17,8 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#ifdef __REACTOS__
+#include <wine/config.h>
+#include <wine/port.h>
+#endif
 
 #include <limits.h>
 #include <math.h>
@@ -542,16 +544,16 @@ static inline HRESULT date_to_string(DOUBLE time, BOOL show_offset, int offset, 
         }
 
         if(!show_offset)
-            sprintfW(buf, formatNoOffsetW, week, month, day,
+            swprintf(buf, formatNoOffsetW, week, month, day,
                     (int)hour_from_time(time), (int)min_from_time(time),
                     (int)sec_from_time(time), year, formatAD?ADW:BCW);
         else if(offset)
-            sprintfW(buf, formatW, week, month, day,
+            swprintf(buf, formatW, week, month, day,
                     (int)hour_from_time(time), (int)min_from_time(time),
                     (int)sec_from_time(time), sign, offset/60, offset%60,
                     year, formatAD?ADW:BCW);
         else
-            sprintfW(buf, formatUTCW, week, month, day,
+            swprintf(buf, formatUTCW, week, month, day,
                     (int)hour_from_time(time), (int)min_from_time(time),
                     (int)sec_from_time(time), year, formatAD?ADW:BCW);
 
@@ -658,15 +660,16 @@ static HRESULT Date_toISOString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, 
 
     if(year < 0) {
         *p++ = '-';
-        p += sprintfW(p, long_year_formatW, -(int)year);
+        p += swprintf(p, long_year_formatW, -(int)year);
     }else if(year > 9999) {
         *p++ = '+';
-        p += sprintfW(p, long_year_formatW, (int)year);
+        p += swprintf(p, long_year_formatW, (int)year);
     }else {
-        p += sprintfW(p, short_year_formatW, (int)year);
+        p += swprintf(p, short_year_formatW, (int)year);
     }
 
-    sprintfW(p, formatW, (int)month_from_time(date->time) + 1, (int)date_from_time(date->time),
+    swprintf(p, formatW,
+             (int)month_from_time(date->time) + 1, (int)date_from_time(date->time),
              (int)hour_from_time(date->time), (int)min_from_time(date->time),
              (int)sec_from_time(date->time), (int)ms_from_time(date->time));
 
@@ -745,7 +748,7 @@ static inline HRESULT create_utc_string(script_ctx_t *ctx, vdisp_t *jsthis, jsva
 
         day = date_from_time(date->time);
 
-        sprintfW(buf, formatAD ? formatADW : formatBCW, week, day, month, year,
+        swprintf(buf, formatAD ? formatADW : formatBCW, week, day, month, year,
                 (int)hour_from_time(date->time), (int)min_from_time(date->time),
                 (int)sec_from_time(date->time));
 
@@ -822,7 +825,7 @@ static HRESULT dateobj_to_date_string(DateInstance *date, jsval_t *r)
 
         day = date_from_time(time);
 
-        sprintfW(buf, formatAD ? formatADW : formatBCW, week, month, day, year);
+        swprintf(buf, formatAD ? formatADW : formatBCW, week, month, day, year);
 
         date_str = jsstr_alloc(buf);
         if(!date_str)
@@ -883,11 +886,11 @@ static HRESULT Date_toTimeString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         else sign = '-';
 
         if(offset)
-            sprintfW(buf, formatW, (int)hour_from_time(time),
+            swprintf(buf, formatW, (int)hour_from_time(time),
                     (int)min_from_time(time), (int)sec_from_time(time),
                     sign, offset/60, offset%60);
         else
-            sprintfW(buf, formatUTCW, (int)hour_from_time(time),
+            swprintf(buf, formatUTCW, (int)hour_from_time(time),
                     (int)min_from_time(time), (int)sec_from_time(time));
 
         date_str = jsstr_alloc(buf);
@@ -2075,7 +2078,7 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
     for(i=0; i<input_len; i++) {
         if(input[i] == '(') nest_level++;
         else if(input[i] == ')') nest_level--;
-        else if(!nest_level) parse[parse_len++] = toupperW(input[i]);
+        else if(!nest_level) parse[parse_len++] = towupper(input[i]);
     }
     parse[parse_len] = 0;
 
@@ -2102,16 +2105,16 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
     }
 
     for(i=0; i<parse_len;) {
-        while(isspaceW(parse[i])) i++;
+        while(iswspace(parse[i])) i++;
         if(parse[i] == ',') {
             while(parse[i] == ',') i++;
             continue;
         }
 
         if(parse[i]>='0' && parse[i]<='9') {
-            int tmp = atoiW(&parse[i]);
+            int tmp = wcstol(&parse[i], NULL, 10);
             while(parse[i]>='0' && parse[i]<='9') i++;
-            while(isspaceW(parse[i])) i++;
+            while(iswspace(parse[i])) i++;
 
             if(parse[i] == ':') {
                 /* Time */
@@ -2121,17 +2124,17 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
                 hour = tmp;
 
                 while(parse[i] == ':') i++;
-                while(isspaceW(parse[i])) i++;
+                while(iswspace(parse[i])) i++;
                 if(parse[i]>='0' && parse[i]<='9') {
-                    min = atoiW(&parse[i]);
+                    min = wcstol(&parse[i], NULL, 10);
                     while(parse[i]>='0' && parse[i]<='9') i++;
                 }
 
-                while(isspaceW(parse[i])) i++;
+                while(iswspace(parse[i])) i++;
                 while(parse[i] == ':') i++;
-                while(isspaceW(parse[i])) i++;
+                while(iswspace(parse[i])) i++;
                 if(parse[i]>='0' && parse[i]<='9') {
-                    sec = atoiW(&parse[i]);
+                    sec = wcstol(&parse[i], NULL, 10);
                     while(parse[i]>='0' && parse[i]<='9') i++;
                 }
             }
@@ -2144,17 +2147,17 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
 
                 month = tmp-1;
 
-                while(isspaceW(parse[i])) i++;
+                while(iswspace(parse[i])) i++;
                 while(parse[i]=='-' || parse[i]=='/') i++;
-                while(isspaceW(parse[i])) i++;
+                while(iswspace(parse[i])) i++;
                 if(parse[i]<'0' || parse[i]>'9') break;
-                day = atoiW(&parse[i]);
+                day = wcstol(&parse[i], NULL, 10);
                 while(parse[i]>='0' && parse[i]<='9') i++;
 
                 while(parse[i]=='-' || parse[i]=='/') i++;
-                while(isspaceW(parse[i])) i++;
+                while(iswspace(parse[i])) i++;
                 if(parse[i]<'0' || parse[i]>'9') break;
-                year = atoiW(&parse[i]);
+                year = wcstol(&parse[i], NULL, 10);
                 while(parse[i]>='0' && parse[i]<='9') i++;
 
                 if(tmp >= 70){
@@ -2189,9 +2192,9 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
             if(parse[i] == '-')  positive = FALSE;
 
             i++;
-            while(isspaceW(parse[i])) i++;
+            while(iswspace(parse[i])) i++;
             if(parse[i]<'0' || parse[i]>'9') break;
-            offset = atoiW(&parse[i]);
+            offset = wcstol(&parse[i], NULL, 10);
             while(parse[i]>='0' && parse[i]<='9') i++;
 
             if(offset<24) offset *= 60;
@@ -2270,7 +2273,7 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
                 size -= i;
 
                 for(j=0; j<ARRAY_SIZE(string_ids); j++)
-                    if(!strncmpiW(&parse[i], strings[j], size)) break;
+                    if(!_wcsnicmp(&parse[i], strings[j], size)) break;
 
                 if(j < 12) {
                     if(set_month) break;

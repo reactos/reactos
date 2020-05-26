@@ -28,6 +28,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
+#include "wine/winternl.h"
 #include "winuser.h"
 #include "winerror.h"
 #include "winreg.h"
@@ -157,6 +158,9 @@ static HRESULT mousedev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEI
     if (id != 0)
         return E_FAIL;
 
+    if (dwFlags & DIEDFL_FORCEFEEDBACK)
+        return S_FALSE;
+
     if ((dwDevType == 0) ||
 	((dwDevType == DIDEVTYPE_MOUSE) && (version < 0x0800)) ||
 	(((dwDevType == DI8DEVCLASS_POINTER) || (dwDevType == DI8DEVTYPE_MOUSE)) && (version >= 0x0800))) {
@@ -174,6 +178,9 @@ static HRESULT mousedev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEI
 {
     if (id != 0)
         return E_FAIL;
+
+    if (dwFlags & DIEDFL_FORCEFEEDBACK)
+        return S_FALSE;
 
     if ((dwDevType == 0) ||
 	((dwDevType == DIDEVTYPE_MOUSE) && (version < 0x0800)) ||
@@ -211,9 +218,9 @@ static SysMouseImpl *alloc_device(REFGUID rguid, IDirectInputImpl *dinput)
     get_app_key(&hkey, &appkey);
     if (!get_config_key(hkey, appkey, "MouseWarpOverride", buffer, sizeof(buffer)))
     {
-        if (!strcasecmp(buffer, "disable"))
+        if (!_strnicmp(buffer, "disable", -1))
             newDevice->warp_override = WARP_DISABLE;
-        else if (!strcasecmp(buffer, "force"))
+        else if (!_strnicmp(buffer, "force", -1))
             newDevice->warp_override = WARP_FORCE_ON;
     }
     if (appkey) RegCloseKey(appkey);
@@ -723,6 +730,9 @@ static HRESULT WINAPI SysMouseWImpl_GetObjectInfo(LPDIRECTINPUTDEVICE8W iface,
     else if (pdidoi->dwType & DIDFT_BUTTON)
         wsprintfW(pdidoi->tszName, buttonW, DIDFT_GETINSTANCE(pdidoi->dwType) - 3);
 
+    if(pdidoi->dwType & DIDFT_AXIS)
+        pdidoi->dwFlags |= DIDOI_ASPECTPOSITION;
+
     _dump_OBJECTINSTANCEW(pdidoi);
     return res;
 }
@@ -757,11 +767,6 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceInfo(
 {
     SysMouseImpl *This = impl_from_IDirectInputDevice8A(iface);
     TRACE("(this=%p,%p)\n", This, pdidi);
-
-    if (pdidi->dwSize != sizeof(DIDEVICEINSTANCEA)) {
-        WARN(" dinput3 not supported yet...\n");
-	return DI_OK;
-    }
 
     fill_mouse_dideviceinstanceA(pdidi, This->base.dinput->dwVersion);
     
@@ -828,7 +833,8 @@ static HRESULT WINAPI SysMouseWImpl_SetActionMap(LPDIRECTINPUTDEVICE8W iface,
                                                  LPCWSTR lpszUserName,
                                                  DWORD dwFlags)
 {
-    FIXME("(%p)->(%p,%s,%08x): semi-stub !\n", iface, lpdiaf, debugstr_w(lpszUserName), dwFlags);
+    SysMouseImpl *This = impl_from_IDirectInputDevice8W(iface);
+    FIXME("(%p)->(%p,%s,%08x): semi-stub !\n", This, lpdiaf, debugstr_w(lpszUserName), dwFlags);
 
     return _set_action_map(iface, lpdiaf, lpszUserName, dwFlags, &c_dfDIMouse2);
 }
@@ -855,6 +861,8 @@ static HRESULT WINAPI SysMouseAImpl_SetActionMap(LPDIRECTINPUTDEVICE8A iface,
     }
 
     hr = SysMouseWImpl_SetActionMap(&This->base.IDirectInputDevice8W_iface, &diafW, lpszUserNameW, dwFlags);
+
+    lpdiaf->dwCRC = diafW.dwCRC;
 
     HeapFree(GetProcessHeap(), 0, diafW.rgoAction);
     HeapFree(GetProcessHeap(), 0, lpszUserNameW);

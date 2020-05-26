@@ -4,11 +4,13 @@
 #include <wine/test.h>
 
 extern void func_drawdib(void);
+extern void func_mciwnd(void);
 extern void func_msvfw(void);
 
 const struct test winetest_testlist[] =
 {
     { "drawdib", func_drawdib },
+    { "mciwnd", func_mciwnd },
     { "msvfw", func_msvfw },
     { 0, 0 }
 };

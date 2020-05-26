@@ -20,7 +20,7 @@
     do { \
         ULONG64 _value = (expression); \
         ULONG64 _result = (result); \
-        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%s), got: %s\n", \
+        ok(_value == _result, "Wrong value for '%s', expected: " #result " (%s), got: %s\n", \
            #expression, wine_dbgstr_longlong(_result), wine_dbgstr_longlong(_value)); \
     } while (0)
 
@@ -28,19 +28,9 @@
     do { \
         ULONG64 _value = (expression); \
         ULONG64 _result = (result); \
-        ok_(file, line)(_value == (result), "Wrong value for '%s', expected: " #result " (%s), got: %s\n", \
+        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (%s), got: %s\n", \
            #expression, wine_dbgstr_longlong(_result), wine_dbgstr_longlong(_value)); \
     } while (0)
-
-#define ok_hex_(file, line, expression, result) \
-    do { \
-        int _value = (expression); \
-        ok_(file, line)(_value == (result), "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x\n", \
-           #expression, (int)(result), _value); \
-    } while (0)
-
-#define ok_str_(file, line, x, y) \
-    ok_(file, line)(strcmp(x, y) == 0, "Wrong string. Expected '%s', got '%s'\n", y, x)
 
 
 // data.c

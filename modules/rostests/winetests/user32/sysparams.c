@@ -17,12 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __REACTOS__
-#define _WIN32_WINNT 0x0600 /* For SPI_GETMOUSEHOVERWIDTH and more */
-#define _WIN32_IE 0x0700
-#define WINVER 0x0600 /* For COLOR_MENUBAR, NONCLIENTMETRICS with padding */
-#endif
-
 #include <assert.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -43,12 +37,26 @@
 static LONG (WINAPI *pChangeDisplaySettingsExA)(LPCSTR, LPDEVMODEA, HWND, DWORD, LPVOID);
 static BOOL (WINAPI *pIsProcessDPIAware)(void);
 static BOOL (WINAPI *pSetProcessDPIAware)(void);
+static BOOL (WINAPI *pSetProcessDpiAwarenessContext)(DPI_AWARENESS_CONTEXT);
+static BOOL (WINAPI *pGetProcessDpiAwarenessInternal)(HANDLE,DPI_AWARENESS*);
+static BOOL (WINAPI *pSetProcessDpiAwarenessInternal)(DPI_AWARENESS);
+static UINT (WINAPI *pGetDpiForSystem)(void);
+static UINT (WINAPI *pGetDpiForWindow)(HWND);
+static BOOL (WINAPI *pGetDpiForMonitorInternal)(HMONITOR,UINT,UINT*,UINT*);
+static DPI_AWARENESS_CONTEXT (WINAPI *pGetThreadDpiAwarenessContext)(void);
+static DPI_AWARENESS_CONTEXT (WINAPI *pSetThreadDpiAwarenessContext)(DPI_AWARENESS_CONTEXT);
+static DPI_AWARENESS_CONTEXT (WINAPI *pGetWindowDpiAwarenessContext)(HWND);
+static DPI_AWARENESS (WINAPI *pGetAwarenessFromDpiAwarenessContext)(DPI_AWARENESS_CONTEXT);
+static BOOL (WINAPI *pIsValidDpiAwarenessContext)(DPI_AWARENESS_CONTEXT);
+static INT (WINAPI *pGetSystemMetricsForDpi)(INT,UINT);
+static BOOL (WINAPI *pSystemParametersInfoForDpi)(UINT,UINT,void*,UINT,UINT);
+static BOOL (WINAPI *pAdjustWindowRectExForDpi)(LPRECT,DWORD,BOOL,DWORD,UINT);
+static BOOL (WINAPI *pLogicalToPhysicalPointForPerMonitorDPI)(HWND,POINT*);
+static BOOL (WINAPI *pPhysicalToLogicalPointForPerMonitorDPI)(HWND,POINT*);
 static LONG (WINAPI *pGetAutoRotationState)(PAR_STATE);
 
 static BOOL strict;
 static int dpi, real_dpi;
-static BOOL iswin9x;
-static HDC hdc;
 
 #define eq(received, expected, label, type) \
         ok((received) == (expected), "%s: got " type " instead of " type "\n", (label),(received),(expected))
@@ -193,6 +201,13 @@ static DWORD get_real_dpi(void)
 {
     DWORD dpi;
 
+    if (pSetThreadDpiAwarenessContext)
+    {
+        DPI_AWARENESS_CONTEXT context = pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_SYSTEM_AWARE );
+        dpi = pGetDpiForSystem();
+        pSetThreadDpiAwarenessContext( context );
+        return dpi;
+    }
     if (get_reg_dword(HKEY_CURRENT_USER, "Control Panel\\Desktop", "LogPixels", &dpi))
         return dpi;
     if (get_reg_dword(HKEY_CURRENT_CONFIG, "Software\\Fonts", "LogPixels", &dpi))
@@ -622,30 +637,17 @@ static BOOL run_spi_setmouse_test( int curr_val[], POINT *req_change, POINT *pro
     BOOL rc;
     INT mi[3];
     static int aw_turn = 0;
-    static BOOL w_implemented = TRUE;
 
     char buf[20];
     int i;
 
     aw_turn++;
     rc = FALSE;
-    if ((aw_turn % 2!=0) && (w_implemented))
-    {
-        /* call unicode on odd (non even) calls */ 
-        SetLastError(0xdeadbeef);
+    SetLastError(0xdeadbeef);
+    if (aw_turn % 2)  /* call unicode on odd (non even) calls */
         rc=SystemParametersInfoW( SPI_SETMOUSE, 0, curr_val, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
-        if (rc == FALSE && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-        {
-            w_implemented = FALSE;
-            trace("SystemParametersInfoW not supported on this platform\n");
-        }
-    }
-
-    if ((aw_turn % 2==0) || (!w_implemented))
-    {
-        /* call ascii version on even calls or if unicode is not available */
+    else
         rc=SystemParametersInfoA( SPI_SETMOUSE, 0, curr_val, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
-    }
     if (!test_error_msg(rc,"SPI_SETMOUSE")) return FALSE;
 
     ok(rc, "SystemParametersInfo: rc=%d err=%d\n", rc, GetLastError());
@@ -664,15 +666,12 @@ static BOOL run_spi_setmouse_test( int curr_val[], POINT *req_change, POINT *pro
            "incorrect value for %d: %d != %d\n", i, mi[i], curr_val[i]);
     }
 
-    if (w_implemented)
-    { 
-        rc=SystemParametersInfoW( SPI_GETMOUSE, 0, mi, 0 );
-        ok(rc, "SystemParametersInfoW: rc=%d err=%d\n", rc, GetLastError());
-        for (i = 0; i < 3; i++)
-        {
-            ok(mi[i] == curr_val[i],
-               "incorrect value for %d: %d != %d\n", i, mi[i], curr_val[i]);
-        }
+    rc=SystemParametersInfoW( SPI_GETMOUSE, 0, mi, 0 );
+    ok(rc, "SystemParametersInfoW: rc=%d err=%d\n", rc, GetLastError());
+    for (i = 0; i < 3; i++)
+    {
+        ok(mi[i] == curr_val[i],
+           "incorrect value for %d: %d != %d\n", i, mi[i], curr_val[i]);
     }
 
     if (0)
@@ -710,7 +709,7 @@ static void test_SPI_SETMOUSE( void )                  /*      4 */
     POINT proj_change7[] = { {6, 6}, {14, 6}, {32, 6}, {40, 40}, {44, 40}, {400, 400} };
     POINT proj_change8[] = { {6, 6}, {28, 6}, {32, 6}, {40, 40}, {44, 40}, {400, 400} };
 
-    int nchange = sizeof( req_change ) / sizeof( POINT );
+    int nchange = ARRAY_SIZE(req_change);
 
     trace("testing SPI_{GET,SET}MOUSE\n");
     SetLastError(0xdeadbeef);
@@ -848,15 +847,10 @@ static void test_SPI_SETBORDER( void )                 /*      6 */
     if ( old_border == 7 || old_border == 20 )
         old_border = 1;
 
-    /* The SPI_SETBORDER seems to be buggy on Win9x/ME (looks like you need to
-     * do it twice to make the intended change). So skip parts of the tests on
-     * those platforms */
-    if( !iswin9x) {
-        /* win2k3 fails if you set the same border twice, or if size is 0 */
-        if (!test_setborder(2,  1, dpi)) return;
-        test_setborder(1,  1, dpi);
-        test_setborder(3,  1, dpi);
-    }
+    /* win2k3 fails if you set the same border twice, or if size is 0 */
+    if (!test_setborder(2,  1, dpi)) return;
+    test_setborder(1,  1, dpi);
+    test_setborder(3,  1, dpi);
     if (!test_setborder(1, 0, dpi)) return;
     test_setborder(0, 0, dpi);
     test_setborder(3, 0, dpi);
@@ -880,7 +874,7 @@ static void test_SPI_SETKEYBOARDSPEED( void )          /*     10 */
     if (!test_error_msg(rc,"SPI_{GET,SET}KEYBOARDSPEED"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
         char buf[10];
@@ -969,7 +963,7 @@ static void test_SPI_SETSCREENSAVETIMEOUT( void )      /*     14 */
     if (!test_error_msg(rc,"SPI_{GET,SET}SCREENSAVETIMEOUT"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
         char buf[10];
@@ -1006,7 +1000,7 @@ static void test_SPI_SETSCREENSAVEACTIVE( void )       /*     17 */
     if (!test_error_msg(rc,"SPI_{GET,SET}SCREENSAVEACTIVE"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
 
@@ -1047,7 +1041,7 @@ static void test_SPI_SETKEYBOARDDELAY( void )          /*     23 */
     if (!test_error_msg(rc,"SPI_{GET,SET}KEYBOARDDELAY"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT delay;
         char buf[10];
@@ -1148,7 +1142,7 @@ static void test_SPI_SETICONTITLEWRAP( void )          /*     26 */
     if (!test_error_msg(rc,"SPI_{GET,SET}ICONTITLEWRAP"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
         UINT regval;
@@ -1163,8 +1157,7 @@ static void test_SPI_SETICONTITLEWRAP( void )          /*     26 */
         if( regval != vals[i])
             regval = metricfromreg( SPI_SETICONTITLEWRAP_REGKEY1,
                     SPI_SETICONTITLEWRAP_VALNAME, dpi);
-        ok( regval == vals[i] || broken(regval == -1), /* win9x */
-                "wrong value in registry %d, expected %d\n", regval, vals[i] );
+        ok( regval == vals[i], "wrong value in registry %d, expected %d\n", regval, vals[i] );
 
         rc=SystemParametersInfoA( SPI_GETICONTITLEWRAP, 0, &v, 0 );
         ok(rc, "%d: rc=%d err=%d\n", i, rc, GetLastError());
@@ -1193,7 +1186,7 @@ static void test_SPI_SETMENUDROPALIGNMENT( void )      /*     28 */
     if (!test_error_msg(rc,"SPI_{GET,SET}MENUDROPALIGNMENT"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
 
@@ -1229,7 +1222,7 @@ static void test_SPI_SETDOUBLECLKWIDTH( void )         /*     29 */
     trace("testing SPI_{GET,SET}DOUBLECLKWIDTH\n");
     old_width = GetSystemMetrics( SM_CXDOUBLECLK );
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         char buf[10];
 
@@ -1263,7 +1256,7 @@ static void test_SPI_SETDOUBLECLKHEIGHT( void )        /*     30 */
     trace("testing SPI_{GET,SET}DOUBLECLKHEIGHT\n");
     old_height = GetSystemMetrics( SM_CYDOUBLECLK );
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         char buf[10];
 
@@ -1353,7 +1346,7 @@ static void test_SPI_SETMOUSEBUTTONSWAP( void )        /*     33 */
     trace("testing SPI_{GET,SET}MOUSEBUTTONSWAP\n");
     old_b = GetSystemMetrics( SM_SWAPBUTTON );
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         SetLastError(0xdeadbeef);
         rc=SystemParametersInfoA( SPI_SETMOUSEBUTTONSWAP, vals[i], 0,
@@ -1408,7 +1401,7 @@ static void test_SPI_SETDRAGFULLWINDOWS( void )        /*     37 */
     if (!test_error_msg(rc,"SPI_{GET,SET}DRAGFULLWINDOWS"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
 
@@ -1430,21 +1423,21 @@ static void test_SPI_SETDRAGFULLWINDOWS( void )        /*     37 */
     ok(rc, "***warning*** failed to restore the original value: rc=%d err=%d\n", rc, GetLastError());
 }
 
-#define test_reg_metric( KEY, VAL, val) \
-{   INT regval;\
+#define test_reg_metric( KEY, VAL, val) do { \
+    INT regval;\
     regval = metricfromreg( KEY, VAL, dpi);\
     ok( regval==val, "wrong value \"%s\" in registry %d, expected %d\n", VAL, regval, val);\
-}
- 
-#define test_reg_metric2( KEY1, KEY2, VAL, val) \
-{   INT regval;\
+} while(0)
+
+#define test_reg_metric2( KEY1, KEY2, VAL, val) do { \
+    INT regval;\
     regval = metricfromreg( KEY1, VAL, dpi);\
     if( regval != val) regval = metricfromreg( KEY2, VAL, dpi);\
     ok( regval==val, "wrong value \"%s\" in registry %d, expected %d\n", VAL, regval, val);\
-}
+} while(0)
 
-#define test_reg_font( KEY, VAL, LF) \
-{   LOGFONTA lfreg;\
+#define test_reg_font( KEY, VAL, LF) do { \
+    LOGFONTA lfreg;\
     lffromreg( KEY, VAL, &lfreg);\
     ok( (lfreg.lfHeight < 0 ? (LF).lfHeight == MulDiv( lfreg.lfHeight, dpi, real_dpi ) : \
                 MulDiv( -(LF).lfHeight , 72, dpi) == lfreg.lfHeight )&&\
@@ -1452,9 +1445,9 @@ static void test_SPI_SETDRAGFULLWINDOWS( void )        /*     37 */
         (LF).lfWeight == lfreg.lfWeight &&\
         !strcmp( (LF).lfFaceName, lfreg.lfFaceName)\
         , "wrong value \"%s\" in registry %d, %d\n", VAL, (LF).lfHeight, lfreg.lfHeight);\
-}
+} while(0)
 
-#define TEST_NONCLIENTMETRICS_REG( ncm) \
+#define TEST_NONCLIENTMETRICS_REG( ncm) do { \
 /*FIXME: test_reg_metric2( SPI_SETBORDER_REGKEY2, SPI_SETBORDER_REGKEY, SPI_SETBORDER_VALNAME, (ncm).iBorderWidth);*/\
 test_reg_metric( SPI_METRIC_REGKEY, SPI_SCROLLWIDTH_VALNAME, (ncm).iScrollWidth);\
 test_reg_metric( SPI_METRIC_REGKEY, SPI_SCROLLHEIGHT_VALNAME, (ncm).iScrollHeight);\
@@ -1468,16 +1461,30 @@ test_reg_font( SPI_METRIC_REGKEY, SPI_MENUFONT_VALNAME, (ncm).lfMenuFont);\
 test_reg_font( SPI_METRIC_REGKEY, SPI_CAPTIONFONT_VALNAME, (ncm).lfCaptionFont);\
 test_reg_font( SPI_METRIC_REGKEY, SPI_SMCAPTIONFONT_VALNAME, (ncm).lfSmCaptionFont);\
 test_reg_font( SPI_METRIC_REGKEY, SPI_STATUSFONT_VALNAME, (ncm).lfStatusFont);\
-test_reg_font( SPI_METRIC_REGKEY, SPI_MESSAGEFONT_VALNAME, (ncm).lfMessageFont);
+test_reg_font( SPI_METRIC_REGKEY, SPI_MESSAGEFONT_VALNAME, (ncm).lfMessageFont); } while(0)
 
 /* get text metric height value for the specified logfont */
 static int get_tmheight( LOGFONTA *plf, int flag)
 {
     TEXTMETRICA tm;
+    HDC hdc = GetDC(0);
     HFONT hfont = CreateFontIndirectA( plf);
     hfont = SelectObject( hdc, hfont);
     GetTextMetricsA( hdc, &tm);
     hfont = SelectObject( hdc, hfont);
+    ReleaseDC( 0, hdc );
+    return tm.tmHeight + (flag ? tm.tmExternalLeading : 0);
+}
+
+static int get_tmheightW( LOGFONTW *plf, int flag)
+{
+    TEXTMETRICW tm;
+    HDC hdc = GetDC(0);
+    HFONT hfont = CreateFontIndirectW( plf);
+    hfont = SelectObject( hdc, hfont);
+    GetTextMetricsW( hdc, &tm);
+    hfont = SelectObject( hdc, hfont);
+    ReleaseDC( 0, hdc );
     return tm.tmHeight + (flag ? tm.tmExternalLeading : 0);
 }
 
@@ -1515,8 +1522,7 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
     Ncmorig.iSmCaptionHeight = metricfromreg( SPI_METRIC_REGKEY, SPI_SMCAPTIONHEIGHT_VALNAME, dpi);
     Ncmorig.iMenuHeight = metricfromreg( SPI_METRIC_REGKEY, SPI_MENUHEIGHT_VALNAME, dpi);
     /* test registry entries */
-    TEST_NONCLIENTMETRICS_REG( Ncmorig)
-    Ncmorig.lfCaptionFont.lfHeight = MulDiv( Ncmorig.lfCaptionFont.lfHeight, real_dpi, dpi );
+    TEST_NONCLIENTMETRICS_REG( Ncmorig);
 
     /* make small changes */
     Ncmnew = Ncmstart;
@@ -1554,7 +1560,7 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
     rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSA), &Ncmcur, FALSE );
     ok(rc, "SystemParametersInfoA: rc=%d err=%d\n", rc, GetLastError());
     /* test registry entries */
-    TEST_NONCLIENTMETRICS_REG( Ncmcur)
+    TEST_NONCLIENTMETRICS_REG( Ncmcur );
     /* test the system metrics with these settings */
     test_GetSystemMetrics();
     /* now for something invalid: increase the {menu|caption|smcaption} fonts
@@ -1574,7 +1580,7 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
     ok(rc, "SystemParametersInfoA: rc=%d err=%d\n", rc, GetLastError());
     test_change_message( SPI_SETNONCLIENTMETRICS, 1 );
     /* raw values are in registry */
-    TEST_NONCLIENTMETRICS_REG( Ncmnew)
+    TEST_NONCLIENTMETRICS_REG( Ncmnew );
     /* get them back */
     rc=SystemParametersInfoA( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSA), &Ncmcur, FALSE );
     ok(rc, "SystemParametersInfoA: rc=%d err=%d\n", rc, GetLastError());
@@ -1754,10 +1760,10 @@ static void test_SPI_SETICONMETRICS( void )               /*     46 */
         return;
    /* check some registry values */ 
     regval = metricfromreg( SPI_ICONHORIZONTALSPACING_REGKEY, SPI_ICONHORIZONTALSPACING_VALNAME, dpi);
-    ok( regval==im_orig.iHorzSpacing || broken(regval == -1), /* nt4 */
+    ok( regval==im_orig.iHorzSpacing,
         "wrong value in registry %d, expected %d\n", regval, im_orig.iHorzSpacing);
     regval = metricfromreg( SPI_ICONVERTICALSPACING_REGKEY, SPI_ICONVERTICALSPACING_VALNAME, dpi);
-    ok( regval==im_orig.iVertSpacing || broken(regval == -1), /* nt4 */
+    ok( regval==im_orig.iVertSpacing,
         "wrong value in registry %d, expected %d\n", regval, im_orig.iVertSpacing);
     regval = metricfromreg( SPI_SETICONTITLEWRAP_REGKEY2, SPI_SETICONTITLEWRAP_VALNAME, dpi);
     if( regval != im_orig.iTitleWrap)
@@ -1915,11 +1921,10 @@ static void test_SPI_SETSHOWSOUNDS( void )             /*     57 */
     trace("testing SPI_{GET,SET}SHOWSOUNDS\n");
     SetLastError(0xdeadbeef);
     rc=SystemParametersInfoA( SPI_GETSHOWSOUNDS, 0, &old_b, 0 );
-    /* SPI_{GET,SET}SHOWSOUNDS is completely broken on Win9x */
     if (!test_error_msg(rc,"SPI_{GET,SET}SHOWSOUNDS"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
 
@@ -1956,7 +1961,7 @@ static void test_SPI_SETKEYBOARDPREF( void )           /*     69 */
     if (!test_error_msg(rc,"SPI_{GET,SET}KEYBOARDPREF"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         BOOL v;
 
@@ -1991,7 +1996,7 @@ static void test_SPI_SETSCREENREADER( void )           /*     71 */
     if (!test_error_msg(rc,"SPI_{GET,SET}SCREENREADER"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         BOOL v;
 
@@ -2022,7 +2027,6 @@ static void test_SPI_SETFONTSMOOTHING( void )         /*     75 */
     unsigned int i;
 
     trace("testing SPI_{GET,SET}FONTSMOOTHING\n");
-    if( iswin9x) return; /* 95/98/ME don't seem to implement this fully */ 
     SetLastError(0xdeadbeef);
     rc=SystemParametersInfoA( SPI_GETFONTSMOOTHING, 0, &old_b, 0 );
     if (!test_error_msg(rc,"SPI_{GET,SET}FONTSMOOTHING"))
@@ -2031,7 +2035,7 @@ static void test_SPI_SETFONTSMOOTHING( void )         /*     75 */
     SystemParametersInfoA( SPI_GETFONTSMOOTHINGCONTRAST, 0, &old_contrast, 0 );
     SystemParametersInfoA( SPI_GETFONTSMOOTHINGORIENTATION, 0, &old_orient, 0 );
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
 
@@ -2108,7 +2112,7 @@ static void test_SPI_SETLOWPOWERACTIVE( void )         /*     85 */
     if (!test_error_msg(rc,"SPI_{GET,SET}LOWPOWERACTIVE"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
 
@@ -2125,9 +2129,7 @@ static void test_SPI_SETLOWPOWERACTIVE( void )         /*     85 */
         v = 0xdeadbeef;
         rc=SystemParametersInfoA( SPI_GETLOWPOWERACTIVE, 0, &v, 0 );
         ok(rc, "%d: rc=%d err=%d\n", i, rc, GetLastError());
-        ok(v == vals[i] ||
-           broken(v == (0xdead0000 | vals[i])) ||  /* win98 only sets the low word */
-           v == 0, /* win2k3 */
+        ok(v == vals[i] || v == 0, /* win2k3 */
            "SPI_GETLOWPOWERACTIVE: got %d instead of 0 or %d\n", v, vals[i]);
     }
 
@@ -2148,7 +2150,7 @@ static void test_SPI_SETPOWEROFFACTIVE( void )         /*     86 */
     if (!test_error_msg(rc,"SPI_{GET,SET}POWEROFFACTIVE"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
 
@@ -2165,9 +2167,7 @@ static void test_SPI_SETPOWEROFFACTIVE( void )         /*     86 */
         v = 0xdeadbeef;
         rc=SystemParametersInfoA( SPI_GETPOWEROFFACTIVE, 0, &v, 0 );
         ok(rc, "%d: rc=%d err=%d\n", i, rc, GetLastError());
-        ok(v == vals[i] ||
-           broken(v == (0xdead0000 | vals[i])) ||  /* win98 only sets the low word */
-           v == 0, /* win2k3 */
+        ok(v == vals[i] || v == 0, /* win2k3 */
            "SPI_GETPOWEROFFACTIVE: got %d instead of 0 or %d\n", v, vals[i]);
     }
 
@@ -2188,7 +2188,7 @@ static void test_SPI_SETSNAPTODEFBUTTON( void )         /*     95 */
     if (!test_error_msg(rc,"SPI_GETSNAPTODEFBUTTON"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
 
@@ -2220,13 +2220,10 @@ static void test_SPI_SETMOUSEHOVERWIDTH( void )      /*     99 */
     trace("testing SPI_{GET,SET}MOUSEHOVERWIDTH\n");
     SetLastError(0xdeadbeef);
     rc=SystemParametersInfoA( SPI_GETMOUSEHOVERWIDTH, 0, &old_width, 0 );
-    /* SPI_{GET,SET}MOUSEHOVERWIDTH does not seem to be supported on Win9x despite
-    * what MSDN states (Verified on Win98SE)
-    */
     if (!test_error_msg(rc,"SPI_{GET,SET}MOUSEHOVERWIDTH"))
         return;
-    
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
         char buf[10];
@@ -2260,13 +2257,10 @@ static void test_SPI_SETMOUSEHOVERHEIGHT( void )      /*     101 */
     trace("testing SPI_{GET,SET}MOUSEHOVERHEIGHT\n");
     SetLastError(0xdeadbeef);
     rc=SystemParametersInfoA( SPI_GETMOUSEHOVERHEIGHT, 0, &old_height, 0 );
-    /* SPI_{GET,SET}MOUSEHOVERWIDTH does not seem to be supported on Win9x despite
-     * what MSDN states (Verified on Win98SE)
-     */
     if (!test_error_msg(rc,"SPI_{GET,SET}MOUSEHOVERHEIGHT"))
         return;
-    
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
         char buf[10];
@@ -2304,13 +2298,10 @@ static void test_SPI_SETMOUSEHOVERTIME( void )      /*     103 */
     trace("testing SPI_{GET,SET}MOUSEHOVERTIME\n");
     SetLastError(0xdeadbeef);
     rc=SystemParametersInfoA( SPI_GETMOUSEHOVERTIME, 0, &old_time, 0 );
-    /* SPI_{GET,SET}MOUSEHOVERWIDTH does not seem to be supported on Win9x despite
-     * what MSDN states (Verified on Win98SE)
-     */    
     if (!test_error_msg(rc,"SPI_{GET,SET}MOUSEHOVERTIME"))
         return;
-    
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
         char buf[10];
@@ -2349,7 +2340,7 @@ static void test_SPI_SETWHEELSCROLLLINES( void )      /*     105 */
     if (!test_error_msg(rc,"SPI_{GET,SET}WHEELSCROLLLINES"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
         char buf[10];
@@ -2388,7 +2379,7 @@ static void test_SPI_SETMENUSHOWDELAY( void )      /*     107 */
     if (!test_error_msg(rc,"SPI_{GET,SET}MENUSHOWDELAY"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
         char buf[10];
@@ -2427,7 +2418,7 @@ static void test_SPI_SETWHEELSCROLLCHARS( void )      /*     108 */
     if (!test_error_msg(rc,"SPI_{GET,SET}WHEELSCROLLCHARS"))
         return;
 
-    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    for (i=0;i<ARRAY_SIZE(vals);i++)
     {
         UINT v;
         char buf[10];
@@ -2459,9 +2450,6 @@ static void test_SPI_SETWALLPAPER( void )              /*   115 */
     trace("testing SPI_{GET,SET}DESKWALLPAPER\n");
     SetLastError(0xdeadbeef);
     rc=SystemParametersInfoA(SPI_GETDESKWALLPAPER, 260, oldval, 0);
-    /* SPI_{GET,SET}DESKWALLPAPER is completely broken on Win9x and
-     * unimplemented on NT4
-     */
     if (!test_error_msg(rc,"SPI_{GET,SET}DESKWALLPAPER"))
         return;
 
@@ -2500,7 +2488,7 @@ static void test_WM_DISPLAYCHANGE(void)
 
     displaychange_sem = CreateSemaphoreW(NULL, 0, 1, NULL);
 
-    for(i = 0; i < sizeof(test_bpps)/sizeof(test_bpps[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(test_bpps); i++) {
         last_bpp = -1;
 
         memset(&mode, 0, sizeof(mode));
@@ -2737,8 +2725,10 @@ static void test_GetSystemMetrics( void)
 
     ncm.cbSize = sizeof(ncm); /* Vista added padding */
     SetLastError(0xdeadbeef);
+    ncm.iPaddedBorderWidth = 0xcccc;
     rc = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
     ok(rc || broken(!rc) /* before Vista */, "SystemParametersInfoA failed\n");
+    if (rc) ok( ncm.iPaddedBorderWidth == 0, "wrong iPaddedBorderWidth %u\n", ncm.iPaddedBorderWidth );
 
     minim.cbSize = sizeof( minim);
     ncm.cbSize = FIELD_OFFSET(NONCLIENTMETRICSA, iPaddedBorderWidth);
@@ -2925,6 +2915,165 @@ static void test_GetSystemMetrics( void)
     DeleteDC(hdc);
 }
 
+static void compare_font( const LOGFONTW *lf1, const LOGFONTW *lf2, int dpi, int custom_dpi, int line )
+{
+    ok_(__FILE__,line)( lf1->lfHeight == MulDiv( lf2->lfHeight, dpi, custom_dpi ),
+                        "wrong lfHeight %d vs %d\n", lf1->lfHeight, lf2->lfHeight );
+    ok_(__FILE__,line)( abs( lf1->lfWidth - MulDiv( lf2->lfWidth, dpi, custom_dpi )) <= 1,
+                        "wrong lfWidth %d vs %d\n", lf1->lfWidth, lf2->lfWidth );
+    ok_(__FILE__,line)( !memcmp( &lf1->lfEscapement, &lf2->lfEscapement,
+                                 offsetof( LOGFONTW, lfFaceName ) - offsetof( LOGFONTW, lfEscapement )),
+                        "font differs\n" );
+    ok_(__FILE__,line)( !lstrcmpW( lf1->lfFaceName, lf2->lfFaceName ), "wrong face name %s vs %s\n",
+                        wine_dbgstr_w( lf1->lfFaceName ), wine_dbgstr_w( lf2->lfFaceName ));
+}
+
+static void test_metrics_for_dpi( int custom_dpi )
+{
+    int i, val;
+    NONCLIENTMETRICSW ncm1, ncm2;
+    ICONMETRICSW im1, im2;
+    LOGFONTW lf1, lf2;
+    BOOL ret;
+
+    if (!pSystemParametersInfoForDpi)
+    {
+        win_skip( "custom dpi metrics not supported\n" );
+        return;
+    }
+
+    ncm1.cbSize = sizeof(ncm1);
+    ret = SystemParametersInfoW( SPI_GETNONCLIENTMETRICS, sizeof(ncm1), &ncm1, FALSE );
+    ok( ret, "SystemParametersInfoW failed err %u\n", GetLastError() );
+    ncm2.cbSize = sizeof(ncm2);
+    ret = pSystemParametersInfoForDpi( SPI_GETNONCLIENTMETRICS, sizeof(ncm2), &ncm2, FALSE, custom_dpi );
+    ok( ret, "SystemParametersInfoForDpi failed err %u\n", GetLastError() );
+
+    for (i = 0; i < 92; i++)
+    {
+        int ret1 = GetSystemMetrics( i );
+        int ret2 = pGetSystemMetricsForDpi( i, custom_dpi );
+        switch (i)
+        {
+        case SM_CXVSCROLL:
+        case SM_CYHSCROLL:
+        case SM_CYVTHUMB:
+        case SM_CXHTHUMB:
+        case SM_CXICON:
+        case SM_CYICON:
+        case SM_CYVSCROLL:
+        case SM_CXHSCROLL:
+        case SM_CYSIZE:
+        case SM_CXICONSPACING:
+        case SM_CYICONSPACING:
+        case SM_CXSMSIZE:
+        case SM_CYSMSIZE:
+        case SM_CYMENUSIZE:
+            ok( ret1 == MulDiv( ret2, dpi, custom_dpi ), "%u: wrong value %u vs %u\n", i, ret1, ret2 );
+            break;
+        case SM_CXSIZE:
+            ok( ret1 == ncm1.iCaptionWidth && ret2 == ncm2.iCaptionWidth,
+                "%u: wrong value %u vs %u caption %u vs %u\n",
+                i, ret1, ret2, ncm1.iCaptionWidth, ncm2.iCaptionWidth );
+            break;
+        case SM_CXCURSOR:
+        case SM_CYCURSOR:
+            val = MulDiv( 32, custom_dpi, USER_DEFAULT_SCREEN_DPI );
+            if (val < 48) val = 32;
+            else if (val < 64) val = 48;
+            else val = 64;
+            ok( val == ret2, "%u: wrong value %u vs %u\n", i, ret1, ret2 );
+            break;
+        case SM_CYCAPTION:
+        case SM_CYSMCAPTION:
+        case SM_CYMENU:
+            ok( ret1 - 1 == MulDiv( ret2 - 1, dpi, custom_dpi ), "%u: wrong value %u vs %u\n", i, ret1, ret2 );
+            break;
+        case SM_CXMENUSIZE:
+            ok( ret1 / 8 == MulDiv( ret2, dpi, custom_dpi ) / 8, "%u: wrong value %u vs %u\n", i, ret1, ret2 );
+            break;
+        case SM_CXFRAME:
+        case SM_CYFRAME:
+            ok( ret1 == ncm1.iBorderWidth + 3 && ret2 == ncm2.iBorderWidth + 3,
+                "%u: wrong value %u vs %u borders %u+%u vs %u+%u\n", i, ret1, ret2,
+                ncm1.iBorderWidth, ncm1.iPaddedBorderWidth, ncm2.iBorderWidth, ncm2.iPaddedBorderWidth );
+            break;
+        case SM_CXSMICON:
+        case SM_CYSMICON:
+            ok( ret1 == (MulDiv( 16, dpi, USER_DEFAULT_SCREEN_DPI ) & ~1) &&
+                ret2 == (MulDiv( 16, custom_dpi, USER_DEFAULT_SCREEN_DPI ) & ~1),
+                "%u: wrong value %u vs %u\n", i, ret1, ret2 );
+            break;
+        case SM_CXMENUCHECK:
+        case SM_CYMENUCHECK:
+            ok( ret1 == ((get_tmheightW( &ncm1.lfMenuFont, 1 ) - 1) | 1) &&
+                ret2 == ((get_tmheightW( &ncm2.lfMenuFont, 1 ) - 1) | 1),
+                "%u: wrong value %u vs %u font %u vs %u\n", i, ret1, ret2,
+                get_tmheightW( &ncm1.lfMenuFont, 1 ), get_tmheightW( &ncm2.lfMenuFont, 1 ));
+            break;
+        default:
+            ok( ret1 == ret2, "%u: wrong value %u vs %u\n", i, ret1, ret2 );
+            break;
+        }
+    }
+    im1.cbSize = sizeof(im1);
+    ret = SystemParametersInfoW( SPI_GETICONMETRICS, sizeof(im1), &im1, FALSE );
+    ok( ret, "SystemParametersInfoW failed err %u\n", GetLastError() );
+    im2.cbSize = sizeof(im2);
+    ret = pSystemParametersInfoForDpi( SPI_GETICONMETRICS, sizeof(im2), &im2, FALSE, custom_dpi );
+    ok( ret, "SystemParametersInfoForDpi failed err %u\n", GetLastError() );
+    ok( im1.iHorzSpacing == MulDiv( im2.iHorzSpacing, dpi, custom_dpi ), "wrong iHorzSpacing %u vs %u\n",
+        im1.iHorzSpacing, im2.iHorzSpacing );
+    ok( im1.iVertSpacing == MulDiv( im2.iVertSpacing, dpi, custom_dpi ), "wrong iVertSpacing %u vs %u\n",
+        im1.iVertSpacing, im2.iVertSpacing );
+    ok( im1.iTitleWrap == im2.iTitleWrap, "wrong iTitleWrap %u vs %u\n",
+        im1.iTitleWrap, im2.iTitleWrap );
+    compare_font( &im1.lfFont, &im2.lfFont, dpi, custom_dpi, __LINE__ );
+
+    ret = SystemParametersInfoW( SPI_GETICONTITLELOGFONT, sizeof(lf1), &lf1, FALSE );
+    ok( ret, "SystemParametersInfoW failed err %u\n", GetLastError() );
+    ret = pSystemParametersInfoForDpi( SPI_GETICONTITLELOGFONT, sizeof(lf2), &lf2, FALSE, custom_dpi );
+    ok( ret, "SystemParametersInfoForDpi failed err %u\n", GetLastError() );
+    compare_font( &lf1, &lf2, dpi, custom_dpi, __LINE__ );
+
+    /* on high-dpi iPaddedBorderWidth is used in addition to iBorderWidth */
+    ok( ncm1.iBorderWidth + ncm1.iPaddedBorderWidth == MulDiv( ncm2.iBorderWidth + ncm2.iPaddedBorderWidth, dpi, custom_dpi ),
+        "wrong iBorderWidth %u+%u vs %u+%u\n",
+        ncm1.iBorderWidth, ncm1.iPaddedBorderWidth, ncm2.iBorderWidth, ncm2.iPaddedBorderWidth );
+    ok( ncm1.iScrollWidth == MulDiv( ncm2.iScrollWidth, dpi, custom_dpi ),
+        "wrong iScrollWidth %u vs %u\n", ncm1.iScrollWidth, ncm2.iScrollWidth );
+    ok( ncm1.iScrollHeight == MulDiv( ncm2.iScrollHeight, dpi, custom_dpi ),
+        "wrong iScrollHeight %u vs %u\n", ncm1.iScrollHeight, ncm2.iScrollHeight );
+    ok( ((ncm1.iCaptionWidth + 1) & ~1) == ((MulDiv( ncm2.iCaptionWidth, dpi, custom_dpi ) + 1) & ~1),
+        "wrong iCaptionWidth %u vs %u\n", ncm1.iCaptionWidth, ncm2.iCaptionWidth );
+    ok( ncm1.iCaptionHeight == MulDiv( ncm2.iCaptionHeight, dpi, custom_dpi ),
+        "wrong iCaptionHeight %u vs %u\n", ncm1.iCaptionHeight, ncm2.iCaptionHeight );
+    compare_font( &ncm1.lfCaptionFont, &ncm2.lfCaptionFont, dpi, custom_dpi, __LINE__ );
+    ok( ncm1.iSmCaptionHeight == MulDiv( ncm2.iSmCaptionHeight, dpi, custom_dpi ),
+        "wrong iSmCaptionHeight %u vs %u\n", ncm1.iSmCaptionHeight, ncm2.iSmCaptionHeight );
+    compare_font( &ncm1.lfSmCaptionFont, &ncm2.lfSmCaptionFont, dpi, custom_dpi, __LINE__ );
+    ok( ncm1.iMenuHeight == MulDiv( ncm2.iMenuHeight, dpi, custom_dpi ),
+        "wrong iMenuHeight %u vs %u\n", ncm1.iMenuHeight, ncm2.iMenuHeight );
+    /* iSmCaptionWidth and iMenuWidth apparently need to be multiples of 8 */
+    ok( ncm1.iSmCaptionWidth / 8 == MulDiv( ncm2.iSmCaptionWidth, dpi, custom_dpi ) / 8,
+        "wrong iSmCaptionWidth %u vs %u\n", ncm1.iSmCaptionWidth, ncm2.iSmCaptionWidth );
+    ok( ncm1.iMenuWidth / 8 == MulDiv( ncm2.iMenuWidth, dpi, custom_dpi ) / 8,
+        "wrong iMenuWidth %u vs %u\n", ncm1.iMenuWidth, ncm2.iMenuWidth );
+    compare_font( &ncm1.lfMenuFont, &ncm2.lfMenuFont, dpi, custom_dpi, __LINE__ );
+    compare_font( &ncm1.lfStatusFont, &ncm2.lfStatusFont, dpi, custom_dpi, __LINE__ );
+    compare_font( &ncm1.lfMessageFont, &ncm2.lfMessageFont, dpi, custom_dpi, __LINE__ );
+
+    for (i = 1; i < 120; i++)
+    {
+        if (i == SPI_GETICONTITLELOGFONT || i == SPI_GETNONCLIENTMETRICS || i == SPI_GETICONMETRICS)
+            continue;
+        SetLastError( 0xdeadbeef );
+        ret = pSystemParametersInfoForDpi( i, 0, &val, 0, custom_dpi );
+        ok( !ret, "%u: SystemParametersInfoForDpi succeeded\n", i );
+            ok( GetLastError() == ERROR_INVALID_PARAMETER, "%u: wrong error %u\n", i, GetLastError() );
+    }
+}
+
 static void test_EnumDisplaySettings(void)
 {
     DEVMODEA devmode;
@@ -2933,13 +3082,11 @@ static void test_EnumDisplaySettings(void)
     DWORD num;
 
     memset(&devmode, 0, sizeof(devmode));
-    /* Win95 doesn't handle ENUM_CURRENT_SETTINGS correctly */
     EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &devmode);
 
     hdc = GetDC(0);
     val = GetDeviceCaps(hdc, BITSPIXEL);
-    ok(devmode.dmBitsPerPel == val ||
-        broken(devmode.dmDeviceName[0] == 0), /* Win95 */
+    ok(devmode.dmBitsPerPel == val,
         "GetDeviceCaps(BITSPIXEL) returned %d, EnumDisplaySettings returned %d\n",
         val, devmode.dmBitsPerPel);
 
@@ -2988,6 +3135,378 @@ static void test_GetSysColorBrush(void)
         win_skip("COLOR_MENUBAR unsupported\n");
 }
 
+static void test_dpi_stock_objects( HDC hdc )
+{
+    DPI_AWARENESS_CONTEXT context;
+    HGDIOBJ obj[STOCK_LAST + 1], obj2[STOCK_LAST + 1];
+    LOGFONTW lf, lf2;
+    UINT i, dpi;
+
+    context = pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_UNAWARE );
+    dpi = GetDeviceCaps( hdc, LOGPIXELSX );
+    ok( dpi == USER_DEFAULT_SCREEN_DPI, "wrong dpi %u\n", dpi );
+    ok( !pIsProcessDPIAware(), "not aware\n" );
+    for (i = 0; i <= STOCK_LAST; i++) obj[i] = GetStockObject( i );
+
+    pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_SYSTEM_AWARE );
+    dpi = GetDeviceCaps( hdc, LOGPIXELSX );
+    ok( dpi == real_dpi, "wrong dpi %u\n", dpi );
+    ok( pIsProcessDPIAware(), "not aware\n" );
+    for (i = 0; i <= STOCK_LAST; i++) obj2[i] = GetStockObject( i );
+
+    for (i = 0; i <= STOCK_LAST; i++)
+    {
+        switch (i)
+        {
+        case OEM_FIXED_FONT:
+        case SYSTEM_FIXED_FONT:
+            ok( obj[i] != obj2[i], "%u: same object\n", i );
+            break;
+        case SYSTEM_FONT:
+        case DEFAULT_GUI_FONT:
+            ok( obj[i] != obj2[i], "%u: same object\n", i );
+            GetObjectW( obj[i], sizeof(lf), &lf );
+            GetObjectW( obj2[i], sizeof(lf2), &lf2 );
+            ok( lf.lfHeight == MulDiv( lf2.lfHeight, USER_DEFAULT_SCREEN_DPI, real_dpi ),
+                "%u: wrong height %d / %d\n", i, lf.lfHeight, lf2.lfHeight );
+            break;
+        default:
+            ok( obj[i] == obj2[i], "%u: different object\n", i );
+            break;
+        }
+    }
+
+    pSetThreadDpiAwarenessContext( context );
+}
+
+static void scale_point_dpi( POINT *pt, UINT src_dpi, UINT target_dpi )
+{
+    pt->x = MulDiv( pt->x, target_dpi, src_dpi );
+    pt->y = MulDiv( pt->y, target_dpi, src_dpi );
+}
+
+static void scale_rect_dpi( RECT *rect, UINT src_dpi, UINT target_dpi )
+{
+    rect->left = MulDiv( rect->left, target_dpi, src_dpi );
+    rect->top = MulDiv( rect->top, target_dpi, src_dpi );
+    rect->right = MulDiv( rect->right, target_dpi, src_dpi );
+    rect->bottom = MulDiv( rect->bottom, target_dpi, src_dpi );
+}
+
+static void scale_point_dpi_aware( POINT *pt, DPI_AWARENESS from, DPI_AWARENESS to )
+{
+    if (from == DPI_AWARENESS_UNAWARE && to != DPI_AWARENESS_UNAWARE)
+        scale_point_dpi( pt, USER_DEFAULT_SCREEN_DPI, real_dpi );
+    else if (from != DPI_AWARENESS_UNAWARE && to == DPI_AWARENESS_UNAWARE)
+        scale_point_dpi( pt, real_dpi, USER_DEFAULT_SCREEN_DPI );
+}
+
+static void scale_rect_dpi_aware( RECT *rect, DPI_AWARENESS from, DPI_AWARENESS to )
+{
+    if (from == DPI_AWARENESS_UNAWARE && to != DPI_AWARENESS_UNAWARE)
+        scale_rect_dpi( rect, USER_DEFAULT_SCREEN_DPI, real_dpi );
+    else if (from != DPI_AWARENESS_UNAWARE && to == DPI_AWARENESS_UNAWARE)
+        scale_rect_dpi( rect, real_dpi, USER_DEFAULT_SCREEN_DPI );
+}
+
+static void test_dpi_mapping(void)
+{
+    HWND hwnd, child;
+    HDC hdc;
+    UINT win_dpi, units;
+    POINT point;
+    BOOL ret;
+    HRGN rgn, update;
+    RECT rect, orig, client, desktop, expect;
+    ULONG_PTR i, j, k;
+    WINDOWPLACEMENT wpl_orig, wpl;
+    HMONITOR monitor;
+    MONITORINFO mon_info;
+    DPI_AWARENESS_CONTEXT context;
+
+    if (!pLogicalToPhysicalPointForPerMonitorDPI)
+    {
+        win_skip( "LogicalToPhysicalPointForPerMonitorDPI not supported\n" );
+        return;
+    }
+    context = pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE );
+    GetWindowRect( GetDesktopWindow(), &desktop );
+    for (i = DPI_AWARENESS_UNAWARE; i <= DPI_AWARENESS_PER_MONITOR_AWARE; i++)
+    {
+        pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~i );
+        /* test desktop rect */
+        GetWindowRect( GetDesktopWindow(), &rect );
+        expect = desktop;
+        if (i == DPI_AWARENESS_UNAWARE) scale_rect_dpi( &expect, real_dpi, USER_DEFAULT_SCREEN_DPI );
+        ok( EqualRect( &expect, &rect ), "%lu: wrong desktop rect %s expected %s\n",
+            i, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+        SetRect( &rect, 0, 0, GetSystemMetrics( SM_CXSCREEN ), GetSystemMetrics( SM_CYSCREEN ));
+        ok( EqualRect( &expect, &rect ), "%lu: wrong desktop rect %s expected %s\n",
+            i, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+        SetRect( &rect, 0, 0, GetSystemMetrics( SM_CXVIRTUALSCREEN ), GetSystemMetrics( SM_CYVIRTUALSCREEN ));
+        ok( EqualRect( &expect, &rect ), "%lu: wrong virt desktop rect %s expected %s\n",
+            i, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+        SetRect( &rect, 0, 0, 1, 1 );
+        monitor = MonitorFromRect( &rect, MONITOR_DEFAULTTOPRIMARY );
+        ok( monitor != 0, "failed to get monitor\n" );
+        mon_info.cbSize = sizeof(mon_info);
+        ok( GetMonitorInfoW( monitor, &mon_info ), "GetMonitorInfoExW failed\n" );
+        ok( EqualRect( &expect, &mon_info.rcMonitor ), "%lu: wrong monitor rect %s expected %s\n",
+            i, wine_dbgstr_rect(&mon_info.rcMonitor), wine_dbgstr_rect(&expect) );
+        hdc = CreateDCA( "display", NULL, NULL, NULL );
+        SetRect( &rect, 0, 0, GetDeviceCaps( hdc, HORZRES ), GetDeviceCaps( hdc, VERTRES ));
+        ok( EqualRect( &expect, &rect ), "%lu: wrong caps desktop rect %s expected %s\n",
+            i, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+        SetRect( &rect, 0, 0, GetDeviceCaps( hdc, DESKTOPHORZRES ), GetDeviceCaps( hdc, DESKTOPVERTRES ));
+        ok( EqualRect( &desktop, &rect ), "%lu: wrong caps virt desktop rect %s expected %s\n",
+            i, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&desktop) );
+        DeleteDC( hdc );
+        /* test message window rect */
+        hwnd = CreateWindowA( "SysParamsTestClass", "test", WS_CHILD,
+                              10, 10, 20, 20, HWND_MESSAGE, 0, GetModuleHandleA(0), NULL );
+        GetWindowRect( GetAncestor( hwnd, GA_PARENT ), &rect );
+        SetRect( &expect, 0, 0, 100, 100 );
+        if (i == DPI_AWARENESS_UNAWARE) scale_rect_dpi( &expect, real_dpi, USER_DEFAULT_SCREEN_DPI );
+        ok( EqualRect( &expect, &rect ), "%lu: wrong message rect %s expected %s\n",
+            i, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+        DestroyWindow( hwnd );
+    }
+    for (i = DPI_AWARENESS_UNAWARE; i <= DPI_AWARENESS_PER_MONITOR_AWARE; i++)
+    {
+        pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~i );
+        hwnd = CreateWindowA( "SysParamsTestClass", "test", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                              193, 177, 295, 303, 0, 0, GetModuleHandleA(0), NULL );
+        ok( hwnd != 0, "creating window failed err %u\n", GetLastError());
+        child = CreateWindowA( "SysParamsTestClass", "child", WS_CHILD | WS_VISIBLE,
+                               50, 60, 70, 80, hwnd, 0, GetModuleHandleA(0), NULL );
+        ok( child != 0, "creating child failed err %u\n", GetLastError());
+        GetWindowRect( hwnd, &orig );
+        SetRect( &rect, 0, 0, 0, 0 );
+        pAdjustWindowRectExForDpi( &rect, WS_OVERLAPPEDWINDOW, FALSE, 0, pGetDpiForWindow( hwnd ));
+        SetRect( &client, orig.left - rect.left, orig.top - rect.top,
+                 orig.right - rect.right, orig.bottom - rect.bottom );
+        ShowWindow( hwnd, SW_MINIMIZE );
+        ShowWindow( hwnd, SW_RESTORE );
+        GetWindowPlacement( hwnd, &wpl_orig );
+        units = GetDialogBaseUnits();
+
+        for (j = DPI_AWARENESS_UNAWARE; j <= DPI_AWARENESS_PER_MONITOR_AWARE; j++)
+        {
+            pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~j );
+            /* test window rect */
+            GetWindowRect( hwnd, &rect );
+            expect = orig;
+            scale_rect_dpi_aware( &expect, i, j );
+            ok( EqualRect( &expect, &rect ), "%lu/%lu: wrong window rect %s expected %s\n",
+                i, j, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+            /* test client rect */
+            GetClientRect( hwnd, &rect );
+            expect = client;
+            OffsetRect( &expect, -expect.left, -expect.top );
+            scale_rect_dpi_aware( &expect, i, j );
+            ok( EqualRect( &expect, &rect ), "%lu/%lu: wrong client rect %s expected %s\n",
+                i, j, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+            /* test window placement */
+            GetWindowPlacement( hwnd, &wpl );
+            point = wpl_orig.ptMinPosition;
+            if (point.x != -1 || point.y != -1) scale_point_dpi_aware( &point, i, j );
+            ok( wpl.ptMinPosition.x == point.x && wpl.ptMinPosition.y == point.y,
+                "%lu/%lu: wrong placement min pos %d,%d expected %d,%d\n", i, j,
+                wpl.ptMinPosition.x, wpl.ptMinPosition.y, point.x, point.y );
+            point = wpl_orig.ptMaxPosition;
+            if (point.x != -1 || point.y != -1) scale_point_dpi_aware( &point, i, j );
+            ok( wpl.ptMaxPosition.x == point.x && wpl.ptMaxPosition.y == point.y,
+                "%lu/%lu: wrong placement max pos %d,%d expected %d,%d\n", i, j,
+                wpl.ptMaxPosition.x, wpl.ptMaxPosition.y, point.x, point.y );
+            expect = wpl_orig.rcNormalPosition;
+            scale_rect_dpi_aware( &expect, i, j );
+            ok( EqualRect( &wpl.rcNormalPosition, &expect ),
+                "%lu/%lu: wrong placement rect %s expect %s\n", i, j,
+                wine_dbgstr_rect(&wpl.rcNormalPosition), wine_dbgstr_rect(&expect));
+            /* test DC rect */
+            hdc = GetDC( hwnd );
+            GetClipBox( hdc, &rect );
+            SetRect( &expect, 0, 0, client.right - client.left, client.bottom - client.top );
+            ok( EqualRect( &expect, &rect ), "%lu/%lu: wrong clip box %s expected %s\n",
+                i, j, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+            /* test DC resolution */
+            SetRect( &rect, 0, 0, GetDeviceCaps( hdc, HORZRES ), GetDeviceCaps( hdc, VERTRES ));
+            expect = desktop;
+            if (j == DPI_AWARENESS_UNAWARE) scale_rect_dpi( &expect, real_dpi, USER_DEFAULT_SCREEN_DPI );
+            ok( EqualRect( &expect, &rect ), "%lu/%lu: wrong DC resolution %s expected %s\n",
+                i, j, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+            SetRect( &rect, 0, 0, GetDeviceCaps( hdc, DESKTOPHORZRES ), GetDeviceCaps( hdc, DESKTOPVERTRES ));
+            ok( EqualRect( &desktop, &rect ), "%lu/%lu: wrong desktop resolution %s expected %s\n",
+                i, j, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&desktop) );
+            ReleaseDC( hwnd, hdc );
+            /* test DC win rect */
+            hdc = GetWindowDC( hwnd );
+            GetClipBox( hdc, &rect );
+            SetRect( &expect, 0, 0, 295, 303 );
+            todo_wine
+            ok( EqualRect( &expect, &rect ), "%lu/%lu: wrong clip box win DC %s expected %s\n",
+                i, j, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+            ReleaseDC( hwnd, hdc );
+            /* test window invalidation */
+            UpdateWindow( hwnd );
+            update = CreateRectRgn( 0, 0, 0, 0 );
+            ret = GetUpdateRgn( hwnd, update, FALSE );
+            ok( ret == NULLREGION, "update region not empty\n" );
+            rgn = CreateRectRgn( 20, 20, 25, 25 );
+            for (k = DPI_AWARENESS_UNAWARE; k <= DPI_AWARENESS_PER_MONITOR_AWARE; k++)
+            {
+                pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~k );
+                RedrawWindow( hwnd, 0, rgn, RDW_INVALIDATE );
+                pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~j );
+                GetUpdateRgn( hwnd, update, FALSE );
+                GetRgnBox( update, &rect );
+                SetRect( &expect, 20, 20, 25, 25 );
+                ok( EqualRect( &expect, &rect ), "%lu/%lu/%lu: wrong update region %s expected %s\n",
+                    i, j, k, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+                GetUpdateRect( hwnd, &rect, FALSE );
+                scale_rect_dpi_aware( &expect, i, j );
+                ok( EqualRect( &expect, &rect ), "%lu/%lu/%lu: wrong update rect %s expected %s\n",
+                    i, j, k, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+                UpdateWindow( hwnd );
+            }
+            for (k = DPI_AWARENESS_UNAWARE; k <= DPI_AWARENESS_PER_MONITOR_AWARE; k++)
+            {
+                RedrawWindow( hwnd, 0, rgn, RDW_INVALIDATE );
+                pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~k );
+                GetUpdateRgn( hwnd, update, FALSE );
+                pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~j );
+                GetRgnBox( update, &rect );
+                SetRect( &expect, 20, 20, 25, 25 );
+                ok( EqualRect( &expect, &rect ), "%lu/%lu/%lu: wrong update region %s expected %s\n",
+                    i, j, k, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+                GetUpdateRect( hwnd, &rect, FALSE );
+                scale_rect_dpi_aware( &expect, i, j );
+                ok( EqualRect( &expect, &rect ), "%lu/%lu/%lu: wrong update rect %s expected %s\n",
+                    i, j, k, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+                UpdateWindow( hwnd );
+            }
+            /* test desktop window invalidation */
+            pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE );
+            GetClientRect( hwnd, &rect );
+            InflateRect( &rect, -50, -50 );
+            expect = rect;
+            MapWindowPoints( hwnd, 0, (POINT *)&rect, 2 );
+            pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~j );
+            RedrawWindow( 0, &rect, 0, RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN );
+            GetUpdateRgn( hwnd, update, TRUE );
+            GetRgnBox( update, &rect );
+            if (i == DPI_AWARENESS_UNAWARE) scale_rect_dpi( &expect, real_dpi, USER_DEFAULT_SCREEN_DPI );
+            ok( EqualRect( &expect, &rect ), "%lu/%lu: wrong update region %s expected %s\n",
+                i, j, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+            GetUpdateRect( hwnd, &rect, FALSE );
+            scale_rect_dpi_aware( &expect, i, j );
+            ok( EqualRect( &expect, &rect ), "%lu/%lu: wrong update rect %s expected %s\n",
+                i, j, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+            UpdateWindow( hwnd );
+            DeleteObject( update );
+            /* test dialog units */
+            ret = GetDialogBaseUnits();
+            point.x = LOWORD( units );
+            point.y = HIWORD( units );
+            scale_point_dpi_aware( &point, i, j );
+            ok( LOWORD(ret) == point.x && HIWORD(ret) == point.y, "%lu/%lu: wrong units %d,%d / %d,%d\n",
+                i, j, LOWORD(ret), HIWORD(ret), point.x, point.y );
+            /* test window points mapping */
+            SetRect( &rect, 0, 0, 100, 100 );
+            rect.right = rect.left + 100;
+            rect.bottom = rect.top + 100;
+            MapWindowPoints( hwnd, 0, (POINT *)&rect, 2 );
+            expect = client;
+            scale_rect_dpi_aware( &expect, i, j );
+            expect.right = expect.left + 100;
+            expect.bottom = expect.top + 100;
+            ok( EqualRect( &expect, &rect ), "%lu/%lu: wrong MapWindowPoints rect %s expected %s\n",
+                i, j, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+            SetRect( &rect, 50, 60, 70, 80 );
+            scale_rect_dpi_aware( &rect, i, j );
+            SetRect( &expect, 40, 30, 60, 80 );
+            OffsetRect( &expect, -rect.left, -rect.top );
+            SetRect( &rect, 40, 30, 60, 80 );
+            MapWindowPoints( hwnd, child, (POINT *)&rect, 2 );
+            ok( EqualRect( &expect, &rect ), "%lu/%lu: wrong MapWindowPoints child rect %s expected %s\n",
+                i, j, wine_dbgstr_rect(&rect), wine_dbgstr_rect(&expect) );
+            /* test logical<->physical coords mapping */
+            win_dpi = pGetDpiForWindow( hwnd );
+            if (i == DPI_AWARENESS_UNAWARE)
+                ok( win_dpi == USER_DEFAULT_SCREEN_DPI, "wrong dpi %u\n", win_dpi );
+            else if (i == DPI_AWARENESS_SYSTEM_AWARE)
+                ok( win_dpi == real_dpi, "wrong dpi %u / %u\n", win_dpi, real_dpi );
+            point.x = 373;
+            point.y = 377;
+            ret = pLogicalToPhysicalPointForPerMonitorDPI( hwnd, &point );
+            ok( ret, "%lu/%lu: LogicalToPhysicalPointForPerMonitorDPI failed\n", i, j );
+            ok( point.x == MulDiv( 373, real_dpi, win_dpi ) &&
+                point.y == MulDiv( 377, real_dpi, win_dpi ),
+                "%lu/%lu: wrong pos %d,%d dpi %u\n", i, j, point.x, point.y, win_dpi );
+            point.x = 405;
+            point.y = 423;
+            ret = pPhysicalToLogicalPointForPerMonitorDPI( hwnd, &point );
+            ok( ret, "%lu/%lu: PhysicalToLogicalPointForPerMonitorDPI failed\n", i, j );
+            ok( point.x == MulDiv( 405, win_dpi, real_dpi ) &&
+                point.y == MulDiv( 423, win_dpi, real_dpi ),
+                "%lu/%lu: wrong pos %d,%d dpi %u\n", i, j, point.x, point.y, win_dpi );
+            /* point outside the window fails, but note that Windows (wrongly) checks against the
+             * window rect transformed relative to the thread's awareness */
+            GetWindowRect( hwnd, &rect );
+            point.x = rect.left - 1;
+            point.y = rect.top;
+            ret = pLogicalToPhysicalPointForPerMonitorDPI( hwnd, &point );
+            ok( !ret, "%lu/%lu: LogicalToPhysicalPointForPerMonitorDPI succeeded\n", i, j );
+            point.x++;
+            point.y--;
+            ret = pLogicalToPhysicalPointForPerMonitorDPI( hwnd, &point );
+            ok( !ret, "%lu/%lu: LogicalToPhysicalPointForPerMonitorDPI succeeded\n", i, j );
+            point.y++;
+            ret = pLogicalToPhysicalPointForPerMonitorDPI( hwnd, &point );
+            ok( ret, "%lu/%lu: LogicalToPhysicalPointForPerMonitorDPI failed\n", i, j );
+            point.x = rect.right;
+            point.y = rect.bottom + 1;
+            ret = pLogicalToPhysicalPointForPerMonitorDPI( hwnd, &point );
+            ok( !ret, "%lu/%lu: LogicalToPhysicalPointForPerMonitorDPI succeeded\n", i, j );
+            point.x++;
+            point.y--;
+            ret = pLogicalToPhysicalPointForPerMonitorDPI( hwnd, &point );
+            ok( !ret, "%lu/%lu: LogicalToPhysicalPointForPerMonitorDPI succeeded\n", i, j );
+            point.x--;
+            ret = pLogicalToPhysicalPointForPerMonitorDPI( hwnd, &point );
+            ok( ret, "%lu/%lu: LogicalToPhysicalPointForPerMonitorDPI failed\n", i, j );
+            /* get physical window rect */
+            pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE );
+            GetWindowRect( hwnd, &rect );
+            pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~j );
+            point.x = rect.left - 1;
+            point.y = rect.top;
+            ret = pPhysicalToLogicalPointForPerMonitorDPI( hwnd, &point );
+            ok( !ret, "%lu/%lu: PhysicalToLogicalPointForPerMonitorDPI succeeded\n", i, j );
+            point.x++;
+            point.y--;
+            ret = pPhysicalToLogicalPointForPerMonitorDPI( hwnd, &point );
+            ok( !ret, "%lu/%lu: PhysicalToLogicalPointForPerMonitorDPI succeeded\n", i, j );
+            point.y++;
+            ret = pPhysicalToLogicalPointForPerMonitorDPI( hwnd, &point );
+            ok( ret, "%lu/%lu: PhysicalToLogicalPointForPerMonitorDPI failed\n", i, j );
+            point.x = rect.right;
+            point.y = rect.bottom + 1;
+            ret = pPhysicalToLogicalPointForPerMonitorDPI( hwnd, &point );
+            ok( !ret, "%lu/%lu: PhysicalToLogicalPointForPerMonitorDPI succeeded\n", i, j );
+            point.x++;
+            point.y--;
+            ret = pPhysicalToLogicalPointForPerMonitorDPI( hwnd, &point );
+            ok( !ret, "%lu/%lu: PhysicalToLogicalPointForPerMonitorDPI succeeded\n", i, j );
+            point.x--;
+            ret = pPhysicalToLogicalPointForPerMonitorDPI( hwnd, &point );
+            ok( ret, "%lu/%lu: PhysicalToLogicalPointForPerMonitorDPI failed\n", i, j );
+        }
+        DestroyWindow( hwnd );
+    }
+    pSetThreadDpiAwarenessContext( context );
+}
+
 static void test_dpi_aware(void)
 {
     BOOL ret;
@@ -3006,6 +3525,347 @@ static void test_dpi_aware(void)
 
     dpi = real_dpi;
     test_GetSystemMetrics();
+    test_metrics_for_dpi( 96 );
+    test_metrics_for_dpi( 192 );
+}
+
+static void test_dpi_context(void)
+{
+    DPI_AWARENESS awareness;
+    DPI_AWARENESS_CONTEXT context;
+    ULONG_PTR i, flags;
+    BOOL ret;
+    UINT dpi;
+    HDC hdc = GetDC( 0 );
+
+    context = pGetThreadDpiAwarenessContext();
+    /* Windows 10 >= 1709 adds extra 0x6000 flags */
+    flags = (ULONG_PTR)context & 0x6000;
+    todo_wine
+        ok( context == (DPI_AWARENESS_CONTEXT)(0x10 | flags), "wrong context %p\n", context );
+    awareness = pGetAwarenessFromDpiAwarenessContext( context );
+    todo_wine
+        ok( awareness == DPI_AWARENESS_UNAWARE, "wrong awareness %u\n", awareness );
+    todo_wine
+        ok( !pIsProcessDPIAware(), "already aware\n" );
+    dpi = pGetDpiForSystem();
+    todo_wine_if (real_dpi != USER_DEFAULT_SCREEN_DPI)
+        ok( dpi == USER_DEFAULT_SCREEN_DPI, "wrong dpi %u\n", dpi );
+    dpi = GetDeviceCaps( hdc, LOGPIXELSX );
+    todo_wine_if (real_dpi != USER_DEFAULT_SCREEN_DPI)
+        ok( dpi == USER_DEFAULT_SCREEN_DPI, "wrong dpi %u\n", dpi );
+    SetLastError( 0xdeadbeef );
+    ret = pSetProcessDpiAwarenessContext( NULL );
+    ok( !ret, "got %d\n", ret );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+    SetLastError( 0xdeadbeef );
+    ret = pSetProcessDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)-6 );
+    ok( !ret, "got %d\n", ret );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+    ret = pSetProcessDpiAwarenessContext( DPI_AWARENESS_CONTEXT_SYSTEM_AWARE );
+    todo_wine
+    ok( ret, "got %d\n", ret );
+    ok( pIsProcessDPIAware(), "not aware\n" );
+    real_dpi = pGetDpiForSystem();
+    SetLastError( 0xdeadbeef );
+    ret = pSetProcessDpiAwarenessContext( DPI_AWARENESS_CONTEXT_SYSTEM_AWARE );
+    ok( !ret, "got %d\n", ret );
+    ok( GetLastError() == ERROR_ACCESS_DENIED, "wrong error %u\n", GetLastError() );
+    SetLastError( 0xdeadbeef );
+    ret = pSetProcessDpiAwarenessContext( DPI_AWARENESS_CONTEXT_UNAWARE );
+    ok( !ret, "got %d\n", ret );
+    ok( GetLastError() == ERROR_ACCESS_DENIED, "wrong error %u\n", GetLastError() );
+
+    ret = pSetProcessDpiAwarenessInternal( DPI_AWARENESS_INVALID );
+    ok( !ret, "got %d\n", ret );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+    ret = pSetProcessDpiAwarenessInternal( DPI_AWARENESS_UNAWARE );
+    ok( !ret, "got %d\n", ret );
+    ok( GetLastError() == ERROR_ACCESS_DENIED, "wrong error %u\n", GetLastError() );
+    ret = pGetProcessDpiAwarenessInternal( 0, &awareness );
+    ok( ret, "got %d\n", ret );
+    todo_wine
+    ok( awareness == DPI_AWARENESS_SYSTEM_AWARE, "wrong value %d\n", awareness );
+    ret = pGetProcessDpiAwarenessInternal( GetCurrentProcess(), &awareness );
+    ok( ret, "got %d\n", ret );
+    todo_wine
+    ok( awareness == DPI_AWARENESS_SYSTEM_AWARE, "wrong value %d\n", awareness );
+    ret = pGetProcessDpiAwarenessInternal( (HANDLE)0xdeadbeef, &awareness );
+    ok( ret, "got %d\n", ret );
+    ok( awareness == DPI_AWARENESS_UNAWARE, "wrong value %d\n", awareness );
+
+    ret = pIsProcessDPIAware();
+    ok(ret, "got %d\n", ret);
+    context = pGetThreadDpiAwarenessContext();
+    todo_wine
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x11 | flags), "wrong context %p\n", context );
+    awareness = pGetAwarenessFromDpiAwarenessContext( context );
+    todo_wine
+    ok( awareness == DPI_AWARENESS_SYSTEM_AWARE, "wrong awareness %u\n", awareness );
+    SetLastError( 0xdeadbeef );
+    context = pSetThreadDpiAwarenessContext( 0 );
+    ok( !context, "got %p\n", context );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+    SetLastError( 0xdeadbeef );
+    context = pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)-6 );
+    ok( !context, "got %p\n", context );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+    context = pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_UNAWARE );
+    todo_wine
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x80000011 | flags), "wrong context %p\n", context );
+    awareness = pGetAwarenessFromDpiAwarenessContext( context );
+    todo_wine
+    ok( awareness == DPI_AWARENESS_SYSTEM_AWARE, "wrong awareness %u\n", awareness );
+    dpi = pGetDpiForSystem();
+    ok( dpi == USER_DEFAULT_SCREEN_DPI, "wrong dpi %u\n", dpi );
+    dpi = GetDeviceCaps( hdc, LOGPIXELSX );
+    ok( dpi == USER_DEFAULT_SCREEN_DPI, "wrong dpi %u\n", dpi );
+    ok( !pIsProcessDPIAware(), "still aware\n" );
+    context = pGetThreadDpiAwarenessContext();
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x10 | flags), "wrong context %p\n", context );
+    awareness = pGetAwarenessFromDpiAwarenessContext( context );
+    ok( awareness == DPI_AWARENESS_UNAWARE, "wrong awareness %u\n", awareness );
+    context = pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE );
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x10 | flags), "wrong context %p\n", context );
+    awareness = pGetAwarenessFromDpiAwarenessContext( context );
+    ok( awareness == DPI_AWARENESS_UNAWARE, "wrong awareness %u\n", awareness );
+    dpi = pGetDpiForSystem();
+    ok( dpi == real_dpi, "wrong dpi %u/%u\n", dpi, real_dpi );
+    dpi = GetDeviceCaps( hdc, LOGPIXELSX );
+    ok( dpi == real_dpi, "wrong dpi %u\n", dpi );
+    context = pGetThreadDpiAwarenessContext();
+    ok( context == (DPI_AWARENESS_CONTEXT)0x12, "wrong context %p\n", context );
+    awareness = pGetAwarenessFromDpiAwarenessContext( context );
+    ok( awareness == DPI_AWARENESS_PER_MONITOR_AWARE, "wrong awareness %u\n", awareness );
+    context = pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_SYSTEM_AWARE );
+    ok( context == (DPI_AWARENESS_CONTEXT)0x12, "wrong context %p\n", context );
+    awareness = pGetAwarenessFromDpiAwarenessContext( context );
+    ok( awareness == DPI_AWARENESS_PER_MONITOR_AWARE, "wrong awareness %u\n", awareness );
+    dpi = pGetDpiForSystem();
+    ok( dpi == real_dpi, "wrong dpi %u/%u\n", dpi, real_dpi );
+    dpi = GetDeviceCaps( hdc, LOGPIXELSX );
+    ok( dpi == real_dpi, "wrong dpi %u\n", dpi );
+    ok( pIsProcessDPIAware(), "not aware\n" );
+    context = pGetThreadDpiAwarenessContext();
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x11 | flags), "wrong context %p\n", context );
+    context = pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)(0x80000010 | flags) );
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x11 | flags), "wrong context %p\n", context );
+    context = pGetThreadDpiAwarenessContext();
+    todo_wine
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x11 | flags), "wrong context %p\n", context );
+    context = pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)(0x80000011 | flags) );
+    todo_wine
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x80000011 | flags), "wrong context %p\n", context );
+    context = pGetThreadDpiAwarenessContext();
+    todo_wine
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x11 | flags), "wrong context %p\n", context );
+    context = pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)0x12 );
+    todo_wine
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x80000011 | flags), "wrong context %p\n", context );
+    context = pSetThreadDpiAwarenessContext( context );
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x12), "wrong context %p\n", context );
+    context = pGetThreadDpiAwarenessContext();
+    todo_wine
+    ok( context == (DPI_AWARENESS_CONTEXT)(0x11 | flags), "wrong context %p\n", context );
+    for (i = 0; i < 0x100; i++)
+    {
+        awareness = pGetAwarenessFromDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)i );
+        switch (i)
+        {
+        case 0x10:
+        case 0x11:
+        case 0x12:
+            ok( awareness == (i & ~0x10), "%lx: wrong value %u\n", i, awareness );
+            ok( pIsValidDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)i ), "%lx: not valid\n", i );
+            break;
+        default:
+            ok( awareness == DPI_AWARENESS_INVALID, "%lx: wrong value %u\n", i, awareness );
+            ok( !pIsValidDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)i ), "%lx: valid\n", i );
+            break;
+        }
+        awareness = pGetAwarenessFromDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)(i | 0x80000000) );
+        switch (i)
+        {
+        case 0x10:
+        case 0x11:
+        case 0x12:
+            ok( awareness == (i & ~0x10), "%lx: wrong value %u\n", i | 0x80000000, awareness );
+            ok( pIsValidDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)(i | 0x80000000) ),
+                "%lx: not valid\n", i | 0x80000000 );
+            break;
+        default:
+            ok( awareness == DPI_AWARENESS_INVALID, "%lx: wrong value %u\n", i | 0x80000000, awareness );
+            ok( !pIsValidDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)(i | 0x80000000) ),
+                "%lx: valid\n", i | 0x80000000 );
+            break;
+        }
+        awareness = pGetAwarenessFromDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~i );
+        switch (~i)
+        {
+        case (ULONG_PTR)DPI_AWARENESS_CONTEXT_UNAWARE:
+        case (ULONG_PTR)DPI_AWARENESS_CONTEXT_SYSTEM_AWARE:
+        case (ULONG_PTR)DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE:
+            ok( awareness == i, "%lx: wrong value %u\n", ~i, awareness );
+            ok( pIsValidDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~i ), "%lx: not valid\n", ~i );
+            break;
+        case (ULONG_PTR)DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2:
+            if (pIsValidDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~i ))
+                ok( awareness == DPI_AWARENESS_PER_MONITOR_AWARE, "%lx: wrong value %u\n", ~i, awareness );
+            else
+                ok( awareness == DPI_AWARENESS_INVALID, "%lx: wrong value %u\n", ~i, awareness );
+            break;
+        case (ULONG_PTR)DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED:
+            if (pIsValidDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~i ))
+                ok( awareness == DPI_AWARENESS_UNAWARE, "%lx: wrong value %u\n", ~i, awareness );
+            else
+                ok( awareness == DPI_AWARENESS_INVALID, "%lx: wrong value %u\n", ~i, awareness );
+            break;
+        default:
+            ok( awareness == DPI_AWARENESS_INVALID, "%lx: wrong value %u\n", ~i, awareness );
+            ok( !pIsValidDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~i ), "%lx: valid\n", ~i );
+            break;
+        }
+    }
+    if (real_dpi != USER_DEFAULT_SCREEN_DPI) test_dpi_stock_objects( hdc );
+    ReleaseDC( 0, hdc );
+}
+
+static LRESULT CALLBACK dpi_winproc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
+{
+    DPI_AWARENESS_CONTEXT ctx = pGetWindowDpiAwarenessContext( hwnd );
+    DPI_AWARENESS_CONTEXT ctx2 = pGetThreadDpiAwarenessContext();
+    DWORD pos, pos2;
+
+    ok( pGetAwarenessFromDpiAwarenessContext( ctx ) == pGetAwarenessFromDpiAwarenessContext( ctx2 ),
+        "msg %04x wrong awareness %p / %p\n", msg, ctx, ctx2 );
+    pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_UNAWARE );
+    pos = GetMessagePos();
+    pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE );
+    pos2 = GetMessagePos();
+    ok( pos == pos2, "wrong pos %08x / %08x\n", pos, pos2 );
+    pSetThreadDpiAwarenessContext( ctx2 );
+    return DefWindowProcA( hwnd, msg, wp, lp );
+}
+
+static void test_dpi_window(void)
+{
+    DPI_AWARENESS_CONTEXT context, orig;
+    DPI_AWARENESS awareness;
+    ULONG_PTR i, j;
+    UINT dpi;
+    HWND hwnd, child, ret;
+    MSG msg = { 0, WM_USER + 1, 0, 0 };
+
+    if (!pGetWindowDpiAwarenessContext)
+    {
+        win_skip( "GetWindowDpiAwarenessContext not supported\n" );
+        return;
+    }
+    orig = pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_UNAWARE );
+    for (i = DPI_AWARENESS_UNAWARE; i <= DPI_AWARENESS_PER_MONITOR_AWARE; i++)
+    {
+        pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~i );
+        hwnd = CreateWindowA( "DpiTestClass", "Test",
+                              WS_OVERLAPPEDWINDOW, 0, 0, 100, 100, 0, 0, GetModuleHandleA(0), NULL );
+        ok( hwnd != 0, "failed to create window\n" );
+        context = pGetWindowDpiAwarenessContext( hwnd );
+        awareness = pGetAwarenessFromDpiAwarenessContext( context );
+        ok( awareness == i, "%lu: wrong awareness %u\n", i, awareness );
+        dpi = pGetDpiForWindow( hwnd );
+        ok( dpi == (i == DPI_AWARENESS_UNAWARE ? USER_DEFAULT_SCREEN_DPI : real_dpi),
+            "%lu: got %u / %u\n", i, dpi, real_dpi );
+        if (pGetDpiForMonitorInternal)
+        {
+            BOOL res;
+            SetLastError( 0xdeadbeef );
+            res = pGetDpiForMonitorInternal( MonitorFromWindow( hwnd, 0 ), 0, &dpi, NULL );
+            ok( !res, "succeeded\n" );
+            ok( GetLastError() == ERROR_INVALID_ADDRESS, "wrong error %u\n", GetLastError() );
+            SetLastError( 0xdeadbeef );
+            res = pGetDpiForMonitorInternal( MonitorFromWindow( hwnd, 0 ), 3, &dpi, &dpi );
+            ok( !res, "succeeded\n" );
+            ok( GetLastError() == ERROR_BAD_ARGUMENTS, "wrong error %u\n", GetLastError() );
+            SetLastError( 0xdeadbeef );
+            res = pGetDpiForMonitorInternal( MonitorFromWindow( hwnd, 0 ), 3, &dpi, NULL );
+            ok( !res, "succeeded\n" );
+            ok( GetLastError() == ERROR_BAD_ARGUMENTS, "wrong error %u\n", GetLastError() );
+            res = pGetDpiForMonitorInternal( MonitorFromWindow( hwnd, 0 ), 0, &dpi, &dpi );
+            ok( res, "failed err %u\n", GetLastError() );
+            ok( dpi == (i == DPI_AWARENESS_UNAWARE ? USER_DEFAULT_SCREEN_DPI : real_dpi),
+                "%lu: got %u / %u\n", i, dpi, real_dpi );
+        }
+        msg.hwnd = hwnd;
+        for (j = DPI_AWARENESS_UNAWARE; j <= DPI_AWARENESS_PER_MONITOR_AWARE; j++)
+        {
+            pSetThreadDpiAwarenessContext( (DPI_AWARENESS_CONTEXT)~j );
+            SendMessageA( hwnd, WM_USER, 0, 0 );
+            DispatchMessageA( &msg );
+            CallWindowProcA( dpi_winproc, hwnd, WM_USER + 2, 0, 0 );
+            child = CreateWindowA( "DpiTestClass", "Test",
+                                   WS_CHILD, 0, 0, 100, 100, hwnd, 0, GetModuleHandleA(0), NULL );
+            context = pGetWindowDpiAwarenessContext( child );
+            awareness = pGetAwarenessFromDpiAwarenessContext( context );
+            ok( awareness == i, "%lu/%lu: wrong awareness %u\n", i, j, awareness );
+            dpi = pGetDpiForWindow( child );
+            ok( dpi == (i == DPI_AWARENESS_UNAWARE ? USER_DEFAULT_SCREEN_DPI : real_dpi),
+                "%lu/%lu: got %u / %u\n", i, j, dpi, real_dpi );
+            ret = SetParent( child, NULL );
+            ok( ret != 0, "SetParent failed err %u\n", GetLastError() );
+            context = pGetWindowDpiAwarenessContext( child );
+            awareness = pGetAwarenessFromDpiAwarenessContext( context );
+            ok( awareness == i, "%lu/%lu: wrong awareness %u\n", i, j, awareness );
+            dpi = pGetDpiForWindow( child );
+            ok( dpi == (i == DPI_AWARENESS_UNAWARE ? USER_DEFAULT_SCREEN_DPI : real_dpi),
+                "%lu/%lu: got %u / %u\n", i, j, dpi, real_dpi );
+            DestroyWindow( child );
+            child = CreateWindowA( "DpiTestClass", "Test",
+                                   WS_OVERLAPPEDWINDOW, 0, 0, 100, 100, 0, 0, GetModuleHandleA(0), NULL );
+            context = pGetWindowDpiAwarenessContext( child );
+            awareness = pGetAwarenessFromDpiAwarenessContext( context );
+            ok( awareness == j, "%lu/%lu: wrong awareness %u\n", i, j, awareness );
+            dpi = pGetDpiForWindow( child );
+            ok( dpi == (j == DPI_AWARENESS_UNAWARE ? USER_DEFAULT_SCREEN_DPI : real_dpi),
+                "%lu/%lu: got %u / %u\n", i, j, dpi, real_dpi );
+            ret = SetParent( child, hwnd );
+            ok( ret != 0 || GetLastError() == ERROR_INVALID_STATE,
+                "SetParent failed err %u\n", GetLastError() );
+            context = pGetWindowDpiAwarenessContext( child );
+            awareness = pGetAwarenessFromDpiAwarenessContext( context );
+            ok( awareness == (ret ? i : j), "%lu/%lu: wrong awareness %u\n", i, j, awareness );
+            dpi = pGetDpiForWindow( child );
+            ok( dpi == (i == DPI_AWARENESS_UNAWARE ? USER_DEFAULT_SCREEN_DPI : real_dpi),
+                "%lu/%lu: got %u / %u\n", i, j, dpi, real_dpi );
+            DestroyWindow( child );
+        }
+        DestroyWindow( hwnd );
+    }
+
+    SetLastError( 0xdeadbeef );
+    context = pGetWindowDpiAwarenessContext( (HWND)0xdeadbeef );
+    ok( !context, "got %p\n", context );
+    ok( GetLastError() == ERROR_INVALID_WINDOW_HANDLE, "wrong error %u\n", GetLastError() );
+    SetLastError( 0xdeadbeef );
+    dpi = pGetDpiForWindow( (HWND)0xdeadbeef );
+    ok( !dpi, "got %u\n", dpi );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == ERROR_INVALID_WINDOW_HANDLE,
+        "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    context = pGetWindowDpiAwarenessContext( GetDesktopWindow() );
+    awareness = pGetAwarenessFromDpiAwarenessContext( context );
+    ok( awareness == DPI_AWARENESS_PER_MONITOR_AWARE, "wrong awareness %u\n", awareness );
+    dpi = pGetDpiForWindow( GetDesktopWindow() );
+    ok( dpi == real_dpi, "got %u / %u\n", dpi, real_dpi );
+
+    pSetThreadDpiAwarenessContext( DPI_AWARENESS_CONTEXT_UNAWARE );
+    SetLastError( 0xdeadbeef );
+    context = pGetWindowDpiAwarenessContext( GetDesktopWindow() );
+    awareness = pGetAwarenessFromDpiAwarenessContext( context );
+    ok( awareness == DPI_AWARENESS_PER_MONITOR_AWARE, "wrong awareness %u\n", awareness );
+    dpi = pGetDpiForWindow( GetDesktopWindow() );
+    ok( dpi == real_dpi, "got %u / %u\n", dpi, real_dpi );
+
+    pSetThreadDpiAwarenessContext( orig );
 }
 
 static void test_GetAutoRotationState(void)
@@ -3027,7 +3887,6 @@ static void test_GetAutoRotationState(void)
     state = 0;
     ret = pGetAutoRotationState(&state);
     ok(ret, "Expected GetAutoRotationState to succeed, error %d\n", GetLastError());
-    ok((state & AR_NOSENSOR) != 0, "Expected AR_NOSENSOR, got %d\n", state);
 }
 
 START_TEST(sysparams)
@@ -3036,6 +3895,7 @@ START_TEST(sysparams)
     char** argv;
     WNDCLASSA wc;
     MSG msg;
+    HDC hdc;
     HANDLE hThread;
     DWORD dwThreadId;
     HANDLE hInstance, hdll;
@@ -3044,6 +3904,22 @@ START_TEST(sysparams)
     pChangeDisplaySettingsExA = (void*)GetProcAddress(hdll, "ChangeDisplaySettingsExA");
     pIsProcessDPIAware = (void*)GetProcAddress(hdll, "IsProcessDPIAware");
     pSetProcessDPIAware = (void*)GetProcAddress(hdll, "SetProcessDPIAware");
+    pGetDpiForSystem = (void*)GetProcAddress(hdll, "GetDpiForSystem");
+    pGetDpiForWindow = (void*)GetProcAddress(hdll, "GetDpiForWindow");
+    pGetDpiForMonitorInternal = (void*)GetProcAddress(hdll, "GetDpiForMonitorInternal");
+    pSetProcessDpiAwarenessContext = (void*)GetProcAddress(hdll, "SetProcessDpiAwarenessContext");
+    pGetProcessDpiAwarenessInternal = (void*)GetProcAddress(hdll, "GetProcessDpiAwarenessInternal");
+    pSetProcessDpiAwarenessInternal = (void*)GetProcAddress(hdll, "SetProcessDpiAwarenessInternal");
+    pGetThreadDpiAwarenessContext = (void*)GetProcAddress(hdll, "GetThreadDpiAwarenessContext");
+    pSetThreadDpiAwarenessContext = (void*)GetProcAddress(hdll, "SetThreadDpiAwarenessContext");
+    pGetWindowDpiAwarenessContext = (void*)GetProcAddress(hdll, "GetWindowDpiAwarenessContext");
+    pGetAwarenessFromDpiAwarenessContext = (void*)GetProcAddress(hdll, "GetAwarenessFromDpiAwarenessContext");
+    pIsValidDpiAwarenessContext = (void*)GetProcAddress(hdll, "IsValidDpiAwarenessContext");
+    pGetSystemMetricsForDpi = (void*)GetProcAddress(hdll, "GetSystemMetricsForDpi");
+    pSystemParametersInfoForDpi = (void*)GetProcAddress(hdll, "SystemParametersInfoForDpi");
+    pAdjustWindowRectExForDpi = (void*)GetProcAddress(hdll, "AdjustWindowRectExForDpi");
+    pLogicalToPhysicalPointForPerMonitorDPI = (void*)GetProcAddress(hdll, "LogicalToPhysicalPointForPerMonitorDPI");
+    pPhysicalToLogicalPointForPerMonitorDPI = (void*)GetProcAddress(hdll, "PhysicalToLogicalPointForPerMonitorDPI");
     pGetAutoRotationState = (void*)GetProcAddress(hdll, "GetAutoRotationState");
 
     hInstance = GetModuleHandleA( NULL );
@@ -3051,7 +3927,7 @@ START_TEST(sysparams)
     dpi = GetDeviceCaps( hdc, LOGPIXELSY);
     real_dpi = get_real_dpi();
     trace("dpi %d real_dpi %d\n", dpi, real_dpi);
-    iswin9x = GetVersion() & 0x80000000;
+    ReleaseDC( 0, hdc);
 
     /* This test requires interactivity, if we don't have it, give up */
     if (!SystemParametersInfoA( SPI_SETBEEP, TRUE, 0, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE ) &&
@@ -3063,7 +3939,7 @@ START_TEST(sysparams)
 
     trace("testing GetSystemMetrics with your current desktop settings\n");
     test_GetSystemMetrics( );
-    trace("testing EnumDisplaySettings vs GetDeviceCaps\n");
+    test_metrics_for_dpi( 192 );
     test_EnumDisplaySettings( );
     test_GetSysColorBrush( );
     test_GetAutoRotationState( );
@@ -3082,6 +3958,9 @@ START_TEST(sysparams)
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
     RegisterClassA( &wc );
+    wc.lpszClassName = "DpiTestClass";
+    wc.lpfnWndProc = dpi_winproc;
+    RegisterClassA( &wc );
 
     ghTestWnd = CreateWindowA( "SysParamsTestClass", "Test System Parameters Application",
                                WS_OVERLAPPEDWINDOW, 0, 0, 100, 100, 0, 0, hInstance, NULL );
@@ -3094,7 +3973,14 @@ START_TEST(sysparams)
         TranslateMessage( &msg );
         DispatchMessageA( &msg );
     }
-    ReleaseDC( 0, hdc);
+
+    if (pSetThreadDpiAwarenessContext)
+    {
+        test_dpi_context();
+        test_dpi_mapping();
+        test_dpi_window();
+    }
+    else win_skip( "SetThreadDpiAwarenessContext not supported\n" );
 
     test_dpi_aware();
 }

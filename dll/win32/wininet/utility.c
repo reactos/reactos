@@ -219,7 +219,7 @@ static const char *get_callback_name(DWORD dwInternetStatus) {
     };
     DWORD i;
 
-    for (i = 0; i < (sizeof(internet_status) / sizeof(internet_status[0])); i++) {
+    for (i = 0; i < ARRAY_SIZE(internet_status); i++) {
 	if (internet_status[i].val == dwInternetStatus) return internet_status[i].name;
     }
     return "Unknown";

@@ -27,6 +27,6 @@ list(APPEND MINI_HAL_SOURCE
 
 add_asm_files(mini_hal_asm ../generic/systimer.S)
 add_library(mini_hal ${MINI_HAL_SOURCE} ${mini_hal_asm})
-add_target_compile_definitions(mini_hal _BLDR_ _MINIHAL_)
+target_compile_definitions(mini_hal PRIVATE _BLDR_ _MINIHAL_)
 add_dependencies(mini_hal psdk bugcodes asm)
 add_pch(mini_hal ../include/hal.h MINI_HAL_SOURCE)

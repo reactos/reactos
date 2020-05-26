@@ -1,0 +1,34 @@
+/* Portuguese Language resource file
+ *
+ * Traduzido por: Jose Carlos Jesus 17-01-2020 zecarlos1957@hotmail.com
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "Visualizador de imagens e faxes do ReactOS"
+    IDS_SETASDESKBG "Definir como plano de fundo da área de trabalho"
+    IDS_NOPREVIEW "No preview available."
+    IDS_PREVIEW "Pre-visualizar"
+    /* Tooltips */
+    IDS_TOOLTIP_NEXT_PIC "Próxima imagem"
+    IDS_TOOLTIP_PREV_PIC "Imagem anterior"
+    IDS_TOOLTIP_ZOOM_IN "Zoom (+)"
+    IDS_TOOLTIP_ZOOM_OUT "Zoom (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "Girar no sentido dos ponteiros do relógio(Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Girar no sentido anti-horário (Ctrl+L)"
+    IDS_TOOLTIP_PRINT "Imprimir (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS "Guardar como... (Ctrl+S)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EMF_FILE    "EMF Image"
+    IDS_GIF_FILE    "GIF Image"
+    IDS_JPG_FILE    "JPEG Image"
+    IDS_BMP_FILE    "Bitmap Image"
+    IDS_PNG_FILE    "PNG Image"
+    IDS_TIF_FILE    "TIF Image"
+    IDS_WMF_FILE    "WMF Image"
+END

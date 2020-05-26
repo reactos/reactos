@@ -703,7 +703,7 @@ encoding_error:
     /*
      * An encoding problem may arise from a truncated input buffer
      * splitting a character in the middle. In that case do not raise
-     * an error but return 0 to endicate an end of stream problem
+     * an error but return 0 to indicate an end of stream problem
      */
     if (ctxt->input->end - ctxt->input->cur < 4) {
 	*len = 0;
@@ -816,7 +816,7 @@ encoding_error:
     /*
      * An encoding problem may arise from a truncated input buffer
      * splitting a character in the middle. In that case do not raise
-     * an error but return 0 to endicate an end of stream problem
+     * an error but return 0 to indicate an end of stream problem
      */
     if ((ctxt == NULL) || (ctxt->input == NULL) ||
         (ctxt->input->end - ctxt->input->cur < 4)) {
@@ -1093,7 +1093,7 @@ xmlSwitchEncoding(xmlParserCtxtPtr ctxt, xmlCharEncoding enc)
 	}
     }
     /*
-     * TODO: We could recover from errors in external entites if we
+     * TODO: We could recover from errors in external entities if we
      * didn't stop the parser. But most callers of this function don't
      * check the return value.
      */
@@ -1138,7 +1138,7 @@ xmlSwitchInputEncodingInt(xmlParserCtxtPtr ctxt, xmlParserInputPtr input,
     if (input->buf != NULL) {
         if (input->buf->encoder != NULL) {
             /*
-             * Check in case the auto encoding detetection triggered
+             * Check in case the auto encoding detection triggered
              * in already.
              */
             if (input->buf->encoder == handler)

@@ -102,7 +102,7 @@ interface IEnumIDList : IUnknown
 
     HRESULT Next(
         [in] ULONG celt,
-        [out, size_is(celt), length_is(*pceltFetched)] LPITEMIDLIST *rgelt,
+        [out, size_is(celt), length_is(*pceltFetched)] PITEMID_CHILD *rgelt,
         [out] ULONG *pceltFetched);
 
     HRESULT Skip( [in] ULONG celt );
@@ -176,7 +176,12 @@ interface IShellFolder : IUnknown
         SHCONTF_INIT_ON_FIRST_NEXT = 256,
         SHCONTF_NETPRINTERSRCH = 512,
         SHCONTF_SHAREABLE = 1024,
-        SHCONTF_STORAGE = 2048
+        SHCONTF_STORAGE = 2048,
+        SHCONTF_NAVIGATION_ENUM = 0x01000,
+        SHCONTF_FASTITEMS = 0x02000,
+        SHCONTF_FLATLIST = 0x04000,
+        SHCONTF_ENABLE_ASYNC = 0x08000,
+        SHCONTF_INCLUDESUPERHIDDEN = 0x10000
     };
 
     typedef DWORD SHCONTF;
@@ -759,7 +764,7 @@ interface IShellView : IOleWindow
 
     HRESULT SaveViewState();
     HRESULT SelectItem(
-        [in] LPCITEMIDLIST pidlItem,
+        [in] PCUITEMID_CHILD pidlItem,
         [in] SVSIF uFlags);
     HRESULT GetItemObject(
         [in] UINT uItem,
@@ -796,10 +801,10 @@ cpp_quote("#include <poppack.h>")
         [in] LPSV2CVW2_PARAMS view_params
     );
     HRESULT HandleRename(
-        [in] LPCITEMIDLIST new_pidl
+        [in] PCUITEMID_CHILD new_pidl
     );
     HRESULT SelectAndPositionItem(
-        [in] LPCITEMIDLIST item,
+        [in] PCUITEMID_CHILD item,
         [in] UINT flags,
         [in] POINT *point
     );
@@ -1074,7 +1079,7 @@ cpp_quote("#endif")
     HRESULT TranslateAcceleratorSB( [in] MSG *pmsg, [in] WORD wID );
 
     HRESULT BrowseObject(
-        [in] LPCITEMIDLIST pidl,
+        [in] PCUIDLIST_RELATIVE pidl,
         [in] UINT wFlags);
 
     HRESULT GetViewStateStream(
@@ -1302,7 +1307,7 @@ interface IPersistFolder3 : IPersistFolder2
 {
     typedef struct
     {
-        LPITEMIDLIST	pidlTargetFolder;
+    PIDLIST_ABSOLUTE	pidlTargetFolder;
 	WCHAR		szTargetParsingName[MAX_PATH];
 	WCHAR		szNetworkProvider[MAX_PATH];
 	DWORD		dwAttributes;
@@ -1311,7 +1316,7 @@ interface IPersistFolder3 : IPersistFolder2
 
     HRESULT InitializeEx(
         [in] IBindCtx *pbc,
-        [in] LPCITEMIDLIST pidlRoot,
+        [in] PCIDLIST_ABSOLUTE pidlRoot,
         [in] const PERSIST_FOLDER_TARGET_INFO *ppfti);
 
     HRESULT GetFolderTargetInfo( [out] PERSIST_FOLDER_TARGET_INFO *ppfti );
@@ -1411,7 +1416,7 @@ cpp_quote("#define CDBOSC_STATECHANGE  0x00000004")
 
     HRESULT OnDefaultCommand( [in] IShellView *shv );
     HRESULT OnStateChange( [in] IShellView *shv, [in] ULONG uChange );
-    HRESULT IncludeObject( [in] IShellView *shv, [in] LPCITEMIDLIST pidl );
+    HRESULT IncludeObject( [in] IShellView *shv, [in] PCUITEMID_CHILD pidl );
 }
 
 
@@ -1983,8 +1988,8 @@ interface IShellChangeNotify : IUnknown
 {
     HRESULT OnChange(
                 [in] LONG lEvent,
-                [in] LPCITEMIDLIST pidl1,
-                [in] LPCITEMIDLIST pidl2);
+                [in] PCIDLIST_ABSOLUTE pidl1,
+                [in] PCIDLIST_ABSOLUTE pidl2);
 }
 
 cpp_quote("#define STR_FILE_SYS_BIND_DATA  L\"File System Bind Data\"")
@@ -2620,8 +2625,8 @@ typedef struct tagSMDATA
 	UINT			uIdParent;
 	UINT			uIdAncestor;
 	IUnknown		*punk;
-	LPITEMIDLIST	pidlFolder;
-	LPITEMIDLIST	pidlItem;
+	PIDLIST_ABSOLUTE	pidlFolder;
+	PUITEMID_CHILD	pidlItem;
 	IShellFolder	*psf;
 	void			*pvUserData;
 } SMDATA, *LPSMDATA;
@@ -2641,8 +2646,8 @@ typedef struct tagSMINFO
 typedef struct tagSHCSCHANGENOTIFYSTRUCT
 {
 	LONG			lEvent;
-	LPCITEMIDLIST	pidl1;
-	LPCITEMIDLIST	pidl2;
+	PCIDLIST_ABSOLUTE	pidl1;
+	PCIDLIST_ABSOLUTE	pidl2;
 } SMCSHCHANGENOTIFYSTRUCT, *PSMCSHCHANGENOTIFYSTRUCT;
 
 cpp_quote("#include <poppack.h>")
@@ -2757,13 +2762,13 @@ interface IShellMenu : IUnknown
 
 	HRESULT SetShellFolder(
         [in] IShellFolder *psf,
-		[in] LPCITEMIDLIST pidlFolder,
+		[in] PCIDLIST_ABSOLUTE pidlFolder,
         [in] HKEY hKey,
         [in] DWORD dwFlags);
 
 	HRESULT GetShellFolder(
 		[out] DWORD *pdwFlags,
-		[out] LPITEMIDLIST *ppidl,
+		[out] PIDLIST_ABSOLUTE *ppidl,
 		[in] REFIID riid,
 		[out] void **ppv);
 
@@ -4743,6 +4748,24 @@ interface IUserNotification2 : IUnknown
 
     HRESULT PlaySound(
         [in, string] LPCWSTR pszSoundName);
+};
+
+/*****************************************************************************
+ * IItemNameLimits interface
+ */
+
+[
+    uuid(1df0d7f1-b267-4d28-8b10-12e23202a5c4)
+]
+interface IItemNameLimits : IUnknown 
+{
+    HRESULT GetValidCharacters(
+        [out, string] LPWSTR *ppwszValidChars,
+        [out, string] LPWSTR *ppwszInvalidChars);
+
+    HRESULT GetMaxLength(
+        [in, string] LPCWSTR pszName,
+        [out] int *piMaxNameLen);
 };
 
 #endif // __REACTOS__

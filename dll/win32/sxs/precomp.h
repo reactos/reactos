@@ -3,6 +3,7 @@
 #define _SXS_PRECOMP_H_
 
 #include <stdarg.h>
+#include <wchar.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -16,7 +17,6 @@
 #include <winsxs.h>
 
 #include <wine/debug.h>
-#include <wine/unicode.h>
 
 #include "sxs_private.h"
 

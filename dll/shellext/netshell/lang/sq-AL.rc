@@ -19,8 +19,8 @@ BEGIN
     PUSHBUTTON "&Karaktiristsikat", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Përshkrimi", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Përshkrimi Komponenteve shkon këtu...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "&Shfaq Ikonat në tabelen e punës gjatë lidhjes", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Më njofto kur kjo linjë ka kufizim ose ska lidhje", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    AUTOCHECKBOX "&Shfaq Ikonat në tabelen e punës gjatë lidhjes", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "&Më njofto kur kjo linjë ka kufizim ose ska lidhje", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280
@@ -35,22 +35,22 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Përgjithshëm"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Lidhje", -1, 9, 8, 182, 58, BS_GROUPBOX
-    LTEXT "Gjëndje:", -1, 19, 20, 60, 8
-    LTEXT "Kohëzgjatja:", -1, 19, 34, 60, 8
-    LTEXT "Shpejtësia:", -1, 19, 48, 60, 8
-    GROUPBOX "Aktiviteti", -1, 9, 74, 182, 70, BS_GROUPBOX
-    RTEXT "SentDëguar", -1, 26, 90, 60, 8
+    GROUPBOX "Lidhje", -1, 9, 8, 190, 58, BS_GROUPBOX
+    LTEXT "Gjëndje:", -1, 22, 20, 65, 8
+    LTEXT "Kohëzgjatja:", -1, 22, 34, 65, 8
+    LTEXT "Shpejtësia:", -1, 22, 48, 65, 8
+    GROUPBOX "Aktiviteti", -1, 9, 74, 190, 70, BS_GROUPBOX
+    LTEXT "SentDëguar", -1, 60, 90, 60, 8
     ICON "", IDC_NETSTAT, 110, 85, 32, 32
-    LTEXT "Marrë", -1, 149, 90, 37, 8
-    LTEXT "Bytes:", -1, 17, 115, 32, 8
-    RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
-    RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
-    PUSHBUTTON "&Karaktiristsikat", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
-    PUSHBUTTON "&Gjzmto", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "", IDC_STATUS, 83, 20, 98, 8
-    RTEXT "", IDC_DURATION, 83, 34, 98, 8
-    RTEXT "", IDC_SPEED, 83, 48, 98, 8
+    RTEXT "Marrë", -1, 146, 90, 44, 8
+    LTEXT "Bytes:", -1, 22, 115, 32, 8
+    LTEXT "000.000.000", IDC_SEND, 60, 115, 44, 8
+    RTEXT "000.000.000", IDC_RECEIVED, 146, 115, 44, 8
+    PUSHBUTTON "&Karaktiristsikat", IDC_STATUS_PROPERTIES, 10, 150, 60, 14
+    PUSHBUTTON "&Gjzmto", IDC_ENDISABLE, 76, 150, 60, 14
+    RTEXT "", IDC_STATUS, 90, 20, 100, 8
+    RTEXT "", IDC_DURATION, 90, 34, 100, 8
+    RTEXT "", IDC_SPEED, 90, 48, 100, 8
 END
 
 IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
@@ -58,15 +58,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Mbështetje"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Gjëndja Lidhjes", -1, 9, 8, 200, 88, BS_GROUPBOX
+    GROUPBOX "Gjëndja Lidhjes", -1, 9, 8, 190, 88, BS_GROUPBOX
     LTEXT "Tipi Adreses:", -1, 22, 20, 80, 8
     LTEXT "Adresa IP:", -1, 22, 34, 80, 8
     LTEXT "Subnet Maskë:", -1, 22, 48, 80, 8
     LTEXT "Gateway Parapërzgjedhur:", -1, 22, 62, 80, 8
-    RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
-    RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
+    RTEXT "N/A", IDC_DETAILSTYPE, 110, 20, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSIP, 110, 34, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 110, 48, 80, 8
+    RTEXT "", IDC_DETAILSGATEWAY, 110, 62, 80, 8
     PUSHBUTTON "&Detaje...", IDC_DETAILS, 22, 76, 62, 14
 END
 

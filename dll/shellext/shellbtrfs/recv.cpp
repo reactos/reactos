@@ -84,8 +84,8 @@ static const uint32_t crctable[] = {
 #define ALIGN_MASK      (ALIGN_SIZE - 1)
 #define CALC_CRC(op, crc, type, buf, len)                               \
 do {                                                                  \
-    for (; (len) >= sizeof (type); (len) -= sizeof(type), buf += sizeof (type)) { \
-        (crc) = op((crc), *(type *) (buf));                               \
+    for (; (len) >= sizeof (type); (len) -= (ULONG)sizeof(type), buf += sizeof (type)) { \
+        (crc) = (uint32_t)op((crc), *(type *) (buf));                               \
     }                                                                   \
 } while(0)
 
@@ -153,7 +153,7 @@ static uint32_t calc_crc32c(uint32_t seed, uint8_t* msg, ULONG msglen) {
 }
 
 bool BtrfsRecv::find_tlv(uint8_t* data, ULONG datalen, uint16_t type, void** value, ULONG* len) {
-    ULONG off = 0;
+    size_t off = 0;
 
     while (off < datalen) {
         btrfs_send_tlv* tlv = (btrfs_send_tlv*)(data + off);
@@ -178,11 +178,10 @@ void BtrfsRecv::cmd_subvol(HWND hwnd, btrfs_send_command* cmd, uint8_t* data, co
     string name;
     BTRFS_UUID* uuid;
     uint64_t* gen;
-    ULONG uuidlen, genlen, bcslen;
+    ULONG uuidlen, genlen;
     btrfs_create_subvol* bcs;
     NTSTATUS Status;
     IO_STATUS_BLOCK iosb;
-    wstring nameu;
 
     {
         char* namebuf;
@@ -209,9 +208,9 @@ void BtrfsRecv::cmd_subvol(HWND hwnd, btrfs_send_command* cmd, uint8_t* data, co
     this->subvol_uuid = *uuid;
     this->stransid = *gen;
 
-    utf8_to_utf16(name, nameu);
+    auto nameu = utf8_to_utf16(name);
 
-    bcslen = offsetof(btrfs_create_subvol, name[0]) + (nameu.length() * sizeof(WCHAR));
+    size_t bcslen = offsetof(btrfs_create_subvol, name[0]) + (nameu.length() * sizeof(WCHAR));
     bcs = (btrfs_create_subvol*)malloc(bcslen);
 
     bcs->readonly = true;
@@ -219,7 +218,7 @@ void BtrfsRecv::cmd_subvol(HWND hwnd, btrfs_send_command* cmd, uint8_t* data, co
     bcs->namelen = (uint16_t)(nameu.length() * sizeof(WCHAR));
     memcpy(bcs->name, nameu.c_str(), bcs->namelen);
 
-    Status = NtFsControlFile(parent, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_CREATE_SUBVOL, bcs, bcslen, nullptr, 0);
+    Status = NtFsControlFile(parent, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_CREATE_SUBVOL, bcs, (ULONG)bcslen, nullptr, 0);
     if (!NT_SUCCESS(Status))
         throw string_error(IDS_RECV_CREATE_SUBVOL_FAILED, Status, format_ntstatus(Status).c_str());
 
@@ -238,7 +237,7 @@ void BtrfsRecv::cmd_subvol(HWND hwnd, btrfs_send_command* cmd, uint8_t* data, co
     if (master == INVALID_HANDLE_VALUE)
         throw string_error(IDS_RECV_CANT_OPEN_PATH, subvolpath.c_str(), GetLastError(), format_message(GetLastError()).c_str());
 
-    Status = NtFsControlFile(master, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_RESERVE_SUBVOL, bcs, bcslen, nullptr, 0);
+    Status = NtFsControlFile(master, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_RESERVE_SUBVOL, bcs, (ULONG)bcslen, nullptr, 0);
     if (!NT_SUCCESS(Status))
         throw string_error(IDS_RECV_RESERVE_SUBVOL_FAILED, Status, format_ntstatus(Status).c_str());
 
@@ -269,13 +268,14 @@ void BtrfsRecv::cmd_snapshot(HWND hwnd, btrfs_send_command* cmd, uint8_t* data, 
     string name;
     BTRFS_UUID *uuid, *parent_uuid;
     uint64_t *gen, *parent_transid;
-    ULONG uuidlen, genlen, paruuidlen, partransidlen, bcslen;
+    ULONG uuidlen, genlen, paruuidlen, partransidlen;
     btrfs_create_snapshot* bcs;
     NTSTATUS Status;
     IO_STATUS_BLOCK iosb;
-    wstring nameu, parpath;
+    wstring parpath;
     btrfs_find_subvol bfs;
     WCHAR parpathw[MAX_PATH], volpathw[MAX_PATH];
+    size_t bcslen;
 
     {
         char* namebuf;
@@ -314,7 +314,7 @@ void BtrfsRecv::cmd_snapshot(HWND hwnd, btrfs_send_command* cmd, uint8_t* data, 
     this->subvol_uuid = *uuid;
     this->stransid = *gen;
 
-    utf8_to_utf16(name, nameu);
+    auto nameu = utf8_to_utf16(name);
 
     bfs.uuid = *parent_uuid;
     bfs.ctransid = *parent_transid;
@@ -350,7 +350,7 @@ void BtrfsRecv::cmd_snapshot(HWND hwnd, btrfs_send_command* cmd, uint8_t* data, 
         bcs->namelen = (uint16_t)(nameu.length() * sizeof(WCHAR));
         memcpy(bcs->name, nameu.c_str(), bcs->namelen);
 
-        Status = NtFsControlFile(parent, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_CREATE_SNAPSHOT, bcs, bcslen, nullptr, 0);
+        Status = NtFsControlFile(parent, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_CREATE_SNAPSHOT, bcs, (ULONG)bcslen, nullptr, 0);
         if (!NT_SUCCESS(Status))
             throw string_error(IDS_RECV_CREATE_SNAPSHOT_FAILED, Status, format_ntstatus(Status).c_str());
     }
@@ -370,7 +370,7 @@ void BtrfsRecv::cmd_snapshot(HWND hwnd, btrfs_send_command* cmd, uint8_t* data, 
     if (master == INVALID_HANDLE_VALUE)
         throw string_error(IDS_RECV_CANT_OPEN_PATH, subvolpath.c_str(), GetLastError(), format_message(GetLastError()).c_str());
 
-    Status = NtFsControlFile(master, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_RESERVE_SUBVOL, bcs, bcslen, nullptr, 0);
+    Status = NtFsControlFile(master, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_RESERVE_SUBVOL, bcs, (ULONG)bcslen, nullptr, 0);
     if (!NT_SUCCESS(Status))
         throw string_error(IDS_RECV_RESERVE_SUBVOL_FAILED, Status, format_ntstatus(Status).c_str());
 
@@ -389,7 +389,7 @@ void BtrfsRecv::cmd_snapshot(HWND hwnd, btrfs_send_command* cmd, uint8_t* data, 
 
 void BtrfsRecv::cmd_mkfile(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
     uint64_t *inode, *rdev = nullptr, *mode = nullptr;
-    ULONG inodelen, bmnsize;
+    ULONG inodelen;
     NTSTATUS Status;
     IO_STATUS_BLOCK iosb;
     btrfs_mknod* bmn;
@@ -402,7 +402,7 @@ void BtrfsRecv::cmd_mkfile(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&name, &namelen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(name, namelen), nameu);
+        nameu = utf8_to_utf16(string(name, namelen));
     }
 
     if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_INODE, (void**)&inode, &inodelen))
@@ -432,10 +432,10 @@ void BtrfsRecv::cmd_mkfile(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH_LINK, (void**)&pathlink, &pathlinklen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path_link");
 
-        utf8_to_utf16(string(pathlink, pathlinklen), pathlinku);
+        pathlinku = utf8_to_utf16(string(pathlink, pathlinklen));
     }
 
-    bmnsize = sizeof(btrfs_mknod) - sizeof(WCHAR) + (nameu.length() * sizeof(WCHAR));
+    size_t bmnsize = sizeof(btrfs_mknod) - sizeof(WCHAR) + (nameu.length() * sizeof(WCHAR));
     bmn = (btrfs_mknod*)malloc(bmnsize);
 
     bmn->inode = *inode;
@@ -455,7 +455,7 @@ void BtrfsRecv::cmd_mkfile(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
     bmn->namelen = (uint16_t)(nameu.length() * sizeof(WCHAR));
     memcpy(bmn->name, nameu.c_str(), bmn->namelen);
 
-    Status = NtFsControlFile(dir, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_MKNOD, bmn, bmnsize, nullptr, 0);
+    Status = NtFsControlFile(dir, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_MKNOD, bmn, (ULONG)bmnsize, nullptr, 0);
     if (!NT_SUCCESS(Status)) {
         free(bmn);
         throw string_error(IDS_RECV_MKNOD_FAILED, Status, format_ntstatus(Status).c_str());
@@ -465,10 +465,9 @@ void BtrfsRecv::cmd_mkfile(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
 
     if (cmd->cmd == BTRFS_SEND_CMD_SYMLINK) {
         REPARSE_DATA_BUFFER* rdb;
-        ULONG rdblen;
         btrfs_set_inode_info bsii;
 
-        rdblen = offsetof(REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer[0]) + (2 * pathlinku.length() * sizeof(WCHAR));
+        size_t rdblen = offsetof(REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer[0]) + (2 * pathlinku.length() * sizeof(WCHAR));
 
         if (rdblen >= 0x10000)
             throw string_error(IDS_RECV_PATH_TOO_LONG, funcname);
@@ -495,7 +494,7 @@ void BtrfsRecv::cmd_mkfile(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
             throw string_error(IDS_RECV_CANT_OPEN_FILE, funcname, nameu.c_str(), GetLastError(), format_message(GetLastError()).c_str());
         }
 
-        Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_SET_REPARSE_POINT, rdb, rdblen, nullptr, 0);
+        Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_SET_REPARSE_POINT, rdb, (ULONG)rdblen, nullptr, 0);
         if (!NT_SUCCESS(Status)) {
             free(rdb);
             throw string_error(IDS_RECV_SET_REPARSE_POINT_FAILED, Status, format_ntstatus(Status).c_str());
@@ -548,7 +547,7 @@ void BtrfsRecv::cmd_rename(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &path_len))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, path_len), pathu);
+        pathu = utf8_to_utf16(string(path, path_len));
     }
 
     {
@@ -558,7 +557,7 @@ void BtrfsRecv::cmd_rename(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH_TO, (void**)&path_to, &path_to_len))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path_to");
 
-        utf8_to_utf16(string(path_to, path_to_len), path_tou);
+        path_tou = utf8_to_utf16(string(path_to, path_to_len));
     }
 
     if (!MoveFileW((subvolpath + pathu).c_str(), (subvolpath + path_tou).c_str()))
@@ -575,7 +574,7 @@ void BtrfsRecv::cmd_link(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &path_len))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, path_len), pathu);
+        pathu = utf8_to_utf16(string(path, path_len));
     }
 
     {
@@ -585,7 +584,7 @@ void BtrfsRecv::cmd_link(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH_LINK, (void**)&path_link, &path_link_len))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path_link");
 
-        utf8_to_utf16(string(path_link, path_link_len), path_linku);
+        path_linku = utf8_to_utf16(string(path_link, path_link_len));
     }
 
     if (!CreateHardLinkW((subvolpath + pathu).c_str(), (subvolpath + path_linku).c_str(), nullptr))
@@ -603,7 +602,7 @@ void BtrfsRecv::cmd_unlink(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &pathlen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, pathlen), pathu);
+        pathu = utf8_to_utf16(string(path, pathlen));
     }
 
     att = GetFileAttributesW((subvolpath + pathu).c_str());
@@ -630,7 +629,7 @@ void BtrfsRecv::cmd_rmdir(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &pathlen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, pathlen), pathu);
+        pathu = utf8_to_utf16(string(path, pathlen));
     }
 
     att = GetFileAttributesW((subvolpath + pathu).c_str());
@@ -659,7 +658,7 @@ void BtrfsRecv::cmd_setxattr(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) 
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &pathlen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, pathlen), pathu);
+        pathu = utf8_to_utf16(string(path, pathlen));
     }
 
     {
@@ -677,10 +676,9 @@ void BtrfsRecv::cmd_setxattr(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) 
 
     if (xattrname.length() > XATTR_USER.length() && xattrname.substr(0, XATTR_USER.length()) == XATTR_USER &&
         xattrname != EA_DOSATTRIB && xattrname != EA_EA && xattrname != EA_REPARSE) {
-        wstring streamname;
         ULONG att;
 
-        utf8_to_utf16(xattrname, streamname);
+        auto streamname = utf8_to_utf16(xattrname);
 
         att = GetFileAttributesW((subvolpath + pathu).c_str());
         if (att == INVALID_FILE_ATTRIBUTES)
@@ -710,7 +708,7 @@ void BtrfsRecv::cmd_setxattr(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) 
     } else {
         IO_STATUS_BLOCK iosb;
         NTSTATUS Status;
-        ULONG bsxalen, perms = FILE_WRITE_ATTRIBUTES;
+        ULONG perms = FILE_WRITE_ATTRIBUTES;
         btrfs_set_xattr* bsxa;
 
         if (xattrname == EA_NTACL)
@@ -723,7 +721,7 @@ void BtrfsRecv::cmd_setxattr(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) 
         if (h == INVALID_HANDLE_VALUE)
             throw string_error(IDS_RECV_CANT_OPEN_FILE, funcname, pathu.c_str(), GetLastError(), format_message(GetLastError()).c_str());
 
-        bsxalen = offsetof(btrfs_set_xattr, data[0]) + xattrname.length() + xattrdatalen;
+        size_t bsxalen = offsetof(btrfs_set_xattr, data[0]) + xattrname.length() + xattrdatalen;
         bsxa = (btrfs_set_xattr*)malloc(bsxalen);
         if (!bsxa)
             throw string_error(IDS_OUT_OF_MEMORY);
@@ -733,7 +731,7 @@ void BtrfsRecv::cmd_setxattr(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) 
         memcpy(bsxa->data, xattrname.c_str(), xattrname.length());
         memcpy(&bsxa->data[xattrname.length()], xattrdata, xattrdatalen);
 
-        Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_SET_XATTR, bsxa, bsxalen, nullptr, 0);
+        Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_SET_XATTR, bsxa, (ULONG)bsxalen, nullptr, 0);
         if (!NT_SUCCESS(Status)) {
             free(bsxa);
             throw string_error(IDS_RECV_SETXATTR_FAILED, Status, format_ntstatus(Status).c_str());
@@ -754,7 +752,7 @@ void BtrfsRecv::cmd_removexattr(HWND hwnd, btrfs_send_command* cmd, uint8_t* dat
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &pathlen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, pathlen), pathu);
+        pathu = utf8_to_utf16(string(path, pathlen));
     }
 
     {
@@ -769,9 +767,8 @@ void BtrfsRecv::cmd_removexattr(HWND hwnd, btrfs_send_command* cmd, uint8_t* dat
 
     if (xattrname.length() > XATTR_USER.length() && xattrname.substr(0, XATTR_USER.length()) == XATTR_USER && xattrname != EA_DOSATTRIB && xattrname != EA_EA) { // deleting stream
         ULONG att;
-        wstring streamname;
 
-        utf8_to_utf16(xattrname, streamname);
+        auto streamname = utf8_to_utf16(xattrname);
 
         streamname = streamname.substr(XATTR_USER.length());
 
@@ -794,7 +791,7 @@ void BtrfsRecv::cmd_removexattr(HWND hwnd, btrfs_send_command* cmd, uint8_t* dat
     } else {
         IO_STATUS_BLOCK iosb;
         NTSTATUS Status;
-        ULONG bsxalen, perms = FILE_WRITE_ATTRIBUTES;
+        ULONG perms = FILE_WRITE_ATTRIBUTES;
         btrfs_set_xattr* bsxa;
 
         if (xattrname == EA_NTACL)
@@ -807,7 +804,7 @@ void BtrfsRecv::cmd_removexattr(HWND hwnd, btrfs_send_command* cmd, uint8_t* dat
         if (h == INVALID_HANDLE_VALUE)
             throw string_error(IDS_RECV_CANT_OPEN_FILE, funcname, pathu.c_str(), GetLastError(), format_message(GetLastError()).c_str());
 
-        bsxalen = offsetof(btrfs_set_xattr, data[0]) + xattrname.length();
+        size_t bsxalen = offsetof(btrfs_set_xattr, data[0]) + xattrname.length();
         bsxa = (btrfs_set_xattr*)malloc(bsxalen);
         if (!bsxa)
             throw string_error(IDS_OUT_OF_MEMORY);
@@ -816,7 +813,7 @@ void BtrfsRecv::cmd_removexattr(HWND hwnd, btrfs_send_command* cmd, uint8_t* dat
         bsxa->valuelen = 0;
         memcpy(bsxa->data, xattrname.c_str(), xattrname.length());
 
-        Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_SET_XATTR, bsxa, bsxalen, nullptr, 0);
+        Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_SET_XATTR, bsxa, (ULONG)bsxalen, nullptr, 0);
         if (!NT_SUCCESS(Status)) {
             free(bsxa);
             throw string_error(IDS_RECV_SETXATTR_FAILED, Status, format_ntstatus(Status).c_str());
@@ -833,6 +830,8 @@ void BtrfsRecv::cmd_write(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
     wstring pathu;
     HANDLE h;
     LARGE_INTEGER offli;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK iosb;
 
     {
         char* path;
@@ -841,7 +840,7 @@ void BtrfsRecv::cmd_write(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &pathlen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, pathlen), pathu);
+        pathu = utf8_to_utf16(string(path, pathlen));
     }
 
     if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_OFFSET, (void**)&offset, &offsetlen))
@@ -884,8 +883,9 @@ void BtrfsRecv::cmd_write(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
 
         fbi.LastWriteTime.QuadPart = -1;
 
-        if (!SetFileInformationByHandle(h, FileBasicInfo, &fbi, sizeof(FILE_BASIC_INFO)))
-            throw string_error(IDS_RECV_SETFILEINFO_FAILED, GetLastError(), format_message(GetLastError()).c_str());
+        Status = NtSetInformationFile(h, &iosb, &fbi, sizeof(FILE_BASIC_INFO), FileBasicInformation);
+        if (!NT_SUCCESS(Status))
+            throw ntstatus_error(Status);
     } else
         h = lastwritefile;
 
@@ -930,7 +930,7 @@ void BtrfsRecv::cmd_clone(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &pathlen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, pathlen), pathu);
+        pathu = utf8_to_utf16(string(path, pathlen));
     }
 
     if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_CLONE_UUID, (void**)&cloneuuid, &cloneuuidlen))
@@ -952,7 +952,7 @@ void BtrfsRecv::cmd_clone(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_CLONE_PATH, (void**)&clonepath, &clonepathlen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"clone_path");
 
-        utf8_to_utf16(string(clonepath, clonepathlen), clonepathu);
+        clonepathu = utf8_to_utf16(string(clonepath, clonepathlen));
     }
 
     if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_CLONE_OFFSET, (void**)&cloneoffset, &cloneoffsetlen))
@@ -1047,7 +1047,7 @@ void BtrfsRecv::cmd_truncate(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) 
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &pathlen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, pathlen), pathu);
+        pathu = utf8_to_utf16(string(path, pathlen));
     }
 
     if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_SIZE, (void**)&size, &sizelen))
@@ -1103,7 +1103,7 @@ void BtrfsRecv::cmd_chmod(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &pathlen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, pathlen), pathu);
+        pathu = utf8_to_utf16(string(path, pathlen));
     }
 
     if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_MODE, (void**)&mode, &modelen))
@@ -1141,7 +1141,7 @@ void BtrfsRecv::cmd_chown(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &pathlen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, pathlen), pathu);
+        pathu = utf8_to_utf16(string(path, pathlen));
     }
 
     h = CreateFileW((subvolpath + pathu).c_str(), FILE_WRITE_ATTRIBUTES | WRITE_OWNER | WRITE_DAC, 0, nullptr, OPEN_EXISTING,
@@ -1187,6 +1187,8 @@ void BtrfsRecv::cmd_utimes(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
     FILE_BASIC_INFO fbi;
     BTRFS_TIME* time;
     ULONG timelen;
+    IO_STATUS_BLOCK iosb;
+    NTSTATUS Status;
 
     {
         char* path;
@@ -1195,7 +1197,7 @@ void BtrfsRecv::cmd_utimes(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
         if (!find_tlv(data, cmd->length, BTRFS_SEND_TLV_PATH, (void**)&path, &pathlen))
             throw string_error(IDS_RECV_MISSING_PARAM, funcname, L"path");
 
-        utf8_to_utf16(string(path, pathlen), pathu);
+        pathu = utf8_to_utf16(string(path, pathlen));
     }
 
     h = CreateFileW((subvolpath + pathu).c_str(), FILE_WRITE_ATTRIBUTES, 0, nullptr, OPEN_EXISTING,
@@ -1217,8 +1219,9 @@ void BtrfsRecv::cmd_utimes(HWND hwnd, btrfs_send_command* cmd, uint8_t* data) {
     if (find_tlv(data, cmd->length, BTRFS_SEND_TLV_CTIME, (void**)&time, &timelen) && timelen >= sizeof(BTRFS_TIME))
         fbi.ChangeTime.QuadPart = unix_time_to_win(time);
 
-    if (!SetFileInformationByHandle(h, FileBasicInfo, &fbi, sizeof(FILE_BASIC_INFO)))
-        throw string_error(IDS_RECV_SETFILEINFO_FAILED, GetLastError(), format_message(GetLastError()).c_str());
+    Status = NtSetInformationFile(h, &iosb, &fbi, sizeof(FILE_BASIC_INFO), FileBasicInformation);
+    if (!NT_SUCCESS(Status))
+        throw ntstatus_error(Status);
 }
 
 static void delete_directory(const wstring& dir) {
@@ -1496,9 +1499,7 @@ DWORD BtrfsRecv::recv_thread() {
             } while (pos < (uint64_t)size.QuadPart);
         }
     } catch (const exception& e) {
-        wstring msg;
-
-        utf8_to_utf16(e.what(), msg);
+        auto msg = utf8_to_utf16(e.what());
 
         SetDlgItemTextW(hwnd, IDC_RECV_MSG, msg.c_str());
 
@@ -1552,9 +1553,7 @@ INT_PTR CALLBACK BtrfsRecv::RecvProgressDlgProc(HWND hwndDlg, UINT uMsg, WPARAM 
                 if (!thread)
                     throw string_error(IDS_RECV_CREATETHREAD_FAILED, GetLastError(), format_message(GetLastError()).c_str());
             } catch (const exception& e) {
-                wstring msg;
-
-                utf8_to_utf16(e.what(), msg);
+                auto msg = utf8_to_utf16(e.what());
 
                 SetDlgItemTextW(hwnd, IDC_RECV_MSG, msg.c_str());
 

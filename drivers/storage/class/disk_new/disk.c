@@ -6053,7 +6053,7 @@ DiskIoctlGetPartitionInfoEx(
 
         status = STATUS_BUFFER_TOO_SMALL;
         Irp->IoStatus.Status = status;
-        Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
+        Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION_EX);
         return status;
     }
 

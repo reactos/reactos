@@ -27,6 +27,8 @@ void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC)
   c->pt.x = 0;
   c->pt.y = 0;
   c->rcView = editor->rcFormat;
+  c->current_style = NULL;
+  c->orig_font = NULL;
   if (hDC) {
       c->dpi.cx = GetDeviceCaps(hDC, LOGPIXELSX);
       c->dpi.cy = GetDeviceCaps(hDC, LOGPIXELSY);
@@ -41,5 +43,6 @@ void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC)
 
 void ME_DestroyContext(ME_Context *c)
 {
-  if (c->hDC) ITextHost_TxReleaseDC(c->editor->texthost, c->hDC);
+    select_style( c, NULL );
+    if (c->hDC) ITextHost_TxReleaseDC( c->editor->texthost, c->hDC );
 }

@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -27,9 +26,10 @@
 #include "winuser.h"
 #include "ole2.h"
 #include "netfw.h"
+#include "natupnp.h"
 
+#include "wine/heap.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "hnetcfg_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
@@ -601,5 +601,175 @@ HRESULT NetFwOpenPorts_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     *ppObj = &fp->INetFwOpenPorts_iface;
 
     TRACE("returning iface %p\n", *ppObj);
+    return S_OK;
+}
+
+typedef struct _upnpnat
+{
+    IUPnPNAT IUPnPNAT_iface;
+    LONG ref;
+} upnpnat;
+
+static inline upnpnat *impl_from_IUPnPNAT( IUPnPNAT *iface )
+{
+    return CONTAINING_RECORD(iface, upnpnat, IUPnPNAT_iface);
+}
+
+static HRESULT WINAPI upnpnat_QueryInterface(IUPnPNAT *iface, REFIID riid, void **object)
+{
+    upnpnat *This = impl_from_IUPnPNAT( iface );
+
+    TRACE("%p %s %p\n", This, debugstr_guid( riid ), object );
+
+    if ( IsEqualGUID( riid, &IID_IUPnPNAT ) ||
+         IsEqualGUID( riid, &IID_IDispatch ) ||
+         IsEqualGUID( riid, &IID_IUnknown ) )
+    {
+        *object = iface;
+    }
+    else if(IsEqualGUID( riid, &IID_IProvideClassInfo))
+    {
+        TRACE("IProvideClassInfo not supported.\n");
+        return E_NOINTERFACE;
+    }
+    else
+    {
+        FIXME("interface %s not implemented\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+    IUPnPNAT_AddRef( iface );
+    return S_OK;
+}
+
+static ULONG WINAPI upnpnat_AddRef(IUPnPNAT *iface)
+{
+    upnpnat *This = impl_from_IUPnPNAT( iface );
+    return InterlockedIncrement( &This->ref );
+}
+
+static ULONG WINAPI upnpnat_Release(IUPnPNAT *iface)
+{
+    upnpnat *This = impl_from_IUPnPNAT( iface );
+    LONG refs = InterlockedDecrement( &This->ref );
+    if (!refs)
+    {
+        heap_free( This );
+    }
+    return refs;
+}
+
+static HRESULT WINAPI upnpnat_GetTypeInfoCount(IUPnPNAT *iface, UINT *pctinfo)
+{
+    upnpnat *This = impl_from_IUPnPNAT( iface );
+
+    TRACE("%p %p\n", This, pctinfo);
+    *pctinfo = 1;
+    return S_OK;
+}
+
+static HRESULT WINAPI upnpnat_GetTypeInfo(IUPnPNAT *iface, UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
+{
+    upnpnat *This = impl_from_IUPnPNAT( iface );
+
+    TRACE("%p %u %u %p\n", This, iTInfo, lcid, ppTInfo);
+    return get_typeinfo( IUPnPNAT_tid, ppTInfo );
+}
+
+static HRESULT WINAPI upnpnat_GetIDsOfNames(IUPnPNAT *iface, REFIID riid, LPOLESTR *rgszNames,
+                UINT cNames, LCID lcid, DISPID *rgDispId)
+{
+    upnpnat *This = impl_from_IUPnPNAT( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("%p %s %p %u %u %p\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
+
+    hr = get_typeinfo( IUPnPNAT_tid, &typeinfo );
+    if (SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_GetIDsOfNames( typeinfo, rgszNames, cNames, rgDispId );
+        ITypeInfo_Release( typeinfo );
+    }
+    return hr;
+}
+
+static HRESULT WINAPI upnpnat_Invoke(IUPnPNAT *iface, DISPID dispIdMember, REFIID riid, LCID lcid,
+                WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
+                UINT *puArgErr)
+{
+    upnpnat *This = impl_from_IUPnPNAT( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("%p %d %s %d %d %p %p %p %p\n", This, dispIdMember, debugstr_guid(riid),
+          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+
+    hr = get_typeinfo( IUPnPNAT_tid, &typeinfo );
+    if (SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_Invoke( typeinfo, &This->IUPnPNAT_iface, dispIdMember,
+                               wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr );
+        ITypeInfo_Release( typeinfo );
+    }
+    return hr;
+}
+
+static HRESULT WINAPI upnpnat_get_StaticPortMappingCollection(IUPnPNAT *iface, IStaticPortMappingCollection **collection)
+{
+    upnpnat *This = impl_from_IUPnPNAT( iface );
+    FIXME("%p, %p\n", This, collection);
+    if(collection)
+        *collection = NULL;
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI upnpnat_get_DynamicPortMappingCollection(IUPnPNAT *iface, IDynamicPortMappingCollection **collection)
+{
+    upnpnat *This = impl_from_IUPnPNAT( iface );
+    FIXME("%p, %p\n", This, collection);
+    if(collection)
+        *collection = NULL;
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI upnpnat_get_NATEventManager(IUPnPNAT *iface, INATEventManager **manager)
+{
+    upnpnat *This = impl_from_IUPnPNAT( iface );
+    FIXME("%p, %p\n", This, manager);
+    if(manager)
+        *manager = NULL;
+    return E_NOTIMPL;
+}
+
+static const IUPnPNATVtbl upnpnat_vtbl =
+{
+    upnpnat_QueryInterface,
+    upnpnat_AddRef,
+    upnpnat_Release,
+    upnpnat_GetTypeInfoCount,
+    upnpnat_GetTypeInfo,
+    upnpnat_GetIDsOfNames,
+    upnpnat_Invoke,
+    upnpnat_get_StaticPortMappingCollection,
+    upnpnat_get_DynamicPortMappingCollection,
+    upnpnat_get_NATEventManager
+};
+
+
+HRESULT IUPnPNAT_create(IUnknown *outer, void **object)
+{
+    upnpnat *nat;
+
+    TRACE("(%p,%p)\n", outer, object);
+
+    nat = heap_alloc( sizeof(*nat) );
+    if (!nat) return E_OUTOFMEMORY;
+
+    nat->IUPnPNAT_iface.lpVtbl = &upnpnat_vtbl;
+    nat->ref = 1;
+
+    *object = &nat->IUPnPNAT_iface;
+
+    TRACE("returning iface %p\n", *object);
     return S_OK;
 }

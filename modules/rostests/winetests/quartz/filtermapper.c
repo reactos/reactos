@@ -39,6 +39,7 @@ static BOOL enum_find_filter(const WCHAR *wszFilterName, IEnumMoniker *pEnum)
     HRESULT hr;
     static const WCHAR wszFriendlyName[] = {'F','r','i','e','n','d','l','y','N','a','m','e',0};
 
+    disable_success_count
     while(!found && IEnumMoniker_Next(pEnum, 1, &pMoniker, &nb) == S_OK)
     {
         IPropertyBag * pPropBagCat = NULL;

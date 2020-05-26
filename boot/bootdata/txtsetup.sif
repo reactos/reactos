@@ -149,11 +149,11 @@ wdfldr.sys   = 1,,,,,,,4,,,,1,4
 [SystemPartitionFiles]
 
 [HardwareIdsDatabase]
-;*PNP0A00 = isapnp
+*PNP0A00 = isapnp
 *PNP0A03 = pci
 *PNP0A08 = pci
 *PNP0C08 = acpi
-;PCI\CC_0601 = isapnp
+PCI\CC_0601 = isapnp
 PCI\CC_0604 = pci
 PCI\VEN_104B&CC_0100 = buslogic
 PCI\CC_0101 = pciide
@@ -226,7 +226,7 @@ pci_up = "Standard PC Uniprocessor"
 ;pci_mp = "Standard PC Multiprocessor"
 acpi_up = "ACPI PC Uniprocessor"
 ;acpi_mp = "ACPI PC Multiprocessor"
-xbox = "Original Xbox"
+xbox = "Original Xbox (x86 based)"
 
 [Computer.NTamd64]
 x64_up = "Standard x64 Uniprocessor"

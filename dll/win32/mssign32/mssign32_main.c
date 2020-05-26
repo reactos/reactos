@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include <stdarg.h>
 
 #include "windef.h"
@@ -27,6 +25,9 @@
 #include "wincrypt.h"
 
 #include "wine/debug.h"
+#include "wine/heap.h"
+
+#include "mssign32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mssign);
 
@@ -71,4 +72,20 @@ void WINAPI PvkFreeCryptProv(HCRYPTPROV hProv, LPCWSTR pwszCapiProvider, DWORD d
 {
     FIXME("%08lx %s %d %s stub\n", hProv, debugstr_w(pwszCapiProvider), dwProviderType,
                     debugstr_w(pwszTmpContainer));
+}
+
+HRESULT WINAPI SignerSignEx(DWORD flags, SIGNER_SUBJECT_INFO *subject_info, SIGNER_CERT *signer_cert,
+                            SIGNER_SIGNATURE_INFO *signature_info, SIGNER_PROVIDER_INFO *provider_info,
+                            const WCHAR *http_time_stamp, CRYPT_ATTRIBUTES *request, void *sip_data,
+                            SIGNER_CONTEXT **signer_context)
+{
+    FIXME("%x %p %p %p %p %s %p %p %p stub\n", flags, subject_info, signer_cert, signature_info, provider_info,
+                    wine_dbgstr_w(http_time_stamp), request, sip_data, signer_cert);
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI SignerFreeSignerContext(SIGNER_CONTEXT *signer_context)
+{
+    heap_free(signer_context);
+    return S_OK;
 }

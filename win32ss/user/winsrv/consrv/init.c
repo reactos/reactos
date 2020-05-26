@@ -320,11 +320,6 @@ PCHAR ConsoleServerApiNameTable[ConsolepMaxApiNumber - CONSRV_FIRST_API_NUMBER] 
 
 /* FUNCTIONS ******************************************************************/
 
-/* See handle.c */
-NTSTATUS
-ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
-                          IN PCONSOLE_PROCESS_DATA TargetProcessData);
-
 NTSTATUS
 NTAPI
 ConSrvNewProcess(PCSR_PROCESS SourceProcess,
@@ -569,7 +564,6 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
     if (!ConSrvHeap) return STATUS_NO_MEMORY;
 */
 
-    ConDrvInitConsoleSupport();
     ConSrvInitConsoleSupport();
 
     /* Setup the DLL Object */

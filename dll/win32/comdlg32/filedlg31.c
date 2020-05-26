@@ -28,7 +28,6 @@
 #include "winnls.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
 #include "winreg.h"
@@ -107,13 +106,13 @@ static void FD31_StripEditControl(HWND hwnd)
     WCHAR temp[BUFFILE], *cp;
 
     GetDlgItemTextW( hwnd, edt1, temp, ARRAY_SIZE(temp));
-    cp = strrchrW(temp, '\\');
+    cp = wcsrchr(temp, '\\');
     if (cp != NULL) {
-	strcpyW(temp, cp+1);
+	lstrcpyW(temp, cp+1);
     }
-    cp = strrchrW(temp, ':');
+    cp = wcsrchr(temp, ':');
     if (cp != NULL) {
-	strcpyW(temp, cp+1);
+	lstrcpyW(temp, cp+1);
     }
     /* FIXME: shouldn't we do something with the result here? ;-) */
 }
@@ -200,7 +199,7 @@ static BOOL FD31_ScanDir(const OPENFILENAMEW *ofn, HWND hWnd, LPCWSTR newPath)
 	TRACE("Using filter %s\n", debugstr_w(filter));
 	SendMessageW(hdlg, LB_RESETCONTENT, 0, 0);
 	while (filter) {
-	    scptr = strchrW(filter, ';');
+	    scptr = wcschr(filter, ';');
 	    if (scptr)	*scptr = 0;
 	    while (*filter == ' ') filter++;
 	    TRACE("Using file spec %s\n", debugstr_w(filter));
@@ -211,7 +210,7 @@ static BOOL FD31_ScanDir(const OPENFILENAMEW *ofn, HWND hWnd, LPCWSTR newPath)
     }
 
     /* list of directories */
-    strcpyW(buffer, FILE_star);
+    lstrcpyW(buffer, FILE_star);
 
     if (GetDlgItem(hWnd, lst2) != 0) {
         lRet = DlgDirListW(hWnd, buffer, lst2, stc1, DDL_EXCLUSIVE | DDL_DIRECTORY);
@@ -342,7 +341,7 @@ static void FD31_UpdateResult(const FD31_DATA *lfs, const WCHAR *tmpstr)
         tmpstr2[0] = '\0';
     else
         GetCurrentDirectoryW(BUFFILE, tmpstr2);
-    lenstr2 = strlenW(tmpstr2);
+    lenstr2 = lstrlenW(tmpstr2);
     if (lenstr2 > 3)
         tmpstr2[lenstr2++]='\\';
     lstrcpynW(tmpstr2+lenstr2, tmpstr, BUFFILE-lenstr2);
@@ -422,15 +421,15 @@ static LRESULT FD31_DirListDblClick( const FD31_DATA *lfs )
   pstr = heap_alloc(BUFFILEALLOC);
   SendDlgItemMessageW(hWnd, lst2, LB_GETTEXT, lRet,
 		     (LPARAM)pstr);
-  strcpyW( tmpstr, pstr );
+  lstrcpyW( tmpstr, pstr );
   heap_free(pstr);
   /* get the selected directory in tmpstr */
   if (tmpstr[0] == '[')
     {
       tmpstr[lstrlenW(tmpstr) - 1] = 0;
-      strcpyW(tmpstr,tmpstr+1);
+      lstrcpyW(tmpstr,tmpstr+1);
     }
-  strcatW(tmpstr, FILE_bslash);
+  lstrcatW(tmpstr, FILE_bslash);
 
   FD31_ScanDir(lfs->ofnW, hWnd, tmpstr);
   /* notify the app */
@@ -486,11 +485,11 @@ static LRESULT FD31_TestPath( const FD31_DATA *lfs, LPWSTR path )
     LPWSTR pBeginFileName, pstr2;
     WCHAR tmpstr2[BUFFILE];
 
-    pBeginFileName = strrchrW(path, '\\');
+    pBeginFileName = wcsrchr(path, '\\');
     if (pBeginFileName == NULL)
-	pBeginFileName = strrchrW(path, ':');
+	pBeginFileName = wcsrchr(path, ':');
 
-    if (strchrW(path,'*') != NULL || strchrW(path,'?') != NULL)
+    if (wcschr(path,'*') != NULL || wcschr(path,'?') != NULL)
     {
         /* edit control contains wildcards */
         if (pBeginFileName != NULL)
@@ -500,7 +499,7 @@ static LRESULT FD31_TestPath( const FD31_DATA *lfs, LPWSTR path )
 	}
 	else
 	{
-	    strcpyW(tmpstr2, path);
+	    lstrcpyW(tmpstr2, path);
             if(!(lfs->ofnW->Flags & OFN_NOVALIDATE))
                 *path = 0;
         }
@@ -516,7 +515,7 @@ static LRESULT FD31_TestPath( const FD31_DATA *lfs, LPWSTR path )
 
     pstr2 = path + lstrlenW(path);
     if (pBeginFileName == NULL || *(pBeginFileName + 1) != 0)
-        strcatW(path, FILE_bslash);
+        lstrcatW(path, FILE_bslash);
 
     /* if ScanDir succeeds, we have changed the directory */
     if (FD31_ScanDir(lfs->ofnW, hWnd, path))
@@ -538,7 +537,7 @@ static LRESULT FD31_TestPath( const FD31_DATA *lfs, LPWSTR path )
         {
             return FALSE;
         }
-        strcpyW(path, tmpstr2);
+        lstrcpyW(path, tmpstr2);
     }
     else
         SetDlgItemTextW( hWnd, edt1, path );
@@ -602,7 +601,7 @@ static LRESULT FD31_Validate( const FD31_DATA *lfs, LPCWSTR path, UINT control, 
         if (ofnW->lpstrFile)
         {
             LPWSTR str = ofnW->lpstrFile;
-            LPWSTR ptr = strrchrW(str, '\\');
+            LPWSTR ptr = wcsrchr(str, '\\');
 	    str[lstrlenW(str) + 1] = '\0';
 	    *ptr = 0;
         }

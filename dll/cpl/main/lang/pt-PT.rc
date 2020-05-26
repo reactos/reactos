@@ -54,7 +54,7 @@ BEGIN
     GROUPBOX "Configuração dos botões", -1, 5, 5, 236, 70
     CHECKBOX "&Mudar os botões primário e secundário", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 156, 10
     CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 171, 14, 65, 57, WS_EX_STATICEDGE
-    LTEXT "Seleccione esta caixa para tornar o botão direito do mouse aquele que é utilizado para as principais funções, como seleccionar e arrastar.", -1, 10, 36, 156, 30
+    LTEXT "Seleccione esta caixa para tornar o botão direito do rato aquele que é utilizado para as principais funções, como seleccionar e arrastar.", -1, 10, 36, 156, 30
     GROUPBOX "Velocidade do duplo clique", -1, 5, 78, 236, 70
     LTEXT "Faça duplo clique na pasta para testar a definição. Se a pasta não abrir nem fechar, tente utilizar uma definição mais lenta.", -1, 10, 90, 156, 28
     LTEXT "Velocidade: Lenta", -1, 10, 123, 50, 10
@@ -134,8 +134,8 @@ BEGIN
     LTEXT "Rodar a roda um nó para deslocar", -1, 60, 15, 150, 10
     RADIOBUTTON "O seguinte numero de linhas de cada vez:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
     RADIOBUTTON "&Um ecrã de cada vez", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
-    EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP
-    CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER, 125, 45, 12, 12
+    EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | ES_NUMBER | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS, 125, 45, 12, 12
 END
 
 STRINGTABLE

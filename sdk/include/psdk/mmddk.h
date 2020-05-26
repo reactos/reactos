@@ -29,6 +29,10 @@
 #include <mmsystem.h>
 #include <winbase.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Maxium drivers  */
 #define MAXWAVEDRIVERS 10
 
@@ -479,5 +483,9 @@ DWORD   WINAPI mmGetCurrentTask(void);
 
 
 #include <poppack.h>
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif /* __MMDDK_H */

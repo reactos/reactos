@@ -15,8 +15,8 @@ BEGIN
     PUSHBUTTON "&Vlastnosti", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Popis", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Tak tady bude popis komponenty...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "Po připojení zobrazit ikonu na hlavním panelu", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Upozornit při omezeném nebo žádném připojení", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP
+    AUTOCHECKBOX "Po připojení zobrazit ikonu na hlavním panelu", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "&Upozornit při omezeném nebo žádném připojení", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, WS_TABSTOP | BS_TOP | BS_MULTILINE
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280
@@ -31,22 +31,22 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Obecné nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Spojení", -1, 9, 8, 182, 58, BS_GROUPBOX
-    LTEXT "Stav:", -1, 19, 20, 60, 8
-    LTEXT "Doba připojení:", -1, 19, 34, 60, 8
-    LTEXT "Rychlost:", -1, 19, 48, 60, 8
-    GROUPBOX "Aktivita", -1, 9, 74, 182, 70, BS_GROUPBOX
-    RTEXT "Odesláno", -1, 26, 90, 60, 8
+    GROUPBOX "Spojení", -1, 9, 8, 190, 58, BS_GROUPBOX
+    LTEXT "Stav:", -1, 22, 20, 65, 8
+    LTEXT "Doba připojení:", -1, 22, 34, 65, 8
+    LTEXT "Rychlost:", -1, 22, 48, 65, 8
+    GROUPBOX "Aktivita", -1, 9, 74, 190, 70, BS_GROUPBOX
+    LTEXT "Odesláno", -1, 60, 90, 60, 8
     ICON "", IDC_NETSTAT, 110, 85, 32, 32
-    LTEXT "Přijato", -1, 149, 90, 37, 8
-    LTEXT "Bytů:", -1, 17, 115, 32, 8
-    RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
-    RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
-    PUSHBUTTON "&Vlastnosti", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
-    PUSHBUTTON "&Zakázat", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "", IDC_STATUS, 83, 20, 98, 8
-    RTEXT "", IDC_DURATION, 83, 34, 98, 8
-    RTEXT "", IDC_SPEED, 83, 48, 98, 8
+    RTEXT "Přijato", -1, 146, 90, 44, 8
+    LTEXT "Bytů:", -1, 22, 115, 32, 8
+    LTEXT "000.000.000", IDC_SEND, 60, 115, 44, 8
+    RTEXT "000.000.000", IDC_RECEIVED, 146, 115, 44, 8
+    PUSHBUTTON "&Vlastnosti", IDC_STATUS_PROPERTIES, 10, 150, 60, 14
+    PUSHBUTTON "&Zakázat", IDC_ENDISABLE, 76, 150, 60, 14
+    RTEXT "", IDC_STATUS, 90, 20, 100, 8
+    RTEXT "", IDC_DURATION, 90, 34, 100, 8
+    RTEXT "", IDC_SPEED, 90, 48, 100, 8
 END
 
 IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
@@ -59,10 +59,10 @@ BEGIN
     LTEXT "IP adresa:", -1, 22, 34, 80, 8
     LTEXT "Maska podsítě:", -1, 22, 48, 80, 8
     LTEXT "Výchozí brána:", -1, 22, 62, 80, 8
-    RTEXT "N/A", IDC_DETAILSTYPE, 112, 20, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSIP, 112, 34, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 112, 48, 80, 8
-    RTEXT "", IDC_DETAILSGATEWAY, 112, 62, 80, 8
+    RTEXT "N/A", IDC_DETAILSTYPE, 110, 20, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSIP, 110, 34, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 110, 48, 80, 8
+    RTEXT "", IDC_DETAILSGATEWAY, 110, 62, 80, 8
     PUSHBUTTON "&Podrobnosti...", IDC_DETAILS, 22, 76, 62, 14
 END
 

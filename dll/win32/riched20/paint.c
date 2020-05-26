@@ -43,7 +43,7 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, const RECT *rcUpdate)
 
   ME_InitContext(&c, editor, hDC);
   SetBkMode(hDC, TRANSPARENT);
-  ME_MoveCaret(editor);
+
   item = editor->pBuffer->pFirst->next;
   /* This context point is an offset for the paragraph positions stored
    * during wrapping. It shouldn't be modified during painting. */
@@ -87,7 +87,7 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, const RECT *rcUpdate)
     IntersectRect(&rc, &rc, rcUpdate);
 
     if (!IsRectEmpty(&rc))
-      FillRect(hDC, &rc, c.editor->hbrBackground);
+      PatBlt(hDC, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, PATCOPY);
   }
   if (editor->nTotalLength != editor->nLastTotalLength ||
       editor->nTotalWidth != editor->nLastTotalWidth)
@@ -291,11 +291,10 @@ static void draw_space( ME_Context *c, ME_Run *run, int x, int y,
     {
         COLORREF text_color = get_text_color( c, run->style, selected );
         COLORREF old_text, old_back;
-        HFONT old_font = NULL;
         int y_offset = calc_y_offset( c, run->style );
         static const WCHAR space[1] = {' '};
 
-        old_font = ME_SelectStyleFont( c, run->style );
+        select_style( c, run->style );
         old_text = SetTextColor( hdc, text_color );
         if (selected) old_back = SetBkColor( hdc, back_color );
 
@@ -303,7 +302,6 @@ static void draw_space( ME_Context *c, ME_Run *run, int x, int y,
 
         if (selected) SetBkColor( hdc, old_back );
         SetTextColor( hdc, old_text );
-        ME_UnselectStyleFont( c, run->style, old_font );
 
         draw_underline( c, run, x, y - y_offset, text_color );
     }
@@ -371,7 +369,6 @@ static void ME_DrawTextWithStyle(ME_Context *c, ME_Run *run, int x, int y,
                                  int nSelFrom, int nSelTo, int ymin, int cy)
 {
   HDC hDC = c->hDC;
-  HGDIOBJ hOldFont;
   int yOffset = 0;
   BOOL selected = (nSelFrom < run->len && nSelTo >= 0
                    && nSelFrom < nSelTo && !c->editor->bHideSelection &&
@@ -404,7 +401,7 @@ static void ME_DrawTextWithStyle(ME_Context *c, ME_Run *run, int x, int y,
     }
   }
 
-  hOldFont = ME_SelectStyleFont( c, run->style );
+  select_style( c, run->style );
 
   if (sel_rgn) ExtSelectClipRgn( hDC, sel_rgn, RGN_DIFF );
 
@@ -431,8 +428,6 @@ static void ME_DrawTextWithStyle(ME_Context *c, ME_Run *run, int x, int y,
 
   if (old_style_selected)
     PatBlt( hDC, sel_rect.left, ymin, sel_rect.right - sel_rect.left, cy, DSTINVERT );
-
-  ME_UnselectStyleFont(c, run->style, hOldFont);
 }
 
 static void ME_DebugWrite(HDC hDC, const POINT *pt, LPCWSTR szText) {
@@ -603,7 +598,7 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
     rc.top = y;
     bounds->top = ME_twips2pointsY(c, para->fmt.dySpaceBefore);
     rc.bottom = y + bounds->top + top_border;
-    FillRect(c->hDC, &rc, c->editor->hbrBackground);
+    PatBlt(c->hDC, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, PATCOPY);
   }
 
   if (para->fmt.dwMask & PFM_SPACEAFTER)
@@ -613,7 +608,7 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
     rc.bottom = y + para->nHeight;
     bounds->bottom = ME_twips2pointsY(c, para->fmt.dySpaceAfter);
     rc.top = rc.bottom - bounds->bottom - bottom_border;
-    FillRect(c->hDC, &rc, c->editor->hbrBackground);
+    PatBlt(c->hDC, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, PATCOPY);
   }
 
   /* Native richedit doesn't support paragraph borders in v1.0 - 4.1,
@@ -652,7 +647,7 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
         rc.right = rc.left + border_width;
         rc.top = y + bounds->top;
         rc.bottom = y + para->nHeight - bounds->bottom;
-        FillRect(c->hDC, &rc, c->editor->hbrBackground);
+        PatBlt(c->hDC, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, PATCOPY);
         MoveToEx(c->hDC, c->pt.x + pen_width + 1, y + bounds->top + DD(4), NULL);
         LineTo(c->hDC, c->pt.x + pen_width + 1, y + para->nHeight - bounds->bottom - DD(8));
       }
@@ -667,7 +662,7 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
         rc.right = rc.left + pen_width;
         rc.top = y + bounds->top;
         rc.bottom = y + para->nHeight - bounds->bottom;
-        FillRect(c->hDC, &rc, c->editor->hbrBackground);
+        PatBlt(c->hDC, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, PATCOPY);
         MoveToEx(c->hDC, rightEdge - 1 - pen_width - 1, y + bounds->top + DD(4), NULL);
         LineTo(c->hDC, rightEdge - 1 - pen_width - 1, y + para->nHeight - bounds->bottom - DD(8));
       }
@@ -731,9 +726,8 @@ static void ME_DrawTableBorders(ME_Context *c, ME_DisplayItem *paragraph)
         rc.top = top + width;
         width = cell->yTextOffset - width;
         rc.bottom = rc.top + width;
-        if (width) {
-          FillRect(c->hDC, &rc, c->editor->hbrBackground);
-        }
+        if (width)
+          PatBlt(c->hDC, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, PATCOPY);
       }
       /* Draw cell borders.
        * The order borders are draw in is left, top, bottom, right in order
@@ -901,13 +895,12 @@ static void ME_DrawTableBorders(ME_Context *c, ME_DisplayItem *paragraph)
 static void draw_para_number( ME_Context *c, ME_DisplayItem *p )
 {
     ME_Paragraph *para = &p->member.para;
-    HFONT old_font;
     int x, y;
     COLORREF old_text;
 
     if (para->fmt.wNumbering)
     {
-        old_font = ME_SelectStyleFont( c, para->para_num.style );
+        select_style( c, para->para_num.style );
         old_text = SetTextColor( c->hDC, get_text_color( c, para->para_num.style, FALSE ) );
 
         x = c->pt.x + para->para_num.pt.x;
@@ -916,7 +909,6 @@ static void draw_para_number( ME_Context *c, ME_DisplayItem *p )
         ExtTextOutW( c->hDC, x, y, 0, NULL, para->para_num.text->szData, para->para_num.text->nLen, NULL );
 
         SetTextColor( c->hDC, old_text );
-        ME_UnselectStyleFont( c, para->para_num.style, old_font );
     }
 }
 
@@ -974,18 +966,18 @@ static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
           rc.bottom = y + p->member.row.nHeight;
         }
         visible = RectVisible(c->hDC, &rc);
-        if (visible) {
-          FillRect(c->hDC, &rc, c->editor->hbrBackground);
-        }
+        if (visible)
+          PatBlt(c->hDC, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, PATCOPY);
         if (bounds.right)
         {
           /* If scrolled to the right past the end of the text, then
            * there may be space to the right of the paragraph border. */
-          RECT rcAfterBrdr = rc;
-          rcAfterBrdr.left = rc.right + bounds.right;
-          rcAfterBrdr.right = c->rcView.right;
-          if (RectVisible(c->hDC, &rcAfterBrdr))
-            FillRect(c->hDC, &rcAfterBrdr, c->editor->hbrBackground);
+          RECT after_bdr = rc;
+          after_bdr.left = rc.right + bounds.right;
+          after_bdr.right = c->rcView.right;
+          if (RectVisible(c->hDC, &after_bdr))
+            PatBlt(c->hDC, after_bdr.left, after_bdr.top, after_bdr.right - after_bdr.left,
+                   after_bdr.bottom - after_bdr.top, PATCOPY);
         }
         if (me_debug)
         {
@@ -1034,9 +1026,7 @@ static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
         rc.top = c->pt.y + para->pt.y + para->nHeight;
         rc.bottom = c->pt.y + p->member.cell.pt.y + p->member.cell.nHeight;
         if (RectVisible(c->hDC, &rc))
-        {
-          FillRect(c->hDC, &rc, c->editor->hbrBackground);
-        }
+          PatBlt(c->hDC, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, PATCOPY);
         break;
       default:
         break;

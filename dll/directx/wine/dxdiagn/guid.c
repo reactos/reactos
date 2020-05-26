@@ -11,7 +11,7 @@
 #include <wingdi.h>
 #include <objbase.h>
 #include <initguid.h>
-#include <fil_data.h>
+#include <wine/fil_data.h>
 #include <wbemcli.h>
 #include <wine/dxdiag.h>
 

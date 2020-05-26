@@ -2,6 +2,7 @@
 add_definitions(
     -D__WINESRC__
     -D_WINE
+    -D__ROS_LONG64__
     -D_COMCTL32_)
 
 remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)

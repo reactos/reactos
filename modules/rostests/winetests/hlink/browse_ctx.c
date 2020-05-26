@@ -165,15 +165,11 @@ static void test_GetObject(void)
 {
     IHlinkBrowseContext *bc;
     IMoniker *dummy;
-    IBindCtx *bindctx;
     IUnknown *unk;
     WCHAR one[] = {'1',0};
     WCHAR five[] = {'5',0};
     DWORD cookie;
     HRESULT hres;
-
-    hres = CreateBindCtx(0, &bindctx);
-    ok(hres == S_OK, "CreateBindCtx() failed: 0x%08x\n", hres);
 
     hres = CreateItemMoniker(one, five, &dummy);
     ok(hres == S_OK, "CreateItemMoniker() failed: 0x%08x\n", hres);
@@ -198,6 +194,7 @@ static void test_GetObject(void)
     ok(hres == MK_E_UNAVAILABLE, "expected MK_E_UNAVAILABLE, got 0x%08x\n", hres);
 
     IHlinkBrowseContext_Release(bc);
+    IMoniker_Release(dummy);
 }
 
 START_TEST(browse_ctx)

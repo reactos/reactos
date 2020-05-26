@@ -25,13 +25,13 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "winreg.h"
+#include "winnls.h"
 #include "winver.h"
 #include "winternl.h"
 #include "setupapi.h"
 #include "advpub.h"
 #include "fdi.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "advpack_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(advpack);
@@ -505,7 +505,7 @@ HRESULT WINAPI DelNodeRunDLL32W(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, INT 
     szFlags = get_parameter(&cmdline_ptr, ',', TRUE);
 
     if (szFlags)
-        dwFlags = atolW(szFlags);
+        dwFlags = wcstol(szFlags, NULL, 10);
 
     res = DelNodeW(szFilename, dwFlags);
 

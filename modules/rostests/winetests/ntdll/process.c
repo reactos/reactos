@@ -123,6 +123,7 @@ static void test_NtSuspendProcess(char *process_name)
     ret = WaitForSingleObject(event, 200);
     ok(ret == WAIT_TIMEOUT, "Expected timeout, got: %d\n", ret);
 
+    disable_success_count
     for (;;)
     {
         ret = WaitForDebugEvent(&ev, INFINITE);
@@ -158,6 +159,7 @@ static void test_NtSuspendProcess(char *process_name)
     ok(ret, "ContinueDebugEvent failed, last error %#x.\n", GetLastError());
 
     ret = WaitForSingleObject(event, 200);
+    ros_skip_flaky
     ok(ret == WAIT_OBJECT_0, "Event was not signaled: %d\n", ret);
 
     TerminateProcess(info.hProcess, 0);

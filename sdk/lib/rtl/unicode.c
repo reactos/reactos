@@ -2541,22 +2541,24 @@ RtlDuplicateUnicodeString(
  */
 NTSTATUS
 NTAPI
-RtlValidateUnicodeString(IN ULONG Flags,
-                         IN PCUNICODE_STRING UnicodeString)
+RtlValidateUnicodeString(
+    _In_ ULONG Flags,
+    _In_ PCUNICODE_STRING String)
 {
-    /* currently no flags are supported! */
-    ASSERT(Flags == 0);
+    /* In Windows <= 2003 no flags are supported yet! */
+    if (Flags != 0)
+        return STATUS_INVALID_PARAMETER;
 
-    if ((Flags == 0) &&
-        ((UnicodeString == NULL) ||
-         ((UnicodeString->Length != 0) &&
-          (UnicodeString->Buffer != NULL) &&
-          ((UnicodeString->Length % sizeof(WCHAR)) == 0) &&
-          ((UnicodeString->MaximumLength % sizeof(WCHAR)) == 0) &&
-          (UnicodeString->MaximumLength >= UnicodeString->Length))))
+    /* NOTE: a NULL Unicode string pointer is considered to be a valid one! */
+    if (String == NULL)
     {
-        /* a NULL pointer as a unicode string is considered to be a valid unicode
-           string! */
+        return STATUS_SUCCESS;
+    }
+    else if (!((String->Buffer == NULL) && (String->Length != 0 || String->MaximumLength != 0)) &&
+              (String->Length % sizeof(WCHAR) == 0) &&
+              (String->MaximumLength % sizeof(WCHAR) == 0) &&
+              (String->Length <= String->MaximumLength))
+    {
         return STATUS_SUCCESS;
     }
     else

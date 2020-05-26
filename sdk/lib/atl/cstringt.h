@@ -150,6 +150,16 @@ public:
         return ::vswprintf(pszDest, pszFormat, args);
     }
 
+    static LPWSTR
+    FormatMessageV(_In_z_ LPCWSTR pszFormat, _In_opt_ va_list *pArgList)
+    {
+        LPWSTR psz;
+        ::FormatMessageW(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING, pszFormat, 0, 0,
+            reinterpret_cast<LPWSTR>(&psz), 0, pArgList);
+        return psz;
+    }
+
     static BSTR __cdecl AllocSysString(
         _In_z_ LPCWSTR pszSource,
         _In_ int nLength)
@@ -287,6 +297,16 @@ public:
         if (pszDest == NULL)
             return ::_vscprintf(pszFormat, args);
         return ::vsprintf(pszDest, pszFormat, args);
+    }
+
+    static LPSTR
+    FormatMessageV(_In_z_ LPCSTR pszFormat, _In_opt_ va_list *pArgList)
+    {
+        LPSTR psz;
+        ::FormatMessageA(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING, pszFormat, 0, 0, reinterpret_cast<LPSTR>(&psz),
+            0, pArgList);
+        return psz;
     }
 
     static BSTR __cdecl AllocSysString(
@@ -692,6 +712,36 @@ public:
         CThisSimpleString::ReleaseBufferSetLength(nLength);
     }
 
+    void __cdecl FormatMessage(UINT nFormatID, ...)
+    {
+        va_list va;
+        va_start(va, nFormatID);
+
+        CStringT str;
+        if (str.LoadString(nFormatID))
+            FormatMessageV(str, &va);
+
+        va_end(va);
+    }
+
+    void __cdecl FormatMessage(PCXSTR pszFormat, ...)
+    {
+        va_list va;
+        va_start(va, pszFormat);
+        FormatMessageV(pszFormat, &va);
+        va_end(va);
+    }
+
+    void
+    FormatMessageV(PCXSTR pszFormat, va_list *pArgList)
+    {
+        PXSTR psz = StringTraits::FormatMessageV(pszFormat, pArgList);
+        if (!psz)
+            CThisSimpleString::ThrowMemoryException();
+
+        *this = psz;
+        ::LocalFree(psz);
+    }
 
     int Replace(PCXSTR pszOld, PCXSTR pszNew)
     {

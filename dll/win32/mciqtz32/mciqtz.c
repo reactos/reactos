@@ -422,20 +422,19 @@ static DWORD MCIQTZ_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms
     wma->mci_flags = dwFlags;
     IMediaSeeking_GetTimeFormat(wma->seek, &format);
     if (dwFlags & MCI_FROM) {
+        wma->seek_start = lpParms->dwFrom;
         if (IsEqualGUID(&format, &TIME_FORMAT_MEDIA_TIME))
-            wma->seek_start = lpParms->dwFrom * 10000;
-        else
-            wma->seek_start = lpParms->dwFrom;
+            wma->seek_start *= 10000;
+
         start_flags = AM_SEEKING_AbsolutePositioning;
     } else {
         wma->seek_start = 0;
         start_flags = AM_SEEKING_NoPositioning;
     }
     if (dwFlags & MCI_TO) {
+        wma->seek_stop = lpParms->dwTo;
         if (IsEqualGUID(&format, &TIME_FORMAT_MEDIA_TIME))
-            wma->seek_stop = lpParms->dwTo * 10000;
-        else
-            wma->seek_stop = lpParms->dwTo;
+            wma->seek_stop *= 10000;
     } else {
         wma->seek_stop = 0;
         IMediaSeeking_GetDuration(wma->seek, &wma->seek_stop);

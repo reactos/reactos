@@ -417,7 +417,7 @@ SOCKET make_listening_socket( int port ) {
 
   fprintf( stderr, "Creating the listener\n" );
   SOCKET l = socket( PF_INET, SOCK_STREAM, 0 );
-  fprintf( stderr, "Socket %x\n", l );
+  fprintf( stderr, "Socket %Ix\n", l );
 
   if( l == INVALID_SOCKET ) return l;
   if( bind( l, (struct sockaddr *)&sa, sizeof( sa ) ) < 0 ) {

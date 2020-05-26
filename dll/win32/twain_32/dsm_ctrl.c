@@ -19,8 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -59,12 +57,12 @@ twain_add_onedriver(const char *dsname) {
 
 	hmod = LoadLibraryA(dsname);
 	if (!hmod) {
-		ERR("Failed to load TWAIN Source %s\n", dsname);
+		ERR("Failed to load TWAIN Source %s\n", debugstr_a(dsname));
 		return;
 	}
 	dsEntry = (DSENTRYPROC)GetProcAddress(hmod, "DS_Entry"); 
 	if (!dsEntry) {
-		ERR("Failed to find DS_Entry() in TWAIN DS %s\n", dsname);
+		ERR("Failed to find DS_Entry() in TWAIN DS %s\n", debugstr_a(dsname));
 		return;
 	}
 	/* Loop to do multiple detects, mostly for sane.ds and gphoto2.ds */
@@ -319,7 +317,7 @@ TW_UINT16 TWAIN_OpenDS (pTW_IDENTITY pOrigin, TW_MEMREF pData)
 	}
 	hmod = LoadLibraryA(devices[i].modname);
 	if (!hmod) {
-		ERR("Failed to load TWAIN Source %s\n", modname);
+		ERR("Failed to load TWAIN Source %s\n", debugstr_a(modname));
 		DSM_twCC = TWCC_OPERATIONERROR;
                 HeapFree(GetProcessHeap(), 0, newSource);
 		return TWRC_FAILURE;

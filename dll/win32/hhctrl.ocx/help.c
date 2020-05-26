@@ -216,7 +216,7 @@ BOOL NavigateToUrl(HHInfo *info, LPCWSTR surl)
 
     TRACE("%s\n", debugstr_w(surl));
 
-    if (strstrW(surl, url_indicator)) {
+    if (wcsstr(surl, url_indicator)) {
         hres = navigate_url(info, surl);
         if(SUCCEEDED(hres))
             return TRUE;
@@ -288,7 +288,7 @@ static void DoSync(HHInfo *info)
         static const WCHAR delimW[] = {':',':','/',0};
         const WCHAR *index;
 
-        index = strstrW(url, delimW);
+        index = wcsstr(url, delimW);
 
         if (index)
             ActivateContentTopic(info->tabs[TAB_CONTENTS].hwnd, index + 3, info->content); /* skip over ::/ */
@@ -639,7 +639,7 @@ static LRESULT OnTopicChange(HHInfo *info, void *user_data)
                 memset(&lvi, 0, sizeof(lvi));
                 lvi.iItem = i;
                 lvi.mask = LVIF_TEXT|LVIF_PARAM;
-                lvi.cchTextMax = strlenW(name)+1;
+                lvi.cchTextMax = lstrlenW(name)+1;
                 lvi.pszText = name;
                 lvi.lParam = (LPARAM) item;
                 SendMessageW(info->popup.hwndList, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
@@ -1025,7 +1025,7 @@ static BOOL HH_AddToolbar(HHInfo *pHHInfo)
     for (dwIndex = 0; dwIndex < dwNumButtons; dwIndex++)
     {
         LPWSTR szBuf = HH_LoadString(buttons[dwIndex].idCommand);
-        DWORD dwLen = strlenW(szBuf);
+        DWORD dwLen = lstrlenW(szBuf);
         szBuf[dwLen + 1] = 0; /* Double-null terminate */
 
         buttons[dwIndex].iString = (DWORD)SendMessageW(hToolbar, TB_ADDSTRINGW, 0, (LPARAM)szBuf);
@@ -1958,7 +1958,7 @@ HHInfo *find_window(const WCHAR *window)
 
     LIST_FOR_EACH_ENTRY(info, &window_list, HHInfo, entry)
     {
-        if (strcmpW(info->WinType.pszType, window) == 0)
+        if (lstrcmpW(info->WinType.pszType, window) == 0)
             return info;
     }
     return NULL;

@@ -2547,6 +2547,7 @@ static void test_unicode(void)
     int ret;
     HANDLE file;
     static const WCHAR UNICODE_PATH_TO[] = {'c',':','\\',0x00ae,0x00ae,'\0'};
+    HWND hwnd;
 
     shfoW.hwnd = NULL;
     shfoW.wFunc = FO_DELETE;
@@ -2637,6 +2638,20 @@ static void test_unicode(void)
     ok(GetLastError() == ERROR_SUCCESS ||
        broken(GetLastError() == ERROR_INVALID_HANDLE), /* WinXp, win2k3 */
        "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+
+    /* Check SHCreateDirectoryExW with a Hwnd
+     * returns ERROR_ALREADY_EXISTS where a directory already exists */
+    /* Get any window handle */
+    hwnd = FindWindowA(NULL, NULL);
+    ok(hwnd != 0, "FindWindowA failed to produce a hwnd\n");
+    ret = SHCreateDirectoryExW(hwnd, UNICODE_PATH, NULL);
+    ok(!ret, "SHCreateDirectoryExW returned %d\n", ret);
+    /* Create already-existing directory */
+    ok(file_existsW(UNICODE_PATH), "The directory was not created\n");
+    ret = SHCreateDirectoryExW(hwnd, UNICODE_PATH, NULL);
+    ok(ret == ERROR_ALREADY_EXISTS,
+       "Expected ERROR_ALREADY_EXISTS, got %d\n", ret);
+    RemoveDirectoryW(UNICODE_PATH);
 }
 
 static void

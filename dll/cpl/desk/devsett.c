@@ -665,7 +665,7 @@ CDevSettings_GetData(IDataObject* iface,
                              (wcslen(pszRet) + 1) * sizeof(WCHAR));
         if (pszBuf != NULL)
         {
-            hr = StringCbCopy(pszBuf, (wcslen(pszRet) + 1) * sizeof(WCHAR), pszRet);
+            hr = StringCbCopyW(pszBuf, (wcslen(pszRet) + 1) * sizeof(WCHAR), pszRet);
             if (FAILED(hr))
             {
                 GlobalFree(pszBuf);

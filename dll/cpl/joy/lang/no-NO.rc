@@ -81,4 +81,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Legg til, fjern, og konfigurer spillkontroller maskinvare som styrespak og spillkontroll."
     IDS_CONTROLLER "Kontroller"
     IDS_STATUS "Status"
+    IDS_NONE "(None)"
 END

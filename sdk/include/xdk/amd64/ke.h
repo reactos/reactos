@@ -152,6 +152,15 @@ KeRestoreFloatingPointState(
     return STATUS_SUCCESS;
 }
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+FORCEINLINE
+ULONG
+KeGetCurrentProcessorIndex(VOID)
+{
+    return __readgsdword(0x1a4);
+}
+#endif
+
 /* VOID
  * KeFlushIoBuffers(
  *   IN PMDL Mdl,
@@ -320,11 +329,14 @@ KeGetPcr(VOID)
     return (PKPCR)__readgsqword(FIELD_OFFSET(KPCR, Self));
 }
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+_CRT_DEPRECATE_TEXT("KeGetCurrentProcessorNumber is deprecated. Use KeGetCurrentProcessorNumberEx or KeGetCurrentProcessorIndex instead.")
+#endif
 FORCEINLINE
 ULONG
 KeGetCurrentProcessorNumber(VOID)
 {
-    return (ULONG)__readgsword(0x184);
+    return __readgsbyte(0x184);
 }
 
 $endif /* _NTDDK_ */

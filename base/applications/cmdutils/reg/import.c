@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <wine/unicode.h>
 #include <wine/debug.h>
 #include <wine/heap.h>
 
@@ -162,7 +161,7 @@ static BOOL convert_hex_to_dword(WCHAR *str, DWORD *dw)
     if (!*str) goto error;
 
     p = str;
-    while (isxdigitW(*p))
+    while (iswxdigit(*p))
     {
         count++;
         p++;
@@ -174,7 +173,7 @@ static BOOL convert_hex_to_dword(WCHAR *str, DWORD *dw)
     if (*p && *p != ';') goto error;
 
     *end = 0;
-    *dw = strtoulW(str, &end, 16);
+    *dw = wcstoul(str, &end, 16);
     return TRUE;
 
 error:
@@ -207,7 +206,7 @@ static BOOL convert_hex_csv_to_hex(struct parser *parser, WCHAR **str)
         WCHAR *end;
         unsigned long wc;
 
-        wc = strtoulW(s, &end, 16);
+        wc = wcstoul(s, &end, 16);
         if (wc > 0xff) return FALSE;
 
         if (s == end && wc == 0)
@@ -269,7 +268,7 @@ static BOOL parse_data_type(struct parser *parser, WCHAR **line)
 
     for (ptr = data_types; ptr->tag; ptr++)
     {
-        if (strncmpW(ptr->tag, *line, ptr->len))
+        if (wcsncmp(ptr->tag, *line, ptr->len))
             continue;
 
         parser->parse_type = ptr->parse_type;
@@ -281,7 +280,7 @@ static BOOL parse_data_type(struct parser *parser, WCHAR **line)
             WCHAR *end;
             DWORD val;
 
-            if (!**line || tolowerW((*line)[1]) == 'x')
+            if (!**line || towlower((*line)[1]) == 'x')
                 return FALSE;
 
             /* "hex(xx):" is special */
@@ -354,7 +353,7 @@ static HKEY parse_key_name(WCHAR *key_name, WCHAR **key_path)
 {
     if (!key_name) return 0;
 
-    *key_path = strchrW(key_name, '\\');
+    *key_path = wcschr(key_name, '\\');
     if (*key_path) (*key_path)++;
 
     return path_get_rootkey(key_name);
@@ -458,13 +457,13 @@ static enum reg_versions parse_file_header(const WCHAR *s)
 
     while (*s == ' ' || *s == '\t') s++;
 
-    if (!strcmpW(s, header_31))
+    if (!lstrcmpW(s, header_31))
         return REG_VERSION_31;
 
-    if (!strcmpW(s, header_40))
+    if (!lstrcmpW(s, header_40))
         return REG_VERSION_40;
 
-    if (!strcmpW(s, header_50))
+    if (!lstrcmpW(s, header_50))
         return REG_VERSION_50;
 
     /* The Windows version accepts registry file headers beginning with "REGEDIT" and ending
@@ -472,7 +471,7 @@ static enum reg_versions parse_file_header(const WCHAR *s)
      * "REGEDIT 4", "REGEDIT9" and "REGEDIT4FOO" are all treated as valid file headers.
      * In all such cases, however, the contents of the registry file are not imported.
      */
-    if (!strncmpW(s, header_31, 7)) /* "REGEDIT" without NUL */
+    if (!wcsncmp(s, header_31, 7)) /* "REGEDIT" without NUL */
         return REG_VERSION_FUZZY;
 
     return REG_VERSION_INVALID;
@@ -524,11 +523,11 @@ static WCHAR *parse_win31_line_state(struct parser *parser, WCHAR *pos)
     if (!(line = get_line(parser->file)))
         return NULL;
 
-    if (strncmpW(line, hkcr, ARRAY_SIZE(hkcr)))
+    if (wcsncmp(line, hkcr, ARRAY_SIZE(hkcr)))
         return line;
 
     /* get key name */
-    while (line[key_end] && !isspaceW(line[key_end])) key_end++;
+    while (line[key_end] && !iswspace(line[key_end])) key_end++;
 
     value = line + key_end;
     while (*value == ' ' || *value == '\t') value++;
@@ -590,7 +589,7 @@ static WCHAR *key_name_state(struct parser *parser, WCHAR *pos)
 {
     WCHAR *p = pos, *key_end;
 
-    if (*p == ' ' || *p == '\t' || !(key_end = strrchrW(p, ']')))
+    if (*p == ' ' || *p == '\t' || !(key_end = wcsrchr(p, ']')))
         goto done;
 
     *key_end = 0;
@@ -645,11 +644,8 @@ static WCHAR *quoted_value_name_state(struct parser *parser, WCHAR *pos)
 {
     WCHAR *val_name = pos, *p;
 
-    if (parser->value_name)
-    {
-        heap_free(parser->value_name);
-        parser->value_name = NULL;
-    }
+    heap_free(parser->value_name);
+    parser->value_name = NULL;
 
     if (!unescape_string(val_name, &p))
         goto invalid;
@@ -678,7 +674,7 @@ static WCHAR *data_start_state(struct parser *parser, WCHAR *pos)
     while (*p == ' ' || *p == '\t') p++;
 
     /* trim trailing whitespace */
-    len = strlenW(p);
+    len = lstrlenW(p);
     while (len > 0 && (p[len - 1] == ' ' || p[len - 1] == '\t')) len--;
     p[len] = 0;
 
@@ -843,7 +839,7 @@ static WCHAR *hex_multiline_state(struct parser *parser, WCHAR *pos)
     while (*line == ' ' || *line == '\t') line++;
     if (!*line || *line == ';') return line;
 
-    if (!isxdigitW(*line)) goto invalid;
+    if (!iswxdigit(*line)) goto invalid;
 
     set_state(parser, HEX_DATA);
     return line;
@@ -959,11 +955,11 @@ static WCHAR *get_lineW(FILE *fp)
     while (next)
     {
         static const WCHAR line_endings[] = {'\r','\n',0};
-        WCHAR *p = strpbrkW(line, line_endings);
+        WCHAR *p = wcspbrk(line, line_endings);
         if (!p)
         {
             size_t len, count;
-            len = strlenW(next);
+            len = lstrlenW(next);
             memmove(buf, next, (len + 1) * sizeof(WCHAR));
             if (size - len < 3)
             {
