@@ -538,6 +538,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         return FALSE;
     }
 
+    /* Initialize Kernel Shim engine */
+    KseInitialize(0, LoaderBlock);
+
     /* Initialize PnP manager */
     IopInitializePlugPlayServices();
 
@@ -546,6 +549,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Initialize WMI */
     WmiInitialize();
+
+    /* Finish Kernel Shim engine initialization */
+    KseInitialize(1, LoaderBlock);
 
     /* Initialize HAL Root Bus Driver */
     HalInitPnpDriver();

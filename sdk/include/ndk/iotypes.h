@@ -1121,6 +1121,13 @@ typedef struct _EXTENDED_DRIVER_EXTENSION
     UNICODE_STRING ServiceKeyName;
     PIO_CLIENT_EXTENSION ClientDriverExtension;
     PFS_FILTER_CALLBACKS FsFilterCallbacks;
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
+    PVOID KseCallbacks;
+    PVOID DvCallbacks;
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) || defined(__REACTOS__)
+    PVOID VerifierContext;
+#endif
+#endif
 } EXTENDED_DRIVER_EXTENSION, *PEXTENDED_DRIVER_EXTENSION;
 
 #endif // !NTOS_MODE_USER
