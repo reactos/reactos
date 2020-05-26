@@ -235,8 +235,6 @@ FxAllocateDriverGlobals(
         return NULL;
     }
 
-    RtlZeroMemory(pFxDriverGlobals, sizeof(FX_DRIVER_GLOBALS));
-
     //
     // Initialize this new FxDriverGlobals structure.
     //
@@ -301,6 +299,23 @@ FxAllocateDriverGlobals(
 #endif
 
     pFxDriverGlobals->FxVerifierDbgWaitForSignalTimeoutInSec = 60;
+
+    pFxDriverGlobals->Tag = 0;
+    pFxDriverGlobals->ThreadTable = NULL;
+    pFxDriverGlobals->WdfBindInfo = NULL;
+    pFxDriverGlobals->ImageAddress = NULL;
+    pFxDriverGlobals->ImageSize = 0;
+    RtlZeroMemory(&pFxDriverGlobals->BugCheckCallbackRecord, sizeof(KBUGCHECK_REASON_CALLBACK_RECORD));
+    InitializeListHead(&pFxDriverGlobals->FxPoolFrameworks.PagedHead);
+    InitializeListHead(&pFxDriverGlobals->FxPoolFrameworks.NonPagedHead);
+    pFxDriverGlobals->FxPoolFrameworks.NonPagedBytes = 0;
+    pFxDriverGlobals->FxPoolFrameworks.PagedBytes = 0;
+    pFxDriverGlobals->FxPoolFrameworks.NonPagedAllocations = 0;
+    pFxDriverGlobals->FxPoolFrameworks.PagedAllocations = 0;
+    pFxDriverGlobals->FxPoolFrameworks.PeakNonPagedBytes = 0;
+    pFxDriverGlobals->FxPoolFrameworks.PeakPagedBytes = 0;
+    pFxDriverGlobals->FxPoolFrameworks.PeakNonPagedAllocations = 0;
+    pFxDriverGlobals->FxPoolFrameworks.PeakPagedAllocations = 0;
 
     return &pFxDriverGlobals->Public;
 }
@@ -616,8 +631,6 @@ FxDriverGlobalsInitializeDebugExtension(
         return;
     }
 
-    RtlZeroMemory(pExtension, sizeof(*pExtension));
-
     pExtension->AllocatedTagTrackersLock.Initialize();
 
     InitializeListHead(&pExtension->AllocatedTagTrackersListHead);
@@ -632,7 +645,10 @@ FxDriverGlobalsInitializeDebugExtension(
                                                         );
     }
 
+    pExtension->TrackPower = FxTrackPowerNone;
+
 #if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+    RtlZeroMemory(&pExtension->AllocatedMdls, sizeof(FxAllocatedMdls));
     KeInitializeSpinLock(&pExtension->AllocatedMdlsLock);
 #endif
 }
@@ -1068,7 +1084,7 @@ Return Value:
     FxObjectDebugInfo *pInfo = NULL;
     NTSTATUS status;
 	PVOID dataBuffer = NULL;
-	ULONG length, type;    
+	ULONG length = 0, type;    
 	DECLARE_CONST_UNICODE_STRING(valueName, L"TrackHandles");
     
 	//

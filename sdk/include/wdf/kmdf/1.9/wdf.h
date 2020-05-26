@@ -67,7 +67,7 @@ __drv_Mode_impl(KMDF_INCLUDED)
 #include "wdfdriver.h"
 
 // Objects
-#include "WdfQueryInterface.h"
+#include "wdfqueryinterface.h"
 #include "wdfmemory.h"
 #include "wdfchildlist.h"
 #include "wdffileobject.h"
@@ -89,15 +89,15 @@ __drv_Mode_impl(KMDF_INCLUDED)
 #include "wdfpdo.h"
 #include "wdfcontrol.h"
 
-#include "WdfWMI.h"
+#include "wdfwmi.h"
 
 #include "wdfstring.h"
 #include "wdfregistry.h"
 
 // Dma
-#include "wdfDmaEnabler.h"
-#include "wdfDmaTransaction.h"
-#include "wdfCommonBuffer.h"
+#include "wdfdmaenabler.h"
+#include "wdfdmatransaction.h"
+#include "wdfcommonbuffer.h"
 
 #include "wdfbugcodes.h"
 #include "wdfroletypes.h"

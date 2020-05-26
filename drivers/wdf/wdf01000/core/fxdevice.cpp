@@ -212,7 +212,7 @@ DispatchWorker(
     next = (PLIST_ENTRY)DispatchContext;
 
     ASSERT(NULL != DispatchContext &&
-           ((ULONG)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
+           ((SIZE_T)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
 
     //
     // Check for any driver/class-extensions' preprocess requirements.

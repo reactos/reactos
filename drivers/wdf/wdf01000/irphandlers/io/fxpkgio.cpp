@@ -156,7 +156,7 @@ Return Value:
     NTSTATUS                status;
     FxIrp                   fxIrp(Irp);
 
-    ASSERT(((ULONG)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
+    ASSERT(((SIZE_T)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
     
     ASSERT(fxIrp.GetMajorFunction() <= IRP_MJ_MAXIMUM_FUNCTION);
     

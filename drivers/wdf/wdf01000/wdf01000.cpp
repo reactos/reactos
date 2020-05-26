@@ -44,7 +44,7 @@
 
 extern "C" {
 
-#include "FxDynamics.h"
+#include "fxdynamics.h"
 
 //-----------------------------------------------------------------------------
 // local prototype definitions

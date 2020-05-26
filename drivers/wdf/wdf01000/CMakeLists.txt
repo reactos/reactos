@@ -114,7 +114,7 @@ list(APPEND SOURCE
 add_library(wdf01000 MODULE ${SOURCE})
 
 if(MSVC)
-    add_target_compile_flags(wdf01000 "/Gz")
+    target_compile_options(wdf01000 PRIVATE "/Gz")
 endif()
 
 set_module_type(wdf01000 kernelmodedriver)
