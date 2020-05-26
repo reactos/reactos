@@ -82,7 +82,7 @@ add_executable(bootmgfw ${BOOTMGR_BASE_SOURCE} app/bootmgr/bootmgr.rc)
 set_target_properties(bootmgfw PROPERTIES SUFFIX ".efi")
 
 if(MSVC)
-    if (ARCH STREQUAL "arm")
+    if(ARCH STREQUAL "arm")
         add_target_link_flags(bootmgfw "/ignore:4078 /ignore:4254 /DRIVER")
     else()
         add_target_link_flags(bootmgfw "/ignore:4078 /ignore:4254 /DRIVER /FIXED")

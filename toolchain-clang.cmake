@@ -4,7 +4,7 @@ if(NOT ARCH)
 endif()
 
 # Choose the right MinGW toolchain prefix
-if (NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
+if(NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
     if(ARCH STREQUAL "i386")
 
         if(CMAKE_HOST_WIN32)
@@ -24,7 +24,7 @@ if (NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
     endif()
 endif()
 
-if (NOT DEFINED MINGW_TOOLCHAIN_SUFFIX)
+if(NOT DEFINED MINGW_TOOLCHAIN_SUFFIX)
     set(MINGW_TOOLCHAIN_SUFFIX "" CACHE STRING "MinGW Toolchain Suffix")
 endif()
 

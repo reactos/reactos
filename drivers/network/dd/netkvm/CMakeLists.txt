@@ -26,7 +26,7 @@ add_importlibs(netkvm ndis ntoskrnl hal)
 add_cd_file(TARGET netkvm DESTINATION reactos/system32/drivers FOR all)
 add_driver_inf(netkvm netkvm.inf)
 
-if (NOT MSVC)
+if(NOT MSVC)
     add_compile_flags("-Wno-unused-function")
     add_compile_flags("-Wno-old-style-declaration")
     add_compile_flags("-Wno-unknown-pragmas")

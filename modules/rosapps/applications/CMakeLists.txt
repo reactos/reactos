@@ -1,6 +1,6 @@
 add_subdirectory(cmdutils)
 add_subdirectory(devutils)
-if (ARCH STREQUAL "i386")
+if(ARCH STREQUAL "i386")
     add_subdirectory(explorer-old)
     add_subdirectory(fraginator)
 endif()

@@ -388,7 +388,7 @@ function(spec2def _dllname _spec_file)
         message(FATAL_ERROR "spec2def only takes spec files as input.")
     endif()
 
-    if (__spec2def_WITH_RELAY)
+    if(__spec2def_WITH_RELAY)
         set(__with_relay_arg "--with-tracing")
     endif()
 
