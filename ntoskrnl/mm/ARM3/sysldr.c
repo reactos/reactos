@@ -3473,6 +3473,9 @@ LoaderScan:
 
     /* FIXME: Call driver verifier's loader function */
 
+    /* Call Kernel Shim Engine function */
+    KseDriverLoadImage(LdrEntry);
+
     /* Write-protect the system image */
     MiWriteProtectSystemImage(LdrEntry->DllBase);
 

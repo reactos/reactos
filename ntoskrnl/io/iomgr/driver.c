@@ -909,6 +909,8 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     }
     ASSERT(NextEntry != &PsLoadedModuleList);
 
+    KseDriverLoadImage(LdrEntry);
+
     /*
      * Initialize the driver
      */
@@ -1737,6 +1739,9 @@ try_again:
         ObDereferenceObject(DriverObject);
         return Status;
     }
+
+    /* Give the Kernel Shim Engine a chance to hook the driver callbacks */
+    KseShimDriverIoCallbacks(DriverObject);
 
     /* Windows does this fixup, keep it for compatibility */
     for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
