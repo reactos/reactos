@@ -142,17 +142,14 @@ PromptYesNo(VOID)
 int wmain(int argc, WCHAR *argv[])
 {
     WCHAR szRootPath[] = L" :\\";
-    WCHAR szBuffer[80];
-    WCHAR szLabel[80];
+    WCHAR szBuffer[80] = L"";
+    WCHAR szLabel[80] = L"";
     WCHAR szOldLabel[80];
     DWORD dwSerialNr;
     INT len, i;
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
-
-    /* set empty label string */
-    szLabel[0] = UNICODE_NULL;
 
     /* print help */
     if (argc > 1 && wcscmp(argv[1], L"/?") == 0)
