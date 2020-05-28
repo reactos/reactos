@@ -16,6 +16,8 @@ if(POLICY CMP0065)
     cmake_policy(SET CMP0065 NEW)
 endif()
 
+include(CMakeDependentOption)
+
 project(REACTOS)
 
 # Versioning

@@ -83,12 +83,9 @@ set(_PREFAST_ FALSE CACHE BOOL
 "Whether to enable PREFAST while compiling.")
 set(_VS_ANALYZE_ FALSE CACHE BOOL
 "Whether to enable static analysis while compiling.")
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        option(RUNTIME_CHECKS "Whether to enable runtime checks on MSVC" ON)
-    else()
-        # RTC are incompatible with compiler optimizations.
-        set(RUNTIME_CHECKS FALSE CACHE BOOL "Whether to enable runtime checks on MSVC")
-    endif()
+    # RTC are incompatible with compiler optimizations.
+    CMAKE_DEPENDENT_OPTION(RUNTIME_CHECKS "Whether to enable runtime checks on MSVC" ON
+                           "CMAKE_BUILD_TYPE STREQUAL \"Debug\"" OFF)
 endif()
 
 if(GCC)
