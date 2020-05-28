@@ -262,7 +262,7 @@ public:
 class CAppInfoDisplay :
     public CUiWindow<>
 {
-    BOOL bClassRegistered = FALSE;
+    static BOOL bClassRegistered;
 
     LPWSTR pLink = NULL;
 
@@ -293,7 +293,7 @@ public:
             wndclass.style = CS_HREDRAW | CS_VREDRAW;
             wndclass.lpfnWndProc = AppInfoWndProc;
             wndclass.cbClsExtra = 0;
-            wndclass.cbWndExtra = sizeof(CAppInfoDisplay);
+            wndclass.cbWndExtra = sizeof(CAppInfoDisplay*);
             wndclass.hInstance = GetModuleHandle(0);
             wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
             wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
@@ -363,6 +363,8 @@ public:
     }
 
 };
+
+BOOL CAppInfoDisplay::bClassRegistered = FALSE;
 
 LRESULT CALLBACK AppInfoWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
