@@ -2719,6 +2719,8 @@ LoadDNSSettings(
     {
         dwSize = sizeof(DWORD);
         RegQueryValueExW(hKey, L"RegisterAdapterName", NULL, NULL, (LPBYTE)&This->pCurrentConfig->pDNS->RegisterAdapterName, &dwSize);
+
+        dwSize = sizeof(DWORD);
         RegQueryValueExW(hKey, L"RegistrationEnabled", NULL, NULL, (LPBYTE)&This->pCurrentConfig->pDNS->RegistrationEnabled, &dwSize);
 
         dwSize = sizeof(This->pCurrentConfig->pDNS->szDomain);
@@ -2732,7 +2734,6 @@ LoadDNSSettings(
         dwSize = sizeof(DWORD);
         RegQueryValueExW(hKey, L"UseDomainNameDevolution", NULL, NULL, (LPBYTE)&This->pCurrentConfig->pDNS->UseDomainNameDevolution, &dwSize);
 
-        dwSize = 0;
         if (RegQueryValueExW(hKey, L"SearchList", NULL, NULL, NULL, &dwSize) == ERROR_SUCCESS)
         {
             This->pCurrentConfig->pDNS->szSearchList = (LPWSTR)CoTaskMemAlloc(dwSize);
