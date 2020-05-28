@@ -91,9 +91,9 @@ class CAppRichEdit :
 {
 private:
     VOID LoadAndInsertText(UINT uStringID,
-                           const ATL::CStringW& szText,
-                           DWORD StringFlags,
-                           DWORD TextFlags)
+        const ATL::CStringW& szText,
+        DWORD StringFlags,
+        DWORD TextFlags)
     {
         ATL::CStringW szLoadedText;
         if (!szText.IsEmpty() && szLoadedText.LoadStringW(uStringID))
@@ -104,7 +104,7 @@ private:
     }
 
     VOID LoadAndInsertText(UINT uStringID,
-                                       DWORD StringFlags)
+        DWORD StringFlags)
     {
         ATL::CStringW szLoadedText;
         if (szLoadedText.LoadStringW(uStringID))
