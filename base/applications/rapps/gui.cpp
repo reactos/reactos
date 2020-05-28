@@ -260,8 +260,6 @@ public:
 class CAppInfoDisplay :
     public CUiWindow<CWindowImpl<CAppInfoDisplay>>
 {
-    static BOOL bClassRegistered;
-
     LPWSTR pLink = NULL;
 
 private:
@@ -404,8 +402,6 @@ public:
     }
 
 };
-
-BOOL CAppInfoDisplay::bClassRegistered = FALSE;
 
 class CMainToolbar :
     public CUiWindow< CToolbar<> >
