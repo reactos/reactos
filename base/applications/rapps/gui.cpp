@@ -391,11 +391,13 @@ public:
             
             ShellExecuteW(m_hWnd, L"open", pLink, NULL, NULL, SW_SHOWNOACTIVATE);
             HeapFree(GetProcessHeap(), 0, pLink);
+			pLink = NULL;
             break;
 
         case ID_COPY_LINK:
             CopyTextToClipboard(pLink);
             HeapFree(GetProcessHeap(), 0, pLink);
+			pLink = NULL;
             break;
 
         }
