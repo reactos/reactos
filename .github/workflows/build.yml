@@ -27,7 +27,7 @@ jobs:
         run: |
           echo "::set-env name=CCACHE_BASEDIR::${{github.workspace}}"
           echo "::set-env name=CCACHE_DIR::${{github.workspace}}/ccache"
-          echo "::set-env name=CCACHE_MAXSIZE::2G"
+          echo "::set-env name=CCACHE_MAXSIZE::1G"
           echo "::set-env name=CCACHE_SLOPPINESS::time_macros"
       - name: Configure
         run: |
@@ -42,6 +42,8 @@ jobs:
         run: |
           echo 'cd ${{github.workspace}}/build && cmake --build . --target bootcd && cmake --build . --target livecd' > commands
           ${{github.workspace}}/rosbe/RosBE.sh < 'commands'
+      - name: Print ccache statistics
+        run: ccache -s
       - name: Upload bootcd
         uses: actions/upload-artifact@v1
         with:
@@ -64,6 +66,8 @@ jobs:
         curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
         echo "::add-path::${{github.workspace}}\bin"
+        echo "::set-env name=BISON_PKGDATADIR::${{github.workspace}}\bin\share\bison"
+        echo "::set-env name=M4::${{github.workspace}}\bin\m4.exe"
     - name: Add CL to PATH
       uses: ilammy/msvc-dev-cmd@v1
       with:
@@ -109,6 +113,8 @@ jobs:
         curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
         echo "::add-path::${{github.workspace}}\bin"
+        echo "::set-env name=BISON_PKGDATADIR::${{github.workspace}}\bin\share\bison"
+        echo "::set-env name=M4::${{github.workspace}}\bin\m4.exe"
     - name: Add CL to PATH
       uses: ilammy/msvc-dev-cmd@v1
       with:
