@@ -1,5 +1,10 @@
 #pragma once
 
+/* Bitmaps */
+#define IDB_ZIPFLDR1                    164
+#define IDB_ZIPFLDR2                    200
+#define IDB_ZIPFLDR3                    201
+
 /* registry stuff */
 #define IDR_ZIPFLDR                     8000
 
