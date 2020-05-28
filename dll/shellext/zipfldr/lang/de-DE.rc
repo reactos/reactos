@@ -18,6 +18,7 @@ BEGIN
     PUSHBUTTON      "Kennwort",IDC_PASSWORD,174,66,54,14
     LTEXT           "Klicken Sie auf 'Weiter' um zu extrahieren",IDC_STATUSTEXT,6,114,150,8
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
+    CONTROL         IDB_ZIPFLDR1,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
 IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 235, 156
@@ -29,6 +30,7 @@ BEGIN
     LTEXT           "Zielverzeichnis",IDC_DESTDIR,6,36,222,8
     CONTROL         "Extrahierte Dateien anzeigen",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,105,10
     LTEXT           "Klicken Sie auf 'Fertig' um fortzufahren.",IDC_STATIC,6,84,174,8
+    CONTROL         IDB_ZIPFLDR1,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
