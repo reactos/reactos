@@ -2,8 +2,8 @@
 
 .code
 
-MACRO(DEFINE_ALIAS, alias, orig, type)
-EXTERN &orig:&type
+MACRO(DEFINE_ALIAS, alias, orig)
+EXTERN &orig : PROC
 ALIAS <&alias> = <&orig>
 ENDM
 
