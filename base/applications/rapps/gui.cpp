@@ -53,8 +53,6 @@ INT GetSystemColorDepth()
     return ColorDepth;
 }
 
-LRESULT CALLBACK AppInfoWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-
 class CAppRichEdit :
     public CUiWindow<CRichEdit>
 {
@@ -260,15 +258,88 @@ public:
 };
 
 class CAppInfoDisplay :
-    public CUiWindow<>
+    public CUiWindow<CWindowImpl<CAppInfoDisplay>>
 {
     static BOOL bClassRegistered;
 
     LPWSTR pLink = NULL;
 
+private:
+    BOOL ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
+    {
+        theResult = 0;
+        switch (message)
+        {
+        case WM_CREATE:
+        {
+            RichEdit = new CAppRichEdit();
+            RichEdit->Create(hwnd);
+            break;
+        }
+        case WM_SIZE:
+        {
+            ::MoveWindow(RichEdit->m_hWnd, 0, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), TRUE);
+            break;
+        }
+        case WM_COMMAND:
+        {
+
+            OnCommand(wParam, lParam);
+            break;
+        }
+        case WM_NOTIFY:
+        {
+            NMHDR* NotifyHeader = (NMHDR*)lParam;
+            if (NotifyHeader->hwndFrom == RichEdit->m_hWnd)
+            {
+                switch (NotifyHeader->code)
+                {
+                case EN_LINK:
+                    OnLink((ENLINK*)lParam);
+                    break;
+                }
+            }
+            break;
+        }
+        }
+
+        return FALSE;
+    }
+
 public:
 
     CAppRichEdit * RichEdit;
+
+    static ATL::CWndClassInfo& GetWndClassInfo()
+    {
+        DWORD csStyle = CS_VREDRAW | CS_HREDRAW;
+        static ATL::CWndClassInfo wc =
+        {
+            {
+                sizeof(WNDCLASSEX),
+                csStyle,
+                StartWindowProc,
+                0,
+                0,
+                NULL,
+                NULL,
+                NULL,
+                (HBRUSH)(COLOR_BTNFACE + 1),
+                NULL,
+                L"RAppsAppInfo",
+                NULL
+            },
+            NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
+        };
+        return wc;
+    }
+
+    HWND Create(HWND hwndParent)
+    {
+        RECT r = { 0,0,0,0 };
+
+        return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE);
+    }
 
     BOOL ShowAvailableAppInfo(CAvailableApplicationInfo* Info)
     {
@@ -283,36 +354,6 @@ public:
     VOID SetWelcomeText()
     {
         RichEdit->SetWelcomeText();
-    }
-
-    HWND Create(HWND hwndParent)
-    {
-        if (!bClassRegistered)
-        {
-            WNDCLASSW wndclass = { 0 };
-            wndclass.style = CS_HREDRAW | CS_VREDRAW;
-            wndclass.lpfnWndProc = AppInfoWndProc;
-            wndclass.cbClsExtra = 0;
-            wndclass.cbWndExtra = sizeof(CAppInfoDisplay*);
-            wndclass.hInstance = GetModuleHandle(0);
-            wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-            wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
-            wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-            wndclass.lpszMenuName = NULL;
-            wndclass.lpszClassName = L"RAppsAppInfo";
-
-            if (!RegisterClassW(&wndclass)) return 0;
-
-            bClassRegistered = TRUE;
-        }
-
-        m_hWnd = ::CreateWindowExW(0,
-            L"RAppsAppInfo",
-            L"",
-            WS_CHILD | WS_VISIBLE,
-            0, 0, 0, 0,
-            hwndParent, 0, GetModuleHandle(0), this);
-        return m_hWnd;
     }
 
     VOID OnLink(ENLINK* Link)
@@ -365,59 +406,6 @@ public:
 };
 
 BOOL CAppInfoDisplay::bClassRegistered = FALSE;
-
-LRESULT CALLBACK AppInfoWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    CAppInfoDisplay* AppInfoDisp;
-    if (message != WM_CREATE)
-    {
-        AppInfoDisp = ((CAppInfoDisplay*)GetWindowLongPtr(hwnd, 0));
-        if (!AppInfoDisp)
-        {
-            return DefWindowProc(hwnd, message, wParam, lParam);
-        }
-    }
-
-    switch (message)
-    {
-    case WM_CREATE:
-    {
-        CREATESTRUCT* CreateStruct = (CREATESTRUCT*)lParam;
-        SetWindowLongPtrW(hwnd, 0, (LONG_PTR)(CreateStruct->lpCreateParams));
-        AppInfoDisp = (CAppInfoDisplay*)(CreateStruct->lpCreateParams);
-        AppInfoDisp->m_hWnd = hwnd;
-
-        AppInfoDisp->RichEdit = new CAppRichEdit();
-        AppInfoDisp->RichEdit->Create(hwnd);
-        break;
-    }
-    case WM_SIZE:
-    {
-        MoveWindow(AppInfoDisp->RichEdit->m_hWnd, 0, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), TRUE);
-        break;
-    }
-    case WM_COMMAND:
-    {
-        
-        AppInfoDisp->OnCommand(wParam, lParam);
-        break;
-    }
-    case WM_NOTIFY:
-    {
-        NMHDR* NotifyHeader = (NMHDR*)lParam;
-        if (NotifyHeader->hwndFrom == AppInfoDisp->RichEdit->m_hWnd)
-        {
-            switch (NotifyHeader->code)
-            {
-            case EN_LINK:
-                AppInfoDisp->OnLink((ENLINK*)lParam);
-                break;
-            }
-        }
-    }
-    }
-    return DefWindowProc(hwnd, message, wParam, lParam);
-}
 
 class CMainToolbar :
     public CUiWindow< CToolbar<> >
