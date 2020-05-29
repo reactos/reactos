@@ -907,7 +907,7 @@ HRESULT WINAPI UserInstStubWrapperW(HWND hWnd, HINSTANCE hInstance,
 {
     HKEY setup, guid;
     WCHAR stub[MAX_PATH];
-    DWORD size = MAX_PATH;
+    DWORD size = sizeof(stub);
     HRESULT hr = S_OK;
     BOOL res;
 

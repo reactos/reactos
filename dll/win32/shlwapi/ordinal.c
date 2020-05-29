@@ -4126,7 +4126,7 @@ BOOL WINAPI IsOS(DWORD feature)
  */
 HRESULT WINAPI SHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD size)
 {
-    DWORD type, sz = size;
+    DWORD type, sz = size * sizeof(WCHAR);
 
     if(RegQueryValueExW(hkey, value, NULL, &type, (LPBYTE)buf, &sz) != ERROR_SUCCESS)
         return E_FAIL;
