@@ -35,7 +35,6 @@ struct CAvailableApplicationInfo
     ATL::CStringW m_szSize;
     ATL::CStringW m_szUrlSite;
     ATL::CStringW m_szUrlDownload;
-    ATL::CStringW m_szCDPath;
     ATL::CSimpleArray<LCID> m_LanguageLCIDs;
     ULONG m_SizeBytes;
 

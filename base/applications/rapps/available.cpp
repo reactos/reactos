@@ -52,8 +52,6 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
     GetString(L"License", m_szLicense);
     GetString(L"Description", m_szDesc);
     GetString(L"URLSite", m_szUrlSite);
-    GetString(L"CDPath", m_szCDPath);
-    GetString(L"Language", m_szRegName);
     GetString(L"SHA1", m_szSHA1);
 
     RetrieveSize();
@@ -231,11 +229,19 @@ AvailableStrings::AvailableStrings()
     //FIXME: maybe provide a fallback?
     if (GetStorageDirectory(szPath))
     {
-        szAppsPath = szPath + L"\\rapps\\";
+        szAppsPath = szPath;
+        PathAppendW(szAppsPath.GetBuffer(MAX_PATH), L"rapps");
+        szAppsPath.ReleaseBuffer();
+
         szCabName = L"rappmgr.cab";
         szCabDir = szPath;
-        szCabPath = (szCabDir + L"\\") + szCabName;
-        szSearchPath = szAppsPath + L"*.txt";
+        szCabPath = szCabDir;
+        PathAppendW(szCabPath.GetBuffer(MAX_PATH), szCabName);
+        szCabPath.ReleaseBuffer();
+
+        szSearchPath = szAppsPath;
+        PathAppendW(szSearchPath.GetBuffer(MAX_PATH), L"*.txt");
+        szSearchPath.ReleaseBuffer();
     }
 }
 // AvailableStrings
