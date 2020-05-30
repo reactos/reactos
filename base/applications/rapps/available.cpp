@@ -264,6 +264,7 @@ AvailableStrings::AvailableStrings()
     {
         szAppsPath = szPath;
         PathAppendW(szAppsPath.GetBuffer(MAX_PATH), L"rapps");
+        PathAddBackslashW(szAppsPath.GetBuffer());
         szAppsPath.ReleaseBuffer();
 
         szCabName = L"rappmgr.cab";
