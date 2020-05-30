@@ -650,8 +650,19 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 
         // append a \ to the provided file system path, and the filename portion from the URL after that
-        Path += L"\\";
-        Path += (LPWSTR) (p + 1);
+
+        PathAddBackslashW(Path.GetBuffer(MAX_PATH));
+        switch (InfoArray[iAppId].DLType)
+        {
+        case DLTYPE_DBUPDATE:
+        case DLTYPE_DBUPDATE_UNOFFICIAL:
+            PathAppendW(Path.GetBuffer(), L"rappmgr.cab"); // whatever the URL is, use the file name L"rappmgr.cab"
+            break;
+        case DLTYPE_APPLICATION:
+            PathAppendW(Path.GetBuffer(), (LPWSTR)(p + 1)); // use the filename retrieved from URL
+            break;
+        }
+        Path.ReleaseBuffer();
 
         if ((InfoArray[iAppId].DLType == DLTYPE_APPLICATION) && InfoArray[iAppId].szSHA1[0] && GetFileAttributesW(Path.GetString()) != INVALID_FILE_ATTRIBUTES)
         {
