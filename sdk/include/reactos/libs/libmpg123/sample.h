@@ -151,4 +151,45 @@ static inline int16_t ftoi16(float x)
 #define WRITE_REAL_SAMPLE(samples,sum,clip) *(samples) = ((real)1./SHORT_SCALE)*(sum)
 #endif
 
+/* Finished 32 bit sample to unsigned 32 bit sample. */
+#define CONV_SU32(s) \
+( (s >= 0) \
+	?	((uint32_t)s + (uint32_t)2147483648UL) \
+	:	(s == -2147483647-1 /* Work around to prevent a non-conformant MSVC warning/error */ \
+		?	0 /* Separate because negation would overflow. */  \
+		:	(uint32_t)2147483648UL - (uint32_t)(-s) ) \
+)
+
+/* Finished 16 bit sample to unsigned 16 bit sample. */
+#define CONV_SU16(s) (uint16_t)((int32_t)(s)+32768)
+
+/* Same style for syn123 generic conversion. */
+#define CONV_SU8(s) (uint8_t)((int16_t)s+128)
+
+/* Unsigned 32 bit sample to signed 32 bit sample. */
+#define CONV_US32(u) \
+( (u >= 2147483648UL) \
+	?	(int32_t)((uint32_t)u - (uint32_t)2147483648UL) \
+	:	((u == 0) \
+		?	(int32_t)-2147483648UL \
+		:	-(int32_t)((uint32_t)2147483648UL - u) ) \
+)
+
+/* Unsigned 16 bit sample to signed 16 bit sample. */
+#define CONV_US16(s) (int16_t)((int32_t)s-32768)
+
+/* Same style for syn123 generic conversion. */
+#define CONV_US8(s) (int8_t)((int16_t)s-128)
+
+/* 24 bit conversion: drop or add a least significant byte. */
+#ifdef WORDS_BIGENDIAN
+/* Highest byte first. Drop last. */
+#define DROP4BYTE(w,r) {(w)[0]=(r)[0]; (w)[1]=(r)[1]; (w)[2]=(r)[2];}
+#define ADD4BYTE(w,r)  {(w)[0]=(r)[0]; (w)[1]=(r)[1]; (w)[2]=(r)[2]; (w)[3]=0;}
+#else
+/* Lowest byte first, drop that. */
+#define DROP4BYTE(w,r) {(w)[0]=(r)[1]; (w)[1]=(r)[2]; (w)[2]=(r)[3];}
+#define ADD4BYTE(w,r)  {(w)[0]=0; (w)[1]=(r)[0]; (w)[2]=(r)[1]; (w)[3]=(r)[2];}
+#endif
+
 #endif

@@ -1,9 +1,10 @@
 /* TODO: Check all read calls (in loops, especially!) for return value 0 (EOF)! */
-
+/* Check if get_fileinfo should read ID3 info or not, seems a bit out of place here. */
+/* #define EXTRA_DEBUG */
 /*
 	readers.c: reading input data
 
-	copyright ?-2008 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright ?-2020 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Michael Hipp
 */
@@ -383,18 +384,12 @@ static int stream_back_bytes(mpg123_handle *fr, off_t bytes)
 }
 
 
-/* returns size on success... */
+/* returns size on success... otherwise an error code < 0 */
 static int generic_read_frame_body(mpg123_handle *fr,unsigned char *buf, int size)
 {
 	long l;
-
-	if((l=fr->rd->fullread(fr,buf,size)) != size)
-	{
-		long ll = l;
-		if(ll <= 0) ll = 0;
-		return READER_MORE;
-	}
-	return l;
+	l=fr->rd->fullread(fr,buf,size);
+	return (l >= 0 && l<size) ? READER_ERROR : l;
 }
 
 static off_t generic_tell(mpg123_handle *fr)
@@ -436,18 +431,35 @@ static off_t get_fileinfo(mpg123_handle *fr)
 {
 	off_t len;
 
-	if((len=io_seek(&fr->rdat,0,SEEK_END)) < 0)	return -1;
+	if((len=io_seek(&fr->rdat,0,SEEK_END)) < 0)
+	{
+		debug("cannot seek to end");
+		return -1;
+	} else if(len >= 128)
+	{
+		if(io_seek(&fr->rdat,-128,SEEK_END) < 0)
+		{
+			debug("cannot seek to END-128");
+			return -1;
+		}
+		if(fr->rd->fullread(fr,(unsigned char *)fr->id3buf,128) != 128)
+		{
+			debug("cannot read ID3v1?!");
+			return -1;
+		}
+		if(!strncmp((char*)fr->id3buf,"TAG",3)) len -= 128;
+	} else
+	{
+		debug("stream too short for ID3");
+	}
 
-	if(io_seek(&fr->rdat,-128,SEEK_END) < 0) return -1;
+	if(io_seek(&fr->rdat,0,SEEK_SET) < 0)
+	{
+		debug("cannot seek back");
+		return -1;
+	}
 
-	if(fr->rd->fullread(fr,(unsigned char *)fr->id3buf,128) != 128)	return -1;
-
-	if(!strncmp((char*)fr->id3buf,"TAG",3))	len -= 128;
-
-	if(io_seek(&fr->rdat,0,SEEK_SET) < 0)	return -1;
-
-	if(len <= 0)	return -1;
-
+	debug1("returning length: %"OFF_P, (off_p)len);
 	return len;
 }
 
@@ -831,6 +843,8 @@ static ssize_t buffered_fullread(mpg123_handle *fr, unsigned char *out, ssize_t 
 {
 	struct bufferchain *bc = &fr->rdat.buffer;
 	ssize_t gotcount;
+	if(VERBOSE3)
+		mdebug("buffered_fullread: want %zd", count);
 	if(bc->size - bc->pos < count)
 	{ /* Add more stuff to buffer. If hitting end of file, adjust count. */
 		unsigned char readbuf[4096];
@@ -863,9 +877,8 @@ static ssize_t buffered_fullread(mpg123_handle *fr, unsigned char *out, ssize_t 
 		count = bc->size - bc->pos; /* We want only what we got. */
 	}
 	gotcount = bc_give(bc, out, count);
-
-	if(VERBOSE3) debug2("wanted %li, got %li", (long)count, (long)gotcount);
-
+	if(VERBOSE3)
+		mdebug("buffered_fullread: got %zd", gotcount);
 	if(gotcount != count){ if(NOQUIET) error("gotcount != count"); return READER_ERROR; }
 	else return gotcount;
 }
@@ -1028,7 +1041,9 @@ static int default_init(mpg123_handle *fr)
 		int flags;
 		if(fr->rdat.r_read != NULL)
 		{
-			error("Timeout reading does not work with user-provided read function. Implement it yourself!");
+			if(NOQUIET)
+				error( "Timeout reading does not work with user-provided"
+					" read function. Implement it yourself!" );
 			return -1;
 		}
 		flags = fcntl(fr->rdat.filept, F_GETFL);
@@ -1060,6 +1075,7 @@ static int default_init(mpg123_handle *fr)
 	*/
 	if(fr->rdat.filelen >= 0)
 	{
+		debug("seekable stream");
 		fr->rdat.flags |= READER_SEEKABLE;
 		if(!strncmp((char*)fr->id3buf,"TAG",3))
 		{
@@ -1071,18 +1087,21 @@ static int default_init(mpg123_handle *fr)
 	else if(fr->p.flags & MPG123_SEEKBUFFER)
 	{
 #ifdef NO_FEEDER
-		error("Buffered readers not supported in this build.");
+		if(NOQUIET)
+			error("Buffered readers not supported in this build.");
 		fr->err = MPG123_MISSING_FEATURE;
 		return -1;
 #else
 		if     (fr->rd == &readers[READER_STREAM])
 		{
+			debug("switching to buffered stream reader");
 			fr->rd = &readers[READER_BUF_STREAM];
 			fr->rdat.fullread = plain_fullread;
 		}
 #ifndef NO_ICY
 		else if(fr->rd == &readers[READER_ICY_STREAM])
 		{
+			debug("switching to buffered ICY stream reader");
 			fr->rd = &readers[READER_BUF_ICY_STREAM];
 			fr->rdat.fullread = icy_fullread;
 		}
@@ -1095,7 +1114,7 @@ static int default_init(mpg123_handle *fr)
 		bc_init(&fr->rdat.buffer);
 		fr->rdat.filelen = 0; /* We carry the offset, but never know how big the stream is. */
 		fr->rdat.flags |= READER_BUFFERED;
-#endif /* NO_FEEDER */
+#endif /* NO_ICY */
 	}
 	return 0;
 }
@@ -1119,7 +1138,8 @@ int open_feed(mpg123_handle *fr)
 {
 	debug("feed reader");
 #ifdef NO_FEEDER
-	error("Buffered readers not supported in this build.");
+	if(NOQUIET)
+		error("Buffered readers not supported in this build.");
 	fr->err = MPG123_MISSING_FEATURE;
 	return -1;
 #else

@@ -1,7 +1,7 @@
 /*
 	libmpg123: MPEG Audio Decoder library
 
-	copyright 1995-2014 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright 1995-2020 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 
 */
@@ -14,6 +14,7 @@
 /* Want accurate rounding function regardless of decoder setup. */
 #define FORCE_ACCURATE
 #include "sample.h"
+#include "parse.h"
 
 #define SEEKFRAME(mh) ((mh)->ignoreframe < 0 ? 0 : (mh)->ignoreframe)
 
@@ -49,6 +50,7 @@ int attribute_align_arg mpg123_init(void)
 void attribute_align_arg mpg123_exit(void)
 {
 	/* nothing yet, but something later perhaps */
+	/* Nope. This is dead space. */
 }
 
 /* create a new handle with specified decoder, decoder can be "", "auto" or NULL for auto-detection */
@@ -230,7 +232,8 @@ int attribute_align_arg mpg123_par(mpg123_pars *mp, enum mpg123_parms key, long 
 #ifdef FRAME_INDEX
 			mp->index_size = val;
 #else
-			ret = MPG123_NO_INDEX;
+			if(val) // It is only an eror if you want to enable the index.
+				ret = MPG123_NO_INDEX;
 #endif
 		break;
 		case MPG123_PREFRAMES:
@@ -253,6 +256,9 @@ int attribute_align_arg mpg123_par(mpg123_pars *mp, enum mpg123_parms key, long 
 			ret = MPG123_MISSING_FEATURE;
 #endif
 		break;
+		case MPG123_FREEFORMAT_SIZE:
+			mp->freeformat_framesize = val;
+		break; 
 		default:
 			ret = MPG123_BAD_PARAM;
 	}
@@ -342,6 +348,9 @@ int attribute_align_arg mpg123_getpar(mpg123_pars *mp, enum mpg123_parms key, lo
 			ret = MPG123_MISSING_FEATURE;
 #endif
 		break;
+		case MPG123_FREEFORMAT_SIZE:
+			*val = mp->freeformat_framesize;
+		break; 
 		default:
 			ret = MPG123_BAD_PARAM;
 	}
@@ -384,6 +393,15 @@ int attribute_align_arg mpg123_getstate(mpg123_handle *mh, enum mpg123_state key
 			theval = mh->state_flags & FRAME_FRESH_DECODER;
 			mh->state_flags &= ~FRAME_FRESH_DECODER;
 		break;
+		case MPG123_ENC_DELAY:
+			theval = mh->enc_delay;
+		break;
+		case MPG123_ENC_PADDING:
+			theval = mh->enc_padding;
+		break;
+		case MPG123_DEC_DELAY:
+			theval = mh->lay == 3 ? GAPLESS_DELAY : -1;
+		break;
 		default:
 			mh->err = MPG123_BAD_KEY;
 			ret = MPG123_ERR;
@@ -394,6 +412,7 @@ int attribute_align_arg mpg123_getstate(mpg123_handle *mh, enum mpg123_state key
 
 	return ret;
 }
+
 int attribute_align_arg mpg123_eq(mpg123_handle *mh, enum mpg123_channels channel, int band, double val)
 {
 #ifndef NO_EQUALIZER
@@ -442,6 +461,54 @@ int attribute_align_arg mpg123_open(mpg123_handle *mh, const char *path)
 
 	mpg123_close(mh);
 	return open_stream(mh, path, -1);
+}
+
+// The convenience function mpg123_open_fixed() wraps over acual mpg123_open
+// and hence needs to have the exact same code in lfs_wrap.c. The flesh is
+// in open_fixed_pre() and open_fixed_post(), wich are only defined here.
+int open_fixed_pre(mpg123_handle *mh, int channels, int encoding)
+{
+	if(!mh)
+		return MPG123_BAD_HANDLE;
+	mh->p.flags |= MPG123_NO_FRANKENSTEIN;
+	int err = mpg123_format_none(mh);
+	if(err == MPG123_OK)
+		err = mpg123_format2(mh, 0, channels, encoding);
+	return err;
+}
+
+int open_fixed_post(mpg123_handle *mh, int channels, int encoding)
+{
+	if(!mh)
+		return MPG123_BAD_HANDLE;
+	long rate;
+	int err = mpg123_getformat(mh, &rate, &channels, &encoding);
+	if(err == MPG123_OK)
+		err = mpg123_format_none(mh);
+	if(err == MPG123_OK)
+		err = mpg123_format(mh, rate, channels, encoding);
+	if(err == MPG123_OK)
+	{
+		if(mh->track_frames < 1 && (mh->rdat.flags & READER_SEEKABLE))
+		{
+			debug("open_fixed_post: scan because we can seek and do not know track_frames");
+			err = mpg123_scan(mh);
+		}
+	}
+	if(err != MPG123_OK)
+		mpg123_close(mh);
+	return err;
+}
+
+int attribute_align_arg mpg123_open_fixed( mpg123_handle *mh, const char *path
+,	int channels, int encoding )
+{
+	int err = open_fixed_pre(mh, channels, encoding);
+	if(err == MPG123_OK)
+		err = mpg123_open(mh, path);
+	if(err == MPG123_OK)
+		err = open_fixed_post(mh, channels, encoding);
+	return err;
 }
 
 int attribute_align_arg mpg123_open_fd(mpg123_handle *mh, int fd)
@@ -546,6 +613,8 @@ int decode_update(mpg123_handle *mh)
 			{
 				mh->down_sample_sblimit = SBLIMIT * mh->af.rate;
 				mh->down_sample_sblimit /= frame_freq(mh);
+				if(mh->down_sample_sblimit < 1)
+					mh->down_sample_sblimit = 1;
 			}
 			else mh->down_sample_sblimit = SBLIMIT;
 			mh->outblock = outblock_bytes(mh,
@@ -571,6 +640,7 @@ int decode_update(mpg123_handle *mh)
 	do_rva(mh);
 	debug3("done updating decoder structure with native rate %li and af.rate %li and down_sample %i", frame_freq(mh), mh->af.rate, mh->down_sample);
 
+	mh->decoder_change = 0;
 	return 0;
 }
 
@@ -637,9 +707,9 @@ static int get_next_frame(mpg123_handle *mh)
 			else return MPG123_ERR; /* Some real error. */
 		}
 		/* Now, there should be new data to decode ... and also possibly new stream properties */
-		if(mh->header_change > 1)
+		if(mh->header_change > 1 || mh->decoder_change)
 		{
-			debug("big header change");
+			debug("big header or decoder change");
 			change = 1;
 			mh->header_change = 0;
 			/* Need to update decoder structure right away since frame might need to
@@ -667,7 +737,6 @@ static int get_next_frame(mpg123_handle *mh)
 	   All other situations resulted in returns from the loop. */
 	if(change)
 	{
-		mh->decoder_change = 0;
 		if(mh->fresh)
 		{
 #ifdef GAPLESS
@@ -832,20 +901,25 @@ int attribute_align_arg mpg123_decode_frame(mpg123_handle *mh, off_t *num, unsig
 	if(mh == NULL) return MPG123_BAD_HANDLE;
 	if(mh->buffer.size < mh->outblock) return MPG123_NO_SPACE;
 	mh->buffer.fill = 0; /* always start fresh */
+	/* Be nice: Set these also for sensible values in case of error. */
+	if(audio) *audio = NULL;
+	if(bytes) *bytes = 0;
 	while(TRUE)
 	{
 		/* decode if possible */
 		if(mh->to_decode)
 		{
+			if(num != NULL) *num = mh->num;
 			if(mh->new_format)
 			{
 				debug("notifiying new format");
 				mh->new_format = 0;
 				return MPG123_NEW_FORMAT;
 			}
-			if(num != NULL) *num = mh->num;
 			debug("decoding");
 
+			if(mh->decoder_change && decode_update(mh) < 0)
+				return MPG123_ERR;
 			decode_the_frame(mh);
 
 			mh->to_decode = mh->to_ignore = FALSE;
@@ -865,7 +939,7 @@ int attribute_align_arg mpg123_decode_frame(mpg123_handle *mh, off_t *num, unsig
 	}
 }
 
-int attribute_align_arg mpg123_read(mpg123_handle *mh, unsigned char *out, size_t size, size_t *done)
+int attribute_align_arg mpg123_read(mpg123_handle *mh, void *out, size_t size, size_t *done)
 {
 	return mpg123_decode(mh, NULL, 0, out, size, done);
 }
@@ -915,14 +989,14 @@ int attribute_align_arg mpg123_feed(mpg123_handle *mh, const unsigned char *in, 
 	}
 */
 
-int attribute_align_arg mpg123_decode(mpg123_handle *mh, const unsigned char *inmemory, size_t inmemsize, unsigned char *outmemory, size_t outmemsize, size_t *done)
+int attribute_align_arg mpg123_decode(mpg123_handle *mh, const unsigned char *inmemory, size_t inmemsize, void *outmem, size_t outmemsize, size_t *done)
 {
 	int ret = MPG123_OK;
 	size_t mdone = 0;
+	unsigned char *outmemory = outmem;
 
 	if(done != NULL) *done = 0;
 	if(mh == NULL) return MPG123_BAD_HANDLE;
-#ifndef NO_FEEDER
 	if(inmemsize > 0 && mpg123_feed(mh, inmemory, inmemsize) != MPG123_OK)
 	{
 		ret = MPG123_ERR;
@@ -947,6 +1021,11 @@ int attribute_align_arg mpg123_decode(mpg123_handle *mh, const unsigned char *in
 			if(mh->buffer.size - mh->buffer.fill < mh->outblock)
 			{
 				ret = MPG123_NO_SPACE;
+				goto decodeend;
+			}
+			if(mh->decoder_change && decode_update(mh) < 0)
+			{
+				ret = MPG123_ERR;
 				goto decodeend;
 			}
 			decode_the_frame(mh);
@@ -977,10 +1056,6 @@ int attribute_align_arg mpg123_decode(mpg123_handle *mh, const unsigned char *in
 decodeend:
 	if(done != NULL) *done = mdone;
 	return ret;
-#else
-	mh->err = MPG123_MISSING_FEATURE;
-	return MPG123_ERR;
-#endif
 }
 
 long attribute_align_arg mpg123_clip(mpg123_handle *mh)
@@ -1031,7 +1106,7 @@ int attribute_align_arg mpg123_info(mpg123_handle *mh, struct mpg123_frameinfo *
 		case 1: mi->mode = MPG123_M_JOINT;  break;
 		case 2: mi->mode = MPG123_M_DUAL;   break;
 		case 3: mi->mode = MPG123_M_MONO;   break;
-		default: error("That mode cannot be!");
+		default: mi->mode = 0; // Nothing good to do here.
 	}
 	mi->mode_ext = mh->mode_ext;
 	mi->framesize = mh->framesize+4; /* Include header. */
@@ -1462,6 +1537,23 @@ int attribute_align_arg mpg123_id3(mpg123_handle *mh, mpg123_id3v1 **v1, mpg123_
 	return MPG123_OK;
 }
 
+int attribute_align_arg mpg123_id3_raw( mpg123_handle *mh
+,	unsigned char **v1, size_t *v1_size
+,	unsigned char **v2, size_t *v2_size )
+{
+	if(!mh)
+		return MPG123_ERR;
+	if(v1 != NULL)
+		*v1 = mh->id3buf[0] ? mh->id3buf : NULL;
+	if(v1_size != NULL)
+		*v1_size = mh->id3buf[0] ? 128 : 0;
+	if(v2 != NULL)
+		*v2 = mh->id3v2_raw;
+	if(v2_size != NULL)
+		*v2_size = mh->id3v2_size;
+	return MPG123_OK;
+}
+
 int attribute_align_arg mpg123_icy(mpg123_handle *mh, char **icy_meta)
 {
 	if(mh == NULL) return MPG123_BAD_HANDLE;
@@ -1625,6 +1717,11 @@ void attribute_align_arg mpg123_delete(mpg123_handle *mh)
 		frame_exit(mh); /* free buffers in frame */
 		free(mh); /* free struct; cast? */
 	}
+}
+
+void attribute_align_arg mpg123_free(void *ptr)
+{
+	free(ptr);
 }
 
 static const char *mpg123_error[] =
