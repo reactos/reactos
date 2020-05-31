@@ -23,10 +23,13 @@ HKR, , Icon,           0, "-27"
 
 [Manufacturer]
 %GenericMfg% = GenericMfg
+%MsftMfg% = MsftMfg
 
 [GenericMfg]
 %acpipic_up.DeviceDesc% = NO_DRV,acpipic_up
 %e_isa_up.DeviceDesc% = NO_DRV,e_isa_up
+
+[MsftMfg]
 %xbox.DeviceDesc% = NO_DRV,xbox
 
 ;------------------------------ NO DRIVER -----------------------------
@@ -46,6 +49,8 @@ ComputerClassName = "Computer"
 GenericMfg = "(Generic computers)"
 acpipic_up.DeviceDesc = "ACPI Uniprocessor PC"
 e_isa_up.DeviceDesc = "Standard Uniprocessor PC"
+
+MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0405]
@@ -53,6 +58,8 @@ ComputerClassName = "Počítač"
 GenericMfg = "(Obecné počítače)"
 acpipic_up.DeviceDesc = "Jednoprocesorové PC s ACPI rozhraním"
 e_isa_up.DeviceDesc = "Standardní jednoprocesorové PC"
+
+MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0a]
@@ -63,6 +70,8 @@ ComputerClassName = "Equipo"
 GenericMfg = "(Equipos genéricos)"
 acpipic_up.DeviceDesc = "PC con uniprocesador ACPI"
 e_isa_up.DeviceDesc = "PC con uniprocesador estándar"
+
+MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0415]
@@ -73,6 +82,8 @@ ComputerClassName = "Komputer"
 GenericMfg = "(Komputery standardowe)"
 acpipic_up.DeviceDesc = "Komputer PC z interfejsem ACPI"
 e_isa_up.DeviceDesc = "Standardowy komputer PC"
+
+MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0418]
@@ -83,6 +94,8 @@ ComputerClassName = "Calculator"
 GenericMfg = "(calculatoare generice)"
 acpipic_up.DeviceDesc = "PC uniprocesor ACPI"
 e_isa_up.DeviceDesc = "PC uniprocesor standard"
+
+MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0419]
@@ -93,6 +106,8 @@ ComputerClassName = "Компьютер"
 GenericMfg = "(Универсальный компьютер)"
 acpipic_up.DeviceDesc = "ACPI однопроцессорный ПК"
 e_isa_up.DeviceDesc = "Стандартный однопроцессорный ПК"
+
+MsftMfg = "Корпорация Microsoft"
 xbox.DeviceDesc = "Оригинальный Xbox (на базе x86)"
 
 [Strings.041f]
@@ -103,6 +118,8 @@ ComputerClassName = "Bilgisayar"
 GenericMfg = "(Umûmî Bilgisayarlar)"
 acpipic_up.DeviceDesc = "ACPI Tek İşlemcili PC"
 e_isa_up.DeviceDesc = "Ölçünlü Tek İşlemcili PC"
+
+MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0422]
@@ -113,10 +130,14 @@ ComputerClassName = "Комп'ютер"
 GenericMfg = "(Стандартний комп'ютер)"
 acpipic_up.DeviceDesc = "ACPI однопроцесорний ПК"
 e_isa_up.DeviceDesc = "Стандартний однопроцесорний ПК"
+
+MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 [Strings.0804]
 GenericMfg = "(通用计算机)"
 acpipic_up.DeviceDesc = "ACPI 单处理器 PC"
 e_isa_up.DeviceDesc = "标准单处理器 PC"
+
+MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
