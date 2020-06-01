@@ -893,7 +893,7 @@ SummaryDlgProc(
                                           ARRAYSIZE(CurrentItemText));
                     SetDlgItemTextW(hwndDlg, IDC_KEYBOARD, CurrentItemText);
 
-                    if (L'C') // FIXME!
+                    if (TRUE) // FIXME!
                     {
                         StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
                                          L"%c: \x2014 %wZ",
