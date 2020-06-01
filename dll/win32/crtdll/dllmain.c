@@ -32,7 +32,6 @@ extern void __getmainargs( int *argc, char ***argv, char ***envp,
 extern int BlockEnvToEnvironA(void);
 extern int BlockEnvToEnvironW(void);
 extern void FreeEnvironment(char **environment);
-extern void _atexit_cleanup(void);
 
 extern unsigned int _osver;
 extern unsigned int _winminor;
