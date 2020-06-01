@@ -1086,7 +1086,6 @@ NtReplyWaitReplyPort(IN HANDLE PortHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                DPRINT1("Got exception!\n");
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
