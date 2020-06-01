@@ -21,9 +21,12 @@
  * Private helper function to lookup the module name from a given address.
  * The address can point to anywhere within the module.
  */
-static const char*
-_module_name_from_addr(const void* addr, void **module_start_addr,
-                       char* psz, size_t nChars, char** module_name)
+static VOID
+_module_name_from_addr(_In_opt_ const VOID *addr,
+                       _Out_ VOID **module_start_addr,
+                       _Out_writes_z_(nChars) CHAR *psz,
+                       size_t nChars,
+                       _Out_ CHAR **module_name)
 {
     MEMORY_BASIC_INFORMATION mbi;
 
@@ -36,9 +39,9 @@ _module_name_from_addr(const void* addr, void **module_start_addr,
     if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
         !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, (DWORD)nChars))
     {
+        *module_start_addr = NULL;
         psz[0] = '\0';
         *module_name = psz;
-        *module_start_addr = 0;
     }
     else
     {
@@ -56,9 +59,7 @@ _module_name_from_addr(const void* addr, void **module_start_addr,
         *module_name = s1;
         *module_start_addr = (void *)mbi.AllocationBase;
     }
-    return psz;
 }
-
 
 static VOID
 _dump_context(PCONTEXT pc)

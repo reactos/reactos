@@ -174,9 +174,11 @@ RtlCaptureStackBackTrace(IN ULONG FramesToSkip,
 * Private helper function to lookup the module name from a given address.
 * The address can point to anywhere within the module.
 */
-static const char*
-    _module_name_from_addr(const void* addr, void **module_start_addr,
-    char* psz, size_t nChars)
+static VOID
+_module_name_from_addr(_In_opt_ const VOID *addr,
+                       _Out_ VOID **module_start_addr,
+                       _Out_writes_z_(nChars) CHAR *psz,
+                       size_t nChars)
 {
 #if 0
     MEMORY_BASIC_INFORMATION mbi;
@@ -190,21 +192,18 @@ static const char*
     if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
         !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, (DWORD)nChars))
     {
+        *module_start_addr = NULL;
         psz[0] = '\0';
-        *module_start_addr = 0;
     }
     else
     {
-        *module_start_addr = (void *) mbi.AllocationBase;
+        *module_start_addr = (void *)mbi.AllocationBase;
     }
-    return psz;
 #else
+    *module_start_addr = NULL;
     psz[0] = '\0';
-    *module_start_addr = 0;
-    return psz;
 #endif
 }
-
 
 static VOID
     _dump_context(PCONTEXT pc)
