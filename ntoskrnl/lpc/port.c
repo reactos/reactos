@@ -298,13 +298,15 @@ NtQueryInformationPort(IN HANDLE PortHandle,
     PreviousMode = KeGetPreviousMode();
     if (PreviousMode != KernelMode)
     {
-        _SEH2_TRY {
+        _SEH2_TRY
+        {
             ProbeForWrite(PortInformation, PortInformationLength, sizeof(ULONG));
             if (ARGUMENT_PRESENT(ReturnLength))
             {
                 ProbeForWriteUlong(ReturnLength);
             }
-        } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -323,7 +325,9 @@ NtQueryInformationPort(IN HANDLE PortHandle,
         }
         ObDereferenceObject(PortObject);
         return STATUS_SUCCESS;
-    } else {
+    }
+    else
+    {
         return STATUS_INVALID_INFO_CLASS;
     }
 }

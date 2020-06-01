@@ -551,7 +551,9 @@ NtCompleteConnectPort(IN HANDLE PortHandle)
     if (Port->ConnectionPort)
     {
         PLIST_ENTRY Entry;
-        for (Entry = Port->ConnectionPort->LpcReplyChainHead.Flink; Entry != (PLIST_ENTRY)(&Port->ConnectionPort->LpcReplyChainHead.Flink); Entry = Entry->Flink)
+        for (Entry = Port->ConnectionPort->LpcReplyChainHead.Flink;
+             Entry != (PLIST_ENTRY)(&Port->ConnectionPort->LpcReplyChainHead.Flink);
+             Entry = Entry->Flink)
         {
             if (Entry == ((PLIST_ENTRY)(&Thread->LpcReplyChain.Flink)))
             {
