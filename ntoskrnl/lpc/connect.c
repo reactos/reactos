@@ -747,15 +747,6 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     return Status;
 
 Failure:
-    if (KeReadStateSemaphore(&Thread->LpcReplySemaphore))
-    {
-        KeWaitForSingleObject(&Thread->LpcReplySemaphore,
-                              WrExecutive,
-                              KernelMode,
-                              FALSE,
-                              NULL);
-    }
-
     /* Check if we had a message and free it */
     if (Message) LpcpFreeToPortZone(Message, 0);
 
