@@ -180,8 +180,15 @@ static const char*
 {
 #if 0
     MEMORY_BASIC_INFORMATION mbi;
+
+    // Limited by GetModuleFileNameA().
+    if (nChars > MAXDWORD)
+    {
+        nChars = MAXDWORD;
+    }
+
     if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
-        !GetModuleFileNameA((HMODULE) mbi.AllocationBase, psz, nChars))
+        !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, (DWORD)nChars))
     {
         psz[0] = '\0';
         *module_start_addr = 0;

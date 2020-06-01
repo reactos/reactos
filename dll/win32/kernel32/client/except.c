@@ -27,8 +27,13 @@ _module_name_from_addr(const void* addr, void **module_start_addr,
 {
     MEMORY_BASIC_INFORMATION mbi;
 
-    if ((nChars > MAXDWORD) ||
-        (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi)) ||
+    // Limited by GetModuleFileNameA().
+    if (nChars > MAXDWORD)
+    {
+        nChars = MAXDWORD;
+    }
+
+    if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
         !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, (DWORD)nChars))
     {
         psz[0] = '\0';
