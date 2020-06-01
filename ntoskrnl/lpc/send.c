@@ -680,7 +680,7 @@ NtRequestPort(IN HANDLE PortHandle,
                         MessageType,
                         &Thread->Cid);
     }
-    
+
     /* Acquire the LPC lock */
     KeAcquireGuardedMutex(&LpcpLock);
 

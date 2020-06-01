@@ -46,7 +46,7 @@ LpcpFreeDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
             (Message->Request.ClientId.UniqueProcess == ClientId.UniqueProcess))
         {
             LPCTRACE(LPC_REPLY_DEBUG,
-                     "%s removing DataInfo Message %lx (%u.%u) Port: $lx\n",
+                     "%s removing DataInfo Message %p (%u.%u) Port: %lx\n",
                      PsGetCurrentProcess()->ImageFileName,
                      Message,
                      Message->Request.MessageId,
@@ -98,7 +98,7 @@ LpcpSaveDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
     }
 
     LPCTRACE(LPC_REPLY_DEBUG,
-             "%s saving DataInfo Message %lx (%u.%u) Port: %lx\n",
+             "%s saving DataInfo Message %p (%u.%u) Port: %lx\n",
              PsGetCurrentProcess()->ImageFileName,
              Message,
              Message->Request.MessageId,
@@ -1048,7 +1048,7 @@ NtReplyWaitReplyPort(IN HANDLE PortHandle,
     /* Now we can let go of the thread */
     ObDereferenceObject(WakeupThread);
 
-    /* Now wait for a reply and set 'Status' */
+    /* Now wait for a reply */
     LpcpConnectWait(&Thread->LpcReplySemaphore, PreviousMode);
 
     /* Acquire the lock */

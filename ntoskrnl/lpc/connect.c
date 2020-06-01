@@ -588,7 +588,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         LpcpCompleteWait(Port->MsgQueue.Semaphore);
         KeLeaveCriticalRegion();
 
-        /* Now wait for a reply and set 'Status' */
+        /* Now wait for a reply */
         LpcpConnectWait(&Thread->LpcReplySemaphore, PreviousMode);
     }
 

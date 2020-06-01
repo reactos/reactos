@@ -356,7 +356,6 @@ LpcpDeletePort(IN PVOID ObjectBody)
         ClientDiedMsg.h.u1.s1.TotalLength = sizeof(ClientDiedMsg);
         ClientDiedMsg.h.u1.s1.DataLength = sizeof(ClientDiedMsg.CreateTime);
         ClientDiedMsg.h.u2.ZeroInit = 0;
-        ClientDiedMsg.h.u2.s2.DataInfoOffset = 0;
         ClientDiedMsg.h.u2.s2.Type = LPC_PORT_CLOSED;
         ClientDiedMsg.CreateTime = PsGetCurrentProcess()->CreateTime;
 

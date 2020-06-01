@@ -159,11 +159,14 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     /* Acquire the LPC Lock */
     KeAcquireGuardedMutex(&LpcpLock);
 
+    /* Get the message */
+    Message = LpcpGetMessageFromThread(ClientThread);
+
     /* Make sure that the client wants a reply, and this is the right one */
-    if (!(LpcpGetMessageFromThread(ClientThread)) ||
+    if (!(Message) ||
         !(CapturedReplyMessage.MessageId) ||
         (ClientThread->LpcReplyMessageId != CapturedReplyMessage.MessageId) ||
-        (LpcpGetMessageType(&LpcpGetMessageFromThread(ClientThread)->Request) != LPC_CONNECTION_REQUEST))
+        (LpcpGetMessageType(&Message->Request) != LPC_CONNECTION_REQUEST))
     {
         /* Not the reply asked for, or no reply wanted, fail */
         KeReleaseGuardedMutex(&LpcpLock);
@@ -172,8 +175,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
         return STATUS_REPLY_MESSAGE_MISMATCH;
     }
 
-    /* Now get the message and connection message */
-    Message = LpcpGetMessageFromThread(ClientThread);
+    /* Now get the connection message */
     ConnectMessage = (PLPCP_CONNECTION_MESSAGE)(Message + 1);
 
     /* Get the client and connection port as well */

@@ -301,23 +301,34 @@ NtQueryInformationPort(IN HANDLE PortHandle,
         _SEH2_TRY
         {
             ProbeForWrite(PortInformation, PortInformationLength, sizeof(ULONG));
-            if (ARGUMENT_PRESENT(ReturnLength))
+            if (ReturnLength)
             {
                 ProbeForWriteUlong(ReturnLength);
             }
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }
 
-    if (ARGUMENT_PRESENT(PortHandle))
+    if (PortHandle)
     {
-        Status = ObReferenceObjectByHandle(PortHandle, GENERIC_READ, LpcPortObjectType, PreviousMode, (PVOID*)&PortObject, NULL);
+        Status = ObReferenceObjectByHandle(PortHandle,
+                                           GENERIC_READ,
+                                           LpcPortObjectType,
+                                           PreviousMode,
+                                           (PVOID*)&PortObject,
+                                           NULL);
         if (!NT_SUCCESS(Status))
         {
-            Status = ObReferenceObjectByHandle(PortHandle, GENERIC_READ, LpcWaitablePortObjectType, PreviousMode, (PVOID*)&PortObject, NULL);
+            Status = ObReferenceObjectByHandle(PortHandle,
+                                               GENERIC_READ,
+                                               LpcWaitablePortObjectType,
+                                               PreviousMode,
+                                               (PVOID*)&PortObject,
+                                               NULL);
             if (!NT_SUCCESS(Status))
             {
                 return Status;
