@@ -740,7 +740,6 @@
 @ stdcall LdrFindResourceDirectory_U(ptr ptr long ptr)
 @ stdcall LdrFindResource_U(ptr ptr long ptr)
 @ extern LpcPortObjectType
-@ extern LpcWaitablePortObjectType
 @ stdcall LpcRequestPort(ptr ptr)
 @ stdcall LpcRequestWaitReplyPort(ptr ptr ptr)
 @ stdcall LsaCallAuthenticationPackage(long long ptr long ptr ptr ptr)

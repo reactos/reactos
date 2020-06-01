@@ -278,8 +278,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     if (ClientSectionToMap)
     {
         /* Setup the offset */
-        SectionOffset.LowPart = ConnectMessage->ClientView.SectionOffset;
-        SectionOffset.HighPart = 0;
+        SectionOffset.QuadPart = ConnectMessage->ClientView.SectionOffset;
 
         /* Map the section */
         Status = MmMapViewOfSection(ClientSectionToMap,
@@ -294,7 +293,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
                                     PAGE_READWRITE);
 
         /* Update the offset and check for mapping status */
-        ConnectMessage->ClientView.SectionOffset = SectionOffset.LowPart;
+        ConnectMessage->ClientView.SectionOffset = SectionOffset.QuadPart;
         if (NT_SUCCESS(Status))
         {
             /* Set the view base */
@@ -321,8 +320,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     /* Check if there's a server section */
     if (NT_SUCCESS(Status) && ServerView)
     {
-        SectionOffset.LowPart = CapturedServerView.SectionOffset;
-        SectionOffset.HighPart = 0;
+        SectionOffset.QuadPart = CapturedServerView.SectionOffset;
 
         /* Map the section */
         Status = ObReferenceObjectByHandle(CapturedServerView.SectionHandle,
@@ -354,11 +352,10 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
                     ServerPort->MappingProcess = PsGetCurrentProcess();
                     ObReferenceObject(ServerPort->MappingProcess);
                 }
-                CapturedServerView.SectionOffset = SectionOffset.LowPart;
+                CapturedServerView.SectionOffset = SectionOffset.QuadPart;
                 CapturedServerView.ViewBase = ServerPort->ServerSectionBase;
 
-                SectionOffset.LowPart = CapturedServerView.SectionOffset;
-                SectionOffset.HighPart = 0;
+                SectionOffset.QuadPart = CapturedServerView.SectionOffset;
 
                 ViewSize = CapturedServerView.ViewSize;
                 Status = MmMapViewOfSection(SectionToMap,

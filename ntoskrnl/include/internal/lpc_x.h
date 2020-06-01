@@ -115,7 +115,6 @@ LpcpAllocateFromPortZone(VOID)
     InitializeListHead(&Message->Entry);
     Message->RepliedToThread = NULL;
     Message->Request.u2.ZeroInit = 0;
-    Message->Request.u2.s2.Type = 0;
 
     /* Release the lock */
     KeReleaseGuardedMutex(&LpcpLock);

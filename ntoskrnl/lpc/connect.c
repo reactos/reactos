@@ -406,8 +406,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         }
 
         /* Set the section offset */
-        SectionOffset.LowPart = CapturedClientView.SectionOffset;
-        SectionOffset.HighPart = 0;
+        SectionOffset.QuadPart = CapturedClientView.SectionOffset;
 
         /* Map it */
         Status = MmMapViewOfSection(SectionToMap,
@@ -422,7 +421,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                                     PAGE_READWRITE);
 
         /* Update the offset */
-        CapturedClientView.SectionOffset = SectionOffset.LowPart;
+        CapturedClientView.SectionOffset = SectionOffset.QuadPart;
 
         /* Check for failure */
         if (!NT_SUCCESS(Status))
