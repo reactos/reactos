@@ -240,7 +240,7 @@ static VOID
 }
 
 static VOID
-    PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
+PrintStackTrace(_In_ struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
     PVOID StartAddr;
     CHAR szMod[128];
@@ -274,8 +274,8 @@ static VOID
 
         for (i = 0; Frame[1] != 0 && Frame[1] != 0xdeadbeef && i < 128; i++)
         {
-            //if (IsBadReadPtr((PVOID) Frame[1], 4))
-            if (Frame[1] == 0)
+            //if (IsBadReadPtr((PVOID) Frame[1], sizeof(*Frame)))
+            if (FALSE) // FIXME.
             {
                 DbgPrint("   %8x%9s   %s\n", Frame[1], "<invalid address>", " ");
             }
@@ -303,7 +303,6 @@ static VOID
     _SEH2_END;
 #endif
 }
-
 
 /*
  * @unimplemented

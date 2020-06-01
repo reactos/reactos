@@ -96,7 +96,7 @@ _dump_context(PCONTEXT pc)
 }
 
 static VOID
-PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
+PrintStackTrace(_In_ PEXCEPTION_POINTERS ExceptionInfo)
 {
     PVOID StartAddr;
     CHAR szMod[128], *szModFile;
@@ -131,7 +131,7 @@ PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
 
         for (i = 0; Frame[1] != 0 && Frame[1] != 0xdeadbeef && i < 128; i++)
         {
-            if (IsBadReadPtr((PVOID)Frame[1], 4))
+            if (IsBadReadPtr((PVOID)Frame[1], sizeof(*Frame)))
             {
                 DbgPrint("<%s:%x>\n", "[invalid address]", Frame[1]);
             }
@@ -674,7 +674,6 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
         NtClose(hDebugEvent);
 
     IsSecondChance = TRUE;
-
 
 Quit:
     /* If this is a second chance exception, kill the process */
