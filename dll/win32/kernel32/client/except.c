@@ -99,7 +99,7 @@ static VOID
 PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
 {
     PVOID StartAddr;
-    CHAR szMod[128] = "", *szModFile;
+    CHAR szMod[128], *szModFile;
     PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
     PCONTEXT ContextRecord = ExceptionInfo->ContextRecord;
 
@@ -114,7 +114,8 @@ PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
     }
 
     _dump_context(ContextRecord);
-    _module_name_from_addr(ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod), &szModFile);
+    _module_name_from_addr(ExceptionRecord->ExceptionAddress, &StartAddr,
+                           szMod, _countof(szMod), &szModFile);
     DbgPrint("Address:\n<%s:%x> (%s@%x)\n",
              szModFile,
              (ULONG_PTR)ExceptionRecord->ExceptionAddress - (ULONG_PTR)StartAddr,
@@ -137,7 +138,7 @@ PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
             else
             {
                 _module_name_from_addr((const void*)Frame[1], &StartAddr,
-                                       szMod, sizeof(szMod), &szModFile);
+                                       szMod, _countof(szMod), &szModFile);
                 DbgPrint("<%s:%x> (%s@%x)\n",
                          szModFile,
                          (ULONG_PTR)Frame[1] - (ULONG_PTR)StartAddr,
