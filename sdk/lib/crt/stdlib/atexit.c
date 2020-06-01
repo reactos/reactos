@@ -76,7 +76,7 @@ _onexit_t CDECL _onexit(_onexit_t func)
       UNLOCK_EXIT;
       return NULL;
     }
-    memcpy (newtable, atexit_table, atexit_table_size);
+    memcpy (newtable, atexit_table, atexit_table_size*sizeof(_onexit_t));
     atexit_table_size += 32;
     free (atexit_table);
     atexit_table = newtable;
