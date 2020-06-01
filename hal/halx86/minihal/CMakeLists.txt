@@ -9,6 +9,7 @@ list(APPEND MINI_HAL_SOURCE
     ../legacy/bussupp.c
     ../generic/beep.c
     ../generic/bios.c
+    ../generic/clock.c
     ../generic/cmos.c
     ../generic/dma.c
     ../generic/display.c

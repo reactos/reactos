@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -21,6 +22,8 @@
 
 #define PIT_LATCH  0x00
 
+extern HALP_ROLLOVER HalpRolloverTable[15];
+
 LARGE_INTEGER HalpLastPerfCounter;
 LARGE_INTEGER HalpPerfCounter;
 ULONG HalpPerfCounterCutoff;
@@ -29,29 +32,6 @@ ULONG HalpCurrentTimeIncrement;
 ULONG HalpCurrentRollOver;
 ULONG HalpNextMSRate = 14;
 ULONG HalpLargestClockMS = 15;
-
-static struct _HALP_ROLLOVER
-{
-    ULONG RollOver;
-    ULONG Increment;
-} HalpRolloverTable[15] =
-{
-    {1197, 10032},
-    {2394, 20064},
-    {3591, 30096},
-    {4767, 39952},
-    {5964, 49984},
-    {7161, 60016},
-    {8358, 70048},
-    {9555, 80080},
-    {10731, 89936},
-    {11949, 100144},
-    {13125, 110000},
-    {14322, 120032},
-    {15519, 130064},
-    {16695, 139920},
-    {17892, 149952}
-};
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -88,7 +68,7 @@ HalpSetTimerRollOver(USHORT RollOver)
     TimerControl.BcdMode = FALSE;
 
     /*
-     * Program the PIT to generate a normal rate wave (Mode 3) on channel 0.
+     * Program the PIT to generate a normal rate wave (Mode 2) on channel 0.
      * Channel 0 is used for the IRQ0 clock interval timer, and channel
      * 1 is used for DRAM refresh.
      *

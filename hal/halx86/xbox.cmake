@@ -31,6 +31,7 @@ list(APPEND HAL_XBOX_SOURCE
     legacy/halpcat.c
     generic/profil.c
     generic/timer.c
+    xbox/clock.c
     xbox/part_xbox.c
     xbox/halinit_xbox.c
     xbox/reboot.c
