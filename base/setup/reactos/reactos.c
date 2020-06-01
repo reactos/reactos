@@ -1170,17 +1170,20 @@ PrepareAndDoCopyThread(
     /* Do the file copying - The callback handles whether or not we should stop file copying */
     if (!DoFileCopy(&pSetupData->USetupData, FileCopyCallback, &CopyContext))
     {
-        /* Display an error only if an unexpected failure happened, and not because the user cancelled the installation */
+        /* Only if an unexpected failure happened, and not because the user cancelled the installation */
         if (!pSetupData->bStopInstall)
+        {
+            /* Display an error */
             MessageBoxW(GetParent(hwndDlg), L"Failed to copy the files!", L"Error", MB_ICONERROR);
 
-        /*
-         * If we failed due to an unexpected error, keep on the copy page to view the current state,
-         * but enable the "Next" button to allow the user to continue to the terminate page.
-         * Otherwise we have been cancelled by the user, who has already switched to the Terminate page.
-         */
-        if (!pSetupData->bStopInstall)
+            /*
+             * Keep on the copy page to view the current state,
+             * but enable the "Next" button to allow the user to continue to the terminate page.
+             * Otherwise we have been cancelled by the user, who has already switched to the Terminate page.
+             */
             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+        }
+
         return 1;
     }
 
