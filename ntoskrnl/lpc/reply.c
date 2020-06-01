@@ -45,7 +45,8 @@ LpcpFreeDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
             (Message->Request.ClientId.UniqueThread == ClientId.UniqueThread) &&
             (Message->Request.ClientId.UniqueProcess == ClientId.UniqueProcess))
         {
-            LPCTRACE(LPC_REPLY_DEBUG, "%s removing DataInfo Message %lx (%u.%u) Port: $lx\n",
+            LPCTRACE(LPC_REPLY_DEBUG,
+                     "%s removing DataInfo Message %lx (%u.%u) Port: $lx\n",
                      PsGetCurrentProcess()->ImageFileName,
                      Message,
                      Message->Request.MessageId,
@@ -62,7 +63,8 @@ LpcpFreeDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
         /* Go to the next entry */
         NextEntry = NextEntry->Flink;
     }
-    LPCTRACE(LPC_REPLY_DEBUG, "%s Unable to find DataInfo Message (%u.%u) Port: %lx\n",
+    LPCTRACE(LPC_REPLY_DEBUG,
+             "%s Unable to find DataInfo Message (%u.%u) Port: %lx\n",
              PsGetCurrentProcess()->ImageFileName,
              MessageId,
              CallbackId,
@@ -95,7 +97,8 @@ LpcpSaveDataInfoMessage(IN PLPCP_PORT_OBJECT Port,
         }
     }
 
-    LPCTRACE(LPC_REPLY_DEBUG, "%s saving DataInfo Message %lx (%u.%u) Port: %lx\n",
+    LPCTRACE(LPC_REPLY_DEBUG,
+             "%s saving DataInfo Message %lx (%u.%u) Port: %lx\n",
              PsGetCurrentProcess()->ImageFileName,
              Message,
              Message->Request.MessageId,
@@ -146,7 +149,8 @@ LpcpFindDataInfoMessage(
             (Message->Request.ClientId.UniqueProcess == ClientId.UniqueProcess) &&
             (Message->Request.ClientId.UniqueThread == ClientId.UniqueThread))
         {
-            LPCTRACE(LPC_REPLY_DEBUG, "%s Found DataInfo Message %lx (%u.%u) Port: %lx\n",
+            LPCTRACE(LPC_REPLY_DEBUG,
+                    "%s Found DataInfo Message %lx (%u.%u) Port: %lx\n",
                      PsGetCurrentProcess()->ImageFileName,
                      Message,
                      Message->Request.MessageId,
@@ -158,7 +162,8 @@ LpcpFindDataInfoMessage(
         }
     }
 
-    LPCTRACE(LPC_REPLY_DEBUG, "%s Unable to find DataInfo Message (%u.%u) Port: %lx\n",
+    LPCTRACE(LPC_REPLY_DEBUG,
+             "%s Unable to find DataInfo Message (%u.%u) Port: %lx\n",
              PsGetCurrentProcess()->ImageFileName,
              MessageId,
              CallbackId,
@@ -354,7 +359,8 @@ NtReplyPort(IN HANDLE PortHandle,
     }
     _SEH2_END;
 
-    LPCTRACE(LPC_REPLY_DEBUG, "%s Sending Reply Message %lx (%u, %x) [%08x %08x %08x %08x] to Thread %lx (%s)\n",
+    LPCTRACE(LPC_REPLY_DEBUG,
+              "%s Sending Reply Message %lx (%u, %x) [%08x %08x %08x %08x] to Thread %lx (%s)\n",
               PsGetCurrentProcess()->ImageFileName,
               Message,
               CapturedReplyMessage.MessageId,
@@ -624,7 +630,8 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         }
         _SEH2_END;
 
-        LPCTRACE(LPC_REPLY_DEBUG, "%s Sending Reply Message %lx (%u.%u, %x) [%08x %08x %08x %08x] to Thread %lx (%s)\n",
+        LPCTRACE(LPC_REPLY_DEBUG,
+                  "%s Sending Reply Message %lx (%u.%u, %x) [%08x %08x %08x %08x] to Thread %lx (%s)\n",
                   PsGetCurrentProcess()->ImageFileName,
                   Message,
                   CapturedReplyMessage.MessageId,
@@ -786,7 +793,8 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         else
         {
             /* This is a reply message, should never happen! */
-            LPCTRACE(LPC_REPLY_DEBUG, "Bogus reply message (%08x) in receive queue for port %08x\n",
+            LPCTRACE(LPC_REPLY_DEBUG,
+                     "Bogus reply message (%08x) in receive queue for port %08x\n",
                      Message,
                      ReceivePort);
         }
@@ -854,13 +862,15 @@ NtReplyWaitReplyPort(IN HANDLE PortHandle,
     PETHREAD Thread = PsGetCurrentThread(), WakeupThread;
 
     PAGED_CODE();
-    LPCTRACE(LPC_REPLY_DEBUG, "%s Attempted reply wait reply (Handle: %p, Message: %p)\n",
-	         PsGetCurrentProcess()->ImageFileName,
-	         PortHandle,
+    LPCTRACE(LPC_REPLY_DEBUG,
+             "%s Attempted reply wait reply (Handle: %p, Message: %p)\n",
+             PsGetCurrentProcess()->ImageFileName,
+             PortHandle,
              ReplyMessage);
 
     /* Check if the call comes from user mode */
-    if (PreviousMode != KernelMode) {
+    if (PreviousMode != KernelMode)
+    {
         _SEH2_TRY
         {
             ProbeForRead(ReplyMessage, sizeof(*ReplyMessage), sizeof(ULONG));
@@ -968,7 +978,8 @@ NtReplyWaitReplyPort(IN HANDLE PortHandle,
     }
     _SEH2_END;
 
-    LPCTRACE(LPC_REPLY_DEBUG, "%s Sending Reply Wait Reply Msg %lx (%u, %x) [%08x %08x %08x %08x] to Thread %lx (%s)\n",
+    LPCTRACE(LPC_REPLY_DEBUG,
+                "%s Sending Reply Wait Reply Msg %lx (%u, %x) [%08x %08x %08x %08x] to Thread %lx (%s)\n",
                 PsGetCurrentProcess()->ImageFileName,
                 Message,
                 CapturedReplyMessage.MessageId,

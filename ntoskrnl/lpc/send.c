@@ -1066,7 +1066,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
 
         /* Generate the Callback ID and set it */
         Message->Request.CallbackId = LpcpNextCallbackId++;
-        if(!LpcpNextCallbackId) LpcpNextCallbackId = 1;
+        if (!LpcpNextCallbackId) LpcpNextCallbackId = 1;
 
         /* Reference the object */
         ObReferenceObject(WakeupThread);

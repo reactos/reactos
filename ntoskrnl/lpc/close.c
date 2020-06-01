@@ -45,7 +45,11 @@ LpcExitThread(IN PETHREAD Thread)
             ObDereferenceObject(Message->RepliedToThread);
             Message->RepliedToThread = NULL;
         }
-        LPCTRACE(LPC_CLOSE_DEBUG, "Cleanup Message %lx (%d) for Thread %lx allocated\n", Message, IsListEmpty(&Message->Entry), Thread);
+        LPCTRACE(LPC_CLOSE_DEBUG,
+                 "Cleanup Message %lx (%d) for Thread %lx allocated\n",
+                 Message,
+                 IsListEmpty(&Message->Entry),
+                 Thread);
         LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
     }
 
@@ -430,7 +434,13 @@ LpcpDeletePort(IN PVOID ObjectBody)
                       (Message->SenderPort == Port->ConnectedPort) ||
                       (Message->SenderPort == ConnectionPort)))
             {
-                LPCTRACE(LPC_CLOSE_DEBUG, "%s Freeing DataInfo Message %lx (%u.%u) Port: %lx\n", PsGetCurrentProcess()->ImageFileName, Message, Message->Request.MessageId, Message->Request.CallbackId, ConnectionPort);
+                LPCTRACE(LPC_CLOSE_DEBUG,
+                         "%s Freeing DataInfo Message %lx (%u.%u) Port: %lx\n",
+                         PsGetCurrentProcess()->ImageFileName,
+                         Message,
+                         Message->Request.MessageId,
+                         Message->Request.CallbackId,
+                         ConnectionPort);
                 /* Remove it */
                 RemoveEntryList(&Message->Entry);
                 InitializeListHead(&Message->Entry);
