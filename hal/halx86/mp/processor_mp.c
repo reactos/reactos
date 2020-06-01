@@ -134,7 +134,8 @@ VOID
 NTAPI
 HalProcessorIdle(VOID)
 {
-    UNIMPLEMENTED;
+    /* Enable interrupts */
+    _enable();
 }
 
 /* EOF */
