@@ -650,6 +650,7 @@ CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
                                         TRUE,
                                         TRUE,
                                         &OldValue);
+
             /* Use the Process token if that failed */
             if (Status == STATUS_NO_TOKEN)
             {
