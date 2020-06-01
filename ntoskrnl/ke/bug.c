@@ -706,6 +706,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     }
 }
 
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckWithTf(IN ULONG BugCheckCode,
@@ -1403,6 +1404,7 @@ KeDeregisterNmiCallback(IN PVOID Handle)
 /*
  * @implemented
  */
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckEx(IN ULONG BugCheckCode,
@@ -1423,6 +1425,7 @@ KeBugCheckEx(IN ULONG BugCheckCode,
 /*
  * @implemented
  */
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheck(ULONG BugCheckCode)
