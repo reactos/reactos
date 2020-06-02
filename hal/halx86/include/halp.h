@@ -223,6 +223,12 @@ INIT_FUNCTION VOID NTAPI HalpInitializeClock(VOID);
 VOID __cdecl HalpClockInterrupt(VOID);
 VOID __cdecl HalpProfileInterrupt(VOID);
 
+typedef struct _HALP_ROLLOVER
+{
+    ULONG RollOver;
+    ULONG Increment;
+} HALP_ROLLOVER, *PHALP_ROLLOVER;
+
 VOID
 NTAPI
 HalpCalibrateStallExecution(VOID);
