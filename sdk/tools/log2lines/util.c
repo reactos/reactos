@@ -117,18 +117,20 @@ basename(char *path)
     return path;
 }
 
-static
-const char *
-getFmt(const char *a)
+int
+isOffset(const char *a)
 {
     const char *fmt = "%x";
+    int i = 0;
+
+    if (strchr(a, '.'))
+        return 0;
 
     if (*a == '0')
     {
         switch (*++a)
         {
         case 'x':
-            fmt = "%x";
             ++a;
             break;
         case 'd':
@@ -137,19 +139,10 @@ getFmt(const char *a)
             break;
         default:
             fmt = "%o";
-            break;
         }
     }
-    return fmt;
-}
 
-int
-isOffset(const char *a)
-{
-    int i = 0;
-    if (strchr(a, '.'))
-        return 0;
-    return sscanf(a, getFmt(a), &i);
+    return sscanf(a, fmt, &i);
 }
 
 int
