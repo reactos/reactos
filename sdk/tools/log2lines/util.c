@@ -143,14 +143,6 @@ getFmt(const char *a)
     return fmt;
 }
 
-long
-my_atoi(const char *a)
-{
-    int i = 0;
-    sscanf(a, getFmt(a), &i);
-    return i;
-}
-
 int
 isOffset(const char *a)
 {
