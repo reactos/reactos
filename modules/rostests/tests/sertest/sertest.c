@@ -18,8 +18,6 @@ int main(int argc, char *argv[])
     BOOL bResult;
     HANDLE hPort;
     int i;
-    int j;
-    int k;
 	int nPortNum = 1;
 
 	TCHAR szPortName[MAX_PORTNAME_LEN];
@@ -56,9 +54,7 @@ int main(int argc, char *argv[])
     if (!bResult) {
         printf("WARNING: EscapeCommFunction(SETRTS) failed: %lx\n", (DWORD)bResult);
     }
-	for (j = 0; j < 1000; j++) {
-		k *= j;
-	}
+    Sleep(500);
 /*
 #define CLRDTR	(6)
 #define CLRRTS	(4)
