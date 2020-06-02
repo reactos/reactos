@@ -1818,7 +1818,4 @@ extern BOOLEAN PciEnableNativeModeATA;
 extern PPCI_IRQ_ROUTING_TABLE PciIrqRoutingTable;
 extern BOOLEAN PciRunningDatacenter;
 
-/* Exported by NTOS, should this go in the NDK? */
-extern NTSYSAPI BOOLEAN InitSafeBootMode;
-
 #endif /* _PCIX_PCH_ */

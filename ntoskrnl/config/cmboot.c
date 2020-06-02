@@ -13,10 +13,6 @@
 #define NDEBUG
 #include "debug.h"
 
-/* GLOBALS ********************************************************************/
-
-extern ULONG InitSafeBootMode;
-
 /* FUNCTIONS ******************************************************************/
 
 INIT_FUNCTION
