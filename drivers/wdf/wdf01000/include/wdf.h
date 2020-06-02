@@ -14,11 +14,8 @@
 #include "wdf19.h"
 #include "wdf111.h"
 
-#if defined(_MSC_VER)
-#define WDFNOTIMPLEMENTED() (DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, __FUNCTION__" not implemented\r\n"))
-#else
+
 #define WDFNOTIMPLEMENTED() (DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, "%s %s\r\n", __FUNCTION__, "not implemented"))
-#endif
 #define WDFTRACE() (DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, "%s %s:%d\r\n", __FUNCTION__, __FILE__, __LINE__))
 typedef USHORT WDFOBJECT_OFFSET, *PWDFOBJECT_OFFSET;
 
