@@ -31,8 +31,6 @@ static ERESOURCE ApphelpCacheLock;
 static RTL_AVL_TABLE ApphelpShimCache;
 static LIST_ENTRY ApphelpShimCacheAge;
 
-extern ULONG InitSafeBootMode;
-
 static UNICODE_STRING AppCompatCacheKey = RTL_CONSTANT_STRING(L"\\Registry\\MACHINE\\System\\CurrentControlSet\\Control\\Session Manager\\AppCompatCache");
 static OBJECT_ATTRIBUTES AppCompatKeyAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&AppCompatCacheKey, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE);
 static UNICODE_STRING AppCompatCacheValue = RTL_CONSTANT_STRING(L"AppCompatCache");

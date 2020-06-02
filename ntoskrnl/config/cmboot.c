@@ -45,8 +45,6 @@ DBG_DEFAULT_CHANNEL(REGISTRY);
 /* FUNCTIONS ******************************************************************/
 
 // HACK: This is part of non-NT-compatible SafeBoot support in kernel.
-extern ULONG InitSafeBootMode;
-
 CODE_SEG("INIT")
 static
 BOOLEAN
