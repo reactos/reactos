@@ -72,6 +72,11 @@ extern POBJECT_TYPE NTSYSAPI ExTimerType;
 extern ULONG NTSYSAPI NtBuildNumber;
 
 //
+// Exported NT Safe Boot Mode
+//
+extern ULONG NTSYSAPI InitSafeBootMode;
+
+//
 // Invalid Handle Value Constant
 //
 #define INVALID_HANDLE_VALUE                (HANDLE)-1

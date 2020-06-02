@@ -15,7 +15,6 @@
 
 BOOLEAN CmBootAcceptFirstTime = TRUE;
 BOOLEAN CmFirstTime = TRUE;
-extern ULONG InitSafeBootMode;
 
 
 /* PRIVATE FUNCTIONS *********************************************************/

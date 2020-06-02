@@ -2128,7 +2128,4 @@ extern RTL_RANGE_LIST PciVgaAndIsaBitExclusionList;
 extern PCI_DEBUGGING_DEVICE PciDebuggingDevices[MAX_DEBUGGING_DEVICES_SUPPORTED];
 extern ULONG PciDebugPortsCount;
 
-/* Exported by NTOS, should this go in the NDK? */
-extern NTSYSAPI BOOLEAN InitSafeBootMode;
-
 #endif /* _PCIX_PCH_ */
