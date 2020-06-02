@@ -45,5 +45,10 @@ set(NEWSPRINTF FALSE CACHE BOOL
 "Whether to compile the new sprintf.")
 
 if(MSVC)
-    option(RUNTIME_CHECKS "Whether to enable runtime checks on MSVC" ON)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        option(RUNTIME_CHECKS "Whether to enable runtime checks on MSVC" ON)
+    else()
+        # RTC are incompatible with compiler optimizations.
+        set(RUNTIME_CHECKS FALSE CACHE BOOL "Whether to enable runtime checks on MSVC")
+    endif()
 endif()
