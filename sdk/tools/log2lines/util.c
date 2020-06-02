@@ -117,6 +117,7 @@ basename(char *path)
     return path;
 }
 
+static
 const char *
 getFmt(const char *a)
 {
