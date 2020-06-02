@@ -251,7 +251,7 @@ IDR_OSK_MENU MENU DISCARDABLE
 BEGIN
     POPUP "Datei"
     BEGIN
-        MENUITEM "&Beenden", IDM_EXIT
+        MENUITEM "B&eenden", IDM_EXIT
     END
 
     POPUP "Tastatur"
@@ -271,7 +271,7 @@ BEGIN
     BEGIN
         MENUITEM "Immer im Vordergrund", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "&Benutze Klick-ton", IDM_CLICK_SOUND
+        MENUITEM "Klick-Ton ben&utzen", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&Typing Mode...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
@@ -293,8 +293,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
     ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "Bildschirmtastatur stellt ein mindestmaß an Funktionalität für verhinderte Nutzer zur Verfügung. Solche Benutzer werden ein Program mit größerem Funktionsumfang brauchen für den täglichen Gebrauch.", IDC_STATIC, 36, 7, 207, 33
-    CONTROL "Zeige diese Nachricht nicht mehr", IDC_SHOWWARNINGCHECK, "Button",
+    LTEXT "Bildschirmtastatur stellt ein mindestmaß an Funktionalität für eingeschränkte Nutzer zur Verfügung. Diese Benutzer werden, für den täglichen Gebrauch, ein Program mit größerem Funktionsumfang brauchen.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "Diese Nachricht nicht mehr anzeigen.", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 
