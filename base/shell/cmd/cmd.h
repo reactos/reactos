@@ -95,14 +95,31 @@ ExecuteCommandWithEcho(
 LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
-BOOL SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim);
+
+BOOL
+SubstituteVar(
+    IN PCTSTR Src,
+    OUT size_t* SrcIncLen, // VarNameLen
+    OUT PTCHAR Dest,
+    IN PTCHAR DestEnd,
+    OUT size_t* DestIncLen,
+    IN TCHAR Delim);
+
+BOOL
+SubstituteVars(
+    IN PCTSTR Src,
+    OUT PTSTR Dest,
+    IN TCHAR Delim);
 
 BOOL
 SubstituteForVars(
     IN PCTSTR Src,
     OUT PTSTR Dest);
 
-LPTSTR DoDelayedExpansion(LPTSTR Line);
+PTSTR
+DoDelayedExpansion(
+    IN PCTSTR Line);
+
 INT DoCommand(LPTSTR first, LPTSTR rest, struct _PARSED_COMMAND *Cmd);
 BOOL ReadLine(TCHAR *commandline, BOOL bMore);
 

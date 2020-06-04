@@ -1318,32 +1318,52 @@ GetBatchVar(
 }
 
 BOOL
-SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
+SubstituteVar(
+    IN PCTSTR Src,
+    OUT size_t* SrcIncLen, // VarNameLen
+    OUT PTCHAR Dest,
+    IN PTCHAR DestEnd,
+    OUT size_t* DestIncLen,
+    IN TCHAR Delim)
 {
-#define APPEND(From, Length) { \
+#define APPEND(From, Length) \
+do { \
     if (Dest + (Length) > DestEnd) \
         goto too_long; \
-    memcpy(Dest, From, (Length) * sizeof(TCHAR)); \
-    Dest += Length; }
-#define APPEND1(Char) { \
+    memcpy(Dest, (From), (Length) * sizeof(TCHAR)); \
+    Dest += (Length); \
+} while (0)
+
+#define APPEND1(Char) \
+do { \
     if (Dest >= DestEnd) \
         goto too_long; \
-    *Dest++ = Char; }
+    *Dest++ = (Char); \
+} while (0)
 
-    TCHAR *DestEnd = Dest + CMDLINE_LENGTH - 1;
-    const TCHAR *Var;
-    int VarLength;
-    TCHAR *SubstStart;
+    PCTSTR Var;
+    PCTSTR Start, End, SubstStart;
     TCHAR EndChr;
-    while (*Src)
-    {
-        if (*Src != Delim)
-        {
-            APPEND1(*Src++)
-            continue;
-        }
+    size_t VarLength;
 
-        Src++;
+    Start = Src;
+    End = Dest;
+    *SrcIncLen = 0;
+    *DestIncLen = 0;
+
+    if (!Delim)
+        return FALSE;
+    if (*Src != Delim)
+        return FALSE;
+
+    ++Src;
+
+    /* If we are already at the end of the string, fail the substitution */
+    SubstStart = Src;
+    if (!*Src || *Src == _T('\r') || *Src == _T('\n'))
+        goto bad_subst;
+
+    {
         if (bc && Delim == _T('%'))
         {
             UINT NameLen;
@@ -1353,15 +1373,15 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
                 /* Return the partially-parsed command to be
                  * echoed for error diagnostics purposes. */
                 APPEND1(Delim);
-                APPEND(Src, DestEnd-Dest);
+                APPEND(Src, _tcslen(Src) + 1);
                 return FALSE;
             }
             if (Var != NULL)
             {
                 VarLength = _tcslen(Var);
-                APPEND(Var, VarLength)
+                APPEND(Var, VarLength);
                 Src += NameLen;
-                continue;
+                goto success;
             }
         }
 
@@ -1369,22 +1389,25 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
          * end the name and begin the optional modifier, but not if it
          * is immediately followed by the delimiter (%VAR:%). */
         SubstStart = Src;
-        while (*Src != Delim && !(*Src == _T(':') && Src[1] != Delim))
+        while (*Src && *Src != Delim && !(*Src == _T(':') && Src[1] != Delim))
         {
-            if (!*Src)
-                goto bad_subst;
-            Src++;
+            ++Src;
         }
+        /* If we are either at the end of the string, or the delimiter
+         * has been repeated more than once, fail the substitution. */
+        if (!*Src || Src == SubstStart)
+            goto bad_subst;
 
         EndChr = *Src;
-        *Src = _T('\0');
+        *(PTSTR)Src = _T('\0'); // FIXME: HACK!
         Var = GetEnvVarOrSpecial(SubstStart);
-        *Src++ = EndChr;
+        *(PTSTR)Src++ = EndChr;
         if (Var == NULL)
         {
-            /* In a batch file, %NONEXISTENT% "expands" to an empty string */
+            /* In a batch context, %NONEXISTENT% "expands" to an
+             * empty string, otherwise fail the substitution. */
             if (bc)
-                continue;
+                goto success;
             goto bad_subst;
         }
         VarLength = _tcslen(Var);
@@ -1392,21 +1415,22 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
         if (EndChr == Delim)
         {
             /* %VAR% - use as-is */
-            APPEND(Var, VarLength)
+            APPEND(Var, VarLength);
         }
         else if (*Src == _T('~'))
         {
             /* %VAR:~[start][,length]% - substring
-             * Negative values are offsets from the end */
-            int Start = _tcstol(Src + 1, &Src, 0);
-            int End = VarLength;
+             * Negative values are offsets from the end.
+             */
+            size_t Start = _tcstol(Src + 1, (PTSTR*)&Src, 0);
+            size_t End = VarLength;
             if (Start < 0)
                 Start += VarLength;
             Start = max(Start, 0);
             Start = min(Start, VarLength);
             if (*Src == _T(','))
             {
-                End = _tcstol(Src + 1, &Src, 0);
+                End = _tcstol(Src + 1, (PTSTR*)&Src, 0);
                 End += (End < 0) ? VarLength : Start;
                 End = max(End, Start);
                 End = min(End, VarLength);
@@ -1417,13 +1441,14 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
         }
         else
         {
-            /* %VAR:old=new% - replace all occurrences of old with new
-             * %VAR:*old=new% - replace first occurrence only,
-             *                  and remove everything before it */
-            TCHAR *Old, *New;
-            DWORD OldLength, NewLength;
+            /* %VAR:old=new%  - Replace all occurrences of old with new.
+             * %VAR:*old=new% - Replace first occurrence only,
+             *                  and remove everything before it.
+             */
+            PCTSTR Old, New;
+            size_t OldLength, NewLength;
             BOOL Star = FALSE;
-            int LastMatch = 0, i = 0;
+            size_t LastMatch = 0, i = 0;
 
             if (*Src == _T('*'))
             {
@@ -1431,7 +1456,7 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
                 Src++;
             }
 
-            /* the string to replace may contain the delimiter */
+            /* The string to replace may contain the delimiter */
             Src = _tcschr(Old = Src, _T('='));
             if (Src == NULL)
                 goto bad_subst;
@@ -1449,8 +1474,8 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
                 if (_tcsnicmp(&Var[i], Old, OldLength) == 0)
                 {
                     if (!Star)
-                        APPEND(&Var[LastMatch], i - LastMatch)
-                    APPEND(New, NewLength)
+                        APPEND(&Var[LastMatch], i - LastMatch);
+                    APPEND(New, NewLength);
                     i += OldLength;
                     LastMatch = i;
                     if (Star)
@@ -1459,21 +1484,87 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
                 }
                 i++;
             }
-            APPEND(&Var[LastMatch], VarLength - LastMatch)
+            APPEND(&Var[LastMatch], VarLength - LastMatch);
         }
-        continue;
+
+        goto success;
 
     bad_subst:
         Src = SubstStart;
+        /* Only if no batch context active do we echo the delimiter */
         if (!bc)
-            APPEND1(Delim)
+            APPEND1(Delim);
     }
-    *Dest = _T('\0');
+
+success:
+    *SrcIncLen = (Src - Start);
+    *DestIncLen = (Dest - End);
     return TRUE;
+
 too_long:
     ConOutResPrintf(STRING_ALIAS_ERROR);
     nErrorLevel = 9023;
     return FALSE;
+
+#undef APPEND
+#undef APPEND1
+}
+
+BOOL
+SubstituteVars(
+    IN PCTSTR Src,
+    OUT PTSTR Dest,
+    IN TCHAR Delim)
+{
+#define APPEND(From, Length) \
+do { \
+    if (Dest + (Length) > DestEnd) \
+        goto too_long; \
+    memcpy(Dest, (From), (Length) * sizeof(TCHAR)); \
+    Dest += (Length); \
+} while (0)
+
+#define APPEND1(Char) \
+do { \
+    if (Dest >= DestEnd) \
+        goto too_long; \
+    *Dest++ = (Char); \
+} while (0)
+
+    PTCHAR DestEnd = Dest + CMDLINE_LENGTH - 1;
+    PCTSTR End;
+    size_t SrcIncLen, DestIncLen;
+
+    while (*Src /* && (Dest < DestEnd) */)
+    {
+        if (*Src != Delim)
+        {
+            End = _tcschr(Src, Delim);
+            if (End == NULL)
+                End = Src + _tcslen(Src);
+            APPEND(Src, End - Src);
+            Src = End;
+            continue;
+        }
+
+        if (!SubstituteVar(Src, &SrcIncLen, Dest, DestEnd, &DestIncLen, Delim))
+        {
+            return FALSE;
+        }
+        else
+        {
+            Src += SrcIncLen;
+            Dest += DestIncLen;
+        }
+    }
+    APPEND1(_T('\0'));
+    return TRUE;
+
+too_long:
+    ConOutResPrintf(STRING_ALIAS_ERROR);
+    nErrorLevel = 9023;
+    return FALSE;
+
 #undef APPEND
 #undef APPEND1
 }
@@ -1545,11 +1636,15 @@ SubstituteForVars(
     return TRUE;
 }
 
-LPTSTR
-DoDelayedExpansion(LPTSTR Line)
+PTSTR
+DoDelayedExpansion(
+    IN PCTSTR Line)
 {
     TCHAR Buf1[CMDLINE_LENGTH];
     TCHAR Buf2[CMDLINE_LENGTH];
+    PTCHAR Src, Dst;
+    PTCHAR DestEnd = Buf2 + CMDLINE_LENGTH - 1;
+    size_t SrcIncLen, DestIncLen;
 
     /* First, substitute FOR variables */
     if (!SubstituteForVars(Line, Buf1))
@@ -1558,12 +1653,64 @@ DoDelayedExpansion(LPTSTR Line)
     if (!bDelayedExpansion || !_tcschr(Buf1, _T('!')))
         return cmd_dup(Buf1);
 
-    /* FIXME: Delayed substitutions actually aren't quite the same as
-     * immediate substitutions. In particular, it's possible to escape
-     * the exclamation point using ^. */
-    if (!SubstituteVars(Buf1, Buf2, _T('!')))
-        return NULL;
+    /*
+     * Delayed substitutions are not actually completely the same as
+     * immediate substitutions. In particular, it is possible to escape
+     * the exclamation point using the escape caret.
+     */
+
+    /*
+     * Perform delayed expansion: expand variables around '!',
+     * and reparse escape carets.
+     */
+
+#define APPEND1(Char) \
+do { \
+    if (Dst >= DestEnd) \
+        goto too_long; \
+    *Dst++ = (Char); \
+} while (0)
+
+    Src = Buf1;
+    Dst = Buf2;
+    while (*Src && (Src < &Buf1[CMDLINE_LENGTH]))
+    {
+        if (*Src == _T('^'))
+        {
+            ++Src;
+            if (!*Src || !(Src < &Buf1[CMDLINE_LENGTH]))
+                break;
+
+            APPEND1(*Src++);
+        }
+        else if (*Src == _T('!'))
+        {
+            if (!SubstituteVar(Src, &SrcIncLen, Dst, DestEnd, &DestIncLen, _T('!')))
+            {
+                return NULL; // Got an error during parsing.
+            }
+            else
+            {
+                Src += SrcIncLen;
+                Dst += DestIncLen;
+            }
+        }
+        else
+        {
+            APPEND1(*Src++);
+        }
+        continue;
+    }
+    APPEND1(_T('\0'));
+
     return cmd_dup(Buf2);
+
+too_long:
+    ConOutResPrintf(STRING_ALIAS_ERROR);
+    nErrorLevel = 9023;
+    return NULL;
+
+#undef APPEND1
 }
 
 
