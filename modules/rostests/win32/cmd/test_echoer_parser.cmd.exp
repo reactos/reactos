@@ -135,4 +135,191 @@ better2
 @pwd@>(a)@space@
 
 @pwd@>(a b )@space@
+--------- Testing Delayed Expansion ---------
+This is ReactOS! (an open-source operating system)
+Hello
+Hello
+Hello
+Hello! "!"
+"Hello^World"
+"HelloWorld"
+first second
+[Hello Developer how are you]
+[1]
+[2]
+[3]
+[4]
+Total = 4
+lol2
+lol4
+lol6
+lol8
+lol10
+OHLALA
+
+@pwd@>setlocal disabledelayedexpansion@space@
+
+@pwd@>echo @pwd@\@space@
+@pwd@\
+
+@pwd@>set test=abc@space@
+
+@pwd@>set abc=def@space@
+
+@pwd@>echo@space@@space@
+ECHO is on.
+
+@pwd@>echo %@space@
+%
+
+@pwd@>echo %@space@
+%
+
+@pwd@>echo %%@space@
+%%
+
+@pwd@>echo abc@space@
+abc
+
+@pwd@>echo abc@space@
+abc
+
+@pwd@>echo %test@space@
+%test
+
+@pwd@>echo %test%@space@
+%test%
+
+@pwd@>echo %abc%@space@
+%abc%
+
+@pwd@>echo !test!@space@
+!test!
+
+@pwd@>echo !!test!!@space@
+!!test!!
+
+@pwd@>endlocal
+
+@pwd@>setlocal enabledelayedexpansion@space@
+
+@pwd@>echo !@space@
+ECHO is on.
+
+@pwd@>echo !!@space@
+ECHO is on.
+
+@pwd@>echo !!!@space@
+ECHO is on.
+
+@pwd@>echo !!!!@space@
+ECHO is on.
+
+@pwd@>echo !a!@space@
+ECHO is on.
+
+@pwd@>echo !!a!!@space@
+ECHO is on.
+
+@pwd@>set a=b@space@
+
+@pwd@>echo !!a!!@space@
+b
+
+@pwd@>set b=c@space@
+
+@pwd@>echo !!a!!@space@
+b
+
+@pwd@>echo@space@@space@
+ECHO is on.
+
+@pwd@>echo@space@@space@
+ECHO is on.
+
+@pwd@>echo %test@space@
+%test
+
+@pwd@>echo %test%@space@
+%test%
+
+@pwd@>echo %%@space@
+%%
+
+@pwd@>echo@space@@space@
+ECHO is on.
+
+@pwd@>echo !!@space@
+ECHO is on.
+
+@pwd@>echo !!test!!@space@
+ECHO is on.
+
+@pwd@>echo !!test!!@space@
+ECHO is on.
+
+@pwd@>echo !^!test^!!@space@
+test!
+
+@pwd@>echo !test!@space@
+ECHO is on.
+
+@pwd@>echo !test!!@space@
+ECHO is on.
+
+@pwd@>echo !!test!@space@
+ECHO is on.
+
+@pwd@>echo !!test!!@space@
+ECHO is on.
+
+@pwd@>echo !!!test!!!@space@
+ECHO is on.
+
+@pwd@>set proj=XYZ@space@
+
+@pwd@>echo !XYZ_folder!@space@
+ECHO is on.
+
+@pwd@>echo !!proj!_folder!@space@
+XYZ_folder
+
+@pwd@>set XYZ_folder=\\server\folder\@space@
+
+@pwd@>echo !XYZ_folder!@space@
+\\server\folder\
+
+@pwd@>echo !!proj!_folder!@space@
+XYZ_folder
+
+@pwd@>if 1 == 1 (
+set "pc=T"@space@@space@
+ echo pc == !pc!@space@@space@
+ set i=3@space@@space@
+ set "!pc!!i!=5"@space@@space@
+ echo other pc == !pc! and !pc!!i! == !!pc!!i!!@space@@space@
+ echo other pc == !pc! and !pc!!i! == !!pc!!i!!@space@@space@
+ echo other pc == !pc! and !pc!!i! == !!pc!!i!!@space@@space@
+ echo other pc == !pc! and !pc!!i! == !!pc!!i!!@space@@space@
+ set "trol=!pc!!i!"@space@@space@
+ echo the var was !trol!@space@@space@
+ set "!pc!N=!i!"@space@@space@
+ echo updated !pc!N == !!pc!N!@space@@space@
+ echo updated !pc!N == !!pc!N!@space@@space@
+ echo updated !pc!N == !!pc!N!@space@@space@
+ echo updated !pc!N == !!pc!N!@space@@space@
+ set "trol=!pc!N"@space@@space@
+ echo updated !pc!N == !trol!@space@
+)@space@
+pc == T
+other pc == T and T3 == T3
+other pc == T and T3 == T3
+other pc == T and T3 == T3
+other pc == T and T3 == T3
+the var was T3
+updated TN == TN
+updated TN == TN
+updated TN == TN
+updated TN == TN
+updated TN == TN
 --------- Finished  --------------
