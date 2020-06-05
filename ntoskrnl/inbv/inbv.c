@@ -1149,7 +1149,7 @@ VOID
 NTAPI
 DisplayBootBitmap(IN BOOLEAN TextMode)
 {
-    PVOID BootCopy = NULL, BootLogo = NULL, Header = NULL, Footer = NULL;
+    PVOID BootLogo = NULL, Header = NULL, Footer = NULL;
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
     UCHAR Buffer[24 * 9];
@@ -1336,17 +1336,6 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             }
 #endif
         }
-
-        /* Load and draw copyright text bitmap */
-        BootCopy = InbvGetResourceAddress(IDB_COPYRIGHT);
-        InbvBitBltAligned(BootCopy,
-                      TRUE,
-                      VID_BOOTCOPY_HALIGNMENT,
-                      VID_BOOTCOPY_VALIGNMENT,
-                      VID_BOOTCOPY_MARGIN_LEFT,
-                      VID_BOOTCOPY_MARGIN_TOP,
-                      VID_BOOTCOPY_MARGIN_RIGHT,
-                      VID_BOOTCOPY_MARGIN_BOTTOM);
 
 #ifdef REACTOS_SKUS
         /* Draw the SKU text if it exits */
