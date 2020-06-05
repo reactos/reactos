@@ -7,6 +7,9 @@
 
 #include "misc.h"
 
+
+#define MAX_SNAPSHOT_NUM 16
+
 enum LicenseType
 {
     LICENSE_NONE,
@@ -22,6 +25,18 @@ inline BOOL IsLicenseType(INT x)
     return (x >= LICENSE_MIN && x <= LICENSE_MAX);
 }
 
+struct AvailableStrings
+{
+    ATL::CStringW szPath;
+    ATL::CStringW szCabPath;
+    ATL::CStringW szAppsPath;
+    ATL::CStringW szSearchPath;
+    ATL::CStringW szCabName;
+    ATL::CStringW szCabDir;
+
+    AvailableStrings();
+};
+
 struct CAvailableApplicationInfo
 {
     INT m_Category;
@@ -36,6 +51,8 @@ struct CAvailableApplicationInfo
     ATL::CStringW m_szUrlSite;
     ATL::CStringW m_szUrlDownload;
     ATL::CSimpleArray<LCID> m_LanguageLCIDs;
+    ATL::CStringW m_szSnapshotFilename[MAX_SNAPSHOT_NUM];
+
     ULONG m_SizeBytes;
 
     // Caching mechanism related entries
@@ -47,17 +64,17 @@ struct CAvailableApplicationInfo
     ATL::CStringW m_szInstalledVersion;
 
     // Create an object from file
-    CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam);
+    CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings m_Strings);
 
     // Load all info from the file
-    VOID RefreshAppInfo();
+    VOID RefreshAppInfo(AvailableStrings m_Strings);
     BOOL HasLanguageInfo() const;
     BOOL HasNativeLanguage() const;
     BOOL HasEnglishLanguage() const;
     BOOL IsInstalled() const;
     BOOL HasInstalledVersion() const;
     BOOL HasUpdate() const;
-
+    BOOL RetrieveSnapshot(int Index, ATL::CStringW& SnapshotFileName) const;
     // Set a timestamp
     VOID SetLastWriteTime(FILETIME* ftTime);
 
@@ -70,7 +87,7 @@ private:
     inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString);
 
     // Lazily load general info from the file
-    VOID RetrieveGeneralInfo();
+    VOID RetrieveGeneralInfo(AvailableStrings m_Strings);
     VOID RetrieveInstalledStatus();
     VOID RetrieveInstalledVersion();
     VOID RetrieveLanguages();
@@ -80,18 +97,6 @@ private:
 };
 
 typedef BOOL(CALLBACK *AVAILENUMPROC)(CAvailableApplicationInfo *Info, LPCWSTR szFolderPath, PVOID param);
-
-struct AvailableStrings
-{
-    ATL::CStringW szPath;
-    ATL::CStringW szCabPath;
-    ATL::CStringW szAppsPath;
-    ATL::CStringW szSearchPath;
-    ATL::CStringW szCabName;
-    ATL::CStringW szCabDir;
-
-    AvailableStrings();
-};
 
 class CAvailableApps
 {

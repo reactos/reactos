@@ -13,6 +13,8 @@
 
 #include <atlcom.h>
 
+#include<gdiplus.h>
+
 HWND hMainWnd;
 HINSTANCE hInst;
 SETTINGS_INFO SettingsInfo;
@@ -28,6 +30,10 @@ END_OBJECT_MAP()
 CRAppsModule gModule;
 CAtlWinModule gWinModule;
 
+Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+ULONG_PTR           gdiplusToken;
+
+
 static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 {
     if (bInitialize)
@@ -37,6 +43,18 @@ static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
     else
     {
         gModule.Term();
+    }
+}
+
+VOID InitializeGDIPlus(BOOL bInitialize)
+{
+    if (bInitialize)
+    {
+        Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+    }
+    else
+    {
+        Gdiplus::GdiplusShutdown(gdiplusToken);
     }
 }
 
@@ -129,6 +147,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     BOOL bIsFirstLaunch;
 
     InitializeAtlModule(hInstance, TRUE);
+    InitializeGDIPlus(TRUE);
 
     if (GetUserDefaultUILanguage() == MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT))
     {
@@ -169,6 +188,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     if (hMutex)
         CloseHandle(hMutex);
 
+    InitializeGDIPlus(FALSE);
     InitializeAtlModule(hInstance, FALSE);
 
     return 0;

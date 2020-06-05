@@ -21,10 +21,27 @@
 #include <wininet.h>
 #include <shellutils.h>
 #include <rosctrls.h>
+#include <gdiplus.h>
+#include <math.h>
+
+using namespace Gdiplus;
 
 #define SEARCH_TIMER_ID 'SR'
 #define LISTVIEW_ICON_SIZE 24
 #define TREEVIEW_ICON_SIZE 24
+
+#define SNPSHTPREV_EMPTY    0 // show nothing
+#define SNPSHTPREV_LOADING  1 // image is loading (most likely downloading)
+#define SNPSHTPREV_FILE     2 // display image from a file
+#define SNPSHTPREV_FAILED   3 // image can not be shown (download failure or wrong image)
+
+#define TIMER_LOADING_ANIMATION 1 // Timer ID
+
+#define LOADING_ANIMATION_PERIOD 3 // Animation cycling period (in seconds)
+#define LOADING_ANIMATION_FPS 18 // Animation Frame Per Second
+
+
+#define PI 3.1415927
 
 INT GetSystemColorDepth()
 {
@@ -257,6 +274,250 @@ public:
     }
 };
 
+class CAppSnapshotPreview :
+    public CWindowImpl<CAppSnapshotPreview>
+{
+private:
+
+
+    UINT SnpshtPrevStauts = SNPSHTPREV_EMPTY;
+
+    Image* pImage = NULL;
+
+    int LoadingAnimationFrame;
+
+    BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
+    {
+        theResult = 0;
+        switch (Msg)
+        {
+        case WM_CREATE:
+            break;
+        case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(&ps);
+            RECT rect;
+            GetClientRect(&rect);
+
+            PaintOnDC(hdc,
+                rect.right - rect.left,
+                rect.bottom - rect.top,
+                ps.fErase);
+
+            EndPaint(&ps);
+            break;
+        }
+        case WM_ERASEBKGND:
+        {
+            return TRUE; // do not erase to avoid blinking
+        }
+        case WM_TIMER:
+        {
+            switch (wParam)
+            {
+            case TIMER_LOADING_ANIMATION:
+                LoadingAnimationFrame++;
+                LoadingAnimationFrame %= (LOADING_ANIMATION_PERIOD * LOADING_ANIMATION_FPS);
+                HDC hdc = GetDC();
+                RECT rect;
+                GetClientRect(&rect);
+
+                PaintOnDC(hdc,
+                    rect.right - rect.left,
+                    rect.bottom - rect.top,
+                    TRUE);
+                ReleaseDC(hdc);
+            }
+            break;
+        }
+        }
+        return FALSE;
+    }
+
+    VOID SetStatus(UINT Status)
+    {
+        SnpshtPrevStauts = Status;
+    }
+
+    VOID PaintOnDC(HDC hdc, int width, int height, BOOL bDrawBkgnd)
+    {
+        if (bDrawBkgnd)
+        {
+            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, (HGDIOBJ)GetSysColorBrush(COLOR_BTNFACE));
+            PatBlt(hdc, 0, 0, width, height, PATCOPY);
+            SelectObject(hdc, hOldBrush);
+        }
+
+        switch (SnpshtPrevStauts)
+        {
+        case SNPSHTPREV_EMPTY:
+        {
+
+        }
+        break;
+
+        case SNPSHTPREV_LOADING:
+        {
+
+
+            Graphics graphics(hdc);
+            Color color(255, 0, 0);
+            SolidBrush dotBrush(Color(255, 100, 100, 100));
+
+            graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
+
+            // Paint three dot
+            float DotWidth = GetLoadingDotWidth(width, height);
+            graphics.FillEllipse((Brush*)(&dotBrush),
+                (REAL)width / 2.0 - min(width, height) * 2.0 / 16.0 - DotWidth / 2.0,
+                (REAL)height / 2.0 - GetFrameDotShift(LoadingAnimationFrame + LOADING_ANIMATION_FPS / 4, width, height) - DotWidth / 2.0,
+                DotWidth,
+                DotWidth);
+
+            graphics.FillEllipse((Brush*)(&dotBrush),
+                (REAL)width / 2.0 - DotWidth / 2.0,
+                (REAL)height / 2.0 - GetFrameDotShift(LoadingAnimationFrame, width, height) - DotWidth / 2.0,
+                DotWidth,
+                DotWidth);
+
+            graphics.FillEllipse((Brush*)(&dotBrush),
+                (REAL)width / 2.0 + min(width, height) * 2.0 / 16.0 - DotWidth / 2.0,
+                (REAL)height / 2.0 - GetFrameDotShift(LoadingAnimationFrame - LOADING_ANIMATION_FPS / 4, width, height) - DotWidth / 2.0,
+                DotWidth,
+                DotWidth);
+
+        }
+        break;
+
+        case SNPSHTPREV_FILE:
+        {
+            if (pImage)
+            {
+                Graphics graphics(hdc);
+                graphics.DrawImage(pImage, 0, 0, width, height);
+            }
+        }
+        break;
+
+        case SNPSHTPREV_FAILED:
+        {
+        }
+        break;
+        }
+    }
+
+    float GetLoadingDotWidth(int width, int height)
+    {
+        return min(width, height) / 20.0;
+    }
+
+    float GetFrameDotShift(int Frame, int width, int height)
+    {
+        return min(width, height) *
+            (1.0 / 16.0) *
+            (2.0 / (2.0 - sqrt(3.0))) *
+            (max(sin((float)Frame * 2 * PI / (LOADING_ANIMATION_PERIOD * LOADING_ANIMATION_FPS)), sqrt(3.0) / 2.0) - sqrt(3.0) / 2.0);
+    }
+
+public:
+    static ATL::CWndClassInfo& GetWndClassInfo()
+    {
+        DWORD csStyle = CS_VREDRAW | CS_HREDRAW;
+        static ATL::CWndClassInfo wc =
+        {
+            {
+                sizeof(WNDCLASSEX),
+                csStyle,
+                StartWindowProc,
+                0,
+                0,
+                NULL,
+                0,
+                LoadCursorW(NULL, IDC_ARROW),
+                (HBRUSH)(COLOR_BTNFACE + 1),
+                0,
+                L"RAppsSnapshotPreview",
+                NULL
+            },
+            NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
+        };
+        return wc;
+    }
+
+    HWND Create(HWND hParent)
+    {
+        RECT r = { 0,0,0,0 };
+
+        return CWindowImpl::Create(hParent, r, L"", WS_CHILD | WS_VISIBLE);
+    }
+
+    VOID PreviousDisplayCleanup()
+    {
+        KillTimer(TIMER_LOADING_ANIMATION);
+        LoadingAnimationFrame = 0;
+        if (pImage)
+        {
+            delete pImage;
+            pImage = NULL;
+        }
+    }
+
+    VOID DisplayEmpty()
+    {
+        SetStatus(SNPSHTPREV_EMPTY);
+        PreviousDisplayCleanup();
+    }
+
+    VOID DisplayLoading()
+    {
+        SetStatus(SNPSHTPREV_LOADING);
+        PreviousDisplayCleanup();
+        SetTimer(TIMER_LOADING_ANIMATION, 1000 / LOADING_ANIMATION_FPS, 0);
+
+    }
+
+    VOID DisplayFile(LPCWSTR lpszFileName)
+    {
+        SetStatus(SNPSHTPREV_FILE);
+        PreviousDisplayCleanup();
+        pImage = Bitmap::FromFile(lpszFileName, 0);
+
+    }
+
+    VOID DisplayFailed()
+    {
+        SetStatus(SNPSHTPREV_FAILED);
+        PreviousDisplayCleanup();
+    }
+
+    int GetRequestedWidth(int Height) // calculate requested window width by given height
+    {
+        switch (SnpshtPrevStauts)
+        {
+        case SNPSHTPREV_EMPTY:
+            return 0;
+        case SNPSHTPREV_LOADING:
+            return 200;
+        case SNPSHTPREV_FILE:
+            if (pImage)
+            {
+                return Height * pImage->GetWidth() / pImage->GetHeight();
+            }
+            return 0;
+        case SNPSHTPREV_FAILED:
+            return 0;
+        default:
+            return 0;
+        }
+    }
+
+    ~CAppSnapshotPreview()
+    {
+        PreviousDisplayCleanup();
+    }
+};
+
 class CAppInfoDisplay :
     public CUiWindow<CWindowImpl<CAppInfoDisplay>>
 {
@@ -272,16 +533,20 @@ private:
         {
             RichEdit = new CAppRichEdit();
             RichEdit->Create(hwnd);
+
+            SnpshtPrev = new CAppSnapshotPreview();
+            SnpshtPrev->Create(hwnd);
+
+            SnpshtPrev->DisplayEmpty();
             break;
         }
         case WM_SIZE:
         {
-            ::MoveWindow(RichEdit->m_hWnd, 0, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), TRUE);
+            ResizeChildren(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             break;
         }
         case WM_COMMAND:
         {
-
             OnCommand(wParam, lParam);
             break;
         }
@@ -304,9 +569,17 @@ private:
         return FALSE;
     }
 
+    VOID ResizeChildren(int Width, int Height)
+    {
+        int SnpshtWidth = SnpshtPrev->GetRequestedWidth(Height);
+        ::MoveWindow(SnpshtPrev->m_hWnd, 0, 0, SnpshtWidth, Height, TRUE);
+        ::MoveWindow(RichEdit->m_hWnd, SnpshtWidth, 0, Width - SnpshtWidth, Height, TRUE);
+    }
+
 public:
 
     CAppRichEdit * RichEdit;
+    CAppSnapshotPreview * SnpshtPrev;
 
     static ATL::CWndClassInfo& GetWndClassInfo()
     {
@@ -341,16 +614,37 @@ public:
 
     BOOL ShowAvailableAppInfo(CAvailableApplicationInfo* Info)
     {
+        ATL::CStringW SnapshotFilename;
+        if (Info->RetrieveSnapshot(0, SnapshotFilename))
+        {
+            SnpshtPrev->DisplayFile(SnapshotFilename);
+        }
+        else
+        {
+            SnpshtPrev->DisplayEmpty();
+        }
+        
+        RECT rect;
+        GetWindowRect(&rect);
+        ResizeChildren(rect.right - rect.left, rect.bottom - rect.top);
         return RichEdit->ShowAvailableAppInfo(Info);
     }
 
     BOOL ShowInstalledAppInfo(PINSTALLED_INFO Info)
     {
+        SnpshtPrev->DisplayEmpty();
+        RECT rect;
+        GetWindowRect(&rect);
+        ResizeChildren(rect.right - rect.left, rect.bottom - rect.top);
         return RichEdit->ShowInstalledAppInfo(Info);
     }
 
     VOID SetWelcomeText()
     {
+        SnpshtPrev->DisplayEmpty();
+        RECT rect;
+        GetWindowRect(&rect);
+        ResizeChildren(rect.right - rect.left, rect.bottom - rect.top);
         RichEdit->SetWelcomeText();
     }
 
