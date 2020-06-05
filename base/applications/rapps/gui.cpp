@@ -1,4 +1,4 @@
-﻿/*
+/*
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * FILE:        base/applications/rapps/gui.cpp
@@ -53,7 +53,7 @@ INT GetSystemColorDepth()
     return ColorDepth;
 }
 
-class CAppRichEdit: 
+class CAppRichEdit :
     public CUiWindow<CRichEdit>
 {
 private:
@@ -255,6 +255,154 @@ public:
         szText.LoadStringW(IDS_WELCOME_URL);
         InsertText(szText, CFM_LINK);
     }
+};
+
+class CAppInfoDisplay :
+    public CUiWindow<CWindowImpl<CAppInfoDisplay>>
+{
+    LPWSTR pLink = NULL;
+
+private:
+    BOOL ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
+    {
+        theResult = 0;
+        switch (message)
+        {
+        case WM_CREATE:
+        {
+            RichEdit = new CAppRichEdit();
+            RichEdit->Create(hwnd);
+            break;
+        }
+        case WM_SIZE:
+        {
+            ::MoveWindow(RichEdit->m_hWnd, 0, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), TRUE);
+            break;
+        }
+        case WM_COMMAND:
+        {
+
+            OnCommand(wParam, lParam);
+            break;
+        }
+        case WM_NOTIFY:
+        {
+            NMHDR* NotifyHeader = (NMHDR*)lParam;
+            if (NotifyHeader->hwndFrom == RichEdit->m_hWnd)
+            {
+                switch (NotifyHeader->code)
+                {
+                case EN_LINK:
+                    OnLink((ENLINK*)lParam);
+                    break;
+                }
+            }
+            break;
+        }
+        }
+
+        return FALSE;
+    }
+
+public:
+
+    CAppRichEdit * RichEdit;
+
+    static ATL::CWndClassInfo& GetWndClassInfo()
+    {
+        DWORD csStyle = CS_VREDRAW | CS_HREDRAW;
+        static ATL::CWndClassInfo wc =
+        {
+            {
+                sizeof(WNDCLASSEX),
+                csStyle,
+                StartWindowProc,
+                0,
+                0,
+                NULL,
+                NULL,
+                NULL,
+                (HBRUSH)(COLOR_BTNFACE + 1),
+                NULL,
+                L"RAppsAppInfo",
+                NULL
+            },
+            NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
+        };
+        return wc;
+    }
+
+    HWND Create(HWND hwndParent)
+    {
+        RECT r = { 0,0,0,0 };
+
+        return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE);
+    }
+
+    BOOL ShowAvailableAppInfo(CAvailableApplicationInfo* Info)
+    {
+        return RichEdit->ShowAvailableAppInfo(Info);
+    }
+
+    BOOL ShowInstalledAppInfo(PINSTALLED_INFO Info)
+    {
+        return RichEdit->ShowInstalledAppInfo(Info);
+    }
+
+    VOID SetWelcomeText()
+    {
+        RichEdit->SetWelcomeText();
+    }
+
+    VOID OnLink(ENLINK* Link)
+    {
+        switch (Link->msg)
+        {
+        case WM_LBUTTONUP:
+        case WM_RBUTTONUP:
+        {
+            if (pLink) HeapFree(GetProcessHeap(), 0, pLink);
+
+            pLink = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
+                (max(Link->chrg.cpMin, Link->chrg.cpMax) -
+                    min(Link->chrg.cpMin, Link->chrg.cpMax) + 1) * sizeof(WCHAR));
+            if (!pLink)
+            {
+                /* TODO: Error message */
+                return;
+            }
+
+            RichEdit->SendMessageW(EM_SETSEL, Link->chrg.cpMin, Link->chrg.cpMax);
+            RichEdit->SendMessageW(EM_GETSELTEXT, 0, (LPARAM)pLink);
+
+            ShowPopupMenuEx(m_hWnd, m_hWnd, IDR_LINKMENU, -1);
+        }
+        break;
+        }
+    }
+
+    VOID OnCommand(WPARAM wParam, LPARAM lParam)
+    {
+        WORD wCommand = LOWORD(wParam);
+
+        switch (wCommand)
+        {
+        case ID_OPEN_LINK:
+            
+            ShellExecuteW(m_hWnd, L"open", pLink, NULL, NULL, SW_SHOWNOACTIVATE);
+            HeapFree(GetProcessHeap(), 0, pLink);
+            pLink = NULL;
+            break;
+
+        case ID_COPY_LINK:
+            CopyTextToClipboard(pLink);
+            HeapFree(GetProcessHeap(), 0, pLink);
+            pLink = NULL;
+            break;
+
+        }
+    }
+
 };
 
 class CMainToolbar :
@@ -759,12 +907,10 @@ class CMainWindow :
 
     CSideTreeView* m_TreeView;
     CUiWindow<CStatusBar>* m_StatusBar;
-    CAppRichEdit* m_RichEdit;
+    CAppInfoDisplay* m_AppInfo;
 
     CUiWindow<CSearchBar>* m_SearchBar;
     CAvailableApps m_AvailableApps;
-
-    LPWSTR pLink;
 
     INT nSelectedApps;
 
@@ -777,7 +923,6 @@ class CMainWindow :
 public:
     CMainWindow() :
         m_ClientPanel(NULL),
-        pLink(NULL),
         bSearchEnabled(FALSE),
         SelectedEnumType(ENUM_ALL_INSTALLED)
     {
@@ -878,12 +1023,12 @@ private:
 
     BOOL CreateRichEdit()
     {
-        m_RichEdit = new CAppRichEdit();
-        m_RichEdit->m_VerticalAlignment = UiAlign_Stretch;
-        m_RichEdit->m_HorizontalAlignment = UiAlign_Stretch;
-        m_HSplitter->Second().Append(m_RichEdit);
+        m_AppInfo = new CAppInfoDisplay();
+        m_AppInfo->m_VerticalAlignment = UiAlign_Stretch;
+        m_AppInfo->m_HorizontalAlignment = UiAlign_Stretch;
+        m_HSplitter->Second().Append(m_AppInfo);
 
-        return m_RichEdit->Create(m_hWnd) != NULL;
+        return m_AppInfo->Create(m_hWnd) != NULL;
     }
 
     BOOL CreateVSplitter()
@@ -998,7 +1143,7 @@ private:
 
             PINSTALLED_INFO Info = (PINSTALLED_INFO) m_ListView->GetItemData(Index);
 
-            m_RichEdit->ShowInstalledAppInfo(Info);
+            m_AppInfo->ShowInstalledAppInfo(Info);
         }
         else if (IsAvailableEnum(SelectedEnumType))
         {
@@ -1007,7 +1152,7 @@ private:
 
             CAvailableApplicationInfo* Info = (CAvailableApplicationInfo*) m_ListView->GetItemData(Index);
 
-            m_RichEdit->ShowAvailableAppInfo(Info);
+            m_AppInfo->ShowAvailableAppInfo(Info);
         }
     }
 
@@ -1372,9 +1517,7 @@ private:
             }
             break;
 
-            case EN_LINK:
-                OnLink((ENLINK*) lParam);
-                break;
+            
 
             case TTN_GETDISPINFO:
                 m_Toolbar->OnGetDispInfo((LPTOOLTIPTEXT) lParam);
@@ -1421,33 +1564,6 @@ private:
         }
 
         return FALSE;
-    }
-
-    virtual VOID OnLink(ENLINK *Link)
-    {
-        switch (Link->msg)
-        {
-        case WM_LBUTTONUP:
-        case WM_RBUTTONUP:
-        {
-            if (pLink) HeapFree(GetProcessHeap(), 0, pLink);
-
-            pLink = (LPWSTR) HeapAlloc(GetProcessHeap(), 0,
-                (max(Link->chrg.cpMin, Link->chrg.cpMax) -
-                 min(Link->chrg.cpMin, Link->chrg.cpMax) + 1) * sizeof(WCHAR));
-            if (!pLink)
-            {
-                /* TODO: Error message */
-                return;
-            }
-
-            m_RichEdit->SendMessageW(EM_SETSEL, Link->chrg.cpMin, Link->chrg.cpMax);
-            m_RichEdit->SendMessageW(EM_GETSELTEXT, 0, (LPARAM) pLink);
-
-            ShowPopupMenu(m_RichEdit->m_hWnd, IDR_LINKMENU, -1);
-        }
-        break;
-        }
     }
 
     BOOL IsSelectedNodeInstalled()
@@ -1551,16 +1667,6 @@ private:
 
         switch (wCommand)
         {
-        case ID_OPEN_LINK:
-            ShellExecuteW(m_hWnd, L"open", pLink, NULL, NULL, SW_SHOWNOACTIVATE);
-            HeapFree(GetProcessHeap(), 0, pLink);
-            break;
-
-        case ID_COPY_LINK:
-            CopyTextToClipboard(pLink);
-            HeapFree(GetProcessHeap(), 0, pLink);
-            break;
-
         case ID_SETTINGS:
             CreateSettingsDlg(m_hWnd);
             break;
@@ -1810,7 +1916,7 @@ private:
 
         SelectedEnumType = EnumType;
         UpdateStatusBarText();
-        m_RichEdit->SetWelcomeText();
+        m_AppInfo->SetWelcomeText();
 
         // Set automatic column width for program names if the list is not empty
         if (m_ListView->GetItemCount() > 0)
@@ -1866,7 +1972,7 @@ public:
 
     void HandleTabOrder(int direction)
     {
-        HWND Controls[] = { m_Toolbar->m_hWnd, m_SearchBar->m_hWnd, m_TreeView->m_hWnd, m_ListView->m_hWnd, m_RichEdit->m_hWnd };
+        HWND Controls[] = { m_Toolbar->m_hWnd, m_SearchBar->m_hWnd, m_TreeView->m_hWnd, m_ListView->m_hWnd, m_AppInfo->m_hWnd };
         // When there is no control found, go to the first or last (depending on tab vs shift-tab)
         int current = direction > 0 ? 0 : (_countof(Controls) - 1);
         HWND hActive = ::GetFocus();
