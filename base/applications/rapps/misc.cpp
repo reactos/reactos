@@ -71,7 +71,7 @@ VOID CopyTextToClipboard(LPCWSTR lpszText)
     CloseClipboard();
 }
 
-VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
+VOID ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem)
 {
     HMENU hMenu = NULL;
     HMENU hPopupMenu;
@@ -102,13 +102,19 @@ VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
     GetCursorPos(&pt);
 
     SetForegroundWindow(hwnd);
-    TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hMainWnd, NULL);
+    TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hwndOwner, NULL);
 
     if (hMenu)
     {
         DestroyMenu(hMenu);
     }
 }
+
+VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
+{
+    ShowPopupMenuEx(hwnd, hMainWnd, MenuID, DefaultItem);
+}
+
 
 BOOL StartProcess(ATL::CStringW &Path, BOOL Wait)
 {

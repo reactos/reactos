@@ -10,6 +10,7 @@ INT GetClientWindowHeight(HWND hwnd);
 
 VOID CopyTextToClipboard(LPCWSTR lpszText);
 VOID SetWelcomeText();
+VOID ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem);
 VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem);
 BOOL StartProcess(ATL::CStringW &Path, BOOL Wait);
 BOOL StartProcess(LPWSTR lpPath, BOOL Wait);

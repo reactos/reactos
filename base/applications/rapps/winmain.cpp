@@ -65,7 +65,7 @@ VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
 
     PathAppendW(szDownloadDir.GetBuffer(MAX_PATH), L"\\RAPPS Downloads");
     szDownloadDir.ReleaseBuffer();
-	
+
     ATL::CStringW::CopyChars(pSettingsInfo->szDownloadDir,
                              _countof(pSettingsInfo->szDownloadDir),
                              szDownloadDir.GetString(),
