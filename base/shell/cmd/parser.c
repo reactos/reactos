@@ -1169,11 +1169,11 @@ EchoCommand(PARSED_COMMAND *Cmd)
         break;
 
     case C_IF:
-        ConOutPrintf(_T("if"));
+        ConOutPuts(_T("if"));
         if (Cmd->If.Flags & IFFLAG_IGNORECASE)
-            ConOutPrintf(_T(" /I"));
+            ConOutPuts(_T(" /I"));
         if (Cmd->If.Flags & IFFLAG_NEGATE)
-            ConOutPrintf(_T(" not"));
+            ConOutPuts(_T(" not"));
         if (Cmd->If.LeftArg && SubstituteForVars(Cmd->If.LeftArg, Buf))
             ConOutPrintf(_T(" %s"), Buf);
         ConOutPrintf(_T(" %s"), IfOperatorString[Cmd->If.Operator]);
@@ -1183,20 +1183,23 @@ EchoCommand(PARSED_COMMAND *Cmd)
         EchoCommand(Sub);
         if (Sub->Next)
         {
-            ConOutPrintf(_T(" else "));
+            ConOutPuts(_T(" else "));
             EchoCommand(Sub->Next);
         }
         break;
 
     case C_FOR:
-        ConOutPrintf(_T("for"));
-        if (Cmd->For.Switches & FOR_DIRS)      ConOutPrintf(_T(" /D"));
-        if (Cmd->For.Switches & FOR_F)         ConOutPrintf(_T(" /F"));
-        if (Cmd->For.Switches & FOR_LOOP)      ConOutPrintf(_T(" /L"));
-        if (Cmd->For.Switches & FOR_RECURSIVE) ConOutPrintf(_T(" /R"));
+        ConOutPuts(_T("for"));
+        if (Cmd->For.Switches & FOR_DIRS)      ConOutPuts(_T(" /D"));
+        if (Cmd->For.Switches & FOR_F)         ConOutPuts(_T(" /F"));
+        if (Cmd->For.Switches & FOR_LOOP)      ConOutPuts(_T(" /L"));
+        if (Cmd->For.Switches & FOR_RECURSIVE) ConOutPuts(_T(" /R"));
         if (Cmd->For.Params)
             ConOutPrintf(_T(" %s"), Cmd->For.Params);
-        ConOutPrintf(_T(" %%%c in (%s) do "), Cmd->For.Variable, Cmd->For.List);
+        if (Cmd->For.List && SubstituteForVars(Cmd->For.List, Buf))
+            ConOutPrintf(_T(" %%%c in (%s) do "), Cmd->For.Variable, Buf);
+        else
+            ConOutPrintf(_T(" %%%c in (%s) do "), Cmd->For.Variable, Cmd->For.List);
         EchoCommand(Cmd->Subcommands);
         break;
     }
@@ -1316,7 +1319,10 @@ do { \
         if (Cmd->For.Switches & FOR_RECURSIVE) STRING(_T(" /R"));
         if (Cmd->For.Params)
             PRINTF(_T(" %s"), Cmd->For.Params);
-        PRINTF(_T(" %%%c in (%s) do "), Cmd->For.Variable, Cmd->For.List);
+        if (Cmd->For.List && SubstituteForVars(Cmd->For.List, Buf))
+            PRINTF(_T(" %%%c in (%s) do "), Cmd->For.Variable, Buf);
+        else
+            PRINTF(_T(" %%%c in (%s) do "), Cmd->For.Variable, Cmd->For.List);
         RECURSE(Cmd->Subcommands);
         break;
     }
