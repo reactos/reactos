@@ -13,7 +13,7 @@
 
 #include <atlcom.h>
 
-#include<gdiplus.h>
+#include <gdiplus.h>
 
 HWND hMainWnd;
 HINSTANCE hInst;

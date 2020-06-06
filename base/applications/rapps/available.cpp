@@ -18,14 +18,14 @@
 #include <atlstr.h>
 
  // CAvailableApplicationInfo
-CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings m_Strings)
+CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& m_Strings)
     : m_IsSelected(FALSE), m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
     m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
 {
     RetrieveGeneralInfo(m_Strings);
 }
 
-VOID CAvailableApplicationInfo::RefreshAppInfo(AvailableStrings m_Strings)
+VOID CAvailableApplicationInfo::RefreshAppInfo(AvailableStrings& m_Strings)
 {
     if (m_szUrlDownload.IsEmpty())
     {
@@ -34,7 +34,7 @@ VOID CAvailableApplicationInfo::RefreshAppInfo(AvailableStrings m_Strings)
 }
 
 // Lazily load general info from the file
-VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings m_Strings)
+VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& m_Strings)
 {
     m_Parser = new CConfigParser(m_sFileName);
 
@@ -225,7 +225,7 @@ BOOL CAvailableApplicationInfo::HasUpdate() const
     return (m_szInstalledVersion.Compare(m_szVersion) < 0) ? TRUE : FALSE;
 }
 
-BOOL CAvailableApplicationInfo::RetrieveSnapshot(int Index,ATL::CStringW& SnapshotFileName) const
+BOOL CAvailableApplicationInfo::RetrieveSnapshot(UINT Index,ATL::CStringW& SnapshotFileName) const
 {
     if (Index >= MAX_SNAPSHOT_NUM)
     {

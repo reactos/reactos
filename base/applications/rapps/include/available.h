@@ -64,17 +64,17 @@ struct CAvailableApplicationInfo
     ATL::CStringW m_szInstalledVersion;
 
     // Create an object from file
-    CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings m_Strings);
+    CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& m_Strings);
 
     // Load all info from the file
-    VOID RefreshAppInfo(AvailableStrings m_Strings);
+    VOID RefreshAppInfo(AvailableStrings& m_Strings);
     BOOL HasLanguageInfo() const;
     BOOL HasNativeLanguage() const;
     BOOL HasEnglishLanguage() const;
     BOOL IsInstalled() const;
     BOOL HasInstalledVersion() const;
     BOOL HasUpdate() const;
-    BOOL RetrieveSnapshot(int Index, ATL::CStringW& SnapshotFileName) const;
+    BOOL RetrieveSnapshot(UINT Index, ATL::CStringW& SnapshotFileName) const;
     // Set a timestamp
     VOID SetLastWriteTime(FILETIME* ftTime);
 
@@ -87,7 +87,7 @@ private:
     inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString);
 
     // Lazily load general info from the file
-    VOID RetrieveGeneralInfo(AvailableStrings m_Strings);
+    VOID RetrieveGeneralInfo(AvailableStrings& m_Strings);
     VOID RetrieveInstalledStatus();
     VOID RetrieveInstalledVersion();
     VOID RetrieveLanguages();

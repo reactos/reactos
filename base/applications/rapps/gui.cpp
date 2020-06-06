@@ -30,10 +30,13 @@ using namespace Gdiplus;
 #define LISTVIEW_ICON_SIZE 24
 #define TREEVIEW_ICON_SIZE 24
 
-#define SNPSHTPREV_EMPTY    0 // show nothing
-#define SNPSHTPREV_LOADING  1 // image is loading (most likely downloading)
-#define SNPSHTPREV_FILE     2 // display image from a file
-#define SNPSHTPREV_FAILED   3 // image can not be shown (download failure or wrong image)
+enum SNPSHT_STATUS
+{
+    SNPSHTPREV_EMPTY,      // show nothing
+    SNPSHTPREV_LOADING,    // image is loading (most likely downloading)
+    SNPSHTPREV_FILE,       // display image from a file
+    SNPSHTPREV_FAILED      // image can not be shown (download failure or wrong image)
+};
 
 #define TIMER_LOADING_ANIMATION 1 // Timer ID
 
@@ -280,7 +283,7 @@ class CAppSnapshotPreview :
 private:
 
 
-    UINT SnpshtPrevStauts = SNPSHTPREV_EMPTY;
+    SNPSHT_STATUS SnpshtPrevStauts = SNPSHTPREV_EMPTY;
 
     Image* pImage = NULL;
 
@@ -335,7 +338,7 @@ private:
         return FALSE;
     }
 
-    VOID SetStatus(UINT Status)
+    VOID SetStatus(SNPSHT_STATUS Status)
     {
         SnpshtPrevStauts = Status;
     }
