@@ -15,6 +15,47 @@ END_OBJECT_MAP()
 
 CComModule gModule;
 LONG g_ModuleRefCnt = 0;
+HINSTANCE g_hModule;
+
+static BOOL
+CreateEmptyFile(LPCWSTR pszFile)
+{
+    HANDLE hFile;
+    hFile = CreateFileW(pszFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(hFile);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static HRESULT
+CreateSendToDeskLink(LPCWSTR pszSendTo)
+{
+    WCHAR szTarget[MAX_PATH], szSendToFile[MAX_PATH];
+
+    LoadStringW(g_hModule, IDS_DESKLINK, szTarget, _countof(szTarget));
+    StringCbCatW(szTarget, sizeof(szTarget), L".DeskLink");
+
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
+    PathAppendW(szSendToFile, szTarget);
+
+    if (!CreateEmptyFile(szSendToFile))
+    {
+        ERR("CreateEmptyFile('%ls')\n", szSendToFile);
+        return E_FAIL;
+    }
+    return S_OK;
+}
+
+static HRESULT
+GetDefaultUserSendTo(LPWSTR pszPath)
+{
+    return SHGetFolderPathW(NULL, CSIDL_SENDTO, INVALID_HANDLE_VALUE,
+                            SHGFP_TYPE_DEFAULT, pszPath);
+}
 
 STDAPI DllCanUnloadNow(void)
 {
@@ -39,6 +80,11 @@ STDAPI DllRegisterServer(void)
     HRESULT hr = gModule.DllRegisterServer(FALSE);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
+    WCHAR szSendTo[MAX_PATH];
+    hr = GetDefaultUserSendTo(szSendTo);
+    if (SUCCEEDED(hr))
+        CreateSendToDeskLink(szSendTo);
 
     return S_OK;
 }
@@ -117,6 +163,7 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
     TRACE("%p 0x%x %p\n", hInstance, dwReason, fImpLoad);
     if (dwReason == DLL_PROCESS_ATTACH)
     {
+        g_hModule = hInstance;
         gModule.Init(ObjectMap, hInstance, NULL);
         DisableThreadLibraryCalls(hInstance);
     }

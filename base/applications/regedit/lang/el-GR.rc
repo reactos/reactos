@@ -129,9 +129,17 @@ BEGIN
         MENUITEM "&Μετονομασία", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Εξαγωγή", ID_TREE_EXPORT
-        MENUITEM "&Δικαιώματα...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "&Δικαιώματα...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Αντιγραφή Ονόματος Κλειδιού", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Expand/Collapse", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Εξαγωγή", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Αφαίρεση Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

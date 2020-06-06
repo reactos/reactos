@@ -1,16 +1,16 @@
-/* Indonesian translation by Zaenal Mutaqin (ade999 at gmail.com) */
+/* Indonesian translation by Zaenal Mutaqin (ade999 at gmail.com) and Mas Ahmad Muhammad (m.charly81@gmail.com) */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 /* Menu */
 IDC_FDEBUG MENU
 BEGIN
-    POPUP "&File"
+    POPUP "Be&rkas"
     BEGIN
         MENUITEM "&Sambung", IDM_FILE_CONNECT
         MENUITEM "&Putus", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
+        MENUITEM "&Bersihkan Tampilan", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
         MENUITEM "&Mulai Penangkapan", IDM_FILE_STARTCAPTURE
         MENUITEM "&Hentikan Penangkapan", IDM_FILE_STOPCAPTURE, GRAYED
@@ -47,7 +47,7 @@ END
 
 IDD_CONNECTION DIALOGEX 0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opsi Koneksi"
+CAPTION "Pilihan Sambungan"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Masukkan gerbang COM (contoh. COM1):", IDC_STATIC, 7, 7, 108, 8

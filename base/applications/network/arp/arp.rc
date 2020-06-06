@@ -3,3 +3,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME  "arp.exe"
 #define REACTOS_STR_ORIGINAL_COPYRIGHT "Ged Murphy (gedmurphy@gmail.com)"
 #include <reactos/version.rc>
+#include <arp_msg.rc>

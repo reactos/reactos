@@ -645,6 +645,9 @@ BOOLEAN
 NTAPI
 HalpBiosDisplayReset(VOID)
 {
+#ifdef SARCH_XBOX
+    return FALSE;
+#else
     ULONG Flags;
     PHARDWARE_PTE IdtPte;
     BOOLEAN RestoreWriteProtection = FALSE;
@@ -709,6 +712,7 @@ HalpBiosDisplayReset(VOID)
     //
     __writeeflags(Flags);
     return TRUE;
+#endif
 }
 #endif
 

@@ -2,6 +2,7 @@
  * Shell Desktop
  *
  * Copyright 2008 Thomas Bluemel
+ * Copyright 2020 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,8 +26,6 @@
 #include <atlcoll.h>
 #endif
 
-
-
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
 static const WCHAR szProgmanClassName[]  = L"Progman";
@@ -43,6 +42,9 @@ private:
     HWND m_hWndShellView;
     CComPtr<IShellDesktopTray> m_Tray;
     CComPtr<IShellView>        m_ShellView;
+
+    CComPtr<IOleWindow>        m_ChangeNotifyServer;
+    HWND                       m_hwndChangeNotifyServer;
 
     LRESULT _NotifyTray(UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT _Resize();
@@ -82,6 +84,7 @@ public:
     LRESULT OnOpenNewWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 DECLARE_WND_CLASS_EX(szProgmanClassName, CS_DBLCLKS, COLOR_DESKTOP)
 
@@ -94,6 +97,7 @@ BEGIN_MSG_MAP(CBaseBar)
     MESSAGE_HANDLER(WM_EXPLORER_OPEN_NEW_WINDOW, OnOpenNewWindow)
     MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+    MESSAGE_HANDLER(WM_DESKTOP_GET_CNOTIFY_SERVER, OnGetChangeNotifyServer)
 END_MSG_MAP()
 
 BEGIN_COM_MAP(CDesktopBrowser)
@@ -105,7 +109,8 @@ END_COM_MAP()
 
 CDesktopBrowser::CDesktopBrowser():
     m_hAccel(NULL),
-    m_hWndShellView(NULL)
+    m_hWndShellView(NULL),
+    m_hwndChangeNotifyServer(NULL)
 {
 }
 
@@ -114,6 +119,11 @@ CDesktopBrowser::~CDesktopBrowser()
     if (m_ShellView.p != NULL && m_hWndShellView != NULL)
     {
         m_ShellView->DestroyViewWindow();
+    }
+
+    if (m_hwndChangeNotifyServer)
+    {
+        ::DestroyWindow(m_hwndChangeNotifyServer);
     }
 }
 
@@ -217,7 +227,6 @@ HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
     _Resize();
 
     HWND hwndListView = FindWindowExW(m_hWndShellView, NULL, WC_LISTVIEW, NULL);
-    SetShellWindowEx(m_hWnd, hwndListView);
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_DESKBROWSER));
 
@@ -427,6 +436,26 @@ LRESULT CDesktopBrowser::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     ::SetFocus(m_hWndShellView);
     return 0;
+}
+
+// Message WM_DESKTOP_GET_CNOTIFY_SERVER: Get or create the change notification server.
+//   wParam: BOOL bCreate; The flag whether it creates or not.
+//   lParam: Ignored.
+//   return: The window handle of the server window.
+LRESULT CDesktopBrowser::OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    BOOL bCreate = (BOOL)wParam;
+    if (bCreate && !::IsWindow(m_hwndChangeNotifyServer))
+    {
+        HRESULT hres = CChangeNotifyServer_CreateInstance(IID_PPV_ARG(IOleWindow, &m_ChangeNotifyServer));
+        if (FAILED_UNEXPECTEDLY(hres))
+            return NULL;
+
+        hres = m_ChangeNotifyServer->GetWindow(&m_hwndChangeNotifyServer);
+        if (FAILED_UNEXPECTEDLY(hres))
+            return NULL;
+    }
+    return (LRESULT)m_hwndChangeNotifyServer;
 }
 
 HRESULT CDesktopBrowser_CreateInstance(IShellDesktopTray *Tray, REFIID riid, void **ppv)

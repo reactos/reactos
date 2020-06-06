@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Russian (Russia) resource translation
- * COPYRIGHT:   Copyright 2018 Stas'M (x86corez@gmail.com)
+ * COPYRIGHT:   Copyright 2018-2020 Stas'M (x86corez@gmail.com)
  */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
@@ -16,7 +16,7 @@ BEGIN
     EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Обзор...",IDC_BROWSE,174,42,54,14
     PUSHBUTTON      "Пароль",IDC_PASSWORD,174,66,54,14
-    LTEXT           "Click 'Next' to extract",IDC_STATUSTEXT,6,114,100,8
+    LTEXT           "Нажмите ""Далее"" для извлечения",IDC_STATUSTEXT,6,114,118,8
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
 END
 
@@ -44,17 +44,17 @@ BEGIN
     LTEXT           "",IDC_MESSAGE,36,6,228,24
 END
 
-IDD_PASSWORD DIALOGEX 0, 0, 243, 62
+IDD_PASSWORD DIALOGEX 0, 0, 261, 62
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Password needed"
+CAPTION "Требуется пароль"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     EDITTEXT        IDC_PASSWORD,72,42,108,13,ES_PASSWORD | ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,186,6,50,14
-    PUSHBUTTON      "Skip File",IDSKIP,186,24,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,186,42,50,14
+    DEFPUSHBUTTON   "ОК",IDOK,186,6,68,14
+    PUSHBUTTON      "Пропустить файл",IDSKIP,186,24,68,14
+    PUSHBUTTON      "Отмена",IDCANCEL,186,42,68,14
     LTEXT           "Static",IDC_MESSAGE,24,6,156,30
-    LTEXT           "Password:",IDC_STATIC,24,44,44,8
+    LTEXT           "Пароль:",IDC_STATIC,24,44,44,8
 END
 
 STRINGTABLE
@@ -68,11 +68,11 @@ BEGIN
     IDS_COL_DATE_MOD "Дата изменения"
     IDS_YES "Да"
     IDS_NO "Нет"
-    IDS_ERRORTITLE "Compressed (zipped) Folders Error"
-    IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
-    IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
-    IDS_CANTCREATEZIP "Failed to create a compressed folder '%s' (Error Code: %d)."
-    IDS_CANTREADFILE "Cannot read file '%s'."
+    IDS_ERRORTITLE "Ошибка обработки zip архива"
+    IDS_CANTSTARTTHREAD "Невозможно запустить поток для сжатия файлов."
+    IDS_NOFILES "Указанная директория '%s' пуста, поэтому её невозможно добавить в сжатую папку."
+    IDS_CANTCREATEZIP "Не удалось создать сжатую папку '%s' (код ошибки: %d)."
+    IDS_CANTREADFILE "Не удалось прочитать файл '%s'."
     IDS_EXTRACTING "Извлечение..."
 
     IDS_WIZ_TITLE "Мастер извлечения архивов"
@@ -83,8 +83,8 @@ BEGIN
     IDS_WIZ_BROWSE_TITLE "Выберите расположение для извлечения элементов."
 
     IDS_OVERWRITEFILE_TEXT "В данной папке уже есть файл '%1!ls!'.\nВы хотите заменить его?"
-    IDS_PASSWORD_FILE_TEXT "The file '%1' is password protected. Please enter the password."
-    IDS_PASSWORD_ZIP_TEXT "Please specify the password to use when extracting this zip file."
+    IDS_PASSWORD_FILE_TEXT "Файл '%1' защищён паролем. Пожалуйста введите пароль."
+    IDS_PASSWORD_ZIP_TEXT "Пожалуйста укажите пароль для извлечения этого zip архива."
 
     IDS_MENUITEM "&Извлечь всё..."
     IDS_HELPTEXT "Извлекает содержимое архива"

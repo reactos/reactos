@@ -32,7 +32,7 @@
 #ifndef XXH_STATIC_LINKING_ONLY
 #  define XXH_STATIC_LINKING_ONLY  /* XXH64_state_t */
 #endif
-#include "xxhash.h"                /* XXH_reset, update, digest */
+#include "../xxhash.h"                /* XXH_reset, update, digest */
 
 
 #if defined (__cplusplus)

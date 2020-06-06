@@ -45,12 +45,12 @@ BEGIN
   Use '/nh' to hide headers. By default the data is displayed in a table.\n\
 \n\
 SYNTAX:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
-  whoami /all [/fo <Format>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh]\n\
+  whoami /all [/fo <Format>] [/nh]\n\
 \n\
-EXAMPLES: \n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+EXAMPLES:\n\
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

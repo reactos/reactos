@@ -256,7 +256,7 @@ SetFont(PMAP infoPtr,
                          GGI_MARK_NONEXISTING_GLYPHS) != GDI_ERROR)
     {
         j = 0;
-        for (i = 0; i < MAX_GLYPHS; i++)
+        for (i = ' ' + 1; i < MAX_GLYPHS; i++)
         {
             if (out[i] != 0xffff)
             {
@@ -312,64 +312,38 @@ OnClick(PMAP infoPtr,
         WORD ptx,
         WORD pty)
 {
-    POINT pt;
     INT x, y;
 
-    pt.x = ptx;
-    pt.y = pty;
+    x = ptx / max(1, infoPtr->CellSize.cx);
+    y = pty / max(1, infoPtr->CellSize.cy);
 
-    for (x = 0; x < XCELLS; x++)
-    for (y = 0; y < YCELLS; y++)
+    /* if the cell is not already active */
+    if (!infoPtr->Cells[y][x].bActive)
     {
-        if (PtInRect(&infoPtr->Cells[y][x].CellInt,
-                     pt))
+        /* set previous active cell to inactive */
+        if (infoPtr->pActiveCell)
         {
-            /* if the cell is not already active */
-            if (!infoPtr->Cells[y][x].bActive)
+            /* invalidate normal cells, required when
+             * moving a small active cell via keyboard */
+            if (!infoPtr->pActiveCell->bLarge)
             {
-                /* set previous active cell to inactive */
-                if (infoPtr->pActiveCell)
-                {
-                    /* invalidate normal cells, required when
-                     * moving a small active cell via keyboard */
-                    if (!infoPtr->pActiveCell->bLarge)
-                    {
-                        InvalidateRect(infoPtr->hMapWnd,
-                                       &infoPtr->pActiveCell->CellInt,
-                                       TRUE);
-                    }
-
-                    infoPtr->pActiveCell->bActive = FALSE;
-                    infoPtr->pActiveCell->bLarge = FALSE;
-                }
-
-                /* set new cell to active */
-                infoPtr->pActiveCell = &infoPtr->Cells[y][x];
-                infoPtr->pActiveCell->bActive = TRUE;
-                infoPtr->pActiveCell->bLarge = TRUE;
-                if (infoPtr->hLrgWnd)
-                    MoveLargeCell(infoPtr);
-                else
-                    CreateLargeCell(infoPtr);
-            }
-            else
-            {
-                /* flick between large and small */
-                if (infoPtr->pActiveCell->bLarge)
-                {
-                    DestroyWindow(infoPtr->hLrgWnd);
-                    infoPtr->hLrgWnd = NULL;
-                }
-                else
-                {
-                    CreateLargeCell(infoPtr);
-                }
-
-                infoPtr->pActiveCell->bLarge = (infoPtr->pActiveCell->bLarge) ? FALSE : TRUE;
+                InvalidateRect(infoPtr->hMapWnd,
+                               &infoPtr->pActiveCell->CellInt,
+                               TRUE);
             }
 
-            break;
+            infoPtr->pActiveCell->bActive = FALSE;
+            infoPtr->pActiveCell->bLarge = FALSE;
         }
+
+        /* set new cell to active */
+        infoPtr->pActiveCell = &infoPtr->Cells[y][x];
+        infoPtr->pActiveCell->bActive = TRUE;
+        infoPtr->pActiveCell->bLarge = TRUE;
+        if (infoPtr->hLrgWnd)
+            MoveLargeCell(infoPtr);
+        else
+            CreateLargeCell(infoPtr);
     }
 }
 
@@ -577,12 +551,30 @@ MapWndProc(HWND hwnd,
             break;
         }
 
+        case WM_MOUSEMOVE:
+        {
+            if (wParam & MK_LBUTTON)
+            {
+                OnClick(infoPtr,
+                        LOWORD(lParam),
+                        HIWORD(lParam));
+            }
+            break;
+        }
+
         case WM_LBUTTONDBLCLK:
         {
             NotifyParentOfSelection(infoPtr,
                                     FM_SETCHAR,
                                     infoPtr->pActiveCell->ch);
 
+            if (infoPtr->pActiveCell->bLarge)
+            {
+                DestroyWindow(infoPtr->hLrgWnd);
+                infoPtr->hLrgWnd = NULL;
+            }
+
+            infoPtr->pActiveCell->bLarge = FALSE;
 
             break;
         }

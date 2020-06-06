@@ -129,9 +129,17 @@ BEGIN
         MENUITEM "&Přejmenovat", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportovat", ID_TREE_EXPORT
-        MENUITEM "Oprá&vnění...", ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM "Oprá&vnění...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "Z&kopírovat název klíče", ID_EDIT_COPYKEYNAME
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Rozbalit/Sbalit", ID_TREE_EXPANDBRANCH
+        MENUITEM SEPARATOR
+        MENUITEM "&Exportovat", ID_TREE_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Uvolnit strom registru...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN

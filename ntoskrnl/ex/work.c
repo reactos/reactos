@@ -515,8 +515,8 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
  * @remarks This routine is only called once during system initialization.
  *
  *--*/
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 ExpInitializeWorkerThreads(VOID)
 {

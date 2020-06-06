@@ -12,9 +12,9 @@ DestinationPartitionNumber = 1
 InstallationDirectory=ReactOS
 
 ; MBRInstallType=0  skips MBR installation
-; MBRInstallType=1  install MBR on floppy  
+; MBRInstallType=1  install MBR on floppy
 ; MBRInstallType=2  install MBR on hdd
-MBRInstallType=2 
+MBRInstallType=2
 
 FullName="MyName"
 ;OrgName="MyOrg"
@@ -38,6 +38,11 @@ FormatPartition=1
 ; 0 - disabled
 AutoPartition = 1
 
+; choose default file system type
+; 0 - FAT
+; 1 - BtrFS
+FsType = 0
+
 ; enable this setting to disable Gecko install
 ; yes - disabled
 ; no  - enabled
@@ -47,6 +52,11 @@ DisableGeckoInst = no
 ; specify language in 2nd mode setup
 ; see hivesys.inf for available languages
 LocaleID = 409
+
+; set product option
+; 0: ReactOS Server
+; 1: ReactOS Workstation
+ProductOption = 0
 
 ; enable this section to automatically launch programs
 ; after 3rd boot

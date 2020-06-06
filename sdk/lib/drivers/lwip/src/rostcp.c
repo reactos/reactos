@@ -647,11 +647,24 @@ LibTCPShutdownCallback(void *arg)
      * PCB without telling us if we shutdown TX and RX. To avoid these problems, we'll clear the
      * socket context if we have called shutdown for TX and RX.
      */
-    if (msg->Input.Shutdown.shut_rx) {
-        msg->Output.Shutdown.Error = tcp_shutdown(pcb, TRUE, FALSE);
+    if (msg->Input.Shutdown.shut_rx != msg->Input.Shutdown.shut_tx) {
+        if (msg->Input.Shutdown.shut_rx) {
+            msg->Output.Shutdown.Error = tcp_shutdown(pcb, TRUE, FALSE);
+        }
+        if (msg->Input.Shutdown.shut_tx) {
+            msg->Output.Shutdown.Error = tcp_shutdown(pcb, FALSE, TRUE);
+        }
     }
-    if (msg->Input.Shutdown.shut_tx) {
-        msg->Output.Shutdown.Error = tcp_shutdown(pcb, FALSE, TRUE);
+    else if (msg->Input.Shutdown.shut_rx) {
+        /* We received both RX and TX requests, which seems to mean closing connection from TDI.
+         * So call tcp_close, otherwise we risk to be put in TCP_WAIT_* states, which makes further
+         * attempts to close the socket to fail in this state.
+         */
+        msg->Output.Shutdown.Error = tcp_close(pcb);
+    }
+    else {
+        /* This case shouldn't happen */
+        DbgPrint("Requested socket shutdown(0, 0) !\n");
     }
 
     if (!msg->Output.Shutdown.Error)

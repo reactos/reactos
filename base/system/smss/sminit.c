@@ -1820,13 +1820,13 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     {
         /* To combine it into a single string */
         swprintf((PWCHAR)PartialInfo->Data + wcslen((PWCHAR)PartialInfo->Data),
-                 L", %S",
-                 PartialInfo2->Data);
+                 L", %s",
+                 (PWCHAR)PartialInfo2->Data);
     }
 
     /* So that we can set this as the PROCESSOR_IDENTIFIER variable */
     RtlInitUnicodeString(&ValueName, L"PROCESSOR_IDENTIFIER");
-    DPRINT("Setting %wZ to %s\n", &ValueName, PartialInfo->Data);
+    DPRINT("Setting %wZ to %S\n", &ValueName, PartialInfo->Data);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,

@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "history.h"
 #include "popup.h"
 
 #define NDEBUG
@@ -29,29 +30,6 @@ ConvertInputUnicodeToAnsi(PCONSRV_CONSOLE Console,
                           // BOOLEAN  IsAnsi,
                           PCHAR/* * */   Target,
                           /*P*/USHORT  TargetLength);
-
-
-VOID
-HistoryAddEntry(PCONSRV_CONSOLE Console,
-                PUNICODE_STRING ExeName,
-                PUNICODE_STRING Entry);
-BOOL
-HistoryRecallHistory(PCONSRV_CONSOLE Console,
-                     PUNICODE_STRING ExeName,
-                     INT Offset,
-                     PUNICODE_STRING Entry);
-VOID
-HistoryGetCurrentEntry(PCONSRV_CONSOLE Console,
-                       PUNICODE_STRING ExeName,
-                       PUNICODE_STRING Entry);
-VOID
-HistoryDeleteCurrentBuffer(PCONSRV_CONSOLE Console,
-                           PUNICODE_STRING ExeName);
-BOOL
-HistoryFindEntryByPrefix(PCONSRV_CONSOLE Console,
-                         PUNICODE_STRING ExeName,
-                         PUNICODE_STRING Prefix,
-                         PUNICODE_STRING Entry);
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -323,7 +301,9 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
         case VK_F7:
         {
             if (KeyEvent->dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
+            {
                 HistoryDeleteCurrentBuffer(Console, ExeName);
+            }
             else
             {
                 if (Popup) DestroyPopupWindow(Popup);

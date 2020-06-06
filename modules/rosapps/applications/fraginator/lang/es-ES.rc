@@ -22,7 +22,7 @@ BEGIN
                     0x1,7,71,320,10
     CONTROL         "Static",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP |
                     SS_SUNKEN | WS_GROUP,7,86,359,10
-    LTEXT           "I am a monkey, hear me eeK",IDC_WISECRACKS,78,15,115,8
+    LTEXT           "Soy un mono, óyeme eeK",IDC_WISECRACKS,78,15,115,8
     LTEXT           "100.00%",IDC_PERCENT,337,71,30,8,0,WS_EX_RIGHT
     LTEXT           "Prioridad del proceso:",-1,241,40,73,8
 END
@@ -56,9 +56,9 @@ BEGIN
     LTEXT           "Tamaño en disco",-1,205,40,75,8
     LTEXT           "(Tamaño total, Bytes)",IDC_FILESSIZEONDISK,281,40,117,10,
                     SS_SUNKEN
-    LTEXT           "(Files slack Bytes)",IDC_FILESSLACKBYTES,281,51,117,10,
+    LTEXT           "(Bytes de Espacio Muerto)",IDC_FILESSLACKBYTES,281,51,117,10,
                     SS_SUNKEN
-    LTEXT           "Wasted slack",-1,205,51,75,8
+    LTEXT           "Espacio muerto",-1,205,51,75,8
     LTEXT           "(Espacio libre, Bytes)",IDC_DISKFREEBYTES,83,62,117,10,
                     SS_SUNKEN
     LTEXT           "Espacio libre",-1,7,62,75,8

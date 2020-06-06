@@ -11,7 +11,7 @@ add_host_tool(mkhive ${SOURCE})
 target_include_directories(mkhive PRIVATE ${REACTOS_SOURCE_DIR}/sdk/lib/rtl)
 target_compile_definitions(mkhive PRIVATE -DMKHIVE_HOST)
 if(NOT MSVC)
-    add_target_compile_flags(mkhive "-fshort-wchar")
+    target_compile_options(mkhive PRIVATE "-fshort-wchar")
 endif()
 
 target_link_libraries(mkhive PRIVATE host_includes unicode cmlibhost inflibhost)

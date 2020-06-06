@@ -330,6 +330,10 @@ UINT	MMDRV_PhysicalFeatures(LPWINE_MLD mld, UINT uMsg,
 
     case DRVM_MAPPER_PREFERRED_GET:
 	/* FIXME: get from registry someday */
+#ifdef __REACTOS__
+        if (!dwParam1 || !dwParam2)
+            return MMSYSERR_INVALPARAM;
+#endif
         *((LPDWORD)dwParam1) = -1;      /* No preferred device */
         *((LPDWORD)dwParam2) = 0;
         break;

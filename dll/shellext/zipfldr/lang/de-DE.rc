@@ -16,7 +16,7 @@ BEGIN
     EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Durchsuchen...",IDC_BROWSE,174,42,54,14
     PUSHBUTTON      "Kennwort",IDC_PASSWORD,174,66,54,14
-    LTEXT           "Click 'Next' to extract",IDC_STATUSTEXT,6,114,100,8
+    LTEXT           "Klicken Sie auf 'Weiter' um zu extrahieren",IDC_STATUSTEXT,6,114,150,8
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
 END
 
@@ -46,15 +46,15 @@ END
 
 IDD_PASSWORD DIALOGEX 0, 0, 243, 62
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Password needed"
+CAPTION "Passwort benötigt"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     EDITTEXT        IDC_PASSWORD,72,42,108,13,ES_PASSWORD | ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,186,6,50,14
-    PUSHBUTTON      "Skip File",IDSKIP,186,24,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,186,42,50,14
+    PUSHBUTTON      "Datei überspringen",IDSKIP,186,24,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,186,42,50,14
     LTEXT           "Static",IDC_MESSAGE,24,6,156,30
-    LTEXT           "Password:",IDC_STATIC,24,44,44,8
+    LTEXT           "Passwort:",IDC_STATIC,24,44,44,8
 END
 
 STRINGTABLE
@@ -68,11 +68,11 @@ BEGIN
     IDS_COL_DATE_MOD "Änderungsdatum"
     IDS_YES "Ja"
     IDS_NO "Nein"
-    IDS_ERRORTITLE "Compressed (zipped) Folders Error"
-    IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
-    IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
-    IDS_CANTCREATEZIP "Failed to create a compressed folder '%s' (Error Code: %d)."
-    IDS_CANTREADFILE "Cannot read file '%s'."
+    IDS_ERRORTITLE "Extrahier-Assistent Fehler"
+    IDS_CANTSTARTTHREAD "Der Kompressions-Thread konnte nicht gestartet werden."
+    IDS_NOFILES "Das angegebene Verzeichnis '%s' ist leer, es kann nicht in das Archiv aufgenommen werden."
+    IDS_CANTCREATEZIP "Fehler beim Erstellen des Archivs '%s' (Fehler Code: %d)."
+    IDS_CANTREADFILE "Datei '%s' konnte nicht gelesen werden."
     IDS_EXTRACTING "Extrahieren..."
 
     IDS_WIZ_TITLE "Extrahier-Assistent"
@@ -83,8 +83,8 @@ BEGIN
     IDS_WIZ_BROWSE_TITLE "Wählen Sie ein Ziel zum Extrahieren der Dateien."
 
     IDS_OVERWRITEFILE_TEXT "Dieser Ordner enthält bereits eine Datei '%1'.\nMöchten Sie die existierende Datei ersetzen?"
-    IDS_PASSWORD_FILE_TEXT "The file '%1' is password protected. Please enter the password."
-    IDS_PASSWORD_ZIP_TEXT "Please specify the password to use when extracting this zip file."
+    IDS_PASSWORD_FILE_TEXT "Die Datei '%1' ist passwort-geschützt. Bitte geben Sie das Passwort ein."
+    IDS_PASSWORD_ZIP_TEXT "Bitte geben Sie das Passwort ein, um Dateien dieses Archivs zu extrahieren."
 
     IDS_MENUITEM "&Alle Extrahieren..."
     IDS_HELPTEXT "Ordnerinhalt extrahieren"

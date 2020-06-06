@@ -9,6 +9,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Przeglądarka obrazów i faksów ReactOS"
     IDS_SETASDESKBG "Ustaw jako tło pulpitu"
+    IDS_NOPREVIEW "Podgląd niedostępny."
     IDS_PREVIEW "Podgląd"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Następny obraz"

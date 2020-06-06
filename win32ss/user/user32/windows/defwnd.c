@@ -328,6 +328,9 @@ User32DefWindowProc(HWND hWnd,
 
     switch (Msg)
     {
+        case WM_DEVICECHANGE:
+            return TRUE;
+
         case WM_POPUPSYSTEMMENU:
         {
             /* This is an undocumented message used by the windows taskbar to
@@ -1039,8 +1042,10 @@ RealDefWindowProcW(HWND hWnd,
                if (!Wnd->pSBInfo)
                {
                   SCROLLINFO si = {sizeof si, SIF_ALL, 0, 100, 0, 0, 0};
-                  SetScrollInfo( hWnd, SB_HORZ, &si, FALSE );
-                  SetScrollInfo( hWnd, SB_VERT, &si, FALSE );
+                  if (Wnd->style & WS_HSCROLL)
+                     SetScrollInfo( hWnd, SB_HORZ, &si, FALSE );
+                  if (Wnd->style & WS_VSCROLL)
+                     SetScrollInfo( hWnd, SB_VERT, &si, FALSE );
                }
             }
 

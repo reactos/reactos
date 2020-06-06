@@ -21,7 +21,7 @@ Opcje:\n\
     -l bajtów Rozmiar pakietu echo w bajtach.\n\
     -f        Ustaw w pakiecie flagę „Nie fragmentuj” (tylko IPv4).\n\
     -i TTL    Czas wygaśnięcia.\n\
-    -v TOS    Typ usługi (tylko IPv4. To ustawienie jest przestarzałe \n\
+    -v TOS    Typ usługi (tylko IPv4. To ustawienie jest przestarzałe\n\
               i nie ma wpływu na typ pola usługi w\n\
               nagłówku IP).\n\
     -w czas   Opóźnienie oczekiwanej odpowiedzi, w milisekundach.\n\

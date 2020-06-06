@@ -41,7 +41,7 @@ add_executable(comctl32_winetest
     rsrc.rc)
 
 if(USE_CLANG_CL OR (NOT MSVC))
-    add_target_compile_flags(comctl32_winetest "-Wno-format")
+    target_compile_options(comctl32_winetest PRIVATE "-Wno-format")
 endif()
 
 set_module_type(comctl32_winetest win32cui)

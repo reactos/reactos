@@ -3,6 +3,7 @@ add_definitions(
     -D__WINESRC__
     -D_USE_MATH_DEFINES
     -DUSE_WIN32_OPENGL
+    -D__ROS_LONG64__
     -Dcopysignf=_copysignf)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)

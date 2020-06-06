@@ -39,12 +39,12 @@ Benutzung: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     /i      Die grafische Benutzteroberfläche anzeigen. Diese Option\n\
             muss als erste angegeben werden\n\
     /l      Nur vom lokalen System abmelden. Kann nicht mit /m oder /d\n\
-			benutzt werden. \n\
+			benutzt werden.\n\
     /s      Fährt den Computer herunter.\n\
     /r      Fährt den Computer herunter und startet ihn neu.\n\
     /g      Fährt den Computer herunter und startet ihn neu. Nach dem\n\
-			Neustart des Systems werden alle registrierten Anwendungen \n\
-			ebenfalls neu gestartet. \n\
+			Neustart des Systems werden alle registrierten Anwendungen\n\
+			ebenfalls neu gestartet.\n\
     /a      Brich ein geplantes Herunterfahren ab. Diese Option kann\n\
             nur bei einem geplanten zeitverzögerten Herunterfahren\n\
 			verwendet werden.\n\
@@ -52,7 +52,7 @@ Benutzung: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
             Kann mit /d oder /f verwendet werden.\n\
     /h      Den Computer in Ruhezustand versetzen. Verwendbar mit /f.\n\
     /e      Aktiviert die Speicherung der Gründe für ein unerwartetes\n\
-			Herunterfahren. \n\
+			Herunterfahren.\n\
     /m \\\\Computer  Legt den Zielcomputer fest (UNC- oder IP-Adresse).\n\
     /t xxx  Das Herunterfahren um xxx Sekunden verzögern.\n\
             Die möglichen Werte reichen von 0 bis 315360000 (10 Jahre),\n\
@@ -61,7 +61,7 @@ Benutzung: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
             Es sind maximal 512 Zeichen zulässig.\n\
     /f      Laufende Anwendungen ohne Vorwarnung beenden. Wenn keine\n\
             anderen Parameter angegeben sind, werden Sie automatisch\n\
-			abgemeldet. \n\
+			abgemeldet.\n\
     /d [p|u:]xx:yy  Gibt die Ursache für einen Neustart oder ein\n\
 			Herunterfahren des Systems an.\n\
             ""p"" gibt an, dass dieses Ereignis geplant ist.\n\

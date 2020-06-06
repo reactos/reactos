@@ -4,7 +4,7 @@
  * PURPOSE:     Simple framebuffer driver for NVIDIA NV2A XGPU
  * COPYRIGHT:   Copyright 2004 Gé van Geldorp
  *              Copyright 2004 Filip Navara
- *              Copyright 2019 Stanislav Motylkov (x86corez@gmail.com)
+ *              Copyright 2019-2020 Stanislav Motylkov (x86corez@gmail.com)
  *
  * TODO:
  * - Check input parameters everywhere.
@@ -393,7 +393,7 @@ XboxVmpMapVideoMemory(
     StatusBlock->Information = sizeof(VIDEO_MEMORY_INFORMATION);
 
     /* Reuse framebuffer that was set up by firmware */
-    FrameBuffer.QuadPart = *((PULONG)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET));
+    FrameBuffer.QuadPart = READ_REGISTER_ULONG((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET);
     /* Framebuffer address offset value is coming from the GPU within
      * memory mapped I/O address space, so we're comparing only low
      * 28 bits of the address within actual RAM address space */
@@ -423,7 +423,7 @@ XboxVmpMapVideoMemory(
     MapInformation->FrameBufferLength = MapInformation->VideoRamLength;
 
     /* Tell the nVidia controller about the framebuffer */
-    *((PULONG)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET)) = FrameBuffer.u.LowPart;
+    WRITE_REGISTER_ULONG((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET, FrameBuffer.u.LowPart);
 
     INFO_(IHVVIDEO, "Mapped 0x%x bytes of phys mem at 0x%lx to virt addr 0x%p\n",
         MapInformation->VideoRamLength, FrameBuffer.u.LowPart, MapInformation->VideoRamBase);
@@ -495,8 +495,8 @@ NvGetCrtc(
     PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
     UCHAR Index)
 {
-    *((PUCHAR)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CRTC_REGISTER_INDEX)) = Index;
-    return *((PUCHAR)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CRTC_REGISTER_VALUE));
+    WRITE_REGISTER_UCHAR((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CRTC_REGISTER_INDEX, Index);
+    return READ_REGISTER_UCHAR((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CRTC_REGISTER_VALUE);
 }
 
 UCHAR
@@ -539,8 +539,8 @@ XboxVmpQueryCurrentMode(
     VideoMode->Length = sizeof(VIDEO_MODE_INFORMATION);
     VideoMode->ModeIndex = 0;
 
-    VideoMode->VisScreenWidth = *((PULONG)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_RAMDAC_FP_HVALID_END)) + 1;
-    VideoMode->VisScreenHeight = *((PULONG)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_RAMDAC_FP_VVALID_END)) + 1;
+    VideoMode->VisScreenWidth = READ_REGISTER_ULONG((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_RAMDAC_FP_HVALID_END) + 1;
+    VideoMode->VisScreenHeight = READ_REGISTER_ULONG((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_RAMDAC_FP_VVALID_END) + 1;
 
     if (VideoMode->VisScreenWidth <= 1 || VideoMode->VisScreenHeight <= 1)
     {

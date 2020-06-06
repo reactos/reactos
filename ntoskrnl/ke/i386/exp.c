@@ -17,8 +17,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 KeInitExceptions(VOID)
 {

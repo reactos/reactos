@@ -205,7 +205,7 @@ static void find_devices(HWND hwnd, const GUID* guid, const mountmgr& mm, vector
                                 if (ss > 0) {
                                     WCHAR* desc3 = (WCHAR*)malloc(ss * sizeof(WCHAR));
 
-                                    if (MultiByteToWideChar(CP_OEMCP, MB_PRECOMPOSED, desc2.c_str(), -1, desc3, (int)(ss * sizeof(WCHAR))))
+                                    if (MultiByteToWideChar(CP_OEMCP, MB_PRECOMPOSED, desc2.c_str(), -1, desc3, ss))
                                         dev.friendly_name = desc3;
 
                                     free(desc3);

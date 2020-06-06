@@ -182,6 +182,10 @@ const size_t mbedtls_test_ca_crt_rsa_len = sizeof( mbedtls_test_ca_crt_rsa );
 
 #if defined(MBEDTLS_SHA256_C)
 /* tests/data_files/server2-sha256.crt */
+/* Or more precisely, this is the contents of the version of this file
+ * that's in the mbedtls-2.16 branch, due to a backporting mistake.
+ * We don't want to change the contents now, as that would change the size
+ * which is part of the ABI, which should be stable in LTS branches. */
 #define TEST_SRV_CRT_RSA_SHA256                                          \
 "-----BEGIN CERTIFICATE-----\r\n"                                        \
 "MIIDNzCCAh+gAwIBAgIBAjANBgkqhkiG9w0BAQsFADA7MQswCQYDVQQGEwJOTDER\r\n"   \

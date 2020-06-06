@@ -986,61 +986,66 @@ SampInitializeSAM(VOID)
         goto done;
     }
 
+    /* Create the Administrators alias */
     SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_NAME, szName, 80);
     SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_COMMENT, szComment, 256);
 
-        SampSetupCreateAliasAccount(hBuiltinDomainKey,
-                                    szName,
-                                    szComment,
-                                    DOMAIN_ALIAS_RID_ADMINS);
+    SampSetupCreateAliasAccount(hBuiltinDomainKey,
+                                szName,
+                                szComment,
+                                DOMAIN_ALIAS_RID_ADMINS);
 
-        SampLoadString(hInstance, IDS_ALIAS_USERS_NAME, szName, 80);
-        SampLoadString(hInstance, IDS_ALIAS_USERS_COMMENT, szComment, 256);
+    /* Create the Users alias */
+    SampLoadString(hInstance, IDS_ALIAS_USERS_NAME, szName, 80);
+    SampLoadString(hInstance, IDS_ALIAS_USERS_COMMENT, szComment, 256);
 
-        SampSetupCreateAliasAccount(hBuiltinDomainKey,
-                                    szName,
-                                    szComment,
-                                    DOMAIN_ALIAS_RID_USERS);
+    SampSetupCreateAliasAccount(hBuiltinDomainKey,
+                                szName,
+                                szComment,
+                                DOMAIN_ALIAS_RID_USERS);
 
-        SampLoadString(hInstance, IDS_ALIAS_GUESTS_NAME, szName, 80);
-        SampLoadString(hInstance, IDS_ALIAS_GUESTS_COMMENT, szComment, 256);
+    /* Create the Guests alias */
+    SampLoadString(hInstance, IDS_ALIAS_GUESTS_NAME, szName, 80);
+    SampLoadString(hInstance, IDS_ALIAS_GUESTS_COMMENT, szComment, 256);
 
-        SampSetupCreateAliasAccount(hBuiltinDomainKey,
-                                    szName,
-                                    szComment,
-                                    DOMAIN_ALIAS_RID_GUESTS);
+    SampSetupCreateAliasAccount(hBuiltinDomainKey,
+                                szName,
+                                szComment,
+                                DOMAIN_ALIAS_RID_GUESTS);
 
-        SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_NAME, szName, 80);
-        SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_COMMENT, szComment, 256);
+    /* Create the Power Users alias */
+    SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_NAME, szName, 80);
+    SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_COMMENT, szComment, 256);
 
-        SampSetupCreateAliasAccount(hBuiltinDomainKey,
-                                    szName,
-                                    szComment,
-                                    DOMAIN_ALIAS_RID_POWER_USERS);
+    SampSetupCreateAliasAccount(hBuiltinDomainKey,
+                                szName,
+                                szComment,
+                                DOMAIN_ALIAS_RID_POWER_USERS);
 
-        /* Add the Administrator user to the Administrators alias */
-        pSid = AppendRidToSid(AccountDomainInfo->DomainSid,
-                              DOMAIN_USER_RID_ADMIN);
-        if (pSid != NULL)
-        {
-            SampSetupAddMemberToAlias(hBuiltinDomainKey,
-                                      DOMAIN_ALIAS_RID_ADMINS,
-                                      pSid);
 
-            RtlFreeHeap(RtlGetProcessHeap(), 0, pSid);
-        }
+    /* Add the Administrator user to the Administrators alias */
+    pSid = AppendRidToSid(AccountDomainInfo->DomainSid,
+                          DOMAIN_USER_RID_ADMIN);
+    if (pSid != NULL)
+    {
+        SampSetupAddMemberToAlias(hBuiltinDomainKey,
+                                  DOMAIN_ALIAS_RID_ADMINS,
+                                  pSid);
 
-        /* Add the Guest user to the Guests alias */
-        pSid = AppendRidToSid(AccountDomainInfo->DomainSid,
-                              DOMAIN_USER_RID_GUEST);
-        if (pSid != NULL)
-        {
-            SampSetupAddMemberToAlias(hBuiltinDomainKey,
-                                      DOMAIN_ALIAS_RID_GUESTS,
-                                      pSid);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pSid);
+    }
 
-            RtlFreeHeap(RtlGetProcessHeap(), 0, pSid);
-        }
+    /* Add the Guest user to the Guests alias */
+    pSid = AppendRidToSid(AccountDomainInfo->DomainSid,
+                          DOMAIN_USER_RID_GUEST);
+    if (pSid != NULL)
+    {
+        SampSetupAddMemberToAlias(hBuiltinDomainKey,
+                                  DOMAIN_ALIAS_RID_GUESTS,
+                                  pSid);
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pSid);
+    }
 
     /* Add the Interactive SID to the Users alias */
     SampSetupAddMemberToAlias(hBuiltinDomainKey,
@@ -1065,41 +1070,46 @@ SampInitializeSAM(VOID)
         goto done;
     }
 
-        SampLoadString(hInstance, IDS_GROUP_NONE_NAME, szName, 80);
-        SampLoadString(hInstance, IDS_GROUP_NONE_COMMENT, szComment, 256);
+    /* Create the None group */
+    SampLoadString(hInstance, IDS_GROUP_NONE_NAME, szName, 80);
+    SampLoadString(hInstance, IDS_GROUP_NONE_COMMENT, szComment, 256);
 
-        SampSetupCreateGroupAccount(hAccountDomainKey,
-                                    szName,
-                                    szComment,
-                                    DOMAIN_GROUP_RID_USERS);
+    SampSetupCreateGroupAccount(hAccountDomainKey,
+                                szName,
+                                szComment,
+                                DOMAIN_GROUP_RID_USERS);
 
-        SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_NAME, szName, 80);
-        SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_COMMENT, szComment, 256);
+    /* Create the Administrator user */
+    SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_NAME, szName, 80);
+    SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_COMMENT, szComment, 256);
 
-        SampSetupCreateUserAccount(hAccountDomainKey,
-                                   szName,
-                                   szComment,
-                                   AccountDomainInfo->DomainSid,
-                                   DOMAIN_USER_RID_ADMIN,
-                                   USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
+    SampSetupCreateUserAccount(hAccountDomainKey,
+                               szName,
+                               szComment,
+                               AccountDomainInfo->DomainSid,
+                               DOMAIN_USER_RID_ADMIN,
+                               USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
-        SampSetupAddMemberToGroup(hAccountDomainKey,
-                                  DOMAIN_GROUP_RID_USERS,
-                                  DOMAIN_USER_RID_ADMIN);
+    /* Add the Adminitrator user to the Administrators alias */
+    SampSetupAddMemberToGroup(hAccountDomainKey,
+                              DOMAIN_GROUP_RID_USERS,
+                              DOMAIN_USER_RID_ADMIN);
 
-        SampLoadString(hInstance, IDS_USER_GUEST_NAME, szName, 80);
-        SampLoadString(hInstance, IDS_USER_GUEST_COMMENT, szComment, 256);
+    /* Create the Guest user */
+    SampLoadString(hInstance, IDS_USER_GUEST_NAME, szName, 80);
+    SampLoadString(hInstance, IDS_USER_GUEST_COMMENT, szComment, 256);
 
-        SampSetupCreateUserAccount(hAccountDomainKey,
-                                   szName,
-                                   szComment,
-                                   AccountDomainInfo->DomainSid,
-                                   DOMAIN_USER_RID_GUEST,
-                                   USER_ACCOUNT_DISABLED | USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
+    SampSetupCreateUserAccount(hAccountDomainKey,
+                               szName,
+                               szComment,
+                               AccountDomainInfo->DomainSid,
+                               DOMAIN_USER_RID_GUEST,
+                               USER_ACCOUNT_DISABLED | USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
-        SampSetupAddMemberToGroup(hAccountDomainKey,
-                                  DOMAIN_GROUP_RID_USERS,
-                                  DOMAIN_USER_RID_GUEST);
+    /* Add the Guest user to the Guests alias */
+    SampSetupAddMemberToGroup(hAccountDomainKey,
+                              DOMAIN_GROUP_RID_USERS,
+                              DOMAIN_USER_RID_GUEST);
 
 done:
     if (AccountDomainInfo)

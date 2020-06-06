@@ -18,11 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Define _WIN32_WINNT to get SetThreadIdealProcessor on Windows */
-#ifndef __REACTOS__
-#define _WIN32_WINNT 0x0600
-#endif
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>

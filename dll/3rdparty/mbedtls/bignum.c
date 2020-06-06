@@ -153,9 +153,10 @@ int mbedtls_mpi_shrink( mbedtls_mpi *X, size_t nblimbs )
     mbedtls_mpi_uint *p;
     size_t i;
 
-    /* Actually resize up in this case */
+    /* Actually resize up if there are currently fewer than nblimbs limbs. */
     if( X->n <= nblimbs )
         return( mbedtls_mpi_grow( X, nblimbs ) );
+    /* After this point, then X->n > nblimbs and in particular X->n > 0. */
 
     for( i = X->n - 1; i > 0; i-- )
         if( X->p[i] != 0 )
@@ -192,7 +193,7 @@ int mbedtls_mpi_copy( mbedtls_mpi *X, const mbedtls_mpi *Y )
     if( X == Y )
         return( 0 );
 
-    if( Y->p == NULL )
+    if( Y->n == 0 )
     {
         mbedtls_mpi_free( X );
         return( 0 );

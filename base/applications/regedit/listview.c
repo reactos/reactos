@@ -563,7 +563,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
     }
     return TRUE;
     case NM_SETFOCUS:
-        g_pChildWnd->nFocusPanel = 0;
+        g_pChildWnd->nFocusPanel = 1;
         break;
     case LVN_BEGINLABELEDIT:
         Info = (NMLVDISPINFO*)lParam;

@@ -244,34 +244,12 @@ AddResourceItems(
     IN PDEVADVPROP_INFO dap,
     IN HWND hWndDevList)
 {
-    HKEY hKey;
     WCHAR szBuffer[100];
     WCHAR szDetail[100];
-    BYTE szData[512];
-    DWORD dwSize;
     PCM_RESOURCE_LIST ResourceList;
-    LONG Result;
     ULONG ItemCount = 0, Index;
 
-    wsprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Enum\\%s\\LogConf", dap->szDeviceID);
-    Result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, KEY_READ, &hKey);
-    if (Result != ERROR_SUCCESS)
-    {
-        /* failed to open device instance log conf dir */
-        return;
-    }
-
-    dwSize = sizeof(szData);
-    Result = RegQueryValueExW(hKey, L"BootConfig", NULL, NULL, szData, &dwSize);
-
-    RegCloseKey(hKey);
-    if (Result != ERROR_SUCCESS)
-    {
-        /* failed to query resources */
-        return;
-    }
-
-    ResourceList = (PCM_RESOURCE_LIST)szData;
+    ResourceList = (PCM_RESOURCE_LIST)dap->pResourceList;
 
     for (Index = 0; Index < ResourceList->List[0].PartialResourceList.Count; Index++)
     {
@@ -374,3 +352,43 @@ ResourcesProcDriverDlgProc(IN HWND hwndDlg,
     return Ret;
 }
 
+
+PVOID
+GetResourceList(
+    LPWSTR pszDeviceID)
+{
+    WCHAR szBuffer[100];
+    PCM_RESOURCE_LIST pResourceList = NULL;
+    HKEY hKey = NULL;
+    DWORD dwError, dwSize;
+
+    wsprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Enum\\%s\\LogConf", pszDeviceID);
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, KEY_READ, &hKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        /* failed to open device instance log conf dir */
+        return NULL;
+    }
+
+    dwSize = 0;
+    RegQueryValueExW(hKey, L"BootConfig", NULL, NULL, NULL, &dwSize);
+    if (dwSize == 0)
+        goto done;
+
+    pResourceList = static_cast<PCM_RESOURCE_LIST>(HeapAlloc(GetProcessHeap(), 0, dwSize));
+    if (pResourceList == NULL)
+        goto done;
+
+    dwError = RegQueryValueExW(hKey, L"BootConfig", NULL, NULL, (LPBYTE)pResourceList, &dwSize);
+    if (dwError != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, pResourceList);
+        pResourceList = NULL;
+    }
+
+done:
+    if (hKey != NULL)
+        RegCloseKey(hKey);
+
+    return (PVOID)pResourceList;
+}

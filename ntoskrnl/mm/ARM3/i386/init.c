@@ -418,6 +418,8 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         StartPde++;
     }
 
+    MmSubsectionBase = (ULONG_PTR)MmNonPagedPoolStart;
+
     //
     // Now remember where the expansion starts
     //

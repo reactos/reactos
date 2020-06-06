@@ -78,6 +78,9 @@ IDI_MINES BITMAP "rc/mines.bmp"
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
 #endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/hu-HU.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif

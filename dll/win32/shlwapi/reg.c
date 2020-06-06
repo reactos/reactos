@@ -2422,16 +2422,32 @@ HRESULT WINAPI SHRegGetCLSIDKeyA(REFGUID guid, LPCSTR lpszValue, BOOL bUseHKCU, 
 HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU,
                            BOOL bCreate, PHKEY phKey)
 {
+#ifndef __REACTOS__
   static const WCHAR szClassIdKey[] = { 'S','o','f','t','w','a','r','e','\\',
     'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
     'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
     'E','x','p','l','o','r','e','r','\\','C','L','S','I','D','\\' };
+#endif
 #define szClassIdKeyLen (sizeof(szClassIdKey)/sizeof(WCHAR))
   WCHAR szKey[MAX_PATH];
   DWORD dwRet;
   HKEY hkey;
 
   /* Create the key string */
+#ifdef __REACTOS__
+  // https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/reg/reggetclsidkey.htm
+  WCHAR* ptr;
+
+  wcscpy(szKey, bUseHKCU ? L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\" : L"CLSID\\");
+  ptr = szKey + wcslen(szKey);
+  SHStringFromGUIDW(guid, ptr, 39); /* Append guid */
+  if (lpszValue)
+  {
+      ptr = szKey + wcslen(szKey);
+      wcscat(ptr, L"\\");
+      wcscat(++ptr, lpszValue);
+  }
+#else
   memcpy(szKey, szClassIdKey, sizeof(szClassIdKey));
   SHStringFromGUIDW(guid, szKey + szClassIdKeyLen, 39); /* Append guid */
 
@@ -2440,6 +2456,7 @@ HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU,
     szKey[szClassIdKeyLen + 39] = '\\';
     strcpyW(szKey + szClassIdKeyLen + 40, lpszValue); /* Append value name */
   }
+#endif
 
   hkey = bUseHKCU ? HKEY_CURRENT_USER : HKEY_CLASSES_ROOT;
 

@@ -111,3 +111,18 @@ WINSTAAPI _WinStationNotifyLogon(PVOID A,
 {
     UNIMPLEMENTED;
 }
+
+VOID
+WINSTAAPI WinStationCanLogonProceed(PVOID A,
+                                    PVOID B,
+                                    PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationOpenSessionDirectory(PVOID A,
+                                          PVOID B)
+{
+    UNIMPLEMENTED;
+}

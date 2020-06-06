@@ -6,7 +6,7 @@ BEGIN
     MSG_COPYRIGHT_1 "本软件是自由软件，欢迎您以当前状况下重分发本软件。\n\n"
     MSG_USAGE "用法: TELNET [params][host [port]]\n\n  params\n    -d:FILENAME.EXT  转储所有传入的数据到 FILENAME.EXT。\n  host              要连接的远程主机的主机名或者 IP 地址。\n"
     MSG_USAGE_1 "  port              要打开的服务端口（telnet 的默认端口是 23）。\n\n"
-    MSG_HELP "命令可以被简写。命令有:\n  \ncl[ose]         关闭当前连接\nop[en]          连接到一个站点\nq[uit]          退出 telnet\n"
+    MSG_HELP "命令可以被简写。命令有:\n\ncl[ose]         关闭当前连接\nop[en]          连接到一个站点\nq[uit]          退出 telnet\n"
     MSG_HELP_1 "ke[ys]          修改或现实按键映射 (写入一些键来查看选项)\nse[t]           显示或修改配置选项\nz               暂停\n? h[elp]        打印帮助信息\n"
     MSG_INVCMD "无效命令。输入 ? 获得帮助。\n"
     MSG_ERROR "%1 失败。\n"

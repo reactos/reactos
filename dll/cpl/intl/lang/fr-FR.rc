@@ -132,7 +132,7 @@ BEGIN
     GROUPBOX "", -1, 7, 124, 228, 60, WS_VISIBLE
     LTEXT "Notation de l'heure\n\n\
 h = heure    m = minute    s = seconde    t = AM ou PM\n\n\
-h = 12 heures   H =24 heures \n\
+h = 12 heures   H =24 heures\n\
 hh, mm, ss = Zéro de départ   h, m, s = Pas de zéro de départ", -1, 13, 133, 214, 47, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
 
@@ -215,5 +215,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
     IDS_ERROR_NLS_CODE_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "Unable to start input.dll"
+    IDS_ERROR_UNICODE "Impossible d'installer une nouvelle langue pour les programmes ne supportant pas Unicode!"
 END
-

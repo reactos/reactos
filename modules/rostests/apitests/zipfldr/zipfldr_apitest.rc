@@ -1,0 +1,8 @@
+#include <windef.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+1 RCDATA "zipfldr_test_file.zip"
+2 RCDATA "zipfldr_test_enum.zip"
+

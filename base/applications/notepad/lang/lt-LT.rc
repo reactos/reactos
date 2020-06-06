@@ -152,7 +152,7 @@ Ar norite sukurti naują bylą?"
 Ar norite išsaugoti pakeitimus?"
     STRING_NOTFOUND "'%s' nerastas."
     STRING_OUT_OF_MEMORY "Nepakanka atminties užduoties užbaigimui. \
-\nUžverkite vieną ar kelias programas, kad padidintumėte \nlaisvos atminties kiekį."
+\nUžverkite vieną ar kelias programas, kad padidintumėte\nlaisvos atminties kiekį."
     STRING_CANNOTFIND "Nepavyko rasti '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

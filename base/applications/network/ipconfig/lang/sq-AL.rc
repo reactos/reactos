@@ -33,11 +33,11 @@ BEGIN
                   /flushdns | /displaydns | /registerdns |\n \
                   /showclassid adapter |\n \
                   /setclassid adapter [classid] ]\n \
-    \n \
+\n \
     where\n \
         adapter         Connection name\n \
                        (karakteret jolly * dhe ? lejohen, shih shembujt)\n \
-    \n \
+\n \
         Options:\n \
            /?           Shfaq kete mesazhe ndihme\n \
            /all         Shfaq informacion te plote konfigurimi.\n \
@@ -48,15 +48,15 @@ BEGIN
            /displaydns  Shfaq permbajtjen e DNS'se te leshuara.\n \
            /showclassid Shfaq te gjitha klasat e ID've dhcp te lejuara per adapterat.\n \
            /setclassid  Modifikon klasen e ID've te dhcp's.\n \
-    \n \
+\n \
     Parazgjedhja shfaq vetem adresat e IP've, subnet maskat dhe\n \
     gateway e parazgjedhur per secilin adapter i lidhut me TCP/IP.\n \
-    \n \
+\n \
     Për lirim dhe rinovim, nese emri i adapterit nuk eshte specifikuart, atehere adresa e IP'se\n \
     jepet per te gjithe adapterat te lidhur me TCP/IP qe lirohen dhe rinovohen.\n \
-    \n \
+\n \
     Për Setclassid, nese nuk specifikohet ClassId, atehere ClassId hiqet.\n \
-    \n \
+\n \
     Examples:\n \
         > ipconfig                   ... Shfaq informacionet.\n \
         > ipconfig /all              ... Shfaq informacionet\n \

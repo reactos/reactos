@@ -572,7 +572,6 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
 {
 #ifndef _M_AMD64
     KIRQL OldIrql;
-    PVOID Address;
 #endif
 
     DPRINT("MmDeleteProcessAddressSpace(Process %p (%s))\n", Process,
@@ -591,7 +590,9 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
 #if (_MI_PAGING_LEVELS == 2)
     {
         KIRQL OldIrql;
+        PVOID Address;
         PMMPDE pointerPde;
+
         /* Attach to Process */
         KeAttachProcess(&Process->Pcb);
 

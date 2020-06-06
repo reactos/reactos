@@ -103,10 +103,10 @@ add_library(libtirpc MODULE
 
 if(MSVC AND (NOT USE_CLANG_CL))
     replace_compile_flags("/we4101" " ")
-    add_target_compile_flags(libtirpc "/wd4101 /wd4133 /wd4473 /wd4477")
+    target_compile_options(libtirpc PRIVATE /wd4101 /wd4133 /wd4473 /wd4477)
 else()
     # FIXME: Tons of warnings.
-    add_target_compile_flags(libtirpc "-w")
+    target_compile_options(libtirpc PRIVATE "-w")
 endif()
 
 set_module_type(libtirpc win32dll)

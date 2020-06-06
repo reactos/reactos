@@ -54,7 +54,7 @@ MCIERR_UNRECOGNIZED_KEYWORD,      "Modulul-pilot nu recunoaște parametrul de co
 MCIERR_UNRECOGNIZED_COMMAND,      "Modulul-pilot nu recunoaște comanda specificată."
 MCIERR_HARDWARE,                  "A survenit o problemă la dispozitivul media. Asigurați-vă că funcționează corect sau contactați producătorul dispozitivului."
 MCIERR_INVALID_DEVICE_NAME,       "Dispozitivul specificat nu este deschis sau nu este recunoscut de către MCI."
-MCIERR_OUT_OF_MEMORY,             "Memorie disponibilă pentru această activitate este insuficientă. \nÎnchideți una sau mai multe aplicații pentru a elibera memorie, apoi reîncercați."
+MCIERR_OUT_OF_MEMORY,             "Memorie disponibilă pentru această activitate este insuficientă.\nÎnchideți una sau mai multe aplicații pentru a elibera memorie, apoi reîncercați."
 MCIERR_DEVICE_OPEN,               "Numele de dispozitiv deja este utilizat ca alias de către aplicație. Utilizați un alias unic."
 MCIERR_CANNOT_LOAD_DRIVER,        "A survenit o eroare neidentificabilă la încărcarea modulului-pilot al dispozitivului."
 MCIERR_MISSING_COMMAND_STRING,    "Nu a fost specificată comanda."

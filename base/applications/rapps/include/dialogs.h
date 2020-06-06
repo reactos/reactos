@@ -8,13 +8,10 @@
 // Settings dialog (settingsdlg.cpp)
 VOID CreateSettingsDlg(HWND hwnd);
 
-// About dialog (aboutdlg.cpp)
-VOID ShowAboutDialog();
-
 //Main window
 VOID ShowMainWindow(INT nShowCmd);
 
 // Download dialogs
-VOID DownloadApplicationsDB(LPCWSTR lpUrl);
+VOID DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial);
 BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo, BOOL bIsModal);
 BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo>& AppsList, BOOL bIsModal);

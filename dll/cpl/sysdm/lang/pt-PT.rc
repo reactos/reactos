@@ -23,7 +23,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 140, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 140, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 140, 173, 118, 9
-    CONTROL "Visite  <A HREF=""http://www.reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 159, 10
+    CONTROL "Visite  <A HREF=""https://reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 159, 10
     PUSHBUTTON "Ver &licença...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -203,7 +203,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Arranque do sistema", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Sistema operativo predefinido:", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Mostrar a lista de &sistemas operativos durante:", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -221,7 +221,7 @@ BEGIN
     AUTOCHECKBOX "Enviar um &alerta administrativo", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "&Reiniciar automaticamente", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "Escrever informações de depuração", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "Ficheiro de imagem de erro:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "&Substituir ficheiro existente", IDC_STRRECOVERWRITE, 17, 228, 125, 10
@@ -337,12 +337,12 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Aplicação do painel de controle do sistema"
     IDS_WARNINITIALSIZE "Digite um valor numérico para o tamanho inicial do arquivo de paginação."
     IDS_WARNMAXIMUMSIZE "Digite um valor numérico para o tamanho máximo do arquivo de paginação."
-    IDS_WARNINITIALRANGE "O tamanho inicial do arquivo de paginação não deve ser menor que 16 MB e não deve exceder o espaço disponível na unidade seleccionada."
+    IDS_WARNINITIALRANGE "O tamanho inicial do arquivo de paginação não deve ser menor que 2 MB e não deve exceder o espaço disponível na unidade seleccionada."
     IDS_WARNMAXIMUMRANGE "O tamanho máximo do arquivo de paginação não deve ser menor que o tamanho inicial, não deve ser maior que 4095 MB e não deve exceder o espaço disponível na unidade seleccionada."
     IDS_PAGEFILE_NONE "Nenhum"
     IDS_PAGEFILE_SYSTEM "Sistema gerenciado"
     IDS_INFOREBOOT "Precisa reiniciar o computador para aplicar as alterações."
-    IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributors\nWine Team\n\n"
+    IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini\n\nRelease Engineers\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributors\nWine Team\n\n"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirmar exclusão do perfil"
     IDS_HWPROFILE_CONFIRM_DELETE "Tem certeza de que deseja excluir o perfil de hardware ""%s""?"
     IDS_HWPROFILE_ALREADY_IN_USE "O nome do perfil já está em uso."

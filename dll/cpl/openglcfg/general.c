@@ -10,20 +10,11 @@ static VOID InitSettings(HWND hWndDlg)
 {
     HKEY hKeyRenderer;
     HKEY hKeyDrivers;
+    DWORD dwType = 0;
+    DWORD dwSize = MAX_KEY_LENGTH;
     WCHAR szBuffer[MAX_KEY_LENGTH];
     WCHAR szBultin[MAX_KEY_LENGTH];
     WCHAR szDriver[MAX_KEY_LENGTH];
-    DWORD dwType = 0;
-    DWORD dwSize = MAX_KEY_LENGTH; 
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, KEY_DRIVERS, 0, KEY_READ, &hKeyDrivers) != ERROR_SUCCESS)
-        return;
-
-    if (RegCreateKeyExW(HKEY_CURRENT_USER, KEY_RENDERER, 0, NULL, 0, MAXIMUM_ALLOWED, NULL, &hKeyRenderer, NULL) != ERROR_SUCCESS)
-    {
-        RegCloseKey(hKeyDrivers);
-        return;
-    }
 
     LoadString(hApplet, IDS_DEBUG_DNM, (LPTSTR)szBultin, 127);
     SendDlgItemMessageW(hWndDlg, IDC_DEBUG_OUTPUT, CB_ADDSTRING, 0, (LPARAM)szBultin);
@@ -42,8 +33,13 @@ static VOID InitSettings(HWND hWndDlg)
     LoadString(hApplet, IDS_RENDERER_RSWR, (LPTSTR)szBultin, 127);
     SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_ADDSTRING, 0, (LPARAM)szBultin);
 
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, KEY_RENDERER, 0, NULL, 0, MAXIMUM_ALLOWED, NULL, &hKeyRenderer, NULL) != ERROR_SUCCESS)
+        return;
+
     if (RegQueryValueExW(hKeyRenderer, NULL, NULL, &dwType, (LPBYTE)szDriver, &dwSize) != ERROR_SUCCESS || dwSize == sizeof(WCHAR))
         SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_SETCURSEL, RENDERER_DEFAULT, 0);
+
+    RegCloseKey(hKeyRenderer);
 
     if (dwType == REG_SZ)
     {
@@ -53,12 +49,14 @@ static VOID InitSettings(HWND hWndDlg)
         if (wcsncmp(szBultin, szDriver, MAX_KEY_LENGTH) == 0)
             SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_SETCURSEL, RENDERER_RSWR, 0);
 
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, KEY_DRIVERS, 0, KEY_READ, &hKeyDrivers) != ERROR_SUCCESS)
+            return;
+
         ret = RegQueryInfoKeyW(hKeyDrivers, NULL, NULL, NULL, &dwNumDrivers, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
         if (ret != ERROR_SUCCESS || dwNumDrivers == 0)
         {
             RegCloseKey(hKeyDrivers);
-            RegCloseKey(hKeyRenderer);
             return;
         }
 
@@ -90,10 +88,9 @@ static VOID InitSettings(HWND hWndDlg)
             if (wcsncmp(szBuffer, szDriver, MAX_KEY_LENGTH) == 0)
                 SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_SETCURSEL, iKey + 2, 0);
         }
-    }
 
-    RegCloseKey(hKeyDrivers);
-    RegCloseKey(hKeyRenderer);
+        RegCloseKey(hKeyDrivers);
+    }
 
     return;
 }

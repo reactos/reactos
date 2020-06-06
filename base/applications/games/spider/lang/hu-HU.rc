@@ -20,19 +20,19 @@ BEGIN
     CONTROL "", IDC_CARDBACK11, "Static", SS_NOTIFY, 232, 89, 50, 71
     CONTROL "", IDC_CARDBACK12, "Static", SS_NOTIFY, 289, 89, 50, 71
     DEFPUSHBUTTON "OK", IDOK, 114, 165, 54, 14
-    PUSHBUTTON "Mégsem", IDCANCEL, 176, 165, 54, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 176, 165, 54, 14
 END
 
 IDD_DIFFICULTY DIALOGEX 100, 100, 106, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Difficulty"
+CAPTION "Nehézség"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Könnyû: &Egy szín", IDC_DIF_ONECOLOR, 8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Könnyű: &Egy szín", IDC_DIF_ONECOLOR, 8, 10, 80, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Közepes: &Két szín", IDC_DIF_TWOCOLORS, 8, 23, 80, 10
     AUTORADIOBUTTON "Nehéz: &Négy szín", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
     DEFPUSHBUTTON "OK", IDOK, 8, 58, 40, 14
-    PUSHBUTTON "Mégsem", IDCANCEL, 58, 58, 40, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 58, 58, 40, 14
 END
 
 /* Strings */
@@ -40,7 +40,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Fekete özvegy"
-    IDS_SPI_ABOUT "Fekete Özvéegy, készítette Gregor Schneider\n\nCardLib verzió 1.0"
+    IDS_SPI_ABOUT "Fekete Özvegy, készítette Gregor Schneider\n\nCardLib verzió 1.0"
     IDS_SPI_QUIT "Kilépés ebbõl a játékból?"
     IDS_SPI_WIN "Gratulálok, Ön nyert!"
     IDS_SPI_DEAL "Új leosztás?"

@@ -1,10 +1,10 @@
-/* Indonesian language file by Zaenal Mutaqin <ade999 at gmail dot com> 2007-02-15 */
+/* Indonesian language file by Zaenal Mutaqin <ade999 at gmail dot com> 2007-02-15 and Mas Ahmad Muhammad <m dot charly81 at gmail dot com> */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
+    STRING_FILE_NOT_FOUND "Berkas tidak ditemukan - '%s'\n"
     STRING_ATTRIB_HELP "Menampilkan atau mengubah atribut file.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
        [/S [/D]]\n\n\

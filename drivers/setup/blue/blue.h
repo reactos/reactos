@@ -145,5 +145,6 @@ typedef struct _CFFILE
 #define PELDATA      (PUCHAR)0x3c9
 
 VOID ScrLoadFontTable(_In_ ULONG CodePage);
+VOID ScrSetFont(_In_ PUCHAR FontBitfield);
 
 #endif /* _BLUE_PCH_ */

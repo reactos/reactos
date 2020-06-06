@@ -49,7 +49,7 @@ MOVE     Bir dizinden bir ya da daha çok kütüğü başka bir dizine taşır.\
 PATH     Çalıştırılailir kütükler için bir arama yolu görüntüler ya da\n\
          oluşturur.\n\
 PAUSE    Bir toplu iş kütüğünde işlemeyi askıya alır ve bir ileti görüntüler.\n\
-POPD     PUSHD ile kaydedilen şimdiki dizinin bir önceki değerini \n\
+POPD     PUSHD ile kaydedilen şimdiki dizinin bir önceki değerini\n\
          yeniden yükler.\n\
 PROMPT   Komut istemini değiştirir.\n\
 PUSHD    Şimdiki dizini kaydeder, sonra onu değiştirir.\n\

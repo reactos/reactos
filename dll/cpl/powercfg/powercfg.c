@@ -124,6 +124,8 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     {
         InitPropSheetPage(&psh, IDD_POWERSCHEMESPAGE_ACDC, PowerSchemesDlgProc);
         InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, AlarmsDlgProc);
+
+        /* FIXME: Add battery page */
     }
     else
     {
@@ -134,6 +136,8 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     {
         InitPropSheetPage(&psh, IDD_PROPPAGEHIBERNATE, HibernateDlgProc);
     }
+
+    /* FIXME: Add UPS page */
 
     /* Load additional pages provided by shell extensions */
     hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Power"), MAX_POWER_PAGES - psh.nPages);

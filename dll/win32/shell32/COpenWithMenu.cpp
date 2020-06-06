@@ -534,8 +534,6 @@ VOID COpenWithList::LoadFromProgIdKey(HKEY hKey, LPCWSTR pwszExt)
         {
             StringCbCopyW(pApp->wszCmd, sizeof(pApp->wszCmd), wszCmd);
             SetRecommended(pApp);
-            if (!pApp->bMRUList)
-                AddAppToMRUList(pApp, pwszExt);
         }
     }
 }
@@ -652,6 +650,9 @@ BOOL COpenWithList::AddAppToMRUList(SApp *pApp, LPCWSTR pwszFilename)
     {
         /* Insert the entry */
         AddMRUStringW(hList, pApp->wszFilename);
+
+        /* Set MRU presence */
+        pApp->bMRUList = TRUE;
 
         /* Close MRU list */
         FreeMRUList(hList);

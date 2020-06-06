@@ -360,15 +360,25 @@ KdReceivePacket(
     _Out_ PULONG DataLength,
     _Inout_ PKD_CONTEXT KdContext)
 {
-    KDDBGPRINT("KdReceivePacket.\n");
+    KDDBGPRINT("KdReceivePacket --> ");
 
     if (PacketType == PACKET_TYPE_KD_POLL_BREAKIN)
     {
+        static BOOLEAN firstTime = TRUE;
+        KDDBGPRINT("Polling break in.\n");
+        if (firstTime)
+        {
+            /* Force debug break on init */
+            firstTime = FALSE;
+            return KdPacketReceived;
+        }
+
         return KdpPollBreakIn();
     }
 
     if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
     {
+        KDDBGPRINT("Debug prompt.\n");
         /* HACK ! RtlAssert asks for (boipt), always say "o" --> break once. */
         MessageData->Length = 1;
         MessageData->Buffer[0] = 'o';
@@ -379,14 +389,17 @@ KdReceivePacket(
     {
         DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
 
+        KDDBGPRINT("State manipulation: ");
+
         /* Maybe we are in a send<->receive loop that GDB doesn't need to know about */
         if (KdpManipulateStateHandler != NULL)
         {
-            KDDBGPRINT("KDGBD: We have a manipulate state handler.\n");
+            KDDBGPRINT("We have a manipulate state handler.\n");
             return KdpManipulateStateHandler(State, MessageData, DataLength, KdContext);
         }
 
         /* Receive data from GDB  and interpret it */
+        KDDBGPRINT("Receiving data from GDB.\n");
         return gdb_receive_and_interpret_packet(State, MessageData, DataLength, KdContext);
     }
 

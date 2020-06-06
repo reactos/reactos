@@ -152,7 +152,7 @@ Chcete ho vytvořit ?"
 Chcete uložit změny ?"
     STRING_NOTFOUND "'%s' nebyl nalezen."
     STRING_OUT_OF_MEMORY "Není dost paměti na dokončení této úlohy. \
-\nUzavřete jednu či více aplikací, abyste získali více  \nvolné \
+\nUzavřete jednu či více aplikací, abyste získali více\nvolné \
 paměti."
     STRING_CANNOTFIND "Nelze nalézt '%s'"
     STRING_ANSI "ANSI"

@@ -50,29 +50,29 @@ XboxGetSerialPort(ULONG Index, PULONG Irq)
     ULONG ComBase = 0;
 
     // Enter Configuration
-    WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_ENTER_CONFIG_KEY);
+    WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_ENTER_CONFIG_KEY);
 
     // Select serial device
-    WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_CONFIG_DEVICE_NUMBER);
-    WRITE_PORT_UCHAR(LPC_IO_BASE + 1, Device[Index]);
+    WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_CONFIG_DEVICE_NUMBER);
+    WRITE_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1), Device[Index]);
 
     // Check if selected device is active
-    WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_CONFIG_DEVICE_ACTIVATE);
-    if (READ_PORT_UCHAR(LPC_IO_BASE + 1) == 1)
+    WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_CONFIG_DEVICE_ACTIVATE);
+    if (READ_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1)) == 1)
     {
         // Read LSB
-        WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_CONFIG_DEVICE_BASE_ADDRESS_LOW);
-        ComBase = READ_PORT_UCHAR(LPC_IO_BASE + 1);
+        WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_CONFIG_DEVICE_BASE_ADDRESS_LOW);
+        ComBase = READ_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1));
         // Read MSB
-        WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_CONFIG_DEVICE_BASE_ADDRESS_HIGH);
-        ComBase |= (READ_PORT_UCHAR(LPC_IO_BASE + 1) << 8);
+        WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_CONFIG_DEVICE_BASE_ADDRESS_HIGH);
+        ComBase |= (READ_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1)) << 8);
         // Read IRQ
-        WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_CONFIG_DEVICE_INTERRUPT);
-        *Irq = READ_PORT_UCHAR(LPC_IO_BASE + 1);
+        WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_CONFIG_DEVICE_INTERRUPT);
+        *Irq = READ_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1));
     }
 
     // Exit Configuration
-    WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_EXIT_CONFIG_KEY);
+    WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_EXIT_CONFIG_KEY);
 
     return ComBase;
 }
@@ -261,8 +261,8 @@ MachInit(const char *CmdLine)
 
     /* Check for Xbox by identifying device at PCI 0:0:0, if it's
      * 0x10DE/0x02A5 then we're running on an Xbox */
-    WRITE_PORT_ULONG((ULONG *)0xCF8, CONFIG_CMD(0, 0, 0));
-    PciId = READ_PORT_ULONG((ULONG *)0xCFC);
+    WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(0, 0, 0));
+    PciId = READ_PORT_ULONG((PULONG)0xCFC);
     if (PciId != 0x02A510DE)
     {
         ERR("This is not original Xbox!\n");
@@ -276,10 +276,6 @@ MachInit(const char *CmdLine)
 
     /* Set LEDs to red before anything is initialized */
     XboxSetLED("rrrr");
-
-    /* Initialize our stuff */
-    XboxMemInit();
-    XboxVideoInit();
 
     /* Setup vtbl */
     MachVtbl.ConsPutChar = XboxConsPutChar;
@@ -311,6 +307,10 @@ MachInit(const char *CmdLine)
     MachVtbl.HwDetect = XboxHwDetect;
     MachVtbl.HwIdle = XboxHwIdle;
 
+    /* Initialize our stuff */
+    XboxMemInit();
+    XboxVideoInit();
+
     /* Set LEDs to orange after init */
     XboxSetLED("oooo");
 
@@ -324,6 +324,9 @@ XboxPrepareForReactOS(VOID)
     XboxVideoPrepareForReactOS();
     XboxDiskInit(FALSE);
     DiskStopFloppyMotor();
+    
+    /* Turn off debug messages to screen */
+    DebugDisableScreenPort();
 }
 
 /* EOF */

@@ -21,6 +21,7 @@
 #include "wine/port.h"
 
 #include <stdio.h>
+#include <assert.h>
 
 #include "d3dx9_private.h"
 #include "d3dcompiler.h"
@@ -2913,7 +2914,12 @@ static HRESULT d3dx_set_shader_const_state(struct ID3DXEffectImpl *effect, enum 
         {D3DXPT_BOOL,  sizeof(BOOL),      "SCT_PSBOOL"},
         {D3DXPT_INT,   sizeof(int) * 4,   "SCT_PSINT"},
     };
+
+    BOOL is_heap_buffer = FALSE;
     unsigned int element_count;
+    void *buffer = value_ptr;
+    D3DXVECTOR4 value;
+    HRESULT ret;
 
     if (op < 0 || op > SCT_PSINT)
     {
@@ -2927,28 +2933,66 @@ static HRESULT d3dx_set_shader_const_state(struct ID3DXEffectImpl *effect, enum 
         FIXME("Unexpected param type %u.\n", param->type);
         return D3DERR_INVALIDCALL;
     }
-    if (param->bytes % const_tbl[op].elem_size != 0)
+
+    if (param->bytes % const_tbl[op].elem_size || element_count > 1)
     {
-        FIXME("Unexpected param size %u, rows %u, cols %u.\n", param->bytes, param->rows, param->columns);
-        return D3DERR_INVALIDCALL;
+        unsigned int param_data_size;
+
+        TRACE("Parameter size %u, rows %u, cols %u.\n", param->bytes, param->rows, param->columns);
+
+        if (param->bytes % const_tbl[op].elem_size)
+            ++element_count;
+        if (element_count > 1)
+        {
+            WARN("Setting %u elements.\n", element_count);
+            buffer = HeapAlloc(GetProcessHeap(), 0, const_tbl[op].elem_size * element_count);
+            if (!buffer)
+            {
+                ERR("Out of memory.\n");
+                return E_OUTOFMEMORY;
+            }
+            is_heap_buffer = TRUE;
+        }
+        else
+        {
+            assert(const_tbl[op].elem_size <= sizeof(value));
+            buffer = &value;
+        }
+        param_data_size = min(param->bytes, const_tbl[op].elem_size);
+        memcpy(buffer, value_ptr, param_data_size);
+        memset((unsigned char *)buffer + param_data_size, 0,
+                const_tbl[op].elem_size * element_count - param_data_size);
     }
 
     switch (op)
     {
         case SCT_VSFLOAT:
-            return SET_D3D_STATE(effect, SetVertexShaderConstantF, index, (const float *)value_ptr, element_count);
+            ret = SET_D3D_STATE(effect, SetVertexShaderConstantF, index, (const float *)buffer, element_count);
+            break;
         case SCT_VSBOOL:
-            return SET_D3D_STATE(effect, SetVertexShaderConstantB, index, (const BOOL *)value_ptr, element_count);
+            ret = SET_D3D_STATE(effect, SetVertexShaderConstantB, index, (const BOOL *)buffer, element_count);
+            break;
         case SCT_VSINT:
-            return SET_D3D_STATE(effect, SetVertexShaderConstantI, index, (const int *)value_ptr, element_count);
+            ret = SET_D3D_STATE(effect, SetVertexShaderConstantI, index, (const int *)buffer, element_count);
+            break;
         case SCT_PSFLOAT:
-            return SET_D3D_STATE(effect, SetPixelShaderConstantF, index, (const float *)value_ptr, element_count);
+            ret = SET_D3D_STATE(effect, SetPixelShaderConstantF, index, (const float *)buffer, element_count);
+            break;
         case SCT_PSBOOL:
-            return SET_D3D_STATE(effect, SetPixelShaderConstantB, index, (const BOOL *)value_ptr, element_count);
+            ret = SET_D3D_STATE(effect, SetPixelShaderConstantB, index, (const BOOL *)buffer, element_count);
+            break;
         case SCT_PSINT:
-            return SET_D3D_STATE(effect, SetPixelShaderConstantI, index, (const int *)value_ptr, element_count);
+            ret = SET_D3D_STATE(effect, SetPixelShaderConstantI, index, (const int *)buffer, element_count);
+            break;
+        default:
+            ret = D3DERR_INVALIDCALL;
+            break;
     }
-    return D3D_OK;
+
+    if (is_heap_buffer)
+        HeapFree(GetProcessHeap(), 0, buffer);
+
+    return ret;
 }
 
 static HRESULT d3dx9_apply_state(struct ID3DXEffectImpl *effect, struct d3dx_pass *pass,

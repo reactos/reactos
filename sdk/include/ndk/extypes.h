@@ -582,7 +582,7 @@ typedef struct _HANDLE_TRACE_DEBUG_INFO
     LONG RefCount;
     ULONG TableSize;
     ULONG BitMaskFlags;
-    FAST_MUTEX CloseCompatcionLock;
+    FAST_MUTEX CloseCompactionLock;
     ULONG CurrentStackIndex;
     HANDLE_TRACE_DB_ENTRY TraceDb[1];
 } HANDLE_TRACE_DEBUG_INFO, *PHANDLE_TRACE_DEBUG_INFO;

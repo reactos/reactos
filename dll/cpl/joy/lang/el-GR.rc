@@ -81,4 +81,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Προσθήκη, κατάργηση και ρύθμιση του υλικού ελεγκτών παιχνιδιών όπως joystick και χειριστήρια παιχνιδιών."
     IDS_CONTROLLER "Ελεγκτής"
     IDS_STATUS "Κατάσταση"
+    IDS_NONE "(None)"
 END

@@ -19,7 +19,7 @@ HKCR
         '{888DCA60-FC0A-11CF-8F0F-00C04FD7D062}' = s 'Compressed (zipped) Folder SendTo Target'
         {
             val EditFlags = d '0x01'
-            val FriendlyTypeName = s '%MODULE%,-10226'
+            val FriendlyTypeName = s '@%MODULE%,-10226'
             val NeverShowExt = s ''
             val NoOpen = s 'Drag Files onto this icon to compress them.'
             DefaultIcon = s '%MODULE%' { }
@@ -39,7 +39,7 @@ HKCR
     }
     NoRemove CompressedFolder
     {
-        FriendlyTypeName = s '%MODULE%,-10195'
+        val FriendlyTypeName = s '@%MODULE%,-10195'
         CLSID = s '{E88DCCE0-B7B3-11D1-A9F0-00AA0060FA31}'
         DefaultIcon = s '%MODULE%'
 

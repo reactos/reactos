@@ -647,7 +647,7 @@ MiSegmentDelete(IN PSEGMENT Segment)
     while (PointerPte < LastPte)
     {
         /* Check if it's time to switch master PTEs if we passed a PDE boundary */
-        if (!((ULONG_PTR)PointerPte & (PD_SIZE - 1)) &&
+        if (MiIsPteOnPdeBoundary(PointerPte) &&
             (PointerPte != Subsection->SubsectionBase))
         {
             /* Check if the master PTE is invalid */
@@ -2150,7 +2150,7 @@ MiSetProtectionOnSection(IN PEPROCESS Process,
         //
         // Check if we've crossed a PDE boundary and make the new PDE valid too
         //
-        if ((((ULONG_PTR)PointerPte) & (SYSTEM_PD_SIZE - 1)) == 0)
+        if (MiIsPteOnPdeBoundary(PointerPte))
         {
             PointerPde = MiPteToPde(PointerPte);
             MiMakePdeExistAndMakeValid(PointerPde, Process, MM_NOIRQL);

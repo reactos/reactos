@@ -7,16 +7,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Répétition des caractères", -1, 5, 5, 230, 130
     ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
-    LTEXT "&Délai de répétition", -1, 40, 15, 50, 10
+    LTEXT "&Délai de répétition", -1, 40, 15, 150, 10
     LTEXT "Long", -1, 40, 30, 20, 10
     LTEXT "Court", -1, 200, 30, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
     ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
-    LTEXT "&Délai de répétition", -1, 40, 70, 50, 10
+    LTEXT "&Fréquence de répétition", -1, 40, 70, 150, 10
     LTEXT "Lent", -1, 40, 85, 20, 10
-    LTEXT "Rapide", -1, 200, 85, 20, 10
+    LTEXT "Rapide", -1, 200, 85, 21, 10
     CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-    LTEXT "Cliquer ici et enfoncer une touche pour &tester le délai de répétition :", -1, 15, 105, 150, 10
+    LTEXT "Cliquer ici et enfoncer une touche pour &tester la répétition :", -1, 15, 105, 200, 10
     EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
     GROUPBOX "Taux de &clignotement du curseur :", -1, 5, 145, 230, 50
     LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
@@ -134,8 +134,8 @@ BEGIN
     LTEXT "Bouger la roulette pour défiler", -1, 60, 15, 150, 10
     RADIOBUTTON "Le nombre suivant de &lignes à la fois", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
     RADIOBUTTON "&Une page à la fois", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
-    EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP
-    CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER, 125, 45, 12, 12
+    EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | ES_NUMBER | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS, 125, 45, 12, 12
 END
 
 STRINGTABLE

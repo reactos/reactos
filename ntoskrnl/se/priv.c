@@ -58,8 +58,8 @@ const LUID SeCreateSymbolicLinkPrivilege = CONST_LUID(SE_CREATE_SYMBOLIC_LINK_PR
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 SepInitPrivileges(VOID)
 {

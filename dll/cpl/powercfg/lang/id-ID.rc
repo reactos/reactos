@@ -10,7 +10,7 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
     LTEXT "Pilih skema tenaga dengan setelan paling benar untuk komputer ini. Catatan bahwa mengubah setelan di bawah akan mengubah skema yang dipilih.", -1, 45, 13, 194, 36
     GROUPBOX "Skema Tena&ga", -1, 7, 57, 240, 46
-    COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+    COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Simpan Sebagai...", IDC_SAVEAS_BTN, 100, 85, 75, 15, WS_DISABLED
     PUSHBUTTON "&Hapus", IDC_DELETE_BTN, 180, 85, 55, 15, WS_DISABLED
     GROUPBOX "Tidak Dikenal", IDC_GRPDETAIL, 7, 108, 240, 105
@@ -22,7 +22,7 @@ BEGIN
     LTEXT "Matikan &monitor:", IDC_MONITOR, 15, 145, 80, 10
     COMBOBOX IDC_MONITORACLIST, 100, 140, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 175, 140, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Matikan hard d&isks:", IDC_DISK, 15, 160, 80, 10
+    LTEXT "Matikan hardd&isk:", IDC_DISK, 15, 160, 80, 10
     COMBOBOX IDC_DISKACLIST, 100, 155, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_DISKDCLIST, 175, 155, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "Sistem s&tandby:", IDC_STANDBY, 15, 180, 80, 10
@@ -47,7 +47,7 @@ BEGIN
     GROUPBOX "Tidak Dikenal", IDC_GRPDETAIL, 7, 108, 240, 105
     LTEXT "Matikan &monitor:", IDC_MONITOR, 15, 145, 80, 10
     COMBOBOX IDC_MONITORACLIST, 100, 140, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Matikan hard d&isks:", IDC_DISK, 15, 160, 80, 10
+    LTEXT "Matikan hardd&isk:", IDC_DISK, 15, 160, 80, 10
     COMBOBOX IDC_DISKACLIST, 100, 155, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "Sistem s&tandby:", IDC_STANDBY, 15, 180, 80, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 175, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -114,7 +114,7 @@ CAPTION "Hibernasi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 5, 5, 20, 20
-    LTEXT "Ketika komputer anda hibernasi, ia menyimpan apapun yang ada di memori pada hard disk anda dan kemudian mematikan komputer. Ketika komputer anda keluar dari hibernasi, ia kembali ke keadaan sebelumnya. ", -1, 35, 5, 195, 35
+    LTEXT "Ketika komputer anda hibernasi, ia menyimpan apapun yang ada di memori pada harddisk anda dan kemudian mematikan komputer. Ketika komputer anda keluar dari hibernasi, ia kembali ke keadaan sebelumnya. ", -1, 35, 5, 195, 35
     GROUPBOX "Hibernasi", -1, 5, 45, 235, 25
     AUTOCHECKBOX "Hidupkan &hibernasi", IDC_HIBERNATEFILE, 10, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Ruang disk untuk hibernasi", -1, 5, 80, 240, 60
@@ -127,13 +127,13 @@ END
 
 IDD_SAVEPOWERSCHEME DIALOGEX 0, 0, 190, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Save Scheme"
+CAPTION "Simpan Skema"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Save this power scheme as:", -1, 7, 7, 104, 8
+    LTEXT "Simpan skema daya sebagai:", -1, 7, 7, 104, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 79, 40, 50, 14
-    DEFPUSHBUTTON "Cancel", IDCANCEL, 133, 40, 50, 14
+    DEFPUSHBUTTON "Batal", IDCANCEL, 133, 40, 50, 14
 END
 
 STRINGTABLE
@@ -171,6 +171,7 @@ BEGIN
     IDS_TIMEOUT14 "Setelah 4 jam"
     IDS_TIMEOUT15 "Setelah 5 jam"
     IDS_TIMEOUT16 "Tidak pernah"
-    IDS_DEL_SCHEME "Are you sure you want to delete the power scheme: ""%s""?"
-    IDS_DEL_SCHEME_TITLE "Delete Scheme"
+    IDS_DEL_SCHEME "Anda yakin ingin menghapus skema daya: ""%s""?"
+    IDS_DEL_SCHEME_TITLE "Hapus Skema"
+    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
 END

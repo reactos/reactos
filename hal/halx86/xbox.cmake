@@ -31,6 +31,7 @@ list(APPEND HAL_XBOX_SOURCE
     legacy/halpcat.c
     generic/profil.c
     generic/timer.c
+    xbox/clock.c
     xbox/part_xbox.c
     xbox/halinit_xbox.c
     xbox/reboot.c
@@ -39,7 +40,7 @@ list(APPEND HAL_XBOX_SOURCE
 add_asm_files(lib_hal_xbox_asm ${HAL_XBOX_ASM_SOURCE})
 add_object_library(lib_hal_xbox ${HAL_XBOX_SOURCE} ${lib_hal_xbox_asm})
 if(NOT SARCH STREQUAL "xbox")
-    add_target_compile_definitions(lib_hal_xbox SARCH_XBOX)
+    target_compile_definitions(lib_hal_xbox PRIVATE SARCH_XBOX)
 endif()
 add_dependencies(lib_hal_xbox bugcodes xdk asm)
 #add_pch(lib_hal_xbox xbox/halxbox.h)

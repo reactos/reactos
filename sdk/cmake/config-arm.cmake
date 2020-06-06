@@ -43,3 +43,7 @@ set(BUILD_MP TRUE CACHE BOOL
 
 set(NEWSPRINTF FALSE CACHE BOOL
 "Whether to compile the new sprintf.")
+
+if(MSVC)
+    option(RUNTIME_CHECKS "Whether to enable runtime checks on MSVC" ON)
+endif()

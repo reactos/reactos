@@ -107,7 +107,8 @@ foreach(_keyboard_layout ${_keyboard_layouts})
         set_property(TARGET ${_keyboard_layout} PROPERTY C_STANDARD 99)
     endif()
 
-    if (STACK_PROTECTOR)
+    # dynamic analysis switches
+    if(STACK_PROTECTOR)
         target_link_libraries(${_keyboard_layout} gcc_ssp)
     endif()
 

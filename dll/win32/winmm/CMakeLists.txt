@@ -33,7 +33,7 @@ add_pch(winmm winemm.h SOURCE)
 add_cd_file(TARGET winmm DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
-    add_target_compile_flags(winmm "-Wno-unused-but-set-variable")
+    target_compile_options(winmm PRIVATE "-Wno-unused-but-set-variable")
 endif()
 
 add_subdirectory(midimap)

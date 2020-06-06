@@ -75,7 +75,7 @@ USBH_SelectConfigOrInterfaceComplete(IN PDEVICE_OBJECT DeviceObject,
         if (Urb->UrbHeader.Status == USBD_STATUS_NO_BANDWIDTH)
         {
             DPRINT1("USBH_SelectConfigOrInterfaceComplete: USBD_STATUS_NO_BANDWIDTH. FIXME\n");
-            DbgBreakPoint();
+            /*DbgBreakPoint();*/ /* disabled due to CORE-16384, seems to be continuable */
         }
     }
 

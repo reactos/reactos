@@ -81,4 +81,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Add, remove, and configure game controller hardware such as joysticks and gamepads."
     IDS_CONTROLLER "בקר"
     IDS_STATUS "מצב"
+    IDS_NONE "(None)"
 END

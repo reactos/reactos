@@ -1,20 +1,20 @@
-/* Indonesian language file by Zaenal Mutaqin <ade999 at gmail dot com> 2007-02-15 */
+/* Indonesian language file by Zaenal Mutaqin <ade999 at gmail dot com> 2007-02-15 and Mas Ahmad Muhammad <m dot charly81 at gmail dot com> */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
 //    STRING_LABEL_HELP "Menampilkan atau mengubah label drive.\n\nLABEL [drive:][label]\n"
-    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
+    STRING_LABEL_HELP "Membuat, mengubah atau menghapus label volume pada cakram.\n\n\
 LABEL [drive:][label]\n\n\
-  drive:          Specifies the drive letter of a drive.\n\
-  label           Specifies the label of the drive."
+  drive:          Menentukan huruf drive pada drive.\n\
+  label           Menentukan label drive."
     STRING_LABEL_TEXT1 "Volume di drive %c: adalah %s\n"
     STRING_LABEL_TEXT2 "Volume di drive %c: tidak berlabel\n"
     STRING_LABEL_TEXT3 "Nomor Seri Volume adalah %04X-%04X\n"
     STRING_LABEL_TEXT4 "Label Drive (32 Karakter, ENTER jika sudah)? "
-    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_PROMPT "Hapus label volume saat ini (Y/N)? "
     STRING_LABEL_OPTIONS "YN"
-    STRING_ERROR_INVALID_DRIVE "Spesifikasi drive tidak benar\n"
-    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+    STRING_ERROR_INVALID_DRIVE "Penentuan drive tidak benar\n"
+    STRING_ERROR_INVALID_LABEL "Label volume tidak sah\n"
 END

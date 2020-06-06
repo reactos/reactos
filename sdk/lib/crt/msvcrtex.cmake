@@ -36,6 +36,7 @@ list(APPEND MSVCRTEX_SOURCE
     startup/crt0_w.c
     startup/dllentry.c
     startup/reactos.c
+    misc/dbgrpt.cpp
     misc/fltused.c
     misc/isblank.c
     misc/iswblank.c
@@ -101,7 +102,7 @@ set_source_files_properties(${MSVCRTEX_ASM_SOURCE} PROPERTIES COMPILE_DEFINITION
 add_asm_files(msvcrtex_asm ${MSVCRTEX_ASM_SOURCE})
 
 add_library(msvcrtex ${MSVCRTEX_SOURCE} ${msvcrtex_asm})
-add_target_compile_definitions(msvcrtex _DLL _MSVCRTEX_)
+target_compile_definitions(msvcrtex PRIVATE _DLL _MSVCRTEX_)
 set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTDLL)
 set_source_files_properties(startup/crtexe.c
                             startup/wcrtexe.c PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)

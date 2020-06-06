@@ -486,7 +486,7 @@ CreateDIBitmap(
     }
 
     /* Check if the Compr is incompatible */
-    if ((Compression == BI_JPEG) || (Compression == BI_PNG) || (Compression == BI_BITFIELDS))
+    if ((Compression == BI_JPEG) || (Compression == BI_PNG))
     {
         DPRINT1("Invalid compression: %lu!\n", Compression);
         goto Exit;

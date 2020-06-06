@@ -41,9 +41,9 @@ endif()
 add_executable(rpcrt4_winetest ${SOURCE})
 
 if(USE_CLANG_CL OR (NOT MSVC))
-    add_target_compile_flags(rpcrt4_winetest "-Wno-format")
+    target_compile_options(rpcrt4_winetest PRIVATE "-Wno-format")
     if(USE_CLANG_CL)
-        add_target_compile_flags(rpcrt4_winetest "-Wno-cast-calling-convention")
+        target_compile_options(rpcrt4_winetest PRIVATE "-Wno-cast-calling-convention")
     endif()
 endif()
 

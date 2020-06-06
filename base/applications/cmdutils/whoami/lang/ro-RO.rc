@@ -43,17 +43,17 @@ BEGIN
   Afișează informațiile de utilizator, de grup, și de privilegii pentru un\n\
   utilizator autentificat local. Dacă nu sunt furnizate argumente, vor fi\n\
   afișate numele și domeniul utilizatorului curent.\n\
-  \n\
+\n\
   Formatele disponibile pentru opțiunea «/fo» sunt «csv», «list», și «table».\n\
   Argumentul «/nh» ascunde anteturile. Datele sunt implicit afișate tabelar.\n\
-  \n\
+\n\
             SINTAXĂ:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
-  whoami /all [/fo <Format>] [/nh] \n\
-  \n\
-            EXEMPLE: \n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh]\n\
+  whoami /all [/fo <Format>] [/nh]\n\
+\n\
+            EXEMPLE:\n\
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

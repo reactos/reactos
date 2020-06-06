@@ -291,11 +291,6 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #define RTL_FIND_CHAR_IN_UNICODE_STRING_CASE_INSENSITIVE    4
 
 //
-// RtlImageNtHeaderEx Flags
-//
-#define RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK          0x00000001
-
-//
 // RtlDosApplyFileIsolationRedirection_Ustr Flags
 //
 #define RTL_DOS_APPLY_FILE_REDIRECTION_USTR_FLAG_RESPECT_DOT_LOCAL  0x01
@@ -354,6 +349,13 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #define MESSAGE_RESOURCE_UNICODE                            0x0001
 
 #endif /* !NTOS_MODE_USER */
+
+//
+// RtlImageNtHeaderEx Flags
+//
+#define RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK          0x00000001
+
+
 #define MAXIMUM_LEADBYTES                                   12
 
 //
@@ -1157,7 +1159,7 @@ typedef struct _RTL_PROCESS_BACKTRACE_INFORMATION
     ULONG TraceCount;
     USHORT Index;
     USHORT Depth;
-    PVOID BackTrace[16];
+    PVOID BackTrace[32];
 } RTL_PROCESS_BACKTRACE_INFORMATION, *PRTL_PROCESS_BACKTRACE_INFORMATION;
 
 typedef struct _RTL_PROCESS_BACKTRACES
@@ -1203,7 +1205,7 @@ typedef struct _RTL_DEBUG_INFORMATION
     PRTL_PROCESS_LOCKS Locks;
     HANDLE SpecificHeap;
     HANDLE TargetProcessHandle;
-    RTL_PROCESS_VERIFIER_OPTIONS VerifierOptions;
+    PRTL_PROCESS_VERIFIER_OPTIONS VerifierOptions;
     HANDLE ProcessHeap;
     HANDLE CriticalSectionHandle;
     HANDLE CriticalSectionOwnerThread;
@@ -1224,7 +1226,7 @@ typedef struct _RTL_FLS_DATA
 //
 // Unload Event Trace Structure for RtlGetUnloadEventTrace
 //
-#define RTL_UNLOAD_EVENT_TRACE_NUMBER 64
+#define RTL_UNLOAD_EVENT_TRACE_NUMBER 16
 
 typedef struct _RTL_UNLOAD_EVENT_TRACE
 {
@@ -1734,10 +1736,47 @@ typedef struct _RTL_STACK_TRACE_ENTRY
     PVOID BackTrace[32];
 } RTL_STACK_TRACE_ENTRY, *PRTL_STACK_TRACE_ENTRY;
 
+
 typedef struct _STACK_TRACE_DATABASE
 {
-    RTL_CRITICAL_SECTION CriticalSection;
+    union
+    {
+        PVOID Lock;
+
+        /* Padding for ERESOURCE */
+#if defined(_M_AMD64)
+        UCHAR Padding[0x68];
+#else
+        UCHAR Padding[56];
+#endif
+    } Lock;
+
+    BOOLEAN DumpInProgress;
+
+    PVOID CommitBase;
+    PVOID CurrentLowerCommitLimit;
+    PVOID CurrentUpperCommitLimit;
+
+    PCHAR NextFreeLowerMemory;
+    PCHAR NextFreeUpperMemory;
+
+    ULONG NumberOfEntriesAdded;
+    ULONG NumberOfAllocationFailures;
+    PRTL_STACK_TRACE_ENTRY* EntryIndexArray;
+
+    ULONG NumberOfBuckets;
+    PRTL_STACK_TRACE_ENTRY Buckets[ANYSIZE_ARRAY];
 } STACK_TRACE_DATABASE, *PSTACK_TRACE_DATABASE;
+
+// Validate that our padding is big enough:
+#ifndef NTOS_MODE_USER
+#if defined(_M_AMD64)
+C_ASSERT(sizeof(ERESOURCE) <= 0x68);
+#else
+C_ASSERT(sizeof(ERESOURCE) <= 56);
+#endif
+#endif
+
 
 //
 // Trace Database

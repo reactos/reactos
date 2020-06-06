@@ -148,11 +148,11 @@ mountmgr.sys = 1,,,,,,x,4,,,,1,4
 [SystemPartitionFiles]
 
 [HardwareIdsDatabase]
-;*PNP0A00 = isapnp
+*PNP0A00 = isapnp
 *PNP0A03 = pci
 *PNP0A08 = pci
 *PNP0C08 = acpi
-;PCI\CC_0601 = isapnp
+PCI\CC_0601 = isapnp
 PCI\CC_0604 = pci
 PCI\VEN_104B&CC_0100 = buslogic
 PCI\CC_0101 = pciide

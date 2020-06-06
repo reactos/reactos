@@ -469,15 +469,23 @@ void test_create_exe_imp(const WCHAR* name, int skip_rsrc_exports)
     HANDLE file;
     char *buf, *cur;
     DWORD size = 0x800;
+
     buf = malloc(size);
+    winetest_ok(buf != NULL, "malloc failed\n");
+    if (buf == NULL)
+    {
+        return;
+    }
 
     file = CreateFileW(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     winetest_ok(file != INVALID_HANDLE_VALUE, "can't create file\n");
-    if(file == INVALID_HANDLE_VALUE)
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        free(buf);
         return;
+    }
 
     memset(buf, 0, size);
-    cur = buf;
     cur = memcpy(buf, &dos_header, sizeof(dos_header));
     cur += dos_header.e_lfanew;
 

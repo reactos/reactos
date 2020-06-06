@@ -1762,7 +1762,7 @@ INT WINAPI GetCurrencyFormatW(LCID lcid, DWORD dwFlags,
       *szOut-- = *lpszDec--; /* Write decimal separator */
   }
 
-  dwGroupCount = lpFormat->Grouping;
+  dwGroupCount = lpFormat->Grouping == 32 ? 3 : lpFormat->Grouping;
 
   /* Write the remaining whole number digits, including grouping chars */
   while (szSrc >= lpszValue && *szSrc >= '0' && *szSrc <= '9')
@@ -1791,6 +1791,8 @@ INT WINAPI GetCurrencyFormatW(LCID lcid, DWORD dwFlags,
         *szOut-- = *lpszGrp--; /* Write grouping char */
 
       dwCurrentGroupCount = 0;
+      if (lpFormat->Grouping == 32)
+        dwGroupCount = 2; /* Indic grouping: 3 then 2 */
     }
   }
   if (dwState & NF_ROUND)

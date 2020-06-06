@@ -293,7 +293,13 @@ CNetConnection::GetProperties(NETCON_PROPERTIES **ppProps)
     /* Enable 'Rename' and 'Delete' for Adminstrators only */
     if (IsUserAdmin())
     {
-        pProperties->dwCharacter |= (NCCF_ALLOW_RENAME | NCCF_ALLOW_REMOVAL);
+        pProperties->dwCharacter |= NCCF_ALLOW_RENAME;
+
+        /* Virtual network interfaces can be deleted */
+        if (IfEntry.dwType == IF_TYPE_TUNNEL)
+        {
+            pProperties->dwCharacter |= NCCF_ALLOW_REMOVAL;
+        }
     }
     else
     {

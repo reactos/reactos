@@ -5,21 +5,27 @@
 #include <ndk/halfuncs.h>
 #include <drivers/bootvid/bootvid.h>
 
+/* Arch specific includes */
+#if defined(_M_IX86) || defined(_M_AMD64)
+#if defined(SARCH_PC98)
+#include "i386/pc98/pc98.h"
+#elif defined(SARCH_XBOX)
+#include "i386/xbox/nv2a.h"
+#else
+#include "i386/pc/vga.h"
+#include "i386/pc/pc.h"
+#endif
+#elif defined(_M_ARM)
+#include "arm/arm.h"
+#else
+#error Unknown architecture
+#endif
+
 /* Define if FontData has upside down characters */
 #undef CHAR_GEN_UPSIDE_DOWN
 
 #define BOOTCHAR_HEIGHT 13
 #define BOOTCHAR_WIDTH  8 // Each character line is encoded in a UCHAR.
-
-/*
- * Screen resolution (for default VGA)
- */
-#define SCREEN_WIDTH    640
-#define SCREEN_HEIGHT   480
-
-#ifndef _M_ARM
-#include "vga.h"
-#endif /* _M_ARM */
 
 /* Bitmap Header */
 typedef struct tagBITMAPINFOHEADER
@@ -41,31 +47,32 @@ typedef struct tagBITMAPINFOHEADER
 #define BI_RGB  0
 #define BI_RLE4 2
 
-VOID
-NTAPI
-InitializePalette(VOID);
+typedef ULONG RGBQUAD;
 
-/* Globals */
-#ifndef _M_ARM
-extern ULONG curr_x;
-extern ULONG curr_y;
-extern ULONG_PTR VgaRegisterBase;
-extern ULONG_PTR VgaBase;
-extern USHORT AT_Initialization[];
-extern USHORT VGA_640x480[];
-#endif /* _M_ARM */
-extern UCHAR FontData[256 * BOOTCHAR_HEIGHT];
+/*
+ * Globals
+ */
+extern UCHAR VidpTextColor;
+extern ULONG VidpCurrentX;
+extern ULONG VidpCurrentY;
+extern ULONG VidpScrollRegion[4];
+extern UCHAR VidpFontData[256 * BOOTCHAR_HEIGHT];
+extern const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS];
 
-#define __inpb(Port) \
-    READ_PORT_UCHAR((PUCHAR)(VgaRegisterBase + (Port)))
+#define RGB(r, g, b)    ((RGBQUAD)(((UCHAR)(b) | ((USHORT)((UCHAR)(g))<<8)) | (((ULONG)(UCHAR)(r))<<16)))
 
-#define __inpw(Port) \
-    READ_PORT_USHORT((PUSHORT)(VgaRegisterBase + (Port)))
+#define GetRValue(quad)    ((UCHAR)(((quad)>>16) & 0xFF))
+#define GetGValue(quad)    ((UCHAR)(((quad)>>8) & 0xFF))
+#define GetBValue(quad)    ((UCHAR)((quad) & 0xFF))
 
-#define __outpb(Port, Value) \
-    WRITE_PORT_UCHAR((PUCHAR)(VgaRegisterBase + (Port)), (UCHAR)(Value))
+#define InitializePalette()    InitPaletteWithTable((PULONG)VidpDefaultPalette, BV_MAX_COLORS)
 
-#define __outpw(Port, Value) \
-    WRITE_PORT_USHORT((PUSHORT)(VgaRegisterBase + (Port)), (USHORT)(Value))
+#ifdef CHAR_GEN_UPSIDE_DOWN
+# define GetFontPtr(_Char) &VidpFontData[_Char * BOOTCHAR_HEIGHT] + BOOTCHAR_HEIGHT - 1;
+# define FONT_PTR_DELTA (-1)
+#else
+# define GetFontPtr(_Char) &VidpFontData[_Char * BOOTCHAR_HEIGHT];
+# define FONT_PTR_DELTA (1)
+#endif
 
 #endif /* _BOOTVID_PCH_ */

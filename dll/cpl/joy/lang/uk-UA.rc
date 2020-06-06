@@ -89,4 +89,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Додавання, видалення й настройка параметрів ігрових пристроїв, наприклад, джойстиків або ігрових планшетів."
     IDS_CONTROLLER "Пристрій"
     IDS_STATUS "Стан"
+    IDS_NONE "(None)"
 END

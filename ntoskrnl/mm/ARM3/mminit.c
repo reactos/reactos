@@ -2123,40 +2123,6 @@ MmArmInitSystem(IN ULONG Phase,
         /* Set the based section highest address */
         MmHighSectionBase = (PVOID)((ULONG_PTR)MmHighestUserAddress - 0x800000);
 
-#if DBG
-        /* The subection PTE format depends on things being 8-byte aligned */
-        ASSERT((sizeof(CONTROL_AREA) % 8) == 0);
-        ASSERT((sizeof(SUBSECTION) % 8) == 0);
-
-        /* Prototype PTEs are assumed to be in paged pool, so check if the math works */
-        PointerPte = (PMMPTE)MmPagedPoolStart;
-        MI_MAKE_PROTOTYPE_PTE(&TempPte, PointerPte);
-        TestPte = MiProtoPteToPte(&TempPte);
-        ASSERT(PointerPte == TestPte);
-
-        /* Try the last nonpaged pool address */
-        PointerPte = (PMMPTE)MI_NONPAGED_POOL_END;
-        MI_MAKE_PROTOTYPE_PTE(&TempPte, PointerPte);
-        TestPte = MiProtoPteToPte(&TempPte);
-        ASSERT(PointerPte == TestPte);
-
-        /* Try a bunch of random addresses near the end of the address space */
-        PointerPte = (PMMPTE)((ULONG_PTR)MI_HIGHEST_SYSTEM_ADDRESS - 0x37FFF);
-        for (j = 0; j < 20; j += 1)
-        {
-            MI_MAKE_PROTOTYPE_PTE(&TempPte, PointerPte);
-            TestPte = MiProtoPteToPte(&TempPte);
-            ASSERT(PointerPte == TestPte);
-            PointerPte++;
-        }
-
-        /* Subsection PTEs are always in nonpaged pool, pick a random address to try */
-        PointerPte = (PMMPTE)((ULONG_PTR)MmNonPagedPoolStart + (MmSizeOfNonPagedPoolInBytes / 2));
-        MI_MAKE_SUBSECTION_PTE(&TempPte, PointerPte);
-        TestPte = MiSubsectionPteToSubsection(&TempPte);
-        ASSERT(PointerPte == TestPte);
-#endif
-
         /* Loop all 8 standby lists */
         for (i = 0; i < 8; i++)
         {
@@ -2181,9 +2147,8 @@ MmArmInitSystem(IN ULONG Phase,
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
 
-        /* Set the zero page event */
-        KeInitializeEvent(&MmZeroingPageEvent, SynchronizationEvent, FALSE);
-        MmZeroingPageThreadActive = FALSE;
+        /* Set up the zero page event */
+        KeInitializeEvent(&MmZeroingPageEvent, NotificationEvent, FALSE);
 
         /* Initialize the dead stack S-LIST */
         InitializeSListHead(&MmDeadStackSListHead);
@@ -2331,6 +2296,36 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Initialize the platform-specific parts */
         MiInitMachineDependent(LoaderBlock);
+
+#if DBG
+        /* Prototype PTEs are assumed to be in paged pool, so check if the math works */
+        PointerPte = (PMMPTE)MmPagedPoolStart;
+        MI_MAKE_PROTOTYPE_PTE(&TempPte, PointerPte);
+        TestPte = MiProtoPteToPte(&TempPte);
+        ASSERT(PointerPte == TestPte);
+
+        /* Try the last nonpaged pool address */
+        PointerPte = (PMMPTE)MI_NONPAGED_POOL_END;
+        MI_MAKE_PROTOTYPE_PTE(&TempPte, PointerPte);
+        TestPte = MiProtoPteToPte(&TempPte);
+        ASSERT(PointerPte == TestPte);
+
+        /* Try a bunch of random addresses near the end of the address space */
+        PointerPte = (PMMPTE)((ULONG_PTR)MI_HIGHEST_SYSTEM_ADDRESS - 0x37FFF);
+        for (j = 0; j < 20; j += 1)
+        {
+            MI_MAKE_PROTOTYPE_PTE(&TempPte, PointerPte);
+            TestPte = MiProtoPteToPte(&TempPte);
+            ASSERT(PointerPte == TestPte);
+            PointerPte++;
+        }
+
+        /* Subsection PTEs are always in nonpaged pool, pick a random address to try */
+        PointerPte = (PMMPTE)((ULONG_PTR)MmNonPagedPoolStart + (MmSizeOfNonPagedPoolInBytes / 2));
+        MI_MAKE_SUBSECTION_PTE(&TempPte, PointerPte);
+        TestPte = MiSubsectionPteToSubsection(&TempPte);
+        ASSERT(PointerPte == TestPte);
+#endif
 
         //
         // Build the physical memory block

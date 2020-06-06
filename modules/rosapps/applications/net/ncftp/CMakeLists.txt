@@ -70,10 +70,9 @@ list(APPEND SOURCE
 
 add_executable(ncftp ${SOURCE} ncftp.rc)
 set_module_type(ncftp win32cui)
+target_compile_definitions(ncftp PRIVATE HAVE_UTIME_H HAVE_UNISTD_H)
 if(NOT MSVC)
-    add_target_compile_flags(ncftp "-DHAVE_UTIME_H -DHAVE_UNISTD_H -Wno-unused-but-set-variable")
-else()
-    add_target_compile_flags(ncftp "-DHAVE_UTIME_H -DHAVE_UNISTD_H")
+    target_compile_options(ncftp PRIVATE -Wno-unused-but-set-variable)
 endif()
 add_importlibs(ncftp advapi32 user32 ws2_32 msvcrt kernel32)
 add_cd_file(TARGET ncftp DESTINATION reactos/system32 FOR all)

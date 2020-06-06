@@ -94,7 +94,7 @@
 @ stub WTHelperCheckCertUsage
 @ stub WTHelperGetAgencyInfo
 @ stdcall WTHelperGetFileHandle(ptr)
-#@ stub WTHelperGetFileHash
+@ stub WTHelperGetFileHash
 @ stdcall WTHelperGetFileName(ptr)
 @ stdcall WTHelperGetKnownUsages(long ptr)
 @ stdcall WTHelperGetProvCertFromChain(ptr long)

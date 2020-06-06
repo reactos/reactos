@@ -1979,7 +1979,6 @@ HalAllocateCrashDumpRegisters(IN PADAPTER_OBJECT AdapterObject,
         }
 
         /* Try to find free map registers */
-        MapRegisterNumber = MAXULONG;
         MapRegisterNumber = RtlFindClearBitsAndSet(MasterAdapter->MapRegisters,
                                                    *NumberOfMapRegisters,
                                                    0);

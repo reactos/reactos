@@ -24,6 +24,18 @@ PUNICODE_STRING PiInitGroupOrderTable;
 USHORT PiInitGroupOrderTableCount;
 INTERFACE_TYPE PnpDefaultInterfaceType;
 
+ARBITER_INSTANCE IopRootBusNumberArbiter;
+ARBITER_INSTANCE IopRootIrqArbiter;
+ARBITER_INSTANCE IopRootDmaArbiter;
+ARBITER_INSTANCE IopRootMemArbiter;
+ARBITER_INSTANCE IopRootPortArbiter;
+
+NTSTATUS NTAPI IopPortInitialize(VOID);
+NTSTATUS NTAPI IopMemInitialize(VOID);
+NTSTATUS NTAPI IopDmaInitialize(VOID);
+NTSTATUS NTAPI IopIrqInitialize(VOID);
+NTSTATUS NTAPI IopBusNumberInitialize(VOID);
+
 /* FUNCTIONS ******************************************************************/
 
 INTERFACE_TYPE
@@ -38,9 +50,45 @@ NTSTATUS
 NTAPI
 IopInitializeArbiters(VOID)
 {
-     /* FIXME: TODO */
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+
+    Status = IopPortInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopPortInitialize() return %X\n", Status);
+        return Status;
+    }
+
+    Status = IopMemInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopMemInitialize() return %X\n", Status);
+        return Status;
+    }
+
+    Status = IopDmaInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopDmaInitialize() return %X\n", Status);
+        return Status;
+    }
+
+    Status = IopIrqInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopIrqInitialize() return %X\n", Status);
+        return Status;
+    }
+
+    Status = IopBusNumberInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopBusNumberInitialize() return %X\n", Status);
+    }
+
+    return Status;
 }
+
 
 INIT_FUNCTION
 NTSTATUS

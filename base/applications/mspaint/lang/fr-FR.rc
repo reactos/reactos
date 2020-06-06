@@ -9,19 +9,19 @@ BEGIN
         MENUITEM "&Enregistrer\tCtrl+S", IDM_FILESAVE
         MENUITEM "Enregistrer &sous...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "À partir d'un scanneur ou d'une caméra...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
-        MENUITEM "Page View", IDM_FILEPAGEVIEW
-        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
+        MENUITEM "Aperçu avant impression", IDM_FILEPAGEVIEW
+        MENUITEM "Mise en page...", IDM_FILEPAGESETUP
         MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM "Envoyer...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "Choisir comme image d'arrière-plan (mosaïque)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Choisir comme image d'arrière-plan (centrée)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Choisir comme image d'arrière-plan (étirée)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "Fichiers récents", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Quitter\tAlt+F4", IDM_FILEEXIT
     END
@@ -79,8 +79,8 @@ BEGIN
     BEGIN
         MENUITEM "Modifier les couleurs...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
-        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
+        MENUITEM "Palette moderne", IDM_COLORSMODERNPALETTE
+        MENUITEM "Palette ancienne", IDM_COLORSOLDPALETTE
     END
     POPUP "&Aide"
     BEGIN

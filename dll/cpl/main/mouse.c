@@ -1833,12 +1833,16 @@ MouseApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     HPSXA hpsxa;
     TCHAR Caption[256];
     UINT i;
+    INT nPage = 0;
     LONG ret;
 
     UNREFERENCED_PARAMETER(lParam1);
     UNREFERENCED_PARAMETER(lParam2);
     UNREFERENCED_PARAMETER(uMsg);
     UNREFERENCED_PARAMETER(hwnd);
+
+    if (uMsg == CPL_STARTWPARMSW && lParam2 != 0)
+        nPage = _wtoi((PWSTR)lParam2);
 
     LoadString(hApplet, IDS_CPLNAME_1, Caption, sizeof(Caption) / sizeof(TCHAR));
 
@@ -1872,6 +1876,9 @@ MouseApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 
     if (hpsxa != NULL)
         SHAddFromPropSheetExtArray(hpsxa, PropSheetAddPage, (LPARAM)&psh);
+
+    if (nPage != 0 && nPage <= psh.nPages)
+        psh.nStartPage = nPage;
 
     ret = (LONG)(PropertySheet(&psh) != -1);
 

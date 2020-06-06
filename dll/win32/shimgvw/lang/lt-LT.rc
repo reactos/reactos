@@ -6,6 +6,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS paveikslėlių ir faksogramų peržiūros programa"
     IDS_SETASDESKBG "Nustatyti kaip darbalaukio foną"
+    IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Preview"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Tolesnis paveikslėlis"

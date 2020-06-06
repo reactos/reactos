@@ -18,91 +18,7 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ********************************************************************/
-
-static ULONG CurrentConsoleID = 0;
-
-/* Linked list of consoles */
-static LIST_ENTRY ConDrvConsoleList;
-static RTL_RESOURCE ListLock;
-
-#define ConDrvLockConsoleListExclusive()    \
-    RtlAcquireResourceExclusive(&ListLock, TRUE)
-
-#define ConDrvLockConsoleListShared()       \
-    RtlAcquireResourceShared(&ListLock, TRUE)
-
-#define ConDrvUnlockConsoleList()           \
-    RtlReleaseResource(&ListLock)
-
-
-static NTSTATUS
-ConDrvInsertConsole(IN PCONSOLE Console)
-{
-    ASSERT(Console);
-
-    /* All went right, so add the console to the list */
-    ConDrvLockConsoleListExclusive();
-
-    DPRINT("Insert in the list\n");
-    InsertTailList(&ConDrvConsoleList, &Console->ListEntry);
-
-    // FIXME: Move this code to the caller function!!
-    /* Get a new console ID */
-    _InterlockedExchange((PLONG)&Console->ConsoleID, CurrentConsoleID);
-    _InterlockedIncrement((PLONG)&CurrentConsoleID);
-
-    /* Unlock the console list and return success */
-    ConDrvUnlockConsoleList();
-    return STATUS_SUCCESS;
-}
-
-static NTSTATUS
-RemoveConsole(IN PCONSOLE Console)
-{
-    // ASSERT(Console);
-    if (!Console) return STATUS_INVALID_PARAMETER;
-
-    /* Remove the console from the list */
-    ConDrvLockConsoleListExclusive();
-
-    RemoveEntryList(&Console->ListEntry);
-
-    /* Unlock the console list and return success */
-    ConDrvUnlockConsoleList();
-    return STATUS_SUCCESS;
-}
-
-
-/* PRIVATE FUNCTIONS **********************************************************/
-
-VOID NTAPI
-ConDrvPause(PCONSOLE Console)
-{
-    /* In case we already have a pause event, just exit... */
-    if (Console->UnpauseEvent) return;
-
-    /* ... otherwise create it */
-    NtCreateEvent(&Console->UnpauseEvent, EVENT_ALL_ACCESS,
-                  NULL, NotificationEvent, FALSE);
-}
-
-VOID NTAPI
-ConDrvUnpause(PCONSOLE Console)
-{
-    /* In case we already freed the event, just exit... */
-    if (!Console->UnpauseEvent) return;
-
-    /* ... otherwise set and free it */
-    NtSetEvent(Console->UnpauseEvent, NULL);
-    NtClose(Console->UnpauseEvent);
-    Console->UnpauseEvent = NULL;
-}
-
-
-/*
- * Console accessibility check helpers
- */
+/* CONSOLE VALIDATION FUNCTIONS ***********************************************/
 
 BOOLEAN NTAPI
 ConDrvValidateConsoleState(IN PCONSOLE Console,
@@ -146,43 +62,24 @@ ConDrvValidateConsoleUnsafe(IN PCONSOLE Console,
 
 /* CONSOLE INITIALIZATION FUNCTIONS *******************************************/
 
-VOID NTAPI
-ConDrvInitConsoleSupport(VOID)
-{
-    DPRINT("CONSRV: ConDrvInitConsoleSupport()\n");
-
-    /* Initialize the console list and its lock */
-    InitializeListHead(&ConDrvConsoleList);
-    RtlInitializeResource(&ListLock);
-}
-
 /* For resetting the terminal - defined in dummyterm.c */
 VOID ResetTerminal(IN PCONSOLE Console);
 
 NTSTATUS NTAPI
-ConDrvInitConsole(OUT PCONSOLE* NewConsole,
-                  IN PCONSOLE_INFO ConsoleInfo)
+ConDrvInitConsole(
+    IN OUT PCONSOLE Console,
+    IN PCONSOLE_INFO ConsoleInfo)
 {
     NTSTATUS Status;
     // CONSOLE_INFO CapturedConsoleInfo;
     TEXTMODE_BUFFER_INFO ScreenBufferInfo;
-    PCONSOLE Console;
     PCONSOLE_SCREEN_BUFFER NewBuffer;
 
-    if (NewConsole == NULL || ConsoleInfo == NULL)
+    if (Console == NULL || ConsoleInfo == NULL)
         return STATUS_INVALID_PARAMETER;
 
-    *NewConsole = NULL;
-
-    /*
-     * Allocate a new console
-     */
-    Console = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(*Console));
-    if (NULL == Console)
-    {
-        DPRINT1("Not enough memory for console creation.\n");
-        return STATUS_NO_MEMORY;
-    }
+    /* Reset the console structure */
+    RtlZeroMemory(Console, sizeof(*Console));
 
     /*
      * Set and fix the screen buffer size if needed.
@@ -214,7 +111,6 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     {
         DPRINT1("ConDrvInitInputBuffer: failed, Status = 0x%08lx\n", Status);
         DeleteCriticalSection(&Console->Lock);
-        ConsoleFreeHeap(Console);
         return Status;
     }
 
@@ -243,30 +139,19 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
         DPRINT1("ConDrvCreateScreenBuffer: failed, Status = 0x%08lx\n", Status);
         ConDrvDeinitInputBuffer(Console);
         DeleteCriticalSection(&Console->Lock);
-        ConsoleFreeHeap(Console);
         return Status;
     }
     /* Make the new screen buffer active */
     Console->ActiveBuffer = NewBuffer;
-    Console->UnpauseEvent = NULL;
+    Console->ConsolePaused = FALSE;
 
     DPRINT("Console initialized\n");
-
-    /* All went right, so add the console to the list */
-    Status = ConDrvInsertConsole(Console);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Fail */
-        ConDrvDeleteConsole(Console);
-        return Status;
-    }
 
     /* The initialization is finished */
     DPRINT("Change state\n");
     Console->State = CONSOLE_RUNNING;
 
-    /* Return the newly created console to the caller and a success code too */
-    *NewConsole = Console;
+    /* The caller now has a newly initialized console */
     return STATUS_SUCCESS;
 }
 
@@ -337,7 +222,7 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
      * Forbid validation of any console by other threads
      * during the deletion of this console.
      */
-    ConDrvLockConsoleListExclusive();
+    // ConDrvLockConsoleListExclusive();
 
     /*
      * If the console is already being destroyed, i.e. not running
@@ -346,8 +231,6 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE) &&
         !ConDrvValidateConsoleUnsafe(Console, CONSOLE_INITIALIZING, TRUE))
     {
-        /* Unlock the console list and return */
-        ConDrvUnlockConsoleList();
         return;
     }
 
@@ -361,13 +244,12 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
     /*
      * Allow other threads to finish their job: basically, unlock
      * all other calls to EnterCriticalSection(&Console->Lock); by
-     * ConDrvValidateConsoleUnsafe functions so that they just see
+     * ConDrvValidateConsoleUnsafe() functions so that they just see
      * that we are not in CONSOLE_RUNNING state anymore, or unlock
-     * other concurrent calls to ConDrvDeleteConsole so that they
+     * other concurrent calls to ConDrvDeleteConsole() so that they
      * can see that we are in fact already deleting the console.
      */
     LeaveCriticalSection(&Console->Lock);
-    ConDrvUnlockConsoleList();
 
     /* Deregister the terminal */
     DPRINT("Deregister terminal\n");
@@ -380,11 +262,8 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
      * ...unless to cancel console deletion ?).
      ***/
 
-    ConDrvLockConsoleListExclusive();
-
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_TERMINATING, TRUE))
     {
-        ConDrvUnlockConsoleList();
         return;
     }
 
@@ -393,9 +272,6 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
 
     /* We really delete the console. Reset the count to be sure. */
     Console->ReferenceCount = 0;
-
-    /* Remove the console from the list */
-    RemoveConsole(Console);
 
     /* Delete the last screen buffer */
     ConDrvDeleteScreenBuffer(Console->ActiveBuffer);
@@ -409,23 +285,39 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
     /* Deinitialize the input buffer */
     ConDrvDeinitInputBuffer(Console);
 
-    if (Console->UnpauseEvent) CloseHandle(Console->UnpauseEvent);
+    Console->ConsolePaused = FALSE;
 
     DPRINT("ConDrvDeleteConsole - Unlocking\n");
     LeaveCriticalSection(&Console->Lock);
     DPRINT("ConDrvDeleteConsole - Destroying lock\n");
     DeleteCriticalSection(&Console->Lock);
-    DPRINT("ConDrvDeleteConsole - Lock destroyed ; freeing console\n");
+    DPRINT("ConDrvDeleteConsole - Lock destroyed\n");
 
-    ConsoleFreeHeap(Console);
     DPRINT("ConDrvDeleteConsole - Console destroyed\n");
-
-    /* Unlock the console list and return */
-    ConDrvUnlockConsoleList();
 }
 
 
 /* PUBLIC DRIVER APIS *********************************************************/
+
+VOID NTAPI
+ConDrvPause(PCONSOLE Console)
+{
+    /* In case we are already paused, just exit... */
+    if (Console->ConsolePaused) return;
+
+    /* ... otherwise set the flag */
+    Console->ConsolePaused = TRUE;
+}
+
+VOID NTAPI
+ConDrvUnpause(PCONSOLE Console)
+{
+    /* In case we are already unpaused, just exit... */
+    if (!Console->ConsolePaused) return;
+
+    /* ... otherwise reset the flag */
+    Console->ConsolePaused = FALSE;
+}
 
 NTSTATUS NTAPI
 ConDrvGetConsoleMode(IN PCONSOLE Console,

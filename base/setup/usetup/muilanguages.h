@@ -200,9 +200,9 @@
 #ifdef LANGUAGE_ET_EE
     #include "lang/et-EE.h"
 #endif
-// #ifdef LANGUAGE_EU_ES
-    // #include "lang/eu-ES.h"
-// #endif
+#ifdef LANGUAGE_EU_ES
+    #include "lang/eu-ES.h"
+#endif
 // #ifdef LANGUAGE_FA_IR
     // #include "lang/fa-IR.h"
 // #endif
@@ -251,9 +251,9 @@
 // #ifdef LANGUAGE_HY_AM
     // #include "lang/hy-AM.h"
 // #endif
-// #ifdef LANGUAGE_ID_ID
-    // #include "lang/id-ID.h"
-// #endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/id-ID.h"
+ #endif
 // #ifdef LANGUAGE_IS_IS
     // #include "lang/is-IS.h"
 // #endif
@@ -478,7 +478,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"0000042C", L"Azeri (Latin)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EU_ES
-    {L"0000042D", L"Basque", enUSPages, enUSErrorEntries, enUSStrings},
+    {L"0000042D", L"Basque", euESPages, euESErrorEntries, euESStrings},
 #endif
 #ifdef LANGUAGE_BE_BY
     {L"00000423", L"Belarusian", enUSPages, enUSErrorEntries, enUSStrings},
@@ -643,7 +643,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"0000040F", L"Icelandic", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_ID_ID
-    {L"00000421", L"Indonesian", enUSPages, enUSErrorEntries, enUSStrings},
+    {L"00000421", L"Indonesian", idIDPages, idIDErrorEntries, idIDStrings},
 #endif
 #ifdef LANGUAGE_IT_IT
     {L"00000410", L"Italian (Italy)", itITPages, itITErrorEntries, itITStrings},

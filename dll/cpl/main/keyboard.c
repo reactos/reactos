@@ -306,12 +306,16 @@ KeyboardApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     PROPSHEETHEADER psh;
     HPSXA hpsxa;
     TCHAR szCaption[256];
+    INT nPage = 0;
     LONG ret;
 
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(uMsg);
     UNREFERENCED_PARAMETER(hwnd);
+
+    if (uMsg == CPL_STARTWPARMSW && lParam != 0)
+        nPage = _wtoi((PWSTR)lParam);
 
     LoadString(hApplet, IDS_CPLNAME_2, szCaption, sizeof(szCaption) / sizeof(TCHAR));
 
@@ -336,6 +340,9 @@ KeyboardApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     if (hpsxa != NULL)
         SHAddFromPropSheetExtArray(hpsxa, PropSheetAddPage, (LPARAM)&psh);
+
+    if (nPage != 0 && nPage <= psh.nPages)
+        psh.nStartPage = nPage;
 
     ret = (LONG)(PropertySheet(&psh) != -1);
 

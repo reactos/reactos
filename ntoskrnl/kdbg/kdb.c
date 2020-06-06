@@ -1691,7 +1691,6 @@ continue_execution:
     return ContinueType;
 }
 
-INIT_FUNCTION
 VOID
 NTAPI
 KdbpGetCommandLineSettings(

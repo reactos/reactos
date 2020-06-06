@@ -635,6 +635,7 @@ OnBrowseButton(HWND hwndDlg, PBACKGROUND_DATA pData)
     OPENFILENAME ofn;
     TCHAR filename[MAX_PATH];
     TCHAR fileTitle[256];
+    TCHAR initialDir[MAX_PATH];
     LPTSTR filter;
     LPTSTR extensions;
     BackgroundItem *backgroundItem = NULL;
@@ -652,6 +653,7 @@ OnBrowseButton(HWND hwndDlg, PBACKGROUND_DATA pData)
 
     hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
     himl = ListView_GetImageList(hwndBackgroundList, LVSIL_SMALL);
+    SHGetFolderPathW(NULL, CSIDL_MYPICTURES, NULL, 0, initialDir);
 
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
 
@@ -706,8 +708,8 @@ OnBrowseButton(HWND hwndDlg, PBACKGROUND_DATA pData)
     ofn.nFilterIndex = 0;
     ofn.lpstrFileTitle = fileTitle;
     ofn.nMaxFileTitle = 256;
-    ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrInitialDir = initialDir;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
 
     success = GetOpenFileName(&ofn);
     HeapFree(GetProcessHeap(), 0, filter);

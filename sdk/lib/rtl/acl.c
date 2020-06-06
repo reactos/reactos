@@ -847,21 +847,21 @@ RtlValidAcl(IN PACL Acl)
         if ((Acl->AclRevision < MIN_ACL_REVISION) ||
             (Acl->AclRevision > MAX_ACL_REVISION))
         {
-            DPRINT1("Invalid ACL revision\n");
+            DPRINT1("Invalid ACL revision: %u\n", Acl->AclRevision);
             _SEH2_YIELD(return FALSE);
         }
 
         /* Next, validate that the ACL is USHORT-aligned */
         if (ROUND_DOWN(Acl->AclSize, sizeof(USHORT)) != Acl->AclSize)
         {
-            DPRINT1("Invalid ACL size\n");
+            DPRINT1("Misaligned ACL size: %u\n", Acl->AclSize);
             _SEH2_YIELD(return FALSE);
         }
 
         /* And that it's big enough */
         if (Acl->AclSize < sizeof(ACL))
         {
-            DPRINT1("Invalid ACL size\n");
+            DPRINT1("Too small ACL size: %u\n", Acl->AclSize);
             _SEH2_YIELD(return FALSE);
         }
 

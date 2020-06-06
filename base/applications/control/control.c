@@ -57,18 +57,12 @@ OpenShellFolder(LPWSTR lpFolderCLSID)
 static INT
 RunControlPanel(LPCWSTR lpCmd)
 {
-    /*
-     * Old method:
-     *
     WCHAR szParameters[MAX_PATH];
-    wcscpy(szParameters, L"shell32.dll,Control_RunDLL ");
-    wcscat(szParameters, lpCmd);
-    return RUNDLL(szParameters);
-     */
+    StringCchCopyW(szParameters, ARRAYSIZE(szParameters), L"shell32.dll,Control_RunDLL ");
+    if (FAILED(StringCchCatW(szParameters, ARRAYSIZE(szParameters), lpCmd)))
+        return 0;
 
-    /* New method: */
-    Control_RunDLLW(GetDesktopWindow(), 0, lpCmd, SW_SHOW);
-    return 1;
+    return RUNDLL(szParameters);
 }
 
 INT
@@ -86,7 +80,7 @@ wWinMain(HINSTANCE hInstance,
 
     /* Check one of the built-in control panel handlers */
     if (!_wcsicmp(lpCmdLine, L"admintools"))           return OpenShellFolder(L"\\::{D20EA4E1-3957-11d2-A40B-0C5020524153}");
-    else if (!_wcsicmp(lpCmdLine, L"color"))           return RunControlPanel(L"desk.cpl");       /* TODO: Switch to the "Apperance" tab */
+    else if (!_wcsicmp(lpCmdLine, L"color"))           return RunControlPanel(L"desk.cpl,,2");
     else if (!_wcsicmp(lpCmdLine, L"date/time"))       return RunControlPanel(L"timedate.cpl");
     else if (!_wcsicmp(lpCmdLine, L"desktop"))         return RunControlPanel(L"desk.cpl");
     else if (!_wcsicmp(lpCmdLine, L"folders"))         return RUNDLL(L"shell32.dll,Options_RunDLL");

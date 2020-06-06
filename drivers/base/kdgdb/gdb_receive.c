@@ -30,23 +30,21 @@ KDSTATUS
 NTAPI
 gdb_receive_packet(_Inout_ PKD_CONTEXT KdContext)
 {
-    UCHAR* ByteBuffer = (UCHAR*)gdb_input;
+    UCHAR* ByteBuffer;
     UCHAR Byte;
     KDSTATUS Status;
-    CHAR CheckSum = 0, ReceivedCheckSum;
+    CHAR CheckSum, ReceivedCheckSum;
 
     do
     {
         Status = KdpReceiveByte(&Byte);
         if (Status != KdPacketReceived)
             return Status;
-        if (Byte == 0x03)
-        {
-            KDDBGPRINT("BREAK!");
-            KdContext->KdpControlCPending = TRUE;
-            return KdPacketNeedsResend;
-        }
     } while (Byte != '$');
+
+get_packet:
+    CheckSum = 0;
+    ByteBuffer = (UCHAR*)gdb_input;
 
     while (TRUE)
     {
@@ -92,6 +90,20 @@ end:
         KDDBGPRINT("Check sums don't match!");
         KdpSendByte('-');
         return KdPacketNeedsResend;
+    }
+
+    /* Ensure there is nothing left in the pipe */
+    while (KdpPollByte(&Byte) == KdPacketReceived)
+    {
+        switch (Byte)
+        {
+            case '$':
+                KDDBGPRINT("Received new packet just after %s.\n", gdb_input);
+                goto get_packet;
+            case 0x03: 
+                KdContext->KdpControlCPending = TRUE;
+                break;
+        }
     }
 
     /* Acknowledge */

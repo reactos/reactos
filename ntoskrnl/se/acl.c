@@ -28,8 +28,8 @@ PACL SeUnrestrictedDacl = NULL;
 
 /* FUNCTIONS ******************************************************************/
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 SepInitDACLs(VOID)
 {

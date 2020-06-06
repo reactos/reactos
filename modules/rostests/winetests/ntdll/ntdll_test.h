@@ -20,10 +20,6 @@
 
 #include <stdarg.h>
 
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x500 /* For NTSTATUS */
-#endif
-
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
 #include "windef.h"

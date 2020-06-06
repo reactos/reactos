@@ -59,7 +59,7 @@
 #define ACPI_INVALID_PROTOCOL_ID        0x80
 #define ACPI_MAX_PROTOCOL_ID            0x0F
 
-const UINT8     AcpiProtocolLengths[] =
+static const UINT8      AcpiProtocolLengths[] =
 {
     ACPI_INVALID_PROTOCOL_ID,   /* 0 - reserved */
     ACPI_INVALID_PROTOCOL_ID,   /* 1 - reserved */

@@ -161,7 +161,7 @@ static MUI_ENTRY huHUWelcomePageEntries[] =
     {
         6,
         24,
-        "http://www.reactos.org weboldalra.",
+        "https://reactos.org/ weboldalra.",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
@@ -1204,7 +1204,7 @@ static MUI_ENTRY huHUFormatPartitionEntries[] =
     {
         6,
         10,
-        "A telep\241t\213 most form\240zni fogja a part\241ci\242t. Nyomjon ENTER-t a folytat\240shoz.",
+        "A telep\241t\213 form\240zni fogja a part\241ci\242t. Nyomjon ENTER-t a folytat\240shoz.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
     },

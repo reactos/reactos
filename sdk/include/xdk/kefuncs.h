@@ -1464,7 +1464,7 @@ KeFlushWriteBuffer(VOID);
  *   IN PKBUGCHECK_CALLBACK_RECORD  CallbackRecord)
  */
 #define KeInitializeCallbackRecord(CallbackRecord) \
-  CallbackRecord->State = BufferEmpty;
+  (CallbackRecord)->State = BufferEmpty;
 
 #if defined(_PREFAST_)
 

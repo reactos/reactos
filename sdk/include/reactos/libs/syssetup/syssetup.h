@@ -23,31 +23,11 @@
 #ifndef __SYSSETUP_H_INCLUDED__
 #define __SYSSETUP_H_INCLUDED__
 
-// See also dll/cpl/timedate/timezone.c
-typedef struct _TZ_INFO
-{
-    LONG Bias;
-    LONG StandardBias;
-    LONG DaylightBias;
-    SYSTEMTIME StandardDate;
-    SYSTEMTIME DaylightDate;
-} TZ_INFO, *PTZ_INFO;
-
-typedef struct _TIMEZONE_ENTRY
-{
-    struct _TIMEZONE_ENTRY *Prev;
-    struct _TIMEZONE_ENTRY *Next;
-    WCHAR Description[64];   /* 'Display' */
-    WCHAR StandardName[32];  /* 'Std' */
-    WCHAR DaylightName[32];  /* 'Dlt' */
-    TZ_INFO TimezoneInfo;    /* 'TZI' */
-    ULONG Index;
-} TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
-
 typedef enum _PRODUCT_OPTION
 {
     PRODUCT_OPTION_SERVER,
-    PRODUCT_OPTION_WORKSTATION
+    PRODUCT_OPTION_WORKSTATION,
+    PRODUCT_OPTION_DEFAULT = PRODUCT_OPTION_SERVER
 } PRODUCT_OPTION, *PPRODUCT_OPTION;
 
 /* Private Setup data shared between syssetup.dll and netshell.dll */
@@ -67,8 +47,8 @@ typedef struct _SETUPDATA
     BOOL  DisableGeckoInst;
 
     SYSTEMTIME SystemTime;
-    PTIMEZONE_ENTRY TimeZoneListHead;
-    PTIMEZONE_ENTRY TimeZoneListTail;
+    struct _TIMEZONE_ENTRY* TimeZoneListHead;
+    struct _TIMEZONE_ENTRY* TimeZoneListTail;
     DWORD TimeZoneIndex;
     DWORD DisableAutoDaylightTimeSet;
     LCID LocaleID;

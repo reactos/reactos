@@ -253,6 +253,12 @@ int mbedtls_rsa_complete( mbedtls_rsa_context *ctx )
     const int have_D = ( mbedtls_mpi_cmp_int( &ctx->D, 0 ) != 0 );
     const int have_E = ( mbedtls_mpi_cmp_int( &ctx->E, 0 ) != 0 );
 
+#if !defined(MBEDTLS_RSA_NO_CRT)
+    const int have_DP = ( mbedtls_mpi_cmp_int( &ctx->DP, 0 ) != 0 );
+    const int have_DQ = ( mbedtls_mpi_cmp_int( &ctx->DQ, 0 ) != 0 );
+    const int have_QP = ( mbedtls_mpi_cmp_int( &ctx->QP, 0 ) != 0 );
+#endif
+
     /*
      * Check whether provided parameters are enough
      * to deduce all others. The following incomplete
@@ -318,7 +324,7 @@ int mbedtls_rsa_complete( mbedtls_rsa_context *ctx )
      */
 
 #if !defined(MBEDTLS_RSA_NO_CRT)
-    if( is_priv )
+    if( is_priv && ! ( have_DP && have_DQ && have_QP ) )
     {
         ret = mbedtls_rsa_deduce_crt( &ctx->P,  &ctx->Q,  &ctx->D,
                                       &ctx->DP, &ctx->DQ, &ctx->QP );

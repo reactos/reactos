@@ -70,8 +70,8 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
     static const WCHAR ProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
     HKEY hKey;
     LONG error;
-    WCHAR szValue[32];
-    DWORD cbValue, dwType;
+    WCHAR szValue[9];
+    DWORD cbValue;
     static DWORD s_dwProductType = 0;
 
     if (s_dwProductType != 0)
@@ -87,8 +87,8 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
         return FALSE;
 
     cbValue = sizeof(szValue);
-    error = RegQueryValueExW(hKey, L"ProductType", NULL, &dwType, (LPBYTE)szValue, &cbValue);
-    if (!error && dwType == REG_SZ)
+    error = RegGetValueW(hKey, NULL, L"ProductType", RRF_RT_REG_SZ, NULL, (PVOID)szValue, &cbValue);
+    if (!error)
     {
         if (lstrcmpW(szValue, L"WinNT") == 0)
             *ProductType = NtProductWinNt;

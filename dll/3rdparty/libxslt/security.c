@@ -352,16 +352,18 @@ xsltCheckWrite(xsltSecurityPrefsPtr sec,
 	(xmlStrEqual(BAD_CAST uri->scheme, BAD_CAST "file"))) {
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
-    if ((uri->path)&&(uri->path[0]=='/')&&
-        (uri->path[1]!='\0')&&(uri->path[2]==':'))
-    ret = xsltCheckWritePath(sec, ctxt, uri->path+1);
-    else
+        if ((uri->path)&&(uri->path[0]=='/')&&
+            (uri->path[1]!='\0')&&(uri->path[2]==':'))
+            ret = xsltCheckWritePath(sec, ctxt, uri->path+1);
+        else
 #endif
+        {
+            /*
+             * Check if we are allowed to write this file
+             */
+	    ret = xsltCheckWritePath(sec, ctxt, uri->path);
+        }
 
-	/*
-	 * Check if we are allowed to write this file
-	 */
-	ret = xsltCheckWritePath(sec, ctxt, uri->path);
 	if (ret <= 0) {
 	    xmlFreeURI(uri);
 	    return(ret);

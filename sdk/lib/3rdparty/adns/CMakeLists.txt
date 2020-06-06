@@ -25,7 +25,7 @@ list(APPEND SOURCE
 add_library(adns ${SOURCE})
 
 if(NOT MSVC)
-    add_target_compile_flags(adns "-Wno-unused-but-set-variable")
+    target_compile_options(adns PRIVATE "-Wno-unused-but-set-variable")
 endif()
 
 add_dependencies(adns psdk)

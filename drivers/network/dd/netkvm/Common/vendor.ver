@@ -1,0 +1,98 @@
+/*
+ * This file contains resource (version) definitions for all drivers
+ * that are independent from vendor.
+ *
+ * Copyright (c) 2017  Parallels IP Holdings GmbH
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met :
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and / or other materials provided with the distribution.
+ * 3. Neither the names of the copyright holders nor the names of their contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/*
+ * These defines are only for Visual Studio built-in rc editor
+ *
+ * VER_OS <= $(TargetOS) for description postfix
+ * VER_ARCH <= $(VerArch) for description postfix
+ * VENDOR_VER <= $(_VENDOR_).ver (rhel by default)
+ */
+#ifndef VER_OS
+    #define VER_OS Win??
+#endif
+#ifndef VER_ARCH
+    #define VER_ARCH x??
+#endif
+#ifndef VENDOR_VER
+    #define VENDOR_VER rhel.ver
+    //#define VENDOR_VER vz.ver
+#endif
+
+/*
+ * AUTO: these defines are defined in common.ver
+ *    VER_PRODUCTVERSION          <= VER_PRODUCTMAJORVERSION,VER_PRODUCTMINORVERSION,VER_PRODUCTBUILD,VER_PRODUCTBUILD_QFE
+ *    VER_FILEVERSION             <= VER_PRODUCTVERSION
+ *    VER_FILEVERSION_STR         <= VER_PRODUCTVERSION_STR
+ *    VER_ORIGINALFILENAME_STR    <= VER_INTERNALNAME_STR
+ */
+
+/*
+ * COMMON: these defines are strictly required
+ */
+#define VER_LANGNEUTRAL
+#define VER_FILETYPE                VFT_DRV
+#define VER_FILESUBTYPE             VFT2_DRV_SYSTEM
+#define VER_FILEDESCRIPTION_STR     "File Description required"
+#define VER_INTERNALNAME_STR        "File Name required"
+
+/*
+ * STRINGIFY
+ */
+#define STRINGIFY_AUX(X) #X
+#define STRINGIFY(X)     STRINGIFY_AUX(X)
+
+/*
+ * VENDOR SPECIFIC
+ */
+#include STRINGIFY(VENDOR_VER)
+
+/*
+ * Applying vendor specific
+ */
+#undef  VER_PRODUCTBUILD
+#undef  VER_PRODUCTBUILD_QFE
+#undef  VER_PRODUCTMAJORVERSION
+#undef  VER_PRODUCTMINORVERSION
+
+#define VER_PRODUCTMAJORVERSION    VENDOR_VIRTIO_1
+#define VER_PRODUCTMINORVERSION    VENDOR_VIRTIO_2
+#define VER_PRODUCTBUILD           VENDOR_VIRTIO_3
+#define VER_PRODUCTBUILD_QFE       VENDOR_VIRTIO_4
+
+#undef  VER_LEGALTRADEMARKS_STR
+#undef  VER_LEGALCOPYRIGHT_STR
+#undef  VER_COMPANYNAME_STR
+#undef  VER_PRODUCTNAME_STR
+
+#define VER_LEGALTRADEMARKS_STR    ""
+#define VER_LEGALCOPYRIGHT_STR     VENDOR_VIRTIO_COPYRIGHT
+#define VER_COMPANYNAME_STR        VENDOR_VIRTIO_COMPANY
+#define VER_PRODUCTNAME_STR        VENDOR_VIRTIO_PRODUCT

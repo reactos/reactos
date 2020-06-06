@@ -31,30 +31,13 @@ endfunction()
 # arguments, all of which will be added to the list
 #
 # Examples:
-#  add_target_compile_flags(mymodule "-pedantic -O5")
 #  add_target_link_flags(mymodule "-s --fatal-warnings")
-#  add_target_compile_definitions(mymodule WIN32 _WIN32 INLINE=inline)
-#  add_target_include_directories(mymodule include ../include)
-function(add_target_compile_flags _module _flags)
-    if(${ARGC} GREATER 2)
-        message(FATAL_ERROR "Excess arguments to add_target_compile_flags! Module ${_module}, args ${ARGN}")
-    endif()
-    add_target_property(${_module} COMPILE_FLAGS ${_flags})
-endfunction()
 
 function(add_target_link_flags _module _flags)
     if(${ARGC} GREATER 2)
         message(FATAL_ERROR "Excess arguments to add_target_link_flags! Module ${_module}, args ${ARGN}")
     endif()
     add_target_property(${_module} LINK_FLAGS ${_flags})
-endfunction()
-
-function(add_target_compile_definitions _module)
-    add_target_property(${_module} COMPILE_DEFINITIONS ${ARGN})
-endfunction()
-
-function(add_target_include_directories _module)
-    add_target_property(${_module} INCLUDE_DIRECTORIES ${ARGN})
 endfunction()
 
 # replace_compiler_option

@@ -4,8 +4,6 @@ function(add_host_tool _tool)
     set_target_properties(${_tool} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TOOLS_FOLDER})
 endfunction()
 
-#add_executable(pefixup pefixup.c)
-
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE -DHAVE_IO_H=1)
     add_compile_flags_language("/EHsc" "CXX")
@@ -40,4 +38,7 @@ add_subdirectory(xml2sdb)
 if(NOT MSVC)
     add_subdirectory(log2lines)
     add_subdirectory(rsym)
+
+    add_host_tool(pefixup pefixup.c)
+    target_link_libraries(pefixup PRIVATE host_includes)
 endif()

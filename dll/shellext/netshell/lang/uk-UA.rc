@@ -39,22 +39,22 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Підключення", -1, 9, 8, 182, 58, BS_GROUPBOX
-    LTEXT "Стан:", -1, 19, 20, 60, 8
-    LTEXT "Тривалість:", -1, 19, 34, 60, 8
-    LTEXT "Швидкість:", -1, 19, 48, 60, 8
-    GROUPBOX "Активність", -1, 9, 74, 182, 70, BS_GROUPBOX
-    RTEXT "Надіслано", -1, 26, 90, 60, 8
+    GROUPBOX "Підключення", -1, 9, 8, 190, 58, BS_GROUPBOX
+    LTEXT "Стан:", -1, 22, 20, 65, 8
+    LTEXT "Тривалість:", -1, 22, 34, 65, 8
+    LTEXT "Швидкість:", -1, 22, 48, 65, 8
+    GROUPBOX "Активність", -1, 9, 74, 190, 70, BS_GROUPBOX
+    LTEXT "Надіслано", -1, 60, 90, 60, 8
     ICON "", IDC_NETSTAT, 110, 85, 32, 32
-    LTEXT "Отримано", -1, 149, 90, 37, 8
-    LTEXT "Байтів:", -1, 17, 115, 32, 8
-    RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
-    RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
-    PUSHBUTTON "Влас&тивості", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
-    PUSHBUTTON "Ви&мкнути", IDC_ENDISABLE, 66, 150, 50, 14
-    RTEXT "", IDC_STATUS, 83, 20, 98, 8
-    RTEXT "", IDC_DURATION, 83, 34, 98, 8
-    RTEXT "", IDC_SPEED, 83, 48, 98, 8
+    RTEXT "Отримано", -1, 146, 90, 44, 8
+    LTEXT "Байтів:", -1, 22, 115, 32, 8
+    LTEXT "000.000.000", IDC_SEND, 60, 115, 44, 8
+    RTEXT "000.000.000", IDC_RECEIVED, 146, 115, 44, 8
+    PUSHBUTTON "Влас&тивості", IDC_STATUS_PROPERTIES, 10, 150, 60, 14
+    PUSHBUTTON "Ви&мкнути", IDC_ENDISABLE, 76, 150, 60, 14
+    RTEXT "", IDC_STATUS, 90, 20, 100, 8
+    RTEXT "", IDC_DURATION, 90, 34, 100, 8
+    RTEXT "", IDC_SPEED, 90, 48, 100, 8
 END
 
 IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
@@ -62,15 +62,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Підтримка"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Стан підключення", -1, 9, 8, 189, 88, BS_GROUPBOX
+    GROUPBOX "Стан підключення", -1, 9, 8, 190, 88, BS_GROUPBOX
     LTEXT "Тип адреси:", -1, 22, 20, 80, 8
     LTEXT "IP-адреса:", -1, 22, 34, 80, 8
     LTEXT "Маска підмережі:", -1, 22, 48, 80, 8
     LTEXT "Основний шлюз:", -1, 22, 62, 80, 8
-    RTEXT "н/д", IDC_DETAILSTYPE, 115, 20, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSIP, 115, 34, 80, 8
-    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 115, 48, 80, 8
-    RTEXT "", IDC_DETAILSGATEWAY, 115, 62, 80, 8
+    RTEXT "н/д", IDC_DETAILSTYPE, 110, 20, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSIP, 110, 34, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 110, 48, 80, 8
+    RTEXT "", IDC_DETAILSGATEWAY, 110, 62, 80, 8
     PUSHBUTTON "&Склад...", IDC_DETAILS, 22, 76, 62, 14
 END
 

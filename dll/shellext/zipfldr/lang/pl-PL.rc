@@ -2,6 +2,8 @@
  * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Polish resource translation
+ * TRANSLATORS: 2018-2019 Adam Słaboń (asaillen456esx@gmail.com)
+ *              2020 Piotr Hetnarowicz (piotrhwz@gmail.com)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -15,7 +17,7 @@ BEGIN
     EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Przeglądaj...",IDC_BROWSE,174,42,54,14
     PUSHBUTTON      "Hasło",IDC_PASSWORD,174,66,54,14
-    LTEXT           "Click 'Next' to extract",IDC_STATUSTEXT,6,114,100,8
+    LTEXT           "Kliknij przycisk Dalej, aby wypakować.",IDC_STATUSTEXT,6,114,124,8
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
 END
 
@@ -67,12 +69,12 @@ BEGIN
     IDS_COL_DATE_MOD "Data modyfikacji"
     IDS_YES "Tak"
     IDS_NO "Nie"
-    IDS_ERRORTITLE "Compressed (zipped) Folders Error"
-    IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
-    IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
-    IDS_CANTCREATEZIP "Failed to create a compressed folder '%s' (Error Code: %d)."
-    IDS_CANTREADFILE "Cannot read file '%s'."
-    IDS_EXTRACTING "Extracting..."
+    IDS_ERRORTITLE "Błąd folderów skompresowanych (zip)."
+    IDS_CANTSTARTTHREAD "Nie można uruchomić wątku do kompresji plików."
+    IDS_NOFILES "Określony katalog '%s' jest pusty, dlatego foldery skompresowane (zip) nie mogą dodać go do archiwum."
+    IDS_CANTCREATEZIP "Nie można utworzyć folderu skompresowanego '%s' (kod błędu: %d)."
+    IDS_CANTREADFILE "Błąd podczas czytania pliku '%s'."
+    IDS_EXTRACTING "Trwa wyodrębnianie..."
 
     IDS_WIZ_TITLE "Kreator wyodrębniania"
     IDS_WIZ_DEST_TITLE "Wybierz miejsce docelowe"

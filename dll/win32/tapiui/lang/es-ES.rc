@@ -1,0 +1,446 @@
+LANGUAGE LANG_SPANISH, SUBLANG_DEFAULT
+
+101 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Reglas de marcado"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 201, 2000, 7, 7, 21, 20
+    LTEXT "La lista a continuación muestra las ubicaciones que tú hayas especificado. Por favor, selecciona una ubicación desde la que vas a llamar.", -1, 35, 7, 210, 16
+    LTEXT "&Ubicaciones:", -1, 7, 35, 210, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000011D, 7, 46, 238, 105, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Nueva...", 1030, 87, 155, 50, 14
+    PUSHBUTTON "&Editar...", 1031, 141, 155, 50, 14
+    PUSHBUTTON "&Eliminar", 1032, 195, 155, 50, 14
+    LTEXT "El número se llamará como:", 1052, 7, 181, 100, 8
+    LTEXT "", 1053, 14, 195, 224, 16
+END
+
+102 DIALOGEX 0, 0, 252, 255
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 202, 2000, 7, 7, 20, 20
+    LTEXT "Nombre de &ubicación:", -1, 35, 11, 56, 8, SS_CENTERIMAGE
+    EDITTEXT 1038, 96, 8, 149, 14, ES_AUTOHSCROLL
+    LTEXT "Especificar la ubicación desde la cual llamará.", 2001, 7, 33, 238, 8
+    LTEXT "País/&región:", -1, 7, 49, 161, 8
+    COMBOBOX 1006, 7, 60, 175, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "Código de &área:", -1, 190, 49, 48, 8
+    EDITTEXT 1034, 190, 60, 48, 12, ES_AUTOHSCROLL
+    GROUPBOX "Reglas de marcado", 2002, 7, 80, 238, 92
+    LTEXT "Cuando llame desde esta ubicación se usarán las siguientes normas:", 2003, 14, 92, 224, 8
+    LTEXT "Para acceder a una línea externa en llamadas &locales, marcar:", -1, 14, 106, 170, 8
+    EDITTEXT 1010, 190, 104, 48, 12, ES_AUTOHSCROLL
+    LTEXT "Para acceder a una línea externa en llamadas de larga &distancia, marcar:", -1, 14, 122, 170, 8
+    EDITTEXT 1011, 190, 120, 48, 12, ES_AUTOHSCROLL
+    LTEXT "Usar este código de &operador para hacer llamadas de larga distancia:", -1, 14, 138, 170, 8
+    EDITTEXT 1059, 190, 136, 48, 12, ES_AUTOHSCROLL
+    LTEXT "Usar este código de operador para hacer llamadas &internacionales:", -1, 14, 154, 170, 8
+    EDITTEXT 1060, 190, 152, 48, 12, ES_AUTOHSCROLL
+    AUTOCHECKBOX "Para desactivar la &espera de llamada, marcar:", 1035, 14, 177, 170, 10
+    COMBOBOX 1013, 190, 176, 48, 73, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL
+    LTEXT "Marcar usando:", -1, 14, 195, 40, 8
+    AUTORADIOBUTTON "&Tonos", 1036, 58, 194, 50, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Pulsos", 1037, 112, 194, 50, 10, NOT WS_TABSTOP
+    LTEXT "El número de teléfono será marcado como:", 1052, 7, 219, 100, 8
+    LTEXT "", 1053, 14, 232, 224, 16
+END
+
+103 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Reglas de Código de Área"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Una regla de código de área determina cómo se marcan los números para tu actual código de área hacia otros códigos de área y entre tu propio área.", 2000, 7, 7, 238, 16
+    LTEXT "Reglas de &código de área:", -1, 7, 31, 238, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000801D, 7, 42, 238, 99, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Nueva...", 1030, 87, 147, 50, 14
+    PUSHBUTTON "&Editar...", 1031, 141, 147, 50, 14
+    PUSHBUTTON "&Eliminar", 1032, 195, 147, 50, 14
+    GROUPBOX "Descripción", 2006, 7, 166, 238, 45
+    LTEXT "", 1039, 14, 180, 224, 24
+END
+
+104 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Tarjeta telefónica"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Seleccionar la tarjeta telefónica que usarás o clica en Nuevo para añadir una tarjeta diferente.", 2000, 7, 7, 238, 8
+    LTEXT "Tipo de &Tarjeta:", -1, 7, 23, 238, 8
+    CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Nueva ...", 1030, 87, 103, 50, 14
+    PUSHBUTTON "&Editar...", 1031, 141, 103, 50, 14
+    PUSHBUTTON "&Eliminar", 1032, 195, 103, 50, 14
+    LTEXT "N&úmero de la cuenta:", -1, 7, 127, 91, 8
+    EDITTEXT 1018, 102, 125, 143, 12, ES_AUTOHSCROLL
+    LTEXT "&Número ID Personal (PIN):", -1, 7, 145, 91, 8
+    EDITTEXT 1019, 102, 143, 143, 12, ES_AUTOHSCROLL
+    GROUPBOX "Acceder a números de teléfono para", 2001, 7, 158, 238, 53
+    LTEXT "Llamadas de larga distancia:", -1, 14, 172, 84, 8
+    LTEXT "", 1042, 102, 172, 136, 8
+    LTEXT "Llamadas internacionales:", -1, 14, 184, 84, 8
+    LTEXT "", 1043, 102, 184, 136, 8
+    LTEXT "Llamadas locales:", -1, 14, 196, 84, 8
+    LTEXT "", 1051, 102, 196, 136, 8
+END
+
+105 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 203, 2000, 7, 7, 20, 20
+    LTEXT "&Nombre de la Tarjeta Telefónica:", -1, 35, 12, 64, 8, SS_CENTERIMAGE
+    EDITTEXT 1047, 105, 9, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Número de la &cuenta:", -1, 7, 35, 238, 8
+    EDITTEXT 1018, 7, 46, 116, 14, ES_AUTOHSCROLL
+    LTEXT "&Número de Identificación Personal (PIN):", -1, 7, 68, 238, 8
+    EDITTEXT 1019, 7, 80, 116, 14, ES_AUTOHSCROLL
+    LTEXT "Esta tarjeta telefónica se usará cuando:", 1056, 14, 117, 224, 8
+    GROUPBOX "Calling card details", 2001, 7, 105, 238, 66
+    LTEXT "", 1000, 22, 131, 216, 8
+    LTEXT "", 1001, 22, 143, 216, 8
+    LTEXT "", 1002, 22, 155, 216, 8
+END
+
+106 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Larga distancia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Acceder a números de &llamada de larga distancia:", -1, 7, 7, 238, 8
+    EDITTEXT 1044, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Utiliza los botones a continuación para introducir los pasos de marcado para las llamadas de larga distancia. Introduce esos pasos en el orden exacto como aparecen en tu tarjeta telefónica.", 2000, 7, 40, 238, 24
+    LTEXT "Pasos de marcado de la Tarjeta de &llamada:", -1, 7, 72, 80, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Mover &Arriba", 1022, 195, 83, 50, 14
+    PUSHBUTTON "&Mover Abajo", 1023, 195, 101, 50, 14
+    PUSHBUTTON "&Eliminar", 1024, 195, 119, 50, 14
+    PUSHBUTTON "&Número de acceso", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Número de la &Cuenta", 1018, 101, 161, 90, 14
+    PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
+    PUSHBUTTON "Número de D&estino...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "&Esperar para la entrada...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Especificar dígitos...", 1021, 101, 197, 90, 14
+END
+
+107 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "International"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Acceder a números de llamada &internacional:", -1, 7, 7, 238, 8
+    EDITTEXT 1045, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Utiliza los botones a continuación para introducir los pasos de marcado para las llamadas internacionales. Introduce esos pasos en el orden exacto como aparecen en tu tarjeta telefónica.", 2000, 7, 40, 244, 24
+    LTEXT "Pasos de marcado de la Tarjeta de &llamada:", -1, 7, 72, 80, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Mover &Arriba", 1022, 195, 83, 50, 14
+    PUSHBUTTON "&Mover Abajo", 1023, 195, 101, 50, 14
+    PUSHBUTTON "&Eliminar", 1024, 195, 119, 50, 14
+    PUSHBUTTON "&Número de acceso", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Número de la &Cuenta", 1018, 101, 161, 90, 14
+    PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
+    PUSHBUTTON "Número de D&estino...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "&Esperar para la entrada...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Especificar dígitos...", 1021, 101, 197, 90, 14
+END
+
+108 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Llamadas locales"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Acceder a números de llamada l&ocales:", -1, 7, 7, 238, 8
+    EDITTEXT 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
+    LTEXT "Utiliza los botones a continuación para introducir los pasos de marcado para las llamadas internacionales. Introduce esos pasos en el orden exacto como aparecen en tu tarjeta telefónica. Para hacer llamadas locales sin usar una tarjeta telefónica, déjalo en blanco.", 2000, 7, 40, 238, 24
+    LTEXT "Pasos de marcado de la tarjeta t&elefónica:", -1, 7, 72, 238, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Mover &Arriba", 1022, 195, 83, 50, 14
+    PUSHBUTTON "&Mover Abajo", 1023, 195, 101, 50, 14
+    PUSHBUTTON "&Eliminar", 1024, 195, 119, 50, 14
+    PUSHBUTTON "&Número de acceso", 1025, 7, 161, 90, 14
+    PUSHBUTTON "Número de la &Cuenta", 1018, 101, 161, 90, 14
+    PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
+    PUSHBUTTON "Número de D&estino...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "&Esperar para la entrada...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Especificar dígitos...", 1021, 101, 197, 90, 14
+END
+
+109 DIALOGEX 0, 0, 252, 257
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Reglas de código de Nuevo Área"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Estas reglas de código de área serán aplicadas solo a llamadas hechas al código de área y la combinación de prefijos que especifiques a continuación.", 2000, 7, 6, 238, 16
+    LTEXT "Código de área desde dónde llamas:", -1, 7, 31, 110, 8
+    LTEXT "Código de Á&rea:", -1, 7, 47, 36, 8
+    EDITTEXT 1034, 46, 44, 50, 14, ES_AUTOHSCROLL
+    LTEXT "Especificar los prefijoes a ser usados para las reglas de código de área.", -1, 14, 78, 224, 8
+    AUTORADIOBUTTON "&Incluir todos los prefijos de este código de área", 1014, 14, 90, 224, 12, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Incluir &solo los prefijos de la siguiente lista:", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
+    LTEXT "&Prefijos a incluir:", 1057, 26, 117, 119, 8
+    CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000411D, 25, 128, 66, 32, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Añadir...", 1005, 95, 128, 50, 14
+    PUSHBUTTON "E&liminar", 1024, 95, 146, 50, 14
+    LTEXT "When dialing phone numbers that contain the prefixes above:", -1, 14, 184, 224, 8
+    AUTOCHECKBOX "&Marcar:", 1012, 14, 198, 30, 12
+    EDITTEXT 1007, 46, 196, 42, 14, ES_AUTOHSCROLL
+    AUTOCHECKBOX "Incluir el código de &área", 1029, 14, 214, 85, 12
+    DEFPUSHBUTTON "Aceptar", 1, 141, 236, 50, 14
+    PUSHBUTTON "Cancelar", 2, 195, 236, 50, 14
+    RTEXT "Código de área", 2001, 133, 31, 51, 8
+    LTEXT "Prefijo", 2002, 200, 31, 45, 8
+    CONTROL "", 2003, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 180, 41, 1, 6
+    CONTROL "", 2004, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 203, 41, 1, 6
+    RTEXT "X - X X X - X X X - X X X X", 2005, 133, 48, 112, 8
+    GROUPBOX "Prefijos", -1, 7, 64, 238, 102
+    GROUPBOX "Reglas", -1, 7, 170, 238, 60
+END
+
+110 DIALOGEX 0, 0, 227, 82
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", 1003, 7, 7, 213, 8
+    LTEXT "", 1039, 7, 23, 213, 8
+    EDITTEXT 1031, 7, 34, 213, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "Aceptar", 1, 116, 62, 50, 14
+    PUSHBUTTON "Cancelar", 2, 170, 62, 50, 14
+END
+
+111 DIALOGEX 0, 0, 252, 124
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Esperar a"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Seleccionar el tipo de comando a esperar antes de la continuación con la secuencia de marcado.", 2000, 7, 7, 238, 16
+    AUTORADIOBUTTON "Esperar a &tono de marcado", 1009, 7, 31, 238, 10, WS_GROUP
+    AUTORADIOBUTTON "Esperar a &que el mensaje de voz haya acabado", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Esperar un &tiempo específico de retardo:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
+    EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
+    LTEXT "&segundos", -1, 58, 81, 187, 8
+    DEFPUSHBUTTON "Aceptar", 1, 141, 103, 50, 14
+    PUSHBUTTON "Cancelar", 2, 195, 103, 50, 14
+END
+
+112 DIALOGEX 0, 0, 252, 111
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Número destinatario"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "En este paso fijaremos el número destinatario que tú marcarás en la secuencia de la tarjeta telefónica. Cuando esté llamando al destinatario, ¿qué partes del número quiere marcar?", 2000, 7, 7, 238, 24
+    AUTOCHECKBOX "Marcar el &código de país/región", 1027, 7, 39, 238, 10
+    AUTOCHECKBOX "Marcar el &código de área", 1034, 7, 55, 238, 10
+    AUTOCHECKBOX "Marcar el &número", 1008, 7, 71, 238, 10, WS_DISABLED
+    DEFPUSHBUTTON "Aceptar", 1, 141, 92, 50, 14
+    PUSHBUTTON "Cancelar", 2, 195, 92, 50, 14
+END
+
+113 DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Avanzado"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 201, 2000, 7, 7, 20, 20
+    LTEXT "Los siguientes proveedores telefónicos están instalados en tu ordenador:", -1, 40, 7, 205, 8
+    LTEXT "&Proveedores:", -1, 7, 35, 238, 8
+    LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
+    PUSHBUTTON "&Añadir...", 1005, 87, 197, 50, 14
+    PUSHBUTTON "&Eliminar", 1024, 141, 197, 50, 14
+    PUSHBUTTON "&Configurar...", 1031, 195, 197, 50, 14
+END
+
+114 DIALOGEX 20, 15, 252, 127
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Añadir proveedor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Selecione el proveedor que desee instalar de la lista a continuación y haga clic en añadir.", 2000, 7, 7, 241, 8
+    LTEXT "&Proveedor telefónico:", -1, 7, 23, 144, 10
+    LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "&Añadir", 1005, 141, 106, 50, 14
+    DEFPUSHBUTTON "Cancelar", 2, 195, 106, 50, 14
+END
+
+115 DIALOGEX 10, 10, 303, 228
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Información de Ubicación"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
+    LTEXT "Before you can make any phone or modem connections, ReactOS needs the following information about your current location.", 2000, 107, 15, 188, 25
+    LTEXT "¿En &qué país o región te encuentras ahora?", -1, 107, 43, 189, 10
+    COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "¿En qué &código de área (o código de ciudad) te encuentras ahora?", -1, 107, 74, 189, 10
+    EDITTEXT 1034, 107, 87, 45, 12, ES_AUTOHSCROLL
+    LTEXT "Si necesitas especificar un código de &operador, ¿cuál es?", -1, 107, 105, 189, 10
+    EDITTEXT 1058, 106, 118, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "Si necesitas especificar un número para acceder a una &línea externa, ¿cuál es?", -1, 107, 137, 189, 10
+    EDITTEXT 1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "El sistema telefónico de esa ubicación usa:", -1, 107, 168, 189, 10
+    AUTORADIOBUTTON "&Marcación a tonos", 1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "Marcación a &pulsos", 1037, 175, 178, 57, 14, NOT WS_TABSTOP
+    DEFPUSHBUTTON "Aceptar", 1, 192, 204, 50, 14
+    PUSHBUTTON "Cancelar", 2, 246, 204, 50, 14
+END
+
+400 DIALOGEX 0, 0, 290, 151
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
+    LTEXT "Before you can make any phone or modem connections, ReactOS needs the following information about your current location.", 2000, 95, 2, 188, 25
+    LTEXT "¿En &qué país o región te encuentras ahora?", -1, 95, 30, 188, 10
+    COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "¿En qué &código de área (o código de ciudad) te encuentras ahora?", -1, 95, 61, 188, 10
+    EDITTEXT 1034, 95, 73, 40, 14, ES_AUTOHSCROLL
+    LTEXT "Si necesitas especificar un número para acceder a una &línea externa, ¿cuál es?", -1, 95, 96, 188, 10
+    EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT "El sistema telefónico de esa ubicación usa:", -1, 95, 129, 159, 10
+    AUTORADIOBUTTON "&Marcado a tonos", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Marcado a pulsos", 1037, 155, 139, 55, 12, NOT WS_TABSTOP
+END
+
+500 DIALOGEX 0, 0, 235, 88
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Explorador de ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 504, 501, 13, 14, 21, 20
+    LTEXT "", 502, 47, 15, 180, 32
+    AUTOCHECKBOX "&Siempre confiar en esta página en futuras ocasiones.", 503, 50, 47, 147, 12
+    DEFPUSHBUTTON "&Aceptar", 505, 110, 65, 50, 14
+    PUSHBUTTON "&Cancelar", 506, 164, 65, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    1 "Phone and Modem Options"
+    2 "Configure dialing rules and properties for using your modem."
+    3 "Ubicación"
+    4 "To create a new location, click New."
+    5 "Nueva Ubicación"
+    6 "Editar Ubicación"
+    7 "New Calling Card"
+    8 "Edit Calling Card"
+    9 "Area Code"
+    10 "Prefijos"
+    11 "Rule"
+    12 "The character you entered is invalid.\n\nValid characters are 0 through 9, *, #, and comma."
+    13 "The character you entered is invalid.\n\nValid characters are 0 through 9, *, #, space, and comma."
+    14 "The character you entered is invalid.\n\nValid characters are 0 through 9."
+    15 "The character you entered is invalid."
+    16 "Dial %1"
+    17 "Dial %1 plus area code"
+    18 "Dial area code"
+    19 "Dial number only"
+    20 "Todo"
+    21 "Seleccionado"
+    22 "Edit Area Code Rule"
+    23 "Select a rule in the list above to view its description, or click New to add a rule."
+    24 "Dial '%2' plus the area code before the number for all calls within the %1 area code."
+    25 "Dial '%2' before the number for all calls within the %1 area code."
+    26 "Dial the area code before the number for all calls within the %1 area code."
+    27 "Dial only the number for all calls within the %1 area code."
+    28 "Dial '%2' plus the area code before the number for calls within the %1 area code, containing the prefixes you specified."
+    29 "Dial '%2' before the number for calls within the %1 area code, containing the prefixes you specified."
+    30 "Dial the area code before the number for calls within the %1 area code, containing the prefixes you specified."
+    31 "Dial only the number for calls within the %1 area code, containing the prefixes you specified."
+    32 "Dial a '1' before calls within all other area codes, and include the area code for all prefixes."
+    33 "Add Prefix"
+    34 "Enter one or more prefixes separated by spaces or commas."
+    35 "Specify Digits"
+    36 "Enter one or more digits (including * and #) to be dialed."
+    37 "You tried to enter an invalid character.\n\nValid characters are 0 thru 9 and space."
+    38 "Wait for %1!d! seconds."
+    39 "Dial the access number."
+    40 "Dial the account number."
+    41 "Dial the PIN number."
+    42 "Wait for a dial tone."
+    43 "Wait for a voice message to end."
+    44 "Dial the country/region code, area code, and number."
+    45 "Dial the country/region code and number."
+    46 "Dial the area code and number."
+    47 "Dial the country/region code."
+    48 "Dial the area code."
+    49 "Dial the number."
+    50 "dialing long distance calls."
+    51 "dialing international calls."
+    52 "dialing local calls."
+    53 "There are no rules defined for how this calling card should be used."
+    54 "You must enter the long distance carrier code for this location."
+    55 "You must enter a name for this location."
+    56 "You must enter the area code for this location."
+    57 "You must select the number to dial to disable call waiting."
+    58 "You must select the country or region that you are calling from."
+    59 "Missing Information"
+    60 "The location name you have entered is already in use.  Please enter a unique name."
+    61 "This calling card is missing some required information. To use this card, click Edit to provide more information, or select a different card."
+    62 "You must select a default calling card. Select a card from the list, or click New to create a new card."
+    63 "You must enter the calling card name."
+    64 "You must enter the account number."
+    65 "You must enter the PIN number."
+    66 "There are no rules defined for this calling card. To create a rule, select the Long Distance, International, or Local Calls tab."
+    67 "Your long distance rule requires your calling card's long distance access number."
+    68 "Your international rule requires your calling card's international access number."
+    69 "Your local rule requires your calling card's local access number."
+    70 "None"
+    71 "Are you sure you want to remove the selected Telephony Service Provider?"
+    72 "<no service provider is installed>"
+    73 "You must enter the prefixes for which this rule applies."
+    74 "&Digits:"
+    75 "&Prefixes:"
+    76 "You tried to enter an invalid character.\n\nValid characters are 0 thru 9, space, and comma."
+    77 "Confirm Delete"
+    78 "Are you sure you want to delete this location?"
+    79 "Are you sure you want to delete this calling card?"
+    80 "Are you sure you want to delete this area code rule?"
+    81 "You must enter the digits to dial."
+    82 "The calling card name you have entered is already in use.  Please enter a unique name."
+    83 "ReactOS needs telephone information about the location from which you will be dialing. If you cancel without providing this information, this program may not function correctly when dialing. In addition, some applications respond to your canceling this dialog box by immediately re-posting it.\nAre you sure you want to cancel?"
+    84 "Confirm Cancel"
+    85 "Mi Ubicación"
+    86 "<no service providers are available for installation>"
+    87 "The character you entered is invalid.\n\nValid characters are 0 through 9, A through D, *, #, +, !, space, and comma."
+    88 "You must enter the international carrier code for this location."
+    89 "You must enter the carrier code for this location."
+    90 "This page is attempting to make or monitor telephone calls or other multimedia connections on your computer.\nDo you want allow it to continue?"
+    91 "This page is attempting to access directory information on your network.\nDo you want to allow it to continue?"
+    92 "This page is attempting to access or change network conferencing information.\nDo you want to allow it to continue?"
+    93 "This page is attempting to access or change registry information.\nDo you want to allow it to continue?"
+    1064 "Phone And Modem control panel can not be opened. You may have a problem starting telephony service."
+    1065 "Remove Provider"
+    15800 "23"
+    15801 "0,""None (Direct Dial)"","""","""","""","""","""","""","""","""",1"
+    15802 "1,""AT&T Direct Dial via 1010ATT1"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010288"",""1010288"",1"
+    15803 "2,""AT&T via 1010ATT0"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010288"",""1010288"",1"
+    15804 "3,""AT&T via 1-800-321-0288"","""",""G"",""J$TFG$TH"",""J$T01EFG$TH"","""","""",""18003210288"",""18003210288"",1"
+    15805 "4,""MCI Direct Dial via 10102221"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010222"",""1010222"",1"
+    15806 "5,""MCI via 10102220"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010222"",""1010222"",1"
+    15807 "6,""MCI via 1-800-888-8000"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18008888000"",""18008888000"",1"
+    15808 "7,""MCI via 1-800-674-0700"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18006740700"",""18006740700"",1"
+    15809 "8,""MCI via 1-800-674-7000"","""",""G"",""J,,,,,,TH,,FG"",""J,,,,,,TH,,011EFG"","""","""",""18006747000"",""18006747000"",1"
+    15810 "9,""US Sprint Direct Dial via 10103331"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010333"",""1010333"",1"
+    15811 "10,""US Sprint via 10103330"","""",""G"",""J0FG$TH"",""J01EFG$TH"","""","""",""1010333"",""1010333"",1"
+    15812 "11,""US Sprint via 1-800-877-8000"","""",""G"",""J,,,T0FG,,H"",""J,,,T01EFG#,H"","""","""",""18008778000"",""18008778000"",1"
+    15813 "12,""Calling Card via 0"","""",""G"",""0FG$TH"",""01EFG$TH"","""","""","""","""",1"
+    15814 "13,""Carte France Telecom"","""",""T3010,H,0FG#"",""T3010,H,0FG#"",""T3010,H,00EFG#"","""","""","""","""",1"
+    15815 "14,""Mercury (UK)"","""",""J$TH,0FG"",""J$TH,0FG"",""J$TH,0FG"","""",""0500800800"",""0500800800"",""0500800800"",1"
+    15816 "15,""British Telecom (UK)"","""",""J$H,0FG"",""J$H,0FG"",""J$H,00EFG"","""",""144"",""144"".""144"",1"
+    15817 "16,""CLEAR Communications (New Zealand)"","""",""J$TH,0FG"",""J$TH,0FG"",""J$TH,00EFG"","""",""0502333"",""0502333"",""0502333"",1"
+    15818 "17,""Telecom New Zealand"","""",""J,0FG?H"",""J,0FG?H"",""J,00EFG?H"","""",""012"",""012"",""012"",1"
+    15819 "18,""Global Card (Taiwan to USA)"","""",""G"",""0FG"",""J,102880$TFG$H"","""","""","""",""0080"",1"
+    15820 "19,""Telstra (Australia) via 1818 (voice)"","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0011EFG#"","""",""1818"",""1818"",""1818"",1"
+    15821 "20,""Telstra (Australia) via 1818 (fax)"","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0015EFG#"","""",""1818"",""1818"",""1818"",1"
+    15822 "21,""Optus (Australia) via 1812"","""",""FG"",""FG"",""J@TH,0011EFG"","""","""","""",""1812"",1"
+    15823 "22,""Optus (Australia) via 008551812"","""",""FG"",""FG"",""J@TH,0011EFG"","""","""","""",""008551812"",1"
+END

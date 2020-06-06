@@ -6,8 +6,8 @@ CAPTION "Wählregeln"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 21, 20
+    LTEXT "In der folgenden Liste sind alle Standorte aufgelistet. Wählen Sie den Standort aus, von dem aus gewählt wird.", -1, 35, 7, 210, 16
     LTEXT "&Standorte:", -1, 7, 35, 210, 8
-    LTEXT "In der folgenden Liste sind alle Standorte aufgelistet. Wählen Sie den Standort aus, von dem aus gewählt wird.", -1, 35, 12, 210, 16
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000011D, 7, 46, 238, 105, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Neu...", 1030, 87, 155, 50, 14
     PUSHBUTTON "Be&arbeiten...", 1031, 141, 155, 50, 14
@@ -223,9 +223,9 @@ BEGIN
     AUTORADIOBUTTON "Auf &Freizeichen warten", 1009, 7, 31, 238, 10, WS_GROUP
     AUTORADIOBUTTON "&Auf das Ende einer Sprachnachricht warten", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "&Eine bestimmte Zeit warten:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
-    LTEXT "&Sekunden", -1, 58, 80, 187, 8
     EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 77, 11, 14
+    LTEXT "&Sekunden", -1, 58, 79, 187, 8
     DEFPUSHBUTTON "OK", 1, 141, 103, 50, 14
     PUSHBUTTON "Abbrechen", 2, 195, 103, 50, 14
 END
@@ -250,7 +250,7 @@ CAPTION "Erweitert"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "Die folgenden Telefonieanbieter sind auf diesem Computer installiert:", -1, 40, 12, 205, 16
+    LTEXT "Die folgenden Telefonieanbieter sind auf diesem Computer installiert:", -1, 40, 7, 205, 16
     LTEXT "&Anbieter:", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
     PUSHBUTTON "&Hinzufügen...", 1005, 87, 197, 50, 14
@@ -258,16 +258,16 @@ BEGIN
     PUSHBUTTON "&Konfigurieren...", 1031, 195, 197, 50, 14
 END
 
-114 DIALOGEX 20, 15, 252, 127
+114 DIALOGEX 20, 15, 252, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Anbieter hinzufügen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Wählen Sie die zu installierenden Anbieter aus der Liste aus und klicken Sie dann auf Hinzufügen.", 2000, 7, 7, 241, 16
-    LTEXT "&Telefonieanbieter:", -1, 7, 23, 144, 10
-    LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "&Hinzufügen", 1005, 141, 106, 50, 14
-    DEFPUSHBUTTON "Abbrechen", 2, 195, 106, 50, 14
+    LTEXT "&Telefonieanbieter:", -1, 7, 31, 144, 10
+    LISTBOX 1055, 7, 42, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "&Hinzufügen", 1005, 141, 114, 50, 14
+    DEFPUSHBUTTON "Abbrechen", 2, 195, 114, 50, 14
 END
 
 115 DIALOGEX 10, 10, 303, 228

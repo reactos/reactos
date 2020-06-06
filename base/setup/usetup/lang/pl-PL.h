@@ -4,7 +4,7 @@
 /*
  *      translated by Caemyr (Jan-Feb, Apr, 2008)
  *      Use ReactOS forum PM or IRC to contact me
- *      http://www.reactos.org
+ *      https://reactos.org/
  *      IRC: irc.freenode.net #reactos-pl;
  *      Updated by Wojo664 (July, 2014)
  *      Updated by Saibamen (July, 2015)
@@ -170,7 +170,7 @@ static MUI_ENTRY plPLWelcomePageEntries[] =
     {
         6,
         24,
-        "http://www.reactos.org",
+        "https://reactos.org/",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
@@ -1871,7 +1871,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_WARN_PARTITION,
-        "Instalator wykry\210, \276e co najmniej jeden dysk twardy zawiera niekompatybiln\245 \n"
+        "Instalator wykry\210, \276e co najmniej jeden dysk twardy zawiera niekompatybiln\245\n"
         "tabel\251 partycji, kt\242ra nie b\251dzie poprawnie obs\210ugiwana!\n"
         "\n"
         "Tworzenie lub usuwanie partycji mo\276e nieodwracalnie uszkodi\206 tabel\251 partycji.\n"
@@ -2018,7 +2018,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "Nie mo\276na utworzy\206 partycji podstawowej lub rozszerzonej, \n" // FIXME
+        "Nie mo\276na utworzy\206 partycji podstawowej lub rozszerzonej,\n" // FIXME
         "poniewa\276 tabela partycji na tym dysku jest pe\210na.\n"
         "\n"
         "  * Naci\230nij dowolny klawisz, aby kontynuowa\206."

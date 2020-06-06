@@ -452,7 +452,13 @@ vsnprintf (
 
 
     Pos = String;
-    End = String + Size;
+
+
+    if (Size != ACPI_UINT32_MAX) {
+        End = String + Size;
+    } else {
+        End = ACPI_CAST_PTR(char, ACPI_UINT32_MAX);
+    }
 
     for (; *Format; ++Format)
     {

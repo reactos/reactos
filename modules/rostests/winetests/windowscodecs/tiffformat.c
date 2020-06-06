@@ -302,6 +302,47 @@ static const struct tiff_24bpp_data
     { 900, 3 },
     { 0x11, 0x22, 0x33 }
 };
+
+static const struct tiff_4bps_bgra
+{
+    USHORT byte_order;
+    USHORT version;
+    ULONG  dir_offset;
+    USHORT number_of_entries;
+    struct IFD_entry entry[14];
+    ULONG next_IFD;
+    struct IFD_rational res;
+    BYTE pixel_data[4];
+} tiff_4bps_bgra =
+{
+#ifdef WORDS_BIGENDIAN
+    'M' | 'M' << 8,
+#else
+    'I' | 'I' << 8,
+#endif
+    42,
+    FIELD_OFFSET(struct tiff_4bps_bgra, number_of_entries),
+    14,
+    {
+        { 0xff, IFD_SHORT, 1, 0 }, /* SUBFILETYPE */
+        { 0x100, IFD_LONG, 1, 3 }, /* IMAGEWIDTH */
+        { 0x101, IFD_LONG, 1, 2 }, /* IMAGELENGTH */
+        { 0x102, IFD_SHORT, 1, 1 }, /* BITSPERSAMPLE */
+        { 0x103, IFD_SHORT, 1, 1 }, /* COMPRESSION */
+        { 0x106, IFD_SHORT, 1, 2 }, /* PHOTOMETRIC */
+        { 0x111, IFD_LONG, 1, FIELD_OFFSET(struct tiff_4bps_bgra, pixel_data) }, /* STRIPOFFSETS */
+        { 0x115, IFD_SHORT, 1, 4 }, /* SAMPLESPERPIXEL */
+        { 0x116, IFD_LONG, 1, 2 }, /* ROWSPERSTRIP */
+        { 0x117, IFD_LONG, 1, 4 }, /* STRIPBYTECOUNT */
+        { 0x11a, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_4bps_bgra, res) }, /* XRESOLUTION */
+        { 0x11b, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_4bps_bgra, res) }, /* YRESOLUTION */
+        { 0x11c, IFD_SHORT, 1, 1 }, /* PLANARCONFIGURATION */
+        { 0x128, IFD_SHORT, 1, 2 } /* RESOLUTIONUNIT */
+    },
+    0,
+    { 96, 1 },
+    { 0x12,0x30, 0x47,0xe0 }
+};
 #include "poppack.h"
 
 static IWICImagingFactory *factory;
@@ -1179,6 +1220,68 @@ static void test_color_formats(void)
     }
 }
 
+static void test_tiff_4bps_bgra(void)
+{
+    HRESULT hr;
+    IWICBitmapDecoder *decoder;
+    IWICBitmapFrameDecode *frame;
+    UINT frame_count, width, height, i;
+    double dpi_x, dpi_y;
+    IWICPalette *palette;
+    GUID format;
+    WICRect rc;
+    BYTE data[24];
+    static const BYTE expected_data[24] = { 0,0,0,0xff, 0xff,0,0,0, 0xff,0,0,0xff,
+                                            0,0xff,0,0, 0xff,0xff,0,0xff, 0xff,0xff,0xff,0 };
+
+    hr = create_decoder(&tiff_4bps_bgra, sizeof(tiff_4bps_bgra), &decoder);
+    ok(hr == S_OK, "Failed to load TIFF image data %#x\n", hr);
+    if (hr != S_OK) return;
+
+    hr = IWICBitmapDecoder_GetFrameCount(decoder, &frame_count);
+    ok(hr == S_OK, "GetFrameCount error %#x\n", hr);
+    ok(frame_count == 1, "expected 1, got %u\n", frame_count);
+
+    hr = IWICBitmapDecoder_GetFrame(decoder, 0, &frame);
+    ok(hr == S_OK, "GetFrame error %#x\n", hr);
+
+    hr = IWICBitmapFrameDecode_GetSize(frame, &width, &height);
+    ok(hr == S_OK, "GetSize error %#x\n", hr);
+    ok(width == 3, "got %u\n", width);
+    ok(height == 2, "got %u\n", height);
+
+    hr = IWICBitmapFrameDecode_GetResolution(frame, &dpi_x, &dpi_y);
+    ok(hr == S_OK, "GetResolution error %#x\n", hr);
+    ok(dpi_x == 96.0, "expected 96.0, got %f\n", dpi_x);
+    ok(dpi_y == 96.0, "expected 96.0, got %f\n", dpi_y);
+
+    hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
+    ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
+    ok(IsEqualGUID(&format, &GUID_WICPixelFormat32bppBGRA),
+       "got wrong format %s\n", wine_dbgstr_guid(&format));
+
+    hr = IWICImagingFactory_CreatePalette(factory, &palette);
+    ok(hr == S_OK, "CreatePalette error %#x\n", hr);
+    hr = IWICBitmapFrameDecode_CopyPalette(frame, palette);
+    ok(hr == WINCODEC_ERR_PALETTEUNAVAILABLE,
+       "expected WINCODEC_ERR_PALETTEUNAVAILABLE, got %#x\n", hr);
+    IWICPalette_Release(palette);
+
+    memset(data, 0xaa, sizeof(data));
+    rc.X = 0;
+    rc.Y = 0;
+    rc.Width = 3;
+    rc.Height = 2;
+    hr = IWICBitmapFrameDecode_CopyPixels(frame, &rc, 12, sizeof(data), data);
+    ok(hr == S_OK, "CopyPixels error %#x\n", hr);
+
+    for (i = 0; i < sizeof(data); i++)
+        ok(data[i] == expected_data[i], "%u: expected %02x, got %02x\n", i, expected_data[i], data[i]);
+
+    IWICBitmapFrameDecode_Release(frame);
+    IWICBitmapDecoder_Release(decoder);
+}
+
 START_TEST(tiffformat)
 {
     HRESULT hr;
@@ -1190,6 +1293,7 @@ START_TEST(tiffformat)
     ok(hr == S_OK, "CoCreateInstance error %#x\n", hr);
     if (FAILED(hr)) return;
 
+    test_tiff_4bps_bgra();
     test_color_formats();
     test_tiff_1bpp_palette();
     test_tiff_8bpp_palette();

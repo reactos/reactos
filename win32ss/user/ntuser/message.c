@@ -96,10 +96,11 @@ static const unsigned int message_pointer_flags[] =
 };
 
 /* check whether a given message type includes pointers */
-static inline int is_pointer_message( UINT message )
+static inline int is_pointer_message( UINT message, WPARAM wparam )
 {
     if (message >= 8*sizeof(message_pointer_flags)) return FALSE;
-        return (message_pointer_flags[message / 32] & SET(message)) != 0;
+    if (message == WM_DEVICECHANGE && !(wparam & 0x8000)) return FALSE;
+    return (message_pointer_flags[message / 32] & SET(message)) != 0;
 }
 #undef SET
 
@@ -139,6 +140,7 @@ static MSGMEMORY g_MsgMemory[] =
     { WM_DRAWITEM, sizeof(DRAWITEMSTRUCT), MMS_FLAG_READWRITE },
     { WM_HELP, sizeof(HELPINFO), MMS_FLAG_READWRITE },
     { WM_NEXTMENU, sizeof(MDINEXTMENU), MMS_FLAG_READWRITE },
+    { WM_DEVICECHANGE, MMS_SIZE_SPECIAL, MMS_FLAG_READ },
 };
 
 static PMSGMEMORY FASTCALL
@@ -217,6 +219,16 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
                 {
                 COPYDATASTRUCT *cds = (COPYDATASTRUCT *)lParam;
                 Size = sizeof(COPYDATASTRUCT) + cds->cbData;
+                }
+                break;
+
+            case WM_DEVICECHANGE:
+                {
+                    if ( lParam && (wParam & 0x8000) )
+                    {
+                        DEV_BROADCAST_HDR *header = (DEV_BROADCAST_HDR *)lParam;
+                        Size = header->dbch_size;
+                    }
                 }
                 break;
 
@@ -577,30 +589,174 @@ GetWakeMask(UINT first, UINT last )
     return mask;
 }
 
+//
+// Pass Strings to User Heap Space for Message Hook Callbacks.
+//
+BOOL
+FASTCALL
+IntMsgCreateStructW(
+    PWND Window,
+    CREATESTRUCTW *pCsw,
+    CREATESTRUCTW *Cs,
+    PVOID *ppszClass,
+    PVOID *ppszName )
+{
+    PLARGE_STRING WindowName;
+    PUNICODE_STRING ClassName;
+    PVOID pszClass = NULL, pszName = NULL;
+
+    /* Fill the new CREATESTRUCTW */
+    RtlCopyMemory(pCsw, Cs, sizeof(CREATESTRUCTW));
+    pCsw->style = Window->style; /* HCBT_CREATEWND needs the real window style */
+
+    WindowName = (PLARGE_STRING)   Cs->lpszName;
+    ClassName  = (PUNICODE_STRING) Cs->lpszClass;
+
+    // Based on the assumption this is from "unicode source" user32, ReactOS, answer is yes.
+    if (!IS_ATOM(ClassName->Buffer))
+    {
+        if (ClassName->Length)
+        {
+            if (Window->state & WNDS_ANSICREATOR)
+            {
+                ANSI_STRING AnsiString;
+                AnsiString.MaximumLength = (USHORT)RtlUnicodeStringToAnsiSize(ClassName)+sizeof(CHAR);
+                pszClass = UserHeapAlloc(AnsiString.MaximumLength);
+                if (!pszClass)
+                {
+                    ERR("UserHeapAlloc() failed!\n");
+                    return FALSE;
+                }
+                RtlZeroMemory(pszClass, AnsiString.MaximumLength);
+                AnsiString.Buffer = (PCHAR)pszClass;
+                RtlUnicodeStringToAnsiString(&AnsiString, ClassName, FALSE);
+            }
+            else
+            {
+                UNICODE_STRING UnicodeString;
+                UnicodeString.MaximumLength = ClassName->Length + sizeof(UNICODE_NULL);
+                pszClass = UserHeapAlloc(UnicodeString.MaximumLength);
+                if (!pszClass)
+                {
+                    ERR("UserHeapAlloc() failed!\n");
+                    return FALSE;
+                }
+                RtlZeroMemory(pszClass, UnicodeString.MaximumLength);
+                UnicodeString.Buffer = (PWSTR)pszClass;
+                RtlCopyUnicodeString(&UnicodeString, ClassName);
+            }
+            *ppszClass = pszClass;
+            pCsw->lpszClass = UserHeapAddressToUser(pszClass);
+        }
+        else
+        {
+            pCsw->lpszClass = NULL;
+        }
+    }
+    else
+    {
+        pCsw->lpszClass = ClassName->Buffer;
+    }
+    if (WindowName->Length)
+    {
+        UNICODE_STRING Name;
+        Name.Buffer = WindowName->Buffer;
+        Name.Length = (USHORT)min(WindowName->Length, MAXUSHORT); // FIXME: LARGE_STRING truncated
+        Name.MaximumLength = (USHORT)min(WindowName->MaximumLength, MAXUSHORT);
+
+        if (Window->state & WNDS_ANSICREATOR)
+        {
+            ANSI_STRING AnsiString;
+            AnsiString.MaximumLength = (USHORT)RtlUnicodeStringToAnsiSize(&Name) + sizeof(CHAR);
+            pszName = UserHeapAlloc(AnsiString.MaximumLength);
+            if (!pszName)
+            {
+               ERR("UserHeapAlloc() failed!\n");
+               return FALSE;
+            }
+            RtlZeroMemory(pszName, AnsiString.MaximumLength);
+            AnsiString.Buffer = (PCHAR)pszName;
+            RtlUnicodeStringToAnsiString(&AnsiString, &Name, FALSE);
+        }
+        else
+        {
+            UNICODE_STRING UnicodeString;
+            UnicodeString.MaximumLength = Name.Length + sizeof(UNICODE_NULL);
+            pszName = UserHeapAlloc(UnicodeString.MaximumLength);
+            if (!pszName)
+            {
+               ERR("UserHeapAlloc() failed!\n");
+               return FALSE;
+            }
+            RtlZeroMemory(pszName, UnicodeString.MaximumLength);
+            UnicodeString.Buffer = (PWSTR)pszName;
+            RtlCopyUnicodeString(&UnicodeString, &Name);
+        }
+        *ppszName = pszName;
+        pCsw->lpszName = UserHeapAddressToUser(pszName);
+    }
+    else
+    {
+        pCsw->lpszName = NULL;
+    }
+
+    return TRUE;
+}
+
 static VOID FASTCALL
-IntCallWndProc( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+IntCallWndProc( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam )
 {
     BOOL SameThread = FALSE;
     CWPSTRUCT CWP;
+    PVOID pszClass = NULL, pszName = NULL;
+    CREATESTRUCTW Csw;
+
+    //// Check for a hook to eliminate overhead. ////
+    if ( !ISITHOOKED(WH_CALLWNDPROC) && !(Window->head.rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_CALLWNDPROC)) )
+        return;
 
     if (Window->head.pti == ((PTHREADINFO)PsGetCurrentThreadWin32Thread()))
         SameThread = TRUE;
+
+    if ( Msg == WM_CREATE || Msg == WM_NCCREATE )
+    {   //
+        // String pointers are in user heap space, like WH_CBT HCBT_CREATEWND.
+        //
+        if (!IntMsgCreateStructW( Window, &Csw, (CREATESTRUCTW *)lParam, &pszClass, &pszName ))
+            return;
+        lParam = (LPARAM)&Csw;
+    }
 
     CWP.hwnd    = hWnd;
     CWP.message = Msg;
     CWP.wParam  = wParam;
     CWP.lParam  = lParam;
     co_HOOK_CallHooks( WH_CALLWNDPROC, HC_ACTION, SameThread, (LPARAM)&CWP );
+
+    if (pszName)  UserHeapFree(pszName);
+    if (pszClass) UserHeapFree(pszClass);
 }
 
 static VOID FASTCALL
-IntCallWndProcRet ( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *uResult)
+IntCallWndProcRet( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *uResult )
 {
     BOOL SameThread = FALSE;
     CWPRETSTRUCT CWPR;
+    PVOID pszClass = NULL, pszName = NULL;
+    CREATESTRUCTW Csw;
+
+    if ( !ISITHOOKED(WH_CALLWNDPROCRET) && !(Window->head.rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET)) )
+        return;
 
     if (Window->head.pti == ((PTHREADINFO)PsGetCurrentThreadWin32Thread()))
         SameThread = TRUE;
+
+    if ( Msg == WM_CREATE || Msg == WM_NCCREATE )
+    {
+        if (!IntMsgCreateStructW( Window, &Csw, (CREATESTRUCTW *)lParam, &pszClass, &pszName ))
+            return;
+        lParam = (LPARAM)&Csw;
+    }
 
     CWPR.hwnd    = hWnd;
     CWPR.message = Msg;
@@ -608,6 +764,9 @@ IntCallWndProcRet ( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPar
     CWPR.lParam  = lParam;
     CWPR.lResult = uResult ? (*uResult) : 0;
     co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
+
+    if (pszName)  UserHeapFree(pszName);
+    if (pszClass) UserHeapFree(pszClass);
 }
 
 static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPARAM lparam )
@@ -1072,8 +1231,11 @@ co_IntGetPeekMessage( PMSG pMsg,
                                      bGMSG );
         if (Present)
         {
-           /* GetMessage or PostMessage must never get messages that contain pointers */
-           ASSERT(FindMsgMemory(pMsg->message) == NULL);
+           if ( pMsg->message != WM_DEVICECHANGE || (pMsg->wParam & 0x8000) )
+           {
+               /* GetMessage or PostMessage must never get messages that contain pointers */
+               ASSERT(FindMsgMemory(pMsg->message) == NULL);
+           }
 
            if ( pMsg->message >= WM_DDE_FIRST && pMsg->message <= WM_DDE_LAST )
            {
@@ -1151,7 +1313,7 @@ UserPostThreadMessage( PTHREADINFO pti,
 {
     MSG Message;
 
-    if (is_pointer_message(Msg))
+    if (is_pointer_message(Msg, wParam))
     {
         EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
@@ -1197,7 +1359,7 @@ UserPostMessage( HWND Wnd,
     Message.pt = gpsi->ptCursor;
     Message.time = EngGetTickCount32();
 
-    if (is_pointer_message(Message.message))
+    if (is_pointer_message(Message.message, Message.wParam))
     {
         EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
@@ -1879,7 +2041,7 @@ UserSendNotifyMessage( HWND hWnd,
 {
     BOOL Ret = TRUE;
 
-    if (is_pointer_message(Msg))
+    if (is_pointer_message(Msg, wParam))
     {
         EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
@@ -2713,7 +2875,7 @@ NtUserMessageCall( HWND hWnd,
             }
             _SEH2_END;
 
-            if (is_pointer_message(Msg))
+            if (is_pointer_message(Msg, wParam))
             {
                EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
                break;
@@ -2893,7 +3055,7 @@ DWORD
 APIENTRY
 NtUserWaitForInputIdle( IN HANDLE hProcess,
                         IN DWORD dwMilliseconds,
-                        IN BOOL Unknown2)
+                        IN BOOL bSharedWow)
 {
     PEPROCESS Process;
     PPROCESSINFO W32Process;

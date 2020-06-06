@@ -247,7 +247,7 @@ ReassembleDatagram(
 }
 
 
-__inline VOID Cleanup(
+static inline VOID Cleanup(
   PKSPIN_LOCK Lock,
   KIRQL OldIrql,
   PIPDATAGRAM_REASSEMBLY IPDR)

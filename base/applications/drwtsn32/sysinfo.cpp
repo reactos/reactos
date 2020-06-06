@@ -9,6 +9,7 @@
 #include <udmihelp.h>
 #include <winreg.h>
 #include <reactos/buildno.h>
+#include <reactos/stubs.h>
 
 static const char* Exception2Str(DWORD code)
 {
@@ -36,6 +37,7 @@ static const char* Exception2Str(DWORD code)
     case EXCEPTION_INVALID_DISPOSITION: return "EXCEPTION_INVALID_DISPOSITION";
     case EXCEPTION_GUARD_PAGE: return "EXCEPTION_GUARD_PAGE";
     case EXCEPTION_INVALID_HANDLE: return "EXCEPTION_INVALID_HANDLE";
+    case EXCEPTION_WINE_STUB: return "EXCEPTION_WINE_STUB";
     }
 
     return "--";

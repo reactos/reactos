@@ -304,6 +304,7 @@ OnInitDialog(HWND hwnd)
     EnableDialogText(hwnd);
     CreateNTPServerList(hwnd);
     SyncNTPStatusInit(hwnd);
+    SetWindowLongPtr(hwnd, DWLP_USER, (LONG_PTR)FALSE);
 }
 
 static VOID
@@ -341,6 +342,40 @@ OnAutoSync(BOOL Sync)
     RegCloseKey(hKey);
 }
 
+static DWORD
+UpdateThread(
+    _In_ LPVOID lpParameter)
+{
+    HWND hwndDlg;
+    DWORD dwError;
+
+    hwndDlg = (HWND)lpParameter;
+
+    SetNTPServer(hwndDlg, TRUE);
+
+    dwError = W32TimeSyncNow(L"localhost", 0, 0);
+    UpdateNTPStatus(hwndDlg, dwError);
+
+    SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)FALSE);
+    return 0;
+}
+
+static VOID
+OnUpdate(
+    HWND hwndDlg)
+{
+    if ((BOOL)GetWindowLongPtr(hwndDlg, DWLP_USER) == FALSE)
+    {
+        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)TRUE);
+
+        if (CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)UpdateThread, (PVOID)hwndDlg, 0, NULL) == NULL)
+        {
+            UpdateNTPStatus(hwndDlg, GetLastError());
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)FALSE);
+        }
+    }
+}
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 InetTimePageProc(HWND hwndDlg,
@@ -358,15 +393,8 @@ InetTimePageProc(HWND hwndDlg,
             switch(LOWORD(wParam))
             {
                 case IDC_UPDATEBUTTON:
-                {
-                    DWORD dwError;
-
-                    SetNTPServer(hwndDlg, TRUE);
-
-                    dwError = W32TimeSyncNow(L"localhost", 0, 0);
-                    UpdateNTPStatus(hwndDlg, dwError);
-                }
-                break;
+                    OnUpdate(hwndDlg);
+                    break;
 
                 case IDC_SERVERLIST:
                     if ((HIWORD(wParam) == CBN_SELCHANGE) || (HIWORD(wParam) == CBN_EDITCHANGE))

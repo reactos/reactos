@@ -8,52 +8,13 @@
 #include "shelltest.h"
 #include <shlwapi.h>
 #include <stdio.h>
+#include "SHChangeNotify.h"
 
-#define WM_SHELL_NOTIFY (WM_USER + 100)
-
-#define ID_TEST 1000
-
-static WCHAR s_dir1[MAX_PATH];  // "%TEMP%\\WatchDir1"
-static WCHAR s_dir2[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir2"
-static WCHAR s_dir3[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir3"
-static WCHAR s_file1[MAX_PATH]; // "%TEMP%\\WatchDir1\\File1.txt"
-static WCHAR s_file2[MAX_PATH]; // "%TEMP%\\WatchDir1\\File2.txt"
+#define DONT_SEND 0x24242424
 
 static HWND s_hwnd = NULL;
-static WCHAR s_szName[] = L"SHChangeNotify testcase";
-static LPITEMIDLIST s_pidl = NULL;
-static UINT s_uRegID = 0;
-static SHChangeNotifyEntry s_entry;
-
-static CHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
-
-typedef enum TYPE
-{
-    TYPE_RENAMEITEM,
-    TYPE_CREATE,
-    TYPE_DELETE,
-    TYPE_MKDIR,
-    TYPE_RMDIR,
-    TYPE_UPDATEDIR,
-    TYPE_UPDATEITEM,
-    TYPE_RENAMEFOLDER,
-    TYPE_FREESPACE
-} TYPE;
-
-static BYTE s_counters[TYPE_FREESPACE + 1];
-
-static LPCSTR
-DoGetPattern(void)
-{
-    size_t i;
-    static char buf[TYPE_FREESPACE + 1 + 1];
-    for (i = 0; i < TYPE_FREESPACE + 1; ++i)
-    {
-        buf[i] = (char)('0' + s_counters[i]);
-    }
-    buf[i] = 0;
-    return buf;
-}
+static const WCHAR s_szName[] = L"SHChangeNotify testcase";
+static WCHAR s_szSubProgram[MAX_PATH];
 
 typedef void (*ACTION)(void);
 
@@ -65,6 +26,8 @@ typedef struct TEST_ENTRY
     LPCVOID item2;
     LPCSTR pattern;
     ACTION action;
+    LPCWSTR path1;
+    LPCWSTR path2;
 } TEST_ENTRY;
 
 static BOOL
@@ -125,350 +88,239 @@ DoAction8(void)
     ok_int(RemoveDirectoryW(s_dir1), TRUE);
 }
 
-static const TEST_ENTRY s_TestEntries[] = {
-    {__LINE__, SHCNE_MKDIR, s_dir1, NULL, "000100000", NULL},
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", DoAction1},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", DoAction2},
-    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", DoAction1},
-    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "000000010", NULL},
-    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, NULL, "000000010", NULL},
-    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "000000010", DoAction3},
-    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, NULL, "000000010", NULL},
-    {__LINE__, SHCNE_CREATE, s_file1, NULL, "010000000", NULL},
-    {__LINE__, SHCNE_CREATE, s_file1, s_file2, "010000000", NULL},
-    {__LINE__, SHCNE_CREATE, s_file1, NULL, "010000000", DoAction4},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, NULL, "100000000", NULL},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", NULL},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", DoAction5},
-    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file1, NULL, "000000100", NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file2, NULL, "000000100", NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file1, s_file2, "000000100", NULL},
-    {__LINE__, SHCNE_UPDATEITEM, s_file2, s_file1, "000000100", NULL},
-    {__LINE__, SHCNE_DELETE, s_file1, NULL, "001000000", NULL},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", NULL},
-    {__LINE__, SHCNE_DELETE, s_file2, s_file1, "001000000", NULL},
-    {__LINE__, SHCNE_DELETE, s_file1, s_file2, "001000000", NULL},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", DoAction6},
-    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", NULL},
-    {__LINE__, SHCNE_DELETE, s_file1, NULL, "001000000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_file1, NULL, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_file2, NULL, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_file1, s_file2, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_file2, s_file1, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_dir1, NULL, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_dir2, NULL, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_dir1, s_dir2, "000001000", NULL},
-    {__LINE__, SHCNE_UPDATEDIR, s_dir2, s_dir1, "000001000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir1, s_dir2, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir1, s_dir3, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, s_dir1, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir2, s_dir3, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", DoAction7},
-    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", NULL},
-    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", DoAction8},
+static const TEST_ENTRY s_TestEntriesMode0[] =
+{
+    {__LINE__, SHCNE_MKDIR, s_dir1, NULL, "000100000", NULL, s_dir1, L""},
+    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", NULL, s_dir2, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL, s_dir2, L""},
+    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", DoAction1, s_dir2, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL, s_dir2, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", DoAction2, s_dir2, L""},
+    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000100000", DoAction1, s_dir2, L""},
+    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "000000010", NULL, s_dir2, s_dir3},
+    {__LINE__, SHCNE_RENAMEFOLDER, s_dir2, s_dir3, "000000010", DoAction3, s_dir2, s_dir3},
+    {__LINE__, SHCNE_CREATE, s_file1, NULL, "010000000", NULL, s_file1, L""},
+    {__LINE__, SHCNE_CREATE, s_file1, s_file2, "010000000", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_CREATE, s_file1, NULL, "010000000", DoAction4, s_file1, L""},
+    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", DoAction5, s_file1, s_file2},
+    {__LINE__, SHCNE_RENAMEITEM, s_file1, s_file2, "100000000", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_UPDATEITEM, s_file1, NULL, "000000100", NULL, s_file1, L""},
+    {__LINE__, SHCNE_UPDATEITEM, s_file2, NULL, "000000100", NULL, s_file2, L""},
+    {__LINE__, SHCNE_UPDATEITEM, s_file1, s_file2, "000000100", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_UPDATEITEM, s_file2, s_file1, "000000100", NULL, s_file2, s_file1},
+    {__LINE__, SHCNE_DELETE, s_file1, NULL, "001000000", NULL, s_file1, L""},
+    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", NULL, s_file2, L""},
+    {__LINE__, SHCNE_DELETE, s_file2, s_file1, "001000000", NULL, s_file2, s_file1},
+    {__LINE__, SHCNE_DELETE, s_file1, s_file2, "001000000", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", DoAction6, s_file2, L""},
+    {__LINE__, SHCNE_DELETE, s_file2, NULL, "001000000", NULL, s_file2, L""},
+    {__LINE__, SHCNE_DELETE, s_file1, NULL, "001000000", NULL, s_file1, L""},
+    {__LINE__, SHCNE_UPDATEDIR, s_file1, NULL, "000001000", NULL, s_file1, L""},
+    {__LINE__, SHCNE_UPDATEDIR, s_file2, NULL, "000001000", NULL, s_file2, L""},
+    {__LINE__, SHCNE_UPDATEDIR, s_file1, s_file2, "000001000", NULL, s_file1, s_file2},
+    {__LINE__, SHCNE_UPDATEDIR, s_file2, s_file1, "000001000", NULL, s_file2, s_file1},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir1, NULL, "000001000", NULL, s_dir1, L""},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir2, NULL, "000001000", NULL, s_dir2, L""},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir1, s_dir2, "000001000", NULL, s_dir1, s_dir2},
+    {__LINE__, SHCNE_UPDATEDIR, s_dir2, s_dir1, "000001000", NULL, s_dir2, s_dir1},
+    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", NULL, s_dir1, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir2, NULL, "000010000", NULL, s_dir2, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", NULL, s_dir3, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir1, s_dir2, "000010000", NULL, s_dir1, s_dir2},
+    {__LINE__, SHCNE_RMDIR, s_dir1, s_dir3, "000010000", NULL, s_dir1, s_dir3},
+    {__LINE__, SHCNE_RMDIR, s_dir2, s_dir1, "000010000", NULL, s_dir2, s_dir1},
+    {__LINE__, SHCNE_RMDIR, s_dir2, s_dir3, "000010000", NULL, s_dir2, s_dir3},
+    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", NULL, s_dir3, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir3, NULL, "000010000", DoAction7, s_dir3, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", NULL, s_dir1, L""},
+    {__LINE__, SHCNE_RMDIR, s_dir1, NULL, "000010000", DoAction8, s_dir1, L""},
 };
-static const size_t s_nTestEntries = _countof(s_TestEntries);
-static size_t s_iTest = 0;
+
+#define s_TestEntriesMode1 s_TestEntriesMode0
+#define s_TestEntriesMode2 s_TestEntriesMode0
+
+LPCSTR PatternFromFlags(DWORD flags)
+{
+    static char s_buf[TYPE_FREESPACE + 1 + 1];
+    DWORD i;
+    for (i = 0; i <= TYPE_FREESPACE; ++i)
+    {
+        s_buf[i] = (char)('0' + !!(flags & (1 << i)));
+    }
+    s_buf[i] = 0;
+    return s_buf;
+}
+
+static BOOL
+DoGetClipText(LPWSTR pszPath1, LPWSTR pszPath2)
+{
+    pszPath1[0] = pszPath2[0] = 0;
+
+    if (!IsClipboardFormatAvailable(CF_UNICODETEXT))
+        return FALSE;
+
+    if (!OpenClipboard(NULL))
+        return FALSE;
+
+    WCHAR szText[MAX_PATH * 2];
+    HGLOBAL hGlobal = GetClipboardData(CF_UNICODETEXT);
+    LPWSTR psz = (LPWSTR)GlobalLock(hGlobal);
+    lstrcpynW(szText, psz, _countof(szText));
+    GlobalUnlock(hGlobal);
+    CloseClipboard();
+
+    LPWSTR pch = wcschr(szText, L'|');
+    if (pch == NULL)
+        return FALSE;
+
+    *pch = 0;
+    lstrcpynW(pszPath1, szText, MAX_PATH);
+    lstrcpynW(pszPath2, pch + 1, MAX_PATH);
+    return TRUE;
+}
 
 static void
-DoTestEntry1(const TEST_ENTRY *entry)
+DoTestEntry(const TEST_ENTRY *entry)
 {
     if (entry->action)
     {
         (*entry->action)();
     }
 
-    SHChangeNotify(entry->event, SHCNF_PATHW | SHCNF_FLUSH, entry->item1, entry->item2);
-    SendMessageW(s_hwnd, WM_COMMAND, ID_TEST + s_iTest, 0);
+    if (entry->event != DONT_SEND)
+    {
+        SHChangeNotify(entry->event, SHCNF_PATHW | SHCNF_FLUSH, entry->item1, entry->item2);
+    }
 
-    ZeroMemory(&s_counters, sizeof(s_counters));
-}
+    DWORD flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
+    LPCSTR pattern = PatternFromFlags(flags);
 
-static void
-DoTestEntry2(const TEST_ENTRY *entry)
-{
-    LPCSTR pattern = DoGetPattern();
     ok(lstrcmpA(pattern, entry->pattern) == 0, "Line %d: pattern mismatch '%s'\n", entry->line, pattern);
+
+    SendMessageW(s_hwnd, WM_SET_PATHS, 0, 0);
+
+    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+    BOOL bOK = DoGetClipText(szPath1, szPath2);
+    if (entry->path1)
+        ok(bOK && lstrcmpiW(entry->path1, szPath1) == 0,
+           "Line %d: path1 mismatch '%S' (%d)\n", entry->line, szPath1, bOK);
+    if (entry->path2)
+        ok(bOK && lstrcmpiW(entry->path2, szPath2) == 0,
+           "Line %d: path2 mismatch '%S' (%d)\n", entry->line, szPath2, bOK);
+
+    SendMessageW(s_hwnd, WM_CLEAR_FLAGS, 0, 0);
 }
 
 static BOOL
-DoInit(HWND hwnd)
+DoInit(void)
 {
-    WCHAR szTemp[MAX_PATH], szPath[MAX_PATH];
+    DoInitPaths();
 
-    GetTempPathW(_countof(szTemp), szTemp);
-    GetLongPathNameW(szTemp, szPath, _countof(szPath));
-
-    lstrcpyW(s_dir1, szPath);
-    PathAppendW(s_dir1, L"WatchDir1");
     CreateDirectoryW(s_dir1, NULL);
 
-    lstrcpyW(s_dir2, s_dir1);
-    PathAppendW(s_dir2, L"Dir2");
-
-    lstrcpyW(s_dir3, s_dir1);
-    PathAppendW(s_dir3, L"Dir3");
-
-    lstrcpyW(s_file1, s_dir1);
-    PathAppendW(s_file1, L"File1.txt");
-
-    lstrcpyW(s_file2, s_dir1);
-    PathAppendW(s_file2, L"File2.txt");
-
-    s_pidl = ILCreateFromPathW(s_dir1);
-
-    s_entry.pidl = s_pidl;
-    s_entry.fRecursive = TRUE;
-    LONG fEvents = SHCNE_ALLEVENTS;
-    s_uRegID = SHChangeNotifyRegister(hwnd, SHCNRF_ShellLevel, fEvents, WM_SHELL_NOTIFY,
-                                      1, &s_entry);
-    return s_uRegID != 0;
-}
-
-static DWORD WINAPI ThreadFunc(LPVOID)
-{
-    for (size_t i = 0; i < s_nTestEntries; ++i)
-    {
-        s_iTest = i;
-        DoTestEntry1(&s_TestEntries[i]);
-    }
-
-    SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
-    return 0;
-}
-
-static BOOL
-OnCreate(HWND hwnd)
-{
-    s_hwnd = hwnd;
-
-    BOOL bOK = DoInit(hwnd);
-    if (!bOK)
-    {
-        skip("SHChangeNotifyRegister failed\n");
-        return FALSE;
-    }
-
-    DWORD tid;
-    HANDLE hThread = CreateThread(NULL, 0, ThreadFunc, NULL, 0, &tid);
-    if (hThread == NULL)
-    {
-        skip("CreateThread failed\n");
-        return FALSE;
-    }
-    CloseHandle(hThread);
-
-    return TRUE;
+    return PathIsDirectoryW(s_dir1);
 }
 
 static void
-OnCommand(HWND hwnd, UINT id)
+DoEnd(HWND hwnd)
 {
-    switch (id)
-    {
-        case IDOK:
-        case IDCANCEL:
-            DestroyWindow(hwnd);
-            break;
-        default:
-            if (ID_TEST <= id && id < ID_TEST + 1000)
-            {
-                DoTestEntry2(&s_TestEntries[s_iTest]);
-            }
-            break;
-    }
-}
-
-static void
-OnDestroy(HWND hwnd)
-{
-    SHChangeNotifyDeregister(s_uRegID);
-    CoTaskMemFree(s_pidl);
     DeleteFileW(s_file1);
     DeleteFileW(s_file2);
     RemoveDirectoryW(s_dir3);
     RemoveDirectoryW(s_dir2);
     RemoveDirectoryW(s_dir1);
-    PostQuitMessage(0);
-    s_hwnd = NULL;
+
+    SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
 }
 
-static void
-DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
+static BOOL
+GetSubProgramPath(void)
 {
-    if (pidl1)
-        SHGetPathFromIDListA(pidl1, s_path1);
-    else
-        s_path1[0] = 0;
+    GetModuleFileNameW(NULL, s_szSubProgram, _countof(s_szSubProgram));
+    PathRemoveFileSpecW(s_szSubProgram);
+    PathAppendW(s_szSubProgram, L"shell-notify.exe");
 
-    if (pidl2)
-        SHGetPathFromIDListA(pidl2, s_path2);
-    else
-        s_path2[0] = 0;
+    if (!PathFileExistsW(s_szSubProgram))
+    {
+        PathRemoveFileSpecW(s_szSubProgram);
+        PathAppendW(s_szSubProgram, L"testdata\\shell-notify.exe");
 
-    switch (lEvent)
-    {
-        case SHCNE_RENAMEITEM:
-            trace("SHCNE_RENAMEITEM('%s', '%s')\n", s_path1, s_path2);
-            s_counters[TYPE_RENAMEITEM] = 1;
-            break;
-        case SHCNE_CREATE:
-            trace("SHCNE_CREATE('%s', '%s')\n", s_path1, s_path2);
-            s_counters[TYPE_CREATE] = 1;
-            break;
-        case SHCNE_DELETE:
-            trace("SHCNE_DELETE('%s', '%s')\n", s_path1, s_path2);
-            s_counters[TYPE_DELETE] = 1;
-            break;
-        case SHCNE_MKDIR:
-            trace("SHCNE_MKDIR('%s', '%s')\n", s_path1, s_path2);
-            s_counters[TYPE_MKDIR] = 1;
-            break;
-        case SHCNE_RMDIR:
-            trace("SHCNE_RMDIR('%s', '%s')\n", s_path1, s_path2);
-            s_counters[TYPE_RMDIR] = 1;
-            break;
-        case SHCNE_MEDIAINSERTED:
-            trace("SHCNE_MEDIAINSERTED('%s', '%s')\n", s_path1, s_path2);
-            break;
-        case SHCNE_MEDIAREMOVED:
-            trace("SHCNE_MEDIAREMOVED('%s', '%s')\n", s_path1, s_path2);
-            break;
-        case SHCNE_DRIVEREMOVED:
-            trace("SHCNE_DRIVEREMOVED('%s', '%s')\n", s_path1, s_path2);
-            break;
-        case SHCNE_DRIVEADD:
-            trace("SHCNE_DRIVEADD('%s', '%s')\n", s_path1, s_path2);
-            break;
-        case SHCNE_NETSHARE:
-            trace("SHCNE_NETSHARE('%s', '%s')\n", s_path1, s_path2);
-            break;
-        case SHCNE_NETUNSHARE:
-            trace("SHCNE_NETUNSHARE('%s', '%s')\n", s_path1, s_path2);
-            break;
-        case SHCNE_ATTRIBUTES:
-            trace("SHCNE_ATTRIBUTES('%s', '%s')\n", s_path1, s_path2);
-            break;
-        case SHCNE_UPDATEDIR:
-            trace("SHCNE_UPDATEDIR('%s', '%s')\n", s_path1, s_path2);
-            s_counters[TYPE_UPDATEDIR] = 1;
-            break;
-        case SHCNE_UPDATEITEM:
-            trace("SHCNE_UPDATEITEM('%s', '%s')\n", s_path1, s_path2);
-            s_counters[TYPE_UPDATEITEM] = 1;
-            break;
-        case SHCNE_SERVERDISCONNECT:
-            trace("SHCNE_SERVERDISCONNECT('%s', '%s')\n", s_path1, s_path2);
-            break;
-        case SHCNE_UPDATEIMAGE:
-            trace("SHCNE_UPDATEIMAGE('%s', '%s')\n", s_path1, s_path2);
-            break;
-        case SHCNE_DRIVEADDGUI:
-            trace("SHCNE_DRIVEADDGUI('%s', '%s')\n", s_path1, s_path2);
-            break;
-        case SHCNE_RENAMEFOLDER:
-            trace("SHCNE_RENAMEFOLDER('%s', '%s')\n", s_path1, s_path2);
-            s_counters[TYPE_RENAMEFOLDER] = 1;
-            break;
-        case SHCNE_FREESPACE:
-            trace("SHCNE_FREESPACE('%s', '%s')\n", s_path1, s_path2);
-            s_counters[TYPE_FREESPACE] = 1;
-            break;
-        case SHCNE_EXTENDED_EVENT:
-            trace("SHCNE_EXTENDED_EVENT('%p', '%p')\n", pidl1, pidl2);
-            break;
-        case SHCNE_ASSOCCHANGED:
-            trace("SHCNE_ASSOCCHANGED('%s', '%s')\n", s_path1, s_path2);
-            break;
-        default:
-            trace("(lEvent:%08lX)('%s', '%s')\n", lEvent, s_path1, s_path2);
-            break;
+        if (!PathFileExistsW(s_szSubProgram))
+        {
+            return FALSE;
+        }
     }
-}
 
-static INT_PTR
-OnShellNotify(HWND hwnd, WPARAM wParam, LPARAM lParam)
-{
-    LONG lEvent;
-    PIDLIST_ABSOLUTE *pidlAbsolute;
-    HANDLE hLock = SHChangeNotification_Lock((HANDLE)wParam, (DWORD)lParam, &pidlAbsolute, &lEvent);
-    if (hLock)
-    {
-        DoShellNotify(hwnd, pidlAbsolute[0], pidlAbsolute[1], lEvent);
-        SHChangeNotification_Unlock(hLock);
-    }
-    else
-    {
-        pidlAbsolute = (PIDLIST_ABSOLUTE *)wParam;
-        DoShellNotify(hwnd, pidlAbsolute[0], pidlAbsolute[1], lParam);
-    }
     return TRUE;
 }
 
-static LRESULT CALLBACK
-WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static void
+JustDoIt(INT nMode)
 {
-    switch (uMsg)
+    if (!DoInit())
     {
-        case WM_CREATE:
-            return (OnCreate(hwnd) ? 0 : -1);
-
-        case WM_COMMAND:
-            OnCommand(hwnd, LOWORD(wParam));
-            break;
-
-        case WM_SHELL_NOTIFY:
-            return OnShellNotify(hwnd, wParam, lParam);
-
-        case WM_DESTROY:
-            OnDestroy(hwnd);
-            break;
-
-        default:
-            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+        skip("Unable to initialize.\n");
+        return;
     }
-    return 0;
+
+    WCHAR szParams[8];
+    wsprintfW(szParams, L"%u", nMode);
+
+    HINSTANCE hinst = ShellExecuteW(NULL, NULL, s_szSubProgram, szParams, NULL, SW_SHOWNORMAL);
+    if ((INT_PTR)hinst <= 32)
+    {
+        skip("Unable to run shell-notify.exe.\n");
+        return;
+    }
+
+    for (int i = 0; i < 15; ++i)
+    {
+        s_hwnd = FindWindowW(s_szName, s_szName);
+        if (s_hwnd)
+            break;
+
+        Sleep(50);
+    }
+
+    if (!s_hwnd)
+    {
+        skip("Unable to find window.\n");
+        return;
+    }
+
+    switch (nMode)
+    {
+        case 0:
+        case 1:
+        case 2:
+            for (size_t i = 0; i < _countof(s_TestEntriesMode0); ++i)
+            {
+                DoTestEntry(&s_TestEntriesMode0[i]);
+            }
+            break;
+    }
+
+    DoEnd(s_hwnd);
+
+    for (int i = 0; i < 15; ++i)
+    {
+        s_hwnd = FindWindowW(s_szName, s_szName);
+        if (!s_hwnd)
+            break;
+
+        Sleep(50);
+    }
 }
 
 START_TEST(SHChangeNotify)
 {
-    WNDCLASSW wc;
-    ZeroMemory(&wc, sizeof(wc));
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = GetModuleHandleW(NULL);
-    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
-    wc.lpszClassName = s_szName;
-    if (!RegisterClassW(&wc))
+    if (!GetSubProgramPath())
     {
-        skip("RegisterClassW failed\n");
-        return;
+        skip("shell-notify.exe not found\n");
     }
 
-    HWND hwnd = CreateWindowW(s_szName, s_szName, WS_OVERLAPPEDWINDOW,
-                              CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
-                              NULL, NULL, GetModuleHandleW(NULL), NULL);
-    if (!hwnd)
-    {
-        skip("CreateWindowW failed\n");
-        return;
-    }
-    ShowWindow(hwnd, SW_SHOWNORMAL);
-    UpdateWindow(hwnd);
-
-    MSG msg;
-    while (GetMessageW(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    }
+    JustDoIt(0);
+    JustDoIt(1);
+    JustDoIt(2);
 }

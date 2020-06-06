@@ -408,6 +408,8 @@ LoadDialog(
             MixerWindow->baseUnit.cx = charSize.cx;
             MixerWindow->baseUnit.cy = charSize.cy;
         }
+
+        ReleaseDC(NULL, hDC);
     }
 
 //    assert(MixerWindow->hFont);

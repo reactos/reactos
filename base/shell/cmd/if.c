@@ -118,6 +118,7 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
         INT Size;
         WIN32_FIND_DATA f;
         HANDLE hFind;
+        DWORD attrs;
 
         /* IF EXIST filename: check if file exists (wildcards allowed) */
         StripQuotes(Right);
@@ -127,20 +128,24 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
         if (IsDir)
             Right[Size - 1] = 0;
 
-
         hFind = FindFirstFile(Right, &f);
         if (hFind != INVALID_HANDLE_VALUE)
         {
-            if (IsDir)
-            {
-                result = ((f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY);
-            }
-            else
-            {
-                result = TRUE;
-            }
+            attrs = f.dwFileAttributes;
             FindClose(hFind);
         }
+        else
+        {
+            /* FindFirstFile fails at the root directory. */
+            attrs = GetFileAttributes(Right);
+        }
+
+        if (attrs == 0xFFFFFFFF)
+            result = FALSE;
+        else if (IsDir)
+            result = ((attrs & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY);
+        else
+            result = TRUE;
 
         if (IsDir)
             Right[Size - 1] = '\\';

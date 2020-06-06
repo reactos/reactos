@@ -1,0 +1,64 @@
+/*
+ * This file contains rhel vendor specific
+ * resource (version) definitions for all drivers
+ *
+ * Copyright (c) 2017  Parallels IP Holdings GmbH
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met :
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and / or other materials provided with the distribution.
+ * 3. Neither the names of the copyright holders nor the names of their contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/*
+ * These defines are only for Visual Studio built-in rc editor
+ */
+#ifndef _NT_TARGET_MAJ
+    #define _NT_TARGET_MAJ 1
+    #define _RHEL_RELEASE_VERSION_ 20
+    #define _BUILD_MAJOR_VERSION_ 300
+    #define _BUILD_MINOR_VERSION_ 5800
+#endif
+
+/*
+ * rhel versioning
+ */
+#define VENDOR_VIRTIO_1            _NT_TARGET_MAJ
+#define VENDOR_VIRTIO_2            _RHEL_RELEASE_VERSION_
+#define VENDOR_VIRTIO_3            _BUILD_MAJOR_VERSION_
+#define VENDOR_VIRTIO_4            _BUILD_MINOR_VERSION_
+
+/*
+ * rhel strings
+ */
+#define VENDOR_VIRTIO_COPYRIGHT    "Copyright (C) " STRINGIFY(RHEL_COPYRIGHT_YEARS) " Red Hat, Inc."
+#define VENDOR_VIRTIO_COMPANY      "Red Hat,\040Inc."
+#define VENDOR_PREFIX              "Red Hat\040"
+#define VENDOR_PRODUCT_PREFIX      VENDOR_PREFIX
+#define QEMU_PRODUCT_PREFIX        "QEMU\040"
+#define VENDOR_DESC_PREFIX         VENDOR_PREFIX
+#define VENDOR_DESC_POSTFIX        ""
+
+/*
+ * remaining macro should be defined in project .rc file
+ *
+ * VENDOR_VIRTIO_PRODUCT, VER_FILEDESCRIPTION_STR, VER_INTERNALNAME_STR
+ */

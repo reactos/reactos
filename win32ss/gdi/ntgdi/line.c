@@ -25,16 +25,16 @@ AddPenLinesBounds(PDC dc, int count, POINT *points)
     pbrLine = dc->dclevel.pbrLine;
     ASSERT(pbrLine);
     
-    lWidth = pbrLine->lWidth;
+    lWidth = 0;
 
     // Setup bounds
     bounds.left = bounds.top = INT_MAX;
     bounds.right = bounds.bottom = INT_MIN;
 
-    if (((pbrLine->ulPenStyle & PS_TYPE_MASK) & PS_GEOMETRIC) || lWidth > 1)
+    if (((pbrLine->ulPenStyle & PS_TYPE_MASK) & PS_GEOMETRIC) || (pbrLine->lWidth > 1))
     {
         /* Windows uses some heuristics to estimate the distance from the point that will be painted */
-        lWidth = lWidth + 2;
+        lWidth = pbrLine->lWidth + 2;
         endcap = (PS_ENDCAP_MASK & pbrLine->ulPenStyle);
         join   = (PS_JOIN_MASK   & pbrLine->ulPenStyle);
         if (join == PS_JOIN_MITER)

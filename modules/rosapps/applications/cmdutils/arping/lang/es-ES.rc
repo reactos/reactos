@@ -1,0 +1,33 @@
+/*
+ * PROJECT:     ReactOS
+ * LICENSE:     Public Domain
+ * FILE:        applications/cmdutils/arping/lang/es-ES.rc
+ * PURPOSE:     Spanish Lang resource for arping
+ * TRANSLATOR:  Julen Urizar Compains
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nUso: arping [-t] [-n count] -s ip-origen ip-destinatario\n\n\
+Options:\n\
+    -t             Hace ping al anfitrión hasta que pare.\n\
+                   Para parar - escriba Control-C.\n\
+    -n count       Número de pruebas a mandar.\n\
+    -s             Usar esta IP de origen.\n\n\0"
+    IDS_BAD_OPTION_FORMAT "Opción de formato errónea %1.\n\0"
+    IDS_BAD_OPTION "Opción errónea %1.\n\0"
+    IDS_BAD_PARAMETER "Parámetro erroneo %1.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED "El nombre o la dirección IP de destino debe especificarse.\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK "No ha sido posible inicar winsock dll.\n\0"
+    IDS_UNKNOWN_HOST "Destinatario desconocido %1.\n\0"
+    IDS_SRC_MUST_BE_SPECIFIED "La dirección IP de origen debe ser especificada.\n\0"
+    IDS_BAD_VALUE_OPTION_N "Valor erróneo en -n, el rango válido tiene que ser entre 1 y %1!u!.\n\0"
+    IDS_ARPING_TO_FROM "ARPING %1 desde %2\n\0"
+    IDS_MS "ms\0"
+    IDS_1MS "1ms\0"
+    IDS_REPLY_FROM "Respuesta unicast de %1 [%2]  %3%4\n\0"
+    IDS_ARPING_STATISTICS "Enviadas %1!u! pruebas\n\
+Recibidas %2!u! respuesta(s)\n\0"
+END

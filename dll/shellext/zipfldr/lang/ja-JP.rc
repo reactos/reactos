@@ -46,15 +46,15 @@ END
 
 IDD_PASSWORD DIALOGEX 0, 0, 243, 62
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Password needed"
+CAPTION "パスワードが必要です"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     EDITTEXT        IDC_PASSWORD,72,42,108,13,ES_PASSWORD | ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,186,6,50,14
-    PUSHBUTTON      "Skip File",IDSKIP,186,24,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,186,42,50,14
+    PUSHBUTTON      "スキップ",IDSKIP,186,24,50,14
+    PUSHBUTTON      "キャンセル",IDCANCEL,186,42,50,14
     LTEXT           "Static",IDC_MESSAGE,24,6,156,30
-    LTEXT           "Password:",IDC_STATIC,24,44,44,8
+    LTEXT           "パスワード:",IDC_STATIC,24,44,44,8
 END
 
 STRINGTABLE
@@ -68,11 +68,11 @@ BEGIN
     IDS_COL_DATE_MOD "変更日"
     IDS_YES "はい"
     IDS_NO "いいえ"
-    IDS_ERRORTITLE "Compressed (zipped) Folders Error"
-    IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
-    IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
-    IDS_CANTCREATEZIP "Failed to create a compressed folder '%s' (Error Code: %d)."
-    IDS_CANTREADFILE "Cannot read file '%s'."
+    IDS_ERRORTITLE "圧縮 (zip) フォルダ エラー"
+    IDS_CANTSTARTTHREAD "ファイルを圧縮するスレッドを起動できません。"
+    IDS_NOFILES "指定したディレクトリ '%s' は空なので、圧縮 (zip) フォルダはそれを書庫に追加できません。"
+    IDS_CANTCREATEZIP "圧縮フォルダ '%s' を作るのに失敗しました (エラーコード: %d) 。"
+    IDS_CANTREADFILE "ファイル '%s' が読めません。"
     IDS_EXTRACTING "展開中..."
 
     IDS_WIZ_TITLE "展開ウィザード"
@@ -83,8 +83,8 @@ BEGIN
     IDS_WIZ_BROWSE_TITLE "選択された項目を展開したい場所を選んで下さい。"
 
     IDS_OVERWRITEFILE_TEXT "'%1'という名前のファイルがフォルダ内に既に存在します。\n置き換えしますか?"
-    IDS_PASSWORD_FILE_TEXT "The file '%1' is password protected. Please enter the password."
-    IDS_PASSWORD_ZIP_TEXT "Please specify the password to use when extracting this zip file."
+    IDS_PASSWORD_FILE_TEXT "ファイル '%1' はパスワードで保護されています。パスワードを入力下さい。"
+    IDS_PASSWORD_ZIP_TEXT "この zip ファイルを展開するときに使うパスワードを指定して下さい。"
 
     IDS_MENUITEM "すべて展開(&A)..."
     IDS_HELPTEXT "フォルダ内容の展開"

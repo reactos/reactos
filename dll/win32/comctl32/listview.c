@@ -2723,11 +2723,16 @@ static DWORD LISTVIEW_MapIndexToId(const LISTVIEW_INFO *infoPtr, INT iItem)
  * PARAMETER(S):
  * [I] infoPtr : valid pointer to the listview structure
  * [O] lpPos : will get the current icon position
+ * [I] nItem : item id to get position for
  *
  * RETURN:
  * None
  */
+#ifdef __REACTOS__
+static void LISTVIEW_NextIconPosTop(LISTVIEW_INFO *infoPtr, LPPOINT lpPos, INT nItem)
+#else
 static void LISTVIEW_NextIconPosTop(LISTVIEW_INFO *infoPtr, LPPOINT lpPos)
+#endif
 {
     INT nListWidth = infoPtr->rcList.right - infoPtr->rcList.left;
     
@@ -2749,11 +2754,16 @@ static void LISTVIEW_NextIconPosTop(LISTVIEW_INFO *infoPtr, LPPOINT lpPos)
  * PARAMETER(S):
  * [I] infoPtr : valid pointer to the listview structure
  * [O] lpPos : will get the current icon position
+ * [I] nItem : item id to get position for
  *
  * RETURN:
  * None
  */
+#ifdef __REACTOS__
+static void LISTVIEW_NextIconPosLeft(LISTVIEW_INFO *infoPtr, LPPOINT lpPos, INT nItem)
+#else
 static void LISTVIEW_NextIconPosLeft(LISTVIEW_INFO *infoPtr, LPPOINT lpPos)
+#endif
 {
     INT nListHeight = infoPtr->rcList.bottom - infoPtr->rcList.top;
     
@@ -2766,7 +2776,45 @@ static void LISTVIEW_NextIconPosLeft(LISTVIEW_INFO *infoPtr, LPPOINT lpPos)
     infoPtr->currIconPos.y  = 0;
 }
 
-    
+
+#ifdef __REACTOS__
+/***
+ * DESCRIPTION:
+ * Returns the grid position closest to the already placed icon.
+ * The returned position is not offset by Origin.
+ *
+ * PARAMETER(S):
+ * [I] infoPtr : valid pointer to the listview structure
+ * [O] lpPos : will get the current icon position
+ * [I] nItem : item id to get position for
+ *
+ * RETURN:
+ * None
+ */
+static void LISTVIEW_NextIconPosSnap(LISTVIEW_INFO *infoPtr, LPPOINT lpPos, INT nItem)
+{
+    INT nListHeight = infoPtr->rcList.bottom - infoPtr->rcList.top;
+    INT nListWidth = infoPtr->rcList.right - infoPtr->rcList.left;
+    INT nMaxColumns = nListWidth / infoPtr->nItemWidth;
+    INT nMaxRows = nListHeight / infoPtr->nItemHeight;
+    POINT oldPosition;
+
+    // get the existing x and y position and then snap to the closest grid square
+    oldPosition.x = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosX, nItem);
+    oldPosition.y = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosY, nItem);
+
+    // FIXME: This could should deal with multiple icons in the same grid square
+    // equivalent of max(0, round(oldPosition / itemSize) * itemSize), but without need for 'round' function
+    (*lpPos).x = max(0, oldPosition.x + (infoPtr->nItemWidth >> 1) - (oldPosition.x + (infoPtr->nItemWidth >> 1)) % infoPtr->nItemWidth);
+    (*lpPos).y = max(0, oldPosition.y + (infoPtr->nItemHeight >> 1) - (oldPosition.y + (infoPtr->nItemHeight >> 1)) % infoPtr->nItemHeight);
+
+    // deal with any icons that have gone out of range
+    if ((*lpPos).x > nListWidth) (*lpPos).x = nMaxColumns * infoPtr->nItemWidth;
+    if ((*lpPos).y > nListHeight) (*lpPos).y = nMaxRows * infoPtr->nItemHeight;
+}
+#endif
+
+
 /***
  * DESCRIPTION:
  * Moves an icon to the specified position.
@@ -2819,7 +2867,11 @@ static BOOL LISTVIEW_MoveIconTo(const LISTVIEW_INFO *infoPtr, INT nItem, const P
  */
 static BOOL LISTVIEW_Arrange(LISTVIEW_INFO *infoPtr, INT nAlignCode)
 {
+#ifdef __REACTOS__
+    void (*next_pos)(LISTVIEW_INFO *, LPPOINT, INT);
+#else
     void (*next_pos)(LISTVIEW_INFO *, LPPOINT);
+#endif
     POINT pos;
     INT i;
 
@@ -2837,14 +2889,22 @@ static BOOL LISTVIEW_Arrange(LISTVIEW_INFO *infoPtr, INT nAlignCode)
     {
     case LVA_ALIGNLEFT:  next_pos = LISTVIEW_NextIconPosLeft; break;
     case LVA_ALIGNTOP:   next_pos = LISTVIEW_NextIconPosTop;  break;
+#ifdef __REACTOS__
+    case LVA_SNAPTOGRID: next_pos = LISTVIEW_NextIconPosSnap; break;
+#else
     case LVA_SNAPTOGRID: next_pos = LISTVIEW_NextIconPosTop;  break; /* FIXME */
+#endif
     default: return FALSE;
     }
     
     infoPtr->currIconPos.x = infoPtr->currIconPos.y = 0;
     for (i = 0; i < infoPtr->nItemCount; i++)
     {
-	next_pos(infoPtr, &pos);
+#ifdef __REACTOS__
+    next_pos(infoPtr, &pos, i);
+#else
+    next_pos(infoPtr, &pos);
+#endif
 	LISTVIEW_MoveIconTo(infoPtr, i, &pos, FALSE);
     }
 
@@ -7978,10 +8038,17 @@ static INT LISTVIEW_InsertItemT(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem,
     {
 	POINT pt;
 
+#ifdef __REACTOS__
 	if (infoPtr->dwStyle & LVS_ALIGNLEFT)
+	    LISTVIEW_NextIconPosLeft(infoPtr, &pt, nItem);
+        else
+	    LISTVIEW_NextIconPosTop(infoPtr, &pt, nItem);
+#else
+    if (infoPtr->dwStyle & LVS_ALIGNLEFT)
 	    LISTVIEW_NextIconPosLeft(infoPtr, &pt);
         else
 	    LISTVIEW_NextIconPosTop(infoPtr, &pt);
+#endif
 
 	LISTVIEW_MoveIconTo(infoPtr, nItem, &pt, TRUE);
     }
@@ -8682,6 +8749,13 @@ static DWORD LISTVIEW_SetExtendedListViewStyle(LISTVIEW_INFO *infoPtr, DWORD mas
         LISTVIEW_UpdateScroll(infoPtr);
     }
 
+#ifdef __REACTOS__
+    if ((infoPtr->dwLvExStyle & LVS_EX_SNAPTOGRID) > (old_ex_style & LVS_EX_SNAPTOGRID))
+    {
+        LISTVIEW_Arrange(infoPtr, LVA_SNAPTOGRID);
+    }
+#endif
+
     LISTVIEW_InvalidateList(infoPtr);
     return old_ex_style;
 }
@@ -8992,6 +9066,12 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
     if (!pt || nItem < 0 || nItem >= infoPtr->nItemCount ||
 	!(infoPtr->uView == LV_VIEW_ICON || infoPtr->uView == LV_VIEW_SMALLICON)) return FALSE;
 
+#ifdef __REACTOS__
+    /* FIXME:  This should really call snap to grid if auto-arrange is enabled
+       and limit the size of the grid to nItemCount elements */
+    if (is_autoarrange(infoPtr)) return FALSE;
+#endif
+
     Pt = *pt;
     LISTVIEW_GetOrigin(infoPtr, &Origin);
 
@@ -9008,6 +9088,14 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
     }
     Pt.x -= Origin.x;
     Pt.y -= Origin.y;
+
+#ifdef __REACTOS__
+    if (infoPtr->dwLvExStyle & LVS_EX_SNAPTOGRID)
+    {
+        Pt.x = max(0, Pt.x + (infoPtr->nItemWidth >> 1) - (Pt.x + (infoPtr->nItemWidth >> 1)) % infoPtr->nItemWidth);
+        Pt.y = max(0, Pt.y + (infoPtr->nItemHeight >> 1) - (Pt.y + (infoPtr->nItemHeight >> 1)) % infoPtr->nItemHeight);
+    }
+#endif
 
     return LISTVIEW_MoveIconTo(infoPtr, nItem, &Pt, FALSE);
 }

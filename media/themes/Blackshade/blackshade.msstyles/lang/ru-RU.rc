@@ -31,7 +31,7 @@ STRINGTABLE
 5002, "Команда ReactOS"
 5003, "Изображения от David Quintana <gigaherz@gmail.com>"
 5004, "Выпущены под CC-BY-SA 4.0"
-5005, "http://www.reactos.org"
+5005, "https://reactos.org/"
 5006, "1.0"
 5007, "Визуальный стиль для ReactOS"
 }

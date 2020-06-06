@@ -185,7 +185,7 @@ PurgeInputBuffer(IN PCONSOLE_INPUT_BUFFER InputBuffer)
         ConsoleFreeHeap(Event);
     }
 
-    // CloseHandle(Console->InputBuffer.ActiveEvent);
+    // NtClose(Console->InputBuffer.ActiveEvent);
 }
 
 NTSTATUS NTAPI
@@ -221,7 +221,7 @@ VOID NTAPI
 ConDrvDeinitInputBuffer(IN PCONSOLE Console)
 {
     PurgeInputBuffer(&Console->InputBuffer);
-    CloseHandle(Console->InputBuffer.ActiveEvent);
+    NtClose(Console->InputBuffer.ActiveEvent);
 }
 
 
@@ -317,7 +317,7 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
 
     if (IsListEmpty(&InputBuffer->InputEvents))
     {
-        ResetEvent(InputBuffer->ActiveEvent);
+        NtClearEvent(InputBuffer->ActiveEvent);
     }
 
     // FIXME: If we add back UNICODE support, it's here that we need to do the translation.
@@ -365,7 +365,7 @@ ConDrvFlushConsoleInputBuffer(IN PCONSOLE Console,
 
     /* Discard all entries in the input event queue */
     PurgeInputBuffer(InputBuffer);
-    ResetEvent(InputBuffer->ActiveEvent);
+    NtClearEvent(InputBuffer->ActiveEvent);
 
     return STATUS_SUCCESS;
 }

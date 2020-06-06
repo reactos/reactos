@@ -140,7 +140,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Свойства: Рабочий стол"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Выберите, наиболее предпочтительный для вас, \nспособ выравнивания значков", IDC_STATIC, 7, 7, 195, 18
+    LTEXT "Выберите, наиболее предпочтительный для вас,\nспособ выравнивания значков", IDC_STATIC, 7, 7, 195, 18
     CONTROL "left/top dwn", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 25, 46, 44
     CONTROL "left/top right", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 25, 46, 44
     CONTROL "right/top left", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 25, 46, 44

@@ -79,16 +79,17 @@ list(APPEND SOURCE
 add_library(reiserfs MODULE ${SOURCE} src/rfsd.rc)
 
 if(USE_CLANG_CL OR (NOT MSVC))
-    add_target_compile_flags(reiserfs "-Wno-missing-braces -Wno-pointer-sign")
-    add_target_compile_flags(reiserfs "-Wno-unused-function -Wno-unused-variable")
+    target_compile_options(reiserfs PRIVATE -Wno-missing-braces -Wno-pointer-sign)
+    target_compile_options(reiserfs PRIVATE -Wno-unused-function -Wno-unused-variable)
     if(NOT USE_CLANG_CL)
-        add_target_compile_flags(reiserfs "-Wno-unused-but-set-variable -D__GCC__")
+        target_compile_options(reiserfs PRIVATE -Wno-unused-but-set-variable)
+        target_compile_definitions(reiserfs PRIVATE __GCC__)
     endif()
 else()
     #disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"
     replace_compile_flags("/we4101" " ")
     replace_compile_flags("/we4189" " ")
-    add_target_compile_flags(reiserfs "/wd4189 /wd4142 /wd4101")
+    target_compile_options(reiserfs PRIVATE /wd4189 /wd4142 /wd4101)
 endif()
 
 target_link_libraries(reiserfs memcmp ${PSEH_LIB})

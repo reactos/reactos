@@ -59,7 +59,7 @@ static LIST_ENTRY VddUserHooksList = {&VddUserHooksList, &VddUserHooksList};
 
 static USHORT GetNextFreeVDDEntry(VOID)
 {
-    USHORT Entry = MAX_VDD_MODULES;
+    USHORT Entry;
     for (Entry = 0; Entry < ARRAYSIZE(VDDList); ++Entry)
     {
         if (VDDList[Entry].hDll == NULL) break;

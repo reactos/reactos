@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS msgina.dll
  * FILE:            dll/win32/msgina/gui.c
  * PURPOSE:         ReactOS Logon GINA DLL
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
@@ -28,12 +28,15 @@ typedef struct _LEGALNOTICEDATA
     LPWSTR pszText;
 } LEGALNOTICEDATA, *PLEGALNOTICEDATA;
 
+// Timer ID for the animated dialog bar.
+#define IDT_BAR 1
+
 typedef struct _DLG_DATA
 {
     PGINA_CONTEXT pgContext;
     HBITMAP hLogoBitmap;
     HBITMAP hBarBitmap;
-    UINT_PTR TimerID;
+    HWND hWndBarCtrl;
     DWORD BarCounter;
     DWORD LogoWidth;
     DWORD LogoHeight;
@@ -53,28 +56,34 @@ DlgData_Create(HWND hwndDlg, PGINA_CONTEXT pgContext)
     return pDlgData;
 }
 
-static BOOL
-DlgData_LoadBitmaps(PDLG_DATA pDlgData)
+static VOID
+DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
 {
     BITMAP bm;
 
     if (!pDlgData)
-        return FALSE;
+    {
+        return;
+    }
 
     pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
                                        MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP,
                                        0, 0, LR_DEFAULTCOLOR);
-    GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
-    pDlgData->LogoWidth = bm.bmWidth;
-    pDlgData->LogoHeight = bm.bmHeight;
+    if (pDlgData->hLogoBitmap)
+    {
+        GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
+        pDlgData->LogoWidth = bm.bmWidth;
+        pDlgData->LogoHeight = bm.bmHeight;
+    }
 
     pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_BAR),
                                       IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-    GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
-    pDlgData->BarWidth = bm.bmWidth;
-    pDlgData->BarHeight = bm.bmHeight;
-
-    return (pDlgData->hLogoBitmap != NULL && pDlgData->hBarBitmap != NULL);
+    if (pDlgData->hBarBitmap)
+    {
+        GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
+        pDlgData->BarWidth = bm.bmWidth;
+        pDlgData->BarHeight = bm.bmHeight;
+    }
 }
 
 static void
@@ -189,9 +198,18 @@ StatusDialogProc(
             if (pDlgData == NULL)
                 return FALSE;
 
-            if (DlgData_LoadBitmaps(pDlgData))
+            DlgData_LoadBitmaps(pDlgData);
+            if (pDlgData->hBarBitmap)
             {
-                pDlgData->TimerID = SetTimer(hwndDlg, -1, 20, NULL);
+                if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
+                {
+                    ERR("SetTimer(IDT_BAR) failed: %d\n", GetLastError());
+                }
+                else
+                {
+                    /* Get the animation bar control */
+                    pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
+                }
             }
             return TRUE;
         }
@@ -205,8 +223,8 @@ StatusDialogProc(
                  * We can divide 413 by 7 without remainder
                  */
                 pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->BarWidth;
-                InvalidateRect(hwndDlg, NULL, FALSE);
-                UpdateWindow(hwndDlg);
+                InvalidateRect(pDlgData->hWndBarCtrl, NULL, FALSE);
+                UpdateWindow(pDlgData->hWndBarCtrl);
             }
             return TRUE;
         }
@@ -244,7 +262,7 @@ StatusDialogProc(
         {
             if (pDlgData && pDlgData->hBarBitmap)
             {
-                KillTimer(hwndDlg, pDlgData->TimerID);
+                KillTimer(hwndDlg, IDT_BAR);
             }
             DlgData_Destroy(pDlgData);
             return TRUE;

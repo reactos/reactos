@@ -233,7 +233,12 @@ AcpiDsCreateBufferField (
         Status = AcpiNsLookup (WalkState->ScopeInfo,
             Arg->Common.Value.String, ACPI_TYPE_ANY,
             ACPI_IMODE_LOAD_PASS1, Flags, WalkState, &Node);
-        if (ACPI_FAILURE (Status))
+        if ((WalkState->ParseFlags & ACPI_PARSE_DISASSEMBLE) &&
+            Status == AE_ALREADY_EXISTS)
+        {
+            Status = AE_OK;
+        }
+        else if (ACPI_FAILURE (Status))
         {
             ACPI_ERROR_NAMESPACE (WalkState->ScopeInfo,
                 Arg->Common.Value.String, Status);
@@ -574,12 +579,21 @@ AcpiDsCreateField (
     Info.RegionNode = RegionNode;
 
     Status = AcpiDsGetFieldNames (&Info, WalkState, Arg->Common.Next);
-    if (Info.RegionNode->Object->Region.SpaceId == ACPI_ADR_SPACE_PLATFORM_COMM &&
-        !(RegionNode->Object->Field.InternalPccBuffer
-        = ACPI_ALLOCATE_ZEROED(Info.RegionNode->Object->Region.Length)))
+    if (ACPI_FAILURE (Status))
     {
-        return_ACPI_STATUS (AE_NO_MEMORY);
+        return_ACPI_STATUS (Status);
     }
+
+    if (Info.RegionNode->Object->Region.SpaceId == ACPI_ADR_SPACE_PLATFORM_COMM)
+    {
+        RegionNode->Object->Field.InternalPccBuffer =
+            ACPI_ALLOCATE_ZEROED(Info.RegionNode->Object->Region.Length);
+        if (!RegionNode->Object->Field.InternalPccBuffer)
+        {
+            return_ACPI_STATUS (AE_NO_MEMORY);
+        }
+    }
+
     return_ACPI_STATUS (Status);
 }
 

@@ -28,8 +28,8 @@ PSECURITY_DESCRIPTOR SeUnrestrictedSd = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 SepInitSDs(VOID)
 {

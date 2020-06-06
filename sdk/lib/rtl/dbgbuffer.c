@@ -1,8 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/rtl/dbgbuffer.c
- * PROGRAMER:       James Tabor
+ * PROJECT:     ReactOS system libraries
+ * LICENSE:     GPL-2.0 (https://spdx.org/licenses/GPL-2.0)
+ * PURPOSE:     RTL_DEBUG_INFORMATION implementation
+ * COPYRIGHT:   Copyright James Tabor
+ *              Copyright 2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,30 +15,80 @@
 
 /* FUNCTIONS *****************************************************************/
 
+PVOID
+NTAPI
+RtlpDebugBufferCommit(_Inout_ PRTL_DEBUG_INFORMATION Buffer,
+                     _In_ SIZE_T Size)
+{
+    ULONG Remaining = Buffer->CommitSize - Buffer->OffsetFree;
+    PVOID Result;
+    NTSTATUS Status;
+
+    if (Size > MAXLONG)
+        return NULL;
+
+    if (Remaining < Size)
+    {
+        PVOID Buf;
+        SIZE_T CommitSize;
+
+        Buf = (PVOID)((ULONG_PTR)Buffer->ViewBaseClient + Buffer->CommitSize);
+        CommitSize = Size - Remaining;
+
+        /* this is not going to end well.. */
+        if (CommitSize > MAXLONG)
+            return NULL;
+
+        Status = NtAllocateVirtualMemory(NtCurrentProcess(), (PVOID*)&Buf, 0, &CommitSize, MEM_COMMIT, PAGE_READWRITE);
+        if (!NT_SUCCESS(Status))
+            return NULL;
+
+        Buffer->CommitSize += CommitSize;
+        Remaining = Buffer->CommitSize - Buffer->OffsetFree;
+        /* Sanity check */
+        ASSERT(Remaining >= Size);
+        if (Remaining < Size)
+            return NULL;
+    }
+
+    Result = (PBYTE)Buffer->ViewBaseClient + Buffer->OffsetFree;
+    Buffer->OffsetFree += Size;
+
+    return Result;
+}
+
+
 /*
  * @unimplemented
  */
 PRTL_DEBUG_INFORMATION
 NTAPI
-RtlCreateQueryDebugBuffer(IN ULONG Size,
-                          IN BOOLEAN EventPair)
+RtlCreateQueryDebugBuffer(_In_ ULONG Size,
+                          _In_ BOOLEAN EventPair)
 {
     NTSTATUS Status;
     PRTL_DEBUG_INFORMATION Buf = NULL;
-    SIZE_T ViewSize = 100 * PAGE_SIZE;
+    SIZE_T AllocationSize = Size ? Size : 0x400 * PAGE_SIZE;
+    SIZE_T CommitSize = sizeof(*Buf);
 
-    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-                                     (PVOID*)&Buf,
-                                     0,
-                                     &ViewSize,
-                                     MEM_RESERVE | MEM_COMMIT,
-                                     PAGE_READWRITE);
-    if (!NT_SUCCESS(Status)) return NULL;
+    /* Reserve the memory */
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(), (PVOID*)&Buf, 0, &AllocationSize, MEM_RESERVE, PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
+        return NULL;
 
+    /* Commit the first data, CommitSize is updated with the actual committed data */
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(), (PVOID*)&Buf, 0, &CommitSize, MEM_COMMIT, PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlDestroyQueryDebugBuffer(Buf);
+        return NULL;
+    }
+
+    /* Fill out the minimum data required */
     Buf->ViewBaseClient = Buf;
-    Buf->ViewSize = (ULONG)ViewSize;
-
-    DPRINT("RtlCQDB: BA: %p BS: 0x%lx\n", Buf->ViewBaseClient, Buf->ViewSize);
+    Buf->ViewSize = (ULONG)AllocationSize;
+    Buf->CommitSize = CommitSize;
+    Buf->OffsetFree = sizeof(*Buf);
 
     return Buf;
 }
@@ -47,7 +98,7 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
  */
 NTSTATUS
 NTAPI
-RtlDestroyQueryDebugBuffer(IN PRTL_DEBUG_INFORMATION Buf)
+RtlDestroyQueryDebugBuffer(_In_ PRTL_DEBUG_INFORMATION Buf)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     SIZE_T ViewSize = 0;
@@ -265,25 +316,27 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
             {
                 PRTL_PROCESS_MODULES Mp;
                 ULONG ReturnSize = 0;
-                ULONG MSize;
-
-                Mp = (PRTL_PROCESS_MODULES)((PUCHAR)Buf + Buf->OffsetFree);
 
                 /* I like this better than the do & while loop. */
                 Status = LdrQueryProcessModuleInformation(NULL,
                                                           0,
                                                           &ReturnSize);
+
+                Mp = RtlpDebugBufferCommit(Buf, ReturnSize);
+                if (!Mp)
+                {
+                    DPRINT1("RtlQueryProcessDebugInformation: Unable to commit %u\n", ReturnSize);
+                }
+
                 Status = LdrQueryProcessModuleInformation(Mp,
-                                                          ReturnSize ,
+                                                          ReturnSize,
                                                           &ReturnSize);
                 if (!NT_SUCCESS(Status))
                 {
                     return Status;
                 }
 
-                MSize = Mp->NumberOfModules * (sizeof(RTL_PROCESS_MODULES) + 8);
                 Buf->Modules = Mp;
-                Buf->OffsetFree = Buf->OffsetFree + MSize;
             }
 
             if (DebugInfoMask & RTL_DEBUG_QUERY_HEAPS)
@@ -349,14 +402,17 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
             {
                 PRTL_PROCESS_MODULES Mp;
                 ULONG ReturnSize = 0;
-                ULONG MSize;
-
-                Mp = (PRTL_PROCESS_MODULES)((PUCHAR)Buf + Buf->OffsetFree);
 
                 Status = RtlpQueryRemoteProcessModules(hProcess,
                                                        NULL,
                                                        0,
                                                        &ReturnSize);
+
+                Mp = RtlpDebugBufferCommit(Buf, ReturnSize);
+                if (!Mp)
+                {
+                    DPRINT1("RtlQueryProcessDebugInformation: Unable to commit %u\n", ReturnSize);
+                }
 
                 Status = RtlpQueryRemoteProcessModules(hProcess,
                                                        Mp,
@@ -367,9 +423,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                     return Status;
                 }
 
-                MSize = Mp->NumberOfModules * (sizeof(RTL_PROCESS_MODULES) + 8);
                 Buf->Modules = Mp;
-                Buf->OffsetFree = Buf->OffsetFree + MSize;
             }
 
             if (DebugInfoMask & RTL_DEBUG_QUERY_HEAPS)

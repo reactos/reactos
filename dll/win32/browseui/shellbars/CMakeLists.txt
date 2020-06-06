@@ -19,7 +19,7 @@ list(APPEND SOURCE
 add_library(shellbars ${SOURCE})
 
 if(NOT MSVC)
-    add_target_compile_flags(shellbars "-Wno-unused-but-set-variable")
+    target_compile_options(shellbars PRIVATE "-Wno-unused-but-set-variable")
 endif()
 
 add_pch(shellbars shellbars.h SOURCE)

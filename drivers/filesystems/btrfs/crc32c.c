@@ -15,18 +15,14 @@
  * You should have received a copy of the GNU Lesser General Public Licence
  * along with WinBtrfs.  If not, see <http://www.gnu.org/licenses/>. */
 
-#include <windef.h>
-#ifndef __REACTOS__
-#include <smmintrin.h>
-#endif /* __REACTOS__ */
+#include "crc32c.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include <sal.h>
 
-#ifndef __REACTOS__
-extern bool have_sse42;
-#endif /* __REACTOS__ */
+crc_func calc_crc32c = calc_crc32c_sw;
 
-static const uint32_t crctable[] = {
+const uint32_t crctable[] = {
     0x00000000, 0xf26b8303, 0xe13b70f7, 0x1350f3f4, 0xc79a971f, 0x35f1141c, 0x26a1e7e8, 0xd4ca64eb,
     0x8ad958cf, 0x78b2dbcc, 0x6be22838, 0x9989ab3b, 0x4d43cfd0, 0xbf284cd3, 0xac78bf27, 0x5e133c24,
     0x105ec76f, 0xe235446c, 0xf165b798, 0x030e349b, 0xd7c45070, 0x25afd373, 0x36ff2087, 0xc494a384,
@@ -61,75 +57,15 @@ static const uint32_t crctable[] = {
     0x79b737ba, 0x8bdcb4b9, 0x988c474d, 0x6ae7c44e, 0xbe2da0a5, 0x4c4623a6, 0x5f16d052, 0xad7d5351,
 };
 
-#ifndef __REACTOS__
-// HW code taken from https://github.com/rurban/smhasher/blob/master/crc32_hw.c
-#define ALIGN_SIZE      0x08UL
-#define ALIGN_MASK      (ALIGN_SIZE - 1)
-#define CALC_CRC(op, crc, type, buf, len)                               \
-  do {                                                                  \
-    for (; (len) >= sizeof (type); (len) -= sizeof(type), buf += sizeof (type)) { \
-      (crc) = op((crc), *(type *) (buf));                               \
-    }                                                                   \
-  } while(0)
+// x86 and amd64 versions live in asm files
+#if !defined(_X86_) && !defined(_AMD64_)
+uint32_t __stdcall calc_crc32c_sw(_In_ uint32_t seed, _In_reads_bytes_(msglen) uint8_t* msg, _In_ uint32_t msglen) {
+    uint32_t rem = seed;
 
-static uint32_t crc32c_hw(const void *input, ULONG len, uint32_t crc) {
-    const char* buf = (const char*)input;
-
-    // Annoyingly, the CRC32 intrinsics don't work properly in modern versions of MSVC -
-    // it compiles _mm_crc32_u8 as if it was _mm_crc32_u32. And because we're apparently
-    // not allowed to use inline asm on amd64, there's no easy way to fix this!
-
-    for (; (len > 0) && ((size_t)buf & ALIGN_MASK); len--, buf++) {
-#ifdef _MSC_VER
-        crc = crctable[(crc ^ *buf) & 0xff] ^ (crc >> 8);
-#else
-        crc = _mm_crc32_u8(crc, *buf);
-#endif
+    for (uint32_t i = 0; i < msglen; i++) {
+        rem = crctable[(rem ^ msg[i]) & 0xff] ^ (rem >> 8);
     }
-
-#ifdef _AMD64_
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4244) // _mm_crc32_u64 wants to return uint64_t(!)
-#pragma warning(disable:4242)
-#endif
-    CALC_CRC(_mm_crc32_u64, crc, uint64_t, buf, len);
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-#endif
-    CALC_CRC(_mm_crc32_u32, crc, uint32_t, buf, len);
-
-#ifdef _MSC_VER
-    for (; len > 0; len--, buf++) {
-        crc = crctable[(crc ^ *buf) & 0xff] ^ (crc >> 8);
-    }
-#else
-    CALC_CRC(_mm_crc32_u16, crc, uint16_t, buf, len);
-    CALC_CRC(_mm_crc32_u8, crc, uint8_t, buf, len);
-#endif
-
-    return crc;
-}
-#endif
-
-uint32_t calc_crc32c(_In_ uint32_t seed, _In_reads_bytes_(msglen) uint8_t* msg, _In_ ULONG msglen) {
-    uint32_t rem;
-    ULONG i;
-
-#ifndef __REACTOS__
-    if (have_sse42) {
-        return crc32c_hw(msg, msglen, seed);
-    } else {
-#endif
-        rem = seed;
-
-        for (i = 0; i < msglen; i++) {
-            rem = crctable[(rem ^ msg[i]) & 0xff] ^ (rem >> 8);
-        }
-#ifndef __REACTOS__
-    }
-#endif
 
     return rem;
 }
+#endif

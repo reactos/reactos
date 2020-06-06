@@ -1465,6 +1465,7 @@ public:
     // + Hacks for gcc
     using CWindowImplRoot<TBase>::WINSTATE_DESTROYED;
     using CWindowImplRoot<TBase>::m_thunk;
+    using CWindowImplRoot<TBase>::m_hWnd;
     // - Hacks for gcc
 
     WNDPROC m_pfnSuperWindowProc;
@@ -1623,6 +1624,11 @@ template <class T, class TBase = CWindow, class TWinTraits = CControlWinTraits>
 class CWindowImpl : public CWindowImplBaseT<TBase, TWinTraits>
 {
 public:
+    // + Hacks for gcc
+    using CWindowImplRoot<TBase>::m_hWnd;
+    // - Hacks for gcc
+
+
     static LPCTSTR GetWndCaption()
     {
         return NULL;
@@ -1655,6 +1661,10 @@ template <class TBase = CWindow, class TWinTraits = CControlWinTraits>
 class CContainedWindowT : public TBase
 {
 public:
+    // + Hacks for gcc
+    using TBase::m_hWnd;
+    // - Hacks for gcc
+
     CWndProcThunk m_thunk;
     LPCTSTR m_lpszClassName;
     WNDPROC m_pfnSuperWindowProc;

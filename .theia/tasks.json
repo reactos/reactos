@@ -1,0 +1,91 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+        {
+            "label": "build livecd",
+            "type": "shell",
+            "command": "ninja livecd",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            },
+            "group": "build",
+            "problemMatcher": [
+                {
+                    "owner": "cpp",
+                    "fileLocation": ["relative", "${workspaceFolder}/build"],
+                    "pattern": {
+                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    }
+                }
+            ]
+        },
+        {
+            "label": "build bootcd",
+            "type": "shell",
+            "command": "ninja bootcd",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            },
+            "group": "build",
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": ["relative", "${workspaceFolder}/build"],
+                },
+            ]
+        },
+        {
+            "label": "launch livecd",
+            "type": "process",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            },
+            "dependsOn": [
+                "build livecd"
+            ],
+            "dependsOrder": "sequence",
+            "command": "qemu-system-i386",
+            "args": [
+                "-cdrom", "livecd.iso",
+                "-chardev", "socket,port=9091,host=localhost,server,nowait,id=char0",
+                "-serial", "chardev:char0",
+                "-nic", "user,model=e1000",
+                "-boot", "d",
+                "-chardev", "socket,path=/tmp/livecd_dbg,server,nowait,id=char1", "-serial", "chardev:char1",
+                "-daemonize"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "launch bootcd",
+            "type": "process",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            },
+            "dependsOn": [
+                "build bootcd"
+            ],
+            "dependsOrder": "sequence",
+            "command": "qemu-system-i386",
+            "args": [
+                "-cdrom", "bootcd.iso",
+                "-hda", "${env:HOME}/reactos_hdd.qcow",
+                "-boot", "d",
+                "-m", "1024",
+                "-chardev", "socket,port=9091,host=localhost,server,nowait,id=char0",
+                "-serial", "chardev:char0",
+                "-nic", "user,model=e1000",
+                "-chardev", "socket,path=/tmp/bootcd_dbg,server,nowait,id=char1", "-serial", "chardev:char1",
+                "-daemonize"
+            ],
+            "problemMatcher": []
+        },
+    ],
+}

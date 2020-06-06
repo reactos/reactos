@@ -3259,7 +3259,7 @@ LoaderScan:
         PspRunLoadImageNotifyRoutines(FileName, NULL, &ImageInfo);
     }
 
-#if defined(KDBG) || defined(_WINKD_)
+#ifdef __ROS_ROSSYM__
     /* MiCacheImageSymbols doesn't detect rossym */
     if (TRUE)
 #else

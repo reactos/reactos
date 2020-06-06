@@ -339,7 +339,7 @@ DumpNtfs(PVOID Statistics, PVOID Specific)
 #define GET_NEXT(stats, length, iter, type) (type)((ULONG_PTR)stats + (length * iter))
 #define SUM_VALUE(stats, new, value) stats->value += new->value
 
-inline int
+static inline int
 ValidateSizes(ULONG Length, DWORD ProcCount, DWORD BytesRead, DWORD SpecificSize)
 {
     /* Check whether we could read our base length for every processor */
@@ -359,7 +359,7 @@ ValidateSizes(ULONG Length, DWORD ProcCount, DWORD BytesRead, DWORD SpecificSize
     return 0;
 }
 
-inline void
+static inline void
 SumBase(PFILESYSTEM_STATISTICS Base, PFILESYSTEM_STATISTICS NextBase)
 {
     /* Sum any entry in the generic structures */

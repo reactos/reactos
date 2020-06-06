@@ -89,11 +89,11 @@ target_link_libraries(unicode PRIVATE host_includes)
 
 if(MSVC)
     # Disable warning "'<': signed/unsigned mismatch"
-    add_target_compile_flags(unicode "/wd4018")
+    target_compile_options(unicode PRIVATE "/wd4018")
 
     # Disable warning "unary minus operator applied to unsigned type, result still unsigned"
-    add_target_compile_flags(unicode "/wd4146")
+    target_compile_options(unicode PRIVATE "/wd4146")
 
     # Disable warning "conversion from 'const WCHAR' to 'char', possible loss of data"
-    add_target_compile_flags(unicode "/wd4244")
+    target_compile_options(unicode PRIVATE "/wd4244")
 endif()

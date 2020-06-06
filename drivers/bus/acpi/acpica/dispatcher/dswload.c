@@ -48,7 +48,6 @@
 #include "acdispat.h"
 #include "acinterp.h"
 #include "acnamesp.h"
-
 #ifdef ACPI_ASL_COMPILER
 #include "acdisasm.h"
 #endif
@@ -447,7 +446,6 @@ AcpiDsLoad1EndOp (
     ACPI_PARSE_OBJECT       *Op;
     ACPI_OBJECT_TYPE        ObjectType;
     ACPI_STATUS             Status = AE_OK;
-
 #ifdef ACPI_ASL_COMPILER
     UINT8                   ParamCount;
 #endif

@@ -499,7 +499,23 @@ VOID ShowInfo(BOOL bAll)
     ULONG netOutBufLen = 0;
     PIP_PER_ADAPTER_INFO pPerAdapterInfo = NULL;
     ULONG ulPerAdapterInfoLength = 0;
+    PSTR pszDomainName = NULL;
+    DWORD dwDomainNameSize = 0;
     ULONG ret = 0;
+
+    GetComputerNameExA(ComputerNameDnsDomain,
+                       NULL,
+                       &dwDomainNameSize);
+    if (dwDomainNameSize > 0)
+    {
+        pszDomainName = HeapAlloc(ProcessHeap,
+                                  0,
+                                  dwDomainNameSize * sizeof(TCHAR));
+        if (pszDomainName != NULL)
+            GetComputerNameExA(ComputerNameDnsDomain,
+                               pszDomainName,
+                               &dwDomainNameSize);
+    }
 
     /* call GetAdaptersInfo to obtain the adapter info */
     ret = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen);
@@ -507,14 +523,13 @@ VOID ShowInfo(BOOL bAll)
     {
         pAdapterInfo = (IP_ADAPTER_INFO *)HeapAlloc(ProcessHeap, 0, adaptOutBufLen);
         if (pAdapterInfo == NULL)
-            return;
+            goto done;
 
         ret = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen);
         if (ret != NO_ERROR)
         {
             DoFormatMessage(0);
-            HeapFree(ProcessHeap, 0, pAdapterInfo);
-            return;
+            goto done;
         }
     }
     else
@@ -522,7 +537,7 @@ VOID ShowInfo(BOOL bAll)
         if (ret != ERROR_NO_DATA)
         {
             DoFormatMessage(0);
-            return;
+            goto done;
         }
     }
 
@@ -532,25 +547,18 @@ VOID ShowInfo(BOOL bAll)
         pFixedInfo = (FIXED_INFO *)HeapAlloc(ProcessHeap, 0, netOutBufLen);
         if (pFixedInfo == NULL)
         {
-            if (pAdapterInfo)
-                HeapFree(ProcessHeap, 0, pAdapterInfo);
-            return;
+            goto done;
         }
         if (GetNetworkParams(pFixedInfo, &netOutBufLen) != NO_ERROR)
         {
             DoFormatMessage(0);
-            if (pAdapterInfo)
-                HeapFree(ProcessHeap, 0, pAdapterInfo);
-            HeapFree(ProcessHeap, 0, pFixedInfo);
-            return;
+            goto done;
         }
     }
     else
     {
-        if (pAdapterInfo)
-            HeapFree(ProcessHeap, 0, pAdapterInfo);
         DoFormatMessage(0);
-        return;
+        goto done;
     }
 
     pAdapter = pAdapterInfo;
@@ -559,7 +567,7 @@ VOID ShowInfo(BOOL bAll)
     if (bAll)
     {
         _tprintf(_T("\tHost Name . . . . . . . . . . . . : %s\n"), pFixedInfo->HostName);
-        _tprintf(_T("\tPrimary DNS Suffix. . . . . . . . : \n"));
+        _tprintf(_T("\tPrimary DNS Suffix. . . . . . . . : %s\n"), (pszDomainName != NULL) ? pszDomainName : "");
         _tprintf(_T("\tNode Type . . . . . . . . . . . . : %s\n"), GetNodeTypeName(pFixedInfo->NodeType));
         if (pFixedInfo->EnableRouting)
             _tprintf(_T("\tIP Routing Enabled. . . . . . . . : Yes\n"));
@@ -569,7 +577,15 @@ VOID ShowInfo(BOOL bAll)
             _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : Yes\n"));
         else
             _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : No\n"));
-        _tprintf(_T("\tDNS Suffix Search List. . . . . . : %s\n"), pFixedInfo->DomainName);
+        if (pszDomainName != NULL && pszDomainName[0] != 0)
+        {
+            _tprintf(_T("\tDNS Suffix Search List. . . . . . : %s\n"), pszDomainName);
+            _tprintf(_T("\t                                    %s\n"), pFixedInfo->DomainName);
+        }
+        else
+        {
+            _tprintf(_T("\tDNS Suffix Search List. . . . . . : %s\n"), pFixedInfo->DomainName);
+        }
     }
 
     while (pAdapter)
@@ -682,7 +698,11 @@ VOID ShowInfo(BOOL bAll)
         pAdapter = pAdapter->Next;
     }
 
-    HeapFree(ProcessHeap, 0, pFixedInfo);
+done:
+    if (pszDomainName)
+        HeapFree(ProcessHeap, 0, pszDomainName);
+    if (pFixedInfo)
+        HeapFree(ProcessHeap, 0, pFixedInfo);
     if (pAdapterInfo)
         HeapFree(ProcessHeap, 0, pAdapterInfo);
 }
@@ -826,6 +846,12 @@ FlushDns(VOID)
         DoFormatMessage(GetLastError());
 }
 
+VOID
+RegisterDns(VOID)
+{
+    /* FIXME */
+    _tprintf(_T("\nSorry /registerdns is not implemented yet\n"));
+}
 
 static
 VOID
@@ -1089,7 +1115,7 @@ int main(int argc, char *argv[])
             else if (DoFlushdns)
                 FlushDns();
             else if (DoRegisterdns)
-                _tprintf(_T("\nSorry /registerdns is not implemented yet\n"));
+                RegisterDns();
             else if (DoDisplaydns)
                 DisplayDns();
             else

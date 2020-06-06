@@ -4,7 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Kuvab andmeid lehekülje kaupa ekraanil.\n\n\
   MORE < [Draiv:][Tee]Faili nimi\n\
-  Käsk | MORE \n\
+  Käsk | MORE\n\
   MORE [Draiv:][Tee]Faili nimi\n\n\
   [Draiv:][Tee]Faili nimi    Fail mille sisu kuvatakse.\n\
   Käsk\t\t\t     Käsk mille sisu kuvatakse.\n\n\

@@ -6,7 +6,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Görüntülükte veriyi sayfa sayfa görüntüler.\n\n\
   MORE < [Sürücü:][Yol]Kütük adı\n\
-  Komut | MORE \n\
+  Komut | MORE\n\
   MORE [Sürücü:][Yol]Kütük adı\n\n\
   [Sürücü:][Yol]Kütük adı    İçeriği görüntülenecek bir kütük.\n\
   Komut\t\t     Çıkışı görüntülenecek bir komut.\n\n\

@@ -262,23 +262,23 @@ typedef INT SRRF;
 LSTATUS
 WINAPI
 SHRegGetValueA(
-  _In_ HKEY,
-  _In_opt_ LPCSTR,
-  _In_opt_ LPCSTR,
-  _In_ SRRF,
-  _Out_opt_ LPDWORD,
-  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _In_ HKEY hkey,
+  _In_opt_ LPCSTR pszSubKey,
+  _In_opt_ LPCSTR pszValue,
+  _In_ SRRF srrfFlags,
+  _Out_opt_ LPDWORD pdwType,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID pvData,
   _Inout_opt_ LPDWORD pcbData);
 
 LSTATUS
 WINAPI
 SHRegGetValueW(
-  _In_ HKEY,
-  _In_opt_ LPCWSTR,
-  _In_opt_ LPCWSTR,
-  _In_ SRRF,
-  _Out_opt_ LPDWORD,
-  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID,
+  _In_ HKEY hkey,
+  _In_opt_ LPCWSTR pszSubKey,
+  _In_opt_ LPCWSTR pszValue,
+  _In_ SRRF srrfFlags,
+  _Out_opt_ LPDWORD pdwType,
+  _Out_writes_bytes_to_opt_(*pcbData, *pcbData) LPVOID pvData,
   _Inout_opt_ LPDWORD pcbData);
 
 #define SHRegGetValue WINELIB_NAME_AW(SHRegGetValue)

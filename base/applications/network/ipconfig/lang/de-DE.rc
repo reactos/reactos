@@ -28,11 +28,11 @@ BEGIN
                   /flushdns | /displaydns | /registerdns |\n \
                   /showclassid Adapter |\n \
                   /setclassid Adapter [Klassen-ID] ]\n \
-    \n \
+\n \
     wobei\n \
         Adapter         Verbindungsname\n \
                        (Wildcards * und ? sind möglich, siehe Beispiele)\n \
-    \n \
+\n \
         Optionen:\n \
            /?           Zeigt die Hilfe an.\n \
            /all         Zeigt alle Konfigurationsinformationen an.\n \
@@ -42,18 +42,18 @@ BEGIN
            /registerdns Aktualisiert alle DHCP-Leases und registriert DNS-Namen.\n \
            /displaydns  Zeigt den Inhalt des DNS-Auflösungscaches an.\n \
            /showclassid Zeigt alle DHCP-Klassen-IDs an, die für diesen\n \
-                        Adapter zugelassen sind. \n \
+                        Adapter zugelassen sind.\n \
            /setclassid  Ändert die DHCP-Klassen-ID\n \
-    \n \
+\n \
     Standardmäßig wird nur die IP-Adresse, die Subnetzmaske und das Standard-\n \
     gateway für jeden an TCP/IP gebundenen Adapter angezeigt.\n \
-    \n \
+\n \
     Wird bei RELEASE oder RENEW kein Adaptername angegeben, so werden die IP-\n \
     Adressen von allen an TCP/IP gebundenen Adapter freigegeben oder erneuert.\n \
-    \n \
+\n \
     Wird bei SETCLASSID kein Klassenkennung angegeben, dann wird die Klassen-\n \
-    kennung gelöscht. \n \
-    \n \
+    kennung gelöscht.\n \
+\n \
     Beispiele:\n \
         > ipconfig                   ... Zeigt Informationen an.\n \
         > ipconfig /all              ... Zeigt detaillierte Informationen an.\n \

@@ -18,24 +18,32 @@ int CDECL _mbtowc_l(wchar_t *dst, const char* str, size_t n, _locale_t locale)
     MSVCRT_pthreadlocinfo locinfo;
     wchar_t tmpdst = '\0';
 
-    if(!locale)
+    if (!locale)
         locinfo = get_locinfo();
     else
         locinfo = (MSVCRT_pthreadlocinfo)(locale->locinfo);
 
-    if(n <= 0 || !str)
+    if (n <= 0 || !str)
         return 0;
-    if(!locinfo->lc_codepage)
-        tmpdst = (unsigned char)*str;
-    else if(!MultiByteToWideChar(locinfo->lc_codepage, 0, str, n, &tmpdst, 1))
-        return -1;
-    if(dst)
-        *dst = tmpdst;
-    /* return the number of bytes from src that have been used */
-    if(!*str)
+
+    if (!*str) {
+        if (dst) *dst = 0;
         return 0;
-    if(n >= 2 && _isleadbyte_l((unsigned char)*str, locale) && str[1])
+    }
+
+    if (!locinfo->lc_codepage) {
+        if (dst) *dst = (unsigned char)*str;
+        return 1;
+    }
+    if (n >= 2 && _isleadbyte_l((unsigned char)*str, locale)) {
+        if (!MultiByteToWideChar(locinfo->lc_codepage, 0, str, 2, &tmpdst, 1))
+            return -1;
+        if (dst) *dst = tmpdst;
         return 2;
+    }
+    if (!MultiByteToWideChar(locinfo->lc_codepage, 0, str, 1, &tmpdst, 1))
+        return -1;
+    if (dst) *dst = tmpdst;
     return 1;
 }
 

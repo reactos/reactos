@@ -45,12 +45,12 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_BUTTON_YES    "&Yes"
+    IDS_BUTTON_YES    "&Sí"
     IDS_BUTTON_NO     "&No"
-    IDS_BUTTON_RETRY  "&Retry"
+    IDS_BUTTON_RETRY  "&Reintentar"
     IDS_BUTTON_OK     "OK"
-    IDS_BUTTON_CANCEL "Cancel"
-    IDS_BUTTON_CLOSE  "&Close"
+    IDS_BUTTON_CANCEL "Cancelar"
+    IDS_BUTTON_CLOSE  "&Cerrar"
 }
 
 IDD_PROPSHEET DIALOG 0, 0, 220, 140

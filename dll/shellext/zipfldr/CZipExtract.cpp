@@ -533,13 +533,11 @@ public:
             } while (err > 0);
 
             /* Update Filetime */
-            FILETIME LastAccessTime;
-            GetFileTime(hFile, NULL, &LastAccessTime, NULL);
             FILETIME LocalFileTime;
             DosDateTimeToFileTime((WORD)(Info.dosDate >> 16), (WORD)Info.dosDate, &LocalFileTime);
             FILETIME FileTime;
             LocalFileTimeToFileTime(&LocalFileTime, &FileTime);
-            SetFileTime(hFile, &FileTime, &LastAccessTime, &FileTime);
+            SetFileTime(hFile, &FileTime, &FileTime, &FileTime);
 
             /* Done */
             CloseHandle(hFile);

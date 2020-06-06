@@ -168,7 +168,7 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
             }
 
             /* Move to the next descriptor */
-            Partial = PciNextPartialDescriptor(Partial);
+            Partial = CmiGetNextPartialDescriptor(Partial);
         }
 
         /* We should be starting a new list now */

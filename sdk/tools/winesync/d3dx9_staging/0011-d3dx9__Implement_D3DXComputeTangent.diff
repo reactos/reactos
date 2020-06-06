@@ -1,0 +1,289 @@
+diff --git a/dll/directx/wine/d3dx9_24/d3dx9_24.spec b/dll/directx/wine/d3dx9_24/d3dx9_24.spec
+index ad3ea3a0..3cf044c1 100644
+--- a/dll/directx/wine/d3dx9_24/d3dx9_24.spec
++++ b/dll/directx/wine/d3dx9_24/d3dx9_24.spec
+@@ -20,7 +20,7 @@
+ @ stdcall D3DXComputeBoundingSphere(ptr long long ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_25/d3dx9_25.spec b/dll/directx/wine/d3dx9_25/d3dx9_25.spec
+index b54a8e16..f311bbf1 100644
+--- a/dll/directx/wine/d3dx9_25/d3dx9_25.spec
++++ b/dll/directx/wine/d3dx9_25/d3dx9_25.spec
+@@ -20,7 +20,7 @@
+ @ stdcall D3DXComputeBoundingSphere(ptr long long ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_26/d3dx9_26.spec b/dll/directx/wine/d3dx9_26/d3dx9_26.spec
+index 03542f07..aa560e4e 100644
+--- a/dll/directx/wine/d3dx9_26/d3dx9_26.spec
++++ b/dll/directx/wine/d3dx9_26/d3dx9_26.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_27/d3dx9_27.spec b/dll/directx/wine/d3dx9_27/d3dx9_27.spec
+index 03542f07..aa560e4e 100644
+--- a/dll/directx/wine/d3dx9_27/d3dx9_27.spec
++++ b/dll/directx/wine/d3dx9_27/d3dx9_27.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_28/d3dx9_28.spec b/dll/directx/wine/d3dx9_28/d3dx9_28.spec
+index b470fb33..fb57152b 100644
+--- a/dll/directx/wine/d3dx9_28/d3dx9_28.spec
++++ b/dll/directx/wine/d3dx9_28/d3dx9_28.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_29/d3dx9_29.spec b/dll/directx/wine/d3dx9_29/d3dx9_29.spec
+index b470fb33..fb57152b 100644
+--- a/dll/directx/wine/d3dx9_29/d3dx9_29.spec
++++ b/dll/directx/wine/d3dx9_29/d3dx9_29.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_30/d3dx9_30.spec b/dll/directx/wine/d3dx9_30/d3dx9_30.spec
+index e90185a5..129e2a04 100644
+--- a/dll/directx/wine/d3dx9_30/d3dx9_30.spec
++++ b/dll/directx/wine/d3dx9_30/d3dx9_30.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_31/d3dx9_31.spec b/dll/directx/wine/d3dx9_31/d3dx9_31.spec
+index b926ad5e..2e4456a4 100644
+--- a/dll/directx/wine/d3dx9_31/d3dx9_31.spec
++++ b/dll/directx/wine/d3dx9_31/d3dx9_31.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_32/d3dx9_32.spec b/dll/directx/wine/d3dx9_32/d3dx9_32.spec
+index a4d698bd..d0d3631d 100644
+--- a/dll/directx/wine/d3dx9_32/d3dx9_32.spec
++++ b/dll/directx/wine/d3dx9_32/d3dx9_32.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_33/d3dx9_33.spec b/dll/directx/wine/d3dx9_33/d3dx9_33.spec
+index a4d698bd..d0d3631d 100644
+--- a/dll/directx/wine/d3dx9_33/d3dx9_33.spec
++++ b/dll/directx/wine/d3dx9_33/d3dx9_33.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_34/d3dx9_34.spec b/dll/directx/wine/d3dx9_34/d3dx9_34.spec
+index a4d698bd..d0d3631d 100644
+--- a/dll/directx/wine/d3dx9_34/d3dx9_34.spec
++++ b/dll/directx/wine/d3dx9_34/d3dx9_34.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_35/d3dx9_35.spec b/dll/directx/wine/d3dx9_35/d3dx9_35.spec
+index a4d698bd..d0d3631d 100644
+--- a/dll/directx/wine/d3dx9_35/d3dx9_35.spec
++++ b/dll/directx/wine/d3dx9_35/d3dx9_35.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_36/d3dx9_36.spec b/dll/directx/wine/d3dx9_36/d3dx9_36.spec
+index 3b5fdcc4..9ef3581b 100644
+--- a/dll/directx/wine/d3dx9_36/d3dx9_36.spec
++++ b/dll/directx/wine/d3dx9_36/d3dx9_36.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_36/mesh.c b/dll/directx/wine/d3dx9_36/mesh.c
+index a392a5b5..2a9ee062 100644
+--- a/dll/directx/wine/d3dx9_36/mesh.c
++++ b/dll/directx/wine/d3dx9_36/mesh.c
+@@ -7536,6 +7536,24 @@ done:
+     return hr;
+ }
+ 
++/*************************************************************************
++ * D3DXComputeTangent    (D3DX9_36.@)
++ */
++HRESULT WINAPI D3DXComputeTangent(ID3DXMesh *mesh, DWORD stage_idx, DWORD tangent_idx,
++        DWORD binorm_idx, DWORD wrap, const DWORD *adjacency)
++{
++    TRACE("mesh %p, stage_idx %d, tangent_idx %d, binorm_idx %d, wrap %d, adjacency %p.\n",
++           mesh, stage_idx, tangent_idx, binorm_idx, wrap, adjacency);
++
++    return D3DXComputeTangentFrameEx( mesh, D3DDECLUSAGE_TEXCOORD, stage_idx,
++            ( binorm_idx == D3DX_DEFAULT ) ? D3DX_DEFAULT : D3DDECLUSAGE_BINORMAL,
++            binorm_idx,
++            ( tangent_idx == D3DX_DEFAULT ) ? D3DX_DEFAULT : D3DDECLUSAGE_TANGENT,
++            tangent_idx, D3DX_DEFAULT, 0,
++            ( wrap ? D3DXTANGENT_WRAP_UV : 0 ) | D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_ORTHOGONALIZE_FROM_U,
++            adjacency, -1.01f, -0.01f, -1.01f, NULL, NULL);
++}
++
+ /*************************************************************************
+  * D3DXComputeNormals    (D3DX9_36.@)
+  */
+diff --git a/dll/directx/wine/d3dx9_37/d3dx9_37.spec b/dll/directx/wine/d3dx9_37/d3dx9_37.spec
+index 3b5fdcc4..9ef3581b 100644
+--- a/dll/directx/wine/d3dx9_37/d3dx9_37.spec
++++ b/dll/directx/wine/d3dx9_37/d3dx9_37.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_38/d3dx9_38.spec b/dll/directx/wine/d3dx9_38/d3dx9_38.spec
+index 3b5fdcc4..9ef3581b 100644
+--- a/dll/directx/wine/d3dx9_38/d3dx9_38.spec
++++ b/dll/directx/wine/d3dx9_38/d3dx9_38.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_39/d3dx9_39.spec b/dll/directx/wine/d3dx9_39/d3dx9_39.spec
+index 3b5fdcc4..9ef3581b 100644
+--- a/dll/directx/wine/d3dx9_39/d3dx9_39.spec
++++ b/dll/directx/wine/d3dx9_39/d3dx9_39.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_40/d3dx9_40.spec b/dll/directx/wine/d3dx9_40/d3dx9_40.spec
+index 3b5fdcc4..9ef3581b 100644
+--- a/dll/directx/wine/d3dx9_40/d3dx9_40.spec
++++ b/dll/directx/wine/d3dx9_40/d3dx9_40.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_41/d3dx9_41.spec b/dll/directx/wine/d3dx9_41/d3dx9_41.spec
+index 3b5fdcc4..9ef3581b 100644
+--- a/dll/directx/wine/d3dx9_41/d3dx9_41.spec
++++ b/dll/directx/wine/d3dx9_41/d3dx9_41.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_42/d3dx9_42.spec b/dll/directx/wine/d3dx9_42/d3dx9_42.spec
+index 3a681e3e..c1f0104d 100644
+--- a/dll/directx/wine/d3dx9_42/d3dx9_42.spec
++++ b/dll/directx/wine/d3dx9_42/d3dx9_42.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_43/d3dx9_43.spec b/dll/directx/wine/d3dx9_43/d3dx9_43.spec
+index 3a681e3e..c1f0104d 100644
+--- a/dll/directx/wine/d3dx9_43/d3dx9_43.spec
++++ b/dll/directx/wine/d3dx9_43/d3dx9_43.spec
+@@ -24,7 +24,7 @@
+ @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
+ @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
+ @ stdcall D3DXComputeNormals(ptr ptr)
+-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
++@ stdcall D3DXComputeTangent(ptr long long long long ptr)
+ @ stdcall -stub D3DXComputeTangentFrame(ptr long)
+ @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
+ @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)

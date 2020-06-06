@@ -305,35 +305,43 @@ CPortPinWaveRT::DeviceIoControl(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
 
-    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
+    switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
-       return HandleKsProperty(Irp);
-    }
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT)
-    {
-        /// FIXME
-        /// handle enable event
-    }
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_DISABLE_EVENT)
-    {
-        /// FIXME
-        /// handle disable event
-    }
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_RESET_STATE)
-    {
-        /// FIXME
-        /// handle reset state
-    }
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_WRITE_STREAM || IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_READ_STREAM)
-    {
-       return HandleKsStream(Irp);
-    }
-    else
-    {
-        return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
-    }
+        case IOCTL_KS_PROPERTY:
+            return HandleKsProperty(Irp);
+		
+        case IOCTL_KS_ENABLE_EVENT:
+            /* FIXME UNIMPLEMENTED */
+            UNIMPLEMENTED_ONCE;
+            break;
 
-    UNIMPLEMENTED;
+        case IOCTL_KS_DISABLE_EVENT:
+            /* FIXME UNIMPLEMENTED */
+            UNIMPLEMENTED_ONCE;
+            break;
+
+        case IOCTL_KS_HANDSHAKE:
+            /* FIXME UNIMPLEMENTED */
+            UNIMPLEMENTED_ONCE;
+            break;
+
+        case IOCTL_KS_METHOD:
+            /* FIXME UNIMPLEMENTED */
+            UNIMPLEMENTED_ONCE;
+            return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
+
+        case IOCTL_KS_RESET_STATE:
+            /* FIXME UNIMPLEMENTED */
+            UNIMPLEMENTED_ONCE;
+            break;
+			
+        case IOCTL_KS_WRITE_STREAM:
+        case IOCTL_KS_READ_STREAM:
+            return HandleKsStream(Irp);
+			
+        default:
+            return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
+    }
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;

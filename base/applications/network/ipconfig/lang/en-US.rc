@@ -29,11 +29,11 @@ BEGIN
                   /flushdns | /displaydns | /registerdns |\n \
                   /showclassid adapter |\n \
                   /setclassid adapter [classid] ]\n \
-    \n \
+\n \
     where\n \
         adapter         Connection name\n \
                        (wildcard characters * and ? allowed, see examples)\n \
-    \n \
+\n \
         Options:\n \
            /?           Display this help message\n \
            /all         Display full configuration information.\n \
@@ -44,15 +44,15 @@ BEGIN
            /displaydns  Display the contents of the DNS Resolver Cache.\n \
            /showclassid Displays all the dhcp class IDs allowed for adapter.\n \
            /setclassid  Modifies the dhcp class id.\n \
-    \n \
+\n \
     The default is to display only the IP address, subnet mask and\n \
     default gateway for each adapter bound to TCP/IP.\n \
-    \n \
+\n \
     For Release and Renew, if no adapter name is specified, then the IP address\n \
     leases for all adapters bound to TCP/IP will be released or renewed.\n \
-    \n \
+\n \
     For Setclassid, if no ClassId is specified, then the ClassId is removed.\n \
-    \n \
+\n \
     Examples:\n \
         > ipconfig                   ... Show information.\n \
         > ipconfig /all              ... Show detailed information\n \

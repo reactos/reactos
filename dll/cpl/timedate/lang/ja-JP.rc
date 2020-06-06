@@ -54,6 +54,6 @@ BEGIN
     IDS_INETTIMENEXTSYNC "次回の同期: %s %s"
     IDS_INETTIMESYNCING "ReactOSが %s と同期する間、お待ちください"
     IDS_INETTIMEERROR "ReactOSが %s と同期中にエラーが発生しました"
-    IDS_INETTIMESUCFILL "Please type a NTP server name in order to synchronize the time"
-    IDS_INETTIMEWELCOME "Select a NTP server from the list or type a NTP server name to synchronize the computer's time"
+    IDS_INETTIMESUCFILL "時刻を同期するための NTP サーバ名を入力して下さい"
+    IDS_INETTIMEWELCOME "コンピュータの時刻を同期するための NTP サーバをリストから選択するか、NTP サーバ名を入力して下さい"
 END

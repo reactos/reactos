@@ -199,7 +199,7 @@ PUSHD [rrugë | ..]\n\n\
 Shkruaj ECHO pa parametra qe shfaqin konfigurimin aktual te ECHO."
     STRING_ECHO_HELP5 "ECHO është %s\n"
     STRING_EXIT_HELP "Dalje nga interpretuesi komandues i linjes.\n\nEXIT [/b] [ExitCode]\n\n\
-  /B            Dalje nga batch vetëm.  \n\
+  /B            Dalje nga batch vetëm.\n\
                 Nëse drejtuar jashtë nga një skedar batch do të dalë nga cmd.exe\n\
   ExitCode      Kjo vlerë do të caktohet për ERRORLEVEL në dalje\n"
     STRING_FOR_HELP1 "Ekzekuto një komandë të specifikuar për secilën dokument në një grupim dokumentesh.\n\n\
@@ -417,7 +417,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     1    hh%cmm%css%cdd\n\n\
 Nëse nuk konfigurohen ON, OFF ose /S është specifikimi i komandave\n\
 që do të tregojë gjendjen e kronometrit\n\n"
-    STRING_TYPE_HELP1 "Shfaq përmbajtjen e tekstit të dosjeve.\n\nTIPI [drive:][rrugë]emri \n\
+    STRING_TYPE_HELP1 "Shfaq përmbajtjen e tekstit të dosjeve.\n\nTIPI [drive:][rrugë]emri\n\
   /P          Tregon një ekran informacionin në një kohë.\n"
     STRING_VERIFY_HELP1 "Kjo komandë është kot!!\n\
 Vendos nëse të verifikoje që dosjet tuaja janë shkruar saktë për një\n\

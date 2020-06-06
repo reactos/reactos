@@ -611,8 +611,8 @@ HRESULT WINAPI SHCreateLinks(
     UINT uFlags,
     LPITEMIDLIST *lppidlLinks);
 
-DWORD WINAPI CheckEscapesA(LPSTR string, DWORD len);
-DWORD WINAPI CheckEscapesW(LPWSTR string, DWORD len);
+VOID WINAPI CheckEscapesA(LPSTR string, DWORD len);
+VOID WINAPI CheckEscapesW(LPWSTR string, DWORD len);
 
 /* policy functions */
 BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey);
@@ -689,6 +689,11 @@ BOOL WINAPI GUIDFromStringW(
 #define TRAYCMD_SWITCH_USER_DIALOG  5000
 #define TRAYCMD_SEARCH_FILES        41093
 #define TRAYCMD_SEARCH_COMPUTERS    41094
+
+// Explorer Tray Application Bar Data Message Commands
+#define TABDMC_APPBAR     0
+#define TABDMC_NOTIFY     1
+#define TABDMC_LOADINPROC 2
 
 void WINAPI ShellDDEInit(BOOL bInit);
 DWORD WINAPI WinList_Init(void);

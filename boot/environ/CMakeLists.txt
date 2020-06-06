@@ -20,6 +20,7 @@ list(APPEND BOOTLIB_SOURCE
      lib/misc/resource.c
      lib/misc/font.c
      lib/misc/rtlcompat.c
+     lib/rtl/libsupp.c
      lib/firmware/fwutil.c
      lib/firmware/efi/firmware.c
      lib/mm/mm.c
@@ -81,7 +82,7 @@ add_executable(bootmgfw ${BOOTMGR_BASE_SOURCE} app/bootmgr/bootmgr.rc)
 set_target_properties(bootmgfw PROPERTIES SUFFIX ".efi")
 
 if(MSVC)
-    if (ARCH STREQUAL "arm")
+    if(ARCH STREQUAL "arm")
         add_target_link_flags(bootmgfw "/ignore:4078 /ignore:4254 /DRIVER")
     else()
         add_target_link_flags(bootmgfw "/ignore:4078 /ignore:4254 /DRIVER /FIXED")
@@ -102,9 +103,12 @@ set_entrypoint(bootmgfw EfiEntry)
 
 target_link_libraries(bootmgfw bootlib cportlib cmlib rtl libcntpr)
 
+# dynamic analysis switches
 if(STACK_PROTECTOR)
     target_link_libraries(bootmgfw gcc_ssp)
-elseif(RUNTIME_CHECKS)
+endif()
+
+if(RUNTIME_CHECKS)
     target_link_libraries(bootmgfw runtmchk)
 endif()
 
@@ -147,9 +151,12 @@ endif()
 
 target_link_libraries(rosload bootlib cportlib cmlib rtl libcntpr)
 
+# dynamic analysis switches
 if(STACK_PROTECTOR)
     target_link_libraries(rosload gcc_ssp)
-elseif(RUNTIME_CHECKS)
+endif()
+
+if(RUNTIME_CHECKS)
     target_link_libraries(rosload runtmchk)
 endif()
 

@@ -13,6 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef PVOID PSECURITY_PACKAGE_OPTIONS, PSecurityUserData;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -160,11 +161,16 @@ GenerateSessionKey(VOID)
     UNIMPLEMENTED_DBGBREAK();
 }
 
-VOID
+SECURITY_STATUS
 SEC_ENTRY
-GetSecurityUserInfo(VOID)
+GetSecurityUserInfo(
+    _In_opt_    PLUID LogonId,
+    _In_        ULONG Flags,
+    _Outptr_    PSecurityUserData *UserInformation)
 {
-    UNIMPLEMENTED_DBGBREAK();
+    UNIMPLEMENTED;
+    *UserInformation = NULL;
+    return STATUS_UNSUCCESSFUL;
 }
 
 SECURITY_STATUS

@@ -44,4 +44,5 @@ set(USERMODE TRUE CACHE BOOL
 if(MSVC)
 set(_PREFAST_ FALSE CACHE BOOL
 "Whether to enable PREFAST while compiling.")
+    option(RUNTIME_CHECKS "Whether to enable runtime checks on MSVC" ON)
 endif()

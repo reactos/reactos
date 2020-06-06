@@ -40,8 +40,34 @@ static BOOLEAN InputQueueEmpty;
 static BOOLEAN WaitForInput;
 static KEYBOARD_INPUT_DATA InputDataQueue; // Only one element!
 static IO_STATUS_BLOCK InputIosb;
+static UINT LastLoadedCodepage;
 
 /* FUNCTIONS *****************************************************************/
+
+typedef struct _CONSOLE_CABINET_CONTEXT
+{
+    CABINET_CONTEXT CabinetContext;
+    PVOID Data;
+    ULONG Size;
+} CONSOLE_CABINET_CONTEXT, *PCONSOLE_CABINET_CONTEXT;
+
+static PVOID
+ConsoleCreateFileHandler(
+    IN PCABINET_CONTEXT CabinetContext,
+    IN ULONG FileSize)
+{
+    PCONSOLE_CABINET_CONTEXT ConsoleCabinetContext;
+
+    ConsoleCabinetContext = (PCONSOLE_CABINET_CONTEXT)CabinetContext;
+    ConsoleCabinetContext->Data = RtlAllocateHeap(ProcessHeap, 0, FileSize);
+    if (!ConsoleCabinetContext->Data)
+    {
+        DPRINT("Failed to allocate %d bytes\n", FileSize);
+        return NULL;
+    }
+    ConsoleCabinetContext->Size = FileSize;
+    return ConsoleCabinetContext->Data;
+}
 
 BOOL
 WINAPI
@@ -666,23 +692,65 @@ WINAPI
 SetConsoleOutputCP(
     IN UINT wCodepage)
 {
+    WCHAR FontName[100];
+    WCHAR FontFile[] = L"\\SystemRoot\\vgafonts.cab";
+    CONSOLE_CABINET_CONTEXT ConsoleCabinetContext;
+    PCABINET_CONTEXT CabinetContext = &ConsoleCabinetContext.CabinetContext;
+    CAB_SEARCH Search;
+    ULONG CabStatus;
     HANDLE hConsoleOutput;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 
+    if (wCodepage == LastLoadedCodepage)
+        return TRUE;
+
     hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    CabinetInitialize(CabinetContext);
+    CabinetSetEventHandlers(CabinetContext,
+                            NULL, NULL, NULL, ConsoleCreateFileHandler);
+    CabinetSetCabinetName(CabinetContext, FontFile);
+
+    CabStatus = CabinetOpen(CabinetContext);
+    if (CabStatus != CAB_STATUS_SUCCESS)
+    {
+        DPRINT("CabinetOpen('%S') returned 0x%08x\n", FontFile, CabStatus);
+        return FALSE;
+    }
+
+    swprintf(FontName, L"%u-8x8.bin", wCodepage);
+    CabStatus = CabinetFindFirst(CabinetContext, FontName, &Search);
+    if (CabStatus != CAB_STATUS_SUCCESS)
+    {
+        DPRINT("CabinetFindFirst('%S', '%S') returned 0x%08x\n", FontFile, FontName, CabStatus);
+        CabinetClose(CabinetContext);
+        return FALSE;
+    }
+
+    CabStatus = CabinetExtractFile(CabinetContext, &Search);
+    CabinetClose(CabinetContext);
+    if (CabStatus != CAB_STATUS_SUCCESS)
+    {
+        DPRINT("CabinetLoadFile('%S', '%S') returned 0x%08x\n", FontFile, FontName, CabStatus);
+        return FALSE;
+    }
 
     Status = NtDeviceIoControlFile(hConsoleOutput,
                                    NULL,
                                    NULL,
                                    NULL,
                                    &IoStatusBlock,
-                                   IOCTL_CONSOLE_LOADFONT,
-                                   &wCodepage,
-                                   sizeof(ULONG),
+                                   IOCTL_CONSOLE_SETFONT,
+                                   ConsoleCabinetContext.Data,
+                                   ConsoleCabinetContext.Size,
                                    NULL,
                                    0);
-    return NT_SUCCESS(Status);
+    if (!NT_SUCCESS(Status))
+          return FALSE;
+
+    LastLoadedCodepage = wCodepage;
+    return TRUE;
 }
 
 

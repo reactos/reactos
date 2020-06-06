@@ -2,6 +2,7 @@
  *    Translated by Polish Translation Team (Apr, 2007)
  *    https://sourceforge.net/projects/reactospl
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Polish translation Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (May, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -11,7 +12,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS - Zapraszamy"
+    IDS_APPTITLE "System ReactOS - Zapraszamy!"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "Witaj w systemie operacyjnym ReactOS.\n\nWybierz temat po lewej."
     IDS_FONTNAME "Tahoma"
@@ -22,23 +23,23 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "&Zainstaluj ReactOS"
-    IDS_TOPIC_BUTTON1 "Przeglądaj &CD"
+    IDS_TOPIC_BUTTON0 "&Zainstaluj system ReactOS"
+    IDS_TOPIC_BUTTON1 "Przeglądaj ten dysk &CD-ROM"
     IDS_TOPIC_BUTTON2 "&Wyjście"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Zainstaluj ReactOS"
-    IDS_TOPIC_TITLE1 "Przeglądaj CD"
+    IDS_TOPIC_TITLE0 "Zainstaluj system ReactOS"
+    IDS_TOPIC_TITLE1 "Przeglądaj ten dysk CD-ROM"
     IDS_TOPIC_TITLE2 "Wyjście"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Utwórz nową instalację ReactOS na komputerze lub aktualizuj już istniejącą."
-    IDS_TOPIC_DESC1 "Przeglądaj CD."
+    IDS_TOPIC_DESC0 "Utwórz nową instalację ReactOS na komputerze lub uaktualnij bieżącą wersję systemu ReactOS."
+    IDS_TOPIC_DESC1 "Przeglądaj zawartość tego dysku CD, aby odnaleźć narzędzia dodatkowe i dokumentację z dołączonymi informacjami o wersji."
     IDS_TOPIC_DESC2 "Kliknij, aby zakończyć aplikację."
 END

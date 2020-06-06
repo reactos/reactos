@@ -38,6 +38,7 @@ typedef struct _DEVICE_EXTENSION
     USHORT  Rows;       /* Number of rows        */
     USHORT  Columns;    /* Number of columns     */
     USHORT  CursorX, CursorY; /* Cursor position */
+    PUCHAR  FontBitfield; /* Specifies the font. If NULL, use CodePage */
     ULONG   CodePage;   /* Specifies the font associated to this code page */
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
@@ -483,8 +484,15 @@ ScrAcquireOwnership(
     // DeviceExtension->CursorX = min(max(DeviceExtension->CursorX, 0), DeviceExtension->Columns - 1);
     DeviceExtension->CursorY = min(max(DeviceExtension->CursorY, 0), DeviceExtension->Rows - 1);
 
-    /* Upload a default font for the current codepage */
-    ScrLoadFontTable(DeviceExtension->CodePage);
+    if (DeviceExtension->FontBitfield)
+    {
+        ScrSetFont(DeviceExtension->FontBitfield);
+    }
+    else
+    {
+        /* Upload a default font for the current codepage */
+        ScrLoadFontTable(DeviceExtension->CodePage);
+    }
 
     DPRINT("%d Columns  %d Rows %d Scanlines\n",
            DeviceExtension->Columns,
@@ -510,6 +518,12 @@ ScrResetScreen(
     {
         DeviceExtension->CursorSize    = 5; /* FIXME: value correct?? */
         DeviceExtension->CursorVisible = TRUE;
+
+        if (DeviceExtension->FontBitfield)
+        {
+            ExFreePoolWithTag(DeviceExtension->FontBitfield, TAG_BLUE);
+            DeviceExtension->FontBitfield = NULL;
+        }
 
         /* More initialization */
         DeviceExtension->CharAttribute = BACKGROUND_BLUE | FOREGROUND_LIGHTGRAY;
@@ -1496,11 +1510,46 @@ ScrIoControl(
             }
             ASSERT(Irp->AssociatedIrp.SystemBuffer);
 
+            if (DeviceExtension->FontBitfield)
+            {
+                ExFreePoolWithTag(DeviceExtension->FontBitfield, TAG_BLUE);
+                DeviceExtension->FontBitfield = NULL;
+            }
             DeviceExtension->CodePage = *(PULONG)Irp->AssociatedIrp.SystemBuffer;
 
             /* Upload a font for the codepage if needed */
             if (DeviceExtension->Enabled && DeviceExtension->VideoMemory)
                 ScrLoadFontTable(DeviceExtension->CodePage);
+
+            Irp->IoStatus.Information = 0;
+            Status = STATUS_SUCCESS;
+            break;
+        }
+
+        case IOCTL_CONSOLE_SETFONT:
+        {
+            /* Validate input buffer */
+            if (stk->Parameters.DeviceIoControl.InputBufferLength < 256 * 8)
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+            ASSERT(Irp->AssociatedIrp.SystemBuffer);
+
+            DeviceExtension->CodePage = 0;
+            if (DeviceExtension->FontBitfield)
+                ExFreePoolWithTag(DeviceExtension->FontBitfield, TAG_BLUE);
+            DeviceExtension->FontBitfield = ExAllocatePoolWithTag(NonPagedPool, 256 * 8, TAG_BLUE);
+            if (!DeviceExtension->FontBitfield)
+            {
+                Status = STATUS_NO_MEMORY;
+                break;
+            }
+            RtlCopyMemory(DeviceExtension->FontBitfield, Irp->AssociatedIrp.SystemBuffer, 256 * 8);
+
+            /* Upload the font if needed */
+            if (DeviceExtension->Enabled && DeviceExtension->VideoMemory)
+                ScrSetFont(DeviceExtension->FontBitfield);
 
             Irp->IoStatus.Information = 0;
             Status = STATUS_SUCCESS;

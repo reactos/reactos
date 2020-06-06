@@ -107,7 +107,7 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, uint64_t addr, root* s
 
     Status = read_data(Vcb, addr, Vcb->superblock.node_size, NULL, true, buf, NULL, NULL, Irp, 0, false, NormalPagePriority);
     if (!NT_SUCCESS(Status)) {
-        ERR("read_data returned %08x\n", Status);
+        ERR("read_data returned %08lx\n", Status);
         goto end;
     }
 
@@ -120,7 +120,7 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, uint64_t addr, root* s
 
     Status = get_tree_new_address(Vcb, &t, Irp, rollback);
     if (!NT_SUCCESS(Status)) {
-        ERR("get_tree_new_address returned %08x\n", Status);
+        ERR("get_tree_new_address returned %08lx\n", Status);
         goto end;
     }
 
@@ -143,7 +143,7 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, uint64_t addr, root* s
     th->address = t.new_address;
     th->tree_id = subvol->id;
     th->generation = Vcb->superblock.generation;
-    th->fs_uuid = Vcb->superblock.uuid;
+    th->fs_uuid = Vcb->superblock.metadata_uuid;
 
     if (th->level == 0) {
         uint32_t i;
@@ -160,7 +160,7 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, uint64_t addr, root* s
                         Status = increase_extent_refcount_data(Vcb, ed2->address, ed2->size, subvol->id, ln[i].key.obj_id, ln[i].key.offset - ed2->offset, 1, Irp);
 
                         if (!NT_SUCCESS(Status)) {
-                            ERR("increase_extent_refcount_data returned %08x\n", Status);
+                            ERR("increase_extent_refcount_data returned %08lx\n", Status);
                             goto end;
                         }
                     }
@@ -178,13 +178,13 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, uint64_t addr, root* s
 
             Status = increase_extent_refcount(Vcb, in[i].address, Vcb->superblock.node_size, TYPE_TREE_BLOCK_REF, &tbr, NULL, th->level - 1, Irp);
             if (!NT_SUCCESS(Status)) {
-                ERR("increase_extent_refcount returned %08x\n", Status);
+                ERR("increase_extent_refcount returned %08lx\n", Status);
                 goto end;
             }
         }
     }
 
-    *((uint32_t*)buf) = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, Vcb->superblock.node_size - sizeof(th->csum));
+    calc_tree_checksum(Vcb, th);
 
     KeInitializeEvent(&wtc.Event, NotificationEvent, false);
     InitializeListHead(&wtc.stripes);
@@ -192,7 +192,7 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, uint64_t addr, root* s
 
     Status = write_data(Vcb, t.new_address, buf, Vcb->superblock.node_size, &wtc, NULL, NULL, false, 0, NormalPagePriority);
     if (!NT_SUCCESS(Status)) {
-        ERR("write_data returned %08x\n", Status);
+        ERR("write_data returned %08lx\n", Status);
         goto end;
     }
 
@@ -305,7 +305,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
     free_trees(Vcb);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("do_write returned %08x\n", Status);
+        ERR("do_write returned %08lx\n", Status);
         return Status;
     }
 
@@ -317,7 +317,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
     Status = create_root(Vcb, id, &r, true, Vcb->superblock.generation, Irp);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("create_root returned %08x\n", Status);
+        ERR("create_root returned %08lx\n", Status);
         goto end;
     }
 
@@ -331,7 +331,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
         Status = create_root(Vcb, BTRFS_ROOT_UUID, &uuid_root, false, 0, Irp);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("create_root returned %08x\n", Status);
+            ERR("create_root returned %08lx\n", Status);
             goto end;
         }
 
@@ -361,7 +361,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
 
     Status = insert_tree_item(Vcb, Vcb->uuid_root, searchkey.obj_id, searchkey.obj_type, searchkey.offset, root_num, sizeof(uint64_t), NULL, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("insert_tree_item returned %08x\n", Status);
+        ERR("insert_tree_item returned %08lx\n", Status);
         ExFreePool(root_num);
         goto end;
     }
@@ -372,13 +372,13 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
 
     Status = find_item(Vcb, Vcb->root_root, &tp, &searchkey, false, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
+        ERR("error - find_item returned %08lx\n", Status);
         goto end;
     }
 
     Status = snapshot_tree_copy(Vcb, subvol->root_item.block_number, r, &address, Irp, &rollback);
     if (!NT_SUCCESS(Status)) {
-        ERR("snapshot_tree_copy returned %08x\n", Status);
+        ERR("snapshot_tree_copy returned %08lx\n", Status);
         goto end;
     }
 
@@ -436,7 +436,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
 
     Status = open_fcb(Vcb, r, r->root_item.objid, BTRFS_TYPE_DIRECTORY, utf8, false, fcb, &fr->fcb, PagedPool, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("open_fcb returned %08x\n", Status);
+        ERR("open_fcb returned %08lx\n", Status);
         free_fileref(fr);
         goto end;
     }
@@ -445,7 +445,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
 
     Status = add_dir_child(fileref->fcb, r->id, true, utf8, name, BTRFS_TYPE_DIRECTORY, &dc);
     if (!NT_SUCCESS(Status))
-        WARN("add_dir_child returned %08x\n", Status);
+        WARN("add_dir_child returned %08lx\n", Status);
 
     fr->dc = dc;
     dc->fileref = fr;
@@ -509,7 +509,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
     free_trees(Vcb);
 
     if (!NT_SUCCESS(Status))
-        ERR("do_write returned %08x\n", Status);
+        ERR("do_write returned %08lx\n", Status);
 
 end:
     if (NT_SUCCESS(Status))
@@ -607,7 +607,7 @@ static NTSTATUS create_snapshot(device_extension* Vcb, PFILE_OBJECT FileObject, 
 
     Status = utf16_to_utf8(NULL, 0, &len, nameus.Buffer, nameus.Length);
     if (!NT_SUCCESS(Status)) {
-        ERR("utf16_to_utf8 failed with error %08x\n", Status);
+        ERR("utf16_to_utf8 failed with error %08lx\n", Status);
         return Status;
     }
 
@@ -631,7 +631,7 @@ static NTSTATUS create_snapshot(device_extension* Vcb, PFILE_OBJECT FileObject, 
 
     Status = utf16_to_utf8(utf8.Buffer, len, &len, nameus.Buffer, nameus.Length);
     if (!NT_SUCCESS(Status)) {
-        ERR("utf16_to_utf8 failed with error %08x\n", Status);
+        ERR("utf16_to_utf8 failed with error %08lx\n", Status);
         goto end2;
     }
 
@@ -649,13 +649,13 @@ static NTSTATUS create_snapshot(device_extension* Vcb, PFILE_OBJECT FileObject, 
         } else
             free_fileref(fr2);
     } else if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND) {
-        ERR("open_fileref returned %08x\n", Status);
+        ERR("open_fileref returned %08lx\n", Status);
         goto end3;
     }
 
     Status = ObReferenceObjectByHandle(subvolh, 0, *IoFileObjectType, Irp->RequestorMode, (void**)&subvol_obj, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("ObReferenceObjectByHandle returned %08x\n", Status);
+        ERR("ObReferenceObjectByHandle returned %08lx\n", Status);
         goto end3;
     }
 
@@ -724,7 +724,7 @@ static NTSTATUS create_snapshot(device_extension* Vcb, PFILE_OBJECT FileObject, 
         Status = open_fileref(Vcb, &fr, &nameus, fileref, false, NULL, NULL, PagedPool, false, Irp);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("open_fileref returned %08x\n", Status);
+            ERR("open_fileref returned %08lx\n", Status);
             Status = STATUS_SUCCESS;
         } else {
             send_notification_fileref(fr, FILE_NOTIFY_CHANGE_DIR_NAME, FILE_ACTION_ADDED, NULL);
@@ -829,7 +829,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
 
     Status = utf16_to_utf8(NULL, 0, &len, nameus.Buffer, nameus.Length);
     if (!NT_SUCCESS(Status)) {
-        ERR("utf16_to_utf8 failed with error %08x\n", Status);
+        ERR("utf16_to_utf8 failed with error %08lx\n", Status);
         return Status;
     }
 
@@ -853,7 +853,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
 
     Status = utf16_to_utf8(utf8.Buffer, len, &len, nameus.Buffer, nameus.Length);
     if (!NT_SUCCESS(Status)) {
-        ERR("utf16_to_utf8 failed with error %08x\n", Status);
+        ERR("utf16_to_utf8 failed with error %08lx\n", Status);
         goto end2;
     }
 
@@ -874,7 +874,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
         } else
             free_fileref(fr2);
     } else if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND) {
-        ERR("open_fileref returned %08x\n", Status);
+        ERR("open_fileref returned %08lx\n", Status);
         goto end;
     }
 
@@ -882,7 +882,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
     Status = create_root(Vcb, id, &r, false, 0, Irp);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("create_root returned %08x\n", Status);
+        ERR("create_root returned %08lx\n", Status);
         goto end;
     }
 
@@ -896,7 +896,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
         Status = create_root(Vcb, BTRFS_ROOT_UUID, &uuid_root, false, 0, Irp);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("create_root returned %08x\n", Status);
+            ERR("create_root returned %08lx\n", Status);
             goto end;
         }
 
@@ -926,7 +926,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
 
     Status = insert_tree_item(Vcb, Vcb->uuid_root, searchkey.obj_id, searchkey.obj_type, searchkey.offset, root_num, sizeof(uint64_t), NULL, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("insert_tree_item returned %08x\n", Status);
+        ERR("insert_tree_item returned %08lx\n", Status);
         ExFreePool(root_num);
         goto end;
     }
@@ -980,7 +980,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
     Status = SeAssignSecurity(fcb->sd, NULL, (void**)&rootfcb->sd, true, &subjcont, IoGetFileObjectGenericMapping(), PagedPool);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("SeAssignSecurity returned %08x\n", Status);
+        ERR("SeAssignSecurity returned %08lx\n", Status);
         goto end;
     }
 
@@ -992,7 +992,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
 
     Status = RtlGetOwnerSecurityDescriptor(rootfcb->sd, &owner, &defaulted);
     if (!NT_SUCCESS(Status)) {
-        ERR("RtlGetOwnerSecurityDescriptor returned %08x\n", Status);
+        ERR("RtlGetOwnerSecurityDescriptor returned %08lx\n", Status);
         rootfcb->inode_item.st_uid = UID_NOBODY;
         rootfcb->sd_dirty = true;
     } else {
@@ -1041,7 +1041,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
 
     Status = insert_tree_item(Vcb, r, r->root_item.objid, TYPE_INODE_REF, r->root_item.objid, ir, irsize, NULL, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("insert_tree_item returned %08x\n", Status);
+        ERR("insert_tree_item returned %08lx\n", Status);
         ExFreePool(ir);
         goto end;
     }
@@ -1066,7 +1066,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
 
     Status = add_dir_child(fileref->fcb, r->id, true, &utf8, &nameus, BTRFS_TYPE_DIRECTORY, &dc);
     if (!NT_SUCCESS(Status))
-        WARN("add_dir_child returned %08x\n", Status);
+        WARN("add_dir_child returned %08lx\n", Status);
 
     fr->dc = dc;
     dc->fileref = fr;
@@ -1523,7 +1523,7 @@ static NTSTATUS get_usage(device_extension* Vcb, void* data, ULONG length, PIRP 
         ExReleaseResourceLite(&Vcb->tree_lock);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("find_chunk_usage returned %08x\n", Status);
+            ERR("find_chunk_usage returned %08lx\n", Status);
             return Status;
         }
     }
@@ -1841,7 +1841,7 @@ static NTSTATUS zero_data(device_extension* Vcb, fcb* fcb, uint64_t start, uint6
         Status = read_file(fcb, data + buf_head, start_data, end_data - start_data, NULL, Irp);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("read_file returned %08x\n", Status);
+            ERR("read_file returned %08lx\n", Status);
             ExFreePool(data);
             return Status;
         }
@@ -1855,7 +1855,7 @@ static NTSTATUS zero_data(device_extension* Vcb, fcb* fcb, uint64_t start, uint6
 
         Status = excise_extents(Vcb, fcb, 0, sector_align(end_data, Vcb->superblock.sector_size), Irp, rollback);
         if (!NT_SUCCESS(Status)) {
-            ERR("excise_extents returned %08x\n", Status);
+            ERR("excise_extents returned %08lx\n", Status);
             ExFreePool(data);
             return Status;
         }
@@ -1871,7 +1871,7 @@ static NTSTATUS zero_data(device_extension* Vcb, fcb* fcb, uint64_t start, uint6
 
         Status = add_extent_to_fcb(fcb, 0, ed, edsize, false, NULL, rollback);
         if (!NT_SUCCESS(Status)) {
-            ERR("add_extent_to_fcb returned %08x\n", Status);
+            ERR("add_extent_to_fcb returned %08lx\n", Status);
             ExFreePool(data);
             return Status;
         }
@@ -1885,7 +1885,7 @@ static NTSTATUS zero_data(device_extension* Vcb, fcb* fcb, uint64_t start, uint6
         ExFreePool(data);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("write_compressed returned %08x\n", Status);
+            ERR("write_compressed returned %08lx\n", Status);
             return Status;
         }
     } else {
@@ -1894,7 +1894,7 @@ static NTSTATUS zero_data(device_extension* Vcb, fcb* fcb, uint64_t start, uint6
         ExFreePool(data);
 
         if (!NT_SUCCESS(Status)) {
-            ERR("do_write_file returned %08x\n", Status);
+            ERR("do_write_file returned %08lx\n", Status);
             return Status;
         }
     }
@@ -1999,7 +1999,7 @@ static NTSTATUS set_zero_data(device_extension* Vcb, PFILE_OBJECT FileObject, vo
     if (ext->extent_data.type == EXTENT_TYPE_INLINE) {
         Status = zero_data(Vcb, fcb, fzdi->FileOffset.QuadPart, fzdi->BeyondFinalZero.QuadPart - fzdi->FileOffset.QuadPart, Irp, &rollback);
         if (!NT_SUCCESS(Status)) {
-            ERR("zero_data returned %08x\n", Status);
+            ERR("zero_data returned %08lx\n", Status);
             goto end;
         }
     } else {
@@ -2013,14 +2013,14 @@ static NTSTATUS set_zero_data(device_extension* Vcb, PFILE_OBJECT FileObject, vo
         if (end <= start) {
             Status = zero_data(Vcb, fcb, fzdi->FileOffset.QuadPart, fzdi->BeyondFinalZero.QuadPart - fzdi->FileOffset.QuadPart, Irp, &rollback);
             if (!NT_SUCCESS(Status)) {
-                ERR("zero_data returned %08x\n", Status);
+                ERR("zero_data returned %08lx\n", Status);
                 goto end;
             }
         } else {
             if (start > (uint64_t)fzdi->FileOffset.QuadPart) {
                 Status = zero_data(Vcb, fcb, fzdi->FileOffset.QuadPart, start - fzdi->FileOffset.QuadPart, Irp, &rollback);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("zero_data returned %08x\n", Status);
+                    ERR("zero_data returned %08lx\n", Status);
                     goto end;
                 }
             }
@@ -2028,7 +2028,7 @@ static NTSTATUS set_zero_data(device_extension* Vcb, PFILE_OBJECT FileObject, vo
             if (end < (uint64_t)fzdi->BeyondFinalZero.QuadPart) {
                 Status = zero_data(Vcb, fcb, end, fzdi->BeyondFinalZero.QuadPart - end, Irp, &rollback);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("zero_data returned %08x\n", Status);
+                    ERR("zero_data returned %08lx\n", Status);
                     goto end;
                 }
             }
@@ -2036,7 +2036,7 @@ static NTSTATUS set_zero_data(device_extension* Vcb, PFILE_OBJECT FileObject, vo
             if (end > start) {
                 Status = excise_extents(Vcb, fcb, start, end, Irp, &rollback);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("excise_extents returned %08x\n", Status);
+                    ERR("excise_extents returned %08lx\n", Status);
                     goto end;
                 }
             }
@@ -2182,7 +2182,7 @@ end:
 static NTSTATUS get_object_id(device_extension* Vcb, PFILE_OBJECT FileObject, FILE_OBJECTID_BUFFER* buf, ULONG buflen, ULONG_PTR* retlen) {
     fcb* fcb;
 
-    TRACE("(%p, %p, %p, %x, %p)\n", Vcb, FileObject, buf, buflen, retlen);
+    TRACE("(%p, %p, %p, %lx, %p)\n", Vcb, FileObject, buf, buflen, retlen);
 
     if (!FileObject) {
         ERR("FileObject was NULL\n");
@@ -2285,7 +2285,7 @@ static NTSTATUS lock_volume(device_extension* Vcb, PIRP Irp) {
     ExReleaseResourceLite(&Vcb->tree_lock);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("do_write returned %08x\n", Status);
+        ERR("do_write returned %08lx\n", Status);
         goto end;
     }
 
@@ -2382,7 +2382,7 @@ static NTSTATUS invalidate_volumes(PIRP Irp) {
     Status = ObReferenceObjectByHandle(h, 0, *IoFileObjectType, Irp->RequestorMode, (void**)&fileobj, NULL);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("ObReferenceObjectByHandle returned %08x\n", Status);
+        ERR("ObReferenceObjectByHandle returned %08lx\n", Status);
         return Status;
     }
 
@@ -2410,6 +2410,8 @@ static NTSTATUS invalidate_volumes(PIRP Irp) {
 
                 RtlZeroMemory(newvpb, sizeof(VPB));
 
+                ObReferenceObject(devobj);
+
                 ExAcquireResourceExclusiveLite(&Vcb->tree_lock, true);
 
                 Vcb->removing = true;
@@ -2430,9 +2432,10 @@ static NTSTATUS invalidate_volumes(PIRP Irp) {
                 free_trees(Vcb);
 
                 if (!NT_SUCCESS(Status)) {
-                    ERR("do_write returned %08x\n", Status);
+                    ERR("do_write returned %08lx\n", Status);
                     ExReleaseResourceLite(&Vcb->tree_lock);
                     ExFreePool(newvpb);
+                    ObDereferenceObject(devobj);
                     goto end;
                 }
 
@@ -2459,6 +2462,8 @@ static NTSTATUS invalidate_volumes(PIRP Irp) {
 
                 if (Vcb->open_files == 0)
                     uninit(Vcb);
+
+                ObDereferenceObject(devobj);
             }
 
             break;
@@ -2587,7 +2592,7 @@ NTSTATUS dismount_volume(device_extension* Vcb, bool shutdown, PIRP Irp) {
 
         Status = FsRtlNotifyVolumeEvent(Vcb->root_file, FSRTL_VOLUME_DISMOUNT);
         if (!NT_SUCCESS(Status)) {
-            WARN("FsRtlNotifyVolumeEvent returned %08x\n", Status);
+            WARN("FsRtlNotifyVolumeEvent returned %08lx\n", Status);
         }
     }
 
@@ -2600,7 +2605,7 @@ NTSTATUS dismount_volume(device_extension* Vcb, bool shutdown, PIRP Irp) {
             Status = do_write(Vcb, Irp);
 
             if (!NT_SUCCESS(Status))
-                ERR("do_write returned %08x\n", Status);
+                ERR("do_write returned %08lx\n", Status);
         }
     }
 
@@ -2627,7 +2632,6 @@ static NTSTATUS is_device_part_of_mounted_btrfs_raid(PDEVICE_OBJECT devobj, PFIL
     NTSTATUS Status;
     ULONG to_read;
     superblock* sb;
-    uint32_t crc32;
     BTRFS_UUID fsuuid, devuuid;
     LIST_ENTRY* le;
 
@@ -2641,7 +2645,7 @@ static NTSTATUS is_device_part_of_mounted_btrfs_raid(PDEVICE_OBJECT devobj, PFIL
 
     Status = sync_read_phys(devobj, fileobj, superblock_addrs[0], to_read, (uint8_t*)sb, true);
     if (!NT_SUCCESS(Status)) {
-        ERR("sync_read_phys returned %08x\n", Status);
+        ERR("sync_read_phys returned %08lx\n", Status);
         ExFreePool(sb);
         return Status;
     }
@@ -2652,9 +2656,7 @@ static NTSTATUS is_device_part_of_mounted_btrfs_raid(PDEVICE_OBJECT devobj, PFIL
         return STATUS_SUCCESS;
     }
 
-    crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
-
-    if (crc32 != *((uint32_t*)sb->checksum)) {
+    if (!check_superblock_checksum(sb)) {
         TRACE("device has Btrfs magic, but invalid superblock checksum\n");
         ExFreePool(sb);
         return STATUS_SUCCESS;
@@ -2721,7 +2723,7 @@ void trim_whole_device(device* dev) {
 
     Status = dev_ioctl(dev->devobj, IOCTL_STORAGE_MANAGE_DATA_SET_ATTRIBUTES, &dmdsa, sizeof(DEVICE_MANAGE_DATA_SET_ATTRIBUTES), NULL, 0, true, NULL);
     if (!NT_SUCCESS(Status))
-        WARN("IOCTL_STORAGE_MANAGE_DATA_SET_ATTRIBUTES returned %08x\n", Status);
+        WARN("IOCTL_STORAGE_MANAGE_DATA_SET_ATTRIBUTES returned %08lx\n", Status);
 }
 
 static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE processor_mode) {
@@ -2779,7 +2781,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
     Status = ObReferenceObjectByHandle(h, 0, *IoFileObjectType, Irp->RequestorMode, (void**)&fileobj, NULL);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("ObReferenceObjectByHandle returned %08x\n", Status);
+        ERR("ObReferenceObjectByHandle returned %08lx\n", Status);
         return Status;
     }
 
@@ -2787,7 +2789,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
 
     Status = get_device_pnp_name(DeviceObject, &pnp_name, &pnp_guid);
     if (!NT_SUCCESS(Status)) {
-        ERR("get_device_pnp_name returned %08x\n", Status);
+        ERR("get_device_pnp_name returned %08lx\n", Status);
         ObDereferenceObject(fileobj);
         return Status;
     }
@@ -2798,14 +2800,14 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
 
     Status = dev_ioctl(DeviceObject, IOCTL_DISK_IS_WRITABLE, NULL, 0, NULL, 0, true, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("IOCTL_DISK_IS_WRITABLE returned %08x\n", Status);
+        ERR("IOCTL_DISK_IS_WRITABLE returned %08lx\n", Status);
         ObDereferenceObject(fileobj);
         return Status;
     }
 
     Status = is_device_part_of_mounted_btrfs_raid(DeviceObject, fileobj);
     if (!NT_SUCCESS(Status)) {
-        ERR("is_device_part_of_mounted_btrfs_raid returned %08x\n", Status);
+        ERR("is_device_part_of_mounted_btrfs_raid returned %08lx\n", Status);
         ObDereferenceObject(fileobj);
         return Status;
     }
@@ -2859,7 +2861,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
     Status = dev_ioctl(DeviceObject, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0,
                         &gli, sizeof(gli), true, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("error reading length information: %08x\n", Status);
+        ERR("error reading length information: %08lx\n", Status);
         ObDereferenceObject(fileobj);
         return Status;
     }
@@ -2884,7 +2886,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
     free_trees(Vcb);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("do_write returned %08x\n", Status);
+        ERR("do_write returned %08lx\n", Status);
         goto end;
     }
 
@@ -2907,7 +2909,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
     if (size > 0x100000) { // add disk hole - the first MB is marked as used
         Status = add_space_entry(&dev->space, NULL, 0x100000, size - 0x100000);
         if (!NT_SUCCESS(Status)) {
-            ERR("add_space_entry returned %08x\n", Status);
+            ERR("add_space_entry returned %08lx\n", Status);
             goto end;
         }
     }
@@ -2951,7 +2953,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
 
     Status = insert_tree_item(Vcb, Vcb->chunk_root, 1, TYPE_DEV_ITEM, di->dev_id, di, sizeof(DEV_ITEM), NULL, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("insert_tree_item returned %08x\n", Status);
+        ERR("insert_tree_item returned %08lx\n", Status);
         ExFreePool(di);
         goto end;
     }
@@ -2972,7 +2974,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
 
     Status = find_item(Vcb, Vcb->dev_root, &tp, &searchkey, false, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
+        ERR("error - find_item returned %08lx\n", Status);
         ExFreePool(stats);
         goto end;
     }
@@ -2980,7 +2982,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
     if (!keycmp(tp.item->key, searchkey)) {
         Status = delete_tree_item(Vcb, &tp);
         if (!NT_SUCCESS(Status)) {
-            ERR("delete_tree_item returned %08x\n", Status);
+            ERR("delete_tree_item returned %08lx\n", Status);
             ExFreePool(stats);
             goto end;
         }
@@ -2988,7 +2990,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
 
     Status = insert_tree_item(Vcb, Vcb->dev_root, 0, TYPE_DEV_STATS, di->dev_id, stats, sizeof(uint64_t) * 5, NULL, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("insert_tree_item returned %08x\n", Status);
+        ERR("insert_tree_item returned %08lx\n", Status);
         ExFreePool(stats);
         goto end;
     }
@@ -3008,7 +3010,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
 
     Status = write_data_phys(DeviceObject, fileobj, 0, mb, 0x100000);
     if (!NT_SUCCESS(Status)) {
-        ERR("write_data_phys returned %08x\n", Status);
+        ERR("write_data_phys returned %08lx\n", Status);
         ExFreePool(mb);
         goto end;
     }
@@ -3031,11 +3033,12 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
     vc->devobj = DeviceObject;
     vc->fileobj = fileobj;
     vc->notification_entry = NULL;
+    vc->boot_volume = false;
 
     Status = IoRegisterPlugPlayNotification(EventCategoryTargetDeviceChange, 0, fileobj,
                                             drvobj, pnp_removal, vde->pdode, &vc->notification_entry);
     if (!NT_SUCCESS(Status))
-        WARN("IoRegisterPlugPlayNotification returned %08x\n", Status);
+        WARN("IoRegisterPlugPlayNotification returned %08lx\n", Status);
 
     pnp_name2 = pnp_name;
 
@@ -3076,11 +3079,11 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
     RtlInitUnicodeString(&mmdevpath, MOUNTMGR_DEVICE_NAME);
     Status = IoGetDeviceObjectPointer(&mmdevpath, FILE_READ_ATTRIBUTES, &mountmgrfo, &mountmgr);
     if (!NT_SUCCESS(Status))
-        ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
+        ERR("IoGetDeviceObjectPointer returned %08lx\n", Status);
     else {
         Status = remove_drive_letter(mountmgr, &pnp_name);
         if (!NT_SUCCESS(Status) && Status != STATUS_NOT_FOUND)
-            WARN("remove_drive_letter returned %08x\n", Status);
+            WARN("remove_drive_letter returned %08lx\n", Status);
 
         vc->had_drive_letter = NT_SUCCESS(Status);
 
@@ -3098,7 +3101,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
 
     Status = do_write(Vcb, Irp);
     if (!NT_SUCCESS(Status))
-        ERR("do_write returned %08x\n", Status);
+        ERR("do_write returned %08lx\n", Status);
 
     ObReferenceObject(fileobj);
 
@@ -3287,7 +3290,7 @@ static NTSTATUS duplicate_extents(device_extension* Vcb, PFILE_OBJECT FileObject
 
     Status = ObReferenceObjectByHandle(ded->FileHandle, 0, *IoFileObjectType, Irp->RequestorMode, (void**)&sourcefo, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("ObReferenceObjectByHandle returned %08x\n", Status);
+        ERR("ObReferenceObjectByHandle returned %08lx\n", Status);
         return Status;
     }
 
@@ -3400,7 +3403,7 @@ static NTSTATUS duplicate_extents(device_extension* Vcb, PFILE_OBJECT FileObject
                 Status = read_file(fcb, data2, ded->TargetFileOffset.QuadPart - dataoff, dataoff, NULL, Irp);
 
             if (!NT_SUCCESS(Status)) {
-                ERR("read_file returned %08x\n", Status);
+                ERR("read_file returned %08lx\n", Status);
                 ExFreePool(data2);
                 goto end;
             }
@@ -3409,14 +3412,14 @@ static NTSTATUS duplicate_extents(device_extension* Vcb, PFILE_OBJECT FileObject
         if (sourcefcb->ads) {
             Status = read_stream(sourcefcb, data2 + dataoff, ded->SourceFileOffset.QuadPart, (ULONG)ded->ByteCount.QuadPart, &bytes_read);
             if (!NT_SUCCESS(Status)) {
-                ERR("read_stream returned %08x\n", Status);
+                ERR("read_stream returned %08lx\n", Status);
                 ExFreePool(data2);
                 goto end;
             }
         } else {
             Status = read_file(sourcefcb, data2 + dataoff, ded->SourceFileOffset.QuadPart, ded->ByteCount.QuadPart, &bytes_read, Irp);
             if (!NT_SUCCESS(Status)) {
-                ERR("read_file returned %08x\n", Status);
+                ERR("read_file returned %08lx\n", Status);
                 ExFreePool(data2);
                 goto end;
             }
@@ -3433,7 +3436,7 @@ static NTSTATUS duplicate_extents(device_extension* Vcb, PFILE_OBJECT FileObject
 
             Status = excise_extents(Vcb, fcb, 0, sector_align(fcb->inode_item.st_size, Vcb->superblock.sector_size), Irp, &rollback);
             if (!NT_SUCCESS(Status)) {
-                ERR("excise_extents returned %08x\n", Status);
+                ERR("excise_extents returned %08lx\n", Status);
                 ExFreePool(data2);
                 goto end;
             }
@@ -3459,7 +3462,7 @@ static NTSTATUS duplicate_extents(device_extension* Vcb, PFILE_OBJECT FileObject
 
             Status = add_extent_to_fcb(fcb, 0, ed, edsize, false, NULL, &rollback);
             if (!NT_SUCCESS(Status)) {
-                ERR("add_extent_to_fcb returned %08x\n", Status);
+                ERR("add_extent_to_fcb returned %08lx\n", Status);
                 ExFreePool(data2);
                 goto end;
             }
@@ -3470,7 +3473,7 @@ static NTSTATUS duplicate_extents(device_extension* Vcb, PFILE_OBJECT FileObject
 
             Status = do_write_file(fcb, start, start + datalen2, data2, Irp, false, 0, &rollback);
             if (!NT_SUCCESS(Status)) {
-                ERR("do_write_file returned %08x\n", Status);
+                ERR("do_write_file returned %08lx\n", Status);
                 ExFreePool(data2);
                 goto end;
             }
@@ -3540,7 +3543,7 @@ static NTSTATUS duplicate_extents(device_extension* Vcb, PFILE_OBJECT FileObject
 
                     if (ext->csum) {
                         if (ext->extent_data.compression == BTRFS_COMPRESSION_NONE) {
-                            ext2->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(ed2d->num_bytes * sizeof(uint32_t) / Vcb->superblock.sector_size), ALLOC_TAG);
+                            ext2->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(ed2d->num_bytes * Vcb->csum_size / Vcb->superblock.sector_size), ALLOC_TAG);
                             if (!ext2->csum) {
                                 ERR("out of memory\n");
                                 Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -3548,10 +3551,10 @@ static NTSTATUS duplicate_extents(device_extension* Vcb, PFILE_OBJECT FileObject
                                 goto end;
                             }
 
-                            RtlCopyMemory(ext2->csum, &ext->csum[(ed2d->offset - ed2s->offset) / Vcb->superblock.sector_size],
-                                          (ULONG)(ed2d->num_bytes * sizeof(uint32_t) / Vcb->superblock.sector_size));
+                            RtlCopyMemory(ext2->csum, (uint8_t*)ext->csum + ((ed2d->offset - ed2s->offset) * Vcb->csum_size / Vcb->superblock.sector_size),
+                                          (ULONG)(ed2d->num_bytes * Vcb->csum_size / Vcb->superblock.sector_size));
                         } else {
-                            ext2->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(ed2d->size * sizeof(uint32_t) / Vcb->superblock.sector_size), ALLOC_TAG);
+                            ext2->csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(ed2d->size * Vcb->csum_size / Vcb->superblock.sector_size), ALLOC_TAG);
                             if (!ext2->csum) {
                                 ERR("out of memory\n");
                                 Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -3559,7 +3562,7 @@ static NTSTATUS duplicate_extents(device_extension* Vcb, PFILE_OBJECT FileObject
                                 goto end;
                             }
 
-                            RtlCopyMemory(ext2->csum, ext->csum, (ULONG)(ed2s->size * sizeof(uint32_t) / Vcb->superblock.sector_size));
+                            RtlCopyMemory(ext2->csum, ext->csum, (ULONG)(ed2s->size * Vcb->csum_size / Vcb->superblock.sector_size));
                         }
                     } else
                         ext2->csum = NULL;
@@ -3576,7 +3579,7 @@ static NTSTATUS duplicate_extents(device_extension* Vcb, PFILE_OBJECT FileObject
                     Status = update_changed_extent_ref(Vcb, c, ed2s->address, ed2s->size, fcb->subvol->id, fcb->inode, ext2->offset - ed2d->offset,
                                                     1, fcb->inode_item.flags & BTRFS_INODE_NODATASUM, false, Irp);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("update_changed_extent_ref returned %08x\n", Status);
+                        ERR("update_changed_extent_ref returned %08lx\n", Status);
                         goto end;
                     }
 
@@ -3589,7 +3592,7 @@ static NTSTATUS duplicate_extents(device_extension* Vcb, PFILE_OBJECT FileObject
 
         Status = excise_extents(Vcb, fcb, ded->TargetFileOffset.QuadPart, ded->TargetFileOffset.QuadPart + ded->ByteCount.QuadPart, Irp, &rollback);
         if (!NT_SUCCESS(Status)) {
-            ERR("excise_extents returned %08x\n", Status);
+            ERR("excise_extents returned %08lx\n", Status);
 
             while (!IsListEmpty(&newexts)) {
                 extent* ext = CONTAINING_RECORD(RemoveHeadList(&newexts), extent, list_entry);
@@ -3708,7 +3711,7 @@ static NTSTATUS mknod(device_extension* Vcb, PFILE_OBJECT FileObject, void* data
     PSID owner;
     BOOLEAN defaulted;
 
-    TRACE("(%p, %p, %p, %u)\n", Vcb, FileObject, data, datalen);
+    TRACE("(%p, %p, %p, %lu)\n", Vcb, FileObject, data, datalen);
 
     if (!FileObject || !FileObject->FsContext || !FileObject->FsContext2 || FileObject->FsContext == Vcb->volume_fcb)
         return STATUS_INVALID_PARAMETER;
@@ -3765,7 +3768,7 @@ static NTSTATUS mknod(device_extension* Vcb, PFILE_OBJECT FileObject, void* data
 
     Status = utf16_to_utf8(NULL, 0, &len, bmn->name, bmn->namelen);
     if (!NT_SUCCESS(Status)) {
-        ERR("utf16_to_utf8 return %08x\n", Status);
+        ERR("utf16_to_utf8 returned %08lx\n", Status);
         return Status;
     }
 
@@ -3775,7 +3778,7 @@ static NTSTATUS mknod(device_extension* Vcb, PFILE_OBJECT FileObject, void* data
     }
 
     if (len > 0xffff) {
-        ERR("len was too long (%x)\n", len);
+        ERR("len was too long (%lx)\n", len);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -3789,7 +3792,7 @@ static NTSTATUS mknod(device_extension* Vcb, PFILE_OBJECT FileObject, void* data
 
     Status = utf16_to_utf8(utf8.Buffer, len, &len, bmn->name, bmn->namelen);
     if (!NT_SUCCESS(Status)) {
-        ERR("utf16_to_utf8 failed with error %08x\n", Status);
+        ERR("utf16_to_utf8 failed with error %08lx\n", Status);
         ExFreePool(utf8.Buffer);
         return Status;
     }
@@ -3799,7 +3802,7 @@ static NTSTATUS mknod(device_extension* Vcb, PFILE_OBJECT FileObject, void* data
 
     Status = find_file_in_dir(&name, parfcb, &subvol, &inode, &dc, true);
     if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND) {
-        ERR("find_file_in_dir returned %08x\n", Status);
+        ERR("find_file_in_dir returned %08lx\n", Status);
         goto end;
     }
 
@@ -3901,14 +3904,14 @@ static NTSTATUS mknod(device_extension* Vcb, PFILE_OBJECT FileObject, void* data
                                 SEF_SACL_AUTO_INHERIT, &subjcont, IoGetFileObjectGenericMapping(), PagedPool);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("SeAssignSecurityEx returned %08x\n", Status);
+        ERR("SeAssignSecurityEx returned %08lx\n", Status);
         reap_fcb(fcb);
         goto end;
     }
 
     Status = RtlGetOwnerSecurityDescriptor(fcb->sd, &owner, &defaulted);
     if (!NT_SUCCESS(Status)) {
-        WARN("RtlGetOwnerSecurityDescriptor returned %08x\n", Status);
+        WARN("RtlGetOwnerSecurityDescriptor returned %08lx\n", Status);
         fcb->sd_dirty = true;
     } else {
         fcb->inode_item.st_uid = sid_to_uid(owner);
@@ -3982,7 +3985,7 @@ static NTSTATUS mknod(device_extension* Vcb, PFILE_OBJECT FileObject, void* data
 
     Status = add_dir_child(fileref->parent->fcb, fcb->inode, false, &utf8, &name, fcb->type, &dc);
     if (!NT_SUCCESS(Status))
-        WARN("add_dir_child returned %08x\n", Status);
+        WARN("add_dir_child returned %08lx\n", Status);
 
     fileref->dc = dc;
     dc->fileref = fileref;
@@ -4080,7 +4083,7 @@ static NTSTATUS recvd_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, voi
     LARGE_INTEGER time;
     BTRFS_TIME now;
 
-    TRACE("(%p, %p, %p, %u)\n", Vcb, FileObject, data, datalen);
+    TRACE("(%p, %p, %p, %lu)\n", Vcb, FileObject, data, datalen);
 
     if (!data || datalen < sizeof(btrfs_received_subvol))
         return STATUS_INVALID_PARAMETER;
@@ -4198,7 +4201,7 @@ static NTSTATUS fsctl_set_xattr(device_extension* Vcb, PFILE_OBJECT FileObject, 
 
     static const char stream_pref[] = "user.";
 
-    TRACE("(%p, %p, %p, %u)\n", Vcb, FileObject, data, datalen);
+    TRACE("(%p, %p, %p, %lu)\n", Vcb, FileObject, data, datalen);
 
     if (!data || datalen < sizeof(btrfs_set_xattr))
         return STATUS_INVALID_PARAMETER;
@@ -4346,7 +4349,7 @@ static NTSTATUS fsctl_set_xattr(device_extension* Vcb, PFILE_OBJECT FileObject, 
             Status = IoCheckEaBufferValidity((FILE_FULL_EA_INFORMATION*)(bsxa->data + bsxa->namelen), bsxa->valuelen, &offset);
 
             if (!NT_SUCCESS(Status))
-                WARN("IoCheckEaBufferValidity returned %08x (error at offset %u)\n", Status, offset);
+                WARN("IoCheckEaBufferValidity returned %08lx (error at offset %lu)\n", Status, offset);
             else {
                 FILE_FULL_EA_INFORMATION* eainfo;
 
@@ -4517,7 +4520,7 @@ static NTSTATUS get_subvol_path(device_extension* Vcb, uint64_t id, WCHAR* out, 
     Status = open_fileref_by_inode(Vcb, r, r->root_item.objid, &fr, Irp);
     if (!NT_SUCCESS(Status)) {
         ExReleaseResourceLite(&Vcb->fileref_lock);
-        ERR("open_fileref_by_inode returned %08x\n", Status);
+        ERR("open_fileref_by_inode returned %08lx\n", Status);
         return Status;
     }
 
@@ -4530,7 +4533,7 @@ static NTSTATUS get_subvol_path(device_extension* Vcb, uint64_t id, WCHAR* out, 
     if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW)
         out[us.Length / sizeof(WCHAR)] = 0;
     else
-        ERR("fileref_get_filename returned %08x\n", Status);
+        ERR("fileref_get_filename returned %08lx\n", Status);
 
     free_fileref(fr);
 
@@ -4571,7 +4574,7 @@ static NTSTATUS find_subvol(device_extension* Vcb, void* in, ULONG inlen, void* 
     Status = find_item(Vcb, Vcb->uuid_root, &tp, &searchkey, false, Irp);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         goto end;
     }
 
@@ -4588,7 +4591,7 @@ static NTSTATUS find_subvol(device_extension* Vcb, void* in, ULONG inlen, void* 
 
             Status = find_item(Vcb, Vcb->root_root, &tp2, &searchkey2, false, Irp);
             if (!NT_SUCCESS(Status)) {
-                ERR("find_item returned %08x\n", Status);
+                ERR("find_item returned %08lx\n", Status);
                 goto end;
             }
 
@@ -4614,7 +4617,7 @@ static NTSTATUS find_subvol(device_extension* Vcb, void* in, ULONG inlen, void* 
     Status = find_item(Vcb, Vcb->uuid_root, &tp, &searchkey, false, Irp);
 
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         goto end;
     }
 
@@ -4633,7 +4636,7 @@ static NTSTATUS find_subvol(device_extension* Vcb, void* in, ULONG inlen, void* 
 
                 Status = find_item(Vcb, Vcb->root_root, &tp2, &searchkey2, false, Irp);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("find_item returned %08x\n", Status);
+                    ERR("find_item returned %08lx\n", Status);
                     goto end;
                 }
 
@@ -4669,7 +4672,7 @@ static NTSTATUS resize_device(device_extension* Vcb, void* data, ULONG len, PIRP
     LIST_ENTRY* le;
     device* dev = NULL;
 
-    TRACE("(%p, %p, %u)\n", Vcb, data, len);
+    TRACE("(%p, %p, %lu)\n", Vcb, data, len);
 
     if (!data || len < sizeof(btrfs_resize) || (br->size % Vcb->superblock.sector_size) != 0)
         return STATUS_INVALID_PARAMETER;
@@ -4766,7 +4769,7 @@ static NTSTATUS resize_device(device_extension* Vcb, void* data, ULONG len, PIRP
 
             Status = PsCreateSystemThread(&Vcb->balance.thread, 0, &oa, NULL, NULL, balance_thread, Vcb);
             if (!NT_SUCCESS(Status)) {
-                ERR("PsCreateSystemThread returned %08x\n", Status);
+                ERR("PsCreateSystemThread returned %08lx\n", Status);
                 goto end;
             }
 
@@ -4780,7 +4783,7 @@ static NTSTATUS resize_device(device_extension* Vcb, void* data, ULONG len, PIRP
 
         Status = update_dev_item(Vcb, dev, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("update_dev_item returned %08x\n", Status);
+            ERR("update_dev_item returned %08lx\n", Status);
             dev->devitem.num_bytes = old_size;
             goto end;
         }
@@ -4795,7 +4798,7 @@ static NTSTATUS resize_device(device_extension* Vcb, void* data, ULONG len, PIRP
         Status = dev_ioctl(dev->devobj, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0,
                            &gli, sizeof(gli), true, NULL);
         if (!NT_SUCCESS(Status)) {
-            ERR("IOCTL_DISK_GET_LENGTH_INFO returned %08x\n", Status);
+            ERR("IOCTL_DISK_GET_LENGTH_INFO returned %08lx\n", Status);
             goto end;
         }
 
@@ -4826,7 +4829,7 @@ static NTSTATUS resize_device(device_extension* Vcb, void* data, ULONG len, PIRP
 
         Status = update_dev_item(Vcb, dev, Irp);
         if (!NT_SUCCESS(Status)) {
-            ERR("update_dev_item returned %08x\n", Status);
+            ERR("update_dev_item returned %08lx\n", Status);
             dev->devitem.num_bytes = old_size;
             goto end;
         }
@@ -5556,7 +5559,7 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP* Pirp, uint32_t type) {
             break;
 
         default:
-            WARN("unknown control code %x (DeviceType = %x, Access = %x, Function = %x, Method = %x)\n",
+            WARN("unknown control code %lx (DeviceType = %lx, Access = %lx, Function = %lx, Method = %lx)\n",
                           IrpSp->Parameters.FileSystemControl.FsControlCode, (IrpSp->Parameters.FileSystemControl.FsControlCode & 0xff0000) >> 16,
                           (IrpSp->Parameters.FileSystemControl.FsControlCode & 0xc000) >> 14, (IrpSp->Parameters.FileSystemControl.FsControlCode & 0x3ffc) >> 2,
                           IrpSp->Parameters.FileSystemControl.FsControlCode & 0x3);

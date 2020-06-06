@@ -8319,6 +8319,16 @@ RxQueryNameInfo(
         return STATUS_BUFFER_OVERFLOW;
     }
 
+#if 1 // CORE-13938, rfb: please note I replaced 0 with 1 here
+    if (NodeType(Fcb) == RDBSS_NTC_STORAGE_TYPE_DIRECTORY &&
+        RxContext->Info.LengthRemaining >= sizeof(WCHAR))
+    {
+        NameInfo->FileName[NameInfo->FileNameLength / sizeof(WCHAR)] = L'\\';
+        NameInfo->FileNameLength += sizeof(WCHAR);
+        RxContext->Info.LengthRemaining -= sizeof(WCHAR);
+    }
+#endif
+
     /* All correct */
     return STATUS_SUCCESS;
 }

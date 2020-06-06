@@ -12,7 +12,7 @@
 @ stdcall FreeCredentialsHandle(ptr)
 @ stdcall GenerateDirEfs()
 @ stdcall GenerateSessionKey()
-@ stdcall GetSecurityUserInfo()
+@ stdcall GetSecurityUserInfo(ptr long ptr)
 @ stdcall ImpersonateSecurityContext(ptr)
 @ stdcall ImportSecurityContextW(ptr ptr ptr ptr)
 @ stdcall InitSecurityInterfaceW()

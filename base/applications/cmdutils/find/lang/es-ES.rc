@@ -8,8 +8,8 @@ FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""cadena"" [fichero...]\n\
   /C         Cuenta el número de líneas que contienen la cadena de caracteres.\n\
   /N         Numero de líneas a mostrar en pantalla, a partir de la primera.\n\
   /I         Ignora mayúsculas y minúsculas.\n\
-  /OFF[LINE] Do not skip files that have the offline attribute set."
+  /OFF[LINE] No saltar los archivos que tengan configurado el atributo offline."
     IDS_NO_SUCH_FILE "FIND: %s: No se encontró el fichero\n"
     IDS_CANNOT_OPEN "FIND: %s: No se pudo abrir el fichero\n"
-    IDS_INVALID_SWITCH "FIND: Invalid switch\n"
+    IDS_INVALID_SWITCH "FIND: Cambio inválido\n"
 END

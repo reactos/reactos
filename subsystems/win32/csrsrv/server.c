@@ -205,6 +205,9 @@ CsrLoadServerDll(IN PCHAR DllString,
     else
     {
         /* No handle, so we are loading ourselves */
+#ifdef CSR_DBG
+        RtlInitAnsiString(&EntryPointString, "CsrServerDllInitialization");
+#endif
         ServerDllInitProcedure = CsrServerDllInitialization;
         Status = STATUS_SUCCESS;
     }
@@ -212,8 +215,21 @@ CsrLoadServerDll(IN PCHAR DllString,
     /* Check if we got the pointer, and call it */
     if (NT_SUCCESS(Status))
     {
-        /* Get the result from the Server DLL */
-        Status = ServerDllInitProcedure(ServerDll);
+        /* Call the Server DLL entrypoint */
+        _SEH2_TRY
+        {
+            Status = ServerDllInitProcedure(ServerDll);
+        }
+        _SEH2_EXCEPT(CsrUnhandledExceptionFilter(_SEH2_GetExceptionInformation()))
+        {
+            Status = _SEH2_GetExceptionCode();
+#ifdef CSR_DBG
+            DPRINT1("CSRSS: Exception 0x%lx while calling Server DLL entrypoint %Z!%Z()\n",
+                    Status, &DllName, &EntryPointString);
+#endif
+        }
+        _SEH2_END;
+
         if (NT_SUCCESS(Status))
         {
             /*
@@ -643,6 +659,11 @@ CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
                                             FALSE,
                                             &OldValue);
             }
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("CsrUnhandledExceptionFilter(): RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE) failed, Status = 0x%08lx\n", Status);
+                goto NoPrivilege;
+            }
 
             /* Initialize our Name String */
             RtlInitUnicodeString(&ErrorSource, L"Windows SubSystem");
@@ -654,14 +675,15 @@ CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
             ErrorParameters[3] = (ULONG_PTR)ExceptionInfo->ContextRecord;
 
             /* Bugcheck */
-            Status = NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
-                                      4,
-                                      1,
-                                      ErrorParameters,
-                                      OptionShutdownSystem,
-                                      &Response);
+            NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
+                             4,
+                             1,
+                             ErrorParameters,
+                             OptionShutdownSystem,
+                             &Response);
         }
 
+NoPrivilege:
         /* Just terminate us */
         NtTerminateProcess(NtCurrentProcess(),
                            ExceptionInfo->ExceptionRecord->ExceptionCode);

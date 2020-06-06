@@ -81,6 +81,7 @@
         IN PCUNICODE_STRING String2,
         IN BOOLEAN CaseInSensitive);
 
+    // FIXME: DECLSPEC_NORETURN
     VOID
     NTAPI
     KeBugCheckEx(

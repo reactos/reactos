@@ -83,4 +83,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Adăugarea, eliminarea sau configurarea dispozitivelor de control pentru jocuri, precum joystick-uri sau gamepad-uri."
     IDS_CONTROLLER "Dispozitiv de control"
     IDS_STATUS "Stare"
+    IDS_NONE "(None)"
 END

@@ -70,7 +70,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Arama Kartı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kullanacağınız arama kartını seçiniz ya da ayrı bir kart eklemek için Yeni'ye tıklayınız.", 2000, 7, 7, 238, 8
+    LTEXT "Kullanacağınız arama kartını seçiniz ya da ayrı bir kart eklemek için Yeni'ye tıklayınız.", 2000, 7, 7, 238, 16
     LTEXT "&Kart Türleri:", -1, 7, 23, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Yeni...", 1030, 87, 103, 50, 14
@@ -227,7 +227,7 @@ BEGIN
     AUTORADIOBUTTON "Bi&r Belirli Uzunluktaki Süre İçin Bekle:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
     EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
-    LTEXT "&sâniye", -1, 58, 81, 187, 8
+    LTEXT "&sâniye", -1, 58, 79, 187, 8
     DEFPUSHBUTTON "Tamam", 1, 141, 103, 50, 14
     PUSHBUTTON "İptal", 2, 195, 103, 50, 14
 END
@@ -252,7 +252,7 @@ CAPTION "Gelişmiş"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "Bu bilgisayarda aşağıdaki telefon sağlayıcıları kurulmuştur:", -1, 40, 7, 205, 8
+    LTEXT "Bu bilgisayarda aşağıdaki telefon sağlayıcıları kurulmuştur:", -1, 40, 7, 205, 16
     LTEXT "S&ağlayıcılar:", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
     PUSHBUTTON "&Ekle...", 1005, 87, 197, 50, 14
@@ -260,16 +260,16 @@ BEGIN
     PUSHBUTTON "&Yapılandır...", 1031, 195, 197, 50, 14
 END
 
-114 DIALOGEX 20, 15, 252, 127
+114 DIALOGEX 20, 15, 252, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Sağlayıcı Ekle"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aşağıdaki dizelgeden kurmak istediğiniz sağlayıcıyı seçiniz ve Ekle'ye tıklayınız.", 2000, 7, 7, 241, 8
-    LTEXT "&Telefon Sağlayıcıları:", -1, 7, 23, 144, 10
-    LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "&Ekle", 1005, 141, 106, 50, 14
-    DEFPUSHBUTTON "İptal", 2, 195, 106, 50, 14
+    LTEXT "Aşağıdaki dizelgeden kurmak istediğiniz sağlayıcıyı seçiniz ve Ekle'ye tıklayınız.", 2000, 7, 7, 241, 16
+    LTEXT "&Telefon Sağlayıcıları:", -1, 7, 31, 144, 10
+    LISTBOX 1055, 7, 42, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "&Ekle", 1005, 141, 114, 50, 14
+    DEFPUSHBUTTON "İptal", 2, 195, 114, 50, 14
 END
 
 115 DIALOGEX 10, 10, 303, 228
@@ -289,8 +289,8 @@ BEGIN
     LTEXT "&Bir dış geçeğe erişmek için bir numarayı çevirirseniz o nedir?", -1, 107, 137, 189, 10
     EDITTEXT 1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "Bu konumdaki telefon dizgesi şunu kullanır:", -1, 107, 168, 189, 10
-    AUTORADIOBUTTON "&Titremli Çevirme", 1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Vuruşlu Çevirme", 1037, 175, 178, 57, 14, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Titremli Çevirme", 1036, 107, 178, 64, 14, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Vuruşlu Çevirme", 1037, 175, 178, 64, 14, NOT WS_TABSTOP
     DEFPUSHBUTTON "Tamam", 1, 192, 204, 50, 14
     PUSHBUTTON "İptal", 2, 246, 204, 50, 14
 END
@@ -308,8 +308,8 @@ BEGIN
     LTEXT "&Bir dış geçeğe erişmek için bir numarayı çevirirseniz o nedir?", -1, 95, 96, 188, 10
     EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "Bu konumdaki telefon dizgesi şunu kullanır:", -1, 95, 129, 159, 10
-    AUTORADIOBUTTON "&Titremli Çevirme", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Vuruşlu Çevirme", 1037, 155, 139, 55, 12, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Titremli Çevirme", 1036, 95, 139, 65, 12, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Vuruşlu Çevirme", 1037, 165, 139, 65, 12, NOT WS_TABSTOP
 END
 
 500 DIALOGEX 0, 0, 235, 88

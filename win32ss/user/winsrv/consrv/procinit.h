@@ -8,16 +8,24 @@
 
 #pragma once
 
-NTSTATUS ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                               PHANDLE pInputHandle,
-                               PHANDLE pOutputHandle,
-                               PHANDLE pErrorHandle,
-                               PCONSOLE_INIT_INFO ConsoleInitInfo);
-NTSTATUS ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                              HANDLE ConsoleHandle,
-                              BOOLEAN CreateNewHandlesTable,
-                              PHANDLE pInputHandle,
-                              PHANDLE pOutputHandle,
-                              PHANDLE pErrorHandle,
-                              PCONSOLE_START_INFO ConsoleStartInfo);
-NTSTATUS ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData);
+NTSTATUS
+ConSrvAllocateConsole(
+    IN OUT PCONSOLE_PROCESS_DATA ProcessData,
+    OUT PHANDLE pInputHandle,
+    OUT PHANDLE pOutputHandle,
+    OUT PHANDLE pErrorHandle,
+    IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo);
+
+NTSTATUS
+ConSrvInheritConsole(
+    IN OUT PCONSOLE_PROCESS_DATA ProcessData,
+    IN HANDLE ConsoleHandle,
+    IN BOOLEAN CreateNewHandleTable,
+    OUT PHANDLE pInputHandle,
+    OUT PHANDLE pOutputHandle,
+    OUT PHANDLE pErrorHandle,
+    IN OUT PCONSOLE_START_INFO ConsoleStartInfo);
+
+NTSTATUS
+ConSrvRemoveConsole(
+    IN OUT PCONSOLE_PROCESS_DATA ProcessData);

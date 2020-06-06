@@ -3580,6 +3580,30 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         SetFocus(GetDlgItem(hwnd, IDOK));
       }
+#ifdef __REACTOS__
+      { /* 
+           try to fit it into the desktop  
+           user32 positions the dialog based on the IDD_PROPSHEET template, 
+           but we've since made it larger by adding controls
+        */
+          RECT rcWork;
+          RECT rcDlg;
+          int dx, dy;
+
+          if (GetWindowRect(hwnd, &rcDlg) && SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWork, 0))
+          {
+              dx = rcDlg.right - rcWork.right;
+              dy = rcDlg.bottom - rcWork.bottom;
+
+              if (rcDlg.right > rcWork.right)
+                  rcDlg.left -= dx;
+              if (rcDlg.bottom > rcWork.bottom)
+                  rcDlg.top -= dy;
+
+              SetWindowPos(hwnd, HWND_TOPMOST, rcDlg.left, rcDlg.top, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW | SWP_NOSIZE);
+          }
+      }
+#endif
 
       if (IS_INTRESOURCE(psInfo->ppshheader.pszCaption) &&
               psInfo->ppshheader.hInstance)

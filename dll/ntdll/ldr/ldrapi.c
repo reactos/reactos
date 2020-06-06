@@ -1449,8 +1449,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
         /* Get the current entry */
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, HashLinks);
 
-        /* FIXME: Log the Unload Event */
-        //LdrpRecordUnloadEvent(LdrEntry);
+        LdrpRecordUnloadEvent(LdrEntry);
 
         /* Set the entry and clear it from the list */
         CurrentEntry = LdrEntry;

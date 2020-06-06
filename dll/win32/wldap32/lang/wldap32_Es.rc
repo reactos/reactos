@@ -23,7 +23,7 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 STRINGTABLE
 {
     0 "Éxito"
-    1 "Error en operacioens"
+    1 "Error en operaciones"
     2 "Error de protocolo"
     3 "Límite de tiempo excedido"
     4 "Límite de tamaño excedido"

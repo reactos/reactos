@@ -229,7 +229,6 @@
 #define IDS_DISCONNECT           340
 
 #define IDS_OPENFILELOCATION     341
-#define IDS_DESKLINK             342
 #define IDS_SENDTO_MENU          343
 
 #define IDS_MOVEERRORTITLE       344
@@ -765,6 +764,7 @@
 /* 0x7030-0x703f are used by the shellbrowser */
 #define FCIDM_SHVIEW_AUTOARRANGE 0x7031
 #define FCIDM_SHVIEW_SNAPTOGRID  0x7032
+#define FCIDM_SHVIEW_ALIGNTOGRID 0x7033
 
 #define FCIDM_SHVIEW_HELP       0x7041
 #define FCIDM_SHVIEW_RENAME     0x7050
@@ -795,7 +795,8 @@
 #define IDM_MOVEHERE 0x8
 #define IDM_LINKHERE 0xB
 
-
+#define IDM_MYDOCUMENTS 516
+#define IDM_MYPICTURES 518
 
 /* Registrar scripts (RGS) */
 #define IDR_ADMINFOLDERSHORTCUT 128
