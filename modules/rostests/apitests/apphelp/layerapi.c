@@ -569,16 +569,26 @@ static BOOL create_file(LPCSTR dir, LPCSTR name, int filler, DWORD size)
 {
     char target[MAX_PATH], *tmp;
     HANDLE file;
-    PathCombineA(target, dir, name);
 
     tmp = malloc(size);
-    memset(tmp, filler, size);
+    if (tmp == NULL)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+
+    PathCombineA(target, dir, name);
 
     file = CreateFileA(target, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if(file == INVALID_HANDLE_VALUE)
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        free(tmp);
         return FALSE;
+    }
 
+    memset(tmp, filler, size);
     WriteFile(file, tmp, size, &size, NULL);
+
     CloseHandle(file);
     free(tmp);
     return TRUE;
