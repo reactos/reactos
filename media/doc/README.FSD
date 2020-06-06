@@ -22,6 +22,13 @@ drivers/filesystems/cdfs            # Synced to f73e552
 drivers/filesystems/fastfat_new     # Synced to 2817004
 drivers/storage/floppy_new          # Synced to 8fb512a
 
+The following FSD are shared with: ??? ('nfs41 project'. See CORE-8204.)
+
+base/services/nfsd                  # ??? (Imported on 2017.06.19.)
+dll/3rdparty/libtirpc               # ??? (Imported on 2017.06.18.)
+dll/np/nfs                          # ??? (Imported on 2017.06.18.)
+drivers/filesystems/nfs             # ??? (Imported on 2017.06.18.)
+
 The following FS libs are shared with: https://github.com/dosfstools/dosfstools
 
 sdk/lib/fslib/vfatlib/check         # Synced to 4.1
