@@ -8,7 +8,7 @@ endif()
 
 if(POLICY CMP0058)
     # Ninja requires custom command byproducts to be explicit
-    cmake_policy(SET CMP0058 OLD)
+    cmake_policy(SET CMP0058 NEW)
 endif()
 
 if(POLICY CMP0065)
