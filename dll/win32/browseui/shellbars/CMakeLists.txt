@@ -23,4 +23,4 @@ if(NOT MSVC)
 endif()
 
 add_pch(shellbars shellbars.h SOURCE)
-add_dependencies(shellbars xdk)
+add_dependencies(shellbars xdk psdk)
