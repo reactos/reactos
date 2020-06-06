@@ -234,9 +234,9 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
     if (LpcRequest->u2.s2.Type & LPC_KERNELMODE_MESSAGE)
     {
         MessageType |= LPC_KERNELMODE_MESSAGE;
-	}
+    }
 
-	/* Set the request type */
+    /* Set the request type */
     LpcRequest->u2.s2.Type = MessageType;
 
     /* Validate the message length */
@@ -325,7 +325,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
 
         /* Generate the Callback ID and set it */
         Message->Request.CallbackId = LpcpNextCallbackId++;
-        if(!LpcpNextCallbackId) LpcpNextCallbackId = 1;
+        if (!LpcpNextCallbackId) LpcpNextCallbackId = 1;
 
         /* Reference the object */
         ObReferenceObject(WakeupThread);
