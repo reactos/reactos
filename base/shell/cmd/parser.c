@@ -4,6 +4,15 @@
 
 #include "precomp.h"
 
+/*
+ * Parser debugging support. These flags are global so that their values can be
+ * modified at runtime from a debugger. They correspond to the public Windows'
+ * cmd!fDumpTokens and cmd!fDumpParse booleans.
+ * (Same names are used for compatibility as they are documented online.)
+ */
+BOOLEAN fDumpTokens = FALSE;
+BOOLEAN fDumpParse  = FALSE;
+
 #define C_OP_LOWEST C_MULTI
 #define C_OP_HIGHEST C_PIPE
 static const TCHAR OpString[][3] = { _T("&"), _T("||"), _T("&&"), _T("|") };
@@ -220,7 +229,12 @@ static int ParseToken(TCHAR ExtraEnd, TCHAR *Separators)
         Type = TOK_END;
     }
     *Out = _T('\0');
-    return CurrentTokenType = Type;
+
+    /* Debugging support */
+    if (fDumpTokens)
+        ConOutPrintf(_T("ParseToken: (%d) '%s'\n"), Type, CurrentToken);
+
+    return (CurrentTokenType = Type);
 }
 
 static BOOL ParseRedirection(REDIRECTION **List)
@@ -763,6 +777,9 @@ static PARSED_COMMAND *ParseCommandOp(int OpType)
     return Cmd;
 }
 
+VOID
+DumpCommand(PARSED_COMMAND *Cmd, ULONG SpacePad);
+
 PARSED_COMMAND *
 ParseCommand(LPTSTR Line)
 {
@@ -787,14 +804,19 @@ ParseCommand(LPTSTR Line)
     Cmd = ParseCommandOp(C_OP_LOWEST);
     if (Cmd)
     {
+        bIgnoreEcho = FALSE;
+
         if (CurrentTokenType != TOK_END)
             ParseError();
         if (bParseError)
         {
             FreeCommand(Cmd);
-            Cmd = NULL;
+            return NULL;
         }
-        bIgnoreEcho = FALSE;
+
+        /* Debugging support */
+        if (fDumpParse)
+            DumpCommand(Cmd, 0);
     }
     else
     {
@@ -803,6 +825,293 @@ ParseCommand(LPTSTR Line)
     return Cmd;
 }
 
+
+/*
+ * This function is similar to EchoCommand(), but is used
+ * for dumping the command tree for debugging purposes.
+ */
+static VOID
+DumpRedir(REDIRECTION* Redirections)
+{
+    REDIRECTION* Redir;
+
+    if (Redirections)
+#ifndef MSCMD_ECHO_COMMAND_COMPAT
+        ConOutPuts(_T(" Redir: "));
+#else
+        ConOutPuts(_T("Redir: "));
+#endif
+    for (Redir = Redirections; Redir; Redir = Redir->Next)
+    {
+        ConOutPrintf(_T(" %x %s%s"), Redir->Number,
+                     RedirString[Redir->Mode], Redir->Filename);
+    }
+}
+
+VOID
+DumpCommand(PARSED_COMMAND *Cmd, ULONG SpacePad)
+{
+/*
+ * This macro is like DumpCommand(Cmd, Pad);
+ * but avoids an extra recursive level.
+ * Note that it can be used ONLY for terminating commands!
+ */
+#define DUMP(Command, Pad) \
+do { \
+    Cmd = (Command); \
+    SpacePad = (Pad); \
+    goto dump; \
+} while (0)
+
+    PARSED_COMMAND *Sub;
+
+dump:
+    /* Space padding */
+    ConOutPrintf(_T("%*s"), SpacePad, _T(""));
+
+    switch (Cmd->Type)
+    {
+    case C_COMMAND:
+    {
+        /* Generic command name, and Type */
+#ifndef MSCMD_ECHO_COMMAND_COMPAT
+        ConOutPrintf(_T("Cmd: %s  Type: %x"),
+                     Cmd->Command.First, Cmd->Type);
+#else
+        ConOutPrintf(_T("Cmd: %s  Type: %x "),
+                     Cmd->Command.First, Cmd->Type);
+#endif
+        /* Arguments */
+        if (Cmd->Command.Rest && *(Cmd->Command.Rest))
+#ifndef MSCMD_ECHO_COMMAND_COMPAT
+            ConOutPrintf(_T(" Args: `%s'"), Cmd->Command.Rest);
+#else
+            ConOutPrintf(_T("Args: `%s' "), Cmd->Command.Rest);
+#endif
+        /* Redirections */
+        DumpRedir(Cmd->Redirections);
+
+        ConOutChar(_T('\n'));
+        return;
+    }
+
+    case C_QUIET:
+    {
+#ifndef MSCMD_ECHO_COMMAND_COMPAT
+        ConOutChar(_T('@'));
+#else
+        ConOutPuts(_T("@ "));
+#endif
+        DumpRedir(Cmd->Redirections); // FIXME: Can we have leading redirections??
+        ConOutChar(_T('\n'));
+
+        /*DumpCommand*/DUMP(Cmd->Subcommands, SpacePad + 2);
+        return;
+    }
+
+    case C_BLOCK:
+    {
+#ifndef MSCMD_ECHO_COMMAND_COMPAT
+        ConOutChar(_T('('));
+#else
+        ConOutPuts(_T("( "));
+#endif
+        DumpRedir(Cmd->Redirections);
+        ConOutChar(_T('\n'));
+
+        SpacePad += 2;
+
+        for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
+        {
+#if defined(MSCMD_ECHO_COMMAND_COMPAT) && defined(MSCMD_PARSER_BUGS)
+            /*
+             * We will emulate Windows' CMD handling of "CRLF" and "&" multi-command
+             * enumeration within parenthesized command blocks.
+             */
+
+            if (!Sub->Next)
+            {
+                DumpCommand(Sub, SpacePad);
+                continue;
+            }
+
+            if (Sub->Type != C_MULTI)
+            {
+                ConOutPrintf(_T("%*s"), SpacePad, _T(""));
+                ConOutPuts(_T("CRLF \n"));
+                DumpCommand(Sub, SpacePad);
+                continue;
+            }
+
+            /* Now, Sub->Type == C_MULTI */
+
+            Cmd = Sub;
+
+            ConOutPrintf(_T("%*s"), SpacePad, _T(""));
+            ConOutPrintf(_T("%s \n"), OpString[Cmd->Type - C_OP_LOWEST]);
+            // FIXME: Can we have redirections on these operator-type commands?
+
+            SpacePad += 2;
+
+            Cmd = Cmd->Subcommands;
+            DumpCommand(Cmd, SpacePad);
+            ConOutPrintf(_T("%*s"), SpacePad, _T(""));
+            ConOutPuts(_T("CRLF \n"));
+            DumpCommand(Cmd->Next, SpacePad);
+
+            // NOTE: Next commands will remain indented.
+
+#else
+
+            /*
+             * If this command is followed by another one, first display "CRLF".
+             * This also emulates the CRLF placement "bug" of Windows' CMD
+             * for the last two commands.
+             */
+            if (Sub->Next)
+            {
+                ConOutPrintf(_T("%*s"), SpacePad, _T(""));
+#ifndef MSCMD_ECHO_COMMAND_COMPAT
+                ConOutPuts(_T("CRLF\n"));
+#else
+                ConOutPuts(_T("CRLF \n"));
+#endif
+            }
+            DumpCommand(Sub, SpacePad);
+
+#endif // defined(MSCMD_ECHO_COMMAND_COMPAT) && defined(MSCMD_PARSER_BUGS)
+        }
+
+        return;
+    }
+
+    case C_MULTI:
+    case C_OR:
+    case C_AND:
+    case C_PIPE:
+    {
+#ifndef MSCMD_ECHO_COMMAND_COMPAT
+        ConOutPrintf(_T("%s\n"), OpString[Cmd->Type - C_OP_LOWEST]);
+#else
+        ConOutPrintf(_T("%s \n"), OpString[Cmd->Type - C_OP_LOWEST]);
+#endif
+        // FIXME: Can we have redirections on these operator-type commands?
+
+        SpacePad += 2;
+
+        Sub = Cmd->Subcommands;
+        DumpCommand(Sub, SpacePad);
+        /*DumpCommand*/DUMP(Sub->Next, SpacePad);
+        return;
+    }
+
+    case C_IF:
+    {
+        ConOutPuts(_T("if"));
+        /* NOTE: IF cannot have leading redirections */
+
+        if (Cmd->If.Flags & IFFLAG_IGNORECASE)
+            ConOutPuts(_T(" /I"));
+
+        ConOutChar(_T('\n'));
+
+        SpacePad += 2;
+
+        /*
+         * Show the IF command condition as a command.
+         * If it is negated, indent the command more.
+         */
+        if (Cmd->If.Flags & IFFLAG_NEGATE)
+        {
+            ConOutPrintf(_T("%*s"), SpacePad, _T(""));
+            ConOutPuts(_T("not\n"));
+            SpacePad += 2;
+        }
+
+        ConOutPrintf(_T("%*s"), SpacePad, _T(""));
+
+        /*
+         * Command name:
+         * - Unary operator: its name is the command name, and its argument is the command argument.
+         * - Binary operator: its LHS is the command name, its RHS is the command argument.
+         *
+         * Type:
+         * Windows' CMD (Win2k3 / Win7-10) values are as follows:
+         *   CMDEXTVERSION  Type: 0x32 / 0x34
+         *   ERRORLEVEL     Type: 0x33 / 0x35
+         *   DEFINED        Type: 0x34 / 0x36
+         *   EXIST          Type: 0x35 / 0x37
+         *   ==             Type: 0x37 / 0x39 (String Comparison)
+         *
+         * For the following command:
+         *   NOT            Type: 0x36 / 0x38
+         * Windows only prints it without any type / redirection.
+         *
+         * For the following command:
+         *   EQU, NEQ, etc. Type: 0x38 / 0x3a (Generic Comparison)
+         * Windows displays it as command of unknown type.
+         */
+#ifndef MSCMD_ECHO_COMMAND_COMPAT
+        ConOutPrintf(_T("Cmd: %s  Type: %x"),
+                     (Cmd->If.Operator <= IF_MAX_UNARY) ?
+                        IfOperatorString[Cmd->If.Operator] :
+                        Cmd->If.LeftArg,
+                     Cmd->If.Operator);
+#else
+        ConOutPrintf(_T("Cmd: %s  Type: %x "),
+                     (Cmd->If.Operator <= IF_MAX_UNARY) ?
+                        IfOperatorString[Cmd->If.Operator] :
+                        Cmd->If.LeftArg,
+                     Cmd->If.Operator);
+#endif
+        /* Arguments */
+#ifndef MSCMD_ECHO_COMMAND_COMPAT
+        ConOutPrintf(_T(" Args: `%s'"), Cmd->If.RightArg);
+#else
+        ConOutPrintf(_T("Args: `%s' "), Cmd->If.RightArg);
+#endif
+
+        ConOutChar(_T('\n'));
+
+        if (Cmd->If.Flags & IFFLAG_NEGATE)
+        {
+            SpacePad -= 2;
+        }
+
+        Sub = Cmd->Subcommands;
+        DumpCommand(Sub, SpacePad);
+        if (Sub->Next)
+        {
+            ConOutPrintf(_T("%*s"), SpacePad - 2, _T(""));
+            ConOutPuts(_T("else\n"));
+            DumpCommand(Sub->Next, SpacePad);
+        }
+        return;
+    }
+
+    case C_FOR:
+    {
+        ConOutPuts(_T("for"));
+        /* NOTE: FOR cannot have leading redirections */
+
+        if (Cmd->For.Switches & FOR_DIRS)      ConOutPuts(_T(" /D"));
+        if (Cmd->For.Switches & FOR_F)         ConOutPuts(_T(" /F"));
+        if (Cmd->For.Switches & FOR_LOOP)      ConOutPuts(_T(" /L"));
+        if (Cmd->For.Switches & FOR_RECURSIVE) ConOutPuts(_T(" /R"));
+        if (Cmd->For.Params)
+            ConOutPrintf(_T(" %s"), Cmd->For.Params);
+        ConOutPrintf(_T(" %%%c in (%s) do\n"), Cmd->For.Variable, Cmd->For.List);
+        /*DumpCommand*/DUMP(Cmd->Subcommands, SpacePad + 2);
+        return;
+    }
+
+    default:
+        ConOutPrintf(_T("*** Unknown type: %x\n"), Cmd->Type);
+        break;
+    }
+
+#undef DUMP
+}
 
 /*
  * Reconstruct a parse tree into text form; used for echoing
