@@ -253,6 +253,76 @@ Test_ProcessPriorityClassAlignment(void)
     free(ProcPriority);
 }
 
+static
+void
+Test_ProcessWx86Information(void)
+{
+    NTSTATUS Status;
+    ULONG VdmPower = 1, ReturnLength;
+
+    /* Everything is NULL */
+    Status = NtQueryInformationProcess(NULL,
+                                       ProcessWx86Information,
+                                       NULL,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* Given an invalid process handle */
+    Status = NtQueryInformationProcess(NULL,
+                                       ProcessWx86Information,
+                                       &VdmPower,
+                                       sizeof(VdmPower),
+                                       NULL);
+    ok_hex(Status, STATUS_INVALID_HANDLE);
+
+    /* Don't query anything */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessWx86Information,
+                                       NULL,
+                                       sizeof(VdmPower),
+                                       NULL);
+    ok_hex(Status, STATUS_ACCESS_VIOLATION);
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessWx86Information,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessWx86Information,
+                                       (PVOID)1,
+                                       sizeof(VdmPower),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an alignment size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessWx86Information,
+                                       (PVOID)2,
+                                       sizeof(VdmPower),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* Query the VDM power */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessWx86Information,
+                                       &VdmPower,
+                                       sizeof(VdmPower),
+                                       &ReturnLength);
+    ok_hex(Status, STATUS_SUCCESS);
+    ok(ReturnLength != 0, "ReturnLength shouldn't be 0!\n");
+    ok(VdmPower == 0 || VdmPower == 1, "The VDM power value must be within the boundary between 0 and 1, not anything else! Got %lu\n", VdmPower);
+
+    /* Trace the VDM power value and returned length */
+    trace("ReturnLength = %lu\n", ReturnLength);
+    trace("VdmPower = %lu\n", VdmPower);
+}
+
 START_TEST(NtQueryInformationProcess)
 {
     NTSTATUS Status;
@@ -262,4 +332,5 @@ START_TEST(NtQueryInformationProcess)
 
     Test_ProcessTimes();
     Test_ProcessPriorityClassAlignment();
+    Test_ProcessWx86Information();
 }

@@ -215,9 +215,60 @@ Test_ProcForegroundBackgroundClass(void)
     HeapFree(GetProcessHeap(), 0, ProcForeground);
 }
 
+static
+void
+Test_ProcessWx86InformationClass(void)
+{
+    NTSTATUS Status;
+    ULONG VdmPower = 1;
+
+    /* Everything is NULL */
+    Status = NtSetInformationProcess(NULL,
+                                     ProcessWx86Information,
+                                     NULL,
+                                     0);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* Don't set anything to the process */
+    Status = NtSetInformationProcess(NtCurrentProcess(),
+                                     ProcessWx86Information,
+                                     NULL,
+                                     sizeof(VdmPower));
+    ok_hex(Status, STATUS_ACCESS_VIOLATION);
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtSetInformationProcess(NtCurrentProcess(),
+                                     ProcessWx86Information,
+                                     (PVOID)1,
+                                     0);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtSetInformationProcess(NtCurrentProcess(),
+                                     ProcessWx86Information,
+                                     (PVOID)1,
+                                     sizeof(VdmPower));
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an alignment size of 2 */
+    Status = NtSetInformationProcess(NtCurrentProcess(),
+                                     ProcessWx86Information,
+                                     (PVOID)2,
+                                     sizeof(VdmPower));
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* We do not have privileges to set the VDM power */
+    Status = NtSetInformationProcess(NtCurrentProcess(),
+                                     ProcessWx86Information,
+                                     &VdmPower,
+                                     sizeof(VdmPower));
+    ok_hex(Status, STATUS_PRIVILEGE_NOT_HELD);
+}
+
 START_TEST(NtSetInformationProcess)
 {
     Test_ProcForegroundBackgroundClass();
     Test_ProcBasePriorityClass();
     Test_ProcRaisePriorityClass();
+    Test_ProcessWx86InformationClass();
 }
