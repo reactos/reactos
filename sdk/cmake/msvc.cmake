@@ -173,7 +173,7 @@ else()
     set(cl_includes_flag "/showIncludes")
 endif()
 
-if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
+if(MSVC_IDE)
     # For VS builds we'll only have en-US in resource files
     add_definitions(/DLANGUAGE_EN_US)
 else()
@@ -467,7 +467,7 @@ function(allow_warnings __module)
 endfunction()
 
 macro(add_asm_files _target)
-    if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
+    if(MSVC_IDE)
         get_defines(_directory_defines)
         get_includes(_directory_includes)
         get_directory_property(_defines COMPILE_DEFINITIONS)
@@ -534,7 +534,7 @@ function(add_linker_script _target _linker_script_file)
     else()
         set(_no_std_includes_flag "/X")
     endif()
-    if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
+    if(MSVC_IDE)
         # MSBuild, via the VS IDE, uses response files when calling CL or LINK.
         # We cannot specify a custom response file on the linker command-line,
         # since specifying response files from within response files is forbidden.
