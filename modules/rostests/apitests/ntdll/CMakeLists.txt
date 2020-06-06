@@ -35,6 +35,7 @@ list(APPEND SOURCE
     NtSaveKey.c
     NtSetInformationFile.c
     NtSetInformationProcess.c
+    NtSetInformationThread.c
     NtSetValueKey.c
     NtSetVolumeInformationFile.c
     NtUnloadDriver.c
