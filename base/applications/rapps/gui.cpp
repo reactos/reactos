@@ -575,8 +575,14 @@ private:
     VOID ResizeChildren(int Width, int Height)
     {
         int SnpshtWidth = SnpshtPrev->GetRequestedWidth(Height);
-        ::MoveWindow(SnpshtPrev->m_hWnd, 0, 0, SnpshtWidth, Height, TRUE);
-        ::MoveWindow(RichEdit->m_hWnd, SnpshtWidth, 0, Width - SnpshtWidth, Height, TRUE);
+        HDWP hDwp = BeginDeferWindowPos(2);
+
+        if (hDwp)
+        {
+            hDwp = ::DeferWindowPos(hDwp, SnpshtPrev->m_hWnd, NULL, 0, 0, SnpshtWidth, Height, 0);
+            hDwp = ::DeferWindowPos(hDwp, RichEdit->m_hWnd, NULL, SnpshtWidth, 0, Width - SnpshtWidth, Height, 0);
+        }
+        EndDeferWindowPos(hDwp);
     }
 
 public:
