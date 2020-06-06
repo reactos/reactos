@@ -1,19 +1,8 @@
 
 cmake_minimum_required(VERSION 3.17.0)
-cmake_policy(VERSION 3.2.1)
 
 if(NOT CMAKE_VERSION MATCHES "ReactOS")
     message(WARNING "Building with \"${CMAKE_COMMAND}\", which is not the custom CMake included in RosBE, might cause build issues...")
-endif()
-
-if(POLICY CMP0058)
-    # Ninja requires custom command byproducts to be explicit
-    cmake_policy(SET CMP0058 NEW)
-endif()
-
-if(POLICY CMP0065)
-    # Do not add flags to export symbols from executables without the ENABLE_EXPORTS target property
-    cmake_policy(SET CMP0065 NEW)
 endif()
 
 project(REACTOS)
