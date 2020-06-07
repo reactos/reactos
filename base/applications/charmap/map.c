@@ -228,14 +228,14 @@ GetPossibleCharacters(WCHAR* ch, INT chLen, INT codePageIdx)
     }
     else
     {
-        // this is a codepage, so use NLS to translate the first 256 characters
+        /* This is a codepage, so use NLS to translate the first 256 characters */
         CHAR multiByteString[256] = { 0 };
-        for (i = 0x21; i < 256; i++)
+        for (i = 0x21; i < SIZEOF(multiByteString); i++)
             multiByteString[i] = (CHAR)i;
 
-        if (!MultiByteToWideChar(codePages[codePageIdx - 1], 0, multiByteString, 256, ch, chLen))
+        if (!MultiByteToWideChar(codePages[codePageIdx - 1], 0, multiByteString, sizeof(multiByteString), ch, chLen))
         {
-            // failed for some reason, so clear the array
+            /* Failed for some reason, so clear the array */
             memset(ch, 0, sizeof(ch[0]) * chLen);
         }
     }
@@ -268,7 +268,7 @@ SetFont(PMAP infoPtr,
     infoPtr->CurrentFont.lfCharSet =  DEFAULT_CHARSET;
     lstrcpynW(infoPtr->CurrentFont.lfFaceName,
               lpFontName,
-              sizeof(infoPtr->CurrentFont.lfFaceName) / sizeof(infoPtr->CurrentFont.lfFaceName[0]));
+              SIZEOF(infoPtr->CurrentFont.lfFaceName));
 
     infoPtr->hFont = CreateFontIndirectW(&infoPtr->CurrentFont);
 
@@ -353,15 +353,17 @@ OnClick(PMAP infoPtr,
 {
     INT x, y, i;
 
-    /* find the cell the mouse pointer is over.
-     * since each cell is the same size this can be done quickly using CellSize
-     * clamp to XCELLS - 1 and YCELLS - 1 because the map can sometimes be slightly
-     * larger than infoPtr.CellSize * XCELLS due to the map size being a non integer 
-     * multiple of infoPtr.CellSize */
+    /*
+     * Find the cell the mouse pointer is over.
+     * Since each cell is the same size, this can be done quickly using CellSize.
+     * Clamp to XCELLS - 1 and YCELLS - 1 because the map can sometimes be slightly
+     * larger than infoPtr.CellSize * XCELLS , due to the map size being a non integer 
+     * multiple of infoPtr.CellSize .
+     */
     x = min(XCELLS - 1, ptx / max(1, infoPtr->CellSize.cx));
     y = min(YCELLS - 1, pty / max(1, infoPtr->CellSize.cy));
 
-    /* make sure the mouse is within a valid glyph */
+    /* Make sure the mouse is within a valid glyph */
     i = XCELLS * infoPtr->iYStart + y * XCELLS + x;
     if (i >= infoPtr->NumValidGlyphs)
     {
@@ -502,7 +504,7 @@ OnVScroll(PMAP infoPtr,
         {
             RECT rect;
 
-            // invalidate the rect around the active cell since a new cell will become active
+            /* Invalidate the rect around the active cell since a new cell will become active */
             if (infoPtr->pActiveCell && infoPtr->pActiveCell->bActive)
             {
                 InvalidateRect(infoPtr->hMapWnd, 

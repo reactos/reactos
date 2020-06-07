@@ -46,7 +46,7 @@ FillCharacterSetComboList(HWND hwndCombo)
     {
         if (GetCPInfoExW(codePages[i], 0, &cpInfo))
         {
-            trimmedName = wcsstr(cpInfo.CodePageName, L"(");
+            trimmedName = wcschr(cpInfo.CodePageName, L'(');
             if (!trimmedName) 
                 trimmedName = cpInfo.CodePageName;
 
@@ -496,12 +496,11 @@ AdvancedDlgProc(HWND hDlg,
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
                         INT idx = (INT)SendMessageW((HWND)lParam,
-                            CB_GETCURSEL,
-                            0,
-                            0);
+                                                    CB_GETCURSEL,
+                                                    0, 0);
                         SendMessageW(GetDlgItem(hCharmapDlg, IDC_FONTMAP),
-                            FM_SETCHARMAP,
-                            idx, 0);
+                                     FM_SETCHARMAP,
+                                     idx, 0);
 
                         EnableWindow(GetDlgItem(hAdvancedDlg, IDC_EDIT_UNICODE), idx == 0);
                     }
