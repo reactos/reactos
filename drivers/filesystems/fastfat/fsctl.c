@@ -936,6 +936,7 @@ VfatGetVolumeBitmap(
     PVFAT_IRP_CONTEXT IrpContext)
 {
     DPRINT("VfatGetVolumeBitmap (IrpContext %p)\n", IrpContext);
+    UNIMPLEMENTED;
     return STATUS_INVALID_DEVICE_REQUEST;
 }
 
