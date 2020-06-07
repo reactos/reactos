@@ -220,7 +220,6 @@ HRESULT WINAPI GetThemeSysString(HTHEME hTheme, int iStringID,
     return E_PROP_ID_UNSUPPORTED;
 }
 
-#ifndef __REACTOS__
 /***********************************************************************
  *      GetThemeTransitionDuration                          (UXTHEME.@)
  */
@@ -232,4 +231,3 @@ HRESULT WINAPI GetThemeTransitionDuration(HTHEME hTheme, int iPartId, int iState
 
     return E_NOTIMPL;
 }
-#endif

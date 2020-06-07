@@ -93,3 +93,4 @@
 93 stdcall SetThemeAppProperties(long)
 94 stdcall SetWindowTheme(ptr wstr wstr)
 95 stdcall ThemeInitApiHook(long ptr)
+@ stdcall -version=0x600+ GetThemeTransitionDuration(ptr long long long long ptr)

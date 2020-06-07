@@ -128,6 +128,9 @@ int WINAPI GetThemeSysSize(HTHEME,int);
 HRESULT WINAPI GetThemeSysString(HTHEME,int,LPWSTR,int);
 HRESULT WINAPI GetThemeTextExtent(HTHEME,HDC,int,int,LPCWSTR,int,DWORD,const RECT*,RECT*);
 HRESULT WINAPI GetThemeTextMetrics(HTHEME,HDC,int,int,TEXTMETRICW*);
+#if _WIN32_WINNT >= 0x0600
+HRESULT WINAPI GetThemeTransitionDuration(HTHEME,int,int,int,int,DWORD*);
+#endif
 HTHEME WINAPI GetWindowTheme(HWND);
 HRESULT WINAPI HitTestThemeBackground(HTHEME,HDC,int,int,DWORD,const RECT*,HRGN,POINT,WORD*);
 BOOL WINAPI IsAppThemed(void);
