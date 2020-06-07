@@ -575,7 +575,7 @@ StatusMessageWindowProc(
             {
                 if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
                 {
-                    DPRINT1("SetTimer(IDT_BAR) failed: %d\n", GetLastError());
+                    DPRINT1("SetTimer(IDT_BAR) failed: %lu\n", GetLastError());
                 }
 
                 /* Get the animation bar control */
