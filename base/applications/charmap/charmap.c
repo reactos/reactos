@@ -13,7 +13,7 @@
 #include <richedit.h>
 #include <winnls.h>
 
-#define REMOVE_ADVANCED
+//#define REMOVE_ADVANCED
 
 #define ID_ABOUT    0x1
 
@@ -24,6 +24,55 @@ HWND      hStatusWnd;
 HICON     hSmIcon;
 HICON     hBgIcon;
 SETTINGS  Settings;
+
+static
+VOID
+FillCharacterSetComboList(HWND hwndCombo)
+{
+    WCHAR szCharSetText[256];
+    LPWSTR trimmedName;
+    CPINFOEXW cpInfo;
+    INT i;
+
+    if (LoadStringW(hInstance, IDS_UNICODE, szCharSetText, SIZEOF(szCharSetText)))
+    {
+        SendMessageW(hwndCombo,
+                     CB_ADDSTRING,
+                     0,
+                     (LPARAM)szCharSetText);
+    }
+
+    for (i = 0; i < SIZEOF(codePages); i++)
+    {
+        if (GetCPInfoExW(codePages[i], 0, &cpInfo))
+        {
+            trimmedName = wcschr(cpInfo.CodePageName, L'(');
+            if (!trimmedName) 
+                trimmedName = cpInfo.CodePageName;
+
+            SendMessageW(hwndCombo,
+                         CB_ADDSTRING,
+                         0,
+                         (LPARAM)trimmedName);
+        }
+    }
+
+    SendMessageW(hwndCombo, CB_SETCURSEL, 0, 0);
+}
+
+static
+VOID
+FillGroupByComboList(HWND hwndCombo)
+{
+    WCHAR szAllText[256];
+
+    if (LoadStringW(hInstance, IDS_ALL, szAllText, SIZEOF(szAllText)))
+    {
+        SendMessageW(hwndCombo, CB_ADDSTRING, 0, (LPARAM)szAllText);
+    }
+
+    SendMessageW(hwndCombo, CB_SETCURSEL, 0, 0);
+}
 
 /* Font-enumeration callback */
 static
@@ -283,7 +332,7 @@ ChangeView(HWND hWnd)
     RECT rcPanelInt;
     RECT rcStatus;
     UINT DeX, DeY;
-    UINT xPos, yPos;
+    LONG xPos, yPos;
     UINT Width, Height;
     UINT DeskTopWidth, DeskTopHeight;
 #ifdef REMOVE_ADVANCED
@@ -325,11 +374,12 @@ ChangeView(HWND hWnd)
        Shrink the window height a bit here to accomodate for that lost control. */
     Height = rcCharmap.bottom + rcCopy.bottom + 10;
 #endif
+    // FIXME: This fails on multi monitor setups
     if ((xPos + Width) > DeskTopWidth)
-        xPos += DeskTopWidth - (xPos + Width);
+        xPos = DeskTopWidth - Width;
 
     if ((yPos + Height) > DeskTopHeight)
-        yPos += DeskTopHeight - (yPos + Height);
+        yPos = DeskTopHeight - Height;
 
     MoveWindow(hWnd,
                xPos, yPos,
@@ -438,6 +488,26 @@ AdvancedDlgProc(HWND hDlg,
         case WM_INITDIALOG:
             return TRUE;
 
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_COMBO_CHARSET:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        INT idx = (INT)SendMessageW((HWND)lParam,
+                                                    CB_GETCURSEL,
+                                                    0, 0);
+                        SendMessageW(GetDlgItem(hCharmapDlg, IDC_FONTMAP),
+                                     FM_SETCHARMAP,
+                                     idx, 0);
+
+                        EnableWindow(GetDlgItem(hAdvancedDlg, IDC_EDIT_UNICODE), idx == 0);
+                    }
+                    break;
+            }
+        }
+
         default:
             return FALSE;
     }
@@ -456,11 +526,21 @@ PanelOnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
                                MAKEINTRESOURCE(IDD_CHARMAP),
                                hWnd,
                                CharMapDlgProc);
+
+    // For now, the Help push button is disabled because of lacking of HTML Help support
+    EnableWindow(GetDlgItem(hCharmapDlg, IDC_CMHELP), FALSE);
+
 #ifndef REMOVE_ADVANCED
     hAdvancedDlg = CreateDialog(hInstance,
                                 MAKEINTRESOURCE(IDD_ADVANCED),
                                 hWnd,
                                 AdvancedDlgProc);
+
+    FillCharacterSetComboList(GetDlgItem(hAdvancedDlg, IDC_COMBO_CHARSET));
+
+    FillGroupByComboList(GetDlgItem(hAdvancedDlg, IDC_COMBO_GROUPBY));
+    EnableWindow(GetDlgItem(hAdvancedDlg, IDC_COMBO_GROUPBY), FALSE);   // FIXME: Implement
+    EnableWindow(GetDlgItem(hAdvancedDlg, IDC_BUTTON_SEARCH), FALSE);   // FIXME: Implement
 #endif
     hStatusWnd = CreateWindow(STATUSCLASSNAME,
                               NULL,
@@ -495,8 +575,6 @@ PanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg) {
     case WM_CREATE:
-        // For now, the Help push button is disabled because of lacking of HTML Help support
-        EnableWindow(GetDlgItem(hWnd, IDC_CMHELP), FALSE);
         return PanelOnCreate(hWnd, wParam, lParam);
 
     case WM_CLOSE:
