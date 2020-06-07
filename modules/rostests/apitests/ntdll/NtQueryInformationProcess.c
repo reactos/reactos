@@ -3,11 +3,136 @@
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Tests for the NtQueryInformationProcess API
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ *                  George Bișoc <george.bisoc@reactos.org>
  */
 
 #include "precomp.h"
 
 static LARGE_INTEGER TestStartTime;
+
+static
+void
+Test_ProcessBasicInformationClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessBasicInformation,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessBasicInformation,
+                                       (PVOID)1,
+                                       sizeof(PROCESS_BASIC_INFORMATION),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessBasicInformation,
+                                       (PVOID)2,
+                                       sizeof(PROCESS_BASIC_INFORMATION),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessQuotaLimitsClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessQuotaLimits,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessQuotaLimits,
+                                       (PVOID)1,
+                                       sizeof(QUOTA_LIMITS),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessQuotaLimits,
+                                       (PVOID)2,
+                                       sizeof(QUOTA_LIMITS),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessIoCountersClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessIoCounters,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessIoCounters,
+                                       (PVOID)1,
+                                       sizeof(IO_COUNTERS),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessIoCounters,
+                                       (PVOID)2,
+                                       sizeof(IO_COUNTERS),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessVmCountersClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessVmCounters,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessVmCounters,
+                                       (PVOID)1,
+                                       sizeof(VM_COUNTERS),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessVmCounters,
+                                       (PVOID)2,
+                                       sizeof(VM_COUNTERS),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
 
 static
 void
@@ -187,6 +312,68 @@ Test_ProcessTimes(void)
 
 static
 void
+Test_ProcessDebugPortClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDebugPort,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDebugPort,
+                                       (PVOID)1,
+                                       sizeof(HANDLE),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDebugPort,
+                                       (PVOID)2,
+                                       sizeof(HANDLE),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessDefaultHardErrorModeClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDefaultHardErrorMode,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDefaultHardErrorMode,
+                                       (PVOID)1,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDefaultHardErrorMode,
+                                       (PVOID)2,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
 Test_ProcessPriorityClassAlignment(void)
 {
     NTSTATUS Status;
@@ -323,6 +510,409 @@ Test_ProcessWx86Information(void)
     trace("VdmPower = %lu\n", VdmPower);
 }
 
+static
+void
+Test_ProcessHandleCountClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessHandleCount,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessHandleCount,
+                                       (PVOID)1,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessHandleCount,
+                                       (PVOID)2,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessPriorityBoostClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessPriorityBoost,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessPriorityBoost,
+                                       (PVOID)1,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessPriorityBoost,
+                                       (PVOID)2,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessDeviceMapClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDeviceMap,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDeviceMap,
+                                       (PVOID)1,
+                                       sizeof(PROCESS_DEVICEMAP_INFORMATION),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDeviceMap,
+                                       (PVOID)2,
+                                       sizeof(PROCESS_DEVICEMAP_INFORMATION),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessSessionInformationClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessSessionInformation,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessSessionInformation,
+                                       (PVOID)1,
+                                       sizeof(PROCESS_SESSION_INFORMATION),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessSessionInformation,
+                                       (PVOID)2,
+                                       sizeof(PROCESS_SESSION_INFORMATION),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessWow64InformationClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessWow64Information,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessWow64Information,
+                                       (PVOID)1,
+                                       sizeof(ULONG_PTR),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessWow64Information,
+                                       (PVOID)2,
+                                       sizeof(ULONG_PTR),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessImageFileNameClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessImageFileName,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessImageFileName,
+                                       (PVOID)1,
+                                       sizeof(UNICODE_STRING),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessImageFileName,
+                                       (PVOID)2,
+                                       sizeof(UNICODE_STRING),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessLUIDDeviceMapsEnabledClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessLUIDDeviceMapsEnabled,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessLUIDDeviceMapsEnabled,
+                                       (PVOID)1,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessLUIDDeviceMapsEnabled,
+                                       (PVOID)2,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessBreakOnTerminationClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessBreakOnTermination,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessBreakOnTermination,
+                                       (PVOID)1,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessBreakOnTermination,
+                                       (PVOID)2,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessDebugObjectHandleClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDebugObjectHandle,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDebugObjectHandle,
+                                       (PVOID)1,
+                                       sizeof(HANDLE),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDebugObjectHandle,
+                                       (PVOID)2,
+                                       sizeof(HANDLE),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessDebugFlagsClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDebugFlags,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDebugFlags,
+                                       (PVOID)1,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDebugFlags,
+                                       (PVOID)2,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessExecuteFlagsClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessExecuteFlags,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessExecuteFlags,
+                                       (PVOID)1,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessExecuteFlags,
+                                       (PVOID)2,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessCookieClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessCookie,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessCookie,
+                                       (PVOID)1,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessCookie,
+                                       (PVOID)2,
+                                       sizeof(ULONG),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
+static
+void
+Test_ProcessImageInformationClass(void)
+{
+    NTSTATUS Status;
+
+    /* The buffer is misaligned and information length is wrong */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessImageInformation,
+                                       (PVOID)1,
+                                       0,
+                                       NULL);
+    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The buffer is misaligned */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessImageInformation,
+                                       (PVOID)1,
+                                       sizeof(SECTION_IMAGE_INFORMATION),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+
+    /* The buffer is misaligned -- try with an assignement size of 2 */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessImageInformation,
+                                       (PVOID)2,
+                                       sizeof(SECTION_IMAGE_INFORMATION),
+                                       NULL);
+    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+}
+
 START_TEST(NtQueryInformationProcess)
 {
     NTSTATUS Status;
@@ -330,7 +920,26 @@ START_TEST(NtQueryInformationProcess)
     Status = NtQuerySystemTime(&TestStartTime);
     ok_hex(Status, STATUS_SUCCESS);
 
+    Test_ProcessBasicInformationClass();
+    Test_ProcessQuotaLimitsClass();
+    Test_ProcessIoCountersClass();
+    Test_ProcessVmCountersClass();
     Test_ProcessTimes();
+    Test_ProcessDebugPortClass();
+    Test_ProcessDefaultHardErrorModeClass();
     Test_ProcessPriorityClassAlignment();
     Test_ProcessWx86Information();
+    Test_ProcessHandleCountClass();
+    Test_ProcessPriorityBoostClass();
+    Test_ProcessDeviceMapClass();
+    Test_ProcessSessionInformationClass();
+    Test_ProcessWow64InformationClass();
+    Test_ProcessImageFileNameClass();
+    Test_ProcessLUIDDeviceMapsEnabledClass();
+    Test_ProcessBreakOnTerminationClass();
+    Test_ProcessDebugObjectHandleClass();
+    Test_ProcessDebugFlagsClass();
+    Test_ProcessExecuteFlagsClass();
+    Test_ProcessCookieClass();
+    Test_ProcessImageInformationClass();
 }
