@@ -546,6 +546,9 @@ StatusMessageWindowProc(
 
     pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
+    /* pDlgData is required for each case except WM_INITDIALOG */
+    if (uMsg != WM_INITDIALOG && pDlgData == NULL) return FALSE;
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -553,33 +556,34 @@ StatusMessageWindowProc(
             BITMAP bm;
             WCHAR szMsg[256];
 
-            /* Init dialog data */
+            /* Allocate pDlgData */
             pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pDlgData));
             if (pDlgData)
             {
+                /* Set pDlgData to GWLP_USERDATA, so we can get it for new messages */
                 SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
-            }
 
-            /* Load bitmaps */
-            pDlgData->hLogoBitmap = LoadImageW(hDllInstance,
-                                                MAKEINTRESOURCEW(IDB_REACTOS), IMAGE_BITMAP,
-                                                0, 0, LR_DEFAULTCOLOR);
+                /* Load bitmaps */
+                pDlgData->hLogoBitmap = LoadImageW(hDllInstance,
+                                                    MAKEINTRESOURCEW(IDB_REACTOS), IMAGE_BITMAP,
+                                                    0, 0, LR_DEFAULTCOLOR);
 
-            pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDB_LINE),
-                                            IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-            GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
-            pDlgData->BarWidth = bm.bmWidth;
-            pDlgData->BarHeight = bm.bmHeight;
+                pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDB_LINE),
+                                                IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
+                pDlgData->BarWidth = bm.bmWidth;
+                pDlgData->BarHeight = bm.bmHeight;
 
-            if (pDlgData->hLogoBitmap && pDlgData->hBarBitmap)
-            {
-                if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
+                if (pDlgData->hLogoBitmap && pDlgData->hBarBitmap)
                 {
-                    DPRINT1("SetTimer(IDT_BAR) failed: %lu\n", GetLastError());
-                }
+                    if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
+                    {
+                        DPRINT1("SetTimer(IDT_BAR) failed: %lu\n", GetLastError());
+                    }
 
-                /* Get the animation bar control */
-                pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
+                    /* Get the animation bar control */
+                    pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
+                }
             }
 
             /* Get and set status text */
