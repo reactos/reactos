@@ -32,6 +32,8 @@ using namespace Gdiplus;
 
 #define BROKENIMG_ICON_SIZE 96
 
+#define SNPSHT_MAX_ASPECT_RAT 2.5
+
 enum SNPSHT_STATUS
 {
     SNPSHTPREV_EMPTY,      // show nothing
@@ -424,8 +426,15 @@ private:
         {
             if (pImage)
             {
+                // always draw entire image inside the window.
                 Graphics graphics(hdc);
-                graphics.DrawImage(pImage, 0, 0, width, height);
+                float ZoomRatio = min(((float)width / (float)pImage->GetWidth()), ((float)height / (float)pImage->GetHeight()));
+                float ZoomedImgWidth = ZoomRatio * (float)pImage->GetWidth();
+                float ZoomedImgHeight = ZoomRatio * (float)pImage->GetHeight();
+
+                graphics.DrawImage(pImage,
+                    ((float)width - ZoomedImgWidth) / 2.0, ((float)height - ZoomedImgHeight) / 2.0,
+                    ZoomedImgWidth, ZoomedImgHeight);
             }
         }
         break;
@@ -546,7 +555,10 @@ public:
         case SNPSHTPREV_FILE:
             if (pImage)
             {
-                return Height * pImage->GetWidth() / pImage->GetHeight();
+                // return the width needed to display image inside the window.
+                // and always keep window w/h ratio inside [ 1/SNPSHT_MAX_ASPECT_RAT, SNPSHT_MAX_ASPECT_RAT ]
+                return (int)floor((float)Height *
+                    max(min((float)pImage->GetWidth() / (float)pImage->GetHeight(), (float)SNPSHT_MAX_ASPECT_RAT), 1.0/ (float)SNPSHT_MAX_ASPECT_RAT));
             }
             return 0;
         case SNPSHTPREV_FAILED:
