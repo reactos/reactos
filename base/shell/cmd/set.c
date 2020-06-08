@@ -92,10 +92,13 @@ INT cmd_set(LPTSTR param)
             lpOutput = lpEnv;
             while (*lpOutput)
             {
+                /* Do not display the special '=X:' environment variables */
                 if (*lpOutput != _T('='))
+                {
                     ConOutPuts(lpOutput);
+                    ConOutChar(_T('\n'));
+                }
                 lpOutput += _tcslen(lpOutput) + 1;
-                ConOutChar(_T('\n'));
             }
             FreeEnvironmentStrings(lpEnv);
         }
