@@ -90,10 +90,10 @@ IntVideoPortDeferredRoutine(
 NTSTATUS
 NTAPI
 IntVideoPortCreateAdapterDeviceObject(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
-    IN PDEVICE_OBJECT PhysicalDeviceObject,
-    OUT PDEVICE_OBJECT *DeviceObject  OPTIONAL)
+   _In_ PDRIVER_OBJECT DriverObject,
+   _In_ PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
+   _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+   _Out_opt_ PDEVICE_OBJECT *DeviceObject)
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     ULONG DeviceNumber;
@@ -1046,7 +1046,6 @@ VideoPortScanRom(
 
     StringLength = strlen((PCHAR)String);
     Found = FALSE;
-    SearchLocation = RomBase;
     for (SearchLocation = RomBase;
             !Found && SearchLocation < RomBase + RomLength - StringLength;
             SearchLocation++)
