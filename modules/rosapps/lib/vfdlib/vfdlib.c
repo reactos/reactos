@@ -179,6 +179,10 @@ void DebugTrace(
 
 	_vsnprintf(buf + len, sizeof(buf) - len, sFormat, args);
 
+#ifdef __REACTOS__
+    va_end(args);
+#endif
+
 	OutputDebugString(buf);
 }
 #endif	// _DEBUG

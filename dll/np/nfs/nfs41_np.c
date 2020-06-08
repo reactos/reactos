@@ -52,6 +52,9 @@ ULONG _cdecl NFS41DbgPrint( __in LPTSTR Format, ... )
         OutputDebugString( TRACE_TAG );
         OutputDebugString( szbuffer );
     }
+#ifdef __REACTOS__
+    va_end(marker);
+#endif
 
     return rc;
 }
