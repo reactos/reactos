@@ -85,7 +85,10 @@ private:
     bool         Done;
     bool         PleaseStop;
     bool         PleasePause;
+#if 0
+    // TODO: Duplicates 'Method'.
     DefragType   DefragMethod;
+#endif
 };
 
 
