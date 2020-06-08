@@ -293,14 +293,30 @@ private:
 
     int LoadingAnimationFrame;
 
+    int BrokenImgSize = BROKENIMG_ICON_SIZE;
+
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
     {
         theResult = 0;
         switch (Msg)
         {
         case WM_CREATE:
-            hBrokenImgIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_BROKEN_IMAGE), IMAGE_ICON, BROKENIMG_ICON_SIZE, BROKENIMG_ICON_SIZE, 0);
+            hBrokenImgIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_BROKEN_IMAGE), IMAGE_ICON, BrokenImgSize, BrokenImgSize, 0);
             break;
+        case WM_SIZE:
+        {
+            if (BrokenImgSize != min(min(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)), BROKENIMG_ICON_SIZE))
+            {
+                BrokenImgSize = min(min(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)), BROKENIMG_ICON_SIZE);
+
+                if (hBrokenImgIcon)
+                {
+                    DeleteObject(hBrokenImgIcon);
+                    hBrokenImgIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_BROKEN_IMAGE), IMAGE_ICON, BrokenImgSize, BrokenImgSize, 0);
+                }
+            }
+            break;
+        }
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
@@ -417,11 +433,11 @@ private:
         case SNPSHTPREV_FAILED:
         {
             DrawIconEx(hdc,
-                (width - BROKENIMG_ICON_SIZE) / 2,
-                (height - BROKENIMG_ICON_SIZE) / 2,
+                (width - BrokenImgSize) / 2,
+                (height - BrokenImgSize) / 2,
                 hBrokenImgIcon,
-                BROKENIMG_ICON_SIZE,
-                BROKENIMG_ICON_SIZE,
+                BrokenImgSize,
+                BrokenImgSize,
                 NULL,
                 NULL,
                 DI_NORMAL | DI_COMPAT);
