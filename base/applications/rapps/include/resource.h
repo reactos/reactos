@@ -14,6 +14,7 @@
 #define IDI_UPDATE_DB            20
 #define IDI_CHECK_ALL            21
 #define IDI_SELECTEDFORINST      22
+#define IDI_BROKEN_IMAGE         23
 
 /* Icons for categories */
 #define IDI_CAT_AUDIO            50

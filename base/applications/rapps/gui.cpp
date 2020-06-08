@@ -30,6 +30,8 @@ using namespace Gdiplus;
 #define LISTVIEW_ICON_SIZE 24
 #define TREEVIEW_ICON_SIZE 24
 
+#define BROKENIMG_ICON_SIZE 96
+
 enum SNPSHT_STATUS
 {
     SNPSHTPREV_EMPTY,      // show nothing
@@ -287,6 +289,8 @@ private:
 
     Image* pImage = NULL;
 
+    HICON hBrokenImgIcon = NULL;
+
     int LoadingAnimationFrame;
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
@@ -295,6 +299,7 @@ private:
         switch (Msg)
         {
         case WM_CREATE:
+            hBrokenImgIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_BROKEN_IMAGE), IMAGE_ICON, BROKENIMG_ICON_SIZE, BROKENIMG_ICON_SIZE, 0);
             break;
         case WM_PAINT:
         {
@@ -332,6 +337,12 @@ private:
                     TRUE);
                 ReleaseDC(hdc);
             }
+            break;
+        }
+        case WM_DESTROY:
+        {
+            DeleteObject(hBrokenImgIcon);
+            hBrokenImgIcon = NULL;
             break;
         }
         }
@@ -405,6 +416,15 @@ private:
 
         case SNPSHTPREV_FAILED:
         {
+            DrawIconEx(hdc,
+                (width - BROKENIMG_ICON_SIZE) / 2,
+                (height - BROKENIMG_ICON_SIZE) / 2,
+                hBrokenImgIcon,
+                BROKENIMG_ICON_SIZE,
+                BROKENIMG_ICON_SIZE,
+                NULL,
+                NULL,
+                DI_NORMAL | DI_COMPAT);
         }
         break;
         }
@@ -480,12 +500,17 @@ public:
 
     }
 
-    VOID DisplayFile(LPCWSTR lpszFileName)
+    BOOL DisplayFile(LPCWSTR lpszFileName)
     {
         SetStatus(SNPSHTPREV_FILE);
         PreviousDisplayCleanup();
         pImage = Bitmap::FromFile(lpszFileName, 0);
-
+        if (pImage->GetLastStatus() != Ok)
+        {
+            DisplayFailed();
+            return FALSE;
+        }
+        return TRUE;
     }
 
     VOID DisplayFailed()
@@ -509,7 +534,7 @@ public:
             }
             return 0;
         case SNPSHTPREV_FAILED:
-            return 0;
+            return 200;
         default:
             return 0;
         }
