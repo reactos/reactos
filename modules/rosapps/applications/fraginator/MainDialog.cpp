@@ -530,8 +530,11 @@ INT_PTR CALLBACK MainDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LPara
                         DefragType Method;
                         HANDLE H;
 
+#if 0
+                        // TODO: Impossible.
                         if (Defrag != NULL)
                             return (1);
+#endif
 
                         SendMessage (GetDlgItem (Dlg, IDC_DRIVES_LIST), WM_GETTEXT,
                             sizeof (Drive) - 1, (LPARAM) Drive);
