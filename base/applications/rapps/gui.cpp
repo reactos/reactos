@@ -30,9 +30,17 @@ using namespace Gdiplus;
 #define LISTVIEW_ICON_SIZE 24
 #define TREEVIEW_ICON_SIZE 24
 
+// default broken-image icon size
 #define BROKENIMG_ICON_SIZE 96
 
+// the boundary of w/h ratio of snapshot preview window
 #define SNPSHT_MAX_ASPECT_RAT 2.5
+
+// padding between snapshot preview and richedit (in pixel)
+#define INFO_DISPLAY_PADDING 10
+
+// minimum width of richedit
+#define RICHEDIT_MIN_WIDTH 160
 
 enum SNPSHT_STATUS
 {
@@ -628,12 +636,18 @@ private:
     VOID ResizeChildren(int Width, int Height)
     {
         int SnpshtWidth = SnpshtPrev->GetRequestedWidth(Height);
+
+        // make sure richedit always have room to display
+        SnpshtWidth = min(SnpshtWidth, Width - INFO_DISPLAY_PADDING - RICHEDIT_MIN_WIDTH);
+
         HDWP hDwp = BeginDeferWindowPos(2);
 
         if (hDwp)
         {
-            hDwp = ::DeferWindowPos(hDwp, SnpshtPrev->m_hWnd, NULL, 0, 0, SnpshtWidth, Height, 0);
-            hDwp = ::DeferWindowPos(hDwp, RichEdit->m_hWnd, NULL, SnpshtWidth, 0, Width - SnpshtWidth, Height, 0);
+            hDwp = ::DeferWindowPos(hDwp, SnpshtPrev->m_hWnd, NULL,
+                0, 0, SnpshtWidth, Height, 0);
+            hDwp = ::DeferWindowPos(hDwp, RichEdit->m_hWnd, NULL,
+                SnpshtWidth + INFO_DISPLAY_PADDING, 0, Width - SnpshtWidth - INFO_DISPLAY_PADDING, Height, 0);
         }
         EndDeferWindowPos(hDwp);
     }
