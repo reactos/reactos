@@ -382,11 +382,16 @@ private:
 
     VOID PaintOnDC(HDC hdc, int width, int height, BOOL bDrawBkgnd)
     {
+        // use an off screen dc to avoid blinking
+        HDC hdcMem = CreateCompatibleDC(hdc);
+        HBITMAP hBitmap = CreateCompatibleBitmap(hdc, width, height);
+        SelectObject(hdcMem, hBitmap);
+
         if (bDrawBkgnd)
         {
-            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, (HGDIOBJ)GetSysColorBrush(COLOR_BTNFACE));
-            PatBlt(hdc, 0, 0, width, height, PATCOPY);
-            SelectObject(hdc, hOldBrush);
+            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdcMem, (HGDIOBJ)GetSysColorBrush(COLOR_BTNFACE));
+            PatBlt(hdcMem, 0, 0, width, height, PATCOPY);
+            SelectObject(hdcMem, hOldBrush);
         }
 
         switch (SnpshtPrevStauts)
@@ -399,9 +404,7 @@ private:
 
         case SNPSHTPREV_LOADING:
         {
-
-
-            Graphics graphics(hdc);
+            Graphics graphics(hdcMem);
             Color color(255, 0, 0);
             SolidBrush dotBrush(Color(255, 100, 100, 100));
 
@@ -426,7 +429,6 @@ private:
                 (REAL)height / 2.0 - GetFrameDotShift(LoadingAnimationFrame - LOADING_ANIMATION_FPS / 4, width, height) - DotWidth / 2.0,
                 DotWidth,
                 DotWidth);
-
         }
         break;
 
@@ -435,7 +437,7 @@ private:
             if (pImage)
             {
                 // always draw entire image inside the window.
-                Graphics graphics(hdc);
+                Graphics graphics(hdcMem);
                 float ZoomRatio = min(((float)width / (float)pImage->GetWidth()), ((float)height / (float)pImage->GetHeight()));
                 float ZoomedImgWidth = ZoomRatio * (float)pImage->GetWidth();
                 float ZoomedImgHeight = ZoomRatio * (float)pImage->GetHeight();
@@ -449,7 +451,7 @@ private:
 
         case SNPSHTPREV_FAILED:
         {
-            DrawIconEx(hdc,
+            DrawIconEx(hdcMem,
                 (width - BrokenImgSize) / 2,
                 (height - BrokenImgSize) / 2,
                 hBrokenImgIcon,
@@ -461,6 +463,11 @@ private:
         }
         break;
         }
+
+        // copy the content form off-screen dc to hdc
+        BitBlt(hdc, 0, 0, width, height, hdcMem, 0, 0, SRCCOPY);
+        DeleteDC(hdcMem);
+        DeleteObject(hBitmap);
     }
 
     float GetLoadingDotWidth(int width, int height)
@@ -654,6 +661,7 @@ private:
                 RicheditPosX, 0, Width - RicheditPosX, Height, 0);
         }
         EndDeferWindowPos(hDwp);
+        UpdateWindow();
     }
 
 public:
@@ -689,7 +697,7 @@ public:
     {
         RECT r = { 0,0,0,0 };
 
-        return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE);
+        return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
     }
 
     BOOL ShowAvailableAppInfo(CAvailableApplicationInfo* Info)
