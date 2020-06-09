@@ -69,7 +69,10 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvaliStrin
         // TODO: Does the filename contain anything stuff like "\\" ".." ":" "<" ">" ?
         // these stuff may lead to security issues
 
-        m_szSnapshotFilename[i].Format(L"%lssnapshots\\%ls", AvaliStrings.szAppsPath.GetString(), SnapshotFileName.GetString());
+        m_szSnapshotFilename[i] = AvaliStrings.szAppsPath;
+        PathAppendW(m_szSnapshotFilename->GetBuffer(MAX_PATH), L"snapshots");
+        PathAppendW(m_szSnapshotFilename->GetBuffer(), SnapshotFileName.GetString());
+        m_szSnapshotFilename->ReleaseBuffer();
     }
 
     RetrieveSize();
@@ -263,7 +266,6 @@ AvailableStrings::AvailableStrings()
     {
         szAppsPath = szPath;
         PathAppendW(szAppsPath.GetBuffer(MAX_PATH), L"rapps");
-        PathAddBackslashW(szAppsPath.GetBuffer());
         szAppsPath.ReleaseBuffer();
 
         szCabName = L"rappmgr.cab";
@@ -312,7 +314,9 @@ VOID CAvailableApps::DeleteCurrentAppsDB()
         ATL::CStringW szTmp;
         do
         {
-            szTmp = m_Strings.szAppsPath + FindFileData.cFileName;
+            szTmp = m_Strings.szAppsPath;
+            PathAppendW(szTmp.GetBuffer(MAX_PATH), FindFileData.cFileName);
+            szTmp.ReleaseBuffer();
             DeleteFileW(szTmp.GetString());
         } while (FindNextFileW(hFind, &FindFileData) != 0);
         FindClose(hFind);

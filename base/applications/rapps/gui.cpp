@@ -2174,8 +2174,12 @@ private:
         }
 
         /* Load icon from file */
-        ATL::CStringW szIconPath;
-        szIconPath.Format(L"%lsicons\\%ls.ico", szFolderPath, Info->m_szName.GetString());
+        ATL::CStringW szIconPath = szFolderPath;
+        PathAppendW(szIconPath.GetBuffer(MAX_PATH), L"icons");
+        PathAppendW(szIconPath.GetBuffer(), Info->m_szName.GetString());
+        PathAddExtensionW(szIconPath.GetBuffer(), L".ico");
+        szIconPath.ReleaseBuffer();
+
         hIcon = (HICON) LoadImageW(NULL,
                                    szIconPath.GetString(),
                                    IMAGE_ICON,
