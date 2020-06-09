@@ -24,7 +24,7 @@ ALIAS [别名=[命令]]\n\n\
     STRING_BEEP_HELP "使扬声器发出BEEP声。\n\nBEEP\n"
     STRING_CALL_HELP "从一个批处理程序调用另一个。\n\n\
 CALL [驱动器:][路径]文件名 [批处理参数]\n\n\
-  批处理参数  指定被调用的批处理程序所需的命令行信息。"
+  批处理参数  指定被调用的批处理程序所需的命令行信息。\n"
     STRING_CD_HELP "改变当前目录或者显示当前目录名。\n\n\
 CHDIR [/D][驱动器:][路径]\n\
 CHDIR[..|.]\n\
@@ -184,7 +184,7 @@ PUSHD [路径 | ..]\n\n\
   ECHO [消息]\n\
   ECHO.             输出空行\n\n\
 执行不带参数的 ECHO 将会显示当前的 ECHO 设置。"
-    STRING_ECHO_HELP5 "ECHO 为 %s\n"
+    STRING_ECHO_HELP5 "ECHO 为 %s。\n"
     STRING_EXIT_HELP "退出命令行解释器。\n\nEXIT [/b] [ExitCode]\n\n\
   /B            仅退出一个批处理文件。\n\
                 如果在一个批处理文件之外运行，将会使 cmd.exe 退出。\n\
@@ -218,7 +218,7 @@ f,d,p,n,x,s,a,t,z.\n\n\
     STRING_GOTO_HELP1 "在批处理脚本中将 CMD 定向到被标记的行执行。\n\n\
 GOTO 标签\n\n\
   标签    在批处理脚本中被用作标签的文本字符串。\n\n\
-使用冒号开头的一行就作为一个标签。"
+使用冒号开头的一行就作为一个标签。\n"
     STRING_IF_HELP1 "在批处理文件中执行条件控制处理。\n\n\
   IF [NOT] ERRORLEVEL 数字 命令\n\
   IF [NOT] 字符串1==字符串2 命令\n\
@@ -438,9 +438,9 @@ RESTORE       恢复窗口\n\
     STRING_ALIAS_ERROR "别名展开后的命令行太长！\n"
     STRING_ASSOC_ERROR "扩展名 %s 的文件关联未找到！\n"
     STRING_BATCH_ERROR "打开批处理文件时出错\n"
-    STRING_CHOICE_ERROR "无效选项。期望的格式：/C[:]选项"
-    STRING_CHOICE_ERROR_TXT "无效选项。期望的格式：/T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "非法选项：%s"
+    STRING_CHOICE_ERROR "无效选项。期望的格式：/C[:]选项\n"
+    STRING_CHOICE_ERROR_TXT "无效选项。期望的格式：/T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "非法选项：%s\n"
     STRING_CMD_ERROR1 "无法从文件 %s 重定向输入\n"
     STRING_CMD_ERROR2 "为管道数据创建临时文件时出错\n"
     STRING_CMD_ERROR3 "无法重定向到文件 %s\n"
@@ -465,7 +465,7 @@ RESTORE       恢复窗口\n\
     STRING_FOR_ERROR4 "'do' 后没有命令。"
     STRING_FREE_ERROR1 "无效驱动器"
     STRING_FREE_ERROR2 "未标记"
-    STRING_GOTO_ERROR1 "没有为 GOTO 指定标签"
+    STRING_GOTO_ERROR1 "没有为 GOTO 指定标签\n"
     STRING_GOTO_ERROR2 "标签 '%s' 未找到\n"
     STRING_MD_ERROR "一个子目录或文件已存在。\n"
     STRING_MD_ERROR2 "到新文件夹的路径不存在。\n"
@@ -486,7 +486,7 @@ RESTORE       恢复窗口\n\
     STRING_ERROR_BADCOMMAND "非法的命令或文件名 - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "内存不足。\n"
     STRING_ERROR_CANNOTPIPE "错误！无法创建管道！不能打开临时文件！\n"
-    STRING_ERROR_D_PAUSEMSG "按任意键继续..."
+    STRING_ERROR_D_PAUSEMSG "按任意键继续... "
     STRING_ERROR_DRIVER_NOT_READY "驱动器未就绪"
     STRING_PATH_ERROR "CMD: 不在环境 '%s' 中\n"
     STRING_REPLACE_ERROR1 "无效开关 - %s\n"
@@ -512,8 +512,8 @@ RESTORE       恢复窗口\n\
     STRING_MKLINK_CREATED_JUNCTION "已为 %s <<===>> %s 创建接合点\n"
     STRING_MORE "更多？"
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break 已被按下。停止批处理文件吗？ (Yes/No/All) "
-    STRING_INVALID_OPERAND "无效操作数。"
-    STRING_EXPECTED_CLOSE_PAREN "期望 ')'。"
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "期望数值或变量名。"
-    STRING_SYNTAX_COMMAND_INCORRECT "命令语法不正确。"
+    STRING_INVALID_OPERAND "无效操作数。\n"
+    STRING_EXPECTED_CLOSE_PAREN "期望 ')'。\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "期望数值或变量名。\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "命令语法不正确。\n"
 END

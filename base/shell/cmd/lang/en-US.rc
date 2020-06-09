@@ -23,7 +23,7 @@ To remove an alias from the alias list:\n\
     STRING_CALL_HELP "Calls one batch program from another.\n\n\
 CALL [drive:][path]filename [batch-parameter]\n\n\
   batch-parameter  Specifies any command-line information required by the\n\
-                   batch program."
+                   batch program.\n"
     STRING_CD_HELP "Changes the current directory or displays it's name\n\n\
 CHDIR [/D][drive:][path]\n\
 CHDIR[..|.]\n\
@@ -193,7 +193,7 @@ PUSHD [path | ..]\n\n\
   ECHO [message]\n\
   ECHO.             prints an empty line\n\n\
 Type ECHO without a parameter to display the current ECHO setting."
-    STRING_ECHO_HELP5 "ECHO is %s\n"
+    STRING_ECHO_HELP5 "ECHO is %s.\n"
     STRING_EXIT_HELP "Exits the command line interpreter.\n\nEXIT [/b] [ExitCode]\n\n\
   /B            Exits a batch file only.\n\
                 If run outside of a batch file it will exit cmd.exe\n\
@@ -228,7 +228,7 @@ To use the FOR command in a batch program, specify %%variable instead of\n\
     STRING_GOTO_HELP1 "Directs CMD to a labeled line in a batch script.\n\n\
 GOTO label\n\n\
   label  Specifies a text string used in a batch script as a label.\n\n\
-You type a label on a line by itself, beginning with a colon."
+You type a label on a line by itself, beginning with a colon.\n"
     STRING_IF_HELP1 "Performs conditional processing in batch programs.\n\n\
   IF [NOT] ERRORLEVEL number command\n\
   IF [NOT] string1==string2 command\n\
@@ -468,9 +468,9 @@ title         new title\n"
     STRING_ALIAS_ERROR "Command line too long after alias expansion!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Error opening batch file\n"
-    STRING_CHOICE_ERROR "Invalid option. Expected format: /C[:]options"
-    STRING_CHOICE_ERROR_TXT "Invalid option. Expected format: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Illegal Option: %s"
+    STRING_CHOICE_ERROR "Invalid option. Expected format: /C[:]options\n"
+    STRING_CHOICE_ERROR_TXT "Invalid option. Expected format: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Illegal Option: %s\n"
     STRING_CMD_ERROR1 "Can't redirect input from file %s\n"
     STRING_CMD_ERROR2 "Error creating temporary file for pipe data\n"
     STRING_CMD_ERROR3 "Can't redirect to file %s\n"
@@ -495,7 +495,7 @@ title         new title\n"
     STRING_FOR_ERROR4 "no command after 'do'."
     STRING_FREE_ERROR1 "Invalid drive"
     STRING_FREE_ERROR2 "unlabeled"
-    STRING_GOTO_ERROR1 "No label specified for GOTO"
+    STRING_GOTO_ERROR1 "No label specified for GOTO\n"
     STRING_GOTO_ERROR2 "Label '%s' not found\n"
     STRING_MD_ERROR "A subdirectory or file already exists.\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
@@ -516,7 +516,7 @@ title         new title\n"
     STRING_ERROR_BADCOMMAND "Bad command or filename - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Out of memory error.\n"
     STRING_ERROR_CANNOTPIPE "Error!  Cannot pipe!  Cannot open temporary file!\n"
-    STRING_ERROR_D_PAUSEMSG "Press any key to continue . . ."
+    STRING_ERROR_D_PAUSEMSG "Press any key to continue . . . "
     STRING_ERROR_DRIVER_NOT_READY "Drive not ready"
     STRING_PATH_ERROR "CMD: Not in environment '%s'\n"
     STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
@@ -542,8 +542,8 @@ title         new title\n"
     STRING_MKLINK_CREATED_JUNCTION "Junction created for %s <<===>> %s\n"
     STRING_MORE "More? "
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break pressed.  Cancel batch file? (Yes/No/All) "
-    STRING_INVALID_OPERAND "Invalid operand."
-    STRING_EXPECTED_CLOSE_PAREN "Expected ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Expected number or variable name."
-    STRING_SYNTAX_COMMAND_INCORRECT "The syntax of the command is incorrect."
+    STRING_INVALID_OPERAND "Invalid operand.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Expected ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Expected number or variable name.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "The syntax of the command is incorrect.\n"
 END

@@ -25,7 +25,7 @@ Para borrar un alias de la lista de alias:\n\
     STRING_CALL_HELP "Ejecuta un arhivo por lotes desde otro archivo por lotes.\n\n\
 CALL [drive:][path]filename [batch-parameter]\n\n\
   batch-parameter  Especifica cualquier informacion de la linea de comandos\n\
-                   requerida por el archivo por lotes."
+                   requerida por el archivo por lotes.\n"
     STRING_CD_HELP "Cambia el directorio actual o muestra su nombre.\n\n\
 CHDIR [/D][drive:][path]\n\
 CHDIR[..|.]\n\
@@ -198,7 +198,7 @@ pasa de linea.\n\n\
   ECHO [mensaje]\n\
   ECHO.             Muestra una linea vacia\n\n\
 Escribe ECHO sin parámetros para mostrar la configuración actual de ECHO."
-    STRING_ECHO_HELP5 "ECHO está %s\n"
+    STRING_ECHO_HELP5 "ECHO está %s.\n"
     STRING_EXIT_HELP "Sale del interprete de la linea de comandos.\n\nEXIT\n"
     STRING_FOR_HELP1 "Ejecuta un comando específico para cada archivo de un grupo de archivos.\n\n\
 FOR %variable IN (grupo) DO comando [parametros]\n\
@@ -232,7 +232,7 @@ de %variable.\n"
     STRING_GOTO_HELP1 "Manda al CMD a una linea etiquetada en un archivo por lotes.\n\n\
 GOTO etiqueta\n\n\
   etiqueta  Especifica la cadena de texto usada en el archivo por lotes como etiqueta.\n\n\
-Escriba la etiqueta en la linea misma, empezando con dos puntos."
+Escriba la etiqueta en la linea misma, empezando con dos puntos.\n"
     STRING_IF_HELP1 "Ejecuta procesos condicionales en archivos por lotes.\n\n\
   IF [NOT] ERRORLEVEL número comando\n\
   IF [NOT] string1==string2 comando\n\
@@ -472,9 +472,9 @@ title         Nuevo título\n"
     STRING_ALIAS_ERROR "¡Línea de comandos demasiado larga tras la expansión del alias!\n"
     STRING_ASSOC_ERROR "No se ha encontrado ninguna asociación de archivos para la extensión %s\n"
     STRING_BATCH_ERROR "Error abriendo el archivo por lotes\n"
-    STRING_CHOICE_ERROR "Opción inválida. Se esperaba el formato: /C[:]options"
-    STRING_CHOICE_ERROR_TXT "Opción inválida. Se esperaba el formato: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Opción ilegal: %s"
+    STRING_CHOICE_ERROR "Opción inválida. Se esperaba el formato: /C[:]options\n"
+    STRING_CHOICE_ERROR_TXT "Opción inválida. Se esperaba el formato: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Opción ilegal: %s\n"
     STRING_CMD_ERROR1 "No se puede redirigir la entrada del archivo %s\n"
     STRING_CMD_ERROR2 "Error creando archivo temporal para la pila de datos\n"
     STRING_CMD_ERROR3 "No se puede redirigir el archivo %s\n"
@@ -499,7 +499,7 @@ title         Nuevo título\n"
     STRING_FOR_ERROR4 "No hay comando después de 'do'."
     STRING_FREE_ERROR1 "Unidad errónea."
     STRING_FREE_ERROR2 "Sin etiqueta"
-    STRING_GOTO_ERROR1 "No se especifico etiqueta para GOTO"
+    STRING_GOTO_ERROR1 "No se especifico etiqueta para GOTO\n"
     STRING_GOTO_ERROR2 "La etiqueta '%s' no se encuentra\n"
     STRING_MD_ERROR "A subdirectory or file already exists.\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
@@ -520,7 +520,7 @@ title         Nuevo título\n"
     STRING_ERROR_BADCOMMAND "Comando o nombre de archivo erróneo - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Error fuera de memoria.\n"
     STRING_ERROR_CANNOTPIPE "¡Error!  ¡No se puede apilar!  ¡No se puede abrir el archivo temporal!\n"
-    STRING_ERROR_D_PAUSEMSG "Pulse una tecla para continuar ..."
+    STRING_ERROR_D_PAUSEMSG "Pulse una tecla para continuar ... "
     STRING_ERROR_DRIVER_NOT_READY "La unidad no está lista"
     STRING_PATH_ERROR "CMD: No está en el entorno '%s'\n"
     STRING_REPLACE_ERROR1 "Argumento no válido - %s\n"

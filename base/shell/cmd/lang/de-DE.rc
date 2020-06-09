@@ -25,7 +25,7 @@ Löscht ein Alias von der Alias-Liste:\n\
     STRING_CALL_HELP "Ruft eine Batchdatei von einer anderen aus auf.\n\n\
 CALL [Laufwerk:][Pfad]Dateiname [Batch-Parameter]\n\n\
   Parameter      Bezeichnet beliebige Angaben in der Befehlszeile, die von\n\
-                 dem aufgerufenen Batchprogramm benötigt werden."
+                 dem aufgerufenen Batchprogramm benötigt werden.\n"
     STRING_CD_HELP "Wechselt das Verzeichnis oder zeigt dessen Namen an.\n\n\
 CHDIR [Laufwerk:][Pfad]\n\
 CHDIR[..|.]\n\
@@ -193,7 +193,7 @@ PUSHD [path | ..]\n\n\
   ECHO [Nachricht]\n\
   ECHO.             gibt eine Leerzeile aus\n\n\
 ECHO ohne Parameter zeigt die aktuelle Einstellung der Befehlsanzeige an."
-    STRING_ECHO_HELP5 "ECHO ist %s\n"
+    STRING_ECHO_HELP5 "ECHO ist %s.\n"
     STRING_EXIT_HELP "Beendet den Befehlsinterpreter CMD.EXE oder die aktuelle Batchdatei.\n\nEXIT"
     STRING_FOR_HELP1 "Führt einen Befehl für jede einzelne Datei für einen Satz von Dateien aus.\n\n\
 FOR %Variable IN (Satz) DO Befehl [Parameter]\n\
@@ -226,7 +226,7 @@ statt %Variable an."
     STRING_GOTO_HELP1 "Setzt die Ausführung eines Batchprogramms an einer Marke fort.\n\n\
 GOTO Marke\n\n\
   Marke  Definiert eine Zeichenfolge als Marke in einem Batchprogramm.\n\n\
-Marken stehen am Zeilenanfang mit einem vorangestellten Doppelpunkt."
+Marken stehen am Zeilenanfang mit einem vorangestellten Doppelpunkt.\n"
     STRING_IF_HELP1 "Verarbeitet Ausdrücke in einer Batchdatei abhängig von Bedingungen.\n\n\
   IF [NOT] ERRORLEVEL Nummer Befehl\n\
   IF [NOT] Variable1==Variable2 Befehl\n\
@@ -467,9 +467,9 @@ Titel         neuer Titel"
     STRING_ALIAS_ERROR "Die Befehlszeile ist zu lange nach der Alias-Erweiterung!\n"
     STRING_ASSOC_ERROR "Dateizuordnung für Erweiterung %s nicht gefunden\n"
     STRING_BATCH_ERROR "Es trat ein Fehler auf, während die Batchdatei geöffnet wurde.\n"
-    STRING_CHOICE_ERROR "Ungültige Option. Erwartetes Format: /C[:]Optionen"
-    STRING_CHOICE_ERROR_TXT "Ungültige Option. Erwartetes Format: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Ungültige Option: %s"
+    STRING_CHOICE_ERROR "Ungültige Option. Erwartetes Format: /C[:]Optionen\n"
+    STRING_CHOICE_ERROR_TXT "Ungültige Option. Erwartetes Format: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Ungültige Option: %s\n"
     STRING_CMD_ERROR1 "Die Eingaben konnten nicht umgeleitet werden (von der Datei) %s\n"
     STRING_CMD_ERROR2 "Ein Fehler ist beim Erstellen der temporären Datei für Pipedaten aufgetreten\n"
     STRING_CMD_ERROR3 "%s kann nicht in die Datei umgeleitet werden\n"
@@ -494,7 +494,7 @@ Titel         neuer Titel"
     STRING_FOR_ERROR4 "kein Befehl nach 'do'."
     STRING_FREE_ERROR1 "Ungültiges Laufwerk"
     STRING_FREE_ERROR2 "keine Bezeichnung"
-    STRING_GOTO_ERROR1 "Keine Sprungmarke für GOTO gesetzt"
+    STRING_GOTO_ERROR1 "Keine Sprungmarke für GOTO gesetzt\n"
     STRING_GOTO_ERROR2 "Sprungmarke '%s' wurde nicht gefunden\n"
     STRING_MD_ERROR "Unterverzeichnis oder Datei existiert bereits.\n"
     STRING_MD_ERROR2 "Der Pfad zum neuen Ordner existiert nicht.\n"//FIXME
@@ -515,7 +515,7 @@ Titel         neuer Titel"
     STRING_ERROR_BADCOMMAND "Ungültiger Befehl oder Dateiname - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Fehler: Zu wenig Speicher verfügbar.\n"
     STRING_ERROR_CANNOTPIPE "Fehler: Pipen nicht möglich! Temporäre Datei kann nicht geöffnet werden!\n"
-    STRING_ERROR_D_PAUSEMSG "Drücken Sie eine beliebige Taste . . ."
+    STRING_ERROR_D_PAUSEMSG "Drücken Sie eine beliebige Taste . . . "
     STRING_ERROR_DRIVER_NOT_READY "Laufwerk ist nicht bereit"
     STRING_PATH_ERROR "CMD: Nicht in Umgebung '%s'\n"
     STRING_REPLACE_ERROR1 "Ungültiger Parameter - %s\n"
@@ -541,8 +541,8 @@ Titel         neuer Titel"
     STRING_MKLINK_CREATED_JUNCTION "Junction Point erstellt für %s <<===>> %s\n"
     STRING_MORE "Mehr? "
     STRING_CANCEL_BATCH_FILE "\r\nStrg-Pause gedrückt. Batchvorgang abbrechen? (Ja/Nein/Alle) "
-    STRING_INVALID_OPERAND "Ungültiger Operand."
-    STRING_EXPECTED_CLOSE_PAREN "Erwartet ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Erwartet Nummer oder Variablennamen."
-    STRING_SYNTAX_COMMAND_INCORRECT "Syntaxfehler."
+    STRING_INVALID_OPERAND "Ungültiger Operand.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Erwartet ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Erwartet Nummer oder Variablennamen.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Syntaxfehler.\n"
 END

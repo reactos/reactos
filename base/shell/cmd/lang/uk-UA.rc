@@ -31,7 +31,7 @@ ALIAS [псевдонiм=[команда]]\n\n\
     STRING_CALL_HELP "Виклик однiєї пакетної програми з iншої.\n\n\
 CALL [диск:][шлях]iм'я_файла [параметри]\n\n\
   параметри  Набiр параметрiв командного рядка, необхiдних для пакетного\n\
-             файлу."
+             файлу.\n"
     STRING_CD_HELP "Виведення iменi або змiна поточного каталогу\n\n\
 CHDIR [/D][диск:][шлях]\n\
 CHDIR[..|.]\n\
@@ -204,7 +204,7 @@ PUSHD [path | ..]\n\n\
   ECHO [повiдомлення]\n\
   ECHO.             друкує порожнiй рядок\n\n\
 ECHO без параметра виводить поточний режим вiдображення команд."
-    STRING_ECHO_HELP5 "ECHO is %s\n"
+    STRING_ECHO_HELP5 "ECHO is %s.\n"
     STRING_EXIT_HELP "Завершує iнтерпретатор команд.\n\nEXIT [/b] [ExitCode]\n\n\
   /B            Виходить лише з пакетного файлу.\n\
                 Якщо робота йде поза пакетним файлом - вихiд з cmd.exe\n\
@@ -239,7 +239,7 @@ f,d,p,n,x,s,a,t,z.\n\n\
     STRING_GOTO_HELP1 "Передача управління рядку пакетного файлу, що мiстить мiтку.\n\n\
 GOTO мiтка\n\n\
   label  рядок пакетного файлу, визначений як мiтка.\n\n\
-Мітка повинна знаходитися в окремому рядку i починатися з двокрапки."
+Мітка повинна знаходитися в окремому рядку i починатися з двокрапки.\n"
     STRING_IF_HELP1 "Оператор умовного виконання команд у пакетному файлi.\n\n\
   IF [NOT] ERRORLEVEL число команда\n\
   IF [NOT] рядок1==рядок2 команда\n\
@@ -478,9 +478,9 @@ title         новий заголовок\n"
     STRING_ALIAS_ERROR "Командний рядок занадто довгий пiсля розгортання псевдонiмiв!\n"
     STRING_ASSOC_ERROR "Не знайдено файлової асоцiацiї для розширення %s\n"
     STRING_BATCH_ERROR "Помилка вiдкриття пакетного файлу\n"
-    STRING_CHOICE_ERROR "Невiрний параметр. Очiкується формат: /C[:]параметри"
-    STRING_CHOICE_ERROR_TXT "Невiрний параметр. Очiкується формат: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Невiрний параметр: %s"
+    STRING_CHOICE_ERROR "Невiрний параметр. Очiкується формат: /C[:]параметри\n"
+    STRING_CHOICE_ERROR_TXT "Невiрний параметр. Очiкується формат: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Невiрний параметр: %s\n"
     STRING_CMD_ERROR1 "Не можу перенаправити ввiд з файлу %s\n"
     STRING_CMD_ERROR2 "Помилка створення тимчасового файлу для pipe-даних\n"
     STRING_CMD_ERROR3 "Не можу перенаправити в файл %s\n"
@@ -505,7 +505,7 @@ title         новий заголовок\n"
     STRING_FOR_ERROR4 "немає команди пiсля 'do'."
     STRING_FREE_ERROR1 "Невiрний диск"
     STRING_FREE_ERROR2 "не вiдмiчено"
-    STRING_GOTO_ERROR1 "Не визначена мiтка для GOTO"
+    STRING_GOTO_ERROR1 "Не визначена мiтка для GOTO\n"
     STRING_GOTO_ERROR2 "Мiтка '%s' не знайдена\n"
     STRING_MD_ERROR "Пiдкаталог чи файл вже iснує.\n"
     STRING_MD_ERROR2 "Шлях до нового каталогу не iснує.\n"
@@ -526,7 +526,7 @@ title         новий заголовок\n"
     STRING_ERROR_BADCOMMAND "Невiрна команда або iм'я файлу - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Недостатньо пам'ятi.\n"
     STRING_ERROR_CANNOTPIPE "Помилка!  Неможливо використати pipe!  Неможливо вiдкрити тимчасовий файл!\n"
-    STRING_ERROR_D_PAUSEMSG "Натиснiть будь-яку клавiшу для продовження . . ."
+    STRING_ERROR_D_PAUSEMSG "Натиснiть будь-яку клавiшу для продовження . . . "
     STRING_ERROR_DRIVER_NOT_READY "Пристрій не готовий"
     STRING_PATH_ERROR "CMD: Не в середовищi '%s'\n"
     STRING_REPLACE_ERROR1 "Невiрний ключ - %s\n"
@@ -552,8 +552,8 @@ title         новий заголовок\n"
     STRING_MKLINK_CREATED_JUNCTION "Створено з'єднання для %s <<===>> %s\n"
     STRING_MORE "Бiльше? "
     STRING_CANCEL_BATCH_FILE "\r\nнатиснено Ctrl-Break.  Припинити виконання пакетного файлу? (Yes/No/All) "
-    STRING_INVALID_OPERAND "Невiрний операнд."
-    STRING_EXPECTED_CLOSE_PAREN "Очiкується ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Очiкується число або iм'я змiнної."
-    STRING_SYNTAX_COMMAND_INCORRECT "Некоректний синтаксис команди."
+    STRING_INVALID_OPERAND "Невiрний операнд.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Очiкується ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Очiкується число або iм'я змiнної.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Некоректний синтаксис команди.\n"
 END

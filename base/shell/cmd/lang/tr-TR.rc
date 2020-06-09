@@ -25,7 +25,7 @@ Başka ad dizelgesinden bir başka ad silmek için:\n\
     STRING_CALL_HELP "Bir toplu iş izlencesini bir başkasından çağırır.\n\n\
 CALL [sürücü:][yol]kütük adı [toplu iş değişkeni]\n\n\
   toplu iş değişkeni  Toplu iş izlencesinin gerektirdiği bir komut yatacı\n\
-                      bilgisi belirtir."
+                      bilgisi belirtir.\n"
     STRING_CD_HELP "Şimdiki dizini değiştirir ya da onun adını görüntüler\n\n\
 CHDIR [/D][sürücü:][yol]\n\
 CHDIR[..|.]\n\
@@ -199,7 +199,7 @@ PUSHD [yol | ..]\n\n\
   ECHO [ileti]\n\
   ECHO.             boş bir yataç yazdırır\n\n\
 Şimdiki ECHO ayârını görüntülemek için bir değişken olmadan ECHO yazınız."
-    STRING_ECHO_HELP5 "ECHO %s\n"
+    STRING_ECHO_HELP5 "ECHO %s.\n"
     STRING_EXIT_HELP "Komut yatacı yorumcusundan çıkar.\n\nEXIT [/b] [çıkış kodu]\n\n\
   /B            Yalnızca bir toplu iş kütüğünden çıkar.\n\
                 Bir toplu iş kütüğünün dışında çalışırsa cmd.exe'den çıkacaktır.\n\
@@ -235,7 +235,7 @@ belirtiniz.\n"
 GOTO etiket\n\n\
   etiket  Bir metin dizgisini, kullanılan bir toplu iş betiğinde bir etiket\n\
   olarak belirtir.\n\n\
-Bir dikeçle başlayan tek başına bir yataç üzerinde bir etiket yazınız."
+Bir dikeçle başlayan tek başına bir yataç üzerinde bir etiket yazınız.\n"
     STRING_IF_HELP1 "Toplu iş izlencelerinde şartlı işlemeyi gerçekleştirir.\n\n\
   IF [NOT] ERRORLEVEL sayı komut\n\
   IF [NOT] dizgi1==dizgi2 komut\n\
@@ -473,9 +473,9 @@ başlık        Yeni başlık\n"
     STRING_ALIAS_ERROR "Başka ad açılımından sonra komut yatacı çok uzun!\n"
     STRING_ASSOC_ERROR "%s uzantısı için kütük ilişkilendirmesi bulunamadı.\n"
     STRING_BATCH_ERROR "Toplu iş kütüğünü açma yanlışlığı\n"
-    STRING_CHOICE_ERROR "Geçersiz seçenek. Beklenen biçim: /C[:]seçenekler"
-    STRING_CHOICE_ERROR_TXT "Geçersiz seçenek. Beklenen biçim: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Geçersiz seçenek: %s"
+    STRING_CHOICE_ERROR "Geçersiz seçenek. Beklenen biçim: /C[:]seçenekler\n"
+    STRING_CHOICE_ERROR_TXT "Geçersiz seçenek. Beklenen biçim: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Geçersiz seçenek: %s\n"
     STRING_CMD_ERROR1 "%s kütüğünden girdi yönlendirilemiyor.\n"
     STRING_CMD_ERROR2 "Boru verisi için geçici kütük oluşturma yanlışlığı\n"
     STRING_CMD_ERROR3 "%s kütüğüne yönlendirilemiyor.\n"
@@ -500,7 +500,7 @@ başlık        Yeni başlık\n"
     STRING_FOR_ERROR4 """do"" deyişinden sonra komut yok."
     STRING_FREE_ERROR1 "Geçersiz sürücü"
     STRING_FREE_ERROR2 "etiketlenmemiş"
-    STRING_GOTO_ERROR1 "GOTO için bir etiket belirlenmemiş."
+    STRING_GOTO_ERROR1 "GOTO için bir etiket belirlenmemiş.\n"
     STRING_GOTO_ERROR2 """%s"" etiketi bulunamadı.\n"
     STRING_MD_ERROR "Bir alt dizin ya da kütük önceden var.\n"
     STRING_MD_ERROR2 "Yeni dizin için yol yok.\n"
@@ -521,7 +521,7 @@ başlık        Yeni başlık\n"
     STRING_ERROR_BADCOMMAND "Geçersiz komut ya da kütük adı - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Yetersiz bellek yanlışlığı.\n"
     STRING_ERROR_CANNOTPIPE "Yanlışlık! Borulanamıyor! Geçici kütük açılamıyor!\n"
-    STRING_ERROR_D_PAUSEMSG "Sürdürmek için bir düğmeye basınız . . ."
+    STRING_ERROR_D_PAUSEMSG "Sürdürmek için bir düğmeye basınız . . . "
     STRING_ERROR_DRIVER_NOT_READY "Sürücü anık değil."
     STRING_PATH_ERROR "CMD: ""%s"" ortamda yok.\n"
     STRING_REPLACE_ERROR1 "Geçersiz seçenek - %s\n"
@@ -547,8 +547,8 @@ başlık        Yeni başlık\n"
     STRING_MKLINK_CREATED_JUNCTION "%s için bağlantı oluşturuldu <<===>> %s\n"
     STRING_MORE "Daha? "
     STRING_CANCEL_BATCH_FILE "\r\nDenetim'e ve Duraklat'a birlikte basıldı. Toplu iş kütüğünü iptal et? (Evet/Hayır/Tümü) "
-    STRING_INVALID_OPERAND "Geçersiz işlenen."
-    STRING_EXPECTED_CLOSE_PAREN """)"" bekleniyordu."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Sayı ya da değişken adı bekleniyordu."
-    STRING_SYNTAX_COMMAND_INCORRECT "Komutun yazımı yanlış."
+    STRING_INVALID_OPERAND "Geçersiz işlenen.\n"
+    STRING_EXPECTED_CLOSE_PAREN """)"" bekleniyordu.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Sayı ya da değişken adı bekleniyordu.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Komutun yazımı yanlış.\n"
 END

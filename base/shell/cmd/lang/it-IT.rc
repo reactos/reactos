@@ -22,7 +22,7 @@ Per rimuovere un alias:\n\
     STRING_BEEP_HELP "Segnale acustico.\n\nBEEP\n"
     STRING_CALL_HELP "Chiama un programma batch da un altro.\n\n\
 CALL [disco:][percorso]nomefile [Parametri]\n\n\
-  Parametri  Indicano le informazioni richieste per il programma batch."
+  Parametri  Indicano le informazioni richieste per il programma batch.\n"
     STRING_CD_HELP "Cambia la cartella corrente o ne visualizza nome\n\n\
 CHDIR [/D][disco:][percorso]\n\
 CHDIR[..|.]\n\
@@ -193,7 +193,7 @@ PUSHD [percorso | ..]\n\n\
   ECHO [messagio]\n\
   ECHO.             Stampa una linea vuota\n\n\
 Usa ECHO senza parametri pr visualizzare lo stato attuale di ECHO."
-    STRING_ECHO_HELP5 "ECHO è %s\n"
+    STRING_ECHO_HELP5 "ECHO è %s.\n"
     STRING_EXIT_HELP "Esce dall'interprete dei comandi.\n\n\
   EXIT [/b] [ExitCode]\n\n\
     /B            Esce solo dalle procedure batch.\n\
@@ -230,7 +230,7 @@ Per usare FOR in un batch usare %%variable invece di %variable.\n"
                      indicata.\n\n\
 GOTO etichetta\n\n\
   etichetta  Indica il testo utilizzato come etichetta in un batch.\n\n\
-Nel batch questa deve trovarsi da sola in una linea con davanti due punti :.\n"
+Nel batch questa deve trovarsi da sola in una linea con davanti due punti (:).\n"
     STRING_IF_HELP1 "Esegue una elaborazione condizionale nei batch.\n\n\
   IF [NOT] ERRORLEVEL numero comando\n\
   IF [NOT] stringa1==stringa2 comando\n\
@@ -477,9 +477,9 @@ titolo        il nuovo titolo\n"
     STRING_ALIAS_ERROR "Linea di comando troppo lunga dopo l'espansione degli alias!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Errore durante l'apertura di un batch\n"
-    STRING_CHOICE_ERROR "Opzione non valida. Formato atteso: /C[:]opzioni"
-    STRING_CHOICE_ERROR_TXT "Opzione non valida. Formato atteso: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Opzione non valida: %s"
+    STRING_CHOICE_ERROR "Opzione non valida. Formato atteso: /C[:]opzioni\n"
+    STRING_CHOICE_ERROR_TXT "Opzione non valida. Formato atteso: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Opzione non valida: %s\n"
     STRING_CMD_ERROR1 "Impossibile ridirigere dal file %s\n"
     STRING_CMD_ERROR2 "Errore nella creazione del file temporaneo per la ridirezione\n"
     STRING_CMD_ERROR3 "Impossibile ridirigere nel file %s\n"
@@ -504,7 +504,7 @@ titolo        il nuovo titolo\n"
     STRING_FOR_ERROR4 "nessuno comando dopo 'do'."
     STRING_FREE_ERROR1 "Disco non valido"
     STRING_FREE_ERROR2 "non etichettato"
-    STRING_GOTO_ERROR1 "Nessuna etichetta indicata per GOTO"
+    STRING_GOTO_ERROR1 "Nessuna etichetta indicata per GOTO\n"
     STRING_GOTO_ERROR2 "Etichetta '%s' non trovata\n"
     STRING_MD_ERROR "Una cartella o file esiste già.\n"
     STRING_MD_ERROR2 "Il percorso della nuova cartella non esiste.\n"
@@ -525,7 +525,7 @@ titolo        il nuovo titolo\n"
     STRING_ERROR_BADCOMMAND "Comando o nome di file errato - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Errore di memoria esaurita.\n"
     STRING_ERROR_CANNOTPIPE "Errore!  Impossibile ridirigere!  Impossibile aprire un file temporaneo!\n"
-    STRING_ERROR_D_PAUSEMSG "Premi un tasto per continuare . . ."
+    STRING_ERROR_D_PAUSEMSG "Premi un tasto per continuare . . . "
     STRING_ERROR_DRIVER_NOT_READY "Disco non pronto"
     STRING_PATH_ERROR "CMD: Non nell'ambiente '%s'\n"
     STRING_REPLACE_ERROR1 "Parametro non valido - %s\n"
@@ -551,8 +551,8 @@ titolo        il nuovo titolo\n"
     STRING_MKLINK_CREATED_JUNCTION "Junction creato per %s <<===>> %s\n"
     STRING_MORE "Avanti? "
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break.  Interrompere il file batch? (Si/No/Tutti)"
-    STRING_INVALID_OPERAND "Operando non valido."
-    STRING_EXPECTED_CLOSE_PAREN "Attesa una ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Attesa un numero o un nome di variabile."
-    STRING_SYNTAX_COMMAND_INCORRECT "La sintassi del comando è errata."
+    STRING_INVALID_OPERAND "Operando non valido.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Attesa una ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Attesa un numero o un nome di variabile.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "La sintassi del comando è errata.\n"
 END

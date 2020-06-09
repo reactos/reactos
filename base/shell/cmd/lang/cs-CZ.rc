@@ -28,7 +28,7 @@ To remove an alias from the alias list:\n\
     STRING_CALL_HELP "Calls one batch program from another.\n\n\
 CALL [drive:][path]filename [batch-parameter]\n\n\
   batch-parameter  Specifies any command-line information required by the\n\
-                   batch program."
+                   batch program.\n"
     STRING_CD_HELP "Changes the current directory or displays it's name\n\n\
 CHDIR [/D][drive:][path]\n\
 CHDIR[..|.]\n\
@@ -198,7 +198,7 @@ PUSHD [path | ..]\n\n\
   ECHO [message]\n\
   ECHO.             prints an empty line\n\n\
 Type ECHO without a parameter to display the current ECHO setting."
-    STRING_ECHO_HELP5 "ECHO is %s\n"
+    STRING_ECHO_HELP5 "ECHO is %s.\n"
     STRING_EXIT_HELP "Exits the command line interpreter.\n\nEXIT [/b] [ExitCode]\n\n\
   /B            Exits a batch file only.\n\
                 If run outside of a batch file it will exit cmd.exe\n\
@@ -233,7 +233,7 @@ To use the FOR command in a batch program, specify %%variable instead of\n\
     STRING_GOTO_HELP1 "Directs CMD to a labeled line in a batch script.\n\n\
 GOTO label\n\n\
   label  Specifies a text string used in a batch script as a label.\n\n\
-You type a label on a line by itself, beginning with a colon."
+You type a label on a line by itself, beginning with a colon.\n"
     STRING_IF_HELP1 "Performs conditional processing in batch programs.\n\n\
   IF [NOT] ERRORLEVEL number command\n\
   IF [NOT] string1==string2 command\n\
@@ -473,9 +473,9 @@ title         new title\n"
     STRING_ALIAS_ERROR "Po rozšíření aliasů je příkaz příliš dlouhý!\n"
     STRING_ASSOC_ERROR "Pro příponu %s nebyly nalezeny žádné asociace\n"
     STRING_BATCH_ERROR "Chyba při otevírání dávkového souboru\n"
-    STRING_CHOICE_ERROR "Neplatná volba. Očekávaný formát: /C[:]volby"
-    STRING_CHOICE_ERROR_TXT "Neplatná volba. Očekávaný formát: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Neplatná volba: %s"
+    STRING_CHOICE_ERROR "Neplatná volba. Očekávaný formát: /C[:]volby\n"
+    STRING_CHOICE_ERROR_TXT "Neplatná volba. Očekávaný formát: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Neplatná volba: %s\n"
     STRING_CMD_ERROR1 "Nelze přesměrovat vstup ze souboru %s\n"
     STRING_CMD_ERROR2 "Chyba při vytváření dočasného souboru pro data roury\n"
     STRING_CMD_ERROR3 "Nelze přesměrovat do souboru %s\n"
@@ -500,7 +500,7 @@ title         new title\n"
     STRING_FOR_ERROR4 "žádný příkaz po 'do'."
     STRING_FREE_ERROR1 "Neplatná jednotka"
     STRING_FREE_ERROR2 "bez popisku"
-    STRING_GOTO_ERROR1 "Pro GOTO nebyl zadán popisek"
+    STRING_GOTO_ERROR1 "Pro GOTO nebyl zadán popisek\n"
     STRING_GOTO_ERROR2 "Popisek '%s' nenalezen\n"
     STRING_MD_ERROR "Podadresář nebo soubor už existuje.\n"
     STRING_MD_ERROR2 "Cesta do nového adresáře neexistuje.\n"
@@ -521,7 +521,7 @@ title         new title\n"
     STRING_ERROR_BADCOMMAND "Neplatný příkaz nebo název souboru - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Chyba - nedostatek paměti.\n"
     STRING_ERROR_CANNOTPIPE "Chyba!  Nelze vytvořit rouru!  Nelze vytvořit dočasný soubor!\n"
-    STRING_ERROR_D_PAUSEMSG "Pokračujte stisknutím libovolné klávesy . . ."
+    STRING_ERROR_D_PAUSEMSG "Pokračujte stisknutím libovolné klávesy . . . "
     STRING_ERROR_DRIVER_NOT_READY "Jednotka není připravena"
     STRING_PATH_ERROR "CMD: Ne v prostředí '%s'\n"
     STRING_REPLACE_ERROR1 "Neplatný přepínač - %s\n"
@@ -547,8 +547,8 @@ title         new title\n"
     STRING_MKLINK_CREATED_JUNCTION "Junction vytvořena pro %s <<===>> %s\n"
     STRING_MORE "Více? "
     STRING_CANCEL_BATCH_FILE "\r\nStisknuto Ctrl-Break. Zrušit dávkový soubor? (Ano/Ne/Vše) "
-    STRING_INVALID_OPERAND "Neplatný operand."
-    STRING_EXPECTED_CLOSE_PAREN "Očekáváno ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Očekáváno číslo nebo název proměnné."
-    STRING_SYNTAX_COMMAND_INCORRECT "Syntaxe příkazu není správná."
+    STRING_INVALID_OPERAND "Neplatný operand.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Očekáváno ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Očekáváno číslo nebo název proměnné.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Syntaxe příkazu není správná.\n"
 END
