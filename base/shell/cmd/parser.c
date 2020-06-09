@@ -4,6 +4,9 @@
 
 #include "precomp.h"
 
+/* Enable this define for "buggy" Windows' CMD command echoer compatibility */
+#define MSCMD_ECHO_COMMAND_COMPAT
+
 /*
  * Parser debugging support. These flags are global so that their values can be
  * modified at runtime from a debugger. They correspond to the public Windows'
@@ -1127,48 +1130,85 @@ EchoCommand(PARSED_COMMAND *Cmd)
     switch (Cmd->Type)
     {
     case C_COMMAND:
+    {
         if (SubstituteForVars(Cmd->Command.First, Buf))
             ConOutPrintf(_T("%s"), Buf);
         if (SubstituteForVars(Cmd->Command.Rest, Buf))
+        {
             ConOutPrintf(_T("%s"), Buf);
+#ifdef MSCMD_ECHO_COMMAND_COMPAT
+            /* NOTE: For Windows compatibility, add a trailing space after printing the command parameter, if present */
+            if (*Buf) ConOutChar(_T(' '));
+#endif
+        }
         break;
+    }
 
     case C_QUIET:
         return;
 
     case C_BLOCK:
+    {
+        BOOLEAN bIsFirstCmdCRLF;
+
         ConOutChar(_T('('));
+
         Sub = Cmd->Subcommands;
-        if (Sub && !Sub->Next)
-        {
-            /* Single-command block: display all on one line */
-            EchoCommand(Sub);
-        }
-        else if (Sub)
-        {
-            /* Multi-command block: display parenthesis on separate lines */
+
+        bIsFirstCmdCRLF = (Sub && Sub->Next);
+
+#if defined(MSCMD_ECHO_COMMAND_COMPAT) && defined(MSCMD_PARSER_BUGS)
+        /*
+         * We will emulate Windows' CMD handling of "CRLF" and "&" multi-command
+         * enumeration within parenthesized command blocks.
+         */
+        bIsFirstCmdCRLF = bIsFirstCmdCRLF && (Sub->Type != C_MULTI);
+#endif
+
+        /*
+         * Single-command block: display all on one line.
+         * Multi-command block: display commands on separate lines.
+         */
+        if (bIsFirstCmdCRLF)
             ConOutChar(_T('\n'));
-            do
-            {
-                EchoCommand(Sub);
+
+        for (; Sub; Sub = Sub->Next)
+        {
+            EchoCommand(Sub);
+            if (Sub->Next)
+#ifdef MSCMD_ECHO_COMMAND_COMPAT
+                ConOutPuts(_T(" \n "));
+#else
                 ConOutChar(_T('\n'));
-                Sub = Sub->Next;
-            } while (Sub);
+#endif
         }
+
+        if (bIsFirstCmdCRLF)
+            ConOutChar(_T('\n'));
+
+#ifdef MSCMD_ECHO_COMMAND_COMPAT
+        /* NOTE: For Windows compatibility, add a trailing space after printing the closing parenthesis */
+        ConOutPuts(_T(") "));
+#else
         ConOutChar(_T(')'));
+#endif
         break;
+    }
 
     case C_MULTI:
     case C_OR:
     case C_AND:
     case C_PIPE:
+    {
         Sub = Cmd->Subcommands;
         EchoCommand(Sub);
         ConOutPrintf(_T(" %s "), OpString[Cmd->Type - C_OP_LOWEST]);
         EchoCommand(Sub->Next);
         break;
+    }
 
     case C_IF:
+    {
         ConOutPuts(_T("if"));
         if (Cmd->If.Flags & IFFLAG_IGNORECASE)
             ConOutPuts(_T(" /I"));
@@ -1187,8 +1227,10 @@ EchoCommand(PARSED_COMMAND *Cmd)
             EchoCommand(Sub->Next);
         }
         break;
+    }
 
     case C_FOR:
+    {
         ConOutPuts(_T("for"));
         if (Cmd->For.Switches & FOR_DIRS)      ConOutPuts(_T(" /D"));
         if (Cmd->For.Switches & FOR_F)         ConOutPuts(_T(" /F"));
@@ -1204,12 +1246,24 @@ EchoCommand(PARSED_COMMAND *Cmd)
         break;
     }
 
+    default:
+        ASSERT(FALSE);
+        break;
+    }
+
     for (Redir = Cmd->Redirections; Redir; Redir = Redir->Next)
     {
         if (SubstituteForVars(Redir->Filename, Buf))
         {
-            ConOutPrintf(_T(" %c%s%s"), _T('0') + Redir->Number,
+#ifdef MSCMD_ECHO_COMMAND_COMPAT
+            ConOutPrintf(_T("%c%s%s "),
+                         _T('0') + Redir->Number,
                          RedirString[Redir->Mode], Buf);
+#else
+            ConOutPrintf(_T(" %c%s%s"),
+                         _T('0') + Redir->Number,
+                         RedirString[Redir->Mode], Buf);
+#endif
         }
     }
 }
@@ -1325,6 +1379,10 @@ do { \
             PRINTF(_T(" %%%c in (%s) do "), Cmd->For.Variable, Cmd->For.List);
         RECURSE(Cmd->Subcommands);
         break;
+
+    default:
+        ASSERT(FALSE);
+        break;
     }
 
     for (Redir = Cmd->Redirections; Redir; Redir = Redir->Next)
@@ -1335,6 +1393,11 @@ do { \
                RedirString[Redir->Mode], Buf);
     }
     return Out;
+
+#undef CHAR
+#undef STRING
+#undef PRINTF
+#undef RECURSE
 }
 
 VOID
