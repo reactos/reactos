@@ -21,6 +21,8 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
+extern PVOID FrameBuffer;
+extern ULONG FrameBufferSize;
 
 BOOLEAN
 XboxFindPciBios(PPCI_REGISTRY_INFO BusData)
@@ -160,6 +162,56 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     return PartialResourceList;
 }
 
+static VOID
+DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
+{
+    CHAR Buffer[80];
+    PCONFIGURATION_COMPONENT_DATA ControllerKey;
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    ULONG Size;
+
+    if (FrameBufferSize == 0)
+        return;
+
+    strcpy(Buffer, "NV2A Framebuffer");
+
+    Size = sizeof(CM_PARTIAL_RESOURCE_LIST);
+    PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+    if (PartialResourceList == NULL)
+    {
+        ERR("Failed to allocate resource descriptor\n");
+        return;
+    }
+    memset(PartialResourceList, 0, Size);
+
+    /* Initialize resource descriptor */
+    PartialResourceList->Version = 1;
+    PartialResourceList->Revision = 1;
+    PartialResourceList->Count = 1;
+
+    /* Set Memory */
+    PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
+    PartialDescriptor->Type = CmResourceTypeMemory;
+    PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+    PartialDescriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+    PartialDescriptor->u.Memory.Start.LowPart = (ULONG_PTR)FrameBuffer & 0x0FFFFFFF;
+    PartialDescriptor->u.Memory.Length = FrameBufferSize;
+
+    FldrCreateComponentKey(BusKey,
+                           ControllerClass,
+                           DisplayController,
+                           0x0,
+                           0x0,
+                           0xFFFFFFFF,
+                           Buffer,
+                           PartialResourceList,
+                           Size,
+                           &ControllerKey);
+
+    TRACE("Created key: DisplayController\\0\n");
+}
+
 static
 VOID
 DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
@@ -202,6 +254,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* Detect ISA/BIOS devices */
     DetectBiosDisks(SystemKey, BusKey);
     DetectSerialPorts(BusKey, XboxGetSerialPort, MAX_XBOX_COM_PORTS);
+    DetectDisplayController(BusKey);
 
     /* FIXME: Detect more ISA devices */
 }
@@ -232,6 +285,7 @@ XboxHwDetect(VOID)
 
     /* Create the 'System' key */
     FldrCreateSystemKey(&SystemKey);
+    FldrSetIdentifier(SystemKey, "Original Xbox (PC/AT like)");
 
     GetHarddiskConfigurationData = XboxGetHarddiskConfigurationData;
     FindPciBios = XboxFindPciBios;
