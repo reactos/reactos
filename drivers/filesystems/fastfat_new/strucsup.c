@@ -93,6 +93,9 @@ FatFreeFcb (
     ExFreePool( Fcb );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 PNON_PAGED_FCB
 FatAllocateNonPagedFcb (
@@ -101,6 +104,9 @@ FatAllocateNonPagedFcb (
     return (PNON_PAGED_FCB) ExAllocateFromNPagedLookasideList( &FatNonPagedFcbLookasideList );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 VOID
 FatFreeNonPagedFcb (
@@ -114,6 +120,9 @@ FatFreeNonPagedFcb (
     ExFreeToNPagedLookasideList( &FatNonPagedFcbLookasideList, (PVOID) NonPagedFcb );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 PERESOURCE
 FatAllocateResource (
@@ -128,6 +137,9 @@ FatAllocateResource (
     return Resource;
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 VOID
 FatFreeResource (
@@ -143,6 +155,9 @@ FatFreeResource (
     ExFreeToNPagedLookasideList( &FatEResourceLookasideList, (PVOID) Resource );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 PIRP_CONTEXT
 FatAllocateIrpContext (
@@ -151,6 +166,9 @@ FatAllocateIrpContext (
     return (PIRP_CONTEXT) ExAllocateFromNPagedLookasideList( &FatIrpContextLookasideList );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 VOID
 FatFreeIrpContext (
