@@ -646,8 +646,12 @@ private:
         {
             hDwp = ::DeferWindowPos(hDwp, SnpshtPrev->m_hWnd, NULL,
                 0, 0, SnpshtWidth, Height, 0);
+
+            // hide the padding if snapshot window width == 0
+            int RicheditPosX = SnpshtWidth ? (SnpshtWidth + INFO_DISPLAY_PADDING) : 0;
+
             hDwp = ::DeferWindowPos(hDwp, RichEdit->m_hWnd, NULL,
-                SnpshtWidth + INFO_DISPLAY_PADDING, 0, Width - SnpshtWidth - INFO_DISPLAY_PADDING, Height, 0);
+                RicheditPosX, 0, Width - RicheditPosX, Height, 0);
         }
         EndDeferWindowPos(hDwp);
     }
