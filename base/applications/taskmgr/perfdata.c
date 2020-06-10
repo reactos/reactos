@@ -179,7 +179,6 @@ CachedGetUserFromSid(
 
 void PerfDataRefresh(void)
 {
-    ULONG                                      ulSize;
     NTSTATUS                                   status;
     ULONG                                      BufferSize;
     PSYSTEM_PROCESS_INFORMATION                pSPI;
@@ -191,8 +190,8 @@ void PerfDataRefresh(void)
     SYSTEM_TIMEOFDAY_INFORMATION               SysTimeInfo;
     SYSTEM_FILECACHE_INFORMATION               SysCacheInfo;
     BOOLEAN                                    HasSysCacheInfo, HasSysPerfInfo, HasSysTimeInfo;
-    PSYSTEM_HANDLE_INFORMATION                 pSysHandleInfo;
-    PSYSTEM_PROCESS_INFORMATION                pSysProcessInfo;
+    PSYSTEM_HANDLE_INFORMATION                 pSysHandleInfo = NULL;
+    PSYSTEM_PROCESS_INFORMATION                pSysProcessInfo = NULL;
     PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  pSysProcessorPerfInfo;
     double                                     CurrentKernelTime;
     PSECURITY_DESCRIPTOR                       ProcessSD;
@@ -235,19 +234,30 @@ void PerfDataRefresh(void)
     BufferSize = 0;
     do
     {
-        BufferSize += 0x10000;
+        status = NtQuerySystemInformation(SystemHandleInformation,
+                                          pSysHandleInfo,
+                                          BufferSize,
+                                          &BufferSize);
+        if (status != STATUS_INFO_LENGTH_MISMATCH)
+        {
+            break;
+        }
+
+        if (pSysHandleInfo)
+        {
+            HeapFree(GetProcessHeap(), 0, pSysHandleInfo);
+        }
         pSysHandleInfo = HeapAlloc(GetProcessHeap(), 0, BufferSize);
         if (!pSysHandleInfo)
         {
             break;
         }
-
-        status = NtQuerySystemInformation(SystemHandleInformation, pSysHandleInfo, BufferSize, &ulSize);
-
-        if (status == STATUS_INFO_LENGTH_MISMATCH) {
-            HeapFree(GetProcessHeap(), 0, pSysHandleInfo);
-        }
-    } while (status == STATUS_INFO_LENGTH_MISMATCH);
+    } while (TRUE);
+    if (!NT_SUCCESS(status))
+    {
+        HeapFree(GetProcessHeap(), 0, pSysHandleInfo);
+        pSysHandleInfo = NULL;
+    }
 
     /* Get process information
      * We don't know how much data there is so just keep
@@ -256,20 +266,30 @@ void PerfDataRefresh(void)
     BufferSize = 0;
     do
     {
-        BufferSize += 0x10000;
+        status = NtQuerySystemInformation(SystemProcessInformation,
+                                          pSysProcessInfo,
+                                          BufferSize,
+                                          &BufferSize);
+        if (status != STATUS_INFO_LENGTH_MISMATCH)
+        {
+            break;
+        }
+
+        if (pSysProcessInfo)
+        {
+            HeapFree(GetProcessHeap(), 0, pSysProcessInfo);
+        }
         pSysProcessInfo = HeapAlloc(GetProcessHeap(), 0, BufferSize);
         if (!pSysProcessInfo)
         {
             break;
         }
-
-        status = NtQuerySystemInformation(SystemProcessInformation, pSysProcessInfo, BufferSize, &ulSize);
-
-        if (status == STATUS_INFO_LENGTH_MISMATCH) {
-            HeapFree(GetProcessHeap(), 0, pSysProcessInfo);
-        }
-
-    } while (status == STATUS_INFO_LENGTH_MISMATCH);
+    } while (TRUE);
+    if (!NT_SUCCESS(status))
+    {
+        HeapFree(GetProcessHeap(), 0, pSysProcessInfo);
+        pSysProcessInfo = NULL;
+    }
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
