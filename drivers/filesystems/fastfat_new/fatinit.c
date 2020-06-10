@@ -632,14 +632,14 @@ FatIsFujitsuFMR (
 
 Routine Description:
 
-    This routine tells if is we running on a FujitsuFMR machine.
+    This routine tells us if we are running on a FujitsuFMR machine.
 
 Arguments:
 
 
 Return Value:
 
-    BOOLEAN - TRUE is we are and FALSE otherwise
+    BOOLEAN - TRUE if we are and FALSE otherwise
 
 --*/
 
