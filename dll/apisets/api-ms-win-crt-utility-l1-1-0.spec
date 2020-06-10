@@ -13,7 +13,7 @@
 @ stdcall abs() msvcrt.abs
 @ stdcall bsearch() msvcrt.bsearch
 @ stub bsearch_s
-@ stdcall div() msvcrt.div
+@ cdecl div() msvcrt.div
 @ stub imaxabs
 @ stub imaxdiv
 @ stdcall labs() msvcrt.labs

@@ -952,7 +952,7 @@
 @ cdecl cosh(double)
 @ cdecl ctime(ptr)
 @ cdecl difftime(long long)
-@ cdecl div(long long)
+@ cdecl -ret64 div(long long)
 @ cdecl exit(long)
 @ cdecl exp(double)
 @ cdecl fabs(double)

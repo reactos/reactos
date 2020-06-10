@@ -357,7 +357,7 @@
   @ cdecl cosh(double) msvcrt.cosh
   @ cdecl ctime(ptr) msvcrt.ctime
   @ cdecl difftime(long long) msvcrt.difftime
-  @ cdecl div(long long) msvcrt.div
+  @ cdecl div() msvcrt.div
   @ cdecl exit(long) msvcrt.exit
   @ cdecl exp(double) msvcrt.exp
   @ cdecl fabs(double) msvcrt.fabs

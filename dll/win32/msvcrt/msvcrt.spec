@@ -800,7 +800,7 @@
 @ cdecl -arch=x86_64,arm coshf(long)
 @ cdecl ctime(ptr)
 @ cdecl difftime(long long)
-@ cdecl div(long long)
+@ cdecl -ret64 div(long long)
 @ cdecl exit(long)
 @ cdecl exp(double)
 @ cdecl -arch=x86_64,arm expf(long)
