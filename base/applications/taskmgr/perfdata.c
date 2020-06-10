@@ -125,13 +125,26 @@ static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)
 VOID
 WINAPI
 CachedGetUserFromSid(
-    PSID pSid,
-    LPWSTR pUserName,
-    PULONG pcwcUserName)
+    _In_opt_ PSID pSid,
+    _Out_ LPWSTR pUserName,
+    _Inout_ PULONG pcwcUserName)
 {
     PLIST_ENTRY pCur;
     PSIDTOUSERNAME pEntry;
     ULONG cbSid, cwcUserName;
+
+    // It seems NT5.2- does not check the username arguments, especially 'NULL' and '0'.
+
+    if (!pSid)
+    {
+        // TODO: Probably make this string a localizable resource.
+        static const WCHAR szUserNameFromNull[] = L"(unknown)";
+
+        wcsncpy(pUserName, szUserNameFromNull, *pcwcUserName - 1);
+        pUserName[*pcwcUserName - 1] = UNICODE_NULL;
+        *pcwcUserName = wcslen(pUserName);
+        return;
+    }
 
     cwcUserName = *pcwcUserName;
 
