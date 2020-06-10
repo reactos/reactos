@@ -29,6 +29,9 @@
 #include "debug.h"
 #include "priority.h"
 
+#define NDEBUG
+#include <reactos/debug.h>
+
 #define STATUS_WINDOW   2001
 
 /* Global Variables: */
@@ -116,18 +119,25 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     TOKEN_PRIVILEGES tkp;
     HANDLE hMutex;
 
-    /* check wether we're already running or not */
     hMutex = CreateMutexW(NULL, TRUE, L"taskmgrros");
-    if (hMutex && GetLastError() == ERROR_ALREADY_EXISTS)
+    if (!hMutex)
+    {
+        DPRINT1("CreateMutexW() failed! (%lu)\n", GetLastError());
+        return 1;
+    }
+
+    /* check wether we're already running or not */
+    if (GetLastError() == ERROR_ALREADY_EXISTS)
     {
         /* Restore existing taskmanager and bring window to front */
         /* Relies on the fact that the application title string and window title are the same */
         HWND hTaskMgr;
         TCHAR szTaskmgr[128];
 
+        DPRINT("Already running\n");
+
         LoadString(hInst, IDS_APP_TITLE, szTaskmgr, sizeof(szTaskmgr)/sizeof(TCHAR));
         hTaskMgr = FindWindow(NULL, szTaskmgr);
-
         if (hTaskMgr != NULL)
         {
             SendMessage(hTaskMgr, WM_SYSCOMMAND, SC_RESTORE, 0);
@@ -136,10 +146,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
         CloseHandle(hMutex);
         return 0;
-    }
-    else if (!hMutex)
-    {
-        return 1;
     }
 
     /* Initialize global variables */
@@ -175,6 +181,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     /* Initialize perf data */
     if (!PerfDataInitialize())
     {
+        DPRINT1("PerfDataInitialize() failed!\n");
+        CloseHandle(hMutex);
         return -1;
     }
 

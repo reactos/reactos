@@ -30,6 +30,9 @@
 #include <ndk/psfuncs.h>
 #include <ndk/exfuncs.h>
 
+#define NDEBUG
+#include <reactos/debug.h>
+
 CRITICAL_SECTION                           PerfDataCriticalSection;
 PPERFDATA                                  pPerfDataOld = NULL;    /* Older perf data (saved to establish delta values) */
 PPERFDATA                                  pPerfData = NULL;       /* Most recent copy of perf data */
@@ -66,19 +69,28 @@ BOOL PerfDataInitialize(void)
     SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
     NTSTATUS    status;
 
-    InitializeCriticalSection(&PerfDataCriticalSection);
-
     /*
      * Get number of processors in the system
      */
     status = NtQuerySystemInformation(SystemBasicInformation, &SystemBasicInfo, sizeof(SystemBasicInfo), NULL);
     if (!NT_SUCCESS(status))
+    {
+        DPRINT1("NtQuerySystemInformation(SystemBasicInformation) failed! (%#lx)\n", status);
         return FALSE;
+    }
 
     /*
      * Create the SYSTEM Sid
      */
-    AllocateAndInitializeSid(&NtSidAuthority, 1, SECURITY_LOCAL_SYSTEM_RID, 0, 0, 0, 0, 0, 0, 0, &SystemUserSid);
+    if (!AllocateAndInitializeSid(&NtSidAuthority,
+                                  1, SECURITY_LOCAL_SYSTEM_RID, 0, 0, 0, 0, 0, 0, 0,
+                                  &SystemUserSid))
+    {
+        DPRINT1("AllocateAndInitializeSid() failed. (%lu)\n", GetLastError());
+    }
+
+    InitializeCriticalSection(&PerfDataCriticalSection);
+
     return TRUE;
 }
 
@@ -95,7 +107,6 @@ void PerfDataUninitialize(void)
     if (SystemUserSid != NULL)
     {
         FreeSid(SystemUserSid);
-        SystemUserSid = NULL;
     }
 
     /* Free user names cache list */
