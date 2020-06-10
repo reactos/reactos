@@ -30,25 +30,28 @@
 #include <ndk/psfuncs.h>
 #include <ndk/exfuncs.h>
 
-CRITICAL_SECTION                           PerfDataCriticalSection;
-PPERFDATA                                  pPerfDataOld = NULL;    /* Older perf data (saved to establish delta values) */
-PPERFDATA                                  pPerfData = NULL;       /* Most recent copy of perf data */
-ULONG                                      ProcessCountOld = 0;
-ULONG                                      ProcessCount = 0;
-double                                     dbIdleTime;
-double                                     dbKernelTime;
-double                                     dbSystemTime;
-LARGE_INTEGER                              liOldIdleTime = {{0,0}};
-double                                     OldKernelTime = 0;
-LARGE_INTEGER                              liOldSystemTime = {{0,0}};
-SYSTEM_PERFORMANCE_INFORMATION             SystemPerfInfo;
-SYSTEM_BASIC_INFORMATION                   SystemBasicInfo;
-SYSTEM_FILECACHE_INFORMATION               SystemCacheInfo;
-SYSTEM_HANDLE_INFORMATION                  SystemHandleInfo;
-PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SystemProcessorTimeInfo = NULL;
-PSID                                       SystemUserSid = NULL;
+// #define NDEBUG
+// #include <reactos/debug.h>
 
-PCMD_LINE_CACHE global_cache = NULL;
+static CRITICAL_SECTION                          PerfDataCriticalSection;
+static PPERFDATA                                 pPerfDataOld;    /* Older perf data (saved to establish delta values) */
+static PPERFDATA                                 pPerfData;       /* Most recent copy of perf data */
+static ULONG                                     ProcessCountOld;
+static ULONG                                     ProcessCount;
+static double                                    dbIdleTime;
+static double                                    dbKernelTime;
+static double                                    dbSystemTime;
+static LARGE_INTEGER                             liOldIdleTime;
+static double                                    OldKernelTime;
+static LARGE_INTEGER                             liOldSystemTime;
+static SYSTEM_PERFORMANCE_INFORMATION            SystemPerfInfo;
+static SYSTEM_BASIC_INFORMATION                  SystemBasicInfo;
+static SYSTEM_FILECACHE_INFORMATION              SystemCacheInfo;
+static SYSTEM_HANDLE_INFORMATION                 SystemHandleInfo;
+static PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SystemProcessorTimeInfo;
+static PSID                                      SystemUserSid;
+
+static PCMD_LINE_CACHE global_cache;
 
 #define CMD_LINE_MIN(a, b) (a < b ? a - sizeof(WCHAR) : b)
 
@@ -365,13 +368,9 @@ void PerfDataRefresh(void)
         pPerfData[Idx].PeakWorkingSetSizeBytes = pSPI->PeakWorkingSetSize;
         if (pPDOld)
             pPerfData[Idx].WorkingSetSizeDelta = labs((LONG)pSPI->WorkingSetSize - (LONG)pPDOld->WorkingSetSizeBytes);
-        else
-            pPerfData[Idx].WorkingSetSizeDelta = 0;
         pPerfData[Idx].PageFaultCount = pSPI->PageFaultCount;
         if (pPDOld)
             pPerfData[Idx].PageFaultCountDelta = labs((LONG)pSPI->PageFaultCount - (LONG)pPDOld->PageFaultCount);
-        else
-            pPerfData[Idx].PageFaultCountDelta = 0;
         pPerfData[Idx].VirtualMemorySizeBytes = pSPI->VirtualSize;
         pPerfData[Idx].PagedPoolUsagePages = pSPI->QuotaPeakPagedPoolUsage;
         pPerfData[Idx].NonPagedPoolUsagePages = pSPI->QuotaPeakNonPagedPoolUsage;
@@ -379,9 +378,6 @@ void PerfDataRefresh(void)
         pPerfData[Idx].HandleCount = pSPI->HandleCount;
         pPerfData[Idx].ThreadCount = pSPI->NumberOfThreads;
         pPerfData[Idx].SessionId = pSPI->SessionId;
-        pPerfData[Idx].UserName[0] = UNICODE_NULL;
-        pPerfData[Idx].USERObjectCount = 0;
-        pPerfData[Idx].GDIObjectCount = 0;
         ProcessUser = SystemUserSid;
         ProcessSD = NULL;
 
