@@ -47,7 +47,7 @@ static LARGE_INTEGER                             liOldSystemTime;
 static SYSTEM_PERFORMANCE_INFORMATION            SystemPerfInfo;
 static SYSTEM_BASIC_INFORMATION                  SystemBasicInfo;
 static SYSTEM_FILECACHE_INFORMATION              SystemCacheInfo;
-static SYSTEM_HANDLE_INFORMATION                 SystemHandleInfo;
+static ULONG                                     SystemNumberOfHandles;
 static PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SystemProcessorTimeInfo;
 static PSID                                      SystemUserSid;
 
@@ -179,7 +179,6 @@ void PerfDataRefresh(void)
 {
     ULONG                                      ulSize;
     NTSTATUS                                   status;
-    LPBYTE                                     pBuffer;
     ULONG                                      BufferSize;
     PSYSTEM_PROCESS_INFORMATION                pSPI;
     PPERFDATA                                  pPDOld;
@@ -189,7 +188,8 @@ void PerfDataRefresh(void)
     SYSTEM_PERFORMANCE_INFORMATION             SysPerfInfo;
     SYSTEM_TIMEOFDAY_INFORMATION               SysTimeInfo;
     SYSTEM_FILECACHE_INFORMATION               SysCacheInfo;
-    LPBYTE                                     SysHandleInfoData;
+    PSYSTEM_HANDLE_INFORMATION                 pSysHandleInfo;
+    PSYSTEM_PROCESS_INFORMATION                pSysProcessInfo;
     PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SysProcessorTimeInfo;
     double                                     CurrentKernelTime;
     PSECURITY_DESCRIPTOR                       ProcessSD;
@@ -231,12 +231,12 @@ void PerfDataRefresh(void)
     do
     {
         BufferSize += 0x10000;
-        SysHandleInfoData = (LPBYTE)HeapAlloc(GetProcessHeap(), 0, BufferSize);
+        pSysHandleInfo = HeapAlloc(GetProcessHeap(), 0, BufferSize);
 
-        status = NtQuerySystemInformation(SystemHandleInformation, SysHandleInfoData, BufferSize, &ulSize);
+        status = NtQuerySystemInformation(SystemHandleInformation, pSysHandleInfo, BufferSize, &ulSize);
 
         if (status == STATUS_INFO_LENGTH_MISMATCH) {
-            HeapFree(GetProcessHeap(), 0, SysHandleInfoData);
+            HeapFree(GetProcessHeap(), 0, pSysHandleInfo);
         }
 
     } while (status == STATUS_INFO_LENGTH_MISMATCH);
@@ -249,12 +249,12 @@ void PerfDataRefresh(void)
     do
     {
         BufferSize += 0x10000;
-        pBuffer = (LPBYTE)HeapAlloc(GetProcessHeap(), 0, BufferSize);
+        pSysProcessInfo = HeapAlloc(GetProcessHeap(), 0, BufferSize);
 
-        status = NtQuerySystemInformation(SystemProcessInformation, pBuffer, BufferSize, &ulSize);
+        status = NtQuerySystemInformation(SystemProcessInformation, pSysProcessInfo, BufferSize, &ulSize);
 
         if (status == STATUS_INFO_LENGTH_MISMATCH) {
-            HeapFree(GetProcessHeap(), 0, pBuffer);
+            HeapFree(GetProcessHeap(), 0, pSysProcessInfo);
         }
 
     } while (status == STATUS_INFO_LENGTH_MISMATCH);
@@ -282,8 +282,8 @@ void PerfDataRefresh(void)
     /*
      * Save system handle info
      */
-    memcpy(&SystemHandleInfo, SysHandleInfoData, sizeof(SYSTEM_HANDLE_INFORMATION));
-    HeapFree(GetProcessHeap(), 0, SysHandleInfoData);
+    SystemNumberOfHandles = pSysHandleInfo->NumberOfHandles;
+    HeapFree(GetProcessHeap(), 0, pSysHandleInfo);
 
     for (CurrentKernelTime=0, Idx=0; Idx<(ULONG)SystemBasicInfo.NumberOfProcessors; Idx++) {
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].KernelTime);
@@ -318,7 +318,7 @@ void PerfDataRefresh(void)
      */
     ProcessCountOld = ProcessCount;
     ProcessCount = 0;
-    pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
+    pSPI = pSysProcessInfo;
     while (pSPI) {
         ProcessCount++;
         if (pSPI->NextEntryOffset == 0)
@@ -329,7 +329,7 @@ void PerfDataRefresh(void)
     /* Now alloc a new PERFDATA array and fill in the data */
     pPerfData = (PPERFDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PERFDATA) * ProcessCount);
 
-    pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
+    pSPI = pSysProcessInfo;
     for (Idx=0; Idx<ProcessCount; Idx++) {
         /* Get the old perf data for this process (if any) */
         /* so that we can establish delta values */
@@ -434,7 +434,7 @@ ClearInfo:
         pPerfData[Idx].KernelTime.QuadPart = pSPI->KernelTime.QuadPart;
         pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->NextEntryOffset);
     }
-    HeapFree(GetProcessHeap(), 0, pBuffer);
+    HeapFree(GetProcessHeap(), 0, pSysProcessInfo);
     if (pPerfDataOld) {
         HeapFree(GetProcessHeap(), 0, pPerfDataOld);
     }
@@ -1102,7 +1102,7 @@ ULONG PerfDataGetSystemHandleCount(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    HandleCount = SystemHandleInfo.NumberOfHandles;
+    HandleCount = SystemNumberOfHandles;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
