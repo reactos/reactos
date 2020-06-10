@@ -40,17 +40,6 @@ diff -pudN e:\wine\dlls\ole32/compobj.c e:\reactos\dll\win32\ole32/compobj.c
 diff -pudN e:\wine\dlls\ole32/stg_prop.c e:\reactos\dll\win32\ole32/stg_prop.c
 --- e:\wine\dlls\ole32/stg_prop.c	2016-11-16 17:29:23 +0100
 +++ e:\reactos\dll\win32\ole32/stg_prop.c	2016-08-15 16:49:04 +0100
-@@ -41,6 +41,10 @@
- 
- WINE_DEFAULT_DEBUG_CHANNEL(storage);
- 
-+#ifdef _MSC_VER
-+#define __ASM_STDCALL_FUNC(name,args,code)
-+#endif
-+
- static inline StorageImpl *impl_from_IPropertySetStorage( IPropertySetStorage *iface )
- {
-     return CONTAINING_RECORD(iface, StorageImpl, base.IPropertySetStorage_iface);
 @@ -1013,7 +1017,13 @@ static HRESULT PropertyStorage_ReadDicti
      return hr;
  }
