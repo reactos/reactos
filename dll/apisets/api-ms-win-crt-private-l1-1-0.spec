@@ -180,7 +180,7 @@
 @ stub _o__atol_l
 @ stub _o__atoldbl
 @ stub _o__atoldbl_l
-@ stub _o__atoll_l
+@ stub -ret64 _o__atoll_l
 @ stub _o__beep
 @ stub _o__beginthread
 @ stub _o__beginthreadex
@@ -699,11 +699,11 @@
 @ stub -ret64 _o__strtoi64_l
 @ stub _o__strtol_l
 @ stub _o__strtold_l
-@ stub _o__strtoll_l
+@ stub -ret64 _o__strtoll_l
 @ stub -ret64 _o__strtoui64
 @ stub -ret64 _o__strtoui64_l
 @ stub _o__strtoul_l
-@ stub _o__strtoull_l
+@ stub -ret64 _o__strtoull_l
 @ stub _o__strupr
 @ stub _o__strupr_l
 @ stub _o__strupr_s
@@ -779,13 +779,13 @@
 @ stub -ret64 _o__wcstoi64_l
 @ stub _o__wcstol_l
 @ stub _o__wcstold_l
-@ stub _o__wcstoll_l
+@ stub -ret64 _o__wcstoll_l
 @ stub _o__wcstombs_l
 @ stub _o__wcstombs_s_l
 @ stub -ret64 _o__wcstoui64
 @ stub -ret64 _o__wcstoui64_l
 @ stub _o__wcstoul_l
-@ stub _o__wcstoull_l
+@ stub -ret64 _o__wcstoull_l
 @ stub _o__wcsupr
 @ stub _o__wcsupr_l
 @ stub _o__wcsupr_s
@@ -863,8 +863,8 @@
 @ stub _o__wtoi_l
 @ stub _o__wtol
 @ stub _o__wtol_l
-@ stub _o__wtoll
-@ stub _o__wtoll_l
+@ stub -ret64 _o__wtoll
+@ stub -ret64 _o__wtoll_l
 @ stub _o__wunlink
 @ stub _o__wutime32
 @ stub _o__wutime64
@@ -894,7 +894,7 @@
 @ stub _o_atof
 @ stub _o_atoi
 @ stub _o_atol
-@ stub _o_atoll
+@ stub -ret64 _o_atoll
 @ stub _o_bsearch
 @ stub _o_bsearch_s
 @ stub _o_btowc
@@ -1103,9 +1103,9 @@
 @ stub _o_strtok_s
 @ stub _o_strtol
 @ stub _o_strtold
-@ stub _o_strtoll
+@ stub -ret64 _o_strtoll
 @ stub _o_strtoul
-@ stub _o_strtoull
+@ stub -ret64 _o_strtoull
 @ stub _o_system
 @ stub _o_tan
 @ stub _o_tanf
@@ -1140,11 +1140,11 @@
 @ stub _o_wcstok_s
 @ stub _o_wcstol
 @ stub _o_wcstold
-@ stub _o_wcstoll
+@ stub -ret64 _o_wcstoll
 @ stub _o_wcstombs
 @ stub _o_wcstombs_s
 @ stub _o_wcstoul
-@ stub _o_wcstoull
+@ stub -ret64 _o_wcstoull
 @ stub _o_wctob
 @ stub _o_wctomb
 @ stub _o_wctomb_s
