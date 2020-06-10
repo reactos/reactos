@@ -135,7 +135,6 @@ BEGIN
             MENUITEM "低(&L)", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "関係の設定(&A)...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "デバッグ チャンネルの変更(&C)...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
