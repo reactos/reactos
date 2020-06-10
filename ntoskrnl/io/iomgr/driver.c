@@ -299,6 +299,70 @@ IopNormalizeImagePath(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+IopQueryServiceSettings(
+    _In_ PUNICODE_STRING ServiceName,
+    _Out_ PUNICODE_STRING ServiceImagePath,
+    _Out_ PULONG ServiceStart)
+{
+    NTSTATUS Status;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
+    UNICODE_STRING CCSName = RTL_CONSTANT_STRING(
+        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
+    HANDLE CCSKey, ServiceKey;
+
+    /* Open CurrentControlSet */
+    Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                &CCSName, Status);
+        return Status;
+    }
+
+    /* Open service key */
+    Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                ServiceName, Status);
+        ZwClose(CCSKey);
+        return Status;
+    }
+
+    /*
+     * Get information about the service.
+     */
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+
+    RtlInitUnicodeString(ServiceImagePath, NULL);
+
+    QueryTable[0].Name = L"Start";
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[0].EntryContext = ServiceStart;
+
+    QueryTable[1].Name = L"ImagePath";
+    QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[1].EntryContext = ServiceImagePath;
+
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                                    (PWSTR)ServiceKey,
+                                    QueryTable,
+                                    NULL,
+                                    NULL);
+
+    ZwClose(ServiceKey);
+    ZwClose(CCSKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlQueryRegistryValues() failed for '%wZ' (Status %lx)\n", ServiceName, Status);
+        return Status;
+    }
+
+    return Status;
+}
+
 /*
  * IopLoadServiceModule
  *
@@ -317,11 +381,9 @@ IopLoadServiceModule(
     IN PUNICODE_STRING ServiceName,
     OUT PLDR_DATA_TABLE_ENTRY *ModuleObject)
 {
-    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
     ULONG ServiceStart;
-    UNICODE_STRING ServiceImagePath, CCSName;
+    UNICODE_STRING ServiceImagePath;
     NTSTATUS Status;
-    HANDLE CCSKey, ServiceKey;
     PVOID BaseAddress;
 
     ASSERT(ExIsResourceAcquiredExclusiveLite(&IopDriverLoadResource));
@@ -341,54 +403,10 @@ IopLoadServiceModule(
     }
     else
     {
-        /* Open CurrentControlSet */
-        RtlInitUnicodeString(&CCSName,
-                             L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
-        Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
+        Status = IopQueryServiceSettings(ServiceName, &ServiceImagePath, &ServiceStart);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
-                    &CCSName, Status);
-            return Status;
-        }
-
-        /* Open service key */
-        Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
-                    ServiceName, Status);
-            ZwClose(CCSKey);
-            return Status;
-        }
-
-        /*
-         * Get information about the service.
-         */
-        RtlZeroMemory(QueryTable, sizeof(QueryTable));
-
-        RtlInitUnicodeString(&ServiceImagePath, NULL);
-
-        QueryTable[0].Name = L"Start";
-        QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-        QueryTable[0].EntryContext = &ServiceStart;
-
-        QueryTable[1].Name = L"ImagePath";
-        QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
-        QueryTable[1].EntryContext = &ServiceImagePath;
-
-        Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                        (PWSTR)ServiceKey,
-                                        QueryTable,
-                                        NULL,
-                                        NULL);
-
-        ZwClose(ServiceKey);
-        ZwClose(CCSKey);
-
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("RtlQueryRegistryValues() failed (Status %x)\n", Status);
+            DPRINT("IopQueryServiceSettings() failed for '%wZ' (Status %lx)\n", ServiceName, Status);
             return Status;
         }
     }
