@@ -468,21 +468,23 @@ void AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung)
     else
     {
         pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)HeapAlloc(GetProcessHeap(), 0, sizeof(APPLICATION_PAGE_LIST_ITEM));
+        if (pAPLI)
+        {
+            pAPLI->hWnd = hWnd;
+            pAPLI->hIcon = hIcon;
+            pAPLI->bHung = bHung;
+            wcscpy(pAPLI->szTitle, szTitle);
 
-        pAPLI->hWnd = hWnd;
-        pAPLI->hIcon = hIcon;
-        pAPLI->bHung = bHung;
-        wcscpy(pAPLI->szTitle, szTitle);
-
-        /* Add the item to the list */
-        memset(&item, 0, sizeof(LV_ITEM));
-        item.mask = LVIF_TEXT|LVIF_IMAGE|LVIF_PARAM;
-        ImageList_AddIcon(hImageListLarge, hIcon);
-        item.iImage = ImageList_AddIcon(hImageListSmall, hIcon);
-        item.pszText = LPSTR_TEXTCALLBACK;
-        item.iItem = ListView_GetItemCount(hApplicationPageListCtrl);
-        item.lParam = (LPARAM)pAPLI;
-        (void)ListView_InsertItem(hApplicationPageListCtrl, &item);
+            /* Add the item to the list */
+            memset(&item, 0, sizeof(LV_ITEM));
+            item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
+            ImageList_AddIcon(hImageListLarge, hIcon);
+            item.iImage = ImageList_AddIcon(hImageListSmall, hIcon);
+            item.pszText = LPSTR_TEXTCALLBACK;
+            item.iItem = ListView_GetItemCount(hApplicationPageListCtrl);
+            item.lParam = (LPARAM)pAPLI;
+            (void)ListView_InsertItem(hApplicationPageListCtrl, &item);
+        }
     }
 
     /* Select first item if any */
@@ -748,6 +750,11 @@ void ApplicationPage_OnWindowsTile(DWORD dwMode)
     int                           nWndCount;
 
     hWndArray = (HWND*)HeapAlloc(GetProcessHeap(), 0, sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
+    if (!hWndArray)
+    {
+        return;
+    }
+
     nWndCount = 0;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
@@ -821,6 +828,11 @@ void ApplicationPage_OnWindowsCascade(void)
     int                           nWndCount;
 
     hWndArray = (HWND*)HeapAlloc(GetProcessHeap(), 0, sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
+    if (!hWndArray)
+    {
+        return;
+    }
+
     nWndCount = 0;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {

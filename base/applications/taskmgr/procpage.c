@@ -542,6 +542,11 @@ void AddProcess(ULONG Index)
     if (!bAlreadyInList)  /* Add */
     {
         pData = (LPPROCESS_PAGE_LIST_ITEM)HeapAlloc(GetProcessHeap(), 0, sizeof(PROCESS_PAGE_LIST_ITEM));
+        if (!pData)
+        {
+            return;
+        }
+
         pData->ProcessId = pid;
 
         /* Add the item to the list */
