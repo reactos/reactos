@@ -34,14 +34,14 @@
 @ stub _ltow_s
 @ stub _strtod_l
 @ stub _strtof_l
-@ stdcall _strtoi64() msvcrt._strtoi64
-@ stub _strtoi64_l
+@ cdecl _strtoi64() msvcrt._strtoi64
+@ stub -ret64 _strtoi64_l
 @ stub _strtoimax_l
 @ stub _strtol_l
 @ stub _strtold_l
 @ stub _strtoll_l
-@ stdcall _strtoui64() msvcrt._strtoui64
-@ stub _strtoui64_l
+@ cdecl _strtoui64() msvcrt._strtoui64
+@ stub -ret64 _strtoui64_l
 @ stub _strtoul_l
 @ stub _strtoull_l
 @ stub _strtoumax_l
@@ -55,16 +55,16 @@
 @ stub _ultow_s
 @ stub _wcstod_l
 @ stub _wcstof_l
-@ stdcall _wcstoi64() msvcrt._wcstoi64
-@ stub _wcstoi64_l
+@ cdecl _wcstoi64() msvcrt._wcstoi64
+@ stub -ret64 _wcstoi64_l
 @ stub _wcstoimax_l
 @ stub _wcstol_l
 @ stub _wcstold_l
 @ stub _wcstoll_l
 @ stub _wcstombs_l
 @ stub _wcstombs_s_l
-@ stdcall _wcstoui64() msvcrt._wcstoui64
-@ stub _wcstoui64_l
+@ cdecl _wcstoui64() msvcrt._wcstoui64
+@ stub -ret64 _wcstoui64_l
 @ stub _wcstoul_l
 @ stub _wcstoull_l
 @ stub _wcstoumax_l
@@ -73,8 +73,8 @@
 @ stdcall _wtof() msvcrt._wtof
 @ stub _wtof_l
 @ stdcall _wtoi() msvcrt._wtoi
-@ stdcall _wtoi64() msvcrt._wtoi64
-@ stub _wtoi64_l
+@ cdecl _wtoi64() msvcrt._wtoi64
+@ stub -ret64 _wtoi64_l
 @ stub _wtoi_l
 @ stdcall _wtol() msvcrt._wtol
 @ stub _wtol_l

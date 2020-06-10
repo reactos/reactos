@@ -28,12 +28,12 @@
 @ stdcall _wcsicmp() msvcrt._wcsicmp
 @ stub _wcslwr_s
 @ stdcall _wcsnicmp() msvcrt._wcsnicmp
-@ stdcall _wcstoi64() msvcrt._wcstoi64
-@ stdcall _wcstoui64() msvcrt._wcstoui64
+@ cdecl _wcstoi64() msvcrt._wcstoi64
+@ cdecl _wcstoui64() msvcrt._wcstoui64
 @ stub _wcsupr_s
 @ stub _wsplitpath_s
 @ stdcall _wtoi() msvcrt._wtoi
-@ stdcall _wtoi64() msvcrt._wtoi64
+@ cdecl _wtoi64() msvcrt._wtoi64
 @ stdcall _wtol() msvcrt._wtol
 @ stdcall atoi() msvcrt.atoi
 @ stdcall atol() msvcrt.atol

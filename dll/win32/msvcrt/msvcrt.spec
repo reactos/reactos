@@ -651,8 +651,8 @@
 @ cdecl _strrev(str)
 @ cdecl _strset(str long)
 @ cdecl _strtime(ptr)
-@ cdecl _strtoi64(str ptr long)
-@ cdecl _strtoui64(str ptr long) strtoull
+@ cdecl -ret64 _strtoi64(str ptr long)
+@ cdecl _strtoui64() strtoull
 @ cdecl _strupr(str)
 @ cdecl _swab(str str long)
 @ extern _sys_errlist
@@ -699,8 +699,8 @@
 @ cdecl _wcsnset(wstr long long)
 @ cdecl _wcsrev(wstr)
 @ cdecl _wcsset(wstr long)
-@ cdecl _wcstoi64(wstr ptr long)
-@ cdecl _wcstoui64(wstr ptr long)
+@ cdecl -ret64 _wcstoi64(wstr ptr long)
+@ cdecl -ret64 _wcstoui64(wstr ptr long)
 @ cdecl _wcsupr(wstr)
 @ cdecl _wctime(ptr)
 @ cdecl _wctime64(ptr)
@@ -765,7 +765,7 @@
 @ cdecl _wtmpnam(ptr)
 @ cdecl _wtof(wstr)
 @ cdecl _wtoi(wstr)
-@ cdecl _wtoi64(wstr)
+@ cdecl -ret64 _wtoi64(wstr)
 @ cdecl _wtol(wstr)
 @ cdecl _wunlink(wstr)
 @ cdecl _wutime(wstr ptr)

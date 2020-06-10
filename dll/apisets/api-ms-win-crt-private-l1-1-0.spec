@@ -695,13 +695,13 @@
 @ stub _o__strtime_s
 @ stub _o__strtod_l
 @ stub _o__strtof_l
-@ stub _o__strtoi64
-@ stub _o__strtoi64_l
+@ stub -ret64 _o__strtoi64
+@ stub -ret64 _o__strtoi64_l
 @ stub _o__strtol_l
 @ stub _o__strtold_l
 @ stub _o__strtoll_l
-@ stub _o__strtoui64
-@ stub _o__strtoui64_l
+@ stub -ret64 _o__strtoui64
+@ stub -ret64 _o__strtoui64_l
 @ stub _o__strtoul_l
 @ stub _o__strtoull_l
 @ stub _o__strupr
@@ -775,15 +775,15 @@
 @ stub _o__wcsset_s
 @ stub _o__wcstod_l
 @ stub _o__wcstof_l
-@ stub _o__wcstoi64
-@ stub _o__wcstoi64_l
+@ stub -ret64 _o__wcstoi64
+@ stub -ret64 _o__wcstoi64_l
 @ stub _o__wcstol_l
 @ stub _o__wcstold_l
 @ stub _o__wcstoll_l
 @ stub _o__wcstombs_l
 @ stub _o__wcstombs_s_l
-@ stub _o__wcstoui64
-@ stub _o__wcstoui64_l
+@ stub -ret64 _o__wcstoui64
+@ stub -ret64 _o__wcstoui64_l
 @ stub _o__wcstoul_l
 @ stub _o__wcstoull_l
 @ stub _o__wcsupr
@@ -858,8 +858,8 @@
 @ stub _o__wtof
 @ stub _o__wtof_l
 @ stub _o__wtoi
-@ stub _o__wtoi64
-@ stub _o__wtoi64_l
+@ stub -ret64 _o__wtoi64
+@ stub -ret64 _o__wtoi64_l
 @ stub _o__wtoi_l
 @ stub _o__wtol
 @ stub _o__wtol_l
