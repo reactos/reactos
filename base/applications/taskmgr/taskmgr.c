@@ -31,6 +31,19 @@
 
 #define STATUS_WINDOW   2001
 
+static void LoadSettings(void);
+static BOOL OnCreate(HWND hWnd);
+static void OnMove(WPARAM nType, int cx, int cy);
+static void OnSize(WPARAM nType, int cx, int cy);
+static void SaveSettings(void);
+static void TaskManager_OnEnterMenuLoop(HWND hWnd);
+static void TaskManager_OnExitMenuLoop(HWND hWnd);
+static void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu);
+static void TaskManager_OnRestoreMainWindow(void);
+static void TaskManager_OnTabWndSelChange(void);
+static void TaskManager_OnViewUpdateSpeed(DWORD dwSpeed);
+static INT_PTR CALLBACK TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+
 /* Global Variables: */
 HINSTANCE hInst;                 /* current instance */
 
@@ -38,16 +51,16 @@ HWND hMainWnd;                   /* Main Window */
 HWND hStatusWnd;                 /* Status Bar Window */
 HWND hTabWnd;                    /* Tab Control Window */
 
-HMENU hWindowMenu = NULL;
+static HMENU hWindowMenu = NULL;
 
-int  nMinimumWidth;              /* Minimum width of the dialog (OnSize()'s cx) */
-int  nMinimumHeight;             /* Minimum height of the dialog (OnSize()'s cy) */
+static int  nMinimumWidth;              /* Minimum width of the dialog (OnSize()'s cx) */
+static int  nMinimumHeight;             /* Minimum height of the dialog (OnSize()'s cy) */
 
-int  nOldWidth;                  /* Holds the previous client area width */
-int  nOldHeight;                 /* Holds the previous client area height */
+static int  nOldWidth;                  /* Holds the previous client area width */
+static int  nOldHeight;                 /* Holds the previous client area height */
 
 BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
-BOOL bWasKeyboardInput = FALSE;  /* TabChange by Keyboard or Mouse ? */
+static BOOL bWasKeyboardInput = FALSE;  /* TabChange by Keyboard or Mouse ? */
 
 TASKMANAGER_SETTINGS TaskManagerSettings;
 
@@ -73,6 +86,7 @@ typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
 //
 //	Try to call EnableThemeDialogTexture, if uxtheme.dll is present
 //
+static
 BOOL EnableDialogTheme(HWND hwnd)
 {
     HMODULE hUXTheme;
@@ -196,6 +210,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 }
 
 /* Message handler for dialog box. */
+static
 INT_PTR CALLBACK
 TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -554,11 +569,13 @@ void Draw3dRect(HDC hDC, int x, int y, int cx, int cy, COLORREF clrTopLeft, COLO
     FillSolidRect2(hDC, x, y + cy, cx, -1, clrBottomRight);
 }
 
+#if UNABLE_DRAW3DRECT2_WHEN_USED
 void Draw3dRect2(HDC hDC, LPRECT lpRect, COLORREF clrTopLeft, COLORREF clrBottomRight)
 {
     Draw3dRect(hDC, lpRect->left, lpRect->top, lpRect->right - lpRect->left,
         lpRect->bottom - lpRect->top, clrTopLeft, clrBottomRight);
 }
+#endif
 
 static void SetUpdateSpeed(HWND hWnd)
 {
@@ -576,6 +593,7 @@ static void SetUpdateSpeed(HWND hWnd)
     }
 }
 
+static
 BOOL OnCreate(HWND hWnd)
 {
     HMENU   hMenu;
@@ -779,7 +797,8 @@ BOOL OnCreate(HWND hWnd)
  * This function handles all the moving events for the application
  * It moves every child window that needs moving
  */
-void OnMove( WPARAM nType, int cx, int cy )
+static
+void OnMove(WPARAM nType, int cx, int cy)
 {
 #ifdef __GNUC__TEST__
     MoveWindow(hApplicationPage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
@@ -792,7 +811,8 @@ void OnMove( WPARAM nType, int cx, int cy )
  * This function handles all the sizing events for the application
  * It re-sizes every window, and child window that needs re-sizing
  */
-void OnSize( WPARAM nType, int cx, int cy )
+static
+void OnSize(WPARAM nType, int cx, int cy)
 {
     int   nParts[3];
     int   nXDifference;
@@ -848,6 +868,7 @@ void OnSize( WPARAM nType, int cx, int cy )
     SetWindowPos(hPerformancePage, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
 }
 
+static
 void LoadSettings(void)
 {
     HKEY   hKey;
@@ -911,6 +932,7 @@ void LoadSettings(void)
     RegCloseKey(hKey);
 }
 
+static
 void SaveSettings(void)
 {
     HKEY hKey;
@@ -925,6 +947,7 @@ void SaveSettings(void)
     RegCloseKey(hKey);
 }
 
+static
 void TaskManager_OnRestoreMainWindow(void)
 {
     //HMENU hMenu, hOptionsMenu;
@@ -939,6 +962,7 @@ void TaskManager_OnRestoreMainWindow(void)
     SetWindowPos(hMainWnd, (OnTop ? HWND_TOPMOST : HWND_TOP), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
 }
 
+static
 void TaskManager_OnEnterMenuLoop(HWND hWnd)
 {
     int nParts;
@@ -950,6 +974,7 @@ void TaskManager_OnEnterMenuLoop(HWND hWnd)
     SendMessageW(hStatusWnd, SB_SETTEXT, (WPARAM)0, (LPARAM)L"");
 }
 
+static
 void TaskManager_OnExitMenuLoop(HWND hWnd)
 {
     RECT   rc;
@@ -968,6 +993,7 @@ void TaskManager_OnExitMenuLoop(HWND hWnd)
     RefreshPerformancePage();
 }
 
+static
 void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
 {
     WCHAR  str[100];
@@ -984,6 +1010,7 @@ void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMe
     SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)str);
 }
 
+static
 void TaskManager_OnViewUpdateSpeed(DWORD dwSpeed)
 {
     HMENU  hMenu;
@@ -1002,6 +1029,7 @@ void TaskManager_OnViewUpdateSpeed(DWORD dwSpeed)
     SetUpdateSpeed(hMainWnd);
 }
 
+static
 void TaskManager_OnTabWndSelChange(void)
 {
     int    i;
@@ -1197,4 +1225,3 @@ DWORD EndLocalThread(HANDLE *hThread, DWORD dwThread)
     }
     return dwExitCodeThread;
 }
-

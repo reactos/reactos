@@ -94,29 +94,15 @@ extern	HINSTANCE	hInst;						/* current instance */
 extern	HWND		hMainWnd;					/* Main Window */
 extern	HWND		hStatusWnd;					/* Status Bar Window */
 extern	HWND		hTabWnd;					/* Tab Control Window */
-extern	int			nMinimumWidth;				/* Minimum width of the dialog (OnSize()'s cx) */
-extern	int			nMinimumHeight;				/* Minimum height of the dialog (OnSize()'s cy) */
-extern	int			nOldWidth;					/* Holds the previous client area width */
-extern	int			nOldHeight;					/* Holds the previous client area height */
 extern	TASKMANAGER_SETTINGS	TaskManagerSettings;
 
 /* Forward declarations of functions included in this code module: */
-INT_PTR CALLBACK TaskManagerWndProc(HWND, UINT, WPARAM, LPARAM);
-BOOL OnCreate(HWND hWnd);
-void OnSize(WPARAM nType, int cx, int cy);
-void OnMove(WPARAM nType, int cx, int cy);
 void FillSolidRect(HDC hDC, LPCRECT lpRect, COLORREF clr);
 void FillSolidRect2(HDC hDC, int x, int y, int cx, int cy, COLORREF clr);
 void Draw3dRect(HDC hDC, int x, int y, int cx, int cy, COLORREF clrTopLeft, COLORREF clrBottomRight);
+#if UNABLE_DRAW3DRECT2_WHEN_USED
 void Draw3dRect2(HDC hDC, LPRECT lpRect, COLORREF clrTopLeft, COLORREF clrBottomRight);
-void LoadSettings(void);
-void SaveSettings(void);
-void TaskManager_OnRestoreMainWindow(void);
-void TaskManager_OnEnterMenuLoop(HWND hWnd);
-void TaskManager_OnExitMenuLoop(HWND hWnd);
-void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu);
-void TaskManager_OnViewUpdateSpeed(DWORD);
-void TaskManager_OnTabWndSelChange(void);
+#endif
 VOID ShowWin32Error(DWORD dwError);
 LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize );
 DWORD EndLocalThread(HANDLE *hThread, DWORD dwThread);
