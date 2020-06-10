@@ -129,12 +129,12 @@ DrvEnableDirectDraw(
 
 BOOL APIENTRY
 DrvGetDirectDrawInfo(
-  IN DHPDEV  dhpdev,
-  OUT DD_HALINFO  *pHalInfo,
-  OUT DWORD  *pdwNumHeaps,
-  OUT VIDEOMEMORY  *pvmList,
-  OUT DWORD  *pdwNumFourCCCodes,
-  OUT DWORD  *pdwFourCC)
+    _Inout_ DHPDEV dhpdev,
+    _Out_ DD_HALINFO *pHalInfo,
+    _Out_ DWORD *pdwNumHeaps,
+    _Out_opt_ VIDEOMEMORY *pvmList,
+    _Out_ DWORD *pdwNumFourCCCodes,
+    _Out_opt_ DWORD *pdwFourCC)
 {
 	PPDEV ppdev = (PPDEV)dhpdev;
 	LONG i;

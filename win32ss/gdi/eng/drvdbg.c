@@ -843,12 +843,12 @@ DbgDrvNextBand(
 BOOL
 APIENTRY
 DbgDrvGetDirectDrawInfo(
-    DHPDEV dhpdev,
-    DD_HALINFO *pHalInfo,
-    DWORD *pdwNumHeaps,
-    VIDEOMEMORY *pvmList,
-    DWORD *pdwNumFourCCCodes,
-    DWORD *pdwFourCC)
+    _Inout_ DHPDEV dhpdev,
+    _Out_ DD_HALINFO *pHalInfo,
+    _Out_ DWORD *pdwNumHeaps,
+    _Out_opt_ VIDEOMEMORY *pvmList,
+    _Out_ DWORD *pdwNumFourCCCodes,
+    _Out_opt_ DWORD *pdwFourCC)
 {
     PPDEVOBJ ppdev = DbgLookupDHPDEV(dhpdev);
 

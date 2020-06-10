@@ -4222,12 +4222,12 @@ extern FN_DrvEnableDirectDraw DrvEnableDirectDraw;
 
 typedef BOOL
 (APIENTRY FN_DrvGetDirectDrawInfo)(
-    _In_ DHPDEV dhpdev,
+    _Inout_ DHPDEV dhpdev,
     _Out_ DD_HALINFO *pHalInfo,
     _Out_ DWORD *pdwNumHeaps,
-    _Out_ VIDEOMEMORY *pvmList,
+    _Out_opt_ VIDEOMEMORY *pvmList,
     _Out_ DWORD *pdwNumFourCCCodes,
-    _Out_ DWORD *pdwFourCC);
+    _Out_opt_ DWORD *pdwFourCC);
 typedef FN_DrvGetDirectDrawInfo *PFN_DrvGetDirectDrawInfo;
 extern FN_DrvGetDirectDrawInfo DrvGetDirectDrawInfo;
 
