@@ -252,7 +252,7 @@ DrvGetDirectDrawInfo(
 		pvmList->ddsCaps.dwCaps =  DDSCAPS_FRONTBUFFER | DDSCAPS_BACKBUFFER ;
 		pvmList->ddsCapsAlt.dwCaps = DDSCAPS_FRONTBUFFER | DDSCAPS_BACKBUFFER;
 
-		pvmList = ppdev->pvmList;
+		// TODO, useless: pvmList = ppdev->pvmList;
 	}
 
 	return TRUE;
