@@ -7,8 +7,8 @@
 @ stub _atof_l
 @ stub _atoflt
 @ stub _atoflt_l
-@ stdcall _atoi64() msvcrt._atoi64
-@ stub _atoi64_l
+@ cdecl _atoi64() msvcrt._atoi64
+@ stub -ret64 _atoi64_l
 @ stub _atoi_l
 @ stub _atol_l
 @ stdcall _atoldbl() msvcrt._atoldbl

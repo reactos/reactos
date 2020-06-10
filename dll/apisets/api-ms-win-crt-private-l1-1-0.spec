@@ -174,8 +174,8 @@
 @ stub _o__atof_l
 @ stub _o__atoflt
 @ stub _o__atoflt_l
-@ stub _o__atoi64
-@ stub _o__atoi64_l
+@ stub -ret64 _o__atoi64
+@ stub -ret64 _o__atoi64_l
 @ stub _o__atoi_l
 @ stub _o__atol_l
 @ stub _o__atoldbl
