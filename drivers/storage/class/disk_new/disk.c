@@ -406,7 +406,9 @@ Return Value:
 --*/
 
 {
+#ifdef NTNAMEBUFFER_IS_COMPILED_AND_INITIALIZED
     CCHAR          ntNameBuffer[MAXIMUM_FILENAME_LENGTH];
+#endif
     //STRING         ntNameString;
     //UNICODE_STRING ntUnicodeString;
 
@@ -516,9 +518,14 @@ Return Value:
 
     if (!NT_SUCCESS(status)) {
 
+#ifdef NTNAMEBUFFER_IS_COMPILED_AND_INITIALIZED
         DebugPrint((1,
                     "DiskCreateFdo: Can not create device object %s\n",
                     ntNameBuffer));
+#else
+        DebugPrint((1,
+                    "DiskCreateFdo: Can not create device object\n"));
+#endif
 
         goto DiskCreateFdoExit;
     }
