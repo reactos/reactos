@@ -1160,6 +1160,15 @@ Return Value:
         if (OemLabel.Length > 0) {
 
             //
+            //  Translate the first character from 0xe5 to 0x5.
+            //
+
+            if ((UCHAR)OemLabel.Buffer[0] == 0xe5) {
+
+                OemLabel.Buffer[0] = FAT_DIRENT_REALLY_0E5;
+            }
+
+            //
             //  Locate the volume label if there already is one
             //
 
