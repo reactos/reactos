@@ -1670,8 +1670,10 @@ static BOOL parse_nummethods(const xmlstr_t *str, struct entity *entity)
             num = num * 10 + *curr - '0';
         else
         {
+#if DBG
             UNICODE_STRING strU = xmlstr2unicode(str);
             DPRINT1("wrong numeric value %wZ\n", &strU);
+#endif
             return FALSE;
         }
     }
@@ -1757,8 +1759,10 @@ static BOOL parse_typelib_flags(const xmlstr_t *value, struct entity *entity)
             *flags |= LIBFLAG_FHASDISKIMAGE;
         else
         {
+#if DBG
             UNICODE_STRING valueU = xmlstr2unicode(value);
             DPRINT1("unknown flags value %wZ\n", &valueU);
+#endif
             return FALSE;
         }
 
@@ -2104,8 +2108,10 @@ static BOOL parse_clr_class_elem(xmlbuf_t* xmlbuf, struct assembly* assembly, st
         }
         else
         {
+#if DBG
             UNICODE_STRING elemU = xmlstr2unicode(&elem);
             DPRINT1("unknown elem %wZ\n", &elemU);
+#endif
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2377,15 +2383,19 @@ static BOOL parse_supportedos_elem(xmlbuf_t *xmlbuf, struct assembly *assembly, 
             }
             else
             {
+#if DBG
                 UNICODE_STRING attr_valueU = xmlstr2unicode(&attr_value);
                 DPRINT1("Invalid guid %wZ\n", &attr_valueU);
+#endif
             }
         }
         else
         {
+#if DBG
             UNICODE_STRING attr_nameU = xmlstr2unicode(&attr_name);
             UNICODE_STRING attr_valueU = xmlstr2unicode(&attr_value);
             DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
+#endif
         }
     }
 
@@ -2414,8 +2424,10 @@ static BOOL parse_compatibility_application_elem(xmlbuf_t* xmlbuf, struct assemb
         }
         else
         {
+#if DBG
             UNICODE_STRING elemU = xmlstr2unicode(&elem);
             DPRINT1("unknown elem %wZ\n", &elemU);
+#endif
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2442,8 +2454,10 @@ static BOOL parse_compatibility_elem(xmlbuf_t* xmlbuf, struct assembly* assembly
         }
         else
         {
+#if DBG
             UNICODE_STRING elemU = xmlstr2unicode(&elem);
             DPRINT1("unknown elem %wZ\n", &elemU);
+#endif
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2469,8 +2483,10 @@ static BOOL parse_requested_execution_level_elem(xmlbuf_t* xmlbuf, struct assemb
 
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
     {
+#if DBG
         UNICODE_STRING attr_nameU = xmlstr2unicode(&attr_name);
         UNICODE_STRING attr_valueU = xmlstr2unicode(&attr_value);
+#endif
         if (xmlstr_cmp(&attr_name, levelW))
         {
             if (xmlstr_cmpi(&attr_value, asInvokerW))
@@ -2480,7 +2496,11 @@ static BOOL parse_requested_execution_level_elem(xmlbuf_t* xmlbuf, struct assemb
             else if (xmlstr_cmpi(&attr_value, requireAdministratorW))
                 assembly->run_level = ACTCTX_RUN_LEVEL_REQUIRE_ADMIN;
             else
+            {
+#if DBG
                 DPRINT1("unknown execution level: %wZ\n", &attr_valueU);
+#endif
+            }
         }
         else if (xmlstr_cmp(&attr_name, uiAccessW))
         {
@@ -2489,10 +2509,18 @@ static BOOL parse_requested_execution_level_elem(xmlbuf_t* xmlbuf, struct assemb
             else if (xmlstr_cmpi(&attr_value, trueW))
                 assembly->ui_access = TRUE;
             else
+            {
+#if DBG
                 DPRINT1("unknown uiAccess value: %wZ\n", &attr_valueU);
+#endif
+            }
         }
         else
+        {
+#if DBG
             DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
+#endif
+        }
     }
 
     if (error) return FALSE;
@@ -2507,8 +2535,10 @@ static BOOL parse_requested_execution_level_elem(xmlbuf_t* xmlbuf, struct assemb
         }
         else
         {
+#if DBG
             UNICODE_STRING elemU = xmlstr2unicode(&elem);
             DPRINT1("unknown element %wZ\n", &elemU);
+#endif
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2532,8 +2562,10 @@ static BOOL parse_requested_privileges_elem(xmlbuf_t* xmlbuf, struct assembly* a
             ret = parse_requested_execution_level_elem(xmlbuf, assembly, acl);
         else
         {
+#if DBG
             UNICODE_STRING elemU = xmlstr2unicode(&elem);
             DPRINT1("unknown elem %wZ\n", &elemU);
+#endif
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2557,8 +2589,10 @@ static BOOL parse_security_elem(xmlbuf_t *xmlbuf, struct assembly *assembly, str
             ret = parse_requested_privileges_elem(xmlbuf, assembly, acl);
         else
         {
+#if DBG
             UNICODE_STRING elemU = xmlstr2unicode(&elem);
             DPRINT1("unknown elem %wZ\n", &elemU);
+#endif
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2582,8 +2616,10 @@ static BOOL parse_trust_info_elem(xmlbuf_t *xmlbuf, struct assembly *assembly, s
             ret = parse_security_elem(xmlbuf, assembly, acl);
         else
         {
+#if DBG
             UNICODE_STRING elemU = xmlstr2unicode(&elem);
             DPRINT1("unknown elem %wZ\n", &elemU);
+#endif
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
