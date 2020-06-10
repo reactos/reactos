@@ -45,6 +45,9 @@ static void TaskManager_OnViewUpdateSpeed(DWORD dwSpeed);
 static INT_PTR CALLBACK TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 /* Global Variables: */
+
+static const WCHAR szSubKey[] = L"Software\Microsoft\Windows NT\CurrentVersion\TaskManager";
+
 HINSTANCE hInst;                 /* current instance */
 
 HWND hMainWnd;                   /* Main Window */
@@ -872,7 +875,6 @@ static
 void LoadSettings(void)
 {
     HKEY   hKey;
-    WCHAR  szSubKey[] = L"Software\\ReactOS\\TaskManager";
     int    i;
     DWORD  dwSize;
 
@@ -936,7 +938,6 @@ static
 void SaveSettings(void)
 {
     HKEY hKey;
-    WCHAR szSubKey[] = L"Software\\ReactOS\\TaskManager";
 
     /* Open (or create) the key */
     if (RegCreateKeyExW(HKEY_CURRENT_USER, szSubKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
