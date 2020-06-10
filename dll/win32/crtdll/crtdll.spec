@@ -420,7 +420,7 @@
   @ cdecl isxdigit(long) msvcrt.isxdigit
   @ cdecl labs(long) msvcrt.labs
   @ cdecl ldexp( double long) msvcrt.ldexp
-  @ cdecl ldiv(long long) msvcrt.ldiv
+  @ cdecl ldiv() msvcrt.ldiv
   @ cdecl localeconv() msvcrt.localeconv
   @ cdecl localtime(ptr) msvcrt.localtime
   @ cdecl log(double) msvcrt.log

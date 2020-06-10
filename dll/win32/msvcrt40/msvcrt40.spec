@@ -1057,7 +1057,7 @@
 @ cdecl isxdigit(long)
 @ cdecl labs(long)
 @ cdecl ldexp( double long)
-@ cdecl ldiv(long long)
+@ cdecl -ret64 ldiv(long long)
 @ cdecl localeconv()
 @ cdecl localtime(ptr)
 @ cdecl log(double)
