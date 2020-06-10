@@ -144,16 +144,16 @@ CachedGetUserFromSid(
         if (EqualSid((PSID)&pEntry->Data, pSid))
         {
             wcsncpy(pUserName, pEntry->pszName, cwcUserName);
-            *pcwcUserName = cwcUserName;
+            *pcwcUserName = wcslen(pUserName);
             return;
         }
     }
 
     /* We didn't find the SID in the list, get the name conventional */
     SidToUserName(pSid, pUserName, cwcUserName);
+    *pcwcUserName = wcslen(pUserName);
 
     /* Allocate a new entry */
-    *pcwcUserName = wcslen(pUserName);
     cwcUserName = *pcwcUserName + 1;
     cbSid = GetLengthSid(pSid);
     pEntry = HeapAlloc(GetProcessHeap(), 0, sizeof(SIDTOUSERNAME) + cbSid + cwcUserName * sizeof(WCHAR));
