@@ -651,6 +651,8 @@ GreOpenDCW(
     PDC pdc;
     HDC hdc;
 
+    DBG_UNREFERENCED_PARAMETER(pdmInit);
+
     DPRINT("GreOpenDCW(%S, iType=%lu)\n",
            pustrDevice ? pustrDevice->Buffer : NULL, iType);
 
@@ -760,7 +762,7 @@ NtGdiOpenDCW(
     }
     else
     {
-        pdmInit = NULL;
+        // TODO, useless: pdmInit = NULL;
         pUMdhpdev = NULL;
         // return UserGetDesktopDC(iType, FALSE, TRUE);
     }
