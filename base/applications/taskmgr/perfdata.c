@@ -190,6 +190,7 @@ void PerfDataRefresh(void)
     SYSTEM_PERFORMANCE_INFORMATION             SysPerfInfo;
     SYSTEM_TIMEOFDAY_INFORMATION               SysTimeInfo;
     SYSTEM_FILECACHE_INFORMATION               SysCacheInfo;
+    BOOLEAN                                    HasSysCacheInfo, HasSysPerfInfo, HasSysTimeInfo;
     PSYSTEM_HANDLE_INFORMATION                 pSysHandleInfo;
     PSYSTEM_PROCESS_INFORMATION                pSysProcessInfo;
     PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  pSysProcessorPerfInfo;
@@ -201,18 +202,15 @@ void PerfDataRefresh(void)
 
     /* Get new system time */
     status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), NULL);
-    if (!NT_SUCCESS(status))
-        return;
+    HasSysTimeInfo = NT_SUCCESS(status);
 
     /* Get new CPU's idle time */
     status = NtQuerySystemInformation(SystemPerformanceInformation, &SysPerfInfo, sizeof(SysPerfInfo), NULL);
-    if (!NT_SUCCESS(status))
-        return;
+    HasSysPerfInfo = NT_SUCCESS(status);
 
     /* Get system cache information */
     status = NtQuerySystemInformation(SystemFileCacheInformation, &SysCacheInfo, sizeof(SysCacheInfo), NULL);
-    if (!NT_SUCCESS(status))
-        return;
+    HasSysCacheInfo = NT_SUCCESS(status);
 
     // Get system processor performance information.
     pSysProcessorPerfInfo = HeapAlloc(GetProcessHeap(), 0,
@@ -275,15 +273,23 @@ void PerfDataRefresh(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    /*
-     * Save system performance info
-     */
-    memcpy(&SystemPerfInfo, &SysPerfInfo, sizeof(SYSTEM_PERFORMANCE_INFORMATION));
+    // Save system performance information.
+    if (HasSysPerfInfo)
+    {
+        memcpy(&SystemPerfInfo, &SysPerfInfo, sizeof(SYSTEM_PERFORMANCE_INFORMATION));
+    }
+    else
+    // Fake system performance information, as a fallback.
+    // Then, 'dbIdleTime', if updated, will be '100.0'. That's wrong but acceptable.
+    {
+        SysPerfInfo.IdleProcessTime = liOldIdleTime;
+    }
 
-    /*
-     * Save system cache info
-     */
-    memcpy(&SystemCacheInfo, &SysCacheInfo, sizeof(SYSTEM_FILECACHE_INFORMATION));
+    // Save system cache information.
+    if (HasSysCacheInfo)
+    {
+        memcpy(&SystemCacheInfo, &SysCacheInfo, sizeof(SYSTEM_FILECACHE_INFORMATION));
+    }
 
     // Save system processor performance information.
     if (pSysProcessorPerfInfo)
@@ -309,7 +315,8 @@ void PerfDataRefresh(void)
     }
 
     /* If it's a first call - skip idle time calcs */
-    if (liOldIdleTime.QuadPart != 0) {
+    if (liOldIdleTime.QuadPart != 0 && HasSysTimeInfo)
+    {
         /*  CurrentValue = NewValue - OldValue */
         dbIdleTime = Li2Double(SysPerfInfo.IdleProcessTime) - Li2Double(liOldIdleTime);
         dbKernelTime = CurrentKernelTime - OldKernelTime;
@@ -326,7 +333,10 @@ void PerfDataRefresh(void)
 
     /* Store new CPU's idle and system time */
     liOldIdleTime = SysPerfInfo.IdleProcessTime;
-    liOldSystemTime = SysTimeInfo.CurrentTime;
+    if (HasSysTimeInfo)
+    {
+        liOldSystemTime = SysTimeInfo.CurrentTime;
+    }
     OldKernelTime = CurrentKernelTime;
 
     if (!pSysProcessInfo)
@@ -382,7 +392,8 @@ void PerfDataRefresh(void)
 
         pPerfData[Idx].ProcessId = pSPI->UniqueProcessId;
 
-        if (pPDOld)    {
+        if (pPDOld && HasSysTimeInfo)
+        {
             double    CurTime = Li2Double(pSPI->KernelTime) + Li2Double(pSPI->UserTime);
             double    OldTime = Li2Double(pPDOld->KernelTime) + Li2Double(pPDOld->UserTime);
             double    CpuTime = (CurTime - OldTime) / dbSystemTime;
