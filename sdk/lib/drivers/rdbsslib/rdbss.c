@@ -4648,7 +4648,9 @@ RxCommonWrite(
             else
             {
                 PVOID SystemBuffer;
+#if DBG
                 ULONG BreakpointsSave;
+#endif
 
                 /* Map the user buffer */
                 SystemBuffer = RxNewMapUserBuffer(RxContext);
