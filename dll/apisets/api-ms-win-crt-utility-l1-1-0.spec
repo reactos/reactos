@@ -18,7 +18,7 @@
 @ stub imaxdiv
 @ stdcall labs() msvcrt.labs
 @ stdcall ldiv() msvcrt.ldiv
-@ stub llabs
+@ stub -ret64 llabs
 @ stub lldiv
 @ stdcall qsort() msvcrt.qsort
 @ stub qsort_s
