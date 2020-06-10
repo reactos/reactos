@@ -137,7 +137,6 @@ BEGIN
             MENUITEM "A&lacsony", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "&Processzorok használata...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Hibakereső &csatornák...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 

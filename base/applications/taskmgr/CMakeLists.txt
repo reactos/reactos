@@ -4,7 +4,6 @@ list(APPEND SOURCE
     affinity.c
     applpage.c
     column.c
-    dbgchnl.c
     debug.c
     endproc.c
     graph.c

@@ -135,7 +135,6 @@ BEGIN
             MENUITEM "&Lav", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Sett &tiltrekning ...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Rediger Debug &kanaler...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 

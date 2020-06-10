@@ -137,7 +137,6 @@ BEGIN
             MENUITEM "&נמוכה", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "הגדרת &קירבה", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Edit Debug &Channels...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
