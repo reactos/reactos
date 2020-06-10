@@ -197,10 +197,9 @@ Index: D:/trunk/dll/win32/msi/msvchelper.h
 ===================================================================
 --- D:/trunk/dll/win32/msi/msvchelper.h	(revision 0)
 +++ D:/trunk/dll/win32/msi/msvchelper.h	(revision 51711)
-@@ -0,0 +1,13 @@
+@@ -0,0 +1,12 @@
 +
 +#ifdef __i386__
-+#define __ASM_DEFINE_FUNC(name,suffix,code)
 +
 +typedef unsigned int (__stdcall *__MSVC__MsiCustomActionEntryPoint)(unsigned int);
 +
