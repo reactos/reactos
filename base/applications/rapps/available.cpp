@@ -18,23 +18,23 @@
 #include <atlstr.h>
 
  // CAvailableApplicationInfo
-CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& AvaliStrings)
+CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& AvlbStrings)
     : m_IsSelected(FALSE), m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
     m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
 {
-    RetrieveGeneralInfo(AvaliStrings);
+    RetrieveGeneralInfo(AvlbStrings);
 }
 
-VOID CAvailableApplicationInfo::RefreshAppInfo(AvailableStrings& AvaliStrings)
+VOID CAvailableApplicationInfo::RefreshAppInfo(AvailableStrings& AvlbStrings)
 {
     if (m_szUrlDownload.IsEmpty())
     {
-        RetrieveGeneralInfo(AvaliStrings);
+        RetrieveGeneralInfo(AvlbStrings);
     }
 }
 
 // Lazily load general info from the file
-VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvaliStrings)
+VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbStrings)
 {
     m_Parser = new CConfigParser(m_sFileName);
 
@@ -70,7 +70,7 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvaliStrin
         // TODO: Does the filename contain anything stuff like "\\" ".." ":" "<" ">" ?
         // these stuff may lead to security issues
 
-        ATL::CStringW SnapshotName = AvaliStrings.szAppsPath;
+        ATL::CStringW SnapshotName = AvlbStrings.szAppsPath;
         PathAppendW(SnapshotName.GetBuffer(MAX_PATH), L"snapshots");
         PathAppendW(SnapshotName.GetBuffer(), SnapshotFileName.GetString());
         SnapshotName.ReleaseBuffer();
