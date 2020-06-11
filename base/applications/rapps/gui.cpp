@@ -339,6 +339,21 @@ private:
             EndPaint(&ps);
             break;
         }
+        case WM_PRINTCLIENT:
+        {
+            if (lParam & PRF_CHECKVISIBLE)
+            {
+                if (!IsWindowVisible()) break;
+            }
+            CRect rect;
+            GetClientRect(&rect);
+
+            PaintOnDC((HDC)wParam,
+                rect.Width(),
+                rect.Height(),
+                lParam & PRF_ERASEBKGND);
+            break;
+        }
         case WM_ERASEBKGND:
         {
             return TRUE; // do not erase to avoid blinking
