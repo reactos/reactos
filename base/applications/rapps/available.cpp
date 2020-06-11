@@ -232,7 +232,7 @@ BOOL CAvailableApplicationInfo::HasUpdate() const
 
 BOOL CAvailableApplicationInfo::RetrieveSnapshot(UINT Index,ATL::CStringW& SnapshotFileName) const
 {
-    if (Index >= m_szSnapshotFilename.GetSize())
+    if (Index >= (UINT)m_szSnapshotFilename.GetSize())
     {
         return FALSE;
     }
