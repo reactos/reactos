@@ -54,6 +54,7 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvaliStrin
     GetString(L"URLSite", m_szUrlSite);
     GetString(L"SHA1", m_szSHA1);
 
+    static_assert(MAX_SNAPSHOT_NUM < 10000, "MAX_SNAPSHOT_NUM is too big");
     for (int i = 0; i < MAX_SNAPSHOT_NUM; i++)
     {
         WCHAR SnapshotField[sizeof("Snapshot") + 4];
@@ -61,7 +62,7 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvaliStrin
         ATL::CStringW SnapshotFileName;
         if (!GetString(SnapshotField, SnapshotFileName))
         {
-            break;
+            continue;
         }
 
         // TODO: Add URL Support
@@ -69,10 +70,11 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvaliStrin
         // TODO: Does the filename contain anything stuff like "\\" ".." ":" "<" ">" ?
         // these stuff may lead to security issues
 
-        m_szSnapshotFilename[i] = AvaliStrings.szAppsPath;
-        PathAppendW(m_szSnapshotFilename->GetBuffer(MAX_PATH), L"snapshots");
-        PathAppendW(m_szSnapshotFilename->GetBuffer(), SnapshotFileName.GetString());
-        m_szSnapshotFilename->ReleaseBuffer();
+        ATL::CStringW SnapshotName = AvaliStrings.szAppsPath;
+        PathAppendW(SnapshotName.GetBuffer(MAX_PATH), L"snapshots");
+        PathAppendW(SnapshotName.GetBuffer(), SnapshotFileName.GetString());
+        SnapshotName.ReleaseBuffer();
+        m_szSnapshotFilename.Add(SnapshotName);
     }
 
     RetrieveSize();
@@ -230,11 +232,7 @@ BOOL CAvailableApplicationInfo::HasUpdate() const
 
 BOOL CAvailableApplicationInfo::RetrieveSnapshot(UINT Index,ATL::CStringW& SnapshotFileName) const
 {
-    if (Index >= MAX_SNAPSHOT_NUM)
-    {
-        return FALSE;
-    }
-    if (m_szSnapshotFilename[Index].IsEmpty())
+    if (Index >= m_szSnapshotFilename.GetSize())
     {
         return FALSE;
     }

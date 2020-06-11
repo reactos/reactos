@@ -17,6 +17,7 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
+#include <atltypes.h>
 #include <atlwin.h>
 #include <wininet.h>
 #include <shellutils.h>
@@ -294,15 +295,11 @@ class CAppSnapshotPreview :
 {
 private:
 
-
     SNPSHT_STATUS SnpshtPrevStauts = SNPSHTPREV_EMPTY;
-
     Image* pImage = NULL;
-
     HICON hBrokenImgIcon = NULL;
-
-    int LoadingAnimationFrame;
-
+    BOOL bLoadingTimerOn = FALSE;
+    int LoadingAnimationFrame = 0;
     int BrokenImgSize = BROKENIMG_ICON_SIZE;
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
@@ -331,12 +328,12 @@ private:
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(&ps);
-            RECT rect;
+            CRect rect;
             GetClientRect(&rect);
 
             PaintOnDC(hdc,
-                rect.right - rect.left,
-                rect.bottom - rect.top,
+                rect.Width(),
+                rect.Height(),
                 ps.fErase);
 
             EndPaint(&ps);
@@ -354,12 +351,12 @@ private:
                 LoadingAnimationFrame++;
                 LoadingAnimationFrame %= (LOADING_ANIMATION_PERIOD * LOADING_ANIMATION_FPS);
                 HDC hdc = GetDC();
-                RECT rect;
+                CRect rect;
                 GetClientRect(&rect);
 
                 PaintOnDC(hdc,
-                    rect.right - rect.left,
-                    rect.bottom - rect.top,
+                    rect.Width(),
+                    rect.Height(),
                     TRUE);
                 ReleaseDC(hdc);
             }
@@ -367,6 +364,7 @@ private:
         }
         case WM_DESTROY:
         {
+            PreviousDisplayCleanup();
             DeleteObject(hBrokenImgIcon);
             hBrokenImgIcon = NULL;
             break;
@@ -517,7 +515,11 @@ public:
 
     VOID PreviousDisplayCleanup()
     {
-        KillTimer(TIMER_LOADING_ANIMATION);
+        if (bLoadingTimerOn)
+        {
+            KillTimer(TIMER_LOADING_ANIMATION);
+            bLoadingTimerOn = FALSE;
+        }
         LoadingAnimationFrame = 0;
         if (pImage)
         {
@@ -536,8 +538,8 @@ public:
     {
         SetStatus(SNPSHTPREV_LOADING);
         PreviousDisplayCleanup();
+        bLoadingTimerOn = TRUE;
         SetTimer(TIMER_LOADING_ANIMATION, 1000 / LOADING_ANIMATION_FPS, 0);
-
     }
 
     BOOL DisplayFile(LPCWSTR lpszFileName)
@@ -607,8 +609,6 @@ private:
 
             SnpshtPrev = new CAppSnapshotPreview();
             SnpshtPrev->Create(hwnd);
-
-            SnpshtPrev->DisplayEmpty();
             break;
         }
         case WM_SIZE:
@@ -640,6 +640,13 @@ private:
         return FALSE;
     }
 
+    VOID ResizeChildren()
+    {
+        CRect rect;
+        GetWindowRect(&rect);
+        ResizeChildren(rect.Width(), rect.Height());
+    }
+
     VOID ResizeChildren(int Width, int Height)
     {
         int SnpshtWidth = SnpshtPrev->GetRequestedWidth(Height);
@@ -647,6 +654,7 @@ private:
         // make sure richedit always have room to display
         SnpshtWidth = min(SnpshtWidth, Width - INFO_DISPLAY_PADDING - RICHEDIT_MIN_WIDTH);
 
+        DWORD dwError = ERROR_SUCCESS;
         HDWP hDwp = BeginDeferWindowPos(2);
 
         if (hDwp)
@@ -654,13 +662,39 @@ private:
             hDwp = ::DeferWindowPos(hDwp, SnpshtPrev->m_hWnd, NULL,
                 0, 0, SnpshtWidth, Height, 0);
 
-            // hide the padding if snapshot window width == 0
-            int RicheditPosX = SnpshtWidth ? (SnpshtWidth + INFO_DISPLAY_PADDING) : 0;
+            if (hDwp)
+            {
+                // hide the padding if snapshot window width == 0
+                int RicheditPosX = SnpshtWidth ? (SnpshtWidth + INFO_DISPLAY_PADDING) : 0;
 
-            hDwp = ::DeferWindowPos(hDwp, RichEdit->m_hWnd, NULL,
-                RicheditPosX, 0, Width - RicheditPosX, Height, 0);
+                hDwp = ::DeferWindowPos(hDwp, RichEdit->m_hWnd, NULL,
+                    RicheditPosX, 0, Width - RicheditPosX, Height, 0);
+
+                if (hDwp)
+                {
+                    EndDeferWindowPos(hDwp);
+                }
+                else
+                {
+                    dwError = GetLastError();
+                }
+            }
+            else
+            {
+                dwError = GetLastError();
+            }
         }
-        EndDeferWindowPos(hDwp);
+        else
+        {
+            dwError = GetLastError();
+        }
+
+
+        if (dwError != ERROR_SUCCESS)
+        {
+            // TODO: error handling (I have no idea how to handle)
+        }
+
         UpdateWindow();
     }
 
@@ -711,28 +745,21 @@ public:
         {
             SnpshtPrev->DisplayEmpty();
         }
-        
-        RECT rect;
-        GetWindowRect(&rect);
-        ResizeChildren(rect.right - rect.left, rect.bottom - rect.top);
+        ResizeChildren();
         return RichEdit->ShowAvailableAppInfo(Info);
     }
 
     BOOL ShowInstalledAppInfo(PINSTALLED_INFO Info)
     {
         SnpshtPrev->DisplayEmpty();
-        RECT rect;
-        GetWindowRect(&rect);
-        ResizeChildren(rect.right - rect.left, rect.bottom - rect.top);
+        ResizeChildren();
         return RichEdit->ShowInstalledAppInfo(Info);
     }
 
     VOID SetWelcomeText()
     {
         SnpshtPrev->DisplayEmpty();
-        RECT rect;
-        GetWindowRect(&rect);
-        ResizeChildren(rect.right - rect.left, rect.bottom - rect.top);
+        ResizeChildren();
         RichEdit->SetWelcomeText();
     }
 

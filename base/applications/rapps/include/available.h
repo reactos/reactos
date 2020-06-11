@@ -51,7 +51,7 @@ struct CAvailableApplicationInfo
     ATL::CStringW m_szUrlSite;
     ATL::CStringW m_szUrlDownload;
     ATL::CSimpleArray<LCID> m_LanguageLCIDs;
-    ATL::CStringW m_szSnapshotFilename[MAX_SNAPSHOT_NUM];
+    ATL::CSimpleArray<ATL::CStringW> m_szSnapshotFilename;
 
     ULONG m_SizeBytes;
 
