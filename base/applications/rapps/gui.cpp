@@ -698,6 +698,33 @@ private:
         UpdateWindow();
     }
 
+    VOID OnLink(ENLINK* Link)
+    {
+        switch (Link->msg)
+        {
+        case WM_LBUTTONUP:
+        case WM_RBUTTONUP:
+        {
+            if (pLink) HeapFree(GetProcessHeap(), 0, pLink);
+
+            pLink = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
+                (max(Link->chrg.cpMin, Link->chrg.cpMax) -
+                    min(Link->chrg.cpMin, Link->chrg.cpMax) + 1) * sizeof(WCHAR));
+            if (!pLink)
+            {
+                /* TODO: Error message */
+                return;
+            }
+
+            RichEdit->SendMessageW(EM_SETSEL, Link->chrg.cpMin, Link->chrg.cpMax);
+            RichEdit->SendMessageW(EM_GETSELTEXT, 0, (LPARAM)pLink);
+
+            ShowPopupMenuEx(m_hWnd, m_hWnd, IDR_LINKMENU, -1);
+        }
+        break;
+        }
+    }
+
 public:
 
     CAppRichEdit * RichEdit;
@@ -761,33 +788,6 @@ public:
         SnpshtPrev->DisplayEmpty();
         ResizeChildren();
         RichEdit->SetWelcomeText();
-    }
-
-    VOID OnLink(ENLINK* Link)
-    {
-        switch (Link->msg)
-        {
-        case WM_LBUTTONUP:
-        case WM_RBUTTONUP:
-        {
-            if (pLink) HeapFree(GetProcessHeap(), 0, pLink);
-
-            pLink = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-                (max(Link->chrg.cpMin, Link->chrg.cpMax) -
-                    min(Link->chrg.cpMin, Link->chrg.cpMax) + 1) * sizeof(WCHAR));
-            if (!pLink)
-            {
-                /* TODO: Error message */
-                return;
-            }
-
-            RichEdit->SendMessageW(EM_SETSEL, Link->chrg.cpMin, Link->chrg.cpMax);
-            RichEdit->SendMessageW(EM_GETSELTEXT, 0, (LPARAM)pLink);
-
-            ShowPopupMenuEx(m_hWnd, m_hWnd, IDR_LINKMENU, -1);
-        }
-        break;
-        }
     }
 
     VOID OnCommand(WPARAM wParam, LPARAM lParam)
