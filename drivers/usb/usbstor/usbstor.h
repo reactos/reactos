@@ -61,6 +61,52 @@
 #define MAX_LUN 0xF
 #define USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH 0x10000
 
+#define CBW_SIGNATURE 0x43425355
+#define CSW_SIGNATURE 0x53425355
+
+#include <pshpack1.h>
+
+typedef struct
+{
+    ULONG Signature;                                                 // CBW signature
+    ULONG Tag;                                                       // CBW Tag of operation
+    ULONG DataTransferLength;                                        // data transfer length
+    UCHAR Flags;                                                     // CBW Flags endpoint direction
+    UCHAR LUN;                                                       // lun unit
+    UCHAR CommandBlockLength;                                        // Command block length
+    UCHAR CommandBlock[16];
+} CBW, *PCBW;
+
+C_ASSERT(sizeof(CBW) == 31);
+
+#define CSW_STATUS_COMMAND_PASSED 0x00
+#define CSW_STATUS_COMMAND_FAILED 0x01
+#define CSW_STATUS_PHASE_ERROR    0x02
+
+typedef struct
+{
+    ULONG Signature;                                                 // CSW signature
+    ULONG Tag;                                                       // CSW tag
+    ULONG DataResidue;                                               // CSW data transfer diff
+    UCHAR Status;                                                    // CSW status
+} CSW, *PCSW;
+
+#include <poppack.h>
+
+typedef struct
+{
+    PIRP Irp;
+    ULONG ErrorIndex;
+    ULONG StallRetryCount;                                            // the number of retries after receiving USBD_STATUS_STALL_PID status
+    union
+    {
+        CBW cbw;
+        CSW csw;
+    };
+    URB Urb;
+    SCSI_REQUEST_BLOCK SenseSrb;
+} IRP_CONTEXT, *PIRP_CONTEXT;
+
 typedef struct __COMMON_DEVICE_EXTENSION__
 {
     BOOLEAN IsFDO;
@@ -99,6 +145,7 @@ typedef struct
     KSPIN_LOCK CommonLock;
     PIO_WORKITEM ResetDeviceWorkItem;
     ULONG Flags;
+    IRP_CONTEXT CurrentIrpContext;
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
@@ -108,56 +155,11 @@ typedef struct
     UCHAR LUN;                                                                           // lun id
     BOOLEAN Claimed;                                                                     // indicating if it has been claimed by upper driver
     PDEVICE_OBJECT LowerDeviceObject;                                                    // points to FDO
-    PINQUIRYDATA InquiryData;                                                            // USB SCSI inquiry data
     PDEVICE_OBJECT *PDODeviceObject;                                                     // entry in pdo list
     PDEVICE_OBJECT Self;                                                                 // self
+    // the whole structure is not stored
+    UCHAR InquiryData[INQUIRYDATABUFFERSIZE];                                            // USB SCSI inquiry data
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
-
-#define CBW_SIGNATURE 0x43425355
-#define CSW_SIGNATURE 0x53425355
-
-#include <pshpack1.h>
-typedef struct
-{
-    ULONG Signature;                                                 // CBW signature
-    ULONG Tag;                                                       // CBW Tag of operation
-    ULONG DataTransferLength;                                        // data transfer length
-    UCHAR Flags;                                                     // CBW Flags endpoint direction
-    UCHAR LUN;                                                       // lun unit
-    UCHAR CommandBlockLength;                                        // Command block length
-    UCHAR CommandBlock[16];
-}CBW, *PCBW;
-
-C_ASSERT(sizeof(CBW) == 31);
-
-#define CSW_STATUS_COMMAND_PASSED 0x00
-#define CSW_STATUS_COMMAND_FAILED 0x01
-#define CSW_STATUS_PHASE_ERROR    0x02
-
-typedef struct
-{
-    ULONG Signature;                                                 // CSW signature
-    ULONG Tag;                                                       // CSW tag
-    ULONG DataResidue;                                               // CSW data transfer diff
-    UCHAR Status;                                                    // CSW status
-}CSW, *PCSW;
-
-#include <poppack.h>
-
-typedef struct
-{
-    PIRP Irp;
-    PFDO_DEVICE_EXTENSION FDODeviceExtension;
-    ULONG ErrorIndex;
-    ULONG StallRetryCount;                                            // the number of retries after receiving USBD_STATUS_STALL_PID status
-    union
-    {
-        CBW cbw;
-        CSW csw;
-    };
-    URB Urb;
-    SCSI_REQUEST_BLOCK SenseSrb;
-} IRP_CONTEXT, *PIRP_CONTEXT;
 
 typedef struct _ERRORHANDLER_WORKITEM_DATA
 {
@@ -267,7 +269,7 @@ USBSTOR_HandleExecuteSCSI(
 
 NTSTATUS
 USBSTOR_SendCSWRequest(
-    PIRP_CONTEXT Context,
+    PFDO_DEVICE_EXTENSION FDODeviceExtension,
     PIRP Irp);
 
 
@@ -351,8 +353,7 @@ USBSTOR_TimerRoutine(
 VOID
 NTAPI
 USBSTOR_QueueResetPipe(
-    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
-    IN PIRP_CONTEXT Context);
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension);
 
 VOID
 NTAPI

@@ -77,15 +77,15 @@ USBSTOR_ResetPipeWorkItemRoutine(
     IN PVOID Ctx)
 {
     NTSTATUS Status;
-    PIRP_CONTEXT Context = (PIRP_CONTEXT)Ctx;
-    PFDO_DEVICE_EXTENSION FDODeviceExtension = (PFDO_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension = (PFDO_DEVICE_EXTENSION)Ctx;
+    PIRP_CONTEXT Context = &FDODeviceExtension->CurrentIrpContext;
 
     // clear stall on the corresponding pipe
     Status = USBSTOR_ResetPipeWithHandle(FDODeviceExtension->LowerDeviceObject, Context->Urb.UrbBulkOrInterruptTransfer.PipeHandle);
     DPRINT1("USBSTOR_ResetPipeWithHandle Status %x\n", Status);
 
     // now resend the csw as the stall got cleared
-    USBSTOR_SendCSWRequest(Context, Context->Irp);
+    USBSTOR_SendCSWRequest(FDODeviceExtension, Context->Irp);
 }
 
 VOID
@@ -133,15 +133,14 @@ USBSTOR_ResetDeviceWorkItemRoutine(
 VOID
 NTAPI
 USBSTOR_QueueResetPipe(
-    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
-    IN PIRP_CONTEXT Context)
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension)
 {
     DPRINT("USBSTOR_QueueResetPipe\n");
 
     IoQueueWorkItem(FDODeviceExtension->ResetDeviceWorkItem,
                     USBSTOR_ResetPipeWorkItemRoutine,
                     CriticalWorkQueue,
-                    Context);
+                    FDODeviceExtension);
 }
 
 VOID
