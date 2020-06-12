@@ -705,10 +705,9 @@ private:
         }
 
 
-        if (dwError != ERROR_SUCCESS)
-        {
-            // TODO: error handling (I have no idea how to handle)
-        }
+#if DBG
+        ATLASSERT(dwError == ERROR_SUCCESS);
+#endif
 
         UpdateWindow();
     }
