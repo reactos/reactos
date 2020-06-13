@@ -331,7 +331,6 @@ USBSTOR_CBWCompletionRoutine(
     PIRP Irp,
     PVOID Ctx)
 {
-    PIRP_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
@@ -344,7 +343,6 @@ USBSTOR_CBWCompletionRoutine(
     DPRINT("USBSTOR_CBWCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
 
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)Ctx;
-    Context = &FDODeviceExtension->CurrentIrpContext;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Request = IoStack->Parameters.Scsi.Srb;
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
