@@ -15,4 +15,4 @@
 #define WARN(fmt, ...) WARN__(DPFLTR_USBSTOR_ID, fmt, __VA_ARGS__)
 #define TRACE(fmt, ...) TRACE__(DPFLTR_USBSTOR_ID, fmt, __VA_ARGS__)
 #define INFO(fmt, ...) INFO__(DPFLTR_USBSTOR_ID, fmt, __VA_ARGS__)
-#define FDPRINT(lvl, fmt, ...) FDPRINT__(DPFLTR_USBSTOR_ID, lvl, __VA_ARGS__)
+#define FDPRINT(lvl, fmt, ...) FDPRINT__(DPFLTR_USBSTOR_ID, lvl, fmt, __VA_ARGS__)

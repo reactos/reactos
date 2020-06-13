@@ -9,9 +9,6 @@
 
 #include "usbstor.h"
 
-#define NDEBUG
-#include <debug.h>
-
 
 VOID
 USBSTOR_QueueInitialize(
@@ -60,7 +57,7 @@ USBSTOR_Cancel(
 
     KeAcquireSpinLockAtDpcLevel(&FDODeviceExtension->IrpListLock);
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
-    KeReleaseSpinLockFromDpcLevel(&FDODeviceExtension->IrpListLock);    
+    KeReleaseSpinLockFromDpcLevel(&FDODeviceExtension->IrpListLock);
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
     Irp->IoStatus.Status = STATUS_CANCELLED;
@@ -135,7 +132,7 @@ USBSTOR_QueueAddIrp(
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     // if list is freezed, dont start this packet
-    DPRINT("IrpListFreeze: %lu IrpPendingCount %lu\n", IrpListFreeze, FDODeviceExtension->IrpPendingCount);
+    INFO("IrpListFreeze: %lu IrpPendingCount %lu\n", IrpListFreeze, FDODeviceExtension->IrpPendingCount);
 
     return (IrpListFreeze || SrbProcessing);
 }
@@ -291,7 +288,7 @@ USBSTOR_QueueRelease(
 
     IoStartPacket(DeviceObject,
                   Irp,
-                  &Request->QueueSortKey, 
+                  &Request->QueueSortKey,
                   USBSTOR_CancelIo);
 }
 
@@ -307,8 +304,6 @@ USBSTOR_StartIo(
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     KIRQL OldLevel;
     BOOLEAN ResetInProgress;
-
-    DPRINT("USBSTOR_StartIo\n");
 
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);

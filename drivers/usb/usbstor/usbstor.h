@@ -7,6 +7,8 @@
 #include <usbdlib.h>
 #include <classpnp.h>
 
+#include "dbghlp.h"
+
 #define USB_STOR_TAG 'sbsu'
 
 #ifndef BooleanFlagOn

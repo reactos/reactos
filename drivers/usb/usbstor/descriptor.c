@@ -9,9 +9,6 @@
 
 #include "usbstor.h"
 
-#define NDEBUG
-#include <debug.h>
-
 
 NTSTATUS
 NTAPI
@@ -209,25 +206,11 @@ USBSTOR_ScanConfigurationDescriptor(
     // check if everything has been found
     if (*OutInterfaceDescriptor == NULL || *InEndpointDescriptor == NULL || *OutEndpointDescriptor == NULL)
     {
-        DPRINT1("USBSTOR_ScanConfigurationDescriptor: Failed to find InterfaceDescriptor %p InEndpointDescriptor %p OutEndpointDescriptor %p\n", *OutInterfaceDescriptor, *InEndpointDescriptor, *OutEndpointDescriptor);
+        ERR("USBSTOR_ScanConfigurationDescriptor: Failed to find InterfaceDescriptor %p InEndpointDescriptor %p OutEndpointDescriptor %p\n", *OutInterfaceDescriptor, *InEndpointDescriptor, *OutEndpointDescriptor);
         return STATUS_UNSUCCESSFUL;
     }
 
     return STATUS_SUCCESS;
-}
-
-VOID
-DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
-{
-    DPRINT1("Dumping ConfigurationDescriptor %p\n", ConfigurationDescriptor);
-    DPRINT1("bLength %x\n", ConfigurationDescriptor->bLength);
-    DPRINT1("bDescriptorType %x\n", ConfigurationDescriptor->bDescriptorType);
-    DPRINT1("wTotalLength %x\n", ConfigurationDescriptor->wTotalLength);
-    DPRINT1("bNumInterfaces %x\n", ConfigurationDescriptor->bNumInterfaces);
-    DPRINT1("bConfigurationValue %x\n", ConfigurationDescriptor->bConfigurationValue);
-    DPRINT1("iConfiguration %x\n", ConfigurationDescriptor->iConfiguration);
-    DPRINT1("bmAttributes %x\n", ConfigurationDescriptor->bmAttributes);
-    DPRINT1("MaxPower %x\n", ConfigurationDescriptor->MaxPower);
 }
 
 NTSTATUS
@@ -273,7 +256,7 @@ USBSTOR_SelectConfigurationAndInterface(
     if (!NT_SUCCESS(Status))
     {
         // failed to set configuration
-        DPRINT1("USBSTOR_SelectConfiguration failed to set interface %x\n", Status);
+        ERR("USBSTOR_SelectConfiguration failed to set interface %x\n", Status);
         FreeItem(InterfaceList);
         ExFreePoolWithTag(Urb, 0);
         return Status;
@@ -349,7 +332,7 @@ USBSTOR_GetPipeHandles(
     if (!BulkInFound || !BulkOutFound)
     {
         // WTF? usb port driver does not give us bulk pipe access
-        DPRINT1("USBSTOR_GetPipeHandles> BulkInFound %c BulkOutFound %c missing!!!\n", BulkInFound, BulkOutFound);
+        ERR("USBSTOR_GetPipeHandles> BulkInFound %c BulkOutFound %c missing!!!\n", BulkInFound, BulkOutFound);
         return STATUS_DEVICE_CONFIGURATION_ERROR;
     }
 
