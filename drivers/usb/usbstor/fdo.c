@@ -61,7 +61,7 @@ USBSTOR_FdoHandleDeviceRelations(
             }
         }
 
-        DeviceRelations = ExFreePoolWithTag(PagedPool, sizeof(DEVICE_RELATIONS) + (DeviceCount-1) * sizeof(PDEVICE_OBJECT), USB_STOR_TAG);
+        DeviceRelations = ExAllocatePoolWithTag(PagedPool, sizeof(DEVICE_RELATIONS) + (DeviceCount - 1) * sizeof(PDEVICE_OBJECT), USB_STOR_TAG);
         if (!DeviceRelations)
         {
             Irp->IoStatus.Information = 0;
@@ -69,6 +69,8 @@ USBSTOR_FdoHandleDeviceRelations(
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+
+        DeviceRelations->Count = 0;
 
         // add device objects
         for (Index = 0; Index < max(DeviceExtension->MaxLUN, 1); Index++)
