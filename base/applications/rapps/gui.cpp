@@ -691,6 +691,7 @@ public:
             {
                 DownloadParam->DownloadFileName.ReleaseBuffer();
                 delete DownloadParam;
+                DisplayFailed();
                 return FALSE;
             }
             DownloadParam->hFile = CreateFileW(DownloadParam->DownloadFileName.GetBuffer(),
@@ -699,6 +700,7 @@ public:
             if (INVALID_HANDLE_VALUE == DownloadParam->hFile)
             {
                 delete DownloadParam;
+                DisplayFailed();
                 return FALSE;
             }
 
@@ -708,6 +710,7 @@ public:
                 CloseHandle(DownloadParam->hFile);
                 DeleteFileW(DownloadParam->DownloadFileName.GetBuffer());
                 delete DownloadParam;
+                DisplayFailed();
                 return FALSE;
             }
             return TRUE;
