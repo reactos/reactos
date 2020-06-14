@@ -13,7 +13,7 @@
 	so DO NOT define VFD_MOUNT_MANAGER macro
 	unless you know exactly what you are doing...
 */
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 //	suppress empty compile unit warning
 #pragma warning (disable: 4206)
 #pragma message ("Mount Manager support feature is disabled.")
