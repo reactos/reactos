@@ -2273,7 +2273,7 @@ ScmAutoStartServices(VOID)
             }
             else
             {
-                DPRINT1("WARNING: Could not open the associated Safe Boot key");
+                DPRINT1("WARNING: Could not open the associated Safe Boot key\n");
                 CurrentService->ServiceVisited = FALSE;
             }
         }

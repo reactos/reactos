@@ -1882,7 +1882,7 @@ CreatePartitionList(VOID)
                                       &ReturnSize);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtQuerySystemInformation() failed, Status 0x%08lx", Status);
+        DPRINT1("NtQuerySystemInformation() failed, Status 0x%08lx\n", Status);
         RtlFreeHeap(ProcessHeap, 0, List);
         return NULL;
     }

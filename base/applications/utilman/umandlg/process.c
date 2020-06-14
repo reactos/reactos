@@ -84,7 +84,7 @@ BOOL IsProcessRunning(IN LPCWSTR lpszProcessName)
     hProcess = OpenProcess(SYNCHRONIZE, FALSE, dwProcessID);
     if (!hProcess)
     {
-        DPRINT("IsProcessRunning(): Failed to open the process! (Error: %lu)", GetLastError());
+        DPRINT("IsProcessRunning(): Failed to open the process! (Error: %lu)\n", GetLastError());
         return FALSE;
     }
 
@@ -211,7 +211,7 @@ BOOL CloseProcess(IN LPCWSTR lpszProcessName)
     hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, dwProcessID);
     if (!hProcess)
     {
-        DPRINT("CloseProcess(): Failed to open the process for termination! (Error: %lu)", GetLastError());
+        DPRINT("CloseProcess(): Failed to open the process for termination! (Error: %lu)\n", GetLastError());
         return FALSE;
     }
 
