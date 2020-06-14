@@ -8,8 +8,9 @@
  */
 
 /*
- * NOTE: Define NDEBUG before including this header
- * to disable debugging macros.
+ * NOTE:
+ * Define NDEBUG before including this header to disable DPRINT() macro when DBG is enabled.
+ * Moreover, NDEBUG_GLOBAL hes the same purpose, but is meant to be defined once/globally.
  */
 
 #pragma once
@@ -100,8 +101,8 @@ RtlAssert(
             DbgPrint("(%s:%d) DbgPrint() failed!\n", __RELFILE__, __LINE__); \
     } while (0)
 
-    /* These are printed only if NDEBUG is NOT defined */
-    #ifndef NDEBUG
+    /* These are printed only if NDEBUG_GLOBAL and NDEBUG are NOT defined */
+    #if !defined(NDEBUG_GLOBAL) && !defined(NDEBUG)
 
         #define DPRINT(fmt, ...) do { \
             if (DbgPrint("(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__))  \

@@ -78,6 +78,8 @@ elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif()
 
 # Debugging
+add_compile_definitions($<$<NOT:$<CONFIG:Debug>>:NDEBUG_GLOBAL>)
+
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
     if(SEPARATE_DBG)
         add_compile_options(-gdwarf-2 -ggdb)
@@ -117,7 +119,7 @@ endif()
 # Optimizations
 # FIXME: Revisit this to see if we even need these levels
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O2 -DNDEBUG)
+    add_compile_options(-O2)
 else()
     if(OPTIMIZE STREQUAL "1")
         add_compile_options(-Os)
