@@ -14,7 +14,7 @@ list(APPEND SOURCE
     DllMain.c
     ${CMAKE_CURRENT_BINARY_DIR}/ntdll_vista.def)
 
-add_library(ntdll_vista MODULE ${SOURCE})
+add_library(ntdll_vista MODULE ${SOURCE} ntdll_vista.rc)
 set_module_type(ntdll_vista win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(ntdll_vista smlib rtl_vista)
 if(ARCH STREQUAL "arm")
