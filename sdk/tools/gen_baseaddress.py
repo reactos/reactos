@@ -215,8 +215,9 @@ EXCLUDE = (
     'redirtest1.dll',
     'redirtest2.dll',
     'testvdd.dll',
+    # 'win32u.dll' # Future-proof: Is currently a test file, but will eventually move to "Win7+ core".
     'win32u_2k3sp2.dll',
-    'win32u_vista.dll',
+    'win32u_vista.dll', # Future-proof: Not built yet.
     'win32u_xpsp2.dll',
     # sdk/
     'genincdata.dll',
