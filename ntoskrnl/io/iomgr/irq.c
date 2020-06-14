@@ -163,7 +163,7 @@ IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
             continue;
 
         /* Disconnect it */
-        KeDisconnectInterrupt(&InterruptObject[i]);
+        KeDisconnectInterrupt(IoInterrupt->Interrupt[i]);
     }
 
     /* Free the I/O Interrupt */
