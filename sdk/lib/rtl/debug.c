@@ -81,7 +81,7 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
         if (PrefixLength > sizeof(Buffer)) PrefixLength = sizeof(Buffer);
 
         /* Copy it */
-        strncpy(Buffer, Prefix, PrefixLength);
+        memcpy(Buffer, Prefix, PrefixLength);
 
         /* Do the printf */
         Length = _vsnprintf(Buffer + PrefixLength,
@@ -125,6 +125,7 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
         ExceptionRecord.ExceptionRecord = NULL;
         ExceptionRecord.NumberParameters = 2;
         ExceptionRecord.ExceptionFlags = 0;
+        /* FIXME: '+ 1' looks wrong when Length == sizeof(Buffer) */
         ExceptionRecord.ExceptionInformation[0] = DebugString.Length + 1;
         ExceptionRecord.ExceptionInformation[1] = (ULONG_PTR)DebugString.Buffer;
 
