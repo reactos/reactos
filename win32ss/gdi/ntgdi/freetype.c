@@ -1205,11 +1205,10 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         PrivateEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_ENTRY_MEM), TAG_FONT);
         if (!PrivateEntry)
         {
-            if (FontGDI->Filename)
-                ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
             EngFreeMem(FontGDI);
             SharedFace_Release(SharedFace);
             ExFreePoolWithTag(Entry, TAG_FONT);
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0;
         }
 
