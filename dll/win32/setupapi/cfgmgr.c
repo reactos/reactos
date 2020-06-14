@@ -698,8 +698,7 @@ CMP_RegisterNotification(
     }
     else
     {
-        if (pNotifyData->hNotifyHandle == NULL)
-            HeapFree(GetProcessHeap(), 0, pNotifyData);
+        HeapFree(GetProcessHeap(), 0, pNotifyData);
 
         *phDevNotify = (HDEVNOTIFY)NULL;
     }
