@@ -1273,8 +1273,7 @@ CDefaultContextMenu::InvokeRegVerb(
                 /* In WinXP if we have browsed, we don't open any more folders.
                  * In Win7 we browse to the first folder we find and
                  * open new windows for each of the rest of the folders */
-                UINT ntver = RosGetProcessEffectiveVersion();
-                if (ntver >= _WIN32_WINNT_VISTA)
+                if (RosGetProcessEffectiveVersion() >= _WIN32_WINNT_VISTA)
                     wFlags = 0; // FIXME: = SBSP_NEWBROWSER | (wFlags & ~SBSP_SAMEBROWSER);
                 else
                     i = m_cidl;

@@ -38,12 +38,14 @@ static
 inline
 UINT RosGetProcessEffectiveVersion(VOID)
 {
-    PPEB peb = NtCurrentPeb();
     UINT shimVer = RosGetProcessCompatVersion();
-    if (shimVer)
-        return shimVer;
-    else
-        return (peb->OSMajorVersion << 8) | (peb->OSMinorVersion);
+    if (!shimVer)
+    {
+        PPEB peb = NtCurrentPeb();
+        return (peb->OSMajorVersion << 8) | peb->OSMinorVersion;
+    }
+
+    return shimVer;
 }
 
 BOOL
