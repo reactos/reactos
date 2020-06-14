@@ -142,7 +142,7 @@ MmeOpenDevice(
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
     LPWAVEFORMATEX Format = NULL;
 
-    SND_TRACE(L"Opening device");
+    SND_TRACE(L"Opening device\n");
 
     VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) || IS_MIXER_DEVICE_TYPE(DeviceType) || IS_MIDI_DEVICE_TYPE(DeviceType) );    /* FIXME? wave in too? */
     VALIDATE_MMSYS_PARAMETER( OpenParameters );
