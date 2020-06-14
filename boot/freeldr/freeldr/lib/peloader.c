@@ -625,15 +625,15 @@ PeLdrAllocateDataTableEntry(
         return FALSE;
     }
 
-    RtlZeroMemory(Buffer, Length);
-    while (*BaseDllName != 0)
-    {
-        *Buffer++ = *BaseDllName++;
-    }
-
     DataTableEntry->BaseDllName.Length = Length;
     DataTableEntry->BaseDllName.MaximumLength = Length;
     DataTableEntry->BaseDllName.Buffer = PaToVa(Buffer);
+
+    RtlZeroMemory(Buffer, Length);
+    while (Length--)
+    {
+        *Buffer++ = *BaseDllName++;
+    }
 
     /* Initialize FullDllName field (UNICODE_STRING) from the Ansi FullDllName
        using the same method */
@@ -645,15 +645,15 @@ PeLdrAllocateDataTableEntry(
         return FALSE;
     }
 
-    RtlZeroMemory(Buffer, Length);
-    while (*FullDllName != 0)
-    {
-        *Buffer++ = *FullDllName++;
-    }
-
     DataTableEntry->FullDllName.Length = Length;
     DataTableEntry->FullDllName.MaximumLength = Length;
     DataTableEntry->FullDllName.Buffer = PaToVa(Buffer);
+
+    RtlZeroMemory(Buffer, Length);
+    while (Length--)
+    {
+        *Buffer++ = *FullDllName++;
+    }
 
     /* Initialize what's left - LoadCount which is 1, and set Flags so that
        we know this entry is processed */
