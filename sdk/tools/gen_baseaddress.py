@@ -102,15 +102,7 @@ PRIORITIES = (
 )
 
 EXCLUDE = (
-    'bmfd.dll',
-    'bootvid.dll',
-    'framebuf.dll',
-    'ftfd.dll',
-    'genincdata.dll',
-    'hal.dll',
-    'halaacpi.dll',
-    'halacpi.dll',
-    'halapic.dll',
+    # dll/keyboard/
     'kbda1.dll',
     'kbda2.dll',
     'kbda3.dll',
@@ -201,20 +193,34 @@ EXCLUDE = (
     'kbdvntc.dll',
     'kbdycc.dll',
     'kbdycl.dll',
+    # drivers/
+    'bootvid.dll',
     'kdcom.dll',
     'kdvbox.dll',
-    'vgaddi.dll',
-    'dllexport_test_dll1.dll',
-    'dllexport_test_dll2.dll',
+    # hal/
+    'hal.dll',
+    'halaacpi.dll',
+    'halacpi.dll',
+    'halapic.dll',
+    # modules/rostests/
+    'MyEventProvider.dll', # MyEventProvider_dll target.
+    'dllexport_test_dll1.dll', # Moreover, this module hardcodes its baseaddress.
+    'dllexport_test_dll2.dll', # Moreover, this module hardcodes its baseaddress.
     'dllimport_test.dll',
     'localspl_apitest.dll',
-    'MyEventProvider.dll',
     'redirtest1.dll',
     'redirtest2.dll',
+    'testvdd.dll',
     'win32u_2k3sp2.dll',
     'win32u_vista.dll',
     'win32u_xpsp2.dll',
-    'testvdd.dll',
+    # sdk/
+    'genincdata.dll',
+    # win32ss/
+    'bmfd.dll',
+    'framebuf.dll',
+    'ftfd.dll',
+    'vgaddi.dll',
 )
 
 IMAGE_NT_OPTIONAL_HDR32_MAGIC = 0x10b
