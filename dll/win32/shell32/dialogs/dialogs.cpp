@@ -20,6 +20,7 @@
  */
 
 #include "precomp.h"
+#include "winreg.h"
 
 typedef struct
 {
@@ -1132,6 +1133,87 @@ VOID ExitWindowsDialog_backup(HWND hWndOwner)
 }
 
 /*************************************************************************
+ * SetRegistryToBootInNTNativeMode
+ *
+ * NOTES
+ *     Used to append the NT Native shell executable to the BootExecute
+ *     registry value then triggers a restart in order to boot into it.
+ */
+VOID SetRegistryToBootInNTNativeMode()
+{
+    // prepare the registry for booting into the NT Native Shell
+    LONG lRet;
+    HKEY hKey;
+    DWORD dwType = 0, dwCurrentValueLength = 0;
+    WCHAR* pszCurrentValue = NULL, * pszFinalValue = NULL;
+    UINT cchLatest = 0;
+
+    TRACE("dwCurrValLength: %d\n", dwCurrentValueLength);
+
+    lRet = RegCreateKeyExW(
+        HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager", 0, NULL,
+        REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL);
+
+    if (lRet != ERROR_SUCCESS)
+    {
+        TRACE("Unable to open the Session Manager key, error %d", GetLastError());
+        return;
+    }
+
+    lRet = RegQueryValueEx(hKey, L"BootExecute", NULL, &dwType, NULL, &dwCurrentValueLength);
+
+    if (lRet != ERROR_SUCCESS || dwType != REG_MULTI_SZ)
+    {
+        TRACE("Unable to grab BootExecute, error %d", GetLastError());
+        return;
+    }
+
+    TRACE("dwCurrValLength: %d\n", dwCurrentValueLength);
+
+    pszCurrentValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, dwCurrentValueLength);
+    if (!pszCurrentValue)
+    {
+        TRACE("HeapAlloc failed to allocate %d bytes", dwCurrentValueLength);
+        return;
+    }
+    TRACE("dwCurrValLength: %d\n", dwCurrentValueLength);
+    pszCurrentValue[0] = L'\0';
+
+    lRet = RegQueryValueExW(
+        hKey, L"BootExecute", NULL, &dwType, (LPBYTE)pszCurrentValue, &dwCurrentValueLength);
+    TRACE("dwCurrValLength: %d", dwCurrentValueLength);
+    WCHAR pszNativeShellArg[] = L"0native Hello World!";
+
+    cchLatest = dwCurrentValueLength + lstrlen(pszNativeShellArg) * sizeof(WCHAR);
+    const UINT uInitialStringSize = lstrlen(pszCurrentValue);
+
+    pszFinalValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, cchLatest);
+    if (!pszFinalValue)
+    {
+        TRACE("HeapAlloc failed to allocate %d bytes\n", cchLatest);
+        goto Cleanup;
+    }
+
+    wcscpy(&pszFinalValue[0], &pszCurrentValue[0]);
+    lstrcat((LPWSTR)pszFinalValue, pszNativeShellArg);
+
+    *(pszFinalValue + uInitialStringSize) = '\0';
+    *(pszFinalValue + lstrlen(pszFinalValue)) = '\0';
+
+    TRACE("length: %d", (cchLatest / sizeof(WCHAR)));
+    TRACE("sizeof wchar: %d", sizeof(WCHAR));
+
+    RegSetValueExW(hKey, L"BootExecute", 0, REG_MULTI_SZ, (LPBYTE)pszFinalValue, cchLatest);
+
+Cleanup:
+    RegCloseKey(hKey);
+
+    HeapFree(GetProcessHeap(), 0, pszCurrentValue);
+    HeapFree(GetProcessHeap(), 0, pszFinalValue);
+}
+
+
+/*************************************************************************
  * ExitWindowsDialog                [SHELL32.60]
  *
  * NOTES
@@ -1190,6 +1272,15 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
         }
         case 0x04: /* Reboot */
         {
+            EnablePrivilege(L"SeShutdownPrivilege", TRUE);
+            ExitWindowsEx(EWX_REBOOT, 0);
+            EnablePrivilege(L"SeShutdownPrivilege", FALSE);
+            break;
+        }
+        case 0x05: /* Reboot to NT Native Mode */
+        {
+            SetRegistryToBootInNTNativeMode();
+
             EnablePrivilege(L"SeShutdownPrivilege", TRUE);
             ExitWindowsEx(EWX_REBOOT, 0);
             EnablePrivilege(L"SeShutdownPrivilege", FALSE);
