@@ -35,7 +35,6 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
     PKINTERRUPT Interrupt;
     PKINTERRUPT InterruptUsed;
     PIO_INTERRUPT IoInterrupt;
-    PKSPIN_LOCK SpinLockUsed;
     BOOLEAN FirstRun;
     CCHAR Count = 0;
     KAFFINITY Affinity;
@@ -64,16 +63,20 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
                                         TAG_KINTERRUPT);
     if (!IoInterrupt) return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Select which Spinlock to use */
-    SpinLockUsed = SpinLock ? SpinLock : &IoInterrupt->SpinLock;
+    /* Zero the interrupt pointers */
+    RtlZeroMemory(&IoInterrupt->Interrupt, sizeof(IoInterrupt->Interrupt));
+
+    /* Use structure's spinlock, if none was provided */
+    if (!SpinLock)
+    {
+        SpinLock = &IoInterrupt->SpinLock;
+        KeInitializeSpinLock(SpinLock);
+    }
 
     /* We first start with a built-in Interrupt inside the I/O Structure */
     *InterruptObject = &IoInterrupt->FirstInterrupt;
     Interrupt = (PKINTERRUPT)(IoInterrupt + 1);
     FirstRun = TRUE;
-
-    /* Start with a fresh structure */
-    RtlZeroMemory(IoInterrupt, sizeof(IO_INTERRUPT));
 
     /* Now create all the interrupts */
     Affinity = ProcessorEnableMask & KeActiveProcessors;
@@ -90,7 +93,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
         KeInitializeInterrupt(InterruptUsed,
                               ServiceRoutine,
                               ServiceContext,
-                              SpinLockUsed,
+                              SpinLock,
                               Vector,
                               Irql,
                               SynchronizeIrql,
