@@ -540,7 +540,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         }
 
         UINT cmdFlags = 0;
-        BOOL hide = FALSE;
+        bool hide = false;
         HKEY hkVerb;
         if (idResource > 0)
         {
@@ -585,12 +585,13 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
             // FIXME: GetAsyncKeyState should not be called here, clients
             // need to be updated to set the CMF_EXTENDEDVERBS flag.
             if (!(uFlags & CMF_EXTENDEDVERBS) && GetAsyncKeyState(VK_SHIFT) >= 0)
-                hide |= RegValueExists(hkVerb, L"Extended");
+                hide = RegValueExists(hkVerb, L"Extended");
 
-            hide |= RegValueExists(hkVerb, L"ProgrammaticAccessOnly");
+            if (!hide)
+                hide = RegValueExists(hkVerb, L"ProgrammaticAccessOnly");
 
-            if (!(uFlags & CMF_DISABLEDVERBS))
-                hide |= RegValueExists(hkVerb, L"LegacyDisable");
+            if (!hide && !(uFlags & CMF_DISABLEDVERBS))
+                hide = RegValueExists(hkVerb, L"LegacyDisable");
 
             if (RegValueExists(hkVerb, L"NeverDefault"))
                 fState &= ~MFS_DEFAULT;
