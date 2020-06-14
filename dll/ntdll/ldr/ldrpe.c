@@ -703,7 +703,7 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
                 DPFLTR_WARNING_LEVEL,
                 "LDR: LdrpWalkImportDescriptor() failed to probe %wZ for its "
                 "manifest, ntstatus = 0x%08lx\n",
-                &LdrEntry->FullDllName, Status);
+                &LdrEntry->FullDllName, Status2);
         }
     }
 
