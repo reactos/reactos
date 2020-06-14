@@ -51,7 +51,7 @@ struct CAvailableApplicationInfo
     ATL::CStringW m_szUrlSite;
     ATL::CStringW m_szUrlDownload;
     ATL::CSimpleArray<LCID> m_LanguageLCIDs;
-    ATL::CSimpleArray<ATL::CStringW> m_szSnapshotFilename;
+    ATL::CSimpleArray<ATL::CStringW> m_szSnapshotLocation;
 
     ULONG m_SizeBytes;
 
@@ -100,10 +100,11 @@ typedef BOOL(CALLBACK *AVAILENUMPROC)(CAvailableApplicationInfo *Info, LPCWSTR s
 
 class CAvailableApps
 {
-    static AvailableStrings m_Strings;
     ATL::CAtlList<CAvailableApplicationInfo*> m_InfoList;
 
 public:
+    static AvailableStrings m_Strings;
+
     CAvailableApps();
 
     static BOOL UpdateAppsDB();
