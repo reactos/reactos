@@ -59,22 +59,28 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
     {
         WCHAR SnapshotField[sizeof("Snapshot") + 4];
         wsprintfW(SnapshotField, L"Snapshot%d", i + 1);
-        ATL::CStringW SnapshotFileName;
-        if (!GetString(SnapshotField, SnapshotFileName))
+        ATL::CStringW SnapshotLocation;
+        if (!GetString(SnapshotField, SnapshotLocation))
         {
             continue;
         }
 
-        // TODO: Add URL Support
 
-        // TODO: Does the filename contain anything stuff like "\\" ".." ":" "<" ">" ?
-        // these stuff may lead to security issues
+        if (PathIsURLW(SnapshotLocation.GetString()))
+        {
+            m_szSnapshotLocation.Add(SnapshotLocation);
+        }
+        else
+        {
+            // TODO: Does the filename contain anything stuff like "\\" ".." ":" "<" ">" ?
+            // these stuff may lead to security issues
 
-        ATL::CStringW SnapshotName = AvlbStrings.szAppsPath;
-        PathAppendW(SnapshotName.GetBuffer(MAX_PATH), L"snapshots");
-        PathAppendW(SnapshotName.GetBuffer(), SnapshotFileName.GetString());
-        SnapshotName.ReleaseBuffer();
-        m_szSnapshotFilename.Add(SnapshotName);
+            ATL::CStringW SnapshotName = AvlbStrings.szAppsPath;
+            PathAppendW(SnapshotName.GetBuffer(MAX_PATH), L"snapshots");
+            PathAppendW(SnapshotName.GetBuffer(), SnapshotLocation.GetString());
+            SnapshotName.ReleaseBuffer();
+            m_szSnapshotLocation.Add(SnapshotName);
+        }
     }
 
     RetrieveSize();
@@ -232,11 +238,11 @@ BOOL CAvailableApplicationInfo::HasUpdate() const
 
 BOOL CAvailableApplicationInfo::RetrieveSnapshot(UINT Index,ATL::CStringW& SnapshotFileName) const
 {
-    if (Index >= (UINT)m_szSnapshotFilename.GetSize())
+    if (Index >= (UINT)m_szSnapshotLocation.GetSize())
     {
         return FALSE;
     }
-    SnapshotFileName = m_szSnapshotFilename[Index];
+    SnapshotFileName = m_szSnapshotLocation[Index];
     return TRUE;
 }
 
