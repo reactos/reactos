@@ -647,11 +647,6 @@ CMP_RegisterNotification(
                                  ARRAYSIZE(szNameBuffer));
         if (nLength == 0)
         {
-
-        }
-
-        if (nLength == 0)
-        {
             szNameBuffer[0] = UNICODE_NULL;
         }
 
