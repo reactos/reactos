@@ -146,7 +146,7 @@ IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
 
     PAGED_CODE();
 
-    /* Get the I/O Interrupt */
+    /* Get the I/O interrupt */
     IoInterrupt = CONTAINING_RECORD(InterruptObject,
                                     IO_INTERRUPT,
                                     FirstInterrupt);
@@ -165,8 +165,8 @@ IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
         KeDisconnectInterrupt(IoInterrupt->Interrupt[i]);
     }
 
-    /* Free the I/O Interrupt */
-    ExFreePool(IoInterrupt); // ExFreePoolWithTag(IoInterrupt, TAG_KINTERRUPT);
+    /* Free the I/O interrupt */
+    ExFreePoolWithTag(IoInterrupt, TAG_KINTERRUPT);
 }
 
 NTSTATUS
