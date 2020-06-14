@@ -540,7 +540,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         }
 
         UINT cmdFlags = 0;
-        BOOL hide = FALSE;
+        bool hide = false;
         HKEY hkVerb;
         if (idResource > 0)
         {
@@ -585,12 +585,13 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
             // FIXME: GetAsyncKeyState should not be called here, clients
             // need to be updated to set the CMF_EXTENDEDVERBS flag.
             if (!(uFlags & CMF_EXTENDEDVERBS) && GetAsyncKeyState(VK_SHIFT) >= 0)
-                hide |= RegValueExists(hkVerb, L"Extended");
+                hide = RegValueExists(hkVerb, L"Extended");
 
-            hide |= RegValueExists(hkVerb, L"ProgrammaticAccessOnly");
+            if (!hide)
+                hide = RegValueExists(hkVerb, L"ProgrammaticAccessOnly");
 
-            if (!(uFlags & CMF_DISABLEDVERBS))
-                hide |= RegValueExists(hkVerb, L"LegacyDisable");
+            if (!hide && !(uFlags & CMF_DISABLEDVERBS))
+                hide = RegValueExists(hkVerb, L"LegacyDisable");
 
             if (RegValueExists(hkVerb, L"NeverDefault"))
                 fState &= ~MFS_DEFAULT;
@@ -1273,8 +1274,7 @@ CDefaultContextMenu::InvokeRegVerb(
                 /* In WinXP if we have browsed, we don't open any more folders.
                  * In Win7 we browse to the first folder we find and
                  * open new windows for each of the rest of the folders */
-                UINT ntver = RosGetProcessEffectiveVersion();
-                if (ntver >= _WIN32_WINNT_VISTA)
+                if (RosGetProcessEffectiveVersion() >= _WIN32_WINNT_VISTA)
                     wFlags = 0; // FIXME: = SBSP_NEWBROWSER | (wFlags & ~SBSP_SAMEBROWSER);
                 else
                     i = m_cidl;
