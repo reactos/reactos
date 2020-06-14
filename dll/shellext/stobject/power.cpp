@@ -16,9 +16,6 @@
 #include <windows.h>
 #include <batclass.h>
 
-int br_icons[5] = { IDI_BATTCAP0, IDI_BATTCAP1, IDI_BATTCAP2, IDI_BATTCAP3, IDI_BATTCAP4 }; // battery mode icons.
-int bc_icons[5] = { IDI_BATTCHA0, IDI_BATTCHA1, IDI_BATTCHA2, IDI_BATTCHA3, IDI_BATTCHA4 }; // charging mode icons.
-
 typedef struct _PWRSCHEMECONTEXT
 {
     HMENU hPopup;
@@ -26,8 +23,13 @@ typedef struct _PWRSCHEMECONTEXT
     UINT uiLast;
 } PWRSCHEMECONTEXT, *PPWRSCHEMECONTEXT;
 
-CString  g_strTooltip;
-static HICON g_hIconBattery = NULL;
+// Battery charging mode icons.
+static const int bc_icons[5] = { IDI_BATTCHA0, IDI_BATTCHA1, IDI_BATTCHA2, IDI_BATTCHA3, IDI_BATTCHA4 };
+// Battery remaining mode icons.
+static const int br_icons[5] = { IDI_BATTCAP0, IDI_BATTCAP1, IDI_BATTCAP2, IDI_BATTCAP3, IDI_BATTCAP4 };
+
+static CString g_strTooltip;
+static HICON g_hIconBattery;
 
 
 /*++
@@ -78,7 +80,7 @@ static HICON DynamicLoadIcon(HINSTANCE hinst)
 {
     SYSTEM_POWER_STATUS PowerStatus;
     HICON hBatIcon;
-    UINT index = -1;
+    UINT index;
 
     if (!GetSystemPowerStatus(&PowerStatus) ||
         PowerStatus.ACLineStatus == AC_LINE_UNKNOWN ||
@@ -86,28 +88,26 @@ static HICON DynamicLoadIcon(HINSTANCE hinst)
     {
         hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_BATTCAP_ERR));
         g_strTooltip.LoadStringW(IDS_PWR_UNKNOWN_REMAINING);
-        return hBatIcon;
     }
-
-    if (((PowerStatus.BatteryFlag & BATTERY_FLAG_NO_BATTERY) == 0) &&
-        (PowerStatus.BatteryLifePercent == BATTERY_PERCENTAGE_UNKNOWN))
+    else if ((PowerStatus.BatteryFlag & BATTERY_FLAG_NO_BATTERY) == 0)
     {
-        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_BATTCAP_ERR));
-        g_strTooltip.LoadStringW(IDS_PWR_UNKNOWN_REMAINING);
-    }
-    else if (((PowerStatus.BatteryFlag & BATTERY_FLAG_NO_BATTERY) == 0) &&
-        ((PowerStatus.BatteryFlag & BATTERY_FLAG_CHARGING) == BATTERY_FLAG_CHARGING))
-    {
-        index = Quantize(PowerStatus.BatteryLifePercent);
-        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(bc_icons[index]));
-        g_strTooltip.Format(IDS_PWR_CHARGING, PowerStatus.BatteryLifePercent);
-    }
-    else if (((PowerStatus.BatteryFlag & BATTERY_FLAG_NO_BATTERY) == 0) &&
-             ((PowerStatus.BatteryFlag & BATTERY_FLAG_CHARGING) == 0))
-    {
-        index = Quantize(PowerStatus.BatteryLifePercent);
-        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(br_icons[index]));
-        g_strTooltip.Format(IDS_PWR_PERCENT_REMAINING, PowerStatus.BatteryLifePercent);
+        if (PowerStatus.BatteryLifePercent == BATTERY_PERCENTAGE_UNKNOWN)
+        {
+            hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_BATTCAP_ERR));
+            g_strTooltip.LoadStringW(IDS_PWR_UNKNOWN_REMAINING);
+        }
+        else if ((PowerStatus.BatteryFlag & BATTERY_FLAG_CHARGING) == 0)
+        {
+            index = Quantize(PowerStatus.BatteryLifePercent);
+            hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(br_icons[index]));
+            g_strTooltip.Format(IDS_PWR_PERCENT_REMAINING, PowerStatus.BatteryLifePercent);
+        }
+        else
+        {
+            index = Quantize(PowerStatus.BatteryLifePercent);
+            hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(bc_icons[index]));
+            g_strTooltip.Format(IDS_PWR_CHARGING, PowerStatus.BatteryLifePercent);
+        }
     }
     else
     {
@@ -162,6 +162,7 @@ static void _ShowContextMenu(CSysTray * pSysTray)
         pt.x, pt.y,
         pSysTray->GetHWnd(), NULL);
 
+    // TODO: Use if() and/or add a default case (with an ERR() log)...
     switch (id)
     {
         case IDS_PWR_PROPERTIES:
@@ -235,7 +236,7 @@ ShowPowerSchemesPopupMenu(
 
 HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult)
 {
-    TRACE("Power_Message uMsg=%d, wParam=%x, lParam=%x\n", uMsg, wParam, lParam);
+    TRACE("Power_Message uMsg=%u, wParam=%x, lParam=%x\n", uMsg, wParam, lParam);
 
     switch (uMsg)
     {
@@ -254,7 +255,7 @@ HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPA
                     return Power_Shutdown(pSysTray);
                 }
             }
-            return S_FALSE;
+            break;
 
         case WM_USER + 221:
             TRACE("Power_Message: WM_USER+221\n");
@@ -263,7 +264,7 @@ HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPA
                 lResult = (LRESULT)pSysTray->IsServiceEnabled(POWER_SERVICE_FLAG);
                 return S_OK;
             }
-            return S_FALSE;
+            break;
 
         case WM_TIMER:
             if (wParam == POWER_TIMER_ID)
@@ -306,8 +307,8 @@ HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPA
             return S_OK;
 
         default:
-            TRACE("Power_Message received for unknown ID %d, ignoring.\n");
-            return S_FALSE;
+            // FIXME: Which "variable" is 'ID %d'?
+            ERR("Power_Message received for unknown ID %d, ignored\n", 0);
     }
 
     return S_FALSE;
