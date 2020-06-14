@@ -15,6 +15,7 @@
 #define WLX_SHUTDOWN_STATE_LOGOFF       0x01
 #define WLX_SHUTDOWN_STATE_POWER_OFF    0x02
 #define WLX_SHUTDOWN_STATE_REBOOT       0x04
+#define WLX_SHUTDOWN_STATE_NT_MODE      0x05
 // 0x08
 #define WLX_SHUTDOWN_STATE_SLEEP        0x10
 // 0x20
@@ -144,6 +145,10 @@ LoadShutdownSelState(VOID)
                 dwValue = WLX_SAS_ACTION_SHUTDOWN_REBOOT;
                 break;
 
+            case WLX_SHUTDOWN_STATE_NT_MODE:
+                dwValue = WLX_SAS_ACTION_SHUTDOWN_NT_MODE;
+                break;
+
             // 0x08
 
             case WLX_SHUTDOWN_STATE_SLEEP:
@@ -201,6 +206,10 @@ SaveShutdownSelState(
             dwValue = WLX_SHUTDOWN_STATE_REBOOT;
             break;
 
+        case WLX_SAS_ACTION_SHUTDOWN_NT_MODE:
+            dwValue = WLX_SHUTDOWN_STATE_NT_MODE;
+            break;
+
         case WLX_SAS_ACTION_SHUTDOWN_SLEEP:
             dwValue = WLX_SHUTDOWN_STATE_SLEEP;
             break;
@@ -220,7 +229,7 @@ SaveShutdownSelState(
 DWORD
 GetDefaultShutdownOptions(VOID)
 {
-    return WLX_SHUTDOWN_STATE_POWER_OFF | WLX_SHUTDOWN_STATE_REBOOT;
+    return WLX_SHUTDOWN_STATE_POWER_OFF | WLX_SHUTDOWN_STATE_REBOOT | WLX_SHUTDOWN_STATE_NT_MODE;
 }
 
 DWORD
@@ -229,7 +238,7 @@ GetAllowedShutdownOptions(VOID)
     DWORD Options = 0;
 
     // FIXME: Compute those options accordings to current user's rights!
-    Options |= WLX_SHUTDOWN_STATE_LOGOFF | WLX_SHUTDOWN_STATE_POWER_OFF | WLX_SHUTDOWN_STATE_REBOOT;
+    Options |= WLX_SHUTDOWN_STATE_LOGOFF | WLX_SHUTDOWN_STATE_POWER_OFF | WLX_SHUTDOWN_STATE_REBOOT | WLX_SHUTDOWN_STATE_NT_MODE;
 
     if (IsPwrSuspendAllowed())
         Options |= WLX_SHUTDOWN_STATE_SLEEP;
@@ -276,6 +285,9 @@ UpdateShutdownDesc(
         case WLX_SAS_ACTION_SHUTDOWN_HIBERNATE:
             DescId = IDS_SHUTDOWN_HIBERNATE_DESC;
             break;
+
+        case WLX_SAS_ACTION_SHUTDOWN_NT_MODE:
+            DescId = IDS_SHUTDOWN_NT_MODE_DESC;
 
         default:
             break;
@@ -334,6 +346,17 @@ ShutdownOnInit(
         idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
         if (idx != CB_ERR)
             SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
+    }
+
+    /* Restart in NT Native Mode */
+    if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_NT_MODE)
+    {
+        LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_NT_MODE, szBuffer, _countof(szBuffer));
+        idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+        if (idx != CB_ERR)
+        {
+            SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_NT_MODE);
+        }
     }
 
     // if (pContext->ShutdownOptions & 0x08) {}
@@ -606,6 +629,9 @@ ShellShutdownDialog(
 
             case WLX_SAS_ACTION_SHUTDOWN_REBOOT:
                 return WLX_SHUTDOWN_STATE_REBOOT;
+
+            case WLX_SAS_ACTION_SHUTDOWN_NT_MODE:
+                return WLX_SHUTDOWN_STATE_NT_MODE;
 
             // 0x08
 

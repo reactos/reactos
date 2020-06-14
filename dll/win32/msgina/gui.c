@@ -1348,7 +1348,7 @@ GUILoggedOutSAS(
         LogonDialogProc,
         (LPARAM)pgContext);
     if (result >= WLX_SAS_ACTION_LOGON &&
-        result <= WLX_SAS_ACTION_SWITCH_CONSOLE)
+        result <= WLX_SAS_ACTION_SHUTDOWN_NT_MODE)
     {
         WARN("WlxLoggedOutSAS() returns 0x%x\n", result);
         return result;
