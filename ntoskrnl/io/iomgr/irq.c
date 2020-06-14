@@ -139,8 +139,8 @@ VOID
 NTAPI
 IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
 {
-    LONG i;
     PIO_INTERRUPT IoInterrupt;
+    ULONG i;
 
     PAGED_CODE();
 
@@ -160,7 +160,7 @@ IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
             continue;
 
         /* Disconnect it */
-        KeDisconnectInterrupt(&InterruptObject[i]);
+        KeDisconnectInterrupt(IoInterrupt->Interrupt[i]);
     }
 
     /* Free the I/O Interrupt */
