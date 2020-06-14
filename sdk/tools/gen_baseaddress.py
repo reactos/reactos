@@ -113,7 +113,7 @@ EXCLUDE = (
     'kbdazel.dll',
     'kbdbe.dll',
     'kbdbga.dll',
-    'kbdbgm.dll',
+    'kbdbgm.dll', # Renamed to kbdbu. Kept for v0.4.14- backward-support.
     'kbdbgt.dll',
     'kbdblr.dll',
     'kbdbr.dll',
@@ -126,7 +126,7 @@ EXCLUDE = (
     'kbdda.dll',
     'kbddv.dll',
     'kbdeo.dll',
-    'kbdes.dll',
+    'kbdes.dll', # Renamed to kbdsp. Kept for v0.4.14- backward-support.
     'kbdest.dll',
     'kbdfc.dll',
     'kbdfi.dll',
@@ -136,7 +136,7 @@ EXCLUDE = (
     'kbdgneo.dll',
     'kbdgr.dll',
     'kbdgr1.dll',
-    'kbdgrist.dll',
+    'kbdgrist.dll', # Renamed to kbdgr1. Kept for v0.4.14- backward-support.
     'kbdhe.dll',
     'kbdheb.dll',
     'kbdhu.dll',
@@ -148,10 +148,10 @@ EXCLUDE = (
     'kbdinmal.dll',
     'kbdir.dll',
     'kbdit.dll',
-    'kbdja.dll',
+    'kbdja.dll', # Renamed to kbdjpn. Kept for v0.4.14- backward-support.
     'kbdjpn.dll',
     'kbdkaz.dll',
-    'kbdko.dll',
+    'kbdko.dll', # Renamed to kbdkor. Kept for v0.4.14- backward-support.
     'kbdkor.dll',
     'kbdla.dll',
     'kbdlt1.dll',
@@ -168,8 +168,8 @@ EXCLUDE = (
     'kbdru1.dll',
     'kbdsf.dll',
     'kbdsg.dll',
-    'kbdsk.dll',
-    'kbdsk1.dll',
+    'kbdsk.dll', # Renamed to kbdsl. Kept for v0.4.14- backward-support.
+    'kbdsk1.dll', # Renamed to kbdsl1. Kept for v0.4.14- backward-support.
     'kbdsl.dll',
     'kbdsl1.dll',
     'kbdsp.dll',
