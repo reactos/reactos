@@ -70,8 +70,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
         KeInitializeSpinLock(SpinLock);
     }
 
-    /* We first start with a built-in Interrupt inside the I/O Structure */
-    *InterruptObject = &IoInterrupt->FirstInterrupt;
+    /* We first start with a built-in interrupt inside the I/O structure */
     Interrupt = (PKINTERRUPT)(IoInterrupt + 1);
     FirstRun = TRUE;
 
@@ -115,7 +114,6 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
             }
 
             /* And fail */
-            *InterruptObject = NULL;
             return STATUS_INVALID_PARAMETER;
         }
 
@@ -131,7 +129,8 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
         }
     }
 
-    /* Return Success */
+    /* Return success */
+    *InterruptObject = &IoInterrupt->FirstInterrupt;
     return STATUS_SUCCESS;
 }
 
