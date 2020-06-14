@@ -1000,6 +1000,8 @@ LdrQueryProcessModuleInformationEx(
     ANSI_STRING AnsiString;
     PCHAR p;
 
+    UNREFERENCED_PARAMETER(ProcessId);
+
     DPRINT("LdrQueryProcessModuleInformation() called\n");
 
     /* Acquire loader lock */
@@ -1008,7 +1010,7 @@ LdrQueryProcessModuleInformationEx(
     _SEH2_TRY
     {
         /* Check if we were given enough space */
-        if (Size < UsedSize)
+        if (UsedSize > Size)
         {
             Status = STATUS_INFO_LENGTH_MISMATCH;
         }
@@ -1016,7 +1018,6 @@ LdrQueryProcessModuleInformationEx(
         {
             ModuleInformation->NumberOfModules = 0;
             ModulePtr = &ModuleInformation->Modules[0];
-            Status = STATUS_SUCCESS;
         }
 
         /* Traverse the list of modules */
@@ -1083,8 +1084,7 @@ LdrQueryProcessModuleInformationEx(
                 ModulePtr++;
 
                 /* Increase number of modules */
-                if (ModuleInformation)
-                    ModuleInformation->NumberOfModules++;
+                ModuleInformation->NumberOfModules++;
             }
 
             /* Go to the next entry in the modules list */
@@ -1098,6 +1098,7 @@ LdrQueryProcessModuleInformationEx(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Ignoring the exception */
+        // FIXME: It looks like STATUS_SUCCESS could be returned, though *ReturnedSize was not set, for example.
     } _SEH2_END;
 
     /* Release the lock */
@@ -1175,12 +1176,13 @@ LdrEnumerateLoadedModules(
 
     /* Release loader lock */
     Status = LdrUnlockLoaderLock(0, Cookie);
-    ASSERT(NT_SUCCESS(Status));
 
     /* Reset any successful status to STATUS_SUCCESS,
      * but leave failure to the caller */
     if (NT_SUCCESS(Status))
         Status = STATUS_SUCCESS;
+    else
+        ASSERT(NT_SUCCESS(Status));
 
     /* Return any possible failure status */
     return Status;
