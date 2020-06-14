@@ -35,9 +35,9 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
     PKINTERRUPT Interrupt;
     PKINTERRUPT InterruptUsed;
     PIO_INTERRUPT IoInterrupt;
-    BOOLEAN FirstRun;
-    CCHAR Count = 0;
     KAFFINITY Affinity;
+    INT Count = 0;
+    CHAR ProcessorNumber;
 
     PAGED_CODE();
 
@@ -46,15 +46,16 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
 
     /* Get the affinity */
     Affinity = ProcessorEnableMask & KeActiveProcessors;
+    if (!Affinity)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Count CPUs */
     while (Affinity)
     {
         /* Increase count */
         if (Affinity & 1) Count++;
         Affinity >>= 1;
     }
-
-    /* Make sure we have a valid CPU count */
-    if (!Count) return STATUS_INVALID_PARAMETER;
 
     /* Allocate the array of I/O Interrupts */
     IoInterrupt = ExAllocatePoolWithTag(NonPagedPool,
@@ -75,18 +76,18 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
 
     /* We first start with a built-in Interrupt inside the I/O Structure */
     Interrupt = (PKINTERRUPT)(IoInterrupt + 1);
-    FirstRun = TRUE;
 
     /* Now create all the interrupts */
-    Affinity = ProcessorEnableMask & KeActiveProcessors;
-    for (Count = 0; Affinity; Count++, Affinity >>= 1)
+    for (Affinity = ProcessorEnableMask & KeActiveProcessors, ProcessorNumber = 0, Count = -1;
+         Affinity;
+         Affinity >>= 1, ++ProcessorNumber)
     {
         /* Check if it's enabled for this CPU */
         if (!(Affinity & 1))
             continue;
 
         /* Check which one we will use */
-        InterruptUsed = FirstRun ? &IoInterrupt->FirstInterrupt : Interrupt;
+        InterruptUsed = Count < 0 ? &IoInterrupt->FirstInterrupt : Interrupt;
 
         /* Initialize it */
         KeInitializeInterrupt(InterruptUsed,
@@ -98,14 +99,14 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
                               SynchronizeIrql,
                               InterruptMode,
                               ShareVector,
-                              Count,
+                              ProcessorNumber,
                               FloatingSave);
 
         /* Connect it */
         if (!KeConnectInterrupt(InterruptUsed))
         {
             /* Check how far we got */
-            if (FirstRun)
+            if (Count < 0)
             {
                 /* We failed early so just free this */
                 ExFreePoolWithTag(IoInterrupt, TAG_KINTERRUPT);
@@ -120,16 +121,12 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
             return STATUS_INVALID_PARAMETER;
         }
 
-        /* Now we've used up our First Run */
-        if (FirstRun)
-        {
-            FirstRun = FALSE;
-        }
-        else
-        {
-            /* Move on to the next one */
-            IoInterrupt->Interrupt[(UCHAR)Count] = Interrupt++;
-        }
+        /* Update interrupt pointers */
+        if (Count >= 0)
+            IoInterrupt->Interrupt[Count] = Interrupt++;
+
+        /* Increase interrupt index */
+        ++Count;
     }
 
     /* Return Success */
@@ -144,8 +141,8 @@ VOID
 NTAPI
 IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
 {
-    LONG i;
     PIO_INTERRUPT IoInterrupt;
+    UINT i;
 
     PAGED_CODE();
 
@@ -158,12 +155,8 @@ IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
     KeDisconnectInterrupt(&IoInterrupt->FirstInterrupt);
 
     /* Now disconnect the others */
-    for (i = 0; i < KeNumberProcessors; i++)
+    for (i = 0; i < _countof(IoInterrupt->Interrupt) && IoInterrupt->Interrupt[i]; ++i)
     {
-        /* Make sure one was registered */
-        if (!IoInterrupt->Interrupt[i])
-            continue;
-
         /* Disconnect it */
         KeDisconnectInterrupt(IoInterrupt->Interrupt[i]);
     }
