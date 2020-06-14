@@ -9,9 +9,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/notifyhook.def)
 
 add_library(notifyhook MODULE ${SOURCE})
-
-set_module_type(notifyhook win32dll)
-
+set_module_type(notifyhook win32dll IMAGEBASE default)
 add_importlibs(notifyhook user32 msvcrt kernel32)
-
 add_cd_file(TARGET notifyhook DESTINATION reactos/system32 FOR all)
