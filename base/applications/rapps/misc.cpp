@@ -233,8 +233,6 @@ VOID InitLogs()
     {
         hLog = RegisterEventSourceW(NULL, L"ReactOS Application Manager");
     }
-
-    key.Close();
 }
 
 
@@ -302,7 +300,6 @@ BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
         bHasSucceded = TRUE;
         szVersion.ReleaseBuffer();
     }
-    key.Close();
 
     return bHasSucceded;
 }
