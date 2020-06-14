@@ -12,6 +12,14 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifdef _WIN64
+#define InterlockedBitTestAndSetPointer(ptr, val) \
+    InterlockedBitTestAndSet64((PLONGLONG)(ptr), (LONGLONG)(val))
+#else
+#define InterlockedBitTestAndSetPointer(ptr, val) \
+    InterlockedBitTestAndSet((PLONG)(ptr), (LONG)(val))
+#endif
+
 /* GLOBALS *******************************************************************/
 
 BOOLEAN HalpPciLockSettings;
@@ -54,9 +62,8 @@ HalInitializeProcessor(
     KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 
     /* Update the interrupt affinity and processor mask */
-    InterlockedBitTestAndSet((PLONG)&HalpActiveProcessors, ProcessorNumber);
-    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
-                             ProcessorNumber);
+    InterlockedBitTestAndSetPointer(&HalpActiveProcessors, ProcessorNumber);
+    InterlockedBitTestAndSetPointer(&HalpDefaultInterruptAffinity, ProcessorNumber);
 
     /* Register routines for KDCOM */
     HalpRegisterKdSupportFunctions();
