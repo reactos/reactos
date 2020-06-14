@@ -385,6 +385,7 @@ private:
                     DisplayFile(DownloadParam->DownloadFileName);
                     // send a message to trigger resizing
                     ::SendMessageW(::GetParent(m_hWnd), WM_RESIZE_CHILDREN, 0, 0);
+                    InvalidateRect(0, 0);
                     TempImagePath = DownloadParam->DownloadFileName; // record tmp file path in order to delete it when cleanup
                 }
                 else
@@ -398,11 +399,12 @@ private:
                 break;
             default:
                 DisplayFailed();
+                // send a message to trigger resizing
+                ::SendMessageW(::GetParent(m_hWnd), WM_RESIZE_CHILDREN, 0, 0);
+                InvalidateRect(0, 0);
                 DeleteFileW(DownloadParam->DownloadFileName);
                 break;
             }
-            
-            
             delete DownloadParam;
             break;
         }
@@ -658,7 +660,6 @@ public:
             DeleteFileW(TempImagePath.GetString());
             TempImagePath.Empty();
         }
-        
     }
 
     VOID DisplayEmpty()
