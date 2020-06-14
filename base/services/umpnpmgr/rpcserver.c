@@ -4702,7 +4702,7 @@ PNP_RegisterNotification(
     PDEV_BROADCAST_HANDLE pBroadcastDeviceHandle;
     PNOTIFY_ENTRY pNotifyData = NULL;
 
-    DPRINT1("PNP_RegisterNotification(%p %lx '%S' %p %lu 0x%lx %p %lx %p)\n",
+    DPRINT1("PNP_RegisterNotification(%p %p '%S' %p %lu 0x%lx %p %lx %p)\n",
            hBinding, hRecipient, pszName, pNotificationFilter,
            ulNotificationFilterSize, ulFlags, pNotifyHandle, ulProcessId, pulUnknown9);
 
