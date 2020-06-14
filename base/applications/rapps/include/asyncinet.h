@@ -13,40 +13,40 @@ typedef struct __AsyncInet ASYNCINET, * pASYNCINET;
 
 typedef int
 (* ASYNCINET_CALLBACK)(
-	pASYNCINET AsyncInet,
-	UINT iReason,
-	WPARAM wParam,
-	LPARAM lParam,
-	VOID* Extension
-	);
+    pASYNCINET AsyncInet,
+    UINT iReason,
+    WPARAM wParam,
+    LPARAM lParam,
+    VOID* Extension
+    );
 
 typedef struct __AsyncInet
 {
-	HINTERNET hInternet;
-	HINTERNET hInetFile;
+    HINTERNET hInternet;
+    HINTERNET hInetFile;
 
-	long long HandleClosedCnt;
+    long long HandleClosedCnt;
 
-	BOOL bIsOpenUrlComplete;
+    BOOL bIsOpenUrlComplete;
 
-	BOOL bIsCancelled;
+    BOOL bIsCancelled;
 
-	BYTE ReadBuffer[4096];
-	DWORD BytesRead;
+    BYTE ReadBuffer[4096];
+    DWORD BytesRead;
 
-	ASYNCINET_CALLBACK Callback;
-	VOID* Extension;
+    ASYNCINET_CALLBACK Callback;
+    VOID* Extension;
 }ASYNCINET, * pASYNCINET;
 
 pASYNCINET AsyncInetDownloadW(LPCWSTR lpszAgent,
-	DWORD   dwAccessType,
-	LPCWSTR lpszProxy,
-	LPCWSTR lpszProxyBypass,
-	LPCWSTR lpszUrl,
-	BOOL bAllowCache,
-	ASYNCINET_CALLBACK Callback,
-	VOID* Extension
-	);
+    DWORD   dwAccessType,
+    LPCWSTR lpszProxy,
+    LPCWSTR lpszProxyBypass,
+    LPCWSTR lpszUrl,
+    BOOL bAllowCache,
+    ASYNCINET_CALLBACK Callback,
+    VOID* Extension
+    );
 
 BOOL AsyncInetCancel(pASYNCINET AsyncInet);
 
