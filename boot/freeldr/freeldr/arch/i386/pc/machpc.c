@@ -238,7 +238,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     }
 
     /* Initialize resource descriptor */
-    memset(PartialResourceList, 0, Size);
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;
@@ -694,7 +694,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetS
         }
 
         /* Initialize resource descriptor */
-        memset(PartialResourceList, 0, Size);
+        RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 3;
@@ -797,7 +797,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         }
 
         /* Initialize resource descriptor */
-        memset(PartialResourceList, 0, Size);
+        RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = (Irq[i] != (ULONG) - 1) ? 2 : 1;
@@ -1175,7 +1175,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
         }
 
         /* Initialize resource descriptor */
-        memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
+        RtlZeroMemory(PartialResourceList, sizeof(CM_PARTIAL_RESOURCE_LIST));
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 1;

@@ -290,7 +290,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
     }
 
     /* Initialize resource descriptor */
-    memset(PartialResourceList, 0, Size);
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 3;
