@@ -93,7 +93,14 @@ IntVideoPortFilterResourceRequirements(
 
     Status = IntVideoPortGetLegacyResources(DriverExtension, DeviceExtension, &AccessRanges, &AccessRangeCount);
     if (!NT_SUCCESS(Status))
+    {
+        if (OldResList)
+        {
+            ExFreePool(OldResList);
+            Irp->IoStatus.Information = 0;
+        }
         return Status;
+    }
     if (!AccessRangeCount)
     {
         /* No legacy resources to report */
@@ -108,7 +115,12 @@ IntVideoPortFilterResourceRequirements(
         ListSize = OldResList->ListSize + sizeof(IO_RESOURCE_DESCRIPTOR) * AccessRangeCount;
         ResList = ExAllocatePool(NonPagedPool,
                                  ListSize);
-        if (!ResList) return STATUS_NO_MEMORY;
+        if (!ResList)
+        {
+            ExFreePool(OldResList);
+            Irp->IoStatus.Information = 0;
+            return STATUS_NO_MEMORY;
+        }
         
         RtlCopyMemory(ResList, OldResList, OldResList->ListSize);
         

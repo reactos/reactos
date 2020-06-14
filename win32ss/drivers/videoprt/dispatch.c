@@ -1029,7 +1029,6 @@ IntVideoPortDispatchFdoPnp(
             if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
                 Status = IntVideoPortFilterResourceRequirements(DeviceObject, Irp);
             Irp->IoStatus.Status = Status;
-            Irp->IoStatus.Information = 0;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             break;
 
