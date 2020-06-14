@@ -5,7 +5,7 @@
  * PROGRAMMERS:
  */
 
-#include <win32nt.h>
+#include "../win32nt.h"
 #include "../resource.h"
 
 START_TEST(NtUserGetIconInfo)
