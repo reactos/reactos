@@ -162,7 +162,7 @@ IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
     }
 
     /* Free the I/O Interrupt */
-    ExFreePool(IoInterrupt); // ExFreePoolWithTag(IoInterrupt, TAG_KINTERRUPT);
+    ExFreePoolWithTag(IoInterrupt, TAG_KINTERRUPT);
 }
 
 NTSTATUS
