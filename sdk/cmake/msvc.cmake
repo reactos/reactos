@@ -23,8 +23,7 @@ endif()
 add_compile_options(/GF)
 
 # Enable function level linking and comdat folding (only C/C++, not ASM!)
-add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Gy>)
-add_compile_options($<$<COMPILE_LANGUAGE:C>:/Gy>)
+add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/Gy>)
 add_link_options(/OPT:REF /OPT:ICF)
 
 if(ARCH STREQUAL "i386")
@@ -145,6 +144,7 @@ endif()
 add_compile_options(/w14115)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Werror=unknown-warning-option>)
     add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-nostdinc;-Wno-multichar;-Wno-char-subscripts;-Wno-microsoft-enum-forward-reference;-Wno-pragma-pack;-Wno-microsoft-anon-tag;-Wno-parentheses-equality;-Wno-unknown-pragmas>")
 endif()
 
