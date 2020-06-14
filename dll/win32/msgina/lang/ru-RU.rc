@@ -219,10 +219,12 @@ BEGIN
     IDS_SHUTDOWN_RESTART "Перезагрузка"
     IDS_SHUTDOWN_SLEEP "Спящий режим"
     IDS_SHUTDOWN_HIBERNATE "Гибернация"
+    IDS_SHUTDOWN_NT_MODE "Restart in NT Native Mode"
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "Завершает текущий сеанс и позволяет другим пользователям войти в систему."
     IDS_SHUTDOWN_SHUTDOWN_DESC "Закрывает все программы, завершает работу ReactOS и выключает компьютер."
     IDS_SHUTDOWN_RESTART_DESC "Завершает текущий сеанс и перезагружает систему."
     IDS_SHUTDOWN_SLEEP_DESC "Переводит систему в режим ожидания."
     IDS_SHUTDOWN_HIBERNATE_DESC "Сохраняет текущий сеанс и выключает компьютер."
+    IDS_SHUTDOWN_NT_MODE_DESC "Ends your current session and reboots the system in NT Native Mode."
 END

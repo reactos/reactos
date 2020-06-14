@@ -217,10 +217,12 @@ BEGIN
     IDS_SHUTDOWN_RESTART "Mulai Ulang"
     IDS_SHUTDOWN_SLEEP "Tidur"
     IDS_SHUTDOWN_HIBERNATE "Hibernasi"
+    IDS_SHUTDOWN_NT_MODE "Restart in NT Native Mode"
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "Menyelesaikan sesi saat ini dan mengizinkan pengguna lain untuk masuk ke dalam sistem."
     IDS_SHUTDOWN_SHUTDOWN_DESC "Menyelesaikan sesi saat ini dan menonaktifkan sistem, jadi anda bisa mematikan daya dengan aman."
     IDS_SHUTDOWN_RESTART_DESC "Menyelesaikan sesi saat ini dan memulai ulang sistem."
     IDS_SHUTDOWN_SLEEP_DESC "Memasukkan sistem ke mode tidur."
     IDS_SHUTDOWN_HIBERNATE_DESC "Menyimpan sesi saat ini dan menonaktifkan komputer."
+    IDS_SHUTDOWN_NT_MODE_DESC "Ends your current session and reboots the system in NT Native Mode."
 END

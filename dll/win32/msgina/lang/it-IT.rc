@@ -226,10 +226,12 @@ BEGIN
     IDS_SHUTDOWN_RESTART "Riavvia"
     IDS_SHUTDOWN_SLEEP "Sospendi"
     IDS_SHUTDOWN_HIBERNATE "Ibernazione"
+    IDS_SHUTDOWN_NT_MODE "Restart in NT Native Mode"
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "Termina la sessione attuale e permette ad altri utenti di accedere al sistema."
     IDS_SHUTDOWN_SHUTDOWN_DESC "Termina la sessione attuale e spegne il sistema così puoi staccare la corrente in sicurezza."
     IDS_SHUTDOWN_RESTART_DESC "Termina la sessione attuale e riavvia il sistema."
     IDS_SHUTDOWN_SLEEP_DESC "Mette il sistema in modalità riposo."
     IDS_SHUTDOWN_HIBERNATE_DESC "Salva la sessione attuale e spegne il computer."
+    IDS_SHUTDOWN_NT_MODE_DESC "Ends your current session and reboots the system in NT Native Mode."
 END

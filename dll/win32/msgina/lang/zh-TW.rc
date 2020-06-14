@@ -219,11 +219,13 @@ BEGIN
     IDS_SHUTDOWN_RESTART "重新開機"
     IDS_SHUTDOWN_SLEEP "睡眠狀態"
     IDS_SHUTDOWN_HIBERNATE "休眠狀態"
+    IDS_SHUTDOWN_NT_MODE "Restart in NT Native Mode"
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "結束當前會話，並允許其他使用者登入到系統上。"
     IDS_SHUTDOWN_SHUTDOWN_DESC "結束當前會話並關閉系統，這樣您可以安全地關閉電源。"
     IDS_SHUTDOWN_RESTART_DESC "結束當前會話並重新引導系統。"
     IDS_SHUTDOWN_SLEEP_DESC "使系統處於睡眠模式。"
     IDS_SHUTDOWN_HIBERNATE_DESC "儲存當前會話並關閉電腦。"
+    IDS_SHUTDOWN_NT_MODE_DESC "Ends your current session and reboots the system in NT Native Mode."
 END
 

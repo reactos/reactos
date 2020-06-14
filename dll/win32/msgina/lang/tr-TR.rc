@@ -219,10 +219,12 @@ BEGIN
     IDS_SHUTDOWN_RESTART "Yeniden Başlat"
     IDS_SHUTDOWN_SLEEP "Uykuya Geçir"
     IDS_SHUTDOWN_HIBERNATE "Anıkta Beklet"
+    IDS_SHUTDOWN_NT_MODE "Restart in NT Native Mode"
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "Şimdiki oturumunuzu sonlandırır ve başka kullanıcılara dizgede oturum açmaya olanak sağlar."
     IDS_SHUTDOWN_SHUTDOWN_DESC "Şimdiki oturumunuzu sonlandırır ve dizgeyi kapatır, böylece gücü güvenli olarak kapatbilirsiniz."
     IDS_SHUTDOWN_RESTART_DESC "Şimdiki oturumunuzu sonlandırır dizgeyi yeniden başlatır."
     IDS_SHUTDOWN_SLEEP_DESC "Dizgeyi uyku kipine geçirir."
     IDS_SHUTDOWN_HIBERNATE_DESC "Şimdiki oturumu saklar ve bilgisayarı kapatır."
+    IDS_SHUTDOWN_NT_MODE_DESC "Ends your current session and reboots the system in NT Native Mode."
 END

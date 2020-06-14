@@ -222,10 +222,12 @@ BEGIN
     IDS_SHUTDOWN_RESTART "Restartovat"
     IDS_SHUTDOWN_SLEEP "Uspat"
     IDS_SHUTDOWN_HIBERNATE "Hibernace"
+    IDS_SHUTDOWN_NT_MODE "Restart in NT Native Mode"
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "Ukončí současnou relaci a umožní přihlášení k systému ostatním uživatelům."
     IDS_SHUTDOWN_SHUTDOWN_DESC "Ukončí současnou relaci a vypne počítač."
     IDS_SHUTDOWN_RESTART_DESC "Ukončí současnou relaci a restartuje systém."
     IDS_SHUTDOWN_SLEEP_DESC "Přepne systém do režimu spánku."
     IDS_SHUTDOWN_HIBERNATE_DESC "Uloží současnou relaci na disk a vypne počítač."
+    IDS_SHUTDOWN_NT_MODE_DESC "Ends your current session and reboots the system in NT Native Mode."
 END

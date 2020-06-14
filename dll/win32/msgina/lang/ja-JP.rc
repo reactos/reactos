@@ -222,10 +222,12 @@ BEGIN
     IDS_SHUTDOWN_RESTART "再起動"
     IDS_SHUTDOWN_SLEEP "スリープ"
     IDS_SHUTDOWN_HIBERNATE "休止"
+    IDS_SHUTDOWN_NT_MODE "Restart in NT Native Mode"
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "現在のセッションを終了し、他のユーザーがシステムにログオンできるようにします。"
     IDS_SHUTDOWN_SHUTDOWN_DESC "現在のセッションを終了し、安全に電源が切れるようシステムをシャットダウンします。"
     IDS_SHUTDOWN_RESTART_DESC "現在のセッションを終了し、システムを再起動します。"
     IDS_SHUTDOWN_SLEEP_DESC "システムをスリープモードにします。"
     IDS_SHUTDOWN_HIBERNATE_DESC "現在のセッションを保存し、コンピュータをシャットダウンします。"
+    IDS_SHUTDOWN_NT_MODE_DESC "Ends your current session and reboots the system in NT Native Mode."
 END
