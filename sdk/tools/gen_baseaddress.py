@@ -208,12 +208,14 @@ EXCLUDE = (
     'halxbox.dll',
     # modules/rostests/
     'MyEventProvider.dll', # MyEventProvider_dll target.
+    'custom.dll', # msi_custom target.
     'dllexport_test_dll1.dll', # Moreover, this module hardcodes its baseaddress.
     'dllexport_test_dll2.dll', # Moreover, this module hardcodes its baseaddress.
     'dllimport_test.dll',
     'localspl_apitest.dll',
     'redirtest1.dll',
     'redirtest2.dll',
+    'selfreg.dll', # msi_selfreg target.
     'testvdd.dll',
     # 'win32u.dll' # Future-proof: Is currently a test file, but will eventually move to "Win7+ core".
     'win32u_2k3sp2.dll',

@@ -3,13 +3,13 @@ spec2def(custom.dll custom.spec)
 add_library(msi_custom MODULE custom.c ${CMAKE_CURRENT_BINARY_DIR}/custom.def)
 set_target_properties(msi_custom PROPERTIES OUTPUT_NAME "custom")
 target_link_libraries(msi_custom uuid)
-set_module_type(msi_custom win32dll)
+set_module_type(msi_custom win32dll IMAGEBASE default)
 add_importlibs(msi_custom msi ole32 oleaut32 odbccp32 shell32 advapi32 msvcrt kernel32)
 
 spec2def(selfreg.dll selfreg.spec)
 add_library(msi_selfreg MODULE selfreg.c ${CMAKE_CURRENT_BINARY_DIR}/selfreg.def)
 set_target_properties(msi_selfreg PROPERTIES OUTPUT_NAME "selfreg")
-set_module_type(msi_selfreg win32dll)
+set_module_type(msi_selfreg win32dll IMAGEBASE default)
 add_importlibs(msi_selfreg advapi32 msvcrt kernel32)
 
 list(APPEND SOURCE
