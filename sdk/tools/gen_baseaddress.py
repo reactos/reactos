@@ -206,6 +206,10 @@ EXCLUDE = (
     'halmp.dll',
     'halpc98.dll',
     'halxbox.dll',
+    # modules/rosapps/applications/
+    'notifyhook.dll', # Sub-part of explorer_old target.
+    # modules/rosapps/lib/
+    'vfd.dll',
     # modules/rostests/
     'MyEventProvider.dll', # MyEventProvider_dll target.
     'custom.dll', # msi_custom target.
