@@ -17,14 +17,47 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
+#include <atltypes.h>
 #include <atlwin.h>
 #include <wininet.h>
 #include <shellutils.h>
 #include <rosctrls.h>
+#include <gdiplus.h>
+#include <math.h>
+
+using namespace Gdiplus;
 
 #define SEARCH_TIMER_ID 'SR'
 #define LISTVIEW_ICON_SIZE 24
 #define TREEVIEW_ICON_SIZE 24
+
+// default broken-image icon size
+#define BROKENIMG_ICON_SIZE 96
+
+// the boundary of w/h ratio of snapshot preview window
+#define SNPSHT_MAX_ASPECT_RAT 2.5
+
+// padding between snapshot preview and richedit (in pixel)
+#define INFO_DISPLAY_PADDING 10
+
+// minimum width of richedit
+#define RICHEDIT_MIN_WIDTH 160
+
+enum SNPSHT_STATUS
+{
+    SNPSHTPREV_EMPTY,      // show nothing
+    SNPSHTPREV_LOADING,    // image is loading (most likely downloading)
+    SNPSHTPREV_FILE,       // display image from a file
+    SNPSHTPREV_FAILED      // image can not be shown (download failure or wrong image)
+};
+
+#define TIMER_LOADING_ANIMATION 1 // Timer ID
+
+#define LOADING_ANIMATION_PERIOD 3 // Animation cycling period (in seconds)
+#define LOADING_ANIMATION_FPS 18 // Animation Frame Per Second
+
+
+#define PI 3.1415927
 
 INT GetSystemColorDepth()
 {
@@ -257,6 +290,322 @@ public:
     }
 };
 
+class CAppSnapshotPreview :
+    public CWindowImpl<CAppSnapshotPreview>
+{
+private:
+
+    SNPSHT_STATUS SnpshtPrevStauts = SNPSHTPREV_EMPTY;
+    Image* pImage = NULL;
+    HICON hBrokenImgIcon = NULL;
+    BOOL bLoadingTimerOn = FALSE;
+    int LoadingAnimationFrame = 0;
+    int BrokenImgSize = BROKENIMG_ICON_SIZE;
+
+    BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
+    {
+        theResult = 0;
+        switch (Msg)
+        {
+        case WM_CREATE:
+            hBrokenImgIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_BROKEN_IMAGE), IMAGE_ICON, BrokenImgSize, BrokenImgSize, 0);
+            break;
+        case WM_SIZE:
+        {
+            if (BrokenImgSize != min(min(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)), BROKENIMG_ICON_SIZE))
+            {
+                BrokenImgSize = min(min(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)), BROKENIMG_ICON_SIZE);
+
+                if (hBrokenImgIcon)
+                {
+                    DeleteObject(hBrokenImgIcon);
+                    hBrokenImgIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_BROKEN_IMAGE), IMAGE_ICON, BrokenImgSize, BrokenImgSize, 0);
+                }
+            }
+            break;
+        }
+        case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(&ps);
+            CRect rect;
+            GetClientRect(&rect);
+
+            PaintOnDC(hdc,
+                rect.Width(),
+                rect.Height(),
+                ps.fErase);
+
+            EndPaint(&ps);
+            break;
+        }
+        case WM_PRINTCLIENT:
+        {
+            if (lParam & PRF_CHECKVISIBLE)
+            {
+                if (!IsWindowVisible()) break;
+            }
+            CRect rect;
+            GetClientRect(&rect);
+
+            PaintOnDC((HDC)wParam,
+                rect.Width(),
+                rect.Height(),
+                lParam & PRF_ERASEBKGND);
+            break;
+        }
+        case WM_ERASEBKGND:
+        {
+            return TRUE; // do not erase to avoid blinking
+        }
+        case WM_TIMER:
+        {
+            switch (wParam)
+            {
+            case TIMER_LOADING_ANIMATION:
+                LoadingAnimationFrame++;
+                LoadingAnimationFrame %= (LOADING_ANIMATION_PERIOD * LOADING_ANIMATION_FPS);
+                HDC hdc = GetDC();
+                CRect rect;
+                GetClientRect(&rect);
+
+                PaintOnDC(hdc,
+                    rect.Width(),
+                    rect.Height(),
+                    TRUE);
+                ReleaseDC(hdc);
+            }
+            break;
+        }
+        case WM_DESTROY:
+        {
+            PreviousDisplayCleanup();
+            DeleteObject(hBrokenImgIcon);
+            hBrokenImgIcon = NULL;
+            break;
+        }
+        }
+        return FALSE;
+    }
+
+    VOID SetStatus(SNPSHT_STATUS Status)
+    {
+        SnpshtPrevStauts = Status;
+    }
+
+    VOID PaintOnDC(HDC hdc, int width, int height, BOOL bDrawBkgnd)
+    {
+        // use an off screen dc to avoid blinking
+        HDC hdcMem = CreateCompatibleDC(hdc);
+        HBITMAP hBitmap = CreateCompatibleBitmap(hdc, width, height);
+        SelectObject(hdcMem, hBitmap);
+
+        if (bDrawBkgnd)
+        {
+            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdcMem, (HGDIOBJ)GetSysColorBrush(COLOR_BTNFACE));
+            PatBlt(hdcMem, 0, 0, width, height, PATCOPY);
+            SelectObject(hdcMem, hOldBrush);
+        }
+
+        switch (SnpshtPrevStauts)
+        {
+        case SNPSHTPREV_EMPTY:
+        {
+
+        }
+        break;
+
+        case SNPSHTPREV_LOADING:
+        {
+            Graphics graphics(hdcMem);
+            Color color(255, 0, 0);
+            SolidBrush dotBrush(Color(255, 100, 100, 100));
+
+            graphics.SetSmoothingMode(SmoothingMode::SmoothingModeAntiAlias);
+
+            // Paint three dot
+            float DotWidth = GetLoadingDotWidth(width, height);
+            graphics.FillEllipse((Brush*)(&dotBrush),
+                (REAL)width / 2.0 - min(width, height) * 2.0 / 16.0 - DotWidth / 2.0,
+                (REAL)height / 2.0 - GetFrameDotShift(LoadingAnimationFrame + LOADING_ANIMATION_FPS / 4, width, height) - DotWidth / 2.0,
+                DotWidth,
+                DotWidth);
+
+            graphics.FillEllipse((Brush*)(&dotBrush),
+                (REAL)width / 2.0 - DotWidth / 2.0,
+                (REAL)height / 2.0 - GetFrameDotShift(LoadingAnimationFrame, width, height) - DotWidth / 2.0,
+                DotWidth,
+                DotWidth);
+
+            graphics.FillEllipse((Brush*)(&dotBrush),
+                (REAL)width / 2.0 + min(width, height) * 2.0 / 16.0 - DotWidth / 2.0,
+                (REAL)height / 2.0 - GetFrameDotShift(LoadingAnimationFrame - LOADING_ANIMATION_FPS / 4, width, height) - DotWidth / 2.0,
+                DotWidth,
+                DotWidth);
+        }
+        break;
+
+        case SNPSHTPREV_FILE:
+        {
+            if (pImage)
+            {
+                // always draw entire image inside the window.
+                Graphics graphics(hdcMem);
+                float ZoomRatio = min(((float)width / (float)pImage->GetWidth()), ((float)height / (float)pImage->GetHeight()));
+                float ZoomedImgWidth = ZoomRatio * (float)pImage->GetWidth();
+                float ZoomedImgHeight = ZoomRatio * (float)pImage->GetHeight();
+
+                graphics.DrawImage(pImage,
+                    ((float)width - ZoomedImgWidth) / 2.0, ((float)height - ZoomedImgHeight) / 2.0,
+                    ZoomedImgWidth, ZoomedImgHeight);
+            }
+        }
+        break;
+
+        case SNPSHTPREV_FAILED:
+        {
+            DrawIconEx(hdcMem,
+                (width - BrokenImgSize) / 2,
+                (height - BrokenImgSize) / 2,
+                hBrokenImgIcon,
+                BrokenImgSize,
+                BrokenImgSize,
+                NULL,
+                NULL,
+                DI_NORMAL | DI_COMPAT);
+        }
+        break;
+        }
+
+        // copy the content form off-screen dc to hdc
+        BitBlt(hdc, 0, 0, width, height, hdcMem, 0, 0, SRCCOPY);
+        DeleteDC(hdcMem);
+        DeleteObject(hBitmap);
+    }
+
+    float GetLoadingDotWidth(int width, int height)
+    {
+        return min(width, height) / 20.0;
+    }
+
+    float GetFrameDotShift(int Frame, int width, int height)
+    {
+        return min(width, height) *
+            (1.0 / 16.0) *
+            (2.0 / (2.0 - sqrt(3.0))) *
+            (max(sin((float)Frame * 2 * PI / (LOADING_ANIMATION_PERIOD * LOADING_ANIMATION_FPS)), sqrt(3.0) / 2.0) - sqrt(3.0) / 2.0);
+    }
+
+public:
+    static ATL::CWndClassInfo& GetWndClassInfo()
+    {
+        DWORD csStyle = CS_VREDRAW | CS_HREDRAW;
+        static ATL::CWndClassInfo wc =
+        {
+            {
+                sizeof(WNDCLASSEX),
+                csStyle,
+                StartWindowProc,
+                0,
+                0,
+                NULL,
+                0,
+                LoadCursorW(NULL, IDC_ARROW),
+                (HBRUSH)(COLOR_BTNFACE + 1),
+                0,
+                L"RAppsSnapshotPreview",
+                NULL
+            },
+            NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
+        };
+        return wc;
+    }
+
+    HWND Create(HWND hParent)
+    {
+        RECT r = { 0,0,0,0 };
+
+        return CWindowImpl::Create(hParent, r, L"", WS_CHILD | WS_VISIBLE);
+    }
+
+    VOID PreviousDisplayCleanup()
+    {
+        if (bLoadingTimerOn)
+        {
+            KillTimer(TIMER_LOADING_ANIMATION);
+            bLoadingTimerOn = FALSE;
+        }
+        LoadingAnimationFrame = 0;
+        if (pImage)
+        {
+            delete pImage;
+            pImage = NULL;
+        }
+    }
+
+    VOID DisplayEmpty()
+    {
+        SetStatus(SNPSHTPREV_EMPTY);
+        PreviousDisplayCleanup();
+    }
+
+    VOID DisplayLoading()
+    {
+        SetStatus(SNPSHTPREV_LOADING);
+        PreviousDisplayCleanup();
+        bLoadingTimerOn = TRUE;
+        SetTimer(TIMER_LOADING_ANIMATION, 1000 / LOADING_ANIMATION_FPS, 0);
+    }
+
+    BOOL DisplayFile(LPCWSTR lpszFileName)
+    {
+        SetStatus(SNPSHTPREV_FILE);
+        PreviousDisplayCleanup();
+        pImage = Bitmap::FromFile(lpszFileName, 0);
+        if (pImage->GetLastStatus() != Ok)
+        {
+            DisplayFailed();
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    VOID DisplayFailed()
+    {
+        SetStatus(SNPSHTPREV_FAILED);
+        PreviousDisplayCleanup();
+    }
+
+    int GetRequestedWidth(int Height) // calculate requested window width by given height
+    {
+        switch (SnpshtPrevStauts)
+        {
+        case SNPSHTPREV_EMPTY:
+            return 0;
+        case SNPSHTPREV_LOADING:
+            return 200;
+        case SNPSHTPREV_FILE:
+            if (pImage)
+            {
+                // return the width needed to display image inside the window.
+                // and always keep window w/h ratio inside [ 1/SNPSHT_MAX_ASPECT_RAT, SNPSHT_MAX_ASPECT_RAT ]
+                return (int)floor((float)Height *
+                    max(min((float)pImage->GetWidth() / (float)pImage->GetHeight(), (float)SNPSHT_MAX_ASPECT_RAT), 1.0/ (float)SNPSHT_MAX_ASPECT_RAT));
+            }
+            return 0;
+        case SNPSHTPREV_FAILED:
+            return 200;
+        default:
+            return 0;
+        }
+    }
+
+    ~CAppSnapshotPreview()
+    {
+        PreviousDisplayCleanup();
+    }
+};
+
 class CAppInfoDisplay :
     public CUiWindow<CWindowImpl<CAppInfoDisplay>>
 {
@@ -272,16 +621,18 @@ private:
         {
             RichEdit = new CAppRichEdit();
             RichEdit->Create(hwnd);
+
+            SnpshtPrev = new CAppSnapshotPreview();
+            SnpshtPrev->Create(hwnd);
             break;
         }
         case WM_SIZE:
         {
-            ::MoveWindow(RichEdit->m_hWnd, 0, 0, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), TRUE);
+            ResizeChildren(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             break;
         }
         case WM_COMMAND:
         {
-
             OnCommand(wParam, lParam);
             break;
         }
@@ -304,9 +655,94 @@ private:
         return FALSE;
     }
 
+    VOID ResizeChildren()
+    {
+        CRect rect;
+        GetWindowRect(&rect);
+        ResizeChildren(rect.Width(), rect.Height());
+    }
+
+    VOID ResizeChildren(int Width, int Height)
+    {
+        int SnpshtWidth = SnpshtPrev->GetRequestedWidth(Height);
+
+        // make sure richedit always have room to display
+        SnpshtWidth = min(SnpshtWidth, Width - INFO_DISPLAY_PADDING - RICHEDIT_MIN_WIDTH);
+
+        DWORD dwError = ERROR_SUCCESS;
+        HDWP hDwp = BeginDeferWindowPos(2);
+
+        if (hDwp)
+        {
+            hDwp = ::DeferWindowPos(hDwp, SnpshtPrev->m_hWnd, NULL,
+                0, 0, SnpshtWidth, Height, 0);
+
+            if (hDwp)
+            {
+                // hide the padding if snapshot window width == 0
+                int RicheditPosX = SnpshtWidth ? (SnpshtWidth + INFO_DISPLAY_PADDING) : 0;
+
+                hDwp = ::DeferWindowPos(hDwp, RichEdit->m_hWnd, NULL,
+                    RicheditPosX, 0, Width - RicheditPosX, Height, 0);
+
+                if (hDwp)
+                {
+                    EndDeferWindowPos(hDwp);
+                }
+                else
+                {
+                    dwError = GetLastError();
+                }
+            }
+            else
+            {
+                dwError = GetLastError();
+            }
+        }
+        else
+        {
+            dwError = GetLastError();
+        }
+
+
+#if DBG
+        ATLASSERT(dwError == ERROR_SUCCESS);
+#endif
+
+        UpdateWindow();
+    }
+
+    VOID OnLink(ENLINK* Link)
+    {
+        switch (Link->msg)
+        {
+        case WM_LBUTTONUP:
+        case WM_RBUTTONUP:
+        {
+            if (pLink) HeapFree(GetProcessHeap(), 0, pLink);
+
+            pLink = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
+                (max(Link->chrg.cpMin, Link->chrg.cpMax) -
+                    min(Link->chrg.cpMin, Link->chrg.cpMax) + 1) * sizeof(WCHAR));
+            if (!pLink)
+            {
+                /* TODO: Error message */
+                return;
+            }
+
+            RichEdit->SendMessageW(EM_SETSEL, Link->chrg.cpMin, Link->chrg.cpMax);
+            RichEdit->SendMessageW(EM_GETSELTEXT, 0, (LPARAM)pLink);
+
+            ShowPopupMenuEx(m_hWnd, m_hWnd, IDR_LINKMENU, -1);
+        }
+        break;
+        }
+    }
+
 public:
 
     CAppRichEdit * RichEdit;
+    CAppSnapshotPreview * SnpshtPrev;
 
     static ATL::CWndClassInfo& GetWndClassInfo()
     {
@@ -336,49 +772,36 @@ public:
     {
         RECT r = { 0,0,0,0 };
 
-        return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE);
+        return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
     }
 
     BOOL ShowAvailableAppInfo(CAvailableApplicationInfo* Info)
     {
+        ATL::CStringW SnapshotFilename;
+        if (Info->RetrieveSnapshot(0, SnapshotFilename))
+        {
+            SnpshtPrev->DisplayFile(SnapshotFilename);
+        }
+        else
+        {
+            SnpshtPrev->DisplayEmpty();
+        }
+        ResizeChildren();
         return RichEdit->ShowAvailableAppInfo(Info);
     }
 
     BOOL ShowInstalledAppInfo(PINSTALLED_INFO Info)
     {
+        SnpshtPrev->DisplayEmpty();
+        ResizeChildren();
         return RichEdit->ShowInstalledAppInfo(Info);
     }
 
     VOID SetWelcomeText()
     {
+        SnpshtPrev->DisplayEmpty();
+        ResizeChildren();
         RichEdit->SetWelcomeText();
-    }
-
-    VOID OnLink(ENLINK* Link)
-    {
-        switch (Link->msg)
-        {
-        case WM_LBUTTONUP:
-        case WM_RBUTTONUP:
-        {
-            if (pLink) HeapFree(GetProcessHeap(), 0, pLink);
-
-            pLink = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-                (max(Link->chrg.cpMin, Link->chrg.cpMax) -
-                    min(Link->chrg.cpMin, Link->chrg.cpMax) + 1) * sizeof(WCHAR));
-            if (!pLink)
-            {
-                /* TODO: Error message */
-                return;
-            }
-
-            RichEdit->SendMessageW(EM_SETSEL, Link->chrg.cpMin, Link->chrg.cpMax);
-            RichEdit->SendMessageW(EM_GETSELTEXT, 0, (LPARAM)pLink);
-
-            ShowPopupMenuEx(m_hWnd, m_hWnd, IDR_LINKMENU, -1);
-        }
-        break;
-        }
     }
 
     VOID OnCommand(WPARAM wParam, LPARAM lParam)
@@ -1804,8 +2227,12 @@ private:
         }
 
         /* Load icon from file */
-        ATL::CStringW szIconPath;
-        szIconPath.Format(L"%lsicons\\%ls.ico", szFolderPath, Info->m_szName.GetString());
+        ATL::CStringW szIconPath = szFolderPath;
+        PathAppendW(szIconPath.GetBuffer(MAX_PATH), L"icons");
+        PathAppendW(szIconPath.GetBuffer(), Info->m_szName.GetString());
+        PathAddExtensionW(szIconPath.GetBuffer(), L".ico");
+        szIconPath.ReleaseBuffer();
+
         hIcon = (HICON) LoadImageW(NULL,
                                    szIconPath.GetString(),
                                    IMAGE_ICON,
