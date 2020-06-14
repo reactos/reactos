@@ -18,23 +18,23 @@
 #include <atlstr.h>
 
  // CAvailableApplicationInfo
-CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam)
+CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& AvlbStrings)
     : m_IsSelected(FALSE), m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
     m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
 {
-    RetrieveGeneralInfo();
+    RetrieveGeneralInfo(AvlbStrings);
 }
 
-VOID CAvailableApplicationInfo::RefreshAppInfo()
+VOID CAvailableApplicationInfo::RefreshAppInfo(AvailableStrings& AvlbStrings)
 {
     if (m_szUrlDownload.IsEmpty())
     {
-        RetrieveGeneralInfo();
+        RetrieveGeneralInfo(AvlbStrings);
     }
 }
 
 // Lazily load general info from the file
-VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
+VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbStrings)
 {
     m_Parser = new CConfigParser(m_sFileName);
 
@@ -52,9 +52,30 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
     GetString(L"License", m_szLicense);
     GetString(L"Description", m_szDesc);
     GetString(L"URLSite", m_szUrlSite);
-    GetString(L"CDPath", m_szCDPath);
-    GetString(L"Language", m_szRegName);
     GetString(L"SHA1", m_szSHA1);
+
+    static_assert(MAX_SNAPSHOT_NUM < 10000, "MAX_SNAPSHOT_NUM is too big");
+    for (int i = 0; i < MAX_SNAPSHOT_NUM; i++)
+    {
+        WCHAR SnapshotField[sizeof("Snapshot") + 4];
+        wsprintfW(SnapshotField, L"Snapshot%d", i + 1);
+        ATL::CStringW SnapshotFileName;
+        if (!GetString(SnapshotField, SnapshotFileName))
+        {
+            continue;
+        }
+
+        // TODO: Add URL Support
+
+        // TODO: Does the filename contain anything stuff like "\\" ".." ":" "<" ">" ?
+        // these stuff may lead to security issues
+
+        ATL::CStringW SnapshotName = AvlbStrings.szAppsPath;
+        PathAppendW(SnapshotName.GetBuffer(MAX_PATH), L"snapshots");
+        PathAppendW(SnapshotName.GetBuffer(), SnapshotFileName.GetString());
+        SnapshotName.ReleaseBuffer();
+        m_szSnapshotFilename.Add(SnapshotName);
+    }
 
     RetrieveSize();
     RetrieveLicenseType();
@@ -209,6 +230,16 @@ BOOL CAvailableApplicationInfo::HasUpdate() const
     return (m_szInstalledVersion.Compare(m_szVersion) < 0) ? TRUE : FALSE;
 }
 
+BOOL CAvailableApplicationInfo::RetrieveSnapshot(UINT Index,ATL::CStringW& SnapshotFileName) const
+{
+    if (Index >= (UINT)m_szSnapshotFilename.GetSize())
+    {
+        return FALSE;
+    }
+    SnapshotFileName = m_szSnapshotFilename[Index];
+    return TRUE;
+}
+
 VOID CAvailableApplicationInfo::SetLastWriteTime(FILETIME* ftTime)
 {
     RtlCopyMemory(&m_ftCacheStamp, ftTime, sizeof(FILETIME));
@@ -231,11 +262,19 @@ AvailableStrings::AvailableStrings()
     //FIXME: maybe provide a fallback?
     if (GetStorageDirectory(szPath))
     {
-        szAppsPath = szPath + L"\\rapps\\";
+        szAppsPath = szPath;
+        PathAppendW(szAppsPath.GetBuffer(MAX_PATH), L"rapps");
+        szAppsPath.ReleaseBuffer();
+
         szCabName = L"rappmgr.cab";
         szCabDir = szPath;
-        szCabPath = (szCabDir + L"\\") + szCabName;
-        szSearchPath = szAppsPath + L"*.txt";
+        szCabPath = szCabDir;
+        PathAppendW(szCabPath.GetBuffer(MAX_PATH), szCabName);
+        szCabPath.ReleaseBuffer();
+
+        szSearchPath = szAppsPath;
+        PathAppendW(szSearchPath.GetBuffer(MAX_PATH), L"*.txt");
+        szSearchPath.ReleaseBuffer();
     }
 }
 // AvailableStrings
@@ -273,7 +312,9 @@ VOID CAvailableApps::DeleteCurrentAppsDB()
         ATL::CStringW szTmp;
         do
         {
-            szTmp = m_Strings.szAppsPath + FindFileData.cFileName;
+            szTmp = m_Strings.szAppsPath;
+            PathAppendW(szTmp.GetBuffer(MAX_PATH), FindFileData.cFileName);
+            szTmp.ReleaseBuffer();
             DeleteFileW(szTmp.GetString());
         } while (FindNextFileW(hFind, &FindFileData) != 0);
         FindClose(hFind);
@@ -369,7 +410,7 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
         }
 
         // create a new entry
-        Info = new CAvailableApplicationInfo(FindFileData.cFileName);
+        Info = new CAvailableApplicationInfo(FindFileData.cFileName, m_Strings);
 
         // set a timestamp for the next time
         Info->SetLastWriteTime(&FindFileData.ftLastWriteTime);
@@ -380,7 +421,7 @@ skip_if_cached:
             || EnumType == ENUM_ALL_AVAILABLE
             || (EnumType == ENUM_CAT_SELECTED && Info->m_IsSelected))
         {
-            Info->RefreshAppInfo();
+            Info->RefreshAppInfo(m_Strings);
 
             if (lpEnumProc)
                 lpEnumProc(Info, m_Strings.szAppsPath.GetString(), param);
