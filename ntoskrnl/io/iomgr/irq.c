@@ -64,9 +64,6 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
                                         TAG_KINTERRUPT);
     if (!IoInterrupt) return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Zero the interrupt pointers */
-    RtlZeroMemory(&IoInterrupt->Interrupt, sizeof(IoInterrupt->Interrupt));
-
     /* Use structure's spinlock, if none was provided */
     if (!SpinLock)
     {
@@ -114,6 +111,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
             else
             {
                 /* Far enough, so disconnect everything */
+                IoInterrupt->Interrupt[Count] = NULL;
                 IoDisconnectInterrupt(&IoInterrupt->FirstInterrupt);
             }
 
@@ -128,6 +126,10 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
         /* Increase interrupt index */
         ++Count;
     }
+
+    /* Set actual end of the interrupt pointers */
+    if (Count < _countof(IoInterrupt->Interrupt))
+        IoInterrupt->Interrupt[Count] = NULL;
 
     /* Return Success */
     *InterruptObject = &IoInterrupt->FirstInterrupt;
