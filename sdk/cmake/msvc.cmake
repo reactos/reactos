@@ -114,10 +114,7 @@ add_compile_options(/wd4018)
 add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4101 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
 
 # - C4189: local variable initialized but not referenced
-# Not in Release mode, msbuild generator doesn't like CMAKE_BUILD_TYPE
-if(MSVC_IDE OR CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(/we4189)
-endif()
+add_compile_options($<$<CONFIG:Debug>:/we4189>)
 
 # Enable warnings above the default level, but don't treat them as errors:
 # - C4115: named type definition in parentheses
