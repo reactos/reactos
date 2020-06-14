@@ -33,6 +33,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -385,7 +386,7 @@ CcRosFlushDirtyPages (
         Locked = SharedCacheMap->Callbacks->AcquireForLazyWrite(SharedCacheMap->LazyWriteContext, Wait);
         if (!Locked)
         {
-            DPRINT("Not locked!");
+            DPRINT("Not locked\n");
             ASSERT(!Wait);
             CcRosVacbDecRefCount(current);
             OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
@@ -1018,7 +1019,7 @@ CcRosRequestVacb (
 
     if (FileOffset % VACB_MAPPING_GRANULARITY != 0)
     {
-        DPRINT1("Bad fileoffset %I64x should be multiple of %x",
+        DPRINT1("Bad FileOffset %I64x: should be multiple of %x\n",
                 FileOffset, VACB_MAPPING_GRANULARITY);
         KeBugCheck(CACHE_MANAGER);
     }
