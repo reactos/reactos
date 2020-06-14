@@ -177,14 +177,15 @@ BOOL StartProcess(LPWSTR lpPath, BOOL Wait)
 
 BOOL GetStorageDirectory(ATL::CStringW& Directory)
 {
-    if (!SHGetSpecialFolderPathW(NULL, Directory.GetBuffer(MAX_PATH), CSIDL_LOCAL_APPDATA, TRUE))
+    LPWSTR DirectoryStr = Directory.GetBuffer(MAX_PATH);
+    if (!SHGetSpecialFolderPathW(NULL, DirectoryStr, CSIDL_LOCAL_APPDATA, TRUE))
     {
         Directory.ReleaseBuffer();
         return FALSE;
     }
 
+    PathAppendW(DirectoryStr, L"rapps");
     Directory.ReleaseBuffer();
-    Directory += L"\\rapps";
 
     return (CreateDirectoryW(Directory.GetString(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS);
 }
