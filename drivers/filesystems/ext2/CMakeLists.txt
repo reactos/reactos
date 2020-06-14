@@ -101,10 +101,10 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(ext2fs PRIVATE
-        -Wno-parentheses-equality
-        -Wno-incompatible-pointer-types-discards-qualifiers
-        "-Wno-#pragma-messages;-Wno-cast-calling-convention")
+    target_compile_options(ext2fs PRIVATE -Wno-parentheses-equality)
+    if(ARCH STREQUAL "i386")
+        target_compile_options(ext2fs PRIVATE -Wno-cast-calling-convention) # FIXME: CORE-17545
+    endif()
 endif()
 
 target_link_libraries(ext2fs memcmp ${PSEH_LIB})
