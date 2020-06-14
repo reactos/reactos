@@ -202,6 +202,10 @@ EXCLUDE = (
     'halaacpi.dll',
     'halacpi.dll',
     'halapic.dll',
+    'halmacpi.dll',
+    'halmp.dll',
+    'halpc98.dll',
+    'halxbox.dll',
     # modules/rostests/
     'MyEventProvider.dll', # MyEventProvider_dll target.
     'dllexport_test_dll1.dll', # Moreover, this module hardcodes its baseaddress.
