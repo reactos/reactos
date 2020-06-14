@@ -9,9 +9,11 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
-#include <debug.h>
+
 #include "internal/i386/trap_x.h"
+
+// #define NDEBUG
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -536,7 +538,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     else
     {
         /* FIXME */
-        DPRINT1("Starting CPU#%u - you are brave\n", Number);
+        DPRINT("Starting CPU %d\n", Number);
     }
 
     /* Setup the Idle Thread */

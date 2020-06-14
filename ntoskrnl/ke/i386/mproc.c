@@ -9,7 +9,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+
+// #define NDEBUG
 #include <debug.h>
 
 typedef struct _APINFO
@@ -48,7 +49,7 @@ KeStartAllProcessors(VOID)
         DPCStack = NULL;
 
         // Allocate structures for a new CPU.
-        APInfo = ExAllocatePoolZero(NonPagedPool, sizeof(APINFO), '  eK');
+        APInfo = ExAllocatePoolZero(NonPagedPool, sizeof(*APInfo), TAG_KERNEL);
         if (!APInfo)
             break;
         ASSERT(ALIGN_DOWN_POINTER_BY(APInfo, PAGE_SIZE) == APInfo);
@@ -127,7 +128,7 @@ KeStartAllProcessors(VOID)
         KeLoaderBlock->Thread = (ULONG_PTR)&APInfo->Pcr.Prcb->IdleThread;
 
         // Start the CPU
-        DPRINT("Attempting to Start a CPU with number: %u\n", ProcessorCount);
+        DPRINT("Attempting to start CPU %Iu\n", ProcessorCount);
         if (!HalStartNextProcessor(KeLoaderBlock, ProcessorState))
         {
             break;
@@ -142,15 +143,14 @@ KeStartAllProcessors(VOID)
         }
     }
 
-    // The last CPU didn't start - clean the data
+    // The last CPU didn't start. Clean its data up.
     ProcessorCount--;
-
-    if (APInfo)
-        ExFreePoolWithTag(APInfo, '  eK');
-    if (KernelStack)
-        MmDeleteKernelStack(KernelStack, FALSE);
     if (DPCStack)
         MmDeleteKernelStack(DPCStack, FALSE);
+    if (KernelStack)
+        MmDeleteKernelStack(KernelStack, FALSE);
+    if (APInfo)
+        ExFreePoolWithTag(APInfo, TAG_KERNEL);
 
-    DPRINT1("KeStartAllProcessors: Sucessful AP startup count is %u\n", ProcessorCount);
+    DPRINT("KeStartAllProcessors: successful AP startup count is %Iu\n", ProcessorCount);
 }

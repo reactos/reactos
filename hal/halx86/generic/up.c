@@ -9,9 +9,6 @@
 
 #include <hal.h>
 
-#define NDEBUG
-#include <debug.h>
-
 /* FUNCTIONS *****************************************************************/
 
 VOID

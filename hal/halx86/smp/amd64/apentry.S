@@ -17,8 +17,8 @@ HalpAPEntry16:
     cli
 
     xor ax, ax
-	mov ds, ax
-	mov ss, ax
+    mov ds, ax
+    mov ss, ax
     mov fs, ax
     mov gs, ax
 
