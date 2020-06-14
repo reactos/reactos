@@ -82,8 +82,13 @@ jobs:
         arch: [i386, amd64]
         config: [Debug, Release]
         include:
-        - arch: i386 # Not compiling on amd64 prompt
-          toolset: '14.0' # VS 2015
+        # VS (2017/)2019 with VS 2015 toolset fail to build for amd64. (CORE-17585)
+        - toolset: '14.0'
+          arch: i386
+          config: Debug
+        - toolset: '14.0'
+          arch: i386
+          config: Release
       fail-fast: false
     runs-on: windows-latest
     steps:
