@@ -326,7 +326,6 @@ int SnapshotDownloadCallback(
     case ASYNCINET_CANCELLED:
         CloseHandle(DownloadParam->hFile);
         SendMessage(DownloadParam->hwndNotify, WM_DOWNLOAD_COMPLETE, (WPARAM)ERROR_CANCELLED, (LPARAM)DownloadParam);
-        delete DownloadParam;
         break;
     case ASYNCINET_ERROR:
         CloseHandle(DownloadParam->hFile);
