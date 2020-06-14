@@ -5,28 +5,19 @@
     Hacky debug macro
 */
 
-#define POPUP(...) \
-    { \
-        WCHAR dbg_popup_msg[1024], dbg_popup_title[256]; \
-        wsprintf(dbg_popup_title, L"%hS(%d)", __FILE__, __LINE__); \
-        wsprintf(dbg_popup_msg, __VA_ARGS__); \
-        MessageBox(0, dbg_popup_msg, dbg_popup_title, MB_OK | MB_TASKMODAL); \
-    }
+// FIXME: sdk\lib\...\mmebuddy compilation would fail: wsprintf() and MessageBox() are undefined!
+#if DBG && !defined(NDEBUG) // #if DBG
 
-#if DBG && !defined(NDEBUG)
+    // Helper for SND_ASSERT().
+    #define POPUP(...) \
+        { \
+            WCHAR dbg_popup_msg[1024], dbg_popup_title[256]; \
+            wsprintf(dbg_popup_title, L"%hS(%d)", __FILE__, __LINE__); \
+            wsprintf(dbg_popup_msg, __VA_ARGS__); \
+            MessageBox(0, dbg_popup_msg, dbg_popup_title, MB_OK | MB_TASKMODAL); \
+        }
+
     #define SND_ERR(...) \
-        { \
-            WCHAR dbg_popup_msg[1024]; \
-            wsprintf(dbg_popup_msg, __VA_ARGS__); \
-            OutputDebugString(dbg_popup_msg); \
-        }
-    #define SND_WARN(...) \
-        { \
-            WCHAR dbg_popup_msg[1024]; \
-            wsprintf(dbg_popup_msg, __VA_ARGS__); \
-            OutputDebugString(dbg_popup_msg); \
-        }
-    #define SND_TRACE(...) \
         { \
             WCHAR dbg_popup_msg[1024]; \
             wsprintf(dbg_popup_msg, __VA_ARGS__); \
@@ -43,6 +34,29 @@
             } \
         }
 
+#else // DBG
+
+    #define SND_ERR(...) do {} while ( 0 )
+    #define SND_ASSERT(condition) do {(void)(condition);} while ( 0 )
+
+#endif // DBG
+
+#if DBG && !defined(NDEBUG)
+
+    #define SND_WARN(...) \
+        { \
+            WCHAR dbg_popup_msg[1024]; \
+            wsprintf(dbg_popup_msg, __VA_ARGS__); \
+            OutputDebugString(dbg_popup_msg); \
+        }
+
+    #define SND_TRACE(...) \
+        { \
+            WCHAR dbg_popup_msg[1024]; \
+            wsprintf(dbg_popup_msg, __VA_ARGS__); \
+            OutputDebugString(dbg_popup_msg); \
+        }
+
     #define DUMP_WAVEHDR_QUEUE(sound_device_instance) \
         { \
             PWAVEHDR CurrDumpHdr = sound_device_instance->HeadWaveHeader; \
@@ -55,12 +69,13 @@
                 CurrDumpHdr = CurrDumpHdr->lpNext; \
             } \
         }
-#else
-    #define SND_ERR(...) do {} while ( 0 )
+
+#else // DBG && !defined(NDEBUG)
+
     #define SND_WARN(...) do {} while ( 0 )
     #define SND_TRACE(...) do {} while ( 0 )
-    #define SND_ASSERT(condition) do {(void)(condition);} while ( 0 )
     #define DUMP_WAVEHDR_QUEUE(condition) do {} while ( 0 )
-#endif
+
+#endif // DBG && !defined(NDEBUG)
 
 #endif /* ROS_AUDIO_MMEBUDDY_DEBUG_H */
