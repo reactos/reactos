@@ -74,7 +74,6 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
     }
 
     /* We first start with a built-in Interrupt inside the I/O Structure */
-    *InterruptObject = &IoInterrupt->FirstInterrupt;
     Interrupt = (PKINTERRUPT)(IoInterrupt + 1);
     FirstRun = TRUE;
 
@@ -118,7 +117,6 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
             }
 
             /* And fail */
-            *InterruptObject = NULL;
             return STATUS_INVALID_PARAMETER;
         }
 
@@ -135,6 +133,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
     }
 
     /* Return Success */
+    *InterruptObject = &IoInterrupt->FirstInterrupt;
     return STATUS_SUCCESS;
 }
 
