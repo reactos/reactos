@@ -566,7 +566,6 @@ IntDefWindowProc(
                     lResult = (LRESULT) (Wnd->strName.Length / sizeof(WCHAR));
                 }
             }
-            else lResult = 0L;
 
             break;
       }
@@ -1038,12 +1037,15 @@ IntDefWindowProc(
       case WM_MOUSEACTIVATE:
          if (Wnd->style & WS_CHILD)
          {
-             LONG Ret;
              HWND hwndParent;
              PWND pwndParent = IntGetParent(Wnd);
              hwndParent = pwndParent ? UserHMGetHandle(pwndParent) : NULL;
-             if (hwndParent) Ret = co_IntSendMessage(hwndParent, WM_MOUSEACTIVATE, wParam, lParam);
-             if (Ret) return (Ret);
+             if (hwndParent)
+             {
+                 lResult = co_IntSendMessage(hwndParent, WM_MOUSEACTIVATE, wParam, lParam);
+                 if (lResult)
+                     break;
+             }
          }
          return ( (HIWORD(lParam) == WM_LBUTTONDOWN && LOWORD(lParam) == HTCAPTION) ? MA_NOACTIVATE : MA_ACTIVATE );
 
