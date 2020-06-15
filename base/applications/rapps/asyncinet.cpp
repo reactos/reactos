@@ -6,6 +6,7 @@
  */
 
 
+#include "rapps.h"
 #include <windows.h>
 #include <wininet.h>
 #include <strsafe.h>
