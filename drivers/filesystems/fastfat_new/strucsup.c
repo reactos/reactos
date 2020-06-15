@@ -1458,11 +1458,7 @@ Return Value:
 
         if (FatData.ChicagoMode) {
 
-#ifndef __REACTOS__
             LARGE_INTEGER FatSystemJanOne1980 = {0};
-#else
-            LARGE_INTEGER FatSystemJanOne1980 = {{0}};
-#endif
 
             //
             //  If either date is possibly zero, get the system
@@ -1796,11 +1792,7 @@ Return Value:
 
         if (FatData.ChicagoMode) {
 
-#ifndef __REACTOS__
             LARGE_INTEGER FatSystemJanOne1980 = {0};
-#else
-            LARGE_INTEGER FatSystemJanOne1980 = {{0}};
-#endif
 
             //
             //  If either date is possibly zero, get the system

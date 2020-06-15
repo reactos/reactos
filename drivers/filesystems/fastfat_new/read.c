@@ -972,11 +972,7 @@ Return Value:
 
                 (FileObject->SectionObjectPointer->DataSectionObject != NULL)) {
 
-#ifndef __REACTOS__
                 IO_STATUS_BLOCK IoStatus = {0};
-#else
-                IO_STATUS_BLOCK IoStatus = {{0}};
-#endif
 
 #ifndef REDUCE_SYNCHRONIZATION
                 if (!FatAcquireExclusiveFcb( IrpContext, FcbOrDcb )) {
