@@ -41,7 +41,7 @@ typedef struct __AsyncInet
     VOID* Extension;
 } ASYNCINET, * pASYNCINET;
 
-pASYNCINET AsyncInetDownloadW(LPCWSTR lpszAgent,
+pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
     DWORD   dwAccessType,
     LPCWSTR lpszProxy,
     LPCWSTR lpszProxyBypass,

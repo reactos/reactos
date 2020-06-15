@@ -711,7 +711,7 @@ public:
                 return FALSE;
             }
 
-            AsyncInet = AsyncInetDownloadW(0, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, lpszLocation, TRUE, SnapshotDownloadCallback, DownloadParam);
+            AsyncInet = AsyncInetDownload(0, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, lpszLocation, TRUE, SnapshotDownloadCallback, DownloadParam);
             if (!AsyncInet)
             {
                 CloseHandle(DownloadParam->hFile);
