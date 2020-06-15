@@ -137,8 +137,12 @@ VOID CALLBACK AsyncInetStatusCallback(
         }
         break;
         case ERROR_INVALID_HANDLE:
-            // this is most likely not an error. when canceling, using closed/invalid handle may lead to this
-            break;
+            if (AsyncInet->bIsCancelled)
+            {
+                // this is most likely not an error. when canceling, using closed/invalid handle may lead to this
+                break;
+            }
+            // fall-down to handle error
         default:
             // something went wrong
             AsyncInetPerformCallback(AsyncInet, ASYNCINET_ERROR, 0, (LPARAM)(AsyncResult->dwError));
