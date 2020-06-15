@@ -686,6 +686,12 @@ public:
             ATL::CStringW SnapshotFolder = CAvailableApps::m_Strings.szAppsPath;
             PathAppendW(SnapshotFolder.GetBuffer(MAX_PATH), L"snapshots");
             SnapshotFolder.ReleaseBuffer();
+
+            if (!PathIsDirectoryW(SnapshotFolder.GetString()))
+            {
+                CreateDirectoryW(SnapshotFolder.GetString(), NULL);
+            }
+
             if (!GetTempFileNameW(SnapshotFolder.GetString(), L"img",
                 0, DownloadParam->DownloadFileName.GetBuffer(MAX_PATH)))
             {
