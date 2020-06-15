@@ -46,8 +46,8 @@ using namespace Gdiplus;
 
 
 // user-defined window message
-#define WM_DOWNLOAD_COMPLETE (WM_USER + 1) // notify download complete. wParam is error code, and lParam is a pointer to SNPSHT_DOWNLOAD_PARAM
-#define WM_RESIZE_CHILDREN   (WM_USER + 2) // ask parent window to resize children.
+#define WM_RAPPS_DOWNLOAD_COMPLETE (WM_USER + 1) // notify download complete. wParam is error code, and lParam is a pointer to SnapshotDownloadParam
+#define WM_RAPPS_RESIZE_CHILDREN   (WM_USER + 2) // ask parent window to resize children.
 
 enum SNPSHT_STATUS
 {
@@ -71,7 +71,7 @@ typedef struct __SnapshotDownloadParam
     HANDLE hFile;
     HWND hwndNotify;
     ATL::CStringW DownloadFileName;
-}SNPSHT_DOWNLOAD_PARAM;
+} SnapshotDownloadParam;
 
 INT GetSystemColorDepth()
 {
@@ -312,7 +312,7 @@ int SnapshotDownloadCallback(
     VOID* Extension
     )
 {
-    SNPSHT_DOWNLOAD_PARAM* DownloadParam = (SNPSHT_DOWNLOAD_PARAM*)Extension;
+    SnapshotDownloadParam* DownloadParam = (SnapshotDownloadParam*)Extension;
     switch (Event)
     {
     case ASYNCINET_DATA:
@@ -321,15 +321,15 @@ int SnapshotDownloadCallback(
         break;
     case ASYNCINET_COMPLETE:
         CloseHandle(DownloadParam->hFile);
-        SendMessage(DownloadParam->hwndNotify, WM_DOWNLOAD_COMPLETE, (WPARAM)ERROR_SUCCESS, (LPARAM)DownloadParam);
+        SendMessage(DownloadParam->hwndNotify, WM_RAPPS_DOWNLOAD_COMPLETE, (WPARAM)ERROR_SUCCESS, (LPARAM)DownloadParam);
         break;
     case ASYNCINET_CANCELLED:
         CloseHandle(DownloadParam->hFile);
-        SendMessage(DownloadParam->hwndNotify, WM_DOWNLOAD_COMPLETE, (WPARAM)ERROR_CANCELLED, (LPARAM)DownloadParam);
+        SendMessage(DownloadParam->hwndNotify, WM_RAPPS_DOWNLOAD_COMPLETE, (WPARAM)ERROR_CANCELLED, (LPARAM)DownloadParam);
         break;
     case ASYNCINET_ERROR:
         CloseHandle(DownloadParam->hFile);
-        SendMessage(DownloadParam->hwndNotify, WM_DOWNLOAD_COMPLETE, wParam, (LPARAM)DownloadParam);
+        SendMessage(DownloadParam->hwndNotify, WM_RAPPS_DOWNLOAD_COMPLETE, wParam, (LPARAM)DownloadParam);
         break;
     }
     return 0;
@@ -372,9 +372,9 @@ private:
             }
             break;
         }
-        case WM_DOWNLOAD_COMPLETE:
+        case WM_RAPPS_DOWNLOAD_COMPLETE:
         {
-            SNPSHT_DOWNLOAD_PARAM* DownloadParam = (SNPSHT_DOWNLOAD_PARAM*)lParam;
+            SnapshotDownloadParam* DownloadParam = (SnapshotDownloadParam*)lParam;
             AsyncInet = NULL;
             switch (wParam)
             {
@@ -383,7 +383,7 @@ private:
                 {
                     DisplayFile(DownloadParam->DownloadFileName);
                     // send a message to trigger resizing
-                    ::SendMessageW(::GetParent(m_hWnd), WM_RESIZE_CHILDREN, 0, 0);
+                    ::SendMessageW(::GetParent(m_hWnd), WM_RAPPS_RESIZE_CHILDREN, 0, 0);
                     InvalidateRect(0, 0);
                     TempImagePath = DownloadParam->DownloadFileName; // record tmp file path in order to delete it when cleanup
                 }
@@ -399,7 +399,7 @@ private:
             default:
                 DisplayFailed();
                 // send a message to trigger resizing
-                ::SendMessageW(::GetParent(m_hWnd), WM_RESIZE_CHILDREN, 0, 0);
+                ::SendMessageW(::GetParent(m_hWnd), WM_RAPPS_RESIZE_CHILDREN, 0, 0);
                 InvalidateRect(0, 0);
                 DeleteFileW(DownloadParam->DownloadFileName);
                 break;
@@ -677,7 +677,7 @@ public:
         {
             DisplayLoading();
 
-            SNPSHT_DOWNLOAD_PARAM* DownloadParam = new SNPSHT_DOWNLOAD_PARAM;
+            SnapshotDownloadParam* DownloadParam = new SnapshotDownloadParam;
             if (!DownloadParam) return FALSE;
 
             DownloadParam->hwndNotify = m_hWnd;
@@ -790,7 +790,7 @@ private:
             ResizeChildren(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             break;
         }
-        case WM_RESIZE_CHILDREN:
+        case WM_RAPPS_RESIZE_CHILDREN:
         {
             ResizeChildren();
             break;

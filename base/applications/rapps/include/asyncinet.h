@@ -39,7 +39,7 @@ typedef struct __AsyncInet
 
     ASYNCINET_CALLBACK Callback;
     VOID* Extension;
-}ASYNCINET, * pASYNCINET;
+} ASYNCINET, * pASYNCINET;
 
 pASYNCINET AsyncInetDownloadW(LPCWSTR lpszAgent,
     DWORD   dwAccessType,
