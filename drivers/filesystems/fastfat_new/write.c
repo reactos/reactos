@@ -1175,11 +1175,7 @@ Return Value:
             if (NonCachedIo && !PagingIo &&
                 (FileObject->SectionObjectPointer->DataSectionObject != NULL)) {
 
-#ifndef __REACTOS__
                 IO_STATUS_BLOCK IoStatus = {0};
-#else
-                IO_STATUS_BLOCK IoStatus = {{0}};
-#endif
 
                 //
                 //  We need the Fcb exclsuive to do the CcPurgeCache

@@ -916,11 +916,7 @@ Return Value:
 
     PLIST_ENTRY Links;
 
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
     ULONG ChangeCount = 0;
 
     DISK_GEOMETRY Geometry;
@@ -1907,11 +1903,7 @@ Return Value:
     BOOLEAN LabelFound;
 
     ULONG ChangeCount = 0;
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
 
     PAGED_CODE();
 
