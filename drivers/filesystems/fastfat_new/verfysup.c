@@ -709,11 +709,7 @@ Return Value:
     //  If we couldn't get pool, oh well....
     //
 
-#ifndef __REACTOS__
     Packet = ExAllocatePoolWithTag(NonPagedPoolNx, sizeof(CLEAN_AND_DIRTY_VOLUME_PACKET), ' taF');
-#else
-    Packet = ExAllocatePoolWithTag(NonPagedPool, sizeof(CLEAN_AND_DIRTY_VOLUME_PACKET), ' taF');
-#endif
 
     if ( Packet ) {
 
