@@ -172,41 +172,45 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
     INTERNET_STATUS_CALLBACK OldCallbackFunc;
 
     AsyncInet = (pASYNCINET)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ASYNCINET));
-    if (!AsyncInet)goto cleanup;
+    if (!AsyncInet)
+    {
+        OutputDebugStringA("At File: " __FILE__ " HeapAlloc returned 0");
+        return 0;
+    }
 
     AsyncInet->Callback = Callback;
     AsyncInet->Extension = Extension;
 
     AsyncInet->hInternet = InternetOpenW(lpszAgent, dwAccessType, lpszProxy, lpszProxyBypass, INTERNET_FLAG_ASYNC);
-    if (!AsyncInet->hInternet)goto cleanup;
 
-    OldCallbackFunc = InternetSetStatusCallbackW(AsyncInet->hInternet, AsyncInetStatusCallback);
-    if (OldCallbackFunc == INTERNET_INVALID_STATUS_CALLBACK)goto cleanup;
-
-    InetOpenUrlFlag |= INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_PASSIVE;
-    if (!bAllowCache)
+    if (AsyncInet->hInternet)
     {
-        InetOpenUrlFlag |= INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_PRAGMA_NOCACHE;
-    }
-    AsyncInet->hInetFile = InternetOpenUrlW(AsyncInet->hInternet, lpszUrl, 0, 0, InetOpenUrlFlag, (DWORD_PTR)AsyncInet);
-    if (!AsyncInet->hInetFile)
-    {
-        if (GetLastError() != ERROR_IO_PENDING)
+        OldCallbackFunc = InternetSetStatusCallbackW(AsyncInet->hInternet, AsyncInetStatusCallback);
+        if (OldCallbackFunc != INTERNET_INVALID_STATUS_CALLBACK)
         {
-            goto cleanup;
+            InetOpenUrlFlag |= INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_PASSIVE;
+            if (!bAllowCache)
+            {
+                InetOpenUrlFlag |= INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_PRAGMA_NOCACHE;
+            }
+
+            AsyncInet->hInetFile = InternetOpenUrlW(AsyncInet->hInternet, lpszUrl, 0, 0, InetOpenUrlFlag, (DWORD_PTR)AsyncInet);
+            if (AsyncInet->hInetFile)
+            {
+                // TODO: If I remember it correctly, sometimes the file is cache before
+                // thus may lead to InternetOpenUrlW return immediately with the handle.
+                // more investigation required. And if it's true, it should be handled correctly.
+            }
+            else
+            {
+                if (GetLastError() == ERROR_IO_PENDING)
+                {
+                    // everything fine
+                    bSuccess = TRUE;
+                }
+            }
         }
     }
-    else
-    {
-        // TODO: If I remember it correctly, sometimes the file is cache before
-        // thus may lead to InternetOpenUrlW return immediately with the handle.
-        // more investigation required. And if it's true, it should be handled correctly.
-    }
-
-    bSuccess = TRUE;
-
-
-cleanup:
 
     if (!bSuccess)
     {
