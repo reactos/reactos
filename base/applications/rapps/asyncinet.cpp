@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * FILE:        base/applications/rapps/asyncinet.cpp
+ * PURPOSE:     Async Internet operation using WinINet
+ * COPYRIGHT:   Copyright 2020 He Yang            (1163086205@qq.com)
+ */
+
+
 #include <Windows.h>
 #include <WinInet.h>
 #include <strsafe.h>
