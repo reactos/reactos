@@ -331,6 +331,9 @@ int SnapshotDownloadCallback(
         CloseHandle(DownloadParam->hFile);
         SendMessage(DownloadParam->hwndNotify, WM_RAPPS_DOWNLOAD_COMPLETE, wParam, (LPARAM)DownloadParam);
         break;
+    default:
+        ATLASSERT(FALSE);
+        break;
     }
     return 0;
 }
