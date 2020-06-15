@@ -11,6 +11,7 @@
 #include "rapps.h"
 #include "rosui.h"
 #include "crichedit.h"
+#include "asyncinet.h"
 
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
@@ -43,11 +44,16 @@ using namespace Gdiplus;
 // minimum width of richedit
 #define RICHEDIT_MIN_WIDTH 160
 
+
+// user-defined window message
+#define WM_DOWNLOAD_COMPLETE (WM_USER + 1) // notify download complete. wParam is error code, and lParam is a pointer to SNPSHT_DOWNLOAD_PARAM
+#define WM_RESIZE_CHILDREN   (WM_USER + 2) // ask parent window to resize children.
+
 enum SNPSHT_STATUS
 {
     SNPSHTPREV_EMPTY,      // show nothing
     SNPSHTPREV_LOADING,    // image is loading (most likely downloading)
-    SNPSHTPREV_FILE,       // display image from a file
+    SNPSHTPREV_IMAGE,       // display image from a file
     SNPSHTPREV_FAILED      // image can not be shown (download failure or wrong image)
 };
 
@@ -58,6 +64,14 @@ enum SNPSHT_STATUS
 
 
 #define PI 3.1415927
+
+typedef struct __SnapshotDownloadParam
+{
+    LONGLONG ID;
+    HANDLE hFile;
+    HWND hwndNotify;
+    ATL::CStringW DownloadFileName;
+}SNPSHT_DOWNLOAD_PARAM;
 
 INT GetSystemColorDepth()
 {
@@ -290,6 +304,38 @@ public:
     }
 };
 
+int SnapshotDownloadCallback(
+    pASYNCINET AsyncInet,
+    UINT iReason,
+    WPARAM wParam,
+    LPARAM lParam,
+    VOID* Extension
+    )
+{
+    SNPSHT_DOWNLOAD_PARAM* DownloadParam = (SNPSHT_DOWNLOAD_PARAM*)Extension;
+    switch (iReason)
+    {
+    case ASYNCINET_DATA:
+        DWORD BytesWritten;
+        WriteFile(DownloadParam->hFile, (LPCVOID)wParam, (DWORD)lParam, &BytesWritten, NULL);
+        break;
+    case ASYNCINET_COMPLETE:
+        CloseHandle(DownloadParam->hFile);
+        SendMessage(DownloadParam->hwndNotify, WM_DOWNLOAD_COMPLETE, (WPARAM)ERROR_SUCCESS, (LPARAM)DownloadParam);
+        break;
+    case ASYNCINET_CANCELLED:
+        CloseHandle(DownloadParam->hFile);
+        SendMessage(DownloadParam->hwndNotify, WM_DOWNLOAD_COMPLETE, (WPARAM)ERROR_CANCELLED, (LPARAM)DownloadParam);
+        delete DownloadParam;
+        break;
+    case ASYNCINET_ERROR:
+        CloseHandle(DownloadParam->hFile);
+        SendMessage(DownloadParam->hwndNotify, WM_DOWNLOAD_COMPLETE, wParam, (LPARAM)DownloadParam);
+        break;
+    }
+    return 0;
+}
+
 class CAppSnapshotPreview :
     public CWindowImpl<CAppSnapshotPreview>
 {
@@ -301,6 +347,9 @@ private:
     BOOL bLoadingTimerOn = FALSE;
     int LoadingAnimationFrame = 0;
     int BrokenImgSize = BROKENIMG_ICON_SIZE;
+    pASYNCINET AsyncInet = NULL;
+    LONGLONG ContentID = 0; // used to determine whether image has been switched when download complete. Increase by 1 each time the content of this window changed
+    ATL::CStringW TempImagePath; // currently displayed temp file
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
     {
@@ -322,6 +371,39 @@ private:
                     hBrokenImgIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_BROKEN_IMAGE), IMAGE_ICON, BrokenImgSize, BrokenImgSize, 0);
                 }
             }
+            break;
+        }
+        case WM_DOWNLOAD_COMPLETE:
+        {
+            SNPSHT_DOWNLOAD_PARAM* DownloadParam = (SNPSHT_DOWNLOAD_PARAM*)lParam;
+            AsyncInet = NULL;
+            switch (wParam)
+            {
+            case ERROR_SUCCESS:
+                if (ContentID == DownloadParam->ID)
+                {
+                    DisplayFile(DownloadParam->DownloadFileName);
+                    // send a message to trigger resizing
+                    ::SendMessageW(::GetParent(m_hWnd), WM_RESIZE_CHILDREN, 0, 0);
+                    TempImagePath = DownloadParam->DownloadFileName; // record tmp file path in order to delete it when cleanup
+                }
+                else
+                {
+                    // the picture downloaded is already outdated. delete it.
+                    DeleteFileW(DownloadParam->DownloadFileName);
+                }
+                break;
+            case ERROR_CANCELLED:
+                DeleteFileW(DownloadParam->DownloadFileName);
+                break;
+            default:
+                DisplayFailed();
+                DeleteFileW(DownloadParam->DownloadFileName);
+                break;
+            }
+            
+            
+            delete DownloadParam;
             break;
         }
         case WM_PAINT:
@@ -388,6 +470,31 @@ private:
         return FALSE;
     }
 
+    VOID DisplayLoading()
+    {
+        SetStatus(SNPSHTPREV_LOADING);
+        if (bLoadingTimerOn)
+        {
+            KillTimer(TIMER_LOADING_ANIMATION);
+        }
+        LoadingAnimationFrame = 0;
+        bLoadingTimerOn = TRUE;
+        SetTimer(TIMER_LOADING_ANIMATION, 1000 / LOADING_ANIMATION_FPS, 0);
+    }
+
+    BOOL DisplayFile(LPCWSTR lpszFileName)
+    {
+        PreviousDisplayCleanup();
+        SetStatus(SNPSHTPREV_IMAGE);
+        pImage = Bitmap::FromFile(lpszFileName, 0);
+        if (pImage->GetLastStatus() != Ok)
+        {
+            DisplayFailed();
+            return FALSE;
+        }
+        return TRUE;
+    }
+
     VOID SetStatus(SNPSHT_STATUS Status)
     {
         SnpshtPrevStauts = Status;
@@ -445,7 +552,7 @@ private:
         }
         break;
 
-        case SNPSHTPREV_FILE:
+        case SNPSHTPREV_IMAGE:
         {
             if (pImage)
             {
@@ -541,37 +648,79 @@ public:
             delete pImage;
             pImage = NULL;
         }
+        if (AsyncInet)
+        {
+            AsyncInetCancel(AsyncInet);
+            AsyncInet = NULL;
+        }
+        if (!TempImagePath.IsEmpty())
+        {
+            DeleteFileW(TempImagePath.GetString());
+            TempImagePath.Empty();
+        }
+        
     }
 
     VOID DisplayEmpty()
     {
+        InterlockedIncrement64(&ContentID);
         SetStatus(SNPSHTPREV_EMPTY);
         PreviousDisplayCleanup();
     }
 
-    VOID DisplayLoading()
+    BOOL DisplayImage(LPCWSTR lpszLocation)
     {
-        SetStatus(SNPSHTPREV_LOADING);
+        LONGLONG ID = InterlockedIncrement64(&ContentID);
         PreviousDisplayCleanup();
-        bLoadingTimerOn = TRUE;
-        SetTimer(TIMER_LOADING_ANIMATION, 1000 / LOADING_ANIMATION_FPS, 0);
-    }
 
-    BOOL DisplayFile(LPCWSTR lpszFileName)
-    {
-        SetStatus(SNPSHTPREV_FILE);
-        PreviousDisplayCleanup();
-        pImage = Bitmap::FromFile(lpszFileName, 0);
-        if (pImage->GetLastStatus() != Ok)
+        if (PathIsURLW(lpszLocation))
         {
-            DisplayFailed();
-            return FALSE;
+            DisplayLoading();
+
+            SNPSHT_DOWNLOAD_PARAM* DownloadParam = new SNPSHT_DOWNLOAD_PARAM;
+            if (!DownloadParam) return FALSE;
+
+            DownloadParam->hwndNotify = m_hWnd;
+            DownloadParam->ID = ID;
+            // generate a filename
+            ATL::CStringW SnapshotFolder = CAvailableApps::m_Strings.szAppsPath;
+            PathAppendW(SnapshotFolder.GetBuffer(MAX_PATH), L"snapshots");
+            SnapshotFolder.ReleaseBuffer();
+            if (!GetTempFileNameW(SnapshotFolder.GetString(), L"img",
+                0, DownloadParam->DownloadFileName.GetBuffer(MAX_PATH)))
+            {
+                DownloadParam->DownloadFileName.ReleaseBuffer();
+                delete DownloadParam;
+                return FALSE;
+            }
+            DownloadParam->hFile = CreateFileW(DownloadParam->DownloadFileName.GetBuffer(),
+                GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            DownloadParam->DownloadFileName.ReleaseBuffer();
+            if (INVALID_HANDLE_VALUE == DownloadParam->hFile)
+            {
+                delete DownloadParam;
+                return FALSE;
+            }
+
+            AsyncInet = AsyncInetDownloadW(0, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, lpszLocation, TRUE, SnapshotDownloadCallback, DownloadParam);
+            if (!AsyncInet)
+            {
+                CloseHandle(DownloadParam->hFile);
+                DeleteFileW(DownloadParam->DownloadFileName.GetBuffer());
+                delete DownloadParam;
+                return FALSE;
+            }
+            return TRUE;
         }
-        return TRUE;
+        else
+        {
+            return DisplayFile(lpszLocation);
+        }
     }
 
     VOID DisplayFailed()
     {
+        InterlockedIncrement64(&ContentID);
         SetStatus(SNPSHTPREV_FAILED);
         PreviousDisplayCleanup();
     }
@@ -584,7 +733,7 @@ public:
             return 0;
         case SNPSHTPREV_LOADING:
             return 200;
-        case SNPSHTPREV_FILE:
+        case SNPSHTPREV_IMAGE:
             if (pImage)
             {
                 // return the width needed to display image inside the window.
@@ -629,6 +778,11 @@ private:
         case WM_SIZE:
         {
             ResizeChildren(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            break;
+        }
+        case WM_RESIZE_CHILDREN:
+        {
+            ResizeChildren();
             break;
         }
         case WM_COMMAND:
@@ -777,10 +931,10 @@ public:
 
     BOOL ShowAvailableAppInfo(CAvailableApplicationInfo* Info)
     {
-        ATL::CStringW SnapshotFilename;
-        if (Info->RetrieveSnapshot(0, SnapshotFilename))
+        ATL::CStringW SnapshotLocation;
+        if (Info->RetrieveSnapshot(0, SnapshotLocation))
         {
-            SnpshtPrev->DisplayFile(SnapshotFilename);
+            SnpshtPrev->DisplayImage(SnapshotLocation);
         }
         else
         {
