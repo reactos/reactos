@@ -700,9 +700,10 @@ public:
                 DisplayFailed();
                 return FALSE;
             }
-            DownloadParam->hFile = CreateFileW(DownloadParam->DownloadFileName.GetBuffer(),
-                GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
             DownloadParam->DownloadFileName.ReleaseBuffer();
+
+            DownloadParam->hFile = CreateFileW(DownloadParam->DownloadFileName.GetString(),
+                GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
             if (INVALID_HANDLE_VALUE == DownloadParam->hFile)
             {
                 delete DownloadParam;
