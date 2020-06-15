@@ -306,14 +306,14 @@ public:
 
 int SnapshotDownloadCallback(
     pASYNCINET AsyncInet,
-    UINT iReason,
+    ASYNC_EVENT Event,
     WPARAM wParam,
     LPARAM lParam,
     VOID* Extension
     )
 {
     SNPSHT_DOWNLOAD_PARAM* DownloadParam = (SNPSHT_DOWNLOAD_PARAM*)Extension;
-    switch (iReason)
+    switch (Event)
     {
     case ASYNCINET_DATA:
         DWORD BytesWritten;
