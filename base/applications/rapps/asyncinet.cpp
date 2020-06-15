@@ -13,6 +13,19 @@
 #include "asyncinet.h"
 
 
+int AsyncInetPerformCallback(pASYNCINET AsyncInet,
+    ASYNC_EVENT Event,
+    WPARAM wParam,
+    LPARAM lParam
+    )
+{
+    if (AsyncInet && AsyncInet->Callback)
+    {
+        return AsyncInet->Callback(AsyncInet, Event, wParam, lParam, AsyncInet->Extension);
+    }
+    return 0;
+}
+
 VOID CALLBACK AsyncInetStatusCallback(
     HINTERNET hInternet,
     DWORD_PTR dwContext,
@@ -34,10 +47,7 @@ VOID CALLBACK AsyncInetStatusCallback(
     {
         if (AsyncInet->bIsCancelled)
         {
-            if (AsyncInet->Callback)
-            {
-                AsyncInet->Callback(AsyncInet, ASYNCINET_CANCELLED, 0, 0, AsyncInet->Extension);
-            }
+            AsyncInetPerformCallback(AsyncInet, ASYNCINET_CANCELLED, 0, 0);
         }
         // handle now closed. free the memory.
         HeapFree(GetProcessHeap(), 0, AsyncInet);
@@ -62,10 +72,7 @@ VOID CALLBACK AsyncInetStatusCallback(
             }
             else // asynchronous InternetReadFile complete
             {
-                if (AsyncInet->Callback)
-                {
-                    AsyncInet->Callback(AsyncInet, ASYNCINET_DATA, (WPARAM)(AsyncInet->ReadBuffer), (LPARAM)(AsyncInet->BytesRead), AsyncInet->Extension);
-                }
+                AsyncInetPerformCallback(AsyncInet, ASYNCINET_DATA, (WPARAM)(AsyncInet->ReadBuffer), (LPARAM)(AsyncInet->BytesRead));
             }
 
             while (1)
@@ -79,34 +86,28 @@ VOID CALLBACK AsyncInetStatusCallback(
                     if (AsyncInet->BytesRead == 0)
                     {
                         // all read.
-                        if (AsyncInet->Callback)
+                        AsyncInetPerformCallback(AsyncInet, ASYNCINET_COMPLETE, 0, 0);
+
+                        // clean up, close handles.
+
+                        // AsyncInet may got freed while handling INTERNET_STATUS_HANDLE_CLOSING.
+                        // so store the handle first, then close them
+                        HINTERNET hInetFile = AsyncInet->hInetFile;
+                        HINTERNET hInternet = AsyncInet->hInternet;
+                        if (hInetFile)
                         {
-                            AsyncInet->Callback(AsyncInet, ASYNCINET_COMPLETE, 0, 0, AsyncInet->Extension);
-
-                            // clean up, close handles.
-
-                            // AsyncInet may got freed while handling INTERNET_STATUS_HANDLE_CLOSING.
-                            // so store the handle first, then close them
-                            HINTERNET hInetFile = AsyncInet->hInetFile;
-                            HINTERNET hInternet = AsyncInet->hInternet;
-                            if (hInetFile)
-                            {
-                                InternetCloseHandle(hInetFile);
-                            }
-                            if (hInternet)
-                            {
-                                InternetCloseHandle(hInternet);
-                            }
-                            break;
+                            InternetCloseHandle(hInetFile);
                         }
+                        if (hInternet)
+                        {
+                            InternetCloseHandle(hInternet);
+                        }
+                        break;
                     }
                     else
                     {
                         // read completed immediately.
-                        if (AsyncInet->Callback)
-                        {
-                            AsyncInet->Callback(AsyncInet, ASYNCINET_DATA, (WPARAM)(AsyncInet->ReadBuffer), (LPARAM)(AsyncInet->BytesRead), AsyncInet->Extension);
-                        }
+                        AsyncInetPerformCallback(AsyncInet, ASYNCINET_DATA, (WPARAM)(AsyncInet->ReadBuffer), (LPARAM)(AsyncInet->BytesRead));
                     }
                 }
                 else
@@ -140,10 +141,7 @@ VOID CALLBACK AsyncInetStatusCallback(
             break;
         default:
             // something went wrong
-            if (AsyncInet->Callback)
-            {
-                AsyncInet->Callback(AsyncInet, ASYNCINET_ERROR, 0, (LPARAM)(AsyncResult->dwError), AsyncInet->Extension);
-            }
+            AsyncInetPerformCallback(AsyncInet, ASYNCINET_ERROR, 0, (LPARAM)(AsyncResult->dwError));
             break;
         }
         break;
