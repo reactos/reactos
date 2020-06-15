@@ -1057,11 +1057,7 @@ Return Value:
         //  that this will be only a single page.
         //
 
-#ifndef __REACTOS__
         if (MmGetSystemAddressForMdlSafe( Mdl, NormalPagePriority | MdlMappingNoExecute ) == NULL) {
-#else
-        if (MmGetSystemAddressForMdlSafe( Mdl, NormalPagePriority ) == NULL) {
-#endif
 
             FatRaiseStatus( IrpContext, STATUS_INSUFFICIENT_RESOURCES );
         }
@@ -1395,11 +1391,7 @@ Return Value:
     //  Allocate the local buffer
     //
 
-#ifndef __REACTOS__
     DiskBuffer = FsRtlAllocatePoolWithTag( NonPagedPoolNxCacheAligned,
-#else
-    DiskBuffer = FsRtlAllocatePoolWithTag( NonPagedPoolCacheAligned,
-#endif
                                            (ULONG) ROUND_TO_PAGES( SectorSize ),
                                            TAG_IO_BUFFER );
 
@@ -2775,11 +2767,7 @@ Return Value:
         //  If we can't get pool, oh well....
         //
 
-#ifndef __REACTOS__
         Packet = ExAllocatePoolWithTag(NonPagedPoolNx, sizeof(CLEAN_AND_DIRTY_VOLUME_PACKET), ' taF');
-#else
-        Packet = ExAllocatePoolWithTag(NonPagedPool, sizeof(CLEAN_AND_DIRTY_VOLUME_PACKET), ' taF');
-#endif
 
         if ( Packet ) {
 
@@ -3407,11 +3395,7 @@ Return Value:
     
     } else {
 
-#ifndef __REACTOS__
         PVOID Address = MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority | MdlMappingNoExecute );
-#else
-        PVOID Address = MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
-#endif
 
         if (Address == NULL) {
 
@@ -3476,11 +3460,7 @@ Return Value:
 
         UserBuffer = FatMapUserBuffer( IrpContext, Irp );
 
-#ifndef __REACTOS__
         Irp->AssociatedIrp.SystemBuffer = FsRtlAllocatePoolWithQuotaTag( NonPagedPoolNx,
-#else
-        Irp->AssociatedIrp.SystemBuffer = FsRtlAllocatePoolWithQuotaTag( NonPagedPool,
-#endif
                                                                          BufferLength,
                                                                          TAG_IO_USER_BUFFER );
 

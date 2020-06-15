@@ -556,11 +556,7 @@ Return Value:
         //  Initialize the performance counters.
         //
 
-#ifndef __REACTOS__
         Vcb->Statistics = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-        Vcb->Statistics = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                     sizeof(FILE_SYSTEM_STATISTICS) * FatData.NumberProcessors,
                                                     TAG_VCB_STATS );
         UnwindStatistics = Vcb->Statistics;
@@ -579,11 +575,7 @@ Return Value:
         //  of the storage stack on demand.
         //
 
-#ifndef __REACTOS__
         Vcb->SwapVpb = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-        Vcb->SwapVpb = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                  sizeof( VPB ),
                                                  TAG_VPB );
 
@@ -1047,11 +1039,7 @@ Return Value:
         //  have to continually reference through the Vcb
         //
 
-#ifndef __REACTOS__
         UnwindStorage[0] = Dcb = Vcb->RootDcb = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-        UnwindStorage[0] = Dcb = Vcb->RootDcb = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                                           sizeof(DCB),
                                                                           TAG_FCB );
 
@@ -1144,11 +1132,7 @@ Return Value:
         //  directory is a fixed size so we can set it everything up now.
         //
 
-#ifndef __REACTOS__
         FsRtlInitializeLargeMcb( &Dcb->Mcb, NonPagedPoolNx );
-#else
-        FsRtlInitializeLargeMcb( &Dcb->Mcb, NonPagedPool );
-#endif
         UnwindMcb = &Dcb->Mcb;
 
         if (FatIsFat32(Vcb)) {
@@ -1333,13 +1317,8 @@ Return Value:
 
         if (IsPagingFile) {
 
-#ifndef __REACTOS__
             PoolType = NonPagedPoolNx;
             Fcb = UnwindStorage[0] = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-            PoolType = NonPagedPool;
-            Fcb = UnwindStorage[0] = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                                sizeof(FCB),
                                                                TAG_FCB );
         } else {

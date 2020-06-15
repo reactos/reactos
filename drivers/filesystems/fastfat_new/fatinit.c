@@ -264,11 +264,7 @@ Return Value:
     //  Allocate the zero page
     //
 
-#ifndef __REACTOS__
     FatData.ZeroPage = ExAllocatePoolWithTag( NonPagedPoolNx, PAGE_SIZE, 'ZtaF' );
-#else
-    FatData.ZeroPage = ExAllocatePoolWithTag( NonPagedPool, PAGE_SIZE, 'ZtaF' );
-#endif
     if (FatData.ZeroPage == NULL) {
         IoDeleteDevice (FatDiskFileSystemDeviceObject);
         IoDeleteDevice (FatCdromFileSystemDeviceObject);        
@@ -388,11 +384,7 @@ Return Value:
     ExInitializeNPagedLookasideList( &FatIrpContextLookasideList,
                                      NULL,
                                      NULL,
-#ifndef __REACTOS__
                                      POOL_NX_ALLOCATION | POOL_RAISE_IF_ALLOCATION_FAILURE,
-#else
-                                     POOL_RAISE_IF_ALLOCATION_FAILURE,
-#endif
                                      sizeof(IRP_CONTEXT),
                                      TAG_IRP_CONTEXT,
                                      MaxDepth );
@@ -400,11 +392,7 @@ Return Value:
     ExInitializeNPagedLookasideList( &FatNonPagedFcbLookasideList,
                                      NULL,
                                      NULL,
-#ifndef __REACTOS__
                                      POOL_NX_ALLOCATION | POOL_RAISE_IF_ALLOCATION_FAILURE,
-#else
-                                     POOL_RAISE_IF_ALLOCATION_FAILURE,
-#endif
                                      sizeof(NON_PAGED_FCB),
                                      TAG_FCB_NONPAGED,
                                      MaxDepth );
@@ -412,11 +400,7 @@ Return Value:
     ExInitializeNPagedLookasideList( &FatEResourceLookasideList,
                                      NULL,
                                      NULL,
-#ifndef __REACTOS__
                                      POOL_NX_ALLOCATION | POOL_RAISE_IF_ALLOCATION_FAILURE,
-#else
-                                     POOL_RAISE_IF_ALLOCATION_FAILURE,
-#endif
                                      sizeof(ERESOURCE),
                                      TAG_ERESOURCE,
                                      MaxDepth );

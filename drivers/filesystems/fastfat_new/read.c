@@ -685,11 +685,7 @@ Return Value:
             if (!Wait) {
 
                 IrpContext->FatIoContext =
-#ifndef __REACTOS__
                     FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-                    FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                               sizeof(FAT_IO_CONTEXT),
                                               TAG_FAT_IO_CONTEXT );
 
