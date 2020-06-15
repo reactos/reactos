@@ -7,10 +7,10 @@
  */
 
 
-#include <Windows.h>
-#include <WinInet.h>
+#include <windows.h>
+#include <wininet.h>
 #include <strsafe.h>
-#include "AsyncINet.h"
+#include "asyncinet.h"
 
 
 VOID CALLBACK AsyncInetStatusCallback(

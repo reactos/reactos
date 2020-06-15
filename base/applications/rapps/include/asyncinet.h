@@ -1,8 +1,8 @@
 #ifndef ASYNC_INET
 #define ASYNC_INET
 
-#include <Windows.h>
-#include <WinInet.h>
+#include <windows.h>
+#include <wininet.h>
 
 #define ASYNCINET_DATA       1 // wParam is the Data retrieved from the internet, lParam is the length of Data
 #define ASYNCINET_COMPLETE        2 // wParam and lParam is not used
