@@ -599,18 +599,18 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
         return;
     }
 
+    const UINT uInitialStringLength = lstrlen(pszCurrentValue);
     pszCurrentValue = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, dwCurrentValueSize);
     if (!pszCurrentValue)
     {
         TRACE("HeapAlloc failed to allocate %d bytes", dwCurrentValueSize);
         return;
     }
-    memset(pszCurrentValue, '\0', sizeof(pszCurrentValue));
+    memset(pszCurrentValue, '\0', uInitialStringLength);
 
     lRet = RegQueryValueExW(hKey, L"BootExecute", NULL, &dwType, (LPBYTE)pszCurrentValue, &dwCurrentValueSize);
 
     cchLatest = dwCurrentValueSize - wcharSize + SHELL_ARG_LENGTH * wcharSize;
-    const UINT uInitialStringLength = lstrlen(pszCurrentValue);
 
     // check if we haven't set the key already
     if (NULL == wcsstr(pszCurrentValue, pszNativeShellArg))
@@ -626,7 +626,7 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
         TRACE("HeapAlloc failed to allocate %d bytes\n", cchLatest);
         goto Cleanup;
     }
-    memset(pszFinalValue, '\0', sizeof(pszFinalValue));
+    memset(pszFinalValue, '\0', (cchLatest / wcharSize));
 
     wcscpy(&pszFinalValue[0], &pszCurrentValue[0]);
     lstrcat((LPWSTR)pszFinalValue, pszNativeShellArg);
