@@ -26,6 +26,74 @@ int AsyncInetPerformCallback(pASYNCINET AsyncInet,
     return 0;
 }
 
+VOID AsyncInetReadFileLoop(pASYNCINET AsyncInet)
+{
+    if ((!AsyncInet) || (!AsyncInet->hInetFile))
+    {
+        return;
+    }
+
+    while (1)
+    {
+        BOOL bRet = InternetReadFile(AsyncInet->hInetFile,
+            AsyncInet->ReadBuffer,
+            _countof(AsyncInet->ReadBuffer),
+            &(AsyncInet->BytesRead));
+        if (bRet)
+        {
+            if (AsyncInet->BytesRead == 0)
+            {
+                // all read.
+                AsyncInetPerformCallback(AsyncInet, ASYNCINET_COMPLETE, 0, 0);
+
+                // clean up, close handles.
+
+                // AsyncInet may got freed while handling INTERNET_STATUS_HANDLE_CLOSING.
+                // so store the handle first, then close them
+                HINTERNET hInetFile = AsyncInet->hInetFile;
+                HINTERNET hInternet = AsyncInet->hInternet;
+                if (hInetFile)
+                {
+                    InternetCloseHandle(hInetFile);
+                }
+                if (hInternet)
+                {
+                    InternetCloseHandle(hInternet);
+                }
+                break;
+            }
+            else
+            {
+                // read completed immediately.
+                AsyncInetPerformCallback(AsyncInet, ASYNCINET_DATA, (WPARAM)(AsyncInet->ReadBuffer), (LPARAM)(AsyncInet->BytesRead));
+            }
+        }
+        else
+        {
+            DWORD dwError;
+            if ((dwError = GetLastError()) == ERROR_IO_PENDING)
+            {
+                // performing asynchronous IO, everything OK.
+                break;
+            }
+            else
+            {
+                //something went wrong
+                if (dwError == ERROR_INVALID_HANDLE)
+                {
+                    if (AsyncInet->bIsCancelled)
+                    {
+                        // That's most likely not an error. handle got closed when canceling may lead to this
+                        break;
+                    }
+                }
+                AsyncInetPerformCallback(AsyncInet, ASYNCINET_ERROR, 0, (LPARAM)dwError);
+                break;
+            }
+        }
+    }
+}
+
 VOID CALLBACK AsyncInetStatusCallback(
     HINTERNET hInternet,
     DWORD_PTR dwContext,
@@ -75,65 +143,7 @@ VOID CALLBACK AsyncInetStatusCallback(
                 AsyncInetPerformCallback(AsyncInet, ASYNCINET_DATA, (WPARAM)(AsyncInet->ReadBuffer), (LPARAM)(AsyncInet->BytesRead));
             }
 
-            while (1)
-            {
-                BOOL bRet = InternetReadFile(AsyncInet->hInetFile,
-                    AsyncInet->ReadBuffer,
-                    _countof(AsyncInet->ReadBuffer),
-                    &(AsyncInet->BytesRead));
-                if (bRet)
-                {
-                    if (AsyncInet->BytesRead == 0)
-                    {
-                        // all read.
-                        AsyncInetPerformCallback(AsyncInet, ASYNCINET_COMPLETE, 0, 0);
-
-                        // clean up, close handles.
-
-                        // AsyncInet may got freed while handling INTERNET_STATUS_HANDLE_CLOSING.
-                        // so store the handle first, then close them
-                        HINTERNET hInetFile = AsyncInet->hInetFile;
-                        HINTERNET hInternet = AsyncInet->hInternet;
-                        if (hInetFile)
-                        {
-                            InternetCloseHandle(hInetFile);
-                        }
-                        if (hInternet)
-                        {
-                            InternetCloseHandle(hInternet);
-                        }
-                        break;
-                    }
-                    else
-                    {
-                        // read completed immediately.
-                        AsyncInetPerformCallback(AsyncInet, ASYNCINET_DATA, (WPARAM)(AsyncInet->ReadBuffer), (LPARAM)(AsyncInet->BytesRead));
-                    }
-                }
-                else
-                {
-                    DWORD dwError;
-                    if ((dwError = GetLastError()) == ERROR_IO_PENDING)
-                    {
-                        // performing asynchronous IO, everything OK.
-                        break;
-                    }
-                    else
-                    {
-                        //something went wrong
-                        if (dwError == ERROR_INVALID_HANDLE)
-                        {
-                            // That's most likely not an error. handle got closed when canceling may lead to this
-                            break;
-                        }
-                        if (AsyncInet->Callback)
-                        {
-                            AsyncInet->Callback(AsyncInet, ASYNCINET_ERROR, 0, (LPARAM)dwError, AsyncInet->Extension);
-                        }
-                        break;
-                    }
-                }
-            }
+            AsyncInetReadFileLoop(AsyncInet);
         }
         break;
         case ERROR_INVALID_HANDLE:
@@ -197,9 +207,9 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
             AsyncInet->hInetFile = InternetOpenUrlW(AsyncInet->hInternet, lpszUrl, 0, 0, InetOpenUrlFlag, (DWORD_PTR)AsyncInet);
             if (AsyncInet->hInetFile)
             {
-                // TODO: If I remember it correctly, sometimes the file is cache before
-                // thus may lead to InternetOpenUrlW return immediately with the handle.
-                // more investigation required. And if it's true, it should be handled correctly.
+                // operate complete synchronously
+                bSuccess = TRUE;
+                AsyncInetReadFileLoop(AsyncInet);
             }
             else
             {
