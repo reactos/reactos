@@ -1196,7 +1196,7 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
             EnablePrivilege(L"SeShutdownPrivilege", FALSE);
             break;
         }
-        case 0x05: /* Reboot to NT Native Mode */
+        case 0x08: /* Reboot to NT Native Mode */
         {
             EnablePrivilege(L"SeShutdownPrivilege", TRUE);
             ExitWindowsEx(EWX_REBOOT, 0);
