@@ -1,7 +1,7 @@
 /*
 	index: frame index data structure and functions
 
-	copyright 2007-2015 by the mpg123 project
+	copyright 2007-2020 by the mpg123 project
 	-= free software under the terms of the LGPL 2.1 =-
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Thomas Orgis
@@ -74,12 +74,8 @@ int fi_resize(struct frame_index *fi, size_t newsize)
 		fi->next = fi_next(fi);
 		debug2("new index of size %lu at %p", (unsigned long)fi->size, (void*)fi->data);
 		return 0;
-	}
-	else
-	{
-		error("failed to resize index!");
+	} else
 		return -1;
-	}
 }
 
 void fi_add(struct frame_index *fi, off_t pos)

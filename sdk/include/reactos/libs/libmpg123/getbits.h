@@ -13,29 +13,21 @@
 #define _MPG123_GETBITS_H_
 
 #include "mpg123lib_intern.h"
+#include "debug.h"
 
 #define backbits(fr,nob) ((void)( \
+  fr->bits_avail  += nob, \
   fr->bitindex    -= nob, \
   fr->wordpointer += (fr->bitindex>>3), \
   fr->bitindex    &= 0x7 ))
 
 #define getbitoffset(fr) ((-fr->bitindex)&0x7)
-#define getbyte(fr)      (*fr->wordpointer++)
-
-/* There is something wrong with that macro... the function below works also for the layer1 test case. */
-#define macro_getbits(fr, nob) ( \
-  fr->ultmp = fr->wordpointer[0],\
-  fr->ultmp <<= 8, \
-  fr->ultmp |= fr->wordpointer[1], \
-  fr->ultmp <<= 8, \
-  fr->ultmp |= fr->wordpointer[2], \
-  fr->ultmp <<= fr->bitindex, \
-  fr->ultmp &= 0xffffff, \
-  fr->bitindex += nob, \
-  fr->ultmp >>= (24-nob), \
-  fr->wordpointer += (fr->bitindex>>3), \
-  fr->bitindex &= 7, \
-  fr->ultmp)
+/* Precomputing the bytes to be read is error-prone, and some over-read
+   is even expected for Huffman. Just play safe and return zeros in case
+   of overflow. This assumes you made bitindex zero already! */
+#define getbyte(fr) ( (fr)->bits_avail-=8, (fr)->bits_avail >= 0 \
+  ? *((fr)->wordpointer++) \
+  : 0 )
 
 static unsigned int getbits(mpg123_handle *fr, int number_of_bits)
 {
@@ -44,11 +36,16 @@ static unsigned int getbits(mpg123_handle *fr, int number_of_bits)
 #ifdef DEBUG_GETBITS
 fprintf(stderr,"g%d",number_of_bits);
 #endif
+  fr->bits_avail -= number_of_bits;
   /* Safety catch until we got the nasty code fully figured out. */
   /* No, that catch stays here, even if we think we got it figured out! */
-  if( (long)(fr->wordpointer-fr->bsbuf)*8
-      + fr->bitindex+number_of_bits > (long)fr->framesize*8 )
+  if(fr->bits_avail < 0)
+  {
+    if(NOQUIET)
+      error2( "Tried to read %i bits with %li available."
+      ,  number_of_bits, fr->bits_avail );
     return 0;
+  }
 /*  This is actually slow: if(!number_of_bits)
     return 0; */
 
@@ -85,7 +82,7 @@ fprintf(stderr,":%lx\n",rval);
 #define skipbits(fr, nob) fr->ultmp = ( \
   fr->ultmp = fr->wordpointer[0], fr->ultmp <<= 8, fr->ultmp |= fr->wordpointer[1], \
   fr->ultmp <<= 8, fr->ultmp |= fr->wordpointer[2], fr->ultmp <<= fr->bitindex, \
-  fr->ultmp &= 0xffffff, fr->bitindex += nob, \
+  fr->ultmp &= 0xffffff, fr->bitindex += nob, fr->bits_avail -= nob, \
   fr->ultmp >>= (24-nob), fr->wordpointer += (fr->bitindex>>3), \
   fr->bitindex &= 7 )
 
@@ -93,11 +90,13 @@ fprintf(stderr,":%lx\n",rval);
   fr->ultmp = (unsigned char) (fr->wordpointer[0] << fr->bitindex), \
   fr->ultmp |= ((unsigned long) fr->wordpointer[1]<<fr->bitindex)>>8, \
   fr->ultmp <<= nob, fr->ultmp >>= 8, \
-  fr->bitindex += nob, fr->wordpointer += (fr->bitindex>>3), \
+  fr->bitindex += nob, fr->bits_avail -= nob, \
+  fr->wordpointer += (fr->bitindex>>3), \
   fr->bitindex &= 7, fr->ultmp )
 
 #define get1bit(fr) ( \
-  fr->uctmp = *fr->wordpointer << fr->bitindex, fr->bitindex++, \
+  fr->uctmp = *fr->wordpointer << fr->bitindex, \
+  ++fr->bitindex, --fr->bits_avail, \
   fr->wordpointer += (fr->bitindex>>3), fr->bitindex &= 7, fr->uctmp>>7 )
 
 
