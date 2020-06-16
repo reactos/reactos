@@ -15,7 +15,7 @@
 #define WLX_SHUTDOWN_STATE_LOGOFF       0x01
 #define WLX_SHUTDOWN_STATE_POWER_OFF    0x02
 #define WLX_SHUTDOWN_STATE_REBOOT       0x04
-#define WLX_SHUTDOWN_STATE_NT_MODE      0x05
+#define WLX_SHUTDOWN_STATE_NT_MODE      0x08
 // 0x08
 #define WLX_SHUTDOWN_STATE_SLEEP        0x10
 // 0x20
@@ -578,9 +578,8 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
     DWORD FinalRegValueLength = 0;
     WCHAR* InitialRegValue = NULL;
     WCHAR* FinalRegValue = NULL;
-    const UINT CharSize = sizeof(WCHAR);
-#define SHELL_ARG_LENGTH 20
-    WCHAR NativeShellArguments[SHELL_ARG_LENGTH] = L"native Hello World!";
+    WCHAR NativeShellArguments[] = L"native Hello World!";
+    const UINT ShellArgsLength = lstrlen(NativeShellArguments);
 
     ReturnCode = RegCreateKeyExW(
         HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager", 0, NULL, REG_OPTION_NON_VOLATILE,
@@ -600,13 +599,13 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
         return;
     }
 
-    const UINT InitialRegValueLength = InitialRegValueSize / CharSize;
+    const UINT InitialRegValueLength = InitialRegValueSize / sizeof(WCHAR);
 
     /* BootExecute is empty (there should be at least autochk in there) - add our string and get out */
     if (InitialRegValueSize == 0)
     {
-        FinalRegValueSize = SHELL_ARG_LENGTH * CharSize + CharSize;
-        FinalRegValueLength = FinalRegValueSize / CharSize;
+        FinalRegValueSize = ShellArgsLength * sizeof(WCHAR) + sizeof(WCHAR);
+        FinalRegValueLength = FinalRegValueSize / sizeof(WCHAR);
         FinalRegValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, FinalRegValueSize);
         if (!FinalRegValue)
         {
@@ -614,8 +613,8 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
             goto Cleanup;
         }
 
-        memset(FinalRegValue, '\0', (FinalRegValueSize / CharSize));
-        memcpy(FinalRegValue, NativeShellArguments, SHELL_ARG_LENGTH * CharSize);
+        memset(FinalRegValue, '\0', (FinalRegValueSize / sizeof(WCHAR)));
+        memcpy(FinalRegValue, NativeShellArguments, ShellArgsLength * sizeof(WCHAR));
         goto Cleanup;
     }
 
@@ -629,12 +628,12 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
 
     ReturnCode = RegQueryValueExW(HiveKey, L"BootExecute", NULL, &RegValueType, (LPBYTE)InitialRegValue, &InitialRegValueSize);
 
-    FinalRegValueSize = InitialRegValueSize - CharSize + SHELL_ARG_LENGTH * CharSize + CharSize;
+    FinalRegValueSize = InitialRegValueSize - sizeof(WCHAR) + ShellArgsLength * sizeof(WCHAR) + sizeof(WCHAR);
 
     /* check if we haven't set the key already */
     WCHAR* StringIt = InitialRegValue;
     UINT CharCount = 0;
-    while (CharCount < (InitialRegValueSize / CharSize))
+    while (CharCount < (InitialRegValueSize / sizeof(WCHAR)))
     {
         if (wcsstr(StringIt, NativeShellArguments) != NULL)
         {
@@ -646,17 +645,17 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
         CharCount += CurrentStringLength != 0 ? CurrentStringLength : 1;
     }
 
-    FinalRegValueLength = FinalRegValueSize / CharSize;
+    FinalRegValueLength = FinalRegValueSize / sizeof(WCHAR);
     FinalRegValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, FinalRegValueSize);
     if (!FinalRegValue)
     {
         TRACE("HeapAlloc failed to allocate %d bytes\n", FinalRegValueSize);
         goto Cleanup;
     }
-    memset(FinalRegValue, '\0', (FinalRegValueSize / CharSize));
+    memset(FinalRegValue, '\0', (FinalRegValueSize / sizeof(WCHAR)));
 
     memcpy(FinalRegValue, InitialRegValue, InitialRegValueSize);
-    memcpy((FinalRegValue + (InitialRegValueLength - 1)), NativeShellArguments, SHELL_ARG_LENGTH * CharSize);
+    memcpy((FinalRegValue + (InitialRegValueLength - 1)), NativeShellArguments, ShellArgsLength * sizeof(WCHAR));
 
     /* MULTI_SZ uses null terminators as string delimiters */
     *(FinalRegValue + FinalRegValueLength) = '\0';
@@ -671,7 +670,6 @@ Cleanup:
         HeapFree(GetProcessHeap(), 0, InitialRegValue);
     if (FinalRegValue != NULL)
         HeapFree(GetProcessHeap(), 0, FinalRegValue);
-#undef SHELL_ARG_LENGTH
 }
 
 /*
