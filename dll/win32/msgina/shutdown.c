@@ -645,7 +645,6 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
         CharCount += CurrentStringLength != 0 ? CurrentStringLength : 1;
     }
 
-    FinalRegValueLength = FinalRegValueSize / sizeof(WCHAR);
     FinalRegValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, FinalRegValueSize);
     if (!FinalRegValue)
     {
