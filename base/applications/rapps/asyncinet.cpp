@@ -147,6 +147,7 @@ VOID CALLBACK AsyncInetStatusCallback(
         }
         break;
         case ERROR_INVALID_HANDLE:
+        case ERROR_INTERNET_OPERATION_CANCELLED:
             if (AsyncInet->bIsCancelled)
             {
                 // this is most likely not an error. when canceling, using closed/invalid handle may lead to this

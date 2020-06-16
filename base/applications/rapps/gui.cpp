@@ -486,6 +486,13 @@ private:
         SetTimer(TIMER_LOADING_ANIMATION, 1000 / LOADING_ANIMATION_FPS, 0);
     }
 
+    VOID DisplayFailed()
+    {
+        InterlockedIncrement64(&ContentID);
+        SetStatus(SNPSHTPREV_FAILED);
+        PreviousDisplayCleanup();
+    }
+
     BOOL DisplayFile(LPCWSTR lpszFileName)
     {
         PreviousDisplayCleanup();
@@ -729,13 +736,6 @@ public:
         {
             return DisplayFile(lpszLocation);
         }
-    }
-
-    VOID DisplayFailed()
-    {
-        InterlockedIncrement64(&ContentID);
-        SetStatus(SNPSHTPREV_FAILED);
-        PreviousDisplayCleanup();
     }
 
     int GetRequestedWidth(int Height) // calculate requested window width by given height
