@@ -185,7 +185,7 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
     AsyncInet = (pASYNCINET)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ASYNCINET));
     if (!AsyncInet)
     {
-        OutputDebugStringA("At File: " __FILE__ " Function: " __FUNCTION__ " HeapAlloc returned 0\n");
+        OutputDebugStringA("At File: " __FILE__ " HeapAlloc returned 0\n");
         return 0;
     }
 
