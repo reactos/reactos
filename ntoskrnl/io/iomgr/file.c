@@ -1262,9 +1262,9 @@ IopParseDevice(IN PVOID ParseObject,
                 FileBasicInfo = ExAllocatePoolWithTag(NonPagedPool,
                                                       sizeof(*FileBasicInfo),
                                                       TAG_IO);
-                RtlZeroMemory(FileBasicInfo, sizeof(*FileBasicInfo));
                 if (FileBasicInfo)
                 {
+                    RtlZeroMemory(FileBasicInfo, sizeof(*FileBasicInfo));
                     /* Do the query */
                     Status = IoQueryFileInformation(FileObject,
                                                     FileBasicInformation,
