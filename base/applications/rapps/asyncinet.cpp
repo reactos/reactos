@@ -79,7 +79,7 @@ VOID AsyncInetReadFileLoop(pASYNCINET AsyncInet)
             else
             {
                 //something went wrong
-                if (dwError == ERROR_INVALID_HANDLE)
+                if (dwError == ERROR_INVALID_HANDLE || dwError == ERROR_INTERNET_OPERATION_CANCELLED)
                 {
                     if (AsyncInet->bIsCancelled)
                     {
