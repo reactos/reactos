@@ -575,7 +575,6 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
     DWORD RegValueType = 0;
     DWORD InitialRegValueSize = 0;
     DWORD FinalRegValueSize = 0;
-    DWORD FinalRegValueLength = 0;
     WCHAR* InitialRegValue = NULL;
     WCHAR* FinalRegValue = NULL;
     WCHAR NativeShellArguments[] = L"native Hello World!\0";
@@ -605,7 +604,6 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
     if (InitialRegValueSize == 0)
     {
         FinalRegValueSize = ShellArgsLength * sizeof(WCHAR) + sizeof(WCHAR);
-        FinalRegValueLength = FinalRegValueSize / sizeof(WCHAR);
         FinalRegValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, FinalRegValueSize);
         if (!FinalRegValue)
         {
