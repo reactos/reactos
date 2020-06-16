@@ -578,8 +578,8 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
     DWORD FinalRegValueLength = 0;
     WCHAR* InitialRegValue = NULL;
     WCHAR* FinalRegValue = NULL;
-    WCHAR NativeShellArguments[] = L"native Hello World!";
-    const UINT ShellArgsLength = lstrlen(NativeShellArguments);
+    WCHAR NativeShellArguments[] = L"native Hello World!\0";
+    const UINT ShellArgsLength = lstrlen(NativeShellArguments) + 2;
 
     ReturnCode = RegCreateKeyExW(
         HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager", 0, NULL, REG_OPTION_NON_VOLATILE,
@@ -628,14 +628,14 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
 
     ReturnCode = RegQueryValueExW(HiveKey, L"BootExecute", NULL, &RegValueType, (LPBYTE)InitialRegValue, &InitialRegValueSize);
 
-    FinalRegValueSize = InitialRegValueSize - sizeof(WCHAR) + ShellArgsLength * sizeof(WCHAR) + sizeof(WCHAR);
+    FinalRegValueSize = InitialRegValueSize - sizeof(WCHAR) + ShellArgsLength * sizeof(WCHAR);
 
     /* check if we haven't set the key already */
     WCHAR* StringIt = InitialRegValue;
     UINT CharCount = 0;
     while (CharCount < (InitialRegValueSize / sizeof(WCHAR)))
     {
-        if (wcsstr(StringIt, NativeShellArguments) != NULL)
+        if (wcsstr(StringIt, (NativeShellArguments + 1)) != NULL)
         {
             goto Cleanup;
         }
@@ -656,10 +656,6 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
 
     memcpy(FinalRegValue, InitialRegValue, InitialRegValueSize);
     memcpy((FinalRegValue + (InitialRegValueLength - 1)), NativeShellArguments, ShellArgsLength * sizeof(WCHAR));
-
-    /* MULTI_SZ uses null terminators as string delimiters */
-    *(FinalRegValue + FinalRegValueLength) = '\0';
-    *(FinalRegValue + FinalRegValueLength - 1) = '\0';
 
     RegSetValueExW(HiveKey, L"BootExecute", 0, REG_MULTI_SZ, (LPBYTE)FinalRegValue, FinalRegValueSize);
 
