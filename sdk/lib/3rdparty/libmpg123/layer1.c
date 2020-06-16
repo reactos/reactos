@@ -34,6 +34,14 @@ static int check_balloc(mpg123_handle *fr, unsigned int *balloc, unsigned int *e
 	return 0;
 }
 
+#define NEED_BITS(fr, num) \
+	if((fr)->bits_avail < num) \
+	{ \
+		if(NOQUIET) \
+			error2("%u bits needed, %li available", num, (fr)->bits_avail); \
+		return -1; \
+	} \
+
 static int I_step_one(unsigned int balloc[], unsigned int scale_index[2][SBLIMIT],mpg123_handle *fr)
 {
 	unsigned int *ba=balloc;
@@ -43,42 +51,62 @@ static int I_step_one(unsigned int balloc[], unsigned int scale_index[2][SBLIMIT
 	{
 		int i;
 		int jsbound = fr->jsbound;
+		unsigned int needbits = jsbound*2*4 + (SBLIMIT-jsbound)*4;
+
+		NEED_BITS(fr, needbits);
+		needbits = 0;
 		for(i=0;i<jsbound;i++)
 		{
-			*ba++ = getbits(fr, 4);
-			*ba++ = getbits(fr, 4);
+			ba[0] = getbits_fast(fr, 4);
+			ba[1] = getbits_fast(fr, 4);
+			needbits += ((ba[0]?1:0)+(ba[1]?1:0))*6;
+			ba+=2;
 		}
-		for(i=jsbound;i<SBLIMIT;i++) *ba++ = getbits(fr, 4);
+		for(i=jsbound;i<SBLIMIT;i++)
+		{
+			*ba = getbits_fast(fr, 4);
+			needbits += (*ba?1:0)*12;
+			++ba;
+		}
 
 		if(check_balloc(fr, balloc, ba)) return -1;
 
 		ba = balloc;
-
+		NEED_BITS(fr, needbits)
 		for(i=0;i<jsbound;i++)
 		{
 			if ((*ba++))
-				*sca++ = getbits(fr, 6);
+				*sca++ = getbits_fast(fr, 6);
 			if ((*ba++))
-				*sca++ = getbits(fr, 6);
+				*sca++ = getbits_fast(fr, 6);
 		}
-		for (i=jsbound;i<SBLIMIT;i++)
-		if((*ba++))
+		for (i=jsbound;i<SBLIMIT;i++) if((*ba++))
 		{
-			*sca++ =  getbits(fr, 6);
-			*sca++ =  getbits(fr, 6);
+			*sca++ =  getbits_fast(fr, 6);
+			*sca++ =  getbits_fast(fr, 6);
 		}
 	}
 	else
 	{
 		int i;
-		for(i=0;i<SBLIMIT;i++) *ba++ = getbits(fr, 4);
+		unsigned int needbits = SBLIMIT*4;
+
+		NEED_BITS(fr, needbits)
+		needbits = 0;
+		for(i=0;i<SBLIMIT;i++)
+		{
+			*ba = getbits_fast(fr, 4);
+			needbits += (*ba?1:0)*6;
+			++ba;
+		}
 
 		if(check_balloc(fr, balloc, ba)) return -1;
 
 		ba = balloc;
+		NEED_BITS(fr, needbits)
 		for (i=0;i<SBLIMIT;i++)
-		if ((*ba++))
-		*sca++ = getbits(fr, 6);
+			if ((*ba++))
+				*sca++ = getbits_fast(fr, 6);
 	}
 
 	return 0;
@@ -87,7 +115,7 @@ static int I_step_one(unsigned int balloc[], unsigned int scale_index[2][SBLIMIT
 /* Something sane in place of undefined (-1)<<n. Well, not really. */
 #define MINUS_SHIFT(n) ( (int)(((unsigned int)-1)<<(n)) )
 
-static void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT], unsigned int scale_index[2][SBLIMIT],mpg123_handle *fr)
+static int I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT], unsigned int scale_index[2][SBLIMIT],mpg123_handle *fr)
 {
 	int i,n;
 	int smpb[2*SBLIMIT]; /* values: 0-65535 */
@@ -97,9 +125,24 @@ static void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
 
 	if(fr->stereo == 2)
 	{
+		unsigned int needbits = 0;
 		int jsbound = fr->jsbound;
 		register real *f0 = fraction[0];
 		register real *f1 = fraction[1];
+
+		ba = balloc;
+		for(sample=smpb,i=0;i<jsbound;i++)
+		{
+			if((n=*ba++))
+				needbits += n+1;
+			if((n=*ba++))
+				needbits += n+1;
+		}
+		for(i=jsbound;i<SBLIMIT;i++) 
+			if((n = *ba++))
+				needbits += n+1;
+		NEED_BITS(fr, needbits)
+
 		ba = balloc;
 		for(sample=smpb,i=0;i<jsbound;i++)
 		{
@@ -137,11 +180,20 @@ static void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
 	}
 	else
 	{
+		unsigned int needbits = 0;
 		register real *f0 = fraction[0];
+
+		ba = balloc;
+		for(sample=smpb,i=0;i<SBLIMIT;i++)
+			if((n = *ba++))
+				needbits += n+1;
+		NEED_BITS(fr, needbits);
+
 		ba = balloc;
 		for(sample=smpb,i=0;i<SBLIMIT;i++)
 		if ((n = *ba++))
 		*sample++ = getbits(fr, n+1);
+
 
 		ba = balloc;
 		for(sample=smpb,i=0;i<SBLIMIT;i++)
@@ -153,6 +205,7 @@ static void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
 		for(i=fr->down_sample_sblimit;i<32;i++)
 		fraction[0][i] = DOUBLE_TO_REAL(0.0);
 	}
+	return 0;
 }
 
 int do_layer1(mpg123_handle *fr)
@@ -171,13 +224,19 @@ int do_layer1(mpg123_handle *fr)
 
 	if(I_step_one(balloc,scale_index,fr))
 	{
-		if(NOQUIET) error("Aborting layer I decoding after step one.\n");
+		if(NOQUIET)
+			error("Aborting layer I decoding after step one.");
 		return clip;
 	}
 
 	for(i=0;i<SCALE_BLOCK;i++)
 	{
-		I_step_two(fraction,balloc,scale_index,fr);
+		if(I_step_two(fraction,balloc,scale_index,fr))
+		{
+			if(NOQUIET)
+				error("Aborting layer I decoding after step two.");
+			return clip;
+		}
 
 		if(single != SINGLE_STEREO)
 		clip += (fr->synth_mono)(fraction[single], fr);

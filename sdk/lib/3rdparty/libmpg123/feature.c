@@ -1,6 +1,11 @@
 #include "mpg123lib_intern.h"
 
-int mpg123_feature(const enum mpg123_feature_set key)
+int attribute_align_arg mpg123_feature2(int key)
+{
+	return mpg123_feature(key);
+}
+
+int attribute_align_arg mpg123_feature(const enum mpg123_feature_set key)
 {
 	switch(key)
 	{
@@ -31,6 +36,20 @@ int mpg123_feature(const enum mpg123_feature_set key)
 #else
 		return 1;
 #endif /* mpg123_output_32bit */
+
+		case MPG123_FEATURE_OUTPUT_FLOAT32:
+#if defined(NO_REAL) || defined(REAL_IS_DOUBLE)
+		return 0;
+#else
+		return 1;
+#endif
+
+		case MPG123_FEATURE_OUTPUT_FLOAT64:
+#if defined(NO_REAL) || !defined(REAL_IS_DOUBLE)
+		return 0;
+#else
+		return 1;
+#endif
 
 		case MPG123_FEATURE_PARSE_ID3V2:
 #ifdef NO_ID3V2
@@ -102,6 +121,12 @@ int mpg123_feature(const enum mpg123_feature_set key)
 #endif
 		case MPG123_FEATURE_EQUALIZER:
 #ifndef NO_EQUALIZER
+		return 1;
+#else
+		return 0;
+#endif
+		case MPG123_FEATURE_MOREINFO:
+#ifndef NO_MOREINFO
 		return 1;
 #else
 		return 0;

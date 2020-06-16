@@ -106,17 +106,18 @@ const UINT8                     AcpiGbl_NsProperties[ACPI_NUM_NS_TYPES] =
 
 const char        *AcpiGbl_RegionTypes[ACPI_NUM_PREDEFINED_REGIONS] =
 {
-    "SystemMemory",      /* 0x00 */
-    "SystemIO",          /* 0x01 */
-    "PCI_Config",        /* 0x02 */
-    "EmbeddedControl",   /* 0x03 */
-    "SMBus",             /* 0x04 */
-    "SystemCMOS",        /* 0x05 */
-    "PCIBARTarget",      /* 0x06 */
-    "IPMI",              /* 0x07 */
-    "GeneralPurposeIo",  /* 0x08 */
-    "GenericSerialBus",  /* 0x09 */
-    "PCC"                /* 0x0A */
+    "SystemMemory",       /* 0x00 */
+    "SystemIO",           /* 0x01 */
+    "PCI_Config",         /* 0x02 */
+    "EmbeddedControl",    /* 0x03 */
+    "SMBus",              /* 0x04 */
+    "SystemCMOS",         /* 0x05 */
+    "PCIBARTarget",       /* 0x06 */
+    "IPMI",               /* 0x07 */
+    "GeneralPurposeIo",   /* 0x08 */
+    "GenericSerialBus",   /* 0x09 */
+    "PCC",                /* 0x0A */
+    "PlatformRtMechanism" /* 0x0B */
 };
 
 

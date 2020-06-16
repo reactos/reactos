@@ -1,7 +1,7 @@
 /*
 	frame: Heap of routines dealing with the core mpg123 data structure.
 
-	copyright 2008-2014 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright 2008-2020 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Thomas Orgis
 */
@@ -40,7 +40,7 @@ static void frame_default_pars(mpg123_pars *mp)
 #ifdef GAPLESS
 	mp->flags |= MPG123_GAPLESS;
 #endif
-	mp->flags |= MPG123_AUTO_RESAMPLE;
+	mp->flags |= MPG123_AUTO_RESAMPLE|MPG123_FLOAT_FALLBACK;
 #ifndef NO_NTOM
 	mp->force_rate = 0;
 #endif
@@ -64,6 +64,7 @@ static void frame_default_pars(mpg123_pars *mp)
 	mp->feedpool = 5; 
 	mp->feedbuffer = 4096;
 #endif
+	mp->freeformat_framesize = -1;
 }
 
 void frame_init(mpg123_handle *fr)
@@ -124,6 +125,7 @@ void frame_init_par(mpg123_handle *fr, mpg123_pars *mp)
 #endif
 
 	fr->down_sample = 0; /* Initialize to silence harmless errors when debugging. */
+	fr->id3v2_raw = NULL;
 	frame_fixed_reset(fr); /* Reset only the fixed data, dynamic buffers are not there yet! */
 	fr->synth = NULL;
 	fr->synth_mono = NULL;
@@ -131,6 +133,9 @@ void frame_init_par(mpg123_handle *fr, mpg123_pars *mp)
 #ifdef FRAME_INDEX
 	fi_init(&fr->index);
 	frame_index_setup(fr); /* Apply the size setting. */
+#endif
+#ifndef NO_MOREINFO
+	fr->pinfo = NULL;
 #endif
 }
 
@@ -183,8 +188,9 @@ int frame_outbuffer(mpg123_handle *fr)
 		if(fr->buffer.size < size)
 		{
 			fr->err = MPG123_BAD_BUFFER;
-			if(NOQUIET) error2("have external buffer of size %"SIZE_P", need %"SIZE_P, (size_p)fr->buffer.size, (size_p)size);
-
+			if(NOQUIET)
+				merror( "have external buffer of size %"SIZE_P", need %"SIZE_P
+				,	(size_p)fr->buffer.size, (size_p)size );
 			return MPG123_ERR;
 		}
 	}
@@ -210,7 +216,7 @@ int frame_outbuffer(mpg123_handle *fr)
 	return MPG123_OK;
 }
 
-int attribute_align_arg mpg123_replace_buffer(mpg123_handle *mh, unsigned char *data, size_t size)
+int attribute_align_arg mpg123_replace_buffer(mpg123_handle *mh, void *data, size_t size)
 {
 	debug2("replace buffer with %p size %"SIZE_P, data, (size_p)size);
 	if(mh == NULL) return MPG123_BAD_HANDLE;
@@ -236,20 +242,19 @@ int frame_index_setup(mpg123_handle *fr)
 	if(fr->p.index_size >= 0)
 	{ /* Simple fixed index. */
 		fr->index.grow_size = 0;
-		debug1("resizing index to %li", fr->p.index_size);
 		ret = fi_resize(&fr->index, (size_t)fr->p.index_size);
-		debug2("index resized... %lu at %p", (unsigned long)fr->index.size, (void*)fr->index.data);
 	}
 	else
 	{ /* A growing index. We give it a start, though. */
 		fr->index.grow_size = (size_t)(- fr->p.index_size);
 		if(fr->index.size < fr->index.grow_size)
-		ret = fi_resize(&fr->index, fr->index.grow_size);
+			ret = fi_resize(&fr->index, fr->index.grow_size);
 		else
-		ret = MPG123_OK; /* We have minimal size already... and since growing is OK... */
+			ret = MPG123_OK; /* We have minimal size already... and since growing is OK... */
 	}
 	debug2("set up frame index of size %lu (ret=%i)", (unsigned long)fr->index.size, ret);
-
+	if(ret && NOQUIET)
+		error("frame index setup (initial resize) failed");
 	return ret;
 }
 #endif
@@ -560,7 +565,14 @@ static void frame_fixed_reset(mpg123_handle *fr)
 #endif
 	fr->halfphase = 0; /* here or indeed only on first-time init? */
 	fr->error_protection = 0;
-	fr->freeformat_framesize = -1;
+	fr->freeformat_framesize = fr->p.freeformat_framesize;
+	fr->enc_delay = -1;
+	fr->enc_padding = -1;
+	memset(fr->id3buf, 0, sizeof(fr->id3buf));
+	if(fr->id3v2_raw)
+		free(fr->id3v2_raw);
+	fr->id3v2_raw = NULL;
+	fr->id3v2_size = 0;
 }
 
 static void frame_free_buffers(mpg123_handle *fr)
@@ -621,6 +633,18 @@ int attribute_align_arg mpg123_framedata(mpg123_handle *mh, unsigned long *heade
 	if(bodybytes != NULL) *bodybytes = mh->framesize;
 
 	return MPG123_OK;
+}
+
+int attribute_align_arg mpg123_set_moreinfo( mpg123_handle *mh
+,	struct mpg123_moreinfo *mi)
+{
+#ifndef NO_MOREINFO
+	mh->pinfo = mi;
+	return MPG123_OK;
+#else
+	mh->err = MPG123_MISSING_FEATURE;
+	return MPG123_ERR;
+#endif
 }
 
 /*
@@ -739,7 +763,9 @@ off_t frame_ins2outs(mpg123_handle *fr, off_t ins)
 #		ifndef NO_NTOM
 		case 3: outs = ntom_ins2outs(fr, ins); break;
 #		endif
-		default: error1("Bad down_sample (%i) ... should not be possible!!", fr->down_sample);
+		default: if(NOQUIET)
+			merror( "Bad down_sample (%i) ... should not be possible!!"
+			,	fr->down_sample );
 	}
 	return outs;
 }
@@ -759,7 +785,9 @@ off_t frame_outs(mpg123_handle *fr, off_t num)
 #ifndef NO_NTOM
 		case 3: outs = ntom_frmouts(fr, num); break;
 #endif
-		default: error1("Bad down_sample (%i) ... should not be possible!!", fr->down_sample);
+		default: if(NOQUIET)
+			merror( "Bad down_sample (%i) ... should not be possible!!"
+			,	fr->down_sample );
 	}
 	return outs;
 }
@@ -781,7 +809,9 @@ off_t frame_expect_outsamples(mpg123_handle *fr)
 #ifndef NO_NTOM
 		case 3: outs = ntom_frame_outsamples(fr); break;
 #endif
-		default: error1("Bad down_sample (%i) ... should not be possible!!", fr->down_sample);
+		default: if(NOQUIET)
+			merror( "Bad down_sample (%i) ... should not be possible!!"
+			,	fr->down_sample );
 	}
 	return outs;
 }
@@ -801,7 +831,8 @@ off_t frame_offset(mpg123_handle *fr, off_t outs)
 #ifndef NO_NTOM
 		case 3: num = ntom_frameoff(fr, outs); break;
 #endif
-		default: error("Bad down_sample ... should not be possible!!");
+		default: if(NOQUIET)
+			error("Bad down_sample ... should not be possible!!");
 	}
 	return num;
 }
@@ -849,7 +880,10 @@ void frame_gapless_update(mpg123_handle *fr, off_t total_samples)
 
 	if(gapless_samples > total_samples)
 	{
-		if(NOQUIET) error2("End sample count smaller than gapless end! (%"OFF_P" < %"OFF_P"). Disabling gapless mode from now on.", (off_p)total_samples, (off_p)fr->end_s);
+		if(NOQUIET)
+			merror( "End sample count smaller than gapless end! (%"OFF_P
+				" < %"OFF_P"). Disabling gapless mode from now on."
+			,	(off_p)total_samples, (off_p)fr->end_s );
 		/* This invalidates the current position... but what should I do? */
 		frame_gapless_init(fr, -1, 0, 0);
 		frame_gapless_realinit(fr);
@@ -912,7 +946,7 @@ void frame_set_frameseek(mpg123_handle *fr, off_t fe)
 void frame_skip(mpg123_handle *fr)
 {
 #ifndef NO_LAYER3
-	if(fr->lay == 3) set_pointer(fr, 512);
+	if(fr->lay == 3) set_pointer(fr, 1, 512);
 #endif
 }
 

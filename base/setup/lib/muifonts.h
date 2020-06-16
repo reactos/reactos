@@ -29,7 +29,6 @@ MUI_SUBFONT LatinFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"Segoe UI", L"Selawik" },
     { NULL, NULL }
 };
 

@@ -1,7 +1,7 @@
 /*
 	lfs_alias: Aliases to the small/native API functions with the size of long int as suffix.
 
-	copyright 2010-2013 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright 2010-2020 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Thomas Orgis
 
@@ -99,6 +99,14 @@ EOT
 
 }' < mpg123.h.in
 */
+
+int NATIVE_NAME(mpg123_open_fixed)( mpg123_handle *mh, const char *path
+,	int channels, int encoding );
+int attribute_align_arg ALIAS_NAME(mpg123_open_fixed)( mpg123_handle *mh, const char *path
+,	int channels, int encoding )
+{
+	return NATIVE_NAME(mpg123_open_fixed)(mh, path, channels, encoding);
+}
 
 int NATIVE_NAME(mpg123_open)(mpg123_handle *mh, const char *path);
 int attribute_align_arg ALIAS_NAME(mpg123_open)(mpg123_handle *mh, const char *path)
