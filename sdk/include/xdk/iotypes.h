@@ -1282,7 +1282,6 @@ typedef struct _FILE_POSITION_INFORMATION {
   LARGE_INTEGER CurrentByteOffset;
 } FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
 
-#pragma pack(push, 1)
 typedef struct _FILE_BASIC_INFORMATION {
   LARGE_INTEGER CreationTime;
   LARGE_INTEGER LastAccessTime;
@@ -1290,7 +1289,6 @@ typedef struct _FILE_BASIC_INFORMATION {
   LARGE_INTEGER ChangeTime;
   ULONG FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
-#pragma pack(pop)
 
 typedef struct _FILE_IO_PRIORITY_HINT_INFORMATION {
   IO_PRIORITY_HINT PriorityHint;

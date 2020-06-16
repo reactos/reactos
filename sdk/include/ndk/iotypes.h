@@ -414,7 +414,6 @@ typedef struct _IO_STATUS_BLOCK
 //
 // File Information structures for NtQueryInformationFile
 //
-#pragma pack(push, 1)
 typedef struct _FILE_BASIC_INFORMATION
 {
     LARGE_INTEGER CreationTime;
@@ -423,7 +422,6 @@ typedef struct _FILE_BASIC_INFORMATION
     LARGE_INTEGER ChangeTime;
     ULONG FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
-#pragma pack(pop)
 
 typedef struct _FILE_STANDARD_INFORMATION
 {
