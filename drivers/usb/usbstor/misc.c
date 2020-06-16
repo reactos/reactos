@@ -208,10 +208,9 @@ USBSTOR_GetMaxLUN(
     PUCHAR Buffer;
     NTSTATUS Status;
 
-    Buffer = (PUCHAR)AllocateItem(NonPagedPool, sizeof(UCHAR));
+    Buffer = (PUCHAR)ExAllocatePoolWithTag(NonPagedPool, sizeof(UCHAR), USB_STOR_TAG);
     if (!Buffer)
     {
-        FreeItem(Buffer);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -221,7 +220,7 @@ USBSTOR_GetMaxLUN(
 
     if (NT_SUCCESS(Status))
     {
-        if (*Buffer > 0xF)
+        if (*Buffer > MAX_LUN)
         {
             // invalid response documented in usb mass storage specification
             Status = STATUS_DEVICE_DATA_ERROR;
@@ -243,7 +242,7 @@ USBSTOR_GetMaxLUN(
         Status = STATUS_SUCCESS;
     }
 
-    FreeItem(Buffer);
+    ExFreePoolWithTag(Buffer, USB_STOR_TAG);
     return Status;
 }
 
@@ -258,6 +257,7 @@ USBSTOR_ResetDevice(
     return Status;
 }
 
+// if somebody wants to add UFI support, here is a useful function
 #if 0
 BOOLEAN
 USBSTOR_IsFloppy(
