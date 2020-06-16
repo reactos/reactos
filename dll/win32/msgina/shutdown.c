@@ -568,17 +568,18 @@ ShutdownDialog(
  *     Used to append the NT Native shell executable to the BootExecute
  *     registry value then triggers a restart in order to boot into it.
  */
-VOID
-SetRegistryToBootInNTNativeMode(VOID)
+VOID SetRegistryToBootInNTNativeMode(VOID)
 {
     // prepare the registry for booting into the NT Native Shell
     LONG lRet;
     HKEY hKey;
-    DWORD dwType = 0, dwCurrentValueLength = 0;
+    DWORD dwType = 0, dwCurrentValueSize = 0;
     WCHAR *pszCurrentValue = NULL, *pszFinalValue = NULL;
     UINT cchLatest = 0;
-
-    TRACE("dwCurrValLength: %d\n", dwCurrentValueLength);
+    const UINT wcharSize = sizeof(WCHAR);
+#define SHELL_ARG_LENGTH 22
+    // '0' will be replaced with null terminators
+    WCHAR pszNativeShellArg[SHELL_ARG_LENGTH] = L"0native Hello World!0";
 
     lRet = RegCreateKeyExW(
         HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager", 0, NULL, REG_OPTION_NON_VOLATILE,
@@ -590,7 +591,7 @@ SetRegistryToBootInNTNativeMode(VOID)
         return;
     }
 
-    lRet = RegQueryValueEx(hKey, L"BootExecute", NULL, &dwType, NULL, &dwCurrentValueLength);
+    lRet = RegQueryValueEx(hKey, L"BootExecute", NULL, &dwType, NULL, &dwCurrentValueSize);
 
     if (lRet != ERROR_SUCCESS || dwType != REG_MULTI_SZ)
     {
@@ -598,23 +599,26 @@ SetRegistryToBootInNTNativeMode(VOID)
         return;
     }
 
-    TRACE("dwCurrValLength: %d\n", dwCurrentValueLength);
-
-    pszCurrentValue = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, dwCurrentValueLength);
+    pszCurrentValue = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, dwCurrentValueSize);
     if (!pszCurrentValue)
     {
-        TRACE("HeapAlloc failed to allocate %d bytes", dwCurrentValueLength);
+        TRACE("HeapAlloc failed to allocate %d bytes", dwCurrentValueSize);
         return;
     }
-    TRACE("dwCurrValLength: %d\n", dwCurrentValueLength);
-    pszCurrentValue[0] = L'\0';
+    memset(pszCurrentValue, '\0', sizeof(pszCurrentValue));
 
-    lRet = RegQueryValueExW(hKey, L"BootExecute", NULL, &dwType, (LPBYTE)pszCurrentValue, &dwCurrentValueLength);
-    TRACE("dwCurrValLength: %d", dwCurrentValueLength);
-    WCHAR pszNativeShellArg[] = L"0native Hello World!";
+    lRet = RegQueryValueExW(hKey, L"BootExecute", NULL, &dwType, (LPBYTE)pszCurrentValue, &dwCurrentValueSize);
 
-    cchLatest = dwCurrentValueLength + lstrlen(pszNativeShellArg) * sizeof(WCHAR);
-    const UINT uInitialStringSize = lstrlen(pszCurrentValue);
+    cchLatest = dwCurrentValueSize - wcharSize + SHELL_ARG_LENGTH * wcharSize;
+    const UINT uInitialStringLength = lstrlen(pszCurrentValue);
+
+    // check if we haven't set the key already
+    if (NULL == wcsstr(pszCurrentValue, pszNativeShellArg))
+    {
+        RegCloseKey(hKey);
+        HeapFree(GetProcessHeap(), 0, pszCurrentValue);
+        return;
+    }
 
     pszFinalValue = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, cchLatest);
     if (!pszFinalValue)
@@ -622,15 +626,14 @@ SetRegistryToBootInNTNativeMode(VOID)
         TRACE("HeapAlloc failed to allocate %d bytes\n", cchLatest);
         goto Cleanup;
     }
+    memset(pszFinalValue, '\0', sizeof(pszFinalValue));
 
     wcscpy(&pszFinalValue[0], &pszCurrentValue[0]);
     lstrcat((LPWSTR)pszFinalValue, pszNativeShellArg);
 
-    *(pszFinalValue + uInitialStringSize) = '\0';
-    *(pszFinalValue + lstrlen(pszFinalValue)) = '\0';
-
-    TRACE("length: %d", (cchLatest / sizeof(WCHAR)));
-    TRACE("sizeof wchar: %d", sizeof(WCHAR));
+    // MULTI_SZ uses null terminators as string delimiters
+    *(pszFinalValue + uInitialStringLength) = '\0';
+    *(pszFinalValue + uInitialStringLength + SHELL_ARG_LENGTH - 2) = '\0';
 
     RegSetValueExW(hKey, L"BootExecute", 0, REG_MULTI_SZ, (LPBYTE)pszFinalValue, cchLatest);
 
@@ -639,6 +642,7 @@ Cleanup:
 
     HeapFree(GetProcessHeap(), 0, pszCurrentValue);
     HeapFree(GetProcessHeap(), 0, pszFinalValue);
+#undef SHELL_ARG_LENGTH
 }
 
 /*
