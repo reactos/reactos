@@ -565,83 +565,112 @@ ShutdownDialog(
  * SetRegistryToBootInNTNativeMode
  *
  * NOTES
- *     Used to append the NT Native shell executable to the BootExecute
- *     registry value then triggers a restart in order to boot into it.
+ *     Used to append the NT Native shell start-up arguments to the
+ *     BootExecute registry value so that the system will boot into it.
  */
 VOID SetRegistryToBootInNTNativeMode(VOID)
 {
-    // prepare the registry for booting into the NT Native Shell
-    LONG lRet;
-    HKEY hKey;
-    DWORD dwType = 0, dwCurrentValueSize = 0;
-    WCHAR *pszCurrentValue = NULL, *pszFinalValue = NULL;
-    UINT cchLatest = 0;
-    const UINT wcharSize = sizeof(WCHAR);
-#define SHELL_ARG_LENGTH 22
-    // '0' will be replaced with null terminators
-    WCHAR pszNativeShellArg[SHELL_ARG_LENGTH] = L"0native Hello World!0";
+    LONG ReturnCode;
+    HKEY HiveKey;
+    DWORD RegValueType = 0;
+    DWORD InitialRegValueSize = 0;
+    DWORD FinalRegValueSize = 0;
+    DWORD FinalRegValueLength = 0;
+    WCHAR* InitialRegValue = NULL;
+    WCHAR* FinalRegValue = NULL;
+    const UINT CharSize = sizeof(WCHAR);
+#define SHELL_ARG_LENGTH 20
+    WCHAR NativeShellArguments[SHELL_ARG_LENGTH] = L"native Hello World!";
 
-    lRet = RegCreateKeyExW(
+    ReturnCode = RegCreateKeyExW(
         HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager", 0, NULL, REG_OPTION_NON_VOLATILE,
-        KEY_ALL_ACCESS, NULL, &hKey, NULL);
+        KEY_ALL_ACCESS, NULL, &HiveKey, NULL);
 
-    if (lRet != ERROR_SUCCESS)
+    if (ReturnCode != ERROR_SUCCESS)
     {
         TRACE("Unable to open the Session Manager key, error %d", GetLastError());
         return;
     }
 
-    lRet = RegQueryValueEx(hKey, L"BootExecute", NULL, &dwType, NULL, &dwCurrentValueSize);
+    ReturnCode = RegQueryValueEx(HiveKey, L"BootExecute", NULL, &RegValueType, NULL, &InitialRegValueSize);
 
-    if (lRet != ERROR_SUCCESS || dwType != REG_MULTI_SZ)
+    if (ReturnCode != ERROR_SUCCESS || RegValueType != REG_MULTI_SZ)
     {
         TRACE("Unable to grab BootExecute, error %d", GetLastError());
         return;
     }
 
-    const UINT uInitialStringLength = lstrlen(pszCurrentValue);
-    pszCurrentValue = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, dwCurrentValueSize);
-    if (!pszCurrentValue)
+    const UINT InitialRegValueLength = InitialRegValueSize / CharSize;
+
+    /* BootExecute is empty (there should be at least autochk in there) - add our string and get out */
+    if (InitialRegValueSize == 0)
     {
-        TRACE("HeapAlloc failed to allocate %d bytes", dwCurrentValueSize);
-        return;
-    }
-    memset(pszCurrentValue, '\0', uInitialStringLength);
+        FinalRegValueSize = SHELL_ARG_LENGTH * CharSize + CharSize;
+        FinalRegValueLength = FinalRegValueSize / CharSize;
+        FinalRegValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, FinalRegValueSize);
+        if (!FinalRegValue)
+        {
+            TRACE("HeapAlloc failed to allocate %d bytes\n", FinalRegValueSize);
+            goto Cleanup;
+        }
 
-    lRet = RegQueryValueExW(hKey, L"BootExecute", NULL, &dwType, (LPBYTE)pszCurrentValue, &dwCurrentValueSize);
-
-    cchLatest = dwCurrentValueSize - wcharSize + SHELL_ARG_LENGTH * wcharSize;
-
-    // check if we haven't set the key already
-    if (NULL == wcsstr(pszCurrentValue, pszNativeShellArg))
-    {
-        RegCloseKey(hKey);
-        HeapFree(GetProcessHeap(), 0, pszCurrentValue);
-        return;
-    }
-
-    pszFinalValue = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, cchLatest);
-    if (!pszFinalValue)
-    {
-        TRACE("HeapAlloc failed to allocate %d bytes\n", cchLatest);
+        memset(FinalRegValue, '\0', (FinalRegValueSize / CharSize));
+        memcpy(FinalRegValue, NativeShellArguments, SHELL_ARG_LENGTH * CharSize);
         goto Cleanup;
     }
-    memset(pszFinalValue, '\0', (cchLatest / wcharSize));
 
-    wcscpy(&pszFinalValue[0], &pszCurrentValue[0]);
-    lstrcat((LPWSTR)pszFinalValue, pszNativeShellArg);
+    InitialRegValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, InitialRegValueSize);
+    if (!InitialRegValue)
+    {
+        TRACE("HeapAlloc failed to allocate %d bytes", InitialRegValueSize);
+        return;
+    }
+    memset(InitialRegValue, '\0', InitialRegValueLength);
 
-    // MULTI_SZ uses null terminators as string delimiters
-    *(pszFinalValue + uInitialStringLength) = '\0';
-    *(pszFinalValue + uInitialStringLength + SHELL_ARG_LENGTH - 2) = '\0';
+    ReturnCode = RegQueryValueExW(HiveKey, L"BootExecute", NULL, &RegValueType, (LPBYTE)InitialRegValue, &InitialRegValueSize);
 
-    RegSetValueExW(hKey, L"BootExecute", 0, REG_MULTI_SZ, (LPBYTE)pszFinalValue, cchLatest);
+    FinalRegValueSize = InitialRegValueSize - CharSize + SHELL_ARG_LENGTH * CharSize + CharSize;
+
+    /* check if we haven't set the key already */
+    WCHAR* StringIt = InitialRegValue;
+    UINT CharCount = 0;
+    while (CharCount < (InitialRegValueSize / CharSize))
+    {
+        if (wcsstr(StringIt, NativeShellArguments) != NULL)
+        {
+            goto Cleanup;
+        }
+
+        const UINT CurrentStringLength = wcslen(StringIt);
+        StringIt += (CurrentStringLength + 1);
+        CharCount += CurrentStringLength != 0 ? CurrentStringLength : 1;
+    }
+
+    FinalRegValueLength = FinalRegValueSize / CharSize;
+    FinalRegValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, FinalRegValueSize);
+    if (!FinalRegValue)
+    {
+        TRACE("HeapAlloc failed to allocate %d bytes\n", FinalRegValueSize);
+        goto Cleanup;
+    }
+    memset(FinalRegValue, '\0', (FinalRegValueSize / CharSize));
+
+    memcpy(FinalRegValue, InitialRegValue, InitialRegValueSize);
+    memcpy((FinalRegValue + (InitialRegValueLength - 1)), NativeShellArguments, SHELL_ARG_LENGTH * CharSize);
+
+    /* MULTI_SZ uses null terminators as string delimiters */
+    *(FinalRegValue + FinalRegValueLength) = '\0';
+    *(FinalRegValue + FinalRegValueLength - 1) = '\0';
+
+    RegSetValueExW(HiveKey, L"BootExecute", 0, REG_MULTI_SZ, (LPBYTE)FinalRegValue, FinalRegValueSize);
 
 Cleanup:
-    RegCloseKey(hKey);
+    RegCloseKey(HiveKey);
 
-    HeapFree(GetProcessHeap(), 0, pszCurrentValue);
-    HeapFree(GetProcessHeap(), 0, pszFinalValue);
+    if (InitialRegValue != NULL)
+        HeapFree(GetProcessHeap(), 0, InitialRegValue);
+    if (FinalRegValue != NULL)
+        HeapFree(GetProcessHeap(), 0, FinalRegValue);
 #undef SHELL_ARG_LENGTH
 }
 
