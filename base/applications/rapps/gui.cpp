@@ -707,7 +707,7 @@ public:
 
             DownloadParam->hFile = CreateFileW(DownloadParam->DownloadFileName.GetString(),
                 GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-            if (INVALID_HANDLE_VALUE == DownloadParam->hFile)
+            if (DownloadParam->hFile == INVALID_HANDLE_VALUE)
             {
                 delete DownloadParam;
                 DisplayFailed();
