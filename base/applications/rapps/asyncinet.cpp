@@ -63,11 +63,11 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
     AsyncInet->hEventHandleCreated = CreateEvent(NULL, FALSE, FALSE, NULL);
 
     InitializeCriticalSection(&(AsyncInet->CriticalSection));
-    AsyncInet->ReferenceCnt = 0;
-    AsyncInet->hEventRefZero = CreateEvent(NULL, TRUE, TRUE, NULL);
+    AsyncInet->PendingIOCnt = 0;
+    AsyncInet->hEventNoPending = CreateEvent(NULL, TRUE, TRUE, NULL);
     AsyncInet->hEventHandleClose = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-    if (AsyncInet->hEventHandleCreated && AsyncInet->hEventRefZero && AsyncInet->hEventHandleClose)
+    if (AsyncInet->hEventHandleCreated && AsyncInet->hEventNoPending && AsyncInet->hEventHandleClose)
     {
         AsyncInet->hInternet = InternetOpenW(lpszAgent, dwAccessType, lpszProxy, lpszProxyBypass, INTERNET_FLAG_ASYNC);
 
@@ -140,8 +140,8 @@ BOOL AsyncInetAcquire(pASYNCINET AsyncInet) // try to increase refcnt by 1. if r
         EnterCriticalSection(&(AsyncInet->CriticalSection));
         if (!(AsyncInet->bCleanUp))
         {
-            AsyncInet->ReferenceCnt++;
-            ResetEvent(AsyncInet->hEventRefZero); // no longer zero
+            AsyncInet->PendingIOCnt++;
+            ResetEvent(AsyncInet->hEventNoPending); // no longer zero
             bResult = TRUE;
         }
         // otherwise (AsyncInet->bCleanUp == TRUE)
@@ -159,12 +159,12 @@ VOID AsyncInetRelease(pASYNCINET AsyncInet) // try to decrease refcnt by 1
     if (AsyncInet)
     {
         EnterCriticalSection(&(AsyncInet->CriticalSection));
-        if (AsyncInet->ReferenceCnt)
+        if (AsyncInet->PendingIOCnt)
         {
-            AsyncInet->ReferenceCnt--;
-            if (AsyncInet->ReferenceCnt == 0)
+            AsyncInet->PendingIOCnt--;
+            if (AsyncInet->PendingIOCnt == 0)
             {
-                SetEvent(AsyncInet->hEventRefZero);
+                SetEvent(AsyncInet->hEventNoPending);
             }
         }
         else
@@ -344,7 +344,7 @@ BOOL AsyncInetCleanUp(pASYNCINET AsyncInet) // gracefully cancel operation and c
         InternetCloseHandle(AsyncInet->hInetFile);
         AsyncInet->hInetFile = NULL;
 
-        HANDLE WaitHandleList[] = { AsyncInet->hEventRefZero , AsyncInet->hEventHandleClose };
+        HANDLE WaitHandleList[] = { AsyncInet->hEventNoPending , AsyncInet->hEventHandleClose };
         // only cleanup when handle closed and refcnt == 0
         switch (WaitForMultipleObjects(_countof(WaitHandleList), WaitHandleList, TRUE, INFINITE))
         {
@@ -379,10 +379,10 @@ VOID AsyncInetFree(pASYNCINET AsyncInet) // close all handles, free the memory o
             CloseHandle(AsyncInet->hEventHandleCreated);
             AsyncInet->hEventHandleCreated = NULL;
         }
-        if (AsyncInet->hEventRefZero)
+        if (AsyncInet->hEventNoPending)
         {
-            CloseHandle(AsyncInet->hEventRefZero);
-            AsyncInet->hEventRefZero = NULL;
+            CloseHandle(AsyncInet->hEventNoPending);
+            AsyncInet->hEventNoPending = NULL;
         }
         if (AsyncInet->hEventHandleClose)
         {

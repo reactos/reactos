@@ -36,9 +36,9 @@ typedef struct __AsyncInet
 
     HANDLE hEventHandleCreated;
 
-    UINT ReferenceCnt;
+    UINT PendingIOCnt;
     CRITICAL_SECTION CriticalSection;
-    HANDLE hEventRefZero; // TODO: Use conditional variable instead when one day ROS has conditional variable
+    HANDLE hEventNoPending; // TODO: Use conditional variable instead when one day ROS has conditional variable
     HANDLE hEventHandleClose;
 
     BOOL bIsOpenUrlComplete;
