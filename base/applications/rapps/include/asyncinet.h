@@ -8,15 +8,14 @@ enum ASYNC_EVENT
 {
     ASYNCINET_DATA,           // wParam is the Data retrieved from the internet, lParam is the length of Data
 
-
     ASYNCINET_COMPLETE,       // wParam and lParam is not used.
                               // when receiving this, AsyncInet will be free soon and should not used anymore
 
-                              ASYNCINET_CANCELLED,      // wParam and lParam is not used.
-                                                        // when receiving this, AsyncInet will be free soon and should not used anymore
+    ASYNCINET_CANCELLED,      // wParam and lParam is not used.
+                              // when receiving this, AsyncInet will be free soon and should not used anymore
 
-                                                        ASYNCINET_ERROR           // wParam is not used. lParam specify the error code (if there is one). 
-                                                                                  // when receiving this, AsyncInet will be free soon and should not used anymore
+    ASYNCINET_ERROR           // wParam is not used. lParam specify the error code (if there is one). 
+                              // when receiving this, AsyncInet will be free soon and should not used anymore
 };
 
 typedef struct __AsyncInet ASYNCINET, * pASYNCINET;

@@ -37,7 +37,7 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
     BOOL bAllowCache,
     ASYNCINET_CALLBACK Callback,
     VOID* Extension
-    ) // start a download task
+    ) // allocate memory for AsyncInet and start a download task
 {
     pASYNCINET AsyncInet = NULL;
     BOOL bSuccess = FALSE;
@@ -51,9 +51,14 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
         return 0;
     }
 
+    AsyncInet->bCleanUp = FALSE;
+    AsyncInet->bCancelled = FALSE;
+
+    AsyncInet->hInternet = NULL;
+    AsyncInet->hInetFile = NULL;
+
     AsyncInet->Callback = Callback;
     AsyncInet->Extension = Extension;
-
 
     AsyncInet->hEventHandleCreated = CreateEvent(NULL, FALSE, FALSE, NULL);
 
@@ -283,7 +288,6 @@ VOID AsyncInetReadFileLoop(pASYNCINET AsyncInet)
                 AsyncInetPerformCallback(AsyncInet, ASYNCINET_COMPLETE, 0, 0);
                 AsyncInetRelease(AsyncInet);
                 AsyncInetCleanUp(AsyncInet);
-
                 break;
             }
             else
@@ -339,10 +343,10 @@ BOOL AsyncInetCleanUp(pASYNCINET AsyncInet) // gracefully cancel operation and c
         // close the handle, waiting for all pending request cancelled.
         InternetCloseHandle(AsyncInet->hInetFile);
         AsyncInet->hInetFile = NULL;
-        HANDLE WaitList[2] = { AsyncInet->hEventRefZero , AsyncInet->hEventHandleClose };
 
+        HANDLE WaitHandleList[] = { AsyncInet->hEventRefZero , AsyncInet->hEventHandleClose };
         // only cleanup when handle closed and refcnt == 0
-        switch (WaitForMultipleObjects(2, WaitList, TRUE, INFINITE))
+        switch (WaitForMultipleObjects(_countof(WaitHandleList), WaitHandleList, TRUE, INFINITE))
         {
         case WAIT_OBJECT_0:
         case WAIT_OBJECT_0 + 1:
@@ -351,7 +355,6 @@ BOOL AsyncInetCleanUp(pASYNCINET AsyncInet) // gracefully cancel operation and c
             {
                 AsyncInetPerformCallback(AsyncInet, ASYNCINET_CANCELLED, 0, 0);
             }
-
             AsyncInetFree(AsyncInet);
             return TRUE;
         }
