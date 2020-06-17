@@ -631,7 +631,7 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
     /* check if we haven't set the key already */
     WCHAR* StringIt = InitialRegValue;
     UINT CharCount = 0;
-    while (CharCount < (InitialRegValueSize / sizeof(WCHAR)))
+    while (CharCount < InitialRegValueLength)
     {
         if (wcsstr(StringIt, (NativeShellArguments + 1)) != NULL)
         {
