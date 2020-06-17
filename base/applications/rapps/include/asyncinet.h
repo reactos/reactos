@@ -7,15 +7,22 @@
 enum ASYNC_EVENT
 {
     ASYNCINET_DATA,           // wParam is the Data retrieved from the internet, lParam is the length of Data
-    ASYNCINET_COMPLETE,       // wParam and lParam is not used
-    ASYNCINET_CANCELLED,      // wParam and lParam is not used
-    ASYNCINET_ERROR           // wParam is not used. lParam specify the error code (if there is one)
+
+
+    ASYNCINET_COMPLETE,       // wParam and lParam is not used.
+                              // when receiving this, AsyncInet will be free soon and should not used anymore
+
+                              ASYNCINET_CANCELLED,      // wParam and lParam is not used.
+                                                        // when receiving this, AsyncInet will be free soon and should not used anymore
+
+                                                        ASYNCINET_ERROR           // wParam is not used. lParam specify the error code (if there is one). 
+                                                                                  // when receiving this, AsyncInet will be free soon and should not used anymore
 };
 
 typedef struct __AsyncInet ASYNCINET, * pASYNCINET;
 
 typedef int
-(* ASYNCINET_CALLBACK)(
+(*ASYNCINET_CALLBACK)(
     pASYNCINET AsyncInet,
     ASYNC_EVENT Event,
     WPARAM wParam,
@@ -28,11 +35,17 @@ typedef struct __AsyncInet
     HINTERNET hInternet;
     HINTERNET hInetFile;
 
-    long long HandleClosedCnt;
+    HANDLE hEventHandleCreated;
+
+    UINT ReferenceCnt;
+    CRITICAL_SECTION CriticalSection;
+    HANDLE hEventRefZero; // TODO: Use conditional variable instead when one day ROS has conditional variable
+    HANDLE hEventHandleClose;
 
     BOOL bIsOpenUrlComplete;
 
-    BOOL bIsCancelled;
+    BOOL bCleanUp;
+    BOOL bCancelled;
 
     BYTE ReadBuffer[4096];
     DWORD BytesRead;
