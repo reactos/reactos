@@ -6,11 +6,12 @@
  */
 
 #include "rapps.h"
-#include <windows.h>
 #include <wininet.h>
 #include <atlbase.h>
 #include "asyncinet.h"
 
+
+BOOL AsyncInetIsCleanUp(pASYNCINET AsyncInet);
 BOOL AsyncInetAcquire(pASYNCINET AsyncInet);
 VOID AsyncInetRelease(pASYNCINET AsyncInet);
 int AsyncInetPerformCallback(pASYNCINET AsyncInet,
@@ -63,11 +64,10 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
     AsyncInet->hEventHandleCreated = CreateEvent(NULL, FALSE, FALSE, NULL);
 
     InitializeCriticalSection(&(AsyncInet->CriticalSection));
-    AsyncInet->PendingIOCnt = 0;
-    AsyncInet->hEventNoPending = CreateEvent(NULL, TRUE, TRUE, NULL);
+    AsyncInet->ReferenceCnt = 0;
     AsyncInet->hEventHandleClose = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-    if (AsyncInet->hEventHandleCreated && AsyncInet->hEventNoPending && AsyncInet->hEventHandleClose)
+    if (AsyncInet->hEventHandleCreated && AsyncInet->hEventHandleClose)
     {
         AsyncInet->hInternet = InternetOpenW(lpszAgent, dwAccessType, lpszProxy, lpszProxyBypass, INTERNET_FLAG_ASYNC);
 
@@ -76,7 +76,7 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
             OldCallbackFunc = InternetSetStatusCallbackW(AsyncInet->hInternet, AsyncInetStatusCallback);
             if (OldCallbackFunc != INTERNET_INVALID_STATUS_CALLBACK)
             {
-                InetOpenUrlFlag |= INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_PASSIVE | INTERNET_FLAG_RESYNCHRONIZE;
+                InetOpenUrlFlag |= INTERNET_FLAG_PASSIVE | INTERNET_FLAG_RESYNCHRONIZE;
                 if (!bAllowCache)
                 {
                     InetOpenUrlFlag |= INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_RELOAD;
@@ -91,7 +91,6 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
                         // operate complete synchronously
                         bSuccess = TRUE;
                         AsyncInetReadFileLoop(AsyncInet);
-                        AsyncInetRelease(AsyncInet);
                     }
                     else
                     {
@@ -101,7 +100,10 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
                             switch (WaitForSingleObject(AsyncInet->hEventHandleCreated, INFINITE))
                             {
                             case WAIT_OBJECT_0:
-                                bSuccess = TRUE;
+                                if (AsyncInet->hInetFile)
+                                {
+                                    bSuccess = TRUE;
+                                }
                             }
                         }
                     }
@@ -116,6 +118,12 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
         AsyncInet = NULL;
     }
 
+    if (AsyncInet)
+    {
+        // add reference count for caller.
+        // the caller is responsible for call AsyncInetRelease when no longer using it.
+        AsyncInetAcquire(AsyncInet);
+    }
     return AsyncInet;
 }
 
@@ -123,13 +131,33 @@ BOOL AsyncInetCancel(pASYNCINET AsyncInet) // mark as cancelled (this will send 
 {
     if (AsyncInet)
     {
+        EnterCriticalSection(&(AsyncInet->CriticalSection));
         AsyncInet->bCancelled = TRUE;
-        return AsyncInetCleanUp(AsyncInet);
+        LeaveCriticalSection(&(AsyncInet->CriticalSection));
+
+        if (AsyncInet->hInetFile)
+        {
+            InternetCloseHandle(AsyncInet->hInetFile);
+            return TRUE;
+        }
     }
-    else
+    
+    return FALSE;
+}
+
+BOOL AsyncInetIsCleanUp(pASYNCINET AsyncInet) // if returned FALSE, no operation should be exectued further
+{
+    if (AsyncInet)
     {
-        return FALSE;
+        EnterCriticalSection(&(AsyncInet->CriticalSection));
+        if (AsyncInet->bCleanUp)
+        {
+            LeaveCriticalSection(&(AsyncInet->CriticalSection));
+            return TRUE;
+        }
+        LeaveCriticalSection(&(AsyncInet->CriticalSection));
     }
+    return FALSE;
 }
 
 BOOL AsyncInetAcquire(pASYNCINET AsyncInet) // try to increase refcnt by 1. if returned FALSE, AsyncInet should not be used anymore
@@ -140,8 +168,7 @@ BOOL AsyncInetAcquire(pASYNCINET AsyncInet) // try to increase refcnt by 1. if r
         EnterCriticalSection(&(AsyncInet->CriticalSection));
         if (!(AsyncInet->bCleanUp))
         {
-            AsyncInet->PendingIOCnt++;
-            ResetEvent(AsyncInet->hEventNoPending); // no longer zero
+            AsyncInet->ReferenceCnt++;
             bResult = TRUE;
         }
         // otherwise (AsyncInet->bCleanUp == TRUE)
@@ -156,15 +183,17 @@ BOOL AsyncInetAcquire(pASYNCINET AsyncInet) // try to increase refcnt by 1. if r
 
 VOID AsyncInetRelease(pASYNCINET AsyncInet) // try to decrease refcnt by 1
 {
+    BOOL bCleanUp = FALSE;
     if (AsyncInet)
     {
         EnterCriticalSection(&(AsyncInet->CriticalSection));
-        if (AsyncInet->PendingIOCnt)
+        if (AsyncInet->ReferenceCnt)
         {
-            AsyncInet->PendingIOCnt--;
-            if (AsyncInet->PendingIOCnt == 0)
+            AsyncInet->ReferenceCnt--;
+            if (AsyncInet->ReferenceCnt == 0)
             {
-                SetEvent(AsyncInet->hEventNoPending);
+                bCleanUp = TRUE;
+                AsyncInet->bCleanUp = TRUE;
             }
         }
         else
@@ -172,6 +201,11 @@ VOID AsyncInetRelease(pASYNCINET AsyncInet) // try to decrease refcnt by 1
             ATLASSERT(FALSE); // should be always non-negative, can not decrease anymore.
         }
         LeaveCriticalSection(&(AsyncInet->CriticalSection));
+
+        if (bCleanUp)
+        {
+            AsyncInetCleanUp(AsyncInet);
+        }
     }
 }
 
@@ -208,12 +242,25 @@ VOID CALLBACK AsyncInetStatusCallback(
     }
     case INTERNET_STATUS_HANDLE_CLOSING:
     {
+        if (AsyncInet->bCancelled)
+        {
+            AsyncInetPerformCallback(AsyncInet, ASYNCINET_CANCELLED, 0, 0);
+        }
         SetEvent(AsyncInet->hEventHandleClose);
         break;
     }
     case INTERNET_STATUS_REQUEST_COMPLETE:
     {
         INTERNET_ASYNC_RESULT* AsyncResult = (INTERNET_ASYNC_RESULT*)lpvStatusInformation;
+
+        if (!AsyncInet->hInetFile)
+        {
+            // some error occurs during InternetOpenUrl
+            // and INTERNET_STATUS_HANDLE_CREATED is skipped
+
+            SetEvent(AsyncInet->hEventHandleCreated);
+            break;
+        }
 
         switch (AsyncResult->dwError)
         {
@@ -227,12 +274,10 @@ VOID CALLBACK AsyncInetStatusCallback(
             if (!(AsyncInet->bIsOpenUrlComplete)) // InternetOpenUrlW completed
             {
                 AsyncInet->bIsOpenUrlComplete = TRUE;
-                AsyncInetRelease(AsyncInet);
             }
             else // asynchronous InternetReadFile complete
             {
                 AsyncInetPerformCallback(AsyncInet, ASYNCINET_DATA, (WPARAM)(AsyncInet->ReadBuffer), (LPARAM)(AsyncInet->BytesRead));
-                AsyncInetRelease(AsyncInet);
             }
 
             AsyncInetReadFileLoop(AsyncInet);
@@ -240,7 +285,8 @@ VOID CALLBACK AsyncInetStatusCallback(
         break;
         case ERROR_INVALID_HANDLE:
         case ERROR_INTERNET_OPERATION_CANCELLED:
-            if (AsyncInet->bCleanUp)
+        case ERROR_CANCELLED:
+            if (AsyncInet->bCleanUp || AsyncInet->bCancelled)
             {
                 AsyncInetRelease(AsyncInet);
                 break;
@@ -249,9 +295,17 @@ VOID CALLBACK AsyncInetStatusCallback(
             // fall down
         default:
             // something went wrong
-            AsyncInetPerformCallback(AsyncInet, ASYNCINET_ERROR, 0, (LPARAM)(AsyncResult->dwError));
-            AsyncInetRelease(AsyncInet);
-            AsyncInetCleanUp(AsyncInet);
+            if (AsyncInet->bCancelled)
+            {
+                // sending both ASYNCINET_ERROR and ASYNCINET_CANCELLED may lead to unpredictable behavior
+                // TODO: log the error
+                AsyncInetRelease(AsyncInet);
+            }
+            else
+            {
+                AsyncInetPerformCallback(AsyncInet, ASYNCINET_ERROR, 0, (LPARAM)(AsyncResult->dwError));
+                AsyncInetRelease(AsyncInet);
+            }
             break;
         }
         break;
@@ -269,9 +323,10 @@ VOID AsyncInetReadFileLoop(pASYNCINET AsyncInet)
 
     while (1)
     {
-        if (!AsyncInetAcquire(AsyncInet))
+        if (AsyncInetIsCleanUp(AsyncInet))
         {
             // abort now.
+            AsyncInetRelease(AsyncInet);
             break;
         }
 
@@ -284,16 +339,14 @@ VOID AsyncInetReadFileLoop(pASYNCINET AsyncInet)
         {
             if (AsyncInet->BytesRead == 0)
             {
-                // all read.
+                // everything read. now complete.
                 AsyncInetPerformCallback(AsyncInet, ASYNCINET_COMPLETE, 0, 0);
                 AsyncInetRelease(AsyncInet);
-                AsyncInetCleanUp(AsyncInet);
                 break;
             }
             else
             {
                 // read completed immediately.
-                AsyncInetRelease(AsyncInet);
                 AsyncInetPerformCallback(AsyncInet, ASYNCINET_DATA, (WPARAM)(AsyncInet->ReadBuffer), (LPARAM)(AsyncInet->BytesRead));
             }
         }
@@ -307,17 +360,28 @@ VOID AsyncInetReadFileLoop(pASYNCINET AsyncInet)
             }
             else
             {
-                if ((dwError == ERROR_INVALID_HANDLE || dwError == ERROR_INTERNET_OPERATION_CANCELLED) && AsyncInet->bCleanUp)
+                if (dwError == ERROR_INVALID_HANDLE ||
+                    dwError == ERROR_INTERNET_OPERATION_CANCELLED ||
+                    dwError == ERROR_CANCELLED)
                 {
-                    // not an error. just normally cancelling
+                    if (AsyncInetIsCleanUp(AsyncInet))
+                    {
+                        // not an error. just normally cancelling
+                        AsyncInetRelease(AsyncInet);
+                        break;
+                    }
                 }
-                else
+
+                if (!(AsyncInet->bCancelled)) // can not send both ASYNCINET_ERROR and ASYNCINET_CANCELLED
                 {
                     AsyncInetPerformCallback(AsyncInet, ASYNCINET_ERROR, 0, dwError);
                 }
-
+                else
+                {
+                    // TODO: log the error
+                }
                 AsyncInetRelease(AsyncInet);
-                AsyncInetCleanUp(AsyncInet);
+                break;
             }
         }
     }
@@ -328,34 +392,24 @@ BOOL AsyncInetCleanUp(pASYNCINET AsyncInet) // gracefully cancel operation and c
 {
     if (AsyncInet)
     {
-        // do not allow using AsyncInet anymore. 
-        // this will make all subsequence AsyncInetAcquire return FALSE.
-        EnterCriticalSection(&(AsyncInet->CriticalSection));
-        if (AsyncInet->bCleanUp)
-        {
-            // already in progress of cleanup
-            LeaveCriticalSection(&(AsyncInet->CriticalSection));
-            return FALSE;
-        }
-        AsyncInet->bCleanUp = TRUE;
-        LeaveCriticalSection(&(AsyncInet->CriticalSection));
-
         // close the handle, waiting for all pending request cancelled.
-        InternetCloseHandle(AsyncInet->hInetFile);
-        AsyncInet->hInetFile = NULL;
 
-        HANDLE WaitHandleList[] = { AsyncInet->hEventNoPending , AsyncInet->hEventHandleClose };
-        // only cleanup when handle closed and refcnt == 0
-        switch (WaitForMultipleObjects(_countof(WaitHandleList), WaitHandleList, TRUE, INFINITE))
+        if (AsyncInet->bCancelled) // already closed
+        {
+            AsyncInet->hInetFile = NULL;
+        }
+        else if (AsyncInet->hInetFile)
+        {
+            InternetCloseHandle(AsyncInet->hInetFile);
+            AsyncInet->hInetFile = NULL;
+        }
+
+        // only cleanup when handle closed notification received
+        switch (WaitForSingleObject(AsyncInet->hEventHandleClose, INFINITE))
         {
         case WAIT_OBJECT_0:
-        case WAIT_OBJECT_0 + 1:
         {
-            if (AsyncInet->bCancelled)
-            {
-                AsyncInetPerformCallback(AsyncInet, ASYNCINET_CANCELLED, 0, 0);
-            }
-            AsyncInetFree(AsyncInet);
+            AsyncInetFree(AsyncInet); // now safe to free the structure
             return TRUE;
         }
         default:
@@ -378,11 +432,6 @@ VOID AsyncInetFree(pASYNCINET AsyncInet) // close all handles, free the memory o
         {
             CloseHandle(AsyncInet->hEventHandleCreated);
             AsyncInet->hEventHandleCreated = NULL;
-        }
-        if (AsyncInet->hEventNoPending)
-        {
-            CloseHandle(AsyncInet->hEventNoPending);
-            AsyncInet->hEventNoPending = NULL;
         }
         if (AsyncInet->hEventHandleClose)
         {

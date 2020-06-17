@@ -36,9 +36,8 @@ typedef struct __AsyncInet
 
     HANDLE hEventHandleCreated;
 
-    UINT PendingIOCnt;
+    UINT ReferenceCnt;
     CRITICAL_SECTION CriticalSection;
-    HANDLE hEventNoPending; // TODO: Use conditional variable instead when one day ROS has conditional variable
     HANDLE hEventHandleClose;
 
     BOOL bIsOpenUrlComplete;
@@ -64,5 +63,7 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
     );
 
 BOOL AsyncInetCancel(pASYNCINET AsyncInet);
+
+VOID AsyncInetRelease(pASYNCINET AsyncInet);
 
 #endif

@@ -378,6 +378,7 @@ private:
         case WM_RAPPS_DOWNLOAD_COMPLETE:
         {
             SnapshotDownloadParam* DownloadParam = (SnapshotDownloadParam*)lParam;
+            AsyncInetRelease(AsyncInet);
             AsyncInet = NULL;
             switch (wParam)
             {
@@ -662,7 +663,6 @@ public:
         if (AsyncInet)
         {
             AsyncInetCancel(AsyncInet);
-            AsyncInet = NULL;
         }
         if (!TempImagePath.IsEmpty())
         {
