@@ -25,6 +25,7 @@ list(APPEND SOURCE
     client/resntfy.c
     client/session.c
     client/synch.c
+    client/sync_vista.c
     client/sysinfo.c
     client/time.c
     client/timerqueue.c
@@ -113,7 +114,7 @@ set_subsystem(kernel32 console)
 ################# END  HACK #################
 
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
-add_importlibs(kernel32 ntdll)
+add_importlibs(kernel32 ntdll ntdll_vista)
 add_pch(kernel32 k32.h SOURCE)
 add_dependencies(kernel32 psdk errcodes asm)
 add_cd_file(TARGET kernel32 DESTINATION reactos/system32 FOR all)
