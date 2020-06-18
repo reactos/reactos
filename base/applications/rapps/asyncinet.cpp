@@ -64,7 +64,7 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
     AsyncInet->hEventHandleCreated = CreateEvent(NULL, FALSE, FALSE, NULL);
 
     InitializeCriticalSection(&(AsyncInet->CriticalSection));
-    AsyncInet->ReferenceCnt = 0;
+    AsyncInet->ReferenceCnt = 1; // 1 for callee itself
     AsyncInet->hEventHandleClose = CreateEvent(NULL, FALSE, FALSE, NULL);
 
     if (AsyncInet->hEventHandleCreated && AsyncInet->hEventHandleClose)
@@ -82,28 +82,25 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
                     InetOpenUrlFlag |= INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_RELOAD;
                 }
 
-                if (AsyncInetAcquire(AsyncInet))
-                {
-                    AsyncInet->hInetFile = InternetOpenUrlW(AsyncInet->hInternet, lpszUrl, 0, 0, InetOpenUrlFlag, (DWORD_PTR)AsyncInet);
+                AsyncInet->hInetFile = InternetOpenUrlW(AsyncInet->hInternet, lpszUrl, 0, 0, InetOpenUrlFlag, (DWORD_PTR)AsyncInet);
 
-                    if (AsyncInet->hInetFile)
+                if (AsyncInet->hInetFile)
+                {
+                    // operate complete synchronously
+                    bSuccess = TRUE;
+                    AsyncInetReadFileLoop(AsyncInet);
+                }
+                else
+                {
+                    if (GetLastError() == ERROR_IO_PENDING)
                     {
-                        // operate complete synchronously
-                        bSuccess = TRUE;
-                        AsyncInetReadFileLoop(AsyncInet);
-                    }
-                    else
-                    {
-                        if (GetLastError() == ERROR_IO_PENDING)
+                        // everything fine. waiting for handle created
+                        switch (WaitForSingleObject(AsyncInet->hEventHandleCreated, INFINITE))
                         {
-                            // everything fine. waiting for handle created
-                            switch (WaitForSingleObject(AsyncInet->hEventHandleCreated, INFINITE))
+                        case WAIT_OBJECT_0:
+                            if (AsyncInet->hInetFile)
                             {
-                            case WAIT_OBJECT_0:
-                                if (AsyncInet->hInetFile)
-                                {
-                                    bSuccess = TRUE;
-                                }
+                                bSuccess = TRUE;
                             }
                         }
                     }
@@ -166,6 +163,7 @@ BOOL AsyncInetAcquire(pASYNCINET AsyncInet) // try to increase refcnt by 1. if r
     if (AsyncInet)
     {
         EnterCriticalSection(&(AsyncInet->CriticalSection));
+        ATLASSERT(AsyncInet->ReferenceCnt > 0);
         if (!(AsyncInet->bCleanUp))
         {
             AsyncInet->ReferenceCnt++;
