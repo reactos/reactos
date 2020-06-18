@@ -8,7 +8,7 @@ enum ASYNC_EVENT
 {
     ASYNCINET_DATA,           // wParam is the Data retrieved from the internet, lParam is the length of Data
 
-    ASYNCINET_COMPLETE,       // wParam and lParam is not used.
+    ASYNCINET_COMPLETE,       // wParam and lParam are not used.
                               // when receiving this, AsyncInet will be free soon and should not used anymore
 
     ASYNCINET_CANCELLED,      // wParam and lParam is not used.
