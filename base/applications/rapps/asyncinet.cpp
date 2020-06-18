@@ -52,7 +52,6 @@ pASYNCINET AsyncInetDownload(LPCWSTR lpszAgent,
         return 0;
     }
 
-    AsyncInet->bCleanUp = FALSE;
     AsyncInet->bCancelled = FALSE;
 
     AsyncInet->hInternet = NULL;
@@ -167,7 +166,7 @@ BOOL AsyncInetAcquire(pASYNCINET AsyncInet) // try to increase refcnt by 1. if r
     {
         EnterCriticalSection(&(AsyncInet->CriticalSection));
         ATLASSERT(AsyncInet->ReferenceCnt > 0);
-        if (!(AsyncInet->bCleanUp))
+        if (!AsyncInet->bCancelled)
         {
             AsyncInet->ReferenceCnt++;
             bResult = TRUE;
@@ -194,7 +193,6 @@ VOID AsyncInetRelease(pASYNCINET AsyncInet) // try to decrease refcnt by 1
             if (AsyncInet->ReferenceCnt == 0)
             {
                 bCleanUp = TRUE;
-                AsyncInet->bCleanUp = TRUE;
             }
         }
         else

@@ -40,7 +40,6 @@ typedef struct __AsyncInet
 
     BOOL bIsOpenUrlComplete;
 
-    BOOL bCleanUp;
     BOOL bCancelled;
 
     BYTE ReadBuffer[4096];
