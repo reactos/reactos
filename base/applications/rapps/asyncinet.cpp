@@ -145,7 +145,7 @@ BOOL AsyncInetCancel(pASYNCINET AsyncInet) // mark as cancelled (this will send 
     return FALSE;
 }
 
-BOOL AsyncInetIsCleanUp(pASYNCINET AsyncInet) // if returned FALSE, no operation should be exectued further
+BOOL AsyncInetIsCleanUp(pASYNCINET AsyncInet) // if returned TRUE, no operation should be exectued further
 {
     if (AsyncInet)
     {
@@ -451,4 +451,3 @@ VOID AsyncInetFree(pASYNCINET AsyncInet) // close all handles, free the memory o
         HeapFree(GetProcessHeap(), 0, AsyncInet);
     }
 }
-
