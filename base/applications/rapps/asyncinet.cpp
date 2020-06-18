@@ -11,7 +11,7 @@
 #include "asyncinet.h"
 
 
-BOOL AsyncInetIsCleanUp(pASYNCINET AsyncInet);
+BOOL AsyncInetIsCanceled(pASYNCINET AsyncInet);
 BOOL AsyncInetAcquire(pASYNCINET AsyncInet);
 VOID AsyncInetRelease(pASYNCINET AsyncInet);
 int AsyncInetPerformCallback(pASYNCINET AsyncInet,
@@ -142,12 +142,12 @@ BOOL AsyncInetCancel(pASYNCINET AsyncInet) // mark as cancelled (this will send 
     return FALSE;
 }
 
-BOOL AsyncInetIsCleanUp(pASYNCINET AsyncInet) // if returned TRUE, no operation should be exectued further
+BOOL AsyncInetIsCanceled(pASYNCINET AsyncInet) // if returned TRUE, no operation should be exectued further
 {
     if (AsyncInet)
     {
         EnterCriticalSection(&(AsyncInet->CriticalSection));
-        if (AsyncInet->bCleanUp)
+        if (AsyncInet->bCancelled)
         {
             LeaveCriticalSection(&(AsyncInet->CriticalSection));
             return TRUE;
@@ -321,7 +321,7 @@ VOID AsyncInetReadFileLoop(pASYNCINET AsyncInet)
 
     while (1)
     {
-        if (AsyncInetIsCleanUp(AsyncInet))
+        if (AsyncInetIsCanceled(AsyncInet))
         {
             // abort now.
             AsyncInetRelease(AsyncInet);
@@ -362,7 +362,7 @@ VOID AsyncInetReadFileLoop(pASYNCINET AsyncInet)
                     dwError == ERROR_INTERNET_OPERATION_CANCELLED ||
                     dwError == ERROR_CANCELLED)
                 {
-                    if (AsyncInetIsCleanUp(AsyncInet))
+                    if (AsyncInetIsCanceled(AsyncInet))
                     {
                         // not an error. just normally cancelling
                         AsyncInetRelease(AsyncInet);
