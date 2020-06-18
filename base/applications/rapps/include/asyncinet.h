@@ -1,8 +1,6 @@
 #ifndef ASYNC_INET
 #define ASYNC_INET
 
-#include <windows.h>
-#include <wininet.h>
 
 enum ASYNC_EVENT
 {
