@@ -570,6 +570,13 @@ ShutdownDialog(
  */
 VOID SetRegistryToBootInNTNativeMode(VOID)
 {
+    #if 1
+        /* FIXME: Add proper shell arguments once a native shell is included.
+                  Until then, don't pollute the registry.
+        */
+        return;
+    #endif
+
     LONG ReturnCode;
     HKEY HiveKey;
     DWORD RegValueType = 0;
