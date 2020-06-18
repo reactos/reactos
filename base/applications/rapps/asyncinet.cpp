@@ -166,7 +166,7 @@ BOOL AsyncInetAcquire(pASYNCINET AsyncInet) // try to increase refcnt by 1. if r
     {
         EnterCriticalSection(&(AsyncInet->CriticalSection));
         ATLASSERT(AsyncInet->ReferenceCnt > 0);
-        if (!AsyncInet->bCancelled)
+        if (!AsyncInetIsCanceled(AsyncInet))
         {
             AsyncInet->ReferenceCnt++;
             bResult = TRUE;
@@ -241,7 +241,7 @@ VOID CALLBACK AsyncInetStatusCallback(
     }
     case INTERNET_STATUS_HANDLE_CLOSING:
     {
-        if (AsyncInet->bCancelled)
+        if (AsyncInetIsCanceled(AsyncInet))
         {
             AsyncInetPerformCallback(AsyncInet, ASYNCINET_CANCELLED, 0, 0);
         }
@@ -287,7 +287,7 @@ VOID CALLBACK AsyncInetStatusCallback(
         case ERROR_INVALID_HANDLE:
         case ERROR_INTERNET_OPERATION_CANCELLED:
         case ERROR_CANCELLED:
-            if (AsyncInet->bCancelled)
+            if (AsyncInetIsCanceled(AsyncInet))
             {
                 AsyncInetRelease(AsyncInet);
                 break;
@@ -296,7 +296,7 @@ VOID CALLBACK AsyncInetStatusCallback(
             // fall down
         default:
             // something went wrong
-            if (AsyncInet->bCancelled)
+            if (AsyncInetIsCanceled(AsyncInet))
             {
                 // sending both ASYNCINET_ERROR and ASYNCINET_CANCELLED may lead to unpredictable behavior
                 // TODO: log the error
@@ -373,7 +373,7 @@ VOID AsyncInetReadFileLoop(pASYNCINET AsyncInet)
                     }
                 }
 
-                if (!(AsyncInet->bCancelled)) // can not send both ASYNCINET_ERROR and ASYNCINET_CANCELLED
+                if (!AsyncInetIsCanceled(AsyncInet)) // can not send both ASYNCINET_ERROR and ASYNCINET_CANCELLED
                 {
                     AsyncInetPerformCallback(AsyncInet, ASYNCINET_ERROR, 0, dwError);
                 }
@@ -389,10 +389,11 @@ VOID AsyncInetReadFileLoop(pASYNCINET AsyncInet)
     return;
 }
 
-BOOL AsyncInetCleanUp(pASYNCINET AsyncInet) // gracefully cancel operation and clean up
+BOOL AsyncInetCleanUp(pASYNCINET AsyncInet) // close all handle and clean up
 {
     if (AsyncInet)
     {
+        ATLASSERT(AsyncInet->ReferenceCnt == 0);
         // close the handle, waiting for all pending request cancelled.
 
         if (AsyncInet->bCancelled) // already closed
@@ -414,6 +415,8 @@ BOOL AsyncInetCleanUp(pASYNCINET AsyncInet) // gracefully cancel operation and c
             return TRUE;
         }
         default:
+            ATLASSERT(FALSE);
+            AsyncInetFree(AsyncInet);
             return FALSE;
         }
     }
