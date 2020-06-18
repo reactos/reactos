@@ -128,13 +128,16 @@ BOOL AsyncInetCancel(pASYNCINET AsyncInet) // mark as cancelled (this will send 
 {
     if (AsyncInet)
     {
+        HINTERNET hInetFile;
         EnterCriticalSection(&(AsyncInet->CriticalSection));
         AsyncInet->bCancelled = TRUE;
+        hInetFile = AsyncInet->hInetFile;
+        AsyncInet->hInetFile = NULL;
         LeaveCriticalSection(&(AsyncInet->CriticalSection));
 
-        if (AsyncInet->hInetFile)
+        if (hInetFile)
         {
-            InternetCloseHandle(AsyncInet->hInetFile);
+            InternetCloseHandle(hInetFile);
             return TRUE;
         }
     }
@@ -253,11 +256,13 @@ VOID CALLBACK AsyncInetStatusCallback(
 
         if (!AsyncInet->hInetFile)
         {
-            // some error occurs during InternetOpenUrl
-            // and INTERNET_STATUS_HANDLE_CREATED is skipped
-
-            SetEvent(AsyncInet->hEventHandleCreated);
-            break;
+            if (!AsyncInetIsCanceled(AsyncInet))
+            {
+                // some error occurs during InternetOpenUrl
+                // and INTERNET_STATUS_HANDLE_CREATED is skipped
+                SetEvent(AsyncInet->hEventHandleCreated);
+                break;
+            }
         }
 
         switch (AsyncResult->dwError)
@@ -284,7 +289,7 @@ VOID CALLBACK AsyncInetStatusCallback(
         case ERROR_INVALID_HANDLE:
         case ERROR_INTERNET_OPERATION_CANCELLED:
         case ERROR_CANCELLED:
-            if (AsyncInet->bCleanUp || AsyncInet->bCancelled)
+            if (AsyncInet->bCancelled)
             {
                 AsyncInetRelease(AsyncInet);
                 break;
