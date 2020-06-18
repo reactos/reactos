@@ -85,7 +85,7 @@ FASTCALL
 MirrorRgnByWidth(
     _In_ HRGN hrgn,
     _In_ INT Width,
-    _In_ HRGN *phrgn)
+    _Out_opt_ HRGN *phrgn)
 {
     INT cRgnDSize, Ret = 0;
     PRGNDATA pRgnData;
@@ -118,7 +118,10 @@ MirrorRgnByWidth(
                 hRgnex = ExtCreateRegion(NULL, cRgnDSize , pRgnData);
                 if (hRgnex)
                 {
-                    if (phrgn) phrgn = (HRGN *)hRgnex;
+                    if (phrgn)
+                    {
+                        *phrgn = hRgnex;
+                    }
                     else
                     {
                         CombineRgn(hrgn, hRgnex, 0, RGN_COPY);
@@ -138,7 +141,7 @@ WINAPI
 MirrorRgnDC(
     _In_ HDC hdc,
     _In_ HRGN hrgn,
-    _In_ HRGN *phrn)
+    _Out_opt_ HRGN *phrn)
 {
     if (!GdiValidateHandle((HGDIOBJ) hdc) ||
         (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC))
