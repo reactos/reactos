@@ -187,18 +187,14 @@ VOID AsyncInetRelease(pASYNCINET AsyncInet) // try to decrease refcnt by 1
     if (AsyncInet)
     {
         EnterCriticalSection(&(AsyncInet->CriticalSection));
-        if (AsyncInet->ReferenceCnt)
+
+        ATLASSERT(AsyncInet->ReferenceCnt);
+        AsyncInet->ReferenceCnt--;
+        if (AsyncInet->ReferenceCnt == 0)
         {
-            AsyncInet->ReferenceCnt--;
-            if (AsyncInet->ReferenceCnt == 0)
-            {
-                bCleanUp = TRUE;
-            }
+            bCleanUp = TRUE;
         }
-        else
-        {
-            ATLASSERT(FALSE); // should be always non-negative, can not decrease anymore.
-        }
+        
         LeaveCriticalSection(&(AsyncInet->CriticalSection));
 
         if (bCleanUp)
