@@ -15,8 +15,6 @@
 
 /* GLOBALS *******************************************************************/
 
-PDEVICE_NODE IopRootDeviceNode;
-KSPIN_LOCK IopDeviceTreeLock;
 ERESOURCE PpRegistryDeviceResource;
 KGUARDED_MUTEX PpDeviceReferenceTableLock;
 RTL_AVL_TABLE PpDeviceReferenceTable;
@@ -24,6 +22,7 @@ RTL_AVL_TABLE PpDeviceReferenceTable;
 extern ERESOURCE IopDriverLoadResource;
 extern ULONG ExpInitializationPhase;
 extern BOOLEAN PnpSystemInit;
+extern PDEVICE_NODE IopRootDeviceNode;
 
 #define MAX_DEVICE_ID_LEN          200
 #define MAX_SEPARATORS_INSTANCEID  0
@@ -40,12 +39,6 @@ KSPIN_LOCK IopDeviceActionLock;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-NTAPI
-IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
-                       IN ULONG CreateOptions,
-                       OUT PHANDLE Handle);
-
 VOID
 IopCancelPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject);
 
@@ -54,13 +47,6 @@ IopPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject, BOOLEAN Force);
 
 PDEVICE_OBJECT
 IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance);
-
-PDEVICE_NODE
-FASTCALL
-IopGetDeviceNode(PDEVICE_OBJECT DeviceObject)
-{
-    return ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
-}
 
 VOID
 IopFixupDeviceId(PWCHAR String)
@@ -1239,252 +1225,6 @@ Quickie:
     return FoundIndex;
 }
 
-/*
- * DESCRIPTION
- *     Creates a device node
- *
- * ARGUMENTS
- *   ParentNode           = Pointer to parent device node
- *   PhysicalDeviceObject = Pointer to PDO for device object. Pass NULL
- *                          to have the root device node create one
- *                          (eg. for legacy drivers)
- *   DeviceNode           = Pointer to storage for created device node
- *
- * RETURN VALUE
- *     Status
- */
-NTSTATUS
-IopCreateDeviceNode(PDEVICE_NODE ParentNode,
-                    PDEVICE_OBJECT PhysicalDeviceObject,
-                    PUNICODE_STRING ServiceName,
-                    PDEVICE_NODE *DeviceNode)
-{
-    PDEVICE_NODE Node;
-    NTSTATUS Status;
-    KIRQL OldIrql;
-    UNICODE_STRING FullServiceName;
-    UNICODE_STRING LegacyPrefix = RTL_CONSTANT_STRING(L"LEGACY_");
-    UNICODE_STRING UnknownDeviceName = RTL_CONSTANT_STRING(L"UNKNOWN");
-    UNICODE_STRING KeyName, ClassName;
-    PUNICODE_STRING ServiceName1;
-    ULONG LegacyValue;
-    UNICODE_STRING ClassGUID;
-    HANDLE InstanceHandle;
-
-    DPRINT("ParentNode 0x%p PhysicalDeviceObject 0x%p ServiceName %wZ\n",
-           ParentNode, PhysicalDeviceObject, ServiceName);
-
-    Node = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_NODE), TAG_IO_DEVNODE);
-    if (!Node)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlZeroMemory(Node, sizeof(DEVICE_NODE));
-
-    if (!ServiceName)
-        ServiceName1 = &UnknownDeviceName;
-    else
-        ServiceName1 = ServiceName;
-
-    if (!PhysicalDeviceObject)
-    {
-        FullServiceName.MaximumLength = LegacyPrefix.Length + ServiceName1->Length + sizeof(UNICODE_NULL);
-        FullServiceName.Length = 0;
-        FullServiceName.Buffer = ExAllocatePool(PagedPool, FullServiceName.MaximumLength);
-        if (!FullServiceName.Buffer)
-        {
-            ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        RtlAppendUnicodeStringToString(&FullServiceName, &LegacyPrefix);
-        RtlAppendUnicodeStringToString(&FullServiceName, ServiceName1);
-        RtlUpcaseUnicodeString(&FullServiceName, &FullServiceName, FALSE);
-
-        Status = PnpRootCreateDevice(&FullServiceName, NULL, &PhysicalDeviceObject, &Node->InstancePath);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("PnpRootCreateDevice() failed with status 0x%08X\n", Status);
-            ExFreePool(FullServiceName.Buffer);
-            ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
-            return Status;
-        }
-
-        /* Create the device key for legacy drivers */
-        Status = IopCreateDeviceKeyPath(&Node->InstancePath, REG_OPTION_VOLATILE, &InstanceHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePool(FullServiceName.Buffer);
-            ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
-            return Status;
-        }
-
-        Node->ServiceName.MaximumLength = ServiceName1->Length + sizeof(UNICODE_NULL);
-        Node->ServiceName.Length = 0;
-        Node->ServiceName.Buffer = ExAllocatePool(PagedPool, Node->ServiceName.MaximumLength);
-        if (!Node->ServiceName.Buffer)
-        {
-            ZwClose(InstanceHandle);
-            ExFreePool(FullServiceName.Buffer);
-            ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
-            return Status;
-        }
-
-        RtlCopyUnicodeString(&Node->ServiceName, ServiceName1);
-
-        if (ServiceName)
-        {
-            RtlInitUnicodeString(&KeyName, L"Service");
-            Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ServiceName->Buffer, ServiceName->Length + sizeof(UNICODE_NULL));
-        }
-
-        if (NT_SUCCESS(Status))
-        {
-            RtlInitUnicodeString(&KeyName, L"Legacy");
-            LegacyValue = 1;
-            Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_DWORD, &LegacyValue, sizeof(LegacyValue));
-
-            RtlInitUnicodeString(&KeyName, L"ConfigFlags");
-            LegacyValue = 0;
-            ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_DWORD, &LegacyValue, sizeof(LegacyValue));
-
-            if (NT_SUCCESS(Status))
-            {
-                RtlInitUnicodeString(&KeyName, L"Class");
-                RtlInitUnicodeString(&ClassName, L"LegacyDriver");
-                Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassName.Buffer, ClassName.Length + sizeof(UNICODE_NULL));
-                if (NT_SUCCESS(Status))
-                {
-                    RtlInitUnicodeString(&KeyName, L"ClassGUID");
-                    RtlInitUnicodeString(&ClassGUID, L"{8ECC055D-047F-11D1-A537-0000F8753ED1}");
-                    Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassGUID.Buffer, ClassGUID.Length + sizeof(UNICODE_NULL));
-                    if (NT_SUCCESS(Status))
-                    {
-                        // FIXME: Retrieve the real "description" by looking at the "DisplayName" string
-                        // of the corresponding CurrentControlSet\Services\xxx entry for this driver.
-                        RtlInitUnicodeString(&KeyName, L"DeviceDesc");
-                        Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ServiceName1->Buffer, ServiceName1->Length + sizeof(UNICODE_NULL));
-                    }
-                }
-            }
-        }
-
-        ZwClose(InstanceHandle);
-        ExFreePool(FullServiceName.Buffer);
-
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePool(Node->ServiceName.Buffer);
-            ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
-            return Status;
-        }
-
-        IopDeviceNodeSetFlag(Node, DNF_LEGACY_DRIVER);
-        IopDeviceNodeSetFlag(Node, DNF_PROCESSED);
-        IopDeviceNodeSetFlag(Node, DNF_ADDED);
-        IopDeviceNodeSetFlag(Node, DNF_STARTED);
-    }
-
-    Node->PhysicalDeviceObject = PhysicalDeviceObject;
-
-    ((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode = Node;
-
-    if (ParentNode)
-    {
-        KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
-        Node->Parent = ParentNode;
-        Node->Sibling = NULL;
-        if (ParentNode->LastChild == NULL)
-        {
-            ParentNode->Child = Node;
-            ParentNode->LastChild = Node;
-        }
-        else
-        {
-            ParentNode->LastChild->Sibling = Node;
-            ParentNode->LastChild = Node;
-        }
-        KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
-        Node->Level = ParentNode->Level + 1;
-    }
-
-    PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-
-    *DeviceNode = Node;
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
-{
-    KIRQL OldIrql;
-    PDEVICE_NODE PrevSibling = NULL;
-
-    /* All children must be deleted before a parent is deleted */
-    ASSERT(!DeviceNode->Child);
-    ASSERT(DeviceNode->PhysicalDeviceObject);
-
-    KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
-
-    /* Get previous sibling */
-    if (DeviceNode->Parent && DeviceNode->Parent->Child != DeviceNode)
-    {
-        PrevSibling = DeviceNode->Parent->Child;
-        while (PrevSibling->Sibling != DeviceNode)
-            PrevSibling = PrevSibling->Sibling;
-    }
-
-    /* Unlink from parent if it exists */
-    if (DeviceNode->Parent)
-    {
-        if (DeviceNode->Parent->LastChild == DeviceNode)
-        {
-            DeviceNode->Parent->LastChild = PrevSibling;
-            if (PrevSibling)
-                PrevSibling->Sibling = NULL;
-        }
-        if (DeviceNode->Parent->Child == DeviceNode)
-            DeviceNode->Parent->Child = DeviceNode->Sibling;
-    }
-
-    /* Unlink from sibling list */
-    if (PrevSibling)
-        PrevSibling->Sibling = DeviceNode->Sibling;
-
-    KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
-
-    RtlFreeUnicodeString(&DeviceNode->InstancePath);
-
-    RtlFreeUnicodeString(&DeviceNode->ServiceName);
-
-    if (DeviceNode->ResourceList)
-    {
-        ExFreePool(DeviceNode->ResourceList);
-    }
-
-    if (DeviceNode->ResourceListTranslated)
-    {
-        ExFreePool(DeviceNode->ResourceListTranslated);
-    }
-
-    if (DeviceNode->ResourceRequirements)
-    {
-        ExFreePool(DeviceNode->ResourceRequirements);
-    }
-
-    if (DeviceNode->BootResources)
-    {
-        ExFreePool(DeviceNode->BootResources);
-    }
-
-    ((PEXTENDED_DEVOBJ_EXTENSION)DeviceNode->PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode = NULL;
-    ExFreePoolWithTag(DeviceNode, TAG_IO_DEVNODE);
-
-    return STATUS_SUCCESS;
-}
-
 NTSTATUS
 NTAPI
 IopSynchronousCall(IN PDEVICE_OBJECT DeviceObject,
@@ -1582,85 +1322,6 @@ IopInitiatePnpIrp(IN PDEVICE_OBJECT DeviceObject,
                                                (PVOID)&IoStatusBlock->Information);
     return IoStatusBlock->Status;
 }
-
-NTSTATUS
-IopTraverseDeviceTreeNode(PDEVICETREE_TRAVERSE_CONTEXT Context)
-{
-    PDEVICE_NODE ParentDeviceNode;
-    PDEVICE_NODE ChildDeviceNode;
-    PDEVICE_NODE NextDeviceNode;
-    NTSTATUS Status;
-
-    /* Copy context data so we don't overwrite it in subsequent calls to this function */
-    ParentDeviceNode = Context->DeviceNode;
-
-    /* HACK: Keep a reference to the PDO so we can keep traversing the tree
-     * if the device is deleted. In a perfect world, children would have to be
-     * deleted before their parents, and we'd restart the traversal after
-     * deleting a device node. */
-    ObReferenceObject(ParentDeviceNode->PhysicalDeviceObject);
-
-    /* Call the action routine */
-    Status = (Context->Action)(ParentDeviceNode, Context->Context);
-    if (!NT_SUCCESS(Status))
-    {
-        ObDereferenceObject(ParentDeviceNode->PhysicalDeviceObject);
-        return Status;
-    }
-
-    /* Traversal of all children nodes */
-    for (ChildDeviceNode = ParentDeviceNode->Child;
-         ChildDeviceNode != NULL;
-         ChildDeviceNode = NextDeviceNode)
-    {
-        /* HACK: We need this reference to ensure we can get Sibling below. */
-        ObReferenceObject(ChildDeviceNode->PhysicalDeviceObject);
-
-        /* Pass the current device node to the action routine */
-        Context->DeviceNode = ChildDeviceNode;
-
-        Status = IopTraverseDeviceTreeNode(Context);
-        if (!NT_SUCCESS(Status))
-        {
-            ObDereferenceObject(ChildDeviceNode->PhysicalDeviceObject);
-            ObDereferenceObject(ParentDeviceNode->PhysicalDeviceObject);
-            return Status;
-        }
-
-        NextDeviceNode = ChildDeviceNode->Sibling;
-        ObDereferenceObject(ChildDeviceNode->PhysicalDeviceObject);
-    }
-
-    ObDereferenceObject(ParentDeviceNode->PhysicalDeviceObject);
-    return Status;
-}
-
-
-NTSTATUS
-IopTraverseDeviceTree(PDEVICETREE_TRAVERSE_CONTEXT Context)
-{
-    NTSTATUS Status;
-
-    DPRINT("Context 0x%p\n", Context);
-
-    DPRINT("IopTraverseDeviceTree(DeviceNode 0x%p  FirstDeviceNode 0x%p  Action %p  Context 0x%p)\n",
-           Context->DeviceNode, Context->FirstDeviceNode, Context->Action, Context->Context);
-
-    /* Start from the specified device node */
-    Context->DeviceNode = Context->FirstDeviceNode;
-
-    /* Recursively traverse the device tree */
-    Status = IopTraverseDeviceTreeNode(Context);
-    if (Status == STATUS_UNSUCCESSFUL)
-    {
-        /* The action routine just wanted to terminate the traversal with status
-        code STATUS_SUCCESS */
-        Status = STATUS_SUCCESS;
-    }
-
-    return Status;
-}
-
 
 /*
  * IopCreateDeviceKeyPath
@@ -4036,49 +3697,6 @@ PpInitSystem(VOID)
         KeBugCheck(UNEXPECTED_INITIALIZATION_CALL);
         return FALSE;
     }
-}
-
-LONG IopNumberDeviceNodes;
-
-PDEVICE_NODE
-NTAPI
-PipAllocateDeviceNode(IN PDEVICE_OBJECT PhysicalDeviceObject)
-{
-    PDEVICE_NODE DeviceNode;
-    PAGED_CODE();
-
-    /* Allocate it */
-    DeviceNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_NODE), TAG_IO_DEVNODE);
-    if (!DeviceNode) return DeviceNode;
-
-    /* Statistics */
-    InterlockedIncrement(&IopNumberDeviceNodes);
-
-    /* Set it up */
-    RtlZeroMemory(DeviceNode, sizeof(DEVICE_NODE));
-    DeviceNode->InterfaceType = InterfaceTypeUndefined;
-    DeviceNode->BusNumber = -1;
-    DeviceNode->ChildInterfaceType = InterfaceTypeUndefined;
-    DeviceNode->ChildBusNumber = -1;
-    DeviceNode->ChildBusTypeIndex = -1;
-//    KeInitializeEvent(&DeviceNode->EnumerationMutex, SynchronizationEvent, TRUE);
-    InitializeListHead(&DeviceNode->DeviceArbiterList);
-    InitializeListHead(&DeviceNode->DeviceTranslatorList);
-    InitializeListHead(&DeviceNode->TargetDeviceNotify);
-    InitializeListHead(&DeviceNode->DockInfo.ListEntry);
-    InitializeListHead(&DeviceNode->PendedSetInterfaceState);
-
-    /* Check if there is a PDO */
-    if (PhysicalDeviceObject)
-    {
-        /* Link it and remove the init flag */
-        DeviceNode->PhysicalDeviceObject = PhysicalDeviceObject;
-        ((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode = DeviceNode;
-        PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-    }
-
-    /* Return the node */
-    return DeviceNode;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
