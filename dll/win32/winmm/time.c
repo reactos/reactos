@@ -423,12 +423,14 @@ MMRESULT WINAPI timeGetDevCaps(LPTIMECAPS lpCaps, UINT wSize)
 MMRESULT WINAPI timeBeginPeriod(UINT wPeriod)
 {
     if (wPeriod < MMSYSTIME_MININTERVAL || wPeriod > MMSYSTIME_MAXINTERVAL)
-		return TIMERR_NOCANDO;
+        return TIMERR_NOCANDO;
 
     /*  High resolution timer requested, use QPC */
-    if (wPeriod <= 5 && TIME_qpcFreq.QuadPart == 0) 
+    if (wPeriod <= 5 && TIME_qpcFreq.QuadPart == 0)
+    {
         if(QueryPerformanceFrequency(&TIME_qpcFreq))
             TIME_qpcFreq.QuadPart /= 1000;
+    }
 
     if (wPeriod > MMSYSTIME_MININTERVAL)
     {
@@ -444,7 +446,7 @@ MMRESULT WINAPI timeBeginPeriod(UINT wPeriod)
 MMRESULT WINAPI timeEndPeriod(UINT wPeriod)
 {
     if (wPeriod < MMSYSTIME_MININTERVAL || wPeriod > MMSYSTIME_MAXINTERVAL)
-		return TIMERR_NOCANDO;
+        return TIMERR_NOCANDO;
 
     /*  High resolution timer no longer requested, stop using QPC */
     if (wPeriod <= 5 && TIME_qpcFreq.QuadPart != 0)
@@ -463,7 +465,7 @@ MMRESULT WINAPI timeEndPeriod(UINT wPeriod)
  */
 DWORD WINAPI timeGetTime(void)
 {
-	LARGE_INTEGER perfCount;
+    LARGE_INTEGER perfCount;
 #if defined(COMMENTOUTPRIORTODELETING)
     DWORD       count;
 
@@ -474,11 +476,11 @@ DWORD WINAPI timeGetTime(void)
     if (pFnRestoreThunkLock) pFnRestoreThunkLock(count);
 #endif
     /* Use QPC if a high-resolution timer was requested (<= 5ms) */
-    if (TIME_qpcFreq.QuadPart != 0) 
+    if (TIME_qpcFreq.QuadPart != 0)
     {
         QueryPerformanceCounter(&perfCount);
         return (DWORD)(perfCount.QuadPart / TIME_qpcFreq.QuadPart);
     }
-	/* Otherwise continue using GetTickCount */
+    /* Otherwise continue using GetTickCount */
     return GetTickCount();
 }
