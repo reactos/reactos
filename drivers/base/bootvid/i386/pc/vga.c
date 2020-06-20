@@ -94,6 +94,8 @@ PrepareForSetPixel(VOID)
 do {                                                        \
     /* Select the bitmask register and write the mask */    \
     __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, ((_PixelMask) << 8) | IND_BIT_MASK); \
+    /* Dummy read to load latch registers */                \
+    (VOID)READ_REGISTER_UCHAR((_PixelPtr));                 \
     /* Set the new color */                                 \
     WRITE_REGISTER_UCHAR((_PixelPtr), (UCHAR)(_TextColor)); \
 } while (0);
