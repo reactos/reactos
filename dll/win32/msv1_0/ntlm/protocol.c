@@ -127,7 +127,7 @@ CliGenerateNegotiateMessage(
     offset = (ULONG_PTR)(message+1);
 
     /* build message */
-    strncpy(message->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
+    strncpy(message->Signature, NTLMSSP_SIGNATURE, sizeof(message->Signature));
     message->MsgType = NtlmNegotiate;
 
     TRACE("nego message %p size %lu\n", message, messageSize);
@@ -199,17 +199,17 @@ SvrGenerateChallengeMessageBuildTargetInfo(
 
     /* generate av-list */
     if (gsvr->NbMachineName.bUsed > 0)
-        NtlmAvlAdd(pTargetInfo, MsvAvNbComputerName,
+        NtlmAvlAdd((PSTRING)pTargetInfo, MsvAvNbComputerName,
                    gsvr->NbMachineName.Buffer, gsvr->NbMachineName.bUsed);
     if (gsvr->NbDomainName.bUsed > 0)
-        NtlmAvlAdd(pTargetInfo, MsvAvNbDomainName,
+        NtlmAvlAdd((PSTRING)pTargetInfo, MsvAvNbDomainName,
                    gsvr->NbDomainName.Buffer, gsvr->NbDomainName.bUsed);
     if (gsvr->DnsMachineName.bUsed > 0)
-        NtlmAvlAdd(pTargetInfo, MsvAvDnsComputerName,
+        NtlmAvlAdd((PSTRING)pTargetInfo, MsvAvDnsComputerName,
                    gsvr->DnsMachineName.Buffer, gsvr->DnsMachineName.bUsed);
     /* FIXME: This is not correct! - (same value as above??) */
     if (gsvr->DnsMachineName.bUsed > 0)
-        NtlmAvlAdd(pTargetInfo, MsvAvDnsDomainName,
+        NtlmAvlAdd((PSTRING)pTargetInfo, MsvAvDnsDomainName,
                    gsvr->DnsMachineName.Buffer, gsvr->DnsMachineName.bUsed);
 #if 0 /* this is > w2k */
     /* timestamp */
@@ -217,7 +217,7 @@ SvrGenerateChallengeMessageBuildTargetInfo(
     NtlmAvlAdd(pTargetInfo, MsvAvTimestamp, &ts, sizeof(ts));
 #endif
     /* eol */
-    NtlmAvlAdd(pTargetInfo, MsvAvEOL, NULL, 0);
+    NtlmAvlAdd((PSTRING)pTargetInfo, MsvAvEOL, NULL, 0);
     //TODO: MsvAvDnsTreeName
 
     ERR("avlTargetInfo len 0x%x\n", pTargetInfo->bUsed);
@@ -380,7 +380,7 @@ SvrGenerateChallengeMessage(
 
     /* build message
      * MS-NLMP 3.2.5.1.1 */
-    strncpy(chaMessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
+    strncpy(chaMessage->Signature, NTLMSSP_SIGNATURE, sizeof(chaMessage->Signature));
     chaMessage->MsgType = NtlmChallenge;
     chaMessage->NegotiateFlags = chaMsgNegFlg;
 
@@ -898,7 +898,7 @@ CliGenerateAuthenticationMessage(
         //NtlmPrintAvPairs(ptr);
         //NtlmPrintHexDump(InputToken1->pvBuffer, InputToken1->cbBuffer);
 
-        if (!NtlmAvlGet((PEXT_DATA)&ChallengeTargetInfo, MsvAvNbDomainName, &data, &len))
+        if (!NtlmAvlGet(&ChallengeTargetInfo, MsvAvNbDomainName, &data, &len))
         {
             ERR("could not get domainname from target info!\n");
             goto quit;
@@ -910,7 +910,7 @@ CliGenerateAuthenticationMessage(
 
         ExtWStrSetN(&ServerName, (WCHAR*)data, len / sizeof(WCHAR));
 
-        if (NtlmAvlGet((PEXT_DATA)&ChallengeTargetInfo, MsvAvTimestamp, &data, &len))
+        if (NtlmAvlGet(&ChallengeTargetInfo, MsvAvTimestamp, &data, &len))
             ChallengeTimestamp = *(PULONGLONG)data;
         //ExtWStrSetN(&ServerName, (WCHAR*)data, len / sizeof(WCHAR));
     }
@@ -957,7 +957,7 @@ CliGenerateAuthenticationMessage(
         debugstr_w((WCHAR*)ServerName.Buffer));
 
     /* elaborate which data to send ... */
-    sendLmChallengeResponse = !context->UseNTLMv2;
+    sendLmChallengeResponse = TRUE;
     /* MS-NLSP 3.2.5.1.2 says
        * An AUTHENTICATE_MESSAGE indicates the presence of a
          MIC field if the TargetInfo field has an AV_PAIR
@@ -992,15 +992,15 @@ CliGenerateAuthenticationMessage(
     if (!ComputeResponse(context->NegFlg,
                          context->UseNTLMv2,
                          Anonymouse,
-                         &cred->DomainNameW,
-                         &LmOwfPwd,
-                         &NtOwfPwd,
-                         &ServerName,
+                         (PUNICODE_STRING)&cred->DomainNameW,
+                         (PUCHAR)&LmOwfPwd,
+                         (PUCHAR)&NtOwfPwd,
+                         (PUNICODE_STRING)&ServerName,
                          ChallengeFromClient,
                          challenge->ServerChallenge,
                          ChallengeTimestamp,
-                         &LmResponseData,
-                         &NtResponseData,
+                         (PSTRING)&LmResponseData,
+                         (PSTRING)&NtResponseData,
                          &SessionBaseKey))
     {
         ERR("ComputeResponse error\n");
@@ -1057,7 +1057,7 @@ CliGenerateAuthenticationMessage(
     authmessage = (PAUTHENTICATE_MESSAGE)OutputToken1->pvBuffer;
 
     /* fill auth message */
-    strncpy(authmessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
+    strncpy(authmessage->Signature, NTLMSSP_SIGNATURE, sizeof(authmessage->Signature));
     authmessage->MsgType = NtlmAuthenticate;
     authmessage->NegotiateFlags = context->NegFlg;
 

@@ -135,6 +135,8 @@ LsaSpShutDown(void)
     //TODO FiniLsaPort + port freigeben / löschen
     NtlmFini();
 
+    LsaFunctions = NULL;
+
     return STATUS_SUCCESS;
 }
 

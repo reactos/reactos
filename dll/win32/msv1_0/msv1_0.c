@@ -236,10 +236,6 @@ BuildLm20LogonProfileBuffer(
     LocalBuffer->LogoffTime.LowPart = UserInfo->All.AccountExpires.LowPart;
     LocalBuffer->LogoffTime.HighPart = UserInfo->All.AccountExpires.HighPart;
 
-    LocalBuffer->UserFlags = 0x0; // FIXME ...
-    if (LogonPwdData->LogonType == NetLogonLmKey)
-        LocalBuffer->UserFlags |= LOGON_USED_LM_PASSWORD;
-
     memcpy(LocalBuffer->UserSessionKey, &LogonPwdData->UserSessionKey, MSV1_0_USER_SESSION_KEY_LENGTH);
 
     //FIXME: Set Domainname if we domain joined
@@ -257,8 +253,10 @@ BuildLm20LogonProfileBuffer(
     }
     /* not supported */
     RtlInitUnicodeString(&LocalBuffer->UserParameters, NULL);
-    /* not supported */
+    /* Build user flags */
     LocalBuffer->UserFlags = 0x0;
+    if (LogonPwdData->LogonType == NetLogonLmKey)
+        LocalBuffer->UserFlags |= LOGON_USED_LM_PASSWORD;
 
     /* copy data to client buffer */
     Status = NtlmCopyToClientBuffer(ClientRequest, BufferLength, &Buffer);

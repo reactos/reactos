@@ -309,7 +309,7 @@ void _fdTRACE(
 {
     va_list ap;
     char buf[2048];
-    char buf2[2048];
+    char buf2[4048];
     char *filepart;
 
     va_start(ap, line);

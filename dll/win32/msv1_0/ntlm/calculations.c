@@ -28,7 +28,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 NTSTATUS
 NTOWFv1(
     _In_ PUNICODE_STRING Password,
-    _Out_ PVOID Result)
+    _Out_ NTLM_NT_OWF_PASSWORD Result)
 {
     #if 0
     return SystemFunction007(Password, Result);
@@ -44,35 +44,98 @@ NTOWFv1(
     #endif
 }
 
-/* MS-NLSP 3.3.2 */
-BOOL
-NTOWFv2(
-    IN LPCWSTR password,
-    IN LPCWSTR user,
-    IN LPCWSTR domain,
-    OUT UCHAR result[16])
+/**
+ * @brief creates a NTLMv2 hash. Uses the pre-computed password (NTLMv1 hash).
+ */
+
+NTSTATUS
+NTOWFv2ofw(
+    _In_ NTLM_NT_OWF_PASSWORD md4pwd,
+    _In_ PUNICODE_STRING User,
+    _In_ PUNICODE_STRING Domain,
+    _Out_ NTLM_NT_OWF_PASSWORD Result)
 {
-    EXT_STRING UserUserDom;
-    UCHAR md4pwd[16];
+    UNICODE_STRING UserUserDom;
+    ULONG UserDomByteLen = 0;
+
+    if (User)
+        UserDomByteLen += User->Length;
+    if (Domain)
+        UserDomByteLen += Domain->Length;
 
     /* concat upper(user) + domain */
-    ExtWStrInit(&UserUserDom, (WCHAR*)user);
-    ExtWStrUpper(&UserUserDom);
-    ExtWStrCat(&UserUserDom, (WCHAR*)domain);
+    NtlmUStrAlloc(&UserUserDom, UserDomByteLen + sizeof(WCHAR), 0);
+    RtlAppendUnicodeStringToString(&UserUserDom, User);
+    NtlmUStrUpper(&UserUserDom);
+    RtlAppendUnicodeStringToString(&UserUserDom, Domain);
 
-    MD4((UCHAR*)password, wcslen(password) * sizeof(WCHAR), md4pwd);
-    HMAC_MD5(md4pwd, ARRAYSIZE(md4pwd),
-             (UCHAR*)UserUserDom.Buffer, UserUserDom.bUsed, result);
+    HMAC_MD5(md4pwd, MSV1_0_NT_OWF_PASSWORD_LENGTH,
+             (UCHAR*)UserUserDom.Buffer, UserUserDom.Length, Result);
 
-    ExtStrFree(&UserUserDom);
+    NtlmUStrFree(&UserUserDom);
     return TRUE;
 }
+
+/* MS-NLSP 3.3.2 */
+// FIXME: Set to 0 and chec if other version is okay ...
+#if 1
+NTSTATUS
+NTOWFv2(
+    _In_ LPCWSTR Password,
+    _In_ LPCWSTR User,
+    _In_ LPCWSTR Domain,
+    _Out_ NTLM_NT_OWF_PASSWORD Result)
+{
+    UNICODE_STRING UserUserDom;
+    UCHAR md4pwd[16];
+    ULONG UserDomChLen = 0;
+
+    if (User)
+        UserDomChLen += wcslen(User);
+    if (Domain)
+        UserDomChLen += wcslen(Domain);
+
+    /* concat upper(user) + domain */
+    NtlmUStrAlloc(&UserUserDom, (UserDomChLen + 1) * sizeof(WCHAR), 0);
+    RtlAppendUnicodeToString(&UserUserDom, User);
+    NtlmUStrUpper(&UserUserDom);
+    RtlAppendUnicodeToString(&UserUserDom, Domain);
+
+    MD4((UCHAR*)Password, wcslen(Password) * sizeof(WCHAR), md4pwd);
+    HMAC_MD5(md4pwd, ARRAYSIZE(md4pwd),
+             (UCHAR*)UserUserDom.Buffer, UserUserDom.Length, Result);
+
+    NtlmUStrFree(&UserUserDom);
+    return TRUE;
+}
+#else
+//FIXME: Use PUNICODE_STRING ...
+NTSTATUS
+NTOWFv2(
+    _In_ LPCWSTR Password,
+    _In_ LPCWSTR User,
+    _In_ LPCWSTR Domain,
+    _Out_ NTLM_NT_OWF_PASSWORD Result)
+{
+    NTLM_NT_OWF_PASSWORD md4pwd;
+    UNICODE_STRING xUser;
+    UNICODE_STRING xDomain;
+
+    RtlInitUnicodeString(&xUser, User);
+    RtlInitUnicodeString(&xDomain, Domain);
+
+    MD4((UCHAR*)Password, wcslen(Password) * sizeof(WCHAR), md4pwd);
+
+    NTOWFv2ofw(md4pwd, xUser, xDomain);
+    return TRUE;
+}
+#endif
 
 /* MS-NLSP 3.3.1 */
 NTSTATUS
 LMOWFv1(
     _In_ LPCSTR Password,
-    _Out_ BYTE Result[16])
+    _Out_ NTLM_LM_OWF_PASSWORD Result)
 {
 #if 1
     int i;
@@ -113,20 +176,26 @@ LMOWFv1(
 #endif
 }
 
-BOOL
-LMOWFv2(LPCWSTR password,
-        LPCWSTR user,
-        LPCWSTR domain,
-        PUCHAR result)
+NTSTATUS
+LMOWFv2(
+    _In_ LPCWSTR Password,
+    _In_ LPCWSTR User,
+    _In_ LPCWSTR Domain,
+    _Out_ NTLM_LM_OWF_PASSWORD Result)
 {
-    return NTOWFv2(password, user, domain, result);
+    return NTOWFv2(Password, User, Domain, Result);
 }
 
-VOID
+BOOLEAN
 NONCE(PUCHAR buffer,
       ULONG num)
 {
+    #if 1
+    return SystemFunction036(buffer, num);
+    #else
     NtlmGenerateRandomBits(buffer, num);
+    return TRUE;
+    #endif
 }
 
 /* MS-NLSP 3.4.5.1 KXKEY */
@@ -554,6 +623,7 @@ ComputeResponseNTLMv1(
             MD5(tmpCat, MSV1_0_CHALLENGE_LENGTH * 2, tmpMD5);
             /* uses only first 8 bytes from tmpMD5! */
             DESL(ResponseKeyNT, tmpMD5, NtChallengeResponse);
+
             //Set LmChallengeResponse to ConcatenationOf{ClientChallenge,
             //Z(16)}
             memcpy(LmChallengeResponse, ClientChallenge, MSV1_0_CHALLENGE_LENGTH);
@@ -583,7 +653,11 @@ ComputeResponseNTLMv1(
     //EndI
     }
     // Set SessionBaseKey to MD4(NTOWF)
+    #if 0 //TODO
+    CalcNtUserSessionKey();
+    #else
     MD4(ResponseKeyNT, MSV1_0_NT_OWF_PASSWORD_LENGTH, (UCHAR*)SessionBaseKey);
+    #endif
     return TRUE;
 }
 
@@ -592,17 +666,17 @@ ComputeResponseNTLMv1(
 //#define VALIDATE_NTLM
 BOOL
 ComputeResponseNTLMv2(
-    IN BOOL Anonymouse,
-    IN PEXT_STRING_W userdom,
-    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
-    IN UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH],
-    IN PEXT_STRING_W ServerName,
-    IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
-    IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
-    IN ULONGLONG ChallengeTimestamp,
-    OUT PLM2_RESPONSE pLmChallengeResponse,
-    IN OUT PEXT_DATA pNtChallengeResponseData,
-    OUT PUSER_SESSION_KEY SessionBaseKey)
+    _In_ BOOL Anonymouse,
+    _In_ PUNICODE_STRING UserDom,
+    _In_ UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
+    _In_ UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH],
+    _In_ PUNICODE_STRING ServerName,
+    _In_ UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
+    _In_ UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
+    _In_ ULONGLONG ChallengeTimestamp,
+    _Out_ PLM2_RESPONSE pLmChallengeResponse,
+    _In_ PSTRING pNtChallengeResponseData,
+    _Out_ PUSER_SESSION_KEY SessionBaseKey)
 {
     UCHAR NTProofStr[16];
     BOOL avOk;
@@ -616,7 +690,7 @@ ComputeResponseNTLMv2(
         memset(ClientChallenge0, 0, MSV1_0_CHALLENGE_LENGTH);
     }
 
-    TRACE("userdom %S\n", userdom->Buffer);
+    TRACE("UserDom %S\n", UserDom->Buffer);
     TRACE("ServerName %S\n", ServerName->Buffer);
     TRACE("ResponseKeyLM\n");
     NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_OWF_LENGTH);
@@ -627,18 +701,19 @@ ComputeResponseNTLMv2(
     TRACE("ClientChallenge\n");
     NtlmPrintHexDump(ClientChallenge, MSV1_0_CHALLENGE_LENGTH);
     TRACE("ChallengeTimestamp\n");
-    TRACE("0x%x\n", ChallengeTimestamp);
+    TRACE("0x%lx\n", (ULONG)ChallengeTimestamp);
 
     /* alloc/fill NtResponse struct */
-    ExtDataSetLength(pNtChallengeResponseData,
-                     sizeof(MSV1_0_NTLM3_RESPONSE) +
-                     sizeof(MSV1_0_AV_PAIR) * 3 +
-                     ServerName->bUsed +
+    NtlmAStrAlloc(pNtChallengeResponseData,
+                  sizeof(MSV1_0_NTLM3_RESPONSE) +
+                  4 + 4 +/*?*/
+                  sizeof(MSV1_0_AV_PAIR) * 3 +
+                  ServerName->Length + /*Hack*/
         #ifdef VALIDATE_NTLMv2
-                     20 + /* HACK */
+                  20 + /* HACK */
         #endif
-                     userdom->bUsed,
-                     TRUE);
+                  UserDom->Length,
+                  0);
     pNtResponse = (PMSV1_0_NTLM3_RESPONSE)pNtChallengeResponseData->Buffer;
     pNtResponse->RespType = 1;
     pNtResponse->HiRespType = 1;
@@ -646,11 +721,12 @@ ComputeResponseNTLMv2(
     pNtResponse->MsgWord = 0;
     pNtResponse->TimeStamp = ChallengeTimestamp;
     pNtResponse->AvPairsOff = 0;
+    pNtResponse->Buffer[0] = 2; //??
     memcpy(pNtResponse->ChallengeFromClient, ClientChallenge,
            ARRAYSIZE(pNtResponse->ChallengeFromClient));
     /* Av-Pairs should begin at AvPairsOff field. So we need
        to set the used-ptr back before writing avl */
-    pNtChallengeResponseData->bUsed = FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, Buffer);
+    pNtChallengeResponseData->Length = FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, Buffer)+4/*?*/;
     // TEST_CALCULATION
     #ifdef VALIDATE_NTLMv2
     pNtResponse->TimeStamp = 0;
@@ -665,15 +741,21 @@ ComputeResponseNTLMv2(
            NtlmAvlAdd(pNtChallengeResponseData, MsvAvEOL, NULL, 0);
     #else
     avOk = TRUE;
-    if (userdom->bUsed > 0)
-        avOk = avOk &&
-               NtlmAvlAdd(pNtChallengeResponseData, MsvAvNbDomainName, (WCHAR*)userdom->Buffer, userdom->bUsed);
     avOk = avOk &&
-           NtlmAvlAdd(pNtChallengeResponseData, MsvAvNbComputerName, ServerName->Buffer, ServerName->bUsed) &&
+           NtlmAvlAdd(pNtChallengeResponseData, MsvAvNbComputerName, ServerName->Buffer, ServerName->Length);
+    if (UserDom->Length > 0)
+        avOk = avOk &&
+            NtlmAvlAdd(pNtChallengeResponseData, MsvAvDnsComputerName, UserDom->Buffer, UserDom->Length);
+    avOk = avOk &&
            NtlmAvlAdd(pNtChallengeResponseData, MsvAvEOL, NULL, 0);
     #endif
     if (!avOk)
+    {
        ERR("failed to write avl data\n");
+       //TODO return STATUS_INTERNAL_ERROR;
+       return FALSE;
+    }
+    pNtChallengeResponseData->Length += 4;
 
     //Define ComputeResponse(NegFlg, ResponseKeyNT, ResponseKeyLM,
     //CHALLENGE_MESSAGE.ServerChallenge, ClientChallenge, Time, ServerName)
@@ -694,10 +776,8 @@ ComputeResponseNTLMv2(
         //UNICODE_STRING val;
         PBYTE ccTemp;
         PBYTE temp;
-        EXT_STRING_A ServerNameOEM;
         int tempLen, ccTempLen;
 
-        ExtWStrToAStr(&ServerNameOEM, ServerName, TRUE, TRUE);
         //FILETIME ft;
         //SYSTEMTIME st;
         //ft.dwLowDateTime = (pNtResponse->TimeStamp && 0xFFFFFFFF);
@@ -712,7 +792,7 @@ ComputeResponseNTLMv2(
         /* Spec (4.2.4.1.3 temp) shows 4 bytes more
          * (all 0) may be a bug in spec-doc. It works
          * without these extra bytes. */
-        tempLen = pNtChallengeResponseData->bUsed -
+        tempLen = pNtChallengeResponseData->Length -
                   FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, RespType);
         #ifdef VALIDATE_NTLMv2
         NtlmPrintHexDump((PBYTE)pNtChallengeResponseData->pData, pNtChallengeResponseData->bUsed);
@@ -942,20 +1022,20 @@ ComputeResponse(
     _In_ ULONG Context_NegFlg,
     _In_ BOOL UseNTLMv2,
     _In_ BOOL Anonymouse,
-    _In_ PEXT_STRING_W userdom,
-    _In_ PNTLM_LM_OWF_PASSWORD LmOwfPwd,
-    _In_ PNTLM_NT_OWF_PASSWORD NtOwfPwd,
-    _In_ PEXT_STRING_W pServerName,
+    _In_ PUNICODE_STRING UserDom,
+    _In_ NTLM_LM_OWF_PASSWORD LmOwfPwd,
+    _In_ NTLM_NT_OWF_PASSWORD NtOwfPwd,
+    _In_ PUNICODE_STRING ServerName,
     _In_ UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH],
     _In_ UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     _In_ ULONGLONG ChallengeTimestamp,
-    _Inout_ PEXT_DATA pLmChallengeResponseData,
-    _Inout_ PEXT_DATA pNtChallengeResponseData,
+    _Inout_ PSTRING LmChallengeResponseData,
+    _Inout_ PSTRING NtChallengeResponseData,
     _Out_ PUSER_SESSION_KEY pSessionBaseKey)
 {
     TRACE("%S %p %p\n",
-        pServerName->Buffer, ChallengeToClient,
-        userdom->Buffer);
+        ServerName->Buffer, ChallengeToClient,
+        UserDom->Buffer);
     TRACE("UseNTLMv2 %i\n", UseNTLMv2);
 
     #ifdef VALIDATE_NTLM
@@ -970,8 +1050,8 @@ ComputeResponse(
     if (!UseNTLMv2)
     {
         /* prepare ComputeResponse */
-        ExtDataSetLength(pNtChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
-        ExtDataSetLength(pLmChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
+        NtlmAStrAlloc(NtChallengeResponseData, MSV1_0_RESPONSE_LENGTH, MSV1_0_RESPONSE_LENGTH);
+        NtlmAStrAlloc(LmChallengeResponseData, MSV1_0_RESPONSE_LENGTH, MSV1_0_RESPONSE_LENGTH);
 
         if (!ComputeResponseNTLMv1(Context_NegFlg,
                                    Anonymouse,
@@ -979,12 +1059,12 @@ ComputeResponse(
                                    (PUCHAR)NtOwfPwd,
                                    ChallengeToClient,
                                    ChallengeFromClient,
-                                   (PUCHAR)pLmChallengeResponseData->Buffer,
-                                   (PUCHAR)pNtChallengeResponseData->Buffer,
+                                   (PUCHAR)LmChallengeResponseData->Buffer,
+                                   (PUCHAR)NtChallengeResponseData->Buffer,
                                    pSessionBaseKey))
         {
-            ExtStrFree(pNtChallengeResponseData);
-            ExtStrFree(pLmChallengeResponseData);
+            NtlmAStrFree(NtChallengeResponseData);
+            NtlmAStrFree(LmChallengeResponseData);
             ERR("ComputeResponseNTLMv1 failed!\n");
             return FALSE;
         }
@@ -995,21 +1075,21 @@ ComputeResponse(
     else
     {
         /* prepare CompureResponse */
-        ExtDataSetLength(pLmChallengeResponseData, sizeof(LM2_RESPONSE), TRUE);
+        NtlmAStrAlloc(LmChallengeResponseData, sizeof(LM2_RESPONSE), sizeof(LM2_RESPONSE));
 
         if (!ComputeResponseNTLMv2(Anonymouse,
-                                   userdom,
-                                   (PUCHAR)LmOwfPwd,
-                                   (PUCHAR)NtOwfPwd,
-                                   pServerName,
+                                   UserDom,
+                                   LmOwfPwd,
+                                   NtOwfPwd,
+                                   ServerName,
                                    ChallengeToClient,
                                    ChallengeFromClient,
                                    ChallengeTimestamp,
-                                   (PLM2_RESPONSE)pLmChallengeResponseData->Buffer,
-                                   pNtChallengeResponseData,
+                                   (PLM2_RESPONSE)LmChallengeResponseData->Buffer,
+                                   NtChallengeResponseData,
                                    pSessionBaseKey))
         {
-            ExtStrFree(pLmChallengeResponseData);
+            NtlmAStrFree(LmChallengeResponseData);
             ERR("ComputeResponseNVLMv2 failed!\n");
             return FALSE;
         }
@@ -1021,13 +1101,13 @@ ComputeResponse(
     TRACE("SessionBaseKey\n");
     NtlmPrintHexDump((PBYTE)pSessionBaseKey, sizeof(USER_SESSION_KEY));
     TRACE("pLmChallengeResponseData\n");
-    NtlmPrintHexDump(pLmChallengeResponseData->Buffer, pLmChallengeResponseData->bUsed);
+    NtlmPrintHexDump((PUCHAR)LmChallengeResponseData->Buffer, LmChallengeResponseData->Length);
     TRACE("ClientChallenge\n");
     NtlmPrintHexDump(ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
     TRACE("ServerChallenge\n");
     NtlmPrintHexDump(ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
     TRACE("ResponseKeyLM\n");
-    NtlmPrintHexDump((PBYTE)LmOwfPwd, MSV1_0_NTLM3_OWF_LENGTH);
+    NtlmPrintHexDump((PUCHAR)LmOwfPwd, MSV1_0_NTLM3_OWF_LENGTH);
 
     return TRUE;
 }
@@ -1078,7 +1158,7 @@ RC4(IN prc4_key pHandle,
 /* The LM User Session Key */
 NTSTATUS
 CalcLmUserSessionKey(
-    _In_ PNTLM_LM_OWF_PASSWORD LmOwfPwd,
+    _In_ NTLM_LM_OWF_PASSWORD LmOwfPwd,
     _Out_ PSTRING Key)//->MoveToLib
 {
     TRACE("The LM User Session Key\n");
@@ -1097,46 +1177,42 @@ CalcLmUserSessionKey(
 /* ChallengeFromClient also known as nonce */
 VOID
 CalcLm2UserSessionKey(
-    _In_ PSTRING Lm2ResponseKey,
+    _In_ NTLM_LM_OWF_PASSWORD Lm2OwfPwd,
     _In_ PSTRING ChallengeFromClient,
     _In_ PSTRING ChallengeFromServer)//->MoveToLib
 {
     STRING Key;
     STRING Buffer;
-    //UCHAR tmpMD5[50];
 
-    // The LM User Session Key
-    TRACE("The LMv2 User Session Key\n");
-
-    /* Challenge + Nonce (0x16 bytes) */
-    NtlmAStrAlloc(&Key, 0x10, 0x10);
-    NtlmAStrAlloc(&Buffer, ChallengeFromClient->Length + ChallengeFromServer->Length, 0);
-    if (Buffer.MaximumLength != 0x10)
+    if (TRUE)  // no null session
     {
-        ERR("Unexpected maximum length (!= 0x10) 0x%x!\n", Buffer.MaximumLength);
-        return;
+        /* The LMv2 User Session Key */
+        TRACE("The LMv2 User Session Key\n");
+
+        //Set LmChallengeResponse to ConcatenationOf(HMAC_MD5(ResponseKeyLM,
+        //ConcatenationOf(CHALLENGE_MESSAGE.ServerChallenge, ClientChallenge)),
+        //ClientChallenge )
+        NtlmAStrAlloc(&Buffer, 2 * MSV1_0_CHALLENGE_LENGTH, 0);
+        NtlmAStrAlloc(&Key, 0x10, 0x10);
+
+        RtlAppendStringToString(&Buffer, ChallengeFromServer);
+        RtlAppendStringToString(&Buffer, ChallengeFromClient);
+        HMAC_MD5(Lm2OwfPwd, MSV1_0_LM_OWF_PASSWORD_LENGTH,
+                 (PUCHAR)Buffer.Buffer, Buffer.Length,
+                 (PUCHAR)Key.Buffer);
+
+        NtlmPrintHexDump((PBYTE)Key.Buffer, Key.Length);
+
+
+        NtlmAStrFree(&Buffer);
+        NtlmAStrFree(&Key);
     }
-
-    RtlAppendStringToString(&Buffer, ChallengeFromServer);
-    RtlAppendStringToString(&Buffer, ChallengeFromClient);
-    if (Buffer.Length != 0x10)
-    {
-        ERR("Unexpected length (!= 0x10) 0x%x!\n", Buffer.Length);
-        return;
-    }
-    HMAC_MD5((PUCHAR)Lm2ResponseKey->Buffer, MSV1_0_LM_OWF_PASSWORD_LENGTH,
-             (PUCHAR)Buffer.Buffer, Buffer.Length, (PUCHAR)Key.Buffer);
-
-    NtlmPrintHexDump((PBYTE)Key.Buffer, Key.Length);
-
-    NtlmAStrFree(&Buffer);
-    NtlmAStrFree(&Key);
 }
 
 /* The LM User Session Key */
 NTSTATUS
 CalcLanmanSessionKey(
-    _In_ PNTLM_LM_OWF_PASSWORD LmOwfPwd,
+    _In_ NTLM_LM_OWF_PASSWORD LmOwfPwd,
     _In_ PSTRING LmResponse)//->MoveToLib
 {
     STRING Key;
@@ -1164,7 +1240,7 @@ CalcLanmanSessionKey(
 /* The NTLM User Session Key */
 NTSTATUS
 CalcNtUserSessionKey(
-    _In_ PNTLM_NT_OWF_PASSWORD NtOwfPwd,
+    _In_ NTLM_NT_OWF_PASSWORD NtOwfPwd,
     _Out_ PSTRING Key)//->MoveToLib
 {
     TRACE("The NTLM User Session Key (maybe wrong)\n");
@@ -1180,28 +1256,143 @@ CalcNtUserSessionKey(
 
 VOID
 CalcNtLm2UserSessionKey(
-    _In_ PSTRING Nt2ResponseKey,
+    _In_ NTLM_NT_OWF_PASSWORD Nt2OwfPwd,
+    _In_ PSTRING TargetInfo,
     _In_ PSTRING ChallengeFromClient,
-    _In_ PSTRING NTLMv2Response)//->MoveToLib
+    _In_ PSTRING ChallengeFromServer,
+    _In_ PSTRING NTLMv2Response,
+    _Out_ PSTRING SessionBaseKey)//->MoveToLib
 {
-    STRING Key;
-    STRING Buffer;
+    STRING NtProofStr;
+    BOOL Anonymouse = FALSE;
+    STRING NtChallengeResponseData;
+
+    //TODO Check size of SessionBaseKey -> Should 0x10
 
     // The NTLMv2 User Session Key
-    TRACE("The NTLMv2 User Session Key (maybe wrong)\n");
+    TRACE("The NTLMv2 User Session Key\n");
 
-    NtlmAStrAlloc(&Key, 0x10, 0x10);
-    NtlmAStrAlloc(&Buffer, ChallengeFromClient->Length + NTLMv2Response->Length, 0);
+    NtlmAStrAlloc(&NtProofStr, 0x10, 0x10);
 
+    //Define ComputeResponse(NegFlg, ResponseKeyNT, ResponseKeyLM,
+    //CHALLENGE_MESSAGE.ServerChallenge, ClientChallenge, Time, ServerName)
+    //As
+    //If (User is set to "" && Passwd is set to "")
+    if (Anonymouse)
+    {
+        //-- Special case for anonymous authentication
+        //Set NtChallengeResponseLen to 0
+        //Set NtChallengeResponseMaxLen to 0
+        //Set NtChallengeResponseBufferOffset to 0
+        //Set LmChallengeResponse to Z(1)
+        //Else
+        ERR("FIXME no user/pass case!\n");
+    }
+    else
+    {
+        //UNICODE_STRING val;
+        PBYTE ccTemp;
+        PBYTE temp;
+        int tempLen, ccTempLen;
+
+        NtChallengeResponseData = *NTLMv2Response;
+        NtChallengeResponseData.Buffer += 0x10;
+        NtChallengeResponseData.Length -= 0x10;
+        NtChallengeResponseData.MaximumLength -= 0x10;
+
+        //Set temp to ConcatenationOf(Responserversion, HiResponserversion,
+        //Z(6), Time, ClientChallenge, Z(4), ServerName, Z(4))
+        //temp = ((PBYTE)NtResponse) +
+        //       FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, RespType);
+        temp = (PBYTE)NtChallengeResponseData.Buffer;
+        /* Spec (4.2.4.1.3 temp) shows 4 bytes more
+         * (all 0) may be a bug in spec-doc. It works
+         * without these extra bytes. */
+        tempLen = NtChallengeResponseData.Length;// -
+                  //FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, RespType) +
+                  //FIXME check length (4 Byte all 0)
+                  //sizeof(ULONG);//??;
+        #ifdef VALIDATE_NTLMv2
+        PrintHexDumpMax(NtChallengeResponseData.Length, (PBYTE)NtChallengeResponseData.Buffer, 0x100);
+        TRACE("%p %p %p %i\n", NtResponse->Buffer, temp, NtChallengeResponseData.Buffer, tempLen);
+        TRACE("**** VALIDATE **** temp\n");
+        PrintHexDumpMax(tempLen, (PBYTE)temp, tempLen);
+        #endif
+
+        //Set NTProofStr to
+        //  HMAC_MD5(ResponseKeyNT,
+        //           ConcatenationOf(CHALLENGE_MESSAGE.ServerChallenge,temp))
+        ccTempLen = MSV1_0_CHALLENGE_LENGTH + tempLen;
+        ccTemp = (PBYTE)NtlmAllocate(ccTempLen, FALSE);
+        memcpy(ccTemp, ChallengeFromServer->Buffer, MSV1_0_CHALLENGE_LENGTH);
+        memcpy(ccTemp + MSV1_0_CHALLENGE_LENGTH, temp, tempLen);
+        HMAC_MD5(Nt2OwfPwd, MSV1_0_NT_OWF_PASSWORD_LENGTH,
+                 ccTemp, ccTempLen, (PUCHAR)NtProofStr.Buffer);
+        NtlmFree(ccTemp, FALSE);
+
+        //Set NtChallengeResponse to ConcatenationOf(NTProofStr, temp)
+        //memcpy(&NtChallengeResponse[0], NTProofStr, ARRAYSIZE(NTProofStr));//16
+        //memcpy(&NtResponse->Response[0], NtProofStr.Buffer, NtProofStr.Length);//16
+        /* MS-NLMP says concat temp ... however
+         * Response is oly 16 Byte ... temp points after it
+         * and this is the same address (temp == &pNtResponse->Response[16])
+         * which is already filled - so copy makes no sense */
+        #ifdef VALIDATE_NTLMv2
+        TRACE("**** VALIDATE **** NTProofStr\n");
+        NtlmPrintHexDump((PBYTE)NtProofStr.Buffer, NtProofStr.Length);
+        //TRACE("**** VALIDATE **** NtChallengeResponse\n");
+        //NtlmPrintHexDump(NtResponse->Buffer, MSV1_0_NTLM3_RESPONSE_LENGTH);
+        #endif
+
+    }
+
+    //EndIf
+    //Set SessionBaseKey to HMAC_MD5(ResponseKeyNT, NTProofStr)
+    //EndDefine
+    HMAC_MD5(Nt2OwfPwd, MSV1_0_NT_OWF_PASSWORD_LENGTH,
+             (PUCHAR)NtProofStr.Buffer, NtProofStr.Length,
+             (PUCHAR)SessionBaseKey->Buffer);
+
+    NtlmPrintHexDump((PBYTE)SessionBaseKey->Buffer, SessionBaseKey->Length);
+
+    NtlmAStrFree(&NtProofStr);
+}
+
+VOID
+CalcNtLm2SessionResponseKey(
+    _In_ NTLM_NT_OWF_PASSWORD NtOwfPwd,
+    _In_ PSTRING ChallengeFromClient,
+    _In_ PSTRING ChallengeFromServer,
+    _Out_ PSTRING SessionResponseKey)
+{
+
+    STRING Buffer;
+    STRING UserSessionKey;
+
+    /* The NTLM2 Session Response User Session Key */
+    TRACE("The NTLM2 Session Response User Session Key\n");
+
+    //Set LmChallengeResponse to ConcatenationOf(HMAC_MD5(ResponseKeyLM,
+    //ConcatenationOf(CHALLENGE_MESSAGE.ServerChallenge, ClientChallenge)),
+    //ClientChallenge )
+    RtlInitString(&UserSessionKey, NULL);
+    NtlmAStrAlloc(&Buffer, 0x10, 0);
+    if (SessionResponseKey->Length != 0x10)
+    {
+        ERR("ERR\n");
+        return;
+    }
+
+    CalcNtUserSessionKey(NtOwfPwd, &UserSessionKey);
+
+    RtlAppendStringToString(&Buffer, ChallengeFromServer);
     RtlAppendStringToString(&Buffer, ChallengeFromClient);
-    RtlAppendStringToString(&Buffer, NTLMv2Response);
+    HMAC_MD5((PUCHAR)UserSessionKey.Buffer, UserSessionKey.Length,
+             (PUCHAR)Buffer.Buffer, Buffer.Length,
+             (PUCHAR)SessionResponseKey->Buffer);
 
-    HMAC_MD5((PUCHAR)Nt2ResponseKey->Buffer, Nt2ResponseKey->Length,
-             (PUCHAR)Buffer.Buffer, Buffer.Length, (PUCHAR)Buffer.Buffer);
-    HMAC_MD5((PUCHAR)Nt2ResponseKey->Buffer, Nt2ResponseKey->Length,
-             (PUCHAR)Buffer.Buffer, Buffer.Length, (PUCHAR)Key.Buffer);
+    NtlmPrintHexDump((PBYTE)SessionResponseKey->Buffer, SessionResponseKey->Length);
 
-    NtlmPrintHexDump((PBYTE)Key.Buffer, Key.Length);
-
-    NtlmAStrFree(&Key);
+    NtlmAStrFree(&UserSessionKey);
+    NtlmAStrFree(&Buffer);
 }

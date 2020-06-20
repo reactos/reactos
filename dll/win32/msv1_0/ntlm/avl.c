@@ -23,14 +23,15 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 BOOL
-NtlmAvlGet(IN PEXT_DATA pAvData,
-           IN MSV1_0_AVID AvId,
-           OUT PVOID* pData,
-           OUT PULONG pLen)
+NtlmAvlGet(
+    _In_ PSTRING pAvData,
+    _In_ MSV1_0_AVID AvId,
+    _Out_ PVOID* pData,
+    _Out_ PULONG pLen)
 {
     PMSV1_0_AV_PAIR pAvPair;
-    PBYTE ptr = pAvData->Buffer;
-    PBYTE ptrend = ptr + pAvData->bUsed;
+    PCHAR ptr = pAvData->Buffer;
+    PCHAR ptrend = ptr + pAvData->Length;
 
     do
     {
@@ -67,28 +68,29 @@ NtlmAvlLen(IN PMSV1_0_AV_PAIR pAvList,
 }*/
 
 BOOL
-NtlmAvlAdd(IN PEXT_DATA pAvData,
-           IN MSV1_0_AVID AvId,
-           IN void* data,
-           IN ULONG len)
+NtlmAvlAdd(
+    _Inout_ PSTRING AvData,
+    _In_ MSV1_0_AVID AvId,
+    _In_ PVOID Data,
+    _In_ ULONG DataLen)
 {
-    PMSV1_0_AV_PAIR pNewPair;
+    PMSV1_0_AV_PAIR NewPair;
 
-    /* realloc not implemented ... */
-    if (pAvData->bUsed + len + sizeof(MSV1_0_AV_PAIR) > pAvData->bAllocated)
+    /* check available buffer size */
+    if (AvData->Length + DataLen + sizeof(MSV1_0_AV_PAIR) > AvData->MaximumLength)
     {
-        ERR("NtlmAvlAdd - need more memory ...");
+        ERR("NtlmAvlAdd: Buffer to small!\n");
         return FALSE;
     }
 
-    pNewPair = (PMSV1_0_AV_PAIR)(pAvData->Buffer + pAvData->bUsed);
-    pNewPair->AvId = (USHORT)AvId;
-    pNewPair->AvLen = (USHORT)len;
-    pAvData->bUsed += sizeof(MSV1_0_AV_PAIR);
+    NewPair = (PMSV1_0_AV_PAIR)(AvData->Buffer + AvData->Length);
+    NewPair->AvId = (USHORT)AvId;
+    NewPair->AvLen = (USHORT)DataLen;
+    AvData->Length += sizeof(MSV1_0_AV_PAIR);
 
-    if (len > 0)
-        memcpy(pAvData->Buffer + pAvData->bUsed, data, len);
-    pAvData->bUsed += len;
+    if (DataLen > 0)
+        memcpy(AvData->Buffer + AvData->Length, Data, DataLen);
+    AvData->Length += DataLen;
 
     return TRUE;
 }

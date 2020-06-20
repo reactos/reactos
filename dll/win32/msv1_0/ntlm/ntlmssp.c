@@ -114,7 +114,8 @@ NtlmInitializeGlobals(VOID)
     /*  NTLMV1 works */
     /*  NTLMV2 not fully working (AUTH_MESSAGE receives INVALID_PARAMETER :-( ) */
     /* FIXME value is stored in registry ... so get it from there! */
-    g->LMCompatibilityLevel = 2;// partly unimplemented
+    // Works with 2 and 5!
+    g->LMCompatibilityLevel = 2;
     /* LMCompatibilityLevel - matrix
      * cli/DC  lvl   LM-     NTLMv1-   NTLMv2   v2-Session-
      *               auth.   auth.     auth.     Security

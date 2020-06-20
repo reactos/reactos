@@ -190,14 +190,7 @@ typedef struct _NTLMSSP_MESSAGE_SIGNATURE_12
 
 /* basic functions */
 
-BOOL
-NTOWFv2(
-    IN LPCWSTR password,
-    IN LPCWSTR user,
-    IN LPCWSTR domain,
-    OUT UCHAR result[16]);
-
-VOID
+BOOLEAN
 NONCE(
     PUCHAR buffer,
     ULONG num);
@@ -285,20 +278,6 @@ CliComputeKeys(
 
 #define NtlmAvlInit ExtDataInit2
 #define NtlmAvlFree ExtStrFree
-
-BOOL
-NtlmAvlGet(
-    IN PEXT_DATA pAvData,
-    IN MSV1_0_AVID AvId,
-    OUT PVOID* pData,
-    OUT PULONG plen);
-
-BOOL
-NtlmAvlAdd(
-    IN PEXT_DATA pAvData,
-    IN MSV1_0_AVID AvId,
-    IN void* data,
-    IN ULONG len);
 
 ULONG
 NtlmAvlSize(
@@ -407,31 +386,6 @@ NtlmAppendToBlob(IN void* buffer,
                  IN OUT PULONG_PTR OffSet);
 
 /* calculations */
-BOOL
-ComputeResponseNTLMv2(
-    IN BOOL Anonymouse,
-    IN PEXT_STRING_W userdom,
-    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
-    IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
-    IN PEXT_STRING_W ServerName,
-    IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
-    IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
-    IN ULONGLONG ChallengeTimestamp,
-    OUT PLM2_RESPONSE pLmChallengeResponse,
-    IN OUT PEXT_DATA pNtChallengeResponse,
-    OUT PUSER_SESSION_KEY SessionBaseKey);
-
-BOOL
-ComputeResponseNTLMv1(
-    IN ULONG NegFlg,
-    IN BOOL Anonymouse,
-    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
-    IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
-    IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
-    IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
-    OUT UCHAR LmChallengeResponse[MSV1_0_RESPONSE_LENGTH],
-    OUT UCHAR NtChallengeResponse[MSV1_0_RESPONSE_LENGTH],
-    OUT PUSER_SESSION_KEY SessionBaseKey);
 
 VOID
 RC4Init(

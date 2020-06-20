@@ -41,6 +41,7 @@
 
 #include "lsa.h"
 #include "msv1_0.h"
+#include "ntlm/avl.h"
 #include "ntlm/ciphers.h"
 #include "ntlm/strutil.h"
 #include "ntlm/ntlmssp.h"

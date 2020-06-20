@@ -9,7 +9,7 @@
 #include "precomp.h"
 
 #include "wine/debug.h"
-WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
+WINE_DEFAULT_DEBUG_CHANNEL(msv1_0_sam);
 
 NTSTATUS
 GetAccountDomainSid(PRPC_SID *Sid)
@@ -165,6 +165,7 @@ MsvpCheckNetworkPassword(
     BOOL UseNTLMv2;
     PNTLM_LM_OWF_PASSWORD LmOwfPwd;
     PNTLM_NT_OWF_PASSWORD NtOwfPwd;
+    NTLM_NT_OWF_PASSWORD Nt2OwfPwd;
     UCHAR *ChallengeFromClient;//[MSV1_0_CHALLENGE_LENGTH];
     UCHAR ZeroBytes16[16];
         //PNTLMSSP_CONTEXT_SVR Context = NULL; // FIXME - maybe from CLIENT_REQUEST ...
@@ -177,14 +178,13 @@ MsvpCheckNetworkPassword(
     PSTRING NtChallengeResponse = &LogonInfo->CaseSensitiveChallengeResponse;
     PSTRING LmChallengeResponse = &LogonInfo->CaseInsensitiveChallengeResponse;
         //PNTLMSSP_CONTEXT_SVR context = Context;
-    EXT_STRING_W XServerName;
-    EXT_STRING_W Xad_DomainName;
     ULONGLONG ChallengeTimestamp;
     //UCHAR context_ServerChallenge[MSV1_0_CHALLENGE_LENGTH];
     UCHAR *ServerChallenge = LogonInfo->ChallengeToClient;
     STRING ExpectedNtChallengeResponse;
     STRING ExpectedLmChallengeResponse;
 
+    __wine_dbch_msv1_0_sam.flags = 0xff;
     TRACE("(%p %p)\n", UserPwdData, UserInfo);
 
     //FIXME: context_cli_NegFlg
@@ -202,14 +202,6 @@ MsvpCheckNetworkPassword(
 
             /* Servername is NetBIOS Name or DNS Hostname */
             //RtlInitUnicodeString(&ServerName, (WCHAR*)gsvr->NbMachineName.Buffer);
-
-    // Hacks
-    XServerName.Buffer = (PBYTE)UserPwdData->ComputerName->Buffer;
-    XServerName.bUsed = UserPwdData->ComputerName->Length;
-    XServerName.bAllocated = UserPwdData->ComputerName->MaximumLength;
-    Xad_DomainName.Buffer = (PBYTE)ad_DomainName->Buffer;
-    Xad_DomainName.bUsed = ad_DomainName->Length;
-    Xad_DomainName.bAllocated = ad_DomainName->MaximumLength;
 
     // guessing cli_negFlg
     if ((LmChallengeResponse->Length == 0x18) &&
@@ -264,19 +256,27 @@ MsvpCheckNetworkPassword(
         (UserInfo->All.LmOwfPassword.Length == MSV1_0_NT_OWF_PASSWORD_LENGTH))
         LmOwfPwd = (PNTLM_NT_OWF_PASSWORD)UserInfo->All.LmOwfPassword.Buffer;
 
+    if (UseNTLMv2)
+    {
+        NTOWFv2ofw((UCHAR*)NtOwfPwd, &UserPwdData->LogonInfo->UserName,
+                   &UserPwdData->LogonInfo->LogonDomainName, Nt2OwfPwd);
+        NtOwfPwd = &Nt2OwfPwd;
+        LmOwfPwd = &Nt2OwfPwd;
+    }
+
     if (!ComputeResponse(
         context_cli_NegFlg,//FIXME: context->cli_NegFlg,
         UseNTLMv2,
         FALSE,
-        &Xad_DomainName,
-        LmOwfPwd,
-        NtOwfPwd,
-        &XServerName,
+        ad_DomainName,
+        (PUCHAR)LmOwfPwd,
+        (PUCHAR)NtOwfPwd,
+        UserPwdData->ComputerName,
         ChallengeFromClient,
         ServerChallenge,//context_ServerChallenge,
         ChallengeTimestamp,
-        /*HACK*/(PEXT_DATA)&ExpectedLmChallengeResponse,
-        /*HACK*/(PEXT_DATA)&ExpectedNtChallengeResponse,
+        &ExpectedLmChallengeResponse,
+        &ExpectedNtChallengeResponse,
         &SessionBaseKey))
     {
         Status = STATUS_INTERNAL_ERROR;
@@ -386,7 +386,7 @@ MsvpCheckNetworkPassword(
     goto done;
 
 setkeys:
-    Status = CalcLmUserSessionKey(LmOwfPwd, &LanmanSessionKey);
+    Status = CalcLmUserSessionKey((PUCHAR)LmOwfPwd, &LanmanSessionKey);
     if (!NT_SUCCESS(Status))
     {
         ERR("Failed to calculate the User Session Key! 0x%lx\n", Status);
