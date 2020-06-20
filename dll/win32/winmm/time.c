@@ -428,7 +428,7 @@ MMRESULT WINAPI timeBeginPeriod(UINT wPeriod)
     /*  High resolution timer requested, use QPC */
     if (wPeriod <= 5 && TIME_qpcFreq.QuadPart == 0)
     {
-        if(QueryPerformanceFrequency(&TIME_qpcFreq))
+        if (QueryPerformanceFrequency(&TIME_qpcFreq))
             TIME_qpcFreq.QuadPart /= 1000;
     }
 
