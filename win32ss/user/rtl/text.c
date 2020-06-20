@@ -997,7 +997,6 @@ BOOL UserExtTextOutW(HDC hdc,
     }
     else
     {
-        RtlZeroMemory(&Argument->rect, sizeof(RECT));
         Argument->bRect = FALSE;
     }
 

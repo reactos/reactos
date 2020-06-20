@@ -35,6 +35,7 @@ IntCbAllocateMemory(ULONG Size)
       return NULL;
    }
 
+   RtlZeroMemory(Mem, Size + sizeof(INT_CALLBACK_HEADER));
    W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
@@ -185,10 +186,6 @@ co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName,
        pLibNameBuffer -= (ULONG_PTR)pArguments;
        pArguments->strLibraryName.Buffer = (PWCHAR)(pLibNameBuffer);
    }
-   else
-   {
-       RtlZeroMemory(&pArguments->strLibraryName, sizeof(UNICODE_STRING));
-   }
 
    if(pstrInitFunc)
    {
@@ -201,10 +198,6 @@ co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName,
        /* Fix argument pointers to be relative to the argument */
        pInitFuncBuffer -= (ULONG_PTR)pArguments;
        pArguments->strInitFuncName.Buffer = (PWCHAR)(pInitFuncBuffer);
-   }
-   else
-   {
-       RtlZeroMemory(&pArguments->strInitFuncName, sizeof(UNICODE_STRING));
    }
 
    /* Do the callback */
@@ -294,7 +287,7 @@ co_IntCallWindowProc(WNDPROC Proc,
                      LPARAM lParam,
                      INT lParamBufferSize)
 {
-   WINDOWPROC_CALLBACK_ARGUMENTS StackArguments;
+   WINDOWPROC_CALLBACK_ARGUMENTS StackArguments = { 0 };
    PWINDOWPROC_CALLBACK_ARGUMENTS Arguments;
    NTSTATUS Status;
    PVOID ResultPointer, pActCtx;
@@ -662,7 +655,6 @@ co_IntCallHookProc(INT HookId,
    Common->offPfn = offPfn;
    Common->Ansi = Ansi;
    Common->lParamSize = lParamSize;
-   RtlZeroMemory(&Common->ModuleName, sizeof(Common->ModuleName));
    if (ModuleName->Buffer && ModuleName->Length)
    {
       RtlCopyMemory(&Common->ModuleName, ModuleName->Buffer, ModuleName->Length);
@@ -928,9 +920,6 @@ co_IntCallLoadMenu( HINSTANCE hModule,
       return 0;
    }
    Common = (PLOADMENU_CALLBACK_ARGUMENTS) Argument;
-
-   // Help Intersource check and MenuName is now 4 bytes + so zero it.
-   RtlZeroMemory(Common, ArgumentLength);
 
    Common->hModule = hModule;
    if (pMenuName->Length)
