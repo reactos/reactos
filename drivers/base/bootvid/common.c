@@ -51,7 +51,7 @@ BitBlt(
     _In_ ULONG Top,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ PUCHAR Buffer,
+    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG BitsPerPixel,
     _In_ ULONG Delta)
 {
@@ -318,7 +318,7 @@ VidSetTextColor(
 VOID
 NTAPI
 VidDisplayStringXY(
-    _In_ PUCHAR String,
+    _In_z_ PUCHAR String,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ BOOLEAN Transparent)
@@ -368,7 +368,7 @@ VidSetScrollRegion(
 VOID
 NTAPI
 VidDisplayString(
-    _In_ PUCHAR String)
+    _In_z_ PUCHAR String)
 {
     /* Start looping the string */
     for (; *String; ++String)
@@ -446,7 +446,7 @@ VidDisplayString(
 VOID
 NTAPI
 VidBufferToScreenBlt(
-    _In_ PUCHAR Buffer,
+    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,

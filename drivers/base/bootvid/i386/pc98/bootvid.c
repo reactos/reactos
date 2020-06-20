@@ -411,7 +411,7 @@ VidResetDisplay(
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_ PUCHAR Buffer,
+    _Out_writes_bytes_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
@@ -430,7 +430,7 @@ VidScreenToBufferBlt(
     {
         OutputBuffer = Buffer + Y * Delta;
 
-        for (X = 0; X < Width; X += 2)
+        for (X = 0; X < Width; X += sizeof(USHORT))
         {
             Px = READ_REGISTER_USHORT(PixelsPosition++);
             *OutputBuffer++ = (FIRSTBYTE(Px) << 4) | (SECONDBYTE(Px) & 0x0F);

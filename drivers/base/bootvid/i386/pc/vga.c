@@ -331,7 +331,7 @@ VidCleanUp(VOID)
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_ PUCHAR Buffer,
+    _Out_writes_bytes_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,

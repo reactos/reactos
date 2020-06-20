@@ -412,7 +412,7 @@ VidSolidColorFill(
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_ PUCHAR Buffer,
+    _Out_writes_bytes_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
@@ -430,7 +430,7 @@ VidScreenToBufferBlt(
         PUCHAR Buf = Buffer + y * Delta;
 
         /* Start the X inner loop */
-        for (ULONG x = 0; x < Width; x += 2)
+        for (ULONG x = 0; x < Width; x += sizeof(USHORT))
         {
             /* Read the current value */
             *Buf = (*Back++ & 0xF) << 4;
