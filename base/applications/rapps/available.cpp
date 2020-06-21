@@ -102,6 +102,19 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
         }
     }
 
+    // TODO: are we going to support specify an URL for an icon ?
+    ATL::CStringW IconLocation;
+    if (GetString(L"Icon", IconLocation))
+    {
+        // TODO: Does the filename contain anything stuff like "\\" ".." ":" "<" ">" ?
+        // these stuff may lead to security issues
+        ATL::CStringW IconPath = AvlbStrings.szAppsPath;
+        PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
+        PathAppendW(IconPath.GetBuffer(), IconLocation.GetString());
+        IconPath.ReleaseBuffer();
+        m_szIconLocation = IconPath;
+    }
+
     RetrieveSize();
     RetrieveLicenseType();
     RetrieveLanguages();
