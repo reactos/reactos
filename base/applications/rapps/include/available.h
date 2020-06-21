@@ -8,7 +8,7 @@
 #include "misc.h"
 
 
-#define MAX_SNAPSHOT_NUM 16
+#define MAX_SCRNSHOT_NUM 16
 
 enum LicenseType
 {
@@ -51,7 +51,7 @@ struct CAvailableApplicationInfo
     ATL::CStringW m_szUrlSite;
     ATL::CStringW m_szUrlDownload;
     ATL::CSimpleArray<LCID> m_LanguageLCIDs;
-    ATL::CSimpleArray<ATL::CStringW> m_szSnapshotLocation;
+    ATL::CSimpleArray<ATL::CStringW> m_szScrnshotLocation;
 
     ULONG m_SizeBytes;
 
@@ -74,7 +74,7 @@ struct CAvailableApplicationInfo
     BOOL IsInstalled() const;
     BOOL HasInstalledVersion() const;
     BOOL HasUpdate() const;
-    BOOL RetrieveSnapshot(UINT Index, ATL::CStringW& SnapshotFileName) const;
+    BOOL RetrieveScrnshot(UINT Index, ATL::CStringW& ScrnshotLocation) const;
     // Set a timestamp
     VOID SetLastWriteTime(FILETIME* ftTime);
 
