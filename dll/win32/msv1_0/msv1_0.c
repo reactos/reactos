@@ -20,54 +20,6 @@ LSA_DISPATCH_TABLE DispatchTable;
 
 /* FUNCTIONS ***************************************************************/
 
-static
-NTSTATUS
-GetAccountDomainSid(PRPC_SID *Sid)
-{
-    LSAPR_HANDLE PolicyHandle = NULL;
-    PLSAPR_POLICY_INFORMATION PolicyInfo = NULL;
-    ULONG Length = 0;
-    NTSTATUS Status;
-
-    Status = LsaIOpenPolicyTrusted(&PolicyHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("LsaIOpenPolicyTrusted() failed (Status 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    Status = LsarQueryInformationPolicy(PolicyHandle,
-                                        PolicyAccountDomainInformation,
-                                        &PolicyInfo);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("LsarQueryInformationPolicy() failed (Status 0x%08lx)\n", Status);
-        goto done;
-    }
-
-    Length = RtlLengthSid(PolicyInfo->PolicyAccountDomainInfo.Sid);
-
-    *Sid = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
-    if (*Sid == NULL)
-    {
-        ERR("Failed to allocate SID\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    memcpy(*Sid, PolicyInfo->PolicyAccountDomainInfo.Sid, Length);
-
-done:
-    if (PolicyInfo != NULL)
-        LsaIFree_LSAPR_POLICY_INFORMATION(PolicyAccountDomainInformation,
-                                          PolicyInfo);
-
-    if (PolicyHandle != NULL)
-        LsarClose(&PolicyHandle);
-
-    return Status;
-}
-
 
 static
 NTSTATUS
@@ -790,182 +742,6 @@ done:
 }
 
 
-static
-NTSTATUS
-MsvpCheckPassword(PUNICODE_STRING UserPassword,
-                  PSAMPR_USER_INFO_BUFFER UserInfo)
-{
-    ENCRYPTED_NT_OWF_PASSWORD UserNtPassword;
-    ENCRYPTED_LM_OWF_PASSWORD UserLmPassword;
-    BOOLEAN UserLmPasswordPresent = FALSE;
-    BOOLEAN UserNtPasswordPresent = FALSE;
-    OEM_STRING LmPwdString;
-    CHAR LmPwdBuffer[15];
-    NTSTATUS Status;
-
-    TRACE("(%p %p)\n", UserPassword, UserInfo);
-
-    /* Calculate the LM password and hash for the users password */
-    LmPwdString.Length = 15;
-    LmPwdString.MaximumLength = 15;
-    LmPwdString.Buffer = LmPwdBuffer;
-    ZeroMemory(LmPwdString.Buffer, LmPwdString.MaximumLength);
-
-    Status = RtlUpcaseUnicodeStringToOemString(&LmPwdString,
-                                               UserPassword,
-                                               FALSE);
-    if (NT_SUCCESS(Status))
-    {
-        /* Calculate the LM hash value of the users password */
-        Status = SystemFunction006(LmPwdString.Buffer,
-                                   (LPSTR)&UserLmPassword);
-        if (NT_SUCCESS(Status))
-        {
-            UserLmPasswordPresent = TRUE;
-        }
-    }
-
-    /* Calculate the NT hash of the users password */
-    Status = SystemFunction007(UserPassword,
-                               (LPBYTE)&UserNtPassword);
-    if (NT_SUCCESS(Status))
-    {
-        UserNtPasswordPresent = TRUE;
-    }
-
-    Status = STATUS_WRONG_PASSWORD;
-
-    /* Succeed, if no password has been set */
-    if (UserInfo->All.NtPasswordPresent == FALSE &&
-        UserInfo->All.LmPasswordPresent == FALSE)
-    {
-        TRACE("No password check!\n");
-        Status = STATUS_SUCCESS;
-        goto done;
-    }
-
-    /* Succeed, if NT password matches */
-    if (UserNtPasswordPresent && UserInfo->All.NtPasswordPresent)
-    {
-        TRACE("Check NT password hashes:\n");
-        if (RtlEqualMemory(&UserNtPassword,
-                           UserInfo->All.NtOwfPassword.Buffer,
-                           sizeof(ENCRYPTED_NT_OWF_PASSWORD)))
-        {
-            TRACE("  success!\n");
-            Status = STATUS_SUCCESS;
-            goto done;
-        }
-
-        TRACE("  failed!\n");
-    }
-
-    /* Succeed, if LM password matches */
-    if (UserLmPasswordPresent && UserInfo->All.LmPasswordPresent)
-    {
-        TRACE("Check LM password hashes:\n");
-        if (RtlEqualMemory(&UserLmPassword,
-                           UserInfo->All.LmOwfPassword.Buffer,
-                           sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
-        {
-            TRACE("  success!\n");
-            Status = STATUS_SUCCESS;
-            goto done;
-        }
-        TRACE("  failed!\n");
-    }
-
-done:
-    return Status;
-}
-
-
-static
-BOOL
-MsvpCheckLogonHours(
-    _In_ PSAMPR_LOGON_HOURS LogonHours,
-    _In_ PLARGE_INTEGER LogonTime)
-{
-#if 0
-    LARGE_INTEGER LocalLogonTime;
-    TIME_FIELDS TimeFields;
-    USHORT MinutesPerUnit, Offset;
-    BOOL bFound;
-
-    FIXME("MsvpCheckLogonHours(%p %p)\n", LogonHours, LogonTime);
-
-    if (LogonHours->UnitsPerWeek == 0 || LogonHours->LogonHours == NULL)
-    {
-        FIXME("No logon hours!\n");
-        return TRUE;
-    }
-
-    RtlSystemTimeToLocalTime(LogonTime, &LocalLogonTime);
-    RtlTimeToTimeFields(&LocalLogonTime, &TimeFields);
-
-    FIXME("UnitsPerWeek: %u\n", LogonHours->UnitsPerWeek);
-    MinutesPerUnit = 10080 / LogonHours->UnitsPerWeek;
-
-    Offset = ((TimeFields.Weekday * 24 + TimeFields.Hour) * 60 + TimeFields.Minute) / MinutesPerUnit;
-    FIXME("Offset: %us\n", Offset);
-
-    bFound = (BOOL)(LogonHours->LogonHours[Offset / 8] & (1 << (Offset % 8)));
-    FIXME("Logon permitted: %s\n", bFound ? "Yes" : "No");
-
-    return bFound;
-#endif
-    return TRUE;
-}
-
-
-static
-BOOL
-MsvpCheckWorkstations(
-    _In_ PRPC_UNICODE_STRING WorkStations,
-    _In_ PWSTR ComputerName)
-{
-    PWSTR pStart, pEnd;
-    BOOL bFound = FALSE;
-
-    TRACE("MsvpCheckWorkstations(%p %S)\n", WorkStations, ComputerName);
-
-    if (WorkStations->Length == 0 || WorkStations->Buffer == NULL)
-    {
-        TRACE("No workstations!\n");
-        return TRUE;
-    }
-
-    TRACE("Workstations: %wZ\n", WorkStations);
-
-    pStart = WorkStations->Buffer;
-    for (;;)
-    {
-        pEnd = wcschr(pStart, L',');
-        if (pEnd != NULL)
-            *pEnd = UNICODE_NULL;
-
-        TRACE("Comparing '%S' and '%S'\n", ComputerName, pStart);
-        if (_wcsicmp(ComputerName, pStart) == 0)
-        {
-            bFound = TRUE;
-            if (pEnd != NULL)
-                *pEnd = L',';
-            break;
-        }
-
-        if (pEnd == NULL)
-            break;
-
-        *pEnd = L',';
-        pStart = pEnd + 1;
-    }
-
-    TRACE("Found allowed workstation: %s\n", (bFound) ? "Yes" : "No");
-
-    return bFound;
-}
-
-
 /*
  * @unimplemented
  */
@@ -1185,19 +961,11 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     PMSV1_0_INTERACTIVE_LOGON LogonInfo;
     UNICODE_STRING ComputerName;
     WCHAR ComputerNameData[MAX_COMPUTERNAME_LENGTH + 1];
-    SAMPR_HANDLE ServerHandle = NULL;
-    SAMPR_HANDLE DomainHandle = NULL;
+    LSA_SAM_PWD_DATA LogonPwdData = { FALSE, NULL };
     SAMPR_HANDLE UserHandle = NULL;
     PRPC_SID AccountDomainSid = NULL;
-    RPC_UNICODE_STRING Names[1];
-    SAMPR_ULONG_ARRAY RelativeIds = {0, NULL};
-    SAMPR_ULONG_ARRAY Use = {0, NULL};
     PSAMPR_USER_INFO_BUFFER UserInfo = NULL;
     BOOLEAN SessionCreated = FALSE;
-    LARGE_INTEGER LogonTime;
-    LARGE_INTEGER AccountExpires;
-    LARGE_INTEGER PasswordMustChange;
-    LARGE_INTEGER PasswordLastSet;
     DWORD ComputerNameSize;
     BOOL SpecialAccount = FALSE;
     UCHAR LogonPassHash;
@@ -1324,6 +1092,9 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         if (!NT_SUCCESS(Status))
             return STATUS_INVALID_PARAMETER;
 
+        LogonPwdData.IsNetwork = FALSE;
+        LogonPwdData.PlainPwd = &LogonInfo->Password;
+
         TRACE("Domain: %wZ\n", &LogonInfo->LogonDomainName);
         TRACE("User: %wZ\n", &LogonInfo->UserName);
         TRACE("Password: %wZ\n", &LogonInfo->Password);
@@ -1336,9 +1107,6 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         return STATUS_NOT_IMPLEMENTED;
     }
     // TODO: Add other LogonType validity checks.
-
-    /* Get the logon time */
-    NtQuerySystemTime(&LogonTime);
 
     /* Check for special accounts */
     // FIXME: Windows does not do this that way!! (msv1_0 does not contain these hardcoded values)
@@ -1401,164 +1169,17 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     else
     {
         TRACE("NormalAccount\n");
-
-        /* Get the account domain SID */
-        Status = GetAccountDomainSid(&AccountDomainSid);
+        Status = SamValidateNormalUser(&LogonInfo->UserName,
+                                       &LogonPwdData,
+                                       &ComputerName,
+                                       &AccountDomainSid,
+                                       &UserHandle,
+                                       &UserInfo,
+                                       SubStatus);
         if (!NT_SUCCESS(Status))
         {
-            ERR("GetAccountDomainSid() failed (Status 0x%08lx)\n", Status);
+            ERR("SamValidateNormalUser() failed (Status 0x%08lx)\n", Status);
             return Status;
-        }
-
-        /* Connect to the SAM server */
-        Status = SamIConnect(NULL,
-                             &ServerHandle,
-                             SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
-                             TRUE);
-        if (!NT_SUCCESS(Status))
-        {
-            TRACE("SamIConnect() failed (Status 0x%08lx)\n", Status);
-            goto done;
-        }
-
-        /* Open the account domain */
-        Status = SamrOpenDomain(ServerHandle,
-                                DOMAIN_LOOKUP,
-                                AccountDomainSid,
-                                &DomainHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamrOpenDomain failed (Status %08lx)\n", Status);
-            goto done;
-        }
-
-        Names[0].Length = LogonInfo->UserName.Length;
-        Names[0].MaximumLength = LogonInfo->UserName.MaximumLength;
-        Names[0].Buffer = LogonInfo->UserName.Buffer;
-
-        /* Try to get the RID for the user name */
-        Status = SamrLookupNamesInDomain(DomainHandle,
-                                         1,
-                                         Names,
-                                         &RelativeIds,
-                                         &Use);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamrLookupNamesInDomain failed (Status %08lx)\n", Status);
-            Status = STATUS_NO_SUCH_USER;
-            goto done;
-        }
-
-        /* Fail, if it is not a user account */
-        if (Use.Element[0] != SidTypeUser)
-        {
-            ERR("Account is not a user account!\n");
-            Status = STATUS_NO_SUCH_USER;
-            goto done;
-        }
-
-        /* Open the user object */
-        Status = SamrOpenUser(DomainHandle,
-                              USER_READ_GENERAL | USER_READ_LOGON |
-                              USER_READ_ACCOUNT | USER_READ_PREFERENCES, /* FIXME */
-                              RelativeIds.Element[0],
-                              &UserHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamrOpenUser failed (Status %08lx)\n", Status);
-            goto done;
-        }
-
-        Status = SamrQueryInformationUser(UserHandle,
-                                          UserAllInformation,
-                                          &UserInfo);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamrQueryInformationUser failed (Status %08lx)\n", Status);
-            goto done;
-        }
-
-        TRACE("UserName: %wZ\n", &UserInfo->All.UserName);
-
-        /* Check the password */
-        if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
-        {
-            Status = MsvpCheckPassword(&LogonInfo->Password,
-                                       UserInfo);
-            if (!NT_SUCCESS(Status))
-            {
-                ERR("MsvpCheckPassword failed (Status %08lx)\n", Status);
-                goto done;
-            }
-        }
-
-        /* Check account restrictions for non-administrator accounts */
-        if (RelativeIds.Element[0] != DOMAIN_USER_RID_ADMIN)
-        {
-            /* Check if the account has been disabled */
-            if (UserInfo->All.UserAccountControl & USER_ACCOUNT_DISABLED)
-            {
-                ERR("Account disabled!\n");
-                *SubStatus = STATUS_ACCOUNT_DISABLED;
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
-
-            /* Check if the account has been locked */
-            if (UserInfo->All.UserAccountControl & USER_ACCOUNT_AUTO_LOCKED)
-            {
-                ERR("Account locked!\n");
-                *SubStatus = STATUS_ACCOUNT_LOCKED_OUT;
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
-
-            /* Check if the account expired */
-            AccountExpires.LowPart = UserInfo->All.AccountExpires.LowPart;
-            AccountExpires.HighPart = UserInfo->All.AccountExpires.HighPart;
-            if (LogonTime.QuadPart >= AccountExpires.QuadPart)
-            {
-                ERR("Account expired!\n");
-                *SubStatus = STATUS_ACCOUNT_EXPIRED;
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
-
-            /* Check if the password expired */
-            PasswordMustChange.LowPart = UserInfo->All.PasswordMustChange.LowPart;
-            PasswordMustChange.HighPart = UserInfo->All.PasswordMustChange.HighPart;
-            PasswordLastSet.LowPart = UserInfo->All.PasswordLastSet.LowPart;
-            PasswordLastSet.HighPart = UserInfo->All.PasswordLastSet.HighPart;
-
-            if (LogonTime.QuadPart >= PasswordMustChange.QuadPart)
-            {
-                ERR("Password expired!\n");
-                if (PasswordLastSet.QuadPart == 0)
-                    *SubStatus = STATUS_PASSWORD_MUST_CHANGE;
-                else
-                    *SubStatus = STATUS_PASSWORD_EXPIRED;
-
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
-
-            /* Check logon hours */
-            if (!MsvpCheckLogonHours(&UserInfo->All.LogonHours, &LogonTime))
-            {
-                ERR("Invalid logon hours!\n");
-                *SubStatus = STATUS_INVALID_LOGON_HOURS;
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
-
-            /* Check workstations */
-            if (!MsvpCheckWorkstations(&UserInfo->All.WorkStations, ComputerNameData))
-            {
-                ERR("Invalid workstation!\n");
-                *SubStatus = STATUS_INVALID_WORKSTATION;
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
         }
     }
 
@@ -1692,14 +1313,6 @@ done:
 
     SamIFree_SAMPR_USER_INFO_BUFFER(UserInfo,
                                     UserAllInformation);
-    SamIFree_SAMPR_ULONG_ARRAY(&RelativeIds);
-    SamIFree_SAMPR_ULONG_ARRAY(&Use);
-
-    if (DomainHandle != NULL)
-        SamrCloseHandle(&DomainHandle);
-
-    if (ServerHandle != NULL)
-        SamrCloseHandle(&ServerHandle);
 
     if (AccountDomainSid != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
