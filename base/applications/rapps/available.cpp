@@ -57,9 +57,9 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
     static_assert(MAX_SCRNSHOT_NUM < 10000, "MAX_SCRNSHOT_NUM is too big");
     for (int i = 0; i < MAX_SCRNSHOT_NUM; i++)
     {
-        WCHAR ScrnshotField[sizeof("Scrnshot") + 4];
-        wsprintfW(ScrnshotField, L"Scrnshot%d", i + 1);
-        ATL::CStringW ScrnshotLocation;
+        CStringW ScrnshotField;
+        ScrnshotField.Format(L"Screenshot%d", i + 1);
+        CStringW ScrnshotLocation;
         if (!GetString(ScrnshotField, ScrnshotLocation))
         {
             continue;
