@@ -2394,18 +2394,16 @@ private:
         }
 
         /* Load icon from file */
-        ATL::CStringW szIconPath = szFolderPath;
-        PathAppendW(szIconPath.GetBuffer(MAX_PATH), L"icons");
-        PathAppendW(szIconPath.GetBuffer(), Info->m_szName.GetString());
-        PathAddExtensionW(szIconPath.GetBuffer(), L".ico");
-        szIconPath.ReleaseBuffer();
-
-        hIcon = (HICON) LoadImageW(NULL,
-                                   szIconPath.GetString(),
-                                   IMAGE_ICON,
-                                   LISTVIEW_ICON_SIZE,
-                                   LISTVIEW_ICON_SIZE,
-                                   LR_LOADFROMFILE);
+        ATL::CStringW szIconPath;
+        if (Info->RetrieveIcon(szIconPath))
+        {
+            hIcon = (HICON)LoadImageW(NULL,
+                szIconPath.GetString(),
+                IMAGE_ICON,
+                LISTVIEW_ICON_SIZE,
+                LISTVIEW_ICON_SIZE,
+                LR_LOADFROMFILE);
+        }
 
         if (!hIcon || GetLastError() != ERROR_SUCCESS)
         {
