@@ -74,7 +74,7 @@ struct CAvailableApplicationInfo
     BOOL IsInstalled() const;
     BOOL HasInstalledVersion() const;
     BOOL HasUpdate() const;
-    BOOL RetrieveScrnshot(UINT Index, ATL::CStringW& ScrnshotFileName) const;
+    BOOL RetrieveScrnshot(UINT Index, ATL::CStringW& ScrnshotLocation) const;
     // Set a timestamp
     VOID SetLastWriteTime(FILETIME* ftTime);
 

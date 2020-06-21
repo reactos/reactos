@@ -236,13 +236,13 @@ BOOL CAvailableApplicationInfo::HasUpdate() const
     return (m_szInstalledVersion.Compare(m_szVersion) < 0) ? TRUE : FALSE;
 }
 
-BOOL CAvailableApplicationInfo::RetrieveScrnshot(UINT Index,ATL::CStringW& ScrnshotFileName) const
+BOOL CAvailableApplicationInfo::RetrieveScrnshot(UINT Index,ATL::CStringW& ScrnshotLocation) const
 {
     if (Index >= (UINT)m_szScrnshotLocation.GetSize())
     {
         return FALSE;
     }
-    ScrnshotFileName = m_szScrnshotLocation[Index];
+    ScrnshotLocation = m_szScrnshotLocation[Index];
     return TRUE;
 }
 
