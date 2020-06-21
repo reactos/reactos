@@ -54,32 +54,32 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
     GetString(L"URLSite", m_szUrlSite);
     GetString(L"SHA1", m_szSHA1);
 
-    static_assert(MAX_SNAPSHOT_NUM < 10000, "MAX_SNAPSHOT_NUM is too big");
-    for (int i = 0; i < MAX_SNAPSHOT_NUM; i++)
+    static_assert(MAX_SCRNSHOT_NUM < 10000, "MAX_SCRNSHOT_NUM is too big");
+    for (int i = 0; i < MAX_SCRNSHOT_NUM; i++)
     {
-        WCHAR SnapshotField[sizeof("Snapshot") + 4];
-        wsprintfW(SnapshotField, L"Snapshot%d", i + 1);
-        ATL::CStringW SnapshotLocation;
-        if (!GetString(SnapshotField, SnapshotLocation))
+        WCHAR ScrnshotField[sizeof("Scrnshot") + 4];
+        wsprintfW(ScrnshotField, L"Scrnshot%d", i + 1);
+        ATL::CStringW ScrnshotLocation;
+        if (!GetString(ScrnshotField, ScrnshotLocation))
         {
             continue;
         }
 
 
-        if (PathIsURLW(SnapshotLocation.GetString()))
+        if (PathIsURLW(ScrnshotLocation.GetString()))
         {
-            m_szSnapshotLocation.Add(SnapshotLocation);
+            m_szScrnshotLocation.Add(ScrnshotLocation);
         }
         else
         {
             // TODO: Does the filename contain anything stuff like "\\" ".." ":" "<" ">" ?
             // these stuff may lead to security issues
 
-            ATL::CStringW SnapshotName = AvlbStrings.szAppsPath;
-            PathAppendW(SnapshotName.GetBuffer(MAX_PATH), L"snapshots");
-            PathAppendW(SnapshotName.GetBuffer(), SnapshotLocation.GetString());
-            SnapshotName.ReleaseBuffer();
-            m_szSnapshotLocation.Add(SnapshotName);
+            ATL::CStringW ScrnshotName = AvlbStrings.szAppsPath;
+            PathAppendW(ScrnshotName.GetBuffer(MAX_PATH), L"scrnshots");
+            PathAppendW(ScrnshotName.GetBuffer(), ScrnshotLocation.GetString());
+            ScrnshotName.ReleaseBuffer();
+            m_szScrnshotLocation.Add(ScrnshotName);
         }
     }
 
@@ -236,13 +236,13 @@ BOOL CAvailableApplicationInfo::HasUpdate() const
     return (m_szInstalledVersion.Compare(m_szVersion) < 0) ? TRUE : FALSE;
 }
 
-BOOL CAvailableApplicationInfo::RetrieveSnapshot(UINT Index,ATL::CStringW& SnapshotFileName) const
+BOOL CAvailableApplicationInfo::RetrieveScrnshot(UINT Index,ATL::CStringW& ScrnshotFileName) const
 {
-    if (Index >= (UINT)m_szSnapshotLocation.GetSize())
+    if (Index >= (UINT)m_szScrnshotLocation.GetSize())
     {
         return FALSE;
     }
-    SnapshotFileName = m_szSnapshotLocation[Index];
+    ScrnshotFileName = m_szScrnshotLocation[Index];
     return TRUE;
 }
 

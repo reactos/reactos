@@ -35,10 +35,10 @@ using namespace Gdiplus;
 // default broken-image icon size
 #define BROKENIMG_ICON_SIZE 96
 
-// the boundary of w/h ratio of snapshot preview window
-#define SNPSHT_MAX_ASPECT_RAT 2.5
+// the boundary of w/h ratio of scrnshot preview window
+#define SCRNSHOT_MAX_ASPECT_RAT 2.5
 
-// padding between snapshot preview and richedit (in pixel)
+// padding between scrnshot preview and richedit (in pixel)
 #define INFO_DISPLAY_PADDING 10
 
 // minimum width of richedit
@@ -46,15 +46,15 @@ using namespace Gdiplus;
 
 
 // user-defined window message
-#define WM_RAPPS_DOWNLOAD_COMPLETE (WM_USER + 1) // notify download complete. wParam is error code, and lParam is a pointer to SnapshotDownloadParam
+#define WM_RAPPS_DOWNLOAD_COMPLETE (WM_USER + 1) // notify download complete. wParam is error code, and lParam is a pointer to ScrnshotDownloadParam
 #define WM_RAPPS_RESIZE_CHILDREN   (WM_USER + 2) // ask parent window to resize children.
 
-enum SNPSHT_STATUS
+enum SCRNSHOT_STATUS
 {
-    SNPSHT_PREV_EMPTY,      // show nothing
-    SNPSHT_PREV_LOADING,    // image is loading (most likely downloading)
-    SNPSHT_PREV_IMAGE,       // display image from a file
-    SNPSHT_PREV_FAILED      // image can not be shown (download failure or wrong image)
+    SCRNSHOT_PREV_EMPTY,      // show nothing
+    SCRNSHOT_PREV_LOADING,    // image is loading (most likely downloading)
+    SCRNSHOT_PREV_IMAGE,       // display image from a file
+    SCRNSHOT_PREV_FAILED      // image can not be shown (download failure or wrong image)
 };
 
 #define TIMER_LOADING_ANIMATION 1 // Timer ID
@@ -65,13 +65,13 @@ enum SNPSHT_STATUS
 
 #define PI 3.1415927
 
-typedef struct __SnapshotDownloadParam
+typedef struct __ScrnshotDownloadParam
 {
     LONGLONG ID;
     HANDLE hFile;
     HWND hwndNotify;
     ATL::CStringW DownloadFileName;
-} SnapshotDownloadParam;
+} ScrnshotDownloadParam;
 
 INT GetSystemColorDepth()
 {
@@ -304,7 +304,7 @@ public:
     }
 };
 
-int SnapshotDownloadCallback(
+int ScrnshotDownloadCallback(
     pASYNCINET AsyncInet,
     ASYNC_EVENT Event,
     WPARAM wParam,
@@ -312,7 +312,7 @@ int SnapshotDownloadCallback(
     VOID* Extension
     )
 {
-    SnapshotDownloadParam* DownloadParam = (SnapshotDownloadParam*)Extension;
+    ScrnshotDownloadParam* DownloadParam = (ScrnshotDownloadParam*)Extension;
     switch (Event)
     {
     case ASYNCINET_DATA:
@@ -338,12 +338,12 @@ int SnapshotDownloadCallback(
     return 0;
 }
 
-class CAppSnapshotPreview :
-    public CWindowImpl<CAppSnapshotPreview>
+class CAppScrnshotPreview :
+    public CWindowImpl<CAppScrnshotPreview>
 {
 private:
 
-    SNPSHT_STATUS SnpshtPrevStauts = SNPSHT_PREV_EMPTY;
+    SCRNSHOT_STATUS ScrnshotPrevStauts = SCRNSHOT_PREV_EMPTY;
     Image* pImage = NULL;
     HICON hBrokenImgIcon = NULL;
     BOOL bLoadingTimerOn = FALSE;
@@ -377,7 +377,7 @@ private:
         }
         case WM_RAPPS_DOWNLOAD_COMPLETE:
         {
-            SnapshotDownloadParam* DownloadParam = (SnapshotDownloadParam*)lParam;
+            ScrnshotDownloadParam* DownloadParam = (ScrnshotDownloadParam*)lParam;
             AsyncInetRelease(AsyncInet);
             AsyncInet = NULL;
             switch (wParam)
@@ -477,7 +477,7 @@ private:
 
     VOID DisplayLoading()
     {
-        SetStatus(SNPSHT_PREV_LOADING);
+        SetStatus(SCRNSHOT_PREV_LOADING);
         if (bLoadingTimerOn)
         {
             KillTimer(TIMER_LOADING_ANIMATION);
@@ -490,14 +490,14 @@ private:
     VOID DisplayFailed()
     {
         InterlockedIncrement64(&ContentID);
-        SetStatus(SNPSHT_PREV_FAILED);
+        SetStatus(SCRNSHOT_PREV_FAILED);
         PreviousDisplayCleanup();
     }
 
     BOOL DisplayFile(LPCWSTR lpszFileName)
     {
         PreviousDisplayCleanup();
-        SetStatus(SNPSHT_PREV_IMAGE);
+        SetStatus(SCRNSHOT_PREV_IMAGE);
         pImage = Bitmap::FromFile(lpszFileName, 0);
         if (pImage->GetLastStatus() != Ok)
         {
@@ -507,9 +507,9 @@ private:
         return TRUE;
     }
 
-    VOID SetStatus(SNPSHT_STATUS Status)
+    VOID SetStatus(SCRNSHOT_STATUS Status)
     {
-        SnpshtPrevStauts = Status;
+        ScrnshotPrevStauts = Status;
     }
 
     VOID PaintOnDC(HDC hdc, int width, int height, BOOL bDrawBkgnd)
@@ -526,15 +526,15 @@ private:
             SelectObject(hdcMem, hOldBrush);
         }
 
-        switch (SnpshtPrevStauts)
+        switch (ScrnshotPrevStauts)
         {
-        case SNPSHT_PREV_EMPTY:
+        case SCRNSHOT_PREV_EMPTY:
         {
 
         }
         break;
 
-        case SNPSHT_PREV_LOADING:
+        case SCRNSHOT_PREV_LOADING:
         {
             Graphics graphics(hdcMem);
             Color color(255, 0, 0);
@@ -564,7 +564,7 @@ private:
         }
         break;
 
-        case SNPSHT_PREV_IMAGE:
+        case SCRNSHOT_PREV_IMAGE:
         {
             if (pImage)
             {
@@ -581,7 +581,7 @@ private:
         }
         break;
 
-        case SNPSHT_PREV_FAILED:
+        case SCRNSHOT_PREV_FAILED:
         {
             DrawIconEx(hdcMem,
                 (width - BrokenImgSize) / 2,
@@ -632,7 +632,7 @@ public:
                 LoadCursorW(NULL, IDC_ARROW),
                 (HBRUSH)(COLOR_BTNFACE + 1),
                 0,
-                L"RAppsSnapshotPreview",
+                L"RAppsScrnshotPreview",
                 NULL
             },
             NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
@@ -674,7 +674,7 @@ public:
     VOID DisplayEmpty()
     {
         InterlockedIncrement64(&ContentID);
-        SetStatus(SNPSHT_PREV_EMPTY);
+        SetStatus(SCRNSHOT_PREV_EMPTY);
         PreviousDisplayCleanup();
     }
 
@@ -687,22 +687,22 @@ public:
         {
             DisplayLoading();
 
-            SnapshotDownloadParam* DownloadParam = new SnapshotDownloadParam;
+            ScrnshotDownloadParam* DownloadParam = new ScrnshotDownloadParam;
             if (!DownloadParam) return FALSE;
 
             DownloadParam->hwndNotify = m_hWnd;
             DownloadParam->ID = ID;
             // generate a filename
-            ATL::CStringW SnapshotFolder = CAvailableApps::m_Strings.szAppsPath;
-            PathAppendW(SnapshotFolder.GetBuffer(MAX_PATH), L"snapshots");
-            SnapshotFolder.ReleaseBuffer();
+            ATL::CStringW ScrnshotFolder = CAvailableApps::m_Strings.szAppsPath;
+            PathAppendW(ScrnshotFolder.GetBuffer(MAX_PATH), L"scrnshots");
+            ScrnshotFolder.ReleaseBuffer();
 
-            if (!PathIsDirectoryW(SnapshotFolder.GetString()))
+            if (!PathIsDirectoryW(ScrnshotFolder.GetString()))
             {
-                CreateDirectoryW(SnapshotFolder.GetString(), NULL);
+                CreateDirectoryW(ScrnshotFolder.GetString(), NULL);
             }
 
-            if (!GetTempFileNameW(SnapshotFolder.GetString(), L"img",
+            if (!GetTempFileNameW(ScrnshotFolder.GetString(), L"img",
                 0, DownloadParam->DownloadFileName.GetBuffer(MAX_PATH)))
             {
                 DownloadParam->DownloadFileName.ReleaseBuffer();
@@ -721,7 +721,7 @@ public:
                 return FALSE;
             }
 
-            AsyncInet = AsyncInetDownload(0, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, lpszLocation, TRUE, SnapshotDownloadCallback, DownloadParam);
+            AsyncInet = AsyncInetDownload(0, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, lpszLocation, TRUE, ScrnshotDownloadCallback, DownloadParam);
             if (!AsyncInet)
             {
                 CloseHandle(DownloadParam->hFile);
@@ -740,29 +740,29 @@ public:
 
     int GetRequestedWidth(int Height) // calculate requested window width by given height
     {
-        switch (SnpshtPrevStauts)
+        switch (ScrnshotPrevStauts)
         {
-        case SNPSHT_PREV_EMPTY:
+        case SCRNSHOT_PREV_EMPTY:
             return 0;
-        case SNPSHT_PREV_LOADING:
+        case SCRNSHOT_PREV_LOADING:
             return 200;
-        case SNPSHT_PREV_IMAGE:
+        case SCRNSHOT_PREV_IMAGE:
             if (pImage)
             {
                 // return the width needed to display image inside the window.
-                // and always keep window w/h ratio inside [ 1/SNPSHT_MAX_ASPECT_RAT, SNPSHT_MAX_ASPECT_RAT ]
+                // and always keep window w/h ratio inside [ 1/SCRNSHOT_MAX_ASPECT_RAT, SCRNSHOT_MAX_ASPECT_RAT ]
                 return (int)floor((float)Height *
-                    max(min((float)pImage->GetWidth() / (float)pImage->GetHeight(), (float)SNPSHT_MAX_ASPECT_RAT), 1.0/ (float)SNPSHT_MAX_ASPECT_RAT));
+                    max(min((float)pImage->GetWidth() / (float)pImage->GetHeight(), (float)SCRNSHOT_MAX_ASPECT_RAT), 1.0/ (float)SCRNSHOT_MAX_ASPECT_RAT));
             }
             return 0;
-        case SNPSHT_PREV_FAILED:
+        case SCRNSHOT_PREV_FAILED:
             return 200;
         default:
             return 0;
         }
     }
 
-    ~CAppSnapshotPreview()
+    ~CAppScrnshotPreview()
     {
         PreviousDisplayCleanup();
     }
@@ -784,8 +784,8 @@ private:
             RichEdit = new CAppRichEdit();
             RichEdit->Create(hwnd);
 
-            SnpshtPrev = new CAppSnapshotPreview();
-            SnpshtPrev->Create(hwnd);
+            ScrnshotPrev = new CAppScrnshotPreview();
+            ScrnshotPrev->Create(hwnd);
             break;
         }
         case WM_SIZE:
@@ -831,23 +831,23 @@ private:
 
     VOID ResizeChildren(int Width, int Height)
     {
-        int SnpshtWidth = SnpshtPrev->GetRequestedWidth(Height);
+        int ScrnshotWidth = ScrnshotPrev->GetRequestedWidth(Height);
 
         // make sure richedit always have room to display
-        SnpshtWidth = min(SnpshtWidth, Width - INFO_DISPLAY_PADDING - RICHEDIT_MIN_WIDTH);
+        ScrnshotWidth = min(ScrnshotWidth, Width - INFO_DISPLAY_PADDING - RICHEDIT_MIN_WIDTH);
 
         DWORD dwError = ERROR_SUCCESS;
         HDWP hDwp = BeginDeferWindowPos(2);
 
         if (hDwp)
         {
-            hDwp = ::DeferWindowPos(hDwp, SnpshtPrev->m_hWnd, NULL,
-                0, 0, SnpshtWidth, Height, 0);
+            hDwp = ::DeferWindowPos(hDwp, ScrnshotPrev->m_hWnd, NULL,
+                0, 0, ScrnshotWidth, Height, 0);
 
             if (hDwp)
             {
-                // hide the padding if snapshot window width == 0
-                int RicheditPosX = SnpshtWidth ? (SnpshtWidth + INFO_DISPLAY_PADDING) : 0;
+                // hide the padding if scrnshot window width == 0
+                int RicheditPosX = ScrnshotWidth ? (ScrnshotWidth + INFO_DISPLAY_PADDING) : 0;
 
                 hDwp = ::DeferWindowPos(hDwp, RichEdit->m_hWnd, NULL,
                     RicheditPosX, 0, Width - RicheditPosX, Height, 0);
@@ -909,7 +909,7 @@ private:
 public:
 
     CAppRichEdit * RichEdit;
-    CAppSnapshotPreview * SnpshtPrev;
+    CAppScrnshotPreview * ScrnshotPrev;
 
     static ATL::CWndClassInfo& GetWndClassInfo()
     {
@@ -944,14 +944,14 @@ public:
 
     BOOL ShowAvailableAppInfo(CAvailableApplicationInfo* Info)
     {
-        ATL::CStringW SnapshotLocation;
-        if (Info->RetrieveSnapshot(0, SnapshotLocation))
+        ATL::CStringW ScrnshotLocation;
+        if (Info->RetrieveScrnshot(0, ScrnshotLocation))
         {
-            SnpshtPrev->DisplayImage(SnapshotLocation);
+            ScrnshotPrev->DisplayImage(ScrnshotLocation);
         }
         else
         {
-            SnpshtPrev->DisplayEmpty();
+            ScrnshotPrev->DisplayEmpty();
         }
         ResizeChildren();
         return RichEdit->ShowAvailableAppInfo(Info);
@@ -959,14 +959,14 @@ public:
 
     BOOL ShowInstalledAppInfo(PINSTALLED_INFO Info)
     {
-        SnpshtPrev->DisplayEmpty();
+        ScrnshotPrev->DisplayEmpty();
         ResizeChildren();
         return RichEdit->ShowInstalledAppInfo(Info);
     }
 
     VOID SetWelcomeText()
     {
-        SnpshtPrev->DisplayEmpty();
+        ScrnshotPrev->DisplayEmpty();
         ResizeChildren();
         RichEdit->SetWelcomeText();
     }
