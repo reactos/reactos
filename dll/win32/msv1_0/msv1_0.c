@@ -1177,7 +1177,8 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     NTSTATUS Status;
     PMSV1_0_INTERACTIVE_LOGON LogonInfo;
-    WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    UNICODE_STRING ComputerName;
+    WCHAR ComputerNameData[MAX_COMPUTERNAME_LENGTH + 1];
     SAMPR_HANDLE ServerHandle = NULL;
     SAMPR_HANDLE DomainHandle = NULL;
     SAMPR_HANDLE UserHandle = NULL;
@@ -1207,6 +1208,17 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     *SubStatus = STATUS_SUCCESS;
     *AccountName = NULL;
     *AuthenticatingAuthority = NULL;
+
+    RtlInitUnicodeString(&ComputerName, NULL);
+    /* Get the computer name */
+    ComputerNameSize = ARRAYSIZE(ComputerNameData);
+    if (!GetComputerNameW(ComputerNameData, &ComputerNameSize))
+    {
+        ERR("Failed to get Computername.\n");
+        return STATUS_INTERNAL_ERROR;
+    }
+    ComputerNameData[ComputerNameSize] = 0;
+    RtlInitUnicodeString(&ComputerName, ComputerNameData);
 
     /* Parameters validation */
     if (LogonType == Interactive ||
@@ -1323,10 +1335,6 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     /* Get the logon time */
     NtQuerySystemTime(&LogonTime);
-
-    /* Get the computer name */
-    ComputerNameSize = ARRAYSIZE(ComputerName);
-    GetComputerNameW(ComputerName, &ComputerNameSize);
 
     /* Check for special accounts */
     // FIXME: Windows does not do this that way!! (msv1_0 does not contain these hardcoded values)
@@ -1540,7 +1548,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             }
 
             /* Check workstations */
-            if (!MsvpCheckWorkstations(&UserInfo->All.WorkStations, ComputerName))
+            if (!MsvpCheckWorkstations(&UserInfo->All.WorkStations, ComputerNameData))
             {
                 ERR("Invalid workstation!\n");
                 *SubStatus = STATUS_INVALID_WORKSTATION;
@@ -1573,7 +1581,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     /* Build and fill the interactive profile buffer */
     Status = BuildInteractiveProfileBuffer(ClientRequest,
                                            UserInfo,
-                                           ComputerName,
+                                           ComputerNameData,
                                            (PMSV1_0_INTERACTIVE_PROFILE*)ProfileBuffer,
                                            ProfileBufferSize);
     if (!NT_SUCCESS(Status))
@@ -1658,7 +1666,7 @@ done:
         {
             (*MachineName)->MaximumLength = (ComputerNameSize + 1) * sizeof(WCHAR);
             (*MachineName)->Length = ComputerNameSize * sizeof(WCHAR);
-            RtlCopyMemory((*MachineName)->Buffer, ComputerName, (*MachineName)->MaximumLength);
+            RtlCopyMemory((*MachineName)->Buffer, ComputerNameData, (*MachineName)->MaximumLength);
         }
     }
 
