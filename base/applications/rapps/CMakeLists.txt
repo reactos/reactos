@@ -7,6 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/cryptlib)
 include_directories(include)
 
 list(APPEND SOURCE
+    asyncinet.cpp
     available.cpp
     cabinet.cpp
     gui.cpp
@@ -18,6 +19,7 @@ list(APPEND SOURCE
     winmain.cpp
     unattended.cpp
     include/rapps.h
+    include/asyncinet.h
     include/available.h
     include/dialogs.h
     include/installed.h
