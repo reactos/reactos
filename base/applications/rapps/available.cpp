@@ -76,7 +76,7 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
             // these stuff may lead to security issues
 
             ATL::CStringW ScrnshotName = AvlbStrings.szAppsPath;
-            PathAppendW(ScrnshotName.GetBuffer(MAX_PATH), L"scrnshots");
+            PathAppendW(ScrnshotName.GetBuffer(MAX_PATH), L"screenshots");
             PathAppendW(ScrnshotName.GetBuffer(), ScrnshotLocation.GetString());
             ScrnshotName.ReleaseBuffer();
             m_szScrnshotLocation.Add(ScrnshotName);

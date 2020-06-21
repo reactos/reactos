@@ -694,7 +694,7 @@ public:
             DownloadParam->ID = ID;
             // generate a filename
             ATL::CStringW ScrnshotFolder = CAvailableApps::m_Strings.szAppsPath;
-            PathAppendW(ScrnshotFolder.GetBuffer(MAX_PATH), L"scrnshots");
+            PathAppendW(ScrnshotFolder.GetBuffer(MAX_PATH), L"screenshots");
             ScrnshotFolder.ReleaseBuffer();
 
             if (!PathIsDirectoryW(ScrnshotFolder.GetString()))
