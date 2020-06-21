@@ -51,10 +51,10 @@ using namespace Gdiplus;
 
 enum SNPSHT_STATUS
 {
-    SNPSHTPREV_EMPTY,      // show nothing
-    SNPSHTPREV_LOADING,    // image is loading (most likely downloading)
-    SNPSHTPREV_IMAGE,       // display image from a file
-    SNPSHTPREV_FAILED      // image can not be shown (download failure or wrong image)
+    SNPSHT_PREV_EMPTY,      // show nothing
+    SNPSHT_PREV_LOADING,    // image is loading (most likely downloading)
+    SNPSHT_PREV_IMAGE,       // display image from a file
+    SNPSHT_PREV_FAILED      // image can not be shown (download failure or wrong image)
 };
 
 #define TIMER_LOADING_ANIMATION 1 // Timer ID
@@ -343,7 +343,7 @@ class CAppSnapshotPreview :
 {
 private:
 
-    SNPSHT_STATUS SnpshtPrevStauts = SNPSHTPREV_EMPTY;
+    SNPSHT_STATUS SnpshtPrevStauts = SNPSHT_PREV_EMPTY;
     Image* pImage = NULL;
     HICON hBrokenImgIcon = NULL;
     BOOL bLoadingTimerOn = FALSE;
@@ -477,7 +477,7 @@ private:
 
     VOID DisplayLoading()
     {
-        SetStatus(SNPSHTPREV_LOADING);
+        SetStatus(SNPSHT_PREV_LOADING);
         if (bLoadingTimerOn)
         {
             KillTimer(TIMER_LOADING_ANIMATION);
@@ -490,14 +490,14 @@ private:
     VOID DisplayFailed()
     {
         InterlockedIncrement64(&ContentID);
-        SetStatus(SNPSHTPREV_FAILED);
+        SetStatus(SNPSHT_PREV_FAILED);
         PreviousDisplayCleanup();
     }
 
     BOOL DisplayFile(LPCWSTR lpszFileName)
     {
         PreviousDisplayCleanup();
-        SetStatus(SNPSHTPREV_IMAGE);
+        SetStatus(SNPSHT_PREV_IMAGE);
         pImage = Bitmap::FromFile(lpszFileName, 0);
         if (pImage->GetLastStatus() != Ok)
         {
@@ -528,13 +528,13 @@ private:
 
         switch (SnpshtPrevStauts)
         {
-        case SNPSHTPREV_EMPTY:
+        case SNPSHT_PREV_EMPTY:
         {
 
         }
         break;
 
-        case SNPSHTPREV_LOADING:
+        case SNPSHT_PREV_LOADING:
         {
             Graphics graphics(hdcMem);
             Color color(255, 0, 0);
@@ -564,7 +564,7 @@ private:
         }
         break;
 
-        case SNPSHTPREV_IMAGE:
+        case SNPSHT_PREV_IMAGE:
         {
             if (pImage)
             {
@@ -581,7 +581,7 @@ private:
         }
         break;
 
-        case SNPSHTPREV_FAILED:
+        case SNPSHT_PREV_FAILED:
         {
             DrawIconEx(hdcMem,
                 (width - BrokenImgSize) / 2,
@@ -674,7 +674,7 @@ public:
     VOID DisplayEmpty()
     {
         InterlockedIncrement64(&ContentID);
-        SetStatus(SNPSHTPREV_EMPTY);
+        SetStatus(SNPSHT_PREV_EMPTY);
         PreviousDisplayCleanup();
     }
 
@@ -742,11 +742,11 @@ public:
     {
         switch (SnpshtPrevStauts)
         {
-        case SNPSHTPREV_EMPTY:
+        case SNPSHT_PREV_EMPTY:
             return 0;
-        case SNPSHTPREV_LOADING:
+        case SNPSHT_PREV_LOADING:
             return 200;
-        case SNPSHTPREV_IMAGE:
+        case SNPSHT_PREV_IMAGE:
             if (pImage)
             {
                 // return the width needed to display image inside the window.
@@ -755,7 +755,7 @@ public:
                     max(min((float)pImage->GetWidth() / (float)pImage->GetHeight(), (float)SNPSHT_MAX_ASPECT_RAT), 1.0/ (float)SNPSHT_MAX_ASPECT_RAT));
             }
             return 0;
-        case SNPSHTPREV_FAILED:
+        case SNPSHT_PREV_FAILED:
             return 200;
         default:
             return 0;
