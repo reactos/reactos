@@ -910,6 +910,31 @@ LsaApLogonTerminated(IN PLUID LogonId)
 
 
 /*
+ * Handle Network logon
+ */
+static
+NTSTATUS
+LsaApLogonUserEx2_Network(
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferSize,
+    _In_ PUNICODE_STRING ComputerName,
+    _Out_ PUNICODE_STRING* LogonUserRef,
+    _Out_ PUNICODE_STRING* LogonDomainRef,
+    _Inout_ PLSA_SAM_PWD_DATA LogonPwdData,
+    _Out_ SAMPR_HANDLE* UserHandlePtr,
+    _Out_ PSAMPR_USER_INFO_BUFFER* UserInfoPtr,
+    _Out_ PRPC_SID* AccountDomainSidPtr,
+    _Out_ PBOOL SpecialAccount,
+    _Out_ PMSV1_0_LM20_LOGON_PROFILE *LogonProfile,
+    _Out_ PULONG LogonProfileSize,
+    _Out_ PNTSTATUS SubStatus)
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
  * @implemented
  */
 NTSTATUS
@@ -1080,6 +1105,26 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
 
         // TODO: If LogonType == Service, do some extra work using LogonInfo->Password.
     }
+    else if (LogonType == Network)
+    {
+        Status = LsaApLogonUserEx2_Network(ClientRequest,
+                                           ProtocolSubmitBuffer,
+                                           ClientBufferBase,
+                                           SubmitBufferSize,
+                                           &ComputerName,
+                                           &LogonUserName,
+                                           &LogonDomain,
+                                           &LogonPwdData,
+                                           &UserHandle,
+                                           &UserInfo,
+                                           &AccountDomainSid,
+                                           &SpecialAccount,
+                                           (PMSV1_0_LM20_LOGON_PROFILE*)ProfileBuffer,
+                                           ProfileBufferSize,
+                                           SubStatus);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
     else
     {
         FIXME("LogonType %lu is not supported yet!\n", LogonType);
@@ -1120,16 +1165,23 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     SessionCreated = TRUE;
 
-    /* Build and fill the interactive profile buffer */
-    Status = BuildInteractiveProfileBuffer(ClientRequest,
-                                           UserInfo,
-                                           ComputerNameData,
-                                           (PMSV1_0_INTERACTIVE_PROFILE*)ProfileBuffer,
-                                           ProfileBufferSize);
-    if (!NT_SUCCESS(Status))
+    if (LogonType == Interactive || LogonType == Batch || LogonType == Service)
     {
-        TRACE("BuildInteractiveProfileBuffer failed (Status %08lx)\n", Status);
-        goto done;
+        /* Build and fill the interactive profile buffer */
+        Status = BuildInteractiveProfileBuffer(ClientRequest,
+                                               UserInfo,
+                                               ComputerName.Buffer,
+                                               (PMSV1_0_INTERACTIVE_PROFILE*)ProfileBuffer,
+                                               ProfileBufferSize);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("BuildInteractiveProfileBuffer failed (Status %08lx)\n", Status);
+            goto done;
+        }
+    }
+    else if (LogonType == Network)
+    {
+        //FIXME: no need to do anything, its already done ...
     }
 
     /* Return the token information type */
