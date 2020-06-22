@@ -407,3 +407,49 @@ BOOL CConfigParser::GetInt(const ATL::CStringW& KeyName, INT& iResult)
     return (iResult > 0);
 }
 // CConfigParser
+
+
+BOOL PathAppendNoDirEscapeW(LPWSTR pszPath, LPCWSTR pszMore)
+{
+    WCHAR pszPathBuffer[MAX_PATH]; // buffer to store result
+    WCHAR pszPathCopy[MAX_PATH];
+
+    if (!PathCanonicalizeW(pszPathCopy, pszPath))
+    {
+        return FALSE;
+    }
+
+    PathRemoveBackslashW(pszPathCopy);
+
+    if (StringCchCopyW(pszPathBuffer, _countof(pszPathBuffer), pszPathCopy) != S_OK)
+    {
+        return FALSE;
+    }
+
+    if (!PathAppendW(pszPathBuffer, pszMore))
+    {
+        return FALSE;
+    }
+
+    size_t PathLen;
+    if (StringCchLengthW(pszPathCopy, _countof(pszPathCopy), &PathLen) != S_OK)
+    {
+        return FALSE;
+    }
+    int CommonPrefixLen = PathCommonPrefixW(pszPathCopy, pszPathBuffer, NULL);
+
+    if (CommonPrefixLen != PathLen)
+    {
+        // pszPathBuffer should be a file/folder under pszPath.
+        // but now common prefix len is smaller than length of pszPathCopy
+        // hacking use ".." ?
+        return FALSE;
+    }
+
+    if (StringCchCopyW(pszPath, MAX_PATH, pszPathBuffer) != S_OK)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}

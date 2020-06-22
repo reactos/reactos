@@ -72,14 +72,16 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
         }
         else
         {
-            // TODO: Does the filename contain anything stuff like "\\" ".." ":" "<" ">" ?
+            // TODO: Does the filename contain anything stuff like ":" "<" ">" ?
             // these stuff may lead to security issues
-
             ATL::CStringW ScrnshotName = AvlbStrings.szAppsPath;
             PathAppendW(ScrnshotName.GetBuffer(MAX_PATH), L"screenshots");
-            PathAppendW(ScrnshotName.GetBuffer(), ScrnshotLocation.GetString());
+            BOOL bSuccess = PathAppendNoDirEscapeW(ScrnshotName.GetBuffer(), ScrnshotLocation.GetString());
             ScrnshotName.ReleaseBuffer();
-            m_szScrnshotLocation.Add(ScrnshotName);
+            if (bSuccess)
+            {
+                m_szScrnshotLocation.Add(ScrnshotName);
+            }
         }
     }
 
@@ -87,13 +89,17 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
     ATL::CStringW IconLocation;
     if (GetString(L"Icon", IconLocation))
     {
-        // TODO: Does the filename contain anything stuff like "\\" ".." ":" "<" ">" ?
+        // TODO: Does the filename contain anything stuff like ":" "<" ">" ?
         // these stuff may lead to security issues
         ATL::CStringW IconPath = AvlbStrings.szAppsPath;
         PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
-        PathAppendW(IconPath.GetBuffer(), IconLocation.GetString());
+        BOOL bSuccess = PathAppendNoDirEscapeW(IconPath.GetBuffer(), IconLocation.GetString());
         IconPath.ReleaseBuffer();
-        m_szIconLocation = IconPath;
+
+        if (bSuccess)
+        {
+            m_szIconLocation = IconPath;
+        }
     }
 
     RetrieveSize();
