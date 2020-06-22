@@ -11,6 +11,7 @@
 
 #include <win32k.h>
 
+
 #define NDEBUG
 #include <debug.h>
 
@@ -313,7 +314,8 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DPRINT("Flip == 1 or 3.\n");
 
             /* Allocate enough pixels for a row in DWORD's */
-            BYTE store[BltInfo->DestRect.right - BltInfo->DestRect.left + 1];
+            BYTE *store = ExAllocatePoolWithTag(PagedPool,
+              BltInfo->DestRect.right - BltInfo->DestRect.left + 1, GDITAG_TEMP);
             WORD  Index;
 
             /* This sets SourceLine to the top line */
@@ -358,6 +360,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               SourceLine += BltInfo->SourceSurface->lDelta;
               DestLine += BltInfo->DestSurface->lDelta;
             }
+            ExFreePoolWithTag(store, GDITAG_TEMP);
             OneDone = TRUE;
           }
 
@@ -368,7 +371,8 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DWORD  Index;
 
             /* Allocate enough pixels for a column in DWORD's */
-            BYTE store[BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1];
+            BYTE *store = ExAllocatePoolWithTag(PagedPool,
+              BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1, GDITAG_TEMP);
 
             /* The OneDone flag indicates that we are doing a flip == 3 and have already */
             /* completed the flip == 1. So we will lose our first flip output unless     */
@@ -427,6 +431,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               SourceLine += 1;
               DestLine += 1;
             }
+            ExFreePoolWithTag(store, GDITAG_TEMP);
           }
 
         }

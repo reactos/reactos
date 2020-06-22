@@ -501,7 +501,8 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           DPRINT("Flip == 1 or 3.\n");
 
           /* Allocate enough pixels for a row in DWORD's */
-          DWORD store[BltInfo->DestRect.right - BltInfo->DestRect.left + 1];
+          DWORD *store = ExAllocatePoolWithTag(PagedPool,
+            (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 4, GDITAG_TEMP);
 
           /* This sets SourceBits to the bottom line */
           SourceBits = (PBYTE)BltInfo->SourceSurface->pvScan0
@@ -540,6 +541,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             SourceBits -= BltInfo->SourceSurface->lDelta;
             DestBits -= BltInfo->DestSurface->lDelta;
           }
+          ExFreePoolWithTag(store, GDITAG_TEMP);
           OneDone = TRUE;
         }
 
@@ -553,7 +555,8 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           DPRINT("Flip == 2 or 3.\n");
 
           /* Allocate enough pixels for a row in DWORD's */
-          DWORD store[BltInfo->DestRect.right - BltInfo->DestRect.left + 1];
+          DWORD *store = ExAllocatePoolWithTag(PagedPool,
+            (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 4, GDITAG_TEMP);
 
           /* This set DestBitsT to the top line */
           DestBitsT = (PBYTE)BltInfo->DestSurface->pvScan0
@@ -613,7 +616,9 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             /* If we had an odd number of lines we handle the center one here */
             RtlMoveMemory(DestBitsB, SourceBitsT, 4 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
           }
+          ExFreePoolWithTag(store, GDITAG_TEMP);
         }
+
       }
     }
     break;

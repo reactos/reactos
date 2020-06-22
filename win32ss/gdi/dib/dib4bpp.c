@@ -234,7 +234,7 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       if ((flip == 2) || (flip == 3))
       {
         /* This sets SourceBits to the bottom line */
-        SourceBits = (PBYTE)((LONG)SourceBits +
+        SourceBits_8BPP = (PBYTE)((LONG)SourceBits_8BPP +
           ((BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) *
           BltInfo->SourceSurface->lDelta));
       }
@@ -351,7 +351,7 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       if ((flip == 2) || (flip ==3))
       {
         /* This sets SourceLine to the bottom line */
-        SourceLine += BltInfo->SourceSurface->lDelta * (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1);
+        SourceBits_24BPP += BltInfo->SourceSurface->lDelta * (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1);
       }
 
       for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
