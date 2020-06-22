@@ -234,7 +234,7 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       if ((flip == 2) || (flip == 3))
       {
         /* This sets SourceBits to the bottom line */
-        SourceBits_8BPP = (PBYTE)((LONG)SourceBits_8BPP +
+        SourceBits_8BPP = (PBYTE)((LONG_PTR)SourceBits_8BPP +
           ((BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) *
           BltInfo->SourceSurface->lDelta));
       }
