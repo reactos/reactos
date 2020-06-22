@@ -497,9 +497,9 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         {
           DPRINT("Flip == 1 or 3.\n");
 
-          /* Allocate enough pixels for a row in DWORD's */
-          WORD *store = ExAllocatePoolWithTag(PagedPool,
-            (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 2, GDITAG_TEMP);
+          /* Allocate enough pixels for a row in WORD's */
+          WORD *store = ExAllocatePoolWithTag(NonPagedPool,
+            (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 2, TAG_DIB);
           WORD  Index;
 
           /* This sets SourceLine to the top line */
@@ -553,9 +553,9 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           DPRINT("Flip == 2 or 3.\n");    
           DWORD  Index;
 
-          /* Allocate enough pixels for a column in DWORD's */
-          WORD *store = ExAllocatePoolWithTag(PagedPool,
-            (BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1) * 2, GDITAG_TEMP);
+          /* Allocate enough pixels for a column in WORD's */
+          WORD *store = ExAllocatePoolWithTag(NonPagedPool,
+            (BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1) * 2, TAG_DIB);
 
           /* This set the DestLine to the top line */
           DestLine = (PBYTE)BltInfo->DestSurface->pvScan0 +

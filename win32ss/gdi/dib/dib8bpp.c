@@ -14,6 +14,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <stdlib.h>
 
 VOID
 DIB_8BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
@@ -313,9 +314,9 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           {
             DPRINT("Flip == 1 or 3.\n");
 
-            /* Allocate enough pixels for a row in DWORD's */
-            BYTE *store = ExAllocatePoolWithTag(PagedPool,
-              BltInfo->DestRect.right - BltInfo->DestRect.left + 1, GDITAG_TEMP);
+            /* Allocate enough pixels for a row in BYTE's */
+            BYTE *store = ExAllocatePoolWithTag(NonPagedPool,
+              BltInfo->DestRect.right - BltInfo->DestRect.left + 1, TAG_DIB);
             WORD  Index;
 
             /* This sets SourceLine to the top line */
@@ -370,9 +371,9 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     
             DWORD  Index;
 
-            /* Allocate enough pixels for a column in DWORD's */
-            BYTE *store = ExAllocatePoolWithTag(PagedPool,
-              BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1, GDITAG_TEMP);
+            /* Allocate enough pixels for a column in BYTE's */
+            BYTE *store = ExAllocatePoolWithTag(NonPagedPool,
+              BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1, TAG_DIB);
 
             /* The OneDone flag indicates that we are doing a flip == 3 and have already */
             /* completed the flip == 1. So we will lose our first flip output unless     */

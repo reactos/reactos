@@ -501,8 +501,8 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           DPRINT("Flip == 1 or 3.\n");
 
           /* Allocate enough pixels for a row in DWORD's */
-          DWORD *store = ExAllocatePoolWithTag(PagedPool,
-            (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 4, GDITAG_TEMP);
+          DWORD *store = ExAllocatePoolWithTag(NonPagedPool,
+            (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 4, TAG_DIB);
 
           /* This sets SourceBits to the bottom line */
           SourceBits = (PBYTE)BltInfo->SourceSurface->pvScan0
@@ -555,8 +555,8 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           DPRINT("Flip == 2 or 3.\n");
 
           /* Allocate enough pixels for a row in DWORD's */
-          DWORD *store = ExAllocatePoolWithTag(PagedPool,
-            (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 4, GDITAG_TEMP);
+          DWORD *store = ExAllocatePoolWithTag(NonPagedPool,
+            (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 4, TAG_DIB);
 
           /* This set DestBitsT to the top line */
           DestBitsT = (PBYTE)BltInfo->DestSurface->pvScan0

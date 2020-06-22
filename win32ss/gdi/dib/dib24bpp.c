@@ -390,8 +390,8 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DWORD  Index;
 
             /* Allocate enough pixels for a row in DWORD's */
-            DWORD *store = ExAllocatePoolWithTag(PagedPool,
-              (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 4, GDITAG_TEMP);
+            DWORD *store = ExAllocatePoolWithTag(NonPagedPool,
+              (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 4, TAG_DIB);
 
             sx = BltInfo->SourcePoint.x;
             /* This sets sy to the top line */
@@ -436,8 +436,8 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DWORD  Index;
 
             /* Allocate enough pixels for a column in DWORD's */
-            DWORD *store = ExAllocatePoolWithTag(PagedPool,
-              (BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1) * 4, GDITAG_TEMP);
+            DWORD *store = ExAllocatePoolWithTag(NonPagedPool,
+              (BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1) * 4, TAG_DIB);
 
             /* The OneDone flag indicates that we are doing a flip == 3 and have already */
             /* completed the flip == 1. So we will lose our first flip output unless     */
