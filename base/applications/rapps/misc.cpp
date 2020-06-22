@@ -438,7 +438,7 @@ BOOL PathAppendNoDirEscapeW(LPWSTR pszPath, LPCWSTR pszMore)
     }
     int CommonPrefixLen = PathCommonPrefixW(pszPathCopy, pszPathBuffer, NULL);
 
-    if (CommonPrefixLen != PathLen)
+    if ((unsigned int)CommonPrefixLen != PathLen)
     {
         // pszPathBuffer should be a file/folder under pszPath.
         // but now common prefix len is smaller than length of pszPathCopy
