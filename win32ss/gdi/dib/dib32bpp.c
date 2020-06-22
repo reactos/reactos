@@ -541,7 +541,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             SourceBits -= BltInfo->SourceSurface->lDelta;
             DestBits -= BltInfo->DestSurface->lDelta;
           }
-          ExFreePoolWithTag(store, GDITAG_TEMP);
+          ExFreePoolWithTag(store, TAG_DIB);
           OneDone = TRUE;
         }
 
@@ -616,7 +616,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             /* If we had an odd number of lines we handle the center one here */
             RtlMoveMemory(DestBitsB, SourceBitsT, 4 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
           }
-          ExFreePoolWithTag(store, GDITAG_TEMP);
+          ExFreePoolWithTag(store, TAG_DIB);
         }
 
       }

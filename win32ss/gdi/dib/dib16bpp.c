@@ -544,7 +544,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             SourceLine += BltInfo->SourceSurface->lDelta;
             DestLine += BltInfo->DestSurface->lDelta;
           }
-          ExFreePoolWithTag(store, GDITAG_TEMP);
+          ExFreePoolWithTag(store, TAG_DIB);
           OneDone = TRUE;
         }
 
@@ -614,7 +614,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             SourceLine += 2;
             DestLine += 2;
           }
-          ExFreePoolWithTag(store, GDITAG_TEMP);
+          ExFreePoolWithTag(store, TAG_DIB);
         }
 
       }

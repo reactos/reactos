@@ -426,7 +426,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               }
               sy++;
             }
-            ExFreePoolWithTag(store, GDITAG_TEMP);
+            ExFreePoolWithTag(store, TAG_DIB);
             OneDone = TRUE;
           }
 
@@ -494,7 +494,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               }
               sx++;
             }
-            ExFreePoolWithTag(store, GDITAG_TEMP);
+            ExFreePoolWithTag(store, TAG_DIB);
           }
 
         }

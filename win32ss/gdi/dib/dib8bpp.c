@@ -361,7 +361,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               SourceLine += BltInfo->SourceSurface->lDelta;
               DestLine += BltInfo->DestSurface->lDelta;
             }
-            ExFreePoolWithTag(store, GDITAG_TEMP);
+            ExFreePoolWithTag(store, TAG_DIB);
             OneDone = TRUE;
           }
 
@@ -432,7 +432,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               SourceLine += 1;
               DestLine += 1;
             }
-            ExFreePoolWithTag(store, GDITAG_TEMP);
+            ExFreePoolWithTag(store, TAG_DIB);
           }
 
         }
