@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI EngCopyBits Function
  * FILE:             win32ss/gdi/eng/copybits.c
- * PROGRAMER:        Jason Filby
+ * PROGRAMERS        Jason Filby
+ *                   Doug Lyons
  */
 
 #include <win32k.h>
@@ -32,6 +33,28 @@ EngCopyBits(
     SURFACE *psurfSource;
     RECTL rclDest = *DestRect;
     POINTL ptlSrc = *SourcePoint;
+    LONG      lTmp;
+    BOOL      flip;
+
+    DPRINT("Entering EngCopyBits with SourcePoint (%d,%d) and DestRect (%d,%d)-(%d,%d).\n",
+        SourcePoint->x, SourcePoint->y, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+
+    DPRINT("Source cx/cy is %d/%d and Dest cx/cy is %d/%d.\n",
+        psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy);
+
+    /* Retrieve Top Down/flip here and then make Well-Ordered again */
+
+    if (DestRect->top > DestRect->bottom)
+    {
+        flip = TRUE;
+        lTmp = DestRect->top;
+        DestRect->top = DestRect->bottom;
+        DestRect->bottom = lTmp;
+        rclDest = *DestRect;
+    }
+    else
+        flip = FALSE;
+    DPRINT("flip is '%d'.\n", flip);
 
     ASSERT(psoDest != NULL && psoSource != NULL && DestRect != NULL && SourcePoint != NULL);
 
@@ -115,6 +138,14 @@ EngCopyBits(
         case DC_TRIVIAL:
             BltInfo.DestRect = *DestRect;
             BltInfo.SourcePoint = *SourcePoint;
+
+            /* Now we set the Dest Rect top and bottom based on Top Down/flip */
+            if (flip)
+            {
+                lTmp = BltInfo.DestRect.top;
+                BltInfo.DestRect.top = BltInfo.DestRect.bottom;
+                BltInfo.DestRect.bottom = lTmp;
+            }
 
             ret = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
             break;

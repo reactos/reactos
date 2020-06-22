@@ -4,6 +4,7 @@
  * FILE:            win32ss/gdi/dib/dib4bpp.c
  * PURPOSE:         Device Independant Bitmap functions, 4bpp
  * PROGRAMMERS:     Jason Filby
+ *                  Doug Lyons
  */
 
 
@@ -59,10 +60,53 @@ DIB_4BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 BOOLEAN
 DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
-  LONG     i, j, sx, sy, f2, xColor;
+  LONG     i, j, sx, sy, f2, xColor, flip, lTmp;;
   PBYTE    SourceBits_24BPP, SourceLine_24BPP;
   PBYTE    DestBits, DestLine, SourceBits_8BPP, SourceLine_8BPP;
   PBYTE    SourceBits, SourceLine;
+
+  DPRINT("DIB_4BPP_BitBltSrcCopy: SrcSurf cx/cy (%d/%d), DestSuft cx/cy (%d/%d) dstRect: (%d,%d)-(%d,%d)\n",
+    BltInfo->SourceSurface->sizlBitmap.cx, BltInfo->SourceSurface->sizlBitmap.cy,
+    BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
+    BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
+
+  /* Retrieve flip here and then make Well-Ordered again */
+  /* Get back flip here */
+
+  if ((BltInfo->DestRect.left > BltInfo->DestRect.right) && (BltInfo->DestRect.top > BltInfo->DestRect.bottom))
+  {
+    flip = 3;
+  }
+  else if (BltInfo->DestRect.left > BltInfo->DestRect.right)
+  {
+    flip = 1;
+  }
+  else if (BltInfo->DestRect.top > BltInfo->DestRect.bottom)
+  {
+    flip = 2;
+  }
+  else
+  {
+    flip = 0;
+  }
+
+  /* Then we make top < bottom and left < right */
+  if (BltInfo->DestRect.left > BltInfo->DestRect.right)
+  {
+    lTmp = BltInfo->DestRect.left;
+    BltInfo->DestRect.left = BltInfo->DestRect.right;
+    BltInfo->DestRect.right = lTmp;
+  }
+
+  if (BltInfo->DestRect.top > BltInfo->DestRect.bottom)
+  {
+    lTmp = BltInfo->DestRect.top;
+    BltInfo->DestRect.top = BltInfo->DestRect.bottom;
+    BltInfo->DestRect.bottom = lTmp;
+  }
+
+  DPRINT("flip/bpp is '%d/%d' & BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
+    flip, BltInfo->SourceSurface->iBitmapFormat, BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
 
   DestBits = (PBYTE)BltInfo->DestSurface->pvScan0 +
              (BltInfo->DestRect.left >> 1) +
@@ -71,12 +115,30 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   switch (BltInfo->SourceSurface->iBitmapFormat)
   {
     case BMF_1BPP:
+      DPRINT("1BPP Case Selected with DestRect Width of '%d' and flip is '%d'.\n",
+        BltInfo->DestRect.right - BltInfo->DestRect.left, flip);
+
       sx = BltInfo->SourcePoint.x;
+
+      /* This sets sy to the top line */
       sy = BltInfo->SourcePoint.y;
+
+      if ((flip == 2) || (flip ==3))
+      {
+        /* This sets sy to the bottom line */
+        sy += (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta;
+      }
 
       for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
       {
         sx = BltInfo->SourcePoint.x;
+
+        if ((flip == 1) || (flip == 3))
+        {
+          /* This sets the sx to the rightmost pixel */
+          sx += (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
+        }
+
         for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
         {
           if(DIB_1BPP_GetPixel(BltInfo->SourceSurface, sx, sy) == 0)
@@ -87,18 +149,48 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           {
             DIB_4BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, 1));
           }
-          sx++;
+          if ((flip == 1) || (flip == 3))
+          {
+            sx--;
+          }
+          else
+          {
+            sx++;
+          }
         }
-        sy++;
+        if ((flip == 2) || (flip == 3))
+        {
+          sy--;
+        }
+        else
+        {
+          sy++;
+        }
       }
       break;
 
     case BMF_4BPP:
+      DPRINT("4BPP Case Selected with DestRect Width of '%d' and flip is '%d'.\n",
+        BltInfo->DestRect.right - BltInfo->DestRect.left, flip);
+
+      /* This sets sy to the top line */
       sy = BltInfo->SourcePoint.y;
+
+      if ((flip == 2) || (flip ==3))
+      {
+        /* This sets sy to the bottom line */
+        sy += (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta;
+      }
 
       for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
       {
         sx = BltInfo->SourcePoint.x;
+
+        if ((flip == 1) || (flip == 3))
+        {
+          /* This sets the sx to the rightmost pixel */
+          sx += (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
+        }
 
         for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
         {
@@ -110,41 +202,111 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           {
             DIB_4BPP_PutPixel(BltInfo->DestSurface, i, j, DIB_4BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
           }
-          sx++;
+          if ((flip == 1) || (flip == 3))
+          {
+            sx--;
+          }
+          else
+          {
+            sx++;
+          }
         }
-        sy++;
+        if ((flip == 2) || (flip == 3))
+        {
+          sy--;
+        }
+        else
+        {
+          sy++;
+        }
       }
       break;
 
     case BMF_8BPP:
-      SourceBits_8BPP = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + BltInfo->SourcePoint.x;
+      DPRINT("8BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+         BltInfo->DestRect.left, BltInfo->DestRect.top,
+         BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+         BltInfo->DestRect.right - BltInfo->DestRect.left);
+
+      SourceBits_8BPP = (PBYTE)BltInfo->SourceSurface->pvScan0 + 
+          (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + BltInfo->SourcePoint.x;
+
+      if ((flip == 2) || (flip == 3))
+      {
+        /* This sets SourceBits to the bottom line */
+        SourceBits = (PBYTE)((LONG)SourceBits +
+          ((BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) *
+          BltInfo->SourceSurface->lDelta));
+      }
 
       for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
       {
         SourceLine_8BPP = SourceBits_8BPP;
         DestLine = DestBits;
+
+        if ((flip == 1) || (flip == 3))
+        {
+          /* This sets SourceBits_8BPP to the rightmost pixel */
+          SourceBits_8BPP += (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
+        }
+
         f2 = BltInfo->DestRect.left & 1;
 
         for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
         {
           *DestLine = (*DestLine & notmask[f2]) |
             (BYTE)((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *SourceLine_8BPP)) << ((4 * (1 - f2))));
-          if(f2 == 1) { DestLine++; f2 = 0; } else { f2 = 1; }
-          SourceLine_8BPP++;
+          if (f2 == 1) { DestLine++; f2 = 0; } else { f2 = 1; }
+          if ((flip == 2) || (flip ==3))
+          {
+            SourceLine_8BPP--;
+          }
+          else
+          {
+            SourceLine_8BPP++;
+          }
         }
-
-        SourceBits_8BPP += BltInfo->SourceSurface->lDelta;
+        if ((flip == 2) || (flip == 3))
+        {
+          SourceBits_8BPP -= BltInfo->SourceSurface->lDelta;
+        }
+        else
+        {
+          SourceBits_8BPP += BltInfo->SourceSurface->lDelta;
+        }
         DestBits += BltInfo->DestSurface->lDelta;
       }
       break;
 
     case BMF_16BPP:
+      DPRINT("16BPP Case Selected with DestRect Width of '%d' and flip is '%d'.\n",
+        BltInfo->DestRect.right - BltInfo->DestRect.left, flip);
+
+      DPRINT("BMF_16BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+        BltInfo->DestRect.left, BltInfo->DestRect.top,
+        BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+        BltInfo->DestRect.right - BltInfo->DestRect.left);
+
       SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 2 * BltInfo->SourcePoint.x;
+
+      if ((flip == 2) || (flip ==3))
+      {
+        /* This sets SourceLine to the bottom line */
+        SourceLine += (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta;;
+      }
+
       DestLine = DestBits;
 
       for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
       {
         SourceBits = SourceLine;
+
+        if ((flip == 1) || (flip == 3))
+        {
+          /* This sets SourceBits to the rightmost pixel */
+          SourceBits += (BltInfo->DestRect.right - BltInfo->DestRect.left - 1) * 2;
+        }
+
         DestBits = DestLine;
         f2 = BltInfo->DestRect.left & 1;
 
@@ -154,22 +316,55 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           *DestBits = (*DestBits & notmask[f2]) |
             (BYTE)((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, xColor)) << ((4 * (1 - f2))));
           if(f2 == 1) { DestBits++; f2 = 0; } else { f2 = 1; }
-          SourceBits += 2;
+
+          if ((flip == 1) || (flip ==3))
+          {
+            SourceBits -= 2;
+          }
+          else
+          {
+            SourceBits += 2;
+          }
         }
 
-        SourceLine += BltInfo->SourceSurface->lDelta;
+        if ((flip == 2) || (flip ==3))
+        {
+          SourceLine -= BltInfo->SourceSurface->lDelta;
+        }
+        else
+        {
+          SourceLine += BltInfo->SourceSurface->lDelta;
+        }
         DestLine += BltInfo->DestSurface->lDelta;
       }
       break;
 
     case BMF_24BPP:
+
+      DPRINT("24BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+        BltInfo->DestRect.left, BltInfo->DestRect.top,
+        BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+        BltInfo->DestRect.right - BltInfo->DestRect.left);
+
       SourceBits_24BPP = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + BltInfo->SourcePoint.x * 3;
+
+      if ((flip == 2) || (flip ==3))
+      {
+        /* This sets SourceLine to the bottom line */
+        SourceLine += BltInfo->SourceSurface->lDelta * (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1);
+      }
 
       for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
       {
         SourceLine_24BPP = SourceBits_24BPP;
         DestLine = DestBits;
         f2 = BltInfo->DestRect.left & 1;
+
+        if ((flip == 1) || (flip == 3))
+        {
+          /* This sets the SourceBits_24BPP to the rightmost pixel */
+          SourceLine_24BPP += (BltInfo->DestRect.right - BltInfo->DestRect.left - 1) * 3;
+        }
 
         for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
         {
@@ -179,22 +374,52 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           *DestLine = (*DestLine & notmask[f2]) |
             (BYTE)((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, xColor)) << ((4 * (1 - f2))));
           if(f2 == 1) { DestLine++; f2 = 0; } else { f2 = 1; }
-          SourceLine_24BPP+=3;
+          if ((flip == 1) || (flip ==3))
+          {
+            SourceLine_24BPP-=3;
+          }
+          else
+          {
+            SourceLine_24BPP+=3;
+          }
         }
-
-        SourceBits_24BPP += BltInfo->SourceSurface->lDelta;
+        if ((flip == 2) || (flip ==3))
+        {
+          SourceBits_24BPP -= BltInfo->SourceSurface->lDelta;
+        }
+        else
+        {
+          SourceBits_24BPP += BltInfo->SourceSurface->lDelta;
+        }
         DestBits += BltInfo->DestSurface->lDelta;
       }
       break;
 
     case BMF_32BPP:
+      DPRINT("32BPP Case Selected with DestRect Width of '%d' and flip is '%d'.\n",
+        BltInfo->DestRect.right - BltInfo->DestRect.left, flip);
+
       SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 4 * BltInfo->SourcePoint.x;
+
+      if ((flip == 2) || (flip ==3))
+      {
+        /* This sets SourceLine to the bottom line */
+        SourceLine += BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1;
+      }
+
       DestLine = DestBits;
 
       for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
       {
         SourceBits = SourceLine;
         DestBits = DestLine;
+
+        if ((flip == 1) || (flip == 3))
+        {
+          /* This sets SourceBits to the rightmost pixel */
+          SourceBits += (BltInfo->DestRect.right - BltInfo->DestRect.left - 1) * 4;
+        }
+
         f2 = BltInfo->DestRect.left & 1;
 
         for (i = BltInfo->DestRect.left; i < BltInfo->DestRect.right; i++)
@@ -203,16 +428,31 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           *DestBits = (*DestBits & notmask[f2]) |
             (BYTE)((XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, xColor)) << ((4 * (1 - f2))));
           if(f2 == 1) { DestBits++; f2 = 0; } else { f2 = 1; }
-          SourceBits += 4;
+
+          if ((flip == 1) || (flip ==3))
+          {
+            SourceBits -= 4;
+          }
+          else
+          {
+            SourceBits += 4;
+          }
         }
 
-        SourceLine += BltInfo->SourceSurface->lDelta;
+        if ((flip == 2) || (flip ==3))
+        {
+          SourceLine -= BltInfo->SourceSurface->lDelta;
+        }
+        else
+        {
+          SourceLine += BltInfo->SourceSurface->lDelta;
+        }
         DestLine += BltInfo->DestSurface->lDelta;
       }
       break;
 
     default:
-      DbgPrint("DIB_4BPP_Bitblt: Unhandled Source BPP: %u\n", BitsPerFormat(BltInfo->SourceSurface->iBitmapFormat));
+      DbgPrint("DIB_4BPP_BitBltSrcCopy: Unhandled Source BPP: %u\n", BitsPerFormat(BltInfo->SourceSurface->iBitmapFormat));
       return FALSE;
   }
   return(TRUE);
@@ -359,7 +599,21 @@ DIB_4BPP_BitBlt(PBLTINFO BltInfo)
 BOOLEAN
 DIB_4BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
-  LONG DestY;
+  LONG DestY, lTmp;
+
+/* Make WellOrdered by making top < bottom and left < right */
+    if (DestRect->left > DestRect->right)
+    {
+        lTmp = DestRect->left;
+        DestRect->left = DestRect->right;
+        DestRect->right = lTmp;
+    }
+    if (DestRect->top > DestRect->bottom)
+    {
+        lTmp = DestRect->top;
+        DestRect->top = DestRect->bottom;
+        DestRect->bottom = lTmp;
+    }
 
   for (DestY = DestRect->top; DestY < DestRect->bottom; DestY++)
   {

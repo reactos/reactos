@@ -3,8 +3,9 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          GDI BitBlt Functions
  * FILE:             win32ss/gdi/eng/bitblt.c
- * PROGRAMER:        Jason Filby
+ * PROGRAMERS:       Jason Filby
  *                   Timo Kreuzer
+ *                   Doug Lyons
  */
 
 #include <win32k.h>
@@ -222,6 +223,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     BLTINFO BltInfo;
     SURFOBJ *psoPattern;
     BOOLEAN Result;
+    LONG    lTmp; 
 
     BltInfo.DestSurface = OutputObj;
     BltInfo.SourceSurface = InputObj;
@@ -254,6 +256,23 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     {
         psoPattern = NULL;
     }
+
+    /* Make the top < bottom and left < right if needed */
+    if (BltInfo.DestRect.left > BltInfo.DestRect.right)
+    {
+        lTmp = BltInfo.DestRect.left;
+        BltInfo.DestRect.left = BltInfo.DestRect.right;
+        BltInfo.DestRect.right = lTmp;
+    }
+    if (BltInfo.DestRect.top > BltInfo.DestRect.bottom)
+    {
+        lTmp = BltInfo.DestRect.top;
+        BltInfo.DestRect.top = BltInfo.DestRect.bottom;
+        BltInfo.DestRect.bottom = lTmp;
+    }
+
+    DPRINT("CallDibBitBlt: dstRect: (%d,%d)-(%d,%d)\n",
+           BltInfo.DestRect.left, BltInfo.DestRect.top, BltInfo.DestRect.right, BltInfo.DestRect.bottom);
 
     Result = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBlt(&BltInfo);
 
@@ -344,9 +363,29 @@ EngBitBlt(
     ULONG              Direction;
     BOOL               UsesSource, UsesMask;
     POINTL             AdjustedBrushOrigin;
+    INT                flip;
+    LONG               lTmp;
 
     UsesSource = ROP4_USES_SOURCE(rop4);
     UsesMask = ROP4_USES_MASK(rop4);
+
+    /* Get back the incoming flip here */
+    if ((prclTrg->left > prclTrg->right) && (prclTrg->top > prclTrg->bottom))
+    {
+        flip = 3;
+    }
+    else if (prclTrg->left > prclTrg->right)
+    {
+        flip = 1;
+    }
+    else if  (prclTrg->top > prclTrg-> bottom)
+    {
+        flip = 2;
+    }
+    else
+    {
+        flip = 0;
+    }
 
     if (rop4 == ROP4_NOOP)
     {
@@ -358,6 +397,12 @@ EngBitBlt(
 
     OutputRect = *prclTrg;
     RECTL_vMakeWellOrdered(&OutputRect);
+
+    DPRINT("EngBitBlt: prclTrg: (%d,%d)-(%d,%d)\n",
+           prclTrg->left, prclTrg->top, prclTrg->right, prclTrg->bottom);
+
+    DPRINT("EngBitBlt: OutputRect: (%d,%d)-(%d,%d)\n",
+           OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
 
     if (UsesSource)
     {
@@ -498,6 +543,29 @@ EngBitBlt(
     switch (clippingType)
     {
         case DC_TRIVIAL:
+            /* Fix up OutputRect here */
+            if (flip == 1)
+            {
+                lTmp = OutputRect.left;
+                OutputRect.left = OutputRect.right;
+                OutputRect.right = lTmp;
+            }
+            else if (flip == 2)
+            {
+                lTmp = OutputRect.top;
+                OutputRect.top = OutputRect.bottom;
+                OutputRect.bottom = lTmp;
+            }
+            else if (flip == 3)
+            {
+                lTmp = OutputRect.top;
+                OutputRect.top = OutputRect.bottom;
+                OutputRect.bottom = lTmp;
+                lTmp = OutputRect.left;
+                OutputRect.left = OutputRect.right;
+                OutputRect.right = lTmp;
+            }
+
             Ret = (*BltRectFunc)(OutputObj,
                                  InputObj,
                                  psoMask,
@@ -622,12 +690,35 @@ IntEngBitBlt(
     RECTL rclSrcClipped;
     POINTL ptlBrush;
     PFN_DrvBitBlt pfnBitBlt;
+    INT flip;
+    LONG lTmp;
 
     /* Sanity checks */
     ASSERT(IS_VALID_ROP4(Rop4));
     ASSERT(psoTrg);
 
+    DPRINT("IntEngBitBlt: prclTrg: (%d,%d)-(%d,%d)\n",
+           prclTrg->left, prclTrg->top, prclTrg->right, prclTrg->bottom);
+
     psurfTrg = CONTAINING_RECORD(psoTrg, SURFACE, SurfObj);
+
+    /* Before making it well ordered we save the flip value  */
+    if ((prclTrg->left > prclTrg->right) && (prclTrg->top > prclTrg->bottom))
+    {
+        flip = 3;
+    }
+    else if (prclTrg->top > prclTrg-> bottom)
+    {
+        flip = 2;
+    }
+    else if (prclTrg->left > prclTrg->right)
+    {
+        flip = 1;
+    }
+    else
+    {
+        flip = 0;
+    }
 
     /* Get the target rect and make it well ordered */
     rclClipped = *prclTrg;
@@ -719,6 +810,29 @@ IntEngBitBlt(
     else
     {
         pfnBitBlt = EngBitBlt;
+    }
+
+    /* rclClipped needs to be modified in accordance with flip here */
+    if (flip == 1)
+    {
+        lTmp = rclClipped.left;
+        rclClipped.left = rclClipped.right;
+        rclClipped.right = lTmp;
+    }
+    else if (flip == 2)
+    {
+        lTmp = rclClipped.top;
+        rclClipped.top = rclClipped.bottom;
+        rclClipped.bottom = lTmp;
+    }
+    else if (flip == 3)
+    {
+        lTmp = rclClipped.top;
+        rclClipped.top = rclClipped.bottom;
+        rclClipped.bottom = lTmp;
+        lTmp = rclClipped.left;
+        rclClipped.left = rclClipped.right;
+        rclClipped.right = lTmp;
     }
 
     bResult = pfnBitBlt(psoTrg,

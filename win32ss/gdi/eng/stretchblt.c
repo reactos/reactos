@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          GDI stretch blt functions
  * FILE:             win32ss/gdi/eng/stretchblt.c
- * PROGRAMER:        Jason Filby
+ * PROGRAMERS:       Jason Filby
+ *                   Doug Lyons
  */
 
 #include <win32k.h>
@@ -37,6 +38,11 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     POINTL RealBrushOrigin;
     SURFOBJ* psoPattern;
     BOOL bResult;
+
+    DPRINT("Entering CallDibStretchBlt: psoSource cx/cy (%d/%d), psoDest cx/cy (%d/%d) OutputRect: (%d,%d)-(%d,%d)\n",
+        psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy,
+        psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy,
+        OutputRect->left, OutputRect->top, OutputRect->right, OutputRect->bottom);
 
     if (BrushOrigin == NULL)
     {
@@ -114,6 +120,58 @@ EngStretchBltROP(
     LONG DstWidth;
     LONG SrcHeight;
     LONG SrcWidth;
+
+    LONG cxSrc, cySrc, cxDest, cyDest, flip;
+    BOOL flipx, flipy;
+    LONG lTmp;
+
+    DPRINT("Entering EngStretchBltROP: SrcSurf cx/cy (%d/%d), DestSuft cx/cy (%d/%d) dstRect: (%d,%d)-(%d,%d)\n",
+        psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, //SourceRect->right, SourceRect->bottom,
+        psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy,
+        prclDest->left, prclDest->top, prclDest->right, prclDest->bottom);
+
+    cxSrc = prclSrc->right - prclSrc->left;
+    cySrc = prclSrc->bottom - prclSrc->top;
+    cxDest = prclDest->right - prclDest->left;
+    cyDest = prclDest->bottom - prclDest->top;
+
+    /* Here we do the tests and set our conditions */
+    if (((cxSrc < 0) && (cxDest < 0)) || ((cxSrc >= 0) && (cxDest >= 0)))
+        flipy = FALSE;
+    else
+        flipy = TRUE;
+
+    if (((cySrc < 0) && (cyDest < 0)) || ((cySrc >= 0) && (cyDest >= 0)))
+        flipx = FALSE;
+    else
+        flipx = TRUE;
+
+    DPRINT("flip about x-axis is '%d' and flip and y-axis is '%d'.\n", flipx, flipy);
+
+    if (!flipx && !flipy)
+    {
+        flip = 0;
+    }
+    else if (!flipx && flipy)
+    {
+        flip = 1;
+    }
+    else if (flipx && !flipy)
+    {
+        flip = 2;
+    }
+    else
+    {
+        flip = 3;
+    }
+
+    DPRINT("flip is '%d'.\n", flip);
+
+
+    /* Make Well Ordered to start */
+    OutputRect = *prclDest;
+    RECTL_vMakeWellOrdered(&OutputRect);
+    *prclDest = OutputRect;
 
     if (Rop4 == ROP4_NOOP)
     {
@@ -240,6 +298,31 @@ EngStretchBltROP(
     switch (clippingType)
     {
         case DC_TRIVIAL:
+            if (flip == 1)
+            {
+               lTmp = OutputRect.left;
+                OutputRect.left = OutputRect.right;
+                OutputRect.right = lTmp;
+            }
+            else if (flip == 2)
+            {
+                lTmp = OutputRect.top;
+                OutputRect.top = OutputRect.bottom;
+                OutputRect.bottom = lTmp;
+            }
+            else if (flip == 3)
+            {
+                lTmp = OutputRect.top;
+                OutputRect.top = OutputRect.bottom;
+                OutputRect.bottom = lTmp;
+                lTmp = OutputRect.left;
+                OutputRect.left = OutputRect.right;
+                OutputRect.right = lTmp;
+            }
+
+            DPRINT("About to call CallDibStretchBlt?: OutputRect: (%d,%d)-(%d,%d)\n",
+                   OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
+
             Ret = (*BltRectFunc)(psoOutput, psoInput, Mask,
                          ColorTranslation, &OutputRect, &InputRect, MaskOrigin,
                          pbo, &AdjustedBrushOrigin, Rop4);
@@ -256,6 +339,32 @@ EngStretchBltROP(
                 InputToCombinedRect.bottom = InputRect.top + (CombinedRect.bottom - OutputRect.top) * SrcHeight / DstHeight;
                 InputToCombinedRect.left = InputRect.left + (CombinedRect.left - OutputRect.left) * SrcWidth / DstWidth;
                 InputToCombinedRect.right = InputRect.left + (CombinedRect.right - OutputRect.left) * SrcWidth / DstWidth;
+
+                if (flip == 1)
+                {
+                   lTmp = CombinedRect.left;
+                    CombinedRect.left = CombinedRect.right;
+                    CombinedRect.right = lTmp;
+                }
+                else if (flip == 2)
+                {
+                    lTmp = CombinedRect.top;
+                    CombinedRect.top = CombinedRect.bottom;
+                    CombinedRect.bottom = lTmp;
+                }
+                else if (flip == 3)
+                {
+                    lTmp = CombinedRect.top;
+                    CombinedRect.top = CombinedRect.bottom;
+                    CombinedRect.bottom = lTmp;
+                    lTmp = CombinedRect.left;
+                    CombinedRect.left = CombinedRect.right;
+                    CombinedRect.right = lTmp;
+                }
+
+                DPRINT("About to call CallDibStretchBlt?: CombinedRect: (%d,%d)-(%d,%d)\n",
+                       CombinedRect.left, CombinedRect.top, CombinedRect.right, CombinedRect.bottom);
+
                 Ret = (*BltRectFunc)(psoOutput, psoInput, Mask,
                            ColorTranslation,
                            &CombinedRect,
@@ -301,6 +410,32 @@ EngStretchBltROP(
                         InputToCombinedRect.bottom = InputRect.top + (CombinedRect.bottom - OutputRect.top) * SrcHeight / DstHeight;
                         InputToCombinedRect.left = InputRect.left + (CombinedRect.left - OutputRect.left) * SrcWidth / DstWidth;
                         InputToCombinedRect.right = InputRect.left + (CombinedRect.right - OutputRect.left) * SrcWidth / DstWidth;
+
+                        if (flip == 1)
+                        {
+                           lTmp = CombinedRect.left;
+                            CombinedRect.left = CombinedRect.right;
+                            CombinedRect.right = lTmp;
+                        }
+                        else if (flip == 2)
+                        {
+                            lTmp = CombinedRect.top;
+                            CombinedRect.top = CombinedRect.bottom;
+                            CombinedRect.bottom = lTmp;
+                        }
+                        else if (flip == 3)
+                        {
+                            lTmp = CombinedRect.top;
+                            CombinedRect.top = CombinedRect.bottom;
+                            CombinedRect.bottom = lTmp;
+                            lTmp = CombinedRect.left;
+                            CombinedRect.left = CombinedRect.right;
+                            CombinedRect.right = lTmp;
+                        }
+
+                        DPRINT("About to call CallDibStretchBlt?: CombinedRect: (%d,%d)-(%d,%d)\n",
+                               CombinedRect.left, CombinedRect.top, CombinedRect.right, CombinedRect.bottom);
+
                         Ret = (*BltRectFunc)(psoOutput, psoInput, Mask,
                            ColorTranslation,
                            &CombinedRect,
@@ -382,6 +517,8 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     RECTL OutputRect;
     BOOL UsesSource = ROP4_USES_SOURCE(Rop4);
     LONG InputClWidth, InputClHeight, InputWidth, InputHeight;
+    LONG lTmp, cxSrc, cySrc, cxDest, cyDest, flip;
+    BOOL flipx, flipy;   // flipx is flip about the x-axis and flipy is flip about the y-axis
 
     ASSERT(psoDest);
     //ASSERT(psoSource); // FIXME!
@@ -397,10 +534,169 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     /* Sanity check */
     ASSERT(IS_VALID_ROP4(Rop4));
 
+    cxSrc = SourceRect->right - SourceRect->left;
+    cySrc = SourceRect->bottom - SourceRect->top;
+    cxDest = DestRect->right - DestRect->left;
+    cyDest = DestRect->bottom - DestRect->top;
+
+    DPRINT("xDest(%d) yDest(%d) cxDest(%d) cyDest(%d) xSrc(%d) ySrc(%d) cxSrc(%d) cySrc(%d)\n",
+           DestRect->left, DestRect->top, cxDest, cyDest,
+           SourceRect->left, SourceRect->top, cxSrc, cySrc);
+
     /* Check if source and dest size are equal */
-    if (((DestRect->right - DestRect->left) == (SourceRect->right - SourceRect->left)) &&
-        ((DestRect->bottom - DestRect->top) == (SourceRect->bottom - SourceRect->top)))
+    if ((abs(cxDest) == abs(cxSrc)) && (abs(cyDest) == abs(cySrc)))
     {
+        /* if cxSrc < 0 and cxDest <0 (both negative, we change both their signs  */
+        /* because the outcome is the same as if they were both positive and we   */
+        /* reverse both their top and bottom values                               */
+        if ((cxSrc < 0) && (cxDest < 0))
+        {
+            lTmp = DestRect->left;
+            DestRect->left = DestRect->right;
+            DestRect->right = lTmp;
+            lTmp = SourceRect->left;
+            SourceRect->left = SourceRect->right;
+            SourceRect->right = lTmp;
+            cxSrc = abs(cxSrc);
+            cxDest = abs(cxDest);
+        }
+
+        /* if cySrc < 0 and cyDest <0 (both negative, we change both their signs  */
+        /* because the outcome is the same as if they were both positive and we   */
+        /* reverse both their top and bottom values                               */
+        if ((cySrc < 0) && (cyDest < 0))
+        {
+            lTmp = DestRect->top;
+            DestRect->top = DestRect->bottom;
+            DestRect->bottom = lTmp;
+            lTmp = SourceRect->top;
+            SourceRect->top = SourceRect->bottom;
+            SourceRect->bottom = lTmp;
+            cySrc = -cySrc;
+            cyDest = -cyDest;
+        }
+
+        /* if the cxDest >= 0 and cxSrc < 0 then we reverse  */
+        /* the signs of both cxDest and cxSrc                */
+        if ((cxDest >= 0) && (cxSrc < 0))
+        {
+            cxDest = -cxDest;
+            cxSrc = -cxSrc;
+        }
+
+        /* if the cxDest < 0 and cxSrc >= 0 then we reverse */
+        /* the left and right values                        */
+        else if ((cxDest < 0) && (cxSrc >= 0))
+        {
+            lTmp = SourceRect->left;
+            SourceRect->left = SourceRect->right;
+            SourceRect->right = lTmp;
+        }
+
+        /* if the cyDest >= 0 and cySrc < 0 then we reverse  */
+        /* the signs of both cxDest and cxSrc                */
+        if ((cyDest >= 0) && (cySrc < 0))
+        {
+            cyDest = -cyDest;
+            cySrc = -cySrc;
+        }
+
+        /* if the cyDest < 0 and cySrc >= 0 then we reverse */
+        /* the top and bottom values                        */
+        else if ((cyDest <= 0) && (cySrc > 0))
+        {
+            lTmp = SourceRect->top;
+            SourceRect->top = SourceRect->bottom;
+            SourceRect->bottom = lTmp;
+        }
+    }
+
+    /*****************************************************************************************************************************
+      We want to send the flip state to IntEngBitBlt without changing its parameter list.
+      So a way that we can do this is to use the DestRect to carry this information along with it.
+      Since there are four values, we can use their relative positions (coordinates) to indicate the four flip conditions.
+      if the cx = 0 then there can be no x-flip and if cy = 0 there can be no y-flip. We have no concerns about these conditions.
+      So we can set the four flip conditions as follows:
+
+      flip = 0 means no flips                             therefore left < right and top < bottom (normal well-formed rect)
+      flip = 1 means that we are flipped about the y-axis therefore left < right and top > bottom
+      flip = 2 means that we are flipped about the x-axis therefore left > right and top < bottom
+      flip = 3 means that we are flipped about both axes  therefore left > right and top > bottom
+    *****************************************************************************************************************************/
+
+    /* Make Well Ordered to start */
+    OutputRect = *DestRect;
+    RECTL_vMakeWellOrdered(&OutputRect);
+    *DestRect = OutputRect;
+
+    /* Here we do the tests and set our flip based on input conditions */
+    if (((cxSrc < 0) && (cxDest < 0)) || ((cxSrc >= 0) && (cxDest >= 0)))
+    {
+        flipy = FALSE;
+    }
+    else
+    {
+        flipy = TRUE;
+    }
+
+    if (((cySrc < 0) && (cyDest < 0)) || ((cySrc >= 0) && (cyDest >= 0)))
+    {
+        flipx = FALSE;
+    }
+    else
+    {
+        flipx = TRUE;
+    }
+
+    DPRINT("flip about x-axis is '%d' and flip and y-axis is '%d'.\n", flipx, flipy);
+
+    if (!flipx && !flipy)
+    {
+        flip = 0;
+    }
+    else if (!flipx && flipy)
+    {
+        flip = 1;
+    }
+    else if (flipx && !flipy)
+    {
+        flip = 2;
+    }
+    else
+    {
+        flip = 3;
+    }
+
+    DPRINT("flip is '%d'.\n", flip);
+
+    /* Check if source and dest size are equal */
+    if ((abs(DestRect->right - DestRect->left) == abs(SourceRect->right - SourceRect->left)) &&
+        (abs(DestRect->bottom - DestRect->top) == abs(SourceRect->bottom - SourceRect->top)))
+    {
+        DPRINT("source and dest size are equal.\n");
+
+        if (flip == 1)
+        {
+            lTmp = DestRect->left;
+            DestRect->left = DestRect->right;
+            DestRect->right = lTmp;
+        }
+        else if (flip == 2)
+        {
+            lTmp = DestRect->top;
+            DestRect->top = DestRect->bottom;
+            DestRect->bottom = lTmp;
+        }
+        else if (flip == 3)
+        {
+            lTmp = DestRect->top;
+            DestRect->top = DestRect->bottom;
+            DestRect->bottom = lTmp;
+            lTmp = DestRect->left;
+            DestRect->left = DestRect->right;
+            DestRect->right = lTmp;
+        }
+
         /* Pass the request to IntEngBitBlt */
         return IntEngBitBlt(psoDest,
                             psoSource,
@@ -413,6 +709,36 @@ IntEngStretchBlt(SURFOBJ *psoDest,
                             pbo,
                             BrushOrigin,
                             Rop4);
+    }
+    else
+        DPRINT("source and dest size are NOT equal.\n");
+
+    /* if cxSrc < 0 then we change the signs for both cxSrc and cxDest and */
+    /* we reverse their coordinates, because these outcomes are the same.  */
+    if (cxSrc < 0)
+    {
+        lTmp = SourceRect->left;
+        SourceRect->left = SourceRect->right;
+        SourceRect->right = lTmp;
+        lTmp = DestRect->left;
+        DestRect->left = DestRect->right;
+        DestRect->right = lTmp;
+        cxSrc = -cxSrc;
+        cxDest = -cxDest;
+    }
+
+    /* if cySrc < 0 then we change the signs for both cySrc and cyDest and */
+    /* we reverse their coordinates, because these outcomes are the same.  */
+    if (cySrc < 0)
+    {
+        lTmp = DestRect->top;
+        DestRect->top = DestRect->bottom;
+        DestRect->bottom = lTmp;
+        lTmp = SourceRect->top;
+        SourceRect->top = SourceRect->bottom;
+        SourceRect->bottom = lTmp;
+        cySrc = -cySrc;
+        cyDest = -cyDest;
     }
 
     InputClippedRect = *DestRect;
@@ -498,6 +824,34 @@ IntEngStretchBlt(SURFOBJ *psoDest,
 
     if (! ret)
     {
+        /* set OutputRect to follow flip */
+        if (flip == 1)
+        {
+            lTmp = OutputRect.left;
+            OutputRect.left = OutputRect.right;
+            OutputRect.right = lTmp;
+        }
+        else if (flip == 2)
+        {
+            lTmp = OutputRect.top;
+            OutputRect.top = OutputRect.bottom;
+            OutputRect.bottom = lTmp;
+        }
+        else if (flip == 3)
+        {
+            lTmp = OutputRect.top;
+            OutputRect.top = OutputRect.bottom;
+            OutputRect.bottom = lTmp;
+            lTmp = OutputRect.left;
+            OutputRect.left = OutputRect.right;
+            OutputRect.right = lTmp;
+        }
+
+        DPRINT("About to call EngStretchBltROP: SrcSurf cx/cy (%d/%d), DestSuft cx/cy (%d/%d) dstRect: (%d,%d)-(%d,%d)\n",
+            psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, //SourceRect->right, SourceRect->bottom,
+            psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy,
+            OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
+
         ret = EngStretchBltROP(psoDest,
                                psoSource,
                                MaskSurf,

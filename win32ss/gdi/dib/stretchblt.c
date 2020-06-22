@@ -6,6 +6,7 @@
  * PROGRAMMERS:     Magnus Olsen
  *                  Evgeniy Boltik
  *                  Gregor Schneider
+ *                  Doug Lyons
  */
 
 #include <win32k.h>
@@ -47,6 +48,9 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
 
   BOOL UsesSource = ROP4_USES_SOURCE(ROP);
   BOOL UsesPattern = ROP4_USES_PATTERN(ROP);
+  LONG flip;
+  BOOL flipx, flipy;
+  RECTL OutputRect;
 
   ASSERT(IS_VALID_ROP4(ROP));
 
@@ -55,6 +59,56 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
 
   DPRINT("Dest BPP: %u, dstRect: (%d,%d)-(%d,%d)\n",
     BitsPerFormat(DestSurf->iBitmapFormat), DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+
+  DstHeight = DestRect->bottom - DestRect->top;
+  DstWidth = DestRect->right - DestRect->left;
+  SrcHeight = SourceRect->bottom - SourceRect->top;
+  SrcWidth = SourceRect->right - SourceRect->left;
+
+  /* Here we do the flip tests and set our conditions */
+  if (((SrcWidth < 0) && (DstWidth < 0)) || ((SrcWidth >= 0) && (DstWidth >= 0)))
+  {
+    flipy = FALSE;
+  }
+  else
+  {
+    flipy = TRUE;
+  }
+
+  if (((SrcHeight < 0) && (DstHeight < 0)) || ((SrcHeight >= 0) && (DstHeight >= 0)))
+  {
+    flipx = FALSE;
+  }
+  else
+  {
+    flipx = TRUE;
+  }
+
+  DPRINT("flip about x-axis is '%d' and flip and y-axis is '%d'.\n", flipx, flipy);
+
+  if (!flipx && !flipy)
+  {
+    flip = 0;
+  }
+  else if (!flipx && flipy)
+  {
+    flip = 1;
+  }
+  else if (flipx && !flipy)
+  {
+    flip = 2;
+  }
+  else
+  {
+    flip = 3;
+  }
+
+  DPRINT("flip is '%d'.\n", flip);
+
+  /* Make Well Ordered to start */
+  OutputRect = *DestRect;
+  RECTL_vMakeWellOrdered(&OutputRect);
+  *DestRect = OutputRect;
 
   if (UsesSource)
   {
@@ -66,6 +120,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
 
   if (MaskSurf)
   {
+    DPRINT("MaskSurf is not NULL.\n");
     fnMask_GetPixel = DibFunctionsForBitmapFormat[MaskSurf->iBitmapFormat].DIB_GetPixel;
     MaskCy = MaskSurf->sizlBitmap.cy;
   }
@@ -87,9 +142,11 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
   default:
     xxBPPMask = 0xFFFFFFFF;
   }
+  DPRINT("xxBPPMask is 0x%x.\n", xxBPPMask);
 
   if (UsesPattern)
   {
+    DPRINT("UsesPattern is not NULL.\n");
     if (PatternSurface)
     {
       PatternY = (DestRect->top - BrushOrigin->y) % PatternSurface->sizlBitmap.cy;
@@ -106,6 +163,10 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
     }
   }
 
+  if (PatternSurface)
+  {
+    DPRINT("PatternSurface is not NULL.\n");
+  }
 
   for (DesY = DestRect->top; DesY < DestRect->bottom; DesY++)
   {
@@ -118,7 +179,16 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
       }
     }
     if (UsesSource)
-      sy = SourceRect->top+(DesY - DestRect->top) * SrcHeight / DstHeight;
+    {
+      if ((flip == 2) || (flip == 3))
+      {
+        sy = SourceRect->bottom-(DesY - DestRect->top) * SrcHeight / DstHeight;  // flips about the x-axis
+      }
+      else
+      {
+        sy = SourceRect->top+(DesY - DestRect->top) * SrcHeight / DstHeight;
+      }
+    }
 
     for (DesX = DestRect->left; DesX < DestRect->right; DesX++)
     {
@@ -126,7 +196,14 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
 
       if (fnMask_GetPixel)
       {
-        sx = SourceRect->left+(DesX - DestRect->left) * SrcWidth / DstWidth;
+        if ((flip == 1) || (flip == 3))
+        {
+          sx = SourceRect->right-(DesX - DestRect->left) * SrcWidth / DstWidth;  // flips about the y-axis
+        }
+        else
+        {
+          sx = SourceRect->left+(DesX - DestRect->left) * SrcWidth / DstWidth;
+        }
         if (sx < 0 || sy < 0 ||
           MaskSurf->sizlBitmap.cx < sx || MaskCy < sy ||
           fnMask_GetPixel(MaskSurf, sx, sy) != 0)
@@ -137,7 +214,14 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
 
       if (UsesSource && CanDraw)
       {
-        sx = SourceRect->left+(DesX - DestRect->left) * SrcWidth / DstWidth;
+        if ((flip == 1) || (flip == 3))
+        {
+          sx = SourceRect->right-(DesX - DestRect->left) * SrcWidth / DstWidth;  // flips about the y-axis
+        }
+        else
+        {
+          sx = SourceRect->left+(DesX - DestRect->left) * SrcWidth / DstWidth;
+        }
         if (sx >= 0 && sy >= 0 &&
           SourceSurf->sizlBitmap.cx > sx && SourceCy > sy)
         {
