@@ -14,17 +14,22 @@ typedef struct _LSA_SAM_PWD_DATA
     BOOL IsNetwork;
     PUNICODE_STRING PlainPwd;
 
+    /* Input (IsNetwork = TRUE) */
+    PUNICODE_STRING ComputerName;
 } LSA_SAM_PWD_DATA, *PLSA_SAM_PWD_DATA;
 
 /**
- * @brief Validates a normal user by checking if it exists in the sam database.
- *        Further some other checks are done.
+ * @brief Validates a user by checking if it exists in the sam database.
+ *        Some other checks are done further.
  */
 NTSTATUS
-SamValidateNormalUser(
-    _In_ PUNICODE_STRING UserName,
-    _In_ PLSA_SAM_PWD_DATA PwdData,
+SamValidateUser(
+    _In_ SECURITY_LOGON_TYPE LogonType,
+    _In_ PUNICODE_STRING LogonUserName,
+    _In_ PUNICODE_STRING LogonDomain,
+    _In_ PLSA_SAM_PWD_DATA LogonPwdData,
     _In_ PUNICODE_STRING ComputerName,
+    _Out_ PBOOL SpecialAccount,
     _Out_ PRPC_SID* AccountDomainSidPtr,
     _Out_ SAMPR_HANDLE* UserHandlePtr,
     _Out_ PSAMPR_USER_INFO_BUFFER* UserInfoPtr,

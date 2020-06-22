@@ -20,28 +20,6 @@ LSA_DISPATCH_TABLE DispatchTable;
 
 /* FUNCTIONS ***************************************************************/
 
-
-static
-NTSTATUS
-GetNtAuthorityDomainSid(PRPC_SID *Sid)
-{
-    SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-    ULONG Length = 0;
-
-    Length = RtlLengthRequiredSid(0);
-    *Sid = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
-    if (*Sid == NULL)
-    {
-        ERR("Failed to allocate SID\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlInitializeSid(*Sid,&NtAuthority, 0);
-
-    return STATUS_SUCCESS;
-}
-
-
 static
 NTSTATUS
 BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
@@ -953,15 +931,12 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
                   OUT PSECPKG_PRIMARY_CRED PrimaryCredentials, /* Not supported yet */
                   OUT PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials) /* Not supported yet */
 {
-    static const UNICODE_STRING NtAuthorityU = RTL_CONSTANT_STRING(L"NT AUTHORITY");
-    static const UNICODE_STRING LocalServiceU = RTL_CONSTANT_STRING(L"LocalService");
-    static const UNICODE_STRING NetworkServiceU = RTL_CONSTANT_STRING(L"NetworkService");
-
     NTSTATUS Status;
-    PMSV1_0_INTERACTIVE_LOGON LogonInfo;
     UNICODE_STRING ComputerName;
     WCHAR ComputerNameData[MAX_COMPUTERNAME_LENGTH + 1];
+    PUNICODE_STRING LogonUserName = NULL;
     LSA_SAM_PWD_DATA LogonPwdData = { FALSE, NULL };
+    PUNICODE_STRING LogonDomain = NULL;
     SAMPR_HANDLE UserHandle = NULL;
     PRPC_SID AccountDomainSid = NULL;
     PSAMPR_USER_INFO_BUFFER UserInfo = NULL;
@@ -997,6 +972,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         LogonType == Batch ||
         LogonType == Service)
     {
+        PMSV1_0_INTERACTIVE_LOGON LogonInfo;
         ULONG_PTR PtrOffset;
 
         if (SubmitBufferSize < sizeof(MSV1_0_INTERACTIVE_LOGON))
@@ -1092,8 +1068,11 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         if (!NT_SUCCESS(Status))
             return STATUS_INVALID_PARAMETER;
 
+        LogonUserName = &LogonInfo->UserName;
+        LogonDomain = &LogonInfo->LogonDomainName;
         LogonPwdData.IsNetwork = FALSE;
         LogonPwdData.PlainPwd = &LogonInfo->Password;
+        LogonPwdData.ComputerName = &ComputerName;
 
         TRACE("Domain: %wZ\n", &LogonInfo->LogonDomainName);
         TRACE("User: %wZ\n", &LogonInfo->UserName);
@@ -1108,80 +1087,18 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     }
     // TODO: Add other LogonType validity checks.
 
-    /* Check for special accounts */
-    // FIXME: Windows does not do this that way!! (msv1_0 does not contain these hardcoded values)
-    if (RtlEqualUnicodeString(&LogonInfo->LogonDomainName, &NtAuthorityU, TRUE))
-    {
-        SpecialAccount = TRUE;
-
-        /* Get the authority domain SID */
-        Status = GetNtAuthorityDomainSid(&AccountDomainSid);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("GetNtAuthorityDomainSid() failed (Status 0x%08lx)\n", Status);
-            return Status;
-        }
-
-        if (RtlEqualUnicodeString(&LogonInfo->UserName, &LocalServiceU, TRUE))
-        {
-            TRACE("SpecialAccount: LocalService\n");
-
-            if (LogonType != Service)
-                return STATUS_LOGON_FAILURE;
-
-            UserInfo = RtlAllocateHeap(RtlGetProcessHeap(),
-                                       HEAP_ZERO_MEMORY,
-                                       sizeof(SAMPR_USER_ALL_INFORMATION));
-            if (UserInfo == NULL)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto done;
-            }
-
-            UserInfo->All.UserId = SECURITY_LOCAL_SERVICE_RID;
-            UserInfo->All.PrimaryGroupId = SECURITY_LOCAL_SERVICE_RID;
-        }
-        else if (RtlEqualUnicodeString(&LogonInfo->UserName, &NetworkServiceU, TRUE))
-        {
-            TRACE("SpecialAccount: NetworkService\n");
-
-            if (LogonType != Service)
-                return STATUS_LOGON_FAILURE;
-
-            UserInfo = RtlAllocateHeap(RtlGetProcessHeap(),
-                                       HEAP_ZERO_MEMORY,
-                                       sizeof(SAMPR_USER_ALL_INFORMATION));
-            if (UserInfo == NULL)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto done;
-            }
-
-            UserInfo->All.UserId = SECURITY_NETWORK_SERVICE_RID;
-            UserInfo->All.PrimaryGroupId = SECURITY_NETWORK_SERVICE_RID;
-        }
-        else
-        {
-            Status = STATUS_NO_SUCH_USER;
-            goto done;
-        }
-    }
-    else
-    {
-        TRACE("NormalAccount\n");
-        Status = SamValidateNormalUser(&LogonInfo->UserName,
-                                       &LogonPwdData,
-                                       &ComputerName,
-                                       &AccountDomainSid,
-                                       &UserHandle,
-                                       &UserInfo,
-                                       SubStatus);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamValidateNormalUser() failed (Status 0x%08lx)\n", Status);
-            return Status;
-        }
-    }
+    Status = SamValidateUser(LogonType,
+                             LogonUserName,
+                             LogonDomain,
+                             &LogonPwdData,
+                             &ComputerName,
+                             &SpecialAccount,
+                             &AccountDomainSid,
+                             &UserHandle,
+                             &UserInfo,
+                             SubStatus);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     /* Return logon information */
 
@@ -1254,44 +1171,51 @@ done:
                                &InternalInfo);
     }
 
-    /* Return the account name */
-    *AccountName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
-    if (*AccountName != NULL)
+    if (NT_SUCCESS(Status))
     {
-        (*AccountName)->Buffer = DispatchTable.AllocateLsaHeap(LogonInfo->UserName.Length +
-                                                               sizeof(UNICODE_NULL));
-        if ((*AccountName)->Buffer != NULL)
+        /* Return the account name */
+        *AccountName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
+        if ((LogonUserName != NULL) &&
+            (*AccountName != NULL))
         {
-            (*AccountName)->MaximumLength = LogonInfo->UserName.Length +
-                                            sizeof(UNICODE_NULL);
-            RtlCopyUnicodeString(*AccountName, &LogonInfo->UserName);
+            (*AccountName)->Buffer = DispatchTable.AllocateLsaHeap(LogonUserName->Length +
+                                                                   sizeof(UNICODE_NULL));
+            if ((*AccountName)->Buffer != NULL)
+            {
+                (*AccountName)->MaximumLength = LogonUserName->Length +
+                                                sizeof(UNICODE_NULL);
+                RtlCopyUnicodeString(*AccountName, LogonUserName);
+            }
         }
-    }
 
-    /* Return the authenticating authority */
-    *AuthenticatingAuthority = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
-    if (*AuthenticatingAuthority != NULL)
-    {
-        (*AuthenticatingAuthority)->Buffer = DispatchTable.AllocateLsaHeap(LogonInfo->LogonDomainName.Length +
-                                                                           sizeof(UNICODE_NULL));
-        if ((*AuthenticatingAuthority)->Buffer != NULL)
+        /* Return the authenticating authority */
+        *AuthenticatingAuthority = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
+        if ((LogonDomain != NULL) &&
+            (*AuthenticatingAuthority != NULL))
         {
-            (*AuthenticatingAuthority)->MaximumLength = LogonInfo->LogonDomainName.Length +
-                                                        sizeof(UNICODE_NULL);
-            RtlCopyUnicodeString(*AuthenticatingAuthority, &LogonInfo->LogonDomainName);
+            (*AuthenticatingAuthority)->Buffer = DispatchTable.AllocateLsaHeap(LogonDomain->Length +
+                                                                               sizeof(UNICODE_NULL));
+            if ((*AuthenticatingAuthority)->Buffer != NULL)
+            {
+                (*AuthenticatingAuthority)->MaximumLength = LogonDomain->Length +
+                                                            sizeof(UNICODE_NULL);
+                RtlCopyUnicodeString(*AuthenticatingAuthority, LogonDomain);
+            }
         }
-    }
 
-    /* Return the machine name */
-    *MachineName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
-    if (*MachineName != NULL)
-    {
-        (*MachineName)->Buffer = DispatchTable.AllocateLsaHeap(ComputerName.MaximumLength);
-        if ((*MachineName)->Buffer != NULL)
+        /* Return the machine name */
+        *MachineName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
+        if (*MachineName != NULL)
         {
-            (*MachineName)->MaximumLength = ComputerName.MaximumLength;
-            (*MachineName)->Length = ComputerName.Length;
-            RtlCopyMemory((*MachineName)->Buffer, ComputerName.Buffer, ComputerName.MaximumLength);
+            (*MachineName)->Buffer = DispatchTable.AllocateLsaHeap(ComputerName.MaximumLength);
+            if ((*MachineName)->Buffer != NULL)
+            {
+                (*MachineName)->MaximumLength = ComputerName.MaximumLength;
+                (*MachineName)->Length = ComputerName.Length;
+                RtlCopyMemory((*MachineName)->Buffer,
+                              ComputerName.Buffer,
+                              ComputerName.MaximumLength);
+            }
         }
     }
 

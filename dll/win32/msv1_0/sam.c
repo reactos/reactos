@@ -238,6 +238,7 @@ MsvpCheckWorkstations(
 }
 
 
+static
 NTSTATUS
 SamValidateNormalUser(
     _In_ PUNICODE_STRING UserName,
@@ -428,6 +429,121 @@ done:
 
     if (ServerHandle != NULL)
         SamrCloseHandle(&ServerHandle);
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+GetNtAuthorityDomainSid(
+    _In_ PRPC_SID *Sid)
+{
+    SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+    ULONG Length = 0;
+
+    Length = RtlLengthRequiredSid(0);
+    *Sid = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
+    if (*Sid == NULL)
+    {
+        ERR("Failed to allocate SID\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlInitializeSid(*Sid,&NtAuthority, 0);
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+SamValidateUser(
+    _In_ SECURITY_LOGON_TYPE LogonType,
+    _In_ PUNICODE_STRING LogonUserName,
+    _In_ PUNICODE_STRING LogonDomain,
+    _In_ PLSA_SAM_PWD_DATA LogonPwdData,
+    _In_ PUNICODE_STRING ComputerName,
+    _Out_ PBOOL SpecialAccount,
+    _Out_ PRPC_SID* AccountDomainSidPtr,
+    _Out_ SAMPR_HANDLE* UserHandlePtr,
+    _Out_ PSAMPR_USER_INFO_BUFFER* UserInfoPtr,
+    _Out_ PNTSTATUS SubStatus)
+{
+    static const UNICODE_STRING NtAuthorityU = RTL_CONSTANT_STRING(L"NT AUTHORITY");
+    static const UNICODE_STRING LocalServiceU = RTL_CONSTANT_STRING(L"LocalService");
+    static const UNICODE_STRING NetworkServiceU = RTL_CONSTANT_STRING(L"NetworkService");
+
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    *SpecialAccount = FALSE;
+
+    /* Check for special accounts */
+    // FIXME: Windows does not do this that way!! (msv1_0 does not contain these hardcoded values)
+    if (RtlEqualUnicodeString(LogonDomain, &NtAuthorityU, TRUE))
+    {
+        *SpecialAccount = TRUE;
+
+        /* Get the authority domain SID */
+        Status = GetNtAuthorityDomainSid(AccountDomainSidPtr);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("GetNtAuthorityDomainSid() failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+
+        if (RtlEqualUnicodeString(LogonUserName, &LocalServiceU, TRUE))
+        {
+            TRACE("SpecialAccount: LocalService\n");
+
+            if (LogonType != Service)
+                return STATUS_LOGON_FAILURE;
+
+            *UserInfoPtr = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           HEAP_ZERO_MEMORY,
+                                           sizeof(SAMPR_USER_ALL_INFORMATION));
+            if (*UserInfoPtr == NULL)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            (*UserInfoPtr)->All.UserId = SECURITY_LOCAL_SERVICE_RID;
+            (*UserInfoPtr)->All.PrimaryGroupId = SECURITY_LOCAL_SERVICE_RID;
+        }
+        else if (RtlEqualUnicodeString(LogonUserName, &NetworkServiceU, TRUE))
+        {
+            TRACE("SpecialAccount: NetworkService\n");
+
+            if (LogonType != Service)
+                return STATUS_LOGON_FAILURE;
+
+            *UserInfoPtr = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           HEAP_ZERO_MEMORY,
+                                           sizeof(SAMPR_USER_ALL_INFORMATION));
+            if (*UserInfoPtr == NULL)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            (*UserInfoPtr)->All.UserId = SECURITY_NETWORK_SERVICE_RID;
+            (*UserInfoPtr)->All.PrimaryGroupId = SECURITY_NETWORK_SERVICE_RID;
+        }
+        else
+        {
+            return STATUS_NO_SUCH_USER;
+        }
+    }
+    else
+    {
+        TRACE("NormalAccount\n");
+        Status = SamValidateNormalUser(LogonUserName,
+                                       LogonPwdData,
+                                       ComputerName,
+                                       AccountDomainSidPtr,
+                                       UserHandlePtr,
+                                       UserInfoPtr,
+                                       SubStatus);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamValidateNormalUser() failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+    }
 
     return Status;
 }
