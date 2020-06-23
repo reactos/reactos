@@ -604,7 +604,7 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
         NewIrp->Tail.Overlay.Thread = Irp->Tail.Overlay.Thread;
         NewIrp->IoStatus.Information = BytesWritten;
 
-        IoStack->Parameters.Read.Length = BytesWritten;
+        IoStack->Parameters.Write.Length = BytesWritten;
         IoStack->MajorFunction = IRP_MJ_WRITE;
 
         if (BytesWritten > 0) NewIrp->Flags = IRP_DEALLOCATE_BUFFER | IRP_BUFFERED_IO;
