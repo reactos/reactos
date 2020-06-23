@@ -908,8 +908,8 @@ private:
 
 public:
 
-    CAppRichEdit * RichEdit;
-    CAppScrnshotPreview * ScrnshotPrev;
+    CAppRichEdit * RichEdit = NULL;
+    CAppScrnshotPreview * ScrnshotPrev = NULL;
 
     static ATL::CWndClassInfo& GetWndClassInfo()
     {
@@ -993,6 +993,11 @@ public:
         }
     }
 
+    ~CAppInfoDisplay()
+    {
+        if (RichEdit) delete RichEdit;
+        if (ScrnshotPrev) delete ScrnshotPrev;
+    }
 };
 
 class CMainToolbar :
@@ -1488,18 +1493,18 @@ public:
 class CMainWindow :
     public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
 {
-    CUiPanel* m_ClientPanel;
-    CUiSplitPanel* m_VSplitter;
-    CUiSplitPanel* m_HSplitter;
+    CUiPanel* m_ClientPanel = NULL;
+    CUiSplitPanel* m_VSplitter = NULL;
+    CUiSplitPanel* m_HSplitter = NULL;
 
-    CMainToolbar* m_Toolbar;
-    CAppsListView* m_ListView;
+    CMainToolbar* m_Toolbar = NULL;
+    CAppsListView* m_ListView = NULL;
 
-    CSideTreeView* m_TreeView;
-    CUiWindow<CStatusBar>* m_StatusBar;
-    CAppInfoDisplay* m_AppInfo;
+    CSideTreeView* m_TreeView = NULL;
+    CUiWindow<CStatusBar>* m_StatusBar = NULL;
+    CAppInfoDisplay* m_AppInfo = NULL;
 
-    CUiWindow<CSearchBar>* m_SearchBar;
+    CUiWindow<CSearchBar>* m_SearchBar = NULL;
     CAvailableApps m_AvailableApps;
 
     INT nSelectedApps;
@@ -1518,6 +1523,10 @@ public:
     {
     }
 
+    ~CMainWindow()
+    {
+        LayoutCleanup();
+    }
 private:
     VOID InitApplicationsList()
     {
@@ -1611,7 +1620,7 @@ private:
         return m_ListView->Create(m_hWnd) != NULL;
     }
 
-    BOOL CreateRichEdit()
+    BOOL CreateAppInfoDisplay()
     {
         m_AppInfo = new CAppInfoDisplay();
         m_AppInfo->m_VerticalAlignment = UiAlign_Stretch;
@@ -1683,7 +1692,7 @@ private:
 
         // Inside H Splitter
         b = b && CreateListView();
-        b = b && CreateRichEdit();
+        b = b && CreateAppInfoDisplay();
 
         if (b)
         {
@@ -1705,6 +1714,19 @@ private:
 
         bUpdating = FALSE;
         return b;
+    }
+
+    VOID LayoutCleanup()
+    {
+        if (m_AppInfo) delete m_AppInfo;
+        if (m_ListView) delete m_ListView;
+        if (m_TreeView) delete m_TreeView;
+        if (m_HSplitter) delete m_HSplitter;
+        if (m_VSplitter) delete m_VSplitter;
+        if (m_SearchBar) delete m_SearchBar;
+        if (m_Toolbar) delete m_Toolbar;
+        if (m_StatusBar) delete m_StatusBar;
+        return;
     }
 
     BOOL InitControls()
