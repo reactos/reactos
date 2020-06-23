@@ -99,11 +99,12 @@
 #define IDS_SHUTDOWN_RESTART          50002
 #define IDS_SHUTDOWN_SLEEP            50003
 #define IDS_SHUTDOWN_HIBERNATE        50004
-#define IDS_SHUTDOWN_NT_MODE          50005
 /* Shut down descriptions */
 #define IDS_SHUTDOWN_SHUTDOWN_DESC    50006
 #define IDS_SHUTDOWN_LOGOFF_DESC      50007
 #define IDS_SHUTDOWN_RESTART_DESC     50008
 #define IDS_SHUTDOWN_SLEEP_DESC       50009
 #define IDS_SHUTDOWN_HIBERNATE_DESC   50010
-#define IDS_SHUTDOWN_NT_MODE_DESC     50011
+/* NT Mode selection dropdown and description */
+#define IDS_SHUTDOWN_NT_MODE          50011
+#define IDS_SHUTDOWN_NT_MODE_DESC     50012

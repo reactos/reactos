@@ -20,7 +20,6 @@
  */
 
 #include "precomp.h"
-#include "winreg.h"
 
 typedef struct
 {
@@ -1196,13 +1195,6 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
             EnablePrivilege(L"SeShutdownPrivilege", FALSE);
             break;
         }
-        case 0x08: /* Reboot to NT Native Mode */
-        {
-            EnablePrivilege(L"SeShutdownPrivilege", TRUE);
-            ExitWindowsEx(EWX_REBOOT, 0);
-            EnablePrivilege(L"SeShutdownPrivilege", FALSE);
-            break;
-        }
         case 0x10: /* Sleep */
         {
             if (IsPwrSuspendAllowed())
@@ -1221,6 +1213,13 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
                 SetSuspendState(TRUE, FALSE, TRUE);
                 EnablePrivilege(L"SeShutdownPrivilege", FALSE);
             }
+            break;
+        }
+        case 0x100: /* Reboot to NT Native Mode */
+        {
+            EnablePrivilege(L"SeShutdownPrivilege", TRUE);
+            ExitWindowsEx(EWX_REBOOT, 0);
+            EnablePrivilege(L"SeShutdownPrivilege", FALSE);
             break;
         }
         /* If the option is any other value */

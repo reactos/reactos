@@ -15,12 +15,12 @@
 #define WLX_SHUTDOWN_STATE_LOGOFF       0x01
 #define WLX_SHUTDOWN_STATE_POWER_OFF    0x02
 #define WLX_SHUTDOWN_STATE_REBOOT       0x04
-#define WLX_SHUTDOWN_STATE_NT_MODE      0x08
 // 0x08
 #define WLX_SHUTDOWN_STATE_SLEEP        0x10
 // 0x20
 #define WLX_SHUTDOWN_STATE_HIBERNATE    0x40
 // 0x80
+#define WLX_SHUTDOWN_STATE_NT_MODE      0x100
 
 typedef struct _SHUTDOWN_DLG_CONTEXT
 {
@@ -348,17 +348,6 @@ ShutdownOnInit(
             SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
     }
 
-    /* Restart in NT Native Mode */
-    if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_NT_MODE)
-    {
-        LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_NT_MODE, szBuffer, _countof(szBuffer));
-        idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
-        if (idx != CB_ERR)
-        {
-            SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_NT_MODE);
-        }
-    }
-
     // if (pContext->ShutdownOptions & 0x08) {}
 
     /* Sleep */
@@ -382,6 +371,17 @@ ShutdownOnInit(
     }
 
     // if (pContext->ShutdownOptions & 0x80) {}
+
+    /* Restart in NT Native Mode */
+    if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_NT_MODE)
+    {
+        LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_NT_MODE, szBuffer, _countof(szBuffer));
+        idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+        if (idx != CB_ERR)
+        {
+            SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_NT_MODE);
+        }
+    }
 
     /* Set the default shut down selection */
     count = SendMessageW(hwndList, CB_GETCOUNT, 0, 0);
@@ -570,22 +570,20 @@ ShutdownDialog(
  */
 VOID SetRegistryToBootInNTNativeMode(VOID)
 {
-    #if 1
-        /* FIXME: Add proper shell arguments once a native shell is included.
-                  Until then, don't pollute the registry.
-        */
-        return;
-    #endif
+    /* FIXME: Add proper shell arguments once a native shell is included.
+          Until then, don't pollute the registry.
+     */
 
+    #if 0
     LONG ReturnCode;
     HKEY HiveKey;
     DWORD RegValueType = 0;
-    DWORD InitialRegValueSize = 0;
-    DWORD FinalRegValueSize = 0;
+    DWORD InitialRegValueByteCount = 0;
+    DWORD FinalRegValueByteCount = 0;
     WCHAR* InitialRegValue = NULL;
     WCHAR* FinalRegValue = NULL;
     WCHAR NativeShellArguments[] = L"native Hello World!\0";
-    const UINT ShellArgsLength = lstrlen(NativeShellArguments) + 2;
+    const UINT ShellArgsCharCount = lstrlen(NativeShellArguments) + 2;
 
     ReturnCode = RegCreateKeyExW(
         HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager", 0, NULL, REG_OPTION_NON_VOLATILE,
@@ -597,50 +595,50 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
         return;
     }
 
-    ReturnCode = RegQueryValueEx(HiveKey, L"BootExecute", NULL, &RegValueType, NULL, &InitialRegValueSize);
+    ReturnCode = RegQueryValueEx(HiveKey, L"BootExecute", NULL, &RegValueType, NULL, &InitialRegValueByteCount);
 
     if (ReturnCode != ERROR_SUCCESS || RegValueType != REG_MULTI_SZ)
     {
         TRACE("Unable to grab BootExecute, error %d", GetLastError());
-        return;
-    }
-
-    const UINT InitialRegValueLength = InitialRegValueSize / sizeof(WCHAR);
-
-    /* BootExecute is empty (there should be at least autochk in there) - add our string and get out */
-    if (InitialRegValueSize == 0)
-    {
-        FinalRegValueSize = ShellArgsLength * sizeof(WCHAR) + sizeof(WCHAR);
-        FinalRegValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, FinalRegValueSize);
-        if (!FinalRegValue)
-        {
-            TRACE("HeapAlloc failed to allocate %d bytes\n", FinalRegValueSize);
-            goto Cleanup;
-        }
-
-        memset(FinalRegValue, '\0', (FinalRegValueSize / sizeof(WCHAR)));
-        memcpy(FinalRegValue, NativeShellArguments, ShellArgsLength * sizeof(WCHAR));
         goto Cleanup;
     }
 
-    InitialRegValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, InitialRegValueSize);
+    const UINT InitialRegValueCharCount = InitialRegValueByteCount / sizeof(WCHAR);
+
+    /* BootExecute is empty (there should be at least autochk in there) - add our string and get out */
+    if (InitialRegValueByteCount == 0)
+    {
+        FinalRegValueByteCount = ShellArgsCharCount * sizeof(WCHAR) + sizeof(WCHAR);
+        FinalRegValue = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FinalRegValueByteCount);
+        if (!FinalRegValue)
+        {
+            TRACE("HeapAlloc failed to allocate %d bytes\n", FinalRegValueByteCount);
+            goto Cleanup;
+        }
+
+        memcpy(FinalRegValue, NativeShellArguments, ShellArgsCharCount * sizeof(WCHAR));
+        RegSetValueExW(HiveKey, L"BootExecute", 0, REG_MULTI_SZ, (LPBYTE)FinalRegValue, FinalRegValueByteCount);
+
+        goto Cleanup;
+    }
+
+    InitialRegValue = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, InitialRegValueByteCount);
     if (!InitialRegValue)
     {
-        TRACE("HeapAlloc failed to allocate %d bytes", InitialRegValueSize);
+        TRACE("HeapAlloc failed to allocate %d bytes", InitialRegValueByteCount);
         return;
     }
-    memset(InitialRegValue, '\0', InitialRegValueLength);
 
-    ReturnCode = RegQueryValueExW(HiveKey, L"BootExecute", NULL, &RegValueType, (LPBYTE)InitialRegValue, &InitialRegValueSize);
+    ReturnCode = RegQueryValueExW(HiveKey, L"BootExecute", NULL, &RegValueType, (LPBYTE)InitialRegValue, &InitialRegValueByteCount);
 
-    FinalRegValueSize = InitialRegValueSize - sizeof(WCHAR) + ShellArgsLength * sizeof(WCHAR);
+    FinalRegValueByteCount = InitialRegValueByteCount - sizeof(WCHAR) + ShellArgsCharCount * sizeof(WCHAR);
 
     /* check if we haven't set the key already */
     WCHAR* StringIt = InitialRegValue;
     UINT CharCount = 0;
-    while (CharCount < InitialRegValueLength)
+    while (CharCount < InitialRegValueCharCount)
     {
-        if (wcsstr(StringIt, (NativeShellArguments + 1)) != NULL)
+        if (wcsstr(StringIt, NativeShellArguments) != NULL)
         {
             goto Cleanup;
         }
@@ -650,18 +648,17 @@ VOID SetRegistryToBootInNTNativeMode(VOID)
         CharCount += CurrentStringLength != 0 ? CurrentStringLength : 1;
     }
 
-    FinalRegValue = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, FinalRegValueSize);
+    FinalRegValue = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FinalRegValueByteCount);
     if (!FinalRegValue)
     {
-        TRACE("HeapAlloc failed to allocate %d bytes\n", FinalRegValueSize);
+        TRACE("HeapAlloc failed to allocate %d bytes\n", FinalRegValueByteCount);
         goto Cleanup;
     }
-    memset(FinalRegValue, '\0', (FinalRegValueSize / sizeof(WCHAR)));
 
-    memcpy(FinalRegValue, InitialRegValue, InitialRegValueSize);
-    memcpy((FinalRegValue + (InitialRegValueLength - 1)), NativeShellArguments, ShellArgsLength * sizeof(WCHAR));
+    memcpy(FinalRegValue, InitialRegValue, InitialRegValueByteCount);
+    memcpy((FinalRegValue + (InitialRegValueCharCount - 1)), NativeShellArguments, ShellArgsCharCount * sizeof(WCHAR));
 
-    RegSetValueExW(HiveKey, L"BootExecute", 0, REG_MULTI_SZ, (LPBYTE)FinalRegValue, FinalRegValueSize);
+    RegSetValueExW(HiveKey, L"BootExecute", 0, REG_MULTI_SZ, (LPBYTE)FinalRegValue, FinalRegValueByteCount);
 
 Cleanup:
     RegCloseKey(HiveKey);
@@ -670,6 +667,7 @@ Cleanup:
         HeapFree(GetProcessHeap(), 0, InitialRegValue);
     if (FinalRegValue != NULL)
         HeapFree(GetProcessHeap(), 0, FinalRegValue);
+#endif
 }
 
 /*
