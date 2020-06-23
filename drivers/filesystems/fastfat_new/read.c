@@ -685,11 +685,7 @@ Return Value:
             if (!Wait) {
 
                 IrpContext->FatIoContext =
-#ifndef __REACTOS__
                     FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-                    FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                               sizeof(FAT_IO_CONTEXT),
                                               TAG_FAT_IO_CONTEXT );
 
@@ -972,11 +968,7 @@ Return Value:
 
                 (FileObject->SectionObjectPointer->DataSectionObject != NULL)) {
 
-#ifndef __REACTOS__
                 IO_STATUS_BLOCK IoStatus = {0};
-#else
-                IO_STATUS_BLOCK IoStatus = {{0}};
-#endif
 
 #ifndef REDUCE_SYNCHRONIZATION
                 if (!FatAcquireExclusiveFcb( IrpContext, FcbOrDcb )) {

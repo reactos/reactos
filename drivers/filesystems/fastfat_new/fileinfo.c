@@ -1949,21 +1949,11 @@ Return Value:
     PDIRENT Dirent;
     PBCB DirentBcb;
 
-#ifndef __REACTOS__
     FAT_TIME_STAMP CreationTime = {0};
-#else
-    FAT_TIME_STAMP CreationTime = {{0}};
-#endif
     UCHAR CreationMSec = 0;
-#ifndef __REACTOS__
     FAT_TIME_STAMP LastWriteTime = {0};
     FAT_TIME_STAMP LastAccessTime = {0};
     FAT_DATE LastAccessDate = {0};
-#else
-    FAT_TIME_STAMP LastWriteTime = {{0}};
-    FAT_TIME_STAMP LastAccessTime = {{0}};
-    FAT_DATE LastAccessDate = {0, 0, 0};
-#endif
     UCHAR Attributes;
 
     BOOLEAN ModifyCreation = FALSE;
@@ -1974,15 +1964,9 @@ Return Value:
     BOOLEAN ModifiedAttributes = FALSE;
 #endif
 
-#ifndef __REACTOS__
     LARGE_INTEGER LargeCreationTime = {0};
     LARGE_INTEGER LargeLastWriteTime = {0};
     LARGE_INTEGER LargeLastAccessTime = {0};
-#else
-    LARGE_INTEGER LargeCreationTime = {{0}};
-    LARGE_INTEGER LargeLastWriteTime = {{0}};
-    LARGE_INTEGER LargeLastAccessTime = {{0}};
-#endif
 
     ULONG NotifyFilter = 0;
 

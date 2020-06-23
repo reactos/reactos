@@ -20,7 +20,7 @@ static DRIVER_DISPATCH ClassClose;
 static DRIVER_DISPATCH ClassCleanup;
 static DRIVER_DISPATCH ClassRead;
 static DRIVER_DISPATCH ClassDeviceControl;
-static DRIVER_DISPATCH IrpStub;
+static DRIVER_DISPATCH ClassPower;
 static DRIVER_ADD_DEVICE ClassAddDevice;
 static DRIVER_STARTIO ClassStartIo;
 static DRIVER_CANCEL ClassCancelRoutine;
@@ -165,39 +165,31 @@ ClassDeviceControl(
 }
 
 static NTSTATUS NTAPI
-IrpStub(
+ClassPower(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	NTSTATUS Status = STATUS_NOT_SUPPORTED;
+	NTSTATUS Status;
 	PPORT_DEVICE_EXTENSION DeviceExtension;
 
 	DeviceExtension = DeviceObject->DeviceExtension;
 	if (!DeviceExtension->Common.IsClassDO)
 	{
-		/* Forward some IRPs to lower device */
-		switch (IoGetCurrentIrpStackLocation(Irp)->MajorFunction)
-		{
-			case IRP_MJ_POWER:
-				PoStartNextPowerIrp(Irp);
-				IoSkipCurrentIrpStackLocation(Irp);
-				return PoCallDriver(DeviceExtension->LowerDevice, Irp);
-			default:
-			{
-				ERR_(CLASS_NAME, "Port DO stub for major function 0x%lx\n",
-					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
-				ASSERT(FALSE);
-			}
-		}
-	}
-	else
-	{
-		ERR_(CLASS_NAME, "Class DO stub for major function 0x%lx\n",
-			IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
-		ASSERT(FALSE);
+		/* Forward port DO IRPs to lower device */
+		PoStartNextPowerIrp(Irp);
+		IoSkipCurrentIrpStackLocation(Irp);
+		return PoCallDriver(DeviceExtension->LowerDevice, Irp);
 	}
 
-	Irp->IoStatus.Status = Status;
+	switch (IoGetCurrentIrpStackLocation(Irp)->MinorFunction)
+	{
+		case IRP_MN_SET_POWER:
+		case IRP_MN_QUERY_POWER:
+			Irp->IoStatus.Status = STATUS_SUCCESS;
+			break;
+	}
+	Status = Irp->IoStatus.Status;
+	PoStartNextPowerIrp(Irp);
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return Status;
 }
@@ -1023,7 +1015,6 @@ DriverEntry(
 	IN PUNICODE_STRING RegistryPath)
 {
 	PCLASS_DRIVER_EXTENSION DriverExtension;
-	ULONG i;
 	NTSTATUS Status;
 
 	Status = IoAllocateDriverObjectExtension(
@@ -1070,13 +1061,11 @@ DriverEntry(
 	DriverObject->DriverExtension->AddDevice = ClassAddDevice;
 	DriverObject->DriverUnload = DriverUnload;
 
-	for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
-		DriverObject->MajorFunction[i] = IrpStub;
-
 	DriverObject->MajorFunction[IRP_MJ_CREATE]         = ClassCreate;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE]          = ClassClose;
 	DriverObject->MajorFunction[IRP_MJ_CLEANUP]        = ClassCleanup;
 	DriverObject->MajorFunction[IRP_MJ_READ]           = ClassRead;
+	DriverObject->MajorFunction[IRP_MJ_POWER]          = ClassPower;
 	DriverObject->MajorFunction[IRP_MJ_PNP]            = ClassPnp;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ClassDeviceControl;
 	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = ForwardIrpAndForget;

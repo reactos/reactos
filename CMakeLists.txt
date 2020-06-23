@@ -1,19 +1,8 @@
 
-cmake_minimum_required(VERSION 3.2.1)
-cmake_policy(VERSION 3.2.1)
+cmake_minimum_required(VERSION 3.17.0)
 
 if(NOT CMAKE_VERSION MATCHES "ReactOS")
     message(WARNING "Building with \"${CMAKE_COMMAND}\", which is not the custom CMake included in RosBE, might cause build issues...")
-endif()
-
-if(POLICY CMP0058)
-    # Ninja requires custom command byproducts to be explicit
-    cmake_policy(SET CMP0058 OLD)
-endif()
-
-if(POLICY CMP0065)
-    # Do not add flags to export symbols from executables without the ENABLE_EXPORTS target property
-    cmake_policy(SET CMP0065 NEW)
 endif()
 
 project(REACTOS)
@@ -141,9 +130,6 @@ else()
 
     if(ENABLE_CCACHE)
         message(WARNING "-- Disabling precompiled headers support (ccache).")
-        option(PCH "Whether to use precompiled headers" OFF)
-    elseif(CMAKE_VERSION VERSION_LESS 3.16.0)
-        message(WARNING "-- Disabling precompiled headers support due to this unsupported CMake version: ${CMAKE_VERSION}.")
         option(PCH "Whether to use precompiled headers" OFF)
     elseif(GCC)
         message(WARNING "-- Disabling precompiled headers on GCC by default CORE-17108.")

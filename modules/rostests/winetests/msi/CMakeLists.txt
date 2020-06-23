@@ -34,11 +34,9 @@ list(APPEND SOURCE
 list(APPEND PCH_SKIP_SOURCE
     testlist.c)
 
-if(NOT ${CMAKE_VERSION} VERSION_LESS "3.9.0")
-    # CMake 3.9 and higher requires to specify this dependency manually
-    # see https://gitlab.kitware.com/cmake/cmake/issues/19933
-    set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS custom.dll)
-endif()
+# CMake 3.9 and higher requires to specify this dependency manually
+# see https://gitlab.kitware.com/cmake/cmake/issues/19933
+set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS custom.dll)
 
 add_executable(msi_winetest
     ${SOURCE}

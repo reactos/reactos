@@ -916,11 +916,7 @@ Return Value:
 
     PLIST_ENTRY Links;
 
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
     ULONG ChangeCount = 0;
 
     DISK_GEOMETRY Geometry;
@@ -1907,11 +1903,7 @@ Return Value:
     BOOLEAN LabelFound;
 
     ULONG ChangeCount = 0;
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
 
     PAGED_CODE();
 
@@ -2125,11 +2117,7 @@ Return Value:
             try_return( Status = STATUS_WRONG_VOLUME );
         }
 
-#ifndef __REACTOS__
         BootSector = FsRtlAllocatePoolWithTag(NonPagedPoolNxCacheAligned,
-#else
-        BootSector = FsRtlAllocatePoolWithTag(NonPagedPoolCacheAligned,
-#endif
                                               (ULONG) ROUND_TO_PAGES( SectorSize ),
                                               TAG_VERIFY_BOOTSECTOR);
 
@@ -2220,11 +2208,7 @@ Return Value:
             RootDirectorySize = FatBytesPerCluster(&Bpb);
         }
 
-#ifndef __REACTOS__
         RootDirectory = FsRtlAllocatePoolWithTag( NonPagedPoolNxCacheAligned,
-#else
-        RootDirectory = FsRtlAllocatePoolWithTag( NonPagedPoolCacheAligned,
-#endif
                                                   (ULONG) ROUND_TO_PAGES( RootDirectorySize ),
                                                   TAG_VERIFY_ROOTDIR);
 
@@ -4017,11 +4001,7 @@ Return Value:
 
     } else if (Irp->MdlAddress != NULL) {
 
-#ifndef __REACTOS__
         VolumeState = MmGetSystemAddressForMdlSafe( Irp->MdlAddress, LowPagePriority | MdlMappingNoExecute );
-#else
-        VolumeState = MmGetSystemAddressForMdlSafe( Irp->MdlAddress, LowPagePriority );
-#endif
 
         if (VolumeState == NULL) {
 
@@ -4837,11 +4817,7 @@ Return Value:
             try_leave( Status = STATUS_FILE_CORRUPT_ERROR);
         }
         
-#ifndef __REACTOS__
         *MappingPairs = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-        *MappingPairs = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                   (Index + 2) * (2 * sizeof(LARGE_INTEGER)),
                                                   TAG_OUTPUT_MAPPINGPAIRS );
 
@@ -6095,11 +6071,7 @@ Return Value:
 
             if (Buffer == NULL) {
 
-#ifndef __REACTOS__
                 Buffer = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-                Buffer = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                    BufferSize,
                                                    TAG_DEFRAG_BUFFER );
             }
@@ -7987,11 +7959,7 @@ FatVerifyLookupFatEntry (
 
     FatVerifyIndexIsValid( IrpContext, Vcb, FatIndex);
 
-#ifndef __REACTOS__
     Buffer = FsRtlAllocatePoolWithTag( NonPagedPoolNxCacheAligned,
-#else
-    Buffer = FsRtlAllocatePoolWithTag( NonPagedPoolCacheAligned,
-#endif
                                        PAGE_SIZE,
                                        TAG_ENTRY_LOOKUP_BUFFER );
 

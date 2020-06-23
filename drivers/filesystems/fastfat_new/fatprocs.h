@@ -40,6 +40,15 @@ Abstract:
 
 
 #ifdef __REACTOS__
+// Downgrade unsupported NT6.2+ features.
+#undef MdlMappingNoExecute
+#define MdlMappingNoExecute 0
+#define NonPagedPoolNx NonPagedPool
+#define NonPagedPoolNxCacheAligned NonPagedPoolCacheAligned
+#undef POOL_NX_ALLOCATION
+#define POOL_NX_ALLOCATION 0
+
+// Moved up: needed in 'fatstruc.h'.
 typedef enum _TYPE_OF_OPEN {
 
     UnopenedFileObject = 1,

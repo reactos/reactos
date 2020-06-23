@@ -762,6 +762,13 @@ NTSTATUS
 IopTraverseDeviceTree(
     PDEVICETREE_TRAVERSE_CONTEXT Context);
 
+NTSTATUS
+NTAPI
+IopCreateDeviceKeyPath(
+    IN PCUNICODE_STRING RegistryPath,
+    IN ULONG CreateOptions,
+    OUT PHANDLE Handle);
+
 //
 // PnP Routines
 //
@@ -1391,7 +1398,7 @@ IoSetIoCompletion(
     IN PVOID ApcContext,
     IN NTSTATUS IoStatus,
     IN ULONG_PTR IoStatusInformation,
-    IN BOOLEAN Quota 
+    IN BOOLEAN Quota
 );
 
 //
