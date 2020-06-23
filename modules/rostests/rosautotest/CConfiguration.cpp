@@ -21,7 +21,8 @@ CConfiguration::CConfiguration()
       m_PrintToConsole(true),
       m_RepeatCount(1),
       m_Shutdown(false),
-      m_Submit(false)
+      m_Submit(false),
+      m_ListModules(false)
 {
     WCHAR WindowsDirectory[MAX_PATH];
     WCHAR Interactive[32];
@@ -98,6 +99,10 @@ CConfiguration::ParseParameters(int argc, wchar_t* argv[])
                     }
 
                     m_RepeatCount = tmp_RepeatCount;
+                    break;
+
+                case 'l':
+                    m_ListModules = true;
                     break;
 
                 default:

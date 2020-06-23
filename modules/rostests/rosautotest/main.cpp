@@ -32,6 +32,7 @@ IntPrintUsage()
          << "    /w           - Submit the results to the webservice." << endl
          << "                   Requires a \"rosautotest.ini\" with valid login data." << endl
          << "                   Incompatible with the /r option." << endl
+         << "    /l           - List all modules that would run." << endl
          << endl
          << "  module:" << endl
          << "    The module to be tested (i.e. \"advapi32\")" << endl
