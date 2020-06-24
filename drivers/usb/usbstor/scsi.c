@@ -11,9 +11,6 @@
 
 #include "usbstor.h"
 
-#define NDEBUG
-#include <debug.h>
-
 
 static
 NTSTATUS
@@ -103,13 +100,13 @@ USBSTOR_IsCSWValid(
 {
     if (Context->csw.Signature != CSW_SIGNATURE)
     {
-        DPRINT1("[USBSTOR] Expected Signature %x but got %x\n", CSW_SIGNATURE, Context->csw.Signature);
+        ERR("Expected Signature %x but got %x\n", CSW_SIGNATURE, Context->csw.Signature);
         return FALSE;
     }
 
     if (Context->csw.Tag != PtrToUlong(Context->Irp))
     {
-        DPRINT1("[USBSTOR] Expected Tag %Ix but got %x\n", PtrToUlong(Context->Irp), Context->csw.Tag);
+        ERR("Expected Tag %Ix but got %x\n", PtrToUlong(Context->Irp), Context->csw.Tag);
         return FALSE;
     }
 
@@ -137,7 +134,7 @@ USBSTOR_CSWCompletionRoutine(
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PSCSI_REQUEST_BLOCK Request;
 
-    DPRINT("USBSTOR_CSWCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
+    FDPRINT(DBGLVL_DISK, "USBSTOR_CSWCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
@@ -163,7 +160,7 @@ USBSTOR_CSWCompletionRoutine(
         }
         else
         {
-            DPRINT1("USBSTOR_CSWCompletionRoutine: Urb.Hdr.Status - %x\n", Context->Urb.UrbHeader.Status);
+            ERR("USBSTOR_CSWCompletionRoutine: Urb.Hdr.Status - %x\n", Context->Urb.UrbHeader.Status);
         }
 
         goto ResetRecovery;
@@ -193,7 +190,7 @@ USBSTOR_CSWCompletionRoutine(
     else if (Context->csw.Status == CSW_STATUS_COMMAND_FAILED)
     {
         // the command is correct but with failed status - issue request sense
-        DPRINT("USBSTOR_CSWCompletionRoutine: CSW_STATUS_COMMAND_FAILED\n");
+        FDPRINT(DBGLVL_DISK, "USBSTOR_CSWCompletionRoutine: CSW_STATUS_COMMAND_FAILED\n");
 
         ASSERT(FDODeviceExtension->ActiveSrb == Request);
 
@@ -203,7 +200,7 @@ USBSTOR_CSWCompletionRoutine(
         Request->ScsiStatus = 2;
         Request->DataTransferLength = 0;
 
-        DPRINT("Flags: %x SBL: %x, buf: %p\n", Request->SrbFlags, Request->SenseInfoBufferLength, Request->SenseInfoBuffer);
+        FDPRINT(DBGLVL_DISK, "Flags: %x SBL: %x, buf: %p\n", Request->SrbFlags, Request->SenseInfoBufferLength, Request->SenseInfoBuffer);
 
         if (!(Request->SrbFlags & SRB_FLAGS_DISABLE_AUTOSENSE) &&
               Request->SenseInfoBufferLength &&
@@ -268,7 +265,7 @@ USBSTOR_DataCompletionRoutine(
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
 
-    DPRINT("USBSTOR_DataCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
+    FDPRINT(DBGLVL_DISK, "USBSTOR_DataCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
 
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)Ctx;
     Context = &FDODeviceExtension->CurrentIrpContext;
@@ -340,7 +337,7 @@ USBSTOR_CBWCompletionRoutine(
     PMDL Mdl = NULL;
     PVOID TransferBuffer = NULL;
 
-    DPRINT("USBSTOR_CBWCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
+    FDPRINT(DBGLVL_DISK, "USBSTOR_CBWCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
 
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)Ctx;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -376,7 +373,7 @@ USBSTOR_CBWCompletionRoutine(
     else
     {
         // we check the validity of a request in disk.c so we should never be here
-        DPRINT1("Warning: shouldn't be here\n");
+        ERR("Warning: shouldn't be here\n");
         goto ResetRecovery;
     }
 
@@ -406,7 +403,7 @@ USBSTOR_CBWCompletionRoutine(
 
         if (!Mdl)
         {
-            DPRINT1("USBSTOR_CBWCompletionRoutine: Mdl - %p\n", Mdl);
+            FDPRINT(DBGLVL_DISK, "USBSTOR_CBWCompletionRoutine: Mdl - %p\n", Mdl);
             goto ResetRecovery;
         }
     }
@@ -444,7 +441,7 @@ VOID
 DumpCBW(
     PUCHAR Block)
 {
-    DPRINT("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+    FDPRINT(DBGLVL_DISK, "%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
         Block[0] & 0xFF, Block[1] & 0xFF, Block[2] & 0xFF, Block[3] & 0xFF, Block[4] & 0xFF, Block[5] & 0xFF, Block[6] & 0xFF, Block[7] & 0xFF, Block[8] & 0xFF, Block[9] & 0xFF,
         Block[10] & 0xFF, Block[11] & 0xFF, Block[12] & 0xFF, Block[13] & 0xFF, Block[14] & 0xFF, Block[15] & 0xFF, Block[16] & 0xFF, Block[17] & 0xFF, Block[18] & 0xFF, Block[19] & 0xFF,
         Block[20] & 0xFF, Block[21] & 0xFF, Block[22] & 0xFF, Block[23] & 0xFF, Block[24] & 0xFF, Block[25] & 0xFF, Block[26] & 0xFF, Block[27] & 0xFF, Block[28] & 0xFF, Block[29] & 0xFF,
@@ -479,7 +476,7 @@ USBSTOR_SendCBWRequest(
 
     RtlCopyMemory(&Context->cbw.CommandBlock, Request->Cdb, Request->CdbLength);
 
-    DPRINT("CBW for IRP %p\n", Irp);
+    FDPRINT(DBGLVL_DISK, "CBW for IRP %p\n", Irp);
     DumpCBW((PUCHAR)&Context->cbw);
 
     // initialize rest of context
@@ -507,8 +504,6 @@ USBSTOR_IssueRequestSense(
     PSCSI_REQUEST_BLOCK CurrentSrb;
     PSCSI_REQUEST_BLOCK SenseSrb;
 
-    DPRINT("USBSTOR_IssueRequestSense: \n");
-
     CurrentSrb = FDODeviceExtension->ActiveSrb;
     SenseSrb = &FDODeviceExtension->CurrentIrpContext.SenseSrb;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -525,7 +520,7 @@ USBSTOR_IssueRequestSense(
 
     ASSERT(CurrentSrb->SenseInfoBufferLength);
     ASSERT(CurrentSrb->SenseInfoBuffer);
-    DPRINT("SenseInfoBuffer %x, SenseInfoBufferLength %x\n", CurrentSrb->SenseInfoBuffer, CurrentSrb->SenseInfoBufferLength);
+    FDPRINT(DBGLVL_DISK, "SenseInfoBuffer %x, SenseInfoBufferLength %x\n", CurrentSrb->SenseInfoBuffer, CurrentSrb->SenseInfoBufferLength);
 
     SenseSrb->DataTransferLength = CurrentSrb->SenseInfoBufferLength;
     SenseSrb->DataBuffer = CurrentSrb->SenseInfoBuffer;
@@ -550,7 +545,7 @@ USBSTOR_HandleExecuteSCSI(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Request = IoStack->Parameters.Scsi.Srb;
 
-    DPRINT("USBSTOR_HandleExecuteSCSI Operation Code %x, Length %lu\n", SrbGetCdb(Request)->CDB10.OperationCode, Request->DataTransferLength);
+    FDPRINT(DBGLVL_DISK, "USBSTOR_HandleExecuteSCSI Operation Code %x, Length %lu\n", SrbGetCdb(Request)->CDB10.OperationCode, Request->DataTransferLength);
 
     // check that we're sending to the right LUN
     ASSERT(SrbGetCdb(Request)->CDB10.LogicalUnitNumber == PDODeviceExtension->LUN);

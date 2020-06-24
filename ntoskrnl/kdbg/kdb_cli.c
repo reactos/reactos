@@ -301,6 +301,10 @@ ComponentTable[] =
     { "XSAVE",          DPFLTR_XSAVE_ID         },
     { "SE",             DPFLTR_SE_ID            },
     { "DRIVEEXTENDER",  DPFLTR_DRIVEEXTENDER_ID },
+//
+// ReactOS-specific components
+//
+    { "ROSUSBPORT",     DPFLTR_ROSUSBPORT_ID    },
 };
 
 //

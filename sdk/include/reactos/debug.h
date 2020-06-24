@@ -93,6 +93,7 @@ RtlAssert(
 
 /* Print stuff only on Debug Builds*/
 #if DBG
+    /* DPRINT and DPRINT1 are deprecated. Use ERR/WARN/TRACE/INFO/FDPRINT instead */
 
     /* These are always printed */
     #define DPRINT1(fmt, ...) do { \
@@ -121,15 +122,18 @@ RtlAssert(
     #define UNIMPLEMENTED         __NOTICE(WARNING, "is UNIMPLEMENTED!\n")
     #define UNIMPLEMENTED_ONCE    do { static int bWarnedOnce = 0; if (!bWarnedOnce) { bWarnedOnce++; UNIMPLEMENTED; } } while (0)
 
+    /* These macros are supposed to be overriden in each module (so you don't need to specify the channel) */
     #define ERR_(ch, fmt, ...)    DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
     #define WARN_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
     #define TRACE_(ch, fmt, ...)  DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
     #define INFO_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
+    #define FDPRINT_(ch, lvl, fmt, ...) DbgPrintEx(DPFLTR_##ch##_ID, lvl, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
 
     #define ERR__(ch, fmt, ...)    DbgPrintEx(ch, DPFLTR_ERROR_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
     #define WARN__(ch, fmt, ...)   DbgPrintEx(ch, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
     #define TRACE__(ch, fmt, ...)  DbgPrintEx(ch, DPFLTR_TRACE_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
     #define INFO__(ch, fmt, ...)   DbgPrintEx(ch, DPFLTR_INFO_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
+    #define FDPRINT__(ch, lvl, fmt, ...) DbgPrintEx(ch, lvl, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
 
 #else /* not DBG */
 
@@ -144,11 +148,13 @@ RtlAssert(
     #define WARN_(ch, ...)     __noop
     #define TRACE_(ch, ...)    __noop
     #define INFO_(ch, ...)     __noop
+    #define FDPRINT_(ch, ...)  __noop
 
     #define ERR__(ch, ...)     __noop
     #define WARN__(ch, ...)    __noop
     #define TRACE__(ch, ...)   __noop
     #define INFO__(ch, ...)    __noop
+    #define FDPRINT__(ch, ...)  __noop
 #else
     #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
@@ -157,11 +163,13 @@ RtlAssert(
     #define WARN_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define TRACE_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define INFO_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+    #define FDPRINT_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 
     #define ERR__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define WARN__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define TRACE__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define INFO__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+    #define FDPRINT__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 #endif /* _MSC_VER */
 
 #endif /* not DBG */

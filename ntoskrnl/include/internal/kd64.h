@@ -561,7 +561,7 @@ extern ULONG TraceDataBufferPosition;
 //
 // Debug Filter Component Table
 //
-#define MAX_KD_COMPONENT_TABLE_ENTRIES  147
+#define MAX_KD_COMPONENT_TABLE_ENTRIES (DPFLTR_ENDOFTABLE_ID + 2)
 extern ULONG KdComponentTableSize;
 extern PULONG KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES];
 
@@ -718,3 +718,7 @@ extern ULONG Kd_FILETRACE_Mask;
 extern ULONG Kd_XSAVE_Mask;
 extern ULONG Kd_SE_Mask;
 extern ULONG Kd_DRIVEEXTENDER_Mask;
+//
+// ReactOS-specific components
+//
+extern ULONG Kd_ROSUSBPORT_Mask;

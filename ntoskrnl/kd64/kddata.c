@@ -294,6 +294,8 @@ ULONG Kd_FILETRACE_Mask;
 ULONG Kd_XSAVE_Mask;
 ULONG Kd_SE_Mask;
 ULONG Kd_DRIVEEXTENDER_Mask;
+// ReactOS-specific masks
+ULONG Kd_ROSUSB_Mask;
 // End Mask
 ULONG Kd_ENDOFTABLE_Mask;
 
@@ -452,6 +454,8 @@ PULONG KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES] =
     &Kd_XSAVE_Mask,
     &Kd_SE_Mask,
     &Kd_DRIVEEXTENDER_Mask,
+    // ReactOS-specific masks
+    &Kd_ROSUSBPORT_Mask,
     // End Mask
     &Kd_ENDOFTABLE_Mask,
 };

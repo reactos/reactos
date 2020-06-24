@@ -9,9 +9,6 @@
 
 #include "usbstor.h"
 
-#define NDEBUG
-#include <debug.h>
-
 
 IO_COMPLETION_ROUTINE SyncForwardIrpCompletionRoutine;
 
@@ -216,7 +213,7 @@ USBSTOR_GetMaxLUN(
 
     Status = USBSTOR_ClassRequest(DeviceObject, DeviceExtension, USB_BULK_GET_MAX_LUN, DeviceExtension->InterfaceInformation->InterfaceNumber, USBD_TRANSFER_DIRECTION_IN, sizeof(UCHAR), Buffer);
 
-    DPRINT("MaxLUN: %x\n", *Buffer);
+    INFO("MaxLUN: %x\n", *Buffer);
 
     if (NT_SUCCESS(Status))
     {

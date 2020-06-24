@@ -10,9 +10,6 @@
 
 #include "usbstor.h"
 
-#define NDEBUG
-#include <debug.h>
-
 
 NTSTATUS
 USBSTOR_GetEndpointStatus(
@@ -23,11 +20,10 @@ USBSTOR_GetEndpointStatus(
     PURB Urb;
     NTSTATUS Status;
 
-    DPRINT("Allocating URB\n");
     Urb = (PURB)AllocateItem(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
     if (!Urb)
     {
-        DPRINT1("OutofMemory!\n");
+        ERR("Out of Memory!\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -35,7 +31,7 @@ USBSTOR_GetEndpointStatus(
     UsbBuildGetStatusRequest(Urb, URB_FUNCTION_GET_STATUS_FROM_ENDPOINT, bEndpointAddress & 0x0F, Value, NULL, NULL);
 
     // send the request
-    DPRINT1("Sending Request DeviceObject %p, Urb %p\n", DeviceObject, Urb);
+    INFO("Sending Request DeviceObject %p, Urb %p\n", DeviceObject, Urb);
     Status = USBSTOR_SyncUrbRequest(DeviceObject, Urb);
 
     FreeItem(Urb);
@@ -50,11 +46,10 @@ USBSTOR_ResetPipeWithHandle(
     PURB Urb;
     NTSTATUS Status;
 
-    DPRINT("Allocating URB\n");
     Urb = (PURB)AllocateItem(NonPagedPool, sizeof(struct _URB_PIPE_REQUEST));
     if (!Urb)
     {
-        DPRINT1("OutofMemory!\n");
+        ERR("Out of Memory!\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -63,7 +58,7 @@ USBSTOR_ResetPipeWithHandle(
     Urb->UrbPipeRequest.PipeHandle = PipeHandle;
 
     // send the request
-    DPRINT1("Sending Request DeviceObject %p, Urb %p\n", DeviceObject, Urb);
+    INFO("Sending Request DeviceObject %p, Urb %p\n", DeviceObject, Urb);
     Status = USBSTOR_SyncUrbRequest(DeviceObject, Urb);
 
     FreeItem(Urb);
@@ -82,7 +77,7 @@ USBSTOR_ResetPipeWorkItemRoutine(
 
     // clear stall on the corresponding pipe
     Status = USBSTOR_ResetPipeWithHandle(FDODeviceExtension->LowerDeviceObject, Context->Urb.UrbBulkOrInterruptTransfer.PipeHandle);
-    DPRINT1("USBSTOR_ResetPipeWithHandle Status %x\n", Status);
+    INFO("USBSTOR_ResetPipeWithHandle Status %x\n", Status);
 
     // now resend the csw as the stall got cleared
     USBSTOR_SendCSWRequest(FDODeviceExtension, Context->Irp);
@@ -99,7 +94,7 @@ USBSTOR_ResetDeviceWorkItemRoutine(
     NTSTATUS Status;
     KIRQL OldIrql;
 
-    DPRINT("USBSTOR_ResetDeviceWorkItemRoutine\n");
+    INFO("USBSTOR_ResetDeviceWorkItemRoutine\n");
 
     FDODeviceExtension = FdoDevice->DeviceExtension;
 
@@ -135,8 +130,6 @@ NTAPI
 USBSTOR_QueueResetPipe(
     IN PFDO_DEVICE_EXTENSION FDODeviceExtension)
 {
-    DPRINT("USBSTOR_QueueResetPipe\n");
-
     IoQueueWorkItem(FDODeviceExtension->ResetDeviceWorkItem,
                     USBSTOR_ResetPipeWorkItemRoutine,
                     CriticalWorkQueue,
@@ -149,8 +142,6 @@ USBSTOR_QueueResetDevice(
     IN PFDO_DEVICE_EXTENSION FDODeviceExtension)
 {
     KIRQL OldIrql;
-
-    DPRINT("USBSTOR_QueueResetDevice\n");
 
     KeAcquireSpinLock(&FDODeviceExtension->CommonLock, &OldIrql);
     FDODeviceExtension->Flags |= USBSTOR_FDO_FLAGS_DEVICE_RESETTING;
@@ -186,7 +177,7 @@ USBSTOR_TimerWorkerRoutine(
             Status = USBSTOR_ResetPipeWithHandle(FDODeviceExtension->LowerDeviceObject, FDODeviceExtension->InterfaceInformation->Pipes[FDODeviceExtension->BulkOutPipeIndex].PipeHandle);
         }
     }
-    DPRINT1("Status %x\n", Status);
+    INFO("Reset device status: %x\n", Status);
 
     // clear timer srb
     FDODeviceExtension->LastTimerActiveSrb = NULL;
@@ -211,7 +202,7 @@ USBSTOR_TimerRoutine(
     PERRORHANDLER_WORKITEM_DATA WorkItemData;
 
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)Context;
-    DPRINT1("[USBSTOR] TimerRoutine entered\n");
+    INFO("TimerRoutine entered\n");
     // DPRINT1("[USBSTOR] ActiveSrb %p ResetInProgress %x LastTimerActiveSrb %p\n", FDODeviceExtension->ActiveSrb, FDODeviceExtension->ResetInProgress, FDODeviceExtension->LastTimerActiveSrb);
 
     KeAcquireSpinLockAtDpcLevel(&FDODeviceExtension->IrpListLock);
@@ -222,7 +213,7 @@ USBSTOR_TimerRoutine(
         if (FDODeviceExtension->LastTimerActiveSrb != NULL && FDODeviceExtension->LastTimerActiveSrb == FDODeviceExtension->ActiveSrb)
         {
             // check if empty
-            DPRINT1("[USBSTOR] ActiveSrb %p hang detected\n", FDODeviceExtension->ActiveSrb);
+            WARN("ActiveSrb %p hang detected\n", FDODeviceExtension->ActiveSrb);
             ResetDevice = TRUE;
         }
         else
@@ -254,7 +245,7 @@ USBSTOR_TimerRoutine(
 
            WorkItemData->DeviceObject = FDODeviceExtension->FunctionalDeviceObject;
 
-           DPRINT1("[USBSTOR] Queing Timer WorkItem\n");
+           INFO("Queing Timer WorkItem\n");
            ExQueueWorkItem(&WorkItemData->WorkQueueItem, DelayedWorkQueue);
         }
      }

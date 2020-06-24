@@ -10,30 +10,27 @@
 
 #include "usbstor.h"
 
-#define NDEBUG
-#include <debug.h>
-
 
 #if DBG
 static
 VOID
 USBSTOR_DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
 {
-    DPRINT("Dumping Device Descriptor %p\n", DeviceDescriptor);
-    DPRINT("bLength %x\n", DeviceDescriptor->bLength);
-    DPRINT("bDescriptorType %x\n", DeviceDescriptor->bDescriptorType);
-    DPRINT("bcdUSB %x\n", DeviceDescriptor->bcdUSB);
-    DPRINT("bDeviceClass %x\n", DeviceDescriptor->bDeviceClass);
-    DPRINT("bDeviceSubClass %x\n", DeviceDescriptor->bDeviceSubClass);
-    DPRINT("bDeviceProtocol %x\n", DeviceDescriptor->bDeviceProtocol);
-    DPRINT("bMaxPacketSize0 %x\n", DeviceDescriptor->bMaxPacketSize0);
-    DPRINT("idVendor %x\n", DeviceDescriptor->idVendor);
-    DPRINT("idProduct %x\n", DeviceDescriptor->idProduct);
-    DPRINT("bcdDevice %x\n", DeviceDescriptor->bcdDevice);
-    DPRINT("iManufacturer %x\n", DeviceDescriptor->iManufacturer);
-    DPRINT("iProduct %x\n", DeviceDescriptor->iProduct);
-    DPRINT("iSerialNumber %x\n", DeviceDescriptor->iSerialNumber);
-    DPRINT("bNumConfigurations %x\n", DeviceDescriptor->bNumConfigurations);
+    FDPRINT(DBGLVL_PNP, "Dumping Device Descriptor %p\n", DeviceDescriptor);
+    FDPRINT(DBGLVL_PNP, "bLength %x\n", DeviceDescriptor->bLength);
+    FDPRINT(DBGLVL_PNP, "bDescriptorType %x\n", DeviceDescriptor->bDescriptorType);
+    FDPRINT(DBGLVL_PNP, "bcdUSB %x\n", DeviceDescriptor->bcdUSB);
+    FDPRINT(DBGLVL_PNP, "bDeviceClass %x\n", DeviceDescriptor->bDeviceClass);
+    FDPRINT(DBGLVL_PNP, "bDeviceSubClass %x\n", DeviceDescriptor->bDeviceSubClass);
+    FDPRINT(DBGLVL_PNP, "bDeviceProtocol %x\n", DeviceDescriptor->bDeviceProtocol);
+    FDPRINT(DBGLVL_PNP, "bMaxPacketSize0 %x\n", DeviceDescriptor->bMaxPacketSize0);
+    FDPRINT(DBGLVL_PNP, "idVendor %x\n", DeviceDescriptor->idVendor);
+    FDPRINT(DBGLVL_PNP, "idProduct %x\n", DeviceDescriptor->idProduct);
+    FDPRINT(DBGLVL_PNP, "bcdDevice %x\n", DeviceDescriptor->bcdDevice);
+    FDPRINT(DBGLVL_PNP, "iManufacturer %x\n", DeviceDescriptor->iManufacturer);
+    FDPRINT(DBGLVL_PNP, "iProduct %x\n", DeviceDescriptor->iProduct);
+    FDPRINT(DBGLVL_PNP, "iSerialNumber %x\n", DeviceDescriptor->iSerialNumber);
+    FDPRINT(DBGLVL_PNP, "bNumConfigurations %x\n", DeviceDescriptor->bNumConfigurations);
 }
 #endif
 
@@ -105,14 +102,14 @@ USBSTOR_FdoHandleRemoveDevice(
     NTSTATUS Status;
     ULONG Index;
 
-    DPRINT("Handling FDO removal %p\n", DeviceObject);
+    FDPRINT(DBGLVL_PNP, "Handling FDO removal %p\n", DeviceObject);
 
     // FIXME: wait for devices finished processing
     for (Index = 0; Index < USB_MAXCHILDREN; Index++)
     {
         if (DeviceExtension->ChildPDO[Index] != NULL)
         {
-            DPRINT("Deleting PDO %p RefCount %x AttachedDevice %p \n", DeviceExtension->ChildPDO[Index], DeviceExtension->ChildPDO[Index]->ReferenceCount, DeviceExtension->ChildPDO[Index]->AttachedDevice);
+            FDPRINT(DBGLVL_PNP, "Deleting PDO %p RefCount %x AttachedDevice %p \n", DeviceExtension->ChildPDO[Index], DeviceExtension->ChildPDO[Index]->ReferenceCount, DeviceExtension->ChildPDO[Index]->AttachedDevice);
             IoDeleteDevice(DeviceExtension->ChildPDO[Index]);
         }
     }
@@ -163,7 +160,7 @@ USBSTOR_FdoHandleStartDevice(
     Status = USBSTOR_SyncForwardIrp(DeviceExtension->LowerDeviceObject, Irp);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("USBSTOR_FdoHandleStartDevice Lower device failed to start %x\n", Status);
+        ERR("USBSTOR_FdoHandleStartDevice Lower device failed to start %x\n", Status);
         return Status;
     }
 
@@ -185,7 +182,7 @@ USBSTOR_FdoHandleStartDevice(
     Status = USBSTOR_GetDescriptors(DeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("USBSTOR_FdoHandleStartDevice failed to get device descriptor with %x\n", Status);
+        ERR("USBSTOR_FdoHandleStartDevice failed to get device descriptor with %x\n", Status);
         return Status;
     }
 
@@ -199,16 +196,16 @@ USBSTOR_FdoHandleStartDevice(
     ASSERT(InterfaceDesc->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE);
     ASSERT(InterfaceDesc->bLength == sizeof(USB_INTERFACE_DESCRIPTOR));
 
-    DPRINT("bInterfaceSubClass %x\n", InterfaceDesc->bInterfaceSubClass);
+    FDPRINT(DBGLVL_PNP, "bInterfaceSubClass %x\n", InterfaceDesc->bInterfaceSubClass);
     if (InterfaceDesc->bInterfaceProtocol != USB_PROTOCOL_BULK)
     {
-        DPRINT1("USB Device is not a bulk only device and is not currently supported\n");
+        ERR("USB Device is not a bulk only device and is not currently supported\n");
         return STATUS_NOT_SUPPORTED;
     }
 
     if (InterfaceDesc->bInterfaceSubClass == USB_SUBCLASS_UFI)
     {
-        DPRINT1("USB Floppy devices are not supported\n");
+        ERR("USB Floppy devices are not supported\n");
         return STATUS_NOT_SUPPORTED;
     }
 
@@ -217,7 +214,7 @@ USBSTOR_FdoHandleStartDevice(
     if (!NT_SUCCESS(Status))
     {
         // failed to get device descriptor
-        DPRINT1("USBSTOR_FdoHandleStartDevice failed to select configuration / interface with %x\n", Status);
+        ERR("Failed to select configuration / interface with %x\n", Status);
         return Status;
     }
 
@@ -225,14 +222,14 @@ USBSTOR_FdoHandleStartDevice(
     Status = USBSTOR_GetPipeHandles(DeviceExtension);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("USBSTOR_FdoHandleStartDevice no pipe handles %x\n", Status);
+        ERR("No pipe handles %x\n", Status);
         return Status;
     }
 
     Status = USBSTOR_GetMaxLUN(DeviceExtension->LowerDeviceObject, DeviceExtension);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("USBSTOR_FdoHandleStartDevice failed to get max lun %x\n", Status);
+        ERR("Failed to get max lun %x\n", Status);
         return Status;
     }
 
@@ -243,7 +240,7 @@ USBSTOR_FdoHandleStartDevice(
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("USBSTOR_FdoHandleStartDevice USBSTOR_CreatePDO failed for Index %lu with Status %x\n", Index, Status);
+            ERR("USBSTOR_CreatePDO failed for Index %lu with Status %x\n", Index, Status);
             return Status;
         }
 
@@ -262,14 +259,14 @@ USBSTOR_FdoHandleStartDevice(
         //
         // failed to device interface
         //
-        DPRINT1("USBSTOR_FdoHandleStartDevice failed to get device interface %x\n", Status);
+        ERR("USBSTOR_FdoHandleStartDevice failed to get device interface %x\n", Status);
         return Status;
     }
 #endif
 
     //IoStartTimer(DeviceObject);
 
-    DPRINT("USBSTOR_FdoHandleStartDevice FDO is initialized\n");
+    FDPRINT(DBGLVL_PNP, "FDO is initialized\n");
     return STATUS_SUCCESS;
 }
 
@@ -290,7 +287,7 @@ USBSTOR_FdoHandlePnp(
     {
         case IRP_MN_SURPRISE_REMOVAL:
         {
-            DPRINT("IRP_MN_SURPRISE_REMOVAL %p\n", DeviceObject);
+            FDPRINT(DBGLVL_PNP, "IRP_MN_SURPRISE_REMOVAL %p\n", DeviceObject);
             Irp->IoStatus.Status = STATUS_SUCCESS;
 
             // forward irp to next device object
@@ -299,12 +296,12 @@ USBSTOR_FdoHandlePnp(
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            DPRINT("IRP_MN_QUERY_DEVICE_RELATIONS %p Type: %u\n", DeviceObject, IoStack->Parameters.QueryDeviceRelations.Type);
+            FDPRINT(DBGLVL_PNP, "IRP_MN_QUERY_DEVICE_RELATIONS %p Type: %u\n", DeviceObject, IoStack->Parameters.QueryDeviceRelations.Type);
             return USBSTOR_FdoHandleDeviceRelations(DeviceExtension, Irp);
         }
         case IRP_MN_STOP_DEVICE:
         {
-            DPRINT1("USBSTOR_FdoHandlePnp: IRP_MN_STOP_DEVICE unimplemented\n");
+            FDPRINT(DBGLVL_PNP, "IRP_MN_STOP_DEVICE\n");
             IoStopTimer(DeviceObject);
             Irp->IoStatus.Status = STATUS_SUCCESS;
 
@@ -314,12 +311,13 @@ USBSTOR_FdoHandlePnp(
         }
         case IRP_MN_REMOVE_DEVICE:
         {
-            DPRINT("IRP_MN_REMOVE_DEVICE\n");
+            FDPRINT(DBGLVL_PNP, "IRP_MN_REMOVE_DEVICE\n");
 
             return USBSTOR_FdoHandleRemoveDevice(DeviceObject, DeviceExtension, Irp);
         }
         case IRP_MN_QUERY_CAPABILITIES:
         {
+            FDPRINT(DBGLVL_PNP, "IRP_MN_QUERY_CAPABILITIES\n");
             // FIXME: set custom capabilities
             IoSkipCurrentIrpStackLocation(Irp);
             return IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
@@ -327,6 +325,7 @@ USBSTOR_FdoHandlePnp(
         case IRP_MN_QUERY_STOP_DEVICE:
         case IRP_MN_QUERY_REMOVE_DEVICE:
         {
+            FDPRINT(DBGLVL_PNP, "IRP_MN_QUERY_STOP_DEVICE / IRP_MN_QUERY_REMOVE_DEVICE\n");
 #if 0
             //
             // we can if nothing is pending
@@ -338,7 +337,7 @@ USBSTOR_FdoHandlePnp(
 #endif
             {
                 /* We have pending requests */
-                DPRINT1("Failing removal/stop request due to pending requests present\n");
+                ERR("Failing removal/stop request due to pending requests present\n");
                 Status = STATUS_UNSUCCESSFUL;
             }
             else
@@ -353,6 +352,7 @@ USBSTOR_FdoHandlePnp(
         }
         case IRP_MN_START_DEVICE:
         {
+            FDPRINT(DBGLVL_PNP, "IRP_MN_START_DEVICE\n");
             Status = USBSTOR_FdoHandleStartDevice(DeviceObject, DeviceExtension, Irp);
             break;
         }

@@ -11,9 +11,6 @@
 
 #include "usbstor.h"
 
-#define NDEBUG
-#include <debug.h>
-
 
 static
 LPCSTR
@@ -144,8 +141,6 @@ USBSTOR_PdoHandleQueryDeviceText(
         case DeviceTextDescription:
         case DeviceTextLocationInformation:
         {
-            DPRINT("USBSTOR_PdoHandleQueryDeviceText\n");
-
             Offset += CopyFieldTruncate(InquiryData->VendorId, &LocalBuffer[Offset], sizeof(InquiryData->VendorId));
             LocalBuffer[Offset++] = ' ';
             Offset += CopyFieldTruncate(InquiryData->ProductId, &LocalBuffer[Offset], sizeof(InquiryData->ProductId));
@@ -223,7 +218,7 @@ USBSTOR_PdoHandleQueryDeviceId(
         Irp->IoStatus.Information = (ULONG_PTR)DeviceId.Buffer;
     }
 
-    DPRINT("DeviceId %wZ Status %x\n", &DeviceId, Status);
+    INFO("DeviceId %wZ Status %x\n", &DeviceId, Status);
 
     return Status;
 }
@@ -243,7 +238,7 @@ USBSTOR_ConvertToUnicodeString(
     ASSERT(ResultBufferLength);
     ASSERT(ResultBufferLength > ResultBufferOffset);
 
-    DPRINT("ResultBufferOffset %lu ResultBufferLength %lu Buffer %s Length %lu\n", ResultBufferOffset, ResultBufferLength, Buffer, strlen(Buffer));
+    INFO("ResultBufferOffset %lu ResultBufferLength %lu Buffer %s Length %lu\n", ResultBufferOffset, ResultBufferLength, Buffer, strlen(Buffer));
 
     // construct destination string
     DeviceString.Buffer = &ResultBuffer[ResultBufferOffset];
@@ -297,7 +292,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset += CopyField(InquiryData->ProductId, &Id1[Offset], 16);
     Offset += CopyField(InquiryData->ProductRevisionLevel, &Id1[Offset], 4);
     Id1Length = strlen(Id1) + 1;
-    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId1 %s\n", Id1);
+    FDPRINT(DBGLVL_PNP, "USBSTOR_PdoHandleQueryHardwareId HardwareId1 %s\n", Id1);
 
     // generate id 2
     // USBSTOR\SCSIType_VendorId(8)_ProductId(16)
@@ -308,7 +303,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset += CopyField(InquiryData->VendorId, &Id2[Offset], 8);
     Offset += CopyField(InquiryData->ProductId, &Id2[Offset], 16);
     Id2Length = strlen(Id2) + 1;
-    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId2 %s\n", Id2);
+    FDPRINT(DBGLVL_PNP, "USBSTOR_PdoHandleQueryHardwareId HardwareId2 %s\n", Id2);
 
     // generate id 3
     // USBSTOR\SCSIType_VendorId(8)
@@ -318,7 +313,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset += sprintf(&Id3[Offset], DeviceType);
     Offset += CopyField(InquiryData->VendorId, &Id3[Offset], 8);
     Id3Length = strlen(Id3) + 1;
-    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId3 %s\n", Id3);
+    FDPRINT(DBGLVL_PNP, "USBSTOR_PdoHandleQueryHardwareId HardwareId3 %s\n", Id3);
 
     // generate id 4
     // USBSTOR\SCSIType_VendorId(8)_ProductId(16)_Revision(1)
@@ -330,7 +325,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset += CopyField(InquiryData->ProductId, &Id4[Offset], 16);
     Offset += CopyField(InquiryData->ProductRevisionLevel, &Id4[Offset], 1);
     Id4Length = strlen(Id4) + 1;
-    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId4 %s\n", Id4);
+    FDPRINT(DBGLVL_PNP, "USBSTOR_PdoHandleQueryHardwareId HardwareId4 %s\n", Id4);
 
     // generate id 5
     // SCSIType_VendorId(8)_ProductId(16)_Revision(1)
@@ -341,7 +336,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset += CopyField(InquiryData->ProductId, &Id5[Offset], 16);
     Offset += CopyField(InquiryData->ProductRevisionLevel, &Id5[Offset], 1);
     Id5Length = strlen(Id5) + 1;
-    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId5 %s\n", Id5);
+    FDPRINT(DBGLVL_PNP, "USBSTOR_PdoHandleQueryHardwareId HardwareId5 %s\n", Id5);
 
     // generate id 6
     // USBSTOR\SCSIType
@@ -350,7 +345,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset = sprintf(&Id6[Offset], "USBSTOR\\");
     Offset += sprintf(&Id6[Offset], GenericType);
     Id6Length = strlen(Id6) + 1;
-    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId6 %s\n", Id6);
+    FDPRINT(DBGLVL_PNP, "USBSTOR_PdoHandleQueryHardwareId HardwareId6 %s\n", Id6);
 
     // generate id 7
     // SCSIType
@@ -358,7 +353,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Offset = 0;
     Offset = sprintf(&Id7[Offset], GenericType);
     Id7Length = strlen(Id7) + 1;
-    DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId7 %s\n", Id7);
+    FDPRINT(DBGLVL_PNP, "USBSTOR_PdoHandleQueryHardwareId HardwareId7 %s\n", Id7);
 
     TotalLength = Id1Length + Id2Length + Id3Length + Id4Length + Id5Length + Id6Length + Id7Length + 1;
 
@@ -418,7 +413,7 @@ USBSTOR_PdoHandleQueryCompatibleId(
     USBSTOR_ConvertToUnicodeString(Buffer, Length, 0, InstanceId, &Offset);
     USBSTOR_ConvertToUnicodeString(&Buffer[Offset], Length, Offset, InstanceId, &Offset);
 
-    DPRINT("USBSTOR_PdoHandleQueryCompatibleId %S\n", InstanceId);
+    FDPRINT(DBGLVL_PNP, "USBSTOR_PdoHandleQueryCompatibleId %S\n", InstanceId);
 
     Irp->IoStatus.Information = (ULONG_PTR)InstanceId;
     return STATUS_SUCCESS;
@@ -461,7 +456,7 @@ USBSTOR_PdoHandleQueryInstanceId(
 
     wcscpy(InstanceId, Buffer);
 
-    DPRINT("USBSTOR_PdoHandleQueryInstanceId %S\n", InstanceId);
+    FDPRINT(DBGLVL_PNP, "USBSTOR_PdoHandleQueryInstanceId %S\n", InstanceId);
 
     Irp->IoStatus.Information = (ULONG_PTR)InstanceId;
     return STATUS_SUCCESS;
@@ -474,8 +469,6 @@ USBSTOR_PdoHandleDeviceRelations(
 {
     PDEVICE_RELATIONS DeviceRelations;
     PIO_STACK_LOCATION IoStack;
-
-    DPRINT("USBSTOR_PdoHandleDeviceRelations\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -520,16 +513,20 @@ USBSTOR_PdoHandlePnp(
     {
        case IRP_MN_QUERY_DEVICE_RELATIONS:
        {
+           FDPRINT(DBGLVL_PNP, "IRP_MN_QUERY_DEVICE_RELATIONS\n");
            Status = USBSTOR_PdoHandleDeviceRelations(DeviceObject, Irp);
            break;
        }
        case IRP_MN_QUERY_DEVICE_TEXT:
        {
+           FDPRINT(DBGLVL_PNP, "IRP_MN_QUERY_DEVICE_TEXT\n");
            Status = USBSTOR_PdoHandleQueryDeviceText(DeviceObject, Irp);
            break;
        }
        case IRP_MN_QUERY_ID:
        {
+           FDPRINT(DBGLVL_PNP, "IRP_MN_QUERY_ID IdType %x\n", IoStack->Parameters.QueryId.IdType);
+
            if (IoStack->Parameters.QueryId.IdType == BusQueryDeviceID)
            {
                Status = USBSTOR_PdoHandleQueryDeviceId(DeviceObject, Irp);
@@ -551,14 +548,14 @@ USBSTOR_PdoHandlePnp(
                break;
            }
 
-           DPRINT1("USBSTOR_PdoHandlePnp: IRP_MN_QUERY_ID IdType %x unimplemented\n", IoStack->Parameters.QueryId.IdType);
+           WARN("IRP_MN_QUERY_ID IdType %x unimplemented\n", IoStack->Parameters.QueryId.IdType);
            Status = STATUS_NOT_SUPPORTED;
            Irp->IoStatus.Information = 0;
            break;
        }
        case IRP_MN_REMOVE_DEVICE:
        {
-           DPRINT("IRP_MN_REMOVE_DEVICE\n");
+           FDPRINT(DBGLVL_PNP, "IRP_MN_REMOVE_DEVICE\n");
 
            if(*DeviceExtension->PDODeviceObject != NULL)
            {
@@ -582,6 +579,7 @@ USBSTOR_PdoHandlePnp(
        }
        case IRP_MN_QUERY_CAPABILITIES:
        {
+           FDPRINT(DBGLVL_PNP, "IRP_MN_QUERY_CAPABILITIES\n");
            // just forward irp to lower device
            Status = USBSTOR_SyncForwardIrp(DeviceExtension->LowerDeviceObject, Irp);
            ASSERT(Status == STATUS_SUCCESS);
@@ -598,6 +596,7 @@ USBSTOR_PdoHandlePnp(
        case IRP_MN_QUERY_REMOVE_DEVICE:
        case IRP_MN_QUERY_STOP_DEVICE:
        {
+           FDPRINT(DBGLVL_PNP, "IRP_MN_QUERY_STOP_DEVICE / IRP_MN_QUERY_REMOVE_DEVICE\n");
 #if 0
            //
            // if we're not claimed it's ok
@@ -608,7 +607,7 @@ USBSTOR_PdoHandlePnp(
 #endif
            {
                Status = STATUS_UNSUCCESSFUL;
-               DPRINT1("[USBSTOR] Request %x fails because device is still claimed\n", IoStack->MinorFunction);
+               ERR("Request %x fails because device is still claimed\n", IoStack->MinorFunction);
            }
            else
                Status = STATUS_SUCCESS;
@@ -678,7 +677,7 @@ USBSTOR_SendInternalCdb(
     NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
     UCHAR SrbStatus;
 
-    DPRINT("USBSTOR_SendInternalCdb SCSIOP %x\n", Cdb->CDB6GENERIC.OperationCode);
+    FDPRINT(DBGLVL_DISK, "USBSTOR_SendInternalCdb SCSIOP %x\n", Cdb->CDB6GENERIC.OperationCode);
 
     Srb = ExAllocatePoolWithTag(NonPagedPool,
                                 sizeof(SCSI_REQUEST_BLOCK),
@@ -811,24 +810,24 @@ USBSTOR_FillInquiryData(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("USBSTOR_FillInquiryData failed with %x\n", Status);
+        ERR("USBSTOR_FillInquiryData failed with %x\n", Status);
         return Status;
     }
 
-    DPRINT("DeviceType %x\n", InquiryData->DeviceType);
-    DPRINT("DeviceTypeModifier %x\n", InquiryData->DeviceTypeModifier);
-    DPRINT("RemovableMedia %x\n", InquiryData->RemovableMedia);
-    DPRINT("Version %x\n", InquiryData->Versions);
-    DPRINT("Format %x\n", InquiryData->ResponseDataFormat);
-    DPRINT("Length %x\n", InquiryData->AdditionalLength);
-    DPRINT("Reserved %p\n", InquiryData->Reserved);
-    DPRINT("VendorId %c%c%c%c%c%c%c%c\n", InquiryData->VendorId[0], InquiryData->VendorId[1], InquiryData->VendorId[2], InquiryData->VendorId[3], InquiryData->VendorId[4], InquiryData->VendorId[5], InquiryData->VendorId[6], InquiryData->VendorId[7]);
-    DPRINT("ProductId %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", InquiryData->ProductId[0], InquiryData->ProductId[1], InquiryData->ProductId[2], InquiryData->ProductId[3],
-                                                           InquiryData->ProductId[4], InquiryData->ProductId[5], InquiryData->ProductId[6], InquiryData->ProductId[7],
-                                                           InquiryData->ProductId[8], InquiryData->ProductId[9], InquiryData->ProductId[10], InquiryData->ProductId[11],
-                                                           InquiryData->ProductId[12], InquiryData->ProductId[13], InquiryData->ProductId[14], InquiryData->ProductId[15]);
+    INFO("DeviceType %x\n", InquiryData->DeviceType);
+    INFO("DeviceTypeModifier %x\n", InquiryData->DeviceTypeModifier);
+    INFO("RemovableMedia %x\n", InquiryData->RemovableMedia);
+    INFO("Version %x\n", InquiryData->Versions);
+    INFO("Format %x\n", InquiryData->ResponseDataFormat);
+    INFO("Length %x\n", InquiryData->AdditionalLength);
+    INFO("Reserved %p\n", InquiryData->Reserved);
+    INFO("VendorId %c%c%c%c%c%c%c%c\n", InquiryData->VendorId[0], InquiryData->VendorId[1], InquiryData->VendorId[2], InquiryData->VendorId[3], InquiryData->VendorId[4], InquiryData->VendorId[5], InquiryData->VendorId[6], InquiryData->VendorId[7]);
+    INFO("ProductId %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", InquiryData->ProductId[0], InquiryData->ProductId[1], InquiryData->ProductId[2], InquiryData->ProductId[3],
+                                                         InquiryData->ProductId[4], InquiryData->ProductId[5], InquiryData->ProductId[6], InquiryData->ProductId[7],
+                                                         InquiryData->ProductId[8], InquiryData->ProductId[9], InquiryData->ProductId[10], InquiryData->ProductId[11],
+                                                         InquiryData->ProductId[12], InquiryData->ProductId[13], InquiryData->ProductId[14], InquiryData->ProductId[15]);
 
-    DPRINT("Revision %c%c%c%c\n", InquiryData->ProductRevisionLevel[0], InquiryData->ProductRevisionLevel[1], InquiryData->ProductRevisionLevel[2], InquiryData->ProductRevisionLevel[3]);
+    INFO("Revision %c%c%c%c\n", InquiryData->ProductRevisionLevel[0], InquiryData->ProductRevisionLevel[1], InquiryData->ProductRevisionLevel[2], InquiryData->ProductRevisionLevel[3]);
 
     return Status;
 }
@@ -850,7 +849,7 @@ USBSTOR_CreatePDO(
     Status = IoCreateDevice(DeviceObject->DriverObject, sizeof(PDO_DEVICE_EXTENSION), NULL, FILE_DEVICE_MASS_STORAGE, FILE_AUTOGENERATED_DEVICE_NAME | FILE_DEVICE_SECURE_OPEN, FALSE, &PDO);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create PDO, status %x\n", Status);
+        ERR("Failed to create PDO, status %x\n", Status);
         return Status;
     }
 

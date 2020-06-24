@@ -10,9 +10,6 @@
 
 #include "usbstor.h"
 
-#define NDEBUG
-#include <debug.h>
-
 
 static
 BOOLEAN
@@ -29,7 +26,7 @@ IsRequestValid(PIRP Irp)
     {
         if ((Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) == SRB_FLAGS_UNSPECIFIED_DIRECTION)
         {
-            DPRINT1("IsRequestValid: Invalid Srb. Srb->SrbFlags - %X\n", Srb->SrbFlags);
+            ERR("IsRequestValid: Invalid Srb. Srb->SrbFlags - %X\n", Srb->SrbFlags);
             return FALSE;
         }
 
@@ -37,19 +34,19 @@ IsRequestValid(PIRP Irp)
 
         if (Irp->MdlAddress == NULL)
         {
-            DPRINT1("IsRequestValid: Invalid Srb. Irp->MdlAddress == NULL\n");
+            ERR("IsRequestValid: Invalid Srb. Irp->MdlAddress == NULL\n");
             return FALSE;
         }
 
         if (TransferLength == 0)
         {
-            DPRINT1("IsRequestValid: Invalid Srb. TransferLength == 0\n");
+            ERR("IsRequestValid: Invalid Srb. TransferLength == 0\n");
             return FALSE;
         }
 
         if (TransferLength > USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH)
         {
-            DPRINT1("IsRequestValid: Invalid Srb. TransferLength > 0x10000\n");
+            ERR("IsRequestValid: Invalid Srb. TransferLength > 0x10000\n");
             return FALSE;
         }
     }
@@ -57,19 +54,19 @@ IsRequestValid(PIRP Irp)
     {
         if (Srb->DataTransferLength)
         {
-            DPRINT1("IsRequestValid: Invalid Srb. Srb->DataTransferLength != 0\n");
+            ERR("IsRequestValid: Invalid Srb. Srb->DataTransferLength != 0\n");
             return FALSE;
         }
 
         if (Srb->DataBuffer)
         {
-            DPRINT1("IsRequestValid: Invalid Srb. Srb->DataBuffer != NULL\n");
+            ERR("IsRequestValid: Invalid Srb. Srb->DataBuffer != NULL\n");
             return FALSE;
         }
 
         if (Irp->MdlAddress)
         {
-            DPRINT1("IsRequestValid: Invalid Srb. Irp->MdlAddress != NULL\n");
+            ERR("IsRequestValid: Invalid Srb. Irp->MdlAddress != NULL\n");
             return FALSE;
         }
     }
@@ -97,7 +94,7 @@ USBSTOR_HandleInternalDeviceControl(
     {
         case SRB_FUNCTION_EXECUTE_SCSI:
         {
-            DPRINT("SRB_FUNCTION_EXECUTE_SCSI\n");
+            TRACE("SRB_FUNCTION_EXECUTE_SCSI\n");
 
             if (!IsRequestValid(Irp))
             {
@@ -107,7 +104,6 @@ USBSTOR_HandleInternalDeviceControl(
 
             if (Request->Cdb[0] == SCSIOP_MODE_SENSE)
             {
-                DPRINT("USBSTOR_Scsi: SRB_FUNCTION_EXECUTE_SCSI - FIXME SCSIOP_MODE_SENSE\n");
                 // FIXME Get from registry WriteProtect for StorageDevicePolicies;
                 // L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\StorageDevicePolicies"
                 // QueryTable[0].Name = L"WriteProtect"
@@ -126,7 +122,7 @@ USBSTOR_HandleInternalDeviceControl(
         }
         case SRB_FUNCTION_RELEASE_DEVICE:
         {
-            DPRINT1("SRB_FUNCTION_RELEASE_DEVICE\n");
+            TRACE("SRB_FUNCTION_RELEASE_DEVICE\n");
             ASSERT(PDODeviceExtension->Claimed == TRUE);
 
             // release claim
@@ -136,7 +132,7 @@ USBSTOR_HandleInternalDeviceControl(
         }
         case SRB_FUNCTION_CLAIM_DEVICE:
         {
-            DPRINT1("SRB_FUNCTION_CLAIM_DEVICE\n");
+            TRACE("SRB_FUNCTION_CLAIM_DEVICE\n");
 
             // check if the device has been claimed
             if (PDODeviceExtension->Claimed)
@@ -158,7 +154,7 @@ USBSTOR_HandleInternalDeviceControl(
         }
         case SRB_FUNCTION_RELEASE_QUEUE:
         {
-            DPRINT1("SRB_FUNCTION_RELEASE_QUEUE\n");
+            TRACE("SRB_FUNCTION_RELEASE_QUEUE\n");
 
             USBSTOR_QueueRelease(PDODeviceExtension->LowerDeviceObject);
 
@@ -171,7 +167,7 @@ USBSTOR_HandleInternalDeviceControl(
         case SRB_FUNCTION_FLUSH:
         case SRB_FUNCTION_FLUSH_QUEUE:
         {
-            DPRINT1("SRB_FUNCTION_FLUSH / SRB_FUNCTION_FLUSH_QUEUE / SRB_FUNCTION_SHUTDOWN\n");
+            TRACE("SRB_FUNCTION_FLUSH / SRB_FUNCTION_FLUSH_QUEUE / SRB_FUNCTION_SHUTDOWN\n");
 
             // HACK: don't flush pending requests
 #if 0       // we really need a proper storage stack
@@ -241,7 +237,7 @@ USBSTOR_HandleQueryProperty(
     ANSI_STRING AnsiString;
     NTSTATUS Status;
 
-    DPRINT("USBSTOR_HandleQueryProperty\n");
+    FDPRINT(DBGLVL_DISK, "USBSTOR_HandleQueryProperty\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(STORAGE_PROPERTY_QUERY));
@@ -273,7 +269,7 @@ USBSTOR_HandleQueryProperty(
     // check if it is a device property
     if (PropertyQuery->PropertyId == StorageDeviceProperty)
     {
-        DPRINT("USBSTOR_HandleQueryProperty StorageDeviceProperty OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+        FDPRINT(DBGLVL_DISK, "USBSTOR_HandleQueryProperty StorageDeviceProperty OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
 
         PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
         ASSERT(PDODeviceExtension);
@@ -361,10 +357,10 @@ USBSTOR_HandleQueryProperty(
             ASSERT(Status == STATUS_SUCCESS);
         }
 
-        DPRINT("Vendor %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->VendorIdOffset));
-        DPRINT("Product %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->ProductIdOffset));
-        DPRINT("Revision %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->ProductRevisionOffset));
-        DPRINT("Serial %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->SerialNumberOffset));
+        INFO("Vendor %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->VendorIdOffset));
+        INFO("Product %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->ProductIdOffset));
+        INFO("Revision %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->ProductRevisionOffset));
+        INFO("Serial %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->SerialNumberOffset));
 
         Irp->IoStatus.Information = TotalLength;
         return STATUS_SUCCESS;
@@ -373,7 +369,7 @@ USBSTOR_HandleQueryProperty(
     {
         // adapter property query request
 
-        DPRINT("USBSTOR_HandleQueryProperty StorageAdapterProperty OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+        FDPRINT(DBGLVL_DISK, "USBSTOR_HandleQueryProperty StorageAdapterProperty OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
 
         if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(STORAGE_ADAPTER_DESCRIPTOR))
         {
@@ -430,23 +426,26 @@ USBSTOR_HandleDeviceControl(
     switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
         case IOCTL_STORAGE_QUERY_PROPERTY:
+            FDPRINT(DBGLVL_DISK, "IOCTL_STORAGE_QUERY_PROPERTY\n");
             Status = USBSTOR_HandleQueryProperty(DeviceObject, Irp);
             break;
         case IOCTL_SCSI_PASS_THROUGH:
-            DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH NOT implemented\n");
+            WARN("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH NOT implemented\n");
             Status = STATUS_NOT_SUPPORTED;
             break;
         case IOCTL_SCSI_PASS_THROUGH_DIRECT:
-            DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH_DIRECT NOT implemented\n");
+            WARN("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH_DIRECT NOT implemented\n");
             Status = STATUS_NOT_SUPPORTED;
             break;
         case IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER:
-            DPRINT1("USBSTOR_HandleDeviceControl IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER NOT implemented\n");
+            WARN("USBSTOR_HandleDeviceControl IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER NOT implemented\n");
             Status = STATUS_NOT_SUPPORTED;
             break;
         case IOCTL_SCSI_GET_CAPABILITIES:
         {
             PIO_SCSI_CAPABILITIES Capabilities;
+
+            FDPRINT(DBGLVL_DISK, "IOCTL_SCSI_GET_CAPABILITIES\n");
 
             // Legacy port capability query
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(PVOID))
@@ -486,6 +485,8 @@ USBSTOR_HandleDeviceControl(
             ASSERT(PDODeviceExtension);
             ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
+            FDPRINT(DBGLVL_DISK, "IOCTL_SCSI_GET_INQUIRY_DATA\n");
+
             // get parameters
             BusInfo = Irp->AssociatedIrp.SystemBuffer;
             ScsiInquiryData = (PSCSI_INQUIRY_DATA)(BusInfo + 1);
@@ -520,6 +521,8 @@ USBSTOR_HandleDeviceControl(
         {
             PSCSI_ADDRESS Address = Irp->AssociatedIrp.SystemBuffer;
 
+            FDPRINT(DBGLVL_DISK, "IOCTL_SCSI_GET_ADDRESS\n");
+
             Address->Length = sizeof(SCSI_ADDRESS);
             Address->PortNumber = 0;
             Address->PathId = 0;
@@ -532,7 +535,7 @@ USBSTOR_HandleDeviceControl(
             break;
         }
         default:
-            DPRINT("USBSTOR_HandleDeviceControl IoControl %x not supported\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+            WARN("USBSTOR_HandleDeviceControl IoControl %x not supported\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
             Status = STATUS_NOT_SUPPORTED;
             break;
     }
