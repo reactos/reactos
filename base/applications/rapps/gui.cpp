@@ -1397,6 +1397,59 @@ public:
         INT item = GetSelectionMark();
         return (CAvailableApplicationInfo*) GetItemData(item);
     }
+
+    BOOL AddAvailableAppInfo(CAvailableApplicationInfo* Info)
+    {
+        INT Index;
+        HICON hIcon = NULL;
+
+        HIMAGELIST hImageListView = (HIMAGELIST)SendMessage(LVM_GETIMAGELIST, LVSIL_SMALL, 0);
+
+        /* Load icon from file */
+        ATL::CStringW szIconPath;
+        if (Info->RetrieveIcon(szIconPath))
+        {
+            hIcon = (HICON)LoadImageW(NULL,
+                szIconPath.GetString(),
+                IMAGE_ICON,
+                LISTVIEW_ICON_SIZE,
+                LISTVIEW_ICON_SIZE,
+                LR_LOADFROMFILE);
+        }
+
+        if (!hIcon || GetLastError() != ERROR_SUCCESS)
+        {
+            /* Load default icon */
+            hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+        }
+
+        Index = ImageList_AddIcon(hImageListView, hIcon);
+        DestroyIcon(hIcon);
+
+        Index = AddItem(Info->m_Category, Index, Info->m_szName.GetString(), (LPARAM)Info);
+        SetImageList(hImageListView, LVSIL_SMALL);
+        SetItemText(Index, 1, Info->m_szVersion.GetString());
+        SetItemText(Index, 2, Info->m_szDesc.GetString());
+        SetCheckState(Index, Info->m_IsSelected);
+
+        return TRUE;
+    }
+
+    BOOL AddInstalledAppInfo(INT ItemIndex, ATL::CStringW& m_szName, PINSTALLED_INFO ItemInfo)
+    {
+        INT Index;
+        ATL::CStringW szText;
+        Index = AddItem(ItemIndex, 0, m_szName.GetString(), (LPARAM)ItemInfo);
+
+        /* Get version info */
+        ItemInfo->GetApplicationString(L"DisplayVersion", szText);
+        SetItemText(Index, 1, szText.GetString());
+
+        /* Get comments */
+        ItemInfo->GetApplicationString(L"Comments", szText);
+        SetItemText(Index, 2, szText.GetString());
+        return TRUE;
+    }
 };
 
 class CSideTreeView :
@@ -2373,8 +2426,6 @@ private:
     BOOL CALLBACK EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info)
     {
         PINSTALLED_INFO ItemInfo;
-        ATL::CStringW szText;
-        INT Index;
 
         if (!SearchPatternMatch(m_szName.GetString(), szSearchPattern))
         {
@@ -2389,60 +2440,17 @@ private:
             return FALSE;
         }
 
-        Index = m_ListView->AddItem(ItemIndex, 0, m_szName.GetString(), (LPARAM) ItemInfo);
-
-        /* Get version info */
-        ItemInfo->GetApplicationString(L"DisplayVersion", szText);
-        m_ListView->SetItemText(Index, 1, szText.GetString());
-
-        /* Get comments */
-        ItemInfo->GetApplicationString(L"Comments", szText);
-        m_ListView->SetItemText(Index, 2, szText.GetString());
-
-        return TRUE;
+        return m_ListView->AddInstalledAppInfo(ItemIndex, m_szName, ItemInfo);
     }
 
     BOOL EnumAvailableAppProc(CAvailableApplicationInfo* Info, LPCWSTR szFolderPath)
     {
-        INT Index;
-        HICON hIcon = NULL;
-
-        HIMAGELIST hImageListView = (HIMAGELIST)m_ListView->SendMessage(LVM_GETIMAGELIST, LVSIL_SMALL, 0);
-
         if (!SearchPatternMatch(Info->m_szName.GetString(), szSearchPattern) &&
             !SearchPatternMatch(Info->m_szDesc.GetString(), szSearchPattern))
         {
             return TRUE;
         }
-
-        /* Load icon from file */
-        ATL::CStringW szIconPath;
-        if (Info->RetrieveIcon(szIconPath))
-        {
-            hIcon = (HICON)LoadImageW(NULL,
-                szIconPath.GetString(),
-                IMAGE_ICON,
-                LISTVIEW_ICON_SIZE,
-                LISTVIEW_ICON_SIZE,
-                LR_LOADFROMFILE);
-        }
-
-        if (!hIcon || GetLastError() != ERROR_SUCCESS)
-        {
-            /* Load default icon */
-            hIcon = (HICON) LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
-        }
-
-        Index = ImageList_AddIcon(hImageListView, hIcon);
-        DestroyIcon(hIcon);
-
-        Index = m_ListView->AddItem(Info->m_Category, Index, Info->m_szName.GetString(), (LPARAM) Info);
-        m_ListView->SetImageList(hImageListView, LVSIL_SMALL);
-        m_ListView->SetItemText(Index, 1, Info->m_szVersion.GetString());
-        m_ListView->SetItemText(Index, 2, Info->m_szDesc.GetString());
-        m_ListView->SetCheckState(Index, Info->m_IsSelected);
-
-        return TRUE;
+        return m_ListView->AddAvailableAppInfo(Info);
     }
 
     static BOOL CALLBACK s_EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info, PVOID param)
