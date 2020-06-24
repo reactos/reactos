@@ -543,7 +543,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
            DestRect->left, DestRect->top, cxDest, cyDest,
            SourceRect->left, SourceRect->top, cxSrc, cySrc);
 
-    /* Check if source and dest size are equal */
+    /* Check if source and dest size are equal in size */
     if ((abs(cxDest) == abs(cxSrc)) && (abs(cyDest) == abs(cySrc)))
     {
         /* if cxSrc < 0 and cxDest <0 (both negative, we change both their signs  */

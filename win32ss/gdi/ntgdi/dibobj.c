@@ -320,14 +320,6 @@ IntSetDIBits(
     ptSrc.x = 0;
     ptSrc.y = 0;
 
-    /* Here we adjust for Top Down to flip bmp for Lazarus */
-    if (psurfSrc->SurfObj.fjBitmap & BMF_TOPDOWN)  // Source surface TopDown bit
-    {
-        LONG lTmp = rcDst.top;
-        rcDst.top = rcDst.bottom;
-        rcDst.bottom = lTmp;
-    }
-
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,
                             NULL,
@@ -698,7 +690,7 @@ GreGetDIBitsInternal(
     RGBQUAD* rgbQuads;
     VOID* colorPtr;
 
-    DPRINT("Entered GreGetDIBitsInternal() and height is '%d'.\n", Info->bmiHeader.biHeight);
+    DPRINT("Entered GreGetDIBitsInternal()\n");
 
     if ((Usage && Usage != DIB_PAL_COLORS) || !Info || !hBitmap)
         return 0;
@@ -1015,16 +1007,6 @@ GreGetDIBitsInternal(
 
         EXLATEOBJ_vInitialize(&exlo, psurf->ppal, psurfDest->ppal, 0xffffff, 0xffffff, 0);
 
-        /* Here we adjust for Top Down to flip bmp for PeaZip */
-        /* This fixes Double Commander menubar icons, but not */
-        /* its Configure - Options icons.                     */
-        if (psurf->SurfObj.fjBitmap & BMF_TOPDOWN)  // Source surface TopDown bit
-        {
-            LONG lTmp = rcDest.top;
-            rcDest.top = rcDest.bottom;
-            rcDest.bottom = lTmp;
-        }
-
         ret = IntEngCopyBits(&psurfDest->SurfObj,
                              &psurf->SurfObj,
                              NULL,
@@ -1208,9 +1190,6 @@ NtGdiStretchDIBitsInternal(
     EXLATEOBJ exlo;
     PVOID pvBits;
 
-DPRINT("NtGdiStretchDIBitsInternal Src(%d,%d) Dst(%d,%d) cxSrc/cySrc(%d/%d) cxDst/cyDst(%d/%d).\n",
-    xSrc, ySrc, xDst, yDst, cxSrc, cySrc, cxDst, cyDst);
- 
     if (!(pdc = DC_LockDc(hdc)))
     {
         EngSetLastError(ERROR_INVALID_HANDLE);

@@ -33,28 +33,6 @@ EngCopyBits(
     SURFACE *psurfSource;
     RECTL rclDest = *DestRect;
     POINTL ptlSrc = *SourcePoint;
-    LONG      lTmp;
-    BOOL      flip;
-
-    DPRINT("Entering EngCopyBits with SourcePoint (%d,%d) and DestRect (%d,%d)-(%d,%d).\n",
-        SourcePoint->x, SourcePoint->y, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
-
-    DPRINT("Source cx/cy is %d/%d and Dest cx/cy is %d/%d.\n",
-        psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy);
-
-    /* Retrieve Top Down/flip here and then make Well-Ordered again */
-
-    if (DestRect->top > DestRect->bottom)
-    {
-        flip = TRUE;
-        lTmp = DestRect->top;
-        DestRect->top = DestRect->bottom;
-        DestRect->bottom = lTmp;
-        rclDest = *DestRect;
-    }
-    else
-        flip = FALSE;
-    DPRINT("flip is '%d'.\n", flip);
 
     ASSERT(psoDest != NULL && psoSource != NULL && DestRect != NULL && SourcePoint != NULL);
 
@@ -139,13 +117,23 @@ EngCopyBits(
             BltInfo.DestRect = *DestRect;
             BltInfo.SourcePoint = *SourcePoint;
 
-            /* Now we set the Dest Rect top and bottom based on Top Down/flip */
-            if (flip)
+            // Code that used changing from well ordered for the top-bottom
+            // caused regression test random failures, so using a bit that
+            // was previously not used to send this info was chosen instead.
+
+            // Now we set the BMF_UMPDMEM bit based on Top-Down/flip state.
+            // Using the BMF_TOPDOWN was not possible. It was already used. 
+
+            // Clear BMF_UMPDMEM bit
+            BltInfo.SourceSurface->fjBitmap &= ~BMF_UMPDMEM;
+
+            if (psoSource->fjBitmap & BMF_TOPDOWN)
             {
-                lTmp = BltInfo.DestRect.top;
-                BltInfo.DestRect.top = BltInfo.DestRect.bottom;
-                BltInfo.DestRect.bottom = lTmp;
+                BltInfo.SourceSurface->fjBitmap |= BMF_UMPDMEM;
             }
+
+            DPRINT("About to call BitBltSrcCopy with iBitmapFormat/BMF_UMPDMEM of '%d/%d'.\n",
+                psoDest->iBitmapFormat, BltInfo.SourceSurface->fjBitmap & BMF_UMPDMEM);
 
             ret = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
             break;
@@ -156,6 +144,17 @@ EngCopyBits(
 
             BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
             BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top  - DestRect->top;
+
+            // Clear BMF_UMPDMEM bit
+            BltInfo.SourceSurface->fjBitmap &= ~BMF_UMPDMEM;
+
+            if (psoSource->fjBitmap & BMF_TOPDOWN)
+            {
+                BltInfo.SourceSurface->fjBitmap |= BMF_UMPDMEM;
+            }
+
+            DPRINT("About to call BitBltSrcCopy with iBitmapFormat/BMF_UMPDMEM of '%d/%d'.\n",
+                psoDest->iBitmapFormat, BltInfo.SourceSurface->fjBitmap & BMF_UMPDMEM);
 
             ret = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
             break;
@@ -179,6 +178,17 @@ EngCopyBits(
 
                         BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
                         BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top - DestRect->top;
+
+                        // Clear BMF_UMPDMEM bit
+                        BltInfo.SourceSurface->fjBitmap &= ~BMF_UMPDMEM;
+
+                        if (psoSource->fjBitmap & BMF_TOPDOWN)
+                        {
+                            BltInfo.SourceSurface->fjBitmap |= BMF_UMPDMEM;
+                        }
+
+                        DPRINT("About to call BitBltSrcCopy with iBitmapFormat/BMF_UMPDMEM of '%d/%d'.\n",
+                            psoDest->iBitmapFormat, BltInfo.SourceSurface->fjBitmap & BMF_UMPDMEM);
 
                         if (!DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo))
                         {

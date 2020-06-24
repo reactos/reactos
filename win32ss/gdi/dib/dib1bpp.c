@@ -309,6 +309,15 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     flip = 0;
   }
 
+  DPRINT("Flip is '%d'.\n", flip);
+
+  /* If we came from copybits.c with a Top-Down SourceSurface bit set, */
+  /* then we need a flip of 2. This mostly fixes Lazarus and PeaZip.   */
+  if ((BltInfo->SourceSurface->fjBitmap & BMF_UMPDMEM) && (flip == 0))
+  {
+    flip = 2;
+  }
+
   // Make WellOrdered with top < bottom and left < right
   if (BltInfo->DestRect.left > BltInfo->DestRect.right)
   {

@@ -78,6 +78,15 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     flip = 0;
   }
 
+  DPRINT("Flip is '%d'.\n", flip);
+
+  /* If we came from copybits.c with a Top-Down SourceSurface bit set, */
+  /* then we need a flip of 2. This mostly fixes Lazarus and PeaZip.   */
+  if ((BltInfo->SourceSurface->fjBitmap & BMF_UMPDMEM) && (flip == 0))
+  {
+    flip = 2;
+  }
+
   DPRINT("flip is '%d' & BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
     flip, BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
 
@@ -392,6 +401,10 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             /* Allocate enough pixels for a row in DWORD's */
             DWORD *store = ExAllocatePoolWithTag(NonPagedPool,
               (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 4, TAG_DIB);
+            if (store == NULL)
+            {
+              return FALSE;
+            }
 
             sx = BltInfo->SourcePoint.x;
             /* This sets sy to the top line */
@@ -438,6 +451,10 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             /* Allocate enough pixels for a column in DWORD's */
             DWORD *store = ExAllocatePoolWithTag(NonPagedPool,
               (BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1) * 4, TAG_DIB);
+            if (store == NULL)
+            {
+              return FALSE;
+            }
 
             /* The OneDone flag indicates that we are doing a flip == 3 and have already */
             /* completed the flip == 1. So we will lose our first flip output unless     */
