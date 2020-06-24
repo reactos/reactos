@@ -102,8 +102,12 @@ else()
 endif()
 
 # Warnings, errors
-if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
-    add_compile_flags("-Werror")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    if(NOT CMAKE_BUILD_TYPE STREQUAL "Release" AND
+       NOT CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" AND
+       NOT CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+        add_compile_flags("-Werror")
+    endif()
 endif()
 
 add_compile_flags("-Wall -Wpointer-arith")
