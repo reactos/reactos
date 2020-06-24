@@ -215,7 +215,7 @@ IopPnpEnumerateDevice(PPLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA DeviceData)
         return STATUS_NO_SUCH_DEVICE;
     }
 
-    Status = IopEnumerateDevice(DeviceObject);
+    Status = PiPerformSyncDeviceAction(DeviceObject, PiActionEnumDeviceTree);
 
     ObDereferenceObject(DeviceObject);
 

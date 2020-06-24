@@ -91,7 +91,7 @@ HalpReportDetectedDevices(IN PDRIVER_OBJECT DriverObject,
     PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
     /* Invalidate device relations since we added a new device */
-    IoSynchronousInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
+    IoInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
 }
 
 NTSTATUS

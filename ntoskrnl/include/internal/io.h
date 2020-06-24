@@ -688,11 +688,6 @@ IopActionInitChildServices(
 );
 
 NTSTATUS
-IopEnumerateDevice(
-    IN PDEVICE_OBJECT DeviceObject
-);
-
-NTSTATUS
 IoCreateDriverList(
     VOID
 );
@@ -1423,6 +1418,11 @@ PiQueueDeviceAction(
     _In_ DEVICE_ACTION Action,
     _In_opt_ PKEVENT CompletionEvent,
     _Out_opt_ NTSTATUS *CompletionStatus);
+
+NTSTATUS
+PiPerformSyncDeviceAction(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ DEVICE_ACTION Action);
 
 //
 // Global I/O Data

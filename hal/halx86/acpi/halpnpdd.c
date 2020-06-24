@@ -99,8 +99,8 @@ HalpReportDetectedDevices(IN PDRIVER_OBJECT DriverObject,
         DPRINT1("You have an ACPI Watchdog. That's great! You should be proud ;-)\n");
     }
 
-    /* This will synchronously load the ACPI driver (needed because we're critical for boot) */
-    IoSynchronousInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
+    /* This will load the ACPI driver (IO initialization will wait for this operation to finish) */
+    IoInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
 }
 
 NTSTATUS
