@@ -360,6 +360,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     Id7Length = strlen(Id7) + 1;
     DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId7 %s\n", Id7);
 
+    // last +1 is for terminating \0 of REG_MULTI_SZ
     TotalLength = Id1Length + Id2Length + Id3Length + Id4Length + Id5Length + Id6Length + Id7Length + 1;
 
     Buffer = ExAllocatePoolWithTag(PagedPool, TotalLength * sizeof(WCHAR), USB_STOR_TAG);
@@ -380,6 +381,8 @@ USBSTOR_PdoHandleQueryHardwareId(
     USBSTOR_ConvertToUnicodeString(Id5, Length, Offset, Buffer, &Offset);
     USBSTOR_ConvertToUnicodeString(Id6, Length, Offset, Buffer, &Offset);
     USBSTOR_ConvertToUnicodeString(Id7, Length, Offset, Buffer, &Offset);
+
+    Buffer[Offset] = UNICODE_NULL; // finish the REG_MULTI_SZ
 
     ASSERT(Offset + 1 == Length);
 
@@ -406,6 +409,7 @@ USBSTOR_PdoHandleQueryCompatibleId(
 
     // format instance id
     Length = sprintf(Buffer, "USBSTOR\\%s", DeviceType) + 1;
+    // +1 for terminating \0 and another +1 for \0 at the end of REG_MULTI_SZ
     Length += sprintf(&Buffer[Length], "USBSTOR\\%s", "RAW") + 2;
 
     InstanceId = ExAllocatePoolWithTag(PagedPool, Length * sizeof(WCHAR), USB_STOR_TAG);
@@ -417,6 +421,8 @@ USBSTOR_PdoHandleQueryCompatibleId(
 
     USBSTOR_ConvertToUnicodeString(Buffer, Length, 0, InstanceId, &Offset);
     USBSTOR_ConvertToUnicodeString(&Buffer[Offset], Length, Offset, InstanceId, &Offset);
+
+    InstanceId[Offset] = UNICODE_NULL; // finish the REG_MULTI_SZ
 
     DPRINT("USBSTOR_PdoHandleQueryCompatibleId %S\n", InstanceId);
 
