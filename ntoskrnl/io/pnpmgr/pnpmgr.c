@@ -2474,13 +2474,16 @@ IoInvalidateDeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN DEVICE_RELATION_TYPE Type)
 {
-    DEVICE_ACTION_DATA ActionData;
-
-    ActionData.DeviceObject = DeviceObject;
-    ActionData.Action = DeviceActionInvalidateDeviceRelations;
-    ActionData.InvalidateDeviceRelations.Type = Type;
-
-    IopQueueDeviceAction(&ActionData);
+    switch (Type)
+    {
+        case BusRelations:
+            /* Enumerate the device */
+            PiQueueDeviceAction(DeviceObject, PiActionEnumDeviceTree, NULL, NULL);
+            break;
+        default:
+            /* Everything else is not implemented */
+            break;
+    }
 }
 
 /*

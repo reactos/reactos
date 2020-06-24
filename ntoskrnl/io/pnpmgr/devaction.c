@@ -30,6 +30,17 @@ WORK_QUEUE_ITEM IopDeviceActionWorkItem;
 BOOLEAN IopDeviceActionInProgress;
 KSPIN_LOCK IopDeviceActionLock;
 
+/* TYPES *********************************************************************/
+
+typedef struct _DEVICE_ACTION_REQUEST
+{
+    LIST_ENTRY RequestListEntry;
+    PDEVICE_OBJECT DeviceObject;
+    PKEVENT CompletionEvent;
+    NTSTATUS *CompletionStatus;
+    DEVICE_ACTION Action;
+} DEVICE_ACTION_REQUEST, *PDEVICE_ACTION_REQUEST;
+
 /* FUNCTIONS *****************************************************************/
 
 PDEVICE_OBJECT
@@ -2298,14 +2309,32 @@ cleanup:
                               &DeviceNode->InstancePath);
 }
 
+#ifdef DBG
+static
+PCSTR
+ActionToStr(
+    _In_ DEVICE_ACTION Action)
+{
+    switch (Action)
+    {
+        case PiActionEnumDeviceTree:
+            return "PiActionEnumDeviceTree";
+        case PiActionEnumRootDevices:
+            return "PiActionEnumRootDevices";
+        default:
+            return "(request unknown)";
+    }
+}
+#endif
+
 static
 VOID
 NTAPI
-IopDeviceActionWorker(
-    _In_ PVOID Context)
+PipDeviceActionWorker(
+    _In_opt_ PVOID Context)
 {
     PLIST_ENTRY ListEntry;
-    PDEVICE_ACTION_DATA Data;
+    PDEVICE_ACTION_REQUEST Request;
     KIRQL OldIrql;
 
     KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
@@ -2313,52 +2342,66 @@ IopDeviceActionWorker(
     {
         ListEntry = RemoveHeadList(&IopDeviceActionRequestList);
         KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
-        Data = CONTAINING_RECORD(ListEntry,
-                                 DEVICE_ACTION_DATA,
-                                 RequestListEntry);
+        Request = CONTAINING_RECORD(ListEntry, DEVICE_ACTION_REQUEST, RequestListEntry);
 
-        switch (Data->Action)
+        switch (Request->Action)
         {
-            case DeviceActionInvalidateDeviceRelations:
-                IoSynchronousInvalidateDeviceRelations(Data->DeviceObject,
-                                                       Data->InvalidateDeviceRelations.Type);
+            case PiActionEnumDeviceTree:
+                // this will be reworked in next commits
+                IoSynchronousInvalidateDeviceRelations(Request->DeviceObject, BusRelations);
                 break;
 
             default:
-                DPRINT1("Unimplemented device action %u\n", Data->Action);
+                DPRINT1("Unimplemented device action %u\n", Request->Action);
                 break;
         }
 
-        ObDereferenceObject(Data->DeviceObject);
-        ExFreePoolWithTag(Data, TAG_IO);
+        ObDereferenceObject(Request->DeviceObject);
+        ExFreePoolWithTag(Request, TAG_IO);
         KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
     }
     IopDeviceActionInProgress = FALSE;
     KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
 }
 
+/**
+ * @brief      Queue a device operation to a worker thread.
+ *
+ * @param[in]  DeviceObject      The device object
+ * @param[in]  Action            The action
+ * @param[in]  CompletionEvent   The completion event object (optional)
+ * @param[out] CompletionStatus  Status returned be the action will be written here
+ */
+
 VOID
-IopQueueDeviceAction(
-    _In_ PDEVICE_ACTION_DATA ActionData)
+PiQueueDeviceAction(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ DEVICE_ACTION Action,
+    _In_opt_ PKEVENT CompletionEvent,
+    _Out_opt_ NTSTATUS *CompletionStatus)
 {
-    PDEVICE_ACTION_DATA Data;
+    PDEVICE_ACTION_REQUEST Request;
     KIRQL OldIrql;
 
-    DPRINT("IopQueueDeviceAction(%p)\n", ActionData);
-
-    Data = ExAllocatePoolWithTag(NonPagedPool,
-                                 sizeof(DEVICE_ACTION_DATA),
-                                 TAG_IO);
-    if (!Data)
+    Request = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Request), TAG_IO);
+    if (!Request)
+    {
+        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x3, 0, 0, 0);
         return;
+    }
 
-    ObReferenceObject(ActionData->DeviceObject);
-    RtlCopyMemory(Data, ActionData, sizeof(DEVICE_ACTION_DATA));
+    DPRINT("PiQueueDeviceAction: DeviceObject - %p, Request - %p, Action - %s\n",
+        DeviceObject, Request, ActionToStr(Action));
 
-    DPRINT("Action %u\n", Data->Action);
+    ObReferenceObject(DeviceObject);
+
+    Request->DeviceObject = DeviceObject;
+    Request->Action = Action;
+    Request->CompletionEvent = CompletionEvent;
+    Request->CompletionStatus = CompletionStatus;
 
     KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
-    InsertTailList(&IopDeviceActionRequestList, &Data->RequestListEntry);
+    InsertTailList(&IopDeviceActionRequestList, &Request->RequestListEntry);
     if (IopDeviceActionInProgress)
     {
         KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
@@ -2367,9 +2410,6 @@ IopQueueDeviceAction(
     IopDeviceActionInProgress = TRUE;
     KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
 
-    ExInitializeWorkItem(&IopDeviceActionWorkItem,
-                         IopDeviceActionWorker,
-                         NULL);
-    ExQueueWorkItem(&IopDeviceActionWorkItem,
-                    DelayedWorkQueue);
+    ExInitializeWorkItem(&IopDeviceActionWorkItem, PipDeviceActionWorker, NULL);
+    ExQueueWorkItem(&IopDeviceActionWorkItem, DelayedWorkQueue);
 }
