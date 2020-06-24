@@ -44,12 +44,8 @@ add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
 # Prevent GCC from searching any of the default directories
 add_compile_flags("-nostdinc")
 
-if(GCC_VERSION VERSION_GREATER 4.7)
-    add_compile_flags("-mstackrealign")
-endif()
-if(NOT GCC_VERSION VERSION_LESS 4.8)
-    add_compile_flags("-fno-aggressive-loop-optimizations")
-endif()
+add_compile_flags("-mstackrealign")
+add_compile_flags("-fno-aggressive-loop-optimizations")
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_flags_language("-std=gnu99 -Wno-microsoft" "C")
@@ -112,9 +108,7 @@ endif()
 
 add_compile_flags("-Wall -Wpointer-arith")
 add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value")
-if(NOT GCC_VERSION VERSION_LESS 6.1)
-    add_compile_flags("-Wno-unused-const-variable")
-endif()
+add_compile_flags("-Wno-unused-const-variable")
 add_compile_flags("-Wno-unused-local-typedefs")
 add_compile_flags("-Wno-deprecated")
 
