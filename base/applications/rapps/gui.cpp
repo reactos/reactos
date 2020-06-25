@@ -1452,6 +1452,8 @@ public:
     }
 };
 
+
+
 class CSideTreeView :
     public CUiWindow<CTreeView>
 {
@@ -1551,11 +1553,13 @@ class CMainWindow :
     CUiSplitPanel* m_HSplitter = NULL;
 
     CMainToolbar* m_Toolbar = NULL;
-    CAppsListView* m_ListView = NULL;
+    //CAppsListView* m_ListView = NULL;
 
     CSideTreeView* m_TreeView = NULL;
     CUiWindow<CStatusBar>* m_StatusBar = NULL;
-    CAppInfoDisplay* m_AppInfo = NULL;
+    //CAppInfoDisplay* m_AppInfo = NULL;
+
+
 
     CUiWindow<CSearchBar>* m_SearchBar = NULL;
     CAvailableApps m_AvailableApps;
@@ -1581,23 +1585,23 @@ public:
         LayoutCleanup();
     }
 private:
-    VOID InitApplicationsList()
-    {
-        ATL::CStringW szText;
+    //VOID InitApplicationsList()
+    //{
+    //    ATL::CStringW szText;
 
-        /* Add columns to ListView */
-        szText.LoadStringW(IDS_APP_NAME);
-        m_ListView->AddColumn(0, szText, 250, LVCFMT_LEFT);
+    //    /* Add columns to ListView */
+    //    szText.LoadStringW(IDS_APP_NAME);
+    //    m_ListView->AddColumn(0, szText, 250, LVCFMT_LEFT);
 
-        szText.LoadStringW(IDS_APP_INST_VERSION);
-        m_ListView->AddColumn(1, szText, 90, LVCFMT_RIGHT);
+    //    szText.LoadStringW(IDS_APP_INST_VERSION);
+    //    m_ListView->AddColumn(1, szText, 90, LVCFMT_RIGHT);
 
-        szText.LoadStringW(IDS_APP_DESCRIPTION);
-        m_ListView->AddColumn(3, szText, 300, LVCFMT_LEFT);
+    //    szText.LoadStringW(IDS_APP_DESCRIPTION);
+    //    m_ListView->AddColumn(3, szText, 300, LVCFMT_LEFT);
 
-        // Unnesesary since the list updates on every TreeView selection
-        // UpdateApplicationsList(ENUM_ALL_COMPONENTS);
-    }
+    //    // Unnesesary since the list updates on every TreeView selection
+    //    // UpdateApplicationsList(ENUM_ALL_COMPONENTS);
+    //}
 
     VOID InitCategoriesList()
     {
@@ -1663,7 +1667,7 @@ private:
         return m_TreeView->Create(m_hWnd) != NULL;
     }
 
-    BOOL CreateListView()
+    /*BOOL CreateListView()
     {
         m_ListView = new CAppsListView();
         m_ListView->m_VerticalAlignment = UiAlign_Stretch;
@@ -1671,9 +1675,9 @@ private:
         m_HSplitter->First().Append(m_ListView);
 
         return m_ListView->Create(m_hWnd) != NULL;
-    }
+    }*/
 
-    BOOL CreateAppInfoDisplay()
+    /*BOOL CreateAppInfoDisplay()
     {
         m_AppInfo = new CAppInfoDisplay();
         m_AppInfo->m_VerticalAlignment = UiAlign_Stretch;
@@ -1681,7 +1685,7 @@ private:
         m_HSplitter->Second().Append(m_AppInfo);
 
         return m_AppInfo->Create(m_hWnd) != NULL;
-    }
+    }*/
 
     BOOL CreateVSplitter()
     {
@@ -1698,20 +1702,20 @@ private:
         return m_VSplitter->Create(m_hWnd) != NULL;
     }
 
-    BOOL CreateHSplitter()
-    {
-        m_HSplitter = new CUiSplitPanel();
-        m_HSplitter->m_VerticalAlignment = UiAlign_Stretch;
-        m_HSplitter->m_HorizontalAlignment = UiAlign_Stretch;
-        m_HSplitter->m_DynamicFirst = TRUE;
-        m_HSplitter->m_Horizontal = TRUE;
-        m_HSplitter->m_Pos = INT_MAX; //set INT_MAX to use lowest possible position (m_MinSecond)
-        m_HSplitter->m_MinFirst = 10;
-        m_HSplitter->m_MinSecond = 140;
-        m_VSplitter->Second().Append(m_HSplitter);
+    //BOOL CreateHSplitter()
+    //{
+    //    m_HSplitter = new CUiSplitPanel();
+    //    m_HSplitter->m_VerticalAlignment = UiAlign_Stretch;
+    //    m_HSplitter->m_HorizontalAlignment = UiAlign_Stretch;
+    //    m_HSplitter->m_DynamicFirst = TRUE;
+    //    m_HSplitter->m_Horizontal = TRUE;
+    //    m_HSplitter->m_Pos = INT_MAX; //set INT_MAX to use lowest possible position (m_MinSecond)
+    //    m_HSplitter->m_MinFirst = 10;
+    //    m_HSplitter->m_MinSecond = 140;
+    //    m_VSplitter->Second().Append(m_HSplitter);
 
-        return m_HSplitter->Create(m_hWnd) != NULL;
-    }
+    //    return m_HSplitter->Create(m_hWnd) != NULL;
+    //}
 
     BOOL CreateSearchBar()
     {
@@ -1740,12 +1744,12 @@ private:
         b = b && CreateVSplitter();
 
         // Inside V Splitter
-        b = b && CreateHSplitter();
+        //b = b && CreateHSplitter();
         b = b && CreateTreeView();
 
         // Inside H Splitter
-        b = b && CreateListView();
-        b = b && CreateAppInfoDisplay();
+        //b = b && CreateListView();
+        //b = b && CreateAppInfoDisplay();
 
         if (b)
         {
@@ -1771,8 +1775,8 @@ private:
 
     VOID LayoutCleanup()
     {
-        if (m_AppInfo) delete m_AppInfo;
-        if (m_ListView) delete m_ListView;
+        //if (m_AppInfo) delete m_AppInfo;
+        //if (m_ListView) delete m_ListView;
         if (m_TreeView) delete m_TreeView;
         if (m_HSplitter) delete m_HSplitter;
         if (m_VSplitter) delete m_VSplitter;
@@ -1787,7 +1791,7 @@ private:
         if (CreateLayout())
         {
 
-            InitApplicationsList();
+            //InitApplicationsList();
             InitCategoriesList();
 
             nSelectedApps = 0;
@@ -1799,7 +1803,7 @@ private:
         return FALSE;
     }
 
-    VOID ShowAppInfo(INT Index)
+    /*VOID ShowAppInfo(INT Index)
     {
         if (IsInstalledEnum(SelectedEnumType))
         {
@@ -1819,7 +1823,7 @@ private:
 
             m_AppInfo->ShowAvailableAppInfo(Info);
         }
-    }
+    }*/
 
     VOID OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
@@ -1874,45 +1878,45 @@ private:
 
     }
 
-    VOID RemoveSelectedAppFromRegistry()
-    {
-        PINSTALLED_INFO Info;
-        WCHAR szFullName[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
-        ATL::CStringW szMsgText, szMsgTitle;
-        INT ItemIndex = m_ListView->GetNextItem(-1, LVNI_FOCUSED);
+    //VOID RemoveSelectedAppFromRegistry()
+    //{
+    //    PINSTALLED_INFO Info;
+    //    WCHAR szFullName[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
+    //    ATL::CStringW szMsgText, szMsgTitle;
+    //    INT ItemIndex = m_ListView->GetNextItem(-1, LVNI_FOCUSED);
 
-        if (!IsInstalledEnum(SelectedEnumType))
-            return;
+    //    if (!IsInstalledEnum(SelectedEnumType))
+    //        return;
 
-        Info = reinterpret_cast<PINSTALLED_INFO>(m_ListView->GetItemData(ItemIndex));
-        if (!Info || !Info->hSubKey || (ItemIndex == -1)) 
-            return;
+    //    Info = reinterpret_cast<PINSTALLED_INFO>(m_ListView->GetItemData(ItemIndex));
+    //    if (!Info || !Info->hSubKey || (ItemIndex == -1)) 
+    //        return;
 
-        if (!szMsgText.LoadStringW(IDS_APP_REG_REMOVE) ||
-            !szMsgTitle.LoadStringW(IDS_INFORMATION))
-            return;
+    //    if (!szMsgText.LoadStringW(IDS_APP_REG_REMOVE) ||
+    //        !szMsgTitle.LoadStringW(IDS_INFORMATION))
+    //        return;
 
-        if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
-        {
-            ATL::CStringW::CopyChars(szFullName,
-                                     MAX_PATH,
-                                     Info->szKeyName.GetString(),
-                                     MAX_PATH - wcslen(szFullName));
+    //    if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
+    //    {
+    //        ATL::CStringW::CopyChars(szFullName,
+    //                                 MAX_PATH,
+    //                                 Info->szKeyName.GetString(),
+    //                                 MAX_PATH - wcslen(szFullName));
 
-            if (RegDeleteKeyW(Info->hRootKey, szFullName) == ERROR_SUCCESS)
-            {
-                m_ListView->DeleteItem(ItemIndex);
-                return;
-            }
+    //        if (RegDeleteKeyW(Info->hRootKey, szFullName) == ERROR_SUCCESS)
+    //        {
+    //            m_ListView->DeleteItem(ItemIndex);
+    //            return;
+    //        }
 
-            if (!szMsgText.LoadStringW(IDS_UNABLE_TO_REMOVE))
-                return;
+    //        if (!szMsgText.LoadStringW(IDS_UNABLE_TO_REMOVE))
+    //            return;
 
-            MessageBoxW(szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
-        }
-    }
+    //        MessageBoxW(szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
+    //    }
+    //}
 
-    BOOL UninstallSelectedApp(BOOL bModify)
+    /*BOOL UninstallSelectedApp(BOOL bModify)
     {
         WCHAR szAppName[MAX_STR_LEN];
 
@@ -1928,7 +1932,8 @@ private:
 
         PINSTALLED_INFO ItemInfo = (PINSTALLED_INFO)m_ListView->GetItemData(ItemIndex);
         return UninstallApplication(ItemInfo, bModify);
-    }
+    }*/
+
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
     {
         theResult = 0;
@@ -1947,8 +1952,8 @@ private:
             FreeLogs();
             m_AvailableApps.FreeCachedEntries();
 
-            if (IsInstalledEnum(SelectedEnumType))
-                FreeInstalledAppList();
+            /*if (IsInstalledEnum(SelectedEnumType))
+                FreeInstalledAppList();*/
 
             delete m_ClientPanel;
 
@@ -2059,7 +2064,7 @@ private:
                 }
 
                 HMENU mainMenu = ::GetMenu(hwnd);
-                HMENU lvwMenu = ::GetMenu(m_ListView->m_hWnd);
+                //HMENU lvwMenu = ::GetMenu(m_ListView->m_hWnd);
 
                 /* Disable/enable items based on treeview selection */
                 if (IsSelectedNodeInstalled())
@@ -2069,10 +2074,10 @@ private:
                     EnableMenuItem(mainMenu, ID_UNINSTALL, MF_ENABLED);
                     EnableMenuItem(mainMenu, ID_MODIFY, MF_ENABLED);
 
-                    EnableMenuItem(lvwMenu, ID_REGREMOVE, MF_ENABLED);
+                    /*EnableMenuItem(lvwMenu, ID_REGREMOVE, MF_ENABLED);
                     EnableMenuItem(lvwMenu, ID_INSTALL, MF_GRAYED);
                     EnableMenuItem(lvwMenu, ID_UNINSTALL, MF_ENABLED);
-                    EnableMenuItem(lvwMenu, ID_MODIFY, MF_ENABLED);
+                    EnableMenuItem(lvwMenu, ID_MODIFY, MF_ENABLED);*/
 
                     m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, TRUE);
                     m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, FALSE);
@@ -2086,10 +2091,10 @@ private:
                     EnableMenuItem(mainMenu, ID_UNINSTALL, MF_GRAYED);
                     EnableMenuItem(mainMenu, ID_MODIFY, MF_GRAYED);
 
-                    EnableMenuItem(lvwMenu, ID_REGREMOVE, MF_GRAYED);
+                    /*EnableMenuItem(lvwMenu, ID_REGREMOVE, MF_GRAYED);
                     EnableMenuItem(lvwMenu, ID_INSTALL, MF_ENABLED);
                     EnableMenuItem(lvwMenu, ID_UNINSTALL, MF_GRAYED);
-                    EnableMenuItem(lvwMenu, ID_MODIFY, MF_GRAYED);
+                    EnableMenuItem(lvwMenu, ID_MODIFY, MF_GRAYED);*/
 
                     m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, FALSE);
                     m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, TRUE);
@@ -2099,88 +2104,88 @@ private:
             }
             break;
 
-            case LVN_ITEMCHANGED:
-            {
-                LPNMLISTVIEW pnic = (LPNMLISTVIEW) lParam;
+            //case LVN_ITEMCHANGED:
+            //{
+            //    LPNMLISTVIEW pnic = (LPNMLISTVIEW) lParam;
 
-                if (pnic->hdr.hwndFrom == m_ListView->m_hWnd)
-                {
-                    /* Check if this is a valid item
-                    * (technically, it can be also an unselect) */
-                    INT ItemIndex = pnic->iItem;
-                    if (ItemIndex == -1 ||
-                        ItemIndex >= ListView_GetItemCount(pnic->hdr.hwndFrom))
-                    {
-                        break;
-                    }
+            //    if (pnic->hdr.hwndFrom == m_ListView->m_hWnd)
+            //    {
+            //        /* Check if this is a valid item
+            //        * (technically, it can be also an unselect) */
+            //        INT ItemIndex = pnic->iItem;
+            //        if (ItemIndex == -1 ||
+            //            ItemIndex >= ListView_GetItemCount(pnic->hdr.hwndFrom))
+            //        {
+            //            break;
+            //        }
 
-                    /* Check if the focus has been moved to another item */
-                    if ((pnic->uChanged & LVIF_STATE) &&
-                        (pnic->uNewState & LVIS_FOCUSED) &&
-                        !(pnic->uOldState & LVIS_FOCUSED))
-                    {
-                        ShowAppInfo(ItemIndex);
-                    }
-                    /* Check if the item is checked */
-                    if ((pnic->uNewState & LVIS_STATEIMAGEMASK) && !bUpdating)
-                    {
-                        BOOL checked = m_ListView->GetCheckState(pnic->iItem);
-                        /* FIXME: HAX!
-                        - preventing decremention below zero as a safeguard for ReactOS
-                          In ReactOS this action is triggered whenever user changes *selection*, but should be only when *checkbox* state toggled
-                          Maybe LVIS_STATEIMAGEMASK is set incorrectly
-                        */
-                        nSelectedApps +=
-                            (checked)
-                            ? 1
-                            : ((nSelectedApps > 0)
-                               ? -1
-                               : 0);
+            //        /* Check if the focus has been moved to another item */
+            //        if ((pnic->uChanged & LVIF_STATE) &&
+            //            (pnic->uNewState & LVIS_FOCUSED) &&
+            //            !(pnic->uOldState & LVIS_FOCUSED))
+            //        {
+            //            ShowAppInfo(ItemIndex);
+            //        }
+            //        /* Check if the item is checked */
+            //        if ((pnic->uNewState & LVIS_STATEIMAGEMASK) && !bUpdating)
+            //        {
+            //            BOOL checked = m_ListView->GetCheckState(pnic->iItem);
+            //            /* FIXME: HAX!
+            //            - preventing decremention below zero as a safeguard for ReactOS
+            //              In ReactOS this action is triggered whenever user changes *selection*, but should be only when *checkbox* state toggled
+            //              Maybe LVIS_STATEIMAGEMASK is set incorrectly
+            //            */
+            //            nSelectedApps +=
+            //                (checked)
+            //                ? 1
+            //                : ((nSelectedApps > 0)
+            //                   ? -1
+            //                   : 0);
 
-                        /* Update item's selection status */
-                        m_ListView->SetSelected(pnic->iItem, checked);
+            //            /* Update item's selection status */
+            //            m_ListView->SetSelected(pnic->iItem, checked);
 
-                        UpdateStatusBarText();
-                    }
-                }
-            }
-            break;
+            //            UpdateStatusBarText();
+            //        }
+            //    }
+            //}
+            //break;
 
-            case LVN_COLUMNCLICK:
-            {
-                LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
+            //case LVN_COLUMNCLICK:
+            //{
+            //    LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
 
-                m_ListView->ColumnClick(pnmv);
-            }
-            break;
+            //    m_ListView->ColumnClick(pnmv);
+            //}
+            //break;
 
-            case NM_CLICK:
-            {
-                if (data->hwndFrom == m_ListView->m_hWnd && ((LPNMLISTVIEW) lParam)->iItem != -1)
-                {
-                    ShowAppInfo(-1);
-                }
-            }
-            break;
+            //case NM_CLICK:
+            //{
+            //    if (data->hwndFrom == m_ListView->m_hWnd && ((LPNMLISTVIEW) lParam)->iItem != -1)
+            //    {
+            //        ShowAppInfo(-1);
+            //    }
+            //}
+            //break;
 
-            case NM_DBLCLK:
-            {
-                if (data->hwndFrom == m_ListView->m_hWnd && ((LPNMLISTVIEW) lParam)->iItem != -1)
-                {
-                    /* this won't do anything if the program is already installed */
-                    SendMessageW(hwnd, WM_COMMAND, ID_INSTALL, 0);
-                }
-            }
-            break;
+            //case NM_DBLCLK:
+            //{
+            //    if (data->hwndFrom == m_ListView->m_hWnd && ((LPNMLISTVIEW) lParam)->iItem != -1)
+            //    {
+            //        /* this won't do anything if the program is already installed */
+            //        SendMessageW(hwnd, WM_COMMAND, ID_INSTALL, 0);
+            //    }
+            //}
+            //break;
 
-            case NM_RCLICK:
-            {
-                if (data->hwndFrom == m_ListView->m_hWnd && ((LPNMLISTVIEW) lParam)->iItem != -1)
-                {
-                    ShowPopupMenu(m_ListView->m_hWnd, 0, ID_INSTALL);
-                }
-            }
-            break;
+            //case NM_RCLICK:
+            //{
+            //    if (data->hwndFrom == m_ListView->m_hWnd && ((LPNMLISTVIEW) lParam)->iItem != -1)
+            //    {
+            //        ShowPopupMenu(m_ListView->m_hWnd, 0, ID_INSTALL);
+            //    }
+            //}
+            //break;
 
             
 
@@ -2211,10 +2216,10 @@ private:
         case WM_SYSCOLORCHANGE:
         {
             /* Forward WM_SYSCOLORCHANGE to common controls */
-            m_ListView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
+            //m_ListView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
             m_TreeView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
             m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
-            m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
+            //m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
         }
         break;
 
@@ -2345,7 +2350,7 @@ private:
             break;
 
         case ID_INSTALL:
-            if (IsAvailableEnum(SelectedEnumType))
+            /*if (IsAvailableEnum(SelectedEnumType))
             {
                 if (nSelectedApps > 0)
                 {
@@ -2358,21 +2363,21 @@ private:
                     UpdateApplicationsList(-1);
                 }
 
-            }
+            }*/
             break;
 
         case ID_UNINSTALL:
-            if (UninstallSelectedApp(FALSE))
-                UpdateApplicationsList(-1);
+            /*if (UninstallSelectedApp(FALSE))
+                UpdateApplicationsList(-1);*/
             break;
 
         case ID_MODIFY:
-            if (UninstallSelectedApp(TRUE))
-                UpdateApplicationsList(-1);
+            /*if (UninstallSelectedApp(TRUE))
+                UpdateApplicationsList(-1);*/
             break;
 
         case ID_REGREMOVE:
-            RemoveSelectedAppFromRegistry();
+            /*RemoveSelectedAppFromRegistry();*/
             break;
 
         case ID_REFRESH:
@@ -2393,12 +2398,12 @@ private:
             break;
 
         case ID_CHECK_ALL:
-            m_ListView->CheckAll();
+            /*m_ListView->CheckAll();*/
             break;
         }
     }
 
-    VOID FreeInstalledAppList()
+    /*VOID FreeInstalledAppList()
     {
         INT Count = m_ListView->GetItemCount() - 1;
         PINSTALLED_INFO Info;
@@ -2413,7 +2418,7 @@ private:
             }
             Count--;
         }
-    }
+    }*/
 
     static BOOL SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle)
     {
@@ -2423,7 +2428,7 @@ private:
         return StrStrIW(szHaystack, szNeedle) != NULL;
     }
 
-    BOOL CALLBACK EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info)
+    /*BOOL CALLBACK EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info)
     {
         PINSTALLED_INFO ItemInfo;
 
@@ -2463,91 +2468,96 @@ private:
     {
         CMainWindow* pThis = (CMainWindow*)param;
         return pThis->EnumAvailableAppProc(Info, szFolderPath);
-    }
+    }*/
 
     VOID UpdateStatusBarText()
     {
-        if (m_StatusBar)
+        /*if (m_StatusBar)
         {
             ATL::CStringW szBuffer;
 
             szBuffer.Format(IDS_APPS_COUNT, m_ListView->GetItemCount(), nSelectedApps);
             m_StatusBar->SetText(szBuffer);
-        }
+        }*/
     }
+
+    //VOID UpdateApplicationsList(INT EnumType)
+    //{
+    //    ATL::CStringW szBuffer1, szBuffer2;
+    //    HIMAGELIST hImageListView;
+    //    BOOL bWasInInstalled = IsInstalledEnum(SelectedEnumType);
+
+    //    bUpdating = TRUE;
+    //    m_ListView->SetRedraw(FALSE);
+
+    //    if (EnumType < 0)
+    //    {
+    //        EnumType = SelectedEnumType;
+    //    }
+
+    //    //if previous one was INSTALLED purge the list
+    //    //TODO: make the Installed category a separate class to avoid doing this
+    //    if (bWasInInstalled)
+    //    {
+    //        FreeInstalledAppList();
+    //    }
+
+    //    m_ListView->DeleteAllItems();
+
+    //    // Create new ImageList
+    //    hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE,
+    //                                      LISTVIEW_ICON_SIZE,
+    //                                      GetSystemColorDepth() | ILC_MASK,
+    //                                      0, 1);
+    //    HIMAGELIST hImageListBuf = m_ListView->SetImageList(hImageListView, LVSIL_SMALL);
+    //    if (hImageListBuf)
+    //    {
+    //        ImageList_Destroy(hImageListBuf);
+    //    }
+
+    //    if (IsInstalledEnum(EnumType))
+    //    {
+    //        if (!bWasInInstalled)
+    //        {
+    //            m_ListView->SetCheckboxesVisible(FALSE);
+    //        }
+
+    //        HICON hIcon = (HICON) LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+    //        ImageList_AddIcon(hImageListView, hIcon);
+    //        DestroyIcon(hIcon);
+
+    //        // Enum installed applications and updates
+    //        EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc, this);
+    //        EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc, this);
+    //    }
+    //    else if (IsAvailableEnum(EnumType))
+    //    {
+    //        if (bWasInInstalled)
+    //        {
+    //            m_ListView->SetCheckboxesVisible(TRUE);
+    //        }
+
+    //        // Enum available applications
+    //        m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);
+    //    }
+
+    //    SelectedEnumType = EnumType;
+    //    UpdateStatusBarText();
+    //    m_AppInfo->SetWelcomeText();
+
+    //    // Set automatic column width for program names if the list is not empty
+    //    if (m_ListView->GetItemCount() > 0)
+    //    {
+    //        ListView_SetColumnWidth(m_ListView->GetWindow(), 0, LVSCW_AUTOSIZE);
+    //    }
+
+    //    bUpdating = FALSE;
+    //    m_ListView->SetRedraw(TRUE);
+    //}
 
     VOID UpdateApplicationsList(INT EnumType)
     {
-        ATL::CStringW szBuffer1, szBuffer2;
-        HIMAGELIST hImageListView;
-        BOOL bWasInInstalled = IsInstalledEnum(SelectedEnumType);
 
-        bUpdating = TRUE;
-        m_ListView->SetRedraw(FALSE);
-
-        if (EnumType < 0)
-        {
-            EnumType = SelectedEnumType;
-        }
-
-        //if previous one was INSTALLED purge the list
-        //TODO: make the Installed category a separate class to avoid doing this
-        if (bWasInInstalled)
-        {
-            FreeInstalledAppList();
-        }
-
-        m_ListView->DeleteAllItems();
-
-        // Create new ImageList
-        hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE,
-                                          LISTVIEW_ICON_SIZE,
-                                          GetSystemColorDepth() | ILC_MASK,
-                                          0, 1);
-        HIMAGELIST hImageListBuf = m_ListView->SetImageList(hImageListView, LVSIL_SMALL);
-        if (hImageListBuf)
-        {
-            ImageList_Destroy(hImageListBuf);
-        }
-
-        if (IsInstalledEnum(EnumType))
-        {
-            if (!bWasInInstalled)
-            {
-                m_ListView->SetCheckboxesVisible(FALSE);
-            }
-
-            HICON hIcon = (HICON) LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
-            ImageList_AddIcon(hImageListView, hIcon);
-            DestroyIcon(hIcon);
-
-            // Enum installed applications and updates
-            EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc, this);
-            EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc, this);
-        }
-        else if (IsAvailableEnum(EnumType))
-        {
-            if (bWasInInstalled)
-            {
-                m_ListView->SetCheckboxesVisible(TRUE);
-            }
-
-            // Enum available applications
-            m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);
-        }
-
-        SelectedEnumType = EnumType;
-        UpdateStatusBarText();
-        m_AppInfo->SetWelcomeText();
-
-        // Set automatic column width for program names if the list is not empty
-        if (m_ListView->GetItemCount() > 0)
-        {
-            ListView_SetColumnWidth(m_ListView->GetWindow(), 0, LVSCW_AUTOSIZE);
-        }
-
-        bUpdating = FALSE;
-        m_ListView->SetRedraw(TRUE);
     }
 
 public:
@@ -2594,7 +2604,7 @@ public:
 
     void HandleTabOrder(int direction)
     {
-        HWND Controls[] = { m_Toolbar->m_hWnd, m_SearchBar->m_hWnd, m_TreeView->m_hWnd, m_ListView->m_hWnd, m_AppInfo->m_hWnd };
+        HWND Controls[] = { m_Toolbar->m_hWnd, m_SearchBar->m_hWnd, m_TreeView->m_hWnd/*, m_ListView->m_hWnd, m_AppInfo->m_hWnd*/ };
         // When there is no control found, go to the first or last (depending on tab vs shift-tab)
         int current = direction > 0 ? 0 : (_countof(Controls) - 1);
         HWND hActive = ::GetFocus();
