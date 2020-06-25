@@ -1452,7 +1452,135 @@ public:
     }
 };
 
+class CAppsTableView :
+    public CUiWindow<CWindowImpl<CAppsTableView>>
+{
+private:
+    CUiPanel *m_Panel = NULL;
 
+    CAppsListView *m_ListView = NULL;
+    CAppInfoDisplay *m_AppsInfo = NULL;
+    CUiSplitPanel *m_HSplitter = NULL;
+
+    BOOL ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
+    {
+        theResult = 0;
+        switch (message)
+        {
+        case WM_CREATE:
+        {
+            BOOL bSuccess = TRUE;
+            m_Panel = new CUiPanel();
+            m_Panel->m_VerticalAlignment = UiAlign_Stretch;
+            m_Panel->m_HorizontalAlignment = UiAlign_Stretch;
+
+            bSuccess &= CreateHSplitter();
+            bSuccess &= CreateListView();
+            bSuccess &= CreateAppInfoDisplay();
+
+            if (!bSuccess)
+            {
+                return -1; // creation failure
+            }
+        }
+            break;
+        case WM_SIZE:
+        {
+            OnSize(hwnd, wParam, lParam);
+            break;
+        }
+        }
+        return FALSE;
+    }
+
+    BOOL CreateHSplitter()
+    {
+        m_HSplitter = new CUiSplitPanel();
+        m_HSplitter->m_VerticalAlignment = UiAlign_Stretch;
+        m_HSplitter->m_HorizontalAlignment = UiAlign_Stretch;
+        m_HSplitter->m_DynamicFirst = TRUE;
+        m_HSplitter->m_Horizontal = TRUE;
+        m_HSplitter->m_Pos = INT_MAX; //set INT_MAX to use lowest possible position (m_MinSecond)
+        m_HSplitter->m_MinFirst = 10;
+        m_HSplitter->m_MinSecond = 140;
+        m_Panel->Children().Append(m_HSplitter);
+        return m_HSplitter->Create(m_hWnd) != NULL;
+    }
+
+    BOOL CreateListView()
+    {
+        m_ListView = new CAppsListView();
+        m_ListView->m_VerticalAlignment = UiAlign_Stretch;
+        m_ListView->m_HorizontalAlignment = UiAlign_Stretch;
+        m_HSplitter->First().Append(m_ListView);
+        
+        return m_ListView->Create(m_hWnd) != NULL;
+    }
+
+    BOOL CreateAppInfoDisplay()
+    {
+        m_AppsInfo = new CAppInfoDisplay();
+        m_AppsInfo->m_VerticalAlignment = UiAlign_Stretch;
+        m_AppsInfo->m_HorizontalAlignment = UiAlign_Stretch;
+        m_HSplitter->Second().Append(m_AppsInfo);
+
+        return m_AppsInfo->Create(m_hWnd) != NULL;
+    }
+
+    VOID OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
+    {
+        if (wParam == SIZE_MINIMIZED)
+            return;
+
+        
+        RECT r = { 0, 0, LOWORD(lParam), HIWORD(lParam) };
+        HDWP hdwp = NULL;
+        INT count = m_Panel->CountSizableChildren();
+
+        hdwp = BeginDeferWindowPos(count);
+        if (hdwp)
+        {
+            hdwp = m_Panel->OnParentSize(r, hdwp);
+            if (hdwp)
+            {
+                EndDeferWindowPos(hdwp);
+            }
+        }
+    }
+
+public:
+    static ATL::CWndClassInfo& GetWndClassInfo()
+    {
+        DWORD csStyle = CS_VREDRAW | CS_HREDRAW;
+        static ATL::CWndClassInfo wc =
+        {
+            {
+                sizeof(WNDCLASSEX),
+                csStyle,
+                StartWindowProc,
+                0,
+                0,
+                NULL,
+                NULL,
+                NULL,
+                (HBRUSH)(COLOR_BTNFACE + 1),
+                NULL,
+                L"RAppsTableView",
+                NULL
+            },
+            NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
+        };
+        return wc;
+    }
+
+    HWND Create(HWND hwndParent)
+    {
+        RECT r = { 0,0,0,0 };
+
+        return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+    }
+
+};
 
 class CSideTreeView :
     public CUiWindow<CTreeView>
@@ -1550,7 +1678,7 @@ class CMainWindow :
 {
     CUiPanel* m_ClientPanel = NULL;
     CUiSplitPanel* m_VSplitter = NULL;
-    CUiSplitPanel* m_HSplitter = NULL;
+    //CUiSplitPanel* m_HSplitter = NULL;
 
     CMainToolbar* m_Toolbar = NULL;
     //CAppsListView* m_ListView = NULL;
@@ -1559,7 +1687,7 @@ class CMainWindow :
     CUiWindow<CStatusBar>* m_StatusBar = NULL;
     //CAppInfoDisplay* m_AppInfo = NULL;
 
-
+    CAppsTableView* m_AppsTableView;
 
     CUiWindow<CSearchBar>* m_SearchBar = NULL;
     CAvailableApps m_AvailableApps;
@@ -1667,6 +1795,15 @@ private:
         return m_TreeView->Create(m_hWnd) != NULL;
     }
 
+    BOOL CreateTableView()
+    {
+        m_AppsTableView = new CAppsTableView();
+        m_AppsTableView->m_VerticalAlignment = UiAlign_Stretch;
+        m_AppsTableView->m_HorizontalAlignment = UiAlign_Stretch;
+        m_VSplitter->Second().Append(m_AppsTableView);
+
+        return m_AppsTableView->Create(m_hWnd) != NULL;
+    }
     /*BOOL CreateListView()
     {
         m_ListView = new CAppsListView();
@@ -1746,6 +1883,7 @@ private:
         // Inside V Splitter
         //b = b && CreateHSplitter();
         b = b && CreateTreeView();
+        b = b && CreateTableView();
 
         // Inside H Splitter
         //b = b && CreateListView();
@@ -1778,7 +1916,7 @@ private:
         //if (m_AppInfo) delete m_AppInfo;
         //if (m_ListView) delete m_ListView;
         if (m_TreeView) delete m_TreeView;
-        if (m_HSplitter) delete m_HSplitter;
+        //if (m_HSplitter) delete m_HSplitter;
         if (m_VSplitter) delete m_VSplitter;
         if (m_SearchBar) delete m_SearchBar;
         if (m_Toolbar) delete m_Toolbar;
@@ -1875,7 +2013,6 @@ private:
                 EndDeferWindowPos(hdwp);
             }
         }
-
     }
 
     //VOID RemoveSelectedAppFromRegistry()
