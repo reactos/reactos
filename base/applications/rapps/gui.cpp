@@ -1687,7 +1687,7 @@ class CMainWindow :
     CUiWindow<CStatusBar>* m_StatusBar = NULL;
     //CAppInfoDisplay* m_AppInfo = NULL;
 
-    CAppsTableView* m_AppsTableView;
+    CAppsTableView* m_AppsTableView = NULL;
 
     CUiWindow<CSearchBar>* m_SearchBar = NULL;
     CAvailableApps m_AvailableApps;
@@ -1917,6 +1917,7 @@ private:
         //if (m_ListView) delete m_ListView;
         if (m_TreeView) delete m_TreeView;
         //if (m_HSplitter) delete m_HSplitter;
+        if (m_AppsTableView) delete m_AppsTableView;
         if (m_VSplitter) delete m_VSplitter;
         if (m_SearchBar) delete m_SearchBar;
         if (m_Toolbar) delete m_Toolbar;
