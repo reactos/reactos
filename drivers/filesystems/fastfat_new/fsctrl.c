@@ -1422,22 +1422,34 @@ Return Value:
 
         if (Dirent != NULL) {
 
+            UCHAR OemBuffer[11];
             OEM_STRING OemString;
             UNICODE_STRING UnicodeString;
+
+            OemString.Buffer = (PCHAR)&OemBuffer[0];
+            OemString.MaximumLength = 11;
+
+            RtlCopyMemory( OemString.Buffer, Dirent->FileName, 11 );
+
+            //
+            //  Translate the first character from 0x5 to 0xe5.
+            //
+
+            if (OemString.Buffer[0] == FAT_DIRENT_REALLY_0E5) {
+
+                OemString.Buffer[0] = 0xe5;
+            }
 
             //
             //  Compute the length of the volume name
             //
 
-            OemString.Buffer = (PCHAR)&Dirent->FileName[0];
-            OemString.MaximumLength = 11;
-
             for ( OemString.Length = 11;
                   OemString.Length > 0;
                   OemString.Length -= 1) {
 
-                if ( (Dirent->FileName[OemString.Length-1] != 0x00) &&
-                     (Dirent->FileName[OemString.Length-1] != 0x20) ) { break; }
+                if ( (OemString.Buffer[OemString.Length-1] != 0x00) &&
+                     (OemString.Buffer[OemString.Length-1] != 0x20) ) { break; }
             }
 
             UnicodeString.MaximumLength = MAXIMUM_VOLUME_LABEL_LENGTH;
@@ -7849,6 +7861,7 @@ Return Value:
     PDIRENT Dirent;
     PDIRENT TerminationDirent;
     ULONG VolumeLabelLength;
+    UCHAR OemBuffer[11];
     OEM_STRING OemString;
     UNICODE_STRING UnicodeString;
 
@@ -7895,19 +7908,30 @@ Return Value:
     }
 
 
+    OemString.Buffer = (PCHAR)&OemBuffer[0];
+    OemString.MaximumLength = 11;
+
+    RtlCopyMemory( OemString.Buffer, Dirent->FileName, 11 );
+
+    //
+    //  Translate the first character from 0x5 to 0xe5.
+    //
+
+    if (OemString.Buffer[0] == FAT_DIRENT_REALLY_0E5) {
+
+        OemString.Buffer[0] = 0xe5;
+    }
+
     //
     //  Compute the length of the volume name
     //
-
-    OemString.Buffer = (PCHAR)&Dirent->FileName[0];
-    OemString.MaximumLength = 11;
 
     for ( OemString.Length = 11;
           OemString.Length > 0;
           OemString.Length -= 1) {
 
-        if ( (Dirent->FileName[OemString.Length-1] != 0x00) &&
-             (Dirent->FileName[OemString.Length-1] != 0x20) ) { break; }
+        if ( (OemString.Buffer[OemString.Length-1] != 0x00) &&
+             (OemString.Buffer[OemString.Length-1] != 0x20) ) { break; }
     }
 
     UnicodeString.MaximumLength = sizeof( UnicodeBuffer );

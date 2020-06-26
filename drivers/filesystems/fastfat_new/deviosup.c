@@ -3814,7 +3814,7 @@ Return Value:
     //
     //  It would be nice if Mm exported a way for us to not have
     //  to pull the Mdl apart and rebuild it ourselves, but this
-    //  is so bizzare a purpose as to be tolerable.
+    //  is so bizarre a purpose as to be tolerable.
     //
 
     SavedByteCount = ZeroMdl->ByteCount;
