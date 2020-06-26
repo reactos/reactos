@@ -14,30 +14,43 @@
 
 BOOL CInstalledApplicationInfo::GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String)
 {
-    BOOL result = ::GetApplicationString(hSubKey, lpKeyName, String.GetBuffer(MAX_PATH));
-    String.ReleaseBuffer();
-    return result;
-}
+    DWORD dwSize = 0;
+    String.Empty();
 
-BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
-{
-    DWORD dwSize = MAX_PATH * sizeof(WCHAR);
-
-    if (RegQueryValueExW(hKey,
-                         lpKeyName,
-                         NULL,
-                         NULL,
-                         (LPBYTE) szString,
-                         &dwSize) == ERROR_SUCCESS)
+    // retrieve the size of value first.
+    // TODO: I assume the type as REG_SZ. but I think REG_EXPAND_SZ should be handled correctly too.
+    if (RegQueryValueExW(hSubKey,
+        lpKeyName,
+        NULL,
+        NULL,
+        NULL,
+        &dwSize) != ERROR_SUCCESS)
     {
-        return TRUE;
+        return FALSE;
     }
 
-    StringCchCopyW(szString, MAX_PATH, L"---");
-    return FALSE;
+    // allocate buffer.
+    // attention: dwSize is size in bytes, and RegQueryValueExW does not guarantee the terminating null character.
+    String.GetBuffer(dwSize + sizeof(WCHAR));
+
+    // query the value
+    if (RegQueryValueExW(hSubKey,
+        lpKeyName,
+        NULL,
+        NULL,
+        (LPBYTE)String.GetBuffer(),
+        &dwSize) != ERROR_SUCCESS)
+    {
+        String.ReleaseBuffer();
+        String.Empty();
+        return FALSE;
+    }
+    String.GetBuffer()[dwSize / sizeof(WCHAR)] = L'0'; // ensure zero terminated
+    String.ReleaseBuffer();
+    return TRUE;
 }
 
-BOOL UninstallApplication(CInstalledApplicationInfo * ItemInfo, BOOL bModify)
+BOOL CInstalledApplicationInfo::UninstallApplication(BOOL bModify)
 {
     LPCWSTR szModify = L"ModifyPath";
     LPCWSTR szUninstall = L"UninstallString";
@@ -46,7 +59,7 @@ BOOL UninstallApplication(CInstalledApplicationInfo * ItemInfo, BOOL bModify)
 
     dwType = REG_SZ;
     dwSize = MAX_PATH * sizeof(WCHAR);
-    if (RegQueryValueExW(ItemInfo->hSubKey,
+    if (RegQueryValueExW(hSubKey,
                          bModify ? szModify : szUninstall,
                          NULL,
                          &dwType,

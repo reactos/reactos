@@ -11,11 +11,9 @@ public:
     ATL::CStringW szKeyName;
 
     BOOL GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String);
+    BOOL UninstallApplication(BOOL bModify);
 };
 
 typedef BOOL(CALLBACK *APPENUMPROC)(INT ItemIndex, ATL::CStringW &Name, CInstalledApplicationInfo * Info, PVOID param);
 
 BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc, PVOID param);
-BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString);
-
-BOOL UninstallApplication(CInstalledApplicationInfo * ItemInfo, BOOL bModify);
