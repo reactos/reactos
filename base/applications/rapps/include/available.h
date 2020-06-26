@@ -37,8 +37,9 @@ struct AvailableStrings
     AvailableStrings();
 };
 
-struct CAvailableApplicationInfo
+class CAvailableApplicationInfo
 {
+public:
     INT m_Category;
     BOOL m_IsSelected;
     LicenseType m_LicenseType;

@@ -250,7 +250,7 @@ public:
         return TRUE;
     }
 
-    BOOL ShowInstalledAppInfo(PINSTALLED_INFO Info)
+    BOOL ShowInstalledAppInfo(CInstalledApplicationInfo * Info)
     {
         ATL::CStringW szText;
         ATL::CStringW szInfo;
@@ -957,7 +957,7 @@ public:
         return RichEdit->ShowAvailableAppInfo(Info);
     }
 
-    BOOL ShowInstalledAppInfo(PINSTALLED_INFO Info)
+    BOOL ShowInstalledAppInfo(CInstalledApplicationInfo * Info)
     {
         ScrnshotPrev->DisplayEmpty();
         ResizeChildren();
@@ -1435,7 +1435,7 @@ public:
         return TRUE;
     }
 
-    BOOL AddInstalledAppInfo(INT ItemIndex, ATL::CStringW& m_szName, PINSTALLED_INFO ItemInfo)
+    BOOL AddInstalledAppInfo(INT ItemIndex, ATL::CStringW& m_szName, CInstalledApplicationInfo * ItemInfo)
     {
         INT Index;
         ATL::CStringW szText;
@@ -2576,7 +2576,7 @@ private:
             return TRUE;
         }
 
-        ItemInfo = new INSTALLED_INFO(*Info);
+        ItemInfo = new CInstalledApplicationInfo(*Info);
         if (!ItemInfo)
         {
             RegCloseKey(Info->hSubKey);

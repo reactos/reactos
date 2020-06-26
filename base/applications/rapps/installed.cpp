@@ -12,7 +12,7 @@
 
 #include "misc.h"
 
-BOOL INSTALLED_INFO::GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String)
+BOOL CInstalledApplicationInfo::GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String)
 {
     BOOL result = ::GetApplicationString(hSubKey, lpKeyName, String.GetBuffer(MAX_PATH));
     String.ReleaseBuffer();
@@ -37,7 +37,7 @@ BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
     return FALSE;
 }
 
-BOOL UninstallApplication(PINSTALLED_INFO ItemInfo, BOOL bModify)
+BOOL UninstallApplication(CInstalledApplicationInfo * ItemInfo, BOOL bModify)
 {
     LPCWSTR szModify = L"ModifyPath";
     LPCWSTR szUninstall = L"UninstallString";
@@ -65,7 +65,7 @@ BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumP
     BOOL bIsSystemComponent, bIsUpdate;
     ATL::CStringW szParentKeyName;
     ATL::CStringW szDisplayName;
-    INSTALLED_INFO Info;
+    CInstalledApplicationInfo Info;
     HKEY hKey;
     LONG ItemIndex = 0;
 
