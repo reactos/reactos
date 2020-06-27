@@ -12,6 +12,59 @@
 
 #include "misc.h"
 
+CInstalledApplicationInfo::CInstalledApplicationInfo(BOOL bIsUserKey, HKEY hSubKey)
+    : hSubKey(hSubKey)
+{
+    // if Initialize failed, hSubKey will be closed automatically and set to zero
+
+    DWORD dwSize = MAX_PATH, dwType, dwValue;
+    BOOL bIsSystemComponent;
+    ATL::CStringW szParentKeyName;
+
+    dwType = REG_DWORD;
+    dwSize = sizeof(DWORD);
+
+    if (RegQueryValueExW(hSubKey,
+        L"SystemComponent",
+        NULL,
+        &dwType,
+        (LPBYTE)&dwValue,
+        &dwSize) == ERROR_SUCCESS)
+    {
+        bIsSystemComponent = (dwValue == 0x1);
+    }
+    else
+    {
+        bIsSystemComponent = FALSE;
+    }
+
+    dwType = REG_SZ;
+    dwSize = MAX_PATH * sizeof(WCHAR);
+    bIsUpdate = (RegQueryValueExW(hSubKey,
+        L"ParentKeyName",
+        NULL,
+        &dwType,
+        (LPBYTE)szParentKeyName.GetBuffer(MAX_PATH),
+        &dwSize) == ERROR_SUCCESS);
+    szParentKeyName.ReleaseBuffer();
+
+    if (bIsSystemComponent)
+    {
+        CloseHandle(hSubKey);
+        hSubKey = NULL;
+    }
+
+}
+
+CInstalledApplicationInfo::~CInstalledApplicationInfo()
+{
+    if (hSubKey)
+    {
+        CloseHandle(hSubKey);
+        hSubKey = NULL;
+    }
+}
+
 BOOL CInstalledApplicationInfo::GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String)
 {
     DWORD dwSize = 0;
@@ -72,102 +125,156 @@ BOOL CInstalledApplicationInfo::UninstallApplication(BOOL bModify)
     return StartProcess(szPath, TRUE);
 }
 
-BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc, PVOID param)
+BOOL CInstalledApps::Enum(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc, PVOID param)
 {
-    DWORD dwSize = MAX_PATH, dwType, dwValue;
-    BOOL bIsSystemComponent, bIsUpdate;
-    ATL::CStringW szParentKeyName;
-    ATL::CStringW szDisplayName;
-    CInstalledApplicationInfo Info;
-    HKEY hKey;
+    DWORD dwSize = MAX_PATH;
+    HKEY hKey, hSubKey;
     LONG ItemIndex = 0;
+    ATL::CStringW szKeyName;
+    //Info.hRootKey = IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE;
 
-    Info.hRootKey = IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE;
-
-    if (RegOpenKeyW(Info.hRootKey,
-                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
-                    &hKey) != ERROR_SUCCESS)
+    if (RegOpenKeyW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
+        L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+        &hKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
 
-    while (RegEnumKeyExW(hKey, ItemIndex, Info.szKeyName.GetBuffer(MAX_PATH), &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+    while (RegEnumKeyExW(hKey, ItemIndex, szKeyName.GetBuffer(MAX_PATH), &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
-        Info.szKeyName.ReleaseBuffer();
-        if (RegOpenKeyW(hKey, Info.szKeyName.GetString(), &Info.hSubKey) == ERROR_SUCCESS)
+        szKeyName.ReleaseBuffer();
+        if (RegOpenKeyW(hKey, szKeyName.GetString(), &hSubKey) == ERROR_SUCCESS)
         {
-            dwType = REG_DWORD;
-            dwSize = sizeof(DWORD);
-
-            if (RegQueryValueExW(Info.hSubKey,
-                                 L"SystemComponent",
-                                 NULL,
-                                 &dwType,
-                                 (LPBYTE) &dwValue,
-                                 &dwSize) == ERROR_SUCCESS)
+            CInstalledApplicationInfo *Info = new CInstalledApplicationInfo(IsUserKey, hSubKey);
+            // check for failure. if failed to init, Info->hSubKey will be set to NULL
+            if (Info->hSubKey)
             {
-                bIsSystemComponent = (dwValue == 0x1);
+                // add to InfoList.
+                m_InfoList.AddTail(Info);
             }
             else
             {
-                bIsSystemComponent = FALSE;
-            }
-
-            dwType = REG_SZ;
-            dwSize = MAX_PATH * sizeof(WCHAR);
-            bIsUpdate = (RegQueryValueExW(Info.hSubKey,
-                                          L"ParentKeyName",
-                                          NULL,
-                                          &dwType,
-                                          (LPBYTE) szParentKeyName.GetBuffer(MAX_PATH),
-                                          &dwSize) == ERROR_SUCCESS);
-            szParentKeyName.ReleaseBuffer();
-
-            dwType = REG_SZ;
-            dwSize = MAX_PATH * sizeof(WCHAR);
-            if (RegQueryValueExW(Info.hSubKey,
-                                 L"DisplayName",
-                                 NULL,
-                                 &dwType,
-                                 (LPBYTE) szDisplayName.GetBuffer(MAX_PATH),
-                                 &dwSize) == ERROR_SUCCESS)
-            {
-                szDisplayName.ReleaseBuffer();
-                if (EnumType < ENUM_ALL_INSTALLED || EnumType > ENUM_UPDATES)
-                    EnumType = ENUM_ALL_INSTALLED;
-
-                if (!bIsSystemComponent)
-                {
-                    if ((EnumType == ENUM_ALL_INSTALLED) || /* All components */
-                        ((EnumType == ENUM_INSTALLED_APPLICATIONS) && (!bIsUpdate)) || /* Applications only */
-                        ((EnumType == ENUM_UPDATES) && (bIsUpdate))) /* Updates only */
-                    {
-                        if (!lpEnumProc(ItemIndex, szDisplayName, &Info, param))
-                            break;
-                    }
-                    else
-                    {
-                        RegCloseKey(Info.hSubKey);
-                    }
-                }
-                else
-                {
-                    RegCloseKey(Info.hSubKey);
-                }
-            }
-            else
-            {
-                szDisplayName.ReleaseBuffer();
-                RegCloseKey(Info.hSubKey);
+                // failed.
+                delete Info;
             }
         }
-
-        dwSize = MAX_PATH;
-        ItemIndex++;
     }
 
-    Info.szKeyName.ReleaseBuffer();
+    szKeyName.ReleaseBuffer();
     RegCloseKey(hKey);
 
     return TRUE;
 }
+
+VOID CInstalledApps::FreeCachedEntries()
+{
+    POSITION InfoListPosition = m_InfoList.GetHeadPosition();
+
+    /* loop and deallocate all the cached app infos in the list */
+    while (InfoListPosition)
+    {
+        CInstalledApplicationInfo *Info = m_InfoList.GetNext(InfoListPosition);
+        delete Info;
+    }
+
+    m_InfoList.RemoveAll();
+}
+//BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc, PVOID param)
+//{
+//    DWORD dwSize = MAX_PATH, dwType, dwValue;
+//    BOOL bIsSystemComponent, bIsUpdate;
+//    ATL::CStringW szParentKeyName;
+//    ATL::CStringW szDisplayName;
+//    CInstalledApplicationInfo Info;
+//    HKEY hKey;
+//    LONG ItemIndex = 0;
+//
+//    Info.hRootKey = IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE;
+//
+//    if (RegOpenKeyW(Info.hRootKey,
+//                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+//                    &hKey) != ERROR_SUCCESS)
+//    {
+//        return FALSE;
+//    }
+//
+//    while (RegEnumKeyExW(hKey, ItemIndex, Info.szKeyName.GetBuffer(MAX_PATH), &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+//    {
+//        Info.szKeyName.ReleaseBuffer();
+//        if (RegOpenKeyW(hKey, Info.szKeyName.GetString(), &Info.hSubKey) == ERROR_SUCCESS)
+//        {
+//            dwType = REG_DWORD;
+//            dwSize = sizeof(DWORD);
+//
+//            if (RegQueryValueExW(Info.hSubKey,
+//                                 L"SystemComponent",
+//                                 NULL,
+//                                 &dwType,
+//                                 (LPBYTE) &dwValue,
+//                                 &dwSize) == ERROR_SUCCESS)
+//            {
+//                bIsSystemComponent = (dwValue == 0x1);
+//            }
+//            else
+//            {
+//                bIsSystemComponent = FALSE;
+//            }
+//
+//            dwType = REG_SZ;
+//            dwSize = MAX_PATH * sizeof(WCHAR);
+//            bIsUpdate = (RegQueryValueExW(Info.hSubKey,
+//                                          L"ParentKeyName",
+//                                          NULL,
+//                                          &dwType,
+//                                          (LPBYTE) szParentKeyName.GetBuffer(MAX_PATH),
+//                                          &dwSize) == ERROR_SUCCESS);
+//            szParentKeyName.ReleaseBuffer();
+//
+//            dwType = REG_SZ;
+//            dwSize = MAX_PATH * sizeof(WCHAR);
+//            if (RegQueryValueExW(Info.hSubKey,
+//                                 L"DisplayName",
+//                                 NULL,
+//                                 &dwType,
+//                                 (LPBYTE) szDisplayName.GetBuffer(MAX_PATH),
+//                                 &dwSize) == ERROR_SUCCESS)
+//            {
+//                szDisplayName.ReleaseBuffer();
+//                if (EnumType < ENUM_ALL_INSTALLED || EnumType > ENUM_UPDATES)
+//                    EnumType = ENUM_ALL_INSTALLED;
+//
+//                if (!bIsSystemComponent)
+//                {
+//                    if ((EnumType == ENUM_ALL_INSTALLED) || /* All components */
+//                        ((EnumType == ENUM_INSTALLED_APPLICATIONS) && (!bIsUpdate)) || /* Applications only */
+//                        ((EnumType == ENUM_UPDATES) && (bIsUpdate))) /* Updates only */
+//                    {
+//                        if (!lpEnumProc(ItemIndex, szDisplayName, &Info, param))
+//                            break;
+//                    }
+//                    else
+//                    {
+//                        RegCloseKey(Info.hSubKey);
+//                    }
+//                }
+//                else
+//                {
+//                    RegCloseKey(Info.hSubKey);
+//                }
+//            }
+//            else
+//            {
+//                szDisplayName.ReleaseBuffer();
+//                RegCloseKey(Info.hSubKey);
+//            }
+//        }
+//
+//        dwSize = MAX_PATH;
+//        ItemIndex++;
+//    }
+//
+//    Info.szKeyName.ReleaseBuffer();
+//    RegCloseKey(hKey);
+//
+//    return TRUE;
+//}
