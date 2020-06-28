@@ -402,7 +402,7 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
 {
     if (EnumType == ENUM_CAT_SELECTED)
     {
-        //hey complete here
+        // TODO: complete here
         return TRUE;
     }
     else
@@ -464,7 +464,7 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
                 Info->RefreshAppInfo(m_Strings);
 
                 if (lpEnumProc)
-                    lpEnumProc(Info, m_Strings.szAppsPath.GetString(), param);
+                    lpEnumProc(Info, param);
             }
         } while (FindNextFileW(hFind, &FindFileData) != 0);
 

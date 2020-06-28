@@ -2567,9 +2567,9 @@ private:
         return StrStrIW(szHaystack, szNeedle) != NULL;
     }
 
-    /*BOOL CALLBACK EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info)
+    BOOL CALLBACK EnumInstalledAppProc(CInstalledApplicationInfo * Info)
     {
-        PINSTALLED_INFO ItemInfo;
+        /*PINSTALLED_INFO ItemInfo;
 
         if (!SearchPatternMatch(m_szName.GetString(), szSearchPattern))
         {
@@ -2584,30 +2584,38 @@ private:
             return FALSE;
         }
 
-        return m_ListView->AddInstalledAppInfo(ItemIndex, m_szName, ItemInfo);
+        return m_ListView->AddInstalledAppInfo(ItemIndex, m_szName, ItemInfo);*/
+
+
+
+        return TRUE;
     }
 
-    BOOL EnumAvailableAppProc(CAvailableApplicationInfo* Info, LPCWSTR szFolderPath)
+    BOOL EnumAvailableAppProc(CAvailableApplicationInfo * Info)
     {
-        if (!SearchPatternMatch(Info->m_szName.GetString(), szSearchPattern) &&
+        /*if (!SearchPatternMatch(Info->m_szName.GetString(), szSearchPattern) &&
             !SearchPatternMatch(Info->m_szDesc.GetString(), szSearchPattern))
         {
             return TRUE;
         }
-        return m_ListView->AddAvailableAppInfo(Info);
+        return m_ListView->AddAvailableAppInfo(Info);*/
+
+
+        return TRUE;
     }
 
-    static BOOL CALLBACK s_EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info, PVOID param)
+
+    static BOOL CALLBACK s_EnumInstalledAppProc(CInstalledApplicationInfo * Info, PVOID param)
     {
         CMainWindow* pThis = (CMainWindow*)param;
-        return pThis->EnumInstalledAppProc(ItemIndex, m_szName, Info);
+        return pThis->EnumInstalledAppProc(Info);
     }
 
-    static BOOL CALLBACK s_EnumAvailableAppProc(CAvailableApplicationInfo* Info, LPCWSTR szFolderPath, PVOID param)
+    static BOOL CALLBACK s_EnumAvailableAppProc(CAvailableApplicationInfo* Info, PVOID param)
     {
         CMainWindow* pThis = (CMainWindow*)param;
-        return pThis->EnumAvailableAppProc(Info, szFolderPath);
-    }*/
+        return pThis->EnumAvailableAppProc(Info);
+    }
 
     VOID UpdateStatusBarText()
     {
@@ -2696,7 +2704,17 @@ private:
 
     VOID UpdateApplicationsList(INT EnumType)
     {
-
+        if (IsInstalledEnum(EnumType))
+        {
+            // enum installed softwares 
+            m_InstalledApps.Enum(EnumType, s_EnumInstalledAppProc, this);
+            //EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc, this);
+            //EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc, this);
+        }
+        else if (IsAvailableEnum(EnumType))
+        {
+            m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);
+        }
     }
 
 public:

@@ -12,8 +12,8 @@
 
 #include "misc.h"
 
-CInstalledApplicationInfo::CInstalledApplicationInfo(BOOL bIsUserKey, HKEY hSubKey)
-    : hSubKey(hSubKey)
+CInstalledApplicationInfo::CInstalledApplicationInfo(BOOL bIsUserKey, HKEY hKey)
+    : hSubKey(hKey)
 {
     // if Initialize failed, hSubKey will be closed automatically and set to zero
 
@@ -125,43 +125,88 @@ BOOL CInstalledApplicationInfo::UninstallApplication(BOOL bModify)
     return StartProcess(szPath, TRUE);
 }
 
-BOOL CInstalledApps::Enum(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc, PVOID param)
+BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
 {
-    DWORD dwSize = MAX_PATH;
-    HKEY hKey, hSubKey;
-    LONG ItemIndex = 0;
-    ATL::CStringW szKeyName;
-    //Info.hRootKey = IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE;
+    FreeCachedEntries();
 
-    if (RegOpenKeyW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-        L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
-        &hKey) != ERROR_SUCCESS)
-    {
-        return FALSE;
-    }
+    HKEY RootKeyEnum[2] = { HKEY_CURRENT_USER ,HKEY_LOCAL_MACHINE };
 
-    while (RegEnumKeyExW(hKey, ItemIndex, szKeyName.GetBuffer(MAX_PATH), &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+    // loop 2 times for both HKEY_CURRENT_USER and HKEY_LOCAL_MACHINE
+    for (int i = 0; i < 2; i++)
     {
-        szKeyName.ReleaseBuffer();
-        if (RegOpenKeyW(hKey, szKeyName.GetString(), &hSubKey) == ERROR_SUCCESS)
+        DWORD dwSize = MAX_PATH;
+        HKEY hKey, hSubKey;
+        LONG ItemIndex = 0;
+        ATL::CStringW szKeyName;
+        //Info.hRootKey = IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE;
+
+        if (RegOpenKeyW(RootKeyEnum[i],
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            &hKey) != ERROR_SUCCESS)
         {
-            CInstalledApplicationInfo *Info = new CInstalledApplicationInfo(IsUserKey, hSubKey);
-            // check for failure. if failed to init, Info->hSubKey will be set to NULL
-            if (Info->hSubKey)
+            return FALSE;
+        }
+
+        while (1)
+        {
+            dwSize = MAX_PATH;
+            if (RegEnumKeyExW(hKey, ItemIndex, szKeyName.GetBuffer(MAX_PATH), &dwSize, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
             {
-                // add to InfoList.
-                m_InfoList.AddTail(Info);
+                break;
             }
-            else
+
+            ItemIndex++;
+
+            szKeyName.ReleaseBuffer();
+            if (RegOpenKeyW(hKey, szKeyName.GetString(), &hSubKey) == ERROR_SUCCESS)
             {
-                // failed.
-                delete Info;
+                CInstalledApplicationInfo *Info = new CInstalledApplicationInfo(i == 0, hSubKey);
+                // check for failure. if failed to init, Info->hSubKey will be set to NULL
+                if (Info->hSubKey)
+                {
+                    Info->GetApplicationString(L"DisplayVersion", Info->szDisplayVersion);
+                    Info->GetApplicationString(L"Publisher", Info->szPublisher);
+                    Info->GetApplicationString(L"RegOwner", Info->szRegOwner);
+                    Info->GetApplicationString(L"ProductID", Info->szProductID);
+                    Info->GetApplicationString(L"HelpLink", Info->szHelpLink);
+                    Info->GetApplicationString(L"HelpTelephone", Info->szHelpTelephone);
+                    Info->GetApplicationString(L"Readme", Info->szReadme);
+                    Info->GetApplicationString(L"Contact", Info->szContact);
+                    Info->GetApplicationString(L"URLUpdateInfo", Info->szURLUpdateInfo);
+                    Info->GetApplicationString(L"URLInfoAbout", Info->szURLInfoAbout);
+                    Info->GetApplicationString(L"Comments", Info->szComments);
+                    Info->GetApplicationString(L"InstallDate", Info->szInstallDate);
+                    Info->GetApplicationString(L"InstallLocation", Info->szInstallLocation);
+                    Info->GetApplicationString(L"InstallSource", Info->szInstallSource);
+                    Info->GetApplicationString(L"UninstallString", Info->szUninstallString);
+                    Info->GetApplicationString(L"ModifyPath", Info->szModifyPath);
+
+                    CloseHandle(Info->hSubKey);
+                    Info->hSubKey = NULL;
+
+                    // add to InfoList.
+                    m_InfoList.AddTail(Info);
+
+                    // invoke callback
+                    if (lpEnumProc)
+                    {
+                        lpEnumProc(Info, param);
+                    }
+                }
+                else
+                {
+                    // failed.
+                    CloseHandle(Info->hSubKey);
+                    Info->hSubKey = NULL;
+                    delete Info;
+                }
             }
         }
-    }
 
-    szKeyName.ReleaseBuffer();
-    RegCloseKey(hKey);
+        szKeyName.ReleaseBuffer();
+        RegCloseKey(hKey);
+    }
+    
 
     return TRUE;
 }

@@ -99,7 +99,7 @@ private:
     inline BOOL FindInLanguages(LCID what) const;
 };
 
-typedef BOOL(CALLBACK *AVAILENUMPROC)(CAvailableApplicationInfo *Info, LPCWSTR szFolderPath, PVOID param);
+typedef BOOL(CALLBACK *AVAILENUMPROC)(CAvailableApplicationInfo *Info, PVOID param);
 
 class CAvailableApps
 {
