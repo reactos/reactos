@@ -41,7 +41,7 @@ class CAvailableApplicationInfo
 {
 public:
     INT m_Category;
-    BOOL m_IsSelected;
+    //BOOL m_IsSelected;
     LicenseType m_LicenseType;
     ATL::CStringW m_szName;
     ATL::CStringW m_szRegName;
@@ -119,7 +119,7 @@ public:
 
     CAvailableApplicationInfo* FindInfo(const ATL::CStringW& szAppName) const;
     ATL::CSimpleArray<CAvailableApplicationInfo> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
-    ATL::CSimpleArray<CAvailableApplicationInfo> GetSelected() const;
+    //ATL::CSimpleArray<CAvailableApplicationInfo> GetSelected() const;
 
     const ATL::CStringW& GetFolderPath() const;
     const ATL::CStringW& GetAppPath() const;

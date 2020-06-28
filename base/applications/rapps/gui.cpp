@@ -1337,11 +1337,11 @@ public:
         if (bHasCheckboxes)
         {
             SetItemState(item, INDEXTOSTATEIMAGEMASK((fCheck) ? 2 : 1), LVIS_STATEIMAGEMASK);
-            SetSelected(item, fCheck);
+            //SetSelected(item, fCheck);
         }
     }
 
-    VOID SetSelected(INT item, BOOL value)
+    /*VOID SetSelected(INT item, BOOL value)
     {
         if (item < 0)
         {
@@ -1362,7 +1362,7 @@ public:
                 pAppInfo->m_IsSelected = value;
             }
         }
-    }
+    }*/
 
     VOID CheckAll()
     {
@@ -1430,7 +1430,7 @@ public:
         SetImageList(hImageListView, LVSIL_SMALL);
         SetItemText(Index, 1, Info->m_szVersion.GetString());
         SetItemText(Index, 2, Info->m_szDesc.GetString());
-        SetCheckState(Index, Info->m_IsSelected);
+        //SetCheckState(Index, Info->m_IsSelected);
 
         return TRUE;
     }
@@ -1691,6 +1691,7 @@ class CMainWindow :
 
     CUiWindow<CSearchBar>* m_SearchBar = NULL;
     CAvailableApps m_AvailableApps;
+    CInstalledApps m_InstalledApps;
 
     INT nSelectedApps;
 
@@ -2089,7 +2090,7 @@ private:
 
             FreeLogs();
             m_AvailableApps.FreeCachedEntries();
-
+            m_InstalledApps.FreeCachedEntries();
             /*if (IsInstalledEnum(SelectedEnumType))
                 FreeInstalledAppList();*/
 
