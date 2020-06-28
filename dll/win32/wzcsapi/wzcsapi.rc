@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "Wireless Zero Configuration API"
+#define REACTOS_STR_INTERNAL_NAME     "wzcsapi"
+#define REACTOS_STR_ORIGINAL_FILENAME "wzcsapi.dll"
+#include <reactos/version.rc>
