@@ -2126,6 +2126,20 @@ HKLM,"SYSTEM\CurrentControlSet\Services\DcomLaunch","Start",0x00010001,0x0000000
 HKLM,"SYSTEM\CurrentControlSet\Services\DcomLaunch","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\DcomLaunch\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dcomlaunch.dll"
 
+; WZC Service
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc","DependOnService",0x00010000,"RPCSS","ndisuio"
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc","DisplayName",0x00000000,%WZCSVC_SERVICE%
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc","Description",0x00000000,%WZCSVC_SERVICE_DESCRIPTION%
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc","Group",0x00000000,"TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\wzcsvc.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc\Parameters","ServiceDllUnloadOnStop",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\wzcsvc\Parameters","ServiceMain",0x00000000,"WZCSvcMain"
+
 ; Sound Blaster (NT4)
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Description",0x00000000,"Sound Blaster (NT4)"
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ErrorControl",0x00010001,0x00000001
@@ -2300,6 +2314,9 @@ WORKSTATION_SERVICE_DESCRIPTION="Responsible for creating and maintaining networ
 WUAUSERV_SERVICE="Automatic Updates"
 WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
 
+WZCSVC_SERVICE="Wireless Zero Configuration Service"
+WZCSVC_SERVICE_DESCRIPTION="Allows automatic configuration of IEEE 802.11 adapters"
+
 ; Keyboard layouts
 ALBANIAN = "Albanian"
 ARABIC_101 = "Arabic (101)"
@@ -2451,6 +2468,9 @@ WORKSTATION_SERVICE_DESCRIPTION="Tworzy i zachowuje połączenia sieciowe klient
 WUAUSERV_SERVICE="Aktualizacje automatyczne"
 WUAUSERV_SERVICE_DESCRIPTION="Namiastka usługi Aktualizacje automatyczne."
 
+WZCSVC_SERVICE="Wireless Zero Configuration Service"
+WZCSVC_SERVICE_DESCRIPTION="Allows automatic configuration of IEEE 802.11 adapters"
+
 ; Keyboard layouts
 ALBANIAN = "Albański"
 ARABIC_101 = "Arabski (101)"
@@ -2599,6 +2619,9 @@ WORKSTATION_SERVICE_DESCRIPTION="Serviciu responsabil pentru crearea și mențin
 WUAUSERV_SERVICE="Automatic Updates"
 WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
 
+WZCSVC_SERVICE="Wireless Zero Configuration Service"
+WZCSVC_SERVICE_DESCRIPTION="Allows automatic configuration of IEEE 802.11 adapters"
+
 ; Keyboard layouts
 ALBANIAN = "Albaneză"
 ARABIC_101 = "Arabă (101)"
@@ -2746,5 +2769,8 @@ WORKSTATION_SERVICE_DESCRIPTION="Обеспечивает поддержку с�
 
 WUAUSERV_SERVICE="Automatic Updates"
 WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
+
+WZCSVC_SERVICE="Беспроводная настройка"
+WZCSVC_SERVICE_DESCRIPTION="Обеспечивает автоматическую настройку IEEE 802.11 адаптеров"
 
 ; EOF
