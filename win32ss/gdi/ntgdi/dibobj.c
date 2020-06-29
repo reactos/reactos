@@ -321,7 +321,7 @@ IntSetDIBits(
     ptSrc.y = 0;
 
     /* The code for the psurfSrc->SurfObj.fjBitmap BMF_TOPDOWN bit  */
-    /*  for flipping ofthe Lazarus icons comes though this location. */
+    /* for flipping of the Lazarus icons comes though this location. */
     
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,
@@ -1014,6 +1014,9 @@ GreGetDIBitsInternal(
         }
 
         EXLATEOBJ_vInitialize(&exlo, psurf->ppal, psurfDest->ppal, 0xffffff, 0xffffff, 0);
+
+        /* The code for the psurfSrc->SurfObj.fjBitmap BMF_TOPDOWN bit  */
+        /* for flipping of the PeaZip icons comes though this location. */
 
         ret = IntEngCopyBits(&psurfDest->SurfObj,
                              &psurf->SurfObj,
