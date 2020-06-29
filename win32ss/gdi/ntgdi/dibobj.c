@@ -320,10 +320,9 @@ IntSetDIBits(
     ptSrc.x = 0;
     ptSrc.y = 0;
 
-    // Not used from here. If not cleared this makes it
-    // impossible to use this bit for Lazarus and PeaZip flip info
-    psurfSrc->SurfObj.fjBitmap &= ~BMF_TOPDOWN; 
-
+    /* The code for the psurfSrc->SurfObj.fjBitmap BMF_TOPDOWN bit  */
+    /*  for flipping ofthe Lazarus icons comes though this location. */
+    
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,
                             NULL,
