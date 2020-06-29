@@ -48,9 +48,8 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
 
   BOOL UsesSource = ROP4_USES_SOURCE(ROP);
   BOOL UsesPattern = ROP4_USES_PATTERN(ROP);
-  LONG flip;
-  BOOL flipx, flipy;
   RECTL OutputRect;
+  BOOLEAN bTopToBottom, bLeftToRight;
 
   ASSERT(IS_VALID_ROP4(ROP));
 
@@ -65,45 +64,16 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
   SrcHeight = SourceRect->bottom - SourceRect->top;
   SrcWidth = SourceRect->right - SourceRect->left;
 
-  /* Here we do the flip tests and set our conditions */
-  if (((SrcWidth < 0) && (DstWidth < 0)) || ((SrcWidth >= 0) && (DstWidth >= 0)))
-  {
-    flipy = FALSE;
-  }
-  else
-  {
-    flipy = TRUE;
-  }
+    /* Here we do the tests and set our conditions */
+    if (((SrcWidth < 0) && (DstWidth < 0)) || ((SrcWidth >= 0) && (DstWidth >= 0)))
+        bLeftToRight = FALSE;
+    else
+        bLeftToRight = TRUE;
 
-  if (((SrcHeight < 0) && (DstHeight < 0)) || ((SrcHeight >= 0) && (DstHeight >= 0)))
-  {
-    flipx = FALSE;
-  }
-  else
-  {
-    flipx = TRUE;
-  }
-
-  DPRINT("flip about x-axis is '%d' and flip and y-axis is '%d'.\n", flipx, flipy);
-
-  if (!flipx && !flipy)
-  {
-    flip = 0;
-  }
-  else if (!flipx && flipy)
-  {
-    flip = 1;
-  }
-  else if (flipx && !flipy)
-  {
-    flip = 2;
-  }
-  else
-  {
-    flip = 3;
-  }
-
-  DPRINT("flip is '%d'.\n", flip);
+    if (((SrcHeight < 0) && (DstHeight < 0)) || ((SrcHeight >= 0) && (DstHeight >= 0)))
+        bTopToBottom = FALSE;
+    else
+        bTopToBottom = TRUE;
 
   /* Make Well Ordered to start */
   OutputRect = *DestRect;
@@ -168,6 +138,8 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
     DPRINT("PatternSurface is not NULL.\n");
   }
 
+  DPRINT("bLeftToRight is '%d' and bTopToBottom is '%d'.\n", bLeftToRight, bTopToBottom);
+
   for (DesY = DestRect->top; DesY < DestRect->bottom; DesY++)
   {
     if (PatternSurface)
@@ -180,7 +152,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
     }
     if (UsesSource)
     {
-      if ((flip == 2) || (flip == 3))
+      if (bTopToBottom)
       {
         sy = SourceRect->bottom-(DesY - DestRect->top) * SrcHeight / DstHeight;  // flips about the x-axis
       }
@@ -196,7 +168,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
 
       if (fnMask_GetPixel)
       {
-        if ((flip == 1) || (flip == 3))
+        if (bLeftToRight)
         {
           sx = SourceRect->right-(DesX - DestRect->left) * SrcWidth / DstWidth;  // flips about the y-axis
         }
@@ -214,7 +186,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
 
       if (UsesSource && CanDraw)
       {
-        if ((flip == 1) || (flip == 3))
+        if (bLeftToRight)
         {
           sx = SourceRect->right-(DesX - DestRect->left) * SrcWidth / DstWidth;  // flips about the y-axis
         }

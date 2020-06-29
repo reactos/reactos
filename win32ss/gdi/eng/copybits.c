@@ -33,6 +33,32 @@ EngCopyBits(
     SURFACE *psurfSource;
     RECTL rclDest = *DestRect;
     POINTL ptlSrc = *SourcePoint;
+    LONG      lTmp;
+    BOOL      bTopToBottom;
+
+    DPRINT("Entering EngCopyBits with SourcePoint (%d,%d) and DestRect (%d,%d)-(%d,%d).\n",
+        SourcePoint->x, SourcePoint->y, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+
+    DPRINT("Source cx/cy is %d/%d and Dest cx/cy is %d/%d.\n",
+        psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy);
+    if (psoSource)
+    {
+    DPRINT("psoSource->fjBitmap & BMF_TOPDOWN is '%d'.\n", psoSource->fjBitmap & BMF_TOPDOWN);
+    }
+
+    /* Retrieve Top Down/flip here and then make Well-Ordered again */
+
+    if (DestRect->top > DestRect->bottom)
+    {
+        bTopToBottom = TRUE;
+        lTmp = DestRect->top;
+        DestRect->top = DestRect->bottom;
+        DestRect->bottom = lTmp;
+        rclDest = *DestRect;
+    }
+    else
+        bTopToBottom = FALSE;
+    DPRINT("bTopToBottom is '%d'.\n", bTopToBottom);
 
     ASSERT(psoDest != NULL && psoSource != NULL && DestRect != NULL && SourcePoint != NULL);
 
@@ -114,53 +140,42 @@ EngCopyBits(
     switch (clippingType)
     {
         case DC_TRIVIAL:
+            DPRINT("DC_TRIVIAL.\n");
             BltInfo.DestRect = *DestRect;
             BltInfo.SourcePoint = *SourcePoint;
 
-            // Code that used changing from well ordered for the top-bottom
-            // caused regression test random failures, so using a bit that
-            // was previously not used to send this info was chosen instead.
-
-            // Now we set the BMF_UMPDMEM bit based on Top-Down/flip state.
-            // Using the BMF_TOPDOWN was not possible. It was already used. 
-
-            // Clear BMF_UMPDMEM bit
-            BltInfo.SourceSurface->fjBitmap &= ~BMF_UMPDMEM;
-
-            if (psoSource->fjBitmap & BMF_TOPDOWN)
+            /* Now we set the Dest Rect top and bottom based on Top Down/flip */
+            if (bTopToBottom)
             {
-                BltInfo.SourceSurface->fjBitmap |= BMF_UMPDMEM;
+                lTmp = BltInfo.DestRect.top;
+                BltInfo.DestRect.top = BltInfo.DestRect.bottom;
+                BltInfo.DestRect.bottom = lTmp;
             }
-
-            DPRINT("About to call BitBltSrcCopy with iBitmapFormat/BMF_UMPDMEM of '%d/%d'.\n",
-                psoDest->iBitmapFormat, BltInfo.SourceSurface->fjBitmap & BMF_UMPDMEM);
 
             ret = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
             break;
 
         case DC_RECT:
+            DPRINT("DC_RECT.\n");
             // Clip the blt to the clip rectangle
             RECTL_bIntersectRect(&BltInfo.DestRect, DestRect, &Clip->rclBounds);
 
             BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
             BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top  - DestRect->top;
 
-            // Clear BMF_UMPDMEM bit
-            BltInfo.SourceSurface->fjBitmap &= ~BMF_UMPDMEM;
-
-            if (psoSource->fjBitmap & BMF_TOPDOWN)
+            /* Now we set the Dest Rect top and bottom based on Top Down/flip */
+            if (bTopToBottom)
             {
-                BltInfo.SourceSurface->fjBitmap |= BMF_UMPDMEM;
+                lTmp = BltInfo.DestRect.top;
+                BltInfo.DestRect.top = BltInfo.DestRect.bottom;
+                BltInfo.DestRect.bottom = lTmp;
             }
-
-            DPRINT("About to call BitBltSrcCopy with iBitmapFormat/BMF_UMPDMEM of '%d/%d'.\n",
-                psoDest->iBitmapFormat, BltInfo.SourceSurface->fjBitmap & BMF_UMPDMEM);
 
             ret = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
             break;
 
         case DC_COMPLEX:
-
+            DPRINT("DC_COMPLEX.\n");
             CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_ANY, 0);
 
             do
@@ -179,16 +194,13 @@ EngCopyBits(
                         BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
                         BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top - DestRect->top;
 
-                        // Clear BMF_UMPDMEM bit
-                        BltInfo.SourceSurface->fjBitmap &= ~BMF_UMPDMEM;
-
-                        if (psoSource->fjBitmap & BMF_TOPDOWN)
+                        /* Now we set the Dest Rect top and bottom based on Top Down/flip */
+                        if (bTopToBottom)
                         {
-                            BltInfo.SourceSurface->fjBitmap |= BMF_UMPDMEM;
+                            lTmp = BltInfo.DestRect.top;
+                            BltInfo.DestRect.top = BltInfo.DestRect.bottom;
+                            BltInfo.DestRect.bottom = lTmp;
                         }
-
-                        DPRINT("About to call BitBltSrcCopy with iBitmapFormat/BMF_UMPDMEM of '%d/%d'.\n",
-                            psoDest->iBitmapFormat, BltInfo.SourceSurface->fjBitmap & BMF_UMPDMEM);
 
                         if (!DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo))
                         {

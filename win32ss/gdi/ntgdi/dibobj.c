@@ -320,6 +320,10 @@ IntSetDIBits(
     ptSrc.x = 0;
     ptSrc.y = 0;
 
+    // Not used from here. If not cleared this makes it
+    // impossible to use this bit for Lazarus and PeaZip flip info
+    psurfSrc->SurfObj.fjBitmap &= ~BMF_TOPDOWN; 
+
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,
                             NULL,
@@ -631,6 +635,11 @@ NtGdiSetDIBitsToDeviceInternal(
     DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n",
            rcDest.left, rcDest.top, rcDest.right, rcDest.bottom,
            ptSource.x, ptSource.y, SourceSize.cx, SourceSize.cy);
+
+    // Not used from here. If not cleared this makes it
+    // impossible to use this bit for Lazarus and PeaZip flip info
+    pSourceSurf->fjBitmap &= ~BMF_TOPDOWN;
+
     bResult = IntEngBitBlt(pDestSurf,
                           pSourceSurf,
                           pMaskSurf,

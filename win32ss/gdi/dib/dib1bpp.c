@@ -59,7 +59,8 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
                                  XLATEOBJ* pxlo,
                                  PRECTL DestRect,
                                  POINTL *SourcePoint,
-                                 LONG flip )
+                                 BOOLEAN bTopToBottom,
+                                 BOOLEAN bLeftToRight )
 {
   // The 'window' in this sense is the x-position that corresponds
   // to the left-edge of the 8-pixel byte we are currently working with.
@@ -101,7 +102,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     // Moving up (scan top -> bottom)
     dy1 = DestRect->top;
     dy2 = DestRect->bottom - 1;
-    if ((flip == 2) || (flip ==3))
+    if (bTopToBottom)
     {
       sy1 = SourcePoint->y + dy1 - dy2;
     }
@@ -111,7 +112,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     }
     yinc = 1;
 
-    if ((flip == 2) || (flip ==3))
+    if (bTopToBottom)
     {
       ySrcDelta = DestSurf->lDelta;
       yDstDelta = SourceSurf->lDelta;
@@ -128,7 +129,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     // Moving down (scan bottom -> top)
     dy1 = DestRect->bottom - 1;
     dy2 = DestRect->top;
-    if ((flip == 2) || (flip ==3))
+    if (bTopToBottom)
     {
       sy1 = SourcePoint->y;
     }
@@ -138,7 +139,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     }
     yinc = -1;
 
-    if ((flip == 2) || (flip ==3))
+    if (bTopToBottom)
     {
       ySrcDelta = -DestSurf->lDelta;
       yDstDelta = -SourceSurf->lDelta;
@@ -154,7 +155,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     // Moving left (scan left->right)
     dwx = dl&~7;
     dwx2 = dr&~7;
-    if ((flip == 1) || (flip == 3))
+    if (bLeftToRight)
     {
       swx = (sr - (dr & 7)) & ~7;
       xinc = -1;
@@ -170,7 +171,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     // Moving right (scan right->left)
     dwx = dr & ~7;
     dwx2 = dl & ~7;
-    if ((flip == 1) || (flip == 3))
+    if (bLeftToRight)
     {
       swx = (sl-(dl&7))&~7;
       xinc = 1;
@@ -279,7 +280,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
   ULONG Color;
   LONG i, j, sx, sy;
-  LONG flip, lTmp;
+  LONG lTmp;
+  BOOLEAN bTopToBottom, bLeftToRight;
 
   // This sets sy to the top line
   sy = BltInfo->SourcePoint.y;
@@ -289,33 +291,29 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
     BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
 
-  // Retrieve flip here and then make Well-Ordered again
-  // Get back flip here
+  /* If we came from copybits.c with a SourceSurface BMF_TOPDOWN bit set,       */
+  /* then we need a flip of bTopToBottom. This mostly fixes Lazarus and PeaZip. */
 
-  if ((BltInfo->DestRect.left > BltInfo->DestRect.right) && (BltInfo->DestRect.top > BltInfo->DestRect.bottom))
+  DPRINT("SourceSurface->fjBitmap & BMF_TOPDOWN is '%d'.\n", BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN);
+
+  /* Get back flip here */
+  if (BltInfo->DestRect.left > BltInfo->DestRect.right)
   {
-    flip = 3;
-  }
-  else if (BltInfo->DestRect.left > BltInfo->DestRect.right)
-  {
-    flip = 1;
-  }
-  else if (BltInfo->DestRect.top > BltInfo->DestRect.bottom)
-  {
-    flip = 2;
+    bLeftToRight = TRUE;
   }
   else
   {
-    flip = 0;
+    bLeftToRight = FALSE;
   }
 
-  DPRINT("Flip is '%d'.\n", flip);
-
-  /* If we came from copybits.c with a Top-Down SourceSurface bit set, */
-  /* then we need a flip of 2. This mostly fixes Lazarus and PeaZip.   */
-  if ((BltInfo->SourceSurface->fjBitmap & BMF_UMPDMEM) && (flip == 0))
+  /* The OR for BltInfo->SourceSurface->fjBitmap & BMF_UMPDMEM checks for coming from copybits.c */
+  if ((BltInfo->DestRect.top > BltInfo->DestRect.bottom) || (BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN))
   {
-    flip = 2;
+    bTopToBottom = TRUE;
+  }
+  else
+  {
+    bTopToBottom = FALSE;
   }
 
   // Make WellOrdered with top < bottom and left < right
@@ -332,24 +330,25 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->DestRect.bottom = lTmp;
   }
 
-  DPRINT("flip/bpp is '%d/%d' & BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
-    flip, BltInfo->SourceSurface->iBitmapFormat, BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
+  DPRINT("BPP is '%d' & BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
+    BltInfo->SourceSurface->iBitmapFormat, BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
 
   switch ( BltInfo->SourceSurface->iBitmapFormat )
   {
   case BMF_1BPP:
-    DPRINT("1BPP Case Selected with DestRect Width of '%d' and flip is '%d'.\n",
-      BltInfo->DestRect.right - BltInfo->DestRect.left, flip);
+    DPRINT("1BPP Case Selected with DestRect Width of '%d'.\n",
+      BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     DIB_1BPP_BitBltSrcCopy_From1BPP ( BltInfo->DestSurface, BltInfo->SourceSurface,
-      BltInfo->XlateSourceToDest, &BltInfo->DestRect, &BltInfo->SourcePoint, flip );
+      BltInfo->XlateSourceToDest, &BltInfo->DestRect, &BltInfo->SourcePoint,
+      bTopToBottom, bLeftToRight );
     break;
 
   case BMF_4BPP:
-    DPRINT("4BPP Case Selected with DestRect Width of '%d' and flip is '%d'.\n",
-      BltInfo->DestRect.right - BltInfo->DestRect.left, flip);
+    DPRINT("4BPP Case Selected with DestRect Width of '%d'.\n",
+      BltInfo->DestRect.right - BltInfo->DestRect.left);
 
-    if ((flip == 2) || (flip ==3))
+    if (bTopToBottom)
     {
       // This sets sy to the bottom line
       sy += (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta;
@@ -359,7 +358,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     {
       sx = BltInfo->SourcePoint.x;
 
-      if ((flip == 1) || (flip == 3))
+      if (bLeftToRight)
       {
        // This sets the sx to the rightmost pixel
        sx += (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
@@ -370,7 +369,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_4BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
         DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 
-        if ((flip == 1) || (flip == 3))
+        if (bLeftToRight)
         {
           sx--;
         }
@@ -379,7 +378,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           sx++;
         }
       }
-      if ((flip == 2) || (flip == 3))
+      if (bTopToBottom)
       {
         sy--;
       }
@@ -396,7 +395,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
        BltInfo->DestRect.right, BltInfo->DestRect.bottom,
        BltInfo->DestRect.right - BltInfo->DestRect.left);
  
-    if ((flip == 2) || (flip == 3))
+    if (bTopToBottom)
     {
       // This sets sy to the bottom line
       sy += (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta;
@@ -406,7 +405,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     {
       sx = BltInfo->SourcePoint.x;
 
-      if ((flip == 1) || (flip == 3))
+      if (bLeftToRight)
       {
         // This sets sx to the rightmost pixel
         sx += (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
@@ -417,7 +416,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_8BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
         DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 
-        if ((flip == 2) || (flip ==3))
+        if (bTopToBottom)
         {
           sx--;
         }
@@ -426,7 +425,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           sx++;
         }
       }
-      if ((flip == 2) || (flip == 3))
+      if (bTopToBottom)
       {
         sy--;
       }
@@ -443,7 +442,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       BltInfo->DestRect.right, BltInfo->DestRect.bottom,
       BltInfo->DestRect.right - BltInfo->DestRect.left);
 
-    if ((flip == 2) || (flip ==3))
+    if (bTopToBottom)
     {
       // This sets sy to the bottom line
       sy += (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta;;
@@ -453,7 +452,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     {
       sx = BltInfo->SourcePoint.x;
 
-      if ((flip == 1) || (flip == 3))
+      if (bLeftToRight)
       {
         // This sets the sx to the rightmost pixel
         sx += (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
@@ -463,7 +462,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       {
         Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_16BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
         DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
-        if ((flip == 1) || (flip == 3))
+        if (bLeftToRight)
         {
           sx--;
         }
@@ -472,7 +471,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           sx++;
         }
       }
-      if ((flip == 2) || (flip == 3))
+      if (bTopToBottom)
       {
         sy--;
       }
@@ -490,7 +489,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       BltInfo->DestRect.right, BltInfo->DestRect.bottom,
       BltInfo->DestRect.right - BltInfo->DestRect.left);
 
-      if ((flip == 2) || (flip ==3))
+      if (bTopToBottom)
       {
         // This sets sy to the bottom line
         sy += (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta;
@@ -500,7 +499,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     {
       sx = BltInfo->SourcePoint.x;
 
-      if ((flip == 1) || (flip == 3))
+      if (bLeftToRight)
       {
         // This sets the sx to the rightmost pixel
         sx += (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
@@ -510,7 +509,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       {
         Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
         DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
-        if ((flip == 1) || (flip == 3))
+        if (bLeftToRight)
         {
           sx--;
         }
@@ -519,7 +518,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           sx++;
         }
       }
-      if ((flip == 2) || (flip == 3))
+      if (bTopToBottom)
       {
         sy--;
       }
@@ -537,7 +536,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       BltInfo->DestRect.right, BltInfo->DestRect.bottom,
       BltInfo->DestRect.right - BltInfo->DestRect.left);
 
-    if ((flip == 2) || (flip ==3))
+    if (bTopToBottom)
     {
       // This sets sy to the bottom line
       sy += (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta;
@@ -547,7 +546,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     {
       sx = BltInfo->SourcePoint.x;
 
-      if ((flip == 1) || (flip == 3))
+      if (bLeftToRight)
       {
         // This sets the sx to the rightmost pixel
         sx += (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
@@ -557,7 +556,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       {
         Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_32BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
         DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
-        if ((flip == 1) || (flip == 3))
+        if (bLeftToRight)
         {
           sx--;
         }
@@ -566,7 +565,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           sx++;
         }
       }
-      if ((flip == 2) || (flip == 3))
+      if (bTopToBottom)
       {
         sy--;
       }

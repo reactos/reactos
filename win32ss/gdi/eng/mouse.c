@@ -169,6 +169,10 @@ IntHideMousePointer(
     ptlSave.x = rclDest.left - pt.x;
     ptlSave.y = rclDest.top - pt.y;
 
+    // Not used from here. If not cleared this makes it
+    // impossible to use this bit for Lazarus and PeaZip flip info
+    pgp->psurfSave->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
+
     IntEngBitBlt(psoDest,
                  &pgp->psurfSave->SurfObj,
                  NULL,
@@ -223,6 +227,10 @@ IntShowMousePointer(
     rclPointer.right = min(pgp->Size.cx, psoDest->sizlBitmap.cx - pt.x);
     rclPointer.bottom = min(pgp->Size.cy, psoDest->sizlBitmap.cy - pt.y);
 
+    // Not used from here. If not cleared this makes it
+    // impossible to use this bit for Lazarus and PeaZip flip info
+    psoDest->fjBitmap &= ~BMF_TOPDOWN;
+
     /* Copy the pixels under the cursor to temporary surface. */
     IntEngBitBlt(&pgp->psurfSave->SurfObj,
                  psoDest,
@@ -241,6 +249,13 @@ IntShowMousePointer(
     {
         if(!(pgp->flags & SPS_ALPHA))
         {
+            // Not used from here. If not cleared this makes it
+            // impossible to use this bit for Lazarus and PeaZip flip info
+            if (pgp->psurfMask)
+            {
+                pgp->psurfMask->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
+            }
+
             IntEngBitBlt(psoDest,
                          &pgp->psurfMask->SurfObj,
                          NULL,
@@ -252,6 +267,13 @@ IntShowMousePointer(
                          NULL,
                          NULL,
                          ROP4_SRCAND);
+
+            // Not used from here. If not cleared this makes it
+            // impossible to use this bit for Lazarus and PeaZip flip info
+            if (pgp->psurfColor)
+            {
+                pgp->psurfColor->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
+            }
 
             IntEngBitBlt(psoDest,
                          &pgp->psurfColor->SurfObj,
@@ -285,6 +307,14 @@ IntShowMousePointer(
     }
     else
     {
+
+        // Not used from here. If not cleared this makes it
+        // impossible to use this bit for Lazarus and PeaZip flip info
+        if (pgp->psurfMask)
+        {
+            pgp->psurfMask->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
+        }
+
         IntEngBitBlt(psoDest,
                      &pgp->psurfMask->SurfObj,
                      NULL,

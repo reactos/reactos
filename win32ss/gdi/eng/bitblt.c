@@ -363,28 +363,30 @@ EngBitBlt(
     ULONG              Direction;
     BOOL               UsesSource, UsesMask;
     POINTL             AdjustedBrushOrigin;
-    INT                flip;
     LONG               lTmp;
+    BOOLEAN            bTopToBottom, bLeftToRight;
 
     UsesSource = ROP4_USES_SOURCE(rop4);
     UsesMask = ROP4_USES_MASK(rop4);
 
-    /* Get back the incoming flip here */
-    if ((prclTrg->left > prclTrg->right) && (prclTrg->top > prclTrg->bottom))
+    DPRINT("psoSrc->fjBitmap & BMF_TOPDOWN is '%d'.\n", psoSrc->fjBitmap & BMF_TOPDOWN);
+
+    if (prclTrg->left > prclTrg->right)
     {
-        flip = 3;
-    }
-    else if (prclTrg->left > prclTrg->right)
-    {
-        flip = 1;
-    }
-    else if  (prclTrg->top > prclTrg-> bottom)
-    {
-        flip = 2;
+      bLeftToRight = TRUE;
     }
     else
     {
-        flip = 0;
+      bLeftToRight = FALSE;
+    }
+
+    if (prclTrg->top > prclTrg->bottom)
+    {
+      bTopToBottom = TRUE;
+    }
+    else
+    {
+      bTopToBottom = FALSE;
     }
 
     if (rop4 == ROP4_NOOP)
@@ -544,26 +546,18 @@ EngBitBlt(
     {
         case DC_TRIVIAL:
             /* Fix up OutputRect here */
-            if (flip == 1)
+            if (bLeftToRight)
             {
                 lTmp = OutputRect.left;
                 OutputRect.left = OutputRect.right;
                 OutputRect.right = lTmp;
             }
-            else if (flip == 2)
+
+            if (bTopToBottom)
             {
                 lTmp = OutputRect.top;
                 OutputRect.top = OutputRect.bottom;
                 OutputRect.bottom = lTmp;
-            }
-            else if (flip == 3)
-            {
-                lTmp = OutputRect.top;
-                OutputRect.top = OutputRect.bottom;
-                OutputRect.bottom = lTmp;
-                lTmp = OutputRect.left;
-                OutputRect.left = OutputRect.right;
-                OutputRect.right = lTmp;
             }
 
             Ret = (*BltRectFunc)(OutputObj,
@@ -690,8 +684,8 @@ IntEngBitBlt(
     RECTL rclSrcClipped;
     POINTL ptlBrush;
     PFN_DrvBitBlt pfnBitBlt;
-    INT flip;
     LONG lTmp;
+    BOOLEAN bTopToBottom, bLeftToRight;
 
     /* Sanity checks */
     ASSERT(IS_VALID_ROP4(Rop4));
@@ -702,22 +696,24 @@ IntEngBitBlt(
 
     psurfTrg = CONTAINING_RECORD(psoTrg, SURFACE, SurfObj);
 
-    /* Before making it well ordered we save the flip value  */
-    if ((prclTrg->left > prclTrg->right) && (prclTrg->top > prclTrg->bottom))
+    DPRINT("psoSrc->fjBitmap & BMF_TOPDOWN is '%d'.\n", psoSrc->fjBitmap & BMF_TOPDOWN);
+
+    if (prclTrg->left > prclTrg->right)
     {
-        flip = 3;
-    }
-    else if (prclTrg->top > prclTrg-> bottom)
-    {
-        flip = 2;
-    }
-    else if (prclTrg->left > prclTrg->right)
-    {
-        flip = 1;
+      bLeftToRight = TRUE;
     }
     else
     {
-        flip = 0;
+      bLeftToRight = FALSE;
+    }
+
+    if (prclTrg->top > prclTrg->bottom)
+    {
+      bTopToBottom = TRUE;
+    }
+    else
+    {
+      bTopToBottom = FALSE;
     }
 
     /* Get the target rect and make it well ordered */
@@ -812,27 +808,19 @@ IntEngBitBlt(
         pfnBitBlt = EngBitBlt;
     }
 
-    /* rclClipped needs to be modified in accordance with flip here */
-    if (flip == 1)
+    /* rclClipped needs to be modified in accordance with flips here */
+    if (bLeftToRight)
     {
         lTmp = rclClipped.left;
         rclClipped.left = rclClipped.right;
         rclClipped.right = lTmp;
     }
-    else if (flip == 2)
+
+    if (bTopToBottom)
     {
         lTmp = rclClipped.top;
         rclClipped.top = rclClipped.bottom;
         rclClipped.bottom = lTmp;
-    }
-    else if (flip == 3)
-    {
-        lTmp = rclClipped.top;
-        rclClipped.top = rclClipped.bottom;
-        rclClipped.bottom = lTmp;
-        lTmp = rclClipped.left;
-        rclClipped.left = rclClipped.right;
-        rclClipped.right = lTmp;
     }
 
     bResult = pfnBitBlt(psoTrg,

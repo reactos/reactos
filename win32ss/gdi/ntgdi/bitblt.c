@@ -480,6 +480,14 @@ NtGdiMaskBlt(
         XlateObj = &exlo.xlo;
     }
 
+
+    // Should not be used from here. If not cleared this makes it
+    // impossible to use this bit for Lazarus and PeaZip flip info
+    if (BitmapSrc)
+    {
+        BitmapSrc->SurfObj.fjBitmap &= ~BMF_TOPDOWN; 
+    }
+
     /* Perform the bitblt operation */
     Status = IntEngBitBlt(&BitmapDest->SurfObj,
                           BitmapSrc ? &BitmapSrc->SurfObj : NULL,
