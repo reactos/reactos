@@ -44,3 +44,5 @@ public:
     BOOL GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString);
     BOOL GetInt(const ATL::CStringW& KeyName, INT& iResult);
 };
+
+BOOL PathAppendNoDirEscapeW(LPWSTR pszPath, LPCWSTR pszMore);

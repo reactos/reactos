@@ -52,6 +52,7 @@ struct CAvailableApplicationInfo
     ATL::CStringW m_szUrlDownload;
     ATL::CSimpleArray<LCID> m_LanguageLCIDs;
     ATL::CSimpleArray<ATL::CStringW> m_szScrnshotLocation;
+    ATL::CStringW m_szIconLocation;
 
     ULONG m_SizeBytes;
 
@@ -75,6 +76,7 @@ struct CAvailableApplicationInfo
     BOOL HasInstalledVersion() const;
     BOOL HasUpdate() const;
     BOOL RetrieveScrnshot(UINT Index, ATL::CStringW& ScrnshotLocation) const;
+    BOOL RetrieveIcon(ATL::CStringW& IconLocation) const;
     // Set a timestamp
     VOID SetLastWriteTime(FILETIME* ftTime);
 
