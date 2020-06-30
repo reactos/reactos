@@ -607,14 +607,22 @@ UDFFlushIsBreaking(
     IN ULONG        FlushFlags
     )
 {
+#if 0
+// FIXME: Enable this code.
     BOOLEAN ret_val = FALSE;
 //    if(!(FlushFlags & UDF_FLUSH_FLAGS_BREAKABLE))
+#else
+    DBG_UNREFERENCED_PARAMETER(Vcb);
+    DBG_UNREFERENCED_PARAMETER(FlushFlags);
+#endif
         return FALSE;
+#if 0
     UDFAcquireResourceExclusive(&(Vcb->FlushResource),TRUE);
     ret_val = (Vcb->VCBFlags & UDF_VCB_FLAGS_FLUSH_BREAK_REQ) ? TRUE : FALSE;
     Vcb->VCBFlags &= ~UDF_VCB_FLAGS_FLUSH_BREAK_REQ;
     UDFReleaseResource(&(Vcb->FlushResource));
     return ret_val;
+#endif
 } // end UDFFlushIsBreaking()
 
 /*
