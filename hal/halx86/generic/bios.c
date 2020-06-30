@@ -240,7 +240,6 @@ HalpTrap06(VOID)
 
     /* Return back to where we left */
     longjmp(HalpSavedContext, 1);
-    UNREACHABLE;
 }
 
 /* V8086 ENTER ****************************************************************/
