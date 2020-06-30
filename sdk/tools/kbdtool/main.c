@@ -54,7 +54,6 @@ PrintUsage(VOID)
 
     /* Quit */
     exit(1);
-    printf("should not be here");
 }
 
 INT
