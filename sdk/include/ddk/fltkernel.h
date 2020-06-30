@@ -1035,8 +1035,8 @@ FltRequestOperationStatusCallback(
     _In_ PFLT_GET_OPERATION_STATUS_CALLBACK CallbackRoutine,
     _In_opt_ PVOID RequesterContext);
 
-_When_((PoolType==NonPagedPoolNx), _IRQL_requires_max_(DISPATCH_LEVEL))
-_When_((PoolType!=NonPagedPoolNx), _IRQL_requires_max_(APC_LEVEL))
+_When_((PoolType==NonPagedPool), _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_((PoolType!=NonPagedPool), _IRQL_requires_max_(APC_LEVEL))
 PVOID
 FLTAPI
 FltAllocatePoolAlignedWithTag(
