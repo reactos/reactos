@@ -65,6 +65,14 @@ enum SCRNSHOT_STATUS
 
 #define PI 3.1415927
 
+
+enum TABLE_VIEW_MODE
+{
+    TableViewEmpty,
+    TableViewAvailableApps,
+    TableViewInstalledApps
+};
+
 typedef struct __ScrnshotDownloadParam
 {
     LONGLONG ID;
@@ -1186,7 +1194,12 @@ class CAppsListView :
     BOOL bIsAscending;
     BOOL bHasCheckboxes;
 
+    INT ItemCount = 0;
+    INT ColumnCount = 0;
+
     INT nLastHeaderID;
+
+    TABLE_VIEW_MODE TableViewMode = TableViewEmpty;
 
 public:
     CAppsListView() :
@@ -1254,7 +1267,7 @@ public:
         return AddColumn(Index, const_cast<LPWSTR>(Text.GetString()), Width, Format);
     }
 
-    BOOL AddColumn(INT Index, LPWSTR lpText, INT Width, INT Format)
+    int AddColumn(INT Index, LPWSTR lpText, INT Width, INT Format)
     {
         LVCOLUMNW Column;
 
@@ -1266,7 +1279,13 @@ public:
         Column.cx = Width;
         Column.fmt = Format;
 
-        return (InsertColumn(Index, &Column) == -1) ? FALSE : TRUE;
+        return SendMessage(LVM_INSERTCOLUMN, Index, (LPARAM)(&Column));
+    }
+
+    void DeleteColumn(INT Index)
+    {
+        SendMessage(LVM_DELETECOLUMN, Index, 0);
+        return;
     }
 
     INT AddItem(INT ItemIndex, INT IconIndex, LPCWSTR lpText, LPARAM lParam)
@@ -1398,56 +1417,131 @@ public:
         return (CAvailableApplicationInfo*) GetItemData(item);
     }
 
-    BOOL AddAvailableAppInfo(CAvailableApplicationInfo* Info)
+    //BOOL AddAvailableAppInfo(CAvailableApplicationInfo* Info)
+    //{
+    //    INT Index;
+    //    HICON hIcon = NULL;
+
+    //    HIMAGELIST hImageListView = (HIMAGELIST)SendMessage(LVM_GETIMAGELIST, LVSIL_SMALL, 0);
+
+    //    /* Load icon from file */
+    //    ATL::CStringW szIconPath;
+    //    if (Info->RetrieveIcon(szIconPath))
+    //    {
+    //        hIcon = (HICON)LoadImageW(NULL,
+    //            szIconPath.GetString(),
+    //            IMAGE_ICON,
+    //            LISTVIEW_ICON_SIZE,
+    //            LISTVIEW_ICON_SIZE,
+    //            LR_LOADFROMFILE);
+    //    }
+
+    //    if (!hIcon || GetLastError() != ERROR_SUCCESS)
+    //    {
+    //        /* Load default icon */
+    //        hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+    //    }
+
+    //    Index = ImageList_AddIcon(hImageListView, hIcon);
+    //    DestroyIcon(hIcon);
+
+    //    Index = AddItem(Info->m_Category, Index, Info->m_szName.GetString(), (LPARAM)Info);
+    //    SetImageList(hImageListView, LVSIL_SMALL);
+    //    SetItemText(Index, 1, Info->m_szVersion.GetString());
+    //    SetItemText(Index, 2, Info->m_szDesc.GetString());
+    //    //SetCheckState(Index, Info->m_IsSelected);
+
+    //    return TRUE;
+    //}
+
+    //BOOL AddInstalledAppInfo(INT ItemIndex, ATL::CStringW& m_szName, CInstalledApplicationInfo * ItemInfo)
+    //{
+    //    INT Index;
+    //    ATL::CStringW szText;
+    //    Index = AddItem(ItemIndex, 0, m_szName.GetString(), (LPARAM)ItemInfo);
+
+    //    /* Get version info */
+    //    ItemInfo->GetApplicationString(L"DisplayVersion", szText);
+    //    SetItemText(Index, 1, szText.GetString());
+
+    //    /* Get comments */
+    //    ItemInfo->GetApplicationString(L"Comments", szText);
+    //    SetItemText(Index, 2, szText.GetString());
+    //    return TRUE;
+    //}
+
+    BOOL SetDisplayMode(TABLE_VIEW_MODE Mode)
     {
-        INT Index;
-        HICON hIcon = NULL;
+        if (!DeleteAllItems()) return FALSE;
+        TableViewMode = Mode;
 
-        HIMAGELIST hImageListView = (HIMAGELIST)SendMessage(LVM_GETIMAGELIST, LVSIL_SMALL, 0);
+        ItemCount = 0;
 
-        /* Load icon from file */
-        ATL::CStringW szIconPath;
-        if (Info->RetrieveIcon(szIconPath))
+        // delete old columns
+        while (ColumnCount) DeleteColumn(--ColumnCount);
+
+        // add new columns
+        ATL::CStringW szText;
+        switch (Mode)
         {
-            hIcon = (HICON)LoadImageW(NULL,
-                szIconPath.GetString(),
-                IMAGE_ICON,
-                LISTVIEW_ICON_SIZE,
-                LISTVIEW_ICON_SIZE,
-                LR_LOADFROMFILE);
+        case TableViewInstalledApps:
+
+            /* Add columns to ListView */
+            szText.LoadStringW(IDS_APP_NAME);
+            AddColumn(ColumnCount++, szText, 250, LVCFMT_LEFT);
+
+            szText.LoadStringW(IDS_APP_INST_VERSION);
+            AddColumn(ColumnCount++, szText, 90, LVCFMT_RIGHT);
+
+            szText.LoadStringW(IDS_APP_DESCRIPTION);
+            AddColumn(ColumnCount++, szText, 300, LVCFMT_LEFT);
+            break;
+
+        case TableViewAvailableApps:
+
+            /* Add columns to ListView */
+            szText.LoadStringW(IDS_APP_NAME);
+            AddColumn(ColumnCount++, szText, 250, LVCFMT_LEFT);
+
+            szText.LoadStringW(IDS_APP_INST_VERSION);
+            AddColumn(ColumnCount++, szText, 90, LVCFMT_RIGHT);
+
+            szText.LoadStringW(IDS_APP_DESCRIPTION);
+            AddColumn(ColumnCount++, szText, 300, LVCFMT_LEFT);
+            break;
         }
 
-        if (!hIcon || GetLastError() != ERROR_SUCCESS)
-        {
-            /* Load default icon */
-            hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
-        }
-
-        Index = ImageList_AddIcon(hImageListView, hIcon);
-        DestroyIcon(hIcon);
-
-        Index = AddItem(Info->m_Category, Index, Info->m_szName.GetString(), (LPARAM)Info);
-        SetImageList(hImageListView, LVSIL_SMALL);
-        SetItemText(Index, 1, Info->m_szVersion.GetString());
-        SetItemText(Index, 2, Info->m_szDesc.GetString());
-        //SetCheckState(Index, Info->m_IsSelected);
-
+        
         return TRUE;
     }
 
-    BOOL AddInstalledAppInfo(INT ItemIndex, ATL::CStringW& m_szName, CInstalledApplicationInfo * ItemInfo)
+    BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID param)
     {
-        INT Index;
-        ATL::CStringW szText;
-        Index = AddItem(ItemIndex, 0, m_szName.GetString(), (LPARAM)ItemInfo);
+        if (TableViewMode != TableViewInstalledApps)
+        {
+            return FALSE;
+        }
 
-        /* Get version info */
-        ItemInfo->GetApplicationString(L"DisplayVersion", szText);
-        SetItemText(Index, 1, szText.GetString());
+        int Index = AddItem(ItemCount, 0, InstAppInfo->szDisplayName, 0);
+        SetItemText(Index, 1, InstAppInfo->szDisplayVersion);
+        SetItemText(Index, 2, InstAppInfo->szComments);
 
-        /* Get comments */
-        ItemInfo->GetApplicationString(L"Comments", szText);
-        SetItemText(Index, 2, szText.GetString());
+        ItemCount++;
+        return TRUE;
+    }
+
+    BOOL AddAvailableApplication(CAvailableApplicationInfo *AvlbAppInfo, LPVOID param)
+    {
+        if (TableViewMode != TableViewAvailableApps)
+        {
+            return FALSE;
+        }
+
+        int Index = AddItem(ItemCount, 0, AvlbAppInfo->m_szName, 0);
+        SetItemText(Index, 1, AvlbAppInfo->m_szVersion);
+        SetItemText(Index, 2, AvlbAppInfo->m_szDesc);
+
+        ItemCount++;
         return TRUE;
     }
 };
@@ -1461,6 +1555,8 @@ private:
     CAppsListView *m_ListView = NULL;
     CAppInfoDisplay *m_AppsInfo = NULL;
     CUiSplitPanel *m_HSplitter = NULL;
+
+    TABLE_VIEW_MODE TableViewMode = TableViewEmpty;
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
     {
@@ -1580,6 +1676,34 @@ public:
         return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
     }
 
+    BOOL SetDisplayMode(TABLE_VIEW_MODE Mode)
+    {
+        if (!m_ListView->SetDisplayMode(Mode))
+        {
+            return FALSE;
+        }
+        TableViewMode = Mode;
+        m_AppsInfo->SetWelcomeText();
+        return TRUE;
+    }
+
+    BOOL AddInstalledApplication(CInstalledApplicationInfo * InstAppInfo, LPVOID param)
+    {
+        if (TableViewMode != TableViewInstalledApps)
+        {
+            return FALSE;
+        }
+        return m_ListView->AddInstalledApplication(InstAppInfo, param);
+    }
+
+    BOOL AddAvailableApplication(CAvailableApplicationInfo * AvlbAppInfo, LPVOID param)
+    {
+        if (TableViewMode != TableViewAvailableApps)
+        {
+            return FALSE;
+        }
+        return m_ListView->AddAvailableApplication(AvlbAppInfo, param);
+    }
 };
 
 class CSideTreeView :
@@ -2587,7 +2711,7 @@ private:
         return m_ListView->AddInstalledAppInfo(ItemIndex, m_szName, ItemInfo);*/
 
 
-
+        m_AppsTableView->AddInstalledApplication(Info, Info);
         return TRUE;
     }
 
@@ -2600,7 +2724,7 @@ private:
         }
         return m_ListView->AddAvailableAppInfo(Info);*/
 
-
+        m_AppsTableView->AddAvailableApplication(Info, Info);
         return TRUE;
     }
 
@@ -2706,6 +2830,9 @@ private:
     {
         if (IsInstalledEnum(EnumType))
         {
+            // set the display mode of tableview. this will remove all the item in table view too.
+            m_AppsTableView->SetDisplayMode(TableViewInstalledApps);
+
             // enum installed softwares 
             m_InstalledApps.Enum(EnumType, s_EnumInstalledAppProc, this);
             //EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc, this);
@@ -2713,6 +2840,10 @@ private:
         }
         else if (IsAvailableEnum(EnumType))
         {
+            // set the display mode of tableview. this will remove all the item in table view too.
+            m_AppsTableView->SetDisplayMode(TableViewAvailableApps);
+
+            // enum available softwares 
             m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);
         }
     }

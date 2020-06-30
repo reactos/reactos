@@ -160,30 +160,45 @@ BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
             szKeyName.ReleaseBuffer();
             if (RegOpenKeyW(hKey, szKeyName.GetString(), &hSubKey) == ERROR_SUCCESS)
             {
-                CInstalledApplicationInfo *Info = new CInstalledApplicationInfo(i == 0, hSubKey);
+                BOOL bSuccess = FALSE;
+                CInstalledApplicationInfo *Info = new CInstalledApplicationInfo(RootKeyEnum[i] == HKEY_CURRENT_USER, hSubKey);
+
                 // check for failure. if failed to init, Info->hSubKey will be set to NULL
                 if (Info->hSubKey)
                 {
-                    Info->GetApplicationString(L"DisplayVersion", Info->szDisplayVersion);
-                    Info->GetApplicationString(L"Publisher", Info->szPublisher);
-                    Info->GetApplicationString(L"RegOwner", Info->szRegOwner);
-                    Info->GetApplicationString(L"ProductID", Info->szProductID);
-                    Info->GetApplicationString(L"HelpLink", Info->szHelpLink);
-                    Info->GetApplicationString(L"HelpTelephone", Info->szHelpTelephone);
-                    Info->GetApplicationString(L"Readme", Info->szReadme);
-                    Info->GetApplicationString(L"Contact", Info->szContact);
-                    Info->GetApplicationString(L"URLUpdateInfo", Info->szURLUpdateInfo);
-                    Info->GetApplicationString(L"URLInfoAbout", Info->szURLInfoAbout);
-                    Info->GetApplicationString(L"Comments", Info->szComments);
-                    Info->GetApplicationString(L"InstallDate", Info->szInstallDate);
-                    Info->GetApplicationString(L"InstallLocation", Info->szInstallLocation);
-                    Info->GetApplicationString(L"InstallSource", Info->szInstallSource);
-                    Info->GetApplicationString(L"UninstallString", Info->szUninstallString);
-                    Info->GetApplicationString(L"ModifyPath", Info->szModifyPath);
+                    // those items without display name are ignored
+                    if (Info->GetApplicationString(L"DisplayName", Info->szDisplayName))
+                    {
+                        Info->GetApplicationString(L"DisplayVersion", Info->szDisplayVersion);
+                        Info->GetApplicationString(L"Publisher", Info->szPublisher);
+                        Info->GetApplicationString(L"RegOwner", Info->szRegOwner);
+                        Info->GetApplicationString(L"ProductID", Info->szProductID);
+                        Info->GetApplicationString(L"HelpLink", Info->szHelpLink);
+                        Info->GetApplicationString(L"HelpTelephone", Info->szHelpTelephone);
+                        Info->GetApplicationString(L"Readme", Info->szReadme);
+                        Info->GetApplicationString(L"Contact", Info->szContact);
+                        Info->GetApplicationString(L"URLUpdateInfo", Info->szURLUpdateInfo);
+                        Info->GetApplicationString(L"URLInfoAbout", Info->szURLInfoAbout);
+                        Info->GetApplicationString(L"Comments", Info->szComments);
+                        Info->GetApplicationString(L"InstallDate", Info->szInstallDate);
+                        Info->GetApplicationString(L"InstallLocation", Info->szInstallLocation);
+                        Info->GetApplicationString(L"InstallSource", Info->szInstallSource);
+                        Info->GetApplicationString(L"UninstallString", Info->szUninstallString);
+                        Info->GetApplicationString(L"ModifyPath", Info->szModifyPath);
 
+                        bSuccess = TRUE;
+                    }
+                }
+
+                // close handle
+                if (Info->hSubKey)
+                {
                     CloseHandle(Info->hSubKey);
                     Info->hSubKey = NULL;
+                }
 
+                if (bSuccess)
+                {
                     // add to InfoList.
                     m_InfoList.AddTail(Info);
 
@@ -195,9 +210,7 @@ BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
                 }
                 else
                 {
-                    // failed.
-                    CloseHandle(Info->hSubKey);
-                    Info->hSubKey = NULL;
+                    // destory object
                     delete Info;
                 }
             }

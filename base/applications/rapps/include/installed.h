@@ -12,7 +12,8 @@ public:
     CInstalledApplicationInfo(BOOL bIsUserKey, HKEY hSubKey);
     BOOL GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String);
     BOOL UninstallApplication(BOOL bModify);
-    
+
+    ATL::CStringW szDisplayName;
     ATL::CStringW szDisplayVersion;
     ATL::CStringW szPublisher;
     ATL::CStringW szRegOwner;
