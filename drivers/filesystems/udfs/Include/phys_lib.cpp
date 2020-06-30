@@ -1250,8 +1250,8 @@ retry_1:
 #ifdef _BROWSE_UDF_
                     if(!OS_SUCCESS(RC) &&
                         OS_SUCCESS(RC = UDFRecoverFromError(Vcb, TRUE, RC, fLba, BCount, &retry)) ) {
-                        goto retry_1;
                         UDFPrint(("Fmt retry\n"));
+                        goto retry_1;
                     }
 #endif //_BROWSE_UDF_
                     if(!OS_SUCCESS(RC)) {
