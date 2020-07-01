@@ -4,6 +4,21 @@
 
 #pragma once
 
+/*
+ * This batch type enumeration allows us to adjust the behaviour of some commands
+ * depending on whether they are run from within a .BAT or a .CMD file.
+ * The behaviour is selected when the top-level batch file is loaded,
+ * and it remains the same for any child batch file that may be loaded later.
+ *
+ * See https://ss64.com/nt/errorlevel.html for more details.
+ */
+typedef enum _BATCH_TYPE
+{
+    NONE,
+    BAT_TYPE,   /* Old-style DOS batch file */
+    CMD_TYPE    /* New-style NT OS/2 batch file */
+} BATCH_TYPE;
+
 typedef struct _BATCH_CONTEXT
 {
     struct _BATCH_CONTEXT *prev;
@@ -34,6 +49,7 @@ typedef struct _FOR_CONTEXT
  * The stack of current batch contexts.
  * NULL when no batch is active.
  */
+extern BATCH_TYPE BatType;
 extern PBATCH_CONTEXT bc;
 extern PFOR_CONTEXT fc;
 

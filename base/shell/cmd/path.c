@@ -35,13 +35,13 @@
 
 INT cmd_path(LPTSTR param)
 {
+    INT retval = 0;
+
     if (!_tcsncmp(param, _T("/?"), 2))
     {
         ConOutResPaging(TRUE, STRING_PATH_HELP1);
         return 0;
     }
-
-    nErrorLevel = 0;
 
     /* If param is empty, display the PATH environment variable */
     if (!param || !*param)
@@ -53,7 +53,9 @@ INT cmd_path(LPTSTR param)
         if (!pszBuffer)
         {
             WARN("Cannot allocate memory for pszBuffer!\n");
-            return 1;
+            error_out_of_memory();
+            retval = 1;
+            goto Quit;
         }
 
         dwBuffer = GetEnvironmentVariable(_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
@@ -61,7 +63,8 @@ INT cmd_path(LPTSTR param)
         {
             cmd_free(pszBuffer);
             ConErrResPrintf(STRING_SET_ENV_ERROR, _T("PATH"));
-            return 0;
+            retval = 0;
+            goto Quit;
         }
         else if (dwBuffer > ENV_BUFFER_SIZE)
         {
@@ -70,8 +73,10 @@ INT cmd_path(LPTSTR param)
             if (!pszBuffer)
             {
                 WARN("Cannot reallocate memory for pszBuffer!\n");
+                error_out_of_memory();
                 cmd_free(pszOldBuffer);
-                return 1;
+                retval = 1;
+                goto Quit;
             }
             GetEnvironmentVariable(_T("PATH"), pszBuffer, dwBuffer);
         }
@@ -79,7 +84,8 @@ INT cmd_path(LPTSTR param)
         ConOutPrintf(_T("PATH=%s\n"), pszBuffer);
         cmd_free(pszBuffer);
 
-        return 0;
+        retval = 0;
+        goto Quit;
     }
 
     /* Skip leading '=' */
@@ -89,11 +95,21 @@ INT cmd_path(LPTSTR param)
     /* Set PATH environment variable */
     if (!SetEnvironmentVariable(_T("PATH"), param))
     {
-        nErrorLevel = 1;
-        return 1;
+        retval = 1;
     }
 
-    return 0;
+Quit:
+    if (BatType != CMD_TYPE)
+    {
+        if (retval != 0)
+            nErrorLevel = retval;
+    }
+    else
+    {
+        nErrorLevel = retval;
+    }
+
+    return retval;
 }
 
 #endif

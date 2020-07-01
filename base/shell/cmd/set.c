@@ -71,6 +71,7 @@ GetQuotedString(TCHAR *p)
 
 INT cmd_set(LPTSTR param)
 {
+    INT retval = 0;
     LPTSTR p;
     LPTSTR lpEnv;
     LPTSTR lpOutput;
@@ -103,7 +104,8 @@ INT cmd_set(LPTSTR param)
             FreeEnvironmentStrings(lpEnv);
         }
 
-        return 0;
+        retval = 0;
+        goto Quit;
     }
 
     /* The /A does *NOT* have to be followed by a whitespace */
@@ -115,9 +117,14 @@ INT cmd_set(LPTSTR param)
         if (!Success)
         {
             /* Might seem random but this is what windows xp does -- This is a message ID */
-            nErrorLevel = 9165;
+            retval = 9165;
         }
-        return !Success;
+        // return !Success;
+        else
+        {
+            retval = 0;
+        }
+        goto Quit;
     }
 
     if (!_tcsnicmp(param, _T("/P"), 2))
@@ -128,8 +135,8 @@ INT cmd_set(LPTSTR param)
         if (!p)
         {
             ConErrResPuts(STRING_SYNTAX_COMMAND_INCORRECT);
-            nErrorLevel = 1;
-            return 1;
+            retval = 1;
+            goto Quit;
         }
 
         *p++ = _T('\0');
@@ -138,10 +145,11 @@ INT cmd_set(LPTSTR param)
 
         if (!*value || !SetEnvironmentVariable(param, value))
         {
-            nErrorLevel = 1;
-            return 1;
+            retval = 1;
+            goto Quit;
         }
-        return 0;
+        retval = 0;
+        goto Quit;
     }
 
     param = GetQuotedString(param);
@@ -154,15 +162,15 @@ INT cmd_set(LPTSTR param)
         {
             /* Handle set =val case */
             ConErrResPuts(STRING_SYNTAX_COMMAND_INCORRECT);
-            nErrorLevel = 1;
-            return 1;
+            retval = 1;
+            goto Quit;
         }
 
         *p++ = _T('\0');
         if (!SetEnvironmentVariable(param, *p ? p : NULL))
         {
-            nErrorLevel = 1;
-            return 1;
+            retval = 1;
+            goto Quit;
         }
     }
     else
@@ -220,12 +228,23 @@ INT cmd_set(LPTSTR param)
         if (!bFound)
         {
             ConErrResPrintf(STRING_SET_ENV_ERROR, param);
-            nErrorLevel = 1;
-            return 1;
+            retval = 1;
+            goto Quit;
         }
     }
 
-    return 0;
+Quit:
+    if (BatType != CMD_TYPE)
+    {
+        if (retval != 0)
+            nErrorLevel = retval;
+    }
+    else
+    {
+        nErrorLevel = retval;
+    }
+
+    return retval;
 }
 
 static INT

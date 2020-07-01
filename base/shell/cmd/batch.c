@@ -63,6 +63,7 @@
 /* The stack of current batch contexts.
  * NULL when no batch is active.
  */
+BATCH_TYPE BatType = NONE;
 PBATCH_CONTEXT bc = NULL;
 
 BOOL bEcho = TRUE;  /* The echo flag */
@@ -209,7 +210,10 @@ VOID ExitBatch(VOID)
 
     /* If there is no more batch contexts, notify the signal handler */
     if (!bc)
+    {
         CheckCtrlBreak(BREAK_OUTOFBATCH);
+        BatType = NONE;
+    }
 }
 
 /*
@@ -258,7 +262,8 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
     INT ret = 0;
     INT i;
     HANDLE hFile = NULL;
-    BOOL bSameFn = FALSE;
+    BOOLEAN bSameFn = FALSE;
+    BOOLEAN bTopLevel;
     BATCH_CONTEXT new;
     PFOR_CONTEXT saved_fc;
 
@@ -285,6 +290,13 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
             return 1;
         }
     }
+
+    /*
+     * Remember whether this is a top-level batch context, i.e. if there is
+     * no batch context existing prior (bc == NULL originally), and we are
+     * going to create one below.
+     */
+    bTopLevel = !bc;
 
     if (bc != NULL && Cmd == bc->current)
     {
@@ -353,13 +365,27 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
         return 1;
     }
 
-    /* Check if this is a "CALL :label" */
-    if (*firstword == _T(':'))
-        ret = cmd_goto(firstword);
-
     /* If we are calling from inside a FOR, hide the FOR variables */
     saved_fc = fc;
     fc = NULL;
+
+    /* Perform top-level batch initialization */
+    if (bTopLevel)
+    {
+        /* Default the top-level batch context type to .BAT */
+        BatType = BAT_TYPE;
+
+        /* If this is a .CMD file, adjust the type */
+        TCHAR *dot = _tcsrchr(bc->BatchFilePath, _T('.'));
+        if (dot && (!_tcsicmp(dot, _T(".cmd"))))
+        {
+            BatType = CMD_TYPE;
+        }
+    }
+
+    /* Check if this is a "CALL :label" */
+    if (*firstword == _T(':'))
+        ret = cmd_goto(firstword);
 
     /* If we have created a new context, don't return
      * until this batch file has completed. */
@@ -391,6 +417,13 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
         bc->current = Cmd;
         ret = ExecuteCommandWithEcho(Cmd);
         FreeCommand(Cmd);
+    }
+
+    /* Perform top-level batch cleanup */
+    if (!bc || bTopLevel)
+    {
+        /* Reset the top-level batch context type */
+        BatType = NONE;
     }
 
     /* Restore the FOR variables */

@@ -192,6 +192,7 @@ RemoveAssociation(
 
 INT CommandAssoc(LPTSTR param)
 {
+    INT retval = 0;
     LPTSTR lpEqualSign;
 
     /* Print help */
@@ -201,12 +202,10 @@ INT CommandAssoc(LPTSTR param)
         return 0;
     }
 
-    nErrorLevel = 0;
-
     if (_tcslen(param) == 0)
     {
         PrintAllAssociations();
-        return 0;
+        goto Quit;
     }
 
     lpEqualSign = _tcschr(param, _T('='));
@@ -218,7 +217,8 @@ INT CommandAssoc(LPTSTR param)
         {
             WARN("Cannot allocate memory for extension!\n");
             error_out_of_memory();
-            return 1;
+            retval = 1;
+            goto Quit;
         }
 
         _tcsncpy(extension, param, lpEqualSign - param);
@@ -228,26 +228,43 @@ INT CommandAssoc(LPTSTR param)
          * in the string, then delete the key. */
         if (_tcslen(fileType) == 0)
         {
-            RemoveAssociation(extension);
+            retval = RemoveAssociation(extension);
         }
         else
         /* Otherwise, add the key and print out the association */
         {
-            AddAssociation(extension, fileType);
+            retval = AddAssociation(extension, fileType);
             PrintAssociation(extension);
         }
 
         cmd_free(extension);
+
+        if (retval)
+            retval = 1; /* Fixup the error value */
     }
     else
     {
         /* No equal sign, print all associations */
-        INT retval = PrintAssociation(param);
+        retval = PrintAssociation(param);
         if (retval == 0)    /* If nothing printed out */
+        {
             ConOutResPrintf(STRING_ASSOC_ERROR, param);
+            retval = 1; /* Fixup the error value */
+        }
     }
 
-    return 0;
+Quit:
+    if (BatType != CMD_TYPE)
+    {
+        if (retval != 0)
+            nErrorLevel = retval;
+    }
+    else
+    {
+        nErrorLevel = retval;
+    }
+
+    return retval;
 }
 
 #endif /* INCLUDE_CMD_ASSOC */
