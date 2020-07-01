@@ -1294,13 +1294,23 @@ public:
 
         ZeroMemory(&Item, sizeof(Item));
 
-        Item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
+        Item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
         Item.pszText = const_cast<LPWSTR>(lpText);
         Item.lParam = lParam;
         Item.iItem = ItemIndex;
         Item.iImage = IconIndex;
 
+        if (IconIndex >= 0)
+        {
+            Item.iImage = IconIndex;
+            Item.mask |= LVIF_IMAGE;
+        }
         return InsertItem(&Item);
+    }
+
+    HIMAGELIST GetImageList(int iImageList)
+    {
+        return (HIMAGELIST)SendMessage(LVM_GETIMAGELIST, iImageList, 0);
     }
 
     static INT CALLBACK s_CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
@@ -1342,6 +1352,12 @@ public:
         {
             SetCheckboxesVisible(FALSE);
         }
+
+        HIMAGELIST hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE,
+                                                  LISTVIEW_ICON_SIZE,
+                                                  GetSystemColorDepth() | ILC_MASK,
+                                                  0, 1);
+        SetImageList(hImageListView, LVSIL_SMALL);
 
         return hwnd;
     }
@@ -1480,6 +1496,8 @@ public:
         // delete old columns
         while (ColumnCount) DeleteColumn(--ColumnCount);
 
+        ImageList_RemoveAll(GetImageList(LVSIL_SMALL));
+
         // add new columns
         ATL::CStringW szText;
         switch (Mode)
@@ -1509,6 +1527,10 @@ public:
             szText.LoadStringW(IDS_APP_DESCRIPTION);
             AddColumn(ColumnCount++, szText, 300, LVCFMT_LEFT);
             break;
+
+        case TableViewEmpty:
+        default:
+            break;
         }
 
         
@@ -1522,7 +1544,12 @@ public:
             return FALSE;
         }
 
-        int Index = AddItem(ItemCount, 0, InstAppInfo->szDisplayName, 0);
+        HICON hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+        HIMAGELIST hImageList = GetImageList(LVSIL_SMALL);
+        int IconIndex = ImageList_AddIcon(hImageList, hIcon);
+        DestroyIcon(hIcon);
+
+        int Index = AddItem(ItemCount, IconIndex, InstAppInfo->szDisplayName, 0); // specify -1 for the icon index to not display
         SetItemText(Index, 1, InstAppInfo->szDisplayVersion);
         SetItemText(Index, 2, InstAppInfo->szComments);
 
@@ -1537,7 +1564,31 @@ public:
             return FALSE;
         }
 
-        int Index = AddItem(ItemCount, 0, AvlbAppInfo->m_szName, 0);
+        /* Load icon from file */
+        HICON hIcon = NULL;
+        ATL::CStringW szIconPath;
+        if (AvlbAppInfo->RetrieveIcon(szIconPath))
+        {
+            hIcon = (HICON)LoadImageW(NULL,
+                szIconPath.GetString(),
+                IMAGE_ICON,
+                LISTVIEW_ICON_SIZE,
+                LISTVIEW_ICON_SIZE,
+                LR_LOADFROMFILE);
+        }
+
+        if (!hIcon || GetLastError() != ERROR_SUCCESS)
+        {
+            /* Load default icon */
+            hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+        }
+
+        HIMAGELIST hImageList = GetImageList(LVSIL_SMALL);
+
+        int IconIndex = ImageList_AddIcon(hImageList, hIcon);
+        DestroyIcon(hIcon);
+
+        int Index = AddItem(ItemCount, IconIndex, AvlbAppInfo->m_szName, 0);
         SetItemText(Index, 1, AvlbAppInfo->m_szVersion);
         SetItemText(Index, 2, AvlbAppInfo->m_szDesc);
 
