@@ -328,9 +328,9 @@ PAUSE [повiдомлення]"
     STRING_PROMPT_HELP3 "\nPROMPT без параметрiв встановлює запрошення командного рядка за замовчуванням."
     STRING_REM_HELP "Стартує рядок коментаря впакетному файлi.\n\nREM [Comment]"
     STRING_RMDIR_HELP "Видалення каталогу.\n\n\
-RMDIR [диск:]шлях\nRD [диск:]шлях\n\
-/S          Видалення всього дерева всерединi цiлi\n\
-/Q          Вимкнення запиту пiдтвердження\n"
+RMDIR [/S] [/Q] [диск:]шлях\nRD [/S] [/Q] [диск:]шлях\n\
+  /S    Видалення всього дерева всерединi цiлi.\n\
+  /Q    Вимкнення запиту пiдтвердження.\n"
     STRING_RMDIR_HELP2 "Каталог не порожнiй!\n"
     STRING_REN_HELP1 "Перейменування одного чи кiлькох файлiв/каталогiв.\n\n\
 RENAME [/E /N /P /Q /S /T] старе_iм'я ... нове_iм'я\n\
@@ -507,7 +507,7 @@ title         новий заголовок\n"
     STRING_FREE_ERROR2 "не вiдмiчено"
     STRING_GOTO_ERROR1 "Не визначена мiтка для GOTO\n"
     STRING_GOTO_ERROR2 "Мiтка '%s' не знайдена\n"
-    STRING_MD_ERROR "Пiдкаталог чи файл вже iснує.\n"
+    STRING_MD_ERROR "Пiдкаталог чи файл %s вже iснує.\n"
     STRING_MD_ERROR2 "Шлях до нового каталогу не iснує.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Помилка]\n"

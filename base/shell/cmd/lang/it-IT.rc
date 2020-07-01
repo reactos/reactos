@@ -324,9 +324,9 @@ PAUSE [messaggio]"
     STRING_REM_HELP "Inizia una linea di commento.\n\n\
 REM [Commento]"
     STRING_RMDIR_HELP "Cancella una cartella.\n\n\
-RMDIR [disco:]percorso\nRD [disco:]percorso\n\
-/S          cancella tutti i file e le cartelle indicate\n\
-/Q          non chiede conferma\n"
+RMDIR [/S] [/Q] [disco:]percorso\nRD [/S] [/Q] [disco:]percorso\n\
+  /S    Cancella tutti i file e le cartelle indicate.\n\
+  /Q    Non chiede conferma.\n"
     STRING_RMDIR_HELP2 "La cartella non è vuota!\n"
     STRING_REN_HELP1 "Rinomina file/cartella or file/cartelle.\n\n\
 RENAME [/E /N /P /Q /S /T] vecchio_nome ... nuovo_nome\n\
@@ -506,7 +506,7 @@ titolo        il nuovo titolo\n"
     STRING_FREE_ERROR2 "non etichettato"
     STRING_GOTO_ERROR1 "Nessuna etichetta indicata per GOTO\n"
     STRING_GOTO_ERROR2 "Etichetta '%s' non trovata\n"
-    STRING_MD_ERROR "Una cartella o file esiste già.\n"
+    STRING_MD_ERROR "Una cartella o file %s esiste già.\n"
     STRING_MD_ERROR2 "Il percorso della nuova cartella non esiste.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Errore]\n"

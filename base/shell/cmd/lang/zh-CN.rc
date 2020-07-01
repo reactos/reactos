@@ -301,9 +301,9 @@ PAUSE [消息]"
     STRING_PROMPT_HELP3 "\n执行不带参数的 PROMPT 将会把提示符重置为默认设置。"
     STRING_REM_HELP "在批处理文件中开始一行注释。\n\nREM [注释]"
     STRING_RMDIR_HELP "删除一个目录。\n\n\
-RMDIR [驱动器:]路径\nRD [驱动器:]路径\n\
-/S          删除目标中的所有文件和文件夹。\n\
-/Q          删除时不要提示。\n"
+RMDIR [/S] [/Q] [驱动器:]路径\nRD [/S] [/Q] [驱动器:]路径\n\
+  /S    删除目标中的所有文件和文件夹。\n\
+  /Q    删除时不要提示。\n"
     STRING_RMDIR_HELP2 "目录非空！\n"
     STRING_REN_HELP1 "重命名一个或者多个文件或文件夹。\n\n\
 RENAME [/E /N /P /Q /S /T] 旧名称 ... 新名称\n\
@@ -467,7 +467,7 @@ RESTORE       恢复窗口\n\
     STRING_FREE_ERROR2 "未标记"
     STRING_GOTO_ERROR1 "没有为 GOTO 指定标签\n"
     STRING_GOTO_ERROR2 "标签 '%s' 未找到\n"
-    STRING_MD_ERROR "一个子目录或文件已存在。\n"
+    STRING_MD_ERROR "%s 一个子目录或文件已存在。\n"
     STRING_MD_ERROR2 "到新文件夹的路径不存在。\n"
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[错误]\n"

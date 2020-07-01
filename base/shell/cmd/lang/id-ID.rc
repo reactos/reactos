@@ -318,9 +318,9 @@ PAUSE [pesan]"
     STRING_PROMPT_HELP3 "\nKetik PROMPT tanpa parameter untuk mereset prompt ke setelan standar."
     STRING_REM_HELP "Memulai baris komentar dalam file batch.\n\nREM [Komentar]"
     STRING_RMDIR_HELP "Menghapus direktori.\n\n\
-RMDIR [drive:]path\nRD [drive:]path\n\
-/S          Menghapus semua file dan folder di dalam target\n\
-/Q          Tidak bertanya pada pengguna\n"
+RMDIR [/S] [/Q] [drive:]path\nRD [/S] [/Q] [drive:]path\n\
+  /S    Menghapus semua file dan folder di dalam target.\n\
+  /Q    Tidak bertanya pada pengguna.\n"
     STRING_RMDIR_HELP2 "Direktori tidak kosong!\n"
     STRING_REN_HELP1 "Mengganti nama file/direktori.\n\n\
 RENAME [/E /N /P /Q /S /T] nama_lama ... nama_baru\n\
@@ -496,7 +496,7 @@ title         judul baru\n"
     STRING_FREE_ERROR2 "tak berlabel"
     STRING_GOTO_ERROR1 "Tidak ada label ditetapkan untuk GOTO\n"
     STRING_GOTO_ERROR2 "Label '%s' tidak ditemukan\n"
-    STRING_MD_ERROR "Subdirektori atau file sudah ada.\n"
+    STRING_MD_ERROR "Subdirektori atau file %s sudah ada.\n"
     STRING_MD_ERROR2 "Path ke folder baru tidak ada.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Salah]\n"

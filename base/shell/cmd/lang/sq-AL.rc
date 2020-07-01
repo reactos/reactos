@@ -321,9 +321,9 @@ PAUZE [mesazhi]"
     STRING_PROMPT_HELP3 "\nSHFAQ pa parametra për të resetuar ne konfigurimet e automatizuara."
     STRING_REM_HELP "Nis një linjë koment në një dokument batch.\n\nREM [Koment"
     STRING_RMDIR_HELP "Heq një direktori.\n\n\
-RMDIR [drive:]rrugë\nRD [drive:]rrugë\n\
-/S          Fshin të gjitha dokumentat dhe dosjet brenda objektivit\n\
-/Q          Nuk e shfaq për përdoruesin\n"
+RMDIR [/S] [/Q] [drive:]rrugë\nRD [/S] [/Q] [drive:]rrugë\n\
+  /S    Fshin të gjitha dokumentat dhe dosjet brenda objektivit.\n\
+  /Q    Nuk e shfaq për përdoruesin.\n"
     STRING_RMDIR_HELP2 "Direktoria nuk është e zbrazët!\n"
     STRING_REN_HELP1 "Emeron nje dokument/directori ose dokument/skedë.\n\n\
 RENAME [/E /N /P /Q /S /T] emrin_e_vjetër ... emrin_e_ri\n\
@@ -501,7 +501,7 @@ title         titull i ri\n"
     STRING_FREE_ERROR2 "E paetiketuar"
     STRING_GOTO_ERROR1 "Nuk ka etiketa specifikuar për GOTO\n"
     STRING_GOTO_ERROR2 "Etikete '%s' Nuk u gjet\n"
-    STRING_MD_ERROR "Një nën-skedë ose dokument ekziston.\n"
+    STRING_MD_ERROR "Një nën-skedë ose dokument %s ekziston.\n"
     STRING_MD_ERROR2 "Rruga për tek skeda e re nuk ekziston.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Error]\n"

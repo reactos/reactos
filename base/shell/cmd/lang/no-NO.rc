@@ -316,9 +316,9 @@ PAUSE [melding]"
     STRING_PROMPT_HELP3 "\nSkriv PROMPT uten parameter for å resette ledeteksten."
     STRING_REM_HELP "Start en kommentarlinje i en satsvis fil.\n\nREM [Kommentar]"
     STRING_RMDIR_HELP "Flytter en mappe.\n\n\
-RMDIR [stasjon:]mappe\nRD [stasjon:]mappe\n\
-/S          Sletter alle filer og mapper innenfor målet\n\
-/Q          Ikke spør før sletting.\n"
+RMDIR [/S] [/Q] [stasjon:]mappe\nRD [/S] [/Q] [stasjon:]mappe\n\
+  /S    Sletter alle filer og mapper innenfor målet.\n\
+  /Q    Ikke spør før sletting.\n"
     STRING_RMDIR_HELP2 "Mappen er ikke tom!\n"
     STRING_REN_HELP1 "Endre navn på fil/mappe eller filer/mapper.\n\n\
 ENDRE NAVN [/E /N /P /Q /S /T] gammelt_navn ... nytt_navn\n\
@@ -495,7 +495,7 @@ tittel        ny tittel\n"
     STRING_FREE_ERROR2 "utmerket"
     STRING_GOTO_ERROR1 "Ingen merke spesifisert for GOTO\n"
     STRING_GOTO_ERROR2 "Merke '%s' ikke funnet\n"
-    STRING_MD_ERROR "En undermappe eller fil finnes allerede.\n"
+    STRING_MD_ERROR "En undermappe eller fil %s finnes allerede.\n"
     STRING_MD_ERROR2 "Stien til den nye mappen eksisterer ikke.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Feil]\n"

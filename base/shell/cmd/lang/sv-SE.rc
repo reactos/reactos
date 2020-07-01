@@ -316,9 +316,9 @@ PAUSE [melding]"
     STRING_PROMPT_HELP3 "\nSkriv PROMPT uten parameter för att resette ledetexten."
     STRING_REM_HELP "Start en kommentarlinje i en batch-fil.\n\nREM [Kommentar]"
     STRING_RMDIR_HELP "Flytter en mapp.\n\n\
-RMDIR [enhet:]mapp\nRD [enhet:]mapp\n\
-/S          Sletter alle filer och mappar innenfor målet\n\
-/Q          Inte spør før sletting.\n"
+RMDIR [/S] [/Q] [enhet:]mapp\nRD [/S] [/Q] [enhet:]mapp\n\
+  /S    Sletter alle filer och mappar innenfor målet.\n\
+  /Q    Inte spør før sletting.\n"
     STRING_RMDIR_HELP2 "mappn är inte tom!\n"
     STRING_REN_HELP1 "Ändra namn på fil/mapp eller filer/mappar.\n\n\
 ENDRE NAVN [/E /N /P /Q /S /T] gammelt_namn ... nytt_namn\n\
@@ -495,7 +495,7 @@ tittel        ny tittel\n"
     STRING_FREE_ERROR2 "utmärkt"
     STRING_GOTO_ERROR1 "Inget märke specifiserat för GOTO\n"
     STRING_GOTO_ERROR2 "Märke '%s' finns inte\n"
-    STRING_MD_ERROR "En undermapp eller fil finns redan.\n"
+    STRING_MD_ERROR "En undermapp eller fil %s finns redan.\n"
     STRING_MD_ERROR2 "Stien till den nye mappen exsisterar inte.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Fel]\n"

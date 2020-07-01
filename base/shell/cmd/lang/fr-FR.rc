@@ -334,9 +334,9 @@ PAUSE [message]"
     STRING_PROMPT_HELP3 "\nTaper PROMPT sans paramètres pour changer l'invite à celui défini par défaut."
     STRING_REM_HELP "Démarrer une ligne de commentaire dans un fichier batch.\n\nREM [Commentaire]"
     STRING_RMDIR_HELP "Supprime un répertoire.\n\n\
-RMDIR [lecteur:]chemin\nRD [lecteur:]chemin\n\
-/S          Supprime tous les fichiers et dossiers dans le répertoire cible\n\
-/Q          N'interroge pas l'utilisateur\n"
+RMDIR [/S] [/Q] [lecteur:]chemin\nRD [/S] [/Q] [lecteur:]chemin\n\
+  /S    Supprime tous les fichiers et dossiers dans le répertoire cible.\n\
+  /Q    N'interroge pas l'utilisateur.\n"
     STRING_RMDIR_HELP2 "Le répertoire n'est pas vide!\n"
     STRING_REN_HELP1 "Renomme un(des) fichier(s)/répertoire(s)\n\
 RENAME [/E /N /P /Q /S /T] ancien_nom ... nouveau_nom\n\
@@ -513,7 +513,7 @@ titre         titre de la fenêtre"
     STRING_FREE_ERROR2 "sans nom"
     STRING_GOTO_ERROR1 "Pas de label indiqué pour GOTO\n"
     STRING_GOTO_ERROR2 "Label '%s' introuvable\n"
-    STRING_MD_ERROR "Un sous répertoire ou un fichier existe déjà.\n"
+    STRING_MD_ERROR "Un sous-répertoire ou un fichier %s existe déjà.\n"
     STRING_MD_ERROR2 "Le chemin vers le nouveau répertoire n'existe pas.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Erreur]\n"

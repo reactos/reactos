@@ -322,7 +322,9 @@ PAUSE [mensaje]"
 comandos a su configuración por defecto."
     STRING_REM_HELP "Comienza una liena de comentarios en un archivo por lotes\n\nREM [Comentario]"
     STRING_RMDIR_HELP "Elimina un directorio.\n\n\
-RMDIR [unidad:]ruta\nRD [unidad:]ruta"
+RMDIR [/S] [/Q] [unidad:]ruta\nRD [/S] [/Q] [unidad:]ruta\n\
+  /S    Deletes all files and folders within the target.\n\
+  /Q    Doesn't prompt for user.\n"
     STRING_RMDIR_HELP2 "La carpeta no está vacía.\n"
     STRING_REN_HELP1 "Renombra un archivo/directorio o varios archivos/directorios.\n\n\
 RENAME [/E /N /P /Q /S /T] nombre_antiguo ... nuevo_nombre\n\
@@ -501,7 +503,7 @@ title         Nuevo título\n"
     STRING_FREE_ERROR2 "Sin etiqueta"
     STRING_GOTO_ERROR1 "No se especifico etiqueta para GOTO\n"
     STRING_GOTO_ERROR2 "La etiqueta '%s' no se encuentra\n"
-    STRING_MD_ERROR "A subdirectory or file already exists.\n"
+    STRING_MD_ERROR "A subdirectory or file %s already exists.\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
     STRING_MOVE_ERROR1 "[Correcto]\n"
     STRING_MOVE_ERROR2 "[Error]\n"

@@ -316,7 +316,9 @@ PAUSE [message]"
     STRING_PROMPT_HELP3 "\n  'PROMPT'   setzt die Prompt auf die Standardwerte zurück."
     STRING_REM_HELP "Leitet Kommentare in einer Batchdatei ein.\n\nREM [Kommentar]"
     STRING_RMDIR_HELP   "Löscht ein Verzeichnis.\n\n\
-RMDIR [Laufwerk:]Pfad\nRD [Laufwerk:]Pfad"
+RMDIR [/S] [/Q] [Laufwerk:]Pfad\nRD [/S] [/Q] [Laufwerk:]Pfad\n\
+  /S    Deletes all files and folders within the target.\n\
+  /Q    Doesn't prompt for user.\n"
     STRING_RMDIR_HELP2  "Verzeichnis ist nicht leer!\n"//FIXME
     STRING_REN_HELP1 "Benennt Dateien und Verzeichnisse um.\n\n\
 RENAME [/E /N /P /Q /S /T] alter_Name ... neuer_Name\n\
@@ -496,7 +498,7 @@ Titel         neuer Titel"
     STRING_FREE_ERROR2 "keine Bezeichnung"
     STRING_GOTO_ERROR1 "Keine Sprungmarke für GOTO gesetzt\n"
     STRING_GOTO_ERROR2 "Sprungmarke '%s' wurde nicht gefunden\n"
-    STRING_MD_ERROR "Unterverzeichnis oder Datei existiert bereits.\n"
+    STRING_MD_ERROR "Unterverzeichnis oder Datei %s existiert bereits.\n"
     STRING_MD_ERROR2 "Der Pfad zum neuen Ordner existiert nicht.\n"//FIXME
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[FEHLER]\n"

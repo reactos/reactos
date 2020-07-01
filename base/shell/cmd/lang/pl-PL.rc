@@ -324,9 +324,9 @@ PAUSE [wiadomość]"
     STRING_PROMPT_HELP3 "\nWpisz PROMPT bez żadnych parametrów, by powrócić do ustawień domyślnych."
     STRING_REM_HELP "Definiuje linię komentarza w pliku wsadowym.\n\nREM [komentarz]"
     STRING_RMDIR_HELP "Usuwa katalog.\n\n\
-RMDIR [napęd:]ścieżka\nRD [napęd:]ścieżka\n\
-/S      Kasuje także wszystkie pliki i podkatalogi w danym katalogu\n\
-/Q      Nie wyświetla prośby o potwierdzenie\n"
+RMDIR [/S] [/Q] [napęd:]ścieżka\nRD [/S] [/Q] [napęd:]ścieżka\n\
+  /S    Kasuje także wszystkie pliki i podkatalogi w danym katalogu.\n\
+  /Q    Nie wyświetla prośby o potwierdzenie.\n"
     STRING_RMDIR_HELP2 "Katalog nie jest pusty!\n"
     STRING_REN_HELP1 "Zmienia nazwę pliku/katalogu (także wielu).\n\n\
 RENAME [/E /N /P /Q /S /T] stara_nazwa ... nowa_nazwa\n\
@@ -502,7 +502,7 @@ title         nowy tytuł okna\n"
     STRING_FREE_ERROR2 "brak"
     STRING_GOTO_ERROR1 "Brak etykiety dla GOTO\n"
     STRING_GOTO_ERROR2 "Etykieta '%s' nie została znaleziona\n"
-    STRING_MD_ERROR "Istnieje już plik lub podkatalog o tej nazwie.\n"
+    STRING_MD_ERROR "Istnieje już plik lub podkatalog %s o tej nazwie.\n"
     STRING_MD_ERROR2 "Ścieżka do nowego katalogu nie jest prawidłowa.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Błąd]\n"

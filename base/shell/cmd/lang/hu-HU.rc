@@ -303,7 +303,9 @@ PAUSE [message]"
     STRING_PROMPT_HELP3 "\nHa paraméter nélkül beírod a PROMPT parancsot, vissza áll az alapértelmezettre a kijelzés."
     STRING_REM_HELP "Megjegyzést jelölõ sor batch fájlokban.\n\nREM [megjegyzés]"
     STRING_RMDIR_HELP "Eltávolít egy mappát.\n\n\
-RMDIR [meghajtó:]elérési_út\nRD [meghajtó:]elérési_út"
+RMDIR [/S] [/Q] [meghajtó:]elérési_út\nRD [/S] [/Q] [meghajtó:]elérési_út\n\
+  /S    Deletes all files and folders within the target.\n\
+  /Q    Doesn't prompt for user.\n"
     STRING_RMDIR_HELP2 "Directory is not empty!\n"//FIXME
     STRING_REN_HELP1 "Átnevez egy állományt.\n\n\
 RENAME [/E /N /P /Q /S /T] régi_név ... új_név\n\
@@ -480,7 +482,7 @@ title         new title\n"
     STRING_FREE_ERROR2 "nincs cimkézve"
     STRING_GOTO_ERROR1 "Nem lett cimke megadva a GOTO után\n"
     STRING_GOTO_ERROR2 "A '%s' cimke nem található\n"
-    STRING_MD_ERROR "A subdirectory or file already exists.\n"//FIXME
+    STRING_MD_ERROR "A subdirectory or file %s already exists.\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[HIBA]\n"

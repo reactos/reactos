@@ -352,7 +352,7 @@ PAUSE [mesaj]\n"
     STRING_PROMPT_HELP3 "\nTastați PROMPT fără argumente pentru a readuce consola în starea implicită.\n"
     STRING_REM_HELP "Începe o linie de comentariu într-un fișier de comenzi.\n\nREM [comentariu]\n"
     STRING_RMDIR_HELP "Șterge un director.\n\n\
-RMDIR [unitate:]cale\nRD [unitate:]cale\n\
+RMDIR [/S] [/Q] [unitate:]cale\nRD [/S] [/Q] [unitate:]cale\n\
   /S    Șterge toate fișierele și directoarele țintă.\n\
   /Q    Omite cererile de confirmare.\n"
     STRING_RMDIR_HELP2 "Directorul nu este gol!\n"
@@ -530,7 +530,7 @@ titlu         Noul titlu.\n"
     STRING_FREE_ERROR2 "neetichetat"
     STRING_GOTO_ERROR1 "Nu a fost specificată nici o etichetă pentru «GOTO»\n"
     STRING_GOTO_ERROR2 "Eticheta «%s» nu a fost găsită\n"
-    STRING_MD_ERROR "Există deja un fișier sau un subdirector cu acest nume.\n"
+    STRING_MD_ERROR "Există deja un fișier sau un subdirector %s cu acest nume.\n"
     STRING_MD_ERROR2 "Calea către noul director nu există.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Eroare]\n"

@@ -324,9 +324,9 @@ PAUSE [ileti]"
     STRING_PROMPT_HELP3 "\nÖn tanımlı ayarlamaya istemi sıfırlamak için değişkensiz PROMPT yazınız."
     STRING_REM_HELP "Bir toplu iş kütüğünde bir açıklama yatacı başlatır.\n\nREM [Açıklama]"
     STRING_RMDIR_HELP "Bir dizin siler.\n\n\
-RMDIR [sürücü:]yol\nRD [sürücü:]yol\n\
-/S          Varış içinde tüm kütükleri ve dizinleri siler.\n\
-/Q          Kullanıcı için sorma.\n"
+RMDIR [/S] [/Q] [sürücü:]yol\nRD [/S] [/Q] [sürücü:]yol\n\
+  /S    Varış içinde tüm kütükleri ve dizinleri siler.\n\
+  /Q    Kullanıcı için sorma.\n"
     STRING_RMDIR_HELP2 "Dizin boş değil!\n"
     STRING_REN_HELP1 "Bir kütüğü/dizini ya da kütükleri/dizinleri yeniden adlandırır.\n\n\
 RENAME [/E /N /P /Q /S /T] eski ad ... yeni ad\n\
@@ -502,7 +502,7 @@ başlık        Yeni başlık\n"
     STRING_FREE_ERROR2 "etiketlenmemiş"
     STRING_GOTO_ERROR1 "GOTO için bir etiket belirlenmemiş.\n"
     STRING_GOTO_ERROR2 """%s"" etiketi bulunamadı.\n"
-    STRING_MD_ERROR "Bir alt dizin ya da kütük önceden var.\n"
+    STRING_MD_ERROR "Bir alt dizin ya da kütük %s önceden var.\n"
     STRING_MD_ERROR2 "Yeni dizin için yol yok.\n"
     STRING_MOVE_ERROR1 "[Tamam]\n"
     STRING_MOVE_ERROR2 "[Yanlışlık]\n"

@@ -321,9 +321,9 @@ PAUSE [message]"
     STRING_PROMPT_HELP3 "\nType PROMPT without parameters to reset the prompt to the default setting."
     STRING_REM_HELP "Starts a comment line in a batch file.\n\nREM [Comment]"
     STRING_RMDIR_HELP "Removes a directory.\n\n\
-RMDIR [drive:]path\nRD [drive:]path\n\
-/S          Deletes all files and folders within target\n\
-/Q          Doesn't prompt for user\n"
+RMDIR [/S] [/Q] [drive:]path\nRD [/S] [/Q] [drive:]path\n\
+  /S    Deletes all files and folders within the target.\n\
+  /Q    Doesn't prompt for user.\n"
     STRING_RMDIR_HELP2 "Directory is not empty!\n"
     STRING_REN_HELP1 "Renames a file/directory or files/directories.\n\n\
 RENAME [/E /N /P /Q /S /T] old_name ... new_name\n\
@@ -501,7 +501,7 @@ title         new title\n"
     STRING_FREE_ERROR2 "unlabeled"
     STRING_GOTO_ERROR1 "No label specified for GOTO\n"
     STRING_GOTO_ERROR2 "Label '%s' not found\n"
-    STRING_MD_ERROR "A subdirectory or file already exists.\n"
+    STRING_MD_ERROR "A subdirectory or file %s already exists.\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Σφάλμα]\n"
