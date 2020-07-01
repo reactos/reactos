@@ -822,7 +822,7 @@ BEGIN
     IDS_PERSONAL "Dokumentumok"
     IDS_FAVORITES "Kedvencek"
     IDS_STARTUP "Start menü\\Programok\\Automatikus indítás" /* MS style: Indítópult */
-    IDS_RECENT "Recent"
+    IDS_RECENT "Legutóbbi dokumentumok"
     IDS_SENDTO "SendTo"
     IDS_STARTMENU "Start menü"
     IDS_MYMUSIC "Zenék"
