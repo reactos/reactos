@@ -32,7 +32,7 @@
 
 #include "precomp.h"
 
-static INT GenericCmp(INT (*StringCmp)(LPCTSTR, LPCTSTR),
+static INT GenericCmp(INT (WINAPI *StringCmp)(LPCTSTR, LPCTSTR),
                       LPCTSTR Left, LPCTSTR Right)
 {
     TCHAR *end;
@@ -152,14 +152,20 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
     }
     else
     {
-        /* Do case-insensitive string comparisons if /I specified */
-        INT (*StringCmp)(LPCTSTR, LPCTSTR) =
-            (Cmd->If.Flags & IFFLAG_IGNORECASE) ? _tcsicmp : _tcscmp;
+        /*
+         * Do case-insensitive string comparisons if /I specified.
+         *
+         * Since both strings are user-specific, use kernel32!lstrcmp(i)
+         * instead of CRT!_tcs(i)cmp, so as to use the correct
+         * current thread locale information.
+         */
+        INT (WINAPI *StringCmp)(LPCTSTR, LPCTSTR) =
+            (Cmd->If.Flags & IFFLAG_IGNORECASE) ? lstrcmpi : lstrcmp;
 
         if (Cmd->If.Operator == IF_STRINGEQ)
         {
             /* IF str1 == str2 */
-            result = StringCmp(Left, Right) == 0;
+            result = (StringCmp(Left, Right) == 0);
         }
         else
         {
@@ -168,9 +174,9 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
             {
             case IF_EQU: result = (result == 0); break;
             case IF_NEQ: result = (result != 0); break;
-            case IF_LSS: result = (result < 0); break;
+            case IF_LSS: result = (result <  0); break;
             case IF_LEQ: result = (result <= 0); break;
-            case IF_GTR: result = (result > 0); break;
+            case IF_GTR: result = (result >  0); break;
             case IF_GEQ: result = (result >= 0); break;
             }
         }
