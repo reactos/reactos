@@ -1513,6 +1513,9 @@ public:
 
             szText.LoadStringW(IDS_APP_DESCRIPTION);
             AddColumn(ColumnCount++, szText, 300, LVCFMT_LEFT);
+
+            // disable checkboxes
+            SetCheckboxesVisible(FALSE);
             break;
 
         case TableViewAvailableApps:
@@ -1526,6 +1529,9 @@ public:
 
             szText.LoadStringW(IDS_APP_DESCRIPTION);
             AddColumn(ColumnCount++, szText, 300, LVCFMT_LEFT);
+
+            // enable checkboxes
+            SetCheckboxesVisible(TRUE);
             break;
 
         case TableViewEmpty:
