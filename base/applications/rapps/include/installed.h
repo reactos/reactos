@@ -45,6 +45,6 @@ class CInstalledApps
 public:
     BOOL Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param);
 
-    VOID CInstalledApps::FreeCachedEntries();
+    VOID FreeCachedEntries();
 };
 
