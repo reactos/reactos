@@ -327,6 +327,8 @@ INT cmd_mkdir (LPTSTR param)
 {
     LPTSTR *p;
     INT argc, i;
+    DWORD dwLastError;
+
     if (!_tcsncmp (param, _T("/?"), 2))
     {
         ConOutResPaging(TRUE,STRING_MKDIR_HELP);
@@ -347,13 +349,20 @@ INT cmd_mkdir (LPTSTR param)
     {
         if (!MakeFullPath(p[i]))
         {
-            if (GetLastError() == ERROR_PATH_NOT_FOUND)
+            dwLastError = GetLastError();
+            switch (dwLastError)
             {
+            case ERROR_PATH_NOT_FOUND:
                 ConErrResPuts(STRING_MD_ERROR2);
-            }
-            else
-            {
-                ErrorMessage (GetLastError(), _T("MD"));
+                break;
+
+            case ERROR_FILE_EXISTS:
+            case ERROR_ALREADY_EXISTS:
+                ConErrResPrintf(STRING_MD_ERROR, p[i]);
+                break;
+
+            default:
+                ErrorMessage(GetLastError(), NULL);
             }
             nErrorLevel = 1;
         }
@@ -504,7 +513,7 @@ INT cmd_rmdir(LPTSTR param)
         {
             /* Couldn't delete the folder, print out the error */
             nError = GetLastError();
-            ErrorMessage(nError, _T("RD"));
+            ErrorMessage(nError, NULL);
         }
     }
 

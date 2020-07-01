@@ -50,7 +50,7 @@ ErrorMessage(
                       NULL, dwErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                       (LPTSTR)&szError, 0, NULL))
     {
-        ConErrPrintf(_T("%s %s\n"), szError, szMessage);
+        ConErrPrintf(_T("%s%s%s"), szError, szMessage, (*szMessage ? _T("\n") : _T("")));
         if (szError)
             LocalFree(szError);
         return;
