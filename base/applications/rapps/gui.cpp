@@ -2885,6 +2885,7 @@ private:
 
     VOID UpdateApplicationsList(INT EnumType)
     {
+        m_AppsTableView->SetRedraw(FALSE);
         if (IsInstalledEnum(EnumType))
         {
             // set the display mode of tableview. this will remove all the item in table view too.
@@ -2903,6 +2904,8 @@ private:
             // enum available softwares 
             m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);
         }
+        m_AppsTableView->SetRedraw(TRUE);
+        m_AppsTableView->RedrawWindow(0, 0, RDW_INVALIDATE | RDW_ALLCHILDREN); // force the child window to repaint
     }
 
 public:
