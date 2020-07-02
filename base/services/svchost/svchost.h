@@ -52,7 +52,7 @@ typedef VOID
 //
 typedef struct _DOMAIN_SID_DATA
 {
-    PSID Sid;
+    PSID* Sid;
     DWORD SubAuthority;
 } DOMAIN_SID_DATA;
 
@@ -61,7 +61,7 @@ typedef struct _DOMAIN_SID_DATA
 //
 typedef struct _SID_DATA
 {
-    PSID Sid;
+    PSID* Sid;
     SID_IDENTIFIER_AUTHORITY Authority;
     DWORD SubAuthority;
 } SID_DATA;
