@@ -260,39 +260,35 @@ public:
 
     BOOL ShowInstalledAppInfo(CInstalledApplicationInfo * Info)
     {
-        ATL::CStringW szText;
-        ATL::CStringW szInfo;
+        if (!Info) return FALSE;
 
-        if (!Info || !Info->hSubKey)
-            return FALSE;
-
-        Info->GetApplicationString(L"DisplayName", szText);
-        SetText(szText, CFE_BOLD);
+        SetText(Info->szDisplayName, CFE_BOLD);
         InsertText(L"\n", 0);
 
-#define GET_INFO(a, b, c, d) \
-    if (Info->GetApplicationString(a, szInfo)) \
+#define INSERT_TEXT(StringID, StringFlags, Text, TextFlags) \
+    if(!Text.IsEmpty()) \
     { \
-        LoadAndInsertText(b, szInfo, c, d); \
+        LoadAndInsertText(StringID, Text, StringFlags, TextFlags); \
     }
 
-        GET_INFO(L"DisplayVersion", IDS_INFO_VERSION, CFE_BOLD, 0);
-        GET_INFO(L"Publisher", IDS_INFO_PUBLISHER, CFE_BOLD, 0);
-        GET_INFO(L"RegOwner", IDS_INFO_REGOWNER, CFE_BOLD, 0);
-        GET_INFO(L"ProductID", IDS_INFO_PRODUCTID, CFE_BOLD, 0);
-        GET_INFO(L"HelpLink", IDS_INFO_HELPLINK, CFE_BOLD, CFM_LINK);
-        GET_INFO(L"HelpTelephone", IDS_INFO_HELPPHONE, CFE_BOLD, 0);
-        GET_INFO(L"Readme", IDS_INFO_README, CFE_BOLD, 0);
-        GET_INFO(L"Contact", IDS_INFO_CONTACT, CFE_BOLD, 0);
-        GET_INFO(L"URLUpdateInfo", IDS_INFO_UPDATEINFO, CFE_BOLD, CFM_LINK);
-        GET_INFO(L"URLInfoAbout", IDS_INFO_INFOABOUT, CFE_BOLD, CFM_LINK);
-        GET_INFO(L"Comments", IDS_INFO_COMMENTS, CFE_BOLD, 0);
-        GET_INFO(L"InstallDate", IDS_INFO_INSTALLDATE, CFE_BOLD, 0);
-        GET_INFO(L"InstallLocation", IDS_INFO_INSTLOCATION, CFE_BOLD, 0);
-        GET_INFO(L"InstallSource", IDS_INFO_INSTALLSRC, CFE_BOLD, 0);
-        GET_INFO(L"UninstallString", IDS_INFO_UNINSTALLSTR, CFE_BOLD, 0);
-        GET_INFO(L"InstallSource", IDS_INFO_INSTALLSRC, CFE_BOLD, 0);
-        GET_INFO(L"ModifyPath", IDS_INFO_MODIFYPATH, CFE_BOLD, 0);
+        INSERT_TEXT(IDS_INFO_VERSION, CFE_BOLD, Info->szDisplayVersion, 0);
+        INSERT_TEXT(IDS_INFO_PUBLISHER, CFE_BOLD, Info->szPublisher, 0);
+        INSERT_TEXT(IDS_INFO_REGOWNER, CFE_BOLD, Info->szRegOwner, 0);
+        INSERT_TEXT(IDS_INFO_PRODUCTID, CFE_BOLD, Info->szProductID, 0);
+        INSERT_TEXT(IDS_INFO_HELPLINK, CFE_BOLD, Info->szHelpLink, CFM_LINK);
+        INSERT_TEXT(IDS_INFO_HELPPHONE, CFE_BOLD, Info->szHelpTelephone, 0);
+        INSERT_TEXT(IDS_INFO_README, CFE_BOLD, Info->szReadme, 0);
+        INSERT_TEXT(IDS_INFO_CONTACT, CFE_BOLD, Info->szContact, 0);
+        INSERT_TEXT(IDS_INFO_UPDATEINFO, CFE_BOLD, Info->szURLUpdateInfo, CFM_LINK);
+        INSERT_TEXT(IDS_INFO_INFOABOUT, CFE_BOLD, Info->szURLInfoAbout, CFM_LINK);
+        INSERT_TEXT(IDS_INFO_COMMENTS, CFE_BOLD, Info->szComments, 0);
+        INSERT_TEXT(IDS_INFO_INSTALLDATE, CFE_BOLD, Info->szInstallDate, 0);
+        INSERT_TEXT(IDS_INFO_INSTLOCATION, CFE_BOLD, Info->szInstallLocation, 0);
+        INSERT_TEXT(IDS_INFO_INSTALLSRC, CFE_BOLD, Info->szInstallSource, 0);
+        INSERT_TEXT(IDS_INFO_UNINSTALLSTR, CFE_BOLD, Info->szUninstallString, 0);
+        INSERT_TEXT(IDS_INFO_MODIFYPATH, CFE_BOLD, Info->szModifyPath, 0);
+
+#undef INSERT_TEXT
 
         return TRUE;
     }
@@ -1543,7 +1539,7 @@ public:
         return TRUE;
     }
 
-    BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID param)
+    BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID CallbackParam)
     {
         if (TableViewMode != TableViewInstalledApps)
         {
@@ -1555,7 +1551,7 @@ public:
         int IconIndex = ImageList_AddIcon(hImageList, hIcon);
         DestroyIcon(hIcon);
 
-        int Index = AddItem(ItemCount, IconIndex, InstAppInfo->szDisplayName, 0); // specify -1 for the icon index to not display
+        int Index = AddItem(ItemCount, IconIndex, InstAppInfo->szDisplayName, (LPARAM)CallbackParam);
         SetItemText(Index, 1, InstAppInfo->szDisplayVersion);
         SetItemText(Index, 2, InstAppInfo->szComments);
 
@@ -1563,7 +1559,7 @@ public:
         return TRUE;
     }
 
-    BOOL AddAvailableApplication(CAvailableApplicationInfo *AvlbAppInfo, LPVOID param)
+    BOOL AddAvailableApplication(CAvailableApplicationInfo *AvlbAppInfo, LPVOID CallbackParam)
     {
         if (TableViewMode != TableViewAvailableApps)
         {
@@ -1594,7 +1590,7 @@ public:
         int IconIndex = ImageList_AddIcon(hImageList, hIcon);
         DestroyIcon(hIcon);
 
-        int Index = AddItem(ItemCount, IconIndex, AvlbAppInfo->m_szName, 0);
+        int Index = AddItem(ItemCount, IconIndex, AvlbAppInfo->m_szName, (LPARAM)CallbackParam);
         SetItemText(Index, 1, AvlbAppInfo->m_szVersion);
         SetItemText(Index, 2, AvlbAppInfo->m_szDesc);
 
@@ -1634,6 +1630,39 @@ private:
             if (!bSuccess)
             {
                 return -1; // creation failure
+            }
+        }
+            break;
+        case WM_NOTIFY:
+        {
+            LPNMHDR pNotifyHeader = (LPNMHDR)lParam;
+            if (pNotifyHeader->hwndFrom == m_ListView->GetWindow())
+            {
+                switch (pNotifyHeader->code)
+                {
+                case LVN_ITEMCHANGED:
+                {
+                    LPNMLISTVIEW pnic = (LPNMLISTVIEW)lParam;
+
+                    /* Check if this is a valid item
+                    * (technically, it can be also an unselect) */
+                    INT ItemIndex = pnic->iItem;
+                    if (ItemIndex == -1 ||
+                        ItemIndex >= ListView_GetItemCount(pnic->hdr.hwndFrom))
+                    {
+                        break;
+                    }
+
+                    /* Check if the focus has been moved to another item */
+                    if ((pnic->uChanged & LVIF_STATE) &&
+                        (pnic->uNewState & LVIS_FOCUSED) &&
+                        !(pnic->uOldState & LVIS_FOCUSED))
+                    {
+                        ItemGetFocus((LPVOID)pnic->lParam);
+                    }
+                }
+                break;
+                }
             }
         }
             break;
@@ -1767,6 +1796,25 @@ public:
             return FALSE;
         }
         return m_ListView->AddAvailableApplication(AvlbAppInfo, param);
+    }
+
+    // this function is called when a item of listview get focus.
+    // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
+    BOOL ItemGetFocus(LPVOID CallbackParam)
+    {
+        switch (TableViewMode)
+        {
+        case TableViewInstalledApps:
+            return m_AppsInfo->ShowInstalledAppInfo((CInstalledApplicationInfo *)CallbackParam);
+
+        case TableViewAvailableApps:
+            return m_AppsInfo->ShowAvailableAppInfo((CAvailableApplicationInfo *)CallbackParam);
+
+        case TableViewEmpty:
+        default:
+            m_AppsInfo->SetWelcomeText();
+            return FALSE;
+        }
     }
 };
 
