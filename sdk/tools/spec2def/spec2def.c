@@ -25,7 +25,7 @@ typedef struct
     int nOrdinal;
     int nStackBytes;
     int nArgCount;
-    int anArgs[30];
+    int anArgs[35];
     unsigned int uFlags;
     int nNumber;
     unsigned nStartVersion;
@@ -1135,6 +1135,11 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
             exp.nStackBytes = 0;
             while (*pc >= '0')
             {
+                if (exp.nArgCount >= ARRAYSIZE(exp.anArgs))
+                {
+                    Fatal(pszSourceFileName, nLine, pcLine, pc, 0, "Too many arguments, please increment the magic anArgs size!");
+                }
+
                 if (CompareToken(pc, "long"))
                 {
                     exp.nStackBytes += 4;
