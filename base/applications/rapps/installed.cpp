@@ -205,7 +205,12 @@ BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
                     // invoke callback
                     if (lpEnumProc)
                     {
-                        lpEnumProc(Info, param);
+                        if ((EnumType == ENUM_ALL_INSTALLED) || /* All components */
+                            ((EnumType == ENUM_INSTALLED_APPLICATIONS) && (!Info->bIsUpdate)) || /* Applications only */
+                            ((EnumType == ENUM_UPDATES) && (Info->bIsUpdate))) /* Updates only */
+                        {
+                            lpEnumProc(Info, param);
+                        }
                     }
                 }
                 else
