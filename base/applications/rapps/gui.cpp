@@ -1702,6 +1702,13 @@ private:
     }
 
 public:
+
+    ~CAppsTableView()
+    {
+        delete m_ListView;
+        delete m_AppsInfo;
+        delete m_HSplitter;
+    }
     static ATL::CWndClassInfo& GetWndClassInfo()
     {
         DWORD csStyle = CS_VREDRAW | CS_HREDRAW;
