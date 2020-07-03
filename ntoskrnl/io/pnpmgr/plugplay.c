@@ -64,6 +64,7 @@ IopQueueTargetDeviceEvent(const GUID *Guid,
                                 TotalSize + FIELD_OFFSET(PNP_EVENT_ENTRY, Event));
     if (!EventEntry)
         return STATUS_INSUFFICIENT_RESOURCES;
+    RtlZeroMemory(EventEntry, TotalSize + FIELD_OFFSET(PNP_EVENT_ENTRY, Event));
 
     /* Fill the buffer with the event GUID */
     RtlCopyMemory(&EventEntry->Event.EventGuid,
