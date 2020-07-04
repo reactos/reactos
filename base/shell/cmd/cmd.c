@@ -1143,6 +1143,10 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
                 { _T('o'), FILE_ATTRIBUTE_OFFLINE },
                 { _T('t'), FILE_ATTRIBUTE_TEMPORARY },
                 { _T('l'), FILE_ATTRIBUTE_REPARSE_POINT },
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+                { _T('v'), FILE_ATTRIBUTE_INTEGRITY_STREAM },
+                { _T('x'), FILE_ATTRIBUTE_NO_SCRUB_DATA /* 0x20000 */ },
+#endif
             };
             for (Attrib = Table; Attrib != &Table[ARRAYSIZE(Table)]; Attrib++)
             {
