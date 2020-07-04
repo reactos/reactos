@@ -1190,11 +1190,12 @@ class CAppsListView :
         INT iSubItem;
     };
 
-    BOOL bHasAllChecked;
+    //BOOL bHasAllChecked;
     BOOL bIsAscending;
     BOOL bHasCheckboxes;
 
     INT ItemCount = 0;
+    INT CheckedItemCount = 0;
     INT ColumnCount = 0;
 
     INT nLastHeaderID;
@@ -1203,7 +1204,7 @@ class CAppsListView :
 
 public:
     CAppsListView() :
-        bHasAllChecked(FALSE),
+        //bHasAllChecked(FALSE),
         bIsAscending(TRUE),
         bHasCheckboxes(FALSE),
         nLastHeaderID(-1)
@@ -1372,7 +1373,6 @@ public:
         if (bHasCheckboxes)
         {
             SetItemState(item, INDEXTOSTATEIMAGEMASK((fCheck) ? 2 : 1), LVIS_STATEIMAGEMASK);
-            //SetSelected(item, fCheck);
         }
     }
 
@@ -1403,8 +1403,16 @@ public:
     {
         if (bHasCheckboxes)
         {
-            bHasAllChecked = !bHasAllChecked;
-            SetCheckState(-1, bHasAllChecked);
+            if (CheckedItemCount == ItemCount)
+            {
+                // clear all
+                SetCheckState(-1, FALSE);
+            }
+            else
+            {
+                // check all
+                SetCheckState(-1, TRUE);
+            }
         }
     }
 
@@ -1492,6 +1500,7 @@ public:
         TableViewMode = Mode;
 
         ItemCount = 0;
+        CheckedItemCount = 0;
 
         // delete old columns
         while (ColumnCount) DeleteColumn(--ColumnCount);
@@ -1607,6 +1616,19 @@ public:
         ItemCount++;
         return TRUE;
     }
+
+    // this function is called when parent window receiving an notification about checkstate changing
+    VOID ItemCheckStateNotify(int iItem, BOOL bCheck)
+    {
+        if (bCheck)
+        {
+            CheckedItemCount++;
+        }
+        else
+        {
+            CheckedItemCount--;
+        }
+    }
 };
 
 class CAppsTableView :
@@ -1680,11 +1702,13 @@ private:
                         if (iOldState == 1 && iNewState == 2)
                         {
                             // this item is just checked
+                            m_ListView->ItemCheckStateNotify(pnic->iItem, TRUE);
                             ItemCheckStateChanged(TRUE, (LPVOID)pnic->lParam);
                         }
                         else if (iOldState == 2 && iNewState == 1)
                         {
                             // this item is just unchecked
+                            m_ListView->ItemCheckStateNotify(pnic->iItem, FALSE);
                             ItemCheckStateChanged(FALSE, (LPVOID)pnic->lParam);
                         }
                     }
@@ -1829,6 +1853,12 @@ public:
             return FALSE;
         }
         return m_ListView->AddAvailableApplication(AvlbAppInfo, InitCheckState, param);
+    }
+
+    void CheckAll()
+    {
+        m_ListView->CheckAll();
+        return;
     }
 
     // this function is called when a item of listview get focus.
@@ -2811,7 +2841,7 @@ private:
             break;
 
         case ID_CHECK_ALL:
-            /*m_ListView->CheckAll();*/
+            m_AppsTableView->CheckAll();
             break;
         }
     }
