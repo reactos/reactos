@@ -96,7 +96,12 @@ LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
 BOOL SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim);
-BOOL SubstituteForVars(TCHAR *Src, TCHAR *Dest);
+
+BOOL
+SubstituteForVars(
+    IN PCTSTR Src,
+    OUT PTSTR Dest);
+
 LPTSTR DoDelayedExpansion(LPTSTR Line);
 INT DoCommand(LPTSTR first, LPTSTR rest, struct _PARSED_COMMAND *Cmd);
 BOOL ReadLine(TCHAR *commandline, BOOL bMore);

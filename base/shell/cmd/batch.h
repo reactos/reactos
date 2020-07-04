@@ -44,7 +44,12 @@ extern BOOL bEcho;       /* The echo flag */
 extern TCHAR textline[BATCH_BUFFSIZE]; /* Buffer for reading Batch file lines */
 
 
-LPTSTR FindArg(TCHAR, BOOL *);
+BOOL
+FindArg(
+    IN TCHAR Char,
+    OUT PCTSTR* ArgPtr,
+    OUT BOOL* IsParam0);
+
 VOID   ExitBatch(VOID);
 VOID   ExitAllBatches(VOID);
 INT    Batch(LPTSTR, LPTSTR, LPTSTR, PARSED_COMMAND *);

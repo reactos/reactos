@@ -964,8 +964,10 @@ GetEnvVarOrSpecial(LPCTSTR varName)
 }
 
 /* Handle the %~var syntax */
-static LPTSTR
-GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
+static PCTSTR
+GetEnhancedVar(
+    IN OUT PCTSTR* pFormat,
+    IN BOOL (*GetVar)(TCHAR, PCTSTR*, BOOL*))
 {
     static const TCHAR ModifierTable[] = _T("dpnxfsatz");
     enum {
@@ -980,28 +982,68 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
         M_SIZE  = 256, /* Z: file size */
     } Modifiers = 0;
 
-    TCHAR *Format, *FormatEnd;
-    TCHAR *PathVarName = NULL;
-    LPTSTR Variable;
-    TCHAR *VarEnd;
+    PCTSTR Format, FormatEnd;
+    PCTSTR PathVarName = NULL;
+    PCTSTR Variable;
+    PCTSTR VarEnd;
     BOOL VariableIsParam0;
     TCHAR FullPath[MAX_PATH];
-    TCHAR FixedPath[MAX_PATH], *Filename, *Extension;
+    TCHAR FixedPath[MAX_PATH];
+    PTCHAR Filename, Extension;
     HANDLE hFind;
     WIN32_FIND_DATA w32fd;
-    TCHAR *In, *Out;
+    PTCHAR In, Out;
 
     static TCHAR Result[CMDLINE_LENGTH];
 
-    /* There is ambiguity between modifier characters and FOR variables;
-     * the rule that cmd uses is to pick the longest possible match.
-     * For example, if there is a %n variable, then out of %~anxnd,
-     * %~anxn will be substituted rather than just %~an. */
+     /* Check whether the current character is a recognized variable.
+      * If it is not, then restore the previous one: there is indeed
+      * ambiguity between modifier characters and FOR variables;
+      * the rule that CMD uses is to pick the longest possible match.
+      * This case can happen if we have a FOR-variable specification
+      * of the following form:
+      *
+      *   %~<modifiers><actual FOR variable character><other characters>
+      *
+      * where the FOR variable character is also a similar to a modifier,
+      * but should not be interpreted as is, and the following other
+      * characters are not part of the possible modifier characters, and
+      * are unrelated to the FOR variable (they can be part of a command).
+      * For example, if there is a %n variable, then out of %~anxnd,
+      * %~anxn will be substituted rather than just %~an.
+      *
+      * In the following examples, all characters 'd','p','n','x' are valid modifiers.
+      *
+      * 1. In this example, the FOR variable character is 'x' and the actual
+      *    modifiers are 'dpn'. Parsing will first determine that 'dpnx'
+      *    are modifiers, with the possible (last) valid variable being 'x',
+      *    and will stop at the letter 'g'. Since 'g' is not a valid
+      *    variable, then the actual variable is the lattest one 'x',
+      *    and the modifiers are then actually 'dpn'.
+      *    The FOR-loop will then display the %x variable formatted with 'dpn'
+      *    and will append any other characters following, 'g'.
+      *
+      *  C:\Temp>for %x in (foo.exe bar.txt) do @echo %~dpnxg
+      *  C:\Temp\foog
+      *  C:\Temp\barg
+      *
+      *
+      * 2. In this second example, the FOR variable character is 'g' and
+      *    the actual modifiers are 'dpnx'. Parsing will determine also that
+      *    the possible (last) valid variable could be 'x', but since it's
+      *    not present in the FOR-variables list, it won't be the case.
+      *    This means that the actual FOR variable character must follow,
+      *    in this case, 'g'.
+      *
+      *  C:\Temp>for %g in (foo.exe bar.txt) do @echo %~dpnxg
+      *  C:\Temp\foo.exe
+      *  C:\Temp\bar.txt
+      */
 
     /* First, go through as many modifier characters as possible */
     FormatEnd = Format = *pFormat;
     while (*FormatEnd && _tcschr(ModifierTable, _totlower(*FormatEnd)))
-        FormatEnd++;
+        ++FormatEnd;
 
     if (*FormatEnd == _T('$'))
     {
@@ -1012,48 +1054,52 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
             return NULL;
 
         /* Must be immediately followed by the variable */
-        Variable = GetVar(*++FormatEnd, &VariableIsParam0);
-        if (!Variable)
+        if (!GetVar(*++FormatEnd, &Variable, &VariableIsParam0))
             return NULL;
     }
     else
     {
         /* Backtrack if necessary to get a variable name match */
-        while (!(Variable = GetVar(*FormatEnd, &VariableIsParam0)))
+        while (!GetVar(*FormatEnd, &Variable, &VariableIsParam0))
         {
             if (FormatEnd == Format)
                 return NULL;
-            FormatEnd--;
+            --FormatEnd;
         }
     }
 
-    for (; Format < FormatEnd && *Format != _T('$'); Format++)
-        Modifiers |= 1 << (_tcschr(ModifierTable, _totlower(*Format)) - ModifierTable);
-
     *pFormat = FormatEnd + 1;
+
+    /* If the variable is empty, return an empty string */
+    if (!Variable || !*Variable)
+        return _T("");
 
     /* Exclude the leading and trailing quotes */
     VarEnd = &Variable[_tcslen(Variable)];
     if (*Variable == _T('"'))
     {
-        Variable++;
+        ++Variable;
         if (VarEnd > Variable && VarEnd[-1] == _T('"'))
-            VarEnd--;
+            --VarEnd;
     }
 
-    if ((char *)VarEnd - (char *)Variable >= sizeof Result)
+    if ((ULONG_PTR)VarEnd - (ULONG_PTR)Variable >= sizeof(Result))
         return _T("");
-    memcpy(Result, Variable, (char *)VarEnd - (char *)Variable);
+    memcpy(Result, Variable, (ULONG_PTR)VarEnd - (ULONG_PTR)Variable);
     Result[VarEnd - Variable] = _T('\0');
+
+    /* Now determine the actual modifiers */
+    for (; Format < FormatEnd && *Format != _T('$'); ++Format)
+        Modifiers |= 1 << (_tcschr(ModifierTable, _totlower(*Format)) - ModifierTable);
 
     if (PathVarName)
     {
         /* $PATH: syntax - search the directories listed in the
          * specified environment variable for the file */
-        LPTSTR PathVar;
-        FormatEnd[-1] = _T('\0');
+        PTSTR PathVar;
+        ((PTSTR)FormatEnd)[-1] = _T('\0'); // FIXME: HACK!
         PathVar = GetEnvVar(PathVarName);
-        FormatEnd[-1] = _T(':');
+        ((PTSTR)FormatEnd)[-1] = _T(':');
         if (!PathVar ||
             !SearchPath(PathVar, Result, NULL, ARRAYSIZE(FullPath), FullPath, NULL))
         {
@@ -1070,6 +1116,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
         /* Special case: If the variable is %0 and modifier characters are present,
          * use the batch file's path (which includes the .bat/.cmd extension)
          * rather than the actual %0 variable (which might not). */
+        ASSERT(bc);
         _tcscpy(FullPath, bc->BatchFilePath);
     }
     else
@@ -1103,7 +1150,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
         /* If it doesn't exist, just leave the name as it was given */
         if (hFind != INVALID_HANDLE_VALUE)
         {
-            LPTSTR FixedComponent = w32fd.cFileName;
+            PTSTR FixedComponent = w32fd.cFileName;
             if (*w32fd.cAlternateFileName &&
                 ((Modifiers & M_SHORT) || !_tcsicmp(In, w32fd.cAlternateFileName)))
             {
@@ -1194,7 +1241,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
     }
     if (Modifiers & (M_PATH | M_FULL))
     {
-        memcpy(Out, &FixedPath[2], (char *)Filename - (char *)&FixedPath[2]);
+        memcpy(Out, &FixedPath[2], (ULONG_PTR)Filename - (ULONG_PTR)&FixedPath[2]);
         Out += Filename - &FixedPath[2];
     }
     if (Modifiers & (M_NAME | M_FULL))
@@ -1217,18 +1264,20 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
     return Result;
 }
 
-static LPCTSTR
-GetBatchVar(TCHAR *varName, UINT *varNameLen)
+static PCTSTR
+GetBatchVar(
+    IN PCTSTR varName,
+    OUT PUINT varNameLen)
 {
-    LPCTSTR ret;
-    TCHAR *varNameEnd;
-    BOOL dummy;
+    PCTSTR ret;
+    PCTSTR varNameEnd;
 
     *varNameLen = 1;
 
-    switch ( *varName )
+    switch (*varName)
     {
     case _T('~'):
+    {
         varNameEnd = varName + 1;
         ret = GetEnhancedVar(&varNameEnd, FindArg);
         if (!ret)
@@ -1238,6 +1287,7 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
         }
         *varNameLen = varNameEnd - varName;
         return ret;
+    }
 
     case _T('0'):
     case _T('1'):
@@ -1249,7 +1299,13 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
     case _T('7'):
     case _T('8'):
     case _T('9'):
-        return FindArg(*varName, &dummy);
+    {
+        BOOL dummy;
+        if (!FindArg(*varName, &ret, &dummy))
+            return NULL;
+        else
+            return ret;
+    }
 
     case _T('*'):
         /* Copy over the raw params (not including the batch file name) */
@@ -1423,37 +1479,53 @@ too_long:
 }
 
 /* Search the list of FOR contexts for a variable */
-static LPTSTR
-FindForVar(TCHAR Var, BOOL *IsParam0)
+static BOOL
+FindForVar(
+    IN TCHAR Var,
+    OUT PCTSTR* VarPtr,
+    OUT BOOL* IsParam0)
 {
     PFOR_CONTEXT Ctx;
 
+    *VarPtr = NULL;
     *IsParam0 = FALSE;
+
     for (Ctx = fc; Ctx != NULL; Ctx = Ctx->prev)
     {
         if ((UINT)(Var - Ctx->firstvar) < Ctx->varcount)
-            return Ctx->values[Var - Ctx->firstvar];
+        {
+            *VarPtr = Ctx->values[Var - Ctx->firstvar];
+            return TRUE;
+        }
     }
-    return NULL;
+    return FALSE;
 }
 
 BOOL
-SubstituteForVars(TCHAR *Src, TCHAR *Dest)
+SubstituteForVars(
+    IN PCTSTR Src,
+    OUT PTSTR Dest)
 {
-    TCHAR *DestEnd = &Dest[CMDLINE_LENGTH - 1];
+    PTCHAR DestEnd = &Dest[CMDLINE_LENGTH - 1];
     while (*Src)
     {
         if (Src[0] == _T('%'))
         {
             BOOL Dummy;
-            LPTSTR End = &Src[2];
-            LPTSTR Value = NULL;
+            PCTSTR End = &Src[2];
+            PCTSTR Value = NULL;
 
             if (Src[1] == _T('~'))
                 Value = GetEnhancedVar(&End, FindForVar);
 
-            if (!Value)
-                Value = FindForVar(Src[1], &Dummy);
+            if (!Value && Src[1])
+            {
+                if (FindForVar(Src[1], &Value, &Dummy) && !Value)
+                {
+                    /* The variable is empty, return an empty string */
+                    Value = _T("");
+                }
+            }
 
             if (Value)
             {

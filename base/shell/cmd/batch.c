@@ -74,29 +74,35 @@ TCHAR textline[BATCH_BUFFSIZE];
 /*
  * Returns a pointer to the n'th parameter of the current batch file.
  * If no such parameter exists returns pointer to empty string.
- * If no batch file is current, returns NULL
- *
+ * If no batch file is current, returns NULL.
  */
-LPTSTR FindArg(TCHAR Char, BOOL *IsParam0)
+BOOL
+FindArg(
+    IN TCHAR Char,
+    OUT PCTSTR* ArgPtr,
+    OUT BOOL* IsParam0)
 {
-    LPTSTR pp;
+    PCTSTR pp;
     INT n = Char - _T('0');
 
-    TRACE ("FindArg: (%d)\n", n);
+    TRACE("FindArg: (%d)\n", n);
+
+    *ArgPtr = NULL;
 
     if (n < 0 || n > 9)
-        return NULL;
+        return FALSE;
 
     n = bc->shiftlevel[n];
     *IsParam0 = (n == 0);
     pp = bc->params;
 
-    /* Step up the strings till we reach the end */
-    /* or the one we want */
+    /* Step up the strings till we reach
+     * the end or the one we want. */
     while (*pp && n--)
-        pp += _tcslen (pp) + 1;
+        pp += _tcslen(pp) + 1;
 
-    return pp;
+    *ArgPtr = pp;
+    return TRUE;
 }
 
 
