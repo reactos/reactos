@@ -1,5 +1,5 @@
 
-if(GCC AND GCC_VERSION VERSION_GREATER 7)
+if(GCC)
     add_compile_flags("-Wno-stringop-overflow")
 endif()
 
