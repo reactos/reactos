@@ -382,6 +382,12 @@ static int x509_get_basic_constraints( unsigned char **p,
         return( MBEDTLS_ERR_X509_INVALID_EXTENSIONS +
                 MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
 
+    /* Do not accept max_pathlen equal to INT_MAX to avoid a signed integer
+     * overflow, which is an undefined behavior. */
+    if( *max_pathlen == INT_MAX )
+        return( MBEDTLS_ERR_X509_INVALID_EXTENSIONS +
+                MBEDTLS_ERR_ASN1_INVALID_LENGTH );
+
     (*max_pathlen)++;
 
     return( 0 );

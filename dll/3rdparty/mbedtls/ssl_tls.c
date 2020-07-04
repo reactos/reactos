@@ -2119,10 +2119,20 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
             ssl_read_memory( ssl->in_msg + ssl->in_msglen, padlen );
             mbedtls_md_hmac_finish( &ssl->transform_in->md_ctx_dec, mac_expect );
 
-            /* Call mbedtls_md_process at least once due to cache attacks
-             * that observe whether md_process() was called of not */
+            /* Dummy calls to compression function.
+             * Call mbedtls_md_process at least once due to cache attacks
+             * that observe whether md_process() was called of not.
+             * Respect the usual start-(process|update)-finish sequence for
+             * the sake of hardware accelerators that might require it. */
+            mbedtls_md_starts( &ssl->transform_in->md_ctx_dec );
             for( j = 0; j < extra_run + 1; j++ )
                 mbedtls_md_process( &ssl->transform_in->md_ctx_dec, ssl->in_msg );
+            {
+                /* The switch statement above already checks that we're using
+                 * one of MD-5, SHA-1, SHA-256 or SHA-384. */
+                unsigned char tmp[384 / 8];
+                mbedtls_md_finish( &ssl->transform_in->md_ctx_dec, tmp );
+            }
 
             mbedtls_md_hmac_reset( &ssl->transform_in->md_ctx_dec );
 
@@ -6553,7 +6563,9 @@ int mbedtls_ssl_conf_alpn_protocols( mbedtls_ssl_config *conf, const char **prot
         cur_len = strlen( *p );
         tot_len += cur_len;
 
-        if( cur_len == 0 || cur_len > 255 || tot_len > 65535 )
+        if( ( cur_len == 0 ) ||
+            ( cur_len > MBEDTLS_SSL_MAX_ALPN_NAME_LEN ) ||
+            ( tot_len > MBEDTLS_SSL_MAX_ALPN_LIST_LEN ) )
             return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
     }
 

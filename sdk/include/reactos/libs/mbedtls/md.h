@@ -122,6 +122,8 @@ typedef struct {
  * \brief           This function returns the list of digests supported by the
  *                  generic digest module.
  *
+ * \note            The list starts with the strongest available hashes.
+ *
  * \return          A statically allocated array of digests. Each element
  *                  in the returned list is an integer belonging to the
  *                  message-digest enumeration #mbedtls_md_type_t.

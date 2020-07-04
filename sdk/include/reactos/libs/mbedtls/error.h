@@ -121,6 +121,7 @@
  * RSA       4   11
  * ECP       4   9 (Started from top)
  * MD        5   5
+ * SSL       5   1 (Started from 0x5E80)
  * CIPHER    6   8
  * SSL       6   17 (Started from top)
  * SSL       7   31

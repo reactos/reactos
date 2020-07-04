@@ -183,6 +183,12 @@
                         + MBEDTLS_SSL_PADDING_ADD                \
                         )
 
+/* Maximum size in bytes of list in sig-hash algorithm ext., RFC 5246 */
+#define MBEDTLS_SSL_MAX_SIG_HASH_ALG_LIST_LEN  65534
+
+/* Maximum size in bytes of list in supported elliptic curve ext., RFC 4492 */
+#define MBEDTLS_SSL_MAX_CURVE_LIST_LEN         65535
+
 /*
  * Check that we obey the standard's message size bounds
  */
@@ -210,6 +216,41 @@
  */
 #define MBEDTLS_TLS_EXT_SUPPORTED_POINT_FORMATS_PRESENT (1 << 0)
 #define MBEDTLS_TLS_EXT_ECJPAKE_KKPP_OK                 (1 << 1)
+
+/**
+ * \brief        This function checks if the remaining size in a buffer is
+ *               greater or equal than a needed space.
+ *
+ * \param cur    Pointer to the current position in the buffer.
+ * \param end    Pointer to one past the end of the buffer.
+ * \param need   Needed space in bytes.
+ *
+ * \return       Zero if the needed space is available in the buffer, non-zero
+ *               otherwise.
+ */
+static inline int mbedtls_ssl_chk_buf_ptr( const uint8_t *cur,
+                                           const uint8_t *end, size_t need )
+{
+    return( ( cur > end ) || ( need > (size_t)( end - cur ) ) );
+}
+
+/**
+ * \brief        This macro checks if the remaining size in a buffer is
+ *               greater or equal than a needed space. If it is not the case,
+ *               it returns an SSL_BUFFER_TOO_SMALL error.
+ *
+ * \param cur    Pointer to the current position in the buffer.
+ * \param end    Pointer to one past the end of the buffer.
+ * \param need   Needed space in bytes.
+ *
+ */
+#define MBEDTLS_SSL_CHK_BUF_PTR( cur, end, need )                        \
+    do {                                                                 \
+        if( mbedtls_ssl_chk_buf_ptr( ( cur ), ( end ), ( need ) ) != 0 ) \
+        {                                                                \
+            return( MBEDTLS_ERR_SSL_BUFFER_TOO_SMALL );                  \
+        }                                                                \
+    } while( 0 )
 
 #ifdef __cplusplus
 extern "C" {
