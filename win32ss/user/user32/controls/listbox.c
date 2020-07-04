@@ -3055,10 +3055,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         return LB_OKAY;
 
     case LB_GETLISTBOXINFO:
-        if (descr->style & LBS_MULTICOLUMN) //// ReactOS
-           return descr->page_size * descr->column_width;
-        else
-           return descr->page_size;
+        return descr->page_size;
 
     case WM_DESTROY:
         return LISTBOX_Destroy( descr );

@@ -3349,10 +3349,7 @@ NtUserGetListBoxInfo(
    {
       LB_DESCR *descr = ((PWND2LB)Wnd)->pLBiv;
       // See Controls ListBox.c:LB_GETLISTBOXINFO must match...
-      if (descr->style & LBS_MULTICOLUMN) //// ReactOS
-         Ret = descr->page_size * descr->column_width;
-      else
-         Ret = descr->page_size;
+      Ret = descr->page_size;
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
