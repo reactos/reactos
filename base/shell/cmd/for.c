@@ -121,6 +121,8 @@ static LPTSTR ReadFileContents(FILE *InputFile, TCHAR *Buffer)
 static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 {
     LPTSTR Delims = _T(" \t");
+    LPTSTR DelimsEndPtr = NULL;
+    TCHAR  DelimsEndChr = _T('\0');
     TCHAR Eol = _T(';');
     INT SkipLines = 0;
     DWORD Tokens = (1 << 1);
@@ -148,8 +150,13 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
             else if (_tcsnicmp(Param, _T("delims="), 7) == 0)
             {
                 Param += 7;
-                /* delims=xxx: Specifies the list of characters that separate tokens */
+                /*
+                 * delims=xxx: Specifies the list of characters that separate tokens.
+                 * This option does not cumulate: only the latest 'delims=' specification
+                 * is taken into account.
+                 */
                 Delims = Param;
+                DelimsEndPtr = NULL;
                 while (*Param && *Param != Quote)
                 {
                     if (*Param == _T(' '))
@@ -158,13 +165,19 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
                         Param += _tcsspn(Param, _T(" "));
                         /* Exclude trailing spaces if this is not the last parameter */
                         if (*Param && *Param != Quote)
-                            *FirstSpace = _T('\0');
+                        {
+                            /* Save where the delimiters specification string ends */
+                            DelimsEndPtr = FirstSpace;
+                        }
                         break;
                     }
                     Param++;
                 }
                 if (*Param == Quote)
-                    *Param++ = _T('\0');
+                {
+                    /* Save where the delimiters specification string ends */
+                    DelimsEndPtr = Param++;
+                }
             }
             else if (_tcsnicmp(Param, _T("eol="), 4) == 0)
             {
@@ -301,6 +314,13 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
             return 1;
         }
 
+        /* Patch the delimiters string */
+        if (DelimsEndPtr)
+        {
+            DelimsEndChr = *DelimsEndPtr;
+            *DelimsEndPtr = _T('\0');
+        }
+
         /* Loop over the input line by line */
         for (In = FullInput, Skip = SkipLines;
              !ExitingOrGoto(Cmd) && (In != NULL);
@@ -342,6 +362,10 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
             if (*Variables[0])
                 Ret = RunInstance(Cmd);
         }
+
+        /* Restore the delimiters string */
+        if (DelimsEndPtr)
+            *DelimsEndPtr = DelimsEndChr;
 
         cmd_free(FullInput);
     }
