@@ -99,11 +99,12 @@ private:
     inline BOOL FindInLanguages(LCID what) const;
 };
 
-typedef BOOL(CALLBACK *AVAILENUMPROC)(CAvailableApplicationInfo *Info, PVOID param);
+typedef BOOL(CALLBACK *AVAILENUMPROC)(CAvailableApplicationInfo *Info, BOOL bInitialCheckState, PVOID param);
 
 class CAvailableApps
 {
     ATL::CAtlList<CAvailableApplicationInfo*> m_InfoList;
+    ATL::CAtlList< CAvailableApplicationInfo*> m_SelectedList;
 
 public:
     static AvailableStrings m_Strings;
@@ -116,6 +117,8 @@ public:
 
     VOID FreeCachedEntries();
     BOOL Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param);
+
+    BOOL AddSelected(BOOL bAdd, CAvailableApplicationInfo *AvlbInfo);
 
     CAvailableApplicationInfo* FindInfo(const ATL::CStringW& szAppName) const;
     ATL::CSimpleArray<CAvailableApplicationInfo> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;

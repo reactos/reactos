@@ -402,7 +402,18 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
 {
     if (EnumType == ENUM_CAT_SELECTED)
     {
-        // TODO: complete here
+        CAvailableApplicationInfo *EnumAvlbInfo = NULL;
+
+        // enum all object in m_SelectedList and invoke callback
+        for(POSITION CurrentPosition = m_SelectedList.GetHeadPosition();
+            CurrentPosition && (EnumAvlbInfo = m_SelectedList.GetAt(CurrentPosition));
+            m_SelectedList.GetNext(CurrentPosition))
+        {
+            EnumAvlbInfo->RefreshAppInfo(m_Strings);
+
+            if (lpEnumProc)
+                lpEnumProc(EnumAvlbInfo, TRUE, param);
+        }
         return TRUE;
     }
     else
@@ -438,6 +449,9 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
                         // recreate our cache, this is the slow path
                         m_InfoList.RemoveAt(LastListPosition);
 
+                        // also remove this in selected list (if exist)
+                        AddSelected(FALSE, Info);
+
                         delete Info;
                         Info = NULL;
                         break;
@@ -464,12 +478,39 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
                 Info->RefreshAppInfo(m_Strings);
 
                 if (lpEnumProc)
-                    lpEnumProc(Info, param);
+                {
+                    if (m_SelectedList.Find(Info))
+                    {
+                        lpEnumProc(Info, TRUE, param);
+                    }
+                    else
+                    {
+                        lpEnumProc(Info, FALSE, param);
+                    }
+                }
             }
         } while (FindNextFileW(hFind, &FindFileData) != 0);
 
         FindClose(hFind);
         return TRUE;
+    }
+}
+
+BOOL CAvailableApps::AddSelected(BOOL bAdd, CAvailableApplicationInfo *AvlbInfo)
+{
+    if (bAdd)
+    {
+        return m_SelectedList.AddTail(AvlbInfo) != 0;
+    }
+    else
+    {
+        POSITION Position = m_SelectedList.Find(AvlbInfo);
+        if (Position)
+        {
+            m_SelectedList.RemoveAt(Position);
+            return TRUE;
+        }
+        return FALSE;
     }
 }
 

@@ -65,6 +65,8 @@ enum SCRNSHOT_STATUS
 
 #define PI 3.1415927
 
+// retrieve the value using a mask
+#define GET_MASKED_VALUE(Value, Mask) (((Value) & (Mask)) / ((Mask) - ((Mask) & (Mask - 1))))
 
 enum TABLE_VIEW_MODE
 {
@@ -80,6 +82,8 @@ typedef struct __ScrnshotDownloadParam
     HWND hwndNotify;
     ATL::CStringW DownloadFileName;
 } ScrnshotDownloadParam;
+
+class CMainWindow;
 
 INT GetSystemColorDepth()
 {
@@ -1559,7 +1563,7 @@ public:
         return TRUE;
     }
 
-    BOOL AddAvailableApplication(CAvailableApplicationInfo *AvlbAppInfo, LPVOID CallbackParam)
+    BOOL AddAvailableApplication(CAvailableApplicationInfo *AvlbAppInfo, BOOL InitCheckState, LPVOID CallbackParam)
     {
         if (TableViewMode != TableViewAvailableApps)
         {
@@ -1591,6 +1595,12 @@ public:
         DestroyIcon(hIcon);
 
         int Index = AddItem(ItemCount, IconIndex, AvlbAppInfo->m_szName, (LPARAM)CallbackParam);
+
+        if (InitCheckState)
+        {
+            SetCheckState(Index, TRUE);
+        }
+
         SetItemText(Index, 1, AvlbAppInfo->m_szVersion);
         SetItemText(Index, 2, AvlbAppInfo->m_szDesc);
 
@@ -1608,7 +1618,7 @@ private:
     CAppsListView *m_ListView = NULL;
     CAppInfoDisplay *m_AppsInfo = NULL;
     CUiSplitPanel *m_HSplitter = NULL;
-
+    CMainWindow *m_MainWindow = NULL;
     TABLE_VIEW_MODE TableViewMode = TableViewEmpty;
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
@@ -1659,6 +1669,24 @@ private:
                         !(pnic->uOldState & LVIS_FOCUSED))
                     {
                         ItemGetFocus((LPVOID)pnic->lParam);
+                    }
+
+                    /* Check if the item is checked/unchecked */
+                    if (pnic->uChanged & LVIF_STATE)
+                    {
+                        int iOldState = GET_MASKED_VALUE(pnic->uOldState, LVIS_STATEIMAGEMASK);
+                        int iNewState = GET_MASKED_VALUE(pnic->uNewState, LVIS_STATEIMAGEMASK);
+
+                        if (iOldState == 1 && iNewState == 2)
+                        {
+                            // this item is just checked
+                            ItemCheckStateChanged(TRUE, (LPVOID)pnic->lParam);
+                        }
+                        else if (iOldState == 2 && iNewState == 1)
+                        {
+                            // this item is just unchecked
+                            ItemCheckStateChanged(FALSE, (LPVOID)pnic->lParam);
+                        }
                     }
                 }
                 break;
@@ -1732,6 +1760,11 @@ private:
 
 public:
 
+    CAppsTableView(CMainWindow *MainWindow)
+        : m_MainWindow(MainWindow)
+    {
+    }
+
     ~CAppsTableView()
     {
         delete m_ListView;
@@ -1789,13 +1822,13 @@ public:
         return m_ListView->AddInstalledApplication(InstAppInfo, param);
     }
 
-    BOOL AddAvailableApplication(CAvailableApplicationInfo * AvlbAppInfo, LPVOID param)
+    BOOL AddAvailableApplication(CAvailableApplicationInfo * AvlbAppInfo, BOOL InitCheckState, LPVOID param)
     {
         if (TableViewMode != TableViewAvailableApps)
         {
             return FALSE;
         }
-        return m_ListView->AddAvailableApplication(AvlbAppInfo, param);
+        return m_ListView->AddAvailableApplication(AvlbAppInfo, InitCheckState, param);
     }
 
     // this function is called when a item of listview get focus.
@@ -1816,6 +1849,11 @@ public:
             return FALSE;
         }
     }
+
+    // this function is called when a item of listview is checked/unchecked
+    // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
+    BOOL ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam);
+    
 };
 
 class CSideTreeView :
@@ -2034,7 +2072,7 @@ private:
 
     BOOL CreateTableView()
     {
-        m_AppsTableView = new CAppsTableView();
+        m_AppsTableView = new CAppsTableView(this); // pass this to TableView for callback purpose
         m_AppsTableView->m_VerticalAlignment = UiAlign_Stretch;
         m_AppsTableView->m_HorizontalAlignment = UiAlign_Stretch;
         m_VSplitter->Second().Append(m_AppsTableView);
@@ -2827,7 +2865,7 @@ private:
         return TRUE;
     }
 
-    BOOL EnumAvailableAppProc(CAvailableApplicationInfo * Info)
+    BOOL EnumAvailableAppProc(CAvailableApplicationInfo * Info, BOOL bInitialCheckState)
     {
         /*if (!SearchPatternMatch(Info->m_szName.GetString(), szSearchPattern) &&
             !SearchPatternMatch(Info->m_szDesc.GetString(), szSearchPattern))
@@ -2836,7 +2874,7 @@ private:
         }
         return m_ListView->AddAvailableAppInfo(Info);*/
 
-        m_AppsTableView->AddAvailableApplication(Info, Info);
+        m_AppsTableView->AddAvailableApplication(Info, bInitialCheckState, Info);
         return TRUE;
     }
 
@@ -2847,10 +2885,10 @@ private:
         return pThis->EnumInstalledAppProc(Info);
     }
 
-    static BOOL CALLBACK s_EnumAvailableAppProc(CAvailableApplicationInfo* Info, PVOID param)
+    static BOOL CALLBACK s_EnumAvailableAppProc(CAvailableApplicationInfo* Info, BOOL bInitialCheckState, PVOID param)
     {
         CMainWindow* pThis = (CMainWindow*)param;
-        return pThis->EnumAvailableAppProc(Info);
+        return pThis->EnumAvailableAppProc(Info, bInitialCheckState);
     }
 
     VOID UpdateStatusBarText()
@@ -2940,6 +2978,18 @@ private:
 
     VOID UpdateApplicationsList(INT EnumType)
     {
+        bUpdating = TRUE;
+
+        if (EnumType == -1)
+        {
+            // keep the old enum type
+            EnumType = SelectedEnumType;
+        }
+        else
+        {
+            SelectedEnumType = EnumType;
+        }
+
         m_AppsTableView->SetRedraw(FALSE);
         if (IsInstalledEnum(EnumType))
         {
@@ -2961,6 +3011,7 @@ private:
         }
         m_AppsTableView->SetRedraw(TRUE);
         m_AppsTableView->RedrawWindow(0, 0, RDW_INVALIDATE | RDW_ALLCHILDREN); // force the child window to repaint
+        bUpdating = FALSE;
     }
 
 public:
@@ -3005,6 +3056,27 @@ public:
         return CWindowImpl::Create(NULL, r, szWindowName.GetString(), WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
     }
 
+    // this function is called when a item of tableview is checked/unchecked
+    // CallbackParam is the param passed to tableview when adding the item (the one getting focus now).
+    BOOL ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam)
+    {
+        if (!bUpdating)
+        {
+            if (bChecked)
+            {
+                return m_AvailableApps.AddSelected(TRUE, (CAvailableApplicationInfo *)CallbackParam);
+            }
+            else
+            {
+                return m_AvailableApps.AddSelected(FALSE, (CAvailableApplicationInfo *)CallbackParam);
+            }
+        }
+        else
+        {
+            return TRUE;
+        }
+    }
+
     void HandleTabOrder(int direction)
     {
         HWND Controls[] = { m_Toolbar->m_hWnd, m_SearchBar->m_hWnd, m_TreeView->m_hWnd/*, m_ListView->m_hWnd, m_AppInfo->m_hWnd*/ };
@@ -3028,6 +3100,12 @@ public:
         ::SetFocus(Controls[current]);
     }
 };
+
+BOOL CAppsTableView::ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam)
+{
+    m_MainWindow->ItemCheckStateChanged(bChecked, CallbackParam);
+    return TRUE;
+}
 
 VOID ShowMainWindow(INT nShowCmd)
 {
