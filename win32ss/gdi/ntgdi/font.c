@@ -927,6 +927,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
       EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return 0;
   }
+  RtlZeroMemory(potm, Size);
   IntGetOutlineTextMetrics(FontGDI, Size, potm);
 
   _SEH2_TRY
