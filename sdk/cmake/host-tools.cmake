@@ -38,8 +38,9 @@ function(configure_host_tools HOST_TOOLS_DIR)
     # Make a host-tools target so it'll be built when needed
     # custom target + symbolic output prevents cmake from running
     # the command multiple times per build
+    # Specify the --config option, so the Release/Debug setting from the IDE can be used
     add_custom_command(
-        COMMAND ${CMAKE_COMMAND} --build ${HOST_TOOLS_DIR}
+        COMMAND ${CMAKE_COMMAND} --build ${HOST_TOOLS_DIR} --config $<CONFIG>
         OUTPUT host_tools
         BYPRODUCTS ${_target_locations})
     add_custom_target(build-host-tools ALL DEPENDS host_tools)
