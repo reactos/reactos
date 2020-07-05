@@ -60,7 +60,7 @@ DIB_4BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 BOOLEAN
 DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
-  LONG     i, j, sx, sy, f2, xColor, lTmp;;
+  LONG     i, j, sx, sy, f2, xColor;
   PBYTE    SourceBits_24BPP, SourceLine_24BPP;
   PBYTE    DestBits, DestLine, SourceBits_8BPP, SourceLine_8BPP;
   PBYTE    SourceBits, SourceLine;
@@ -71,7 +71,7 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
     BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
 
-  /* If we came from copybits.c with a TBltInfo->SourceSurface->fjBitmap & BMF_UMPDMEM   */
+  /* If we came from dibobj.c with a TBltInfo->SourceSurface->fjBitmap & BMF_UMPDMEM   */
   /* bit set, then we need a flip of bTopToBottom. This mostly fixes Lazarus and PeaZip. */
 
   DPRINT("SourceSurface->fjBitmap & BMF_TOPDOWN is '%d'.\n", BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN);
@@ -87,7 +87,7 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     bLeftToRight = FALSE;
   }
 
-  /* The OR for BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN checks for coming from copybits.c */
+  /* The OR for BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN checks for coming from dibobj.c */
   if ((BltInfo->DestRect.top > BltInfo->DestRect.bottom) || (BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN ))
   {
     bTopToBottom = TRUE;
@@ -97,20 +97,8 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     bTopToBottom = FALSE;
   }
 
-  /* Then we make top < bottom and left < right */
-  if (BltInfo->DestRect.left > BltInfo->DestRect.right)
-  {
-    lTmp = BltInfo->DestRect.left;
-    BltInfo->DestRect.left = BltInfo->DestRect.right;
-    BltInfo->DestRect.right = lTmp;
-  }
-
-  if (BltInfo->DestRect.top > BltInfo->DestRect.bottom)
-  {
-    lTmp = BltInfo->DestRect.top;
-    BltInfo->DestRect.top = BltInfo->DestRect.bottom;
-    BltInfo->DestRect.bottom = lTmp;
-  }
+  /* Make WellOrdered with top < bottom and left < right */
+  RECTL_vMakeWellOrdered(&BltInfo->DestRect);
 
   DPRINT("BPP is '%d/%d' & BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
     BltInfo->SourceSurface->iBitmapFormat, BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
@@ -621,21 +609,10 @@ DIB_4BPP_BitBlt(PBLTINFO BltInfo)
 BOOLEAN
 DIB_4BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
-  LONG DestY, lTmp;
+  LONG DestY;
 
-/* Make WellOrdered by making top < bottom and left < right */
-    if (DestRect->left > DestRect->right)
-    {
-        lTmp = DestRect->left;
-        DestRect->left = DestRect->right;
-        DestRect->right = lTmp;
-    }
-    if (DestRect->top > DestRect->bottom)
-    {
-        lTmp = DestRect->top;
-        DestRect->top = DestRect->bottom;
-        DestRect->bottom = lTmp;
-    }
+  /* Make WellOrdered by making top < bottom and left < right */
+  RECTL_vMakeWellOrdered(DestRect);
 
   for (DestY = DestRect->top; DestY < DestRect->bottom; DestY++)
   {

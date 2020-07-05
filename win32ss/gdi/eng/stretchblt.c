@@ -588,9 +588,8 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     }
 
     /* Make Well Ordered to start */
+    RECTL_vMakeWellOrdered(DestRect);
     OutputRect = *DestRect;
-    RECTL_vMakeWellOrdered(&OutputRect);
-    *DestRect = OutputRect;
 
     /* Here we do the tests and set our conditions */
     if (((cxSrc < 0) && (cxDest < 0)) || ((cxSrc >= 0) && (cxDest >= 0)))

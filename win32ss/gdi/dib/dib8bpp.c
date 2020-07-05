@@ -55,7 +55,7 @@ DIB_8BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 BOOLEAN
 DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
-  LONG     i, j, sx, sy, xColor, f1, lTmp;
+  LONG     i, j, sx, sy, xColor, f1;
   PBYTE    SourceBits, DestBits, SourceLine, DestLine;
   PBYTE    SourceBits_4BPP, SourceLine_4BPP;
   BOOLEAN  bTopToBottom, bLeftToRight;
@@ -65,7 +65,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
     BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
 
-  /* Normally,if we came from copybits.c with a BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN     */
+  /* Normally,if we came from dibobj.c with a BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN     */
   /* bit set, we have to set the bTopToBottom flip bit for Lazarus and PeaZip. But for some reason */
   /* for the 8 BPP here we need to ignore this bit or we get fails in gdi32:CreateDIBPatternBrush. */
 
@@ -92,19 +92,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   DPRINT("bTopToBottom is '%d' and bLeftToRight is '%d'.\n", bTopToBottom, bLeftToRight);
 
   /* Make WellOrdered by making top < bottom and left < right */
-  if (BltInfo->DestRect.left > BltInfo->DestRect.right)
-  {
-    lTmp = BltInfo->DestRect.left;
-    BltInfo->DestRect.left = BltInfo->DestRect.right;
-    BltInfo->DestRect.right = lTmp;
-  }
-
-  if (BltInfo->DestRect.top > BltInfo->DestRect.bottom)
-  {
-    lTmp = BltInfo->DestRect.top;
-    BltInfo->DestRect.top = BltInfo->DestRect.bottom;
-    BltInfo->DestRect.bottom = lTmp;
-  }
+  RECTL_vMakeWellOrdered(&BltInfo->DestRect);
 
   DPRINT("BPP is '%d' & BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
     BltInfo->SourceSurface->iBitmapFormat, BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
@@ -632,21 +620,10 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 BOOLEAN
 DIB_8BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
-  LONG DestY, lTmp;
+  LONG DestY;
 
   /* Make WellOrdered by making top < bottom and left < right */
-  if (DestRect->left > DestRect->right)
-  {
-    lTmp = DestRect->left;
-    DestRect->left = DestRect->right;
-    DestRect->right = lTmp;
-  }
-  if (DestRect->top > DestRect->bottom)
-  {
-    lTmp = DestRect->top;
-    DestRect->top = DestRect->bottom;
-    DestRect->bottom = lTmp;
-  }
+  RECTL_vMakeWellOrdered(DestRect);
 
   for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
   {

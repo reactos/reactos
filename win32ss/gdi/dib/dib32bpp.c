@@ -50,7 +50,7 @@ DIB_32BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 BOOLEAN
 DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
-  LONG     i, j, sx, sy, xColor, f1, lTmp;
+  LONG     i, j, sx, sy, xColor, f1;
   PBYTE    SourceBits, DestBits, SourceLine, DestLine;
   PBYTE    SourceBitsT, SourceBitsB, DestBitsT, DestBitsB;
   PBYTE    SourceBits_4BPP, SourceLine_4BPP;
@@ -64,7 +64,11 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
     BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
 
-  DPRINT("BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN is '%d'.\n", BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN);
+  DPRINT("SourceSurf->dhsurf is '%p', SourceSurface->hsurf is '%p'.\n",
+    BltInfo->SourceSurface->dhsurf, BltInfo->SourceSurface->hsurf);
+
+  DPRINT("BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN is '%d'.\n",
+    BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN);
 
   /* Get back flip here */
   if (BltInfo->DestRect.left > BltInfo->DestRect.right)
@@ -76,7 +80,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     bLeftToRight = FALSE;
   }
 
-  /* The OR for BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN checks for coming from copybits.c */
+  /* The OR for BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN checks for coming from dibobj.c */
   if ((BltInfo->DestRect.top > BltInfo->DestRect.bottom) || (BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN))
   {
     bTopToBottom = TRUE;
@@ -90,21 +94,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
 
   /* Make WellOrdered with top < bottom and left < right */
-  if (BltInfo->DestRect.left > BltInfo->DestRect.right)
-  {
-    DPRINT("Left to Right needs Fixes.\n");
-    lTmp = BltInfo->DestRect.left;
-    BltInfo->DestRect.left = BltInfo->DestRect.right;
-    BltInfo->DestRect.right = lTmp;
-  }
-
-  if (BltInfo->DestRect.top > BltInfo->DestRect.bottom)
-  {
-    DPRINT("Top To Bottom needs Fixes.\n");
-    lTmp = BltInfo->DestRect.top;
-    BltInfo->DestRect.top = BltInfo->DestRect.bottom;
-    BltInfo->DestRect.bottom = lTmp;
-  }
+  RECTL_vMakeWellOrdered(&BltInfo->DestRect);
 
   DestBits = (PBYTE)BltInfo->DestSurface->pvScan0
     + (BltInfo->DestRect.top * BltInfo->DestSurface->lDelta)

@@ -140,9 +140,10 @@ DIB_16BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 BOOLEAN
 DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
-  LONG     i, j, sx, sy, xColor, f1, lTmp;
+  LONG     i, j, sx, sy, xColor, f1;
   PBYTE    SourceBits, DestBits, SourceLine, DestLine;
   PBYTE    SourceBits_4BPP, SourceLine_4BPP;
+  PBYTE    SourceBitsT, SourceBitsB, DestBitsT, DestBitsB;
   BOOLEAN  bTopToBottom, bLeftToRight;
 
   DPRINT("DIB_16BPP_BitBltSrcCopy: SrcSurf cx/cy (%d/%d), DestSuft cx/cy (%d/%d) dstRect: (%d,%d)-(%d,%d)\n",
@@ -150,7 +151,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
     BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
 
-  /* If we came from copybits.c with a TBltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN   */
+  /* If we came from dibobj.c with a TBltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN   */
   /* bit set, then we need a flip of bTopToBottom. This mostly fixes Lazarus and PeaZip. */
 
   DPRINT("SourceSurface->fjBitmap & BMF_TOPDOWN is '%d'.\n", BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN);
@@ -165,7 +166,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     bLeftToRight = FALSE;
   }
 
-  /* The OR for BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN checks for coming from copybits.c */ 
+  /* The OR for BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN checks for coming from dibobj.c */ 
   if ((BltInfo->DestRect.top > BltInfo->DestRect.bottom) || (BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN))
   {
     bTopToBottom = TRUE;
@@ -179,19 +180,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
 
   /* Make WellOrdered with top < bottom and left < right */
-  if (BltInfo->DestRect.left > BltInfo->DestRect.right)
-  {
-    lTmp = BltInfo->DestRect.left;
-    BltInfo->DestRect.left = BltInfo->DestRect.right;
-    BltInfo->DestRect.right = lTmp;
-  }
-
-  if (BltInfo->DestRect.top > BltInfo->DestRect.bottom)
-  {
-    lTmp = BltInfo->DestRect.top;
-    BltInfo->DestRect.top = BltInfo->DestRect.bottom;
-    BltInfo->DestRect.bottom = lTmp;
-  }
+  RECTL_vMakeWellOrdered(&BltInfo->DestRect);
 
   DPRINT("BPP is '%d/%d' & BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
     BltInfo->SourceSurface->iBitmapFormat, BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
@@ -566,22 +555,26 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
         if (bTopToBottom)
         {
-          DPRINT("Flip is bTopToBottom.\n");    
-          DWORD  Index;
+          DPRINT("Flip is bTopToBottom.\n");
 
-          /* Allocate enough pixels for a column in WORD's */
+          /* Allocate enough pixels for a row in WORD's */
           WORD *store = ExAllocatePoolWithTag(NonPagedPool,
-            (BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1) * 2, TAG_DIB);
+            (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 2, TAG_DIB);
           if (store == NULL)
           {
             DPRINT1("Storage Allocation Failed.\n");
             return FALSE;
           }
 
-          /* This set the DestLine to the top line */
-          DestLine = (PBYTE)BltInfo->DestSurface->pvScan0 +
-            (BltInfo->DestRect.top * BltInfo->DestSurface->lDelta) +
-            2 * BltInfo->DestRect.left;
+          /* This set DestBitsT to the top line */
+          DestBitsT = (PBYTE)BltInfo->DestSurface->pvScan0
+            + (BltInfo->DestRect.top * BltInfo->DestSurface->lDelta)
+            + 2 * BltInfo->DestRect.left;
+
+          /* This sets DestBitsB to the bottom line */
+          DestBitsB = (PBYTE)BltInfo->DestSurface->pvScan0
+           + (BltInfo->DestRect.bottom - 1) * BltInfo->DestSurface->lDelta
+           + 2 * BltInfo->DestRect.left;
 
           /* The OneDone flag indicates that we are flipping for bTopToBottom and bLeftToRight   */
           /* and have already completed the bLeftToRight. So we will lose our first flip output */
@@ -590,50 +583,46 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
           if (OneDone)
           {
-            /* This sets SourceLine to the bottom line of our previous destination */
-            SourceLine = (PBYTE)BltInfo->DestSurface->pvScan0 + 
-              (BltInfo->DestRect.top * BltInfo->DestSurface->lDelta) + 2 * BltInfo->DestRect.left  +
-              (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->DestSurface->lDelta;
+            /* This sets SourceBitsB to the bottom line */
+            SourceBitsB = DestBitsB;
+
+            /* This sets SourceBitsT to the top line */
+            SourceBitsT = DestBitsT;
           }
           else
           {
-            /* This sets SourceLine to the bottom line */
-            SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 + 
-              (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 2 * BltInfo->SourcePoint.x  +
-              (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta;
+            /* This sets SourceBitsB to the bottom line */
+            SourceBitsB = (PBYTE)BltInfo->SourceSurface->pvScan0
+              + ((BltInfo->SourcePoint.y + BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1)
+              * BltInfo->SourceSurface->lDelta) + 2 * BltInfo->SourcePoint.x;
+
+            /* This sets SourceBitsT to the top line */
+            SourceBitsT = (PBYTE)BltInfo->SourceSurface->pvScan0
+              + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 2 * BltInfo->SourcePoint.x;
           }
 
-          /* Read columns */
-          for (i = BltInfo->DestRect.left; i < BltInfo->DestRect.right; i++)
+          for (j = 0; j < (BltInfo->DestRect.bottom - BltInfo->DestRect.top) / 2 ; j++)
           {
+            /* Store bottom row */
+            RtlMoveMemory(&store[0], SourceBitsB, 2 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
 
-            DestBits = DestLine;
-            SourceBits = SourceLine;
+            /* Copy top row to bottom row overwriting it */
+            RtlMoveMemory(DestBitsB, SourceBitsT, 2 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
 
-            Index = 0;
+            /* Copy stored bottom row to top row */
+            RtlMoveMemory(DestBitsT, &store[0], 2 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
 
-            /* Read up the column and store the pixels */
-            for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
-            {
-              store[Index] = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *((WORD *)SourceBits));
-              /* Go up a line */
-              SourceBits -= BltInfo->SourceSurface->lDelta;
-              Index++;
-            }
- 
-            Index = 0;
+            /* Index top rows down and bottom rows up */
+            SourceBitsT += BltInfo->SourceSurface->lDelta;
+            SourceBitsB -= BltInfo->SourceSurface->lDelta;
 
-            /* Get the stored pixels and copy them down the column */
-            for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
-            {
-              *((WORD *)DestBits) = store[Index];
-              /* Go down a line */
-              DestBits += BltInfo->SourceSurface->lDelta;
-              Index++;
-            }
-            /* Index to next column */
-            SourceLine += 2;
-            DestLine += 2;
+            DestBitsT += BltInfo->DestSurface->lDelta;
+            DestBitsB -= BltInfo->DestSurface->lDelta;
+          }
+          if ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) % 2)
+          {
+            /* If we had an odd number of lines we handle the center one here */
+            RtlMoveMemory(DestBitsB, SourceBitsT, 2 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
           }
           ExFreePoolWithTag(store, TAG_DIB);
         }
@@ -768,21 +757,10 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 BOOLEAN
 DIB_16BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
-  LONG DestY, lTmp;
+  LONG DestY;
 
   /* Make WellOrdered with top < bottom and left < right */
-  if (DestRect->left > DestRect->right)
-  {
-    lTmp = DestRect->left;
-    DestRect->left = DestRect->right;
-    DestRect->right = lTmp;
-  }
-  if (DestRect->top > DestRect->bottom)
-  {
-    lTmp = DestRect->top;
-    DestRect->top = DestRect->bottom;
-    DestRect->bottom = lTmp;
-  }
+  RECTL_vMakeWellOrdered(DestRect);
 
 #if defined(_M_IX86) && !defined(_MSC_VER)
   /* This is about 10% faster than the generic C code below */

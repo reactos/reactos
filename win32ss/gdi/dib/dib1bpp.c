@@ -62,6 +62,9 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
                                  BOOLEAN bTopToBottom,
                                  BOOLEAN bLeftToRight )
 {
+
+  DPRINT("bLeftToRight is '%d' and bTopToBottom is '%d'.\n", bLeftToRight, bTopToBottom);
+
   // The 'window' in this sense is the x-position that corresponds
   // to the left-edge of the 8-pixel byte we are currently working with.
   // dwx is current x-window, dwx2 is the 'last' window we need to process.
@@ -97,35 +100,28 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 
   xormask = 0xFF * (BYTE)XLATEOBJ_iXlate(pxlo, 0);
 
+
   if ( DestRect->top <= SourcePoint->y )
   {
+    DPRINT("Moving up (scan top -> bottom).\n");
     // Moving up (scan top -> bottom)
     dy1 = DestRect->top;
     dy2 = DestRect->bottom - 1;
     if (bTopToBottom)
     {
-      sy1 = SourcePoint->y + dy1 - dy2;
+      sy1 = SourcePoint->y + dy2 - dy1;
     }
     else
     {
       sy1 = SourcePoint->y;
     }
     yinc = 1;
-
-    if (bTopToBottom)
-    {
-      ySrcDelta = DestSurf->lDelta;
-      yDstDelta = SourceSurf->lDelta;
-    }
-    else
-    {
-      ySrcDelta = SourceSurf->lDelta;
-      yDstDelta = DestSurf->lDelta;
-    }
-
+    ySrcDelta = SourceSurf->lDelta;
+    yDstDelta = DestSurf->lDelta;
   }
   else
   {
+    DPRINT("Moving down (scan bottom -> top).\n");
     // Moving down (scan bottom -> top)
     dy1 = DestRect->bottom - 1;
     dy2 = DestRect->top;
@@ -138,20 +134,12 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
       sy1 = SourcePoint->y + dy1 - dy2;
     }
     yinc = -1;
-
-    if (bTopToBottom)
-    {
-      ySrcDelta = -DestSurf->lDelta;
-      yDstDelta = -SourceSurf->lDelta;
-    }
-    else
-    {
-      ySrcDelta = -SourceSurf->lDelta;
-      yDstDelta = -DestSurf->lDelta;
-    }
+    ySrcDelta = -SourceSurf->lDelta;
+    yDstDelta = -DestSurf->lDelta;
   }
   if ( DestRect->left <= SourcePoint->x )
   {
+    DPRINT("Moving left (scan left->right).\n");
     // Moving left (scan left->right)
     dwx = dl&~7;
     dwx2 = dr&~7;
@@ -168,6 +156,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
   }
   else
   {
+    DPRINT("Moving right (scan right->left).\n");
     // Moving right (scan right->left)
     dwx = dr & ~7;
     dwx2 = dl & ~7;
@@ -184,6 +173,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
   }
   d = &(((PBYTE)DestSurf->pvScan0)[dy1*DestSurf->lDelta + (dwx>>3)]);
   s = &(((PBYTE)SourceSurf->pvScan0)[sy1*SourceSurf->lDelta + (swx>>3)]);
+  DPRINT("Start of outside for.\n");
   for ( ;; )
   {
     dy = dy1;
@@ -207,6 +197,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     // needed and may in fact be invalid.
     if ( !shift )
     {
+      DPRINT("Start of 1st inside for.\n");
       for ( ;; )
       {
         *pd = (BYTE)((*pd & dstmask) | ((ps[0]^xormask) & srcmask));
@@ -221,6 +212,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     }
     else if ( !(0xFF00 & (srcmask<<shift) ) ) // Check if ps[0] not needed...
     {
+      DPRINT("Start of 2nd inside for.\n");
       for ( ;; )
       {
         *pd = (BYTE)((*pd & dstmask)
@@ -236,6 +228,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     }
     else if ( !(0xFF & (srcmask<<shift) ) ) // Check if ps[1] not needed...
     {
+      DPRINT("Start of 3rd inside for.\n");
       for ( ;; )
       {
         *pd = (*pd & dstmask)
@@ -251,6 +244,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     }
     else // Both ps[0] and ps[1] are needed
     {
+      DPRINT("Start of 4th inside for.\n");
       for ( ;; )
       {
         *pd = (*pd & dstmask)
@@ -280,7 +274,6 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
   ULONG Color;
   LONG i, j, sx, sy;
-  LONG lTmp;
   BOOLEAN bTopToBottom, bLeftToRight;
 
   // This sets sy to the top line
@@ -291,7 +284,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
     BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
 
-  /* If we came from copybits.c with a SourceSurface BMF_TOPDOWN bit set,       */
+  /* If we came from dibobj.c with a SourceSurface BMF_TOPDOWN bit set,       */
   /* then we need a flip of bTopToBottom. This mostly fixes Lazarus and PeaZip. */
 
   DPRINT("SourceSurface->fjBitmap & BMF_TOPDOWN is '%d'.\n", BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN);
@@ -306,7 +299,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     bLeftToRight = FALSE;
   }
 
-  /* The OR for BltInfo->SourceSurface->fjBitmap & BMF_UMPDMEM checks for coming from copybits.c */
+  /* The OR for BltInfo->SourceSurface->fjBitmap & BMF_UMPDMEM checks for coming from dibobj.c */
   if ((BltInfo->DestRect.top > BltInfo->DestRect.bottom) || (BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN))
   {
     bTopToBottom = TRUE;
@@ -317,18 +310,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   }
 
   // Make WellOrdered with top < bottom and left < right
-  if (BltInfo->DestRect.left > BltInfo->DestRect.right)
-  {
-    lTmp = BltInfo->DestRect.left;
-    BltInfo->DestRect.left = BltInfo->DestRect.right;
-    BltInfo->DestRect.right = lTmp;
-  }
-  if (BltInfo->DestRect.top > BltInfo->DestRect.bottom)
-  {
-    lTmp = BltInfo->DestRect.top;
-    BltInfo->DestRect.top = BltInfo->DestRect.bottom;
-    BltInfo->DestRect.bottom = lTmp;
-  }
+  RECTL_vMakeWellOrdered(&BltInfo->DestRect);
 
   DPRINT("BPP is '%d' & BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
     BltInfo->SourceSurface->iBitmapFormat, BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
@@ -539,7 +521,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     if (bTopToBottom)
     {
       // This sets sy to the bottom line
-      sy += (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta;
+      sy += BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1;
     }
 
     for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
@@ -729,21 +711,10 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
 BOOLEAN
 DIB_1BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
-  LONG DestY, lTmp;
+  LONG DestY;
 
   /* Make WellOrdered with top < bottom and left < right */
-  if (DestRect->left > DestRect->right)
-  {
-    lTmp = DestRect->left;
-    DestRect->left = DestRect->right;
-    DestRect->right = lTmp;
-  }
-  if (DestRect->top > DestRect->bottom)
-  {
-    lTmp = DestRect->top;
-    DestRect->top = DestRect->bottom;
-    DestRect->bottom = lTmp;
-  }
+  RECTL_vMakeWellOrdered(DestRect);
 
   for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
   {

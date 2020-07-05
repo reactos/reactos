@@ -223,7 +223,6 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     BLTINFO BltInfo;
     SURFOBJ *psoPattern;
     BOOLEAN Result;
-    LONG    lTmp; 
 
     BltInfo.DestSurface = OutputObj;
     BltInfo.SourceSurface = InputObj;
@@ -257,19 +256,8 @@ CallDibBitBlt(SURFOBJ* OutputObj,
         psoPattern = NULL;
     }
 
-    /* Make the top < bottom and left < right if needed */
-    if (BltInfo.DestRect.left > BltInfo.DestRect.right)
-    {
-        lTmp = BltInfo.DestRect.left;
-        BltInfo.DestRect.left = BltInfo.DestRect.right;
-        BltInfo.DestRect.right = lTmp;
-    }
-    if (BltInfo.DestRect.top > BltInfo.DestRect.bottom)
-    {
-        lTmp = BltInfo.DestRect.top;
-        BltInfo.DestRect.top = BltInfo.DestRect.bottom;
-        BltInfo.DestRect.bottom = lTmp;
-    }
+    /* Make WellOrdered with top < bottom and left < right */
+    RECTL_vMakeWellOrdered(&BltInfo.DestRect);
 
     DPRINT("CallDibBitBlt: dstRect: (%d,%d)-(%d,%d)\n",
            BltInfo.DestRect.left, BltInfo.DestRect.top, BltInfo.DestRect.right, BltInfo.DestRect.bottom);

@@ -480,7 +480,6 @@ NtGdiMaskBlt(
         XlateObj = &exlo.xlo;
     }
 
-
     // Should not be used from here. If not cleared this makes it
     // impossible to use this bit for Lazarus and PeaZip flip info
     if (BitmapSrc)
@@ -704,6 +703,14 @@ GreStretchBltMask(
         IntLPtoDP(DCMask, &MaskPoint, 1);
         MaskPoint.x += DCMask->ptlDCOrig.x;
         MaskPoint.y += DCMask->ptlDCOrig.y;
+    }
+
+    /* The code for the BitmapSrc->SurfObj.fjBitmap BMF_TOPDOWN bit */
+    /* for flipping of the Lazarus taskbar icon comes though here.  */
+    /* Clear this bit to fix the Lazarus flipped taskbar icon.      */
+    if (BitmapSrc)
+    {
+        BitmapSrc->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
     }
 
     /* Perform the bitblt operation */

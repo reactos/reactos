@@ -320,9 +320,15 @@ IntSetDIBits(
     ptSrc.x = 0;
     ptSrc.y = 0;
 
-    /* The code for the psurfSrc->SurfObj.fjBitmap BMF_TOPDOWN bit  */
+    /* The code for the psurfSrc->SurfObj.fjBitmap BMF_TOPDOWN bit   */
     /* for flipping of the Lazarus icons comes though this location. */
-    
+    /* Allowing this bit to pass fixes the first Lazarus Lion Setup  */
+    /* icon and it fixes the flips for SPINA Thyr and SimThyr. But,  */
+    /* it causes the Lazarus pull down menus to flip on mouse touch. */
+
+    DPRINT("psurfSrc->SurfObj.fjBitmap & BMF_TOPDOWN is '%d'.\n",
+      psurfSrc->SurfObj.fjBitmap & BMF_TOPDOWN);
+
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,
                             NULL,
@@ -1017,6 +1023,13 @@ GreGetDIBitsInternal(
 
         /* The code for the psurfSrc->SurfObj.fjBitmap BMF_TOPDOWN bit  */
         /* for flipping of the PeaZip icons comes though this location. */
+        /* Allowing this bit to pass fixes both PeaZip and Lazarus menu */
+        /* flips. It fixes the menubar icons for Double Commander too.  */
+
+        DPRINT("psurf->SurfObj.fjBitmap & BMF_TOPDOWN is '%d'.\n",
+          psurf->SurfObj.fjBitmap & BMF_TOPDOWN);
+
+        DPRINT("Info->bmiHeader.biHeight is '%d'.\n", Info->bmiHeader.biHeight);
 
         ret = IntEngCopyBits(&psurfDest->SurfObj,
                              &psurf->SurfObj,

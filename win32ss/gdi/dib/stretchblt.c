@@ -48,7 +48,6 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
 
   BOOL UsesSource = ROP4_USES_SOURCE(ROP);
   BOOL UsesPattern = ROP4_USES_PATTERN(ROP);
-  RECTL OutputRect;
   BOOLEAN bTopToBottom, bLeftToRight;
 
   ASSERT(IS_VALID_ROP4(ROP));
@@ -76,9 +75,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
         bTopToBottom = TRUE;
 
   /* Make Well Ordered to start */
-  OutputRect = *DestRect;
-  RECTL_vMakeWellOrdered(&OutputRect);
-  *DestRect = OutputRect;
+  RECTL_vMakeWellOrdered(DestRect);
 
   if (UsesSource)
   {
