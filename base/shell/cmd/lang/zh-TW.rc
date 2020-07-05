@@ -489,7 +489,7 @@ RESTORE       恢復視窗\n\
     STRING_ERROR_CANNOTPIPE "錯誤！無法創建管道！不能開啟臨時檔案！\n"
     STRING_ERROR_D_PAUSEMSG "按任意鍵繼續... "
     STRING_ERROR_DRIVER_NOT_READY "驅動器未就緒"
-    STRING_PATH_ERROR "CMD: 不在環境 '%s' 中\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "無效開關 - %s\n"
     STRING_REPLACE_ERROR2 "路徑未找到 - %s\n"
     STRING_REPLACE_ERROR3 "檔名、目錄名或卷標語法不正確。\n"

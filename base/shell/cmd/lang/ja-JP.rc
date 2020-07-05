@@ -525,7 +525,7 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_ERROR_CANNOTPIPE "エラー!  パイプできません!  一時ファイルを開けません!\n"
     STRING_ERROR_D_PAUSEMSG "続行するには何かキーを押してください . . . "
     STRING_ERROR_DRIVER_NOT_READY "ドライブの準備ができていません。"
-    STRING_PATH_ERROR "CMD: Not in environment '%s'\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
     STRING_REPLACE_ERROR2 "Path not found - %s\n"
     STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"

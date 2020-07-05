@@ -488,7 +488,7 @@ RESTORE       恢复窗口\n\
     STRING_ERROR_CANNOTPIPE "错误！无法创建管道！不能打开临时文件！\n"
     STRING_ERROR_D_PAUSEMSG "按任意键继续... "
     STRING_ERROR_DRIVER_NOT_READY "驱动器未就绪"
-    STRING_PATH_ERROR "CMD: 不在环境 '%s' 中\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "无效开关 - %s\n"
     STRING_REPLACE_ERROR2 "路径未找到 - %s\n"
     STRING_REPLACE_ERROR3 "文件名、目录名或卷标语法不正确。\n"

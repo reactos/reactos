@@ -60,7 +60,7 @@ INT cmd_path (LPTSTR param)
         if (dwBuffer == 0)
         {
             cmd_free(pszBuffer);
-            ConOutResPrintf(STRING_VOL_HELP2, _T("PATH"));
+            ConErrResPrintf(STRING_SET_ENV_ERROR, _T("PATH"));
             return 0;
         }
         else if (dwBuffer > ENV_BUFFER_SIZE)

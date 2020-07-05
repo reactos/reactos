@@ -197,7 +197,7 @@ INT cmd_set(LPTSTR param)
 
         if (!bFound)
         {
-            ConErrResPrintf(STRING_PATH_ERROR, param);
+            ConErrResPrintf(STRING_SET_ENV_ERROR, param);
             nErrorLevel = 1;
             return 1;
         }
