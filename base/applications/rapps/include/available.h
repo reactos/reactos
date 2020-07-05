@@ -119,6 +119,7 @@ public:
     BOOL Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param);
 
     BOOL AddSelected(BOOL bAdd, CAvailableApplicationInfo *AvlbInfo);
+    VOID RemoveAllSelected();
 
     CAvailableApplicationInfo* FindInfo(const ATL::CStringW& szAppName) const;
     ATL::CSimpleArray<CAvailableApplicationInfo> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;

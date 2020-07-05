@@ -514,6 +514,12 @@ BOOL CAvailableApps::AddSelected(BOOL bAdd, CAvailableApplicationInfo *AvlbInfo)
     }
 }
 
+VOID CAvailableApps::RemoveAllSelected()
+{
+    m_SelectedList.RemoveAll();
+    return;
+}
+
 CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppName) const
 {
     if (m_InfoList.IsEmpty())

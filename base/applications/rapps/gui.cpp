@@ -1190,7 +1190,6 @@ class CAppsListView :
         INT iSubItem;
     };
 
-    //BOOL bHasAllChecked;
     BOOL bIsAscending;
     BOOL bHasCheckboxes;
 
@@ -1204,7 +1203,6 @@ class CAppsListView :
 
 public:
     CAppsListView() :
-        //bHasAllChecked(FALSE),
         bIsAscending(TRUE),
         bHasCheckboxes(FALSE),
         nLastHeaderID(-1)
@@ -1435,10 +1433,14 @@ public:
         return list;
     }
 
-    CAvailableApplicationInfo* GetSelectedData()
+    PVOID GetFocusedItemData()
     {
         INT item = GetSelectionMark();
-        return (CAvailableApplicationInfo*) GetItemData(item);
+        if (item == -1)
+        {
+            return (PVOID)0;
+        }
+        return (PVOID)GetItemData(item);
     }
 
     //BOOL AddAvailableAppInfo(CAvailableApplicationInfo* Info)
@@ -1861,6 +1863,11 @@ public:
         return;
     }
 
+    PVOID GetFocusedItemData()
+    {
+        return m_ListView->GetFocusedItemData();
+    }
+
     // this function is called when a item of listview get focus.
     // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
     BOOL ItemGetFocus(LPVOID CallbackParam)
@@ -1996,8 +2003,6 @@ class CMainWindow :
     CUiWindow<CSearchBar>* m_SearchBar = NULL;
     CAvailableApps m_AvailableApps;
     CInstalledApps m_InstalledApps;
-
-    INT nSelectedApps;
 
     BOOL bSearchEnabled;
     BOOL bUpdating;
@@ -2234,11 +2239,9 @@ private:
     {
         if (CreateLayout())
         {
-
             //InitApplicationsList();
             InitCategoriesList();
 
-            nSelectedApps = 0;
             UpdateStatusBarText();
 
             return TRUE;
@@ -2793,20 +2796,39 @@ private:
             break;
 
         case ID_INSTALL:
-            /*if (IsAvailableEnum(SelectedEnumType))
+            if (IsAvailableEnum(SelectedEnumType))
             {
-                if (nSelectedApps > 0)
-                {
-                    DownloadListOfApplications(m_AvailableApps.GetSelected(), FALSE);
-                    UpdateApplicationsList(-1);
-                    m_ListView->SetSelected(-1, FALSE);
-                }
-                else if (DownloadApplication(m_ListView->GetSelectedData(), FALSE))
-                {
-                    UpdateApplicationsList(-1);
-                }
+                ATL::CSimpleArray<CAvailableApplicationInfo> AppsList;
 
-            }*/
+                // enum all selected apps
+                m_AvailableApps.Enum(ENUM_CAT_SELECTED, s_EnumSelectedAppForDownloadProc, (PVOID)&AppsList);
+
+
+                if (AppsList.GetSize())
+                {
+                    if (DownloadListOfApplications(AppsList, FALSE))
+                    {
+                        m_AvailableApps.RemoveAllSelected();
+                        UpdateApplicationsList(-1);
+                    }
+                }
+                else
+                {
+                    // use the currently focused item in tableview
+                    CAvailableApplicationInfo *FocusedApps = (CAvailableApplicationInfo *)m_AppsTableView->GetFocusedItemData();
+                    if (FocusedApps)
+                    {
+                        if (DownloadApplication(FocusedApps, FALSE))
+                        {
+                            UpdateApplicationsList(-1);
+                        }
+                    }
+                    else
+                    {
+                        // TODO: popup a messagebox telling user to select/check some app first
+                    }
+                }
+            }
             break;
 
         case ID_UNINSTALL:
@@ -2895,7 +2917,7 @@ private:
         return TRUE;
     }
 
-    BOOL EnumAvailableAppProc(CAvailableApplicationInfo * Info, BOOL bInitialCheckState)
+    BOOL CALLBACK EnumAvailableAppProc(CAvailableApplicationInfo * Info, BOOL bInitialCheckState)
     {
         /*if (!SearchPatternMatch(Info->m_szName.GetString(), szSearchPattern) &&
             !SearchPatternMatch(Info->m_szDesc.GetString(), szSearchPattern))
@@ -2919,6 +2941,13 @@ private:
     {
         CMainWindow* pThis = (CMainWindow*)param;
         return pThis->EnumAvailableAppProc(Info, bInitialCheckState);
+    }
+
+    static BOOL CALLBACK s_EnumSelectedAppForDownloadProc(CAvailableApplicationInfo *Info, BOOL bInitialCheckState, PVOID param)
+    {
+        ATL::CSimpleArray<CAvailableApplicationInfo> *pAppList = (ATL::CSimpleArray<CAvailableApplicationInfo> *)param;
+        pAppList->Add(*Info);
+        return TRUE;
     }
 
     VOID UpdateStatusBarText()
