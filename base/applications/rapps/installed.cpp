@@ -17,6 +17,8 @@ CInstalledApplicationInfo::CInstalledApplicationInfo(BOOL bIsUserKey, HKEY hKey)
 {
     // if Initialize failed, hSubKey will be closed automatically and set to zero
 
+    IsUserKey = bIsUserKey;
+
     DWORD dwSize = MAX_PATH, dwType, dwValue;
     BOOL bIsSystemComponent;
     ATL::CStringW szParentKeyName;
@@ -105,7 +107,7 @@ BOOL CInstalledApplicationInfo::GetApplicationString(LPCWSTR lpKeyName, ATL::CSt
 
 BOOL CInstalledApplicationInfo::UninstallApplication(BOOL bModify)
 {
-    LPCWSTR szModify = L"ModifyPath";
+    /*LPCWSTR szModify = L"ModifyPath";
     LPCWSTR szUninstall = L"UninstallString";
     DWORD dwType, dwSize;
     WCHAR szPath[MAX_PATH];
@@ -120,9 +122,16 @@ BOOL CInstalledApplicationInfo::UninstallApplication(BOOL bModify)
                          &dwSize) != ERROR_SUCCESS)
     {
         return FALSE;
-    }
+    }*/
 
-    return StartProcess(szPath, TRUE);
+    return StartProcess(bModify ? szModifyPath : szUninstallString, TRUE);
+}
+
+LSTATUS CInstalledApplicationInfo::RemoveFromRegistry()
+{
+    ATL::CStringW szFullName = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + szKeyName;
+
+    return RegDeleteKeyW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szFullName);
 }
 
 BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
@@ -162,6 +171,7 @@ BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
             {
                 BOOL bSuccess = FALSE;
                 CInstalledApplicationInfo *Info = new CInstalledApplicationInfo(RootKeyEnum[i] == HKEY_CURRENT_USER, hSubKey);
+                Info->szKeyName = szKeyName;
 
                 // check for failure. if failed to init, Info->hSubKey will be set to NULL
                 if (Info->hSubKey)

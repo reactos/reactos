@@ -6,12 +6,16 @@
 class CInstalledApplicationInfo
 {
 public:
+    BOOL IsUserKey;
     HKEY hSubKey = NULL;
     BOOL bIsUpdate = FALSE;
+
+    ATL::CStringW szKeyName;
 
     CInstalledApplicationInfo(BOOL bIsUserKey, HKEY hSubKey);
     BOOL GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String);
     BOOL UninstallApplication(BOOL bModify);
+    LSTATUS RemoveFromRegistry();
 
     ATL::CStringW szDisplayName;
     ATL::CStringW szDisplayVersion;

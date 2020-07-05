@@ -2324,61 +2324,44 @@ private:
         }
     }
 
-    //VOID RemoveSelectedAppFromRegistry()
-    //{
-    //    PINSTALLED_INFO Info;
-    //    WCHAR szFullName[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
-    //    ATL::CStringW szMsgText, szMsgTitle;
-    //    INT ItemIndex = m_ListView->GetNextItem(-1, LVNI_FOCUSED);
-
-    //    if (!IsInstalledEnum(SelectedEnumType))
-    //        return;
-
-    //    Info = reinterpret_cast<PINSTALLED_INFO>(m_ListView->GetItemData(ItemIndex));
-    //    if (!Info || !Info->hSubKey || (ItemIndex == -1)) 
-    //        return;
-
-    //    if (!szMsgText.LoadStringW(IDS_APP_REG_REMOVE) ||
-    //        !szMsgTitle.LoadStringW(IDS_INFORMATION))
-    //        return;
-
-    //    if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
-    //    {
-    //        ATL::CStringW::CopyChars(szFullName,
-    //                                 MAX_PATH,
-    //                                 Info->szKeyName.GetString(),
-    //                                 MAX_PATH - wcslen(szFullName));
-
-    //        if (RegDeleteKeyW(Info->hRootKey, szFullName) == ERROR_SUCCESS)
-    //        {
-    //            m_ListView->DeleteItem(ItemIndex);
-    //            return;
-    //        }
-
-    //        if (!szMsgText.LoadStringW(IDS_UNABLE_TO_REMOVE))
-    //            return;
-
-    //        MessageBoxW(szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
-    //    }
-    //}
-
-    /*BOOL UninstallSelectedApp(BOOL bModify)
+    BOOL RemoveSelectedAppFromRegistry()
     {
-        WCHAR szAppName[MAX_STR_LEN];
-
         if (!IsInstalledEnum(SelectedEnumType))
             return FALSE;
 
-        INT ItemIndex = m_ListView->GetNextItem(-1, LVNI_FOCUSED);
-        if (ItemIndex == -1)
+        ATL::CStringW szMsgText, szMsgTitle;
+
+        if (!szMsgText.LoadStringW(IDS_APP_REG_REMOVE) ||
+            !szMsgTitle.LoadStringW(IDS_INFORMATION))
             return FALSE;
 
-        m_ListView->GetItemText(ItemIndex, 0, szAppName, _countof(szAppName));
-        WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_REMOVE, szAppName);
+        if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
+        {
+            CInstalledApplicationInfo *InstalledApp = (CInstalledApplicationInfo *)m_AppsTableView->GetFocusedItemData();
+            LSTATUS Result = InstalledApp->RemoveFromRegistry();
+            if (Result != ERROR_SUCCESS)
+            {
+                // TODO: popup a messagebox telling user it fails somehow
+                return FALSE;
+            }
 
-        PINSTALLED_INFO ItemInfo = (PINSTALLED_INFO)m_ListView->GetItemData(ItemIndex);
-        return UninstallApplication(ItemInfo, bModify);
-    }*/
+            // as it's already removed form registry, this will also remove it from the list
+            UpdateApplicationsList(-1);
+            return TRUE;
+        }
+
+        return FALSE;
+    }
+
+    BOOL UninstallSelectedApp(BOOL bModify)
+    {
+        if (!IsInstalledEnum(SelectedEnumType))
+            return FALSE;
+
+        CInstalledApplicationInfo *InstalledApp = (CInstalledApplicationInfo *)m_AppsTableView->GetFocusedItemData();
+
+        return InstalledApp->UninstallApplication(bModify);
+    }
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
     {
@@ -2398,8 +2381,6 @@ private:
             FreeLogs();
             m_AvailableApps.FreeCachedEntries();
             m_InstalledApps.FreeCachedEntries();
-            /*if (IsInstalledEnum(SelectedEnumType))
-                FreeInstalledAppList();*/
 
             delete m_ClientPanel;
 
@@ -2832,17 +2813,17 @@ private:
             break;
 
         case ID_UNINSTALL:
-            /*if (UninstallSelectedApp(FALSE))
-                UpdateApplicationsList(-1);*/
+            if (UninstallSelectedApp(FALSE))
+                UpdateApplicationsList(-1);
             break;
 
         case ID_MODIFY:
-            /*if (UninstallSelectedApp(TRUE))
-                UpdateApplicationsList(-1);*/
+            if (UninstallSelectedApp(TRUE))
+                UpdateApplicationsList(-1);
             break;
 
         case ID_REGREMOVE:
-            /*RemoveSelectedAppFromRegistry();*/
+            RemoveSelectedAppFromRegistry();
             break;
 
         case ID_REFRESH:
