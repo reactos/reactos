@@ -1015,6 +1015,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         {
             /* Don't ignore invalid scan codes */
             wVk = IntVscToVk(wScanCode | (bExt ? 0xE000 : 0), pKbdTbl);
+            wVk &= 0xFF; /* Since it is not KEYEVENTF_UNICODE */
             if (!wVk) /* use 0xFF if vsc is invalid */
                 wVk = 0xFF;
         }
