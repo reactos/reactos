@@ -1719,6 +1719,9 @@ private:
 
                 case LVN_COLUMNCLICK:
                 {
+                    LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lParam;
+
+                    m_ListView->ColumnClick(pnmv);
                 }
                 break;
 
