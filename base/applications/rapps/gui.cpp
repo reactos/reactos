@@ -1716,6 +1716,38 @@ private:
                     }
                 }
                 break;
+
+                case LVN_COLUMNCLICK:
+                {
+                }
+                break;
+
+                case NM_CLICK:
+                {
+                }
+                break;
+
+                case NM_DBLCLK:
+                {
+                }
+                break;
+
+                case NM_RCLICK:
+                {
+                    if (((LPNMLISTVIEW)lParam)->iItem != -1)
+                    {
+                        // TODO: currently the menu will send WM_COMMAND directly to MainWindow.
+                        // possibly it should be handled by this table-view first
+                        // and then forward to mainwindow.
+
+                        // TODO: I think if user right-click on one item, and select "Install"
+                        // that means the user want install "this" application
+                        // but if some apps are checked, this will lead to those checked apps to be installed.
+                        // this should be improved.
+                        ShowPopupMenu(m_ListView->m_hWnd, 0, ID_INSTALL);
+                    }
+                }
+                break;
                 }
             }
         }
@@ -1836,6 +1868,32 @@ public:
         }
         TableViewMode = Mode;
         m_AppsInfo->SetWelcomeText();
+
+        HMENU lvwMenu = ::GetMenu(m_ListView->m_hWnd);
+        switch (Mode)
+        {
+        case TableViewEmpty:
+        default:
+            EnableMenuItem(lvwMenu, ID_REGREMOVE, MF_GRAYED);
+            EnableMenuItem(lvwMenu, ID_INSTALL, MF_GRAYED);
+            EnableMenuItem(lvwMenu, ID_UNINSTALL, MF_GRAYED);
+            EnableMenuItem(lvwMenu, ID_MODIFY, MF_GRAYED);
+            break;
+
+        case TableViewInstalledApps:
+            EnableMenuItem(lvwMenu, ID_REGREMOVE, MF_ENABLED);
+            EnableMenuItem(lvwMenu, ID_INSTALL, MF_GRAYED);
+            EnableMenuItem(lvwMenu, ID_UNINSTALL, MF_ENABLED);
+            EnableMenuItem(lvwMenu, ID_MODIFY, MF_ENABLED);
+            break;
+
+        case TableViewAvailableApps:
+            EnableMenuItem(lvwMenu, ID_REGREMOVE, MF_GRAYED);
+            EnableMenuItem(lvwMenu, ID_INSTALL, MF_ENABLED);
+            EnableMenuItem(lvwMenu, ID_UNINSTALL, MF_GRAYED);
+            EnableMenuItem(lvwMenu, ID_MODIFY, MF_GRAYED);
+            break;
+        }
         return TRUE;
     }
 
