@@ -1722,13 +1722,19 @@ private:
                 }
                 break;
 
-                case NM_CLICK:
-                {
-                }
-                break;
-
                 case NM_DBLCLK:
                 {
+                    if (((LPNMLISTVIEW)lParam)->iItem != -1)
+                    {
+                        /* this won't do anything if the program is already installed */
+
+                        // TODO: the same problem I've mentioned in NM_RCLICK
+                        // I think if user double-click this app, then this app should be installed, not those checked apps.
+                        if (TableViewMode == TableViewAvailableApps)
+                        {
+                            SendMessageW(GetParent(), WM_COMMAND, ID_INSTALL, 0);
+                        }
+                    }
                 }
                 break;
 
