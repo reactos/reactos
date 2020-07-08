@@ -273,9 +273,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Klick-Ton ben&utzen", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
-        MENUITEM "&Typing Mode...", IDM_TYPE_MODE, GRAYED
+        MENUITEM "Eingabemodus...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Schiftart...", IDM_FONT, GRAYED
+        MENUITEM "&Schriftart...", IDM_FONT, GRAYED
     END
 
     POPUP "Hilfe"
@@ -293,7 +293,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
     ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "Bildschirmtastatur stellt ein mindestmaß an Funktionalität für eingeschränkte Nutzer zur Verfügung. Diese Benutzer werden, für den täglichen Gebrauch, ein Program mit größerem Funktionsumfang brauchen.", IDC_STATIC, 36, 7, 207, 33
+    LTEXT "Bildschirmtastatur stellt ein Mindestmaß an Funktionalität für eingeschränkte Nutzer zur Verfügung. Für den täglichen Gebrauch werden diese Benutzer ein Programm mit größerem Funktionsumfang benötigen.", IDC_STATIC, 36, 7, 207, 33
     CONTROL "Diese Nachricht nicht mehr anzeigen.", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
