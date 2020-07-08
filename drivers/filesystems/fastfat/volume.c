@@ -457,6 +457,8 @@ VfatQueryVolumeInformation(
     DPRINT("FsInformationClass %d\n", FsInformationClass);
     DPRINT("SystemBuffer %p\n", SystemBuffer);
 
+    RtlZeroMemory(SystemBuffer, BufferLength);
+
     switch (FsInformationClass)
     {
         case FileFsVolumeInformation:

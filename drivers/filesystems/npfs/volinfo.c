@@ -153,6 +153,8 @@ NpCommonQueryVolumeInformation(IN PDEVICE_OBJECT DeviceObject,
     Length = IoStack->Parameters.QueryVolume.Length;
     InfoClass = IoStack->Parameters.QueryVolume.FsInformationClass;
 
+    RtlZeroMemory(Buffer, Length);
+
     switch (InfoClass)
     {
         case FileFsVolumeInformation:
