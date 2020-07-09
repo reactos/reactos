@@ -40,8 +40,6 @@ public:
 
 typedef BOOL(CALLBACK *APPENUMPROC)(CInstalledApplicationInfo * Info, PVOID param);
 
-//BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc, PVOID param);
-
 class CInstalledApps
 {
     ATL::CAtlList<CInstalledApplicationInfo *> m_InfoList;

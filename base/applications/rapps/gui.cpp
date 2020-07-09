@@ -1975,14 +1975,11 @@ class CMainWindow :
 {
     CUiPanel* m_ClientPanel = NULL;
     CUiSplitPanel* m_VSplitter = NULL;
-    //CUiSplitPanel* m_HSplitter = NULL;
 
     CMainToolbar* m_Toolbar = NULL;
-    //CAppsListView* m_ListView = NULL;
 
     CSideTreeView* m_TreeView = NULL;
     CUiWindow<CStatusBar>* m_StatusBar = NULL;
-    //CAppInfoDisplay* m_AppInfo = NULL;
 
     CAppsTableView* m_AppsTableView = NULL;
 
