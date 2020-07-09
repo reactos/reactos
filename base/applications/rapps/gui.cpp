@@ -1666,6 +1666,15 @@ private:
             }
         }
             break;
+
+        case WM_SYSCOLORCHANGE:
+        {
+            /* Forward WM_SYSCOLORCHANGE to common controls */
+            m_ListView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
+            m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
+        }
+            break;
+
         case WM_SIZE:
         {
             OnSize(hwnd, wParam, lParam);
@@ -2442,10 +2451,9 @@ private:
         case WM_SYSCOLORCHANGE:
         {
             /* Forward WM_SYSCOLORCHANGE to common controls */
-            //m_ListView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
+            m_AppsTableView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
             m_TreeView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
             m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
-            //m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
         }
         break;
 
