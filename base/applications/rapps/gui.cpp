@@ -1374,29 +1374,6 @@ public:
         }
     }
 
-    /*VOID SetSelected(INT item, BOOL value)
-    {
-        if (item < 0)
-        {
-            for (INT i = 0; i >= 0; i = GetNextItem(i, LVNI_ALL))
-            {
-                CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(i);
-                if (pAppInfo)
-                {
-                    pAppInfo->m_IsSelected = value;
-                }
-            }
-        }
-        else
-        {
-            CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(item);
-            if (pAppInfo)
-            {
-                pAppInfo->m_IsSelected = value;
-            }
-        }
-    }*/
-
     VOID CheckAll()
     {
         if (bHasCheckboxes)
@@ -1413,26 +1390,7 @@ public:
             }
         }
     }
-
-    ATL::CSimpleArray<CAvailableApplicationInfo> GetCheckedItems()
-    {
-        if (!bHasCheckboxes)
-        {
-            return ATL::CSimpleArray<CAvailableApplicationInfo>();
-        }
-
-        ATL::CSimpleArray<CAvailableApplicationInfo> list;
-        for (INT i = 0; i >= 0; i = GetNextItem(i, LVNI_ALL))
-        {
-            if (GetCheckState(i) != FALSE)
-            {
-                CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(i);
-                list.Add(*pAppInfo);
-            }
-        }
-        return list;
-    }
-
+    
     PVOID GetFocusedItemData()
     {
         INT item = GetSelectionMark();
@@ -1442,59 +1400,6 @@ public:
         }
         return (PVOID)GetItemData(item);
     }
-
-    //BOOL AddAvailableAppInfo(CAvailableApplicationInfo* Info)
-    //{
-    //    INT Index;
-    //    HICON hIcon = NULL;
-
-    //    HIMAGELIST hImageListView = (HIMAGELIST)SendMessage(LVM_GETIMAGELIST, LVSIL_SMALL, 0);
-
-    //    /* Load icon from file */
-    //    ATL::CStringW szIconPath;
-    //    if (Info->RetrieveIcon(szIconPath))
-    //    {
-    //        hIcon = (HICON)LoadImageW(NULL,
-    //            szIconPath.GetString(),
-    //            IMAGE_ICON,
-    //            LISTVIEW_ICON_SIZE,
-    //            LISTVIEW_ICON_SIZE,
-    //            LR_LOADFROMFILE);
-    //    }
-
-    //    if (!hIcon || GetLastError() != ERROR_SUCCESS)
-    //    {
-    //        /* Load default icon */
-    //        hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
-    //    }
-
-    //    Index = ImageList_AddIcon(hImageListView, hIcon);
-    //    DestroyIcon(hIcon);
-
-    //    Index = AddItem(Info->m_Category, Index, Info->m_szName.GetString(), (LPARAM)Info);
-    //    SetImageList(hImageListView, LVSIL_SMALL);
-    //    SetItemText(Index, 1, Info->m_szVersion.GetString());
-    //    SetItemText(Index, 2, Info->m_szDesc.GetString());
-    //    //SetCheckState(Index, Info->m_IsSelected);
-
-    //    return TRUE;
-    //}
-
-    //BOOL AddInstalledAppInfo(INT ItemIndex, ATL::CStringW& m_szName, CInstalledApplicationInfo * ItemInfo)
-    //{
-    //    INT Index;
-    //    ATL::CStringW szText;
-    //    Index = AddItem(ItemIndex, 0, m_szName.GetString(), (LPARAM)ItemInfo);
-
-    //    /* Get version info */
-    //    ItemInfo->GetApplicationString(L"DisplayVersion", szText);
-    //    SetItemText(Index, 1, szText.GetString());
-
-    //    /* Get comments */
-    //    ItemInfo->GetApplicationString(L"Comments", szText);
-    //    SetItemText(Index, 2, szText.GetString());
-    //    return TRUE;
-    //}
 
     BOOL SetDisplayMode(TABLE_VIEW_MODE Mode)
     {
