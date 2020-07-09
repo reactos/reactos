@@ -520,6 +520,11 @@ VOID CAvailableApps::RemoveAllSelected()
     return;
 }
 
+int CAvailableApps::GetSelectedCount()
+{
+    return m_SelectedList.GetCount();
+}
+
 CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppName) const
 {
     if (m_InfoList.IsEmpty())

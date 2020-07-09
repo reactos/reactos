@@ -1935,6 +1935,11 @@ public:
         return m_ListView->GetFocusedItemData();
     }
 
+    int GetItemCount()
+    {
+        return m_ListView->GetItemCount();
+    }
+
     // this function is called when a item of listview get focus.
     // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
     BOOL ItemGetFocus(LPVOID CallbackParam)
@@ -2788,13 +2793,13 @@ private:
 
     VOID UpdateStatusBarText()
     {
-        /*if (m_StatusBar)
+        if (m_StatusBar)
         {
             ATL::CStringW szBuffer;
 
-            szBuffer.Format(IDS_APPS_COUNT, m_ListView->GetItemCount(), nSelectedApps);
+            szBuffer.Format(IDS_APPS_COUNT, m_AppsTableView->GetItemCount(), m_AvailableApps.GetSelectedCount());
             m_StatusBar->SetText(szBuffer);
-        }*/
+        }
     }
 
     //VOID UpdateApplicationsList(INT EnumType)
@@ -2957,12 +2962,21 @@ public:
         {
             if (bChecked)
             {
-                return m_AvailableApps.AddSelected(TRUE, (CAvailableApplicationInfo *)CallbackParam);
+                if (!m_AvailableApps.AddSelected(TRUE, (CAvailableApplicationInfo *)CallbackParam))
+                {
+                    return FALSE;
+                }
             }
             else
             {
-                return m_AvailableApps.AddSelected(FALSE, (CAvailableApplicationInfo *)CallbackParam);
+                if (!m_AvailableApps.AddSelected(FALSE, (CAvailableApplicationInfo *)CallbackParam))
+                {
+                    return FALSE;
+                }
             }
+
+            UpdateStatusBarText();
+            return TRUE;
         }
         else
         {

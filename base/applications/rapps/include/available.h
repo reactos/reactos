@@ -120,6 +120,7 @@ public:
 
     BOOL AddSelected(BOOL bAdd, CAvailableApplicationInfo *AvlbInfo);
     VOID RemoveAllSelected();
+    int GetSelectedCount();
 
     CAvailableApplicationInfo* FindInfo(const ATL::CStringW& szAppName) const;
     ATL::CSimpleArray<CAvailableApplicationInfo> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
