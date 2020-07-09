@@ -2748,39 +2748,22 @@ private:
 
     BOOL CALLBACK EnumInstalledAppProc(CInstalledApplicationInfo * Info)
     {
-        /*PINSTALLED_INFO ItemInfo;
-
-        if (!SearchPatternMatch(m_szName.GetString(), szSearchPattern))
+        if (!SearchPatternMatch(Info->szDisplayName.GetString(), szSearchPattern))
         {
-            RegCloseKey(Info->hSubKey);
             return TRUE;
         }
 
-        ItemInfo = new CInstalledApplicationInfo(*Info);
-        if (!ItemInfo)
-        {
-            RegCloseKey(Info->hSubKey);
-            return FALSE;
-        }
-
-        return m_ListView->AddInstalledAppInfo(ItemIndex, m_szName, ItemInfo);*/
-
-
-        m_AppsTableView->AddInstalledApplication(Info, Info);
-        return TRUE;
+        return m_AppsTableView->AddInstalledApplication(Info, Info);
     }
 
     BOOL CALLBACK EnumAvailableAppProc(CAvailableApplicationInfo * Info, BOOL bInitialCheckState)
     {
-        /*if (!SearchPatternMatch(Info->m_szName.GetString(), szSearchPattern) &&
+        if (!SearchPatternMatch(Info->m_szName.GetString(), szSearchPattern) &&
             !SearchPatternMatch(Info->m_szDesc.GetString(), szSearchPattern))
         {
             return TRUE;
         }
-        return m_ListView->AddAvailableAppInfo(Info);*/
-
-        m_AppsTableView->AddAvailableApplication(Info, bInitialCheckState, Info);
-        return TRUE;
+        return m_AppsTableView->AddAvailableApplication(Info, bInitialCheckState, Info);;
     }
 
 
