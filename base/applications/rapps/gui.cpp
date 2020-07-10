@@ -2618,7 +2618,8 @@ private:
                     }
                     else
                     {
-                        // TODO: popup a messagebox telling user to select/check some app first
+                        // TODO: in this case, Install button in toolbar (and all other places) should be disabled
+                        // or at least popup a messagebox telling user to select/check some app first
                     }
                 }
             }
