@@ -100,7 +100,7 @@ BOOL CInstalledApplicationInfo::GetApplicationString(LPCWSTR lpKeyName, ATL::CSt
         String.Empty();
         return FALSE;
     }
-    String.GetBuffer()[dwSize / sizeof(WCHAR)] = L'0'; // ensure zero terminated
+    String.GetBuffer()[dwSize / sizeof(WCHAR)] = L'\0'; // ensure zero terminated
     String.ReleaseBuffer();
     return TRUE;
 }
