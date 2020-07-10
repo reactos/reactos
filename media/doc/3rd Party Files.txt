@@ -98,3 +98,7 @@ Website: https://acpica.org/
 Title: Schily Tools, mkisofs
 Used Version: schily-2017-09-07
 Website: https://sourceforge.net/projects/schilytools/
+
+Title: chmc and lzxcomp
+Used Version: ??? (Imported on 2015.08.11.)
+Website: https://sourceforge.net/projects/chmc/
