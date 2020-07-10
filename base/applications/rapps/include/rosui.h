@@ -495,7 +495,7 @@ public:
 
     virtual ~CUiWindow()
     {
-        if (::IsWindow(T::m_hWnd))
+        if (T::IsWindow())
         {
             T::DestroyWindow();
         }
