@@ -1008,8 +1008,8 @@ public:
 
     ~CAppInfoDisplay()
     {
-        if (RichEdit) delete RichEdit;
-        if (ScrnshotPrev) delete ScrnshotPrev;
+        delete RichEdit;
+        delete ScrnshotPrev;
     }
 };
 
@@ -1415,7 +1415,10 @@ public:
         CheckedItemCount = 0;
 
         // delete old columns
-        while (ColumnCount) DeleteColumn(--ColumnCount);
+        while (ColumnCount)
+        {
+            DeleteColumn(--ColumnCount);
+        }
 
         ImageList_RemoveAll(GetImageList(LVSIL_SMALL));
 
@@ -1675,7 +1678,7 @@ private:
         case WM_SYSCOLORCHANGE:
         {
             /* Forward WM_SYSCOLORCHANGE to common controls */
-            m_ListView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
+            m_ListView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
             m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
         }
             break;
@@ -2155,12 +2158,12 @@ private:
 
     VOID LayoutCleanup()
     {
-        if (m_TreeView) delete m_TreeView;
-        if (m_AppsTableView) delete m_AppsTableView;
-        if (m_VSplitter) delete m_VSplitter;
-        if (m_SearchBar) delete m_SearchBar;
-        if (m_Toolbar) delete m_Toolbar;
-        if (m_StatusBar) delete m_StatusBar;
+        delete m_TreeView;
+        delete m_AppsTableView;
+        delete m_VSplitter;
+        delete m_SearchBar;
+        delete m_Toolbar;
+        delete m_StatusBar;
         return;
     }
 
@@ -2453,8 +2456,8 @@ private:
         case WM_SYSCOLORCHANGE:
         {
             /* Forward WM_SYSCOLORCHANGE to common controls */
-            m_AppsTableView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
-            m_TreeView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
+            m_AppsTableView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
+            m_TreeView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
             m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
         }
         break;
