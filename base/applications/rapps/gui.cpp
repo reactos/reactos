@@ -66,7 +66,12 @@ enum SCRNSHOT_STATUS
 #define PI 3.1415927
 
 // retrieve the value using a mask
-#define GET_MASKED_VALUE(Value, Mask) (((Value) & (Mask)) / ((Mask) - ((Mask) & (Mask - 1))))
+#define STATEIMAGETOINDEX(x) (((x) & LVIS_STATEIMAGEMASK) >> 12)
+
+// for listview with extend style LVS_EX_CHECKBOXES, State image 1 is the unchecked box, and state image 2 is the checked box.
+// see this: https://docs.microsoft.com/en-us/windows/win32/controls/extended-list-view-styles
+#define STATEIMAGE_UNCHECKED 1
+#define STATEIMAGE_CHECKED 2
 
 enum TABLE_VIEW_MODE
 {
@@ -1603,16 +1608,16 @@ private:
                     /* Check if the item is checked/unchecked */
                     if (pnic->uChanged & LVIF_STATE)
                     {
-                        int iOldState = GET_MASKED_VALUE(pnic->uOldState, LVIS_STATEIMAGEMASK);
-                        int iNewState = GET_MASKED_VALUE(pnic->uNewState, LVIS_STATEIMAGEMASK);
+                        int iOldState = STATEIMAGETOINDEX(pnic->uOldState);
+                        int iNewState = STATEIMAGETOINDEX(pnic->uNewState);
 
-                        if (iOldState == 1 && iNewState == 2)
+                        if (iOldState == STATEIMAGE_UNCHECKED && iNewState == STATEIMAGE_CHECKED)
                         {
                             // this item is just checked
                             m_ListView->ItemCheckStateNotify(pnic->iItem, TRUE);
                             ItemCheckStateChanged(TRUE, (LPVOID)pnic->lParam);
                         }
-                        else if (iOldState == 2 && iNewState == 1)
+                        else if (iOldState == STATEIMAGE_CHECKED && iNewState == STATEIMAGE_UNCHECKED)
                         {
                             // this item is just unchecked
                             m_ListView->ItemCheckStateNotify(pnic->iItem, FALSE);
