@@ -489,7 +489,7 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
                     }
                 }
             }
-        } while (FindNextFileW(hFind, &FindFileData) != 0);
+        } while (FindNextFileW(hFind, &FindFileData));
 
         FindClose(hFind);
         return TRUE;
