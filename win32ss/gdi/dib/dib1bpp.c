@@ -110,13 +110,14 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     if (bTopToBottom)
     {
       sy1 = SourcePoint->y + dy2 - dy1;
+      ySrcDelta = -SourceSurf->lDelta;
     }
     else
     {
       sy1 = SourcePoint->y;
+      ySrcDelta = SourceSurf->lDelta;
     }
     yinc = 1;
-    ySrcDelta = SourceSurf->lDelta;
     yDstDelta = DestSurf->lDelta;
   }
   else
@@ -128,13 +129,14 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     if (bTopToBottom)
     {
       sy1 = SourcePoint->y;
+      ySrcDelta = SourceSurf->lDelta;
     }
     else
     {
       sy1 = SourcePoint->y + dy1 - dy2;
+      ySrcDelta = -SourceSurf->lDelta;
     }
     yinc = -1;
-    ySrcDelta = -SourceSurf->lDelta;
     yDstDelta = -DestSurf->lDelta;
   }
   if ( DestRect->left <= SourcePoint->x )
