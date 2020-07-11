@@ -267,6 +267,14 @@ public:
         return TRUE;
     }
 
+    inline VOID InsertTextWithString(UINT StringID, DWORD StringFlags, const ATL::CStringW& Text, DWORD TextFlags)
+    {
+        if (!Text.IsEmpty())
+        {
+            LoadAndInsertText(StringID, Text, StringFlags, TextFlags);
+        }
+    }
+
     BOOL ShowInstalledAppInfo(CInstalledApplicationInfo * Info)
     {
         if (!Info) return FALSE;
@@ -274,30 +282,22 @@ public:
         SetText(Info->szDisplayName, CFE_BOLD);
         InsertText(L"\n", 0);
 
-#define INSERT_TEXT(StringID, StringFlags, Text, TextFlags) \
-    if(!Text.IsEmpty()) \
-    { \
-        LoadAndInsertText(StringID, Text, StringFlags, TextFlags); \
-    }
-
-        INSERT_TEXT(IDS_INFO_VERSION, CFE_BOLD, Info->szDisplayVersion, 0);
-        INSERT_TEXT(IDS_INFO_PUBLISHER, CFE_BOLD, Info->szPublisher, 0);
-        INSERT_TEXT(IDS_INFO_REGOWNER, CFE_BOLD, Info->szRegOwner, 0);
-        INSERT_TEXT(IDS_INFO_PRODUCTID, CFE_BOLD, Info->szProductID, 0);
-        INSERT_TEXT(IDS_INFO_HELPLINK, CFE_BOLD, Info->szHelpLink, CFM_LINK);
-        INSERT_TEXT(IDS_INFO_HELPPHONE, CFE_BOLD, Info->szHelpTelephone, 0);
-        INSERT_TEXT(IDS_INFO_README, CFE_BOLD, Info->szReadme, 0);
-        INSERT_TEXT(IDS_INFO_CONTACT, CFE_BOLD, Info->szContact, 0);
-        INSERT_TEXT(IDS_INFO_UPDATEINFO, CFE_BOLD, Info->szURLUpdateInfo, CFM_LINK);
-        INSERT_TEXT(IDS_INFO_INFOABOUT, CFE_BOLD, Info->szURLInfoAbout, CFM_LINK);
-        INSERT_TEXT(IDS_INFO_COMMENTS, CFE_BOLD, Info->szComments, 0);
-        INSERT_TEXT(IDS_INFO_INSTALLDATE, CFE_BOLD, Info->szInstallDate, 0);
-        INSERT_TEXT(IDS_INFO_INSTLOCATION, CFE_BOLD, Info->szInstallLocation, 0);
-        INSERT_TEXT(IDS_INFO_INSTALLSRC, CFE_BOLD, Info->szInstallSource, 0);
-        INSERT_TEXT(IDS_INFO_UNINSTALLSTR, CFE_BOLD, Info->szUninstallString, 0);
-        INSERT_TEXT(IDS_INFO_MODIFYPATH, CFE_BOLD, Info->szModifyPath, 0);
-
-#undef INSERT_TEXT
+        InsertTextWithString(IDS_INFO_VERSION, CFE_BOLD, Info->szDisplayVersion, 0);
+        InsertTextWithString(IDS_INFO_PUBLISHER, CFE_BOLD, Info->szPublisher, 0);
+        InsertTextWithString(IDS_INFO_REGOWNER, CFE_BOLD, Info->szRegOwner, 0);
+        InsertTextWithString(IDS_INFO_PRODUCTID, CFE_BOLD, Info->szProductID, 0);
+        InsertTextWithString(IDS_INFO_HELPLINK, CFE_BOLD, Info->szHelpLink, CFM_LINK);
+        InsertTextWithString(IDS_INFO_HELPPHONE, CFE_BOLD, Info->szHelpTelephone, 0);
+        InsertTextWithString(IDS_INFO_README, CFE_BOLD, Info->szReadme, 0);
+        InsertTextWithString(IDS_INFO_CONTACT, CFE_BOLD, Info->szContact, 0);
+        InsertTextWithString(IDS_INFO_UPDATEINFO, CFE_BOLD, Info->szURLUpdateInfo, CFM_LINK);
+        InsertTextWithString(IDS_INFO_INFOABOUT, CFE_BOLD, Info->szURLInfoAbout, CFM_LINK);
+        InsertTextWithString(IDS_INFO_COMMENTS, CFE_BOLD, Info->szComments, 0);
+        InsertTextWithString(IDS_INFO_INSTALLDATE, CFE_BOLD, Info->szInstallDate, 0);
+        InsertTextWithString(IDS_INFO_INSTLOCATION, CFE_BOLD, Info->szInstallLocation, 0);
+        InsertTextWithString(IDS_INFO_INSTALLSRC, CFE_BOLD, Info->szInstallSource, 0);
+        InsertTextWithString(IDS_INFO_UNINSTALLSTR, CFE_BOLD, Info->szUninstallString, 0);
+        InsertTextWithString(IDS_INFO_MODIFYPATH, CFE_BOLD, Info->szModifyPath, 0);
 
         return TRUE;
     }
