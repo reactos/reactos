@@ -8,7 +8,7 @@ class CInstalledApplicationInfo
 public:
     BOOL IsUserKey;
     REGSAM WowKey;
-    HKEY hSubKey = NULL;
+    HKEY hSubKey;
     BOOL bIsUpdate = FALSE;
 
     ATL::CStringW szKeyName;
