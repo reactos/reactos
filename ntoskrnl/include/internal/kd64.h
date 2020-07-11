@@ -561,7 +561,7 @@ extern ULONG TraceDataBufferPosition;
 //
 // Debug Filter Component Table
 //
-#define MAX_KD_COMPONENT_TABLE_ENTRIES  (DPFLTR_ENDOFTABLE_ID + 2)
+#define MAX_KD_COMPONENT_TABLE_ENTRIES  (DPFLTR_ENDOFTABLE_ID + 1)
 extern ULONG KdComponentTableSize;
 extern PULONG KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES];
 
