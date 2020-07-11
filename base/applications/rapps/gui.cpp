@@ -2828,6 +2828,7 @@ private:
         }
         m_AppsTableView->SetRedraw(TRUE);
         m_AppsTableView->RedrawWindow(0, 0, RDW_INVALIDATE | RDW_ALLCHILDREN); // force the child window to repaint
+        UpdateStatusBarText();
         bUpdating = FALSE;
     }
 
