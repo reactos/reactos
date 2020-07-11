@@ -377,43 +377,68 @@ INT cmd_mkdir (LPTSTR param)
 /*
  * RD / RMDIR
  */
-BOOL DeleteFolder(LPTSTR FileName)
+BOOL DeleteFolder(LPTSTR Directory)
 {
-    TCHAR Base[MAX_PATH];
-    TCHAR TempFileName[MAX_PATH];
+    LPTSTR pFileName;
     HANDLE hFile;
     WIN32_FIND_DATA f;
+    DWORD dwAttribs;
+    TCHAR szFullPath[MAX_PATH];
 
-    _tcscpy(Base, FileName);
-    _tcscat(Base, _T("\\*"));
+    _tcscpy(szFullPath, Directory);
+    pFileName = &szFullPath[_tcslen(szFullPath)];
+    /*
+     * Append a path separator if we don't have one already, and if this a drive root
+     * path is not specified (paths like "C:" mean the current directory on drive C:).
+     */
+    if (*szFullPath && *(pFileName - 1) != _T(':') && *(pFileName - 1) != _T('\\'))
+        *pFileName++ = _T('\\');
+    _tcscpy(pFileName, _T("*"));
 
-    hFile = FindFirstFile(Base, &f);
-    Base[_tcslen(Base) - 1] = _T('\0');
+    hFile = FindFirstFile(szFullPath, &f);
     if (hFile != INVALID_HANDLE_VALUE)
     {
         do
         {
+            /* Check Breaker */
+            if (bCtrlBreak)
+                break;
+
             if (!_tcscmp(f.cFileName, _T(".")) ||
                 !_tcscmp(f.cFileName, _T("..")))
             {
                 continue;
             }
 
-            _tcscpy(TempFileName, Base);
-            _tcscat(TempFileName, f.cFileName);
+            _tcscpy(pFileName, f.cFileName);
 
-            if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            dwAttribs = f.dwFileAttributes;
+
+            if (dwAttribs & FILE_ATTRIBUTE_DIRECTORY)
             {
-                DeleteFolder(TempFileName);
+                if (!DeleteFolder(szFullPath))
+                {
+                    /* Couldn't delete the file, print out the error */
+                    ErrorMessage(GetLastError(), szFullPath);
+
+                    /* Continue deleting files/subfolders */
+                }
             }
             else
             {
-                /* Force file deletion */
-                SetFileAttributes(TempFileName, FILE_ATTRIBUTE_NORMAL);
-                if (!DeleteFile(TempFileName))
+                /* Force file deletion even if it's read-only */
+                if (dwAttribs & FILE_ATTRIBUTE_READONLY)
+                    SetFileAttributes(szFullPath, dwAttribs & ~FILE_ATTRIBUTE_READONLY);
+
+                if (!DeleteFile(szFullPath))
                 {
-                    FindClose(hFile);
-                    return 0;
+                    /* Couldn't delete the file, print out the error */
+                    ErrorMessage(GetLastError(), szFullPath);
+
+                    /* Restore file attributes */
+                    SetFileAttributes(szFullPath, dwAttribs);
+
+                    /* Continue deleting files/subfolders */
                 }
             }
 
@@ -421,9 +446,42 @@ BOOL DeleteFolder(LPTSTR FileName)
         FindClose(hFile);
     }
 
-    /* Force directory deletion even if it's read-only */
-    SetFileAttributes(FileName, FILE_ATTRIBUTE_NORMAL);
-    return RemoveDirectory(FileName);
+    /* Ignore directory deletion if the user pressed Ctrl-C */
+    if (bCtrlBreak)
+        return TRUE;
+
+    /*
+     * Detect whether we are trying to delete a pure root drive (e.g. "C:\\", but not "C:");
+     * if so, just return success. Otherwise the RemoveDirectory() call below would fail
+     * and return ERROR_ACCESS_DENIED.
+     */
+    if (GetFullPathName(Directory, ARRAYSIZE(szFullPath), szFullPath, NULL) == 3 &&
+        szFullPath[1] == _T(':') && szFullPath[2] == _T('\\'))
+    {
+        return TRUE;
+    }
+
+    /* First attempt to delete the directory */
+    if (RemoveDirectory(Directory))
+        return TRUE;
+
+    /*
+     * It failed; if it was due to an denied access, check whether it was
+     * due to the directory being read-only. If so, remove its attribute
+     * and retry deletion.
+     */
+    if (GetLastError() == ERROR_ACCESS_DENIED)
+    {
+        /* Force directory deletion even if it's read-only */
+        dwAttribs = GetFileAttributes(Directory);
+        if (dwAttribs & FILE_ATTRIBUTE_READONLY)
+        {
+            SetFileAttributes(Directory, dwAttribs & ~FILE_ATTRIBUTE_READONLY);
+            return RemoveDirectory(Directory);
+        }
+    }
+
+    return FALSE;
 }
 
 INT cmd_rmdir(LPTSTR param)
@@ -437,7 +495,6 @@ INT cmd_rmdir(LPTSTR param)
     TCHAR ch;
     BOOL bRecurseDir = FALSE;
     BOOL bQuiet = FALSE;
-    TCHAR szFullPath[MAX_PATH];
 
     if (!_tcsncmp(param, _T("/?"), 2))
     {
@@ -498,14 +555,7 @@ INT cmd_rmdir(LPTSTR param)
                     bQuiet = TRUE;
             }
 
-            /* Get the folder name */
-            GetFullPathName(arg[i], ARRAYSIZE(szFullPath), szFullPath, NULL);
-
-            /* Remove trailing \ if any, but ONLY if dir is not the root dir */
-            if (_tcslen(szFullPath) >= 2 && szFullPath[_tcslen(szFullPath) - 1] == _T('\\'))
-                szFullPath[_tcslen(szFullPath) - 1] = _T('\0');
-
-            res = DeleteFolder(szFullPath);
+            res = DeleteFolder(arg[i]);
         }
         else
         {
