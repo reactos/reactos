@@ -1480,8 +1480,8 @@ public:
         DestroyIcon(hIcon);
 
         int Index = AddItem(ItemCount, IconIndex, InstAppInfo->szDisplayName, (LPARAM)CallbackParam);
-        SetItemText(Index, 1, InstAppInfo->szDisplayVersion);
-        SetItemText(Index, 2, InstAppInfo->szComments);
+        SetItemText(Index, 1, InstAppInfo->szDisplayVersion.IsEmpty() ? L"---" : InstAppInfo->szDisplayVersion);
+        SetItemText(Index, 2, InstAppInfo->szComments.IsEmpty() ? L"---" : InstAppInfo->szComments);
 
         ItemCount++;
         return TRUE;
