@@ -36,8 +36,6 @@ ErrorMessage(
     if (dwErrorCode == ERROR_SUCCESS)
         return;
 
-    nErrorLevel = 1;
-
     *szMessage = 0;
     if (szFormat)
     {
