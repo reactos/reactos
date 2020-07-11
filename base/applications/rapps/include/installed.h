@@ -7,12 +7,13 @@ class CInstalledApplicationInfo
 {
 public:
     BOOL IsUserKey;
+    REGSAM WowKey;
     HKEY hSubKey = NULL;
     BOOL bIsUpdate = FALSE;
 
     ATL::CStringW szKeyName;
 
-    CInstalledApplicationInfo(BOOL bIsUserKey, HKEY hSubKey);
+    CInstalledApplicationInfo(BOOL bIsUserKey, REGSAM RegWowKey, HKEY hKey);
     BOOL GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String);
     BOOL UninstallApplication(BOOL bModify);
     LSTATUS RemoveFromRegistry();

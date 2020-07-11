@@ -46,3 +46,5 @@ public:
 };
 
 BOOL PathAppendNoDirEscapeW(LPWSTR pszPath, LPCWSTR pszMore);
+
+BOOL IsSystem64Bit();

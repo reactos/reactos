@@ -12,12 +12,10 @@
 
 #include "misc.h"
 
-CInstalledApplicationInfo::CInstalledApplicationInfo(BOOL bIsUserKey, HKEY hKey)
-    : hSubKey(hKey)
+CInstalledApplicationInfo::CInstalledApplicationInfo(BOOL bIsUserKey, REGSAM RegWowKey, HKEY hKey)
+    : hSubKey(hKey), IsUserKey(bIsUserKey), WowKey(RegWowKey)
 {
     // if Initialize failed, hSubKey will be closed automatically and set to zero
-
-    IsUserKey = bIsUserKey;
 
     DWORD dwSize = MAX_PATH, dwType, dwValue;
     BOOL bIsSystemComponent;
@@ -114,26 +112,49 @@ LSTATUS CInstalledApplicationInfo::RemoveFromRegistry()
 {
     ATL::CStringW szFullName = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + szKeyName;
 
-    return RegDeleteKeyW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szFullName);
+    // TODO: if there are subkeys inside, simply RegDeleteKeyExW will fail
+    // we don't have RegDeleteTree for ReactOS now. (It's a WinVista API)
+    // write a function to delete all subkeys recursively to solve this
+    // or consider letting ReactOS having this API
+
+    return RegDeleteKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szFullName, WowKey, 0);
 }
 
 BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
 {
     FreeCachedEntries();
 
-    HKEY RootKeyEnum[2] = { HKEY_CURRENT_USER ,HKEY_LOCAL_MACHINE };
+    HKEY RootKeyEnum[3]  = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, HKEY_LOCAL_MACHINE };
+    REGSAM RegSamEnum[3] = { KEY_WOW64_32KEY,   KEY_WOW64_32KEY,    KEY_WOW64_64KEY    };
 
-    // loop 2 times for both HKEY_CURRENT_USER and HKEY_LOCAL_MACHINE
-    for (int i = 0; i < 2; i++)
+    int LoopTime;
+
+    // test if the OS is 64 bit.
+    if (IsSystem64Bit())
+    {
+        // loop for all 3 combination.
+        // note that HKEY_CURRENT_USER\Software don't have a redirect
+        // https://docs.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys#redirected-shared-and-reflected-keys-under-wow64
+        LoopTime = 3;
+    }
+    else
+    {
+        // loop for 2 combination for KEY_WOW64_32KEY only
+        LoopTime = 2;
+    }
+
+    // loop for all combination
+    for (int i = 0; i < LoopTime; i++)
     {
         DWORD dwSize = MAX_PATH;
         HKEY hKey, hSubKey;
         LONG ItemIndex = 0;
         ATL::CStringW szKeyName;
-        //Info.hRootKey = IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE;
 
-        if (RegOpenKeyW(RootKeyEnum[i],
+        if (RegOpenKeyExW(RootKeyEnum[i],
             L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            NULL,
+            KEY_READ | RegSamEnum[i],
             &hKey) != ERROR_SUCCESS)
         {
             return FALSE;
@@ -153,7 +174,7 @@ BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
             if (RegOpenKeyW(hKey, szKeyName.GetString(), &hSubKey) == ERROR_SUCCESS)
             {
                 BOOL bSuccess = FALSE;
-                CInstalledApplicationInfo *Info = new CInstalledApplicationInfo(RootKeyEnum[i] == HKEY_CURRENT_USER, hSubKey);
+                CInstalledApplicationInfo *Info = new CInstalledApplicationInfo(RootKeyEnum[i] == HKEY_CURRENT_USER, RegSamEnum[i], hSubKey);
                 Info->szKeyName = szKeyName;
 
                 // check for failure. if failed to init, Info->hSubKey will be set to NULL
