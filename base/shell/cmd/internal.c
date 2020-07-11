@@ -408,6 +408,7 @@ BOOL DeleteFolder(LPTSTR FileName)
             }
             else
             {
+                /* Force file deletion */
                 SetFileAttributes(TempFileName, FILE_ATTRIBUTE_NORMAL);
                 if (!DeleteFile(TempFileName))
                 {
@@ -420,6 +421,8 @@ BOOL DeleteFolder(LPTSTR FileName)
         FindClose(hFile);
     }
 
+    /* Force directory deletion even if it's read-only */
+    SetFileAttributes(FileName, FILE_ATTRIBUTE_NORMAL);
     return RemoveDirectory(FileName);
 }
 
@@ -506,6 +509,7 @@ INT cmd_rmdir(LPTSTR param)
         }
         else
         {
+            /* Without /S, do not force directory deletion even if it's read-only */
             res = RemoveDirectory(arg[i]);
         }
 
