@@ -69,19 +69,24 @@ BOOL CInstalledApplicationInfo::GetApplicationString(LPCWSTR lpKeyName, ATL::CSt
 {
     DWORD dwSize = 0;
     String.Empty();
+    DWORD dwType;
 
     // retrieve the size of value first.
     // TODO: I assume the type as REG_SZ. but I think REG_EXPAND_SZ should be handled correctly too.
     if (RegQueryValueExW(hSubKey,
         lpKeyName,
         NULL,
-        NULL,
+        &dwType,
         NULL,
         &dwSize) != ERROR_SUCCESS)
     {
         return FALSE;
     }
 
+    if (dwType != REG_SZ)
+    {
+        return FALSE;
+    }
     // allocate buffer.
     // attention: dwSize is size in bytes, and RegQueryValueExW does not guarantee the terminating null character.
     String.GetBuffer(dwSize + sizeof(WCHAR));
