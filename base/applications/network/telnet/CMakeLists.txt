@@ -3,7 +3,7 @@ set_cpp(WITH_EXCEPTIONS WITH_STL)
 
 add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
 
-if(NOT MSVC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
+if(NOT MSVC)
     add_compile_flags("-Wno-restrict")
 endif()
 
