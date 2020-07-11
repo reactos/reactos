@@ -13,7 +13,7 @@
 #include "misc.h"
 
 CInstalledApplicationInfo::CInstalledApplicationInfo(BOOL bIsUserKey, REGSAM RegWowKey, HKEY hKey)
-    : hSubKey(hKey), IsUserKey(bIsUserKey), WowKey(RegWowKey)
+    : IsUserKey(bIsUserKey), WowKey(RegWowKey), hSubKey(hKey)
 {
     // if Initialize failed, hSubKey will be closed automatically and set to zero
 
