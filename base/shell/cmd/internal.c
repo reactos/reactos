@@ -194,9 +194,22 @@ BOOL SetRootPath(TCHAR *oldpath, TCHAR *InPath)
         goto Fail;
     }
 
-    /* Convert the full path to its correct case.
-     * Example: c:\windows\SYSTEM32 => C:\WINDOWS\System32 */
-    GetPathCase(OutPathTemp, OutPath);
+    if (bEnableExtensions)
+    {
+        /*
+         * Convert the full path to its correct case, and
+         * resolve any wilcard present as well in the path
+         * and retrieve the first result.
+         * Example: c:\windows\SYSTEM32 => C:\WINDOWS\System32
+         * Example: C:\WINDOWS\S* => C:\WINDOWS\System,
+         * or C:\WINDOWS\System32, depending on the user's OS.
+         */
+        GetPathCase(OutPathTemp, OutPath);
+    }
+    else
+    {
+        _tcscpy(OutPath, OutPathTemp);
+    }
 
     /* Use _tchdir(), since unlike SetCurrentDirectory() it updates
      * the current-directory-on-drive environment variables. */
@@ -239,12 +252,27 @@ INT cmd_chdir(LPTSTR param)
         return 0;
     }
 
-    /* Remove extra quotes and strip trailing whitespace */
+    //
+    // FIXME: Use the split() tokenizer if bEnableExtensions == FALSE,
+    // so as to cut the parameter at the first separator (space, ',', ';'):
+    // - When bEnableExtensions == FALSE, doing
+    //   CD system32;winsxs
+    //   will go into system32, (but: CD "system32;winsxs" will fail as below), while
+    // - When bEnableExtensions == TRUE, it will fail because the "system32;winsxs"
+    //   directory does not exist.
+    //
+
+    /* Remove extra quotes */
     StripQuotes(param);
-    tmp = param + _tcslen(param) - 1;
-    while (tmp > param && _istspace(*tmp))
-        --tmp;
-    *(tmp + 1) = _T('\0');
+
+    if (bEnableExtensions)
+    {
+        /* Strip trailing whitespace */
+        tmp = param + _tcslen(param) - 1;
+        while (tmp > param && _istspace(*tmp))
+            --tmp;
+        *(tmp + 1) = _T('\0');
+    }
 
     /* Reset the error level */
     nErrorLevel = 0;
