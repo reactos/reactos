@@ -196,7 +196,7 @@ INT cmd_date(LPTSTR param)
     /* Check for options */
     for (i = 0; i < argc; i++)
     {
-        if (_tcsicmp(arg[i], _T("/t")) == 0)
+        if (bEnableExtensions && (_tcsicmp(arg[i], _T("/T")) == 0))
             bPrompt = FALSE;
 
         if ((*arg[i] != _T('/')) && (nDateString == -1))
