@@ -168,12 +168,27 @@ INT cmd_set(LPTSTR param)
     else
     {
         /* Display all the environment variables with the given prefix */
-        BOOL bFound = FALSE;
+        LPTSTR pOrgParam = param;
+        BOOLEAN bFound = FALSE;
+        BOOLEAN bRestoreSpace;
 
+        /*
+         * Trim the prefix from "special" characters (only when displaying the
+         * environment variables), so that e.g. "SET ,; ,;FOO" will display all
+         * the variables starting by "FOO".
+         * The SET command allows as well to set an environment variable whose name
+         * actually contains these characters (e.g. "SET ,; ,;FOO=42"); however,
+         * by trimming the characters, doing "SET ,; ,;FOO" would not allow seeing
+         * such variables.
+         * Thus, we also save a pointer to the original variable name prefix, that
+         * we will look it up as well below.
+         */
         while (_istspace(*param) || *param == _T(',') || *param == _T(';'))
-            param++;
+            ++param;
 
+        /* Just remove the very last space, if present */
         p = _tcsrchr(param, _T(' '));
+        bRestoreSpace = (p != NULL);
         if (!p)
             p = param + _tcslen(param);
         *p = _T('\0');
@@ -184,7 +199,9 @@ INT cmd_set(LPTSTR param)
             lpOutput = lpEnv;
             while (*lpOutput)
             {
-                if (!_tcsnicmp(lpOutput, param, p - param))
+                /* Look up for both the original and truncated variable name prefix */
+                if (!_tcsnicmp(lpOutput, pOrgParam, p - pOrgParam) ||
+                    !_tcsnicmp(lpOutput, param, p - param))
                 {
                     ConOutPuts(lpOutput);
                     ConOutChar(_T('\n'));
@@ -194,6 +211,11 @@ INT cmd_set(LPTSTR param)
             }
             FreeEnvironmentStrings(lpEnv);
         }
+
+        /* Restore the truncated space for correctly
+         * displaying the error message, if any. */
+        if (bRestoreSpace)
+            *p = _T(' ');
 
         if (!bFound)
         {
