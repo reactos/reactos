@@ -1195,7 +1195,7 @@ class CAppsListView :
         INT iSubItem;
     };
 
-    BOOL bIsAscending;
+    BOOL bIsAscending = TRUE;
     BOOL bHasCheckboxes;
 
     INT ItemCount = 0;
@@ -1208,7 +1208,6 @@ class CAppsListView :
 
 public:
     CAppsListView() :
-        bIsAscending(TRUE),
         bHasCheckboxes(FALSE),
         nLastHeaderID(-1)
     {
@@ -1411,6 +1410,8 @@ public:
         if (!DeleteAllItems()) return FALSE;
         TableViewMode = Mode;
 
+        bIsAscending = TRUE;
+        
         ItemCount = 0;
         CheckedItemCount = 0;
 
