@@ -212,9 +212,9 @@ INT cmd_date(LPTSTR param)
         return 0;
     }
 
-    if (nDateString == -1)
+    while (TRUE)
     {
-        while (TRUE)
+        if (nDateString == -1)
         {
             PrintDateString();
             ConInString(szDate, ARRAYSIZE(szDate));
@@ -229,30 +229,21 @@ INT cmd_date(LPTSTR param)
                 freep(arg);
                 return 0;
             }
-            ConErrResPuts(STRING_DATE_ERROR);
         }
-    }
-    else
-    {
-        if (!ParseDate(arg[nDateString]))
+        else
         {
-            while (TRUE)
+            if (ParseDate(arg[nDateString]))
             {
-                ConErrResPuts(STRING_DATE_ERROR);
-
-                PrintDateString();
-                ConInString(szDate, ARRAYSIZE(szDate));
-
-                while (*szDate && szDate[_tcslen(szDate) - 1] < _T(' '))
-                    szDate[_tcslen(szDate) - 1] = _T('\0');
-
-                if (ParseDate(szDate))
-                {
-                    freep(arg);
-                    return 0;
-                }
+                freep(arg);
+                return 0;
             }
+
+            /* Force input the next time around */
+            nDateString = -1;
         }
+
+        ConErrResPuts(STRING_DATE_ERROR);
+        nErrorLevel = 1;
     }
 
     freep(arg);
