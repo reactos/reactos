@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:         ReactOS user32.dll
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            win32ss/user/user32/windows/cursoricon.c
@@ -312,7 +312,7 @@ create_alpha_bitmap(
             goto done;
         info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
         info->bmiHeader.biWidth = bm.bmWidth;
-        info->bmiHeader.biHeight = -bm.bmHeight;
+        info->bmiHeader.biHeight = bm.bmHeight;
         info->bmiHeader.biPlanes = 1;
         info->bmiHeader.biBitCount = 32;
         info->bmiHeader.biCompression = BI_RGB;
