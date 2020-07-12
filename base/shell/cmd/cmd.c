@@ -902,7 +902,11 @@ GetEnvVarOrSpecial(LPCTSTR varName)
     if (var)
         return var;
 
-    /* env var doesn't exist, look for a "special" one */
+    /* The environment variable doesn't exist, look for
+     * a "special" one only if extensions are enabled. */
+    if (!bEnableExtensions)
+        return NULL;
+
     /* %CD% */
     if (_tcsicmp(varName, _T("CD")) == 0)
     {
