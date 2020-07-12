@@ -948,6 +948,17 @@ GetEnvVarOrSpecial(LPCTSTR varName)
         _itot(nErrorLevel, ret, 10);
         return ret;
     }
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    /* Available in Win7+, even if the underlying API is available in Win2003+ */
+    /* %HIGHESTNUMANODENUMBER% */
+    else if (_tcsicmp(varName, _T("HIGHESTNUMANODENUMBER")) == 0)
+    {
+        ULONG NumaNodeNumber = 0;
+        GetNumaHighestNodeNumber(&NumaNodeNumber);
+        _itot(NumaNodeNumber, ret, 10);
+        return ret;
+    }
+#endif
 
     return NULL;
 }
