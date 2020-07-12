@@ -184,6 +184,7 @@ GetRootPath(
 
 BOOL SetRootPath(TCHAR *oldpath, TCHAR *InPath)
 {
+    DWORD dwLastError;
     TCHAR OutPath[MAX_PATH];
     TCHAR OutPathTemp[MAX_PATH];
 
@@ -191,7 +192,10 @@ BOOL SetRootPath(TCHAR *oldpath, TCHAR *InPath)
 
     /* Retrieve the full path name from the (possibly relative) InPath */
     if (GetFullPathName(InPath, ARRAYSIZE(OutPathTemp), OutPathTemp, NULL) == 0)
+    {
+        dwLastError = GetLastError();
         goto Fail;
+    }
 
     /* Convert the full path to its correct case.
      * Example: c:\windows\SYSTEM32 => C:\WINDOWS\System32 */
@@ -200,7 +204,12 @@ BOOL SetRootPath(TCHAR *oldpath, TCHAR *InPath)
     /* Use _tchdir(), since unlike SetCurrentDirectory() it updates
      * the current-directory-on-drive environment variables. */
     if (_tchdir(OutPath) != 0)
+    {
+        dwLastError = GetLastError();
+        if (dwLastError == ERROR_FILE_NOT_FOUND)
+            dwLastError = ERROR_PATH_NOT_FOUND;
         goto Fail;
+    }
 
     /* Keep the original drive in ordinary CD/CHDIR (without /D switch) */
     if (oldpath != NULL && _tcsncicmp(OutPath, oldpath, 2) != 0)
@@ -209,7 +218,7 @@ BOOL SetRootPath(TCHAR *oldpath, TCHAR *InPath)
     return TRUE;
 
 Fail:
-    ConErrFormatMessage(GetLastError());
+    ConErrFormatMessage(dwLastError);
     nErrorLevel = 1;
     return FALSE;
 }
