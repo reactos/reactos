@@ -494,6 +494,10 @@ static PARSED_COMMAND *ParseFor(void)
     memset(Cmd, 0, sizeof(PARSED_COMMAND));
     Cmd->Type = C_FOR;
 
+    /* Skip the extended FOR syntax if extensions are disabled */
+    if (!bEnableExtensions)
+        goto parseForBody;
+
     while (1)
     {
         if (_tcsicmp(CurrentToken, _T("/D")) == 0)
@@ -542,6 +546,8 @@ static PARSED_COMMAND *ParseFor(void)
     {
         goto error;
     }
+
+parseForBody:
 
     /* Variable name should be % and just one other character */
     if (CurrentToken[0] != _T('%') || _tcslen(CurrentToken) != 2)

@@ -500,19 +500,27 @@ ExecuteFor(PARSED_COMMAND *Cmd)
     Cmd->For.Context = lpNew;
     fc = lpNew;
 
-    if (Cmd->For.Switches & FOR_F)
+    /* Run the extended FOR syntax only if extensions are enabled */
+    if (bEnableExtensions)
     {
-        Ret = ForF(Cmd, List, Buffer);
-    }
-    else if (Cmd->For.Switches & FOR_LOOP)
-    {
-        Ret = ForLoop(Cmd, List, Buffer);
-    }
-    else if (Cmd->For.Switches & FOR_RECURSIVE)
-    {
-        DWORD Len = GetFullPathName(Cmd->For.Params ? Cmd->For.Params : _T("."),
-                                    MAX_PATH, Buffer, NULL);
-        Ret = ForRecursive(Cmd, List, Buffer, &Buffer[Len]);
+        if (Cmd->For.Switches & FOR_F)
+        {
+            Ret = ForF(Cmd, List, Buffer);
+        }
+        else if (Cmd->For.Switches & FOR_LOOP)
+        {
+            Ret = ForLoop(Cmd, List, Buffer);
+        }
+        else if (Cmd->For.Switches & FOR_RECURSIVE)
+        {
+            DWORD Len = GetFullPathName(Cmd->For.Params ? Cmd->For.Params : _T("."),
+                                        MAX_PATH, Buffer, NULL);
+            Ret = ForRecursive(Cmd, List, Buffer, &Buffer[Len]);
+        }
+        else
+        {
+            Ret = ForDir(Cmd, List, Buffer, Buffer);
+        }
     }
     else
     {
