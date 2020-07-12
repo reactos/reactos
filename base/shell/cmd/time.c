@@ -135,8 +135,7 @@ INT cmd_time(LPTSTR param)
     INT argc;
     INT i;
     INT nTimeString = -1;
-    TCHAR szTime[20];
-    TCHAR s[40];
+    TCHAR szTime[40];
 
     if (!_tcsncmp(param, _T("/?"), 2))
     {
@@ -152,7 +151,7 @@ INT cmd_time(LPTSTR param)
     /* Check for options */
     for (i = 0; i < argc; i++)
     {
-        if (_tcsicmp(arg[i], _T("/t")) == 0)
+        if (bEnableExtensions && (_tcsicmp(arg[i], _T("/T")) == 0))
         {
             /* Display current time in short format */
             SYSTEMTIME st;
@@ -178,14 +177,14 @@ INT cmd_time(LPTSTR param)
         if (nTimeString == -1)
         {
             ConOutResPuts(STRING_TIME_HELP2);
-            ConInString(s, ARRAYSIZE(s));
+            ConInString(szTime, ARRAYSIZE(szTime));
 
-            TRACE("\'%s\'\n", debugstr_aw(s));
+            TRACE("\'%s\'\n", debugstr_aw(szTime));
 
-            while (*s && s[_tcslen(s) - 1] < _T(' '))
-                s[_tcslen(s) - 1] = _T('\0');
+            while (*szTime && szTime[_tcslen(szTime) - 1] < _T(' '))
+                szTime[_tcslen(szTime) - 1] = _T('\0');
 
-            if (ParseTime(s))
+            if (ParseTime(szTime))
             {
                 freep(arg);
                 return 0;
