@@ -2882,14 +2882,14 @@ public:
         {
             if (bChecked)
             {
-                if (!m_AvailableApps.AddSelected(TRUE, (CAvailableApplicationInfo *)CallbackParam))
+                if (!m_AvailableApps.AddSelected((CAvailableApplicationInfo *)CallbackParam))
                 {
                     return FALSE;
                 }
             }
             else
             {
-                if (!m_AvailableApps.AddSelected(FALSE, (CAvailableApplicationInfo *)CallbackParam))
+                if (!m_AvailableApps.RemoveSelected((CAvailableApplicationInfo *)CallbackParam))
                 {
                     return FALSE;
                 }

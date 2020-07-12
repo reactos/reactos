@@ -118,7 +118,9 @@ public:
     VOID FreeCachedEntries();
     BOOL Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param);
 
-    BOOL AddSelected(BOOL bAdd, CAvailableApplicationInfo *AvlbInfo);
+    BOOL AddSelected(CAvailableApplicationInfo *AvlbInfo);
+    BOOL RemoveSelected(CAvailableApplicationInfo *AvlbInfo);
+
     VOID RemoveAllSelected();
     int GetSelectedCount();
 

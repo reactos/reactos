@@ -450,7 +450,7 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
                         m_InfoList.RemoveAt(LastListPosition);
 
                         // also remove this in selected list (if exist)
-                        AddSelected(FALSE, Info);
+                        RemoveSelected(Info);
 
                         delete Info;
                         Info = NULL;
@@ -496,22 +496,20 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
     }
 }
 
-BOOL CAvailableApps::AddSelected(BOOL bAdd, CAvailableApplicationInfo *AvlbInfo)
+BOOL CAvailableApps::AddSelected(CAvailableApplicationInfo *AvlbInfo)
 {
-    if (bAdd)
-    {
         return m_SelectedList.AddTail(AvlbInfo) != 0;
-    }
-    else
+}
+
+BOOL CAvailableApps::RemoveSelected(CAvailableApplicationInfo *AvlbInfo)
+{
+    POSITION Position = m_SelectedList.Find(AvlbInfo);
+    if (Position)
     {
-        POSITION Position = m_SelectedList.Find(AvlbInfo);
-        if (Position)
-        {
-            m_SelectedList.RemoveAt(Position);
-            return TRUE;
-        }
-        return FALSE;
+        m_SelectedList.RemoveAt(Position);
+        return TRUE;
     }
+    return FALSE;
 }
 
 VOID CAvailableApps::RemoveAllSelected()
