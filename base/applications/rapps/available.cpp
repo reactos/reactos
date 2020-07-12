@@ -558,23 +558,6 @@ ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindInfoList(const 
     return result;
 }
 
-//ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::GetSelected() const
-//{
-//    ATL::CSimpleArray<CAvailableApplicationInfo> result;
-//    POSITION CurrentListPosition = m_InfoList.GetHeadPosition();
-//    CAvailableApplicationInfo* Info;
-//
-//    while (CurrentListPosition != NULL)
-//    {
-//        Info = m_InfoList.GetNext(CurrentListPosition);
-//        if (Info->m_IsSelected)
-//        {
-//            result.Add(*Info);
-//        }
-//    }
-//    return result;
-//}
-
 const ATL::CStringW& CAvailableApps::GetFolderPath() const
 {
     return m_Strings.szPath;
