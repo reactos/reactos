@@ -395,7 +395,7 @@
 #define PACKAGE_NAME "mpg123"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "mpg123 1.26.1"
+#define PACKAGE_STRING "mpg123 1.26.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "mpg123"
@@ -404,7 +404,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.26.1"
+#define PACKAGE_VERSION "1.26.2"
 
 /* Define if portaudio v18 API is wanted. */
 /* #undef PORTAUDIO18 */
@@ -414,6 +414,9 @@
 
 /* The size of `long', as computed by sizeof. */
 #define SIZEOF_LONG 4
+
+/* The size of `off64_t', as computed by sizeof. */
+#define SIZEOF_OFF64_T 8
 
 /* The size of `off_t', as computed by sizeof. */
 #define SIZEOF_OFF_T 4
@@ -440,13 +443,16 @@
 /* #undef USE_YASM_FOR_AVX */
 
 /* Version number of package */
-#define VERSION "1.26.1"
+#define VERSION "1.26.2"
 
 /* Define to use Win32 named pipes */
 #define WANT_WIN32_FIFO 1
 
 /* Define to use Win32 sockets */
 #define WANT_WIN32_SOCKETS 1
+
+/* Windows UWP build */
+/* #undef WINDOWS_UWP */
 
 /* Define to use Unicode for Windows */
 #define WANT_WIN32_UNICODE 1
