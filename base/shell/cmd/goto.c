@@ -65,8 +65,10 @@ INT cmd_goto(LPTSTR param)
         ++tmp;
     *tmp = _T('\0');
 
-    /* jump to end of the file */
-    if ( _tcsicmp( param, _T(":eof"))==0)
+    /* Support jumping to the end of the file, only if extensions are enabled */
+    if (bEnableExtensions &&
+        (_tcsnicmp(param, _T(":EOF"), 4) == 0) &&
+        (!param[4] || _istspace(param[4])))
     {
         /* Position at the end of the batch file */
         bc->mempos = bc->memsize;
