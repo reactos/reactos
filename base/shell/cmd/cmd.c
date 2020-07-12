@@ -934,8 +934,8 @@ GetEnvVarOrSpecial(LPCTSTR varName)
     /* %CMDEXTVERSION% */
     else if (_tcsicmp(varName, _T("CMDEXTVERSION")) == 0)
     {
-        /* Set version number to 2 */
-        _itot(2, ret, 10);
+        /* Set version number to CMDEXTVERSION */
+        _itot(CMDEXTVERSION, ret, 10);
         return ret;
     }
     /* %ERRORLEVEL% */

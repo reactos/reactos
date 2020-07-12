@@ -24,19 +24,26 @@ static const TCHAR RedirString[][3] = { _T("<"), _T(">"), _T(">>") };
 
 static const TCHAR *const IfOperatorString[] =
 {
-    _T("cmdextversion"),
-    _T("defined"),
+    /* Standard */
     _T("errorlevel"),
     _T("exist"),
-#define IF_MAX_UNARY IF_EXIST
+
+    /* Extended */
+    _T("cmdextversion"),
+    _T("defined"),
+#define IF_MAX_UNARY IF_DEFINED
+
+    /* Standard */
     _T("=="),
+
+    /* Extended */
     _T("equ"),
-    _T("gtr"),
-    _T("geq"),
+    _T("neq"),
     _T("lss"),
     _T("leq"),
-    _T("neq"),
-#define IF_MAX_COMPARISON IF_NEQ
+    _T("gtr"),
+    _T("geq"),
+#define IF_MAX_COMPARISON IF_GEQ
 };
 
 static BOOL IsSeparator(TCHAR Char)
@@ -389,7 +396,7 @@ static PARSED_COMMAND *ParseIf(void)
     memset(Cmd, 0, sizeof(PARSED_COMMAND));
     Cmd->Type = C_IF;
 
-    if (_tcsicmp(CurrentToken, _T("/I")) == 0)
+    if (bEnableExtensions && (_tcsicmp(CurrentToken, _T("/I")) == 0))
     {
         Cmd->If.Flags |= IFFLAG_IGNORECASE;
         ParseToken(0, STANDARD_SEPS);
@@ -406,6 +413,10 @@ static PARSED_COMMAND *ParseIf(void)
     /* Check for unary operators */
     for (; Cmd->If.Operator <= IF_MAX_UNARY; Cmd->If.Operator++)
     {
+        /* Skip the extended operators if the extensions are disabled */
+        if (!bEnableExtensions && (Cmd->If.Operator >= IF_CMDEXTVERSION))
+            continue;
+
         if (_tcsicmp(CurrentToken, IfOperatorString[Cmd->If.Operator]) == 0)
         {
             if (ParseToken(0, STANDARD_SEPS) != TOK_NORMAL)
@@ -427,8 +438,13 @@ static PARSED_COMMAND *ParseIf(void)
         goto condition_done;
     }
 
+    // Cmd->If.Operator == IF_MAX_UNARY + 1;
     for (; Cmd->If.Operator <= IF_MAX_COMPARISON; Cmd->If.Operator++)
     {
+        /* Skip the extended operators if the extensions are disabled */
+        if (!bEnableExtensions && (Cmd->If.Operator >= IF_EQU)) // (Cmd->If.Operator > IF_STRINGEQ)
+            continue;
+
         if (_tcsicmp(CurrentToken, IfOperatorString[Cmd->If.Operator]) == 0)
         {
             if (ParseToken(0, STANDARD_SEPS) != TOK_NORMAL)

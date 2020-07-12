@@ -82,7 +82,7 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
         return 1;
     }
 
-    if (Cmd->If.Operator == IF_CMDEXTVERSION)
+    if (bEnableExtensions && (Cmd->If.Operator == IF_CMDEXTVERSION))
     {
         /* IF CMDEXTVERSION n: check if Command Extensions version
          * is greater or equal to n */
@@ -93,9 +93,9 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
             cmd_free(Right);
             return 1;
         }
-        result = (2 >= n);
+        result = (CMDEXTVERSION >= n);
     }
-    else if (Cmd->If.Operator == IF_DEFINED)
+    else if (bEnableExtensions && (Cmd->If.Operator == IF_DEFINED))
     {
         /* IF DEFINED var: check if environment variable exists */
         result = (GetEnvVarOrSpecial(Right) != NULL);
@@ -167,7 +167,7 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
             /* IF str1 == str2 */
             result = (StringCmp(Left, Right) == 0);
         }
-        else
+        else if (bEnableExtensions)
         {
             result = GenericCmp(StringCmp, Left, Right);
             switch (Cmd->If.Operator)

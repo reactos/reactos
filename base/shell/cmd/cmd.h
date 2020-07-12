@@ -28,6 +28,9 @@
 #include "cmdver.h"
 #include "cmddbg.h"
 
+/* Version of the Command Extensions */
+#define CMDEXTVERSION   2
+
 #define BREAK_BATCHFILE     1
 #define BREAK_OUTOFBATCH    2 /* aka. BREAK_ENDOFBATCHFILES */
 #define BREAK_INPUT         3
@@ -232,11 +235,21 @@ INT CommandHistory(LPTSTR param);
 #endif
 
 /* Prototypes for IF.C */
-#define IFFLAG_NEGATE 1     /* NOT */
-#define IFFLAG_IGNORECASE 2 /* /I  */
-enum { IF_CMDEXTVERSION, IF_DEFINED, IF_ERRORLEVEL, IF_EXIST,
-       IF_STRINGEQ,         /* == */
-       IF_EQU, IF_GTR, IF_GEQ, IF_LSS, IF_LEQ, IF_NEQ };
+#define IFFLAG_NEGATE     1 /* NOT */
+#define IFFLAG_IGNORECASE 2 /* /I - Extended */
+enum {
+    /** Unary operators **/
+    /* Standard */
+    IF_ERRORLEVEL, IF_EXIST,
+    /* Extended */
+    IF_CMDEXTVERSION, IF_DEFINED,
+
+    /** Binary operators **/
+    /* Standard */
+    IF_STRINGEQ,    /* == */
+    /* Extended */
+    IF_EQU, IF_NEQ, IF_LSS, IF_LEQ, IF_GTR, IF_GEQ
+};
 INT ExecuteIf(struct _PARSED_COMMAND *Cmd);
 
 /* Prototypes for INTERNAL.C */
