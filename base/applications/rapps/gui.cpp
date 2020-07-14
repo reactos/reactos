@@ -1242,6 +1242,7 @@ public:
         /* If the sorting column changed, remove the sorting style from the old column */
         if ((nLastHeaderID != -1) && (nLastHeaderID != nHeaderID))
         {
+            bIsAscending = TRUE;
             hColumn.mask = HDI_FORMAT;
             Header_GetItem(hHeader, nLastHeaderID, &hColumn);
             hColumn.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
