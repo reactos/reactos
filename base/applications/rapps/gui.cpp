@@ -1242,7 +1242,7 @@ public:
         /* If the sorting column changed, remove the sorting style from the old column */
         if ((nLastHeaderID != -1) && (nLastHeaderID != nHeaderID))
         {
-            bIsAscending = TRUE;
+            bIsAscending = TRUE; // also reset sorting method to ascending
             hColumn.mask = HDI_FORMAT;
             Header_GetItem(hHeader, nLastHeaderID, &hColumn);
             hColumn.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
@@ -1705,6 +1705,7 @@ private:
         m_HSplitter->m_MinFirst = 10;
         m_HSplitter->m_MinSecond = 140;
         m_Panel->Children().Append(m_HSplitter);
+
         return m_HSplitter->Create(m_hWnd) != NULL;
     }
 
@@ -1732,7 +1733,6 @@ private:
     {
         if (wParam == SIZE_MINIMIZED)
             return;
-
         
         RECT r = { 0, 0, LOWORD(lParam), HIWORD(lParam) };
         HDWP hdwp = NULL;
@@ -1762,6 +1762,7 @@ public:
         delete m_AppsInfo;
         delete m_HSplitter;
     }
+
     static ATL::CWndClassInfo& GetWndClassInfo()
     {
         DWORD csStyle = CS_VREDRAW | CS_HREDRAW;
@@ -1998,7 +1999,7 @@ class CMainWindow :
     CInstalledApps m_InstalledApps;
 
     BOOL bSearchEnabled;
-    BOOL bUpdating;
+    BOOL bUpdating = FALSE;
 
     ATL::CStringW szSearchPattern;
     INT SelectedEnumType;
@@ -2401,7 +2402,6 @@ private:
                 }
 
                 HMENU mainMenu = ::GetMenu(hwnd);
-                //HMENU lvwMenu = ::GetMenu(m_ListView->m_hWnd);
 
                 /* Disable/enable items based on treeview selection */
                 if (IsSelectedNodeInstalled())
@@ -2598,7 +2598,6 @@ private:
                 // enum all selected apps
                 m_AvailableApps.Enum(ENUM_CAT_SELECTED, s_EnumSelectedAppForDownloadProc, (PVOID)&AppsList);
 
-
                 if (AppsList.GetSize())
                 {
                     if (DownloadListOfApplications(AppsList, FALSE))
@@ -2678,8 +2677,7 @@ private:
         {
             return TRUE;
         }
-
-        return m_ApplicationView->AddInstalledApplication(Info, Info);
+        return m_ApplicationView->AddInstalledApplication(Info, Info); // currently, the callback param is Info itself
     }
 
     BOOL CALLBACK EnumAvailableAppProc(CAvailableApplicationInfo * Info, BOOL bInitialCheckState)
@@ -2689,9 +2687,8 @@ private:
         {
             return TRUE;
         }
-        return m_ApplicationView->AddAvailableApplication(Info, bInitialCheckState, Info);;
+        return m_ApplicationView->AddAvailableApplication(Info, bInitialCheckState, Info); // currently, the callback param is Info itself
     }
-
 
     static BOOL CALLBACK s_EnumInstalledAppProc(CInstalledApplicationInfo * Info, PVOID param)
     {
@@ -2834,7 +2831,7 @@ public:
 
     void HandleTabOrder(int direction)
     {
-        HWND Controls[] = { m_Toolbar->m_hWnd, m_SearchBar->m_hWnd, m_TreeView->m_hWnd/*, m_ListView->m_hWnd, m_AppInfo->m_hWnd*/ };
+        HWND Controls[] = { m_Toolbar->m_hWnd, m_SearchBar->m_hWnd, m_TreeView->m_hWnd, m_ApplicationView->m_hWnd};
         // When there is no control found, go to the first or last (depending on tab vs shift-tab)
         int current = direction > 0 ? 0 : (_countof(Controls) - 1);
         HWND hActive = ::GetFocus();
