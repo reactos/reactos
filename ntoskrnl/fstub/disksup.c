@@ -1387,14 +1387,12 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 NTSTATUS
 NTAPI
 HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
-                    IN PDISK_GEOMETRY Geometry,
-                    OUT PULONGLONG RealSectorCount)
+                    OUT PDISK_GEOMETRY_EX Geometry)
 {
     PIRP Irp;
     IO_STATUS_BLOCK IoStatusBlock;
     PKEVENT Event;
     NTSTATUS Status;
-    PARTITION_INFORMATION PartitionInfo;
     PAGED_CODE();
 
     /* Allocate a non-paged event */
@@ -1407,12 +1405,12 @@ HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
     KeInitializeEvent(Event, NotificationEvent, FALSE);
 
     /* Build the IRP */
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
                                              DeviceObject,
                                              NULL,
                                              0UL,
                                              Geometry,
-                                             sizeof(DISK_GEOMETRY),
+                                             sizeof(DISK_GEOMETRY_EX),
                                              FALSE,
                                              Event,
                                              &IoStatusBlock);
@@ -1430,47 +1428,6 @@ HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
         /* Wait on the driver */
         KeWaitForSingleObject(Event, Executive, KernelMode, FALSE, NULL);
         Status = IoStatusBlock.Status;
-    }
-
-    /* Check if the driver returned success */
-    if(NT_SUCCESS(Status))
-    {
-        /* Build another IRP */
-        Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_PARTITION_INFO,
-                                                 DeviceObject,
-                                                 NULL,
-                                                 0UL,
-                                                 &PartitionInfo,
-                                                 sizeof(PARTITION_INFORMATION),
-                                                 FALSE,
-                                                 Event,
-                                                 &IoStatusBlock);
-        if (!Irp)
-        {
-            /* Fail, free the event */
-            ExFreePoolWithTag(Event, TAG_FILE_SYSTEM);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        /* Reset event */
-        KeClearEvent(Event);
-
-        /* Call the driver and check if it's pending */
-        Status = IoCallDriver(DeviceObject, Irp);
-        if (Status == STATUS_PENDING)
-        {
-            /* Wait on the driver */
-            KeWaitForSingleObject(Event, Executive, KernelMode, FALSE, NULL);
-            Status = IoStatusBlock.Status;
-        }
-
-        /* Check if the driver returned success */
-        if(NT_SUCCESS(Status))
-        {
-            /* Get the number of sectors */
-            *RealSectorCount = (PartitionInfo.PartitionLength.QuadPart /
-                                Geometry->BytesPerSector);
-        }
     }
 
     /* Free the event and return the Status */
@@ -1823,9 +1780,8 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     ULONG BufferSize = 2048, InputSize;
     PDRIVE_LAYOUT_INFORMATION DriveLayoutInfo = NULL;
     LONG j = -1, i = -1, k;
-    DISK_GEOMETRY DiskGeometry;
+    DISK_GEOMETRY_EX DiskGeometryEx;
     LONGLONG EndSector, MaxSector, StartOffset;
-    ULONGLONG MaxOffset;
     LARGE_INTEGER Offset, VolumeOffset;
     BOOLEAN IsPrimary = TRUE, IsEzDrive = FALSE, MbrFound = FALSE;
     BOOLEAN IsValid, IsEmpty = TRUE;
@@ -1856,7 +1812,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Get drive geometry */
-    Status = HalpGetFullGeometry(DeviceObject, &DiskGeometry, &MaxOffset);
+    Status = HalpGetFullGeometry(DeviceObject, &DiskGeometryEx);
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(*PartitionBuffer, TAG_FILE_SYSTEM);
@@ -1865,10 +1821,10 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Get the end and maximum sector */
-    EndSector = MaxOffset;
-    MaxSector = MaxOffset << 1;
-    DPRINT("FSTUB: MaxOffset = %#I64x, MaxSector = %#I64x\n",
-            MaxOffset, MaxSector);
+    EndSector = DiskGeometryEx.DiskSize.QuadPart / DiskGeometryEx.Geometry.BytesPerSector;
+    MaxSector = EndSector << 1;
+    DPRINT("FSTUB: DiskSize = %#I64x, MaxSector = %#I64x\n",
+            DiskGeometryEx.DiskSize, MaxSector);
 
     /* Allocate our buffer */
     Buffer = ExAllocatePoolWithTag(NonPagedPool, InputSize, TAG_FILE_SYSTEM);
@@ -1970,13 +1926,12 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             if (PartitionType == EFI_PMBR_OSTYPE_EFI)
             {
                 /* Partition length might be bigger than disk size */
-                FstubFixupEfiPartition(PartitionDescriptor,
-                                       MaxOffset);
+                FstubFixupEfiPartition(PartitionDescriptor, DiskGeometryEx.DiskSize.QuadPart);
             }
 
             /* Make sure that the partition is valid, unless it's the first */
             if (!(HalpIsValidPartitionEntry(PartitionDescriptor,
-                                            MaxOffset,
+                                            DiskGeometryEx.DiskSize.QuadPart,
                                             MaxSector)) && (j == 0))
             {
                 /* It's invalid, so fail */
@@ -2158,7 +2113,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     } while (Offset.HighPart | Offset.LowPart);
 
     /* Check if this is a removable device that's probably a super-floppy */
-    if ((DiskGeometry.MediaType == RemovableMedia) &&
+    if ((DiskGeometryEx.Geometry.MediaType == RemovableMedia) &&
         (j == 0) && (MbrFound) && (IsEmpty))
     {
         PBOOT_SECTOR_INFO BootSectorInfo = (PBOOT_SECTOR_INFO)Buffer;
@@ -2179,7 +2134,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     if (j == -1)
     {
         /* The likely cause is the super floppy detection above */
-        if ((MbrFound) || (DiskGeometry.MediaType == RemovableMedia))
+        if ((MbrFound) || (DiskGeometryEx.Geometry.MediaType == RemovableMedia))
         {
             /* Print out debugging information */
             DPRINT1("FSTUB: Drive %#p has no valid MBR. Make it into a "
@@ -2187,7 +2142,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                     DeviceObject);
             DPRINT1("FSTUB: Drive has %I64d sectors and is %#016I64x "
                     "bytes large\n",
-                    EndSector, EndSector * DiskGeometry.BytesPerSector);
+                    EndSector, DiskGeometryEx.DiskSize);
 
             /* We should at least have some sectors */
             if (EndSector > 0)
@@ -2202,9 +2157,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 PartitionInfo->BootIndicator = FALSE;
                 PartitionInfo->HiddenSectors = 0;
                 PartitionInfo->StartingOffset.QuadPart = 0;
-                PartitionInfo->PartitionLength.QuadPart = (EndSector *
-                                                           DiskGeometry.
-                                                           BytesPerSector);
+                PartitionInfo->PartitionLength = DiskGeometryEx.DiskSize;
 
                 /* FIXME: REACTOS HACK */
                 PartitionInfo->PartitionNumber = 0;
