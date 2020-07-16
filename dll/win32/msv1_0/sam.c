@@ -476,6 +476,8 @@ SamValidateUser(
     NTSTATUS Status = STATUS_SUCCESS;
 
     *SpecialAccount = FALSE;
+    *UserInfoPtr = NULL;
+    *SubStatus = STATUS_SUCCESS;
 
     /* Check for special accounts */
     // FIXME: Windows does not do this that way!! (msv1_0 does not contain these hardcoded values)
