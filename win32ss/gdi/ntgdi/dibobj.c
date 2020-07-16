@@ -493,6 +493,9 @@ NtGdiSetDIBitsToDeviceInternal(
     LPBITMAPINFO pbmiSafe;
     BOOL bResult;
 
+    DPRINT("XDest/YDest is '%d/%d' Width is '%d' Height is '%d' XSrc/YSrc is '%d/%d' StartScan is '%d' ScanLines is '%d'.\n",
+        XDest, YDest, Width, Height, XSrc, YSrc, StartScan, ScanLines);
+
     if (!Bits) return 0;
 
     pbmiSafe = ExAllocatePoolWithTag(PagedPool, cjMaxInfo, 'pmTG');
@@ -644,6 +647,13 @@ NtGdiSetDIBitsToDeviceInternal(
     // Not used from here. If not cleared this makes it
     // impossible to use this bit for Lazarus and PeaZip flip info
     pSourceSurf->fjBitmap &= ~BMF_TOPDOWN;
+
+    /* This fixes the large Google text on Google.com from being upside down */
+    if (rcDest.top > rcDest.bottom)
+    {
+        RECTL_vMakeWellOrdered(&rcDest);
+        ptSource.y -= SourceSize.cy;
+    }
 
     bResult = IntEngBitBlt(pDestSurf,
                           pSourceSurf,
@@ -1397,6 +1407,8 @@ IntCreateDIBitmap(
     BOOL fColor;
     ULONG BmpFormat = 0;
 
+    DPRINT("height is '%d'.\n", height);
+
     if (planes && bpp)
         BmpFormat = BitmapFormat(planes * bpp, compression);
 
@@ -1494,6 +1506,8 @@ NtGdiCreateDIBitmapInternal(
     NTSTATUS Status = STATUS_SUCCESS;
     PBYTE safeBits = NULL;
     HBITMAP hbmResult = NULL;
+
+    DPRINT("pbmi height is '%d'.\n", pbmi->bmiHeader.biHeight);
 
     if (pjInit == NULL)
     {
