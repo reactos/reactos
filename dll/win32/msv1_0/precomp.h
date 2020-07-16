@@ -32,6 +32,8 @@
 //#include <lsass/lsasrv.h>
 
 #include "ntlm/global.h"
+#include "ntlm/protocol.h"
+#include "ntlm/util.h"
 #include "lsa.h"
 #include "msv1_0.h"
 #include "sam.h"

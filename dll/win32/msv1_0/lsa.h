@@ -7,9 +7,6 @@
 
 #pragma once
 
-// functions we provide to LSA in SpLsaModeInitialize
-extern SECPKG_FUNCTION_TABLE NtlmLsaFn[1];
-
 NTSTATUS
 NTAPI
 SpInitialize(
