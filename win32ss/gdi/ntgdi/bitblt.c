@@ -7,6 +7,10 @@
  */
 
 #include <win32k.h>
+
+#define NDEBUG
+#include <debug.h>
+
 DBG_DEFAULT_CHANNEL(GdiBlt);
 
 BOOL APIENTRY
@@ -160,6 +164,11 @@ NtGdiBitBlt(
     IN DWORD crBackColor,
     IN FLONG fl)
 {
+
+    DPRINT("XSrc/YSrc is (%d,%d) and XDest/YDest is (%d,%d).\n",
+      XSrc, YSrc, XDest, YDest);
+    DPRINT("Width/Height is '%d/%d'.\n",
+      Width, Height);
 
     if (dwRop & CAPTUREBLT)
     {
@@ -487,6 +496,29 @@ NtGdiMaskBlt(
         BitmapSrc->SurfObj.fjBitmap &= ~BMF_TOPDOWN; 
     }
 
+    DPRINT("DestRect: (%d,%d)-(%d,%d) and SourcePoint is (%d,%d)\n",
+           DestRect.left, DestRect.top, DestRect.right, DestRect.bottom,
+           SourcePoint.x, SourcePoint.y);
+
+    DPRINT("nWidth is '%d' and nHeight is '%d'.\n", nWidth, nHeight);
+
+    /* Fix BitBlt so that it will not flip left to right */
+    if ((DestRect.left > DestRect.right) && (nWidth < 0))
+    {
+        SourcePoint.x += nWidth;
+        nWidth = -nWidth;
+    }
+
+    /* Fix BitBlt so that it will not flip top to bottom */
+    if ((DestRect.top > DestRect.bottom) && (nHeight < 0))
+    {
+        SourcePoint.y += nHeight;
+        nHeight = -nHeight;
+    }
+
+    /* Make Well Ordered so that we don't flip either way */
+    RECTL_vMakeWellOrdered(&DestRect);
+
     /* Perform the bitblt operation */
     Status = IntEngBitBlt(&BitmapDest->SurfObj,
                           BitmapSrc ? &BitmapSrc->SurfObj : NULL,
@@ -624,6 +656,11 @@ GreStretchBltMask(
 
     pdcattr = DCDest->pdcattr;
 
+    DPRINT("XOriginSrc/YOriginSrc is (%d,%d) and XOriginDest/YOriginDest is (%d,%d).\n",
+      XOriginSrc, YOriginSrc, XOriginDest, YOriginDest);
+    DPRINT("WidthSrc/HeightSrc is '%d/%d' and WidthDest/HeightDest is '%d/%d'.\n",
+      WidthSrc, HeightSrc, WidthDest, HeightDest);
+
     DestRect.left   = XOriginDest;
     DestRect.top    = YOriginDest;
     DestRect.right  = XOriginDest+WidthDest;
@@ -644,6 +681,10 @@ GreStretchBltMask(
     SourceRect.top    = YOriginSrc;
     SourceRect.right  = XOriginSrc+WidthSrc;
     SourceRect.bottom = YOriginSrc+HeightSrc;
+
+    DPRINT("SourceRect is (%d,%d)-(%d,%d) and DestRect is (%d,%d)-(%d,%d)\n",
+           SourceRect.left, SourceRect.top, SourceRect.right, SourceRect.bottom,
+           DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
     if (UsesSource)
     {

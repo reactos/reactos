@@ -6,6 +6,10 @@
  * PROGRAMERS:       Jason Filby
  *                   Timo Kreuzer
  *                   Doug Lyons
+ *
+ * WARNING: Modify this file with extreme caution. It is very sensitive to timing changes.
+ *   Adding code can cause the system to show a Fatal Exception Error and fail to boot!.
+ *   This is especially true in CallDibBitBlt, IntEngBitBlt and EngBitBlt (even DPRINT's).
  */
 
 #include <win32k.h>
