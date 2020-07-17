@@ -1209,7 +1209,6 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     *AccountName = NULL;
     *AuthenticatingAuthority = NULL;
 
-    RtlInitUnicodeString(&ComputerName, NULL);
     /* Get the computer name */
     ComputerNameSize = ARRAYSIZE(ComputerNameData);
     if (!GetComputerNameW(ComputerNameData, &ComputerNameSize))
@@ -1217,7 +1216,6 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         ERR("Failed to get Computername.\n");
         return STATUS_INTERNAL_ERROR;
     }
-    ComputerNameData[ComputerNameSize] = 0;
     RtlInitUnicodeString(&ComputerName, ComputerNameData);
 
     /* Parameters validation */
