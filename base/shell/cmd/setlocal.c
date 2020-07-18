@@ -9,10 +9,13 @@
 
 #include "precomp.h"
 
+#include <direct.h> // For _getdrive().
+
 typedef struct _SETLOCAL
 {
     struct _SETLOCAL *Prev;
     LPTSTR Environment;
+    INT CurDrive;
     BOOL EnableExtensions;
     BOOL DelayedExpansion;
 } SETLOCAL, *PSETLOCAL;
@@ -42,6 +45,13 @@ INT cmd_setlocal(LPTSTR param)
     LPTSTR* arg;
     INT argc, i;
 
+    if (!_tcscmp(param, _T("/?")))
+    {
+        // FIXME
+        ConOutPuts(_T("SETLOCAL help not implemented yet!\n"));
+        return 0;
+    }
+
     /* SETLOCAL only works inside a batch context */
     if (!bc)
         return 0;
@@ -53,6 +63,7 @@ INT cmd_setlocal(LPTSTR param)
         error_out_of_memory();
         return 1;
     }
+
     Saved->Environment = DuplicateEnvironment();
     if (!Saved->Environment)
     {
@@ -60,6 +71,12 @@ INT cmd_setlocal(LPTSTR param)
         cmd_free(Saved);
         return 1;
     }
+    /*
+     * Save the current drive; the duplicated environment
+     * contains the corresponding current directory.
+     */
+    Saved->CurDrive = _getdrive();
+
     Saved->EnableExtensions = bEnableExtensions;
     Saved->DelayedExpansion = bDelayedExpansion;
 
@@ -94,9 +111,15 @@ INT cmd_endlocal(LPTSTR param)
 {
     LPTSTR Environ, Name, Value;
     PSETLOCAL Saved;
+    TCHAR drvEnvVar[] = _T("=?:");
+    TCHAR szCurrent[MAX_PATH];
 
-    /* ENDLOCAL doesn't take any params */
-    UNREFERENCED_PARAMETER(param);
+    if (!_tcscmp(param, _T("/?")))
+    {
+        // FIXME
+        ConOutPuts(_T("ENDLOCAL help not implemented yet!\n"));
+        return 0;
+    }
 
     /* Pop a SETLOCAL struct off of this batch context's stack */
     if (!bc || !(Saved = bc->setlocal))
@@ -132,6 +155,14 @@ INT cmd_endlocal(LPTSTR param)
         SetEnvironmentVariable(Name, Value);
         Name = Value;
     }
+
+    /* Restore the current drive and its current directory from the environment */
+    drvEnvVar[1] = _T('A') + Saved->CurDrive - 1;
+    if (!GetEnvironmentVariable(drvEnvVar, szCurrent, ARRAYSIZE(szCurrent)))
+    {
+        _stprintf(szCurrent, _T("%C:\\"), _T('A') + Saved->CurDrive - 1);
+    }
+    _tchdir(szCurrent); // SetRootPath(NULL, szCurrent);
 
     cmd_free(Saved->Environment);
     cmd_free(Saved);
