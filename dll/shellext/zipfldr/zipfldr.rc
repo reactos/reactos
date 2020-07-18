@@ -3,9 +3,9 @@
 
 #include "resource.h"
 
-164 BITMAP "res/zipfldr1.bmp"
-200 BITMAP "res/zipfldr2.bmp"
-201 BITMAP "res/zipfldr3.bmp"
+164 BITMAP "res/zipfldr.bmp"
+200 BITMAP "res/header.bmp"
+201 BITMAP "res/watermark.bmp"
 1 ICON "res/zipfldr.ico"
 
 #define REACTOS_VERSION_DLL
