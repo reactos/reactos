@@ -46,7 +46,7 @@ FsType = 0
 ; enable this setting to disable Gecko install
 ; yes - disabled
 ; no  - enabled
-DisableGeckoInst = no
+DisableGeckoInst = yes
 
 ; set this option to automatically
 ; specify language in 2nd mode setup
@@ -71,6 +71,6 @@ ProductOption = 0
 ; setting a value to 0 or skipping it will leave it unchanged
 ; [Display]
 ; BitsPerPel = 32
-; XResolution = 1440
-; YResolution = 900
+; XResolution = 1280
+; YResolution = 1024
 ; VRefresh = 0

@@ -7,6 +7,8 @@
  *                  Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
  */
 
+// TODO: Fix all remaining bugs, remove obsolete code
+
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
