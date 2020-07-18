@@ -48,7 +48,6 @@ FsdGetFsVolumeInformation(
         RtlCopyMemory(FsVolumeInfo->VolumeLabel,
                       DeviceObject->Vpb->VolumeLabel,
                       *BufferLength);
-        *BufferLength = 0;
     }
     else
     {
