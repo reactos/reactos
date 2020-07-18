@@ -294,6 +294,21 @@ ULONG Kd_FILETRACE_Mask;
 ULONG Kd_XSAVE_Mask;
 ULONG Kd_SE_Mask;
 ULONG Kd_DRIVEEXTENDER_Mask;
+//
+// Components specified in Windows 8
+//
+ULONG Kd_POWER_Mask;
+ULONG Kd_CRASHDUMPXHCI_Mask;
+ULONG Kd_GPIO_Mask;
+ULONG Kd_REFS_Mask;
+ULONG Kd_WER_Mask;
+//
+// Components specified in Windows 10
+//
+ULONG Kd_CAPIMG_Mask;
+ULONG Kd_VPCI_Mask;
+ULONG Kd_STORAGECLASSMEMORY_Mask;
+ULONG Kd_FSLIB_Mask;
 // End Mask
 ULONG Kd_ENDOFTABLE_Mask;
 
@@ -407,7 +422,6 @@ PULONG KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES] =
     &Kd_MM_Mask,
     &Kd_DFSC_Mask,
     &Kd_WOW64_Mask,
-
 //
 // Components specified in Vista+, some of which we also use in ReactOS
 //
@@ -452,11 +466,26 @@ PULONG KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES] =
     &Kd_XSAVE_Mask,
     &Kd_SE_Mask,
     &Kd_DRIVEEXTENDER_Mask,
-    // End Mask
+//
+// Components specified in Windows 8
+//
+    &Kd_POWER_Mask,
+    &Kd_CRASHDUMPXHCI_Mask,
+    &Kd_GPIO_Mask,
+    &Kd_REFS_Mask,
+    &Kd_WER_Mask,
+//
+// Components specified in Windows 10
+//
+    &Kd_CAPIMG_Mask,
+    &Kd_VPCI_Mask,
+    &Kd_STORAGECLASSMEMORY_Mask,
+    &Kd_FSLIB_Mask,
+// End Mask
     &Kd_ENDOFTABLE_Mask,
 };
 
-ULONG KdComponentTableSize = sizeof(KdComponentTable) / sizeof(KdComponentTable[0]);
+ULONG KdComponentTableSize = RTL_NUMBER_OF(KdComponentTable);
 
 //
 // Debugger Data

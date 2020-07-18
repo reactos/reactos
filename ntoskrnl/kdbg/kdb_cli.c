@@ -301,6 +301,21 @@ ComponentTable[] =
     { "XSAVE",          DPFLTR_XSAVE_ID         },
     { "SE",             DPFLTR_SE_ID            },
     { "DRIVEEXTENDER",  DPFLTR_DRIVEEXTENDER_ID },
+//
+// Components specified in Windows 8
+//
+    { "POWER",          DPFLTR_POWER_ID         },
+    { "CRASHDUMPXHCI",  DPFLTR_CRASHDUMPXHCI_ID },
+    { "GPIO",           DPFLTR_GPIO_ID          },
+    { "REFS",           DPFLTR_REFS_ID          },
+    { "WER",            DPFLTR_WER_ID           },
+//
+// Components specified in Windows 10
+//
+    { "CAPIMG",         DPFLTR_CAPIMG_ID        },
+    { "VPCI",           DPFLTR_VPCI_ID          },
+    { "STORAGECLASSMEMORY", DPFLTR_STORAGECLASSMEMORY_ID },
+    { "FSLIB",          DPFLTR_FSLIB_ID         },
 };
 
 //

@@ -1751,6 +1751,75 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL
     },
 //
+// Components specified in Windows 8
+//
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"POWER",
+        &Kd_POWER_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"CRASHDUMPXHCI",
+        &Kd_CRASHDUMPXHCI_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"GPIO",
+        &Kd_GPIO_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"REFS",
+        &Kd_REFS_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"WER",
+        &Kd_WER_Mask,
+        NULL,
+        NULL
+    },
+//
+// Components specified in Windows 10
+//
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"CAPIMG",
+        &Kd_CAPIMG_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"VPCI",
+        &Kd_VPCI_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"STORAGECLASSMEMORY",
+        &Kd_STORAGECLASSMEMORY_Mask,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Debug Print Filter",
+        L"FSLIB",
+        &Kd_FSLIB_Mask,
+        NULL,
+        NULL
+    },
+//
 // END OF Debug Filter Masks
 //
 
