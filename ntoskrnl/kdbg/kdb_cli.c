@@ -706,11 +706,11 @@ KdbpCmdFilter(
                   "- The 'DEFAULT' debug filter component is used for DbgPrint() messages with\n"
                   "  an unknown Component ID.\n\n");
         KdbpPrint("The list of debug filter components currently available on your system is:\n\n");
-        KdbpPrint(" Component Name        Component ID\n"
-                  "================      ==============\n");
+        KdbpPrint("    Component Name         Component ID\n"
+                  "  ==================     ================\n");
         for (i = 0; i < RTL_NUMBER_OF(ComponentTable); i++)
         {
-            KdbpPrint("%16s        0x%08lx\n", ComponentTable[i].Name, ComponentTable[i].Id);
+            KdbpPrint("%20s        0x%08lx\n", ComponentTable[i].Name, ComponentTable[i].Id);
         }
         return TRUE;
     }
