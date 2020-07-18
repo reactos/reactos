@@ -641,7 +641,7 @@ KdbpGetComponentId(
 {
     ULONG i;
 
-    for (i = 0; i < sizeof(ComponentTable) / sizeof(ComponentTable[0]); i++)
+    for (i = 0; i < RTL_NUMBER_OF(ComponentTable); i++)
     {
         if (_stricmp(ComponentName, ComponentTable[i].Name) == 0)
         {
@@ -689,7 +689,7 @@ KdbpCmdFilter(
         KdbpPrint("The list of debug filter components currently available on your system is:\n\n");
         KdbpPrint(" Component Name        Component ID\n"
                   "================      ==============\n");
-        for (i = 0; i < sizeof(ComponentTable) / sizeof(ComponentTable[0]); i++)
+        for (i = 0; i < RTL_NUMBER_OF(ComponentTable); i++)
         {
             KdbpPrint("%16s        0x%08lx\n", ComponentTable[i].Name, ComponentTable[i].Id);
         }
@@ -704,7 +704,7 @@ KdbpCmdFilter(
 
         if (p > opt)
         {
-            for (j = 0; j < sizeof(debug_classes) / sizeof(debug_classes[0]); j++)
+            for (j = 0; j < RTL_NUMBER_OF(debug_classes); j++)
             {
                 SIZE_T len = strlen(debug_classes[j].Name);
                 if (len != (p - opt))
@@ -718,7 +718,7 @@ KdbpCmdFilter(
                     break;
                 }
             }
-            if (j == sizeof(debug_classes) / sizeof(debug_classes[0]))
+            if (j == RTL_NUMBER_OF(debug_classes))
             {
                 Level = strtoul(opt, &pend, 0);
                 if (pend != p)
@@ -1702,7 +1702,7 @@ KdbpCmdThread(
                 Eip = 0;
 
                 if (Ebp) /* FIXME: Should we attach to the process to read Ebp[1]? */
-                    KdbpSafeReadMemory(&Eip, Ebp + 1, sizeof (Eip));
+                    KdbpSafeReadMemory(&Eip, Ebp + 1, sizeof(Eip));
             }
 
             if (Thread->Tcb.State < (DeferredReady + 1))
@@ -2688,7 +2688,7 @@ KdbpPrint(
                 break;
 
             Buffer[Length++] = c;
-            if (Length >= (sizeof (Buffer) - 1))
+            if (Length >= (sizeof(Buffer) - 1))
                 break;
         }
 
@@ -2723,7 +2723,7 @@ KdbpPrint(
                             break;
 
                         Buffer[Length++] = c;
-                        if (isalpha(c) || Length >= (sizeof (Buffer) - 1))
+                        if (isalpha(c) || Length >= (sizeof(Buffer) - 1))
                             break;
                     }
 
@@ -2762,7 +2762,7 @@ KdbpPrint(
 
     /* Get the string */
     va_start(ap, Format);
-    Length = _vsnprintf(Buffer, sizeof (Buffer) - 1, Format, ap);
+    Length = _vsnprintf(Buffer, sizeof(Buffer) - 1, Format, ap);
     Buffer[Length] = '\0';
     va_end(ap);
 
@@ -3005,7 +3005,7 @@ KdbpPager(
                 break;
 
             InBuffer[Length++] = c;
-            if (Length >= (sizeof (InBuffer) - 1))
+            if (Length >= (sizeof(InBuffer) - 1))
                 break;
         }
 
@@ -3040,7 +3040,7 @@ KdbpPager(
                             break;
 
                         InBuffer[Length++] = c;
-                        if (isalpha(c) || Length >= (sizeof (InBuffer) - 1))
+                        if (isalpha(c) || Length >= (sizeof(InBuffer) - 1))
                             break;
                     }
 
@@ -3680,7 +3680,7 @@ KdbpCliMainLoop(
         KdbpPrint(KdbPromptString.Buffer);
 
         /* Read a command and remember it */
-        KdbpReadCommand(Command, sizeof (Command));
+        KdbpReadCommand(Command, sizeof(Command));
         KdbpCommandHistoryAppend(Command);
 
         /* Reset the number of rows/cols printed and output aborted state */
@@ -3793,7 +3793,7 @@ KdbpCliInit(VOID)
     }
 
     /* Get the size of the file */
-    Status = ZwQueryInformationFile(hFile, &Iosb, &FileStdInfo, sizeof (FileStdInfo),
+    Status = ZwQueryInformationFile(hFile, &Iosb, &FileStdInfo, sizeof(FileStdInfo),
                                     FileStandardInformation);
     if (!NT_SUCCESS(Status))
     {
