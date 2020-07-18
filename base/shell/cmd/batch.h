@@ -19,6 +19,10 @@ typedef enum _BATCH_TYPE
     CMD_TYPE    /* New-style NT OS/2 batch file */
 } BATCH_TYPE;
 
+
+/* Enable this define for Windows' CMD batch-echo behaviour compatibility */
+#define MSCMD_BATCH_ECHO
+
 typedef struct _BATCH_CONTEXT
 {
     struct _BATCH_CONTEXT *prev;
@@ -30,7 +34,9 @@ typedef struct _BATCH_CONTEXT
     LPTSTR params;
     LPTSTR raw_params;  /* Holds the raw params given by the input */
     INT    shiftlevel[10];
+#ifndef MSCMD_BATCH_ECHO
     BOOL   bEcho;       /* Preserve echo flag across batch calls */
+#endif
     REDIRECTION *RedirList;
     PARSED_COMMAND *current;
     struct _SETLOCAL *setlocal;
@@ -52,6 +58,10 @@ typedef struct _FOR_CONTEXT
 extern BATCH_TYPE BatType;
 extern PBATCH_CONTEXT bc;
 extern PFOR_CONTEXT fc;
+
+#ifdef MSCMD_BATCH_ECHO
+extern BOOL bBcEcho;
+#endif
 
 extern BOOL bEcho;       /* The echo flag */
 
