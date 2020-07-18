@@ -4610,9 +4610,6 @@ ftGdiGetTextMetricsW(
             if (NT_SUCCESS(Status) || !Error)
             {
                 FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
-
-                /* FIXME: Fill Diff member */
-                RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
             }
 
             IntUnLockFreeType();
