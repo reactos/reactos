@@ -269,7 +269,12 @@ INT CommandMemory (LPTSTR);
 INT cmd_mklink(LPTSTR);
 
 /* Prototypes for MISC.C */
-INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size);
+INT
+GetRootPath(
+    IN LPCTSTR InPath,
+    OUT LPTSTR OutPath,
+    IN INT size);
+
 BOOL SetRootPath(TCHAR *oldpath,TCHAR *InPath);
 TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);

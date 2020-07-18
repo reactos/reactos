@@ -150,7 +150,7 @@
  */
 INT
 GetRootPath(
-    IN LPTSTR InPath,
+    IN LPCTSTR InPath,
     OUT LPTSTR OutPath,
     IN INT size)
 {
@@ -162,14 +162,11 @@ GetRootPath(
         {
             t = (InPath[0] - _T('0')) + 28;
         }
-
-        if ((InPath[0] >= _T('a')) && (InPath[0] <= _T('z')))
+        else if ((InPath[0] >= _T('a')) && (InPath[0] <= _T('z')))
         {
             t = (InPath[0] - _T('a')) + 1;
-            InPath[0] = t + _T('A') - 1;
         }
-
-        if ((InPath[0] >= _T('A')) && (InPath[0] <= _T('Z')))
+        else if ((InPath[0] >= _T('A')) && (InPath[0] <= _T('Z')))
         {
             t = (InPath[0] - _T('A')) + 1;
         }
