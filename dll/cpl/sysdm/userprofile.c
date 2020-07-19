@@ -695,9 +695,11 @@ AddUserProfiles(
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
         return;
 
-    GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize);
-    if (dwSize == 0)
+    if (GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize) ||
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    {
         goto done;
+    }
 
     pTokenUser = HeapAlloc(GetProcessHeap(), 0, dwSize);
     if (pTokenUser == NULL)
