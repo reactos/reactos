@@ -1264,7 +1264,6 @@ IopParseDevice(IN PVOID ParseObject,
                                                       TAG_IO);
                 if (FileBasicInfo)
                 {
-                    RtlZeroMemory(FileBasicInfo, sizeof(*FileBasicInfo));
                     /* Do the query */
                     Status = IoQueryFileInformation(FileObject,
                                                     FileBasicInformation,
