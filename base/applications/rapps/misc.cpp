@@ -486,3 +486,30 @@ BOOL IsSystem64Bit()
     bIsSys64ResultCached = TRUE; // next time calling this function, it will directly return bIsSys64Result
     return bIsSys64Result;
 }
+
+INT GetSystemColorDepth()
+{
+    DEVMODEW pDevMode;
+    INT ColorDepth;
+
+    pDevMode.dmSize = sizeof(pDevMode);
+    pDevMode.dmDriverExtra = 0;
+
+    if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &pDevMode))
+    {
+        /* TODO: Error message */
+        return ILC_COLOR;
+    }
+
+    switch (pDevMode.dmBitsPerPel)
+    {
+    case 32: ColorDepth = ILC_COLOR32; break;
+    case 24: ColorDepth = ILC_COLOR24; break;
+    case 16: ColorDepth = ILC_COLOR16; break;
+    case  8: ColorDepth = ILC_COLOR8;  break;
+    case  4: ColorDepth = ILC_COLOR4;  break;
+    default: ColorDepth = ILC_COLOR;   break;
+    }
+
+    return ColorDepth;
+}
