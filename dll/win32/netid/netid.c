@@ -180,13 +180,15 @@ IsUserAdmin(VOID)
         goto done;
 
     dwSize = 0;
-    GetTokenInformation(hToken,
-                        TokenGroups,
-                        NULL,
-                        0,
-                        &dwSize);
-    if (dwSize == 0)
+    if (GetTokenInformation(hToken,
+                            TokenGroups,
+                            NULL,
+                            0,
+                            &dwSize) ||
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    {
         goto done;
+    }
 
     pGroups = HeapAlloc(GetProcessHeap(), 0, dwSize);
     if (pGroups == NULL)
