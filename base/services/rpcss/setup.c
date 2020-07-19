@@ -65,7 +65,7 @@ RunningAsSYSTEM(VOID)
         return FALSE;
 
     /* Retrieve token's information */
-    if (!GetTokenInformation(hToken, TokenUser, NULL, 0, &cbTokenBuffer) &&
+    if (GetTokenInformation(hToken, TokenUser, NULL, 0, &cbTokenBuffer) ||
         GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
         goto Quit;
