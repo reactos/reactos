@@ -1105,25 +1105,35 @@ BOOL CMainWindow::ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam)
 
 void CMainWindow::HandleTabOrder(int direction)
 {
-    HWND Controls[] = { m_Toolbar->m_hWnd, m_SearchBar->m_hWnd, m_TreeView->m_hWnd, m_ApplicationView->m_hWnd };
-    // When there is no control found, go to the first or last (depending on tab vs shift-tab)
-    int current = direction > 0 ? 0 : (_countof(Controls) - 1);
-    HWND hActive = ::GetFocus();
-    for (size_t n = 0; n < _countof(Controls); ++n)
+    ATL::CSimpleArray<HWND> TabOrderHwndList;
+
+    m_Toolbar->AppendTabOrderWindow(direction, TabOrderHwndList);
+    m_SearchBar->AppendTabOrderWindow(direction, TabOrderHwndList);
+    m_TreeView->AppendTabOrderWindow(direction, TabOrderHwndList);
+    m_ApplicationView->AppendTabOrderWindow(direction, TabOrderHwndList);
+
+    
+    if (TabOrderHwndList.GetSize() == 0)
     {
-        if (hActive == Controls[n])
-        {
-            current = n + direction;
-            break;
-        }
+        // in case the list is empty
+        return;
     }
 
-    if (current < 0)
-        current = (_countof(Controls) - 1);
-    else if ((UINT)current >= _countof(Controls))
-        current = 0;
+    int FocusIndex;
 
-    ::SetFocus(Controls[current]);
+    if ((FocusIndex = TabOrderHwndList.Find(GetFocus())) == -1)
+    {
+        FocusIndex = 0; // focus the first window in the list
+    }
+    else
+    {
+        FocusIndex += direction;
+        FocusIndex += TabOrderHwndList.GetSize(); // FocusIndex might be negative. we don't want to mod a negative number
+        FocusIndex %= TabOrderHwndList.GetSize();
+    }
+
+    ::SetFocus(TabOrderHwndList[FocusIndex]);
+    return;
 }
 // **** CMainWindow ****
 

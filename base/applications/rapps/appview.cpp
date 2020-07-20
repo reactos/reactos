@@ -1552,6 +1552,14 @@ int CApplicationView::GetItemCount()
     return m_ListView->GetItemCount();
 }
 
+VOID CApplicationView::AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &TabOrderList)
+{
+    m_ListView->AppendTabOrderWindow(Direction, TabOrderList);
+    m_AppsInfo->AppendTabOrderWindow(Direction, TabOrderList);
+
+    return;
+}
+
 // this function is called when a item of listview get focus.
 // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
 BOOL CApplicationView::ItemGetFocus(LPVOID CallbackParam)
