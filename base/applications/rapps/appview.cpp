@@ -1271,6 +1271,7 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
         }
     }
     break;
+
     case WM_NOTIFY:
     {
         LPNMHDR pNotifyHeader = (LPNMHDR)lParam;
@@ -1331,15 +1332,14 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
 
             case NM_DBLCLK:
             {
-                if (((LPNMLISTVIEW)lParam)->iItem != -1)
+                LPNMITEMACTIVATE Item = (LPNMITEMACTIVATE)lParam;
+                if (Item->iItem != -1)
                 {
                     /* this won't do anything if the program is already installed */
 
-                    // TODO: the same problem I've mentioned in NM_RCLICK
-                    // I think if user double-click this app, then this app should be installed, not those checked apps.
                     if (ApplicationViewMode == ApplicationViewAvailableApps)
                     {
-                        SendMessageW(GetParent(), WM_COMMAND, ID_INSTALL, 0);
+                        m_MainWindow->InstallApplication((CAvailableApplicationInfo *)m_ListView->GetItemData(Item->iItem));
                     }
                 }
             }
@@ -1349,15 +1349,7 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
             {
                 if (((LPNMLISTVIEW)lParam)->iItem != -1)
                 {
-                    // TODO: currently the menu will send WM_COMMAND directly to MainWindow.
-                    // possibly it should be handled by this application-view first
-                    // and then forward to mainwindow.
-
-                    // TODO: I think if user right-click on one item, and select "Install"
-                    // that means the user want install "this" application
-                    // but if some apps are checked, this will lead to those checked apps to be installed.
-                    // this should be improved.
-                    ShowPopupMenu(m_ListView->m_hWnd, 0, ID_INSTALL);
+                    ShowPopupMenuEx(m_ListView->m_hWnd, m_hWnd, 0, ID_INSTALL);
                 }
             }
             break;
@@ -1379,6 +1371,12 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
         OnSize(hwnd, wParam, lParam);
         break;
     }
+
+    case WM_COMMAND:
+    {
+        OnCommand(wParam, lParam);
+    }
+    break;
     }
     return FALSE;
 }
@@ -1435,6 +1433,38 @@ VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
         {
             EndDeferWindowPos(hdwp);
         }
+    }
+}
+
+VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+    WORD wCommand = LOWORD(wParam);
+
+    switch (wCommand)
+    {
+    case ID_INSTALL:
+        m_MainWindow->InstallApplication((CAvailableApplicationInfo *)GetFocusedItemData());
+        break;
+
+    case ID_UNINSTALL:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_UNINSTALL, 0);
+        break;
+
+    case ID_MODIFY:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_MODIFY, 0);
+        break;
+
+    case ID_REGREMOVE:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_REGREMOVE, 0);
+        break;
+
+    case ID_REFRESH:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_REFRESH, 0);
+        break;
+
+    case ID_RESETDB:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_RESETDB, 0);
+        break;
     }
 }
 

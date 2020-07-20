@@ -1103,6 +1103,39 @@ BOOL CMainWindow::ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam)
     }
 }
 
+// this function is called when one or more application(s) should be installed install
+// if Info is not zero, this app should be installed. otherwise those checked apps should be installed
+BOOL CMainWindow::InstallApplication(CAvailableApplicationInfo *Info)
+{
+    if (Info)
+    {
+        if (DownloadApplication(Info, FALSE))
+        {
+            UpdateApplicationsList(-1);
+            return TRUE;
+        }
+    }
+    else
+    {
+        ATL::CSimpleArray<CAvailableApplicationInfo> AppsList;
+
+        // enum all selected apps
+        m_AvailableApps.Enum(ENUM_CAT_SELECTED, s_EnumSelectedAppForDownloadProc, (PVOID)&AppsList);
+
+        if (AppsList.GetSize())
+        {
+            if (DownloadListOfApplications(AppsList, FALSE))
+            {
+                m_AvailableApps.RemoveAllSelected();
+                UpdateApplicationsList(-1);
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
+}
+
 void CMainWindow::HandleTabOrder(int direction)
 {
     ATL::CSimpleArray<HWND> TabOrderHwndList;

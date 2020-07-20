@@ -175,6 +175,9 @@ public:
     // CallbackParam is the param passed to application-view when adding the item (the one getting focus now).
     BOOL ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam);
 
+    // this function is called when application-view is asked to install an application
+    // if Info is not zero, this app should be installed. otherwise those checked apps should be installed
+    BOOL InstallApplication(CAvailableApplicationInfo *Info);
     void HandleTabOrder(int direction);
 };
 

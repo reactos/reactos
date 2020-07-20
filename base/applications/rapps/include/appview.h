@@ -282,6 +282,7 @@ private:
 
     VOID OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam);
 
+    VOID OnCommand(WPARAM wParam, LPARAM lParam);
 public:
 
     CApplicationView(CMainWindow *MainWindow);
