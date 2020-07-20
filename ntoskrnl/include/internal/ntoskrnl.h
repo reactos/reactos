@@ -106,15 +106,6 @@ typedef struct _INFORMATION_CLASS_INFO
 #define ICI_SQ(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
   { TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags }
 
-//
-// TEMPORARY
-//
-#define IQS_SAME(Type, Alignment, Flags)                                    \
-  { sizeof(Type), sizeof(Type), sizeof(Alignment), sizeof(Alignment), Flags }
-
-#define IQS(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
-  { sizeof(TypeQuery), sizeof(TypeSet), sizeof(AlignmentQuery), sizeof(AlignmentSet), Flags }
-
 /*
  * Use IsPointerOffset to test whether a pointer should be interpreted as an offset
  * or as a pointer
