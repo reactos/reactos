@@ -32,6 +32,8 @@
 #define TREEVIEW_ICON_SIZE 24
 
 
+// **** CMainToolbar ****
+
 VOID CMainToolbar::AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex)
 {
     HICON hImage;
@@ -191,7 +193,10 @@ DWORD CMainToolbar::GetMaxButtonsWidth() const
 {
     return m_dButtonsWidthMax;
 }
+// **** CMainToolbar ****
 
+
+// **** CSideTreeView ****
 
 CSideTreeView::CSideTreeView() :
     CUiWindow(),
@@ -243,6 +248,10 @@ CSideTreeView::~CSideTreeView()
 {
     DestroyImageList();
 }
+// **** CSideTreeView ****
+
+
+// **** CSearchBar ****
 
 CSearchBar::CSearchBar() : m_Width(200), m_Height(22)
 {
@@ -267,7 +276,10 @@ HWND CSearchBar::Create(HWND hwndParent)
     SetWindowTextW(szBuf);
     return m_hWnd;
 }
+// **** CSearchBar ****
 
+
+// **** CMainWindow ****
 
 CMainWindow::CMainWindow() :
     m_ClientPanel(NULL),
@@ -1113,6 +1125,7 @@ void CMainWindow::HandleTabOrder(int direction)
 
     ::SetFocus(Controls[current]);
 }
+// **** CMainWindow ****
 
 
 

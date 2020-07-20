@@ -29,6 +29,8 @@
 class CMainWindow;
 
 
+// **** CAppRichEdit ****
+
 VOID CAppRichEdit::LoadAndInsertText(UINT uStringID,
     const ATL::CStringW &szText,
     DWORD StringFlags,
@@ -222,6 +224,7 @@ VOID CAppRichEdit::SetWelcomeText()
     szText.LoadStringW(IDS_WELCOME_URL);
     InsertText(szText, CFM_LINK);
 }
+// **** CAppRichEdit ****
 
 
 int ScrnshotDownloadCallback(
@@ -258,6 +261,8 @@ int ScrnshotDownloadCallback(
     return 0;
 }
 
+
+// **** CAppScrnshotPreview ****
 
 BOOL CAppScrnshotPreview::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT &theResult, DWORD dwMapId)
 {
@@ -671,7 +676,10 @@ CAppScrnshotPreview::~CAppScrnshotPreview()
 {
     PreviousDisplayCleanup();
 }
+// **** CAppScrnshotPreview ****
 
+
+// **** CAppInfoDisplay ****
 
 BOOL CAppInfoDisplay::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT &theResult, DWORD dwMapId)
 {
@@ -892,8 +900,10 @@ CAppInfoDisplay::~CAppInfoDisplay()
     delete RichEdit;
     delete ScrnshotPrev;
 }
+// **** CAppInfoDisplay ****
 
 
+// **** CAppsListView ****
 
 CAppsListView::CAppsListView() :
     bHasCheckboxes(FALSE),
@@ -1234,7 +1244,10 @@ VOID CAppsListView::ItemCheckStateNotify(int iItem, BOOL bCheck)
         CheckedItemCount--;
     }
 }
+// **** CAppsListView ****
 
+
+// **** CApplicationView ****
 
 BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT &theResult, DWORD dwMapId)
 {
@@ -1565,4 +1578,5 @@ BOOL CApplicationView::ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam
     m_MainWindow->ItemCheckStateChanged(bChecked, CallbackParam);
     return TRUE;
 }
+// **** CApplicationView ****
 
