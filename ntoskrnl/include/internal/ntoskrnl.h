@@ -100,11 +100,11 @@ typedef struct _INFORMATION_CLASS_INFO
   ULONG Flags;
 } INFORMATION_CLASS_INFO, *PINFORMATION_CLASS_INFO;
 
-#define ICI_SQ_SAME(Type, Alignment, Flags)                                    \
-  { Type, Type, Alignment, Alignment, Flags }
+#define ICI_SQ_SAME(Size, Alignment, Flags)                                    \
+  { Size, Size, Alignment, Alignment, Flags }
 
-#define ICI_SQ(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
-  { TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags }
+#define ICI_SQ(SizeQuery, SizeSet, AlignmentQuery, AlignmentSet, Flags)        \
+  { SizeQuery, SizeSet, AlignmentQuery, AlignmentSet, Flags }
 
 //
 // TEMPORARY
