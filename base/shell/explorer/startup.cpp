@@ -62,9 +62,6 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
     STARTUPINFOW si;
     PROCESS_INFORMATION info;
     DWORD exit_code = 0;
-    WCHAR szCmdLineExp[MAX_PATH+1] = L"\0";
-
-    ExpandEnvironmentStringsW(cmdline, szCmdLineExp, _countof(szCmdLineExp));
 
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(si);
@@ -75,7 +72,7 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
     }
     memset(&info, 0, sizeof(info));
 
-    if (!CreateProcessW(NULL, szCmdLineExp, NULL, NULL, FALSE, 0, NULL, dir, &si, &info))
+    if (!CreateProcessW(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, dir, &si, &info))
     {
         TRACE("Failed to run command (%lu)\n", GetLastError());
 
@@ -260,11 +257,19 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
             TRACE("Couldn't delete value - %lu, %ld. Running command anyways.\n", i, res);
         }
 
-        if (type != REG_SZ)
+        if (type != REG_SZ && type != REG_EXPAND_SZ)
         {
             TRACE("Incorrect type of value #%lu (%lu)\n", i, type);
 
             continue;
+        }
+
+        if (type == REG_EXPAND_SZ)
+        {
+            WCHAR szCmdLineExp[MAX_PATH + 1] = L"\0";
+
+            if (ExpandEnvironmentStringsW(szCmdLine, szCmdLineExp, _countof(szCmdLineExp)))
+                StringCbCopyW(szCmdLine, cbMaxCmdLine, szCmdLineExp);
         }
 
         res = runCmd(szCmdLine, NULL, bSynchronous, FALSE);
