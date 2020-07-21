@@ -229,6 +229,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
 
     while (i > 0)
     {
+        WCHAR *szCmdLineExp = NULL;
         DWORD cchValLength = cchMaxValue, cbDataLength = cbMaxCmdLine;
         DWORD type;
 
@@ -266,16 +267,35 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
 
         if (type == REG_EXPAND_SZ)
         {
-            WCHAR szCmdLineExp[MAX_PATH + 1] = L"\0";
+            DWORD dwNumOfChars;
 
-            if (ExpandEnvironmentStringsW(szCmdLine, szCmdLineExp, _countof(szCmdLineExp)))
-                StringCbCopyW(szCmdLine, cbMaxCmdLine, szCmdLineExp);
+            dwNumOfChars = ExpandEnvironmentStringsW(szCmdLine, NULL, 0);
+            if (dwNumOfChars)
+            {
+                szCmdLineExp = (WCHAR *)HeapAlloc(hProcessHeap, 0, dwNumOfChars * sizeof(*szCmdLineExp));
+
+                if (szCmdLineExp == NULL)
+                {
+                    TRACE("Couldn't allocate memory for the commands to be executed\n");
+
+                    res = ERROR_NOT_ENOUGH_MEMORY;
+                    goto end;
+                }
+
+                ExpandEnvironmentStringsW(szCmdLine, szCmdLineExp, dwNumOfChars);
+            }
         }
 
-        res = runCmd(szCmdLine, NULL, bSynchronous, FALSE);
+        res = runCmd(szCmdLineExp ? szCmdLineExp : szCmdLine, NULL, bSynchronous, FALSE);
         if (res == INVALID_RUNCMD_RETURN)
         {
             TRACE("Error running cmd #%lu (%lu)\n", i, GetLastError());
+        }
+
+        if (szCmdLineExp != NULL)
+        {
+            HeapFree(hProcessHeap, 0, szCmdLineExp);
+            szCmdLineExp = NULL;
         }
 
         TRACE("Done processing cmd #%lu\n", i);
