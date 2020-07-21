@@ -19,7 +19,7 @@
 
  // CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& AvlbStrings)
-    : m_IsSelected(FALSE), m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
+    : m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
     m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
 {
     RetrieveGeneralInfo(AvlbStrings);
@@ -400,71 +400,127 @@ BOOL CAvailableApps::ForceUpdateAppsDB()
 
 BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
 {
-
-    HANDLE hFind = INVALID_HANDLE_VALUE;
-    WIN32_FIND_DATAW FindFileData;
-
-    hFind = FindFirstFileW(m_Strings.szSearchPath.GetString(), &FindFileData);
-
-    if (hFind == INVALID_HANDLE_VALUE)
+    if (EnumType == ENUM_CAT_SELECTED)
     {
-        //no db yet
-        return FALSE;
-    }
+        CAvailableApplicationInfo *EnumAvlbInfo = NULL;
 
-    do
-    {
-        // loop for all the cached entries
-        POSITION CurrentListPosition = m_InfoList.GetHeadPosition();
-        CAvailableApplicationInfo* Info = NULL;
-
-        while (CurrentListPosition != NULL)
+        // enum all object in m_SelectedList and invoke callback
+        for(POSITION CurrentPosition = m_SelectedList.GetHeadPosition();
+            CurrentPosition && (EnumAvlbInfo = m_SelectedList.GetAt(CurrentPosition));
+            m_SelectedList.GetNext(CurrentPosition))
         {
-            POSITION LastListPosition = CurrentListPosition;
-            Info = m_InfoList.GetNext(CurrentListPosition);
-
-            // do we already have this entry in cache?
-            if (Info->m_sFileName == FindFileData.cFileName)
-            {
-                // is it current enough, or the file has been modified since our last time here?
-                if (CompareFileTime(&FindFileData.ftLastWriteTime, &Info->m_ftCacheStamp) == 1)
-                {
-                    // recreate our cache, this is the slow path
-                    m_InfoList.RemoveAt(LastListPosition);
-
-                    delete Info;
-                    Info = NULL;
-                    break;
-                }
-                else
-                {
-                    // speedy path, compare directly, we already have the data
-                    goto skip_if_cached;
-                }
-            }
-        }
-
-        // create a new entry
-        Info = new CAvailableApplicationInfo(FindFileData.cFileName, m_Strings);
-
-        // set a timestamp for the next time
-        Info->SetLastWriteTime(&FindFileData.ftLastWriteTime);
-        m_InfoList.AddTail(Info);
-
-skip_if_cached:
-        if (EnumType == Info->m_Category
-            || EnumType == ENUM_ALL_AVAILABLE
-            || (EnumType == ENUM_CAT_SELECTED && Info->m_IsSelected))
-        {
-            Info->RefreshAppInfo(m_Strings);
+            EnumAvlbInfo->RefreshAppInfo(m_Strings);
 
             if (lpEnumProc)
-                lpEnumProc(Info, m_Strings.szAppsPath.GetString(), param);
+                lpEnumProc(EnumAvlbInfo, TRUE, param);
         }
-    } while (FindNextFileW(hFind, &FindFileData) != 0);
+        return TRUE;
+    }
+    else
+    {
+        HANDLE hFind = INVALID_HANDLE_VALUE;
+        WIN32_FIND_DATAW FindFileData;
 
-    FindClose(hFind);
-    return TRUE;
+        hFind = FindFirstFileW(m_Strings.szSearchPath.GetString(), &FindFileData);
+
+        if (hFind == INVALID_HANDLE_VALUE)
+        {
+            //no db yet
+            return FALSE;
+        }
+
+        do
+        {
+            // loop for all the cached entries
+            POSITION CurrentListPosition = m_InfoList.GetHeadPosition();
+            CAvailableApplicationInfo *Info = NULL;
+
+            while (CurrentListPosition != NULL)
+            {
+                POSITION LastListPosition = CurrentListPosition;
+                Info = m_InfoList.GetNext(CurrentListPosition);
+
+                // do we already have this entry in cache?
+                if (Info->m_sFileName == FindFileData.cFileName)
+                {
+                    // is it current enough, or the file has been modified since our last time here?
+                    if (CompareFileTime(&FindFileData.ftLastWriteTime, &Info->m_ftCacheStamp) == 1)
+                    {
+                        // recreate our cache, this is the slow path
+                        m_InfoList.RemoveAt(LastListPosition);
+
+                        // also remove this in selected list (if exist)
+                        RemoveSelected(Info);
+
+                        delete Info;
+                        Info = NULL;
+                        break;
+                    }
+                    else
+                    {
+                        // speedy path, compare directly, we already have the data
+                        goto skip_if_cached;
+                    }
+                }
+            }
+
+            // create a new entry
+            Info = new CAvailableApplicationInfo(FindFileData.cFileName, m_Strings);
+
+            // set a timestamp for the next time
+            Info->SetLastWriteTime(&FindFileData.ftLastWriteTime);
+            m_InfoList.AddTail(Info);
+
+        skip_if_cached:
+            if (EnumType == Info->m_Category
+                || EnumType == ENUM_ALL_AVAILABLE)
+            {
+                Info->RefreshAppInfo(m_Strings);
+
+                if (lpEnumProc)
+                {
+                    if (m_SelectedList.Find(Info))
+                    {
+                        lpEnumProc(Info, TRUE, param);
+                    }
+                    else
+                    {
+                        lpEnumProc(Info, FALSE, param);
+                    }
+                }
+            }
+        } while (FindNextFileW(hFind, &FindFileData));
+
+        FindClose(hFind);
+        return TRUE;
+    }
+}
+
+BOOL CAvailableApps::AddSelected(CAvailableApplicationInfo *AvlbInfo)
+{
+        return m_SelectedList.AddTail(AvlbInfo) != 0;
+}
+
+BOOL CAvailableApps::RemoveSelected(CAvailableApplicationInfo *AvlbInfo)
+{
+    POSITION Position = m_SelectedList.Find(AvlbInfo);
+    if (Position)
+    {
+        m_SelectedList.RemoveAt(Position);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+VOID CAvailableApps::RemoveAllSelected()
+{
+    m_SelectedList.RemoveAll();
+    return;
+}
+
+int CAvailableApps::GetSelectedCount()
+{
+    return m_SelectedList.GetCount();
 }
 
 CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppName) const
@@ -495,23 +551,6 @@ ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindInfoList(const 
     {
         CAvailableApplicationInfo* Info = FindInfo(arrAppsNames[i]);
         if (Info)
-        {
-            result.Add(*Info);
-        }
-    }
-    return result;
-}
-
-ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::GetSelected() const
-{
-    ATL::CSimpleArray<CAvailableApplicationInfo> result;
-    POSITION CurrentListPosition = m_InfoList.GetHeadPosition();
-    CAvailableApplicationInfo* Info;
-
-    while (CurrentListPosition != NULL)
-    {
-        Info = m_InfoList.GetNext(CurrentListPosition);
-        if (Info->m_IsSelected)
         {
             result.Add(*Info);
         }

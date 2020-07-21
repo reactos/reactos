@@ -13,6 +13,9 @@
 
 static HANDLE hLog = NULL;
 
+static BOOL bIsSys64ResultCached = FALSE;
+static BOOL bIsSys64Result = FALSE;
+
 INT GetWindowWidth(HWND hwnd)
 {
     RECT Rect;
@@ -452,4 +455,34 @@ BOOL PathAppendNoDirEscapeW(LPWSTR pszPath, LPCWSTR pszMore)
     }
 
     return TRUE;
+}
+
+
+
+BOOL IsSystem64Bit()
+{
+    if (bIsSys64ResultCached)
+    {
+        // just return cached result
+        return bIsSys64Result;
+    }
+
+    SYSTEM_INFO si;
+    typedef void (WINAPI *LPFN_PGNSI)(LPSYSTEM_INFO);
+    LPFN_PGNSI pGetNativeSystemInfo = (LPFN_PGNSI)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetNativeSystemInfo");
+    if (pGetNativeSystemInfo)
+    {
+        pGetNativeSystemInfo(&si);
+        if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 || si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64)
+        {
+            bIsSys64Result = TRUE;
+        }
+    }
+    else
+    {
+        bIsSys64Result = FALSE;
+    }
+
+    bIsSys64ResultCached = TRUE; // next time calling this function, it will directly return bIsSys64Result
+    return bIsSys64Result;
 }

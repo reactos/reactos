@@ -495,7 +495,10 @@ public:
 
     virtual ~CUiWindow()
     {
-        T::DestroyWindow();
+        if (T::IsWindow())
+        {
+            T::DestroyWindow();
+        }
     }
 
     VOID GetWindowTextW(ATL::CStringW& szText)
