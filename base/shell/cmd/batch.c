@@ -131,7 +131,7 @@ static LPTSTR BatchParams(LPTSTR s1, LPTSTR s2)
         BOOL inquotes = FALSE;
 
         /* Find next parameter */
-        while (_istspace(*s2) || (*s2 && _tcschr(_T(",;="), *s2)))
+        while (_istspace(*s2) || (*s2 && _tcschr(STANDARD_SEPS, *s2)))
             s2++;
         if (!*s2)
             break;
@@ -139,7 +139,7 @@ static LPTSTR BatchParams(LPTSTR s1, LPTSTR s2)
         /* Copy it */
         do
         {
-            if (!inquotes && (_istspace(*s2) || _tcschr(_T(",;="), *s2)))
+            if (!inquotes && (_istspace(*s2) || _tcschr(STANDARD_SEPS, *s2)))
                 break;
             inquotes ^= (*s2 == _T('"'));
             *s1++ = *s2++;

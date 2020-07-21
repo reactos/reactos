@@ -39,9 +39,6 @@ static const TCHAR *const IfOperatorString[] =
 #define IF_MAX_COMPARISON IF_NEQ
 };
 
-/* These three characters act like spaces to the parser in most contexts */
-#define STANDARD_SEPS _T(",;=")
-
 static BOOL IsSeparator(TCHAR Char)
 {
     return _istspace(Char) || (Char && _tcschr(STANDARD_SEPS, Char));

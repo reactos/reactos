@@ -35,7 +35,7 @@
  */
 INT cmd_goto(LPTSTR param)
 {
-    LPTSTR tmp, tmp2;
+    LPTSTR label, tmp;
     DWORD dwCurrPos;
     BOOL bRetry;
 
@@ -59,11 +59,9 @@ INT cmd_goto(LPTSTR param)
         return 1;
     }
 
-    /* Terminate label at first space char */
-    tmp = param + 1;
-    while (!_istcntrl(*tmp) && !_istspace(*tmp) && (*tmp != _T(':')))
-        ++tmp;
-    *tmp = _T('\0');
+    /* Strip leading whitespace */
+    while (_istspace(*param))
+        ++param;
 
     /* Support jumping to the end of the file, only if extensions are enabled */
     if (bEnableExtensions &&
@@ -78,6 +76,23 @@ INT cmd_goto(LPTSTR param)
         return 0;
     }
 
+    /* Skip the first colon or plus sign */
+    if (*param == _T(':') || *param == _T('+'))
+        ++param;
+    /* Terminate the label at the first delimiter character */
+    tmp = param;
+    while (!_istcntrl(*tmp) && !_istspace(*tmp) &&
+           !_tcschr(_T(":+"), *tmp) && !_tcschr(STANDARD_SEPS, *tmp) /* &&
+           !_tcschr(_T("&|<>"), *tmp) */)
+    {
+        ++tmp;
+    }
+    *tmp = _T('\0');
+
+    /* If we don't have any label, bail out */
+    if (!*param)
+        goto NotFound;
+
     /*
      * Search the next label starting our position, until the end of the file.
      * If none has been found, restart at the beginning of the file, and continue
@@ -89,36 +104,59 @@ INT cmd_goto(LPTSTR param)
 retry:
     while (BatchGetString(textline, ARRAYSIZE(textline)))
     {
-        INT pos;
-        INT_PTR size;
-
         if (bRetry && (bc->mempos >= dwCurrPos))
             break;
 
-        /* Strip out any trailing spaces or control chars */
-        tmp = textline + _tcslen(textline) - 1;
-        while (tmp > textline && (_istcntrl(*tmp) || _istspace(*tmp) || (*tmp == _T(':'))))
-            --tmp;
-        *(tmp + 1) = _T('\0');
+#if 0
+        /* If this is not a label, continue searching */
+        if (!_tcschr(textline, _T(':')))
+            continue;
+#endif
 
-        /* Then leading spaces... */
-        tmp = textline;
-        while (_istspace(*tmp))
-            ++tmp;
+        label = textline;
 
-        /* All space after leading space terminate the string */
-        size = _tcslen(tmp) - 1;
-        pos = 0;
-        while (tmp + pos < tmp + size)
+        /* A bug in Windows' CMD makes it always ignore the
+         * first character of the line, unless it's a colon. */
+        if (*label != _T(':'))
+            ++label;
+
+        /* Strip any leading whitespace */
+        while (_istspace(*label))
+            ++label;
+
+        /* If this is not a label, continue searching */
+        if (*label != _T(':'))
+            continue;
+
+        /* Skip the first colon or plus sign */
+#if 0
+        if (*label == _T(':') || *label == _T('+'))
+            ++label;
+#endif
+        ++label;
+        /* Strip any whitespace between the colon and the label */
+        while (_istspace(*label))
+            ++label;
+        /* Terminate the label at the first delimiter character */
+        tmp = label;
+        while (!_istcntrl(*tmp) && !_istspace(*tmp) &&
+               !_tcschr(_T(":+"), *tmp) && !_tcschr(STANDARD_SEPS, *tmp) &&
+               !_tcschr(_T("&|<>"), *tmp))
         {
-            if (_istspace(tmp[pos]))
-                tmp[pos]=_T('\0');
-            ++pos;
-        }
+            /* Support the escape caret */
+            if (*tmp == _T('^'))
+            {
+                /* Move the buffer back one character */
+                memmove(tmp, tmp + 1, (_tcslen(tmp + 1) + 1) * sizeof(TCHAR));
+                /* We will ignore the new character */
+            }
 
-        tmp2 = param;
-        /* Use whole label name */
-        if ((*tmp == _T(':')) && ((_tcsicmp(++tmp, param) == 0) || (_tcsicmp(tmp, ++tmp2) == 0)))
+            ++tmp;
+        }
+        *tmp = _T('\0');
+
+        /* Jump if the labels are identical */
+        if (_tcsicmp(label, param) == 0)
         {
             /* Do not process any more parts of a compound command */
             bc->current = NULL;
@@ -132,6 +170,7 @@ retry:
         goto retry;
     }
 
+NotFound:
     ConErrResPrintf(STRING_GOTO_ERROR2, param);
     ExitBatch();
     return 1;

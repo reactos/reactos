@@ -301,6 +301,10 @@ INT cmd_move (LPTSTR);
 INT CommandMsgbox (LPTSTR);
 
 /* Prototypes from PARSER.C */
+
+/* These three characters act like spaces to the parser in most contexts */
+#define STANDARD_SEPS _T(",;=")
+
 enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_OR, C_AND, C_PIPE, C_IF, C_FOR };
 typedef struct _PARSED_COMMAND
 {
