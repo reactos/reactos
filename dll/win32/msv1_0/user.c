@@ -1,7 +1,6 @@
 /*
  * PROJECT:     Authentication Package DLL
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/msv1_0/user.c
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     NTLM-Functions returned from SpUserModeInitialize
                 (PSECPKG_USER_FUNCTION_TABLE)
  * COPYRIGHT:   Copyright 2019-2020 Andreas Maier (staubim@quantentunnel.de)
