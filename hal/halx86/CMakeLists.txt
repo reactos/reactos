@@ -32,6 +32,14 @@ function(add_hal _halname)
         target_link_libraries(${_halname} ${_haldata_LIBS})
     endif()
 
+    if(${_halname} STREQUAL "halpc98")
+        target_compile_definitions(lib_hal_pc98 PRIVATE SARCH_PC98)
+    endif()
+
+    if(${_halname} STREQUAL "halxbox")
+        target_compile_definitions(lib_hal_xbox PRIVATE SARCH_XBOX)
+    endif()
+
     if(${_halname} STREQUAL "hal")
         target_link_libraries(${_halname} libcntpr arbiter)
     else()
@@ -61,7 +69,11 @@ if(ARCH STREQUAL "i386")
     include(up.cmake)
     include(pic.cmake)
     include(xbox.cmake)
+    include(pc98.cmake)
     add_subdirectory(minihal)
+
+    remove_definitions(-DSARCH_XBOX)
+    remove_definitions(-DSARCH_PC98)
 
     # hal
     add_hal(hal SOURCES up/halup.rc COMPONENTS generic legacy up pic)
@@ -69,6 +81,7 @@ if(ARCH STREQUAL "i386")
     add_hal(halapic SOURCES acpi/halacpi.rc COMPONENTS generic legacy up apic)
     add_hal(halaacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi up apic)
     add_hal(halxbox SOURCES xbox/halxbox.rc COMPONENTS xbox up)
+    add_hal(halpc98 SOURCES pc98/halpc98.rc COMPONENTS pc98 up)
 
     #add_hal(halmps SOURCES up/halup.rc COMPONENTS generic legacy smp pic)
     #add_hal(halmacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi smp pic)

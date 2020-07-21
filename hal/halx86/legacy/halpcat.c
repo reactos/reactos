@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halx86/legacy/halpcat.c
  * PURPOSE:         HAL Legacy Support Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -9,6 +8,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -28,6 +28,9 @@ BOOLEAN HalDisableFirmwareMapper = FALSE;
 #if defined(SARCH_XBOX)
 PWCHAR HalHardwareIdString = L"xbox";
 PWCHAR HalName = L"Xbox HAL";
+#elif defined(SARCH_PC98)
+PWCHAR HalHardwareIdString = L"pc98_up";
+PWCHAR HalName = L"NEC PC-98 Compatible NESA/C-Bus HAL";
 #else
 PWCHAR HalHardwareIdString = L"e_isa_up";
 PWCHAR HalName = L"PC Compatible Eisa/Isa HAL";
@@ -51,7 +54,7 @@ HalpBuildAddressMap(VOID)
 {
     /* FIXME: Inherit ROM blocks from the registry */
     //HalpInheritROMBlocks();
-    
+
     /* FIXME: Add the ROM blocks to our ranges */
     //HalpAddROMRanges();
 }

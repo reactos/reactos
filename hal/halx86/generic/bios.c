@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Hardware Abstraction Layer (HAL)
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halx86/generic/bios.c
  * PURPOSE:         BIOS Access Routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu (alex.ionescu@reactos.org)
@@ -10,8 +9,10 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+
 #define NDEBUG
 #include <debug.h>
+
 #include <setjmp.h>
 
 void __cdecl HalpTrap0D();
@@ -645,7 +646,8 @@ BOOLEAN
 NTAPI
 HalpBiosDisplayReset(VOID)
 {
-#ifdef SARCH_XBOX
+#if defined(SARCH_XBOX) || defined(SARCH_PC98)
+    /* There is no VGA BIOS on these machine types */
     return FALSE;
 #else
     ULONG Flags;

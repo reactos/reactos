@@ -1,15 +1,13 @@
 /*
  * PROJECT:         ReactOS Hardware Abstraction Layer (HAL)
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halx86/generic/misc.c
- * PURPOSE:         NMI, I/O Mapping and x86 Subs
+ * PURPOSE:         I/O Mapping and x86 Subs
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
-#include <drivers/bootvid/display.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -20,8 +18,6 @@
 #endif
 
 /* GLOBALS  *******************************************************************/
-
-BOOLEAN HalpNMIInProgress;
 
 UCHAR HalpSerialLen;
 CHAR HalpSerialNumber[31];
@@ -148,7 +144,7 @@ HalpOpenRegistryKey(IN PHANDLE KeyHandle,
     /* We're done */
     return Status;
 }
-#endif
+#endif /* !_MINIHAL_ */
 
 VOID
 NTAPI
@@ -222,108 +218,6 @@ HalpFlushTLB(VOID)
 }
 
 /* FUNCTIONS *****************************************************************/
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-HalHandleNMI(IN PVOID NmiInfo)
-{
-#ifndef _MINIHAL_
-    SYSTEM_CONTROL_PORT_B_REGISTER SystemControl;
-
-    //
-    // Don't recurse
-    //
-    if (HalpNMIInProgress++) ERROR_DBGBREAK();
-
-    //
-    // Read the system control register B
-    //
-    SystemControl.Bits = __inbyte(SYSTEM_CONTROL_PORT_B);
-
-    //
-    // Switch to boot video
-    //
-    if (InbvIsBootDriverInstalled())
-    {
-        //
-        // Acquire ownership
-        //
-        InbvAcquireDisplayOwnership();
-        InbvResetDisplay();
-
-        //
-        // Fill the screen
-        //
-        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_RED);
-        InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
-
-        //
-        // Enable text
-        //
-        InbvSetTextColor(BV_COLOR_WHITE);
-        InbvInstallDisplayStringFilter(NULL);
-        InbvEnableDisplayString(TRUE);
-    }
-
-    //
-    // Display NMI failure string
-    //
-    InbvDisplayString("\r\n*** Hardware Malfunction\r\n\r\n");
-    InbvDisplayString("Call your hardware vendor for support\r\n\r\n");
-
-    //
-    // Check for parity error
-    //
-    if (SystemControl.ParityCheck)
-    {
-        //
-        // Display message
-        //
-        InbvDisplayString("NMI: Parity Check / Memory Parity Error\r\n");
-    }
-
-    //
-    // Check for I/O failure
-    //
-    if (SystemControl.ChannelCheck)
-    {
-        //
-        // Display message
-        //
-        InbvDisplayString("NMI: Channel Check / IOCHK\r\n");
-    }
-
-    //
-    // Check for EISA systems
-    //
-    if (HalpBusType == MACHINE_TYPE_EISA)
-    {
-        //
-        // FIXME: Not supported
-        //
-        UNIMPLEMENTED;
-    }
-
-    //
-    // Halt the system
-    //
-    InbvDisplayString("\r\n*** The system has halted ***\r\n");
-
-
-    //
-    // Enter the debugger if possible
-    //
-    KiBugCheckData[0] = (ULONG_PTR)KeServiceDescriptorTable; /* NMI Corruption? */
-    //if (!(KdDebuggerNotPresent) && (KdDebuggerEnabled)) KeEnterKernelDebugger();
-#endif
-    //
-    // Freeze the system
-    //
-    while (TRUE);
-}
 
 /*
  * @implemented
@@ -407,5 +301,4 @@ KeReleaseSpinLock(PKSPIN_LOCK SpinLock,
     KfReleaseSpinLock(SpinLock, NewIrql);
 }
 
-#endif
-
+#endif /* _M_IX86 */

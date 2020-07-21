@@ -378,12 +378,14 @@ HalpInitializeCmos(
     VOID
 );
 
+_Requires_lock_held_(HalpSystemHardwareLock)
 UCHAR
 NTAPI
 HalpReadCmos(
     IN UCHAR Reg
 );
 
+_Requires_lock_held_(HalpSystemHardwareLock)
 VOID
 NTAPI
 HalpWriteCmos(
@@ -394,12 +396,14 @@ HalpWriteCmos(
 //
 // Spinlock for protecting CMOS access
 //
+_Acquires_lock_(HalpSystemHardwareLock)
 VOID
 NTAPI
 HalpAcquireCmosSpinLock(
     VOID
 );
 
+_Releases_lock_(HalpSystemHardwareLock)
 VOID
 NTAPI
 HalpReleaseCmosSpinLock(
@@ -515,6 +519,30 @@ HalpInitProcessor(
     IN ULONG ProcessorNumber,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
+
+#if defined(SARCH_PC98)
+BOOLEAN
+NTAPI
+HalpDismissIrq08(
+    _In_ KIRQL Irql,
+    _In_ ULONG Irq,
+    _Out_ PKIRQL OldIrql
+);
+
+BOOLEAN
+NTAPI
+HalpDismissIrq08Level(
+    _In_ KIRQL Irql,
+    _In_ ULONG Irq,
+    _Out_ PKIRQL OldIrql
+);
+
+VOID
+NTAPI
+HalpInitializeClockPc98(VOID);
+
+extern ULONG PIT_FREQUENCY;
+#endif /* SARCH_PC98 */
 
 #ifdef _M_AMD64
 

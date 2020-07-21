@@ -1,11 +1,8 @@
 /*
- * COPYRIGHT:     See COPYING in the top level directory
- * PROJECT:       ReactOS kernel
- * FILE:          hal/halx86/xbox/halinit_xbox.c
- * PURPOSE:       Initialize the x86 hal
- * PROGRAMMER:    David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *              11/06/98: Created
+ * PROJECT:     Xbox HAL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Initialize the x86 HAL
+ * COPYRIGHT:   Copyright 1998 David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -28,7 +25,7 @@ HalpInitProcessor(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Set default IDR */
-    KeGetPcr()->IDR = 0xFFFFFFFB;
+    KeGetPcr()->IDR = 0xFFFFFFFF & ~(1 << PIC_CASCADE_IRQ);
 }
 
 VOID
@@ -41,18 +38,18 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 VOID
 HalpInitPhase1(VOID)
 {
-    /* Enable IRQ 0 */
+    /* Enable timer interrupt handler */
     HalpEnableInterruptHandler(IDT_DEVICE,
                                0,
-                               PRIMARY_VECTOR_BASE,
+                               PRIMARY_VECTOR_BASE + PIC_TIMER_IRQ,
                                CLOCK2_LEVEL,
                                HalpClockInterrupt,
                                Latched);
 
-    /* Enable IRQ 8 */
+    /* Enable RTC interrupt handler */
     HalpEnableInterruptHandler(IDT_DEVICE,
                                0,
-                               PRIMARY_VECTOR_BASE + 8,
+                               PRIMARY_VECTOR_BASE + PIC_RTC_IRQ,
                                PROFILE_LEVEL,
                                HalpProfileInterrupt,
                                Latched);

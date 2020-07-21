@@ -226,6 +226,7 @@ pci_up = "Standard PC Uniprocessor"
 acpi_up = "ACPI PC Uniprocessor"
 ;acpi_mp = "ACPI PC Multiprocessor"
 xbox = "Original Xbox (x86 based)"
+pc98_up = "Uniprocessor NEC PC-98"
 
 [Computer.NTamd64]
 x64_up = "Standard x64 Uniprocessor"
@@ -237,6 +238,7 @@ pci_up = "PC UP"
 acpi_up = "ACPI UP"
 ;acpi_mp = "ACPI MP"
 xbox = "Xbox"
+pc98_up = "NEC PC-98 UP"
 
 [Map.Computer.NTamd64]
 x64_up = "ACPI UP"
@@ -260,6 +262,10 @@ halacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 [Files.xbox]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
 halxbox.dll  = 1,,,,,,,2,,,hal.dll,1,2
+
+[Files.pc98_up]
+ntoskrnl.exe = 1,,,,,,,2,,,,1,2
+halpc98.dll  = 1,,,,,,,2,,,hal.dll,1,2
 
 [Files.x64_up]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2

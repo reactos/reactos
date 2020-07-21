@@ -32,7 +32,7 @@
 //
 // Video Modes for INT10h AH=00 (in AL)
 //
-#define GRAPHICS_MODE_12 0x12           /* 80x30	 8x16  640x480	 16/256K */
+#define GRAPHICS_MODE_12 0x12           /* 80x30  8x16  640x480  16/256K */
 
 #if defined(SARCH_XBOX)
 //
@@ -151,6 +151,10 @@ typedef union _SYSTEM_CONTROL_PORT_B_REGISTER
 #define PIC1_DATA_PORT         0x21
 #define PIC2_CONTROL_PORT      0xA0
 #define PIC2_DATA_PORT         0xA1
+
+#define PIC_TIMER_IRQ      0
+#define PIC_CASCADE_IRQ    2
+#define PIC_RTC_IRQ        8
 
 //
 // Definitions for ICW/OCW Bits
@@ -304,19 +308,16 @@ typedef union _I8259_OCW3
 
 typedef union _I8259_ISR
 {
-    union
+    struct
     {
-        struct
-        {
-            UCHAR Irq0:1;
-            UCHAR Irq1:1;
-            UCHAR Irq2:1;
-            UCHAR Irq3:1;
-            UCHAR Irq4:1;
-            UCHAR Irq5:1;
-            UCHAR Irq6:1;
-            UCHAR Irq7:1;
-        };
+        UCHAR Irq0:1;
+        UCHAR Irq1:1;
+        UCHAR Irq2:1;
+        UCHAR Irq3:1;
+        UCHAR Irq4:1;
+        UCHAR Irq5:1;
+        UCHAR Irq6:1;
+        UCHAR Irq7:1;
     };
     UCHAR Bits;
 } I8259_ISR, *PI8259_ISR;
@@ -362,15 +363,12 @@ typedef union _EISA_ELCR
     USHORT Bits;
 } EISA_ELCR, *PEISA_ELCR;
 
-typedef struct _PIC_MASK
+typedef union _PIC_MASK
 {
-    union
+    struct
     {
-        struct
-        {
-            UCHAR Master;
-            UCHAR Slave;
-        };
-        USHORT Both;
+        UCHAR Master;
+        UCHAR Slave;
     };
+    USHORT Both;
 } PIC_MASK, *PPIC_MASK;
