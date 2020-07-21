@@ -2709,7 +2709,7 @@ static NTSTATUS parse_manifest_buffer( struct actctx_loader* acl, struct assembl
                                        struct assembly_identity* ai, xmlbuf_t *xmlbuf )
 {
     struct xml_elem elem;
-    struct xml_elem parent = {};
+    struct xml_elem parent = {0};
 
     xmlbuf->error = FALSE;
     xmlbuf->ns_pos = 0;
