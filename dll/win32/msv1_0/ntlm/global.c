@@ -12,6 +12,23 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 /* globals */
-
 PSECPKG_DLL_FUNCTIONS UsrFunctions = NULL;
-SECPKG_USER_FUNCTION_TABLE NtlmUsrFn[1];
+SECPKG_USER_FUNCTION_TABLE NtlmUsrFn[1] =
+{
+    {
+        .InstanceInit = SpInstanceInit,
+        .InitUserModeContext = UsrSpInitUserModeContext,
+        .MakeSignature = UsrSpMakeSignature,
+        .VerifySignature = UsrSpVerifySignature,
+        .SealMessage = UsrSpSealMessage,
+        .UnsealMessage = UsrSpUnsealMessage,
+        .GetContextToken = UsrSpGetContextToken,
+        .SpQueryContextAttributes = UsrSpQueryContextAttributes,
+        .CompleteAuthToken = UsrSpCompleteAuthToken,
+        .DeleteUserModeContext = UsrSpDeleteUserModeContext,
+        .FormatCredentials = UsrSpFormatCredentials,
+        .MarshallSupplementalCreds = UsrSpMarshallSupplementalCreds,
+        .ExportContext = UsrSpExportSecurityContext,
+        .ImportContext = UsrSpImportSecurityContext
+    }
+};

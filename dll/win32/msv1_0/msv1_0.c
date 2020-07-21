@@ -1769,7 +1769,6 @@ SpLsaModeInitialize(
     return STATUS_SUCCESS;
 }
 
-
 /*
  * @unimplemented
  */
@@ -1788,23 +1787,6 @@ SpUserModeInitialize(
         return STATUS_INVALID_PARAMETER;
 
     *PackageVersion = SECPKG_INTERFACE_VERSION;
-
-    RtlZeroMemory(NtlmUsrFn, sizeof(NtlmUsrFn));
-
-    NtlmUsrFn[0].InstanceInit = SpInstanceInit;
-    NtlmUsrFn[0].InitUserModeContext = UsrSpInitUserModeContext;
-    NtlmUsrFn[0].MakeSignature = UsrSpMakeSignature;
-    NtlmUsrFn[0].VerifySignature = UsrSpVerifySignature;
-    NtlmUsrFn[0].SealMessage = UsrSpSealMessage;
-    NtlmUsrFn[0].UnsealMessage = UsrSpUnsealMessage;
-    NtlmUsrFn[0].GetContextToken = UsrSpGetContextToken;
-    NtlmUsrFn[0].SpQueryContextAttributes = UsrSpQueryContextAttributes;
-    NtlmUsrFn[0].CompleteAuthToken = UsrSpCompleteAuthToken;
-    NtlmUsrFn[0].DeleteUserModeContext = UsrSpDeleteUserModeContext;
-    NtlmUsrFn[0].FormatCredentials = UsrSpFormatCredentials;
-    NtlmUsrFn[0].MarshallSupplementalCreds = UsrSpMarshallSupplementalCreds;
-    NtlmUsrFn[0].ExportContext = UsrSpExportSecurityContext;
-    NtlmUsrFn[0].ImportContext = UsrSpImportSecurityContext;
 
     *ppTables = NtlmUsrFn;
     *pcTables = 1;

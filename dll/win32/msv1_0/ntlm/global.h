@@ -14,5 +14,4 @@ extern PSECPKG_DLL_FUNCTIONS UsrFunctions;
 /* functions we provide to LSA in SpUserModeInitialize */
 extern SECPKG_USER_FUNCTION_TABLE NtlmUsrFn[1];
 
-
 #endif
