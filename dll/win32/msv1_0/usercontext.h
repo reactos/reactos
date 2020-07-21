@@ -7,8 +7,6 @@
 #ifndef _USERCONTEXT_H_
 #define _USERCONTEXT_H_
 
-#include "precomp.h"
-
 NTSTATUS NTAPI
 UsrSpInitUserModeContext(
     _In_ LSA_SEC_HANDLE ContextHandle,
