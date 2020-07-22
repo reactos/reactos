@@ -3,6 +3,10 @@
 #include <windef.h>
 #include <atlstr.h>
 
+#define EPOCH_DIFF 116444736000000000 //FILETIME starts from 1601-01-01 UTC, UnixTime starts from 1970-01-01
+#define RATE_DIFF 10000000
+
+
 INT GetWindowWidth(HWND hwnd);
 INT GetWindowHeight(HWND hwnd);
 INT GetClientWindowWidth(HWND hwnd);
@@ -50,3 +54,5 @@ BOOL PathAppendNoDirEscapeW(LPWSTR pszPath, LPCWSTR pszMore);
 BOOL IsSystem64Bit();
 
 INT GetSystemColorDepth();
+
+void UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);

@@ -513,3 +513,13 @@ INT GetSystemColorDepth()
 
     return ColorDepth;
 }
+
+void UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime)
+{
+    // Note that LONGLONG is a 64-bit value
+    LONGLONG ll;
+
+    ll = Int32x32To64(dwUnixTime, 10000000) + 116444736000000000;
+    pFileTime->dwLowDateTime = (DWORD)ll;
+    pFileTime->dwHighDateTime = ll >> 32;
+}
