@@ -1026,9 +1026,8 @@ HWND CAppsListView::Create(HWND hwndParent)
 {
     RECT r = { 205, 28, 465, 250 };
     DWORD style = WS_CHILD | WS_VISIBLE | LVS_SORTASCENDING | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS;
-    HMENU menu = GetSubMenu(LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_APPLICATIONMENU)), 0);
 
-    HWND hwnd = CListView::Create(hwndParent, r, NULL, style, WS_EX_CLIENTEDGE, menu);
+    HWND hwnd = CListView::Create(hwndParent, r, NULL, style, WS_EX_CLIENTEDGE);
 
     if (hwnd)
     {
@@ -1329,7 +1328,7 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
             {
                 if (((LPNMLISTVIEW)lParam)->iItem != -1)
                 {
-                    ShowPopupMenuEx(m_ListView->m_hWnd, m_hWnd, 0, ID_INSTALL);
+                    ShowPopupMenuEx(m_hWnd, m_hWnd, 0, ID_INSTALL);
                 }
             }
             break;
@@ -1488,7 +1487,9 @@ HWND CApplicationView::Create(HWND hwndParent)
 {
     RECT r = { 0,0,0,0 };
 
-    return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+    HMENU menu = GetSubMenu(LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_APPLICATIONMENU)), 0);
+
+    return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, menu);
 }
 
 BOOL CApplicationView::SetDisplayMode(APPLICATION_VIEW_MODE Mode)
@@ -1500,29 +1501,29 @@ BOOL CApplicationView::SetDisplayMode(APPLICATION_VIEW_MODE Mode)
     ApplicationViewMode = Mode;
     m_AppsInfo->SetWelcomeText();
 
-    HMENU lvwMenu = ::GetMenu(m_ListView->m_hWnd);
+    HMENU hMenu = ::GetMenu(m_hWnd);
     switch (Mode)
     {
     case ApplicationViewEmpty:
     default:
-        EnableMenuItem(lvwMenu, ID_REGREMOVE, MF_GRAYED);
-        EnableMenuItem(lvwMenu, ID_INSTALL, MF_GRAYED);
-        EnableMenuItem(lvwMenu, ID_UNINSTALL, MF_GRAYED);
-        EnableMenuItem(lvwMenu, ID_MODIFY, MF_GRAYED);
+        EnableMenuItem(hMenu, ID_REGREMOVE, MF_GRAYED);
+        EnableMenuItem(hMenu, ID_INSTALL, MF_GRAYED);
+        EnableMenuItem(hMenu, ID_UNINSTALL, MF_GRAYED);
+        EnableMenuItem(hMenu, ID_MODIFY, MF_GRAYED);
         break;
 
     case ApplicationViewInstalledApps:
-        EnableMenuItem(lvwMenu, ID_REGREMOVE, MF_ENABLED);
-        EnableMenuItem(lvwMenu, ID_INSTALL, MF_GRAYED);
-        EnableMenuItem(lvwMenu, ID_UNINSTALL, MF_ENABLED);
-        EnableMenuItem(lvwMenu, ID_MODIFY, MF_ENABLED);
+        EnableMenuItem(hMenu, ID_REGREMOVE, MF_ENABLED);
+        EnableMenuItem(hMenu, ID_INSTALL, MF_GRAYED);
+        EnableMenuItem(hMenu, ID_UNINSTALL, MF_ENABLED);
+        EnableMenuItem(hMenu, ID_MODIFY, MF_ENABLED);
         break;
 
     case ApplicationViewAvailableApps:
-        EnableMenuItem(lvwMenu, ID_REGREMOVE, MF_GRAYED);
-        EnableMenuItem(lvwMenu, ID_INSTALL, MF_ENABLED);
-        EnableMenuItem(lvwMenu, ID_UNINSTALL, MF_GRAYED);
-        EnableMenuItem(lvwMenu, ID_MODIFY, MF_GRAYED);
+        EnableMenuItem(hMenu, ID_REGREMOVE, MF_GRAYED);
+        EnableMenuItem(hMenu, ID_INSTALL, MF_ENABLED);
+        EnableMenuItem(hMenu, ID_UNINSTALL, MF_GRAYED);
+        EnableMenuItem(hMenu, ID_MODIFY, MF_GRAYED);
         break;
     }
     return TRUE;
