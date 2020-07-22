@@ -931,7 +931,7 @@ VOID CAppsListView::ColumnClick(LPNMLISTVIEW pnmv)
     hColumn.mask = HDI_FORMAT;
     Header_GetItem(hHeader, nHeaderID, &hColumn);
 
-    hColumn.fmt &= (bIsAscending ? ~HDF_SORTDOWN : ~HDF_SORTUP);
+    hColumn.fmt &= ~(HDF_SORTDOWN | HDF_SORTUP);
     hColumn.fmt |= (bIsAscending ? HDF_SORTUP : HDF_SORTDOWN);
     Header_SetItem(hHeader, nHeaderID, &hColumn);
 
