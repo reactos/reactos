@@ -6,28 +6,8 @@
  */
 
 #include "rapps.h"
-#include "rosui.h"
-#include "crichedit.h"
-#include "asyncinet.h"
 #include "appview.h"
-#include "misc.h"
 #include "gui.h"
-#include <shlobj_undoc.h>
-#include <shlguid_undoc.h>
-
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atltypes.h>
-#include <atlwin.h>
-#include <wininet.h>
-#include <shellutils.h>
-#include <rosctrls.h>
-#include <gdiplus.h>
-#include <math.h>
-
-
-class CMainWindow;
-
 
 // **** CAppRichEdit ****
 
