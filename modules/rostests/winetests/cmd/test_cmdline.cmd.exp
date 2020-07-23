@@ -90,8 +90,16 @@ Passed
 ------- Testing CMD /C qualifier treatment ------------
 0@space@
 1@space@
-THIS FAILS: cmd "/c"say one
-THIS FAILS: cmd ignoreme/c say one
+0@space@
+0@space@
+0@space@
+0@space@
+0@space@
+0@space@
+0@space@
+0@space@
+bar@space@
+bar@space@
 --------- Testing special characters --------------
 0@space@
 0@space@
