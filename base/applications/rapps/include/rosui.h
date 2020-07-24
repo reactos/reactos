@@ -493,6 +493,12 @@ public:
         }
     };
 
+    virtual VOID AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> & TabOrderList)
+    {
+        TabOrderList.Add(T::m_hWnd);
+        return;
+    }
+
     virtual ~CUiWindow()
     {
         if (T::IsWindow())

@@ -14,7 +14,8 @@ public:
     ATL::CStringW szKeyName;
 
     CInstalledApplicationInfo(BOOL bIsUserKey, REGSAM RegWowKey, HKEY hKey);
-    BOOL GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String);
+    BOOL GetApplicationRegString(LPCWSTR lpKeyName, ATL::CStringW& String);
+    BOOL GetApplicationRegDword(LPCWSTR lpKeyName, DWORD *lpValue);
     BOOL UninstallApplication(BOOL bModify);
     LSTATUS RemoveFromRegistry();
 

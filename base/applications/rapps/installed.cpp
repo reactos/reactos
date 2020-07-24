@@ -65,7 +65,7 @@ CInstalledApplicationInfo::~CInstalledApplicationInfo()
     }
 }
 
-BOOL CInstalledApplicationInfo::GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String)
+BOOL CInstalledApplicationInfo::GetApplicationRegString(LPCWSTR lpKeyName, ATL::CStringW& String)
 {
     DWORD dwSize = 0;
     String.Empty();
@@ -106,6 +106,23 @@ BOOL CInstalledApplicationInfo::GetApplicationString(LPCWSTR lpKeyName, ATL::CSt
     }
     String.GetBuffer()[dwSize / sizeof(WCHAR)] = L'\0'; // ensure zero terminated
     String.ReleaseBuffer();
+    return TRUE;
+}
+
+BOOL CInstalledApplicationInfo::GetApplicationRegDword(LPCWSTR lpKeyName, DWORD *lpValue)
+{
+    DWORD dwType = REG_DWORD;
+    DWORD dwSize = sizeof(DWORD);
+    if (RegQueryValueExW(hSubKey,
+        lpKeyName,
+        NULL,
+        &dwType,
+        (LPBYTE)lpValue,
+        &dwSize) != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -187,24 +204,51 @@ BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
                 if (Info->hSubKey)
                 {
                     // those items without display name are ignored
-                    if (Info->GetApplicationString(L"DisplayName", Info->szDisplayName))
+                    if (Info->GetApplicationRegString(L"DisplayName", Info->szDisplayName))
                     {
-                        Info->GetApplicationString(L"DisplayVersion", Info->szDisplayVersion);
-                        Info->GetApplicationString(L"Publisher", Info->szPublisher);
-                        Info->GetApplicationString(L"RegOwner", Info->szRegOwner);
-                        Info->GetApplicationString(L"ProductID", Info->szProductID);
-                        Info->GetApplicationString(L"HelpLink", Info->szHelpLink);
-                        Info->GetApplicationString(L"HelpTelephone", Info->szHelpTelephone);
-                        Info->GetApplicationString(L"Readme", Info->szReadme);
-                        Info->GetApplicationString(L"Contact", Info->szContact);
-                        Info->GetApplicationString(L"URLUpdateInfo", Info->szURLUpdateInfo);
-                        Info->GetApplicationString(L"URLInfoAbout", Info->szURLInfoAbout);
-                        Info->GetApplicationString(L"Comments", Info->szComments);
-                        Info->GetApplicationString(L"InstallDate", Info->szInstallDate);
-                        Info->GetApplicationString(L"InstallLocation", Info->szInstallLocation);
-                        Info->GetApplicationString(L"InstallSource", Info->szInstallSource);
-                        Info->GetApplicationString(L"UninstallString", Info->szUninstallString);
-                        Info->GetApplicationString(L"ModifyPath", Info->szModifyPath);
+                        Info->GetApplicationRegString(L"DisplayVersion", Info->szDisplayVersion);
+                        Info->GetApplicationRegString(L"Publisher", Info->szPublisher);
+                        Info->GetApplicationRegString(L"RegOwner", Info->szRegOwner);
+                        Info->GetApplicationRegString(L"ProductID", Info->szProductID);
+                        Info->GetApplicationRegString(L"HelpLink", Info->szHelpLink);
+                        Info->GetApplicationRegString(L"HelpTelephone", Info->szHelpTelephone);
+                        Info->GetApplicationRegString(L"Readme", Info->szReadme);
+                        Info->GetApplicationRegString(L"Contact", Info->szContact);
+                        Info->GetApplicationRegString(L"URLUpdateInfo", Info->szURLUpdateInfo);
+                        Info->GetApplicationRegString(L"URLInfoAbout", Info->szURLInfoAbout);
+                        Info->GetApplicationRegString(L"Comments", Info->szComments);
+                        if (Info->GetApplicationRegString(L"InstallDate", Info->szInstallDate) == FALSE)
+                        {
+                            // It might be a DWORD (Unix timestamp). try again.
+                            DWORD dwInstallTimeStamp;
+                            if (Info->GetApplicationRegDword(L"InstallDate", &dwInstallTimeStamp))
+                            {
+                                FILETIME InstallFileTime;
+                                SYSTEMTIME InstallSystemTime, InstallLocalTime;
+
+                                UnixTimeToFileTime(dwInstallTimeStamp, &InstallFileTime);
+                                FileTimeToSystemTime(&InstallFileTime, &InstallSystemTime);
+
+                                // convert to localtime
+                                SystemTimeToTzSpecificLocalTime(NULL, &InstallSystemTime, &InstallLocalTime);
+
+                                // convert to readable date string
+                                int cchTimeStrLen = GetDateFormatW(LOCALE_USER_DEFAULT,
+                                    0,
+                                    &InstallLocalTime,
+                                    NULL, 0, 0);
+
+                                GetDateFormatW(LOCALE_USER_DEFAULT, // use default locale for current user
+                                    0,
+                                    &InstallLocalTime,
+                                    NULL, Info->szInstallDate.GetBuffer(cchTimeStrLen), cchTimeStrLen);
+                                Info->szInstallDate.ReleaseBuffer();
+                            }
+                        }
+                        Info->GetApplicationRegString(L"InstallLocation", Info->szInstallLocation);
+                        Info->GetApplicationRegString(L"InstallSource", Info->szInstallSource);
+                        Info->GetApplicationRegString(L"UninstallString", Info->szUninstallString);
+                        Info->GetApplicationRegString(L"ModifyPath", Info->szModifyPath);
 
                         bSuccess = TRUE;
                     }
