@@ -93,14 +93,14 @@ class CMainWindow :
     CUiPanel *m_ClientPanel = NULL;
     CUiSplitPanel *m_VSplitter = NULL;
 
-    CMainToolbar *m_Toolbar = NULL;
+    //CMainToolbar *m_Toolbar = NULL;
 
     CSideTreeView *m_TreeView = NULL;
     CUiWindow<CStatusBar> *m_StatusBar = NULL;
 
     CApplicationView *m_ApplicationView = NULL;
 
-    CUiWindow<CSearchBar> *m_SearchBar = NULL;
+    //CUiWindow<CSearchBar> *m_SearchBar = NULL;
     CAvailableApps m_AvailableApps;
     CInstalledApps m_InstalledApps;
 
@@ -120,7 +120,7 @@ private:
 
     BOOL CreateStatusBar();
 
-    BOOL CreateToolbar();
+    //BOOL CreateToolbar();
 
     BOOL CreateTreeView();
 
@@ -128,7 +128,7 @@ private:
 
     BOOL CreateVSplitter();
 
-    BOOL CreateSearchBar();
+    //BOOL CreateSearchBar();
 
     BOOL CreateLayout();
 

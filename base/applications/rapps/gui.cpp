@@ -337,15 +337,15 @@ BOOL CMainWindow::CreateStatusBar()
     return m_StatusBar->Create(m_hWnd, (HMENU)IDC_STATUSBAR) != NULL;
 }
 
-BOOL CMainWindow::CreateToolbar()
-{
-    m_Toolbar = new CMainToolbar();
-    m_Toolbar->m_VerticalAlignment = UiAlign_LeftTop;
-    m_Toolbar->m_HorizontalAlignment = UiAlign_Stretch;
-    m_ClientPanel->Children().Append(m_Toolbar);
-
-    return m_Toolbar->Create(m_hWnd) != NULL;
-}
+//BOOL CMainWindow::CreateToolbar()
+//{
+//    m_Toolbar = new CMainToolbar();
+//    m_Toolbar->m_VerticalAlignment = UiAlign_LeftTop;
+//    m_Toolbar->m_HorizontalAlignment = UiAlign_Stretch;
+//    m_ClientPanel->Children().Append(m_Toolbar);
+//
+//    return m_Toolbar->Create(m_hWnd) != NULL;
+//}
 
 BOOL CMainWindow::CreateTreeView()
 {
@@ -382,16 +382,16 @@ BOOL CMainWindow::CreateVSplitter()
     return m_VSplitter->Create(m_hWnd) != NULL;
 }
 
-BOOL CMainWindow::CreateSearchBar()
-{
-    m_SearchBar = new CUiWindow<CSearchBar>();
-    m_SearchBar->m_VerticalAlignment = UiAlign_LeftTop;
-    m_SearchBar->m_HorizontalAlignment = UiAlign_RightBtm;
-    m_SearchBar->m_Margin.top = 4;
-    m_SearchBar->m_Margin.right = 6;
-
-    return m_SearchBar->Create(m_Toolbar->m_hWnd) != NULL;
-}
+//BOOL CMainWindow::CreateSearchBar()
+//{
+//    m_SearchBar = new CUiWindow<CSearchBar>();
+//    m_SearchBar->m_VerticalAlignment = UiAlign_LeftTop;
+//    m_SearchBar->m_HorizontalAlignment = UiAlign_RightBtm;
+//    m_SearchBar->m_Margin.top = 4;
+//    m_SearchBar->m_Margin.right = 6;
+//
+//    return m_SearchBar->Create(m_Toolbar->m_hWnd) != NULL;
+//}
 
 BOOL CMainWindow::CreateLayout()
 {
@@ -404,8 +404,8 @@ BOOL CMainWindow::CreateLayout()
 
     // Top level
     b = b && CreateStatusBar();
-    b = b && CreateToolbar();
-    b = b && CreateSearchBar();
+    //b = b && CreateToolbar();
+    //b = b && CreateSearchBar();
     b = b && CreateVSplitter();
 
     // Inside V Splitter
@@ -414,19 +414,19 @@ BOOL CMainWindow::CreateLayout()
 
     if (b)
     {
-        RECT rTop;
+        //RECT rTop;
         RECT rBottom;
 
         /* Size status bar */
         m_StatusBar->SendMessageW(WM_SIZE, 0, 0);
 
         /* Size tool bar */
-        m_Toolbar->AutoSize();
+        //m_Toolbar->AutoSize();
 
-        ::GetWindowRect(m_Toolbar->m_hWnd, &rTop);
+        //::GetWindowRect(m_Toolbar->m_hWnd, &rTop);
         ::GetWindowRect(m_StatusBar->m_hWnd, &rBottom);
 
-        m_VSplitter->m_Margin.top = rTop.bottom - rTop.top;
+        //m_VSplitter->m_Margin.top = rTop.bottom - rTop.top;
         m_VSplitter->m_Margin.bottom = rBottom.bottom - rBottom.top;
     }
 
@@ -439,8 +439,8 @@ VOID CMainWindow::LayoutCleanup()
     delete m_TreeView;
     delete m_ApplicationView;
     delete m_VSplitter;
-    delete m_SearchBar;
-    delete m_Toolbar;
+    //delete m_SearchBar;
+    //delete m_Toolbar;
     delete m_StatusBar;
     return;
 }
@@ -468,20 +468,20 @@ VOID CMainWindow::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     m_StatusBar->SendMessage(WM_SIZE, 0, 0);
 
     /* Size tool bar */
-    m_Toolbar->AutoSize();
+    //m_Toolbar->AutoSize();
 
     /* Automatically hide captions */
-    DWORD dToolbarTreshold = m_Toolbar->GetMaxButtonsWidth();
-    DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width);
+    //DWORD dToolbarTreshold = m_Toolbar->GetMaxButtonsWidth();
+    //DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width);
 
-    if (dSearchbarMargin > dToolbarTreshold)
+    /*if (dSearchbarMargin > dToolbarTreshold)
     {
         m_Toolbar->ShowButtonCaption();
     }
     else if (dSearchbarMargin < dToolbarTreshold)
     {
         m_Toolbar->HideButtonCaption();
-    }
+    }*/
 
     RECT r = { 0, 0, LOWORD(lParam), HIWORD(lParam) };
     HDWP hdwp = NULL;
@@ -498,7 +498,7 @@ VOID CMainWindow::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     }
 
     // TODO: Sub-layouts for children of children
-    count = m_SearchBar->CountSizableChildren();
+    /*count = m_SearchBar->CountSizableChildren();
     hdwp = BeginDeferWindowPos(count);
     if (hdwp)
     {
@@ -507,7 +507,7 @@ VOID CMainWindow::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
         {
             EndDeferWindowPos(hdwp);
         }
-    }
+    }*/
 }
 
 BOOL CMainWindow::RemoveSelectedAppFromRegistry()
@@ -686,10 +686,10 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
                 EnableMenuItem(mainMenu, ID_UNINSTALL, MF_ENABLED);
                 EnableMenuItem(mainMenu, ID_MODIFY, MF_ENABLED);
 
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, TRUE);
+                /*m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, TRUE);
                 m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, FALSE);
                 m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, TRUE);
+                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, TRUE);*/
             }
             else
             {
@@ -698,16 +698,16 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
                 EnableMenuItem(mainMenu, ID_UNINSTALL, MF_GRAYED);
                 EnableMenuItem(mainMenu, ID_MODIFY, MF_GRAYED);
 
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, FALSE);
+                /*m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, FALSE);
                 m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, TRUE);
                 m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, FALSE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, FALSE);
+                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, FALSE);*/
             }
         }
         break;
 
         case TTN_GETDISPINFO:
-            m_Toolbar->OnGetDispInfo((LPTOOLTIPTEXT)lParam);
+            //m_Toolbar->OnGetDispInfo((LPTOOLTIPTEXT)lParam);
             break;
         }
     }
@@ -735,7 +735,7 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
         /* Forward WM_SYSCOLORCHANGE to common controls */
         m_ApplicationView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
         m_TreeView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
-        m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
+        //m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
     }
     break;
 
@@ -788,7 +788,7 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
 {
     WORD wCommand = LOWORD(wParam);
 
-    if (lParam == (LPARAM)m_SearchBar->m_hWnd)
+    /*if (lParam == (LPARAM)m_SearchBar->m_hWnd)
     {
         ATL::CStringW szBuf;
 
@@ -849,7 +849,7 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
         }
 
         return;
-    }
+    }*/
 
     switch (wCommand)
     {
@@ -862,7 +862,7 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
         break;
 
     case ID_SEARCH:
-        m_SearchBar->SetFocus();
+        //m_SearchBar->SetFocus();
         break;
 
     case ID_INSTALL:
@@ -1140,8 +1140,8 @@ void CMainWindow::HandleTabOrder(int direction)
 {
     ATL::CSimpleArray<HWND> TabOrderHwndList;
 
-    m_Toolbar->AppendTabOrderWindow(direction, TabOrderHwndList);
-    m_SearchBar->AppendTabOrderWindow(direction, TabOrderHwndList);
+    //m_Toolbar->AppendTabOrderWindow(direction, TabOrderHwndList);
+    //m_SearchBar->AppendTabOrderWindow(direction, TabOrderHwndList);
     m_TreeView->AppendTabOrderWindow(direction, TabOrderHwndList);
     m_ApplicationView->AppendTabOrderWindow(direction, TabOrderHwndList);
 
