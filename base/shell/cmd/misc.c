@@ -510,45 +510,6 @@ BOOL IsExistingDirectory (LPCTSTR pszPath)
 }
 
 
-BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
-{
-    LPSTR lpString;
-    DWORD  dwRead;
-    INT len = 0;
-#ifdef _UNICODE
-    lpString = cmd_alloc(nBufferLength);
-#else
-    lpString = lpBuffer;
-#endif
-
-    if (ReadFile(hFile, lpString, nBufferLength - 1, &dwRead, NULL))
-    {
-        /* break at new line*/
-        CHAR *end = memchr(lpString, '\n', dwRead);
-        len = dwRead;
-        if (end)
-        {
-            len = (INT)(end - lpString) + 1;
-            SetFilePointer(hFile, len - dwRead, NULL, FILE_CURRENT);
-        }
-    }
-
-    if (!len)
-    {
-#ifdef _UNICODE
-        cmd_free(lpString);
-#endif
-        return FALSE;
-    }
-
-    lpString[len++] = '\0';
-#ifdef _UNICODE
-    MultiByteToWideChar(OutputCodePage, 0, lpString, -1, lpBuffer, len);
-    cmd_free(lpString);
-#endif
-    return TRUE;
-}
-
 // See r874
 BOOL __stdcall PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
 {

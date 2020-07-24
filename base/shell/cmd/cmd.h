@@ -300,7 +300,6 @@ VOID   StripQuotes(LPTSTR);
 BOOL   IsValidPathName (LPCTSTR);
 BOOL   IsExistingFile (LPCTSTR);
 BOOL   IsExistingDirectory (LPCTSTR);
-BOOL   FileGetString (HANDLE, LPTSTR, INT);
 VOID   GetPathCase(TCHAR *, TCHAR *);
 
 #define PROMPT_NO    0
