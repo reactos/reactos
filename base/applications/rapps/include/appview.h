@@ -252,7 +252,7 @@ public:
 
     BOOL SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
 
-    BOOL CAppsListView::SetViewMode(DWORD ViewMode);
+    BOOL SetViewMode(DWORD ViewMode);
 
     BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID CallbackParam);
 
