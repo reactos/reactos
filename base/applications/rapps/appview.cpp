@@ -1146,6 +1146,11 @@ BOOL CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
     return TRUE;
 }
 
+BOOL CAppsListView::SetViewMode(DWORD ViewMode)
+{
+    return SendMessage(LVM_SETVIEW, (WPARAM)ViewMode, 0) == 1;
+}
+
 BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID CallbackParam)
 {
     if (ApplicationViewType != AppViewTypeInstalledApps)
