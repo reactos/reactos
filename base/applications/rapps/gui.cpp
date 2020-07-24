@@ -1012,16 +1012,16 @@ VOID CMainWindow::UpdateApplicationsList(INT EnumType)
     m_ApplicationView->SetRedraw(FALSE);
     if (IsInstalledEnum(EnumType))
     {
-        // set the display mode of application-view. this will remove all the item in application-view too.
-        m_ApplicationView->SetDisplayMode(ApplicationViewInstalledApps);
+        // set the display type of application-view. this will remove all the item in application-view too.
+        m_ApplicationView->SetDisplayAppType(AppViewTypeInstalledApps);
 
         // enum installed softwares 
         m_InstalledApps.Enum(EnumType, s_EnumInstalledAppProc, this);
     }
     else if (IsAvailableEnum(EnumType))
     {
-        // set the display mode of application-view. this will remove all the item in application-view too.
-        m_ApplicationView->SetDisplayMode(ApplicationViewAvailableApps);
+        // set the display type of application-view. this will remove all the item in application-view too.
+        m_ApplicationView->SetDisplayAppType(AppViewTypeAvailableApps);
 
         // enum available softwares 
         m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);

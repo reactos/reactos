@@ -65,11 +65,11 @@ enum SCRNSHOT_STATUS
 
 class CMainWindow;
 
-enum APPLICATION_VIEW_MODE
+enum APPLICATION_VIEW_TYPE
 {
-    ApplicationViewEmpty,
-    ApplicationViewAvailableApps,
-    ApplicationViewInstalledApps
+    AppViewTypeEmpty,
+    AppViewTypeAvailableApps,
+    AppViewTypeInstalledApps
 };
 
 typedef struct __ScrnshotDownloadParam
@@ -217,7 +217,7 @@ class CAppsListView :
 
     INT nLastHeaderID;
 
-    APPLICATION_VIEW_MODE ApplicationViewMode = ApplicationViewEmpty;
+    APPLICATION_VIEW_TYPE ApplicationViewType = AppViewTypeEmpty;
 
 public:
     CAppsListView();
@@ -250,7 +250,7 @@ public:
 
     PVOID GetFocusedItemData();
 
-    BOOL SetDisplayMode(APPLICATION_VIEW_MODE Mode);
+    BOOL SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
 
     BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID CallbackParam);
 
@@ -270,7 +270,7 @@ private:
     CAppInfoDisplay *m_AppsInfo = NULL;
     CUiSplitPanel *m_HSplitter = NULL;
     CMainWindow *m_MainWindow = NULL;
-    APPLICATION_VIEW_MODE ApplicationViewMode = ApplicationViewEmpty;
+    APPLICATION_VIEW_TYPE ApplicationViewType = AppViewTypeEmpty;
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT &theResult, DWORD dwMapId);
 
@@ -293,7 +293,7 @@ public:
 
     HWND Create(HWND hwndParent);
 
-    BOOL SetDisplayMode(APPLICATION_VIEW_MODE Mode);
+    BOOL SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
 
     BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID param);
 

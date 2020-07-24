@@ -1083,10 +1083,10 @@ PVOID CAppsListView::GetFocusedItemData()
     return (PVOID)GetItemData(item);
 }
 
-BOOL CAppsListView::SetDisplayMode(APPLICATION_VIEW_MODE Mode)
+BOOL CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
 {
     if (!DeleteAllItems()) return FALSE;
-    ApplicationViewMode = Mode;
+    ApplicationViewType = AppType;
 
     bIsAscending = TRUE;
 
@@ -1103,9 +1103,9 @@ BOOL CAppsListView::SetDisplayMode(APPLICATION_VIEW_MODE Mode)
 
     // add new columns
     ATL::CStringW szText;
-    switch (Mode)
+    switch (AppType)
     {
-    case ApplicationViewInstalledApps:
+    case AppViewTypeInstalledApps:
 
         /* Add columns to ListView */
         szText.LoadStringW(IDS_APP_NAME);
@@ -1121,7 +1121,7 @@ BOOL CAppsListView::SetDisplayMode(APPLICATION_VIEW_MODE Mode)
         SetCheckboxesVisible(FALSE);
         break;
 
-    case ApplicationViewAvailableApps:
+    case AppViewTypeAvailableApps:
 
         /* Add columns to ListView */
         szText.LoadStringW(IDS_APP_NAME);
@@ -1137,7 +1137,7 @@ BOOL CAppsListView::SetDisplayMode(APPLICATION_VIEW_MODE Mode)
         SetCheckboxesVisible(TRUE);
         break;
 
-    case ApplicationViewEmpty:
+    case AppViewTypeEmpty:
     default:
         break;
     }
@@ -1148,7 +1148,7 @@ BOOL CAppsListView::SetDisplayMode(APPLICATION_VIEW_MODE Mode)
 
 BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID CallbackParam)
 {
-    if (ApplicationViewMode != ApplicationViewInstalledApps)
+    if (ApplicationViewType != AppViewTypeInstalledApps)
     {
         return FALSE;
     }
@@ -1168,7 +1168,7 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
 
 BOOL CAppsListView::AddAvailableApplication(CAvailableApplicationInfo *AvlbAppInfo, BOOL InitCheckState, LPVOID CallbackParam)
 {
-    if (ApplicationViewMode != ApplicationViewAvailableApps)
+    if (ApplicationViewType != AppViewTypeAvailableApps)
     {
         return FALSE;
     }
@@ -1316,7 +1316,7 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
                 {
                     /* this won't do anything if the program is already installed */
 
-                    if (ApplicationViewMode == ApplicationViewAvailableApps)
+                    if (ApplicationViewType == AppViewTypeAvailableApps)
                     {
                         m_MainWindow->InstallApplication((CAvailableApplicationInfo *)m_ListView->GetItemData(Item->iItem));
                     }
@@ -1492,19 +1492,19 @@ HWND CApplicationView::Create(HWND hwndParent)
     return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, menu);
 }
 
-BOOL CApplicationView::SetDisplayMode(APPLICATION_VIEW_MODE Mode)
+BOOL CApplicationView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
 {
-    if (!m_ListView->SetDisplayMode(Mode))
+    if (!m_ListView->SetDisplayAppType(AppType))
     {
         return FALSE;
     }
-    ApplicationViewMode = Mode;
+    ApplicationViewType = AppType;
     m_AppsInfo->SetWelcomeText();
 
     HMENU hMenu = ::GetMenu(m_hWnd);
-    switch (Mode)
+    switch (AppType)
     {
-    case ApplicationViewEmpty:
+    case AppViewTypeEmpty:
     default:
         EnableMenuItem(hMenu, ID_REGREMOVE, MF_GRAYED);
         EnableMenuItem(hMenu, ID_INSTALL, MF_GRAYED);
@@ -1512,14 +1512,14 @@ BOOL CApplicationView::SetDisplayMode(APPLICATION_VIEW_MODE Mode)
         EnableMenuItem(hMenu, ID_MODIFY, MF_GRAYED);
         break;
 
-    case ApplicationViewInstalledApps:
+    case AppViewTypeInstalledApps:
         EnableMenuItem(hMenu, ID_REGREMOVE, MF_ENABLED);
         EnableMenuItem(hMenu, ID_INSTALL, MF_GRAYED);
         EnableMenuItem(hMenu, ID_UNINSTALL, MF_ENABLED);
         EnableMenuItem(hMenu, ID_MODIFY, MF_ENABLED);
         break;
 
-    case ApplicationViewAvailableApps:
+    case AppViewTypeAvailableApps:
         EnableMenuItem(hMenu, ID_REGREMOVE, MF_GRAYED);
         EnableMenuItem(hMenu, ID_INSTALL, MF_ENABLED);
         EnableMenuItem(hMenu, ID_UNINSTALL, MF_GRAYED);
@@ -1531,7 +1531,7 @@ BOOL CApplicationView::SetDisplayMode(APPLICATION_VIEW_MODE Mode)
 
 BOOL CApplicationView::AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID param)
 {
-    if (ApplicationViewMode != ApplicationViewInstalledApps)
+    if (ApplicationViewType != AppViewTypeInstalledApps)
     {
         return FALSE;
     }
@@ -1540,7 +1540,7 @@ BOOL CApplicationView::AddInstalledApplication(CInstalledApplicationInfo *InstAp
 
 BOOL CApplicationView::AddAvailableApplication(CAvailableApplicationInfo *AvlbAppInfo, BOOL InitCheckState, LPVOID param)
 {
-    if (ApplicationViewMode != ApplicationViewAvailableApps)
+    if (ApplicationViewType != AppViewTypeAvailableApps)
     {
         return FALSE;
     }
@@ -1575,15 +1575,15 @@ VOID CApplicationView::AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWN
 // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
 BOOL CApplicationView::ItemGetFocus(LPVOID CallbackParam)
 {
-    switch (ApplicationViewMode)
+    switch (ApplicationViewType)
     {
-    case ApplicationViewInstalledApps:
+    case AppViewTypeInstalledApps:
         return m_AppsInfo->ShowInstalledAppInfo((CInstalledApplicationInfo *)CallbackParam);
 
-    case ApplicationViewAvailableApps:
+    case AppViewTypeAvailableApps:
         return m_AppsInfo->ShowAvailableAppInfo((CAvailableApplicationInfo *)CallbackParam);
 
-    case ApplicationViewEmpty:
+    case AppViewTypeEmpty:
     default:
         m_AppsInfo->SetWelcomeText();
         return FALSE;
