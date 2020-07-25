@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
+
+/* TODO (RENAME TO globals.h) */
+
 #include "../precomp.h"
 
 #include "wine/debug.h"
@@ -93,6 +96,46 @@ getGlobalsSvr(VOID)
 
 /* private functions */
 
+/* 2 is the default value for w2k. */
+const DWORD  DefaultLmCompatibilityLevel = 2;
+/* registry keys */
+const WCHAR* RegLsaPathW = L"System\\CurrentControlSet\\Control\\Lsa";
+const WCHAR* RegLmCompatibilityLevelKeyW = L"LmCompatibilityLevel";
+
+DWORD RegReadLmCompatibilityLevel(VOID)
+{
+    HKEY RegKey;
+    LSTATUS RegRet;
+    DWORD LmCompatibilityLevel = 0;
+    DWORD ValueType;
+    DWORD ValueSize = sizeof(LmCompatibilityLevel);
+
+    TRACE("RegReadLmCompatibilityLevel\n");
+
+    RegRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE, RegLsaPathW, 0, KEY_READ, &RegKey);
+    if (RegRet != ERROR_SUCCESS)
+    {
+        WARN("Failed to read registry %S. Error: %d\n",
+            RegLsaPathW, RegRet);
+        return DefaultLmCompatibilityLevel;
+    }
+
+    RegRet = RegQueryValueExW(RegKey, RegLmCompatibilityLevelKeyW, NULL, &ValueType,
+        (PBYTE)&LmCompatibilityLevel, &ValueSize);
+    if ((RegRet != ERROR_SUCCESS) ||
+        (ValueType != REG_DWORD))
+    {
+        WARN("Failed to read registry %S\\%S. Error %d\n",
+            RegLsaPathW, RegLmCompatibilityLevelKeyW, RegRet);
+        LmCompatibilityLevel = DefaultLmCompatibilityLevel;
+    }
+
+    TRACE("Using LmCompatibilityLevel %d.\n", LmCompatibilityLevel);
+    RegCloseKey(RegKey);
+    return LmCompatibilityLevel;
+}
+
+
 BOOL
 NtlmInitializeGlobals(VOID)
 {
@@ -115,7 +158,7 @@ NtlmInitializeGlobals(VOID)
     /*  NTLMV2 not fully working (AUTH_MESSAGE receives INVALID_PARAMETER :-( ) */
     /* FIXME value is stored in registry ... so get it from there! */
     // Works with 2 and 5!
-    g->LMCompatibilityLevel = 2;
+    g->LMCompatibilityLevel = RegReadLmCompatibilityLevel();
     /* LMCompatibilityLevel - matrix
      * cli/DC  lvl   LM-     NTLMv1-   NTLMv2   v2-Session-
      *               auth.   auth.     auth.     Security
