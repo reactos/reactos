@@ -262,12 +262,58 @@ public:
     VOID ItemCheckStateNotify(int iItem, BOOL bCheck);
 };
 
+class CMainToolbar :
+    public CUiWindow< CToolbar<> >
+{
+    const INT m_iToolbarHeight;
+    DWORD m_dButtonsWidthMax;
+
+    WCHAR szInstallBtn[MAX_STR_LEN];
+    WCHAR szUninstallBtn[MAX_STR_LEN];
+    WCHAR szModifyBtn[MAX_STR_LEN];
+    WCHAR szSelectAll[MAX_STR_LEN];
+
+    VOID AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex);
+
+    HIMAGELIST InitImageList();
+
+public:
+
+    CMainToolbar();
+
+    VOID OnGetDispInfo(LPTOOLTIPTEXT lpttt);
+
+    HWND Create(HWND hwndParent);
+
+    VOID HideButtonCaption();
+
+    VOID ShowButtonCaption();
+
+    DWORD GetMaxButtonsWidth() const;
+};
+
+class CSearchBar :
+    public CWindow
+{
+public:
+    const INT m_Width;
+    const INT m_Height;
+
+    CSearchBar();
+
+    VOID SetText(LPCWSTR lpszText);
+
+    HWND Create(HWND hwndParent);
+
+};
+
 class CApplicationView :
     public CUiWindow<CWindowImpl<CApplicationView>>
 {
 private:
     CUiPanel *m_Panel = NULL;
-
+    CMainToolbar *m_Toolbar = NULL;
+    CUiWindow<CSearchBar> *m_SearchBar = NULL;
     CAppsListView *m_ListView = NULL;
     CAppInfoDisplay *m_AppsInfo = NULL;
     CUiSplitPanel *m_HSplitter = NULL;
@@ -275,6 +321,10 @@ private:
     APPLICATION_VIEW_TYPE ApplicationViewType = AppViewTypeEmpty;
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT &theResult, DWORD dwMapId);
+
+    BOOL CreateToolbar();
+
+    BOOL CreateSearchBar();
 
     BOOL CreateHSplitter();
 

@@ -23,35 +23,6 @@
 #define TREEVIEW_ICON_SIZE 24
 
 
-class CMainToolbar :
-    public CUiWindow< CToolbar<> >
-{
-    const INT m_iToolbarHeight;
-    DWORD m_dButtonsWidthMax;
-
-    WCHAR szInstallBtn[MAX_STR_LEN];
-    WCHAR szUninstallBtn[MAX_STR_LEN];
-    WCHAR szModifyBtn[MAX_STR_LEN];
-    WCHAR szSelectAll[MAX_STR_LEN];
-
-    VOID AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex);
-
-    HIMAGELIST InitImageList();
-
-public:
-
-    CMainToolbar();
-
-    VOID OnGetDispInfo(LPTOOLTIPTEXT lpttt);
-
-    HWND Create(HWND hwndParent);
-
-    VOID HideButtonCaption();
-
-    VOID ShowButtonCaption();
-
-    DWORD GetMaxButtonsWidth() const;
-};
 
 class CSideTreeView :
     public CUiWindow<CTreeView>
@@ -70,21 +41,6 @@ public:
     VOID DestroyImageList();
 
     ~CSideTreeView();
-};
-
-class CSearchBar :
-    public CWindow
-{
-public:
-    const INT m_Width;
-    const INT m_Height;
-
-    CSearchBar();
-
-    VOID SetText(LPCWSTR lpszText);
-
-    HWND Create(HWND hwndParent);
-
 };
 
 class CMainWindow :

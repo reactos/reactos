@@ -9,6 +9,199 @@
 #include "appview.h"
 #include "gui.h"
 
+
+ // **** CMainToolbar ****
+
+VOID CMainToolbar::AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex)
+{
+    HICON hImage;
+
+    if (!(hImage = (HICON)LoadImageW(hInst,
+        MAKEINTRESOURCE(ImageIndex),
+        IMAGE_ICON,
+        m_iToolbarHeight,
+        m_iToolbarHeight,
+        0)))
+    {
+        /* TODO: Error message */
+    }
+
+    ImageList_AddIcon(hImageList, hImage);
+    DeleteObject(hImage);
+}
+
+HIMAGELIST CMainToolbar::InitImageList()
+{
+    HIMAGELIST hImageList;
+
+    /* Create the toolbar icon image list */
+    hImageList = ImageList_Create(m_iToolbarHeight,//GetSystemMetrics(SM_CXSMICON),
+        m_iToolbarHeight,//GetSystemMetrics(SM_CYSMICON),
+        ILC_MASK | GetSystemColorDepth(),
+        1, 1);
+    if (!hImageList)
+    {
+        /* TODO: Error message */
+        return NULL;
+    }
+
+    AddImageToImageList(hImageList, IDI_INSTALL);
+    AddImageToImageList(hImageList, IDI_UNINSTALL);
+    AddImageToImageList(hImageList, IDI_MODIFY);
+    AddImageToImageList(hImageList, IDI_CHECK_ALL);
+    AddImageToImageList(hImageList, IDI_REFRESH);
+    AddImageToImageList(hImageList, IDI_UPDATE_DB);
+    AddImageToImageList(hImageList, IDI_SETTINGS);
+    AddImageToImageList(hImageList, IDI_EXIT);
+
+    return hImageList;
+}
+
+CMainToolbar::CMainToolbar() : m_iToolbarHeight(24)
+{
+}
+
+VOID CMainToolbar::OnGetDispInfo(LPTOOLTIPTEXT lpttt)
+{
+    UINT idButton = (UINT)lpttt->hdr.idFrom;
+
+    switch (idButton)
+    {
+    case ID_EXIT:
+        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_EXIT);
+        break;
+
+    case ID_INSTALL:
+        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_INSTALL);
+        break;
+
+    case ID_UNINSTALL:
+        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_UNINSTALL);
+        break;
+
+    case ID_MODIFY:
+        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_MODIFY);
+        break;
+
+    case ID_SETTINGS:
+        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_SETTINGS);
+        break;
+
+    case ID_REFRESH:
+        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_REFRESH);
+        break;
+
+    case ID_RESETDB:
+        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_UPDATE_DB);
+        break;
+    }
+}
+
+HWND CMainToolbar::Create(HWND hwndParent)
+{
+    /* Create buttons */
+    TBBUTTON Buttons[] =
+    {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
+        {  0, ID_INSTALL,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szInstallBtn      },
+        {  1, ID_UNINSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szUninstallBtn    },
+        {  2, ID_MODIFY,    TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szModifyBtn       },
+        {  3, ID_CHECK_ALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szSelectAll       },
+        { -1, 0,            TBSTATE_ENABLED, BTNS_SEP,                    { 0 }, 0, 0                           },
+        {  4, ID_REFRESH,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
+        {  5, ID_RESETDB,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
+        { -1, 0,            TBSTATE_ENABLED, BTNS_SEP,                    { 0 }, 0, 0                           },
+        {  6, ID_SETTINGS,  TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
+        {  7, ID_EXIT,      TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
+    };
+
+    LoadStringW(hInst, IDS_INSTALL, szInstallBtn, _countof(szInstallBtn));
+    LoadStringW(hInst, IDS_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
+    LoadStringW(hInst, IDS_MODIFY, szModifyBtn, _countof(szModifyBtn));
+    LoadStringW(hInst, IDS_SELECT_ALL, szSelectAll, _countof(szSelectAll));
+
+    m_hWnd = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL,
+        WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_LIST,
+        0, 0, 0, 0,
+        hwndParent,
+        0, hInst, NULL);
+
+    if (!m_hWnd)
+    {
+        /* TODO: Show error message */
+        return FALSE;
+    }
+
+    SendMessageW(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_HIDECLIPPEDBUTTONS);
+    SetButtonStructSize();
+
+    /* Set image list */
+    HIMAGELIST hImageList = InitImageList();
+
+    if (!hImageList)
+    {
+        /* TODO: Show error message */
+        return FALSE;
+    }
+
+    ImageList_Destroy(SetImageList(hImageList));
+
+    AddButtons(_countof(Buttons), Buttons);
+
+    /* Remember ideal width to use as a max width of buttons */
+    SIZE size;
+    GetIdealSize(FALSE, &size);
+    m_dButtonsWidthMax = size.cx;
+
+    return m_hWnd;
+}
+
+VOID CMainToolbar::HideButtonCaption()
+{
+    DWORD dCurrentExStyle = (DWORD)SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
+    SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle | TBSTYLE_EX_MIXEDBUTTONS);
+}
+
+VOID CMainToolbar::ShowButtonCaption()
+{
+    DWORD dCurrentExStyle = (DWORD)SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
+    SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle & ~TBSTYLE_EX_MIXEDBUTTONS);
+}
+
+DWORD CMainToolbar::GetMaxButtonsWidth() const
+{
+    return m_dButtonsWidthMax;
+}
+// **** CMainToolbar ****
+
+
+// **** CSearchBar ****
+
+CSearchBar::CSearchBar() : m_Width(200), m_Height(22)
+{
+}
+
+VOID CSearchBar::SetText(LPCWSTR lpszText)
+{
+    SendMessageW(SB_SETTEXT, SBT_NOBORDERS, (LPARAM)lpszText);
+}
+
+HWND CSearchBar::Create(HWND hwndParent)
+{
+    ATL::CStringW szBuf;
+    m_hWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL,
+        WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL,
+        0, 0, m_Width, m_Height,
+        hwndParent, (HMENU)NULL,
+        hInst, 0);
+
+    SendMessageW(WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
+    szBuf.LoadStringW(IDS_SEARCH_TEXT);
+    SetWindowTextW(szBuf);
+    return m_hWnd;
+}
+// **** CSearchBar ****
+
+
 // **** CAppRichEdit ****
 
 VOID CAppRichEdit::LoadAndInsertText(UINT uStringID,
@@ -1245,10 +1438,18 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
         m_Panel->m_VerticalAlignment = UiAlign_Stretch;
         m_Panel->m_HorizontalAlignment = UiAlign_Stretch;
 
+        bSuccess &= CreateToolbar();
+        bSuccess &= CreateSearchBar();
         bSuccess &= CreateHSplitter();
         bSuccess &= CreateListView();
         bSuccess &= CreateAppInfoDisplay();
 
+        m_Toolbar->AutoSize();
+
+        RECT rTop;
+
+        ::GetWindowRect(m_Toolbar->m_hWnd, &rTop);
+        m_HSplitter->m_Margin.top = rTop.bottom - rTop.top;
         if (!bSuccess)
         {
             return -1; // creation failure
@@ -1339,6 +1540,15 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
             break;
             }
         }
+        else if (pNotifyHeader->hwndFrom == m_Toolbar->GetWindow())
+        {
+            switch (pNotifyHeader->code)
+            {
+            case TTN_GETDISPINFO:
+                m_Toolbar->OnGetDispInfo((LPTOOLTIPTEXT)lParam);
+                break;
+            }
+        }
     }
     break;
 
@@ -1347,6 +1557,8 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
         /* Forward WM_SYSCOLORCHANGE to common controls */
         m_ListView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
         m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
+
+        m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
     }
     break;
 
@@ -1363,6 +1575,27 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
     break;
     }
     return FALSE;
+}
+
+BOOL CApplicationView::CreateToolbar() 
+{
+    m_Toolbar = new CMainToolbar();
+    m_Toolbar->m_VerticalAlignment = UiAlign_LeftTop;
+    m_Toolbar->m_HorizontalAlignment = UiAlign_Stretch;
+    m_Panel->Children().Append(m_Toolbar);
+
+    return m_Toolbar->Create(m_hWnd) != NULL;
+}
+
+BOOL CApplicationView::CreateSearchBar()
+{
+    m_SearchBar = new CUiWindow<CSearchBar>();
+    m_SearchBar->m_VerticalAlignment = UiAlign_LeftTop;
+    m_SearchBar->m_HorizontalAlignment = UiAlign_RightBtm;
+    m_SearchBar->m_Margin.top = 4;
+    m_SearchBar->m_Margin.right = 6;
+
+    return m_SearchBar->Create(m_Toolbar->m_hWnd) != NULL;
 }
 
 BOOL CApplicationView::CreateHSplitter()
@@ -1405,6 +1638,23 @@ VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (wParam == SIZE_MINIMIZED)
         return;
 
+    /* Size tool bar */
+    m_Toolbar->AutoSize();
+
+    /* Automatically hide captions */
+    DWORD dToolbarTreshold = m_Toolbar->GetMaxButtonsWidth();
+    DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width);
+
+    if (dSearchbarMargin > dToolbarTreshold)
+    {
+        m_Toolbar->ShowButtonCaption();
+    }
+    else if (dSearchbarMargin < dToolbarTreshold)
+    {
+        m_Toolbar->HideButtonCaption();
+
+    }
+
     RECT r = { 0, 0, LOWORD(lParam), HIWORD(lParam) };
     HDWP hdwp = NULL;
     INT count = m_Panel->CountSizableChildren();
@@ -1413,6 +1663,17 @@ VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (hdwp)
     {
         hdwp = m_Panel->OnParentSize(r, hdwp);
+        if (hdwp)
+        {
+            EndDeferWindowPos(hdwp);
+        }
+    }
+
+    count = m_SearchBar->CountSizableChildren();
+    hdwp = BeginDeferWindowPos(count);
+    if (hdwp)
+    {
+        hdwp = m_SearchBar->OnParentSize(r, hdwp);
         if (hdwp)
         {
             EndDeferWindowPos(hdwp);
@@ -1459,6 +1720,8 @@ CApplicationView::CApplicationView(CMainWindow *MainWindow)
 
 CApplicationView::~CApplicationView()
 {
+    delete m_Toolbar;
+    delete m_SearchBar;
     delete m_ListView;
     delete m_AppsInfo;
     delete m_HSplitter;
@@ -1515,6 +1778,11 @@ BOOL CApplicationView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
         EnableMenuItem(hMenu, ID_INSTALL, MF_GRAYED);
         EnableMenuItem(hMenu, ID_UNINSTALL, MF_GRAYED);
         EnableMenuItem(hMenu, ID_MODIFY, MF_GRAYED);
+
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, TRUE);
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, FALSE);
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, TRUE);
         break;
 
     case AppViewTypeInstalledApps:
@@ -1522,6 +1790,12 @@ BOOL CApplicationView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
         EnableMenuItem(hMenu, ID_INSTALL, MF_GRAYED);
         EnableMenuItem(hMenu, ID_UNINSTALL, MF_ENABLED);
         EnableMenuItem(hMenu, ID_MODIFY, MF_ENABLED);
+
+        // TODO: instead of disable these button, I would rather remove them.
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, TRUE);
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, FALSE);
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, TRUE);
         break;
 
     case AppViewTypeAvailableApps:
@@ -1529,6 +1803,12 @@ BOOL CApplicationView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
         EnableMenuItem(hMenu, ID_INSTALL, MF_ENABLED);
         EnableMenuItem(hMenu, ID_UNINSTALL, MF_GRAYED);
         EnableMenuItem(hMenu, ID_MODIFY, MF_GRAYED);
+
+        // TODO: instead of disable these button, I would rather remove them.
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, FALSE);
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, TRUE);
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, FALSE);
+        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, FALSE);
         break;
     }
     return TRUE;
@@ -1570,6 +1850,8 @@ int CApplicationView::GetItemCount()
 
 VOID CApplicationView::AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &TabOrderList)
 {
+    m_Toolbar->AppendTabOrderWindow(Direction, TabOrderList);
+    m_SearchBar->AppendTabOrderWindow(Direction, TabOrderList);
     m_ListView->AppendTabOrderWindow(Direction, TabOrderList);
     m_AppsInfo->AppendTabOrderWindow(Direction, TabOrderList);
 
