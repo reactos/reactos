@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/timer.c
  * PURPOSE:         HAL Timer Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
@@ -101,6 +100,10 @@ HalpInitializeClock(VOID)
 
     DPRINT("HalpInitializeClock()\n");
 
+#if defined(SARCH_PC98)
+    HalpInitializeClockPc98();
+#endif
+
     /* Get increment and rollover for the largest time clock ms possible */
     Increment = HalpRolloverTable[HalpLargestClockMS - 1].Increment;
     RollOver = (USHORT)HalpRolloverTable[HalpLargestClockMS - 1].RollOver;
@@ -129,7 +132,7 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KiEnterInterruptTrap(TrapFrame);
 
     /* Start the interrupt */
-    if (HalBeginSystemInterrupt(CLOCK2_LEVEL, PRIMARY_VECTOR_BASE, &Irql))
+    if (HalBeginSystemInterrupt(CLOCK2_LEVEL, PRIMARY_VECTOR_BASE + PIC_TIMER_IRQ, &Irql))
     {
         /* Update the performance counter */
         HalpPerfCounter.QuadPart += HalpCurrentRollOver;
@@ -170,13 +173,20 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KiEnterInterruptTrap(TrapFrame);
 
     /* Start the interrupt */
-    if (HalBeginSystemInterrupt(PROFILE_LEVEL, PRIMARY_VECTOR_BASE + 8, &Irql))
+    if (HalBeginSystemInterrupt(PROFILE_LEVEL, PRIMARY_VECTOR_BASE + PIC_RTC_IRQ, &Irql))
     {
+#if defined(SARCH_PC98)
+        /* Clear the interrupt flag */
+        HalpAcquireCmosSpinLock();
+        (VOID)__inbyte(RTC_IO_i_INTERRUPT_RESET);
+        HalpReleaseCmosSpinLock();
+#else
         /* Spin until the interrupt pending bit is clear */
         HalpAcquireCmosSpinLock();
         while (HalpReadCmos(RTC_REGISTER_C) & RTC_REG_C_IRQ)
-            ;
+            NOTHING;
         HalpReleaseCmosSpinLock();
+#endif
 
         /* If profiling is enabled, call the kernel function */
         if (!HalpProfilingStopped)
@@ -192,9 +202,9 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Spurious, just end the interrupt */
     KiEoiHelper(TrapFrame);
 }
-#endif
+#endif /* !_MINIHAL_ */
 
-#endif
+#endif /* _M_IX86 */
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

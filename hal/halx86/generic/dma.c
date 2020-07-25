@@ -133,6 +133,24 @@ static DMA_OPERATIONS HalpDmaOperations = {
 
 /* FUNCTIONS *****************************************************************/
 
+#if defined(SARCH_PC98)
+/*
+ * Disable I/O for safety.
+ * FIXME: Add support for PC-98 DMA controllers.
+ */
+#undef WRITE_PORT_UCHAR
+#undef READ_PORT_UCHAR
+
+#define WRITE_PORT_UCHAR(Port, Data) \
+    do { \
+        UNIMPLEMENTED; \
+        (Port); \
+        (Data); \
+    } while (0)
+
+#define READ_PORT_UCHAR(Port) 0x00
+#endif
+
 #ifndef _MINIHAL_
 INIT_FUNCTION
 VOID
