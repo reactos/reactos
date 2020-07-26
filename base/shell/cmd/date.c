@@ -173,30 +173,32 @@ ParseDate (LPTSTR s)
 }
 
 
-INT cmd_date (LPTSTR param)
+INT cmd_date(LPTSTR param)
 {
-    LPTSTR *arg;
-    INT    argc;
-    INT    i;
-    BOOL   bPrompt = TRUE;
-    INT    nDateString = -1;
+    LPTSTR* arg;
+    INT argc;
+    INT i;
+    BOOL bPrompt = TRUE;
+    INT nDateString = -1;
+    TCHAR szDate[40];
 
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_DATE_HELP4);
+        ConOutResPaging(TRUE, STRING_DATE_HELP4);
         return 0;
     }
 
     nErrorLevel = 0;
 
-    /* build parameter array */
-    arg = split (param, &argc, FALSE, FALSE);
+    /* Build the parameter array */
+    arg = split(param, &argc, FALSE, FALSE);
 
-    /* check for options */
+    /* Check for options */
     for (i = 0; i < argc; i++)
     {
-        if (_tcsicmp (arg[i], _T("/t")) == 0)
+        if (_tcsicmp(arg[i], _T("/t")) == 0)
             bPrompt = FALSE;
+
         if ((*arg[i] != _T('/')) && (nDateString == -1))
             nDateString = i;
     }
@@ -206,24 +208,25 @@ INT cmd_date (LPTSTR param)
 
     if (!bPrompt)
     {
-        freep (arg);
+        freep(arg);
         return 0;
     }
 
     if (nDateString == -1)
     {
-        while (TRUE)  /* forever loop */
+        while (TRUE)
         {
-            TCHAR s[40];
+            PrintDateString();
+            ConInString(szDate, ARRAYSIZE(szDate));
 
-            PrintDateString ();
-            ConInString (s, 40);
-            TRACE ("\'%s\'\n", debugstr_aw(s));
-            while (*s && s[_tcslen (s) - 1] < _T(' '))
-                s[_tcslen (s) - 1] = _T('\0');
-            if (ParseDate (s))
+            TRACE("\'%s\'\n", debugstr_aw(szDate));
+
+            while (*szDate && szDate[_tcslen(szDate) - 1] < _T(' '))
+                szDate[_tcslen(szDate) - 1] = _T('\0');
+
+            if (ParseDate(szDate))
             {
-                freep (arg);
+                freep(arg);
                 return 0;
             }
             ConErrResPuts(STRING_DATE_ERROR);
@@ -231,28 +234,28 @@ INT cmd_date (LPTSTR param)
     }
     else
     {
-        if (!ParseDate (arg[nDateString]))
+        if (!ParseDate(arg[nDateString]))
         {
-            while (TRUE)  /* forever loop */
+            while (TRUE)
             {
-                TCHAR s[40];
                 ConErrResPuts(STRING_DATE_ERROR);
 
-                PrintDateString ();
-                ConInString (s, 40);
+                PrintDateString();
+                ConInString(szDate, ARRAYSIZE(szDate));
 
-                while (*s && s[_tcslen (s) - 1] < _T(' '))
-                    s[_tcslen (s) - 1] = _T('\0');
-                if (ParseDate (s))
+                while (*szDate && szDate[_tcslen(szDate) - 1] < _T(' '))
+                    szDate[_tcslen(szDate) - 1] = _T('\0');
+
+                if (ParseDate(szDate))
                 {
-                    freep (arg);
+                    freep(arg);
                     return 0;
                 }
             }
         }
     }
 
-    freep (arg);
+    freep(arg);
     return 0;
 }
 #endif /* INCLUDE_CMD_DATE */
