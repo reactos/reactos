@@ -125,14 +125,14 @@ typedef struct _DEVICEPROPERTYHEADER {
 LONG WINAPI DrvDocumentPropertySheets(PPROPSHEETUI_INFO,LPARAM);
 
 typedef struct _DOCUMENTPROPERTYHEADER {
-    WORD        cbSize;
-    WORD        Reserved;
-    HANDLE      hPrinter;
-    LPTSTR      pszPrinterName;
-    PDEVMODE    pdmIn;
-    PDEVMODE    pdmOut;
-    DWORD       cbOut;
-    DWORD       fMode;
+    WORD     cbSize;
+    WORD     Reserved;
+    HANDLE   hPrinter;
+    LPTSTR   pszPrinterName;
+    PDEVMODE pdmIn;
+    PDEVMODE pdmOut;
+    DWORD    cbOut;
+    DWORD    fMode;
 } DOCUMENTPROPERTYHEADER, *PDOCUMENTPROPERTYHEADER;
 
 #define DM_ADVANCED         0x10
@@ -147,7 +147,7 @@ typedef struct _DEVQUERYPRINT_INFO {
     LPWSTR  pszErrorStr;
     DWORD   cchErrorStr;
     DWORD   cchNeeded;
-    } DEVQUERYPRINT_INFO, *PDEVQUERYPRINT_INFO;
+} DEVQUERYPRINT_INFO, *PDEVQUERYPRINT_INFO;
 
 BOOL WINAPI DevQueryPrintEx(PDEVQUERYPRINT_INFO);
 
