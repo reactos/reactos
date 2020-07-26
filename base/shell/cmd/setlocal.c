@@ -12,10 +12,10 @@
 typedef struct _SETLOCAL
 {
     struct _SETLOCAL *Prev;
+    LPTSTR Environment;
     BOOL EnableExtensions;
     BOOL DelayedExpansion;
-    LPTSTR Environment;
-} SETLOCAL;
+} SETLOCAL, *PSETLOCAL;
 
 /* Create a copy of the current environment */
 LPTSTR
@@ -38,11 +38,11 @@ DuplicateEnvironment(VOID)
 
 INT cmd_setlocal(LPTSTR param)
 {
-    SETLOCAL *Saved;
-    LPTSTR *arg;
+    PSETLOCAL Saved;
+    LPTSTR* arg;
     INT argc, i;
 
-    /* SETLOCAL only works inside a batch file */
+    /* SETLOCAL only works inside a batch context */
     if (!bc)
         return 0;
 
@@ -53,9 +53,6 @@ INT cmd_setlocal(LPTSTR param)
         error_out_of_memory();
         return 1;
     }
-    Saved->Prev = bc->setlocal;
-    Saved->EnableExtensions = bEnableExtensions;
-    Saved->DelayedExpansion = bDelayedExpansion;
     Saved->Environment = DuplicateEnvironment();
     if (!Saved->Environment)
     {
@@ -63,6 +60,10 @@ INT cmd_setlocal(LPTSTR param)
         cmd_free(Saved);
         return 1;
     }
+    Saved->EnableExtensions = bEnableExtensions;
+    Saved->DelayedExpansion = bDelayedExpansion;
+
+    Saved->Prev = bc->setlocal;
     bc->setlocal = Saved;
 
     nErrorLevel = 0;
@@ -70,15 +71,13 @@ INT cmd_setlocal(LPTSTR param)
     arg = splitspace(param, &argc);
     for (i = 0; i < argc; i++)
     {
-        if (!_tcsicmp(arg[i], _T("enableextensions")))
-            /* FIXME: not implemented! */
+        if (!_tcsicmp(arg[i], _T("ENABLEEXTENSIONS")))
             bEnableExtensions = TRUE;
-        else if (!_tcsicmp(arg[i], _T("disableextensions")))
-            /* FIXME: not implemented! */
+        else if (!_tcsicmp(arg[i], _T("DISABLEEXTENSIONS")))
             bEnableExtensions = FALSE;
-        else if (!_tcsicmp(arg[i], _T("enabledelayedexpansion")))
+        else if (!_tcsicmp(arg[i], _T("ENABLEDELAYEDEXPANSION")))
             bDelayedExpansion = TRUE;
-        else if (!_tcsicmp(arg[i], _T("disabledelayedexpansion")))
+        else if (!_tcsicmp(arg[i], _T("DISABLEDELAYEDEXPANSION")))
             bDelayedExpansion = FALSE;
         else
         {
@@ -91,13 +90,15 @@ INT cmd_setlocal(LPTSTR param)
     return nErrorLevel;
 }
 
-/* endlocal doesn't take any params */
 INT cmd_endlocal(LPTSTR param)
 {
     LPTSTR Environ, Name, Value;
-    SETLOCAL *Saved;
+    PSETLOCAL Saved;
 
-    /* Pop a SETLOCAL struct off of this batch file's stack */
+    /* ENDLOCAL doesn't take any params */
+    UNREFERENCED_PARAMETER(param);
+
+    /* Pop a SETLOCAL struct off of this batch context's stack */
     if (!bc || !(Saved = bc->setlocal))
         return 0;
     bc->setlocal = Saved->Prev;
@@ -107,7 +108,7 @@ INT cmd_endlocal(LPTSTR param)
 
     /* First, clear out the environment. Since making any changes to the
      * environment invalidates pointers obtained from GetEnvironmentStrings(),
-     * we must make a copy of it and get the variable names from that */
+     * we must make a copy of it and get the variable names from that. */
     Environ = DuplicateEnvironment();
     if (Environ)
     {
@@ -122,7 +123,7 @@ INT cmd_endlocal(LPTSTR param)
         cmd_free(Environ);
     }
 
-    /* Now, restore variables from the copy saved by cmd_setlocal */
+    /* Now, restore variables from the copy saved by cmd_setlocal() */
     for (Name = Saved->Environment; *Name; Name += _tcslen(Name) + 1)
     {
         if (!(Value = _tcschr(Name + 1, _T('='))))
