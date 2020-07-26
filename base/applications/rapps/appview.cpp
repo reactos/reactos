@@ -173,7 +173,7 @@ DWORD CMainToolbar::GetMaxButtonsWidth() const
 
 // **** CSearchBar ****
 
-CSearchBar::CSearchBar() : m_Width(200), m_Height(22)
+CSearchBar::CSearchBar() : m_Width(180), m_Height(22)
 {
 }
 
@@ -197,6 +197,23 @@ HWND CSearchBar::Create(HWND hwndParent)
     return m_hWnd;
 }
 // **** CSearchBar ****
+
+
+// **** CComboBox ****
+CComboBox::CComboBox() : m_Width(80), m_Height(22)
+{
+}
+
+HWND CComboBox::Create(HWND hwndParent)
+{
+    m_hWnd = CreateWindowW(WC_COMBOBOX, L"",
+        CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
+        0, 0, m_Width, m_Height, hwndParent, NULL, 0,
+        NULL);
+
+    return m_hWnd;
+}
+// **** CComboBox ****
 
 
 // **** CAppRichEdit ****
@@ -1437,6 +1454,7 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
 
         bSuccess &= CreateToolbar();
         bSuccess &= CreateSearchBar();
+        bSuccess &= CreateComboBox();
         bSuccess &= CreateHSplitter();
         bSuccess &= CreateListView();
         bSuccess &= CreateAppInfoDisplay();
@@ -1590,9 +1608,19 @@ BOOL CApplicationView::CreateSearchBar()
     m_SearchBar->m_VerticalAlignment = UiAlign_LeftTop;
     m_SearchBar->m_HorizontalAlignment = UiAlign_RightBtm;
     m_SearchBar->m_Margin.top = 4;
-    m_SearchBar->m_Margin.right = 6;
+    m_SearchBar->m_Margin.right = TOOLBAR_PADDING;
 
     return m_SearchBar->Create(m_Toolbar->m_hWnd) != NULL;
+}
+
+BOOL CApplicationView::CreateComboBox()
+{
+    m_ComboBox = new CUiWindow<CComboBox>();
+    m_ComboBox->m_VerticalAlignment = UiAlign_LeftTop;
+    m_ComboBox->m_HorizontalAlignment = UiAlign_RightBtm;
+    m_ComboBox->m_Margin.top = 4;
+
+    return m_ComboBox->Create(m_Toolbar->m_hWnd) != NULL;
 }
 
 BOOL CApplicationView::CreateHSplitter()
@@ -1640,7 +1668,7 @@ VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     /* Automatically hide captions */
     DWORD dToolbarTreshold = m_Toolbar->GetMaxButtonsWidth();
-    DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width);
+    DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width - m_ComboBox->m_Width - TOOLBAR_PADDING * 3);
 
     if (dSearchbarMargin > dToolbarTreshold)
     {
@@ -1671,6 +1699,18 @@ VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (hdwp)
     {
         hdwp = m_SearchBar->OnParentSize(r, hdwp);
+        if (hdwp)
+        {
+            EndDeferWindowPos(hdwp);
+        }
+    }
+
+    m_ComboBox->m_Margin.right = m_SearchBar->m_Width + m_SearchBar->m_Margin.right + TOOLBAR_PADDING;
+    count = m_ComboBox->CountSizableChildren();
+    hdwp = BeginDeferWindowPos(count);
+    if (hdwp)
+    {
+        hdwp = m_ComboBox->OnParentSize(r, hdwp);
         if (hdwp)
         {
             EndDeferWindowPos(hdwp);

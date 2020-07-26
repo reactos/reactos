@@ -34,6 +34,8 @@ using namespace Gdiplus;
 // minimum width of richedit
 #define RICHEDIT_MIN_WIDTH 160
 
+// padding between controls in toolbar
+#define TOOLBAR_PADDING 6
 
 // user-defined window message
 #define WM_RAPPS_DOWNLOAD_COMPLETE (WM_USER + 1) // notify download complete. wParam is error code, and lParam is a pointer to ScrnshotDownloadParam
@@ -307,12 +309,26 @@ public:
 
 };
 
+class CComboBox :
+    public CWindow
+{
+public:
+
+    int m_Width;
+    int m_Height;
+
+    CComboBox();
+
+    HWND Create(HWND hwndParent);
+};
+
 class CApplicationView :
     public CUiWindow<CWindowImpl<CApplicationView>>
 {
 private:
     CUiPanel *m_Panel = NULL;
     CMainToolbar *m_Toolbar = NULL;
+    CUiWindow<CComboBox> *m_ComboBox = NULL;
     CUiWindow<CSearchBar> *m_SearchBar = NULL;
     CAppsListView *m_ListView = NULL;
     CAppInfoDisplay *m_AppsInfo = NULL;
@@ -325,6 +341,8 @@ private:
     BOOL CreateToolbar();
 
     BOOL CreateSearchBar();
+
+    BOOL CreateComboBox();
 
     BOOL CreateHSplitter();
 

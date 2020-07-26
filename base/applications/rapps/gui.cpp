@@ -191,17 +191,6 @@ BOOL CMainWindow::CreateVSplitter()
     return m_VSplitter->Create(m_hWnd) != NULL;
 }
 
-//BOOL CMainWindow::CreateSearchBar()
-//{
-//    m_SearchBar = new CUiWindow<CSearchBar>();
-//    m_SearchBar->m_VerticalAlignment = UiAlign_LeftTop;
-//    m_SearchBar->m_HorizontalAlignment = UiAlign_RightBtm;
-//    m_SearchBar->m_Margin.top = 4;
-//    m_SearchBar->m_Margin.right = 6;
-//
-//    return m_SearchBar->Create(m_Toolbar->m_hWnd) != NULL;
-//}
-
 BOOL CMainWindow::CreateLayout()
 {
     BOOL b = TRUE;
