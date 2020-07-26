@@ -107,7 +107,7 @@ Severity=Warning
 Facility=System
 SymbolicName=BUGCODE_PSS_MESSAGE
 Language=English
-Possible fixes:
+General recommendations:
  - Reboot your computer;
    - Use additional boot options to diagnose your ReactOS installation:
      - Exclude third party drivers - run ReactOS in a safe mode:
@@ -1087,11 +1087,9 @@ Severity=Success
 Facility=System
 SymbolicName=INACCESSIBLE_BOOT_DEVICE
 Language=English
-Check for viruses on your computer. Remove any newly installed
-hard drives or hard drive controllers. Check your hard drive
-to make sure it is properly configured and terminated.
-Run CHKDSK /F to check for hard drive corruption, and then
-restart your computer.
+The boot device is inaccessible. Possible fixes:
+ - Check boot device for errors (run CHKDSK /F);
+ - Make sure that bootable device is NOT a USB flash drive.
 .
 
 MessageId=0x7C
