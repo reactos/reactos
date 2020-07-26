@@ -399,9 +399,28 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 #endif
     }
 
-    /* Check if this is a "CALL :label" */
-    if (*firstword == _T(':'))
-        ret = cmd_goto(firstword);
+    /* If this is a "CALL :label args ...", call a subroutine of
+     * the current batch file, only if extensions are enabled. */
+    if (bEnableExtensions && (*firstword == _T(':')))
+    {
+        LPTSTR expLabel;
+
+        /* Position at the place of the parent file (which is the same as the caller) */
+        bc->mempos = (bc->prev ? bc->prev->mempos : 0);
+
+        /*
+         * Jump to the label. Strip the label's colon; as a side-effect
+         * this will forbid "CALL :EOF"; however "CALL ::EOF" will work!
+         */
+        bc->current = Cmd;
+        ++firstword;
+
+        /* Expand the label only! (simulate a GOTO command as in Windows' CMD) */
+        expLabel = DoDelayedExpansion(firstword);
+        ret = cmd_goto(expLabel ? expLabel : firstword);
+        if (expLabel)
+            cmd_free(expLabel);
+    }
 
     /* If we have created a new context, don't return
      * until this batch file has completed. */
@@ -548,8 +567,16 @@ LPTSTR ReadBatchLine(VOID)
 
     TRACE("ReadBatchLine(): textline: \'%s\'\n", debugstr_aw(textline));
 
+#if 1
+    //
+    // FIXME: This is redundant, but keep it for the moment until we correctly
+    // hande the end-of-file situation here, in ReadLine() and in the parser.
+    // (In an EOF, the previous BatchGetString() call will return FALSE but
+    // we want not to run the ExitBatch() at first, but wait later to do it.)
+    //
     if (textline[_tcslen(textline) - 1] != _T('\n'))
         _tcscat(textline, _T("\n"));
+#endif
 
     return textline;
 }
