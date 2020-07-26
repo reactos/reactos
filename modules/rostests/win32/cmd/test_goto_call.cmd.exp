@@ -2,6 +2,13 @@
 Test GOTO ok
 --------- Testing CALL within batch ---------
 Test CALL ok from :test_call
+GOTO with escape caret worked
+Hi there!
+Hi there!
+Hi there!
+Hi there!
+Hi there!
+Hi there!
 --------- Testing :EOF support ---------
 OK
 OK

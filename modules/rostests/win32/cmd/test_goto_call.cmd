@@ -11,8 +11,9 @@ setlocal enabledelayedexpansion
 :: GOTO/CALL jump to labels present forward to their call-point. Only when
 :: the label cannot be found forward, the search is then restarted from the
 :: beginning of the batch file onwards up to the original call-point.
-::
-goto :test_start
+
+:: GOTO with a label parameter without ':' works.
+goto test_start
 
 :: Execution must never go there!
 :test_goto
@@ -36,7 +37,8 @@ goto :continue
 
 :test_goto
 echo Test GOTO ok
-goto :do_test_call
+:: GOTO also understands '+' instead of ':' in its label parameter.
+goto +do_test_call
 
 :test_call
 echo Test CALL ok from %0
@@ -47,7 +49,64 @@ goto :EOF
 ::
 :: Next suite of tests.
 ::
+
+:: GOTO label search algorithm ignores any whitespace between ':'
+:: and the label name, as well as leading and trailing whitespace.
+  :@tab@continue@space@@space@
+
+
+:: Jumping to a label with escape carets.
+goto :la^^bel2
+
+:la^bel2
+echo Unexpected GOTO jump^^!
+:la^^bel2
+echo GOTO with escape caret worked
+
+
+:: Go to the next tests below.
+goto :continue
+
+
+::
+:: Next suite of tests.
+::
 :continue
+
+
+::
+:: Extra GOTO syntax checks: separators in the label parameter
+::
+
+:: Whitespace
+goto :testLbl1@tab@ignored
+:testLbl1
+echo Hi there^^!
+
+:: Colon
+goto :testLbl2:ignored
+:testLbl2
+echo Hi there^^!
+
+:: Plus sign
+goto :testLbl3+ignored
+:testLbl3
+echo Hi there^^!
+
+:: Comma
+goto :testLbl4,ignored
+:testLbl4
+echo Hi there^^!
+
+:: Semicolon
+goto :testLbl5;ignored
+:testLbl5
+echo Hi there^^!
+
+:: Equals
+goto :testLbl6;ignored
+:testLbl6
+echo Hi there^^!
 
 
 ::
