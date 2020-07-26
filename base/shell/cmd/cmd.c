@@ -801,7 +801,7 @@ ExecuteCommand(
         for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
             Ret = ExecuteCommand(Sub);
         break;
-    case C_IFFAILURE:
+    case C_OR:
         Sub = Cmd->Subcommands;
         Ret = ExecuteCommand(Sub);
         if (Ret != 0)
@@ -810,7 +810,7 @@ ExecuteCommand(
             Ret = ExecuteCommand(Sub->Next);
         }
         break;
-    case C_IFSUCCESS:
+    case C_AND:
         Sub = Cmd->Subcommands;
         Ret = ExecuteCommand(Sub);
         if (Ret == 0)

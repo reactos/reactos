@@ -301,7 +301,7 @@ INT cmd_move (LPTSTR);
 INT CommandMsgbox (LPTSTR);
 
 /* Prototypes from PARSER.C */
-enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_IFFAILURE, C_IFSUCCESS, C_PIPE, C_IF, C_FOR };
+enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_OR, C_AND, C_PIPE, C_IF, C_FOR };
 typedef struct _PARSED_COMMAND
 {
     struct _PARSED_COMMAND *Subcommands;

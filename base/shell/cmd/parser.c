@@ -823,8 +823,10 @@ EchoCommand(PARSED_COMMAND *Cmd)
         if (SubstituteForVars(Cmd->Command.Rest, Buf))
             ConOutPrintf(_T("%s"), Buf);
         break;
+
     case C_QUIET:
         return;
+
     case C_BLOCK:
         ConOutChar(_T('('));
         Sub = Cmd->Subcommands;
@@ -846,15 +848,17 @@ EchoCommand(PARSED_COMMAND *Cmd)
         }
         ConOutChar(_T(')'));
         break;
+
     case C_MULTI:
-    case C_IFFAILURE:
-    case C_IFSUCCESS:
+    case C_OR:
+    case C_AND:
     case C_PIPE:
         Sub = Cmd->Subcommands;
         EchoCommand(Sub);
         ConOutPrintf(_T(" %s "), OpString[Cmd->Type - C_OP_LOWEST]);
         EchoCommand(Sub->Next);
         break;
+
     case C_IF:
         ConOutPrintf(_T("if"));
         if (Cmd->If.Flags & IFFLAG_IGNORECASE)
@@ -874,6 +878,7 @@ EchoCommand(PARSED_COMMAND *Cmd)
             EchoCommand(Sub->Next);
         }
         break;
+
     case C_FOR:
         ConOutPrintf(_T("for"));
         if (Cmd->For.Switches & FOR_DIRS)      ConOutPrintf(_T(" /D"));
@@ -947,10 +952,12 @@ do { \
         if (!SubstituteForVars(Cmd->Command.Rest, Buf)) return NULL;
         STRING(Buf);
         break;
+
     case C_QUIET:
         CHAR(_T('@'));
         RECURSE(Cmd->Subcommands);
         break;
+
     case C_BLOCK:
         CHAR(_T('('));
         for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
@@ -961,15 +968,17 @@ do { \
         }
         CHAR(_T(')'));
         break;
+
     case C_MULTI:
-    case C_IFFAILURE:
-    case C_IFSUCCESS:
+    case C_OR:
+    case C_AND:
     case C_PIPE:
         Sub = Cmd->Subcommands;
         RECURSE(Sub);
         PRINTF(_T(" %s "), OpString[Cmd->Type - C_OP_LOWEST]);
         RECURSE(Sub->Next);
         break;
+
     case C_IF:
         STRING(_T("if"));
         if (Cmd->If.Flags & IFFLAG_IGNORECASE)
@@ -989,6 +998,7 @@ do { \
             RECURSE(Sub->Next);
         }
         break;
+
     case C_FOR:
         STRING(_T("for"));
         if (Cmd->For.Switches & FOR_DIRS)      STRING(_T(" /D"));
