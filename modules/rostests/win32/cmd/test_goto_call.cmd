@@ -51,6 +51,64 @@ goto :EOF
 
 
 ::
+:: Testing :EOF support
+::
+echo --------- Testing :EOF support ---------
+
+:: Use an auxiliary CMD file to test GOTO :EOF
+mkdir foobar && cd foobar
+
+:: GOTO :EOF is available only if commands extensions are enabled
+echo @echo off> tmp.cmd
+echo setlocal disableextensions>> tmp.cmd
+echo goto :eof>> tmp.cmd
+call :setError 0
+cmd /c tmp.cmd
+if %errorlevel% equ 0 (echo Unexpected: GOTO :EOF did not fail^^!) else echo OK
+
+:: GOTO :EOF is done only if the ":EOF" part is followed by whitespace or ends.
+:: The following two GOTO's fail because the labels cannot be found.
+echo @echo off> tmp.cmd
+echo setlocal enableextensions>> tmp.cmd
+echo goto :eof,lol>> tmp.cmd
+echo echo Batch continues^^!>> tmp.cmd
+call :setError 0
+cmd /c tmp.cmd
+if %errorlevel% equ 0 (echo Unexpected: GOTO :eof,lol did not fail^^!) else echo OK
+
+echo @echo off> tmp.cmd
+echo setlocal enableextensions>> tmp.cmd
+echo goto :eof:lol>> tmp.cmd
+echo echo Batch continues^^!>> tmp.cmd
+call :setError 0
+cmd /c tmp.cmd
+if %errorlevel% equ 0 (echo Unexpected: GOTO :eof:lol did not fail^^!) else echo OK
+
+:: GOTO :EOF expects at least one whitespace character before anything else.
+:: Not even '+',':' or other separators are allowed.
+echo @echo off> tmp.cmd
+echo setlocal enableextensions>> tmp.cmd
+echo goto :eof+lol>> tmp.cmd
+echo echo Batch continues^^!>> tmp.cmd
+call :setError 0
+cmd /c tmp.cmd
+if %errorlevel% equ 0 (echo Unexpected: GOTO :eof+lol did not fail^^!) else echo OK
+
+:: This GOTO :EOF works.
+echo @echo off> tmp.cmd
+echo setlocal enableextensions>> tmp.cmd
+echo goto :eof@tab@+lol>> tmp.cmd
+echo echo You should not see this^^!>> tmp.cmd
+call :setError 0
+cmd /c tmp.cmd
+if %errorlevel% neq 0 (echo Unexpected: GOTO :EOF did fail^^!) else echo OK
+
+
+:: Cleanup
+cd .. & rd /s/q foobar
+
+
+::
 :: Testing GOTO/CALL from and to within parenthesized blocks.
 ::
 
