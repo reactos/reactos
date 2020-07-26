@@ -8,12 +8,12 @@
 #ifndef _MSV1_0_SAM_H_
 #define _MSV1_0_SAM_H_
 
-typedef enum _LSA_SAM_NETLOGON_TYP
+typedef enum _LSA_SAM_NETLOGON_TYPE
 {
-    NetLogonAnonymouse = 0,
+    NetLogonAnonymous = 0,
     NetLogonLmKey,
     NetLogonNtKey
-} LSA_SAM_NETLOGON_TYP;
+} LSA_SAM_NETLOGON_TYPE;
 
 //TODO Add IsSpecialAccount - variable ...
 typedef struct _LSA_SAM_PWD_DATA
@@ -30,7 +30,7 @@ typedef struct _LSA_SAM_PWD_DATA
     PMSV1_0_LM20_LOGON LogonInfo;
     PUNICODE_STRING ComputerName;
     // IsNetwork - result
-    LSA_SAM_NETLOGON_TYP LogonType;
+    LSA_SAM_NETLOGON_TYPE LogonType;
     LANMAN_SESSION_KEY LanmanSessionKey;
     USER_SESSION_KEY UserSessionKey;
 } LSA_SAM_PWD_DATA, *PLSA_SAM_PWD_DATA;

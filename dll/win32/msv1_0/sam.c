@@ -253,7 +253,7 @@ MsvpCheckNetworkPassword(
 
     LmOwfPwd = (PNTLM_LM_OWF_PASSWORD)ZeroBytes16;
     if (UserInfo->All.LmPasswordPresent &
-        (UserInfo->All.LmOwfPassword.Length == MSV1_0_NT_OWF_PASSWORD_LENGTH))
+        (UserInfo->All.LmOwfPassword.Length == MSV1_0_LM_OWF_PASSWORD_LENGTH))
         LmOwfPwd = (PNTLM_NT_OWF_PASSWORD)UserInfo->All.LmOwfPassword.Buffer;
 
     if (UseNTLMv2)
@@ -344,13 +344,13 @@ MsvpCheckNetworkPassword(
     //EndIf
     }*/
 
-    UserPwdData->LogonType = NetLogonAnonymouse;
+    UserPwdData->LogonType = NetLogonAnonymous;
 
     /* Succeed, if NT password matches */
     if (NtChallengeResponse->Length > 0 && UserInfo->All.NtPasswordPresent)
     {
         TRACE("Check NT challenge response:\n");
-        if ((NtChallengeResponse->Length != ExpectedNtChallengeResponse.Length) ||
+        if ((NtChallengeResponse->Length == ExpectedNtChallengeResponse.Length) &&
             (RtlEqualMemory(NtChallengeResponse->Buffer,
                             ExpectedNtChallengeResponse.Buffer,
                             ExpectedNtChallengeResponse.Length)))
@@ -367,8 +367,8 @@ MsvpCheckNetworkPassword(
     /* Succeed, if LM password matches */
     if (LmChallengeResponse->Length > 0 && UserInfo->All.LmPasswordPresent)
     {
-        TRACE("Check NT challenge response:\n");
-        if ((LmChallengeResponse->Length != ExpectedLmChallengeResponse.Length) ||
+        TRACE("Check LM challenge response:\n");
+        if ((LmChallengeResponse->Length == ExpectedLmChallengeResponse.Length) &&
             (RtlEqualMemory(LmChallengeResponse->Buffer,
                             ExpectedLmChallengeResponse.Buffer,
                             ExpectedLmChallengeResponse.Length)))
@@ -386,15 +386,26 @@ MsvpCheckNetworkPassword(
     goto done;
 
 setkeys:
-    Status = CalcLmUserSessionKey((PUCHAR)LmOwfPwd, &LanmanSessionKey);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
-        ERR("Failed to calculate the User Session Key! 0x%lx\n", Status);
-        goto done;
+        if (!UseNTLMv2)
+        {
+            /* NTLMv1 - calculate lm user session key */
+            Status = CalcLmUserSessionKey((PUCHAR)LmOwfPwd, &LanmanSessionKey);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("Failed to calculate the User Session Key! 0x%lx\n", Status);
+                goto done;
+            }
+            RtlCopyMemory(&UserPwdData->LanmanSessionKey, LanmanSessionKey.Buffer, MSV1_0_LANMAN_SESSION_KEY_LENGTH);
+        }
+        else
+        {
+            /* NTLMv2 - use (first part of) SessionBaseKey as LanmanSessionkey too */
+            RtlCopyMemory(&UserPwdData->LanmanSessionKey, &SessionBaseKey, MSV1_0_LANMAN_SESSION_KEY_LENGTH);
+        }
+        RtlCopyMemory(&UserPwdData->UserSessionKey, &SessionBaseKey, MSV1_0_USER_SESSION_KEY_LENGTH);
     }
-
-    RtlCopyMemory(&UserPwdData->UserSessionKey, &SessionBaseKey, MSV1_0_USER_SESSION_KEY_LENGTH);
-    RtlCopyMemory(&UserPwdData->LanmanSessionKey, LanmanSessionKey.Buffer, MSV1_0_LANMAN_SESSION_KEY_LENGTH);
     /*-> hier nicht mehr nötig -> LM2_LOGON_PRFOFILE füllen!*/
 
     //Set MessageMIC to AUTHENTICATE_MESSAGE.MIC
@@ -804,12 +815,6 @@ SamValidateUser(
     NTSTATUS Status = STATUS_SUCCESS;
 
     *SpecialAccount = FALSE;
-    //ULONG ComputerNameSize;
-    //WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-
-    /* Get the computer name */
-    //ComputerNameSize = ARRAYSIZE(ComputerName);
-    //GetComputerNameW(ComputerName, &ComputerNameSize);
 
     /* Check for special accounts */
     // FIXME: Windows does not do this that way!! (msv1_0 does not contain these hardcoded values)
