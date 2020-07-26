@@ -60,7 +60,6 @@ class CMainWindow :
     CAvailableApps m_AvailableApps;
     CInstalledApps m_InstalledApps;
 
-    BOOL bSearchEnabled;
     BOOL bUpdating = FALSE;
 
     ATL::CStringW szSearchPattern;
@@ -134,6 +133,10 @@ public:
     // this function is called when application-view is asked to install an application
     // if Info is not zero, this app should be installed. otherwise those checked apps should be installed
     BOOL InstallApplication(CAvailableApplicationInfo *Info);
+
+    // this function is called when search text is changed
+    BOOL SearchTextChanged(ATL::CStringW &SearchText);
+
     void HandleTabOrder(int direction);
 };
 

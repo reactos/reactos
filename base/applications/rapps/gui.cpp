@@ -93,7 +93,6 @@ CSideTreeView::~CSideTreeView()
 
 CMainWindow::CMainWindow() :
     m_ClientPanel(NULL),
-    bSearchEnabled(FALSE),
     SelectedEnumType(ENUM_ALL_INSTALLED)
 {
 }
@@ -550,8 +549,8 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
         if (wParam == SEARCH_TIMER_ID)
         {
             ::KillTimer(hwnd, SEARCH_TIMER_ID);
-            if (bSearchEnabled)
-                UpdateApplicationsList(-1);
+            
+            UpdateApplicationsList(-1);
         }
         break;
     }
@@ -595,153 +594,93 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
 {
     WORD wCommand = LOWORD(wParam);
 
-    /*if (lParam == (LPARAM)m_SearchBar->m_hWnd)
+    if (!lParam)
     {
-        ATL::CStringW szBuf;
-
-        switch (HIWORD(wParam))
+        switch (wCommand)
         {
-        case EN_SETFOCUS:
-        {
-            ATL::CStringW szWndText;
+        case ID_SETTINGS:
+            CreateSettingsDlg(m_hWnd);
+            break;
 
-            szBuf.LoadStringW(IDS_SEARCH_TEXT);
-            m_SearchBar->GetWindowTextW(szWndText);
-            if (szBuf == szWndText)
+        case ID_EXIT:
+            PostMessageW(WM_CLOSE, 0, 0);
+            break;
+
+        case ID_SEARCH:
+            //m_SearchBar->SetFocus();
+            break;
+
+        case ID_INSTALL:
+            if (IsAvailableEnum(SelectedEnumType))
             {
-                bSearchEnabled = FALSE;
-                m_SearchBar->SetWindowTextW(L"");
-            }
-        }
-        break;
+                ATL::CSimpleArray<CAvailableApplicationInfo> AppsList;
 
-        case EN_KILLFOCUS:
-        {
-            m_SearchBar->GetWindowTextW(szBuf);
-            if (szBuf.IsEmpty())
-            {
-                szBuf.LoadStringW(IDS_SEARCH_TEXT);
-                bSearchEnabled = FALSE;
-                m_SearchBar->SetWindowTextW(szBuf.GetString());
-            }
-        }
-        break;
+                // enum all selected apps
+                m_AvailableApps.Enum(ENUM_CAT_SELECTED, s_EnumSelectedAppForDownloadProc, (PVOID)&AppsList);
 
-        case EN_CHANGE:
-        {
-            ATL::CStringW szWndText;
-
-            if (!bSearchEnabled)
-            {
-                bSearchEnabled = TRUE;
-                break;
-            }
-
-            szBuf.LoadStringW(IDS_SEARCH_TEXT);
-            m_SearchBar->GetWindowTextW(szWndText);
-            if (szBuf == szWndText)
-            {
-                szSearchPattern.Empty();
-            }
-            else
-            {
-                szSearchPattern = szWndText;
-            }
-
-            DWORD dwDelay;
-            SystemParametersInfoW(SPI_GETMENUSHOWDELAY, 0, &dwDelay, 0);
-            SetTimer(SEARCH_TIMER_ID, dwDelay);
-        }
-        break;
-        }
-
-        return;
-    }*/
-
-    switch (wCommand)
-    {
-    case ID_SETTINGS:
-        CreateSettingsDlg(m_hWnd);
-        break;
-
-    case ID_EXIT:
-        PostMessageW(WM_CLOSE, 0, 0);
-        break;
-
-    case ID_SEARCH:
-        //m_SearchBar->SetFocus();
-        break;
-
-    case ID_INSTALL:
-        if (IsAvailableEnum(SelectedEnumType))
-        {
-            ATL::CSimpleArray<CAvailableApplicationInfo> AppsList;
-
-            // enum all selected apps
-            m_AvailableApps.Enum(ENUM_CAT_SELECTED, s_EnumSelectedAppForDownloadProc, (PVOID)&AppsList);
-
-            if (AppsList.GetSize())
-            {
-                if (DownloadListOfApplications(AppsList, FALSE))
+                if (AppsList.GetSize())
                 {
-                    m_AvailableApps.RemoveAllSelected();
-                    UpdateApplicationsList(-1);
-                }
-            }
-            else
-            {
-                // use the currently focused item in application-view
-                CAvailableApplicationInfo *FocusedApps = (CAvailableApplicationInfo *)m_ApplicationView->GetFocusedItemData();
-                if (FocusedApps)
-                {
-                    if (DownloadApplication(FocusedApps, FALSE))
+                    if (DownloadListOfApplications(AppsList, FALSE))
                     {
+                        m_AvailableApps.RemoveAllSelected();
                         UpdateApplicationsList(-1);
                     }
                 }
                 else
                 {
-                    // TODO: in this case, Install button in toolbar (and all other places) should be disabled
-                    // or at least popup a messagebox telling user to select/check some app first
+                    // use the currently focused item in application-view
+                    CAvailableApplicationInfo *FocusedApps = (CAvailableApplicationInfo *)m_ApplicationView->GetFocusedItemData();
+                    if (FocusedApps)
+                    {
+                        if (DownloadApplication(FocusedApps, FALSE))
+                        {
+                            UpdateApplicationsList(-1);
+                        }
+                    }
+                    else
+                    {
+                        // TODO: in this case, Install button in toolbar (and all other places) should be disabled
+                        // or at least popup a messagebox telling user to select/check some app first
+                    }
                 }
             }
+            break;
+
+        case ID_UNINSTALL:
+            if (UninstallSelectedApp(FALSE))
+                UpdateApplicationsList(-1);
+            break;
+
+        case ID_MODIFY:
+            if (UninstallSelectedApp(TRUE))
+                UpdateApplicationsList(-1);
+            break;
+
+        case ID_REGREMOVE:
+            RemoveSelectedAppFromRegistry();
+            break;
+
+        case ID_REFRESH:
+            UpdateApplicationsList(-1);
+            break;
+
+        case ID_RESETDB:
+            CAvailableApps::ForceUpdateAppsDB();
+            UpdateApplicationsList(-1);
+            break;
+
+        case ID_HELP:
+            MessageBoxW(L"Help not implemented yet", NULL, MB_OK);
+            break;
+
+        case ID_ABOUT:
+            ShowAboutDlg();
+            break;
+
+        case ID_CHECK_ALL:
+            m_ApplicationView->CheckAll();
+            break;
         }
-        break;
-
-    case ID_UNINSTALL:
-        if (UninstallSelectedApp(FALSE))
-            UpdateApplicationsList(-1);
-        break;
-
-    case ID_MODIFY:
-        if (UninstallSelectedApp(TRUE))
-            UpdateApplicationsList(-1);
-        break;
-
-    case ID_REGREMOVE:
-        RemoveSelectedAppFromRegistry();
-        break;
-
-    case ID_REFRESH:
-        UpdateApplicationsList(-1);
-        break;
-
-    case ID_RESETDB:
-        CAvailableApps::ForceUpdateAppsDB();
-        UpdateApplicationsList(-1);
-        break;
-
-    case ID_HELP:
-        MessageBoxW(L"Help not implemented yet", NULL, MB_OK);
-        break;
-
-    case ID_ABOUT:
-        ShowAboutDlg();
-        break;
-
-    case ID_CHECK_ALL:
-        m_ApplicationView->CheckAll();
-        break;
     }
 }
 
@@ -941,6 +880,17 @@ BOOL CMainWindow::InstallApplication(CAvailableApplicationInfo *Info)
     }
 
     return FALSE;
+}
+
+BOOL CMainWindow::SearchTextChanged(ATL::CStringW &SearchText)
+{
+    szSearchPattern = SearchText;
+
+    DWORD dwDelay;
+    SystemParametersInfoW(SPI_GETMENUSHOWDELAY, 0, &dwDelay, 0);
+    SetTimer(SEARCH_TIMER_ID, dwDelay);
+
+    return TRUE;
 }
 
 void CMainWindow::HandleTabOrder(int direction)

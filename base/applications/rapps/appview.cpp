@@ -1680,37 +1680,92 @@ VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-    WORD wCommand = LOWORD(wParam);
-
-    switch (wCommand)
+    if (lParam)
     {
-    case ID_INSTALL:
-        m_MainWindow->InstallApplication((CAvailableApplicationInfo *)GetFocusedItemData());
-        break;
+        if ((HWND)lParam == m_SearchBar->GetWindow())
+        {
+            ATL::CStringW szBuf;
+            switch (HIWORD(wParam))
+            {
+            case EN_SETFOCUS:
+            {
+                ATL::CStringW szWndText;
 
-    case ID_TOOLBAR_INSTALL:
-        m_MainWindow->SendMessageW(WM_COMMAND, ID_INSTALL, 0);
-        break;
+                szBuf.LoadStringW(IDS_SEARCH_TEXT);
+                m_SearchBar->GetWindowTextW(szWndText);
+                if (szBuf == szWndText)
+                {
+                    m_SearchBar->SetWindowTextW(L"");
+                }
+            }
+            break;
 
-    case ID_UNINSTALL:
-        m_MainWindow->SendMessageW(WM_COMMAND, ID_UNINSTALL, 0);
-        break;
+            case EN_KILLFOCUS:
+            {
+                m_SearchBar->GetWindowTextW(szBuf);
+                if (szBuf.IsEmpty())
+                {
+                    szBuf.LoadStringW(IDS_SEARCH_TEXT);
+                    m_SearchBar->SetWindowTextW(szBuf.GetString());
+                }
+            }
+            break;
 
-    case ID_MODIFY:
-        m_MainWindow->SendMessageW(WM_COMMAND, ID_MODIFY, 0);
-        break;
+            case EN_CHANGE:
+            {
+                ATL::CStringW szWndText;
 
-    case ID_REGREMOVE:
-        m_MainWindow->SendMessageW(WM_COMMAND, ID_REGREMOVE, 0);
-        break;
+                szBuf.LoadStringW(IDS_SEARCH_TEXT);
+                m_SearchBar->GetWindowTextW(szWndText);
+                if (szBuf == szWndText)
+                {
+                    szWndText = L"";
+                    m_MainWindow->SearchTextChanged(szWndText);
+                }
+                else
+                {
+                    m_MainWindow->SearchTextChanged(szWndText);
+                }
+            }
+            break;
+            }
 
-    case ID_REFRESH:
-        m_MainWindow->SendMessageW(WM_COMMAND, ID_REFRESH, 0);
-        break;
+        }
+    }
+    else
+    {
+        WORD wCommand = LOWORD(wParam);
 
-    case ID_RESETDB:
-        m_MainWindow->SendMessageW(WM_COMMAND, ID_RESETDB, 0);
-        break;
+        switch (wCommand)
+        {
+        case ID_INSTALL:
+            m_MainWindow->InstallApplication((CAvailableApplicationInfo *)GetFocusedItemData());
+            break;
+
+        case ID_TOOLBAR_INSTALL:
+            m_MainWindow->SendMessageW(WM_COMMAND, ID_INSTALL, 0);
+            break;
+
+        case ID_UNINSTALL:
+            m_MainWindow->SendMessageW(WM_COMMAND, ID_UNINSTALL, 0);
+            break;
+
+        case ID_MODIFY:
+            m_MainWindow->SendMessageW(WM_COMMAND, ID_MODIFY, 0);
+            break;
+
+        case ID_REGREMOVE:
+            m_MainWindow->SendMessageW(WM_COMMAND, ID_REGREMOVE, 0);
+            break;
+
+        case ID_REFRESH:
+            m_MainWindow->SendMessageW(WM_COMMAND, ID_REFRESH, 0);
+            break;
+
+        case ID_RESETDB:
+            m_MainWindow->SendMessageW(WM_COMMAND, ID_RESETDB, 0);
+            break;
+        }
     }
 }
 
