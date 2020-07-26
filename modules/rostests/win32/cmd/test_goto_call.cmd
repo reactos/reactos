@@ -8,6 +8,47 @@ setlocal enabledelayedexpansion
 ::
 
 
+:: GOTO/CALL jump to labels present forward to their call-point. Only when
+:: the label cannot be found forward, the search is then restarted from the
+:: beginning of the batch file onwards up to the original call-point.
+::
+goto :test_start
+
+:: Execution must never go there!
+:test_goto
+echo Unexpected GOTO jump^^!
+exit
+:test_call
+echo Unexpected CALL jump^^!
+goto :EOF
+
+
+:test_start
+
+:: Testing GOTO/CALL forwards.
+echo --------- Testing GOTO ---------
+goto :test_goto
+
+:do_test_call
+echo --------- Testing CALL within batch ---------
+call :test_call
+goto :continue
+
+:test_goto
+echo Test GOTO ok
+goto :do_test_call
+
+:test_call
+echo Test CALL ok from %0
+:: We exit this CALL invocation
+goto :EOF
+
+
+::
+:: Next suite of tests.
+::
+:continue
+
 
 ::
 :: Testing GOTO/CALL from and to within parenthesized blocks.

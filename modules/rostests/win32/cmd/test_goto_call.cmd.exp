@@ -1,3 +1,7 @@
+--------- Testing GOTO ---------
+Test GOTO ok
+--------- Testing CALL within batch ---------
+Test CALL ok from :test_call
 --------- Testing GOTO within block ---------
 Block-test 1: Single-line
 Block-test 2: Multi-line
