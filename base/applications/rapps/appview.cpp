@@ -102,7 +102,7 @@ HWND CMainToolbar::Create(HWND hwndParent)
     /* Create buttons */
     TBBUTTON Buttons[] =
     {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
-        {  0, ID_INSTALL,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szInstallBtn      },
+        {  0, ID_TOOLBAR_INSTALL,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szInstallBtn      },
         {  1, ID_UNINSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szUninstallBtn    },
         {  2, ID_MODIFY,    TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szModifyBtn       },
         {  3, ID_CHECK_ALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szSelectAll       },
@@ -1689,6 +1689,10 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
     {
     case ID_INSTALL:
         m_MainWindow->InstallApplication((CAvailableApplicationInfo *)GetFocusedItemData());
+        break;
+
+    case ID_TOOLBAR_INSTALL:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_INSTALL, 0);
         break;
 
     case ID_UNINSTALL:
