@@ -46,9 +46,9 @@ ErrorMessage(
         va_end(arg_ptr);
     }
 
-    if (FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-                       NULL, dwErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                       (LPTSTR)&szError, 0, NULL))
+    if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+                      NULL, dwErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                      (LPTSTR)&szError, 0, NULL))
     {
         ConErrPrintf(_T("%s %s\n"), szError, szMessage);
         if (szError)
