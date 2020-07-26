@@ -34,13 +34,13 @@
 
 
 /* FOR is a special command, so this function is only used for showing help now */
-INT cmd_for (LPTSTR param)
+INT cmd_for(LPTSTR param)
 {
-    TRACE ("cmd_for (\'%s\')\n", debugstr_aw(param));
+    TRACE("cmd_for(\'%s\')\n", debugstr_aw(param));
 
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_FOR_HELP1);
+        ConOutResPaging(TRUE, STRING_FOR_HELP1);
         return 0;
     }
 
@@ -50,7 +50,7 @@ INT cmd_for (LPTSTR param)
 
 /* The stack of current FOR contexts.
  * NULL when no FOR command is active */
-LPFOR_CONTEXT fc = NULL;
+PFOR_CONTEXT fc = NULL;
 
 /* Get the next element of the FOR's list */
 static BOOL GetNextElement(TCHAR **pStart, TCHAR **pEnd)
@@ -116,6 +116,7 @@ static LPTSTR ReadFileContents(FILE *InputFile, TCHAR *Buffer)
     return Contents;
 }
 
+/* FOR /F: Parse the contents of each file */
 static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 {
     LPTSTR Delims = _T(" \t");
@@ -248,6 +249,7 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
         goto single_element;
     }
 
+    /* Loop over each file */
     End = List;
     while (GetNextElement(&Start, &End))
     {
@@ -325,7 +327,7 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
                     *CurVar++ = In;
                 /* Find end of token */
                 In += _tcscspn(In, Delims);
-                /* Nul-terminate it and advance to next token */
+                /* NULL-terminate it and advance to next token */
                 if (*In)
                 {
                     *In++ = _T('\0');
@@ -352,9 +354,9 @@ static INT ForLoop(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
     INT params[3] = { 0, 0, 0 };
     INT i;
     INT Ret = 0;
-
     TCHAR *Start, *End = List;
-    for (i = 0; i < 3 && GetNextElement(&Start, &End); i++)
+
+    for (i = 0; i < 3 && GetNextElement(&Start, &End); ++i)
         params[i] = _tcstol(Start, NULL, 0);
 
     i = params[START];
@@ -365,6 +367,7 @@ static INT ForLoop(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
         Ret = RunInstance(Cmd);
         i += params[STEP];
     }
+
     return Ret;
 }
 
@@ -373,8 +376,9 @@ static INT ForLoop(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
  * it will be empty, but in FOR /R it will be the directory name. */
 static INT ForDir(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos)
 {
-    TCHAR *Start, *End = List;
     INT Ret = 0;
+    TCHAR *Start, *End = List;
+
     while (!Exiting(Cmd) && GetNextElement(&Start, &End))
     {
         if (BufPos + (End - Start) > &Buffer[CMDLINE_LENGTH])
@@ -417,12 +421,12 @@ static INT ForDir(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos
     return Ret;
 }
 
-/* FOR /R: Process a FOR in each directory of a tree, recursively. */
+/* FOR /R: Process a FOR in each directory of a tree, recursively */
 static INT ForRecursive(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos)
 {
+    INT Ret = 0;
     HANDLE hFind;
     WIN32_FIND_DATA w32fd;
-    INT Ret = 0;
 
     if (BufPos[-1] != _T('\\'))
     {
@@ -446,18 +450,20 @@ static INT ForRecursive(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *
         Ret = ForRecursive(Cmd, List, Buffer, _stpcpy(BufPos, w32fd.cFileName));
     } while (!Exiting(Cmd) && FindNextFile(hFind, &w32fd));
     FindClose(hFind);
+
     return Ret;
 }
 
 INT
 ExecuteFor(PARSED_COMMAND *Cmd)
 {
+    INT Ret;
+    LPTSTR List;
+    PFOR_CONTEXT lpNew;
     TCHAR Buffer[CMDLINE_LENGTH]; /* Buffer to hold the variable value */
     LPTSTR BufferPtr = Buffer;
-    LPFOR_CONTEXT lpNew;
-    INT Ret;
-    LPTSTR List = DoDelayedExpansion(Cmd->For.List);
 
+    List = DoDelayedExpansion(Cmd->For.List);
     if (!List)
         return 1;
 

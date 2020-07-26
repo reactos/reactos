@@ -541,8 +541,8 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 
 
 /*
- * look through the internal commands and determine whether or not this
- * command is one of them.  If it is, call the command.  If not, call
+ * Look through the internal commands and determine whether or not this
+ * command is one of them. If it is, call the command. If not, call
  * execute to run it as an external program.
  *
  * first - first word on command line
@@ -553,7 +553,7 @@ DoCommand(LPTSTR first, LPTSTR rest, PARSED_COMMAND *Cmd)
 {
     TCHAR *com;
     TCHAR *cp;
-    LPTSTR param;   /* pointer to command's parameters */
+    LPTSTR param;   /* Pointer to command's parameters */
     INT cl;
     LPCOMMAND cmdptr;
     BOOL nointernal = FALSE;
@@ -561,7 +561,7 @@ DoCommand(LPTSTR first, LPTSTR rest, PARSED_COMMAND *Cmd)
 
     TRACE ("DoCommand: (\'%s\' \'%s\')\n", debugstr_aw(first), debugstr_aw(rest));
 
-    /* full command line */
+    /* Full command line */
     com = cmd_alloc((_tcslen(first) + _tcslen(rest) + 2) * sizeof(TCHAR));
     if (com == NULL)
     {
@@ -795,12 +795,14 @@ ExecuteCommand(
             cmd_free(First);
         }
         break;
+
     case C_QUIET:
     case C_BLOCK:
     case C_MULTI:
         for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
             Ret = ExecuteCommand(Sub);
         break;
+
     case C_OR:
         Sub = Cmd->Subcommands;
         Ret = ExecuteCommand(Sub);
@@ -810,18 +812,22 @@ ExecuteCommand(
             Ret = ExecuteCommand(Sub->Next);
         }
         break;
+
     case C_AND:
         Sub = Cmd->Subcommands;
         Ret = ExecuteCommand(Sub);
         if (Ret == 0)
             Ret = ExecuteCommand(Sub->Next);
         break;
+
     case C_PIPE:
         Ret = ExecutePipeline(Cmd);
         break;
+
     case C_IF:
         Ret = ExecuteIf(Cmd);
         break;
+
     case C_FOR:
         Ret = ExecuteFor(Cmd);
         break;
@@ -878,48 +884,44 @@ GetEnvVarOrSpecial(LPCTSTR varName)
 
     /* env var doesn't exist, look for a "special" one */
     /* %CD% */
-    if (_tcsicmp(varName,_T("cd")) ==0)
+    if (_tcsicmp(varName, _T("CD")) == 0)
     {
-        GetCurrentDirectory(MAX_PATH, ret);
+        GetCurrentDirectory(ARRAYSIZE(ret), ret);
         return ret;
     }
-    /* %TIME% */
-    else if (_tcsicmp(varName,_T("time")) ==0)
-    {
-        return GetTimeString();
-    }
     /* %DATE% */
-    else if (_tcsicmp(varName,_T("date")) ==0)
+    else if (_tcsicmp(varName, _T("DATE")) == 0)
     {
         return GetDateString();
     }
-
+    /* %TIME% */
+    else if (_tcsicmp(varName, _T("TIME")) == 0)
+    {
+        return GetTimeString();
+    }
     /* %RANDOM% */
-    else if (_tcsicmp(varName,_T("random")) ==0)
+    else if (_tcsicmp(varName, _T("RANDOM")) == 0)
     {
         /* Get random number */
-        _itot(rand(),ret,10);
+        _itot(rand(), ret, 10);
         return ret;
     }
-
     /* %CMDCMDLINE% */
-    else if (_tcsicmp(varName,_T("cmdcmdline")) ==0)
+    else if (_tcsicmp(varName, _T("CMDCMDLINE")) == 0)
     {
         return GetCommandLine();
     }
-
     /* %CMDEXTVERSION% */
-    else if (_tcsicmp(varName,_T("cmdextversion")) ==0)
+    else if (_tcsicmp(varName, _T("CMDEXTVERSION")) == 0)
     {
         /* Set version number to 2 */
-        _itot(2,ret,10);
+        _itot(2, ret, 10);
         return ret;
     }
-
     /* %ERRORLEVEL% */
-    else if (_tcsicmp(varName,_T("errorlevel")) ==0)
+    else if (_tcsicmp(varName, _T("ERRORLEVEL")) == 0)
     {
-        _itot(nErrorLevel,ret,10);
+        _itot(nErrorLevel, ret, 10);
         return ret;
     }
 
@@ -1018,7 +1020,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
         PathVar = GetEnvVar(PathVarName);
         FormatEnd[-1] = _T(':');
         if (!PathVar ||
-            !SearchPath(PathVar, Result, NULL, MAX_PATH, FullPath, NULL))
+            !SearchPath(PathVar, Result, NULL, ARRAYSIZE(FullPath), FullPath, NULL))
         {
             return _T("");
         }
@@ -1038,7 +1040,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
     else
     {
         /* Convert the variable, now without quotes, to a full path */
-        if (!GetFullPathName(Result, MAX_PATH, FullPath, NULL))
+        if (!GetFullPathName(Result, ARRAYSIZE(FullPath), FullPath, NULL))
             return _T("");
     }
 
@@ -1059,7 +1061,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
         if (Next)
             *Next++ = _T('\0');
         /* Use FindFirstFile to get the correct name */
-        if (Out + _tcslen(In) + 1 >= &FixedPath[MAX_PATH])
+        if (Out + _tcslen(In) + 1 >= &FixedPath[ARRAYSIZE(FixedPath)])
             return _T("");
         _tcscpy(Out, In);
         hFind = FindFirstFile(FixedPath, &w32fd);
@@ -1074,7 +1076,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
             }
             FindClose(hFind);
 
-            if (Out + _tcslen(FixedComponent) + 1 >= &FixedPath[MAX_PATH])
+            if (Out + _tcslen(FixedComponent) + 1 >= &FixedPath[ARRAYSIZE(FixedPath)])
                 return _T("");
             _tcscpy(Out, FixedComponent);
         }
@@ -1107,7 +1109,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
                 { _T('t'), FILE_ATTRIBUTE_TEMPORARY },
                 { _T('l'), FILE_ATTRIBUTE_REPARSE_POINT },
             };
-            for (Attrib = Table; Attrib != &Table[9]; Attrib++)
+            for (Attrib = Table; Attrib != &Table[ARRAYSIZE(Table)]; Attrib++)
             {
                 *Out++ = w32fd.dwFileAttributes & Attrib->Value
                          ? Attrib->Character
@@ -1176,7 +1178,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
     return Result;
 }
 
-LPCTSTR
+static LPCTSTR
 GetBatchVar(TCHAR *varName, UINT *varNameLen)
 {
     LPCTSTR ret;
@@ -1197,6 +1199,7 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
         }
         *varNameLen = varNameEnd - varName;
         return ret;
+
     case _T('0'):
     case _T('1'):
     case _T('2'):
@@ -1210,9 +1213,7 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
         return FindArg(*varName, &dummy);
 
     case _T('*'):
-        //
-        // Copy over the raw params(not including the batch file name
-        //
+        /* Copy over the raw params (not including the batch file name) */
         return bc->raw_params;
 
     case _T('%'):
@@ -1375,9 +1376,11 @@ too_long:
 }
 
 /* Search the list of FOR contexts for a variable */
-static LPTSTR FindForVar(TCHAR Var, BOOL *IsParam0)
+static LPTSTR
+FindForVar(TCHAR Var, BOOL *IsParam0)
 {
-    FOR_CONTEXT *Ctx;
+    PFOR_CONTEXT Ctx;
+
     *IsParam0 = FALSE;
     for (Ctx = fc; Ctx != NULL; Ctx = Ctx->prev)
     {
@@ -1446,10 +1449,8 @@ DoDelayedExpansion(LPTSTR Line)
 
 
 /*
- * do the prompt/input/process loop
- *
+ * Do the prompt/input/process loop.
  */
-
 BOOL
 ReadLine(TCHAR *commandline, BOOL bMore)
 {
@@ -1522,12 +1523,14 @@ ProcessInput(VOID)
 
 
 /*
- * control-break handler.
+ * Control-break handler.
  */
-BOOL WINAPI BreakHandler(DWORD dwCtrlType)
+static BOOL
+WINAPI
+BreakHandler(IN DWORD dwCtrlType)
 {
-    DWORD           dwWritten;
-    INPUT_RECORD    rec;
+    DWORD dwWritten;
+    INPUT_RECORD rec;
 
     if ((dwCtrlType != CTRL_C_EVENT) &&
         (dwCtrlType != CTRL_BREAK_EVENT))
@@ -1582,8 +1585,7 @@ VOID RemoveBreakHandler(VOID)
 
 
 /*
- * show commands and options that are available.
- *
+ * Show commands and options that are available.
  */
 #if 0
 static VOID
@@ -1799,18 +1801,21 @@ ExecuteAutoRunFile(HKEY hKeyRoot)
 
 /* Get the command that comes after a /C or /K switch */
 static VOID
-GetCmdLineCommand(TCHAR *commandline, TCHAR *ptr, BOOL AlwaysStrip)
+GetCmdLineCommand(
+    OUT LPTSTR commandline,
+    IN LPCTSTR ptr,
+    IN BOOL AlwaysStrip)
 {
-    TCHAR *LastQuote;
+    TCHAR* LastQuote;
 
     while (_istspace(*ptr))
-        ptr++;
+        ++ptr;
 
     /* Remove leading quote, find final quote */
     if (*ptr == _T('"') &&
         (LastQuote = _tcsrchr(++ptr, _T('"'))) != NULL)
     {
-        TCHAR *Space;
+        const TCHAR* Space;
         /* Under certain circumstances, all quotes are preserved.
          * CMD /? documents these conditions as follows:
          *  1. No /S switch
@@ -1822,7 +1827,7 @@ GetCmdLineCommand(TCHAR *commandline, TCHAR *ptr, BOOL AlwaysStrip)
          *  5. Enclosed string is an executable filename
          */
         *LastQuote = _T('\0');
-        for (Space = ptr + 1; Space < LastQuote; Space++)
+        for (Space = ptr + 1; Space < LastQuote; ++Space)
         {
             if (_istspace(*Space))                         /* Rule 4 */
             {
@@ -1858,15 +1863,14 @@ static VOID
 Initialize(VOID)
 {
     HMODULE NtDllModule;
-    TCHAR commandline[CMDLINE_LENGTH];
-    TCHAR ModuleName[_MAX_PATH + 1];
     // INT nExitCode;
-
     HANDLE hIn, hOut;
-
-    TCHAR *ptr, *cmdLine, option = 0;
+    LPTSTR ptr, cmdLine;
+    TCHAR option = 0;
     BOOL AlwaysStrip = FALSE;
     BOOL AutoRun = TRUE;
+    TCHAR ModuleName[MAX_PATH + 1];
+    TCHAR commandline[CMDLINE_LENGTH];
 
     /* Get version information */
     InitOSVersion();
@@ -1904,7 +1908,7 @@ Initialize(VOID)
     /* Set COMSPEC environment variable */
     if (GetModuleFileName(NULL, ModuleName, ARRAYSIZE(ModuleName)) != 0)
     {
-        ModuleName[_MAX_PATH] = _T('\0');
+        ModuleName[MAX_PATH] = _T('\0');
         SetEnvironmentVariable (_T("COMSPEC"), ModuleName);
     }
 
@@ -1921,32 +1925,32 @@ Initialize(VOID)
     cmdLine = GetCommandLine();
     TRACE ("[command args: %s]\n", debugstr_aw(cmdLine));
 
-    for (ptr = cmdLine; *ptr; ptr++)
+    for (ptr = cmdLine; *ptr; ++ptr)
     {
         if (*ptr == _T('/'))
         {
             option = _totupper(ptr[1]);
             if (option == _T('?'))
             {
-                ConOutResPaging(TRUE,STRING_CMD_HELP8);
+                ConOutResPaging(TRUE, STRING_CMD_HELP8);
                 nErrorLevel = 1;
                 bExit = TRUE;
                 return;
             }
             else if (option == _T('P'))
             {
-                if (!IsExistingFile (_T("\\autoexec.bat")))
+                if (!IsExistingFile(_T("\\autoexec.bat")))
                 {
 #ifdef INCLUDE_CMD_DATE
-                    cmd_date (_T(""));
+                    cmd_date(_T(""));
 #endif
 #ifdef INCLUDE_CMD_TIME
-                    cmd_time (_T(""));
+                    cmd_time(_T(""));
 #endif
                 }
                 else
                 {
-                    ParseCommandLine (_T("\\autoexec.bat"));
+                    ParseCommandLine(_T("\\autoexec.bat"));
                 }
                 bCanExit = FALSE;
             }
@@ -2126,7 +2130,6 @@ int _tmain(int argc, const TCHAR *argv[])
 
     /* Do the cleanup */
     Cleanup();
-
     cmd_free(lpOriginalEnvironment);
 
     cmd_exit(nErrorLevel);

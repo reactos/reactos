@@ -49,13 +49,13 @@ static INT GenericCmp(INT (*StringCmp)(LPCTSTR, LPCTSTR),
     return StringCmp(Left, Right);
 }
 
-INT cmd_if (LPTSTR param)
+INT cmd_if(LPTSTR param)
 {
-    TRACE ("cmd_if: (\'%s\')\n", debugstr_aw(param));
+    TRACE("cmd_if(\'%s\')\n", debugstr_aw(param));
 
     if (!_tcsncmp (param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_IF_HELP1);
+        ConOutResPaging(TRUE, STRING_IF_HELP1);
         return 0;
     }
 
@@ -181,12 +181,12 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
 
     if (result ^ ((Cmd->If.Flags & IFFLAG_NEGATE) != 0))
     {
-        /* full condition was true, do the command */
+        /* Full condition was true, do the command */
         return ExecuteCommand(Cmd->Subcommands);
     }
     else
     {
-        /* full condition was false, do the "else" command if there is one */
+        /* Full condition was false, do the "else" command if there is one */
         if (Cmd->Subcommands->Next)
             return ExecuteCommand(Cmd->Subcommands->Next);
         return 0;
