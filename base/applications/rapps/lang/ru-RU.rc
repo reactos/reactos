@@ -211,7 +211,7 @@ BEGIN
     IDS_MISMATCH_CERT_INFO "Используемый сертификат не опознан:\nНазначение: %s\nВыдан: %s\nВы хотите продолжить в любом случае?"
     IDS_UNABLE_PATH "Incorrect path format."
     IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_CARD "card"
+    IDS_APP_DISPLAY_TILE "tile"
 END
 
 STRINGTABLE

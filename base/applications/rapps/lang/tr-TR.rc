@@ -213,7 +213,7 @@ BEGIN
     IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de sürdürmek istiyor musunuz?"
     IDS_UNABLE_PATH "Incorrect path format."
     IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_CARD "card"
+    IDS_APP_DISPLAY_TILE "tile"
 END
 
 STRINGTABLE

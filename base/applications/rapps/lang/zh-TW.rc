@@ -213,7 +213,7 @@ BEGIN
     IDS_MISMATCH_CERT_INFO "所使用的證書未知：\n主題：%s\n發行方：%s\n您是否仍然想繼續？"
     IDS_UNABLE_PATH "不正確的URL格式。"
     IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_CARD "card"
+    IDS_APP_DISPLAY_TILE "tile"
 END
 
 STRINGTABLE

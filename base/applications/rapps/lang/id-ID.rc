@@ -211,7 +211,7 @@ BEGIN
     IDS_MISMATCH_CERT_INFO "Sertifikat yang dipakai tidak dikenal:\nSubyek: %s\nIssuer: %s\nYakin ingin lanjut?"
     IDS_UNABLE_PATH "Incorrect path format."
     IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_CARD "card"
+    IDS_APP_DISPLAY_TILE "tile"
 END
 
 STRINGTABLE

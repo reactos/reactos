@@ -314,10 +314,10 @@ class CComboBox :
 {
     // ID refers to different types of view
     const INT m_AppDisplayTypeList = 0;
-    const INT m_AppDisplayTypeCard = 1;
+    const INT m_AppDisplayTypeTile = 1;
 
     // string ID for different
-    const UINT m_TypeStringID[2] = { IDS_APP_DISPLAY_LIST, IDS_APP_DISPLAY_CARD };
+    const UINT m_TypeStringID[2] = { IDS_APP_DISPLAY_LIST, IDS_APP_DISPLAY_TILE };
     
     const int m_DefaultSelectType = m_AppDisplayTypeList;
 public:

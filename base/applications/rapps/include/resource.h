@@ -121,7 +121,7 @@
 #define IDS_UNABLE_PATH          131
 #define IDS_APP_AUTHORS          132
 #define IDS_APP_DISPLAY_LIST     133
-#define IDS_APP_DISPLAY_CARD     134
+#define IDS_APP_DISPLAY_TILE     134
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200
