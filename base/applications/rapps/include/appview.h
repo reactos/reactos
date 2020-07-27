@@ -312,6 +312,14 @@ public:
 class CComboBox :
     public CWindow
 {
+    // ID refers to different types of view
+    const INT m_AppDisplayTypeList = 0;
+    const INT m_AppDisplayTypeCard = 1;
+
+    // string ID for different
+    const UINT m_TypeStringID[2] = { IDS_APP_DISPLAY_LIST, IDS_APP_DISPLAY_CARD };
+    
+    const int m_DefaultSelectType = m_AppDisplayTypeList;
 public:
 
     int m_Width;
