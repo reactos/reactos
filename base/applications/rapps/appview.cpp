@@ -215,7 +215,7 @@ HWND CComboBox::Create(HWND hwndParent)
 
     SendMessageW(WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
     
-    for (int i = 0; i < _countof(m_TypeStringID); i++)
+    for (int i = 0; i < (int)_countof(m_TypeStringID); i++)
     {
         ATL::CStringW szBuf;
         szBuf.LoadStringW(m_TypeStringID[i]);
@@ -1259,6 +1259,7 @@ HWND CAppsListView::Create(HWND hwndParent)
         GetSystemColorDepth() | ILC_MASK,
         0, 1);
     SetImageList(hImageListView, LVSIL_SMALL);
+    SetImageList(hImageListView, LVSIL_NORMAL);
 
     return hwnd;
 }
@@ -1792,8 +1793,8 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
             case CBN_SELCHANGE:
                 int CurrSelection = m_ComboBox->SendMessageW(CB_GETCURSEL);
 
-                int ViewModeList[] = { LV_VIEW_LIST, LV_VIEW_TILE };
-                ATLASSERT(CurrSelection < _countof(ViewModeList));
+                int ViewModeList[] = { LV_VIEW_DETAILS, LV_VIEW_TILE };
+                ATLASSERT(CurrSelection < (int)_countof(ViewModeList));
                 m_ListView->SetViewMode(ViewModeList[CurrSelection]);
                 break;
             }
