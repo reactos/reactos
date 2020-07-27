@@ -1258,6 +1258,8 @@ HWND CAppsListView::Create(HWND hwndParent)
         LISTVIEW_ICON_SIZE,
         GetSystemColorDepth() | ILC_MASK,
         0, 1);
+
+    // currently, this two Imagelist is the same one.
     SetImageList(hImageListView, LVSIL_SMALL);
     SetImageList(hImageListView, LVSIL_NORMAL);
 
