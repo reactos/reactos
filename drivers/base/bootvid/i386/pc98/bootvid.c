@@ -421,7 +421,7 @@ VidScreenToBufferBlt(
     ULONG X, Y;
     PUCHAR OutputBuffer;
     USHORT Px;
-    PUSHORT PixelsPosition = (PUSHORT)(FrameBuffer + FB_OFFSET(Left, Top));
+    PUSHORT PixelsPosition;
 
     /* Clear the destination buffer */
     RtlZeroMemory(Buffer, Delta * Height);
@@ -429,6 +429,7 @@ VidScreenToBufferBlt(
     for (Y = 0; Y < Height; Y++)
     {
         OutputBuffer = Buffer + Y * Delta;
+        PixelsPosition = (PUSHORT)(FrameBuffer + FB_OFFSET(Left, Top + Y));
 
         for (X = 0; X < Width; X += sizeof(USHORT))
         {
