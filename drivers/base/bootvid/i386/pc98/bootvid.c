@@ -283,24 +283,24 @@ PreserveRow(
     _In_ ULONG TopDelta,
     _In_ BOOLEAN Restore)
 {
-    PUCHAR OldPosition, NewPosition;
-    ULONG PixelCount = TopDelta * SCREEN_WIDTH;
+    PULONG OldPosition, NewPosition;
+    ULONG PixelCount = TopDelta * (SCREEN_WIDTH / sizeof(ULONG));
 
     if (Restore)
     {
         /* Restore the row by copying back the contents saved off-screen */
-        OldPosition = (PUCHAR)(FrameBuffer + FB_OFFSET(0, SCREEN_HEIGHT));
-        NewPosition = (PUCHAR)(FrameBuffer + FB_OFFSET(0, CurrentTop));
+        OldPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, SCREEN_HEIGHT));
+        NewPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, CurrentTop));
     }
     else
     {
         /* Preserve the row by saving its contents off-screen */
-        OldPosition = (PUCHAR)(FrameBuffer + FB_OFFSET(0, CurrentTop));
-        NewPosition = (PUCHAR)(FrameBuffer + FB_OFFSET(0, SCREEN_HEIGHT));
+        OldPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, CurrentTop));
+        NewPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, SCREEN_HEIGHT));
     }
 
     while (PixelCount--)
-        WRITE_REGISTER_UCHAR(NewPosition++, READ_REGISTER_UCHAR(OldPosition++));
+        WRITE_REGISTER_ULONG(NewPosition++, READ_REGISTER_ULONG(OldPosition++));
 }
 
 VOID
