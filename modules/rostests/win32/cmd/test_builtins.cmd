@@ -397,6 +397,108 @@ cd .. & rmdir /s/q foobar
 
 
 ::
+:: ERRORLEVEL tests for special commands.
+::
+:: For some commands, the errorlevel is set differently,
+:: whether or not they are run within a .BAT, a .CMD, or
+:: directly from the command-line.
+::
+:: These commands are:
+:: APPEND/DPATH, ASSOC, FTYPE, PATH, PROMPT, SET.
+::
+:: See https://ss64.com/nt/errorlevel.html for more details.
+::
+
+echo ---------- Testing ERRORLEVEL in .BAT and .CMD ----------
+
+:: Use an auxiliary CMD file
+mkdir foobar && cd foobar
+
+echo --- In .BAT file
+call :outputErrLvlTestToBatch tmp.bat
+cmd /c tmp.bat
+del tmp.bat
+
+echo --- In .CMD file
+call :outputErrLvlTestToBatch tmp.cmd
+cmd /c tmp.cmd
+del tmp.cmd
+
+:: Cleanup
+cd .. & rmdir /s/q foobar
+
+:: Go to the next tests below.
+goto :continue
+
+:: ERRORLEVEL test helper function
+:outputErrLvlTestToBatch (filename)
+
+echo @echo off> %1
+echo setlocal enableextensions>> %1
+
+:: Reset the errorlevel
+echo call :zeroErrLvl>> %1
+
+:: dpath
+:: echo %errorlevel%
+:: dpath xxx
+:: echo %errorlevel%
+:: dpath
+:: echo %errorlevel%
+
+echo assoc^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo assoc .nonexisting^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo assoc .nonexisting^=^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+
+:: ftype
+:: echo %errorlevel%
+:: ftype xxx
+:: echo %errorlevel%
+:: ftype
+:: echo %errorlevel%
+
+echo path^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo path^;^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+
+echo prompt^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo prompt ^$p^$g^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo prompt foobar^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+
+echo set^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo set nonexisting^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo set nonexisting^=^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo set nonexisting^=trololol^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo set nonexisting^=^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+
+echo goto :eof>> %1
+
+:: Zero ERRORLEVEL
+echo :zeroErrLvl>> %1
+echo exit /B 0 >> %1
+
+goto :eof
+
+
+::
+:: Next suite of tests.
+::
+:continue
+
+
+::
 :: Finished!
 ::
 echo --------- Finished  --------------

@@ -101,4 +101,33 @@ OK
 OK
 OK
 OK
+---------- Testing ERRORLEVEL in .BAT and .CMD ----------
+--- In .BAT file
+0
+1
+2
+2
+2
+2
+2
+2
+2
+1
+1
+1
+1
+--- In .CMD file
+0
+1
+2
+0
+0
+0
+0
+0
+0
+1
+0
+0
+0
 --------- Finished  --------------
