@@ -77,7 +77,7 @@
 @ stdcall ImmProcessKey(long long long long long)
 @ stub ImmPutImeMenuItemsIntoMappedFile
 @ stdcall ImmReSizeIMCC(long long)
-@ stub ImmRegisterClient
+@ stdcall ImmRegisterClient(ptr ptr)
 @ stdcall ImmRegisterWordA(long str long str)
 @ stdcall ImmRegisterWordW(long wstr long wstr)
 @ stdcall ImmReleaseContext(long long)

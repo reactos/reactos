@@ -3174,3 +3174,15 @@ BOOL WINAPI ImmDisableLegacyIME(void)
     FIXME("stub\n");
     return TRUE;
 }
+
+#ifdef __REACTOS__
+/***********************************************************************
+*		ImmRegisterClient(IMM32.@)
+*       ( Undocumented, called from user32.dll )
+*/
+BOOL WINAPI ImmRegisterClient(PVOID ptr, HINSTANCE hMod)
+{
+    FIXME("Stub\n");
+    return TRUE;
+}
+#endif
