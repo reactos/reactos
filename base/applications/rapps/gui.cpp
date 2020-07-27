@@ -873,6 +873,11 @@ BOOL CMainWindow::InstallApplication(CAvailableApplicationInfo *Info)
 
 BOOL CMainWindow::SearchTextChanged(ATL::CStringW &SearchText)
 {
+    if (szSearchPattern == SearchText)
+    {
+        return FALSE;
+    }
+
     szSearchPattern = SearchText;
 
     DWORD dwDelay;

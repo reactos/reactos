@@ -200,6 +200,7 @@ HWND CSearchBar::Create(HWND hwndParent)
 
 
 // **** CComboBox ****
+
 CComboBox::CComboBox() : m_Width(80), m_Height(22)
 {
 }
@@ -1668,7 +1669,7 @@ VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     /* Automatically hide captions */
     DWORD dToolbarTreshold = m_Toolbar->GetMaxButtonsWidth();
-    DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width - m_ComboBox->m_Width - TOOLBAR_PADDING * 3);
+    DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width - m_ComboBox->m_Width - TOOLBAR_PADDING * 2);
 
     if (dSearchbarMargin > dToolbarTreshold)
     {
