@@ -11,8 +11,8 @@
 
 /* GLOBALS ********************************************************************/
 
-static ULONG_PTR VideoMemoryI;
-ULONG_PTR FrameBuffer;
+static ULONG_PTR PegcControl = 0;
+ULONG_PTR FrameBuffer = 0;
 
 #define PEGC_MAX_COLORS    256
 
@@ -25,10 +25,25 @@ GraphGetStatus(
     UCHAR Result;
 
     WRITE_PORT_UCHAR((PUCHAR)GRAPH_IO_o_STATUS_SELECT, Status);
-    KeStallExecutionProcessor(1);
     Result = READ_PORT_UCHAR((PUCHAR)GRAPH_IO_i_STATUS);
 
     return (Result & GRAPH_STATUS_SET) && (Result != 0xFF);
+}
+
+static BOOLEAN
+TestMmio(VOID)
+{
+    USHORT OldValue, NewValue;
+
+    OldValue = READ_REGISTER_USHORT((PUSHORT)(PegcControl + PEGC_MMIO_MODE));
+
+    /* Bits [15:1] are not writable */
+    WRITE_REGISTER_USHORT((PUSHORT)(PegcControl + PEGC_MMIO_MODE), 0x80);
+    NewValue = READ_REGISTER_USHORT((PUSHORT)(PegcControl + PEGC_MMIO_MODE));
+
+    WRITE_REGISTER_USHORT((PUSHORT)(PegcControl + PEGC_MMIO_MODE), OldValue);
+
+    return !(NewValue & 0x80);
 }
 
 static BOOLEAN
@@ -37,11 +52,11 @@ HasPegcController(VOID)
     BOOLEAN Success;
 
     if (GraphGetStatus(GRAPH_STATUS_PEGC))
-        return TRUE;
+        return TestMmio();
 
     WRITE_PORT_UCHAR((PUCHAR)GDC2_IO_o_MODE_FLIPFLOP2, GDC2_EGC_FF_UNPROTECT);
     WRITE_PORT_UCHAR((PUCHAR)GDC2_IO_o_MODE_FLIPFLOP2, GDC2_MODE_PEGC_ENABLE);
-    Success = GraphGetStatus(GRAPH_STATUS_PEGC);
+    Success = GraphGetStatus(GRAPH_STATUS_PEGC) ? TestMmio() : FALSE;
     WRITE_PORT_UCHAR((PUCHAR)GDC2_IO_o_MODE_FLIPFLOP2, GDC2_MODE_PEGC_DISABLE);
     WRITE_PORT_UCHAR((PUCHAR)GDC2_IO_o_MODE_FLIPFLOP2, GDC2_EGC_FF_PROTECT);
 
@@ -212,8 +227,8 @@ InitializeDisplay(VOID)
     WRITE_PORT_UCHAR((PUCHAR)GDC2_IO_o_MODE_FLIPFLOP2, GDC2_MODE_PEGC_ENABLE);
     WRITE_PORT_UCHAR((PUCHAR)GDC2_IO_o_MODE_FLIPFLOP2, GDC2_MODE_LINES_800);
     WRITE_PORT_UCHAR((PUCHAR)GDC2_IO_o_MODE_FLIPFLOP2, GDC2_EGC_FF_PROTECT);
-    WRITE_REGISTER_USHORT((PUSHORT)(VideoMemoryI + PEGC_MMIO_MODE), PEGC_MODE_PACKED);
-    WRITE_REGISTER_USHORT((PUSHORT)(VideoMemoryI + PEGC_MMIO_FRAMEBUFFER), PEGC_FB_MAP);
+    WRITE_REGISTER_USHORT((PUSHORT)(PegcControl + PEGC_MMIO_MODE), PEGC_MODE_PACKED);
+    WRITE_REGISTER_USHORT((PUSHORT)(PegcControl + PEGC_MMIO_FRAMEBUFFER), PEGC_FB_MAP);
 
     /* Select the video source */
     RelayState = READ_PORT_UCHAR((PUCHAR)GRAPH_IO_i_RELAY) & ~(GRAPH_RELAY_0 | GRAPH_RELAY_1);
@@ -348,8 +363,8 @@ VidInitialize(
     PHYSICAL_ADDRESS BaseAddress;
 
     BaseAddress.QuadPart = VRAM_NORMAL_PLANE_I;
-    VideoMemoryI = (ULONG_PTR)MmMapIoSpace(BaseAddress, VRAM_PLANE_SIZE, MmNonCached);
-    if (!VideoMemoryI)
+    PegcControl = (ULONG_PTR)MmMapIoSpace(BaseAddress, PEGC_CONTROL_SIZE, MmNonCached);
+    if (!PegcControl)
         goto Failure;
 
     if (!HasPegcController())
@@ -366,8 +381,8 @@ VidInitialize(
     return TRUE;
 
 Failure:
-    if (!VideoMemoryI) MmUnmapIoSpace((PVOID)VideoMemoryI, VRAM_PLANE_SIZE);
-    if (!FrameBuffer) MmUnmapIoSpace((PVOID)FrameBuffer, PEGC_FRAMEBUFFER_SIZE);
+    if (PegcControl)
+        MmUnmapIoSpace((PVOID)PegcControl, PEGC_CONTROL_SIZE);
 
     return FALSE;
 }
