@@ -498,6 +498,62 @@ goto :eof
 :continue
 
 
+:: Testing different ERRORLEVELs from the SET command.
+:: See https://ss64.com/nt/set.html for more details.
+
+echo ---------- Testing SET /A ERRORLEVELs ----------
+
+echo --- Success
+call :setError 0
+set /a "total=1+1"
+call :checkErrorLevel 0
+echo %errorlevel%
+echo %total%
+
+echo --- Unbalanced parentheses
+call :setError 0
+set /a "total=(2+1"
+call :checkErrorLevel 1073750988
+echo %errorlevel%
+echo %total%
+
+echo --- Missing operand
+call :setError 0
+set /a "total=5*"
+call :checkErrorLevel 1073750989
+echo %errorlevel%
+echo %total%
+
+echo --- Syntax error
+call :setError 0
+set /a "total=7$3"
+call :checkErrorLevel 1073750990
+echo %errorlevel%
+echo %total%
+
+echo --- Invalid number
+call :setError 0
+set /a "total=0xdeadbeeg"
+call :checkErrorLevel 1073750991
+echo %errorlevel%
+echo %total%
+
+echo --- Number larger than 32-bits
+call :setError 0
+set /a "total=999999999999999999999999"
+call :checkErrorLevel 1073750992
+echo %errorlevel%
+echo %total%
+
+echo --- Division by zero
+call :setError 0
+set /a "total=1/0"
+call :checkErrorLevel 1073750993
+echo %errorlevel%
+echo %total%
+
+
+
 ::
 :: Finished!
 ::

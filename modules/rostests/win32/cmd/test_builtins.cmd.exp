@@ -130,4 +130,33 @@ OK
 0
 0
 0
+---------- Testing SET /A ERRORLEVELs ----------
+--- Success
+OK
+0
+2
+--- Unbalanced parentheses
+OK
+1073750988
+2
+--- Missing operand
+OK
+1073750989
+2
+--- Syntax error
+OK
+1073750990
+7
+--- Invalid number
+OK
+1073750991
+7
+--- Number larger than 32-bits
+OK
+1073750992
+7
+--- Division by zero
+OK
+1073750993
+7
 --------- Finished  --------------
