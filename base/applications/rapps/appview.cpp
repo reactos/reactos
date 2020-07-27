@@ -8,6 +8,7 @@
 #include "rapps.h"
 #include "appview.h"
 #include "gui.h"
+#include <windowsx.h>
 
 
  // **** CMainToolbar ****
@@ -211,6 +212,17 @@ HWND CComboBox::Create(HWND hwndParent)
         CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
         0, 0, m_Width, m_Height, hwndParent, NULL, 0,
         NULL);
+
+    ATL::CStringW szBuf;
+
+    SendMessageW(WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
+    szBuf.LoadStringW(IDS_APP_DISPLAY_LIST);
+    SendMessageW(CB_ADDSTRING, 0, (LPARAM)(LPCWSTR)szBuf);
+    szBuf.LoadStringW(IDS_APP_DISPLAY_CARD);
+    SendMessageW(CB_ADDSTRING, 0, (LPARAM)(LPCWSTR)szBuf);
+
+    
+    SendMessageW(CB_SETCURSEL, 0, 0); // select the first item
 
     return m_hWnd;
 }
