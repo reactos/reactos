@@ -1784,6 +1784,20 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
             }
 
         }
+        else if ((HWND)lParam == m_ComboBox->GetWindow())
+        {
+            int NotifyCode = HIWORD(wParam);
+            switch (NotifyCode)
+            {
+            case CBN_SELCHANGE:
+                int CurrSelection = m_ComboBox->SendMessageW(CB_GETCURSEL);
+
+                int ViewModeList[] = { LV_VIEW_LIST, LV_VIEW_TILE };
+                ATLASSERT(CurrSelection < _countof(ViewModeList));
+                m_ListView->SetViewMode(ViewModeList[CurrSelection]);
+                break;
+            }
+        }
     }
     else
     {
