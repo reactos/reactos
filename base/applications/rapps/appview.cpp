@@ -222,7 +222,7 @@ HWND CComboBox::Create(HWND hwndParent)
         SendMessageW(CB_ADDSTRING, 0, (LPARAM)(LPCWSTR)szBuf);
     }
     
-    SendMessageW(CB_SETCURSEL, m_AppDisplayTypeList, 0); // select the first item
+    SendMessageW(CB_SETCURSEL, m_DefaultSelectType, 0); // select the first item
 
     return m_hWnd;
 }
