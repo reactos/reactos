@@ -213,6 +213,7 @@ BEGIN
     IDS_SELECTEDFORINST "Seleccionados para instalar"
     IDS_MISMATCH_CERT_INFO "El certificado que usa es desconocido:\nSujeto: %s\nEmisor: %s\n¿Quiere continuar a pesar de ello?"
     IDS_UNABLE_PATH "Incorrect path format."
+    IDS_APP_DISPLAY_DETAILS "details"
     IDS_APP_DISPLAY_LIST "list"
     IDS_APP_DISPLAY_TILE "tile"
 END

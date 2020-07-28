@@ -315,13 +315,14 @@ class CComboBox :
     public CWindow
 {
     // ID refers to different types of view
-    const INT m_AppDisplayTypeList = 0;
-    const INT m_AppDisplayTypeTile = 1;
+    enum
+    { m_AppDisplayTypeDetails, m_AppDisplayTypeList, m_AppDisplayTypeTile};
 
-    // string ID for different
-    const UINT m_TypeStringID[2] = { IDS_APP_DISPLAY_LIST, IDS_APP_DISPLAY_TILE };
+    // string ID for different. this should correspond with the enum above.
+    const UINT m_TypeStringID[3] =
+    { IDS_APP_DISPLAY_DETAILS, IDS_APP_DISPLAY_LIST, IDS_APP_DISPLAY_TILE};
     
-    const int m_DefaultSelectType = m_AppDisplayTypeList;
+    const int m_DefaultSelectType = m_AppDisplayTypeDetails;
 public:
 
     int m_Width;

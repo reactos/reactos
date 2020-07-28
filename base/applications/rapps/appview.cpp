@@ -1793,7 +1793,7 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
             case CBN_SELCHANGE:
                 int CurrSelection = m_ComboBox->SendMessageW(CB_GETCURSEL);
 
-                int ViewModeList[] = { LV_VIEW_DETAILS, LV_VIEW_TILE };
+                int ViewModeList[] = { LV_VIEW_DETAILS, LV_VIEW_LIST, LV_VIEW_TILE };
                 ATLASSERT(CurrSelection < (int)_countof(ViewModeList));
                 m_ListView->SetViewMode(ViewModeList[CurrSelection]);
                 break;
