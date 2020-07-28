@@ -316,12 +316,12 @@ class CComboBox :
 {
     // ID refers to different types of view
     enum
-    { m_AppDisplayTypeDetails, m_AppDisplayTypeList, m_AppDisplayTypeTile};
+    { m_AppDisplayTypeDetails, m_AppDisplayTypeList, m_AppDisplayTypeTile };
 
     // string ID for different. this should correspond with the enum above.
     const UINT m_TypeStringID[3] =
-    { IDS_APP_DISPLAY_DETAILS, IDS_APP_DISPLAY_LIST, IDS_APP_DISPLAY_TILE};
-    
+    { IDS_APP_DISPLAY_DETAILS, IDS_APP_DISPLAY_LIST, IDS_APP_DISPLAY_TILE };
+
     const int m_DefaultSelectType = m_AppDisplayTypeDetails;
 public:
 

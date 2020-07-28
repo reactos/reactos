@@ -1795,7 +1795,10 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
 
                 int ViewModeList[] = { LV_VIEW_DETAILS, LV_VIEW_LIST, LV_VIEW_TILE };
                 ATLASSERT(CurrSelection < (int)_countof(ViewModeList));
-                m_ListView->SetViewMode(ViewModeList[CurrSelection]);
+                if (!m_ListView->SetViewMode(ViewModeList[CurrSelection]))
+                {
+                    MessageBoxW(L"View mode invalid or unimplemented");
+                }
                 break;
             }
         }
