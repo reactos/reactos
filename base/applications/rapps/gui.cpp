@@ -202,7 +202,6 @@ BOOL CMainWindow::CreateLayout()
 
     if (b)
     {
-        //RECT rTop;
         RECT rBottom;
 
         /* Size status bar */

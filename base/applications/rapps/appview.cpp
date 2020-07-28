@@ -1588,7 +1588,6 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
         /* Forward WM_SYSCOLORCHANGE to common controls */
         m_ListView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
         m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
-
         m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
         m_ComboBox->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
     }
