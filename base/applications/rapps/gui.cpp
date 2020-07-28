@@ -184,7 +184,9 @@ BOOL CMainWindow::CreateVSplitter()
     m_VSplitter->m_DynamicFirst = FALSE;
     m_VSplitter->m_Horizontal = FALSE;
     m_VSplitter->m_MinFirst = 0;
-    m_VSplitter->m_MinSecond = 320;
+
+    // TODO: m_MinSecond should be calculate dynamically instead of hard-coded
+    m_VSplitter->m_MinSecond = 480;
     m_VSplitter->m_Pos = 240;
     m_ClientPanel->Children().Append(m_VSplitter);
 
