@@ -1590,6 +1590,7 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
         m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
 
         m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
+        m_ComboBox->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
     }
     break;
 
@@ -1977,6 +1978,7 @@ int CApplicationView::GetItemCount()
 VOID CApplicationView::AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &TabOrderList)
 {
     m_Toolbar->AppendTabOrderWindow(Direction, TabOrderList);
+    m_ComboBox->AppendTabOrderWindow(Direction, TabOrderList);
     m_SearchBar->AppendTabOrderWindow(Direction, TabOrderList);
     m_ListView->AppendTabOrderWindow(Direction, TabOrderList);
     m_AppsInfo->AppendTabOrderWindow(Direction, TabOrderList);

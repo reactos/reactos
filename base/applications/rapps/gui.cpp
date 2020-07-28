@@ -146,16 +146,6 @@ BOOL CMainWindow::CreateStatusBar()
     return m_StatusBar->Create(m_hWnd, (HMENU)IDC_STATUSBAR) != NULL;
 }
 
-//BOOL CMainWindow::CreateToolbar()
-//{
-//    m_Toolbar = new CMainToolbar();
-//    m_Toolbar->m_VerticalAlignment = UiAlign_LeftTop;
-//    m_Toolbar->m_HorizontalAlignment = UiAlign_Stretch;
-//    m_ClientPanel->Children().Append(m_Toolbar);
-//
-//    return m_Toolbar->Create(m_hWnd) != NULL;
-//}
-
 BOOL CMainWindow::CreateTreeView()
 {
     m_TreeView = new CSideTreeView();
@@ -204,8 +194,6 @@ BOOL CMainWindow::CreateLayout()
 
     // Top level
     b = b && CreateStatusBar();
-    //b = b && CreateToolbar();
-    //b = b && CreateSearchBar();
     b = b && CreateVSplitter();
 
     // Inside V Splitter
@@ -220,13 +208,8 @@ BOOL CMainWindow::CreateLayout()
         /* Size status bar */
         m_StatusBar->SendMessageW(WM_SIZE, 0, 0);
 
-        /* Size tool bar */
-        //m_Toolbar->AutoSize();
-
-        //::GetWindowRect(m_Toolbar->m_hWnd, &rTop);
         ::GetWindowRect(m_StatusBar->m_hWnd, &rBottom);
 
-        //m_VSplitter->m_Margin.top = rTop.bottom - rTop.top;
         m_VSplitter->m_Margin.bottom = rBottom.bottom - rBottom.top;
     }
 
@@ -239,8 +222,6 @@ VOID CMainWindow::LayoutCleanup()
     delete m_TreeView;
     delete m_ApplicationView;
     delete m_VSplitter;
-    //delete m_SearchBar;
-    //delete m_Toolbar;
     delete m_StatusBar;
     return;
 }
@@ -267,21 +248,6 @@ VOID CMainWindow::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     /* Size status bar */
     m_StatusBar->SendMessage(WM_SIZE, 0, 0);
 
-    /* Size tool bar */
-    //m_Toolbar->AutoSize();
-
-    /* Automatically hide captions */
-    //DWORD dToolbarTreshold = m_Toolbar->GetMaxButtonsWidth();
-    //DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width);
-
-    /*if (dSearchbarMargin > dToolbarTreshold)
-    {
-        m_Toolbar->ShowButtonCaption();
-    }
-    else if (dSearchbarMargin < dToolbarTreshold)
-    {
-        m_Toolbar->HideButtonCaption();
-    }*/
 
     RECT r = { 0, 0, LOWORD(lParam), HIWORD(lParam) };
     HDWP hdwp = NULL;
@@ -296,18 +262,6 @@ VOID CMainWindow::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
             EndDeferWindowPos(hdwp);
         }
     }
-
-    // TODO: Sub-layouts for children of children
-    /*count = m_SearchBar->CountSizableChildren();
-    hdwp = BeginDeferWindowPos(count);
-    if (hdwp)
-    {
-        hdwp = m_SearchBar->OnParentSize(r, hdwp);
-        if (hdwp)
-        {
-            EndDeferWindowPos(hdwp);
-        }
-    }*/
 }
 
 BOOL CMainWindow::RemoveSelectedAppFromRegistry()
@@ -485,11 +439,6 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
                 EnableMenuItem(mainMenu, ID_INSTALL, MF_GRAYED);
                 EnableMenuItem(mainMenu, ID_UNINSTALL, MF_ENABLED);
                 EnableMenuItem(mainMenu, ID_MODIFY, MF_ENABLED);
-
-                /*m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, TRUE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, FALSE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, TRUE);*/
             }
             else
             {
@@ -497,11 +446,6 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
                 EnableMenuItem(mainMenu, ID_INSTALL, MF_ENABLED);
                 EnableMenuItem(mainMenu, ID_UNINSTALL, MF_GRAYED);
                 EnableMenuItem(mainMenu, ID_MODIFY, MF_GRAYED);
-
-                /*m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, FALSE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, TRUE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, FALSE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, FALSE);*/
             }
         }
         break;
@@ -532,7 +476,6 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
         /* Forward WM_SYSCOLORCHANGE to common controls */
         m_ApplicationView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
         m_TreeView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
-        //m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
     }
     break;
 
@@ -595,10 +538,6 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
 
         case ID_EXIT:
             PostMessageW(WM_CLOSE, 0, 0);
-            break;
-
-        case ID_SEARCH:
-            //m_SearchBar->SetFocus();
             break;
 
         case ID_INSTALL:
@@ -893,8 +832,6 @@ void CMainWindow::HandleTabOrder(int direction)
 {
     ATL::CSimpleArray<HWND> TabOrderHwndList;
 
-    //m_Toolbar->AppendTabOrderWindow(direction, TabOrderHwndList);
-    //m_SearchBar->AppendTabOrderWindow(direction, TabOrderHwndList);
     m_TreeView->AppendTabOrderWindow(direction, TabOrderHwndList);
     m_ApplicationView->AppendTabOrderWindow(direction, TabOrderHwndList);
 
