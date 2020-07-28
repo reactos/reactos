@@ -221,6 +221,8 @@ class CAppsListView :
 
     APPLICATION_VIEW_TYPE ApplicationViewType = AppViewTypeEmpty;
 
+    HIMAGELIST m_hImageListView;
+
 public:
     CAppsListView();
 

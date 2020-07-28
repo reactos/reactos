@@ -1254,14 +1254,14 @@ HWND CAppsListView::Create(HWND hwndParent)
         SetCheckboxesVisible(FALSE);
     }
 
-    HIMAGELIST hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE,
+    m_hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE,
         LISTVIEW_ICON_SIZE,
         GetSystemColorDepth() | ILC_MASK,
         0, 1);
 
     // currently, this two Imagelist is the same one.
-    SetImageList(hImageListView, LVSIL_SMALL);
-    SetImageList(hImageListView, LVSIL_NORMAL);
+    SetImageList(m_hImageListView, LVSIL_SMALL);
+    SetImageList(m_hImageListView, LVSIL_NORMAL);
 
     return hwnd;
 }
@@ -1322,7 +1322,7 @@ BOOL CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
         DeleteColumn(--ColumnCount);
     }
 
-    ImageList_RemoveAll(GetImageList(LVSIL_SMALL));
+    ImageList_RemoveAll(m_hImageListView);
 
     // add new columns
     ATL::CStringW szText;
@@ -1382,8 +1382,8 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
     }
 
     HICON hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
-    HIMAGELIST hImageList = GetImageList(LVSIL_SMALL);
-    int IconIndex = ImageList_AddIcon(hImageList, hIcon);
+
+    int IconIndex = ImageList_AddIcon(m_hImageListView, hIcon);
     DestroyIcon(hIcon);
 
     int Index = AddItem(ItemCount, IconIndex, InstAppInfo->szDisplayName, (LPARAM)CallbackParam);
@@ -1420,9 +1420,7 @@ BOOL CAppsListView::AddAvailableApplication(CAvailableApplicationInfo *AvlbAppIn
         hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
     }
 
-    HIMAGELIST hImageList = GetImageList(LVSIL_SMALL);
-
-    int IconIndex = ImageList_AddIcon(hImageList, hIcon);
+    int IconIndex = ImageList_AddIcon(m_hImageListView, hIcon);
     DestroyIcon(hIcon);
 
     int Index = AddItem(ItemCount, IconIndex, AvlbAppInfo->m_szName, (LPARAM)CallbackParam);
