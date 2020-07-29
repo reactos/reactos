@@ -349,7 +349,7 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 
     /* Check if this is a "CALL :label" */
     if (*firstword == _T(':'))
-        cmd_goto(firstword);
+        ret = cmd_goto(firstword);
 
     /* If we are calling from inside a FOR, hide the FOR variables */
     saved_fc = fc;
@@ -376,6 +376,7 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
             }
             /* Stop all execution */
             ExitAllBatches();
+            ret = 1;
             break;
         }
 
@@ -386,12 +387,11 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
         FreeCommand(Cmd);
     }
 
-    /* Always return the current errorlevel */
-    ret = nErrorLevel;
-
-    TRACE("Batch: returns TRUE\n");
-
+    /* Restore the FOR variables */
     fc = saved_fc;
+
+    /* Always return the last command's return code */
+    TRACE("Batch: returns %d\n", ret);
     return ret;
 }
 

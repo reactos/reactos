@@ -154,6 +154,7 @@ BOOL bCanExit = TRUE;     /* Indicates if this shell is exitable */
 BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Set this to TRUE to prevent a newline, when executing a command */
 static BOOL fSingleCommand = 0; /* When we are executing something passed on the command line after /C or /K */
+static BOOL bAlwaysStrip = FALSE;
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 CRITICAL_SECTION ChildProcessRunningLock;
 BOOL bDisableBatchEcho = FALSE;
@@ -631,12 +632,17 @@ DoCommand(LPTSTR first, LPTSTR rest, PARSED_COMMAND *Cmd)
 INT ParseCommandLine(LPTSTR cmd)
 {
     INT Ret = 0;
-    PARSED_COMMAND *Cmd = ParseCommand(cmd);
-    if (Cmd)
+    PARSED_COMMAND *Cmd;
+
+    Cmd = ParseCommand(cmd);
+    if (!Cmd)
     {
-        Ret = ExecuteCommand(Cmd);
-        FreeCommand(Cmd);
+        /* Return an adequate error code */
+        return (!bParseError ? 0 : 1);
     }
+
+    Ret = ExecuteCommand(Cmd);
+    FreeCommand(Cmd);
     return Ret;
 }
 
@@ -1524,9 +1530,10 @@ ReadLine(TCHAR *commandline, BOOL bMore)
     return SubstituteVars(ip, commandline, _T('%'));
 }
 
-static VOID
+static INT
 ProcessInput(VOID)
 {
+    INT Ret = 0;
     PARSED_COMMAND *Cmd;
 
     while (!bCanExit || !bExit)
@@ -1538,9 +1545,11 @@ ProcessInput(VOID)
         if (!Cmd)
             continue;
 
-        ExecuteCommand(Cmd);
+        Ret = ExecuteCommand(Cmd);
         FreeCommand(Cmd);
     }
+
+    return Ret;
 }
 
 
@@ -1879,20 +1888,18 @@ GetCmdLineCommand(
 
 
 /*
- * Set up global initializations and process parameters
+ * Set up global initializations and process parameters.
+ * Return a pointer to the command line if present.
  */
-static VOID
+static LPCTSTR
 Initialize(VOID)
 {
     HMODULE NtDllModule;
-    // INT nExitCode;
     HANDLE hIn, hOut;
     LPTSTR ptr, cmdLine;
     TCHAR option = 0;
-    BOOL AlwaysStrip = FALSE;
     BOOL AutoRun = TRUE;
     TCHAR ModuleName[MAX_PATH + 1];
-    TCHAR commandline[CMDLINE_LENGTH];
 
     /* Get version information */
     InitOSVersion();
@@ -1957,7 +1964,7 @@ Initialize(VOID)
                 ConOutResPaging(TRUE, STRING_CMD_HELP8);
                 nErrorLevel = 1;
                 bExit = TRUE;
-                return;
+                return NULL;
             }
             else if (option == _T('P'))
             {
@@ -1996,7 +2003,7 @@ Initialize(VOID)
             }
             else if (option == _T('S'))
             {
-                AlwaysStrip = TRUE;
+                bAlwaysStrip = TRUE;
             }
 #ifdef INCLUDE_CMD_COLOR
             else if (!_tcsnicmp(ptr, _T("/T:"), 3))
@@ -2067,18 +2074,8 @@ Initialize(VOID)
         ExecuteAutoRunFile(HKEY_CURRENT_USER);
     }
 
-    if (*ptr)
-    {
-        /* Do the /C or /K command */
-        GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
-        /* nExitCode = */ ParseCommandLine(commandline);
-        if (fSingleCommand == 1)
-        {
-            // nErrorLevel = nExitCode;
-            bExit = TRUE;
-        }
-        fSingleCommand = 0;
-    }
+    /* Returns the rest of the command line */
+    return ptr;
 }
 
 
@@ -2125,6 +2122,8 @@ static VOID Cleanup(VOID)
  */
 int _tmain(int argc, const TCHAR *argv[])
 {
+    INT nExitCode;
+    LPCTSTR pCmdLine;
     TCHAR startPath[MAX_PATH];
 
     InitializeCriticalSection(&ChildProcessRunningLock);
@@ -2144,18 +2143,39 @@ int _tmain(int argc, const TCHAR *argv[])
 
     CMD_ModuleHandle = GetModuleHandle(NULL);
 
-    /* Perform general initialization, parse switches on command-line */
-    Initialize();
+    /*
+     * Perform general initialization, parse switches on command-line.
+     * Initialize the exit code with the errorlevel as Initialize() can set it.
+     */
+    pCmdLine = Initialize();
+    nExitCode = nErrorLevel;
 
-    /* Call prompt routine */
-    ProcessInput();
+    if (pCmdLine && *pCmdLine)
+    {
+        TCHAR commandline[CMDLINE_LENGTH];
+
+        /* Do the /C or /K command */
+        GetCmdLineCommand(commandline, &pCmdLine[2], bAlwaysStrip);
+        nExitCode = ParseCommandLine(commandline);
+        if (fSingleCommand == 1)
+        {
+            // nErrorLevel = nExitCode;
+            bExit = TRUE;
+        }
+        fSingleCommand = 0;
+    }
+    if (!bExit)
+    {
+        /* Call prompt routine */
+        nExitCode = ProcessInput();
+    }
 
     /* Do the cleanup */
     Cleanup();
     cmd_free(lpOriginalEnvironment);
 
-    cmd_exit(nErrorLevel);
-    return nErrorLevel;
+    cmd_exit(nExitCode);
+    return nExitCode;
 }
 
 /* EOF */

@@ -548,13 +548,16 @@ INT CommandExit(LPTSTR param)
 
     /* Search for an optional exit code */
     while (_istspace(*param))
-        param++;
+        ++param;
 
     /* Set the errorlevel to the exit code */
     if (_istdigit(*param))
+    {
         nErrorLevel = _ttoi(param);
+        // if (fSingleCommand == 1) return nErrorLevel;
+    }
 
-    return 0;
+    return (bExit ? nErrorLevel : 0);
 }
 
 #ifdef INCLUDE_CMD_REM
