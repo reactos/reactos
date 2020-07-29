@@ -84,6 +84,7 @@
 #define ID_RESETDB               561
 #define ID_CHECK_ALL             562
 #define ID_SEARCH                563
+#define ID_TOOLBAR_INSTALL       564
 
 /* Strings */
 #define IDS_APPTITLE             100
@@ -119,7 +120,9 @@
 #define IDS_MISMATCH_CERT_INFO   130
 #define IDS_UNABLE_PATH          131
 #define IDS_APP_AUTHORS          132
-
+#define IDS_APP_DISPLAY_DETAILS  133
+#define IDS_APP_DISPLAY_LIST     134
+#define IDS_APP_DISPLAY_TILE     135
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200

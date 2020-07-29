@@ -32,169 +32,6 @@
 #define TREEVIEW_ICON_SIZE 24
 
 
-// **** CMainToolbar ****
-
-VOID CMainToolbar::AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex)
-{
-    HICON hImage;
-
-    if (!(hImage = (HICON)LoadImageW(hInst,
-        MAKEINTRESOURCE(ImageIndex),
-        IMAGE_ICON,
-        m_iToolbarHeight,
-        m_iToolbarHeight,
-        0)))
-    {
-        /* TODO: Error message */
-    }
-
-    ImageList_AddIcon(hImageList, hImage);
-    DeleteObject(hImage);
-}
-
-HIMAGELIST CMainToolbar::InitImageList()
-{
-    HIMAGELIST hImageList;
-
-    /* Create the toolbar icon image list */
-    hImageList = ImageList_Create(m_iToolbarHeight,//GetSystemMetrics(SM_CXSMICON),
-        m_iToolbarHeight,//GetSystemMetrics(SM_CYSMICON),
-        ILC_MASK | GetSystemColorDepth(),
-        1, 1);
-    if (!hImageList)
-    {
-        /* TODO: Error message */
-        return NULL;
-    }
-
-    AddImageToImageList(hImageList, IDI_INSTALL);
-    AddImageToImageList(hImageList, IDI_UNINSTALL);
-    AddImageToImageList(hImageList, IDI_MODIFY);
-    AddImageToImageList(hImageList, IDI_CHECK_ALL);
-    AddImageToImageList(hImageList, IDI_REFRESH);
-    AddImageToImageList(hImageList, IDI_UPDATE_DB);
-    AddImageToImageList(hImageList, IDI_SETTINGS);
-    AddImageToImageList(hImageList, IDI_EXIT);
-
-    return hImageList;
-}
-
-CMainToolbar::CMainToolbar() : m_iToolbarHeight(24)
-{
-}
-
-VOID CMainToolbar::OnGetDispInfo(LPTOOLTIPTEXT lpttt)
-{
-    UINT idButton = (UINT)lpttt->hdr.idFrom;
-
-    switch (idButton)
-    {
-    case ID_EXIT:
-        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_EXIT);
-        break;
-
-    case ID_INSTALL:
-        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_INSTALL);
-        break;
-
-    case ID_UNINSTALL:
-        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_UNINSTALL);
-        break;
-
-    case ID_MODIFY:
-        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_MODIFY);
-        break;
-
-    case ID_SETTINGS:
-        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_SETTINGS);
-        break;
-
-    case ID_REFRESH:
-        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_REFRESH);
-        break;
-
-    case ID_RESETDB:
-        lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_UPDATE_DB);
-        break;
-    }
-}
-
-HWND CMainToolbar::Create(HWND hwndParent)
-{
-    /* Create buttons */
-    TBBUTTON Buttons[] =
-    {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
-        {  0, ID_INSTALL,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szInstallBtn      },
-        {  1, ID_UNINSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szUninstallBtn    },
-        {  2, ID_MODIFY,    TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szModifyBtn       },
-        {  3, ID_CHECK_ALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR)szSelectAll       },
-        { -1, 0,            TBSTATE_ENABLED, BTNS_SEP,                    { 0 }, 0, 0                           },
-        {  4, ID_REFRESH,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
-        {  5, ID_RESETDB,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
-        { -1, 0,            TBSTATE_ENABLED, BTNS_SEP,                    { 0 }, 0, 0                           },
-        {  6, ID_SETTINGS,  TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
-        {  7, ID_EXIT,      TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
-    };
-
-    LoadStringW(hInst, IDS_INSTALL, szInstallBtn, _countof(szInstallBtn));
-    LoadStringW(hInst, IDS_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
-    LoadStringW(hInst, IDS_MODIFY, szModifyBtn, _countof(szModifyBtn));
-    LoadStringW(hInst, IDS_SELECT_ALL, szSelectAll, _countof(szSelectAll));
-
-    m_hWnd = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL,
-        WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_LIST,
-        0, 0, 0, 0,
-        hwndParent,
-        0, hInst, NULL);
-
-    if (!m_hWnd)
-    {
-        /* TODO: Show error message */
-        return FALSE;
-    }
-
-    SendMessageW(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_HIDECLIPPEDBUTTONS);
-    SetButtonStructSize();
-
-    /* Set image list */
-    HIMAGELIST hImageList = InitImageList();
-
-    if (!hImageList)
-    {
-        /* TODO: Show error message */
-        return FALSE;
-    }
-
-    ImageList_Destroy(SetImageList(hImageList));
-
-    AddButtons(_countof(Buttons), Buttons);
-
-    /* Remember ideal width to use as a max width of buttons */
-    SIZE size;
-    GetIdealSize(FALSE, &size);
-    m_dButtonsWidthMax = size.cx;
-
-    return m_hWnd;
-}
-
-VOID CMainToolbar::HideButtonCaption()
-{
-    DWORD dCurrentExStyle = (DWORD)SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
-    SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle | TBSTYLE_EX_MIXEDBUTTONS);
-}
-
-VOID CMainToolbar::ShowButtonCaption()
-{
-    DWORD dCurrentExStyle = (DWORD)SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
-    SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle & ~TBSTYLE_EX_MIXEDBUTTONS);
-}
-
-DWORD CMainToolbar::GetMaxButtonsWidth() const
-{
-    return m_dButtonsWidthMax;
-}
-// **** CMainToolbar ****
-
 
 // **** CSideTreeView ****
 
@@ -251,39 +88,11 @@ CSideTreeView::~CSideTreeView()
 // **** CSideTreeView ****
 
 
-// **** CSearchBar ****
-
-CSearchBar::CSearchBar() : m_Width(200), m_Height(22)
-{
-}
-
-VOID CSearchBar::SetText(LPCWSTR lpszText)
-{
-    SendMessageW(SB_SETTEXT, SBT_NOBORDERS, (LPARAM)lpszText);
-}
-
-HWND CSearchBar::Create(HWND hwndParent)
-{
-    ATL::CStringW szBuf;
-    m_hWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL,
-        WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL,
-        0, 0, m_Width, m_Height,
-        hwndParent, (HMENU)NULL,
-        hInst, 0);
-
-    SendMessageW(WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
-    szBuf.LoadStringW(IDS_SEARCH_TEXT);
-    SetWindowTextW(szBuf);
-    return m_hWnd;
-}
-// **** CSearchBar ****
-
 
 // **** CMainWindow ****
 
 CMainWindow::CMainWindow() :
     m_ClientPanel(NULL),
-    bSearchEnabled(FALSE),
     SelectedEnumType(ENUM_ALL_INSTALLED)
 {
 }
@@ -337,16 +146,6 @@ BOOL CMainWindow::CreateStatusBar()
     return m_StatusBar->Create(m_hWnd, (HMENU)IDC_STATUSBAR) != NULL;
 }
 
-BOOL CMainWindow::CreateToolbar()
-{
-    m_Toolbar = new CMainToolbar();
-    m_Toolbar->m_VerticalAlignment = UiAlign_LeftTop;
-    m_Toolbar->m_HorizontalAlignment = UiAlign_Stretch;
-    m_ClientPanel->Children().Append(m_Toolbar);
-
-    return m_Toolbar->Create(m_hWnd) != NULL;
-}
-
 BOOL CMainWindow::CreateTreeView()
 {
     m_TreeView = new CSideTreeView();
@@ -375,22 +174,13 @@ BOOL CMainWindow::CreateVSplitter()
     m_VSplitter->m_DynamicFirst = FALSE;
     m_VSplitter->m_Horizontal = FALSE;
     m_VSplitter->m_MinFirst = 0;
-    m_VSplitter->m_MinSecond = 320;
+
+    // TODO: m_MinSecond should be calculate dynamically instead of hard-coded
+    m_VSplitter->m_MinSecond = 480;
     m_VSplitter->m_Pos = 240;
     m_ClientPanel->Children().Append(m_VSplitter);
 
     return m_VSplitter->Create(m_hWnd) != NULL;
-}
-
-BOOL CMainWindow::CreateSearchBar()
-{
-    m_SearchBar = new CUiWindow<CSearchBar>();
-    m_SearchBar->m_VerticalAlignment = UiAlign_LeftTop;
-    m_SearchBar->m_HorizontalAlignment = UiAlign_RightBtm;
-    m_SearchBar->m_Margin.top = 4;
-    m_SearchBar->m_Margin.right = 6;
-
-    return m_SearchBar->Create(m_Toolbar->m_hWnd) != NULL;
 }
 
 BOOL CMainWindow::CreateLayout()
@@ -404,8 +194,6 @@ BOOL CMainWindow::CreateLayout()
 
     // Top level
     b = b && CreateStatusBar();
-    b = b && CreateToolbar();
-    b = b && CreateSearchBar();
     b = b && CreateVSplitter();
 
     // Inside V Splitter
@@ -414,19 +202,13 @@ BOOL CMainWindow::CreateLayout()
 
     if (b)
     {
-        RECT rTop;
         RECT rBottom;
 
         /* Size status bar */
         m_StatusBar->SendMessageW(WM_SIZE, 0, 0);
 
-        /* Size tool bar */
-        m_Toolbar->AutoSize();
-
-        ::GetWindowRect(m_Toolbar->m_hWnd, &rTop);
         ::GetWindowRect(m_StatusBar->m_hWnd, &rBottom);
 
-        m_VSplitter->m_Margin.top = rTop.bottom - rTop.top;
         m_VSplitter->m_Margin.bottom = rBottom.bottom - rBottom.top;
     }
 
@@ -439,8 +221,6 @@ VOID CMainWindow::LayoutCleanup()
     delete m_TreeView;
     delete m_ApplicationView;
     delete m_VSplitter;
-    delete m_SearchBar;
-    delete m_Toolbar;
     delete m_StatusBar;
     return;
 }
@@ -467,21 +247,6 @@ VOID CMainWindow::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     /* Size status bar */
     m_StatusBar->SendMessage(WM_SIZE, 0, 0);
 
-    /* Size tool bar */
-    m_Toolbar->AutoSize();
-
-    /* Automatically hide captions */
-    DWORD dToolbarTreshold = m_Toolbar->GetMaxButtonsWidth();
-    DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width);
-
-    if (dSearchbarMargin > dToolbarTreshold)
-    {
-        m_Toolbar->ShowButtonCaption();
-    }
-    else if (dSearchbarMargin < dToolbarTreshold)
-    {
-        m_Toolbar->HideButtonCaption();
-    }
 
     RECT r = { 0, 0, LOWORD(lParam), HIWORD(lParam) };
     HDWP hdwp = NULL;
@@ -491,18 +256,6 @@ VOID CMainWindow::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (hdwp)
     {
         hdwp = m_ClientPanel->OnParentSize(r, hdwp);
-        if (hdwp)
-        {
-            EndDeferWindowPos(hdwp);
-        }
-    }
-
-    // TODO: Sub-layouts for children of children
-    count = m_SearchBar->CountSizableChildren();
-    hdwp = BeginDeferWindowPos(count);
-    if (hdwp)
-    {
-        hdwp = m_SearchBar->OnParentSize(r, hdwp);
         if (hdwp)
         {
             EndDeferWindowPos(hdwp);
@@ -685,11 +438,6 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
                 EnableMenuItem(mainMenu, ID_INSTALL, MF_GRAYED);
                 EnableMenuItem(mainMenu, ID_UNINSTALL, MF_ENABLED);
                 EnableMenuItem(mainMenu, ID_MODIFY, MF_ENABLED);
-
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, TRUE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, FALSE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, TRUE);
             }
             else
             {
@@ -697,18 +445,10 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
                 EnableMenuItem(mainMenu, ID_INSTALL, MF_ENABLED);
                 EnableMenuItem(mainMenu, ID_UNINSTALL, MF_GRAYED);
                 EnableMenuItem(mainMenu, ID_MODIFY, MF_GRAYED);
-
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, FALSE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, TRUE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, FALSE);
-                m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, FALSE);
             }
         }
         break;
 
-        case TTN_GETDISPINFO:
-            m_Toolbar->OnGetDispInfo((LPTOOLTIPTEXT)lParam);
-            break;
         }
     }
     break;
@@ -735,7 +475,6 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
         /* Forward WM_SYSCOLORCHANGE to common controls */
         m_ApplicationView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
         m_TreeView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
-        m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
     }
     break;
 
@@ -743,8 +482,8 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
         if (wParam == SEARCH_TIMER_ID)
         {
             ::KillTimer(hwnd, SEARCH_TIMER_ID);
-            if (bSearchEnabled)
-                UpdateApplicationsList(-1);
+            
+            UpdateApplicationsList(-1);
         }
         break;
     }
@@ -788,153 +527,89 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
 {
     WORD wCommand = LOWORD(wParam);
 
-    if (lParam == (LPARAM)m_SearchBar->m_hWnd)
+    if (!lParam)
     {
-        ATL::CStringW szBuf;
-
-        switch (HIWORD(wParam))
+        switch (wCommand)
         {
-        case EN_SETFOCUS:
-        {
-            ATL::CStringW szWndText;
+        case ID_SETTINGS:
+            CreateSettingsDlg(m_hWnd);
+            break;
 
-            szBuf.LoadStringW(IDS_SEARCH_TEXT);
-            m_SearchBar->GetWindowTextW(szWndText);
-            if (szBuf == szWndText)
+        case ID_EXIT:
+            PostMessageW(WM_CLOSE, 0, 0);
+            break;
+
+        case ID_INSTALL:
+            if (IsAvailableEnum(SelectedEnumType))
             {
-                bSearchEnabled = FALSE;
-                m_SearchBar->SetWindowTextW(L"");
-            }
-        }
-        break;
+                ATL::CSimpleArray<CAvailableApplicationInfo> AppsList;
 
-        case EN_KILLFOCUS:
-        {
-            m_SearchBar->GetWindowTextW(szBuf);
-            if (szBuf.IsEmpty())
-            {
-                szBuf.LoadStringW(IDS_SEARCH_TEXT);
-                bSearchEnabled = FALSE;
-                m_SearchBar->SetWindowTextW(szBuf.GetString());
-            }
-        }
-        break;
+                // enum all selected apps
+                m_AvailableApps.Enum(ENUM_CAT_SELECTED, s_EnumSelectedAppForDownloadProc, (PVOID)&AppsList);
 
-        case EN_CHANGE:
-        {
-            ATL::CStringW szWndText;
-
-            if (!bSearchEnabled)
-            {
-                bSearchEnabled = TRUE;
-                break;
-            }
-
-            szBuf.LoadStringW(IDS_SEARCH_TEXT);
-            m_SearchBar->GetWindowTextW(szWndText);
-            if (szBuf == szWndText)
-            {
-                szSearchPattern.Empty();
-            }
-            else
-            {
-                szSearchPattern = szWndText;
-            }
-
-            DWORD dwDelay;
-            SystemParametersInfoW(SPI_GETMENUSHOWDELAY, 0, &dwDelay, 0);
-            SetTimer(SEARCH_TIMER_ID, dwDelay);
-        }
-        break;
-        }
-
-        return;
-    }
-
-    switch (wCommand)
-    {
-    case ID_SETTINGS:
-        CreateSettingsDlg(m_hWnd);
-        break;
-
-    case ID_EXIT:
-        PostMessageW(WM_CLOSE, 0, 0);
-        break;
-
-    case ID_SEARCH:
-        m_SearchBar->SetFocus();
-        break;
-
-    case ID_INSTALL:
-        if (IsAvailableEnum(SelectedEnumType))
-        {
-            ATL::CSimpleArray<CAvailableApplicationInfo> AppsList;
-
-            // enum all selected apps
-            m_AvailableApps.Enum(ENUM_CAT_SELECTED, s_EnumSelectedAppForDownloadProc, (PVOID)&AppsList);
-
-            if (AppsList.GetSize())
-            {
-                if (DownloadListOfApplications(AppsList, FALSE))
+                if (AppsList.GetSize())
                 {
-                    m_AvailableApps.RemoveAllSelected();
-                    UpdateApplicationsList(-1);
-                }
-            }
-            else
-            {
-                // use the currently focused item in application-view
-                CAvailableApplicationInfo *FocusedApps = (CAvailableApplicationInfo *)m_ApplicationView->GetFocusedItemData();
-                if (FocusedApps)
-                {
-                    if (DownloadApplication(FocusedApps, FALSE))
+                    if (DownloadListOfApplications(AppsList, FALSE))
                     {
+                        m_AvailableApps.RemoveAllSelected();
                         UpdateApplicationsList(-1);
                     }
                 }
                 else
                 {
-                    // TODO: in this case, Install button in toolbar (and all other places) should be disabled
-                    // or at least popup a messagebox telling user to select/check some app first
+                    // use the currently focused item in application-view
+                    CAvailableApplicationInfo *FocusedApps = (CAvailableApplicationInfo *)m_ApplicationView->GetFocusedItemData();
+                    if (FocusedApps)
+                    {
+                        if (DownloadApplication(FocusedApps, FALSE))
+                        {
+                            UpdateApplicationsList(-1);
+                        }
+                    }
+                    else
+                    {
+                        // TODO: in this case, Install button in toolbar (and all other places) should be disabled
+                        // or at least popup a messagebox telling user to select/check some app first
+                    }
                 }
             }
+            break;
+
+        case ID_UNINSTALL:
+            if (UninstallSelectedApp(FALSE))
+                UpdateApplicationsList(-1);
+            break;
+
+        case ID_MODIFY:
+            if (UninstallSelectedApp(TRUE))
+                UpdateApplicationsList(-1);
+            break;
+
+        case ID_REGREMOVE:
+            RemoveSelectedAppFromRegistry();
+            break;
+
+        case ID_REFRESH:
+            UpdateApplicationsList(-1);
+            break;
+
+        case ID_RESETDB:
+            CAvailableApps::ForceUpdateAppsDB();
+            UpdateApplicationsList(-1);
+            break;
+
+        case ID_HELP:
+            MessageBoxW(L"Help not implemented yet", NULL, MB_OK);
+            break;
+
+        case ID_ABOUT:
+            ShowAboutDlg();
+            break;
+
+        case ID_CHECK_ALL:
+            m_ApplicationView->CheckAll();
+            break;
         }
-        break;
-
-    case ID_UNINSTALL:
-        if (UninstallSelectedApp(FALSE))
-            UpdateApplicationsList(-1);
-        break;
-
-    case ID_MODIFY:
-        if (UninstallSelectedApp(TRUE))
-            UpdateApplicationsList(-1);
-        break;
-
-    case ID_REGREMOVE:
-        RemoveSelectedAppFromRegistry();
-        break;
-
-    case ID_REFRESH:
-        UpdateApplicationsList(-1);
-        break;
-
-    case ID_RESETDB:
-        CAvailableApps::ForceUpdateAppsDB();
-        UpdateApplicationsList(-1);
-        break;
-
-    case ID_HELP:
-        MessageBoxW(L"Help not implemented yet", NULL, MB_OK);
-        break;
-
-    case ID_ABOUT:
-        ShowAboutDlg();
-        break;
-
-    case ID_CHECK_ALL:
-        m_ApplicationView->CheckAll();
-        break;
     }
 }
 
@@ -1012,16 +687,16 @@ VOID CMainWindow::UpdateApplicationsList(INT EnumType)
     m_ApplicationView->SetRedraw(FALSE);
     if (IsInstalledEnum(EnumType))
     {
-        // set the display mode of application-view. this will remove all the item in application-view too.
-        m_ApplicationView->SetDisplayMode(ApplicationViewInstalledApps);
+        // set the display type of application-view. this will remove all the item in application-view too.
+        m_ApplicationView->SetDisplayAppType(AppViewTypeInstalledApps);
 
         // enum installed softwares 
         m_InstalledApps.Enum(EnumType, s_EnumInstalledAppProc, this);
     }
     else if (IsAvailableEnum(EnumType))
     {
-        // set the display mode of application-view. this will remove all the item in application-view too.
-        m_ApplicationView->SetDisplayMode(ApplicationViewAvailableApps);
+        // set the display type of application-view. this will remove all the item in application-view too.
+        m_ApplicationView->SetDisplayAppType(AppViewTypeAvailableApps);
 
         // enum available softwares 
         m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);
@@ -1136,12 +811,26 @@ BOOL CMainWindow::InstallApplication(CAvailableApplicationInfo *Info)
     return FALSE;
 }
 
+BOOL CMainWindow::SearchTextChanged(ATL::CStringW &SearchText)
+{
+    if (szSearchPattern == SearchText)
+    {
+        return FALSE;
+    }
+
+    szSearchPattern = SearchText;
+
+    DWORD dwDelay;
+    SystemParametersInfoW(SPI_GETMENUSHOWDELAY, 0, &dwDelay, 0);
+    SetTimer(SEARCH_TIMER_ID, dwDelay);
+
+    return TRUE;
+}
+
 void CMainWindow::HandleTabOrder(int direction)
 {
     ATL::CSimpleArray<HWND> TabOrderHwndList;
 
-    m_Toolbar->AppendTabOrderWindow(direction, TabOrderHwndList);
-    m_SearchBar->AppendTabOrderWindow(direction, TabOrderHwndList);
     m_TreeView->AppendTabOrderWindow(direction, TabOrderHwndList);
     m_ApplicationView->AppendTabOrderWindow(direction, TabOrderHwndList);
 

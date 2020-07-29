@@ -213,6 +213,9 @@ BEGIN
     IDS_SELECTEDFORINST "选中以安装"
     IDS_MISMATCH_CERT_INFO "所使用的证书未知:\n主题: %s\n发行方: %s\n您是否仍然想继续？"
     IDS_UNABLE_PATH "不正确的URL格式。"
+    IDS_APP_DISPLAY_DETAILS "细节"
+    IDS_APP_DISPLAY_LIST "列表"
+    IDS_APP_DISPLAY_TILE "卡片"
 END
 
 STRINGTABLE

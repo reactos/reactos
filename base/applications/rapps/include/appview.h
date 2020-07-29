@@ -34,6 +34,8 @@ using namespace Gdiplus;
 // minimum width of richedit
 #define RICHEDIT_MIN_WIDTH 160
 
+// padding between controls in toolbar
+#define TOOLBAR_PADDING 6
 
 // user-defined window message
 #define WM_RAPPS_DOWNLOAD_COMPLETE (WM_USER + 1) // notify download complete. wParam is error code, and lParam is a pointer to ScrnshotDownloadParam
@@ -65,11 +67,11 @@ enum SCRNSHOT_STATUS
 
 class CMainWindow;
 
-enum APPLICATION_VIEW_MODE
+enum APPLICATION_VIEW_TYPE
 {
-    ApplicationViewEmpty,
-    ApplicationViewAvailableApps,
-    ApplicationViewInstalledApps
+    AppViewTypeEmpty,
+    AppViewTypeAvailableApps,
+    AppViewTypeInstalledApps
 };
 
 typedef struct __ScrnshotDownloadParam
@@ -217,7 +219,9 @@ class CAppsListView :
 
     INT nLastHeaderID;
 
-    APPLICATION_VIEW_MODE ApplicationViewMode = ApplicationViewEmpty;
+    APPLICATION_VIEW_TYPE ApplicationViewType = AppViewTypeEmpty;
+
+    HIMAGELIST m_hImageListView;
 
 public:
     CAppsListView();
@@ -250,7 +254,9 @@ public:
 
     PVOID GetFocusedItemData();
 
-    BOOL SetDisplayMode(APPLICATION_VIEW_MODE Mode);
+    BOOL SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
+
+    BOOL SetViewMode(DWORD ViewMode);
 
     BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID CallbackParam);
 
@@ -260,19 +266,94 @@ public:
     VOID ItemCheckStateNotify(int iItem, BOOL bCheck);
 };
 
+class CMainToolbar :
+    public CUiWindow< CToolbar<> >
+{
+    const INT m_iToolbarHeight;
+    DWORD m_dButtonsWidthMax;
+
+    WCHAR szInstallBtn[MAX_STR_LEN];
+    WCHAR szUninstallBtn[MAX_STR_LEN];
+    WCHAR szModifyBtn[MAX_STR_LEN];
+    WCHAR szSelectAll[MAX_STR_LEN];
+
+    VOID AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex);
+
+    HIMAGELIST InitImageList();
+
+public:
+
+    CMainToolbar();
+
+    VOID OnGetDispInfo(LPTOOLTIPTEXT lpttt);
+
+    HWND Create(HWND hwndParent);
+
+    VOID HideButtonCaption();
+
+    VOID ShowButtonCaption();
+
+    DWORD GetMaxButtonsWidth() const;
+};
+
+class CSearchBar :
+    public CWindow
+{
+public:
+    const INT m_Width;
+    const INT m_Height;
+
+    CSearchBar();
+
+    VOID SetText(LPCWSTR lpszText);
+
+    HWND Create(HWND hwndParent);
+
+};
+
+class CComboBox :
+    public CWindow
+{
+    // ID refers to different types of view
+    enum
+    { m_AppDisplayTypeDetails, m_AppDisplayTypeList, m_AppDisplayTypeTile };
+
+    // string ID for different. this should correspond with the enum above.
+    const UINT m_TypeStringID[3] =
+    { IDS_APP_DISPLAY_DETAILS, IDS_APP_DISPLAY_LIST, IDS_APP_DISPLAY_TILE };
+
+    const int m_DefaultSelectType = m_AppDisplayTypeDetails;
+public:
+
+    int m_Width;
+    int m_Height;
+
+    CComboBox();
+
+    HWND Create(HWND hwndParent);
+};
+
 class CApplicationView :
     public CUiWindow<CWindowImpl<CApplicationView>>
 {
 private:
     CUiPanel *m_Panel = NULL;
-
+    CMainToolbar *m_Toolbar = NULL;
+    CUiWindow<CComboBox> *m_ComboBox = NULL;
+    CUiWindow<CSearchBar> *m_SearchBar = NULL;
     CAppsListView *m_ListView = NULL;
     CAppInfoDisplay *m_AppsInfo = NULL;
     CUiSplitPanel *m_HSplitter = NULL;
     CMainWindow *m_MainWindow = NULL;
-    APPLICATION_VIEW_MODE ApplicationViewMode = ApplicationViewEmpty;
+    APPLICATION_VIEW_TYPE ApplicationViewType = AppViewTypeEmpty;
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT &theResult, DWORD dwMapId);
+
+    BOOL CreateToolbar();
+
+    BOOL CreateSearchBar();
+
+    BOOL CreateComboBox();
 
     BOOL CreateHSplitter();
 
@@ -293,7 +374,7 @@ public:
 
     HWND Create(HWND hwndParent);
 
-    BOOL SetDisplayMode(APPLICATION_VIEW_MODE Mode);
+    BOOL SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
 
     BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID param);
 

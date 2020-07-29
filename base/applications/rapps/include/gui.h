@@ -23,35 +23,6 @@
 #define TREEVIEW_ICON_SIZE 24
 
 
-class CMainToolbar :
-    public CUiWindow< CToolbar<> >
-{
-    const INT m_iToolbarHeight;
-    DWORD m_dButtonsWidthMax;
-
-    WCHAR szInstallBtn[MAX_STR_LEN];
-    WCHAR szUninstallBtn[MAX_STR_LEN];
-    WCHAR szModifyBtn[MAX_STR_LEN];
-    WCHAR szSelectAll[MAX_STR_LEN];
-
-    VOID AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex);
-
-    HIMAGELIST InitImageList();
-
-public:
-
-    CMainToolbar();
-
-    VOID OnGetDispInfo(LPTOOLTIPTEXT lpttt);
-
-    HWND Create(HWND hwndParent);
-
-    VOID HideButtonCaption();
-
-    VOID ShowButtonCaption();
-
-    DWORD GetMaxButtonsWidth() const;
-};
 
 class CSideTreeView :
     public CUiWindow<CTreeView>
@@ -72,39 +43,20 @@ public:
     ~CSideTreeView();
 };
 
-class CSearchBar :
-    public CWindow
-{
-public:
-    const INT m_Width;
-    const INT m_Height;
-
-    CSearchBar();
-
-    VOID SetText(LPCWSTR lpszText);
-
-    HWND Create(HWND hwndParent);
-
-};
-
 class CMainWindow :
     public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
 {
     CUiPanel *m_ClientPanel = NULL;
     CUiSplitPanel *m_VSplitter = NULL;
 
-    CMainToolbar *m_Toolbar = NULL;
-
     CSideTreeView *m_TreeView = NULL;
     CUiWindow<CStatusBar> *m_StatusBar = NULL;
 
     CApplicationView *m_ApplicationView = NULL;
 
-    CUiWindow<CSearchBar> *m_SearchBar = NULL;
     CAvailableApps m_AvailableApps;
     CInstalledApps m_InstalledApps;
 
-    BOOL bSearchEnabled;
     BOOL bUpdating = FALSE;
 
     ATL::CStringW szSearchPattern;
@@ -120,15 +72,11 @@ private:
 
     BOOL CreateStatusBar();
 
-    BOOL CreateToolbar();
-
     BOOL CreateTreeView();
 
     BOOL CreateApplicationView();
 
     BOOL CreateVSplitter();
-
-    BOOL CreateSearchBar();
 
     BOOL CreateLayout();
 
@@ -178,6 +126,10 @@ public:
     // this function is called when application-view is asked to install an application
     // if Info is not zero, this app should be installed. otherwise those checked apps should be installed
     BOOL InstallApplication(CAvailableApplicationInfo *Info);
+
+    // this function is called when search text is changed
+    BOOL SearchTextChanged(ATL::CStringW &SearchText);
+
     void HandleTabOrder(int direction);
 };
 
