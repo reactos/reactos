@@ -23,4 +23,66 @@ I
 TRUE AND condition
 ---------- Testing OR operator -----------
 FALSE OR condition
-------------- End of Testing -------------
+---------- Testing CMD exit codes and errorlevels ----------
+--- CMD /C Direct EXIT call
+OK
+OK
+--- CMD /C Direct EXIT /B call
+OK
+OK
+--- CMD /C Non-existing command
+OK
+OK
+OK
+OK
+--- CMD /C RMDIR (no ERRORLEVEL set)
+OK
+OK
+OK
+OK
+--- CMD /C DIR (sets ERRORLEVEL) - With failure
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+--- CMD /C DIR (sets ERRORLEVEL) - With success
+OK
+OK
+OK
+OK
+OK
+OK
+--- CALL Batch Non-existing command
+OK
+OK
+--- CALL Batch RMDIR (no ERRORLEVEL set)
+OK
+OK
+--- CALL Batch RMDIR with || (sets ERRORLEVEL)
+OK
+OK
+OK
+OK
+--- CALL Batch DIR (sets ERRORLEVEL) - With failure
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+--- CALL Batch DIR (sets ERRORLEVEL) - With success
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+--------- Finished  --------------
