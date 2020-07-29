@@ -2303,7 +2303,7 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
                 ProtoPte = MiProtoPteToPte(&PteContents);
 
                 /* We don't support anything else atm */
-                ASSERT(ProtoPte->u.Long == 0);
+                if (ProtoPte->u.Long != 0) UNIMPLEMENTED_ONCE;
             }
         }
 
