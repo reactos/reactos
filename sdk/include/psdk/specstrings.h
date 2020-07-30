@@ -25,11 +25,6 @@
 
 #include <sal.h>
 
-#define __field_bcount(size) __notnull __byte_writableTo(size)
-#define __field_bcount_full(size) __notnull __byte_writableTo(size) __byte_readableTo(size)
-#define __field_ecount(size) __notnull __elem_writableTo(size)
-#define __post_invalid _Post_ __notvalid
-
 #define __deref_in
 #define __deref_in_ecount(size)
 #define __deref_in_bcount(size)
@@ -42,11 +37,8 @@
 #define __deref_opt_in_opt
 #define __deref_opt_in_ecount_opt(size)
 #define __deref_opt_in_bcount_opt(size)
-#define __out_awcount(expr,size)
-#define __in_awcount(expr,size)
+
 #define __nullnullterminated
-#define __in_data_source(src_sym)
-#define __kernel_entry
 
 #if (_MSC_VER >= 1000) && !defined(__midl) && defined(_PREFAST_)
 
@@ -60,5 +52,17 @@
 #define __analysis_noreturn
 
 #endif
+
+#define __field_ecount(size)                __notnull __elem_writableTo(size)
+#define __field_bcount(size)                __notnull __byte_writableTo(size)
+
+#define __field_bcount_full(size)           __notnull __byte_writableTo(size) __byte_readableTo(size)
+
+#define __out_awcount(expr, size)
+#define __in_awcount(expr, size)
+#define __post_invalid                      _Post_ __notvalid
+
+#define __in_data_source(src_sym)
+#define __kernel_entry
 
 #include <driverspecs.h>
