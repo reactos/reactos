@@ -24,7 +24,6 @@
 #define SPECSTRINGS_H
 
 #include <sal.h>
-#include <driverspecs.h>
 
 #define __field_bcount(size) __notnull __byte_writableTo(size)
 #define __field_bcount_full(size) __notnull __byte_writableTo(size) __byte_readableTo(size)
@@ -73,3 +72,5 @@
 #else
 #define _Check_return_wat_
 #endif
+
+#include <driverspecs.h>
