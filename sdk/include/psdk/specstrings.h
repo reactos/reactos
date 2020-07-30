@@ -25,20 +25,21 @@
 
 #include <sal.h>
 
-#define __deref_in
-#define __deref_in_ecount(size)
-#define __deref_in_bcount(size)
-#define __deref_in_opt
-#define __deref_in_ecount_opt(size)
-#define __deref_in_bcount_opt(size)
-#define __deref_opt_in
-#define __deref_opt_in_ecount(size)
-#define __deref_opt_in_bcount(size)
-#define __deref_opt_in_opt
-#define __deref_opt_in_ecount_opt(size)
-#define __deref_opt_in_bcount_opt(size)
+#define __deref_in                          __in _Pre_ __deref __deref __readonly
+#define __deref_in_ecount(size)             __deref_in _Pre_ __deref __elem_readableTo(size)
+#define __deref_in_bcount(size)             __deref_in _Pre_ __deref __byte_readableTo(size)
+#define __deref_in_opt                      __deref_in _Pre_ __deref __exceptthat __maybenull
+#define __deref_in_ecount_opt(size)         __deref_in_ecount(size) _Pre_ __deref __exceptthat __maybenull
+#define __deref_in_bcount_opt(size)         __deref_in_bcount(size) _Pre_ __deref __exceptthat __maybenull
+#define __deref_opt_in                      __deref_in __exceptthat __maybenull
+#define __deref_opt_in_ecount(size)         __deref_in_ecount(size) __exceptthat __maybenull
+#define __deref_opt_in_bcount(size)         __deref_in_bcount(size) __exceptthat __maybenull
+#define __deref_opt_in_opt                  __deref_in_opt __exceptthat __maybenull
+#define __deref_opt_in_ecount_opt(size)     __deref_in_ecount_opt(size) __exceptthat __maybenull
+#define __deref_opt_in_bcount_opt(size)     __deref_in_bcount_opt(size) __exceptthat __maybenull
 
-#define __nullnullterminated
+#undef __nullnullterminated
+#define __nullnullterminated                __inexpressible_readableTo("string terminated by two nulls") __nullterminated
 
 #if (_MSC_VER >= 1000) && !defined(__midl) && defined(_PREFAST_)
 
@@ -59,12 +60,12 @@
 
 #define __field_bcount_full(size)           __notnull __byte_writableTo(size) __byte_readableTo(size)
 
-#define __out_awcount(expr, size)
-#define __in_awcount(expr, size)
+#define __out_awcount(expr, size)           _Pre_ __notnull __byte_writableTo((expr) ? (size) : (size) * 2) _Post_ __valid __refparam
+#define __in_awcount(expr, size)            _Pre_ __valid _Pre_ _Notref_ __deref __readonly __byte_readableTo((expr) ? (size) : (size) * 2)
 #define __post_invalid                      _Post_ __notvalid
 
-#define __in_data_source(src_sym)
+#define __in_data_source(src_sym)           _Pre_ __inner_data_source(#src_sym)
 #define __out_data_source(src_sym)          _Post_ __inner_data_source(#src_sym)
-#define __kernel_entry
+#define __kernel_entry                      __inner_control_entrypoint(UserToKernel)
 
 #include <driverspecs.h>
