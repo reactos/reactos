@@ -34,19 +34,35 @@ typedef struct _RFSD_FLPFLUSH_CONTEXT {
 WORKER_THREAD_ROUTINE RfsdFloppyFlush;
 #endif // _PREFAST_
 
+#ifndef __REACTOS__
 VOID
 RfsdFloppyFlush(IN PVOID Parameter);
+#else
+VOID
+NTAPI
+RfsdFloppyFlush(_In_ PVOID Parameter);
+#endif
 
 #ifdef _PREFAST_
 KDEFERRED_ROUTINE RfsdFloppyFlushDpc;
 #endif // _PREFAST_
 
+#ifndef __REACTOS__
 VOID
 RfsdFloppyFlushDpc (
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
     IN PVOID SystemArgument2);
+#else
+VOID
+NTAPI
+RfsdFloppyFlushDpc (
+    _In_ PKDPC Dpc,
+    _In_opt_ PVOID DeferredContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2);
+#endif
 
 NTSTATUS
 RfsdWriteComplete (IN PRFSD_IRP_CONTEXT IrpContext);
