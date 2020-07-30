@@ -42,16 +42,17 @@
 
 #if (_MSC_VER >= 1000) && !defined(__midl) && defined(_PREFAST_)
 
-#define __inner_data_source(src_raw)        _SA_annotes1(SAL_untrusted_data_source,src_raw)
-#define __out_data_source(src_sym)          _Post_ __inner_data_source(#src_sym)
-#define __analysis_noreturn __declspec(noreturn)
+#define __analysis_noreturn                 __declspec(noreturn)
 
-#else
+#define __inner_data_source(src_raw)        _SA_annotes1(SAL_untrusted_data_source, src_raw)
 
-#define __out_data_source(src_sym)
+#else // (_MSC_VER >= 1000) && !defined(__midl) && defined(_PREFAST_)
+
 #define __analysis_noreturn
 
-#endif
+#define __inner_data_source(src_raw)
+
+#endif // (_MSC_VER >= 1000) && !defined(__midl) && defined(_PREFAST_)
 
 #define __field_ecount(size)                __notnull __elem_writableTo(size)
 #define __field_bcount(size)                __notnull __byte_writableTo(size)
@@ -63,6 +64,7 @@
 #define __post_invalid                      _Post_ __notvalid
 
 #define __in_data_source(src_sym)
+#define __out_data_source(src_sym)          _Post_ __inner_data_source(#src_sym)
 #define __kernel_entry
 
 #include <driverspecs.h>
