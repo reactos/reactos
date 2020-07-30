@@ -61,16 +61,4 @@
 
 #endif
 
-#if defined(_PREFAST_) && defined(_PFT_SHOULD_CHECK_RETURN)
-#define _Check_return_opt_ _Check_return_
-#else
-#define _Check_return_opt_
-#endif
-
-#if defined(_PREFAST_) && defined(_PFT_SHOULD_CHECK_RETURN_WAT)
-#define _Check_return_wat_ _Check_return_
-#else
-#define _Check_return_wat_
-#endif
-
 #include <driverspecs.h>
