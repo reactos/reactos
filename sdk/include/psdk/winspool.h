@@ -640,6 +640,35 @@ __MINGW_TYPEDEF_AW(LPDRIVER_INFO_8)
   __MINGW_TYPEDEF_AW(PFORM_INFO_1)
   __MINGW_TYPEDEF_AW(LPFORM_INFO_1)
 
+typedef struct _FORM_INFO_2A {
+  DWORD   Flags;
+  LPSTR   pName;
+  SIZEL   Size;
+  RECTL   ImageableArea;
+  LPCSTR  pKeyword;
+  DWORD   StringType;
+  LPCSTR  pMuiDll;
+  DWORD   dwResourceId;
+  LPCSTR  pDisplayName;
+  LANGID  wLangId;
+} FORM_INFO_2A, *PFORM_INFO_2A;
+
+typedef struct _FORM_INFO_2W {
+  DWORD   Flags;
+  LPWSTR  pName;
+  SIZEL   Size;
+  RECTL   ImageableArea;
+  LPCSTR  pKeyword;
+  DWORD   StringType;
+  LPCWSTR pMuiDll;
+  DWORD   dwResourceId;
+  LPCWSTR pDisplayName;
+  LANGID  wLangId;
+} FORM_INFO_2W, *PFORM_INFO_2W;
+
+__MINGW_TYPEDEF_AW(FORM_INFO_2)
+__MINGW_TYPEDEF_AW(PFORM_INFO_2)
+
   typedef struct _DOC_INFO_2A {
     LPSTR pDocName;
     LPSTR pOutputFile;
@@ -1479,36 +1508,6 @@ HRESULT DocumentEventW(
   ULONG cbOut,
   PVOID pvOut
 );
-
-
-typedef struct _FORM_INFO_2A {
-  DWORD   Flags;
-  LPSTR   pName;
-  SIZEL   Size;
-  RECTL   ImageableArea;
-  LPCSTR  pKeyword;
-  DWORD   StringType;
-  LPCSTR  pMuiDll;
-  DWORD   dwResourceId;
-  LPCSTR  pDisplayName;
-  LANGID  wLangId;
-} FORM_INFO_2A, *PFORM_INFO_2A;
-
-typedef struct _FORM_INFO_2W {
-  DWORD   Flags;
-  LPWSTR  pName;
-  SIZEL   Size;
-  RECTL   ImageableArea;
-  LPCSTR  pKeyword;
-  DWORD   StringType;
-  LPCWSTR pMuiDll;
-  DWORD   dwResourceId;
-  LPCWSTR pDisplayName;
-  LANGID  wLangId;
-} FORM_INFO_2W, *PFORM_INFO_2W;
-
-__MINGW_TYPEDEF_AW(FORM_INFO_2)
-__MINGW_TYPEDEF_AW(PFORM_INFO_2)
 
 typedef struct _PRINTPROCESSOR_CAPS_2 {
   DWORD dwLevel;
