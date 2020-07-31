@@ -1,10 +1,9 @@
 /*
-* PROJECT:      ReactOS Applications Manager
-* LICENSE:      GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
-* FILE:         base/applications/rapps/unattended.cpp
-* PURPOSE:      Functions to parse command-line flags and process them
-* COPYRIGHT:    Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
-*/
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Functions to parse command-line flags and process them
+ * COPYRIGHT:   Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
+ */
 #include "rapps.h"
 
 #include "unattended.h"
