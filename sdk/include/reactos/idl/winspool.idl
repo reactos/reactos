@@ -834,6 +834,26 @@ typedef [switch_type(DWORD)] union _WINSPOOL_V2_UREPLY_PRINTER
 }
 WINSPOOL_V2_UREPLY_PRINTER;
 
+typedef struct _WINSPOOL_FILE_INFO
+{
+    BOOL   bInheritHandle;
+    HANDLE hSpoolFileHandle;
+    DWORD  dwOptions;
+}
+WINSPOOL_FILE_INFO_1;
+
+typedef struct _WINSPOOL_FILE_INFO_CONTAINER
+{
+    DWORD Level;
+
+    [switch_is(Level)] union
+    {
+        [case(1)]
+            WINSPOOL_FILE_INFO_1 *pFileInfo1;
+    }
+    FileInfo;
+}
+WINSPOOL_FILE_INFO_CONTAINER;
 
 /*
  * The actual interface
