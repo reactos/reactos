@@ -279,9 +279,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "Ecraser %s (Oui/Non/Tous) ? "
     STRING_MOVE_HELP2 "Déplace des fichiers ou renomme des fichiers et des répertoires.\n\n\
 Pouur déplacer un ou plusieurs fichiers:\n\
-MOVE [/N][lecteur:][nomfich1[,...] destination\n\n\
+MOVE [/N][/Y|/-Y][lecteur:][nomfich1[,...] destination\n\n\
 Pour renommer un répertoire:\n\
-MOVE [/N][lecteur:][chemin]nomrep1 nomrep2\n\n\
+MOVE [/N][/Y|/-Y][lecteur:][chemin]nomrep1 nomrep2\n\n\
   [lecteur:][chemin]nomfich1  Indique l'endroit et le nom du ou des fichiers\n\
                               que vous voulez déplacer.\n\
   /N                          Nothing. Do everything but move files or directories.\n\n\
@@ -303,6 +303,10 @@ Taper PATH ; pour effacer tous les réglages courants\n\
 et indiquer à l'interpréteur de commandes\n\
 de chercher seulement dans le répertoire courant.\n\
 Taper PATH sans paramètres pour afficher le chemin courant.\n"
+    STRING_PAUSE_HELP1 "Stoppe l'exécution d'un fichier batch et affiche le message suivant:\n\
+'Appuyer sur une touche pour continuer...' ou un message défini\n\
+par l'utilisateur.\n\n\
+PAUSE [message]"
     STRING_PROMPT_HELP1 "Change l'invite de commandes.\n\n\
 PROMPT [texte]\n\n\
   texte   Indique le nouvel invite de commandes.\n\n\
@@ -326,10 +330,6 @@ des caractères spéciaux suivants:\n\n\
   $V   Numéro de version de ReactOS\n\
   $_   Retour chariot/saut de ligne\n\
   $$   $ (signe dollar)"
-    STRING_PAUSE_HELP1 "Stoppe l'exécution d'un fichier batch et affiche le message suivant:\n\
-'Appuyer sur une touche pour continuer...' ou un message défini\n\
-par l'utilisateur.\n\n\
-PAUSE [message]"
     STRING_PROMPT_HELP2 "  $+   Affiche la hauteur de la pile de répertoires"
     STRING_PROMPT_HELP3 "\nTaper PROMPT sans paramètres pour changer l'invite à celui défini par défaut."
     STRING_REM_HELP "Démarrer une ligne de commentaire dans un fichier batch.\n\nREM [Commentaire]"

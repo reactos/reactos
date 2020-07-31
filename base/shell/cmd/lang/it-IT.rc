@@ -267,9 +267,9 @@ MEMORY"
     STRING_MOVE_HELP1 "Sovrascrivi %s (Si/No/Tutti)? "
     STRING_MOVE_HELP2 "Sposta i file o cambia il nome a file e cartelle.\n\n\
 Per spostare uno o più file:\n\
-MOVE [/N][disco:][percorso]nomefile1[,...] destinazione\n\n\
+MOVE [/N][/Y|/-Y][disco:][percorso]nomefile1[,...] destinazione\n\n\
 Per rinominare una cartella:\n\
-MOVE [/N][disco:][percorso]]cartella1 cartella2\n\n\
+MOVE [/N][/Y|/-Y][disco:][percorso]]cartella1 cartella2\n\n\
   [disco:][percorso]nomefile1  indica la posizione e il nome del file\n\
                                o dei file da spostare.\n\
   /N                           Nulla. Effettua il comando ma senza alterare\n\
@@ -294,6 +294,9 @@ PATH ;\n\n\
 Usa PATH ; per rimuovere tutti i percorsi di ricerca e indicare all'interprete\n\
 dei comandi di cercare solo nella cartella corrente\n\
 PATH senza parametri visualizza i percorsi attualmente impostati.\n"
+    STRING_PAUSE_HELP1 "Ferma l'esecuzione del batch e mostra il seguente messaggio:\n\
+'Premi un tasto per continuare...' o il messaggio indicato.\n\n\
+PAUSE [messaggio]"
     STRING_PROMPT_HELP1 "Modifica il messaggio di pronto a eseguire comandi.\n\n\
 PROMPT [testo]\n\n\
   testo   Indica il nuovo messaggio.\n\n\
@@ -316,9 +319,6 @@ Può essere composto da un testo qualunque e dai seguenti codici speciali:\n\n\
   $V   Versione del sistema operativo\n\
   $_   CR LF (a capo)\n\
   $$   $ (simbolo dollaro)\n"
-    STRING_PAUSE_HELP1 "Ferma l'esecuzione del batch e mostra il seguente messaggio:\n\
-'Premi un tasto per continuare...' o il messaggio indicato.\n\n\
-PAUSE [messaggio]"
     STRING_PROMPT_HELP2 "  $+   Mostra la profondità attuale dello stack delle cartelle"
     STRING_PROMPT_HELP3 "\nUsa PROMPT senza parametri per attivare quello predefinito."
     STRING_REM_HELP "Inizia una linea di commento.\n\n\

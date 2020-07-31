@@ -272,9 +272,9 @@ Jeśli nie zostały użyte zarówno /H jak i /J, zostanie utworzone dowiązanie 
     STRING_MOVE_HELP1 "Nadpisać %s (Tak/Nie/Zawsze)? "
     STRING_MOVE_HELP2 "Przenosi, a także zmienia nazwy plików i katalogów.\n\n\
 Aby przenieść jeden lub więcej plików:\n\
-MOVE [/N][napęd:][ścieżka]nazwa_pliku1[,...] cel\n\n\
+MOVE [/N][/Y|/-Y][napęd:][ścieżka]nazwa_pliku1[,...] cel\n\n\
 Aby zmienić nazwę katalogu:\n\
-MOVE [/N][napęd:][ścieżka]nazwa1 nazwa2\n\n\
+MOVE [/N][/Y|/-Y][napęd:][ścieżka]nazwa1 nazwa2\n\n\
   [napęd:][ścieżka]nazwa  Wyznacza scieżkę dostępu do pliku lub\n\
                           plików, które chcesz przenieść.\n\
   /N                      Nic. Zrób wszystko, oprócz przenoszenia plików/katalogów.\n\n\
@@ -295,6 +295,9 @@ PATH [[napęd:]ścieżka[;...]]\nPATH ;\n\n\
 Wpisz PATH ; jeśli chcesz wyczyścić wszystkie zapisane ścieżki dostępu i zmusić konsolę\n\
 do przeszukiwania wyłącznie katalogu bieżącego.\n\
 Wpisz PATH bez żadnych parametrów, by wyświetlić zapisane ścieżki dostępu.\n"
+    STRING_PAUSE_HELP1 "Zatrzymuje wykonywanie programu wsadowego i pokazuje wiadomość:\n\
+'Naciśnij dowolny klawisz, aby kontynuować...' albo inną dowolną.\n\n\
+PAUSE [wiadomość]"
     STRING_PROMPT_HELP1 "Zmienia znak zachęty.\n\n\
 PROMPT [tekst]\n\n\
   tekst   Definiuje nowy znak zachęty.\n\n\
@@ -317,9 +320,6 @@ Znak zachęty może składać się z normalnych znaków, a także poniższych sy
   $V   Wersja systemu\n\
   $_   Znak CR/LF\n\
   $$   $ (dolar)\n"
-    STRING_PAUSE_HELP1 "Zatrzymuje wykonywanie programu wsadowego i pokazuje wiadomość:\n\
-'Naciśnij dowolny klawisz, aby kontynuować...' albo inną dowolną.\n\n\
-PAUSE [wiadomość]"
     STRING_PROMPT_HELP2 "  $+   Wyświetla obecny poziom stosu katalogów"
     STRING_PROMPT_HELP3 "\nWpisz PROMPT bez żadnych parametrów, by powrócić do ustawień domyślnych."
     STRING_REM_HELP "Definiuje linię komentarza w pliku wsadowym.\n\nREM [komentarz]"

@@ -272,9 +272,9 @@ MKLINK [/D | /H | /J] bağlantı adı varış\n\n\
     STRING_MOVE_HELP1 "Üzerine yaz: %s (Evet/Hayır/Tümü)? "
     STRING_MOVE_HELP2 "Kütükleri taşır ve kütükleri ve dizinleri yeniden adlandırır.\n\n\
 Bir ya da daha çok kütüğü taşımak için:\n\
-MOVE [/N][sürücü:][yol]kütük adı1[,...] varış\n\n\
+MOVE [/N][/Y|/-Y][sürücü:][yol]kütük adı1[,...] varış\n\n\
 Bir dizini yeniden adlandırmak için:\n\
-MOVE [/N][sürücü:][yol]dizin adı1 dizin adı2\n\n\
+MOVE [/N][/Y|/-Y][sürücü:][yol]dizin adı1 dizin adı2\n\n\
   [sürücü:][yol]kütük adı1  Taşımak istediğiniz kütüğün ya da kütüklerin\n\
                             konumunu ve adını belirtir.\n\
   /N                        Hiçbir şey. Tüm şeyleri yapar ama kütükleri ve dizinleri taşır.\n\n\
@@ -295,6 +295,9 @@ PATH [[sürücü:]yol[;...]]\nPATH ;\n\n\
 PATH yazınız, tüm arama yolu ayarlarını silmek ve komut kabuğunu yalnızca\n\
 şimdiki dizinde aramaya yönlendirmek için.\n\
 Şimdiki yolu görüntülemek için değişkensiz PATH yazınız.\n"
+    STRING_PAUSE_HELP1 "Bir toplu iş kütüğünün çalışmasını durdurur ve aşağıdaki iletiyi gösterir:\n\
+""Sürdürmek için bir düğmeye basınız..."" ya da kullanıcı tanımlı bir ileti.\n\n\
+PAUSE [ileti]"
     STRING_PROMPT_HELP1 "Komut istemini değiştirir.\n\n\
 PROMPT [metin]\n\n\
   metin   Yeni bir komut istemi belirtir.\n\n\
@@ -317,9 +320,6 @@ PROMPT [metin]\n\n\
   $V   OS sürüm numarası\n\
   $_   Yataç başı ve yataç sonu\n\
   $$   $ (dolar imi)\n"
-    STRING_PAUSE_HELP1 "Bir toplu iş kütüğünün çalışmasını durdurur ve aşağıdaki iletiyi gösterir:\n\
-""Sürdürmek için bir düğmeye basınız..."" ya da kullanıcı tanımlı bir ileti.\n\n\
-PAUSE [ileti]"
     STRING_PROMPT_HELP2 "  $+   Dizin yığınının şimdiki derinliğini görüntüler."
     STRING_PROMPT_HELP3 "\nÖn tanımlı ayarlamaya istemi sıfırlamak için değişkensiz PROMPT yazınız."
     STRING_REM_HELP "Bir toplu iş kütüğünde bir açıklama yatacı başlatır.\n\nREM [Açıklama]"

@@ -251,9 +251,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "Felülírja %s (Igen/Nem/Mind)? "
     STRING_MOVE_HELP2 "Áthelyezi és átnevezi az állományokat a mappákban.\n\n\
 Egy vagy több állomány áthelyezéséhez:\n\
-MOVE [/N][meghajtó:][elérési_út]állomány1[,...] cél\n\n\
+MOVE [/N][/Y|/-Y][meghajtó:][elérési_út]állomány1[,...] cél\n\n\
 Mappa átnevezése:\n\
-MOVE [/N][meghajtó:][elérési_út]mappa1 mappa2\n\n\
+MOVE [/N][/Y|/-Y][meghajtó:][elérési_út]mappa1 mappa2\n\n\
   [meghajtó:][elérési_út]állomány1  Átnevezendõ állományok forrása.\n\
   /N                    Nem helyez át semmit.\n\n\
 Hiányosságok:\n\
@@ -274,6 +274,9 @@ PATH ; Keresési útvonalak törlése\n\n\
 A PATH törléséhez a következõt írd be: PATH ;\n\
 Így csak az aktuális mappában fog keresni a CMD.\
 Paraméterek nélkül az érvényes keresési útvonalakat mutatja meg.\n"
+    STRING_PAUSE_HELP1 "Felfüggeszti a futást, és vár a felhasználóra. A következõ üzenet jelenik meg:\n\
+'A folytatáshoz nyomj meg egy billentyût . . .' vagy egy általad választott üzenet.\n\n\
+PAUSE [message]"
     STRING_PROMPT_HELP1 "Parancssor beállítása.\n\n\
 PROMPT [szöveg]\n\n\
   szöveg    Az új parancssor megadása.\n\n\
@@ -296,9 +299,6 @@ A parancssor speciális kódokat is tartalmazhat:\n\n\
   $V   OS verziószám\n\
   $_   Újsor\n\
   $$   $ (dollár jel)\n"
-    STRING_PAUSE_HELP1 "Felfüggeszti a futást, és vár a felhasználóra. A következõ üzenet jelenik meg:\n\
-'A folytatáshoz nyomj meg egy billentyût . . .' vagy egy általad választott üzenet.\n\n\
-PAUSE [message]"
     STRING_PROMPT_HELP2 "  $+   Displays the current depth of the directory stack"
     STRING_PROMPT_HELP3 "\nHa paraméter nélkül beírod a PROMPT parancsot, vissza áll az alapértelmezettre a kijelzés."
     STRING_REM_HELP "Megjegyzést jelölõ sor batch fájlokban.\n\nREM [megjegyzés]"

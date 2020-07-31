@@ -266,9 +266,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "Timpa %s (Ya/Tidak/Semua)? "
     STRING_MOVE_HELP2 "Memindahkan file dan mengganti nama file dan direktori.\n\n\
 Untuk memindahkan satu atau lebih file:\n\
-MOVE [/N][drive:][path]filename1[,...] tujuan\n\n\
+MOVE [/N][/Y|/-Y][drive:][path]filename1[,...] tujuan\n\n\
 Untuk mengganti nama direktori:\n\
-MOVE [/N][drive:][path]dirname1 dirname2\n\n\
+MOVE [/N][/Y|/-Y][drive:][path]dirname1 dirname2\n\n\
   [drive:][path]filename1  Menetapkan lokasi dan nama file\n\
                            yang ingin anda pindahkan.\n\
   /N                    Tidak apapun. Lakukan apapun kecuali memindahkan file dan direktori.\n\n\
@@ -289,6 +289,9 @@ PATH [[drive:]path[;...]]\nPATH ;\n\n\
 Ketik PATH ; untuk membersihkan semua setelan path-pencarian dan shell\n\
 perintah langsung untuk mencari hanya dalam direktori saat ini.\n\
 Ketik PATH tanpa parameter untuk menampilkan path saat ini.\n"
+    STRING_PAUSE_HELP1 "Menunda eksekusi file batch dan menampilkan pesan berikut:\n\
+'Tekan tombol untuk melanjutkan...' atau pesan yang dibuat pengguna.\n\n\
+PAUSE [pesan]"
     STRING_PROMPT_HELP1 "Mengubah prompt perintah.\n\n\
 PROMPT [teks]\n\n\
   teks    Menetapkan prompt perintah baru.\n\n\
@@ -311,9 +314,6 @@ Prompt bisa dibuat dari karakter normal dan kode spesial berikut:\n\n\
   $V   Nomor versi OS\n\
   $_   Carriage return dan linefeed\n\
   $$   $ (tanda dolar)\n"
-    STRING_PAUSE_HELP1 "Menunda eksekusi file batch dan menampilkan pesan berikut:\n\
-'Tekan tombol untuk melanjutkan...' atau pesan yang dibuat pengguna.\n\n\
-PAUSE [pesan]"
     STRING_PROMPT_HELP2 "  $+   Menampilkan kedalaman tumpukan direktori saat ini"
     STRING_PROMPT_HELP3 "\nKetik PROMPT tanpa parameter untuk mereset prompt ke setelan standar."
     STRING_REM_HELP "Memulai baris komentar dalam file batch.\n\nREM [Komentar]"

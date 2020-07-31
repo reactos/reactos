@@ -269,9 +269,9 @@ Nëse anjëra nga /H ose /J nuk speficikohet, një lidhje simboli do të krijohe
     STRING_MOVE_HELP1 "Mbishkruaj %s (Po/Jo/Të Gjith)? "
     STRING_MOVE_HELP2 "Lëviz dokumentet dhe emero ato dhe skedat.\n\n\
 Për të lëvizur një ose më shumë dokumenta:\n\
-MOVE [/N][drive:][rrugë]emri1[,...] destinacioni\n\n\
+MOVE [/N][/Y|/-Y][drive:][rrugë]emri1[,...] destinacioni\n\n\
 Të emerosh skedat:\n\
-MOVE [/N][drive:][rrugë]dirname1 dirname2\n\n\
+MOVE [/N][/Y|/-Y][drive:][rrugë]dirname1 dirname2\n\n\
   [drive:][rrugë]emri1  Përcakton vendndodhjen dhe emrin e skedës\n\
                            ose dokumentave që ju dëshironi për të lëvizur.\n\
   /N                    Asgjë. Bëni gjithçka perveq zhvendosjen e dokumenta ose direktorives.\n\n\
@@ -292,6 +292,9 @@ rrugë [[drive:]rrugë[;...]]\nrrugë ;\n\n\
 Tipi rrugë ; të pastrosh të gjitha kërkimet-rrugën në parametra dhe të drejtojë komanden shell\n\
 që të kërkoj ne direktorine aktuale.\n\
 Shkruaj RRUGE pa parametra që shfaqin rrugen aktuale.\n"
+    STRING_PAUSE_HELP1 "Ndalon ekzekutimin e një dokumenti batch dhe trego mesazhin në vazhdim:\n\
+'Shtypni një buton për të vazhduar...' ose një mesazh të përcaktuar për përdoruesin.\n\n\
+PAUSE [mesazhi]"
     STRING_PROMPT_HELP1 "Ndryshimet në komandën e shpejtë.\n\n\
 PROMPT [teksti]\n\n\
   tekst    Specifiko një dritare të re komande.\n\n\
@@ -314,9 +317,6 @@ Komanda mund të përbëhet nga karaktere normale dhe Kodet e mëposhtme të ve�
   $V   Versioni i OS\n\
   $_   Rikthimi i perzgjedhjeve dhe informacionit\n\
   $$   $ (Shenja e dollarit)\n"
-    STRING_PAUSE_HELP1 "Ndalon ekzekutimin e një dokumenti batch dhe trego mesazhin në vazhdim:\n\
-'Shtypni një buton për të vazhduar...' ose një mesazh të përcaktuar për përdoruesin.\n\n\
-PAUZE [mesazhi]"
     STRING_PROMPT_HELP2 "  $+   Shfaq thellësinë aktuale të directorive në rafte"
     STRING_PROMPT_HELP3 "\nSHFAQ pa parametra për të resetuar ne konfigurimet e automatizuara."
     STRING_REM_HELP "Nis një linjë koment në një dokument batch.\n\nREM [Koment"

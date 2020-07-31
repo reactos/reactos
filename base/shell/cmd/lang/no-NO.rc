@@ -264,9 +264,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "Overskrive %s (Ja/Nei/Alle)? "
     STRING_MOVE_HELP2 "Flytt filer, og gi nytt navn på filer og mapper.\n\n\
 For å flytte en eller flere filer:\n\
-MOVE [/N][stasjon:][mappe]filnavn1[,...] destinasjon\n\n\
+MOVE [/N][/Y|/-Y][stasjon:][mappe]filnavn1[,...] destinasjon\n\n\
 For å endre navn på en mappe:\n\
-MOVE [/N][stasjon:][mappe]mappenavn1 mappenavn2\n\n\
+MOVE [/N][/Y|/-Y][stasjon:][mappe]mappenavn1 mappenavn2\n\n\
   [stasjon:][mappe]filnavn1  Spesifisere plassering og navn av fil\n\
                            eller filer du ønsker å flytte.\n\
   /N                    Ingenting. Gjør alt unntatt å flytte filer eller mapper.\n\n\
@@ -287,6 +287,9 @@ PATH [[stasjon:]mappe[;...]]\nPATH ;\n\n\
 Skriv PATH; for å tømme alle søkemapper innstillinger og angi at kommandoskallet\n\
 kun skal søke gjeldende mappe.\n\
 Skriv PATH uten parameter for å vise gjeldende søkesti.\n"
+    STRING_PAUSE_HELP1 "Stopp eksekvering av satsvis fil og vis følgende melding:\n\
+'Trykk en tast for å fortsette...' eller en bruker definert melding.\n\n\
+PAUSE [melding]"
     STRING_PROMPT_HELP1 "Endre kommandoledetekst.\n\n\
 PROMPT [tekst]\n\n\
   tekst    Spesifisere en nytt kommandoledetekst.\n\n\
@@ -309,9 +312,6 @@ Ledeteksten kan bli satt sammen av normale tegn og følgende spesielle koder:\n\
   $V   Versjonsnummer for ReactOS\n\
   $_   Retur og linjeskift\n\
   $$   $ (dollar tegn)\n"
-    STRING_PAUSE_HELP1 "Stopp eksekvering av satsvis fil og vis følgende melding:\n\
-'Trykk en tast for å fortsette...' eller en bruker definert melding.\n\n\
-PAUSE [melding]"
     STRING_PROMPT_HELP2 "  $+   Vis gjeldende dybde av mappestakken"
     STRING_PROMPT_HELP3 "\nSkriv PROMPT uten parameter for å resette ledeteksten."
     STRING_REM_HELP "Start en kommentarlinje i en satsvis fil.\n\nREM [Kommentar]"

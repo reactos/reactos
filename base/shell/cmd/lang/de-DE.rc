@@ -264,9 +264,9 @@ Wenn weder /H noch /J angegeben werden, wird eine symbolische Verknüpfung angel
     STRING_MOVE_HELP1 "Überschreiben %s (Ja/Nein/Alle)? "
     STRING_MOVE_HELP2 "Verschiebt Dateien und benennt Dateien sowie Verzeichnisse um.\n\n\
 Um eine oder mehrere Dateien zu verschieben:\n\
-MOVE [/N][Laufwerk:][Pfad]Dateiname1[,...] Ziel\n\n\
+MOVE [/N][/Y|/-Y][Laufwerk:][Pfad]Dateiname1[,...] Ziel\n\n\
 Um ein Verzeichnis umzubenennen:\n\
-MOVE [/N][Laufwerk:][Pfad]Verzeichnis1 Verzeichnis2\n\n\
+MOVE [/N][/Y|/-Y][Laufwerk:][Pfad]Verzeichnis1 Verzeichnis2\n\n\
   [Laufwerk:][Pfad]Datei1  Bezeichnet den Pfad und den Namen der zu\n\
                            verschiebenden Datei(en).\n\
   /N                 Nichts. Tut alles außer Dateien/Verzeichnisse verschieben.\n\n\
@@ -287,6 +287,9 @@ PATH [[Laufwerk:]Pfad[;...]]\nPATH ;\n\n\
   PATH ;    Löscht den Suchpfad und lässt CMD.EXE nur in dem aktuellen\n\
             Verzeichnis suchen.\n\
   PATH      Ohne Parameter zeigt den aktuellen Pfad an.\n"
+    STRING_PAUSE_HELP1 "Hält die Ausführung einer Batchdatei an und zeigt folgende Meldung oder eine benutzerdefinierte Nachricht an:\n\
+'Drücken Sie eine beliebige Taste . . .'.\n\n\
+PAUSE [message]"
     STRING_PROMPT_HELP1 "Ändert die Eingabeaufforderung.\n\n\
 PROMPT [Text]\n\n\
   Text    Bezeichnet die neue Eingabeaufforderung.\n\n\
@@ -309,9 +312,6 @@ Sie kann aus normalen Zeichen und folgenden Sonderzeichen bestehen:\n\n\
   $V   Betriebssystem-Versionsnummer\n\
   $_   Wagenrücklauf und Zeilenvorschub\n\
   $$   $ (Dollarzeichen)"
-    STRING_PAUSE_HELP1 "Hält die Ausführung einer Batchdatei an und zeigt folgende Meldung oder eine benutzerdefinierte Nachricht an:\n\
-'Drücken Sie eine beliebige Taste . . .'.\n\n\
-PAUSE [message]"
     STRING_PROMPT_HELP2 "  $+   Zeigt die aktuelle Tiefe des Verzeichnis-Stacks an"
     STRING_PROMPT_HELP3 "\n  'PROMPT'   setzt die Prompt auf die Standardwerte zurück."
     STRING_REM_HELP "Leitet Kommentare in einer Batchdatei ein.\n\nREM [Kommentar]"

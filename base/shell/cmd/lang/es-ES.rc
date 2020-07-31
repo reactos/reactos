@@ -267,9 +267,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "¿Sobreescribir %s (Si/No/Todos)? "
     STRING_MOVE_HELP2 "Mueve archivos y renombra archivos y directorios.\n\n\
 Para mover uno o más archivos:\n\
-MOVE [/N][unidad:][ruta]archivo1[,...] destino\n\n\
+MOVE [/N][/Y|/-Y][unidad:][ruta]archivo1[,...] destino\n\n\
 Para renombrar un directorio:\n\
-MOVE [/N][unidad:][ruta]directorio1 directorio2\n\n\
+MOVE [/N][/Y|/-Y][unidad:][ruta]directorio1 directorio2\n\n\
   [unidad:][ruta]archivo1  Especifica la localización y el nombre del archivo\n\
                            o archivos que quieres mover.\n\
   /N                    Nada. Hace todo menos mover archivos o directorios.\n\n\
@@ -290,6 +290,10 @@ PATH [[unidad:]ruta[;...]]\nRuta ;\n\n\
 Escribe PATH ; para limpiar todas las configuraciones de búsqueda y usar solo el\n\
 directorio actual del interprete de comandos.\n\
 Escribe PATH sin parámetros para mostrar la ruta actual.\n"
+    STRING_PAUSE_HELP1 "Detiene la ejecución del archivo por lotes actual y muestra el\n\
+siguiente mensaje:\n\
+'Pulsa cualquier tecla para continuar...' o un mensaje definido por el usuario.\n\n\
+PAUSE [mensaje]"
     STRING_PROMPT_HELP1 "Cambia el símbolo de comandos.\n\n\
 PROMPT [texto]\n\n\
   texto   Epecifica un nuevo símbolo de comandos.\n\n\
@@ -313,10 +317,6 @@ códigos especiales:\n\n\
   $V   Número de versión del SO\n\
   $_   Salto de linea\n\
   $$   $ (signo del dolar)\n"
-    STRING_PAUSE_HELP1 "Detiene la ejecución del archivo por lotes actual y muestra el\n\
-siguiente mensaje:\n\
-'Pulsa cualquier tecla para continuar...' o un mensaje definido por el usuario.\n\n\
-PAUSE [mensaje]"
     STRING_PROMPT_HELP2 "  $+   Muestra la profundidad actual de la pila de directorios"
     STRING_PROMPT_HELP3 "\nEscribe PROMPT sin parámetros para resetear el símbolo de\n\
 comandos a su configuración por defecto."
