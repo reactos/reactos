@@ -1,10 +1,10 @@
 /*
  * PROJECT:     ReactOS Applications Manager
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/gui.cpp
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     GUI classes for RAPPS
  * COPYRIGHT:   Copyright 2015 David Quintana           (gigaherz@gmail.com)
  *              Copyright 2017 Alexander Shaposhnikov   (sanchaez@reactos.org)
+ *              Copyright 2020 He Yang                  (1160386205@qq.com)
  */
 
 #include "rapps.h"
