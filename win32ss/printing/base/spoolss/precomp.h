@@ -52,4 +52,12 @@ SPOOLSS_PRINTER_HANDLE, *PSPOOLSS_PRINTER_HANDLE;
 extern HANDLE hProcessHeap;
 extern LIST_ENTRY PrintProviderList;
 
+// spoolfile.c
+typedef struct _FILE_INFO_1
+{
+    BOOL   bInheritHandle;
+    HANDLE hSpoolFileHandle;
+    DWORD  dwOptions;
+} FILE_INFO_1, *PFILE_INFO_1;
+
 #endif

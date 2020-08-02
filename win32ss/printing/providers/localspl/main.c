@@ -112,9 +112,9 @@ static const PRINTPROVIDOR _PrintProviderFunctions = {
     NULL,                                       // fpAddPrinterDriverEx
     NULL,                                       // fpSplReadPrinter
     NULL,                                       // fpDriverUnloadComplete
-    NULL,                                       // fpGetSpoolFileInfo
-    NULL,                                       // fpCommitSpoolData
-    NULL,                                       // fpCloseSpoolFileHandle
+    LocalGetSpoolFileInfo,                      // fpGetSpoolFileInfo
+    LocalCommitSpoolData,                       // fpCommitSpoolData
+    LocalCloseSpoolFileHandle,                  // fpCloseSpoolFileHandle
     NULL,                                       // fpFlushPrinter
     NULL,                                       // fpSendRecvBidiData
     NULL,                                       // fpAddDriverCatalog

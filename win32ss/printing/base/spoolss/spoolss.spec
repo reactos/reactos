@@ -142,10 +142,10 @@
 @ stdcall SetPrinterDataExW(long wstr wstr long ptr long)
 @ stdcall SetPrinterDataW(long wstr long ptr long)
 @ stub SetPrinterW
-@ stub SplCloseSpoolFileHandle
-@ stub SplCommitSpoolData
+@ stdcall SplCloseSpoolFileHandle(ptr)
+@ stdcall SplCommitSpoolData(ptr ptr long long ptr long ptr)
 @ stub SplDriverUnloadComplete
-@ stub SplGetSpoolFileInfo
+@ stdcall SplGetSpoolFileInfo(ptr ptr long ptr long ptr)
 @ stdcall SplInitializeWinSpoolDrv(ptr)
 @ stub SplIsSessionZero
 @ stdcall SplIsUpgrade()
