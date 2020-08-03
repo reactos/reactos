@@ -1784,6 +1784,7 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
             break;
             }
 
+            return;
         }
         else if ((HWND)lParam == m_ComboBox->GetWindow())
         {
@@ -1801,42 +1802,51 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
                 }
                 break;
             }
+
+            return;
+        }
+        else if ((HWND)lParam == m_Toolbar->GetWindow())
+        {
+            // the message is sent from Toolbar. fall down to continue process
+        }
+        else
+        {
+            return;
         }
     }
-    else
+
+    // the LOWORD of wParam contains a Menu or Control ID
+    WORD wCommand = LOWORD(wParam);
+
+    switch (wCommand)
     {
-        WORD wCommand = LOWORD(wParam);
+    case ID_INSTALL:
+        m_MainWindow->InstallApplication((CAvailableApplicationInfo *)GetFocusedItemData());
+        break;
 
-        switch (wCommand)
-        {
-        case ID_INSTALL:
-            m_MainWindow->InstallApplication((CAvailableApplicationInfo *)GetFocusedItemData());
-            break;
+    case ID_TOOLBAR_INSTALL:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_INSTALL, 0);
+        break;
 
-        case ID_TOOLBAR_INSTALL:
-            m_MainWindow->SendMessageW(WM_COMMAND, ID_INSTALL, 0);
-            break;
+    case ID_UNINSTALL:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_UNINSTALL, 0);
+        break;
 
-        case ID_UNINSTALL:
-            m_MainWindow->SendMessageW(WM_COMMAND, ID_UNINSTALL, 0);
-            break;
+    case ID_MODIFY:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_MODIFY, 0);
+        break;
 
-        case ID_MODIFY:
-            m_MainWindow->SendMessageW(WM_COMMAND, ID_MODIFY, 0);
-            break;
+    case ID_REGREMOVE:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_REGREMOVE, 0);
+        break;
 
-        case ID_REGREMOVE:
-            m_MainWindow->SendMessageW(WM_COMMAND, ID_REGREMOVE, 0);
-            break;
+    case ID_REFRESH:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_REFRESH, 0);
+        break;
 
-        case ID_REFRESH:
-            m_MainWindow->SendMessageW(WM_COMMAND, ID_REFRESH, 0);
-            break;
-
-        case ID_RESETDB:
-            m_MainWindow->SendMessageW(WM_COMMAND, ID_RESETDB, 0);
-            break;
-        }
+    case ID_RESETDB:
+        m_MainWindow->SendMessageW(WM_COMMAND, ID_RESETDB, 0);
+        break;
     }
 }
 
