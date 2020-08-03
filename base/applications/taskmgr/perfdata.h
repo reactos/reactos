@@ -4,6 +4,7 @@
  *  perfdata.h
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
+ *  Copyright (C)        2020  Aidan Case    <aidanzcase@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,6 +23,7 @@
 
 #pragma once
 
+#include "windef.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -58,6 +60,7 @@ typedef struct _PERFDATA
 typedef struct _CMD_LINE_CACHE
 {
      DWORD idx;
+     ULONG pid;
     LPWSTR str;
      ULONG len;
     struct _CMD_LINE_CACHE* pnext;
